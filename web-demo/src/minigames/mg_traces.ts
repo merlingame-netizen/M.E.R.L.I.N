@@ -83,6 +83,8 @@ export class MinigameTraces extends MinigameBase {
 
     // pointerdown covers mouse, touch and stylus — no 'click' needed (avoids double-fire on desktop)
     this.canvas.addEventListener('pointerdown', this.onClick);
+    // C137: WCAG 2.1.1 — Enter/Space activates current footprint for keyboard-only players
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Timer
     this.timeLeft = this.totalTime;
@@ -99,6 +101,21 @@ export class MinigameTraces extends MinigameBase {
       }
     }, 100);
   }
+
+  // C137: WCAG 2.1.1 — keyboard activation of current footprint (Enter/Space = click at footprint center)
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    const target = this.footprints[this.currentIndex];
+    if (!target) return;
+    target.hit = true;
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+    this.currentIndex++;
+    if (this.currentIndex >= this.footprintCount) {
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+      this.endGame();
+    }
+  };
 
   private onClick = (e: PointerEvent): void => {
     if (!this.canvas) return;
@@ -129,6 +146,7 @@ export class MinigameTraces extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const hitCount = this.footprints.filter((f) => f.hit).length;
     const timeBonus = Math.max(0, this.timeLeft / this.totalTime) * 20;
@@ -202,6 +220,7 @@ export class MinigameTraces extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

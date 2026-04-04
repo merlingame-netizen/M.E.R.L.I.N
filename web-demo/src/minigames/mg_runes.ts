@@ -46,6 +46,7 @@ export class MinigameRunes extends MinigameBase {
   private animFrame = 0;
   private revealTimeout = 0;
   private ended = false;
+  private kbFocusIdx = 0; // C137: keyboard-focused tile index (ArrowKey grid nav)
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -98,6 +99,8 @@ export class MinigameRunes extends MinigameBase {
 
     // pointerdown covers mouse, touch and stylus — no 'click' needed (avoids double-fire on desktop)
     this.canvas.addEventListener('pointerdown', this.onClick);
+    // C137: WCAG 2.1.1 — ArrowKey grid navigation + Enter/Space to flip tile
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Timer
     this.timeLeft = this.totalTime;
@@ -105,6 +108,7 @@ export class MinigameRunes extends MinigameBase {
     this.firstPick = null;
     this.lockInput = false;
     this.ended = false;
+    this.kbFocusIdx = 0;
 
     this.timerInterval = window.setInterval(() => {
       this.timeLeft -= 0.1;
@@ -210,6 +214,57 @@ export class MinigameRunes extends MinigameBase {
     }
   };
 
+  // C137: WCAG 2.1.1 — ArrowKey 4-column grid navigation + Enter/Space to flip tile
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    const isConfirm = e.key === 'Enter' || e.key === ' ';
+    if (!isArrow && !isConfirm) return;
+    e.preventDefault();
+
+    if (isArrow) {
+      const maxIdx = this.tiles.length - 1;
+      if (e.key === 'ArrowRight')     this.kbFocusIdx = Math.min(maxIdx, this.kbFocusIdx + 1);
+      else if (e.key === 'ArrowLeft') this.kbFocusIdx = Math.max(0, this.kbFocusIdx - 1);
+      else if (e.key === 'ArrowDown') this.kbFocusIdx = Math.min(maxIdx, this.kbFocusIdx + this.gridCols);
+      else if (e.key === 'ArrowUp')   this.kbFocusIdx = Math.max(0, this.kbFocusIdx - this.gridCols);
+      return;
+    }
+
+    // Confirm (Enter / Space) — same logic as onClick
+    if (this.lockInput) return;
+    const tile = this.tiles[this.kbFocusIdx];
+    if (!tile || tile.state !== 'hidden') return;
+    (tile as { state: string }).state = 'revealed';
+
+    if (this.firstPick === null) {
+      this.firstPick = this.kbFocusIdx;
+    } else {
+      const firstTile = this.tiles[this.firstPick];
+      this.lockInput = true;
+
+      if (firstTile.runeIndex === tile.runeIndex) {
+        (firstTile as { state: string }).state = 'matched';
+        (tile as { state: string }).state = 'matched';
+        this.matchedCount++;
+        this.firstPick = null;
+        this.lockInput = false;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+        if (this.matchedCount >= this.totalPairs) {
+          this.endGame();
+        }
+      } else {
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+        const fp = this.firstPick;
+        this.revealTimeout = window.setTimeout(() => {
+          (this.tiles[fp] as { state: string }).state = 'hidden';
+          (tile as { state: string }).state = 'hidden';
+          this.firstPick = null;
+          this.lockInput = false;
+        }, this.flipBackDelay);
+      }
+    }
+  };
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
@@ -217,6 +272,7 @@ export class MinigameRunes extends MinigameBase {
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     // Score: base on pairs found + time bonus
     const pairScore = (this.matchedCount / this.totalPairs) * 70;
@@ -231,7 +287,8 @@ export class MinigameRunes extends MinigameBase {
 
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    for (const tile of this.tiles) {
+    for (let i = 0; i < this.tiles.length; i++) {
+      const tile = this.tiles[i]!;
       ctx.save();
 
       if (tile.state === 'hidden') {
@@ -293,6 +350,16 @@ export class MinigameRunes extends MinigameBase {
       }
 
       ctx.restore();
+
+      // C137: keyboard focus ring — amber border on focused tile
+      if (i === this.kbFocusIdx) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(205,133,63,0.9)';
+        ctx.lineWidth = 2.5;
+        this.roundRect(ctx, tile.x - 2, tile.y - 2, this.tileSize + 4, this.tileSize + 4, 10);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     this.animFrame = requestAnimationFrame(() => this.render());
@@ -317,6 +384,7 @@ export class MinigameRunes extends MinigameBase {
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }
