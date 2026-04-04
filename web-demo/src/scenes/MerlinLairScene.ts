@@ -662,6 +662,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entrée pour activer.');
   renderer.domElement.setAttribute('tabindex', '0');
   renderer.domElement.style.touchAction = 'none'; // prevent mobile scroll interference
+  // C88: aria-live region — screen readers announce zone focus/activation (WCAG 2.1 AA)
+  const ariaLive = document.createElement('div');
+  ariaLive.setAttribute('aria-live', 'polite');
+  ariaLive.setAttribute('aria-atomic', 'true');
+  ariaLive.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;';
+  container.style.position = container.style.position || 'relative';
+  container.appendChild(ariaLive);
 
   // Scene + Camera
   const scene = new THREE.Scene();
@@ -786,6 +793,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
   };
 
+  // C85-01: zone label map (used by pointer action + keyboard nav + aria-live)
+  const ZONE_ARIA_LABELS: Readonly<Record<LairZone, string>> = {
+    map:       'Carte des Biomes',
+    crystal:   'Pierre des Oghams',
+    bookshelf: 'Journal de Merlin',
+    cauldron:  'Chaudron Druidique',
+    door:      'Sortie vers l\'aventure',
+  };
+
   const onPointerAction = (e: { clientX: number; clientY: number }): void => {
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -794,6 +810,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     if (found && zoneClickCallback) {
       // C82-01: confirm click audio before callback (which may trigger scene transition)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
+      ariaLive.textContent = `${ZONE_ARIA_LABELS[found.zone]} activée`;
       zoneClickCallback(found.zone);
     }
   };
@@ -822,13 +839,6 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // C85-01: keyboard navigation — Tab cycles zones, Enter/Space activates
   const KEYBOARD_ZONES: LairZone[] = ['map', 'crystal', 'bookshelf', 'cauldron', 'door'];
-  const ZONE_ARIA_LABELS: Readonly<Record<LairZone, string>> = {
-    map:       'Carte des Biomes',
-    crystal:   'Pierre des Oghams',
-    bookshelf: 'Journal de Merlin',
-    cauldron:  'Chaudron Druidique',
-    door:      'Sortie vers l\'aventure',
-  };
   let keyboardZoneIdx = -1;
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key === 'Tab' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -840,6 +850,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     } else if ((e.key === 'Enter' || e.key === ' ') && currentHovered && zoneClickCallback) {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
+      ariaLive.textContent = `${ZONE_ARIA_LABELS[currentHovered.zone]} activée`;
       zoneClickCallback(currentHovered.zone);
       return;
     } else {
@@ -859,6 +870,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       applyHoverTo(currentHovered, 0.65);
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
       renderer.domElement.setAttribute('aria-label', `Zone active : ${ZONE_ARIA_LABELS[zone]} — Entrée pour activer`);
+      ariaLive.textContent = `${ZONE_ARIA_LABELS[zone]} — Appuyez sur Entrée pour activer`;
     }
   };
 
@@ -922,6 +934,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     renderer.dispose();
     if (renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
+    if (ariaLive.parentNode) {
+      ariaLive.parentNode.removeChild(ariaLive);
     }
     renderer.domElement.style.cursor = 'default';
   };
