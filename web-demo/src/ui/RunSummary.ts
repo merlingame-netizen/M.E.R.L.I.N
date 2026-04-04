@@ -283,24 +283,28 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   // C87: :focus-visible outline for keyboard users — WCAG 2.4.7 (Focus Visible).
   // Inline event listeners are used because this element is created dynamically
   // and no stylesheet is injected by this module.
-  restartBtn.addEventListener('focus', () => {
+  // C150/RS-LISTENER-LEAK-01: store all style-mutation handlers as named functions so the
+  // click handler can removeEventListener() before overlay.remove(). Without removal,
+  // 4 listeners accumulate on a detached restartBtn node per run — modern GC eventually
+  // collects them but memory pressure on mobile (low-end ~512MB) can spike between runs.
+  const onFocus = (): void => {
     restartBtn.style.outline = '2px solid rgba(205,133,63,0.9)';
     restartBtn.style.outlineOffset = '3px';
-  });
-  restartBtn.addEventListener('blur', () => {
-    restartBtn.style.outline = 'none';
-  });
-  // C149/RS-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
-  // mouseenter/mouseleave only fire for mouse → no hover feedback when tapping "Rejouer".
-  // Same class as C148/OGHAM-HOVER-MOBILE-01 (OghamPanel slots + skip button).
-  restartBtn.addEventListener('pointerenter', () => {
+  };
+  const onBlur = (): void => { restartBtn.style.outline = 'none'; };
+  const onPointerEnter = (): void => {
     restartBtn.style.background = 'rgba(139,69,19,0.55)';
     restartBtn.style.borderColor = 'rgba(205,133,63,0.9)';
-  });
-  restartBtn.addEventListener('pointerleave', () => {
+  };
+  const onPointerLeave = (): void => {
     restartBtn.style.background = 'rgba(139,69,19,0.3)';
     restartBtn.style.borderColor = 'rgba(205,133,63,0.5)';
-  });
+  };
+  restartBtn.addEventListener('focus', onFocus);
+  restartBtn.addEventListener('blur', onBlur);
+  // C149/RS-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
+  restartBtn.addEventListener('pointerenter', onPointerEnter);
+  restartBtn.addEventListener('pointerleave', onPointerLeave);
   panel.appendChild(restartBtn);
 
   overlay.appendChild(panel);
@@ -315,6 +319,11 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   await new Promise<void>((resolve) => {
     resolveRestart = resolve;
     restartBtn.addEventListener('click', () => {
+      // C150/RS-LISTENER-LEAK-01: remove style-mutation listeners before overlay removal
+      restartBtn.removeEventListener('focus', onFocus);
+      restartBtn.removeEventListener('blur', onBlur);
+      restartBtn.removeEventListener('pointerenter', onPointerEnter);
+      restartBtn.removeEventListener('pointerleave', onPointerLeave);
       overlay.remove();
       hideCard();
       resolveRestart = null;

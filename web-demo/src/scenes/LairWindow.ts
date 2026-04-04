@@ -199,7 +199,11 @@ export function createLairWindow(scene: Scene): WindowResult {
     }
     // C50: glass shimmers at night only (moonlight reflection) — stable by day.
     // windowLight.intensity tracks day/night: ~1.0 at noon, ~0.0 at midnight.
-    const nightWeight = Math.max(0, 1 - Math.min(1, windowLight.intensity));
+    // C150/LW-NIGHT-CLAMP-01: clamp intensity to [0,1] before inversion — a negative
+    // intensity (valid Three.js for subtractive light) would produce nightWeight > 1,
+    // making glassMat.opacity exceed its [0,1] domain (opacity = 0.28 + ~0.07 at night).
+    // Three.js clamps opacity silently but the shimmer amplitude formula breaks.
+    const nightWeight = 1 - Math.min(1, Math.max(0, windowLight.intensity));
     glassMat.opacity = 0.28 - nightWeight * 0.05 + Math.sin(elapsed * 0.4) * 0.02 * nightWeight;
   };
 
