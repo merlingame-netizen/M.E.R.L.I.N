@@ -53,6 +53,9 @@ const LLM_EFFECT_CAPS: Record<string, number> = {
   ADD_BIOME_CURRENCY: 10,
 } as const;
 
+const VALID_FACTIONS: ReadonlySet<string> = new Set(['druides', 'niamh', 'korrigans', 'anciens', 'ankou']);
+const VALID_EVENT_TYPES: ReadonlySet<string> = new Set(['rencontre', 'obstacle', 'tresor', 'danger', 'mystere', 'fin']);
+
 /**
  * Clamp a raw effect string's numeric value to the card-level cap.
  * Format: "CODE:N" or "CODE:faction:N". Returns the effect unchanged if unknown.
@@ -81,6 +84,62 @@ function sanitizeEffectCap(effect: string): string {
   }
 
   return effect;
+}
+
+/**
+ * Validate and sanitize a single effect string.
+ * Returns null if the effect is malformed or references an unknown faction.
+ * Applies numeric caps via sanitizeEffectCap.
+ */
+function validateEffect(effect: string): string | null {
+  if (typeof effect !== 'string' || effect.trim() === '') return null;
+  const parts = effect.trim().split(':');
+  const code = parts[0];
+
+  if (code === 'ADD_REPUTATION') {
+    // Must be ADD_REPUTATION:faction:N
+    if (parts.length !== 3) return null;
+    if (!VALID_FACTIONS.has(parts[1])) return null;
+    if (isNaN(parseInt(parts[2], 10))) return null;
+    return sanitizeEffectCap(effect.trim());
+  }
+
+  if (code === 'HEAL_LIFE' || code === 'DAMAGE_LIFE' || code === 'ADD_ANAM' || code === 'ADD_BIOME_CURRENCY') {
+    if (parts.length !== 2) return null;
+    if (isNaN(parseInt(parts[1], 10))) return null;
+    return sanitizeEffectCap(effect.trim());
+  }
+
+  // Unknown effect code — drop silently
+  return null;
+}
+
+/**
+ * Sanitize a raw CardOption from LLM output.
+ * Applies fallbacks for missing verb/text and strips invalid effects.
+ */
+function sanitizeOption(raw: Record<string, unknown>, index: number): import('../game/CardSystem').CardOption {
+  const verb = (typeof raw['verb'] === 'string' && raw['verb'].trim().length > 0)
+    ? raw['verb'].trim().toUpperCase()
+    : 'CHOISIR';
+
+  const text = (typeof raw['text'] === 'string' && raw['text'].trim().length > 0)
+    ? raw['text'].trim()
+    : 'Le druide hésite.';
+
+  const field = (typeof raw['field'] === 'string' && raw['field'].trim().length > 0)
+    ? raw['field'].trim()
+    : 'esprit';
+
+  const rawEffects = Array.isArray(raw['effects']) ? (raw['effects'] as unknown[]) : [];
+  const effects = rawEffects
+    .filter((e): e is string => typeof e === 'string')
+    .map((e) => validateEffect(e))
+    .filter((e): e is string => e !== null)
+    .slice(0, 2); // max 2 effects per option
+
+  console.info(`[MERLIN LLM] option[${index}] verb=${verb} effects=[${effects.join(', ')}]`);
+  return { verb, text, field, effects };
 }
 
 // --- Config ---
@@ -144,19 +203,27 @@ export class GroqAdapter {
     };
     const atmosphere = biomeAtmosphere[biome] ?? 'Paysage celtique mysterieux de Bretagne.';
 
-    // C156: more explicit JSON schema with filled example values to anchor LLM output format.
+    // C173: explicit uppercase verbs, strict effect rules, 3-option example anchors LLM output.
     // Three-attempt retry with temperature escalation: 0.7 (strict) → 0.9 → 1.0 (creative fallback).
-    const systemPrompt = `Tu es le narrateur du jeu de cartes MERLIN (celtique bretagne). Atmosphere: ${atmosphere}
-REGLE ABSOLUE: Reponds UNIQUEMENT avec du JSON valide. Aucun texte, aucun markdown, aucune explication. Le JSON doit commencer par { et finir par }.
+    const systemPrompt = `Tu es le narrateur du jeu MERLIN (celtique bretagne). Atmosphere: ${atmosphere}
+REGLE ABSOLUE: Reponds UNIQUEMENT avec du JSON valide. Pas de markdown, pas de texte autour. Commence par { et termine par }.
 
-Structure JSON obligatoire (copie exactement les champs, remplace seulement les valeurs):
-{"narrative":"[40-80 mots en francais, style poetique celtique, present de narration, decrit la scene]","options":[{"verb":"observer","text":"[10-20 mots, action concrete du joueur]","field":"observation","effects":["HEAL_LIFE:3"]},{"verb":"negocier","text":"[10-20 mots]","field":"bluff","effects":["ADD_REPUTATION:druides:5"]},{"verb":"fuir","text":"[10-20 mots]","field":"vigueur","effects":["DAMAGE_LIFE:2"]}]}
+Structure JSON exacte — RESPECTE ces champs et types:
+{"narrative":"UNE phrase narrative 15-30 mots, atmosphere celtique, present de narration.","options":[{"verb":"OBSERVER","text":"Description 8-15 mots de l action du joueur.","field":"observation","effects":["HEAL_LIFE:2"]},{"verb":"NEGOCIER","text":"Description 8-15 mots de l action du joueur.","field":"bluff","effects":["ADD_REPUTATION:druides:6"]},{"verb":"FUIR","text":"Description 8-15 mots de l action du joueur.","field":"vigueur","effects":["DAMAGE_LIFE:2","ADD_REPUTATION:ankou:-4"]}]}
 
-Verbes autorises (choisir dans cette liste uniquement): observer,ecouter,chercher,examiner,negocier,mentir,bluffer,flatter,resoudre,analyser,deduire,calculer,crocheter,esquiver,sculpter,doser,frapper,soulever,pousser,briser,mediter,chanter,invoquer,prier,deviner,sentir,toucher,gouter,lancer,parier,defier,improviser,persuader,consoler,inspirer,menacer,voler,trahir,seduire,dissimuler,contourner,sacrifier,attendre,avancer,fuir
-Champs (field): observation,bluff,logique,finesse,vigueur,esprit,perception,chance
-Factions (pour ADD_REPUTATION): druides,anciens,korrigans,niamh,ankou
-Effets valides: HEAL_LIFE:N (N=1-5), DAMAGE_LIFE:N (N=1-5), ADD_REPUTATION:faction:N (N=1-10), ADD_ANAM:N (N=1-5)
-Contraintes: exactement 3 options, 1-2 effets par option, verbes differents, JSON pur.`;
+REGLES VERBES (OBLIGATOIRE):
+- verb = 1 mot en MAJUSCULES (ex: OBSERVER, NEGOCIER, FUIR, ECOUTER, INVOQUER)
+- Chaque option doit avoir un verb DIFFERENT
+- Choisir parmi: OBSERVER, ECOUTER, CHERCHER, EXAMINER, NEGOCIER, MENTIR, BLUFFER, FLATTER, RESOUDRE, ANALYSER, DEDUIRE, CALCULER, CROCHETER, ESQUIVER, SCULPTER, DOSER, FRAPPER, SOULEVER, POUSSER, BRISER, MEDITER, CHANTER, INVOQUER, PRIER, DEVINER, SENTIR, TOUCHER, GOUTER, LANCER, PARIER, DEFIER, IMPROVISER, PERSUADER, CONSOLER, INSPIRER, MENACER, VOLER, TRAHIR, SEDUIRE, DISSIMULER, CONTOURNER, SACRIFIER, ATTENDRE, AVANCER, FUIR
+
+REGLES EFFETS (OBLIGATOIRE):
+- HEAL_LIFE:N — N entier entre 1 et 5 (ex: HEAL_LIFE:3)
+- DAMAGE_LIFE:N — N entier entre 1 et 5 (ex: DAMAGE_LIFE:2)
+- ADD_REPUTATION:faction:N — faction parmi druides|niamh|korrigans|anciens|ankou, N entre -10 et 10 (ex: ADD_REPUTATION:druides:7)
+- Exactement 1 ou 2 effets par option. Jamais 0, jamais plus de 2.
+- EXACTEMENT 3 options, pas moins, pas plus.
+
+REGLES FIELD: observation|bluff|logique|finesse|vigueur|esprit|perception|chance`;
 
     const userPrompt = `Biome: ${biome}. Contexte: ${context}. Genere une rencontre narrative unique.`;
 
@@ -186,20 +253,44 @@ Contraintes: exactement 3 options, 1-2 effets par option, verbes differents, JSO
         }
 
         const p = parsed as Record<string, unknown>;
-        if (!p['narrative'] || !Array.isArray(p['options']) || (p['options'] as unknown[]).length !== 3) {
-          console.info(`[MERLIN] GroqAdapter card attempt ${attempt + 1} invalid structure — retrying`);
+
+        // Validate narrative field
+        if (!p['narrative'] || typeof p['narrative'] !== 'string') {
+          console.info(`[MERLIN LLM] card attempt ${attempt + 1} missing narrative — retrying`);
           continue;
         }
 
-        // Sanitize LLM effect values against card-level caps
-        const sanitizedOptions = (p['options'] as CardOption[]).map((opt) => ({
-          ...opt,
-          effects: (opt.effects as string[]).map((eff) => sanitizeEffectCap(eff)),
-        }));
+        // Validate and fixup options array
+        if (!Array.isArray(p['options'])) {
+          console.info(`[MERLIN LLM] card attempt ${attempt + 1} options not an array — retrying`);
+          continue;
+        }
+
+        let rawOptions = p['options'] as Record<string, unknown>[];
+
+        // Count fixup — silent correction
+        if (rawOptions.length < 2) {
+          console.info(`[MERLIN LLM] card attempt ${attempt + 1} only ${rawOptions.length} options — retrying`);
+          continue;
+        }
+        if (rawOptions.length > 3) {
+          console.info(`[MERLIN LLM] card attempt ${attempt + 1} ${rawOptions.length} options — trimming to 3`);
+          rawOptions = rawOptions.slice(0, 3);
+        }
+        if (rawOptions.length === 2) {
+          // Duplicate 3rd option with a variation to reach exactly 3
+          console.info(`[MERLIN LLM] card attempt ${attempt + 1} only 2 options — duplicating 3rd`);
+          rawOptions = [...rawOptions, { ...rawOptions[1], verb: 'ATTENDRE', text: 'Le druide observe en silence.' }];
+        }
+
+        // Sanitize each option (fallbacks + effect validation)
+        const sanitizedOptions = rawOptions.map((opt, i) =>
+          sanitizeOption(opt, i),
+        );
 
         return {
           id: `card_groq_${Date.now()}`,
-          narrative: p['narrative'] as string,
+          narrative: (p['narrative'] as string).trim(),
           options: sanitizedOptions as unknown as readonly [CardOption, CardOption, CardOption],
           biome,
           source: 'llm',
@@ -242,11 +333,48 @@ Style: celtique poetique, present de narration, immersif. Noms liés au biome.`;
         0.85, 500, true,
       );
       if (!response) return null;
-      const parsed = JSON.parse(response) as RunScenario;
-      if (!parsed.titre || !Array.isArray(parsed.scenario) || !Array.isArray(parsed.events)) return null;
-      return parsed;
+
+      let parsed: Record<string, unknown>;
+      try {
+        const cleaned = response.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        parsed = JSON.parse(cleaned) as Record<string, unknown>;
+      } catch {
+        console.info('[MERLIN LLM] generateRunScenario JSON parse failed — using procedural fallback');
+        return null;
+      }
+
+      if (!parsed['titre'] || !Array.isArray(parsed['scenario']) || !Array.isArray(parsed['events'])) {
+        console.info('[MERLIN LLM] generateRunScenario invalid structure — using procedural fallback');
+        return null;
+      }
+
+      // Validate and filter events
+      const validEvents = (parsed['events'] as unknown as RunScenarioEvent[]).filter((ev) => {
+        if (typeof ev !== 'object' || ev === null) return false;
+        if (!VALID_EVENT_TYPES.has(ev['type'] as string)) {
+          console.info(`[MERLIN LLM] dropping event with unknown type: ${ev['type']}`);
+          return false;
+        }
+        const pos = ev['position'];
+        if (typeof pos !== 'number' || pos < 0 || pos > 1) {
+          console.info(`[MERLIN LLM] dropping event with invalid position: ${pos}`);
+          return false;
+        }
+        return true;
+      }) as RunScenarioEvent[];
+
+      if (validEvents.length === 0) {
+        console.info('[MERLIN LLM] generateRunScenario no valid events — using procedural fallback');
+        return null;
+      }
+
+      return {
+        titre: String(parsed['titre']),
+        scenario: (parsed['scenario'] as unknown[]).map(String),
+        events: validEvents,
+      };
     } catch (err: unknown) {
-      console.warn('[GroqAdapter] Scenario generation failed:', err instanceof Error ? err.message : err);
+      console.warn('[MERLIN LLM] generateRunScenario failed:', err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -283,7 +411,22 @@ Style: celtique poetique, present de narration, immersif. Noms liés au biome.`;
         });
         if (!res.ok) return null;
         const data = await res.json() as GroqChatResponse;
-        return data.choices[0]?.message.content?.trim() ?? null;
+        const raw = data.choices[0]?.message.content ?? null;
+        if (!raw) return null;
+
+        // Strip surrounding quotes, trim whitespace
+        let whisper = raw.trim().replace(/^["«»""]|["«»""]$/g, '').trim();
+
+        // Too short to be meaningful
+        if (whisper.length < 5) return null;
+
+        // Truncate to 80 chars max (at word boundary if possible)
+        if (whisper.length > 80) {
+          const cut = whisper.slice(0, 80).lastIndexOf(' ');
+          whisper = cut > 40 ? whisper.slice(0, cut) : whisper.slice(0, 80);
+        }
+
+        return whisper;
       } finally {
         clearTimeout(timeout);
       }
