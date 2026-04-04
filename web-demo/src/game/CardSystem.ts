@@ -82,9 +82,10 @@ export async function loadTemplates(): Promise<void> {
     const data = await res.json() as FastRouteTemplate[];
     if (!Array.isArray(data) || data.length === 0) throw new Error('Empty or invalid cards.json');
     _templates = data;
-    console.info(`[MERLIN] Loaded ${_templates.length} FastRoute card templates`);
   } catch (err) {
-    console.warn('[MERLIN] Failed to load cards.json, FastRoute pool will be empty:', err);
+    // Silent failure: FastRoute pool will be empty, EMERGENCY_TEMPLATE provides fallback.
+    // No console.warn — production build must not leak internal paths to browser devtools.
+    void err;
     _templates = [];
   }
 }

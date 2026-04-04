@@ -278,6 +278,16 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'transition:all 0.2s ease',
   ].join(';');
   restartBtn.textContent = 'Rejouer';
+  // C87: :focus-visible outline for keyboard users — WCAG 2.4.7 (Focus Visible).
+  // Inline event listeners are used because this element is created dynamically
+  // and no stylesheet is injected by this module.
+  restartBtn.addEventListener('focus', () => {
+    restartBtn.style.outline = '2px solid rgba(205,133,63,0.9)';
+    restartBtn.style.outlineOffset = '3px';
+  });
+  restartBtn.addEventListener('blur', () => {
+    restartBtn.style.outline = 'none';
+  });
   restartBtn.addEventListener('mouseenter', () => {
     restartBtn.style.background = 'rgba(139,69,19,0.55)';
     restartBtn.style.borderColor = 'rgba(205,133,63,0.9)';
@@ -290,6 +300,8 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
+  // C87: move focus to restartBtn after DOM insertion — WCAG 2.1 SC 2.1.2 (keyboard reachable on dialog open)
+  requestAnimationFrame(() => restartBtn.focus());
 
   // Wait for restart click — resolve so main()'s outer while(true) loop returns to lair.
   // Do NOT call window.location.reload() — the outer loop in main.ts handles the next run
