@@ -568,12 +568,19 @@ async function main(): Promise<void> {
     initHUD();
     initOghamPanel();
 
-    // Load cross-run Anam + meta from localStorage (T053)
-    loadAnamFromStorage();
-    loadMetaFromStorage();
+    // C88-01: loadAnamFromStorage/loadMetaFromStorage removed from loop body — they are
+    // called once at startup (lines 524-525). Re-loading here every run overwrites
+    // in-memory meta state that accumulated since the last save, corrupting cross-run Anam.
+    // saveAnamToStorage() fires at every end-of-run path (death/cards_limit/victory) so
+    // the storage state is always current when the next run starts.
 
     // Start run with the biome the player chose at the map zone
     store.getState().startRun(chosenBiome);
+    // C88-02: explicitly reset activeOgham before applying lair selection — startRun()
+    // does not clear it. If the prior run exited via death_drain (step 3, before step 8
+    // where setActiveOgham('') normally fires), the stale ogham persists and fires
+    // silently on the next run's first card without player activation.
+    store.getState().setActiveOgham('');
     // C84: apply lair-pre-selected ogham — carried into first card automatically
     if (lairResult.lairOgham) {
       store.getState().setActiveOgham(lairResult.lairOgham);
