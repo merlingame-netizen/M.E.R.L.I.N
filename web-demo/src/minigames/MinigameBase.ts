@@ -192,6 +192,8 @@ export abstract class MinigameBase {
   // C94: cross-run difficulty tier (0-3) derived from cumulative play count in localStorage.
   // Tier 0: 0-2 plays, Tier 1: 3-6, Tier 2: 7-11, Tier 3: 12+.
   protected difficultyTier = 0;
+  // C101: edge-trigger for critical_alert SFX — fires once when timeLeft crosses 3s threshold.
+  protected criticalAlerted = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -219,9 +221,21 @@ export abstract class MinigameBase {
     return dt;
   }
 
+  /**
+   * Dispatch critical_alert SFX once when timeLeft crosses 3s from above.
+   * Call from any subclass timer setInterval after decrementing timeLeft.
+   */
+  protected checkCriticalAlert(timeLeft: number): void {
+    if (!this.criticalAlerted && timeLeft <= 3.0) {
+      this.criticalAlerted = true;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'critical_alert' } }));
+    }
+  }
+
   /** Start the minigame and return a promise that resolves with the result. */
   play(): Promise<MinigameResult> {
     this.finished = false;
+    this.criticalAlerted = false; // C101: reset for each new play session
     this.lastRenderMs = 0; // reset so getDeltaTime() returns 1/60 on first frame
     // C94: compute difficulty tier from cumulative play count
     try {

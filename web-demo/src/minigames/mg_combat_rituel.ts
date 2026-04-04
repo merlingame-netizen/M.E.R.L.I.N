@@ -138,6 +138,7 @@ export class MinigameCombatRituel extends MinigameBase {
     // Timer
     this.timerInterval = window.setInterval(() => {
       this.timeLeft -= 0.1;
+      this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-combat-timer-fill');
       if (fill) fill.style.width = `${pct}%`;

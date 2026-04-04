@@ -25,7 +25,7 @@ export class MinigameEquilibre extends MinigameBase {
   private cursorX = 0; // -1 (left edge) to +1 (right edge), 0 = center
   private velocity = 0;
   private timeLeft = 12;
-  private readonly totalTime = 12;
+  private totalTime = 12;        // C101: mutable for tieredValue() scaling in setup()
   private timeInZone = 0; // seconds spent inside safe zone
   private safeZoneHalf = 0.25; // C100: [0.25,0.20,0.15,0.10] — narrower at high tier
   private wasInZone = false;   // C100: SFX edge-trigger
@@ -50,7 +50,8 @@ export class MinigameEquilibre extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C100: difficulty scaling — narrower safe zone at high tiers
+    // C100/C101: difficulty scaling
+    this.totalTime    = this.tieredValue([12, 10, 8, 7] as const);
     this.safeZoneHalf = this.tieredValue([0.25, 0.20, 0.15, 0.10] as const);
 
     // Title
@@ -114,6 +115,7 @@ export class MinigameEquilibre extends MinigameBase {
     // Timer
     this.timerInterval = window.setInterval(() => {
       this.timeLeft -= 0.1;
+      this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-eq-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
