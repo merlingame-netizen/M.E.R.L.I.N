@@ -686,7 +686,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   container.appendChild(renderer.domElement);
   // C85-01: ARIA accessibility — canvas is interactive region
   renderer.domElement.setAttribute('role', 'application');
-  renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entrée pour activer.');
+  renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — chargement des zones...');  // C38: updated to dynamic count after interactives[] built
   renderer.domElement.setAttribute('tabindex', '0');
   renderer.domElement.style.touchAction = 'none'; // prevent mobile scroll interference
   // C102: auto-focus canvas so C85-01 keyboard nav works without requiring a prior click
@@ -846,6 +846,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, visualMesh: cauldron.body, baseEmissive: 0.0 },
   ];
 
+  // C38: update ARIA label now that zone count is known (was placeholder "chargement..." set before this array)
+  renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${interactives.length} zones interactives. Tab pour naviguer, Entrée pour activer.`);
+
   // C118: cache crystalEntry ref at init — avoids Array.find() closure allocation in 60fps update loop
   const crystalEntry = interactives.find((i) => i.zone === 'crystal')!;
   // C122: cache raycaster targets — interactives.map() on every mousemove allocates a 5-element array at 60fps.
@@ -918,7 +921,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
-        renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entrée pour activer.');
+        renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${interactives.length} zones interactives. Tab pour naviguer, Entrée pour activer.`); // C38: dynamic count
       }
     }
   };
