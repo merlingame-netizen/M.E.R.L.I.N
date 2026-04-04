@@ -322,8 +322,8 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     const kbHint = document.createElement('div');
     kbHint.style.cssText = [
       'text-align:center;margin-top:8px;',
-      'color:rgba(232,220,200,0.35);font-size:10px;letter-spacing:0.12em;',
-      'pointer-events:none;font-family:system-ui;',
+      'color:rgba(51,255,102,0.28);font-size:10px;letter-spacing:0.12em;',
+      'pointer-events:none;font-family:Courier New,monospace;',
     ].join('');
     kbHint.setAttribute('aria-hidden', 'true');
     kbHint.textContent = '[ 1 ]  [ 2 ]  [ 3 ]';

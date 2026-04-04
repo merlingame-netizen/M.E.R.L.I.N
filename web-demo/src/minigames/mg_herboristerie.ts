@@ -145,7 +145,7 @@ export class MinigameHerboristerie extends MinigameBase {
     // C97: instruction — target name set after buildGrid() populates targetPlant
     const instrEl = document.createElement('div');
     instrEl.id = 'mg-herb-instr';
-    instrEl.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:6px;font-family:system-ui;';
+    instrEl.style.cssText = 'color:rgba(51,255,102,0.50);font-size:11px;text-align:center;margin-bottom:6px;font-family:Courier New,monospace;';
     instrEl.textContent = `Cherche la bonne plante — Évite les toxiques (−${this.wrongPenalty} pts)`; // C135: use tieredValue not hardcoded 8
     this.container.appendChild(instrEl);
 

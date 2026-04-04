@@ -35,15 +35,16 @@ export function initOghamPanel(): void {
     'align-items:center',
     'justify-content:center',
     'z-index:200',
-    'font-family:system-ui',
+    'font-family:Courier New,monospace',
   ].join(';');
 
   const panel = document.createElement('div');
   panel.id = 'ogham-panel';
   panel.style.cssText = [
-    'background:rgba(20,20,30,0.95)',
-    'border:1px solid rgba(205,133,63,0.4)',
-    'border-radius:16px',
+    'background:rgba(1,8,2,0.97)',
+    'border:1px solid rgba(51,255,102,0.18)',
+    'border-left:3px solid #1a8833',
+    'border-radius:4px',
     'padding:24px',
     'max-width:480px',
     'width:90%',
@@ -213,11 +214,11 @@ export function showOghamPanel(): Promise<string | null> {
       'padding:10px 32px',
       'font-size:14px',
       'cursor:pointer',
-      'background:rgba(80,80,90,0.3)',
-      'color:rgba(232,220,200,0.7)',
-      'border:1px solid rgba(150,150,150,0.3)',
-      'border-radius:8px',
-      'font-family:system-ui',
+      'background:rgba(26,136,51,0.10)',
+      'color:rgba(51,255,102,0.55)',
+      'border:1px solid rgba(51,255,102,0.20)',
+      'border-radius:2px',
+      'font-family:Courier New,monospace',
       'transition:background 0.2s',
     ].join(';');
     skipBtn.addEventListener('click', () => selectOgham(null), { signal: slotSignal });
