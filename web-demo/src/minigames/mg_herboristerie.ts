@@ -143,7 +143,7 @@ export class MinigameHerboristerie extends MinigameBase {
     const instrEl = document.createElement('div');
     instrEl.id = 'mg-herb-instr';
     instrEl.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:6px;font-family:system-ui;';
-    instrEl.textContent = 'Cherche la bonne plante — Évite les toxiques (−8 pts)';
+    instrEl.textContent = `Cherche la bonne plante — Évite les toxiques (−${this.wrongPenalty} pts)`; // C135: use tieredValue not hardcoded 8
     this.container.appendChild(instrEl);
 
     // Timer bar — responsive
@@ -176,7 +176,7 @@ export class MinigameHerboristerie extends MinigameBase {
     this.buildGrid();
     this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);
     // C97: update instruction with actual target name
-    instrEl.textContent = `Cible : ${this.targetPlant.name} — Évite les toxiques (−8 pts)`;
+    instrEl.textContent = `Cible : ${this.targetPlant.name} — Évite les toxiques (−${this.wrongPenalty} pts)`; // C135
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);

@@ -100,6 +100,8 @@ export class MinigameOmbres extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
+    // C135: WCAG 2.1.1 — ArrowKeys move cursor through corridor (keyboard-only players scored 0 without this)
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.cursorX = 30;
@@ -159,6 +161,23 @@ export class MinigameOmbres extends MinigameBase {
     }
   };
 
+  // C135: WCAG 2.1.1 — keyboard corridor navigation.
+  // ArrowRight/Left advance/retreat along corridor (drives progress).
+  // ArrowUp/Down move vertically within the corridor (avoid walls).
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const isNav = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    if (!isNav) return;
+    e.preventDefault();
+    const stepX = 8;
+    const stepY = 10;
+    if (e.key === 'ArrowRight') this.cursorX = Math.min(this.canvasW, this.cursorX + stepX);
+    else if (e.key === 'ArrowLeft') this.cursorX = Math.max(0, this.cursorX - stepX);
+    else if (e.key === 'ArrowUp')   this.cursorY = Math.max(0, this.cursorY - stepY);
+    else if (e.key === 'ArrowDown') this.cursorY = Math.min(this.canvasH, this.cursorY + stepY);
+    this.progress = Math.max(0, Math.min(1, this.cursorX / this.canvasW));
+    if (this.progress > this.maxProgress) this.maxProgress = this.progress;
+  };
+
   private getSegmentAt(t: number): Segment {
     const idx = Math.min(this.segmentCount - 1, Math.max(0, Math.floor(t * (this.segmentCount - 1))));
     return this.segments[idx];
@@ -170,6 +189,7 @@ export class MinigameOmbres extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     // Score = max progress reached * (1 - collision penalty)
     const collisionPenalty = Math.min(1, this.collisionTime / this.totalTime);
@@ -327,6 +347,7 @@ export class MinigameOmbres extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }
