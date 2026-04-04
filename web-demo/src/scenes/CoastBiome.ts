@@ -365,8 +365,10 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     (c) => c instanceof Mesh && c.name === 'fog_plane'
   ) as Mesh | undefined;
 
-  // Track whether to skip ocean vertex update this frame (low-FPS adaptive LOD)
-  let _skipOceanFrame = false;
+  // C130/C122-13: alternating-frame flag for ocean LOD. true = this frame is the skip candidate
+  // (update only when dt ≤ 33ms), false = update always. Renamed from _skipOceanFrame which implied
+  // it controlled skipping directly — it controls which frame-parity is the candidate.
+  let _oceanAltFrame = false;
   // C88: accumulate scene time from dt instead of performance.now() — wall-clock time
   // causes a visible phase jump in fog/ocean on tab resume (performance.now() skips
   // 30s forward; accumulated dt stays at last-rendered frame). Shader already
@@ -380,8 +382,8 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     // Low-FPS adaptive: skip every other frame when dt > 33ms (<30fps) to keep
     // the game loop responsive on mobile/low-end hardware.
     if (oceanMesh && oceanBaseY) {
-      _skipOceanFrame = !_skipOceanFrame;
-      if (!_skipOceanFrame || dt <= 0.033) {
+      _oceanAltFrame = !_oceanAltFrame;
+      if (!_oceanAltFrame || dt <= 0.033) {
         const posAttr = oceanMesh.geometry.attributes['position'] as BufferAttribute;
         const arr = posAttr.array as Float32Array;
         for (let i = 0; i < posAttr.count; i++) {

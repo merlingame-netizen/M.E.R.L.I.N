@@ -313,6 +313,11 @@ export function loadLairGLBs(
     // C97: all 3 InstancedMeshes share tileMat — one fadeInGLB call sets opacity=0 on the shared
     // material before any scene.add(), so all 48 wall tiles fade in together (consistent with the
     // other 6 GLBs). Called BEFORE scene.add() so walls start invisible on the first render frame.
+    // C130/BUG-L-GLBFADE-MURTILE-01: cancel-safety — if dispose() fires mid-fade, the cancel handle
+    // here stops the rAF and leaves tileMat with transparent=true + opacity<1. This is safe because
+    // dispose() calls scene.traverse() which reaches all 3 InstancedMeshes and calls material.dispose()
+    // on the shared tileMat, preventing any semi-transparent leak into a subsequent lair visit
+    // (the next visit clones a fresh tileMat from the re-loaded GLB). No fix needed beyond this doc.
     cancelHandles.push(fadeInGLB(backMesh, 400, isDisposed));
     scene.add(backMesh);
     scene.add(leftMesh);
