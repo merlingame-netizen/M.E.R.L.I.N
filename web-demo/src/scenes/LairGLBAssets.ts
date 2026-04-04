@@ -14,8 +14,9 @@ const CANDLE_POSITIONS: Array<[number, number, number]> = [
 // C97: GLB fade-in — prevents hard pop-in on slow connections.
 // Fades all mesh opacities from 0 → 1 over durationMs via rAF.
 // Restores transparent=false after completion to avoid depth-sort artifacts.
-// C122: returns cancel fn — call it in dispose() to stop rAF writing to disposed materials.
-function fadeInGLB(group: THREE.Object3D, durationMs = 400): () => void {
+// C122: pass isDisposed so the rAF tick auto-stops when the lair is disposed mid-fade —
+// avoids writing to materials on a renderer that has already been torn down.
+function fadeInGLB(group: THREE.Object3D, durationMs = 400, isDisposed?: () => boolean): () => void {
   let cancelled = false;
   const meshes: THREE.Mesh[] = [];
   group.traverse((child) => {
@@ -32,7 +33,7 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): () => void {
   if (meshes.length === 0) return () => { /* nothing to cancel */ };
   const start = performance.now();
   const tick = (): void => {
-    if (cancelled) return; // C122: bail out if scene was disposed during fade
+    if (cancelled || isDisposed?.()) return; // C122: bail out if scene was disposed during fade
     const t = Math.min((performance.now() - start) / durationMs, 1);
     for (const m of meshes) {
       if (m.material instanceof THREE.MeshStandardMaterial) m.material.opacity = t;
@@ -101,7 +102,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(2, -4.65, -7);
     gltf.scene.scale.setScalar(0.72);
     scene.add(gltf.scene);
-    fadeInGLB(gltf.scene); // C97: fade-in on load
+    fadeInGLB(gltf.scene, 400, isDisposed); // C97: fade-in on load
     if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;
     // Update interactives[] visualMesh to the GLB body so hover emissive works on GLB path
     if (proceduralGroups?.onCauldronGLBLoaded) {
@@ -137,7 +138,7 @@ export function loadLairGLBs(
       clone.scale.setScalar(0.42);
       clone.position.set(cx, cy, cz);
       scene.add(clone);
-      fadeInGLB(clone); // C97: fade-in per clone
+      fadeInGLB(clone, 400, isDisposed); // C97: fade-in per clone
     }
     if (proceduralGroups?.candleGroup) {
       // C112: hide only non-Light children — sharedLight must stay active for candle warmth post-GLB

@@ -37,7 +37,7 @@ export class MinigameEcho extends MinigameBase {
   private readonly canvasH = 340;
 
   // Game config
-  private readonly totalRounds = 6;
+  private totalRounds = 6; // C123: set by tieredValue in setup() — [6,6,7,8] rounds
   private flashDuration = 0.5;   // C100: [0.5,0.4,0.35,0.3]s
   private windowDuration = 1.2;  // C100: [1.2,1.0,0.8,0.7]s
   private readonly pauseBetween = 0.6;    // pause between rounds
@@ -76,6 +76,8 @@ export class MinigameEcho extends MinigameBase {
     // C100: difficulty scaling — shorter flash and answer window at high tiers
     this.flashDuration  = this.tieredValue([0.5, 0.4, 0.35, 0.3] as const);
     this.windowDuration = this.tieredValue([1.2, 1.0, 0.8, 0.7] as const);
+    // C123: more rounds at high tiers — increases cognitive demand beyond time compression alone
+    this.totalRounds = this.tieredValue([6, 6, 7, 8] as const);
 
     // Title
     const title = document.createElement('div');
