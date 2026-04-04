@@ -1137,7 +1137,10 @@ function showPredictToast(field: string): void {
     'transition:opacity 0.3s ease',
     'text-align:center',
   ].join(';');
-  toast.textContent = `\u168F Ailm pr\u00e9dit\u00a0: ${field}`;
+  // C145b/NEW-MAIN-01: "entrevoit" (glimpses) instead of "prédit" (predicts) — the preview
+  // is generated from a random FastRoute card, not the actual next LLM card. "Entrevoit"
+  // conveys oracular approximation (Celtic mysticism) rather than a false hard prediction.
+  toast.textContent = `\u168F Ailm entrevoit\u00a0: ${field}`;
   document.body.appendChild(toast);
   requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.opacity = '1'; }); });
   setTimeout(() => {

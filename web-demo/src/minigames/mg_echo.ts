@@ -298,12 +298,14 @@ export class MinigameEcho extends MinigameBase {
     if (this.phase === 'answer') {
       this.phaseTimer -= dt;
       if (this.phaseTimer <= 0 && !this.answered) {
-        // Timed out -- miss
-        this.feedback = 'miss';
-        this.roundOutcomes = [...this.roundOutcomes, false]; // C145/ECHO-02: immutable spread (timeout = miss)
-        this.phase = 'feedback';
-        this.feedbackTimer = 0.5;
+        // C145b/ECHO-01: set answered + phase BEFORE recording outcome (fail-fast guard ordering).
+        // onClick/onKeyDown guard: `this.phase !== 'answer' || this.answered`. Setting both first
+        // ensures the guard holds even if a pointer event fires in the same JS task batch.
         this.answered = true;
+        this.phase = 'feedback';
+        this.feedback = 'miss';
+        this.roundOutcomes = [...this.roundOutcomes, false]; // timeout = miss
+        this.feedbackTimer = 0.5;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
 
         if (this.statusElRef) {

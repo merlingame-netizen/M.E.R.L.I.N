@@ -343,4 +343,7 @@ export function teardownHUD(): void {
   _oghamMultEl = null;
   // C140/BUG-C140-01: predict toast lives on document.body — remove on run end to avoid z-index:65 overlap on RunSummary
   document.getElementById('merlin-predict-toast')?.remove();
+  // C145b/NEW-HUD-01: ogham-badge-style <style> injected into document.head in buildOghamBadge().
+  // Remove on teardown so it is cleanly re-injected on next initHUD(). Prevents stale <style> accumulation.
+  document.getElementById('ogham-badge-style')?.remove();
 }
