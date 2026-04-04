@@ -1,0 +1,70 @@
+{
+  "cycle": "C126",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "files_audited": [
+    "minigames/mg_apaisement.ts",
+    "minigames/mg_echo.ts",
+    "minigames/mg_equilibre.ts",
+    "minigames/mg_course.ts",
+    "minigames/mg_fouille.ts",
+    "minigames/mg_runes.ts",
+    "minigames/mg_combat_rituel.ts",
+    "main.ts",
+    "engine/SceneManager.ts"
+  ],
+  "new_bugs": [
+    {
+      "id": "C126-01",
+      "severity": "HIGH",
+      "file": "minigames/mg_combat_rituel.ts",
+      "line_approx": 243,
+      "description": "Formula divergence: the live HUD status (line 296) displays 'Survie: X.Xs | Centre: Y.Ys' in raw seconds with NO denominator shown to the player. The final score formula (line 243-248) computes survivalPct = (survivalTime / totalTime) * 80 plus centerPct = (centerTime / totalTime) * 20 — capped at 100. A player who survives 10s out of 16s (tier 0) sees '10.0s' but has no way to know their partial score, and critically: if they are hit for a chunk of time their displayed survivalTime can diverge from what drives the 80-point component by the full amount of collision time accumulated. At tier 0, totalTime=16s; if 6s are spent in collision the survivalTime=10s, yielding survivalPct=50, but the HUD shows '10.0s' with no context of the 16s target — a player cannot infer their final score from the display. The gap between perceived completion and final score can exceed 20 points.",
+      "fix": "In render() (line 296), replace the raw-seconds display with a normalised percentage that mirrors the endGame() formula: e.g. 'Survie: X% | Centre: Y%' where each is computed as Math.round((survivalTime / totalTime) * 80) and Math.round((centerTime / totalTime) * 20). This makes the HUD faithfully preview the final finish() value."
+    },
+    {
+      "id": "C126-02",
+      "severity": "HIGH",
+      "file": "minigames/mg_equilibre.ts",
+      "line_approx": 356,
+      "description": "Formula divergence between live canvas display and endGame(): The canvas render() (line 356-358) shows 'Equilibre: N%' computed as Math.round((timeInZone / elapsedTime) * 100), using elapsedTime as denominator. The endGame() formula (line 222-225) uses totalElapsed = Math.min(totalTime, totalTime - timeLeft + 0.001) as denominator, which diverges from elapsedTime whenever timeLeft has drifted from the setInterval ticks (floating-point accumulation). More importantly the setInterval DOM status (line 155-157) uses yet a third denominator: elapsed = Math.min(totalTime, totalTime - timeLeft + 0.001). So there are THREE different denominators (elapsedTime in render canvas, totalTime-timeLeft+0.001 in setInterval DOM, totalElapsed in endGame). The canvas value shown in-game diverges from the finish() value by up to ~5 points in typical runs and up to ~20+ points at tier 3 (7s total, where drift is proportionally larger). The most player-visible divergence is between the canvas HUD (elapsedTime) and the actual finish() score (totalElapsed).",
+      "fix": "Unify to a single denominator. The simplest fix: in render() line 356, replace 'this.elapsedTime' with 'Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001)' to match endGame() exactly. Alternatively store a single computed 'totalElapsed' that is shared between render(), setInterval, and endGame()."
+    },
+    {
+      "id": "C126-03",
+      "severity": "MEDIUM",
+      "file": "main.ts",
+      "line_approx": 512,
+      "description": "The global visibilitychange listener registered at line 512 (for emergency save) fires on every visibility toggle for the lifetime of the app. This is correct and intentional. However, the SceneManager has NO internal visibilitychange handling of its own (confirmed: SceneManager.ts has zero matches for 'visibilitychange', 'pause', or 'resume'). The pause/resume of the 3D SceneManager during gameplay is handled ad-hoc in main.ts via onGameVisibility (line 562-565), which calls sceneManager.stop() / sceneManager.start(). This is structurally sound for the current single-scene-at-a-time architecture but means any future SceneManager instance created outside of main.ts's run loop (e.g. a test harness or a second scene) would NOT benefit from pause/resume automatically. This is a MEDIUM architectural debt, not an active bug.",
+      "fix": "Consider moving the visibilitychange pause/resume logic into SceneManager itself (constructor registers, dispose() removes). This is a refactor recommendation, not a blocking fix."
+    }
+  ],
+  "formula_audit_results": {
+    "mg_apaisement": "CLEAN — endGame() (line 243-248): score = (totalAccuracy/tapCount) * tapBonus * 100, floored at 10. Live HUD (line 218-219): shows 'Synchronisation: N% (K respirations)' = Math.round((totalAccuracy/taps.length)*100). Both use totalAccuracy/tapCount*100 as the core metric. tapBonus is a multiplier applied only at endGame for tap count < 4 — the player sees the raw accuracy percentage live which is a fair preview; the final score can be lower if tapCount < 4 but this is intentional design (penalise low engagement), gap is at most 50pts for 1 tap but 0 pts for 4+ taps. The instruction text ('at least 4 taps') is implicit in the tap bonus design. Not flagged as HIGH because the divergence is by design and communicated by the tap count display.",
+    "mg_echo": "CLEAN — endGame() (line 269): finalScore = (hits / totalRounds) * 100. Live HUD statusElRef (line 185 and 220): 'Echos captes: hits / currentRound+1'. The denominator in the live display (currentRound+1) reflects rounds completed so far, while endGame uses totalRounds. These diverge mid-game but converge to the same value when currentRound+1 == totalRounds at game end. No formula divergence at finish time.",
+    "mg_equilibre": "ISSUE — see C126-02. Three different denominators across render() canvas HUD, setInterval DOM status, and endGame(). Canvas HUD uses elapsedTime; endGame uses totalTime - timeLeft + 0.001. Divergence can exceed 20 points at tier 3.",
+    "mg_course": "CLEAN — endGame() (line 290): finalScore = (hits / totalRounds) * 100. Live statusEl (line 267): 'Touches: hits / currentRound'. Same pattern as mg_echo — denominator grows during play but matches totalRounds at finish. No divergence at score time.",
+    "mg_fouille": "CLEAN — endGame() (line 311-315): score = 50 + timePct*50 where timePct = timeLeft/totalTime. showFoundStatus() (line 252-254) displays 'Trouvé ! +bonus pts' where bonus = Math.round(50 + timePct*50) using the SAME frozen timeLeft (clearInterval fires in onClick before setTimeout delay). Score formula is identical. For not-found path: score=0, no HUD promise was made. CLEAN.",
+    "mg_runes": "CLEAN — endGame() (line 289-292): pairScore = (matchedCount/totalPairs)*70, timeBonus = (timeLeft/totalTime)*30, score = pairScore+timeBonus. No live HUD displays a score preview — only a timer bar and the tile match state. No formula divergence possible since there is no intermediate score display.",
+    "mg_combat_rituel": "ISSUE — see C126-01. Live HUD shows raw survivalTime/centerTime in seconds; endGame() computes score as (survivalTime/totalTime)*80 + (centerTime/totalTime)*20. Player cannot infer final score from HUD display. Gap can exceed 20 points."
+  },
+  "visibilitychange_audit": "PRESENT — main.ts has 5 registered visibilitychange listeners: (1) line 352: onLairVisibility pauses/resumes lair rAF loop when tab is hidden — CORRECT. (2) line 512: global emergency save (saves Anam/meta on hidden) — CORRECT. (3) line 566: onGameVisibility pauses/resumes SceneManager during 3D gameplay — CORRECT. Listeners at lines 489 and 608 are the corresponding removeEventListener cleanup calls. SceneManager.ts itself has NO visibilitychange handling (by design — delegated to main.ts). The minigame RAF loops (inside MinigameBase subclasses) do NOT have their own visibilitychange handlers — if the tab is hidden during a minigame, the RAF continues to queue but browser typically throttles it to 1fps. This is low-risk since minigames are brief (7-30s) and the setInterval timers continue regardless. No HIGH issue here, rated MEDIUM architectural debt (see C126-03).",
+  "summary": {
+    "total_issues": 3,
+    "critical": 0,
+    "high": 2,
+    "medium": 1,
+    "low": 0,
+    "notes": [
+      "mg_combat_rituel HUD shows raw seconds; endGame scores on normalised percentages — player cannot predict final score (C126-01 HIGH).",
+      "mg_equilibre has three divergent denominators across canvas HUD, DOM status, and endGame() — can diverge > 20pts at tier 3 (C126-02 HIGH).",
+      "SceneManager has no internal pause/resume — delegated to main.ts; no active bug but architectural debt (C126-03 MEDIUM).",
+      "mg_apaisement tapBonus divergence is intentional design, not a bug — tap count is shown live so player has enough context.",
+      "mg_echo, mg_course: live denominator grows mid-game but converges to correct value at finish — CLEAN.",
+      "mg_fouille: showFoundStatus() uses same frozen timeLeft as endGame() formula — CLEAN.",
+      "mg_runes: no intermediate score display — CLEAN.",
+      "No getElementById calls at runtime found in any audited file — all use cached DOM refs (C119/C120 compliance confirmed for all 7 minigames).",
+      "All 7 minigames have 'ended' guard in render() — CLEAN on check B.",
+      "visibilitychange is PRESENT in main.ts for both lair and gameplay phases."
+    ]
+  }
+}

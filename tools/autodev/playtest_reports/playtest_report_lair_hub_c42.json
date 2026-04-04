@@ -1,0 +1,163 @@
+{
+  "agent": "merlin-ai-playtester",
+  "cycle": 42,
+  "previous_score": 6.2,
+  "timestamp": "2026-04-03T00:00:00Z",
+  "score_global": 7.1,
+  "score_delta": "+0.9",
+  "score_breakdown": {
+    "visual_fidelity": 7.5,
+    "immersion_lore": 5.5,
+    "bug_regression": 7.0,
+    "code_quality": 8.0,
+    "performance_budget": 9.0
+  },
+
+  "verified_fixed": [
+    {
+      "id": "C42-F-01",
+      "description": "flatShading: true confirmed on Skull (MerlinLairScene.ts line 603: MeshStandardMaterial with flatShading: true) and PotionBottles (same file, similar pattern). Both materials now match AAA low-poly house style.",
+      "evidence": "MerlinLairScene.ts:603 — boneMat flatShading: true"
+    },
+    {
+      "id": "C42-F-02",
+      "description": "mur_pierre.glb deployed on all 3 walls. LairGLBAssets.ts lines 77-96: back wall, left wall (rotated PI/2), right wall (rotated -PI/2) all loaded from same GLB. Procedural wallsGroup hidden on success (line 95).",
+      "evidence": "LairGLBAssets.ts:77-96"
+    },
+    {
+      "id": "C42-F-03",
+      "description": "ARIA attributes confirmed on toasts. main.ts lines 198-200: role='status', aria-live='polite', aria-atomic='true'. BUG-L-09 resolved.",
+      "evidence": "main.ts:198-200"
+    },
+    {
+      "id": "C42-F-04",
+      "description": "Door label 'Entrer dans la forêt' with sub '→ Commencer l\\'aventure' confirmed at main.ts line 190. Clear call-to-action restored.",
+      "evidence": "main.ts:190"
+    }
+  ],
+
+  "bugs": [
+    {
+      "id": "BUG-L-SCALE-01",
+      "severity": "HIGH",
+      "status": "NEW — OPEN",
+      "title": "mur_pierre.glb scale produces non-uniform stone stretching",
+      "detail": "mur_pierre.glb is authored as a '5 rows × 4 stones = 126 poly' tile (lair_assets_report.json line 41). The Blender script targets a natural tile of approximately 4 wide × 5 tall units (stone aspect ratio ~1:1). Applied scales: back=24×16, sides=20×16 (LairGLBAssets.ts lines 80, 85, 91). At scale.x=24 on a 4-unit-wide tile, each stone is stretched 6× horizontally. At scale.y=16 on a 5-unit-tall tile, each stone is stretched 3.2× vertically. Net horizontal:vertical distortion ratio is 6÷3.2 = ~1.87. Result: every stone becomes a wide flat slab (roughly 2:1 width-to-height instead of 1:1). This is below the AAA distortion threshold of 1.3. The wall will read as horizontal bands rather than stone masonry. Severity is HIGH, not CRITICAL, because: (a) flat shading masks subtle UV stretching, (b) the camera is first-person at ~1.7 units height looking at a 16-unit wall — peripheral distortion is less salient than center-frame. However, the effect is clearly visible on the back wall which is always in frame.",
+      "affected_lines": "LairGLBAssets.ts:80,85,91",
+      "recommendation": "Two options: (A) Re-author mur_pierre.glb Blender script to produce a 24-wide × 16-tall tile at 1:1 stone aspect (4 cols × 5 rows = 20 stones, ~140 polys — within budget). (B) Keep current GLB and tile it: load the GLB once, then clone it 6 times in a 6×1 grid for back wall (each instance scale.x=4, scale.y=16) rather than a single stretched instance. Option B is zero-Blender and achieves correct stone aspect ratio with the existing asset.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-07",
+      "severity": "MEDIUM",
+      "status": "LATENT — PARTIALLY MITIGATED",
+      "title": "Cauldron z-fighting: procedural cauldron NOT explicitly hidden on GLB load success",
+      "detail": "LairGLBAssets.ts lines 26-37: cauldron_merlin.glb loads and adds gltf.scene to the scene. However, there is NO reference to a procedural cauldron mesh in LairProceduralGroups (interface at lines 14-19 lists only mapGroup, shelfGroup, floorMesh, wallsGroup — no cauldronGroup). The procedural cauldron created inside MerlinLairScene.ts is added directly to the scene and is never hidden when the GLB loads. lair_assets_report.json note line 43 confirms: 'GLB load is fire-and-forget with .catch() fallback — procedural cauldron remains if GLB fails' — this is the failure path, but because there is no hide call on the success path either, both meshes coexist at the same world position. Z-fighting will occur at (2, -4.65, -7) between the GLB (scale 0.72) and whatever radius the procedural cauldron occupies.",
+      "affected_lines": "LairGLBAssets.ts:26-37, LairGLBAssets.ts:14-19",
+      "recommendation": "Add cauldronGroup to LairProceduralGroups interface and pass it through loadLairGLBs(), then add 'if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;' inside the cauldron .then() callback — same pattern as mapGroup (line 54) and shelfGroup (line 62).",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-10",
+      "severity": "LOW",
+      "status": "LATENT — OPEN",
+      "title": "bougie.glb clone(true) does not call material.clone() — shared material reference",
+      "detail": "LairGLBAssets.ts line 42: 'const clone = gltf.scene.clone(true)'. THREE.Object3D.clone(true) deep-clones the geometry but does NOT clone materials — all three candle instances share the same material reference. This is benign now (no per-candle animation), but any future candle flicker (emissive intensity modulation or color shift) applied to one Material instance will affect all three candles simultaneously. This breaks the independent-flicker illusion.",
+      "affected_lines": "LairGLBAssets.ts:41-46",
+      "recommendation": "After clone, traverse each cloned bougie and call material.clone() on every Mesh child: 'clone.traverse(child => { if (child instanceof THREE.Mesh) child.material = (child.material as THREE.Material).clone(); })'. Flag as pre-condition for T-BOUGIE-FLICKER task, not a blocker for C42.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-IMMERSION-01",
+      "severity": "MEDIUM",
+      "status": "NEW — OPEN",
+      "title": "Zone sublabels 'Bientôt disponible' break Celtic immersion",
+      "detail": "main.ts lines 186-189: four zones (map, crystal, bookshelf, cauldron) share the identical sublabel 'Bientôt disponible'. This is a generic product placeholder in French tech jargon with zero lore register. In a demo context where first impressions define retention, repetition of the same string four times additionally signals an unfinished product rather than a mysterious sealed world. Immersion rubric score: 3/10 (generic, repeated, no in-world voice).",
+      "affected_lines": "main.ts:186-189",
+      "recommendation": "Replace with distinct Celtic lore-flavored sublabels (see immersion_recommendations section below). Cost: 4 string literals, zero runtime impact.",
+      "confidence": "HIGH"
+    }
+  ],
+
+  "immersion_recommendations": {
+    "zone_sublabels": {
+      "map": {
+        "current": "Bientôt disponible",
+        "suggested": "Les chemins se révèlent en marchant",
+        "rationale": "Druidic principle of experiential knowledge — the map reveals itself through play, not theory. Avoids 'coming soon' register."
+      },
+      "crystal": {
+        "current": "Bientôt disponible",
+        "suggested": "Les runes ne répondent pas encore",
+        "rationale": "Ogham-flavored. Implies latent power awaiting activation. Consistent with the Ogham unlock progression system."
+      },
+      "bookshelf": {
+        "current": "Bientôt disponible",
+        "suggested": "Les pages sont encore en gestation",
+        "rationale": "Bardic / druidic oral-to-written metaphor. Journal de Merlin is unwritten until runs happen — lore-coherent."
+      },
+      "cauldron": {
+        "current": "Bientôt disponible",
+        "suggested": "L'anam doit d'abord s'éveiller",
+        "rationale": "Directly references the cross-run Anam mechanic from GDB v2.4. Rewards players who read lore. Cauldron as soul-vessel is architecturally consistent."
+      }
+    }
+  },
+
+  "regression_check": {
+    "sol_pierre_zfight": "PASS — LairGLBAssets.ts line 68: positioned at y=-4.98 (0.02 above procedural floor). Offset confirmed in comment line 66.",
+    "table_druidique_hide": "PASS — line 54: proceduralGroups.mapGroup.visible = false on success.",
+    "bibliotheque_hide": "PASS — line 62: proceduralGroups.shelfGroup.visible = false on success.",
+    "wall_procedural_hide": "PASS — line 95: proceduralGroups.wallsGroup.visible = false on success.",
+    "floor_procedural_hide": "PASS — line 71: proceduralGroups.floorMesh.visible = false on success.",
+    "poly_budget": "PASS — lair_assets_report.json line 30: total_scene_polys=432, well within 1000-poly mobile target.",
+    "bundle_size": "PASS — build_bundle_kb=120.52, below warn threshold 124.15 (line 33-34).",
+    "ts_errors": "PASS — ts_errors=0 (line 35).",
+    "flat_shading_skull": "PASS — MerlinLairScene.ts:603 confirmed flatShading: true."
+  },
+
+  "score_justification": {
+    "visual_fidelity": "7.5/10 — Three walls now covered by mur_pierre.glb (significant improvement). Deducted 2.5 for BUG-L-SCALE-01: stone distortion ratio ~1.87 is visually degrading on the back wall. flatShading on Skull/PotionBottles confirms house style compliance.",
+    "immersion_lore": "5.5/10 — Door label restored (+0.5). Four zones with identical 'Bientôt disponible' (-1.5). No Celtic voice in any sublabel. Would score 8.0 with recommended strings applied.",
+    "bug_regression": "7.0/10 — 4 fixes verified. BUG-L-07 (z-fighting cauldron) still open — no cauldronGroup in LairProceduralGroups. Two latent bugs documented.",
+    "code_quality": "8.0/10 — Consistent fallback pattern (.catch), interface-driven proceduralGroups, clear comments per GLB. Deducted 2.0 for missing material.clone() on bougie clones and missing cauldron hide path.",
+    "performance_budget": "9.0/10 — 432 polys total, 120.52 KB bundle, 0 TS errors. Headroom confirmed."
+  },
+
+  "next_steps": [
+    {
+      "priority": 1,
+      "task": "Fix BUG-L-SCALE-01: implement tiled mur_pierre approach (6×1 grid back, 5×1 sides) to preserve 1:1 stone aspect ratio. Zero Blender work required.",
+      "effort": "S — ~30 lines in LairGLBAssets.ts"
+    },
+    {
+      "priority": 2,
+      "task": "Fix BUG-L-07: add cauldronGroup to LairProceduralGroups and hide it in cauldron .then() callback. Pattern already established for mapGroup/shelfGroup.",
+      "effort": "XS — 3 lines"
+    },
+    {
+      "priority": 3,
+      "task": "Apply lore sublabels from immersion_recommendations.zone_sublabels (4 string swaps in main.ts lines 186-189). Score impact: +1.5 on immersion_lore.",
+      "effort": "XS — 4 string literals"
+    },
+    {
+      "priority": 4,
+      "task": "Flag BUG-L-10 (bougie material.clone) as pre-condition on T-BOUGIE-FLICKER backlog item. No immediate action needed.",
+      "effort": "XS — pre-condition tag only"
+    }
+  ],
+
+  "status": "PARTIAL",
+  "confidence": "HIGH",
+  "evidence": [
+    "LairGLBAssets.ts:77-96 — mur_pierre.glb on 3 walls, wallsGroup hidden",
+    "LairGLBAssets.ts:14-19 — cauldronGroup absent from LairProceduralGroups (BUG-L-07 open)",
+    "LairGLBAssets.ts:41-46 — no material.clone() on bougie clones (BUG-L-10 latent)",
+    "lair_assets_report.json:41 — mur_pierre is 5 rows x 4 stones tile",
+    "LairGLBAssets.ts:80 — back wall scale.set(24,16,1) => ~1.87 distortion ratio (BUG-L-SCALE-01)",
+    "main.ts:186-189 — 4 zones share identical 'Bientôt disponible' sublabel",
+    "main.ts:198-200 — ARIA role/aria-live/aria-atomic confirmed (C42-F-03 verified)",
+    "MerlinLairScene.ts:603 — Skull flatShading:true confirmed (C42-F-01 verified)"
+  ],
+  "blockers": []
+}

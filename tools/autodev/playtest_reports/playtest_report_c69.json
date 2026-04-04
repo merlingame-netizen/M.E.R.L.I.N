@@ -1,0 +1,248 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "agent": "merlin-ai-playtester",
+  "cycle": 69,
+  "audit_type": "minigame_score_contract",
+  "scope": "web-demo/src/minigames/ — 14 playable .ts files + MinigameBase.ts",
+
+  "base_contract": {
+    "file": "MinigameBase.ts",
+    "finish_method": "protected finish(score: number): void",
+    "clamp_applied_in_base": true,
+    "clamp_expression": "Math.max(0, Math.min(100, Math.round(score)))",
+    "completed_field": "always true (finish() is the only resolution path)",
+    "outcomeLevel_field": "derived from clamped score via scoreToOutcome()",
+    "double_finish_guard": true,
+    "note": "The base clamp is CORRECT and universal — all minigames route through finish(). The risk is NOT a missing clamp: it is score formulas that can silently produce 0 as a valid non-error result."
+  },
+
+  "minigame_audit": [
+    {
+      "id": "mg_apaisement",
+      "score_formula": "avgAccuracy * tapBonus * 100",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "HIGH",
+      "silent_zero_path": "Early-exit at < 4 taps calls this.finish(0) directly — intentional penalty but indistinguishable from a player that was confused or tapped once accidentally. No floor.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "tapBonus = Math.min(1.0, tapCount/4). A player who taps exactly once gets score 0 — same as complete failure. The zero is structurally correct but design-questionable."
+    },
+    {
+      "id": "mg_combat_rituel",
+      "score_formula": "Math.min(100, survivalPct + centerPct)",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "Only if survivalPct=0 AND centerPct=0, which requires dying instantly AND never being near center.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "Math.min(100) cap explicit. Good."
+    },
+    {
+      "id": "mg_course",
+      "score_formula": "(this.hits / this.totalRounds) * 100",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "MEDIUM",
+      "silent_zero_path": "If totalRounds = 0 (edge case on init), produces NaN which base clamp converts to 0. If player hits nothing: score = 0, legitimate but gives no feedback differentiation from NaN path.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "NaN risk: 0/0 if totalRounds were ever 0. The base Math.round(NaN) = NaN, Math.max(0, NaN) = 0 — survives but silently."
+    },
+    {
+      "id": "mg_echo",
+      "score_formula": "(this.hits / this.totalRounds) * 100",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "MEDIUM",
+      "silent_zero_path": "Same NaN-from-division risk as mg_course if totalRounds = 0. Also: player who gets every sequence wrong scores 0 — design-correct but no floor.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "No guard on totalRounds > 0 before division."
+    },
+    {
+      "id": "mg_equilibre",
+      "score_formula": "zoneRatio * 100 (zoneRatio = time_in_zone / totalElapsed)",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "totalElapsed guarded with +0.001 denominator floor. Cannot produce NaN. Legitimate 0 only if player never touched safe zone.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "Denominator floor is correct defensive pattern."
+    },
+    {
+      "id": "mg_fouille",
+      "score_formula": "0 (fail) or 50 + timePct*50 (success)",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "0 only on explicit failure (no items found before timeout). Range guaranteed: success always 50-100.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "Binary + bonus design. Score floor of 50 on success is clean."
+    },
+    {
+      "id": "mg_herboristerie",
+      "score_formula": "Math.max(0, baseScore - penalty + timeBonus)",
+      "min_possible": 0,
+      "max_possible": "UNBOUNDED before base clamp",
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "Math.max(0,...) prevents negatives. Base clamp at 100 handles overflow.",
+      "upper_bound_safe": false,
+      "type_correct": true,
+      "notes": "MEDIUM: No local Math.min(100) before finish(). Relies entirely on base clamp. If timeBonus is large and baseScore is high, the raw value could exceed 100 — base saves it, but it is implicit."
+    },
+    {
+      "id": "mg_negociation",
+      "score_formula": "Math.max(0, factionScore + comboBonus - penalty + timeBonus)",
+      "min_possible": 0,
+      "max_possible": "~125 theoretical max before base clamp (80+25+?+?)",
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "Math.max(0,...) prevents negatives explicitly.",
+      "upper_bound_safe": false,
+      "type_correct": true,
+      "notes": "MEDIUM: Same implicit upper-bound reliance on base clamp. factionScore capped at 80, comboBonus at 25, but timeBonus has no local cap."
+    },
+    {
+      "id": "mg_ombres",
+      "score_formula": "this.maxProgress * 100 * (1 - collisionPenalty * 0.5)",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "MEDIUM",
+      "silent_zero_path": "maxProgress starts at 0 — if player never moves cursor across canvas, score = 0. collisionPenalty = Math.min(1,...) so cannot make score negative. But maxProgress never guaranteed > 0 at timeout.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "No NaN risk. Silent zero possible on total inactivity."
+    },
+    {
+      "id": "mg_regard",
+      "score_formula": "(this.correctTotal / totalSymbols) * 100",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "MEDIUM",
+      "silent_zero_path": "If totalSymbols = 0 (degenerate grid setup), produces NaN -> 0 via base clamp. correctTotal=0 on all wrong answers is legitimate 0.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "Division-by-zero risk identical to mg_course/echo pattern. No guard on totalSymbols > 0."
+    },
+    {
+      "id": "mg_runes",
+      "score_formula": "pairScore + timeBonus",
+      "min_possible": 0,
+      "max_possible": "UNBOUNDED before base clamp (pairScore = pairs*14, timeBonus = ratio*30)",
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "Only if 0 pairs matched AND 0 time left — both zero simultaneously is unlikely.",
+      "upper_bound_safe": false,
+      "type_correct": true,
+      "notes": "MEDIUM: With 8 pairs (max), pairScore = 112, timeBonus up to 30 = 142 raw. Base clamp saves it but 42 points are silently eaten. No local min(100). Also: revealTimeout cleared in cleanup() but not in the timer-expiry path — minor GC issue, not a score bug."
+    },
+    {
+      "id": "mg_sang_froid",
+      "score_formula": "derived from time-in-zone ratio",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "Ratio is time_in_zone / totalTime, both well-defined. Only 0 if player never enters zone.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "Clean implementation. No division risk."
+    },
+    {
+      "id": "mg_traces",
+      "score_formula": "(hitCount / this.footprintCount) * 80 + timeBonus",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "MEDIUM",
+      "silent_zero_path": "If footprintCount = 0 (degenerate spawn), produces NaN -> 0 via base clamp. hitCount=0 on total miss is 0 + timeBonus (max 20) = 20 minimum on timeout — actually safe.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "NaN risk on footprintCount=0. hitCount=0 still yields up to 20 from timeBonus — effectively a soft floor of ~10-20 for any engaged player."
+    },
+    {
+      "id": "mg_volonte",
+      "score_formula": "derived from time-with-cursor-in-zone / totalTime",
+      "min_possible": 0,
+      "max_possible": 100,
+      "silent_zero_risk": "LOW",
+      "silent_zero_path": "totalTime > 0 guard explicit. Only 0 if player never moves cursor near the zone.",
+      "upper_bound_safe": true,
+      "type_correct": true,
+      "notes": "Clean. Guard on totalTime > 0 is correct."
+    }
+  ],
+
+  "summary": {
+    "total_minigames": 14,
+    "correct_score_range_0_100": 14,
+    "base_clamp_universal": true,
+    "missing_result_score_field": 0,
+    "wrong_score_type": 0,
+
+    "silent_zero_HIGH": ["mg_apaisement"],
+    "silent_zero_MEDIUM": ["mg_course", "mg_echo", "mg_ombres", "mg_regard", "mg_traces"],
+    "silent_zero_LOW": ["mg_combat_rituel", "mg_equilibre", "mg_fouille", "mg_herboristerie", "mg_negociation", "mg_runes", "mg_sang_froid", "mg_volonte"],
+
+    "nan_to_zero_division_risk": ["mg_course", "mg_echo", "mg_regard", "mg_traces"],
+    "implicit_upper_bound_reliance": ["mg_herboristerie", "mg_negociation", "mg_runes"],
+
+    "root_cause_of_couverture_gap": "No validateScore() contract in MinigameBase. The base finish() clamps correctly but: (1) NaN from division-by-zero silently becomes 0 — indistinguishable from a legitimate desastre; (2) scores > 100 are silently clamped in base with no per-game assertion, masking design bugs (mg_runes can produce 142 raw). Both failure modes yield structurally valid MinigameResult objects that the card system accepts without flagging."
+  },
+
+  "issues": [
+    {
+      "severity": "HIGH",
+      "id": "MG-01",
+      "minigame": "mg_apaisement",
+      "issue": "Explicit finish(0) on < 4 taps — silent zero indistinguishable from inactivity or confusion",
+      "recommendation": "Add a minimum floor: finish(Math.max(10, finalScore)) for engaged players (>= 1 tap), or add a distinct 'abandoned' result path."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "MG-02",
+      "minigames": ["mg_course", "mg_echo", "mg_regard", "mg_traces"],
+      "issue": "Division by totalRounds/totalSymbols/footprintCount without a zero-guard — NaN silently becomes score=0 via base clamp",
+      "recommendation": "Guard each division: const score = total > 0 ? (hits / total) * 100 : 0; and log a warning when total === 0."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "MG-03",
+      "minigames": ["mg_herboristerie", "mg_negociation", "mg_runes"],
+      "issue": "Raw score can exceed 100 before base clamp — mg_runes can produce 142. Silent truncation hides design misconfiguration.",
+      "recommendation": "Add local Math.min(100, ...) before each this.finish() call, or add an assertion in finish(): if (score > 100) console.warn('score overflow:', score, this.constructor.name)"
+    },
+    {
+      "severity": "LOW",
+      "id": "MG-04",
+      "minigame": "mg_runes",
+      "issue": "revealTimeout not cleared in timer-expiry path (only in cleanup()). Minor resource leak, not a score correctness bug.",
+      "recommendation": "Add clearTimeout(this.revealTimeout) in the timer-expiry branch alongside clearInterval(this.timerInterval)."
+    }
+  ],
+
+  "proposed_contract": {
+    "function": "validateScore",
+    "signature": "export function validateScore(score: number, context?: string): number",
+    "implementation": [
+      "if (!Number.isFinite(score)) {",
+      "  console.warn(`[MinigameBase] validateScore: non-finite score (${score}) in ${context ?? 'unknown'} — defaulting to 0`);",
+      "  return 0;",
+      "}",
+      "if (score > 100) {",
+      "  console.warn(`[MinigameBase] validateScore: score overflow (${score}) in ${context ?? 'unknown'} — clamped to 100`);",
+      "}",
+      "return Math.max(0, Math.min(100, Math.round(score)));"
+    ],
+    "integration": "Replace the clamp line in finish() — `const clamped = Math.max(0, Math.min(100, Math.round(score)));` — with `const clamped = validateScore(score, this.constructor.name);`. Export validateScore() so individual minigames can call it before finish() for pre-assertion.",
+    "note": "This does not change runtime behavior for well-formed scores. It makes NaN and overflow observable in devtools console without throwing, preserving the silent-degradation policy for players."
+  },
+
+  "scores": {
+    "coverage_completeness": "9/10 — All 14 minigames audited against MinigameBase contract. Deducted 1 for not having source access to MinigameRegistry dispatch logic.",
+    "silent_zero_risk": "6/10 — 1 HIGH (apaisement explicit 0), 4 MEDIUM NaN-to-zero paths, 3 MEDIUM overflow truncations. Base clamp prevents crashes but masks bugs.",
+    "type_safety": "8/10 — MinigameResult interface is correct (score: number, completed: boolean, outcomeLevel: OutcomeLevel). All 14 games call finish() with a number. No missing fields. Deducted 2 for absence of validateScore() making NaN a valid undetected path."
+  },
+
+  "overall_assessment": "The MinigameBase architecture is sound — the finish() clamp is universal, the double-finish guard is correct, and MinigameResult is well-typed. The couverture_minijeux gap (7.5/10 for 3 cycles) is not a type error but a signal quality problem: NaN-to-0 paths and score-overflow truncations yield technically valid results that look like player failures. A single validateScore() export would surface these in devtools without breaking production behavior. The apaisement early-exit finish(0) is the only design-level concern worth a dedicated review."
+}

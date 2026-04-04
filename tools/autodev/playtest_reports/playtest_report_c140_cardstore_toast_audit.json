@@ -1,0 +1,139 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 140,
+  "agent": "merlin-ai-playtester",
+  "audit_type": "DOUBLE_MODE_QA — CardSystem + Store + Toast",
+  "files_audited": [
+    "web-demo/src/game/CardSystem.ts (full, 151 lines)",
+    "web-demo/src/game/Store.ts (lines 1-180)",
+    "web-demo/src/main.ts (lines 139-230, 1099-1200)",
+    "web-demo/src/ui/HUD.ts (lines 1-80)"
+  ],
+
+  "findings": [
+
+    {
+      "id": "BUG-C140-01",
+      "severity": "MEDIUM",
+      "category": "DOM leak — predict toast persists on abrupt run exit",
+      "file": "web-demo/src/main.ts",
+      "line_range": "1111-1143",
+      "description": "showPredictToast() appends a div#merlin-predict-toast to document.body with a 4 s auto-remove timer. If the run ends (endRun, death, cutToBlack) within those 4 s, the element is not explicitly removed. teardownHUD() at line 622 cleans up HUD subscriptions but never touches PREDICT_TOAST_ID. On the return path to the lair the toast div remains in document.body at z-index:65 and will render over the lair hub screen until the 4 s timer fires.",
+      "reproduction": "1. Equip Ailm. 2. Trigger predict_next effect at card N. 3. Die immediately (life hits 0 on the same card via drain). Toast remains visible over RunSummary overlay and lair return.",
+      "status": "NOT cleaned on run end",
+      "proposed_fix": "Add `document.getElementById(PREDICT_TOAST_ID)?.remove();` inside teardownHUD() (HUD.ts) OR at the top of the `cutToBlack()` / endRun flow in main.ts. The existing guard at the top of showPredictToast() only removes a previous toast when a NEW toast is requested — it does not fire on run exit."
+    },
+
+    {
+      "id": "BUG-C140-02",
+      "severity": "LOW",
+      "category": "Escape-handler leak — external overlay removal leaves keydown listener active",
+      "file": "web-demo/src/main.ts",
+      "line_range": "215-222",
+      "description": "showBiomePicker() registers escapeHandler on document at line 222. The handler is correctly removed in both the click path (line 205) and the Escape path (line 217). HOWEVER, if the overlay element is removed from the DOM externally (e.g. a future 'cancel run' path, or a forced teardown that calls overlay.remove() without going through either handler), escapeHandler remains on document indefinitely. Every subsequent Escape keystroke silently calls resolve(defaultBiome) on a settled Promise (harmless) but the listener never unregisters — minor memory leak on multi-run sessions.",
+      "status": "Low risk in current codebase (no external removal path exists today). Risk is latent.",
+      "proposed_fix": "Use AbortController or an IntersectionObserver to auto-remove the listener when the overlay leaves the DOM, or add a MutationObserver.disconnect guard. Short-term: document the invariant that overlay must only be removed through click or Escape paths."
+    },
+
+    {
+      "id": "BUG-C140-03",
+      "severity": "LOW",
+      "category": "CardSystem — safeTemplate falls back to EMERGENCY_TEMPLATE narrative but uses original template narrative in return",
+      "file": "web-demo/src/game/CardSystem.ts",
+      "line_range": "128-142",
+      "description": "When a runtime-loaded template has != 3 options, safeTemplate is assigned EMERGENCY_TEMPLATE (line 128) and the options array is taken from safeTemplate.options — correct. However the return object at line 136-142 uses `template.narrative` (the malformed template's narrative) rather than `safeTemplate.narrative`. This means the card is displayed with the bad template's narrative text (which may be valid) but the 3 emergency options below it — visually inconsistent pairing. Not a crash, but a narrative/gameplay mismatch.",
+      "status": "Minor correctness issue",
+      "proposed_fix": "Change `narrative: template.narrative` at line 138 to `narrative: safeTemplate.narrative` so the emergency card is fully self-consistent when the fallback fires."
+    },
+
+    {
+      "id": "BUG-C140-04",
+      "severity": "PASS",
+      "category": "EMERGENCY_TEMPLATE option count",
+      "file": "web-demo/src/game/CardSystem.ts",
+      "line_range": "98-105",
+      "description": "EMERGENCY_TEMPLATE.options has exactly 3 entries (observer, avancer, attendre). The TypeScript interface FastRouteTemplate enforces a 3-tuple. safeTemplate guard at line 128 fires for runtime data with !=3 options. No issue.",
+      "status": "CLEAN"
+    },
+
+    {
+      "id": "BUG-C140-05",
+      "severity": "PASS",
+      "category": "Store.ts — factionDeltaThisRun reset on startRun",
+      "file": "web-demo/src/game/Store.ts",
+      "line_range": "111-128 (buildDefaultRun), 161-169 (startRun)",
+      "description": "buildDefaultRun() at line 127 initialises factionDeltaThisRun via buildZeroFactions() (all zeros). startRun() at line 161 calls `run: { ...buildDefaultRun(), active:true, biome, factions: {...s.meta.factionRep} }` — note that factions is overwritten from meta.factionRep (cross-run persistence, correct per game design) but factionDeltaThisRun retains buildDefaultRun()'s value of all-zeros. Reset is correct. RS-NULL-02 concern is not present.",
+      "status": "CLEAN"
+    },
+
+    {
+      "id": "BUG-C140-06",
+      "severity": "PASS",
+      "category": "showBiomePicker — closure correctness for defaultBiome",
+      "file": "web-demo/src/main.ts",
+      "line_range": "214-221",
+      "description": "escapeHandler is declared at line 215 AFTER the for-loop over BIOME_ENTRIES (lines 184-211). defaultBiome is captured at line 214 as BIOME_ENTRIES[0]![0] — a string value evaluated once before the handler is defined. There is no closure-over-loop-variable problem here: defaultBiome is a scalar string constant captured by value in the escapeHandler closure. BIOME_ENTRIES[0] is always 'cotes_sauvages'. No closure bug.",
+      "status": "CLEAN"
+    },
+
+    {
+      "id": "BUG-C140-07",
+      "severity": "PASS",
+      "category": "showPredictToast — self-dedup on rapid successive calls",
+      "file": "web-demo/src/main.ts",
+      "line_range": "1112",
+      "description": "The first line of showPredictToast() calls document.getElementById(PREDICT_TOAST_ID)?.remove() before creating the new toast. If Ailm predict_next fires twice in one run (e.g. two consecutive Ailm activations before cooldown), the second call removes the first toast immediately and replaces it. No duplicate DOM nodes. Self-dedup is correct.",
+      "status": "CLEAN"
+    },
+
+    {
+      "id": "BUG-C140-08",
+      "severity": "PASS",
+      "category": "ogham_unlocked listener — no accumulation on multi-run",
+      "file": "web-demo/src/main.ts",
+      "line_range": "1146-1152",
+      "description": "The window.addEventListener('ogham_unlocked', ...) at line 1146 is registered at module scope (top-level, outside any loop). It fires once per module load, not once per run. No listener accumulation. CLEAN.",
+      "status": "CLEAN"
+    }
+  ],
+
+  "summary": {
+    "total_findings": 8,
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 2,
+    "pass": 5
+  },
+
+  "issues_requiring_action": [
+    {
+      "id": "BUG-C140-01",
+      "severity": "MEDIUM",
+      "one_liner": "PREDICT_TOAST_ID div lingers over lair after run ends within 4s of Ailm activation",
+      "fix_location": "teardownHUD() in HUD.ts OR endRun cleanup block in main.ts",
+      "fix_code": "document.getElementById('merlin-predict-toast')?.remove();"
+    },
+    {
+      "id": "BUG-C140-02",
+      "severity": "LOW",
+      "one_liner": "Biome picker escapeHandler leaks if overlay is removed externally (latent, no current trigger)",
+      "fix_location": "showBiomePicker() — add AbortController pattern or document invariant",
+      "fix_code": "const ac = new AbortController(); document.addEventListener('keydown', escapeHandler, { signal: ac.signal }); // call ac.abort() on cleanup"
+    },
+    {
+      "id": "BUG-C140-03",
+      "severity": "LOW",
+      "one_liner": "safeTemplate fallback corrects options but still uses malformed template.narrative",
+      "fix_location": "CardSystem.ts line 138",
+      "fix_code": "narrative: safeTemplate.narrative,"
+    }
+  ],
+
+  "balance_notes": [
+    "No balance constants were modified in C138/C139/C140 changes. Balance audit deferred to dedicated balance cycle.",
+    "CardSystem biome-pool fallback (biomePool.length >= 3 threshold) remains unchanged — functions correctly."
+  ],
+
+  "verdict": "PARTIAL — 3 issues found (1 MEDIUM, 2 LOW), 0 blockers. Run is functional. MEDIUM toast leak is the highest-priority fix."
+}

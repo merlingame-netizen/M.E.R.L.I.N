@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.0",
+  "audit_id": "c102_gameloop",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "cycle": 102,
+  "verdict": "PROCEED",
+  "init_ogham_panel_line569_safe_to_remove": false,
+
+  "top3_by_impact": [
+    {
+      "rank": 1,
+      "severity": "MEDIUM",
+      "file": "main.ts",
+      "lines": [569],
+      "title": "initOghamPanel() at line 569 is NOT safely removable — HUD reset gap",
+      "detail": "Line 523 calls initOghamPanel() once before the while(true) loop (pre-lair, correct). Line 569 calls it again inside the loop, AFTER initHUD() (line 568) and BEFORE store.getState().startRun(). The comment at line 522 says 'idempotent; safe to call again each loop iteration', which is true for DOM reconstruction. HOWEVER the ordering dependency is the risk: initHUD() at line 568 may reset DOM nodes that initOghamPanel depends on. If removing line 569, the ogham panel state from the previous run would persist visually across runs (e.g. previously-selected ogham badge left highlighted) because the run-start reset of setActiveOgham('') at line 583 drives store state but not a visual refresh of the panel. Without the line-569 call, there is no DOM rebuild to reflect the cleared ogham after startRun(). Remove ONLY after confirming initOghamPanel is driven by a reactive store subscriber that auto-updates on setActiveOgham('') changes.",
+      "recommendation": "Keep line 569 until ogham panel reactivity is verified. If a store subscriber already patches the DOM on every setActiveOgham(), then line 569 is redundant and can be dropped."
+    },
+    {
+      "rank": 2,
+      "severity": "LOW",
+      "file": "mg_combat_rituel.ts",
+      "lines": [142, 221, 387],
+      "title": "Double clearInterval + removeEventListener in endGame() AND cleanup() — harmless but redundant",
+      "detail": "endGame() at line 221 calls clearInterval(this.timerInterval), cancelAnimationFrame(this.animFrame), and removes all three listeners (pointermove, pointerdown, keydown). cleanup() at lines 387-394 repeats the exact same three operations before calling super.cleanup(). Calling clearInterval/cancelAnimationFrame on an already-cleared id is a no-op (safe per spec). removeEventListener with a bound function that is no longer registered is also a no-op. So there is no functional bug. The concern is that cleanup() is called by MinigameBase.finish() (line 297) AFTER the outcome overlay, while endGame() already cleaned up earlier. The duplication adds zero risk but creates maintenance confusion: if a new resource (e.g. a ResizeObserver) is added in setup(), the developer must remember to clean it in BOTH endGame() and cleanup().",
+      "recommendation": "Have endGame() delegate resource release entirely to cleanup(), calling this.cleanup() instead of manually clearing. This is a refactor-cleaner task, not a blocking bug."
+    },
+    {
+      "rank": 3,
+      "severity": "LOW",
+      "file": "mg_runes.ts",
+      "lines": [207, 258, 383, 386],
+      "title": "revealTimeout cleared in endGame() but NOT cleared if cleanup() fires without endGame()",
+      "detail": "In mg_runes.ts, if an external agent calls cleanup() directly (possible via MinigameBase.finish() race — see MinigameBase line 297) while a flip-back setTimeout is pending (revealTimeout, set at lines 207 and 258), cleanup() at line 386 does call clearTimeout(this.revealTimeout) — correct. However the path is: endGame() already fired (sets this.ended = true, clears revealTimeout at line 272), then finish() calls cleanup() a second time (line 297 of MinigameBase). At that point revealTimeout is already cleared, so the second clearTimeout is a no-op. No leak. BUT: if someone calls play() a second time without endGame() having been called (unusual but not prevented), revealTimeout from the previous play would be orphaned if setup() overwrites this.revealTimeout = 0 without clearing the old one first. setup() does NOT clear revealTimeout before the new game starts (line 51-125, no clearTimeout call). This is a latent timer leak, reachable only on play()-replay without a natural endGame() path.",
+      "recommendation": "Add clearTimeout(this.revealTimeout) at the top of setup() in mg_runes.ts. Low probability in practice since play() is always preceded by cleanup(), but worth hardening."
+    }
+  ],
+
+  "findings": [
+    {
+      "file": "MinigameBase.ts",
+      "lines": [302, 303, 304, 305],
+      "topic": "cleanup() base implementation",
+      "finding": "CLEAN. The base cleanup() does only container.innerHTML = ''. Every subclass (mg_combat_rituel, mg_traces, mg_herboristerie, mg_runes) overrides cleanup() and calls super.cleanup() as the LAST step. The call chain is: MinigameBase.finish() [line 296] -> showOutcomeOverlay().then() -> this.cleanup() [line 297]. At that point this refers to the concrete subclass, so the subclass override always runs first. There is NO path where the base cleanup() executes without the subclass override running first, because TypeScript virtual dispatch always resolves to the most-derived override.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "main.ts",
+      "lines": [523, 569],
+      "topic": "initOghamPanel() double-call",
+      "finding": "Line 523 is the canonical startup call (correct). Line 569 inside the while(true) loop causes a full DOM rebuild of the ogham panel every run. The comment acknowledges idempotency. The rebuild is functionally correct: it re-renders the panel from scratch each run, which ensures stale visual state from the prior run is cleared. Removing line 569 would be safe ONLY IF the ogham panel DOM is driven reactively by a store subscriber. Without confirmation of that subscriber, removing line 569 risks a stale panel UI after run 1.",
+      "verdict": "NOT SAFE TO REMOVE line 569 without store-reactivity audit"
+    },
+    {
+      "file": "mg_combat_rituel.ts",
+      "lines": [29, 222, 387],
+      "topic": "this.ended guard",
+      "finding": "CLEAN. this.ended declared at line 29, reset to false in setup() line 124, guarded in endGame() line 222 ('if (this.ended) return'). The guard is correctly placed before any side-effect. No double-finish possible through the timer + rAF race.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "mg_combat_rituel.ts",
+      "lines": [142, 221, 226, 227, 228, 387, 388, 389, 390, 391, 392, 393],
+      "topic": "Timer and event listener lifecycle",
+      "finding": "timerInterval cleared in both endGame() (line 224) and cleanup() (line 388). animFrame cancelled in both (lines 225, 389). All three listeners (pointermove, pointerdown, keydown) removed in both (lines 226-228, 390-392). The double-cleanup is redundant but not harmful. No document-scope listeners found — all listeners are attached to this.canvas only. No orphaned setTimeouts found (no window.setTimeout calls in this file).",
+      "verdict": "PASS with LOW-priority refactor note (see top3 rank 2)"
+    },
+    {
+      "file": "mg_combat_rituel.ts",
+      "lines": [231, 232, 233, 234, 236],
+      "topic": "Score formula",
+      "finding": "survivalPct = (survivalTime / totalTime) * 80. centerPct = (centerTime / totalTime) * 20. finalScore = Math.min(100, survivalPct + centerPct). Guard on totalTime > 0 present at line 232. survivalTime only increments when not hit (line 270), so it can never exceed totalTime. centerTime only increments when inside centerBonusRadius AND not hit (lines 274-277). Max theoretical score = 80 + 20 = 100, correctly capped by Math.min(100, ...). Formula is correct. validateScore() in MinigameBase.finish() provides a second safety net for NaN/Infinity.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "mg_traces.ts",
+      "lines": [141, 218],
+      "topic": "this.ended guard, timer, listener lifecycle",
+      "finding": "CLEAN. this.ended guarded in endGame() line 142. timerInterval and animFrame cleared in both endGame() and cleanup(). Both canvas listeners (pointerdown, keydown) removed in both paths. No document-scope listeners. No orphaned timeouts.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "mg_traces.ts",
+      "lines": [149, 150, 151],
+      "topic": "Score formula",
+      "finding": "hitCount = footprints.filter(f => f.hit).length. timeBonus = max(0, timeLeft / totalTime) * 20. score = (hitCount / footprintCount) * 80 + timeBonus. Max = 80 + 20 = 100. timeLeft can go slightly negative (interval fires at 0 then decrements to -0.1 before endGame check) — but Math.max(0, ...) clamps timeBonus correctly. Formula is correct.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "mg_herboristerie.ts",
+      "lines": [99, 313, 341, 496, 497],
+      "topic": "endTimeout handle, timer and listener lifecycle",
+      "finding": "CLEAN. endTimeout stored at line 99, cleared in both endGame() (line 341, 'cancel pending 300ms delay') and cleanup() (line 497). timerInterval cleared in both. animFrame cancelled in both. Both canvas listeners removed in both paths. No document-scope listeners.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "mg_herboristerie.ts",
+      "lines": [351, 352, 353, 354, 355],
+      "topic": "Score formula",
+      "finding": "pickRatio = correctPicks / totalTargets (guarded: totalTargets > 0). baseScore = pickRatio * 80. penalty = wrongPicks * wrongPenalty (tier-scaled 5-8). timeBonus = (timeLeft / totalTime) * 20 if timeLeft > 0 else 0. score = max(0, baseScore - penalty + timeBonus). The max(0, ...) prevents negative scores. Edge case: if player picks zero correct and hits many wrong picks, score floors at 0 correctly. Formula is correct.",
+      "verdict": "PASS"
+    },
+    {
+      "file": "mg_runes.ts",
+      "lines": [207, 258, 51, 383, 386],
+      "topic": "revealTimeout lifecycle and potential replay leak",
+      "finding": "revealTimeout stored and cleared in endGame() (line 272) and cleanup() (line 386). Under normal single-play flow: no leak. Under hypothetical re-play (play() called again on same instance), setup() at line 51 does NOT clear revealTimeout before starting a new game. If a mismatch delay is in-flight when play() is called again, the old setTimeout would fire on the new game's tile array. Low probability in current usage (play() is not called twice on a live instance) but represents a latent bug.",
+      "verdict": "LOW risk — latent only under re-play scenario"
+    },
+    {
+      "file": "mg_runes.ts",
+      "lines": [279, 280, 281],
+      "topic": "Score formula",
+      "finding": "pairScore = (matchedCount / totalPairs) * 70. timeBonus = max(0, timeLeft / totalTime) * 30. score = pairScore + timeBonus. Max = 70 + 30 = 100. totalPairs always >= 6 (tieredValue min), so no division-by-zero. timeLeft clamped via Math.max. Formula is correct.",
+      "verdict": "PASS"
+    }
+  ],
+
+  "summary": {
+    "files_audited": 5,
+    "critical_issues": 0,
+    "high_issues": 0,
+    "medium_issues": 1,
+    "low_issues": 2,
+    "document_scope_listeners_found": false,
+    "orphaned_settimeouts_found": false,
+    "double_finish_paths_found": false,
+    "score_formula_errors": 0,
+    "cleanup_chain_broken": false
+  },
+
+  "balance_recommendations": [
+    {
+      "parameter": "mg_combat_rituel_endGame_cleanup_duplication",
+      "file": "mg_combat_rituel.ts",
+      "lines": [221, 387],
+      "current": "resource cleanup duplicated in endGame() and cleanup()",
+      "suggested": "endGame() calls this.cleanup() instead of manually clearing — cleanup() becomes single source of truth",
+      "confidence": "HIGH",
+      "blocking": false
+    },
+    {
+      "parameter": "mg_runes_setup_revealTimeout_clear",
+      "file": "mg_runes.ts",
+      "lines": [51],
+      "current": "setup() does not clearTimeout(this.revealTimeout) before starting new game",
+      "suggested": "Add clearTimeout(this.revealTimeout) as first line of setup() before container.innerHTML = ''",
+      "confidence": "HIGH",
+      "blocking": false
+    }
+  ]
+}

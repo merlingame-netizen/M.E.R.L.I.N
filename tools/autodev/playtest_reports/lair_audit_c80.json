@@ -1,0 +1,55 @@
+{
+  "cycle": "C80",
+  "global_score": 9.91,
+  "verdict": "FIX",
+  "criteria": {
+    "flat_shading": 10,
+    "z_fighting": 10,
+    "material_quality": 10,
+    "lighting_dramaturgy": 10,
+    "glb_coverage": 10,
+    "geometric_proportions": 10,
+    "bundle_gzip": 10,
+    "fps_budget": 8,
+    "memory_leaks": 10,
+    "feedback_zones": 10,
+    "mobile_touch": 10,
+    "keyboard_nav": 10,
+    "scene_entry_flow": 10,
+    "hover_feedback": 10,
+    "lore_coherence": 10,
+    "celtic_immersion": 10
+  },
+  "bugs": [
+    {
+      "id": "BUG#1-C80",
+      "severity": "MEDIUM",
+      "description": "updateCandles() fires 9 Math.sin/frame (3 candles × 3 each) and cauldron.update() fires 1 more, totalling 16 Math.sin/frame (6 main loop + 9 candles + 1 cauldron) against a ≤6 target. updateCandles() is not gated by lowFpsMode — it executes unconditionally every rAF frame. On a Snapdragon 695 or Mali-G57 at 60fps this is ~960 transcendental calls/second from candles alone. The fix is either (a) gate updateCandles under !lowFpsMode like dust.update(), or (b) reduce to 1 sin/candle using a single broadband noise value, or (c) hoist the 3 sin calls outside the per-candle loop and share one result across all candles (they are phase-shifted so a single call + phase offset is a valid approximation).",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1152
+    }
+  ],
+  "c79_verification": {
+    "BUG1_skull_createSkull": {
+      "status": "VERIFIED_FIXED",
+      "evidence": "Line 647: createSkull() signature returns { group: Group; cranium: Mesh }. Line 650: boneMat has emissive: 0xd4c89a, emissiveIntensity: 0.0. Line 854: interactives entry uses visualMesh: skullCranium. applyHoverTo() guard at line 890 checks emissive.r/g/b > 0 — 0xd4c89a decomposes to r=0.831 g=0.784 b=0.604, all > 0, guard passes, boost applied."
+    },
+    "BUG2_ZONE_LABELS_skull": {
+      "status": "VERIFIED_FIXED",
+      "evidence": "Lines 941-948: ZONE_ARIA_LABELS has skull: 'Crâne du Sage'. Lines 952-959: ZONE_LORE has skull: 'Les anciens druides méditaient face à la mort — gardienne des secrets oubliés'. No raw 'skull' string shown to user on click."
+    },
+    "BUG3_ARIA_tabNavCount": {
+      "status": "VERIFIED_FIXED",
+      "evidence": "Line 859: tabNavCount = interactives.filter(i => i.zone !== 'skull').length → 5. Line 860: aria-label uses tabNavCount=5 not interactives.length=6. WCAG 4.1.2 satisfied."
+    },
+    "BUG4_mortarMat_polygonOffset": {
+      "status": "VERIFIED_FIXED",
+      "evidence": "Lines 44-45: mortarMat.polygonOffsetFactor = -2, mortarMat.polygonOffsetUnits = -4. Matches mur_pierre / sol_pierre scene standard. Comment on line 44 references C79 rationale."
+    },
+    "BUG5_updateCandles_sin_budget": {
+      "status": "CARRY_OPEN",
+      "evidence": "Lines 430-433: 3 Math.sin calls per candle body in updateCandles(). CANDLE_POSITIONS in LairGLBAssets.ts line 8-12 has 3 entries → 9 sin/frame from candles. Main loop adds 6 more (sway ×2, crystal intensity, crystal emissive, floatSin, door). cauldron.update() line 584 adds 1. Total: 16 Math.sin/frame. updateCandles not gated by lowFpsMode (line 1152 vs line 1155 which gates dust). BUG#5-C79 is now BUG#1-C80."
+    }
+  },
+  "notes": "All 4 C79 fixes verified clean with no regressions introduced. The sole remaining issue is the un-gated Math.sin budget in the candle update path (carried from C79 as BUG#5). Score deducted 0.09 on fps_budget criterion (−2/10 → 8/10 weighted at 4.5% of global) reflecting the budget overrun on low-end mobile. Every other criterion is at 10/10. Recommended fix for C80: add lowFpsMode gate around updateCandles or reduce to 1 sin/candle by replacing the 3-frequency blend with a single value shared across candles. No new bugs introduced since C79 commits 21a17a9/ba058c0. LairGLBAssets.ts dispose pattern is correct: cancelHandles array collects all fadeInGLB cancellators, cancelGLBFades() called in dispose() at line 1179. Memory leak path closed."
+}

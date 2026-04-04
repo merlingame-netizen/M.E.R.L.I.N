@@ -25,9 +25,9 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
   marais_korrigans:  'Marais des Korrigans',
   landes_bruyere:    'Landes de Bruyere',
   cercles_pierres:   'Cercles de Pierres',
-  villages_celtes:   'Villages Celtes',
-  collines_dolmens:  'Collines aux Dolmens',
-  iles_mystiques:    'Iles Mystiques',
+  monts_brumeux:     'Monts Brumeux',
+  plaine_druides:    'Plaine des Druides',
+  vallee_anciens:    'Vallee des Anciens',
 } as const;
 
 const SUMMARY_OVERLAY_ID = 'run-summary-overlay';

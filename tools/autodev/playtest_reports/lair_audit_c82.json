@@ -1,0 +1,87 @@
+{
+  "cycle": "C82",
+  "audited_at": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "scope": "mg_regard correctTotal fix, sfx wiring across 7 minigames, cauldron lowFps gate, mg_volonte pointerleave",
+
+  "mg_regard_score_formula": {
+    "status": "FIXED",
+    "max_theoretical": 100,
+    "evidence": "correctTotal increments on every in-sequence correct click (line 218/268). clickedIndex advances per click. endGame() at line 293 computes finalScore = (correctTotal / totalSymbols) * 100 where totalSymbols = sum(roundLengths). Tier-0 totalSymbols=12, Tier-3=18. A perfect run (all symbols correct, all rounds) yields correctTotal==totalSymbols => score=100. Maitrise threshold (>85) is reachable on all tiers. C100 bug (only first symbol counted) is confirmed resolved.",
+    "score_breakdown_by_tier": {
+      "tier_0": { "roundLengths": [3, 4, 5], "totalSymbols": 12, "maitrise_requires": ">=10.2 correct" },
+      "tier_1": { "roundLengths": [4, 5, 6], "totalSymbols": 15, "maitrise_requires": ">=12.75 correct" },
+      "tier_2": { "roundLengths": [4, 5, 6], "totalSymbols": 15, "maitrise_requires": ">=12.75 correct" },
+      "tier_3": { "roundLengths": [5, 6, 7], "totalSymbols": 18, "maitrise_requires": ">=15.3 correct" }
+    }
+  },
+
+  "sfx_wired": {
+    "count_wired": 14,
+    "count_total": 14,
+    "status": "FULLY_WIRED",
+    "per_file": {
+      "mg_apaisement": 2,
+      "mg_echo": 2,
+      "mg_equilibre": 2,
+      "mg_fouille": 2,
+      "mg_negociation": 2,
+      "mg_regard": 2,
+      "mg_volonte": 2
+    },
+    "evidence": {
+      "mg_apaisement": "lines 199(unlock), 203(unlock), 207(lose) — correct/wrong outcomes covered",
+      "mg_echo": "lines 160(unlock), 163(lose), 195(unlock), 198(lose) — two interaction points both wired",
+      "mg_equilibre": "lines 260(unlock), 261(lose) — edge-triggered on zone enter/leave",
+      "mg_fouille": "lines 231(unlock), 235(lose), 265(unlock), 270(lose) — two handler paths covered",
+      "mg_negociation": "lines 110(unlock), 113(lose), 293(unlock), 297(lose)",
+      "mg_regard": "lines 220(unlock), 233(lose) in onClick; lines 270(unlock), 276(lose) in onKeyDown",
+      "mg_volonte": "lines 227(unlock on target enter), 228(lose on target leave) — edge-triggered"
+    }
+  },
+
+  "cauldron_lowfps_gate": {
+    "status": "UNGATED",
+    "line": 1163,
+    "severity": "MEDIUM",
+    "evidence": "MerlinLairScene.ts line 1163: cauldron.update(elapsedTime, dt) runs unconditionally. Adjacent calls — updateCandles() at line 1157 and dust.update() at line 1160 — are both gated under !lowFpsMode. Cauldron steam particle system is the only cosmetic system lacking the fps guard, costing ~CPU budget on low-fps devices.",
+    "recommendation": "Wrap line 1163 with if (!lowFpsMode) { cauldron.update(elapsedTime, dt); }"
+  },
+
+  "mg_volonte_pointerleave": {
+    "status": "OPEN",
+    "line": 115,
+    "severity": "LOW",
+    "evidence": "mg_volonte.ts registers only 'pointermove' on canvas (line 115). No 'pointerleave', 'pointercancel', or 'pointerup' listeners present in the file. On mobile, when the finger slides off the canvas boundary, pointermove stops firing but no reset event clears the cursor position. The cursor stays at the last in-canvas position, which may be on target — awarding free accumulation time until the next pointermove triggers from outside or the round ends.",
+    "recommendation": "Add canvas.addEventListener('pointerleave', this.onPointerReset) and canvas.addEventListener('pointercancel', this.onPointerReset) where onPointerReset sets isMoving=false or clears the active pointer state."
+  },
+
+  "verdict": "FIX",
+
+  "top_bugs": [
+    {
+      "id": "BUG-01",
+      "severity": "MEDIUM",
+      "file": "MerlinLairScene.ts",
+      "line": 1163,
+      "title": "cauldron.update() not gated under !lowFpsMode",
+      "impact": "Cosmetic particle CPU waste on <45fps devices; inconsistency with candle/dust pattern already established at lines 1157/1160.",
+      "fix": "Gate cauldron.update() behind !lowFpsMode identical to candles and dust."
+    },
+    {
+      "id": "BUG-02",
+      "severity": "LOW",
+      "file": "mg_volonte.ts",
+      "line": 115,
+      "title": "No pointerleave/pointercancel listener — finger off-canvas freezes cursor on mobile",
+      "impact": "Mobile players who slide finger off canvas edge get free on-target credit until next pointermove. Inflates score on mobile vs desktop.",
+      "fix": "Register pointerleave and pointercancel on canvas to clear active pointer state."
+    }
+  ],
+
+  "passing_checks": [
+    "mg_regard correctTotal formula — fully counts all sequence symbols per round (FIXED from C100)",
+    "SFX dispatch — all 14 injection points wired across 7 minigames (14/14)",
+    "mg_regard keyboard path (onKeyDown) also fires SFX correctly — both pointer and keyboard covered"
+  ]
+}

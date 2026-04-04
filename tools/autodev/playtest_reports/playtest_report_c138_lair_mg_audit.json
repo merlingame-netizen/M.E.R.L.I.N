@@ -1,0 +1,151 @@
+{
+  "report_id": "c138_lair_mg_audit",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "cycle": 138,
+  "scope": [
+    "web-demo/src/main.ts (showBiomePicker, showRunSummary, ogham mutation block C136)",
+    "web-demo/src/game/EffectEngine.ts (applyOghamEffect, lines 280-431)",
+    "web-demo/src/ui/RunSummary.ts (re-entry guard, race window)",
+    "web-demo/src/ui/HUD.ts (predict_next consumer search)",
+    "web-demo/src/minigames/mg_sang_froid.ts",
+    "web-demo/src/minigames/mg_combat_rituel.ts"
+  ],
+
+  "bugs": [
+    {
+      "id": "C138-BP-01",
+      "severity": "MEDIUM",
+      "prior_id": "BP-01",
+      "status": "CONFIRMED OPEN — no fix landed",
+      "title": "showBiomePicker() has no Escape key handler",
+      "file": "web-demo/src/main.ts",
+      "lines": "148-214",
+      "description": "showBiomePicker() returns a Promise<string> that resolves only when a biome button is clicked. No keydown listener for Escape (or any key) is attached to the overlay or document. If the player presses Escape, dismisses the overlay via browser back gesture on mobile, or if a future caller wraps this with a race(), the Promise never settles. The outer caller in runLairLoop() awaits this unconditionally, so the run flow stalls indefinitely — a functional softlock at the lair entry point.",
+      "reproduction": "Open lair, trigger biome picker, press Escape. Promise hangs; no run starts.",
+      "proposed_fix": "Add a keydown listener on document for 'Escape' inside the Promise executor. On Escape: fade out the overlay, remove it, and resolve with a default biome (e.g. 'foret_broceliande'). Alternatively resolve with a sentinel value that the caller maps to a default. Remove the listener on any resolution path."
+    },
+    {
+      "id": "C138-RS-01",
+      "severity": "MEDIUM",
+      "prior_id": "RS-01",
+      "status": "PARTIALLY MITIGATED — race window confirmed, documented gap remains",
+      "title": "showRunSummary() re-entry guard fires AFTER the 800ms fadeIn, not before",
+      "file": "web-demo/src/ui/RunSummary.ts",
+      "lines": "103-123",
+      "description": "The sequence in showRunSummary() is: (1) await fadeIn(800ms), then (2) check resolveRestart and resolve stale awaiter, then (3) remove existing overlay DOM node. The re-entry guard at lines 119-122 is correct but placed after an 800ms async gap. If a second call to showRunSummary() arrives during the fadeIn (e.g. death_drain fires, then death_effects fires 1 frame later), both calls enter the fadeIn race. The first call completes fadeIn, runs the guard (resolveRestart is still null at that point), builds the overlay. The second call completes its own fadeIn 800ms later, sees resolveRestart != null, fires it (resolving the first caller's pending await prematurely with no player interaction), then removes the first overlay and builds a second one. Net effect: the first run-end cause (e.g. 'death') is dismissed by the guard without player action, replaced by the second cause ('death_effects'). Player loses the first summary screen. In practice the double-death path (drain check at line 671 then effects check at line 807) is the most likely trigger — both are sequential in the same loop iteration, so both calls overlap.",
+      "reproduction": "Rare in normal play but reproducible: start a run with life = 1 and an active ogham that does DAMAGE_LIFE in effects. Drain check fires first (life = 0), calls showRunSummary('death'). Effect engine also fires damage, second check at line 807 also calls showRunSummary('death_effects'). Both awaits are live concurrently.",
+      "proposed_fix": "Move the re-entry guard and the overlay.remove() BEFORE the fadeIn call. Add a module-level boolean 'isShowing' that is set to true immediately on entry and false on restart click. The second invocation should either no-op (return immediately if isShowing) or queue. The simplest safe fix: if (resolveRestart) { resolveRestart(); resolveRestart = null; } before the await fadeIn(). Then skip a second fadeIn if the overlay already exists."
+    },
+    {
+      "id": "C138-OC-03",
+      "severity": "MEDIUM",
+      "prior_id": "OC-03",
+      "status": "CONFIRMED OPEN — no HUD consumer exists",
+      "title": "ailm predict_next returns applied:true but no HUD or toast consumes the result",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "lines": "311-313",
+      "description": "applyOghamEffect() for 'ailm' returns { oghamId: 'ailm', effectType: 'predict_next', applied: true, description: 'Predit la prochaine carte' }. The comment says 'handled by HUD'. A full-text search of web-demo/src/ui/HUD.ts finds zero occurrences of 'predict_next', 'ailm', 'nextCard', or 'next_card'. The main.ts ogham mutation block (lines 731-751) checks effectType against 'full_reroll', 'force_twist', 'regenerate_all_options', and 'replace_worst_option' — predict_next is absent. updateHUD() does not render any prediction badge. The result: activating ailm consumes the ogham (costs anam, starts cooldown, displays the badge) but produces zero visible feedback to the player. The player receives no prediction, making ailm a no-op from a gameplay perspective.",
+      "reproduction": "Unlock ailm (anciens faction >= 50). Activate ailm before any card. Observe: no prediction toast, no next-card preview appears in HUD or card overlay.",
+      "proposed_fix": "When oghamResult.effectType === 'predict_next', peek at the next card by calling generateFastRouteCard(biome) and storing the theme and lexical field in a module-level variable (e.g. _pendingPrediction). In showCard() or the HUD update, render a small badge showing the predicted theme. Clear _pendingPrediction after the next card is shown. Alternatively show a toast immediately after ogham activation."
+    },
+    {
+      "id": "C138-OC-04",
+      "severity": "HIGH",
+      "prior_id": null,
+      "status": "NEW — introduced by C136 ogham mutation block",
+      "title": "Ogham mutation block runs even when oghamResult.applied === false",
+      "file": "web-demo/src/main.ts",
+      "lines": "731-751",
+      "description": "The mutation guard at line 731 is: if (oghamResult). This checks for non-null only, not oghamResult.applied. The applyOghamEffect() function can return applied:false for any oghamId matched by the default case in the switch (line 322-323: 'Effet non implemente'). More importantly, for a sacrifice_trade type (if added), a blocked use, or any future ogham that sets applied:false, the mutation block would still execute because oghamResult is a non-null object. For the four currently handled narrative effectTypes (full_reroll, force_twist, regenerate_all_options, replace_worst_option) the only return paths are applied:true — but the guard is structurally unsound: any ogham whose applyOghamEffect() falls through to the default case returns { applied:false } AND a non-null oghamResult. Since oghamResult is set unconditionally at line 687 whenever oghamChoice is truthy, all 18 oghams populate oghamResult. The mutation block then checks effectType, which for non-narrative oghams (e.g. 'block_first_negative', 'predict_next') doesn't match any of the four branches, so the block is a no-op by accident — but only because there are exactly four explicit branches. If a future ogham returns applied:false AND sets effectType to 'replace_worst_option' (e.g. a guarded version), the mutation would incorrectly run.",
+      "reproduction": "Activate any non-narrative ogham (e.g. luis, beith, ailm). oghamResult is non-null, effectType doesn't match any branch, mutation block is silently skipped. No current crash, but the missing applied check is a latent correctness bug.",
+      "proposed_fix": "Change line 731 from: if (oghamResult) to: if (oghamResult?.applied). This ensures mutations only execute when the ogham effect was actually applied. One-character change with full safety."
+    },
+    {
+      "id": "C138-OC-05",
+      "severity": "LOW",
+      "prior_id": null,
+      "status": "NEW — edge case in replace_worst_option",
+      "title": "replace_worst_option worstIdx heuristic is tie-broken arbitrarily and uses the fresh card's same index",
+      "file": "web-demo/src/main.ts",
+      "lines": "743-748",
+      "description": "The worstIdx reduce starts with accumulator 0 and uses strict '<' comparison. When two or more options share the lowest score (common for neutral options with score 0), worstIdx always resolves to the first tied index found (leftmost), which is index 0. This means the player always gets the first option replaced when options are tied-neutral, making the bias deterministic and exploitable. Additionally, opts[worstIdx] = fresh.options[worstIdx] replaces the worst position from the original card with the same positional option from a freshly generated card. If the fresh card also generates a negative option at that position (possible with the current card templates), the replacement provides no improvement. The description says 'replace worst option with a better one' but there is no guarantee the replacement is better.",
+      "reproduction": "Use Idad (replace_worst_option ogham). Observe over multiple uses that option index 0 is replaced most often. Use in a biome where templates frequently generate negative options at all positions.",
+      "proposed_fix": "Add a check: only perform the swap if scoreOpt(fresh.options[worstIdx]) > scoreOpt(card.options[worstIdx]). If the fresh option is not better, retry once or skip the swap. For tie-breaking, add a secondary sort by index to pick the highest-index tie (less biased toward slot 0)."
+    },
+    {
+      "id": "C138-COMB-01",
+      "severity": "LOW",
+      "prior_id": null,
+      "status": "NEW — mg_combat_rituel survivalTime accumulation during hit frames",
+      "title": "mg_combat_rituel survivalTime does not accumulate during collision frames, but centerTime does",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "lines": "270-289",
+      "description": "In render(), the collision check sets this.hit = true on first collision. The else branch at line 278 accumulates survivalTime (line 282) and centerTime (line 288) only when not hitting. This is correct for survivalTime. However, centerTime is also gated behind the same else block, meaning: if the player is simultaneously inside the center bonus zone AND colliding with an obstacle, the centerTime tick is lost for that frame. This is technically a minor unfairness (the player who takes risks by staying near center is penalized doubly — hit damage AND lost center credit) rather than a bug. More importantly: the hit state is edge-triggered at line 272 (only set on first frame of collision), which means on subsequent frames of a sustained collision (while the player stays in the obstacle arc), this.hit is true but the else branch does NOT fire. This means survivalTime correctly stops accumulating — but the edge-trigger comment at line 272 says 'first frame of each new collision'. A sustained overlap means survivalTime freezes for the duration, which is the intended design. No correctness bug, but the asymmetric centerTime denial during hits is worth noting.",
+      "reproduction": "In combat_rituel, maneuver into the center bonus zone and hold position while an obstacle rotates through the player. Center credit is denied for the overlap duration.",
+      "proposed_fix": "Move centerTime accumulation outside the hit/no-hit branch (accumulate whenever the player is geometrically inside centerBonusRadius, regardless of collision state). This decouples survival scoring from center bonus scoring and makes the mechanic clearer."
+    },
+    {
+      "id": "C138-SF-01",
+      "severity": "LOW",
+      "prior_id": null,
+      "status": "NEW — mg_sang_froid score formula denominator",
+      "title": "mg_sang_froid finalScore denominator is totalTime but timeInside accumulates against elapsedTime dt",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "lines": "200-208, 258-262",
+      "description": "The endGame() formula at line 205-207 computes finalScore = (timeInside / totalTime) * 100. timeInside is accumulated via this.timeInside = Math.min(this.timeInside + dt, this.totalTime) in render(), where dt comes from getDeltaTime(). The setInterval timer counts down timeLeft -= 0.1 every 100ms and triggers endGame() when timeLeft <= 0. There is a known ~100ms gap: the setInterval fires at timeLeft <= 0, but the last render() frame that incremented timeInside ran just before the interval tick. This is harmless (one frame, < 16ms error). The clamp at line 261 (Math.min(..., this.totalTime)) correctly prevents scores > 100%. No correctness bug. Score formula is correct.",
+      "reproduction": "N/A — informational only.",
+      "proposed_fix": "No fix needed."
+    }
+  ],
+
+  "summary": {
+    "total_bugs": 7,
+    "critical": 0,
+    "high": 1,
+    "medium": 3,
+    "low": 3,
+    "new_this_cycle": 4,
+    "carry_forward_confirmed": 3
+  },
+
+  "ogham_mutation_block_verdict": {
+    "question_applied_false_guard": "FAIL — line 731 checks (oghamResult) not (oghamResult?.applied). For currently shipped oghams this is a silent no-op because non-narrative effectTypes fall through all four branch conditions. But the guard is structurally wrong and will misfire if applied:false is ever paired with a matching effectType.",
+    "question_worstIdx_reduce_correctness": "PARTIAL — reduce logic is correct for strict ordering. Tie-breaking is deterministic but biased to index 0. The replacement uses the same positional index from the fresh card with no quality guarantee. No crash or incorrect type, but the mechanic does not reliably improve the hand.",
+    "question_all_4_effectTypes_covered": "YES — full_reroll, force_twist, regenerate_all_options, replace_worst_option are all handled. sacrifice_trade is not present in OGHAM_SPECS and is not a shipped type, so no gap there.",
+    "question_predict_next_consumed": "NO — predict_next has no HUD or toast consumer anywhere in the codebase. The effect is dead code from the player's perspective."
+  },
+
+  "minigame_verdicts": {
+    "mg_sang_froid": {
+      "render_guard": "PASS — line 212: if (!this.ctx || !this.canvas || this.ended) return",
+      "cancelTimers": "PASS — clears setInterval, cancelAnimationFrame, removes all 5 event listeners (pointermove, pointerdown, pointerleave, pointercancel, keydown)",
+      "score_formula": "PASS — (timeInside / totalTime) * 100, clamped, denominator totalTime matches live HUD display",
+      "ended_double_fire_guard": "PASS — if (this.ended) return at top of endGame()"
+    },
+    "mg_combat_rituel": {
+      "render_guard": "PASS — line 253: if (!this.ctx || !this.canvas || this.ended) return",
+      "cancelTimers": "PASS — clears setInterval, cancelAnimationFrame, removes 3 event listeners (pointermove, pointerdown, keydown). NOTE: no pointerleave/pointercancel handler was added (unlike sang_froid), consistent with combat_rituel not needing the leave-reset mechanic",
+      "score_formula": "PASS — survivalPct = (survivalTime/totalTime)*80 + centerPct = (centerTime/totalTime)*20, clamped at 100. Live HUD display matches formula.",
+      "ended_double_fire_guard": "PASS — if (this.ended) return at top of endGame()"
+    }
+  },
+
+  "deferred_issues_status": {
+    "BP-01": "OPEN — no fix applied since prior cycles",
+    "RS-01": "OPEN — C86 guard landed but race window of 800ms (fadeIn duration) remains. Not closed.",
+    "OC-03": "OPEN — predict_next has no HUD consumer",
+    "LAIR-01": "NOT AUDITED — LairResult.pause() API out of scope for this file set",
+    "LORE": "NOT AUDITED — label string search out of scope",
+    "MerlinLairScene_line_count": "NOT AUDITED — cohesion violation deferred"
+  },
+
+  "priority_order": [
+    "C138-OC-04 (HIGH) — fix oghamResult?.applied guard in main.ts:731 — 1-char fix, zero risk",
+    "C138-RS-01 (MEDIUM) — move RunSummary re-entry guard before fadeIn to close 800ms window",
+    "C138-BP-01 (MEDIUM) — add Escape handler to showBiomePicker to prevent lair softlock",
+    "C138-OC-03 (MEDIUM) — implement predict_next HUD toast so ailm is not a dead button",
+    "C138-OC-05 (LOW) — add quality check to replace_worst_option swap",
+    "C138-COMB-01 (LOW) — decouple centerTime from hit branch in combat_rituel"
+  ]
+}

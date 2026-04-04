@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "audit_type": "static-code",
+    "cycle": 87,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "files_read": [
+      "web-demo/src/scenes/MerlinLairScene.ts (lines 1150-1265)",
+      "web-demo/src/minigames/mg_combat_rituel.ts",
+      "web-demo/src/minigames/mg_sang_froid.ts",
+      "web-demo/src/minigames/mg_ombres.ts",
+      "web-demo/src/minigames/mg_course.ts",
+      "web-demo/src/minigames/mg_negociation.ts",
+      "web-demo/src/minigames/mg_fouille.ts",
+      "web-demo/src/minigames/mg_equilibre.ts"
+    ]
+  },
+
+  "lairWindow_gate_status": "ALREADY_FIXED",
+  "lairWindow_gate_detail": {
+    "line": 1169,
+    "exact_code": "if (!lowFpsMode) lairWindow.update(elapsedTime);",
+    "comment": "C83 gate correctly applied. Consistent with candles (1159), dust (1162), cauldron (1165)."
+  },
+
+  "sfx_per_minigame": {
+    "mg_combat_rituel": {
+      "dispatch_count": 2,
+      "lines": [264, 268],
+      "sounds_used": ["lose", "unlock"],
+      "status": "OK"
+    },
+    "mg_sang_froid": {
+      "dispatch_count": 2,
+      "lines": [244, 246],
+      "sounds_used": ["unlock", "lose"],
+      "status": "OK"
+    },
+    "mg_ombres": {
+      "dispatch_count": 1,
+      "lines": [214],
+      "sounds_used": ["lose"],
+      "status": "PARTIAL — only lose dispatched on collision; no unlock SFX on clean corridor completion",
+      "note": "No SFX fires when player completes corridor without colliding. All other minigames dispatch a positive sound on win path."
+    },
+    "mg_course": {
+      "dispatch_count": 4,
+      "lines": [89, 231, 246, 314],
+      "sounds_used": ["unlock", "unlock", "lose", "lose"],
+      "status": "OK"
+    }
+  },
+
+  "sfx_reference_pattern": {
+    "source": "web-demo/src/minigames/mg_negociation.ts",
+    "lines": [110, 113],
+    "faction_word_hit": "window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));",
+    "neutral_word_hit": "window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));",
+    "context": "Dispatched inside onKeyDown handler and onClick handler after a word is picked."
+  },
+
+  "mg_fouille_issues": [],
+  "mg_fouille_notes": "No open issues. Cleanup is complete: foundTimeout, timerInterval, animFrame all cleared in both cleanup() paths (lines 293-295 and 439-441). SFX dispatches at lines 231, 235, 265, 270 cover wrong-click, correct-find, and timeout-loss cases.",
+
+  "mg_equilibre_issues": [],
+  "mg_equilibre_notes": "No open issues. Cleanup clears timerInterval and animFrame at lines 202-203 and 370-371. SFX dispatches at lines 260-261 cover zone-enter (unlock) and zone-exit (lose).",
+
+  "dispose_leaks": [],
+  "dispose_analysis": {
+    "world_level_targets_handled": [
+      {
+        "object": "lairWindow.windowLight.target",
+        "type": "SpotLight target (Object3D)",
+        "removal": "scene.remove() at line 1189 — explicit, correct",
+        "comment": "C83 — spotlight target added at world level, not in group, not reached by traverse"
+      },
+      {
+        "object": "moon.target",
+        "type": "DirectionalLight target (Object3D)",
+        "removal": "cleanupLairDensity() at line 1188 — explicit, correct",
+        "comment": "C35 — moon target not reached by traverse"
+      }
+    ],
+    "traverse_coverage": {
+      "InstancedMesh": "dispose() + geometry.dispose() + material.dispose() at lines 1213-1215",
+      "Mesh": "geometry.dispose() + material(s).dispose() at lines 1216-1223",
+      "Points": "geometry.dispose() + material.dispose() at lines 1216-1223 (same branch as Mesh)",
+      "dust.points": "Points added directly via scene.add(dust.points) at line 779 — COVERED by traverse Points branch",
+      "cauldronHit": "Mesh (new Mesh at line 788) added directly via scene.add at line 793 — COVERED by traverse Mesh branch",
+      "AmbientLight_HemisphereLight_PointLight": "Lights have no geometry/material to dispose. GPU resources freed by renderer.dispose(). Standard Three.js practice — not a leak."
+    },
+    "verdict": "No uncovered leaks detected. All world-space Object3D targets are explicitly removed before traverse. All Mesh/Points added directly to scene are covered by traverse branches."
+  },
+
+  "new_bugs": [
+    {
+      "id": "C87-B1",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_ombres.ts",
+      "line": "endGame() win path (after line 214 collision block)",
+      "description": "mg_ombres dispatches only the 'lose' SFX on collision (line 214). There is no 'unlock' or positive SFX dispatched when the player completes the corridor successfully. All other minigames dispatch a positive sound on win outcome (mg_sang_froid line 244, mg_combat_rituel line 268, mg_course line 231). The absence creates a silent win, breaking audio feedback consistency.",
+      "fix": "In the endGame() branch that resolves with a non-zero score (player survived without critical collision), add: window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } })); — matching the pattern from mg_negociation.ts lines 110-113."
+    }
+  ],
+
+  "summary": {
+    "status": "PASS_WITH_MINOR",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "medium_issues": 0,
+    "low_issues": 1,
+    "lairWindow_gate": "ALREADY_FIXED",
+    "sfx_silent_minigames": ["mg_ombres (win path only — collision lose SFX is present)"],
+    "dispose_leaks_found": 0
+  }
+}

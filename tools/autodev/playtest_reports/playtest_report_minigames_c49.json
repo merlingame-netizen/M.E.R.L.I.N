@@ -1,0 +1,252 @@
+{
+  "cycle": 49,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "verdict": "FIX",
+  "global_score": 7.4,
+  "criteria_scores": {
+    "C1_tieredValue_coverage": {
+      "score": 8.5,
+      "notes": "13/15 minigames fully use tieredValue(). mg_regard only scales showTime (1 param — only time-based param needed). mg_herboristerie only scales totalTime (1 param — grid layout is static). mg_negociation.maxWords=30 hardcoded (on-screen cap, not a difficulty axis — acceptable). All critical numeric difficulty params correctly covered. Strong overall."
+    },
+    "C2_checkCriticalAlert_usage": {
+      "score": 6.5,
+      "notes": "9/10 timer-based minigames correctly call checkCriticalAlert() in setInterval. MISSING in mg_equilibre (timer at lines 116-128 — no checkCriticalAlert call). mg_regard/mg_echo/mg_course have no setInterval timer (pure frame-based or round-based) — N/A. mg_equilibre is the only timer-based minigame missing this call: critical_alert SFX will never fire for equilibre."
+    },
+    "C3_cleanup_endGame_listeners": {
+      "score": 6.0,
+      "notes": "CRITICAL: mg_herboristerie line 308 calls setTimeout(() => this.endGame(), 300) inside pickCellByIdx(). Handle not stored — cleanup() cannot cancel it. If player exits within 300ms of completing all targets, orphaned setTimeout fires endGame() on destroyed instance. finish() idempotent guard (MinigameBase.finished) blocks double-resolve, but DOM queries inside endGame() run on empty container. Contrast with mg_fouille (foundTimeout stored+cancelled correctly). All other minigames: cleanup() correctly mirrors all listeners added in setup(). mg_equilibre correctly removes document-level keydown/keyup in both endGame() and cleanup()."
+    },
+    "C4_aria_live_status_elements": {
+      "score": 5.0,
+      "notes": "SYSTEMATIC: Only mg_echo has aria-live on its status element (C49 fix). 14/15 minigames with dynamic status/score elements are missing aria-live='polite'. Affected: mg_apaisement (#mg-apaise-score), mg_combat_rituel (#mg-combat-status), mg_course (#mg-course-status), mg_fouille (#mg-fouille-status), mg_negociation (#mg-nego-sequence), mg_ombres (#mg-ombres-status), mg_regard (#mg-regard-status), mg_sang_froid (#mg-sf-status), mg_volonte (#mg-volonte-status), mg_equilibre (no DOM status), mg_runes (no DOM status), mg_traces (no DOM status). WCAG 2.1 SC 4.1.3 violation across 14 minigames."
+    },
+    "C5_canvas_tabIndex": {
+      "score": 10.0,
+      "notes": "All 15 minigames set canvas.tabIndex = 0. Perfect coverage."
+    },
+    "C6_stale_rAF_cancel": {
+      "score": 9.0,
+      "notes": "All minigames call cancelAnimationFrame in both endGame() and cleanup(). mg_regard and mg_echo: endGame() sets phase='done', render() guard exits early before rAF self-reschedules, then cleanup() cancels — functionally safe, one extra rAF callback fires before guard triggers. Not a stale-rAF bug but unorthodox. -1 point."
+    },
+    "C7_score_calculation": {
+      "score": 7.5,
+      "notes": "MEDIUM: mg_herboristerie penalty scale (8pts per wrong pick) can suppress score unfairly for exploratory players with many misclicks even when all targets are found. Math.max(0,...) prevents underflow but reussite tier (51-85) is hard to reach with any wrong picks at high tier (21-24 decoys in a dense grid). All other score formulas produce correct 0-100 output with Math.min/max guards."
+    },
+    "C8_sfx_dispatch_names": {
+      "score": 8.5,
+      "notes": "MEDIUM: mg_traces line 120 dispatches sound='ogham_unlock' on sequence completion — all other 14 minigames use 'unlock'. If the SFX handler does not map 'ogham_unlock', this fires silently. No innerHTML with user data found — XSS clean throughout all 16 files."
+    }
+  },
+  "top3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "line": 308,
+      "description": "Orphaned setTimeout handle in pickCellByIdx(): setTimeout(() => this.endGame(), 300) is not assigned to a stored field. cleanup() cannot cancel it. If the player exits within 300ms of completing all targets, the orphaned callback fires endGame() on an already-destroyed instance (container.innerHTML='' has been called). finish() idempotent guard blocks double-resolve but DOM queries inside endGame() run on empty container. Pattern already solved correctly in mg_fouille (foundTimeout stored+cancelled).",
+      "code_ref": "if (this.correctPicks >= this.totalTargets) { setTimeout(() => this.endGame(), 300); }",
+      "fix": "Add private endTimeout = 0; field. Assign: this.endTimeout = window.setTimeout(() => this.endGame(), 300); Cancel in endGame() and cleanup(): clearTimeout(this.endTimeout);"
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "line": 116,
+      "description": "checkCriticalAlert() never called in the setInterval timer. Every other timer-based minigame calls this.checkCriticalAlert(this.timeLeft) after decrementing timeLeft. mg_equilibre is the sole exception — the 3-second critical_alert SFX will never fire during this minigame regardless of difficultyTier.",
+      "code_ref": "setInterval callback lines 117-128: missing this.checkCriticalAlert(this.timeLeft);",
+      "fix": "Add this.checkCriticalAlert(this.timeLeft); after this.timeLeft -= 0.1; in the setInterval callback."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "line": 120,
+      "description": "SFX event name mismatch on sequence completion: dispatches sound='ogham_unlock' instead of 'unlock'. All 14 other minigames use 'unlock' for success events. If the SFX dispatcher only handles the documented set ('unlock', 'lose', 'critical_alert'), the completion sound is silently dropped — no audio feedback when the player finishes the full footprint sequence.",
+      "code_ref": "window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'ogham_unlock' } }));",
+      "fix": "Change 'ogham_unlock' to 'unlock' unless the SFX system explicitly maps 'ogham_unlock' to a distinct registered sound. Verify in the SFX handler."
+    }
+  ],
+  "per_minigame": {
+    "MinigameBase": {
+      "tieredValue": "PASS",
+      "checkCriticalAlert": "PASS — base method defined, criticalAlerted reset in play()",
+      "cleanup": "PASS — super.cleanup() clears innerHTML",
+      "aria_live": "PASS — outcome overlay uses role=status aria-live=assertive",
+      "canvas_tabIndex": "N/A",
+      "stale_rAF": "N/A",
+      "score_calc": "PASS — validateScore() clamps NaN/Infinity to 0-100",
+      "sfx": "PASS — WebAudio singleton, not merlin_sfx events"
+    },
+    "mg_apaisement": {
+      "tieredValue": "PASS — 4 params: totalTime, breathCycleDuration, targetWindow, goodWindow",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS — endGame+cleanup both clear interval+rAF+listener",
+      "aria_live": "FAIL — #mg-apaise-score missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — range 0-100, floor 10 for engaged",
+      "sfx": "PASS — unlock/lose"
+    },
+    "mg_combat_rituel": {
+      "tieredValue": "PASS — totalTime, obstacleCount",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS",
+      "aria_live": "FAIL — #mg-combat-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — 0-80+0-20, Math.min(100,...)",
+      "sfx": "PASS — lose on collision edge-trigger"
+    },
+    "mg_course": {
+      "tieredValue": "PASS — roundTime, decoyCount, hitRadius",
+      "checkCriticalAlert": "N/A — no setInterval",
+      "cleanup": "PASS — endTimeout stored+cancelled",
+      "aria_live": "FAIL — #mg-course-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — (hits/totalRounds)*100",
+      "sfx": "PASS"
+    },
+    "mg_echo": {
+      "tieredValue": "PASS — flashDuration, windowDuration",
+      "checkCriticalAlert": "N/A — no setInterval",
+      "cleanup": "PASS — both pointerdown+keydown removed",
+      "aria_live": "PASS — #mg-echo-status has aria-live=polite (C49)",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS",
+      "sfx": "PASS"
+    },
+    "mg_equilibre": {
+      "tieredValue": "PASS — totalTime, safeZoneHalf",
+      "checkCriticalAlert": "FAIL — setInterval missing checkCriticalAlert (BUG #2)",
+      "cleanup": "PASS — document keydown/keyup + canvas pointer* all removed correctly",
+      "aria_live": "FAIL — no DOM status element with aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — zoneRatio*100 with +0.001 div-by-zero guard",
+      "sfx": "PASS — unlock/lose on zone enter/exit"
+    },
+    "mg_fouille": {
+      "tieredValue": "PASS — totalTime, decoyCount, shuffleInterval",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS — foundTimeout stored+cancelled, both listeners removed",
+      "aria_live": "FAIL — #mg-fouille-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — 50-100 on find, 0 if not",
+      "sfx": "PASS"
+    },
+    "mg_herboristerie": {
+      "tieredValue": "PASS — totalTime (only tier-scaled param)",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "FAIL — orphaned setTimeout in pickCellByIdx() not stored (BUG #1)",
+      "aria_live": "FAIL — no DOM status with aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "MEDIUM — 8pt/wrongPick penalty can suppress reussite tier unfairly",
+      "sfx": "PASS",
+      "notes": "keydown listener correctly removed in cleanup()"
+    },
+    "mg_negociation": {
+      "tieredValue": "PASS — totalTime, scrollSpeed, spawnInterval",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS",
+      "aria_live": "FAIL — #mg-nego-sequence missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — Math.min(100,Math.max(0,...)) guards",
+      "sfx": "PASS"
+    },
+    "mg_ombres": {
+      "tieredValue": "PASS — totalTime, endHalfWidth",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS",
+      "aria_live": "FAIL — #mg-ombres-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS",
+      "sfx": "PASS — lose on collision edge-trigger"
+    },
+    "mg_regard": {
+      "tieredValue": "PASS — showTime (only time param)",
+      "checkCriticalAlert": "N/A — no setInterval",
+      "cleanup": "PASS",
+      "aria_live": "FAIL — #mg-regard-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS — phase='done' guard + cleanup() cancel",
+      "score_calc": "PASS — (correctTotal/15)*100",
+      "sfx": "PASS"
+    },
+    "mg_runes": {
+      "tieredValue": "PASS — totalTime, flipBackDelay",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS — revealTimeout stored+cancelled",
+      "aria_live": "FAIL — no DOM status element with aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — (pairs/8)*70+(timeLeft/totalTime)*30",
+      "sfx": "PASS",
+      "notes": "Tile state mutation via type cast is intentional local mutation — functionally correct"
+    },
+    "mg_sang_froid": {
+      "tieredValue": "PASS — totalTime, endRadius, driftSpeed all 3 params",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS — all 3 listeners removed in endGame+cleanup",
+      "aria_live": "FAIL — #mg-sf-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — (timeInside/totalTime)*100 guarded",
+      "sfx": "PASS — unlock/lose on zone enter/exit"
+    },
+    "mg_traces": {
+      "tieredValue": "PASS — totalTime, footprintCount, hitRadius",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS",
+      "aria_live": "FAIL — no DOM status element with aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — (hitCount/footprintCount)*80+timeBonus",
+      "sfx": "FAIL — sequence completion uses sound='ogham_unlock' not 'unlock' (BUG #3)"
+    },
+    "mg_volonte": {
+      "tieredValue": "PASS — totalTime, targetRadius, spawnInterval, maxDistractors (4 params)",
+      "checkCriticalAlert": "PASS",
+      "cleanup": "PASS — both listeners removed in endGame+cleanup",
+      "aria_live": "FAIL — #mg-volonte-status missing aria-live",
+      "canvas_tabIndex": "PASS",
+      "stale_rAF": "PASS",
+      "score_calc": "PASS — (timeOnTarget/totalTime)*100 guarded",
+      "sfx": "PASS — unlock/lose on target enter/exit"
+    },
+    "MinigameRegistry": {
+      "notes": "LOW: Header comment says '14 minigames' but 15 are registered (apaisement added post-comment). All 15 minigames reachable via createMinigameById(). No functional bug."
+    }
+  },
+  "systematic_issues": [
+    {
+      "issue": "aria-live missing on 14/15 status elements",
+      "severity": "MEDIUM",
+      "affected_count": 14,
+      "recommendation": "Add aria-live='polite' to all dynamic status/score DOM elements. C49 fixed mg_echo — apply same pattern to all others. WCAG 2.1 SC 4.1.3."
+    },
+    {
+      "issue": "MinigameRegistry header comment count stale",
+      "severity": "LOW",
+      "recommendation": "Update comment from '14 minigames' to '15 minigames'."
+    }
+  ],
+  "xss_audit": {
+    "status": "PASS",
+    "notes": "No innerHTML assignments with interpolated user/game data found across all 16 files. All dynamic text uses textContent= or Canvas fillText(). XSS surface is zero."
+  },
+  "balance_recommendations": [
+    {
+      "parameter": "mg_herboristerie.wrongPick_penalty_pts",
+      "current": 8,
+      "suggested": 5,
+      "confidence": "MEDIUM",
+      "rationale": "8pts/wrong pick is too punishing at tier 3 (24 decoys in dense grid). Reduces to 5 keeps penalty meaningful without blocking reussite tier for players with 1-2 misclicks."
+    }
+  ]
+}

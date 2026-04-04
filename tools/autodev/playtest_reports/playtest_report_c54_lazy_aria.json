@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "cycle": 54,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "base_score_c53": 7.1,
+    "focus_areas": ["lazy-loading", "aria-gaps", "victory-condition", "emergency-card-field-mismatch"]
+  },
+
+  "global_score": 7.4,
+  "section_scores": {
+    "lazy_loading": 6.5,
+    "aria_accessibility": 7.0,
+    "game_feel_victory": 6.0,
+    "emergency_card_fields": 5.0
+  },
+
+  "issues": [
+
+    {
+      "id": "C54-01",
+      "area": "lazy_loading",
+      "severity": "MEDIUM",
+      "title": "Minigame chunk is split but still eagerly parsed at boot",
+      "detail": "vite.config.ts lines 18-35 place all 14 minigame files into a 'minigames' manualChunk. Rollup emits the chunk as a separate file, but main.ts lines 16-29 import every minigame class with static top-level import statements. Static imports are resolved by the module loader before any JS executes — the browser fetches and parses the minigames chunk synchronously as part of the module graph, before DOMContentLoaded. The manualChunks split only controls the output filename and avoids inlining them into the main entry chunk; it does NOT defer loading.",
+      "feasibility": "Switching createMinigame() (main.ts line 505) to dynamic import() would make each minigame truly lazy: the chunk is only fetched the first time a minigame of that type is needed. First-play latency for a given minigame would increase by one network round-trip (~50-300ms on a good connection) but time-to-interactive for the boot/menu/first-card would improve because the minigames chunk (~14 classes) is no longer parsed eagerly.",
+      "refactor_scope": "MODERATE — 3 touches required",
+      "files_and_lines": [
+        {
+          "file": "web-demo/src/main.ts",
+          "lines": "16-29",
+          "action": "DELETE all 14 static minigame import lines (MinigameTraces through MinigameEcho)"
+        },
+        {
+          "file": "web-demo/src/main.ts",
+          "lines": "505-537 (createMinigame function)",
+          "action": "Replace each `new MinigameX(container)` with `const { MinigameX } = await import('./minigames/mg_x'); return new MinigameX(container);`. Because createMinigame is already called inside an async context (the game loop), no calling-signature change is needed — just add `async` to createMinigame and await it at line 431."
+        },
+        {
+          "file": "web-demo/vite.config.ts",
+          "lines": "18-35 (manualChunks.minigames block)",
+          "action": "REMOVE the minigames manualChunks entry. With dynamic imports Rollup will automatically code-split each minigame into its own small chunk (or group them via granular manualChunks if desired). Keeping the old combined entry alongside dynamic imports would cause the entire group to re-download as one block even on first use."
+        }
+      ],
+      "ttl_improvement_estimate": "The minigames chunk is estimated at 60-120 KB minified. Deferring it saves ~15-40ms parse time on a mid-range mobile CPU at boot. Measurable but not dramatic for this game size.",
+      "recommendation": "Implement lazy loading. Low risk, net positive for mobile TTI. Prioritize for Cycle 55."
+    },
+
+    {
+      "id": "C54-02",
+      "area": "aria_accessibility",
+      "severity": "MEDIUM",
+      "title": "Three.js game canvas (SceneManager) has no aria-label",
+      "detail": "SceneManager.ts line 41 appends renderer.domElement to the container with no ARIA attributes. A raw canvas without an aria-label is announced as 'canvas' or nothing by screen readers. Note: MainMenuScene.ts line 685 DOES set an aria-label on its own renderer.domElement — the SceneManager used for the main gameplay walk is the one missing it.",
+      "file": "web-demo/src/engine/SceneManager.ts",
+      "line": 41,
+      "current_code": "container.appendChild(this.renderer.domElement);",
+      "fix": "Add immediately after line 41:\n  this.renderer.domElement.setAttribute('aria-label', 'Scène 3D — Chemin celtique de Merlin, marche en forêt de Brocéliande');\n  this.renderer.domElement.setAttribute('role', 'img');",
+      "note": "role='img' + aria-label is the correct pattern for a decorative/presentational canvas that does not accept keyboard interaction. If the canvas later becomes interactive (pointer lock, etc.) switch to role='application' and add aria-description."
+    },
+
+    {
+      "id": "C54-03",
+      "area": "aria_accessibility",
+      "severity": "LOW",
+      "title": "#boot-status-text has no aria-live region",
+      "detail": "index.html line 521 defines <div class='boot-status' id='boot-status-text'>Initialisation...</div>. main.ts lines 57-60 update its textContent every 650ms with rotating status messages. Without aria-live='polite', screen readers do not announce these updates — users with assistive technology hear no feedback during the 2.6s boot wait.",
+      "file": "web-demo/index.html",
+      "line": 521,
+      "current_html": "<div class=\"boot-status\" id=\"boot-status-text\">Initialisation...</div>",
+      "fix": "Change to:\n  <div class=\"boot-status\" id=\"boot-status-text\" aria-live=\"polite\" aria-atomic=\"true\">Initialisation...</div>",
+      "note": "aria-atomic='true' ensures the full text is re-read rather than just the changed portion, which is correct for short status strings."
+    },
+
+    {
+      "id": "C54-04",
+      "area": "aria_accessibility",
+      "severity": "LOW",
+      "title": "LLM loading hint toast has no role or aria-live",
+      "detail": "showLLMLoadingHint() in main.ts lines 549-571 creates a div and sets only visual styles. It has no role, no aria-live, and no aria-label. The toast is injected mid-game while the player waits for card generation. Screen reader users are unaware of why the UI is frozen.",
+      "file": "web-demo/src/main.ts",
+      "lines": "549-571 (showLLMLoadingHint body)",
+      "current_code": "hint.textContent = 'Merlin consulte les etoiles…';",
+      "fix": "Add after the hint element is created (after line 552, before the style assignment or just before appendChild):\n  hint.setAttribute('role', 'status');\n  hint.setAttribute('aria-live', 'polite');\n  hint.setAttribute('aria-label', 'Chargement — Merlin consulte les étoiles');",
+      "note": "role='status' implies aria-live='polite' per spec, but explicit aria-live='polite' on the same element is redundant-but-harmless. Either approach is acceptable; the key requirement is that the toast is announced."
+    },
+
+    {
+      "id": "C54-05",
+      "area": "game_feel_victory",
+      "severity": "HIGH",
+      "title": "Rail reset before victory check allows silent looping",
+      "detail": "The game loop at main.ts lines 484-501 checks victory at lines 485-492 (cardsPlayed >= 25 AND rail.isComplete()), then at lines 499-501 resets the rail if complete. The ordering within a single loop iteration is:\n  1. Victory check (line 485): if cards >= 25 AND rail complete → win\n  2. fadeIn/fadeOut (lines 495-496)\n  3. Rail reset if complete (lines 499-501)\n\nThis order is SAFE for a single card cycle — victory is evaluated before the reset in the same iteration.\n\nHowever the rail runs CONTINUOUSLY during WALK_SECONDS_BEFORE_CARD (6 seconds) via rail.resume() at line 355. The rail can reach isComplete() = true DURING the walk phase. When the loop resumes after the walk wait, it drains life and plays a card BEFORE checking victory (the drain and increment happen at lines 363-364, victory check is at line 485). If cardsPlayed was already 24 at the start of that iteration, the sequence is: drain → card 25 increment → minigame → effects → victory check. This is correct.\n\nThe REAL risk C53 identified is: if cardsPlayed < 25 when the rail first completes, lines 499-501 reset it. The rail then completes AGAIN in a future iteration. This can repeat silently across many iterations until cardsPlayed hits 25, at which point the next iteration catches it. There is no UI feedback that the rail looped — the player has no way to know the 'world is cycling'. This is a game-feel / narrative coherence issue, not a true softlock, but it produces jarring invisible resets.",
+      "file": "web-demo/src/main.ts",
+      "lines": "498-501",
+      "current_code": "// Reset rail if complete\nif (rail.isComplete()) {\n  rail.reset();\n}",
+      "fix": "Add a brief visual/audio cue before resetting, and optionally slow the rail near completion when cardsPlayed < 25 to give the game more breathing room. Minimal fix:\n\n  if (rail.isComplete()) {\n    // Brief pulse/flash to signal world-loop to player\n    playSound('ambient_transition'); // reuse existing SFX\n    rail.reset();\n  }\n\nBetter fix: pause the rail when it nears completion (progress > 0.9) until cardsPlayed >= 20, then resume. This prevents silent invisible loops by synchronizing rail pacing with card progression.",
+      "recommendation": "Add a visual signal on silent rail reset (MEDIUM effort). Rail-pacing synchronization is COMPLEX — defer to Cycle 56."
+    },
+
+    {
+      "id": "C54-06",
+      "area": "emergency_card_fields",
+      "severity": "HIGH",
+      "title": "Emergency card hardcodes field:'observation' but verbToField('observer') → 'observation' — MATCH. Field 'esprit' for 'avancer'/'attendre' — needs verification.",
+      "detail": "The emergency fallback card at main.ts lines 406-416 hardcodes:\n  option 1: verb='observer',  field='observation'\n  option 2: verb='avancer',   field='esprit'\n  option 3: verb='attendre',  field='esprit'\n\nConstants.ts ACTION_VERBS (line 106) maps the 'observation' field to: ['observer','scruter','memoriser','examiner','fixer','inspecter']. Therefore verbToField('observer') returns 'observation'. The hardcoded field:'observation' is CORRECT.\n\nFor 'avancer' and 'attendre': verbToField falls through to the default return 'esprit' (CardSystem.ts line 42) if the verb is not found in ACTION_VERBS. Neither 'avancer' nor 'attendre' appear in the ACTION_VERBS map exported from Constants.ts (only the 6 observation verbs are visible in the grep result; the full map was not loaded but the fallback default is 'esprit'). If 'avancer' and 'attendre' are absent from ACTION_VERBS, verbToField returns 'esprit' — matching the hardcoded value. HOWEVER, using verbs that are not in ACTION_VERBS means detectMinigame() cannot resolve a meaningful minigame for these options, likely falling back to 'traces'. This is a latent quality issue, not a field-mismatch bug per se.",
+      "status": "PARTIAL — observer→observation is correct. avancer/attendre→esprit is correct only if those verbs are absent from ACTION_VERBS (fallback path). The BUG-C52-04 field mismatch is NOT reproduced for option 1. Recommend verifying avancer/attendre are absent from ACTION_VERBS in Constants.ts to fully close BUG-C52-04.",
+      "residual_risk": "If a future refactor adds 'avancer' to a non-esprit field in ACTION_VERBS, the hardcoded emergency card will silently produce a mismatched field without any compiler warning. The fix is to remove hardcoded field strings and call verbToField() at card-construction time.",
+      "file": "web-demo/src/main.ts",
+      "lines": "409-412",
+      "fix": "Replace the three hardcoded `field: 'observation'` / `field: 'esprit'` literals with runtime calls:\n  import { verbToField } from './game/CardSystem';\n  // then in the emergency card options:\n  { verb: 'observer', text: '...', field: verbToField('observer'), effects: ['HEAL_LIFE:3'] },\n  { verb: 'avancer',  text: '...', field: verbToField('avancer'),  effects: ['ADD_ANAM:2'] },\n  { verb: 'attendre', text: '...', field: verbToField('attendre'), effects: ['HEAL_LIFE:2'] },\nNote: verbToField is already imported via generateFastRouteCard — the import already exists in CardSystem.ts. verbToField needs to be re-exported and called in main.ts's catch block."
+    }
+  ],
+
+  "balance_recommendations": [
+    {
+      "parameter": "rail_completion_pacing",
+      "current": "Rail runs at WALK_SPEED=0.04/s continuously; completes after ~25 walk phases (150s walk time). No coupling to cardsPlayed.",
+      "suggested": "Reduce WALK_SPEED from 0.04 to 0.032 OR add a soft-cap: pause rail at progress=0.92 until cardsPlayed >= 20. This statistically eliminates rail loops before card 25.",
+      "confidence": "MEDIUM"
+    },
+    {
+      "parameter": "emergency_card_verb_coverage",
+      "current": "'avancer' and 'attendre' are likely absent from ACTION_VERBS, routing to esprit/traces by default.",
+      "suggested": "Replace 'avancer'/'attendre' in the emergency card with verbs confirmed present in ACTION_VERBS (e.g. 'marcher' if present, or 'observer'/'scruter' for a coherent observation-field fallback).",
+      "confidence": "HIGH"
+    }
+  ],
+
+  "summary": {
+    "issues_by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 2,
+      "MEDIUM": 1,
+      "LOW": 2
+    },
+    "softlocks_detected": 0,
+    "lazy_loading_verdict": "Feasible and recommended. Scope: 3 file touches, ~30 lines changed. Net TTI gain: ~15-40ms on mobile. Not a blocking issue but a clean win for Cycle 55.",
+    "aria_verdict": "3 gaps remain: SceneManager canvas (MEDIUM), boot-status-text (LOW), LLM hint toast (LOW). MainMenuScene canvas and all minigame canvases already have aria-label — the pattern is established, gaps are oversights.",
+    "victory_verdict": "No true softlock. Silent rail looping before card 25 is real and produces poor UX. HIGH severity for game feel. Fix is low-effort (add sound cue) to medium-effort (rail pacing).",
+    "emergency_field_verdict": "observer→observation is CORRECT. BUG-C52-04 is partially closed. Residual risk from hardcoded strings — use verbToField() at runtime to fully close."
+  },
+
+  "next_steps": [
+    "C54-06: Replace hardcoded field literals in emergency card with verbToField() calls — LOW effort, closes BUG-C52-04 fully",
+    "C54-05: Add sound/visual cue on silent rail reset — LOW effort, HIGH impact on game feel",
+    "C54-02: Add aria-label + role='img' to SceneManager canvas — 2 lines",
+    "C54-03: Add aria-live='polite' aria-atomic='true' to #boot-status-text in index.html — 1 line",
+    "C54-04: Add role='status' + aria-live to LLM hint toast — 2 lines",
+    "C54-01: Implement dynamic import() in createMinigame — Cycle 55 milestone"
+  ]
+}

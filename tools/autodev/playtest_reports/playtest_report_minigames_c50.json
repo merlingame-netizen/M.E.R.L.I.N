@@ -1,0 +1,171 @@
+{
+  "timestamp": "2026-04-03T00:00:00Z",
+  "cycle": 50,
+  "commit_audited": "cad1fb2",
+  "files_audited": 15,
+
+  "fix_verification_c49": {
+    "fix_1_mg_runes_click_listener": {
+      "status": "PASS",
+      "detail": "Zero occurrences of addEventListener('click') or removeEventListener('click') in mg_runes.ts. Only 'pointerdown' used (line 89). endGame() removes only pointerdown (line 196). cleanup() not present — endGame handles it directly. CLEAN."
+    },
+    "fix_2_mg_traces_click_listener": {
+      "status": "PASS",
+      "detail": "Zero occurrences of 'click' listener. Only addEventListener('pointerdown', this.onClick) in setup() (line 71). endGame() removes only 'pointerdown' (line 110). aria-valuenow updated in setInterval: `bar.setAttribute('aria-valuenow', String(Math.round(pct)))` (line 81). CLEAN."
+    },
+    "fix_3_mg_volonte_hex_rgba": {
+      "status": "PASS",
+      "detail": "Three-component hex->rgba conversion present at lines 239-241: parseInt(d.color.slice(1,3),16) for r, parseInt(d.color.slice(3,5),16) for g, parseInt(d.color.slice(5,7),16) for b. All three components used in createRadialGradient rgba() call. CLEAN."
+    },
+    "fix_4_mg_course_roundOutcomes": {
+      "status": "PASS",
+      "detail": "private roundOutcomes: boolean[] = [] declared at class level (line 56). Three push paths confirmed: hit -> [...this.roundOutcomes, true] (line 187), miss via decoy click -> [...this.roundOutcomes, false] (line 200), timeout miss -> [...this.roundOutcomes, false] (line 262). this.roundOutcomes[i] used in dot drawing (line 394). CLEAN — note: immutable spread pattern used, no direct push()."
+    },
+    "fix_5_aria_batch": {
+      "mg_apaisement": {
+        "status": "PASS",
+        "role_progressbar": true,
+        "aria_valuemin_max": true,
+        "aria_valuenow_setInterval": "line 120: bar.setAttribute('aria-valuenow', String(Math.round(pct)))"
+      },
+      "mg_negociation": {
+        "status": "PASS",
+        "role_progressbar": true,
+        "aria_valuemin_max": true,
+        "aria_valuenow_setInterval": "line 157: bar.setAttribute('aria-valuenow', String(Math.round(pct)))"
+      },
+      "mg_ombres": {
+        "status": "PASS",
+        "role_progressbar": true,
+        "aria_valuemin_max": true,
+        "aria_valuenow_setInterval": "line 116: bar.setAttribute('aria-valuenow', String(Math.round(pct)))"
+      },
+      "mg_volonte": {
+        "status": "PASS",
+        "role_progressbar": true,
+        "aria_valuemin_max": true,
+        "aria_valuenow_setInterval": "line 125: bar.setAttribute('aria-valuenow', String(Math.round(pct)))"
+      },
+      "mg_equilibre": {
+        "status": "PASS",
+        "role_progressbar": true,
+        "aria_valuemin_max": true,
+        "aria_valuenow_setInterval": "line 113: bar.setAttribute('aria-valuenow', String(Math.round(pct)))"
+      }
+    }
+  },
+
+  "all_c49_fixes": "5/5 VERIFIED PASS",
+
+  "global_score_grid": {
+    "criterion_1_aria_timer_progressbar": {
+      "label": "ARIA timer progressbar consistency",
+      "applicable": 14,
+      "passing": 14,
+      "detail": "All 14 minigames have role='progressbar' + aria-valuemin/max/now in setup() AND bar.setAttribute('aria-valuenow') inside setInterval. mg_runes also confirmed (lines 62-64, 103). mg_equilibre confirmed (lines 67-70, 113). Full compliance.",
+      "score": 10
+    },
+    "criterion_2_double_listener": {
+      "label": "Double-listener cleanliness (pointerdown only)",
+      "applicable": 14,
+      "passing": 13,
+      "detail": "Zero 'click' listeners found across all 14 files. mg_runes canvas lacks touch-action:none in its style string (canvas style line 81 has no touch-action). This is a minor mobile regression — all others have touch-action:none. 13/14 fully clean.",
+      "score": 9
+    },
+    "criterion_3_cleanup_completeness": {
+      "label": "cleanup() completeness",
+      "applicable": 14,
+      "passing": 12,
+      "detail": "All 14 files handle clearInterval + cancelAnimationFrame + removeEventListener in endGame(). mg_equilibre also removes document-level keydown/keyup listeners. mg_traces and mg_runes do not null out canvas/ctx refs but do removeEventListener properly. MinigameBase clearRect confirmed per file. 2 minor gaps: mg_runes has no revealTimeout cancel safety if endGame fires mid-reveal (has clearTimeout(revealTimeout) -- actually confirmed line 194). mg_traces: canvas style missing touch-action:none.",
+      "score": 8
+    },
+    "criterion_4_canvas_role_application": {
+      "label": "Canvas role=application + aria-label",
+      "applicable": 14,
+      "passing": 14,
+      "detail": "All 14 canvases confirmed with role='application' and descriptive aria-label. mg_runes: 'Minigame Runes — tracez la rune...', mg_traces: 'Minigame Traces — suivez le chemin...', mg_volonte: 'Minigame Volonte — resistez aux distractions...', mg_apaisement: 'synchronisez votre respiration...', mg_negociation: 'choisissez les bons mots...', mg_ombres: 'naviguez dans le couloir...', mg_equilibre: 'maintenez votre equilibre...', mg_course: 'capturez les symboles...'",
+      "score": 10
+    },
+    "criterion_5_audiocontext_lifecycle": {
+      "label": "AudioContext lifecycle",
+      "applicable": 1,
+      "passing": 1,
+      "detail": "AudioContext used only in MinigameBase.ts playOutcomeTone(). ctx.resume() called before scheduling (BUG-03 fix). ctx.close() scheduled via setTimeout after last tone completes. No per-minigame AudioContext instantiation — centralised and safe. Individual minigames have no audio code.",
+      "score": 10
+    },
+    "criterion_6_fun_factor": {
+      "label": "Fun factor mean",
+      "applicable": 14,
+      "passing": 14,
+      "detail": "Variety: reaction (Course), memory (Runes), precision (Traces, Volonte), rhythm (Apaisement, Echo), stealth (Ombres), balance (Equilibre), word-matching (Negociation), combat (Combat Rituel), exploration (Fouille, Herboristerie), social (Regard, Sang Froid). Theme cohesion (Ogham symbols, Breton/Celtic faction vocabulary) is strong. Course: good tension loop. Runes: satisfying pair-match. Volonte: glow distractors work. Minor: Traces has no touch-action:none which hurts mobile fun.",
+      "score": 8
+    },
+    "criterion_7_visual_feedback": {
+      "label": "Feedback visuel immediat (glow, flash, color)",
+      "applicable": 14,
+      "passing": 14,
+      "detail": "Course: green/red flash overlay + 'Touche!/Rate!' text (lines 366-379). Runes: tiles change color on reveal/match. Volonte: hex->rgba radial glow per distractor confirmed. Apaisement: feedbackAlpha/feedbackColor driven. Ombres: collision color change (colliding flag drives red tint). All 14 use clearRect + rAF-based render for immediate response.",
+      "score": 10
+    },
+    "criterion_8_immutability": {
+      "label": "Immutabilite (violations residuelles)",
+      "applicable": 14,
+      "passing": 12,
+      "detail": "mg_runes: deliberate controlled mutation via (tile as {state:string}).state cast with inline comment justification (line 157-158: 'Mutate state (tiles are mutable game state, not shared data)'). Acceptable but not pure. mg_traces: Footprint.hit mutated directly (line 100: target.hit = true) — same pattern. mg_course: roundOutcomes uses immutable spread [...this.roundOutcomes, true/false] — PASS. All Distractor/Segment/Word interfaces use readonly. 2 controlled mutations in game-state objects, justified but residual.",
+      "score": 8
+    },
+    "criterion_9_mobile_touch_action": {
+      "label": "Mobile touch-action:none on canvas",
+      "applicable": 14,
+      "passing": 12,
+      "detail": "mg_runes canvas style (line 81): 'border-radius:12px;background:...;cursor:pointer;display:block;margin:0 auto;' — MISSING touch-action:none. mg_traces canvas style (line 56): similar, no touch-action:none. All other 12 files confirmed touch-action:none in canvas cssText.",
+      "score": 7
+    },
+    "criterion_10_memory_leaks": {
+      "label": "Memory leaks (canvas cleanup)",
+      "applicable": 14,
+      "passing": 14,
+      "detail": "All 14 files: clearRect called in render(), rAF cancelled in endGame() via cancelAnimationFrame(this.animFrame), intervals cleared via clearInterval(this.timerInterval). MinigameBase shows no retained canvas refs after finish(). mg_equilibre removes document-level keyboard listeners in endGame(). No ImageData or offscreen canvas accumulation detected. AudioContext self-closes in MinigameBase.",
+      "score": 9
+    }
+  },
+
+  "summary": {
+    "criterion_scores": [10, 9, 8, 10, 10, 8, 10, 8, 7, 9],
+    "total_raw": 89,
+    "max": 100,
+    "global_score_10": 8.9,
+    "grade": "AA",
+    "previous_cycle_estimated": "7.5/10",
+    "delta": "+1.4"
+  },
+
+  "remaining_issues": [
+    {
+      "severity": "LOW",
+      "file": "mg_runes.ts",
+      "criterion": "Mobile touch-action:none",
+      "detail": "Canvas style at line 81 is missing touch-action:none — scroll events will fire on mobile swipe during pair-matching.",
+      "fix": "Add touch-action:none to canvas.style.cssText"
+    },
+    {
+      "severity": "LOW",
+      "file": "mg_traces.ts",
+      "criterion": "Mobile touch-action:none",
+      "detail": "Canvas style at line 56 is missing touch-action:none — mobile tap sequence will be interrupted by scroll.",
+      "fix": "Add touch-action:none to canvas.style.cssText"
+    },
+    {
+      "severity": "INFO",
+      "file": "mg_runes.ts + mg_traces.ts",
+      "criterion": "Immutability",
+      "detail": "Direct mutation of .hit / .state on game-state objects. Justified for render-loop performance but inconsistent with other files using spread.",
+      "fix": "Optional: replace with [...arr] pattern + new object if consistency is desired"
+    }
+  ],
+
+  "c49_fixes_confirmed": true,
+  "blocker_issues": 0,
+  "high_issues": 0,
+  "low_issues": 3
+}

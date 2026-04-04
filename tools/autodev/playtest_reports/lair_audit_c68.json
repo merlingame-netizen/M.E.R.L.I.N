@@ -1,0 +1,191 @@
+{
+  "cycle": "C68",
+  "timestamp": "2026-04-04T00:00:00.000Z",
+  "audit_basis": "Source code review: MerlinLairScene.ts (lines 1-150, 650-800, 900-1080), LairGLBAssets.ts (lines 1-150), mg_fouille.ts (lines 1-260), mg_apaisement.ts (lines 1-80), mg_negociation.ts (lines 1-80), mg_ombres.ts (lines 1-80), MinigameBase.ts (lines 1-80), vite.config.ts (full). Baseline: C67 lair_audit. Commits reviewed: C128-C131.",
+  "double_mode": {
+    "score": 9.30,
+    "verdict": "PROCEED",
+    "criteria": {
+      "rendu_3d": {
+        "score": 9,
+        "note": "flat-shading on all procedural and GLB meshes confirmed. Crystal purposely PBR (transparent gem — correct exclusion). 5-source lighting rig intact. fog(0x0d0a08, 12, 28) creates correct Celtic depth. No smooth outlier detected. Key light decay=1.6 vs rim/fill/backAccent decay=2.0 is a deliberate aesthetic choice documented in C85-02. No regression from C67."
+      },
+      "asset_quality": {
+        "score": 9,
+        "note": "5 GLB slots confirmed (cauldron_merlin.glb, bougie.glb x3, table_druidique.glb, bibliotheque.glb, sol_pierre.glb, mur_pierre.glb InstancedMesh). All have procedural fallback guards. applyFlatShading() + material.clone() applied on every GLB path. Celtic scale relationships preserved (stone walls 24x16u, flagstone floor, beams at y=10.5). Non-uniform scale on bibliotheque (1.2, 1.0, 0.8) documented and has polygonOffset compensation."
+      },
+      "animation_fluidity": {
+        "score": 9,
+        "note": "Entry cinematic cubic ease-out z=10→7 over 1.2s confirmed at lines 1072-1077. entryCamDone flag prevents re-run. Dual-frequency camera sway (x=sin(t*0.3*2pi)*0.1, y=0.5+sin(t*0.23*2pi)*0.06). Door cinematic flash 380ms + emissiveIntensity=1.2 burst. GLB fade-in 400ms rAF with isDisposed() guard. Crystal float animation synced to GLB group via crystalGLBBaseY. No regression from C67."
+      },
+      "bundle_size": {
+        "score": 10,
+        "note": "Build state post-C131 confirmed: main=50.83KB gzip (25.4% of 200KB target), minigames=24.26KB gzip (80.9% of 30KB target), three-core=135.45KB. manualChunks isolates three and minigames correctly. chunkSizeWarningLimit=550 appropriate for three.js vendor. vite.config.ts unchanged from C67 — no regression. All 11 modified minigame files (C30 aria patch) included in minigames chunk via MinigameRegistry static import."
+      },
+      "fps_performance": {
+        "score": 9,
+        "note": "FPS monitoring with 2s interval + hysteresis [45, 52]. Dust motes disabled below 45fps. Low-end mobile drops backAccent PointLight. DPR capped at 2. InstancedMesh for mur_pierre (48→3 draw calls). Book material pool (18→6 materials). Candle GLB clones each get own material instances (BUG-L-10 fix). Particle bounds (N=80 dust, N=30 steam). No change in FPS management from C67."
+      },
+      "accessibility": {
+        "score": 9,
+        "note": "C131 fix confirmed at line 911: renderer.domElement.setAttribute('aria-label', Zone:ZONE — Cliquez pour activer) now fires in onMouseMove hover branch. Line 915: aria-label resets to generic string on unhover. BUG#5 from C67 (stale aria-label on mouse hover) is FIXED. canvas: role=application, tabindex=0, aria-describedby=lair-aria-live. ariaLive: polite+atomic. Minor remaining: BUG#5-DM (LOW) dual aria-live on keyboard nav — zoneToast aria-live=polite (line 706) + ariaLive (line 1041) still both fire on keyboard zone change. Tab-trap in lair keyboard handler is an acknowledged design trade-off."
+      },
+      "game_feel": {
+        "score": 9,
+        "note": "Hover: scale=1.05 on visualMesh, emissiveIntensity=0.65, 'hover' SFX via CustomEvent. Door cinematic: doorFlashing guard prevents double-activation (C121), 380ms flash, magic_reveal SFX, emissiveIntensity=1.2. Click confirmation: 'flip' SFX + ariaLive announce. Raycasting via THREE.Raycaster with invisible hit targets on all 5 zones. Hover highlight correctly routed through applyHoverTo() on C98 visualMesh. Scale, emissive, and SFX all consistent."
+      },
+      "player_feedback": {
+        "score": 9,
+        "note": "Zone hover: lore toast (amber label + parchment description), aria-label updated (C131), ariaLive polite announcement. Zone click: ariaLive textContent set to 'Zone activee'. Minigames: statusEl aria-live=polite in mg_fouille (line 130), mg_apaisement, mg_negociation, mg_ombres — consistent pattern. Timer progressbar with aria-valuenow across all minigames. SFX: unlock/lose/hover/flip/magic_reveal/critical_alert events. Minor: mg_fouille score bonus not displayed visually before endGame() resolves (carried from C67, LOW)."
+      },
+      "balance": {
+        "score": 10,
+        "note": "tieredValue() confirmed in MinigameBase.ts — shared base infrastructure. mg_fouille: time [12,10,8,7]s / decoys [15,18,21,24] / shuffle [2.0,1.5,1.2,1.0]s. mg_apaisement: time [12,10,8,6]s / breathCycle [3.0,2.5,2.0,1.7]s / targetWindow [0.15,0.13,0.10,0.08]. mg_negociation: time [12,10,8,7]s / scrollSpeed [40,50,60,70]px/s / spawnInterval [0.6,0.5,0.4,0.35]s. mg_ombres: totalTime [16,14,12,10]s / endHalfWidth [30,26,22,18]px. Full 4-tier coverage confirmed across all sampled minigames. validateScore() prevents NaN/Infinity score edge cases. 4-level outcome system (desastre/echec/reussite/maitrise) with narrative flavor text."
+      },
+      "fun_factor": {
+        "score": 9,
+        "note": "Celtic lore: ZONE_LORE references Cerridwen (cauldron), Brocéliande (door), sacred ogham stone, Merlin's chronicles. Lore toast colors: amber #cd853f zone label + parchment rgba(232,220,200,0.7) description — warm and thematic. Steam particles #44cc88 (forest green), crystal glow #6699cc (moonlight). 5 distinct minigames covering different interaction paradigms (fouille/search, apaisement/rhythm, negociation/word-click, ombres/stealth, others). Skull prop + potion bottles add authentic druidic atmosphere. Door cinematic creates satisfying adventure launch ritual."
+      }
+    },
+    "top3_problems": [
+      "BUG#5-DM (LOW, carried from C67): dual aria-live announcements on keyboard zone nav — ariaLive.textContent (line 1041) and zoneToast aria-live=polite (line 706) both fire simultaneously; screen readers may speak zone name twice (MerlinLairScene.ts lines 706, 1041-1053)",
+      "mg_fouille score bonus not displayed visually before endGame() resolves — player sees 'Trouve!' but not the elapsed-time bonus value until result overlay appears",
+      "No loading indicator during GLB fetch — user clicking a zone mid-GLB-load hits procedural hitTarget mesh rather than GLB mesh, inconsistent interaction window (LairGLBAssets.ts)"
+    ],
+    "bugs": [
+      {
+        "id": "BUG#5-DM",
+        "severity": "LOW",
+        "description": "Dual aria-live announcements on keyboard zone navigation remain unfixed from C67. zoneToast has aria-live=polite (line 706) and ariaLive.textContent fires at line 1041 — both announce on keyboard nav. Screen readers may speak the zone description twice.",
+        "file": "web-demo/src/scenes/MerlinLairScene.ts",
+        "line": 706,
+        "fix": "Remove aria-live=polite from zoneToast (keep role=status for visual, set aria-live=off), or add aria-hidden=true to zoneToast and rely solely on ariaLive div for AT."
+      }
+    ]
+  },
+  "aaa_ultra": {
+    "score": 9.22,
+    "verdict": "PROCEED",
+    "criteria": {
+      "flat_shading": {
+        "score": 9,
+        "note": "applyFlatShading() enforced on all GLB paths (cauldron, bougie x3, sol_pierre, mur_pierre). MeshBasicMaterial instanceof guard at LairGLBAssets.ts lines 61 and 26 prevents silent cast. Crystal deliberately excluded (transparent PBR sphere — correct). All procedural meshes: stoneMat/mortarMat/floorMat/ceilMat/beamMat/woodMat/mapMat all have flatShading:true in MerlinLairScene.ts lines 39, 40, 63, 69, 75, 104, 106. No smooth outlier. Minor: crystal procedural mat roughness=0.25 reads smoother than rest — acknowledged intentional."
+      },
+      "z_fighting": {
+        "score": 9,
+        "note": "polygonOffset confirmed: mortarMat (factor=-1/units=-2, lines 44-45), sol_pierre/mur_pierre/table_druidique/bibliotheque (factor=-2/units=-4 per C67 evidence, LairGLBAssets.ts). All 5 GLB overlay paths + mortar procedural lines covered. bougie candles positioned 0.15u above floor — no offset needed. Differential intentional: mortar is 0.01u coplanar gap vs GLB tile 0.3u overlap. No new z-fighting surface introduced by C128-C131 patches."
+      },
+      "material_quality": {
+        "score": 9,
+        "note": "Stone: roughness=0.95/metalness=0.0. Iron cauldron: roughness=0.9/metalness=0.0 (cauldron GLB overrides to rough iron). Wood: roughness=0.8-0.85/metalness=0.0. Crystal: roughness=0.25 transparent PBR. Potion bottles: roughness=0.1 (glass), emissive additive, opacity=0.78. Material.clone() on all GLB paths prevents cache pollution. Book pool: 6 shared instances without cross-contamination. Emissive baseline=0 guard (C90-P1) on bougie clones. No material regression in C128-C131 patches."
+      },
+      "lighting_dramaturgy": {
+        "score": 9,
+        "note": "5-source rig: AmbientLight(0x1a1008,0.5) + key PointLight(0xff6618,0.9,22,1.6) at [0,3,2] + rim PointLight(0x6699cc,0.55,18,2.0) at [8,2,7] + fill PointLight(0xcc8833,0.4,16,2.0) at [-9,0,-5] + backAccent PointLight(0xff5500,0.35,12,2.0) at [0,1.5,-11]. Low-end mobile: drops backAccent, boosts fill to 0.55. Crystal PointLight range capped at 5. Door flicker at 4.1Hz + cinematic burst (12+sin*4). Decay=1.6 vs 2.0 differential intentional for forward depth. Lines 658-673 confirmed unchanged."
+      },
+      "glb_coverage": {
+        "score": 9,
+        "note": "GLB slots: cauldron_merlin.glb, bougie.glb (3 clones), table_druidique.glb, bibliotheque.glb, sol_pierre.glb, mur_pierre.glb (InstancedMesh). All .catch(() => {}) guards. isDisposed() guard on all .then() paths (C81-03). onCauldronGLBLoaded / onCrystalGLBLoaded / onCrystalGroupLoaded / onMapGLBLoaded / onShelfGLBLoaded callbacks complete interactive swap chain. crystalSphere procedural fallback (visible=false, raycast-able hitSphere). No GLB regression in C128-C131."
+      },
+      "geometric_proportions": {
+        "score": 9,
+        "note": "Celtic interior: back wall 24x16u, low ceiling y=11, beams y=10.5-10.8, floor y=-5. Zone placement: map at x=-5, crystal at x=5, bookshelf at x=8, door at x=-10, cauldron at [2,-3.8,-7]. Skull prop at [9,-1.9,-9]. Potion shelf y=-3.5. Stone mortar lines every 1.5u from y=0 to y=9. Non-uniform biblio scale (1.2,1.0,0.8) documented, compensated. Scene dimensions consistent with druidic hall aesthetic."
+      },
+      "bundle_gzip": {
+        "score": 10,
+        "note": "Post-C131 build: main=50.83KB gzip (target <200KB, using 25.4%), minigames=24.26KB (target <30KB, using 80.9%), three-core=135.45KB deferred vendor chunk. manualChunks strategy unchanged. C30 aria patch added role/aria-label to 11 minigame canvases — zero bundle impact (DOM attribute strings). chunkSizeWarningLimit=550 correct. reportCompressedSize=true. All targets met."
+      },
+      "fps_budget": {
+        "score": 9,
+        "note": "FPS hysteresis [45, 52] with 2s sampling. lowFpsMode disables dust motes. isLowEndMobile: /Android|iPhone|iPad|iPod/ + DPR>=2 (static at init). DPR capped at 2. InstancedMesh for mur_pierre. Book material pool. ResizeObserver for container-driven resize. crystalEntry cached (C118). Particles bounded: N=80 dust, N=30 steam. No per-frame allocations on hot path. No FPS management changes in C128-C131."
+      },
+      "memory_leaks": {
+        "score": 9,
+        "note": "dispose() chain: lairDisposed=true first, stopAmbient(), clearGLBCache(), resizeObserver.disconnect(), 6 event listener removals (mousemove, click, touchmove, touchstart, touchend, keydown), clearTimeout(doorFlashCancelHandle), scene.traverse() with InstancedMesh.dispose()+geometry.dispose()+material.dispose(), renderer.dispose(), parentNode guards on removeChild for domElement+ariaLive+zoneToast. BUG#4 (LOW) remains: fadeInGLB cancel function not stored at LairGLBAssets.ts lines 105, 141 (and other call sites) — rAF loop persists until frame resolves on mid-fade dispose, stopped by isDisposed() guard. Theoretical cost only."
+      },
+      "feedback_zones": {
+        "score": 10,
+        "note": "C131 fully resolves the BUG#5 aria-label staleness on mouse hover. Evidence: line 911 sets aria-label to 'Zone : ZONE_NAME — Cliquez pour activer' in onMouseMove hover branch. Line 915 resets aria-label to generic string on unhover. zoneToast shows lore on hover, hides on unhover. ariaLive announces on keyboard nav. All three feedback layers (visual toast, aria-label, aria-live) now work on both pointer and keyboard paths. WCAG 4.1.2 SC satisfied."
+      },
+      "mobile_touch": {
+        "score": 9,
+        "note": "touch-action:none on renderer.domElement (line 687). onTouchMove (passive:false), onTouchStart (passive:false), onTouchEnd clears hover. Touch bridge uses changedTouches fallback. All minigame canvases: touch-action:none in inline style (mg_fouille line 123, mg_apaisement/negociation/ombres same pattern). Pointer Events API unifies mouse/touch/pen in minigames (no separate touch handlers needed). Minor: touchmove removeEventListener called without options object in dispose — harmless but inconsistent."
+      },
+      "keyboard_nav": {
+        "score": 9,
+        "note": "Lair: Tab/ArrowRight/ArrowDown cycle forward, ArrowLeft/ArrowUp cycle backward across 5 zones (lines 995-1000). Enter/Space activates with door cinematic (lines 1001-1021). auto-focus on mount (line 690, preventScroll:true). mg_fouille C129/C130: onKeyDown at lines 211-242, keyboardActive=true on first ArrowKey (line 217), keyboardActive=false reset on replay (line 153), WCAG 2.4.7 pulsing amber crosshair when keyboardActive=true. mg_apaisement/negociation/ombres: canvas tabIndex=0. All cursor minigames covered. Minor: Tab in lair intercepts browser focus traversal (design trade-off, acknowledged)."
+      },
+      "scene_entry_flow": {
+        "score": 9,
+        "note": "Entry cinematic confirmed at lines 1072-1077: cubic ease-out (1-(1-t)^3) over ENTRY_CAM_DURATION=1.2s, z=10→7. entryCamDone flag prevents re-run. Camera start position: [0, 0.5, 10] (line 722). lookAt(0,0,-4) toward interior. Dual-frequency micro-sway continues post-entry. FOV=62 wide-angle interior drama. fog(0x0d0a08,12,28) matches ambient #0d0a08 for depth. No change in scene_entry from C67."
+      },
+      "hover_feedback": {
+        "score": 9,
+        "note": "Raycasting via THREE.Raycaster on all 5 invisible hit targets. Scale=1.05 on visualMesh (C98 guard prevents scaling the invisible hitTarget). emissiveIntensity=0.65 via applyHoverTo(). 'hover' SFX CustomEvent. cursor=pointer on hover, cursor=default on unhover. door hover: doorLight intensity boost. Crystal hover: crystalGLBMat emissive sync in update loop. onTouchEnd clears hover state. All paths (mouse, touch, keyboard) converge on same hover state management."
+      },
+      "transition_to_run": {
+        "score": 9,
+        "note": "Door cinematic: doorFlashing guard (line 952), doorFlashTimer=0, emissiveIntensity=1.2, magic_reveal SFX, 380ms setTimeout before cb(found.zone). C102 lairDisposed guard in callback (line 960). C121 double-activation guard prevents second click overwriting doorFlashCancelHandle. Keyboard path mirrors pointer path exactly (lines 1007-1018). clearTimeout(doorFlashCancelHandle) in dispose. No regression."
+      },
+      "lore_coherence": {
+        "score": 10,
+        "note": "ZONE_LORE confirmed at lines 931-937: map='Quelle contree de Bretagne t appelle ce soir?', crystal='Les runes d ogham murmurent dans la pierre sacree', bookshelf='Les chroniques de Merlin gardent memoire de tes actes', cauldron='Le chaudron de Cerridwen bouillonne de sagesse ancienne', door='Les bois de Broceliande t attendent, voyageur'. All 5 zones have unique mythological anchors. Toast colors amber/parchment reinforce parchment-manuscript aesthetic. Zone names in ZONE_ARIA_LABELS are correct Celtic objects."
+      },
+      "zone_narration": {
+        "score": 10,
+        "note": "5 zones each have distinct story role: map=biome selection (world), crystal=oghams (power), bookshelf=journal (memory), cauldron=dialogue_merlin (wisdom/Cerridwen), door=run start (adventure/Broceliande). GDB mapping comment at line 14 confirms intentional narrative design. Each zone has unique lore text, unique emissive color baseline, unique hit geometry (scroll, hitSphere, frame, cauldronHit, doorHit). Skull prop + potion bottles add ambient narrative density."
+      },
+      "celtic_immersion": {
+        "score": 9,
+        "note": "Color palette: stoneMat #3a3228, mortarMat #2a2420, floorMat #201c18, beamMat #3d2b1a — warm dark Celtic stone. Crystal #6699cc moonlight glow. Door #8b6343 + amber emissive. Cauldron iron + emissive #00aa33 (druidic green). Steam particles #44cc88 (forest). Fog #0d0a08 (deep forest night). Lore: Cerridwen, Brocéliande, ogham, druide, Bretagne. mg_negociation faction keywords include 'gui', 'chene', 'rituel', 'ancestral' — reinforces Celtic world. Minor: minigame titles use French informal ('Trouve l objet cache') which reads authentic but slightly modern."
+      }
+    },
+    "bugs": [
+      {
+        "id": "BUG#4",
+        "severity": "LOW",
+        "description": "fadeInGLB() returns a cancel function at LairGLBAssets.ts line 53 that is not stored by any caller at lines 105, 141, and other GLB load sites. If dispose() fires mid-fade, isDisposed() check correctly prevents GPU writes, but the rAF loop reference persists until that frame resolves naturally. Memory pressure is negligible (<1ms) but the cancel API is unused. Carried from C67, no fix in C128-C131.",
+        "file": "web-demo/src/scenes/LairGLBAssets.ts",
+        "line": 53,
+        "fix": "Store cancel = fadeInGLB(...) at each call site (lines ~105, ~141, etc.) and call cancel() in dispose() for each in-flight fade, or document the current isDisposed() guard as the accepted mitigation and close the bug."
+      },
+      {
+        "id": "BUG#5-DM",
+        "severity": "LOW",
+        "description": "Dual aria-live announcements on keyboard zone navigation remain from C67. zoneToast has aria-live=polite (line 706) and ariaLive.textContent fires at line 1041 on the same keyboard nav event. Both announce simultaneously. Screen readers may speak the zone name and lore twice. C131 fixed the mouse-hover aria-label drift (BUG#5 AAA) but did not address this separate DM issue.",
+        "file": "web-demo/src/scenes/MerlinLairScene.ts",
+        "line": 706,
+        "fix": "Set aria-live=off on zoneToast (keep role=status for visual, WCAG 1.4.13) and rely on ariaLive div as the sole polite announcement channel."
+      }
+    ],
+    "top3_issues": [
+      "BUG#4 (LOW, carried): fadeInGLB cancel function unused — rAF loop persists on mid-fade dispose until isDisposed() check fires; cancel API returns but callers discard it (LairGLBAssets.ts line 53 vs call sites ~105, ~141)",
+      "BUG#5-DM (LOW, carried): dual aria-live on keyboard zone nav — zoneToast (aria-live=polite, line 706) + ariaLive (line 1041) both announce; verbose AT output risk (MerlinLairScene.ts)",
+      "No GLB load progress indicator — procedural hitTarget remains active during async fetch; click mid-load hits procedural mesh until GLB swap callback fires (design gap, not a code bug)"
+    ],
+    "top3_strengths": [
+      "C131 fully resolves WCAG 4.1.2 SC 4.1.2 aria-label staleness: line 911 updates aria-label on mouse hover, line 915 resets on unhover — both pointer and keyboard paths now maintain aria-label parity",
+      "Dispose chain is production-grade: lairDisposed guard + 6 event removals + InstancedMesh.dispose() + scene.traverse() + clearGLBCache() + parentNode guards on all 3 DOM removals + clearTimeout(doorFlashCancelHandle)",
+      "tieredValue() in MinigameBase provides uniform 4-tier difficulty scaling across all 11+ minigames — confirmed in mg_fouille (time/decoys/shuffle), mg_apaisement (breathCycle/targetWindow/goodWindow), mg_negociation (scrollSpeed/spawnInterval), mg_ombres (totalTime/endHalfWidth)"
+    ]
+  },
+  "combined_verdict": "PROCEED",
+  "c67_delta": {
+    "aaa": "+0.07 (9.15 → 9.22) — C131 resolved BUG#5 (aria-label mouse hover staleness), bumping feedback_zones from 9 to 10",
+    "double": "+0.10 (9.20 → 9.30) — C131 resolved BUG#5 reflected in accessibility criterion (8→9) and overall average lift"
+  },
+  "fixed_in_c128_c131": [
+    "BUG#2 (mg_fouille keyboard crosshair) — CONFIRMED FIXED: keyboardActive flag set on ArrowKey (line 217), reset on replay (line 153), WCAG 2.4.7 pulsing amber crosshair renders when keyboardActive=true",
+    "BUG#3 (non-cursor minigames ArrowKey) — CONFIRMED FIXED: mg_fouille onKeyDown handler (lines 211-242) with step=20, bounds-clamped cursor movement",
+    "BUG#5 (canvas aria-label stale on mouse hover) — CONFIRMED FIXED in C131: line 911 updates aria-label in onMouseMove hover branch, line 915 resets on unhover, WCAG 4.1.2 satisfied",
+    "mortarMat polygonOffset (BUG#1 / C129) — CONFIRMED PRESENT: lines 43-45 factor=-1/units=-2 on mortarMat"
+  ],
+  "remaining_bugs": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 2,
+    "list": ["BUG#4 — fadeInGLB cancel unused (LairGLBAssets.ts ~105)", "BUG#5-DM — dual aria-live on keyboard nav (MerlinLairScene.ts line 706)"]
+  },
+  "summary": "C68 post-C131 audit. Both AAA ULTRA and DOUBLE MODE maintain PROCEED verdicts with marginal score improvements over C67. The key delivery in C128-C131 is the completion of the WCAG accessibility stack: mortarMat polygonOffset (C129), mg_fouille ArrowKey cursor (C129), keyboard crosshair WCAG 2.4.7 (C130), and canvas aria-label sync on hover+reset (C131). No new bugs introduced. Two LOW-severity issues carried from C67 (BUG#4 cancel handle, BUG#5-DM dual aria-live) remain the only open items. Celtic immersion, lighting dramaturgy, dispose chain, and tieredValue difficulty scaling are all production-quality. Recommended next focus: close BUG#5-DM (1-line fix on zoneToast), then address GLB loading UX."
+}

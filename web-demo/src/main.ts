@@ -652,8 +652,11 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       if (doorTriggered) return; // C117/MAIN-01: block all zone interactions after door click
       if (zone === 'crystal') {
         // C84: show ogham panel for pre-run selection — result carried into first card
+        // C170: guard against door click during await (race condition)
+        if (doorTriggered) return;
         playSound('crystal');
         lairSelectedOgham = await showOghamPanel();
+        if (doorTriggered) return; // Early abort if door clicked during await
         if (lairSelectedOgham) {
           showZoneToast('crystal'); // "Pierre des Oghams / Choisissez votre Ogham runique"
         }
@@ -661,16 +664,22 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       }
       if (zone === 'bookshelf') {
         // C85: journal panel — shows cross-run meta stats (anam, runs, oghams, top faction)
+        // C170: guard against door click during await (race condition)
+        if (doorTriggered) return;
         await showJournalPanel();
+        if (doorTriggered) return; // Early abort if door clicked during await
         return;
       }
       if (zone === 'cauldron') {
         // C162: try Groq LLM whisper first, fall back to static quote pool on failure
+        // C170: guard against door click during await (race condition)
+        if (doorTriggered) return;
         playSound('cauldron');
         const llm = getLLMAdapter();
         const whisper = llm
           ? await llm.generateMerlinWhisper(selectedBiomeId).catch(() => null)
           : null;
+        if (doorTriggered) return; // Early abort if door clicked during await
         cauldronQuoteIdx = (cauldronQuoteIdx + 1) % MERLIN_QUOTES.length;
         const quote = whisper ?? MERLIN_QUOTES[cauldronQuoteIdx]!;
         ZONE_LABELS['cauldron']!.title = 'Merlin murmure…';
@@ -1236,9 +1245,9 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
   marais_korrigans: 'Marais des Korrigans',
   landes_bruyere: 'Landes de Bruyere',
   cercles_pierres: 'Cercles de Pierres',
-  villages_celtes: 'Villages Celtes',
-  collines_dolmens: 'Collines aux Dolmens',
-  iles_mystiques: 'Iles Mystiques',
+  monts_brumeux: 'Monts Brumeux',
+  plaine_druides: 'Plaine des Druides',
+  vallee_anciens: 'Vallee des Anciens',
 } as const;
 
 /**

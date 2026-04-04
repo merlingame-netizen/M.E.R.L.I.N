@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-04-04T04:43:59Z",
+  "audit_type": "AAA_scene_audit",
+  "scene": "MerlinLairScene",
+  "cycle": "C55",
+  "fixes_applied_since_c52": ["C117_GLBcache_ResizeObserver", "C118_crystalEntry_deltaY", "C119_instanceof_guard_cursor", "C120_fadeInGLB_clearTimeout"],
+  "scores": {
+    "1_flat_shading_coherence": 9.5,
+    "2_z_fighting_residual": 9.0,
+    "3_materiaux_qualite": 8.5,
+    "4_lighting_dramaturgie": 9.0,
+    "5_GLB_coverage": 9.5,
+    "6_proportions_geometriques": 8.5,
+    "7_bundle_perf": 9.0,
+    "8_memory_leaks": 9.0,
+    "9_ux_aria": 9.5,
+    "10_hover_feedback": 9.0,
+    "11_door_cinematic_race": 8.0,
+    "12_celtic_lore_immersion": 9.5,
+    "global_average": 8.96
+  },
+  "special_evaluations": {
+    "map_hover_post_GLB": "PARTIAL BUG — mapHit inside mapGroup becomes invisible to raycaster when mapGroup.visible=false on GLB load",
+    "minigame_tieredValue_coverage": "PASS — all 14 minigame files use tieredValue (55 total calls, 0 files missing)"
+  },
+  "verdict": "NO PROCEED — 8.96/10 (threshold 9.0). 2 bugs blocking.",
+  "top3_bugs": [
+    {
+      "rank": 1, "severity": "HIGH", "title": "Door double-click race — doorFlashing guard missing",
+      "fix": "In onPointerAction and onKeyDown door branch: add `if (doorFlashing) return;` before starting flash"
+    },
+    {
+      "rank": 2, "severity": "MEDIUM", "title": "Map zone unclickable post-GLB (mapHit inside mapGroup)",
+      "fix": "mapGroup.remove(mapHit); scene.add(mapHit); — move hitTarget to scene root"
+    },
+    {
+      "rank": 3, "severity": "LOW", "title": "clearTimeout(doorFlashCancelHandle) called twice in dispose()",
+      "fix": "Remove duplicate call on line 1089, keep documented C120 call on line 1106"
+    }
+  ]
+}

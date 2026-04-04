@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "audit_type": "targeted_code_review",
+  "files_audited": [
+    "web-demo/src/minigames/mg_regard.ts",
+    "web-demo/src/minigames/mg_equilibre.ts",
+    "web-demo/src/minigames/mg_fouille.ts"
+  ],
+  "findings": [
+    {
+      "id": "REGARD-001",
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "severity": "MEDIUM",
+      "category": "balance",
+      "title": "Score formula is harshly punitive — one wrong click per round caps realistic score at ~20/100",
+      "original_claim": "correctTotal only increments once per round (on first correct symbol)",
+      "claim_verdict": "PARTIALLY_CORRECT — the mechanism is more nuanced than stated",
+      "analysis": {
+        "correctTotal_increment_logic": "correctTotal increments once per correct SEQUENTIAL symbol click (lines 221 in onClick, 271 in onKeyDown). It is NOT capped at 1 per round. A player who completes a full round perfectly accumulates N symbols (where N = roundLengths[round]).",
+        "wrong_click_behaviour": "Any wrong click (line 231-236) immediately sets phase='feedback' and ends the round. No further symbols can be clicked for that round. The remaining symbols in the round contribute 0 to correctTotal.",
+        "endGame_formula_line": 296,
+        "formula": "(this.correctTotal / totalSymbols) * 100",
+        "totalSymbols_computation": "roundLengths.reduce((a,b) => a+b, 0) — sum of ALL round lengths (line 295). Default tier 1 = 4+5+6 = 15. Tier 0 = 3+4+5 = 12. Tier 3 = 5+6+7 = 18.",
+        "worst_realistic_case": "Player gets first symbol right in each round then fails. correctTotal=3, totalSymbols=15, score=3/15*100=20. This matches the reported 20/100 cap — but it reflects worst-case partial play, not a hard ceiling.",
+        "actual_ceiling": "100/100 is achievable if all three rounds are completed perfectly. The formula is not broken by design.",
+        "actual_bug": "The denominator counts TOTAL symbols across all rounds regardless of how many the player actually had opportunity to click. A single wrong click forfeits the remaining round contribution with no partial credit. Combined with the feedback phase advancing the round, a player who scores 1/4 in round 1 is penalised as if they scored 0/4, because rounds 2 and 3 still need their full quotas. This creates a score distribution heavily skewed toward 0-33 in practice."
+      },
+      "exact_lines": {
+        "onClick_correctTotal_increment": 221,
+        "onClick_wrong_click_phase_change": 231,
+        "onKeyDown_correctTotal_increment": 271,
+        "onKeyDown_wrong_click_phase_change": 278,
+        "endGame_formula": "295-296"
+      },
+      "proposed_fix": {
+        "description": "Change the denominator from 'sum of all round lengths' to 'sum of sequence lengths for completed rounds only, plus symbols attempted in the current (failed) round'. This gives partial credit for progress within a failed round.",
+        "approach": "Track attemptsPerRound and correctPerRound arrays instead of single totals. Score = sum(correctPerRound[i]) / sum(seqLengths[i for completed]) * 100 where incomplete rounds count min(correct, attempted) / seqLen.",
+        "alternative_simpler_fix": "Replace the denominator with attemptsTotal (already tracked at line 217/269). Score = (correctTotal / attemptsTotal) * 100 when attemptsTotal > 0, else 0. This measures accuracy, not completion — different semantics but eliminates the denominator mismatch."
+      },
+      "regressions_if_fixed": "Changing to attemptsTotal denominator inflates scores for players who make many wrong guesses (they reduce attemptsTotal relative to correctTotal). A player who always gets round 1 symbol 1 correct then hammers wrong cells gets correctTotal=1 but attemptsTotal large, so score drops. This is fair. No other regressions identified."
+    },
+    {
+      "id": "EQUILIBRE-001",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "severity": "INFO",
+      "category": "false_positive",
+      "title": "keydown/keyup listeners are canvas-scoped — NOT document-scoped",
+      "original_claim": "keydown/keyup listeners attached to document (not canvas) at lines 103-104 and 327-328",
+      "claim_verdict": "FALSE — claim does not match current code",
+      "analysis": {
+        "actual_lines_103_104": "Line 103: this.canvas = document.createElement('canvas') — canvas DOM creation, not a listener. Line 104: canvas.setAttribute('aria-label', ...) — attribute assignment.",
+        "actual_keydown_line": 129,
+        "actual_keyup_line": 130,
+        "actual_code_line_129": "this.canvas.addEventListener('keydown', this.onKeyDown);",
+        "actual_code_line_130": "this.canvas.addEventListener('keyup', this.onKeyUp);",
+        "prior_bug_status": "The comment at line 127 explicitly documents that the prior document-scoped approach was fixed: 'C34: canvas-scoped keydown/keyup (was document-scoped, risked stuck-key on focus loss)'. Fix C34 has already been applied.",
+        "blur_guard_present": true,
+        "blur_guard_line": 131,
+        "blur_guard_code": "this.canvas.addEventListener('blur', this.onBlur)",
+        "blur_handler_effect": "Lines 46-49: onBlur clears keysDown and touchSide, preventing stuck-key if canvas loses focus.",
+        "abort_controller": "Not used — not needed. All listeners are on this.canvas (a locally scoped element). Cleanup at lines 204-209 in endGame() and in cleanup() removes all six listeners by reference. No leak path identified.",
+        "exception_leak_risk": "If setup() throws after canvas listeners are attached but before timerInterval starts, endGame() will never be called. However cleanup() is called by MinigameBase on teardown regardless of how the minigame ended — assuming MinigameBase.cleanup() calls super.cleanup() reliably. This is an architectural dependency, not a bug in this file."
+      },
+      "exact_lines": {
+        "canvas_creation": 103,
+        "keydown_listener": 129,
+        "keyup_listener": 130,
+        "blur_listener": 131,
+        "endGame_removeListeners": "204-209"
+      },
+      "proposed_fix": "No fix required. The claim is a false positive. The document-scoped bug was already fixed as C34.",
+      "regressions_if_fixed": "N/A"
+    },
+    {
+      "id": "FOUILLE-001",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "severity": "INFO",
+      "category": "false_positive",
+      "title": "foundTimeout handle IS stored and IS cleared in both endGame() and cleanup()",
+      "original_claim": "setTimeout handle not stored; cleanup() does not call clearTimeout",
+      "claim_verdict": "FALSE — both assertions are wrong as of current code",
+      "analysis": {
+        "handle_declaration_line": 50,
+        "handle_declaration_code": "private foundTimeout = 0;",
+        "onClick_set_line": 268,
+        "onClick_set_code": "this.foundTimeout = window.setTimeout(() => this.endGame(), 400);",
+        "onKeyDown_set_line": 233,
+        "onKeyDown_set_code": "this.foundTimeout = window.setTimeout(() => this.endGame(), 400);",
+        "endGame_clearTimeout_line": 293,
+        "endGame_clearTimeout_code": "clearTimeout(this.foundTimeout);",
+        "cleanup_clearTimeout_line": 439,
+        "cleanup_clearTimeout_code": "clearTimeout(this.foundTimeout);",
+        "double_endGame_guard": "Line 291: if (this.ended) return — prevents double-fire if both the timeout and the timerInterval call endGame() simultaneously.",
+        "comment_at_line_50": "// C100: stored to allow clearTimeout in cleanup",
+        "conclusion": "The fix was already applied as C100. The foundTimeout is properly stored, guarded, and cleaned up in both paths."
+      },
+      "exact_lines": {
+        "handle_stored": 50,
+        "setTimeout_onClick": 268,
+        "setTimeout_onKeyDown": 233,
+        "clearTimeout_endGame": 293,
+        "clearTimeout_cleanup": 439
+      },
+      "proposed_fix": "No fix required. The claim is a false positive.",
+      "regressions_if_fixed": "N/A"
+    }
+  ],
+  "summary": {
+    "total_claims_investigated": 3,
+    "confirmed_bugs": 0,
+    "confirmed_balance_issues": 1,
+    "false_positives": 2,
+    "already_fixed_prior_cycles": 2
+  },
+  "verdict": "PROCEED",
+  "verdict_rationale": "No correctness bugs or event-listener leaks found. The two cited code-quality issues (document-scoped listeners in mg_equilibre, unguarded setTimeout in mg_fouille) were already resolved in prior cycles C34 and C100 respectively. The mg_regard score formula is mathematically correct but produces a harsh score distribution in realistic play (worst-case 20/100 for minimal-correct partial rounds). This is a balance concern, not a blocking bug. Recommend tracking as a MEDIUM balance item for a future tuning pass rather than blocking release.",
+  "next_steps": [
+    "MEDIUM: Consider revising mg_regard endGame() score formula to use attemptsTotal as denominator (accuracy model) or award partial credit per round. Target: score distribution peaks at 40-70 for average players.",
+    "PASS: mg_equilibre listener scope — no action needed.",
+    "PASS: mg_fouille foundTimeout — no action needed.",
+    "OPTIONAL: Add integration test that simulates a player clicking first symbol correct then failing each round in mg_regard, asserting score > 20 after partial-credit fix is applied."
+  ]
+}

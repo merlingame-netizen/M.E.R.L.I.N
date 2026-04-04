@@ -1,0 +1,159 @@
+{
+  "timestamp": "2026-04-03T00:00:00Z",
+  "audit_type": "game_loop_static_analysis",
+  "source_file": "web-demo/src/main.ts",
+  "auditor": "merlin-ai-playtester (C52)",
+  "global_score": 7.5,
+
+  "section_scores": {
+    "boot_screen":      { "score": 9, "label": "PASS" },
+    "main_menu":        { "score": 8, "label": "PASS" },
+    "lair_hub":         { "score": 8, "label": "PASS" },
+    "walk_3d":          { "score": 7, "label": "MINOR_ISSUES" },
+    "card_loop":        { "score": 8, "label": "PASS" },
+    "minigame_dispatch":{ "score": 9, "label": "PASS" },
+    "effects_hud":      { "score": 8, "label": "PASS" },
+    "run_summary":      { "score": 9, "label": "PASS" },
+    "memory_cleanup":   { "score": 6, "label": "WARN" },
+    "edge_cases":       { "score": 4, "label": "FAIL" }
+  },
+
+  "bugs": [
+    {
+      "id": "BUG-01",
+      "priority": "HIGH",
+      "section": "edge_cases / memory_cleanup",
+      "title": "No tab-close / page-unload handler — run state and Anam not saved on sudden exit",
+      "description": "If the player closes the browser tab during a minigame or walk phase the while-loop never reaches saveAnamToStorage() / saveMetaToStorage(). There is no 'beforeunload' or 'visibilitychange' handler anywhere in main.ts. Cross-run Anam and faction rep can be silently lost.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "317-473 (gameLoop)",
+      "recommendation": "Add window.addEventListener('beforeunload', ...) and document.addEventListener('visibilitychange', ...) early in main() that call saveAnamToStorage() and saveMetaToStorage() unconditionally."
+    },
+    {
+      "id": "BUG-02",
+      "priority": "HIGH",
+      "section": "memory_cleanup",
+      "title": "sceneManager rAF and biome update loop never cancelled after run ends",
+      "description": "sceneManager.start() registers an internal requestAnimationFrame loop (and biomeResult.update is wired via sceneManager.onUpdate). When gameLoop() exits via any break path (death, cards_limit, victory), neither sceneManager.stop() nor any dispose is called. The 3D renderer and biome update continue running indefinitely after the run ends, burning GPU and CPU.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "270-315 (main) and 473 (end of gameLoop)",
+      "recommendation": "Call sceneManager.stop() (or equivalent dispose) immediately after the gameLoop() await resolves in main(). Also call stopAmbient() here if not already done by RunSummary."
+    },
+    {
+      "id": "BUG-03",
+      "priority": "HIGH",
+      "section": "walk_3d / memory_cleanup",
+      "title": "Lair-to-walk transition is one-way — no lair→walk→lair loop exists",
+      "description": "main() calls runMerlinLair() once, then enters the 3D walk + game loop. When a run ends (showRunSummary resolves) there is no code to return to the lair or menu. The function simply returns, leaving the app in a broken post-run state. There is no restart / new-run flow.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "249-315 (main)",
+      "recommendation": "Wrap the lair→walk→gameLoop sequence in an outer while(true) or outer async loop so that after showRunSummary the player is sent back to runMerlinLair() for the next run. Without this, the game is a single-run dead-end."
+    },
+    {
+      "id": "BUG-04",
+      "priority": "MEDIUM",
+      "section": "card_loop",
+      "title": "LLM null response can produce a card with field 'observation' but effects list from emergency template uses a hardcoded inline object instead of the Card interface",
+      "description": "In the catch-block at line 377-388, the emergency card is constructed inline with field values ('observation', 'esprit') that do NOT go through verbToField(). If verbToField returns 'esprit' for 'observer' but the inline object says 'observation', detectMinigame dispatches to fouille/regard instead of traces/echo. This inconsistency is minor but produces wrong minigame mapping on LLM failure.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "376-388",
+      "recommendation": "Replace the inline emergency card with a call to generateFastRouteCard(state().run.biome) which goes through the proper verbToField pipeline. The EMERGENCY_TEMPLATE in CardSystem.ts already serves this purpose."
+    },
+    {
+      "id": "BUG-05",
+      "priority": "MEDIUM",
+      "section": "walk_3d",
+      "title": "Rail reset on loop is silent — no visual fade between end-of-rail and reset",
+      "description": "At line 470-472, if rail.isComplete() but cardsPlayed < 25, the rail is reset silently with rail.reset() while already inside a fade-in/fade-out transition. The camera teleports back to position 0 during the fade, but if the fade timing is tight the player may see the rail snap. The victory condition (line 456) only triggers if cardsPlayed >= 25 AND rail complete, meaning rail can complete multiple times before triggering victory.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "465-473",
+      "recommendation": "Ensure rail.reset() is called while opacity is 0 (inside the fadeIn, before fadeOut). Currently rail.reset() is called after both fades complete."
+    },
+    {
+      "id": "BUG-06",
+      "priority": "MEDIUM",
+      "section": "lair_hub",
+      "title": "Zone toast timers not cancelled on dispose — potential DOM write after lair teardown",
+      "description": "In runMerlinLair(), activeToastFadeId and activeToastRemoveId are cleared when a new zone is entered, but if the door is clicked while a fade-out timer is in flight (e.g., the 220ms removeId), the setTimeout callback will still fire after lair.dispose() and wrapper.style.display = 'none'. The toast.remove() call is harmless if the element is already gone, but activeToast pointer remains stale. This is a minor but real leak.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "196-245",
+      "recommendation": "Before calling lair.dispose(), clear both timer IDs and call activeToast?.remove()."
+    },
+    {
+      "id": "BUG-07",
+      "priority": "LOW",
+      "section": "main_menu",
+      "title": "menuAnimId rAF loop is cancelled only after startDolly resolves — startDolly is a no-op",
+      "description": "startDolly() is documented as a no-op that calls onComplete immediately. So cancelAnimationFrame(menuAnimId) is reached quickly, but the menu.update() loop has been running throughout cutToBlack() and the await. This is harmless but wasteful — the menu scene renders during the black transition.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "135-144",
+      "recommendation": "Call cancelAnimationFrame(menuAnimId) immediately after overlay.classList.remove('visible'), before cutToBlack()."
+    },
+    {
+      "id": "BUG-08",
+      "priority": "LOW",
+      "section": "boot_screen",
+      "title": "msgInterval not cleared if bootScreen element is missing (early return path)",
+      "description": "If document.getElementById('boot-screen') returns null, the function returns immediately (line 47). However msgInterval is set after the null check so this is safe. But if bootScreen exists and the transitionend fires before the 1000ms timeout, the Promise.race resolves correctly. No actual bug — this is a code-quality note.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "45-93",
+      "recommendation": "No action required. Code is correct."
+    }
+  ],
+
+  "softlock_analysis": {
+    "softlock_detected": false,
+    "analysis": "No true softlock path found. The while(state().run.active) loop has three exit conditions: death_drain, death_effects, cards_limit (>=30). The LLM failure path generates a fallback card. The minigame failure path defaults to score 50. The rail complete + no victory resets correctly. However BUG-03 means the game ends in a no-UI dead state after the first run, which is a functional softlock at the meta level.",
+    "meta_softlock": "HIGH — After first run ends the page is stuck: no restart, no menu return. Player must reload manually."
+  },
+
+  "minigame_dispatch_audit": {
+    "total_mg_files": 14,
+    "total_mg_in_switch": 13,
+    "mapped_in_field_minigames": 14,
+    "coverage": "13/14 dispatched explicitly, 1 (traces) is the default fallback — correct",
+    "fields_covered": 8,
+    "all_fields_reachable": true,
+    "unreachable_minigames": [],
+    "notes": "All 14 minigame classes are imported. The createMinigame switch covers 13 explicitly + traces as default. FIELD_MINIGAMES maps all 8 lexical fields. Full coverage confirmed."
+  },
+
+  "lair_loop_audit": {
+    "lair_to_walk_transition": "IMPLEMENTED (cutToBlack + dispose + display none)",
+    "walk_to_lair_return": "MISSING — BUG-03",
+    "loop_bouclable": false
+  },
+
+  "issues_summary": [
+    {
+      "severity": "HIGH",
+      "count": 3,
+      "items": ["BUG-01 (no unload save)", "BUG-02 (rAF leak post-run)", "BUG-03 (no run loop / dead state after first run)"]
+    },
+    {
+      "severity": "MEDIUM",
+      "count": 3,
+      "items": ["BUG-04 (emergency card field mismatch)", "BUG-05 (silent rail reset)", "BUG-06 (lair toast timer leak)"]
+    },
+    {
+      "severity": "LOW",
+      "count": 2,
+      "items": ["BUG-07 (menu rAF wastes GPU during black)", "BUG-08 (code quality note only)"]
+    }
+  ],
+
+  "balance_observations": [
+    "Life drain starts at -1/card, escalates to -2 after card 15, -3 after card 25. With 30-card hard cap this means cards 25-30 drain -3 each = -15 life total in the final 5 cards. A player entering card 25 with <15 life cannot survive to the hard cap — likely intentional pressure but worth monitoring.",
+    "Victory requires cardsPlayed >= 25 AND rail.isComplete(). Rail can complete before card 25, silently resetting. Player can be stuck in walk loops with no victory trigger if rail is too short relative to 25-card minimum.",
+    "Emergency fallback card (EMERGENCY_TEMPLATE) always offers HEAL_LIFE or ADD_ANAM — never DAMAGE. This means LLM failure tilts the game toward easier outcomes, which is acceptable for resilience but may mask balance issues in testing."
+  ],
+
+  "recommendations_priority_order": [
+    "1. BUG-03: Add outer run loop so the game is replayable without a page reload — this is the most critical UX gap.",
+    "2. BUG-01: Add beforeunload + visibilitychange save handlers to protect cross-run data.",
+    "3. BUG-02: Call sceneManager.stop() + stopAmbient() after gameLoop() resolves.",
+    "4. BUG-04: Replace inline emergency card with generateFastRouteCard() call.",
+    "5. BUG-05: Move rail.reset() inside the opacity-0 window of the fade transition.",
+    "6. BUG-06: Clear lair toast timers before dispose."
+  ]
+}

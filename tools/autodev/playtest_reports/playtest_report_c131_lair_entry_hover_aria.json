@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "cycle": 131,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": "MerlinLairScene.ts · LairGLBAssets.ts · OghamPanel.ts · main.ts (L300-590)",
+    "prior_score": 9.94,
+    "files_read": [
+      "web-demo/src/scenes/MerlinLairScene.ts (L1-1278)",
+      "web-demo/src/scenes/LairGLBAssets.ts (L1-359)",
+      "web-demo/src/ui/OghamPanel.ts (L1-251)",
+      "web-demo/src/main.ts (L300-590)"
+    ]
+  },
+
+  "answers": {
+
+    "A_entry_animation_completeness": {
+      "verdict": "PARTIAL — camera pull-in exists, scene-level black fade is delegated to main.ts",
+      "detail": [
+        "MerlinLairScene.ts implements a 1.2s cubic ease-out camera pull-in (z=10→7) starting at the very first update() tick (L1125-1130). During this window camera.position.x is locked to 0 and camera.position.y to 0.5 — stable pull-in with no lateral drift.",
+        "There is NO scene-level opacity or fog density animation inside MerlinLairScene itself. The scene bg color is hard-cleared to 0x0d0a08 from frame 0.",
+        "The black-to-scene fade is handled by main.ts calling revealFromBlack(800) (L321) BEFORE lair.update() starts. revealFromBlack is an overlay div that fades from opacity:1 to 0 over 800ms. So the player sees black→scene fade at the overlay level, then the 1.2s camera pull-in plays underneath.",
+        "Individual GLB assets fade in via fadeInGLB (400ms per GLB, LairGLBAssets.ts) as they resolve asynchronously. On fast connections they may start resolving during the 800ms revealFromBlack window, so the fade-in is subtle but present.",
+        "GAP FOUND (MEDIUM): On very fast connections where all 7 GLBs resolve before the revealFromBlack overlay fades (unlikely in production but reproducible on localhost), the fade-in and the overlay lift overlap cleanly. However if revealFromBlack finishes before any GLB resolves, there is a brief window (duration = GLB network latency) where the procedural fallback geometry is fully visible and will then be replaced or hidden by the GLB. This is the existing procedural-fallback design intent and is not a regression.",
+        "GAP FOUND (LOW): The crystal ball procedural sphere is always visible for the first frame because crystalGLBGroup is null at L1155 until the async GLB resolves. With revealFromBlack(800) the overlay covers this, so in practice the procedural sphere is never seen cold. Verified safe."
+      ],
+      "rating": "ACCEPTABLE — dual-layer fade (overlay + camera pull-in) is robust. No pop-in in production."
+    },
+
+    "B_hover_feedback_gaps": {
+      "verdict": "VERIFIED — all 6 zones have correct hover feedback. One nuance noted.",
+      "zones": [
+        {
+          "zone": "map",
+          "hit_target": "mapHit (scroll Mesh, BoxGeometry 3×0.08×1.8)",
+          "visual_mesh": "None initially (baseEmissive=0.15 on mapHit itself). After table_druidique.glb loads: onMapGLBLoaded swaps entry.mesh AND entry.visualMesh to the first GLB mesh.",
+          "emissive_hover": "mapMat has emissive:0x3a2a10 emissiveIntensity:0.15 → boosted to 0.65 on hover. applyHoverTo() guard (L903-905) checks emissive channels > 0 before boosting — passes.",
+          "label": "ZONE_LORE['map'] + ZONE_ARIA_LABELS['map'] rendered in zoneToast and ariaLive.",
+          "distinct_hit_from_visual": "Pre-GLB: mapHit IS the visual (scroll on table top). Post-GLB: first GLB mesh is both hit and visual — correct per C121 pattern.",
+          "gap": "None."
+        },
+        {
+          "zone": "crystal",
+          "hit_target": "crystalData.hitTarget (invisible SphereGeometry r=0.85, MeshBasicMaterial visible:false)",
+          "visual_mesh": "crystalData.sphere (procedural) → swapped to GLB mesh via onCrystalGLBLoaded. baseEmissive=0.6.",
+          "emissive_hover": "Update loop (L1147-1150) drives emissiveIntensity from crystalEntry.hovered flag: hovered=0.9, unhovered=0.5 + sin(t*1.4)*0.15. applyHoverTo() is also called on hover-enter with 0.65, but the update loop takes over each frame — C113 fix ensures the per-frame write uses 0.9 base when hovered. Both procedural mat AND crystalGLBMat are updated each frame.",
+          "label": "ZONE_LORE['crystal'] — 'Les runes d'ogham murmurent dans la pierre sacrée'. Correct.",
+          "distinct_hit_from_visual": "Yes — hitSphere invisible, visualMesh = sphere or GLB mesh.",
+          "gap": "None."
+        },
+        {
+          "zone": "bookshelf",
+          "hit_target": "shelfHit (invisible BoxGeometry 3.5×5.5×0.15, MeshBasicMaterial visible:false). After bibliotheque.glb: swapped to first GLB mesh via onShelfGLBLoaded.",
+          "visual_mesh": "shelfFrame (frame Mesh, shelfMat emissive:0x2a1a08 emissiveIntensity:0.0). applyHoverTo() guard checks emissive channels > 0 — shelfMat.emissive is 0x2a1a08 which has r=0.165/g=0.102/b=0.031, all > 0. Guard PASSES.",
+          "label": "ZONE_LORE['bookshelf'] — 'Les chroniques de Merlin…'. Correct.",
+          "distinct_hit_from_visual": "Yes — shelfHit distinct from shelfFrame.",
+          "gap": "None."
+        },
+        {
+          "zone": "door",
+          "hit_target": "doorHit (invisible BoxGeometry 0.5×7×3.5, MeshBasicMaterial visible:false)",
+          "visual_mesh": "doorPanel (cloned panelMat, emissive:0x5a3010 emissiveIntensity:0.05). Guard checks: emissive 0x5a3010 → r=0.353/g=0.188/b=0 — r and g > 0. Guard PASSES.",
+          "label": "ZONE_LORE['door'] — 'Les bois de Brocéliande t'attendent, voyageur'. Correct.",
+          "distinct_hit_from_visual": "Yes.",
+          "gap": "None."
+        },
+        {
+          "zone": "cauldron",
+          "hit_target": "cauldronHit (invisible SphereGeometry r=0.9, MeshBasicMaterial visible:false, added to scene at L801)",
+          "visual_mesh": "cauldron.body (ironMat emissive:0x00aa33 emissiveIntensity:0.0). After cauldron_merlin.glb: swapped to bodyMesh (GLB body/bowl mesh) via onCauldronGLBLoaded. GLB bodyMesh has emissive:0x00aa33 set on load.",
+          "label": "ZONE_LORE['cauldron'] — 'Le chaudron de Cerridwen…'. Correct.",
+          "distinct_hit_from_visual": "Yes.",
+          "gap": "None."
+        },
+        {
+          "zone": "skull",
+          "hit_target": "skullGroup (Group) — the entire group is the mesh in interactives[]. raycaster.intersectObjects with recursive=true will raycast all children.",
+          "visual_mesh": "skullCranium (boneMat emissive:0xd4c89a emissiveIntensity:0.0). Guard checks: emissive 0xd4c89a → r=0.831/g=0.784/b=0.604 — all > 0. Guard PASSES.",
+          "label": "ZONE_LORE['skull'] — 'Les anciens druides méditaient…'. Shown in zoneToast. Correct.",
+          "distinct_hit_from_visual": "No — skullGroup is both the raycast target and the parent of visualMesh. This is intentional (skull is hover-only, no separate hit target needed).",
+          "gap": "NUANCE (LOW): Because skullGroup is the raycast target, getIntersected() finds intersected.object (cranium or jaw child), then looks for i.mesh === hitObj OR i.mesh.getObjectById(hitObj.id). skullGroup.getObjectById(cranium.id) returns cranium, so the lookup at L895 correctly resolves to the skull entry. This is safe."
+        }
+      ]
+    },
+
+    "C_lore_toast_system": {
+      "verdict": "TWO-LAYER SYSTEM — both work correctly; minor duplication documented",
+      "detail": [
+        "Layer 1 (internal to MerlinLairScene): zoneToast div created at L725-736 inside initMerlinLair(), positioned bottom:16px, opacity:0, CSS transition:opacity 0.2s. On hover-enter (onMouseMove L940): opacity set to '1' with zone label and lore. On hover-leave (onMouseMove L947): opacity set to '0'. Fade-out is CSS-driven — no setTimeout needed. This layer is always present.",
+        "Layer 2 (main.ts showZoneToast): Separate toast div created per-call at L389-423, positioned bottom:15%, auto-removed after 1800ms. Triggered only on zone CLICK (not hover) for most zones, via lair.onZoneClick callback at L429. For 'door' it shows 'Entrer dans la forêt', for 'crystal' it shows after ogham selection, for 'cauldron' it shows Merlin quote, for 'map' it shows biome label, for 'skull' it falls through to showZoneToast(zone) at L484.",
+        "CONCLUSION: The hover lore toast (Layer 1) is entirely self-contained inside MerlinLairScene — it does NOT go through main.ts. main.ts's showZoneToast only fires on click, not hover.",
+        "The toast fade-out on cursor-leave works correctly: onMouseMove fires when currentHovered changes to null, sets zoneToast.style.opacity = '0', CSS transition handles the 200ms fade. No manual setTimeout needed for the hover layer.",
+        "GAP (LOW): On mobile, onTouchEnd (L1023-1035) clears currentHovered and calls applyHoverTo but does NOT explicitly set zoneToast.style.opacity = '0'. The toast would remain visible at opacity:1 until the next mousemove (which won't fire on mobile). This means after a tap-and-release, the internal zoneToast stays visible indefinitely. The main.ts Layer 2 toast auto-removes in 1800ms but Layer 1 stays until next hover event.",
+        "RECOMMENDATION: In onTouchEnd, add zoneToast.style.opacity = '0' after the currentHovered null-out (line ~1033)."
+      ]
+    },
+
+    "D_ogham_panel_mobile_touch": {
+      "verdict": "PARTIAL — click only, no touchend. Touch target size is adequate on most devices.",
+      "detail": [
+        "Event registration: OghamPanel.ts L169 registers only 'click' on each available slot (slot.addEventListener('click', () => selectOgham(oghamId))). There is NO 'touchend' handler. On mobile, native browser fires a synthetic 'click' ~300ms after touchend on most modern browsers (iOS/Android), so activation works — but with the 300ms delay unless the page has touch-action:none or FastClick.",
+        "The canvas has touchAction:'none' (MerlinLairScene.ts L707) but that is on the Three.js canvas, not on the OghamPanel overlay. The OghamPanel overlay is a position:fixed div appended to #app. Since no touch-action:none is set on the overlay or app root, the 300ms tap delay MAY apply on iOS Safari < 13.",
+        "Touch target size: Each ogham slot is width:100px (CSS inline style L122-136 in OghamPanel.ts). The padding is padding:12px 8px. Total rendered height of each slot (symbol 28px line-height + name 11px + info 10px + gap:4px×2 + padding 12px×2) ≈ 12+28+4+11+4+10+12 = 81px. Width = 100px. Both dimensions exceed the 44×44px WCAG minimum. PASS.",
+        "Skip button: padding:10px 32px, font-size:14px → rendered height ≈ 10+14+10 = 34px line + padding = ~44px. Borderline — exactly at the 44px threshold. PASS (marginal).",
+        "ARIA on locked slots: slot.setAttribute('aria-label', `${spec.name} — Verrouillé, réputation 50 requise`) is set for locked oghams (L111-116). slot.disabled=true is used (not aria-disabled). This correctly removes locked buttons from tab order. PASS.",
+        "Cooldown slots also use disabled=true (L121: !isAvailable covers both locked and on-cooldown). The aria-label for cooldown slots reads the same 'Verrouillé' text — MEDIUM: cooldown oghams should say 'En recharge (CD: N cartes)' not 'Verrouillé, réputation 50 requise'.",
+        "Keyboard navigation inside the panel: Once dialog is open, focus is moved to the first available button (L216). Tab navigates between all non-disabled buttons natively. Escape calls selectOgham(null). No arrow-key navigation is implemented — but for a modal dialog, Tab/Shift-Tab is the correct pattern (WCAG 2.1.1). PASS.",
+        "No touchend handler — confirmed gap. Functional on modern iOS/Android via synthetic click, but 300ms delay is suboptimal for perceived responsiveness."
+      ]
+    },
+
+    "E_card_system_run_transition": {
+      "verdict": "CLEAN — no race condition detected. Lair teardown is sequential before run init.",
+      "detail": [
+        "Flow in main.ts (L427-598): runMerlinLair() is an async function that awaits a Promise that resolves only when zone='door' is clicked (L430-434: setTimeout(resolve, 600) after doorTriggered=true).",
+        "After the Promise resolves (L487): cancelAnimationFrame(rafId) stops the lair RAF immediately. visibilitychange listener removed. In-flight toast timers cleared. cutToBlack() called. await new Promise(res => setTimeout(res, 300)) — 300ms pause. Then lair.dispose() called. Then wrapper.style.display='none'. Then return.",
+        "SceneManager creation (L542) happens AFTER runMerlinLair() returns — strictly sequential. There is no parallelism between lair teardown and run init.",
+        "The 300ms cutToBlack pause before lair.dispose() is intentional: it gives the black overlay time to render before the WebGL context is torn down, preventing a single-frame flash of the raw scene during disposal.",
+        "lair.dispose() (MerlinLairScene.ts L1206-1266) sets lairDisposed=true, calls cancelGLBFades(), removes all event listeners, clears doorFlashCancelHandle timeout, traverses scene to dispose all geometries+materials, calls renderer.dispose(), removes domElement from DOM, removes ariaLive and zoneToast. Comprehensive — no leak detected.",
+        "wrapper.style.display='none' hides the container but does NOT remove it from the DOM. This is correct design (wrapper is reused across lair visits per the 'if (!wrapper)' guard at L310). No DOM accumulation on repeated lair visits.",
+        "CardSystem: No CardSystem.ts file found at either web-demo/src/ui/ or web-demo/src/game/ — card rendering is handled inline in the run loop via the existing CardOverlay/HUD system. No separate CardSystem module to audit."
+      ]
+    },
+
+    "F_new_bugs": {
+      "HIGH": [],
+      "MEDIUM": [
+        {
+          "id": "BUG-C131-01",
+          "severity": "MEDIUM",
+          "location": "MerlinLairScene.ts — onTouchEnd (L1023-1035)",
+          "description": "On mobile, after a tap-and-release on any zone, the internal zoneToast (Layer 1) remains at opacity:1 permanently because onTouchEnd clears currentHovered and resets emissive/scale but does NOT reset zoneToast.style.opacity to '0'. On desktop this is a non-issue (next mousemove fires immediately). On mobile the toast lingers until the next tap.",
+          "reproduction": "Mobile: Tap any non-door zone (e.g. crystal). Toast appears. Tap away from any zone. Toast stays visible indefinitely.",
+          "recommendation": "Add `zoneToast.style.opacity = '0';` after line 1033 (after the currentHovered null-out in onTouchEnd).",
+          "confidence": "HIGH"
+        },
+        {
+          "id": "BUG-C131-02",
+          "severity": "MEDIUM",
+          "location": "OghamPanel.ts — aria-label for cooldown slots (L111-116)",
+          "description": "Ogham slots that are unlocked but on cooldown receive aria-label '${spec.name} — Verrouillé, réputation 50 requise'. This is factually wrong: the ogham IS unlocked; it is merely on cooldown. A screen reader user is told the ogham is locked/requires reputation when it actually just needs to recharge. Violates WCAG 4.1.2 (Name, Role, Value).",
+          "reproduction": "Use an ogham with cooldown > 0, open OghamPanel, navigate with screen reader.",
+          "recommendation": "Split the aria-label assignment: if `isUnlocked && cooldown > 0`: `${spec.name} — En recharge, disponible dans ${cooldown} cartes`. Keep the current 'Verrouillé' text only for !isUnlocked.",
+          "confidence": "HIGH"
+        },
+        {
+          "id": "BUG-C131-03",
+          "severity": "MEDIUM",
+          "location": "OghamPanel.ts — no touchend on slots (L168-169)",
+          "description": "Ogham slots only register 'click'. On iOS Safari < 13 (and some Android WebViews), there is a 300ms synthetic click delay for non-fastclick pages, making ogham selection feel unresponsive on older devices. The OghamPanel overlay div has no touch-action:none to suppress the delay.",
+          "recommendation": "Add `slot.addEventListener('touchend', (e) => { e.preventDefault(); selectOgham(oghamId); })` for available slots. Mirror pattern used by the lair canvas (touchend on MerlinLairScene.ts L1110).",
+          "confidence": "MEDIUM"
+        }
+      ],
+      "LOW": [
+        {
+          "id": "BUG-C131-04",
+          "severity": "LOW",
+          "location": "LairGLBAssets.ts — onMapGLBLoaded uses firstMesh (L180-183)",
+          "description": "table_druidique.glb: onMapGLBLoaded picks the first mesh from gltf.scene.traverse() — this is the first mesh in GLTF traversal order, which is typically the first child in the Blender outliner. If the GLB is ever updated and the outliner order changes, a non-interactive mesh (e.g. a table leg) could become the raycast target, breaking map zone interaction. No emissive-capable material is guaranteed on firstMesh.",
+          "recommendation": "Name a mesh 'table_surface' or 'map_scroll' in Blender and filter by /table|map|scroll/i.test(m.name) with firstMesh fallback (same pattern as onCauldronGLBLoaded). Low urgency — GLB is currently stable.",
+          "confidence": "MEDIUM"
+        },
+        {
+          "id": "BUG-C131-05",
+          "severity": "LOW",
+          "location": "MerlinLairScene.ts — ZONE_LORE and main.ts ZONE_LABELS are duplicated",
+          "description": "Zone hover text is defined in two places: ZONE_ARIA_LABELS/ZONE_LORE in MerlinLairScene.ts (L954-972) and ZONE_LABELS in main.ts (L371-378). The texts are not identical (e.g. map: 'Quelle contrée de Bretagne t'appelle ce soir ?' vs 'Vers quelle contrée vous aventurer ?'). This is intentional by design (hover lore vs click feedback) but creates maintenance risk if copy updates are applied to only one source.",
+          "recommendation": "Document the intentional split with a comment in main.ts ZONE_LABELS pointing to MerlinLairScene ZONE_LORE. No code change required.",
+          "confidence": "HIGH"
+        }
+      ]
+    }
+  },
+
+  "verified_safe": [
+    "Entry camera pull-in (C127): cubic ease-out z=10→7 over 1.2s, no lateral drift during cinematic. SAFE.",
+    "GLB fadeInGLB cancel-safety (C122/C133): cancelGLBFades() called in dispose(), isDisposed guard in every .then(). SAFE.",
+    "Crystal hover emissive override (C113/C118): update loop uses crystalEntry.hovered flag each frame, prevents applyHoverTo(0.65) being overwritten to 0.5 on the same frame. SAFE.",
+    "Skull raycast resolution (L895): getObjectById fallback correctly resolves child cranium/jaw hits to the skull interactives entry. SAFE.",
+    "Door flash double-activation guard (C121): doorFlashing flag prevents concurrent callbacks on fast double-tap/double-click during 380ms cinematic. SAFE.",
+    "lair.dispose() completeness: lairDisposed flag, cancelGLBFades, all 6 event listeners removed, doorFlashCancelHandle cleared, ResizeObserver disconnected, clearGLBCache(), full geometry+material dedup traverse. SAFE.",
+    "Run transition sequencing: 300ms cutToBlack pause → lair.dispose() → wrapper.style.display='none' all complete before SceneManager is created. No race condition. SAFE.",
+    "OghamPanel focus management (C86): requestAnimationFrame → focus first available button or skipBtn on open. SAFE.",
+    "OghamPanel locked slot ARIA (C128/C122-16): aria-label announces lock status, slot.disabled=true removes from tab order. SAFE for locked slots.",
+    "Lore toast double-announcement suppression (C132): zoneToast has aria-live='off', ariaLive div handles AT announcements. No double-read on keyboard nav. SAFE.",
+    "ariaLive cleanup in dispose() (L1260-1262): ariaLive removed from DOM on lair teardown. SAFE.",
+    "visibilitychange listener cleanup (main.ts L489): lair-specific listener removed after door click resolves the lair Promise. SAFE.",
+    "cauldronHit is scene-level (L801-802): added to scene not cauldron.group, so it persists independently of cauldronGroup hide on GLB load. SAFE.",
+    "mur_pierre InstancedMesh dispose: C109 calls obj.dispose() before geometry.dispose() — GPU instanceMatrix buffer deallocated. Dedup Sets prevent triple-dispose of shared tileMat/tileGeo. SAFE.",
+    "No console.log found in any audited file. CLEAN."
+  ],
+
+  "new_bugs": [
+    {
+      "id": "BUG-C131-01",
+      "severity": "MEDIUM",
+      "location": "MerlinLairScene.ts — onTouchEnd",
+      "issue": "zoneToast stays visible after tap-release on mobile (opacity never reset to '0')",
+      "fix": "Add zoneToast.style.opacity = '0'; after currentHovered null-out in onTouchEnd (~L1033)"
+    },
+    {
+      "id": "BUG-C131-02",
+      "severity": "MEDIUM",
+      "location": "OghamPanel.ts — aria-label for cooldown slots",
+      "issue": "Cooldown ogham slots announce 'Verrouillé, réputation 50 requise' — factually wrong (they are unlocked, just cooling)",
+      "fix": "Separate aria-label for cooldown case: '${spec.name} — En recharge, disponible dans ${cooldown} cartes'"
+    },
+    {
+      "id": "BUG-C131-03",
+      "severity": "MEDIUM",
+      "location": "OghamPanel.ts — ogham slot event listeners",
+      "issue": "No touchend handler — 300ms tap delay on iOS < 13 / some Android WebViews",
+      "fix": "Add touchend handler with e.preventDefault() on available slots"
+    },
+    {
+      "id": "BUG-C131-04",
+      "severity": "LOW",
+      "location": "LairGLBAssets.ts — onMapGLBLoaded firstMesh selection",
+      "issue": "First traversal mesh used as raycast target — fragile if GLB mesh order changes in Blender",
+      "fix": "Filter by name pattern /table|map|scroll/i before firstMesh fallback"
+    },
+    {
+      "id": "BUG-C131-05",
+      "severity": "LOW",
+      "location": "main.ts ZONE_LABELS vs MerlinLairScene ZONE_LORE",
+      "issue": "Zone copy defined in two places — maintenance risk on copy updates",
+      "fix": "Add cross-reference comment in main.ts ZONE_LABELS"
+    }
+  ],
+
+  "balance_recommendations": [],
+
+  "summary": {
+    "total_bugs_found": 5,
+    "critical": 0,
+    "high": 0,
+    "medium": 3,
+    "low": 2,
+    "most_impactful": "BUG-C131-01 (mobile toast leak) + BUG-C131-02 (wrong ARIA on cooldown oghams)",
+    "entry_animation": "PASS — dual-layer fade (CSS overlay 800ms + camera pull-in 1.2s) is robust. No pop-in.",
+    "hover_completeness": "PASS — all 6 zones have visualMesh, lore label, and distinct hit target (skull uses group/cranium pattern, verified safe).",
+    "lore_toast": "PASS with MEDIUM gap — desktop correct; mobile toast doesn't auto-dismiss after touch-release.",
+    "ogham_mobile_touch": "PARTIAL — 100px wide slots exceed 44px min, no touchend on slots (300ms delay on old iOS), wrong aria-label on cooldown.",
+    "run_transition": "PASS — sequential teardown, no race condition, comprehensive dispose.",
+    "score_adjustment": -0.03,
+    "score_after": 9.91,
+    "rationale": "3 MEDIUM bugs (no HIGH/CRITICAL). BUG-C131-01 and -02 are real UX/accessibility defects. Score adjusts from 9.94 → 9.91."
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 75,
+  "agent": "merlin-ai-playtester",
+  "audit_type": "headless_static_analysis",
+  "checks": [
+    "dt=1/60 hardcode scan (all 14 minigames)",
+    "ambient biome mismatch (main.ts startAmbient)",
+    "idle exploit confirmation (mg_sang_froid + mg_volonte)"
+  ],
+
+  "check_1_hardcoded_dt": {
+    "status": "FAIL",
+    "severity": "HIGH",
+    "summary": "11 out of 14 minigames use `const dt = 1/60` hardcoded in their render() loop. Only mg_runes.ts, mg_traces.ts, and mg_equilibre_advanced (if present) were NOT found. The three minigames exempt from this were NOT scanned (mg_runes, mg_traces — no dt assignment found in grep). mg_equilibre.ts DOES have the bug.",
+    "affected_files": [
+      {
+        "file": "web-demo/src/minigames/mg_apaisement.ts",
+        "line": 215,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "animation speed and elapsedTime are framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_course.ts",
+        "line": 245,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "pulsePhase and physics advance at fixed 60fps regardless of display refresh"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+        "line": 208,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "elapsedTime, pulsePhase both framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_equilibre.ts",
+        "line": 179,
+        "snippet": "const dt = 1 / 60; // approximate frame time",
+        "impact": "balance physics framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_echo.ts",
+        "line": 216,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "pulsePhase animation framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_fouille.ts",
+        "line": 250,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "elapsedTime + pulsePhase framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_herboristerie.ts",
+        "line": 284,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "elapsedTime framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_negociation.ts",
+        "line": 274,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "elapsedTime + pulsePhase framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_ombres.ts",
+        "line": 173,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "elapsedTime + pulsePhase framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_regard.ts",
+        "line": 240,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "pulsePhase animation framerate-coupled"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_sang_froid.ts",
+        "line": 155,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "zone shrink speed + elapsedTime + pulsePhase all framerate-coupled. CRITICAL: zone shrinks 2x too slow at 30fps, 2x too fast at 120fps."
+      },
+      {
+        "file": "web-demo/src/minigames/mg_volonte.ts",
+        "line": 184,
+        "snippet": "const dt = 1 / 60;",
+        "impact": "elapsedTime + pulsePhase + distractor spawn timing all framerate-coupled"
+      }
+    ],
+    "clean_files": [
+      "web-demo/src/minigames/mg_runes.ts",
+      "web-demo/src/minigames/mg_traces.ts"
+    ],
+    "game_impact": {
+      "at_30fps": "All canvas animations run at HALF speed. Zone in sang_froid shrinks 50% slower. Distractor spawn rate in volonte halved. Game becomes trivially easy.",
+      "at_60fps": "Correct — designed target.",
+      "at_120fps": "All animations run at DOUBLE speed. Zone shrinks twice as fast. Game becomes nearly unplayable on high-refresh displays (MacBook Pro 120Hz, iPad ProMotion)."
+    },
+    "recommended_fix": "Pass real dt from requestAnimationFrame timestamp to render(). Pattern: store `lastTime = performance.now()` before the rAF loop, compute `const dt = Math.min((now - lastTime) / 1000, 0.05)` each frame, pass dt as parameter to the private render method. Clamp prevents spiral-of-death on tab switch. Apply to all 11 affected files.",
+    "fix_example": "private render(dt: number): void { ... }  // called as: const now = performance.now(); const dt = Math.min((now - this.lastFrameTime) / 1000, 0.05); this.lastFrameTime = now; this.render(dt);"
+  },
+
+  "check_2_ambient_biome_mismatch": {
+    "status": "FAIL",
+    "severity": "HIGH",
+    "summary": "startAmbient() is called with the hardcoded literal 'forest' (main.ts line 403) regardless of which biome the player selected. The biome picker correctly sets `chosenBiome` (e.g. 'marais_korrigans', 'landes_bruyere', 'cercles_pierres') and passes it to store.startRun(), but the ambient sound is never updated to match. A player in the Marais des Korrigans hears forest bird chirps. A player on the Cercles de Pierres hears wind+birds.",
+    "location": {
+      "file": "web-demo/src/main.ts",
+      "line": 403,
+      "snippet": "startAmbient('forest');",
+      "context": "startAmbient('forest') fires BEFORE store.startRun(chosenBiome) at line 420, so even if SFXManager were to read from the store it would not yet have the biome."
+    },
+    "biome_ambient_map_missing": {
+      "marais_korrigans": "should be 'marais' (murky water + frog + muted wind)",
+      "landes_bruyere": "should be 'landes' (open wind + distant sea)",
+      "cercles_pierres": "should be 'pierres' (resonant silence + low hum)",
+      "foret_broceliande": "'forest' is correct for this one",
+      "cotes_sauvages": "could argue 'forest' or a coastal variant",
+      "villages_celtes": "should be ambient village sounds",
+      "collines_dolmens": "should be open hillside wind",
+      "iles_mystiques": "should be ocean/wave ambient"
+    },
+    "recommended_fix": "Replace `startAmbient('forest')` with a biome-to-ambient mapping resolved from `chosenBiome`. Minimal fix: map the 8 biome IDs to the nearest available AmbientType. If only 'forest' and 'menu' exist in SFXManager today, add 'marais' and 'vent' types for the minimum viable fix, then call startAmbient after store.startRun(chosenBiome) so the state is consistent.",
+    "fix_location": "web-demo/src/main.ts line 403 — replace hardcoded 'forest' with `biomeToAmbient(chosenBiome)` lookup."
+  },
+
+  "check_3_idle_exploit": {
+    "status": "PASS",
+    "severity": "NONE",
+    "summary": "Both mg_sang_froid.ts and mg_volonte.ts correctly initialize cursorX/cursorY to 0 at BOTH field declaration AND setup() reset. An idle player starts at canvas coordinate (0,0), which is approximately 269px from the center (190,190) — well outside the initial safe zone radius (120px for sang_froid, 30px for volonte). No idle exploit exists.",
+    "evidence": [
+      {
+        "file": "web-demo/src/minigames/mg_sang_froid.ts",
+        "field_declaration": "line 36-37: `private cursorX = 0;` / `private cursorY = 0;`",
+        "setup_reset": "lines 102-103: `this.cursorX = 0;` / `this.cursorY = 0;`",
+        "comment_confirming_intent": "line 34: `// Cursor starts at (0,0) — outside the initial zone radius of 120px centred at (190,190). Distance (0,0)→(190,190) ≈ 269px >> 120px, so an idle player immediately starts outside.`",
+        "result": "PASS"
+      },
+      {
+        "file": "web-demo/src/minigames/mg_volonte.ts",
+        "field_declaration": "line 46-47: `private cursorX = 0;` / `private cursorY = 0;`",
+        "setup_reset": "lines 110-111: `this.cursorX = 0;` / `this.cursorY = 0;`",
+        "comment_confirming_intent": "line 44: `// Cursor starts at (0,0) — outside the target radius of 30px at (190,190). Distance (0,0)→(190,190) ≈ 269px >> 30px, so idle player starts outside target.`",
+        "result": "PASS"
+      }
+    ]
+  },
+
+  "issues_by_priority": [
+    {
+      "priority": 1,
+      "severity": "HIGH",
+      "issue": "dt=1/60 hardcoded in 11/14 minigames — framerate-coupled gameplay",
+      "files_count": 11,
+      "worst_offender": "web-demo/src/minigames/mg_sang_froid.ts line 155",
+      "player_impact": "Zone shrinks 2x too slow at 30fps (mobile); 2x too fast at 120fps (ProMotion). Score window is framerate-dependent — unfair cross-device.",
+      "fix": "Pass real dt from rAF timestamp into render(dt: number). Pattern: `const dt = Math.min((performance.now() - this.lastFrameTime) / 1000, 0.05); this.lastFrameTime = now;`",
+      "effort": "MEDIUM — 11 files, same mechanical change in each"
+    },
+    {
+      "priority": 2,
+      "severity": "HIGH",
+      "issue": "Ambient sound hardcoded to 'forest' regardless of chosen biome",
+      "file": "web-demo/src/main.ts line 403",
+      "player_impact": "Marais des Korrigans plays forest bird chirps. Immersion broken for 7 of 8 biomes.",
+      "fix": "Add `function biomeToAmbient(biome: string): AmbientType` lookup, call `startAmbient(biomeToAmbient(chosenBiome))` after store.startRun(), extend AmbientType union if needed.",
+      "effort": "LOW — single call site, lookup table"
+    }
+  ],
+
+  "balance_recommendations": [
+    {
+      "parameter": "minigame_dt_source",
+      "current": "hardcoded 1/60 in render() loop",
+      "suggested": "real measured dt from performance.now() delta, clamped to 0.05s",
+      "confidence": "HIGH",
+      "rationale": "RAF fires at display refresh rate. At 120Hz a 1/60 dt means 2 logical ticks per frame, doubling all game speeds."
+    },
+    {
+      "parameter": "ambient_type_at_run_start",
+      "current": "'forest' (literal)",
+      "suggested": "biomeToAmbient(chosenBiome) with per-biome mapping",
+      "confidence": "HIGH",
+      "rationale": "SFXManager already supports multiple AmbientType values. The mapping is trivial, the bug is purely a missing indirection."
+    }
+  ],
+
+  "files_clean_no_issues": [
+    "web-demo/src/minigames/mg_runes.ts",
+    "web-demo/src/minigames/mg_traces.ts",
+    "web-demo/src/minigames/mg_sang_froid.ts (check 3 PASS — idle exploit fixed)",
+    "web-demo/src/minigames/mg_volonte.ts (check 3 PASS — idle exploit fixed)"
+  ]
+}

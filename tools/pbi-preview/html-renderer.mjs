@@ -242,9 +242,10 @@ function renderVisual(v, measureValues) {
  * @param {Map<string, number|string>} measureValues — measure name → value
  * @returns {string} complete HTML document
  */
-export function renderToHtml(reportJsonPath, measureValues) {
+export function renderToHtml(reportJsonPath, measureValues, pageIndex = 0) {
   const report = JSON.parse(readFileSync(reportJsonPath, 'utf8'));
-  const page = report.sections[0];
+  const page = report.sections[pageIndex];
+  if (!page) throw new Error(`Page index ${pageIndex} out of bounds (${report.sections.length} pages available)`);
   const pageName = page.displayName || page.name || 'Untitled';
   const W = page.width || 1280;
   const H = page.height || 720;
@@ -294,12 +295,22 @@ export function renderToHtml(reportJsonPath, measureValues) {
 const isMain = process.argv[1] && basename(process.argv[1]) === 'html-renderer.mjs';
 
 if (isMain) {
-  const [,, reportPath, measuresPath, outputPath] = process.argv;
+  const [,, reportPath, measuresPath, outputPath, pageArg] = process.argv;
 
   if (!reportPath || !measuresPath || !outputPath) {
-    console.error('Usage: node html-renderer.mjs <report.json> <measures.json> <output.html>');
+    console.error('Usage: node html-renderer.mjs <report.json> <measures.json> <output.html> [pageIndex]');
     process.exit(1);
   }
+
+  const pageIndex = (() => {
+    if (pageArg === undefined) return 0;
+    const n = parseInt(pageArg, 10);
+    if (Number.isNaN(n) || n < 0) {
+      console.error(`Invalid page index: "${pageArg}" — must be a non-negative integer`);
+      process.exit(1);
+    }
+    return n;
+  })();
 
   const measureValues = new Map();
   try {
@@ -315,10 +326,10 @@ if (isMain) {
     console.error(`Warning: could not parse measures file: ${err.message}`);
   }
 
-  const html = renderToHtml(reportPath, measureValues);
+  const html = renderToHtml(reportPath, measureValues, pageIndex);
   writeFileSync(outputPath, html, 'utf8');
 
   const report = JSON.parse(readFileSync(reportPath, 'utf8'));
-  const count = report.sections[0].visualContainers?.length || 0;
-  console.log(`Generated: ${outputPath} (${count} visuals)`);
+  const count = report.sections[pageIndex]?.visualContainers?.length || 0;
+  console.log(`Generated: ${outputPath} (${count} visuals, page ${pageIndex})`);
 }

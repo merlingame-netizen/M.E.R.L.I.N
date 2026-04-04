@@ -1,0 +1,136 @@
+{
+  "report_id": "c72-lair-aaa-ultra",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "audited_files": [
+    "web-demo/src/scenes/MerlinLairScene.ts",
+    "web-demo/src/scenes/LairGLBAssets.ts",
+    "web-demo/src/scenes/LairDensity.ts"
+  ],
+  "cycle": 72,
+  "severity": "AAA-ULTRA",
+
+  "bugs": [
+    {
+      "id": "BUG-L-07-GHOST",
+      "title": "Cauldron glow PointLight and steam particles added to group — NOT orphaned at scene root",
+      "severity": "CONFIRMED-FIXED (previously reported as GHOST — audit finds group.add, not scene.add)",
+      "confirmed": false,
+      "evidence": {
+        "file": "web-demo/src/scenes/MerlinLairScene.ts",
+        "lines": {
+          "glow_creation": 519,
+          "glow_add": "521 → group.add(glow)",
+          "steamPoints_creation": 543,
+          "steamPoints_add": "544 → group.add(steamPoints)"
+        },
+        "exact_code": [
+          "L519:  const glow = new THREE.PointLight(0x22cc44, 1.2, 3.5, 2);",
+          "L520:  glow.position.set(2, -3.2, -7);",
+          "L521:  group.add(glow);",
+          "L543:  const steamPoints = new THREE.Points(geo, steamMat);",
+          "L544:  group.add(steamPoints);"
+        ],
+        "analysis": "Both glow PointLight and steamPoints are correctly added to the local `group` (not `scene`). When cauldron_merlin.glb loads (LairGLBAssets.ts L40), `proceduralGroups.cauldronGroup.visible = false` is called, which sets the entire group invisible — including the glow and steamPoints. BUG-L-07-GHOST as originally described (scene.add) does NOT exist in the current code. The bug has either been fixed prior to C72 or the C43 report was forward-looking. The ghost-light risk is neutralised."
+      },
+      "verdict": "CLOSED — not reproducible in current source"
+    },
+
+    {
+      "id": "BUG-L-10-CANDLE-MAT",
+      "title": "Candle particle systems added directly to scene (not to candleGroup) — orphaned when bougie.glb hides the group",
+      "severity": "HIGH",
+      "confirmed": true,
+      "evidence": {
+        "file": "web-demo/src/scenes/MerlinLairScene.ts",
+        "lines": {
+          "group_created": 315,
+          "group_bodies_correct": "330 → group.add(body)",
+          "group_wicks_correct": "335 → group.add(wick)",
+          "particle_points_WRONG": "371 → scene.add(points)"
+        },
+        "exact_code": [
+          "L370:  const points = new THREE.Points(geo, particleMat);",
+          "L371:  scene.add(points);   // BUG: should be group.add(points)"
+        ],
+        "analysis": "createCandles() correctly builds a `group` that holds candle bodies, wicks, and the shared PointLight (L322 → group.add(sharedLight)). However, each candle's flame particle system (`THREE.Points`) is added directly to `scene` at L371 instead of to `group`. When bougie.glb loads successfully (LairGLBAssets.ts L63), `candleGroup.visible = false` hides bodies+wicks+sharedLight but leaves 3 orphaned orange particle emitters floating at the candle positions in world space. This is the particle-ghost equivalent of BUG-L-07.",
+        "impact": "3 floating orange flame particle systems remain visible over the GLB bougie candles whenever the GLB asset loads. Severity: HIGH — visually breaking on any device that successfully loads bougie.glb."
+      },
+      "recommendation": "Change MerlinLairScene.ts L371 from `scene.add(points)` to `group.add(points)`. The `group` reference is in scope at that callsite.",
+      "fix_diff": "- scene.add(points);\n+ group.add(points);"
+    },
+
+    {
+      "id": "BUG-L-CANDLE-SHARED-MAT",
+      "title": "Candle body mesh uses shared candleMat — no material.clone() per instance",
+      "severity": "MEDIUM",
+      "confirmed": true,
+      "evidence": {
+        "file": "web-demo/src/scenes/MerlinLairScene.ts",
+        "lines": {
+          "shared_mat_created": "303-310 (candleMat declared once outside the loop)",
+          "all_bodies_share_it": "328 → new THREE.Mesh(..., candleMat) — same reference for all 3 candles"
+        },
+        "exact_code": [
+          "L303:  const candleMat = new THREE.MeshStandardMaterial({ ... });",
+          "L328:  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.7, 8), candleMat);"
+        ],
+        "analysis": "All three candle body meshes share the same MeshStandardMaterial instance. Any emissive hover change applied to one candle body (e.g., on pointer-enter) will mutate emissiveIntensity for all three simultaneously. The procedural fallback path does not currently implement per-candle hover on the bodies (hover is driven by the GLB visual mesh after load), but the shared material is a latent bug that will manifest if hover is extended to the procedural path or if any future pass modifies the material directly.",
+        "impact": "MEDIUM — not immediately visible in GLB path, but materialises if procedural hover is ever implemented or if dispose() resets emissive on one body."
+      },
+      "recommendation": "In the candle body creation loop, use `candleMat.clone()` per iteration: `new THREE.Mesh(geo, candleMat.clone())`. Dispose individual clones in the scene teardown."
+    }
+  ],
+
+  "lairDensity_orphan_check": {
+    "file": "web-demo/src/scenes/LairDensity.ts",
+    "finding": "One DirectionalLight target is added to scene directly (L25: scene.add(moon.target)) rather than to the density group. This is intentional and correct: DirectionalLight targets MUST be in the scene graph (world space) for lookAt to function. The moon DirectionalLight itself is in the group (L24: group.add(moon)), so it disappears correctly with the density group. No unintentional orphan lights found in LairDensity."
+  },
+
+  "cauldron_return_structure_check": {
+    "file": "web-demo/src/scenes/MerlinLairScene.ts",
+    "createCauldron_return": "L567 → { group, body, glow, positions, velocities, lifetimes, geo, update }",
+    "group_contains": ["cauldron body mesh", "4 leg meshes", "glow PointLight (L521)", "steamPoints THREE.Points (L544)"],
+    "verdict": "CORRECT — group encapsulates all cauldron sub-objects. GLB hide path works as designed."
+  },
+
+  "scores": {
+    "ghost_light_severity": {
+      "score": 9,
+      "out_of": 10,
+      "notes": "BUG-L-07 is resolved: glow + steam are in group. Minor residual risk: cauldronHit sphere is added to scene directly (L692) and is never hidden on GLB load — but it is invisible (MeshBasicMaterial visible:false) so no visual artefact."
+    },
+    "candle_material_isolation": {
+      "score": 5,
+      "out_of": 10,
+      "notes": "Shared candleMat is a latent correctness issue (BUG-L-CANDLE-SHARED-MAT). Candle flame particles are orphaned from group (BUG-L-10-CANDLE-MAT, HIGH). Two independent issues in the candle system."
+    },
+    "overall_scene_encapsulation": {
+      "score": 7,
+      "out_of": 10,
+      "notes": "Cauldron and all major systems are properly grouped. The candle particle orphan is the only confirmed group-escape defect. LairDensity.ts intentional scene.add for light target is acceptable. setupLighting lights are at scene root by design (global fill/key/rim). Score penalised for HIGH candle-particles bug."
+    }
+  },
+
+  "top_2_bugs_summary": [
+    {
+      "rank": 1,
+      "id": "BUG-L-10-CANDLE-MAT",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 371,
+      "description": "Candle flame particles added to scene not group — 3 orphaned orange particle emitters survive bougie.glb group-hide",
+      "one_line_fix": "scene.add(points) → group.add(points)"
+    },
+    {
+      "rank": 2,
+      "id": "BUG-L-CANDLE-SHARED-MAT",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 328,
+      "description": "All 3 candle bodies share one MeshStandardMaterial instance — hover emissive changes will bleed across all 3 simultaneously",
+      "one_line_fix": "candleMat → candleMat.clone() per loop iteration"
+    }
+  ],
+
+  "c43_bug_l07_verdict": "NOT REPRODUCED in current source. glow (L521) and steamPoints (L544) are both group.add(). The C43 report may have targeted a now-patched state, or described a forward risk that was addressed before it shipped."
+}

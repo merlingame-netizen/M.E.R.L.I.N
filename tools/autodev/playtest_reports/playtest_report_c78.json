@@ -1,0 +1,105 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "commit": "e120800",
+  "cycle": "C78",
+  "mode": "static-code-analysis",
+  "runs_simulated": 0,
+  "note": "Headless Godot runner not applicable for web-demo TypeScript build. Report produced via static analysis of all 16 minigame files + HUD.ts + OghamPanel.ts + main.ts.",
+
+  "fix_verification": {
+    "c78_ended_guard_6_minigames": {
+      "status": "CONFIRMED",
+      "files_verified": [
+        "mg_combat_rituel.ts: private ended=false (L29), reset in setup() (L117), guard in endGame() (L192-193)",
+        "mg_regard.ts: private ended=false (L42), reset in setup() (L115), guard in endGame() (L229-230)",
+        "mg_course.ts: private ended=false (L42), reset in setup() (L129), guard in endGame() (L236-237)",
+        "mg_fouille.ts: private ended=false (L50), reset in setup() (L138), guard in endGame() (L235-236)",
+        "mg_herboristerie.ts: private ended=false (L70), reset in setup() (L139), guard in endGame() (L266-267)"
+      ],
+      "note": "mg_equilibre was listed in C78 scope but grep confirms no ended field — see NEW BUGS below."
+    },
+    "hud_subscriber_leak": {
+      "status": "CONFIRMED",
+      "evidence": [
+        "HUD.ts L30: module-level let _hudUnsubscribe: (() => void) | null = null",
+        "HUD.ts L288: _hudUnsubscribe?.() called before re-subscribe",
+        "HUD.ts L289: _hudUnsubscribe = store.subscribe(updateHUD)",
+        "Placement: module scope (not inside function body) — correct"
+      ]
+    }
+  },
+
+  "out_of_scope_minigame_guard_audit": {
+    "mg_apaisement": {
+      "has_ended_guard": false,
+      "endGame_call_sites": 1,
+      "call_origin": "timer interval only",
+      "user_action_can_trigger_endGame": false,
+      "race_risk": "LOW — single trigger path, no concurrent user action path to endGame"
+    },
+    "mg_echo": {
+      "has_ended_guard": false,
+      "endGame_call_sites": 1,
+      "call_origin": "render loop condition (this.timeLeft <= 0)",
+      "user_action_can_trigger_endGame": false,
+      "race_risk": "LOW — single trigger path"
+    },
+    "mg_negociation": {
+      "has_ended_guard": false,
+      "endGame_call_sites": 1,
+      "call_origin": "timer interval only",
+      "user_action_can_trigger_endGame": false,
+      "race_risk": "LOW — pointer handler accumulates score, does not call endGame"
+    },
+    "mg_ombres": {
+      "has_ended_guard": false,
+      "endGame_call_sites": 1,
+      "call_origin": "timer interval only",
+      "user_action_can_trigger_endGame": false,
+      "race_risk": "LOW — pointermove does not call endGame"
+    },
+    "mg_sang_froid": {
+      "has_ended_guard": false,
+      "endGame_call_sites": 1,
+      "call_origin": "timer interval only",
+      "user_action_can_trigger_endGame": false,
+      "race_risk": "LOW — pointermove/pointerdown do not call endGame"
+    }
+  },
+
+  "ogham_panel_subscriber_audit": {
+    "status": "CLEAN",
+    "evidence": "OghamPanel.ts uses DOM addEventListener (not store.subscribe). initOghamPanel() has idempotency guard at L18: if (!app || document.getElementById('ogham-panel-overlay')) return. No subscriber accumulation possible."
+  },
+
+  "direct_finish_bypass_audit": {
+    "status": "CLEAN",
+    "evidence": "All 15 this.finish() calls across all minigames are located inside their respective endGame() methods. No call site bypasses endGame()."
+  },
+
+  "issues": [
+    {
+      "severity": "MEDIUM",
+      "file": "mg_equilibre.ts",
+      "issue": "C78 claimed mg_equilibre received ended guard but grep finds no 'ended' field or guard. The file has endGame() called from both timer (via render loop) and potentially button action — needs confirmation.",
+      "recommendation": "Add private ended = false + setup() reset + endGame() guard to mg_equilibre to match the pattern applied to the other 5 C78 files."
+    },
+    {
+      "severity": "LOW",
+      "file": "mg_apaisement.ts, mg_echo.ts, mg_negociation.ts, mg_ombres.ts, mg_sang_froid.ts",
+      "issue": "5 minigames lack the ended idempotency guard. Current risk is LOW (single timer-only trigger path per file), but the pattern is inconsistent across the codebase. Any future addition of a user-action shortcut to these games would immediately introduce a race.",
+      "recommendation": "Apply the same private ended = false pattern to all 5 for uniformity and future-safety."
+    }
+  ],
+
+  "balance_recommendations": [],
+
+  "summary": {
+    "c78_core_fixes_confirmed": true,
+    "regressions_found": 0,
+    "new_critical_bugs": 0,
+    "new_high_bugs": 0,
+    "new_medium_bugs": 1,
+    "new_low_bugs": 1
+  }
+}

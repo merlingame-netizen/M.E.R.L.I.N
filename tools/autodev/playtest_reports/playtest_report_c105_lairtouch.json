@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "report_type": "static_audit",
+  "scope": "MerlinLairScene.ts post-C133",
+  "auditor": "merlin-ai-playtester",
+  "findings": [
+    {
+      "id": "Q1",
+      "title": "Mobile touch flow — onTouchStart bypasses lore toast",
+      "verdict": "CONFIRM",
+      "severity": "MEDIUM",
+      "evidence": [
+        "onTouchStart (line 1001-1004) calls onPointerAction directly on touchstart.",
+        "onPointerAction (line ~960-992) contains only the click/activation path (zoneClickCallback + SFX + door flash logic).",
+        "The lore toast is built exclusively inside onMouseMove (lines 919-935): applyHoverTo, zoneToast.textContent, zoneToast.style.opacity='1', ariaLive announcement.",
+        "onTouchMove (line 996-999) does delegate to onMouseMove, but touchmove only fires after finger movement — a tap that does not move never triggers it.",
+        "Result: tap-without-move activates the zone with zero hover state, zero toast, zero SFX hover sound."
+      ],
+      "correct_fix": "Split touch into two phases: touchstart → call onMouseMove (sets hover + shows toast + shimmer SFX), touchend → call onPointerAction only if touch did not move (touchMoved guard using a stored start position vs. end position delta, e.g. >8px threshold = scroll, skip activation). This mirrors the desktop hover→click sequence on mobile.",
+      "false_positive_risk": "LOW — code paths are clearly separate; no conditional in onTouchStart that would show the toast."
+    },
+    {
+      "id": "Q2",
+      "title": "Dead write — crystalData.sphere.position.y after GLB load",
+      "verdict": "CONFIRM",
+      "severity": "LOW",
+      "evidence": [
+        "LairGLBAssets.ts line 334: 'if (proceduralGroups?.crystalSphere) proceduralGroups.crystalSphere.visible = false' — the procedural sphere is hidden when crystal_ball.glb loads successfully.",
+        "MerlinLairScene.ts line 1134: 'crystalData.sphere.position.y = -1.0 + floatSin * 0.04' runs every frame unconditionally in the update loop.",
+        "Once crystalGLBGroup is set (line 831 callback), line 1136 correctly animates the GLB group instead. Line 1134 continues writing to a hidden mesh — it costs one float write per frame with no visible effect.",
+        "Comment on line 1131 ('procedural sphere uses -1.0 (always correct); GLB uses crystalGLBBaseY delta') acknowledges the dual path but does not gate line 1134.",
+        "This is a dead write, not a correctness bug: the sphere is invisible so the y-update has no rendering impact."
+      ],
+      "correct_fix": "Gate line 1134 with 'if (!crystalGLBGroup)'. This matches the existing pattern on line 1136 ('if (crystalGLBGroup)') and eliminates the dead write. One-line change, zero risk.",
+      "false_positive_risk": "NONE — visibility=false confirmed at line 334, gate pattern already used one line below at 1136."
+    },
+    {
+      "id": "Q3",
+      "title": "InstancedMesh double-dispose — c52 playtester claim",
+      "verdict": "FALSE_POSITIVE",
+      "severity": "INFO",
+      "evidence": [
+        "Three.js r170 InstancedMesh.dispose() source: InstancedMesh extends Mesh, and Mesh.dispose() dispatches only a 'dispose' event on the object itself — it does NOT internally call geometry.dispose() or material.dispose().",
+        "Three.js design: dispose() on geometry and material are intentionally left to the caller. This is documented behavior and unchanged through r170. The renderer listens to the 'dispose' event on Geometry/Material objects, not on Mesh.",
+        "The comment at lines 1209-1212 correctly explains why obj.dispose() is called first (to deallocate the instanceMatrix GPU buffer / InstancedBufferAttribute), and geometry.dispose() + material.dispose() follow for the base geometry and material GPU resources.",
+        "These three calls target three distinct GPU resources: (1) instanceMatrix buffer via InstancedMesh.dispose(), (2) vertex attribute buffers via geometry.dispose(), (3) texture/shader program via material.dispose().",
+        "There is no double-dispose: each dispose() call targets a different GPU object. The c52 report was incorrect."
+      ],
+      "correct_fix": "No fix needed. The three-call pattern is correct and necessary. The c52 false positive likely arose from misreading the call sequence as redundant without checking Three.js internals.",
+      "false_positive_risk": "N/A — this IS the false positive."
+    }
+  ],
+  "summary": {
+    "Q1_mobile_touch_flow": "CONFIRM — UX regression, medium severity. touchstart activates without hover/toast. Fix: touchstart→hover, touchend→activate with touchMoved guard.",
+    "Q2_dead_write_sphere": "CONFIRM — dead write post-GLB-load, low severity (no visible bug). Fix: gate with 'if (!crystalGLBGroup)'.",
+    "Q3_instanced_mesh_dispose": "FALSE_POSITIVE — Three.js r170 InstancedMesh.dispose() does NOT call geometry/material dispose internally. Three explicit calls are correct and non-redundant."
+  },
+  "action_required": [
+    {
+      "priority": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "1001-1005",
+      "action": "Refactor onTouchStart to call onMouseMove (hover+toast), move activation to onTouchEnd with touchMoved guard"
+    },
+    {
+      "priority": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1134,
+      "action": "Add 'if (!crystalGLBGroup)' guard to eliminate dead write on hidden sphere"
+    }
+  ]
+}

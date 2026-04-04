@@ -1,0 +1,82 @@
+{
+  "cycle": 46,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "evaluator": "merlin-ai-playtester",
+  "framework": "AAA ULTRA — targeted eval (4 issues)",
+  "previous_score_c45": 9.0,
+  "global_score": 8.7,
+  "score_delta": "-0.3 (2 confirmed defects demote score pending fix)",
+
+  "issue_analysis": {
+    "issue_881_emissive_guard": {
+      "confirmed": true,
+      "severity": "MEDIUM",
+      "root_cause": "In Three.js, MeshStandardMaterial.emissive is always a Color instance (new Color(0,0,0) by default). A Color object is a non-null JavaScript object and therefore always truthy. The guard `if (target.material.emissive)` at line 881 evaluates to true for EVERY MeshStandardMaterial, including stoneMat (emissive=0x000000), floorMat, beamMat, mortarMat. After the correct instanceof guard on line 880 passes, emissiveIntensity gets written unconditionally — even on materials intended to be non-emissive.",
+      "impact": "All hovered objects get emissiveIntensity=0.65 on hover regardless of whether they have a non-black emissive color. Stone walls, floor tiles, beams — none visually glow because emissive=0x000000 produces no light output. However the write is semantically incorrect and wastes a uniform assignment per hover event. More critically: when applyHoverTo is called with baseEmissive on exit (line 894), non-emissive materials get their emissiveIntensity reset to a non-zero value (e.g. 0.15), which while visually silent now, corrupts material state and could cause unexpected glows if emissive color is later changed at runtime (e.g. LLM-driven color animation).",
+      "correct_guard": "emissive.r > 0 || emissive.g > 0 || emissive.b > 0",
+      "file_line": "web-demo/src/scenes/MerlinLairScene.ts:881"
+    },
+    "issue_pedestal_material": {
+      "confirmed": true,
+      "severity": "LOW-MEDIUM",
+      "root_cause": "pedestalMat at line 155: roughness=0.6 metalness=0.3. With color=0x2a2220 (very dark near-black), roughness=0.6 produces a semi-glossy surface and metalness=0.3 adds reflective specular highlight. The combined PBR result reads as polished dark metal (cast iron or obsidian glass) — not a carved druidic stone pedestal. C45 report flagged this at score 9.0 under materiaux_qualite.",
+      "impact": "Lore-material mismatch: the crystal ball oracle sits on what appears to be a metallic plinth rather than rough-hewn basalt or slate. Undermines the Celtic hand-carved aesthetic that flatShading is designed to reinforce. Visible on the central interactive object — high visual salience.",
+      "file_line": "web-demo/src/scenes/MerlinLairScene.ts:155"
+    },
+    "issue_shared_candle_light": {
+      "confirmed": false,
+      "severity": "INFO",
+      "assessment": "Three.js r152+ processes lights in a per-scene list, not a per-material compile-time MAX_POINT_LIGHTS constant for MeshStandardMaterial. Splitting 1 shared PointLight into 2 brings the active count from 10 to 11. This does not hit a hard shader limit but adds one extra light evaluation per fragment per frame. Not a blocker. Current single sharedLight for 3 candles is a reasonable perf tradeoff.",
+      "recommendation": "Do not split. Keep 1 shared candle PointLight."
+    },
+    "issue_bougie_glb_particles": {
+      "confirmed": "CONTINGENT",
+      "severity": "LOW",
+      "assessment": "group.children.forEach hiding non-Light children in LairGLBAssets.ts would suppress any Points mesh that is a direct child of the GLB root group. C45 report does not flag a missing flame visual as a defect, indicating procedural particles are added outside the GLB load callback or the GLB contains no flame geometry. Risk is real only if flame Points are authored inside bougie.glb. Not actionable without verifying the GLB structure."
+    }
+  },
+
+  "top_3_issues": [
+    {
+      "rank": 1,
+      "id": "BUG-L46-01",
+      "severity": "MEDIUM",
+      "title": "applyHoverTo emissive guard always-true — emissiveIntensity written on all MeshStandardMaterial meshes",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 881,
+      "current_code": "if (target.material.emissive) target.material.emissiveIntensity = intensity;",
+      "defect": "Color object is always truthy. Guard never short-circuits. Non-emissive materials (stoneMat, floorMat, beamMat) receive emissiveIntensity writes on every hover/unhover event, corrupting material state silently."
+    },
+    {
+      "rank": 2,
+      "id": "BUG-L46-02",
+      "severity": "LOW-MEDIUM",
+      "title": "pedestalMat roughness=0.6 metalness=0.3 reads as polished dark metal, not carved druidic stone",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 155,
+      "current_code": "const pedestalMat = new MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3, flatShading: true });",
+      "defect": "Semi-glossy metallic PBR response contradicts the carved stone lore. Central oracle object — high visual salience."
+    },
+    {
+      "rank": 3,
+      "id": "INFO-L46-03",
+      "severity": "INFO",
+      "title": "bougie.glb particle Points hidden by non-Light child suppression — contingent risk",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": "147-152",
+      "defect": "Non-Light children of bougie GLB group are hidden. If flame is a Points object inside the GLB (not procedural TS), it disappears silently. Not confirmed without GLB inspection."
+    }
+  ],
+
+  "issue_1_recommendation": "web-demo/src/scenes/MerlinLairScene.ts:881 — Replace always-true Color object guard with explicit RGB check. BEFORE: `if (target.material.emissive) target.material.emissiveIntensity = intensity;` AFTER: `const e = target.material.emissive; if (e.r > 0 || e.g > 0 || e.b > 0) target.material.emissiveIntensity = intensity;`",
+
+  "issue_2_recommendation": "web-demo/src/scenes/MerlinLairScene.ts:155 — Correct pedestalMat PBR values to carved dark stone (basalt/slate). BEFORE: `roughness: 0.6, metalness: 0.3` AFTER: `roughness: 0.85, metalness: 0.05`",
+
+  "verdict": "FIX",
+  "verdict_rationale": "Two confirmed defects: (1) always-true Color guard silently corrupts material state on all hover events — logic error with latent runtime risk if emissive colors are modified dynamically; (2) pedestalMat material mismatch on the central interactive oracle object. Both are single-line fixes. Recommend applying before C47 visual QA pass.",
+
+  "balance_notes": {
+    "candle_light_split": "DO NOT split sharedLight into 2. Existing 10-light setup is already at the comfortable ceiling for mobile WebGL. Adding an 11th light increases per-fragment cost with no meaningful visual gain.",
+    "emissive_guard_side_effect": "After fix, only crystal (emissive=0x6030aa), cauldron (emissive=0x00aa33), scroll (emissive=0x3a2a10), and any other intentionally emissive objects will receive hover emissiveIntensity changes. Stone walls and floor will correctly be excluded."
+  }
+}

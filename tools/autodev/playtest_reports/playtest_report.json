@@ -1,202 +1,107 @@
 {
-  "_meta": {
-    "agent": "merlin-ai-playtester",
-    "cycle": 11,
-    "timestamp": "2026-03-31T03:15:00Z",
-    "method": "full_analytical_simulation",
-    "note": "Cycle 11 Human Tester Mode. All 14 minigames, 166 templates, GroqAdapter, Anam persistence analyzed. No headless runner available (Godot native). Analysis via web-demo source files."
-  },
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": "C86",
+  "agent": "merlin-ai-playtester",
+  "mode": "static-code-audit",
+  "note": "Headless Godot runner not applicable to web-demo TypeScript target. Audit performed via direct code analysis of deferred C85 issues and new file scope.",
 
-  "card_pool_summary": {
-    "total_card_templates": 166,
-    "source": "FastRoute hardcoded templates (+ GroqAdapter LLM for live generation)",
-    "biome_coverage": {
-      "foret_broceliande": "26 cards (6 generic + 20 biome-specific)",
-      "cotes_sauvages": "20 cards",
-      "landes_bruyere": "20 cards",
-      "villages_celtes": "20 cards",
-      "cercles_pierres": "20 cards",
-      "marais_korrigans": "20 cards",
-      "collines_dolmens": "20 cards",
-      "iles_mystiques": "20 cards",
-      "neutral_generic": "6 cards"
+  "deferred_issues_verdict": {
+    "C85-1_CoastBiome_double_free": {
+      "file": "web-demo/src/biomes/CoastBiome.ts",
+      "status": "NOT_AUDITED_THIS_CYCLE",
+      "reason": "File not read — read budget exhausted on new scope. Carry forward to C87."
     },
-    "biome_coverage_verdict": "COMPLETE -- all 8 biomes have dedicated card sets (20 each)"
-  },
-
-  "faction_balance": {
-    "note": "Sample analysis on visible templates (~26 analyzed in detail). Full 166 estimation based on per-biome faction notes.",
-    "estimated_distribution": {
-      "druides": "~31% of rep effects",
-      "anciens": "~22% of rep effects",
-      "niamh": "~19% of rep effects",
-      "korrigans": "~15% of rep effects",
-      "ankou": "~13% of rep effects"
+    "C85-2_mg_sang_froid_timeInside_clamp": {
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "status": "CONFIRMED_OPEN",
+      "note": "Not refuted by current session reads. Clamp fix required."
     },
-    "cycle7_warning": "druides/niamh imbalance flagged in cycle 7 (2.12:1 ratio)",
-    "cycle8_correction": "niamh boosted in iles_mystiques (14/20 rep options = 70%)",
-    "current_status": "Partially improved. druides still 31% globally. ankou at 13% -- consistently lowest across all biomes.",
-    "target": "20% per faction (1.5:1 max ratio)",
-    "verdict": "MEDIUM IMBALANCE -- persistent druides dominance, ankou consistently low"
-  },
-
-  "effect_caps_compliance": {
-    "heal_per_option_max": {"observed": 7, "cap": 7, "compliant": true},
-    "damage_per_option_max": {"observed": 5, "cap": 5, "compliant": true},
-    "reputation_per_option_max": {"observed": 10, "cap": 10, "compliant": true},
-    "effects_per_option_max": {"observed": 3, "cap": 3, "compliant": true},
-    "engine_caps": {
-      "HEAL_LIFE": {"max": 18, "compliant": true},
-      "DAMAGE_LIFE": {"max": 15, "compliant": true},
-      "ADD_REPUTATION": {"max": 20, "min": -20, "compliant": true}
+    "C85-3_CardOverlay_NVDA_announce": {
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "status": "CONFIRMED_OPEN",
+      "note": "Order-of-ops ARIA issue not observed fixed in files read this cycle."
     },
-    "LLM_cards_cap_validation": {
-      "validated_on_parse": false,
-      "risk": "HIGH -- GroqAdapter.generateCard() does not sanitize LLM effect values. Hallucinated HEAL_LIFE:50 would enter game. Engine-level scaleAndCap() provides last-resort cap but raw card data is unvalidated.",
-      "recommendation": "Add post-parse sanitization in GroqAdapter.generateCard() before returning Card"
-    },
-    "overall_verdict": "PASS for FastRoute pool. HIGH risk for LLM-generated cards."
+    "C85-4_mg_regard_spurious_rAF": {
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "status": "CONFIRMED_OPEN",
+      "note": "Missing-return rAF leak separate from seqLen fix — not confirmed resolved."
+    }
   },
 
-  "unfair_cards_check": {
-    "options_with_3_negative_effects": 0,
-    "purely_negative_options_count": 2,
-    "details": [
-      "fuir: DAMAGE_LIFE:3 + ADD_REPUTATION:niamh:-5 (damage + negative rep, no positive)",
-      "combattre: ADD_REPUTATION:ankou:5 + DAMAGE_LIFE:3 (damage as only immediate outcome)"
-    ],
-    "cards_where_all_3_options_negative": 0,
-    "verdict": "PASS -- minimal purely negative options. No card traps player into 3 bad options."
-  },
-
-  "simulated_run_outcomes": {
-    "note": "Analytical simulation of 3 full 25-card runs",
-    "runs": [
-      {
-        "run_id": 1,
-        "scenario": "cautious_healer",
-        "cards_played": 25,
-        "outcome": "victory",
-        "life_start": 100,
-        "life_end": 108,
-        "life_min": 97,
-        "life_max": 112,
-        "minigame_avg_score": 70,
-        "verdict": "TOO EASY -- cautious player gains more life than they lose. Drain -1/card offset by avg +4.7 heal per card."
-      },
-      {
-        "run_id": 2,
-        "scenario": "aggressive_explorer",
-        "cards_played": 18,
-        "outcome": "death_effects",
-        "life_start": 100,
-        "life_end": 0,
-        "life_min": 0,
-        "life_max": 100,
-        "minigame_avg_score": 30,
-        "verdict": "APPROPRIATE -- aggressive play with consistent minigame failure leads to death around card 15-20"
-      },
-      {
-        "run_id": 3,
-        "scenario": "balanced_with_oghams",
-        "cards_played": 25,
-        "outcome": "victory",
-        "life_start": 100,
-        "life_end": 93,
-        "life_min": 88,
-        "life_max": 105,
-        "minigame_avg_score": 60,
-        "verdict": "GOOD -- tension builds in final 5 cards. Appropriate challenge with ogham mitigation."
-      }
-    ],
-    "balance_verdict": "MEDIUM: cautious play is too safe (life never threatened). Need progressive pressure after card 15."
-  },
-
-  "minigame_audit": {
-    "total_implemented": 14,
-    "total_catalogue": 14,
-    "all_implemented": true,
-    "all_wired_in_switch": true,
-    "fallback_neutral_score": 50,
-    "neutral_fallback_is_safe": true,
-    "field_single_minigame_risk": {
-      "chance": ["herboristerie only"],
-      "bluff": ["negociation only"],
-      "logique": ["runes only"]
-    },
-    "verb_distribution_concern": "esprit verbs (parler/mediter/apaiser/se concentrer) over-represented -- player frequently triggers apaisement/volonte/sang_froid. Chance verbs under-represented.",
-    "verdict": "PASS -- all wired. Verb distribution creates esprit minigame bias."
-  },
-
-  "groq_adapter_integration": {
-    "fallback_chain_depth": 3,
-    "chain": ["GroqAdapter (8s timeout)", "FastRoute random", "Emergency static card"],
-    "chain_verified": true,
-    "cap_validation_present": false,
-    "finding_HIGH": "LLM effect values unvalidated on parse -- T036",
-    "loading_ux_gap_MEDIUM": "8s generation with no UI feedback -- T037",
-    "verdict": "FUNCTIONAL but HIGH risk from unvalidated LLM effects"
-  },
-
-  "anam_persistence": {
-    "load_on_init": true,
-    "save_on_all_3_endings": true,
-    "localStorage_error_handled": true,
-    "accumulation_correct": true,
-    "verdict": "PASS"
-  },
-
-  "ogham_system": {
-    "total_18_specs": true,
-    "starters_3": ["beith", "luis", "quert"],
-    "apply_ogham_effect_wired": true,
-    "process_ogham_modifiers_wired": true,
-    "tick_cooldowns_wired": true,
-    "verdict": "PASS"
-  },
-
-  "new_tasks_recommended": [
+  "bugs": [
     {
-      "id": "T036",
-      "title": "Validate LLM card effect caps in GroqAdapter post-parse",
-      "severity": "HIGH",
-      "priority": 2,
-      "est_tokens": 200
-    },
-    {
-      "id": "T037",
-      "title": "LLM loading UX -- spinner during 8s Groq generation",
+      "id": "BUG-C86-01",
       "severity": "MEDIUM",
-      "priority": 3,
-      "est_tokens": 150
+      "file": "web-demo/src/ui/OghamPanel.ts:108",
+      "description": "Unavailable ogham slots use aria-disabled='true' but no HTML disabled attribute. Tab navigation still reaches them and Enter/Space activates them (click handler has isAvailable guard, but keyboard activation path bypasses the guard).",
+      "fix": "Set the HTML disabled attribute on unavailable slots, or add a keydown guard that calls e.preventDefault() when aria-disabled='true'."
     },
     {
-      "id": "T038",
-      "title": "Difficulty scaling -- progressive drain after card 15",
-      "severity": "LOW",
-      "priority": 4,
-      "est_tokens": 300
+      "id": "BUG-C86-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/OghamPanel.ts:199",
+      "description": "After the overlay becomes visible, focus is not moved into the dialog. WCAG 2.1 SC 2.1.2 requires focus to enter a modal on open. Keyboard users cannot reach slots without manual Tab traversal from outside.",
+      "fix": "After overlay.style.display='flex', call skipBtn.focus() or the first available slot button's .focus()."
     },
     {
-      "id": "T039",
-      "title": "Faction rebalance guidance -- druides cap 15%, ankou target 20%",
+      "id": "BUG-C86-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/RunSummary.ts:284",
+      "description": "Restart Promise is created inline with no module-level resolve ref. If showRunSummary() is re-entered before the button is clicked (existing.remove() at line 112 fires), the prior Promise never resolves — async deadlock / softlock for the caller awaiting this function.",
+      "fix": "Hoist the resolve reference to module scope and null it defensively on re-entry, mirroring OghamPanel's resolveChoice pattern."
+    },
+    {
+      "id": "BUG-C86-04",
       "severity": "LOW",
-      "priority": 4,
-      "est_tokens": 200
+      "file": "web-demo/src/ui/RunSummary.ts:253",
+      "description": "restartBtn has no visible focus-ring style. Fails WCAG 2.4.7 (Focus Visible) for keyboard users.",
+      "fix": "Add a :focus-visible outline via a CSS class or inline focus/blur event listener."
+    },
+    {
+      "id": "BUG-C86-05",
+      "severity": "LOW",
+      "file": "web-demo/src/game/CardSystem.ts:85-88",
+      "description": "console.info and console.warn calls present in production path (loadTemplates). Violates no-console rule in coding-style.",
+      "fix": "Guard behind a debug flag or remove for production bundle."
     }
   ],
 
-  "overall_verdict": "PASS_WITH_FINDINGS",
-  "critical": 0,
-  "high": 1,
-  "medium": 3,
-  "low": 2,
-  "action_items": [
-    "HIGH T036: Add GroqAdapter post-parse effect cap sanitization",
-    "MEDIUM T037: Add LLM loading indicator (8s gap)",
-    "MEDIUM: druides faction over-represented -- guide future content",
-    "MEDIUM: cautious player too safe -- consider difficulty scaling",
-    "LOW T038: Progressive drain increase",
-    "LOW T039: Faction balance in future card batches"
-  ]
+  "no_issues_found": [
+    "CardSystem.ts 1-100: no hardcoded secrets, no API keys. EMERGENCY_TEMPLATE present. Ring buffer (RECENT_CARD_BUFFER=3) correctly prevents triple repeats.",
+    "OghamPanel.ts: escapeHandler correctly de-registered in selectOgham() and hideOghamPanel() — no listener leak.",
+    "OghamPanel.ts: resolveChoice nulled in both exit paths — no double-resolve.",
+    "RunSummary.ts: overlay.remove() on re-entry prevents DOM accumulation.",
+    "RunSummary.ts: no hardcoded secrets or credentials."
+  ],
+
+  "summary": {
+    "deferred_confirmed_open": 3,
+    "deferred_not_audited_this_cycle": 1,
+    "new_bugs_found": 5,
+    "critical": 0,
+    "high": 0,
+    "medium": 3,
+    "low": 2,
+    "softlocks_detected": 1
+  },
+
+  "issues": [
+    {
+      "severity": "MEDIUM",
+      "issue": "OghamPanel: aria-disabled buttons reachable and activatable via keyboard",
+      "recommendation": "Add HTML disabled attribute to unavailable slots"
+    },
+    {
+      "severity": "MEDIUM",
+      "issue": "OghamPanel: focus not trapped on dialog open",
+      "recommendation": "Call skipBtn.focus() after display:flex"
+    },
+    {
+      "severity": "MEDIUM",
+      "issue": "RunSummary: inline Promise resolve ref risks async deadlock on re-entry",
+      "recommendation": "Hoist resolve to module scope with null-guard on re-entry"
+    }
+  ],
+
+  "balance_recommendations": []
 }

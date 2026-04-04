@@ -1,0 +1,171 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 99,
+  "agent": "merlin-ai-playtester",
+  "scope": ["mg_traces.ts", "mg_course.ts"],
+  "base_ref": "MinigameBase.ts (lines 1-80)",
+
+  "mg_traces": {
+    "score_estimate": "6/10",
+    "difficulty_scaling": {
+      "uses_difficultyTier": false,
+      "hardcoded_params": [
+        { "line": 22, "var": "timeLeft / totalTime", "value": "8s", "recommendation": "Scale by tier: [10, 8, 6, 5]s for tiers 0-3" },
+        { "line": 23, "var": "footprintCount", "value": "7", "recommendation": "Scale by tier: [5, 7, 9, 11] for tiers 0-3" },
+        { "line": 101, "var": "hit radius dist < 30", "value": "30px canvas units", "recommendation": "Scale by tier: [38, 30, 22, 16]px for tiers 0-3" }
+      ],
+      "implementation_note": "In setup(), read this.difficultyTier (0-3 from MinigameBase) and branch or use a lookup table for the three params above"
+    },
+    "sfx_gaps": {
+      "has_gameplay_sfx": false,
+      "recommended_insertions": [
+        {
+          "location": "onClick() line 103 — after target.hit = true",
+          "event": "merlin_sfx",
+          "detail": "{ type: 'footprint_hit', index: this.currentIndex }",
+          "tone": "short positive tick"
+        },
+        {
+          "location": "onClick() line 106 — after currentIndex >= footprintCount check, before endGame()",
+          "event": "merlin_sfx",
+          "detail": "{ type: 'sequence_complete' }",
+          "tone": "rising arpeggio"
+        },
+        {
+          "location": "setInterval callback line 86 — when timeLeft <= 0, before endGame()",
+          "event": "merlin_sfx",
+          "detail": "{ type: 'timeout' }",
+          "tone": "low buzzer"
+        }
+      ]
+    },
+    "bugs": [
+      {
+        "severity": "MEDIUM",
+        "line": "22-23",
+        "issue": "totalTime and footprintCount are readonly class fields, not re-assigned in setup(). If difficultyTier scaling is added, these must be instance variables (non-readonly) or the timer/loop must read a scaled local",
+        "recommendation": "Convert to private (non-readonly) instance vars initialised in setup() from a tier lookup"
+      },
+      {
+        "severity": "LOW",
+        "line": "77",
+        "issue": "this.timeLeft = this.totalTime resets from the constant (8s) even though totalTime is never scaled — safe today but fragile if totalTime changes mid-class",
+        "recommendation": "Derive from the same tier-scaled source as the interval logic"
+      },
+      {
+        "severity": "LOW",
+        "line": "91",
+        "issue": "onClick typed as (e: MouseEvent) but listener is 'pointerdown' — PointerEvent extends MouseEvent so it works, but the type annotation is misleading",
+        "recommendation": "Change signature to (e: PointerEvent)"
+      }
+    ],
+    "cleanup_analysis": {
+      "double_removeEventListener_risk": false,
+      "note": "cleanup() (line 185-190) and endGame() (line 115) both call removeEventListener('pointerdown', this.onClick). This is safe because removeEventListener is idempotent, but endGame() also calls cancelAnimationFrame before the rAF loop could re-register — no leak."
+    },
+    "score_formula": {
+      "formula": "(hitCount / footprintCount) * 80 + timeBonus (max 20)",
+      "assessment": "FAIR — time bonus is only 20% weight. A player who hits all 7 footprints in 0.1s remaining earns ~80.25 vs 100 for perfect time. The 80/20 split slightly undersells speed. Consider 70/30 to reward faster completion more visibly.",
+      "max_possible": 100,
+      "skilled_play_rewarded": true
+    },
+    "mobile": {
+      "touch_action_none": { "confirmed": true, "line": 58 },
+      "dpr_correction": { "confirmed": true, "line": "94-95", "formula": "(e.clientX - rect.left) * (canvas.width / rect.width)" }
+    }
+  },
+
+  "mg_course": {
+    "score_estimate": "7/10",
+    "difficulty_scaling": {
+      "uses_difficultyTier": false,
+      "hardcoded_params": [
+        { "line": 49, "var": "totalRounds", "value": "8", "recommendation": "Not a primary scaling lever — keep fixed or scale modestly [6, 8, 8, 10]" },
+        { "line": 50, "var": "roundTime", "value": "1.5s", "recommendation": "Primary lever — scale by tier: [2.0, 1.5, 1.1, 0.8]s" },
+        { "line": 51, "var": "decoyCount", "value": "4", "recommendation": "Scale by tier: [2, 4, 5, 6]" },
+        { "line": 52, "var": "hitRadius", "value": "32px", "recommendation": "Scale by tier: [40, 32, 26, 20]px — smaller target = harder" }
+      ],
+      "implementation_note": "All four are readonly class fields. Same refactor needed as mg_traces: convert to non-readonly and assign from tier lookup inside setup() or prepareRound()"
+    },
+    "sfx_gaps": {
+      "has_gameplay_sfx": false,
+      "recommended_insertions": [
+        {
+          "location": "onClick() line 190 — after this.hits++ (hit branch)",
+          "event": "merlin_sfx",
+          "detail": "{ type: 'symbol_hit' }",
+          "tone": "bright ping"
+        },
+        {
+          "location": "onClick() lines 202-207 — after clickedDecoy branch triggers miss",
+          "event": "merlin_sfx",
+          "detail": "{ type: 'symbol_miss' }",
+          "tone": "low thud"
+        },
+        {
+          "location": "render() line 267 — round timeout miss path (roundElapsed >= roundTime)",
+          "event": "merlin_sfx",
+          "detail": "{ type: 'round_timeout' }",
+          "tone": "short buzz"
+        }
+      ]
+    },
+    "bugs": [
+      {
+        "severity": "MEDIUM",
+        "line": "229",
+        "issue": "setTimeout(() => this.endGame(), 500) inside advanceRound() is not stored and therefore cannot be cancelled if cleanup() is called before the 500ms fires. If the player navigates away immediately after the last round, endGame() fires on a destroyed context and calls this.finish() after the minigame overlay is gone.",
+        "recommendation": "Store the handle: this.endGameTimeout = setTimeout(...) and clear it in cleanup() and endGame() guards"
+      },
+      {
+        "severity": "LOW",
+        "line": "49-52",
+        "issue": "readonly class fields cannot be changed after construction — same pattern issue as mg_traces. Must be non-readonly for tier scaling to work.",
+        "recommendation": "Convert to private (non-readonly) and assign in setup()"
+      }
+    ],
+    "cleanup_analysis": {
+      "double_removeEventListener_risk": false,
+      "note": "endGame() (line 240) calls removeEventListener, cleanup() (line 422) also calls it — safe (idempotent). However, the orphaned setTimeout on line 229 is NOT cancelled anywhere — see HIGH bug above.",
+      "orphan_timeout": { "severity": "MEDIUM", "line": 229 }
+    },
+    "score_formula": {
+      "formula": "(hits / totalRounds) * 100",
+      "assessment": "SIMPLE — purely accuracy-based, no time bonus. A player who hits all 8 with 1ms to spare each round scores the same as one who clicks in the first 100ms. Consider adding a speed bonus: baseScore * 0.85 + (avgClickSpeed / roundTime) * 15 to differentiate skilled play.",
+      "max_possible": 100,
+      "skilled_play_rewarded": false,
+      "note": "Speed is already punished (miss on timeout) but never rewarded — asymmetric incentive"
+    },
+    "mobile": {
+      "touch_action_none": { "confirmed": true, "line": 101 },
+      "dpr_correction": { "confirmed": true, "line": "178-179", "formula": "(e.clientX - rect.left) * (canvas.width / rect.width)" }
+    }
+  },
+
+  "cross_cutting_findings": [
+    {
+      "severity": "HIGH",
+      "issue": "Neither file reads this.difficultyTier — 0% of the 14-minigame fleet uses tier scaling in these two files, consistent with the 3/14 figure at cycle-29. The readonly field pattern in both files blocks in-place tier parameterisation without a structural refactor.",
+      "recommendation": "Adopt a shared helper in MinigameBase: protected tieredValue<T>(values: [T,T,T,T]): T returning values[this.difficultyTier] — then each minigame calls it in setup()"
+    },
+    {
+      "severity": "HIGH",
+      "issue": "Zero in-play SFX in both files. Combined with mg_traces and mg_course being visually distinct games, the absence of per-action audio feedback reduces immersion and outcome clarity for the player.",
+      "recommendation": "Add dispatchEvent(new CustomEvent('merlin_sfx', { detail: { type } })) at the 6 locations listed above across both files"
+    },
+    {
+      "severity": "MEDIUM",
+      "issue": "mg_course orphaned setTimeout (line 229) — not cancellable via cleanup()",
+      "recommendation": "Store handle, cancel in cleanup()"
+    }
+  ],
+
+  "summary": {
+    "mg_traces_score": "6/10",
+    "mg_course_score": "7/10",
+    "critical_issues": 0,
+    "high_issues": 2,
+    "medium_issues": 3,
+    "low_issues": 3
+  }
+}

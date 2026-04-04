@@ -1,0 +1,72 @@
+{
+  "cycle": "C117",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "focus": "main.ts game flow + lair-minigame transition",
+  "lair_dispose_before_minigame": "YES",
+
+  "findings": {
+    "lair_lifecycle": {
+      "verdict": "CLEAN",
+      "detail": "runMerlinLair() is a self-contained async function. Minigames only execute inside gameLoop(), which is only called after runMerlinLair() has fully resolved and returned. The teardown sequence at lines 484-493 of main.ts is: cancelAnimationFrame → removeEventListener('visibilitychange') → clearTimeout(toast timers) → cutToBlack() → 300ms await → lair.dispose() → wrapper.style.display='none'. The Three.js canvas, all pointer listeners (click/mousemove/touchstart/touchend/touchmove/keydown on renderer.domElement), and the rAF are all fully torn down before gameLoop() is entered."
+    },
+    "lair_canvas_during_minigame": {
+      "verdict": "CLEAN",
+      "detail": "The lair wrapper has display:none set after dispose(). The lair renderer.domElement is removed from the DOM (line 1249 of MerlinLairScene.ts). No stale pointer events can reach it."
+    },
+    "door_click_600ms_window": {
+      "verdict": "LOW_RISK",
+      "detail": "The door click sets setTimeout(resolve, 600) but does NOT cancel the lair rAF or remove event listeners immediately. During those 600ms the lair canvas is still active and clickable. A second rapid door click would call zoneClickCallback again, triggering a second setTimeout(resolve, 600). Since Promise.resolve() is idempotent this causes no double-run. However, a crystal/map click during this window would fire showOghamPanel() or showBiomePicker() concurrently with the cutToBlack transition starting. These are UI overlays, not game state mutations, so the impact is cosmetic only (orphaned overlay). Bug ID: MAIN-01."
+    },
+    "save_run_end_idempotency": {
+      "verdict": "CLEAN",
+      "detail": "saveRunEnd() is guarded by savedThisRun flag (lines 622-628). All 5 exit paths call it: death_drain (line 655), death_effects (line 764), cards_limit (line 772), victory (line 780), safety ceiling (line 632). saveAnamToStorage() and saveMetaToStorage() are both called in every path. No exit path is missing a save."
+    },
+    "safety_ceiling_60": {
+      "verdict": "LOW_RISK",
+      "detail": "The safety ceiling of 60 iterations fires only if run.active stays true past the 30-card hard limit, which requires a code bug elsewhere (e.g. endRun() not setting run.active=false, or checkDeath() returning false when it should not). Under normal operation the ceiling is unreachable in one run lifetime (30 cards max). When the ceiling fires it calls showRunSummary('cards_limit') rather than a 'safety' reason — this misrepresents the exit cause in the summary UI. Bug ID: MAIN-02 (LOW)."
+    },
+    "lair_update_guard": {
+      "verdict": "CLEAN",
+      "detail": "MerlinLairScene.ts line 1112: update() has an early return on lairDisposed. Any stale rAF frame on slow devices returns immediately."
+    },
+    "door_flash_dispose_race": {
+      "verdict": "CLEAN",
+      "detail": "The 380ms door flash timeout captures cb before the setTimeout. dispose() sets lairDisposed=true and calls clearTimeout(doorFlashCancelHandle). Even if clearTimeout is too late, the lairDisposed guard at line 987 blocks the callback. dispose() is called ~900ms after the door click (600ms delay + 300ms cutToBlack wait), well after the 380ms flash — no race condition."
+    },
+    "onZoneClick_not_in_lairscene": {
+      "verdict": "CLEAN",
+      "detail": "MerlinLairScene.ts does NOT launch any minigame internally. The onZoneClick callback (set via lair.onZoneClick()) is owned entirely by main.ts. LairScene only emits the zone string; all game logic (biome picker, ogham panel, journal, run start) lives in main.ts. Clear separation of concerns."
+    },
+    "lair_re_creation_after_run": {
+      "verdict": "CLEAN",
+      "detail": "After each run, main.ts outer loop (line 528 while(true)) calls runMerlinLair() again, which calls initMerlinLair() fresh. A new WebGL context, scene, and renderer are created. C117's clearGLBCache() in dispose() prevents returning disposed-geometry GLTFs on the second visit."
+    }
+  },
+
+  "verdict": "BUGS_FOUND",
+
+  "priority_bugs": [
+    {
+      "id": "MAIN-01",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line": 431,
+      "description": "600ms door-click delay window leaves lair canvas interactive. A crystal or map click during this window fires showOghamPanel() or showBiomePicker() concurrently with the cutToBlack transition. The orphaned overlay resolves harmlessly but briefly flickers over the black transition screen on fast double-taps.",
+      "fix": "Set zoneClickCallback = null (or a no-op) immediately when the door resolves, before the 600ms setTimeout fires. Alternatively, set a 'transitioning' flag checked at the top of the onZoneClick async handler."
+    },
+    {
+      "id": "MAIN-02",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line": 634,
+      "description": "Safety ceiling at 60 iterations calls showRunSummary('cards_limit') instead of a dedicated 'safety' reason. If the ceiling ever fires due to a bug in run.active, the player sees 'Limite de cartes' rather than any indication of an abnormal exit. This masks debugging signal.",
+      "fix": "Call showRunSummary('safety') or add a 'safety' reason variant to RunSummary. The 60-iteration ceiling value itself is fine — it is 2x the card limit and only reachable via a bug, not normal play."
+    }
+  ],
+
+  "notes": {
+    "c117_glb_cache_clear": "C117's clearGLBCache() in dispose() correctly prevents disposed-geometry GLTFs from being served on the second lair visit. This was the targeted fix for C117 and is confirmed working.",
+    "no_softlock_paths": "No softlock was found. The loop exits cleanly on all 5 paths. The 60-ceiling is a fallback that saves state before exiting.",
+    "minigame_isolation": "Minigames run in a separate DOM overlay (#minigame-container/#minigame-overlay). The lair Three.js renderer.domElement is removed from the DOM before gameLoop() starts. Zero event interception risk."
+  }
+}

@@ -1,31 +1,23 @@
 {
-  "cycle": 9,
   "agent": "merlin-narrative-designer",
-  "task": "T031",
-  "timestamp": "2026-03-31T01:30:00Z",
-  "card_quality_pass": {
-    "total_templates_checked": 166,
-    "structure_check": {
-      "all_have_3_options": true,
-      "all_effects_non_empty": true,
-      "all_verbs_present": true,
-      "all_text_present": true
-    },
-    "narrative_length_check": {
-      "shortest_narrative_words_approx": 25,
-      "longest_narrative_words_approx": 65,
-      "under_20_words": 0,
-      "over_200_words": 0,
-      "verdict": "PASS"
-    },
-    "duplicate_verb_check": {
-      "cards_with_duplicate_verb_in_same_card": 0,
-      "verdict": "PASS"
-    },
-    "first_10_spot_check": "Starter+foret cards. 3 distinct verbs each, effects balanced, narratives 25-50 words.",
-    "last_10_spot_check": "iles_mystiques finale. Themes: ghost ship, seal guardian, Avalon. Verbs distinct, effects within caps.",
-    "issues_fixed": 0,
-    "quality_pass": true,
-    "verdict": "PASS - all 166 templates meet quality criteria"
-  }
+  "cycle": 169,
+  "task_id": "T169",
+  "status": "PASS",
+  "confidence": "HIGH",
+  "evidence": [
+    "FACTION_COLOURS in CardOverlay.ts already matched spec — no change needed",
+    ".card-biome-badge: added font-family Courier New,monospace; letter-spacing 2px→0.15em; color opacity 0.55→0.60",
+    ".card-narrative: line-height 1.7→1.6 per spec",
+    ".card-option .verb: letter-spacing 0.14em→0.12em per spec",
+    "Card flip animation: rotateY keyframes with perspective:1000px, no preserve-3d (Safari safe)",
+    "LLM source badge (sourceGlyph + title) verified present in showCard()",
+    "Build: 0 TS errors, index bundle 215.33 kB — within regression gate",
+    "Commit c4ba0ed pushed to main"
+  ],
+  "blockers": [],
+  "next_steps": [
+    "Verify badge top-right positioning visually in browser",
+    "Consider max-width + text-overflow ellipsis on badge if long biome names overflow"
+  ],
+  "tokens_used_approx": 950
 }

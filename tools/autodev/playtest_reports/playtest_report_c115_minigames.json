@@ -1,0 +1,106 @@
+{
+  "cycle": "C115",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "targets": ["mg_equilibre", "mg_traces", "mg_volonte"],
+  "findings": {
+    "mg_equilibre": {
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "cancelTimers_contract": "PASS — clearInterval + cancelAnimationFrame + all 7 event listeners removed (keydown, keyup, blur, pointerdown, pointerup, pointerleave, pointercancel). C102 applied correctly.",
+      "score_formula": "PASS — zoneRatio = timeInZone / totalElapsed, result 0-100. Edge: if game ends at t=0 the denominator uses +0.001 guard, preventing NaN. Fair.",
+      "immutability": "PASS — gusts[] is pushed via object literal (no mutation). keysDown is a Set (add/delete are acceptable for transient input state). No render-loop mutations.",
+      "softlock_risk": "PASS — endGame() is called from setInterval when timeLeft <= 0. setInterval runs at 100ms regardless of rAF state. No phase that requires player action to advance timer.",
+      "render_ended_guard": "FAIL — render() at line 224 does NOT check this.ended before re-queuing requestAnimationFrame at line 372. After cancelTimers() calls cancelAnimationFrame(this.animFrame), the in-flight frame that was already scheduled still executes render() one more time, which queues a new animFrame. This is the RUN-01 pattern.",
+      "mobile": "PASS — pointerdown + pointerup + pointerleave + pointercancel all registered. Canvas touch-action:none set. No pointermove dependency (pointerdown sets touchSide, pointerup clears it). Hit target is full left/right half of canvas.",
+      "sfx": "PASS — unlock/lose SFX dispatched only on zone enter/leave (wasInZone edge-trigger). Not every frame.",
+      "bugs": ["EQB-01"]
+    },
+    "mg_traces": {
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "cancelTimers_contract": "PASS — clearInterval + cancelAnimationFrame + pointerdown + keydown listeners removed. C102 applied.",
+      "score_formula": "PASS — (hitCount/footprintCount)*80 + timeBonus(max 20). Completing all footprints instantly gives 80+20=100. Partial hits with time left score fairly. Edge: timeLeft can be fractionally negative at endGame() call from setInterval — Math.max(0, ...) guards correctly.",
+      "immutability": "FAIL — Footprint interface declares hit as a plain boolean (not readonly). onClick at line 131 and onKeyDown at line 112 both do `target.hit = true`, mutating the Footprint object in the shared footprints[] array in-place. This is a direct violation of the immutability contract. While functionally harmless here (single-write, no aliasing), it sets a dangerous precedent and violates the coding-style rule. The render() loop reads fp.hit every frame — an in-place mutation during a rAF callback is safe in single-threaded JS but still incorrect per project style.",
+      "softlock_risk": "PASS — timer endGame() fires at timeLeft <= 0 regardless of footprint progress. No phase requires all footprints to be hit to advance.",
+      "render_ended_guard": "FAIL — render() at line 159 does NOT check this.ended at the top. After cancelTimers(), the already-queued rAF frame executes render() one more time and re-queues via requestAnimationFrame at line 219. Same RUN-01 zombie rAF pattern as EQB-01.",
+      "mobile": "PASS — pointerdown registered (no pointermove dependency). Canvas touch-action:none set. hitRadius at tier 0 is 38px (above 44px WCAG minimum is 76px diameter — acceptable). At tier 3 hitRadius=16px (32px diameter — below 44px minimum for small fingers). Flagged as LOW.",
+      "sfx": "PASS — unlock SFX dispatched once per footprint hit inside onClick/onKeyDown, not in render loop. No per-frame SFX.",
+      "bugs": ["TRC-01", "TRC-02", "TRC-03"]
+    },
+    "mg_volonte": {
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "cancelTimers_contract": "PASS — clearInterval + cancelAnimationFrame + pointermove + pointerdown + pointerleave + pointercancel + keydown all removed. C102 applied correctly.",
+      "score_formula": "PARTIAL — Score = (timeOnTarget / totalTime) * 100. Denominator is totalTime (fixed), not elapsedTime (actual). This means a player who maximally focuses can only reach score = (timeOnTarget / totalTime) * 100. Since timeOnTarget <= elapsedTime and elapsedTime <= totalTime, the formula is bounded 0-100. However, the player receives no time bonus for finishing quickly (unlike mg_traces). More critically: the formula penalises the first ~0.5s where cursor starts at (0,0) outside target — the player cannot get credit for those first frames. This is by design per the cursor init comment. Considered fair.",
+      "immutability": "PASS — spawnDistractor() uses spread + filter to build new distractors array (line 192-203). Distractor interface is fully readonly. No render-loop mutations.",
+      "softlock_risk": "PASS — setInterval fires endGame() at timeLeft <= 0. No blocking phase. nextSpawn countdown is purely timer-driven.",
+      "render_ended_guard": "FAIL — render() at line 227 does NOT check this.ended at the top. After cancelTimers(), the in-flight rAF frame executes render() one more time and re-queues via requestAnimationFrame at line 380. RUN-01 zombie rAF pattern.",
+      "mobile": "PARTIAL — pointermove is registered for cursor tracking. On mobile, pointermove fires correctly after pointerdown (pointer is captured implicitly by the browser on canvas with touch-action:none). pointerdown also calls onPointerMove to set initial position. pointerleave/cancel correctly set cursor to (-1,-1). The canvas custom cursor (4px dot) is invisible on touch devices but that is cosmetic only. No hit-target concern (whole canvas is the interaction surface). The cursor starts at (0,0) on mobile — first touch sets it correctly via pointerdown->onPointerMove. PASS functionally.",
+      "sfx": "PASS — unlock/lose SFX edge-triggered in render() on isOnTarget/wasOnTarget transition. Not per-frame.",
+      "dom_query_per_frame": "MEDIUM concern — statusEl DOM query `document.getElementById('mg-volonte-status')` at line 262 runs every render frame (~60/s). Should be cached as a class field in setup(). Not a bug but a performance smell.",
+      "bugs": ["VOL-01", "VOL-02"]
+    }
+  },
+  "priority_bugs": [
+    {
+      "id": "EQB-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "line": 224,
+      "description": "render() missing this.ended guard at entry point. After cancelTimers() calls cancelAnimationFrame(this.animFrame), one already-scheduled rAF callback fires, executes the full render body (including physics and SFX dispatch), then re-queues a new rAF handle via requestAnimationFrame at line 372. This creates a zombie rAF loop post-game-end. Pattern identical to RUN-01 (mg_runes).",
+      "fix": "Add `if (this.ended) return;` as the first line of render(), before the ctx/canvas null-guard. This is the same fix applied to mg_runes."
+    },
+    {
+      "id": "TRC-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "line": 159,
+      "description": "render() missing this.ended guard. Same zombie rAF pattern as EQB-01 / RUN-01. After endGame() calls cancelTimers(), one pending rAF fires render(), accumulates elapsedTime, redraws, and re-queues itself indefinitely.",
+      "fix": "Add `if (this.ended) return;` as the first statement in render()."
+    },
+    {
+      "id": "TRC-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "line": 112,
+      "description": "In-place mutation of Footprint objects. Both onKeyDown (line 112) and onClick (line 131) do `target.hit = true` directly on the object reference retrieved from footprints[]. The Footprint interface does not mark `hit` as readonly. This violates the project immutability rule (coding-style.md). While harmless in single-threaded JS with single-write semantics, it is inconsistent with the rest of the codebase (mg_volonte Distractor is fully readonly; mg_equilibre WindGust is fully readonly).",
+      "fix": "Mark `hit` as `readonly` in the Footprint interface and replace `target.hit = true` with an immutable array update: `this.footprints = this.footprints.map((f, i) => i === this.currentIndex ? { ...f, hit: true } : f);` — update both onClick and onKeyDown."
+    },
+    {
+      "id": "TRC-03",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "line": 35,
+      "description": "At difficulty tier 3, hitRadius is 16px (32px diameter touch target). WCAG 2.1 Success Criterion 2.5.5 (AAA) recommends 44px minimum. While tier 3 is an advanced difficulty setting and the SC is AAA (not AA), mobile players with large fingers will find tier 3 footprints frustratingly small. The canvas scales via max-width:100% so on a 375px-wide phone the canvas is already shrunk, making effective touch targets even smaller.",
+      "fix": "Clamp hitRadius minimum to 20px (40px diameter) across all tiers, or add a mobile-detection offset: `this.hitRadius = Math.max(20, this.tieredValue([38, 30, 22, 16] as const));`"
+    },
+    {
+      "id": "VOL-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "line": 227,
+      "description": "render() missing this.ended guard. Same zombie rAF pattern as EQB-01 / RUN-01 / TRC-01. After endGame() -> cancelTimers(), one pending rAF fires render(), accumulates elapsedTime/pulsePhase/targetPulse, spawns more distractors (via nextSpawn logic), updates DOM status element, and re-queues itself.",
+      "fix": "Add `if (this.ended) return;` as the first statement in render()."
+    },
+    {
+      "id": "VOL-02",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "line": 262,
+      "description": "document.getElementById('mg-volonte-status') called every render frame (~60 calls/second). The element is created once in setup() and never replaced. This is a repeated DOM lookup that should be cached.",
+      "fix": "Add `private statusEl: HTMLElement | null = null;` as a class field. In setup(), assign `this.statusEl = statusEl;` after creating the element. In render(), replace `document.getElementById('mg-volonte-status')` with `this.statusEl`."
+    }
+  ],
+  "verdict": "BUGS_FOUND",
+  "summary": {
+    "total_bugs": 6,
+    "critical": 0,
+    "high": 3,
+    "medium": 1,
+    "low": 2,
+    "pattern_note": "The render() ended-guard omission (EQB-01, TRC-01, VOL-01) is a systematic gap affecting all three audited files. This same pattern was previously fixed in mg_runes (RUN-01) but was not back-applied to mg_equilibre, mg_traces, and mg_volonte. A sweep of all remaining minigames is recommended to check for the same omission.",
+    "files_clear": [],
+    "files_with_bugs": [
+      "mg_equilibre.ts (1 HIGH)",
+      "mg_traces.ts (1 HIGH, 1 MEDIUM, 1 LOW)",
+      "mg_volonte.ts (1 HIGH, 1 LOW)"
+    ]
+  }
+}

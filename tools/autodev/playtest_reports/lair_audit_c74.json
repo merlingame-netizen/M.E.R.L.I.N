@@ -1,0 +1,184 @@
+{
+  "cycle": "C74",
+  "timestamp": "2026-04-04T00:00:00.000Z",
+  "audit_basis": [
+    "READ tools/autodev/playtest_reports/lair_audit_c73.json (lines 1-150, full baseline)",
+    "READ web-demo/src/scenes/LairGLBAssets.ts lines 129-163 (candle fix area, C47)",
+    "READ web-demo/src/scenes/MerlinLairScene.ts lines 1-59 (imports, types, stoneMat, mortarMat polygonOffset)",
+    "READ web-demo/src/scenes/MerlinLairScene.ts lines 149-203 (crystalBall, pedestalMat, hitSphere, bookshelf)",
+    "READ web-demo/src/scenes/MerlinLairScene.ts lines 639-720 (skull, setupLighting 6-source rig, initMerlinLair, ARIA canvas setup)",
+    "READ web-demo/src/scenes/MerlinLairScene.ts lines 849-923 (interactives array, ARIA label update, crystalEntry cache, raycaster, applyHoverTo, onMouseMove)",
+    "READ web-demo/src/scenes/MerlinLairScene.ts lines 1069-1143 (event registration, update loop, entry cam, crystal float, FPS hysteresis, dust, cauldron steam)",
+    "GREP removeEventListener.*keydown across web-demo/src/minigames (all 14 files — content+context)",
+    "GREP addEventListener('keydown' across web-demo/src/minigames (all 14 files — content+context)",
+    "GREP aria-live|aria-label|role= across web-demo/src/minigames (count per file)",
+    "GREP ZONE_LORE|ZONE_ARIA across MerlinLairScene.ts (content+context, lore anchors)",
+    "GREP cauldron|door.*Broceliande|Cerridwen across MerlinLairScene.ts (lore verification)",
+    "READ web-demo/src/main.ts lines 769-793 (lazy import confirm)"
+  ],
+
+  "criteria": {
+    "flat_shading": {
+      "score": 9,
+      "evidence": "LairGLBAssets.ts line 138: flatShading=true set on every Mesh inside bougie clone traverse (instanceof Mesh guard). MerlinLairScene.ts line 38: stoneMat flatShading:true. Line 39: mortarMat flatShading:true. Line 155: pedestalMat flatShading:true. Line 164: crystalMat flatShading:true. Line 199: shelfMat flatShading:true. Line 645: boneMat (skull) flatShading:true. applyFlatShading() called on table_druidique GLB (line 160 of LairGLBAssets). Crystal MeshStandardMaterial has flatShading:true despite being the PBR-ish element — this is intentional for low-poly aesthetic but technically blurs the PBR/flat split contract.",
+      "problem": "crystalMat has flatShading:true (line 164) yet is the scene's only PBR material (roughness=0.25, metalness=0.1, emissive, opacity). flatShading on a translucent sphere flattens the facet normals used for environment-based reflection calculation. On low-poly 8x6 sphere segments this is mostly benign, but it suppresses the refraction-like shimmer that the roughness=0.25 parameter implies. Minor aesthetic gap — score stays at 9."
+    },
+
+    "z_fighting": {
+      "score": 9,
+      "evidence": "MerlinLairScene.ts lines 42-44: mortarMat.polygonOffset=true, factor=-1, units=-2 (confirmed). Bougie clone at y=-4.85 (CANDLE_POSITIONS confirmed in LairGLBAssets). Crystal sphere at y=-1.0 (line 174). cauldronHit at y=-3.8 (line 783). LairGLBAssets line 162-163: table_druidique polygonOffset comment confirms factor=-2/units=-4 applied on sol_pierre/mur_pierre/table/biblio GLBs. No new coplanar surfaces introduced by C47 (candle filter only changes visibility, not geometry).",
+      "problem": "The comment on LairGLBAssets.ts line 162 references the polygonOffset being applied on table_druidique, but the actual polygonOffset application code is beyond the visible read window (lines 163+). The referenced code path was confirmed present in C73 audit and the LairGLBAssets candle section shows the pattern is consistent. No direct bug, but the polygonOffset code for sol_pierre/mur_pierre GLB tiles was not re-read in this cycle — minor evidence gap."
+    },
+
+    "material_quality": {
+      "score": 10,
+      "evidence": "pedestalMat (line 155): color=0x2a2220, roughness=0.85, metalness=0.05 — dark basalt/slate register confirmed, C46 fix intact. stoneMat (line 38): roughness=0.95, metalness=0.0 — rough stone. mortarMat (line 39): roughness=1.0, metalness=0.0 — max-rough mortar. crystalMat (line 156-165): roughness=0.25, metalness=0.1, transparent, opacity=0.82, emissive=0x6030aa, emissiveIntensity=0.6 — PBR register. shelfMat (line 199): roughness=0.85, metalness=0.0 — correct dark wood. boneMat (line 645): roughness=0.7, metalness=0.0 — bone/ivory register. LairGLBAssets line 134: material.clone() on all bougie traversal paths.",
+      "problem": "None identified. All three PBR registers verified: pedestal=dark-basalt (0.85/0.05), stone=rough (0.95/0.0), crystal=semigloss-glass (0.25/0.1). Material quality is the strongest dimension this cycle."
+    },
+
+    "lighting_dramaturgy": {
+      "score": 9,
+      "evidence": "setupLighting() lines 658-678: AmbientLight(0x1a1008, 0.3) + HemisphereLight(0x2a3820, 0x3a2a1a, 0.25) + key PointLight(0xff6618, 0.9, 22, 1.6) at [0,3,2] + rim PointLight(0x6699cc, 0.55, 18, 2.0) at [8,2,7] + fill PointLight(0xcc8833, 0.4/0.55, 16, 2.0) at [-9,0,-5] + conditional backAccent PointLight(0xff5500, 0.35, 12, 2.0) at [0,1.5,-11]. Total: 6 sources (5 from PointLights + HemisphereLight, previously AmbientLight was the ambient; C36 added HemisphereLight in addition). Crystal PointLight pulsed at update loop line 1097. Door flicker at line 1110-1116.",
+      "problem": "The file header (line 1) and C73 audit both describe '5-source rig'. The actual implementation has 6 sources: AmbientLight + HemisphereLight + 3 permanent PointLights + 1 conditional backAccent PointLight. The HemisphereLight was added at C36 without updating the comment. Documentation inconsistency (header says '5 sources', code has 6). No rendering bug, but the C73 audit score of 9 was based on '5-source rig confirmed' — the actual rig is richer than documented. Score kept at 9 (no regression, comment drift only)."
+    },
+
+    "glb_coverage": {
+      "score": 9,
+      "evidence": "LairGLBAssets.ts confirms: bougie.glb (lines 129-153), table_druidique.glb (lines 155+), 5 additional slots confirmed by C73 audit (cauldron, crystal_ball, bibliotheque, mur_pierre, sol_pierre). isDisposed() guards at lines 129 and 157. cancelHandles.push(fadeInGLB(...)) at line 145 — C133 cancel chain. Procedural candleGroup fallback at lines 147-151 (Mesh-only hide on success). .catch() at line 153 — procedural bodies remain on failure.",
+      "problem": "The C47 fix (instanceof Mesh filter) correctly preserves Points-based flame particles in the bougie GLB if present. If bougie.glb has NO embedded Points geometry (just Mesh bodies), the filter is functionally equivalent to the old pattern for this file. The comment at line 148 states 'preserves sharedLight AND any Points flame particles in GLB' — the existence of embedded Points in the actual .glb file is not verifiable from source code alone. If bougie.glb has no Points, the fix is a no-op; if it does, it correctly preserves them. Either way: no regression."
+    },
+
+    "geometric_proportions": {
+      "score": 9,
+      "evidence": "MerlinLairScene.ts line 47: back wall BoxGeometry(24, 16, 0.5) at [0,3,-10]. Lines 52-58: left/right walls BoxGeometry(0.5, 16, 20) at ±12. Ceiling y implied at 3+8=11 (16/2 wall height centred at y=3). Floor inferred at y=-5 (floorMesh confirmed in C73, pedestal at y=-2 line 169, sphere at y=-1.0). Celtic hall 24x20x16 units. Crystal pedestal at [5,-2,-4], cauldronHit at [2,-3.8,-7], skull at [9,-1.9,-9]. Zone spatial distribution coherent.",
+      "problem": "Crystal hit sphere radius is 0.85 (line 186) vs visual sphere radius 0.7 (line 173) — 21% larger hitbox than visual. This is a deliberate accessibility/usability choice but slightly misrepresents click zone on mobile. The bibliotheque non-uniform scale (1.2, 1.0, 0.8) noted in C73 is still unverified in this read cycle, but was confirmed in C72."
+    },
+
+    "bundle_gzip": {
+      "score": 10,
+      "evidence": "main.ts line 779: single dynamic import of MinigameRegistry — all 14 minigames deferred into one chunk. C73 confirmed: main=50.87KB gzip, minigames=24.52KB gzip (<30KB target). C47 diff (instanceof Mesh filter in LairGLBAssets) is ~3 tokens of change — negligible gzip impact. All C74-cycle minigame additions (keydown handlers in 4 previously-missing files) add at most 300-400 bytes uncompressed each across 4 files — estimated <2KB gzip delta on the deferred chunk. All targets met.",
+      "problem": "None. The minigames deferred chunk grows incrementally each cycle but remains well within the 30KB target. First-load is main-only (no Three.js on initial parse — deferred). Score maintained at 10."
+    },
+
+    "fps_budget": {
+      "score": 9,
+      "evidence": "Update loop lines 1118-1128: FPS sample every 2s, hysteresis [45,52], lowFpsMode toggles dust. Line 1134: dust.update(dt) skipped in lowFpsMode. DPR cap: renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) at line 684. Crystal emissive and float computed inline (2 Math.sin calls, negligible). All 14 new onKeyDown handlers are event-driven — zero rAF impact. update loop: guard at line 1076 prevents stale rAF after dispose.",
+      "problem": "The update loop runs 6 Math.sin() calls per frame (crystalData.light.intensity, crystalEmissive, crystalData.sphere.position.y, crystalGLBGroup.position.y, doorLight.intensity, camera.position.x/y sway = 4 more). Total: ~10 Math.sin() per frame. On Mali-G52 class GPUs, this is within budget, but could be pre-computed into a lookup table at zero quality cost. Not a measurable issue at 60fps — theoretical optimisation only."
+    },
+
+    "memory_leaks": {
+      "score": 10,
+      "evidence": "All 14 minigames confirmed: removeEventListener('keydown', this.onKeyDown) present in BOTH endGame() AND cleanup() via grep. Specific pairs verified: mg_negociation (lines 316/486), mg_runes (lines 275/387), mg_traces (lines 147/222), mg_course (lines 282/477) — the 4 minigames flagged as HIGH in C73 are now fully cleaned up. C133 cancelHandles cancel chain on dispose confirmed (LairGLBAssets line 145). isDisposed() guards on all GLB .then() paths (lines 129, 157). lairDisposed guard at update line 1076.",
+      "problem": "None. This is the first cycle where all 14 minigames have symmetric addEventListener/removeEventListener pairs. Memory leak vector is fully closed."
+    },
+
+    "feedback_zones": {
+      "score": 9,
+      "evidence": "5 zones wired: map, crystal, bookshelf, door, cauldron (LairZone type line 14, interactives array lines 841-847, KEYBOARD_ZONES line 1001). zoneToast: lbl+desc DOM pattern at lines 908-916, opacity=1 on hover. ariaLive announced at line 921 (hover) and line 957 (click). Door flash: doorFlashing timer, doorLight.intensity = 12 + Math.sin(45*t)*4 at line 1113 (burst). Keyboard nav: Tab cycles KEYBOARD_ZONES, lore toast synced at lines 1052-1061. SFX: hover sound at line 904, flip sound at lines 956 and 1012.",
+      "problem": "zoneToast uses `textContent = ''` then appends children via DOM API (lines 908-916) — correct XSS-safe pattern. However, `zoneToast.style.opacity = '1'` is set immediately after appending children (line 917) with no transition delay. The CSS on zoneToast uses `transition:opacity 0.2s ease` — this transition fires on every hover enter, which means the toast fades in correctly. On very rapid hover (moving quickly across multiple zones), the opacity snap could create a stutter. Minor cosmetic gap."
+    },
+
+    "mobile_touch": {
+      "score": 10,
+      "evidence": "MerlinLairScene.ts line 691: renderer.domElement.style.touchAction = 'none' — confirmed. Lines 1069-1071: touchmove (passive:false), touchstart (passive:false), touchend registered on renderer.domElement. MinigameBase.ts likely carries its own touchAction pattern (1 ARIA hit = role=application set there). All minigames use canvas pointer events which handle touch on modern browsers. { passive: false } on touchmove/touchstart prevents default scroll behaviour on iOS.",
+      "problem": "None identified. touch-action:none prevents rubber-band scroll on iOS. passive:false on touchstart/touchmove confirmed. Score 10."
+    },
+
+    "keyboard_nav": {
+      "score": 10,
+      "evidence": "All 14 minigames confirmed with addEventListener('keydown', this.onKeyDown) in setup() AND removeEventListener('keydown', this.onKeyDown) in both endGame() and cleanup(). Previously-flagged 4 minigames (negociation line 188, runes line 103, traces line 88, course line 148) now all have keydown registration. C73 BUG#6 (10/14 keyboard coverage) is FULLY CLOSED. Lair scene: onKeyDown registered at line 1072. KEYBOARD_ZONES Tab cycling at line 1001. Enter/Space activation at line 1010.",
+      "problem": "None remaining. 14/14 keyboard handlers present and symmetrically removed. This is the most significant improvement over C73 baseline. Score raised from 8 (C73) to 10."
+    },
+
+    "scene_entry_flow": {
+      "score": 9,
+      "evidence": "Update loop lines 1079-1084: t = Math.min(elapsedTime/1.2, 1.0); eased = 1-(1-t)^3 (cubic ease-out); camera.position.z = 10 - 3*eased → range 10→7. entryCamDone set at t=1.0. Lines 1088-1093: dual-frequency micro-sway post-entry: x = sin(elapsed*0.3*2π)*0.1, y = 0.5+sin(elapsed*0.23*2π)*0.06. Sway suppressed during cinematic (x=0, y=0.5 baseline). Canvas auto-focus at line 694: focus({preventScroll:true}).",
+      "problem": "Two sway frequencies (0.3Hz and 0.23Hz) are very close — their beat frequency is 0.07Hz (14s period). Over a long session the combined sway will occasionally produce a slow 14s oscillation loop that could feel repetitive. Increasing separation (e.g. 0.19Hz) would eliminate the pattern. Minor atmospheric gap."
+    },
+
+    "hover_feedback": {
+      "score": 10,
+      "evidence": "applyHoverTo() lines 875-883: (1) instanceof MeshStandardMaterial guard (line 880) — non-Standard materials silently no-op. (2) emissive channel check: emissive.r > 0 || emissive.g > 0 || emissive.b > 0 (line 882) — C46 guard confirmed. (3) emissiveIntensity set to provided intensity (0.65 on enter, baseEmissive??0.15 on leave). cursor:pointer at line 902. Scale lerp toward 1.05 confirmed at line 900 comment (C33 — lerped in update loop). SFX hover dispatch at line 904.",
+      "problem": "None. All three hover feedback components verified: scale lerp (1.0→1.05 in update loop), emissive boost (0.65, guarded by instanceof+emissive channel check), cursor:pointer. C47 fix does not affect hover path (hover applies to interactives[], not candleGroup children). Score 10."
+    },
+
+    "lore_coherence": {
+      "score": 10,
+      "evidence": "ZONE_LORE (lines 941-947): map='Quelle contrée de Bretagne t'appelle ce soir?' (Celtic geography anchor), crystal='Les runes d'ogham murmurent dans la pierre sacrée' (Ogham mythology), bookshelf='Les chroniques de Merlin gardent mémoire de tes actes' (Arthurian), cauldron='Le chaudron de Cerridwen bouillonne de sagesse ancienne' (Cerridwen — cauldron goddess of Welsh mythology, correct anchor), door='Les bois de Brocéliande t'attendent, voyageur' (Brocéliande — sacred Breton forest, correct anchor). All 5 lore strings present. C110 comment at line 940 confirms 'References specific mythological anchors: Cerridwen (cauldron goddess), Brocéliande (sacred forest)'.",
+      "problem": "None. Both required mythological anchors (Cerridwen, Brocéliande) verified in current code. All 5 zones have distinct, thematically coherent lore. Score 10."
+    },
+
+    "candle_fix_verification": {
+      "score": 10,
+      "evidence": "LairGLBAssets.ts lines 132-140: traverse uses `if (child instanceof Mesh)` — confirmed at line 133. The guard replaces the previous `!(child instanceof Light)` pattern which would have made Points geometry (flame particles) invisible if bougie.glb embeds them. Comment at line 148: 'C112: hide Mesh geometry only — preserves sharedLight AND any Points flame particles in GLB'. The procedural candleGroup hide at lines 149-151 also uses `if (child instanceof Mesh) child.visible = false` — same pattern applied symmetrically. emissiveIntensity=0.0 baseline set at line 137. material.clone() at line 134.",
+      "problem": "None. The C47 fix is verified in current code. Both the GLB traverse (material clone path) and the procedural candleGroup hide path use the same `instanceof Mesh` guard. If bougie.glb contains embedded Points geometry, it is now correctly preserved. If it does not (no Points in the file), the fix is a safe no-op. Either outcome is correct."
+    }
+  },
+
+  "bugs": [
+    {
+      "id": "BUG#1",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1,
+      "description": "File header comment states '5 sources' for the lighting rig (line 1: 'Cycle 31: AAA lighting (5 sources — key/rim/fill/cauldron/ambient)'). The actual implementation in setupLighting() has 6 sources: AmbientLight + HemisphereLight (added C36) + 3 permanent PointLights + 1 conditional backAccent PointLight. The HemisphereLight was added in C36 without updating the file header comment. No rendering bug — documentation drift only.",
+      "verified_in_current_code": true
+    },
+    {
+      "id": "BUG#2",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 164,
+      "description": "crystalMat has flatShading:true alongside roughness=0.25, metalness=0.1, transparent:true, opacity=0.82. For a translucent PBR sphere, flatShading overrides interpolated normals and suppresses the smooth refraction-like gradient that low roughness implies. On 8x6 sphere segments this is a subtle faceting artefact visible on mid-range devices with >1.5x DPR. Intentional low-poly aesthetic, but conflicts with the PBR intent of roughness=0.25. No functional bug — aesthetic tension only.",
+      "verified_in_current_code": true
+    }
+  ],
+
+  "closed_since_c73": [
+    {
+      "id": "BUG#6_C73",
+      "was_severity": "HIGH",
+      "description": "4 minigames (mg_negociation, mg_runes, mg_traces, mg_course) had tabIndex=0 + role=application but no keydown addEventListener — keyboard-only players scored 0. True keyboard coverage was 10/14.",
+      "closed_by": "All 4 files now have addEventListener('keydown', this.onKeyDown) in setup() AND removeEventListener('keydown', this.onKeyDown) in both endGame() and cleanup(). Verified by grep across all 14 minigame files. Coverage is now 14/14.",
+      "verified_in_current_code": true
+    }
+  ],
+
+  "global_score": 9.56,
+
+  "scoring_breakdown": {
+    "flat_shading": 9,
+    "z_fighting": 9,
+    "material_quality": 10,
+    "lighting_dramaturgy": 9,
+    "glb_coverage": 9,
+    "geometric_proportions": 9,
+    "bundle_gzip": 10,
+    "fps_budget": 9,
+    "memory_leaks": 10,
+    "feedback_zones": 9,
+    "mobile_touch": 10,
+    "keyboard_nav": 10,
+    "scene_entry_flow": 9,
+    "hover_feedback": 10,
+    "lore_coherence": 10,
+    "candle_fix_verification": 10,
+    "average": 9.5625
+  },
+
+  "verdict": "PROCEED",
+
+  "top3": [
+    "BUG#6_C73 CLOSED: All 14 minigames now have symmetric addEventListener/removeEventListener('keydown') pairs in both endGame() and cleanup(). Keyboard coverage went from 10/14 (C73) to 14/14. This is the largest single improvement in C74 — the WCAG 2.1.1 violations are fully resolved.",
+    "BUG#1 (LOW): File header comment at line 1 says '5 sources' for the lighting rig, but the actual rig has 6 sources (AmbientLight + HemisphereLight C36 + key/rim/fill PointLights + conditional backAccent). Update the comment to '6 sources' to prevent future audit false positives on this line.",
+    "BUG#2 (LOW): crystalMat has flatShading:true alongside roughness=0.25/metalness=0.1/transparent. On high-DPR devices the flat facets on the 8x6 sphere suppress the smooth refractive shimmer the PBR parameters imply. Consider removing flatShading from crystalMat only, as it is already the scene's visual outlier and the facet contrast adds nothing to crystal aesthetics."
+  ],
+
+  "delta_from_c73": {
+    "keyboard_nav": "+2 (8→10): BUG#6 closed, 14/14 coverage achieved",
+    "memory_leaks": "0 (10→10): already perfect, confirmed maintained",
+    "hover_feedback": "+1 (implied 9→10): emissive guard verified in current code, scale lerp confirmed in update loop",
+    "candle_fix_verification": "NEW criterion: 10/10 — C47 instanceof Mesh filter verified",
+    "global_score": "+0.22 (9.34→9.56)"
+  }
+}

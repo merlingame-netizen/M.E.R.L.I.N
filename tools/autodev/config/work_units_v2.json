@@ -20,6 +20,7 @@
     "tag_on_merge":  true,
     "stats_frequency":  2,
     "screenshot_frequency":  1,
+    "playtest_frequency":  1,
     "max_fix_attempts":  2,
     "screenshot_resolution":  "800x600",
     "screenshot_settle_seconds":  3,

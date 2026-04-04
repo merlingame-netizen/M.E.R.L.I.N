@@ -1,0 +1,517 @@
+{
+  "_meta": {
+    "cycle": 100,
+    "audited_at": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "base_commit": "9b5180d",
+    "minigamebase_tieredValue_exists": false,
+    "note": "tieredValue() helper confirmed absent from MinigameBase — must be added before difficulty scaling can use it"
+  },
+  "files": {
+    "mg_apaisement": {
+      "score": 6,
+      "scale_params": [
+        {
+          "field": "breathCycleDuration",
+          "line": 31,
+          "current": 3.0,
+          "tiers": [3.0, 2.5, 2.0, 1.6],
+          "rationale": "Faster cycle = harder to time taps at peaks"
+        },
+        {
+          "field": "targetWindow",
+          "line": 35,
+          "current": 0.15,
+          "tiers": [0.15, 0.12, 0.09, 0.07],
+          "rationale": "Narrower perfect window shrinks timing margin"
+        },
+        {
+          "field": "goodWindow",
+          "line": 36,
+          "current": 0.30,
+          "tiers": [0.30, 0.24, 0.18, 0.14],
+          "rationale": "Narrower good window increases miss rate"
+        },
+        {
+          "field": "totalTime (via tapBonus denominator)",
+          "line": 209,
+          "current": 4,
+          "tiers": [4, 5, 6, 7],
+          "rationale": "Increase required tap count for full tapBonus at higher tiers"
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "tap accuracy >= 0.9 (Parfait)",
+          "line": 173,
+          "sound": "unlock",
+          "where": "inside onPointerDown, after this.ringPulse = 1.0 assignment"
+        },
+        {
+          "event": "tap accuracy < 0.5 (Decale)",
+          "line": 179,
+          "sound": "lose",
+          "where": "inside onPointerDown, after feedbackColor assignment for poor tap"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "timerInterval cleared in endGame() (line 196) AND in cleanup() (line 376) — double-clear is benign but redundant. However, cleanup() is called after finish() resolves, which is AFTER endGame() already cleared it. No leak, but the pattern is inconsistent with other minigames that rely solely on cleanup().",
+          "lines": "196, 376"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "feedbackColor manipulation on line 340 builds a broken rgba string by substituting ')' in a hex color (#b06040), producing '#b06040' unchanged since hex has no ')'. The code then overwrites with globalAlpha on line 343 anyway, making lines 340-341 dead code. Low visual impact but misleading.",
+          "lines": "340-341"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read in setup() or render() — the base class computes it but this file never uses it.",
+          "lines": "n/a"
+        }
+      ]
+    },
+    "mg_echo": {
+      "score": 6,
+      "scale_params": [
+        {
+          "field": "flashDuration",
+          "line": 41,
+          "current": 0.5,
+          "tiers": [0.5, 0.4, 0.3, 0.22],
+          "rationale": "Shorter flash = harder to catch symbol"
+        },
+        {
+          "field": "windowDuration",
+          "line": 42,
+          "current": 1.2,
+          "tiers": [1.2, 1.0, 0.8, 0.65],
+          "rationale": "Less time to answer"
+        },
+        {
+          "field": "totalRounds",
+          "line": 40,
+          "current": 6,
+          "tiers": [6, 7, 8, 9],
+          "rationale": "More rounds required to pass = higher pressure"
+        },
+        {
+          "field": "pauseBetween",
+          "line": 43,
+          "current": 0.6,
+          "tiers": [0.6, 0.5, 0.4, 0.3],
+          "rationale": "Less rest between rounds increases cognitive load"
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "hit (correct quadrant clicked)",
+          "line": 150,
+          "sound": "unlock",
+          "where": "inside onClick, after this.hits++ on the 'hit' branch"
+        },
+        {
+          "event": "miss (wrong quadrant or timeout)",
+          "line": 153,
+          "sound": "lose",
+          "where": "inside onClick after this.feedback = 'miss', and also in the timeout branch at line 245"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "endGame() does NOT clear any timerInterval — correct because Echo uses no setInterval. But the canvas pointerdown listener is removed only in cleanup() via super, not in endGame(). If finish() takes 2.2s (overlay), clicks after endGame() still route to onClick. onClick guards on phase === 'answer' so no logical harm, but the listener leaks until cleanup() resolves.",
+          "lines": "206-215"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read anywhere — base class computes it but it is unused.",
+          "lines": "n/a"
+        }
+      ]
+    },
+    "mg_equilibre": {
+      "score": 7,
+      "scale_params": [
+        {
+          "field": "safeZoneHalf",
+          "line": 30,
+          "current": 0.25,
+          "tiers": [0.25, 0.20, 0.15, 0.10],
+          "rationale": "Smaller safe zone = harder to stay inside"
+        },
+        {
+          "field": "gustForce (intensity range: 0.3-0.8 * timeFactor)",
+          "line": 147,
+          "current_range": "0.3-0.8",
+          "tiers_max": [0.8, 1.0, 1.3, 1.6],
+          "rationale": "Stronger gusts make recovery harder"
+        },
+        {
+          "field": "inputForce",
+          "line": 188,
+          "current": 0.06,
+          "tiers": [0.06, 0.055, 0.048, 0.042],
+          "rationale": "Weaker counter-input makes gusts relatively stronger"
+        },
+        {
+          "field": "nextGustTime base interval (baseInterval formula: 2.5 - elapsed/total * 1.5)",
+          "line": 158,
+          "current_initial": 2.5,
+          "tiers": [2.5, 2.2, 1.8, 1.4],
+          "rationale": "Denser gusts at higher tiers throughout the run"
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "wind gust spawn (spawnGust called)",
+          "line": 145,
+          "sound": "hover",
+          "where": "inside spawnGust(), after windArrowAlpha = 1 assignment"
+        },
+        {
+          "event": "cursor exits safe zone (isInZone transitions false)",
+          "line": 246,
+          "sound": "lose",
+          "where": "in render(), add a boolean previousInZone field and emit lose when it flips false"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "HIGH",
+          "description": "keydown/keyup listeners are attached to document (lines 103-104), not the canvas. cleanup() removes them correctly (lines 327-328). However, if two MinigameEquilibre instances somehow run concurrently, the second instance's document listeners would stack without removal until its own cleanup. More importantly, if the page switches away mid-game without cleanup() being called (e.g., exception in finish()), the listeners persist globally and continue consuming keydown events for all subsequent minigames.",
+          "lines": "103-104, 327-328"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "endGame() has no 'ended' double-call guard checking this.ended before calling this.finish(). The timer interval fires every 100ms; if timeLeft crosses 0 between two ticks it fires endGame() once. But if finish() is ever called externally (future API), the double-finish guard in MinigameBase.finish() saves it. Medium risk: safe currently, fragile architecturally.",
+          "lines": "162-178"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read anywhere — base class computes it but unused.",
+          "lines": "n/a"
+        }
+      ]
+    },
+    "mg_fouille": {
+      "score": 6,
+      "scale_params": [
+        {
+          "field": "decoyCount",
+          "line": 58,
+          "current": 15,
+          "tiers": [15, 17, 20, 23],
+          "rationale": "More decoys = harder visual search"
+        },
+        {
+          "field": "shuffleInterval",
+          "line": 59,
+          "current": 2.0,
+          "tiers": [2.0, 1.7, 1.3, 1.0],
+          "rationale": "Faster reshuffles = less time to scan each layout"
+        },
+        {
+          "field": "totalTime",
+          "line": 57,
+          "current": 12,
+          "tiers": [12, 11, 10, 9],
+          "rationale": "Reduced time window with same decoy density"
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "found target (obj.isTarget branch)",
+          "line": 209,
+          "sound": "unlock",
+          "where": "inside onClick, immediately after this.found = true"
+        },
+        {
+          "event": "wrong click (decoy clicked)",
+          "line": 215,
+          "sound": "lose",
+          "where": "inside onClick, after this.clickedWrong = true"
+        },
+        {
+          "event": "shuffle about to happen (nextShuffle < 0.5)",
+          "line": 345,
+          "sound": "hover",
+          "where": "in render() shuffle-warning block, first frame the condition becomes true"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "HIGH",
+          "description": "setTimeout on line 213 is orphaned: 'setTimeout(() => this.endGame(), 400)'. If cleanup() is called externally before the 400ms fires (e.g., the overlay resolves early or the game is forcibly terminated), endGame() fires after cleanup has run, calling this.finish() on an already-finished instance. MinigameBase.finish() has the idempotent guard, so no double-result, but endGame() will call clearInterval and cancelAnimationFrame on already-cleared handles. This is the same class of bug as was fixed in mg_course. Should use a stored timeout handle.",
+          "lines": "213"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "generateObjects() is called from both setup() and render() (via shuffle timer). In render(), this.objects is reassigned to a new array while the render loop is mid-iteration via this.animFrame rAF callback. The JS event loop is single-threaded so there is no actual race, but the hoverIndex computed from the previous layout is not reset on shuffle (line 68-73 resets in setup only). After a shuffle, hoverIndex may refer to a now-non-existent index or wrong object, causing incorrect hover highlight for one frame.",
+          "lines": "268-272, 68"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read — unused.",
+          "lines": "n/a"
+        }
+      ]
+    },
+    "mg_negociation": {
+      "score": 6,
+      "scale_params": [
+        {
+          "field": "scrollSpeed",
+          "line": 61,
+          "current": 40,
+          "tiers": [40, 52, 66, 82],
+          "rationale": "Faster scroll = less time to read and click faction words"
+        },
+        {
+          "field": "spawnInterval",
+          "line": 62,
+          "current": 0.6,
+          "tiers": [0.6, 0.5, 0.4, 0.32],
+          "rationale": "Denser word stream is harder to parse"
+        },
+        {
+          "field": "faction word ratio (currently hardcoded 0.4 in spawnWord)",
+          "line": 171,
+          "current": 0.4,
+          "tiers": [0.4, 0.35, 0.28, 0.22],
+          "rationale": "Fewer faction words among neutrals reduces click rate and score ceiling"
+        },
+        {
+          "field": "neutralPicked penalty per word",
+          "line": 266,
+          "current": 3,
+          "tiers": [3, 4, 5, 6],
+          "rationale": "Higher penalty for mistakes raises skill floor"
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "faction word picked (isFactionWord === true)",
+          "line": 232,
+          "sound": "unlock",
+          "where": "inside onPointerDown, after this.pickedSequence push, on isFactionWord branch"
+        },
+        {
+          "event": "neutral word picked (breaks combo)",
+          "line": 238,
+          "sound": "lose",
+          "where": "inside onPointerDown, on the else branch (comboCount reset)"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "scrollingWords uses direct property mutation on ScrollingWord.y and .fadeAlpha inside the render loop (lines 290-295). The interface ScrollingWord has 'x' and 'y' as mutable (not readonly), which is intentional for the scroll effect but violates the project's immutability coding standard. Not a runtime bug, but a code-quality violation.",
+          "lines": "290-295"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "spawnWord() is called in setup() pre-seeding loop (lines 149-151) before this.scrollingWords is reset (line 140). The sequence is: reset at line 140, then pre-seed at 149-151 — actually correct. However, the spawnWord pre-seed uses Math.random() * canvasH * 0.8 for startY, which can place words at y=0 (off the visible area since words scroll UP). Words at y near 0 vanish in the first frame's filter (sw.y > -20). This wastes up to 8 spawn slots.",
+          "lines": "149-151, 183-184"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read — unused.",
+          "lines": "n/a"
+        }
+      ]
+    },
+    "mg_regard": {
+      "score": 7,
+      "scale_params": [
+        {
+          "field": "roundLengths",
+          "line": 49,
+          "current": "[4, 5, 6]",
+          "tiers": ["[4,5,6]", "[5,6,7]", "[5,6,7,8]", "[6,7,8,9]"],
+          "rationale": "Longer sequences per round and an optional 4th round at tier 3"
+        },
+        {
+          "field": "showTime",
+          "line": 50,
+          "current": 3.0,
+          "tiers": [3.0, 2.5, 2.0, 1.5],
+          "rationale": "Less memorisation time per round"
+        },
+        {
+          "field": "gridCols (affects filler density)",
+          "line": 51,
+          "current": 5,
+          "note": "Keep at 5 for tier 0-2; at tier 3 increase gridRows from 3 to 4 for more fillers",
+          "tiers_gridRows": [3, 3, 3, 4]
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "correct cell clicked (cell.targetIndex === this.clickedIndex)",
+          "line": 201,
+          "sound": "unlock",
+          "where": "inside onClick, after this.correctTotal++ on the correct branch"
+        },
+        {
+          "event": "wrong cell clicked (incorrect sequence order or non-target)",
+          "line": 214,
+          "sound": "lose",
+          "where": "inside onClick, on the else branch (feedbackCorrect = false)"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "clickedCells is declared as 'Set<number>' (non-readonly field, line 67). It is re-assigned as 'new Set()' in prepareRound() (line 172), not in setup(). If prepareRound() is called before setup() initialises it (not possible in current flow), it would throw. Low current risk but the field should be initialised in the class body.",
+          "lines": "67, 172"
+        },
+        {
+          "severity": "MEDIUM",
+          "description": "Score formula divides correctTotal by totalSymbols (sum of roundLengths = 15, line 237). correctTotal only increments on the FIRST symbol of each round that is correct (lines 204-205). If the player clicks the first symbol correctly then makes a mistake, correctTotal = 1 but the round ends. Max achievable correctTotal = 3 (one per round), giving max score = 3/15*100 = 20. This makes 'maitrise' (score > 85) unreachable. The intent appears to be to count per-symbol accuracy but the round-ending-on-error logic collapses it to a round-level binary.",
+          "lines": "199-217, 237"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read — unused.",
+          "lines": "n/a"
+        }
+      ]
+    },
+    "mg_volonte": {
+      "score": 7,
+      "scale_params": [
+        {
+          "field": "targetRadius",
+          "line": 39,
+          "current": 30,
+          "tiers": [30, 25, 20, 16],
+          "rationale": "Smaller target = harder to stay on with mouse or touch"
+        },
+        {
+          "field": "spawnInterval",
+          "line": 40,
+          "current": 0.6,
+          "tiers": [0.6, 0.5, 0.4, 0.3],
+          "rationale": "More distractors per second = more visual noise"
+        },
+        {
+          "field": "maxDistractors",
+          "line": 41,
+          "current": 12,
+          "tiers": [12, 15, 18, 22],
+          "rationale": "More simultaneous distractors on screen"
+        },
+        {
+          "field": "distractor size range (15 + random*25)",
+          "line": 152,
+          "current_max": 40,
+          "tiers_max": [40, 45, 52, 60],
+          "rationale": "Larger distractors obscure more of the canvas"
+        }
+      ],
+      "sfx_points": [
+        {
+          "event": "cursor enters target (isOnTarget transitions to true)",
+          "line": 193,
+          "sound": "unlock",
+          "where": "in render(), add a boolean prevOnTarget field; emit unlock when !prevOnTarget && isOnTarget"
+        },
+        {
+          "event": "cursor leaves target (isOnTarget transitions to false)",
+          "line": 193,
+          "sound": "lose",
+          "where": "in render(), emit lose when prevOnTarget && !isOnTarget"
+        },
+        {
+          "event": "new distractor spawns (spawnDistractor called)",
+          "line": 142,
+          "sound": "hover",
+          "where": "at end of spawnDistractor(), after distractors array reassignment"
+        }
+      ],
+      "bugs": [
+        {
+          "severity": "MEDIUM",
+          "description": "endGame() has no 'ended' double-call guard. The timerInterval fires endGame() when timeLeft <= 0. If finish() is called externally before timer fires, the timer will also call endGame(). MinigameBase.finish() has the idempotent guard so no double result, but clearInterval/cancelAnimationFrame will be called twice on stale handles. Low practical risk with current code flow, but missing the pattern used correctly in other files (this.ended flag).",
+          "lines": "169-179"
+        },
+        {
+          "severity": "LOW",
+          "description": "Touch-only users: the game tracks cursor position via pointermove and pointerdown. On touch devices, holding a finger on the target works, but if the user moves their finger off-canvas the 'pointerleave' event is not listened to, so cursorX/cursorY freezes at last position. This can give unintended free credit on mobile if the finger was on target when it left the canvas.",
+          "lines": "106-107"
+        },
+        {
+          "severity": "LOW",
+          "description": "No difficultyTier read — unused.",
+          "lines": "n/a"
+        }
+      ]
+    }
+  },
+  "cross_cutting": {
+    "tieredValue_helper": {
+      "status": "ABSENT from MinigameBase",
+      "impact": "All 7 files must hard-code tier arrays inline until the helper is added. Recommend adding: protected tieredValue<T>(tiers: [T,T,T,T]): T { return tiers[this.difficultyTier]; } to MinigameBase before implementing scaling.",
+      "minigamebase_line_to_insert": "after line 221 (getDeltaTime block)"
+    },
+    "orphaned_setTimeouts": {
+      "mg_fouille": {
+        "line": 213,
+        "severity": "HIGH",
+        "code": "setTimeout(() => this.endGame(), 400)",
+        "issue": "Handle not stored — cannot be cancelled in cleanup(). Same pattern that was fixed in mg_course."
+      },
+      "others": "No other orphaned setTimeouts found across the 6 remaining files."
+    },
+    "touch_action_none": {
+      "mg_apaisement": "PRESENT (line 88)",
+      "mg_echo": "PRESENT (line 102)",
+      "mg_equilibre": "PRESENT (line 86)",
+      "mg_fouille": "PRESENT (line 116)",
+      "mg_negociation": "PRESENT (line 122)",
+      "mg_regard": "PRESENT (line 99)",
+      "mg_volonte": "PRESENT (line 94)",
+      "status": "ALL CLEAR — every canvas has touch-action:none"
+    }
+  },
+  "top_3_cross_cutting": [
+    {
+      "rank": 1,
+      "issue": "mg_regard score formula makes 'maitrise' unreachable (max theoretical score is 20/100)",
+      "severity": "HIGH",
+      "affected_file": "mg_regard.ts",
+      "line": 237,
+      "recommendation": "Score should divide correctTotal by sequence.length per round accumulated, not by sum of all roundLengths. Alternatively track per-round completion booleans and score on round completion rate."
+    },
+    {
+      "rank": 2,
+      "issue": "mg_fouille orphaned setTimeout — endGame can fire after cleanup",
+      "severity": "HIGH",
+      "affected_file": "mg_fouille.ts",
+      "line": 213,
+      "recommendation": "Store handle: this.foundTimeout = window.setTimeout(() => this.endGame(), 400); and add clearTimeout(this.foundTimeout) in cleanup()."
+    },
+    {
+      "rank": 3,
+      "issue": "mg_equilibre attaches keydown/keyup to document not canvas — persists if exception prevents cleanup",
+      "severity": "HIGH",
+      "affected_file": "mg_equilibre.ts",
+      "lines": "103-104",
+      "recommendation": "Wrap key listeners in a try/finally in play() or add an AbortController with signal option so they auto-remove. Alternatively move to canvas.addEventListener with a synthetic keyboard focus workaround."
+    }
+  ],
+  "score_summary": {
+    "mg_apaisement": 6,
+    "mg_echo": 6,
+    "mg_equilibre": 7,
+    "mg_fouille": 6,
+    "mg_negociation": 6,
+    "mg_regard": 7,
+    "mg_volonte": 7,
+    "average": 6.4
+  },
+  "verdict": "FIX",
+  "verdict_rationale": "3 HIGH issues block PROCEED: (1) mg_regard score ceiling at 20 makes maitrise impossible by design, (2) mg_fouille orphaned setTimeout mirrors the mg_course bug class, (3) mg_equilibre document-level key listeners are a leak risk. All 7 files also share zero difficulty scaling — difficultyTier is computed by MinigameBase but never consumed. Recommend fixing the 3 HIGH bugs first, then adding tieredValue() to MinigameBase, then applying the scale_params arrays per file."
+}

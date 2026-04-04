@@ -1,0 +1,173 @@
+{
+  "timestamp": "2026-04-03T00:00:00Z",
+  "cycle": 57,
+  "auditor": "merlin-ai-playtester",
+  "scope": "HUD null-safety, EffectEngine default branch, GroqAdapter security/resilience, RunSummary UX, OghamPanel logic",
+
+  "section_scores": {
+    "HUD_null_safety":     { "score": 6.0, "max": 10, "verdict": "WARN — 3 bare ! operators on static IDs that may not exist at call time" },
+    "EffectEngine_default": { "score": 5.5, "max": 10, "verdict": "WARN — 10 no-op effect codes silently swallowed with no diagnostics" },
+    "GroqAdapter":          { "score": 9.0, "max": 10, "verdict": "PASS — key from env, timeout present, JSON guard present, fallback path clear; one minor gap (DAMAGE_LIFE sign not clamped symmetrically)" },
+    "RunSummary":           { "score": 7.5, "max": 10, "verdict": "PARTIAL — Anam correct, faction bars shown, restart button present; no rep delta (absolute only), window.location.reload() hard-reset is harsh" },
+    "OghamPanel":           { "score": 8.0, "max": 10, "verdict": "PASS with notes — filter logic correct, skip button present; no keyboard trap/focus management, no aria attributes on slots" }
+  },
+
+  "global_score": 7.2,
+
+  "top_3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "title": "HUD.ts: bare ! operators cause runtime TypeError if DOM is not ready",
+      "file": "web-demo/src/ui/HUD.ts",
+      "lines": "26-28, 138, 141, 150, 153",
+      "detail": "lifeFill(), cardsCount() and biomeName() are arrow functions that call document.getElementById()! (non-null assertion). updateHUD() is subscribed to the store immediately at initHUD() (line 277) and could fire before the host HTML is parsed (e.g. during SSR hydration, Vite HMR, or if the IDs are removed by a refactor). The store.subscribe fires synchronously on any dispatch so the first card-draw will trigger updateHUD() — if the DOM elements are absent, JS throws 'Cannot set properties of null'.",
+      "exact_fix": "Replace the three bare accessor functions with null-guarded versions consistent with the pattern already used for faction/resource/ogham elements at lines 158-166. Minimal early-return pattern:\n\nexport function updateHUD(): void {\n  const lf = document.getElementById('life-fill');\n  const cc = document.getElementById('cards-count');\n  const bn = document.getElementById('biome-name');\n  if (!lf || !cc || !bn) return; // DOM not ready yet\n\n  const state = store.getState();\n  const lifePercent = (state.run.life / LIFE_MAX) * 100;\n  lf.style.width = `${lifePercent}%`;\n  if (lifePercent <= 25) {\n    lf.style.background = 'linear-gradient(90deg,#8b0000,#cd5c5c)';\n  } else if (lifePercent <= 50) {\n    lf.style.background = 'linear-gradient(90deg,#8b4513,#cd853f)';\n  } else {\n    lf.style.background = 'linear-gradient(90deg,#2e6b2e,#5a9a5a)';\n  }\n  cc.textContent = `Carte ${state.run.cardsPlayed}`;\n  const biome = BIOMES[state.run.biome];\n  bn.textContent = biome?.name ?? state.run.biome;\n  // ... rest unchanged\n}\n\nAlso delete the three const arrow-function declarations at lines 26-28 (they are only used inside updateHUD)."
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "title": "EffectEngine.ts: 10 unimplemented effect codes reach default branch silently",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "lines": "146-149",
+      "detail": "The default branch at line 146 calls applied.push(effectStr) for any unrecognised code, including the 10 defined-but-not-yet-implemented codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG, ADD_PROMISE, FULFILL_PROMISE, BREAK_PROMISE, UNLOCK_OGHAM). A future developer generating cards with these codes will see them listed in 'applied' effects as if they worked, with no runtime signal that nothing actually happened. This is a silent success masking a missing feature.",
+      "exact_fix": "Replace the current default block (lines 146-149) with:\n\n      default:\n        // Effect code recognised in design bible but not yet implemented — no-op.\n        // If you see this warning, implement the case above.\n        console.warn(`[EffectEngine] No-op effect (not implemented): ${code}`);\n        applied.push(effectStr);\n        break;\n\nThis is a one-line addition at line 147 before the existing applied.push."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "title": "RunSummary.ts: faction rep shows absolute end-of-run value, not delta — misleading after long runs",
+      "file": "web-demo/src/ui/RunSummary.ts",
+      "lines": "194-197, 172-173",
+      "detail": "buildFactionRow() receives the current absolute reputation (0-100). The faction section header says 'Reputation des factions' which implies current standing, but the player cannot distinguish between rep gained this run and pre-existing cross-run rep. The Store has anamThisRun (line 173 uses it correctly) but there is no equivalent factionDeltaThisRun. Additionally, window.location.reload() at line 239 is called unconditionally after the promise resolves — this blows away any in-progress state (Vite HMR, error boundaries) and is a full page hard-reset rather than a soft game state reset via store.reset().",
+      "exact_fix": "Short-term: rename the section header from 'Reputation des factions' to 'Reputation fin de quete' so players understand it is current standing. Long-term: add a factionDeltaThisRun: Record<FactionId,number> field to run state (start = 0, increment on every ADD_REPUTATION effect) and display delta as '(+12)' next to each bar. For the reload: call store.getState().reset() (already done at line 234) then dispatch a custom 'game:restart' event for the main loop to handle, removing window.location.reload()."
+    }
+  ],
+
+  "full_findings": [
+    {
+      "section": "HUD.ts",
+      "finding": "Lines 26-28: lifeFill/cardsCount/biomeName declared as arrow functions returning getElementById()! (non-null assert). updateHUD() called via store.subscribe — can fire before DOM is ready.",
+      "severity": "HIGH",
+      "resolution": "Remove the three arrow-function declarations; inline null-checked getElementById() calls inside updateHUD() with early return if any element is missing, matching the pattern at lines 158-166."
+    },
+    {
+      "section": "HUD.ts",
+      "finding": "lifeFill() called twice in updateHUD() (lines 138 and 141) causing two DOM queries for the same element per store update. Minor perf waste.",
+      "severity": "LOW",
+      "resolution": "With the fix above (single local variable lf), this is automatically resolved."
+    },
+    {
+      "section": "EffectEngine.ts",
+      "finding": "Default branch at line 146-149 silently pushes unimplemented effect codes into 'applied'. No console.warn. 10 known future codes will appear to succeed.",
+      "severity": "MEDIUM",
+      "resolution": "Add console.warn('[EffectEngine] No-op effect (not implemented): ${code}') at line 147."
+    },
+    {
+      "section": "GroqAdapter.ts",
+      "finding": "API key is NOT hardcoded. Retrieved exclusively via import.meta.env.VITE_GROQ_API_KEY in fromEnv() (lines 96-98) and isAvailable() (line 90). SECURITY: PASS.",
+      "severity": "PASS"
+    },
+    {
+      "section": "GroqAdapter.ts",
+      "finding": "Malformed JSON from LLM: JSON.parse() at line 132 is inside try/catch (lines 124-155). A SyntaxError will be caught, console.warn emitted, and null returned — caller falls back to FastRoute. RESILIENCE: PASS.",
+      "severity": "PASS"
+    },
+    {
+      "section": "GroqAdapter.ts",
+      "finding": "Timeout: AbortController with REQUEST_TIMEOUT_MS = 8000ms at lines 180-181. Timeout triggers AbortError, caught at line 210 with specific console.warn. TIMEOUT: PASS.",
+      "severity": "PASS"
+    },
+    {
+      "section": "GroqAdapter.ts",
+      "finding": "Card structure validation at line 133 checks: parsed.narrative exists, parsed.options is array, length === 3. Does not validate individual option shape (verb, text, field, effects). A hallucinated option missing 'effects' would pass and potentially crash EffectEngine.",
+      "severity": "LOW",
+      "resolution": "Add per-option shape check: parsed.options.every(o => typeof o.verb === 'string' && Array.isArray(o.effects)). Currently lowest priority given EffectEngine is tolerant of empty effects arrays."
+    },
+    {
+      "section": "GroqAdapter.ts",
+      "finding": "sanitizeEffectCap() at line 64 always takes Math.abs(raw) for CODE:N effects, meaning a negative DAMAGE_LIFE from LLM becomes positive (heals). ADD_REPUTATION negative values are handled correctly via Math.max(-cap,Math.min(cap,raw)) at line 56.",
+      "severity": "LOW",
+      "resolution": "For DAMAGE_LIFE and HEAL_LIFE, clamping to Math.abs() is correct (these are always positive magnitudes in the effect string format). This is intentional, not a bug — document with a comment."
+    },
+    {
+      "section": "GroqAdapter.ts",
+      "finding": "LLM fallback to FastRoute: getLLMAdapter() returns null when no key. Callers must handle null explicitly. No crash risk in current flow — calling code (presumably CardSystem) checks for null. FALLBACK: PASS.",
+      "severity": "PASS"
+    },
+    {
+      "section": "RunSummary.ts",
+      "finding": "anamThisRun is displayed correctly on line 173 (state.run.anamThisRun). Total anam shown on line 174. Both correct.",
+      "severity": "PASS"
+    },
+    {
+      "section": "RunSummary.ts",
+      "finding": "Faction rep shown as absolute value (0-100), not delta. No factionDeltaThisRun tracking in store. Misleading in runs where player already had high rep from previous runs.",
+      "severity": "MEDIUM",
+      "resolution": "See TOP 3 bug #3 above. Add delta tracking to run state, display as '(+N)' annotation."
+    },
+    {
+      "section": "RunSummary.ts",
+      "finding": "Restart/replay CTA exists: 'Rejouer' button at line 215, with click handler at line 231. C52 outer-loop UX gap is addressed. UX: PASS.",
+      "severity": "PASS"
+    },
+    {
+      "section": "RunSummary.ts",
+      "finding": "window.location.reload() at line 239 is called after store.reset() and overlay.remove(). This hard-reloads the page. Acceptable for a web game but loses any unserialised meta-state (in-memory Groq adapter instance, etc.). Not a DOM leak but is a harsh reset path.",
+      "severity": "MEDIUM",
+      "resolution": "Replace with soft restart via event dispatch if possible, or document this as intentional with a comment."
+    },
+    {
+      "section": "RunSummary.ts",
+      "finding": "DOM leak check: existing overlay is removed at line 102 before rebuild. Event listeners on the old overlay are released by .remove(). New overlay is created fresh. No leak.",
+      "severity": "PASS"
+    },
+    {
+      "section": "OghamPanel.ts",
+      "finding": "Ogham availability filter: isAvailable = isUnlocked && cooldown <= 0 at line 97. Correctly checks oghamsUnlocked array and run.oghamCooldowns. Only available oghams get click handlers (line 146). Filter logic: PASS.",
+      "severity": "PASS"
+    },
+    {
+      "section": "OghamPanel.ts",
+      "finding": "Shows ALL 18 oghams (locked ones greyed out with opacity 0.35), not just equipped. This is intentional per T052 comment at line 77. Consistent with game design: players see the full tech tree. UX: ACCEPTABLE.",
+      "severity": "INFO"
+    },
+    {
+      "section": "OghamPanel.ts",
+      "finding": "Keyboard accessibility gap: overlay has no role='dialog', no aria-modal, no aria-label. Slot buttons have no aria-label (only title attr). Focus is not trapped in the modal — tabbing will reach background elements. No Escape key handler.",
+      "severity": "MEDIUM",
+      "resolution": "Add overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-label','Activer un Ogham'). Add keydown handler on document for Escape to call selectOgham(null). Add aria-label to each slot button: `${spec.name} — ${isAvailable ? 'disponible' : cooldown > 0 ? 'en recharge' : 'verrouille'}`."
+    },
+    {
+      "section": "OghamPanel.ts",
+      "finding": "resolveChoice closure: set at line 60, cleared at line 198 in selectOgham(). If showOghamPanel() is called twice without resolving the first promise, the first promise leaks (resolveChoice is overwritten). Unlikely in current game loop but fragile.",
+      "severity": "LOW",
+      "resolution": "Guard with: if (resolveChoice) { resolveChoice(null); resolveChoice = null; } at the top of showOghamPanel() before reassigning."
+    }
+  ],
+
+  "balance_recommendations": [
+    {
+      "parameter": "faction_rep_delta_tracking",
+      "current": "not tracked (absolute only)",
+      "suggested": "add factionDeltaThisRun: Record<FactionId,number> to run state, reset to 0 on run start, accumulate in EffectEngine ADD_REPUTATION case",
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "run_restart_mechanism",
+      "current": "window.location.reload() — hard page reload",
+      "suggested": "soft reset via store.reset() + custom 'game:restart' event dispatched to GameLoop",
+      "confidence": "MEDIUM"
+    }
+  ],
+
+  "next_steps": [
+    "Fix HUD.ts lines 26-28 — replace bare ! accessors with null-guarded inline reads + early return (HIGH)",
+    "Add console.warn to EffectEngine.ts default branch at line 147 (1 line, MEDIUM)",
+    "Add aria-modal + role=dialog + Escape handler to OghamPanel.ts overlay (MEDIUM)",
+    "Document or fix RunSummary faction rep display to show delta (MEDIUM)",
+    "Remove window.location.reload() from RunSummary.ts line 239 — replace with soft restart (MEDIUM)"
+  ],
+
+  "worker_output": "c:\\Users\\PGNK2128\\Godot-MCP\\web-demo\\.studio\\worker_playtester.json"
+}

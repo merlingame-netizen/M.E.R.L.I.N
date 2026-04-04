@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "commit": "891481a",
+  "cycle": "C84",
+  "audit_type": "code_review",
+  "scope": ["web-demo/src/main.ts", "web-demo/src/ui/OghamPanel.ts", "web-demo/src/audio/SFXManager.ts"],
+
+  "findings": [
+
+    {
+      "question": "Q1 — Pre-selection flow: does setActiveOgham(lairOgham) survive startRun() reset?",
+      "severity": "PASS",
+      "verdict": "CORRECT",
+      "evidence": [
+        "main.ts line 437: store.getState().startRun(chosenBiome) — this resets run state including activeOgham to ''",
+        "main.ts lines 439-441: if (lairResult.lairOgham) { store.getState().setActiveOgham(lairResult.lairOgham); } — called AFTER startRun, so it overwrites the reset value correctly",
+        "Order is: startRun() → setActiveOgham(lairOgham) — the described invariant holds"
+      ],
+      "notes": "The comment on line 438 matches the implementation. No regression risk here."
+    },
+
+    {
+      "question": "Q2 — Does state().run.activeOgham in gameLoop read the pre-set value correctly?",
+      "severity": "PASS",
+      "verdict": "CORRECT",
+      "evidence": [
+        "gameLoop line 498: const preSelected = state().run.activeOgham;",
+        "state is store.getState (line 464: const state = store.getState;) — this is a reference to the getter function, called as state() each time, so it always reads current store state",
+        "By the time gameLoop runs its first card cycle, startRun+setActiveOgham have already completed synchronously in main(), so state().run.activeOgham holds the lair-pre-selected value"
+      ],
+      "notes": "No stale closure issue. state is not captured once — it is called fresh each loop iteration."
+    },
+
+    {
+      "question": "Q3 — Is hideOghamPanel() still called after oghamChoice is used?",
+      "severity": "PASS",
+      "verdict": "CORRECT",
+      "evidence": [
+        "gameLoop line 506: hideOghamPanel() — called unconditionally after the ogham block, regardless of whether oghamChoice came from preSelected or from showOghamPanel()",
+        "When preSelected is truthy, showOghamPanel() is never called (short-circuit ||), so there is no open overlay to hide, but hideOghamPanel() is idempotent (checks overlay exists, resolveChoice is null — no side effects)",
+        "hideOghamPanel() also resolves any dangling promise (BUG-C58-03 fix) — safe to call even if panel was never shown"
+      ],
+      "notes": "No handler leak risk. escapeHandler cleanup inside hideOghamPanel() is also safe when escapeHandler is null."
+    },
+
+    {
+      "question": "Q4 — Z-index conflict: showOghamPanel() from crystal zone while lair canvas is shown?",
+      "severity": "PASS",
+      "verdict": "NO CONFLICT",
+      "evidence": [
+        "lair-canvas-wrapper z-index: 10 (main.ts line 223)",
+        "ogham-panel-overlay z-index: 200 (OghamPanel.ts line 32)",
+        "Both are position:fixed, so z-index stacking is relative to the root stacking context — OghamPanel (200) renders above the lair canvas (10) as intended",
+        "The OghamPanel overlay covers the entire viewport (inset:0) and has role=dialog + aria-modal=true, so interaction with the lair behind it is blocked visually and semantically"
+      ],
+      "notes": "No risk. The 190-unit z-index gap is more than sufficient. The lair's own biome-picker overlay is z-index:30 (main.ts line 155) — still well below 200."
+    },
+
+    {
+      "question": "Q5 — Does the stochasticTimer rename compile cleanly? Any missed usages?",
+      "severity": "PASS",
+      "verdict": "CLEAN RENAME",
+      "evidence": [
+        "AmbientSession interface (SFXManager.ts line 188): stochasticTimer: ReturnType<typeof setTimeout> | null — correctly renamed",
+        "scheduleRainDrops (line 284): session.stochasticTimer = setTimeout(...) — uses new name",
+        "scheduleBirds (line 304): session.stochasticTimer = setTimeout(...) — uses new name",
+        "stopAmbient (line 423): if (session.stochasticTimer !== null) { clearTimeout(session.stochasticTimer); session.stochasticTimer = null; } — uses new name",
+        "startAmbient (line 379): stochasticTimer: null in session literal — uses new name",
+        "No occurrence of the old name 'birdTimer' found in the file — rename is complete and consistent across all 5 usages"
+      ],
+      "notes": "The comment on stopAmbient (line 422) still reads '// Cancel bird timer' — this is a minor comment staleness, not a compile issue. Functionally correct."
+    },
+
+    {
+      "question": "Q6 — TypeScript errors or type mismatches from the return type change?",
+      "severity": "WARN",
+      "verdict": "ONE MINOR COMMENT STALENESS — NO TYPE ERROR",
+      "evidence": [
+        "runMerlinLair return type: Promise<{ biomeId: string; lairOgham: string | null }> — declared on line 217",
+        "main() destructures correctly: const lairResult = await runMerlinLair(app) then lairResult.biomeId and lairResult.lairOgham (lines 392-440)",
+        "lairResult.lairOgham is typed string | null — the null guard (if lairResult.lairOgham)) on line 439 is correct before calling setActiveOgham()",
+        "showOghamPanel() returns Promise<string | null> — assigned to lairSelectedOgham: string | null — types align",
+        "No implicit any. No missing null checks on the critical path.",
+        "MINOR: stopAmbient comment at line 422 still says '// Cancel bird timer' — should be 'Cancel stochastic timer'. Non-breaking."
+      ],
+      "notes": "TypeScript type flow is clean end-to-end. The old Promise<string> callers no longer exist — the function was only called from main() which was updated in the same commit."
+    }
+  ],
+
+  "issues": [
+    {
+      "severity": "LOW",
+      "issue": "stopAmbient() comment at SFXManager.ts line 422 says '// Cancel bird timer' — stale after birdTimer → stochasticTimer rename",
+      "recommendation": "Update comment to '// Cancel stochastic timer' for consistency with the renamed field"
+    }
+  ],
+
+  "summary": {
+    "verdict": "PASS",
+    "confidence": "HIGH",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "medium_issues": 0,
+    "low_issues": 1,
+    "correct_behaviors": [
+      "setActiveOgham called after startRun — reset sequence is correct",
+      "state() called fresh each loop iteration — no stale closure on activeOgham",
+      "hideOghamPanel() called unconditionally — no escape handler leak",
+      "OghamPanel z-index 200 safely above lair z-index 10 — no conflict",
+      "stochasticTimer rename complete across all 5 usages in SFXManager.ts",
+      "Return type change from Promise<string> to Promise<{biomeId,lairOgham}> is correctly consumed at the single call site in main()"
+    ]
+  },
+
+  "balance_recommendations": [],
+
+  "tokens_used_approx": 2800
+}

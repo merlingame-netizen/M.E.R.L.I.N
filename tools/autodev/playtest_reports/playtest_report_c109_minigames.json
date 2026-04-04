@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "cycle": "C109",
+    "base_commit": "888ad40",
+    "audit_date": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester (claude-sonnet-4-6)",
+    "files_audited": 2,
+    "checklist": [
+      "cancelTimers() contract vs reference pattern",
+      "endGame double-guard",
+      "document-scope listeners",
+      "SFX dispatch in-game",
+      "difficultyTier used in setup()",
+      "score formula fairness"
+    ]
+  },
+  "files": {
+    "mg_combat_rituel": {
+      "path": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "score": 92,
+      "score_rationale": "Reference pattern fully implemented. cancelTimers() contract clean, double-guard present, no document-scope listeners. One structural assumption risk in cleanup() and one O(n²) loop allocation (non-blocking).",
+      "sfx_ingame": true,
+      "sfx_ingame_notes": "Lines 270 ('lose') and 274 ('unlock') fire during render() — both correctly edge-triggered on collision state changes.",
+      "difficultyTier_used": true,
+      "difficultyTier_notes": "Lines 59-60 call this.tieredValue([16,14,12,10]) and this.tieredValue([3,4,5,6]) — totalTime and obstacleCount scaled correctly.",
+      "bugs": [
+        {
+          "id": "MCR-01",
+          "severity": "MEDIUM",
+          "type": "structural_assumption",
+          "description": "cleanup() body (lines 393-396) contains no teardown logic, relying entirely on a comment claim that super.cleanup() calls cancelTimers(). If MinigameBase.cleanup() is ever refactored to not invoke cancelTimers(), timers and rAF will leak silently. No defensive call in the subclass.",
+          "lines": [393, 396],
+          "fix": "Add explicit `this.cancelTimers();` as the first statement in cleanup() before `super.cleanup()`, making the subclass self-sufficient regardless of base class behavior."
+        },
+        {
+          "id": "MCR-02",
+          "severity": "LOW",
+          "type": "performance",
+          "description": "Obstacle array rebuilt with spread inside for-loop (lines 129-138), allocating a new array on each iteration — O(n²) allocations for obstacleCount items. Harmless at n≤6 but contradicts immutable-update intent.",
+          "lines": [127, 139],
+          "fix": "Collect obstacles in a local `const segs: Obstacle[] = []`, push each item, then assign `this.obstacles = segs` once after the loop."
+        }
+      ]
+    },
+    "mg_ombres": {
+      "path": "web-demo/src/minigames/mg_ombres.ts",
+      "score": 74,
+      "score_rationale": "endGame guard and difficultyTier correct. Two actionable bugs: cancelTimers() pattern not followed (duplication between endGame and cleanup), and missing pointerdown listener breaks mobile first-tap. Score formula has a fairness hole that lets wall-huggers pass at 50.",
+      "sfx_ingame": true,
+      "sfx_ingame_notes": "Line 217 fires 'lose' during render() on collision start — correctly edge-triggered via prevColliding guard.",
+      "difficultyTier_used": true,
+      "difficultyTier_notes": "Lines 49-50 call this.tieredValue([16,14,12,10]) and this.tieredValue([30,26,22,18]) — totalTime and endHalfWidth scaled correctly.",
+      "bugs": [
+        {
+          "id": "OMB-01",
+          "severity": "HIGH",
+          "type": "cancelTimers_contract_violation",
+          "description": "endGame() (lines 188-191) and cleanup() (lines 350-353) both inline identical teardown code (clearInterval, cancelAnimationFrame, two removeEventListener calls) instead of extracting a protected cancelTimers() method as established by the reference pattern in mg_combat_rituel. Any future listener addition must be updated in two places — maintenance trap confirmed.",
+          "lines": [186, 200, 349, 355],
+          "fix": "Extract lines 189-192 into `protected cancelTimers(): void { ... }`, call `this.cancelTimers()` from endGame() and remove the duplicate inline teardown from cleanup() (let super.cleanup() call it, matching the mg_combat_rituel pattern)."
+        },
+        {
+          "id": "OMB-02",
+          "severity": "HIGH",
+          "type": "missing_listener_mobile",
+          "description": "canvas registers 'pointermove' but not 'pointerdown' (line 102). On mobile, the cursor stays at its initial position (30, canvasH/2) until the player drags — the first tap-without-move is silently ignored, preventing any score advancement. mg_combat_rituel correctly registers both (lines 109-110).",
+          "lines": [102, 104],
+          "fix": "Add `this.canvas.addEventListener('pointerdown', this.onPointerMove);` immediately after line 102, and add the corresponding removeEventListener in both endGame() and cancelTimers()."
+        },
+        {
+          "id": "OMB-03",
+          "severity": "MEDIUM",
+          "type": "score_formula_fairness",
+          "description": "Score formula rawScore = maxProgress * 100 * (1 - collisionPenalty * 0.5) at line 196. A player who reaches 100% progress while colliding the entire run scores exactly 50 — sufficient to trigger the 'unlock' SFX (line 199 threshold: >= 50). Wall-hugging the full corridor length is rewarded identically to a clean 50%-progress run.",
+          "lines": [195, 196, 199],
+          "fix": "Raise the penalty multiplier from 0.5 to 0.8: `rawScore = maxProgress * 100 * (1 - collisionPenalty * 0.8)` — a full-collision full-progress run scores 20 (lose), while a clean 50%-progress run scores 50 (unlock)."
+        }
+      ]
+    }
+  },
+  "top_2_bugs": [
+    {
+      "rank": 1,
+      "file": "mg_ombres.ts",
+      "bug_id": "OMB-02",
+      "severity": "HIGH",
+      "summary": "Missing pointerdown listener on canvas — mobile players cannot advance progress from first tap, effectively scoring 0 on touch devices.",
+      "line": 102,
+      "fix": "Add `this.canvas.addEventListener('pointerdown', this.onPointerMove);` after line 102 and mirror in teardown."
+    },
+    {
+      "rank": 2,
+      "file": "mg_ombres.ts",
+      "bug_id": "OMB-01",
+      "severity": "HIGH",
+      "summary": "cancelTimers() contract not followed — teardown duplicated between endGame() and cleanup(), diverging from the reference pattern and creating a maintenance trap for future listener additions.",
+      "lines": [186, 200, 349, 355],
+      "fix": "Extract protected cancelTimers() and delegate from both endGame() and cleanup(), matching mg_combat_rituel structure."
+    }
+  ],
+  "cross_cutting": {
+    "sfx_ingame_both_files": true,
+    "sfx_note": "Both files correctly fire SFX during gameplay (not only at endGame): mg_combat_rituel lines 270/274, mg_ombres line 217. All are edge-triggered — no per-frame spam.",
+    "difficultyTier_in_setup_both": true,
+    "difficultyTier_note": "Both files read this.difficultyTier (via this.tieredValue) in setup() — totalTime and difficulty parameters scale correctly across tiers 0-3."
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "target": "mg_ombres.ts",
+      "action": "Add pointerdown listener (OMB-02) — unblocks all mobile players immediately."
+    },
+    {
+      "priority": 2,
+      "target": "mg_ombres.ts",
+      "action": "Refactor to cancelTimers() pattern (OMB-01) — reduces maintenance surface before next listener is added."
+    },
+    {
+      "priority": 3,
+      "target": "mg_ombres.ts",
+      "action": "Adjust collision penalty multiplier to 0.8 (OMB-03) — closes wall-hugging exploit."
+    },
+    {
+      "priority": 4,
+      "target": "mg_combat_rituel.ts",
+      "action": "Add defensive this.cancelTimers() in cleanup() (MCR-01) — removes implicit dependency on base class implementation detail."
+    }
+  ]
+}

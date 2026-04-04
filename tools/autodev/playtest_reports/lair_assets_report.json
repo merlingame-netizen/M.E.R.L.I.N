@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-04-03T19:45:00Z",
+  "agent": "merlin-tech-artist",
+  "cycle": 31,
+  "assets_generated": [
+    "cauldron",
+    "table_druidique",
+    "bibliotheque",
+    "sol_pierre",
+    "mur_pierre",
+    "bougie"
+  ],
+  "assets_failed": [],
+  "poly_counts": {
+    "cauldron": 34,
+    "table_druidique": 32,
+    "bibliotheque": 120,
+    "sol_pierre": 97,
+    "mur_pierre": 126,
+    "bougie": 23
+  },
+  "file_sizes_kb": {
+    "cauldron_merlin.glb": 6.2,
+    "table_druidique.glb": 6.2,
+    "bibliotheque.glb": 20.0,
+    "sol_pierre.glb": 12.0,
+    "mur_pierre.glb": 21.0,
+    "bougie.glb": 4.8
+  },
+  "total_scene_polys": 432,
+  "total_assets_size_kb": 70.2,
+  "build_status": "PASS",
+  "build_bundle_kb": 120.52,
+  "build_bundle_warn_threshold_kb": 124.15,
+  "ts_errors": 0,
+  "coherence_issues": [],
+  "notes": [
+    "All assets use C_OAK=(0.35,0.20,0.08), C_METAL_DARK=(0.10,0.09,0.08), flat shading, vertex color layer 'Col'",
+    "bibliotheque reduced from 21 books to 12 (4/shelf) to reach 120 polys from initial 174",
+    "sol_pierre grid reduced from 7x7 to 4x4 to reach 97 polys from initial 295",
+    "mur_pierre rewritten with 5 rows x 4 stones = 126 polys from initial 534",
+    "cauldron_merlin.glb copied to web-demo/public/ and integrated via loadGLB() async pattern",
+    "GLB load is fire-and-forget with .catch() fallback — procedural cauldron remains if GLB fails",
+    "initMerlinLair() import updated: +loadGLB from engine/AssetLoader"
+  ],
+  "scripts_created": [
+    "tools/blender_scripts/gen_table_druidique.py",
+    "tools/blender_scripts/gen_bibliotheque.py",
+    "tools/blender_scripts/gen_sol_pierre.py",
+    "tools/blender_scripts/gen_mur_pierre.py",
+    "tools/blender_scripts/gen_bougie.py"
+  ],
+  "manifest": "tools/blender_scripts/lair_scene_manifest.json"
+}

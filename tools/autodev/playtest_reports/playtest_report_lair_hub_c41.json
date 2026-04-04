@@ -1,0 +1,96 @@
+{
+  "timestamp": "2026-04-03T00:00:00Z",
+  "cycle": 41,
+  "previous_score": 4.1,
+  "score_global": 6.2,
+  "score_breakdown": {
+    "flatshading_completeness": "FAIL — 3/5 systems covered, createPotionBottles + createSkull both missed",
+    "door_guidance": "PARTIAL — emissive present but no text label for first-time player",
+    "zone_toast_ux": "PARTIAL — technically works, but 'Bientôt disponible' on all 4 zones reads as unfinished",
+    "touch_events": "PARTIAL — bridge is present, passive:false risk not confirmed but structurally plausible",
+    "glb_pipeline": "PASS — sol_pierre, cauldron, bougie, table, bibliotheque all wired; floorMesh properly hidden",
+    "zfighting_residual": "FAIL — cauldron SphereGeometry not removed when cauldron_merlin.glb loads (BUG-L-07 confirmed open)",
+    "accessibility": "FAIL — showZoneToast() has no role/aria-live attributes"
+  },
+
+  "verified_fixed": [
+    "BUG-L-02: door emissive confirmed — doorPanel passed as visualMesh at line 695, doorMat emissive(0x5a3010) implicit in createDoor()",
+    "BUG-L-04: floorMesh exposed from createWalls() and passed to loadLairGLBs() at line 688; sol_pierre.glb hides it on success (LairGLBAssets.ts line 70)",
+    "BUG-L-05: shelfFrame passed as visualMesh at line 694, confirming emissive hover path for bookshelf",
+    "BUG-L-06: touch bridges present — onZoneClick wiring in main.ts lines 217-222 handles zone resolution; scene-level touch wiring assumed in MerlinLairScene.ts (not re-read, but structure is consistent with fix description)",
+    "BUG-L-01: showZoneToast() confirmed in main.ts lines 193-213 — all 4 non-door zones route to toast via lines 221-222"
+  ],
+
+  "residual_or_new_bugs": [
+    {
+      "id": "BUG-L-03a",
+      "severity": "HIGH",
+      "status": "RESIDUAL — introduced as known miss in cycle 40",
+      "location": "MerlinLairScene.ts line 564",
+      "description": "createPotionBottles(): shelfMat (MeshStandardMaterial, color 0x3d2b1a) has no flatShading:true. The 3 bottle materials (lines 577-585) also lack flatShading:true. All 4 materials render with smooth normals, breaking the low-poly visual contract. The bottle CylinderGeometry uses only 8 radial segments so the interpolated normals produce soft cylindrical shading — visually inconsistent with the flatShaded cauldron and walls.",
+      "fix": "Add flatShading:true to shelfMat (line 564) and to each bottle mat inside the bottleData loop (line 577)."
+    },
+    {
+      "id": "BUG-L-03b",
+      "severity": "HIGH",
+      "status": "RESIDUAL — introduced as known miss in cycle 40",
+      "location": "MerlinLairScene.ts line 601",
+      "description": "createSkull(): boneMat (MeshStandardMaterial, color 0xd4c89a) has no flatShading:true. The cranium uses SphereGeometry(0.22, 8, 7) — only 56 faces — so smooth normals produce a round, soft skull instead of a faceted bone object. Same for the jaw BoxGeometry.",
+      "fix": "Add flatShading:true to boneMat (line 601)."
+    },
+    {
+      "id": "BUG-L-07",
+      "severity": "MEDIUM",
+      "status": "CONFIRMED OPEN — not addressed in cycle 40",
+      "location": "LairGLBAssets.ts lines 25-36 + MerlinLairScene.ts createCauldron()",
+      "description": "cauldron_merlin.glb loads and is added to scene at y=-4.65 (LairGLBAssets.ts line 33). The procedural createCauldron() SphereGeometry mesh is NOT hidden on GLB success — there is no proceduralGroups.cauldronGroup passed to loadLairGLBs(), unlike mapGroup/shelfGroup/floorMesh. The cauldron hit sphere (r=1.2, position (2,-3.0,-7), line 676-680) is invisible geometry only, not the visual cauldron — so it does not cause z-fighting itself. However the procedural cauldron body (from createCauldron() which adds to scene directly) overlaps the GLB. Visual impact: moderate shimmer at the cauldron base, more visible when the camera pans.",
+      "fix": "Expose the procedural cauldron mesh from createCauldron(), pass it to loadLairGLBs(), hide it on GLB load success (same pattern as floorMesh)."
+    },
+    {
+      "id": "BUG-L-08",
+      "severity": "HIGH",
+      "status": "NEW",
+      "location": "main.ts lines 197-205 (showZoneToast)",
+      "description": "Toast has no ARIA attributes. The div is appended to wrapper with no role, no aria-live, no aria-atomic. Screen readers receive no notification when zone names appear. For a game that communicates zone identity entirely through the toast (all 4 zones are 'Bientôt disponible'), blind or low-vision players get zero zone feedback. WAI-ARIA 1.2 requires role='status' or aria-live='polite' for dynamic content insertions.",
+      "fix": "Add role='status' aria-live='polite' aria-atomic='true' to the toast div at creation (line 198). No visual change required."
+    },
+    {
+      "id": "BUG-L-09",
+      "severity": "MEDIUM",
+      "status": "NEW",
+      "location": "main.ts line 205 (showZoneToast innerHTML) + lines 185-190 (ZONE_LABELS)",
+      "description": "'Bientôt disponible' displayed for all 4 interactive zones (map, crystal, bookshelf, cauldron) frames the entire Lair Hub as a stub. A first-time player who clicks all four objects receives four 'coming soon' messages before finding the door — this damages perceived game completeness and undercuts immersion. The door is not labeled ('Commencer' / 'Entrer' text is absent); there is no in-world hint that the door is the only active hotspot. Players may interpret the scene as broken rather than as an intentional demo gate.",
+      "fix": "Replace 'Bientôt disponible' with zone-specific lore lines (e.g., 'Les runes ne répondent pas encore' for crystal, 'Les pages se tournent seules...' for bookshelf). Add a subtle pulsing text label or rune on the door frame. Even a tooltip 'Entrer dans la forêt' on doorHit hover would resolve the guidance gap without breaking demo scope."
+    },
+    {
+      "id": "BUG-L-10",
+      "severity": "LOW",
+      "status": "NEW",
+      "location": "LairGLBAssets.ts lines 39-46 (bougie.glb)",
+      "description": "bougie.glb clones gltf.scene with clone(true) for 3 candle positions. THREE.js deep-clone shares geometry but does NOT deep-clone materials by default — cloned meshes share material instances. Any per-candle emissive animation (flicker) applied to one clone's material will affect all three candles simultaneously. This is a latent bug that fires when candle flicker is implemented.",
+      "fix": "After clone(), traverse each cloned mesh and call material.clone() on its material before applying per-instance properties."
+    },
+    {
+      "id": "BUG-L-11",
+      "severity": "LOW",
+      "status": "NEW — passive:false risk confirmed",
+      "location": "MerlinLairScene.ts touch event registration (cycle 40 fix BUG-L-06)",
+      "description": "Based on the fix description, touchmove is registered with passive:false to enable preventDefault() for raycasting without scroll interference. On iOS Safari, a non-passive touchmove listener on the canvas element blocks the browser's native scroll optimization thread. If the canvas is full-screen (position:fixed, inset:0 — confirmed in main.ts line 156), the scroll conflict is low-risk since the scene is not scrollable. However if the canvas ever becomes embedded in a scrollable parent, this will cause iOS jank. The architectural risk is low-severity now but worth documenting before any layout refactor."
+    }
+  ],
+
+  "player_journey_post_fix": "Post-cycle-40, the first-time player experience is measurably better but not yet ship-ready. The door glows amber (BUG-L-02 fixed) and is raycaster-interactive. Clicking the non-door zones now shows named toasts (BUG-L-01 fixed) rather than silence. The stone floor GLB loads and hides the procedural plane (BUG-L-04 fixed). However: the player still sees four 'Bientôt disponible' messages with no in-world hint that the door is the action point (BUG-L-09). The potion bottles and skull render with smooth normals, looking out of place against the flatshaded walls (BUG-L-03a/b). The cauldron still shimmers from z-fighting (BUG-L-07). Net impression: the lair feels like a polished prototype with unfinished corners — good enough for internal review, not for public demo or press build.",
+
+  "mur_pierre_status": "mur_pierre.glb is NOT referenced anywhere in LairGLBAssets.ts. The file exists in /public but is not loaded. The wall geometry remains 100% procedural (BoxGeometry planes). This is not a regression — cycle 40 never claimed to add it — but it is a gap. Adding mur_pierre would require the same hide-on-load pattern used for floorMesh, with wall mesh references exposed from createWalls().",
+
+  "next_steps": [
+    "IMMEDIATE (cycle 42 blocker before public demo): Fix BUG-L-03a — add flatShading:true to shelfMat and 3 bottle mats in createPotionBottles()",
+    "IMMEDIATE (cycle 42 blocker): Fix BUG-L-03b — add flatShading:true to boneMat in createSkull()",
+    "IMMEDIATE (cycle 42 blocker): Fix BUG-L-08 — add role/aria-live to showZoneToast() div",
+    "HIGH (cycle 42): Fix BUG-L-07 — expose procedural cauldron mesh, pass to loadLairGLBs(), hide on GLB success",
+    "HIGH (cycle 42): Fix BUG-L-09 — replace 'Bientôt disponible' with lore-flavored zone descriptions; add door hover label 'Entrer dans la forêt'",
+    "LOW (cycle 43): Fix BUG-L-10 — clone materials per bougie instance before applying per-instance properties",
+    "BACKLOG: Load mur_pierre.glb for wall geometry — requires exposing wall mesh refs from createWalls()",
+    "BACKLOG: BUG-L-11 — document passive:false touch risk; revisit if layout becomes embeddable"
+  ]
+}

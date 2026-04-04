@@ -1,0 +1,146 @@
+{
+  "cycle": 59,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "audited_files": [
+    "web-demo/src/ui/CardOverlay.ts",
+    "web-demo/src/minigames/mg_combat_rituel.ts",
+    "web-demo/src/minigames/mg_fouille.ts",
+    "web-demo/src/minigames/mg_negociation.ts",
+    "web-demo/src/scenes/MerlinLairScene.ts",
+    "web-demo/src/scenes/CoastBiome.ts"
+  ],
+  "score_global": 7.5,
+  "scores": {
+    "rendu_3d_flat_shading": {
+      "score": 9,
+      "note": "flatShading:true is consistent across all procedural geometry in MerlinLairScene (walls, floor, beams, bookshelf, door, crystal) and CoastBiome (ground, ocean, trees). No gaps found.",
+      "problem": "MerlinLairScene.ts line 166: crystal SphereGeometry uses 16x16 segments with flatShading — the high segment count dilutes the faceted AAA look that 6-8 segments would provide."
+    },
+    "rendu_3d_z_fighting": {
+      "score": 8,
+      "note": "Scroll/table surfaces have deliberate 0.06-0.12 unit Z offsets. No obvious co-planar pairs.",
+      "problem": "MerlinLairScene.ts line 86: stone mortar lines are placed at Z=-9.74 against back wall at Z=-10 (only 0.26 units separation on a 0.5-thick wall). At oblique camera angles this risks z-fighting at low precision depth buffers."
+    },
+    "rendu_3d_lighting": {
+      "score": 8,
+      "note": "5-source lighting system (key/rim/fill/cauldron/ambient) with dynamic candle flicker is well-structured. Crystal PointLight (intensity 2.5) + door PointLight (intensity 3.0) add drama.",
+      "problem": "MerlinLairScene.ts line 171: crystal PointLight distance=8 — at low scene depth this bleeds onto the back wall and washes out the stone texture on close inspection. No decay mode specified (decay=2 is set, which is correct physically but the range may need reduction to 5)."
+    },
+    "assets_glb_coverage": {
+      "score": 7,
+      "note": "loadLairGLBs and loadGLB in CoastBiome handle cauldron/bougie/table/biblio. Procedural fallbacks exist for all zones.",
+      "problem": "CoastBiome.ts uses procedural cone trees exclusively — no GLB tree assets loaded. The 3-layer cone stack is functional but noticeably low-fidelity compared to the Lair GLB assets, breaking visual consistency."
+    },
+    "web_perf_memory_leaks": {
+      "score": 9,
+      "note": "MerlinLairScene.ts dispose() at line 820 traverses the full scene graph, calls geometry.dispose() + material.dispose() on all Mesh/Points, removes all event listeners, and calls renderer.dispose(). CoastBiome flatShading geometry is correctly rebuilt only on init. Pattern is solid.",
+      "problem": "MerlinLairScene.ts line 822: only mousemove and click are explicitly removed via removeEventListener. The touchstart handler at line 825 IS removed. However, candle setInterval timers (if any) are not visible in the dispose block — confirmed no interval leak in visible code, but candle particle loop runs via update() which is caller-managed."
+    },
+    "ux_aria_coverage": {
+      "score": 6,
+      "note": "mg_combat_rituel, mg_fouille, mg_negociation all have role=application on canvas and aria-label. Timer bars have role=progressbar with aria-valuemin/max/now. touch-action:none is present on all three canvas elements.",
+      "problem": "CardOverlay.ts line 161: card option elements are created as <div class='card-option'> — NOT <button> elements. This confirms BUG-C58-06. div elements receive no implicit keyboard role, no Enter/Space activation, no focus ring, and are not in the natural tab order. All three options are inaccessible by keyboard."
+    },
+    "ux_focus_management": {
+      "score": 5,
+      "note": "CardOverlay showCard() at line 131 makes the overlay visible and builds options, but never sets focus to the overlay container or first option.",
+      "problem": "CardOverlay.ts line 194: overlay().classList.add('visible') — no document.activeElement trap, no focus() call on the first option or the overlay container. BUG-C58-07 is confirmed: keyboard users receive no focus signal that the CardOverlay has opened. Screen reader users have no announced entry point."
+    },
+    "ux_mobile_touch": {
+      "score": 8,
+      "note": "All three sampled minigames set touch-action:none on canvas at CSS construction time. CoastBiome and MerlinLairScene handle touchstart/touchend events.",
+      "problem": "mg_fouille.ts line 114 and mg_negociation.ts line 120: touch-action:none is applied in the inline style string but there is no tabIndex on the canvas, so double-tap zoom suppression relies entirely on touch-action and may fail on older Safari 14 iOS where touch-action:none on canvas is inconsistently honoured."
+    },
+    "game_feel_card_interaction": {
+      "score": 7,
+      "note": "CardOverlay.ts has 200ms gold highlight (card-option-selected class) before resolving, and card-flip CSS animation on each new card. Faction dot visual indicator is present.",
+      "problem": "CardOverlay.ts line 161: because options are div elements (not buttons), there is no :hover cursor:pointer default, no :focus-visible ring, and no pressed state. The 200ms feedback exists for mouse click but is invisible to touch on iOS (no :active on div without cursor:pointer)."
+    },
+    "game_feel_minigame_entry": {
+      "score": 8,
+      "note": "All three minigames rebuild container innerHTML on setup(), create title + instruction + progressbar + canvas in consistent order. Fade-in from overlay is handled by caller.",
+      "problem": "mg_negociation.ts line 116 and mg_fouille.ts line 109: aria-label strings contain typos ('l objet cache' missing apostrophe in fouille, minor). More critically: no live region (aria-live) is set up to announce score changes or game-over events to screen reader users."
+    },
+    "game_design_faction_progression": {
+      "score": 8,
+      "note": "Faction dot in CardOverlay correctly extracts ADD_REPUTATION from effects and maps to FACTION_COLOURS. Negociation minigame FACTION_KEYWORDS pool covers all 5 factions with 10 thematic words each. Lore vocabulary (gui, cairn, ankou, etc.) is consistent with Celtic theme.",
+      "problem": "CardOverlay.ts line 100: buildFactionDot only reads the FIRST ADD_REPUTATION effect. Cards that modify two factions (e.g. +druides -anciens) show only one dot, silently hiding the negative faction impact from the player before they choose."
+    }
+  },
+  "bugs": [
+    {
+      "id": "BUG-C59-01",
+      "severity": "CRITICAL",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 161,
+      "description": "Card options created as <div> elements, not <button>. No keyboard activation (Enter/Space), not in tab order, no implicit ARIA role. Confirms BUG-C58-06. All three choices are completely inaccessible without a mouse.",
+      "fix": "Replace document.createElement('div') with document.createElement('button') and remove manual click listener in favour of native button behaviour. Add type='button' to prevent form submission. CSS .card-option already exists — button reset styles needed (border:none, background:inherit, text-align:left, cursor:pointer)."
+    },
+    {
+      "id": "BUG-C59-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 194,
+      "description": "showCard() makes overlay visible but never moves focus into it. Keyboard users and screen reader users receive no signal that 3 new choices are available. Confirms BUG-C58-07.",
+      "fix": "After overlay().classList.add('visible') and triggerFlipAnimation(), call: const firstOpt = optContainer.querySelector<HTMLElement>('button.card-option'); firstOpt?.focus(). Also add aria-modal='true' and role='dialog' with aria-label='Choix narratif' on the overlay element."
+    },
+    {
+      "id": "BUG-C59-03",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 100,
+      "description": "buildFactionDot() returns only the first ADD_REPUTATION faction dot. Cards with dual-faction effects (positive + negative) silently hide the second faction impact. Players cannot see the full trade-off before choosing.",
+      "fix": "Iterate all effects and render a dot per ADD_REPUTATION entry. Use a flex row container for multiple dots. Positive amounts use normal dot, negative amounts use a dot with a downward indicator (e.g. opacity:0.6 + border dashed)."
+    },
+    {
+      "id": "BUG-C59-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "line": 110,
+      "description": "aria-label on canvas has a typo: 'l objet cache' (missing apostrophe). Also: no aria-live region for found/not-found outcome announcement. Screen reader users hear nothing when the game ends.",
+      "fix": "Fix apostrophe to 'l\\'objet caché'. Add a visually-hidden aria-live='assertive' div that receives text content on game outcome (found/timeout)."
+    },
+    {
+      "id": "BUG-C59-05",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 166,
+      "description": "Crystal sphere uses SphereGeometry(0.7, 16, 16) with flatShading:true. At 16x16 segments the facets are too small to read visually — the low-poly AAA aesthetic is lost on the only transparent/emissive object in the scene.",
+      "fix": "Reduce to SphereGeometry(0.7, 8, 6) to produce large readable facets matching the Celtic low-poly style of the rest of the scene."
+    },
+    {
+      "id": "BUG-C59-06",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_negociation.ts",
+      "line": 116,
+      "description": "Canvas and all three sampled minigames lack tabIndex attribute. Without tabIndex='0', programmatic focus() on the canvas is ignored by most browsers and keyboard events on the canvas do not fire unless the user clicks first. This partially negates touch-action:none ARIA hardening.",
+      "fix": "Add this.canvas.tabIndex = 0 immediately after creating the canvas element in setup() for mg_negociation, mg_fouille, and mg_combat_rituel (and all other minigames in the 11-minigame set)."
+    }
+  ],
+  "verdict": "FIX",
+  "top3_priorities": [
+    {
+      "rank": 1,
+      "bug": "BUG-C59-01",
+      "rationale": "div-as-button is a WCAG 2.1 Level A failure (Success Criterion 4.1.2 Name, Role, Value). The entire card choice system is keyboard-dead. This is the single highest-impact fix: changing createElement('div') to createElement('button') unblocks keyboard nav, screen readers, and mobile assistive tech simultaneously."
+    },
+    {
+      "rank": 2,
+      "bug": "BUG-C59-02",
+      "rationale": "Without focus management on CardOverlay open, even after BUG-C59-01 is fixed, keyboard users must Tab-hunt to find the newly opened choices. Focus trap + role=dialog + initial focus on first option is a 5-line fix with large UX impact."
+    },
+    {
+      "rank": 3,
+      "bug": "BUG-C59-06",
+      "rationale": "tabIndex=0 is a prerequisite for keyboard events on canvas-based minigames. Affects all 11 minigames. Without it, ARIA hardening from C30/C58 (role=application, aria-label, touch-action:none) is partially inert. One-liner fix per minigame."
+    }
+  ],
+  "score_trend": {
+    "c52": 8.5,
+    "c55": 8.4,
+    "c57": 7.2,
+    "c58": 7.1,
+    "c59": 7.5,
+    "analysis": "Score stabilises at 7.5 after C58 ARIA fixes (OghamPanel role=dialog, Promise deadlock, factionDeltaThisRun). The remaining decline from C52 is concentrated in UX/Accessibility (CardOverlay keyboard gap) and Assets (no GLB tree coverage in CoastBiome). 3D rendering quality held steady at 8-9. A single cycle fixing BUG-C59-01+02+06 should recover to 8.2+."
+  }
+}

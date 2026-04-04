@@ -1,0 +1,296 @@
+{
+  "audit": "C51 — New Scenes AAA Audit",
+  "timestamp": "2026-04-03T00:00:00Z",
+  "files_audited": [
+    "web-demo/src/scenes/LairDensity.ts",
+    "web-demo/src/scenes/LairWindow.ts",
+    "web-demo/src/scenes/CoastBiome.ts"
+  ],
+
+  "lairDensity": {
+    "flatShading_violations": [
+      {
+        "material": "sM (shelf planks)",
+        "line": 8,
+        "code": "new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0 })",
+        "missing": "flatShading: true"
+      },
+      {
+        "material": "book materials (bC loop)",
+        "line": 15,
+        "code": "new THREE.MeshStandardMaterial({ color: bC[b % bC.length]!, roughness: 0.8, metalness: 0.0 })",
+        "missing": "flatShading: true",
+        "note": "5 book materials created inline per shelf row — ALL missing flatShading"
+      },
+      {
+        "material": "pM (parchment rolls)",
+        "line": 23,
+        "code": "new THREE.MeshStandardMaterial({ color: 0xd4b878, roughness: 0.9, metalness: 0.0 })",
+        "missing": "flatShading: true"
+      }
+    ],
+    "flatShading_violation_count": 3,
+    "spotLight_issue": true,
+    "spotLight_analysis": {
+      "light": "moon (SpotLight)",
+      "added_to": "scene directly (line 22: scene.add(moon); scene.add(moon.target))",
+      "bug": "CONFIRMED — light is orphaned from the scene group hierarchy. If the group containing lair objects is toggled via group.visible=false or removed, the moon SpotLight persists independently in scene. It was supposed to illuminate shelf/plank meshes but is decoupled from them.",
+      "severity": "HIGH"
+    },
+    "proportions_analysis": {
+      "floor_y_reference": -5,
+      "wall_x_reference": "±12",
+      "planks_x": -11.4,
+      "planks_y_range": "[-0.5, 2.5] (3 rows)",
+      "parchment_y": -4.8,
+      "verdict": "Planks at x=-11.4 are within the wall boundary (x=-12). Parchments at y=-4.8 are near the floor (y=-5) — correctly resting on the floor. Books positioned relative to plank y ± offsets — coherent. Proportions are acceptable."
+    },
+    "dispose_missing": true,
+    "dispose_analysis": "No dispose() calls anywhere. createLairDensity() creates 3 sM planks + 15 book materials (5 per shelf row × 3 rows) + pM for parchments. None are disposed. The sM material is shared across planks which is correct, but book materials are per-instance inline — 15 separate MeshStandardMaterial objects with no cleanup path.",
+    "score": 52,
+    "score_rationale": "3/3 material categories missing flatShading (-30), SpotLight orphaned from group (-15), no dispose (-3). Proportions OK (+0 penalty)."
+  },
+
+  "lairWindow": {
+    "flatShading_violations": [
+      {
+        "material": "frameMat (stone frame: jambs, lintel, sill, mullion)",
+        "line": 77,
+        "code": "new THREE.MeshStandardMaterial({ color: 0x2e2924, roughness: 0.98, metalness: 0.0 })",
+        "missing": "flatShading: true"
+      },
+      {
+        "material": "treeMat (tree trunks and canopies)",
+        "line": 117,
+        "code": "new THREE.MeshStandardMaterial({ color: 0x2e6e2e, roughness: 1.0, metalness: 0.0 })",
+        "missing": "flatShading: true",
+        "note": "treeMat is then .clone()d for each trunk and canopy — all clones inherit the missing flatShading"
+      }
+    ],
+    "flatShading_ok": [
+      "glassMat — intentionally smooth (glass), flatShading omission is acceptable",
+      "skyMat — MeshBasicMaterial, flatShading not applicable"
+    ],
+    "flatShading_violation_count": 2,
+    "spotLight_issue": true,
+    "spotLight_analysis": {
+      "light": "windowLight (SpotLight)",
+      "added_to": "scene directly (lines 160-161: scene.add(windowLight); scene.add(windowLight.target))",
+      "bug": "CONFIRMED — same pattern as LairDensity moon. windowLight is added to scene, not to group. The group is added to scene at line 203. If group.visible=false or group is removed from scene, windowLight continues to illuminate. This is particularly impactful: this light simulates daylight through the window, so it must be coupled to the window group lifecycle.",
+      "severity": "HIGH"
+    },
+    "updateTime_correct": true,
+    "updateTime_analysis": {
+      "h0_night": "h=0 → night branch (0 < 5 = true). moonPhase = sin(0/24 * PI) * 0.5 + 0.5 = 0.5. color ~RGB(0.175, 0.23, 0.44). intensity ~0.15. CORRECT.",
+      "h5_dawn_start": "h=5 → dawn branch (5 >= 5 && 5 < 8). t=0. color=RGB(1.0, 0.5, 0.2). intensity=0.3. CORRECT.",
+      "h8_day_start": "h=8 → day branch (8 >= 8 && 8 < 17). color=0xfff5e0, intensity=1.1 (×seasonBright). CORRECT.",
+      "h12_day": "h=12 → day branch. Same as h=8. CORRECT.",
+      "h17_dusk_start": "h=17 → dusk branch (17 >= 17 && 17 < 20). t=0. color=RGB(1.0, 0.4, 0.05). intensity=1.0. CORRECT.",
+      "h20_night": "h=20 → night branch (not 5-8, not 8-17, not 17-20). CORRECT.",
+      "h23_night": "h=23 → night branch. moonPhase = sin(23/24 * PI) * 0.5 + 0.5 ≈ 0.565. Very low intensity. CORRECT.",
+      "edge_h24": "h=24 → ((24 % 24) + 24) % 24 = 0 → night branch. Correctly wraps. CORRECT.",
+      "verdict": "All hour transitions are correct. Dawn/day/dusk/night boundaries at 5/8/17/20 are logically sound. Night moonPhase formula is continuous."
+    },
+    "dispose_missing": true,
+    "dispose_analysis": "frameMat shared across 5 meshes (acceptable). treeMat.clone() called 6 times (3 trunks + 3 canopies) — 6 cloned materials never disposed. glassMat and skyMat also undisposed. No dispose() method exposed in WindowResult interface. Caller has no cleanup path.",
+    "score": 63,
+    "score_rationale": "frameMat and treeMat missing flatShading (-20), SpotLight orphaned from group (-15), no dispose (-2). updateTime logic correct (+0 penalty). glassMat/skyMat violations excused (+5)."
+  },
+
+  "coastBiome": {
+    "flatShading_score": 95,
+    "flatShading_analysis": {
+      "ok": [
+        "ground mat: flatShading: true (line 26)",
+        "ocean mat: flatShading: true (line 43)",
+        "tree trunkMat: flatShading: true (line 116)",
+        "tree leafMat: flatShading: true (line 117)",
+        "rock rockMat: flatShading: true (line 161)",
+        "menhir mat: flatShading: true (line 243)",
+        "menhir mossMat: flatShading: true (line 244)"
+      ],
+      "violations": [
+        {
+          "material": "sky (ShaderMaterial)",
+          "note": "ShaderMaterial does not support flatShading — N/A, correct to omit. Sky handles its own fragment logic.",
+          "verdict": "EXCUSED"
+        },
+        {
+          "material": "fog (ShaderMaterial)",
+          "note": "ShaderMaterial — N/A. EXCUSED."
+        },
+        {
+          "material": "GLB models loaded via loadGLB()",
+          "note": "GLB assets are loaded externally. Their materials inherit whatever is in the file. No flatShading override applied post-load. This is a MEDIUM risk: cliff_unified/cabin_unified/crystal_cluster_unified may render with smooth shading, breaking the flat-shaded AAA look.",
+          "severity": "MEDIUM"
+        }
+      ]
+    },
+    "perf_mesh_count": {
+      "ground": 1,
+      "ocean": 1,
+      "sky_sphere": 1,
+      "trees_40_total": {
+        "tree_groups": 40,
+        "meshes_per_tree": 4,
+        "total_tree_meshes": 160
+      },
+      "rocks_18": 18,
+      "menhirs_7": {
+        "menhir_bodies": 7,
+        "moss_patches": 7,
+        "total": 14
+      },
+      "fog_plane": 1,
+      "glb_models": "3 attempted, variable mesh count per GLB (unknown until loaded)",
+      "total_procedural_meshes": 196,
+      "light_count": 4,
+      "lights_detail": [
+        "AmbientLight (group-added)",
+        "DirectionalLight sun (group-added, shadow map 1024x1024)",
+        "HemisphereLight hemi (group-added)",
+        "DirectionalLight rim (group-added)"
+      ],
+      "perf_verdict": "196 procedural meshes is moderately high. All 4 lights are added to group (correct lifecycle). Shared geometries (trunkGeo, cone1/2/3Geo) reused across all 40 trees — good instancing-style optimization. Shadow enabled only on sun DirectionalLight. ACCEPTABLE for target device (GTX 1060 / mobile)."
+    },
+    "camera_rail": {
+      "present": false,
+      "note": "No CameraRail system detected in CoastBiome.ts. The BiomeSceneResult interface only exposes { group, update }. If a CameraRail is expected for the 3D walk gameplay loop, it must be provided by the caller (e.g., the scene orchestrator). This is a design gap — the biome does not self-contain the rail path.",
+      "severity": "MEDIUM"
+    },
+    "dispose_complete": false,
+    "dispose_analysis": {
+      "geometries_no_dispose": [
+        "ground PlaneGeometry (200x200 48x48 — large, ~7056 vertices)",
+        "ocean PlaneGeometry (200x200 24x18 — ~1125 vertices)",
+        "sky SphereGeometry",
+        "fog PlaneGeometry",
+        "trunkGeo (shared, 40 uses)",
+        "cone1/2/3Geo (shared, 40 uses each)"
+      ],
+      "materials_no_dispose": [
+        "ground mat",
+        "ocean mat (with MeshStandardMaterial + transparent)",
+        "treeMat trunkMat + leafMat per layer (2 per layer × 3 layers = 6 materials)",
+        "rockMat (shared across 18 rocks)",
+        "menhir mat + mossMat (shared)",
+        "fog ShaderMaterial",
+        "sky ShaderMaterial"
+      ],
+      "menhir_geo_exception": "DodecahedronGeometry geo is created and immediately geo.dispose()d (line 268) — CORRECT, as it is unused (the actual mesh uses BoxGeometry). This is a bug-aware dispose.",
+      "oceanBaseY_float32": "Pre-cached ocean base positions in Float32Array — no GC issue but the array persists for the scene lifetime.",
+      "verdict": "No dispose() method is exposed on BiomeSceneResult. The caller has no cleanup path for the ~196 meshes and their geometries/materials. INCOMPLETE."
+    },
+    "aria_canvas": false,
+    "aria_analysis": "CoastBiome.ts creates no DOM elements — it only produces a THREE.Group. The canvas element and its ARIA attributes (aria-label, role='img') are the responsibility of the scene mount point. No ARIA attributes are set from within this file. Whether the canvas has ARIA attributes depends entirely on the caller. This is expected for a scene module — not a bug in this file specifically, but a gap at the integration level.",
+    "fun_factor_analysis": {
+      "score": 82,
+      "positives": [
+        "3-tier depth layering for trees (near/mid/far) creates strong parallax feel during walk",
+        "Ocean at position (60, -0.5, 0) with animated vertex displacement gives a living coastal horizon",
+        "Menhirs at z=-25 to -13 form a natural discovery zone mid-path",
+        "Celtic moody sky (slate/grey-green) is more atmospheric than generic blue — AAA quality",
+        "4-source lighting setup (ambient + sun shadow + hemi + rim) gives professional depth separation",
+        "Fog plane warm mist (0x8a9a78) seamlessly blends with sky bottom color — excellent art direction",
+        "3 GLB asset slots (cliff, cabin, crystal) offer focal points for the rail walk"
+      ],
+      "negatives": [
+        "No CameraRail defined — walk path must come from caller, risk of mismatch",
+        "Trees all spawn in a circular radius pattern (angle+radius) — may look uniform rather than path-flanking",
+        "No particle system (sea spray, falling leaves) for kinetic life",
+        "No audio hook or ambient sound trigger point"
+      ]
+    },
+    "score": 74,
+    "score_rationale": "flatShading near-perfect except GLB unknowns (-5), no dispose (-8), no CameraRail (-8), ARIA at integration level (-0 as expected), fun factor strong (+0 bonus). GLB flatShading override missing costs medium."
+  },
+
+  "critical_bugs": [
+    {
+      "severity": "HIGH",
+      "file": "LairDensity.ts",
+      "bug": "moon SpotLight added directly to scene (scene.add(moon)) instead of to a group. Orphaned from lair object lifecycle — light persists if lair objects are hidden/removed.",
+      "line": 22,
+      "fix": "Add moon and moon.target to a Group that is then returned and managed by the caller, matching the LairWindow pattern's intent (though LairWindow has the same bug)."
+    },
+    {
+      "severity": "HIGH",
+      "file": "LairWindow.ts",
+      "bug": "windowLight SpotLight added directly to scene (lines 160-161) instead of to group. Same orphan-light pattern as LairDensity. Critical because this light drives the day/night window effect — if the window group is disabled, light keeps shining.",
+      "line": 160,
+      "fix": "Move scene.add(windowLight) and scene.add(windowLight.target) to group.add(windowLight) / group.add(windowLight.target)."
+    },
+    {
+      "severity": "HIGH",
+      "file": "LairDensity.ts",
+      "bug": "ALL 3 material categories (sM shelves, bC books, pM parchments) missing flatShading: true. Breaks the 21/21 flatShading rule established in C47 for the Lair Hub. Shelves and books will render with smooth Phong shading, visually inconsistent with all other lair objects.",
+      "fix": "Add flatShading: true to sM (line 8), each book MeshStandardMaterial (line 16), and pM (line 23)."
+    },
+    {
+      "severity": "HIGH",
+      "file": "LairWindow.ts",
+      "bug": "frameMat (stone window frame) and treeMat (forest silhouettes) both missing flatShading: true. Stone frame with smooth normals will look plastic, not stone. Tree silhouettes lose the flat low-poly aesthetic.",
+      "fix": "Add flatShading: true to frameMat (line 77) and treeMat (line 117)."
+    },
+    {
+      "severity": "MEDIUM",
+      "file": "CoastBiome.ts",
+      "bug": "GLB models loaded via loadGLB() receive no post-load flatShading override. cliff_unified.glb, cabin_unified.glb, crystal_cluster_unified.glb may render with smooth shading, breaking visual consistency with the flat-shaded procedural scene.",
+      "fix": "After gltf.scene.clone(), traverse model.traverse(child => { if (child.isMesh && child.material) child.material.flatShading = true; child.material.needsUpdate = true; })."
+    },
+    {
+      "severity": "MEDIUM",
+      "file": "CoastBiome.ts",
+      "bug": "No dispose() path exposed on BiomeSceneResult. 196 procedural meshes + geometries + materials accumulate with no cleanup. On scene transitions this will cause GPU memory leaks.",
+      "fix": "Add dispose() to BiomeSceneResult interface and implement full geometry/material traversal disposal."
+    },
+    {
+      "severity": "MEDIUM",
+      "file": "LairDensity.ts + LairWindow.ts",
+      "bug": "No dispose mechanism in either lair module. LairWindow creates 6 cloned treeMat materials + 2 shared materials with no cleanup path. LairDensity creates 15 inline book materials.",
+      "fix": "Expose a dispose() callback in the return value or add a separate cleanup export."
+    }
+  ],
+
+  "global_score": 63,
+  "global_score_breakdown": {
+    "LairDensity": 52,
+    "LairWindow": 63,
+    "CoastBiome": 74,
+    "average": 63
+  },
+  "verdict": "FAIL — 4 HIGH severity bugs block AAA certification. LairDensity and LairWindow both have identical orphan-SpotLight pattern and pervasive flatShading omissions. CoastBiome is structurally stronger but missing dispose and GLB flatShading override.",
+
+  "priority_fixes": [
+    {
+      "priority": 1,
+      "action": "Fix SpotLight orphan in LairWindow.ts line 160-161 — move to group.add()",
+      "effort": "5 min"
+    },
+    {
+      "priority": 2,
+      "action": "Fix SpotLight orphan in LairDensity.ts line 22 — requires exposing a group or returning scene ref",
+      "effort": "10 min"
+    },
+    {
+      "priority": 3,
+      "action": "Add flatShading: true to all 3 materials in LairDensity.ts (lines 8, 16, 23)",
+      "effort": "5 min"
+    },
+    {
+      "priority": 4,
+      "action": "Add flatShading: true to frameMat and treeMat in LairWindow.ts (lines 77, 117)",
+      "effort": "5 min"
+    },
+    {
+      "priority": 5,
+      "action": "Add flatShading override after GLB load in CoastBiome.ts (post gltf.scene.clone() traversal)",
+      "effort": "10 min"
+    },
+    {
+      "priority": 6,
+      "action": "Add dispose() to BiomeSceneResult and implement cleanup in CoastBiome.ts",
+      "effort": "30 min"
+    }
+  ]
+}

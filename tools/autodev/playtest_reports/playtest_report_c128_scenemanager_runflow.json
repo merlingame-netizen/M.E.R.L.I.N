@@ -1,0 +1,73 @@
+{
+  "cycle": "C128",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "audited_files": [
+    "web-demo/src/engine/SceneManager.ts",
+    "web-demo/src/main.ts (lines 535-620)",
+    "web-demo/src/ui/OghamPanel.ts",
+    "web-demo/src/game/EffectEngine.ts",
+    "web-demo/src/game/Store.ts (lines 95-391)"
+  ],
+
+  "clock_delta_issue": "PRESENT — Three.js Clock.getDelta() works by computing (Date.now()/1000 - this.oldTime) and then setting this.oldTime = Date.now()/1000. The clock is created once in the SceneManager constructor (line 14) and never reset. When the tab is hidden, stop() fires (line 115) via the visibilitychange handler (line 64). stop() only calls cancelAnimationFrame — it does NOT touch the Clock. When the tab becomes visible again, start() is called (line 64). The running guard at line 100 is clear, so a new animate() closure is created. The FIRST call to clock.getDelta() inside that closure (line 104) computes dt = Date.now()/1000 - oldTime, where oldTime was last set at the final rendered frame before the tab was hidden. If the user hid the tab for 30 seconds, dt on the first resumed frame equals ~30s. Every registered callback receives this dt, so CameraRail.update() and biomeResult.update() will each advance their animation by 30 full seconds in one frame — a visible teleport/jump. A second structural concern: main.ts lines 562-565 register a SECOND visibilitychange listener (onGameVisibility) that also calls sceneManager.start()/stop(). The constructor already registered onVisibilityChange (line 66). When the tab becomes visible, BOTH fire. The running guard in start() prevents a double loop, but it means the constructor listener always wins the race since it is registered first, and the main.ts listener is redundant and creates unnecessary coupling. Fix for the clock jump: insert this.clock.getDelta() (discard result) immediately after the running guard in start() — line 101 — to consume the stale delta and reset oldTime before the animation loop begins. Fix for the duplicate listener: remove onGameVisibility from main.ts lines 562-566 entirely, since SceneManager already handles visibility internally.",
+
+  "new_bugs": [
+    {
+      "id": "C128-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/engine/SceneManager.ts",
+      "line_approx": 102,
+      "description": "Clock baseline not reset on resume from tab-hidden stop(). The first frame after start() is called following a tab-hidden pause receives dt = full hidden duration (potentially 30s+) because clock.getDelta() is called inside the animate() closure without first discarding the stale delta. CameraRail and biome animations will jump by the full hidden duration on that single frame.",
+      "fix": "Add `this.clock.getDelta();` on a new line immediately after `this.running = true;` (line 101) and before the `const animate = () => {` closure. This discards the accumulated delta and resets oldTime to now, so the first real frame gets a normal sub-16ms dt."
+    },
+    {
+      "id": "C128-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts",
+      "line_approx": 562,
+      "description": "Duplicate visibilitychange listener for SceneManager. The SceneManager constructor (SceneManager.ts line 66) already registers onVisibilityChange which calls stop()/start(). main.ts lines 562-566 register a second listener (onGameVisibility) doing the same. Both fire on every visibility event. While the running guard prevents a double render loop, the duplicate listener is dead weight and is removed at line 608 only after gameLoop resolves, creating an asymmetric add/remove pair if gameLoop throws. Also slightly misleading in code review.",
+      "fix": "Remove the onGameVisibility listener block in main.ts (lines 562-566 and line 608 removeEventListener call). SceneManager handles this natively."
+    },
+    {
+      "id": "C128-03",
+      "severity": "LOW",
+      "file": "web-demo/src/ui/OghamPanel.ts",
+      "line_approx": 109,
+      "description": "Locked ogham slots do not announce lock reason in aria-label. Line 109 sets aria-label to '{name} — {description}' unconditionally. Screen readers cannot tell a locked slot (rep 50 required) from a cooldown slot or a usable slot — the visual lock icon and 'rep 50' text in infoEl (line 147) are inside a disabled button, which some AT implementations may skip. The slot.title tooltip (line 149) IS set correctly for locked oghams but title is not announced by default in most screen readers.",
+      "fix": "For locked oghams, append the lock reason to the aria-label: `slot.setAttribute('aria-label', \\`${spec.name} — verrouille, reputation ${spec.branch} 50 requise\\`)`. For cooldown oghams, append: `slot.setAttribute('aria-label', \\`${spec.name} — recharge dans ${cooldown} cartes\\`)`."
+    },
+    {
+      "id": "C128-04",
+      "severity": "LOW",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line_approx": 81,
+      "description": "applyEffects() does not guard against run being inactive. If called after endRun() (e.g. via an async card resolution resolving after a death_drain at step 3), it will still call store.getState().damageLife() / addReputation() etc. and mutate an already-ended run's state. In practice the gameLoop break guards prevent this, but the function itself has no defensive check. There is no state corruption for the current run since endRun() sets active:false and the loop checks that, but it could corrupt meta.factionRep via ADD_REPUTATION if the async ordering is off.",
+      "fix": "Add a guard at the top of applyEffects(): `if (!store.getState().run.active) return { applied: [], rejected: effects.slice() };`"
+    },
+    {
+      "id": "C128-05",
+      "severity": "LOW",
+      "file": "web-demo/src/game/Store.ts",
+      "line_approx": 374,
+      "description": "checkDeath() reads life <= 0 via get().run.life, which is correct and idempotent. However endRun() does NOT reset life to 0 — life stays at 0 in the run state after death. If any code calls checkDeath() during the showRunSummary async window (after endRun() but before the gameLoop break), it returns true again. The current gameLoop structure prevents double-fire via the savedThisRun / savedRunEnd guard (lines 636-641) and the run.active check in the while condition, so there is no double endRun() risk. Low severity because the existing guards cover it, but checkDeath() itself is not idempotent-safe without those guards.",
+      "fix": "No immediate action required. Optional: have checkDeath() also check run.active: `return get().run.active && get().run.life <= 0;` to make it self-guarding."
+    }
+  ],
+
+  "summary": {
+    "total_issues": 5,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 3,
+    "notes": [
+      "C128-01 is the only HIGH: clock jump on tab-resume is real and reproducible. Fix is a one-liner in start().",
+      "C128-02 is MEDIUM: duplicate visibility listener is harmless today but fragile and should be cleaned up.",
+      "C128-03, C128-04, C128-05 are LOWs, consistent with the deferred list. No new CRITICAL found.",
+      "startRun() correctly rebuilds a fresh run state from buildDefaultRun() and sets active:true — no reset gap found.",
+      "endRun() correctly sets active:false and clears activeOgham + oghamCooldowns. No double-fire risk with savedThisRun guard.",
+      "EffectEngine.applyEffects() handles empty arrays correctly (for loop simply does not iterate) and malformed strings are rejected via parseEffect() returning ok:false.",
+      "OghamPanel.hideOghamPanel() correctly resolves any pending Promise to avoid async deadlock — BUG-C58-03 pattern is solid."
+    ]
+  }
+}

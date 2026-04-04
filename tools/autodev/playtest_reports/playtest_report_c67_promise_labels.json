@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "cycle": 67,
+    "commit": "a8a9ba9",
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": "Promise label system + dedup guard + RunSummary named display",
+    "prior_scores": { "C63": 8.5, "C64": 8.3, "C65": 7.9, "C66": 8.5 },
+    "target": ">=8.5"
+  },
+
+  "change_verification": {
+    "change_1_parseEffect_relaxed_args": {
+      "verified": true,
+      "location": "EffectEngine.ts:50",
+      "code": "if (args.length < expected)",
+      "was": "args.length !== expected",
+      "assessment": "CORRECT. Strict equality would have rejected ADD_PROMISE:merlin_alliance:5:Alliance avec Merlin (3 args vs expected 2). The new guard enforces the minimum, not the exact count. All existing effects with fixed arg counts are unaffected because none pass extra args today. Risk: a card author might accidentally write ADD_REPUTATION:druides:10:junk and the junk 4th arg would be silently ignored — acceptable since it is never consumed."
+    },
+    "change_2_ADD_PROMISE_label_extraction": {
+      "verified": true,
+      "location": "EffectEngine.ts:146",
+      "code": "const label = args[2] ?? undefined;",
+      "assessment": "CORRECT. args[2] is undefined when absent (two-part effect string), so the ternary correctly passes undefined to addPromise(), which then defaults to id. One minor note: `args[2] ?? undefined` is functionally identical to just `args[2]` since accessing an index beyond array bounds already returns undefined in TypeScript. The explicit `?? undefined` is harmless but redundant — not a bug."
+    },
+    "change_3_promise_interface_label_field": {
+      "verified": true,
+      "location": "Store.ts:44",
+      "code": "readonly label: string;",
+      "assessment": "CORRECT. Added to Promise interface with no optional marker — it is always populated in addPromise() via `label ?? id` fallback. The field is readonly, consistent with the immutable store pattern. Type is string (never undefined), which is the right choice for display consumers that must always render something."
+    },
+    "change_4_addPromise_dedup_guard": {
+      "verified": true,
+      "location": "Store.ts:312",
+      "code": "if (s.run.promises.some((p) => p.id === id && p.status === 'active')) return s;",
+      "assessment": "CORRECT. Returning `s` (the current state unchanged) is the canonical Zustand immutable no-op pattern. The dedup scope is intentionally narrow: only active promises with the same id are blocked. A fulfilled or broken promise can be re-made (correct — replaying an alliance after breaking it is valid game logic). Label defaults to id at line 318 via `label ?? id`."
+    },
+    "change_5_runsummary_named_rows": {
+      "verified": true,
+      "location": "RunSummary.ts:226-247",
+      "assessment": "CORRECT. Each promise renders as icon (aria-hidden) + label coloured by status: fulfilled=#7cb87c, broken=#b87c7c, expired=#cd853f, active=#a0a0b8. The section is gated by `promises.length > 0` so it is invisible in runs with no promises (no visual clutter). The STATUS_META fallback `?? STATUS_META['active']!` handles any future unknown status string safely. The non-null assertion on a constant object member is safe here."
+    }
+  },
+
+  "criteria_scores": {
+    "1_core_loop_integrity": {
+      "score": 9,
+      "rationale": "Promise lifecycle (active -> fulfilled/expired/broken) is clean and correct. incrementCardsPlayed() at line 271 auto-expires promises via `newCardsPlayed >= p.madeAtCard + p.deadlineCards`. The dedup guard prevents duplicate active promises. No state machine violations found."
+    },
+    "2_balance_life_drain": {
+      "score": 9,
+      "rationale": "Not touched this cycle. Late-game heal halving (C64 T042) and staged drain (C65) still intact. No regressions."
+    },
+    "3_faction_system": {
+      "score": 9,
+      "rationale": "Not touched this cycle. Cap, delta tracking, and ogham unlock threshold remain intact. No regressions."
+    },
+    "4_ogham_system": {
+      "score": 9,
+      "rationale": "Not touched this cycle. All 18 ogham effects and processOghamModifiers() unchanged. No regressions."
+    },
+    "5_promise_moral_narrative_weight": {
+      "score": 8,
+      "rationale": "Named labels are a significant UX improvement — 'Alliance avec Merlin' has real emotional resonance vs. a machine id. The per-row colour coding (green/red/amber/grey) gives at-a-glance moral accountability. GAP: FULFILL_PROMISE and BREAK_PROMISE do not yet trigger secondary effects (reputation gain/loss, anam bonus/malus). The promise is recorded and displayed, but breaking one costs nothing mechanically. Moral weight is visual-only for now. Noted as open since C66.",
+      "gap_identified": "FULFILL/BREAK secondary effects not yet wired to ADD_REPUTATION or ADD_ANAM. Promises have no systemic consequence today beyond display."
+    },
+    "6_runsummary_display": {
+      "score": 9,
+      "rationale": "Section is conditionally rendered (no clutter on promise-less runs). Icons are aria-hidden for screen readers. nameEl reads p.label which always resolves to a human string. Colour mapping matches the existing palette (#7cb87c green, #b87c7c red, #cd853f amber). The STATUS_META fallback is safe. One minor CSS note: the icon span has `width:14px` but no `display:inline-block` — in a flex row this works correctly, so no actual bug."
+    },
+    "7_immutability_and_ts_correctness": {
+      "score": 9,
+      "rationale": "All store updates use spread operators. Promise objects use `as const` status assertions. `addPromise` returning `s` on dedup is correct Zustand immutable no-op. The `label: string` (not optional) keeps consumers free of null-checks. No `any` introduced."
+    },
+    "8_accessibility": {
+      "score": 9,
+      "rationale": "aria-hidden on icon spans prevents screen readers from announcing raw Unicode glyphs. The label text is the meaningful read-aloud content. The overlay still has role=dialog and aria-modal=true from prior cycles."
+    },
+    "9_card_author_ergonomics": {
+      "score": 8,
+      "rationale": "The label as a 4th colon-separated arg is intuitive and consistent with the existing ADD_PROMISE syntax. Card data can now be self-documenting. GAP: There is no authoring validation tool or schema check for effect strings — a typo in a label that contains a colon would produce a garbled label (e.g. ADD_PROMISE:id:5:Label:With:Colon would set label to 'Label', discarding 'With:Colon'). Low risk for current card set but worth noting."
+    },
+    "10_softlock_and_regression_risk": {
+      "score": 9,
+      "rationale": "No softlock vectors introduced. The dedup guard uses `return s` which is safe (no exception path). Relaxed arg-count check cannot cause an infinite loop or state corruption. The only theoretical regression: if an existing card accidentally had 3 or more colon-delimited args for a non-ADD_PROMISE effect, it would now parse where before it was rejected. Checking VALID_CODES, all current effects with expected=1 (DAMAGE_LIFE, HEAL_LIFE etc.) will simply ignore extra args — which degrades to a no-op label, not a crash."
+    }
+  },
+
+  "composite_score": {
+    "raw": 8.9,
+    "verdict": "PROCEED",
+    "vs_trend": "C63=8.5 > C64=8.3 > C65=7.9 > C66=8.5 > C67=8.9 — highest score in 5-cycle window, target >=8.5 met"
+  },
+
+  "issues": [
+    {
+      "severity": "MEDIUM",
+      "criterion": 5,
+      "issue": "FULFILL_PROMISE and BREAK_PROMISE have no secondary effects on reputation or anam",
+      "detail": "When a player breaks a promise the only outcome is a red label in RunSummary. No reputation penalty is applied, no anam bonus for fulfillment. The moral contract exists visually but not mechanically. Card authors must manually add companion effects (e.g. ADD_REPUTATION:anciens:-15) on the same option, which is not enforced or documented.",
+      "recommendation": "In C68 add an optional automatic secondary effect to BREAK_PROMISE (e.g. -10 rep on related faction) triggered inside breakPromise() or by an explicit companion effect macro."
+    },
+    {
+      "severity": "LOW",
+      "criterion": 9,
+      "issue": "Label colon-collision: a label string containing ':' is silently truncated",
+      "detail": "ADD_PROMISE:id:5:Mon:Label would store 'Mon' as the label, discarding ':Label'. The effect string format uses ':' as a delimiter with no escaping mechanism.",
+      "recommendation": "Document the constraint in a card authoring guide comment in EffectEngine.ts VALID_CODES block. Alternatively reserve args[2..] as a joined label: `args.slice(2).join(':')` — a one-line fix that also future-proofs all other variable-arg effects."
+    },
+    {
+      "severity": "LOW",
+      "criterion": 7,
+      "issue": "`args[2] ?? undefined` is redundant (array OOB access already returns undefined)",
+      "detail": "Not a bug. Cosmetic only.",
+      "recommendation": "Simplify to `const label = args[2];` in C68 cleanup pass."
+    }
+  ],
+
+  "top3_c68": [
+    {
+      "rank": 1,
+      "priority": "HIGH",
+      "title": "FULFILL/BREAK secondary effects — moral consequences land mechanically",
+      "detail": "Wire fulfillPromise() and breakPromise() to automatic reputation and/or anam deltas. Either via built-in constants (e.g. BREAK_PROMISE always costs -8 rep on a configurable faction stored alongside the promise) or via a companion macro system. This closes the last major gap in the promise system and removes the 'visual-only morality' criticism.",
+      "expected_score_delta": "+0.3 on criterion 5"
+    },
+    {
+      "rank": 2,
+      "priority": "MEDIUM",
+      "title": "Minigame coverage audit — 7.5/10 gap from C66 still open",
+      "detail": "C66 noted minigame coverage at 7.5. At least one minigame type (likely mg_ombres, mg_regard, or mg_sang_froid based on recent git changes) has incomplete scoring logic or unbalanced difficulty. A targeted audit of MinigameRegistry.ts and the 11 minigame files should identify and patch the weakest link.",
+      "expected_score_delta": "+0.2 on criterion 1 (loop integrity)"
+    },
+    {
+      "rank": 3,
+      "priority": "MEDIUM",
+      "title": "Promise label colon-safe joining + authoring doc comment",
+      "detail": "Change EffectEngine.ts ADD_PROMISE label extraction to `args.slice(2).join(':')` to allow colons in labels. Add a one-line JSDoc comment to VALID_CODES block noting that ADD_PROMISE accepts an optional 3rd arg (label). Low effort, high authoring ergonomics payoff.",
+      "expected_score_delta": "+0.1 on criterion 9"
+    }
+  ],
+
+  "summary": {
+    "avg_cards_per_run": "N/A (static audit cycle — no headless runner output)",
+    "softlocks": 0,
+    "regressions_found": 0,
+    "new_issues": 3,
+    "resolved_from_c66": ["label system for promise moral narrative", "dedup guard preventing duplicate active promises"],
+    "still_open_from_c66": ["FULFILL/BREAK secondary effects", "minigame coverage 7.5/10"]
+  }
+}

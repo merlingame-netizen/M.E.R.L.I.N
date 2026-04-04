@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "report_id": "c145_neg_echo_main_hud",
+    "generated": "2026-04-04T00:00:00Z",
+    "audited_files": [
+      "web-demo/src/minigames/mg_negociation.ts",
+      "web-demo/src/minigames/mg_echo.ts",
+      "web-demo/src/main.ts",
+      "web-demo/src/ui/HUD.ts"
+    ],
+    "cycle": 145
+  },
+
+  "neg_03_maxcombo_hud": {
+    "verdict": "CONFIRMED — maxCombo is NOT displayed in the HUD or canvas during gameplay",
+    "detail": {
+      "maxCombo_definition": "Line 74: `private maxCombo = 0;`",
+      "maxCombo_reset": "Line 204: `this.maxCombo = 0;` (in setup)",
+      "maxCombo_update_onPointerDown": "Line 298: `this.maxCombo = Math.max(this.maxCombo, this.comboCount);`",
+      "maxCombo_update_onKeyDown": "Line 113: `this.maxCombo = Math.max(this.maxCombo, this.comboCount);`",
+      "maxCombo_used_in_score": "Line 336: `const comboBonus = Math.min(25, this.maxCombo * 5);`",
+      "canvas_hud_combo_display": "Lines 393-398 draw `Combo x${this.comboCount}` (LIVE combo) only when comboCount > 1 — maxCombo is never rendered",
+      "cap_visibility": "The 25pt cap (Math.min(25, maxCombo*5)) is invisible to the player. After 5 consecutive faction words (maxCombo=5), additional streak produces zero extra score silently.",
+      "statusEl_content": "statusEl (seqEl, line 185) only shows the word sequence — `Sequence: [mot] mot2 ...`. It never shows combo or maxCombo.",
+      "severity": "MEDIUM",
+      "recommendation": "Render maxCombo peak or remaining headroom (e.g., `Best: x${this.maxCombo}/5`) in the top-left area already used for `Mots: N` counter, or add a `Max combo: ${this.maxCombo}` line to the seqEl below the canvas."
+    }
+  },
+
+  "neg_01_immutability_fix_c143": {
+    "verdict": "CONFIRMED FIXED — both handlers use map(), spawnWord() cap uses filter(!w.picked)",
+    "detail": {
+      "onPointerDown_line_290": "this.scrollingWords = this.scrollingWords.map((w, i) => i === idx ? { ...w, picked: true, fadeAlpha: 1 } : w);",
+      "onKeyDown_line_109": "this.scrollingWords = this.scrollingWords.map((w, i) => i === target.i ? { ...w, picked: true, fadeAlpha: 1 } : w);",
+      "spawnWord_cap_line_231": "if (this.scrollingWords.filter((w) => !w.picked).length >= this.maxWords) return;",
+      "render_loop_line_359": "this.scrollingWords = this.scrollingWords.map((sw) => ({ ...sw, y: ..., fadeAlpha: ... }));",
+      "assessment": "NEG-01 fix is correct and consistent across all three mutation sites."
+    }
+  },
+
+  "echo_02_roundoutcomes_push_lines": {
+    "verdict": "CONFIRMED — roundOutcomes.push() appears at exactly 4 sites, all correct",
+    "detail": {
+      "hit_in_onClick": "Line 169: `this.roundOutcomes.push(true);` — comment: C103: record hit",
+      "miss_in_onClick": "Line 173: `this.roundOutcomes.push(false);` — comment: C103: record miss",
+      "hit_in_onKeyDown": "Line 205: `this.roundOutcomes.push(true);` — comment: C103: record hit",
+      "miss_in_onKeyDown": "Line 209: `this.roundOutcomes.push(false);` — comment: C103: record miss",
+      "timeout_miss_in_render": "Line 303: `this.roundOutcomes.push(false);` — comment: C103: timeout = miss",
+      "total_push_sites": 5,
+      "note": "All 5 push() calls are correctly placed. push() is appropriate here (per-round accumulation into a results array, not a state struct that requires spread). No structural bug.",
+      "NEW_BUG_noted": "See NEW-ECHO-01 below — roundOutcomes array length can exceed totalRounds if a race between timeout and onClick/onKeyDown fires both. See analysis."
+    }
+  },
+
+  "echo_03_dead_zone_threshold": {
+    "verdict": "NOT FIXED — dead zone is still 30, not yet reduced to 20",
+    "detail": {
+      "file": "mg_echo.ts",
+      "function": "getClickedQuadrant",
+      "line": 231,
+      "code": "if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return -1;",
+      "current_value": 30,
+      "prior_audit_target": 20,
+      "impact": "The 30px dead zone at canvas center (canvasW=380, canvasH=340) blocks a 60x60 pixel area (15.8% of total canvas area) from registering any quadrant. On mobile (canvas scaled down via max-width:100%), this corresponds to a proportionally larger finger-tap dead zone. Clicks near center report -1 and are silently ignored.",
+      "severity": "MEDIUM"
+    }
+  },
+
+  "store_05_useogham_call_site_main_ts": {
+    "verdict": "NO GUARD — useOgham() is called without a run.active check",
+    "detail": {
+      "call_site_line": 698,
+      "code": "state().useOgham(oghamChoice);",
+      "surrounding_context": {
+        "line_693": "const preSelected = state().run.activeOgham;",
+        "line_694": "const oghamChoice = preSelected || await showOghamPanel();",
+        "line_697": "if (oghamChoice) {",
+        "line_698": "  state().useOgham(oghamChoice);",
+        "line_699": "  oghamResult = applyOghamEffect(oghamChoice);",
+        "line_700": "  updateHUD();"
+      },
+      "run_active_guard_present": false,
+      "analysis": "The `if (oghamChoice)` on line 697 guards against falsy/empty oghamChoice strings, but does NOT check `state().run.active`. The ogham phase (lines 691-702) runs after the life drain check at the top of the loop — if life reaches 0 but the death branch path involves a race, the ogham could theoretically fire. More critically: the pre-selected ogham check at line 693 reads `state().run.activeOgham` directly — if a stale activeOgham persists across run boundaries (acknowledged in lines 607-610 of main.ts), useOgham() could fire at the start of a new loop iteration before the run is truly ready.",
+      "comment_in_codebase": "Lines 607-610 explicitly acknowledge the stale-ogham risk: 'the stale ogham persists and fires' — this is a known partial fix area.",
+      "severity": "MEDIUM"
+    }
+  },
+
+  "ogham_effect_chain_coverage": {
+    "verdict": "reveal_all_options IS handled; predict_next IS handled with showPredictToast; coverage is incomplete for edge cases",
+    "detail": {
+      "reveal_all_options_line": 775,
+      "reveal_all_options_code": "const revealEffects = oghamResult?.applied === true && oghamResult.effectType === 'reveal_all_options';",
+      "reveal_all_options_passed_to_showCard": "Line 776: `const chosenOption = await showCard(card, { revealEffects });`",
+      "predict_next_line": 764,
+      "predict_next_code": "} else if (oghamResult.effectType === 'predict_next') { ... showPredictToast(predictedField); }",
+      "showPredictToast_defined_at": "Line 1114",
+      "full_switch_cases_handled": [
+        "full_reroll (line 746)",
+        "force_twist (line 746, same branch as full_reroll)",
+        "regenerate_all_options (line 748)",
+        "replace_worst_option (line 751)",
+        "predict_next (line 764)",
+        "reveal_all_options (line 775, separate flag path)"
+      ],
+      "gap": "reveal_all_options is NOT inside the if-else chain at lines 746-769 — it is computed separately at line 775. This means if oghamResult.effectType === 'reveal_all_options', the if-else chain falls through without executing any mutation, which is correct. However there is no explicit else-if for reveal_all_options inside the chain, making the logic implicit and fragile if a new effectType is added."
+    }
+  },
+
+  "hud_teardown_predict_toast": {
+    "verdict": "CONFIRMED FIXED — teardownHUD() removes merlin-predict-toast",
+    "detail": {
+      "line": 345,
+      "code": "document.getElementById('merlin-predict-toast')?.remove();",
+      "comment": "C140/BUG-C140-01: predict toast lives on document.body — remove on run end to avoid z-index:65 overlap on RunSummary",
+      "ogham_badge_cleanup": "Lines 340-343: _oghamBadgeEl, _oghamRuneEl, _oghamNameEl, _oghamMultEl all set to null in teardownHUD(). The DOM element itself (ogham-badge div) is NOT removed from the DOM — only the cached reference is nulled. The element persists in the HUD div and will be reused by the next initHUD() call via buildOghamBadge() idempotency guard (`if (!hud || document.getElementById('ogham-badge')) return`). This is intentional and correct.",
+      "hud_score_combo_display": "HUD.ts contains no reference to 'combo', 'maxCombo', or 'negociation'. The HUD shows life, factions, anam, currency, biome name, cards count, and ogham badge — no minigame score integration during active minigame play."
+    }
+  },
+
+  "new_bugs_found": [
+    {
+      "id": "NEW-ECHO-01",
+      "severity": "MEDIUM",
+      "file": "mg_echo.ts",
+      "title": "roundOutcomes double-push race on timeout boundary",
+      "description": "In the render loop (line 300-308), when phaseTimer reaches 0 in the 'answer' phase and `!this.answered`, the code pushes `false` into roundOutcomes and sets `this.answered = true`. However, onClick and onKeyDown only guard with `if (this.phase !== 'answer' || this.answered)`. There is a one-frame window where: (1) phaseTimer hits 0 in render(), (2) `this.answered = true` and `roundOutcomes.push(false)` execute, (3) BUT the phase transition to 'feedback' does not happen until the SAME frame's render() continues. If the player's pointerdown event fires between the RAF callback scheduling and the next tick, the answered guard protects correctly. However if a queued event fires within the same microtask batch before `this.phase = 'feedback'` is set, a second push could occur. Risk is low on desktop but present on high-frequency touch input.",
+      "recommendation": "Set `this.phase = 'feedback'` BEFORE `roundOutcomes.push(false)` in the timeout branch at line 303-305, so the phase guard in onClick blocks re-entry immediately."
+    },
+    {
+      "id": "NEW-NEG-01",
+      "severity": "LOW",
+      "file": "mg_negociation.ts",
+      "title": "Off-screen word filter uses only y > -20, allows words scrolled far above canvas to accumulate in array",
+      "description": "Lines 366-368: `this.scrollingWords = this.scrollingWords.filter((sw) => sw.y > -20 && sw.fadeAlpha > 0);` The y threshold is -20px, which is intentional to allow smooth top-fade. However picked words that have fully faded (fadeAlpha <= 0) ARE filtered correctly. The risk is that picked words fading slowly (fadeAlpha -= dt * 3, so ~0.33s to fully fade) can accumulate in the array during burst picking, potentially causing spawnWord() to be briefly blocked even though the filter(!w.picked) cap at line 231 mitigates this. No actual bug, but the interaction between slow fade rate and cap check means the effective usable pool can be slightly below maxWords during high pick-rate play.",
+      "recommendation": "Minor — no code change required, the NEG-02 fix (filter(!w.picked) in spawnWord cap) already addresses the functional impact."
+    },
+    {
+      "id": "NEW-MAIN-01",
+      "severity": "MEDIUM",
+      "file": "main.ts",
+      "title": "predict_next ogham generates a new FastRoute card for preview but that preview card's biome field is unverified",
+      "description": "Lines 766-768: `const nextPreview = generateFastRouteCard(state().run.biome); const predictedField = nextPreview.options[1]?.field ?? nextPreview.options[0]?.field ?? '?';` The predict preview generates a FRESH random card — it has no relationship to the actual next card the player will see (which is LLM-generated or a different FastRoute call). The predicted field is therefore statistically random and provides false information to the player with high probability when LLM cards are active. This is a gameplay accuracy bug: the Ailm ogham promises to preview the next field, but delivers a random field instead.",
+      "recommendation": "Either (a) store the predicted field in run state and force the NEXT card's field to match it, or (b) change the toast copy to 'Voici un champ possible' rather than implying guaranteed prediction, or (c) document this as intended probabilistic behavior in GAME_DESIGN_BIBLE.md."
+    },
+    {
+      "id": "NEW-HUD-01",
+      "severity": "LOW",
+      "file": "HUD.ts",
+      "title": "ogham-badge-style <style> element is never removed from document.head",
+      "description": "Line 262: `style.id = 'ogham-badge-style'; document.head.appendChild(style);` inside buildOghamBadge(), guarded by `if (!document.getElementById('ogham-badge-style'))`. teardownHUD() does NOT remove this style element. Across multiple run cycles the element is correctly not re-added (guard works), but if the DOM is ever reset (e.g., full page reload in SPA context), the style persists. Low risk in current architecture but worth noting for future SSR/hydration scenarios.",
+      "recommendation": "Add `document.getElementById('ogham-badge-style')?.remove();` to teardownHUD() for symmetry, or leave as-is given keyframe CSS is idempotent."
+    }
+  ],
+
+  "overall_assessment": {
+    "score_out_of_10": 7.5,
+    "summary": "The C143 immutability fixes (NEG-01) are correctly applied across all three mutation sites. The ECHO-02 push() sites are all present and correctly placed (5 total). teardownHUD() correctly removes the predict toast (C141 fix confirmed). However three prior-audit issues remain open: NEG-03 (maxCombo 25pt cap invisible to player — MEDIUM), ECHO-03 (dead zone still 30px not 20px — MEDIUM), and STORE-05 (no run.active guard on useOgham() — MEDIUM). Two new non-trivial bugs are found: NEW-MAIN-01 (predict_next ogham gives random field, not actual next-card field — MEDIUM) and NEW-ECHO-01 (theoretical double-push race on timeout boundary — MEDIUM). Code quality is high overall with good use of immutable patterns and cached DOM refs.",
+    "open_issues_count": 5,
+    "critical_count": 0,
+    "high_count": 0,
+    "medium_count": 5,
+    "low_count": 2
+  }
+}

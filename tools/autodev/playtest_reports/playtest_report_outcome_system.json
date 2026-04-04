@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-04-03T00:00:00Z",
+  "agent": "merlin-ai-playtester",
+  "target_file": "web-demo/src/minigames/MinigameBase.ts",
+  "system_analyzed": "4-level outcome overlay (finish() flow)",
+  "score_global": 5.5,
+  "score_label": "RISQUE — 2 bugs CRITIQUE/HIGH bloquants en production mobile et multi-canvas",
+
+  "bugs": [
+    {
+      "id": "BUG-01",
+      "severity": "CRITIQUE",
+      "title": "finish() : querySelector('canvas') selectionne le mauvais canvas si le container en a plusieurs",
+      "location": "MinigameBase.ts line 208",
+      "code_ref": "const canvas = this.container.querySelector('canvas'); if (canvas) canvas.style.opacity = '0.25';",
+      "description": "querySelector retourne le PREMIER canvas du container par ordre DOM. Dans mg_combat_rituel, le container peut inclure des sous-divs qui contiendront eux-memes des canvas (ex : canvas de debugg, canvas de particules futurs). Plus grave : si un minigame cree plusieurs canvas (trail, main, HUD), seul le premier est dimme. Le joueur voit le game actif a pleine opacite en arriere-plan de l'overlay.",
+      "reproduction": "Minigame avec 2 canvas dans le container → seul canvas[0] est dimme → canvas[1] reste visible plein ecran derriere l'overlay semi-transparent.",
+      "fix_proposed": "Remplacer querySelector par querySelectorAll et appliquer l'opacity a tous : this.container.querySelectorAll<HTMLCanvasElement>('canvas').forEach(c => { c.style.opacity = '0.25'; }). Restaurer opacity='1' sur tous dans cleanup() avant container.innerHTML=''."
+    },
+    {
+      "id": "BUG-02",
+      "severity": "CRITIQUE",
+      "title": "Race condition : cleanup() appelle container.innerHTML='' pendant que l'overlay attend son setTimeout(260ms)",
+      "location": "MinigameBase.ts lines 159-214",
+      "code_ref": "showOutcomeOverlay(...).then(() => { this.cleanup(); ... }); // cleanup apres overlay OK\n// MAIS : si un sous-classe appelle cleanup() manuellement avant finish() se termine :",
+      "description": "La sequence correcte est : finish() → overlay(2200ms) → cleanup() → resolve(). MAIS : si une sous-classe override cleanup() et l'appelle dans un timeout independant (ex : minigame qui a sa propre garde-fou contre les runs infinis), container.innerHTML='' efface l'overlay en cours de fade-out. Le Promise overlay ne resolve jamais car overlay.remove() s'execute sur un noeud deja detache (pas d'erreur, mais resolve() de showOutcomeOverlay n'est JAMAIS appele). Consequence : this.resolve?.(result) n'est jamais appele — le minigame ne se termine jamais. SOFTLOCK.",
+      "reproduction": "Override cleanup() dans une sous-classe avec un setTimeout(this.cleanup.bind(this), 2000) → container vide avant la fin de l'overlay → Promise jamais resolue.",
+      "fix_proposed": "Ajouter un guard dans showOutcomeOverlay : verifier que overlay.isConnected avant d'appeler resolve() dans le setTimeout interne. Ou exposer un AbortSignal dans la signature pour permettre l'annulation propre. Minimum : documenter dans JSDoc que cleanup() NE DOIT PAS etre appelee par les sous-classes — seul finish() appelle cleanup()."
+    },
+    {
+      "id": "BUG-03",
+      "severity": "HIGH",
+      "title": "WebAudio bloque par autoplay policy mobile — pas de fallback visible, AudioContext reste suspendu",
+      "location": "MinigameBase.ts lines 66-97",
+      "code_ref": "const ctx = new AudioContext(); // Safari iOS / Chrome Android : state = 'suspended' sans user gesture",
+      "description": "Sur iOS Safari et Chrome Android, new AudioContext() cree un contexte en etat 'suspended' si aucun user gesture recent n'existe. Les appels osc.start() et osc.stop() sont mis en file mais le son ne joue jamais. Le setTimeout de fermeture ctx.close() s'execute quand meme apres (freqs.length * dur * 0.6 + dur + 0.2) * 1000 ms. Le contexte suspendu n'est jamais resolu. Chaque appel a finish() cree un AudioContext orphelin suspendu en memoire. Sur une session de 20+ cartes, cela represente 20+ AudioContext non fermes = fuite memoire progressive sur mobile.",
+      "reproduction": "Ouvrir le jeu sur iPhone Safari, jouer 5 minigames → DevTools > Memory > AudioContext count augmente de 5, aucun son joue.",
+      "fix_proposed": "Avant de jouer les tones, verifier ctx.state et appeler ctx.resume() : if (ctx.state === 'suspended') { ctx.resume().catch(() => {}); }. Ajouter une guard : if (ctx.state === 'closed') return; avant tout osc.start(). Pour la fuite memoire, stocker le ctx dans un try/finally et appeler ctx.close() dans le catch du resume si impossible."
+    },
+    {
+      "id": "BUG-04",
+      "severity": "HIGH",
+      "title": "getComputedStyle(container).position === 'static' retourne '' en environnement jsdom/headless — crash silencieux + positionnement overlay casse",
+      "location": "MinigameBase.ts line 148",
+      "code_ref": "if (getComputedStyle(container).position === 'static') { container.style.position = 'relative'; }",
+      "description": "Dans jsdom (Vitest, Jest), getComputedStyle ne simule pas les valeurs par defaut CSS. Pour un element sans style inline, position retourne '' (chaine vide) et non 'static'. La condition === 'static' est donc FALSE, container.style.position n'est jamais force a 'relative'. L'overlay est cree avec position:absolute mais le container reste position:static (valeur navigateur reelle en prod) ou '' (jsdom). En navigateur reel sans CSS applique, l'overlay se positionne par rapport au premier parent positionne remontant le DOM — potentiellement le <body>. L'overlay couvre toute la page plutot que le container du minigame.",
+      "reproduction": "En test unitaire jsdom : creer un container div non style, appeler showOutcomeOverlay → container.style.position reste '' → overlay absolu flotte au mauvais endroit. En production si le container parent est body : overlay pleine page.",
+      "fix_proposed": "Remplacer la condition par : if (!['relative','absolute','fixed','sticky'].includes(getComputedStyle(container).position)) — cela couvre '' ET 'static'. Ou plus simple et sans ambiguite : forcer inconditionnellement container.style.position = container.style.position || 'relative'; qui ne mute pas si deja positionne."
+    },
+    {
+      "id": "BUG-05",
+      "severity": "MEDIUM",
+      "title": "pointer-events:none sur l'overlay n'empeche pas les inputs du minigame pendant les 2.2s d'affichage",
+      "location": "MinigameBase.ts lines 109-115 + mg_combat_rituel.ts (mousemove handler)",
+      "code_ref": "pointer-events:none; // sur l'overlay seulement\n// le canvas sous-jacent reste interactif (mousemove, mousedown actifs)",
+      "description": "L'overlay a pointer-events:none pour ne pas bloquer les clics sous-jacents — c'est intentionnel pour la transparence visuelle. MAIS la consequence est que le joueur peut continuer a deplacer sa souris et interagir avec le canvas dimme (opacity:0.25) pendant 2.2 secondes. Dans mg_combat_rituel, le handler mousemove met a jour playerX/playerY en continu meme pendant l'overlay. Si le joueur deplace la souris apres avoir vu 'MAITRISE', et qu'un obstacle touche le curseur dans cette fenetre, hit=true est positionne, et survivalTime/centerTime changent — mais le score est DEJA calcule (finish() a deja appele scoreToOutcome). Pas de double-scoring, mais : (1) les animations du canvas continuent a tourner (animFrame, timerInterval), (2) le canvas tente de se re-rendre pendant l'overlay, (3) si le timer du minigame arrive a 0 pendant l'overlay, un second appel a finish() peut etre emis par certains minigames.",
+      "reproduction": "Dans mg_combat_rituel, si le joueur touche un obstacle exactement au moment ou finish() est appele et que l'obstacle continue de bouger pendant l'overlay — le canvas se rerend 2.2s de plus, consommant CPU inutilement. Si un minigame a un timer independant qui appelle finish() a expiration, double-finish possible.",
+      "fix_proposed": "Dans finish() de MinigameBase, AVANT showOutcomeOverlay, appeler une methode protected pauseGameLoop() que les sous-classes implementent pour stopper leurs RAF/intervals. Ou plus simple : ajouter un flag this.finished = true en debut de finish(), et verifier if (this.finished) return; en debut de toute methode qui peut appeler finish() (timer callback, collision handler)."
+    }
+  ],
+
+  "summary_matrix": [
+    { "bug": "BUG-01", "severity": "CRITIQUE", "impact": "Visuel casse sur multi-canvas", "effort_fix": "LOW" },
+    { "bug": "BUG-02", "severity": "CRITIQUE", "impact": "Softlock potentiel — Promise jamais resolue", "effort_fix": "MEDIUM" },
+    { "bug": "BUG-03", "severity": "HIGH",     "impact": "Fuite memoire mobile + pas de son", "effort_fix": "LOW" },
+    { "bug": "BUG-04", "severity": "HIGH",     "impact": "Overlay mal positionne en test ET en prod edge case", "effort_fix": "LOW" },
+    { "bug": "BUG-05", "severity": "MEDIUM",   "impact": "Double-finish possible + gaspillage CPU", "effort_fix": "MEDIUM" }
+  ],
+
+  "positives": [
+    "Architecture Promise propre : play() retourne une Promise, finish() resout apres overlay — pattern correct.",
+    "Double-rAF pour forcer le reflow avant fade-in : technique solide et bien connue.",
+    "Try/catch autour de WebAudio : la degradation silencieuse est le bon comportement.",
+    "cleanup() appele APRES overlay.remove() et AVANT resolve() : ordre correct pour eviter flash.",
+    "scoreToOutcome() pure function, testable isolement, seuils clairement documentes.",
+    "OUTCOME_CONFIG centralise : ajouter un 5e niveau ou modifier les couleurs ne necessite qu'une seule edition.",
+    "role='status' + aria-live='assertive' sur l'overlay : bonne pratique accessibilite."
+  ],
+
+  "balance_notes": {
+    "overlay_duration_2200ms": "Correct pour un feedback narratif. Attention : sur mobile lent, le fade CSS 0.25s peut sauter si le thread est bloque par le RAF du canvas actif (BUG-05). Envisager requestAnimationFrame au lieu de setTimeout pour le dismiss.",
+    "score_thresholds": "0-25/26-50/51-85/86-100 — distribution asymetrique volontaire (maîtrise = 15 points sur 100). En pratique, un joueur median (score ~60) tombe en 'réussite' — correct pour le sentiment d'encouragement celtique."
+  },
+
+  "next_steps": [
+    "Fix BUG-01 et BUG-04 en priorite (effort LOW, impact CRITIQUE/HIGH).",
+    "Ajouter un flag this.finished dans finish() pour bloquer les double-appels (BUG-05, protection defensive).",
+    "Tester AudioContext.resume() sur iOS Safari (BUG-03) — necessaire avant deploy mobile.",
+    "Ecrire un test unitaire jsdom qui verifie que play() se resolv toujours apres 2.2s+260ms meme si cleanup() est appelee par une sous-classe (regression BUG-02)."
+  ]
+}

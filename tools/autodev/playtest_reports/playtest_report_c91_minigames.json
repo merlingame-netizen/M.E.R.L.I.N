@@ -1,0 +1,92 @@
+{
+  "cycle": "C91",
+  "scope": "minigames",
+  "baseline_c90": 8.85,
+  "files_audited": 16,
+  "scores": {
+    "canvas_visual_quality": 8,
+    "animation_smoothness": 8,
+    "feedback_visual": 8,
+    "mobile_responsive": 2,
+    "timer_leak_free": 9,
+    "audio_feedback": 9,
+    "hitbox_fairness": 8,
+    "difficulty_balance": 7,
+    "instructions_clarity": 8,
+    "aria_accessibility": 8,
+    "variety_design": 9,
+    "lore_coherence": 8
+  },
+  "composite": 7.83,
+  "verdict": "FIX",
+  "score_breakdown_notes": {
+    "canvas_visual_quality": "Celtic dark palette consistent across all 14 minigames. Path dashes, glow effects, radial arenas all readable. Minor: mg_herboristerie uses emoji glyphs for plants — renders differently across OS (Android vs iOS vs desktop). Score: 8/10.",
+    "animation_smoothness": "All minigames use requestAnimationFrame loop driven from MinigameBase. clearRect + redraw pattern correct. Delta-time (elapsedTime accumulation in render loop) present in combat_rituel, sang_froid — good. Minor: mg_traces does not use delta-time for animations, relies on setInterval tick only. Score: 8/10.",
+    "feedback_visual": "Hit glow (green) and miss indicators present in traces. Flash cells (Map<index, color+alpha>) in herboristerie. HitFlash state in combat_rituel. Sang_froid uses isInside boolean with visual ring color change. MinigameBase outcome overlay with opacity transition on resolve is solid. Score: 8/10.",
+    "mobile_responsive": "CRITICAL FAILURE. Zero canvas elements have max-width:100% in their style.cssText. Fixed widths: traces=400px, sang_froid=380px, combat_rituel=380px, herboristerie=360px (canvasW=5*64+40). On iPhone SE (375px viewport) traces canvas overflows by 25px. On budget Android (360px) herboristerie overflows. getBoundingClientRect() scaling IS correctly present in all 13 pointer handlers — this half of the fix is done. The canvas CSS constraint is the missing half. Score: 2/10.",
+    "timer_leak_free": "clearInterval(timerInterval) called in all endGame() methods inspected (traces, combat_rituel, sang_froid, herboristerie). cancelAnimationFrame(animFrame) also called. Event listeners removed via named function references (this.onClick, this.onPointerMove). MinigameBase cleanup() hook exists. One minor concern: mg_herboristerie.ts line 146 starts timerInterval after canvas but BEFORE resetting this.ended=false — race condition if setup() is called twice rapidly. Score: 9/10.",
+    "audio_feedback": "MinigameBase provides WebAudio tone engine (playOutcomeTone) with 4-level frequency sequences. ctx.resume() called before oscillator start (iOS autoplay fix documented as BUG-03). Sawtooth for desastre, sine for others — appropriate sonic design. AudioContext closed after playback via setTimeout. Individual minigames dispatch SFX events via container (inferred from git history showing mg_combat_rituel.ts modified in C28-C29). Score: 9/10.",
+    "hitbox_fairness": "Traces: 30px radius hit detection on 400px canvas — reasonable for touch. Herboristerie: 64px cell size with pointer mapped via getBoundingClientRect scaling — fair. Sang_froid / combat_rituel: continuous cursor tracking, no discrete hitboxes. No obvious false-negative zones found in sampled code. Score: 8/10.",
+    "difficulty_balance": "4-outcome system (0-25/26-50/51-85/86-100) well-distributed. Sang_froid shrinking zone from 120px to 28px over 10s creates good difficulty ramp. Combat_rituel 5 obstacles at randRange(0.8, 2.5) rad/s — adequate variance. Herboristerie 15s timer for 5x4 grid is generous, but wrong-pick penalty not observed in sampled code (may be implicit via score formula). Minor gap: no difficulty scaling across runs/sessions detected in sampled files. Score: 7/10.",
+    "instructions_clarity": "All sampled minigames have a title div ('TRACES — Suis les empreintes dans l ordre', 'SANG-FROID -- Reste dans la zone') and instruction div below. French text, imperative form, concise. Combat_rituel instruction fits one line. Herboristerie title truncates at 20px — acceptable. Score: 8/10.",
+    "aria_accessibility": "canvas role='application' present in all 14 files (confirmed via grep pattern). aria-label set on all canvases (herboristerie sets it after buildGrid() to include targetPlant.name — correct ordering). Timer bars use role='progressbar' with aria-valuemin/max/now updated each tick in all sampled files. canvas.tabIndex=0 set for keyboard focus. Outcome overlay uses role='status' + aria-live='assertive'. Score: 8/10.",
+    "variety_design": "14 minigames covering: path-following (traces), dodge-arena (combat_rituel), shrinking-zone (sang_froid), plant-identification (herboristerie), rune-sequence (runes), balance (equilibre), negotiation, calming (apaisement), sprint (course), search (fouille), shadows (ombres), willpower (volonte), gaze (regard), echo/memory (echo). Strong diversity of mechanics — pointer-move, pointerdown-tap, sequence-memory, sustained-hold. Score: 9/10.",
+    "lore_coherence": "Celtic/Druidic references throughout: Ogham, Gui sacre, Verveine, Trefle, Belladone, Aconit, Cigue, Digitale in herboristerie. Flavor texts in MinigameBase outcome overlay ('Les esprits de la foret', 'Ogham vivant', 'Merlin hoche la tete'). Combat rituel arena metaphor. Score: 8/10."
+  },
+  "top3_issues": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "criterion": "mobile_responsive",
+      "issue": "All 14 canvas elements lack max-width:100% in style.cssText. Fixed-width canvases (360-400px) overflow on viewports narrower than canvas width (iPhone SE 375px, budget Android 360px). getBoundingClientRect() scaling IS present in all pointer handlers — only the CSS constraint is missing.",
+      "recommendation": "Add 'max-width:100%;' to canvas.style.cssText in all 14 mg_*.ts files. The BoundingClientRect scaling already in place will then correctly map pointer coordinates at any display scale. Estimated fix: search-replace in 14 files, ~14 one-line changes.",
+      "affected_files": ["mg_traces.ts", "mg_runes.ts", "mg_equilibre.ts", "mg_herboristerie.ts", "mg_negociation.ts", "mg_combat_rituel.ts", "mg_apaisement.ts", "mg_sang_froid.ts", "mg_course.ts", "mg_fouille.ts", "mg_ombres.ts", "mg_volonte.ts", "mg_regard.ts", "mg_echo.ts"]
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "criterion": "difficulty_balance",
+      "issue": "No cross-run difficulty scaling detected in sampled minigames. All parameters (obstacle count, speed ranges, grid size) are static constants. After 10+ runs the player faces identical difficulty. Also: herboristerie wrong-pick penalty not confirmed in sampled code — score formula may be purely correct-picks / total, making toxic avoidance irrelevant to score.",
+      "recommendation": "Pass a 'difficultyTier' parameter (0-3) from MinigameBase to setup(), then scale totalTime, obstacleCount, shrink speed etc. For herboristerie, confirm wrongPicks subtracts from score in endGame() formula."
+    },
+    {
+      "rank": 3,
+      "severity": "LOW",
+      "criterion": "canvas_visual_quality",
+      "issue": "mg_herboristerie uses Unicode emoji for plant icons (\\u2618, \\u273F, \\u2699, \\u2620, \\u2736). Emoji rendering on 2D canvas varies across OS/browser: Android may show color emoji vs monochrome on desktop, and skull (\\u2620) may render as colored emoji breaking the dark Celtic palette.",
+      "recommendation": "Replace emoji glyphs with hand-drawn Canvas primitives (circles, leaf shapes, rune symbols) or SVG-sourced paths for consistent cross-platform rendering."
+    }
+  ],
+  "mobile_overflow_affected_files": [
+    "mg_traces.ts",
+    "mg_runes.ts",
+    "mg_equilibre.ts",
+    "mg_herboristerie.ts",
+    "mg_negociation.ts",
+    "mg_combat_rituel.ts",
+    "mg_apaisement.ts",
+    "mg_sang_froid.ts",
+    "mg_course.ts",
+    "mg_fouille.ts",
+    "mg_ombres.ts",
+    "mg_volonte.ts",
+    "mg_regard.ts",
+    "mg_echo.ts"
+  ],
+  "mobile_overflow_analysis": {
+    "canvas_has_max_width_100pct": false,
+    "bounding_rect_scaling_present": true,
+    "files_with_max_width_in_non_canvas_elements": ["mg_sang_froid.ts", "mg_ombres.ts", "mg_negociation.ts", "mg_echo.ts", "mg_apaisement.ts", "mg_fouille.ts", "mg_course.ts", "mg_regard.ts", "mg_combat_rituel.ts", "mg_volonte.ts"],
+    "note": "max-width:Npx appears on status/timer div elements only — not on the canvas elements themselves. The canvas elements are missing max-width:100% entirely."
+  },
+  "positives": [
+    "MinigameBase provides clean 4-level outcome system (desastre/echec/reussite/maitrise) with WebAudio tones, animated overlay, and correct NaN-guard in validateScore()",
+    "All 14 canvases: role='application', aria-label, tabIndex=0 — accessibility baseline solid",
+    "All sampled endGame() methods correctly call clearInterval + cancelAnimationFrame + removeEventListener",
+    "getBoundingClientRect() coordinate scaling present in all 13 pointer handlers — mobile hit accuracy will be correct once max-width is fixed",
+    "iOS AudioContext autoplay fix (ctx.resume() before oscillator) documented and implemented",
+    "14 minigames cover genuinely distinct mechanics and verb-sensations",
+    "Outcome overlay flavor texts are thematically strong Celtic/Druidic prose"
+  ],
+  "timestamp": "2026-04-04T00:00:00Z"
+}

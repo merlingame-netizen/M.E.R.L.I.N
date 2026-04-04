@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 77,
+  "focus": "CoastBiome shared-geometry fix, mg_runes endGame idempotency, mg_traces endGame idempotency",
+
+  "fix_verification": [
+    {
+      "id": "FIX-1",
+      "target": "CoastBiome shared-geometry",
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "status": "CONFIRMED",
+      "detail": "All 4 geometry constructors (CylinderGeometry, ConeGeometry x3) are inside the per-tree for-loop (lines 118-121), inside the outer per-layer for-loop (line 113). No outer-scope geometry variable declarations exist. Each of the 40 trees gets 4 independent BufferGeometry instances. dispose() traversal (lines 398-413) calls child.geometry.dispose() for every Mesh node, which will correctly free each of the 160 geometry objects independently. The fix is complete and structurally sound."
+    },
+    {
+      "id": "FIX-2",
+      "target": "mg_runes endGame() idempotency",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "status": "CONFIRMED",
+      "detail": "Field 'private ended = false' declared at line 47. Reset to false in setup() at line 98. Guard 'if (this.ended) return; this.ended = true;' present at lines 196-197. Both call sites are protected: timer path at line 108 and 8th-pair match path at line 179-180. clearInterval + clearTimeout + cancelAnimationFrame + removeEventListener all fire exactly once."
+    },
+    {
+      "id": "FIX-3",
+      "target": "mg_traces endGame() idempotency",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "status": "CONFIRMED",
+      "detail": "Field 'private ended = false' declared at line 25. Reset to false in setup() at line 65. Guard 'if (this.ended) return; this.ended = true;' at lines 111-112. Both call sites are protected: timer path at line 86 and final-footprint path at line 104-105. clearInterval + cancelAnimationFrame + removeEventListener fire exactly once."
+    }
+  ],
+
+  "new_bugs": [
+    {
+      "id": "BUG-1",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "line": 160,
+      "description": "endGame() has no idempotency guard ('ended' field missing). The timer fires every 100ms; if timeLeft crosses 0 exactly on a frame boundary it can call endGame() twice before clearInterval takes effect. Additionally, mg_equilibre registers listeners on 'document' (keydown/keyup at lines 101-102) which are harder to track — a double-call would call finish() twice via MinigameBase.",
+      "recommendation": "Add 'private ended = false', reset in setup(), guard in endGame()."
+    },
+    {
+      "id": "BUG-2",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "line": 189,
+      "description": "endGame() has no idempotency guard. Two call paths exist: timer expiry (line 141) and collision detection (line 141 via render loop). The timer interval and render loop can both call endGame() in the same event-loop tick before clearInterval/cancelAnimationFrame execute, resulting in finish() called twice.",
+      "recommendation": "Add 'private ended = false', reset in setup(), guard in endGame()."
+    },
+    {
+      "id": "BUG-3",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "lines": [123, 226, 266],
+      "description": "endGame() has no idempotency guard. Three call sites exist: line 123 (timer), line 266 (success path inside render/click handler). Double-fire risk is real on the success path since the timer fires every 100ms concurrently.",
+      "recommendation": "Add 'private ended = false', reset in setup(), guard in endGame()."
+    },
+    {
+      "id": "BUG-4",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_course.ts",
+      "lines": [135, 227],
+      "description": "Two endGame() call sites: direct call at line 135 (timer) and setTimeout-deferred call at line 227 (finish-line crossing). If the timer fires during the 500ms setTimeout window, endGame() is called twice. No 'ended' guard present.",
+      "recommendation": "Add 'private ended = false' guard. The setTimeout path makes the race window 500ms wide — higher risk than a single-tick race."
+    },
+    {
+      "id": "BUG-5",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "lines": [151, 211],
+      "description": "Two endGame() call sites: direct (timer at line 151) and setTimeout-deferred at 400ms (line 211). Same pattern as mg_course. No 'ended' guard.",
+      "recommendation": "Add 'private ended = false' guard."
+    },
+    {
+      "id": "BUG-6",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "lines": [152, 259],
+      "description": "Two endGame() call sites: timer (line 152) and setTimeout at 300ms (line 259). No 'ended' guard.",
+      "recommendation": "Add 'private ended = false' guard."
+    },
+    {
+      "id": "BUG-7",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/HUD.ts",
+      "line": 281,
+      "description": "initHUD() calls store.subscribe(updateHUD) without storing or returning the unsubscribe function. In the outer while(true) game loop in main.ts, initHUD() is called once per run (line 412). Zustand subscribe() accumulates a new listener each run. After N runs, updateHUD fires N times per store change, causing redundant DOM updates. Not a crash, but a progressive memory/CPU leak.",
+      "recommendation": "Store the return value of store.subscribe() and call it at end-of-run cleanup, or guard with a module-level 'initialized' flag."
+    },
+    {
+      "id": "BUG-8",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "lines": [110, 111],
+      "description": "trunkMat and leafMat are created once per layer (outside the per-tree loop) and shared by all trees in that layer. This is correct behavior for materials (shared materials do not have the same dispose problem as shared geometries — Three.js disposes material GPU resources independently of geometry). However, the layer-level materials are not disposed separately — the traverse() in dispose() only calls child.material.dispose() per Mesh, so they will be disposed once per Mesh that references them, which calls WebGLRenderer.deallocateTexture multiple times harmlessly for textureless MeshStandardMaterial. Confirmed not a corruption risk, but worth documenting.",
+      "recommendation": "No action required. Note confirmed safe."
+    }
+  ],
+
+  "balance_note": "Static code analysis only — no runtime simulation possible headlessly for web-demo. Balance metrics (life drain, ogham activation rate, rep thresholds) unchanged from cycle 76.",
+
+  "score": 7.5,
+  "verdict": "FIX",
+  "verdict_rationale": "Three targeted fixes are all CONFIRMED correct. However, 3 HIGH severity bugs (mg_equilibre, mg_combat_rituel, mg_regard — all missing endGame idempotency) and 3 MEDIUM severity bugs (mg_course, mg_fouille, mg_herboristerie — 500/400/300ms setTimeout race windows) remain unaddressed. BUG-7 (HUD listener accumulation) is a progressive per-run leak. Score 7.5/10 — below the 8.5 PROCEED threshold.",
+
+  "next_steps": [
+    "Add 'private ended = false' guard to mg_equilibre, mg_combat_rituel, mg_regard (HIGH — same 3-line pattern as mg_runes/mg_traces)",
+    "Add 'private ended = false' guard to mg_course, mg_fouille, mg_herboristerie (MEDIUM)",
+    "Fix HUD.ts store.subscribe leak: store unsubscribe ref at module level, call in cleanup or guard with initialized flag",
+    "Rerun C78 playtest after above fixes"
+  ]
+}

@@ -252,6 +252,31 @@ func _capture_screenshot(trigger: String, save_history: bool = true) -> void:
 
 
 # ---------------------------------------------------------------------------
+# Card data helper (shared by _write_state and get_card_data command)
+# ---------------------------------------------------------------------------
+
+func _build_card_data() -> Dictionary:
+	var ctrl: Node = _find_node_by_script_suffix("merlin_game_controller.gd")
+	if ctrl and ctrl.get("current_card") is Dictionary:
+		var c: Dictionary = ctrl.current_card
+		if not c.is_empty():
+			var opts: Array = []
+			for o in c.get("options", []):
+				if o is Dictionary:
+					opts.append({
+						"label": str(o.get("label", "")),
+						"effects": o.get("effects", []),
+					})
+			return {
+				"text": str(c.get("text", "")),
+				"speaker": str(c.get("speaker", "")),
+				"type": str(c.get("type", "")),
+				"options": opts,
+			}
+	return {}
+
+
+# ---------------------------------------------------------------------------
 # Export state (DUAL WRITE)
 # ---------------------------------------------------------------------------
 
@@ -279,6 +304,9 @@ func _write_state() -> void:
 			"mission_type": mission.get("type", ""),
 		}
 
+	# Current card data for AI Playtester
+	var card_data: Dictionary = _build_card_data()
+
 	# Inline perf snapshot
 	var fps_avg: float = 0.0
 	var fps_samples: Array = _perf_data.get("fps_samples", [])
@@ -292,6 +320,7 @@ func _write_state() -> void:
 		"timestamp": int(Time.get_unix_time_from_system()),
 		"datetime": Time.get_datetime_string_from_system(),
 		"run": run,
+		"card": card_data,
 		"perf": {
 			"fps": fps_avg,
 			"cards_generated": _perf_data.get("card_count", 0),
@@ -538,6 +567,10 @@ func _execute_command(action: String, params: Dictionary) -> Dictionary:
 			Input.parse_input_event(ev_up)
 			_append_log("[GameObserver] Simulated key: %s" % key_name)
 			return {"status": "ok", "action": action, "key": key_name}
+
+		"get_card_data":
+			var cd: Dictionary = _build_card_data()
+			return {"status": "ok", "action": action, "card": cd}
 
 		_:
 			return {"status": "error", "action": action, "error": "Unknown action: %s" % action}

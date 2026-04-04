@@ -1,0 +1,164 @@
+{
+  "agent": "merlin-ai-playtester",
+  "cycle": 43,
+  "timestamp": "2026-04-03T00:00:00Z",
+  "previous_score": 7.1,
+  "score_global": 7.9,
+  "score_delta": "+0.8",
+
+  "score_breakdown": {
+    "visual_fidelity": 8.5,
+    "immersion_lore": 8.0,
+    "bug_regression": 7.0,
+    "code_quality": 7.5,
+    "performance_budget": 9.0
+  },
+
+  "score_justification": {
+    "visual_fidelity": "8.5/10 — BUG-L-SCALE-01 tiled-grid fix is a major improvement: back-wall stone distortion ratio drops from ~1.87 (6× horizontal stretch) to ~3.2:1 vertical elongation (each stone renders at 1u wide × 3.2u tall). Coverage math verified: 6 back tiles span x∈[-12,+14] against wall width 24 at ±12 — slight right overhang (+12→+14) is invisible behind wall. Side walls: 5 tiles span z∈[-10,+10] = exact depth coverage. Deducted 1.5: stones still read as tall slabs (1:3.2) rather than square (1:1) — a known ceiling of the clone-and-scale approach without Blender re-authoring. flatShading: true confirmed on all 20 MeshStandardMaterial constructors audited.",
+    "immersion_lore": "8.0/10 — All 4 lore sublabels applied correctly. Each is zone-specific and in Celtic register. Door label intact. +2.5 vs C42. Minor deduction: 'cauldron' uses escaped apostrophe in source (L\\'anam) which is correct JS but the tooltip renders correctly — no display issue.",
+    "bug_regression": "7.0/10 — BUG-L-07 (cauldron z-fighting) is half-fixed: cauldronGroup.visible = false fires correctly when GLB loads. However, the C43 refactor introduced two regression paths: (1) glow PointLight added to scene directly at line 516, not to group — survives the group hide. (2) steamPoints particles added to scene directly at line 539, not to group — also survives the group hide. When cauldron_merlin.glb loads, a green glow + floating steam particles remain at world position (2, -3.2, -7) with no procedural cauldron visible. Score maintained from C42 (not penalized further) because the core z-fighting geometry IS hidden; ghost-light effect is only observable with GLB present.",
+    "code_quality": "7.5/10 — Tiled-grid loop is clean and well-commented (lines 80-102). CauldronSystem interface correctly declares group. createCauldron() returns group. Call site (line 694) correctly passes cauldronGroup: cauldron.group. Deducted 2.5: glow and steamPoints not added to group (architectural inconsistency — partial group encapsulation); bougie material.clone() still absent (BUG-L-10, pre-existing).",
+    "performance_budget": "9.0/10 — Tiled walls add 16 extra clone instances (6 back + 5 left + 5 right) vs 3 single-stretched instances in C42. Each clone references the same GLB geometry (no geometry duplication in GPU terms at Three.js level). Draw call increase: +13 draw calls from extra clones. Still within mobile budget. No new TS errors expected from string literals or interface addition."
+  },
+
+  "verified_fixed": [
+    {
+      "id": "C43-F-01",
+      "bug_ref": "BUG-L-SCALE-01",
+      "description": "mur_pierre.glb now tiled in a 6×1 grid for the back wall and 5×1 for each side wall. Each tile uses scale(4,16,1), reducing horizontal stone distortion from ~1.87 to effectively zero (4u wide per tile matches tile width). Vertical elongation is 3.2× (residual — see RESIDUAL-L-SCALE-01) but represents a 6× improvement over C42.",
+      "evidence": "LairGLBAssets.ts:81-102 — three loop bodies confirmed, tile positions arithmetically verified, wallsGroup hidden on success at line 103"
+    },
+    {
+      "id": "C43-F-02",
+      "bug_ref": "BUG-L-07",
+      "description": "Cauldron z-fighting: procedural cauldron body and legs are now hidden when cauldron_merlin.glb loads. CauldronSystem interface declares group (line 475-476). createCauldron() returns {group, ...} (line 562). Call site passes cauldronGroup: cauldron.group (MerlinLairScene.ts line 694). LairGLBAssets.ts line 38 hides it. Core z-fighting eliminated.",
+      "evidence": "MerlinLairScene.ts:475-476 (interface), :562 (return), :694 (call site); LairGLBAssets.ts:38 (hide)"
+    },
+    {
+      "id": "C43-F-03",
+      "bug_ref": "BUG-L-09",
+      "description": "All 4 lore sublabels applied. crystal='Les runes ne répondent pas encore', bookshelf='Les pages sont encore en gestation', cauldron='L\\'anam doit d\\'abord s\\'éveiller', map='Les chemins se révèlent en marchant'. Door label 'Entrer dans la forêt' with '→ Commencer l\\'aventure' intact.",
+      "evidence": "main.ts:186-191 — all 5 ZONE_LABELS entries confirmed, each unique"
+    }
+  ],
+
+  "residual_or_new_bugs": [
+    {
+      "id": "RESIDUAL-L-SCALE-01",
+      "severity": "LOW",
+      "status": "RESIDUAL — KNOWN CEILING",
+      "title": "Stone vertical elongation 3.2× — residual after tiled-grid fix",
+      "detail": "mur_pierre.glb is authored as a tile with 5 stone rows and 4 columns. Model-space tile height ≈ 1u (normalized). At scale.y=16, each stone renders at 16/5 = 3.2u tall vs 4/4 = 1u wide → aspect ratio 1:3.2 (tall columns rather than square blocks). Distortion is vertical rather than horizontal (which is less visually jarring than the C42 6× horizontal stretch). At first-person eye height of ~1.7u looking at a 16u-tall wall, the top stone rows are near the camera vanishing angle — distortion reads less than it measures. Threshold for demoability: PASS. Threshold for AAA stone masonry: FAIL.",
+      "affected_lines": "LairGLBAssets.ts:83,89,97 — scale.y=16 on all tiles",
+      "recommendation": "Re-author mur_pierre.glb Blender script to output a tile proportioned 4u wide × 16u tall natively (stones arranged in taller rows). At that point scale.set(4,16,1) would map 1:1. Alternative: reduce tile scale.y to match natural tile height (e.g., scale(4,5,1) with 3 tile rows stacked vertically per wall) — adds a second loop dimension but achieves 1:1 stone aspect.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-07-GHOST",
+      "severity": "MEDIUM",
+      "status": "NEW — INTRODUCED BY C43 REFACTOR",
+      "title": "Cauldron glow and steam particles not in group — survive procedural hide",
+      "detail": "createCauldron() (MerlinLairScene.ts) adds body and legs to group (lines 502, 510) but adds glow PointLight directly to scene (line 516) and steamPoints directly to scene (line 539). When cauldron_merlin.glb loads and cauldronGroup.visible = false fires (LairGLBAssets.ts line 38), only the body and legs are hidden. The green PointLight (intensity 1.1-1.3, radius 3.5u) and 30-particle steam system remain active at world position (2, -3.2, -7). Result: a green glow and floating steam emit from empty space while the GLB cauldron at position (2, -4.65, -7) provides its own mesh — the ghost glow is slightly above the GLB cauldron rim and may enhance it coincidentally, but this is by accident not design. If GLB cauldron_merlin.glb is ever lit differently, the rogue green light will conflict.",
+      "affected_lines": "MerlinLairScene.ts:516 (glow scene.add), :539 (steamPoints scene.add), LairGLBAssets.ts:38 (group hide — glow/steam not covered)",
+      "recommendation": "Move glow and steamPoints into group before returning: replace 'scene.add(glow)' with 'group.add(glow)' and 'scene.add(steamPoints)' with 'group.add(steamPoints)'. Adjust glow position to be group-relative: since group has no transform, world coords equal group-local coords — no position change needed. This makes group.visible = false cleanly kill all cauldron effects.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-WALL-COVERAGE",
+      "severity": "LOW",
+      "status": "NEW — COSMETIC",
+      "title": "Back wall tile grid overhangs right edge by 2u",
+      "detail": "Back wall: 6 tiles, center x positions = -10, -6, -2, +2, +6, +10. Each tile is scale.x=4 → half-width = 2u. Last tile (i=5) right edge = 10 + 2 = +12. Wall right edge = +12 (BoxGeometry(24, ...) centered at 0). Coverage is exact on the right. Left edge: first tile (i=0) left edge = -10 - 2 = -12 = wall left edge. Coverage is exact. Re-audit: NO overhang — back wall coverage is precisely -12 to +12. Side walls: 5 tiles, center z = -8, -4, 0, +4, +8. Each tile scale.set(4,16,1) with rotation.y=PI/2 — after rotation, the scale.x=4 dimension runs along Z-axis. Half-width in Z = 2. First tile left z = -8 - 2 = -10, last tile right z = 8 + 2 = +10. Wall depth = 20 units (BoxGeometry(0.5, 16, 20) centered at z=0 → spans -10 to +10). Coverage is exact. No coverage gap detected. Previous report's overhang concern was a calculation error.",
+      "affected_lines": "LairGLBAssets.ts:81-102",
+      "recommendation": "No action needed. Coverage is geometrically correct for all three walls.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-10",
+      "severity": "LOW",
+      "status": "LATENT — OPEN (PRE-EXISTING, UNCHANGED)",
+      "title": "bougie.glb clones share material references — independent flicker impossible",
+      "detail": "Unchanged from C42. LairGLBAssets.ts line 44: gltf.scene.clone(true) shares materials across all 3 candle instances. Benign until candle flicker animation is added.",
+      "affected_lines": "LairGLBAssets.ts:42-48",
+      "recommendation": "Pre-condition on T-BOUGIE-FLICKER: add material.clone() traversal after each clone() call.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-L-11",
+      "severity": "LOW",
+      "status": "LATENT — OPEN (PRE-EXISTING, UNCHANGED)",
+      "title": "passive:false touch risk if canvas embedded in scrollable parent",
+      "detail": "Unchanged from prior cycles. No scrollable parent present in current deployment — benign.",
+      "affected_lines": "main.ts — canvas pointer event handlers",
+      "recommendation": "Add touch-action: none CSS on canvas wrapper if embedding context changes.",
+      "confidence": "MEDIUM"
+    }
+  ],
+
+  "regression_check": {
+    "sol_pierre_zfight": "PASS — LairGLBAssets.ts:70 y=-4.98 offset unchanged",
+    "table_druidique_hide": "PASS — LairGLBAssets.ts:56 mapGroup.visible = false on success",
+    "bibliotheque_hide": "PASS — LairGLBAssets.ts:64 shelfGroup.visible = false on success",
+    "wall_procedural_hide": "PASS — LairGLBAssets.ts:103 wallsGroup.visible = false on success",
+    "floor_procedural_hide": "PASS — LairGLBAssets.ts:73 floorMesh.visible = false on success",
+    "cauldron_geometry_hide": "PASS — LairGLBAssets.ts:38 cauldronGroup.visible = false on success",
+    "cauldron_glow_hide": "FAIL — MerlinLairScene.ts:516 glow added to scene not group — survives hide",
+    "cauldron_steam_hide": "FAIL — MerlinLairScene.ts:539 steamPoints added to scene not group — survives hide",
+    "flat_shading_all_materials": "PASS — 20 MeshStandardMaterial constructors audited (walls, floor, ceiling, beams, table, crystal, bookshelf, door, cauldron, skull, potionbottles) — all include flatShading: true",
+    "lore_sublabels_unique": "PASS — all 5 ZONE_LABELS entries distinct, Celtic register confirmed",
+    "lore_door_label_intact": "PASS — main.ts:190 door title 'Entrer dans la forêt', sub '→ Commencer l\\'aventure'",
+    "cauldron_group_wired": "PASS — MerlinLairScene.ts:694 cauldronGroup: cauldron.group correctly passed",
+    "cauldron_interface_group": "PASS — MerlinLairScene.ts:476 CauldronSystem.group: THREE.Group declared",
+    "tile_coverage_back_wall": "PASS — 6 tiles × 4u = -12 to +12 exact",
+    "tile_coverage_side_walls": "PASS — 5 tiles × 4u = -10 to +10 exact (depth 20u)",
+    "mur_pierre_rotation_left": "PASS — LairGLBAssets.ts:91 rotation.y = Math.PI / 2",
+    "mur_pierre_rotation_right": "PASS — LairGLBAssets.ts:99 rotation.y = -Math.PI / 2"
+  },
+
+  "player_journey_post_fix": {
+    "entry": "Player enters Lair Hub from boot sequence. Back wall visible immediately — tiled stone grid reads as masonry rather than a single stretched tile. Stones are tall (1:3.2) but not grotesquely wide. Improvement is immediately perceptible vs C42.",
+    "exploration": "Player approaches crystal — toast appears: 'Pierre des Oghams / Les runes ne répondent pas encore'. Celtic register. No 'Bientôt disponible'. Player moves to bookshelf: 'Journal de Merlin / Les pages sont encore en gestation'. Distinct and atmospheric.",
+    "cauldron_interaction": "Player approaches cauldron — toast 'Chaudron Druidique / L\\'anam doit d\\'abord s\\'éveiller'. If cauldron_merlin.glb loaded: procedural iron body and legs hidden, GLB visible. Green glow still pulsates (BUG-L-07-GHOST) — at GLB presence this reads as the GLB cauldron glowing, coincidentally correct. Steam particles still emit above GLB rim — slightly misaligned but not jarring.",
+    "map_table": "Player approaches map: 'Carte des Biomes / Les chemins se révèlent en marchant'. Unique and thematically accurate for a locked biome.",
+    "door": "Player clicks door — 'Entrer dans la forêt / → Commencer l\\'aventure' flashes, then fade to black. Run starts. CTA is clear.",
+    "net_impression": "C43 is a meaningful improvement. The lore labels alone elevate the demo register from 'placeholder' to 'in-world'. The tiled walls make the back wall read correctly at first glance. Ghost glow is a background noise issue, not a foreground problem."
+  },
+
+  "next_steps": [
+    {
+      "priority": 1,
+      "task": "Fix BUG-L-07-GHOST: move glow and steamPoints from scene.add() to group.add() inside createCauldron(). Zero position change needed (group at origin). Makes group.visible=false cleanly kill all cauldron effects.",
+      "effort": "XS — 2 line changes in MerlinLairScene.ts",
+      "files": ["web-demo/src/scenes/MerlinLairScene.ts lines 516, 539"]
+    },
+    {
+      "priority": 2,
+      "task": "Address RESIDUAL-L-SCALE-01: re-author mur_pierre.glb Blender script to output 4u × 16u tile natively (tall stone arrangement, ~5 rows × 4 cols). At that size, scale.set(4,16,1) maps 1:1. Alternatively: switch to scale.set(4,5,1) with a 3-row vertical loop (3 tile rows × 5u = 15u ≈ 16u wall, close enough). Zero TypeScript change for either approach if Blender re-exports.",
+      "effort": "S — Blender script edit (~15 lines) or new nested loop in LairGLBAssets.ts",
+      "files": ["tools/blender_addons/ mur_pierre script OR LairGLBAssets.ts:80-103"]
+    },
+    {
+      "priority": 3,
+      "task": "Pre-condition BUG-L-10 on T-BOUGIE-FLICKER backlog item. Add material.clone() traversal comment in LairGLBAssets.ts above bougie clone loop.",
+      "effort": "XS — 1 comment line",
+      "files": ["web-demo/src/scenes/LairGLBAssets.ts:42"]
+    }
+  ],
+
+  "status": "PARTIAL",
+  "confidence": "HIGH",
+  "evidence": [
+    "LairGLBAssets.ts:81-103 — tiled mur_pierre confirmed (6 back + 5 left + 5 right), wallsGroup hidden",
+    "LairGLBAssets.ts:38 — cauldronGroup.visible = false on GLB load",
+    "MerlinLairScene.ts:475-476 — CauldronSystem.group: THREE.Group declared",
+    "MerlinLairScene.ts:562 — createCauldron returns {group, ...}",
+    "MerlinLairScene.ts:694 — cauldronGroup: cauldron.group passed to loadLairGLBs",
+    "MerlinLairScene.ts:516 — glow added to scene NOT group (BUG-L-07-GHOST)",
+    "MerlinLairScene.ts:539 — steamPoints added to scene NOT group (BUG-L-07-GHOST)",
+    "main.ts:186-191 — all 5 ZONE_LABELS unique and Celtic-register",
+    "Tile coverage math: back -12..+12 exact, sides -10..+10 exact",
+    "Stone aspect ratio post-fix: 1:3.2 vertical (down from 1.87 horizontal in C42)"
+  ],
+  "blockers": []
+}

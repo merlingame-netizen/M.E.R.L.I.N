@@ -1,0 +1,218 @@
+{
+  "meta": {
+    "report_id": "c146_ultra_deep_audit",
+    "timestamp": "2026-04-04T00:00:00Z",
+    "audited_files": [
+      "web-demo/src/minigames/mg_apaisement.ts",
+      "web-demo/src/minigames/mg_fouille.ts",
+      "web-demo/src/minigames/mg_regard.ts",
+      "web-demo/src/minigames/MinigameBase.ts"
+    ],
+    "scope": "New bugs only — previously reported issues excluded"
+  },
+
+  "files": {
+
+    "mg_apaisement.ts": {
+      "render_guard": {
+        "status": "CORRECT",
+        "detail": "Line 252: `if (!this.ctx || !this.canvas || this.ended) return;` — guard is present and uses `this.ended`, consistent with C106 contract."
+      },
+      "cancelTimers": {
+        "status": "CORRECT",
+        "detail": "Lines 223-228: clears timerInterval (setInterval), cancels animFrame (rAF), removes pointerdown and keydown listeners. Complete."
+      },
+      "score_formula": {
+        "hud_display": "avgAcc * 100 (running average, line 219)",
+        "endGame": "avgAccuracy * tapBonus * 100 clamped to max(10, x) (lines 243-248)",
+        "mismatch": {
+          "severity": "MEDIUM",
+          "bug_id": "APA-BUG-01",
+          "description": "HUD score display (line 219) shows `totalAccuracy / taps.length * 100` — a pure average accuracy. endGame() (line 245) applies `tapBonus = min(1.0, tapCount/4)` multiplier, then clamps to max(10, x). This means the last HUD value shown to the player can differ substantially from the final score delivered to the outcome overlay. Example: 1 tap with accuracy=1.0 → HUD shows 100%, endGame delivers max(10, 1.0 * 0.25 * 100) = 25. Player sees 100% → DÉSASTRE outcome. The discrepancy is a UX lie.",
+          "lines": [217, 219, 243, 245, 248],
+          "fix": "Either (a) mirror the tapBonus in the HUD update so both show the same composite value, or (b) add a note in the HUD: e.g. `Sync: 100% (1/4 taps — faible engagement)`."
+        }
+      },
+      "immutability": {
+        "status": "CORRECT",
+        "detail": "taps array is `readonly BreathTap[]` updated with spread `[...this.taps, tap]` (line 196). No direct mutation found."
+      },
+      "new_bugs": [
+        {
+          "bug_id": "APA-BUG-01",
+          "severity": "MEDIUM",
+          "location": "lines 217-219 vs 243-248",
+          "description": "Score displayed in HUD (pure accuracy %) diverges from score passed to finish() (accuracy × tapBonus, floor 10). Player can see 100% sync in HUD then receive a DÉSASTRE outcome.",
+          "fix": "Apply the identical composite formula in the HUD update: `const displayed = Math.max(10, avgAcc * Math.min(1.0, taps.length/4) * 100); scoreEl.textContent = 'Synchronisation: ' + Math.round(displayed) + '%';`"
+        },
+        {
+          "bug_id": "APA-BUG-02",
+          "severity": "LOW",
+          "location": "line 133 — setInterval tick",
+          "description": "timerInterval ticks every 100ms and checks `this.timeLeft <= 0` to call `endGame()`. However `endGame()` calls `cancelTimers()` which calls `clearInterval(this.timerInterval)`. If `endGame()` is called from within the interval callback itself, the clearInterval is safe. BUT if tab is throttled (hidden tab, battery saver), the 100ms interval may fire at 1000ms+ intervals, meaning `timeLeft` can go below 0 by a large margin (e.g. -0.9) before endGame fires. This is cosmetic only (the timer bar would try to show negative time briefly) and is guarded by `Math.max(0, ...)` on line 136. No action strictly required but worth noting."
+        },
+        {
+          "bug_id": "APA-BUG-03",
+          "severity": "LOW",
+          "location": "line 180 — onPointerDown",
+          "description": "`onPointerDown` checks `if (this.timeLeft <= 0) return;` but `registerTap()` also checks `if (this.timeLeft <= 0) return;` (line 186). The guard in onPointerDown is redundant but harmless. However `onKeyDown` does NOT have a top-level guard before delegating to `registerTap()` — it only checks `e.key`. This is fine because `registerTap()` has the guard, but the asymmetry is a code clarity issue, not a functional bug."
+        }
+      ]
+    },
+
+    "mg_fouille.ts": {
+      "render_guard": {
+        "status": "CORRECT",
+        "detail": "Line 320: `if (!this.ctx || !this.canvas || this.ended) return;` — present and correct."
+      },
+      "cancelTimers": {
+        "status": "CORRECT",
+        "detail": "Lines 296-303: clearTimeout(foundTimeout), clearInterval(timerInterval), cancelAnimationFrame(animFrame), removes pointermove, pointerdown and keydown listeners. Complete."
+      },
+      "score_formula": {
+        "showFoundStatus": "bonus = round(50 + timePct * 50) (line 253)",
+        "endGame": "score = 50 + timePct * 50 (line 313, NOT rounded)",
+        "mismatch": {
+          "severity": "LOW",
+          "bug_id": "FOU-BUG-01",
+          "description": "showFoundStatus() (line 253) displays `Math.round(50 + timePct * 50)` but endGame() (line 313) passes `50 + timePct * 50` (un-rounded float) to finish(). validateScore() in MinigameBase will Math.round() it, so the final integer score will match. However there is a subtle timing race: showFoundStatus() captures `this.timeLeft` at click instant (after clearInterval on line 270), while endGame() also reads `this.timeLeft` 400ms later. Since clearInterval was called at click time, timeLeft is FROZEN — both reads use identical values. No mismatch in practice. Bug is moot but worth noting the 400ms timeout window."
+        }
+      },
+      "off_by_one": {
+        "status": "PASS",
+        "detail": "allLabels = shuffle([targetLabel, ...usedDecoys]) where usedDecoys = shuffle(DECOY_OBJECTS).slice(0, decoyCount). Total objects placed = 1 + decoyCount. Grid cells = gridCols * gridRows = 4 * ceil((1+decoyCount)/4). With default decoyCount=15: total=16 objects, rows=ceil(16/4)=4, cells=16. Exact fit. Tier 3: decoyCount=24, total=25 objects, rows=ceil(25/4)=7, cells=28. 3 extra empty cells never populated — those cells are skipped by the for loop (allLabels.length=25, not 28). The extra 3 cell positions (indices 25-27) are never added to this.objects. hitTest iterates this.objects.length only. No off-by-one found."
+      },
+      "new_bugs": [
+        {
+          "bug_id": "FOU-BUG-01",
+          "severity": "LOW",
+          "location": "lines 252-254 vs 310-316",
+          "description": "Cosmetic score formula discrepancy: showFoundStatus rounds the bonus (Math.round), endGame does not round before passing to finish(). validateScore() compensates, so the final displayed score is identical. Low priority.",
+          "fix": "Normalise by adding Math.round() in endGame: `score = Math.round(50 + timePct * 50);`"
+        },
+        {
+          "bug_id": "FOU-BUG-02",
+          "severity": "MEDIUM",
+          "location": "lines 175-201 — generateObjects()",
+          "description": "generateObjects() assigns `this.objects = objects` (line 201) — a direct mutation of an instance property with a locally-built mutable array. The PlacedObject interface is marked `readonly` per-field, but `this.objects` is typed as `PlacedObject[]` (mutable array reference, line 63). This violates the immutability contract: a concurrent rAF frame reading this.objects during the shuffle could observe a partially-built intermediate array if JS engine yields between push() calls. In single-threaded JS this is safe in practice, but the design inconsistency with mg_apaisement.ts (which uses `readonly BreathTap[]`) is a lint target.",
+          "fix": "Change field type to `private objects: readonly PlacedObject[] = []` and assign `this.objects = objects as readonly PlacedObject[]` in generateObjects(). No runtime change needed."
+        },
+        {
+          "bug_id": "FOU-BUG-03",
+          "severity": "HIGH",
+          "location": "lines 163-172 — setInterval endGame path",
+          "description": "When timeLeft crosses 0 via the setInterval ticker and endGame() is called, `this.found` is false, so score=0 is returned. This is correct. BUT: there is a race window where foundTimeout (the 400ms delay after a valid click) fires concurrently with the timer interval. Sequence: player clicks target at t=11.9s. clearInterval(timerInterval) is called (line 270). foundTimeout is set for 400ms later. However if the interval had already fired the `timeLeft <= 0` check in the same tick as the click (between the click registering and clearInterval executing), endGame() fires from the interval with found=false → score=0, THEN foundTimeout fires and calls endGame() again. The `this.ended` guard (line 306) prevents the second endGame() from double-resolving, but the player gets score=0 despite clicking the target. This window is very narrow (~0-100ms) but reproducible on slow devices.",
+          "fix": "Move `clearInterval(this.timerInterval)` to BEFORE the `found = true` assignment in onClick and onKeyDown handlers, or add a `if (this.found) return;` guard at the top of the setInterval callback alongside the `timeLeft <= 0` check: `if (this.timeLeft <= 0 && !this.found) { this.endGame(); }`"
+        }
+      ]
+    },
+
+    "mg_regard.ts": {
+      "render_guard": {
+        "status": "CORRECT",
+        "detail": "Line 317: `if (!this.ctx || !this.canvas || this.ended) return;` — present and correct, consistent with C106 contract. Comment on line 317 correctly notes prior deviation was fixed."
+      },
+      "cancelTimers": {
+        "status": "PARTIAL — LOW severity issue",
+        "detail": "Lines 293-298: clearTimeout(recallTimeout), cancelAnimationFrame(animFrame), removes pointerdown and keydown listeners. MISSING: no clearInterval present — but Regard has no setInterval (no countdown bar driven by interval). Correct — Regard is rAF+timeout only. However see RGD-BUG-01."
+      },
+      "score_formula": {
+        "status": "PASS",
+        "detail": "HUD (line 247 and 289): `Correct: correctTotal / attemptsTotal` — a ratio display. endGame() (line 311): `(correctTotal / attemptsTotal) * 100`. These are consistent — both use the same correctTotal/attemptsTotal pair. No mismatch."
+      },
+      "eye_tracking_click_radius": {
+        "status": "N/A",
+        "detail": "Regard is a memory/sequence minigame, not an eye-tracking minigame. Click detection uses circular hit radius of `cellSize/2 - 4 = 26px` (line 214). Grid cells are 60px wide. Hit radius 26px vs cell half-width 30px leaves a 4px dead margin per side. This is intentional to avoid adjacent cell collisions on a 5x3 grid where cells are closely packed."
+      },
+      "new_bugs": [
+        {
+          "bug_id": "RGD-BUG-01",
+          "severity": "HIGH",
+          "location": "lines 340-354 — feedback phase timer in render()",
+          "description": "feedbackTimer is decremented by `dt` in render() (line 341). When feedbackTimer <= 0, currentRound++ and prepareRound() is called (line 353). prepareRound() sets `this.phase = 'show'` and assigns a NEW recallTimeout of 10s (line 327). But cancelTimers() (called from endGame → cleanup) clears recallTimeout. The issue: if the player is in 'feedback' phase and the parent calls cleanup() externally (e.g. game over before all rounds complete), the feedback phase is active, feedbackTimer is still counting down via rAF. The rAF is cancelled by cancelTimers() but the feedbackTimer state remains. On the NEXT setup() call (if the minigame is replayed immediately), the constructor does NOT reset feedbackTimer. feedbackTimer is not reset in setup() (lines 135-143 only reset the fields listed). If feedbackTimer leaked a negative value from a previous session, the feedback phase in a fresh replay would immediately advance (feedbackTimer <= 0 check fires on first render frame). However, feedbackTimer IS set to 0.8 only when a click happens (lines 235, 242, 282, 286). On fresh setup(), phase='show' and feedbackTimer is never read in 'show' phase. The risk only materialises if feedbackTimer is negative AND phase transitions to 'feedback' before a new assignment — which requires a wrong click to set feedbackTimer=0.8 first. Conclusion: no actual bug triggered, but feedbackTimer should be reset in setup() for defensive correctness.",
+          "fix": "Add `this.feedbackTimer = 0;` and `this.feedbackCorrect = false;` to the reset block in setup() (around line 136)."
+        },
+        {
+          "bug_id": "RGD-BUG-02",
+          "severity": "HIGH",
+          "location": "lines 146-155 — prepareRound(), tieredValue() call for roundLengths",
+          "description": "roundLengths is set via `this.tieredValue([...] as const)` where each value is a NUMBER ARRAY (tuple), not a scalar. Line 226 of MinigameBase: `tieredValue<T>(values: readonly [T, T, T, T]): T` returns `values[min(difficultyTier, 3)]`. For tier 0: returns `[3, 4, 5]` (correct). For tier 1: returns `[4, 5, 6]` (correct). For tier 2: returns `[4, 5, 6]` (correct). For tier 3: returns `[5, 6, 7]`. Then seqLen = this.roundLengths[this.currentRound] where roundLengths is now a tuple of 3 numbers, and currentRound is 0, 1, or 2. This works correctly. HOWEVER: SYMBOLS has only 15 entries (line 20). At tier 3, round 3 (currentRound=2): seqLen=7. shuffled.slice(0,7) gives 7 symbols. totalCells = 5*3 = 15. fillerCount = 15-7 = 8. allCells has 7 targets + 8 fillers = 15. Grid = 15 cells. This is fine. BUT: the sequence display at the top of the canvas (lines 378-400) renders `sequence.length` symbols spaced 40px apart. At seqLen=7: seqStartX = (380 - 6*40)/2 = (380-240)/2 = 70. Last symbol at sx = 70 + 6*40 = 310. Canvas is 380px wide. 310 + some text width fits. No overflow. Pass.",
+          "fix": "No fix required — math is correct for all tiers."
+        },
+        {
+          "bug_id": "RGD-BUG-03",
+          "severity": "MEDIUM",
+          "location": "lines 276-290 — onKeyDown confirm path vs onClick",
+          "description": "onKeyDown confirm path (lines 274-290) duplicates the game logic of onClick (lines 207-252) but the two implementations are NOT identical. onClick iterates the grid with a distance check and breaks on first hit. onKeyDown does a direct index lookup on kbFocusIdx. The onClick path skips already-clicked cells via `if (this.clickedCells.has(i)) continue;` BEFORE the distance check. onKeyDown also guards `if (!cell || this.clickedCells.has(this.kbFocusIdx)) return;` on line 272. These are semantically equivalent. HOWEVER: onClick increments attemptsTotal for ANY cell hit (whether target or not). onKeyDown also increments attemptsTotal (line 275). Correct. The divergence: onClick uses `break` after first hit, ensuring only 1 attempt counted per click event. onKeyDown is a single-path direct index lookup — also 1 attempt per keydown. Equivalent. No functional bug. The duplication is a maintainability smell (MEDIUM) — if logic in onClick changes, onKeyDown must be manually kept in sync.",
+          "fix": "Extract the shared tap-resolution logic into a private `resolveCell(gridIndex: number): void` method called from both onClick and onKeyDown, eliminating the duplicated block."
+        },
+        {
+          "bug_id": "RGD-BUG-04",
+          "severity": "LOW",
+          "location": "line 199 — clickedCells: Set<number>",
+          "description": "clickedCells is a mutable `Set<number>` (not readonly). It is reassigned with `this.clickedCells = new Set()` in prepareRound() (line 199) and mutated with `.add(i)` in onClick and onKeyDown. This is a deliberate stateful design (Sets must be mutable to call .add()). However, the field declaration `private clickedCells: Set<number> = new Set()` is not reset in setup() — only in prepareRound(). setup() calls prepareRound() at line 143, so it IS reset indirectly. Correct, but worth making explicit.",
+          "fix": "No functional fix needed. Consider adding `this.clickedCells = new Set();` to the reset block in setup() for clarity."
+        }
+      ]
+    },
+
+    "MinigameBase.ts": {
+      "tieredValue_safety": {
+        "status": "CORRECT",
+        "detail": "Line 227: `values[Math.min(this.difficultyTier, 3) as 0|1|2|3]` — the clamp to 3 ensures index is always in [0,3] for a 4-element tuple. No out-of-bounds possible. The TypeScript cast `as 0|1|2|3` is correct.",
+        "edge_case_note": "When called with a 3-element tuple (as in mg_regard.ts roundLengths — each element is itself a 3-element array), the outer tieredValue receives a 4-element tuple of arrays and returns the correct inner array. The inner array is then indexed at [currentRound] (0,1,2) which is bounds-safe. Pass."
+      },
+      "getDeltaTime_clamp": {
+        "status": "CORRECT",
+        "detail": "Line 238: `Math.min((now - this.lastRenderMs) / 1000, 0.1)` — capped at 100ms. Spiral-of-death on tab switch is prevented. First-frame sentinel (lastRenderMs===0) returns 1/60 (line 238). Correct."
+      },
+      "cleanup_cancelTimers": {
+        "status": "CORRECT",
+        "detail": "Line 322: `this.cancelTimers()` called as first statement of cleanup(). cleanup() is called from finish() → showOutcomeOverlay().then() (line 305). The ordering is: endGame() calls cancelTimers() directly (in all 3 reviewed subclasses), THEN calls finish(). finish() calls cleanup() after the 2.2s overlay. So cancelTimers() is called TWICE: once immediately in endGame(), once 2.2s later in cleanup(). All cleanup handles (clearInterval, cancelAnimationFrame, removeEventListener) are idempotent for repeated calls. Safe."
+      },
+      "new_bugs": [
+        {
+          "bug_id": "BASE-BUG-01",
+          "severity": "MEDIUM",
+          "location": "lines 183-190 — showOutcomeOverlay setTimeout",
+          "description": "showOutcomeOverlay() uses a bare `setTimeout` (line 183) to dismiss the overlay after 2200ms. This timeout ID is NEVER stored and NEVER cleared. If the parent component (e.g. game controller) calls container.innerHTML = '' or replaces the minigame container before the 2200ms elapses, the timeout fires, calls overlay.remove() on an element that was already removed from the DOM (no error, no-op), and then calls resolve(). The Promise resolves correctly. However, if the container was replaced AND a new minigame was injected into the same container reference, the timeout's `overlay.remove()` is a no-op (overlay is not a descendant) but resolve() still fires — causing the caller to receive two MinigameResult resolutions (one from the new minigame, one from the orphaned overlay). The comment on line 187 acknowledges this but marks it safe because 'Promise resolves once only'. The REAL risk is that the caller's `.then(result => ...)` fires for the stale result. If the caller advances game state on every result, this is a HIGH-severity race.",
+          "fix": "Store the outer timeout ID and clear it in cancelTimers() / cleanup(): `const dismissTimer = setTimeout(...)`. Expose via a module-level variable or return it from showOutcomeOverlay. Alternatively, check `overlay.isConnected` inside the timeout before calling resolve() (partially mitigates but does not prevent double-resolve if both minigames complete within 2.2s of each other)."
+        },
+        {
+          "bug_id": "BASE-BUG-02",
+          "severity": "LOW",
+          "location": "line 261 — play() difficulty tier computation",
+          "description": "play() reads localStorage synchronously (line 261) on every call. If localStorage.getItem throws (private browsing in some browsers throws SecurityError, not returns null), the catch sets difficultyTier=0. This is handled. However, the parseInt call on line 261 uses `|| 0` fallback AFTER `?? '0'` — the `??` already guarantees a non-null string, so `parseInt(...) || 0` handles only NaN (e.g. corrupted value like 'abc'). This double-fallback is correct but redundant. No bug — style note only."
+        }
+      ]
+    }
+  },
+
+  "overall_assessment": {
+    "score_out_of_10": 7.5,
+    "rationale": "All three minigames have correct render() guards, correct cancelTimers() completeness (rAF + setInterval + listeners), and solid immutability discipline. The most significant newly-found bug is FOU-BUG-03 (HIGH): a narrow race window in mg_fouille.ts where a valid click at near-zero timeLeft can be silently discarded (score=0) due to the setInterval callback not checking this.found before calling endGame(). APA-BUG-01 (MEDIUM) creates a misleading UX: HUD shows 100% accuracy but the player receives DÉSASTRE due to the tapBonus multiplier not being reflected in live display. RGD-BUG-01 (HIGH) is a defensive hygiene issue: feedbackTimer and feedbackCorrect not reset in setup(), which could cause a spurious immediate round-advance on rapid replay. BASE-BUG-01 (MEDIUM) is an architectural risk: the 2200ms overlay dismiss timeout is unregistered and could cause double-resolution of the minigame Promise in edge cases. The codebase is well-structured with consistent patterns — scores would be 8.5/10 after these fixes are applied.",
+    "critical_bugs": 0,
+    "high_bugs": 2,
+    "medium_bugs": 3,
+    "low_bugs": 4,
+    "bugs_by_file": {
+      "mg_apaisement.ts": { "critical": 0, "high": 0, "medium": 1, "low": 2 },
+      "mg_fouille.ts": { "critical": 0, "high": 1, "medium": 1, "low": 1 },
+      "mg_regard.ts": { "critical": 0, "high": 1, "medium": 1, "low": 1 },
+      "MinigameBase.ts": { "critical": 0, "high": 0, "medium": 1, "low": 1 }
+    },
+    "priority_fix_order": [
+      "FOU-BUG-03 — HIGH — race: valid click scores 0 near time=0",
+      "RGD-BUG-01 — HIGH — feedbackTimer not reset in setup() (defensive hygiene)",
+      "APA-BUG-01 — MEDIUM — HUD score diverges from endGame score (UX lie)",
+      "BASE-BUG-01 — MEDIUM — overlay dismiss timeout unregistered, potential double-resolve",
+      "FOU-BUG-02 — MEDIUM — objects[] typed as mutable array despite readonly-field interface",
+      "RGD-BUG-03 — MEDIUM — onClick/onKeyDown logic duplication (maintainability)",
+      "FOU-BUG-01 — LOW — score rounding inconsistency showFoundStatus vs endGame",
+      "RGD-BUG-04 — LOW — clickedCells not reset in setup() (only in prepareRound)",
+      "APA-BUG-02 — LOW — throttled tab cosmetic timer overshoot (guarded by Math.max)",
+      "APA-BUG-03 — LOW — onPointerDown redundant guard vs registerTap() asymmetry",
+      "BASE-BUG-02 — LOW — redundant parseInt fallback in play()"
+    ]
+  }
+}

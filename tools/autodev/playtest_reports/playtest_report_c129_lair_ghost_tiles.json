@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "cycle": 129,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": "MerlinLairScene.ts + LairGLBAssets.ts + LairDensity.ts + main.ts + minigames/*.ts",
+    "trigger": "pre-fix audit before BUG-L-07-GHOST patch"
+  },
+  "new_bugs": [
+    {
+      "id": "BUG-L-DOUBLE-ADD-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_approx": 555,
+      "description": "createCauldron() calls scene.add(group) internally at line 555 and also returns the CauldronSystem. The cauldronGroup is then passed to loadLairGLBs() which calls proceduralGroups.cauldronGroup.visible = false when the GLB loads (LairGLBAssets.ts line 110). This is correct. However, the cauldron group is added to the scene INSIDE createCauldron() rather than at the call site (line 787), which is an inconsistency with every other factory in the file (createWalls, createMapTable, createCrystalBall, createBookshelf, createDoor all return a group and are scene.add()-ed by the caller). This makes the responsibility boundary ambiguous and has already caused the BUG-L-07-GHOST class of bug (where items intended for the group were added to the scene instead). The steamPoints and glow are currently correct (group.add), but the pattern invites regression on future edits.",
+      "fix": "Move scene.add(group) out of createCauldron() and into the call site at line 787, matching every other factory. Change line 787 to: const cauldron = createCauldron(); scene.add(cauldron.group);"
+    },
+    {
+      "id": "BUG-L-REGARD-GUARD-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "line_approx": 317,
+      "description": "mg_regard.ts render() guard uses `this.phase === 'done'` instead of `this.ended` (contrast with all 10 other minigames that use `this.ended` per the C106 pattern). The `phase` field transitions to 'done' inside endGame() (line 301), but `this.ended` is also set to true at line 302. If endGame() is called from a path that sets `this.ended = true` before `this.phase = 'done'` (or if a future refactor reorders them), the render loop will continue one extra frame. More critically: `this.phase === 'done'` does NOT guard against the case where `this.ended` is true but `this.phase` has not yet been set to 'done' — which can happen if cancelAnimationFrame fires before the phase assignment in a future edit. The inconsistency with the rest of the codebase is also a maintenance hazard.",
+      "fix": "Change line 317 from `if (!this.ctx || !this.canvas || this.phase === 'done') return;` to `if (!this.ctx || !this.canvas || this.ended) return; // C106` to match C106 pattern used by all other minigames."
+    },
+    {
+      "id": "BUG-L-GLBFADE-MURTILE-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line_approx": 315,
+      "description": "fadeInGLB is called on backMesh only (line 315), but leftMesh and rightMesh are added to the scene without their own fade-in. Because all three InstancedMeshes share the same tileMat (cloned once at line 254), setting opacity=0 on backMesh's material via fadeInGLB also affects leftMesh and rightMesh (same material reference). This is intentional per the comment at line 312-314. However, fadeInGLB restores `transparent=false` after completion (line 47-49) by iterating the meshes it collected — it collected backMesh only. leftMesh and rightMesh are NOT in its meshes array. After the 400ms fade, opacity is set to 1.0 on the shared material and transparent is set to false — this is correct because the material IS shared. BUT: if the fade is cancelled mid-way (cancelHandles[i]() called in dispose()), the shared material is left with transparent=true and opacity < 1 permanently, which causes all three wall InstancedMeshes to be semi-transparent on the next lair visit (GLB cache is cleared in dispose, but the THREE.js material object itself is disposed — this is actually safe because clearGLBCache + geometry.dispose() + material.dispose() are all called). Severity is MEDIUM rather than HIGH because the dispose path disposes the material, preventing the semi-transparent leak across sessions.",
+      "fix": "Either (a) pass backMesh as part of a wrapper Group so all three meshes are iterated by fadeInGLB, or (b) add a comment explicitly documenting that the cancelHandles entry covers all three tiles via shared material, and confirm the cancel path is safe (it is, given material.dispose() in dispose())."
+    },
+    {
+      "id": "INFO-L-DENSITY-MOONLEAK-01",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/LairDensity.ts",
+      "line_approx": 30,
+      "description": "LairDensity adds moon (SpotLight) to the group (line 29) and moon.target to the scene (line 30). The cleanup callback returned at line 47 removes moon.target via scene.remove(). This is called in dispose() at line 1206. However, the SpotLight itself (moon) is inside the group which is added via scene.add(group) at line 45. The group is NOT returned — only the cleanup callback is. During dispose(), scene.traverse() at line 1230 will find the group's children (SpotLight is not a Mesh/InstancedMesh/Points) — SpotLight is a Light, which is neither Mesh nor Points, so the traverse block skips it without calling dispose(). Three.js Lights do not have GPU resources to dispose (no geometry/material), so this is not a WebGL memory leak. However the SpotLight object will not be explicitly removed from the scene before renderer.dispose() — Three.js renderer.dispose() does not traverse the scene. The SpotLight is inside the group which is inside scene — renderer.dispose() clears the WebGL context but scene objects remain in JS memory until GC. Since the entire scene object is local to initMerlinLair() and goes out of scope after dispose(), this is GC-safe. No action required, but noting for completeness.",
+      "fix": "No fix required. The scene reference itself is local and will be GC'd. If a future change makes scene long-lived, add light.dispose() calls in the traverse block for Light instances."
+    }
+  ],
+  "confirmations": [
+    {
+      "check": "BUG-L-07-GHOST current state",
+      "result": "In the current code (pre-fix), glow is added via group.add(glow) at line 568 and steamPoints via group.add(steamPoints) at line 591. Both are correctly parented to the group, NOT directly to scene. BUG-L-07-GHOST as originally described (glow + steamPoints added to scene not group) is NOT present in the current source. Either the bug was already partially fixed in a previous cycle, or the original report described a regression that was introduced and then reverted. The fix planned for this cycle may be the scene.add(group) internal call (see BUG-L-DOUBLE-ADD-01)."
+    },
+    {
+      "check": "LairGLBAssets.ts InstancedMesh tile counts (C124 fix)",
+      "result": "CONFIRMED CORRECT. backMesh=24 (6 cols x 4 rows, line 271), leftMesh=20 (5 cols x 4 rows, line 285), rightMesh=20 (5 cols x 4 rows, line 299). ROW_H = 16/4 = 4.0u (line 265). Loop bodies match declared counts: back loop 6x4=24, left 5x4=20, right 5x4=20. Total 64 tiles."
+    },
+    {
+      "check": "cancelGLBFades called in dispose()",
+      "result": "CONFIRMED. cancelGLBFades() is called at line 1205 in dispose(). loadLairGLBs() returns a cancel-all function (LairGLBAssets.ts line 351) that iterates cancelHandles. All 7 fadeInGLB calls push their cancel handle into cancelHandles (lines 109, 145, 175, 206, 237, 315, 341)."
+    },
+    {
+      "check": "cleanupLairDensity called in dispose()",
+      "result": "CONFIRMED. cleanupLairDensity() called at line 1206. It removes moon.target from scene (LairDensity.ts line 47)."
+    },
+    {
+      "check": "scene.traverse geometry+material dispose coverage for cauldron group",
+      "result": "CONFIRMED. cauldron.group is scene.add()-ed inside createCauldron() at line 555. The group contains body (Mesh), 3 legs (Mesh), glow (PointLight — no GPU resource), steamPoints (Points). The traverse at line 1230 covers Mesh and Points via the else-if branch, disposing their geometries and materials. All cauldron GPU resources are correctly freed."
+    },
+    {
+      "check": "Mobile canvas sizing",
+      "result": "NO FIXED-PIXEL CONSTRAINT FOUND. The lair wrapper is created at main.ts line 314 with `position:fixed;inset:0;width:100%;height:100%`. initMerlinLair() calls renderer.setSize(container.clientWidth, container.clientHeight) at line 698. A ResizeObserver re-runs onResize on container dimension changes (line 754-758). No CSS file sets pixel-fixed dimensions on the canvas or wrapper. The canvas is correctly fluid on mobile."
+    },
+    {
+      "check": "All 14 minigames render() ended guard",
+      "result": "13/14 use the standard C106 pattern `if (!this.ctx || !this.canvas || this.ended) return`. mg_regard.ts uses `this.phase === 'done'` instead — flagged as BUG-L-REGARD-GUARD-01 (MEDIUM). mg_ombres.ts uses the correct `this.ended` pattern."
+    },
+    {
+      "check": "bougie.glb clones in LairGLBAssets.ts",
+      "result": "Each clone calls child.material = (child.material as MeshStandardMaterial).clone() at line 134 — each candle clone gets independent material instances. BUG-L-10 (shared material flicker regression) is NOT triggered by this path. The comment at line 126-128 documents the risk and confirms the clone() call is intentional."
+    },
+    {
+      "check": "LairDensity geometry/material disposal",
+      "result": "LairDensity adds a Group to scene (line 45). All objects inside are standard Meshes. scene.traverse() in dispose() will reach them and call geometry.dispose() + material.dispose() via the Mesh branch. The 5 shared bookMats (line 15-17) will each be disposed once (Set dedup guards in dispose() prevent double-dispose). Clean."
+    }
+  ],
+  "score_adjustment": -0.07,
+  "summary": "2 actionable new bugs found: BUG-L-DOUBLE-ADD-01 (HIGH — createCauldron internal scene.add is architecturally inconsistent and is the root cause pattern for the BUG-L-07 class) and BUG-L-REGARD-GUARD-01 (MEDIUM — mg_regard uses phase guard instead of ended guard). 1 documentation gap on the shared-material fadeInGLB cancel path (MEDIUM). No softlocks. No mobile canvas constraint. All dispose() paths verified clean for cauldron, density, and GLB fades."
+}

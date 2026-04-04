@@ -1,0 +1,149 @@
+{
+  "meta": {
+    "cycle": 48,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": "MainMenuScene + MinigameBase + mg_combat_rituel + mg_herboristerie + mg_fouille (representative sample of 14 total minigames)"
+  },
+
+  "scores": {
+    "criterion_1_visual_quality_3d": {
+      "score": 9,
+      "label": "Qualite visuelle 3D — flatShading, eclairage, animation",
+      "finding": "PASS. flatShading: true applique sur absolument tous les materials (ocean, falaise, tour, nuages, vegetation, skybox). Aucune incoherence detectee. Eclairage minimaliste (1 DirectionalLight + 1 AmbientLight + 1 PointLight tower) = draw calls tres bas. God Ray avec pulse sinus subtil (0.20 +/- 0.08 opacity, 3s periode). Sea spray 120 particules AdditiveBlending. Wave animation: 3 composantes sinus entrelacees = facettes polygonales bien visibles. Seule reserve: le `startDolly` est un no-op qui appelle `onComplete` immediatement — commentaire le documente mais absence de camera movement reduit la premiere impression de dynamisme."
+    },
+    "criterion_2_performance": {
+      "score": 8,
+      "label": "Performance — draw calls, lights, particles, FPS budget",
+      "finding": "GOOD. Geometries legeres: BoxGeometry(4,4,4 segments), PlaneGeometry(30×20). 1 PointLight seulement dans la scene (tower interior). pixelRatio plafonné a 1.5. antialias: false. FogExp2 density 0.012 culling les objets lointains. 120 particules Points = acceptable. PROBLEME MINEUR: ocean update() appelle geo.computeVertexNormals() a chaque frame (180 vertices, 30×20 segments = 630 faces a recalculer ~60Hz). Sur mobile bas de gamme ce serait ~1-2ms/frame. Non bloquant mais optimisable (precalcul des normales par face statique). Cloud update() fait un forEach non parallelisable = 14 iterarions/frame, negligeable."
+    },
+    "criterion_3_first_impression_ux": {
+      "score": 7,
+      "label": "First impression / UX — transitions, loading, accessibility",
+      "finding": "PARTIAL. Resize handler correctement rattache a window, correctly removed dans dispose(). Dispose() complet: traverse scene, dispose geometry + material, removeChild canvas. PROBLEME: pas de loading state / skeleton visible pendant l'init Three.js (cold start peut etre blanc ~200ms). startDolly no-op documente mais ne fournit aucun feedback visuel de progression vers le Hub. Pas de titre textuel visible dans MainMenuScene elle-meme (le titre MERLIN est probablement dans le HTML parent, non audite). Aucun aria-label sur le canvas renderer — le canvas 3D n'a pas de role='application' ni aria-label. Critique pour NVDA/VoiceOver."
+    },
+    "criterion_4_minigame_coverage": {
+      "score": 7,
+      "label": "Couverture gameplay — 15 minigames presents et distincts",
+      "finding": "DEFICIT: 14 fichiers mg_*.ts trouves, pas 15. Liste: mg_equilibre, mg_runes, mg_traces, mg_apaisement, mg_combat_rituel, mg_course, mg_echo, mg_fouille, mg_negociation, mg_ombres, mg_regard, mg_sang_froid, mg_volonte, mg_herboristerie. Le 15e minigame du game design bible (champ lexical 'neutre' ou 'memoire' ?) est absent. Les 14 existants semblent couvrir des mecaniques distinctes (dodge, click, identification, negociation, equilibre, course) — diversite satisfaisante sur l'echantillon inspecte."
+    },
+    "criterion_5_minigamebase_quality": {
+      "score": 9,
+      "label": "MinigameBase qualite — dispose correct, AudioContext leaks, canvas cleanup",
+      "finding": "VERY GOOD. AudioContext: cree a chaque appel playOutcomeTone() MAIS setTimeout(() => ctx.close(), ...) est planifie correctement pour fermer le contexte apres que tous les oscillateurs ont joue. La formule de timeout (freqs.length * dur * 0.6 + dur + 0.2) * 1000 est correcte pour le cas maitrise (4 tons). ctx.resume().catch().finally() = pattern iOS-safe. UNE RESERVE MINEURE: si l'utilisateur quitte la scene pendant que les oscillateurs jouent (ex: pendant les 2.2s overlay), ctx.close() sera appele par le setTimeout mais les oscillateurs seront deja coupes par le GC — comportement safe. finish() guard `this.finished` = idempotent contre double-appel. cleanup() = container.innerHTML = '' (supprime canvas + tous les listeners via garbage collection si les listeners sont des arrow functions stockees). ATTENTION: les removeEventListener dans les subclasses (cleanup() override) sont indispensables et bien presents dans les 3 minigames audites."
+    },
+    "criterion_6_feedback_4_levels": {
+      "score": 8,
+      "label": "Feedback 4 niveaux — textes Celtic authentiques",
+      "finding": "GOOD. Les 4 labels et flavor texts sont presents et coherents: DESASTRE ('Les esprits de la foret se detournent de toi'), ECHEC ('Le druide observe. La voie reste incertaine'), REUSSITE ('Merlin hoche la tete — l equilibre est maintenu'), MAITRISE ('Ogham vivant — la foret chante a ton passage'). Tonalite celtique convaincante. Tones WebAudio distincts par niveau (sawtooth descending pour desastre, sine ascending pour maitrise). Overlay: color-coded avec border semantique. RESERVE: les flavor texts sont hardcodes en francais uniquement, sans mecanisme de localisation. Pas de majuscule accentuee dans 'DESASTRE' vs 'DÉSASTRE' (typo dans le code: label correct 'DÉSASTRE' avec accent dans OUTCOME_CONFIG)."
+    },
+    "criterion_7_aria_accessibility": {
+      "score": 6,
+      "label": "ARIA / accessibility — canvas role=application + aria-label",
+      "finding": "PARTIAL — PROBLEME IDENTIFIE. mg_combat_rituel: canvas.setAttribute('role','application') + aria-label OK. Timer progressbar: role, aria-valuemin, aria-valuemax, aria-valuenow tous presents et mis a jour dynamiquement. mg_herboristerie: canvas role=application + aria-label presents. Timer progressbar complet. mg_fouille: canvas role=application + aria-label presents. MAIS le timer bar de mg_fouille N'A PAS de role=progressbar ni d'attributs aria-value* — inconsistance avec les deux autres. MainMenuScene: le WebGLRenderer canvas n'a AUCUN role ni aria-label (critere 3). Overlay outcome: role='status' + aria-live='assertive' = correct. Score abaisse pour les deux lacunes (fouille timer + mainmenu canvas)."
+    },
+    "criterion_8_fun_factor_game_feel": {
+      "score": 8,
+      "label": "Fun factor / game feel — timer visibility, feedback immediat, difficulte progressive",
+      "finding": "GOOD. mg_combat_rituel: difficulty ramp cubique (1.0x → 2.5x en 10s), bien commented. Hit flash 0.5s decay. Player glow gradient. 8 ogham runes decoratives animees en bordure. Centre bonus zone pulsante. Score formule = survivalPct(80) + centerPct(20) = pousse le risque/recompense. mg_herboristerie: grid shake (6px, decay 0.85x) sur mauvais clic. Flash par cellule verte/rouge. Breath animation sur cellules non-cliquees. Score penalite -8/erreur + time bonus 20pts = tension. mg_fouille: shuffle toutes 2s (warning flash < 0.5s) = urgence bien rendue. Hover state sur objects. 60 dots background pseudo-aleatoire. RESERVE: le timer est uniquement une barre en haut, sans affichage numerique des secondes — les joueurs habitues aux chrono numeriques peuvent sous-estimer l'urgence."
+    },
+    "criterion_9_mobile_scroll": {
+      "score": 8,
+      "label": "Scroll/touch iOS — canvas touch-action",
+      "finding": "GOOD. Les 3 minigames audites utilisent tous touch-action:none sur le canvas CSS. MainMenuScene n'a pas de canvas interactif (pas de touch input direct). L'event handler utilise PointerEvent (pas TouchEvent) = unified API cross-platform. RESERVE: touch-action:none bloque le scroll sur toute la page si le canvas est plus haut que le viewport (debordement vertical sans scroll possible). Sur iPhone SE (375px wide) le canvas de mg_fouille (420px wide) est scaled down par le browser mais peut causer un overflow horizontal si le container n'est pas overflow:hidden. Non verifiable sans lecture du CSS parent."
+    },
+    "criterion_10_memory_management": {
+      "score": 8,
+      "label": "Memory management — AudioContext lifecycle, canvas cleanup",
+      "finding": "GOOD avec reserve. AudioContext: cree et ferme correctement dans playOutcomeTone (voir critere 5). canvas cleanup: container.innerHTML = '' dans MinigameBase.cleanup() = fast path correct. Les animFrame sont annules (cancelAnimationFrame) dans cleanup() de chaque minigame. Les timerInterval sont clears dans cleanup(). RESERVE: si finish() est appele (qui appelle cleanup() via showOutcomeOverlay.then()), et que le caller externe appelle aussi cleanup() independamment avant la 2.2s overlay, le container.innerHTML = '' supprime l'overlay en cours d'affichage mais la Promise de showOutcomeOverlay ne se resout jamais (overlay.remove() sur element deja absent = no-op, resolve() n'est jamais appele). Le commentaire BUG-02 mentionne ce cas mais la solution actuelle (resolve apres remove, sans check isConnected) peut laisser la Promise en suspens si le container est vide avant le timeout."
+    }
+  },
+
+  "global_score": {
+    "total": 78,
+    "out_of": 100,
+    "average_per_criterion": 7.8,
+    "rating": "GOOD — pret pour beta, 2 bugs a corriger avant release"
+  },
+
+  "top_2_bugs_critical": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "title": "mg_fouille: timer progressbar manque de ARIA (pas de role=progressbar)",
+      "location": "C:/Users/PGNK2128/Godot-MCP/web-demo/src/minigames/mg_fouille.ts — setup(), ligne ~96",
+      "detail": "Le timerBar div n'a pas role='progressbar', ni aria-label, ni aria-valuemin/max/now. Tous les autres minigames audites (combat_rituel, herboristerie) ont ces attributs. Inconsistance d'accessibilite. Les lecteurs d'ecran (NVDA, VoiceOver) ne peuvent pas signaler l'urgence du timer. Fix: ajouter timerBar.setAttribute('role','progressbar'), aria-label='Temps restant', aria-valuemin='0', aria-valuemax='100', aria-valuenow='100', et mettre a jour aria-valuenow dans le setInterval.",
+      "fix_effort": "5 minutes"
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "title": "MainMenuScene: canvas WebGL sans role ni aria-label — invisible aux lecteurs d'ecran",
+      "location": "C:/Users/PGNK2128/Godot-MCP/web-demo/src/scenes/MainMenuScene.ts — initMainMenu(), ligne ~675 (renderer.domElement)",
+      "detail": "Le canvas Three.js est ajoute au container via container.appendChild(renderer.domElement) sans aucun attribut d'accessibilite. Contrairement aux canvases minigame qui ont role='application' et aria-label, le canvas menu est mute pour les technologies d'assistance. Sur NVDA, le focus sur la page annonce 'canvas' sans contexte. Fix: apres la creation du renderer, ajouter renderer.domElement.setAttribute('role','img') et renderer.domElement.setAttribute('aria-label', 'Scene 3D — Cote rocheux de Broceliande, tour de Merlin'). role=img est preferable a application car le canvas menu n'est pas interactif.",
+      "fix_effort": "2 minutes"
+    }
+  ],
+
+  "secondary_issues": [
+    {
+      "severity": "MEDIUM",
+      "title": "14 minigames au lieu de 15 — un minigame manquant",
+      "detail": "Le game design bible refere a 8 champs lexicaux + neutre = 9 potentiels, mais seuls 14 fichiers mg_*.ts existent. Identifier quel minigame est absent (probable: mg_memoire ou mg_ancestral) et creer le fichier manquant.",
+      "fix_effort": "1-2 heures"
+    },
+    {
+      "severity": "MEDIUM",
+      "title": "ocean computeVertexNormals() chaque frame — CPU waste sur mobile",
+      "location": "MainMenuScene.ts — createLowPolyOcean().update(), ligne ~86",
+      "detail": "computeVertexNormals() sur une PlaneGeometry(80,60,30,20) = 630+ triangles recalcules a 60Hz. Sur Snapdragon 665 equivalent cela prend ~1-2ms/frame. Alternative: utiliser flatShading=true sans recompute (les normales par face sont calculees au rendu par le shader). Supprimer l'appel a computeVertexNormals() dans update() devrait etre safe avec flatShading.",
+      "fix_effort": "10 minutes"
+    },
+    {
+      "severity": "LOW",
+      "title": "showOutcomeOverlay: Promise peut rester en suspens si cleanup() externe est appele avant les 2.2s",
+      "location": "MinigameBase.ts — showOutcomeOverlay(), ligne ~162",
+      "detail": "Si le parent appelle container.innerHTML = '' avant la fin de l'overlay (ex: navigation rapide), overlay.remove() ne fait rien et resolve() n'est jamais appele. Ajouter un garde: if (!overlay.isConnected) { resolve(); return; } dans le setTimeout interne.",
+      "fix_effort": "5 minutes"
+    },
+    {
+      "severity": "LOW",
+      "title": "Timer numerique absent dans tous les minigames",
+      "detail": "Seule une barre de progression est visible — pas d'affichage numerique (ex: '8s'). Sur mobile ou petit ecran, la barre est difficile a lire sous stress. Ajouter un span textuel '8s' cote droit de la timer bar ameliorerait significativement la lisibilite sans cout de performance.",
+      "fix_effort": "15 minutes (cross-cuting, 14 fichiers)"
+    }
+  ],
+
+  "emoji_cross_platform_assessment": {
+    "risk": "LOW",
+    "detail": "mg_herboristerie utilise des unicode non-emoji (U+2618 shamrock, U+273F florette, U+2699 gear, U+2620 skull, U+2736 star6, U+2740/2741 flowers, U+2698 alembic). Ces caracteres sont dans le BMP et rendus via font='28px system-ui'. system-ui mappe sur San Francisco (iOS), Segoe UI (Windows), Roboto (Android). Les glyphs BMP sont generalement presents dans ces polices. Le skull U+2620 peut etre absent sur certains Roboto anciens — fallback: affichage comme carree vide. Risque faible mais existant sur Android < 8.0. Aucun emoji colorise (U+1F...) utilise = bon choix."
+  },
+
+  "worker_output": {
+    "agent": "merlin-ai-playtester",
+    "cycle": 48,
+    "status": "PARTIAL",
+    "confidence": "HIGH",
+    "evidence": [
+      "MainMenuScene.ts lu integralement (773 lignes) — flatShading 100% coherent, dispose() complet",
+      "MinigameBase.ts lu integralement (231 lignes) — AudioContext close() correct, finish() idempotent",
+      "mg_combat_rituel.ts audite — ARIA complet, difficulty ramp cubique, cleanup correct",
+      "mg_herboristerie.ts audite — emojis BMP safe, immutable updates, cleanup correct",
+      "mg_fouille.ts audite — timer ARIA manquant (BUG #1 identifie)",
+      "14 minigames detectes sur 15 attendus",
+      "2 bugs HIGH identifies, 2 issues MEDIUM, 2 issues LOW"
+    ],
+    "blockers": [],
+    "top_2_bugs": [
+      "mg_fouille timer bar: manque role=progressbar + aria-value* (fix: 5 min)",
+      "MainMenuScene canvas: manque role + aria-label (fix: 2 min)"
+    ],
+    "next_steps": [
+      "Corriger BUG #1 (fouille ARIA) et BUG #2 (mainmenu canvas aria) — total 7 min",
+      "Identifier et creer le 15e minigame manquant",
+      "Supprimer computeVertexNormals() dans ocean update() pour gain mobile",
+      "Auditer les 11 minigames non lus (mg_equilibre, mg_runes, mg_traces, mg_apaisement, mg_course, mg_echo, mg_negociation, mg_ombres, mg_regard, mg_sang_froid, mg_volonte) pour confirmer pattern ARIA coherent"
+    ],
+    "tokens_used_approx": 4200
+  }
+}

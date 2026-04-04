@@ -1,0 +1,177 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 48,
+  "commits_verified": ["a424ff6 (C108)", "7a69693 (C109)", "08e4b75 (C110)", "6c597e9 (C111)"],
+  "audit_mode": "static_code_review_headless",
+  "verdict": "FIX",
+
+  "commit_verification": {
+    "C108_sharedLight_hysteresis": {
+      "status": "VERIFIED",
+      "evidence": "MerlinLairScene.ts:1031-1032 — fps<45 sets lowFpsMode=true, fps>52 clears it. Hysteresis band [45,52] confirmed. Sample window 2s confirmed (fpsElapsed>=2.0)."
+    },
+    "C109_InstancedMesh_dispose_order": {
+      "status": "VERIFIED",
+      "evidence": "MerlinLairScene.ts:1064-1071 — InstancedMesh branch: obj.dispose() FIRST, then obj.geometry.dispose(), then obj.material.dispose(). Order is correct; renderer 'dispose' event fires before attribute buffers are released."
+    },
+    "C110_ZONE_LORE_Celtic": {
+      "status": "VERIFIED",
+      "evidence": "MerlinLairScene.ts:882-888 — cauldron='Le chaudron de Cerridwen bouillonne de sagesse ancienne', door='Les bois de Brocéliande t\\'attendent, voyageur'. Both mythological anchors present."
+    },
+    "C110_mg_sang_froid_tieredValue": {
+      "status": "VERIFIED",
+      "evidence": "mg_sang_froid.ts:55-57 — endRadius=tieredValue([28,24,20,16]), driftSpeed=tieredValue([18,22,26,30]). Both parameters now use the standard 4-tier array convention."
+    },
+    "C111_crystalGLBMat_declaration": {
+      "status": "VERIFIED",
+      "evidence": "MerlinLairScene.ts:770 — 'let crystalGLBMat: THREE.MeshStandardMaterial | null = null;' present."
+    },
+    "C111_crystalGLBMat_capture": {
+      "status": "VERIFIED",
+      "evidence": "MerlinLairScene.ts:792 — 'crystalGLBMat = mesh.material as THREE.MeshStandardMaterial;' inside onCrystalGLBLoaded callback."
+    },
+    "C111_crystalGLBMat_animation": {
+      "status": "VERIFIED",
+      "evidence": "MerlinLairScene.ts:1011 — 'if (crystalGLBMat) crystalGLBMat.emissiveIntensity = 0.5 + Math.sin(elapsedTime * 1.4) * 0.15;' in update()."
+    },
+    "C111_mg_echo_onKeyDown_setup": {
+      "status": "VERIFIED",
+      "evidence": "mg_echo.ts:119 — 'this.canvas.addEventListener(\\'keydown\\', this.onKeyDown);' in setup()."
+    },
+    "C111_mg_echo_onKeyDown_endGame_remove": {
+      "status": "VERIFIED",
+      "evidence": "mg_echo.ts:252 — 'this.canvas?.removeEventListener(\\'keydown\\', this.onKeyDown);' in endGame()."
+    },
+    "C111_mg_echo_onKeyDown_quadrant_mapping": {
+      "status": "VERIFIED",
+      "evidence": "mg_echo.ts:181-183 — keyMap: ArrowUp=0, ArrowRight=1, ArrowDown=2, ArrowLeft=3. Matches quadrant array: [Nord,Est,Sud,Ouest]. Correct."
+    },
+    "C111_mg_echo_ripple_on_keyboard": {
+      "status": "VERIFIED",
+      "evidence": "mg_echo.ts:200-206 — keyboard handler triggers ripple at quadrant centre (centerX+q.cx, centerY+q.cy). Visual parity with mouse click."
+    }
+  },
+
+  "criteria_scores": {
+    "rendu_3d_flat_shading_z_fighting": {
+      "score": 7.0,
+      "notes": [
+        "Flat-shading enforced globally via applyFlatShading() on all non-crystal GLBs — VERIFIED.",
+        "Crystal GLB emissive now animated in update() post C111 — BUG-C46-01 resolved.",
+        "sol_pierre.glb: Y offset +0.02 (procedural floor at Y=-5, GLB at Y=-4.98). NO polygonOffset on sol_pierre. This is a residual risk: on Mali/Adreno 16-bit depth, 0.02 world-unit gap may collapse at oblique angles. mur_pierre.glb correctly uses polygonOffset factor=-2/units=-4.",
+        "sharedLight Y=-4.30 not independently verifiable from code (likely in procedural light setup, not in the 3 files read).",
+        "Deduction: sol_pierre z-fighting risk without polygonOffset (-1.5 pts)"
+      ]
+    },
+    "assets_glb_coverage_celtic_style": {
+      "score": 7.5,
+      "notes": [
+        "6 GLBs: cauldron_merlin, bougie (x3), table_druidique, bibliotheque, sol_pierre, mur_pierre, crystal_ball. Good coverage.",
+        "Celtic naming coherent. Flat-shading applied consistently.",
+        "Cannot verify poly counts, proportions, or actual mesh aesthetics without editor. Score capped at 7.5."
+      ]
+    },
+    "web_perf_bundle_fps_memory": {
+      "score": 7.5,
+      "notes": [
+        "C109 InstancedMesh.dispose() order CORRECT — GPU instanceMatrix buffer properly freed.",
+        "FPS hysteresis [45,52] prevents oscillation — good adaptive quality.",
+        "AudioContext singleton in MinigameBase.ts correctly avoids Chrome 6-context cap.",
+        "No geometry.dispose() on cloned geometries (mur_pierre clones tileGeo once, 3 InstancedMeshes share same geometry reference). Shared geometry disposed once — acceptable but not a deep clone per-instance.",
+        "tileGeo.clone() in loadGLB/mur_pierre: one clone, correctly owned. OK.",
+        "Dust motes skipped in lowFpsMode. Good.",
+        "Bundle size not verifiable statically."
+      ]
+    },
+    "ux_accessibility_aria_mobile_lore": {
+      "score": 7.5,
+      "notes": [
+        "ZONE_LORE updated with Cerridwen and Brocéliande references — Celtic immersion improved.",
+        "ZONE_ARIA_LABELS stable. aria-live present on lair.",
+        "mg_echo: canvas.tabIndex=0 set, keyboard handler registered, WCAG 2.1.1 partially satisfied.",
+        "mg_echo: keyboard ripple visual feedback present.",
+        "No cleanup in a hypothetical cleanup() method beyond endGame — if game is aborted mid-run (parent container removed), keydown listener may remain on canvas. MinigameBase cleanup() not verified; endGame() removes it, but abort path unclear.",
+        "mg_echo: no aria-live for keyboard round feedback (only statusEl text update, not aria-atomic)."
+      ]
+    },
+    "game_feel_hover_transitions_zones": {
+      "score": 7.5,
+      "notes": [
+        "Hover: scale 1.05, emissive 0.65, cursor pointer, SFX hover, lore toast fade in. Solid.",
+        "Door: 380ms cinematic burst with emissive 1.2 + magic_reveal SFX. Good drama.",
+        "Crystal float animation synced to GLB group post C101. Crystal emissive now animated post C111.",
+        "Zone lore toast uses textContent (XSS-safe) — clean.",
+        "No keyboard navigation between zones in the lair itself (only within minigame canvases)."
+      ]
+    },
+    "game_design_lore_celtic_narration": {
+      "score": 8.0,
+      "notes": [
+        "ZONE_LORE now mythologically grounded: Cerridwen (cauldron goddess), Brocéliande (Arthurian sacred forest), 'runes d\\'ogham murmurent dans la pierre sacrée', 'chroniques de Merlin'.",
+        "mg_echo lore: 'D\\'ou vient l\\'appel ?' — thematically consistent with Celtic sound/echo motif.",
+        "mg_sang_froid: 'Reste dans la zone' + instruction with drift warning — functional but lore-light.",
+        "4-outcome system labels in MinigameBase (DÉSASTRE/ÉCHEC/RÉUSSITE/MAÎTRISE) + Celtic flavor text — coherent.",
+        "MinigameBase flavor texts reference forest spirits and Merlin — good immersion."
+      ]
+    }
+  },
+
+  "global_score": 7.5,
+
+  "top_3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "id": "BUG-C48-01",
+      "title": "sol_pierre.glb missing polygonOffset — z-fighting risk on mobile GPU",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 159,
+      "description": "sol_pierre.glb is positioned at Y=-4.98 (procedural floor hidden at Y=-5). The 0.02-unit world-space gap is sufficient on desktop (32-bit depth) but collapses on Mali/Adreno 16-bit depth buffers at shallow camera angles. mur_pierre.glb correctly uses polygonOffsetFactor=-2 / Units=-4 (C89-P1/C90-P2). sol_pierre.glb has no polygonOffset set. Inconsistent treatment for the highest-surface-area object in the scene.",
+      "recommendation": "Add polygonOffset=true, polygonOffsetFactor=-1, polygonOffsetUnits=-2 inside the sol_pierre loadGLB traverse() after applyFlatShading()."
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "id": "BUG-C48-02",
+      "title": "mg_echo keydown listener not removed on minigame abort (non-endGame path)",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "line": 251,
+      "description": "The keydown listener is removed in endGame() (line 252) and setup registers it (line 119). However if the parent framework calls cleanup() or destroys the container before the game naturally ends (e.g. player navigates away mid-minigame), the onKeyDown handler remains attached to the canvas element. Whether MinigameBase exposes a cleanup() hook that removes it is not verified in the files read. If not, repeated minigame instantiations accumulate orphaned handlers.",
+      "recommendation": "Verify MinigameBase cleanup() calls this.canvas?.removeEventListener('keydown', this.onKeyDown). If not, add it."
+    },
+    {
+      "rank": 3,
+      "severity": "LOW",
+      "id": "BUG-C48-03",
+      "title": "mg_echo keyboard feedback not aria-live announced",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "line": 207,
+      "description": "statusEl.textContent update on keyboard answer (line 208) is not announced to screen readers because the element lacks role='status' or aria-live='polite'. Mouse-click path has the same issue. Canvas role='application' suppresses automatic announcements. Players using screen readers receive no feedback on whether their arrow-key answer was correct.",
+      "recommendation": "Add aria-live='polite' and role='status' to the status div, or dispatch an aria-live announcement to the existing lair ariaLive element."
+    }
+  ],
+
+  "balance_assessment": {
+    "mg_sang_froid_tieredValue": "CORRECT — endRadius [28,24,20,16] and driftSpeed [18,22,26,30] properly tiered. Harder at higher tiers (smaller zone, faster drift). Consistent with 14-minigame convention.",
+    "mg_echo_difficulty": "CORRECT — flashDuration [0.5,0.4,0.35,0.3]s and windowDuration [1.2,1.0,0.8,0.7]s. Tier-0 is forgiving (500ms flash, 1.2s answer window). Tier-3 is demanding (300ms flash, 700ms window). Balance acceptable.",
+    "crystal_animation": "BUG-C46-01 RESOLVED — GLB emissive now animated in update(). No dead-mat visual artifact post-load."
+  },
+
+  "summary": {
+    "commits_all_verified": true,
+    "critical_issues": 0,
+    "high_issues": 1,
+    "medium_issues": 1,
+    "low_issues": 1,
+    "global_score_10": 7.5,
+    "verdict": "FIX",
+    "verdict_reason": "Score 7.5/10 is below the 8.5 PROCEED threshold. One HIGH issue (sol_pierre z-fighting on mobile GPU) must be addressed before shipping. The fix is a 3-line polygonOffset addition."
+  },
+
+  "next_steps": [
+    "Fix BUG-C48-01: add polygonOffset to sol_pierre.glb mesh traverse in LairGLBAssets.ts",
+    "Verify MinigameBase cleanup() removes keydown listener (BUG-C48-02)",
+    "Add aria-live to mg_echo status element (BUG-C48-03)",
+    "Re-run Cycle-49 playtester after fixes to confirm PROCEED"
+  ]
+}

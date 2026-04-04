@@ -1,0 +1,214 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 76,
+  "auditor": "merlin-ai-playtester",
+  "areas_audited": [
+    "mg_runes.ts",
+    "mg_traces.ts",
+    "CoastBiome.ts",
+    "main.ts gameLoop",
+    "Store.ts startRun / buildDefaultRun"
+  ],
+
+  "area_1_mg_runes": {
+    "mechanic": "Memory-pair matching. 4x4 grid of 16 stone tiles hiding 8 ogham rune pairs. Player clicks tiles two at a time; matching pairs stay revealed (green); mismatches flip back after 600ms. 15-second countdown. Score = (pairsFound/8)*70 + (timeLeft/15)*30. Max score = 100 at full pairs + full time.",
+    "timer_accuracy": "setInterval(100ms) accumulating 0.1s per tick — standard floating-point drift pattern. Over 15s this causes ~150 ticks but float subtraction can overshoot. Not frame-accurate but drift is <0.2s per run — LOW severity.",
+    "render_loop": "Uses requestAnimationFrame for canvas rendering (this.animFrame). No getDeltaTime() needed: render is purely visual, no physics. Timer is decoupled from rAF. Correct design.",
+    "can_score_zero_passively": true,
+    "zero_score_analysis": "If player clicks nothing for 15 seconds, timeLeft reaches 0, endGame() fires with matchedCount=0. Score = 0*70 + 0*30 = 0. Score of exactly 0 is mathematically possible without interaction. The MinigameBase.finish(0) call must be verified — if it clamps, no issue; if the game loop uses score=0 as 'worst outcome multiplier', that is acceptable design.",
+    "softlock_risk": "NONE. Timer always fires endGame. Even with lockInput=true stuck (race condition between revealTimeout and timeLeft<=0), endGame() calls clearTimeout(revealTimeout) first then clearInterval — cleanup is safe.",
+    "double_endgame_risk": {
+      "severity": "MEDIUM",
+      "detail": "Two independent paths call endGame(): (A) matchedCount >= totalPairs inside onClick, (B) timeLeft <= 0 in setInterval. If the 8th pair is matched in the same 100ms tick that also triggers timeLeft<=0, both branches fire. endGame() calls clearInterval and removeEventListener, but does NOT set a guard flag. this.finish() will be called twice on MinigameBase, potentially calling the external resolve() callback twice.",
+      "line_reference": "Line 177 (onClick match branch) and line 106 (timer branch) — no mutual exclusion guard.",
+      "recommendation": "Add a private endedFlag: boolean = false guard in endGame() — early return if already ended."
+    },
+    "aria_assessment": "Timer bar has full ARIA progressbar attributes (aria-label, aria-valuemin, aria-valuemax, aria-valuenow updated per tick). Canvas has aria-label and role=application. tabIndex=0 set. PASS.",
+    "score_range": "Min=0 (no pairs, time expired), Max=100 (all pairs, no time lost). No NaN possible: matchedCount and timeLeft are always finite numbers. No negative possible: both terms clamped to Math.max(0,...).",
+    "issues": [
+      {
+        "severity": "MEDIUM",
+        "issue": "Double endGame() invocation when last pair is matched within same 100ms interval tick that also fires timeLeft<=0",
+        "lines": "106 and 177",
+        "recommendation": "Add 'if (this.ended) return; this.ended = true;' guard at top of endGame()"
+      }
+    ]
+  },
+
+  "area_2_mg_traces": {
+    "mechanic": "Sequential footprint tap. 7 footprints placed along a sine-wave winding path on a 400x400 canvas. Player must click/tap each in order (index 0 to 6). Hit radius = 30px. 8-second countdown. Score = (hitCount/7)*80 + (timeLeft/8)*20. Max score = 100.",
+    "timer_accuracy": "Same setInterval(100ms) pattern as mg_runes — same minor float drift, same LOW severity.",
+    "render_loop": "requestAnimationFrame-driven canvas loop. No getDeltaTime() needed. Uses performance.now() directly for pulse animation of current target — correct.",
+    "can_score_zero_passively": true,
+    "zero_score_analysis": "If player clicks nothing, 8 seconds expire, hitCount=0. Score = 0 + 0 = 0. Same as runes: zero is reachable without interaction.",
+    "softlock_risk": "NONE. Timer always terminates the game.",
+    "double_endgame_risk": {
+      "severity": "MEDIUM",
+      "detail": "Same pattern as mg_runes. Two paths call endGame(): (A) currentIndex >= footprintCount in onClick (all footprints hit), (B) timeLeft <= 0 in setInterval. If final footprint is clicked in the same 100ms window as timer expiry, endGame() fires twice. No guard flag exists.",
+      "line_reference": "Line 102 (onClick) and line 83 (timer)",
+      "recommendation": "Same fix as mg_runes: boolean ended guard."
+    },
+    "footprint_layout_risk": {
+      "severity": "LOW",
+      "detail": "Footprint positions are deterministic (no Math.random). The path formula at line 66-68 produces fixed positions for all 7 footprints. On very small screens the canvas is CSS-scaled but still 400x400 internal — hit detection uses the scaled coordinate mapping (clientX-rect.left)*(400/rect.width), which is correct. No layout risk.",
+      "last_footprint_position": "t=7/8=0.875: x=50+300*0.875+sin(0.875*2PI)*40 = 312.5+sin(5.497)*40 = 312.5 + (-0.883)*40 = 277. y=350-300*0.875+cos(0.875*3PI)*30 = 87.5+cos(8.247)*30 = 87.5+(-0.394)*30 = 75.7. Footprint at ~(277, 76) — top-right area, reachable."
+    },
+    "missing_cleanup_for_revealTimeout": "mg_traces has no revealTimeout (no flip-back mechanic) — cleanup() is correct.",
+    "aria_assessment": "Timer bar has full ARIA. Canvas has aria-label and role=application, tabIndex=0. PASS.",
+    "score_range": "Min=0, Max=100. No NaN. No negative.",
+    "issues": [
+      {
+        "severity": "MEDIUM",
+        "issue": "Double endGame() invocation when final footprint is hit in same 100ms window as timer expiry",
+        "lines": "83 and 102",
+        "recommendation": "Add boolean ended guard in endGame()"
+      }
+    ]
+  },
+
+  "area_3_coast_biome": {
+    "dispose_audit": {
+      "verdict": "PASS — no memory leak",
+      "detail": "dispose() at line 396 uses group.traverse() to call child.geometry.dispose() and child.material.dispose() (handles both Array and single Material). Covers all procedural meshes (ground, ocean, sky, fog, trees, rocks, menhirs). GLB clones are part of the group so they are also traversed. group.clear() called at end. Shadow map from DirectionalLight sun is not explicitly disposed — THREE.js disposes shadow maps when the renderer is stopped/disposed, which SceneManager.stop() handles.",
+      "shadow_map_note": "sun.shadow.map is not explicitly disposed in biome dispose(). If SceneManager.dispose() calls renderer.dispose(), WebGLRenderTarget is cleaned. VERIFY that SceneManager.stop() or sceneManager teardown calls renderer.dispose() — not visible from CoastBiome.ts alone. LOW risk.",
+      "shared_geometry_issue": {
+        "severity": "HIGH",
+        "detail": "In createTrees(), trunkGeo, cone1Geo, cone2Geo, cone3Geo are created ONCE but shared across all tree meshes via new THREE.Mesh(trunkGeo, ...) repeated per tree (lines 122-140). THREE.js Mesh does not copy geometry — multiple meshes share the same geometry object. When dispose() traverses and calls child.geometry.dispose(), the FIRST mesh to be disposed will dispose the shared geometry. All subsequent meshes referencing the same geometry will throw 'WebGL: INVALID_OPERATION: bindBuffer: no buffer' or silently render nothing on the NEXT run. This is a multi-run memory corruption bug.",
+        "affected_lines": "104-107 (geometry creation), 122, 127, 131, 135 (mesh creation in loop)",
+        "affected_count": "trunkGeo shared by up to 40 trees, cone1Geo/cone2Geo/cone3Geo each shared by up to 40 trees — 4 geometries disposed up to 40 times each after first run",
+        "recommendation": "Move geometry creation inside the per-tree loop (one geometry per mesh), or use BufferGeometry.clone() per mesh, or skip geometry.dispose() for shared geometries and dispose them once separately after group.clear()."
+      }
+    },
+    "dt_cap_audit": {
+      "verdict": "PARTIAL — no explicit dt cap in update()",
+      "detail": "update(dt) at line 367 uses dt directly for adaptive LOD logic (dt > 0.033 check) but does not cap dt before ocean vertex computation. The wave formula uses performance.now()*0.001 for time (not dt), so spiral-of-death does not apply to wave animation. The dt is only used for the skipOceanFrame logic. However, the caller (SceneManager.onUpdate) should cap dt — not visible from CoastBiome.ts. LOW risk in isolation.",
+      "recommendation": "Confirm SceneManager caps dt at 0.1s before calling biomeResult.update(dt)."
+    },
+    "hardcoded_positions": {
+      "verdict": "PASS",
+      "detail": "GLB positions (cliff_unified at [15,-1,-15], cabin_unified at [-5,0,-8], crystal_cluster at [8,0,-3]) are art-direction values within the 200x200 ground plane. Camera rail path is defined in CameraRail.createCoastalPath() — not visible here. No obvious mismatch from the coast biome geometry bounds (ground centered at 0, ocean at x=60). The cabin at x=-5 and crystal at x=8 are in the scene center which is where the camera rail should pass."
+    },
+    "z_fighting_audit": {
+      "verdict": "LOW risk — one potential case",
+      "detail": "Ground plane at y=0 after rotation. Moss patches (menhir bases) at y=0.07 — safe clearance. Rocks at y=-0.1 — slightly below ground, will clip into ground mesh. At camera distance this may show z-fighting at the rock base on low-precision depth buffers.",
+      "affected_line": "170: rock.position.set(..., -0.1, ...)",
+      "severity": "LOW",
+      "recommendation": "Set rock y to 0.05 to sit atop the ground plane."
+    },
+    "issues": [
+      {
+        "severity": "HIGH",
+        "issue": "Shared tree geometry disposed multiple times per dispose() call — causes WebGL errors and blank trees on second run",
+        "lines": "104-107 and 122-140 in createTrees()",
+        "recommendation": "Create one geometry instance per mesh (move geometry creation inside loop) or clone geometries, or collect shared geos and dispose once after group.clear()"
+      },
+      {
+        "severity": "LOW",
+        "issue": "Rock y=-0.1 places rocks below ground plane — potential z-fighting at rock bases",
+        "line": "170",
+        "recommendation": "Set y to 0.05"
+      }
+    ]
+  },
+
+  "area_4_gameloop_state_bleed": {
+    "run_reset_on_second_run": {
+      "verdict": "PASS — run state fully replaced",
+      "detail": "startRun() at Store.ts line 161 replaces the entire run object with a fresh buildDefaultRun() spread. All run-scoped fields are reset: active, biome, life=LIFE_START, cardsPlayed=0, day=1, activeOgham='', oghamCooldowns={}, oghamsDiscovered=[], promises=[], karma=0, tension=0, biomeCurrency=0, anamThisRun=0, factionDeltaThisRun=zeroes. Factions are seeded from meta.factionRep (correct cross-run persistence behavior)."
+    },
+    "selectedBiomeId_bleed": {
+      "verdict": "PASS — no bleed",
+      "detail": "selectedBiomeId is declared at the top of runMerlinLair() (main.ts line ~270 based on context). runMerlinLair() is called fresh each iteration of the while(true) loop. The variable is local to runMerlinLair's scope, so it reinitializes to the default ('cotes_sauvages' or similar) on every call. No bleed across runs.",
+      "caveat": "Cannot confirm default value without reading runMerlinLair header — but scope isolation is sufficient."
+    },
+    "ogham_cooldown_bleed": {
+      "verdict": "PASS — oghamCooldowns reset",
+      "detail": "buildDefaultRun() returns oghamCooldowns: {} (empty object). startRun() spreads buildDefaultRun(), so cooldowns from previous run are discarded."
+    },
+    "promises_bleed": {
+      "verdict": "PASS — promises reset",
+      "detail": "buildDefaultRun() returns promises: [] (empty array). startRun() spreads buildDefaultRun()."
+    },
+    "faction_delta_bleed": {
+      "verdict": "PASS — factionDeltaThisRun reset",
+      "detail": "buildDefaultRun() returns factionDeltaThisRun: buildZeroFactions(). startRun() spreads buildDefaultRun()."
+    },
+    "scenemanger_per_run": {
+      "verdict": "PASS — SceneManager created fresh each iteration",
+      "detail": "main.ts line 383: 'const sceneManager = new SceneManager(app)' is inside the while(true) loop. A fresh SceneManager, CameraRail, and biomeResult are created every run. No 3D state bleed."
+    },
+    "hud_state": {
+      "verdict": "NEEDS VERIFY",
+      "detail": "initHUD() and initOghamPanel() are called inside the while loop (lines 411-412). If these functions add event listeners without removing the previous run's listeners, each run accumulates duplicate listeners on the same DOM elements. Not verifiable from current read budget — flag for next cycle.",
+      "severity": "MEDIUM"
+    },
+    "llm_adapter_state": {
+      "verdict": "NEEDS VERIFY",
+      "detail": "getLLMAdapter() is called per-card but the adapter instance may carry per-run context (biome, narrative history). If the adapter caches state between runs it could bias card generation on run 2+. Flag for next cycle.",
+      "severity": "LOW"
+    },
+    "issues": [
+      {
+        "severity": "MEDIUM",
+        "issue": "initHUD() and initOghamPanel() called inside the run loop — potential duplicate event listener accumulation across runs if these functions do not teardown previous listeners",
+        "recommendation": "Verify that initHUD/initOghamPanel remove previous listeners or are idempotent"
+      }
+    ]
+  },
+
+  "area_5_store_startrun_reset": {
+    "buildDefaultRun_fields_confirmed": {
+      "active": "false (set to true by startRun spread)",
+      "biome": "BIOME_DEFAULT (overridden by startRun param)",
+      "life": "LIFE_START (reset)",
+      "cardsPlayed": "0 (reset)",
+      "day": "1 (reset)",
+      "factions": "seeded from meta.factionRep in startRun — correct cross-run persistence",
+      "activeOgham": "'' (reset)",
+      "oghamCooldowns": "{} (reset — CONFIRMED)",
+      "oghamsDiscovered": "[] (reset — CONFIRMED)",
+      "promises": "[] (reset — CONFIRMED)",
+      "karma": "0 (reset — CONFIRMED)",
+      "tension": "0 (reset — CONFIRMED)",
+      "biomeCurrency": "0 (reset)",
+      "anamThisRun": "0 (reset)",
+      "factionDeltaThisRun": "buildZeroFactions() (reset)"
+    },
+    "meta_persistence_confirmed": {
+      "anam": "persists across runs (meta.anam)",
+      "factionRep": "persists across runs (meta.factionRep), seeded into run.factions on startRun",
+      "totalRuns": "persists",
+      "oghamsUnlocked": "persists (meta.oghamsUnlocked) — CORRECT, player keeps unlocked oghams",
+      "oghamsEquipped": "persists (meta.oghamsEquipped) — CORRECT",
+      "talentsUnlocked": "persists"
+    },
+    "verdict": "PASS — all per-run state is correctly reset. Meta state correctly persists. No state bleed found in Store layer."
+  },
+
+  "summary": {
+    "critical_issues": 0,
+    "high_issues": 1,
+    "medium_issues": 3,
+    "low_issues": 2,
+    "issues_by_area": {
+      "mg_runes": ["MEDIUM: double endGame() — no guard flag"],
+      "mg_traces": ["MEDIUM: double endGame() — no guard flag"],
+      "CoastBiome": ["HIGH: shared tree geometry multi-dispose on run 2+", "LOW: rock z=-0.1 z-fighting"],
+      "gameLoop": ["MEDIUM: initHUD/initOghamPanel listener accumulation risk"],
+      "Store_startRun": []
+    }
+  },
+
+  "top_priority_fix": {
+    "severity": "HIGH",
+    "file": "web-demo/src/scenes/CoastBiome.ts",
+    "issue": "Shared tree geometry (trunkGeo, cone1Geo, cone2Geo, cone3Geo) is disposed up to 40 times in a single dispose() call. On the second run, these geometries are already freed — Three.js will silently fail to render trees or throw WebGL errors.",
+    "fix": "Move the 4 geometry declarations (lines 104-107) inside the per-tree for loop so each mesh owns a unique geometry instance."
+  },
+
+  "balance_notes": {
+    "mg_runes_difficulty": "15 seconds for 8 pairs on a 4x4 grid. Comfortable for desktop, borderline tight on mobile where touch targets are the same pixel size. Score 0 is achievable passively — this feeds the worst multiplier tier. Acceptable by design.",
+    "mg_traces_difficulty": "8 seconds for 7 sequential footprints. The deterministic fixed path means expert players can memorize it after 1-2 runs. Consider adding light randomization to path offsets in future cycles.",
+    "life_drain_scaling": "Confirmed in Store: Stage1=LIFE_DRAIN_PER_CARD (base), Stage2 at card 15+, Stage3 at card 25+. Hard cap at 30 cards. Consistent with Game Design Bible v2.4 MOS targets."
+  }
+}

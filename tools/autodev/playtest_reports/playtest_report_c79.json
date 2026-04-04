@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 79,
+  "audited_files": [
+    "web-demo/src/ui/CardOverlay.ts",
+    "web-demo/src/ui/RunSummary.ts",
+    "web-demo/src/game/Store.ts",
+    "web-demo/src/main.ts (lines 350-597)"
+  ],
+  "audit_mode": "static_code_review",
+  "issues": [
+    {
+      "id": "C79-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line_range": "206-224",
+      "title": "Listener accumulation — click and keydown never removed",
+      "detail": "Each call to showCard() appends new 'click' and 'keydown' event listeners to every option button via addEventListener. Because option buttons are rebuilt fresh (optContainer.innerHTML = '') each card, the old DOM nodes are discarded and their listeners are garbage-collected. This is safe for those nodes. However the activate() closure captures the outer resolve() by reference — if somehow the same btn is reused (e.g. DOM framework cache), multiple resolves would fire. Current pattern is safe but fragile. No removeEventListener is paired. Recommend using { once: true } option.",
+      "recommendation": "Add { once: true } to both btn.addEventListener('click', activate, { once: true }) and btn.addEventListener('keydown', ..., { once: true }) to make intent explicit and prevent any future double-fire if DOM is ever cached."
+    },
+    {
+      "id": "C79-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line_range": "147-236",
+      "title": "No timeout escape path — player can be stuck if Groq returns nothing",
+      "detail": "showCard() returns a Promise<number> that resolves only when a button is clicked. There is no timeout, no keyboard Escape handler, and no fallback auto-resolve. If Groq returns a malformed card with zero valid options (e.g. options array is empty), the card overlay shows with no buttons and the game loop hangs forever at 'await showCard(card)'. The null-guard resolves(0) only fires when the DOM elements are missing, not when options is empty.",
+      "recommendation": "Add a guard: if card.options.length === 0, call hideCard() and resolve(0) immediately. Also add a 60-second safety timeout: setTimeout(() => { hideCard(); resolve(0); }, 60_000) inside showCard()."
+    },
+    {
+      "id": "C79-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line_range": "147-241",
+      "title": "ARIA: role=dialog and aria-modal missing on the overlay element",
+      "detail": "The card overlay (#card-overlay) is shown/hidden via a 'visible' CSS class toggle but its ARIA attributes are never set programmatically. The HTML template presumably has these attributes baked in, but showCard() never sets role='dialog', aria-modal='true', or aria-label. RunSummary.ts (line 116-119) correctly sets all three dynamically. CardOverlay should match that pattern.",
+      "recommendation": "Inside showCard(), after resolving overlayEl, set: overlayEl.setAttribute('role','dialog'); overlayEl.setAttribute('aria-modal','true'); overlayEl.setAttribute('aria-label','Choix narratif');"
+    },
+    {
+      "id": "C79-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/RunSummary.ts",
+      "line_range": "284-291",
+      "title": "Double-click 'Rejouer' can start two concurrent runs",
+      "detail": "The restart button's click listener is a plain addEventListener with no guard. If the player clicks 'Rejouer' twice quickly (or taps on mobile), the Promise resolves on the first click and overlay.remove() fires. The second click hits the removed button but by then the outer while(true) loop in main.ts has already called startRun() and is awaiting runMerlinLair(). The second click is lost because the button is detached. However if a network-latency scenario delays overlay.remove() (e.g. fadeIn(800) inside showRunSummary takes 800ms before the button is visible), two rapid clicks during the fade could both fire before the first resolve detaches the button.",
+      "recommendation": "Add { once: true } to restartBtn.addEventListener('click', ..., { once: true }), or set a 'data-clicked' guard flag on first click."
+    },
+    {
+      "id": "C79-05",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/RunSummary.ts",
+      "line_range": "288",
+      "title": "store.getState().reset() called instead of startRun() — partial state concern",
+      "detail": "On restart, the click handler calls store.getState().reset(). This resets the full state including meta (anam, totalRuns, oghamsUnlocked). But main.ts then calls loadAnamFromStorage() and loadMetaFromStorage() before startRun(), so the meta is re-hydrated from localStorage. This is safe today but the order matters critically: reset() in RunSummary fires before main.ts re-hydrates. If reset() and the outer loop's loadAnamFromStorage() race on a slow device, meta could be blank for one tick. The real reset should happen at startRun() in main.ts, not inside RunSummary.",
+      "recommendation": "Remove the reset() call from RunSummary. Let main.ts control state lifecycle: it already calls startRun(chosenBiome) which rebuilds run from buildDefaultRun() with meta.factionRep as faction seeds. Meta rehydration from localStorage should be the source of truth."
+    },
+    {
+      "id": "C79-06",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/Store.ts",
+      "line_range": "161-168",
+      "title": "startRun() does not reset factionDeltaThisRun from meta — delta display could be stale",
+      "detail": "startRun() spreads buildDefaultRun() which initialises factionDeltaThisRun to buildZeroFactions(). This is correct. However factions are seeded from s.meta.factionRep (line 167), which is correct cross-run persistence. The issue: if reset() is called from RunSummary (C79-05 above) BEFORE startRun(), meta.factionRep is wiped to buildDefaultFactions() (all 50s), then startRun() seeds factions from 50s instead of actual earned rep. Combined with C79-05, back-to-back runs lose faction progression.",
+      "recommendation": "This is a consequence of C79-05. Fixing C79-05 (removing reset() from RunSummary) also fixes this. startRun() correctly reads meta.factionRep which is only updated by addReputation() and loadMetaFromStorage()."
+    },
+    {
+      "id": "C79-07",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line_range": "425-435",
+      "title": "sceneManager.dispose() never called — only stop() is called",
+      "detail": "After gameLoop() exits, main.ts calls sceneManager.stop(), stopAmbient(), and biomeResult.dispose(). If SceneManager has a dispose() method that releases Three.js geometries and textures, it should be called here. If stop() is the only cleanup method then this is fine, but the naming is ambiguous. Previous cycle audits (C53, C54) fixed CoastBiome geometry multi-dispose and shadow map GPU leak — verifying that sceneManager.stop() covers all renderer cleanup is advisable.",
+      "recommendation": "Verify that SceneManager.stop() calls renderer.dispose() and releases shadow map. If a separate dispose() method exists, call it after stop()."
+    },
+    {
+      "id": "C79-08",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line_range": "489-499",
+      "title": "LLM timeout not enforced — Groq generateCard() can hang indefinitely",
+      "detail": "The try/catch around getLLMAdapter().generateCard() catches errors but does not enforce a timeout. If Groq's HTTP request stalls (no error, no response), showLLMLoadingHint() stays visible and the loop hangs. The outer catch only fires on a thrown error, not a stalled promise.",
+      "recommendation": "Wrap the llm.generateCard() call with a Promise.race against a timeout: const llmCard = await Promise.race([llm.generateCard(...), new Promise((_, rej) => setTimeout(() => rej(new Error('LLM timeout')), 8000))]).catch(() => null);"
+    }
+  ],
+  "summary": {
+    "critical_count": 0,
+    "high_count": 2,
+    "medium_count": 4,
+    "low_count": 2,
+    "softlocks_detected": 1,
+    "softlock_detail": "C79-02: zero-option card from malformed LLM response hangs the game loop permanently at await showCard()"
+  },
+  "positive_findings": [
+    "showCard() correctly null-guards all DOM elements before use (line 153)",
+    "optContainer.innerHTML = '' on each card prevents option accumulation",
+    "try/catch wraps both LLM generation and minigame execution — neutral fallbacks in place",
+    "biomeResult.dispose() and stopAmbient() called on every run exit path in main.ts",
+    "drainLifeScaled() uses Math.max(0, ...) — life cannot underflow below 0",
+    "healLife() clamps to LIFE_MAX, damageLife() clamps to 0 — no overflow possible in effect engine",
+    "addReputation() caps delta to FACTION_CAP_PER_CARD and clamps result to 0-100 — no reputation overflow",
+    "RunSummary correctly sets role=dialog, aria-modal, aria-label (line 116-119)",
+    "Emergency fallback card is well-formed with 3 valid options — prevents C79-02 in catch path",
+    "startRun() fully rebuilds run via buildDefaultRun() spread — all per-run fields reset correctly",
+    "factionDeltaThisRun reset to buildZeroFactions() in buildDefaultRun() — delta display is clean each run"
+  ],
+  "balance_recommendations": [
+    {
+      "parameter": "showCard_timeout_ms",
+      "current": "none",
+      "suggested": 60000,
+      "confidence": "HIGH",
+      "rationale": "Prevents permanent softlock on empty-option or malformed card"
+    },
+    {
+      "parameter": "llm_generate_timeout_ms",
+      "current": "none",
+      "suggested": 8000,
+      "confidence": "HIGH",
+      "rationale": "Groq stall falls through to FastRoute — prevents invisible loading hint freeze"
+    }
+  ],
+  "score": 7.5,
+  "verdict": "FIX",
+  "verdict_rationale": "Two HIGH issues block PROCEED: C79-02 (softlock on empty-option card) and C79-01 (missing { once: true } on listeners). C79-02 is a true softlock risk. Four MEDIUM issues should be addressed before next cycle. No CRITICAL issues found. Score 7.5/10."
+}

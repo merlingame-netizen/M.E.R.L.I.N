@@ -318,6 +318,27 @@ function Invoke-TestWave {
 
     if (Test-Veto) { return }
 
+    # 2e. AI Playtest (if frequency matches)
+    $playtestFreq = if ($config.playtest_frequency) { $config.playtest_frequency } else { 2 }
+    $doPlaytest = ($CycleNum % $playtestFreq) -eq 0
+    if ($doPlaytest) {
+        Write-Host "`n[CYCLE] Step 2e: AI Playtest..." -ForegroundColor Yellow
+        $playtestScript = Join-Path $scriptDir "ai_playtester/run_playtest.ps1"
+        if ($DryRun) {
+            Write-Host "[DRY RUN] Would run AI Playtest (cycle $CycleNum)" -ForegroundColor Magenta
+        } else {
+            if (Test-Path $playtestScript) {
+                & powershell -File $playtestScript -Cycle $CycleNum -NoLaunch
+            } else {
+                Write-Host "[CYCLE] AI Playtest script not found: $playtestScript" -ForegroundColor Gray
+            }
+        }
+    } else {
+        Write-Host "`n[CYCLE] Step 2e: AI Playtest skipped (frequency: every $playtestFreq cycles)" -ForegroundColor Gray
+    }
+
+    if (Test-Veto) { return }
+
     # 2d. Smoke tests + flow order
     Write-Host "`n[CYCLE] Step 2d: Smoke tests + flow order..." -ForegroundColor Yellow
     if ($DryRun) {

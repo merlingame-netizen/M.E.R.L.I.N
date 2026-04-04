@@ -1,0 +1,56 @@
+{
+  "cycle": "C119",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "files_audited": [
+    "web-demo/src/minigames/mg_volonte.ts",
+    "web-demo/src/minigames/mg_runes.ts",
+    "web-demo/src/minigames/mg_course.ts",
+    "web-demo/src/minigames/mg_combat_rituel.ts",
+    "web-demo/src/minigames/mg_equilibre.ts"
+  ],
+  "vol_02": {
+    "line": 262,
+    "code": "const statusEl = document.getElementById('mg-volonte-status');",
+    "context": "Inside render() — called every rAF frame (typically 60x/second). The element is static and created once in setup().",
+    "fix": "In setup(), after appending statusEl to container, store the reference: this.statusEl = statusEl. In render(), replace document.getElementById call with this.statusEl. Declare private statusEl: HTMLElement | null = null as a class field.",
+    "note": "The setInterval at line 143-145 also calls document.getElementById('mg-volonte-timer-fill') and 'mg-volonte-timer' — those fire at 100ms intervals, which is acceptable but the same caching pattern applies for consistency."
+  },
+  "run_02": {
+    "cause": "RUN-02 occurs at tier 1 (not tier 0). At tier 0, totalPairs=6 → totalTiles=12 → gridRows=ceil(12/4)=3 → 12 slots, 12 tiles: grid is full, no empty slots. At tier 1, totalPairs=7 → totalTiles=14 → gridRows=ceil(14/4)=4 → 16 slots, but only 14 tiles are placed (generateTiles breaks outer loop at placed>=14). The last row has 2 empty (unrendered) slots at positions [14] and [15] in the grid.",
+    "fix": "The empty slots are cosmetic only — the canvas simply does not draw anything in those positions. No gameplay impact (click handlers use findIndex on this.tiles which has exactly 14 entries; out-of-bounds clicks return -1 and are ignored). If the visual gap is undesirable, center the last row by offsetting partial rows: compute lastRowCount = totalTiles % gridCols and add x-offset = (gridCols - lastRowCount) / 2 * (tileSize + tilePad) for the final row's tiles in generateTiles()."
+  },
+  "new_bugs": [
+    {
+      "id": "COMBAT-01",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "line": 291,
+      "description": "document.getElementById('mg-combat-status') called on every render() frame (~60x/second). The element is created once in setup() and never re-parented. This is the same pattern as VOL-02 in mg_volonte.ts.",
+      "fix": "Cache the reference in setup() as a class field (e.g., this.statusEl: HTMLElement | null = null) and use it directly in render(). Also apply the same caching to 'mg-combat-timer-fill' and 'mg-combat-timer' in the setInterval at lines 147-148 for consistency, though those are lower priority at 100ms interval."
+    }
+  ],
+  "clean_files": [
+    {
+      "file": "web-demo/src/minigames/mg_course.ts",
+      "verdict": "CLEAN",
+      "notes": "Score formula (hits/totalRounds)*100 is correct. ended guard in render() present (line 293 checks this.gameOver). endTimeout stored and cleared in cancelTimers(). advanceRound getElementById calls are in response to user events, not per-frame. No zombie rAF risk. No edge case in score calculation."
+    },
+    {
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "verdict": "CLEAN",
+      "notes": "All getElementById calls are inside setInterval (100ms), not per-frame. Score formula timeInZone/totalElapsed uses +0.001 guard to prevent division-by-zero at game start. endGame() math is correct for all termination paths (timer expiry and potential future early-exit). Physics clamp at [-1,1] is correct. cancelTimers removes all 6 event listeners including pointercancel (C96)."
+    }
+  ],
+  "summary": {
+    "total_issues": 3,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 2,
+    "cosmetic": 1,
+    "confirmed_vol_02": true,
+    "confirmed_run_02": true,
+    "run_02_actual_tier": 1
+  },
+  "verdict": "BUGS_FOUND"
+}

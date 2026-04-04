@@ -1,0 +1,129 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 37,
+  "audited_files": [
+    "web-demo/src/minigames/MinigameBase.ts",
+    "web-demo/src/minigames/mg_echo.ts",
+    "web-demo/src/minigames/mg_regard.ts",
+    "web-demo/src/minigames/mg_course.ts",
+    "web-demo/src/scenes/MerlinLairScene.ts"
+  ],
+
+  "bugs": [
+    {
+      "id": "BUG-37-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "status": "OPEN",
+      "title": "critical_alert SFX missing — mg_echo has no checkCriticalAlert() call",
+      "detail": "MinigameBase.checkCriticalAlert() was added in cycle-36 (C101) and called from the 11 updated minigames. mg_echo uses a render()-driven phase timer (this.phaseTimer) but never calls this.checkCriticalAlert(). The windowDuration at tier-3 is only 0.7s — there is never 3s of warning time — but at tier-0/1 the answer window (1.2s/1.0s) is still under 3s, so the SFX would never fire. The real gap is architectural consistency: every minigame with a time pressure mechanic is supposed to dispatch critical_alert once. The pattern is present in MinigameBase (line 228-233) but the render() loop in mg_echo never invokes it.",
+      "evidence": "mg_echo render() lines 246-261: phase='answer' timer decrement does not call this.checkCriticalAlert(this.phaseTimer). Grep for critical_alert in mg_echo.ts: zero matches.",
+      "recommendation": "Add this.checkCriticalAlert(this.phaseTimer) in the 'answer' phase block after decrementing phaseTimer (render() line ~248), consistent with the 11 other minigames."
+    },
+    {
+      "id": "BUG-37-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "status": "OPEN",
+      "title": "critical_alert SFX missing — mg_regard has no checkCriticalAlert() call",
+      "detail": "mg_regard has no time-pressure phase with a countdown below 3s visible to the player (the 'show' phase has a memorisation timer, the 'recall' phase has no time limit at all — player can take unlimited time to click sequence). checkCriticalAlert() would never fire even if added, since showTime is 1.5-3.0s (always under 3s threshold) and recall is untimed. The architectural gap is that the 'show' phase timer bar (lines 320-325) creates urgency but no SFX warning is dispatched. Recall phase has zero time pressure by design.",
+      "evidence": "mg_regard render() lines 253-261: showTimer decrement with no checkCriticalAlert(). Grep for critical_alert in mg_regard.ts: zero matches. Recall phase (lines 187-231): no timer present.",
+      "recommendation": "For the 'show' phase: call this.checkCriticalAlert(this.showTimer) after decrementing showTimer — this fires when <= 1.5s remain (tier-2 showTime), giving player a last-second alert to lock in the sequence. For recall phase: no action needed (untimed by design)."
+    },
+    {
+      "id": "BUG-37-03",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_course.ts",
+      "status": "OPEN",
+      "title": "critical_alert SFX missing — mg_course has no checkCriticalAlert() call",
+      "detail": "Grep for 'critical_alert', 'checkCriticalAlert', and 'timeLeft' in mg_course.ts returned zero matches. mg_course uses roundElapsed / roundTime for time tracking. The file was read and confirmed to use [2.0, 1.5, 1.1, 0.8]s per round — all under the 3s threshold — so the SFX can never fire, but the dispatch is still absent. Same architectural gap as mg_echo and mg_regard.",
+      "evidence": "Grep on mg_course.ts for all three patterns: no matches. setup() lines 77-79 confirm roundTime scaling.",
+      "recommendation": "Add this.checkCriticalAlert(this.roundTime - this.roundElapsed) in the render() active-round timer block after incrementing roundElapsed. Note: because all roundTime values are < 3s, the threshold condition will be met immediately on round start — consider tuning the threshold to 50% of roundTime instead, or leave as-is for consistent UX parity with other minigames."
+    },
+    {
+      "id": "BUG-37-04",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "status": "OPEN",
+      "title": "zoneToast not hidden on keyboard navigation leave — no opacity reset in onKeyDown",
+      "detail": "onMouseMove correctly sets zoneToast.style.opacity='0' in the else branch (line 839) when no zone is hovered. onTouchEnd (line 887) correctly clears hover state. However, onKeyDown (lines 901-934) updates currentHovered and applies hover styles on the new zone, but never explicitly resets the zoneToast when keyboard focus moves away from the last zone (e.g. when the user tabs past all zones). The toast stays visible at opacity=1 with the last hovered zone's label.",
+      "evidence": "onKeyDown lines 919-933: sets currentHovered=next and calls applyHoverTo but never resets zoneToast.innerHTML/opacity when next is null or when a zone-to-zone transition occurs. zoneToast is only updated when currentHovered is truthy (line 835-836); no else branch exists in onKeyDown unlike in onMouseMove.",
+      "recommendation": "Add an else branch after line 933 in onKeyDown: when currentHovered is null (e.g. focus left all zones), set zoneToast.style.opacity = '0'."
+    }
+  ],
+
+  "passes": [
+    {
+      "id": "BUG-01",
+      "status": "FIXED",
+      "title": "querySelector vs querySelectorAll on canvas dim",
+      "evidence": "MinigameBase.ts line 281: this.container.querySelectorAll<HTMLCanvasElement>('canvas').forEach(c => c.style.opacity = '0.25'). ALL canvases are dimmed."
+    },
+    {
+      "id": "BUG-02",
+      "status": "FIXED",
+      "title": "Race condition cleanup() vs overlay",
+      "evidence": "MinigameBase.ts line 171 comment confirms fix. overlay.remove() is called in the setTimeout chain after fade-out (260ms), then resolve() is called. cleanup() is called from within the showOutcomeOverlay.then() callback (line 286), never before the overlay resolves. Promise resolves once-only — safe if overlay was already removed."
+    },
+    {
+      "id": "BUG-03",
+      "status": "FIXED",
+      "title": "AudioContext suspended on mobile — ctx.resume() missing",
+      "evidence": "MinigameBase.ts lines 92-105: ctx.resume().catch(...).finally(() => { ... tone setup ... }). All oscillator scheduling runs inside .finally() so AudioContext is resumed before any note is scheduled."
+    },
+    {
+      "id": "BUG-04",
+      "status": "FIXED",
+      "title": "getComputedStyle position === 'static' broken in jsdom",
+      "evidence": "MinigameBase.ts lines 160-162: guard checks !['relative','absolute','fixed','sticky'].includes(getComputedStyle(container).position). Empty string '' from jsdom falls into the set of non-matching values, so container.style.position='relative' is set unconditionally — correct behaviour."
+    },
+    {
+      "id": "BUG-05",
+      "status": "FIXED",
+      "title": "pointer-events:none does not stop canvas during overlay / double-finish race",
+      "evidence": "MinigameBase.ts line 188-189: private finished = false; plus line 265: if (this.finished) return — idempotent guard. Additionally mg_echo endGame() and mg_regard endGame() both call canvas.removeEventListener('pointerdown', this.onClick) before calling this.finish(), so input is fully stopped before the overlay renders."
+    },
+    {
+      "id": "LAIR-crystalGLBGroup-float",
+      "status": "PASS",
+      "title": "crystalGLBGroup float animation correctly syncs to procedural crystal Y",
+      "evidence": "MerlinLairScene.ts line 954-957: crystalFloatY computed from Math.sin, applied to both crystalData.sphere.position.y and (if crystalGLBGroup is non-null) crystalGLBGroup.position.y. Single source of truth — no drift possible."
+    },
+    {
+      "id": "LAIR-zoneToast-hover",
+      "status": "PASS",
+      "title": "zoneToast shows on hover and hides on leave (mouse path)",
+      "evidence": "MerlinLairScene.ts lines 834-839: zoneToast.innerHTML + opacity='1' set when currentHovered is truthy; opacity='0' set in the else branch. Transition is CSS (opacity change), no layout thrash."
+    },
+    {
+      "id": "LAIR-zoneToast-dispose",
+      "status": "PASS",
+      "title": "zoneToast properly removed from DOM in dispose()",
+      "evidence": "MerlinLairScene.ts lines 1004-1005: if (zoneToast.parentNode) { zoneToast.parentNode.removeChild(zoneToast); } — guarded removal, no throw if already detached."
+    }
+  ],
+
+  "summary": {
+    "bugs_open": 4,
+    "bugs_critical": 0,
+    "bugs_high": 3,
+    "bugs_medium": 0,
+    "bugs_low": 1,
+    "passes": 7,
+    "minigames_missing_critical_alert": ["mg_echo", "mg_regard", "mg_course"],
+    "minigames_confirmed_fixed_bugs_01_to_05": true
+  },
+
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Add checkCriticalAlert() calls to mg_echo, mg_regard, mg_course for SFX parity with the other 11 minigames",
+      "files": ["mg_echo.ts render() answer-phase block", "mg_regard.ts render() show-phase block", "mg_course.ts render() active-round block"]
+    },
+    {
+      "priority": 2,
+      "action": "Add zoneToast opacity reset in onKeyDown else branch (when focus leaves all zones)",
+      "files": ["MerlinLairScene.ts onKeyDown ~line 933"]
+    }
+  ]
+}

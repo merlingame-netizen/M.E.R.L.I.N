@@ -1,0 +1,193 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 60,
+  "agent": "merlin-ai-playtester",
+  "score_trend": {
+    "C52": 8.5,
+    "C55": 8.4,
+    "C57": 7.2,
+    "C58": 7.1,
+    "C59": 7.5,
+    "C60": 7.7
+  },
+  "target": 8.5,
+  "verdict": "PARTIAL — 5 issues still open, 2 HIGH, 1 CRITICAL-CLASS. Score below 8.5 threshold.",
+
+  "criteria_scores": [
+    {
+      "id": "RENDU_3D",
+      "name": "Rendu 3D — flat-shading cohérence, z-fighting, matériaux, lighting",
+      "score": 7,
+      "max": 10,
+      "status": "WARN",
+      "finding": "flatShading:true used consistently on pedestal, crystal, books, ground, ocean — good cohérence. DEFECT: crystal sphere at MerlinLairScene.ts:166 uses SphereGeometry(0.7, 16, 16) — 16 segments produce a visually round sphere. With flatShading:true the facets become visible only below ~6 segments; at 16 the surface looks smooth, breaking low-poly style parity with all other primitives. Pedestal CylinderGeometry(0.4, 0.55, 0.9, 8) correctly uses 8 segments — crystal should match.",
+      "evidence_file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "evidence_line": 166,
+      "recommendation": "Reduce SphereGeometry segments from (16,16) to (6,5) to match flat-shaded facet aesthetic."
+    },
+    {
+      "id": "ASSETS",
+      "name": "Assets — GLB coverage, proportions, Celtic style",
+      "score": 7,
+      "max": 10,
+      "status": "WARN",
+      "finding": "CoastBiome.ts lines 1-80 shows procedural geometry only (PlaneGeometry for ground, ocean) with no GLB asset loaded in this window. loadGLB is imported but not yet called within the first 80 lines — cones/trees relying on procedural geometry maintain Celtic mood but lack the GLB asset density seen in MerlinLairScene. Celtic mood (overcast shader, grey-green palette) is authentic.",
+      "evidence_file": "web-demo/src/scenes/CoastBiome.ts",
+      "evidence_line": 7,
+      "recommendation": "Confirm GLB assets are loaded after line 80; if coast remains fully procedural, add at least one GLB menhir/dolmen to differentiate from ForestBiome."
+    },
+    {
+      "id": "WEB_PERF",
+      "name": "Web Perf — bundle gzip, FPS, memory leaks",
+      "score": 8,
+      "max": 10,
+      "status": "PASS",
+      "finding": "Minigame lazy imports confirmed at main.ts:16 comment — dynamic import defers ~21KB chunk. LLM fallback card generation (main.ts:390-406) prevents hangs. CoastBiome PlaneGeometry uses reasonable vertex counts (48x48, 24x18). No dispose() calls audited in the 80-line window for CoastBiome, but geometry is procedural and scene-scoped. No Memory leak detected in audited files.",
+      "evidence_file": "web-demo/src/main.ts",
+      "evidence_line": 16,
+      "recommendation": "Add dispose() to CoastBiome geometries/materials if not present after line 80."
+    },
+    {
+      "id": "UX_ACCESSIBILITY",
+      "name": "UX/Accessibility — ARIA, keyboard nav, focus, mobile touch",
+      "score": 7,
+      "max": 10,
+      "status": "WARN",
+      "finding": "C59 keyboard fix confirmed landed: role=button + tabindex=0 at CardOverlay.ts:163-164, keydown handler Enter/Space at lines 196-200, requestAnimationFrame focus-first-option at lines 210-212 — all present and correct. LLM loading hint has role=status + aria-live=polite at main.ts:515-516 — good. DEFECT: CardOverlay.ts lines 9-12 still use 4 non-null assertion closures (`!`) — overlay(), textEl(), optionsEl() all call getElementById(...)!. If the DOM element is absent (race condition or SSR hydration), these throw at runtime with no guard. The cardContainer() closure at line 12 correctly uses querySelector<HTMLElement> without `!` but also silently returns null — callers use optional chaining (?.), so that one is safe.",
+      "evidence_file": "web-demo/src/ui/CardOverlay.ts",
+      "evidence_line": "9-11",
+      "recommendation": "Replace the three `!` closures with null-safe variants that return null and add early-return guards at the call sites in showCard() and hideCard()."
+    },
+    {
+      "id": "GAME_FEEL",
+      "name": "Game Feel — card interaction, loading feedback, minigame entry",
+      "score": 8,
+      "max": 10,
+      "status": "PASS",
+      "finding": "Card flip CSS animation triggered each new card (CardOverlay.ts:117-127). Gold highlight on selection (card-option-selected, 200ms, line 187). LLM loading hint shown/hidden cleanly around Groq call (main.ts:386-392). Fallback card generation ensures no freeze on LLM timeout. MINOR: LLM loading hint uses inline cssText strings (main.ts:517-531) — not critical but brittle vs a CSS class.",
+      "evidence_file": "web-demo/src/main.ts",
+      "evidence_line": "507-535",
+      "recommendation": "Move LLM hint styles to a CSS class for maintainability."
+    },
+    {
+      "id": "GAME_DESIGN",
+      "name": "Game Design — lore cohérence, faction transparency, progression",
+      "score": 6,
+      "max": 10,
+      "status": "FAIL",
+      "finding": "BUG-C59-03 still open. buildFactionDot() at CardOverlay.ts:100-111 iterates effects and returns on the FIRST ADD_REPUTATION match (line 108: `return dot`). A dual-faction card (e.g., +druides:12, -ankou:8) renders only the green druides dot — the negative ankou impact is invisible to the player. This is a transparency failure: players cannot see negative faction consequences before committing to a choice. The effect-tooltip (buildEffectTooltip) correctly shows ALL effects (lines 76-91), so tooltip is fine — the problem is isolated to the dot indicator.",
+      "evidence_file": "web-demo/src/ui/CardOverlay.ts",
+      "evidence_line": 108,
+      "recommendation": "Remove the early return from buildFactionDot; collect all ADD_REPUTATION effects and render one dot per faction, or rename the function to buildFactionDots (plural) returning HTMLElement[]."
+    }
+  ],
+
+  "issues": [
+    {
+      "id": "BUG-C59-03",
+      "severity": "HIGH",
+      "status": "STILL_OPEN",
+      "issue": "buildFactionDot() returns on first ADD_REPUTATION match — dual-faction cards hide negative impacts",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 108,
+      "recommendation": "Collect all ADD_REPUTATION effects; render one dot per faction. Return type: HTMLElement[] instead of HTMLElement | null."
+    },
+    {
+      "id": "BUG-C59-05",
+      "severity": "HIGH",
+      "status": "STILL_OPEN",
+      "issue": "SphereGeometry(0.7, 16, 16) — 16-segment sphere looks round, not low-poly, breaks flat-shading cohérence",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 166,
+      "recommendation": "Change to SphereGeometry(0.7, 6, 5) to produce visible facets consistent with the pedestal and bookshelf geometry."
+    },
+    {
+      "id": "BUG-C60-01",
+      "severity": "MEDIUM",
+      "status": "NEW",
+      "issue": "4 non-null assertion closures at CardOverlay.ts:9-11 — overlay(), textEl(), optionsEl() throw uncaught TypeError if DOM element absent",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": "9-11",
+      "recommendation": "Replace `getElementById('x')!` with null-safe wrappers; add early return guards in showCard() and hideCard()."
+    },
+    {
+      "id": "BUG-C60-02",
+      "severity": "LOW",
+      "status": "NEW",
+      "issue": "LLM loading hint uses 12-part inline cssText string — brittle, not covered by theme changes",
+      "file": "web-demo/src/main.ts",
+      "line": "517-531",
+      "recommendation": "Extract to a CSS class llm-loading-hint in the stylesheet."
+    }
+  ],
+
+  "open_from_previous_cycles": [
+    {
+      "id": "BUG-C59-03",
+      "still_open": true,
+      "note": "dual-faction dot — not addressed in C60 code"
+    },
+    {
+      "id": "BUG-C59-05",
+      "still_open": true,
+      "note": "crystal sphere segment count unchanged at 16,16"
+    }
+  ],
+
+  "resolved_since_c59": [
+    {
+      "id": "BUG-C59-01",
+      "resolution": "Keyboard fix confirmed: role=button, tabindex=0, keydown Enter/Space, requestAnimationFrame focus — all present at CardOverlay.ts:163-212"
+    },
+    {
+      "id": "MISSING_LLM_INDICATOR",
+      "resolution": "showLLMLoadingHint / hideLLMLoadingHint implemented at main.ts:507-538 with role=status aria-live=polite"
+    }
+  ],
+
+  "summary": {
+    "total_criteria": 6,
+    "passing": 2,
+    "warning": 3,
+    "failing": 1,
+    "composite_score": 7.2,
+    "weighted_score_c60": 7.7,
+    "score_vs_target": -0.8,
+    "proceed_threshold_met": false,
+    "high_issues_open": 2,
+    "medium_issues_open": 1,
+    "low_issues_open": 1,
+    "critical_issues": 0
+  },
+
+  "balance_recommendations": [
+    {
+      "parameter": "buildFactionDot_return_strategy",
+      "current": "single dot — first ADD_REPUTATION only",
+      "suggested": "multi-dot — one per ADD_REPUTATION faction",
+      "confidence": "HIGH",
+      "impact": "faction transparency, player information completeness"
+    },
+    {
+      "parameter": "crystal_sphere_segments",
+      "current": "SphereGeometry(0.7, 16, 16)",
+      "suggested": "SphereGeometry(0.7, 6, 5)",
+      "confidence": "HIGH",
+      "impact": "visual style cohérence with flat-shading system"
+    },
+    {
+      "parameter": "card_overlay_null_safety",
+      "current": "getElementById('x')! — 3 closures",
+      "suggested": "null-safe wrapper with guard",
+      "confidence": "MEDIUM",
+      "impact": "runtime crash prevention on DOM race"
+    }
+  ],
+
+  "next_steps": [
+    "Fix BUG-C59-03 (buildFactionDot multi-dot) — blocks GAME_DESIGN score ≥8",
+    "Fix BUG-C59-05 (crystal sphere segments 16→6) — 30-min fix, unblocks RENDU_3D score ≥8.5",
+    "Fix BUG-C60-01 (null assertions) — safety hardening before next deploy",
+    "Re-run playtest C61 targeting composite ≥8.5 PROCEED"
+  ]
+}

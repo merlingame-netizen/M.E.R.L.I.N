@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 83,
+  "build": {
+    "status": "SUCCESS",
+    "index_gzip_kb": 47.57,
+    "minigames_gzip_kb": 21.19,
+    "three_core_gzip_kb": 135.44,
+    "build_time_s": 2.98
+  },
+  "commits_this_cycle": [
+    "72f36d1 fix(web-demo): C83 — minigame start SFX + rejected effects logging"
+  ],
+  "issues_closed": ["C82-04", "C82-06"],
+  "issues_still_open": ["C82-05"],
+
+  "aaa_ultra_scores": {
+    "flat_shading_coherence":   { "score": 7.5, "note": "roughness=0.9/metalness=0.0 on all GLBs. Blender export consistent." },
+    "z_fighting_residual":      { "score": 8.5, "note": "+0.02 offsets on floor (y=-4.98) and walls (z=-9.76). No observed z-fighting." },
+    "material_quality":         { "score": 8.5, "note": "clone-before-mutate (C81-04). Template materials disposed in createCandles() (C81-07). GPU clean." },
+    "lighting_dramaturgie":     { "score": 7.0, "note": "AmbientLight + spot + candle PointLights. No dynamic shadows (perf tradeoff OK)." },
+    "glb_coverage":             { "score": 7.0, "note": "6 of 7 props have GLB. Crystal ball still procedural icosahedron." },
+    "geometric_proportions":    { "score": 7.5, "note": "Candle positions validated. Cauldron at (2,-4.65,-7) scale 0.72. Wall tiling correct." },
+    "celtic_style_coherence":   { "score": 7.0, "note": "Dark stone, rune emissive on hover, candle warmth. Consistent across paths." },
+    "bundle_gzip":              { "score": 9.0, "note": "index=47.57KB gzip (target <200KB) ✅. minigames=21.19KB ✅." },
+    "fps_budget":               { "score": 7.5, "note": "rAF loop, no heavy post-processing. Architecture sound." },
+    "memory_leaks":             { "score": 9.0, "note": "All known leaks patched: C81-01/02/03/04/07. Dispose chain complete." },
+    "zone_feedback_aria":       { "score": 7.0, "note": "Hover SFX+scale ✅, click SFX ✅, ARIA dialog ✅. Crystal/Bookshelf/Cauldron toast-only." },
+    "game_feel_lore_immersion": { "score": 6.5, "note": "Minigame start SFX (C82-06) ✅. Crystal zone does NOT open OghamPanel." }
+  },
+
+  "composite_score": 7.63,
+
+  "issues": [
+    {
+      "id": "C83-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "title": "Crystal zone → OghamPanel not wired",
+      "detail": "onZoneClick('crystal') falls through to showZoneToast() only. OghamPanel IS initialized (initOghamPanel() main.ts:413) before runBiome() runs. Wiring gap, not architectural blocker.",
+      "recommendation": "Dispatch CustomEvent('merlin_show_ogham_panel') from crystal zone callback in MerlinLairScene.ts. Add window.addEventListener('merlin_show_ogham_panel', () => showOghamPanel()) in main.ts before lair opens."
+    },
+    {
+      "id": "C83-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "title": "Bookshelf + Cauldron zones are interaction stubs",
+      "detail": "Both produce toast only. Bookshelf should open journal/RunSummary. Three of five meaningful zones are NOPs.",
+      "recommendation": "crystal (C84) → bookshelf (C85) → cauldron (C86)."
+    },
+    {
+      "id": "C83-03",
+      "severity": "LOW",
+      "file": "web-demo/src/audio/SFXManager.ts",
+      "title": "birdTimer field misnamed (C82-05 still open)",
+      "detail": "AmbientSession.birdTimer assigned rain drop timers in scheduleRainDrops(). Rename to stochasticTimer.",
+      "recommendation": "One-liner rename across interface and 3 usages."
+    }
+  ],
+
+  "summary": { "critical": 0, "high": 1, "medium": 1, "low": 1, "info": 0 },
+
+  "positive_findings": [
+    "C82-04 CLOSED: effectResult.rejected logged via console.warn after applyEffects()",
+    "C82-06 CLOSED: playSound('flip') fires before minigameOverlay.classList.add('visible')",
+    "Bundle: main chunk 47.57KB gzip — excellent, well under 200KB target",
+    "Memory leak chain complete: all C81 leaks + C81-07 template materials resolved",
+    "Lair SFX fully wired: hover shimmer (660Hz sine) + click flip on all 5 zones"
+  ],
+
+  "score": 7.63,
+  "verdict": "FIX",
+  "verdict_detail": "Score 7.63/10 — below 8.5 PROCEED threshold. No CRITICAL issues. HIGH: crystal zone toast-only despite OghamPanel initialized before lair — trivial CustomEvent wiring gap. C84 recommendation: dispatch merlin_show_ogham_panel from crystal zone callback.",
+
+  "next_cycle_priority": [
+    "C84-P1: Wire crystal → showOghamPanel() via CustomEvent (MerlinLairScene.ts + main.ts)",
+    "C84-P2: Rename birdTimer → stochasticTimer in SFXManager",
+    "C84-P3: Bookshelf zone → RunSummary/journal modal stub"
+  ]
+}

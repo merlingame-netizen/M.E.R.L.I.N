@@ -1,0 +1,172 @@
+{
+  "cycle": 40,
+  "timestamp": "2026-04-04T00:00:00.000Z",
+  "auditor": "merlin-ai-playtester",
+  "scope": "Focused audit: mg_traces, mg_volonte, mg_combat_rituel, MerlinLairScene (crystal float + zoneToast), mg_runes C39-fix verification, mg_sang_froid C39-fix verification",
+  "files_read": [
+    "web-demo/src/minigames/mg_traces.ts",
+    "web-demo/src/minigames/mg_volonte.ts",
+    "web-demo/src/minigames/mg_combat_rituel.ts",
+    "web-demo/src/scenes/MerlinLairScene.ts (lines 830-870, 960-1010)",
+    "web-demo/src/scenes/LairGLBAssets.ts (grep: crystal + position.set)",
+    "web-demo/src/minigames/mg_runes.ts (lines 1-80)",
+    "web-demo/src/minigames/mg_sang_froid.ts (lines 1-80)",
+    "web-demo/src/minigames/MinigameBase.ts (lines 240-260)"
+  ],
+
+  "c39_fixes_verified": [
+    {
+      "bug_id": "BUG-39-02",
+      "title": "mg_runes manual arithmetic -> tieredValue",
+      "status": "FIXED",
+      "evidence": "mg_runes.ts line 54: `this.totalTime = this.tieredValue([30, 25, 20, 15] as const);` confirmed. Line 55: `this.flipBackDelay = this.tieredValue([600, 550, 500, 450] as const);` confirmed. Both present and correct."
+    },
+    {
+      "bug_id": "BUG-39-03",
+      "title": "mg_sang_froid totalTime readonly -> mutable + tieredValue",
+      "status": "FIXED",
+      "evidence": "mg_sang_froid.ts line 29: `private totalTime = 10;` — readonly keyword removed. Line 54: `this.totalTime = this.tieredValue([10, 9, 8, 7] as const);` confirmed in setup(). Full tier scaling now active."
+    }
+  ],
+
+  "open_bugs_status": [
+    {
+      "bug_id": "BUG-39-04",
+      "title": "mg_combat_rituel uses manual tier arithmetic instead of tieredValue()",
+      "status": "STILL OPEN",
+      "evidence": "mg_combat_rituel.ts line 59: `this.totalTime = 16 - this.difficultyTier * 2;` and line 60: `this.obstacleCount = 3 + this.difficultyTier;` — no change from C39. tieredValue() not used."
+    },
+    {
+      "bug_id": "BUG-39-08",
+      "title": "mg_traces timer IDs 'mg-timer' / 'mg-timer-fill' not namespaced",
+      "status": "STILL OPEN",
+      "evidence": "mg_traces.ts line 44: `timerBar.id = 'mg-timer';` and line 52: `timerFill.id = 'mg-timer-fill';`. setInterval callback (lines 93-96) still uses `document.getElementById('mg-timer-fill')` and `document.getElementById('mg-timer')`. Generic IDs unchanged."
+    },
+    {
+      "bug_id": "BUG-39-09",
+      "title": "Crystal GLB float Y coordinate space mismatch",
+      "status": "RESOLVED — no action needed",
+      "evidence": "LairGLBAssets.ts line 256: `gltf.scene.position.set(5, -1.0, -4)`. MerlinLairScene.ts line 983: `const crystalFloatY = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04`. The GLB baseline Y is exactly -1.0, matching the float animation's resting position. No Y mismatch exists. The float is applied to the group root which owns position Y=-1.0 at load time and oscillates ±0.04 around it. BUG-39-09 is INVALID — the coordinate spaces are aligned."
+    },
+    {
+      "bug_id": "BUG-39-10",
+      "title": "mg_volonte totalTime is readonly — cannot be tier-scaled",
+      "status": "STILL OPEN",
+      "evidence": "mg_volonte.ts line 38: `private readonly totalTime = 10;` — readonly keyword still present. setup() scales targetRadius (line 63), spawnInterval (line 64), maxDistractors (line 65) via tieredValue() correctly. totalTime remains frozen at 10s across all tiers. BUG-39-10 is UNRESOLVED."
+    }
+  ],
+
+  "new_bugs": [
+    {
+      "id": "BUG-40-01",
+      "severity": "MED",
+      "title": "mg_volonte totalTime referenced in endGame() score formula but never reset in setup() after tieredValue() would change it",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "line": 119,
+      "description": "Related to BUG-39-10 but a distinct issue: line 119 resets `this.timeLeft = this.totalTime;` in setup(). Because totalTime is readonly and never reassigned, this.timeLeft is always set to 10 regardless of difficultyTier. When BUG-39-10 is fixed by removing readonly and adding tieredValue(), the fix must also ensure that line 119 `this.timeLeft = this.totalTime;` comes AFTER the tieredValue() call in setup(), not before. If the fix inserts tieredValue() at the end of the scaling block (after line 65) but before line 119, it will be correct. If inserted after line 119 it will cause timeLeft to mismatch totalTime. This ordering dependency is a latent bug that will surface only when BUG-39-10 is patched.",
+      "fix": "When fixing BUG-39-10, insert `this.totalTime = this.tieredValue([12, 11, 10, 9] as const);` between lines 65 and 119 (after the other tieredValue() calls, before the state-reset block). Verify that line 119 `this.timeLeft = this.totalTime;` reads the updated value."
+    },
+    {
+      "id": "BUG-40-02",
+      "severity": "LOW",
+      "title": "mg_traces: render() self-schedules via requestAnimationFrame but never checks this.ended before scheduling the next frame",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "line": 198,
+      "description": "mg_traces.render() at line 198 unconditionally calls `this.animFrame = requestAnimationFrame(() => this.render());`. endGame() at line 130 calls `cancelAnimationFrame(this.animFrame)` and sets `this.ended = true`, which stops the loop. However, if render() is called by the base class (MinigameBase.play() line 249) and a rAF frame fires between cancelAnimationFrame() and the next JS task boundary, the callback can slip through. In practice, cancelAnimationFrame() reliably cancels the pending frame if the handle is current. The risk is negligible. However, mg_volonte (line 346) and mg_sang_froid both follow the same pattern. For consistency and defence-in-depth, an early return `if (this.ended) return;` at the top of render() would prevent any late-firing rAF from doing work after game end. This is a code quality issue, not a functional bug.",
+      "fix": "Add `if (this.ended) return;` as the first statement in mg_traces.render(), and apply the same guard to mg_volonte and mg_sang_froid render() methods."
+    },
+    {
+      "id": "BUG-40-03",
+      "severity": "LOW",
+      "title": "mg_combat_rituel: timeLeft initialised to hardcoded 10 at field declaration but should be totalTime",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "line": 48,
+      "description": "Line 48: `private timeLeft = 10;`. Line 114 in setup() correctly does `this.timeLeft = this.totalTime;` after totalTime is set on line 59. So this.timeLeft is always correctly reset before the game starts. However, the field initializer `= 10` is misleading — if totalTime is ever changed to a different default (e.g. 16 which is the actual default on line 39: `private totalTime = 16;`), the field initializer creates a silent inconsistency between the field declaration (10) and the actual game config default (16). This is a documentation/maintenance issue rather than a runtime bug.",
+      "fix": "Change line 48 to `private timeLeft = 16;` to match the field declaration of totalTime at line 39. Or derive it: `private timeLeft = this.totalTime;` — but that requires totalTime to be declared before timeLeft."
+    }
+  ],
+
+  "crystal_float_audit": {
+    "verdict": "PASS",
+    "glb_baseline_y": -1.0,
+    "float_base_y": -1.0,
+    "float_amplitude": 0.04,
+    "match": true,
+    "notes": "LairGLBAssets.ts line 256: position.set(5, -1.0, -4). MerlinLairScene.ts line 983: crystalFloatY = -1.0 + sin(t*0.9)*0.04. The group's initial Y and the float's resting position are identical. BUG-39-09 is resolved — no fix required."
+  },
+
+  "zone_toast_audit": {
+    "verdict": "PASS (existing LOW risk BUG-39-06 unchanged)",
+    "notes": "zoneToast.innerHTML injection at lines 846 and 958 confirmed still using innerHTML with hardcoded string literals. No new risk introduced in C39. BUG-39-06 (XSS-safe refactor to textContent) remains open at LOW severity. zoneToast itself correctly shows/hides via opacity on hover enter/leave."
+  },
+
+  "minigame_coverage": {
+    "mg_combat_rituel": {
+      "tieredValue": false,
+      "checkCriticalAlert": true,
+      "status": "WARN — BUG-39-04 still open",
+      "notes": "Manual arithmetic on lines 59-60. Numerically equivalent but inconsistent with tieredValue pattern."
+    },
+    "mg_runes": {
+      "tieredValue": true,
+      "checkCriticalAlert": true,
+      "flipBackDelay_tiered": true,
+      "status": "PASS (C39 fixes BUG-39-02 confirmed). BUG-39-07 (MouseEvent typing) still open from C39.",
+      "notes": "tieredValue([30,25,20,15]) and tieredValue([600,550,500,450]) both present at lines 54-55."
+    },
+    "mg_sang_froid": {
+      "tieredValue": true,
+      "checkCriticalAlert": true,
+      "totalTime_mutable": true,
+      "status": "PASS (C39 fix BUG-39-03 confirmed).",
+      "notes": "readonly removed. tieredValue([10,9,8,7]) active. endRadius and driftSpeed also scale. Full tier coverage."
+    },
+    "mg_traces": {
+      "tieredValue": true,
+      "checkCriticalAlert": true,
+      "status": "WARN — BUG-39-08 still open (generic timer IDs)",
+      "notes": "Timer IDs 'mg-timer' and 'mg-timer-fill' unchanged. No other new issues found. Wave params randomised per-play (good). pointerdown correctly typed as PointerEvent (clean)."
+    },
+    "mg_volonte": {
+      "tieredValue": "partial — totalTime still readonly",
+      "checkCriticalAlert": true,
+      "status": "WARN — BUG-39-10 still open + BUG-40-01 latent",
+      "notes": "targetRadius, spawnInterval, maxDistractors all tieredValue. totalTime = readonly 10. Fix ordering risk documented as BUG-40-01."
+    }
+  },
+
+  "summary": {
+    "c39_fixes_confirmed": 2,
+    "bugs_resolved_c39": ["BUG-39-02", "BUG-39-03"],
+    "bugs_invalid_reassessed": ["BUG-39-09"],
+    "bugs_still_open_from_c39": ["BUG-39-04", "BUG-39-08", "BUG-39-10"],
+    "new_bugs_c40": 3,
+    "new_bugs_high": 0,
+    "new_bugs_med": 1,
+    "new_bugs_low": 2,
+    "softlock_detected": false,
+    "regressions_from_c39": "NONE — no regressions introduced by C39 fixes",
+    "render_loop_bootstrap": "PASS — MinigameBase.play() calls setup() then render() at line 249; all minigames correctly rely on this.",
+    "total_open_bugs": {
+      "HIGH": 0,
+      "MED": 3,
+      "LOW": 7,
+      "note": "HIGH bugs from C39 (BUG-39-02, BUG-39-03) both fixed. Remaining open set: BUG-39-04, BUG-39-05, BUG-39-06, BUG-39-07, BUG-39-08, BUG-39-10, BUG-40-01(MED), BUG-40-02(LOW), BUG-40-03(LOW), plus C39 LOWs BUG-39-11 through BUG-39-15."
+    }
+  },
+
+  "score": 78,
+  "score_delta": "+10 vs C39 (was 68)",
+  "score_rationale": "Both HIGH bugs from C39 fixed (+10). BUG-39-09 resolved as invalid (+2 adjustment). Three open MEDs remain (BUG-39-04, BUG-39-08, BUG-39-10) holding score below 85. No regressions. Crystal float confirmed correct.",
+  "verdict": "FIX",
+
+  "fix_priority": [
+    "BUG-39-10: mg_volonte totalTime readonly — remove readonly, add tieredValue([12,11,10,9]) BEFORE line 119 reset (see BUG-40-01 ordering risk)",
+    "BUG-39-08: mg_traces generic timer IDs — rename to 'mg-traces-timer' and 'mg-traces-timer-fill' in 4 places",
+    "BUG-39-04: mg_combat_rituel — replace manual arithmetic with tieredValue([16,14,12,10]) and tieredValue([3,4,5,6])",
+    "BUG-39-07: mg_runes onClick handler — retype from MouseEvent to PointerEvent",
+    "BUG-40-02: render() ended guard — add `if (this.ended) return;` at top of mg_traces/mg_volonte/mg_sang_froid render() methods",
+    "BUG-40-03: mg_combat_rituel timeLeft field initializer — align to 16 to match totalTime default",
+    "BUG-39-06: zoneToast innerHTML — refactor to DOM construction + textContent for XSS safety"
+  ]
+}

@@ -1,0 +1,213 @@
+========================================================================
+LAIR HUB WIRING PLAN — M.E.R.L.I.N.
+Generated: 2026-04-03 | Auditor: merlin-ai-playtester
+========================================================================
+
+## AUDIT FINDINGS
+
+### Current flow (main.ts)
+  runBootScreen()
+    → runMainMenu()         ← player clicks "Start"
+      → buildCoastScene()
+      → gameLoop()
+
+### Target flow after wiring
+  runBootScreen()
+    → runMainMenu()         ← player clicks "Start"
+      → runMerlinLair()     ← NEW: Hub 3D entre menu et run
+        [door click]  → gameLoop()
+        [map click]   → (future) biome selector overlay
+        [crystal]     → (future) ogham equip overlay
+        [bookshelf]   → (future) journal/lore overlay
+        [cauldron]    → (future) LLM Merlin dialogue
+      → gameLoop()
+
+------------------------------------------------------------------------
+
+## 1. POINT D'INSERTION EXACT DANS main.ts
+
+Après la ligne 160 :
+  await runMainMenu();
+
+Avant la ligne 163 :
+  loading.style.display = 'flex';
+
+Insérer :
+  await runMerlinLair(app);
+
+Le paramètre `app` est déjà disponible (ligne 150 : const app = document.getElementById('app')!).
+
+------------------------------------------------------------------------
+
+## 2. ÉLÉMENTS DOM NÉCESSAIRES
+
+`initMerlinLair(container)` appelle `container.appendChild(renderer.domElement)`.
+Le container doit être un div positionné en plein écran, distinct du
+`menu-canvas-wrapper` (qui est caché via wrapper.style.display = 'none'
+en fin de runMainMenu).
+
+Div requis dans index.html, à ajouter après #menu-canvas-wrapper :
+
+  <div id="lair-canvas-wrapper"
+       style="position:fixed;inset:0;width:100%;height:100%;display:none;z-index:10;">
+  </div>
+
+Dimensions : 100vw × 100vh. Le renderer lit clientWidth/clientHeight depuis
+ce container (lignes 621-622 de MerlinLairScene.ts), donc aucune valeur
+hardcodée — responsive natif.
+
+------------------------------------------------------------------------
+
+## 3. ROUTING DES 5 ZONES
+
+Zone       | Action immédiate         | Raison (commentaire MerlinLairScene.ts ligne 683-688)
+-----------|--------------------------|-------------------------------------------------------
+door       | resolve() → gameLoop()   | "start run" — porte = entrée dans la forêt
+map        | log + no-op (cycle futur)| "biome selection" — UI overlay à brancher plus tard
+crystal    | log + no-op (cycle futur)| "oghams equip" — panel équipement à brancher
+bookshelf  | log + no-op (cycle futur)| "journal/lore" — écran lore à brancher
+cauldron   | log + no-op (cycle futur)| "dialogue_merlin LLM" — chat Merlin à brancher
+
+Seul `door` résout la Promise et libère le flow vers gameLoop.
+Les 4 autres zones sont loggées mais ne bloquent pas — prêtes pour les
+overlays des cycles suivants.
+
+------------------------------------------------------------------------
+
+## 4. PATTERN DISPOSE / CLEANUP CORRECT
+
+`LairResult.dispose()` (lignes 775-794 de MerlinLairScene.ts) fait déjà :
+  - window.removeEventListener('resize', onResize)
+  - renderer.domElement.removeEventListener('mousemove', onMouseMove)
+  - renderer.domElement.removeEventListener('click', onClick)
+  - scene.traverse → geometry.dispose() + material.dispose() sur tous meshes/points
+  - renderer.dispose()
+  - removeChild(renderer.domElement) du DOM
+
+Donc dans runMerlinLair :
+  1. Annuler le RAF *avant* d'appeler dispose() pour éviter un render
+     orphelin sur un renderer déjà libéré.
+  2. Masquer et réinitialiser le wrapper div après dispose().
+  3. Ne pas appeler dispose() depuis l'intérieur du RAF tick — toujours
+     depuis le flux principal après cancelAnimationFrame.
+
+------------------------------------------------------------------------
+
+## 5. ESTIMATION LIGNES DE CODE
+
+Fonction runMerlinLair complète : 55-60 lignes.
+Ajout dans main() : 1 ligne (await runMerlinLair(app)).
+Ajout dans index.html : 5 lignes (div wrapper).
+Import dans main.ts : 1 ligne.
+Total : ~67 lignes.
+
+------------------------------------------------------------------------
+
+## 6. CODE PRODUCTION-READY : runMerlinLair()
+
+À insérer dans main.ts entre runMainMenu() et la section "Phase 3: Reveal".
+Import à ajouter en haut de main.ts :
+  import { initMerlinLair } from './scenes/MerlinLairScene';
+
+------------------------------------------------------------------------
+
+// --- Lair Hub ---
+async function runMerlinLair(app: HTMLElement): Promise<void> {
+  // Retrieve or create the lair wrapper div
+  let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'lair-canvas-wrapper';
+    wrapper.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:10;';
+    app.parentElement?.appendChild(wrapper) ?? document.body.appendChild(wrapper);
+  }
+  wrapper.style.display = 'block';
+
+  // Fade in from black (menu already cut to black via cutToBlack())
+  revealFromBlack(800);
+
+  const lair = initMerlinLair(wrapper);
+
+  // Real-time clock → day/night cycle (optional cosmetic, non-blocking)
+  const now = new Date();
+  lair.setTime({
+    hour: now.getHours() + now.getMinutes() / 60,
+    season: (['winter', 'spring', 'summer', 'autumn'] as const)[
+      Math.floor(((now.getMonth() + 1) % 12) / 3)
+    ] ?? 'spring',
+  });
+
+  // RAF loop
+  let rafId = 0;
+  let lastTs = performance.now();
+  const tick = (): void => {
+    rafId = requestAnimationFrame(tick);
+    const now = performance.now();
+    const dt = Math.min((now - lastTs) / 1000, 0.05);
+    lastTs = now;
+    lair.update(dt);
+  };
+  tick();
+
+  // Wait for player to choose a zone
+  const zone = await new Promise<import('./scenes/MerlinLairScene').LairZone>((resolve) => {
+    lair.onZoneClick((z) => {
+      // door  → start run immediately
+      // others → log intent, stay in Lair (future overlays)
+      if (z === 'door') {
+        resolve(z);
+        return;
+      }
+      // Future: dispatch overlay by zone
+      // For now, log and keep Lair active
+      console.info(`[Lair] zone clicked: ${z} (overlay not yet wired)`);
+    });
+  });
+
+  // Cleanup: stop RAF first, then dispose renderer + event listeners
+  cancelAnimationFrame(rafId);
+  cutToBlack();
+  await new Promise<void>((res) => setTimeout(res, 300)); // brief black frame
+  lair.dispose();
+  wrapper.style.display = 'none';
+
+  void zone; // consumed — currently only 'door' resolves
+}
+
+------------------------------------------------------------------------
+
+## 7. MODIFICATION main() (3 lignes)
+
+### Avant (lignes 159-163 de main.ts) :
+  // Phase 2: Main menu (static camera, T061)
+  await runMainMenu();
+
+  // Phase 3: Reveal and enter game
+  loading.style.display = 'flex';
+
+### Après :
+  // Phase 2: Main menu (static camera, T061)
+  await runMainMenu();
+
+  // Phase 2b: Lair Hub (3D interior, player chooses biome/door)
+  await runMerlinLair(app);
+
+  // Phase 3: Reveal and enter game
+  loading.style.display = 'flex';
+
+------------------------------------------------------------------------
+
+## 8. RISQUES IDENTIFIÉS
+
+MEDIUM — cutToBlack() appelé deux fois (fin runMainMenu + fin runMerlinLair).
+  Mitigation : la deuxième transition est intentionnelle (sortie Lair → forêt).
+  Pas de double-appel concurrent car les deux sont séquentiels.
+
+LOW — wrapper div créé dynamiquement si absent de l'HTML.
+  Recommandation : l'ajouter statiquement dans index.html (voir section 2)
+  pour éviter le reflow au premier rendu.
+
+LOW — console.info dans la branche zones non-wired.
+  À remplacer par un logger structuré ou supprimer avant prod.
+
+========================================================================

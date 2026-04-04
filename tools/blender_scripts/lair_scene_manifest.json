@@ -1,0 +1,84 @@
+{
+  "scene": "MerlinLairScene",
+  "units": "Three.js world units",
+  "generated_at": "2026-04-03",
+  "assets": [
+    {
+      "name": "cauldron",
+      "glb": "assets/3d_models/decor/cauldron_merlin.glb",
+      "public_path": "/cauldron_merlin.glb",
+      "position": [2, -4.65, -7],
+      "scale": 0.72,
+      "role": "prop_interactif",
+      "polys": 34,
+      "status": "integrated_in_scene"
+    },
+    {
+      "name": "table_druidique",
+      "glb": "assets/3d_models/decor/table_druidique.glb",
+      "position": [-5, -3.5, -3],
+      "scale": 1.0,
+      "role": "prop_interactif",
+      "polys": 32,
+      "note": "Replaces/augments createMapTable() procedural mesh"
+    },
+    {
+      "name": "bibliotheque",
+      "glb": "assets/3d_models/decor/bibliotheque.glb",
+      "position": [8, 0.5, -8],
+      "scale": 1.0,
+      "role": "prop_interactif_zone_bookshelf",
+      "polys": 120,
+      "note": "Replaces/augments createBookshelf() procedural mesh"
+    },
+    {
+      "name": "sol_pierre",
+      "glb": "assets/3d_models/decor/sol_pierre.glb",
+      "position": [0, -5.15, 0],
+      "scale": 1.0,
+      "role": "sol",
+      "polys": 97,
+      "note": "Overlay on BoxGeometry floor — same Y as existing floor"
+    },
+    {
+      "name": "mur_pierre",
+      "glb": "assets/3d_models/decor/mur_pierre.glb",
+      "position": [0, -5, -10],
+      "scale": 1.0,
+      "role": "mur_fond",
+      "polys": 126,
+      "note": "Module mur réutilisable. Dupliquer et pivoter pour murs latéraux."
+    },
+    {
+      "name": "bougie",
+      "glb": "assets/3d_models/decor/bougie.glb",
+      "instances": [
+        {"position": [-5, -1.6, -7], "scale": 0.9},
+        {"position": [0, -4.6, -8.5], "scale": 0.85},
+        {"position": [3, -3.0, -6], "scale": 0.9},
+        {"position": [-8, 2.5, -9], "scale": 1.0},
+        {"position": [8, 2.5, -9], "scale": 1.0}
+      ],
+      "role": "prop_ambiance",
+      "polys": 23,
+      "note": "Remplace les bougies procédurales de createCandles()"
+    }
+  ],
+  "lights": [
+    {"type": "ambient", "color": "#1a1008", "intensity": 0.5},
+    {"type": "point", "name": "key", "position": [0, 8, -2], "color": "#ff6618", "intensity": 1.1, "distance": 22, "decay": 1.6},
+    {"type": "point", "name": "rim", "position": [8, 2, 7], "color": "#6699cc", "intensity": 0.55, "distance": 18, "decay": 2.0},
+    {"type": "point", "name": "fill", "position": [-9, 0, -5], "color": "#cc8833", "intensity": 0.4, "distance": 16, "decay": 2.0},
+    {"type": "point", "name": "cauldron_glow", "position": [2, -3.2, -7], "color": "#22cc44", "intensity": 1.2, "distance": 3.5, "decay": 2}
+  ],
+  "camera": {
+    "position": [0, 0.5, 7],
+    "lookAt": [0, 0, -4],
+    "fov": 62
+  },
+  "fog": {
+    "color": "#0d0a08",
+    "near": 12,
+    "far": 28
+  }
+}

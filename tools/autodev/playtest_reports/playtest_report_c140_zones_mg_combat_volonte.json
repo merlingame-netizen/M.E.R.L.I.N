@@ -1,0 +1,183 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": "C140",
+  "auditor": "merlin-ai-playtester",
+  "scope": [
+    "mg_combat_rituel.ts",
+    "mg_volonte.ts",
+    "mg_ombres.ts",
+    "MerlinLairScene.ts lines 975-1000 (ZONE_ARIA_LABELS, ZONE_LORE)",
+    "EffectEngine.ts lines 1-50 (imports, types, VALID_CODES)"
+  ],
+
+  "deferred_from_c139": [
+    {
+      "id": "OC-05",
+      "severity": "LOW",
+      "status": "STILL DEFERRED — not touched in C140, confirmed unchanged"
+    },
+    {
+      "id": "COMB-01",
+      "severity": "LOW",
+      "status": "RESOLVED BELOW — exact location and fix identified"
+    },
+    {
+      "id": "CS-01",
+      "severity": "LOW",
+      "status": "STILL DEFERRED — analytics only, out of scope this cycle"
+    },
+    {
+      "id": "LORE",
+      "severity": "LOW",
+      "status": "RESOLVED BELOW — exact string confirmed"
+    }
+  ],
+
+  "findings": [
+    {
+      "id": "COMB-01",
+      "severity": "LOW",
+      "status": "CONFIRMED — exact location pinpointed",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "lines": "278-289",
+      "description": "centerTime accumulates in the else-branch (not-hit branch), which is correct behaviour in isolation. The bug is that centerTime accumulates even during frames where the player is dodging but NOT near the center — i.e. any non-colliding frame. The deferred report description was slightly misleading: the issue is NOT that it accumulates in the wrong branch, it is that the center-proximity check (lines 285-289) is nested INSIDE the else-branch at the correct depth. Reading the code carefully: centerTime only increments when BOTH conditions hold — not-hit AND dist < centerBonusRadius. This is correct. COMB-01 as originally filed ('centerTime accumulates in the not-hit branch, denying center credit during collision frames') is ACCURATE but LOW severity as intended: during a collision frame (hit=true), centerTime does NOT increment even if the player is physically inside the centerBonusRadius. This means standing in the center and getting clipped by an obstacle for a fraction of dt loses that dt of center credit. Fix: move the center-proximity check OUTSIDE the if/else (unconditional each frame) and multiply by (1 - hit_penalty) factor, or simply accept the LOW severity as a design choice (risky center play should not credit collision frames).",
+      "exact_code_location": "mg_combat_rituel.ts line 284-289 — inside `else` block (not-hit): `const dx = this.playerX - this.centerX; const dy = this.playerY - this.centerY; if (Math.sqrt(dx*dx+dy*dy) < this.centerBonusRadius) { this.centerTime += dt; }`",
+      "proposed_fix": "If the intent is to reward time-near-center regardless of collision state, move the center-distance check unconditionally before the hit block. If the intent is 'center credit only when safe', current behaviour is correct by design. Design intent is ambiguous — recommend annotating with a comment clarifying the decision rather than changing the logic.",
+      "impact": "Player can lose up to ~5% of center bonus (centerPct max 20 pts) if they hold center while grazed by rotating arc. Affects 1 of 20 score points at most."
+    },
+    {
+      "id": "LORE-01",
+      "severity": "LOW",
+      "status": "CONFIRMED — incorrect label identified",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 984,
+      "description": "ZONE_ARIA_LABELS['crystal'] = 'Pierre des Oghams'. An ogham is a stone rune character (letter), not a crystal sphere. The 3D object for this zone is described elsewhere as a crystal sphere / boule de cristal. The label mixes two distinct object types. ZONE_LORE['crystal'] (line 995) = 'Les runes d\\'ogham murmurent dans la pierre sacrée' — this also refers to stone/rune, reinforcing the mislabeling. A crystal sphere in Celtic mythology is a scrying object (speculum), not an ogham stone.",
+      "exact_strings": {
+        "ZONE_ARIA_LABELS_crystal": "Pierre des Oghams",
+        "ZONE_LORE_crystal": "Les runes d'ogham murmurent dans la pierre sacrée"
+      },
+      "proposed_fix": "ZONE_ARIA_LABELS['crystal']: change to 'Sphère de Cristal' or 'Boule de Vision'. ZONE_LORE['crystal']: change to something like 'La sphère de cristal reflète les visions du destin' to match the actual 3D object. The ogham rune theme belongs to a stone object, not a crystal sphere.",
+      "impact": "Cosmetic / lore consistency. Screen-reader users hear 'Pierre des Oghams' and expect a stone, not a crystal sphere. Breaks immersion and is WCAG 4.1.2 non-conformant (label does not match purpose)."
+    },
+    {
+      "id": "VOL-AUDIT-01",
+      "severity": "PASS",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "description": "Render guard present (line 234: `if (!this.ctx || !this.canvas || this.ended) return`). cancelTimers() implemented at line 212-219, covering clearInterval, cancelAnimationFrame, and all 5 event listeners (pointermove, pointerdown, pointerleave, pointercancel, keydown). cleanup() delegates to super.cleanup() which calls cancelTimers(). No orphan handles found.",
+      "status": "CLEAN"
+    },
+    {
+      "id": "VOL-AUDIT-02",
+      "severity": "PASS",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "description": "Score formula: `(this.timeOnTarget / this.totalTime) * 100` (line 228). HUD status uses same formula (line 269: `(this.timeOnTarget / this.totalTime) * 100`). Both are aligned. C124/VOL-FORMULA-01 fix from C124 is confirmed present and correct.",
+      "status": "CLEAN"
+    },
+    {
+      "id": "VOL-AUDIT-03",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "lines": "177",
+      "description": "onKeyDown auto-center guard checks `this.cursorX === 0 && this.cursorY === 0` to detect the initial uninitialized state and auto-center the cursor. However, setup() initialises cursorX/cursorY to (0, 0) explicitly (lines 133-134). If a player somehow presses an arrow key without the guard triggering (e.g., if they previously moved to exactly 0,0 via pointer), the auto-center will fire unexpectedly. This is an extremely unlikely edge case (cursorX=0, cursorY=0 is the top-left canvas corner, far from center). The guard works correctly in the common case (first keypress). No code change needed, but annotating the magic values (0,0) as sentinel would improve maintainability.",
+      "severity_rationale": "Extremely unlikely in practice. Keyboard-only flow works correctly for all normal inputs.",
+      "status": "INFORMATIONAL — no fix required"
+    },
+    {
+      "id": "OMB-AUDIT-01",
+      "severity": "PASS",
+      "file": "web-demo/src/minigames/mg_ombres.ts",
+      "description": "C125/OMB-FORMULA-01 fix confirmed present (lines 242-247). Live HUD score uses `maxProgress * 100 * (1 - livePenalty * 0.85)` matching endGame formula exactly. Render guard present (line 220). cancelTimers() present (lines 28-34), cleanup() delegates to super. No regression found.",
+      "status": "CLEAN"
+    },
+    {
+      "id": "EE-AUDIT-01",
+      "severity": "PASS",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "description": "VALID_CODES (lines 9-27) registers 16 effect codes. The C136 mutation block handles ogham-triggered card mutations. Review of VALID_CODES against GAME_DESIGN_BIBLE v2.4 active ogham effects: UNLOCK_OGHAM is registered. ADD_REPUTATION, DAMAGE_LIFE, HEAL_LIFE, ADD_ANAM are all registered. No effect code appears that should trigger card mutation per the design spec but is absent from VALID_CODES. The import of OGHAM_SPECS from Constants (line 6) confirms the engine has access to ogham definitions. No gap found in the 1-50 line range reviewed.",
+      "status": "CLEAN — first 50 lines show no missing effect codes relevant to ogham mutation"
+    },
+    {
+      "id": "COMB-SCOREFORMULA-01",
+      "severity": "PASS",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "description": "endGame() score formula (lines 243-248): `survivalPct = (survivalTime/totalTime)*80`, `centerPct = (centerTime/totalTime)*20`, `finalScore = min(100, survivalPct+centerPct)`. HUD status formula (lines 299-301) uses identical weights (80/20). C127/COMB-FORMULA-01 fix is confirmed present and correct. No divergence between displayed estimate and actual score.",
+      "status": "CLEAN"
+    },
+    {
+      "id": "COMB-CANCELGUARD-01",
+      "severity": "PASS",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "description": "ended guard present at line 253. cancelTimers() present at lines 229-235 covering clearInterval, cancelAnimationFrame, and all 3 event listeners (pointermove, pointerdown, keydown). cleanup() at line 402-405 delegates to super.cleanup(). No orphan handles.",
+      "status": "CLEAN"
+    },
+    {
+      "id": "NEW-VOL-DISTRACTOR-01",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "lines": "198-209",
+      "description": "spawnDistractor() filters expired distractors with `this.distractors.filter(d => this.elapsedTime - d.spawnTime < d.lifetime)` and then slices to `-this.maxDistractors`. The immutable spread pattern is correct. However, the filter is called ONLY during spawn (not every render frame). The `activeDistractors` filter in render() (line 285) is a separate local variable and does NOT update `this.distractors`. This means `this.distractors` can grow unboundedly between spawn events if spawn interval is very long (it grows by 1 per spawn but is never pruned until next spawn). With maxDistractors=18 and lifetime max 3.5s, the array is capped by the slice at 18 entries plus at most 1 stale entry pending the next prune. Maximum array length = maxDistractors + 1 = 19. Impact is negligible (single extra Distractor object in memory between spawns). Informational only.",
+      "status": "INFORMATIONAL — no fix required"
+    },
+    {
+      "id": "NEW-COMB-PROGRESSIVESPEED-01",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "lines": "260-268",
+      "description": "Progressive speed multiplier uses `Math.min(1, this.elapsedTime / this.totalTime)` for timeRatio. elapsedTime is incremented by dt every render frame and is INDEPENDENT from timeLeft (which is decremented by the setInterval at 100ms). If the tab is backgrounded (dt spikes), elapsedTime can advance faster than timeLeft, causing timeRatio to reach 1.0 and the 2.5x speed multiplier to apply prematurely. This is a minor jank risk on low-end devices but not a balance issue under normal conditions. Informational.",
+      "status": "INFORMATIONAL — no fix required under normal play conditions"
+    }
+  ],
+
+  "summary": {
+    "new_critical": 0,
+    "new_high": 0,
+    "new_medium": 0,
+    "new_low": 2,
+    "new_informational": 3,
+    "deferred_resolved": 1,
+    "deferred_still_open": 3,
+    "clean_passes": 6
+  },
+
+  "new_bugs": [
+    {
+      "id": "NEW-LORE-01",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 984,
+      "issue": "ZONE_ARIA_LABELS['crystal'] = 'Pierre des Oghams' mislabels a crystal sphere as an ogham stone.",
+      "fix": "Change to 'Sphère de Cristal'. Update ZONE_LORE['crystal'] from 'Les runes d\\'ogham murmurent dans la pierre sacrée' to 'La sphère de cristal reflète les visions du destin' (or equivalent Celtic scrying lore)."
+    }
+  ],
+
+  "deferred_confirmed_fixes_needed": [
+    {
+      "id": "COMB-01",
+      "current_behaviour": "centerTime does NOT increment during collision frames even if player is inside centerBonusRadius.",
+      "exact_location": "mg_combat_rituel.ts lines 278-289 — center check inside else-branch",
+      "exact_fix_if_design_intent_is_unconditional_credit": "Move lines 285-289 outside the if/else block, before or after it, so centerTime increments whenever dist < centerBonusRadius regardless of hit state.",
+      "exact_fix_if_design_intent_is_safe_credit_only": "Add a code comment confirming current behaviour is intentional (center credit only when not hit) and close the ticket."
+    }
+  ],
+
+  "zone_labels_verbatim": {
+    "ZONE_ARIA_LABELS": {
+      "map": "Carte des Biomes",
+      "crystal": "Pierre des Oghams",
+      "bookshelf": "Journal de Merlin",
+      "cauldron": "Chaudron Druidique",
+      "door": "Sortie vers l'aventure",
+      "skull": "Crâne du Sage"
+    },
+    "ZONE_LORE": {
+      "map": "Quelle contrée de Bretagne t'appelle ce soir ?",
+      "crystal": "Les runes d'ogham murmurent dans la pierre sacrée",
+      "bookshelf": "Les chroniques de Merlin gardent mémoire de tes actes",
+      "cauldron": "Le chaudron de Cerridwen bouillonne de sagesse ancienne",
+      "door": "Les bois de Brocéliande t'attendent, voyageur",
+      "skull": "Les anciens druides méditaient face à la mort — gardienne des secrets oubliés"
+    }
+  },
+
+  "overall_verdict": "PASS — no new CRITICAL/HIGH/MEDIUM bugs. Two new LOW items (COMB-01 design clarification needed, NEW-LORE-01 label fix). All three minigames (mg_combat_rituel, mg_volonte, mg_ombres) are structurally sound: render guards, cancelTimers, score formula HUD alignment all confirmed correct. EffectEngine first 50 lines clean."
+}

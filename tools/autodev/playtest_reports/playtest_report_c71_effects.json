@@ -1,0 +1,143 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 71,
+  "audit_type": "AAA-severity — Card + Effect Layer",
+  "auditor": "merlin-ai-playtester",
+  "files_audited": [
+    "web-demo/src/game/EffectEngine.ts",
+    "web-demo/src/game/CardSystem.ts",
+    "web-demo/src/game/Constants.ts",
+    "web-demo/src/main.ts (lines 1-120)"
+  ],
+  "scores": {
+    "effect_coverage": 7,
+    "balance": 8,
+    "game_loop_safety": 9,
+    "fun_factor": 8,
+    "composite": 8.0
+  },
+  "verdict": "PROCEED",
+  "summary": {
+    "effect_coverage": {
+      "fully_handled": [
+        "DAMAGE_LIFE",
+        "HEAL_LIFE",
+        "ADD_REPUTATION",
+        "ADD_ANAM",
+        "ADD_BIOME_CURRENCY",
+        "ADD_PROMISE",
+        "FULFILL_PROMISE",
+        "BREAK_PROMISE"
+      ],
+      "intentional_no_state_fire_and_forget": [
+        "PLAY_SFX",
+        "SHOW_DIALOG"
+      ],
+      "silent_noop_pushed_as_applied": [
+        "ADD_KARMA",
+        "ADD_TENSION",
+        "PROGRESS_MISSION",
+        "SET_FLAG",
+        "ADD_TAG",
+        "REMOVE_TAG",
+        "UNLOCK_OGHAM"
+      ],
+      "note": "The 7 no-op effects are in VALID_CODES and pass validation, then fall into the default branch. They emit console.warn but are pushed to applied[]. The player receives no state change. UNLOCK_OGHAM is the most dangerous of these — any card carrying it silently fails to grant the ogham."
+    },
+    "scaleAndCap_behavior": {
+      "multiplier_0": "Impossible per MULTIPLIER_TABLE (min factor is -1.5). If somehow passed, Math.abs(0)=0 produces 0-magnitude effects — state methods called with 0, functionally safe.",
+      "multiplier_negative_1_5_echec_critique": "Math.abs(-1.5)=1.5 — effects hit at 1.5x magnitude. ADD_REPUTATION sign is handled separately at line 124. DAMAGE_LIFE and HEAL_LIFE always scale by absolute multiplier, meaning critical failure amplifies effect magnitude in both directions. This is intentional per MULTIPLIER_TABLE design (punishing failures hit harder).",
+      "multiplier_muin_invert": "processOghamModifiers() rewrites effect strings (DAMAGE_LIFE <-> HEAL_LIFE, negate ADD_REPUTATION delta) BEFORE applyEffects() is called. The multiplier passed to applyEffects is the minigame score factor (positive). Muin inversion does not depend on multiplier sign — correctly separated concerns.",
+      "very_large_multipliers": "EFFECT_CAPS enforced in scaleAndCap(). DAMAGE_LIFE caps at 15, HEAL_LIFE at 18, ADD_REPUTATION at +/-20, ADD_ANAM at 20 (explicit). No runaway values possible.",
+      "fulfill_promise_quirk": "Reward of +5 anam is scaled by multiplier via scaleAndCap. At echec_critique (factor -1.5), Math.abs gives 1.5x, so reward is +7 anam rounded. A critical fail on a promise-fulfillment card gives MORE anam than a partial success (0.5x = +3). Minor but counterintuitive — player who barely survives a card gets less reward for keeping a promise than one who botches it spectacularly."
+    },
+    "card_generation": {
+      "template_source": "Externalized to /data/cards.json (loadTemplates). Inline pool removed (noted as 186 templates / ~130KB).",
+      "biome_filtering": "generateFastRouteCard() filters by t.biome === biome. Falls back to full pool when biomePool.length < 3. Cards.json biome coverage cannot be verified from TypeScript source — depends on authoring quality of the JSON file.",
+      "repeat_prevention": "Ring buffer of 3 (RECENT_CARD_BUFFER) correctly prevents consecutive repeats. Fallback to full pool when filtered pool is tiny — no deadlock.",
+      "emergency_fallback": "EMERGENCY_TEMPLATE is narrative content ('Le brouillard se leve...') with 3 realistic options. Not a debug placeholder. Safe.",
+      "biome_coverage_risk": "If cards.json has no biome tags or missing tags for some of the 8 biomes, the biome pool will always be empty for those biomes, causing full-pool fallback every card. Player sees non-biome-thematic cards. Not a crash but a narrative break."
+    },
+    "game_loop_safety": {
+      "boot_screen": "Promise.race([transitionend, setTimeout(1000)]) — cannot hang. T069 skip also works via click/keydown with { once: true } cleanup. Safe.",
+      "main_menu_await": "await new Promise<void> on startBtn click — intentional user-gate, not a deadlock. RAF loop runs independently.",
+      "deadlock_risk": "None detected in lines 1-120. No unconditional infinite await chain.",
+      "note": "Full run loop (card draw -> minigame -> effects -> return) is beyond line 120 and could not be audited. Recommend a follow-up read of lines 120-300 to verify drain timing and the full await chain."
+    },
+    "life_drain_timing": {
+      "constants_correct": "LIFE_DRAIN_PER_CARD=1, LIFE_DRAIN_STAGE2=2 at card 15, LIFE_DRAIN_STAGE3=3 at card 25. Consistent with CLAUDE.md pipeline step 1 (DRAIN before CARTE).",
+      "stage_escalation": "HEAL_LIFE gets halved after card 20 (cardsPlayed >= 20, Math.floor(raw * 0.5), min 1). With stage2 drain=2, avg heal ~2.2 — net slightly positive. With stage3 drain=3, net -0.8 per card. Tension curve is correct.",
+      "late_game_heal_halving": "Applied INSIDE applyEffects, using store.getState().run.cardsPlayed at apply time. Correct: reads live state, not stale snapshot.",
+      "drain_call_site": "Not visible in lines 1-120. Cannot confirm the drain fires at step 1 of the pipeline from this audit. Unverified."
+    }
+  },
+  "issues": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "issue": "UNLOCK_OGHAM is a validated, parseable effect that silently does nothing",
+      "detail": "VALID_CODES declares UNLOCK_OGHAM:1. parseEffect() accepts it. applyEffects() falls into the default no-op branch with console.warn, then pushes it to applied[]. Any card carrying UNLOCK_OGHAM:ioho as a reward gives the player nothing. If the LLM or FastRoute templates emit this effect, the new ogham branch is never opened. The effect is registered as if it worked.",
+      "recommendation": "Implement UNLOCK_OGHAM in the switch statement to call store.getState().unlockOgham(args[0]) — or if the store method does not exist yet, add it. Alternatively, move UNLOCK_OGHAM to a separate post-effect handler in the game loop that is clearly marked as not-yet-implemented so cards cannot be authored with it until it is ready."
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "issue": "5 other no-op effects (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG) silently pass as applied",
+      "detail": "These 6 codes are validated and accepted, pushed to applied[], but change no state. A card author writing ADD_KARMA:5 or SET_FLAG:visited_well:true will see no error and no result. The only signal is console.warn which is invisible to players and easy to miss in production.",
+      "recommendation": "For each unimplemented code, either remove it from VALID_CODES (prevents accidental authoring), or add a comment block in the switch documenting explicitly which cycle will implement them. Consider a separate UNIMPLEMENTED_CODES registry that causes rejection (pushed to rejected[]) rather than silent no-op."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "issue": "FULFILL_PROMISE anam reward scales inversely — echec_critique (factor 1.5) gives more anam than reussite_partielle (factor 0.5)",
+      "detail": "At line 159, the +5 anam reward for keeping a promise is scaled by Math.abs(multiplier). A minigame score of 0-20 (echec_critique, factor -1.5) gives +8 anam. A score of 51-79 (reussite_partielle, factor 0.5) gives +3 anam. The worst minigame performance yields the best moral reward, which is narratively incoherent and can be exploited.",
+      "recommendation": "Make the promise anam reward flat (unscaled), mirroring how BREAK_PROMISE damage is flat at line 172. Change: store.getState().addAnam(5) — no scaleAndCap call. The moral weight of keeping a promise should not depend on minigame skill."
+    }
+  ],
+  "balance_recommendations": [
+    {
+      "parameter": "FULFILL_PROMISE reward scaling",
+      "current": "scaleAndCap('ADD_ANAM', 5, multiplier) — varies 3-8 anam by score",
+      "suggested": "flat addAnam(5) — mirrors BREAK_PROMISE flat damage design",
+      "confidence": "HIGH",
+      "rationale": "Consistency with sibling effect, avoids counterintuitive inverse scaling"
+    },
+    {
+      "parameter": "UNLOCK_OGHAM implementation",
+      "current": "no-op with console.warn",
+      "suggested": "Implement store.unlockOgham(oghamId) or reject from VALID_CODES until implemented",
+      "confidence": "HIGH",
+      "rationale": "Prevents silent failure of ogham unlock cards"
+    },
+    {
+      "parameter": "Unimplemented effect codes disposition",
+      "current": "In VALID_CODES, silently no-op",
+      "suggested": "Move to FUTURE_CODES (separate constant) that causes rejection or explicit skip with stricter logging",
+      "confidence": "MEDIUM",
+      "rationale": "Prevents accidental card authoring with effects that do nothing"
+    }
+  ],
+  "positive_findings": [
+    "scaleAndCap() is robust — all numeric effect types have caps, Math.abs on multiplier prevents sign confusion in magnitude calculation",
+    "processOghamModifiers() correctly pre-processes effect strings before applyEffects(), keeping Muin invert and Tinne doubling cleanly separated from core apply logic",
+    "EMERGENCY_TEMPLATE is narrative content, not a debug placeholder — safe for players to encounter",
+    "Ring buffer repeat prevention (RECENT_CARD_BUFFER=3) correctly handles narrow biome pools",
+    "Boot screen Promise.race pattern is deadlock-safe and handles prefers-reduced-motion",
+    "Late-game HEAL_LIFE halving (card 20+) is applied at runtime from live store state — not a stale snapshot",
+    "BREAK_PROMISE flat damage (5 PV, unscaled) is documented and intentional — correct design",
+    "All 8 core narrative effects handle their state mutations with explicit store calls — no silent state drift on the critical path"
+  ],
+  "unverified_areas": [
+    "Life drain call site (main.ts lines > 120) — cannot confirm drain fires at pipeline step 1 from this audit",
+    "cards.json biome tag coverage for all 8 biomes — external file not audited",
+    "Full run loop await chain (card -> minigame -> effects -> return) — beyond audit scope of lines 1-120",
+    "store.getState().unlockOgham() — method existence in Store.ts not verified"
+  ],
+  "next_steps": [
+    "Implement UNLOCK_OGHAM in EffectEngine switch (HIGH priority — blocks ogham unlock content)",
+    "Read main.ts lines 120-300 to verify drain fires at pipeline step 1 and run loop has no deadlock",
+    "Audit /data/cards.json for biome tag coverage across all 8 biomes",
+    "Fix FULFILL_PROMISE reward to flat 5 anam (remove scaleAndCap call)",
+    "Decide disposition of ADD_KARMA / ADD_TENSION / PROGRESS_MISSION / SET_FLAG / ADD_TAG / REMOVE_TAG (reject vs future-flag)"
+  ]
+}

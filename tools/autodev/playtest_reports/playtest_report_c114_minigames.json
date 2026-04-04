@@ -1,0 +1,168 @@
+{
+  "cycle": "C114",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "targets": ["mg_herboristerie", "mg_regard", "mg_runes"],
+  "findings": {
+    "mg_herboristerie": {
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "cancelTimers_contract": "PASS — cancelTimers() overrides base (line 338), clears timerInterval, animFrame, endTimeout (C114 addition), and removes both event listeners. cleanup() calls super.cleanup() at line 501.",
+      "score_formula": "PASS — Formula is: (correctPicks/totalTargets)*80 - wrongPicks*wrongPenalty + (timeLeft/totalTime)*20. Base 80 + bonus 20 = 100 max. Penalty correctly uses tieredValue-scaled wrongPenalty (5..8). Edge cases: all-correct+no-wrong+full-time → 100. All-wrong → 0 (Math.max floor). Timeout with 0 correct → 0. Partial correct with no wrong → proportional. Formula is fair.",
+      "immutability": "PASS — cells array is rebuilt immutably via .map() in pickCellByIdx (line 292). PLANT_SETS is readonly. Plant/CellState interfaces use readonly fields. penaltyToasts array uses filter+push pattern — filter creates new array (line 483) but individual toast objects have life mutated in-place (line 492: t.life -= dt). This is a LOCAL CONCERN noted below.",
+      "pointerdown_coverage": "PASS — uses pointerdown (line 182), not pointermove. No pointermove tracking needed for this minigame.",
+      "mobile_experience": "PASS with NOTE — cellSize is 64px (line 105), well above 44px minimum. Canvas is 360px wide with max-width:100%. On 375px viewport the canvas fits. Target indicator at top renders at x=canvasW/2+50 (line 415) for the plant name text — this puts text at x=230 which is within bounds. Canvas uses touch-action:none.",
+      "sfx_edge_trigger": "PASS — SFX fired only in pickCellByIdx on state change (lines 300, 305), not in render loop.",
+      "gameplay_balance": "PASS — tieredValue scales both time (15..9s) and penalty (5..8pts). 4-6 target plants in 20 cells. At tier 0: 15s, 4 targets, 5pt penalty → comfortable. At tier 3: 9s, 4 targets, 8pt penalty → tighter. wrongPenalty scaling prevents trivial play at high tiers. The 30% target / 25% toxic / 45% safe distribution is stable across tiers.",
+      "bugs": [
+        {
+          "id": "HRB-01",
+          "severity": "LOW",
+          "file": "web-demo/src/minigames/mg_herboristerie.ts",
+          "line": 492,
+          "description": "penaltyToasts objects are mutated in-place (t.life -= dt) inside the render loop. The interface for these objects has no readonly fields. This is an immutability violation per coding-style rules. Not a runtime bug, but inconsistent with the immutable CellState pattern used elsewhere in the same file.",
+          "fix": "Either declare penaltyToasts items as { x: number; y: number; life: number } (mutable, non-readonly, acceptable for ephemeral visual state) and document the intentional mutability, OR replace with: this.penaltyToasts = this.penaltyToasts.map(t => ({ ...t, life: t.life - dt })).filter(t => t.life > 0). Current code already does filter on line 483 to remove expired toasts, so the pattern is mixed."
+        },
+        {
+          "id": "HRB-02",
+          "severity": "LOW",
+          "file": "web-demo/src/minigames/mg_herboristerie.ts",
+          "line": 483,
+          "description": "penaltyToasts is reassigned (filter creates new array) but individual object mutation happens separately on line 492. The filter on line 483 reads t.life > 0, while the decrement t.life -= dt happens AFTER the filter in the same loop pass. This means an expired toast (life crosses 0) is not removed until the NEXT render frame — it renders one extra frame at life=0 or negative. Visual artifact: toast may flash at alpha=0 for one frame (imperceptible but logically incorrect).",
+          "fix": "Reorder: filter AFTER decrement, or use a combined map+filter pass."
+        }
+      ]
+    },
+    "mg_regard": {
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "cancelTimers_contract": "PASS — cancelTimers() overrides base (line 286), cancels animFrame, removes both event listeners. cleanup() calls super.cleanup() at line 484. NOTE: mg_regard has no setInterval (uses rAF-driven show timer via showTimer countdown in render) — no interval handle needed.",
+      "score_formula": "PASS with NOTE — Formula at line 302: correctTotal / attemptsTotal * 100. This is accuracy-based (correct / attempted). C101 fix comment is accurate: old denominator was sum of all round lengths (silently penalising unattempted symbols). Current formula correctly measures accuracy on what the player actually tried. Edge case: 0 attempts (player never clicks, all rounds timeout via show→recall→feedback) → score = 0, guarded by attemptsTotal > 0 check. HOWEVER: the show phase has no player-facing timer that ends the round if the player simply does nothing in recall phase. See bug RGD-01.",
+      "immutability": "PASS — grid is readonly GridCell[] (line 63). sequence is readonly string[]. clickedCells is a Set (add-only). shuffle() creates a new array via spread. prepareRound() rebuilds grid entirely each round.",
+      "pointerdown_coverage": "PASS — uses pointerdown (line 123). No pointermove usage.",
+      "mobile_experience": "PASS with NOTE — canvas is 380px wide, max-width:100%. Cell circles have radius = cellSize/2 - 6 = 24px, giving 48px diameter. Meets 44px minimum. On 375px: canvas fits with scrolling at most. gridOffsetX = (380 - 5*60)/2 = 40px, so leftmost cell at x=70 and rightmost at x=370 — all within 375px viewport.",
+      "sfx_edge_trigger": "PASS — SFX fired in onClick and onKeyDown only on state transitions (correct pick line 223, wrong pick line 236). Not called from render loop.",
+      "gameplay_balance": "PASS — tieredValue reduces show time (3.0..1.5s) and increases sequence length ([3,4,5]→[5,6,7]). At tier 0 a player sees 3 symbols for 3s — very accessible. At tier 3, 5-6-7 symbols for 1.5s — genuinely challenging. 3 rounds maintain engagement. Score model favours accuracy over speed (no time bonus), which is appropriate for a memory game.",
+      "bugs": [
+        {
+          "id": "RGD-01",
+          "severity": "MEDIUM",
+          "file": "web-demo/src/minigames/mg_regard.ts",
+          "line": 203,
+          "description": "In the recall phase, there is NO timeout to advance the round if the player never clicks. If the player idles during 'recall', the round stays open indefinitely until they click something. prepareRound() only advances after the 'feedback' phase timer expires. A player who clicks nothing in recall will be stuck in that round forever. This can make the minigame feel like a softlock on mobile if the pointerdown event fails to fire (e.g., canvas focus lost).",
+          "fix": "Add a per-round recall timeout (e.g., showTime * 2 or a fixed 10s). On expiry, treat as wrong answer: transition to feedback phase with feedbackCorrect=false. Store the timeout handle in a field and cancel it in cancelTimers()."
+        },
+        {
+          "id": "RGD-02",
+          "severity": "LOW",
+          "file": "web-demo/src/minigames/mg_regard.ts",
+          "line": 100,
+          "description": "Round indicator initialised as 'Manche 1 / 3' (using roundLengths.length = 3 at tier 0). However roundLengths is typed as readonly number[] (from tieredValue), so .length is correct. Not a bug — but the round counter display uses this.roundLengths.length at line 100 before any round is played, which is correct. Flagging as LOW: if tieredValue ever returns a single number instead of array (misuse), this silently breaks. Safe under current usage.",
+          "fix": "No action needed. Confirmed safe under current tieredValue contract."
+        }
+      ]
+    },
+    "mg_runes": {
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "cancelTimers_contract": "PASS — cancelTimers() (line 269) clears timerInterval, revealTimeout, animFrame, and removes both event listeners. setup() also calls clearTimeout(this.revealTimeout) before rebuild (line 52) to handle re-play edge case. cleanup() calls super.cleanup() at line 389.",
+      "score_formula": "PASS — Formula: (matchedCount/totalPairs)*70 + (timeLeft/totalTime)*30. Max 100 (all pairs + no time spent). All-correct with full time remaining → 100. All-wrong/timeout with 0 pairs → 30*(0/totalTime)=0. The 70/30 split between pairs and time is reasonable — punishes slow but complete players mildly. tieredValue scales total time (30..15s).",
+      "immutability": "KNOWN INTENTIONAL VIOLATION — tiles[i].state is mutated via cast: (tile as { state: string }).state = 'revealed'. The comment on line 179 explicitly documents this: 'Mutate state (tiles are mutable game state, not shared data)'. The RuneTile interface has state without readonly (line 15). This is a conscious design choice and consistent between onClick and onKeyDown. Acceptable for a render-loop game state.",
+      "pointerdown_coverage": "PASS — uses pointerdown (line 102). No pointermove usage.",
+      "mobile_experience": "PASS with NOTE — tileSize is 80px (line 40), well above 44px minimum. tilePad is 12px. Canvas width at 4 cols: 4*(80+12)+12 = 380px. Fits 375px viewport with max-width:100%. At tier 0 (6 pairs, 3 rows): canvas height = 3*(80+12)+12 = 288px. At tier 3 (8 pairs, 4 rows): 4*(80+12)+12 = 380px height. Both fit comfortably without scrolling on standard mobile.",
+      "sfx_edge_trigger": "PASS — SFX fired in onClick (lines 198, 206) and onKeyDown (lines 252, 257) only on match/mismatch state changes, not in render loop.",
+      "gameplay_balance": "PASS — 6→7→8 pairs, 30→25→20→15s. 6 pairs (12 tiles, 3×4 grid) at 30s is generous for beginners. 8 pairs (16 tiles, 4×4) at 15s at tier 3 is tight. flipBackDelay scaling (600..450ms) subtly increases cognitive load at higher tiers. The score formula rewards speed (30pt time bonus) creating a natural incentive to work quickly.",
+      "bugs": [
+        {
+          "id": "RUN-01",
+          "severity": "MEDIUM",
+          "file": "web-demo/src/minigames/mg_runes.ts",
+          "line": 290,
+          "description": "render() has no 'ended' guard. After endGame() calls cancelTimers() (which calls cancelAnimationFrame(this.animFrame)), the current rAF callback that is already scheduled may still fire once more before cancellation takes effect. When it does, render() runs, reaches the final line 371 (requestAnimationFrame(() => this.render())), and schedules another frame. This creates a one-frame rAF ghost that is never cancelled. In contrast, mg_regard.render() guards with 'if (this.phase === done) return' at line 309.",
+          "fix": "Add 'if (this.ended) return;' at the top of render() before ctx operations, matching the pattern used in mg_herboristerie (line 364 — though it uses 'if (!this.ctx || !this.canvas) return' which achieves the same via nulling, not an explicit ended flag)."
+        },
+        {
+          "id": "RUN-02",
+          "severity": "LOW",
+          "file": "web-demo/src/minigames/mg_runes.ts",
+          "line": 61,
+          "description": "gridRows is computed as Math.ceil((totalPairs * 2) / gridCols). For totalPairs=7: Math.ceil(14/4) = 4 rows = 16 slots, but only 14 tiles are placed. The last row has 2 empty tile slots in the grid layout. The canvas height is allocated for 4 rows but 2 positions are empty — visually this shows as blank space at the bottom-right of the grid. Not a crash, but produces an unbalanced visual layout for tier 1 (7 pairs). Players may click the empty bottom-right area expecting a tile.",
+          "fix": "Either always use 4 rows regardless of pair count (set gridRows = 4 unconditionally and accept empty slots), or use a 3-column layout for 6 pairs (more balanced). The current behaviour is functional but aesthetically suboptimal at tier 1."
+        },
+        {
+          "id": "RUN-03",
+          "severity": "LOW",
+          "file": "web-demo/src/minigames/mg_runes.ts",
+          "line": 44,
+          "description": "kbFocusIdx is initialised to 0 in class declaration and in setup() (line 112). On first render, tile 0 immediately shows a keyboard focus ring even before the player presses any key. This creates a false affordance on touch/mouse-primary devices where no keyboard navigation is intended. mg_herboristerie initialises keyCol = -1 (line 195) to suppress the ring until first key press.",
+          "fix": "Initialise kbFocusIdx = -1 in setup() and guard the focus ring draw at line 361 with 'this.kbFocusIdx >= 0' — the guard exists at line 361 already ('if (this.kbFocusIdx >= 0 && i === this.kbFocusIdx)'), so only changing the initial value to -1 in setup() is needed."
+        }
+      ]
+    }
+  },
+  "verdict": "BUGS_FOUND",
+  "priority_bugs": [
+    {
+      "id": "RGD-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "line": 203,
+      "description": "Recall phase has no timeout — player who never clicks in recall phase is stuck indefinitely. Potential softlock on mobile if canvas loses pointer focus.",
+      "fix": "Add per-round recall timeout (10s recommended), treat expiry as wrong answer, transition to feedback phase. Cancel timeout handle in cancelTimers()."
+    },
+    {
+      "id": "RUN-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 290,
+      "description": "render() missing ended guard — one rAF ghost frame possible after endGame(), re-scheduling a never-cancelled animation frame.",
+      "fix": "Add 'if (this.ended) return;' at top of render() before any canvas operations."
+    },
+    {
+      "id": "HRB-01",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "line": 492,
+      "description": "penaltyToasts items mutated in-place in render loop (t.life -= dt), inconsistent with immutable CellState pattern in the same file.",
+      "fix": "Document intentional mutability or replace with combined map+filter pass."
+    },
+    {
+      "id": "HRB-02",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "line": 483,
+      "description": "Toast filter runs before decrement — expired toast renders one extra frame at life <= 0.",
+      "fix": "Reorder: decrement first, then filter, in one pass."
+    },
+    {
+      "id": "RUN-03",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 44,
+      "description": "kbFocusIdx initialised to 0 in setup() — keyboard focus ring visible on tile 0 immediately on touch/mouse devices before any key is pressed.",
+      "fix": "Change setup() line 112: this.kbFocusIdx = -1 (guard at line 361 already handles -1 correctly)."
+    },
+    {
+      "id": "RUN-02",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 61,
+      "description": "7-pair layout (tier 1) leaves 2 empty tile slots in the bottom-right of the 4×4 grid — visually unbalanced, players may click empty space.",
+      "fix": "Document as known or constrain gridRows to always 4 regardless of pair count."
+    }
+  ],
+  "summary": {
+    "total_issues": 6,
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 4,
+    "softlocks": 1,
+    "notes": [
+      "RGD-01 is a conditional softlock (only if pointerdown fails entirely, e.g. canvas focus lost on mobile). In normal play the recall phase is not truly stuck but can run indefinitely if player idles.",
+      "RUN-01 is a one-frame ghost rAF — functionally harmless on modern browsers but violates teardown contract and should be fixed for correctness.",
+      "All three cancelTimers() contracts verified PASS. All three cleanup() call super.cleanup() correctly.",
+      "All SFX are event-driven, not polled per frame. No SFX spam detected.",
+      "Mobile hit targets: all three files pass 44px minimum (64px herb cells, 48px regard circles, 80px rune tiles).",
+      "Score formulas are calibrated correctly for all edge cases across all three minigames."
+    ]
+  },
+  "worker_output": "tools/autodev/playtest_reports/playtest_report_c114_minigames.json"
+}

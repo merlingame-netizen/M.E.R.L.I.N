@@ -1,0 +1,74 @@
+{
+  "cycle": "C111",
+  "timestamp": "2026-04-04T14:30:00.000Z",
+  "targets": ["mg_apaisement", "mg_sang_froid"],
+  "findings": {
+    "mg_apaisement": {
+      "cancelTimers_contract": "FAIL",
+      "pointerdown_coverage": "N/A",
+      "immutability": "PASS",
+      "sfx_edge_trigger": "PASS",
+      "tieredValue_usage": "PASS",
+      "memory_leaks": "PASS",
+      "bugs": [
+        {
+          "id": "APZ-01",
+          "severity": "MEDIUM",
+          "description": "cancelTimers() contract not followed. The class does not override cancelTimers(). Instead, cancellation logic (clearInterval + cancelAnimationFrame + two removeEventListener calls) is duplicated in both endGame() (lines 222-225) and cleanup() (lines 401-405). cleanup() should only call super.cleanup(), delegating all timer/listener teardown to a cancelTimers() override. If MinigameBase.cleanup() calls cancelTimers() internally (as per the gold standard at line 322 of MinigameBase.ts), the teardown runs twice. More critically, any future logic added to the base cancelTimers() will be silently bypassed by this subclass.",
+          "file": "web-demo/src/minigames/mg_apaisement.ts",
+          "line": 400,
+          "fix": "Add a protected cancelTimers() override that calls clearInterval(this.timerInterval), cancelAnimationFrame(this.animFrame), this.canvas?.removeEventListener('pointerdown', this.onPointerDown), and this.canvas?.removeEventListener('keydown', this.onKeyDown). Reduce cleanup() to call only super.cleanup(). Remove the manual cancellation lines from endGame() since MinigameBase.endGame() already calls cancelTimers() via super."
+        }
+      ]
+    },
+    "mg_sang_froid": {
+      "cancelTimers_contract": "FAIL",
+      "pointerdown_coverage": "PASS",
+      "immutability": "PASS",
+      "sfx_edge_trigger": "PASS",
+      "tieredValue_usage": "PASS",
+      "memory_leaks": "PASS",
+      "bugs": [
+        {
+          "id": "SF-01",
+          "severity": "MEDIUM",
+          "description": "cancelTimers() contract not followed. Same pattern as APZ-01. The class does not override cancelTimers(). Cancellation logic (clearInterval + cancelAnimationFrame + four removeEventListener calls) is duplicated verbatim in both endGame() (lines 188-194) and cleanup() (lines 372-378). cleanup() should only call super.cleanup(). Duplication means teardown executes twice and any base-class cancelTimers() extension is bypassed.",
+          "file": "web-demo/src/minigames/mg_sang_froid.ts",
+          "line": 371,
+          "fix": "Add a protected cancelTimers() override that calls clearInterval(this.timerInterval), cancelAnimationFrame(this.animFrame), and removeEventListener for all four canvas listeners (pointermove, pointerdown, pointerleave, pointercancel, keydown — note: five listeners registered in setup() at lines 106-114). Reduce cleanup() to super.cleanup() only. Remove the manual cancellation block from endGame()."
+        },
+        {
+          "id": "SF-02",
+          "severity": "LOW",
+          "description": "SF-01 fix description lists five listeners (pointermove, pointerdown, pointerleave, pointercancel, keydown) but the comment in the fix for SF-01 inadvertently says 'four removeEventListener calls' while setup() at lines 106-114 registers five listeners. Both endGame() (lines 190-194) and cleanup() (lines 373-378) correctly remove all five. No runtime bug, but the count discrepancy in internal comments could mislead a future maintainer.",
+          "file": "web-demo/src/minigames/mg_sang_froid.ts",
+          "line": 185,
+          "fix": "No code change required. Cosmetic: update the comment on line 185 (endGame) to read '5 listeners' to match setup()."
+        }
+      ]
+    }
+  },
+  "verdict": "BUGS_FOUND",
+  "priority_bugs": [
+    {
+      "id": "APZ-01",
+      "severity": "MEDIUM",
+      "description": "mg_apaisement does not override cancelTimers(). Teardown logic is duplicated across endGame() and cleanup() instead of being centralised in a cancelTimers() override as required by the MinigameBase contract.",
+      "file": "web-demo/src/minigames/mg_apaisement.ts",
+      "line": 400,
+      "fix": "Add protected cancelTimers() override; reduce cleanup() to super.cleanup() only; remove manual cancellation from endGame()."
+    },
+    {
+      "id": "SF-01",
+      "severity": "MEDIUM",
+      "description": "mg_sang_froid does not override cancelTimers(). Teardown logic (5 listeners + interval + rAF) is duplicated across endGame() and cleanup() instead of being centralised in a cancelTimers() override as required by the MinigameBase contract.",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "line": 371,
+      "fix": "Add protected cancelTimers() override; reduce cleanup() to super.cleanup() only; remove manual cancellation from endGame()."
+    }
+  ],
+  "notes": {
+    "mg_apaisement": "pointerdown_coverage marked N/A — this minigame uses pointerdown only (tap-to-sync mechanic), not pointermove, so the mobile first-tap coverage rule does not apply. All four difficulty parameters correctly use tieredValue. The BreathTap interface and taps array are fully immutable. SFX fires once per registerTap() call, not per frame. No document-level event listeners or untracked timers.",
+    "mg_sang_froid": "pointerdown_coverage PASS — both pointermove and pointerdown are registered with the same onPointerMove handler (setup() lines 106-107), covering mobile first-tap correctly. Drift object updates use spread syntax throughout. SFX is guarded by wasInside/isInside transition check. All five listeners are canvas-level."
+  }
+}

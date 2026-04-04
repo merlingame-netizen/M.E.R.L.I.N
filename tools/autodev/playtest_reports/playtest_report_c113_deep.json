@@ -1,0 +1,134 @@
+{
+  "cycle": "C113",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "targets": ["mg_echo", "mg_fouille", "MerlinLairScene_minigame_flow"],
+  "findings": {
+    "mg_echo": {
+      "ech02_followup_score_dots": {
+        "status": "CONFIRMED_LOW",
+        "detail": "Lines 463-479: completed-round dots are drawn as flat grey rgba(140,130,120,0.5) for ALL past rounds. There is no roundOutcomes[] array — only this.hits (cumulative count). No hit/miss distinction is rendered. The current-round dot pulses correctly (line 470). Adding roundOutcomes[] would give players a post-mortem sequence view (green/red per round), which is a genuine UX improvement but not blocking. The information IS available from this.feedback at the moment each round ends; it is simply not stored.",
+        "roundOutcomes_verdict": "WORTH adding. Cost: ~8 lines. A player who missed round 1 and 6 gets identical dots to someone who missed rounds 3 and 4. The visual tells nothing about pattern (e.g., 'I always miss the Sud quadrant'). Recommend upgrading to MEDIUM — it materially reduces post-run feedback quality.",
+        "severity": "MEDIUM"
+      },
+      "mobile_playability": {
+        "status": "FUNCTIONAL_WITH_CAVEAT",
+        "detail": "canvas has touch-action:none (line 108) and the input handler uses pointerdown (line 121), which fires on touch. getClickedQuadrant uses a dead zone of 30px at canvas center (line 220). The canvas is 380x340 CSS pixels with max-width:100% applied. On a 375px-wide phone (iPhone SE), the canvas renders at 375px wide, scaling the 380px logical canvas down by factor ~0.987. Quadrant zones are centered at cx: ±100, cy: ±80 from center — tap targets are approximately 90px diameter circles. This is adequate for finger tapping. CAVEAT: the central dead zone (30px logical = ~29px physical on SE) creates a strip along each axis boundary where a tap registers nothing. On phones where touch landing zones are imprecise this may frustrate players near the North/South boundary (dy ~= dx). The mechanic is playable but the dead-zone miss could feel unfair on mobile.",
+        "severity": "LOW"
+      },
+      "difficulty_tier_effectiveness": {
+        "status": "EFFECTIVE",
+        "detail": "flashDuration scales [0.5, 0.4, 0.35, 0.3]s and windowDuration [1.2, 1.0, 0.8, 0.7]s (lines 77-78). At tier 0: player has 1.2s to respond after a 0.5s flash. At tier 3: 0.7s after a 0.3s flash. The ratio of window:flash is 2.4 at tier 0 and 2.33 at tier 3 — very similar, meaning the relative difficulty between flash duration and response time is consistent. The tier-3 absolute window of 0.7s is genuinely hard on mobile tap latency (~100-150ms). Additionally, totalRounds scales [6,6,7,8] (line 80), increasing cognitive load at higher tiers. The system is well-designed.",
+        "severity": "NONE"
+      },
+      "visual_wrapping_sequence_display": {
+        "status": "NOT_APPLICABLE",
+        "detail": "mg_echo is NOT a sequence memory game. There is no sequence to display or replay — the mechanic is a single-symbol flash-then-recall per round. No multi-symbol display, no wrap risk. The audit brief may have confused mg_echo with mg_volonte or mg_regard which use sequence patterns. Echo displays only the current flash symbol in the target quadrant and direction labels. No wrapping issue is possible.",
+        "severity": "NONE"
+      },
+      "score_formula_calibration": {
+        "status": "WELL_CALIBRATED",
+        "detail": "Formula (line 261): finalScore = (hits / totalRounds) * 100. For a player scoring 5/7 (tier 2, 7 rounds): score = 71.4. For 5/6 (tiers 0/1): score = 83.3. For 6/6: 100. For 0/6: 0. The formula is linear and unambiguous. No time bonus — only accuracy counts. The question of whether 5/7 deserves 71 vs. a time-weighted formula is a design judgment; as-implemented it is fair and transparent. No calibration bug found.",
+        "severity": "NONE"
+      },
+      "cancelTimers_post_c102": {
+        "status": "CLEAN",
+        "detail": "cancelTimers() (lines 249-253) cancels animFrame, removes pointerdown and keydown listeners. endGame() calls cancelTimers() before finish(). cleanup() calls super.cleanup() which calls cancelTimers(). No leak path detected.",
+        "severity": "NONE"
+      }
+    },
+    "mg_fouille": {
+      "c98_hoverIndex_reset": {
+        "status": "VERIFIED_CORRECT",
+        "detail": "Line 333: this.hoverIndex = -1 is set immediately after generateObjects() fires during the shuffle timer branch. This correctly resets the hover highlight before the render loop draws the new object layout. The C98 fix is properly applied and there is no stale hover regression.",
+        "severity": "NONE"
+      },
+      "foundTimeout_clearTimeout": {
+        "status": "CLEAN",
+        "detail": "foundTimeout is cleared in cancelTimers() at line 291: clearTimeout(this.foundTimeout). endGame() calls cancelTimers() as its first action (line 302). The flow: onClick sets found=true, schedules foundTimeout (line 268), 400ms later endGame fires, which calls cancelTimers() — but at that point foundTimeout has already fired and is a no-op clearTimeout. More critically: if cleanup() is called before the 400ms expires (e.g., player closes the minigame early), cancelTimers() will correctly cancel the pending timeout. The deferred clearTimeout from the prior report is now resolved.",
+        "severity": "NONE"
+      },
+      "found_flash_animation_before_endGame": {
+        "status": "BUG_FOUND",
+        "detail": "When player clicks the target: found=true is set, showFoundStatus() updates the DOM status text (line 266), then foundTimeout fires endGame() after 400ms. During that 400ms window, the render loop runs normally and draws the found state (line 384: rgba(80,180,80,0.4) pill + green pulsing glow). This is fine. HOWEVER: endGame() calls cancelTimers() which calls cancelAnimationFrame(this.animFrame) (line 293). The render loop stops. Then finish() is called. If the MinigameBase.finish() method replaces container.innerHTML immediately (the standard pattern for overlays), the green found-flash has 400ms to play — which is correct. BUT if finish() fires synchronously and removes the canvas before the CSS transition on the timer bar fill (transition:width 0.1s linear, line 112) completes, the transition is interrupted. This is cosmetic only. The animation itself completes cleanly within 400ms. No hard bug, but the timer bar may glitch during the 100ms after found (timerInterval still running). See separate finding below.",
+        "severity": "LOW"
+      },
+      "timerInterval_still_ticking_after_found": {
+        "status": "BUG_FOUND",
+        "detail": "After found=true is set (onClick line 263), the timerInterval continues to tick for 400ms until endGame() fires. The interval decrements timeLeft every 100ms and updates the visual timer bar (lines 159-165). It also calls checkCriticalAlert (line 158). If timeLeft crosses 0 in those 400ms (very unlikely but possible if found at t=0.3s), endGame() would be called from the interval BEFORE the foundTimeout fires, causing a double-endGame() call — which is guarded by this.ended (line 300), so no crash. However, the score would be computed from a lower timeLeft than at the moment the player clicked. The player clicked at, say, timeLeft=0.35, deserving score=50+0.35/12*50=51.5. But the interval fires at timeLeft=0.25 and calls endGame(), giving score=50+0.25/12*50=51. This is a 0.5-point discrepancy. Not a real player-perceptible issue at these values — but it reveals that the intent of the 400ms delay (to show the found state) is undermined: endGame() might fire from the timer thread, not the foundTimeout. To be safe, the timerInterval should be stopped when found=true.",
+        "severity": "MEDIUM"
+      },
+      "mobile_pointerdown_registration": {
+        "status": "FUNCTIONAL",
+        "detail": "Lines 139-140: canvas registers pointermove and pointerdown. touch-action:none is set (line 123). pointerdown fires on touch screens. pointermove for hover updates cursorX/cursorY and hoverIndex — on touch, pointermove fires during drag, not on tap-without-move. This means: if a mobile player taps without moving first, hoverIndex may be stale (-1 or pointing to wrong object). The onClick handler uses hitTest(mx, my) directly (line 258) — NOT hoverIndex — so the click will always correctly identify the object at the tap point. hover-glow on mobile will lag (no pointermove on tap-start) but click registration is correct. No bug.",
+        "severity": "NONE"
+      },
+      "score_first_try_calibration": {
+        "status": "DESIGN_QUESTION",
+        "detail": "Score formula (line 307): score = 50 + timePct * 50, where timePct = timeLeft/totalTime. A player who finds target immediately after game starts: timePct ≈ 1.0, score ≈ 100. A player who finds at exactly t=6s remaining of 12s: timePct=0.5, score=75. At t=0: score=50. Not finding: score=0. The discontinuity between not-found (0) and found-at-last-second (50) is intentional by design — it rewards any find over no-find. A 'lucky' first-try player gets 100, which feels correct: if you happen to click the right object first, maximum score is appropriate. The formula is sound.",
+        "severity": "NONE"
+      }
+    },
+    "MerlinLairScene_minigame_flow": {
+      "launch_return_flow": {
+        "status": "NOT_IN_SCOPE",
+        "detail": "MerlinLairScene.ts does NOT contain minigame launch logic. It is a pure 3D scene with a zone-click callback API (onZoneClick, line 1259). The minigame launch/return flow is handled by the caller (MerlinGameController or equivalent outer orchestrator) which listens to the zone click event and swaps the UI container. MerlinLairScene exposes: update(dt), dispose(), onZoneClick(cb), setTime(params). The container is the Three.js renderer.domElement — there is no HTML overlay inside the lair for minigames. Z-index conflict cannot originate inside this file.",
+        "severity": "NONE"
+      },
+      "zindex_canvas_overlay": {
+        "status": "CANNOT_VERIFY_FROM_THIS_FILE",
+        "detail": "The Three.js canvas is appended to the outer container (line 695). Minigame canvases (mg_echo, mg_fouille) are also appended to a container element. Whether these containers are the same DOM node, siblings, or overlapping depends on the orchestrator. If the Three.js canvas and the minigame canvas share the same container without the Three.js canvas being hidden or removed, z-index stacking could obscure the minigame. This risk cannot be confirmed or denied from MerlinLairScene.ts alone — it would require reading the orchestrator file.",
+        "severity": "LOW"
+      },
+      "bougie_dispose_on_teardown": {
+        "status": "CLEAN",
+        "detail": "LairGLBAssets.ts: bougie.glb clones are added directly to the scene (line 144 — scene.add(clone)). They are NOT tracked in a named variable. dispose() in MerlinLairScene.ts traverses the entire scene and disposes geometries and materials (lines 1220-1231). Since clones are in the scene graph, they will be traversed and disposed. The cancelHandles array (line 91 in LairGLBAssets) collects rAF cancel functions for fadeInGLB, and loadLairGLBs returns a cancel function (see C133 note at line 89). On dispose, if the caller invokes this cancel function, in-flight fade rAFs are stopped. The isDisposed() guard in fadeInGLB (line 36) provides a second safety net. No bougie leak detected.",
+        "severity": "NONE"
+      },
+      "GLBCache_clear_on_dispose": {
+        "status": "CLEAN",
+        "detail": "Line 1203 in MerlinLairScene.ts: clearGLBCache() is called before geometry.dispose(). This matches the C117 comment: prevents returning disposed-geometry GLTF to a new scene. Correct ordering.",
+        "severity": "NONE"
+      }
+    }
+  },
+  "verdict": "BUGS_FOUND",
+  "priority_bugs": [
+    {
+      "id": "ECH-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "line": 467,
+      "description": "Score dots for completed rounds are uniformly flat grey (rgba(140,130,120,0.5)) regardless of hit or miss. No roundOutcomes[] array exists, so there is no per-round feedback. A player who got rounds 1/2 correct and 3/4 wrong sees identical dots to one who got the reverse. Post-round pattern analysis is impossible.",
+      "fix": "Add a private roundOutcomes: Array<'hit'|'miss'> = [] field. Push this.feedback at advanceRound() time. In the score-dot render loop (line 467), read roundOutcomes[i] and use green rgba(80,200,80,0.6) for 'hit' and red rgba(200,80,80,0.5) for 'miss' instead of the flat grey. Upgrading from LOW to MEDIUM is recommended."
+    },
+    {
+      "id": "FOU-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "line": 156,
+      "description": "timerInterval continues ticking for up to 400ms after this.found=true. In the extreme edge case where timeLeft crosses 0 during those 400ms, endGame() fires from the interval with a lower timeLeft than at click time, reducing the score slightly. More importantly, it is architecturally incorrect that the interval can race with foundTimeout — both paths call endGame() and this.ended guards it, but the score is computed from whichever fires first.",
+      "fix": "After this.found=true in onClick (line 263) and in onKeyDown (line 230), call clearInterval(this.timerInterval) immediately. This stops the timer at the moment of discovery, freezing timeLeft at its correct value for score computation and preventing the race condition."
+    },
+    {
+      "id": "FOU-02",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "line": 112,
+      "description": "Timer bar fill has CSS transition:width 0.1s linear. When endGame fires 400ms after found, cancelTimers() removes the canvas. The final 100ms tick from timerInterval (if it fired just before found) is animating the bar width — this transition is interrupted by DOM removal, which is a cosmetic glitch visible as a bar jump in the last frame.",
+      "fix": "Tied to FOU-01 fix: stopping the interval at found=true freezes the bar at the found-moment width, eliminating the glitch."
+    },
+    {
+      "id": "LAIR-01",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 695,
+      "description": "The Three.js renderer.domElement is appended to the caller-provided container. If the orchestrator shows a minigame in the same container without hiding or removing the Three.js canvas, the Two canvases will stack. MerlinLairScene has no API to hide its own renderer.domElement — it only exposes dispose(). If the orchestrator calls dispose() before launching a minigame, the lair is torn down correctly. If it merely hides the container, no issue. But if it appends a minigame canvas to the same container without disposing the lair, the lair rAF loop continues running in the background (wasteful), and pointer events on the transparent lair canvas may intercept minigame clicks depending on z-stacking.",
+      "fix": "Either: (a) confirm that the orchestrator always calls lair.dispose() before launching minigames, OR (b) expose a pause()/resume() API in LairResult to stop the rAF loop without full teardown. Cannot fully assess without reading the orchestrator."
+    }
+  ],
+  "balance_notes": {
+    "echo_score_5_of_7": "Score = (5/7)*100 = 71.4. Formula is linear, unweighted by time. Feels appropriate for a 71% accuracy run.",
+    "fouille_lucky_first_try_100": "Correct by design — finding target immediately is maximum skill expression in this mechanic.",
+    "echo_difficulty_tiers": "Flash window compression is meaningful but the ratio window:flash stays near 2.4 across tiers. Consider widening the spread at tier 3 (e.g., windowDuration 0.6 instead of 0.7) if player feedback indicates tier 3 is too easy."
+  }
+}

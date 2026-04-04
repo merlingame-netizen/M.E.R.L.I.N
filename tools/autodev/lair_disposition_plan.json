@@ -1,0 +1,280 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source_file": "web-demo/src/scenes/MerlinLairScene.ts",
+    "gdb_ref": "docs/GAME_DESIGN_BIBLE.md v2.4 — section 1.4 Meta Loop, section 8 Hub",
+    "authored_by": "Senior Game Designer — MerlinLairScene audit",
+    "date": "2026-04-03",
+    "coordinate_system": "Three.js: Y-up, Z toward viewer. Floor at y=-5. Camera looks toward -Z."
+  },
+
+  "room_dimensions": {
+    "width": 24,
+    "height": 16,
+    "depth": 20,
+    "note": "Walls: back z=-10, left x=-12, right x=+12. No front wall (open toward camera). Floor y=-5 (mesh center y=-5, top face y=-4.85). Ceiling y=11."
+  },
+
+  "camera": {
+    "position": [0, 0.5, 7],
+    "look_at": [0, 0, -4],
+    "fov": 62,
+    "near": 0.1,
+    "far": 60,
+    "sway_amplitude": [0.1, 0.06],
+    "sway_frequency_hz": [0.3, 0.23],
+    "design_note": "Camera is at approximate eye level for a standing figure (y=0.5 above scene center). FOV 62 gives a slightly wide cinematic view. The slight sway adds life without motion sickness. Target [0,0,-4] centers on the mid-room space between cauldron and table, framing all four zones in peripheral vision."
+  },
+
+  "zones": {
+    "map": {
+      "label": "Table druidique — Carte des biomes",
+      "gdb_function": "Hub: Choisir biome (carte des biomes debloques)",
+      "position": [-5, -2, -3],
+      "position_note": "Table top surface. Table frame center at [-5, -3.5, -3], top at y=-2. Scroll hit target at [-5, -1.88, -3].",
+      "rotation_y": 0.0,
+      "scale": 1.0,
+      "hit_target_position": [-5, -1.88, -3],
+      "hit_target_size": [3, 0.08, 1.8],
+      "visibility_from_camera": "GOOD — left-center of frame, 10 units from camera, well-lit by fill light at [-9,0,-5] and candle warm overhead.",
+      "design_intent": "Parchment scroll on a rough wooden druidic table. The map metaphor is direct: the player unfurls the map to choose the next biome. The warm parchment color (0xc8a96e) reads clearly against the dark floor.",
+      "accessible_clearance": "2.5u radius clear. No overlap with cauldron (7u away at [2,-3.8,-7]) or crystal (10u away at [5,-1,-4])."
+    },
+
+    "bookshelf": {
+      "label": "Bibliotheque — Journal et lore",
+      "gdb_function": "Hub: Journal (fins debloquees, biomes decouverts, Oghams collection)",
+      "position": [8, 0.5, -8],
+      "position_note": "Frame center. Right wall is at x=+12. Shelf sits flush against it with 4u of depth clearance. Books face toward -X (toward camera).",
+      "rotation_y": 0.0,
+      "scale": 1.0,
+      "hit_target_position": [8, 0.5, -7.65],
+      "hit_target_size": [3.5, 5.5, 0.15],
+      "visibility_from_camera": "MODERATE — far right, 15+ units from camera. Fog (Fog 12-28) begins to soften it slightly, which is atmospheric. Player must look right. The fill light at [-9,0,-5] does NOT reach this corner well — the scene has a dedicated fill for bookshelf at [-9,0,-5] but this light is on the LEFT wall side. The bookshelf relies on the key light [0,8,-2] casting from above.",
+      "design_intent": "Tall dark wooden bookshelf with colorful spell-tomes (6 books per row, 3 rows). Skull on top shelf adds druidic weight. The bookshelf represents accumulated knowledge — the player's journal of runs, lore fragments, and discovered endings. Color variety (crimson, forest green, navy, ochre, purple) suggests diversity of collected lore.",
+      "lighting_recommendation": "Add a dedicated warm fill PointLight at [9, 2, -7] color #aa6622 intensity 0.8 range 6 to illuminate book spines properly. Current setup leaves the right-rear corner slightly dark.",
+      "accessible_clearance": "4u in front (z from -7 to -3). No blocking objects. Potion bottles shelf at [6,-3.5,-7.7] is 1.5u below and 0.3u in front — no visual overlap at camera angle."
+    },
+
+    "cauldron": {
+      "label": "Chaudron de Merlin — Vapeur verte",
+      "gdb_function": "Decoratif / narratif. Could map to: Dialogue Merlin (LLM commentaire post-run) or Arbre de talents (Anam spending).",
+      "position": [2, -3.8, -7],
+      "position_note": "Body center. Legs extend to y=-4.65 (above floor at y=-4.85). Top opening at approximately y=-3.15.",
+      "rotation_y": 0.0,
+      "scale": 1.0,
+      "effective_height_units": 1.04,
+      "spec_requested_height_units": 1.8,
+      "height_discrepancy_note": "Current cauldron (SphereGeometry r=0.65 scale.y=0.8) is ~1.04u tall — shorter than the spec 1.8u. If GLB asset is loaded, scale it to approximately [1.1, 1.4, 1.1] to reach ~1.8u. The current procedural mesh is intentionally compact for the back-wall position.",
+      "glow_position": [2, -3.2, -7],
+      "glow_color": "#22cc44",
+      "glow_intensity": 1.2,
+      "glow_range": 3.5,
+      "steam_origin": [2, -3.2, -7],
+      "visibility_from_camera": "GOOD — center-right of back wall, clearly visible. Green steam particles rise into the mid-room air, visible over the top of the table from camera position.",
+      "design_intent": "The cauldron is the alchemical heart of the lair. Green glow (0x22cc44) contrasts with the warm amber candles and purple crystal, creating a three-tone lighting palette: amber/warm (candles + fire), cool purple (crystal), acid green (cauldron). This is the strongest atmospheric element.",
+      "interaction_recommendation": "If made interactive, map to Dialogue Merlin — the bubbling cauldron as the oracle through which Merlin speaks after each run. Semantically stronger than the crystal ball for post-run LLM commentary.",
+      "accessible_clearance": "1.5u radius. Potion bottles shelf at [6,-3.5,-7.7] is 4u right — clear. Map table at [-5,-2,-3] is 7u left — clear."
+    },
+
+    "crystal": {
+      "label": "Boule de cristal — Parametres / Oghams",
+      "gdb_function": "Hub: Oghams (equiper l'Ogham actif) or Options (parametres, reset profil).",
+      "position": [5, -1.0, -4],
+      "position_note": "Sphere center. Pedestal base at [5,-2,-4] (cylinder h=0.9, base y=-2.45). Sphere floats at y=-1.0.",
+      "rotation_y": -0.5,
+      "scale": 1.0,
+      "sphere_radius": 0.7,
+      "pedestal_position": [5, -2, -4],
+      "light_position": [5, -1.0, -4],
+      "light_color": "#9060cc",
+      "light_intensity_base": 2.2,
+      "light_intensity_pulse_amplitude": 0.4,
+      "light_pulse_frequency_hz": 1.8,
+      "sphere_float_amplitude": 0.04,
+      "sphere_float_frequency_hz": 0.9,
+      "visibility_from_camera": "EXCELLENT — right-center of frame, 11 units from camera, floating and self-lit. The purple pulse is the most visually prominent element after the cauldron steam. Eye-catching for first-time players.",
+      "design_intent": "The crystal ball is the divination tool — it sees all possible futures (Oghams), making it the natural mapping for Ogham selection. The purple glow (0x9060cc) is distinct, memorable, and readable in dark conditions. The slow float animation signals 'this is special and interactive'.",
+      "design_note_on_settings": "Mapping crystal to Settings/Options works pragmatically but weakens the narrative metaphor. Preferred mapping: crystal = Oghams collection/equip, door = start run, map = biome selection, bookshelf = journal/lore. Settings could be exposed via a small UI overlay triggered by a fixed button rather than a world-space zone.",
+      "accessible_clearance": "2.5u radius clear. Map table is 10u left. Bookshelf is 3u right and 4u deeper."
+    },
+
+    "door": {
+      "label": "Porte — Lancer un run",
+      "gdb_function": "Hub: Nouveau run → Scene 3D biome",
+      "position": [-10.15, 0.25, 5.5],
+      "position_note": "Door panel center. Frame left post at [-10.1, 0.5, 4], right post at [-10.1, 0.5, 7]. This door is on the LEFT WALL (x=-12), not the south wall. It faces +X direction.",
+      "rotation_y": 0.0,
+      "scale": 1.0,
+      "hit_target_position": [-9.9, 0.5, 5.5],
+      "hit_target_size": [0.5, 7, 3.5],
+      "light_under_door": {
+        "color": "#ffdd66",
+        "intensity_base": 2.8,
+        "intensity_flicker_amplitude": 0.3,
+        "flicker_frequency_hz": 4.1,
+        "position": [-9.8, -1.8, 5.5]
+      },
+      "visibility_from_camera": "PERIPHERAL — far left, outside the main look-at cone [0,0,-4]. Player must move mouse left to discover it. This is intentional: the door is the exit, not the focus. The warm light sliver under the door draws the eye when the player looks left.",
+      "design_intent": "The door is the call to adventure — the outside world pressing in via a warm light sliver. Its position on the left wall (rather than a back or front wall) creates an asymmetric composition that feels more organic and less game-menu-like. The iron straps and warm glow read as 'this goes somewhere'.",
+      "ux_concern": "The hit target at x=-9.9 is 9.9 units from center. With camera FOV 62 and position [0,0.5,7], the horizontal field spans approximately ±20 units at z=5.5 depth. The door IS visible but requires intentional left-look. Consider adding a subtle ambient particle or rune glow near the door frame to guide player attention.",
+      "accessible_clearance": "3u in front (z from 5 to 8, x from -9 to -11). No other interactive objects nearby."
+    }
+  },
+
+  "candles": [
+    {
+      "index": 0,
+      "position": [-5, -1.6, -7],
+      "position_note": "Elevated — likely on a surface or bracket near the map table area (deeper, z=-7). y=-1.6 is 3.4u above floor surface. This candle illuminates the bookshelf approach from the left.",
+      "light_color": "#ff9933",
+      "light_intensity_base": 1.8,
+      "light_range": 4.5
+    },
+    {
+      "index": 1,
+      "position": [0, -4.6, -8.5],
+      "position_note": "Floor-level candle at back wall center. y=-4.6 is only 0.25u above floor top face (y=-4.85). This is a votive candle on the floor, or a very short candle holder. Illuminates the base of the back wall between cauldron and center.",
+      "light_color": "#ff9933",
+      "light_intensity_base": 1.8,
+      "light_range": 4.5
+    },
+    {
+      "index": 2,
+      "position": [3, -3.0, -6],
+      "position_note": "Mid-height right of cauldron. y=-3.0 is 2u above floor. Probably on a stone ledge or small table near cauldron. Bridges the cauldron glow and the crystal zone lighting.",
+      "light_color": "#ff9933",
+      "light_intensity_base": 1.8,
+      "light_range": 4.5
+    }
+  ],
+
+  "lighting": {
+    "summary": "5-source pass (AAA). One ambient + 4 points. Candles add 3 more. Crystal and cauldron add 2 more. Total: 10 dynamic light sources. This is acceptable for WebGL single-pass rendering given the small scene.",
+    "ambient": {
+      "color": "#1a1008",
+      "intensity": 0.5,
+      "design_note": "Extremely dark warm base. Without ambient contribution, surfaces facing away from all lights would be pure black — this thin coat of warm brown ensures stone texture reads."
+    },
+    "key_overhead": {
+      "position": [0, 8, -2],
+      "color": "#ff6618",
+      "intensity": 1.1,
+      "range": 22,
+      "decay": 1.6,
+      "design_note": "Warm fire from above, simulating a hearth or torch mounted high center. Casts top-down shadows on all objects. Primary source for the map table and cauldron area."
+    },
+    "rim_door": {
+      "position": [8, 2, 7],
+      "color": "#6699cc",
+      "intensity": 0.55,
+      "range": 18,
+      "decay": 2.0,
+      "design_note": "Cool bluish rim from the door-side wall. Creates the sense that moonlight or outdoor atmosphere seeps through the door crack. Gives depth to foreground objects and crystal."
+    },
+    "fill_bookshelf": {
+      "position": [-9, 0, -5],
+      "color": "#cc8833",
+      "intensity": 0.4,
+      "range": 16,
+      "decay": 2.0,
+      "design_note": "Warm fill on the left wall and bookshelf approach. Positioned near the left wall center. However: the bookshelf is at x=+8 (RIGHT wall), so this fill does NOT directly light the bookshelf. It lights the left side of the map table and candle 0. This is a fill bounce from an imagined hearth on the left wall."
+    },
+    "cauldron_accent": {
+      "position": [2, -4, -7],
+      "color": "#336622",
+      "intensity": 0.35,
+      "range": 10,
+      "decay": 2.5,
+      "design_note": "Subtle green accent at cauldron base. Separates the cauldron from the floor darkness. Combined with the cauldron's own glow (0x22cc44 intensity 1.2) gives the cauldron a green corona."
+    },
+    "crystal_pulse": {
+      "position": [5, -1.0, -4],
+      "color": "#9060cc",
+      "intensity_range": [1.8, 2.6],
+      "pulse_note": "Animated in update() loop. The purple pulse is the signature lighting beat of the scene."
+    },
+    "candle_lights": {
+      "count": 3,
+      "color": "#ff9933",
+      "intensity_range": [1.55, 2.05],
+      "flicker_note": "Multi-frequency sin flicker (7.3Hz, 13.1Hz, 3.7Hz) — organic, not synchronized between candles."
+    }
+  },
+
+  "props_inventory": {
+    "procedural_meshes": [
+      "walls (back, left, right)",
+      "floor (flagstone)",
+      "ceiling",
+      "wooden beams x4 + cross beams x2",
+      "stone mortar lines x7",
+      "map table (top + 4 legs + scroll + scroll border)",
+      "crystal pedestal + sphere",
+      "bookshelf frame + 3 shelf rows + 18 books",
+      "door frame (left, right, top) + door panel + 3 iron straps + light sliver",
+      "cauldron body + 3 legs",
+      "3 candle bodies + 3 wicks",
+      "potion shelf + 3 bottles + 3 necks",
+      "skull (cranium + jaw)"
+    ],
+    "particle_systems": [
+      "candle flames x3 (20 particles each)",
+      "cauldron steam (30 particles)",
+      "dust motes (80 particles)"
+    ],
+    "glb_assets_planned": [
+      "chaudron.glb — replaces procedural cauldron body+legs. Scale target: [1.1, 1.4, 1.1] for H≈1.8u",
+      "table.glb — optional replacement for map table. Scale target: [1.0, 1.0, 1.0]",
+      "bibliotheque.glb — optional replacement for bookshelf frame. Scale target: [1.2, 1.0, 0.8]",
+      "bougie.glb — 3 instances. Scale target: [0.4, 0.4, 0.4]",
+      "sol.glb — optional replacement for floor mesh. Keep at y=-5.",
+      "murs.glb — optional replacement for wall meshes. Keep at existing wall positions."
+    ]
+  },
+
+  "zone_mapping_to_gdb": {
+    "map": {
+      "gdb_hub_function": "Choisir biome (carte des biomes debloques)",
+      "narrative_metaphor": "The cartographer's scroll — unfurling the known world of Broceliande",
+      "coherence_rating": "STRONG — direct metaphor, correct GDB alignment"
+    },
+    "bookshelf": {
+      "gdb_hub_function": "Journal (fins debloquees, biomes decouverts) + Oghams collection display",
+      "narrative_metaphor": "The druid's library of accumulated knowledge and memory",
+      "coherence_rating": "STRONG — 'lore' maps directly to GDB journal content"
+    },
+    "crystal": {
+      "gdb_hub_function": "Oghams equip/select (preferred) or Options/Settings (current mapping)",
+      "narrative_metaphor": "The divination sphere that reveals possible futures — i.e., available Oghams",
+      "coherence_rating": "MODERATE — settings is pragmatic but narratively weak. Recommend remapping to Oghams.",
+      "recommendation": "Map crystal zone to Oghams selection/equip. Move Settings to a non-world-space UI button (gear icon in corner overlay). This preserves the narrative coherence of the Merlin lair as a fully diegetic interface."
+    },
+    "door": {
+      "gdb_hub_function": "Lancer un nouveau run (Hub → Scene 3D biome)",
+      "narrative_metaphor": "The threshold — stepping out into the enchanted forest of Broceliande",
+      "coherence_rating": "STRONG — canonical call-to-adventure metaphor. Warm light under door signals the living world beyond."
+    }
+  },
+
+  "coherence_notes": [
+    "ROOM LAYOUT: The lair is architecturally coherent. The asymmetric door position (left wall, z=5.5) prevents the space from feeling like a formal 4-panel menu screen. The depth gradient (door near → table mid → cauldron/bookshelf far) creates natural visual layering.",
+    "SCALE CONSISTENCY: Floor at y=-5. Objects rest correctly: table legs reach y=-5 (leg center y=-3.5, h=3 → base y=-5.0), pedestal base at y=-2.45 (sits on an implied raised platform or large stone), cauldron legs at y=-4.65 (near floor). Heights are consistent with a space where a human-height character (approx 2u) would feel confined but not cramped.",
+    "CAMERA FRAMING: Camera [0, 0.5, 7] looking at [0, 0, -4]. At this angle, the map table (left, mid-depth) and crystal ball (right, mid-depth) are both in the main FOV cone. The cauldron (back center-right) is visible over the table. The bookshelf (far right) and door (far left) are at the edges — discoverable on mouse movement. This is good UX: core actions (map, crystal) are foregrounded; secondary actions (bookshelf, door) reward exploration.",
+    "LIGHTING COHERENCE: Three-tone palette — amber (fire/candles), green (cauldron), purple (crystal) — follows the Celtic alchemical triad of warmth/nature/mystery. The cool rim from the door direction [8,2,7] is spatially inconsistent (light comes from the RIGHT wall, but the door is on the LEFT wall). This is acceptable as a fill approximation but worth noting for a future refactor.",
+    "DOOR DISCOVERABILITY: The door hit target at x=-9.9, z=5.5 is on the edge of the player's natural scan arc. The light sliver (0xffdd88) and door light flicker are the primary discovery cues. Recommendation: add a soft particle emitter near the door frame (small dust motes drifting from under the door) to reinforce the sense that air — and the outside world — enters through this threshold.",
+    "CAULDRON ZONE MAPPING: The cauldron currently has no interactive zone. Given GDB section 1082 ('Dialogue Merlin — at each return to Hub, the LLM generates a Merlin commentary'), the cauldron is the strongest candidate for this interaction. The bubbling, glowing cauldron as the medium through which Merlin speaks is narratively resonant. If implemented, add a hit target sphere at [2, -3.0, -7] radius 1.2.",
+    "GLB ASSET INTEGRATION: When GLB assets replace procedural meshes, ensure pivot points are at the base center of each object (y=0 at object bottom). This makes placement trivial: place at [x, floor_y, z] and the object rests on the floor. For the cauldron GLB, target scale [1.1, 1.4, 1.1] to reach H≈1.8u. For candle GLBs, use 3 instances at the existing candlePositions array coordinates.",
+    "INTERACTIVE ZONE COUNT: 4 zones (map, crystal, bookshelf, door) matches GDB Hub content (biome, oghams/settings, journal, start run). Adding cauldron as 5th zone (Merlin dialogue) would give one zone per major Hub function: biome + oghams + journal + run + dialogue = 5. This is the recommended final state.",
+    "MINIGAME CONTEXT: The Lair is the between-runs hub only. No minigames occur here. The MerlinLairScene is purely navigational — a diegetic menu. Keep it light on interactive complexity. The current hover+click feedback (scale 1.05, emissiveIntensity 0.65) is correct and sufficient."
+  ],
+
+  "recommended_next_actions": [
+    "1. Remap crystal zone from 'settings' to 'oghams' in the game controller. Move settings to a UI overlay button.",
+    "2. Add a 5th interactive zone for the cauldron (Merlin dialogue). Hit target: sphere at [2,-3.0,-7] r=1.2.",
+    "3. Add a dedicated bookshelf fill light at [9, 2, -7] color #aa6622 intensity 0.8 range 6 — the current fill at [-9,0,-5] is on the wrong side to illuminate the right-wall bookshelf.",
+    "4. When integrating chaudron.glb: position base at [2, -4.85, -7], scale to reach H≈1.8u (~[1.1, 1.4, 1.1] depending on GLB native size). Remove procedural cauldron body + legs meshes.",
+    "5. When integrating bougie.glb: use 3 instances at the candlePositions array. Ensure GLB pivot is at candle base. Keep existing particle + light system attached to same coordinates.",
+    "6. Add 3-5 dust particles drifting from under the door frame to improve door discoverability without changing the layout."
+  ]
+}

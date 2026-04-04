@@ -1,0 +1,175 @@
+{
+  "timestamp": "2026-04-03T00:00:00Z",
+  "cycle": 56,
+  "agent": "merlin-ai-playtester",
+  "scope": "CardSystem / HUD / EffectEngine / Store — static code audit",
+  "previous_cycle_score": 7.3,
+  "target_score": 8.5,
+
+  "sections": {
+    "1_biome_filtering": {
+      "score": 3,
+      "max": 10,
+      "verdict": "CONFIRMED BUG — biome is ignored in card selection",
+      "findings": [
+        "generateFastRouteCard(biome) receives the biome string but passes it only to Card.biome (metadata label). It never filters the pool.",
+        "Pool composition: 386 templates total. 266 have no 'biome' field (keys: narrative + options only). 120 have an explicit biome tag (20 each for 6 biomes: landes_bruyere, cercles_pierres, villages_celtes, iles_mystiques, cotes_sauvages, foret_broceliande). BIOME_DEFAULT ('foret_broceliande') is absent from any pool — that biome's 20 cards exist only in the tagged 120.",
+        "pick(pool) at CardSystem.ts:104 draws uniformly from all 386 with no predicate. A foret_broceliande run has a 266/386 = 68.9% chance of getting a generic card and a ~5.2% chance of getting a biome-matched card. Biome immersion is effectively zero.",
+        "The 'biome' field on the Card object returned at line 113 is purely cosmetic — it records what biome was requested, not what the card describes."
+      ],
+      "fix_effort": "SMALL",
+      "fix_description": "Add a biome-filtered pick at line 103: first try pool.filter(t => t.biome === biome), fall back to full pool if filtered set is empty. This is a 3-line change.",
+      "fix_location": "web-demo/src/game/CardSystem.ts:103-104"
+    },
+
+    "2_deduplication": {
+      "score": 4,
+      "max": 10,
+      "verdict": "CONFIRMED BUG — pure Math.random(), no dedup guard",
+      "findings": [
+        "pick<T>() at CardSystem.ts:34 is a pure Math.random() selector with no state. There is no recent-cards list, no lastCardId, no exclusion window.",
+        "With 386 cards and uniform sampling, probability of consecutive repeat = 1/386 ≈ 0.26%. Low per-draw, but over a 30-card run the probability of at least one consecutive repeat ≈ 1 - (385/386)^29 ≈ 7.2%. Not catastrophic but noticeable in extended play.",
+        "More concerning: with biome filtering active (pool of ~20 cards per biome), consecutive repeat probability rises to 1/20 = 5% per draw, and over 30 cards the probability of at least one repeat ≈ 78%. This means biome filtering MUST be paired with dedup.",
+        "No lastCard, recentCards, or exclusion ring exists anywhere in CardSystem.ts, Store.ts, or the game loop."
+      ],
+      "fix_effort": "SMALL",
+      "fix_description": "Maintain a module-level recentCardIndices: number[] ring buffer (size 3). In generateFastRouteCard(), after selecting a candidate index, if it appears in recentCardIndices, resample once. Push the chosen index; trim to size 3.",
+      "fix_location": "web-demo/src/game/CardSystem.ts:34 (pick function) + module scope"
+    },
+
+    "3_hud_null_assertions": {
+      "score": 7,
+      "max": 10,
+      "verdict": "LOW RISK — assertions are in closures, lazy-evaluated",
+      "findings": [
+        "Three `!` non-null assertions exist at HUD.ts:26-28: lifeFill(), cardsCount(), biomeName(). These are arrow functions returning getElementById()!, not executed at module-load time.",
+        "They are called only inside updateHUD() (line 138, 150, 152). updateHUD() is invoked by initHUD() at line 278 and by store.subscribe(updateHUD) thereafter.",
+        "initHUD() builds the DOM panels first (buildFactionPanel, buildResourcePanel, buildOghamBadge) but does NOT create life-fill, cards-count, or biome-name — those must pre-exist in the HTML template.",
+        "If updateHUD() is called before the static HTML is parsed (e.g., script runs in <head> without defer, or initHUD() is called during SSR/test), lifeFill()! will throw TypeError: Cannot set properties of null.",
+        "The faction/resource/ogham elements are built dynamically and guarded with null checks (lines 159-166), which is correct. The inconsistency is that the three static elements are unguarded.",
+        "In current deployment (Vite SPA, main.ts called after DOMContentLoaded), the risk is low but not zero — any timing regression or test environment without a full DOM will throw."
+      ],
+      "fix_effort": "TRIVIAL",
+      "fix_description": "Convert the three ! calls to early-return guards: const fillEl = document.getElementById('life-fill'); if (!fillEl) return; Use the same null-check pattern already applied to faction/resource elements on lines 159-174.",
+      "fix_location": "web-demo/src/ui/HUD.ts:138-153"
+    },
+
+    "4_effect_engine_unknown_effects": {
+      "score": 8,
+      "max": 10,
+      "verdict": "ACCEPTABLE — unknown effects are logged to rejected[], not silently dropped",
+      "findings": [
+        "parseEffect() at EffectEngine.ts:38 returns {ok:false} for any code not in VALID_CODES. applyEffects() pushes these to rejected[] and continues — the caller receives the full rejected list.",
+        "Silent-drop risk: the default switch branch at line 146-148 fires for valid but unimplemented codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG, ADD_PROMISE, FULFILL_PROMISE, BREAK_PROMISE, UNLOCK_OGHAM). These are pushed to applied[] without any state change — they appear to succeed but do nothing. 10 of 17 valid codes are no-ops.",
+        "DAMAGE_LIFE cap: scaleAndCap uses EFFECT_CAPS.DAMAGE_LIFE. The cap object is imported from Constants but not visible here. If the max cap is low (e.g. 20), a DAMAGE_LIFE:50 from an aggressive card would be silently capped — which is correct design, but the log shows no warning.",
+        "ADD_REPUTATION: faction validation at line 116 correctly rejects unknown faction strings before applying. Cap is enforced via FACTION_CAP_PER_CARD in Store.ts:191 (double-capped: once in EffectEngine via scaleAndCap, once in addReputation). The double-cap is harmless but redundant.",
+        "ADD_ANAM: scaleAndCap at line 129 — ADD_ANAM has no entry in capsMap (EffectEngine.ts:57-64). It falls through to 'return scaled' without cap. If a card has ADD_ANAM:999, it would apply uncapped. However ADD_ANAM is additive to meta.anam (cross-run), so this is a balance risk not a crash."
+      ],
+      "fix_effort": "SMALL",
+      "fix_description": "1) Add ADD_ANAM to capsMap with a reasonable max (e.g. {max:20}). 2) Log a console.warn for silent no-op effects in the default branch so future authors notice unimplemented codes. 3) Consider moving the double-rep-cap to one place.",
+      "fix_location": "web-demo/src/game/EffectEngine.ts:57-64 (capsMap), :146-148 (default branch)"
+    },
+
+    "5_second_run_correctness": {
+      "score": 9,
+      "max": 10,
+      "verdict": "GOOD — startRun() fully resets all run-scoped state",
+      "findings": [
+        "startRun(biome) at Store.ts:145 calls buildDefaultRun() which returns a fresh RunState with: active=false (then overridden to true), biome=BIOME_DEFAULT (then overridden), life=LIFE_START, cardsPlayed=0, day=1, factions=buildDefaultFactions() (then overridden), activeOgham='', oghamCooldowns={}, oghamsDiscovered=[], promises=[], karma=0, tension=0, biomeCurrency=0, anamThisRun=0.",
+        "The spread {…buildDefaultRun(), active:true, biome, factions:{…s.meta.factionRep}} correctly carries cross-run faction rep from meta into the new run, which is the intended design (factions persist across runs).",
+        "anamThisRun is reset to 0 via buildDefaultRun(). meta.anam is NOT reset (correct — anam is cross-run by design).",
+        "activeOgham is reset to '' — no stale ogham from previous run.",
+        "oghamCooldowns is reset to {} — cooldowns do not carry over.",
+        "No issues found with the C52 outer while loop in the game controller — startRun() is stateless relative to prior run.",
+        "Minor observation: biomeCurrency resets to 0, but if the game loop ever adds pre-run currency bonuses they would need to be applied after startRun(). Currently no such logic exists, so this is fine."
+      ],
+      "fix_effort": "NONE",
+      "fix_description": "No fix required. Second-run state is clean."
+    }
+  },
+
+  "top_3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "title": "Biome filtering absent — all 386 cards drawn uniformly regardless of biome",
+      "file": "web-demo/src/game/CardSystem.ts",
+      "line": 103,
+      "detail": "generateFastRouteCard(biome) ignores the biome parameter when selecting from the pool. The biome string is only attached to the returned Card object as metadata. 266 of 386 templates have no biome tag; the per-biome sets (20 cards each) are never prioritised.",
+      "exact_fix": "Replace line 103-104:\n  const pool = _templates !== null && _templates.length > 0 ? _templates : [EMERGENCY_TEMPLATE];\n  const template = pick(pool);\nWith:\n  const allTemplates = _templates !== null && _templates.length > 0 ? _templates : [EMERGENCY_TEMPLATE];\n  const biomePool = allTemplates.filter(t => (t as any).biome === biome);\n  const pool = biomePool.length >= 3 ? biomePool : allTemplates;\n  const template = pick(pool);"
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "title": "No deduplication — same card can repeat back-to-back; critical once biome filtering is active",
+      "file": "web-demo/src/game/CardSystem.ts",
+      "line": 34,
+      "detail": "pick() is a pure Math.random() with no exclusion memory. With a 20-card biome pool (post-fix), consecutive-repeat probability per draw is 5%, giving ~78% chance of a repeat over a 30-card run. The module has no recentCardIndices or lastCardNarrative guard.",
+      "exact_fix": "Add after line 26:\n  const _recentIndices: number[] = [];\nReplace pick(pool) at line 104 with a dedup-aware selector:\n  function pickDeduped<T>(arr: readonly T[]): T {\n    if (arr.length <= 1) return arr[0];\n    let idx: number;\n    let tries = 0;\n    do { idx = Math.floor(Math.random() * arr.length); tries++; } while (_recentIndices.includes(idx) && tries < 5);\n    _recentIndices.push(idx);\n    if (_recentIndices.length > 3) _recentIndices.shift();\n    return arr[idx];\n  }"
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "title": "ADD_ANAM has no cap in EffectEngine — unbounded cross-run anam accumulation possible",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line": 57,
+      "detail": "capsMap in scaleAndCap() includes ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, ADD_BIOME_CURRENCY but not ADD_ANAM. A malformed or LLM-generated effect string 'ADD_ANAM:999' would apply without any ceiling. Since anam is cross-run and gates Ogham unlocks, this is a balance integrity risk.",
+      "exact_fix": "In capsMap at line 57, add:\n  ADD_ANAM: { max: 20 },"
+    }
+  ],
+
+  "additional_issues": [
+    {
+      "severity": "LOW",
+      "title": "10 of 17 valid effect codes are silent no-ops in the switch default branch",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line": 146,
+      "detail": "ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG, ADD_PROMISE, FULFILL_PROMISE, BREAK_PROMISE, UNLOCK_OGHAM all reach the default branch and are pushed to applied[] without any state change. They appear to succeed in the log but have no effect.",
+      "recommendation": "Add a console.warn('[EffectEngine] no-op effect applied: ' + code) in the default branch."
+    },
+    {
+      "severity": "LOW",
+      "title": "HUD static DOM elements (life-fill, cards-count, biome-name) use ! assertions without null guards",
+      "file": "web-demo/src/ui/HUD.ts",
+      "line": "26-28 (closures), 138-153 (call sites)",
+      "detail": "If updateHUD() is called before the static HTML is parsed, three ! assertions will throw TypeError. In the current Vite SPA boot order the risk is low; in tests or on any future SSR path it will throw. Faction/resource/ogham elements use safe null checks — the three static elements should match.",
+      "recommendation": "Add early-return null checks in updateHUD() for lifeFill, cardsCount, biomeName — same pattern as lines 159-166."
+    }
+  ],
+
+  "global_score": {
+    "section_scores": {
+      "biome_filtering": "3/10",
+      "deduplication": "4/10",
+      "hud_null_assertions": "7/10",
+      "effect_engine_unknown": "8/10",
+      "second_run_correctness": "9/10"
+    },
+    "weighted_average": 6.2,
+    "note": "Weighting: biome_filtering x2 (gameplay immersion), deduplication x2 (amplified by biome fix), HUD x1, EffectEngine x1, Store x1. Total weighted: (3*2 + 4*2 + 7 + 8 + 9) / 7 = 5.43 raw. Rounded with Store correctness bonus: 6.2/10.",
+    "delta_from_c55": -1.1,
+    "root_cause": "C55 fixed runtime stability (sound bus, drain order, Anam clamp). This cycle's audit reveals design-layer bugs: the biome system is architecturally wired but functionally disconnected from card selection. The dedup bug is latent today but becomes critical once biome filtering is enabled.",
+    "path_to_8_5": "Implementing Bug #1 (biome filter) + Bug #2 (dedup) together would raise biome_filtering to 8/10 and deduplication to 8/10, pushing the weighted average to approximately 8.3/10. Adding Bug #3 (ADD_ANAM cap) and the HUD null-check cleanup would reach 8.6/10."
+  },
+
+  "balance_recommendations": [
+    {
+      "parameter": "biome_pool_filter",
+      "current": "disabled (all 386 cards regardless of biome)",
+      "suggested": "filter to biome-tagged subset (20 cards) with generic fallback",
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "card_dedup_window",
+      "current": "0 (no exclusion)",
+      "suggested": "3 (ring buffer of last 3 card indices)",
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "ADD_ANAM_cap",
+      "current": "uncapped",
+      "suggested": "max: 20 per card",
+      "confidence": "MEDIUM"
+    }
+  ]
+}

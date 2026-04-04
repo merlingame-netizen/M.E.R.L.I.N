@@ -1,0 +1,182 @@
+{
+  "meta": {
+    "report_type": "static_audit",
+    "auditor": "merlin-ai-playtester",
+    "audit_standard": "Nintendo/FromSoftware severity",
+    "timestamp": "2026-04-04T00:00:00Z",
+    "files_audited": [
+      "web-demo/src/scenes/MerlinLairScene.ts",
+      "web-demo/src/scenes/LairGLBAssets.ts"
+    ],
+    "post_cycle": "C52 (latest commits: C111-C116)"
+  },
+
+  "verdict": "FIX",
+  "global_score": 7.3,
+
+  "top_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "title": "interactives.find() called every frame — O(n) linear scan in hot update path",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1025,
+      "code_snippet": "const crystalHovered = interactives.find((i) => i.zone === 'crystal')?.hovered ?? false;",
+      "description": "Every frame of the update loop calls Array.find() over the interactives array to read the crystal hover state. The array is fixed-size (5 entries) so the CPU cost per frame is negligible at 60fps, but the pattern is architecturally wrong: (1) the result is always the same object reference — it never changes after scene init, so the find is wasted work on every frame; (2) if interactives ever grows (e.g. cauldron minigame adds a sub-target), this silently degrades. The correct fix is to cache the crystal entry reference once at init time: `const crystalEntry = interactives.find(i => i.zone === 'crystal')!` and read `crystalEntry.hovered` in the loop.",
+      "fix": "Cache reference at line ~804 init time: `const crystalEntry = interactives.find(i => i.zone === 'crystal')!;` then replace line 1025 with `const crystalHovered = crystalEntry.hovered;`"
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "title": "dispose() double-disposes InstancedMesh geometry and material",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "1082-1098",
+      "code_snippet": "if (obj instanceof THREE.InstancedMesh) { obj.dispose(); obj.geometry.dispose(); (obj.material as THREE.Material).dispose(); }",
+      "description": "THREE.InstancedMesh.dispose() (line 1087) already calls geometry.dispose() and material.dispose() internally in Three.js r150+. The explicit follow-up calls on lines 1088-1089 double-dispose the same GPU resources. On WebGL2 this typically triggers a WebGL warning ('deleteBuffer called on already-deleted buffer') and can cause a crash on Safari WebKit when the same buffer is deleted twice. This is particularly risky for the mur_pierre InstancedMesh which holds tileGeo (cloned from GLB) and tileMat — both unique per-scene allocations.",
+      "fix": "Remove lines 1088-1089 (`obj.geometry.dispose()` and `(obj.material as THREE.Material).dispose()`) inside the InstancedMesh branch. The outer else-if branch for Mesh/Points correctly calls geometry.dispose() + material.dispose() and those are not InstancedMesh so there is no overlap."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "title": "crystalGLBGroup.position.y float animation sets position on the GROUP, conflicting with LairGLBAssets Y=-1.0 base position",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1033,
+      "code_snippet": "if (crystalGLBGroup) crystalGLBGroup.position.y = crystalFloatY; // crystalFloatY = -1.0 + sin(...) * 0.04",
+      "description": "LairGLBAssets.ts line 273 sets `gltf.scene.position.set(5, -1.0, -4)`. The update loop then writes `crystalGLBGroup.position.y = crystalFloatY` where crystalFloatY oscillates around -1.0. This appears correct but has a subtle fragility: if the GLB has a non-zero root Y in its local space (e.g. Blender export with origin not at 0), the -1.0 base in gltf.scene.position is overwritten every frame. The Y=-1.0 set in loadLairGLBs() is never restored after the update loop takes control. In practice this works only because the Blender crystal_ball.glb was exported with Y=0 at its base — this assumption is undocumented. Additionally, crystalData.sphere.position.y (line 1031) is also written every frame: the procedural sphere is hidden post-GLB load, so this write is harmless but wasted.",
+      "fix": "Clamp the float to a delta: store GLB base Y at load time in onCrystalGroupLoaded, then in update loop write `crystalGLBGroup.position.y = crystalGLBBaseY + sin(...) * 0.04`. Add a comment that crystalData.sphere.position.y can be skipped when crystalGLBGroup is set."
+    }
+  ],
+
+  "criteria_scores": [
+    {
+      "id": 1,
+      "name": "flat-shading coherence",
+      "score": 9,
+      "notes": "All non-crystal GLBs call applyFlatShading() (LairGLBAssets.ts lines 143, 154, 167). mur_pierre sets flatShading directly on tileMat (line 200). Cauldron and bougie set flatShading per-mesh in traverse (lines 85, 121). Procedural materials all declare flatShading:true. Crystal ball is the intentional exception (transparent faceted sphere). One minor gap: bougie.glb clone() at line 114 — applyFlatShading() is NOT called on bougie clones; flatShading is set inline per-mesh at line 121 which covers the same path. Score 9 not 10 because the inline approach in bougie is inconsistent with the applyFlatShading() pattern used elsewhere, risking regression if someone adds a sub-mesh to the GLB that has a different traversal order."
+    },
+    {
+      "id": 2,
+      "name": "z-fighting residual",
+      "score": 8,
+      "notes": "sol_pierre at Y=-4.98 vs procedural floor at Y=-5.0 = 0.02u gap. C112 comment correctly diagnoses that 0.02u is insufficient at 16-bit depth with range ~10u (precision ~0.05u). polygonOffset factor=-2/units=-4 applied correctly (LairGLBAssets lines 173-176). mur_pierre also has polygonOffset=-2/-4 (line 198-201). Mortar lines on back wall at Z=-9.74 vs back wall at Z=-10 — 0.26u separation, safe. Procedural floor Y=-5 vs sol_pierre Y=-4.98: the procedural floor is hidden on GLB load (line 181) so no z-fight post-load. Risk window is the ~400ms fade-in during which both are visible — polygonOffset handles this. Score 8 not 10: the mur_pierre right/left walls at X=+/-11.76 vs procedural walls at X=+/-12.0 have 0.24u gap — acceptable but the back wall at Z=-9.76 (instanced) vs Z=-10.0 (procedural) only has 0.24u. Procedural wall visibility=false fires on GLB load, same fade-in overlap risk exists."
+    },
+    {
+      "id": 3,
+      "name": "materiaux qualite",
+      "score": 9,
+      "notes": "All GLB materials are cloned before mutation (cauldron line 82, bougie line 117, crystal line 266, mur_pierre lines 195). Emissive values appropriate: crystal 0x6030aa/0.6 (rich purple glow), cauldron 0x00aa33/0.0 initial (animated up on hover), door 0x5a3010/0.05 (subtle). Roughness/metalness well-differentiated: iron 0.5/0.6, wood 0.8/0.0, stone 0.95/0.0, crystal 0.25/0.1. One concern: potionBottles (lines 613-623) use `emissive: b.color` which sets the emissive to the same RGB as the diffuse — this causes very bright look under any lighting and is inconsistent with the dark-lair aesthetic. Not a bug but aesthetically jarring."
+    },
+    {
+      "id": 4,
+      "name": "lighting dramaturgie",
+      "score": 8,
+      "notes": "5-light setup: AmbientLight 0x1a1008/0.5, key PointLight 0xff6618/0.9 at [0,3,2], rim 0x6699cc/0.55 at [8,2,7], fill 0xcc8833/0.4 at [-9,0,-5], backAccent 0xff5500/0.35 at [0,1.5,-11]. Low-end mobile drops backAccent (4 lights). Crystal breathes with sin(t*1.8)*0.4 around 2.2. Candle flicker is multi-frequency (3 sin terms) which is authentic. Door burst reaches intensity 12 during cinematic — dramatically strong. One gap: candle sharedLight position computed as centroid of 3 candles (line 340) but uses static math inline rather than a computed constant — if CANDLE_POSITIONS is ever updated, the light centroid silently drifts. Also the rim light at position [8,2,7] (right-front) combined with fill at [-9,0,-5] (left-back) creates good cross-lighting but the cool rim from door-side conflicts slightly with the warm door light at [-9.8,-1.8,5.5] — the door is on the LEFT wall (x=-10.15) but the rim light is on the RIGHT (x=8). Minor spatial inconsistency."
+    },
+    {
+      "id": 5,
+      "name": "GLB coverage",
+      "score": 10,
+      "notes": "All 7 asset types loaded: cauldron_merlin.glb (line 77), bougie.glb (line 111), table_druidique.glb (line 139), bibliotheque.glb (line 150), sol_pierre.glb (line 162), mur_pierre.glb (line 187), crystal_ball.glb (line 261). Each has an isDisposed() guard, a procedural fallback, and a fadeInGLB() call. The onCauldronGLBLoaded / onCrystalGLBLoaded / onCrystalGroupLoaded callback trio is wired correctly in initMerlinLair lines 783-795. Full coverage."
+    },
+    {
+      "id": 6,
+      "name": "proportions geometriques",
+      "score": 7,
+      "notes": "Room footprint: 24w x 20d x 16h (walls). Camera at [0, 0.5, 7] looking at [0, 0, -4] — player stands near front, looks into lair. Crystal at [5,-1,-4] feels reachable. Door on left wall at x=-10.15 which is at the edge of the 24-wide room (half = 12) — positioned at x=-10.15 is 1.85u from the left wall face (x=-12), close but plausible for a door inset. Bookshelf at x=8 (1.76u from right wall at x=11.76) — acceptable. cauldron at [2,-3.8,-7] low in scene — correct, it sits on the floor. One issue: the door panel is positioned at x=-10.15 but the door frame posts are at x=-10.1 (lines 254, 258) — the panel is 0.05u further left than the frame posts, meaning the door slightly clips into the left wall. Minor visual glitch at frame/panel join. Table hit target (scroll) at y=-1.88 with table top at y=-2+0.09=y=-1.91, so scroll is 0.03u above top — correct. Cauldron hit sphere at y=-3.8 matches cauldron.body y=-3.8 exactly (C107 fix confirmed)."
+    },
+    {
+      "id": 7,
+      "name": "bundle/perf",
+      "score": 7,
+      "notes": "Main chunk noted at 50.45KB gzip (0.9% over 50KB target). FPS adaptive quality implemented: hysteresis [45, 52] (lines 1047-1052), dust disabled in lowFpsMode. isLowEndMobile detected by UA + DPR (line 726), drops backAccent PointLight. Mur_pierre uses InstancedMesh (48 draw calls -> 3). Book shelf uses pooled materials (6 instead of 18). Particle systems: 80 dust motes + 20 particles x3 candles (60) + 30 steam = 170 total particles. All use AdditiveBlending + depthWrite:false (correct). The interactives.find() in the update loop (see Bug #1) is a per-frame allocation concern in V8 (closure capture). The crystalData.sphere.position.y write on line 1031 is dead work post-GLB-load. No requestAnimationFrame scheduling code visible in this file (likely in the scene manager), so rAF cancellation on dispose is assumed handled upstream."
+    },
+    {
+      "id": 8,
+      "name": "memory leaks",
+      "score": 7,
+      "notes": "lairDisposed flag guards late GLB callbacks (all 7 loadGLB chains check isDisposed()). doorFlashCancelHandle cleared via clearTimeout(doorFlashCancelHandle) at line 1072. stopAmbient() called at line 1073. Event listeners removed in dispose() (lines 1074-1080). DOM elements (ariaLive, zoneToast) removed at lines 1103-1108. scene.traverse() disposes all Mesh/Points geometry+material. CRITICAL BUG #2 applies here: InstancedMesh double-dispose (lines 1087-1089). Additionally, the candleBaseMat template is correctly disposed at line 410 after clones are created. However: the 3 bougie.glb clones (line 114, `gltf.scene.clone(true)`) are added directly to scene (line 127) — they are not referenced in any group, so scene.traverse() will find and dispose them correctly. But the GLB prototype `gltf.scene` itself (not cloned) is not added to the scene and its geometry/materials are never explicitly disposed — this is a leak of the original GLB internal resources on each lair teardown. Low severity since it only fires once per load."
+    },
+    {
+      "id": 9,
+      "name": "UX/ARIA",
+      "score": 9,
+      "notes": "keyboard nav: Tab/ArrowRight/ArrowDown cycle forward, ArrowLeft/ArrowUp cycle back, Enter/Space activates (lines 943-968). aria-live polite region updates on zone focus and activation (lines 987, 952). canvas has role=application, aria-label with zone count (line 679), tabindex=0 (line 680), auto-focus with preventScroll (line 684). Zone toast shows label + lore on hover and keyboard nav (lines 854-866, 990-999). Touch bridge: touchmove/touchstart/touchend all handled (lines 917-937). touchend clears hover state (line 928). One gap: on mobile touchstart fires onPointerAction immediately (line 925) without a touchmove-then-touchend distinction — tap-to-hover is not possible, it goes directly to activate. This means the lore toast never shows on mobile for a zone before activation. Low severity for a touch-primary UX but worth noting."
+    },
+    {
+      "id": 10,
+      "name": "hover feedback",
+      "score": 8,
+      "notes": "C113 fix confirmed: crystalHovered drives emissive base 0.5 (unhovered) vs 0.9 (hovered), plus sin oscillation of 0.15. Without C113 the update loop would override applyHoverTo(0.65) every frame. The crystalGLBMat branch at line 1029 mirrors the same intensity to the GLB material. applyHoverTo() correctly uses visualMesh fallback (line 826). Scale 1.05 applied to visualMesh (line 846, 983). One subtle issue: the unhovered base for crystal is now 0.5 + sin*0.15 (range 0.35-0.65), but baseEmissive for crystal in interactives[] is 0.6 (line 804). When the mouse leaves the crystal, applyHoverTo restores emissiveIntensity to 0.6 (line 837 via baseEmissive), but the update loop at line 1027 immediately overwrites it to the 0.5-base calculation. This is correct (update loop wins and that is the intended steady state) but the restore-then-overwrite on the same frame is logically redundant. No visual bug, minor code smell."
+    },
+    {
+      "id": 11,
+      "name": "door cinematic",
+      "score": 9,
+      "notes": "Pointer path (lines 899-909): doorFlashing=true, doorFlashTimer=0, emissiveIntensity=1.2, magic_reveal SFX, 380ms setTimeout -> cb(zone). Keyboard path (lines 954-964): identical logic, cb captured as kbCb, kbZone captured — correct. Update loop during flash: intensity=12+sin(timer*45)*4, producing ~4Hz intense flicker for 380ms (17 flicker cycles) — viscerally dramatic. lairDisposed guard in setTimeout callbacks (lines 908, 963). doorFlashCancelHandle tracked and cleared in dispose() (line 1072). One minor gap: if the user double-clicks the door rapidly, a second doorFlashCancelHandle is assigned (line 906) overwriting the first — the first setTimeout is no longer referenced and cannot be cleared. This would fire a stale callback 380ms after the first click even if dispose() was called between them. The lairDisposed guard on line 908 catches the teardown case, but if the scene is still alive (user clicked door twice fast) both callbacks fire. Should guard with `if (doorFlashing) return;` before starting a new flash."
+    },
+    {
+      "id": 12,
+      "name": "Celtic lore immersion",
+      "score": 9,
+      "notes": "ZONE_LORE texts (lines 882-888): 'Quelle contrée de Bretagne t'appelle ce soir?' (map), 'Les runes d'ogham murmurent dans la pierre sacrée' (crystal), 'Les chroniques de Merlin gardent mémoire de tes actes' (bookshelf), 'Le chaudron de Cerridwen bouillonne de sagesse ancienne' (cauldron — Cerridwen is the correct Welsh/Celtic cauldron goddess), 'Les bois de Brocéliande t'attendent, voyageur' (door — Brocéliande is the Arthurian/Breton sacred forest). All 5 texts anchor to specific mythological references. Fog: 0x0d0a08, near=12, far=28 — the lair is 20 units deep, so the back wall at Z=-10 is at distance ~17u from camera (camera Z=7), which falls between near=12 and far=28, meaning the back wall IS affected by fog. This gives depth and keeps the rear dark — atmospheric and appropriate for an underground cave. Camera position [0, 0.5, 7] with lookAt [0, 0, -4]: slight upward tilt from near-floor height creates a 'standing in the cave' perspective — FromSoftware-like environmental storytelling. No Celtic lore inconsistencies found."
+    }
+  ],
+
+  "specific_questions_audit": {
+    "interactives_find_every_frame": {
+      "finding": "CONFIRMED BUG",
+      "detail": "MerlinLairScene.ts line 1025 calls interactives.find() on every update frame to read crystal hover state. The array is 5 elements so the per-frame cost is ~10ns (negligible) but the pattern violates the architectural rule that update() must be allocation-free. Array.find creates a closure each call in V8. Fix: cache `crystalEntry` at init time."
+    },
+    "dispose_clears_doorFlashCancelHandle": {
+      "finding": "CORRECT — clearTimeout present",
+      "detail": "MerlinLairScene.ts line 1072: `clearTimeout(doorFlashCancelHandle)` is called in dispose() before any other teardown. doorFlashCancelHandle initialized to 0 (line 773) which is safe for clearTimeout(0). The lairDisposed guard inside the setTimeout callback (lines 908, 963) provides a second layer of protection. HOWEVER: double-click race condition exists (see Bug #3 ranking 3 in door cinematic notes and criterion 11)."
+    },
+    "fog_dramatic_appropriateness": {
+      "finding": "APPROPRIATE with caveats",
+      "detail": "scene.fog = new THREE.Fog(0x0d0a08, 12, 28). Color 0x0d0a08 is near-black with a very slight warm tint — matches the renderer clearColor exactly, creating fog that blends to void rather than to a distinct haze color. Near=12 means objects 12u from camera start fogging; the back wall is at ~17u distance, which puts it in moderate fog (roughly 42% fogged at that depth). This is dramatically correct — the lair reads as deep and mysterious, not a small box. Far=28 cuts off anything beyond the back wall. The only concern: the forest window (createLairWindow) is presumably on the back wall at Z~-10. If it shows a bright sky, the fog at that distance will slightly grey-out the window view. This is a minor compositing tension but not a bug."
+    },
+    "camera_framing": {
+      "finding": "ACCEPTABLE — minor concern",
+      "detail": "camera.position.set(0, 0.5, 7) with lookAt(0, 0, -4). FoV=62 degrees. This creates a slight downward angle from y=0.5 looking toward y=0 at z=-4 — essentially eye-level of a standing player. The lair ceiling is at y=11 and floor at y=-5. From this camera the floor is dominant in the lower frame, ceiling minimal — appropriate for a cave environment. The sway animation (lines 1018-1019) moves camera x by ±0.1 and y by 0.5±0.06 — very subtle, non-nauseating. One issue: FOV 62 is slightly wide for a hub scene (industry standard for environmental exploration is 55-60). At 62 with the 24u wide room, wall edges may distort on ultrawide monitors. Not a regression from previous cycles."
+    },
+    "resize_handler_dpr_sync": {
+      "finding": "CORRECT",
+      "detail": "onResize() at lines 712-719: updates camera.aspect, calls updateProjectionMatrix(), calls renderer.setSize(w, h), and calls renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)). The DPR re-sync is critical for browser zoom changes (e.g. Ctrl+scroll) and monitor hotplug on Windows (different DPR monitors). The Math.min(..., 2) cap prevents 3x DPR mobile from tripling the render budget. This was added in C102 and is correctly implemented."
+    }
+  },
+
+  "additional_findings": [
+    {
+      "severity": "LOW",
+      "title": "GLB prototype not disposed — bougie.glb internal resources leak",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "lines": "111-136",
+      "detail": "The bougie.glb gltf.scene is cloned 3 times (line 114) and never added to the scene itself. The original gltf.scene geometry and materials stay in memory until the GLTF loader cache is cleared. Three.js GLTFLoader caches by URL by default, so this only leaks on the first load per session — subsequent navigations reuse the cache. Low severity."
+    },
+    {
+      "severity": "LOW",
+      "title": "mapHit (scroll mesh) used as both hitTarget and visualMesh implicitly",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 803,
+      "detail": "interactives entry for 'map': `{ mesh: mapHit, zone: 'map', hovered: false, baseEmissive: 0.15 }` — no visualMesh set. applyHoverTo() falls back to `obj.mesh as THREE.Mesh` (line 826). The scroll mesh (mapMat, line 98) has emissive: 0x3a2a10, emissiveIntensity: 0.15. This works correctly since mapHit IS a visible mesh (unlike other zones where hitTarget is invisible). When table_druidique.glb loads (line 146), mapGroup.visible = false hides the entire table including mapHit. After that, hover emissive fires on a hidden mesh — visually harmless but architecturally inconsistent with other zones. No onMapGLBLoaded callback exists to swap visualMesh for the GLB path, meaning map hover emissive silently dies post-GLB-load."
+    },
+    {
+      "severity": "LOW",
+      "title": "Potion bottle emissive set to full diffuse color — bloom artifact risk",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "613-623",
+      "detail": "bottleData uses `emissive: b.color` where b.color is 0xcc2222 / 0x2244cc / 0x22aa44. Full diffuse as emissive means bottles glow at their own color even in complete darkness. emissiveIntensity=0.25 partially mitigates. No bloom post-process in this renderer so no immediate visual bug, but if bloom is added in a future cycle this will cause overglow."
+    }
+  ],
+
+  "balance_recommendations": [],
+
+  "summary": {
+    "critical_issues": 0,
+    "high_issues": 2,
+    "medium_issues": 1,
+    "low_issues": 3,
+    "regression_from_crystal_hovered_branch": "The C113 crystalHovered branch (line 1025) introduces interactives.find() in the hot path. Functionally correct but architecturally dirty. The crystal hover emissive contrast (0.5 base vs 0.9 hovered, delta=0.4) is clearly visible and the GLB material sync at line 1029 is correct. No visual regression — the feature works. The performance regression is theoretical at n=5 array size but the pattern should be fixed.",
+    "verdict_rationale": "FIX because of two HIGH issues: InstancedMesh double-dispose can crash Safari (memory safety) and the interactives.find() in update() violates the allocation-free contract. Both are simple 2-line fixes. No CRITICAL (softlock, data loss, crash-on-entry) issues found. The scene is playable but should not ship to production before the double-dispose fix."
+  }
+}

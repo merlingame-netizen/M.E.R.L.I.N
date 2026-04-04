@@ -1,0 +1,54 @@
+{
+  "cycle": 16,
+  "task": "T040-confirm",
+  "strategy": "cautious_healer_max_heal",
+  "runs": [
+    {
+      "run": 1,
+      "finalLife": 109,
+      "stage1_avg_net": 1.4,
+      "stage2_avg_net": -0.5,
+      "stage3_avg_net": -1.4
+    },
+    {
+      "run": 2,
+      "finalLife": 136,
+      "stage1_avg_net": 2.73,
+      "stage2_avg_net": 0.2,
+      "stage3_avg_net": -1.4
+    },
+    {
+      "run": 3,
+      "finalLife": 127,
+      "stage1_avg_net": 1.87,
+      "stage2_avg_net": 0.4,
+      "stage3_avg_net": -1
+    },
+    {
+      "run": 4,
+      "finalLife": 124,
+      "stage1_avg_net": 1.93,
+      "stage2_avg_net": 0.1,
+      "stage3_avg_net": -1.2
+    },
+    {
+      "run": 5,
+      "finalLife": 140,
+      "stage1_avg_net": 2.67,
+      "stage2_avg_net": 0.7,
+      "stage3_avg_net": -1.4
+    }
+  ],
+  "aggregate": {
+    "avg_stage1_net": 2.12,
+    "avg_stage2_net": 0.18,
+    "avg_stage3_net": -1.28
+  },
+  "verdict": "PASS",
+  "verdict_detail": {
+    "stage2_threshold": "<=0.5 net/card",
+    "stage3_threshold": "<0 net/card",
+    "stage2_result": 0.18,
+    "stage3_result": -1.28
+  }
+}

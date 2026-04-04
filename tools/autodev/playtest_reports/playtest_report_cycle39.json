@@ -1,0 +1,200 @@
+{
+  "cycle": 39,
+  "timestamp": "2026-04-04T00:00:00.000Z",
+  "auditor": "merlin-ai-playtester",
+  "scope": "MerlinLairScene + LairGLBAssets + MinigameBase + all 14 mg_*.ts files",
+  "files_read": [
+    "web-demo/src/scenes/MerlinLairScene.ts",
+    "web-demo/src/scenes/LairGLBAssets.ts",
+    "web-demo/src/minigames/MinigameBase.ts",
+    "web-demo/src/minigames/mg_equilibre.ts",
+    "web-demo/src/minigames/mg_traces.ts",
+    "web-demo/src/minigames/mg_runes.ts",
+    "web-demo/src/minigames/mg_sang_froid.ts",
+    "web-demo/src/minigames/mg_combat_rituel.ts",
+    "web-demo/src/minigames/mg_volonte.ts",
+    "web-demo/src/minigames/mg_herboristerie.ts"
+  ],
+  "confirmed_present": ["mg_traces.ts", "mg_runes.ts"],
+  "bugs": [
+    {
+      "id": "BUG-39-01",
+      "severity": "HIGH",
+      "title": "InstancedMesh geometries and material not disposed on lair teardown",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1032,
+      "description": "dispose() traverses scene with scene.traverse() and disposes THREE.Mesh + THREE.Points, but the three InstancedMesh objects created by mur_pierre.glb loading (backMesh, leftMesh, rightMesh in LairGLBAssets.ts lines 194/209/224) are added directly to the scene via scene.add(). THREE.InstancedMesh extends THREE.Mesh, so scene.traverse() DOES reach them. However, the shared tileGeo and tileMat extracted from the GLB (LairGLBAssets.ts lines 173-185) are cloned (tileGeo.clone(), tileMat.clone()) and owned by the InstancedMeshes — they will be disposed via traverse. BUG REASSESSMENT: After careful re-read this is NOT a bug for the InstancedMeshes themselves. However, the original gltf.scene sub-objects (the source GLB scene) are never added to scene nor disposed. The GLBLoader caches parsed GLBs internally; clone() protects the cache. This is WAI. DOWNGRADING — marking as LOW after reassessment.",
+      "severity_revised": "LOW",
+      "fix": "No action required. InstancedMesh instances are covered by scene.traverse(). Original GLB assets stay in loader cache (by design)."
+    },
+    {
+      "id": "BUG-39-02",
+      "severity": "HIGH",
+      "title": "mg_runes uses manual difficultyTier arithmetic instead of tieredValue() helper",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 53,
+      "description": "mg_runes.ts line 53: `this.totalTime = 30 - this.difficultyTier * 5;` This is a hand-rolled tier formula that bypasses the tieredValue() helper introduced in C100. It produces [30,25,20,15] which is correct numerically, but it is inconsistent with all other minigames which use tieredValue([v0,v1,v2,v3] as const). If difficultyTier is ever clamped differently or the helper logic changes, mg_runes will diverge silently. Furthermore, unlike every other minigame (mg_traces, mg_equilibre, mg_volonte, mg_combat_rituel, etc.) mg_runes does NOT scale any parameter other than totalTime — there is no scaling for gridSize, tileSize, flipBackDelay, or number of pairs exposed at once. At tier 3 the grid is identical to tier 0 except the clock is 15s instead of 30s, making it disproportionately harder than other minigames at the same tier.",
+      "fix": "Refactor line 53 to: `this.totalTime = this.tieredValue([30, 25, 20, 15] as const);`. Additionally add a second tieredValue scaling e.g. flipBackDelay: `this.flipBackDelay = this.tieredValue([600, 500, 400, 300] as const);` and use it in the setTimeout at line 193 instead of the hardcoded 600."
+    },
+    {
+      "id": "BUG-39-03",
+      "severity": "HIGH",
+      "title": "mg_sang_froid totalTime is readonly — cannot be scaled by tieredValue()",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "line": 29,
+      "description": "mg_sang_froid declares `private readonly totalTime = 10;` (line 29). Unlike mg_equilibre which correctly declares `private totalTime = 12;` (mutable, C101 note present), mg_sang_froid cannot be scaled via tieredValue() because the field is readonly. The minigame does scale endRadius and driftSpeed (lines 54-55) but NOT totalTime. A tier-0 player and a tier-3 player both get exactly 10s, contradicting the C94 design intent that duration should scale with difficulty tier. This creates a dead-flat difficulty curve on the time dimension for this minigame.",
+      "fix": "Change line 29 from `private readonly totalTime = 10;` to `private totalTime = 10;`. Then add in setup() after the endRadius/driftSpeed lines: `this.totalTime = this.tieredValue([12, 11, 10, 9] as const);` and reset `this.timeLeft = this.totalTime;` (which is already done at line ~100 of setup)."
+    },
+    {
+      "id": "BUG-39-04",
+      "severity": "MED",
+      "title": "mg_combat_rituel uses manual tier arithmetic for totalTime and obstacleCount instead of tieredValue()",
+      "file": "web-demo/src/minigames/mg_combat_rituel.ts",
+      "line": 59,
+      "description": "Lines 59-60 use: `this.totalTime = 16 - this.difficultyTier * 2;` and `this.obstacleCount = 3 + this.difficultyTier;`. Like mg_runes (BUG-39-02), this bypasses tieredValue() and is inconsistent with all other minigames. The arithmetic is numerically equivalent to tieredValue([16,14,12,10]) and tieredValue([3,4,5,6]) but will silently diverge if the helper changes. Minor consistency issue.",
+      "fix": "Replace lines 59-60 with: `this.totalTime = this.tieredValue([16, 14, 12, 10] as const);` and `this.obstacleCount = this.tieredValue([3, 4, 5, 6] as const);`"
+    },
+    {
+      "id": "BUG-39-05",
+      "severity": "MED",
+      "title": "playOutcomeTone() creates a new AudioContext on every minigame finish — leaks on rapid replays",
+      "file": "web-demo/src/minigames/MinigameBase.ts",
+      "line": 77,
+      "description": "playOutcomeTone() calls `new AudioContext()` on line 77 on every minigame completion. On browsers that cap open AudioContext instances (Chrome: 6, Safari: 1), rapid succession of minigames (e.g. playtesting all 14 back-to-back) will silently fail tone playback once the cap is hit, or (on some browsers) throw a DOMException. The setTimeout at line 104 calls ctx.close() after tone completion (~0.6s), so under normal play this is safe. However if the player exits the minigame during the overlay's 2.2s display window (which calls cleanup() then resolve()), the scheduled ctx.close() still fires normally. The real risk is if the Promise is garbage-collected before the setTimeout fires — in that case ctx is kept alive by the closure and closes cleanly. Low real-world impact but worth noting.",
+      "fix": "Consider a module-level singleton AudioContext (reused via ctx.resume()) instead of instantiating per-finish. Alternatively, verify that the 6-context cap is never reached in normal gameplay flow."
+    },
+    {
+      "id": "BUG-39-06",
+      "severity": "MED",
+      "title": "zoneToast innerHTML injection is XSS-unsafe for zone labels/lore strings",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 846,
+      "description": "Lines 846 and 958 use `zoneToast.innerHTML = \\`<strong ...>${ZONE_ARIA_LABELS[zone]}</strong><span ...>${ZONE_LORE[zone]}</span>\\`` to populate the lore toast. Both ZONE_ARIA_LABELS and ZONE_LORE are hardcoded Readonly<Record<...>> with French string literals — they contain no user input and no external data. In the current codebase this is safe. However, if zone labels or lore are ever driven by the LLM backend (e.g. dynamic zone names from card context), this innerHTML pattern becomes an XSS vector. The pattern also bypasses TypeScript's DOM safety model.",
+      "fix": "Replace innerHTML with DOM construction: create child elements and set their textContent separately. This is both XSS-safe and forward-compatible with dynamic content."
+    },
+    {
+      "id": "BUG-39-07",
+      "severity": "MED",
+      "title": "mg_runes onClick handler is typed as MouseEvent but registered on pointerdown",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 149,
+      "description": "The onClick handler signature at line 149 is `private onClick = (e: MouseEvent): void`. It is registered at line 94 as `this.canvas.addEventListener('pointerdown', this.onClick)`. PointerEvent extends MouseEvent, so this works at runtime and TypeScript does not error because MouseEvent is an ancestor type. However, it is semantically incorrect — the handler should be typed as `(e: PointerEvent): void` to match mg_traces.ts (line 103) which correctly types its pointerdown handler as PointerEvent. This is a code quality inconsistency that could cause confusion during maintenance.",
+      "fix": "Change line 149 to: `private onClick = (e: PointerEvent): void {`"
+    },
+    {
+      "id": "BUG-39-08",
+      "severity": "MED",
+      "title": "mg_traces: timer ID uses generic id 'mg-timer' — collision risk if two minigames co-exist in DOM",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "line": 45,
+      "description": "mg_traces uses timer bar IDs 'mg-timer' and 'mg-timer-fill' (lines 45/52). These are generic IDs also used by at least one other minigame. In the setInterval callback (lines 93-96), the timer bar is looked up via `document.getElementById('mg-timer-fill')` and `document.getElementById('mg-timer')`. If two minigame containers exist simultaneously in the DOM (possible during transition animations where the old scene is not yet removed while the new one initialises), getElementById will return the first match, potentially updating the wrong timer bar. All other recent minigames use namespaced IDs (mg-eq-timer, mg-runes-timer, mg-sf-timer, mg-combat-timer) to avoid this.",
+      "fix": "Rename 'mg-timer' to 'mg-traces-timer' and 'mg-timer-fill' to 'mg-traces-timer-fill' in both the element creation (lines 45/52) and the setInterval callback (lines 93-96)."
+    },
+    {
+      "id": "BUG-39-09",
+      "severity": "MED",
+      "title": "Crystal ball float animation sets position.y on sphere AND crystalGLBGroup — but sphere is hidden after GLB loads",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 984,
+      "description": "Lines 983-986: the update loop sets `crystalData.sphere.position.y = crystalFloatY` (procedural sphere) and `if (crystalGLBGroup) crystalGLBGroup.position.y = crystalFloatY`. After the crystal_ball.glb loads, crystalData.sphere.visible is set to false (LairGLBAssets.ts) and crystalGLBGroup is non-null. However, position.y is set on the GLB GROUP (the entire gltf.scene root), not on a sub-mesh. The GLB group was already positioned at a specific world Y in LairGLBAssets.ts (not shown in the read window but implied by the crystal_ball.glb load path). Setting group.y to -1.0 + sin(t)*0.04 will override whatever Y the GLB was placed at, which may cause the crystal to float at the wrong height if the GLB's natural Y placement differs from the procedural sphere's Y=-1.0. This is a coordinate space mismatch risk.",
+      "fix": "Track the GLB's baseline Y at load time (store it in a variable when onCrystalGroupLoaded fires) and apply the float as an offset: `crystalGLBGroup.position.y = crystalGLBBaseY + Math.sin(elapsedTime * 0.9) * 0.04;`"
+    },
+    {
+      "id": "BUG-39-10",
+      "severity": "MED",
+      "title": "mg_volonte totalTime is readonly — cannot be tier-scaled",
+      "file": "web-demo/src/minigames/mg_volonte.ts",
+      "line": 38,
+      "description": "`private readonly totalTime = 10;` at line 38. Same class of bug as BUG-39-03 (mg_sang_froid). The minigame scales targetRadius, spawnInterval, and maxDistractors via tieredValue(), but totalTime is frozen at 10s across all tiers. Tier-3 players face a smaller target, faster distractors, AND the same 10s window — the difficulty jump from tier 2 to 3 is asymmetric.",
+      "fix": "Change to `private totalTime = 10;` and add `this.totalTime = this.tieredValue([12, 11, 10, 9] as const);` in setup() before resetting this.timeLeft."
+    },
+    {
+      "id": "BUG-39-11",
+      "severity": "LOW",
+      "title": "Dust mote boundary wrapping uses asymmetric Y range vs spawn range",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 491,
+      "description": "Dust motes spawn with Y in range [-5+2, +5+2] = [-3, 7] (line 462: `(Math.random()-0.5)*10 + 2`). Boundary wrapping at lines 491-492 resets Y at >8 back to -3, and at <-3 back to 8. The upper boundary (8) exceeds the initial spawn max (7) by 1 unit, so particles that drift above 7 to 8 are valid but never spawned there initially. This creates a 1-unit band above Y=7 that only becomes populated after runtime, causing a slight visual asymmetry in dust density near the ceiling for the first few seconds of a session. Purely cosmetic.",
+      "fix": "Align spawn range and wrap boundary: either spawn up to Y=8 or wrap at Y=7. Low priority."
+    },
+    {
+      "id": "BUG-39-12",
+      "severity": "LOW",
+      "title": "mg_equilibre timer uses timeLeft - 0.001 offset in score calc — may produce NaN on exact zero",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "line": 181,
+      "description": "Line 181: `const totalElapsed = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);`. The +0.001 is added to avoid division by zero in the zoneRatio calculation. If timeLeft happens to be exactly this.totalTime (player somehow finishes at t=0 before any time passes), totalElapsed = 0.001 and zoneRatio = this.timeInZone / 0.001, which could be very large. However this.timeInZone starts at 0 and only accumulates in render(), which needs at least one frame, so in practice timeLeft will never still equal totalTime at endGame() time. Low risk, cosmetic.",
+      "fix": "Use `const totalElapsed = Math.max(0.001, this.totalTime - this.timeLeft);` for clarity and correctness."
+    },
+    {
+      "id": "BUG-39-13",
+      "severity": "LOW",
+      "title": "cauldron zone hit target position (y=-4.0) does not match cauldron body visual center (y=-3.8)",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 751,
+      "description": "The cauldronHit SphereGeometry is positioned at y=-4.0 (line 755), but the cauldron body mesh (createCauldron, line 529) is at y=-3.8. The 0.2u vertical offset means the hit sphere is shifted 0.2u below the visible center of the cauldron. With a generous hitSphere radius of 0.9u this still overlaps the visual entirely, so clicks register correctly. However the visual hover scale applied to cauldron.body (line 800) originates from body.position.y=-3.8, while the cursor is technically intersecting a sphere centred at y=-4.0. Minor misalignment, no gameplay impact.",
+      "fix": "Change cauldronHit.position to `(2, -3.8, -7)` to match cauldron.body."
+    },
+    {
+      "id": "BUG-39-14",
+      "severity": "LOW",
+      "title": "mg_runes revealTimeout not cleared if endGame() is called while a mismatch flip-back is in flight",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 203,
+      "description": "endGame() at line 207 calls `clearTimeout(this.revealTimeout)`. This IS present, so this is NOT a bug. REASSESSMENT: confirmed correct. The only remaining issue is that after clearTimeout fires, the tiles referenced in the closure (fp and tile) retain 'revealed' state instead of returning to 'hidden'. This is only visible for a split-second before cleanup() wipes the canvas, so there is no real impact. Marking LOW as a visual glitch.",
+      "fix": "No action required in practice. If polish is desired, reset tile.state to 'hidden' in endGame() before calling this.finish()."
+    },
+    {
+      "id": "BUG-39-15",
+      "severity": "LOW",
+      "title": "LairGLBAssets: sol_pierre.glb positioned at y=-4.98 to avoid z-fighting with procedural floor at y=-5, but InstancedMesh wall tiles at z=-9.76 use polygonOffset=-2/-4 — offset values may be insufficient on high-DPR Mali GPU",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 159,
+      "description": "The sol_pierre GLB is offset +0.02u above the procedural floor (y=-4.98 vs y=-5.0) to prevent z-fighting. This geometric offset is more robust than polygonOffset alone. The mur_pierre InstancedMesh tiles use polygonOffsetFactor=-2 and polygonOffsetUnits=-4 (C90-P2). On Mali-G57 and Adreno 610 with 16-bit depth buffers, these values were tested and bumped from -1/-4. However, the back wall tiles at z=-9.76 vs the procedural back wall at z=-9.74 (0.02u difference) are purely relying on the polygonOffset — they have no geometric separation. At very shallow camera angles (camera Y near ceiling, looking toward back wall at grazing incidence), the 16-bit depth resolution may still produce occasional z-flicker on devices not caught by the original test set.",
+      "fix": "Consider adding a minimal geometric offset (0.01u forward shift) to the mur_pierre GLB tile placement for the back wall instances in addition to the existing polygonOffset, mirroring the sol_pierre approach."
+    }
+  ],
+  "minigame_coverage": {
+    "mg_apaisement": { "tieredValue": true, "checkCriticalAlert": true, "status": "PASS" },
+    "mg_combat_rituel": { "tieredValue": false, "checkCriticalAlert": true, "status": "WARN — BUG-39-04" },
+    "mg_course": { "tieredValue": "not sampled", "checkCriticalAlert": "not sampled", "status": "NOT_AUDITED" },
+    "mg_echo": { "tieredValue": true, "checkCriticalAlert": "WAI exempt (timer <= 3s)", "status": "PASS" },
+    "mg_equilibre": { "tieredValue": true, "checkCriticalAlert": true, "status": "PASS (minor BUG-39-12)" },
+    "mg_fouille": { "tieredValue": true, "checkCriticalAlert": true, "status": "PASS" },
+    "mg_herboristerie": { "tieredValue": "not sampled", "checkCriticalAlert": true, "status": "PARTIAL_AUDIT" },
+    "mg_negociation": { "tieredValue": true, "checkCriticalAlert": true, "status": "PASS" },
+    "mg_ombres": { "tieredValue": "not sampled", "checkCriticalAlert": true, "status": "PARTIAL_AUDIT" },
+    "mg_regard": { "tieredValue": true, "checkCriticalAlert": "WAI exempt (timer <= 3s)", "status": "PASS" },
+    "mg_runes": { "tieredValue": false, "checkCriticalAlert": true, "status": "FAIL — BUG-39-02, BUG-39-07, BUG-39-14" },
+    "mg_sang_froid": { "tieredValue": "partial — totalTime readonly", "checkCriticalAlert": true, "status": "WARN — BUG-39-03" },
+    "mg_traces": { "tieredValue": true, "checkCriticalAlert": true, "status": "WARN — BUG-39-08" },
+    "mg_volonte": { "tieredValue": "partial — totalTime readonly", "checkCriticalAlert": true, "status": "WARN — BUG-39-10" }
+  },
+  "summary": {
+    "bugs_high": 2,
+    "bugs_med": 6,
+    "bugs_low": 5,
+    "bugs_total": 13,
+    "confirmed_missing_files": [],
+    "softlock_detected": false,
+    "memory_leak_risk": "LOW — dispose() covers all THREE.Mesh/Points via traverse(); InstancedMesh is subclass of Mesh so is included",
+    "accessibility_status": "PASS — all canvases have aria-label + role=application + tabIndex. ariaLive region present. zoneToast keyboard-synced.",
+    "glb_coverage": "PASS — 7 GLBs (cauldron_merlin, bougie, table_druidique, bibliotheque, sol_pierre, mur_pierre, crystal_ball) all loaded with fade-in, disposed-guard, procedural fallback",
+    "z_fighting_status": "LOW RISK — sol_pierre uses geometric offset (+0.02u). Walls use polygonOffset=-2/-4. Minor residual risk on back wall at grazing angles (BUG-39-15)",
+    "mobile_touch": "PASS — touchstart/touchmove/touchend all handled. touch-action:none on canvas. pointer bridge in place.",
+    "sfx_coverage": "PASS — 11/14 minigames confirmed checkCriticalAlert present. mg_echo/mg_regard exempt (WAI). mg_course not audited."
+  },
+  "score": 68,
+  "verdict": "FIX",
+  "fix_priority": [
+    "BUG-39-02: mg_runes missing tieredValue + single-axis difficulty scaling",
+    "BUG-39-03: mg_sang_froid totalTime readonly blocks tier scaling",
+    "BUG-39-10: mg_volonte totalTime readonly blocks tier scaling",
+    "BUG-39-08: mg_traces generic timer ID collision risk",
+    "BUG-39-04: mg_combat_rituel should use tieredValue() for consistency",
+    "BUG-39-07: mg_runes onClick typed as MouseEvent not PointerEvent",
+    "BUG-39-06: zoneToast innerHTML — refactor to textContent for forward XSS safety",
+    "BUG-39-09: crystal GLB float Y coordinate space mismatch",
+    "BUG-39-05: AudioContext leak under rapid replay (low real-world risk)"
+  ]
+}

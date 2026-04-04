@@ -1,0 +1,28 @@
+{
+  "cycle": 7,
+  "timestamp": "2026-03-30T23:50:00Z",
+  "approved_changes": [
+    {
+      "issue": "Faction imbalance — druides 27.6% vs niamh 13.0%",
+      "severity": "HIGH",
+      "recommendation": "Next card batches (collines_dolmens, iles_mystiques): niamh +4 extra cards, druides -3 relative",
+      "applied": false,
+      "applies_to": "narrative-designer briefing for cycle 8"
+    },
+    {
+      "issue": "Lexical field imbalance — esprit 68 uses vs chance 7",
+      "severity": "MEDIUM",
+      "recommendation": "Apply field quotas constraint to card generation",
+      "applied": true,
+      "applies_to": "card_generation_constraints.json"
+    },
+    {
+      "issue": "Difficulty too easy — avg heal 5.5 PV vs drain 1 PV",
+      "severity": "MEDIUM",
+      "recommendation": "Reduce heal guideline to max 7 per option, max 1 heal option per card",
+      "applied": true,
+      "applies_to": "card_generation_constraints.json"
+    }
+  ],
+  "escalated_changes": []
+}

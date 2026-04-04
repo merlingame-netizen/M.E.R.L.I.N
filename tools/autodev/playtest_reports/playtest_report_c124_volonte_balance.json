@@ -1,0 +1,59 @@
+{
+  "cycle": "C124",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "files_audited": [
+    "minigames/mg_volonte.ts",
+    "minigames/mg_herboristerie.ts",
+    "minigames/mg_regard.ts",
+    "minigames/mg_ombres.ts",
+    "minigames/mg_negociation.ts"
+  ],
+  "new_bugs": [
+    {
+      "id": "C124-01",
+      "severity": "HIGH",
+      "file": "minigames/mg_volonte.ts",
+      "line_approx": 265,
+      "description": "Display/score formula divergence (deferred C122-18, same pattern as SF-HUD-01). Live status HUD (line 265-267) computes focus as timeOnTarget / elapsedTime — denominator is time elapsed since game start. Final score (line 227-228) uses timeOnTarget / totalTime — denominator is fixed total game duration. A player who holds the target from the first frame sees 'Focus: 100%' throughout, but their final score accrues as timeOnTarget/totalTime (e.g. 8s on target out of 10s total = 80, not 100). The HUD over-reports progress by a factor of totalTime/elapsedTime early in the run, misleading the player about their actual score trajectory.",
+      "fix": "Replace the live display denominator with totalTime to match the score formula: const focusPct = this.totalTime > 0 ? Math.round((this.timeOnTarget / this.totalTime) * 100) : 100; This aligns HUD with final score at all times. Alternatively, display a distinct metric (e.g. 'current rate: X%') with a clear label if the intent was to show instantaneous focus rate."
+    },
+    {
+      "id": "C124-02",
+      "severity": "HIGH",
+      "file": "minigames/mg_ombres.ts",
+      "line_approx": 241,
+      "description": "Display/score formula divergence (same pattern as C124-01 / SF-HUD-01). Live status HUD (lines 241-244) shows 'Progression: N%' using maxProgress * 100 only, with no collision penalty. Final score (lines 212-213) applies a 0.85 collision multiplier: maxProgress * 100 * (1 - collisionPenalty * 0.85). A player who reaches 85% progress while colliding the entire time sees 'Progression: 85%' live but receives a final score of approximately 85 * (1 - 0.85) = 12.75. The gap can exceed 70 points — the live display is not predictive of the outcome.",
+      "fix": "Include the real-time collision penalty in the HUD: const pctProg = Math.round(this.maxProgress * 100); const collPenalty = Math.min(1, this.collisionTime / this.totalTime); const displayScore = Math.round(pctProg * (1 - collPenalty * 0.85)); this.statusEl.textContent = this.colliding ? `COLLISION ! Score estimé: ${displayScore}%` : `Progression: ${pctProg}% — Score estimé: ${displayScore}%`; This gives the player accurate feedback while preserving the collision indicator."
+    }
+  ],
+  "clean_files": [
+    {
+      "file": "minigames/mg_herboristerie.ts",
+      "notes": "No getElementById calls (all refs cached since C120/HRB-02). ended guard present on render() at line 369. cancelTimers() covers endTimeout + timerInterval + animFrame + 2 event listeners. Score is event-driven (pick counts), no display/score divergence. Clean."
+    },
+    {
+      "file": "minigames/mg_regard.ts",
+      "notes": "No getElementById calls (all refs cached since C120/RGD-02). render() guard uses phase === 'done' (line 317) which is set atomically with ended = true in endGame() — functionally equivalent to an ended guard. cancelTimers() covers recallTimeout + animFrame + 2 event listeners. Score denominator is attemptsTotal (event-driven), no divergence. Clean."
+    },
+    {
+      "file": "minigames/mg_negociation.ts",
+      "notes": "No getElementById calls (all refs cached since C120/NEG-01). ended guard on render() at line 343. cancelTimers() covers timerInterval + animFrame + 2 event listeners. Score is fully event-driven (pickedSequence, comboCount). Note: onPointerDown and onKeyDown directly mutate ScrollingWord.picked and .fadeAlpha in-place (lines 287-288, 108-109), inconsistent with the immutable map() used in render() at line 357. Functionally correct because the render map reads the mutated values via spread. Excluded from new_bugs as below HIGH threshold and not a correctness defect."
+    }
+  ],
+  "summary": {
+    "total_issues": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0,
+    "immediate_action_required": true,
+    "notes": [
+      "C124-01 is the confirmed deferred issue C122-18: mg_volonte.ts HUD uses elapsedTime as denominator while score uses totalTime. Identical structural pattern to SF-HUD-01 fixed in C121.",
+      "C124-02 is a newly discovered instance of the same pattern in mg_ombres.ts: live HUD omits the 0.85 collision penalty that is applied in endGame(). Player score can be 70+ points lower than HUD suggests.",
+      "Zero getElementById calls confirmed across all 5 files — C119/C120/C121 fixes hold.",
+      "All 5 files have ended/phase-done guards in render() — no zombie rAF risk.",
+      "All 5 files have complete cancelTimers() covering all registered event listeners — no memory leaks.",
+      "No WCAG 2.5.5 touch target violations observed: all interactive targets (canvas, timer bar) are at canvas scale with adequate hit areas. Word pills in mg_negociation are wordHeight=28px which meets the 20px minimum."
+    ]
+  }
+}

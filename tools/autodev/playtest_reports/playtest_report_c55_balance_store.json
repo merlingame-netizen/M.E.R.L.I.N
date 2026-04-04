@@ -1,0 +1,276 @@
+{
+  "meta": {
+    "cycle": 55,
+    "timestamp": "2026-04-03T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "previous_score": 7.4,
+    "target_score": 8.5,
+    "files_audited": [
+      "web-demo/src/game/Store.ts",
+      "web-demo/src/game/EffectEngine.ts",
+      "web-demo/src/game/CardSystem.ts",
+      "web-demo/src/audio/SFXManager.ts",
+      "web-demo/src/ui/HUD.ts",
+      "web-demo/src/main.ts (pipeline order)"
+    ]
+  },
+
+  "section_scores": {
+    "Store_ts":        { "score": 7.5, "max": 10 },
+    "EffectEngine_ts": { "score": 8.5, "max": 10 },
+    "CardSystem_ts":   { "score": 6.5, "max": 10 },
+    "SFXManager_ts":   { "score": 6.0, "max": 10 },
+    "HUD_ts":          { "score": 8.0, "max": 10 }
+  },
+  "global_score": 7.3,
+
+  "top_3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "title": "drainLifeScaled uses cardsPlayed BEFORE increment — wrong drain tier applied for first 2 stage transitions",
+      "file": "web-demo/src/main.ts",
+      "lines": "351-352",
+      "detail": "The game loop calls drainLifeScaled() then incrementCardsPlayed() in that order (lines 351-352). drainLifeScaled() reads s.run.cardsPlayed to pick the drain tier. Because the increment happens AFTER the drain, the player is on tier N-1 when they should be on tier N. Concretely: the -2 drain should start at card 15, but it does not apply until the drain call at card 16 (because cardsPlayed is still 14 when drain fires on the 15th iteration). The -3 drain similarly lags one card. This means the player survives one extra card at each stage boundary — minor but measurable imbalance across 30 cards.",
+      "fix": "Swap the call order: call incrementCardsPlayed() first, then drainLifeScaled(). The game design bible (pipeline step 1) says drain fires 'AU DEBUT de chaque carte', so the card count should reflect the card being entered. Alternatively, drain should use (cardsPlayed + 1) as the threshold check. Swapping the two lines in main.ts (lines 351-352) is the minimal change."
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "title": "playSound('ambient_transition') dispatches unknown event detail key — SFXManager never handles it",
+      "file": "web-demo/src/main.ts",
+      "line": 488,
+      "detail": "playSound() at line 804 dispatches CustomEvent 'merlin_sfx' with detail { type: <name> }. SFXManager.initSFXManager() listens on 'merlin_sfx' and reads detail.sound (not detail.type) at line 395. This means EVERY playSound() call is already broken in this regard — but all named sounds ('flip', 'win', etc.) happen to also fail silently because detail.sound is undefined. Additionally, 'ambient_transition' is not registered in the VALID_CODES dispatch table (only 'flip', 'win', 'lose', 'unlock', 'end' exist as SFXName). So this call is a double silent no-op: wrong property key AND unregistered sound name. The audio cue for rail reset (line 488) is never heard.",
+      "fix": "Two independent fixes required. (1) In main.ts playSound(), change detail: { type } to detail: { sound: type } so SFXManager can read detail.sound. (2) Either register 'ambient_transition' as a SFXName with a synthesis function in SFXManager, or replace the playSound('ambient_transition') call with startAmbient('forest') which is the correct API for ambient audio changes."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "title": "addAnam has no floor clamp — anam can go negative if a negative amount is passed",
+      "file": "web-demo/src/game/Store.ts",
+      "line": 240,
+      "detail": "addAnam() at line 240-243 performs s.meta.anam + amount with no Math.max(0, ...) guard. The EffectEngine only calls addAnam with scaleAndCap results which are positive, but applyOghamEffect (sacrifice_trade) calls damageLife and addBiomeCurrency — it does not call addAnam negatively. However, nothing prevents a future effect or LLM-generated card from calling ADD_ANAM with a negative value (the FastRoute parser does parseInt which accepts negative strings). If anam goes negative it persists cross-run. The game design bible states Anam is earned cross-run; a negative Anam value is semantically invalid.",
+      "fix": "In Store.ts addAnam(), apply Math.max(0, s.meta.anam + amount) for the meta.anam field. anamThisRun can optionally also be clamped to 0 since a negative per-run value is meaningless."
+    }
+  ],
+
+  "full_audit": {
+
+    "Store_ts": {
+      "score": 7.5,
+      "findings": [
+        {
+          "check": "drainLifeScaled() scaling -1/-2/-3 at cards 0-14/15-24/25+",
+          "status": "PARTIAL",
+          "detail": "The constants are correctly defined: THRESHOLD_STAGE2=15, THRESHOLD_STAGE3=25, STAGE2=2, STAGE3=3. The drainLifeScaled() function logic is correct in isolation. However, in main.ts the drain fires before incrementCardsPlayed, so the thresholds are applied one card late (see Bug #1). The Store function itself is fine; the bug is in the call site ordering."
+        },
+        {
+          "check": "checkDeath() fires AFTER effects are applied",
+          "status": "PASS",
+          "detail": "main.ts line 356 checks death after drain (correct). main.ts line 453 checks death after applyEffects() at line 440 (correct). The pipeline matches the game design bible: DRAIN -> CARD -> OGHAM -> CHOICE -> MINIGAME -> SCORE -> EFFECTS -> PROTECTION -> VIE=0?"
+        },
+        {
+          "check": "addAnam() clamping",
+          "status": "FAIL",
+          "detail": "No floor clamp on meta.anam or anamThisRun. meta.anam can go negative. See Bug #3."
+        },
+        {
+          "check": "Faction rep clamped to [0, 100]",
+          "status": "PASS",
+          "detail": "addReputation() at line 193 applies Math.max(0, Math.min(100, current + capped)). Cross-faction [0,100] clamp is correct. The per-card delta is also capped to FACTION_CAP_PER_CARD (20) before the global clamp."
+        },
+        {
+          "check": "startRun() resets all run state for second run",
+          "status": "PASS",
+          "detail": "startRun() calls buildDefaultRun() which resets life, cardsPlayed, day, activeOgham, oghamCooldowns, oghamsDiscovered, promises, karma, tension, biomeCurrency, and anamThisRun to defaults. factions are seeded from s.meta.factionRep (cross-run persistence), which is correct per game design. No stale run-state leak detected."
+        }
+      ]
+    },
+
+    "EffectEngine_ts": {
+      "score": 8.5,
+      "findings": [
+        {
+          "check": "All FastRoute effect strings handled",
+          "status": "PASS",
+          "detail": "HEAL_LIFE, ADD_ANAM, ADD_REP (as ADD_REPUTATION), DAMAGE_LIFE, ADD_BIOME_CURRENCY all have explicit switch cases. ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG, ADD_PROMISE, FULFILL_PROMISE, BREAK_PROMISE, UNLOCK_OGHAM, PLAY_SFX, SHOW_DIALOG are listed in VALID_CODES so they parse without rejection, and fall through to the default applied push (no-op application), which is acceptable for non-mechanical effects."
+        },
+        {
+          "check": "Unknown effect string handling",
+          "status": "PASS",
+          "detail": "parseEffect() returns ok:false for any code not in VALID_CODES. applyEffects() then pushes to rejected[] and continues. No throw, no crash. The caller (main.ts) wraps applyEffects in try-catch as an extra layer."
+        },
+        {
+          "check": "Off-by-one or negative clamp issues",
+          "status": "PARTIAL",
+          "detail": "scaleAndCap uses Math.round(rawAmount * Math.abs(multiplier)). This is correct. DAMAGE_LIFE applies Math.abs(parseInt(...)) ensuring positive input. HEAL_LIFE halving at card>=20 uses Math.max(1, Math.floor(raw*0.5)) — minimum 1 heal guaranteed. ADD_REPUTATION with negative multiplier uses -scaled (line 122). However: if multiplier is 0.0 (theoretically possible from getMultiplier at score=0), all numeric effects scale to 0. Math.round(n*0) = 0. DAMAGE_LIFE would deal 0 damage (no harm). HEAL_LIFE would heal 0. This is likely intentional but undocumented."
+        },
+        {
+          "check": "ADD_KARMA / ADD_TENSION applied to store",
+          "status": "INFO",
+          "detail": "ADD_KARMA and ADD_TENSION are in VALID_CODES but have no store action in the switch. They fall to the default branch and are pushed to applied[] without actually modifying store.karma or store.tension. The store has karma and tension fields in RunState but no actions to set them. These effects are parsed but silently no-op. Not a crash, but a functional gap if cards use these effects."
+        }
+      ]
+    },
+
+    "CardSystem_ts": {
+      "score": 6.5,
+      "findings": [
+        {
+          "check": "FastRoute pool size",
+          "status": "INFO",
+          "detail": "Templates are externalized to /data/cards.json (loaded at startup by loadTemplates()). The inline pool was removed (line 87 comment confirms: 186 templates). Actual runtime pool size depends on cards.json content. If the file is absent or fails to load, _templates is set to [] and generateFastRouteCard falls back to EMERGENCY_TEMPLATE — meaning every card in the session will be identical (same 3 options). This is a softlock risk."
+        },
+        {
+          "check": "Risk of same card repeating too often",
+          "status": "FAIL",
+          "detail": "generateFastRouteCard() uses pick() which is pure Math.random() with no deduplication, no LRU cache, no recent-card exclusion. With a pool of 186 templates and 30 cards per run, the birthday paradox gives ~22% chance of seeing any specific card at least twice. More critically, if loadTemplates() fails (HTTP error, missing file), the single EMERGENCY_TEMPLATE is used for all cards — 30 identical cards, which meets the playtester softlock threshold (same card >3 times). There is no shuffle-without-replacement mechanism."
+        },
+        {
+          "check": "generateFastRouteCard(biome) filters by biome",
+          "status": "FAIL",
+          "detail": "generateFastRouteCard() takes a biome parameter but does not use it. It calls pick(pool) from the full template array regardless of biome. The biome value is only used to set card.biome on the returned object (for display). Templates do not have a biome field, so biome-specific narrative filtering does not exist. Every biome draws from the same pool."
+        },
+        {
+          "check": "LLM response parser handles malformed JSON",
+          "status": "NOT_IN_FILE",
+          "detail": "CardSystem.ts does not contain the LLM parser — it is in the LLM adapter (not audited in this cycle). The FastRoute path in CardSystem.ts has no JSON parsing; it reads from pre-parsed _templates array. The catch block in main.ts (line 391) handles any failure and falls back to the inline emergency card. Resilience at the call site is adequate."
+        }
+      ]
+    },
+
+    "SFXManager_ts": {
+      "score": 6.0,
+      "findings": [
+        {
+          "check": "ambient_transition registered as a sound",
+          "status": "FAIL",
+          "detail": "SFXName type is 'flip' | 'win' | 'lose' | 'unlock' | 'end'. 'ambient_transition' is not in this union. The dispatch table in initSFXManager() has exactly those 5 keys. playSound('ambient_transition') in main.ts dispatches a 'merlin_sfx' event, but SFXManager reads detail.sound — which is also wrong because playSound() sends detail.type. Double failure: wrong property key AND unregistered name. No audio plays on rail reset. See Bug #2."
+        },
+        {
+          "check": "detail.sound vs detail.type mismatch",
+          "status": "FAIL",
+          "detail": "All playSound() calls in main.ts will silently fail to produce audio because of the property key mismatch (detail.type vs detail.sound). This means flip, win, lose, unlock, and end sounds are all broken. The SFXManager type-checks detail.sound which is always undefined from the current playSound() implementation."
+        },
+        {
+          "check": "AudioContext lifecycle (suspend/resume/pending)",
+          "status": "PASS",
+          "detail": "T072 pending ambient pattern is correctly implemented. startAmbient() queues pendingAmbientType when context is suspended, and resumeOnInteraction restores it after first user gesture. stopAmbient() correctly nulls ambientSession before fading to prevent double-stop. Bird chirp timer is correctly cancelled."
+        }
+      ]
+    },
+
+    "HUD_ts": {
+      "score": 8.0,
+      "findings": [
+        {
+          "check": "All 5 fields updating correctly (life, anam, cardsPlayed, biome, activeOgham)",
+          "status": "PASS",
+          "detail": "updateHUD() reads store.getState() fresh on each call (not a cached snapshot). Life bar uses lifePercent = run.life / LIFE_MAX * 100. cardsCount uses run.cardsPlayed. biomeName uses BIOMES[run.biome]?.name with fallback. Anam uses meta.anam. activeOgham is handled via updateOghamBadge() reading run.activeOgham. All 5 are covered."
+        },
+        {
+          "check": "Stale DOM reference risk",
+          "status": "PARTIAL",
+          "detail": "lifeFill(), cardsCount(), and biomeName() are defined as arrow functions calling document.getElementById() on each invocation (lines 27-29) — no caching, no stale ref. However, these three use the non-null assertion (!) which will throw if the element is missing from the DOM. If updateHUD() is called before the HUD HTML is injected (e.g., during the title phase), this will crash. The faction and resource elements use conditional checks (if (fillEl)) which are safe. Inconsistent defensive pattern."
+        },
+        {
+          "check": "Faction bars for all 5 factions",
+          "status": "PASS",
+          "detail": "buildFactionPanel() iterates FACTIONS array (all 5). updateHUD() iterates FACTIONS for fills. faction-fill-{faction} and faction-val-{faction} IDs are generated and queried consistently."
+        },
+        {
+          "check": "store.subscribe wiring",
+          "status": "PASS",
+          "detail": "initHUD() calls store.subscribe(updateHUD) which is the Zustand vanilla pattern — updateHUD fires on any state change. No manual polling required. Initial call to updateHUD() after subscribe ensures first paint."
+        }
+      ]
+    }
+  },
+
+  "balance_summary": {
+    "drain_pipeline_off_by_one": "Drain tier applied one card late at each stage boundary (cards 15 and 25). Practical effect: player gets ~2 extra HP across the run. Low impact individually, but systemic.",
+    "all_sfx_silent": "The detail.type vs detail.sound mismatch means NO audio plays from playSound() calls. This is a regression from the intended audio system — flip, win, lose, unlock, end are all silent.",
+    "no_biome_card_filtering": "FastRoute ignores biome parameter. Narrative coherence is broken — forest biome cards may appear in marais or other biomes.",
+    "no_deduplication": "With random pick and no exclusion, repeated cards are possible. Emergency fallback (cards.json load failure) produces 30 identical cards = guaranteed softlock by playtester definition."
+  },
+
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "parameter": "playSound() event key",
+      "file": "web-demo/src/main.ts:805",
+      "current": "detail: { type }",
+      "suggested": "detail: { sound: type }",
+      "confidence": "HIGH"
+    },
+    {
+      "priority": "HIGH",
+      "parameter": "drain/increment call order",
+      "file": "web-demo/src/main.ts:351-352",
+      "current": "drainLifeScaled() then incrementCardsPlayed()",
+      "suggested": "incrementCardsPlayed() then drainLifeScaled()",
+      "confidence": "HIGH"
+    },
+    {
+      "priority": "MEDIUM",
+      "parameter": "addAnam floor clamp",
+      "file": "web-demo/src/game/Store.ts:241-242",
+      "current": "s.meta.anam + amount (unclamped)",
+      "suggested": "Math.max(0, s.meta.anam + amount)",
+      "confidence": "HIGH"
+    },
+    {
+      "priority": "MEDIUM",
+      "parameter": "FastRoute deduplication",
+      "file": "web-demo/src/game/CardSystem.ts:103-118",
+      "current": "pure Math.random() pick from full pool",
+      "suggested": "Shuffle-without-replacement ring buffer (track last N template indices, exclude from pick)",
+      "confidence": "MEDIUM"
+    },
+    {
+      "priority": "MEDIUM",
+      "parameter": "ambient_transition sound registration",
+      "file": "web-demo/src/audio/SFXManager.ts",
+      "current": "not registered",
+      "suggested": "Replace playSound('ambient_transition') call with direct startAmbient('forest') or register a synthesis function for the transition cue",
+      "confidence": "HIGH"
+    },
+    {
+      "priority": "LOW",
+      "parameter": "HUD non-null assertions on DOM elements",
+      "file": "web-demo/src/ui/HUD.ts:27-29",
+      "current": "document.getElementById('life-fill')! (throws if missing)",
+      "suggested": "Guard with optional chaining or ensure initHUD() is called only after HUD HTML is present in DOM",
+      "confidence": "MEDIUM"
+    }
+  ],
+
+  "worker_output": {
+    "agent": "merlin-ai-playtester",
+    "cycle": 55,
+    "status": "PARTIAL",
+    "confidence": "HIGH",
+    "evidence": [
+      "5 files fully read and cross-referenced",
+      "2 HIGH bugs confirmed: SFX key mismatch (all audio silent) + drain/increment ordering",
+      "1 MEDIUM bug: addAnam no floor clamp",
+      "2 design gaps: no biome filtering in FastRoute, no card deduplication",
+      "checkDeath() pipeline order CORRECT",
+      "faction clamp [0,100] CORRECT",
+      "startRun() reset CORRECT",
+      "HUD subscription pattern CORRECT"
+    ],
+    "blockers": [
+      "SFX system entirely silent (detail.type vs detail.sound) — audio regression since C54",
+      "cards.json load failure produces guaranteed softlock (30 identical emergency cards)"
+    ],
+    "next_steps": [
+      "Fix playSound() event key mismatch — 1 line change, unblocks all audio",
+      "Swap incrementCardsPlayed/drainLifeScaled call order — 1 line swap",
+      "Add Math.max(0,...) to addAnam in Store.ts",
+      "Add biome field to cards.json templates and filter in generateFastRouteCard()",
+      "Implement LRU exclusion ring in pick() for FastRoute cards"
+    ],
+    "tokens_used_approx": 4800
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 82,
+  "audited_files": [
+    "web-demo/src/main.ts (lines 438-620)",
+    "web-demo/src/audio/SFXManager.ts (full)",
+    "web-demo/src/game/EffectEngine.ts (full)",
+    "web-demo/src/game/Store.ts (lines 1-180)",
+    "web-demo/src/scenes/MerlinLairScene.ts (lines 730-860)",
+    "web-demo/src/ui/RunSummary.ts (full)"
+  ],
+
+  "issues": [
+    {
+      "id": "C82-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_range": "746-777",
+      "title": "No SFX on Lair zone hover or click",
+      "detail": "onMouseMove (hover) and onPointerAction (click) change visual state (emissive intensity, scale, cursor) but make zero calls to playSound(), dispatch 'merlin_sfx', or any SFXManager function. The SFXManager 'flip' / 'unlock' sounds are available but are never triggered by Lair zone interaction. Players receive no audio feedback when hovering or clicking a zone (cauldron, door, crystal ball, etc.).",
+      "recommendation": "Dispatch a 'merlin_sfx' CustomEvent with sound:'flip' (or a dedicated 'hover' tone) inside onMouseMove when currentHovered changes from null to a zone. Dispatch sound:'unlock' inside onPointerAction when a zone is found. Example: window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } })) at lines 758 and 775 respectively."
+    },
+    {
+      "id": "C82-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_range": "303-313",
+      "title": "candleBaseMat and wickMat template materials never disposed (C81-07 still open)",
+      "detail": "candleBaseMat (line 305) and wickMat (line 313) are created as template MeshStandardMaterials. Each candle body clones candleBaseMat (line 331) and the wick uses wickMat directly (line 336). The cloned materials ARE disposed by scene.traverse() in dispose() (line 834-842) because they live on Mesh objects. However, the two template originals — candleBaseMat and wickMat — are local variables never referenced by any scene object and never explicitly disposed. They are detached from the scene graph, so scene.traverse() will not reach them. This is a minor GPU memory leak per Lair scene instantiation.",
+      "recommendation": "Store candleBaseMat and wickMat in a closure-scoped variable, then call candleBaseMat.dispose() and wickMat.dispose() inside the dispose() function after scene.traverse(). Since these are tiny single-mesh materials the impact is low, but it is the correct pattern to close C81-07."
+    },
+    {
+      "id": "C82-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts",
+      "line_range": "485-521",
+      "title": "Card generation runs while screen is fully opaque — potential black-screen flash if LLM resolves late",
+      "detail": "The sequence is: fadeIn(600) [line 486] → then start LLM generation (lines 493-503) → await fadeOut(300) [line 521] → showCard(). fadeIn() makes the screen go TO black (opaque overlay appears). If the LLM Promise.race times out near the 8000ms boundary and the race resolves just as fadeOut() begins, there is a window where the overlay has been removed from 'visible' but the card is not yet rendered, showing the raw 3D scene briefly. Additionally, if card generation throws synchronously before fadeOut() (the catch block at line 505 runs before fadeOut at 521), the screen stays black for the full catch+emergency-card construction time with no user feedback.",
+      "recommendation": "Move fadeOut(300) to immediately after the card is ready (after the try/catch block resolves, before showCard), and ensure that fadeIn is also moved closer to showCard. In the throw path, the catch block already constructs a valid emergency card, so the flow is safe — but a brief 'Chargement...' text visible during the opaque overlay would improve UX. Severity MEDIUM because the emergency card path is always safe and the flash is cosmetic."
+    },
+    {
+      "id": "C82-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line_range": "190-196",
+      "title": "Six validated effect codes silently do nothing (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG)",
+      "detail": "These codes pass parseEffect() validation (they are in VALID_CODES at lines 9-27) and will be pushed to rejected[] by the default: branch (lines 191-195). The comment at line 192 correctly documents this as intentional. However, any LLM-generated or FastRoute card that emits these effect strings will see them in effectResult.rejected[] but the caller in main.ts (line 549-556) only logs a warning if the entire applyEffects() throws — it does not inspect effectResult.rejected. Silently-rejected effects that were promised to the player (e.g. ADD_KARMA or PROGRESS_MISSION) will confuse balance tuning metrics.",
+      "recommendation": "In main.ts gameLoop, after applyEffects(), log effectResult.rejected to the console at minimum: if (effectResult.rejected.length > 0) console.warn('[MERLIN] Rejected effects:', effectResult.rejected). This enables detection during playtesting. Longer term: implement ADD_KARMA and ADD_TENSION in EffectEngine once Store supports karma/tension actions."
+    },
+    {
+      "id": "C82-05",
+      "severity": "LOW",
+      "file": "web-demo/src/audio/SFXManager.ts",
+      "line_range": "271-285",
+      "title": "scheduleRainDrops reuses birdTimer field for rain timers — misnaming creates confusion",
+      "detail": "AmbientSession has a single birdTimer field (line 182). scheduleRainDrops() (line 271) assigns rain drop timers to session.birdTimer (line 279). The field name 'birdTimer' is semantically wrong for rain mode. While functionally correct (clearTimeout in stopAmbient() at line 418 cancels it regardless of name), this is a readability/maintenance trap. If a future developer adds birds AND rain to a new ambient type and assumes birdTimer is only for birds, they will create a scheduling bug.",
+      "recommendation": "Rename birdTimer to stochasticTimer in AmbientSession interface and all usages. One-line rename, zero functional change."
+    },
+    {
+      "id": "C82-06",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line_range": "526-538",
+      "title": "No SFX fired at minigame start or end — only win/lose at score evaluation",
+      "detail": "minigameOverlay.classList.add('visible') at line 531 has no accompanying SFX. The win/lose sound fires at line 542 after the minigame returns its score, which is correct for result feedback. However there is no 'game start' audio cue when the overlay appears. This is a minor UX gap — the overlay appears silently and the player has no audio signal that the minigame phase has begun.",
+      "recommendation": "Call playSound('flip') at line 531 just before minigameOverlay.classList.add('visible') to signal minigame start. This is a single-line addition and reuses an existing sound."
+    },
+    {
+      "id": "C82-07",
+      "severity": "INFO",
+      "file": "web-demo/src/ui/RunSummary.ts",
+      "line_range": "95-200",
+      "title": "showRunSummary safely handles undefined factionDeltaThisRun via buildZeroFactions()",
+      "detail": "VERIFIED SAFE. factionDeltaThisRun is initialized in buildDefaultRun() at Store.ts line 127 via buildZeroFactions() which iterates all FACTIONS and sets each to 0. startRun() calls buildDefaultRun() via spread (Store.ts line 163). RunSummary.ts consumes state.run.factionDeltaThisRun indirectly through buildFactionRow(). Because factionDeltaThisRun is always a complete Record<FactionId, number> (never undefined), RunSummary will never throw on missing keys.",
+      "detail_note": "No action required — this is a positive confirmation."
+    }
+  ],
+
+  "summary": {
+    "critical": 0,
+    "high": 1,
+    "medium": 3,
+    "low": 2,
+    "info": 1,
+    "total_issues": 6
+  },
+
+  "positive_findings": [
+    {
+      "area": "minigameOverlay cleanup",
+      "finding": "minigameOverlay.classList.remove('visible') is in a finally{} block (main.ts line 537). It is GUARANTEED to execute even if createMinigame() or minigame.play() throws. This is the correct pattern and closes the overlay in all paths including exceptions."
+    },
+    {
+      "area": "startAmbient/stopAmbient idempotency",
+      "finding": "startAmbient() calls stopAmbient() unconditionally as its first line (SFXManager.ts line 316). stopAmbient() guards on ambientSession === null (line 411) and returns early. Double-calling either function is safe. The T072 deferred-resume path (pendingAmbientType) is also correctly guarded: it only fires if ambientSession === null, preventing a race where a user interaction triggers a new ambient after one was manually stopped."
+    },
+    {
+      "area": "factionDeltaThisRun initialization",
+      "finding": "buildDefaultRun() initializes factionDeltaThisRun via buildZeroFactions() (Store.ts line 127). RunSummary never risks a missing-key crash on this field."
+    },
+    {
+      "area": "Effect engine unknown codes",
+      "finding": "parseEffect() correctly rejects unknown effect codes (not in VALID_CODES) and pushes to rejected[]. The default: branch in applyEffects() switch also rejects future-but-validated codes. There is no silent success path — unknown effects always surface in the rejected array."
+    },
+    {
+      "area": "Lair dispose() completeness",
+      "finding": "dispose() (MerlinLairScene.ts line 827) removes all 4 event listeners (mousemove, click, touchmove, touchstart), removes the resize listener, traverses all scene Mesh and Points objects to dispose geometry and materials, calls renderer.dispose(), and removes the canvas from the DOM. The C81-03 lairDisposed flag is set first to abort in-flight GLB callbacks. This is comprehensive."
+    },
+    {
+      "area": "Emergency card fallback",
+      "finding": "The gameLoop try/catch for card generation (main.ts lines 505-520) constructs a valid 3-option card with safe effect strings ('HEAL_LIFE:3', 'ADD_ANAM:2', 'HEAL_LIFE:2'). These are all recognized by VALID_CODES and handled in applyEffects(). The run never softlocks on LLM failure."
+    }
+  ],
+
+  "score": 7.5,
+  "verdict": "PASS_WITH_ISSUES",
+  "verdict_detail": "No CRITICAL issues. No softlocks detected. One HIGH issue: Lair zone interactions produce zero audio feedback (hover and click are silent). Three MEDIUM issues: template material memory leak (C81-07 still open), cosmetic card-generation timing gap, and untracked rejected effects. The codebase is stable for gameplay but the Lair audio gap is notable UX regression. Recommend patching C82-01 and C82-02 in C83 before next QA cycle."
+}

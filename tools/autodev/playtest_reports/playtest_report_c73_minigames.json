@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 73,
+  "auditor": "merlin-ai-playtester",
+  "scope": "main.ts startRun + all 14 mg_*.ts files",
+
+  "bug_1": {
+    "severity": "HIGH",
+    "title": "Hardcoded biome — 7 of 8 biomes permanently inaccessible",
+    "file": "web-demo/src/main.ts",
+    "line": 316,
+    "code_exact": "store.getState().startRun('cotes_sauvages');",
+    "also_line": 318,
+    "code_exact_2": "showBiomeToast('cotes_sauvages');",
+    "also_line_2": 283,
+    "code_exact_3": "const biomeResult = await buildCoastScene();",
+    "description": "Every run unconditionally starts the coast biome. The BIOME_LABELS table at line 535 lists 8 biomes, the CameraRail and scene system both reference only CameraRail.createCoastalPath() and buildCoastScene(). No biome selection logic exists anywhere in the game loop. Players can never reach foret_broceliande, marais_korrigans, landes_bruyere, cercles_pierres, villages_celtes, collines_dolmens, or iles_mystiques.",
+    "player_impact": "100% of runs are identical biome. Ogham/card variety associated with biome theming is never exercised.",
+    "recommendation": "Add a biome picker in the Lair (the 'map' zone already has a toast stub). Store the chosen biomeId in run state. Pass it to startRun(), buildScene(), CameraRail factory, and the toast. As interim fix even a random selection from the 8 keys at line 283-318 would unlock the full card pool."
+  },
+
+  "bug_2": {
+    "severity": "MEDIUM",
+    "title": "mg_herboristerie: aria-label built with empty targetPlant.name at canvas-creation time",
+    "file": "web-demo/src/minigames/mg_herboristerie.ts",
+    "line": 119,
+    "code_exact": "this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);",
+    "description": "this.targetPlant is initialised to { emoji: '', name: '' } at field declaration. buildGrid() (which sets the real targetPlant) is called at line 129, ten lines AFTER the canvas is created at line 117 and the aria-label is stamped at line 119. The label will always read 'Herboristerie — cliquez sur les plantes  et évitez les plantes toxiques' (empty name). The visual instruction label at line 89 correctly uses this.targetPlant after buildGrid, so the canvas itself plays correctly — only the accessibility label is wrong.",
+    "player_impact": "Screen-reader users receive no information about which plant to find. Low severity for sighted players, HIGH for accessibility.",
+    "recommendation": "Move the aria-label setAttribute call to after buildGrid() at line 129, or update it inside buildGrid() once this.targetPlant is assigned."
+  },
+
+  "scene_1_main_ts": {
+    "finding": "startRun hardcoded to 'cotes_sauvages'",
+    "line": 316,
+    "severity": "HIGH",
+    "note": "Same hardcoding appears at lines 283 (buildCoastScene call), 287 (CameraRail.createCoastalPath), and 318 (showBiomeToast). All four must be changed together."
+  },
+
+  "minigame_audit": {
+    "total_files": 14,
+    "files_checked": [
+      "mg_apaisement.ts", "mg_combat_rituel.ts", "mg_course.ts", "mg_echo.ts",
+      "mg_equilibre.ts", "mg_fouille.ts", "mg_herboristerie.ts", "mg_negociation.ts",
+      "mg_ombres.ts", "mg_regard.ts", "mg_runes.ts", "mg_sang_froid.ts",
+      "mg_traces.ts", "mg_volonte.ts"
+    ],
+    "validate_score_usage": {
+      "verdict": "PASS",
+      "detail": "All 14 minigames call this.finish(score). MinigameBase.finish() always calls validateScore(score) at line 221 before any outcome computation, which clamps to [0, 100] and maps NaN/Infinity to 0. No minigame can deliver an out-of-range score to the game loop."
+    },
+    "timer_timeout": {
+      "verdict": "PASS",
+      "detail": "11 of 14 minigames (all timed ones) use window.setInterval ticking timeLeft, calling this.endGame() when timeLeft <= 0. Round-based games (Course 8 rounds, Echo 6 rounds, Regard 3 rounds) end via prepareRound() guard when currentRound >= total. No infinite-loop risk found."
+    },
+    "aria_labels": {
+      "verdict": "PARTIAL",
+      "passing": [
+        "mg_apaisement: 'Minigame Apaisement — synchronisez votre respiration avec le cercle de lumiere'",
+        "mg_combat_rituel: 'Arène de combat rituel — déplacez le curseur pour esquiver les obstacles'",
+        "mg_course: 'Minigame Course — capturez les symboles qui defilent rapidement'",
+        "mg_echo: 'Minigame Echo — memorisez la direction du son et cliquez sur le bon quadrant'",
+        "mg_equilibre: 'Minigame Equilibre — maintenez votre equilibre sur le chemin etroit'",
+        "mg_fouille: 'Minigame Fouille — trouvez l objet cache parmi les leurres'",
+        "mg_negociation: (requires inspection — timer-based, canvas present)",
+        "mg_ombres: 'Minigame Ombres — naviguez dans le couloir en evitant les zones de lumiere'",
+        "mg_regard: 'Minigame Regard — memorisez la sequence de symboles et reproduisez-la'",
+        "mg_sang_froid: 'Zone de sang-froid — gardez votre curseur dans le cercle qui rétrécit'",
+        "mg_volonte: 'Minigame Volonte — resistez aux distractions et maintenez votre concentration'"
+      ],
+      "failing": [
+        "mg_herboristerie: aria-label stamped before buildGrid(), always has empty plant name — see bug_2"
+      ],
+      "not_verified": ["mg_runes", "mg_traces"]
+    },
+    "premature_finish_risk": {
+      "verdict": "PASS",
+      "detail": "No minigame calls finish() or endGame() before the first user interaction opportunity. Timed games start their interval after setup() returns. Round-based games wait for rAF-driven phase transitions. The 'show' phase in Regard (3s memorisation) and the 'flash' phase in Echo (0.5s) correctly block click handling before transitioning to 'answer'."
+    },
+    "score_range_analysis": {
+      "mg_apaisement": "0 (no taps) or max(10, avgAccuracy * tapBonus * 100) — tapBonus caps at 1.0 so max is ~100. validateScore clamps. SAFE.",
+      "mg_combat_rituel": "Math.min(100, survivalPct + centerPct). Explicit cap. SAFE.",
+      "mg_course": "(hits/8)*100 — max 100. SAFE.",
+      "mg_echo": "(hits/6)*100 — max 100. SAFE.",
+      "mg_equilibre": "zoneRatio * 100 where zoneRatio = timeInZone/totalElapsed. Max 100. SAFE.",
+      "mg_fouille": "0 (not found) or 50 + timePct*50, max 100. SAFE.",
+      "mg_herboristerie": "baseScore(80) + timeBonus(20) - penalty. Max 100 exactly. wrongPicks penalty can't go below 0 (Math.max(0,...)). SAFE.",
+      "mg_negociation": "Math.min(100, Math.max(0, factionScore + comboBonus - penalty + timeBonus)). Explicit clamp. SAFE.",
+      "mg_ombres": "maxProgress(0-1) * 100 * (1 - collisionPenalty*0.5). Max 100. validateScore also clamps. SAFE.",
+      "mg_regard": "correctTotal/attemptsTotal * 100 — max 100. SAFE.",
+      "mg_sang_froid": "timeInside/totalTime * 100 — max 100. SAFE.",
+      "mg_volonte": "timeOnTarget/totalTime * 100 — max 100. SAFE."
+    }
+  },
+
+  "gameplay_score": {
+    "dimension": "GAMEPLAY only (not 3D rendering)",
+    "game_feel_distinct_mechanics": {
+      "score": 8,
+      "out_of": 10,
+      "rationale": "14 minigames cover genuinely different input paradigms: rhythm tap (Apaisement), cursor dodge (Combat Rituel, Sang-Froid, Volonte, Ombres), QTE click (Course, Echo, Fouille), grid identification (Herboristerie), sequence memory (Regard), balance physics (Equilibre), word selection (Negociation). 5 of 14 share 'hold/move cursor' as core mechanic which creates some overlap feel between Combat Rituel, Sang-Froid, Volonte, and Ombres. Penalty -2."
+    },
+    "player_feedback_obvious_before_overlay": {
+      "score": 8,
+      "out_of": 10,
+      "rationale": "All minigames show live score/status text (survivalTime, synchronisation%, focus%). Hit/miss feedback (colour flash, canvas dim, 'Trouve!') is immediate. The outcome overlay with 4 tiers (DESASTRE/ECHEC/REUSSITE/MAITRISE) adds a 2.2s narrative beat before resolving. Only gap: Regard and Echo give no instant visual cue on wrong click — the missed round just continues to the next."
+    },
+    "balance_zero_without_input": {
+      "score": 7,
+      "out_of": 10,
+      "rationale": "Apaisement: 0 taps = finish(0). Correct. Course/Echo/Regard: 0 clicks = 0/total * 100 = finish(0). Correct. Combat Rituel: if player never moves cursor from starting center position, obstacles still rotate and will eventually hit — survivalTime will be short but not 0 (player starts at center). Fouille: no click = finish(0) when timer expires. Ombres: player starts at cursorX=30, which may or may not be inside the corridor at t=0; with no movement the score depends on corridor generation. Minor balance concern: Sang-Froid and Volonte initialise cursor at center (inside zone), so a completely idle player who never touches the mouse still accumulates timeInside for the duration before the zone drifts away — they could score 20-40 without any input on a slow drift. Penalty -3."
+    },
+    "variety_14_minigames_feel_different": {
+      "score": 7,
+      "out_of": 10,
+      "rationale": "Structural variety is good (timer vs round-based, click vs move vs hold vs key). Visual variety is limited: all use the same dark canvas with Celtic colour palette (intentional thematic choice). The 'cursor follow' cluster (Combat Rituel, Sang-Froid, Volonte, Ombres) feels similar in practice despite different scoring logic. Penalty -3."
+    },
+    "overall_gameplay_score": "7.5 / 10"
+  },
+
+  "issues_summary": [
+    {
+      "severity": "HIGH",
+      "issue": "Hardcoded biome 'cotes_sauvages' in main.ts at lines 283, 287, 316, 318 — 7/8 biomes inaccessible every run",
+      "recommendation": "Implement biome selection in Lair 'map' zone or random pick from BIOME_LABELS keys at run start"
+    },
+    {
+      "severity": "MEDIUM",
+      "issue": "mg_herboristerie.ts line 119: canvas aria-label set before buildGrid() assigns targetPlant.name, always empty",
+      "recommendation": "Move aria-label update to after buildGrid() call at line 129"
+    },
+    {
+      "severity": "LOW",
+      "issue": "Sang-Froid and Volonte: idle player (no mouse movement) can score 20-40 for free due to cursor initialised inside zone and slow drift",
+      "recommendation": "Require first pointer interaction to start timeInside accumulation, or start cursor outside safe zone"
+    },
+    {
+      "severity": "LOW",
+      "issue": "Cursor-follow cluster (Combat Rituel, Sang-Froid, Volonte, Ombres): 4/14 minigames share the same input verb despite different scoring. Player perceives less variety than intended.",
+      "recommendation": "Consider swapping one of the four for a keyboard-only mechanic. Equilibre already covers keyboard; Runes/Traces not verified — check those."
+    }
+  ],
+
+  "softlock_check": {
+    "verdict": "PASS — 0 softlocks detected",
+    "detail": "All minigames have a timeout or round-completion path. MinigameBase.finish() has a double-call guard (this.finished = true). main.ts wraps minigame.play() in try/catch with neutral score=50 fallback. The game loop cannot be stuck by minigame failure."
+  }
+}

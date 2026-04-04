@@ -1,0 +1,81 @@
+{
+  "cycle": 50,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "verdict": "FIX",
+  "global_score": 7.1,
+  "auditor": "merlin-ai-playtester",
+  "note": "Deeper static audit (post-C50) focused on 5 specific files per brief. Supplements playtest_report_minigames_c50.json (C49 fix verification pass, score 8.9).",
+  "files_audited": [
+    "web-demo/src/minigames/mg_runes.ts",
+    "web-demo/src/minigames/mg_equilibre.ts",
+    "web-demo/src/minigames/mg_negociation.ts",
+    "web-demo/src/scenes/LairGLBAssets.ts",
+    "web-demo/src/scenes/MerlinLairScene.ts"
+  ],
+
+  "top3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 38,
+      "description": "gridRows, gridCols and totalPairs are all declared as readonly class fields (4, 4, 8) and are NEVER passed through tieredValue(). At tier 3-4, the grid is the same 4x4 size as tier 0. The C103 comment on lines 36-37 documents only totalTime and flipBackDelay as tiered — grid/pair-count scaling is entirely absent. The prior C50 report did not check this specific axis. The consequence is that tier-3 players face the exact same memory layout as tier-0, making the memory challenge flat across difficulty.",
+      "fix": "Add a mutable pairCount field driven by tieredValue([6, 7, 8, 8]) and dynamically size the grid in generateTiles(). At 6 pairs: 4x3 grid (needs 12 tiles). At 8 pairs: 4x4 (current). Note: RUNE_SET has exactly 8 runes — a pairCount > 8 would overflow it. Stay at or below 8 pairs, then use timeLimit and flipBackDelay compression for the hardest tier."
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "line": 50,
+      "description": "No DOM status element exists for real-time player balance feedback. The canvas renders 'Equilibre: N%' via ctx.fillText() on line 321 (inside the render loop), but this text is pixel-painted and invisible to screen-readers and the DOM event system. The C50 batch added aria-live='polite' to 14 minigames per commit notes — mg_equilibre is in that count for its timer progressbar, but the actual game-state feedback (the balance percentage) has no aria-live element. This also means no CSS-animatable DOM score element is available for a score-pulse feature.",
+      "fix": "Add a <div id='mg-eq-status' aria-live='polite' aria-atomic='true'> beneath the canvas in setup(). Update it inside the setInterval alongside the timer fill (or inside render() via a throttled counter) to announce the current balance percentage and zone transitions (enter/leave safe zone events already dispatch SFX but have no DOM reflection)."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": [788, 839, 931, 976, 1028],
+      "description": "Five backslash-comment artifacts throughout the file: lines use '\\ C111:' / '\\ C97:' / '\\ C98:' instead of '// C111:' etc. These are parse-time hazards — a backslash followed by text is not a valid TypeScript comment; TypeScript's permissive parser has tolerated these in non-strict builds, but they will fail under strict ESLint rules or aggressive minifiers. Confirmed at offsets 788, 839, 931, 976, and 1028 via grep.",
+      "fix": "Global replace in MerlinLairScene.ts: all occurrences of '^(\\s*)\\\\ C' -> '$1// C'. Five substitutions required."
+    }
+  ],
+
+  "verifications": {
+    "mg_runes_tieredValue": "PARTIAL — totalTime scaled via tieredValue([30,25,20,15]) at line 54. flipBackDelay scaled via tieredValue([600,550,500,450]) at line 55. gridRows (line 39), gridCols (line 38), and totalPairs (line 45) are readonly hardcoded constants 4, 4, 8 — NOT tier-scaled. Grid dimensions are fixed across all difficulty tiers.",
+    "mg_equilibre_criticalAlert": "PRESENT — checkCriticalAlert(this.timeLeft) is called at line 118 inside the 100ms setInterval. Confirmed. However: no DOM status element exists for real-time balance feedback. The Equilibre percentage is rendered only via ctx.fillText on the canvas (line 321), not in any aria-live DOM node.",
+    "mg_negociation_tieredValue": "COMPLETE — totalTime at line 84 ([12,10,8,7]s), scrollSpeed at line 85 ([40,50,60,70]px/s), spawnInterval at line 86 ([0.6,0.5,0.4,0.35]s). All three difficulty parameters correctly tier-scaled. checkCriticalAlert at line 162. aria-live='polite' on seqLabel at line 134. No gaps found.",
+    "candleGroup_fix": "VERIFIED CORRECT — LairGLBAssets.ts lines 131-134: 'proceduralGroups.candleGroup.children.forEach((child) => { if (!(child instanceof THREE.Light)) child.visible = false; })'. The sharedLight PointLight is correctly preserved inside candleGroup. The C48 fix is complete.",
+    "crystalHovered_branch": "VERIFIED CORRECT — MerlinLairScene.ts lines 1025-1029: 'const crystalHovered = interactives.find((i) => i.zone === \"crystal\")?.hovered ?? false; const crystalEmissive = (crystalHovered ? 0.9 : 0.5) + Math.sin(elapsedTime * 1.4) * 0.15;'. Both procedural mat and crystalGLBMat are driven by this value each frame. C49 values (unhovered=0.5 base, hovered=0.9 base) confirmed present.",
+    "xss_clean": "CLEAN — No innerHTML with data interpolation found in any of the 5 files. mg_negociation seqLabel uses .textContent (line 256). All other DOM mutations are .textContent or style property assignments. No raw string interpolation into innerHTML.",
+    "orphaned_timers": "CLEAN — mg_runes: timerInterval field at line 34 cleared in endGame() line 208 and cleanup() line 308. revealTimeout field at line 47 cleared in endGame() line 209 and cleanup() line 309. mg_equilibre: timerInterval cleared in endGame() and cleanup(). mg_negociation: timerInterval cleared in endGame() and cleanup(). No orphaned handles detected."
+  },
+
+  "additional_findings": [
+    {
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "description": "render() drives itself via requestAnimationFrame (line 290) but setup() does not explicitly call render() to start the loop. Startup depends on MinigameBase.start() calling render(). If MinigameBase.start() does not invoke render(), the grid will render blank until the first pointerdown event. This was flagged in prior reports as INFO but not yet confirmed resolved.",
+      "fix": "Verify MinigameBase.start() calls this.render(). If not, add an explicit this.render() call at the end of setup() in mg_runes.ts."
+    },
+    {
+      "severity": "INFO",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "description": "The backslash artifacts at lines 788, 839, 931, 976, 1028 suggest copy-paste from a markdown source that converted '//' to '\\'. Worth checking if other scene files (LairDensity.ts, LairWindow.ts) share the same corruption pattern."
+    }
+  ],
+
+  "balance_recommendations": [
+    {
+      "parameter": "mg_runes.pairCount / grid dimensions",
+      "current": "4x4 fixed (8 pairs, all tiers)",
+      "suggested": "tieredValue([6,7,8,8]) for pairCount with corresponding grid size (3x4 for 6 pairs, 4x4 for 7-8). RUNE_SET has exactly 8 runes so pairCount must stay at or below 8.",
+      "confidence": "MEDIUM"
+    }
+  ],
+
+  "blockers": 0,
+  "high_issues": 2,
+  "medium_issues": 1,
+  "low_issues": 1,
+  "info_issues": 1
+}

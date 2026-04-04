@@ -25,7 +25,7 @@
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("screenshot", "click_option", "set_property", "get_tree_snapshot", "get_state", "mark_card_gen_start", "click_button", "change_scene", "list_buttons")]
+    [ValidateSet("screenshot", "click_option", "set_property", "get_tree_snapshot", "get_state", "mark_card_gen_start", "click_button", "change_scene", "list_buttons", "get_card_data", "burst_screenshot", "simulate_click", "simulate_key")]
     [string]$Action,
     [int]$Option = 0,
     [string]$NodePath = "",

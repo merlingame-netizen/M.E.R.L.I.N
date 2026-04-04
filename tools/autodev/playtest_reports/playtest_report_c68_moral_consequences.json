@@ -1,0 +1,130 @@
+{
+  "cycle": 68,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "commit": "f427220",
+  "focus": "EffectEngine.ts — moral consequences (colon-safe label, FULFILL_PROMISE reward, BREAK_PROMISE toll)",
+  "audit_method": "static code review — headless runner not applicable (TS web-demo, not GDScript)",
+
+  "change_verification": {
+    "change_1_colon_safe_label": {
+      "verified": true,
+      "location": "EffectEngine.ts:146",
+      "code": "const label = args.slice(2).join(':') || undefined;",
+      "assessment": "CORRECT. Labels like 'Alliance:Merlin' were previously truncated because args[2] only captured the third colon-segment. The join(':') reconstructs any colon-containing suffix. Edge: an empty label ('') now becomes undefined due to ||, which is the intended sentinel. No regression on simple labels (no colon)."
+    },
+    "change_2_fulfill_promise_anam": {
+      "verified": true,
+      "location": "EffectEngine.ts:152-160",
+      "code": "const isActive = store.getState().run.promises.some((p) => p.id === fulfillId && p.status === 'active'); store.getState().fulfillPromise(fulfillId); if (isActive) { store.getState().addAnam(scaleAndCap('ADD_ANAM', 5, multiplier)); }",
+      "assessment": "CORRECT. Active-check is performed before fulfillPromise() call, so status is read while still 'active'. Reward gated correctly — fulfilling an already-expired or already-fulfilled promise yields no anam. scaleAndCap('ADD_ANAM', 5, multiplier) respects the max:20 cap and multiplier.",
+      "edge_case": "If fulfillPromise() inside the store mutates the promise to 'fulfilled' synchronously (expected), the isActive pre-check is the right approach. No re-read race."
+    },
+    "change_3_break_promise_life": {
+      "verified": true,
+      "location": "EffectEngine.ts:164-176",
+      "code": "const wasActive = ...; store.getState().breakPromise(breakId); if (wasActive) { store.getState().damageLife(5); }",
+      "assessment": "CORRECT. Flat unscaled damage (5) is intentional — a moral toll that bypasses multiplier to signal gravity. Pre-check pattern identical to FULFILL. Naming consistency: isActive (FULFILL) vs wasActive (BREAK) — minor inconsistency, purely cosmetic."
+    }
+  },
+
+  "balance_analysis": {
+    "promise_reward_fulfill": {
+      "value": "+5 anam (scaled by multiplier, capped at 20)",
+      "context": "Anam max effect cap is 20/effect; +5 is 25% of max. Cross-run anam accumulates over ~10 runs/node. Moral reward for a single promise is modest and appropriate.",
+      "verdict": "BALANCED — reward feels meaningful without being exploitable. A full-multiplier run (x2) yields +10, still under cap."
+    },
+    "promise_toll_break": {
+      "value": "-5 life (flat, unscaled)",
+      "context": "Life starts at 100. Stage 1 drain is -1/card, stage 2 -2/card, stage 3 -3/card. A -5 flat toll is equivalent to ~2-5 cards of drain depending on stage. Non-trivial but not catastrophic. Intentionally unscaled to prevent negative-multiplier runs from making breaking promises free.",
+      "verdict": "BALANCED — 5% life toll is noticeable without being death-dealing. Consistent with the game's '-1 to -3/card' range.",
+      "potential_concern": "If a player has Ogham 'Muin' (invert_effects) active, BREAK_PROMISE toll goes through damageLife() directly, bypassing processOghamModifiers which only transforms effect strings. The toll is already applied imperatively (not via effect string), so invert does NOT convert it to a heal. This is CORRECT design — karmic consequences should not be invertable by a trick Ogham."
+    },
+    "symmetry_check": {
+      "fulfill_vs_break": "FULFILL grants +5 anam (cross-run currency). BREAK costs -5 life (per-run resource). These are different resource pools, creating an interesting asymmetry: breaking is immediately punishing (life loss in current run), fulfilling yields long-term benefit (anam persists). This asymmetry reinforces short-term temptation vs long-term integrity as a design theme. INTENTIONAL and GOOD."
+    }
+  },
+
+  "criteria_scores": {
+    "1_code_correctness": {
+      "score": 9.5,
+      "notes": "All 3 changes verified correct. Pre-check pattern is sound. Minor cosmetic inconsistency (isActive vs wasActive naming). No bugs found."
+    },
+    "2_promise_mechanical_balance": {
+      "score": 9.0,
+      "notes": "+5 anam / -5 life is well-calibrated against the game's scales. Asymmetry (cross-run vs per-run) is a feature, not a flaw."
+    },
+    "3_edge_case_coverage": {
+      "score": 8.5,
+      "notes": "Pre-check before store mutation is correct. Colon label join handles multi-colon labels. Edge: double-FULFILL on same promise correctly pays no reward second time (status no longer 'active'). Edge: BREAK on already-broken promise similarly pays no toll. Both correct by the pre-check gate."
+    },
+    "4_ogham_interaction": {
+      "score": 9.0,
+      "notes": "Promise toll bypasses Ogham modifier strings by design (imperative damageLife). Anam reward uses scaleAndCap correctly with multiplier. No unintended interactions found."
+    },
+    "5_minigame_coverage": {
+      "score": 7.5,
+      "notes": "14 minigames registered in MinigameRegistry.ts: traces, runes, equilibre, herboristerie, negociation, combat_rituel, apaisement, sang_froid, course, fouille, ombres, volonte, regard, echo. Registry is complete with no dead imports. Spot-checked negociation (faction keywords, scrolling canvas, 12s timer, combo scoring) and combat_rituel (circular dodge, 10s timer, survival+center scoring) — both structurally sound with proper MinigameBase extension, local mutable state isolated from global store, and canvas cleanup pattern. This criterion flagged MEDIUM in C67 and remains unchanged by f427220. Coverage gap: no evidence of automated score-range regression tests across all 14 minigames."
+    },
+    "6_type_safety": {
+      "score": 9.0,
+      "notes": "ParsedEffect and EffectResult use readonly fields. args typed as readonly string[]. No any usage in changed code. args.slice(2).join(':') is type-safe string operation."
+    },
+    "7_immutability": {
+      "score": 9.5,
+      "notes": "Store mutations are encapsulated behind store.getState().method() calls. EffectEngine itself constructs new applied/rejected arrays and returns readonly EffectResult. No direct state mutation in engine layer."
+    },
+    "8_no_console_log": {
+      "score": 9.0,
+      "notes": "Only console.warn for no-op effects (intentional diagnostic). No console.log in the changed sections."
+    },
+    "9_run_summary_integration": {
+      "score": 8.5,
+      "notes": "C67 established RunSummary renders named promises with status icons. f427220 does not touch RunSummary. The label fix (change 1) ensures labels like 'Alliance:Merlin' now arrive intact at the store, which means RunSummary will display them correctly. Indirect improvement."
+    },
+    "10_architectural_completeness": {
+      "score": 9.5,
+      "notes": "Promise lifecycle is now fully closed: ADD_PROMISE (store), expiry via incrementCardsPlayed, FULFILL (reward), BREAK (toll), RunSummary (display). No missing handler. The promise system is architecturally complete as stated in the C67 context."
+    }
+  },
+
+  "composite_score": 8.9,
+  "composite_calculation": "(9.5+9.0+8.5+9.0+7.5+9.0+9.5+9.0+8.5+9.5) / 10 = 89.0 / 10",
+
+  "verdict": "PROCEED",
+  "verdict_rationale": "All 3 commit changes verified correct and well-balanced. Promise system is architecturally complete. Minigame coverage (7.5) remains the structural anchor preventing a score above 9.0 — no new regressions introduced. Score holds at 8.9, matching C67.",
+
+  "top3_c69": [
+    {
+      "rank": 1,
+      "title": "Minigame score-range regression tests",
+      "severity": "MEDIUM",
+      "description": "14 minigames have no automated assertion that their score output stays within the expected 0-100 range. A misconfigured timer or scoring formula could silently yield scores of 0 (all cards appear easy) or >100 (cap bypass). Add a MinigameBase.validateScore() contract or a lightweight headless test runner that instantiates each minigame with a mock container and asserts score bounds.",
+      "effort": "MEDIUM — 14 stubs + 1 base contract"
+    },
+    {
+      "rank": 2,
+      "title": "FULFILL_PROMISE with negative multiplier edge case",
+      "severity": "LOW",
+      "description": "scaleAndCap uses Math.abs(multiplier), so a negative multiplier (debuff context) still yields positive anam reward for FULFILL_PROMISE. This is correct for the reward case but should be explicitly documented or tested. Scenario: player is under a debuff Ogham that inverts multiplier — they should still get +anam for fulfilling a promise (moral reward transcends game modifiers).",
+      "effort": "LOW — 1 inline comment + 1 unit test"
+    },
+    {
+      "rank": 3,
+      "title": "ADD_PROMISE VALID_CODES minimum arg count",
+      "severity": "LOW",
+      "description": "ADD_PROMISE is declared as requiring 2 args (id + deadline). The optional label is in args[2+]. However VALID_CODES[ADD_PROMISE] = 2 means a bare 'ADD_PROMISE:oath1:5' (no label) passes validation correctly. Risk: if a card author writes 'ADD_PROMISE:oath1' (missing deadline), parseEffect rejects it with a clear error. This is correct. Recommend adding a unit test to confirm the rejection path for malformed ADD_PROMISE strings, as the label ambiguity in colon splitting could mask issues in future multi-colon IDs.",
+      "effort": "LOW — 2-3 unit tests"
+    }
+  ],
+
+  "issues": [],
+
+  "summary": {
+    "changes_verified": 3,
+    "bugs_found": 0,
+    "balance_verdict": "BALANCED",
+    "minigame_count_registered": 14,
+    "minigame_coverage_gap": "no automated score-range tests",
+    "score_trend": "C63=8.5, C64=8.3, C65=7.9, C66=8.5, C67=8.9, C68=8.9 (stable)"
+  }
+}

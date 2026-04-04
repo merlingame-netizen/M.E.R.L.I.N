@@ -1,0 +1,97 @@
+{
+  "cycle": "C83",
+  "commit": "9b3a251",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+
+  "lairWindow_leaf_sin": {
+    "count": 3,
+    "gated": false,
+    "sin_budget_lowfps": 4,
+    "note": "MerlinLairScene.ts line 1166: lairWindow.update(elapsedTime) has NO !lowFpsMode guard. candles (1157), dust (1160) and cauldron (1163) are all gated — lairWindow is the only skipped gate. LairWindow.update() fires 3 Math.sin calls (one per canopy in treeObjects forEach, spring/summer active by default) + 1 Math.sin for glass shimmer (line 198, always active) = 4 total sin calls per frame in low-fps mode. Fix: wrap line 1166 with `if (!lowFpsMode)` — leaf sway and glass shimmer are purely cosmetic.",
+    "severity": "MEDIUM",
+    "fix": "if (!lowFpsMode) lairWindow.update(elapsedTime);"
+  },
+
+  "stone_wall_elongation": {
+    "current_scale_y": 5.33,
+    "scale_formula": "ROW_H = 16 / 3 ≈ 5.33",
+    "tiling_rows": 3,
+    "stone_aspect_ratio": "1.07:1",
+    "fix_feasible_ts": true,
+    "status": "ALREADY_FIXED",
+    "note": "LairGLBAssets.ts lines 263-310 already use a 3-row instanced mesh approach: ROW_H=16/3=5.33, 3 rows × scale.y=5.33 covering the full 16u wall height. If mur_pierre.glb has 5 stone rows per normalized model unit, effective aspect at scale.y=5.33 is (5.33/5) tall vs (4/4) wide = 1.07:1 — nearly square, not elongated. The scale.y=16 described in RESIDUAL-L-SCALE-01 is no longer present. The 3-row tiling fix was already applied in an earlier cycle. No action required.",
+    "severity": "INFO"
+  },
+
+  "sfx_remaining_minigames": {
+    "mg_combat_rituel": 0,
+    "mg_sang_froid": 0,
+    "mg_runes": 0,
+    "mg_herboristerie": 0,
+    "mg_ombres": 0,
+    "mg_course": 0,
+    "total_wired": 0,
+    "grep_pattern": "merlin_sfx|sfxManager|playSound|SFX",
+    "note": "Zero SFX hits across all 6 non-audited minigames. None of mg_combat_rituel, mg_sang_froid, mg_runes, mg_herboristerie, mg_ombres, mg_course contain any audio wiring. This is a systematic gap — all 6 minigames run in complete silence. Players have no audio feedback on hits, misses, success, or failure events.",
+    "severity": "HIGH",
+    "recommendation": "Wire at minimum 3 SFX events per minigame: (1) action/hit, (2) success/score, (3) failure/timeout. Use the existing SFX infrastructure already present in audited minigames (mg_negociation, mg_echo, etc.) as reference pattern."
+  },
+
+  "volonte_pointercancel_fix": {
+    "status": "VERIFIED",
+    "evidence": "setup() lines 118-119 register both pointerleave AND pointercancel to onPointerLeave. endGame() lines 213-214 remove both. cleanup() lines 384-385 remove both. Symmetry is complete — no dangling listener risk. onPointerLeave handler defined at line 160.",
+    "severity": "PASS"
+  },
+
+  "verdict": "FIX",
+
+  "top_bugs": [
+    {
+      "id": "BUG-C83-01",
+      "severity": "HIGH",
+      "component": "All 6 non-audited minigames",
+      "issue": "Zero SFX wiring in mg_combat_rituel, mg_sang_froid, mg_runes, mg_herboristerie, mg_ombres, mg_course",
+      "impact": "Silent gameplay across 6 of 11 minigames. Player has no audio feedback for any game event.",
+      "recommendation": "Add minimum 3 SFX calls per minigame (action, success, failure). Reference mg_negociation.ts or mg_echo.ts for the wiring pattern."
+    },
+    {
+      "id": "BUG-C83-02",
+      "severity": "MEDIUM",
+      "component": "MerlinLairScene.ts line 1166",
+      "issue": "lairWindow.update() not gated under !lowFpsMode — 4 Math.sin calls fire on every frame even in low-fps mode",
+      "impact": "On low-end devices (FPS < 45), leaf sway and glass shimmer still compute 3+1 = 4 sin() calls per frame that are deliberately skipped for candles/dust/cauldron. Wastes ~0.3-0.5ms/frame on low-fps hardware.",
+      "recommendation": "Wrap line 1166 with `if (!lowFpsMode) lairWindow.update(elapsedTime);`"
+    },
+    {
+      "id": "BUG-C83-03",
+      "severity": "INFO",
+      "component": "LairGLBAssets.ts stone wall tiles",
+      "issue": "RESIDUAL-L-SCALE-01 ticket is stale — scale.y=16 no longer exists",
+      "impact": "None. 3-row tiling approach (ROW_H=16/3=5.33) produces 1.07:1 aspect ratio — correct.",
+      "recommendation": "Close ticket RESIDUAL-L-SCALE-01 as resolved."
+    }
+  ],
+
+  "action_items": [
+    {
+      "priority": 1,
+      "action": "Wire SFX to all 6 silent minigames",
+      "files": [
+        "web-demo/src/minigames/mg_combat_rituel.ts",
+        "web-demo/src/minigames/mg_sang_froid.ts",
+        "web-demo/src/minigames/mg_runes.ts",
+        "web-demo/src/minigames/mg_herboristerie.ts",
+        "web-demo/src/minigames/mg_ombres.ts",
+        "web-demo/src/minigames/mg_course.ts"
+      ]
+    },
+    {
+      "priority": 2,
+      "action": "Gate lairWindow.update() under !lowFpsMode",
+      "files": ["web-demo/src/scenes/MerlinLairScene.ts"],
+      "line": 1166,
+      "patch": "if (!lowFpsMode) lairWindow.update(elapsedTime);"
+    }
+  ]
+}

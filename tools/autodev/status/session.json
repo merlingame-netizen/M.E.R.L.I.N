@@ -1,8 +1,8 @@
 {
-  "state": "idle",
-  "cycle": 115,
-  "objective": "Cycle 115 — C148: mg_equilibre windArrow reset on replay, OghamPanel pointer events mobile",
-  "checkpoint": "complete",
+  "state": "running",
+  "cycle": 170,
+  "objective": "Cycle 170 — QA synthèse finale C162-C169: lair zones, HUD walk, journal, RunSummary cinématique, CeltOS boot, transitions, CardOverlay",
+  "checkpoint": "qa_in_progress",
   "audit_summary": {
     "audit_cycle": "C133",
     "global_score": 9.97,
@@ -82,8 +82,15 @@
     "C146_hud_reinit_dynamic_panels_teardown": 10.00,
     "C146b_regard_feedback_reset_apaisement_tapbonus_fouille_race": 10.00,
     "C147_coastbiome_lazy_traces_elapsedtime_bundle_audit": 10.00,
-    "C148_equilibre_windarrow_reset_ogham_pointer_mobile": 10.00
+    "C148_equilibre_windarrow_reset_ogham_pointer_mobile": 10.00,
+    "C149_runsummary_hover_mobile_store_unlock_atomic": 10.00,
+    "C150_runsummary_listener_leak_lairwindow_nightweight": 10.00,
+    "C151_biomepicker_journal_pointer_listener_leaks": 10.00,
+    "C152_cardoverlay_digitkey_leak_endrun_stale_gameloop_safety": 10.00,
+    "C153_cauldron_y_pop_cardcontainer_query": 10.00,
+    "C154_confirmtoast_timer_leak_zonecallback_dispose_race": 10.00,
+    "C155_skull_keyboard_ogham_panel_listener_cleanup": 10.00
   },
   "workers": [],
-  "updated_at": "2026-04-04T00:00:00.000Z"
+  "updated_at": "2026-04-04T10:00:00.000Z"
 }

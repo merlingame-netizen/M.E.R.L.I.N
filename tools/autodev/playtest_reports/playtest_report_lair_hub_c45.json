@@ -1,0 +1,317 @@
+{
+  "cycle": 45,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "evaluator": "merlin-ai-playtester",
+  "framework": "AAA ULTRA — 12 criteria, Nintendo/FromSoftware standard",
+  "files_audited": [
+    "web-demo/src/scenes/MerlinLairScene.ts",
+    "web-demo/src/scenes/LairGLBAssets.ts",
+    "web-demo/src/main.ts (lines 400-500)"
+  ],
+  "previous_score_c44": 8.6,
+  "global_score": 9.0,
+  "score_delta": "+0.4",
+
+  "scores_by_criterion": {
+
+    "flatshading_coherence": {
+      "score": 9.5,
+      "label": "RENDU 3D — flat-shading cohérence",
+      "evidence": [
+        "MerlinLairScene.ts:38 — stoneMat flatShading:true",
+        "MerlinLairScene.ts:39 — mortarMat flatShading:true",
+        "MerlinLairScene.ts:63 — floorMat flatShading:true",
+        "MerlinLairScene.ts:68 — ceilMat flatShading:true",
+        "MerlinLairScene.ts:74 — beamMat flatShading:true",
+        "MerlinLairScene.ts:104 — woodMat flatShading:true",
+        "MerlinLairScene.ts:156 — crystalMat flatShading:true",
+        "MerlinLairScene.ts:199 — shelfMat flatShading:true",
+        "MerlinLairScene.ts:254 — doorMat flatShading:true",
+        "MerlinLairScene.ts:326 — candleBaseMat flatShading:true",
+        "MerlinLairScene.ts:334 — wickMat flatShading:true",
+        "MerlinLairScene.ts:524 — ironMat flatShading:true",
+        "MerlinLairScene.ts:607 — shelfMat (potionBottles) flatShading:true + metalness:0.0 (C44 fix verified)",
+        "MerlinLairScene.ts:620 — bottle mat flatShading:true",
+        "MerlinLairScene.ts:644 — boneMat flatShading:true",
+        "LairGLBAssets.ts:57-65 — applyFlatShading() enforced on all GLB non-crystal assets (table, biblio, sol_pierre, mur_pierre)",
+        "LairGLBAssets.ts:102 — mur_pierre tileMat flatShading:true",
+        "5 MeshBasicMaterial instances correctly exempt: crystal hitSphere line 187, shelfHit line 235, doorHit line 293, cauldronHit line 781, lightSliver line 256"
+      ],
+      "problem": "None. C44 flagged shelfMat in createPotionBottles as missing metalness:0.0 — VERIFIED FIXED at MerlinLairScene.ts:607. Full flat-shading coherence achieved across all visible MeshStandardMaterial instances."
+    },
+
+    "zfighting_residual": {
+      "score": 9.0,
+      "label": "RENDU 3D — z-fighting résiduel",
+      "evidence": [
+        "LairGLBAssets.ts:224-236 — sol_pierre at y=-4.98 + polygonOffset factor=-2 units=-4",
+        "LairGLBAssets.ts:252-259 — mur_pierre tileMat polygonOffset factor=-2 units=-4",
+        "LairGLBAssets.ts:163-173 — table_druidique polygonOffset factor=-2 units=-4",
+        "LairGLBAssets.ts:194-203 — bibliotheque polygonOffset factor=-2 units=-4",
+        "MerlinLairScene.ts:41-44 — mortarMat polygonOffset factor=-1 units=-2 (mortar lines z=-9.74 vs wall z=-10)",
+        "MerlinLairScene.ts:779-783 — cauldronHit r=0.9 at position(2, -3.8, -7) — FIXED: now matches body y=-3.8 (line 539). C107 comment at line 777-778 confirms fix.",
+        "BUG-L-07-GHOST confirmed fixed: glow group.add at line 554, steamPoints group.add at line 577"
+      ],
+      "problem": "Residual micro-issue: cauldronHit sphere r=0.9 extends from y=-4.7 to y=-2.9. GLB cauldron at y=-4.65 scale=0.72 places base at approximately y=-5.0. The hit sphere lower edge at y=-4.7 may barely overlap with the GLB cauldron base geometry — not z-fighting (different draw objects) but the affordance lower boundary is tight. Not actionable as a bug."
+    },
+
+    "materiaux_qualite": {
+      "score": 9.0,
+      "label": "RENDU 3D — matériaux qualité (roughness/metalness palette Celtic)",
+      "evidence": [
+        "Stone walls: color=0x3a3228 roughness=0.95 metalness=0.0 — aged limestone",
+        "Floor: color=0x201c18 roughness=0.9 metalness=0.0 — dark flagstone",
+        "Oak beams: color=0x3d2b1a roughness=0.85 metalness=0.0 — weathered oak",
+        "Iron cauldron: color=0x1a1a1a roughness=0.5 metalness=0.6 emissive=0x00aa33 — cast iron (MerlinLairScene.ts:524, emissive FIXED from C44)",
+        "Door iron straps: color=0x2a2828 roughness=0.5 metalness=0.7 — wrought iron",
+        "Crystal: color=0x9060cc roughness=0.25 metalness=0.1 transparent opacity=0.82 — milky quartz (roughness FIXED from 0.05 in C44 to 0.25)",
+        "Scroll: color=0xc8a96e roughness=0.6 metalness=0.0 emissive=0x3a2a10 — parchment",
+        "Potion glass: roughness=0.1 transparent opacity=0.78 — blown glass",
+        "Bone: color=0xd4c89a roughness=0.7 metalness=0.0 — dry bone"
+      ],
+      "problem": "pedestalMat (MerlinLairScene.ts:155): color=0x2a2220 roughness=0.6 metalness=0.3 reads as polished dark metal rather than carved druidic stone. A stone pedestal supporting an Ogham oracle should read roughness=0.85 metalness=0.05 (dark basalt/slate). Minor lore-material mismatch."
+    },
+
+    "lighting_dramaturgie": {
+      "score": 8.0,
+      "label": "RENDU 3D — lighting dramaturgie (10 sources actives)",
+      "evidence": [
+        "MerlinLairScene.ts:659 — AmbientLight 0x1a1008 intensity=0.3",
+        "MerlinLairScene.ts:663 — HemisphereLight sky=0x2a3820 ground=0x3a2a1a intensity=0.25 (C36)",
+        "MerlinLairScene.ts:666-667 — key PointLight 0xff6618 intensity=0.9 at (0,3,2) forward warm fire",
+        "MerlinLairScene.ts:668-669 — rim PointLight 0x6699cc intensity=0.55 at (8,2,7) cool door rim",
+        "MerlinLairScene.ts:671 — fill PointLight 0xcc8833 intensity=0.4/0.55 at (-9,0,-5)",
+        "MerlinLairScene.ts:675-677 — backAccent PointLight 0xff5500 intensity=0.35 at (0,1.5,-11) non-lowEnd",
+        "MerlinLairScene.ts:178 — crystal PointLight 0x9060cc intensity=2.5 range=5",
+        "MerlinLairScene.ts:287-288 — door PointLight 0xffdd66 intensity=3.0 range=5",
+        "MerlinLairScene.ts:343-346 — candle sharedLight 0xff9933 intensity=1.8 range=9 at centroid",
+        "MerlinLairScene.ts:552-553 — cauldron glow 0x22cc44 intensity=1.1-1.3 range=3.5",
+        "Total: 10 active lights. Key:fill ratio 0.9:0.4 = 2.25:1 — correct dramatic. Color drama: warm fire + cool rim + green oracle + purple crystal + amber door = full Celtic emotional palette."
+      ],
+      "problem": "Candle sharedLight (line 346) is a single PointLight at the centroid of 3 geographically dispersed candles. The leftmost candle at x=-5 is 4.33u from the centroid. With decay=2 (quadratic) and range=9, intensity at 4.33u falloff is noticeable — left candle is underlit relative to center-right. With 10 total lights, budget allows splitting into 2 candle lights (left + center-right) without exceeding mobile limits. Known trade-off (labeled in code) but now correctable without performance cost."
+    },
+
+    "glb_coverage": {
+      "score": 9.5,
+      "label": "ASSETS — couverture GLB (6 assets + crystal = 7 total + fallbacks)",
+      "evidence": [
+        "LairGLBAssets.ts:94 — cauldron_merlin.glb, cauldronGroup hidden at line 110",
+        "LairGLBAssets.ts:128-153 — bougie.glb, 3 clones, non-Light candleGroup children hidden (BUG-L-BOUGIE-OVERLAP FIXED)",
+        "LairGLBAssets.ts:156-184 — table_druidique.glb, mapGroup hidden at line 176",
+        "LairGLBAssets.ts:187-215 — bibliotheque.glb, shelfGroup hidden at line 207",
+        "LairGLBAssets.ts:219-239 — sol_pierre.glb, floorMesh hidden at line 238",
+        "LairGLBAssets.ts:244-313 — mur_pierre.glb, wallsGroup hidden at line 312 (InstancedMesh)",
+        "LairGLBAssets.ts:318-340 — crystal_ball.glb, crystalSphere hidden at line 334",
+        "All 7 assets have catch() procedural fallbacks — progressive enhancement pattern correct",
+        "MerlinLairScene.ts:804-835 — all callbacks wired: onCauldronGLBLoaded, onCrystalGLBLoaded, onCrystalGroupLoaded, onMapGLBLoaded, onShelfGLBLoaded",
+        "MerlinLairScene.ts:806 — candleGroup explicitly passed to loadLairGLBs (C44 fix verified)"
+      ],
+      "problem": "Residual architectural question: bougie.glb hide hides particle Points in candleGroup (MerlinLairScene.ts:397-399 group.add(points)). If bougie.glb is a static wax mesh without flame particles, the scene loses all candle fire animation when GLB loads successfully. Not a code bug — depends on GLB authoring. Flag for bougie.glb content review."
+    },
+
+    "proportions_geometriques": {
+      "score": 8.0,
+      "label": "ASSETS — proportions géométriques (InstancedMesh wall tile math)",
+      "evidence": [
+        "LairGLBAssets.ts:263 — ROW_H = 16 / 3 = 5.33u per tile instance",
+        "LairGLBAssets.ts:268-279 — back wall: 18 instances (6 cols x 3 rows). scale.set(4, ROW_H, 1)",
+        "LairGLBAssets.ts:283-295 — left wall: 15 instances (5 cols x 3 rows)",
+        "LairGLBAssets.ts:298-310 — right wall: 15 instances (5 cols x 3 rows)",
+        "Coverage: back = 6*4=24u = x(-12..+12) PASS. Sides = 5*4=20u = z(-10..+10) PASS. Height = ROW_H*3=16u y(-5..+11) PASS",
+        "Tile aspect per instance: 4u wide x 5.33u tall. Internal stone count in GLB not verifiable from TypeScript — requires Blender inspection",
+        "C44 claim of '1:3.2 stone elongation' was derived from a prior report assuming 5 internal stone rows per tile. This assumption is unverified."
+      ],
+      "problem": "Stone aspect ratio cannot be definitively confirmed from code alone. The instance scale is correct and coverage math is exact. RESIDUAL-L-SCALE-01 is downgraded from confirmed bug to unverified concern. Score 8.0 reflects code correctness with visual uncertainty pending GLB inspection."
+    },
+
+    "bundle_gzip": {
+      "score": 9.5,
+      "label": "WEB PERF — bundle gzip (<200KB target)",
+      "evidence": [
+        "C44 baseline: three-core=131.5KB + index=43.0KB + minigames=20.3KB = 194.8KB (PASS, 5.2KB margin)",
+        "MerlinLairScene.ts:4 — imports unchanged vs C44: no new Three.js modules added",
+        "LairGLBAssets.ts:5 — imports unchanged: no new heavy modules",
+        "No EffectComposer, PMREMGenerator, or post-processing imports detected in either file",
+        "C45 code changes (bug fixes) are logic-only — no import additions"
+      ],
+      "problem": "Bundle margin is 5.2KB (2.6%). Stable since C44. Risk unchanged: one EffectComposer import (~15KB gzip) would breach 200KB. Monitoring required on any new Three.js feature addition."
+    },
+
+    "fps_budget": {
+      "score": 8.5,
+      "label": "WEB PERF — FPS budget (draw calls + light budget + memory)",
+      "evidence": [
+        "InstancedMesh walls: 3 draw calls for 48 tile instances (LairGLBAssets.ts:268, 283, 298)",
+        "No castShadow/receiveShadow calls in codebase — shadow maps disabled (confirmed)",
+        "MerlinLairScene.ts:800-803 — FPS adaptive: fpsFrameCount/fpsElapsed/lowFpsMode (drops dust at <45fps)",
+        "MerlinLairScene.ts:751 — isLowEndMobile: Android/iPhone + DPR>=2 skips backAccent PointLight",
+        "LairGLBAssets.ts:89-91 — cancelHandles for all fadeInGLB rAFs. Line 343 returns cancel-all.",
+        "MerlinLairScene.ts:792 — lairDisposed flag guards late GLB scene.add()",
+        "Particle budget: dust=80, candles=3x20=60, steam=30 — total 170 particles, in-place Float32Array update",
+        "No new Float32Array allocations per frame — no GC pressure detected"
+      ],
+      "problem": "10 active PointLights in an enclosed scene. Three.js per-object max lights = 5. Back wall tiles at z=-10 may receive: key(0,3,2) + fill(-9,0,-5) + backAccent(0,1.5,-11) + cauldron(2,-3.2,-7) + candle centroid(-0.67,-4.3,-7.17) = 5 lights. Adding rim from (8,2,7) makes 6 — the 6th is silently culled by Three.js per-object limit. This is not a crash but is a silent lighting failure on the back wall. Verify with renderer.info or Three.js light per-object profiling."
+    },
+
+    "ux_accessibility": {
+      "score": 9.0,
+      "label": "UX/ACCESSIBILITY — feedback zones (5 zones + hover emissive + toast)",
+      "evidence": [
+        "MerlinLairScene.ts:841-847 — 5 interactives: map, crystal, bookshelf, door, cauldron. All have mesh + visualMesh correctly wired.",
+        "cauldron entry line 846: visualMesh:cauldron.body (BUG-L-CAULDRON-HOVER FIXED)",
+        "cauldronHit position(2,-3.8,-7) matches body y=-3.8 (BUG-L-CAULDRON-HIT FIXED)",
+        "MerlinLairScene.ts:875-882 — applyHoverTo() with instanceof MeshStandardMaterial guard (C119)",
+        "MerlinLairScene.ts:881 — emissive guard: 'if (target.material.emissive)' — see problem",
+        "MerlinLairScene.ts:900 — hover intensity=0.65 applied to visualMesh",
+        "MerlinLairScene.ts:901 — cursor='pointer' on hover",
+        "MerlinLairScene.ts:902 — 'merlin_sfx' hover sound dispatch",
+        "MerlinLairScene.ts:908-916 — zone name (strong, Celtic gold) + lore desc (span, warm grey) in toast",
+        "Toast: bottom:16px centered, pointer-events:none, opacity transition 0.2s ease"
+      ],
+      "problem": "MerlinLairScene.ts:881 — 'if (target.material.emissive)' is always truthy: Three.js MeshStandardMaterial.emissive is always a Color object (initialized to black Color(0,0,0)), never null/undefined. The guard does not protect against zero-emissive materials. Current code is correct only because all visualMesh materials have non-black emissive. Guard should be: if (target.material.emissive.r > 0 || target.material.emissive.g > 0 || target.material.emissive.b > 0). Correctness risk — not a live bug but a latent defect pattern."
+    },
+
+    "aria_mobile": {
+      "score": 8.5,
+      "label": "UX/ACCESSIBILITY — ARIA chain + mobile touch",
+      "evidence": [
+        "MerlinLairScene.ts:688 — canvas role=application",
+        "MerlinLairScene.ts:689 — aria-label dynamic (updated at line 850 after interactives built)",
+        "MerlinLairScene.ts:690 — tabindex=0",
+        "MerlinLairScene.ts:691 — touchAction:none (mobile scroll prevention)",
+        "MerlinLairScene.ts:694 — focus({preventScroll:true}) on mount",
+        "MerlinLairScene.ts:696-704 — offscreen ariaLive: aria-live=polite, aria-atomic=true, clip:rect(0,0,0,0) (WCAG 2.1 AA pattern)",
+        "MerlinLairScene.ts:704 — aria-describedby=lair-aria-live (C126, WCAG 1.3.1)",
+        "MerlinLairScene.ts:709-710 — zoneToast: role=presentation, aria-live=off (C132 double-announce prevention)",
+        "MerlinLairScene.ts:918-920 — onMouseMove updates both aria-label and ariaLive.textContent on hover (C131, WCAG 4.1.2)",
+        "main.ts:400-411 — toast built with createElement+textContent (XSS-safe, C104/C106)"
+      ],
+      "problem": "Keyboard Tab navigation on Three.js canvas zones not verified in this read window (code past offset 950). If Tab focus cycles browser DOM rather than Three.js raycast zones, WCAG 2.1 SC 2.1.1 (Keyboard) is not met for zone activation without mouse. The ARIA infrastructure exists (ariaLive, aria-describedby, tabindex=0) but the Tab handler must be confirmed separately."
+    },
+
+    "game_feel_flow": {
+      "score": 9.0,
+      "label": "GAME FEEL — flux entrée → zones → run (timing + polish)",
+      "evidence": [
+        "MerlinLairScene.ts:726 — camera.position.set(0, 0.5, 10) entry (pulled back for cinematic)",
+        "MerlinLairScene.ts:863 — ENTRY_CAM_DURATION = 1.2s pull-in from z=10 to z=7",
+        "MerlinLairScene.ts:900-902 — hover: instant emissive + cursor='pointer' + SFX hover dispatch",
+        "main.ts:413 — double-RAF opacity transition on toast (prevents flash from display:none)",
+        "main.ts:429 — door click: setTimeout(resolve, 400) — FIXED from C44 (was 0ms)",
+        "main.ts:490 — cutToBlack then 300ms await before lair.dispose() — total 700ms transition",
+        "MerlinLairScene.ts:723 — Fog(near=12, far=28) atmospheric depth without overdraw cost",
+        "MerlinLairScene.ts:908-916 — zone toast: name in Celtic gold (strong), lore in warm grey (span) — visual hierarchy correct"
+      ],
+      "problem": "Entry camera pull-in at z=10 places the back wall at world distance 20u from camera. Fog far=28 means the back wall is not fogged — good. However, at z=10 the fog near=12 clips objects roughly 12u in front of camera, meaning z=-2 in world space starts fogging. The crystal ball at z=-4 is 14u from camera start — begins fogging (14u > near=12). During the 1.2s pull-in, the crystal ball defogs as camera approaches. This is a minor atmospheric artifact on first entry, visible for approximately 0.8s before camera settles at z=7 (crystal at 11u — below fog near). Not a bug but a perceptible transition artifact."
+    },
+
+    "lore_celtic": {
+      "score": 9.5,
+      "label": "GAME DESIGN — cohérence lore Celtic (ZONE_ARIA_LABELS + ZONE_LORE)",
+      "evidence": [
+        "MerlinLairScene.ts:930-936 — ZONE_ARIA_LABELS: 5 unique zone names in French Celtic register",
+        "MerlinLairScene.ts:940-946 — ZONE_LORE (C110 enhanced with mythological anchors):",
+        "  map: 'Quelle contrée de Bretagne t\\'appelle ce soir ?' — Breton Celtic geographic reference, intimate tu form, wandering druid motif",
+        "  crystal: 'Les runes d\\'ogham murmurent dans la pierre sacrée' — Ogham as divination inscriptions on sacred stone (Imbas Forosnai tradition)",
+        "  bookshelf: 'Les chroniques de Merlin gardent mémoire de tes actes' — Merlin as chronicler (Myrddin/Historia Regum Britanniae ancestor)",
+        "  cauldron: 'Le chaudron de Cerridwen bouillonne de sagesse ancienne' — explicit Cerridwen mythology (Mabinogion Taliesin cycle, cauldron of transformation). Highest mythological accuracy.",
+        "  door: 'Les bois de Brocéliande t\\'attendent, voyageur' — Brocéliande as attested Arthurian sacred forest (Wace, Roman de Brut, 12th c.). 'voyageur' as wandering druid archetype.",
+        "C44 complaint: map sublabel too generic. C45 fix: 'contrée de Bretagne' grounds the map in specific Celtic geography."
+      ],
+      "problem": "Minor: ZONE_LORE crystal 'pierre sacrée' is atmospherically correct but lacks Irish Ogham specificity. Ogham was primarily an Irish tradition (4th-6th century carved standing stones in Ireland/Wales). A reference to 'pierre runique d\\'Irlande' or the Ogham alphabet's divine origin in Ogma mac Elatha would elevate authenticity one tier. Current text is broadly Celtic and not inauthentic — just generically sacred rather than specifically Ogham-tradition."
+    }
+  },
+
+  "top_3_issues": [
+    {
+      "rank": 1,
+      "severity": "MEDIUM",
+      "file_line": "MerlinLairScene.ts:881",
+      "issue": "applyHoverTo() guard 'if (target.material.emissive)' is always truthy in Three.js. MeshStandardMaterial.emissive is a Color object initialized to Color(0,0,0) — never null, never undefined, always passes the if-check. The guard does not prevent emissiveIntensity from being applied to a black-emissive material (which would produce no visible hover effect). Current code is not a live bug because all visualMesh materials have non-black emissive, but the guard is a false safety net that will silently fail when any new zone is added with emissive=0x000000.",
+      "recommendation": "Replace line 881 with: if (target.material.emissive.r > 0 || target.material.emissive.g > 0 || target.material.emissive.b > 0)"
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "file_line": "MerlinLairScene.ts:343-346",
+      "issue": "Single shared candle PointLight at centroid of 3 candles. The leftmost candle at x=-5 is 4.33u from the centroid. With quadratic decay (decay=2) and range=9, the leftmost candle receives noticeably weaker warm light — spatially incoherent illumination. With 10 total lights the budget can afford splitting into 2 candle lights on standard mobile.",
+      "recommendation": "Replace sharedLight with two lights behind !isLowEndMobile gate: light_L at (-5, -4.3, -7) range=6 for left candle; light_CR at (1.5, -4.3, -7.25) range=8 for center+right candles. Total lights on standard = 11 (9 point + 1 ambient + 1 hemi). On lowEnd, fall back to current single sharedLight centroid."
+    },
+    {
+      "rank": 3,
+      "severity": "LOW",
+      "file_line": "LairGLBAssets.ts:147-152",
+      "issue": "When bougie.glb loads, non-Light children of candleGroup are hidden — this includes the candle particle Points systems (added to group at MerlinLairScene.ts:397-399). If bougie.glb is a static wax-and-wick mesh without flame particles, the scene loses all candle fire animation (orange sparks) when GLB loads. The procedural flicker system (updateCandles) is still called but targets invisible particle geometry.",
+      "recommendation": "Inspect bougie.glb for embedded particle/flame geometry. If absent: un-hide specifically the particle Points objects after bougie GLB load (traverse candleGroup, keep Points visible, hide only CylinderGeometry body + CylinderGeometry wick meshes). Alternatively, emit bougie flame particles from LairGLBAssets.ts independently of the group hide."
+    }
+  ],
+
+  "false_positives_from_c44": [
+    {
+      "bug_id": "BUG-L-CAULDRON-HIT",
+      "c44_claim": "cauldronHit center at y=-3.0, ~1u above GLB cauldron rim",
+      "actual_state": "FIXED. MerlinLairScene.ts:779-783 — cauldronHit is SphereGeometry(0.9, 8, 6) at position.set(2, -3.8, -7). Comment at line 777-778: 'C107: aligned to visual center — was y=-4.0 (0.2u below visual, BUG-39-13)'. Cauldron body at line 539 is at y=-3.8 — hit target center matches exactly. Radius also reduced from 1.2 (C44 report assumed value) to 0.9 (tighter affordance per C107 fix)."
+    },
+    {
+      "bug_id": "BUG-L-CAULDRON-HOVER",
+      "c44_claim": "cauldron hover has zero visual effect — ironMat has no emissive color",
+      "actual_state": "FIXED. MerlinLairScene.ts:524 — ironMat now has emissive:0x00aa33, emissiveIntensity:0.0. MerlinLairScene.ts:846 — cauldron interactives entry has visualMesh:cauldron.body. applyHoverTo() correctly targets the iron body mesh with a non-black green emissive — hover produces visible green pulse matching cauldron glow colour."
+    },
+    {
+      "bug_id": "BUG-L-BOUGIE-OVERLAP",
+      "c44_claim": "bougie.glb adds 3 clones with no procedural candle hide — double-mesh visible",
+      "actual_state": "FIXED. LairGLBAssets.ts:147-152 — on bougie GLB load, iterates candleGroup.children and sets child.visible=false for all non-Light children. MerlinLairScene.ts:806 — candleGroup is passed. Procedural candle bodies and wicks hidden, sharedLight preserved. Residual: particle Points also hidden (see top_3_issues rank 3)."
+    },
+    {
+      "bug_id": "BUG-DOOR-TOAST-TIMING",
+      "c44_claim": "Door toast visible for only ~200ms before cutToBlack",
+      "actual_state": "FIXED. main.ts:429 — setTimeout(resolve, 400). Door toast now has 400ms reading window before resolve fires cutToBlack. Total transition: 400ms toast + 300ms black = 700ms — within FromSoftware 300-700ms comfort range."
+    },
+    {
+      "bug_id": "C44-shelfMat-metalness-missing",
+      "c44_claim": "MerlinLairScene.ts:569 — shelfMat in createPotionBottles omits metalness:0.0",
+      "actual_state": "FIXED. MerlinLairScene.ts:607 now includes metalness:0.0 explicitly. Pattern consistency fully restored."
+    },
+    {
+      "bug_id": "RESIDUAL-L-SCALE-01-stone-ratio",
+      "c44_claim": "Stone vertical elongation confirmed 1:3.2 — scale(4,16,1) on tile with 5 internal rows",
+      "actual_state": "PARTIALLY REVISED. The '5 internal rows' claim was inherited from a C43 report without direct GLB verification. The InstancedMesh uses 3 INSTANCE rows of tiles (not 5 stone rows per tile). ROW_H=16/3=5.33u per instance. Actual internal stone count in mur_pierre.glb requires Blender inspection — cannot be confirmed from TypeScript. Downgraded from confirmed 1:3.2 elongation to unverified concern."
+    }
+  ],
+
+  "regression_check_c45": {
+    "cauldron_glow_in_group": "PASS — MerlinLairScene.ts:554 group.add(glow)",
+    "cauldron_steam_in_group": "PASS — MerlinLairScene.ts:577 group.add(steamPoints)",
+    "cauldronHit_aligned_to_body": "PASS — both at y=-3.8 (lines 539 and 783)",
+    "cauldron_hover_emissive_visible": "PASS — ironMat emissive=0x00aa33 (line 524), visualMesh:cauldron.body (line 846)",
+    "door_toast_400ms_delay": "PASS — main.ts:429 setTimeout(resolve, 400)",
+    "bougie_non_light_hidden": "PASS — LairGLBAssets.ts:147-152",
+    "potionBottles_shelfMat_metalness": "PASS — MerlinLairScene.ts:607 metalness:0.0",
+    "flatshading_all_visible_materials": "PASS — verified across all MeshStandardMaterial constructors",
+    "sol_pierre_polygonOffset": "PASS — factor=-2 units=-4 (LairGLBAssets.ts:230-232)",
+    "mur_pierre_polygonOffset": "PASS — factor=-2 units=-4 (LairGLBAssets.ts:255-258)",
+    "table_druidique_polygonOffset": "PASS — factor=-2 units=-4 (LairGLBAssets.ts:167-170)",
+    "bibliotheque_polygonOffset": "PASS — factor=-2 units=-4 (LairGLBAssets.ts:198-201)",
+    "cancel_glb_fades_on_dispose": "PASS — MerlinLairScene.ts:804 captures cancelGLBFades, LairGLBAssets.ts:343 returns cancel-all",
+    "lore_cerridwen_cauldron": "PASS — MerlinLairScene.ts:944 explicit Cerridwen Mabinogion reference",
+    "lore_broceliande_door": "PASS — MerlinLairScene.ts:945 Brocéliande forest reference (Wace tradition)",
+    "aria_arialive_polite_atomic": "PASS — MerlinLairScene.ts:698-700",
+    "aria_canvas_describedby": "PASS — MerlinLairScene.ts:704 aria-describedby=lair-aria-live (C126)",
+    "aria_toast_role_presentation": "PASS — MerlinLairScene.ts:709-710 role=presentation aria-live=off (C132)",
+    "fps_adaptive_quality": "PASS — MerlinLairScene.ts:800-803 lowFpsMode dust drop",
+    "isLowEndMobile_gate": "PASS — MerlinLairScene.ts:751 Android/iPhone+DPR>=2 detection",
+    "lairDisposed_guard_on_glb": "PASS — MerlinLairScene.ts:792 lairDisposed flag, checked in loadLairGLBs callbacks"
+  },
+
+  "global_score": 9.0,
+  "verdict": "PROCEED",
+  "verdict_rationale": "C45 reaches 9.0/10 — first cycle clearing the AAA threshold. All 5 critical C44 bugs verified fixed in actual code (cauldronHit alignment, cauldron hover emissive, bougie overlap, door toast timing, shelfMat metalness). No CRITICAL issues. Two MEDIUM issues remain: the applyHoverTo() emissive guard is a latent defect pattern (not a live bug), and the candle sharedLight spatial coherence is an auditable known trade-off that is now correctable without performance cost. Bundle stable at 194.8KB. ARIA chain fully implemented through C126/C131/C132. Celtic lore at its highest quality (Cerridwen + Brocéliande mythological anchors, C110). Scene is AAA demo-ready for web deployment.",
+
+  "next_cycle_priorities": [
+    "Fix applyHoverTo() emissive guard: MerlinLairScene.ts:881 — replace truthy Color check with RGB component check",
+    "Inspect bougie.glb for flame particle geometry — if absent, selectively preserve candle particle Points on GLB load",
+    "Blender inspection of mur_pierre.glb internal stone count to close RESIDUAL-L-SCALE-01",
+    "Optional: split candle sharedLight into 2 lights (left + center-right) behind !isLowEndMobile gate",
+    "Optional: pedestalMat roughness=0.85 metalness=0.05 for druidic stone base authenticity"
+  ]
+}

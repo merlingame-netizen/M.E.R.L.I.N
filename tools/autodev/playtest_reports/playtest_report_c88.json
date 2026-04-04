@@ -1,0 +1,167 @@
+{
+  "cycle": "C88",
+  "audit_timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "audit_type": "static-code",
+  "scope": "main.ts game-loop + Store.ts + HUD.ts + MinigameBase.ts — areas not covered in C86/C87 Lair visual audits",
+  "files_audited": [
+    "web-demo/src/main.ts",
+    "web-demo/src/game/Store.ts",
+    "web-demo/src/ui/HUD.ts",
+    "web-demo/src/minigames/MinigameBase.ts"
+  ],
+
+  "new_bugs": [
+    {
+      "id": "BUG-C88-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/main.ts",
+      "line": 572,
+      "description": "loadAnamFromStorage() and loadMetaFromStorage() are called twice per run cycle: once before the while(true) loop (lines 524-525) and again inside the loop body (lines 572-573) immediately after store.getState().startRun() has already seeded run state from meta. The second in-loop call overwrites the freshly-started run's Store meta with data read from localStorage, potentially duplicating Anam credit carried over from the previous run. Any Anam earned in run N and saved to storage is re-applied at the start of run N+1, inflating the cross-run Anam total.",
+      "fix": "Remove the duplicate loadAnamFromStorage() / loadMetaFromStorage() calls from inside the while(true) loop (lines 572-573). The pre-loop calls at lines 524-525 are sufficient. If a per-run meta refresh is intentional, call them BEFORE startRun(), not after."
+    },
+    {
+      "id": "BUG-C88-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/main.ts",
+      "line": 638,
+      "description": "Stale activeOgham across card iterations. The pre-selection read at line 637 (`const preSelected = state().run.activeOgham`) captures whatever ogham was active at the end of the previous card. The clear at line 731 (`state().setActiveOgham('')`) only executes when `activeOgham` is truthy AND the run survives past step 8. If any of the early-break paths (death_drain at line 627, death_effects at line 737, cards_limit at line 748, victory at line 757) fires before step 8, the activeOgham is never cleared. On the next card iteration preSelected is non-empty, the ogham fires again silently without the player activating it, and the OghamPanel is bypassed entirely.",
+      "fix": "Move setActiveOgham('') to the very top of the card iteration body (before line 637), clearing it unconditionally regardless of how the previous iteration exited. This makes it a guaranteed reset rather than a conditional one."
+    },
+    {
+      "id": "BUG-C88-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts",
+      "line": 695,
+      "description": "playSound('flip') is called twice per card: once at line 688 after showCard() returns (card reveal sound) and again at line 695 (labeled in comment as 'audio cue signalling minigame phase start'). Both calls use the same 'flip' token, causing an audible double-flip on every card play. The second call is clearly intended to be a distinct minigame-entry audio cue but uses the wrong sound identifier.",
+      "fix": "Replace the second playSound('flip') at line 695 with a distinct sound token (e.g., playSound('swoosh') or playSound('minigame_start')). If no distinct token exists yet, remove line 695 until one is added to SFXManager."
+    },
+    {
+      "id": "BUG-C88-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts",
+      "line": 569,
+      "description": "initOghamPanel() is called twice per run cycle: once at line 523 (before the while loop) and again at line 569 (inside the loop, after initHUD()). The function is noted as idempotent, but if its internal guard is a DOM ID check, the subscription/listener registration block may not be equally idempotent. This is structurally identical to the HUD subscriber accumulation bug that was explicitly fixed in HUD.ts with the _hudUnsubscribe pattern. Without auditing OghamPanel internals, the risk of accumulating extra event listeners on each run is non-zero.",
+      "fix": "Audit initOghamPanel() for event listener deduplication equivalent to HUD.ts _hudUnsubscribe. Remove the redundant in-loop call at line 569 if the pre-loop call at line 523 is sufficient, or add a teardown+reinit pattern matching the HUD pattern."
+    },
+    {
+      "id": "BUG-C88-05",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/Store.ts",
+      "line": 361,
+      "description": "endRun() transitions phase to 'end' and sets run.active = false, but leaves run.activeOgham, run.oghamCooldowns, run.tension, and run.karma at their end-of-run values. Between endRun() and the next startRun() (which calls buildDefaultRun() to reset these), there is an async showRunSummary() window of several seconds. Any code that reads these run fields during that window — including the RunSummary component or any store subscribers — sees stale data from the just-ended run rather than a neutral default state.",
+      "fix": "Either reset activeOgham ('') and oghamCooldowns ({}) inside endRun(), or document clearly in JSDoc that run fields other than run.active are only valid when run.active === true and add a guard in RunSummary rendering."
+    },
+    {
+      "id": "BUG-C88-06",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/HUD.ts",
+      "line": 281,
+      "description": "initHUD() correctly unsubscribes the previous Zustand subscription before re-subscribing (_hudUnsubscribe at line 288). However, the HUD DOM sub-panels (faction-panel, resource-panel, ogham-badge) are never removed between runs — they rely on idempotent ID-guarded build functions. If the outer #hud element is ever removed and re-added (e.g., by a future scene rebuild or hot-reload), the build functions will inject into the new #hud correctly, but the old subscription would reference stale DOM nodes via getElementById. The _hudUnsubscribe pattern handles the subscription leak, but there is no corresponding teardownHUD() to handle the DOM lifecycle. This is latent: safe in current architecture but fragile if HUD element lifecycle changes.",
+      "fix": "Add an exported teardownHUD() function that calls _hudUnsubscribe?.() and removes #faction-panel, #resource-panel, and #ogham-badge from the DOM. Call it in main.ts before sceneManager.dispose() if the HUD element is ever re-created. Low urgency for current architecture."
+    },
+    {
+      "id": "BUG-C88-07",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/HUD.ts",
+      "line": "updateHUD — life-fill element",
+      "description": "The life bar (#life-fill) and faction bars (#faction-fill-*) have no ARIA live region. Health-critical drops (<=25% threshold, red gradient applied) and faction reputation changes are purely visual with no screen reader announcement. Biome toasts and zone toasts in other modules use aria-live='polite' correctly, but the persistent HUD bars are static divs without role or aria-live attributes. A screen reader user receives no feedback when life falls to critical levels.",
+      "fix": "Add an off-screen visually-hidden <span> element (CSS: position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0)) updated in updateHUD() with a text description when life crosses a threshold (e.g., 'Vie critique : 18 sur 100'). Use aria-live='assertive' for the critical threshold crossing and aria-live='polite' for routine updates. Do not add aria-live directly to the animated bar element as frequent updates cause excessive SR interruptions."
+    },
+    {
+      "id": "BUG-C88-08",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/MinigameBase.ts",
+      "line": 303,
+      "description": "The base cleanup() implementation (this.container.innerHTML = '') removes child DOM nodes but does not cancel in-flight rAF loops or setInterval timers that subclasses may have registered. The base class has no cancelTimers() contract or abstract timer-cancellation hook. If a subclass stores its rAF id in a local variable rather than a class field, and if cleanup() is called (e.g., on early tab-switch or forced teardown) before the subclass's own cancel logic executes, orphaned rAF callbacks continue firing against a now-empty container. This relies entirely on correct subclass implementation with no enforcement from the base class.",
+      "fix": "Add a protected overridable cancelTimers(): void {} method to MinigameBase. Call it at the top of finish() before showOutcomeOverlay, guaranteeing timers are stopped before the 2.2s outcome display starts. Document in JSDoc that subclasses must override cancelTimers() to cancel their rAF id and any setInterval handles. This makes the contract explicit and auditable."
+    }
+  ],
+
+  "main_loop_verdict": "ISSUES",
+  "main_loop_notes": [
+    "while(true) structure is sound — mutual exclusion guaranteed because gameLoop is fully awaited before the loop continues.",
+    "Groq 8s timeout + FastRoute fallback is correctly implemented — no softlock risk from LLM failure.",
+    "Emergency FastRoute card (lines 673-684) has valid structure with 3 options and concrete effects.",
+    "sceneManager.dispose() + stopAmbient() + biomeResult.dispose() cleanup is complete and correctly ordered after gameLoop returns.",
+    "BUG-C88-01: duplicate loadAnamFromStorage/loadMetaFromStorage inside while(true) causes Anam inflation on repeat runs.",
+    "BUG-C88-02: stale activeOgham not cleared on all exit paths — silent double-ogham-activation risk.",
+    "BUG-C88-03: playSound('flip') called twice per card — audible defect.",
+    "BUG-C88-04: initOghamPanel() called twice per run — latent listener accumulation risk depending on OghamPanel internals."
+  ],
+
+  "store_verdict": "ISSUES",
+  "store_notes": [
+    "All mutations use Zustand set() with spread — immutability pattern consistently applied throughout.",
+    "factionDeltaThisRun typed as Readonly<Record<FactionId, number>>, reset to buildZeroFactions() inside startRun() — correct.",
+    "promises array uses readonly Promise[] with dedup guard in addPromise() and correct expiry in incrementCardsPlayed().",
+    "addReputation() correctly clamps per-card delta to FACTION_CAP_PER_CARD and total rep to 0-100.",
+    "useOgham() has a theoretical TOCTOU gap (get() read then set() write) but is safe in single-threaded JS event loop.",
+    "BUG-C88-05: endRun() leaves activeOgham/cooldowns stale during the async showRunSummary() window.",
+    "Side-effect note: DOM event dispatch (window.dispatchEvent) inside Zustand set() updater in addReputation() and unlockOgham() violates pure-reducer convention. Works in browser but would fail in SSR or pure unit tests."
+  ],
+
+  "hud_verdict": "ISSUES",
+  "hud_notes": [
+    "_hudUnsubscribe pattern correctly prevents Zustand subscriber accumulation across runs — properly fixed in prior cycle.",
+    "All getElementById calls have null guards — no crash risk.",
+    "Faction/resource/ogham panels use idempotent ID-guarded build functions — safe for multi-run loops.",
+    "No rAF or setInterval in HUD itself — no animation leak risk from HUD.",
+    "BUG-C88-06: no teardownHUD() for HUD element lifecycle changes (latent).",
+    "BUG-C88-07: no ARIA live region on life bar or faction bars — accessibility gap."
+  ],
+
+  "minigamebase_dt_cap": "0.1s",
+  "minigamebase_notes": [
+    "getDeltaTime() cap confirmed at 0.1s (line 230: Math.min((now - this.lastRenderMs) / 1000, 0.1)).",
+    "First-frame safe default of 1/60 (~16.7ms) is correct — lastRenderMs === 0 guard present.",
+    "checkCriticalAlert() uses edge-trigger pattern (criticalAlerted flag reset on each play()) — fires exactly once per session.",
+    "finish() is idempotent via this.finished guard — double-finish race condition is handled correctly.",
+    "validateScore() correctly maps NaN/Infinity to 0 before outcome decision.",
+    "Shared AudioContext singleton (_sharedAudioCtx) avoids browser context cap (Chrome: 6) — C105 fix is sound.",
+    "BUG-C88-08: cleanup() = innerHTML wipe does not cancel subclass rAF/interval timers — no cancelTimers() contract in base class."
+  ],
+
+  "summary": {
+    "total_new_bugs": 8,
+    "critical": 0,
+    "high": 2,
+    "medium": 6,
+    "priority_fixes": [
+      "BUG-C88-01 (HIGH): remove duplicate loadAnamFromStorage/loadMetaFromStorage inside while(true) loop body",
+      "BUG-C88-02 (HIGH): unconditionally clear activeOgham at the start of each gameLoop card iteration"
+    ],
+    "no_softlocks_detected": true,
+    "no_infinite_loop_risk": true,
+    "fastroute_fallback_confirmed": true
+  },
+
+  "worker_output": {
+    "agent": "merlin-ai-playtester",
+    "cycle": "C88-gameloop",
+    "status": "FAIL",
+    "confidence": "HIGH",
+    "evidence": [
+      "2 HIGH bugs found: Anam double-load on re-run, stale activeOgham across card iterations",
+      "6 MEDIUM bugs: double flip sound, OghamPanel init leak risk, endRun stale fields, HUD teardown missing, no ARIA on life bar, MinigameBase cancelTimers contract missing",
+      "0 softlocks detected",
+      "0 infinite loop risks",
+      "FastRoute fallback confirmed correct",
+      "getDeltaTime dt cap confirmed at 0.1s",
+      "HUD _hudUnsubscribe pattern confirmed correct"
+    ],
+    "blockers": [
+      "BUG-C88-01: Anam inflation on repeat runs (HIGH)",
+      "BUG-C88-02: Silent ogham double-activation on death/limit exit paths (HIGH)"
+    ],
+    "next_steps": [
+      "Fix BUG-C88-01: remove lines 572-573 from main.ts while(true) loop body",
+      "Fix BUG-C88-02: add setActiveOgham('') at top of card iteration in gameLoop",
+      "Fix BUG-C88-03: replace second playSound('flip') at line 695 with distinct token",
+      "Fix BUG-C88-05: reset activeOgham to '' in Store.ts endRun()",
+      "Fix BUG-C88-07: add visually-hidden ARIA live span for life bar critical threshold",
+      "Fix BUG-C88-08: add cancelTimers() hook to MinigameBase"
+    ],
+    "tokens_used_approx": 2800
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": "C110",
+  "base_commit": "d0a3493",
+  "files_audited": [
+    "web-demo/src/minigames/mg_volonte.ts",
+    "web-demo/src/minigames/mg_negociation.ts"
+  ],
+  "top_2_bugs": [
+    {
+      "rank": 1,
+      "file": "mg_negociation.ts",
+      "severity": "HIGH",
+      "issue": "Immutability violation in render scroll loop — lines 350-355 mutate ScrollingWord.y and .fadeAlpha directly on objects inside the array, which violates the interface comment ('mutated only locally in render loop') but more critically bypasses any future freeze/proxy guards and makes the mutation invisible to diffing",
+      "lines": "350-355",
+      "one_line_fix": "Replace the for-of mutation loop with: this.scrollingWords = this.scrollingWords.map(sw => sw.picked ? { ...sw, y: sw.y - this.scrollSpeed * dt, fadeAlpha: sw.fadeAlpha - dt * 3 } : { ...sw, y: sw.y - this.scrollSpeed * dt });"
+    },
+    {
+      "rank": 2,
+      "file": "mg_negociation.ts",
+      "severity": "MEDIUM",
+      "issue": "spawnWord pre-seed passes startY = Math.random() * canvasH * 0.8 (line 206), which allows startY values near 0 — words spawned at y < wordHeight/2 are immediately clipped by the top-fade overlay (y <= 40) and removed on the very next filter pass (y > -20), wasting one of the 8 pre-seeded slots before the player can ever see or click them",
+      "lines": "205-207",
+      "one_line_fix": "Change to: this.spawnWord(this.wordHeight + Math.random() * (this.canvasH * 0.8 - this.wordHeight)); to guarantee all pre-seeded words start below the top-fade zone."
+    }
+  ],
+  "mg_volonte": {
+    "file": "web-demo/src/minigames/mg_volonte.ts",
+    "checks": {
+      "pointerleave_pointercancel": {
+        "status": "PASS",
+        "lines": "118-119, 160-163",
+        "note": "Both events registered in setup() (lines 118-119) and handler sets cursorX/Y to -1 (lines 160-163), which places cursor 269px from center — well outside targetRadius 18-30px. isOnTarget recomputes false on the very next render tick. No stuck-cursor risk."
+      },
+      "endGame_double_guard": {
+        "status": "PASS",
+        "lines": "206-208",
+        "note": "this.ended flag checked at line 207 before any side effects. Both the timer callback (line 147) and any future caller are guarded. Idempotent."
+      },
+      "cancelTimers_contract": {
+        "status": "PASS",
+        "lines": "209-210, 380-381",
+        "note": "endGame() clears both timerInterval (clearInterval) and animFrame (cancelAnimationFrame) at lines 209-210. cleanup() mirrors this at lines 380-381. No cancelTimers() abstraction needed; direct calls are consistent across both exit paths."
+      },
+      "sfx_during_gameplay": {
+        "status": "PASS",
+        "lines": "238-239",
+        "note": "Edge-triggered SFX on target enter ('unlock') and leave ('lose') inside render(), guarded by wasOnTarget/isOnTarget diff. critical_alert SFX at 3s via checkCriticalAlert() in timer (line 140). No SFX fired when ended is true because render() stops being scheduled after endGame() cancels animFrame."
+      },
+      "difficultyTier_used": {
+        "status": "PASS",
+        "lines": "63-66",
+        "note": "All four config params (totalTime, targetRadius, spawnInterval, maxDistractors) are tier-scaled via tieredValue() in setup(). totalTime is correctly non-readonly (C103 fix documented at line 38)."
+      },
+      "score_formula": {
+        "status": "PASS",
+        "lines": "217-219",
+        "note": "score = (timeOnTarget / totalTime) * 100. Uses totalTime (post-scaling) as denominator, so score is normalized correctly for all tiers. Denominator zero-guarded at line 217."
+      }
+    },
+    "issues": []
+  },
+  "mg_negociation": {
+    "file": "web-demo/src/minigames/mg_negociation.ts",
+    "checks": {
+      "spawnWord_preseed_waste": {
+        "status": "FAIL",
+        "severity": "MEDIUM",
+        "lines": "205-207",
+        "detail": "Pre-seed loop calls spawnWord(Math.random() * this.canvasH * 0.8). With canvasH=400, startY range is [0, 320]. Values below ~42 (wordHeight/2 + top-fade zone 40px) are immediately masked by the top-fade overlay and filtered out on the first render pass (y > -20 but visually invisible). Statistically ~10% of the 8 pre-seeded words (≈1 word per run) is wasted.",
+        "one_line_fix": "Change line 206 to: this.spawnWord(this.wordHeight + Math.random() * (this.canvasH * 0.8 - this.wordHeight));"
+      },
+      "scrollingWords_mutation_loop": {
+        "status": "FAIL",
+        "severity": "HIGH",
+        "lines": "350-355",
+        "detail": "The render loop iterates this.scrollingWords with for-of and mutates sw.y and sw.fadeAlpha in-place (lines 351, 353-354). Although ScrollingWord declares x/y/picked/fadeAlpha as non-readonly mutable fields, this pattern directly contradicts the project immutability rule (common/coding-style.md: 'ALWAYS create new objects, NEVER mutate existing ones') and the typescript/coding-style.md spread-update requirement. TypeScript does not enforce field immutability here, so the violation is silent.",
+        "one_line_fix": "Replace lines 350-355 with: this.scrollingWords = this.scrollingWords.map(sw => ({ ...sw, y: sw.y - this.scrollSpeed * dt, fadeAlpha: sw.picked ? sw.fadeAlpha - dt * 3 : sw.fadeAlpha }));"
+      },
+      "cancelTimers_contract": {
+        "status": "PASS",
+        "lines": "313-314, 493-496",
+        "note": "endGame() clears both timerInterval and animFrame (lines 313-314). cleanup() mirrors at lines 493-496. Consistent with mg_volonte pattern."
+      },
+      "sfx_during_gameplay": {
+        "status": "PASS",
+        "lines": "110-113, 293-297",
+        "note": "SFX dispatched on word pick in both onPointerDown (lines 293-297) and onKeyDown (lines 110-113): 'unlock' for faction words, 'lose' for neutral. critical_alert at 3s via checkCriticalAlert() in timer (line 212). Both handlers check this.ended guard (onKeyDown line 84; onPointerDown implicitly via endGame removing listener). No SFX after game ends."
+      },
+      "difficultyTier_used": {
+        "status": "PASS",
+        "lines": "131-133",
+        "note": "totalTime, scrollSpeed, and spawnInterval are tier-scaled in setup(). maxWords is readonly at 30 (intentional: bounded by canvas height, not difficulty). Correct."
+      },
+      "score_formula": {
+        "status": "PASS",
+        "lines": "326-332",
+        "note": "factionScore (max 80) + comboBonus (max 25) - penalty (neutralPicked * 3) + timeBonus (max 15) = max 120 clamped to 100. Formula is balanced: a player picking 10 faction words in a perfect combo (50 combo points) still needs the time bonus to reach 100. Penalty for neutral words is proportional. Zero-division safe (totalTime always > 0 post-tieredValue)."
+      }
+    },
+    "issues": [
+      {
+        "severity": "HIGH",
+        "check": "scrollingWords_mutation_loop",
+        "lines": "350-355",
+        "recommendation": "Use .map() with spread to produce a new array with updated y and fadeAlpha values, matching the project immutability contract."
+      },
+      {
+        "severity": "MEDIUM",
+        "check": "spawnWord_preseed_waste",
+        "lines": "205-207",
+        "recommendation": "Clamp startY lower bound to wordHeight to prevent pre-seeded words from spawning inside the top-fade masked zone."
+      }
+    ]
+  },
+  "summary": {
+    "total_issues": 2,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 0,
+    "all_checks_passed_volonte": true,
+    "all_checks_passed_negociation": false
+  }
+}

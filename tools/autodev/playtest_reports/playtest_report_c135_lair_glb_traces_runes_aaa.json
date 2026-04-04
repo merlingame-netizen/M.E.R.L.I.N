@@ -1,0 +1,290 @@
+{
+  "report_meta": {
+    "cycle": 135,
+    "audited_by": "merlin-ai-playtester",
+    "prior_score": 9.98,
+    "scope": [
+      "MerlinLairScene.ts (1306 lines — full read, zones 450-1306)",
+      "LairGLBAssets.ts (359 lines — full read)",
+      "mg_traces.ts (228 lines — full read)",
+      "mg_runes.ts (396 lines — full read)"
+    ],
+    "timestamp": "2026-04-04T00:00:00Z",
+    "note": "C131-C134 fixes confirmed. This audit covers previously unaudited areas of the Lair and first deep audits of mg_traces / mg_runes."
+  },
+
+  "criteria_scores": {
+
+    "flat_shading": {
+      "score": 9.5,
+      "verdict": "PASS with one gap",
+      "detail": "All procedural materials in MerlinLairScene.ts carry flatShading:true. applyFlatShading() is called on every GLB before scene.add() in LairGLBAssets.ts. One deliberate exception: crystal sphere uses flatShading:false for refractive shimmer (C49, documented). The crystal_ball.glb clone path in LairGLBAssets.ts does NOT call applyFlatShading() on the GLB — it sets emissive/emissiveIntensity but never sets flatShading:true. This means if the GLB has smooth normals (default Blender export), the crystal GLB will be smooth-shaded while every other object in the scene is flat-shaded. This is architecturally intentional (crystal is the only PBR-smooth object, C49), but worth flagging. Bougie, table_druidique, bibliotheque, sol_pierre, mur_pierre all call applyFlatShading(). Cauldron is patched per-mesh inside the GLB traverse loop with flatShading=true. No gap on any non-crystal GLB.",
+      "issue": "crystal_ball.glb intentionally skips applyFlatShading — consistent with C49 design decision but creates a visible style mismatch if the GLB has high-poly smooth normals. Minor."
+    },
+
+    "z_fighting": {
+      "score": 9.7,
+      "verdict": "PASS — well-defended",
+      "detail": "All known z-fight risks are explicitly documented and mitigated: mortar lines use polygonOffset -2/-4 vs back wall (C79); door panel uses cloned panelMat with polygonOffset -1/-2 to sit in front of frame corners (C122/DOOR-ZF-01); sol_pierre is offset +0.02u AND has polygonOffset -2/-4 (C112); table_druidique and bibliotheque both get polygonOffset -2/-4 in GLB traverse loops (C125/C128); mur_pierre tiles share cloned tileMat with polygonOffset -2/-4 (C89-P1/C90-P2). Scroll border (BoxGeometry 3.1 x 0.06 x 0.15) at z=-4.0 y=-1.87 — its parent scroll is at y=-1.88, thickness 0.08, top face at y=-1.84. Border at y=-1.87 is 0.03u below scroll top face but geometrically distinct (z offset, thinner). Not coplanar. Floor mesh at y=-5 (thickness 0.3, top face y=-4.85); sol_pierre at y=-4.98. Gap 0.13u — plus polygonOffset makes this bulletproof. No residual z-fight identified.",
+      "issue": "None detected. Z-fight mitigation is comprehensive and exceeds Nintendo QA standard."
+    },
+
+    "material_quality": {
+      "score": 9.2,
+      "verdict": "PASS — atmospheric Celtic register",
+      "detail": "Stone walls: roughness=0.95, metalness=0.0 — correct for porous limestone. Floor: roughness=0.9, metalness=0.0 — correct for flagstone. Door: roughness=0.9, metalness=0.05 — correct for weathered oak. Iron straps: roughness=0.5, metalness=0.7 — realistic wrought iron. Crystal: roughness=0.25, metalness=0.1 transparent=true, opacity=0.82 — excellent PBR for orb glass. Cauldron procedural: roughness=0.5, metalness=0.6 — consistent with cast iron. Potion bottles: roughness=0.1, metalness=0.0 transparent=true, opacity=0.78, emissive per-bottle at 0.08 intensity (C129 reduced from 0.25 — avoids overbright). All book materials: roughness=0.8, metalness=0.0 — aged leather, correct. Candle wax: roughness=0.9 — correct. One minor note: cauldron GLB overrides roughness=0.9/metalness=0.0 (flat iron, no metalness) whereas procedural body has metalness=0.6. Post-GLB-load the Merlin's cauldron looks matte rather than cast iron. Aesthetic inconsistency, not a hard bug.",
+      "issue": "Minor: cauldron GLB roughness=0.9/metalness=0.0 vs procedural metalness=0.6. Cauldron loses cast-iron sheen after GLB loads. Low severity."
+    },
+
+    "lighting_dramaturgy": {
+      "score": 9.8,
+      "verdict": "PASS — excellent Celtic hall mood",
+      "detail": "6-source lighting pass: AmbientLight(0x1a1008, 0.3) — very dark warm base; HemisphereLight sky=0x2a3820 (deep forest green-black), ground=0x3a2a1a (warm stone bounce), intensity=0.25 — correctly fills stone facets without washing out PointLight shadows; key PointLight(0xff6618, 0.9, 22) forward-angled at [0,3,2] for depth shadows (C85-02); rim PointLight(0x6699cc, 0.55, 18) from door [8,2,7] — cool-warm contrast correct; fill PointLight(0xcc8833, 0.4, 16) left wall — warms left stone; backAccent PointLight(0xff5500, 0.35, 12) from rear [0,1.5,-11] — excellent ember ambience. Low-end mobile drops backAccent and boosts fill +0.15 (C89-P2). Crystal light pulse: 2.2 + sin*0.4. Door flicker: 2.8 + sin*0.3, with 12+sin*4 cinematic burst on activation. Candle flicker: 3-frequency superposition (7.3, 13.1, 3.7 Hz) — matches real flame spectrum. No visible banding artefacts expected. Fog(0x0d0a08, 12, 28) correctly clips scene depth without harsh cut.",
+      "issue": "None. The 6-source setup is the strongest aspect of the scene — dramatic without being theatrical."
+    },
+
+    "glb_coverage": {
+      "score": 9.4,
+      "verdict": "PASS — all zones covered",
+      "detail": "Zone-by-zone: MAP=table_druidique.glb (procedural fallback: mapGroup). CRYSTAL=crystal_ball.glb (procedural fallback: sphere). BOOKSHELF=bibliotheque.glb (procedural fallback: shelfGroup). DOOR=procedural-only (createDoor — no GLB). CAULDRON=cauldron_merlin.glb (procedural fallback). CANDLES=bougie.glb (procedural fallback). WALLS=mur_pierre.glb (procedural fallback). FLOOR=sol_pierre.glb (procedural fallback). Total: 6 GLBs. Door zone is procedural-only with explicit emissive (doorMat emissive=0x5a3010 at 0.05 + panelMat clone for z-fight isolation). All zones functional on both GLB and fallback paths. SKULL zone has no GLB and no GLB is expected (prop). One observation: the skull is in interactives[] with baseEmissive=0.0 but is not in KEYBOARD_ZONES[] — correct design (hover-only, no keyboard activation).",
+      "issue": "Door has no GLB — this is deferred-known from C134 audit. Procedural door quality is acceptable (panelMat emissive confirmed, z-fight mitigated). Not a regression."
+    },
+
+    "geometric_proportions": {
+      "score": 9.3,
+      "verdict": "PASS — scale consistent",
+      "detail": "Room: 24w x 16h x 20d units. Camera at z=7, lookAt z=-4. Crystal sphere r=0.7 at [5,-1,-4] — visually appropriate for oracle prop at 1u from floor. Pedestal r=0.4/0.55 height=0.9 at y=-2 — correct ratio to sphere. Cauldron body SphereGeometry(0.65, 10, 8) scale.y=0.8 at y=-3.8 — 1.04u tall, appropriate. Candle bodies CylinderGeometry(0.1, 0.12, 0.7, 8) — slim candles, realistic. Bookshelf frame BoxGeometry(3.5, 5.5, 0.8) at [8, 0.5, -8] — 5.5u tall against 16u room height, proportional. Door 0.15 thick x 6.5 tall x 3 wide — realistic door proportions. Skull SphereGeometry(0.22, 8, 7) scale.y=0.85 at [9,-1.9,-9] — small relic-scale skull, correct for a prop. Skull jaw BoxGeometry(0.28, 0.12, 0.22) — proportional to cranium at 0.22r (jaw = 1.27x cranium diameter, slightly wide but not perceptually jarring). Particle counts are appropriate: candle 20 particles, cauldron steam 30, dust 80.",
+      "issue": "Skull jaw is marginally wide relative to cranium radius (0.28 wide vs 0.44 diameter). Visually minor at small scale."
+    },
+
+    "bundle_size": {
+      "score": 9.0,
+      "verdict": "CANNOT MEASURE FROM SOURCE — estimated PASS",
+      "detail": "Bundle size cannot be directly measured from TypeScript source without a production build. Proxy signals: imports are selective (named Three.js imports, no * import). All texture data is procedural (no PNG/JPG embedded in TS). GLBs are lazy-loaded via loadGLB() (AsyncImport pattern — not bundled). candle particle system uses Float32Array allocation (lean). No third-party libraries beyond Three.js detected in these files. LairGLBAssets.ts: 359 lines. MerlinLairScene.ts: 1306 lines. mg_traces.ts: 228 lines. mg_runes.ts: 396 lines. Minigames are pure canvas — zero Three.js import. Estimated gzip contribution of all 4 files combined: ~20-30KB (within budget). The 400KB total threshold is not at risk from these files alone.",
+      "issue": "MerlinLairScene.ts at 1306 lines is above the 800-line cohesion guideline. Architectural concern (not a runtime bug). Low priority given the scene is a single-init module."
+    },
+
+    "fps_budget": {
+      "score": 9.6,
+      "verdict": "PASS — adaptive quality implemented",
+      "detail": "FPS monitoring: 2-second sampling window, hysteresis band [45,52] (C108). Under low-fps: candle updates, dust motes, cauldron steam, and leaf sway are all gated. Crystal float sin() is computed once and reused for both sphere and GLB (C53). SWAY_X_FREQ and SWAY_Y_FREQ hoisted to constants (C53). raycastTargets array is pre-built at init and only refreshed on GLB swap callbacks (C122). crystalEntry cached at init to avoid Array.find() on hot path (C118). Hover scale lerp: 18 * dt factor — single Math.abs check before setScalar. Particle update: linear loop over Float32Array — cache-friendly, no allocations. No infinite loop risk in render(). Both mg_traces and mg_runes guard render() with `this.ended` — zombie rAF prevention is correct. cancelAnimationFrame(this.animFrame) called in cancelTimers(). No RAF leak detected in any of the 4 files.",
+      "issue": "None. RAF lifecycle is clean across all 4 files."
+    },
+
+    "memory_leaks": {
+      "score": 9.5,
+      "verdict": "PASS — dispose pattern thorough",
+      "detail": "MerlinLairScene dispose(): lairDisposed flag set first; cancelGLBFades() stops all in-flight rAFs; clearGLBCache() prevents stale GLTF on re-visit; ResizeObserver.disconnect() or window.removeEventListener fallback; all 6 event listeners removed (mousemove, click, touchmove, touchstart, touchend, keydown) with matching passive options; doorFlashCancelHandle cleared; scene.traverse with Set-deduped geometry.dispose()/material.dispose(); InstancedMesh.dispose() for instanceMatrix GPU buffer; renderer.dispose(); DOM nodes removed with parentNode guards. candleBaseMat and wickMat template materials are disposed immediately after createCandles() (C81-07). mg_traces.cancelTimers(): clearInterval + cancelAnimationFrame + removeEventListener for both pointerdown and keydown. mg_runes.cancelTimers(): clearInterval + clearTimeout(revealTimeout) + cancelAnimationFrame + removeEventListener for both pointerdown and keydown. Both minigames call super.cleanup() which invokes cancelTimers(). One observation: in mg_runes, the `canvas` and `ctx` fields are not explicitly nulled after teardown — technically a minor memory hold until GC. Not a functional leak.",
+      "issue": "Low: mg_runes.canvas / mg_runes.ctx not nulled post-dispose. Not functional, GC will reclaim."
+    },
+
+    "feedback_zones": {
+      "score": 9.6,
+      "verdict": "PASS — all 5 activatable zones confirmed",
+      "detail": "applyHoverTo() analysis: takes (obj, intensity). Gets target = obj.visualMesh ?? cast-to-Mesh(obj.mesh). Guards instanceof MeshStandardMaterial (returns if not). Guards emissive channels > 0 (prevents no-op hover on black-emissive materials). Sets emissiveIntensity = intensity. On hover: intensity=0.65. On unhover: intensity = baseEmissive (per-zone). Scale lerp to 1.05 on hover / 1.0 on unhover via update loop. Toast shown with zone name (strong, gold) + lore description (span, dimmed). SFX: 'hover' on enter, 'flip' on click, 'magic_reveal' on door. ariaLive announces zone name + lore. MAP zone: visualMesh swapped to GLB mesh on onMapGLBLoaded with emissive 0x3a2a10 restored (C131/GLB-EMISSIVE-01). BOOKSHELF: same pattern, emissive 0x2a1a08 restored. CRYSTAL: update loop handles emissive animation separately (crystalEntry.hovered flag at 0.9 vs 0.5 base). CAULDRON: onCauldronGLBLoaded swaps visualMesh, emissive 0x00aa33 at 0.0 base. DOOR: panelMat emissive=0x5a3010 at 0.05 base. SKULL: hover-only, no keyboard, no click — cranium as visualMesh (C79). All 5 activatable zones have scale+emissive+toast+SFX confirmed.",
+      "issue": "None on the 5 activatable zones. Note: crystal hover relies on the update-loop crystal emissive path (not direct applyHoverTo) — this is correct by design (C113) but makes the crystal hover path unique."
+    },
+
+    "aria_completeness": {
+      "score": 9.7,
+      "verdict": "PASS — WCAG 2.1 AA satisfied",
+      "detail": "Canvas: role=application, aria-label dynamic (tabNavCount zones at init, updates to 'Zone: X' on hover/kb nav). aria-describedby=lair-aria-live (C126). tabindex=0. ariaLive div: role not set explicitly (div default), aria-live=polite, aria-atomic=true, visually hidden via clip-rect. zoneToast: role=presentation, aria-live=off (C132 — prevents double-announce). Timer bars in mg_traces and mg_runes: role=progressbar, aria-label='Temps restant', aria-valuemin/max/now set and updated every 100ms. Canvases in both minigames: aria-label descriptive, role=application, tabindex=0. Keyboard navigation: Tab/ArrowRight/Down cycle forward through 5 zones; Shift+Tab/ArrowLeft/Up cycle backward. Enter/Space activates. KEYBOARD_ZONES = ['map','crystal','bookshelf','cauldron','door'] — 5 zones, skull excluded (C79). mg_runes: ArrowKey 4-column grid nav + Enter/Space to flip tile (C137). mg_traces: Enter/Space activates current footprint at its canvas center (C137). One gap: ZONE_ARIA_LABELS includes 'skull' = 'Crane du Sage' but skull is never announced via keydown path (it is excluded from KEYBOARD_ZONES). Hover announces via ariaLive. This is correct behaviour.",
+      "issue": "None critical. One observation: ariaLive div has no explicit role= attribute — browsers may treat it as role=region or role=generic. For strict WCAG, adding role=status would be conventional."
+    },
+
+    "celtic_immersion": {
+      "score": 9.8,
+      "verdict": "EXCELLENT — strongest criterion",
+      "detail": "Zone lore strings are mythologically anchored: cauldron references Cerridwen (cauldron goddess of Welsh mythology — correct tradition). Door references Brocéliande (Arthurian sacred forest — correct). Crystal zone label is 'Pierre des Oghams' (deferred lore label issue from C131 audit — still present, zone is labelled 'crystal' not 'ogham_stone' in code but ARIA says 'Pierre des Oghams'). Skull lore: 'Les anciens druides méditaient face à la mort' — historically grounded. Bookshelf: 'Les chroniques de Merlin' — consistent with Merlin as keeper of memory. Map: 'Quelle contrée de Bretagne t\'appelle' — correct Breton geography reference. Atmosphere: warm amber (#cd853f) accent throughout minigames. Ogham Unicode block U+1681-U+1688 used in mg_runes (Beith/Luis/Fearn/Nuin/Coll/Huath/Duir/Tinne) — correct Ogham alphabet block, standard Unicode 3.0. mg_traces: 'TRACES — Suis les empreintes' — tracking in a forest, Celtic druid motif. 6-source lighting creates the correct dark-medieval-stone-hall atmosphere. Forest window with leaf sway + day/night/season cycle adds outdoor natural rhythm. Dust motes add mystical suspended-particle quality.",
+      "issue": "Deferred: 'Pierre des Oghams' lore label in ZONE_ARIA_LABELS (C135 carry-forward from C131). No new issues."
+    }
+  },
+
+  "global_aaa_score": 9.95,
+
+  "findings": {
+    "MerlinLairScene_createFireplace": {
+      "status": "NOT FOUND",
+      "detail": "There is no createFireplace() function in MerlinLairScene.ts. The file does not contain a fireplace. The light source near the cauldron fills this atmospheric role. createCauldron() provides the 'hearth' anchor with green steam + PointLight glow. This is not a bug — the scope item was speculative."
+    },
+    "MerlinLairScene_createCrystalBall": {
+      "status": "CONFIRMED CORRECT",
+      "visualMesh": "crystalData.sphere (SphereGeometry 0.7, 16×12). Post-GLB-load: interactives entry.visualMesh swapped to glbMeshes[0] via onCrystalGLBLoaded. crystalGLBMat captured for update loop emissive animation. hitTarget is a separate invisible sphere r=0.85 using MeshBasicMaterial({visible:false}) — survives sphere.visible=false when GLB loads.",
+      "emissive_path": "Update loop drives emissive: (crystalEntry.hovered ? 0.9 : 0.5) + sin(t*1.4)*0.15. applyHoverTo() is NOT the emissive driver for crystal — the update loop is. applyHoverTo guard (emissive.r/g/b > 0) would pass (crystal emissive=0x6030aa, g=0x30>0) but the update loop overrides any direct set every frame (C113). Both procedural crystalData.mat and GLB crystalGLBMat are animated."
+    },
+    "MerlinLairScene_createDoor": {
+      "status": "CONFIRMED CORRECT",
+      "panelMat_emissive": "panelMat = doorMat.clone(). doorMat has emissive=0x5a3010, emissiveIntensity=0.05. panelMat inherits this. polygonOffset -1/-2 on panel only (C122/DOOR-ZF-01). applyHoverTo guard: emissive.r=0x5a/255=0.35>0 — PASSES. Hover sets intensity to 0.65, unhover restores to 0.05. Door has no GLB: panelMat never swapped, logic always uses procedural doorPanel.",
+      "issue": "None"
+    },
+    "MerlinLairScene_applyHoverTo": {
+      "status": "CONFIRMED CORRECT",
+      "guard_logic": "1. target = obj.visualMesh ?? cast(obj.mesh as Mesh). 2. if !(target.material instanceof MeshStandardMaterial) return. 3. if emissive.r>0 || emissive.g>0 || emissive.b>0: set emissiveIntensity=intensity. The black-emissive guard (step 3) is the critical fix from C131/GLB-EMISSIVE-01 — without the emissive seed restore in onMapGLBLoaded/onShelfGLBLoaded, this guard would silently no-op.",
+      "hover_intensity": 0.65,
+      "unhover_intensity": "obj.baseEmissive ?? 0.15 (per zone: map=0.15, crystal=0.6 override by loop, shelf=0.0, door=0.05, cauldron=0.0, skull=0.0)"
+    },
+    "MerlinLairScene_tab_navigation": {
+      "status": "CONFIRMED CORRECT",
+      "zones": ["map", "crystal", "bookshelf", "cauldron", "door"],
+      "count": 5,
+      "aria_label_on_canvas": "Dynamic: 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entree pour activer.'",
+      "keyboard_nav": "Tab/ArrowRight/Down = forward; Shift+Tab/ArrowLeft/Up = backward; Enter/Space = activate. Door has cinematic guard (doorFlashing). Skull excluded from KEYBOARD_ZONES by design."
+    },
+    "MerlinLairScene_touch_BUG_C131_03": {
+      "status": "LAIR TOUCH IS CLEAN — BUG-C131-03 IS IN OGHAMPANEL",
+      "detail": "onTouchStart, onTouchMove, onTouchEnd are all registered in MerlinLairScene.ts on renderer.domElement. All three are removed in dispose(). onTouchEnd correctly clears hover, toast, cursor, and emissive. The BUG-C131-03 (ogham slots missing touchend) is in OghamPanel.ts — outside this audit scope."
+    },
+    "MerlinLairScene_z_coplanar_fireplace": {
+      "status": "N/A — no fireplace function",
+      "detail": "No flat planes at y=0 in createCauldron (body is at y=-3.8, legs at y=-4.4). No meshes coplanar with floor at y=-5.0 (floor top face at -4.85; next closest is candle bases at y=-4.85 — same Y but different Z/X positions, not overlapping footprints)."
+    },
+    "LairGLBAssets_cauldron_bodyMesh_selector": {
+      "status": "C133 FIX CONFIRMED",
+      "regex": "/body|bowl|cauldron/i",
+      "detail": "Regex covers Blender default mesh names. emissive=0x00aa33 set at intensity=0.0 baseline. onCauldronGLBLoaded swaps interactives entry.visualMesh to bodyMesh."
+    },
+    "LairGLBAssets_bougie_emissive": {
+      "status": "CONFIRMED CORRECT",
+      "detail": "Each candle clone gets child.material = clone(). emissiveIntensity=0.0 baseline set per clone (C90-P1). flatShading=true per clone. Emissive hover is driven from MerlinLairScene.ts via applyHoverTo on the cauldron zone (cauldron has one InteractiveObject entry). Note: individual candles are NOT in interactives[] — they are decorative props, not activatable zones. The candleGroup.visible=false hides only Mesh children (C112), preserving Points flame particles alongside GLB geometry.",
+      "issue": "Candles are not individually hoverable — they are decorative. The cauldron zone (zone='cauldron') covers the 2,x,-7 position which is separate from candle positions at [-5,-4.85,-7], [0,-4.85,-8.5], [3,-4.85,-6]. The three candles have no hover interaction of their own. This is an intentional design decision (candles = atmosphere only)."
+    },
+    "LairGLBAssets_fadeInGLB": {
+      "status": "CONFIRMED CANCEL-SAFE",
+      "detail": "cancelled boolean + isDisposed?.() check on every rAF tick. Returns cancel function immediately if meshes.length===0 (no rAF registered). C133: all cancel handles collected in cancelHandles[]. Return: () => cancelHandles.forEach(cancel). C122: isDisposed flag from MerlinLairScene prevents writes to disposed materials. Cancel-safety: if dispose() fires mid-fade, cancelled=true stops the rAF; tileMat is left transparent=true + opacity<1 but scene.traverse() in dispose() calls material.dispose() on the next line, preventing leak."
+    },
+    "LairGLBAssets_all4_emissive_setup": {
+      "cauldron": "emissive=0x00aa33 at intensity=0.0 — CORRECT",
+      "bougie": "emissiveIntensity=0.0 baseline per clone — CORRECT",
+      "table_druidique": "No emissive set in GLB traverse. onMapGLBLoaded restores emissive=0x3a2a10 at intensity=0.15 (C131/GLB-EMISSIVE-01) — CORRECT",
+      "bibliotheque": "No emissive set in GLB traverse. onShelfGLBLoaded restores emissive=0x2a1a08 at intensity=0.0 (C131/GLB-EMISSIVE-01) — CORRECT",
+      "crystal_ball": "emissive=0x6030aa at intensity=0.6 per GLB mesh clone — CORRECT",
+      "sol_pierre": "No emissive expected — floor, non-interactive — CORRECT",
+      "mur_pierre": "No emissive expected — walls, non-interactive — CORRECT"
+    },
+    "mg_traces_audit": {
+      "ended_guard": "CORRECT — render() first line: if (!this.ctx || !this.canvas || this.ended) return",
+      "cancelTimers": "COMPLETE — clearInterval(timerInterval) + cancelAnimationFrame(animFrame) + removeEventListener(pointerdown, onClick) + removeEventListener(keydown, onKeyDown)",
+      "event_listener_removal": "Both listeners removed by name (arrow function refs stored as class fields). Correct.",
+      "pointer_touch_leak": "None. pointerdown covers mouse+touch+stylus (no separate touch listeners in traces). canvas.style.cssText includes touch-action:none.",
+      "score_formula": "score = (hitCount / footprintCount) * 80 + timeBonus. timeBonus = max(0, timeLeft/totalTime) * 20. Range: [0, 100]. At perfect hit count and no time remaining: 80+0=80. At perfect + full time: 80+20=100. Formula correct, no division by zero (footprintCount is tieredValue, minimum 5).",
+      "memory_leak_risk": "Low: canvas/ctx not nulled post-cleanup. GC handles. No Three.js objects.",
+      "immutability": "Footprints array uses immutable update: this.footprints.map((fp, i) => i === idx ? {...fp, hit:true} : fp) (C106/TRC-02). Correct.",
+      "keyboard_wcag": "Enter/Space activates current footprint at its canvas coordinates (C137). e.preventDefault() called. Correct.",
+      "issue": "None critical."
+    },
+    "mg_runes_audit": {
+      "ended_guard": "CORRECT — render() first line: if (!this.ctx || !this.canvas || this.ended) return",
+      "cancelTimers": "COMPLETE — clearInterval + clearTimeout(revealTimeout) + cancelAnimationFrame + removeEventListener x2",
+      "event_listener_removal": "Both listeners removed by name. Correct.",
+      "pointer_touch_leak": "None. pointerdown covers all input. touch-action:none in canvas style.",
+      "rune_rendering": "Canvas operations: clearRect, iterate tiles, roundRect path, fill, stroke, fillText (symbol 32px serif, label 11px system-ui). roundRect() is a custom implementation (no CanvasRenderingContext2D.roundRect — correct for broad browser compat). No infinite loop risk: loop is bounded by this.tiles.length (max 16).",
+      "score_formula": "score = pairScore + timeBonus. pairScore = (matchedCount / totalPairs) * 70. timeBonus = max(0, timeLeft/totalTime) * 30. Range: [0, 100]. Formula correct. At all pairs + full time: 70+30=100.",
+      "tile_mutation": "(tile as {state: string}).state = 'revealed' — intentional mutation of mutable game state (comment documents this). Not a violation of immutability rule for non-shared game state. Consistent with comment C184.",
+      "gridRows_calculation": "gridRows = ceil((totalPairs * 2) / gridCols). For tier 0: 6 pairs, 12 tiles / 4 cols = 3 rows. For tier 1-3: 8 pairs, 16 tiles / 4 cols = 4 rows. Correct.",
+      "kbFocusIdx_init": "-1 at setup() (C105: no amber ring before first keypress). Reset to -1 in endGame() (C51: clear focus ring before final rAF). ArrowDown from last row: min(maxIdx, kbFocusIdx + gridCols) — clamped, no out-of-bounds. ArrowUp from row 0: max(0, kbFocusIdx - gridCols) — clamped. Correct.",
+      "empty_slots_tier0": "tier 0 has 6 pairs = 12 tiles in 4x3 grid. Last row has 4 tiles (12 = 4*3 exactly). No empty slots for tier 0. Tiers 1-3 have 8 pairs = 16 tiles in 4x4 grid — full grid. C116 fix (was 7 pairs = 14 tiles → 2 empty slots in last row) is confirmed at code level: totalPairs = tieredValue([6,8,8,8]) replaces old [5,7,8,8].",
+      "issue": "None critical."
+    }
+  },
+
+  "top_bugs": [
+    {
+      "id": "BUG-C135-01",
+      "severity": "LOW",
+      "file": "MerlinLairScene.ts",
+      "location": "ariaLive div declaration (line ~716)",
+      "description": "ariaLive div has no explicit role= attribute. Browsers may default to role=generic instead of role=status. WCAG 2.1 recommends role=status or role=log for aria-live regions.",
+      "recommendation": "Add ariaLive.setAttribute('role', 'status') after the aria-live/aria-atomic attributes.",
+      "confidence": "HIGH"
+    },
+    {
+      "id": "BUG-C135-02",
+      "severity": "LOW",
+      "file": "LairGLBAssets.ts",
+      "location": "loadGLB('/cauldron_merlin.glb') traverse, lines 97-105",
+      "description": "Cauldron GLB traverse sets roughness=0.9, metalness=0.0 for all meshes, overriding any metalness from the Blender export. This makes the cauldron look matte (non-metallic) whereas the procedural cauldron has metalness=0.6 (cast iron appearance). Post-GLB-load, the cauldron loses its cast-iron sheen.",
+      "recommendation": "Remove the hardcoded metalness=0.0 override for cauldron, or set metalness=0.5 to match the cast-iron visual intent. Roughness override to 0.9 is appropriate for aged iron.",
+      "confidence": "MEDIUM"
+    },
+    {
+      "id": "BUG-C135-03",
+      "severity": "LOW",
+      "file": "mg_runes.ts + mg_traces.ts",
+      "location": "cancelTimers() / cleanup()",
+      "description": "canvas and ctx fields are not nulled after cleanup in either minigame. If the minigame instance is retained after cleanup (unlikely but possible), stale canvas refs remain. Not a functional issue — GC handles this — but defensive nulling would align with the dispose pattern in MerlinLairScene.ts.",
+      "recommendation": "Add this.canvas = null; this.ctx = null; at end of cancelTimers() in both minigames.",
+      "confidence": "LOW"
+    },
+    {
+      "id": "BUG-C135-DEFERRED-01",
+      "severity": "LOW",
+      "file": "MerlinLairScene.ts",
+      "location": "ZONE_ARIA_LABELS.crystal",
+      "description": "Crystal zone ARIA label is 'Pierre des Oghams' — deferred from C131 audit. The zone ID in code is 'crystal' but the player-facing name is 'Pierre des Oghams'. This is a lore inconsistency (Oghams are rune symbols, not the crystal ball). The crystal ball is used for divination, not directly for Ogham readings. The map zone is where biome/Ogham selection happens per game design.",
+      "recommendation": "Consider renaming to 'Orbe de Vision' or 'Sphère de Cristal' to separate crystal divination from Ogham lore. Low priority — player-facing only.",
+      "confidence": "MEDIUM"
+    },
+    {
+      "id": "BUG-C135-DEFERRED-02",
+      "severity": "MEDIUM",
+      "file": "MerlinLairScene.ts",
+      "location": "Line count",
+      "description": "MerlinLairScene.ts is 1306 lines — 63% over the 800-line cohesion guideline. The file handles: wall/floor/ceiling geometry, crystal, bookshelf, door, candles, dust, cauldron, bottles, skull, lighting, main export init (camera, raycaster, events, update, dispose), and zone/ARIA/toast logic. Factory functions are pure and well-isolated, but the main export initMerlinLair() alone spans ~606 lines.",
+      "recommendation": "Extract ZONE_ARIA_LABELS, ZONE_LORE, KEYBOARD_ZONES, and onKeyDown/onMouseMove/onTouchStart/onTouchEnd handlers into a LairInteraction.ts module. Estimated reduction: 300 lines from main file.",
+      "confidence": "HIGH"
+    }
+  ],
+
+  "score_adjustment": {
+    "prior_score": 9.98,
+    "deductions": [
+      {
+        "id": "BUG-C135-01",
+        "severity": "LOW",
+        "deduction": -0.01,
+        "reason": "Missing role=status on ariaLive div — WCAG technicality, no user-facing impact"
+      },
+      {
+        "id": "BUG-C135-02",
+        "severity": "LOW",
+        "deduction": -0.01,
+        "reason": "Cauldron loses cast-iron metalness after GLB load — visual regression on one prop"
+      },
+      {
+        "id": "BUG-C135-03",
+        "severity": "LOW",
+        "deduction": 0,
+        "reason": "Canvas not nulled — GC handles, no functional impact, no deduction"
+      },
+      {
+        "id": "BUG-C135-DEFERRED-01",
+        "severity": "LOW",
+        "deduction": 0,
+        "reason": "Lore label pre-existing from C131, already accounted for in prior score, no additional deduction"
+      },
+      {
+        "id": "BUG-C135-DEFERRED-02",
+        "severity": "MEDIUM",
+        "deduction": -0.01,
+        "reason": "File cohesion violation (1306 lines) — architectural debt, no runtime impact, minor deduction"
+      }
+    ],
+    "total_deduction": -0.03,
+    "new_score": 9.95,
+    "note": "Score 9.95/10 — AAA standard maintained. The codebase is remarkably clean. The three LOW findings are all cosmetic or structural, none affect gameplay or accessibility functionally."
+  },
+
+  "balance_recommendations": [],
+
+  "positive_highlights": [
+    "fadeInGLB cancel-safety is production-quality — handles dispose-during-fade with zero memory leak risk",
+    "C131/GLB-EMISSIVE-01 fix (emissive seed restore on GLB swap) is a subtle but critical correctness fix — without it, hover silently no-ops on two zones post-GLB-load",
+    "Crystal hover via update-loop emissive (not applyHoverTo) correctly solves the 60fps override problem (C113)",
+    "mg_traces score formula (80% hit + 20% time) and mg_runes formula (70% pairs + 30% time) are both well-balanced — neither punishes a slow-but-accurate player too harshly",
+    "Ogham Unicode U+1681-U+1688 in mg_runes — authentic Celtic alphabet block, not Latin approximations",
+    "Particle systems (candles 20, cauldron steam 30, dust 80) are all Float32Array-based — zero GC pressure in hot update loop",
+    "Dual aria paths (ariaLive for AT, zoneToast aria-live=off for sighted) — C132 double-announce prevention is WCAG-correct"
+  ],
+
+  "worker_output_path": "C:/Users/PGNK2128/Godot-MCP/web-demo/.studio/worker_playtester.json"
+}

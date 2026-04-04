@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": "C120",
+  "auditor": "merlin-ai-playtester",
+  "files_audited": [
+    "web-demo/src/minigames/mg_runes.ts",
+    "web-demo/src/minigames/mg_sang_froid.ts"
+  ],
+
+  "run_02_fix": {
+    "issue": "RUN-02: tier 1 grid has 2 empty slots in last row",
+    "cause": "tieredValue([6,7,8,8]) yields totalPairs=7 at tier 1. gridRows = Math.ceil(14/4) = 4 (line 61). 4 rows x 4 cols = 16 slots but only 14 tiles are placed (line 145: totalTiles = 7*2 = 14). The last 2 cells in row 4 (indices 14 and 15) have no tile. Clicking them is silently ignored (onClick line 176: clickedIndex===-1 returns early). No crash, no score bug — but visible empty grey area.",
+    "grid_arithmetic": {
+      "tier_0_pairs_6": "gridRows = ceil(12/4) = 3 — full 3x4, no empty slots",
+      "tier_1_pairs_7": "gridRows = ceil(14/4) = 4 — 16 slots, 2 EMPTY — BUG",
+      "tier_2_pairs_8": "gridRows = ceil(16/4) = 4 — full 4x4, no empty slots",
+      "tier_3_pairs_8": "gridRows = ceil(16/4) = 4 — full 4x4, no empty slots"
+    },
+    "empty_cell_error": "No error thrown. onClick findIndex returns -1 for coordinates with no tile; line 176 guard 'if (clickedIndex === -1) return;' silently discards the click.",
+    "fix_options": {
+      "option_A": "Change tieredValue([6,7,8,8]) to tieredValue([6,8,8,8]) — tier 1 goes from 7 to 8 pairs. 8*2=16 tiles fills the 4x4 exactly. One-character change, no layout code touched. Slightly harder at tier 1 (1 extra pair) but within acceptable range.",
+      "option_B": "Change tieredValue([6,7,8,8]) to tieredValue([6,6,8,8]) — tier 1 drops to 6 pairs matching tier 0. gridRows=ceil(12/4)=3, full 3x4. Easier at tier 1, bigger difficulty gap before tier 2.",
+      "option_C": "Keep 7 pairs, change gridCols to be derived rather than fixed 4 — e.g. pick gridCols=2 for 6 pairs (2x6), gridCols=4 for 8 pairs. More complex, touches layout.",
+      "recommended": "option_A"
+    },
+    "code_change": {
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 60,
+      "before": "    this.totalPairs = this.tieredValue([6, 7, 8, 8] as const);",
+      "after":  "    this.totalPairs = this.tieredValue([6, 8, 8, 8] as const);",
+      "rationale": "Tier 1 now uses 8 pairs = 16 tiles = full 4x4 grid. Zero empty cells. Consistent with RUNE_SET having exactly 8 entries. The comment on line 45 already says 'RUNE_SET has exactly 8' which supports this value."
+    }
+  },
+
+  "sang_froid_audit": {
+    "verdict": "CLEAN",
+    "score_formula": {
+      "expression": "(this.timeInside / this.totalTime) * 100",
+      "location": "endGame() line 200-203",
+      "max_reachable_100": true,
+      "clamp_correct": "timeInside is clamped to totalTime at line 256 via Math.min(this.timeInside + dt, this.totalTime). So timeInside/totalTime <= 1.0 exactly. finalScore can reach exactly 100 only if player is inside for the full totalTime seconds.",
+      "divisor_analysis": "totalTime is the fixed game duration (10/9/8/7s by tier). Using totalTime as divisor is correct — it measures absolute coverage, not relative-to-elapsed. If the player is inside for all totalTime seconds, score=100. No off-by-one.",
+      "timer_drift": "timeLeft decrements via setInterval (wall-clock approximation); elapsedTime accumulates via getDeltaTime() in rAF (frame-accurate). endGame uses timeInside/totalTime — independent of both accumulators. No drift vulnerability in the score formula."
+    },
+    "edge_case_never_moves": {
+      "description": "Player never moves cursor — stays at initial position (0,0).",
+      "distance_from_zone": "sqrt(190^2 + 190^2) = ~268.7px >> startRadius 120px. isInside=false for entire run.",
+      "timeInside_result": 0,
+      "finalScore": 0,
+      "verdict": "Correct behavior — poor player gets score 0, not a crash or negative score."
+    },
+    "hud_vs_score_discrepancy": {
+      "severity": "LOW",
+      "description": "Live HUD and status element display 'timeInside / elapsedTime * 100' (concentration ratio = fraction of time spent inside). endGame scores 'timeInside / totalTime * 100' (absolute coverage). These diverge: e.g. player inside 100% of the first 5s of a 10s game shows HUD=100% but will score 50 at end. Not a bug but potentially confusing to players. Consider aligning HUD to the actual scoring metric.",
+      "lines": [260, 364]
+    }
+  },
+
+  "runes_new_bugs": [
+    {
+      "id": "RUN-KB-01",
+      "severity": "CLEAN",
+      "description": "kbFocusIdx initialized to -1 (line 112). First ArrowRight press: kbFocusIdx = Math.min(maxIdx, -1 + 1) = Math.min(maxIdx, 0) = 0. Correct — lands on tile 0. First ArrowLeft: Math.max(0, -1-1) = Math.max(0,-2) = 0. Also correct. First ArrowDown: Math.min(maxIdx, -1+4) = Math.min(maxIdx, 3) = 3 (tile 3 = row 0, col 3). Reasonable. All first-keypress outcomes are valid tile indices. No dead-zone, no out-of-bounds.",
+      "line": 112,
+      "fix": "None required."
+    },
+    {
+      "id": "RUN-KB-02",
+      "severity": "MEDIUM",
+      "description": "Partial-grid keyboard column drift (tier 1 only, 14 tiles). With the current 7-pair config (pending fix RUN-02), ArrowDown from index 10 (row 2, col 2) yields Math.min(13, 14) = 13 (row 3, col 3), not row 3 col 2 (which would be index 14 — a non-existent tile). The nav clamps to the last valid tile index instead of staying in the same column. Effect: keyboard cursor silently skips column when navigating down into the partial last row. Not a crash; not a score bug; but disorienting for keyboard-only players.",
+      "line": 229,
+      "fix": "Resolved automatically if RUN-02 fix (option_A) is applied: 8 pairs = 16 tiles = full grid, all ArrowDown destinations exist.",
+      "depends_on_run_02_fix": true
+    },
+    {
+      "id": "RUN-SCORE-01",
+      "severity": "CLEAN",
+      "description": "Score formula: pairScore = (matchedCount / totalPairs) * 70 + timeBonus = Math.max(0, timeLeft/totalTime) * 30. Range [0, 100]. The Math.max(0,...) guard on timeBonus is correct — timeLeft can be marginally negative when endGame fires from the setInterval tick (timeLeft <= 0 triggers endGame). Without the guard, timeBonus could be a small negative value. Guard is present and correct.",
+      "line": 284
+    },
+    {
+      "id": "RUN-RAF-01",
+      "severity": "CLEAN",
+      "description": "Zombie rAF guard: render() line 291 checks 'if (!this.ctx || !this.canvas || this.ended) return'. endGame() sets this.ended=true BEFORE calling cancelAnimationFrame (via cancelTimers). Any rAF that fires after endGame() but before cancelAnimationFrame executes is caught by the guard. No zombie render loop possible.",
+      "line": 291
+    }
+  ],
+
+  "summary": {
+    "run_02_status": "BUG CONFIRMED — 2 empty slots at tier 1. Fix: change totalPairs tier 1 from 7 to 8.",
+    "sang_froid_status": "CLEAN — score formula correct, clamp correct, no edge-case bugs.",
+    "runes_new_bugs_count": 1,
+    "runes_new_bugs_high_or_critical": 0,
+    "runes_new_bugs_medium": 1,
+    "runes_new_bugs_medium_note": "RUN-KB-02 (keyboard column drift in partial grid) — resolved as side-effect of RUN-02 fix."
+  },
+
+  "verdict": "BUGS_FOUND",
+  "issues": [
+    {
+      "id": "RUN-02",
+      "severity": "MEDIUM",
+      "file": "mg_runes.ts",
+      "line": 60,
+      "issue": "Tier 1 grid: 7 pairs = 14 tiles in 4x4 = 16 slots. 2 empty cells visible in last row.",
+      "recommendation": "Change tieredValue([6,7,8,8]) to tieredValue([6,8,8,8]) — tier 1 uses 8 pairs, fills grid completely."
+    },
+    {
+      "id": "RUN-KB-02",
+      "severity": "MEDIUM",
+      "file": "mg_runes.ts",
+      "line": 229,
+      "issue": "Keyboard ArrowDown navigation drifts to wrong column when navigating into partial last row (tier 1 only).",
+      "recommendation": "Resolved automatically by applying RUN-02 fix."
+    },
+    {
+      "id": "SF-HUD-01",
+      "severity": "LOW",
+      "file": "mg_sang_froid.ts",
+      "lines": [260, 364],
+      "issue": "Live HUD shows timeInside/elapsedTime (concentration %) while endGame scores timeInside/totalTime (absolute coverage). Diverge after partial play.",
+      "recommendation": "Consider changing HUD to display timeInside/totalTime*100 to match the scoring metric. Not a scoring bug."
+    }
+  ],
+
+  "action_items": [
+    {
+      "priority": 1,
+      "action": "Apply RUN-02 fix: mg_runes.ts line 60 — change 7 to 8 in tieredValue array",
+      "resolves": ["RUN-02", "RUN-KB-02"]
+    },
+    {
+      "priority": 2,
+      "action": "Optional: align sang_froid HUD metric to scoring metric (timeInside/totalTime)",
+      "resolves": ["SF-HUD-01"]
+    }
+  ]
+}

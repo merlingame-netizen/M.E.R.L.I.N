@@ -1,0 +1,182 @@
+{
+  "meta": {
+    "cycle": 46,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "commits_audited": ["a424ff6 (C44)", "7a69693 (C45)"],
+    "files_audited": [
+      "web-demo/src/scenes/MerlinLairScene.ts",
+      "web-demo/src/scenes/LairGLBAssets.ts",
+      "web-demo/src/minigames/MinigameBase.ts",
+      "web-demo/src/minigames/mg_negociation.ts",
+      "web-demo/src/minigames/mg_echo.ts"
+    ]
+  },
+
+  "c44_c45_fix_verification": {
+    "C108_sharedLight_Y": {
+      "status": "CONFIRMED",
+      "evidence": "MerlinLairScene.ts line 340: sharedLight.position.set((-5+0+3)/3, (-4.85+-4.85+-4.85)/3 + 0.55, ...) = set(-0.667, -4.30, -7.17). Y = -4.30 exactly as required. Comment at line 339 documents the fix.",
+      "was": "-2.517 (stale from old layout)",
+      "now": "-4.30"
+    },
+    "C108_lowFpsMode_hysteresis": {
+      "status": "CONFIRMED",
+      "evidence": "MerlinLairScene.ts lines 1023-1025: `if (fps<45) lowFpsMode = true; else if (fps>52) lowFpsMode = false;` — two-threshold hysteresis band [45,52] confirmed. Comment at line 1023 documents intent.",
+      "was": "single threshold (toggling at boundary)",
+      "now": "hysteresis band [45,52] — no oscillation"
+    },
+    "C109_InstancedMesh_dispose": {
+      "status": "CONFIRMED",
+      "evidence": "MerlinLairScene.ts lines 1056-1064: InstancedMesh branch fires obj.dispose() FIRST (line 1062), then obj.geometry.dispose() (1063), then material.dispose() (1064). Order is correct — instanceMatrix GPU buffer released before geometry.",
+      "was": "missing obj.dispose() — instanceMatrix leaked on hub/lair nav",
+      "now": "obj.dispose() + geometry.dispose() + material.dispose() in correct order"
+    }
+  },
+
+  "scores": {
+    "RENDU_3D": {
+      "score": 7.5,
+      "max": 10,
+      "findings": [
+        "PASS: flatShading=true enforced by applyFlatShading() on all non-crystal GLBs (LairGLBAssets.ts line 48-55). Consistent with procedural meshes.",
+        "PASS: crystal_ball.glb deliberately EXEMPT from flatShading — preserves smooth refractive appearance. Design intent confirmed (comment line 241).",
+        "PASS: polygonOffset factor=-2 units=-4 on mur_pierre InstancedMesh tiles (lines 181-184) — z-fighting fix for Mali/Adreno 16-bit depth.",
+        "ISSUE (MEDIUM): sol_pierre.glb positioned at Y=-4.98 (line 159), 0.02 above procedural floor at Y=-5.0. The 0.02u offset is a manual z-fighting guard with no depth-bias fallback if device precision is coarser than 0.02u. On very low-precision depth buffers (some Adreno 306/320 chips), z-fighting will still occur. Should use polygonOffset on sol_pierre material, mirroring the mur_pierre fix.",
+        "ISSUE (LOW): Door light flicker during cinematic (lines 1011-1013): intensity swings 12±4 = [8,16]. At intensity 16 the iron door area blows out to near-white on MeshStandard materials with roughness < 0.3. No exposure guard on doorLight.intensity."
+      ]
+    },
+    "ASSETS": {
+      "score": 8.5,
+      "max": 10,
+      "findings": [
+        "PASS: 8 GLBs inventoried — cauldron_merlin, bougie, table_druidique, bibliotheque, sol_pierre, mur_pierre, crystal_ball, plus LairWindow/LairDensity pipeline. Full coverage of all 4 interactive zones + floor + walls.",
+        "PASS: Each GLB has procedural fallback — isDisposed() guards prevent stale scene.add() on slow networks (LairGLBAssets.ts line 74).",
+        "PASS: fadeInGLB() (lines 17-45) eliminates hard pop-in with 400ms opacity ramp.",
+        "PASS: Per-clone material clone() on bougie prevents shared-material emissive bleed across all 3 candles (lines 117, comment BUG-L-10).",
+        "ISSUE (LOW): CANDLE_POSITIONS in LairGLBAssets.ts (lines 8-12) and candlePositions in MerlinLairScene.ts (lines 312-316) are duplicated literals. If positions diverge in a future patch, procedural fallback and GLB overlays will misalign. Should be a shared constant (exported from one file, imported by the other)."
+      ]
+    },
+    "WEB_PERF": {
+      "score": 8.0,
+      "max": 10,
+      "findings": [
+        "PASS: mur_pierre uses InstancedMesh — 48 clones reduced to 3 draw calls (LairGLBAssets.ts lines 194-235). Significant GPU savings.",
+        "PASS: C109 dispose() — InstancedMesh.dispose() first, then geometry + material. No instanceMatrix GPU leak on repeated navigation.",
+        "PASS: lowFpsMode hysteresis [45,52] prevents dust particle toggling at boundary FPS. Dust update() skipped below 45fps.",
+        "PASS: AudioContext singleton in MinigameBase.ts (lines 78-83) — avoids Chrome 6-context cap on rapid completions.",
+        "ISSUE (MEDIUM): dispose() traverse at lines 1056-1073 calls scene.traverse() which visits ALL objects including lights, cameras, helpers — these don't have geometry/material but the `else if (obj instanceof THREE.Mesh || obj instanceof THREE.Points)` branch is safe (won't fire). However, the traverse does NOT handle THREE.BufferGeometry from Points objects added directly to scene (e.g., dust motes). Points are covered by the `instanceof THREE.Points` branch, so this is actually fine. Minor: PointLight objects in the scene are NOT disposed — THREE.PointLight has no .dispose() but its shadow map (if any) would leak. In this project lights use no shadow maps, so impact is zero.",
+        "ISSUE (LOW): fadeInGLB uses a raw requestAnimationFrame loop that continues after potential lair dispose() if the GLB loads just before dispose fires. The isDisposed() guard in loadGLBs prevents scene.add(), but if the GLB loads and fadeInGLB is called before dispose(), the rAF loop will run briefly after lairDisposed=true. It only mutates material opacity on already-added meshes — not a crash, but 1-3 wasted rAF ticks."
+      ]
+    },
+    "UX_ACCESSIBILITY": {
+      "score": 8.0,
+      "max": 10,
+      "findings": [
+        "PASS: MinigameBase.ts overlay uses role=status + aria-live=assertive (line 129-130). Screen reader will announce outcome.",
+        "PASS: mg_negociation canvas has aria-label + role=application + tabIndex=0 (lines 122-124). Keyboard focus possible.",
+        "PASS: mg_echo canvas has aria-label + role=application + tabIndex=0 (lines 101-103). Consistent with negociation.",
+        "PASS: Timer bar has role=progressbar + aria-valuemin/max/now in mg_negociation (lines 108-111).",
+        "PASS: MerlinLairScene has ariaLive node managed in DOM (line 1078-1080).",
+        "PASS: zoneToast node cleaned up in dispose() (lines 1081-1083).",
+        "ISSUE (MEDIUM): mg_echo instructions text (line 88) says 'Clique sur le quadrant d\'ou il venait' — instruction is mouse-centric. Canvas has tabIndex=0 but no keyboard handler is visible in the 150 lines read. If keyboard fallback is absent, keyboard-only users cannot play this minigame. Partial mitigation: canvas focus is possible, but click required to answer rounds.",
+        "ISSUE (LOW): zoneToast (MerlinLairScene hover feedback) has no ARIA role visible in audited code range. If it contains zone name text, it should have role=tooltip or aria-label to be accessible to screen reader users during keyboard navigation."
+      ]
+    },
+    "GAME_FEEL": {
+      "score": 8.5,
+      "max": 10,
+      "findings": [
+        "PASS: Crystal ball float animation (lines 1005-1008): crystalData.sphere.position.y = -1.0 + sin(t*0.9)*0.04. GLB group synced to same Y. Smooth, low-frequency sway appropriate for arcane object.",
+        "PASS: Candle flicker uses 3-frequency sin composition (lines 419-424): 7.3Hz + 13.1Hz + 3.7Hz. Not uniform — organic.",
+        "PASS: Door cinematic: doorFlashing path drives intensity 12±4 with 45Hz oscillation (lines 1012-1013) — fast flicker on run start. Effective dramatic punctuation.",
+        "PASS: Camera sway at 0.3 and 0.23 cycles/s (lines 999-1000). Low frequency, non-nauseating. Contributes to 'inhabited space' feel.",
+        "ISSUE (MEDIUM): crystalData.mat.emissiveIntensity animated at lines 1003-1004 (0.5 ± 0.15). When crystal_ball.glb loads, the GLB mesh's material is set with emissive 0x6030aa and separate emissiveIntensity (LairGLBAssets.ts line ~250). The procedural mat reference on crystalData.mat still drives the animation loop — but post-GLB-load, crystalData.mat is the PROCEDURAL sphere's material (now invisible). The GLB material's emissive intensity is NOT animated from this loop. Crystal GLB will appear static/flat post-load while procedural sphere was pulsing. The crystalGLBGroup position sync at line 1008 is correct, but emissive animation is NOT synced to GLB material.",
+        "ISSUE (LOW): mg_negociation scrolling words use a canvas at 380×400px with max-width:100% CSS. On 320px-wide mobile screens the canvas scales down, but word hit-targets use raw canvas coordinate math (pointerdown). The coordinate translation at `(e.clientX - rect.left) * (canvas.width / rect.width)` is correct and handles CSS scaling. No issue."
+      ]
+    },
+    "GAME_DESIGN": {
+      "score": 8.0,
+      "max": 10,
+      "findings": [
+        "PASS: mg_negociation faction keywords are thematically coherent — druides:chene/gui/rituel, ankou:ombre/seuil/neant, niamh:brume/voile/lune. Lore-accurate.",
+        "PASS: mg_echo uses actual Ogham Unicode characters (\\u1681-\\u168F, lines 19-23) as flash symbols. Strong Celtic immersion — not generic icons.",
+        "PASS: 4-level outcome system in MinigameBase (desastre/echec/reussite/maitrise) with flavor text. Merlin-specific lore ('Ogham vivant — la forêt chante à ton passage' for maitrise).",
+        "PASS: checkCriticalAlert fires at 3s remaining (MinigameBase.ts line 240) — tense SFX moment before time-out.",
+        "PASS: tieredValue[T] (lines 218-220) scales difficulty by play count across 4 tiers — respects GDB progressive difficulty curve.",
+        "ISSUE (MEDIUM): mg_negociation targetFaction displayed as raw key ('druides', 'korrigans') at line 101. Player sees 'Cible: korrigans' — not localized/capitalized. GDB v2.4 faction names use proper casing. Minor immersion break.",
+        "ISSUE (LOW): mg_echo totalRounds=6 is hardcoded (line 40), not tieredValue-scaled. Higher tiers only gain shorter flash/window durations. Adding rounds at tier 2-3 would increase skill ceiling without changing core mechanic."
+      ]
+    }
+  },
+
+  "global_score": {
+    "weighted_average": 8.1,
+    "scores_summary": {
+      "RENDU_3D": 7.5,
+      "ASSETS": 8.5,
+      "WEB_PERF": 8.0,
+      "UX_ACCESSIBILITY": 8.0,
+      "GAME_FEEL": 8.5,
+      "GAME_DESIGN": 8.0
+    },
+    "verdict": "FIX",
+    "reason": "Global 8.1/10 — below 8.5 threshold. Two MEDIUM issues require attention before PROCEED: (1) crystalData.mat emissive animation NOT synced to GLB material post-load [GAME_FEEL], (2) sol_pierre z-fighting guard relies on manual Y offset with no polygonOffset fallback [RENDU_3D]. Both are safe to fix in a single cycle."
+  },
+
+  "top_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": "1003-1008",
+      "title": "Crystal GLB emissive animation not synced — GLB appears static post-load",
+      "description": "The update loop animates crystalData.mat.emissiveIntensity (line 1004) on the PROCEDURAL sphere material. After crystal_ball.glb loads, the procedural sphere is hidden (visible=false) and the GLB mesh takes its place. The GLB material has its own emissive property set at load time (LairGLBAssets.ts ~line 250) but is NEVER updated from the animation loop. Result: procedural sphere pulses correctly before GLB loads, then GLB appears with fixed flat emissive once loaded. crystalGLBGroup position float IS synced (line 1008) — only emissive intensity is missed. Fix: store GLB material ref in a variable (e.g. crystalGLBMat) via the onCrystalGLBLoaded callback, then animate it in the same block as crystalData.mat.",
+      "regression": false
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": "157-165",
+      "title": "sol_pierre z-fighting guard uses manual Y offset only — polygonOffset absent",
+      "description": "sol_pierre.glb is placed at Y=-4.98 (line 159), 0.02u above the procedural floor at Y=-5.0. The comment at line 156 acknowledges this is a z-fighting guard. However, unlike mur_pierre (which uses polygonOffsetFactor=-2, Units=-4 per C89-P1/C90-P2 fix), sol_pierre has no polygonOffset on its material. On Mali-T720/Adreno 306 GPUs with 16-bit depth buffers, the effective depth precision at Z~10 is ~0.05u — larger than the 0.02u separation. Z-fighting will flicker on those devices. Fix: apply applyFlatShading + a polygonOffset pass on sol_pierre material at load time, mirroring the mur_pierre pattern.",
+      "regression": false
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "line": "118",
+      "title": "mg_echo has no keyboard answer handler — keyboard-only users cannot answer rounds",
+      "description": "Canvas has tabIndex=0 (line 103) allowing focus, but onClick is bound only to 'pointerdown' (line 118). No keydown or keyup handler is registered to allow answering quadrant questions via keyboard (e.g. N/E/S/W or arrow keys or 1-4). The game is unplayable for keyboard-only users despite having focus support. MinigameBase also does not provide a default keyboard fallback. Fix: add a keydown handler mapping ArrowUp/W=Nord, ArrowRight/D=Est, ArrowDown/S=Sud, ArrowLeft/A=Ouest to the same quadrant-selection logic as onClick.",
+      "regression": false
+    }
+  ],
+
+  "balance_recommendations": [
+    {
+      "parameter": "mg_echo.totalRounds",
+      "current": "6 (fixed, all tiers)",
+      "suggested": "tieredValue([6, 6, 7, 8])",
+      "confidence": "MEDIUM",
+      "rationale": "Tier 3 players already face 0.3s flash / 0.7s window. Adding 1-2 rounds at high tiers increases mastery ceiling without changing core mechanic."
+    },
+    {
+      "parameter": "mg_negociation.targetFaction display",
+      "current": "raw key string ('korrigans')",
+      "suggested": "capitalize or use a display name map",
+      "confidence": "HIGH",
+      "rationale": "Trivial UX polish — 'Cible: Korrigans' vs 'Cible: korrigans'. Aligns with GDB faction name conventions."
+    },
+    {
+      "parameter": "sol_pierre polygonOffset",
+      "current": "none — manual Y +0.02u only",
+      "suggested": "polygonOffsetFactor=-1, polygonOffsetUnits=-2 (lighter than mur_pierre, floor is flat)",
+      "confidence": "HIGH",
+      "rationale": "Prevents z-fighting on 16-bit depth GPUs without visible visual change on desktop."
+    }
+  ],
+
+  "structured_output_path": "web-demo/.studio/worker_playtester.json"
+}

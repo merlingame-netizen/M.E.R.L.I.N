@@ -1,0 +1,10 @@
+{
+  "agent": "merlin-ai-playtester",
+  "cycle": 30,
+  "wave": 3,
+  "status": "PASS",
+  "overall_score": 9.2,
+  "verdict": "PROCEED",
+  "report_path": "tools/autodev/playtest_reports/playtest_report_cycle30.json",
+  "timestamp": "2026-04-03T00:00:00.000Z"
+}

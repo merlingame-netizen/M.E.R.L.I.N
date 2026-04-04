@@ -1,0 +1,100 @@
+{
+  "report_id": "c106_minigames_audit",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 106,
+  "context": "C94 introduced `protected get storageKey(): string { return this.constructor.name; }` on MinigameBase. All 14 subclasses rely on the default getter. This audit covers vite build config, mg_fouille, and mg_sang_froid.",
+
+  "questions": [
+    {
+      "id": "Q1",
+      "title": "storageKey stability under Vite/esbuild production build",
+      "verdict": "PASS",
+      "confidence": "HIGH",
+      "analysis": {
+        "vite_config_flags_checked": [
+          "minifyIdentifiers",
+          "terser",
+          "build.minify",
+          "esbuild.minifyIdentifiers",
+          "rollupOptions.output.manualChunks"
+        ],
+        "findings": [
+          "vite.config.ts has no `minify` field — Vite defaults to `esbuild` minifier in production.",
+          "Vite's default esbuild minification sets `minifyIdentifiers: false` for class names to preserve them (esbuild only mangles local variable names, not exported class names).",
+          "All 14 minigame classes are statically imported via MinigameRegistry.ts and therefore EXPORTED symbols — esbuild never mangles exported identifiers.",
+          "The manual chunk config splits minigames into a 'minigames' chunk but does not alter identifier preservation rules.",
+          "No terser config is present. No `build.minify: 'terser'` override. No `esbuild.minifyIdentifiers: true`.",
+          "`sourcemap: true` is set — this confirms class names must survive minification for source maps to be useful.",
+          "Result: `this.constructor.name` reliably returns e.g. 'MinigameFouille' at runtime. localStorage keys will be `merlin_mg_plays_MinigameFouille` etc. across dev and prod builds."
+        ],
+        "risk_condition": "Would become HIGH if a future commit adds `build.minify: 'terser'` with aggressive options, or `esbuild: { minifyIdentifiers: true }`. No such config exists today."
+      }
+    },
+
+    {
+      "id": "Q2",
+      "title": "mg_fouille.ts cleanup audit",
+      "verdict": "PASS",
+      "confidence": "HIGH",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "checklist": {
+        "cancelTimers_or_cleanup_clears_timers": {
+          "result": "PASS",
+          "detail": "cleanup() calls clearTimeout(this.foundTimeout), clearInterval(this.timerInterval), and cancelAnimationFrame(this.animFrame) at lines 439-441. No separate cancelTimers() method needed — all timer handles are cleared directly in cleanup()."
+        },
+        "endGame_double_finish_guard": {
+          "result": "PASS",
+          "detail": "`endGame()` opens with `if (this.ended) return;` at line 291 then immediately sets `this.ended = true`. This is a correct double-finish guard. The onClick and onKeyDown paths both call endGame() only after setting `this.found = true`, but even without that the guard is present."
+        },
+        "all_event_listeners_removed_in_cleanup": {
+          "result": "PASS",
+          "detail": "Three listeners are added in setup() on the canvas: `pointermove` (onPointerMove), `pointerdown` (onClick), `keydown` (onKeyDown). cleanup() removes all three on the same canvas reference at lines 442-444. endGame() also removes them at lines 296-298 so they are removed at the earliest possible point. No document-scope or window-scope listeners anywhere in the file."
+        },
+        "orphaned_setTimeouts": {
+          "result": "PASS",
+          "detail": "`foundTimeout` is the only setTimeout in the file. It is stored in `this.foundTimeout`. It is cleared in both endGame() (line 293) and cleanup() (line 439). The 400ms delay fires endGame(), which sets ended=true, so a second fire is a no-op even if clearTimeout were somehow missed."
+        },
+        "document_scope_listeners": {
+          "result": "PASS",
+          "detail": "No `document.addEventListener` or `window.addEventListener` calls anywhere in mg_fouille.ts."
+        }
+      },
+      "notes": "The file is clean. Minor stylistic observation only: endGame() duplicates the three removeEventListener calls that cleanup() also makes — this is harmless (removing a non-attached listener is a no-op) but results in the listeners being removed twice on a normal game-over path. Not a bug."
+    },
+
+    {
+      "id": "Q3",
+      "title": "mg_sang_froid.ts cleanup audit",
+      "verdict": "PASS",
+      "confidence": "HIGH",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "checklist": {
+        "cancelTimers_or_cleanup_clears_timers": {
+          "result": "PASS",
+          "detail": "cleanup() at lines 371-379 calls clearInterval(this.timerInterval) and cancelAnimationFrame(this.animFrame). No foundTimeout equivalent exists in this minigame (no delayed endGame call)."
+        },
+        "endGame_double_finish_guard": {
+          "result": "PASS",
+          "detail": "`endGame()` opens with `if (this.ended) return;` at line 186 then sets `this.ended = true`. The timer interval is the only path that can call endGame(), but the guard correctly protects against any race."
+        },
+        "all_event_listeners_removed_in_cleanup": {
+          "result": "PASS",
+          "detail": "Five listeners are added in setup(): `pointermove` (onPointerMove), `pointerdown` (onPointerMove), `pointerleave` (onPointerLeave), `pointercancel` (onPointerLeave), `keydown` (onKeyDown). endGame() at lines 190-194 removes all five. cleanup() at lines 374-378 also removes all five. No document-scope or window-scope listeners in the file."
+        },
+        "orphaned_setTimeouts": {
+          "result": "PASS",
+          "detail": "No setTimeout calls anywhere in mg_sang_froid.ts. Only setInterval (stored as this.timerInterval) and requestAnimationFrame (stored as this.animFrame)."
+        },
+        "document_scope_listeners": {
+          "result": "PASS",
+          "detail": "No `document.addEventListener` or `window.addEventListener` calls in mg_sang_froid.ts. The SFX dispatches use `window.dispatchEvent` (write-only, no listener registration)."
+        }
+      },
+      "notes": "Same minor duplicate-removal pattern as mg_fouille: endGame() and cleanup() both remove all listeners. Harmless. The `window.dispatchEvent` calls for SFX (lines 244-247) are fire-and-forget dispatches, not listener registrations — no leak."
+    }
+  ],
+
+  "overall_verdict": "PASS",
+  "issues": [],
+  "summary": "All three questions pass with high confidence. The storageKey mechanism is safe under the current Vite/esbuild configuration. Both mg_fouille and mg_sang_froid have correct double-finish guards, full timer cleanup, and no orphaned document-scope listeners. The only structural note is a harmless double-removal pattern (endGame + cleanup both call removeEventListener) present in both files — this is defensive coding, not a bug."
+}

@@ -1,0 +1,78 @@
+{
+  "cycle": "C112",
+  "timestamp": "2026-04-04T15:00:00.000Z",
+  "targets": ["mg_course", "mg_echo"],
+  "findings": {
+    "mg_course": {
+      "cancelTimers_contract": "FAIL",
+      "pointerdown_coverage": "N/A",
+      "immutability": "PASS",
+      "sfx_edge_trigger": "PASS",
+      "tieredValue_usage": "PASS",
+      "memory_leaks": "PASS",
+      "bugs": [
+        {
+          "id": "CRS-01",
+          "severity": "MEDIUM",
+          "description": "No cancelTimers() override. endGame() inlines clearTimeout+cancelAnimationFrame+removeEventListener×2. cleanup() duplicates the same three teardown calls instead of delegating. This diverges from the gold-standard pattern (cancelTimers override + cleanup calling super only) and creates duplicated teardown logic. No crash risk in current code because cleanup() does clear everything, but the duplication is a maintainability hazard.",
+          "file": "web-demo/src/minigames/mg_course.ts",
+          "line": 275,
+          "fix": "Introduce protected cancelTimers(): void { clearTimeout(this.endTimeout); cancelAnimationFrame(this.animFrame); this.canvas?.removeEventListener('pointerdown', this.onClick); this.canvas?.removeEventListener('keydown', this.onKeyDown); super.cancelTimers(); }. Then endGame() calls this.cancelTimers() and cleanup() calls only super.cleanup()."
+        }
+      ]
+    },
+    "mg_echo": {
+      "cancelTimers_contract": "FAIL",
+      "pointerdown_coverage": "N/A",
+      "immutability": "PASS",
+      "sfx_edge_trigger": "PASS",
+      "tieredValue_usage": "PASS",
+      "memory_leaks": "PASS",
+      "bugs": [
+        {
+          "id": "ECH-01",
+          "severity": "MEDIUM",
+          "description": "No cancelTimers() override. endGame() inlines cancelAnimationFrame+removeEventListener×2. cleanup() duplicates the same teardown instead of delegating to cancelTimers(). Same structural divergence from gold standard as CRS-01.",
+          "file": "web-demo/src/minigames/mg_echo.ts",
+          "line": 249,
+          "fix": "Introduce protected cancelTimers(): void { cancelAnimationFrame(this.animFrame); this.canvas?.removeEventListener('pointerdown', this.onClick); this.canvas?.removeEventListener('keydown', this.onKeyDown); super.cancelTimers(); }. Then endGame() calls this.cancelTimers() and cleanup() calls only super.cleanup()."
+        },
+        {
+          "id": "ECH-02",
+          "severity": "LOW",
+          "description": "Completed-round score dots (lines 463-464) render a flat grey rgba(140,130,120,0.5) for all past rounds regardless of hit or miss. mg_course uses roundOutcomes[i] to color green (hit) vs red (miss). Echo never stores per-round outcomes, so there is no hit/miss color distinction. Players lose all feedback about which rounds they got right after the fact.",
+          "file": "web-demo/src/minigames/mg_echo.ts",
+          "line": 463,
+          "fix": "Add a private roundOutcomes: boolean[] = [] field. Push outcome in onClick/onKeyDown/render timeout branch (same pattern as mg_course). In the dot rendering loop, use roundOutcomes[i] to choose green rgba(80,180,80,0.7) vs red rgba(200,60,60,0.5) for completed rounds."
+        }
+      ]
+    }
+  },
+  "verdict": "BUGS_FOUND",
+  "priority_bugs": [
+    {
+      "id": "CRS-01",
+      "severity": "MEDIUM",
+      "description": "mg_course: no cancelTimers() override — teardown duplicated across endGame() and cleanup(). Diverges from gold-standard pattern.",
+      "file": "web-demo/src/minigames/mg_course.ts",
+      "line": 275,
+      "fix": "Extract cancelTimers() override, have endGame() call this.cancelTimers(), have cleanup() call only super.cleanup()."
+    },
+    {
+      "id": "ECH-01",
+      "severity": "MEDIUM",
+      "description": "mg_echo: no cancelTimers() override — same structural duplication as CRS-01.",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "line": 249,
+      "fix": "Same refactor as CRS-01."
+    },
+    {
+      "id": "ECH-02",
+      "severity": "LOW",
+      "description": "mg_echo: score dots for completed rounds are always grey — hit/miss outcome not tracked or visualized.",
+      "file": "web-demo/src/minigames/mg_echo.ts",
+      "line": 463,
+      "fix": "Add roundOutcomes: boolean[] array and drive dot color from it."
+    }
+  ]
+}

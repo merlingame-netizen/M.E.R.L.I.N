@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "cycle": 130,
+    "auditor": "merlin-ai-playtester",
+    "timestamp": "2026-04-04T00:00:00Z",
+    "score_entering_cycle": 9.93,
+    "files_audited": [
+      "web-demo/src/scenes/CoastBiome.ts",
+      "web-demo/src/minigames/mg_herboristerie.ts",
+      "web-demo/src/minigames/mg_negociation.ts",
+      "web-demo/src/scenes/LairGLBAssets.ts (lines 1-80, 240-353)",
+      "web-demo/src/game/CardSystem.ts",
+      "web-demo/src/main.ts (lines 490-784)"
+    ]
+  },
+
+  "answers": {
+    "A_skipOceanFrame_naming": {
+      "verdict": "CORRECT — name is NOT inverted",
+      "analysis": "Line 369: `let _skipOceanFrame = false`. Line 383: `_skipOceanFrame = !_skipOceanFrame` (toggles every frame). Line 384: `if (!_skipOceanFrame || dt <= 0.033)` — update runs when flag is FALSE (just toggled to false = even-numbered frames) OR when fps >= 30. When flag is TRUE the update is skipped (unless dt override). The name 'skip this ocean frame' correctly describes the value: true=skip. The LOW C122-13 finding was incorrect — name matches logic. CLOSE C122-13.",
+      "recommended_action": "Close C122-13 as false positive. No rename needed."
+    },
+
+    "B_herboristerie_hud_vs_endgame": {
+      "verdict": "No divergence. Guard solid. One stale comment.",
+      "live_hud": "Canvas draws `${this.correctPicks}/${this.totalTargets}` (line 425) — raw pick count, correct.",
+      "endgame_formula": "baseScore = (correctPicks/totalTargets)*80, penalty = wrongPicks * this.wrongPenalty (tieredValue), timeBonus = (timeLeft/totalTime)*20. Correct.",
+      "double_finish_guard": "endGame() has `if (this.ended) return` at line 351. endGame() is called from setInterval (timeLeft <= 0) and from a deferred setTimeout (correctPicks >= totalTargets). The ended guard prevents double-calling finish(). Timer is cancelled at start of endGame() via cancelTimers(). SAFE.",
+      "stale_comment_bug": "Line 357: comment says 'Penalty: wrongPicks * 8' but actual code uses `this.wrongPenalty` which is tieredValue([5,6,7,8]). At tier 0 the penalty is 5, not 8. Comment does not match code. LOW severity — no runtime impact but misleads future developers.",
+      "setinterval_leak": "None. cancelTimers() at line 342-348 clears timerInterval, endTimeout, animFrame, and removes event listeners."
+    },
+
+    "C_negociation_hud_vs_endgame": {
+      "verdict": "No divergence. No double-finish. Mutation pattern is functionally safe.",
+      "live_hud": "Canvas draws `factionPicked` at line 400-404 via `pickedSequence.filter(w => w.isFactionWord).length`. This is recalculated each render frame from pickedSequence.",
+      "endgame_formula": "Lines 330-338 recalculate factionPicked and neutralPicked from pickedSequence identically. factionScore = min(80, factionPicked*8), comboBonus = min(25, maxCombo*5), penalty = neutralPicked*3, timeBonus = (timeLeft/totalTime)*15, cap 100. Formula is self-consistent with live HUD.",
+      "double_finish_guard": "endGame() has `if (this.ended) return` at line 321. No deferred setTimeout path — only called from setInterval when timeLeft <= 0. SAFE.",
+      "mutation_note": "onPointerDown (line 287-288) and onKeyDown (lines 108-109) mutate sw.picked and sw.fadeAlpha directly on the array elements. render() rebuilds scrollingWords via immutable .map() each frame, which copies the mutated .picked value via spread. Functionally correct — the mutation IS visible to render() on the next frame. Style inconsistency only, not a runtime bug.",
+      "setinterval_leak": "None. cancelTimers() at line 313-318 clears timerInterval and animFrame and removes listeners. No endTimeout stored (no deferred endGame path)."
+    },
+
+    "D_lair_glbfade_murtile_cancel": {
+      "verdict": "SAFE — old tileMat correctly disposed via scene.traverse in dispose()",
+      "analysis": "When cancelHandles[i]() fires mid-fade (cancelled=true), the rAF tick returns immediately at the `if (cancelled ...) return` guard (LairGLBAssets.ts line 36). The shared tileMat stays at opacity < 1, transparent=true — this is correct: the material is semi-transparent in GPU state. On the NEXT lair visit: MerlinLairScene.dispose() fires BEFORE clearGLBCache() (line 1214). dispose() calls scene.traverse (line 1233) which walks all InstancedMeshes (backMesh/leftMesh/rightMesh). The traverse block at lines 1234-1249 handles InstancedMesh: calls obj.dispose() (line 1239), disposes obj.geometry (line 1240), and disposes obj.material via the deduplicated Set (line 1242). Since all 3 InstancedMeshes share the same tileMat reference, the Set dedup fires mat.dispose() exactly once. The semi-transparent state (transparent=true, opacity<1) is a CPU-side Material property — it is fully released when mat.dispose() calls gl.deleteTexture / deallocates GPU uniform buffer. No partial state survives. clearGLBCache() then purges the GLTF cache so the next lair visit creates a fresh .clone() tileMat.",
+      "recommended_action": "Add a comment at LairGLBAssets.ts line 313 (before the fadeInGLB call) confirming the cancel-dispose safety contract. Example: '// Safe to cancel mid-fade: tileMat is disposed via scene.traverse in MerlinLairScene.dispose() regardless of opacity state. Semi-transparent state does not leak — mat.dispose() deallocates GPU resources.'"
+    },
+
+    "E_cardSystem_double_resolution": {
+      "verdict": "No double-resolution possible",
+      "analysis": "main.ts lines 694-700: `Promise.race([llm.generateCard(...), new Promise(res => setTimeout(() => res(null), 8000))])`. Promise.race() adopts the first settled promise and ignores all subsequent settlements — guaranteed by the Promise spec. The timeout resolves with null; null triggers the `?? generateFastRouteCard(...)` fallback on line 707. The try/catch at lines 704-723 handles any rejection from the race, falling through to the hardcoded emergency card. There is no path where generateCard() resolves twice because the race winner is adopted by the outer await and the loser is silently discarded. generateFastRouteCard() is a synchronous function — no async race within it. SAFE."
+    }
+  },
+
+  "new_bugs": [
+    {
+      "id": "BUG-C130-HERB-COMMENT-01",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "line_approx": 357,
+      "description": "Stale comment in endGame() says 'Penalty: wrongPicks * 8' but actual code uses `this.wrongPenalty` which is tieredValue([5,6,7,8]). At difficulty tier 0 the penalty is 5, not 8. Comment was not updated when C115 introduced tieredValue scaling. No runtime impact but misleads future balance tuning — a developer reading the comment would compute tier-0 score incorrectly.",
+      "fix": "Update comment to: 'Penalty: wrongPicks * this.wrongPenalty (tieredValue [5,6,7,8] by difficultyTier)'"
+    },
+    {
+      "id": "BUG-C130-COASTBIOME-NAMING-CONFIRMED-CORRECT",
+      "severity": "INFO",
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "line_approx": 369,
+      "description": "C122-13 was a false positive. _skipOceanFrame name correctly matches the logic: true=skip this frame, false=render this frame. The if-condition `!_skipOceanFrame || dt<=0.033` reads: 'update unless this is a skip-frame AND fps is low'. No action required. Closing C122-13.",
+      "fix": "No fix needed. Close C122-13."
+    },
+    {
+      "id": "BUG-C130-LAIR-TILEMAT-COMMENT-GAP",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line_approx": 313,
+      "description": "BUG-L-GLBFADE-MURTILE-01 verified SAFE (see answer D). The cancel-dispose safety chain (cancelled=true → rAF stops → tileMat stays semi-transparent → dispose() scene.traverse deallocates mat correctly) is correct but undocumented. A developer seeing opacity<1 on a mid-cancelled material might incorrectly flag it as a leak without understanding the dispose() contract.",
+      "fix": "Add a safety comment before the fadeInGLB call at line ~316: '// Cancel-safe: if cancelHandles[i]() fires mid-fade (opacity<1, transparent=true), the semi-transparent state is released when MerlinLairScene.dispose() calls scene.traverse → mat.dispose() on the shared tileMat. clearGLBCache() then ensures the next visit creates a fresh clone.'"
+    }
+  ],
+
+  "verified_safe": [
+    {
+      "id": "BUG-L-GLBFADE-MURTILE-01",
+      "verdict": "SAFE",
+      "reason": "tileMat disposed correctly via scene.traverse in MerlinLairScene.dispose() regardless of mid-fade cancel state. Set dedup ensures single disposal."
+    },
+    {
+      "id": "LAIR-CANCELHANDLES",
+      "verdict": "SAFE",
+      "reason": "cancelGLBFades() called at top of dispose() before traverse, stopping in-flight rAFs before material deallocation begins."
+    },
+    {
+      "id": "CARDGEN-DOUBLE-RESOLVE",
+      "verdict": "SAFE",
+      "reason": "Promise.race guarantees single resolution. Fallback chain (llm → null → FastRoute → emergency) is fully covered."
+    },
+    {
+      "id": "VISIBILITYCHANGE-HANDLERS",
+      "verdict": "SAFE",
+      "reason": "emergencySave listener added once in main() (not in loop). onGameVisibility added and removed per run at lines 566/608. onLairVisibility added and removed per lair visit at lines 352/489. No accumulation."
+    },
+    {
+      "id": "HERBORISTERIE-DOUBLE-FINISH",
+      "verdict": "SAFE",
+      "reason": "ended guard at line 351 prevents double-finish from concurrent setInterval + setTimeout paths."
+    },
+    {
+      "id": "NEGOCIATION-DOUBLE-FINISH",
+      "verdict": "SAFE",
+      "reason": "ended guard at line 321. Only one endGame path (setInterval timeout) — no deferred setTimeout."
+    }
+  ],
+
+  "summary": {
+    "new_bugs_count": 1,
+    "severity_breakdown": { "HIGH": 0, "MEDIUM": 0, "LOW": 1, "INFO": 2 },
+    "known_issues_resolved": ["C122-13 (false positive — confirmed correct)", "BUG-L-GLBFADE-MURTILE-01 (verified safe, comment gap only)"],
+    "estimated_score_impact": "No score regression. The single LOW bug (stale comment) carries zero runtime risk. Score holds at 9.93/10."
+  }
+}

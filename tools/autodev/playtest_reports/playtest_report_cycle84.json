@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-04-04T00:00:00.000Z",
+  "cycle": "C84",
+  "agent": "merlin-ai-playtester",
+  "scope": "Static code audit — MerlinLairScene.ts, mg_apaisement.ts, mg_negociation.ts, mg_ombres.ts",
+  "note": "No headless build executed. Pure read-only analysis against web-demo/src.",
+  "runs_simulated": 0,
+  "summary": {
+    "files_audited": 4,
+    "bugs_found": 5,
+    "already_tracked_skipped": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 3,
+    "low": 1
+  },
+  "bugs": [
+    {
+      "id": "BUG-C84-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1027,
+      "area": "Keyboard navigation — Enter/Space activation",
+      "description": "The Enter/Space handler fires only when `currentHovered` is non-null (line 1027: `&& currentHovered && zoneClickCallback`). However, Tab/Shift+Tab nav sets `currentHovered` via `interactives.find()` — which searches by `zone` name inside `KEYBOARD_ZONES`. After an onMapGLBLoaded or onShelfGLBLoaded callback the matching `entry.mesh` is swapped to the GLB mesh but the `interactives` array object itself is mutated in-place. The find() still resolves correctly there. The real hazard is the initial state: `keyboardZoneIdx = -1`, so the very first Tab press sets idx=0 and resolves `currentHovered`. But if focus arrives on the canvas via mouse-click before any Tab press, `keyboardZoneIdx` is -1 and `currentHovered` is the hovered mesh from mouse, NOT from the keyboard list. Pressing Enter then activates a zone correctly — but the ariaLive announcement (line 1030) always reads `currentHovered.zone` without checking whether the zone is `'skull'` (hover-only). Unlike the pointer path at line 974 which guards `found.zone !== 'skull'`, the keyboard Enter path at line 1030 has NO such guard and will announce 'Crâne du Sage activée' for the skull, which has no action — misleading screen reader users (WCAG 4.1.3 regression).",
+      "suggested_fix": "At line 1030, wrap the ariaLive write in the same guard used in onPointerAction: `if (currentHovered.zone !== 'skull') ariaLive.textContent = ...`. Also add a skull guard before `zoneClickCallback(currentHovered.zone)` at line 1046 to silently no-op (matching the hover-only contract stated in comment line 856)."
+    },
+    {
+      "id": "BUG-C84-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 996,
+      "area": "Touch — onTouchMove passive option mismatch on removeEventListener",
+      "description": "addEventListener at line 1086 uses `{ passive: false }` — this is correct to allow e.preventDefault(). The removeEventListener at line 1199 passes `{ passive: false } as EventListenerOptions` which TypeScript permits but whose runtime semantics are implementation-defined: browsers treat the passive flag as part of the EventListenerOptions identity only in some engines (Chromium does, Firefox historically did not). If the passive option is ignored during removal, the touchmove listener is not removed and fires on the orphaned domElement after dispose, leaking a reference to the closed-over `mouse` Vector2 and `renderer` (which has been disposed). The safe fix is to store the options object in a named const and reuse the same reference for both add and remove calls.",
+      "suggested_fix": "Add `const touchPassive = { passive: false } as AddEventListenerOptions;` before line 1086. Use it in both addEventListener (lines 1086-1087) and removeEventListener (lines 1199-1200). This ensures object identity and removes ambiguity on all engines."
+    },
+    {
+      "id": "BUG-C84-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1027,
+      "area": "Keyboard Enter — door cinematic ariaLive text set before guard check",
+      "description": "Line 1030: `ariaLive.textContent = '... activée'` is written unconditionally BEFORE the `if (currentHovered.zone === 'door')` branch check on line 1033. This means for ALL zones, including door, the non-door announcement fires first — and then for door, a second setTimeout fires `kbCb(kbZone)` after 380ms with no second announcement. This is correct for non-door zones. For door however the ariaLive text is stale (says 'activée') before the flash even starts. A screen reader user hears the activation announcement 380ms before the scene actually changes, which is harmless but inconsistent with the pointer path where ariaLive is NOT written before the flash (pointer path only announces on `onPointerAction`, line 974, where there is no pre-flash ariaLive write either). Low visual impact but WCAG 4.1.3 timing inconsistency.",
+      "suggested_fix": "For the door branch, defer the ariaLive write to inside the setTimeout callback (after `doorFlashing = false`), matching the pointer path's contract. For non-door branches keep it at line 1030."
+    },
+    {
+      "id": "BUG-C84-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_ombres.ts",
+      "line": 102,
+      "area": "Pointer cleanup on dispose — pointermove not captured ref",
+      "description": "`onPointerMove` is registered as `this.canvas.addEventListener('pointermove', this.onPointerMove)` (line 102). `endGame()` removes it at line 191: `this.canvas?.removeEventListener('pointermove', this.onPointerMove)`. This is correct. However, there is no `dispose()` override in MinigameOmbres (the base class dispose path is not shown in this audit). If the parent component unmounts the container without triggering `endGame()` (e.g., a hard navigation away before timer fires), the listener is not cleaned up because `endGame` is only called from the timer interval. If `MinigameBase.dispose()` does not call `endGame()`, a stale `pointermove` listener persists on the detached canvas, keeping a closure over `this` alive. Additionally the `canvas` element is created in `setup()` and stored as `this.canvas`, so it is not garbage-collectable until the event listener is removed.",
+      "suggested_fix": "Verify that `MinigameBase.dispose()` calls `this.endGame()` or manually calls `this.canvas?.removeEventListener('pointermove', this.onPointerMove)` and `this.canvas?.removeEventListener('keydown', this.onKeyDown)`. If not, add a `dispose()` override in `MinigameOmbres` that delegates to `endGame()` then calls `super.dispose()`."
+    },
+    {
+      "id": "BUG-C84-05",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_negociation.ts",
+      "line": 44,
+      "area": "Type safety — pick<T> can return undefined on empty array",
+      "description": "The helper `pick<T>(arr: readonly T[]): T` at line 43-45 uses `arr[Math.floor(Math.random() * arr.length)]` with return type `T` (non-nullable). If called with an empty array (e.g., `FACTION_KEYWORDS[faction]` if a faction key is missing — possible if `FACTION_KEYWORDS` is ever extended asymmetrically), the return is `undefined` but typed as `T`, silently breaking the immutable `Word` object. TypeScript strictNullChecks would normally catch this on the call site but the non-nullable return type suppresses it.",
+      "suggested_fix": "Change return type to `T | undefined` and add a non-null assertion or fallback at call sites, or add `if (arr.length === 0) throw new Error('pick: empty array');` as a runtime guard. Low risk in current code since all arrays are non-empty constants, but becomes a trap if arrays are made dynamic."
+    }
+  ],
+  "already_tracked_skipped": [
+    {
+      "id": "KNOWN-C83-01",
+      "file": "web-demo/src/minigames/mg_apaisement.ts",
+      "lines": "~330-370",
+      "reason": "feedbackColor dead code already logged in session.json open_issues — not re-reported"
+    }
+  ],
+  "not_found": [
+    {
+      "target": "MerlinLairScene.ts — door cinematic flash logic",
+      "result": "CLEAN — double-activation guard (line 979) and clearTimeout in dispose() (line 1204) are correct. No bug."
+    },
+    {
+      "target": "MerlinLairScene.ts — Tab/Shift+Tab navigation cycle",
+      "result": "CLEAN — KEYBOARD_ZONES correctly excludes skull, modular arithmetic wraps correctly."
+    },
+    {
+      "target": "MerlinLairScene.ts — zone lore toast rendering",
+      "result": "CLEAN — textContent + createElement pattern (lines 922-930) is XSS-safe and renders correctly in both mouse and keyboard paths."
+    },
+    {
+      "target": "mg_negociation.ts — SFX wiring",
+      "result": "CLEAN — unlock (line 113, 293), lose (line 113, 297) all fired via window CustomEvent. No missing wiring."
+    },
+    {
+      "target": "mg_ombres.ts — SFX wiring",
+      "result": "CLEAN — lose fired edge-triggered on collision start (line 214). No missing wiring."
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "report_id": "C138_GAMELOOP_STORE",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "audited_files": [
+    "web-demo/src/main.ts (1145 lines, fully read)",
+    "web-demo/src/game/Store.ts (391 lines, fully read)",
+    "web-demo/src/game/Constants.ts (219 lines, fully read)",
+    "web-demo/src/game/EffectEngine.ts (partial, relevant sections read)",
+    "web-demo/src/ui/RunSummary.ts (323 lines, fully read)"
+  ],
+
+  "checklist_results": {
+
+    "BP-01_showBiomePicker": {
+      "location": "main.ts:148-214",
+      "escape_key_handler": "ABSENT",
+      "timeout_fallback": "ABSENT",
+      "analysis": "showBiomePicker() returns a Promise that resolves only on button click. There is no Escape key handler and no timeout. If the player opens the biome picker (by clicking the 'map' zone) and then does nothing — e.g. presses Escape expecting to dismiss, or simply ignores it — the Promise never resolves and runMerlinLair() hangs indefinitely at line 466: `selectedBiomeId = await showBiomePicker(wrapper!)`. The lair loop is fully blocked; no door click is possible because the overlay sits at z-index:30 covering the lair canvas. This is a SOFTLOCK. Note: the Journal panel (showJournalPanel, line 218-305) DOES have an Escape handler (line 303). The biome picker was not given the same treatment.",
+      "severity": "CRITICAL",
+      "bug_id": "C138-BP-01"
+    },
+
+    "RS-01_showRunSummary_reentry_guard": {
+      "location": "ui/RunSummary.ts:39,103-122",
+      "guard_mechanism": "Module-level `resolveRestart: (() => void) | null` (line 39)",
+      "guard_set_at": "Line 311: `resolveRestart = resolve` — set INSIDE the `new Promise()` executor, AFTER the overlay is built and appended to the DOM",
+      "race_window_analysis": "The guard resolves any stale prior awaiter (line 119-122) and is correct for re-entry protection. However the NEW resolveRestart pointer is only assigned at line 311, which is after `await fadeIn(800)` (line 116) — an 800ms async gap. During that 800ms window, if showRunSummary() were called a second time (from a concurrent death path), the re-entry guard on the SECOND call would find resolveRestart=null (it was cleared at line 121 on the first call's guard execution) and would NOT cancel the first call's pending overlay. The DOM then gets two overlays. In practice the game loop uses sequential break paths (single `await showRunSummary()` per branch) so concurrent calls cannot happen in normal play. The risk is theoretical but real if endRun() is triggered externally.",
+      "verdict": "LOW risk in practice. Guard logic is sound for sequential flow.",
+      "severity": "LOW",
+      "bug_id": "C138-RS-01"
+    },
+
+    "drain_life_logic": {
+      "location": "main.ts:665-677, Store.ts:192-204, Constants.ts:17-25",
+      "order": "incrementCardsPlayed() called FIRST (line 666), then drainLifeScaled() (line 667)",
+      "drain_tiers": {
+        "stage1": "cards 0-14: drain -1",
+        "stage2": "cards 15-24: drain -2 (LIFE_DRAIN_THRESHOLD_STAGE2=15)",
+        "stage3": "cards 25+: drain -3 (LIFE_DRAIN_THRESHOLD_STAGE3=25)"
+      },
+      "death_check_timing": "Death is checked AFTER drain (line 671: step 3) and BEFORE card is shown. A second death check fires AFTER effects (line 807: step 9). This matches the Game Design Bible pipeline (1.DRAIN 2.CARTE ... 9.VIE=0?).",
+      "bug": "Store.ts:192-204 — drainLifeScaled() reads `s.run.cardsPlayed` from the snapshot `s` captured at the start of the `set()` call. Because incrementCardsPlayed() was called BEFORE this in a separate `set()` call (both are synchronous Zustand state mutations), Zustand guarantees the state is committed between the two calls. drainLifeScaled() therefore reads the ALREADY-INCREMENTED count. This is correct.",
+      "off_by_one_check": "Threshold check is `>= 15` and `>= 25`. After card 14 is incremented to 15, the next drain is stage2. This is correct per GDB: 'cards 15-24 drain -2'.",
+      "verdict": "CORRECT. No bug found.",
+      "severity": "PASS"
+    },
+
+    "OC-03_ailm_predict_next": {
+      "location": "EffectEngine.ts:311-313, main.ts:731-751",
+      "effect_type_returned": "'predict_next'",
+      "mutation_block_handling": "main.ts lines 731-751 handle oghamResult.effectType. The block checks for: 'full_reroll', 'force_twist', 'regenerate_all_options', 'replace_worst_option'. The value 'predict_next' is NOT listed in any branch.",
+      "behavior": "When ailm is used, applyOghamEffect returns { effectType: 'predict_next', applied: true }. The mutation block at lines 731-751 falls through with no match — the card is NOT mutated. This is CORRECT: ailm is a UI-only reveal effect (EffectEngine.ts:311-312 comment: 'UI-only effect — handled by HUD'). However the HUD handler for 'predict_next' was not observed in the audited files. If the HUD does not consume `oghamResult` from the game loop, the 'predict next card' feature is silently a no-op.",
+      "bug": "main.ts does NOT pass oghamResult to HUD or any UI component after the mutation block. The oghamResult is local to the gameLoop function and is not forwarded. Therefore ailm 'predict_next' fires, sets cooldown correctly, costs the activation, but delivers zero player-visible feedback. This is a MEDIUM UX bug — the player spends an activation for nothing visible.",
+      "severity": "MEDIUM",
+      "bug_id": "C138-OC-03"
+    },
+
+    "worstIdx_reduce_typescript_validity": {
+      "location": "main.ts:743-746",
+      "code": "const worstIdx = ([0, 1, 2] as const).reduce<0 | 1 | 2>(\n  (w, i) => (scoreOpt(card.options[i]) < scoreOpt(card.options[w]) ? i : w),\n  0,\n);",
+      "typescript_analysis": {
+        "tuple_type": "`[0, 1, 2] as const` produces a readonly tuple of literal types `readonly [0, 1, 2]`. Calling `.reduce<0|1|2>` on it is valid TypeScript. The generic type parameter constrains both the accumulator `w` and the return type of the callback to `0|1|2`. Since `i` is typed as `0|1|2` (elements of the literal tuple) and `w` starts at `0` (which is `0|1|2`), the ternary `? i : w` returns `0|1|2` in both branches.",
+        "accumulator_correctness": "The reduce starts with initial value `0` (index 0). For each subsequent index `i` (1, then 2), it compares the score of option[i] vs option[w]. If option[i] is strictly worse (lower score), w becomes i. After both comparisons, w holds the index of the option with the lowest score.",
+        "edge_case": "If two options have equal scores, the first (lowest-indexed) is kept as 'worst' since the condition is strict `<`. This is a conservative/safe tie-break.",
+        "verdict": "VALID TypeScript. Logic is correct."
+      },
+      "severity": "PASS"
+    },
+
+    "card_source_after_ogham_mutation": {
+      "location": "main.ts:731-751",
+      "analysis": {
+        "full_reroll_force_twist": "Line 734: `card = generateFastRouteCard(...)`. generateFastRouteCard always returns `source: 'fastroute'`. If the original card had `source: 'llm'`, the source is now 'fastroute'. This is CORRECT — the card WAS rerolled from fastroute.",
+        "regenerate_all_options": "Line 736-737: `card = { ...card, options: fresh.options }`. The spread preserves `card.source` from the original LLM card. The options come from a fastroute card but source still says 'llm'. This is a minor inconsistency but not a functional bug — source is used for analytics/logging only.",
+        "replace_worst_option": "Lines 738-749: `card = { ...card, options: opts }`. Same as above — source preserved from original. One option slot is from fastroute, others from llm card.",
+        "verdict": "Source tracking after 'regenerate_all_options' and 'replace_worst_option' is misleading (says 'llm' but options are partially or fully from fastroute). Not a functional bug but a MEDIUM data quality issue if source is ever used for balance metrics."
+      },
+      "severity": "LOW",
+      "bug_id": "C138-CS-01"
+    },
+
+    "dom_leak_patterns": {
+      "analysis": [
+        {
+          "id": "C138-DOM-01",
+          "location": "main.ts:1091-1097",
+          "pattern": "window.addEventListener('ogham_unlocked', ...) at module scope",
+          "issue": "This listener is registered once at module load and never removed. Across the while(true) run loop it accumulates zero additional copies (registered once, not in the loop). Not a leak. PASS.",
+          "severity": "PASS"
+        },
+        {
+          "id": "C138-DOM-02",
+          "location": "main.ts:1103-1133",
+          "pattern": "document.addEventListener('keydown', ...) at module scope (Space + Escape handler)",
+          "issue": "Registered once at module load, never removed. Acceptable — global keyboard shortcut for the app lifetime. PASS.",
+          "severity": "PASS"
+        },
+        {
+          "id": "C138-DOM-03",
+          "location": "main.ts:516-519",
+          "pattern": "window.addEventListener('beforeunload', emergencySave) and document.addEventListener('visibilitychange', ...) in main()",
+          "issue": "Registered once at app startup, never removed. Intentional persistent listeners. PASS.",
+          "severity": "PASS"
+        },
+        {
+          "id": "C138-DOM-04",
+          "location": "main.ts:567-572 (onGameVisibility), removed at line 613",
+          "pattern": "visibilitychange listener added per-run, removed after gameLoop exits",
+          "issue": "Properly cleaned up. PASS.",
+          "severity": "PASS"
+        },
+        {
+          "id": "C138-DOM-05",
+          "location": "main.ts:194-209 (showBiomePicker button hover listeners)",
+          "pattern": "pointerenter/pointerleave listeners added to 8 biome buttons",
+          "issue": "Buttons are children of overlay div. Overlay is removed via overlay.remove() after click (line 205-206) or at DOM GC. Listeners are collected with the element. No leak.",
+          "severity": "PASS"
+        },
+        {
+          "id": "C138-DOM-06",
+          "location": "main.ts:357 (lair onLairVisibility), removed at line 494",
+          "pattern": "visibilitychange for lair RAF pausing",
+          "issue": "Removed before lair.dispose(). PASS.",
+          "severity": "PASS"
+        }
+      ],
+      "summary": "No DOM listener leaks found in the game loop. All per-run listeners are removed on cleanup paths."
+    }
+  },
+
+  "bugs_found": [
+    {
+      "bug_id": "C138-BP-01",
+      "severity": "CRITICAL",
+      "category": "SOFTLOCK",
+      "file": "web-demo/src/main.ts",
+      "line": "148-214",
+      "function": "showBiomePicker()",
+      "description": "The biome picker Promise has no Escape key handler and no timeout fallback. Clicking the 'map' zone in the lair opens the picker overlay (z-index:30). If the player presses Escape or does nothing, the overlay stays visible forever and the await never resolves, hanging runMerlinLair() indefinitely. The door cannot be reached. This is a full softlock on any run where the player opens the biome picker and does not click a biome.",
+      "proposed_fix": "Add a keydown handler for Escape inside the Promise executor that removes the overlay and resolves with the previously selected biome (or the default 'cotes_sauvages'). Mirror the escHandler pattern from showJournalPanel() at line 303. Also add a { once: true } option to the handler to prevent accumulation. Optionally add a 30s timeout fallback that auto-selects the current biome.",
+      "fix_code_reference": "See showJournalPanel() lines 303-305 for the escHandler pattern to replicate."
+    },
+    {
+      "bug_id": "C138-OC-03",
+      "severity": "MEDIUM",
+      "category": "MISSING_FEEDBACK",
+      "file": "web-demo/src/main.ts",
+      "line": "731-751 (mutation block), 683-689 (oghamResult assignment)",
+      "function": "gameLoop()",
+      "description": "The ailm ogham effect 'predict_next' is handled in EffectEngine as a UI-only effect expected to be consumed by the HUD. However in gameLoop(), oghamResult is a local variable that is never forwarded to the HUD or any UI component. After the mutation block (lines 731-751), oghamResult is used only to determine card mutation — and 'predict_next' triggers no mutation. The net effect is: the player activates ailm, the cooldown is set correctly, but no 'next card theme/field' prediction UI is shown. The activation is silently wasted from the player's perspective.",
+      "proposed_fix": "After the mutation block, check `if (oghamResult?.effectType === 'predict_next')` and forward the prediction to the HUD. Either: (a) generate the NEXT card ahead of time (second generateFastRouteCard call) and extract its field, then call a HUD function to display it; or (b) store a 'predicted_field' flag in the store for the HUD to render on the next card display. Option (b) is cleaner for the existing architecture."
+    },
+    {
+      "bug_id": "C138-CS-01",
+      "severity": "LOW",
+      "category": "DATA_QUALITY",
+      "file": "web-demo/src/main.ts",
+      "line": "735-749",
+      "function": "gameLoop() ogham mutation block",
+      "description": "After 'regenerate_all_options' or 'replace_worst_option' mutations, `card.source` retains the value from the original card (e.g. 'llm') even though options have been replaced with fastroute-generated content. If card.source is ever used for balance analytics or logging, this produces misleading attribution.",
+      "proposed_fix": "Set `card = { ...card, options: ..., source: 'fastroute' as const }` after any mutation that replaces options with fastroute content. Full reroll already returns a fresh card from generateFastRouteCard so its source is already 'fastroute'."
+    }
+  ],
+
+  "passes": [
+    "drainLifeScaled() correctly reads post-increment cardsPlayed (separate set() calls, Zustand commits synchronously between them)",
+    "3-stage drain thresholds (15/25) and amounts (1/2/3) correctly match Constants.ts and GDB",
+    "Death check at step 3 (after drain, before card) is correct per GDB pipeline order",
+    "Death check at step 9 (after effects) is also present",
+    "worstIdx reduce<0|1|2> is valid TypeScript with correct accumulation logic",
+    "RS-01 re-entry guard (resolveRestart module-level) correctly resolves stale awaiter before rebuilding overlay",
+    "No DOM listener leaks in the game loop — all per-run listeners are cleaned up",
+    "showJournalPanel() has correct Escape handler",
+    "doorTriggered guard (C117/MAIN-01) correctly prevents double-tap concurrent overlay fire",
+    "emergencySave on beforeunload and visibilitychange:hidden is correctly wired",
+    "savedThisRun idempotency guard in gameLoop correctly prevents double-save",
+    "store.getState().setActiveOgham('') correctly resets stale ogham before new run (C88-02)",
+    "Lair visibilitychange listener correctly removed before dispose"
+  ],
+
+  "summary": {
+    "total_bugs": 3,
+    "critical": 1,
+    "medium": 1,
+    "low": 1,
+    "softlocks_found": 1,
+    "critical_bug": "C138-BP-01: biome picker has no Escape handler — player-triggerable softlock"
+  },
+
+  "escalation": {
+    "required": true,
+    "reason": "CRITICAL softlock C138-BP-01: showBiomePicker() has no Escape key handler and no timeout. Any player who opens the biome picker and does not click a biome button is permanently stuck.",
+    "action": "Fix immediately. Replicate escHandler pattern from showJournalPanel() line 303."
+  }
+}

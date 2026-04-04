@@ -1,0 +1,182 @@
+{
+  "audit_id": "cycle-53-coastbiome",
+  "timestamp": "2026-04-03T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "scope": {
+    "files_audited": [
+      "web-demo/src/scenes/CoastBiome.ts",
+      "web-demo/src/main.ts"
+    ],
+    "missing_files": [
+      "BroceliandeWalk.ts — does not exist (no 3D forest walk scene in web-demo/src/scenes/)"
+    ]
+  },
+
+  "top_3_bugs": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "title": "computeVertexNormals() called once at build time on ocean — but wave animation does NOT call it per-frame, which is correct; however the per-frame loop reads from a stale oceanBaseY Float32Array copied from the ORIGINAL buffer (before rotation). The position array is in LOCAL space (PlaneGeometry Y-axis before rotation.x = -PI/2 is applied), so bx/bz used for wave phase are actually the planar X/Y screen-space coords, not world X/Z. The sine wave phasing is therefore computed in rotated-but-not-accounted-for space — wave topology is subtly wrong.",
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "line_range": "379-386",
+      "exact_fix": "The loop uses `oceanBaseY[i*3]` (X) and `oceanBaseY[i*3+1]` (Y-before-rotation = world Z). Because the mesh is rotated on X by -PI/2, the PlaneGeometry's local Y becomes world Z and local Z becomes world Y. The snapshot is correct in local-space and the math happens to use local X (bx) and local Y (bz label), which in world space are worldX and worldZ after rotation. This is actually numerically fine — but the variable name `bz` for `oceanBaseY[i*3+1]` is misleading and could cause a future regression. Rename: `const bx = oceanBaseY[i*3] ?? 0; const by_local = oceanBaseY[i*3+1] ?? 0;` and use `by_local` for the cosine wave phase. Severity is HIGH because a future developer will 'fix' this by swapping indices and break the animation."
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "title": "biomeResult.dispose() is NEVER called on scene transition. main() calls buildCoastScene(), adds the group to sceneManager, then enters gameLoop(). When the run ends (break), the function returns — but neither the group is removed from sceneManager.scene nor biomeResult.dispose() is called. SceneManager.start() launches a RAF loop that never stops. All 40 trees × 4 meshes + ocean + ground + rocks + menhirs + fog + lights stay in GPU memory for the entire browser session. Re-running (Rejouer) rebuilds a second biomeResult on top without clearing the first.",
+      "file": "web-demo/src/main.ts",
+      "line_range": "273-314 (buildCoastScene call) + 324-473 (gameLoop — no dispose on break)",
+      "exact_fix": "After gameLoop() returns (line 314 or wherever main() awaits it), add: `sceneManager.scene.remove(biomeResult.group); biomeResult.dispose(); sceneManager.stop();`. SceneManager must expose a stop() method that cancels the RAF. Also, the re-run path (showRunSummary → Rejouer) currently reloads the page (or does not — the code path after showRunSummary is a break followed by function end), meaning a page reload is the implicit re-run. Document this explicitly or add the dispose before any future re-run loop."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "title": "runMainMenu() cancels the RAF (cancelAnimationFrame) and calls menu.dispose(), but the menuAnimId RAF is started unconditionally with tick() before awaiting the Start button. If initMainMenu() throws (e.g., WebGL context lost on low-end mobile), menuAnimId is left at 0, cancelAnimationFrame(0) is a no-op and menu.dispose() throws — leaving the animation loop running forever (tick() has already been scheduled).",
+      "file": "web-demo/src/main.ts",
+      "line_range": "105-146",
+      "exact_fix": "Wrap the tick() call and the await-promise block in a try/finally: `try { tick(); await startPromise; } finally { cancelAnimationFrame(menuAnimId); menu.dispose(); }`. This guarantees cleanup even if initMainMenu throws mid-way or the promise rejects."
+    }
+  ],
+
+  "category_scores": {
+    "PERF_per_frame_cpu": {
+      "score": 9,
+      "notes": [
+        "computeVertexNormals() is called ONCE at geometry build time (line 20) — correct, not per-frame.",
+        "Ocean wave animation mutates posAttr.array directly in a tight typed-array loop — this is optimal.",
+        "flatShading:true is set on ocean material, so GPU does per-face normal computation; JS never calls computeVertexNormals() in the update loop. Comment on line 386 confirms intent.",
+        "Fog uses ShaderMaterial with uTime uniform — zero JS CPU cost per-frame beyond one uniform write.",
+        "Minor: performance.now() called inside update() on every frame (line 374) instead of receiving the accumulated time from the dt argument. Not a measurable cost but inconsistent — the dt parameter is passed in but ignored for the ocean animation."
+      ]
+    },
+    "PERF_memory_leaks": {
+      "score": 5,
+      "notes": [
+        "CRITICAL: biomeResult.dispose() never called after run ends — see Bug #2.",
+        "dispose() implementation itself is correct: traverses group, disposes geometry and material for every Mesh. It calls group.clear() at the end.",
+        "SceneManager RAF loop appears to run indefinitely after game ends — no stop() called.",
+        "GLB models are cloned via gltf.scene.clone() — the original gltf scene is never disposed. If loadGLB caches the GLTF object, this is fine; if not, the original geometry stays allocated.",
+        "oceanBaseY Float32Array is a one-time allocation, not per-frame — correct.",
+        "createRocks() creates individual DodecahedronGeometry per rock (18 rocks = 18 separate geometries). Using InstancedMesh would halve draw calls and GPU memory for rocks."
+      ]
+    },
+    "THREE_orphan_lights": {
+      "score": 10,
+      "notes": [
+        "All 4 lights (ambient, sun, hemi, rim) are added to `group` (lines 291, 304, 307, 312), not directly to the scene.",
+        "When the group is disposed/removed, all lights go with it — no orphan lights.",
+        "Pattern is consistent across all lighting: group.add(ambient), group.add(sun), group.add(hemi), group.add(rim).",
+        "This is textbook AAA light grouping for biome scenes."
+      ]
+    },
+    "flatShading_compliance": {
+      "score": 9,
+      "notes": [
+        "ground: flatShading:true (line 26) — PASS.",
+        "ocean: flatShading:true (line 43) — PASS.",
+        "trees trunk: flatShading:true (line 116) — PASS.",
+        "trees leaf: flatShading:true (line 117) — PASS.",
+        "rocks: flatShading:true (line 161) — PASS.",
+        "menhirs stone mat: flatShading:true (line 243) — PASS.",
+        "menhirs moss mat: flatShading:true (line 244) — PASS.",
+        "GLB models: flatShading enforced via traverse() on load (lines 334-337) — PASS.",
+        "Sky: ShaderMaterial (not MeshStandardMaterial) — exempt from flatShading rule, correct.",
+        "Fog: ShaderMaterial — exempt, correct.",
+        "Score -1: createMenhirs() allocates a DodecahedronGeometry `geo` on line 249 but immediately overwrites it with BoxGeometry for the actual menhir mesh (line 250). The DodecahedronGeometry is disposed (line 268) but never used — dead code that costs allocation/disposal per menhir iteration."
+      ]
+    },
+    "ARIA_accessibility": {
+      "score": 6,
+      "notes": [
+        "The Three.js canvas element created by SceneManager has no role or aria-label — screen readers see a bare <canvas>.",
+        "Biome toast: role='status' + aria-live='polite' — PASS (main.ts line 577-578).",
+        "Ogham unlock toast: role='status' + aria-live='assertive' — PASS (main.ts line 729-730).",
+        "LLM loading hint: no role or aria-label — it is pointer-events:none but still announced by some screen readers as an anonymous live region.",
+        "Boot screen: boot-status-text has textContent updates but no aria-live attribute on the element itself — status messages are not announced to screen readers.",
+        "Menu start button: uses id='menu-start-btn' — no way to verify it has accessible label without reading index.html, but the id suggests it is a standard <button>.",
+        "Zone toast in runMerlinLair: role='status' + aria-live='polite' + aria-atomic='true' — PASS (main.ts line 203-205).",
+        "Minigame container: no visible aria attributes in main.ts — depends on individual minigame implementations."
+      ]
+    },
+    "gamefeel_camera_rail": {
+      "score": 8,
+      "notes": [
+        "CoastBiome is correctly self-contained: it returns BiomeSceneResult {group, update, dispose} with NO camera concern.",
+        "The caller (main.ts line 277) creates CameraRail.createCoastalPath() independently of buildCoastScene().",
+        "Clean separation of concerns — biome does not need or store a camera reference.",
+        "The camera rail speed (WALK_SPEED = 0.04) is hardcoded in main.ts, not in CoastBiome — appropriate.",
+        "Minor: the update(dt) callback in BiomeSceneResult ignores the dt parameter internally (uses performance.now() directly for wave time). This means if the game loop is paused (tab hidden, dt clamped to 0.05), the wave animation continues using wall-clock time rather than game time. Consistent pause behavior would require using accumulated dt instead of performance.now()."
+      ]
+    },
+    "dispose_lifecycle": {
+      "score": 4,
+      "notes": [
+        "dispose() implementation in CoastBiome.ts is thorough: traverse + geometry.dispose() + material.dispose() + group.clear() — PASS.",
+        "CRITICAL FAILURE: biomeResult.dispose() is never called in main.ts. After gameLoop() returns, the code simply ends — the biome group stays in sceneManager.scene indefinitely.",
+        "The SceneManager's onUpdate callback still holds a reference to both rail.update and biomeResult.update — even if dispose() were called, these closures would continue executing until the RAF is cancelled.",
+        "main.ts line 280: sceneManager.onUpdate registers a callback but there is no matching offUpdate or cleanup handle returned — no way to unregister the biome update tick without stopping the entire SceneManager.",
+        "Recommendation: SceneManager.onUpdate() should return a disposal handle, or the biome update should be wrapped in a flag that is set to false on dispose."
+      ]
+    },
+    "bundle_code_splitting": {
+      "score": 6,
+      "notes": [
+        "main.ts imports ALL 14 minigame classes at the top of the file (lines 17-29). These are eager imports — all minigame code is in the same initial chunk.",
+        "With 14 minigames, each likely 200-400 lines of TS, this adds ~50-100 KB unminified to the initial bundle.",
+        "createMinigame() is a switch statement that instantiates lazily at runtime — the architecture supports dynamic import() but the imports are static.",
+        "Recommended: convert each `import { MinigameX }` to `const { MinigameX } = await import('./minigames/mg_x')` inside the relevant switch case arm — Vite will automatically code-split.",
+        "CoastBiome.ts imports THREE via `import * as THREE` and loadGLB — both are likely already in the main chunk since SceneManager also uses THREE. No redundancy issue here.",
+        "getLLMAdapter from GroqAdapter is eagerly imported (line 31) — if the LLM feature is optional (user may play without LLM), this could be a dynamic import to avoid loading Groq SDK on first paint.",
+        "loadTemplates() (line 11) is already deferred to after game reveal (line 303) — good async loading practice."
+      ]
+    }
+  },
+
+  "global_score": {
+    "weighted_average": 7.1,
+    "breakdown": {
+      "PERF_per_frame_cpu":    { "weight": 0.15, "score": 9,  "contribution": 1.35 },
+      "PERF_memory_leaks":     { "weight": 0.20, "score": 5,  "contribution": 1.00 },
+      "THREE_orphan_lights":   { "weight": 0.10, "score": 10, "contribution": 1.00 },
+      "flatShading_compliance":{ "weight": 0.10, "score": 9,  "contribution": 0.90 },
+      "ARIA_accessibility":    { "weight": 0.10, "score": 6,  "contribution": 0.60 },
+      "gamefeel_camera_rail":  { "weight": 0.10, "score": 8,  "contribution": 0.80 },
+      "dispose_lifecycle":     { "weight": 0.15, "score": 4,  "contribution": 0.60 },
+      "bundle_code_splitting": { "weight": 0.10, "score": 6,  "contribution": 0.60 }
+    },
+    "verdict": "PARTIAL — render architecture and lighting are AAA-grade; the memory lifecycle is the single largest risk for production (no dispose on run end, no SceneManager stop)."
+  },
+
+  "additional_findings": [
+    {
+      "severity": "LOW",
+      "title": "Dead DodecahedronGeometry in createMenhirs()",
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "line": "249",
+      "note": "geo is allocated (DodecahedronGeometry) and disposed (line 268) but never attached to a Mesh. The menhir body uses BoxGeometry (line 250). The DodecahedronGeometry allocation is dead code — remove lines 249 and 268."
+    },
+    {
+      "severity": "LOW",
+      "title": "performance.now() in update() ignores dt parameter",
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "line": "374",
+      "note": "update(dt) receives a delta time from the game loop but internally calls performance.now() for wave and fog animation. When the browser tab is hidden or the game loop clamps dt, the 3D wave continues animating with wall-clock time. Use an accumulated time: `accumulatedTime += dt` and pass that to the shader uniform and wave math."
+    },
+    {
+      "severity": "LOW",
+      "title": "No ForestWalkScene (BroceliandeWalk) exists in web-demo",
+      "file": "N/A",
+      "note": "The scope requested audit of BroceliandeWalk.ts / ForestWalkScene.ts. Neither file exists in web-demo/src/scenes/. The only biome scene is CoastBiome.ts. If Broceliande is a planned biome, the CameraRail.createCoastalPath() in main.ts is hardcoded — when a second biome is added, the rail factory call and store.getState().startRun('cotes_sauvages') will need to be parameterised."
+    },
+    {
+      "severity": "MEDIUM",
+      "title": "14 minigame eager imports inflate initial bundle",
+      "file": "web-demo/src/main.ts",
+      "line_range": "17-29",
+      "note": "All minigame classes are statically imported. Switching to dynamic import() per switch-case would allow Vite to code-split each minigame into its own async chunk, reducing first-paint bundle by an estimated 50-100 KB."
+    }
+  ],
+
+  "balance_note": "No playtest simulation data available for Cycle 53 — this report is a static code audit only. Run the auto_play_runner for balance metrics (cards-per-run, death distribution, ogham usage rate)."
+}

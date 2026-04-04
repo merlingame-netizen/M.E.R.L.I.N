@@ -1,0 +1,149 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 38,
+  "audit_type": "QA_CODE_REVIEW",
+  "scope": [
+    "web-demo/src/scenes/MerlinLairScene.ts",
+    "web-demo/src/scenes/LairGLBAssets.ts",
+    "web-demo/src/minigames/mg_echo.ts"
+  ],
+
+  "checks": {
+    "A_fps_monitoring": {
+      "result": "MISSING",
+      "detail": "The update() loop (line 961-997) receives dt from the caller (main.ts line 338) and clamps it at 0.05s but there is zero FPS tracking: no frame counter, no rolling average, no adaptive quality path. If a frame takes >50ms the dt is clamped to 0.05 but the renderer still calls renderer.render() on every tick regardless. No dynamic resolution scaling, no geometry LOD switch, no particle-count reduction on slow frames.",
+      "severity": "MEDIUM"
+    },
+    "B_canvas_init_zero_size": {
+      "result": "BUG_CONFIRMED",
+      "detail": "initMerlinLair() (line 671-672) calls renderer.setSize(container.clientWidth, container.clientHeight) unconditionally. main.ts sets wrapper.style.display='block' at line 317 *before* calling initMerlinLair at line 323, so the wrapper is visible by the time the renderer is created. The call to revealFromBlack(800) at line 321 runs *before* initMerlinLair — it applies an opacity fade on the app container, not display:none, so clientWidth/Height will be non-zero at init time. HOWEVER, the guard is architectural luck, not an explicit check. If a caller mounts the container while it is inside a display:none ancestor, or before CSS layout has resolved (e.g., called synchronously during a 'DOMContentLoaded' handler before first paint), the renderer will silently initialise at 0x0 with no error, no resize, no warning. No guard exists in the function itself.",
+      "severity": "MEDIUM"
+    },
+    "C_dpr_on_resize": {
+      "result": "BUG_CONFIRMED",
+      "detail": "onResize() (lines 707-713) updates camera.aspect and calls renderer.setSize(w, h) but does NOT call renderer.setPixelRatio(). The DPR is set once at init (line 672: Math.min(window.devicePixelRatio, 2)). If the user moves the browser window to a monitor with a different DPR (e.g., 1x external monitor after working on a 2x retina screen), or changes the browser zoom level that alters devicePixelRatio, the backing framebuffer stays at the stale ratio. Result: blurry rendering on upscale or wasted GPU pixels on downscale until the page is refreshed.",
+      "severity": "LOW",
+      "note": "Zoom-triggered DPR changes fire 'resize' events, making this reproducible on any monitor without hardware change."
+    },
+    "D_scene_entry_fade": {
+      "result": "PASS_WITH_CAVEAT",
+      "detail": "main.ts calls revealFromBlack(800) at line 321 *before* initMerlinLair — so the HTML overlay fades out over 800ms while the Three.js scene is being built underneath. GLB assets each have their own fadeInGLB(400ms) in LairGLBAssets.ts (C97). The scene itself does NOT have an explicit fade-in; the revealFromBlack covers the gap adequately. However, the procedural scene geometry pops in immediately once the overlay lifts — if the page renders slower than 800ms, the user sees raw geometry before GLBs fade in. This is a cosmetic limitation, not a bug.",
+      "severity": "INFO"
+    },
+    "E_raf_loop_cancel_on_dispose": {
+      "result": "BUG_CONFIRMED",
+      "detail": "dispose() (lines 999-1030) sets lairDisposed=true and removes event listeners, but it does NOT cancel the rAF loop. The rAF tick is owned by main.ts (line 333-342) and the loop id is stored in rafId there. dispose() has no mechanism to reach that rafId. Consequence: after dispose() returns, the next scheduled rAF fires tick(), which calls lair.update(dt), which runs the full update() function including renderer.render(scene, camera). Since renderer.dispose() has already been called (line 1019), calling renderer.render() on a disposed renderer is a no-op in Three.js r152+ — it silently returns. So there is no crash, but there IS one wasted render call per frame until the caller clears rafId. Whether main.ts cancels rafId after calling dispose() is not shown in the visible window (lines 323-350 only), so the leak may persist for the lifetime of the navigation transition.",
+      "severity": "MEDIUM",
+      "note": "Inspect main.ts around the lair teardown path (lines 350+) to confirm rafId is cancelled. If not, this is a sustained ghost-loop leak."
+    },
+    "F_keyboard_focus": {
+      "result": "BUG_CONFIRMED",
+      "detail": "initMerlinLair() sets tabindex='0' on renderer.domElement (line 678) and wires a keydown listener (line 958). However, no .focus() call is made after appending the canvas to the container. Keyboard events only fire on canvas if the canvas has DOM focus. The user must manually click the canvas before Tab navigation works. On mobile or assistive-tech paths, this means keyboard navigation is silently broken until the user interacts with a pointer device first — defeating the purpose of the keyboard nav system added in C85-01.",
+      "severity": "MEDIUM"
+    },
+    "G_candle_flicker": {
+      "result": "PASS",
+      "detail": "updateCandles() (lines 414-446) is called every frame from update() (line 985) with dt and elapsedTime. The flicker is a multi-frequency sin composite computed per-frame (lines 419-421): sin(t*7.3) + sin(t*13.1) + sin(t*3.7). Light intensity is updated every frame. Particles are also updated every frame. There is no interval — it is a proper per-frame animation. No issues found.",
+      "severity": "PASS"
+    },
+    "H_door_flash_dispose_race": {
+      "result": "BUG_CONFIRMED",
+      "detail": "In onPointerAction() (lines 873-884), when the door zone is clicked: doorFlashing=true is set, and setTimeout(() => { doorFlashing=false; cb(found.zone); }, 380) fires after 380ms. If dispose() is called within that 380ms window (e.g., the user navigates away via a keyboard shortcut, or the host component unmounts), three problems occur: (1) the closure 'cb' is the captured zoneClickCallback — it will fire on an already-disposed scene, potentially triggering a scene transition on a torn-down renderer; (2) doorFlashing=false writes to a stale closure variable that no longer has any live readers, which is harmless but indicative; (3) lairDisposed=true is set by dispose() but it is never checked inside the setTimeout callback — there is no early-exit guard. The cb(found.zone) call is the real risk: it is the caller's zoneClickCallback, which may attempt to mount a new scene or modify DOM that has already been cleaned up.",
+      "severity": "HIGH"
+    }
+  },
+
+  "glb_flat_shading_audit": {
+    "result": "PASS",
+    "detail": "All 6 GLBs verified against applyFlatShading() / inline flatShading=true calls in LairGLBAssets.ts: cauldron_merlin.glb (line 85: flatShading=true inline), bougie.glb (line 121: flatShading=true inline per-clone), table_druidique.glb (line 138: applyFlatShading called), bibliotheque.glb (line 150: applyFlatShading called), sol_pierre.glb (line 162: applyFlatShading called), mur_pierre.glb (line 183: flatShading=true on tileMat). crystal_ball.glb is intentionally excluded (crystal aesthetic — emissive purple, no flat-shading applied, consistent with C101 comment 'non-crystal GLBs'). All 6 non-crystal GLBs are correctly patched."
+  },
+
+  "mg_echo_audit": {
+    "result": "PASS",
+    "issues": [],
+    "detail": "Full re-audit of mg_echo.ts post cycle-37: (1) Difficulty scaling via tieredValue() applied to both flashDuration [0.5,0.4,0.35,0.3]s and windowDuration [1.2,1.0,0.8,0.7]s (C100). (2) rAF loop is per-frame via render() -> requestAnimationFrame (line 439); cleanup() cancels it (line 443). (3) Phase state machine is complete: pause->flash->answer->feedback->done with all timeout guards. (4) Timeout miss path (lines 248-260) correctly fires 'lose' SFX and advances. (5) Ripple effect is properly bounded (0.6s timer, lines 271-276). (6) endGame() has a double-fire guard (this.ended check, line 213). (7) canvas.tabIndex=0 set (line 103) — unlike MerlinLairScene, the canvas is inside a container div so focus is user-driven which is acceptable for a minigame overlay. (8) No stale-closure or leak patterns detected."
+  },
+
+  "issues": [
+    {
+      "id": "H",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "873-884",
+      "issue": "Door cinematic setTimeout callback fires cb(found.zone) even if dispose() was called during the 380ms window. No lairDisposed guard in the callback — risk of triggering a scene transition on a torn-down renderer.",
+      "recommendation": "Capture a local disposed flag in the closure before calling setTimeout. Change the callback body to: if (!lairDisposed) { doorFlashing = false; cb(found.zone); } — lairDisposed is already set to true by dispose() so this single check is sufficient."
+    },
+    {
+      "id": "E",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts + web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "999-1030 (dispose), 333-342 (tick loop in main.ts)",
+      "issue": "dispose() does not cancel the rAF loop owned by the caller (main.ts rafId). One extra render() call fires after dispose() per queued frame. If main.ts does not cancel rafId immediately after calling lair.dispose(), the ghost loop persists.",
+      "recommendation": "Expose the rAF cancellation inside LairResult by adding a stop() method, or have dispose() itself cancel via an internal rAF id it owns. The cleanest fix: move the rAF loop inside initMerlinLair so dispose() can cancel it directly, and main.ts just calls dispose()."
+    },
+    {
+      "id": "F",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "674-679",
+      "issue": "Keyboard focus is not set on the renderer canvas after mount. Tab navigation (C85-01) silently requires the user to click the canvas first — keyboard-first users and screen-reader users cannot activate zones via Tab without a prior pointer interaction.",
+      "recommendation": "Add renderer.domElement.focus() immediately after container.appendChild(renderer.domElement) (after line 674). Guard with a try/catch since focus() can throw in sandboxed iframes."
+    },
+    {
+      "id": "B",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "671-672",
+      "issue": "renderer.setSize() uses container.clientWidth/Height with no zero-size guard. Currently safe due to caller order in main.ts, but fragile — any future caller that passes a display:none or unsized container will silently produce a 0x0 renderer.",
+      "recommendation": "Add a guard after renderer.setSize(): if (container.clientWidth === 0 || container.clientHeight === 0) { window.addEventListener('resize', onResize, { once: true }); } — this defers the first valid resize to correct the framebuffer size automatically."
+    },
+    {
+      "id": "A",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "961-997",
+      "issue": "No FPS monitoring or adaptive quality in the update loop. On low-end devices the dt clamp (0.05s = 20fps floor) absorbs timing but rendering always runs at full quality regardless of frame budget.",
+      "recommendation": "Add a rolling 60-frame FPS counter. If avgFps < 30 for 3 consecutive seconds, reduce particle counts (candle N from 12 to 6, dust N from 80 to 40) and skip the lairWindow.update() call every other frame. This is lower priority than H/E/F."
+    },
+    {
+      "id": "C",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "lines": "707-713",
+      "issue": "onResize() does not call renderer.setPixelRatio(). Stale DPR if user changes browser zoom or moves window to a different monitor after scene init.",
+      "recommendation": "Add renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) as the first line of onResize(). This is a one-liner fix."
+    }
+  ],
+
+  "top_2_highest_impact_fixes": [
+    {
+      "rank": 1,
+      "id": "H",
+      "severity": "HIGH",
+      "title": "Door cinematic stale-callback race condition",
+      "why": "This is the only bug that can trigger observable incorrect behavior (scene transition fired on a disposed renderer / torn-down DOM). It is triggered by any user clicking the door then navigating away within 380ms — a realistic interaction on mobile. One-line fix: wrap the setTimeout callback body in if (!lairDisposed).",
+      "effort": "TRIVIAL — 1 line change"
+    },
+    {
+      "rank": 2,
+      "id": "F",
+      "severity": "MEDIUM",
+      "title": "Keyboard focus not set on canvas mount",
+      "why": "The entire keyboard navigation system (C85-01 Tab/Arrow/Enter, 40+ lines of code) is silently inoperative until the user clicks the canvas. This affects all keyboard-first users and any automated accessibility test. Fix is renderer.domElement.focus() — one line.",
+      "effort": "TRIVIAL — 1 line change"
+    }
+  ],
+
+  "summary": {
+    "total_checks": 8,
+    "HIGH": 1,
+    "MEDIUM": 4,
+    "LOW": 1,
+    "PASS": 2,
+    "INFO": 1,
+    "glb_flat_shading_all_6_patched": true,
+    "mg_echo_clean": true,
+    "softlocks": 0,
+    "critical_issues": 0
+  }
+}

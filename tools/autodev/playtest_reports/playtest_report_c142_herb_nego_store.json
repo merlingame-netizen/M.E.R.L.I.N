@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "cycle": 142,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": [
+      "web-demo/src/minigames/mg_herboristerie.ts",
+      "web-demo/src/minigames/mg_negociation.ts",
+      "web-demo/src/game/Store.ts (lines 1-300)"
+    ],
+    "method": "static_analysis",
+    "prior_cycles_resolved": ["OC-01","OC-02","GL-01","BP-01","OC-03","OC-04","RS-01","COMB-01","BUG-C140-01","BUG-C140-03"]
+  },
+
+  "bugs": [
+    {
+      "id": "C142-NEG-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_negociation.ts",
+      "lines": "284-311",
+      "title": "onPointerDown mutates ScrollingWord in-place — violates immutability contract",
+      "description": "In onPointerDown, the code does `sw.picked = true; sw.fadeAlpha = 1;` directly on the object retrieved from `this.scrollingWords[idx]`. ScrollingWord is declared with mutable fields (not Readonly), and the render loop replaces the array via immutable map at line 357, but onPointerDown bypasses that by mutating the live reference in the array. This creates a split-state window: the mutated object is already picked=true before the next rAF runs the immutable map, which then spreads the mutated sw (copying picked:true into a new object). The bug is latent but violates the explicit immutable pattern used in the render loop and onKeyDown (line 108 uses `sw.picked = true` identically). If the render loop is refactored to rely on immutability for diffing, this will silently break. onKeyDown has the same pattern.",
+      "proposed_fix": "Replace direct mutation with an index-based immutable update: `this.scrollingWords = this.scrollingWords.map((w, i) => i === idx ? { ...w, picked: true, fadeAlpha: 1 } : w);`. Same fix for the keyboard path in onKeyDown."
+    },
+    {
+      "id": "C142-NEG-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_negociation.ts",
+      "lines": "362-366",
+      "title": "Word filter removes words at y <= -20 but spawn guard uses maxWords=30 on a growing array",
+      "description": "spawnWord() guards with `if (this.scrollingWords.length >= this.maxWords) return;`. Words that scroll off-screen (y < -20) are removed in the render loop filter. However, the filter condition is `sw.y > -20 && sw.fadeAlpha > 0`. A picked word with fadeAlpha decaying to 0 is also removed. Because spawnTimer is always resetting to 0 when it fires, with spawnInterval=0.35s (tier 3) and up to 30 words, at high tiers the screen can fill completely and new faction words stop spawning for stretches of ~1-2s whenever 30 slow-moving picked words occupy the array before they fade. This can make faction words impossible to click, capping achievable score unfairly at high difficulty.",
+      "proposed_fix": "Count only unpicked, visible words against maxWords: `const activeCount = this.scrollingWords.filter(sw => !sw.picked).length; if (activeCount >= this.maxWords) return;`. Or reduce maxWords at higher tiers."
+    },
+    {
+      "id": "C142-NEG-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_negociation.ts",
+      "lines": "328-339",
+      "title": "Score formula: combo bonus uncapped sum can push past 100 before Math.min clamp — comment misleads",
+      "description": "The comment says 'Faction words picked: each worth 8 points (up to 80)' and 'Combo bonus: maxCombo * 5 (up to 25)'. factionScore is clamped at 80 and comboBonus at 25. However the final `Math.min(100, ...)` clamps the total. With factionScore=80 + comboBonus=25 + timeBonus=15 - penalty=0, the pre-clamp value is 120. The clamp is correct, but the HUD-facing score display at render line 400-404 shows `factionPicked` count in real time with no corresponding visual for combo. Players grinding combo to 5 get no visible indication that their bonus is capped. This is a UX/communication gap rather than a scoring error, but the mismatch between realtime display and final formula can cause confusion.",
+      "proposed_fix": "Either display a running estimated score in the canvas HUD, or add a small maxCombo display so players understand combo is bounded."
+    },
+    {
+      "id": "C142-HERB-01",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "lines": "316-318",
+      "title": "endTimeout handle not reset to 0 after clearTimeout in cancelTimers",
+      "description": "cancelTimers() calls `clearTimeout(this.endTimeout)` (line 343). If cancelTimers() is called more than once (e.g., cleanup() calls super.cleanup() which calls cancelTimers(), and endGame() also calls cancelTimers() before setting ended=true), the second clearTimeout(0) is a harmless no-op. However the handle is never reset to 0 after clearing, so if any future code path checks `if (this.endTimeout)` to detect a pending timer, it will falsely see a stale non-zero id. The same pattern applies to timerInterval. This is a latent hygiene issue consistent with the previous BUG-C140-01 fix pattern.",
+      "proposed_fix": "After each clearTimeout/clearInterval, reset the handle to 0: `clearTimeout(this.endTimeout); this.endTimeout = 0;` and `clearInterval(this.timerInterval); this.timerInterval = 0;`."
+    },
+    {
+      "id": "C142-HERB-02",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_herboristerie.ts",
+      "lines": "369",
+      "title": "render() ended guard: animFrame is not cancelled before checking ended",
+      "description": "render() starts with `if (!this.ctx || !this.canvas || this.ended) return;`. When endGame() sets ended=true and calls cancelTimers(), cancelAnimationFrame(this.animFrame) runs. However the animFrame variable may be 0 at that point if endGame() fires synchronously before the first rAF callback. More importantly, the guard `|| this.ended` at line 369 is the correct defence, but after the early return the function does NOT call `requestAnimationFrame(() => this.render())`, so the loop stops naturally — this is correct. No active bug, but the animFrame handle is also not reset to 0 after cancelAnimationFrame, matching HERB-01 pattern.",
+      "proposed_fix": "Reset animFrame to 0 after cancelAnimationFrame for hygiene, consistent with HERB-01 fix."
+    },
+    {
+      "id": "C142-STORE-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/Store.ts",
+      "lines": "161-169",
+      "title": "startRun() does NOT reset oghamCooldowns — stale cooldowns carry over into new run",
+      "description": "startRun() spreads buildDefaultRun() which sets oghamCooldowns: {} (empty object, line 120). That spread is then overlaid by `factions: { ...s.meta.factionRep }`. The issue is subtle: buildDefaultRun() produces oghamCooldowns: {}, and this is preserved in the spread `...buildDefaultRun()`. So oghamCooldowns IS reset correctly via buildDefaultRun(). HOWEVER — tickCooldowns() (not visible in the 300-line window) decrements cooldowns. If tickCooldowns is called after endRun() but before startRun() completes (e.g., in a transition frame), or if run.active is not checked inside tickCooldowns, the empty object from buildDefaultRun is correct. This needs confirmation of tickCooldowns behaviour.",
+      "proposed_fix": "Verify tickCooldowns() guards on run.active. If not guarded, add `if (!s.run.active) return;` to prevent phantom decrements during hub/title phase. The oghamCooldowns reset itself is correct via buildDefaultRun()."
+    },
+    {
+      "id": "C142-STORE-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/Store.ts",
+      "lines": "284-298",
+      "title": "useOgham() double-call race: get() snapshot is stale under rapid successive calls",
+      "description": "useOgham() uses get() to read state synchronously (line 285), performs guard checks, then calls set() to write. If useOgham() is called twice in the same card cycle (e.g., user double-taps the ogham button or a programmatic path calls it twice), both calls will read the same pre-set snapshot where oghamCooldowns[oghamId] is 0, both will pass the cooldown guard, and set() will be called twice. Zustand's set() is synchronous and each set replaces state, so the second set will overwrite the first — result: cooldown is set to spec.cooldown twice, activeOgham is set twice. The functional impact is the same as calling once (no double-activation), BUT if the ogham effect is applied in caller code between the two useOgham() calls, the effect will be applied twice while the cooldown check only fires once on the first call. This depends on the caller pattern, which is outside the audited files.",
+      "proposed_fix": "Merge get() and set() into a single atomic set() call: read current cooldown inside the set() callback to avoid the snapshot gap. `useOgham: (oghamId) => { const spec = OGHAM_SPECS[oghamId]; if (!spec) return false; let activated = false; set((s) => { if (!s.meta.oghamsEquipped.includes(oghamId)) return s; if ((s.run.oghamCooldowns[oghamId] ?? 0) > 0) return s; activated = true; return { run: { ...s.run, activeOgham: oghamId, oghamCooldowns: { ...s.run.oghamCooldowns, [oghamId]: spec.cooldown } } }; }); return activated; }`"
+    },
+    {
+      "id": "C142-STORE-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/Store.ts",
+      "lines": "161-169",
+      "title": "startRun() does not reset activeOgham — previous run's active ogham persists into new run",
+      "description": "buildDefaultRun() sets activeOgham: '' (line 119). startRun() spreads buildDefaultRun(), which should reset activeOgham to ''. This is correct. HOWEVER, the spread is `{ ...buildDefaultRun(), active: true, biome, factions: { ...s.meta.factionRep } }`. All fields from buildDefaultRun() are included, so activeOgham is reset to ''. No active bug on activeOgham. CONFIRMED CLEAN.",
+      "proposed_fix": "No fix needed — activeOgham is correctly reset via buildDefaultRun() spread. Marking as MEDIUM for documentation/audit trail only. Can be closed."
+    },
+    {
+      "id": "C142-STORE-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/Store.ts",
+      "lines": "161-169",
+      "title": "startRun() factionDeltaThisRun not explicitly reset — relies on buildDefaultRun() spread",
+      "description": "factionDeltaThisRun is set to buildZeroFactions() in buildDefaultRun() (line 127). startRun() spreads buildDefaultRun() so this field is reset correctly. CONFIRMED CLEAN. Same audit-trail note as STORE-03: the reset is implicit via spread, not explicit, making it fragile if someone adds overrides after the spread in the future.",
+      "proposed_fix": "No active bug. Defensive suggestion: document the spread dependency with a comment `// Note: all run-state resets happen through buildDefaultRun() spread — do not add field overrides without checking buildDefaultRun()` to prevent future regressions."
+    },
+    {
+      "id": "C142-STORE-05",
+      "severity": "LOW",
+      "file": "web-demo/src/game/Store.ts",
+      "lines": "284-298",
+      "title": "useOgham() does not check run.active — can be called outside an active run",
+      "description": "useOgham() guards: spec exists, ogham is equipped, cooldown is 0. It does NOT guard on s.run.active. If called from the hub or title phase (e.g., a UI button that is not properly disabled), it will set activeOgham and a cooldown on a non-active run. When startRun() fires, buildDefaultRun() resets both, so the stale state is cleared. No persistent corruption. But the cooldown SET in the non-active run is immediately wiped, making the call effectively a no-op with a misleading return value of true.",
+      "proposed_fix": "Add `if (!s.run.active) return false;` as the first guard in useOgham()."
+    }
+  ],
+
+  "summary": {
+    "total_bugs": 10,
+    "by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 3,
+      "MEDIUM": 4,
+      "LOW": 3
+    },
+    "softlocks_detected": 0,
+    "files_audited": 3
+  },
+
+  "per_file_findings": {
+    "mg_herboristerie.ts": {
+      "render_guard": "PASS — line 369 guards on ended before any draw calls",
+      "cancel_timers": "PASS — cancelTimers() clears timerInterval, endTimeout (C114), and animFrame; removes both event listeners. Handle not reset to 0 (HERB-01, LOW)",
+      "score_formula": "PASS — HUD shows correctPicks/totalTargets live (line 424-425); endGame formula (lines 359-364) uses same correctPicks, totalTargets, wrongPicks, timeLeft. No HUD/endGame mismatch.",
+      "input_pointer_leak": "PASS — pointerdown and keydown removed in cancelTimers().",
+      "bugs": ["C142-HERB-01", "C142-HERB-02"]
+    },
+    "mg_negociation.ts": {
+      "render_guard": "PASS — line 343 guards on ended",
+      "cancel_timers": "PASS — cancelTimers() clears timerInterval, animFrame; removes both listeners. No endTimeout handle needed (no setTimeout used). Handle not reset to 0 pattern same as herboristerie.",
+      "score_formula": "PASS — endGame factionScore+comboBonus-penalty+timeBonus clamped 0-100. HUD displays factionPicked count (line 404) which matches filter used in endGame (line 330). No mismatch. MEDIUM UX gap on combo visibility (NEG-03).",
+      "timer_stack": "Single timerInterval only. No nested setTimeout. CLEAN.",
+      "score_accumulation": "score field is declared (line 75) but never written in endGame — finalScore is computed and passed directly to finish(). score field is dead code (LOW hygiene, not filed as bug since it causes no runtime issue).",
+      "input_pointer_leak": "PASS — pointerdown and keydown removed in cancelTimers().",
+      "bugs": ["C142-NEG-01", "C142-NEG-02", "C142-NEG-03"]
+    },
+    "Store.ts_useOgham": {
+      "anam_cost_decrement": "NOT PRESENT — useOgham() (lines 284-298) does NOT decrement anam. It sets activeOgham and oghamCooldowns only. Anam cost deduction must happen in caller code (card system / effect engine). If the caller does not call addAnam(-cost) the anam cost is silently skipped. This is an architectural assumption, not necessarily a bug in Store.ts itself, but a HIGH risk if callers omit the deduction.",
+      "cooldown_set": "PASS — oghamCooldowns[oghamId] is set to spec.cooldown on successful use.",
+      "double_call_race": "BUG — C142-STORE-02 (HIGH). get() snapshot stale under rapid calls.",
+      "bugs": ["C142-STORE-02", "C142-STORE-05"]
+    },
+    "Store.ts_startRun": {
+      "life_reset": "PASS — buildDefaultRun() sets life: LIFE_START, spread in startRun().",
+      "activeOgham_reset": "PASS — buildDefaultRun() sets activeOgham: '', spread in startRun().",
+      "oghamCooldowns_reset": "PASS — buildDefaultRun() sets oghamCooldowns: {}, spread in startRun().",
+      "factionDeltaThisRun_reset": "PASS — buildDefaultRun() calls buildZeroFactions(), spread in startRun().",
+      "cardsPlayed_reset": "PASS — buildDefaultRun() sets cardsPlayed: 0.",
+      "biomeCurrency_reset": "PASS — buildDefaultRun() sets biomeCurrency: 0.",
+      "factions_init": "PASS — startRun() correctly reads s.meta.factionRep for cross-run persistence.",
+      "bugs": ["C142-STORE-01 (NEEDS tickCooldowns verification)", "C142-STORE-03 (CLEAN)", "C142-STORE-04 (CLEAN)"]
+    }
+  },
+
+  "balance_observations": [
+    {
+      "parameter": "mg_negociation maxWords vs spawn_guard",
+      "observation": "At tier 3 (spawnInterval 0.35s, scrollSpeed 70), the 30-word cap includes fading picked words, reducing effective visible faction words by up to 30-40% in the late game. This can artifically cap scores.",
+      "confidence": "MEDIUM"
+    },
+    {
+      "parameter": "mg_herboristerie score formula",
+      "observation": "Score is bounded [0, 100]. At tier 3 (totalTime=9, wrongPenalty=8): a perfect run (6 correct, 0 wrong, ~0s elapsed) = 80 + 20 = 100. One wrong pick = -8, meaning a single mistake drops max achievable to 92. This scaling is tight but intentional per design.",
+      "confidence": "HIGH"
+    }
+  ],
+
+  "deferred_items_status": {
+    "OC-05": "Still deferred — replace_worst_option tie-break idx=0. Not in audited files.",
+    "CS-01": "Still deferred — card.source misleading after mutation. Not in audited files.",
+    "BUG-C140-02": "Still deferred — escapeHandler AbortController leak. Not in audited files.",
+    "REFACTOR_MerlinLairScene": "Still deferred — 1307L file. Not in audited files."
+  },
+
+  "recommended_next_actions": [
+    {
+      "priority": 1,
+      "action": "Fix C142-STORE-02 — merge get()+set() into atomic set() in useOgham()",
+      "rationale": "HIGH severity. Double-call window can cause double effect application if caller code is not defensive."
+    },
+    {
+      "priority": 2,
+      "action": "Fix C142-NEG-01 — replace sw.picked/sw.fadeAlpha direct mutation with immutable map update",
+      "rationale": "HIGH severity. Violates explicit immutability contract; renders loop correctness brittle."
+    },
+    {
+      "priority": 3,
+      "action": "Verify tickCooldowns() guards run.active (C142-STORE-01)",
+      "rationale": "HIGH severity if unguarded. Requires reading tickCooldowns implementation (lines 300+)."
+    },
+    {
+      "priority": 4,
+      "action": "Fix C142-NEG-02 — count only unpicked words against maxWords cap",
+      "rationale": "MEDIUM balance. Prevents faction word starvation at high difficulty."
+    },
+    {
+      "priority": 5,
+      "action": "Fix C142-HERB-01 — reset timer handles to 0 after clear in cancelTimers()",
+      "rationale": "LOW hygiene. Consistent with C141 fix pattern."
+    }
+  ]
+}

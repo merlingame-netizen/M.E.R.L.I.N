@@ -1,0 +1,295 @@
+{
+  "meta": {
+    "report_type": "AAA_ULTRA_AUDIT",
+    "cycle": 42,
+    "build": "C41b",
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "files_audited": [
+      "web-demo/src/minigames/MinigameBase.ts",
+      "web-demo/src/scenes/MerlinLairScene.ts",
+      "web-demo/src/main.ts",
+      "web-demo/src/minigames/mg_runes.ts",
+      "web-demo/src/scenes/LairGLBAssets.ts"
+    ],
+    "spot_checked_minigames": [
+      "mg_combat_rituel.ts",
+      "mg_echo.ts",
+      "mg_volonte.ts",
+      "mg_sang_froid.ts",
+      "mg_fouille.ts",
+      "mg_ombres.ts"
+    ]
+  },
+
+  "verification_checklist": {
+    "C105_AudioContext_singleton": {
+      "status": "PASS",
+      "detail": "Module-level _sharedAudioCtx lazy singleton confirmed at MinigameBase.ts:78-84. Condition `!_sharedAudioCtx || _sharedAudioCtx.state === 'closed'` correctly recreates only when closed. No ctx.close() call anywhere in the file — comment at line 115 explicitly documents this intent."
+    },
+    "lairDisposed_guard_in_update": {
+      "status": "PASS",
+      "detail": "MerlinLairScene.ts:992 — `if (lairDisposed) return;` is the very first statement in update(). elapsedTime += dt (line 993) is correctly placed AFTER the guard. Question E is confirmed: guard is in the right position."
+    },
+    "zoneToast_textContent_not_innerHTML_pointer_path": {
+      "status": "PASS",
+      "detail": "MerlinLairScene.ts:847 — `zoneToast.textContent = '';` then child elements created with `lbl.textContent` and `desc.textContent`. No innerHTML on zoneToast in the pointer hover path. XSS-safe."
+    },
+    "zoneToast_textContent_not_innerHTML_keyboard_path": {
+      "status": "PASS",
+      "detail": "MerlinLairScene.ts:968 — keyboard path mirrors pointer path: `zoneToast.textContent = '';` then `kLbl.textContent`. Confirmed safe."
+    },
+    "visibilitychange_in_main_ts": {
+      "status": "PASS",
+      "detail": "main.ts:343-352 — onLairVisibility handler pauses/resumes rafId on visibilitychange. Registered at line 352 via `document.addEventListener('visibilitychange', onLairVisibility)`. Removed at line 474 when lair exits: `document.removeEventListener('visibilitychange', onLairVisibility)`. Full lifecycle correct. Note: visibilitychange is NOT inside MerlinLairScene.ts's return closure — it lives in main.ts as the caller manages the rAF loop. This is architecturally correct and intentional."
+    },
+    "mg_runes_tieredValue": {
+      "status": "PASS",
+      "detail": "mg_runes.ts:54-55 — `this.tieredValue([30, 25, 20, 15] as const)` and `this.tieredValue([600, 550, 500, 450] as const)` both use the MinigameBase helper correctly with 4-element tuples. `as const` ensures readonly tuple type."
+    },
+    "mg_runes_flipBackDelay": {
+      "status": "PASS",
+      "detail": "mg_runes.ts:200 — flipBackDelay used as setTimeout delay in the mismatch branch. Value is correctly tier-scaled [600,550,500,450]ms."
+    },
+    "mg_runes_onClick_type": {
+      "status": "FLAG_LOW",
+      "detail": "mg_runes.ts:151 — onClick typed as `(e: MouseEvent): void` but registered with `addEventListener('pointerdown', this.onClick)` at line 96. PointerEvent extends MouseEvent so clientX/clientY are present — no runtime error. However this is a semantic type mismatch: the handler should be typed `(e: PointerEvent): void`. TypeScript will NOT raise an error here because PointerEvent extends MouseEvent and the signature is compatible via structural subtyping. This is BUG-39-07 LOW: a semantic mismatch only, not a TypeScript compile error.",
+      "severity": "LOW",
+      "recommendation": "Change parameter type to PointerEvent for documentation accuracy: `private onClick = (e: PointerEvent): void`"
+    },
+    "LairGLBAssets_flat_shading": {
+      "status": "PASS",
+      "detail": "LairGLBAssets.ts — applyFlatShading() called on: table_druidique.glb (line 138), bibliotheque.glb (line 150), sol_pierre.glb (line 162), mur_pierre.glb (tileMat line 183). Cauldron sets flatShading directly per-mesh at line 85. Bougie/candles set flatShading per clone at line 121."
+    },
+    "crystal_ball_flat_shading_exempt": {
+      "status": "PASS",
+      "detail": "LairGLBAssets.ts:244-266 — crystal_ball.glb load block does NOT call applyFlatShading(). Material is set to emissive purple with emissiveIntensity=0.6 to match procedural baseline. Correctly exempt from flat-shading to preserve glass/crystal translucent aesthetic."
+    }
+  },
+
+  "regression_analysis": {
+    "A_new_regressions_C41_C41b": {
+      "status": "NONE_FOUND",
+      "items": [
+        {
+          "id": "OBSERVE-01",
+          "severity": "INFO",
+          "location": "main.ts:400",
+          "detail": "showZoneToast() uses `toast.innerHTML` with template literal interpolating `entry.title` and `entry.sub`. These values come from the ZONE_LABELS constant (main.ts:371-377), which is hardcoded — no user input or LLM data flows into it. Not an XSS risk in the current architecture. However it is architecturally inconsistent with the C104 textContent discipline applied in MerlinLairScene.ts's zoneToast. Not a regression — was present before C41. Flagged for awareness.",
+          "risk": "NEGLIGIBLE — no runtime injection path currently exists"
+        },
+        {
+          "id": "OBSERVE-02",
+          "severity": "INFO",
+          "location": "mg_sang_froid.ts:351",
+          "detail": "Debug line `ctx.fillText('r:' + Math.round(this.currentRadius), 10, 30)` renders currentRadius in canvas at position (10,30). This appears to be a debug overlay left in production. Not a security issue but is leftover debug output visible to players.",
+          "severity_level": "LOW",
+          "recommendation": "Remove or gate behind a debug flag"
+        }
+      ]
+    }
+  },
+
+  "bug_analysis": {
+    "B_AudioContext_singleton_iOS_resume_safety": {
+      "question": "Does ctx.resume() on the shared singleton conflict with singleton state?",
+      "verdict": "SAFE",
+      "detail": "MinigameBase.ts:103 — `ctx.resume()` is called on the shared AudioContext instance obtained from getSharedAudioCtx(). The resume() call is fire-and-forget with `.catch(() => {})`. AudioContext.resume() is idempotent when state is already 'running' — it returns a resolved Promise. When state is 'suspended' (iOS), it correctly resumes. The singleton is never closed (no ctx.close() call), so state will only ever be 'running' or 'suspended'. The `.finally()` callback schedules oscillators only after resume settles, which is the correct pattern for iOS autoplay policy. No conflict with singleton state.",
+      "ios_pattern": "BUG-03 fix is correctly implemented — resume() before audio node scheduling is the standard iOS WebAudio workaround"
+    },
+    "C_mg_runes_onClick_MouseEvent_vs_PointerEvent": {
+      "question": "Is this a TypeScript error or only a semantic mismatch?",
+      "verdict": "SEMANTIC_MISMATCH_ONLY — not a TypeScript compile error",
+      "detail": "PointerEvent extends MouseEvent in the DOM type hierarchy. TypeScript uses structural subtyping: `addEventListener('pointerdown', handler)` accepts `(e: PointerEvent) => void` as the canonical type, but also accepts `(e: MouseEvent) => void` because a PointerEvent satisfies all MouseEvent constraints. The handler at mg_runes.ts:151 uses only `e.clientX` and `e.clientY`, which exist on both types. TypeScript will compile without error. The mismatch is purely a documentation/intent problem — future maintainers may add pointer-specific properties (e.g., `e.pressure`, `e.pointerType`) and be confused by the MouseEvent annotation.",
+      "typescript_error": false,
+      "runtime_error": false,
+      "recommendation": "BUG-39-07 LOW — rename parameter type to PointerEvent for semantic correctness"
+    },
+    "D_remaining_LOW_bugs": {
+      "items": [
+        {
+          "id": "BUG-C42-01",
+          "severity": "LOW",
+          "location": "main.ts:400",
+          "description": "showZoneToast uses innerHTML with hardcoded ZONE_LABELS. Inconsistent with C104 textContent discipline. Safe today but creates an architecture inconsistency if zone data source ever becomes dynamic.",
+          "recommendation": "Replace with DOM node construction using textContent, mirroring MerlinLairScene.ts zoneToast pattern"
+        },
+        {
+          "id": "BUG-C42-02",
+          "severity": "LOW",
+          "location": "mg_sang_froid.ts:351",
+          "description": "Debug radius display `r:${Math.round(this.currentRadius)}` rendered in canvas at top-left corner — visible to players in production build.",
+          "recommendation": "Remove line or gate behind `if (import.meta.env.DEV)` / a debug flag"
+        },
+        {
+          "id": "BUG-39-07",
+          "severity": "LOW",
+          "location": "mg_runes.ts:151",
+          "description": "onClick parameter typed as MouseEvent, registered on 'pointerdown'. Semantic mismatch — not a compile or runtime error.",
+          "recommendation": "Change to `(e: PointerEvent): void`",
+          "already_tracked": true
+        }
+      ]
+    },
+    "E_lairDisposed_guard_position": {
+      "verdict": "CORRECT",
+      "detail": "MerlinLairScene.ts:992-993: `if (lairDisposed) return;` is on line 992 as the first statement in update(). `elapsedTime += dt;` is on line 993, immediately after. The guard correctly prevents all subsequent computation including time accumulation, scene rendering, and FPS sampling when the lair has been torn down."
+    },
+    "F_minigame_cleanup_spot_check": {
+      "mg_combat_rituel": {
+        "verdict": "PASS",
+        "detail": "cleanup() at line 359: clearInterval(timerInterval), cancelAnimationFrame(animFrame), removeEventListener pointermove + pointerdown for onPointerMove, super.cleanup(). All resources released."
+      },
+      "mg_echo": {
+        "verdict": "PASS",
+        "detail": "cleanup() at line 442: cancelAnimationFrame(animFrame), removeEventListener pointerdown for onClick, super.cleanup(). No setInterval used (game is round-based via rAF state machine) — correct."
+      },
+      "mg_volonte": {
+        "verdict": "PASS_WITH_NOTE",
+        "detail": "cleanup() at line 350: clearInterval(timerInterval), cancelAnimationFrame(animFrame), removeEventListener pointermove + pointerdown both using this.onPointerMove (pointermove is the primary; pointerdown was added to handle tap-to-enter-target on mobile). super.cleanup() called. All resources released. NOTE: pointerdown is registered with onPointerMove (same handler) which is intentional for the cursor-tracking game mechanic.",
+        "note": "Registering pointerdown with the same handler as pointermove is non-idiomatic but harmless — both events trigger cursor position update logic."
+      },
+      "mg_runes": {
+        "verdict": "PASS",
+        "detail": "cleanup() at line 307: clearInterval(timerInterval), clearTimeout(revealTimeout), cancelAnimationFrame(animFrame), removeEventListener pointerdown for onClick, super.cleanup(). revealTimeout cleanup is important — prevents flip-back after score screen."
+      },
+      "mg_fouille": {
+        "verdict": "PASS",
+        "detail": "cleanup() at line 364: clearTimeout(foundTimeout), clearInterval(timerInterval), cancelAnimationFrame(animFrame), removeEventListener pointermove + pointerdown. super.cleanup() called."
+      },
+      "mg_ombres": {
+        "verdict": "PASS",
+        "detail": "cleanup() at line 325: clearInterval(timerInterval), cancelAnimationFrame(animFrame), removeEventListener pointermove for onPointerMove, super.cleanup(). Clean."
+      },
+      "overall": "PASS — all 6 spot-checked minigames implement correct cleanup. Pattern is consistent across the codebase: cancel timers, cancel rAF, remove all registered listeners, call super.cleanup() which clears innerHTML."
+    }
+  },
+
+  "aaa_ultra_scoring": {
+    "criteria": [
+      {
+        "id": "AAA-01",
+        "name": "AudioContext Management",
+        "score": 10,
+        "max": 10,
+        "notes": "C105 singleton correct. No ctx.close() in setTimeout. iOS resume() pattern safe. Browser AudioContext cap (Chrome 6, Safari 1) avoided."
+      },
+      {
+        "id": "AAA-02",
+        "name": "Render Loop Safety",
+        "score": 10,
+        "max": 10,
+        "notes": "lairDisposed guard is first statement in update(). elapsedTime correctly after guard. visibilitychange pause/resume in main.ts is correct and fully cleaned up."
+      },
+      {
+        "id": "AAA-03",
+        "name": "XSS / DOM Safety",
+        "score": 8,
+        "max": 10,
+        "notes": "MerlinLairScene.ts zoneToast uses textContent throughout (C104 compliant). HOWEVER main.ts:400 showZoneToast uses innerHTML with ZONE_LABELS constant — safe today but architecturally inconsistent. -2 for the inconsistency."
+      },
+      {
+        "id": "AAA-04",
+        "name": "Memory / Event Listener Leaks",
+        "score": 10,
+        "max": 10,
+        "notes": "All 6 spot-checked minigames pass cleanup audit. MerlinLairScene dispose() removes all 6 event listeners. visibilitychange removed on lair exit. No leaks detected."
+      },
+      {
+        "id": "AAA-05",
+        "name": "TypeScript Type Safety",
+        "score": 8,
+        "max": 10,
+        "notes": "BUG-39-07: mg_runes onClick typed as MouseEvent but registered on pointerdown. Not a compile error, purely semantic. -2 for the annotation inaccuracy remaining after C41b."
+      },
+      {
+        "id": "AAA-06",
+        "name": "GLB Asset Pipeline",
+        "score": 10,
+        "max": 10,
+        "notes": "Flat-shading applied to all non-crystal GLBs. crystal_ball.glb correctly exempt. isDisposed guards on all 7 GLB load paths. Material clone() before mutation on all paths. Procedural fallbacks functional."
+      },
+      {
+        "id": "AAA-07",
+        "name": "Difficulty Scaling",
+        "score": 10,
+        "max": 10,
+        "notes": "tieredValue() used consistently across all minigames audited (runes, combat_rituel, echo, volonte). C100/C103 adoption complete."
+      },
+      {
+        "id": "AAA-08",
+        "name": "Mobile / Touch Support",
+        "score": 10,
+        "max": 10,
+        "notes": "Lair: touchmove/touchstart/touchend all wired + cleaned up. Minigames: pointerdown used universally (covers mouse, touch, stylus). touch-action:none on canvases. Keyboard nav present in lair."
+      },
+      {
+        "id": "AAA-09",
+        "name": "Timer / Async Race Safety",
+        "score": 10,
+        "max": 10,
+        "notes": "MinigameBase finished flag (BUG-05). mg_runes ended flag. clearTimeout(revealTimeout) in cleanup(). doorFlashCancelHandle tracked and cleared in dispose(). activeToastFadeId/RemoveId tracked and cleared in main.ts."
+      },
+      {
+        "id": "AAA-10",
+        "name": "Accessibility",
+        "score": 9,
+        "max": 10,
+        "notes": "aria-live regions present in MinigameBase overlay. Timer bars have role=progressbar + aria-valuenow. Lair has keyboard navigation + aria-label updates. Canvas elements have aria-label + role=application. -1: mg_sang_froid debug text rendered in canvas may confuse screen readers."
+      },
+      {
+        "id": "AAA-11",
+        "name": "Debug Artifacts",
+        "score": 7,
+        "max": 10,
+        "notes": "mg_sang_froid.ts:351 has a visible debug line `r:${currentRadius}` rendered to canvas in production. This is player-visible. -3."
+      },
+      {
+        "id": "AAA-12",
+        "name": "Architecture Consistency",
+        "score": 9,
+        "max": 10,
+        "notes": "Strong consistency overall: tieredValue pattern, cleanup() pattern, endGame() idempotent guard, pointerdown over click. One inconsistency: main.ts uses innerHTML for zone toast while MerlinLairScene.ts uses textContent. -1."
+      }
+    ],
+    "total_raw": 111,
+    "total_max": 120,
+    "score_pct": 92.5,
+    "score_out_of_10": 9.25,
+    "rounded_score": 9.3
+  },
+
+  "issues_summary": [
+    {
+      "id": "BUG-C42-01",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line": 400,
+      "description": "showZoneToast() uses innerHTML with ZONE_LABELS constant. Safe today (no dynamic data), but architecturally inconsistent with C104 textContent discipline.",
+      "recommendation": "Replace with DOM node construction using textContent"
+    },
+    {
+      "id": "BUG-C42-02",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "line": 351,
+      "description": "Debug radius display `r:${Math.round(this.currentRadius)}` visible to players in production canvas.",
+      "recommendation": "Remove line or gate behind import.meta.env.DEV"
+    },
+    {
+      "id": "BUG-39-07",
+      "severity": "LOW",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "line": 151,
+      "description": "onClick parameter typed as MouseEvent, registered on pointerdown event. Semantic mismatch — not a compile error.",
+      "recommendation": "Change annotation to PointerEvent",
+      "already_tracked": true
+    }
+  ],
+
+  "critical_issues": [],
+  "high_issues": [],
+  "medium_issues": [],
+
+  "build_verdict": "PASS — C41b is production-safe. 3 LOW issues found, 0 CRITICAL/HIGH/MEDIUM. No regressions introduced in C41/C41b."
+}

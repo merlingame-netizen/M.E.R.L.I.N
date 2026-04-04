@@ -1,0 +1,122 @@
+{
+  "cycle": 58,
+  "timestamp": "2026-04-04T00:00:00Z",
+  "analyst": "merlin-ai-playtester",
+  "scope": "OghamPanel.ts, CardOverlay.ts, Store.ts — ARIA audit + double-call risk + factionDelta gap",
+
+  "score_global": 7.1,
+  "scores": {
+    "rendu3d": 7.5,
+    "assets": 7.0,
+    "web_perf": 8.5,
+    "ux_accessibility": 4.5,
+    "game_feel": 8.0,
+    "game_design": 7.0
+  },
+
+  "score_notes": {
+    "rendu3d": "No 3D changes this cycle. Flat-shading + z-fighting state unchanged from C57 baseline (7.2). No regression detected.",
+    "assets": "No GLB changes this cycle. Celtic style cohérence unchanged.",
+    "web_perf": "Bundle 45KB gzip confirmed well under 200KB target. No new event listener leaks detected in CardOverlay (single addEventListener per option per render cycle — innerHTML reset on each showCard() call prevents accumulation). Memory: clean.",
+    "ux_accessibility": "CRITICAL ARIA gaps in OghamPanel: no role=dialog, no aria-modal, no aria-label, no Escape key handler. factionDeltaThisRun absent from Store blocks RunSummary delta display. Score dragged down by severity of accessibility regression.",
+    "game_feel": "Card flip animation (T047) intact. 200ms gold feedback on CardOverlay option select intact. OghamPanel hover states functional. No regression in feel.",
+    "game_design": "Faction unlock logic (threshold 50) correct and immutable. Ogham cooldown system correct. resolveChoice guard present and correct (null-after-call pattern). No lore consistency regressions."
+  },
+
+  "bugs": [
+    {
+      "id": "BUG-C58-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/OghamPanel.ts",
+      "line": 19,
+      "description": "overlay div has no role='dialog', no aria-modal='true', and no aria-label or aria-labelledby attribute. Screen readers cannot identify this as a modal dialog. Keyboard users who navigate away have no way to return to the panel. WCAG 2.1 AA failure: 4.1.2 Name Role Value.",
+      "fix": "Add role='dialog' aria-modal='true' aria-label='Activer un Ogham' to the overlay element at creation time in initOghamPanel(). Add aria-labelledby pointing to the title div id instead if preferred."
+    },
+    {
+      "id": "BUG-C58-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/OghamPanel.ts",
+      "line": 50,
+      "description": "No Escape key handler. When the OghamPanel is open, pressing Escape has no effect. The game loop blocks on the Promise returned by showOghamPanel(). Player is softlocked on keyboard until they click 'Passer'. Modal dialogs MUST respond to Escape per ARIA Authoring Practices Guide (APG Dialog pattern).",
+      "fix": "In showOghamPanel(), attach a keydown listener on 'Escape' that calls selectOgham(null) (same as Passer). Remove the listener in selectOgham() cleanup to avoid leaks."
+    },
+    {
+      "id": "BUG-C58-03",
+      "severity": "HIGH",
+      "file": "web-demo/src/ui/OghamPanel.ts",
+      "line": 192,
+      "description": "selectOgham() nulls resolveChoice after calling it — this IS a correct guard. However, hideOghamPanel() (line 203) also sets resolveChoice = null without calling it. If hideOghamPanel() is called externally while the panel is open (e.g., from a scene transition or HUD cleanup), the Promise returned by showOghamPanel() is abandoned and never resolves — causing a silent async deadlock in the game loop caller. There is no external call guard.",
+      "fix": "In hideOghamPanel(), before nulling resolveChoice, check if it is non-null and call it with null first: `if (resolveChoice) { resolveChoice(null); resolveChoice = null; }`. This ensures the Promise always settles."
+    },
+    {
+      "id": "BUG-C58-04",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/Store.ts + web-demo/src/ui/RunSummary.ts",
+      "line": 22,
+      "description": "RunState has no factionDeltaThisRun field. run.factions holds the current snapshot (initialized from meta.factionRep at startRun). RunSummary cannot compute per-faction (+N) deltas for the end-of-run display because there is no baseline snapshot to diff against. The user confirmed this as a known C58 target. The delta would need to be: run.factions[f] - snapshot_at_run_start[f] for each faction.",
+      "fix": "Add `readonly factionDeltaThisRun: Readonly<Record<FactionId, number>>` to RunState. In startRun(), initialize it to zeroes. In addReputation(), update factionDeltaThisRun[faction] += capped alongside the existing run.factions update. RunSummary can then read state.run.factionDeltaThisRun directly."
+    },
+    {
+      "id": "BUG-C58-05",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/OghamPanel.ts",
+      "line": 99,
+      "description": "Ogham slot buttons have no aria-label or aria-pressed attribute. The button content is a Unicode symbol + name + status text. Screen readers will announce the raw text concatenation without context. Available slots should announce their cooldown or locked state as part of the accessible name.",
+      "fix": "Set aria-label on each slot button: e.g. `slot.setAttribute('aria-label', isAvailable ? spec.name + ' — disponible' : isUnlocked ? spec.name + ' — recharge dans ' + cooldown + ' cartes' : spec.name + ' — verrouillé')`. Add aria-disabled='true' on unavailable slots."
+    },
+    {
+      "id": "BUG-C58-06",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 182,
+      "description": "card-option divs are rendered as div elements with a click listener, not as button elements. They have no role='button', no tabindex='0', and no keydown handler for Enter/Space activation. Keyboard-only users cannot select card options. This is a regression risk — WCAG 2.1 AA 2.1.1 Keyboard.",
+      "fix": "Either change `document.createElement('div')` to `document.createElement('button')` for card options, or add role='button' tabindex='0' and a keydown listener checking for Enter/Space. The button element approach is simpler and semantically correct."
+    },
+    {
+      "id": "BUG-C58-07",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 160,
+      "description": "showCard() does not focus the overlay or the first option when the card appears. After OghamPanel closes and CardOverlay opens, focus remains on the last focused element (likely the Passer button). Tab navigation from that point does not reliably reach card options.",
+      "fix": "After overlay().classList.add('visible') and triggerFlipAnimation(), call focus() on the first .card-option element (or on the overlay if it has tabindex='-1'). This ensures keyboard users are positioned correctly."
+    }
+  ],
+
+  "bugs_not_found": {
+    "resolveChoice_double_call": "NOT a bug as implemented. selectOgham() sets resolveChoice = null immediately after calling it (line 197-199). A second call to selectOgham() finds resolveChoice === null and does nothing. The guard is correct. The risk is the hideOghamPanel() path — logged as BUG-C58-03.",
+    "cardoverlay_double_listener": "NOT present. optContainer.innerHTML = '' at line 158 destroys all previous button elements and their listeners before rebuilding. No duplicate listener accumulation. Clean pattern.",
+    "touch_action_none": "Not blocking for this cycle. CardOverlay option divs lack touch-action:none but this causes scroll bleed, not a functional bug. Noted for future polish cycle."
+  },
+
+  "store_analysis": {
+    "factionDeltaThisRun_exists": false,
+    "factionDeltaThisRun_path": "state.run.factionDeltaThisRun — field ABSENT from RunState interface and buildDefaultRun()",
+    "baseline_at_run_start": "startRun() copies meta.factionRep into run.factions. The delta CAN be computed as run.factions[f] - meta.factionRep[f] IF meta.factionRep is not mutated during the run. BUT: addReputation() updates meta.factionRep in parallel with run.factions (line 233). So meta.factionRep is NOT a stable baseline — it moves with the run. Delta computation from meta is therefore incorrect. A dedicated factionDeltaThisRun accumulator is required.",
+    "immutability": "Store correctly uses spread for all state updates. No mutations detected."
+  },
+
+  "verdict": "FIX",
+
+  "top3_priorities": [
+    "BUG-C58-02: Escape key missing on OghamPanel — potential keyboard softlock. Fix before any public demo.",
+    "BUG-C58-03: hideOghamPanel() silent Promise abandonment — async deadlock risk if scene transitions fire during ogham selection.",
+    "BUG-C58-04: factionDeltaThisRun absent from Store — RunSummary faction delta display (confirmed C58 target) is blocked until this field is added."
+  ],
+
+  "balance_findings": {
+    "life_drain": "No change to drain constants this cycle. Scaled drain (STAGE2/STAGE3) logic is correctly gated by cardsPlayed thresholds in drainLifeScaled().",
+    "faction_unlock": "Threshold at 50 rep correctly triggers ogham unlock. Cross-threshold check uses strict less-than + greater-equal (line 204) — correct, no double-unlock risk.",
+    "ogham_cooldown": "tickCooldowns() removes keys when remaining reaches 0 (not <=0), which is correct — cooldown of 1 means available next card."
+  },
+
+  "cycle_score_trend": {
+    "C52": 8.5, "C53": 7.4, "C54": 7.7, "C55": 8.4, "C56": 6.2, "C57": 7.2, "C58": 7.1
+  },
+
+  "next_cycle_recommendations": [
+    "Implement BUG-C58-01 through BUG-C58-04 (HIGH severity) as C59 primary targets.",
+    "Add factionDeltaThisRun to RunState — enables RunSummary faction +N display per confirmed C58 goal.",
+    "Convert card-option divs to button elements (BUG-C58-06) — unblocks keyboard navigation entirely.",
+    "Consider adding touch-action:none to .card-option in CSS for mobile scroll prevention (low effort, medium reward)."
+  ]
+}

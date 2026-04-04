@@ -1,0 +1,88 @@
+{
+  "cycle": "C116",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "scope": "final_sweep_all_14",
+  "ended_guard_status": "14/14",
+
+  "ended_guard_detail": {
+    "confirmed_guards": [
+      { "file": "mg_apaisement.ts",     "line": 248, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_combat_rituel.ts",  "line": 247, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_course.ts",         "line": 293, "guard": "if (!this.ctx || !this.canvas || this.gameOver) return;",       "tag": "C106" },
+      { "file": "mg_echo.ts",           "line": 272, "guard": "if (!this.ctx || !this.canvas || this.phase === 'done') return;","tag": "C106" },
+      { "file": "mg_equilibre.ts",      "line": 225, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_fouille.ts",        "line": 316, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_herboristerie.ts",  "line": 365, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_negociation.ts",    "line": 340, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_ombres.ts",         "line": 215, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_regard.ts",         "line": 315, "guard": "if (!this.ctx || !this.canvas || this.phase === 'done') return;","tag": "C106" },
+      { "file": "mg_runes.ts",          "line": 291, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C105" },
+      { "file": "mg_sang_froid.ts",     "line": 207, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_traces.ts",         "line": 160, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" },
+      { "file": "mg_volonte.ts",        "line": 228, "guard": "if (!this.ctx || !this.canvas || this.ended) return;",          "tag": "C106" }
+    ],
+    "note": "All guards are first-line in render(). mg_course uses gameOver (set simultaneously with ended in endGame). mg_echo and mg_regard use phase==='done' (set before finish()). All semantically equivalent — no zombie rAF possible."
+  },
+
+  "findings": {
+    "HRB_01_toast_mutation": {
+      "file": "mg_herboristerie.ts",
+      "severity": "LOW",
+      "status": "HARMLESS — confirmed",
+      "detail": "penaltyToasts array is re-assigned via filter() at render line 483 (`this.penaltyToasts = this.penaltyToasts.filter(...)`), which is a clean immutable-style replacement of the array reference. The individual toast objects are not mutated by filter; however the `t.life -= dt` on line 492 is a direct in-place mutation of the toast object. This is the known HRB-01 from C114. The mutation is safe in practice: (a) toasts are short-lived (0.8s), (b) no other code path reads stale toast objects after render(), (c) the filter-before-decrement order means filter uses the pre-decrement life value for the first frame, but since the initial life is 0.8 and the decrement is dt (~0.016s), the delta is negligible. The worst case is one extra frame where a toast with life ~0.001 passes the filter and is rendered at near-zero alpha before being removed next frame. Net visual impact: imperceptible.",
+      "recommendation": "Optional cosmetic fix only. Replace `t.life -= dt` with a new object via spread if strict immutability is required. Not worth a dedicated cycle."
+    },
+    "HRB_02_filter_before_decrement": {
+      "file": "mg_herboristerie.ts",
+      "severity": "LOW",
+      "status": "HARMLESS — confirmed",
+      "detail": "Filter runs at t.life > 0 (old value), then decrement runs. A toast at life = 0.005 passes the filter, is drawn at alpha ~0.0125 (essentially invisible), then life becomes negative next frame and is filtered out. No logical error. Score and gameplay are unaffected.",
+      "recommendation": "None required. Can be resolved alongside HRB-01 in a single-line cosmetic pass if desired."
+    },
+    "mg_combat_rituel_reference_check": {
+      "file": "mg_combat_rituel.ts",
+      "severity": "PASS",
+      "status": "CLEAN",
+      "detail": "Reference file passes all C116 checks. ended guard at line 247 is intact. cancelTimers() at line 223 covers clearInterval + cancelAnimationFrame + 3 removeEventListener calls (pointermove, pointerdown, keydown). endGame() idempotency guard (line 232: `if (this.ended) return`) is present. Obstacle updates use spread immutability (`...obs, angle: obs.angle + ...`). No regression introduced by C106 batch.",
+      "immutability_ok": true,
+      "cancel_timers_ok": true,
+      "ended_guard_ok": true
+    },
+    "mg_apaisement_breathing_mechanic": {
+      "file": "mg_apaisement.ts",
+      "severity": "PASS",
+      "status": "CLEAN — no edge case found",
+      "detail": "The accuracy window analysis across all 4 tiers: breathCycleDuration = [3.0, 2.5, 2.0, 1.7]s, targetWindow = [0.15, 0.13, 0.10, 0.08], goodWindow = [0.30, 0.25, 0.20, 0.16]. The accuracy calculation (getAccuracy, lines 146-165) uses distance-to-peak in phase space (0-1), NOT in real-time seconds, so it is entirely independent of breathCycleDuration. The windows are already tier-scaled fractions of the full phase cycle. At tier 3 (fastest, 1.7s cycle, targetWindow=0.08, goodWindow=0.16): a perfect tap returns accuracy 1.0 (minDist <= 0.04). A tap at the midpoint between peaks (minDist = 0.25) returns accuracy = max(0, 0.5 - ((0.25-0.08)/0.25)*0.5) = max(0, 0.5 - 0.34) = 0.16 — non-zero. The formula only reaches accuracy=0 when minDist >= goodWindow/2 + 0.25 = 0.08 + 0.25 = 0.33, i.e., when the player taps exactly at the quarter-cycle midpoint. Since peaks occur at phase 0.0 and 0.5, the absolute worst tap (phase=0.25 or 0.75) yields minDist=0.25, accuracy=0.16. Score 0 for a single tap is therefore impossible at any tier — only guaranteed if tapCount=0 (no taps at all, handled by the `if (tapCount === 0) this.finish(0)` branch at line 234). The 'accuracy=0 for all taps at tier 3' edge case does not exist.",
+      "tier3_zero_accuracy_risk": false,
+      "breathing_window_tier_scaling_correct": true
+    },
+    "mg_sang_froid_disposal_and_score": {
+      "file": "mg_sang_froid.ts",
+      "severity": "PASS",
+      "status": "CLEAN",
+      "detail": "The isDisposed guard from C85/C96 is implemented as the pointerleave/pointercancel handler (onPointerLeave, line 164) which resets cursor to (0,0). This is registered in setup() (lines 111-112) and removed in cancelTimers() (lines 190-191). The pattern is correct: on finger-lift or pointer-cancel, cursor snaps to (0,0) which is ~269px from canvas center, always outside startRadius=120px. No free timeInside credit on mobile lift. Score when player achieves 100% inside: timeInside is clamped via `Math.min(this.timeInside + dt, this.totalTime)` (line 256). If player stays inside for the full duration, timeInside approaches totalTime but never exceeds it due to the clamp. finalScore = (timeInside / totalTime) * 100 yields exactly 100.0. This is correct and expected — 100% is achievable and properly bounded. The 10s-timer (or tieredValue equivalent) calls endGame() when timeLeft <= 0; endGame is idempotent (line 196 guard). No issues found.",
+      "disposal_guard_correct": true,
+      "score_100pct_achievable": true,
+      "timeinside_overflow_protected": true
+    }
+  },
+
+  "verdict": "CLEAR",
+
+  "remaining_open_items": [
+    {
+      "id": "HRB-01-02",
+      "severity": "LOW",
+      "files": ["mg_herboristerie.ts"],
+      "description": "Toast object in-place mutation (t.life -= dt) and filter-before-decrement ordering. Confirmed harmless. Cosmetic immutability cleanup only.",
+      "recommended_cycle": "optional, can batch with next cosmetic pass"
+    }
+  ],
+
+  "closed_items": [
+    "C106: render() ended guard — 14/14 confirmed",
+    "C103: mg_combat_rituel reference integrity — PASS",
+    "mg_apaisement tier-3 zero-accuracy edge case — does not exist",
+    "mg_sang_froid pointercancel/100%-score correctness — PASS"
+  ]
+}

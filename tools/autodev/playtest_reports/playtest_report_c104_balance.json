@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "timestamp": "2026-04-04T00:00:00Z",
+    "cycle": 104,
+    "auditor": "merlin-ai-playtester",
+    "method": "static-code-analysis",
+    "files_read": [
+      "web-demo/src/minigames/MinigameBase.ts (lines 240-295)",
+      "web-demo/vite.config.ts (full)",
+      "web-demo/src/main.ts (lines 610-784)"
+    ]
+  },
+
+  "investigation_1_shared_play_counter": {
+    "title": "Shared localStorage key 'merlin_mg_plays' contaminates ALL minigames",
+    "severity": "HIGH",
+
+    "finding_1_shared_key": {
+      "description": "Lines 253-254 read 'merlin_mg_plays' and lines 281-282 write it. There is NO per-minigame disambiguation. Playing any one minigame 12 times escalates every other minigame to tier 3, including ones the player has never touched. The counter is globally shared across all 14 mg_*.ts instances.",
+      "code_evidence": "localStorage.getItem('merlin_mg_plays') — single key, no class qualifier",
+      "impact": "A player who spends 12 sessions on mg_traces (the lexical-field word game) will face tier-3 difficulty on mg_combat_rituel, mg_sang_froid, etc. on first encounter. This violates the 'per-minigame earned difficulty' intent of C94 and will feel unfair and opaque to the player."
+    },
+
+    "finding_2_constructor_name_reliability": {
+      "description": "Vite's vite.config.ts does NOT configure terser explicitly. Vite 4/5 uses esbuild by default for dev and esbuild (not terser) for production minification. esbuild does NOT mangle class names by default — it only minifies identifiers in local scope. ES class names are preserved unless 'minifyIdentifiers' is enabled explicitly. The config has no esbuild.minifyIdentifiers or terser.keep_classnames setting.",
+      "vite_config_evidence": "No 'minify: terser', no 'esbuild: { minifyIdentifiers: true }' present in vite.config.ts. Default is esbuild with minifyIdentifiers OFF.",
+      "conclusion": "this.constructor.name IS reliable for the current build config. Class names like 'MgTraces', 'MgCombatRituel', etc. will survive into production bundles. This is NOT guaranteed forever — a future config change adding esbuild minifyIdentifiers or switching to terser with mangle could silently break it.",
+      "risk_level": "LOW (currently safe, fragile under config drift)"
+    },
+
+    "finding_3_per_minigame_key_recommendation": {
+      "description": "Two viable fix patterns exist.",
+
+      "option_a_constructor_name": {
+        "approach": "Derive the key from this.constructor.name at call site",
+        "read_line": "const key = `merlin_mg_plays_${this.constructor.name}`; const plays = parseInt(localStorage.getItem(key) ?? '0', 10) || 0;",
+        "write_line": "localStorage.setItem(`merlin_mg_plays_${this.constructor.name}`, String(plays + 1));",
+        "pros": ["Zero boilerplate — no change to subclasses", "Self-contained fix in MinigameBase.ts"],
+        "cons": ["Relies on non-mangled class names — fragile under future build config changes", "A minigame rename silently resets its counter"]
+      },
+
+      "option_b_protected_storage_key": {
+        "approach": "Add a protected abstract (or defaulted) storageKey getter to MinigameBase, each subclass declares its own stable string",
+        "base_class_addition": "protected get storageKey(): string { return this.constructor.name; }",
+        "subclass_example": "protected override get storageKey(): string { return 'mg_traces'; }",
+        "read_line": "const key = `merlin_mg_plays_${this.storageKey}`; const plays = parseInt(localStorage.getItem(key) ?? '0', 10) || 0;",
+        "write_line": "localStorage.setItem(`merlin_mg_plays_${this.storageKey}`, String(plays + 1));",
+        "pros": ["Stable across renames and build config changes", "Each subclass owns its key — explicit contract", "Default fallback to constructor.name for new minigames keeps it non-breaking"],
+        "cons": ["Requires touching all 14 mg_*.ts files to add the override (can be deferred — default fallback works immediately)"]
+      },
+
+      "recommendation": "OPTION B (protected storageKey getter with default fallback). Deploy the base-class default immediately — this fixes the contamination bug today without touching any subclass. Subclasses can add explicit keys incrementally. Option A is acceptable if build config is locked, but Option B is more robust."
+    }
+  },
+
+  "investigation_2_async_game_loop": {
+    "title": "gameLoop() async safety — spin risk and yield guarantees",
+    "severity": "LOW (no spin detected; one structural note logged)",
+
+    "finding_1_walk_seconds_constant": {
+      "description": "WALK_SECONDS_BEFORE_CARD is declared at line 27 as a numeric literal: const WALK_SECONDS_BEFORE_CARD = 6. It is hardcoded to 6 seconds. It cannot be 0 under any runtime condition. The await waitSeconds(6) at line 622 is the first statement in the loop body and guarantees at minimum a 6-second yield on every iteration.",
+      "verdict": "No tight spin possible from this constant."
+    },
+
+    "finding_2_loop_iteration_yield_analysis": {
+      "description": "Every path through the while loop body contains at least one meaningful await before the condition is re-evaluated. The yield chain per iteration is: await waitSeconds(6) -> [early break check, no await] -> [drain + death check, no await] -> await showOghamPanel() (or pre-selected skip) -> await fadeIn(600) -> await cardGenPromise -> await fadeOut(300) -> await showCard() -> await minigame.play() -> await showRunSummary() (on terminal paths) -> await fadeIn(400) -> await fadeOut(400) on continue path. There is no iteration path that bypasses all awaits.",
+      "verdict": "Loop never spins tightly. Every iteration yields to the event loop at minimum via waitSeconds(6)."
+    },
+
+    "finding_3_death_drain_vs_ogham_ordering": {
+      "description": "The death check at line 635 (after drain) runs BEFORE showOghamPanel() at line 647. If drainLifeScaled() kills the player, endRun('death_drain') is called, showRunSummary is awaited, and the loop breaks. showOghamPanel() is NEVER reached in that iteration. This is CORRECT per the game design bible pipeline: step 1 DRAIN -> step 9 MORT. The ogham phase (step 3b in code) is between drain and card presentation, so an ogham cannot save a player who is already dead from the opening drain — which is intentional.",
+      "verdict": "Death-drain ordering is correct. Ogham cannot reverse a drain-kill, which is expected behavior."
+    },
+
+    "finding_4_preselected_ogham_skip": {
+      "description": "At line 647: const oghamChoice = preSelected || await showOghamPanel(). If run.activeOgham is truthy (player pre-selected in Lair), showOghamPanel() is not awaited. The loop still yields immediately after on await fadeIn(600) at line 671. No spin risk.",
+      "verdict": "Short-circuit on preSelected is safe."
+    },
+
+    "finding_5_minigame_error_fallback": {
+      "description": "The try/catch at lines 702-712 catches any minigame failure and falls back to result = { score: 50 }. This means a minigame that throws synchronously or rejects still allows the loop to continue. The finally block removes the overlay class. No infinite retry, no unhandled rejection, no hang. Score 50 is a neutral outcome that applies no multiplier bias.",
+      "verdict": "Minigame error path is safe and non-spinning."
+    },
+
+    "finding_6_structural_note_no_max_iterations": {
+      "description": "The while loop is bounded by two orthogonal conditions: state().run.active being set to false (by endRun calls), and the 30-card hard cap at line 755 (cards >= 30 triggers endRun('cards_limit') and break). However, if a bug causes run.active to remain true AND cardsPlayed to never increment (e.g., a future refactor removes incrementCardsPlayed()), the loop could theoretically run indefinitely. Currently this cannot happen — incrementCardsPlayed() is called unconditionally at line 630 on every iteration. This is a structural observation, not a current bug.",
+      "severity_of_note": "LOW — informational only, not actionable now",
+      "suggestion": "A defensive max-iterations guard (e.g., let safetyCounter = 0; if (++safetyCounter > 60) break;) would make the loop self-terminating even under future regression."
+    }
+  },
+
+  "issues": [
+    {
+      "id": "C104-01",
+      "severity": "HIGH",
+      "system": "MinigameBase.ts / localStorage",
+      "issue": "Single shared key 'merlin_mg_plays' causes cross-minigame difficulty contamination. Playing any minigame 12 times pushes all 14 to tier 3.",
+      "affected_lines": "MinigameBase.ts:253-254, 281-282",
+      "recommendation": "Add protected get storageKey(): string { return this.constructor.name; } to MinigameBase, then use `merlin_mg_plays_${this.storageKey}` in both read and write paths. Optionally add explicit stable string overrides per subclass."
+    },
+    {
+      "id": "C104-02",
+      "severity": "LOW",
+      "system": "MinigameBase.ts / build config",
+      "issue": "this.constructor.name works in current esbuild config but is fragile under future minifyIdentifiers=true or terser switch.",
+      "affected_lines": "MinigameBase.ts:253 (implicit)",
+      "recommendation": "Protected storageKey getter (see C104-01 fix) eliminates this fragility."
+    },
+    {
+      "id": "C104-03",
+      "severity": "LOW",
+      "system": "main.ts / gameLoop",
+      "issue": "No max-iterations safety guard on the while loop. Loop is currently bounded by 30-card cap and run.active flag but has no defensive ceiling.",
+      "affected_lines": "main.ts:619",
+      "recommendation": "Add a safetyCounter capped at 60 iterations as a defensive measure against future regression."
+    }
+  ],
+
+  "confirmed_safe": [
+    "WALK_SECONDS_BEFORE_CARD = 6 (hardcoded, cannot be 0 — no tight spin)",
+    "Every loop iteration has at minimum await waitSeconds(6) — no yield-free spin path",
+    "Death-drain check before showOghamPanel is correct per GDB pipeline order",
+    "Ogham pre-selection short-circuit is safe (next await is fadeIn 600ms)",
+    "Minigame error fallback (score=50) is non-spinning and non-blocking",
+    "constructor.name survives current esbuild production build (minifyIdentifiers OFF by default)"
+  ],
+
+  "verdict": "FIX",
+  "verdict_detail": "One HIGH issue requires fixing before the next release: shared minigame play counter. The async game loop is structurally sound — no spin, no silent infinite loop, no missing yield. Fix C104-01 in MinigameBase.ts. C104-02 is resolved automatically by the same fix. C104-03 is optional defensive hardening."
+}

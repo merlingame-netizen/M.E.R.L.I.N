@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-04-03T00:00:00.000Z",
+  "agent": "merlin-ai-playtester",
+  "cycle": 39,
+  "target": "MerlinLairScene — zone feedback + flatShading + unloaded GLBs",
+  "score_global": 4.1,
+  "score_rationale": "Atmospheric scene with strong ambient detail (candles, dust, steam, GLB overlay). However the interactive contract is fundamentally broken: 4 of 5 zones are click-silent, the visual style is incoherent between procedural and GLB meshes, and two Blender assets are orphaned in /public. A player cannot distinguish door from decoration without extensive trial-and-error.",
+
+  "bugs": [
+    {
+      "id": "BUG-L-01",
+      "severity": "CRITIQUE",
+      "title": "4/5 interactive zones produce zero player feedback on click",
+      "location": "web-demo/src/main.ts — runMerlinLair(), lines 185-191",
+      "description": "The onZoneClick handler resolves the Promise only for zone === 'door'. Zones 'map', 'crystal', 'bookshelf', 'cauldron' are caught by the handler but intentionally dropped: comment reads 'map/crystal/bookshelf/cauldron: future overlays — stay in Lair'. No toast, no overlay, no label, no sound, no animation is triggered for these four zones. The scene merely continues rendering. From the player's perspective, clicking a glowing purple crystal ball or a visually animated cauldron — both inviting interactive affordances — produces absolute silence. The hover state (scale x1.05, emissiveIntensity bump to 0.65) correctly communicates 'this is clickable', making the click non-response a broken promise.",
+      "evidence": [
+        "main.ts:186-191: zone === 'door' resolves, all others fall through with no action",
+        "MerlinLairScene.ts:720-724: hover glow explicitly raises emissiveIntensity to 0.65 and cursor to pointer — strong affordance signals are present",
+        "MerlinLairScene.ts:797-799: onZoneClick callback is correctly wired in the scene; the gap is in main.ts caller",
+        "Crystal ball has animated pulsing light (intensity 2.2 ± 0.4) and sphere bob — maximum interactive visual promise",
+        "Cauldron has animated green steam particles and pulsing glow — equally strong interactive affordance"
+      ],
+      "fix_proposed": "In runMerlinLair() at the onZoneClick handler, add immediate feedback for each non-door zone. Minimum viable: display a 2D HTML overlay div (z-index above canvas) with a title + short description per zone. For map: 'Choisir un biome — disponible bientôt'. For crystal: 'Oghams disponibles'. For bookshelf: 'Journal de Merlin'. For cauldron: 'Merlin parle'. Each should auto-dismiss on click-outside or after 3s. Without this, the scene functions as a dead-end with one invisible exit."
+    },
+    {
+      "id": "BUG-L-02",
+      "severity": "HIGH",
+      "title": "Door zone has no hover label — player must discover it by accident",
+      "location": "web-demo/src/main.ts — runMerlinLair(); MerlinLairScene.ts — onMouseMove()",
+      "description": "The door is the ONLY actionable zone, yet it carries no text label, no tooltip, no UI prompt. The hover state changes the cursor to 'pointer' and scales the invisible hit target by 1.05 — but the hit target itself is MeshBasicMaterial({ visible: false }). So the scale change applies to an invisible mesh. The visible door panel (doorMat, MeshStandardMaterial) is not in the interactives array and receives no emissive boost. The door's sole affordance clue is a light sliver under it (lightMat: 0xffdd88). A first-time player must: (a) hover near the door, (b) notice the cursor change on an invisible collider, and (c) infer that this is the exit. No label. No 'Entrer dans la forêt' prompt. No emissive highlight on the visible door geometry.",
+      "evidence": [
+        "MerlinLairScene.ts:264-270: hitTarget is MeshBasicMaterial visible:false — scale effect is applied to invisible geometry",
+        "MerlinLairScene.ts:712-726: hover emissiveIntensity boost targets currentHovered.mesh (the invisible target) not the visible door panel",
+        "MerlinLairScene.ts:243: the visible door panel ('door' mesh) is added to doorGroup but is NOT in the interactives array",
+        "No CSS label or HTML overlay is created for any zone in MerlinLairScene.ts or main.ts"
+      ],
+      "fix_proposed": "Add the visible door panel mesh into the hover feedback path, or apply emissive boost to the parent doorGroup on hover detection. Additionally, render a floating '< Commencer >' label (HTML div positioned via THREE.Vector3.project) above the door when hovered."
+    },
+    {
+      "id": "BUG-L-03",
+      "severity": "HIGH",
+      "title": "flatShading: true absent on all 14 procedural MeshStandardMaterial instances",
+      "location": "web-demo/src/scenes/MerlinLairScene.ts — createWalls(), createMapTable(), createCrystalBall(), createBookshelf(), createDoor(), createCandles(), createCauldron(), createPotionBottles(), createSkull()",
+      "description": "Every procedural MeshStandardMaterial in the scene is constructed without flatShading: true. Count by function: createWalls() = 4 materials (stoneMat, mortarMat, floorMat, ceilMat, beamMat = 5 total). createMapTable() = 3 materials (woodMat, mapMat, scrollBorder inline). createCrystalBall() = 2 (pedestalMat, crystalMat). createBookshelf() = 2 (shelfMat + 6 inline book materials). createDoor() = 2 (doorMat, ironMat). createCandles() = 2 (candleMat, wickMat). createCauldron() = 1 (ironMat). createPotionBottles() = 2 (shelfMat + bottle mat). createSkull() = 1 (boneMat). Total: approximately 14 named materials plus ~7 inline-constructed materials = ~21 MeshStandardMaterial instances with smooth shading. The GLB assets (cauldron_merlin, bougie, table_druidique, bibliotheque) are baked with flat shading from Blender. Result: the scene is visually split — low-poly Celtic aesthetic from GLBs surrounded by smooth-shaded procedural geometry that reads as a different art style entirely.",
+      "evidence": [
+        "MerlinLairScene.ts:33: stoneMat — no flatShading",
+        "MerlinLairScene.ts:34: mortarMat — no flatShading",
+        "MerlinLairScene.ts:52: floorMat — no flatShading",
+        "MerlinLairScene.ts:58: ceilMat — no flatShading",
+        "MerlinLairScene.ts:64: beamMat — no flatShading",
+        "MerlinLairScene.ts:93: woodMat (mapTable) — no flatShading",
+        "MerlinLairScene.ts:94-100: mapMat — no flatShading",
+        "MerlinLairScene.ts:143: pedestalMat — no flatShading",
+        "MerlinLairScene.ts:144: crystalMat — no flatShading (transparent sphere, flatShading less critical but still inconsistent)",
+        "MerlinLairScene.ts:177: shelfMat — no flatShading",
+        "MerlinLairScene.ts:197: 6 inline book materials — no flatShading",
+        "MerlinLairScene.ts:227: doorMat — no flatShading",
+        "MerlinLairScene.ts:228: ironMat — no flatShading",
+        "MerlinLairScene.ts:296-302: candleMat, wickMat — no flatShading",
+        "MerlinLairScene.ts:478: cauldron ironMat — no flatShading",
+        "MerlinLairScene.ts:558: potionBottles shelfMat — no flatShading",
+        "MerlinLairScene.ts:595: boneMat (skull) — no flatShading",
+        "LairGLBAssets.ts:27-29: GLB cauldron material explicitly sets roughness/metalness — baked flat from Blender"
+      ],
+      "fix_proposed": "Add flatShading: true to every MeshStandardMaterial constructor in MerlinLairScene.ts. Transparent materials (crystalMat, potionBottles) are edge cases — flatShading on a SphereGeometry with high segment count is subtle, but still correct for low-poly aesthetic. For BoxGeometry meshes the effect is immediate and dramatic. Note: flatShading requires geometry.computeVertexNormals() is NOT called after setting flatShading (Three.js handles this automatically when flatShading: true is passed to the constructor)."
+    },
+    {
+      "id": "BUG-L-04",
+      "severity": "HIGH",
+      "title": "sol_pierre.glb and mur_pierre.glb exist in /public but are never loaded",
+      "location": "web-demo/src/scenes/LairGLBAssets.ts — loadLairGLBs()",
+      "description": "The files sol_pierre.glb and mur_pierre.glb are confirmed present in web-demo/public/ (also with .import sidecar files, indicating they were produced by the Godot/Blender pipeline). loadLairGLBs() loads exactly 4 GLBs: cauldron_merlin, bougie, table_druidique, bibliotheque. It has no reference to sol_pierre or mur_pierre. As a result, the floor (BoxGeometry 24×0.3×20) and all three walls (BoxGeometry 24×16×0.5 and two side walls) remain as flat procedural meshes — contradicting the pattern of other zones where the GLB successfully replaces the procedural fallback. These assets are the most visually prominent surfaces in the scene (they occupy ~60% of screen real estate) and they remain as smooth-shaded flat boxes while the GLB furniture reads as properly Celtic.",
+      "evidence": [
+        "LairGLBAssets.ts:19-62: loadLairGLBs() references only cauldron_merlin.glb, bougie.glb, table_druidique.glb, bibliotheque.glb",
+        "web-demo/public/sol_pierre.glb — confirmed present",
+        "web-demo/public/mur_pierre.glb — confirmed present",
+        "web-demo/public/mur_pierre.glb.import + sol_pierre.glb.import — sidecar files confirm they are tracked assets",
+        "MerlinLairScene.ts:37-49: back wall, left wall, right wall, floor remain as BoxGeometry with stoneMat/floorMat",
+        "LairGLBAssets.ts:14-16: LairProceduralGroups interface only exposes mapGroup and shelfGroup — no wallGroup or floorGroup, so wall/floor replacement cannot be done even if loadLairGLBs were patched without adding parameters"
+      ],
+      "fix_proposed": "1. In createWalls() (MerlinLairScene.ts), extract the wall meshes and floor mesh into named groups (wallGroup, floorGroup) returned alongside the Group. 2. Add wallGroup and floorGroup to the LairProceduralGroups interface in LairGLBAssets.ts. 3. In loadLairGLBs(), add two new loadGLB calls for sol_pierre.glb and mur_pierre.glb, positioned and scaled to cover the BoxGeometry footprints, hiding proceduralGroups.floorGroup and proceduralGroups.wallGroup on success."
+    },
+    {
+      "id": "BUG-L-05",
+      "severity": "MEDIUM",
+      "title": "Crystal and bookshelf hover feedback targets invisible hit meshes — emissive boost is wasted",
+      "location": "web-demo/src/scenes/MerlinLairScene.ts — onMouseMove(), createBookshelf(), createCrystalBall()",
+      "description": "The bookshelf hitTarget is explicitly MeshBasicMaterial({ visible: false }) (line 209). When hovered, the code attempts mat.emissiveIntensity = 0.65 on this invisible material — MeshBasicMaterial has no emissive property, so the boost silently fails. The scale x1.05 is applied to the invisible hitTarget, not to the visible shelfFrame or books. For the crystal, the hitTarget IS the sphere itself (visible: it is crystalMat), so hover works correctly there. The bookshelf hover thus has only the cursor change as feedback, which is insufficient.",
+      "evidence": [
+        "MerlinLairScene.ts:207-212: bookshelf hitTarget = MeshBasicMaterial visible:false",
+        "MerlinLairScene.ts:716-724: hover code branches on mat?.emissive — MeshBasicMaterial has no emissive, so the branch may execute but has zero visual effect",
+        "MerlinLairScene.ts:160-170: crystal hitTarget is the sphere itself (crystalMat = MeshStandardMaterial with emissive) — hover works correctly"
+      ],
+      "fix_proposed": "Store a reference to the shelfFrame mesh alongside the hitTarget. In onMouseMove, when the hovered zone is 'bookshelf', apply the emissive boost to the frame material instead of (or in addition to) the hit target. Pattern already works correctly for crystal — replicate it."
+    },
+    {
+      "id": "BUG-L-06",
+      "severity": "MEDIUM",
+      "title": "No touch / pointer events — Lair is mouse-only, mobile players are locked out",
+      "location": "web-demo/src/scenes/MerlinLairScene.ts — initMerlinLair(), lines 742-743",
+      "description": "The event listeners are exclusively 'mousemove' and 'click' on the renderer domElement. Mobile players using touch get no raycasting, no hover, and clicking the door does nothing. The rest of the web-demo has been audited for mobile (cycle 28 fixes), but the Lair bypasses that work entirely.",
+      "evidence": [
+        "MerlinLairScene.ts:742: renderer.domElement.addEventListener('mousemove', onMouseMove)",
+        "MerlinLairScene.ts:743: renderer.domElement.addEventListener('click', onClick)",
+        "No touchstart, touchend, or pointerdown listeners present anywhere in MerlinLairScene.ts"
+      ],
+      "fix_proposed": "Replace 'mousemove'/'click' with Pointer Events API ('pointermove'/'pointerup') which unifies mouse and touch. Alternatively add parallel 'touchstart'/'touchend' listeners that map touch[0].clientX/Y to the same mouse.x/y NDC calculation."
+    },
+    {
+      "id": "BUG-L-07",
+      "severity": "LOW",
+      "title": "Cauldron procedural body (SphereGeometry) z-fights with cauldron_merlin.glb when GLB loads",
+      "location": "web-demo/src/scenes/MerlinLairScene.ts:489; LairGLBAssets.ts:24-35",
+      "description": "Unlike the table and bookshelf (which hide their proceduralGroups on GLB load success), the cauldron has no corresponding entry in LairProceduralGroups. The procedural cauldron body (SphereGeometry at position 2,-3.8,-7) and legs remain visible when cauldron_merlin.glb loads at position 2,-4.65,-7. The GLB and procedural body overlap spatially, causing z-fighting on the SphereGeometry. The bougie GLBs similarly overlay the procedural candle bodies without hiding them.",
+      "evidence": [
+        "MerlinLairScene.ts:489-500: procedural cauldron body + 3 legs, positioned at (2,-3.8,-7) / (2,-4.4,-7)",
+        "LairGLBAssets.ts:32-35: cauldron_merlin.glb placed at (2,-4.65,-7) — overlapping Z range",
+        "LairGLBAssets.ts:14-16: LairProceduralGroups has no cauldronGroup or candleGroup",
+        "LairGLBAssets.ts:38-45: bougie GLBs placed at CANDLE_POSITIONS same as procedural candle bodies in MerlinLairScene.ts:290-294"
+      ],
+      "fix_proposed": "Add cauldronGroup and candleGroup references to LairProceduralGroups. In createCauldron() and createCandles(), collect the procedural meshes in Groups and return them. In loadLairGLBs(), hide cauldronGroup on cauldron_merlin success and hide candleGroup on bougie success."
+    }
+  ],
+
+  "player_journey": "Player enters the Lair. First impression is strong — warm candlelight, green cauldron steam, a crystal ball pulsing with purple light, a forest visible through a window. The atmosphere reads 'there is something to discover here'. Player moves the cursor: it changes to a pointer over the scroll on the table. Player clicks — nothing happens. Cursor moves to the crystal ball, which is visibly animated and glowing. Player clicks — nothing. Estimated confusion onset: 5-8 seconds. Player tries the bookshelf (cursor changes, click: nothing), the cauldron (most animated object in scene — click: nothing). After 4 failed clicks across 4 zones, the player has now mentally catalogued every interactive-looking object as broken. Frustration is no longer curiosity. At this point (~30-60 seconds in), the player either: (A) moves the cursor near the left wall and accidentally lands on the door's invisible hitTarget — cursor changes to pointer, player clicks, game starts; or (B) concludes the scene is a non-interactive cinematic and either waits indefinitely or refreshes. Outcome A requires the player to hover a poorly-lit, partly-occluded left wall for the cursor change — no visual invite exists. The door's sole affordance (light sliver under it) blends into the warm-toned ambient lighting. Conservative estimate: 15-40% of players will not find the door within 90 seconds on first play. The scene communicates 'rich hub with 5 things to do' and delivers 'one invisible exit'. Delta between promise and delivery is the core wound.",
+
+  "next_steps": [
+    "IMMEDIATE (blocks demo): BUG-L-01 — add 2D HTML overlays for map/crystal/bookshelf/cauldron zones in runMerlinLair(). Even placeholder text removes the broken-click sensation.",
+    "IMMEDIATE (blocks demo): BUG-L-02 — add visible hover feedback to the door panel geometry and a 'Commencer' label on hover.",
+    "SPRINT 1: BUG-L-03 — add flatShading: true to all ~21 MeshStandardMaterial constructors. One-line fix per material, zero architectural change.",
+    "SPRINT 1: BUG-L-04 — wire sol_pierre.glb and mur_pierre.glb into loadLairGLBs(), expose wallGroup/floorGroup in LairProceduralGroups.",
+    "SPRINT 2: BUG-L-05 — fix bookshelf hover to target visible frame mesh emissive.",
+    "SPRINT 2: BUG-L-06 — replace mousemove/click with pointermove/pointerup for mobile support.",
+    "SPRINT 2: BUG-L-07 — add cauldronGroup + candleGroup to LairProceduralGroups, hide on GLB load success.",
+    "Dispatch merlin-balance-tuner for zone overlay content once zone interactions are wired."
+  ],
+
+  "metrics": {
+    "interactive_zones_total": 5,
+    "zones_with_click_feedback": 1,
+    "zones_click_silent": 4,
+    "zones_click_silent_pct": 80,
+    "meshstandard_material_instances_approx": 21,
+    "meshstandard_without_flatshading": 21,
+    "glb_assets_in_public": 6,
+    "glb_assets_loaded": 4,
+    "glb_assets_orphaned": 2,
+    "orphaned_glb_names": ["sol_pierre.glb", "mur_pierre.glb"],
+    "estimated_player_door_discovery_failure_rate_pct": "15-40",
+    "bugs_critique": 1,
+    "bugs_high": 3,
+    "bugs_medium": 2,
+    "bugs_low": 1
+  }
+}

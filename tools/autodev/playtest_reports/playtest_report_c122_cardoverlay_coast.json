@@ -1,0 +1,182 @@
+{
+  "cycle": "C122",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "files_audited": [
+    "web-demo/src/ui/CardOverlay.ts",
+    "web-demo/src/scenes/CoastBiome.ts",
+    "web-demo/src/ui/OghamPanel.ts",
+    "web-demo/src/ui/RunSummary.ts",
+    "web-demo/src/minigames/mg_volonte.ts",
+    "web-demo/src/minigames/mg_combat_rituel.ts"
+  ],
+  "new_bugs": [
+    {
+      "id": "C122-01",
+      "severity": "HIGH",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 250,
+      "description": "Keydown listener leak on abandoned cards. The `onKeyDown` handler is added with `btn.addEventListener('keydown', onKeyDown)` but is only self-removed when it fires. If the 60s safety timeout fires (or hideCard() is called externally before the player presses a key), the `onKeyDown` listener on each option button is never removed. The buttons are discarded via `optContainer.innerHTML = ''` on the next showCard() call, but until that point (up to 60s) all three closures remain live. On mobile/low-memory devices this causes a detached-DOM event listener leak — Chrome DevTools will flag these as retaining the entire Card object.",
+      "fix": "In the safety timeout callback and in any external hideCard() path, iterate optContainer.querySelectorAll('[role=button]') and call removeEventListener('keydown', onKeyDown) for each. Alternatively store handler refs in an array and remove them inside the activate() closure unconditionally before resolve()."
+    },
+    {
+      "id": "C122-02",
+      "severity": "HIGH",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 170,
+      "description": "Safety timeout not cleared when showCard() exits early via the empty-options guard (line 166). If `card.options.length === 0`, the function calls `hideCard(); resolve(0); return;` but the `safetyId` setTimeout has not been created yet at that branch — safe for now. However the getElementById null-guard at line 178 returns early *after* `safetyId` is assigned (line 170). If `overlayEl`, `narrativeEl`, or `optContainer` are null, `clearTimeout(safetyId)` is called correctly (line 178). This specific path is handled. HOWEVER: neither the biome badge insertion block (lines 186-203) nor the triggerFlipAnimation() call (line 269) are guarded behind the resolve(0) early return — they execute even when the overlay elements are null (the function has already returned by then, so they do NOT execute). Marking as informational-HIGH because the null-guard on line 178 does call clearTimeout — confirm via testing that this is the only early-exit after safetyId assignment.",
+      "fix": "Audit: confirm no code path between lines 170 and 276 can throw without clearTimeout(safetyId) being reached. Add a try/finally block around the body to guarantee clearTimeout always runs: `try { ... } finally { if (!activated) clearTimeout(safetyId); }` — or wrap in a dedicated cleanup function."
+    },
+    {
+      "id": "C122-03",
+      "severity": "HIGH",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 206,
+      "description": "optContainer.innerHTML = '' does not remove the keydown listeners from the previous card's buttons before clearing them. Although detached DOM nodes are eventually GC'd, the `onKeyDown` closures capture `btn`, `activate`, `activated`, `safetyId`, and `resolve` from the previous call's closure scope. If a keyboard event fires during the 200ms gold-highlight delay (between `btn.classList.add('card-option-selected')` and `hideCard()`) AND a new card is shown in that window, `optContainer.innerHTML = ''` removes the old buttons but the still-live keydown listeners on those detached nodes can still fire if focus is on one of them. Result: a stale `activate()` call on an already-resolved promise (no crash, but double hideCard() call).",
+      "fix": "Before `optContainer.innerHTML = ''`, call `optContainer.querySelectorAll('[role=button]').forEach(b => b.replaceWith(b.cloneNode(true)))` to strip all listeners, or explicitly remove each keydown handler via stored refs."
+    },
+    {
+      "id": "C122-04",
+      "severity": "HIGH",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": "1/9",
+      "description": "Global keyboard shortcut keys 1/2/3 are missing. The CLAUDE.md spec (Game Design Bible) documents keyboard nav via Enter/1/2/3. CardOverlay only handles Enter and Space per button (WCAG pattern, correct), but the shortcut keys 1, 2, 3 for direct option selection are absent. Players who expect number-key shortcuts (documented in the GDB) get no feedback and must Tab. This is an accessibility and UX gap against spec.",
+      "fix": "Add a document-level keydown handler (or overlay-level) when the card is visible that maps key '1'→activate option 0, '2'→option 1, '3'→option 2. Register it in showCard() alongside the safety timer and remove it in the `activate` closure or safety timeout callback."
+    },
+    {
+      "id": "C122-05",
+      "severity": "MEDIUM",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 186,
+      "description": "Biome badge and divider nodes are inserted via `cardContainer()?.querySelector()` then `container.insertBefore()` on every showCard() call. The existing badge/divider are removed first (lines 187-189), so there is no accumulation bug. However `cardContainer()` is called 4 separate times (lines 186, 188, 191, 201) in a tight block with no null check on intermediate calls — if the `.card-container` element is unmounted mid-call (e.g. during a fast scene transition) line 196 `container.insertBefore(badge, container.firstChild)` throws a TypeError. The `container` reference on line 191 guards via `if (container)` but the querySelector calls on lines 186-189 are unguarded optional-chain calls that silently do nothing — inconsistent pattern.",
+      "fix": "Cache `cardContainer()` once at the top of showCard() and reuse the cached ref. The existing null guard on line 191 pattern is correct; apply it to the early badge/divider removal block too."
+    },
+    {
+      "id": "C122-06",
+      "severity": "MEDIUM",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 213,
+      "description": "aria-label on option buttons uses template `${option.verb} — ${option.text}` (line 213). If `option.verb` or `option.text` contains an unescaped em-dash or special character from the LLM output, the aria-label is correct (textContent is used, not innerHTML). However the aria-label does NOT mention the effect tooltip content. A screen reader user activating the button hears the verb + description but NOT the faction/life effects — meaning they must separately navigate to the tooltip div (which has no role, no aria-describedby link, and is not a live region). The effect tooltip is purely visual.",
+      "fix": "Add `aria-describedby` pointing to the tooltip element id, OR concatenate effect summaries into the aria-label string. Add a unique id to each tooltip div (e.g. `effect-tooltip-${index}`) and set `btn.setAttribute('aria-describedby', tooltipId)`."
+    },
+    {
+      "id": "C122-07",
+      "severity": "MEDIUM",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 266,
+      "description": "narrativeEl.textContent is set (line 266) before overlayEl.classList.add('visible') (line 267). The comment on line 262-265 explicitly justifies this ordering for NVDA/JAWS: set content AFTER overlay becomes visible. The implementation contradicts its own comment — textContent is set one line BEFORE classList.add('visible'). On older screen readers the live region update may be missed.",
+      "fix": "Swap lines 266 and 267: call `overlayEl.classList.add('visible')` first, then `narrativeEl.textContent = card.narrative` on the next line."
+    },
+    {
+      "id": "C122-08",
+      "severity": "MEDIUM",
+      "file": "ui/OghamPanel.ts",
+      "line_approx": 163,
+      "description": "mouseenter/mouseleave hover style listeners (lines 163-170) are added to available ogham slots every time showOghamPanel() is called, with no corresponding removal. Since panelEl.innerHTML = '' (line 72) discards the old slot DOM nodes, the listeners on detached nodes become garbage-collectable — but only after GC runs. On rapid successive calls (e.g. player enters a run, quickly returns to hub, re-enters), each call adds new listeners to new slot elements. These are isolated per-element so there is no accumulation on a single node, but the pattern prevents any future refactor that reuses slot elements from leaking hover state.",
+      "fix": "This is acceptable given innerHTML = '' clears nodes each call. No immediate code change required but add a comment noting listener lifetime is tied to element lifetime."
+    },
+    {
+      "id": "C122-09",
+      "severity": "MEDIUM",
+      "file": "ui/OghamPanel.ts",
+      "line_approx": 56,
+      "description": "showOghamPanel() reads `store.getState()` synchronously at function entry (line 56). If the store is updated between the time showOghamPanel() is called and when the player interacts (which can be seconds later), the ogham cooldown and unlock state displayed in the panel will be stale. Specifically, `state.run.oghamCooldowns` snapshot is taken at panel-open time. If another system decrements cooldowns mid-panel (e.g. via a concurrent async update), the panel shows wrong cooldown values with no refresh mechanism.",
+      "fix": "Acceptable for current single-threaded JS model (no concurrent state updates possible while awaiting user input). Document this assumption explicitly. If store becomes reactive in future, re-read state at selectOgham() time before applying effects."
+    },
+    {
+      "id": "C122-10",
+      "severity": "MEDIUM",
+      "file": "ui/RunSummary.ts",
+      "line_approx": 218,
+      "description": "factionDeltaThisRun is cast as `Record<string, number>` (line 219) without a null/undefined guard. If a faction key exists in `state.run.factions` but not in `state.run.factionDeltaThisRun`, the delta falls back to `?? 0` (line 221) which is correct. However if `state.run.factionDeltaThisRun` is undefined (e.g. old save data missing this field), line 219 casts undefined as a Record and line 221 `deltas[id]` throws `TypeError: Cannot read properties of undefined`. This is a save-compatibility regression risk.",
+      "fix": "Add a null guard: `const deltas = (state.run.factionDeltaThisRun ?? {}) as Record<string, number>;`"
+    },
+    {
+      "id": "C122-11",
+      "severity": "MEDIUM",
+      "file": "ui/RunSummary.ts",
+      "line_approx": 284,
+      "description": "The `focus` and `blur` listeners on restartBtn (lines 284-290) apply outline styles to implement WCAG 2.4.7 focus visibility. Using `focus` instead of `focusvisible` means the outline also appears on mouse click (pointerdown triggers focus). This is a minor UX issue — the gold outline flashes on every mouse click, not just keyboard focus. Not a WCAG failure (focus IS visible) but creates visual noise on mouse interaction.",
+      "fix": "Use the CSS `:focus-visible` selector in a stylesheet instead of JS focus/blur listeners. If inline JS is required, use a `keydown` flag pattern to distinguish keyboard from mouse focus."
+    },
+    {
+      "id": "C122-12",
+      "severity": "MEDIUM",
+      "file": "ui/RunSummary.ts",
+      "line_approx": 196,
+      "description": "addStat() is called with `state.run.anamThisRun` (line 197) but there is no null/undefined guard. If `anamThisRun` is undefined (cold start, no run completed), `String(undefined)` renders as the string 'undefined' in the UI. Same risk applies to `state.run.cardsPlayed` (line 196).",
+      "fix": "Use `state.run.anamThisRun ?? 0` and `state.run.cardsPlayed ?? 0` in the addStat() calls."
+    },
+    {
+      "id": "C122-13",
+      "severity": "MEDIUM",
+      "file": "scenes/CoastBiome.ts",
+      "line_approx": 369,
+      "description": "Ocean wave animation adaptive-LOD logic has an off-by-one inversion. The code reads: `_skipOceanFrame = !_skipOceanFrame; if (!_skipOceanFrame || dt <= 0.033)`. This means: when `_skipOceanFrame` is true (odd frames), the condition `!_skipOceanFrame` is false — ocean update runs only if `dt <= 0.033` (i.e., when at 30+ fps). When `_skipOceanFrame` is false (even frames), `!_skipOceanFrame` is true — ocean update ALWAYS runs. Net result: on low-FPS (dt > 0.033ms), ocean runs on even frames only = 50% frame rate, which is the intended behavior. On high-FPS (dt <= 0.033), ocean runs every frame. Logic is technically correct but the variable naming (`_skipOceanFrame` toggling true=update/false=skip) is inverted from its name semantics, making the condition unreadable and fragile under future edits.",
+      "fix": "Rename to `_oceanFrameActive` or invert the boolean semantics to match the name. Add an inline comment explaining the toggle logic."
+    },
+    {
+      "id": "C122-14",
+      "severity": "MEDIUM",
+      "file": "scenes/CoastBiome.ts",
+      "line_approx": 110,
+      "description": "In createTrees(), `trunkMat` and `leafMat` are instantiated once per layer loop iteration (lines 110-111) but shared across all trees within that layer (N trees × 4 meshes each). The dispose() function correctly uses a Set to avoid double-dispose. However after dispose() is called, all meshes in the layer still hold references to the (now disposed) shared material. If the Three.js renderer attempts a draw call on any of these meshes after dispose() (e.g. a pending rAF fires after scene teardown), it will produce a WebGL error. The `group.clear()` at line 429 removes children from the scene graph but does not null out mesh.material refs.",
+      "fix": "Set `mesh.material = null` (or a disposed sentinel) during the dispose traversal, or ensure group.clear() is called before seenMaterials.forEach(m => m.dispose())."
+    },
+    {
+      "id": "C122-15",
+      "severity": "LOW",
+      "file": "scenes/CoastBiome.ts",
+      "line_approx": 17,
+      "description": "createGround() uses `Math.random()` for terrain height displacement (line 17). This means the ground mesh geometry is different on every page load — no seed, no deterministic terrain. While aesthetically fine, it prevents any future LOD/precompute optimization and makes visual regression testing impossible. Not a bug, but a design note.",
+      "fix": "Consider a seeded pseudo-random function (e.g. mulberry32) for reproducible terrain. Low priority for current scope."
+    },
+    {
+      "id": "C122-16",
+      "severity": "LOW",
+      "file": "ui/CardOverlay.ts",
+      "line_approx": 151,
+      "description": "triggerFlipAnimation() uses `setTimeout(() => container.classList.remove('card-flip'), 420)` (line 151). This 420ms timeout is not cleared anywhere. If hideCard() is called within 420ms of the flip starting (e.g. instant option click + 200ms gold highlight + hideCard at 200ms = well within 420ms), the timeout fires after the overlay is hidden and removes 'card-flip' from a now-hidden element — harmless but a dangling timeout. In a rapid sequence of showCard() calls, multiple flip-remove timeouts can be queued.",
+      "fix": "Store the timeout ID from triggerFlipAnimation() and clear it in hideCard(). Or use a transitionend event listener (once:true) instead of a fixed timeout."
+    },
+    {
+      "id": "C122-17",
+      "severity": "LOW",
+      "file": "ui/OghamPanel.ts",
+      "line_approx": 147,
+      "description": "The lock icon for unavailable oghams uses raw Unicode escape `\\uD83D\\uDD12` (line 147) inline in textContent — this renders correctly as the lock emoji. However the slot's aria-label (line 109) is `${spec.name} — ${spec.description}` and does NOT announce that the slot is locked. A screen reader user tabs to a disabled button and hears the name/description but nothing about why it is unavailable or what reputation is required.",
+      "fix": "Append lock status to aria-label for locked oghams: `slot.setAttribute('aria-label', \\`${spec.name} — Verrouille, reputation 50 requise\\`);` when `!isUnlocked`."
+    },
+    {
+      "id": "C122-18",
+      "severity": "LOW",
+      "file": "minigames/mg_volonte.ts",
+      "line_approx": 227,
+      "description": "Score formula: `(this.timeOnTarget / this.totalTime) * 100`. This divides time-on-target by TOTAL game time (not elapsed time). If the player keeps cursor on target for the full 10s, score = 100%. Correct. But if a player holds focus perfectly for 9s out of 10s total, score = 90%. The live status display (line 266) uses `timeOnTarget / elapsedTime` (focus % of elapsed time) which can show 100% mid-game even if the player was off-target at the start — inconsistency between live display and final score formula. Not a crash but creates misleading UX: player sees 'Focus: 100%' but gets a score below 100 because elapsedTime includes the gap.",
+      "fix": "Align the formulas. Either use `timeOnTarget / elapsedTime` for final score too, or display `timeOnTarget / totalTime * 100` in the live status. Pick one definition of 'focus percentage' and apply consistently."
+    },
+    {
+      "id": "C122-19",
+      "severity": "LOW",
+      "file": "minigames/mg_combat_rituel.ts",
+      "line_approx": 201,
+      "description": "checkCollision() uses a while-loop to normalize angleDiff to [-PI, PI] (lines 217-220). This is correct but O(N) on very large angle accumulations. After many seconds, `obs.angle` can be arbitrarily large (no modulo applied during update). For typical game duration (10-16s) and max speed 2.5 rad/s this reaches at most ~40 rad, requiring at most ~13 loop iterations — not a performance concern at current scale. However as totalTime increases or speed scales up, this could become measurable.",
+      "fix": "Apply `obs.angle = obs.angle % (Math.PI * 2)` in the obstacle update step (render loop line 266) to keep angles bounded. Then the normalization loop needs at most 1 iteration."
+    }
+  ],
+  "summary": {
+    "total_issues": 19,
+    "critical": 0,
+    "high": 4,
+    "medium": 9,
+    "low": 6,
+    "immediate_action_required": false,
+    "notes": [
+      "No CRITICAL issues (no crashes, softlocks, or data loss paths found).",
+      "C122-07 is the most impactful HIGH: textContent set before overlay is visible contradicts its own ARIA comment — NVDA/JAWS will miss the live-region update on every card show.",
+      "C122-04 is a spec deviation: keyboard shortcuts 1/2/3 documented in Game Design Bible are entirely absent from CardOverlay.",
+      "C122-01 and C122-03 are related keydown listener leak issues in CardOverlay — should be fixed together.",
+      "C122-10 and C122-12 in RunSummary are save-compatibility risks that could surface on first run after a store schema update.",
+      "mg_volonte.ts and mg_combat_rituel.ts show no remaining critical issues post-C119 patch. DOM ref caching (VOL-02/COMBAT-01) is correctly implemented. Ended guards and cancelTimers() are in place."
+    ]
+  }
+}

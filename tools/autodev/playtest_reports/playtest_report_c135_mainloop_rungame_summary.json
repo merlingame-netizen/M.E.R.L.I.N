@@ -1,0 +1,256 @@
+{
+  "report_meta": {
+    "cycle": 135,
+    "date": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": [
+      "web-demo/src/main.ts:140-624 (bootstrap, lair, biome picker, journal panel)",
+      "web-demo/src/main.ts:626-820 (gameLoop, createMinigame)",
+      "web-demo/src/ui/RunSummary.ts:1-323",
+      "web-demo/src/ui/OghamPanel.ts:1-256 (C131/C132 verification)",
+      "web-demo/src/game/Constants.ts:153-226 (all 18 ogham specs vs EffectEngine switch)"
+    ],
+    "prior_context": "C134 fixed CS-01 cards.json guard, EE-05 Ur self-kill, MM-08 camera Infinity"
+  },
+
+  "findings": {
+
+    "run_game_loop": {
+      "verdict": "BUG",
+      "notes": "Three issues found in gameLoop() (lines 626-818) and the minigame dispatch.",
+      "issues": [
+        {
+          "id": "GL-01",
+          "severity": "MEDIUM",
+          "line_range": "main.ts:742-749",
+          "issue": "Minigame instance is never explicitly disposed after play(). createMinigame() dynamically imports and constructs a new instance every card. If the minigame class registers event listeners or timers inside play() that are only cleaned up via a dispose() method, those resources persist into the next card cycle. The try/finally block only hides the overlay and resumes sceneManager — it does not call minigame.dispose().",
+          "fix": "Add minigame.dispose?.() in the finally block after minigameOverlay.classList.remove('visible')."
+        },
+        {
+          "id": "GL-02",
+          "severity": "MEDIUM",
+          "line_range": "main.ts:682-688",
+          "issue": "Pre-selected lair ogham path bypasses showOghamPanel() but still calls hideOghamPanel() on line 689 unconditionally. hideOghamPanel() calls resolveChoice(null) if a Promise is pending, which is correct. However, when preSelected is truthy the panel was never shown, so the DOM overlay is already hidden and resolveChoice is null. This is safe today but the dual-path logic is fragile: if a prior interrupted run left resolveChoice set (e.g. game crash during showOghamPanel), hideOghamPanel on the next run entry would spuriously resolve the stale awaiter from the previous run. The stale-resolveChoice scenario is theoretically prevented by the outer while(true) structure but there is no explicit null-guard at run boundary.",
+          "fix": "In gameLoop(), ensure resolveChoice is null at the start of each run iteration, or document the invariant that it is always null here."
+        },
+        {
+          "id": "GL-03",
+          "severity": "LOW",
+          "line_range": "main.ts:808-816",
+          "issue": "Step 11 (return to 3D) does fadeIn(400) then fadeOut(400) back-to-back unconditionally every card cycle, even when the card overlay is already dismissed and no visual transition is needed for the last card of a run (which breaks immediately after). The fade pair costs 800ms of wait in a tight loop path and adds unnecessary perceived stutter on slow devices.",
+          "fix": "Gate step 11 behind a check that the loop will continue: only execute if state().run.active is still true after step 10."
+        }
+      ]
+    },
+
+    "biome_picker": {
+      "verdict": "BUG",
+      "notes": "showBiomePicker (main.ts:148-215) has one confirmed issue and one robustness gap.",
+      "issues": [
+        {
+          "id": "BP-01",
+          "severity": "MEDIUM",
+          "line_range": "main.ts:148-215",
+          "issue": "The BiomePicker overlay is appended to 'container' (the lair wrapper) and removed via overlay.remove() after a 220ms fade-out triggered by the click handler (line 205-207). However, if the player never clicks a biome button (e.g. they close the tab or force-navigate before resolving), the Promise returned by showBiomePicker() will never resolve. While this is partially mitigated by the outer door-click guard, there is no Escape key handler and no timeout fallback. The lair runMerlinLair() would stall indefinitely at 'selectedBiomeId = await showBiomePicker(wrapper!)' with no recovery path.",
+          "fix": "Add a keydown Escape handler inside showBiomePicker that resolves with the currently-selected biome (or the default 'cotes_sauvages') and removes itself, mirroring the journal panel dismiss pattern."
+        },
+        {
+          "id": "BP-02",
+          "severity": "LOW",
+          "line_range": "main.ts:184-210",
+          "issue": "Biome buttons use inline pointerenter/pointerleave listeners to mutate style properties directly. These listeners are never removed; they remain attached to button elements that are detached from the DOM after overlay.remove(). Modern browsers GC detached nodes, so this is not a persistent leak, but it deviates from the cleanup pattern used elsewhere and would become a real leak if any button held a closure over a live outer scope variable.",
+          "fix": "Low priority given DOM detachment. Remove on overlay.remove() if other closures are added in future."
+        }
+      ]
+    },
+
+    "journal_panel": {
+      "verdict": "PASS",
+      "notes": "showJournalPanel (main.ts:218-305) is clean. The overlay is appended to document.body and removed via overlay.remove() inside dismiss(). The Escape key handler is properly registered and deregistered via document.removeEventListener inside dismiss(). All displayed values (anam, totalRuns, oghamsUnlocked.length, factionRep) are read directly from store state at open time — no async paths. No issues found.",
+      "issues": []
+    },
+
+    "run_summary": {
+      "verdict": "BUG",
+      "notes": "RunSummary.ts has one logic gap in the re-entry guard and one stat display issue.",
+      "issues": [
+        {
+          "id": "RS-01",
+          "severity": "MEDIUM",
+          "line_range": "RunSummary.ts:119-126",
+          "issue": "C86 re-entry guard: when resolveRestart is truthy (a prior summary was awaiting click), it is resolved and set to null before the overlay is rebuilt. This is correct in intent. However, the guard fires AFTER 'await fadeIn(800)' (line 116). That 800ms window means a second death (e.g. death_effects following death_drain in the same card cycle, which cannot happen in normal play but could if applyEffects threw and the fallback neutral-score path still ran checkDeath) would both enter fadeIn simultaneously. The second caller would reach the resolveRestart guard while the first is still inside its fadeIn. The guard resolves the first caller, which unblocks the outer gameLoop break, but the second caller then continues building a second overlay on top. Both overlays are stacked on document.body with z-index:70. The player would see a duplicated summary.",
+          "fix": "Add a module-level 'summaryActive' boolean flag set to true on entry and false on restartBtn click. Return early if summaryActive is already true."
+        },
+        {
+          "id": "RS-02",
+          "severity": "LOW",
+          "line_range": "RunSummary.ts:218",
+          "issue": "factionDeltaThisRun is read from state.run with a save-compat null guard ('?? {}'). However, if factionDeltaThisRun is present but a specific faction key is absent (e.g. the run never interacted with that faction), deltas[id] falls back to 0 and no delta annotation is shown, which is correct. Verified no issue here — LOW note only that the guard comment references C123 but the actual fix type is different from RS-NULL-01 (which guards cardsPlayed/anamThisRun). No code change needed."
+        }
+      ]
+    },
+
+    "ogham_panel_c132_verification": {
+      "verdict": "PASS",
+      "notes": "BUG-C131-03 (touchend on ogham slots) status: the code does NOT use touchend. All slot interaction uses native 'click' event listeners on <button> elements (OghamPanel.ts:174). This is the correct fix for the deferred touch issue — native buttons receive both touch and pointer events correctly on mobile without touchend. The deferred BUG-C131-03 is therefore implicitly resolved by the existing implementation. No touchend listeners present. C132 3-way aria-label fix (line 114-121) is intact and correct. C86 disabled attribute (line 126) is intact. Escape handler deregistration in selectOgham() (line 229-231) and hideOghamPanel() (line 245-248) is intact. Re-entry guard (line 67) is intact.",
+      "issues": []
+    },
+
+    "constants_ogham_specs": {
+      "verdict": "BUG",
+      "notes": "Cross-referenced all 18 ogham effect strings in Constants.ts against applyOghamEffect() switch and processOghamModifiers() switch in EffectEngine.ts.",
+      "issues": [
+        {
+          "id": "OC-01",
+          "severity": "HIGH",
+          "line_range": "Constants.ts:186 / EffectEngine.ts:318",
+          "issue": "Ogham 'ioho' (If) has effect: 'full_reroll'. In applyOghamEffect() this hits the case block at line 318 alongside replace_worst_option, regenerate_all_options, and force_twist, all tagged 'Narrative oghams — card generation modifiers, handled in game loop'. The return value is { applied: false, stateChanged: false }. The game loop in main.ts line 683-688 receives this result but does NOT check the returned flag to trigger a card reroll. applyOghamEffect() is called BEFORE showCard() (step 3b precedes step 4), so a reroll would mean re-running cardGenPromise. No code path in gameLoop() handles the 'full_reroll' signal — the ogham is consumed (cooldown set) but the card is NOT replaced. Effect is silently a no-op for the player.",
+          "fix": "Either: (a) return a structured result from applyOghamEffect that gameLoop reads to re-trigger LLM generation, or (b) display a UI message that reroll is 'not yet implemented'. Currently the player pays 160 Anam and 12-card cooldown for zero effect."
+        },
+        {
+          "id": "OC-02",
+          "severity": "HIGH",
+          "line_range": "Constants.ts:179-181 / EffectEngine.ts:315-317",
+          "issue": "Three narrative oghams — 'nuin' (replace_worst_option), 'huath' (regenerate_all_options), 'straif' (force_twist) — share the same silent no-op return path as ioho. All three are Tier 3 / high Anam cost oghams (80-140 Anam, 5-10 CD). Their core gameplay promise (card option manipulation) is completely unimplemented. The card is shown as-is to the player regardless. This is a pre-existing deferred feature but at costs of 80-160 Anam it constitutes a balance trap: players investing Anam in these oghams receive zero mechanical benefit.",
+          "fix": "Same as OC-01. At minimum, show a toast 'Effet en cours d'implémentation' when these oghams are used. Alternatively, gate them out of the unlockable pool until implemented."
+        },
+        {
+          "id": "OC-03",
+          "severity": "MEDIUM",
+          "line_range": "Constants.ts:172 / EffectEngine.ts:311-312",
+          "issue": "Ogham 'ailm' (predict_next) has effect: 'predict_next', mapped to 'UI-only effect — handled by HUD'. However, the HUD module (HUD.ts) was not observed dispatching or consuming any prediction signal from applyOghamEffect. The OghamEffectResult returned has applied:false. No HUD element shows the predicted next card theme or lexical field. This ogham costs 60 Anam and 4-card cooldown with no visible output.",
+          "fix": "Verify HUD.ts for a predict_next signal consumer. If absent, add a temporary toast showing the next biome and a placeholder field prediction, or mark the ogham as locked."
+        },
+        {
+          "id": "OC-04",
+          "severity": "LOW",
+          "line_range": "Constants.ts:169-188",
+          "issue": "All 18 effect strings in OGHAM_SPECS are covered by at least one case in the applyOghamEffect() switch. No missing case or unreachable effect string. Ur sacrifice_trade (EE-05 fix) correctly reads life_cost/currency_gain from effect_params. Ruis heal_and_cost correctly reads heal/currency_cost. Saille currency_and_heal reads currency/heal. All numeric params match spec values. No param mismatch found."
+        }
+      ]
+    }
+  },
+
+  "summary": {
+    "critical": 0,
+    "high": 2,
+    "medium": 5,
+    "low": 4,
+    "total_issues": 11
+  },
+
+  "top_bugs": [
+    {
+      "id": "OC-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/Constants.ts:186 + web-demo/src/main.ts:682-686",
+      "line": 186,
+      "issue": "Ogham 'ioho' (If, 160 Anam, CD:12) activates with full_reroll but gameLoop never reads the result — card is NOT rerolled. Player pays maximum Anam cost for a silent no-op.",
+      "fix": "Check OghamEffectResult.needsReroll flag (or equivalent) in gameLoop step 3b; if true, re-trigger cardGenPromise before proceeding to showCard()."
+    },
+    {
+      "id": "OC-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/Constants.ts:179-181 + web-demo/src/game/EffectEngine.ts:315-317",
+      "line": 315,
+      "issue": "Narrative oghams nuin/huath/straif (Tier 3, 80-140 Anam) all silently no-op — card options are never modified. Balance trap for invested players.",
+      "fix": "Add a 'not yet implemented' toast at minimum; long term wire card option mutation into gameLoop post-applyOghamEffect and before showCard()."
+    },
+    {
+      "id": "RS-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/RunSummary.ts:103-122",
+      "line": 119,
+      "issue": "Double-death within the same fadeIn(800) window (edge case) can stack two RunSummary overlays. C86 re-entry guard fires after await fadeIn, leaving an 800ms race window.",
+      "fix": "Add a summaryActive module-level boolean guard before await fadeIn(800) to block concurrent entries."
+    },
+    {
+      "id": "GL-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts:742-749",
+      "line": 744,
+      "issue": "Minigame instance is never disposed after play(). If minigame registers internal timers or event listeners not cleaned up by play()'s return, they persist across cards.",
+      "fix": "Call minigame.dispose?.() in the finally block of the minigame try/catch."
+    },
+    {
+      "id": "BP-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts:148-215",
+      "line": 148,
+      "issue": "showBiomePicker() Promise never resolves if player does not click a biome button. No Escape handler, no timeout. runMerlinLair() would stall at this await indefinitely.",
+      "fix": "Add keydown Escape handler inside showBiomePicker resolving with current selectedBiomeId or the default."
+    },
+    {
+      "id": "OC-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/Constants.ts:172",
+      "line": 172,
+      "issue": "Ogham 'ailm' (predict_next) returns no visible output — HUD prediction signal consumer not verified present. 60 Anam cost with no player feedback.",
+      "fix": "Audit HUD.ts for predict_next consumer; add toast fallback if absent."
+    },
+    {
+      "id": "GL-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts:681-689",
+      "line": 682,
+      "issue": "hideOghamPanel() is called unconditionally after the pre-selected ogham path, which could spuriously resolve a stale resolveChoice from a crashed prior run (theoretical, no confirmed reproduction path).",
+      "fix": "Assert resolveChoice === null at the start of each gameLoop iteration."
+    }
+  ],
+
+  "score_adjustment": {
+    "prior_score": 9.98,
+    "deductions": [
+      {
+        "id": "OC-01",
+        "severity": "HIGH",
+        "description": "ioho full_reroll is a paid-feature silent no-op. Maximum Anam cost ogham does nothing.",
+        "deduction": -0.10
+      },
+      {
+        "id": "OC-02",
+        "severity": "HIGH",
+        "description": "3 Tier-3 narrative oghams (nuin/huath/straif) silently no-op — compounding balance trap.",
+        "deduction": -0.10
+      },
+      {
+        "id": "RS-01",
+        "severity": "MEDIUM",
+        "description": "Theoretical double-summary overlay stack on concurrent death paths.",
+        "deduction": -0.04
+      },
+      {
+        "id": "GL-01",
+        "severity": "MEDIUM",
+        "description": "Missing minigame dispose() — low severity since most minigames clean up in play(), but pattern is incorrect.",
+        "deduction": -0.03
+      },
+      {
+        "id": "BP-01",
+        "severity": "MEDIUM",
+        "description": "showBiomePicker has no escape/timeout — lair can soft-stall if player doesn't click.",
+        "deduction": -0.03
+      },
+      {
+        "id": "OC-03",
+        "severity": "MEDIUM",
+        "description": "ailm predict_next has no visible output — 60 Anam cost with unclear player feedback.",
+        "deduction": -0.03
+      }
+    ],
+    "total_deduction": -0.33,
+    "new_score": 9.65,
+    "verdict": "The main game loop async flow is fundamentally sound — no softlocks, no deadlocks, no async race conditions on the critical path. The score drop is driven by the cluster of silent-no-op Tier-3 oghams (HIGH x2) which represent a real gameplay trust issue for invested players, plus three MEDIUM structural gaps."
+  },
+
+  "deferred_confirmed_clean": [
+    "BUG-C131-03 (touchend on ogham slots): RESOLVED — slots use native <button> click, no touchend present",
+    "C86 OghamPanel disabled attribute: intact",
+    "C86 RunSummary resolveRestart hoisting: intact, minor race window noted as RS-01",
+    "C88-02 stale activeOgham reset before run start: intact (main.ts:597)",
+    "C88-06 teardownHUD after gameLoop: intact (main.ts:610)",
+    "C79-04 restartBtn { once: true }: intact (RunSummary.ts:321)",
+    "C84 lair-pre-selected ogham carry: intact (main.ts:599-601)",
+    "EE-05 Ur sacrifice_trade self-kill: confirmed fixed, params match spec"
+  ]
+}

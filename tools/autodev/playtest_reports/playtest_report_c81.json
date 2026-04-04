@@ -1,0 +1,131 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 81,
+  "agent": "merlin-ai-playtester",
+  "audit_type": "static_analysis",
+  "audited_files": [
+    "web-demo/src/main.ts (lines 217-346, 420-550)",
+    "web-demo/src/engine/SceneManager.ts (full)",
+    "web-demo/src/scenes/MerlinLairScene.ts (lines 1-100, 300-500, 660-857)",
+    "web-demo/src/scenes/LairGLBAssets.ts (full)"
+  ],
+
+  "verification_targets": {
+    "C80-01_promise_race_8s_timeout": {
+      "status": "CONFIRMED",
+      "evidence": "main.ts line 498-501: Promise.race<Card | null>([llm.generateCard(...), new Promise<null>((res) => setTimeout(() => res(null), 8_000))]) — exact pattern present with correct null fallback to FastRoute"
+    },
+    "C79-03_overlay_role_dialog": {
+      "status": "NOT_IN_SCOPE",
+      "evidence": "CardOverlay.ts not in audit scope for C81; assumed carried from C79 per spec"
+    },
+    "C79-05_no_store_reset_in_summary": {
+      "status": "NOT_IN_SCOPE",
+      "evidence": "RunSummary.ts not in audit scope for C81; assumed carried from C79 per spec"
+    },
+    "C79-07_scenemanager_stop_renderer_dispose": {
+      "status": "PARTIAL_FIX",
+      "evidence": "SceneManager.ts line 100-107: stop() only calls cancelAnimationFrame(). dispose() exists (line 104-107) and calls stop() + renderer.dispose(). HOWEVER: main.ts line 428 calls sceneManager.stop() — NOT dispose() — after the game loop ends. renderer.dispose() is never called on the biome SceneManager. This is the live bug."
+    }
+  },
+
+  "issues": [
+    {
+      "id": "C81-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/main.ts",
+      "line_range": "428",
+      "title": "sceneManager.stop() called instead of dispose() — WebGL renderer never released",
+      "detail": "At main.ts:428, after the gameplay loop ends, only sceneManager.stop() is called (cancels rAF only). SceneManager.dispose() exists at SceneManager.ts:104-107 and calls stop() + renderer.dispose(), but it is never invoked in the run-exit path. This means every completed run leaks the Three.js WebGLRenderer: GPU textures, shader programs, and framebuffers accumulate. On mobile (iOS/Android), the WebGL context limit (typically 8-16 contexts) will be exhausted within 8-16 runs, causing a black screen or WebGL context loss.",
+      "recommendation": "Replace `sceneManager.stop()` at main.ts:428 with `sceneManager.dispose()`. The dispose() method already calls stop() internally — no double-cancel risk. Also remove the renderer's canvas DOM element to prevent orphaned canvases: dispose() in LairScene already does this (line 842-844), but SceneManager.dispose() does not."
+    },
+    {
+      "id": "C81-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/engine/SceneManager.ts",
+      "line_range": "49-54",
+      "title": "resize listener registered in constructor but never removed — permanent window leak per run",
+      "detail": "SceneManager constructor (line 54) registers `window.addEventListener('resize', onResize)`. The `onResize` closure captures `container`, `camera`, and `renderer`. Neither `stop()` nor `dispose()` calls `window.removeEventListener('resize', onResize)` — the function reference is local to the constructor and unreachable after construction. Each instantiation (one per run) permanently leaks a resize handler. Contrast with LairScene.ts line 826 which correctly calls removeEventListener in dispose(). After 10 runs there are 10 dangling resize handlers each holding alive the biome renderer and camera.",
+      "recommendation": "Promote `onResize` to a private class field so dispose() can remove it: `private onResize = () => { ... }`. Then in dispose(): `window.removeEventListener('resize', this.onResize)`. Alternatively store the reference returned by bind and remove it in dispose()."
+    },
+    {
+      "id": "C81-03",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line_range": "58-71, 102-135",
+      "title": "GLB clones added to scene without tracking — geometry and materials never disposed on Lair teardown",
+      "detail": "loadLairGLBs() clones the bougie.glb scene 3 times (line 60) and clones mur_pierre.glb tiles 18+15+15=48 times (lines 108, 116, 126). All clones are added directly to `scene` (the LairScene's Three.js Scene). Each clone() call creates new geometry references and — with the traverse+material.clone() at lines 62-64 — new independent material instances. MerlinLairScene.dispose() at line 831 calls `scene.traverse((obj) => obj.geometry.dispose() + obj.material.dispose())` which would cover these IF the GLB clones are in the scene at dispose time. HOWEVER: the GLBs are loaded asynchronously via Promise chains. If dispose() is called before a GLB Promise resolves (e.g., slow connection, player exits Lair quickly), the then() callback fires after dispose, adds clones to the already-disposed scene reference, and they are never cleaned up. The scene object still exists (just emptied by traverse), so subsequent scene.add() calls succeed silently.",
+      "recommendation": "loadLairGLBs() must accept a `disposed` flag or AbortController-equivalent signal. In each .then() callback, check `if (disposed) { gltf.scene.traverse(dispose logic); return; }` before calling scene.add(). Expose a `cancelGLBLoads()` function from LairGLBAssets and call it in LairScene.dispose() before the traverse loop."
+    },
+    {
+      "id": "C81-04",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line_range": "29-53",
+      "title": "Cauldron GLB materials mutated in-place — shared material corruption risk if GLB is cached",
+      "detail": "In the cauldron .then() block (lines 30-34), the code traverses the loaded gltf.scene and sets roughness/metalness on child.material directly (no .clone()). If the Three.js GLTFLoader caches the parsed GLTF asset (which it does when using a shared LoadingManager or when loadGLB wraps CachingLoader), the same material object is shared between cache entry and scene node. Setting needsUpdate=true is benign but the roughness/metalness mutations affect the cached prototype. On a second Lair visit (while(true) loop), the GLB loads from cache with already-mutated material values — this is low-severity now but becomes HIGH if emissiveIntensity is ever set here (currently done at line 48 for bodyMesh only, which is not cloned).",
+      "recommendation": "Add `child.material = (child.material as THREE.MeshStandardMaterial).clone()` in the cauldron traverse block before mutating material properties, consistent with the bougie.glb pattern at lines 62-64."
+    },
+    {
+      "id": "C81-05",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_range": "660-663",
+      "title": "LairScene creates its own renderer and resize listener — resize not removed on canvas-wrapper hide",
+      "detail": "MerlinLairScene creates a dedicated Three.js renderer (inferred from dispose() calling renderer.dispose() and renderer.domElement.parentNode.removeChild() at lines 841-844). The resize handler is correctly removed in dispose() at line 826. However, main.ts:344 calls `wrapper.style.display = 'none'` AFTER `lair.dispose()` at line 343 — the order is correct. This is a positive finding with no current bug. Flagged MEDIUM because if the order were reversed (display=none before dispose) the resize handler would fire on a hidden-but-still-live renderer, causing a 0×0 canvas resize.",
+      "recommendation": "Add a code comment at main.ts:343-344 making the order dependency explicit: dispose() must precede display=none. Consider asserting wrapper.clientWidth > 0 inside onResize as a defensive guard."
+    },
+    {
+      "id": "C81-06",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_range": "789-792",
+      "title": "4 event listeners re-registered every Lair visit with no accumulation guard",
+      "detail": "MerlinLairScene.ts lines 789-792 register mousemove, click, touchmove, touchstart on renderer.domElement. Each call to runMerlinLair() in main.ts creates a new LairScene (new renderer, new domElement) so these listeners are on distinct DOM nodes. dispose() at lines 827-830 correctly removes all 4 from the same domElement. No accumulation within a single visit. HOWEVER: if a future refactor reuses the renderer across visits (e.g. to avoid context recreation cost), this becomes HIGH — all 4 listeners would stack. Currently MEDIUM as a latent design fragility.",
+      "recommendation": "No immediate action required. Document in a comment that dispose() removes these 4 listeners and that the renderer domElement must not be reused across visits."
+    },
+    {
+      "id": "C81-07",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_range": "300-391",
+      "title": "Procedural candle materials (candleBaseMat template + wickMat) created but template never disposed",
+      "detail": "candleBaseMat (line 305) is a template MeshStandardMaterial used only to produce .clone() instances for each candle body (line 331). The clones are added to the scene and disposed correctly by the traverse in dispose(). However, the template candleBaseMat itself and wickMat (line 313) are local variables — they are never added to the scene, so scene.traverse() never disposes them. Similarly, the single-instance wickMat material is shared across all 3 wicks. The wicks are in the scene (traversed and disposed) but the shared material reference means one of the 3 wick mesh disposals disposes the material and the other 2 attempt to dispose an already-disposed material — Three.js handles this gracefully but it is technically incorrect.",
+      "recommendation": "Explicitly call `candleBaseMat.dispose()` and `wickMat.dispose()` in the dispose() function, or add them to a tracked array of orphan materials. For wickMat shared across meshes: safe to call dispose() once after scene.traverse() completes."
+    }
+  ],
+
+  "summary": {
+    "critical": 0,
+    "high": 3,
+    "medium": 3,
+    "low": 1,
+    "total_issues": 7
+  },
+
+  "positive_findings": [
+    "C80-01 CONFIRMED: Promise.race with 8s timeout around llm.generateCard() is correctly implemented at main.ts:498-501. Null fallback to FastRoute is clean.",
+    "LairScene dispose() correctly removes all 4 DOM event listeners (mousemove, click, touchmove, touchstart) and the resize handler — no listener accumulation within a single visit.",
+    "LairScene dispose() traverses scene and calls geometry.dispose() + material.dispose() on all meshes and Points — procedural geometry is cleaned up.",
+    "bougie.glb: material.clone() is applied per-candle-clone (LairGLBAssets.ts:62-64), preventing the BUG-L-10 shared-material hover bleed — fix is solid.",
+    "Candle procedural path: candleBaseMat.clone() per body (MerlinLairScene.ts:331) prevents emissive hover bleed across 3 candles as documented in comment.",
+    "runMerlinLair() lair rAF loop: cancelAnimationFrame(rafId) is called at line 336 before lair.dispose() — no orphaned animation frame from Lair.",
+    "LairScene has no internal requestAnimationFrame loop — it is driven entirely by the external tick() in main.ts, so there is no hidden rAF that could escape dispose().",
+    "SceneManager.dispose() correctly calls stop() then renderer.dispose() — the method is sound; the only bug is that it is called as stop() not dispose() at the call site.",
+    "Dust motes, cauldron steam: particle BufferGeometry objects (geo) are tracked in CauldronSystem/DustSystem interfaces and will be traversed and disposed by scene.traverse()."
+  ],
+
+  "score": 6.0,
+  "score_rationale": "3 HIGH issues prevent a PROCEED verdict. C81-01 (renderer never released) and C81-02 (resize listener leak) are both per-run leaks that compound across the while(true) loop — on a long session (10+ runs) these will cause GPU context exhaustion on mobile and memory growth on desktop. C81-03 (GLB race condition) is a latent crash on slow networks. No CRITICAL/softlock issues found. Positive: rAF management is clean, event listener hygiene in LairScene is good, C80-01 is solid.",
+
+  "verdict": "FIX",
+  "verdict_rationale": "Two per-run resource leaks (C81-01, C81-02) will degrade and eventually crash long sessions. Fix before cycle 82 ship. C81-03 should be fixed alongside. C81-04 through C81-07 are hardening items that can follow.",
+
+  "recommended_fix_order": [
+    "C81-01: Change sceneManager.stop() to sceneManager.dispose() at main.ts:428 — 1-line fix, highest ROI",
+    "C81-02: Promote onResize to a class field in SceneManager and remove it in dispose() — 3-line fix",
+    "C81-03: Add disposed-flag guard in loadLairGLBs() .then() callbacks — medium complexity",
+    "C81-04: Add material.clone() in cauldron GLB traverse — 1-line fix",
+    "C81-07: Explicit candleBaseMat.dispose() + wickMat.dispose() in LairScene dispose()"
+  ]
+}

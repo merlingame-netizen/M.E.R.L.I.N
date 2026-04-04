@@ -1,0 +1,162 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 74,
+  "agent": "merlin-ai-playtester",
+  "audit_type": "static_code_audit",
+
+  "check_1_biome_picker": {
+    "status": "PASS",
+    "findings": [
+      {
+        "item": "showBiomePicker exists and returns Promise<string>",
+        "result": "PASS",
+        "evidence": "main.ts line 148: function showBiomePicker(container: HTMLElement): Promise<string>"
+      },
+      {
+        "item": "runMerlinLair return type is Promise<string>",
+        "result": "PASS",
+        "evidence": "main.ts line 217: async function runMerlinLair(app: HTMLElement): Promise<string>. Returns selectedBiomeId (string) at line 345."
+      },
+      {
+        "item": "while(true) loop uses chosenBiome in startRun()",
+        "result": "PASS",
+        "evidence": "main.ts line 376: const chosenBiome = await runMerlinLair(app). Line 420: store.getState().startRun(chosenBiome)."
+      },
+      {
+        "item": "while(true) loop uses chosenBiome in showBiomeToast()",
+        "result": "PASS",
+        "evidence": "main.ts line 422: showBiomeToast(chosenBiome)."
+      },
+      {
+        "item": "map zone handler calls showBiomePicker",
+        "result": "PASS",
+        "evidence": "main.ts lines 307-330: zone === 'map' branch awaits showBiomePicker(wrapper!) and stores result in selectedBiomeId."
+      }
+    ]
+  },
+
+  "check_2_idle_exploit": {
+    "status": "FAIL",
+    "severity": "HIGH",
+    "findings": [
+      {
+        "minigame": "mg_sang_froid",
+        "initial_cursorX": 190,
+        "initial_cursorY": 190,
+        "initial_isInside": true,
+        "zone_center_at_start": "(190, 190)",
+        "analysis": "cursorX=190, cursorY=190 initialized at field declaration (line 34-35) AND re-set in setup() at lines 100-101. The zone also starts at zoneX=190, zoneY=190. isInside is initialized to true at line 44 AND reset to true in setup() at line 110. On game start, cursor is co-located with zone center, so dist=0 < startRadius=120: isInside=true. The zone drifts away over time, but cursor stays at (190,190). The zone drifts only ±18px/s from (190,190). With startRadius=120 shrinking to 28 over 10s, the zone must travel ~92px from center before cursor falls outside. At 18px/s max drift, the zone escapes the cursor after roughly 5-6 seconds. Idle player scores approximately 50-60% (time inside before zone drifts out of range), not 0. This is a significant exploit: an idle player gets half-credit without moving.",
+        "idle_score_estimate_pct": "50-60",
+        "verdict": "FAIL — idle player scores ~50-60%, not 0"
+      },
+      {
+        "minigame": "mg_volonte",
+        "initial_cursorX": 190,
+        "initial_cursorY": 190,
+        "initial_isOnTarget": true,
+        "target_center": "(190, 190)",
+        "target_radius": 30,
+        "analysis": "cursorX=190, cursorY=190 initialized at field declaration (lines 44-45) AND re-set in setup() at lines 108-109. isOnTarget initialized to true at line 49 AND reset to true in setup() at line 113. Target center is fixed at (centerX=190, centerY=190). Cursor stays at (190,190) for idle player. dist = sqrt(0^2+0^2) = 0, which is <= targetRadius=30, so isOnTarget=true for the entire 10 seconds. Idle player scores 100%.",
+        "idle_score_estimate_pct": 100,
+        "verdict": "FAIL — idle player scores 100% without ever moving"
+      }
+    ],
+    "root_cause": "Both minigames initialize cursorX=190, cursorY=190 which coincides exactly with the game zone center. The cursor position is set before any pointer event fires. The score accumulates from frame 0 because isInside/isOnTarget starts true and cursor is already inside the target zone.",
+    "recommendation": "Initialize cursorX and cursorY to a position outside the target zone, e.g. cursorX=-9999, cursorY=-9999, and initialize isInside=false / isOnTarget=false. This forces a score of 0 until the player actually moves the cursor onto the canvas."
+  },
+
+  "check_3_high_severity_bugs": {
+    "files_scanned": [
+      "web-demo/src/scenes/MerlinLairScene.ts",
+      "web-demo/src/main.ts",
+      "web-demo/src/minigames/mg_sang_froid.ts",
+      "web-demo/src/minigames/mg_volonte.ts"
+    ],
+    "new_bugs_found": [
+      {
+        "severity": "HIGH",
+        "file": "web-demo/src/minigames/mg_volonte.ts",
+        "issue": "Idle cursor exploit — scores 100% without any input",
+        "detail": "cursorX=190/cursorY=190 starts at exact center. targetRadius=30. dist=0. isOnTarget=true from frame 0. Player idles for 10s = 100% score.",
+        "recommendation": "Initialize cursorX/cursorY to -9999 and isOnTarget=false before setup(). Only update on first pointer event."
+      },
+      {
+        "severity": "HIGH",
+        "file": "web-demo/src/minigames/mg_sang_froid.ts",
+        "issue": "Idle cursor exploit — scores ~50-60% without any input",
+        "detail": "cursorX=190/cursorY=190 starts co-located with zone center (190,190). Zone drifts at max 18px/s, startRadius=120. Idle player stays inside for several seconds before zone drifts out of reach. Score is not 0.",
+        "recommendation": "Initialize cursorX/cursorY to -9999 and isInside=false. Also note: the zone drift is fully random and seeded at setup(), meaning with favorable drift the idle player could stay inside significantly longer than the worst case."
+      },
+      {
+        "severity": "MEDIUM",
+        "file": "web-demo/src/main.ts",
+        "issue": "BIOME_LABELS map referenced but not confirmed defined in this file",
+        "detail": "Line 310 uses BIOME_LABELS[selectedBiomeId] to generate a human-readable label for the confirmation toast. If BIOME_LABELS is undefined or missing a key, the confirmation toast silently shows the raw biome ID (e.g. 'foret_broceliande') instead of the French label. Not a crash, but a UX defect.",
+        "recommendation": "Verify BIOME_LABELS is defined in scope (same file or import). Fallback is already in place via ?? selectedBiomeId, so severity is MEDIUM."
+      },
+      {
+        "severity": "LOW",
+        "file": "web-demo/src/minigames/mg_sang_froid.ts",
+        "issue": "render() uses fixed dt=1/60 instead of real elapsed time",
+        "detail": "Line 155: const dt = 1/60 hardcoded. If the browser drops below 60fps (mobile, tab backgrounded), game time accumulates faster than wall clock. Zone shrinks faster and drift is faster than intended. Not a crash but causes inconsistent difficulty on low-end devices.",
+        "recommendation": "Pass real dt from rAF timestamp, same pattern as SceneManager. Low priority as minigames are short (10s)."
+      },
+      {
+        "severity": "LOW",
+        "file": "web-demo/src/minigames/mg_volonte.ts",
+        "issue": "Same fixed dt=1/60 issue as mg_sang_froid",
+        "detail": "Line 182: const dt = 1/60 hardcoded. Same consequences as sang_froid.",
+        "recommendation": "Same fix as sang_froid."
+      }
+    ]
+  },
+
+  "summary": {
+    "check_1_biome_picker": "PASS — all 5 integration points verified",
+    "check_2_idle_exploit": "FAIL — both minigames vulnerable to idle cursor exploit",
+    "check_3_new_bugs": "2 HIGH, 1 MEDIUM, 2 LOW found",
+    "overall_status": "FAIL",
+    "blocker_count": 2,
+    "action_required": "Fix idle cursor initialization in mg_sang_froid.ts and mg_volonte.ts before shipping C74"
+  },
+
+  "balance_recommendations": [
+    {
+      "parameter": "mg_sang_froid.cursorX_initial",
+      "current": 190,
+      "suggested": -9999,
+      "confidence": "HIGH",
+      "reason": "Forces cursor outside zone until player actually moves mouse/finger"
+    },
+    {
+      "parameter": "mg_sang_froid.cursorY_initial",
+      "current": 190,
+      "suggested": -9999,
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "mg_sang_froid.isInside_initial",
+      "current": true,
+      "suggested": false,
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "mg_volonte.cursorX_initial",
+      "current": 190,
+      "suggested": -9999,
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "mg_volonte.cursorY_initial",
+      "current": 190,
+      "suggested": -9999,
+      "confidence": "HIGH"
+    },
+    {
+      "parameter": "mg_volonte.isOnTarget_initial",
+      "current": true,
+      "suggested": false,
+      "confidence": "HIGH"
+    }
+  ]
+}

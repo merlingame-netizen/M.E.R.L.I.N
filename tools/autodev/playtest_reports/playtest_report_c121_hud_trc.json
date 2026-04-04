@@ -1,0 +1,130 @@
+{
+  "cycle": "C121",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "files_audited": [
+    "web-demo/src/ui/HUD.ts",
+    "web-demo/src/minigames/mg_traces.ts",
+    "web-demo/src/minigames/mg_sang_froid.ts"
+  ],
+  "hud_cache": {
+    "call_count_per_updateHUD": 28,
+    "breakdown": {
+      "static_elements_direct": [
+        "life-fill",
+        "cards-count",
+        "biome-name",
+        "life-bar-container",
+        "life-status"
+      ],
+      "dynamic_faction_loop_5x2": [
+        "faction-fill-druides",
+        "faction-fill-anciens",
+        "faction-fill-korrigans",
+        "faction-fill-niamh",
+        "faction-fill-ankou",
+        "faction-val-druides",
+        "faction-val-anciens",
+        "faction-val-korrigans",
+        "faction-val-niamh",
+        "faction-val-ankou"
+      ],
+      "resource_elements": [
+        "anam-value",
+        "currency-value",
+        "currency-label"
+      ],
+      "ogham_badge_via_updateOghamBadge": [
+        "ogham-badge",
+        "ogham-badge-rune",
+        "ogham-badge-name",
+        "ogham-badge-mult"
+      ]
+    },
+    "call_frequency_note": "store.subscribe fires on every store.setState() call — not once per card. On a 30-card run with 3-5 state mutations per card, this is 90-150 updateHUD() invocations, yielding 2520-4200 getElementById calls per run.",
+    "elements_to_cache": [
+      "life-fill",
+      "cards-count",
+      "biome-name",
+      "life-bar-container",
+      "life-status",
+      "anam-value",
+      "currency-value",
+      "currency-label",
+      "ogham-badge",
+      "ogham-badge-rune",
+      "ogham-badge-name",
+      "ogham-badge-mult"
+    ],
+    "faction_cache_note": "Faction fill/val elements (10 total) can also be cached as a Record<FactionId, {fill, val}> map built once in buildFactionPanel().",
+    "recommended_pattern": "Lazy-init module-level variables, populated in initHUD() after the build functions run. Example: let _els: HudElements | null = null; function getEls(): HudElements | null { if (_els) return _els; const lifeFill = document.getElementById('life-fill'); if (!lifeFill) return null; _els = { lifeFill, ... }; return _els; }. Call getEls() once at the top of updateHUD() and bail out if null. Reset _els = null in teardownHUD() and between runs.",
+    "guard_conditions": {
+      "early_return_on_null": "updateHUD() already guards on lifeFillEl, cardsCountEl, biomeNameEl — correctly returns early if any is null (lines 143-144). This handles the pre-DOM-ready case.",
+      "risk_window": "Between teardownHUD() and the next initHUD() call, updateHUD() should not fire because _hudUnsubscribe is null. However if any stray store.setState() fires after teardown but before cleanup completes, the subscriber is already gone so no DOM access occurs. Pattern is safe."
+    },
+    "risk": "LOW — current code is functionally correct; getElementById on a fully-built DOM tree is O(1) for ids in modern browsers (hash table). The 28-call overhead is real but measured impact is sub-millisecond per call. Caching is a clean-code improvement and prevents any future regression if updateHUD() subscription rate increases.",
+    "severity": "MEDIUM"
+  },
+  "trc_03": {
+    "current_hitRadius_tier3": 16,
+    "canvas_internal_size": "400x400px",
+    "canvas_display_at_375px_screen": "375px (max-width:100% via CSS)",
+    "scale_factor": 0.9375,
+    "screen_pixels_at_375px": "~15px radius / ~30px diameter",
+    "wcag_2_5_5_minimum_target": "44px",
+    "gap_to_wcag": "14px below minimum diameter",
+    "visual_footprint_size": "8x12px ellipse (drawn at fp.x, fp.y)",
+    "visual_vs_hit_discrepancy": "Visual ellipse is 8x12px but hit radius is 16px canvas — player must click 4px outside the visible shape to hit. This mismatch worsens at tier 3 because the hit radius shrinks faster than the visual does (visual stays 8x12 across all tiers).",
+    "recommended_fix": "Change tieredValue([38,30,22,16]) to tieredValue([38,30,22,20]) — raises tier 3 floor to 20px canvas-space (~18.75px screen at 375px). Alternatively apply Math.max(20, this.hitRadius) after tieredValue() for a single-line defensive floor. Neither changes tiers 0-2 gameplay.",
+    "recommended_fix_code": "this.hitRadius = Math.max(20, this.tieredValue([38, 30, 22, 16] as const));",
+    "gameplay_impact": "Tier 3 is already the hardest tier (5s time limit, 11 footprints). Raising hitRadius from 16 to 20px is a minor easing that primarily benefits touch users and prevents WCAG failure. Desktop mouse users are unlikely to notice. Score formula (hitCount/footprintCount * 80 + timeBonus) is unchanged — difficulty remains in the time constraint and footprint count, not hit precision.",
+    "severity": "HIGH",
+    "wcag_violation": "WCAG 2.5.5 Level AAA — touch target size"
+  },
+  "sf_hud_01": {
+    "verdict": "FIX",
+    "display_metric_current": "timeInside / elapsedTime * 100 (concentration ratio — how good you are RIGHT NOW)",
+    "score_metric": "timeInside / totalTime * 100 (absolute coverage — what you will actually score)",
+    "divergence_example": "Player at 100% concentration for first 5s of a 10s game: display shows 100%, final score = 50. The display is not misleading on its own — it accurately reports concentration — but it creates a false expectation about the score.",
+    "display_locations": [
+      { "location": "statusEl textContent (line 266-269)", "formula": "timeInside / elapsedTime * 100" },
+      { "location": "canvas HUD fillText top-left (line 368-373)", "formula": "timeInside / elapsedTime * 100" }
+    ],
+    "reason": "Both display locations use the concentration formula. The player sees a number they interpret as their score-in-progress. At game end, the final number they saw diverges from what finish() computes. This violates the principle of least surprise — the last displayed value should equal (or closely predict) the score. Changing both display lines to use totalTime instead of elapsedTime aligns the live feedback with the scoring formula with zero gameplay impact.",
+    "fix_line_266": "const pctInside = this.totalTime > 0 ? Math.round((this.timeInside / this.totalTime) * 100) : 0;",
+    "fix_line_368": "const pct = this.totalTime > 0 ? Math.round((this.timeInside / this.totalTime) * 100) : 0;",
+    "label_update": "Consider changing 'Concentration:' label to 'Score:' or 'Couverture:' once formula is aligned, to set clearer expectations.",
+    "severity": "MEDIUM"
+  },
+  "new_bugs": [
+    {
+      "id": "HUD-C121-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/ui/HUD.ts",
+      "description": "28 getElementById calls per updateHUD() invocation. store.subscribe() fires on every setState mutation, not once per card. A 30-card run with 4 mutations per card yields ~4200 DOM queries per run. The faction loop (lines 181-187) alone accounts for 10 lookups per tick and is the most expensive segment.",
+      "fix": "Cache all 12 static element references as module-level variables populated in initHUD() after buildFactionPanel/buildResourcePanel/buildOghamBadge complete. Cache faction elements as a Record<FactionId, {fill: HTMLElement, val: HTMLElement}> built inside buildFactionPanel(). Reset cache in teardownHUD(). Guard updateHUD() with a single null check on the cached object."
+    },
+    {
+      "id": "TRC-C121-02",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_traces.ts",
+      "description": "hitRadius at tier 3 is 16px canvas-space, rendering as ~15px screen diameter on 375px mobile (scale 0.9375). WCAG 2.5.5 minimum touch target is 44px. The visual footprint ellipse (8x12px) is smaller than the hit zone but both are well below WCAG. A player's finger center must land within ~7.5px of the footprint center on screen to register a hit.",
+      "fix": "Apply Math.max(20, this.hitRadius) after tieredValue() assignment at line 38, or change tier 3 value in the array from 16 to 20. Recommended one-liner: this.hitRadius = Math.max(20, this.tieredValue([38, 30, 22, 16] as const));"
+    },
+    {
+      "id": "SF-C121-03",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts",
+      "description": "Status display and canvas HUD show concentration% (timeInside/elapsedTime) but endGame() scores coverage% (timeInside/totalTime). The displayed value diverges from the final score, worst-case at the midpoint of the game where concentration can be 100% but score is 50%. The 'Concentration' label adds to the confusion as players typically read the in-game number as their current score.",
+      "fix": "Replace both display formulas (lines 265-267 and line 368) with timeInside/totalTime*100. Optionally rename label from 'Concentration:' to 'Couverture:' or 'Score:' for clarity."
+    }
+  ],
+  "summary": {
+    "total_issues": 3,
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 0,
+    "immediate_action_required": "TRC-C121-02 — WCAG 2.5.5 violation on mobile tier 3 touch target"
+  }
+}

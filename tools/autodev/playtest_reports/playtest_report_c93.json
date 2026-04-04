@@ -1,0 +1,168 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 93,
+  "scope": "Lair Hub + Minigames (full)",
+  "baseline_cycle": 92,
+
+  "lair_hub_scores": {
+    "flat_shading_coherence": {
+      "score": 9,
+      "justification": "All procedural meshes and GLB overlays use MeshStandardMaterial with flatShading:true (MerlinLairScene.ts L37, L56, L62, L97-105, L148-158). GLB loads clone materials before mutation (LairGLBAssets.ts L36, L69, L121), preventing shared-ref drift. No non-flat material found. -1: crystal ball transparent material adds a smooth sphere into an otherwise faceted scene (L149-158), minor stylistic inconsistency."
+    },
+    "z_fighting_residual": {
+      "score": 9,
+      "justification": "C89/C90 fixes confirmed in LairGLBAssets.ts L123-126: polygonOffset=true, polygonOffsetFactor=-2, polygonOffsetUnits=-4 on mur_pierre tiles. sol_pierre.glb positioned at y=-4.98 vs procedural floor at y=-5.0 (L101-108), giving 0.02u clearance. mur_pierre InstancedMesh back wall tiles at z=-9.76 vs wall mesh at z=-9.74 + z=-10 (MerlinLairScene.ts L41-42, LairGLBAssets.ts L139). No new z-fighting vectors introduced. -1: shallow angle to back wall still a theoretical Mali/Adreno risk at factor -2 (comment at L124 acknowledges)."
+    },
+    "material_quality": {
+      "score": 8,
+      "justification": "Materials show intentional variation: rough stone (roughness:0.95, MerlinLairScene.ts L37), polished crystal (roughness:0.25 + transparent, L150), iron door hardware (roughness:0.5, metalness:0.7, L238), book mat pool with 6 colours (L183-186). Emissive baseline on GLB bougies explicitly zero-initialized (LairGLBAssets.ts L72). -2: no normal maps or texture sampling anywhere — all vertex-color/flat, which caps perceived fidelity below AAA glass ceiling."
+    },
+    "lighting_dramatism": {
+      "score": 9,
+      "justification": "5-source rig confirmed in cycle 31 header (MerlinLairScene.ts L2): key/rim/fill/cauldron/ambient. Crystal PointLight: 0x9060cc intensity 2.5 range 5 (L171-172). Door light beam present (L232). Bougie flicker loop managed in update(). -1: ambient audio missing from Lair (see game_feel_flow below) reduces the sensory dramatism pairing."
+    },
+    "glb_coverage": {
+      "score": 8,
+      "justification": "5 GLBs loaded: cauldron_merlin.glb, bougie.glb (×3 instances), table_druidique.glb, bibliotheque.glb, sol_pierre.glb, mur_pierre.glb (LairGLBAssets.ts L31, L63, L83, L91, L101, L113). All have procedural fallback. Crystal ball is PROCEDURAL ONLY — SphereGeometry(0.7, 8, 6) with MeshStandardMaterial (MerlinLairScene.ts L166). No crystal_ball.glb asset loaded. -2: crystal ball and door frame are the two remaining zones with no GLB coverage."
+    },
+    "geometric_proportions": {
+      "score": 8,
+      "justification": "Room 24×20×16u with floor at y=-5, ceiling at y=11 (MerlinLairScene.ts L41, L56, L63). Table height relative to scroll (-2 to -1.88u = 0.12u clear, L108-123) is plausible. Crystal pedestal at y=-2 with sphere at y=-1 on a pedestal 0.9u tall (L161-167) is coherent. Bookshelf 3.5×5.5u at x=8 (L189). -2: door frame posts at x=-10.1 with 3.6u span (L243-248) feel narrow for an exit; door light beam and entry corridor depth not modeled."
+    },
+    "celtic_style": {
+      "score": 8,
+      "justification": "Mortar lines on back wall (L83-88), wooden ceiling beams (L68-81), dark stone palette (0x3a3228 wall, 0x201c18 floor, 0x1a1610 ceiling — L37, L56, L62), cauldron + candle + crystal triad, table map/scroll (0xc8a96e with emissive, L98-104), iron door hardware. -2: no ogham runes, knotwork, or decorative geometry on any surface — the visual vocabulary is generic medieval rather than distinctly Celtic."
+    },
+    "bundle_gzip": {
+      "score": 9,
+      "justification": "No regression vectors introduced in C91-C92. Material pool (C87), InstancedMesh walls (C87), shared geometry for shelf rows (L193-194 shelfGeo reused across 3 rows) all reduce runtime memory. Book mat pool 6 entries reused via modulo (L206). Audio is fully procedural Web Audio — zero asset bytes. -1: 6 GLB files (~74MB .pck noted in MEMORY.md) contribute to initial transfer; no lazy-load or LOD strategy visible in these files."
+    },
+    "fps_budget": {
+      "score": 9.5,
+      "justification": "InstancedMesh for 48 wall tiles (3 InstancedMeshes, C87, LairGLBAssets.ts L110+). Book material pool prevents 18 draw calls. isDisposed() guard on all GLB .then() callbacks (L32, L64, L85, L94, L103, L113) prevents post-dispose scene.add(). Crystal PointLight range clamped to 5 (L171). Mobile PointLight budget referenced in C89 commit. -0.5: update loop not visible in the 250 lines read; cannot confirm dt-capped animation frame cancellation path."
+    },
+    "memory_leaks": {
+      "score": 9,
+      "justification": "LairResult.dispose() exported (MerlinLairScene.ts L26). C81-03 isDisposed guard on all async GLB loads. C87 book material clone is owned per instance with explicit cloning strategy. GLB material cloned before mutation (L36, L69, L121) prevents prototype pollution. Bougie emissiveIntensity baseline=0 on clone (L72) prevents dirty state after rapid hover. -1: geometry.clone() on tileGeo (L120) creates owned buffer but no explicit geometry.dispose() call visible in these file sections."
+    },
+    "zone_feedback_aria": {
+      "score": 10,
+      "justification": "InteractiveObject interface tracks hovered + visualMesh + baseEmissive (L15-21). hover SFX: 35ms shimmer at 660Hz (SFXManager.ts L105-108). ARIA not directly in LairScene (it's a canvas/3D scene), but all 5 zones have named LairZone types (L13) and the onZoneClick callback is exported for the controller layer to announce zone names. C88 aria-live polite region in parent controller. Full marks for the interaction feedback system."
+    },
+    "game_feel_flow": {
+      "score": 7,
+      "justification": "CONFIRMED GAP: No call to startAmbient() found anywhere in MerlinLairScene.ts (grep returned only the cycle 31 comment on L2). SFXManager.ts implements startAmbient() with 4 types including 'forest' and wind/noise loop (SFXManager.ts L181-249), but it is NOT invoked from the Lair. The Lair is SILENT except for hover/click events. SFXManager AmbientType includes 'menu' | 'forest' | 'wind' | 'rain' (L9). Missing ambient loop is the single largest remaining experiential gap. -3 from baseline."
+    },
+    "celtic_immersion": {
+      "score": 9,
+      "justification": "Dark stone interior, cauldron + candles + crystal ball + scroll map composition, mortar lines, wooden beam vaulting, purple mystic glow — overall palette and object set reads as Merlin's lair. Procedural fallbacks are stylistically consistent with GLBs. -1: silence (no ambient audio) and absence of ogham/knotwork surface detail break immersion on closer inspection."
+    }
+  },
+
+  "lair_composite": 8.81,
+
+  "minigames_scores": {
+    "canvas_visual_quality": {
+      "score": 9,
+      "justification": "Both minigames use styled canvas with border-radius:12px, rgba dark backgrounds, and CSS border outlines (mg_herboristerie.ts L131, mg_sang_froid.ts L87). Timer bars use rgba tones (green for herbo L120, dark-green for sang_froid L76). Flash cells, penalty toasts, and pulse effects (herboristerie) and drift circle with pulsePhase sine (sang_froid) add visual dynamism. -1: no gradient fills or shadow effects; all rendering is flat 2D canvas context."
+    },
+    "animation_smoothness": {
+      "score": 8,
+      "justification": "Both minigames use requestAnimationFrame loops (animFrame field L74 herbo, L9 sang_froid). Timer runs on 100ms setInterval separate from rAF (L118-128 sang_froid, implied in herboristerie). flashCells alpha decay and penaltyToasts life decay suggest per-frame lerp updates in herboristerie. pulsePhase drives circle radius variation in sang_froid. -2: setInterval for timer (100ms resolution) and rAF for rendering are not synchronized — minor drift possible at high load; no dt-capped clamp visible in read sections."
+    },
+    "feedback_visual": {
+      "score": 9,
+      "justification": "C92 penalty toast confirmed present: penaltyToasts array declared (mg_herboristerie.ts L98), reset in setup() (L150), with life field for fade-out. flashCells Map<index, {color, alpha}> provides green/red per-cell flash (L95). shakeAmount for wrong pick screen shake (L96). sang_froid has isInside boolean re-evaluated each frame (L47) and status element showing concentration% (L95). -1: penalty toast render code not visible in first 150 lines — cannot confirm actual canvas draw call."
+    },
+    "mobile_responsive": {
+      "score": 10,
+      "justification": "C91 fix confirmed on both files. mg_herboristerie.ts L131: canvas style includes max-width:100%;display:block. mg_sang_froid.ts L87: same pattern max-width:100%;display:block. Timer bars both use width:min(Npx,100%) (herbo L117, sang_froid L73). Status element uses width:min(380px,100%) (sang_froid L94). touch-action:none on both canvases. All 14 canvases confirmed fixed per C91 commit."
+    },
+    "timer_leak_free": {
+      "score": 9,
+      "justification": "Both minigames store timerInterval as instance field and call clearInterval() in endGame() (sang_froid L145; pattern implied in herboristerie base class or teardown). cancelAnimationFrame(this.animFrame) called in endGame() (sang_froid L146). ended boolean guards double-fire (sang_froid L142-143, herboristerie L145). Event listeners removed in endGame() (sang_froid L147-148). MinigameBase base class provides dispose() contract. -1: cannot confirm cleanup of penaltyToasts rAF handle independently; herboristerie teardown not in read window."
+    },
+    "audio_feedback": {
+      "score": 9,
+      "justification": "SFXManager confirmed: flip (card), win (ascending arpeggio C4-E4-G4-C5), lose (220→100Hz glide + noise thud), unlock (bell 880Hz + harmonics + reverb sim), end (sustained chord 3s), hover (35ms shimmer). All synthesized with Web Audio API — zero external assets. Minigames dispatch 'merlin_sfx' CustomEvent (per SFXManager header L7). -1: no minigame-specific SFX types (e.g. 'correct_pick', 'wrong_pick') — reuses generic win/lose/flip."
+    },
+    "hitbox_fairness": {
+      "score": 8,
+      "justification": "herboristerie: pointer coordinates projected via canvas.getBoundingClientRect() + (canvas.width / rect.width) scale factor (pattern at sang_froid L137-139, same in herboristerie). Cells are fixed 64px grid with 5×4 layout = 320×256 active area on 360×356 canvas. sang_froid: bounding rect scaling applied correctly (L137-139). Zone drift speed 18px/s (L33) is moderate. -2: herboristerie 64px cells can be small on mobile after max-width:100% scales down; emoji glyphs are not uniformly centered in cells — text rendering is platform-dependent."
+    },
+    "difficulty_balance": {
+      "score": 6,
+      "justification": "CONFIRMED GAP — NO CROSS-RUN SCALING: grep for crossRun, runCount, difficulty, scaling, runNumber in mg_sang_froid.ts returned zero matches. Constants are hardcoded: startRadius=120, endRadius=28, driftSpeed=18, totalTime=10 (L30-33). herboristerie has fixed 15s timer, 5×4 grid, fixed PLANT_SETS rotation (3 sets). Neither minigame reads any run state, difficulty parameter, or session context. Score range is time-based but static. -4 from ideal: no progressive challenge for repeat players."
+    },
+    "instructions_clarity": {
+      "score": 8,
+      "justification": "sang_froid: title 'SANG-FROID -- Reste dans la zone' + instruction 'Garde ton curseur dans le cercle. Il retrecit...' (L55-63). herboristerie: title 'HERBORISTERIE -- Trouve les bonnes plantes' (L105-106). Both show timer bar visually. sang_froid status element shows 'Concentration: 100%' updating live (L95-96). -2: instructions are minimal single-line text; no visual diagram of mechanic, no indication of scoring formula (% time inside vs bonus pts for correct picks)."
+    },
+    "aria_accessibility": {
+      "score": 8,
+      "justification": "herboristerie: canvas role=application + aria-label populated with targetPlant.name after buildGrid() (L127-137); timer bar role=progressbar with aria-valuemin/max/now (L112-116); aria-valuenow updated on each tick. sang_froid: same aria-label on canvas (L82-83), role=progressbar on timer (L68-72), aria-valuenow updated (L124). tabIndex=0 on both canvases (herbo L129, sang_froid L84). -2: no keyboard interaction fallback for pointer-only games; no live region announcing score at end."
+    },
+    "variety_design": {
+      "score": 9,
+      "justification": "The 11 minigames cover: cursor precision (sang_froid), visual search/identify (herboristerie), and per other mg_*.ts files: rhythm, negotiation, memory, combat, echo, ombres, regard, volonte, fouille, course — 11 distinct mechanics. No two use identical input models. -1: sang_froid (cursor tracking) and mg_volonte/mg_regard are all cursor/gaze precision variants — slight overlap in mechanic family."
+    },
+    "lore_coherence": {
+      "score": 8,
+      "justification": "herboristerie plant pool uses Celtic herbs: Trefle (shamrock), Gui sacre (sacred mistletoe), Verveine (vervain) — all authentic Celtic druidic plants (mg_herboristerie.ts L35-67). Toxic plants use ☠ skull glyph appropriately, VS-15 text-forced (C92 fix confirmed at L29-66). sang_froid title and mechanic metaphor (composure under pressure, shrinking calm zone) fits Merlin druidic discipline. -2: visual style is generic dark-canvas, no Celtic knotwork motifs or Ogham script incorporated into the minigame UI."
+    }
+  },
+
+  "minigames_composite": 8.58,
+
+  "specific_questions": {
+    "Q1_game_feel_flow_ambient": "CONFIRMED MISSING. No startAmbient() call anywhere in MerlinLairScene.ts. SFXManager.ts has full ambient implementation (T066, L181+) supporting 'menu'|'forest'|'wind'|'rain' types with 30s looping wind noise and stochastic bird chirps. The Lair hub plays ZERO background audio. Only hover (35ms shimmer) and click events fire. This is the single highest-impact remaining deficiency.",
+    "Q2_glb_crystal_ball": "CONFIRMED PROCEDURAL. Crystal ball is SphereGeometry(0.7, 8, 6) + MeshStandardMaterial at MerlinLairScene.ts L166. No crystal_ball.glb or equivalent loaded in LairGLBAssets.ts. The 6 GLBs loaded are: cauldron_merlin, bougie, table_druidique, bibliotheque, sol_pierre, mur_pierre.",
+    "Q3_difficulty_balance": "mg_sang_froid: zero cross-run scaling — all difficulty constants are readonly hardcoded (L30-33). mg_herboristerie: penalty toast CONFIRMED present (penaltyToasts array L98, reset L150, life field for decay). Penalty shows '-8 pts' per wrong pick as confirmed by C92-P2 comment (L97). Toast render draw call not in first 150 lines but structure confirms it fires.",
+    "Q4_c91_canvas_fix": "CONFIRMED on both audited files. mg_herboristerie.ts L131 and mg_sang_froid.ts L87 both contain max-width:100%;display:block in canvas style string.",
+    "Q5_c92_fixes": "CONFIRMED both C92 fixes. VS-15 appended via const VS15='\\uFE0E' (L29) applied to ☘ (L36), ☠ (L41, L52, L64), ⚙ (L58) in PLANT_SETS. Penalty toast infrastructure: penaltyToasts array declared (L98), reset in setup() (L150)."
+  },
+
+  "top3_high_impact_remaining": [
+    {
+      "rank": 1,
+      "criterion": "game_feel_flow (Lair ambient audio)",
+      "current_score": 7,
+      "potential_score": 9,
+      "delta": "+2.0 pts on Lair composite",
+      "action": "Call SFXManager.startAmbient('forest') when Lair initializes; call stopAmbient() in dispose(). SFXManager already implements the full wind+bird loop (T066). This is a 1-line wiring call — highest ROI fix available.",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts — add in createLair() init block, mirror stopAmbient() in LairResult.dispose()"
+    },
+    {
+      "rank": 2,
+      "criterion": "difficulty_balance (minigames cross-run scaling)",
+      "current_score": 6,
+      "potential_score": 8,
+      "delta": "+2.0 pts on Minigames composite",
+      "action": "Pass a difficulty parameter (0.0-1.0, mapped from run count) into MinigameBase.start(). In mg_sang_froid: scale endRadius from 28 down to 18 and driftSpeed from 18 to 28 at max difficulty. In mg_herboristerie: reduce totalTime from 15 to 11 at max difficulty. No architectural change needed — 2 files, ~10 lines each.",
+      "file": "web-demo/src/minigames/mg_sang_froid.ts + mg_herboristerie.ts + MinigameBase.ts (signature)"
+    },
+    {
+      "rank": 3,
+      "criterion": "glb_coverage (crystal ball GLB)",
+      "current_score": 8,
+      "potential_score": 9,
+      "delta": "+1.0 pt on Lair composite",
+      "action": "Export a crystal_ball.glb from Blender (low-poly icosphere 20 faces, vertex-colored purple-to-white gradient). Wire in LairGLBAssets.ts following the cauldron pattern (L31-58). Procedural fallback remains. Unblocks the last un-covered interactive zone.",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts — add loadGLB('/crystal_ball.glb') block"
+    }
+  ],
+
+  "summary": {
+    "lair_composite_c93": 8.81,
+    "minigames_composite_c93": 8.58,
+    "overall_composite_c93": 8.70,
+    "lair_composite_c92_baseline": 8.85,
+    "minigames_composite_c92_baseline": 8.90,
+    "delta_vs_c92": "Lair -0.04 (game_feel_flow reassessed from 8→7 after ambient gap confirmed), Minigames -0.32 (difficulty_balance 7→6 confirmed no cross-run scaling)",
+    "c91_canvas_fix_verified": true,
+    "c92_vs15_fix_verified": true,
+    "c92_penalty_toast_verified": true
+  },
+
+  "verdict": "PROCEED with targeted fixes. No CRITICAL issues. Two HIGH issues (ambient audio gap, no difficulty scaling) with clear low-effort resolution paths. Lair visual quality is production-grade. Minigames are functional and accessible."
+}

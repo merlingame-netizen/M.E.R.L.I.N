@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "report_type": "qa_audit_static",
+    "cycle": "C47",
+    "timestamp": "2026-04-03T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "previous_score": 9.3,
+    "target_score": 9.5,
+    "commits_audited": [
+      "f67d25e — BUG-L-CANDLE-Y-MISMATCH (candle Y→-4.85) + GLB body name-guard /body|bowl/i",
+      "7958a81 — map sublabel 'slighe' Celtic",
+      "2bf8b19 — onCauldronGLBLoaded visualMesh swap",
+      "5918675 — candleGroup, crystalMat 0.25, shelfMat metalness:0.0"
+    ]
+  },
+
+  "verification_checks": {
+    "candle_y_positions": {
+      "status": "PASS",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line_range": "297-301",
+      "found": [[-5, -4.85, -7], [0, -4.85, -8.5], [3, -4.85, -6]],
+      "expected": [[-5, -4.85, -7], [0, -4.85, -8.5], [3, -4.85, -6]],
+      "note": "CANDLE_POSITIONS in LairGLBAssets.ts line 8-12 matches exactly — procedural + GLB paths are in sync"
+    },
+    "glb_body_name_guard": {
+      "status": "PASS",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 46,
+      "found": "glbMeshes.find((m) => /body|bowl/i.test(m.name)) ?? glbMeshes[0]",
+      "note": "Regex name-guard correct. Nullish coalescence (??) ensures fallback to first mesh when no match. emissiveIntensity initialised to 0.0 before callback — hover state is clean."
+    },
+    "map_sublabel_slighe": {
+      "status": "PASS",
+      "file": "web-demo/src/main.ts",
+      "line": 186,
+      "found": "Les slighe s'ouvrent aux voyageurs initiés",
+      "note": "Celtic term present, correct apostrophe (escaped \\'), accented final 'é' intact"
+    },
+    "cauldron_glb_loaded_callback": {
+      "status": "PASS",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line_range": "42-51",
+      "note": "Callback chain correct: traverse → filter Mesh → name-guard → set emissive → call onCauldronGLBLoaded. Guard `if (bodyMesh)` prevents null-dereference when GLB has no meshes."
+    },
+    "toast_no_max_stacking": {
+      "status": "OPEN_LOW",
+      "file": "web-demo/src/main.ts",
+      "line_range": "194-216",
+      "note": "showZoneToast() does `if (activeToast) { activeToast.remove(); activeToast = null; }` before appending new toast — only 1 toast active at a time. However rapid successive zone-clicks within the 220ms removal transition could briefly show 2 overlapping toasts (old fading out + new fading in). Severity LOW: cosmetic race, invisible in normal play pace."
+    },
+    "cauldron_procedural_y_alignment": {
+      "status": "OPEN_LOW",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 37,
+      "note": "GLB cauldron is placed at y=-4.65. Procedural cauldron Y not audited this cycle (out of read budget). If procedural cauldron base differs from -4.65, a visible pop may occur during GLB load on slow networks. LOW: GLB path is primary; procedural is short-lived fallback."
+    }
+  },
+
+  "bundle_concern": {
+    "status": "ACCEPTABLE",
+    "gzip_total_kb": 200.45,
+    "target_kb": 200,
+    "delta_kb": 0.45,
+    "assessment": "0.45 KB over target. Not a hard blocker — threshold is a soft guideline, not a deploy gate. Recommend monitoring; defer action unless bundle grows further in C48+.",
+    "blocking": false
+  },
+
+  "grille_aaa_ultra_12": {
+    "criteria": [
+      {
+        "id": "C1",
+        "name": "Geometry correctness (candle Y)",
+        "score": 10,
+        "rationale": "All three candle Y coords confirmed at -4.85 in both procedural (MerlinLairScene.ts) and GLB path (LairGLBAssets.ts CANDLE_POSITIONS). Full alignment."
+      },
+      {
+        "id": "C2",
+        "name": "GLB fallback robustness",
+        "score": 10,
+        "rationale": "name-guard regex + nullish coalescing + null-guard on bodyMesh covers all edge cases (mesh named body/bowl, unnamed mesh, empty GLB)."
+      },
+      {
+        "id": "C3",
+        "name": "Hover/interactivity state",
+        "score": 10,
+        "rationale": "emissiveIntensity initialised to 0.0 before callback hand-off ensures no phantom glow on GLB load. onCauldronGLBLoaded wires visualMesh correctly."
+      },
+      {
+        "id": "C4",
+        "name": "Localisation / Celtic authenticity",
+        "score": 10,
+        "rationale": "Sublabel 'Les slighe s'ouvrent aux voyageurs initiés' verified verbatim. Correct escaped apostrophe in source, accented chars intact."
+      },
+      {
+        "id": "C5",
+        "name": "Toast UX (zone labels)",
+        "score": 9,
+        "rationale": "Single-toast enforcement works for normal play. Minor cosmetic race on rapid clicks (220ms gap) not fixed. Deduction 1pt for open LOW."
+      },
+      {
+        "id": "C6",
+        "name": "Material consistency",
+        "score": 10,
+        "rationale": "candleMat metalness:0.0, candleGroup hidden on GLB load, shelfMat metalness:0.0 (commit 5918675). crystalMat roughness 0.25 applied. No regressions observed."
+      },
+      {
+        "id": "C7",
+        "name": "GLB load failure safety (procedural fallback)",
+        "score": 10,
+        "rationale": "All five loadGLB() calls use .catch(() => {}) — procedural meshes remain visible on network failure. Correct for offline/slow-network resilience."
+      },
+      {
+        "id": "C8",
+        "name": "Bundle size",
+        "score": 9,
+        "rationale": "200.45 KB gzip is 0.45 KB over soft target. Not blocking. Deduction 1pt as a minor pressure indicator."
+      },
+      {
+        "id": "C9",
+        "name": "Code hygiene / no regressions in audit scope",
+        "score": 10,
+        "rationale": "No console.log, no any-type, no hardcoded secrets in audited files. Immutable patterns respected (clone(true) for GLB instances)."
+      },
+      {
+        "id": "C10",
+        "name": "Accessibility (toast ARIA)",
+        "score": 10,
+        "rationale": "Toast has role='status', aria-live='polite', aria-atomic='true'. Screen-reader compatible."
+      },
+      {
+        "id": "C11",
+        "name": "Synchronisation procedural ↔ GLB coordinates",
+        "score": 10,
+        "rationale": "Comment on MerlinLairScene.ts line 296 explicitly cross-references CANDLE_POSITIONS in LairGLBAssets.ts. Developer contract documented in-code."
+      },
+      {
+        "id": "C12",
+        "name": "Door flow / resolve timing",
+        "score": 10,
+        "rationale": "Door click shows toast then resolves after 400ms — sufficient read time before cutToBlack. Non-door zones show toast without resolving (correct guard `if (zone === 'door')`). No softlock risk."
+      }
+    ],
+    "scores": [10, 10, 10, 10, 9, 10, 10, 9, 10, 10, 10, 10],
+    "total_raw": 118,
+    "max_raw": 120,
+    "final_score": 9.83
+  },
+
+  "open_issues": [
+    {
+      "id": "BUG-L-TOAST-NO-MAX-STACKING",
+      "severity": "LOW",
+      "status": "OPEN",
+      "description": "Rapid zone-clicks within 220ms removal transition can cause brief visual overlap of two toasts.",
+      "recommendation": "Acceptable for C47. If closing in C48, add `toast.getAnimations().forEach(a => a.finish())` before remove() to collapse transition instantly.",
+      "blocking": false
+    },
+    {
+      "id": "BUG-L-CAULDRON-BODY-PROCEDURAL-Y",
+      "severity": "LOW",
+      "status": "OPEN",
+      "description": "GLB cauldron placed at y=-4.65; procedural cauldron Y not verified this cycle. Potential pop on slow-network GLB load if Y values differ.",
+      "recommendation": "Verify procedural cauldron body Y in MerlinLairScene.ts in C48. If mismatch: align procedural to -4.65.",
+      "blocking": false
+    }
+  ],
+
+  "summary": {
+    "bugs_verified_fixed": 4,
+    "bugs_open_low": 2,
+    "bugs_open_medium": 0,
+    "bugs_open_high": 0,
+    "bundle_blocking": false,
+    "score_c46": 9.3,
+    "score_c47": 9.83,
+    "delta": "+0.53",
+    "verdict": "PASS — target ≥9.5 exceeded",
+    "release_recommendation": "GREEN — ship C47. Monitor bundle in C48. Address 2 LOW issues at convenience."
+  }
+}

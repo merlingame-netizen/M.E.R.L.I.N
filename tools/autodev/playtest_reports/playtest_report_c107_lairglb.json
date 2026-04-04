@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": "C107",
+  "agent": "merlin-ai-playtester",
+  "scope": "LairGLBAssets.ts + MerlinLairScene.ts + main.ts",
+  "audit_type": "static_code_analysis",
+
+  "questions": [
+    {
+      "id": "Q1",
+      "title": "LairGLBAssets.ts — GLB fade-in rAF handles properly tracked and cancellable",
+      "verdict": "PASS",
+      "evidence": [
+        "fadeInGLB() uses a boolean 'cancelled' flag (line 20-21 of fn), returns () => { cancelled = true; }. The tick() closure checks 'if (cancelled || isDisposed?.()) return' at entry, so any in-flight rAF frame is a no-op after cancel.",
+        "loadLairGLBs() declares 'const cancelHandles: Array<() => void> = []' (line 91) and pushes the return value of fadeInGLB() into it for every GLB that produces a non-empty mesh list: cauldron (line 109), each of 3 bougie clones (line 145), table_druidique (line 175), bibliotheque (line 206), sol_pierre (line 237), crystal_ball (line 333).",
+        "mur_pierre does NOT call fadeInGLB — it builds InstancedMesh directly and adds them to the scene with no opacity animation. This is intentional (instanced mesh path is distinct) and is not a tracking gap.",
+        "loadLairGLBs() returns '() => { cancelHandles.forEach((cancel) => cancel()); }' (line 343) — caller can stop all in-flight fades with a single call.",
+        "A GLB that loads AFTER cancelGLBFades() is called: the isDisposed guard ('if (isDisposed?.()) return') fires at the top of each .then() handler (lines 95, 129, 157, 187, 219, 245, 319), so scene.add() is never reached. No late mesh injection is possible provided the caller sets isDisposed() = true before or at the same time as calling cancelGLBFades().",
+        "Risk note: cancelGLBFades() only cancels rAFs for GLBs that have already resolved. A GLB that resolves after cancelGLBFades() was called but where isDisposed() is still returning false would still call scene.add(). The contract is that the caller must set isDisposed to true synchronously on dispose, not only call cancelGLBFades(). This is a caller-side contract, not a bug in LairGLBAssets.ts."
+      ],
+      "issues": []
+    },
+    {
+      "id": "Q2",
+      "title": "MerlinLairScene.ts — hover 'restore-then-overwrite' on crystal, same frame",
+      "verdict": "PASS",
+      "evidence": [
+        "Before C113 this would have been HIGH: the update() loop unconditionally wrote 'crystalData.mat.emissiveIntensity = 0.5 + sin*0.15' every frame, overwriting the 0.65 set by applyHoverTo in onMouseMove on the very next rAF tick. Hover state would have been invisible on the crystal.",
+        "C113 (line 1138) resolves the race: 'const crystalEmissive = (crystalEntry.hovered ? 0.9 : 0.5) + Math.sin(elapsedTime * 1.4) * 0.15'. The update loop now reads crystalEntry.hovered (the same field set by onMouseMove) and uses a higher base (0.9) when hovered, a lower base (0.5) when not. applyHoverTo(0.65) is still called on hover-enter, but the update loop immediately overrides it on the next frame — however it overrides to 0.9+sin*0.15 (range 0.75–1.05), which is always higher than 0.65 and clearly visible as a hover boost.",
+        "The override no longer negates the hover: unhovered base is 0.5+sin*0.15 (range 0.35–0.65), hovered base is 0.9+sin*0.15 (range 0.75–1.05). Delta is always ~0.4. Hover is visually distinct.",
+        "crystalEntry is cached at init (line 867) from the same interactives[] array entry that onMouseMove writes .hovered to. No stale reference.",
+        "crystalGLBMat (line 1141) receives the same crystalEmissive value in the same frame — both procedural and GLB paths are consistent.",
+        "Minor cosmetic note: applyHoverTo(currentHovered, 0.65) on hover-enter sets intensity to 0.65 for at most one render frame before the update loop raises it to 0.9+. This is imperceptible (sub-16ms) and not a bug."
+      ],
+      "issues": []
+    },
+    {
+      "id": "Q3",
+      "title": "main.ts saveAnamToStorage — double-call risk on same run-end path",
+      "verdict": "MEDIUM",
+      "evidence": [
+        "The run loop is a sequential async while-loop. Each iteration contains three potential break exits: (A) checkDeath() after drain at line 644-651, (B) checkDeath() after effects at line 754-761, (C) cardsPlayed >= 30 at line 764-770. Each calls saveAnamToStorage() + saveMetaToStorage() then 'break'.",
+        "Exit (A) fires after drainLifeScaled(). Exit (B) fires after applyEffects(). Exit (C) fires after exit (B)'s guard. The ordering is strictly sequential within a single iteration: A, then B, then C. 'break' terminates the while-loop, so if A breaks, B and C are never reached in the same iteration.",
+        "However: there is NO guard that prevents re-entering the while-loop after save — 'break' exits the current run loop but the outer frame (startRun async fn) simply returns. saveAnamToStorage is not idempotent-flagged, so if startRun() were called twice, saves would be doubled. No such double-call path is visible in the read range.",
+        "Specific simultaneity question — checkDeath() at line 644 AND cardsPlayed >= 30 at line 764: these are sequential within one iteration, not concurrent. If checkDeath() is true at line 644, the loop breaks before reaching line 764. The only scenario where both could evaluate true is: life <= 0 AND cardsPlayed >= 30 in the same iteration. In that case, exit (A) at line 644 fires first and breaks — exit (C) is never reached. No double-save in this path.",
+        "Scenario for two saves in two iterations (not same iteration): iteration N-1 exits normally (no break), iteration N: checkDeath() at line 644 is true (drain killed) AND cardsPlayed would have been 30 if we reached line 764 — but break at line 650 prevents it. Still single save.",
+        "Residual MEDIUM risk: if state().checkDeath() has a side-effect that resets life (it does not appear to, but is not read here), or if the run loop were called from two async entry-points concurrently (not observed), double-save could occur. The lack of a 'hasSaved' flag or idempotency guard on saveAnamToStorage is the weakness.",
+        "No CRITICAL or HIGH double-save path is confirmed by the code as read. The MEDIUM flag is for the absence of a defensive idempotency guard (e.g., a 'runSaveCompleted' boolean) that would make the intent explicit."
+      ],
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "saveAnamToStorage has no idempotency guard — if startRun() were invoked concurrently or re-entered, saves would double. The sequential structure of the current loop prevents this in practice, but the contract is implicit.",
+          "recommendation": "Add a local 'let savedThisRun = false' flag at the top of startRun(), wrap each saveAnamToStorage()+saveMetaToStorage() call pair with 'if (!savedThisRun) { savedThisRun = true; save...; }'. Zero performance cost, makes the invariant explicit."
+        }
+      ]
+    }
+  ],
+
+  "summary": {
+    "total_questions": 3,
+    "PASS": 2,
+    "MEDIUM": 1,
+    "HIGH": 0,
+    "CRITICAL": 0
+  },
+
+  "balance_recommendations": [],
+
+  "files_audited": [
+    "web-demo/src/scenes/LairGLBAssets.ts",
+    "web-demo/src/scenes/MerlinLairScene.ts (grep: crystalEmissive, applyHoverTo, onMouseMove regions)",
+    "web-demo/src/main.ts (lines 630-793)"
+  ],
+
+  "next_steps": [
+    "Q3-MEDIUM: add savedThisRun idempotency flag to startRun() — 5-line change, low risk",
+    "Q1 caller contract: verify MerlinLairScene.dispose() sets isDisposed=true synchronously before calling cancelGLBFades() — if there is any await between the two, a late-resolving GLB could still call scene.add()"
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "meta": {
+    "cycle": 65,
+    "commit": "d3b53a6",
+    "prior_commit": "50c887a",
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "prior_score": 8.3,
+    "score_trend": [7.2, 8.3, 8.5, 8.3]
+  },
+
+  "verification": {
+    "change_1_cardoverlay_role_img": {
+      "file": "web-demo/src/ui/CardOverlay.ts",
+      "line": 106,
+      "implemented": true,
+      "evidence": "dot.setAttribute('role', 'img') present at line 106, immediately followed by aria-label at line 115 and title at line 114. Both attributes carry the same dotLabel string."
+    },
+    "change_2_store_actions": {
+      "file": "web-demo/src/game/Store.ts",
+      "implemented": true,
+      "evidence": {
+        "interface_declarations": "addPromise/fulfillPromise/breakPromise declared in GameActions (lines 85-87)",
+        "addPromise": "lines 301-309 — immutable spread, pushes {id, madeAtCard: s.run.cardsPlayed, deadlineCards, status:'active'} to run.promises array",
+        "fulfillPromise": "lines 311-318 — map over promises, sets status:'fulfilled' only when id matches AND status==='active'",
+        "breakPromise": "lines 320-327 — same guard pattern, sets status:'broken'"
+      }
+    },
+    "change_3_effectengine": {
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "implemented": true,
+      "evidence": {
+        "ADD_PROMISE": "lines 141-146 — parses id=args[0], deadline=parseInt(args[1]??'5') with fallback 5, calls store.getState().addPromise()",
+        "FULFILL_PROMISE": "lines 148-151 — calls fulfillPromise(args[0]??'')",
+        "BREAK_PROMISE": "lines 153-156 — calls breakPromise(args[0]??'')",
+        "VALID_CODES_registration": "ADD_PROMISE:2, FULFILL_PROMISE:1, BREAK_PROMISE:1 registered at lines 21-23",
+        "UNLOCK_OGHAM_no_op": "UNLOCK_OGHAM falls through to default no-op as before — correct, not part of this commit"
+      }
+    }
+  },
+
+  "criteria_scores": {
+    "stabilite_technique": {
+      "score": 8.5,
+      "notes": [
+        "All three implementations use immutable spread — no mutation anywhere.",
+        "fulfillPromise and breakPromise both guard on status==='active', preventing double-state transitions.",
+        "ADD_PROMISE deadline fallback (parseInt ?? 5) handles malformed card data gracefully.",
+        "FULFILL_PROMISE/BREAK_PROMISE on unknown id silently no-ops (map returns array unchanged) — acceptable for a system without server-side validation.",
+        "Minor: FULFILL_PROMISE passes args[0]??'' to fulfillPromise — empty-string id could spuriously match a promise whose id was also '' if card data is badly authored. Low-probability but worth noting.",
+        "UNLOCK_OGHAM correctly remains a no-op (default branch) and emits a console.warn."
+      ]
+    },
+    "equilibrage": {
+      "score": 7.5,
+      "notes": [
+        "Promise state is now correctly tracked: active/fulfilled/broken/expired statuses defined in the Promise type (line 46).",
+        "EDGE CASE 1 — zero-deadline promise: ADD_PROMISE:someId:0 → parseInt returns 0, fallback '|| 5' kicks in, so deadline defaults to 5. This silently corrects a card-authoring mistake. Semantically correct but no warning is emitted — card authors won't know their '0' was overridden.",
+        "EDGE CASE 2 — negative deadline: ADD_PROMISE:someId:-3 → parseInt returns -3, '|| 5' does NOT fire (since -3 is truthy), so deadlineCards=-3 enters state. No card in run can check for expiry yet (expiry logic not implemented), so this is a dead value; harmless now but a future expiry checker could produce unexpected behavior.",
+        "EDGE CASE 3 — duplicate promise id: ADD_PROMISE can push duplicate ids with no dedup check. fulfillPromise/breakPromise will only affect the first matching active instance via map. The rest remain active. This is a silent accumulation risk.",
+        "EDGE CASE 4 — FULFILL on non-existent id: silently no-ops. Acceptable for now.",
+        "The 'expired' status is declared in the Promise interface (line 46) but no transition to 'expired' is implemented anywhere in EffectEngine or Store. This is a declared-but-dead status — promises currently never expire by time, only by explicit FULFILL/BREAK effects.",
+        "Promise data enriches state coherence and lays the foundation for consequence chains. The core mechanic is balanced in intent; the missing expiry engine is the main gap."
+      ]
+    },
+    "accessibilite": {
+      "score": 8.5,
+      "notes": [
+        "role='img' on a <span> with aria-label satisfies WCAG 2.1 SC 1.1.1 (Non-text content) — screen readers will announce the label instead of trying to read an empty element.",
+        "The dotLabel format 'druides (+5)' is human-readable and informative.",
+        "title attribute is also set (line 114), providing tooltip for mouse users — redundant but harmless.",
+        "WCAG concern: the container <span> wrapping multiple dots (lines 122-125) has no role or aria-label of its own. Each individual dot has role='img'+aria-label, so screen readers will encounter a sequence of img elements without a grouping label. This is acceptable (SC 1.3.1 allows flat sequences) but a role='group' with aria-label='Faction impacts' on the container would be more ergonomic.",
+        "Overall this is a meaningful accessibility improvement over title-only. Passes WCAG 2.1 AA at the element level."
+      ]
+    },
+    "coherence_narrative": {
+      "score": 7.8,
+      "notes": [
+        "Promise tracking aligns with the GAME_DESIGN_BIBLE PROMISE effect system (bible section 13.3, pipeline step 10).",
+        "State shape (id, madeAtCard, deadlineCards, status) is well-structured for future narrative consequence triggers.",
+        "The 'expired' status gap (see equilibrage) means that currently a promise can only end in fulfilled or broken — a promise that simply lapses is invisible to the player."
+      ]
+    },
+    "progression_fun_factor": {
+      "score": 6.5,
+      "notes": [
+        "Promises are tracked in state but NOT surfaced in RunSummary. The player cannot see at end of run whether they fulfilled or broke promises.",
+        "This DOES matter: the promise system is the primary driver of moral weight in MERLIN's narrative loop. Invisible promises contribute zero player emotion or sense of consequence.",
+        "RunSummary.ts exists (confirmed in file list) but no promise section was added in this commit.",
+        "However, the state foundation is correctly in place, so the UI exposure is a distinct task (C66 candidate). This commit is the correct sequencing — state before display.",
+        "Score reflects: technically correct sequence, but the feature is unplayable from the player's perspective until RunSummary is updated."
+      ]
+    },
+    "robustesse_llm": {
+      "score": 8.0,
+      "notes": [
+        "ADD_PROMISE arg parsing is defensive: args[0]??'' and parseInt(args[1]??'5',10)||5.",
+        "VALID_CODES declares ADD_PROMISE:2, so parseEffect() will reject ADD_PROMISE:id (missing deadline) and ADD_PROMISE:id:deadline:extra (too many args). Correct enforcement.",
+        "If LLM generates ADD_PROMISE:: (empty id and empty deadline) → id='', deadline=5 by fallback. No crash, no state corruption. Acceptable resilience.",
+        "The promise id namespace is fully LLM-controlled with no registry validation — a hallucinated id will silently push to state and never match a FULFILL unless the same hallucination repeats exactly. This is inherent to the open-id design and not a regression."
+      ]
+    },
+    "architecture_code_quality": {
+      "score": 8.5,
+      "notes": [
+        "All three implementations follow the established immutable pattern (spread on run object).",
+        "fulfillPromise and breakPromise correctly scope the guard to status==='active' — prevents re-breaking an already-broken promise.",
+        "No new console.log statements. console.warn for no-op effects remains appropriate.",
+        "EffectEngine correctly uses store.getState() (not a stale closure) for all three cases.",
+        "The Promise interface uses readonly on all fields — enforces immutability at the type level."
+      ]
+    },
+    "performance_mobile": {
+      "score": 8.0,
+      "notes": [
+        "Promise array operations are O(n) map() — negligible for typical run length (15-40 cards, each with 0-3 promises).",
+        "No DOM operations introduced in Store or EffectEngine.",
+        "role='img' setAttribute is a single DOM call per dot, no performance concern."
+      ]
+    },
+    "couverture_minijeux": {
+      "score": 7.5,
+      "notes": [
+        "No minigame changes in this commit — score carries forward from C64.",
+        "Promise effects can in principle be triggered by any card, including those attached to minigame outcomes. No integration tested."
+      ]
+    },
+    "pipeline_devops": {
+      "score": 8.0,
+      "notes": [
+        "Three focused, well-scoped changes. No cross-file side effects observed.",
+        "TypeScript types are consistent: Promise interface in Store.ts matches usage in EffectEngine.ts.",
+        "No new dependencies introduced."
+      ]
+    }
+  },
+
+  "composite_score": {
+    "weights": {
+      "stabilite_technique": 0.15,
+      "equilibrage": 0.15,
+      "accessibilite": 0.10,
+      "coherence_narrative": 0.10,
+      "progression_fun_factor": 0.12,
+      "robustesse_llm": 0.10,
+      "architecture_code_quality": 0.10,
+      "performance_mobile": 0.08,
+      "couverture_minijeux": 0.05,
+      "pipeline_devops": 0.05
+    },
+    "weighted_sum": 7.90,
+    "rounded": 7.9,
+    "delta_vs_c64": -0.4,
+    "delta_note": "Score dip is expected: promise state is implemented but not player-visible yet. The -0.4 is entirely attributable to progression_fun_factor (6.5) and the equilibrage edge cases. Technical quality is high."
+  },
+
+  "verdict": "PROCEED",
+  "verdict_rationale": "No critical bugs. All three changes are correctly implemented with good defensive coding. The promise system is a sound foundation. Score drop from 8.3 to 7.9 reflects completeness gap (player-invisible promises, missing expiry logic) rather than any regression.",
+
+  "issues": [
+    {
+      "severity": "MEDIUM",
+      "criterion": "equilibrage",
+      "issue": "Negative deadline not sanitized — ADD_PROMISE:id:-3 stores deadlineCards=-3 in state with no warning. Future expiry logic will behave unexpectedly.",
+      "recommendation": "Add Math.max(1, deadline) guard in EffectEngine ADD_PROMISE case, or in Store.addPromise(). Emit console.warn if original value was <= 0."
+    },
+    {
+      "severity": "MEDIUM",
+      "criterion": "equilibrage",
+      "issue": "'expired' status declared in Promise interface but no transition path exists. Promises can only end as 'active', 'fulfilled', or 'broken' — 'expired' is a dead type state.",
+      "recommendation": "Either remove 'expired' from the union until the expiry engine is built, or implement expiry check in tickCooldowns() / incrementCardsPlayed()."
+    },
+    {
+      "severity": "MEDIUM",
+      "criterion": "progression_fun_factor",
+      "issue": "Promises tracked in run state but not rendered in RunSummary — player has no feedback on promise outcomes at run end.",
+      "recommendation": "Add a Promises section to RunSummary.ts showing fulfilled/broken counts with moral framing. This is the highest-value unblocked C66 task."
+    },
+    {
+      "severity": "LOW",
+      "criterion": "equilibrage",
+      "issue": "No deduplication guard on addPromise — duplicate ids can accumulate. fulfillPromise/breakPromise affect only the first matching active instance.",
+      "recommendation": "Consider replacing push with an upsert: if a promise with the same id exists and is active, overwrite its deadlineCards rather than duplicating. Document intended behavior in a code comment."
+    },
+    {
+      "severity": "LOW",
+      "criterion": "accessibilite",
+      "issue": "Multi-dot container span has no role or aria-label. Screen readers traverse dots as a flat sequence of img elements without grouping context.",
+      "recommendation": "Add role='group' and aria-label='Impacts de faction' to the container span when dots.length > 1."
+    }
+  ],
+
+  "top3_c66": [
+    {
+      "rank": 1,
+      "priority": "HIGH",
+      "task": "RunSummary promise section",
+      "rationale": "Highest fun-factor gain per dev effort. Promises in state, display layer missing. One focused UI component. Unblocks the moral consequence loop.",
+      "target_criterion": "progression_fun_factor",
+      "expected_score_delta": "+0.6 to +0.8"
+    },
+    {
+      "rank": 2,
+      "priority": "MEDIUM",
+      "task": "Promise expiry engine — implement 'expired' status transition in tickCooldowns() or a new checkPromiseExpiry() action",
+      "rationale": "Closes the dead-status gap. Without expiry, promises are only resolved by explicit card effects; most will remain 'active' forever, diluting the system's meaning.",
+      "target_criterion": "equilibrage",
+      "expected_score_delta": "+0.3 to +0.5"
+    },
+    {
+      "rank": 3,
+      "priority": "LOW",
+      "task": "Negative deadline sanitization + multi-dot ARIA grouping",
+      "rationale": "Two small defensive fixes bundled: Math.max(1, deadline) guard + role='group' on the dot container. Combined they close the two LOW issues and raise accessibilite and equilibrage marginally.",
+      "target_criterion": "equilibrage + accessibilite",
+      "expected_score_delta": "+0.1 to +0.2"
+    }
+  ],
+
+  "balance_observations": [
+    "Promise system introduces no new numerical parameters — no balance tuning needed at this stage.",
+    "Expiry mechanic (rank-2 task) will introduce a deadline window parameter; recommend starting with deadlineCards=5 as the default (already baked into the EffectEngine fallback) and tuning via playtesting.",
+    "fulfillPromise/breakPromise effects should eventually trigger secondary effects (reputation delta, anam gain/loss) to give promises mechanical weight beyond narrative tracking."
+  ]
+}

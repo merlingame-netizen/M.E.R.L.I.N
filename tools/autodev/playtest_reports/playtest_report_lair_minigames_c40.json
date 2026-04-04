@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": 40,
+  "auditor": "merlin-ai-playtester",
+  "verdict": "PROCEED",
+  "global_score": 8.97,
+  "baseline_score": 8.91,
+  "delta": "+0.06",
+  "regression": false,
+
+  "scope": {
+    "scenes": ["LairDensity.ts", "MerlinLairScene.ts (lines 655-860)"],
+    "minigames": ["mg_negociation.ts", "mg_course.ts"],
+    "reference_audit": "playtest_report_minigames_c50_post_audit.json"
+  },
+
+  "scores_by_criterion": {
+    "R1_flatshading": { "score": 9.2, "weight": 0.075, "status": "PASS" },
+    "R2_zfighting": { "score": 8.8, "weight": 0.075, "status": "PASS" },
+    "R3_materials": { "score": 8.5, "weight": 0.075, "status": "PASS" },
+    "R4_lighting_dramaturgy": { "score": 9.0, "weight": 0.075, "status": "PASS" },
+    "A5_glb_coverage": { "score": 8.7, "weight": 0.067, "status": "PASS" },
+    "A6_proportions": { "score": 9.1, "weight": 0.067, "status": "PASS" },
+    "A7_celtic_style": { "score": 9.3, "weight": 0.067, "status": "PASS" },
+    "P8_bundle_gzip": { "score": 8.6, "weight": 0.083, "status": "PASS" },
+    "P9_fps_budget": { "score": 9.0, "weight": 0.083, "status": "PASS" },
+    "P10_memory_leaks": { "score": 9.2, "weight": 0.083, "status": "PASS" },
+    "U11_aria_hotspot": { "score": 9.1, "weight": 0.10, "status": "PASS" },
+    "G12_celtic_immersion": { "score": 9.0, "weight": 0.15, "status": "PASS" }
+  },
+
+  "weighted_category_scores": {
+    "rendu_3d_R1_R4": { "raw_avg": 8.875, "weight": 0.30, "contribution": 2.66 },
+    "assets_A5_A7": { "raw_avg": 9.033, "weight": 0.20, "contribution": 1.81 },
+    "web_perf_P8_P10": { "raw_avg": 8.933, "weight": 0.25, "contribution": 2.23 },
+    "ux_accessibility_U11": { "raw_avg": 9.1, "weight": 0.10, "contribution": 0.91 },
+    "game_feel_G12": { "raw_avg": 9.0, "weight": 0.15, "contribution": 1.35 }
+  },
+
+  "minigame_evaluation": {
+    "mg_negociation": {
+      "score": 8.9,
+      "strengths": [
+        "Combo system tracks maxCombo separately from live comboCount — correct peak-performance scoring",
+        "pickedSequence uses immutable spread pattern",
+        "All 3 difficulty axes tiered: time [12,10,8,7]s, speed [40,50,60,70]px/s, spawn [0.6,0.5,0.4,0.35]s",
+        "SFX binary feedback (unlock/lose) matches negotiation framing semantically",
+        "kbFocusIdx clamping after pick is defensive"
+      ],
+      "concerns": []
+    },
+    "mg_course": {
+      "score": 8.4,
+      "strengths": [
+        "4 axes tiered: totalRounds, roundTime, hitRadius, decoyCount",
+        "roundTransition buffer prevents accidental input on round boundaries",
+        "aria-live='polite' on statusEl",
+        "canvas tabIndex=0 with explicit focus call"
+      ],
+      "concerns": [
+        "MEDIUM: onKeyDown always registers hit — no timing/hitRadius validation. Keyboard trivializes tier 3 QTE.",
+        "LOW: title double-dash cosmetic artifact"
+      ]
+    }
+  },
+
+  "c38_fixes_verification": {
+    "biblio_lowEnd_gate": "CLOSED — LairDensity.ts line 37: if (!lowEnd) wraps biblio PointLight",
+    "biblio_y_position": "CLOSED — y=0 targets book spines (was y=-3.5 floor)",
+    "aria_dynamic_count": "CLOSED — MerlinLairScene.ts line 850: template literal uses interactives.length",
+    "hemilight_sky_color": "CLOSED — 0x2a3820 deep forest green-black (was 0x7080a0 steel-blue)"
+  },
+
+  "top3_remaining_issues": [
+    {
+      "rank": 1,
+      "severity": "HIGH",
+      "id": "I-06",
+      "file": "web-demo/src/minigames/mg_runes.ts",
+      "issue": "pairCount and grid dimensions hardcoded readonly — flat difficulty across all tiers",
+      "recommendation": "tieredValue([6,7,8,8]) for pairCount; 3x4 grid at 6 pairs, 4x4 at 7-8. RUNE_SET ceiling = 8."
+    },
+    {
+      "rank": 2,
+      "severity": "HIGH",
+      "id": "I-07",
+      "file": "web-demo/src/minigames/mg_equilibre.ts",
+      "issue": "Balance percentage rendered only via ctx.fillText — no aria-live DOM element",
+      "recommendation": "Add <div id='mg-eq-status' aria-live='polite' aria-atomic='true'> in setup(). Feed from setInterval."
+    },
+    {
+      "rank": 3,
+      "severity": "MEDIUM",
+      "id": "I-08",
+      "file": "web-demo/src/minigames/mg_course.ts",
+      "issue": "Keyboard always-hit in onKeyDown bypasses timing/hitRadius — trivializes QTE at tier 3",
+      "recommendation": "Add guard: confirm only if roundElapsed > roundTime * 0.15"
+    }
+  ],
+
+  "watch_items": [
+    "15 book MeshStandardMaterial instances in LairDensity — functional, minor GPU state churn",
+    "Moon SpotLight castShadow=false — moonbeam lacks penumbra (lore impact)",
+    "mg_course title double-dash typo"
+  ],
+
+  "balance_recommendations": [
+    {
+      "parameter": "mg_runes.pairCount",
+      "current": "8 all tiers (readonly const)",
+      "suggested": "tieredValue([6,7,8,8])",
+      "confidence": "MEDIUM"
+    },
+    {
+      "parameter": "mg_course.onKeyDown timing_guard",
+      "current": "always-hit on Space/Enter",
+      "suggested": "confirm only after roundElapsed > roundTime * 0.15",
+      "confidence": "HIGH"
+    }
+  ]
+}

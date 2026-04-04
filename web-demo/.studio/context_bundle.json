@@ -1,14 +1,22 @@
 {
   "cycle": 30,
   "generated_at": "2026-04-02T00:00:00Z",
+  "status": "COMPLETE",
   "top_tasks": ["T064", "T065-verify", "T077"],
+  "tasks_completed": ["T064", "T065-verified", "T077"],
   "auto_done": ["T065"],
-  "changed_files_this_cycle": [],
+  "changed_files_this_cycle": [
+    "web-demo/src/scenes/MainMenuScene.ts",
+    "web-demo/public/data/cards.json",
+    "web-demo/.studio/backlog.json",
+    "web-demo/.studio/metrics.json",
+    "web-demo/.studio/cycle_audit.json"
+  ],
   "prev_metrics": {
     "ts_errors": 0,
-    "bundle_kb_app": 118.59,
+    "bundle_kb_app": 118.90,
     "build_ok": true,
-    "cards_total": 366
+    "cards_total": 386
   },
   "regression_gate": {
     "ts_errors": 0,
@@ -16,24 +24,23 @@
   },
   "prefilter": {
     "ts_errors": 0,
-    "MainMenuScene_lines": 740,
-    "MainMenuScene_line_budget_remaining": 60,
+    "MainMenuScene_lines": 772,
+    "MainMenuScene_line_budget_remaining": 28,
     "sea_spray_done": true,
-    "god_ray_done": false,
+    "god_ray_done": true,
     "SceneTransition_exists": true,
-    "SceneTransition_fully_implemented": true
+    "SceneTransition_fully_implemented": true,
+    "foret_broceliande_batch2_done": true
   },
   "key_constants": {
     "menu_line_limit": 800,
     "god_ray_color": "0xffd090",
-    "god_ray_position": "above cliff horizon (-5, 14, -18)",
-    "sea_spray_class": "SeaSpraySystem",
-    "transition_overlay_id": "scene-transition-overlay"
+    "god_ray_position": "(-5, 14, -18)",
+    "god_ray_pulse_period_s": 3.0,
+    "god_ray_opacity_range": "0.15..0.45",
+    "cards_total": 386
   },
-  "task_notes": {
-    "T064": "God ray additive sprite above cliff horizon only. Sea spray DONE (SeaSpraySystem at line 554). Dust motes: in lair only (already done via createLairDensity). Budget: 60 lines max in MainMenuScene.ts.",
-    "T065": "ALREADY DONE — SceneTransition.ts fully implemented with cutToBlack/revealFromBlack/transition API. Used by main.ts lines 34,134,192.",
-    "T077": "NEW: Add 20 FastRoute cards for foret_broceliande batch2 (druides 60%+, ankou 10%, korrigans 15%). Follows foret_broceliande batch1 pattern in public/data/cards.json."
-  },
-  "deploy_url": "https://web-export-pi.vercel.app"
+  "deploy_url": "https://web-export-pi.vercel.app",
+  "commit": "cac6623",
+  "notes": "Cycle 30 complete. All original backlog open tasks done. Next cycle: new task planning needed — recommend T078 (foret_broceliande 3D biome scene), T079 (game over screen polish), T080 (lair zone navigation — map/crystal/bookshelf/door)."
 }

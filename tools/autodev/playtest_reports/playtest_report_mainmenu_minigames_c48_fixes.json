@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "cycle": "C48",
+    "timestamp": "2026-04-03T00:00:00Z",
+    "scope": "MainMenuScene + 3 minigames audit + fixes applied",
+    "previous_score": 9.83,
+    "c48_audit_score": 7.8,
+    "bugs_fixed": 3,
+    "commit": "2db2317"
+  },
+
+  "fixes_applied": [
+    {
+      "id": "BUG-ARIA-FOUILLE",
+      "severity": "HIGH",
+      "file": "web-demo/src/minigames/mg_fouille.ts",
+      "description": "timerBar missing role=progressbar + aria-valuemin/max/now",
+      "fix": "Added 5 ARIA attributes to timerBar div, aria-valuenow updated dynamically in setInterval",
+      "status": "FIXED"
+    },
+    {
+      "id": "BUG-ARIA-MAINMENU",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "description": "renderer.domElement canvas had no role or aria-label",
+      "fix": "Added role=img + aria-label Celtic description after container.appendChild()",
+      "status": "FIXED"
+    },
+    {
+      "id": "BUG-PERF-OCEAN",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "description": "computeVertexNormals() called every frame in ocean update() — ~1-2ms/frame waste on mobile",
+      "fix": "Removed call — flatShading:true means GPU handles per-face normals from vertex positions",
+      "status": "FIXED"
+    }
+  ],
+
+  "open_issues": [
+    {
+      "id": "MISSING-MG-15",
+      "severity": "MEDIUM",
+      "description": "14 minigames found, 15 expected by game design bible",
+      "status": "OPEN — C49 investigation"
+    },
+    {
+      "id": "BUG-MINIGAMEBASE-PROMISE",
+      "severity": "LOW",
+      "description": "showOutcomeOverlay Promise may hang if external cleanup() called before 2.2s",
+      "status": "DEFERRED — actual behavior analyzed: resolve() IS called after 2460ms regardless"
+    },
+    {
+      "id": "TIMER-NUMERIC-DISPLAY",
+      "severity": "LOW",
+      "description": "All minigames: timer is bar-only, no numeric countdown (e.g. '8s')",
+      "status": "OPEN — C50 candidate"
+    }
+  ],
+
+  "build": {
+    "ts_errors": 0,
+    "bundle_gzip_kb": 200.55,
+    "delta_vs_c47": "+0.07",
+    "status": "GREEN"
+  },
+
+  "c48_score": {
+    "raw": 7.8,
+    "post_fixes_estimated": 8.5,
+    "verdict": "PROCEED — 3 bugs fixed (2 HIGH + 1 MEDIUM), C49 audits remaining 11 minigames"
+  }
+}
