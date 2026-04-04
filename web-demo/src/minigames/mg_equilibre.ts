@@ -132,6 +132,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     this.canvas.addEventListener('pointerup', this.onPointerUp);
     this.canvas.addEventListener('pointerleave', this.onPointerUp);
+    this.canvas.addEventListener('pointercancel', this.onPointerUp); // C96: reset touchSide if browser cancels pointer (scroll interrupt, notification)
     this.canvas.focus(); // ensure canvas receives keys immediately
 
     // Timer
@@ -207,6 +208,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas?.removeEventListener('pointerup', this.onPointerUp);
     this.canvas?.removeEventListener('pointerleave', this.onPointerUp);
+    this.canvas?.removeEventListener('pointercancel', this.onPointerUp); // C96
 
     // Score: percentage of time spent in safe zone
     const totalElapsed = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);
@@ -375,6 +377,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas?.removeEventListener('pointerup', this.onPointerUp);
     this.canvas?.removeEventListener('pointerleave', this.onPointerUp);
+    this.canvas?.removeEventListener('pointercancel', this.onPointerUp); // C96
     super.cleanup();
   }
 }

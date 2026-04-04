@@ -618,7 +618,14 @@ async function gameLoop(
 
   let _loopSafety = 0; // C104: ceiling guard — run.active + 30-card limit are primary bounds
   while (state().run.active) {
-    if (++_loopSafety > 60) { state().endRun('safety'); break; } // C104: hard ceiling
+    if (++_loopSafety > 60) { // C104: hard ceiling
+      state().endRun('safety');
+      saveAnamToStorage();
+      saveMetaToStorage();
+      playSound('end');
+      await showRunSummary('cards_limit');
+      break;
+    }
     // 1. WALK phase — camera moves along rail
     rail.resume();
     await waitSeconds(WALK_SECONDS_BEFORE_CARD);
