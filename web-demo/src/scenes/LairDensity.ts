@@ -1,7 +1,7 @@
 // LairDensity — extracted from MerlinLairScene (Cycle 34) to stay under 800-line limit.
 // Adds shelves+books, moonlight SpotLight, parchment rolls to the lair scene.
 
-import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Scene, SpotLight } from 'three';
+import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, Scene, SpotLight } from 'three';
 
 /** Add shelves, moonlight shaft and parchment rolls to the lair scene.
  *  Returns a cleanup callback that removes the SpotLight target from the scene —
@@ -31,6 +31,11 @@ export function createLairDensity(scene: Scene): () => void {
     roll.rotation.z = Math.PI / 2; roll.rotation.y = ry;
     roll.position.set(x, -4.8, z); group.add(roll);
   }
+  // C36: warm amber accent for right-wall bibliotheque zone (no dedicated light before)
+  const biblio = new PointLight(0xffa040, 0.6, 6, 2);
+  biblio.position.set(10, -3.5, -7);
+  group.add(biblio);
+
   scene.add(group);
   // C35: return cleanup so MerlinLairScene.dispose() can remove the world-space target
   return () => { scene.remove(moon.target); };

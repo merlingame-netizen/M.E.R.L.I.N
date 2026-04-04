@@ -660,7 +660,7 @@ function setupLighting(scene: Scene, lowEnd = false): void {
   // C33: HemisphereLight fills stone surfaces — reports flagged every cycle that flatShading relied
   // solely on 5 PointLights with no ambient fill. Sky=blue-grey dungeon vault, ground=warm stone bounce.
   // intensity=0.25: subtle — doesn't wash out dramatic PointLight shadows, just reveals stone facets.
-  scene.add(new HemisphereLight(0x7080a0, 0x3a2a1a, 0.25));           // sky/ground Celtic fill
+  scene.add(new HemisphereLight(0x2a3820, 0x3a2a1a, 0.25));           // C36: deep forest green-black sky (was 0x7080a0 steel-blue — fought warm candle/moonbeam palette)
   // C85-02: key moved from overhead [0,8,-2] to forward-angled [0,3,2] — creates
   // depth shadows toward back wall, correct Celtic hall dramaturgy
   const key = new PointLight(0xff6618, 0.9, 22, 1.6);
