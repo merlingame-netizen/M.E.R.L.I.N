@@ -247,7 +247,9 @@ export class MinigameSangFroid extends MinigameBase {
     }
 
     if (this.isInside) {
-      this.timeInside += dt;
+      // C88: clamp timeInside to totalTime — getDeltaTime caps dt at 0.1s but tab-background
+      // resume accumulates excess, pushing timeInside > totalTime → finalScore > 100%.
+      this.timeInside = Math.min(this.timeInside + dt, this.totalTime);
     }
 
     // Update status

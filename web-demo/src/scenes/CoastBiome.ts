@@ -367,9 +367,15 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
   // Track whether to skip ocean vertex update this frame (low-FPS adaptive LOD)
   let _skipOceanFrame = false;
+  // C88: accumulate scene time from dt instead of performance.now() — wall-clock time
+  // causes a visible phase jump in fog/ocean on tab resume (performance.now() skips
+  // 30s forward; accumulated dt stays at last-rendered frame). Shader already
+  // clamps via mod(uTime, 100.0) to prevent float precision drift.
+  let sceneTime = 0;
 
   const update = (dt: number): void => {
-    const t = performance.now() * 0.001;
+    sceneTime += dt;
+    const t = sceneTime;
     // Animate low-poly ocean vertices for faceted wave look.
     // Low-FPS adaptive: skip every other frame when dt > 33ms (<30fps) to keep
     // the game loop responsive on mobile/low-end hardware.
