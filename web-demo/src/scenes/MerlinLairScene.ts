@@ -859,7 +859,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const onTouchEnd = (): void => {
     if (currentHovered) {
       currentHovered.hovered = false;
-      currentHovered.mesh.scale.setScalar(1.0);
+      // C98: scale on visualMesh (visible geometry), not hitTarget (invisible)
+      (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.0);
       applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
       currentHovered = null;
       renderer.domElement.style.cursor = 'default';
@@ -889,13 +890,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const next = interactives.find((i) => i.zone === zone) ?? null;
     if (currentHovered && currentHovered !== next) {
       currentHovered.hovered = false;
-      currentHovered.mesh.scale.setScalar(1.0);
+      // C98: scale on visualMesh (visible geometry), not hitTarget (invisible)
+      (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.0);
       applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
     }
     currentHovered = next;
     if (currentHovered) {
       currentHovered.hovered = true;
-      currentHovered.mesh.scale.setScalar(1.05);
+      (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.05);
       applyHoverTo(currentHovered, 0.65);
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
       renderer.domElement.setAttribute('aria-label', `Zone active : ${ZONE_ARIA_LABELS[zone]} — Entrée pour activer`);

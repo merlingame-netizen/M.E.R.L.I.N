@@ -32,8 +32,8 @@ export class MinigameRunes extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private timerInterval = 0;
-  private timeLeft = 15;
-  private readonly totalTime = 15;
+  private timeLeft = 30;
+  private totalTime = 30; // C98: scaled by difficultyTier in setup() — 30/25/20/15s
   private readonly gridCols = 4;
   private readonly gridRows = 4;
   private readonly tileSize = 80;
@@ -48,6 +48,9 @@ export class MinigameRunes extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C98: scale difficulty — tier 0: 30s, tier 1: 25s, tier 2: 20s, tier 3: 15s
+    this.totalTime = 30 - this.difficultyTier * 5;
 
     // Title
     const title = document.createElement('div');
@@ -175,12 +178,16 @@ export class MinigameRunes extends MinigameBase {
         this.matchedCount++;
         this.firstPick = null;
         this.lockInput = false;
+        // C98: audio feedback — pair matched
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
 
         if (this.matchedCount >= this.totalPairs) {
           this.endGame();
         }
       } else {
         // No match -- flip back after delay
+        // C98: audio feedback — mismatch
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
         const fp = this.firstPick;
         this.revealTimeout = window.setTimeout(() => {
           (this.tiles[fp] as { state: string }).state = 'hidden';
