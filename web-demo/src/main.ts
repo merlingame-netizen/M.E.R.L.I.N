@@ -425,12 +425,16 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
 
   // Wait for door click (only zone that starts a run)
   await new Promise<void>((resolve) => {
+    let doorTriggered = false; // C117/MAIN-01: prevent concurrent overlay fire on fast mobile double-tap during 600ms cinematic
     lair.onZoneClick(async (zone) => {
       if (zone === 'door') {
+        if (doorTriggered) return;
+        doorTriggered = true;
         showZoneToast('door'); // "Entrer dans la forêt" — 600ms total: 200ms fade-in + 400ms fully visible (C45: was 400ms = only 200ms readable)
         setTimeout(resolve, 600);
         return;
       }
+      if (doorTriggered) return; // C117/MAIN-01: block all zone interactions after door click
       if (zone === 'crystal') {
         // C84: show ogham panel for pre-run selection — result carried into first card
         lairSelectedOgham = await showOghamPanel();
@@ -641,7 +645,7 @@ async function gameLoop(
       state().endRun('safety');
       saveRunEnd();
       playSound('end');
-      await showRunSummary('cards_limit');
+      await showRunSummary('cards_limit'); // safety ceiling — closest matching summary type (unreachable in normal play)
       break;
     }
     // 1. WALK phase — camera moves along rail
