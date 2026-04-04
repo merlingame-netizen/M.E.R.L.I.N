@@ -419,7 +419,7 @@ export function stopAmbient(): void {
   const session = ambientSession;
   ambientSession = null;
 
-  // Cancel bird timer
+  // Cancel stochastic timer (birds or rain drops)
   if (session.stochasticTimer !== null) {
     clearTimeout(session.stochasticTimer);
     session.stochasticTimer = null;
