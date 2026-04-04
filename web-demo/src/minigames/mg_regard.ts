@@ -291,9 +291,13 @@ export class MinigameRegard extends MinigameBase {
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
-    // Score: total correct sequences vs total sequence lengths
-    const totalSymbols = this.roundLengths.reduce((a, b) => a + b, 0);
-    const finalScore = (this.correctTotal / totalSymbols) * 100;
+    // Score: accuracy model — correct / attempted clicks.
+    // C101: previous denominator was sum-of-all-roundLengths (15), which silently included
+    // symbols the player never had a chance to click after an early wrong answer in a round.
+    // Example: 1 correct + fail per round → 3/15=20% (wrong) vs 3/6=50% (correct accuracy).
+    const finalScore = this.attemptsTotal > 0
+      ? (this.correctTotal / this.attemptsTotal) * 100
+      : 0;
     this.finish(finalScore);
   }
 
