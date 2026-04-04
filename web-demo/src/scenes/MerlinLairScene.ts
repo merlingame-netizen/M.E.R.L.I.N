@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
+import { startAmbient, stopAmbient } from '../audio/SFXManager';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -739,12 +740,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   loadLairGLBs(scene, {
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
+    crystalSphere: crystalData.sphere,
     // When GLB loads, swap visualMesh to the GLB body so hover emissive works on GLB path
     onCauldronGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'cauldron');
       if (entry) entry.visualMesh = mesh;
     },
   }, () => lairDisposed);
+
+  // C93-P1: forest ambient audio — SFXManager handles AudioContext suspension via pendingAmbientType
+  startAmbient('forest');
 
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [
@@ -922,6 +927,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const dispose = (): void => {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
+    stopAmbient(); // C93-P1: stop forest ambient on scene teardown
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('mousemove', onMouseMove);
     renderer.domElement.removeEventListener('click', onPointerAction);

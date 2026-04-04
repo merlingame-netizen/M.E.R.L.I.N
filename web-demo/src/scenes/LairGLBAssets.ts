@@ -18,6 +18,7 @@ export interface LairProceduralGroups {
   wallsGroup?: THREE.Group;    // full walls group hidden when mur_pierre.glb loads
   cauldronGroup?: THREE.Group; // procedural cauldron body+legs hidden when cauldron_merlin.glb loads
   candleGroup?: THREE.Group;   // procedural candle bodies+wicks+light hidden when bougie.glb loads
+  crystalSphere?: THREE.Mesh;  // C93-P2: procedural sphere hidden when crystal_ball.glb loads (hitTarget/light stay)
   onCauldronGLBLoaded?: (bodyMesh: THREE.Mesh) => void; // callback to update visualMesh in interactives[]
 }
 
@@ -179,4 +180,19 @@ export function loadLairGLBs(
 
     if (proceduralGroups?.wallsGroup) proceduralGroups.wallsGroup.visible = false;
   }).catch(() => { /* procedural stone walls remain */ });
+
+  // Crystal ball: C93-P2 — GLB overlay on procedural sphere. hitTarget + PointLight stay active.
+  loadGLB('/crystal_ball.glb').then((gltf) => {
+    if (isDisposed?.()) return;
+    gltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = (child.material as THREE.MeshStandardMaterial).clone();
+        (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+      }
+    });
+    gltf.scene.position.set(5, -1.0, -4);
+    gltf.scene.scale.setScalar(0.8);
+    scene.add(gltf.scene);
+    if (proceduralGroups?.crystalSphere) proceduralGroups.crystalSphere.visible = false;
+  }).catch(() => { /* procedural crystal sphere remains */ });
 }
