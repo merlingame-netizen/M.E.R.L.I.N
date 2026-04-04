@@ -151,11 +151,22 @@ export function showCard(card: Card): Promise<number> {
     // after first call, but hideCard() and classList mutations would still fire).
     let activated = false;
 
+    // C79-02: runtime guard against empty options array — a Groq response can parse
+    // as valid JSON with options:[] (bypassing the emergency-catch in main.ts) despite
+    // the tuple type. Cast to readonly array to suppress the TS tuple-length overlap error.
+    if (!(card.options as readonly CardOption[]).length) { hideCard(); resolve(0); return; }
+
+    // 60s safety timeout — last-resort escape if all button paths somehow become
+    // unreachable (e.g. DOM mutation by an extension, tab hidden on mobile).
+    const safetyId = setTimeout(() => {
+      if (!activated) { activated = true; hideCard(); resolve(0); }
+    }, 60_000);
+
     // Null-guard DOM elements — consistent with HUD pattern (C57)
     const overlayEl = document.getElementById('card-overlay');
     const narrativeEl = document.getElementById('card-text');
     const optContainer = document.getElementById('card-options');
-    if (!overlayEl || !narrativeEl || !optContainer) { resolve(0); return; }
+    if (!overlayEl || !narrativeEl || !optContainer) { clearTimeout(safetyId); resolve(0); return; }
 
     // Narrative text (T067: keep existing element, styled via CSS)
     narrativeEl.textContent = card.narrative;
@@ -211,6 +222,7 @@ export function showCard(card: Card): Promise<number> {
       const activate = (): void => {
         if (activated) return;
         activated = true;
+        clearTimeout(safetyId);
         // T073: Brief gold highlight before overlay hides (200ms feedback)
         btn.classList.add('card-option-selected');
         setTimeout(() => {
@@ -219,7 +231,7 @@ export function showCard(card: Card): Promise<number> {
         }, 200);
       };
 
-      btn.addEventListener('click', activate);
+      btn.addEventListener('click', activate, { once: true });
       // Keyboard activation: Enter and Space — WCAG 2.1.1
       btn.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {

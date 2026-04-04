@@ -285,8 +285,11 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     restartBtn.addEventListener('click', () => {
       overlay.remove();
       hideCard();
-      store.getState().reset();
+      // C79-05: do NOT call store.reset() here — it wipes meta (anam, factionRep,
+      // totalRuns) before main.ts re-hydrates via loadAnamFromStorage() /
+      // loadMetaFromStorage(). startRun() in main.ts rebuilds run state cleanly
+      // from buildDefaultRun() seeded with preserved meta.factionRep — no reset needed.
       resolve();
-    });
+    }, { once: true }); // C79-04: { once: true } closes double-tap race on mobile
   });
 }
