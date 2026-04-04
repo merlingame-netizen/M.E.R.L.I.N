@@ -579,17 +579,23 @@ async function main(): Promise<void> {
     if (chosenBiome === 'foret_broceliande') {
       const { buildForestScene } = await import('./scenes/BroceliandForest');
       biomeResult = await buildForestScene();
-    } else {
+    } else if (chosenBiome === 'cotes_sauvages') {
       // C147/BUNDLE-OVR-01: lazy dynamic import — deferred from startup to first run start.
       const { buildCoastScene } = await import('./scenes/CoastBiome');
       biomeResult = await buildCoastScene();
+    } else {
+      // C161: remaining 6 biomes use parametric GenericBiome scene
+      const { buildGenericBiomeScene } = await import('./scenes/GenericBiome');
+      biomeResult = await buildGenericBiomeScene(chosenBiome);
     }
     sceneManager.scene.add(biomeResult.group);
 
-    // Camera rail — biome-specific path (C158: forest has tighter winding path)
+    // Camera rail — biome-specific path
     const rail = chosenBiome === 'foret_broceliande'
       ? CameraRail.createForestPath()
-      : CameraRail.createCoastalPath();
+      : chosenBiome === 'cotes_sauvages'
+        ? CameraRail.createCoastalPath()
+        : CameraRail.createGenericPath();
     rail.setSpeed(WALK_SPEED);
 
     sceneManager.onUpdate((dt) => {

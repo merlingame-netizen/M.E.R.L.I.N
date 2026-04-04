@@ -35,6 +35,20 @@ export class CameraRail {
     ]);
   }
 
+  /** Generic curved path for non-coast, non-forest biomes. */
+  static createGenericPath(): CameraRail {
+    return new CameraRail([
+      new Vector3(0, 2, 22),
+      new Vector3(-4, 2.2, 14),
+      new Vector3(6, 2.5, 6),
+      new Vector3(2, 2.8, -2),
+      new Vector3(-6, 2.5, -10),
+      new Vector3(4, 2.2, -18),
+      new Vector3(0, 2, -26),
+      new Vector3(-3, 2.2, -34),
+    ]);
+  }
+
   /** Create a default forest rail path. */
   static createForestPath(): CameraRail {
     return new CameraRail([

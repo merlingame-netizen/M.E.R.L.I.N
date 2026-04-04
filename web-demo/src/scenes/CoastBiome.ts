@@ -1,29 +1,35 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// Coast Biome — Procedural coastal scene with GLB assets
-// Uses existing menu_coast GLBs + procedural ocean, sky, terrain
+// Coast Biome — ISO low-poly coastal scene (C161 visual overhaul)
+// Reference: dramatic cliff + teal faceted ocean + layered flat-shaded clouds.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AmbientLight, BackSide, BoxGeometry, BufferAttribute, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry, FrontSide, Group, HemisphereLight, Material, Mesh, MeshStandardMaterial, PlaneGeometry, ShaderMaterial, SphereGeometry } from 'three';
+import {
+  AmbientLight, BackSide, BoxGeometry, BufferAttribute, Color,
+  ConeGeometry, CylinderGeometry, DirectionalLight,
+  DodecahedronGeometry, Group, HemisphereLight,
+  Material, Mesh, MeshStandardMaterial, PlaneGeometry, SphereGeometry,
+} from 'three';
 import { loadGLB } from '../engine/AssetLoader';
 
-/** Build a procedural ground plane — flat-shaded for low-poly AAA look. */
+// ── Ground (cliff path — sandy grey-brown like reference) ────────────────────
+
 function createGround(): Mesh {
-  const geo = new PlaneGeometry(200, 200, 48, 48);
-  // Gentle terrain undulation
+  const geo = new PlaneGeometry(200, 200, 52, 52);
   const pos = geo.attributes.position as BufferAttribute;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
-    const z = pos.getY(i); // PlaneGeometry Y = world Z after rotation
-    const height = Math.sin(x * 0.05) * 0.8 + Math.cos(z * 0.08) * 0.5 + Math.random() * 0.2;
-    pos.setZ(i, height);
+    const z = pos.getY(i);
+    const h =
+      Math.sin(x * 0.048) * 1.1 +
+      Math.cos(z * 0.072) * 0.65 +
+      Math.sin(x * 0.13 + z * 0.09) * 0.35 +
+      (Math.random() - 0.5) * 0.22;
+    pos.setZ(i, h);
   }
   geo.computeVertexNormals();
-
   const mat = new MeshStandardMaterial({
-    color: 0x2e5228,
-    roughness: 0.95,
-    metalness: 0.0,
-    flatShading: true,
+    color: 0x72684e, // sandy grey-brown cliff path
+    roughness: 0.97, metalness: 0.0, flatShading: true,
   });
   const mesh = new Mesh(geo, mat);
   mesh.rotation.x = -Math.PI / 2;
@@ -31,240 +37,339 @@ function createGround(): Mesh {
   return mesh;
 }
 
-/** Build a low-poly ocean with flat-shading for faceted wave look. */
-function createOcean(): Mesh {
-  const geo = new PlaneGeometry(200, 200, 24, 18);
+// ── Teal faceted ocean with vertex color depth variation ─────────────────────
+
+interface OceanResult {
+  mesh: Mesh;
+  basePositions: Float32Array;
+}
+
+function createOcean(): OceanResult {
+  const geo = new PlaneGeometry(220, 220, 44, 36);
+  const pos = geo.attributes.position as BufferAttribute;
+  const count = pos.count;
+
+  // Vertex colors: teal near shore → deeper blue-teal further
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const x = pos.getX(i);
+    const depth = Math.max(0, Math.min(1, (x + 110) / 220));
+    // Near shore: cyan teal (0x1abfa8), open sea: dark teal (0x0d5d70)
+    colors[i * 3 + 0] = 0.06 + depth * 0.04;
+    colors[i * 3 + 1] = 0.37 - depth * 0.18;
+    colors[i * 3 + 2] = 0.44 + depth * 0.02;
+  }
+  geo.setAttribute('color', new BufferAttribute(colors, 3));
+
   const mat = new MeshStandardMaterial({
-    color: 0x1a3d5c,
-    roughness: 0.3,
-    metalness: 0.35,
+    vertexColors: true,
+    roughness: 0.18,
+    metalness: 0.28,
     transparent: true,
-    opacity: 0.88,
+    opacity: 0.92,
     flatShading: true,
   });
   const mesh = new Mesh(geo, mat);
   mesh.rotation.x = -Math.PI / 2;
-  mesh.position.set(60, -0.5, 0);
+  mesh.position.set(68, -0.6, 0);
   mesh.name = 'ocean_plane';
-  return mesh;
+
+  const basePositions = new Float32Array(pos.array as Float32Array);
+  return { mesh, basePositions };
 }
 
-/**
- * Celtic Breton sky — overcast moody gradient.
- * Top: dark slate-grey (0x2a3240) — brooding Celtic sky.
- * Mid-horizon: warm grey-green (0x5a6a50) — forest haze where sky meets tree line.
- * Bottom: mist cream (0x8a9a78) — matches fog plane color for seamless blend.
- * Cycle 33: replaces generic blue 0x4488bb/0xaaccdd.
- */
-function createSky(): Mesh {
-  const geo = new SphereGeometry(150, 16, 12);
-  const mat = new ShaderMaterial({
-    uniforms: {
-      topColor:    { value: new Color(0x2a3240) },  // dark slate-grey zenith
-      midColor:    { value: new Color(0x4a5a48) },  // grey-green mid
-      bottomColor: { value: new Color(0x8a9a78) },  // warm mist at horizon
-    },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      void main() {
-        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPos.xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 topColor;
-      uniform vec3 midColor;
-      uniform vec3 bottomColor;
-      varying vec3 vWorldPosition;
-      void main() {
-        float h = clamp(normalize(vWorldPosition).y * 0.5 + 0.5, 0.0, 1.0);
-        vec3 col = h < 0.5
-          ? mix(bottomColor, midColor, h * 2.0)
-          : mix(midColor, topColor, (h - 0.5) * 2.0);
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-    side: BackSide,
+// ── Foam strips near shoreline ────────────────────────────────────────────────
+
+function createFoamStrips(): Group {
+  const group = new Group();
+  const foamMat = new MeshStandardMaterial({
+    color: 0xdce8e0,
+    roughness: 0.95, metalness: 0.0,
+    transparent: true, opacity: 0.72,
+    flatShading: true,
+    emissive: 0xaaccbb, emissiveIntensity: 0.08,
   });
-  return new Mesh(geo, mat);
+  const R = () => Math.random();
+  // Irregular foam slabs along the shoreline (x ≈ 22–35)
+  for (let i = 0; i < 14; i++) {
+    const w = 3 + R() * 6;
+    const d = 0.8 + R() * 1.4;
+    const foam = new Mesh(new PlaneGeometry(w, d, 3, 2), foamMat);
+    foam.rotation.x = -Math.PI / 2;
+    foam.position.set(
+      22 + R() * 14,
+      -0.48 + R() * 0.08,
+      -25 + R() * 50,
+    );
+    foam.rotation.z = (R() - 0.5) * 0.4;
+    group.add(foam);
+  }
+  return group;
 }
 
-/**
- * Scatter low-poly Celtic trees in 3 depth layers for AAA visual depth.
- * Layer 0 (near): 12 trees, large, full detail
- * Layer 1 (mid):  16 trees, medium, slightly desaturated
- * Layer 2 (far):  12 trees, small, silhouette-style dark
- * Uses flat-shaded ConeGeometry for conifer (more Celtic than sphere).
- */
-function createTrees(count: number): Group {
+// ── Dramatic ISO low-poly sky — base sphere + layered cloud slabs ─────────────
+
+interface SkyResult {
+  group: Group;
+  cloudLayers: CloudLayer[];
+}
+
+interface CloudLayer {
+  group: Group;
+  speed: number; // world-X drift per second
+  baseX: number;
+}
+
+function createSky(): SkyResult {
   const group = new Group();
 
-  const layers: Array<{ start: number; end: number; minR: number; maxR: number; colorBase: number; scaleBase: number; scaleVar: number }> = [
-    { start: 0,  end: 12, minR: 6,  maxR: 18, colorBase: 0x2d6b2d, scaleBase: 1.1, scaleVar: 0.5 },  // near — vivid green
-    { start: 12, end: 28, minR: 18, maxR: 32, colorBase: 0x265a26, scaleBase: 0.85, scaleVar: 0.4 }, // mid — darker
-    { start: 28, end: count, minR: 32, maxR: 55, colorBase: 0x1a3d1a, scaleBase: 0.6, scaleVar: 0.3 }, // far — silhouette
+  // Base sky sphere — dark dramatic overcast gradient via vertex colors
+  const skyGeo = new SphereGeometry(148, 14, 10);
+  const skyPos = skyGeo.attributes.position as BufferAttribute;
+  const skyCols = new Float32Array(skyPos.count * 3);
+  for (let i = 0; i < skyPos.count; i++) {
+    const y = skyPos.getY(i);
+    const t = Math.max(0, Math.min(1, (y + 60) / 140));
+    // horizon: teal-grey (0x3a4e52), zenith: very dark blue (0x0e1420)
+    const hr = 0.23, hg = 0.31, hb = 0.32;
+    const zr = 0.055, zg = 0.08, zb = 0.125;
+    skyCols[i * 3 + 0] = hr + (zr - hr) * t;
+    skyCols[i * 3 + 1] = hg + (zg - hg) * t;
+    skyCols[i * 3 + 2] = hb + (zb - hb) * t;
+  }
+  skyGeo.setAttribute('color', new BufferAttribute(skyCols, 3));
+  const skyMesh = new Mesh(skyGeo, new MeshStandardMaterial({
+    vertexColors: true, side: BackSide, flatShading: true,
+    roughness: 1.0, metalness: 0.0,
+  }));
+  group.add(skyMesh);
+
+  // Cloud slab factory — flat BoxGeometry tiles
+  const cloudLayers: CloudLayer[] = [];
+
+  const addCloudLayer = (
+    yBase: number,
+    greyRange: [number, number],
+    count: number,
+    speed: number,
+    zRange: [number, number],
+    scaleRange: [number, number],
+  ): void => {
+    const layerGroup = new Group();
+    const R = () => Math.random();
+    for (let i = 0; i < count; i++) {
+      const grey = greyRange[0] + R() * (greyRange[1] - greyRange[0]);
+      const g = Math.floor(grey * 255);
+      const col = (g << 16) | (g << 8) | g;
+      const slab = new Mesh(
+        new BoxGeometry(
+          16 + R() * 28,       // wide cloud
+          1.5 + R() * 3.5,     // flat
+          5 + R() * 10,        // depth
+          Math.floor(2 + R() * 3), 1, Math.floor(1 + R() * 2),
+        ),
+        new MeshStandardMaterial({
+          color: col,
+          flatShading: true,
+          roughness: 1.0, metalness: 0.0,
+          emissive: col, emissiveIntensity: 0.04,
+        }),
+      );
+      slab.position.set(
+        (R() - 0.5) * 200,
+        yBase + (R() - 0.5) * 8,
+        zRange[0] + R() * (zRange[1] - zRange[0]),
+      );
+      slab.rotation.y = (R() - 0.5) * 0.3;
+      const s = scaleRange[0] + R() * (scaleRange[1] - scaleRange[0]);
+      slab.scale.set(s, 1, s * 0.6);
+      layerGroup.add(slab);
+    }
+    group.add(layerGroup);
+    cloudLayers.push({ group: layerGroup, speed, baseX: 0 });
+  };
+
+  // High layer — dark dramatic clouds (0.25–0.38 grey)
+  addCloudLayer(55, [0.22, 0.35], 12, 0.8,  [-80, 60], [0.9, 1.5]);
+  // Mid layer — medium grey (0.35–0.50)
+  addCloudLayer(38, [0.33, 0.48], 14, 1.4,  [-70, 50], [0.8, 1.3]);
+  // Low horizon layer — lighter grey wisps (0.45–0.60)
+  addCloudLayer(22, [0.42, 0.58], 10, 2.0,  [-60, 40], [0.7, 1.1]);
+
+  return { group, cloudLayers };
+}
+
+// ── Integrated cliff formation ────────────────────────────────────────────────
+// Stacked, overlapping DodecahedronGeometry(0) rocks forming a unified cliff face.
+// Rocks vary in size and are clustered in vertical columns to mimic the reference.
+
+function createCliff(): Group {
+  const group = new Group();
+
+  const rockColors = [0x5a5248, 0x625848, 0x706858, 0x4e4840, 0x686050];
+  const R = () => Math.random();
+
+  const makeMat = (): MeshStandardMaterial => new MeshStandardMaterial({
+    color: rockColors[Math.floor(R() * rockColors.length)]!,
+    roughness: 0.92, metalness: 0.0, flatShading: true,
+  });
+
+  // ── Main cliff body: left side of path, rising from ocean to summit ──────
+  // 3 vertical columns of large rocks forming the cliff face
+  const columns: Array<{ x: number; z: number; yStart: number; stacks: number }> = [
+    { x: 14,  z: -20, yStart: -3, stacks: 7 },
+    { x: 18,  z: -10, yStart: -3, stacks: 8 },
+    { x: 16,  z:   0, yStart: -3, stacks: 6 },
+    { x: 20,  z:  10, yStart: -3, stacks: 5 },
+    { x: 15,  z: -30, yStart: -3, stacks: 5 },
   ];
 
-  for (const layer of layers) {
-    const trunkMat = new MeshStandardMaterial({ color: 0x4a2e12, roughness: 0.95, flatShading: true });
-    const leafMat = new MeshStandardMaterial({ color: layer.colorBase, roughness: 0.9, flatShading: true });
+  for (const col of columns) {
+    let y = col.yStart;
+    for (let s = 0; s < col.stacks; s++) {
+      const size = 2.5 - s * 0.18 + (R() - 0.5) * 0.6;  // taper upward
+      const geo = new DodecahedronGeometry(size, 0);
+      const rock = new Mesh(geo, makeMat());
+      rock.position.set(
+        col.x + (R() - 0.5) * 1.6,
+        y + size * 0.7,
+        col.z + (R() - 0.5) * 1.4,
+      );
+      rock.rotation.set(R() * 0.5, R() * Math.PI, R() * 0.4);
+      rock.scale.set(1 + R() * 0.3, 0.55 + R() * 0.25, 1 + R() * 0.3); // flatter = more angular cliff
+      rock.castShadow = true;
+      group.add(rock);
+      y += size * 1.1; // stack upward
+    }
+  }
 
+  // ── Cliff base: wide flat rocks at water level ────────────────────────────
+  for (let i = 0; i < 18; i++) {
+    const size = 1.2 + R() * 2.2;
+    const geo = new DodecahedronGeometry(size, 0);
+    const rock = new Mesh(geo, makeMat());
+    rock.position.set(
+      10 + R() * 16,
+      -1.2 + R() * 0.5,
+      -40 + R() * 80,
+    );
+    rock.rotation.set(R() * 0.3, R() * Math.PI, R() * 0.25);
+    rock.scale.set(1.2 + R() * 0.4, 0.35 + R() * 0.2, 1.1 + R() * 0.4);
+    group.add(rock);
+  }
+
+  // ── Scattered path-side rocks (foreground texture) ────────────────────────
+  for (let i = 0; i < 22; i++) {
+    const size = 0.3 + R() * 1.1;
+    const geo = new DodecahedronGeometry(size, 0);
+    const rock = new Mesh(geo, makeMat());
+    rock.position.set(
+      (R() - 0.5) * 16,
+      -0.15 + R() * 0.15,
+      -30 + R() * 60,
+    );
+    rock.rotation.set(R() * 0.6, R() * Math.PI, R() * 0.5);
+    rock.scale.set(1, 0.5 + R() * 0.4, 1);
+    group.add(rock);
+  }
+
+  // ── Cliff-top vegetation (dark green low shrubs) ──────────────────────────
+  const bushMat = new MeshStandardMaterial({
+    color: 0x2a4a22, roughness: 0.95, metalness: 0.0, flatShading: true,
+    emissive: 0x1a3015, emissiveIntensity: 0.08,
+  });
+  for (let i = 0; i < 16; i++) {
+    const r = 0.3 + R() * 0.55;
+    const bush = new Mesh(new DodecahedronGeometry(r, 0), bushMat);
+    bush.position.set(
+      10 + R() * 14,
+      3 + R() * 6,
+      -28 + R() * 56,
+    );
+    bush.rotation.set(R() * 0.4, R() * Math.PI, R() * 0.3);
+    bush.scale.set(1.4, 0.6, 1.2);
+    group.add(bush);
+  }
+
+  return group;
+}
+
+// ── Celtic conifers — 3-layer depth ──────────────────────────────────────────
+
+function createTrees(count: number): Group {
+  const group = new Group();
+  const layers: Array<{
+    start: number; end: number;
+    minR: number; maxR: number;
+    colorBase: number; scaleBase: number; scaleVar: number;
+  }> = [
+    { start: 0,  end: 12, minR: 6,  maxR: 16, colorBase: 0x2a5e22, scaleBase: 1.0, scaleVar: 0.45 },
+    { start: 12, end: 27, minR: 16, maxR: 30, colorBase: 0x224e1a, scaleBase: 0.8, scaleVar: 0.35 },
+    { start: 27, end: count, minR: 30, maxR: 55, colorBase: 0x18381a, scaleBase: 0.55, scaleVar: 0.28 },
+  ];
+  for (const layer of layers) {
+    const trunkMat = new MeshStandardMaterial({ color: 0x3e2810, roughness: 0.95, flatShading: true });
+    const leafMat  = new MeshStandardMaterial({ color: layer.colorBase, roughness: 0.88, flatShading: true });
     for (let i = layer.start; i < layer.end; i++) {
       const tree = new Group();
-
-      // Per-tree geometry instances — shared geometries cause dispose() to free the GPU
-      // buffer on the first traversal hit, leaving all subsequent meshes with dangling refs.
-      const trunkGeo = new CylinderGeometry(0.08, 0.18, 2.4, 5);
-      const cone1Geo = new ConeGeometry(1.1, 2.2, 6);
-      const cone2Geo = new ConeGeometry(0.8, 1.8, 6);
-      const cone3Geo = new ConeGeometry(0.5, 1.4, 5);
-
-      const trunk = new Mesh(trunkGeo, trunkMat);
-      trunk.castShadow = true;
+      const trunk = new Mesh(new CylinderGeometry(0.07, 0.16, 2.2, 5), trunkMat);
       tree.add(trunk);
-
-      // 3-tier cone stack for Celtic conifer
-      const c1 = new Mesh(cone1Geo, leafMat);
-      c1.position.y = 1.4;
-      c1.castShadow = true;
-      tree.add(c1);
-
-      const c2 = new Mesh(cone2Geo, leafMat);
-      c2.position.y = 2.5;
-      c2.castShadow = true;
-      tree.add(c2);
-
-      const c3 = new Mesh(cone3Geo, leafMat);
-      c3.position.y = 3.5;
-      c3.castShadow = true;
-      tree.add(c3);
-
+      const c1 = new Mesh(new ConeGeometry(1.05, 2.1, 6), leafMat);
+      c1.position.y = 1.35; tree.add(c1);
+      const c2 = new Mesh(new ConeGeometry(0.78, 1.7, 6), leafMat);
+      c2.position.y = 2.4; tree.add(c2);
+      const c3 = new Mesh(new ConeGeometry(0.5, 1.3, 5), leafMat);
+      c3.position.y = 3.35; tree.add(c3);
       const angle = Math.random() * Math.PI * 2;
       const radius = layer.minR + Math.random() * (layer.maxR - layer.minR);
-      tree.position.set(
-        Math.cos(angle) * radius - 10,
-        0,
-        Math.sin(angle) * radius - 10
-      );
+      tree.position.set(Math.cos(angle) * radius - 12, 0, Math.sin(angle) * radius - 8);
       tree.scale.setScalar(layer.scaleBase + Math.random() * layer.scaleVar);
-      // Slight random lean for organic feel
-      tree.rotation.z = (Math.random() - 0.5) * 0.08;
+      tree.rotation.z = (Math.random() - 0.5) * 0.07;
       group.add(tree);
     }
   }
   return group;
 }
 
-/** Scatter procedural rocks — flat-shaded granite. */
-function createRocks(count: number): Group {
-  const group = new Group();
-  const rockMat = new MeshStandardMaterial({ color: 0x5e5450, roughness: 0.9, flatShading: true });
+// ── Menhirs ───────────────────────────────────────────────────────────────────
 
+function createMenhirs(count: number): Group {
+  const group = new Group();
+  const mat  = new MeshStandardMaterial({ color: 0x786e60, roughness: 0.88, flatShading: true });
+  const moss = new MeshStandardMaterial({ color: 0x4a5a38, roughness: 0.95, flatShading: true });
   for (let i = 0; i < count; i++) {
-    const geo = new DodecahedronGeometry(0.3 + Math.random() * 0.7, 0);
-    const rock = new Mesh(geo, rockMat);
-    rock.castShadow = true;
-    const angle = Math.random() * Math.PI * 2;
-    const radius = 5 + Math.random() * 50;
-    rock.position.set(
-      Math.cos(angle) * radius - 5,
-      -0.1,
-      Math.sin(angle) * radius
-    );
-    rock.rotation.set(Math.random(), Math.random(), Math.random());
-    rock.scale.set(1, 0.6 + Math.random() * 0.4, 1);
-    group.add(rock);
+    const h = 2.4 + Math.random() * 3.2;
+    const m = new Mesh(new BoxGeometry(0.52, h, 0.36), mat);
+    m.position.set(-16 + Math.random() * 32, h / 2, -24 + Math.random() * 10);
+    m.rotation.y = Math.random() * Math.PI;
+    m.rotation.z = (Math.random() - 0.5) * 0.11;
+    m.castShadow = true;
+    group.add(m);
+    const mp = new Mesh(new BoxGeometry(0.62, 0.13, 0.48), moss);
+    mp.position.set(m.position.x, 0.06, m.position.z);
+    group.add(mp);
   }
   return group;
 }
 
-/**
- * Ground-level fog plane with animated opacity.
- * T005 optimization (cycle 13):
- *  - noise() reduced from 4 trig ops to 2 (removed weighted secondary terms)
- *  - edgeFade replaced by radial distance from UV center (1 smoothstep vs 4)
- *  - uDensity lowered 0.35 -> 0.25 (reduces transparent overdraw budget)
- *  - DoubleSide -> FrontSide (fog viewed from above only, halves rasterization)
- *  - uTime clamped via mod(uTime, 100.0) to prevent float precision drift on long sessions
- * Expected gain: ~35% fragment cost reduction on tile-based GPUs (GTX 1060 target: 60fps).
- */
-function createFog(): Mesh {
-  const geo = new PlaneGeometry(180, 180, 1, 1);
-  const mat = new ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      // Warm breton mist: grey-green instead of cold blue (Cycle 31 AAA pass)
-      uFogColor: { value: new Color(0x8a9a78) },
-      uDensity: { value: 0.25 },
-    },
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      uniform vec3 uFogColor;
-      uniform float uDensity;
-      varying vec2 vUv;
+// ── Ground fog strip ──────────────────────────────────────────────────────────
+// Simple translucent plane (no shader) — warm breton mist.
 
-      // Optimized noise: 2 trig ops instead of 4 (dropped 0.5-weighted secondary terms)
-      float noise(vec2 p, float t) {
-        float tt = mod(t, 100.0);
-        return sin(p.x * 1.7 + tt * 0.3) * cos(p.y * 2.3 + tt * 0.2);
-      }
-
-      void main() {
-        vec2 p = vUv * 6.0 - 3.0;
-        float n = noise(p, uTime) * 0.5 + 0.5;
-        // Radial edge fade: single smoothstep on distance from UV center (replaces 4 smoothsteps)
-        float dist = length(vUv - vec2(0.5));
-        float edgeFade = smoothstep(0.5, 0.2, dist);
-        float alpha = n * uDensity * edgeFade;
-        gl_FragColor = vec4(uFogColor, alpha);
-      }
-    `,
-    transparent: true,
+function createFogPlane(): Mesh {
+  const mat = new MeshStandardMaterial({
+    color: 0x7a8a6a,
+    transparent: true, opacity: 0.18,
+    roughness: 1.0, metalness: 0.0,
     depthWrite: false,
-    side: FrontSide,
   });
-  const mesh = new Mesh(geo, mat);
+  const mesh = new Mesh(new PlaneGeometry(180, 180, 1, 1), mat);
   mesh.rotation.x = -Math.PI / 2;
-  mesh.position.set(0, 0.8, 0);
+  mesh.position.y = 0.7;
   mesh.name = 'fog_plane';
   return mesh;
 }
 
-/** Standing stones / menhirs — flat-shaded granite look. */
-function createMenhirs(count: number): Group {
-  const group = new Group();
-  const mat = new MeshStandardMaterial({ color: 0x787068, roughness: 0.85, flatShading: true });
-  const mossMat = new MeshStandardMaterial({ color: 0x556644, roughness: 0.95, flatShading: true });
-
-  for (let i = 0; i < count; i++) {
-    const height = 2.5 + Math.random() * 3.5;
-    const menhir = new Mesh(new BoxGeometry(0.55, height, 0.38), mat);
-    menhir.castShadow = true;
-    menhir.position.set(
-      -18 + Math.random() * 36,
-      height / 2,
-      -25 + Math.random() * 12
-    );
-    menhir.rotation.y = Math.random() * Math.PI;
-    menhir.rotation.z = (Math.random() - 0.5) * 0.12;
-    group.add(menhir);
-
-    // Moss patch at base
-    const moss = new Mesh(new BoxGeometry(0.65, 0.15, 0.5), mossMat);
-    moss.position.set(menhir.position.x, 0.07, menhir.position.z);
-    moss.rotation.y = menhir.rotation.y;
-    group.add(moss);
-  }
-  return group;
-}
+// ── Export interface ──────────────────────────────────────────────────────────
 
 export interface BiomeSceneResult {
   readonly group: Group;
@@ -272,80 +377,71 @@ export interface BiomeSceneResult {
   readonly dispose: () => void;
 }
 
-/**
- * Build the full coastal biome scene — AAA lighting pass (Cycle 31).
- * Lighting: AmbientLight + DirectionalLight (sun) + HemisphereLight (sky/ground) + RimLight (backlight).
- * Trees: 40 total in 3 depth layers with flat-shaded Celtic conifers.
- * Fog: warm breton mist (0x8a9a7a) instead of cold blue.
- */
+// ── Main builder ──────────────────────────────────────────────────────────────
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
-  // ── Lighting — AAA 3-source setup ──────────────────────────────────────────
-  // 1. Ambient — warm dark base
-  const ambient = new AmbientLight(0x304028, 0.55);
-  group.add(ambient);
+  // ── Lighting ──────────────────────────────────────────────────────────────
+  // Overcast dramatic: cool directional from NW, teal-grey hemisphere, dark ambient
+  group.add(new AmbientLight(0x1a2028, 0.65));
 
-  // 2. Directional sun — low angle, golden celtic light from NW
-  // C135/COAST-SHADOW-01: mirrors MerlinLairScene isLowEndMobile pattern (C89-P2).
-  // 1024×1024 shadow map = ~4MB WebGL renderTarget. On Mali-G57/Adreno 610 devices
-  // (Android + HiDPI) this alone drops from 60fps to ~30fps. Disable shadows on low-end;
-  // ambient + hemi fill keeps silhouette readability without shadow depth.
   const isLowEndMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.devicePixelRatio >= 2;
-  const sun = new DirectionalLight(0xffd8a0, 1.4);
-  sun.position.set(-20, 18, 10);
+  const sun = new DirectionalLight(0xb8ccd8, 1.5); // cool overcast sun (not golden)
+  sun.position.set(-18, 20, 8);
   if (!isLowEndMobile) {
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
     sun.shadow.camera.near = 0.5;
     sun.shadow.camera.far = 100;
-    sun.shadow.camera.left = -40;
-    sun.shadow.camera.right = 40;
-    sun.shadow.camera.top = 40;
-    sun.shadow.camera.bottom = -40;
+    sun.shadow.camera.left = -45;
+    sun.shadow.camera.right = 45;
+    sun.shadow.camera.top = 45;
+    sun.shadow.camera.bottom = -45;
   }
   group.add(sun);
 
-  // 3. HemisphereLight — sky (soft blue) / ground (dark green) for ambient occlusion feel
-  const hemi = new HemisphereLight(0x7799cc, 0x223316, 0.45);
-  group.add(hemi);
+  // Sky blue-grey / teal-grey ground
+  group.add(new HemisphereLight(0x4a6070, 0x3a4030, 0.55));
 
-  // 4. Rim light — cool backlight from ocean direction to separate silhouettes
-  const rim = new DirectionalLight(0x88bbcc, 0.35);
-  rim.position.set(50, 8, -20);
+  // Rim from ocean: cool cyan backlight to separate cliff silhouettes
+  const rim = new DirectionalLight(0x6ab8cc, 0.45);
+  rim.position.set(55, 6, -18);
   group.add(rim);
 
-  // Procedural elements
+  // ── Scene elements ────────────────────────────────────────────────────────
   group.add(createGround());
-  group.add(createOcean());
-  group.add(createSky());
-  group.add(createTrees(40));
-  group.add(createRocks(18));
-  group.add(createMenhirs(7));
-  group.add(createFog());
 
-  // Load GLB assets in parallel — Promise.allSettled so one failure doesn't block others
+  const { mesh: oceanMesh, basePositions: oceanBase } = createOcean();
+  group.add(oceanMesh);
+  group.add(createFoamStrips());
+
+  const { group: skyGroup, cloudLayers } = createSky();
+  group.add(skyGroup);
+
+  group.add(createCliff());
+  group.add(createTrees(40));
+  group.add(createMenhirs(6));
+  group.add(createFogPlane());
+
+  // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
     { file: 'cliff_unified.glb',           pos: [15, -1, -15] as const, scale: 3   },
     { file: 'cabin_unified.glb',           pos: [-5, 0,  -8]  as const, scale: 1.5 },
     { file: 'crystal_cluster_unified.glb', pos: [8,  0,  -3]  as const, scale: 2   },
   ];
-
   const glbResults = await Promise.allSettled(
     glbConfigs.map(({ file }) => loadGLB(glbBase + file))
   );
   for (let i = 0; i < glbResults.length; i++) {
     const r = glbResults[i];
     const cfg = glbConfigs[i];
-    if (r.status !== 'fulfilled' || !cfg) continue;
+    if (r?.status !== 'fulfilled' || !cfg) continue;
     const model = r.value.scene.clone();
-    // C85: clone material before mutation — scene.clone() shares material refs with cached
-    // GLTF, so writing flatShading/needsUpdate directly mutates the cached asset (same
-    // class as LairGLBAssets C81-04 bougie fix). Clone per-mesh to isolate this instance.
     model.traverse((child) => {
       if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
-        child.material = (child.material as MeshStandardMaterial).clone();
+        child.material = child.material.clone();
         child.material.flatShading = true;
         child.material.needsUpdate = true;
       }
@@ -355,68 +451,48 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(model);
   }
 
-  // Ocean animation — flat-shaded low-poly wave facets via vertex displacement
-  const oceanMesh = group.children.find(
-    (c) => c instanceof Mesh && (c as Mesh).name === 'ocean_plane'
-  ) as Mesh | undefined;
-
-  // Pre-cache ocean geometry base positions for wave animation
-  let oceanBaseY: Float32Array | null = null;
-  if (oceanMesh) {
-    const posAttr = oceanMesh.geometry.attributes['position'] as BufferAttribute;
-    oceanBaseY = new Float32Array(posAttr.array as Float32Array);
-  }
-
-  // Fog animation
-  const fogMesh = group.children.find(
-    (c) => c instanceof Mesh && c.name === 'fog_plane'
-  ) as Mesh | undefined;
-
-  // C130/C122-13: alternating-frame flag for ocean LOD. true = this frame is the skip candidate
-  // (update only when dt ≤ 33ms), false = update always. Renamed from _skipOceanFrame which implied
-  // it controlled skipping directly — it controls which frame-parity is the candidate.
-  let _oceanAltFrame = false;
-  // C88: accumulate scene time from dt instead of performance.now() — wall-clock time
-  // causes a visible phase jump in fog/ocean on tab resume (performance.now() skips
-  // 30s forward; accumulated dt stays at last-rendered frame). Shader already
-  // clamps via mod(uTime, 100.0) to prevent float precision drift.
+  // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
+  let _oceanAltFrame = false;
 
+  // Ocean base positions cached from OceanResult
+  const oceanPosAttr = oceanMesh.geometry.attributes['position'] as BufferAttribute;
+  const oceanArr = oceanPosAttr.array as Float32Array;
+
+  // ── Update loop ───────────────────────────────────────────────────────────
   const update = (dt: number): void => {
     sceneTime += dt;
     const t = sceneTime;
-    // Animate low-poly ocean vertices for faceted wave look.
-    // Low-FPS adaptive: skip every other frame when dt > 33ms (<30fps) to keep
-    // the game loop responsive on mobile/low-end hardware.
-    if (oceanMesh && oceanBaseY) {
-      _oceanAltFrame = !_oceanAltFrame;
-      if (!_oceanAltFrame || dt <= 0.033) {
-        const posAttr = oceanMesh.geometry.attributes['position'] as BufferAttribute;
-        const arr = posAttr.array as Float32Array;
-        for (let i = 0; i < posAttr.count; i++) {
-          // PlaneGeometry stores X and Y in local space; after mesh.rotation.x=-PI/2
-          // local-X stays world-X, local-Y becomes world-Z. Named accordingly to
-          // prevent future "fix" that swaps indices and silently breaks wave topology.
-          const bx = oceanBaseY[i * 3] ?? 0;
-          const by_local = oceanBaseY[i * 3 + 1] ?? 0; // local-Y = world-Z post-rotation
-          const wave = Math.sin(bx * 0.12 + t * 0.9) * 0.9 + Math.cos(by_local * 0.09 + t * 0.7) * 0.6;
-          arr[i * 3 + 2] = wave;
-        }
-        posAttr.needsUpdate = true;
-        // flatShading:true — GPU computes per-face normals, no JS recompute needed
+
+    // Animated cloud drift — each layer at different speed
+    for (const layer of cloudLayers) {
+      layer.group.position.x += layer.speed * dt;
+      // Wrap cloud layer when fully off screen
+      if (layer.group.position.x > 120) layer.group.position.x -= 240;
+    }
+
+    // Teal ocean wave animation — faceted flat-shaded vertex displacement
+    _oceanAltFrame = !_oceanAltFrame;
+    if (!_oceanAltFrame || dt <= 0.033) {
+      for (let i = 0; i < oceanPosAttr.count; i++) {
+        const bx = oceanBase[i * 3] ?? 0;
+        const by = oceanBase[i * 3 + 1] ?? 0;
+        // Stronger wave amplitude vs. old scene — more dramatic facets
+        const wave =
+          Math.sin(bx * 0.10 + t * 1.1) * 1.2 +
+          Math.cos(by * 0.08 + t * 0.85) * 0.85 +
+          Math.sin((bx + by) * 0.06 + t * 0.6) * 0.5;
+        oceanArr[i * 3 + 2] = wave;
       }
+      oceanPosAttr.needsUpdate = true;
     }
-    if (fogMesh) {
-      const fogMat = fogMesh.material as ShaderMaterial;
-      fogMat.uniforms['uTime']!.value = t;
-    }
+
+    // Subtle sun intensity flicker (overcast clouds passing)
+    sun.intensity = 1.5 + Math.sin(t * 0.18) * 0.12 + Math.sin(t * 0.43) * 0.06;
   };
 
+  // ── Dispose ───────────────────────────────────────────────────────────────
   const dispose = (): void => {
-    // C86: collect unique materials before dispose — trunkMat/leafMat/rockMat are shared
-    // across multiple meshes (N trees per layer × 4 meshes each). Calling material.dispose()
-    // per-mesh in traverse disposes the same Material N times, causing WebGL2 strict-mode
-    // console errors (double-free). Collect into a Set, iterate once.
     const seenMaterials = new Set<Material>();
     group.traverse((child) => {
       if (child instanceof Mesh) {
@@ -427,9 +503,6 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
           seenMaterials.add(child.material as Material);
         }
       }
-      // Dispose DirectionalLight shadow maps (WebGLRenderTarget ~4MB each).
-      // The traverse only visits Meshes by default so lights need explicit handling.
-      // Without this, each run leaks one shadow map on the GPU.
       if (child instanceof DirectionalLight && child.shadow.map) {
         child.shadow.map.dispose();
       }
