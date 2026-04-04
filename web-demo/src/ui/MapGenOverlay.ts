@@ -14,46 +14,48 @@
 import type { RunScenario, RunScenarioEvent } from '../llm/GroqAdapter';
 import { getLLMAdapter } from '../llm/GroqAdapter';
 
-// ── Parchment grain texture (generated once per overlay) ─────────────────────
+// ── CRT scanline texture (generated once per overlay) ────────────────────────
 
-function createGrainTexture(w: number, h: number): HTMLCanvasElement {
+function createScanlineTexture(w: number, h: number): HTMLCanvasElement {
   const offscreen = document.createElement('canvas');
   offscreen.width = w;
   offscreen.height = h;
   const ctx = offscreen.getContext('2d')!;
-  // ~2 dots per 100px² — sepia noise
-  const dotCount = Math.floor(w * h / 50);
-  for (let i = 0; i < dotCount; i++) {
-    const x = Math.random() * w;
-    const y = Math.random() * h;
-    const alpha = 0.04 + Math.random() * 0.09;
-    const lightness = Math.random() > 0.6 ? 220 : 140;
-    ctx.fillStyle = `rgba(${lightness},${Math.floor(lightness * 0.82)},${Math.floor(lightness * 0.6)},${alpha.toFixed(2)})`;
-    ctx.fillRect(x, y, 1.4, 1.4);
+  // Horizontal scanlines every 2px
+  for (let y = 0; y < h; y += 2) {
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(0, y, w, 1);
+  }
+  // Occasional phosphor shimmer lines
+  for (let i = 0; i < 4; i++) {
+    const y = Math.floor(Math.random() * h);
+    ctx.fillStyle = 'rgba(51,255,102,0.025)';
+    ctx.fillRect(0, y, w, 1);
   }
   return offscreen;
 }
 
-// ── Compass rose ──────────────────────────────────────────────────────────────
+// ── SFX dispatch helper ───────────────────────────────────────────────────────
+
+function sfx(sound: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
+}
+
+// ── Compass rose — CRT terminal style ─────────────────────────────────────────
 
 function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number): void {
   ctx.save();
   ctx.translate(cx, cy);
 
   const s = size;
-  ctx.strokeStyle = PAL.border;
-  ctx.fillStyle = PAL.parchment;
-  ctx.lineWidth = 1;
 
   // Draw 4 main spokes (N/S/E/W)
-  const spokes: [number, number, number, number, string][] = [
-    [0, -s, 0, s * 0.35, 'N'],
-    [0,  s, 0, -s * 0.35, 'S'],
-    [-s, 0, s * 0.35, 0, 'W'],
-    [ s, 0, -s * 0.35, 0, 'E'],
-  ];
-
-  for (const [x1, y1, x2, y2] of spokes) {
+  for (const [x1, y1, x2, y2] of [
+    [0, -s, 0, s * 0.35],
+    [0,  s, 0, -s * 0.35],
+    [-s, 0, s * 0.35, 0],
+    [ s, 0, -s * 0.35, 0],
+  ] as [number, number, number, number][]) {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
@@ -62,7 +64,7 @@ function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, 
     ctx.stroke();
   }
 
-  // Diamond arrow for each cardinal (N bigger)
+  // Diamond arrow for each cardinal (N bigger) — CRT green fill
   const drawDiamond = (ax: number, ay: number, len: number, angle: number): void => {
     ctx.save();
     ctx.rotate(angle);
@@ -80,20 +82,20 @@ function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, 
     ctx.restore();
   };
 
-  drawDiamond(0, -s, s * 0.42, 0);           // N (larger)
-  drawDiamond(0, s * 0.58, s * 0.28, Math.PI);   // S
-  drawDiamond(s * 0.58, 0, s * 0.28, Math.PI / 2);  // E
-  drawDiamond(-s * 0.58, 0, s * 0.28, -Math.PI / 2); // W
+  drawDiamond(0, -s, s * 0.42, 0);
+  drawDiamond(0, s * 0.58, s * 0.28, Math.PI);
+  drawDiamond(s * 0.58, 0, s * 0.28, Math.PI / 2);
+  drawDiamond(-s * 0.58, 0, s * 0.28, -Math.PI / 2);
 
   // Center dot
   ctx.beginPath();
   ctx.arc(0, 0, s * 0.12, 0, Math.PI * 2);
-  ctx.fillStyle = PAL.border;
+  ctx.fillStyle = PAL.accent;
   ctx.fill();
 
-  // N label
+  // N label — CRT monospace
   ctx.fillStyle = PAL.ink;
-  ctx.font = `bold ${Math.max(7, Math.floor(s * 0.38))}px Georgia`;
+  ctx.font = `bold ${Math.max(7, Math.floor(s * 0.38))}px 'Courier New',monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('N', 0, -s * 1.42);
@@ -103,26 +105,27 @@ function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, 
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
+// CRT / phosphor-green terminal palette
 const PAL = {
-  parchment:  '#f2e8d0',
-  ink:        '#2a1a08',
-  inkFaint:   'rgba(42,26,8,0.35)',
-  inkPath:    '#3d1f00',
-  accent:     '#8b4510',
-  accentGlow: 'rgba(139,69,16,0.18)',
-  border:     '#6b3a10',
-  titleGold:  '#7a4800',
-  eventRing:  '#5c2d00',
-  shadow:     'rgba(0,0,0,0.55)',
+  bg:         '#060d06',
+  ink:        '#33ff66',
+  inkFaint:   'rgba(51,255,102,0.22)',
+  inkPath:    '#1aff44',
+  accent:     '#33ff66',
+  accentGlow: 'rgba(51,255,102,0.14)',
+  border:     '#1a8833',
+  titleGold:  '#33ff66',
+  eventRing:  '#0a3318',
+  shadow:     'rgba(0,0,0,0.80)',
 } as const;
 
 const EVENT_COLORS: Readonly<Record<string, string>> = {
-  rencontre: '#2d5a1e',
-  obstacle:  '#7a1a1a',
-  tresor:    '#7a5a00',
-  danger:    '#6a0a0a',
-  mystere:   '#2a1a6a',
-  fin:       '#3d1a00',
+  rencontre: '#33ff66',
+  obstacle:  '#ff4444',
+  tresor:    '#ffcc00',
+  danger:    '#ff2222',
+  mystere:   '#aa88ff',
+  fin:       '#33ffcc',
 } as const;
 
 // ── Biome fallback scenarios ──────────────────────────────────────────────────
@@ -200,16 +203,16 @@ function buildMapData(
     pathPoints.push({ x: w / 2 + wobble, y });
   }
 
-  // Terrain patches (biome-tinted blobs)
+  // Terrain patches — CRT phosphor-green tinted blobs (dark bg, subtle hue identity)
   const biomeColor: Readonly<Record<string, string[]>> = {
-    foret_broceliande: ['rgba(30,60,20,0.12)', 'rgba(20,50,15,0.09)', 'rgba(40,70,25,0.10)'],
-    cotes_sauvages:    ['rgba(20,50,70,0.10)', 'rgba(30,40,60,0.08)', 'rgba(50,60,80,0.11)'],
-    marais_korrigans:  ['rgba(30,60,10,0.12)', 'rgba(20,40,8,0.10)',  'rgba(10,50,5,0.09)'],
-    landes_bruyere:    ['rgba(80,30,60,0.09)', 'rgba(60,25,50,0.08)', 'rgba(90,35,70,0.10)'],
-    cercles_pierres:   ['rgba(60,40,80,0.09)', 'rgba(40,30,70,0.08)', 'rgba(70,50,90,0.10)'],
-    villages_celtes:   ['rgba(80,50,20,0.10)', 'rgba(70,40,15,0.09)', 'rgba(90,60,25,0.08)'],
-    collines_dolmens:  ['rgba(50,60,30,0.10)', 'rgba(40,50,20,0.09)', 'rgba(60,70,35,0.08)'],
-    iles_mystiques:    ['rgba(20,60,80,0.10)', 'rgba(15,50,70,0.09)', 'rgba(25,65,85,0.11)'],
+    foret_broceliande: ['rgba(10,40,18,0.55)', 'rgba(8,32,14,0.42)', 'rgba(14,48,22,0.48)'],
+    cotes_sauvages:    ['rgba(8,28,40,0.50)',  'rgba(6,22,36,0.40)', 'rgba(10,34,50,0.45)'],
+    marais_korrigans:  ['rgba(10,38,8,0.52)',  'rgba(8,28,6,0.42)',  'rgba(6,44,4,0.48)'],
+    landes_bruyere:    ['rgba(30,8,28,0.50)',  'rgba(24,6,22,0.40)', 'rgba(36,10,34,0.45)'],
+    cercles_pierres:   ['rgba(16,10,36,0.52)', 'rgba(12,8,28,0.42)', 'rgba(20,12,44,0.48)'],
+    villages_celtes:   ['rgba(36,22,6,0.50)',  'rgba(28,16,4,0.40)', 'rgba(44,28,8,0.45)'],
+    collines_dolmens:  ['rgba(14,24,8,0.52)',  'rgba(10,18,6,0.42)', 'rgba(18,30,10,0.48)'],
+    iles_mystiques:    ['rgba(6,28,36,0.50)',  'rgba(4,22,28,0.40)', 'rgba(8,34,44,0.45)'],
   };
   const colors = biomeColor[biome] ?? biomeColor['foret_broceliande']!;
 
@@ -247,10 +250,11 @@ function drawPatchAt(
     ctx.lineTo(patch.points[i]!.x, patch.points[i]!.y);
   }
   if (progress >= 1) ctx.closePath();
+  // CRT tint: biome color converted to phosphor-green toned overlay
   ctx.fillStyle = patch.color;
   ctx.fill();
   ctx.strokeStyle = PAL.inkFaint;
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 0.6;
   ctx.stroke();
 }
 
@@ -278,16 +282,17 @@ function drawPathAt(
     ctx.lineTo(from.x + (to.x - from.x) * frac, from.y + (to.y - from.y) * frac);
   }
 
+  // CRT primary path stroke — phosphor green
   ctx.strokeStyle = PAL.inkPath;
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.stroke();
 
-  // Dotted border for parchment feel
-  ctx.setLineDash([4, 6]);
-  ctx.strokeStyle = PAL.accent;
-  ctx.lineWidth = 1.2;
+  // Dashed glow overlay — terminal feel
+  ctx.setLineDash([6, 8]);
+  ctx.strokeStyle = PAL.accentGlow;
+  ctx.lineWidth = 6;
   ctx.stroke();
   ctx.setLineDash([]);
 }
@@ -302,34 +307,34 @@ function drawEventNode(
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  const color = EVENT_COLORS[event.type] ?? PAL.eventRing;
+  const color = EVENT_COLORS[event.type] ?? PAL.accent;
 
-  // Outer glow ring
+  // Outer glow ring — phosphor bloom
   ctx.beginPath();
-  ctx.arc(x, y, 18, 0, Math.PI * 2);
-  ctx.fillStyle = PAL.accentGlow;
+  ctx.arc(x, y, 20, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(51,255,102,0.08)`;
   ctx.fill();
 
-  // Main circle
+  // Main circle — CRT dark bg
   ctx.beginPath();
   ctx.arc(x, y, 13, 0, Math.PI * 2);
-  ctx.fillStyle = PAL.parchment;
+  ctx.fillStyle = PAL.bg;
   ctx.fill();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Icon
+  // Icon — monospace
   ctx.fillStyle = color;
-  ctx.font = 'bold 14px Georgia';
+  ctx.font = `bold 13px 'Courier New',monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(event.icone, x, y);
 
-  // Label below
+  // Label below — CRT green
   ctx.fillStyle = PAL.ink;
-  ctx.font = '9px Georgia';
-  ctx.fillText(event.nom, x, y + 26);
+  ctx.font = `8px 'Courier New',monospace`;
+  ctx.fillText(event.nom.toUpperCase(), x, y + 26);
 
   ctx.restore();
 }
@@ -347,28 +352,36 @@ function getPathPoint(pts: MapPoint[], t: number): MapPoint {
   };
 }
 
-// ── Border decorator (Celtic frame) ──────────────────────────────────────────
+// ── Border decorator — CRT terminal frame ─────────────────────────────────────
 
 function drawCelticBorder(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-  const m = 12;
-  ctx.strokeStyle = PAL.border;
-  ctx.lineWidth = 2.5;
-  ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+  const m = 10;
+
+  // Outer dim frame
+  ctx.strokeStyle = PAL.inkFaint;
   ctx.lineWidth = 1;
+  ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+
+  // Inner bright frame
+  ctx.strokeStyle = PAL.border;
+  ctx.lineWidth = 1.5;
   ctx.strokeRect(m + 5, m + 5, w - (m + 5) * 2, h - (m + 5) * 2);
 
-  // Corner knotwork — simple diamond crosshatch at each corner
-  const corners: [number, number][] = [
-    [m, m], [w - m, m], [m, h - m], [w - m, h - m],
+  // Corner bracket accents [ ]
+  const b = 18;
+  const corners: [number, number, number, number][] = [
+    [m + 5, m + 5,  1,  1],
+    [w - m - 5, m + 5, -1,  1],
+    [m + 5, h - m - 5,  1, -1],
+    [w - m - 5, h - m - 5, -1, -1],
   ];
-  for (const [cx, cy] of corners) {
-    const s = 10;
+  ctx.strokeStyle = PAL.accent;
+  ctx.lineWidth = 2;
+  for (const [cx, cy, dx, dy] of corners) {
     ctx.beginPath();
-    ctx.moveTo(cx, cy - s); ctx.lineTo(cx + s, cy);
-    ctx.lineTo(cx, cy + s); ctx.lineTo(cx - s, cy);
-    ctx.closePath();
-    ctx.strokeStyle = PAL.border;
-    ctx.lineWidth = 1.5;
+    ctx.moveTo(cx + dx * b, cy);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx, cy + dy * b);
     ctx.stroke();
   }
 }
@@ -397,46 +410,63 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   overlay.id = 'mapgen-overlay';
   overlay.style.cssText = [
     'position:fixed;inset:0;z-index:9500;',
-    `background:${PAL.parchment};`,
+    `background:${PAL.bg};`,
     'display:flex;flex-direction:row;',
     'opacity:0;transition:opacity 0.55s;',
-    'font-family:Georgia,serif;',
+    `font-family:'Courier New',monospace;`,
   ].join('');
   document.body.appendChild(overlay);
 
-  // Left panel
+  // Left panel — CRT terminal
   const leftPanel = document.createElement('div');
   leftPanel.style.cssText = [
     'width:clamp(220px,36%,380px);padding:clamp(24px,4vw,48px) clamp(16px,3vw,36px);',
     'display:flex;flex-direction:column;justify-content:center;',
-    'border-right:1px solid rgba(107,58,16,0.28);overflow:hidden;',
+    `border-right:1px solid rgba(51,255,102,0.18);overflow:hidden;`,
   ].join('');
   overlay.appendChild(leftPanel);
 
-  // Ogham header
+  // CRT system header
   const sigilEl = document.createElement('div');
-  sigilEl.textContent = '᚛ᚋᚓᚏᚂᚔᚅ᚜';
-  sigilEl.style.cssText = `color:${PAL.border};font-size:13px;letter-spacing:4px;margin-bottom:18px;opacity:0.55;`;
+  sigilEl.textContent = '> MERLIN_OS v2.4 :: RUN_INIT';
+  sigilEl.style.cssText = [
+    `color:${PAL.border};font-size:11px;letter-spacing:2px;`,
+    `margin-bottom:6px;opacity:0.7;font-family:'Courier New',monospace;`,
+  ].join('');
   leftPanel.appendChild(sigilEl);
+
+  const subheaderEl = document.createElement('div');
+  subheaderEl.textContent = `> BIOME_SCAN :: ${biome.toUpperCase()}`;
+  subheaderEl.style.cssText = [
+    `color:${PAL.border};font-size:10px;letter-spacing:1px;`,
+    `margin-bottom:20px;opacity:0.55;font-family:'Courier New',monospace;`,
+  ].join('');
+  leftPanel.appendChild(subheaderEl);
 
   const titleEl = document.createElement('div');
   titleEl.style.cssText = [
-    `color:${PAL.titleGold};font-size:clamp(14px,1.8vw,20px);`,
-    'letter-spacing:0.06em;margin-bottom:6px;min-height:26px;font-weight:bold;line-height:1.3;',
+    `color:${PAL.titleGold};font-size:clamp(13px,1.6vw,18px);`,
+    `letter-spacing:0.08em;margin-bottom:8px;min-height:26px;font-weight:bold;line-height:1.4;`,
+    `font-family:'Courier New',monospace;text-transform:uppercase;`,
+    `text-shadow:0 0 8px rgba(51,255,102,0.4);`,
   ].join('');
   leftPanel.appendChild(titleEl);
 
-  // "Merlin réfléchit…" placeholder shown during LLM fetch
+  // LLM loading placeholder
   const thinkingEl = document.createElement('div');
-  thinkingEl.textContent = 'Merlin consulte les runes…';
+  thinkingEl.textContent = '> QUERYING_GROQ_API...';
   thinkingEl.style.cssText = [
-    `color:${PAL.accent};font-size:12px;font-style:italic;`,
-    'margin-bottom:18px;opacity:0.7;transition:opacity 0.4s;',
+    `color:${PAL.border};font-size:11px;`,
+    `margin-bottom:18px;opacity:0.8;transition:opacity 0.4s;`,
+    `font-family:'Courier New',monospace;`,
   ].join('');
   leftPanel.appendChild(thinkingEl);
 
   const divider = document.createElement('div');
-  divider.style.cssText = `width:50px;height:1px;background:${PAL.border};margin-bottom:18px;opacity:0.4;`;
+  divider.style.cssText = [
+    `width:100%;height:1px;background:linear-gradient(90deg,${PAL.border},transparent);`,
+    'margin-bottom:18px;opacity:0.4;',
+  ].join('');
   leftPanel.appendChild(divider);
 
   const scenarioContainer = document.createElement('div');
@@ -445,10 +475,12 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
   const hintEl = document.createElement('div');
   hintEl.style.cssText = [
-    `color:${PAL.accent};font-size:11px;font-style:italic;`,
-    'margin-top:auto;padding-top:20px;opacity:0;transition:opacity 0.5s;letter-spacing:0.05em;',
+    `color:${PAL.accent};font-size:11px;`,
+    `margin-top:auto;padding-top:20px;opacity:0;transition:opacity 0.5s;`,
+    `letter-spacing:0.08em;font-family:'Courier New',monospace;`,
+    `border-left:2px solid ${PAL.border};padding-left:8px;`,
   ].join('');
-  hintEl.textContent = 'Cliquez pour entrer dans ce monde…';
+  hintEl.textContent = '> CLIQUER OU [ENTREE] POUR INITIER_RUN';
   leftPanel.appendChild(hintEl);
 
   // Right panel — canvas map
@@ -460,11 +492,11 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
   rightPanel.appendChild(canvas);
 
-  // Vignette overlay
+  // CRT vignette — dark corner bloom
   const vignette = document.createElement('div');
   vignette.style.cssText = [
     'position:absolute;inset:0;pointer-events:none;',
-    'background:radial-gradient(ellipse at 50% 55%,transparent 45%,rgba(180,145,80,0.22) 100%);',
+    'background:radial-gradient(ellipse at 50% 50%,transparent 42%,rgba(0,8,0,0.55) 100%);',
   ].join('');
   rightPanel.appendChild(vignette);
 
@@ -501,11 +533,11 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
   const ctx = canvas.getContext('2d')!;
 
-  // Generate parchment grain once at final canvas size
-  const grain = createGrainTexture(canvas.width, canvas.height);
+  // Generate CRT scanlines once at final canvas size
+  const grain = createScanlineTexture(canvas.width, canvas.height);
   const stampGrain = (): void => {
     ctx.save();
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.85;
     ctx.drawImage(grain, 0, 0);
     ctx.restore();
   };
@@ -528,8 +560,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Background
-      ctx.fillStyle = PAL.parchment;
+      // Background — CRT dark
+      ctx.fillStyle = PAL.bg;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Terrain patches — staggered
@@ -544,6 +576,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
       drawCelticBorder(ctx, canvas.width, canvas.height);
 
       if (overallP >= 1) {
+        sfx('beep');
         resolve();
       } else {
         requestAnimationFrame(tick);
@@ -556,8 +589,9 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   const PATH_DURATION = 2200;
   const pathStart = performance.now();
 
-  // Start typing title
-  typewrite(titleEl, scenario.titre, 45);
+  // Start typing title (CRT uppercase already applied via CSS)
+  typewrite(titleEl, scenario.titre.toUpperCase(), 40);
+  sfx('mapDraw');
 
   await new Promise<void>((resolve) => {
     const tick = (): void => {
@@ -565,7 +599,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
       const p = Math.min(elapsed / PATH_DURATION, 1);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = PAL.parchment;
+      ctx.fillStyle = PAL.bg;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
@@ -581,8 +615,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
         ctx.arc(start.x, start.y, 8, 0, Math.PI * 2);
         ctx.fillStyle = PAL.accent;
         ctx.fill();
-        ctx.fillStyle = PAL.parchment;
-        ctx.font = 'bold 9px Georgia';
+        ctx.fillStyle = PAL.bg;
+        ctx.font = `bold 9px 'Courier New',monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('▶', start.x, start.y);
@@ -606,7 +640,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   const nodeRaf = (): void => {
     if (!rafActive) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = PAL.parchment;
+    ctx.fillStyle = PAL.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
     drawPathAt(ctx, mapData.pathPoints, 1);
@@ -618,8 +652,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     ctx.arc(start.x, start.y, 8, 0, Math.PI * 2);
     ctx.fillStyle = PAL.accent;
     ctx.fill();
-    ctx.fillStyle = PAL.parchment;
-    ctx.font = 'bold 9px Georgia';
+    ctx.fillStyle = PAL.bg;
+    ctx.font = `bold 9px 'Courier New',monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('▶', start.x, start.y);
@@ -641,13 +675,16 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   for (let i = 0; i < paragraphs.length; i++) {
     const para = document.createElement('div');
     para.style.cssText = [
-      `color:${PAL.ink};font-size:clamp(12px,1.4vw,15px);line-height:1.7;`,
+      `color:${PAL.ink};font-size:clamp(11px,1.3vw,13px);line-height:1.65;`,
+      `font-family:'Courier New',monospace;`,
+      `border-left:2px solid ${PAL.border};padding-left:8px;`,
       'opacity:0;transition:opacity 0.3s;',
     ].join('');
     scenarioContainer.appendChild(para);
     requestAnimationFrame(() => requestAnimationFrame(() => { para.style.opacity = '1'; }));
 
-    await typewrite(para, paragraphs[i]!, 24);
+    await typewrite(para, paragraphs[i]!, 20);
+    sfx('beep');
 
     // Reveal corresponding event node
     const evIdx = Math.min(i + 1, mapData.events.length - 1);
@@ -681,6 +718,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
   // ── Phase 5: zoom-into-map transition ─────────────────────────────────────
   rafActive = false;
+  sfx('mapZoom');
 
   const entryPt = mapData.pathPoints[0]!;
   const scaleTarget = 8;
@@ -689,8 +727,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   const offsetX = cw / 2 - entryPt.x;
   const offsetY = ch / 2 - entryPt.y;
 
-  // Zoom canvas via CSS transform
-  canvas.style.transition = 'transform 0.9s cubic-bezier(0.4,0,1,1)';
+  // Zoom canvas via CSS transform — N64 dive-in
+  canvas.style.transition = 'transform 0.9s cubic-bezier(0.2,0,0.8,1)';
   canvas.style.transformOrigin = `${entryPt.x}px ${entryPt.y}px`;
   canvas.style.transform = `scale(${scaleTarget}) translate(${offsetX / scaleTarget}px, ${offsetY / scaleTarget}px)`;
 

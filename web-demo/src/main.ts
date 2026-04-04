@@ -134,20 +134,30 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
     overlay.style.cssText = [
       'position:absolute;inset:0;z-index:30;',
       'display:flex;flex-direction:column;align-items:center;justify-content:center;',
-      'background:rgba(5,4,2,0.88);backdrop-filter:blur(2px);',
+      'background:rgba(1,6,2,0.94);backdrop-filter:blur(3px);',
       'opacity:0;transition:opacity 0.2s ease;',
     ].join('');
 
     const title = document.createElement('div');
-    title.textContent = 'Choisir un Biome';
+    title.textContent = '> BIOME_SELECT :: CHOIX_DESTINATION';
     title.style.cssText = [
-      'color:#c8a050;font-family:Georgia,serif;font-size:clamp(14px,3vw,20px);',
-      'letter-spacing:0.15em;margin-bottom:16px;text-shadow:0 0 10px rgba(200,160,80,0.5);',
+      `color:#33ff66;font-family:'Courier New',monospace;font-size:clamp(11px,1.8vw,14px);`,
+      `letter-spacing:0.12em;margin-bottom:6px;`,
+      `text-shadow:0 0 8px rgba(51,255,102,0.4);`,
+      `border-left:3px solid #1a8833;padding-left:10px;`,
     ].join('');
     overlay.appendChild(title);
 
+    const subTitle = document.createElement('div');
+    subTitle.textContent = '> SELECTION :: [8 BIOMES DISPONIBLES]';
+    subTitle.style.cssText = [
+      `color:#1a8833;font-family:'Courier New',monospace;font-size:clamp(9px,1.2vw,11px);`,
+      `letter-spacing:0.08em;margin-bottom:20px;padding-left:13px;opacity:0.7;`,
+    ].join('');
+    overlay.appendChild(subTitle);
+
     const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:380px;width:90%;';
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:420px;width:90%;';
     overlay.appendChild(grid);
 
     const BIOME_ENTRIES: Array<[string, string]> = [
@@ -163,30 +173,37 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
 
     for (const [id, label] of BIOME_ENTRIES) {
       const btn = document.createElement('button');
-      btn.textContent = label;
+      btn.textContent = `> ${label.toUpperCase()}`;
       btn.setAttribute('aria-label', `Biome: ${label}`);
       btn.style.cssText = [
-        'background:rgba(30,22,10,0.9);border:1px solid rgba(160,110,50,0.45);border-radius:6px;',
-        'color:rgba(200,170,100,0.85);font-family:Georgia,serif;font-size:clamp(10px,2vw,13px);',
-        'padding:10px 8px;cursor:pointer;letter-spacing:0.05em;text-align:center;',
-        'transition:background 0.15s,border-color 0.15s,color 0.15s;',
+        `background:rgba(2,10,4,0.92);border:1px solid rgba(26,136,51,0.45);`,
+        `color:rgba(51,200,100,0.75);font-family:'Courier New',monospace;`,
+        `font-size:clamp(9px,1.5vw,12px);`,
+        `padding:10px 10px;cursor:pointer;letter-spacing:0.06em;text-align:left;`,
+        `transition:background 0.12s,border-color 0.12s,color 0.12s;`,
+        `border-left:2px solid transparent;`,
+        'position:relative;',
       ].join('');
       // C151/MAIN-BIOMEPICKER-LEAK-01: named handlers so the click can removeEventListener
       // on the clicked button before overlay removal — 16 anonymous pointer listeners on
       // 8 detached buttons accumulated per lair visit without cleanup.
       const onBtnEnter = (): void => {
-        btn.style.background = 'rgba(60,42,15,0.95)';
-        btn.style.borderColor = 'rgba(200,150,60,0.8)';
-        btn.style.color = '#e8c870';
+        btn.style.background = 'rgba(4,20,8,0.97)';
+        btn.style.borderColor = 'rgba(51,255,102,0.75)';
+        btn.style.borderLeftColor = '#33ff66';
+        btn.style.color = '#33ff66';
+        playSound('hover');
       };
       const onBtnLeave = (): void => {
-        btn.style.background = 'rgba(30,22,10,0.9)';
-        btn.style.borderColor = 'rgba(160,110,50,0.45)';
-        btn.style.color = 'rgba(200,170,100,0.85)';
+        btn.style.background = 'rgba(2,10,4,0.92)';
+        btn.style.borderColor = 'rgba(26,136,51,0.45)';
+        btn.style.borderLeftColor = 'transparent';
+        btn.style.color = 'rgba(51,200,100,0.75)';
       };
       btn.addEventListener('pointerenter', onBtnEnter);
       btn.addEventListener('pointerleave', onBtnLeave);
       btn.addEventListener('click', () => {
+        playSound('click');
         btn.removeEventListener('pointerenter', onBtnEnter);
         btn.removeEventListener('pointerleave', onBtnLeave);
         document.removeEventListener('keydown', escapeHandler); // C138/BP-01

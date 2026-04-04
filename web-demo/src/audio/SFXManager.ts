@@ -5,7 +5,8 @@
 // No external assets — pure procedural synthesis
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover' | 'crystal' | 'cauldron';
+type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover' | 'crystal' | 'cauldron'
+  | 'click' | 'beep' | 'mapDraw' | 'mapZoom';
 type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
@@ -188,6 +189,43 @@ function playCrystal(ctx: AudioContext): void {
   });
   // Subtle shimmer layer
   playTone(ctx, 2637, t + 0.05, 0.2, 0.05, 'sine');
+}
+
+// click: N64-style short blip — square wave 220Hz, 55ms (menu button press)
+function playClick(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  playTone(ctx, 220, t, 0.055, 0.20, 'square');
+  playTone(ctx, 440, t + 0.01, 0.025, 0.08, 'square');
+}
+
+// beep: CRT terminal beep — sine 880Hz, 80ms, clean click
+function playBeep(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  playTone(ctx, 880, t, 0.08, 0.14, 'sine');
+}
+
+// mapDraw: pencil scratch — high bandpass noise burst 3-5kHz, 90ms
+function playMapDraw(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  playNoise(ctx, t, 0.09, 0.11, 3500);
+  playNoise(ctx, t + 0.04, 0.07, 0.07, 4800);
+}
+
+// mapZoom: whoosh dive — 800Hz→80Hz exponential glide, 700ms (zoom-into-map)
+function playMapZoom(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(700, t);
+  osc.frequency.exponentialRampToValueAtTime(55, t + 0.7);
+  gain.gain.setValueAtTime(0.18, t);
+  gain.gain.linearRampToValueAtTime(0, t + 0.75);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.78);
+  playNoise(ctx, t, 0.25, 0.07, 1200);
 }
 
 // cauldron: low sub-thump (80Hz) + filtered bubble noise burst
@@ -504,6 +542,7 @@ export function playSound(name: SFXName): void {
   const fns: Record<SFXName, (c: AudioContext) => void> = {
     hover: playHover, flip: playFlip, win: playWin, lose: playLose,
     unlock: playUnlock, end: playEnd, crystal: playCrystal, cauldron: playCauldron,
+    click: playClick, beep: playBeep, mapDraw: playMapDraw, mapZoom: playMapZoom,
   };
   try { fns[name]?.(ctx); } catch { /* silent fail */ }
 }
@@ -518,6 +557,10 @@ export function initSFXManager(): void {
     end: playEnd,
     crystal: playCrystal,
     cauldron: playCauldron,
+    click: playClick,
+    beep: playBeep,
+    mapDraw: playMapDraw,
+    mapZoom: playMapZoom,
   };
 
   const handleSFX = (e: Event): void => {
