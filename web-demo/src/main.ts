@@ -10,7 +10,8 @@ import { CameraRail } from './engine/CameraRail';
 // bundle. Dynamic import defers it to first run, reducing cold-start gzip by ~5KB.
 import { store } from './game/Store';
 import { getMultiplier, getMultiplierLabel } from './game/Constants';
-import { generateFastRouteCard, detectMinigame, loadTemplates, verbToField } from './game/CardSystem';
+import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardSystem';
+import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
 import { initHUD, updateHUD, teardownHUD } from './ui/HUD';
@@ -28,59 +29,6 @@ import { initSFXManager, startAmbient, stopAmbient, biomeToAmbient } from './aud
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
 const WALK_SPEED = 0.04; // Rail progress per second
-
-// --- Boot Screen (T060 + T069) ---
-// Shows Celtic logo + progress bar for 2.5s, then transitions to main menu.
-// T069: Any click or keypress during boot skips the remaining wait immediately.
-async function runBootScreen(): Promise<void> {
-  const bootScreen = document.getElementById('boot-screen');
-  if (!bootScreen) return;
-
-  const statusEl = document.getElementById('boot-status-text');
-  const statusMessages = [
-    'Initialisation...',
-    'Chargement des Oghams...',
-    'Eveil du monde celtique...',
-    'Merlin vous attend...',
-  ];
-  let msgIndex = 0;
-  const msgInterval = setInterval(() => {
-    msgIndex = (msgIndex + 1) % statusMessages.length;
-    if (statusEl) statusEl.textContent = statusMessages[msgIndex] ?? '';
-  }, 650);
-
-  // T069: resolve immediately on click or keypress (listeners cleaned up on resolve)
-  await new Promise<void>((resolve) => {
-    let resolved = false;
-    const skip = (): void => {
-      if (resolved) return;
-      resolved = true;
-      document.removeEventListener('click', skip);
-      document.removeEventListener('keydown', skip);
-      // T075: Snap progress bar to 100% on early skip
-      const fill = document.querySelector<HTMLElement>('.boot-progress-fill');
-      if (fill) {
-        fill.style.animation = 'none';
-        fill.style.width = '100%';
-      }
-      resolve();
-    };
-    document.addEventListener('click', skip, { once: true });
-    document.addEventListener('keydown', skip, { once: true });
-    // Auto-resolve after 2.6s (normal duration)
-    waitSeconds(2.6).then(skip);
-  });
-
-  clearInterval(msgInterval);
-
-  // Fade out boot screen — race transitionend vs timeout (handles prefers-reduced-motion)
-  bootScreen.classList.add('hidden');
-  await Promise.race([
-    new Promise<void>(res => bootScreen.addEventListener('transitionend', () => res(), { once: true })),
-    new Promise<void>(res => setTimeout(res, 1000)), // 0.8s transition + 200ms margin
-  ]);
-  bootScreen.style.display = 'none';
-}
 
 // --- Main Menu (T061) ---
 // Runs the cinematic Three.js cliff/sea scene. Resolves when player clicks Start.
@@ -555,19 +503,22 @@ async function main(): Promise<void> {
     if (document.visibilityState === 'hidden') emergencySave();
   });
 
-  // Phase 1: Boot screen (T060)
-  await runBootScreen();
+  // Phase 1: CeltOS intro (terminal boot + pixel logo + real asset preload)
+  // loadTemplates() is called inside runCeltOSIntro Phase 3 (loading bar = real fetch progress)
+  await runCeltOSIntro();
 
   // Phase 2: Main menu (once — never shown again between runs)
   await runMainMenu();
-
-  // T043: Load FastRoute card templates once (shared across all runs)
-  await loadTemplates();
 
   // C84: Init ogham panel + cross-run data BEFORE first lair visit (once — panel persists across runs)
   initOghamPanel();
   loadAnamFromStorage();
   loadMetaFromStorage();
+
+  // C156/BUG-LOAD-01: #loading has CSS display:flex (z-index:100) and was never hidden before
+  // runMerlinLair() showed the lair canvas (z-index:10). The lair was permanently covered by the
+  // loading overlay. Hide once here — Phase 3 (run init) will re-show it as needed.
+  loading.style.display = 'none';
 
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.
