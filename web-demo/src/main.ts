@@ -699,7 +699,7 @@ async function gameLoop(
 
     let result = { score: 50 }; // neutral fallback
     try {
-      playSound('flip'); // C82-06: audio cue signalling minigame phase start
+      playSound('minigame_start'); // C82-06: audio cue signalling minigame phase start (was 'flip' — BUG-C88-03)
       minigameOverlay.classList.add('visible');
       const minigame = await createMinigame(minigameId, minigameContainer);
       result = await minigame.play();

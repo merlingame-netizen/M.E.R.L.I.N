@@ -562,9 +562,10 @@
     <div id="hud">
       <div>
         <div class="info">Vie</div>
-        <div class="life-bar">
+        <div class="life-bar" id="life-bar-container" role="progressbar" aria-label="Points de vie" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
           <div class="life-bar-fill" id="life-fill" style="width: 100%"></div>
         </div>
+        <div id="life-status" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
       </div>
       <div class="info" id="cards-count">Carte 0</div>
       <div class="info" id="biome-name">Foret de Broceliande</div>

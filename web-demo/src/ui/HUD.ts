@@ -146,6 +146,10 @@ export function updateHUD(): void {
   const lifePercent = (state.run.life / LIFE_MAX) * 100;
   lifeFillEl.style.width = `${lifePercent}%`;
 
+  // ARIA progressbar value — BUG-C88-07
+  const lifeBarContainer = document.getElementById('life-bar-container');
+  if (lifeBarContainer) lifeBarContainer.setAttribute('aria-valuenow', String(Math.round(lifePercent)));
+
   // Color transitions for life bar
   if (lifePercent <= 25) {
     lifeFillEl.style.background = 'linear-gradient(90deg, #8b0000, #cd5c5c)';
@@ -153,6 +157,19 @@ export function updateHUD(): void {
     lifeFillEl.style.background = 'linear-gradient(90deg, #8b4513, #cd853f)';
   } else {
     lifeFillEl.style.background = 'linear-gradient(90deg, #2e6b2e, #5a9a5a)';
+  }
+
+  // ARIA live region — announce critical health once on entry (BUG-C88-07)
+  const lifeStatusEl = document.getElementById('life-status');
+  if (lifeStatusEl) {
+    const prevAnnounced = lifeStatusEl.dataset['criticalAnnounced'] === 'true';
+    if (lifePercent <= 25 && !prevAnnounced) {
+      lifeStatusEl.textContent = `Vie critique — ${Math.round(lifePercent)} % restant`;
+      lifeStatusEl.dataset['criticalAnnounced'] = 'true';
+    } else if (lifePercent > 25 && prevAnnounced) {
+      lifeStatusEl.textContent = '';
+      lifeStatusEl.dataset['criticalAnnounced'] = 'false';
+    }
   }
 
   cardsCountEl.textContent = `Carte ${state.run.cardsPlayed}`;
