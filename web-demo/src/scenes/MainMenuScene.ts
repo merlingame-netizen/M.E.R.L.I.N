@@ -48,9 +48,10 @@ function createLowPolyOcean(): OceanResult {
     const shore = Math.max(0, Math.min(1, (x + 40) / 80));
     // near (shore=1): 0x18e8d0 = (0.094, 0.910, 0.816) N64 vivid turquoise
     // deep (shore=0): 0x0a5aaa = (0.039, 0.353, 0.667) deep ocean blue
-    vertCols[i * 3 + 0] = 0.039 + shore * 0.055;
-    vertCols[i * 3 + 1] = 0.353 + shore * 0.557;
-    vertCols[i * 3 + 2] = 0.667 + shore * 0.149;
+    // near shore: dark teal, deep: dark navy
+    vertCols[i * 3 + 0] = 0.020 + shore * 0.019;
+    vertCols[i * 3 + 1] = 0.063 + shore * 0.172;
+    vertCols[i * 3 + 2] = 0.118 + shore * 0.204;
   }
   geo.setAttribute('color', new BufferAttribute(vertCols, 3));
 
@@ -69,7 +70,7 @@ function createLowPolyOcean(): OceanResult {
   // Horizon plane: N64 vivid cyan far ocean
   const horizonGeo = new PlaneGeometry(120, 50, 12, 6);
   const horizonMat = new MeshStandardMaterial({
-    color: 0x10d4e8,   // C163: vivid cyan horizon
+    color: 0x081828,   // C168: dark navy storm horizon
     flatShading: true,
     roughness: 0.6,
     metalness: 0.2,
@@ -195,21 +196,21 @@ function displaceVertices(geo: BufferGeometry, amount: number): void {
 function createCliff(): Group {
   const group = new Group();
 
-  // C163: N64 sandstone cliff palette — golden-brown instead of dark grey
+  // C168: Dark atmospheric stone cliff — wet stormy rock palette
   const matBase = new MeshStandardMaterial({
-    color: 0x8a7040,
+    color: 0x3a2e1c,
     flatShading: true,
     roughness: 0.95,
     metalness: 0.0,
   });
   const matShadow = new MeshStandardMaterial({
-    color: 0x5a4828,
+    color: 0x201410,
     flatShading: true,
     roughness: 1.0,
     metalness: 0.0,
   });
   const matHighlight = new MeshStandardMaterial({
-    color: 0xb09060,
+    color: 0x4e3e28,
     flatShading: true,
     roughness: 0.88,
     metalness: 0.0,
@@ -342,20 +343,21 @@ function createPath(): Mesh {
 function createTower(): Group {
   const group = new Group();
 
+  // C168: Dark weathered stone tower
   const mat = new MeshStandardMaterial({
-    color: 0x8a8068,
+    color: 0x48403a,
     flatShading: true,
     roughness: 0.9,
     metalness: 0.0,
   });
   const matDark = new MeshStandardMaterial({
-    color: 0x6a6050,
+    color: 0x302820,
     flatShading: true,
     roughness: 1.0,
     metalness: 0.0,
   });
   const matRoof = new MeshStandardMaterial({
-    color: 0x5a5244,
+    color: 0x201c18,
     flatShading: true,
     roughness: 1.0,
     metalness: 0.0,
@@ -382,8 +384,9 @@ function createTower(): Group {
   group.add(s4);
 
   // Battlement notches — 7 small boxes around the top ring
+  // C168: slightly lighter than wall for battlement silhouette contrast
   const notchMat = new MeshStandardMaterial({
-    color: 0x9a9078,
+    color: 0x504840,
     flatShading: true,
     roughness: 0.9,
     metalness: 0.0,
@@ -414,7 +417,7 @@ function createTower(): Group {
   group.add(win);
 
   // Warm interior point light (visible through window)
-  const insideLight = new PointLight(0xffaa44, 1.2, 12, 2);
+  const insideLight = new PointLight(0xffcc44, 2.2, 14, 2); // C168: brighter warm glow against dark scene
   insideLight.position.set(0, 7, 0);
   group.add(insideLight);
 
@@ -445,26 +448,26 @@ interface CloudConfig {
 function createClouds(): { group: Group; update: (t: number) => void } {
   const group = new Group();
 
-  // C163: N64 bright white/cream cloud palette — replace dark storm with puffy bright clouds
+  // C168: Dark stormy cloud palette — layered charcoal-grey storm clouds
   const cloudConfigs: CloudConfig[] = [
-    // Mid-depth bright clouds
-    { color: 0xe8f0f8, w: 14, h: 1.8, d: 0.4, x: -20, y: 32, z: -40, ry: 0.05,  rx: -0.03, rz:  0.01 },
-    { color: 0xd8e8f4, w: 10, h: 1.4, d: 0.3, x:  -8, y: 35, z: -45, ry: -0.08, rx:  0.04, rz: -0.02 },
-    { color: 0xf0f4fc, w: 16, h: 2.0, d: 0.5, x:   5, y: 30, z: -35, ry: 0.12,  rx: -0.05, rz:  0.02 },
-    { color: 0xc8ddf0, w:  9, h: 1.2, d: 0.3, x:  15, y: 33, z: -42, ry: -0.05, rx:  0.02, rz: -0.01 },
-    { color: 0xe0ecf8, w: 12, h: 1.6, d: 0.4, x: -25, y: 28, z: -38, ry: 0.1,   rx: -0.04, rz:  0.015},
-    { color: 0xf4f8ff, w: 18, h: 2.2, d: 0.6, x:  -5, y: 27, z: -32, ry: -0.15, rx:  0.05, rz: -0.02 },
-    // Deep clouds (further back — slightly greyer for depth)
-    { color: 0xb8cce0, w:  8, h: 1.0, d: 0.2, x:  20, y: 36, z: -60, ry: 0.02,  rx: -0.02, rz:  0.01 },
-    { color: 0xc8d8ec, w: 11, h: 1.5, d: 0.3, x: -15, y: 38, z: -65, ry: -0.06, rx:  0.03, rz: -0.015},
-    { color: 0xd8e8f8, w: 20, h: 2.4, d: 0.5, x:   0, y: 25, z: -70, ry: 0.08,  rx: -0.03, rz:  0.02 },
-    { color: 0xb0c8e0, w: 13, h: 1.7, d: 0.4, x: -30, y: 31, z: -55, ry: -0.1,  rx:  0.04, rz: -0.01 },
-    { color: 0xc0d4e8, w: 15, h: 1.9, d: 0.4, x:  25, y: 29, z: -50, ry: 0.07,  rx: -0.05, rz:  0.02 },
-    // Very far background mass — pale blue-white
-    { color: 0xa8c0d8, w: 30, h: 3.0, d: 0.7, x:  -5, y: 22, z: -80, ry: 0.03,  rx:  0.01, rz: -0.005},
-    // High-altitude wispy clouds — near-white
-    { color: 0xe0eef8, w: 35, h: 0.3, d: 0.2, x: -10, y: 45, z: -75, ry: -0.04, rx: -0.01, rz:  0.005},
-    { color: 0xd0e4f4, w: 28, h: 0.3, d: 0.15, x: 15, y: 48, z: -80, ry: 0.06,  rx:  0.01, rz: -0.005},
+    // Mid-depth heavy storm clouds
+    { color: 0x3a4055, w: 14, h: 2.8, d: 0.6, x: -20, y: 32, z: -40, ry: 0.05,  rx: -0.03, rz:  0.01 },
+    { color: 0x2e3448, w: 10, h: 2.2, d: 0.5, x:  -8, y: 35, z: -45, ry: -0.08, rx:  0.04, rz: -0.02 },
+    { color: 0x454a60, w: 18, h: 3.0, d: 0.7, x:   5, y: 30, z: -35, ry: 0.12,  rx: -0.05, rz:  0.02 },
+    { color: 0x282d3e, w: 11, h: 1.8, d: 0.4, x:  15, y: 33, z: -42, ry: -0.05, rx:  0.02, rz: -0.01 },
+    { color: 0x3c4158, w: 15, h: 2.4, d: 0.6, x: -25, y: 28, z: -38, ry: 0.1,   rx: -0.04, rz:  0.015},
+    { color: 0x4a5068, w: 20, h: 3.4, d: 0.8, x:  -5, y: 27, z: -32, ry: -0.15, rx:  0.05, rz: -0.02 },
+    // Deep storm layer — darker, heavier
+    { color: 0x222638, w: 12, h: 2.0, d: 0.4, x:  20, y: 36, z: -60, ry: 0.02,  rx: -0.02, rz:  0.01 },
+    { color: 0x1e2230, w: 16, h: 2.6, d: 0.5, x: -15, y: 38, z: -65, ry: -0.06, rx:  0.03, rz: -0.015},
+    { color: 0x2a2e40, w: 24, h: 3.8, d: 0.8, x:   0, y: 25, z: -70, ry: 0.08,  rx: -0.03, rz:  0.02 },
+    { color: 0x1c2030, w: 18, h: 2.8, d: 0.6, x: -30, y: 31, z: -55, ry: -0.1,  rx:  0.04, rz: -0.01 },
+    { color: 0x252838, w: 20, h: 3.0, d: 0.6, x:  25, y: 29, z: -50, ry: 0.07,  rx: -0.05, rz:  0.02 },
+    // Very far massive dark cloud bank
+    { color: 0x181a28, w: 40, h: 5.0, d: 1.0, x:  -5, y: 22, z: -80, ry: 0.03,  rx:  0.01, rz: -0.005},
+    // High-altitude thin storm streaks — very dark
+    { color: 0x20243a, w: 38, h: 0.6, d: 0.2, x: -10, y: 45, z: -75, ry: -0.04, rx: -0.01, rz:  0.005},
+    { color: 0x1a1e30, w: 32, h: 0.5, d: 0.2, x:  15, y: 48, z: -80, ry: 0.06,  rx:  0.01, rz: -0.005},
   ];
 
   for (const cfg of cloudConfigs) {
@@ -513,9 +516,10 @@ function createSkyBox(): Mesh {
     const t = Math.max(0, Math.min(1, (y + 280) / 560)); // 0=bottom 1=top
     // horizon (t=0): 0x72b8e8 = (0.447, 0.722, 0.910) vivid N64 sky-blue horizon
     // zenith  (t=1): 0x1a3fa8 = (0.102, 0.247, 0.659) deep clear blue zenith
-    cols[i * 3 + 0] = 0.447 - t * 0.345;
-    cols[i * 3 + 1] = 0.722 - t * 0.475;
-    cols[i * 3 + 2] = 0.910 - t * 0.251;
+    // C168: dark storm sky — near-black zenith, dark slate horizon
+    cols[i * 3 + 0] = 0.125 - t * 0.086;
+    cols[i * 3 + 1] = 0.157 - t * 0.102;
+    cols[i * 3 + 2] = 0.220 - t * 0.126;
   }
   geo.setAttribute('color', new BufferAttribute(cols, 3));
   return new Mesh(geo, new MeshStandardMaterial({
@@ -529,15 +533,15 @@ function createSkyBox(): Mesh {
 function createVegetation(): Group {
   const group = new Group();
 
-  // C163: N64 vivid green bushes
+  // C168: Dark muted grey-green storm vegetation
   const mat1 = new MeshStandardMaterial({
-    color: 0x2e8820,
+    color: 0x1a3a14,
     flatShading: true,
     roughness: 1.0,
     metalness: 0.0,
   });
   const mat2 = new MeshStandardMaterial({
-    color: 0x3aaa28,
+    color: 0x1e4818,
     flatShading: true,
     roughness: 1.0,
     metalness: 0.0,
@@ -660,9 +664,9 @@ class SeaSpraySystem {
 function createGodRay(): { mesh: Mesh; update: (dt: number) => void } {
   const geo = new PlaneGeometry(12, 22);
   const mat = new MeshBasicMaterial({
-    color: 0xffd090,
+    color: 0xa0b0c8,  // C168: cool storm light shaft
     transparent: true,
-    opacity: 0.25,
+    opacity: 0.08,
     blending: AdditiveBlending,
     depthWrite: false,
     side: DoubleSide,
@@ -676,7 +680,7 @@ function createGodRay(): { mesh: Mesh; update: (dt: number) => void } {
     elapsed += dt;
     // Subtle opacity pulse 0.12..0.28 — reduced range for mobile readability
     (mesh.material as MeshBasicMaterial).opacity =
-      0.20 + Math.sin(elapsed * (Math.PI * 2) / 3.0) * 0.08;
+      0.05 + Math.sin(elapsed * (Math.PI * 2) / 4.0) * 0.03;
   };
 
   return { mesh, update };
@@ -685,10 +689,10 @@ function createGodRay(): { mesh: Mesh; update: (dt: number) => void } {
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
-  // C163: N64 bright scene — clear sky background, light haze fog
+  // C168: Dark stormy Atlantic coast — near-black bg, heavy overcast fog
   const scene = new Scene();
-  scene.background = new Color(0x5a9ee0);
-  scene.fog = new FogExp2(0x8ac8ec, 0.008);
+  scene.background = new Color(0x181c28);
+  scene.fog = new FogExp2(0x181c28, 0.012);
 
   // Camera: fixed high angle, looking right-to-left over the cliff
   // C134/MM-08: guard against Infinity aspect ratio when container has not yet been laid out
@@ -722,15 +726,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   };
   window.addEventListener('resize', onResize);
 
-  // C163: N64 sunny lighting — warm golden sun + bright hemisphere
-  const ambient = new AmbientLight(0x608080, 0.55);
+  // C168: Stormy overcast lighting — cool grey-blue, dim but readable
+  const ambient = new AmbientLight(0x304458, 0.35);
   scene.add(ambient);
 
-  const sunLight = new DirectionalLight(0xfff0c0, 2.0); // warm golden N64 sun
+  const sunLight = new DirectionalLight(0x8898c0, 0.9); // muted stormy blue-white
   sunLight.position.set(-15, 35, 20);
   scene.add(sunLight);
 
-  const fillLight = new DirectionalLight(0x80c8ff, 0.5); // soft sky fill from front
+  const fillLight = new DirectionalLight(0x1a3060, 0.25); // dark blue fill
   fillLight.position.set(10, 10, 30);
   scene.add(fillLight);
 
@@ -791,6 +795,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     foam.update(elapsedTime);
     spray.update(dt);
     godRay.update(dt);
+
+    // C168: day/night cycle — slow sine oscillation (period ~180s)
+    // dayT: 0=storm-night, 1=storm-day. Always stormy, never fully bright.
+    const dayT = (Math.sin(elapsedTime * (Math.PI * 2) / 180) + 1) / 2;
+    ambient.intensity  = 0.25 + dayT * 0.20;
+    sunLight.intensity = 0.60 + dayT * 0.50;
+    // Fog shifts: night 0x101020 → day 0x202838
+    const fogR = 0.063 + dayT * 0.062;
+    const fogG = 0.063 + dayT * 0.094;
+    const fogB = 0.125 + dayT * 0.095;
+    (scene.fog as FogExp2).color.setRGB(fogR, fogG, fogB);
+    (scene.background as Color).setRGB(fogR, fogG, fogB);
 
     if (_dollyActive) {
       _dollyElapsed = Math.min(_dollyElapsed + dt, DOLLY_DURATION);
