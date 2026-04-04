@@ -193,17 +193,24 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
         'padding:10px 8px;cursor:pointer;letter-spacing:0.05em;text-align:center;',
         'transition:background 0.15s,border-color 0.15s,color 0.15s;',
       ].join('');
-      btn.addEventListener('pointerenter', () => {
+      // C151/MAIN-BIOMEPICKER-LEAK-01: named handlers so the click can removeEventListener
+      // on the clicked button before overlay removal — 16 anonymous pointer listeners on
+      // 8 detached buttons accumulated per lair visit without cleanup.
+      const onBtnEnter = (): void => {
         btn.style.background = 'rgba(60,42,15,0.95)';
         btn.style.borderColor = 'rgba(200,150,60,0.8)';
         btn.style.color = '#e8c870';
-      });
-      btn.addEventListener('pointerleave', () => {
+      };
+      const onBtnLeave = (): void => {
         btn.style.background = 'rgba(30,22,10,0.9)';
         btn.style.borderColor = 'rgba(160,110,50,0.45)';
         btn.style.color = 'rgba(200,170,100,0.85)';
-      });
+      };
+      btn.addEventListener('pointerenter', onBtnEnter);
+      btn.addEventListener('pointerleave', onBtnLeave);
       btn.addEventListener('click', () => {
+        btn.removeEventListener('pointerenter', onBtnEnter);
+        btn.removeEventListener('pointerleave', onBtnLeave);
         document.removeEventListener('keydown', escapeHandler); // C138/BP-01
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 220);
@@ -301,8 +308,12 @@ function showJournalPanel(): Promise<void> {
       'border:1px solid rgba(200,150,60,0.4);border-radius:8px;',
       'font-family:Georgia,serif;transition:background 0.15s;',
     ].join('');
-    closeBtn.addEventListener('pointerenter', () => { closeBtn.style.background = 'rgba(100,75,25,0.6)'; });
-    closeBtn.addEventListener('pointerleave', () => { closeBtn.style.background = 'rgba(80,60,20,0.4)'; });
+    // C151/MAIN-JOURNAL-LEAK-01: named handlers so dismiss() can removeEventListener
+    // before overlay removal — 2 anonymous pointer listeners on detached closeBtn per visit.
+    const onCloseBtnEnter = (): void => { closeBtn.style.background = 'rgba(100,75,25,0.6)'; };
+    const onCloseBtnLeave = (): void => { closeBtn.style.background = 'rgba(80,60,20,0.4)'; };
+    closeBtn.addEventListener('pointerenter', onCloseBtnEnter);
+    closeBtn.addEventListener('pointerleave', onCloseBtnLeave);
     closeBtn.addEventListener('click', dismiss);
     panel.appendChild(closeBtn);
     overlay.appendChild(panel);
@@ -310,6 +321,8 @@ function showJournalPanel(): Promise<void> {
     requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
 
     function dismiss(): void {
+      closeBtn.removeEventListener('pointerenter', onCloseBtnEnter);
+      closeBtn.removeEventListener('pointerleave', onCloseBtnLeave);
       document.removeEventListener('keydown', escHandler);
       overlay.style.opacity = '0';
       setTimeout(() => { overlay.remove(); resolve(); }, 220);
