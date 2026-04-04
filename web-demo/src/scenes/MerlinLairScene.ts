@@ -693,6 +693,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // C101: zone hover lore toast — sighted players need text context (aria-live only serves screen readers)
   const zoneToast = document.createElement('div');
+  // C124: role=status + aria-live so screen readers announce lore text on zone hover (WCAG 2.1 SC 4.1.3)
+  zoneToast.setAttribute('role', 'status');
+  zoneToast.setAttribute('aria-live', 'polite');
+  zoneToast.setAttribute('aria-atomic', 'true');
   zoneToast.style.cssText = [
     'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);',
     'background:rgba(10,8,6,0.82);border:1px solid rgba(205,133,63,0.35);border-radius:8px;',
@@ -1105,7 +1109,6 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const dispose = (): void => {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
-    clearTimeout(doorFlashCancelHandle); // C102: prevent stale door transition after teardown
     stopAmbient(); // C93-P1: stop forest ambient on scene teardown
     // C117: clear GLB cache before geometry.dispose() — prevents returning disposed-geometry GLTF
     // on second lair visit (cauldron/table/biblio/sol_pierre/crystal_ball added as gltf.scene directly)
