@@ -271,6 +271,7 @@ export class MinigameRunes extends MinigameBase {
     clearInterval(this.timerInterval);
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
+    this.kbFocusIdx = -1; // C51: clear focus ring before final rAF may fire
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
@@ -351,8 +352,8 @@ export class MinigameRunes extends MinigameBase {
 
       ctx.restore();
 
-      // C137: keyboard focus ring — amber border on focused tile
-      if (i === this.kbFocusIdx) {
+      // C137: keyboard focus ring — amber border on focused tile. C51: guard kbFocusIdx>=0 (reset in endGame)
+      if (this.kbFocusIdx >= 0 && i === this.kbFocusIdx) {
         ctx.save();
         ctx.strokeStyle = 'rgba(205,133,63,0.9)';
         ctx.lineWidth = 2.5;

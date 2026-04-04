@@ -171,7 +171,9 @@ function createCrystalBall(): CrystalResult {
   group.add(pedestal);
 
   // Crystal sphere (also hit target) — 8×6 segments for readable low-poly facets
-  const sphere = new Mesh(new SphereGeometry(0.7, 8, 6), crystalMat);
+  // C51: 16×12 segments (192 faces) — smooth silhouette now that C49 removed flatShading.
+  // 8×6 (48 faces) left visible equatorial facets even with interpolated normals.
+  const sphere = new Mesh(new SphereGeometry(0.7, 16, 12), crystalMat);
   sphere.position.set(5, -1.0, -4);
   group.add(sphere);
 
