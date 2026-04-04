@@ -261,9 +261,11 @@ export class MinigameVolonte extends MinigameBase {
       this.nextSpawn = this.spawnInterval * speedup;
     }
 
-    // Update status
-    const focusPct = this.elapsedTime > 0
-      ? Math.round((this.timeOnTarget / this.elapsedTime) * 100)
+    // Update status — C124/VOL-FORMULA-01: use totalTime (matches endGame score formula).
+    // Was elapsedTime → showed 100% at game start (division by near-zero) and diverged from
+    // the score formula (timeOnTarget/totalTime * 100). Same fix as SF-HUD-01 (C121).
+    const focusPct = this.totalTime > 0
+      ? Math.round((this.timeOnTarget / this.totalTime) * 100)
       : 100;
     if (this.statusEl) this.statusEl.textContent = `Focus: ${focusPct}%`;
 
