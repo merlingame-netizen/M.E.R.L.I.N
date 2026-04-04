@@ -90,7 +90,7 @@ export class MinigameEquilibre extends MinigameBase {
     timerBar.style.cssText = 'width:min(400px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 12px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-eq-timer-fill';
-    timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';
+    timerFill.style.cssText = 'height:100%;width:100%;background:#33ff66;border-radius:4px;transition:width 0.1s linear;';
     timerBar.appendChild(timerFill);
     this.container.appendChild(timerBar);
 
@@ -113,7 +113,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(51,255,102,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
@@ -307,7 +307,7 @@ export class MinigameEquilibre extends MinigameBase {
     ctx.fillRect(centerX - safePixels, this.pathY - 6, safePixels * 2, 12);
 
     // Safe zone border marks
-    ctx.strokeStyle = 'rgba(205,133,63,0.5)';
+    ctx.strokeStyle = 'rgba(51,255,102,0.5)';
     ctx.lineWidth = 2;
     for (const side of [-1, 1]) {
       const x = centerX + side * safePixels;
@@ -364,7 +364,7 @@ export class MinigameEquilibre extends MinigameBase {
     const currentScore = elapsedForScore > 0
       ? Math.round((this.timeInZone / elapsedForScore) * 100)
       : 100;
-    ctx.fillStyle = 'rgba(232,220,200,0.7)';
+    ctx.fillStyle = 'rgba(51,255,102,0.7)';
     ctx.font = '14px Courier New';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
@@ -377,7 +377,7 @@ export class MinigameEquilibre extends MinigameBase {
       const py = ((this.elapsedTime * 15 + i * 40) % (this.pathY - 20));
       ctx.beginPath();
       ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(205,133,63,${0.1 + Math.sin(this.elapsedTime + i) * 0.1})`;
+      ctx.fillStyle = `rgba(51,255,102,${0.1 + Math.sin(this.elapsedTime + i) * 0.1})`;
       ctx.fill();
     }
 

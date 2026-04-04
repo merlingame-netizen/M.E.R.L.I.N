@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Ogham Panel -- Equip/activate ogham before card choice
 // Shows equipped oghams as clickable slots. Player picks one (or skips).
 // Returns the selected ogham id or null if skipped.
@@ -146,7 +146,7 @@ export function showOghamPanel(): Promise<string | null> {
         'padding:12px 8px',
         'border-radius:10px',
         'border:1px solid',
-        `border-color:${isAvailable ? 'rgba(205,133,63,0.5)' : 'rgba(100,100,100,0.3)'}`,
+        `border-color:${isAvailable ? 'rgba(51,255,102,0.5)' : 'rgba(100,100,100,0.3)'}`,
         `background:${isAvailable ? 'rgba(139,69,19,0.2)' : 'rgba(40,40,50,0.4)'}`,
         'cursor:' + (isAvailable ? 'pointer' : 'not-allowed'),
         `opacity:${isUnlocked ? (isAvailable ? '1' : '0.5') : '0.35'}`,
@@ -182,7 +182,7 @@ export function showOghamPanel(): Promise<string | null> {
         slot.title = `${spec.description} (recharge dans ${cooldown} cartes)`;
       } else {
         infoEl.textContent = spec.category;
-        infoEl.style.cssText = 'font-size:10px;color:rgba(232,220,200,0.4);';
+        infoEl.style.cssText = 'font-size:10px;color:rgba(51,255,102,0.4);';
         slot.title = `${spec.description} (CD: ${spec.cooldown} cartes)`;
       }
       slot.appendChild(infoEl);
@@ -193,11 +193,11 @@ export function showOghamPanel(): Promise<string | null> {
         // mouseenter/mouseleave only fire for mouse → no hover feedback on touch screens.
         slot.addEventListener('pointerenter', () => {
           slot.style.background = 'rgba(139,69,19,0.4)';
-          slot.style.borderColor = 'rgba(205,133,63,0.8)';
+          slot.style.borderColor = 'rgba(51,255,102,0.8)';
         }, { signal: slotSignal });
         slot.addEventListener('pointerleave', () => {
           slot.style.background = 'rgba(139,69,19,0.2)';
-          slot.style.borderColor = 'rgba(205,133,63,0.5)';
+          slot.style.borderColor = 'rgba(51,255,102,0.5)';
         }, { signal: slotSignal });
       }
 

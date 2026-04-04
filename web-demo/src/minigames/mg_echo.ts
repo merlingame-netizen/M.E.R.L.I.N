@@ -378,12 +378,12 @@ export class MinigameEcho extends MinigameBase {
       ctx.font = '12px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(232,220,200,0.4)`;
+      ctx.fillStyle = `rgba(51,255,102,0.4)`;
       ctx.fillText(q.label, qx, qy + 30);
 
       // Direction arrow
       ctx.font = '20px Courier New';
-      ctx.fillStyle = `rgba(232,220,200,0.5)`;
+      ctx.fillStyle = `rgba(51,255,102,0.5)`;
       ctx.fillText(q.symbol, qx, qy);
     }
 
@@ -403,7 +403,7 @@ export class MinigameEcho extends MinigameBase {
 
       // Glow
       const glow = ctx.createRadialGradient(qx, qy, 0, qx, qy, 50);
-      glow.addColorStop(0, `rgba(205,133,63,${flashAlpha * 0.3})`);
+      glow.addColorStop(0, `rgba(51,255,102,${flashAlpha * 0.3})`);
       glow.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
@@ -436,7 +436,7 @@ export class MinigameEcho extends MinigameBase {
       ctx.font = '16px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(232,220,200,0.7)';
+      ctx.fillStyle = 'rgba(51,255,102,0.7)';
       ctx.fillText('D\'ou venait l\'echo ?', this.centerX, 20);
     }
 

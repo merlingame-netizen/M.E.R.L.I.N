@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // Minigame Base — Abstract class for all minigames (score 0-100)
 // 4-level outcome system: désastre (0-25) / échec (26-50) / réussite (51-85) / maîtrise (86-100)
 // Narrative feedback: animated overlay + WebAudio tone, shown 2.2s before resolve.

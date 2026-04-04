@@ -174,7 +174,7 @@ export class MinigameNegociation extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:1px solid rgba(51,255,102,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
@@ -379,7 +379,7 @@ export class MinigameNegociation extends MinigameBase {
     ctx.fillRect(0, 0, this.canvasW, this.canvasH);
 
     // Faction indicator at top
-    ctx.fillStyle = 'rgba(205,133,63,0.5)';
+    ctx.fillStyle = 'rgba(51,255,102,0.5)';
     ctx.font = 'bold 13px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -410,7 +410,7 @@ export class MinigameNegociation extends MinigameBase {
 
     // Score display
     const factionPicked = this.pickedSequence.filter((w) => w.isFactionWord).length;
-    ctx.fillStyle = 'rgba(232,220,200,0.5)';
+    ctx.fillStyle = 'rgba(51,255,102,0.5)';
     ctx.font = '12px Courier New';
     ctx.textAlign = 'left';
     ctx.fillText(`Mots: ${factionPicked}`, 10, 16);
@@ -427,7 +427,7 @@ export class MinigameNegociation extends MinigameBase {
     // C52: WCAG 2.4.7 — keyboard focus visible during empty window (first ~0.6s before words appear)
     if (visibleForKb.length === 0 && document.activeElement === this.canvas) {
       ctx.save();
-      ctx.fillStyle = 'rgba(205,133,63,0.55)';
+      ctx.fillStyle = 'rgba(51,255,102,0.55)';
       ctx.font = '11px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
@@ -458,7 +458,7 @@ export class MinigameNegociation extends MinigameBase {
 
       // Word border
       if (sw.word.isFactionWord) {
-        ctx.strokeStyle = `rgba(205,133,63,${alpha * 0.5})`;
+        ctx.strokeStyle = `rgba(51,255,102,${alpha * 0.5})`;
       } else {
         ctx.strokeStyle = `rgba(100,100,120,${alpha * 0.2})`;
       }
@@ -469,7 +469,7 @@ export class MinigameNegociation extends MinigameBase {
       if (rawIdx === kbFocusedRawIdx && document.activeElement === this.canvas) {
         ctx.beginPath();
         ctx.roundRect(pillX - 2, pillY - 2, pillW + 4, pillH + 4, 8);
-        ctx.strokeStyle = 'rgba(205,133,63,0.9)';
+        ctx.strokeStyle = 'rgba(51,255,102,0.9)';
         ctx.lineWidth = 2.5;
         ctx.stroke();
       }
@@ -485,7 +485,7 @@ export class MinigameNegociation extends MinigameBase {
           : `rgba(150,100,100,${alpha})`;
       } else {
         ctx.fillStyle = sw.word.isFactionWord
-          ? `rgba(232,220,200,${alpha})`
+          ? `rgba(51,255,102,${alpha})`
           : `rgba(160,160,180,${alpha * 0.7})`;
       }
       ctx.fillText(sw.word.text, sw.x, sw.y);

@@ -11,7 +11,7 @@ import { fadeIn } from './Transitions';
 // Faction display metadata — label + color for each faction
 const FACTION_META: Readonly<Record<string, { label: string; color: string }>> = {
   druides:  { label: 'Druides',  color: '#7cb87c' },
-  anciens:  { label: 'Anciens',  color: '#cd853f' },
+  anciens:  { label: 'Anciens',  color: '#e8c84c' },
   korrigans: { label: 'Korrigans', color: '#8b7cb8' },
   niamh:    { label: 'Niamh',    color: '#7cb8b8' },
   ankou:    { label: 'Ankou',    color: '#b87c7c' },
@@ -243,7 +243,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     const STATUS_META: Readonly<Record<string, { icon: string; color: string }>> = {
       fulfilled: { icon: '✓', color: '#7cb87c' },
       broken:    { icon: '✗', color: '#b87c7c' },
-      expired:   { icon: '⏱', color: '#cd853f' },
+      expired:   { icon: '⏱', color: 'rgba(51,255,102,0.55)' },
       active:    { icon: '…', color: '#a0a0b8' },
     } as const;
 

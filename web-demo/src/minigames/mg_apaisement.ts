@@ -364,7 +364,7 @@ export class MinigameApaisement extends MinigameBase {
     ctx.fill();
 
     // Phase label
-    ctx.fillStyle = 'rgba(232,220,200,0.3)';
+    ctx.fillStyle = 'rgba(51,255,102,0.3)';
     ctx.font = '12px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

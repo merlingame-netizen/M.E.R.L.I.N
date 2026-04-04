@@ -374,14 +374,14 @@ export class MinigameFouille extends MinigameBase {
       ctx.fillStyle = this.found && obj.isTarget
         ? 'rgba(80,180,80,0.4)'
         : isHover
-          ? 'rgba(205,133,63,0.25)'
+          ? 'rgba(51,255,102,0.25)'
           : 'rgba(255,255,255,0.06)';
       ctx.beginPath();
       ctx.roundRect(-tw / 2, -th / 2, tw, th, 4);
       ctx.fill();
 
       if (isHover) {
-        ctx.strokeStyle = 'rgba(205,133,63,0.5)';
+        ctx.strokeStyle = 'rgba(51,255,102,0.5)';
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -400,7 +400,7 @@ export class MinigameFouille extends MinigameBase {
         // Target blends with decoys (same color as decoys)
         ctx.fillStyle = isHover ? 'rgba(51,255,102,0.90)' : 'rgba(51,255,102,0.65)';
       } else {
-        ctx.fillStyle = isHover ? '#e8dcc8' : 'rgba(51,255,102,0.55)';
+        ctx.fillStyle = isHover ? 'rgba(51,255,102,0.9)' : 'rgba(51,255,102,0.55)';
       }
 
       ctx.fillText(obj.label, 0, 1);
@@ -417,7 +417,7 @@ export class MinigameFouille extends MinigameBase {
     // Shuffle warning (flash when about to shuffle)
     if (this.nextShuffle < 0.5 && !this.found) {
       const flash = Math.sin(this.pulsePhase * 12) * 0.5 + 0.5;
-      ctx.fillStyle = `rgba(205,133,63,${flash * 0.08})`;
+      ctx.fillStyle = `rgba(51,255,102,${flash * 0.08})`;
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
     }
 
@@ -429,9 +429,9 @@ export class MinigameFouille extends MinigameBase {
       const arm = 6;
       const pulse = 0.7 + Math.sin(this.pulsePhase * 5) * 0.3;
       ctx.save();
-      ctx.strokeStyle = `rgba(205,133,63,${pulse})`;
+      ctx.strokeStyle = `rgba(51,255,102,${pulse})`;
       ctx.lineWidth = 1.5;
-      ctx.shadowColor = 'rgba(205,133,63,0.6)';
+      ctx.shadowColor = 'rgba(51,255,102,0.6)';
       ctx.shadowBlur = 4;
       // Circle
       ctx.beginPath();

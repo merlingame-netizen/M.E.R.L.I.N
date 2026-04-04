@@ -391,7 +391,7 @@ export class MinigameRegard extends MinigameBase {
 
         // Number below
         ctx.font = '11px Courier New';
-        ctx.fillStyle = 'rgba(232,220,200,0.5)';
+        ctx.fillStyle = 'rgba(51,255,102,0.5)';
         ctx.fillText(`${i + 1}`, sx, 64);
       }
 
@@ -400,7 +400,7 @@ export class MinigameRegard extends MinigameBase {
       const barW = this.canvasW - 40;
       ctx.fillStyle = 'rgba(255,255,255,0.1)';
       ctx.fillRect(20, 72, barW, 3);
-      ctx.fillStyle = 'rgba(205,133,63,0.6)';
+      ctx.fillStyle = 'rgba(51,255,102,0.6)';
       ctx.fillRect(20, 72, barW * timePct, 3);
     }
 
@@ -429,9 +429,9 @@ export class MinigameRegard extends MinigameBase {
       // Cell border — C136: amber ring on keyboard-focused cell for WCAG 2.4.7 Focus Visible
       const isKbFocus = i === this.kbFocusIdx && this.phase === 'recall';
       ctx.strokeStyle = isKbFocus
-        ? 'rgba(205,133,63,0.9)'
+        ? 'rgba(51,255,102,0.9)'
         : this.phase === 'show' && cell.isTarget
-          ? 'rgba(205,133,63,0.5)'
+          ? 'rgba(51,255,102,0.5)'
           : 'rgba(100,80,140,0.2)';
       ctx.lineWidth = isKbFocus ? 2.5 : 1.5;
       ctx.stroke();
@@ -441,7 +441,7 @@ export class MinigameRegard extends MinigameBase {
       ctx.font = '22px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(232,220,200,${symAlpha})`;
+      ctx.fillStyle = `rgba(51,255,102,${symAlpha})`;
       ctx.fillText(cell.symbol, cell.gridX, cell.gridY);
 
       // Show order number during show phase

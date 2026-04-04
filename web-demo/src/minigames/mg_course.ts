@@ -404,7 +404,7 @@ export class MinigameCourse extends MinigameBase {
         if (document.activeElement === this.canvas) {
           ctx.beginPath();
           ctx.arc(this.target.x, this.target.y, this.hitRadius + 6, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(205,133,63,0.9)';
+          ctx.strokeStyle = 'rgba(51,255,102,0.9)';
           ctx.lineWidth = 2.5;
           ctx.stroke();
         }

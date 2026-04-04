@@ -81,7 +81,7 @@ export class MinigameRunes extends MinigameBase {
     timerBar.style.cssText = 'width:min(380px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-runes-timer-fill';
-    timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';
+    timerFill.style.cssText = 'height:100%;width:100%;background:#33ff66;border-radius:4px;transition:width 0.1s linear;';
     timerBar.appendChild(timerFill);
     this.container.appendChild(timerBar);
 
@@ -95,7 +95,7 @@ export class MinigameRunes extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(51,255,102,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
@@ -309,7 +309,7 @@ export class MinigameRunes extends MinigameBase {
         ctx.fill();
 
         // Question mark
-        ctx.fillStyle = 'rgba(205,133,63,0.4)';
+        ctx.fillStyle = 'rgba(51,255,102,0.4)';
         ctx.font = 'bold 28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -320,7 +320,7 @@ export class MinigameRunes extends MinigameBase {
         ctx.fillStyle = 'rgba(100,90,75,0.9)';
         this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(205,133,63,0.6)';
+        ctx.strokeStyle = 'rgba(51,255,102,0.6)';
         ctx.lineWidth = 2;
         this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
         ctx.stroke();
@@ -333,7 +333,7 @@ export class MinigameRunes extends MinigameBase {
         ctx.fillText(tile.symbol, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 - 8);
 
         // Label
-        ctx.fillStyle = 'rgba(205,133,63,0.8)';
+        ctx.fillStyle = 'rgba(51,255,102,0.8)';
         ctx.font = '11px Courier New';
         ctx.fillText(tile.label, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 + 18);
 
@@ -365,7 +365,7 @@ export class MinigameRunes extends MinigameBase {
       // C137: keyboard focus ring — amber border on focused tile. C51: guard kbFocusIdx>=0 (reset in endGame)
       if (this.kbFocusIdx >= 0 && i === this.kbFocusIdx) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(205,133,63,0.9)';
+        ctx.strokeStyle = 'rgba(51,255,102,0.9)';
         ctx.lineWidth = 2.5;
         this.roundRect(ctx, tile.x - 2, tile.y - 2, this.tileSize + 4, this.tileSize + 4, 10);
         ctx.stroke();

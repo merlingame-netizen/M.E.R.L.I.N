@@ -405,7 +405,7 @@ export class MinigameHerboristerie extends MinigameBase {
     ctx.fillRect(0, 0, this.canvasW, this.canvasH);
 
     // Target indicator at top
-    ctx.fillStyle = 'rgba(232,220,200,0.7)';
+    ctx.fillStyle = 'rgba(51,255,102,0.7)';
     ctx.font = '14px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -415,11 +415,11 @@ export class MinigameHerboristerie extends MinigameBase {
     ctx.fillText(this.targetPlant.emoji, this.canvasW / 2 + 10, 25);
 
     ctx.font = '13px Courier New';
-    ctx.fillStyle = 'rgba(205,133,63,0.6)';
+    ctx.fillStyle = 'rgba(51,255,102,0.6)';
     ctx.fillText(this.targetPlant.name, this.canvasW / 2 + 50, 25);
 
     // Score display
-    ctx.fillStyle = 'rgba(232,220,200,0.6)';
+    ctx.fillStyle = 'rgba(51,255,102,0.6)';
     ctx.font = '12px Courier New';
     ctx.textAlign = 'right';
     ctx.fillText(`${this.correctPicks}/${this.totalTargets}`, this.canvasW - 12, 20);
@@ -471,7 +471,7 @@ export class MinigameHerboristerie extends MinigameBase {
         ctx.font = '28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = cell.picked ? 'rgba(232,220,200,0.4)' : 'rgba(232,220,200,0.9)';
+        ctx.fillStyle = cell.picked ? 'rgba(51,255,102,0.4)' : 'rgba(51,255,102,0.9)';
         ctx.fillText(cell.plant.emoji, x + this.cellSize / 2, y + this.cellSize / 2);
       } else {
         // Wrong pick: show X

@@ -54,7 +54,7 @@ export class MinigameTraces extends MinigameBase {
     timerBar.style.cssText = 'width:min(400px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-traces-timer-fill';
-    timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';
+    timerFill.style.cssText = 'height:100%;width:100%;background:#33ff66;border-radius:4px;transition:width 0.1s linear;';
     timerBar.appendChild(timerFill);
     this.container.appendChild(timerBar);
 
@@ -65,7 +65,7 @@ export class MinigameTraces extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = 400;
     this.canvas.height = 400;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,30,20,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,30,20,0.8);border:1px solid rgba(51,255,102,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
     this.timerFillEl = timerFill;
@@ -171,7 +171,7 @@ export class MinigameTraces extends MinigameBase {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // Draw path (dotted line between footprints)
-    ctx.strokeStyle = 'rgba(205,133,63,0.15)';
+    ctx.strokeStyle = 'rgba(51,255,102,0.15)';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 8]);
     ctx.beginPath();
@@ -198,7 +198,7 @@ export class MinigameTraces extends MinigameBase {
       } else if (fp.index === this.currentIndex) {
         // Current target — pulsing gold (C35: elapsed-based, consistent with 13 other minigames)
         const pulse = 1 + Math.sin(this.elapsedTime * 5) * 0.15; // 5 rad/s ≈ same period as performance.now()/200
-        ctx.fillStyle = 'rgba(205,133,63,0.4)';
+        ctx.fillStyle = 'rgba(51,255,102,0.4)';
         ctx.beginPath();
         ctx.arc(0, 0, 22 * pulse, 0, Math.PI * 2);
         ctx.fill();

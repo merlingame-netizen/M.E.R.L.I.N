@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // MinigameRegistry — lazy-loaded barrel for all 14 minigames.
 // Imported via a single dynamic import() in main.ts so Rollup bundles all
 // minigame code into one deferred chunk, fetched only when the player enters
