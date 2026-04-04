@@ -79,7 +79,7 @@ export class MinigameOmbres extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(10,10,20,0.95);border:2px solid rgba(80,60,120,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(10,10,20,0.95);border:2px solid rgba(80,60,120,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 

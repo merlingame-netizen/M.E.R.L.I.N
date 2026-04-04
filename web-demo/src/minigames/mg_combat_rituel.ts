@@ -89,7 +89,7 @@ export class MinigameCombatRituel extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
-    this.canvas.style.cssText = 'border-radius:50%;background:rgba(15,15,25,0.9);border:2px solid rgba(139,32,32,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';
+    this.canvas.style.cssText = 'border-radius:50%;background:rgba(15,15,25,0.9);border:2px solid rgba(139,32,32,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
