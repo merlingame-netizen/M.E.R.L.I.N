@@ -7,6 +7,7 @@ import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
 import { startAmbient, stopAmbient } from '../audio/SFXManager';
+import { clearGLBCache } from '../engine/AssetLoader';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -717,7 +718,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // C102: re-sync DPR on zoom/monitor switch
   };
-  window.addEventListener('resize', onResize);
+  // C117: ResizeObserver fires on container resize (sidebar collapse, flex changes) — window.resize
+  // only fires when the viewport changes, missing layout-driven container size changes.
+  let resizeObserver: ResizeObserver | null = null;
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
+  } else {
+    window.addEventListener('resize', onResize); // fallback for very old environments
+  }
 
   // Build scene elements
   // C89-P2: detect low-end mobile (Android/iOS high-DPR) → drop 5th PointLight to stay at 60fps
@@ -1071,7 +1080,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
     clearTimeout(doorFlashCancelHandle); // C102: prevent stale door transition after teardown
     stopAmbient(); // C93-P1: stop forest ambient on scene teardown
-    window.removeEventListener('resize', onResize);
+    // C117: clear GLB cache before geometry.dispose() — prevents returning disposed-geometry GLTF
+    // on second lair visit (cauldron/table/biblio/sol_pierre/crystal_ball added as gltf.scene directly)
+    clearGLBCache();
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    } else {
+      window.removeEventListener('resize', onResize);
+    }
     renderer.domElement.removeEventListener('mousemove', onMouseMove);
     renderer.domElement.removeEventListener('click', onPointerAction);
     renderer.domElement.removeEventListener('touchmove', onTouchMove);

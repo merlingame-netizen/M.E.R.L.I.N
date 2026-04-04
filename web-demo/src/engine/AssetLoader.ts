@@ -51,3 +51,15 @@ export async function loadGLBs(urls: readonly string[]): Promise<Map<string, GLT
 export function cloneGLBScene(gltf: GLTF): THREE.Group {
   return gltf.scene.clone();
 }
+
+/**
+ * C117: clear the GLB cache on scene dispose — prevents stale disposed-geometry references.
+ * When MerlinLairScene dispose() traverses the scene and calls geometry.dispose(), it disposes
+ * geometry objects that are still referenced by cached GLTF entries. On second lair visit the
+ * cache returns the same GLTF with now-disposed GPU buffers (cauldron/table/biblio/sol_pierre/
+ * crystal_ball). Clearing the cache forces fresh loads on revisit (browser HTTP cache handles
+ * network cost). Only call from scene dispose(), not on navigation/route changes.
+ */
+export function clearGLBCache(): void {
+  cache.clear();
+}
