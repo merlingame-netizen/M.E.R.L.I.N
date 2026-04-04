@@ -94,6 +94,7 @@ export class MinigameEquilibre extends MinigameBase {
     const statusEl = document.createElement('div');
     statusEl.id = this.statusId;
     statusEl.setAttribute('aria-live', 'polite');
+    statusEl.setAttribute('aria-atomic', 'true'); // C41: ensures AT reads full "Equilibre: N% — En/Hors zone" string, not just mutated portion
     statusEl.style.cssText = `width:min(400px,100%);max-width:400px;min-height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Equilibre: —';
     this.container.appendChild(statusEl);

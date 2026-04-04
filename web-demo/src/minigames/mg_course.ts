@@ -51,6 +51,7 @@ export class MinigameCourse extends MinigameBase {
   private roundTime = 2.0;    // C99: scaled [2.0,1.5,1.1,0.8]s across tiers 0-3
   private decoyCount = 2;     // C99: scaled [2,4,5,6] decoys
   private hitRadius = 40;     // C99: scaled [40,32,26,20]px
+  private keyDeadZone = 0;    // C41: tiered fraction of roundTime — computed in setup() after roundTime is set
 
   // Game state
   private currentRound = 0;
@@ -75,9 +76,9 @@ export class MinigameCourse extends MinigameBase {
     if (!this.roundActive || this.gameOver) return;
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
-      // C40: timing window guard — reject confirm in first 15% of round to prevent mashing.
-      // At tier 3 (0.8s window): 15% = 0.12s dead zone. Mirrors pointer hitRadius spatial constraint.
-      if (this.roundElapsed < this.roundTime * 0.15) return;
+      // C40/C41: timing window guard — reject confirm before keyDeadZone (computed in setup).
+      // Tier 0-1: 8% (0.12-0.16s). Tier 2-3: 15% (0.12-0.165s). Prevents mashing without blocking fast reactions.
+      if (this.roundElapsed < this.keyDeadZone) return;
       // Keyboard confirms the target directly — QTE equivalent of clicking it
       if (!this.target) return;
       this.hits++;
@@ -98,6 +99,9 @@ export class MinigameCourse extends MinigameBase {
     this.roundTime  = this.tieredValue([2.0, 1.5, 1.1, 0.8] as const);
     this.decoyCount = this.tieredValue([2, 4, 5, 6] as const);
     this.hitRadius  = this.tieredValue([40, 32, 26, 20] as const);
+    // C41: tiered dead zone — 8% at tier 0-1 (slow window: 160-120ms), 15% at tier 2-3 (fast: 165-120ms).
+    // Fixes 300ms dead zone at tier 0 (was roundTime*0.15=0.30s — too long for legitimate fast reactions).
+    this.keyDeadZone = this.roundTime * (this.difficultyTier >= 2 ? 0.15 : 0.08);
 
     // Title
     const title = document.createElement('div');
