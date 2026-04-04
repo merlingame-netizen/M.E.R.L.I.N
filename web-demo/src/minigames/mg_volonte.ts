@@ -114,8 +114,9 @@ export class MinigameVolonte extends MinigameBase {
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
-    // C82: pointerleave — finger off-canvas must not freeze cursor on target (mobile free-credit fix)
+    // C82: pointerleave/cancel — finger off-canvas or interrupted must not freeze cursor on target
     this.canvas.addEventListener('pointerleave', this.onPointerLeave);
+    this.canvas.addEventListener('pointercancel', this.onPointerLeave);
     // C128: arrow key cursor — WCAG 2.1.1 keyboard accessibility (mirrors mg_sang_froid C96 pattern)
     this.canvas.addEventListener('keydown', this.onKeyDown);
 
@@ -210,6 +211,7 @@ export class MinigameVolonte extends MinigameBase {
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
     this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
+    this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const score = this.totalTime > 0
@@ -380,6 +382,7 @@ export class MinigameVolonte extends MinigameBase {
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
     this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
+    this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
