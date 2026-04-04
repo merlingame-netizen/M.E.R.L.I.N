@@ -70,6 +70,23 @@ export class MinigameCourse extends MinigameBase {
   // Prompt display
   private promptSymbol = '';
 
+  // Keyboard support (WCAG 2.1.1 C137)
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (!this.roundActive || this.gameOver) return;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      // Keyboard confirms the target directly — QTE equivalent of clicking it
+      if (!this.target) return;
+      this.hits++;
+      this.roundOutcomes = [...this.roundOutcomes, true];
+      this.feedback = 'hit';
+      this.feedbackTimer = 0.4;
+      this.roundActive = false;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+      this.advanceRound();
+    }
+  };
+
   protected setup(): void {
     this.container.innerHTML = '';
 
@@ -119,6 +136,8 @@ export class MinigameCourse extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onClick);
+    this.canvas.addEventListener('keydown', this.onKeyDown);
+    this.canvas.focus();
 
     // Reset state
     this.currentRound = 0;
@@ -251,6 +270,7 @@ export class MinigameCourse extends MinigameBase {
     clearTimeout(this.endTimeout); // C99: cancel pending timeout (idempotent)
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const finalScore = (this.hits / this.totalRounds) * 100;
     this.finish(finalScore);
@@ -365,6 +385,15 @@ export class MinigameCourse extends MinigameBase {
         ctx.fillStyle = `rgba(220,200,160,${alpha * targetPulse})`;
         ctx.fillText(this.target.symbol, this.target.x, this.target.y);
 
+        // Keyboard focus ring around target (amber, WCAG C137)
+        if (document.activeElement === this.canvas) {
+          ctx.beginPath();
+          ctx.arc(this.target.x, this.target.y, this.hitRadius + 6, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(205,133,63,0.9)';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        }
+
         // Target glow
         const glow = ctx.createRadialGradient(
           this.target.x, this.target.y, 0,
@@ -436,6 +465,7 @@ export class MinigameCourse extends MinigameBase {
     clearTimeout(this.endTimeout); // C99: cancel orphaned setTimeout if player exits early
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

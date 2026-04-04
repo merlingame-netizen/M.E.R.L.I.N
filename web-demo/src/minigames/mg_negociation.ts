@@ -77,6 +77,53 @@ export class MinigameNegociation extends MinigameBase {
   // Visual
   private pulsePhase = 0;
 
+  // Keyboard support (WCAG 2.1.1 C137)
+  private kbFocusIdx = 0;
+
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (this.ended) return;
+
+    const visible = this.scrollingWords
+      .map((sw, i) => ({ sw, i }))
+      .filter(({ sw }) => !sw.picked && sw.fadeAlpha > 0 && sw.y > 0 && sw.y < this.canvasH);
+
+    if (visible.length === 0) return;
+
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.kbFocusIdx = (this.kbFocusIdx + 1) % visible.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.kbFocusIdx = (this.kbFocusIdx - 1 + visible.length) % visible.length;
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      const clampedIdx = Math.min(this.kbFocusIdx, visible.length - 1);
+      const target = visible[clampedIdx];
+      if (!target) return;
+      const sw = target.sw;
+      sw.picked = true;
+      sw.fadeAlpha = 1;
+      this.pickedSequence = [...this.pickedSequence, sw.word];
+      if (sw.word.isFactionWord) {
+        this.comboCount++;
+        this.maxCombo = Math.max(this.maxCombo, this.comboCount);
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+      } else {
+        this.comboCount = 0;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+      }
+      const seqEl = document.getElementById('mg-nego-sequence');
+      if (seqEl) {
+        const words = this.pickedSequence.map((w) =>
+          w.isFactionWord ? `[${w.text}]` : w.text
+        );
+        seqEl.textContent = `Sequence: ${words.join(' ')}`;
+      }
+      // Advance focus to next visible word
+      this.kbFocusIdx = Math.min(this.kbFocusIdx, Math.max(0, visible.length - 2));
+    }
+  };
+
   protected setup(): void {
     this.container.innerHTML = '';
 
@@ -138,6 +185,8 @@ export class MinigameNegociation extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    this.canvas.addEventListener('keydown', this.onKeyDown);
+    this.canvas.focus();
 
     // Reset state
     this.timeLeft = this.totalTime;
@@ -150,6 +199,7 @@ export class MinigameNegociation extends MinigameBase {
     this.score = 0;
     this.ended = false;
     this.pulsePhase = 0;
+    this.kbFocusIdx = 0;
 
     // Pre-seed some words
     for (let i = 0; i < 8; i++) {
@@ -263,6 +313,7 @@ export class MinigameNegociation extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     // Score calculation:
     // - Faction words picked: each worth 8 points (up to 80)
@@ -346,8 +397,17 @@ export class MinigameNegociation extends MinigameBase {
     ctx.textAlign = 'left';
     ctx.fillText(`Mots: ${factionPicked}`, 10, 16);
 
+    // Build visible word list for keyboard focus tracking
+    const visibleForKb = this.scrollingWords
+      .map((sw, i) => ({ sw, i }))
+      .filter(({ sw }) => !sw.picked && sw.fadeAlpha > 0 && sw.y > 0 && sw.y < this.canvasH);
+    const kbClampedIdx = visibleForKb.length > 0
+      ? Math.min(this.kbFocusIdx, visibleForKb.length - 1)
+      : -1;
+    const kbFocusedRawIdx = kbClampedIdx >= 0 ? visibleForKb[kbClampedIdx].i : -1;
+
     // Draw scrolling words
-    for (const sw of this.scrollingWords) {
+    for (const [rawIdx, sw] of this.scrollingWords.entries()) {
       const alpha = sw.picked ? sw.fadeAlpha * 0.4 : 0.9;
       if (alpha <= 0) continue;
 
@@ -375,6 +435,15 @@ export class MinigameNegociation extends MinigameBase {
       }
       ctx.lineWidth = 1;
       ctx.stroke();
+
+      // Keyboard focus ring (amber, WCAG C137)
+      if (rawIdx === kbFocusedRawIdx && document.activeElement === this.canvas) {
+        ctx.beginPath();
+        ctx.roundRect(pillX - 2, pillY - 2, pillW + 4, pillH + 4, 8);
+        ctx.strokeStyle = 'rgba(205,133,63,0.9)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
 
       // Word text
       ctx.font = sw.word.isFactionWord ? 'bold 15px system-ui' : '14px system-ui';
@@ -414,6 +483,7 @@ export class MinigameNegociation extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }
