@@ -112,7 +112,6 @@ export class MinigameTraces extends MinigameBase {
     window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     this.currentIndex++;
     if (this.currentIndex >= this.footprintCount) {
-      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.endGame();
     }
   };
@@ -129,12 +128,10 @@ export class MinigameTraces extends MinigameBase {
     const dist = Math.sqrt((mx - target.x) ** 2 + (my - target.y) ** 2);
     if (dist < this.hitRadius) {
       target.hit = true;
-      // C99: audio feedback — footprint hit
+      // C99: audio feedback — footprint hit (one unlock per step, no duplicate on last)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.currentIndex++;
       if (this.currentIndex >= this.footprintCount) {
-        // C99: audio feedback — sequence complete
-        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
         this.endGame();
       }
     }
