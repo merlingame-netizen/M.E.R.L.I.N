@@ -97,6 +97,8 @@ export function createLairWindow(scene: Scene): WindowResult {
   group.add(mullion);
 
   // Glass panes (semi-transparent, tinted by sky color)
+  // C144/LAIR-WIN-01: polygonOffset prevents z-fighting with coplanar frame front face
+  // (PlaneGeometry at z=-9.5 vs BoxGeometry depth=0.5 at z=-9.75 → front face at z=-9.5)
   const glassMat = new MeshStandardMaterial({
     color: 0x8ab4d4,
     transparent: true,
@@ -104,6 +106,9 @@ export function createLairWindow(scene: Scene): WindowResult {
     roughness: 0.05,
     metalness: 0.1,
     side: DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2,
   });
   const glassL = new Mesh(new PlaneGeometry(1.15, 3.85), glassMat);
   glassL.position.set(3.2, 3.5, -9.5);
