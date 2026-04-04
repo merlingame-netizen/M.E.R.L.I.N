@@ -202,12 +202,24 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
         btn.style.color = 'rgba(200,170,100,0.85)';
       });
       btn.addEventListener('click', () => {
+        document.removeEventListener('keydown', escapeHandler); // C138/BP-01
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 220);
         resolve(id);
       });
       grid.appendChild(btn);
     }
+
+    // C138/BP-01: Escape closes picker with default biome — prevents infinite game stall
+    const defaultBiome = BIOME_ENTRIES[0]![0];
+    const escapeHandler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      document.removeEventListener('keydown', escapeHandler);
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 220);
+      resolve(defaultBiome);
+    };
+    document.addEventListener('keydown', escapeHandler);
 
     container.appendChild(overlay);
     requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
@@ -747,6 +759,11 @@ async function gameLoop(
         const opts = [...card.options] as [typeof card.options[0], typeof card.options[1], typeof card.options[2]];
         opts[worstIdx] = fresh.options[worstIdx];
         card = { ...card, options: opts };
+      } else if (oghamResult.effectType === 'predict_next') {
+        // C138/OC-03: Ailm — preview next card's field so player can prepare
+        const nextPreview = generateFastRouteCard(state().run.biome);
+        const predictedField = nextPreview.options[1]?.field ?? nextPreview.options[0]?.field ?? '?';
+        showPredictToast(predictedField);
       }
     }
 
@@ -1086,6 +1103,43 @@ function showOghamUnlockToast(oghamName: string): void {
     toast.style.opacity = '0';
     setTimeout(() => { toast.remove(); }, 350);
   }, 3000);
+}
+
+// C138/OC-03: Ailm predict_next — show predicted field as feedback toast
+const PREDICT_TOAST_ID = 'merlin-predict-toast';
+function showPredictToast(field: string): void {
+  document.getElementById(PREDICT_TOAST_ID)?.remove();
+  const toast = document.createElement('div');
+  toast.id = PREDICT_TOAST_ID;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.style.cssText = [
+    'position:fixed',
+    'top:120px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'background:rgba(8,16,30,0.92)',
+    'color:rgba(120,200,255,0.95)',
+    'font-family:system-ui',
+    'font-size:13px',
+    'font-weight:600',
+    'letter-spacing:1.5px',
+    'padding:9px 24px',
+    'border-radius:20px',
+    'border:1px solid rgba(80,160,255,0.45)',
+    'z-index:65',
+    'pointer-events:none',
+    'opacity:0',
+    'transition:opacity 0.3s ease',
+    'text-align:center',
+  ].join(';');
+  toast.textContent = `\u168F Ailm pr\u00e9dit\u00a0: ${field}`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.opacity = '1'; }); });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.remove(); }, 320);
+  }, 4000);
 }
 
 window.addEventListener('ogham_unlocked', (evt: Event) => {
