@@ -978,7 +978,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
       ariaLive.textContent = `${ZONE_ARIA_LABELS[currentHovered.zone]} activée`;
       // C113: keyboard door activation mirrors pointer cinematic — 380ms flash + magic_reveal SFX
+      // C121: same double-activation guard as pointer path — keyboard Enter can fire twice in 380ms
       if (currentHovered.zone === 'door') {
+        if (doorFlashing) return;
         const kbZone = currentHovered.zone;
         const kbCb = zoneClickCallback;
         doorFlashing = true;
