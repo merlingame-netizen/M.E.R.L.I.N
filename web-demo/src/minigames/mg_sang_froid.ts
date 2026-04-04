@@ -50,10 +50,11 @@ export class MinigameSangFroid extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C103: tieredValue for totalTime (was readonly — blocked scaling); C94: endRadius + driftSpeed
-    this.totalTime  = this.tieredValue([10, 9, 8, 7] as const);
-    this.endRadius  = 28 - this.difficultyTier * 4; // 28 / 24 / 20 / 16
-    this.driftSpeed = 18 + this.difficultyTier * 4; // 18 / 22 / 26 / 30 px/s
+    // C103/C110: all 3 difficulty params via tieredValue — same values as before but consistent
+    // with the convention established for all 14 minigames (eliminates difficultyTier arithmetic).
+    this.totalTime  = this.tieredValue([10, 9, 8, 7]    as const);
+    this.endRadius  = this.tieredValue([28, 24, 20, 16]  as const);
+    this.driftSpeed = this.tieredValue([18, 22, 26, 30]  as const);
 
     // Title
     const title = document.createElement('div');

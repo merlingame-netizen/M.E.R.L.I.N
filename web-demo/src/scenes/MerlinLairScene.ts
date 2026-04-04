@@ -873,13 +873,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     door:      'Sortie vers l\'aventure',
   };
 
-  // C101: lore descriptions for each zone (shown in zoneToast on hover)
+  // C110: lore descriptions enhanced — Celtic-immersive atmosphere (was generic UI copy).
+  // References specific mythological anchors: Cerridwen (cauldron goddess), Brocéliande (sacred forest).
   const ZONE_LORE: Readonly<Record<LairZone, string>> = {
-    map:       'Choisis un biome pour ta prochaine quête',
-    crystal:   'Consulte tes Oghams et leurs pouvoirs druidiques',
-    bookshelf: 'Relis les traces de tes aventures passées',
-    cauldron:  'Dialogue avec Merlin, guide de ton chemin',
-    door:      'Lance-toi dans les terres sauvages',
+    map:       'Quelle contrée de Bretagne t\'appelle ce soir ?',
+    crystal:   'Les runes d\'ogham murmurent dans la pierre sacrée',
+    bookshelf: 'Les chroniques de Merlin gardent mémoire de tes actes',
+    cauldron:  'Le chaudron de Cerridwen bouillonne de sagesse ancienne',
+    door:      'Les bois de Brocéliande t\'attendent, voyageur',
   };
 
   const onPointerAction = (e: { clientX: number; clientY: number }): void => {
