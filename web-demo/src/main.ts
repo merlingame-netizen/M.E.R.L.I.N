@@ -19,7 +19,7 @@ import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
-import { getLLMAdapter } from './llm/GroqAdapter';
+import { getLLMAdapter, injectAPIKey, clearAPIKey } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
 import { initMerlinLair } from './scenes/MerlinLairScene';
@@ -310,6 +310,124 @@ function showJournalPanel(): Promise<void> {
   });
 }
 
+// C164: Groq API key settings modal — lets player inject key at runtime on Vercel
+function showGroqSettingsModal(): Promise<void> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Paramètres LLM');
+    overlay.style.cssText = [
+      'position:fixed;inset:0;z-index:500;',
+      'display:flex;align-items:center;justify-content:center;',
+      'background:rgba(0,0,0,0.75);opacity:0;transition:opacity 0.2s ease;',
+    ].join('');
+
+    const panel = document.createElement('div');
+    panel.style.cssText = [
+      'background:rgba(5,10,5,0.98);border:1px solid rgba(51,255,102,0.5);',
+      'border-radius:8px;padding:24px 28px;max-width:400px;width:90%;',
+      'font-family:"Courier New",Courier,monospace;color:#33ff66;',
+    ].join('');
+
+    const title = document.createElement('div');
+    title.textContent = '[ CONFIG_LLM ]';
+    title.style.cssText = 'font-size:16px;letter-spacing:0.15em;margin-bottom:4px;color:#33ff66;';
+    panel.appendChild(title);
+
+    const sub = document.createElement('div');
+    sub.textContent = 'Clé API Groq (tab-session uniquement)';
+    sub.style.cssText = 'color:rgba(51,255,102,0.5);font-size:11px;margin-bottom:18px;';
+    panel.appendChild(sub);
+
+    const hasKey = getLLMAdapter() !== null;
+    const status = document.createElement('div');
+    status.textContent = hasKey ? '▶ MODE: CLOUD (Groq actif)' : '▶ MODE: LOCAL (FastRoute)';
+    status.style.cssText = `color:${hasKey ? '#33ff66' : '#ffaa33'};font-size:12px;margin-bottom:14px;`;
+    panel.appendChild(status);
+
+    const input = document.createElement('input');
+    input.type = 'password';
+    input.placeholder = 'gsk_…';
+    input.setAttribute('aria-label', 'Clé API Groq');
+    input.style.cssText = [
+      'width:100%;box-sizing:border-box;padding:8px 10px;',
+      'background:rgba(0,20,5,0.9);border:1px solid rgba(51,255,102,0.4);',
+      'border-radius:4px;color:#33ff66;font-family:"Courier New",Courier,monospace;',
+      'font-size:13px;outline:none;margin-bottom:14px;',
+    ].join('');
+    panel.appendChild(input);
+
+    const feedback = document.createElement('div');
+    feedback.style.cssText = 'font-size:11px;min-height:16px;margin-bottom:14px;';
+    panel.appendChild(feedback);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;';
+
+    const applyBtn = document.createElement('button');
+    applyBtn.textContent = 'Appliquer';
+    applyBtn.style.cssText = [
+      'padding:8px 18px;font-family:"Courier New",Courier,monospace;font-size:13px;cursor:pointer;',
+      'background:rgba(0,40,10,0.8);color:#33ff66;border:1px solid rgba(51,255,102,0.6);border-radius:4px;',
+    ].join('');
+    applyBtn.addEventListener('click', () => {
+      const ok = injectAPIKey(input.value);
+      if (ok) {
+        feedback.style.color = '#33ff66';
+        feedback.textContent = '✓ Clé acceptée — mode cloud actif';
+        status.textContent = '▶ MODE: CLOUD (Groq actif)';
+        status.style.color = '#33ff66';
+      } else {
+        feedback.style.color = '#ff4444';
+        feedback.textContent = '✗ Clé invalide (min 10 caractères)';
+      }
+    });
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Effacer';
+    clearBtn.style.cssText = [
+      'padding:8px 18px;font-family:"Courier New",Courier,monospace;font-size:13px;cursor:pointer;',
+      'background:rgba(20,5,0,0.8);color:#ff8833;border:1px solid rgba(255,136,51,0.4);border-radius:4px;',
+    ].join('');
+    clearBtn.addEventListener('click', () => {
+      clearAPIKey();
+      input.value = '';
+      feedback.style.color = '#ff8833';
+      feedback.textContent = '— Clé supprimée — mode FastRoute';
+      status.textContent = '▶ MODE: LOCAL (FastRoute)';
+      status.style.color = '#ffaa33';
+    });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Fermer';
+    closeBtn.setAttribute('aria-label', 'Fermer les paramètres LLM');
+    closeBtn.style.cssText = [
+      'padding:8px 18px;font-family:"Courier New",Courier,monospace;font-size:13px;cursor:pointer;',
+      'background:rgba(10,10,10,0.8);color:rgba(51,255,102,0.6);border:1px solid rgba(51,255,102,0.2);border-radius:4px;',
+    ].join('');
+    closeBtn.addEventListener('click', dismiss);
+
+    btnRow.appendChild(clearBtn);
+    btnRow.appendChild(applyBtn);
+    btnRow.appendChild(closeBtn);
+    panel.appendChild(btnRow);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
+
+    function dismiss(): void {
+      document.removeEventListener('keydown', escHandler);
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.remove(); resolve(); }, 220);
+    }
+    function escHandler(e: KeyboardEvent): void { if (e.key === 'Escape') dismiss(); }
+    document.addEventListener('keydown', escHandler);
+    // Focus input
+    requestAnimationFrame(() => input.focus());
+  });
+}
+
 async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairOgham: string | null }> {
   // Create wrapper div dynamically (static placement in index.html preferred)
   let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
@@ -451,6 +569,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       if (doorTriggered) return; // C117/MAIN-01: block all zone interactions after door click
       if (zone === 'crystal') {
         // C84: show ogham panel for pre-run selection — result carried into first card
+        playSound('crystal');
         lairSelectedOgham = await showOghamPanel();
         if (lairSelectedOgham) {
           showZoneToast('crystal'); // "Pierre des Oghams / Choisissez votre Ogham runique"
@@ -464,6 +583,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       }
       if (zone === 'cauldron') {
         // C85: Merlin quotes — cycle through 6 druidic whispers
+        playSound('cauldron');
         cauldronQuoteIdx = (cauldronQuoteIdx + 1) % MERLIN_QUOTES.length;
         ZONE_LABELS['cauldron']!.title = 'Merlin murmure…';
         ZONE_LABELS['cauldron']!.sub = MERLIN_QUOTES[cauldronQuoteIdx]!;
@@ -525,6 +645,33 @@ async function main(): Promise<void> {
 
   // SFX: init early so first interaction resumes AudioContext
   initSFXManager();
+
+  // C164: Groq settings gear button — persistent, bottom-right, CRT style
+  const gearBtn = document.createElement('button');
+  gearBtn.textContent = '⚙';
+  gearBtn.setAttribute('aria-label', 'Paramètres LLM Groq');
+  gearBtn.setAttribute('title', 'Configurer la clé API Groq');
+  gearBtn.style.cssText = [
+    'position:fixed;bottom:14px;right:14px;z-index:9990;',
+    'width:36px;height:36px;border-radius:50%;',
+    'background:rgba(0,20,5,0.75);border:1px solid rgba(51,255,102,0.35);',
+    'color:rgba(51,255,102,0.65);font-size:18px;cursor:pointer;',
+    'display:flex;align-items:center;justify-content:center;',
+    'transition:background 0.15s,border-color 0.15s,color 0.15s;',
+    'font-family:"Courier New",Courier,monospace;',
+  ].join('');
+  gearBtn.addEventListener('pointerenter', () => {
+    gearBtn.style.background = 'rgba(0,40,10,0.9)';
+    gearBtn.style.borderColor = 'rgba(51,255,102,0.75)';
+    gearBtn.style.color = '#33ff66';
+  });
+  gearBtn.addEventListener('pointerleave', () => {
+    gearBtn.style.background = 'rgba(0,20,5,0.75)';
+    gearBtn.style.borderColor = 'rgba(51,255,102,0.35)';
+    gearBtn.style.color = 'rgba(51,255,102,0.65)';
+  });
+  gearBtn.addEventListener('click', () => showGroqSettingsModal());
+  document.body.appendChild(gearBtn);
 
   // BUG-01: Save cross-run data on sudden tab close or mobile backgrounding
   const emergencySave = (): void => { saveAnamToStorage(); saveMetaToStorage(); };

@@ -108,11 +108,20 @@ export class GroqAdapter {
     return typeof key === 'string' && key.length > 10;
   }
 
-  /** Create instance from environment. Returns null if no API key. */
+  /** Create instance from environment or sessionStorage fallback. Returns null if no API key. */
   static fromEnv(): GroqAdapter | null {
-    const key = import.meta.env.VITE_GROQ_API_KEY;
-    if (!key || typeof key !== 'string' || key.length < 10) return null;
-    return new GroqAdapter(key);
+    const envKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (envKey && typeof envKey === 'string' && envKey.length > 10) {
+      return new GroqAdapter(envKey);
+    }
+    // Fallback: runtime-injected key stored in sessionStorage
+    try {
+      const stored = sessionStorage.getItem('merlin_groq_key');
+      if (stored && stored.length > 10) return new GroqAdapter(stored);
+    } catch {
+      // sessionStorage unavailable (e.g., private browsing restriction)
+    }
+    return null;
   }
 
   /**
@@ -298,4 +307,31 @@ export function getLLMAdapter(): GroqAdapter | null {
     }
   }
   return _instance;
+}
+
+/**
+ * Inject a Groq API key at runtime (from user settings modal).
+ * Persists to sessionStorage (tab lifetime only) and resets the singleton.
+ * Returns false if the key fails basic validation.
+ */
+export function injectAPIKey(key: string): boolean {
+  if (!key || key.trim().length < 10) return false;
+  const trimmed = key.trim();
+  try {
+    sessionStorage.setItem('merlin_groq_key', trimmed);
+  } catch {
+    // sessionStorage unavailable — key still usable in-memory this session
+  }
+  _instance = new GroqAdapter(trimmed);
+  console.info('[MERLIN] Groq API key injected at runtime — cloud mode active');
+  return true;
+}
+
+/**
+ * Remove the runtime API key and revert to FastRoute fallback.
+ */
+export function clearAPIKey(): void {
+  try { sessionStorage.removeItem('merlin_groq_key'); } catch { /* ignore */ }
+  _instance = null;
+  console.info('[MERLIN] Groq API key cleared — FastRoute fallback active');
 }

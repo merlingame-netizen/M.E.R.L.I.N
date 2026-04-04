@@ -5,7 +5,7 @@
 // No external assets — pure procedural synthesis
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover';
+type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover' | 'crystal' | 'cauldron';
 type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
@@ -176,6 +176,39 @@ function playEnd(ctx: AudioContext): void {
     osc.start(t);
     osc.stop(t + 3.1);
   }
+}
+
+// crystal: high chime arpeggio C6-G6-C7, bell-like shimmer for zone activation
+function playCrystal(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  // C6=1046.5, G6=1568, C7=2093
+  const notes = [1046.5, 1318.5, 1568.0, 2093.0];
+  notes.forEach((freq, i) => {
+    playTone(ctx, freq, t + i * 0.07, 0.35, 0.14, 'sine', t + i * 0.07 + 0.04);
+  });
+  // Subtle shimmer layer
+  playTone(ctx, 2637, t + 0.05, 0.2, 0.05, 'sine');
+}
+
+// cauldron: low sub-thump (80Hz) + filtered bubble noise burst
+function playCauldron(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  // Low thump — fast decay sine
+  const osc = ctx.createOscillator();
+  const env = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(80, t);
+  osc.frequency.exponentialRampToValueAtTime(40, t + 0.18);
+  env.gain.setValueAtTime(0.35, t);
+  env.gain.linearRampToValueAtTime(0, t + 0.22);
+  osc.connect(env);
+  env.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.25);
+  // Bubble noise burst at 400-800Hz bandpass
+  playNoise(ctx, t + 0.05, 0.18, 0.18, 600);
+  // Second lighter bubble
+  playNoise(ctx, t + 0.16, 0.12, 0.09, 900);
 }
 
 // ── Ambient audio (T066) ────────────────────────────────────────────────────
@@ -461,6 +494,20 @@ export function stopAmbient(): void {
 /** T072: Queue ambient type when AudioContext is suspended at call time. */
 let pendingAmbientType: AmbientType | null = null;
 
+/**
+ * Directly play a sound by name — used for zone interactions in main.ts.
+ * Silent-fails if AudioContext is unavailable.
+ */
+export function playSound(name: SFXName): void {
+  const ctx = ensureContext();
+  if (!ctx) return;
+  const fns: Record<SFXName, (c: AudioContext) => void> = {
+    hover: playHover, flip: playFlip, win: playWin, lose: playLose,
+    unlock: playUnlock, end: playEnd, crystal: playCrystal, cauldron: playCauldron,
+  };
+  try { fns[name]?.(ctx); } catch { /* silent fail */ }
+}
+
 export function initSFXManager(): void {
   const dispatch: Record<SFXName, (c: AudioContext) => void> = {
     hover: playHover,
@@ -469,6 +516,8 @@ export function initSFXManager(): void {
     lose: playLose,
     unlock: playUnlock,
     end: playEnd,
+    crystal: playCrystal,
+    cauldron: playCauldron,
   };
 
   const handleSFX = (e: Event): void => {

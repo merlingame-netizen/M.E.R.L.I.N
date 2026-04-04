@@ -34,46 +34,47 @@ interface BiomeTheme {
 }
 
 const THEMES: Readonly<Record<string, BiomeTheme>> = {
+  // N64 Banjo-Kazooie vivid palette — bright, saturated, low-poly pop
   marais_korrigans: {
-    fogColor: 0x0a1208, fogNear: 5, fogFar: 28,
-    groundColor: 0x0e1a08, skyTop: 0x04080a, skyMid: 0x0d1a0a,
-    ambientColor: 0x041204, keyColor: 0x22aa44, rimColor: 0x1a4422,
-    particleColor: 0x44ff88,
+    fogColor: 0x4a8c3c, fogNear: 5, fogFar: 32,
+    groundColor: 0x3a7228, skyTop: 0x1a6e48, skyMid: 0x4aaa5c,
+    ambientColor: 0x306830, keyColor: 0x44ff88, rimColor: 0x22cc55,
+    particleColor: 0x88ffaa,
     stoneDensity: 5, treeCount: 12, stoneType: 'menhir',
   },
   landes_bruyere: {
-    fogColor: 0x160a1a, fogNear: 8, fogFar: 40,
-    groundColor: 0x140810, skyTop: 0x0c0212, skyMid: 0x200a28,
-    ambientColor: 0x080210, keyColor: 0x8833bb, rimColor: 0x441166,
-    particleColor: 0xcc88ff,
+    fogColor: 0x8850b0, fogNear: 8, fogFar: 45,
+    groundColor: 0x6a3888, skyTop: 0x4a2090, skyMid: 0x9050c0,
+    ambientColor: 0x503080, keyColor: 0xcc66ff, rimColor: 0x8844cc,
+    particleColor: 0xee99ff,
     stoneDensity: 8, treeCount: 4, stoneType: 'menhir',
   },
   cercles_pierres: {
-    fogColor: 0x08081a, fogNear: 10, fogFar: 45,
-    groundColor: 0x0a0a14, skyTop: 0x04040e, skyMid: 0x080818,
-    ambientColor: 0x040408, keyColor: 0x4466ee, rimColor: 0x2244aa,
-    particleColor: 0x88aaff,
+    fogColor: 0x3050c0, fogNear: 10, fogFar: 50,
+    groundColor: 0x405898, skyTop: 0x1030a0, skyMid: 0x4060d0,
+    ambientColor: 0x283880, keyColor: 0x88aaff, rimColor: 0x4466dd,
+    particleColor: 0xaaccff,
     stoneDensity: 12, treeCount: 0, stoneType: 'circle',
   },
   villages_celtes: {
-    fogColor: 0x1a0e06, fogNear: 8, fogFar: 38,
-    groundColor: 0x14100a, skyTop: 0x0c0804, skyMid: 0x1a120a,
-    ambientColor: 0x0a0604, keyColor: 0xff8833, rimColor: 0xcc4422,
-    particleColor: 0xffcc66,
+    fogColor: 0xc07828, fogNear: 8, fogFar: 42,
+    groundColor: 0xa06030, skyTop: 0x784020, skyMid: 0xc88040,
+    ambientColor: 0x885030, keyColor: 0xffaa44, rimColor: 0xff6622,
+    particleColor: 0xffdd88,
     stoneDensity: 4, treeCount: 18, stoneType: 'ruins',
   },
   collines_dolmens: {
-    fogColor: 0x0c1208, fogNear: 6, fogFar: 32,
-    groundColor: 0x0e1608, skyTop: 0x060c04, skyMid: 0x0c1408,
-    ambientColor: 0x060a04, keyColor: 0x44aa55, rimColor: 0x225533,
-    particleColor: 0x99ddaa,
+    fogColor: 0x5aa040, fogNear: 6, fogFar: 36,
+    groundColor: 0x4a8830, skyTop: 0x2a7050, skyMid: 0x5aa860,
+    ambientColor: 0x3a6838, keyColor: 0x66dd44, rimColor: 0x44aa22,
+    particleColor: 0xaaeebb,
     stoneDensity: 6, treeCount: 8, stoneType: 'dolmen',
   },
   iles_mystiques: {
-    fogColor: 0x040a10, fogNear: 5, fogFar: 25,
-    groundColor: 0x060e14, skyTop: 0x020608, skyMid: 0x081018,
-    ambientColor: 0x020608, keyColor: 0x2288cc, rimColor: 0x115588,
-    particleColor: 0x44ccff,
+    fogColor: 0x2888cc, fogNear: 5, fogFar: 28,
+    groundColor: 0x306898, skyTop: 0x1050a0, skyMid: 0x3080c8,
+    ambientColor: 0x206080, keyColor: 0x44ccff, rimColor: 0x2299ee,
+    particleColor: 0x66eeff,
     stoneDensity: 7, treeCount: 6, stoneType: 'menhir',
   },
 };
@@ -166,8 +167,8 @@ function createTrees(count: number, trunkColor: number): Group {
 function createStones(theme: BiomeTheme): Group {
   const group = new Group();
   const stoneMat = new MeshStandardMaterial({
-    color: 0x2a2520, roughness: 0.95, metalness: 0.0, flatShading: true,
-    emissive: theme.keyColor, emissiveIntensity: 0.0,
+    color: 0x786858, roughness: 0.95, metalness: 0.0, flatShading: true,
+    emissive: theme.keyColor, emissiveIntensity: 0.04,
   });
   const R = () => Math.random();
 
@@ -329,11 +330,11 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   // Water plane for marais/iles biomes
   if (biome === 'marais_korrigans' || biome === 'iles_mystiques') {
     const waterMat = new MeshStandardMaterial({
-      color: biome === 'iles_mystiques' ? 0x0a1e2a : 0x0a1a08,
-      roughness: 0.1, metalness: 0.3,
-      transparent: true, opacity: 0.72,
-      emissive: biome === 'iles_mystiques' ? 0x051018 : 0x041008,
-      emissiveIntensity: 0.12,
+      color: biome === 'iles_mystiques' ? 0x1488ee : 0x28c868,
+      roughness: 0.1, metalness: 0.35,
+      transparent: true, opacity: 0.75,
+      emissive: biome === 'iles_mystiques' ? 0x0844aa : 0x106630,
+      emissiveIntensity: 0.18,
       flatShading: true,
     });
     const water = new Mesh(new PlaneGeometry(160, 160, 18, 14), waterMat);
@@ -344,7 +345,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
   // Landes bruyère: heather bushes (low purple blobs)
   if (biome === 'landes_bruyere') {
-    const heatherMat = new MeshStandardMaterial({ color: 0x5a1a6a, roughness: 0.9, metalness: 0.0, flatShading: true, emissive: 0x3a1050, emissiveIntensity: 0.08 });
+    const heatherMat = new MeshStandardMaterial({ color: 0xcc55ee, roughness: 0.9, metalness: 0.0, flatShading: true, emissive: 0x8822aa, emissiveIntensity: 0.12 });
     for (let i = 0; i < 30; i++) {
       const h = new Mesh(new SphereGeometry(0.3 + Math.random() * 0.4, 5, 4), heatherMat);
       h.scale.y = 0.35;
@@ -355,8 +356,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
   // Villages celtes: hut silhouettes
   if (biome === 'villages_celtes') {
-    const hutMat = new MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.9, metalness: 0.0, flatShading: true });
-    const roofMat = new MeshStandardMaterial({ color: 0x3a2a10, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x1a1008, emissiveIntensity: 0.1 });
+    const hutMat = new MeshStandardMaterial({ color: 0x8a6040, roughness: 0.9, metalness: 0.0, flatShading: true });
+    const roofMat = new MeshStandardMaterial({ color: 0xb08840, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x604820, emissiveIntensity: 0.12 });
     for (let i = 0; i < 5; i++) {
       const x = (Math.random() - 0.5) * 40;
       const z = -10 - Math.random() * 30;
