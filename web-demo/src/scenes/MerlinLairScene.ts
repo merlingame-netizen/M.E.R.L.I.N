@@ -714,7 +714,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.fog = new THREE.Fog(0x0d0a08, 12, 28);
 
   const camera = new THREE.PerspectiveCamera(62, container.clientWidth / container.clientHeight, 0.1, 60);
-  camera.position.set(0, 0.5, 7);
+  camera.position.set(0, 0.5, 10); // C127: start pulled back — entry cinematic eases to z=7
   camera.lookAt(0, 0, -4);
 
   const onResize = (): void => {
@@ -847,6 +847,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const mouse = new THREE.Vector2();
   let zoneClickCallback: ((zone: LairZone) => void) | null = null;
   let elapsedTime = 0;
+  // C127: entry pull-in cinematic — camera eases from z=10 to z=7 over 1.2s
+  const ENTRY_CAM_DURATION = 1.2;
+  let entryCamDone = false;
   let currentHovered: InteractiveObject | null = null;
 
   const getIntersected = (): InteractiveObject | null => {
@@ -1056,6 +1059,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const update = (dt: number): void => {
     if (lairDisposed) return; // C105: guard stale rAF frame after dispose() on slow devices
     elapsedTime += dt;
+
+    // C127: entry cinematic — cubic ease-out pull from z=10 to z=7 over 1.2s
+    if (!entryCamDone) {
+      const t = Math.min(elapsedTime / ENTRY_CAM_DURATION, 1.0);
+      const eased = 1 - (1 - t) * (1 - t) * (1 - t); // cubic ease-out
+      camera.position.z = 10 - 3 * eased; // 10 → 7
+      if (t >= 1.0) { camera.position.z = 7; entryCamDone = true; }
+    }
 
     // Camera slow sway (fixed camera, slight oscillation for life)
     camera.position.x = Math.sin(elapsedTime * 0.3 * Math.PI * 2) * 0.1;

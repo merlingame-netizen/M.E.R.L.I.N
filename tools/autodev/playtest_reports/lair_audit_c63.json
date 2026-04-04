@@ -1,0 +1,67 @@
+{
+  "cycle": "C63",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "subject": "mg_regard.ts — C126 fix verification (tieredValue array-of-arrays)",
+  "mg_regard_c126_verification": {
+    "tieredValue_type_safe": true,
+    "tieredValue_type_notes": "tieredValue<T>(values: readonly [T,T,T,T]): T — with [[3,4,5],[4,5,6],[4,5,6],[5,6,7]] as const, T is inferred as each inner readonly tuple. TypeScript resolves roundLengths as readonly [3,4,5]|readonly [4,5,6]|readonly [5,6,7], which satisfies readonly number[]. No unsafe cast, no any. Compile-time safe.",
+    "roundLengths_usage_correct": true,
+    "roundLengths_usages": [
+      { "line": 99,  "expr": "this.roundLengths.length",                            "safe": true, "note": "Array length — works on any readonly array" },
+      { "line": 135, "expr": "this.currentRound >= this.roundLengths.length",         "safe": true, "note": "Bounds guard — executed before index access" },
+      { "line": 140, "expr": "this.roundLengths[this.currentRound]",                  "safe": true, "note": "Only reached after guard at line 135; no OOB possible" },
+      { "line": 249, "expr": "this.roundLengths.reduce((a, b) => a + b, 0)",          "safe": true, "note": "reduce on readonly number[] — valid, returns totalSymbols" },
+      { "line": 278, "expr": "this.roundLengths.length (display)",                   "safe": true, "note": "UI only" },
+      { "line": 282, "expr": "this.currentRound >= this.roundLengths.length (guard)", "safe": true, "note": "Second guard in render loop before calling endGame()" }
+    ],
+    "bounds_check_safe": true,
+    "bounds_check_notes": "Double-guarded: prepareRound() at line 135 and render() feedback phase at line 282. currentRound increments only in render() phase='feedback' path. No path can reach roundLengths[currentRound] without passing the guard.",
+    "tier0_config": {
+      "roundLengths": [3, 4, 5],
+      "showTime": 3.0,
+      "totalTargets": 12,
+      "rounds": 3
+    },
+    "tier1_config": {
+      "roundLengths": [4, 5, 6],
+      "showTime": 2.5,
+      "totalTargets": 15,
+      "rounds": 3
+    },
+    "tier2_config": {
+      "roundLengths": [4, 5, 6],
+      "showTime": 2.0,
+      "totalTargets": 15,
+      "rounds": 3
+    },
+    "tier3_config": {
+      "roundLengths": [5, 6, 7],
+      "showTime": 1.5,
+      "totalTargets": 18,
+      "rounds": 3
+    },
+    "score_calc_correct": true,
+    "score_calc_notes": "endGame() computes: totalSymbols = roundLengths.reduce(sum) [12-18]; finalScore = (correctTotal / totalSymbols) * 100. attemptsTotal is UI-only (mid-game 'Correct: X/Y' display). correctTotal is bounded by totalSymbols since clickedIndex is capped at sequence.length per round. Score is always in [0,100]. No division-by-zero: totalSymbols >= 12 for all tiers.",
+    "score_calc_edge_case": "Wrong clicks beyond sequence length accumulate attemptsTotal without affecting finalScore. This is intentional — score rewards correct symbol recall, not click economy.",
+    "issues_found": []
+  },
+  "tieredValue_coverage_final": {
+    "fully_tiered": 14,
+    "partially_tiered": 0,
+    "status": "COMPLETE",
+    "notes": "C126 completes mg_regard tieredValue adoption. All 14 minigames now use tieredValue for all difficulty-scaled parameters. First use of array-of-arrays (tuple-of-tuples) in the codebase; TypeScript inference handles it correctly via generic T."
+  },
+  "verdict": "PASS",
+  "bugs": [],
+  "score": 10.0,
+  "confidence": "HIGH",
+  "evidence": [
+    "tieredValue<T> signature is generic — T inferred as inner tuple type, not 'number', preserving readonly tuple literal types",
+    "Math.min(difficultyTier, 3) clamps index to [0-3] — no OOB on the outer 4-tuple",
+    "All 6 roundLengths usages verified safe — 2 guards before indexing, 1 reduce, 1 length, 2 display",
+    "All 4 tier roundLengths are length-3 tuples — roundLengths.length === 3 invariant holds across all tiers",
+    "Score denominator is totalSymbols (reduce sum), not attemptsTotal — bounded and non-zero",
+    "No division-by-zero: minimum totalSymbols = 12 (tier 0)"
+  ]
+}
