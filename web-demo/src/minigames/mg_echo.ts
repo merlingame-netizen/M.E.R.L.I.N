@@ -38,8 +38,8 @@ export class MinigameEcho extends MinigameBase {
 
   // Game config
   private readonly totalRounds = 6;
-  private readonly flashDuration = 0.5;   // how long symbol is visible
-  private readonly windowDuration = 1.2;  // total time to answer per round
+  private flashDuration = 0.5;   // C100: [0.5,0.4,0.35,0.3]s
+  private windowDuration = 1.2;  // C100: [1.2,1.0,0.8,0.7]s
   private readonly pauseBetween = 0.6;    // pause between rounds
 
   // Quadrant positions (relative to canvas center)
@@ -72,6 +72,10 @@ export class MinigameEcho extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling — shorter flash and answer window at high tiers
+    this.flashDuration  = this.tieredValue([0.5, 0.4, 0.35, 0.3] as const);
+    this.windowDuration = this.tieredValue([1.2, 1.0, 0.8, 0.7] as const);
 
     // Title
     const title = document.createElement('div');
@@ -149,8 +153,10 @@ export class MinigameEcho extends MinigameBase {
     if (clickedQuadrant === this.targetQuadrant) {
       this.hits++;
       this.feedback = 'hit';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.feedback = 'miss';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
 
     this.phase = 'feedback';
@@ -245,6 +251,7 @@ export class MinigameEcho extends MinigameBase {
         this.phase = 'feedback';
         this.feedbackTimer = 0.5;
         this.answered = true;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
 
         const statusEl = document.getElementById('mg-echo-status');
         if (statusEl) {

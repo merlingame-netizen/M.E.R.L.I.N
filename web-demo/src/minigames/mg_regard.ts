@@ -47,7 +47,7 @@ export class MinigameRegard extends MinigameBase {
 
   // Game config
   private readonly roundLengths: readonly number[] = [4, 5, 6]; // symbols per round
-  private readonly showTime = 3.0;    // seconds to memorize
+  private showTime = 3.0;    // C100: [3.0,2.5,2.0,1.5]s to memorize
   private readonly gridCols = 5;
   private readonly gridRows = 3;
   private readonly cellSize = 60;
@@ -68,6 +68,9 @@ export class MinigameRegard extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling — less time to memorize at high tiers
+    this.showTime = this.tieredValue([3.0, 2.5, 2.0, 1.5] as const);
 
     // Title
     const title = document.createElement('div');
@@ -202,6 +205,7 @@ export class MinigameRegard extends MinigameBase {
           // Correct
           this.correctTotal++;
           this.clickedIndex++;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
 
           if (this.clickedIndex >= this.sequence.length) {
             // Round complete
@@ -214,6 +218,7 @@ export class MinigameRegard extends MinigameBase {
           this.phase = 'feedback';
           this.feedbackCorrect = false;
           this.feedbackTimer = 0.8;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
         }
 
         const statusEl = document.getElementById('mg-regard-status');

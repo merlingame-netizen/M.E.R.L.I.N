@@ -27,7 +27,8 @@ export class MinigameEquilibre extends MinigameBase {
   private timeLeft = 12;
   private readonly totalTime = 12;
   private timeInZone = 0; // seconds spent inside safe zone
-  private readonly safeZoneHalf = 0.25; // +/- 0.25 from center
+  private safeZoneHalf = 0.25; // C100: [0.25,0.20,0.15,0.10] — narrower at high tier
+  private wasInZone = false;   // C100: SFX edge-trigger
 
   // Wind system
   private gusts: WindGust[] = [];
@@ -48,6 +49,9 @@ export class MinigameEquilibre extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling — narrower safe zone at high tiers
+    this.safeZoneHalf = this.tieredValue([0.25, 0.20, 0.15, 0.10] as const);
 
     // Title
     const title = document.createElement('div');
@@ -97,6 +101,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.elapsedTime = 0;
     this.keysDown = new Set();
     this.ended = false;
+    this.wasInZone = false;
     this.touchSide = null;
 
     // Input handlers
@@ -217,8 +222,12 @@ export class MinigameEquilibre extends MinigameBase {
     if (this.cursorX < -1) { this.cursorX = -1; this.velocity = 0; }
     if (this.cursorX > 1) { this.cursorX = 1; this.velocity = 0; }
 
-    // Track time in safe zone
-    if (Math.abs(this.cursorX) <= this.safeZoneHalf) {
+    // Track time in safe zone — C100: edge-triggered SFX on zone enter/leave
+    const nowInZone = Math.abs(this.cursorX) <= this.safeZoneHalf;
+    if (nowInZone && !this.wasInZone) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+    if (!nowInZone && this.wasInZone) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+    this.wasInZone = nowInZone;
+    if (nowInZone) {
       this.timeInZone += dt;
     }
 

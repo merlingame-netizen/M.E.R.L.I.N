@@ -27,13 +27,13 @@ export class MinigameApaisement extends MinigameBase {
   private readonly centerX = 190;
   private readonly centerY = 190;
 
-  // Breathing config
-  private readonly totalTime = 12;
-  private readonly breathCycleDuration = 3.0; // seconds per full breath cycle
+  // Breathing config — C100: scaled by difficultyTier in setup()
+  private totalTime = 12;             // C100: [12,10,8,6]s
+  private breathCycleDuration = 3.0;  // C100: [3.0,2.5,2.0,1.7]s
   private readonly minRadius = 30;
   private readonly maxRadius = 120;
-  private readonly targetWindow = 0.15; // fraction of cycle where tap is "perfect"
-  private readonly goodWindow = 0.30;   // fraction of cycle where tap is "good"
+  private targetWindow = 0.15;        // C100: [0.15,0.13,0.10,0.08]
+  private goodWindow = 0.30;          // C100: [0.30,0.25,0.20,0.16]
 
   // Game state
   private timeLeft = 12;
@@ -50,6 +50,12 @@ export class MinigameApaisement extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling
+    this.totalTime           = this.tieredValue([12, 10, 8, 6] as const);
+    this.breathCycleDuration = this.tieredValue([3.0, 2.5, 2.0, 1.7] as const);
+    this.targetWindow        = this.tieredValue([0.15, 0.13, 0.10, 0.08] as const);
+    this.goodWindow          = this.tieredValue([0.30, 0.25, 0.20, 0.16] as const);
 
     // Title
     const title = document.createElement('div');
@@ -173,12 +179,15 @@ export class MinigameApaisement extends MinigameBase {
     if (accuracy >= 0.9) {
       this.lastTapFeedback = 'Parfait !';
       this.feedbackColor = '#60c060';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else if (accuracy >= 0.5) {
       this.lastTapFeedback = 'Bien';
       this.feedbackColor = '#a0b060';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.lastTapFeedback = 'Decale...';
       this.feedbackColor = '#b06040';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
     this.feedbackAlpha = 1.0;
 

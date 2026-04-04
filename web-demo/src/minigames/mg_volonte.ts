@@ -34,11 +34,11 @@ export class MinigameVolonte extends MinigameBase {
   private readonly centerX = 190;
   private readonly centerY = 190;
 
-  // Game config
+  // Game config — C100: scaled by difficultyTier in setup()
   private readonly totalTime = 10;
-  private readonly targetRadius = 30;
-  private readonly spawnInterval = 0.6;  // new distractor every 0.6s
-  private readonly maxDistractors = 12;
+  private targetRadius = 30;        // C100: [30,26,22,18]px
+  private spawnInterval = 0.6;      // C100: [0.6,0.5,0.4,0.3]s
+  private maxDistractors = 12;      // C100: [12,14,16,18]
 
   // Game state
   // Cursor starts at (0,0) — outside the target radius of 30px at (190,190).
@@ -49,6 +49,8 @@ export class MinigameVolonte extends MinigameBase {
   private elapsedTime = 0;
   private timeOnTarget = 0;
   private isOnTarget = false;  // re-evaluated each frame; init false prevents free credit
+  private wasOnTarget = false; // C100: SFX edge-trigger
+  private ended = false;       // C100: idempotent guard
   private pulsePhase = 0;
   private distractors: Distractor[] = [];
   private nextSpawn = 0.5;
@@ -56,6 +58,11 @@ export class MinigameVolonte extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling — smaller target, faster/more distractors
+    this.targetRadius   = this.tieredValue([30, 26, 22, 18] as const);
+    this.spawnInterval  = this.tieredValue([0.6, 0.5, 0.4, 0.3] as const);
+    this.maxDistractors = this.tieredValue([12, 14, 16, 18] as const);
 
     // Title
     const title = document.createElement('div');
@@ -113,6 +120,8 @@ export class MinigameVolonte extends MinigameBase {
     this.elapsedTime = 0;
     this.timeOnTarget = 0;
     this.isOnTarget = false;
+    this.wasOnTarget = false;
+    this.ended = false;
     this.pulsePhase = 0;
     this.distractors = [];
     this.nextSpawn = 0.5;
@@ -167,6 +176,8 @@ export class MinigameVolonte extends MinigameBase {
   }
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
@@ -190,7 +201,11 @@ export class MinigameVolonte extends MinigameBase {
     const dx = this.cursorX - this.centerX;
     const dy = this.cursorY - this.centerY;
     const dist = Math.sqrt(dx * dx + dy * dy);
+    this.wasOnTarget = this.isOnTarget;
     this.isOnTarget = dist <= this.targetRadius;
+    // C100: edge-triggered SFX on target enter/leave
+    if (this.isOnTarget && !this.wasOnTarget) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+    if (!this.isOnTarget && this.wasOnTarget) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
 
     if (this.isOnTarget) {
       this.timeOnTarget += dt;

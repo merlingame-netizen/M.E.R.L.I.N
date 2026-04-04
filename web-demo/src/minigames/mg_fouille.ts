@@ -53,10 +53,10 @@ export class MinigameFouille extends MinigameBase {
   private readonly canvasW = 420;
   private readonly canvasH = 380;
 
-  // Game config
-  private readonly totalTime = 12;
-  private readonly decoyCount = 15;
-  private readonly shuffleInterval = 2; // seconds between shuffles
+  // Game config — C100: scaled by difficultyTier in setup()
+  private totalTime = 12;        // C100: [12,10,8,7]s
+  private decoyCount = 15;       // C100: [15,18,21,24] decoys
+  private shuffleInterval = 2;   // C100: [2.0,1.5,1.2,1.0]s
 
   // Game state
   private objects: PlacedObject[] = [];
@@ -74,6 +74,11 @@ export class MinigameFouille extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling
+    this.totalTime       = this.tieredValue([12, 10, 8, 7] as const);
+    this.decoyCount      = this.tieredValue([15, 18, 21, 24] as const);
+    this.shuffleInterval = this.tieredValue([2.0, 1.5, 1.2, 1.0] as const);
 
     // Pick target
     this.targetLabel = pick(TARGET_OBJECTS);
@@ -207,11 +212,13 @@ export class MinigameFouille extends MinigameBase {
     const obj = this.objects[idx];
     if (obj.isTarget) {
       this.found = true;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       const statusEl = document.getElementById('mg-fouille-status');
       if (statusEl) statusEl.textContent = 'Trouve !';
       // Short delay before ending to show the found state
       setTimeout(() => this.endGame(), 400);
     } else {
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       this.clickedWrong = true;
       this.wrongClickTimer = 0.5;
     }

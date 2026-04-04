@@ -55,11 +55,11 @@ export class MinigameNegociation extends MinigameBase {
   private readonly canvasW = 380;
   private readonly canvasH = 400;
 
-  // Game config
-  private readonly totalTime = 12;
-  private readonly maxWords = 30; // words on screen at once
-  private readonly scrollSpeed = 40; // pixels per second
-  private readonly spawnInterval = 0.6; // seconds between spawns
+  // Game config — C100: scaled by difficultyTier in setup()
+  private totalTime = 12;            // C100: [12,10,8,7]s
+  private readonly maxWords = 30;    // words on screen at once
+  private scrollSpeed = 40;          // C100: [40,50,60,70]px/s
+  private spawnInterval = 0.6;       // C100: [0.6,0.5,0.4,0.35]s
   private readonly wordHeight = 28;
 
   // Game state
@@ -79,6 +79,11 @@ export class MinigameNegociation extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C100: difficulty scaling
+    this.totalTime     = this.tieredValue([12, 10, 8, 7] as const);
+    this.scrollSpeed   = this.tieredValue([40, 50, 60, 70] as const);
+    this.spawnInterval = this.tieredValue([0.6, 0.5, 0.4, 0.35] as const);
 
     // Pick random target faction
     const factionKeys = Object.keys(FACTION_KEYWORDS);
@@ -233,9 +238,11 @@ export class MinigameNegociation extends MinigameBase {
     if (sw.word.isFactionWord) {
       this.comboCount++;
       this.maxCombo = Math.max(this.maxCombo, this.comboCount);
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       // Neutral word breaks combo
       this.comboCount = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
 
     // Update sequence display
