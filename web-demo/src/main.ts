@@ -167,9 +167,9 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
       ['marais_korrigans',  'Marais des Korrigans'],
       ['landes_bruyere',    'Landes de Bruyère'],
       ['cercles_pierres',   'Cercles de Pierres'],
-      ['villages_celtes',   'Villages Celtes'],
-      ['collines_dolmens',  'Collines aux Dolmens'],
-      ['iles_mystiques',    'Îles Mystiques'],
+      ['monts_brumeux',     'Monts Brumeux'],
+      ['plaine_druides',    'Plaine des Druides'],
+      ['vallee_anciens',    'Vallée des Anciens'],
     ];
 
     for (const [id, label] of BIOME_ENTRIES) {
