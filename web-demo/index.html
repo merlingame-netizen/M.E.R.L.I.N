@@ -56,8 +56,8 @@
       align-items: center;
       background: #000;
       z-index: 9999;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      color: #cd853f;
+      font-family: 'Courier New', Courier, monospace;
+      color: #33ff66;
       transition: opacity 0.8s ease;
       overflow: hidden;
     }
@@ -68,30 +68,31 @@
       margin-bottom: 32px;
     }
     .boot-title {
-      font-size: 36px;
+      font-size: 28px;
       letter-spacing: 8px;
       font-weight: 300;
-      color: #e8dcc8;
+      color: rgba(51,255,102,0.92);
+      text-shadow: 0 0 18px rgba(51,255,102,0.40);
       margin-bottom: 8px;
     }
     .boot-subtitle {
-      font-size: 13px;
+      font-size: 11px;
       letter-spacing: 3px;
-      opacity: 0.5;
-      color: #cd853f;
+      opacity: 0.55;
+      color: rgba(51,255,102,0.70);
       text-transform: uppercase;
       margin-bottom: 48px;
     }
     .boot-progress-track {
       width: 280px;
       height: 2px;
-      background: rgba(205,133,63,0.2);
+      background: rgba(51,255,102,0.12);
       border-radius: 2px;
       overflow: hidden;
     }
     .boot-progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #8b4513, #cd853f, #f4c97a);
+      background: linear-gradient(90deg, #0a3318, #1a8833, #33ff66);
       border-radius: 2px;
       width: 0%;
       animation: boot-load 2.5s ease-in-out forwards;
@@ -326,7 +327,7 @@
       align-items: center;
       background: rgba(5, 4, 8, 0.92);
       z-index: 20;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Courier New', Courier, monospace;
     }
     #card-overlay.visible { display: flex; }
 
@@ -334,25 +335,26 @@
       max-width: 680px;
       width: 92%;
       padding: 36px 32px 32px;
-      background: linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209);
-      border: 2px solid rgba(201,168,76,0.45);
-      border-radius: 12px;
-      color: #f5e6c8;
+      background: rgba(1,8,2,0.97);
+      border: 1px solid rgba(51,255,102,0.18);
+      border-left: 3px solid #1a8833;
+      border-radius: 4px;
+      color: rgba(51,255,102,0.88);
       position: relative;
       box-shadow:
-        0 0 0 1px rgba(201,168,76,0.12),
+        0 0 0 1px rgba(51,255,102,0.06),
         inset 0 0 60px rgba(0,0,0,0.5),
         0 8px 40px rgba(0,0,0,0.8);
     }
-    /* Celtic corner accents */
+    /* CRT corner accents */
     .card-container::before,
     .card-container::after {
       content: '';
       position: absolute;
-      width: 28px; height: 28px;
-      border-color: #c9a84c;
+      width: 20px; height: 20px;
+      border-color: #1a8833;
       border-style: solid;
-      opacity: 0.6;
+      opacity: 0.7;
     }
     .card-container::before {
       top: 8px; left: 8px;
@@ -371,28 +373,28 @@
       font-size: 10px;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: #c9a84c;
-      opacity: 0.65;
+      color: rgba(51,255,102,0.55);
+      opacity: 0.90;
       padding: 3px 8px;
-      border: 1px solid rgba(201,168,76,0.3);
-      border-radius: 10px;
+      border: 1px solid rgba(51,255,102,0.20);
+      border-radius: 2px;
       background: rgba(0,0,0,0.3);
     }
-    /* Decorative gold top-line separator */
+    /* CRT terminal separator */
     .card-divider {
       width: 60%; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+      background: linear-gradient(90deg, transparent, rgba(51,255,102,0.30), transparent);
       margin: 0 auto 24px;
     }
     .card-narrative {
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 17px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 15px;
       line-height: 1.7;
       margin-bottom: 28px;
-      font-style: italic;
+      font-style: normal;
       text-align: center;
-      color: #f5e6c8;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      color: rgba(51,255,102,0.85);
+      text-shadow: 0 0 8px rgba(51,255,102,0.20);
     }
     .card-options {
       display: flex;
@@ -405,9 +407,9 @@
       min-width: 160px;
       max-width: 210px;
       padding: 14px 12px;
-      background: rgba(10, 7, 3, 0.7);
-      border: 1px solid rgba(201,168,76,0.35);
-      border-radius: 8px;
+      background: rgba(1,8,2,0.80);
+      border: 1px solid rgba(51,255,102,0.18);
+      border-radius: 2px;
       cursor: pointer;
       text-align: center;
       transition: all 0.25s ease;
@@ -415,23 +417,25 @@
       position: relative;
     }
     .card-option:hover {
-      background: rgba(35, 22, 6, 0.9);
-      border-color: rgba(201,168,76,0.85);
-      transform: translateY(-3px);
-      box-shadow: 0 0 18px rgba(201,168,76,0.2), inset 0 0 12px rgba(201,168,76,0.05);
+      background: rgba(5,20,8,0.95);
+      border-color: rgba(51,255,102,0.55);
+      transform: translateY(-2px);
+      box-shadow: 0 0 14px rgba(51,255,102,0.12), inset 0 0 10px rgba(51,255,102,0.04);
     }
     .card-option .verb {
-      font-family: Georgia, serif;
+      font-family: 'Courier New', Courier, monospace;
       font-weight: bold;
-      font-size: 15px;
+      font-size: 13px;
       margin-bottom: 7px;
-      color: #c9a84c;
-      letter-spacing: 0.5px;
+      color: #33ff66;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-shadow: 0 0 6px rgba(51,255,102,0.30);
     }
     .card-option .desc {
-      font-size: 12px;
+      font-size: 11px;
       opacity: 0.75;
-      color: #e8d4aa;
+      color: rgba(51,255,102,0.60);
       line-height: 1.4;
     }
     /* Faction dot indicator */
@@ -452,9 +456,9 @@
       min-width: 140px;
       max-width: 180px;
       padding: 10px 12px;
-      background: rgba(10, 7, 3, 0.96);
-      border: 1px solid rgba(201,168,76,0.45);
-      border-radius: 8px;
+      background: rgba(1,8,2,0.96);
+      border: 1px solid rgba(51,255,102,0.22);
+      border-radius: 2px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.7);
       z-index: 50;
       pointer-events: none;
@@ -482,16 +486,16 @@
     .effect-tooltip .effect-line {
       font-size: 11px;
       line-height: 1.8;
-      color: #e8d4aa;
+      color: rgba(51,255,102,0.65);
     }
     .effect-tooltip .effect-pos { color: #7dce82; }
     .effect-tooltip .effect-neg { color: #e05c5c; }
-    .effect-tooltip .effect-neu { color: #c9a84c; }
+    .effect-tooltip .effect-neu { color: rgba(51,255,102,0.55); }
 
-    /* T073: Card selection gold flash */
+    /* T073: Card selection CRT flash */
     .card-option-selected {
-      background: rgba(201, 168, 76, 0.3) !important;
-      border-color: #c9a84c !important;
+      background: rgba(26,136,51,0.25) !important;
+      border-color: rgba(51,255,102,0.70) !important;
       transition: none !important;
     }
 
@@ -531,8 +535,8 @@
       align-items: center;
       background: rgba(5, 8, 18, 0.93);
       z-index: 30;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      color: #e8dcc8;
+      font-family: 'Courier New', Courier, monospace;
+      color: rgba(51,255,102,0.88);
     }
     #minigame-overlay.visible { display: flex; }
 

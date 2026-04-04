@@ -19,7 +19,7 @@ const FACTION_COLOURS: Record<string, string> = {
 };
 
 function getFactionColour(faction: string): string {
-  return FACTION_COLOURS[faction.toLowerCase()] ?? '#c9a84c';
+  return FACTION_COLOURS[faction.toLowerCase()] ?? 'rgba(51,255,102,0.70)';
 }
 
 // ── Effect parsing for tooltip (T068) ─────────────────────────────────────
