@@ -383,7 +383,7 @@ export class MinigameRegard extends MinigameBase {
       const seqStartX = (this.canvasW - (this.sequence.length - 1) * seqSpacing) / 2;
       for (let i = 0; i < this.sequence.length; i++) {
         const sx = seqStartX + i * seqSpacing;
-        ctx.font = '24px serif';
+        ctx.font = '24px Courier New';
         ctx.fillStyle = '#cd853f';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -438,7 +438,7 @@ export class MinigameRegard extends MinigameBase {
 
       // Symbol (always visible -- player must remember ORDER not position)
       const symAlpha = isClicked ? 0.3 : 0.8;
-      ctx.font = '22px serif';
+      ctx.font = '22px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = `rgba(232,220,200,${symAlpha})`;

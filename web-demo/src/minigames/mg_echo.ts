@@ -411,7 +411,7 @@ export class MinigameEcho extends MinigameBase {
       ctx.fill();
 
       // Symbol
-      ctx.font = '36px serif';
+      ctx.font = '36px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = `rgba(255,220,150,${flashAlpha})`;

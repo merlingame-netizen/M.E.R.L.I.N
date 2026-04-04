@@ -60,7 +60,7 @@ function buildFactionRow(factionId: string, reputation: number, delta: number): 
   barTrack.style.cssText = [
     'flex:1',
     'height:6px',
-    'background:rgba(255,255,255,0.1)',
+    'background:rgba(51,255,102,0.08)',
     'border-radius:3px',
     'overflow:hidden',
   ].join(';');
@@ -138,10 +138,10 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'display:flex',
     'justify-content:center',
     'align-items:center',
-    'background:rgba(10,10,18,0.92)',
+    'background:rgba(2,8,2,0.96)',
     'z-index:70',
-    'font-family:\'Segoe UI\',system-ui,sans-serif',
-    'color:#e8dcc8',
+    `font-family:'Courier New',monospace`,
+    'color:rgba(51,255,102,0.88)',
   ].join(';');
 
   const panel = document.createElement('div');
@@ -149,16 +149,17 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'max-width:480px',
     'width:90%',
     'padding:36px 40px',
-    'background:linear-gradient(145deg,rgba(30,25,20,0.97),rgba(15,12,10,0.99))',
-    'border:1px solid rgba(205,133,63,0.35)',
-    'border-radius:20px',
+    'background:rgba(1,8,2,0.97)',
+    'border:1px solid rgba(51,255,102,0.18)',
+    'border-left:3px solid #1a8833',
+    'border-radius:4px',
     'text-align:center',
   ].join(';');
 
   // Header
   const header = document.createElement('div');
-  header.style.cssText = 'font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#cd853f;margin-bottom:8px;';
-  header.textContent = 'Fin de Quete';
+  header.style.cssText = `font-size:16px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#33ff66;margin-bottom:8px;font-family:'Courier New',monospace;text-shadow:0 0 8px rgba(51,255,102,0.35);`;
+  header.textContent = '> FIN_DE_QUETE';
   panel.appendChild(header);
 
   // Reason message
@@ -169,7 +170,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   // Divider
   const div1 = document.createElement('hr');
-  div1.style.cssText = 'border:none;border-top:1px solid rgba(205,133,63,0.2);margin-bottom:20px;';
+  div1.style.cssText = 'border:none;border-top:1px solid rgba(51,255,102,0.12);margin-bottom:20px;';
   panel.appendChild(div1);
 
   // Stats grid
@@ -188,7 +189,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     lbl.style.cssText = 'font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:2px;';
     lbl.textContent = label;
     const val = document.createElement('div');
-    val.style.cssText = 'font-size:18px;font-weight:600;color:#cd853f;';
+    val.style.cssText = `font-size:16px;font-weight:600;color:#33ff66;font-family:'Courier New',monospace;`;
     val.textContent = String(value);
     cell.appendChild(lbl);
     cell.appendChild(val);
@@ -205,7 +206,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   // Divider
   const div2 = document.createElement('hr');
-  div2.style.cssText = 'border:none;border-top:1px solid rgba(205,133,63,0.2);margin-bottom:16px;';
+  div2.style.cssText = 'border:none;border-top:1px solid rgba(51,255,102,0.12);margin-bottom:16px;';
   panel.appendChild(div2);
 
   // Faction section header
@@ -228,7 +229,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   const promises = state.run.promises;
   if (promises.length > 0) {
     const div3 = document.createElement('hr');
-    div3.style.cssText = 'border:none;border-top:1px solid rgba(205,133,63,0.2);margin-bottom:16px;';
+    div3.style.cssText = 'border:none;border-top:1px solid rgba(51,255,102,0.12);margin-bottom:16px;';
     panel.appendChild(div3);
 
     const promiseHeader = document.createElement('div');
@@ -268,18 +269,19 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   const restartBtn = document.createElement('button');
   restartBtn.id = 'run-summary-restart';
   restartBtn.style.cssText = [
-    'padding:12px 40px',
-    'font-size:15px',
+    'padding:10px 36px',
+    'font-size:13px',
     'cursor:pointer',
-    'background:rgba(139,69,19,0.3)',
-    'color:#e8dcc8',
-    'border:1px solid rgba(205,133,63,0.5)',
-    'border-radius:10px',
-    'font-family:inherit',
-    'letter-spacing:1px',
+    'background:rgba(26,136,51,0.15)',
+    'color:#33ff66',
+    'border:1px solid rgba(51,255,102,0.35)',
+    'border-radius:2px',
+    `font-family:'Courier New',monospace`,
+    'letter-spacing:0.18em',
+    'text-transform:uppercase',
     'transition:all 0.2s ease',
   ].join(';');
-  restartBtn.textContent = 'Rejouer';
+  restartBtn.textContent = '> REJOUER';
   // C87: :focus-visible outline for keyboard users — WCAG 2.4.7 (Focus Visible).
   // Inline event listeners are used because this element is created dynamically
   // and no stylesheet is injected by this module.
@@ -288,17 +290,17 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   // 4 listeners accumulate on a detached restartBtn node per run — modern GC eventually
   // collects them but memory pressure on mobile (low-end ~512MB) can spike between runs.
   const onFocus = (): void => {
-    restartBtn.style.outline = '2px solid rgba(205,133,63,0.9)';
+    restartBtn.style.outline = '2px solid rgba(51,255,102,0.8)';
     restartBtn.style.outlineOffset = '3px';
   };
   const onBlur = (): void => { restartBtn.style.outline = 'none'; };
   const onPointerEnter = (): void => {
-    restartBtn.style.background = 'rgba(139,69,19,0.55)';
-    restartBtn.style.borderColor = 'rgba(205,133,63,0.9)';
+    restartBtn.style.background = 'rgba(26,136,51,0.35)';
+    restartBtn.style.borderColor = 'rgba(51,255,102,0.7)';
   };
   const onPointerLeave = (): void => {
-    restartBtn.style.background = 'rgba(139,69,19,0.3)';
-    restartBtn.style.borderColor = 'rgba(205,133,63,0.5)';
+    restartBtn.style.background = 'rgba(26,136,51,0.15)';
+    restartBtn.style.borderColor = 'rgba(51,255,102,0.35)';
   };
   restartBtn.addEventListener('focus', onFocus);
   restartBtn.addEventListener('blur', onBlur);

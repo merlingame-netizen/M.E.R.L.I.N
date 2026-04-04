@@ -327,7 +327,7 @@ export class MinigameRunes extends MinigameBase {
 
         // Ogham symbol
         ctx.fillStyle = '#e8dcc8';
-        ctx.font = '32px serif';
+        ctx.font = '32px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(tile.symbol, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 - 8);
@@ -349,7 +349,7 @@ export class MinigameRunes extends MinigameBase {
 
         // Ogham symbol (dimmed)
         ctx.fillStyle = 'rgba(143,188,143,0.7)';
-        ctx.font = '32px serif';
+        ctx.font = '32px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(tile.symbol, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 - 8);

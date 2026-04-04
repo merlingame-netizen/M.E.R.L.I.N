@@ -350,7 +350,7 @@ export class MinigameCourse extends MinigameBase {
     ctx.textBaseline = 'top';
     ctx.fillText('Trouve:', this.canvasW / 2, 8);
 
-    ctx.font = '36px serif';
+    ctx.font = '36px Courier New';
     ctx.fillStyle = '#cd853f';
     ctx.fillText(this.promptSymbol, this.canvasW / 2, 26);
 
@@ -377,7 +377,7 @@ export class MinigameCourse extends MinigameBase {
 
       // Decoys
       for (const d of this.decoys) {
-        ctx.font = '28px serif';
+        ctx.font = '28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = `rgba(120,100,100,${alpha * 0.6})`;
@@ -394,7 +394,7 @@ export class MinigameCourse extends MinigameBase {
       // Target (slightly brighter)
       if (this.target) {
         const targetPulse = 0.7 + Math.sin(this.pulsePhase * 5) * 0.3;
-        ctx.font = '28px serif';
+        ctx.font = '28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = `rgba(220,200,160,${alpha * targetPulse})`;

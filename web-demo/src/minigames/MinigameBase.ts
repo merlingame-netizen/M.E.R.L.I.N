@@ -142,7 +142,7 @@ function showOutcomeOverlay(container: HTMLElement, score: number, level: Outcom
     badge.textContent = cfg.label;
     badge.style.cssText = [
       `color:${cfg.color};font-size:clamp(22px,5vw,32px);font-weight:700;`,
-      'letter-spacing:0.12em;font-family:Georgia,serif;',
+      `letter-spacing:0.12em;font-family:'Courier New',monospace;`,
       'text-shadow:0 0 16px currentColor;margin-bottom:8px;',
     ].join('');
 
@@ -150,17 +150,17 @@ function showOutcomeOverlay(container: HTMLElement, score: number, level: Outcom
     const scoreEl = document.createElement('div');
     scoreEl.textContent = `${score} / 100`;
     scoreEl.style.cssText = [
-      'color:rgba(255,255,255,0.7);font-size:clamp(14px,3vw,18px);',
-      'font-family:monospace;margin-bottom:16px;',
+      'color:rgba(51,255,102,0.85);font-size:clamp(14px,3vw,18px);',
+      `font-family:'Courier New',monospace;margin-bottom:16px;`,
     ].join('');
 
     // Flavor text
     const flavor = document.createElement('div');
     flavor.textContent = cfg.flavor;
     flavor.style.cssText = [
-      'color:rgba(200,180,140,0.85);font-size:clamp(11px,2.5vw,14px);',
+      'color:rgba(51,255,102,0.7);font-size:clamp(11px,2.5vw,14px);',
       'font-style:italic;text-align:center;padding:0 24px;',
-      'font-family:Georgia,serif;max-width:320px;line-height:1.5;',
+      `font-family:'Courier New',monospace;max-width:320px;line-height:1.5;`,
     ].join('');
 
     overlay.appendChild(badge);
