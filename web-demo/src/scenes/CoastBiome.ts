@@ -398,13 +398,18 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   };
 
   const dispose = (): void => {
+    // C86: collect unique materials before dispose — trunkMat/leafMat/rockMat are shared
+    // across multiple meshes (N trees per layer × 4 meshes each). Calling material.dispose()
+    // per-mesh in traverse disposes the same Material N times, causing WebGL2 strict-mode
+    // console errors (double-free). Collect into a Set, iterate once.
+    const seenMaterials = new Set<Material>();
     group.traverse((child) => {
       if (child instanceof Mesh) {
         child.geometry.dispose();
         if (Array.isArray(child.material)) {
-          child.material.forEach((m) => m.dispose());
+          child.material.forEach((m) => seenMaterials.add(m));
         } else {
-          (child.material as Material).dispose();
+          seenMaterials.add(child.material as Material);
         }
       }
       // Dispose DirectionalLight shadow maps (WebGLRenderTarget ~4MB each).
@@ -414,6 +419,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         child.shadow.map.dispose();
       }
     });
+    seenMaterials.forEach((m) => m.dispose());
     group.clear();
   };
 

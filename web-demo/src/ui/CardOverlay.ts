@@ -182,9 +182,6 @@ export function showCard(card: Card): Promise<number> {
     overlayEl.setAttribute('aria-modal', 'true');
     overlayEl.setAttribute('aria-label', 'Choix narratif');
 
-    // Narrative text (T067: keep existing element, styled via CSS)
-    narrativeEl.textContent = card.narrative;
-
     // Biome badge (T067)
     const existingBadge = cardContainer()?.querySelector('.card-biome-badge');
     if (existingBadge) existingBadge.remove();
@@ -262,6 +259,11 @@ export function showCard(card: Card): Promise<number> {
       optContainer.appendChild(btn);
     });
 
+    // C86: Set narrative text AFTER overlay becomes visible so NVDA/JAWS re-announces
+    // the content in context of the dialog. Setting textContent while overlay is hidden
+    // (display:none or opacity:0) causes older screen readers to skip the live-region
+    // update since the element is not in the accessibility tree yet.
+    narrativeEl.textContent = card.narrative;
     overlayEl.classList.add('visible');
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
