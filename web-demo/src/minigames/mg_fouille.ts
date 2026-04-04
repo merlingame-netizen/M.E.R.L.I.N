@@ -47,6 +47,7 @@ export class MinigameFouille extends MinigameBase {
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
   private timerInterval = 0;
+  private foundTimeout = 0;  // C100: stored to allow clearTimeout in cleanup
   private ended = false;
 
   // Canvas dimensions
@@ -215,8 +216,8 @@ export class MinigameFouille extends MinigameBase {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       const statusEl = document.getElementById('mg-fouille-status');
       if (statusEl) statusEl.textContent = 'Trouve !';
-      // Short delay before ending to show the found state
-      setTimeout(() => this.endGame(), 400);
+      // Short delay before ending to show the found state (stored to allow clearTimeout)
+      this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
     } else {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       this.clickedWrong = true;
@@ -241,6 +242,7 @@ export class MinigameFouille extends MinigameBase {
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
+    clearTimeout(this.foundTimeout);
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
@@ -359,6 +361,7 @@ export class MinigameFouille extends MinigameBase {
   }
 
   protected cleanup(): void {
+    clearTimeout(this.foundTimeout);
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
