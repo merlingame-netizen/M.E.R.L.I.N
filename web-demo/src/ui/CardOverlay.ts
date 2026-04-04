@@ -138,6 +138,11 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
 
 // ── T047: Card flip animation ──────────────────────────────────────────────
 
+// C126/FLIP-01: module-level timeout ID so rapid showCard() calls cancel the previous
+// cleanup timeout before queuing a new one. Without this, N rapid calls queue N timeouts
+// that each try to remove 'card-flip' from an already-updated/hidden container.
+let flipTimeoutId = 0;
+
 /** T047: Trigger card-flip CSS animation on the card container (0.4s rotateY). */
 function triggerFlipAnimation(): void {
   const container = cardContainer();
@@ -147,8 +152,9 @@ function triggerFlipAnimation(): void {
   // Force reflow so the browser registers the removal before re-adding
   void container.offsetWidth;
   container.classList.add('card-flip');
-  // Clean up class after animation completes so hover/transitions are unaffected
-  setTimeout(() => { container.classList.remove('card-flip'); }, 420);
+  // C126/FLIP-01: cancel any pending cleanup from previous flip before scheduling new one
+  clearTimeout(flipTimeoutId);
+  flipTimeoutId = window.setTimeout(() => { container.classList.remove('card-flip'); }, 420);
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────

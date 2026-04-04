@@ -9,10 +9,13 @@ export class SceneManager {
   readonly renderer: WebGLRenderer;
   readonly camera: PerspectiveCamera;
   private animationId = 0;
+  private running = false; // C126/VIS-01: guards start() against double-invoke from visibilitychange
   private readonly callbacks: Array<(dt: number) => void> = [];
   private clock = new Clock();
   // C81-01: stored so dispose() can remove it (window.resize leaks per run without this)
   private readonly onResize: () => void;
+  // C126/VIS-01: pause RAF when tab hidden — stops GPU/CPU burn during inactive sessions
+  private readonly onVisibilityChange: () => void;
 
   constructor(container: HTMLElement) {
     // Scene
@@ -54,6 +57,13 @@ export class SceneManager {
       this.renderer.setSize(container.clientWidth, container.clientHeight);
     };
     window.addEventListener('resize', this.onResize);
+
+    // C126/VIS-01: pause render loop when tab is hidden, resume when visible.
+    // Prevents GPU/CPU burn (rAF still fires at ~4fps in background tabs in Chrome).
+    this.onVisibilityChange = () => {
+      if (document.hidden) { this.stop(); } else { this.start(); }
+    };
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   private setupLighting(): void {
@@ -85,8 +95,10 @@ export class SceneManager {
     this.callbacks.push(callback);
   }
 
-  /** Start the render loop. */
+  /** Start the render loop. No-op if already running (safe to call from visibilitychange). */
   start(): void {
+    if (this.running) return; // C126/VIS-01: prevent double-loop on rapid visibility events
+    this.running = true;
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
       const dt = this.clock.getDelta();
@@ -100,12 +112,14 @@ export class SceneManager {
 
   /** Stop the render loop. */
   stop(): void {
+    this.running = false;
     cancelAnimationFrame(this.animationId);
   }
 
   dispose(): void {
     this.stop();
     window.removeEventListener('resize', this.onResize);
+    document.removeEventListener('visibilitychange', this.onVisibilityChange); // C126/VIS-01
     this.renderer.dispose();
   }
 }
