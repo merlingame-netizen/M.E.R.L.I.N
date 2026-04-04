@@ -112,8 +112,9 @@ export function loadLairGLBs(
     if (proceduralGroups?.onCauldronGLBLoaded) {
       const glbMeshes: Mesh[] = [];
       gltf.scene.traverse((child) => { if (child instanceof Mesh) glbMeshes.push(child); });
-      // Prefer a mesh named 'body' or 'bowl'; fall back to first mesh if none match
-      const bodyMesh = glbMeshes.find((m) => /body|bowl/i.test(m.name)) ?? glbMeshes[0];
+      // Prefer a mesh named 'body', 'bowl', or 'cauldron'; fall back to first mesh if none match
+      // C133/CAULDRON-REGEX-01: extend regex to cover Blender default 'cauldron'-prefixed mesh names
+      const bodyMesh = glbMeshes.find((m) => /body|bowl|cauldron/i.test(m.name)) ?? glbMeshes[0];
       if (bodyMesh) {
         (bodyMesh.material as MeshStandardMaterial).emissive = new Color(0x00aa33);
         (bodyMesh.material as MeshStandardMaterial).emissiveIntensity = 0.0;

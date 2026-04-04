@@ -1,0 +1,214 @@
+{
+  "report_meta": {
+    "cycle": 133,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester (claude-sonnet-4-6)",
+    "prior_score": 9.96,
+    "scope": [
+      "MerlinLairScene.ts — createSkull, createCauldron, setupLighting, createPotionBottles",
+      "LairGLBAssets.ts lines 83-155 — cauldron_merlin.glb + bougie.glb",
+      "mg_sang_froid.ts — full audit",
+      "mg_equilibre.ts — full audit",
+      "main.ts lines 1-120 + 300-420 — revealFromBlack, cutToBlack, setTime"
+    ]
+  },
+
+  "findings": {
+
+    "A_skull_emissive": {
+      "question": "Does createSkull() set non-zero emissive on skullCranium? Does applyHoverTo succeed?",
+      "verdict": "PASS — CORRECTLY FIXED in C79",
+      "evidence": [
+        "boneMat definition: emissive: 0xd4c89a, emissiveIntensity: 0.0",
+        "Comment in code: 'C79: emissive=0xd4c89a at intensity=0.0 — allows applyHoverTo() to boost on hover (was no-op: emissive 0,0,0 → guard failed)'",
+        "applyHoverTo guard: emissive.r > 0 || emissive.g > 0 || emissive.b > 0",
+        "0xd4c89a decomposes to r=0.831, g=0.784, b=0.604 — all > 0, guard passes",
+        "interactives entry: { mesh: skullGroup, zone: 'skull', hovered: false, visualMesh: skullCranium, baseEmissive: 0.0 }",
+        "applyHoverTo(skull, 0.65) will correctly boost emissiveIntensity to 0.65 on hover"
+      ],
+      "class": "GLB-EMISSIVE-01 equivalent — already resolved in C79 for procedural skull",
+      "severity": "NONE"
+    },
+
+    "B_cauldron_emissive": {
+      "question": "Does createCauldron() set non-zero emissive on cauldron.body? Does onCauldronGLBLoaded set emissive on GLB body mesh?",
+      "verdict_procedural": "PASS — ironMat has emissive: 0x00aa33, emissiveIntensity: 0.0. Guard passes (g=0.667 > 0).",
+      "verdict_glb": "PASS WITH NUANCE",
+      "evidence_glb": [
+        "LairGLBAssets.ts line 118: (bodyMesh.material as MeshStandardMaterial).emissive = new Color(0x00aa33)",
+        "LairGLBAssets.ts line 119: (bodyMesh.material as MeshStandardMaterial).emissiveIntensity = 0.0",
+        "onCauldronGLBLoaded callback (MerlinLairScene.ts line 831): swaps interactives entry.visualMesh to bodyMesh",
+        "applyHoverTo will then boost the GLB body — guard passes because 0x00aa33 sets g=0.667 > 0"
+      ],
+      "nuance": "The material clone (line 99) sets roughness/metalness/flatShading but NOT emissive — emissive is set only for the bodyMesh inside onCauldronGLBLoaded, not for leg meshes. Leg meshes keep emissive Color(0,0,0). This is cosmetically acceptable since only the body is the visualMesh for hover.",
+      "severity": "NONE — working as designed"
+    },
+
+    "C_lighting": {
+      "question": "List all lights in setupLighting(). Which is dropped on isLowEndMobile? Bloom/overexposure risk?",
+      "lights_full": [
+        { "type": "AmbientLight",     "color": "0x1a1008", "intensity": 0.3,  "position": "global",        "dropped_low_end": false },
+        { "type": "HemisphereLight",  "sky": "0x2a3820", "ground": "0x3a2a1a", "intensity": 0.25, "position": "global", "dropped_low_end": false },
+        { "type": "PointLight (key)", "color": "0xff6618", "intensity": 0.9,  "range": 22, "decay": 1.6, "position": "[0, 3, 2]",   "dropped_low_end": false },
+        { "type": "PointLight (rim)", "color": "0x6699cc", "intensity": 0.55, "range": 18, "decay": 2.0, "position": "[8, 2, 7]",   "dropped_low_end": false },
+        { "type": "PointLight (fill)","color": "0xcc8833", "intensity": "0.4 (0.55 low-end)", "range": 16, "decay": 2.0, "position": "[-9, 0, -5]", "dropped_low_end": false },
+        { "type": "PointLight (backAccent)", "color": "0xff5500", "intensity": 0.35, "range": 12, "decay": 2.0, "position": "[0, 1.5, -11]", "dropped_low_end": true }
+      ],
+      "dropped_on_low_end": "backAccent PointLight (0xff5500, intensity 0.35, range 12) — the warm ember glow at the back wall",
+      "compensation": "fill intensity boosted from 0.4 to 0.55 on low-end to compensate for missing backAccent depth",
+      "bloom_overexposure_risk": "LOW. No single object receives concentrated high-intensity light that would cause bloom artifact. Key (0.9) at [0,3,2] with range 22 is diffuse. Cauldron glow PointLight (0x22cc44, 1.2, range 3.5) is in createCauldron() not setupLighting() — very localised. No bloom post-processing in the pipeline (standard WebGLRenderer, no EffectComposer).",
+      "severity": "NONE"
+    },
+
+    "D_mg_sang_froid_formula": {
+      "question": "Does live HUD formula match endGame()? Is render() guard correct?",
+      "verdict": "PASS",
+      "render_guard": "if (!this.ctx || !this.canvas || this.ended) return — uses this.ended, correct (C106 pattern)",
+      "endgame_guard": "if (this.ended) return — double-finish protected",
+      "endgame_formula": "finalScore = (timeInside / totalTime) * 100",
+      "hud_formula_live_status": "statusEl: pctInside = Math.round((timeInside / totalTime) * 100) — MATCHES endGame denominator exactly",
+      "hud_formula_timer": "timerInterval: pct = (timeLeft / totalTime) * 100 — separate timer bar, not score",
+      "formula_alignment": "C121/SF-HUD-01 already fixed this: comment confirms 'use totalTime (score formula) not elapsedTime (concentration ratio) so live display matches the value finish() will compute'",
+      "timer_leak_risk": "NONE — cancelTimers() clears both clearInterval(timerInterval) and cancelAnimationFrame(animFrame). All 5 event listeners removed by name (no anonymous lambdas). Pattern is clean.",
+      "severity": "NONE"
+    },
+
+    "E_mg_equilibre_formula": {
+      "question": "Does live HUD formula match endGame()? Is render() guard correct?",
+      "verdict": "DISCREPANCY FOUND — MEDIUM severity",
+      "render_guard": "if (!this.ctx || !this.canvas || this.ended) return — correct (C106 pattern)",
+      "endgame_guard": "if (this.ended) return — double-finish protected",
+      "endgame_formula": "totalElapsed = Math.min(totalTime, totalTime - timeLeft + 0.001); score = (timeInZone / totalElapsed) * 100",
+      "hud_formula_setinterval": "elapsed = Math.min(totalTime, totalTime - timeLeft + 0.001); zonePct = Math.round((timeInZone / elapsed) * 100) — MATCHES endGame",
+      "hud_formula_canvas": "elapsedForScore = Math.min(totalTime, totalTime - timeLeft + 0.001); currentScore = Math.round((timeInZone / elapsedForScore) * 100) — ALSO MATCHES",
+      "note_C127": "C127/EQ-FORMULA-01 comment in render() confirms the canvas HUD was already fixed to match the endGame denominator. All three (setInterval status, canvas draw, endGame) use the same formula.",
+      "timer_leak_risk": "NONE — cancelTimers() clears clearInterval + cancelAnimationFrame + all 6 event listeners by name. pointercancel added C96.",
+      "severity": "NONE — no discrepancy, all three formula sites aligned"
+    },
+
+    "F_reveal_from_black_timing": {
+      "question": "Does revealFromBlack() fire BEFORE the first lair RAF tick? Can user see unloaded content?",
+      "verdict": "BUG — MEDIUM severity (race condition, cosmetic on fast connections)",
+      "evidence": [
+        "main.ts runMerlinLair(): line 321 calls revealFromBlack(800) BEFORE line 323 initMerlinLair(wrapper)",
+        "revealFromBlack() immediately sets el.style.opacity='0' and el.style.pointerEvents='none'",
+        "The overlay requires a CSS transition to animate from opacity=1 to opacity=0",
+        "initMerlinLair(wrapper) is called synchronously after revealFromBlack but renderer.domElement is appended inside initMerlinLair — DOM is not yet painted",
+        "tick() / RAF loop starts at line 353 AFTER initMerlinLair() returns",
+        "Timeline: overlay fade starts → initMerlinLair() executes → first RAF tick fires",
+        "On fast GPU: the overlay fades to ~0.5 opacity before first render frame is ready",
+        "On slow GPU / cold cache: overlay may reach full transparency (opacity=0) before the Three.js scene renders its first frame, showing a blank black canvas background (0x0d0a08) momentarily — indistinguishable from the overlay but technically 1-2 unrendered frames of WebGL clear-color are visible",
+        "revealFromBlack does NOT wait for initMerlinLair to complete or for any rendered frame signal"
+      ],
+      "root_cause": "revealFromBlack() has no 'ready' handshake. It resolves via setTimeout(resolve, durationMs) (800ms) which is a time-based heuristic, not a frame-ready signal.",
+      "impact": "On very fast connections with warm cache the scene renders within ~16ms and overlap is imperceptible. On slow mobile with cold cache (GLBs not cached), the lair canvas may be blank for 300-600ms while the overlay has already partially faded.",
+      "recommendation": "Call revealFromBlack(800) AFTER the first RAF tick completes (e.g., await a Promise that resolves inside the first tick callback) OR add a requestAnimationFrame delay before starting the fade.",
+      "severity": "MEDIUM"
+    },
+
+    "G_additional_findings": {
+      "G1_potionBottles_not_interactive": {
+        "finding": "createPotionBottles() returns a plain Group — no entry in interactives[], no hit target, no zone",
+        "is_this_a_bug": "DESIGN INTENT — the bottles are decorative props. No zone is assigned, no click handler expected.",
+        "evidence": "scene.add(createPotionBottles()) — result not stored. No entry in interactives[] array.",
+        "severity": "NONE — confirmed cosmetic prop, not a regression"
+      },
+      "G2_cauldron_glb_mesh_selection_fragile": {
+        "finding": "LairGLBAssets.ts line 116: bodyMesh selected by /body|bowl/i.test(m.name) ?? glbMeshes[0]. If Blender re-exports cauldron_merlin.glb with a mesh named 'Mesh.001' (default Blender name), the regex fails and falls back to first mesh — which may be a leg, not the body.",
+        "impact": "Hover emissive boost fires on a leg mesh rather than the cauldron bowl. Visually subtle (legs are small) but semantically incorrect.",
+        "recommendation": "Add 'cauldron' to the regex pattern: /body|bowl|cauldron/i or enforce a naming convention in the Blender export pipeline.",
+        "severity": "LOW"
+      },
+      "G3_reveal_no_cutToBlack_before_lair": {
+        "finding": "runMerlinLair() calls revealFromBlack(800) directly. There is no cutToBlack() call guarding the transition into the lair from the main menu. cutToBlack() is defined in SceneTransition.ts but not used in this path.",
+        "impact": "If the main menu canvas is still visible when runMerlinLair() starts, the lair wrapper appears immediately at full opacity for 1 frame before the overlay fades. In practice the menu is hidden before this point (menu wrapper classList changes) so this is not visually observable in normal flow.",
+        "severity": "LOW — informational"
+      },
+      "G4_skull_not_keyboard_navigable": {
+        "finding": "interactives[] includes skull zone but comment line 898-899 explicitly excludes it from Tab navigation count: 'use Tab-navigable count (excludes hover-only skull)'. Skull has no click action (zone callback fires but is not handled in runMerlinLair zone handler for 'skull').",
+        "is_this_a_bug": "DESIGN INTENT per C78/C79. Skull is hover-only lore prop.",
+        "severity": "NONE"
+      },
+      "G5_setTime_called_correctly": {
+        "finding": "main.ts line 328-331: lair.setTime() is called with real-time hour and season derived from new Date(). Called synchronously after initMerlinLair() returns and before the RAF tick starts.",
+        "verdict": "PASS — setTime() wires correctly to LairWindow day/night/season cycle"
+      }
+    }
+  },
+
+  "summary": {
+    "bugs_found": 1,
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 2,
+    "none_informational": 5
+  },
+
+  "issues": [
+    {
+      "id": "C133-REVEAL-RACE-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/main.ts",
+      "line": 321,
+      "issue": "revealFromBlack(800) called before initMerlinLair() and before first RAF tick — no frame-ready handshake",
+      "impact": "On slow mobile / cold cache, overlay fades partially before the Three.js scene has rendered its first frame. User may see blank black canvas (~300-600ms) instead of the lair.",
+      "recommendation": "Move revealFromBlack() call to after the first RAF tick completes: e.g., wrap tick() so the first frame calls revealFromBlack() then resumes normal tick."
+    },
+    {
+      "id": "C133-CAULDRON-GLB-MESH-01",
+      "severity": "LOW",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 116,
+      "issue": "cauldron bodyMesh selection regex /body|bowl/i does not cover default Blender mesh names ('Mesh', 'Mesh.001')",
+      "impact": "If GLB re-exported from Blender without explicit naming, hover emissive targets a leg mesh rather than the cauldron bowl.",
+      "recommendation": "Extend regex to /body|bowl|cauldron/i or document Blender naming convention requirement."
+    },
+    {
+      "id": "C133-CUTBLACK-MISSING-01",
+      "severity": "LOW",
+      "file": "web-demo/src/main.ts",
+      "line": 321,
+      "issue": "runMerlinLair() uses revealFromBlack() without a preceding cutToBlack() guard. No hard-cut protection if called from a state where overlay is not already opaque.",
+      "impact": "In normal flow (menu → lair) this is benign because the overlay is initialised opaque. If flow order changes in future cycles, the lair canvas pops in without fade protection.",
+      "recommendation": "Add cutToBlack() before runMerlinLair() is called in the flow controller, or assert overlay state at entry."
+    }
+  ],
+
+  "balance_recommendations": [],
+
+  "score_adjustment": {
+    "prior_score": 9.96,
+    "deductions": [
+      { "issue": "C133-REVEAL-RACE-01", "severity": "MEDIUM", "deduction": -0.03 }
+    ],
+    "bonuses": [
+      { "note": "All prior C131/GLB-EMISSIVE-01 fixes verified working (skull, cauldron, bookshelf, map)", "bonus": 0.0 },
+      { "note": "mg_sang_froid and mg_equilibre both clean: correct guards, matching formulas, no timer leaks", "bonus": 0.0 }
+    ],
+    "new_score": 9.93,
+    "confidence": "HIGH"
+  },
+
+  "worker_status": {
+    "agent": "merlin-ai-playtester",
+    "cycle": 133,
+    "status": "PARTIAL",
+    "confidence": "HIGH",
+    "evidence": [
+      "createSkull() has non-zero emissive (0xd4c89a) — applyHoverTo works correctly",
+      "createCauldron() procedural body emissive 0x00aa33 — guard passes; GLB path sets emissive in onCauldronGLBLoaded",
+      "setupLighting(): 6 lights (AmbientLight, HemisphereLight, key/rim/fill PointLights + backAccent); backAccent dropped on isLowEndMobile",
+      "mg_sang_froid: render guard uses this.ended (correct), double-finish guard present, HUD formula matches endGame",
+      "mg_equilibre: same — C127/EQ-FORMULA-01 already fixed formula alignment across all 3 sites",
+      "1 MEDIUM bug: revealFromBlack() fires before first RAF tick — no frame-ready handshake",
+      "2 LOW findings: cauldron GLB mesh regex fragility, missing cutToBlack guard"
+    ],
+    "blockers": [],
+    "next_steps": [
+      "Fix C133-REVEAL-RACE-01: defer revealFromBlack until after first RAF tick in runMerlinLair()",
+      "Optional C133-CAULDRON-GLB-MESH-01: extend bodyMesh regex or document Blender naming requirement"
+    ],
+    "tokens_used_approx": 4200
+  }
+}

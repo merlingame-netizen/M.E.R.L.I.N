@@ -318,8 +318,6 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   wrapper.setAttribute('role', 'region');
   wrapper.setAttribute('aria-label', 'Antre de Merlin');
 
-  revealFromBlack(800);
-
   const lair = initMerlinLair(wrapper);
 
   // Wire real-time clock to day/night/season — purely cosmetic
@@ -332,12 +330,19 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
 
   let rafId = 0;
   let lastTs = performance.now();
+  // C133/REVEAL-RACE-01: defer revealFromBlack until first rendered frame so the overlay
+  // never fades over a blank WebGL canvas on slow mobile / cold GLB cache.
+  let _firstFrame = true;
   const tick = (): void => {
     rafId = requestAnimationFrame(tick);
     const t = performance.now();
     const dt = Math.min((t - lastTs) / 1000, 0.05);
     lastTs = t;
     lair.update(dt);
+    if (_firstFrame) {
+      _firstFrame = false;
+      revealFromBlack(800);
+    }
   };
   // C104: pause/resume lair rAF when tab is hidden — saves GPU/CPU/battery on mobile
   const onLairVisibility = (): void => {
