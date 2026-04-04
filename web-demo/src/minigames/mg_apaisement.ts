@@ -216,13 +216,17 @@ export class MinigameApaisement extends MinigameBase {
     }
   }
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
+  protected cancelTimers(): void {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C101: centralised teardown
 
     // Score = average accuracy * 100, with a minimum tap count bonus
     // At least 4 taps needed for full score potential
@@ -398,10 +402,6 @@ export class MinigameApaisement extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C101
   }
 }

@@ -182,9 +182,7 @@ export class MinigameSangFroid extends MinigameBase {
     else if (e.key === 'ArrowDown')  this.cursorY = Math.min(this.canvasH, this.cursorY + step);
   };
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
+  protected cancelTimers(): void {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
@@ -192,6 +190,12 @@ export class MinigameSangFroid extends MinigameBase {
     this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
     this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C101: centralised teardown
 
     const finalScore = this.totalTime > 0
       ? (this.timeInside / this.totalTime) * 100
@@ -369,13 +373,6 @@ export class MinigameSangFroid extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
-    this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
-    this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C101
   }
 }
