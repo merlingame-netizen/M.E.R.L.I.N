@@ -388,6 +388,11 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
     });
   }
 
+  // C81-07: template materials are never added to the scene so scene.traverse()
+  // in dispose() won't reach them. Dispose here — clones are independent after .clone().
+  candleBaseMat.dispose();
+  wickMat.dispose();
+
   return { candles, group };
 }
 
