@@ -14,6 +14,93 @@
 import type { RunScenario, RunScenarioEvent } from '../llm/GroqAdapter';
 import { getLLMAdapter } from '../llm/GroqAdapter';
 
+// ── Parchment grain texture (generated once per overlay) ─────────────────────
+
+function createGrainTexture(w: number, h: number): HTMLCanvasElement {
+  const offscreen = document.createElement('canvas');
+  offscreen.width = w;
+  offscreen.height = h;
+  const ctx = offscreen.getContext('2d')!;
+  // ~2 dots per 100px² — sepia noise
+  const dotCount = Math.floor(w * h / 50);
+  for (let i = 0; i < dotCount; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    const alpha = 0.04 + Math.random() * 0.09;
+    const lightness = Math.random() > 0.6 ? 220 : 140;
+    ctx.fillStyle = `rgba(${lightness},${Math.floor(lightness * 0.82)},${Math.floor(lightness * 0.6)},${alpha.toFixed(2)})`;
+    ctx.fillRect(x, y, 1.4, 1.4);
+  }
+  return offscreen;
+}
+
+// ── Compass rose ──────────────────────────────────────────────────────────────
+
+function drawCompassRose(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number): void {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  const s = size;
+  ctx.strokeStyle = PAL.border;
+  ctx.fillStyle = PAL.parchment;
+  ctx.lineWidth = 1;
+
+  // Draw 4 main spokes (N/S/E/W)
+  const spokes: [number, number, number, number, string][] = [
+    [0, -s, 0, s * 0.35, 'N'],
+    [0,  s, 0, -s * 0.35, 'S'],
+    [-s, 0, s * 0.35, 0, 'W'],
+    [ s, 0, -s * 0.35, 0, 'E'],
+  ];
+
+  for (const [x1, y1, x2, y2] of spokes) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = PAL.inkFaint;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // Diamond arrow for each cardinal (N bigger)
+  const drawDiamond = (ax: number, ay: number, len: number, angle: number): void => {
+    ctx.save();
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - len * 0.28, ay + len * 0.5);
+    ctx.lineTo(ax, ay + len);
+    ctx.lineTo(ax + len * 0.28, ay + len * 0.5);
+    ctx.closePath();
+    ctx.fillStyle = PAL.accent;
+    ctx.fill();
+    ctx.strokeStyle = PAL.border;
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  drawDiamond(0, -s, s * 0.42, 0);           // N (larger)
+  drawDiamond(0, s * 0.58, s * 0.28, Math.PI);   // S
+  drawDiamond(s * 0.58, 0, s * 0.28, Math.PI / 2);  // E
+  drawDiamond(-s * 0.58, 0, s * 0.28, -Math.PI / 2); // W
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.12, 0, Math.PI * 2);
+  ctx.fillStyle = PAL.border;
+  ctx.fill();
+
+  // N label
+  ctx.fillStyle = PAL.ink;
+  ctx.font = `bold ${Math.max(7, Math.floor(s * 0.38))}px Georgia`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('N', 0, -s * 1.42);
+
+  ctx.restore();
+}
+
 // ── Palette ───────────────────────────────────────────────────────────────────
 
 const PAL = {
@@ -118,6 +205,11 @@ function buildMapData(
     foret_broceliande: ['rgba(30,60,20,0.12)', 'rgba(20,50,15,0.09)', 'rgba(40,70,25,0.10)'],
     cotes_sauvages:    ['rgba(20,50,70,0.10)', 'rgba(30,40,60,0.08)', 'rgba(50,60,80,0.11)'],
     marais_korrigans:  ['rgba(30,60,10,0.12)', 'rgba(20,40,8,0.10)',  'rgba(10,50,5,0.09)'],
+    landes_bruyere:    ['rgba(80,30,60,0.09)', 'rgba(60,25,50,0.08)', 'rgba(90,35,70,0.10)'],
+    cercles_pierres:   ['rgba(60,40,80,0.09)', 'rgba(40,30,70,0.08)', 'rgba(70,50,90,0.10)'],
+    villages_celtes:   ['rgba(80,50,20,0.10)', 'rgba(70,40,15,0.09)', 'rgba(90,60,25,0.08)'],
+    collines_dolmens:  ['rgba(50,60,30,0.10)', 'rgba(40,50,20,0.09)', 'rgba(60,70,35,0.08)'],
+    iles_mystiques:    ['rgba(20,60,80,0.10)', 'rgba(15,50,70,0.09)', 'rgba(25,65,85,0.11)'],
   };
   const colors = biomeColor[biome] ?? biomeColor['foret_broceliande']!;
 
@@ -409,6 +501,20 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
   const ctx = canvas.getContext('2d')!;
 
+  // Generate parchment grain once at final canvas size
+  const grain = createGrainTexture(canvas.width, canvas.height);
+  const stampGrain = (): void => {
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.drawImage(grain, 0, 0);
+    ctx.restore();
+  };
+
+  // Compass rose position (top-right margin)
+  const roseX = canvas.width - 52;
+  const roseY = 52;
+  const roseSize = 22;
+
   const mapData = buildMapData(canvas.width, canvas.height, scenario.events, biome);
 
   // ── Phase 1: draw terrain patches ────────────────────────────────────────
@@ -434,6 +540,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
         drawPatchAt(ctx, mapData.terrainPatches[i]!, patchP);
       }
 
+      stampGrain();
       drawCelticBorder(ctx, canvas.width, canvas.height);
 
       if (overallP >= 1) {
@@ -463,7 +570,9 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
       for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
       drawPathAt(ctx, mapData.pathPoints, p);
+      stampGrain();
       drawCelticBorder(ctx, canvas.width, canvas.height);
+      if (p > 0.5) drawCompassRose(ctx, roseX, roseY, roseSize);
 
       // Start/end markers
       if (p > 0.05) {
@@ -501,6 +610,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
     drawPathAt(ctx, mapData.pathPoints, 1);
+    stampGrain();
 
     // Draw path start marker
     const start = mapData.pathPoints[0]!;
@@ -522,6 +632,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     }
 
     drawCelticBorder(ctx, canvas.width, canvas.height);
+    drawCompassRose(ctx, roseX, roseY, roseSize);
     requestAnimationFrame(nodeRaf);
   };
   nodeRaf();

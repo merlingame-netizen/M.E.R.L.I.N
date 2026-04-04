@@ -231,7 +231,10 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     if (container) {
       const badge = document.createElement('div');
       badge.className = 'card-biome-badge';
-      badge.textContent = card.biome.replace(/_/g, ' ');
+      // LLM source indicator: ✦ prefix for Groq-generated cards
+      const sourceGlyph = card.source === 'llm' ? '✦ ' : '';
+      badge.textContent = sourceGlyph + card.biome.replace(/_/g, ' ');
+      if (card.source === 'llm') badge.title = 'Carte générée par Merlin (Groq)';
       container.insertBefore(badge, container.firstChild);
 
       const divider = document.createElement('div');
@@ -303,6 +306,17 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
 
       optContainer.appendChild(btn);
     });
+
+    // Keyboard shortcut hint below options
+    const kbHint = document.createElement('div');
+    kbHint.style.cssText = [
+      'text-align:center;margin-top:8px;',
+      'color:rgba(232,220,200,0.35);font-size:10px;letter-spacing:0.12em;',
+      'pointer-events:none;font-family:system-ui;',
+    ].join('');
+    kbHint.setAttribute('aria-hidden', 'true');
+    kbHint.textContent = '[ 1 ]  [ 2 ]  [ 3 ]';
+    optContainer.appendChild(kbHint);
 
     // C122/CARD-KB-01: assign digit handler now that optContainer is confirmed non-null.
     // Fires on document so any focused element (not just options) can trigger it.
