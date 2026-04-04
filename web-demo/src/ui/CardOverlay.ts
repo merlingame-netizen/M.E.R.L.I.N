@@ -168,6 +168,11 @@ export function showCard(card: Card): Promise<number> {
     const optContainer = document.getElementById('card-options');
     if (!overlayEl || !narrativeEl || !optContainer) { clearTimeout(safetyId); resolve(0); return; }
 
+    // C79-03: ARIA dialog semantics — screen readers announce the card as a modal dialog
+    overlayEl.setAttribute('role', 'dialog');
+    overlayEl.setAttribute('aria-modal', 'true');
+    overlayEl.setAttribute('aria-label', 'Choix narratif');
+
     // Narrative text (T067: keep existing element, styled via CSS)
     narrativeEl.textContent = card.narrative;
 

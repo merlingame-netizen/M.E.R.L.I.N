@@ -493,7 +493,12 @@ async function gameLoop(
       let llmCard = null;
       if (llm) {
         showLLMLoadingHint();
-        llmCard = await llm.generateCard(state().run.biome, `carte ${state().run.cardsPlayed}, vie ${state().run.life}`);
+        // C80-01: 8s timeout prevents Groq stall from freezing the game indefinitely.
+        // Promise.race resolves null on timeout → falls through to FastRoute below.
+        llmCard = await Promise.race<import('./game/CardSystem').Card | null>([
+          llm.generateCard(state().run.biome, `carte ${state().run.cardsPlayed}, vie ${state().run.life}`),
+          new Promise<null>((res) => setTimeout(() => res(null), 8_000)),
+        ]);
         hideLLMLoadingHint();
       }
       card = llmCard ?? generateFastRouteCard(state().run.biome);
