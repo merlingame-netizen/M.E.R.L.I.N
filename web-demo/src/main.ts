@@ -11,7 +11,7 @@ import { getMultiplier, getMultiplierLabel } from './game/Constants';
 import { generateFastRouteCard, detectMinigame, loadTemplates, verbToField } from './game/CardSystem';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
-import { initHUD, updateHUD } from './ui/HUD';
+import { initHUD, updateHUD, teardownHUD } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
@@ -590,6 +590,10 @@ async function main(): Promise<void> {
 
     // --- Gameplay Loop ---
     await gameLoop(sceneManager, rail, biomeResult.update);
+
+    // BUG-C88-06: unsubscribe HUD from store — run is over, no point firing updateHUD()
+    // during the lair phase for invisible HUD elements.
+    teardownHUD();
 
     // BUG-02 / C79-07: dispose() = stop rAF + removeEventListener(resize) + renderer.dispose()
     sceneManager.dispose();

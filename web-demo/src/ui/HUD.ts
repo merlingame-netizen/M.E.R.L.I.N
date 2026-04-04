@@ -306,3 +306,9 @@ export function initHUD(): void {
   _hudUnsubscribe = store.subscribe(updateHUD);
   updateHUD();
 }
+
+/** Unsubscribe HUD from store — call when entering lair/menu to stop unnecessary renders. BUG-C88-06. */
+export function teardownHUD(): void {
+  _hudUnsubscribe?.();
+  _hudUnsubscribe = null;
+}

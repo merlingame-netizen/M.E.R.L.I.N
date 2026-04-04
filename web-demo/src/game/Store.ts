@@ -360,7 +360,9 @@ export const store = createStore<MerlinStore>((set, get) => ({
 
   endRun: (ending) => set((s) => ({
     phase: 'end' as GamePhase,
-    run: { ...s.run, active: false },
+    // BUG-C88-05: reset activeOgham + oghamCooldowns immediately so the ogham badge
+    // doesn't show a stale selection during the showRunSummary async window.
+    run: { ...s.run, active: false, activeOgham: '', oghamCooldowns: {} },
     meta: {
       ...s.meta,
       totalRuns: s.meta.totalRuns + 1,
