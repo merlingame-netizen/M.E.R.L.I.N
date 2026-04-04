@@ -1069,7 +1069,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   };
 
   // C85-01: keyboard navigation — Tab cycles zones, Enter/Space activates
-  const KEYBOARD_ZONES: LairZone[] = ['map', 'crystal', 'bookshelf', 'cauldron', 'door'];
+  // C155/SKULL-KB-01: add skull to keyboard cycle — it has ZONE_ARIA_LABELS + ZONE_LORE
+  // entries and a hover-only action (no game effect). WCAG 2.1.1 requires all interactive
+  // elements to be keyboard-reachable. The Enter handler at line 1086 already guards skull
+  // (skull = hover-only; ariaLive not announced as "activée" to avoid misleading feedback).
+  const KEYBOARD_ZONES: LairZone[] = ['map', 'crystal', 'bookshelf', 'cauldron', 'skull', 'door'];
   let keyboardZoneIdx = -1;
   const onKeyDown = (e: KeyboardEvent): void => {
     if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'ArrowRight' || e.key === 'ArrowDown') {

@@ -11,6 +11,11 @@ import { OGHAM_SPECS, type OghamSpec } from '../game/Constants';
 let panelEl: HTMLElement | null = null;
 let resolveChoice: ((oghamId: string | null) => void) | null = null;
 let escapeHandler: ((e: KeyboardEvent) => void) | null = null;
+// C155/BUG-LAIR-04: module-level AbortController so innerHTML='' (which discards DOM nodes
+// but NOT their listeners) is preceded by abort(). Each showOghamPanel() creates a fresh
+// controller and passes its signal to every slot + skipBtn listener. On the next show(),
+// the old controller is aborted before nodes are replaced — zero orphaned closures.
+let _slotsAbortController: AbortController | null = null;
 
 /** Build the ogham panel DOM (called once at init). */
 export function initOghamPanel(): void {
@@ -67,6 +72,17 @@ export function showOghamPanel(): Promise<string | null> {
     if (escapeHandler) document.removeEventListener('keydown', escapeHandler);
     escapeHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') selectOgham(null); };
     document.addEventListener('keydown', escapeHandler);
+
+    // C155/BUG-LAIR-04: abort previous slot listeners before discarding nodes via innerHTML=''.
+    // Without this, each showOghamPanel() call leaks up to 42 listeners (14 slots × 3 events
+    // + skipBtn × 3) that are retained by the old DOM nodes until GC — on mobile/low-memory
+    // devices these closures keep spec objects and state snapshots alive across card cycles.
+    if (_slotsAbortController) {
+      _slotsAbortController.abort();
+      _slotsAbortController = null;
+    }
+    _slotsAbortController = new AbortController();
+    const slotSignal = _slotsAbortController.signal;
 
     // Build panel content
     panelEl.innerHTML = '';
@@ -171,17 +187,17 @@ export function showOghamPanel(): Promise<string | null> {
       slot.appendChild(infoEl);
 
       if (isAvailable) {
-        slot.addEventListener('click', () => selectOgham(oghamId));
+        slot.addEventListener('click', () => selectOgham(oghamId), { signal: slotSignal });
         // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
         // mouseenter/mouseleave only fire for mouse → no hover feedback on touch screens.
         slot.addEventListener('pointerenter', () => {
           slot.style.background = 'rgba(139,69,19,0.4)';
           slot.style.borderColor = 'rgba(205,133,63,0.8)';
-        });
+        }, { signal: slotSignal });
         slot.addEventListener('pointerleave', () => {
           slot.style.background = 'rgba(139,69,19,0.2)';
           slot.style.borderColor = 'rgba(205,133,63,0.5)';
-        });
+        }, { signal: slotSignal });
       }
 
       grid.appendChild(slot);
@@ -204,14 +220,14 @@ export function showOghamPanel(): Promise<string | null> {
       'font-family:system-ui',
       'transition:background 0.2s',
     ].join(';');
-    skipBtn.addEventListener('click', () => selectOgham(null));
+    skipBtn.addEventListener('click', () => selectOgham(null), { signal: slotSignal });
     // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave — consistent with ogham slots above
     skipBtn.addEventListener('pointerenter', () => {
       skipBtn.style.background = 'rgba(80,80,90,0.5)';
-    });
+    }, { signal: slotSignal });
     skipBtn.addEventListener('pointerleave', () => {
       skipBtn.style.background = 'rgba(80,80,90,0.3)';
-    });
+    }, { signal: slotSignal });
     panelEl.appendChild(skipBtn);
 
     // Show overlay
@@ -248,6 +264,11 @@ export function hideOghamPanel(): void {
   if (escapeHandler) {
     document.removeEventListener('keydown', escapeHandler);
     escapeHandler = null;
+  }
+  // C155/BUG-LAIR-04: also abort slot listeners on external hide (scene transition, endRun)
+  if (_slotsAbortController) {
+    _slotsAbortController.abort();
+    _slotsAbortController = null;
   }
   const overlay = document.getElementById('ogham-panel-overlay');
   if (overlay) overlay.style.display = 'none';
