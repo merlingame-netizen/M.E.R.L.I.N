@@ -105,8 +105,8 @@ export class MinigameNegociation extends MinigameBase {
       const target = visible[clampedIdx];
       if (!target) return;
       const sw = target.sw;
-      sw.picked = true;
-      sw.fadeAlpha = 1;
+      // C142/NEG-01: immutable update via index — matches onPointerDown pattern
+      this.scrollingWords = this.scrollingWords.map((w, i) => i === target.i ? { ...w, picked: true, fadeAlpha: 1 } : w);
       this.pickedSequence = [...this.pickedSequence, sw.word];
       if (sw.word.isFactionWord) {
         this.comboCount++;
@@ -226,7 +226,9 @@ export class MinigameNegociation extends MinigameBase {
   }
 
   private spawnWord(startY?: number): void {
-    if (this.scrollingWords.length >= this.maxWords) return;
+    // C142/NEG-02: count only active (non-picked) words — fading picked words clogged the cap at tier 3,
+    // blocking new faction word spawns for 0.5-1s and reducing achievable score by 30-40%
+    if (this.scrollingWords.filter((w) => !w.picked).length >= this.maxWords) return;
 
     // 40% chance faction word, 60% neutral
     const isFaction = Math.random() < 0.4;
@@ -283,9 +285,9 @@ export class MinigameNegociation extends MinigameBase {
     const idx = this.getWordAt(x, y);
     if (idx === null) return;
 
-    const sw = this.scrollingWords[idx];
-    sw.picked = true;
-    sw.fadeAlpha = 1;
+    // C142/NEG-01: immutable update — render loop uses map(), direct mutation breaks reference equality
+    const sw = this.scrollingWords[idx]!;
+    this.scrollingWords = this.scrollingWords.map((w, i) => i === idx ? { ...w, picked: true, fadeAlpha: 1 } : w);
 
     // Add to sequence
     this.pickedSequence = [...this.pickedSequence, sw.word];
