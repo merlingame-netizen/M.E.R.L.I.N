@@ -989,6 +989,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // Update loop
   const update = (dt: number): void => {
+    if (lairDisposed) return; // C105: guard stale rAF frame after dispose() on slow devices
     elapsedTime += dt;
 
     // Camera slow sway (fixed camera, slight oscillation for life)

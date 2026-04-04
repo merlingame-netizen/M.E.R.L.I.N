@@ -72,9 +72,20 @@ const OUTCOME_CONFIG: Record<OutcomeLevel, {
 
 // ── WebAudio outcome tones ────────────────────────────────────────────────────
 
+// C105: module-level lazy singleton — avoids browser AudioContext cap
+// (Chrome: 6, Safari: 1) on rapid completions. Stays open between calls;
+// recreated only if ctx.state === 'closed'.
+let _sharedAudioCtx: AudioContext | null = null;
+function getSharedAudioCtx(): AudioContext {
+  if (!_sharedAudioCtx || _sharedAudioCtx.state === 'closed') {
+    _sharedAudioCtx = new AudioContext();
+  }
+  return _sharedAudioCtx;
+}
+
 function playOutcomeTone(level: OutcomeLevel): void {
   try {
-    const ctx = new AudioContext();
+    const ctx = getSharedAudioCtx();
     const gain = ctx.createGain();
     gain.connect(ctx.destination);
 
@@ -101,7 +112,7 @@ function playOutcomeTone(level: OutcomeLevel): void {
         osc.start(start);
         osc.stop(start + dur);
       });
-      setTimeout(() => ctx.close(), (freqs.length * dur * 0.6 + dur + 0.2) * 1000);
+      // C105: singleton — do NOT call ctx.close() here; context reused across calls
     });
   } catch {
     // WebAudio unavailable — silent fallback
