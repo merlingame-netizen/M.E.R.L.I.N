@@ -507,6 +507,10 @@ async function main(): Promise<void> {
   // loadTemplates() is called inside runCeltOSIntro Phase 3 (loading bar = real fetch progress)
   await runCeltOSIntro();
 
+  // C156/BUG-LOAD-01: #loading has CSS display:flex (z-index:100). Hide immediately after CeltOS
+  // so the main menu and lair are never covered. Phase 3 (run init) re-shows it when needed.
+  loading.style.display = 'none';
+
   // Phase 2: Main menu (once — never shown again between runs)
   await runMainMenu();
 
@@ -514,11 +518,6 @@ async function main(): Promise<void> {
   initOghamPanel();
   loadAnamFromStorage();
   loadMetaFromStorage();
-
-  // C156/BUG-LOAD-01: #loading has CSS display:flex (z-index:100) and was never hidden before
-  // runMerlinLair() showed the lair canvas (z-index:10). The lair was permanently covered by the
-  // loading overlay. Hide once here — Phase 3 (run init) will re-show it as needed.
-  loading.style.display = 'none';
 
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.
