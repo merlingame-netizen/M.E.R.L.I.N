@@ -759,6 +759,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C81-03: disposed flag prevents late-resolving GLBs from adding to a torn-down scene.
   let lairDisposed = false;
   let crystalGLBGroup: THREE.Group | null = null; // C101: stored to sync float animation to GLB
+  let doorFlashing = false;    // C101: door cinematic — lights/emissive burst before transition
+  let doorFlashTimer = 0;
   loadLairGLBs(scene, {
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
@@ -868,7 +870,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       // C82-01: confirm click audio before callback (which may trigger scene transition)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
       ariaLive.textContent = `${ZONE_ARIA_LABELS[found.zone]} activée`;
-      zoneClickCallback(found.zone);
+      if (found.zone === 'door') {
+        // C101: cinematic flash — 380ms burst before transition to give visual drama
+        const cb = zoneClickCallback; // capture before setTimeout (TypeScript narrowing)
+        doorFlashing = true;
+        doorFlashTimer = 0;
+        (doorPanel.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
+        setTimeout(() => { doorFlashing = false; cb(found.zone); }, 380);
+      } else {
+        zoneClickCallback(found.zone);
+      }
     }
   };
 
@@ -956,8 +968,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place
     if (crystalGLBGroup) crystalGLBGroup.position.y = crystalFloatY;
 
-    // Door light flicker
-    doorLight.intensity = 2.8 + Math.sin(elapsedTime * 4.1) * 0.3;
+    // Door light flicker — C101: burst overrides normal flicker during door cinematic
+    if (doorFlashing) {
+      doorFlashTimer += dt;
+      doorLight.intensity = 12 + Math.sin(doorFlashTimer * 45) * 4;
+    } else {
+      doorLight.intensity = 2.8 + Math.sin(elapsedTime * 4.1) * 0.3;
+    }
 
     // Candles (T064)
     updateCandles(candles, dt, elapsedTime);

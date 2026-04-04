@@ -44,6 +44,16 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
   requestAnimationFrame(tick);
 }
 
+// C101: enforce flat-shading on all non-crystal GLBs to match procedural mesh aesthetic
+function applyFlatShading(obj: THREE.Object3D): void {
+  obj.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      (child.material as THREE.MeshStandardMaterial).flatShading = true;
+      (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+    }
+  });
+}
+
 export interface LairProceduralGroups {
   mapGroup: THREE.Group;
   shelfGroup: THREE.Group;
@@ -72,6 +82,7 @@ export function loadLairGLBs(
         child.material = (child.material as THREE.MeshStandardMaterial).clone();
         (child.material as THREE.MeshStandardMaterial).roughness = 0.9;
         (child.material as THREE.MeshStandardMaterial).metalness = 0.0;
+        (child.material as THREE.MeshStandardMaterial).flatShading = true;
         (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
       }
     });
@@ -107,6 +118,8 @@ export function loadLairGLBs(
           // C90-P1: set emissiveIntensity=0 baseline — guards against dirty emissive state
           // if a slow-loading GLB resolves after rapid hover/unhover cycles
           (child.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.0;
+          (child.material as THREE.MeshStandardMaterial).flatShading = true;
+          (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
         }
       });
       clone.scale.setScalar(0.42);
@@ -122,6 +135,7 @@ export function loadLairGLBs(
     if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(-5, -5.0, -3);
     gltf.scene.scale.setScalar(1.0);
+    applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.mapGroup.visible = false;
@@ -132,6 +146,7 @@ export function loadLairGLBs(
     if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(8.8, -5.0, -8);
     gltf.scene.scale.set(1.2, 1.0, 0.8);
+    applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;
@@ -143,6 +158,7 @@ export function loadLairGLBs(
     if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(0, -4.98, 0);
     gltf.scene.scale.set(1.0, 1.0, 1.0);
+    applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
@@ -164,6 +180,7 @@ export function loadLairGLBs(
         // C90-P2: factor/units bumped -1→-2/-4 — covers shallow camera angles to back wall
         (tileMat as THREE.MeshStandardMaterial).polygonOffset = true;
         (tileMat as THREE.MeshStandardMaterial).polygonOffsetFactor = -2;
+        (tileMat as THREE.MeshStandardMaterial).flatShading = true; // C101: match scene aesthetic
         (tileMat as THREE.MeshStandardMaterial).polygonOffsetUnits = -4;
       }
     });
