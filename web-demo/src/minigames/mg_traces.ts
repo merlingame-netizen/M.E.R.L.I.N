@@ -18,14 +18,20 @@ export class MinigameTraces extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private timerInterval = 0;
-  private timeLeft = 8; // seconds
-  private readonly totalTime = 8;
-  private readonly footprintCount = 7;
+  private timeLeft = 10; // reset in setup() to this.totalTime
+  private totalTime = 10;        // C99: scaled [10,8,6,5]s across tiers 0-3
+  private footprintCount = 5;    // C99: scaled [5,7,9,11] footprints
+  private hitRadius = 38;        // C99: scaled [38,30,22,16]px
   private animFrame = 0;
   private ended = false;
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C99: difficulty scaling — fewer/larger footprints + more time for new players
+    this.totalTime      = [10, 8, 6, 5][this.difficultyTier] ?? 5;
+    this.footprintCount = [5, 7, 9, 11][this.difficultyTier] ?? 11;
+    this.hitRadius      = [38, 30, 22, 16][this.difficultyTier] ?? 16;
 
     // Title
     const title = document.createElement('div');
@@ -88,7 +94,7 @@ export class MinigameTraces extends MinigameBase {
     }, 100);
   }
 
-  private onClick = (e: MouseEvent): void => {
+  private onClick = (e: PointerEvent): void => {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) * (this.canvas.width / rect.width);
@@ -98,10 +104,14 @@ export class MinigameTraces extends MinigameBase {
     if (!target) return;
 
     const dist = Math.sqrt((mx - target.x) ** 2 + (my - target.y) ** 2);
-    if (dist < 30) {
+    if (dist < this.hitRadius) {
       target.hit = true;
+      // C99: audio feedback — footprint hit
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.currentIndex++;
       if (this.currentIndex >= this.footprintCount) {
+        // C99: audio feedback — sequence complete
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'ogham_unlock' } }));
         this.endGame();
       }
     }

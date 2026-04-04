@@ -40,16 +40,17 @@ export class MinigameCourse extends MinigameBase {
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
   private ended = false;
+  private endTimeout = 0; // C99: stored so cleanup() can cancel it (MEDIUM bug fix)
 
   // Canvas dimensions
   private readonly canvasW = 380;
   private readonly canvasH = 340;
 
-  // Game config
+  // Game config — roundTime, decoyCount, hitRadius scaled by difficultyTier in setup()
   private readonly totalRounds = 8;
-  private readonly roundTime = 1.5;   // seconds per round
-  private readonly decoyCount = 4;    // number of distractors per round
-  private readonly hitRadius = 32;    // click detection radius
+  private roundTime = 2.0;    // C99: scaled [2.0,1.5,1.1,0.8]s across tiers 0-3
+  private decoyCount = 2;     // C99: scaled [2,4,5,6] decoys
+  private hitRadius = 40;     // C99: scaled [40,32,26,20]px
 
   // Game state
   private currentRound = 0;
@@ -71,6 +72,11 @@ export class MinigameCourse extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C99: difficulty scaling — slower symbols, fewer decoys, larger hitbox for new players
+    this.roundTime  = [2.0, 1.5, 1.1, 0.8][this.difficultyTier] ?? 0.8;
+    this.decoyCount = [2, 4, 5, 6][this.difficultyTier] ?? 6;
+    this.hitRadius  = [40, 32, 26, 20][this.difficultyTier] ?? 20;
 
     // Title
     const title = document.createElement('div');
@@ -191,6 +197,8 @@ export class MinigameCourse extends MinigameBase {
       this.feedback = 'hit';
       this.feedbackTimer = 0.4;
       this.roundActive = false;
+      // C99: audio feedback — symbol hit
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.advanceRound();
     } else {
       // Check if clicked on a decoy (miss penalty)
@@ -204,6 +212,8 @@ export class MinigameCourse extends MinigameBase {
         this.feedback = 'miss';
         this.feedbackTimer = 0.4;
         this.roundActive = false;
+        // C99: audio feedback — decoy clicked
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
         this.advanceRound();
       }
     }
@@ -225,8 +235,8 @@ export class MinigameCourse extends MinigameBase {
     }
 
     if (this.currentRound >= this.totalRounds) {
-      // Small delay before ending
-      setTimeout(() => this.endGame(), 500);
+      // C99 MEDIUM bug fix: store handle so cleanup() can cancel if player exits early
+      this.endTimeout = window.setTimeout(() => this.endGame(), 500);
     } else {
       this.prepareRound();
     }
@@ -236,6 +246,7 @@ export class MinigameCourse extends MinigameBase {
     if (this.ended) return;
     this.ended = true;
     this.gameOver = true;
+    clearTimeout(this.endTimeout); // C99: cancel pending timeout (idempotent)
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
 
@@ -268,6 +279,8 @@ export class MinigameCourse extends MinigameBase {
         this.feedback = 'miss';
         this.feedbackTimer = 0.3;
         this.roundActive = false;
+        // C99: audio feedback — timeout miss
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
         this.advanceRound();
       }
     }
@@ -418,6 +431,7 @@ export class MinigameCourse extends MinigameBase {
   }
 
   protected cleanup(): void {
+    clearTimeout(this.endTimeout); // C99: cancel orphaned setTimeout if player exits early
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     super.cleanup();
