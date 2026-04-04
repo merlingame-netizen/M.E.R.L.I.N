@@ -335,7 +335,9 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
   // Single shared PointLight covers all 3 candles — saves 2 GPU light slots vs individual lights.
   // Positioned at centroid of the 3 candle positions, larger range to cover all.
   const sharedLight = new THREE.PointLight(0xff9933, 1.8, 9, 2);
-  sharedLight.position.set((-5 + 0 + 3) / 3, (-1.6 + -4.6 + -3.0) / 3 + 0.55, (-7 + -8.5 + -6) / 3);
+  // C108: Y values updated to match actual candlePositions (all cy = -4.85). Former values
+  // (-1.6, -4.6, -3.0) were stale from an older layout — light was 1.8u above the flames.
+  sharedLight.position.set((-5 + 0 + 3) / 3, (-4.85 + -4.85 + -4.85) / 3 + 0.55, (-7 + -8.5 + -6) / 3);
   group.add(sharedLight);
 
   for (let i = 0; i < candlePositions.length; i++) {
@@ -1018,7 +1020,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     fpsElapsed += dt;
     if (fpsElapsed >= 2.0) {
       const fps = fpsFrameCount / fpsElapsed;
-      lowFpsMode = fps < 45;
+      // C108: hysteresis band [45, 52] — prevents dust particles toggling when FPS hovers ~45fps
+      if (fps < 45) lowFpsMode = true;
+      else if (fps > 52) lowFpsMode = false;
       fpsFrameCount = 0;
       fpsElapsed = 0;
     }
