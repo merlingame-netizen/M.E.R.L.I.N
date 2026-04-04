@@ -41,7 +41,7 @@ export class MinigameTraces extends MinigameBase {
 
     // Timer bar
     const timerBar = document.createElement('div');
-    timerBar.id = 'mg-timer';
+    timerBar.id = 'mg-traces-timer';
     timerBar.setAttribute('role', 'progressbar');
     timerBar.setAttribute('aria-label', 'Temps restant');
     timerBar.setAttribute('aria-valuemin', '0');
@@ -49,7 +49,7 @@ export class MinigameTraces extends MinigameBase {
     timerBar.setAttribute('aria-valuenow', '100');
     timerBar.style.cssText = 'width:min(400px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
     const timerFill = document.createElement('div');
-    timerFill.id = 'mg-timer-fill';
+    timerFill.id = 'mg-traces-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';
     timerBar.appendChild(timerFill);
     this.container.appendChild(timerBar);
@@ -90,9 +90,9 @@ export class MinigameTraces extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-timer-fill');
+      const fill = document.getElementById('mg-traces-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-timer');
+      const bar = document.getElementById('mg-traces-timer');
       if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
