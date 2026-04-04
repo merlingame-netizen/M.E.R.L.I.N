@@ -567,11 +567,17 @@ async function main(): Promise<void> {
     // Init scene (fresh per run)
     const sceneManager = new SceneManager(app);
 
-    // Build biome — only cotes_sauvages has a 3D walk scene for now;
-    // all other biomes share this backdrop until their scenes are implemented.
-    // C147/BUNDLE-OVR-01: lazy dynamic import — deferred from startup to first run start.
-    const { buildCoastScene } = await import('./scenes/CoastBiome');
-    const biomeResult = await buildCoastScene();
+    // Build biome scene — lazy dynamic imports keep initial bundle small.
+    // C157: foret_broceliande gets its own dedicated forest scene; all others → coast.
+    let biomeResult: import('./scenes/CoastBiome').BiomeSceneResult;
+    if (chosenBiome === 'foret_broceliande') {
+      const { buildForestScene } = await import('./scenes/BroceliandForest');
+      biomeResult = await buildForestScene();
+    } else {
+      // C147/BUNDLE-OVR-01: lazy dynamic import — deferred from startup to first run start.
+      const { buildCoastScene } = await import('./scenes/CoastBiome');
+      biomeResult = await buildCoastScene();
+    }
     sceneManager.scene.add(biomeResult.group);
 
     // Camera rail
