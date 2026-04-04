@@ -21,7 +21,7 @@ export class MinigameTraces extends MinigameBase {
   private timeLeft = 10; // reset in setup() to this.totalTime
   private totalTime = 10;        // C99: scaled [10,8,6,5]s across tiers 0-3
   private footprintCount = 5;    // C99: scaled [5,7,9,11] footprints
-  private hitRadius = 38;        // C99: scaled [38,30,22,16]px
+  private hitRadius = 38;        // C99: scaled [38,30,22,20]px — C121/TRC-03: tier 3 16→20px
   private animFrame = 0;
   private ended = false;
   private elapsedTime = 0; // C35: accumulated render dt for pulse animation (was performance.now()/200)
@@ -35,7 +35,7 @@ export class MinigameTraces extends MinigameBase {
     // C99/C100: difficulty scaling via tieredValue() helper
     this.totalTime      = this.tieredValue([10, 8, 6, 5] as const);
     this.footprintCount = this.tieredValue([5, 7, 9, 11] as const);
-    this.hitRadius      = this.tieredValue([38, 30, 22, 16] as const);
+    this.hitRadius      = this.tieredValue([38, 30, 22, 20] as const); // C121/TRC-03: tier 3 16→20px (WCAG 2.5.5 mobile)
 
     // Title
     const title = document.createElement('div');

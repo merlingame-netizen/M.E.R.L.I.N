@@ -261,12 +261,13 @@ export class MinigameSangFroid extends MinigameBase {
       this.timeInside = Math.min(this.timeInside + dt, this.totalTime);
     }
 
-    // Update status
-    const pctInside = this.elapsedTime > 0
-      ? Math.round((this.timeInside / this.elapsedTime) * 100)
+    // Update status — C121/SF-HUD-01: use totalTime (score formula) not elapsedTime (concentration ratio)
+    // so live display matches the value finish() will compute, preventing end-of-game surprise.
+    const pctInside = this.totalTime > 0
+      ? Math.round((this.timeInside / this.totalTime) * 100)
       : 100;
     if (this.statusEl) {
-      this.statusEl.textContent = `Concentration: ${pctInside}% | Zone: ${Math.round(this.currentRadius)}px`;
+      this.statusEl.textContent = `Couverture: ${pctInside}% | Zone: ${Math.round(this.currentRadius)}px`;
     }
 
     // Clear
@@ -364,8 +365,8 @@ export class MinigameSangFroid extends MinigameBase {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // HUD: score % in canvas top-left — immediate readable feedback
-    const pct = this.elapsedTime > 0 ? Math.round((this.timeInside / this.elapsedTime) * 100) : 100;
+    // HUD: score % in canvas top-left — C121/SF-HUD-01: aligned with score formula (totalTime, not elapsedTime)
+    const pct = this.totalTime > 0 ? Math.round((this.timeInside / this.totalTime) * 100) : 100;
     ctx.font = 'bold 16px system-ui';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';

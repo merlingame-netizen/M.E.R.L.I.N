@@ -22,8 +22,22 @@ const FACTION_LABELS: Readonly<Record<FactionId, string>> = {
   ankou: 'Ankou',
 } as const;
 
-// DOM element accessors are resolved inside updateHUD() with null guards
-// (consistent with faction/resource/ogham elements below — no ! assertions)
+// Module-level element caches — populated in initHUD() / build* functions, cleared in teardownHUD().
+// Eliminates 22 getElementById calls per updateHUD() invocation (C121/HUD-01).
+let _lifeFillEl: HTMLElement | null = null;
+let _cardsCountEl: HTMLElement | null = null;
+let _biomeNameEl: HTMLElement | null = null;
+let _lifeBarContainerEl: HTMLElement | null = null;
+let _lifeStatusEl: HTMLElement | null = null;
+let _anamEl: HTMLElement | null = null;
+let _currEl: HTMLElement | null = null;
+let _currLabelEl: HTMLElement | null = null;
+const _factionFillEls: Partial<Record<FactionId, HTMLElement>> = {};
+const _factionValEls: Partial<Record<FactionId, HTMLElement>> = {};
+let _oghamBadgeEl: HTMLElement | null = null;
+let _oghamRuneEl: HTMLElement | null = null;
+let _oghamNameEl: HTMLElement | null = null;
+let _oghamMultEl: HTMLElement | null = null;
 
 // Module-level unsubscribe handle — prevents duplicate Zustand subscriber accumulation
 // when initHUD() is called on every run inside the outer while(true) loop (main.ts).
@@ -64,12 +78,14 @@ function buildFactionPanel(): void {
     barFill.style.cssText = `height:100%;width:0%;background:${FACTION_COLORS[faction]};border-radius:3px;transition:width 0.3s ease;`;
     barBg.appendChild(barFill);
     row.appendChild(barBg);
+    _factionFillEls[faction] = barFill; // C121/HUD-01: cache for zero-getElementById updateHUD
 
     const val = document.createElement('span');
     val.id = `faction-val-${faction}`;
     val.style.cssText = 'color:rgba(232,220,200,0.5);font-size:10px;font-family:system-ui;width:24px;';
     val.textContent = '0';
     row.appendChild(val);
+    _factionValEls[faction] = val; // C121/HUD-01
 
     panel.appendChild(row);
   }
@@ -110,6 +126,7 @@ function buildResourcePanel(): void {
   anamVal.style.cssText = 'color:#cd853f;font-size:14px;font-family:system-ui;font-weight:bold;min-width:28px;';
   anamVal.textContent = '0';
   anamRow.appendChild(anamVal);
+  _anamEl = anamVal; // C121/HUD-01
 
   panel.appendChild(anamRow);
 
@@ -122,12 +139,14 @@ function buildResourcePanel(): void {
   currLabel.style.cssText = 'color:rgba(143,188,143,0.7);font-size:12px;font-family:system-ui;';
   currLabel.textContent = 'Monnaie';
   currRow.appendChild(currLabel);
+  _currLabelEl = currLabel; // C121/HUD-01
 
   const currVal = document.createElement('span');
   currVal.id = 'currency-value';
   currVal.style.cssText = 'color:#8fbc8f;font-size:14px;font-family:system-ui;font-weight:bold;min-width:28px;';
   currVal.textContent = '0';
   currRow.appendChild(currVal);
+  _currEl = currVal; // C121/HUD-01
 
   panel.appendChild(currRow);
 
@@ -137,66 +156,54 @@ function buildResourcePanel(): void {
 export function updateHUD(): void {
   const state = store.getState();
 
-  // Null-guard static elements — consistent with faction/resource/ogham pattern below
-  const lifeFillEl = document.getElementById('life-fill');
-  const cardsCountEl = document.getElementById('cards-count');
-  const biomeNameEl = document.getElementById('biome-name');
-  if (!lifeFillEl || !cardsCountEl || !biomeNameEl) return;
+  // Use module-level cached refs (C121/HUD-01 — zero getElementById at runtime)
+  if (!_lifeFillEl || !_cardsCountEl || !_biomeNameEl) return;
 
   const lifePercent = (state.run.life / LIFE_MAX) * 100;
-  lifeFillEl.style.width = `${lifePercent}%`;
+  _lifeFillEl.style.width = `${lifePercent}%`;
 
   // ARIA progressbar value — BUG-C88-07
-  const lifeBarContainer = document.getElementById('life-bar-container');
-  if (lifeBarContainer) lifeBarContainer.setAttribute('aria-valuenow', String(Math.round(lifePercent)));
+  if (_lifeBarContainerEl) _lifeBarContainerEl.setAttribute('aria-valuenow', String(Math.round(lifePercent)));
 
   // Color transitions for life bar
   if (lifePercent <= 25) {
-    lifeFillEl.style.background = 'linear-gradient(90deg, #8b0000, #cd5c5c)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #8b0000, #cd5c5c)';
   } else if (lifePercent <= 50) {
-    lifeFillEl.style.background = 'linear-gradient(90deg, #8b4513, #cd853f)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #8b4513, #cd853f)';
   } else {
-    lifeFillEl.style.background = 'linear-gradient(90deg, #2e6b2e, #5a9a5a)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #2e6b2e, #5a9a5a)';
   }
 
   // ARIA live region — announce critical health once on entry (BUG-C88-07)
-  const lifeStatusEl = document.getElementById('life-status');
-  if (lifeStatusEl) {
-    const prevAnnounced = lifeStatusEl.dataset['criticalAnnounced'] === 'true';
+  if (_lifeStatusEl) {
+    const prevAnnounced = _lifeStatusEl.dataset['criticalAnnounced'] === 'true';
     if (lifePercent <= 25 && !prevAnnounced) {
-      lifeStatusEl.textContent = `Vie critique — ${Math.round(lifePercent)} % restant`;
-      lifeStatusEl.dataset['criticalAnnounced'] = 'true';
+      _lifeStatusEl.textContent = `Vie critique — ${Math.round(lifePercent)} % restant`;
+      _lifeStatusEl.dataset['criticalAnnounced'] = 'true';
     } else if (lifePercent > 25 && prevAnnounced) {
-      lifeStatusEl.textContent = '';
-      lifeStatusEl.dataset['criticalAnnounced'] = 'false';
+      _lifeStatusEl.textContent = '';
+      _lifeStatusEl.dataset['criticalAnnounced'] = 'false';
     }
   }
 
-  cardsCountEl.textContent = `Carte ${state.run.cardsPlayed}`;
+  _cardsCountEl.textContent = `Carte ${state.run.cardsPlayed}`;
 
   const biome = BIOMES[state.run.biome];
-  biomeNameEl.textContent = biome?.name ?? state.run.biome;
+  _biomeNameEl.textContent = biome?.name ?? state.run.biome;
 
   // Update faction bars
   for (const faction of FACTIONS) {
     const rep = state.run.factions[faction] ?? 0;
-    const fillEl = document.getElementById(`faction-fill-${faction}`);
-    const valEl = document.getElementById(`faction-val-${faction}`);
+    const fillEl = _factionFillEls[faction];
+    const valEl = _factionValEls[faction];
     if (fillEl) fillEl.style.width = `${rep}%`;
     if (valEl) valEl.textContent = `${rep}`;
   }
 
   // Update resource counters
-  const anamEl = document.getElementById('anam-value');
-  if (anamEl) anamEl.textContent = `${state.meta.anam}`;
-
-  const currEl = document.getElementById('currency-value');
-  if (currEl) currEl.textContent = `${state.run.biomeCurrency}`;
-
-  const currLabel = document.getElementById('currency-label');
-  if (currLabel && biome) {
-    currLabel.textContent = biome.currency_name;
-  }
+  if (_anamEl) _anamEl.textContent = `${state.meta.anam}`;
+  if (_currEl) _currEl.textContent = `${state.run.biomeCurrency}`;
+  if (_currLabelEl && biome) _currLabelEl.textContent = biome.currency_name;
 
   updateOghamBadge();
 }
@@ -223,16 +230,19 @@ function buildOghamBadge(): void {
     'border-radius:20px',
     'padding:3px 12px',
   ].join(';');
+  _oghamBadgeEl = badge; // C121/HUD-01
 
   const runeSpan = document.createElement('span');
   runeSpan.id = 'ogham-badge-rune';
   runeSpan.style.cssText = 'color:#f0c040;font-size:18px;line-height:1;';
   badge.appendChild(runeSpan);
+  _oghamRuneEl = runeSpan; // C121/HUD-01
 
   const nameSpan = document.createElement('span');
   nameSpan.id = 'ogham-badge-name';
   nameSpan.style.cssText = 'color:#f0c040;font-size:11px;font-family:system-ui;font-weight:600;letter-spacing:0.04em;';
   badge.appendChild(nameSpan);
+  _oghamNameEl = nameSpan; // C121/HUD-01
 
   const multSpan = document.createElement('span');
   multSpan.id = 'ogham-badge-mult';
@@ -244,6 +254,7 @@ function buildOghamBadge(): void {
     'animation:ogham-pulse 1.2s ease-in-out infinite',
   ].join(';');
   badge.appendChild(multSpan);
+  _oghamMultEl = multSpan; // C121/HUD-01
 
   // Keyframe injection (once)
   if (!document.getElementById('ogham-badge-style')) {
@@ -258,40 +269,36 @@ function buildOghamBadge(): void {
 
 /** Update the ogham badge visibility and content from current store state. */
 function updateOghamBadge(): void {
-  const badge = document.getElementById('ogham-badge');
-  if (!badge) return;
+  // Use module-level cached refs (C121/HUD-01)
+  if (!_oghamBadgeEl) return;
 
   const activeOgham = store.getState().run.activeOgham;
   if (!activeOgham) {
-    badge.style.display = 'none';
+    _oghamBadgeEl.style.display = 'none';
     return;
   }
 
   const spec = OGHAM_SPECS[activeOgham];
   if (!spec) {
-    badge.style.display = 'none';
+    _oghamBadgeEl.style.display = 'none';
     return;
   }
 
-  const runeEl = document.getElementById('ogham-badge-rune');
-  const nameEl = document.getElementById('ogham-badge-name');
-  const multEl = document.getElementById('ogham-badge-mult');
-
-  if (runeEl) runeEl.textContent = spec.unicode;
-  if (nameEl) nameEl.textContent = spec.name;
-  if (multEl) {
+  if (_oghamRuneEl) _oghamRuneEl.textContent = spec.unicode;
+  if (_oghamNameEl) _oghamNameEl.textContent = spec.name;
+  if (_oghamMultEl) {
     // Show effect label: multiplier oghams show "x2", protection shows shield, etc.
     const params = spec.effect_params as Record<string, unknown>;
     if (typeof params['multiplier'] === 'number') {
-      multEl.textContent = ` \u00d7${params['multiplier']}`;
+      _oghamMultEl.textContent = ` \u00d7${params['multiplier']}`;
     } else if (spec.category === 'protection') {
-      multEl.textContent = ' prot.';
+      _oghamMultEl.textContent = ' prot.';
     } else {
-      multEl.textContent = ' actif';
+      _oghamMultEl.textContent = ' actif';
     }
   }
 
-  badge.style.display = 'flex';
+  _oghamBadgeEl.style.display = 'flex';
 }
 
 /** Subscribe to store changes and auto-update HUD. */
@@ -299,6 +306,12 @@ export function initHUD(): void {
   buildFactionPanel();
   buildResourcePanel();
   buildOghamBadge();
+  // Cache static HTML elements (created in index.html, not by build functions). C121/HUD-01.
+  _lifeFillEl = document.getElementById('life-fill');
+  _cardsCountEl = document.getElementById('cards-count');
+  _biomeNameEl = document.getElementById('biome-name');
+  _lifeBarContainerEl = document.getElementById('life-bar-container');
+  _lifeStatusEl = document.getElementById('life-status');
   // Unsubscribe any previous subscription before re-subscribing — initHUD() is called
   // every run inside the while(true) loop so without this each run would accumulate an
   // extra Zustand subscriber causing updateHUD() to fire N times per state change.
@@ -311,4 +324,21 @@ export function initHUD(): void {
 export function teardownHUD(): void {
   _hudUnsubscribe?.();
   _hudUnsubscribe = null;
+  // Clear element caches to avoid stale refs across runs. C121/HUD-01.
+  _lifeFillEl = null;
+  _cardsCountEl = null;
+  _biomeNameEl = null;
+  _lifeBarContainerEl = null;
+  _lifeStatusEl = null;
+  _anamEl = null;
+  _currEl = null;
+  _currLabelEl = null;
+  for (const faction of FACTIONS) {
+    delete _factionFillEls[faction];
+    delete _factionValEls[faction];
+  }
+  _oghamBadgeEl = null;
+  _oghamRuneEl = null;
+  _oghamNameEl = null;
+  _oghamMultEl = null;
 }
