@@ -91,8 +91,8 @@ async function runMainMenu(): Promise<{ isNewGame: boolean }> {
 
     // Wait for player choice
     const isNewGame = await new Promise<boolean>((resolve) => {
-      startBtn.addEventListener('click', () => resolve(true), { once: true });
-      continueBtn.addEventListener('click', () => resolve(false), { once: true });
+      startBtn.addEventListener('click', () => { playSound('click'); resolve(true); }, { once: true });
+      continueBtn.addEventListener('click', () => { playSound('click'); resolve(false); }, { once: true });
     });
 
     // T066: Stop menu ambient
@@ -100,7 +100,8 @@ async function runMainMenu(): Promise<{ isNewGame: boolean }> {
     overlay.classList.remove('visible');
 
     if (isNewGame) {
-      // Camera walks toward tower over 6s, then we cut to black
+      // Camera walks toward tower over 6s — play unlock tone at dolly start
+      playSound('unlock');
       await new Promise<void>((resolve) => {
         menu.startDolly(resolve);
       });

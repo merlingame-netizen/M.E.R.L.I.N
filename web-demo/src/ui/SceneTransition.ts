@@ -66,24 +66,55 @@ export function transition(
   });
 }
 
-/** Instantly go to black (for hard cuts). */
+/**
+ * CRT power-off cut to black:
+ *  1. Brief phosphor-green flash (40ms) — CRT capacitor discharge
+ *  2. Hard cut to black
+ * Total ~80ms then black is held until revealFromBlack().
+ */
 export function cutToBlack(): void {
   const { el } = getOverlay();
+
+  // Phase 1 — CRT green flash
   el.style.transition = 'none';
+  el.style.background = 'rgba(10,40,15,0.55)';
   el.style.opacity = '1';
   el.style.pointerEvents = 'all';
-  // Re-enable transition after next frame
-  requestAnimationFrame(() => {
-    el.style.transition = 'opacity 0.6s ease';
-  });
+
+  // Phase 2 — hard black after flash
+  setTimeout(() => {
+    el.style.background = '#060d06';
+    // Re-enable smooth transition for future revealFromBlack
+    requestAnimationFrame(() => {
+      el.style.transition = 'opacity 0.55s ease';
+    });
+  }, 60);
 }
 
-/** Instantly reveal (fade out black). */
+/**
+ * CRT power-on reveal:
+ *  1. Start black
+ *  2. Brief scanline flicker flash (white at very low opacity) — monitor tube igniting
+ *  3. Smooth fade to transparent over durationMs
+ */
 export function revealFromBlack(durationMs = 600): Promise<void> {
   return new Promise((resolve) => {
     const { el } = getOverlay();
-    el.style.opacity = '0';
-    el.style.pointerEvents = 'none';
-    setTimeout(resolve, durationMs);
+
+    // Phase 1 — CRT ignition flash (scanline shimmer)
+    el.style.transition = 'none';
+    el.style.background = 'rgba(51,255,102,0.06)';
+    el.style.opacity = '1';
+
+    setTimeout(() => {
+      // Phase 2 — back to black then fade out
+      el.style.background = '#060d06';
+      requestAnimationFrame(() => {
+        el.style.transition = `opacity ${durationMs}ms ease`;
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+      });
+      setTimeout(resolve, durationMs);
+    }, 80);
   });
 }
