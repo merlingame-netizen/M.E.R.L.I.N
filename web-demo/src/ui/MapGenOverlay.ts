@@ -307,99 +307,107 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     'position:fixed;inset:0;z-index:9500;',
     `background:${PAL.parchment};`,
     'display:flex;flex-direction:row;',
-    'opacity:0;transition:opacity 0.6s;',
+    'opacity:0;transition:opacity 0.55s;',
     'font-family:Georgia,serif;',
   ].join('');
   document.body.appendChild(overlay);
 
-  // Left panel — scenario text
+  // Left panel
   const leftPanel = document.createElement('div');
   leftPanel.style.cssText = [
-    'width:38%;min-width:260px;padding:40px 32px 40px 44px;',
+    'width:clamp(220px,36%,380px);padding:clamp(24px,4vw,48px) clamp(16px,3vw,36px);',
     'display:flex;flex-direction:column;justify-content:center;',
-    'border-right:1px solid rgba(107,58,16,0.3);',
-    'overflow:hidden;',
+    'border-right:1px solid rgba(107,58,16,0.28);overflow:hidden;',
   ].join('');
   overlay.appendChild(leftPanel);
 
-  // Merlin sigil
+  // Ogham header
   const sigilEl = document.createElement('div');
-  sigilEl.textContent = '᚛᚜';
-  sigilEl.style.cssText = `color:${PAL.titleGold};font-size:22px;letter-spacing:6px;margin-bottom:16px;opacity:0.5;`;
+  sigilEl.textContent = '᚛ᚋᚓᚏᚂᚔᚅ᚜';
+  sigilEl.style.cssText = `color:${PAL.border};font-size:13px;letter-spacing:4px;margin-bottom:18px;opacity:0.55;`;
   leftPanel.appendChild(sigilEl);
 
   const titleEl = document.createElement('div');
   titleEl.style.cssText = [
-    `color:${PAL.titleGold};font-size:clamp(15px,2vw,20px);`,
-    'letter-spacing:0.08em;margin-bottom:20px;min-height:28px;font-weight:bold;',
+    `color:${PAL.titleGold};font-size:clamp(14px,1.8vw,20px);`,
+    'letter-spacing:0.06em;margin-bottom:6px;min-height:26px;font-weight:bold;line-height:1.3;',
   ].join('');
   leftPanel.appendChild(titleEl);
 
+  // "Merlin réfléchit…" placeholder shown during LLM fetch
+  const thinkingEl = document.createElement('div');
+  thinkingEl.textContent = 'Merlin consulte les runes…';
+  thinkingEl.style.cssText = [
+    `color:${PAL.accent};font-size:12px;font-style:italic;`,
+    'margin-bottom:18px;opacity:0.7;transition:opacity 0.4s;',
+  ].join('');
+  leftPanel.appendChild(thinkingEl);
+
   const divider = document.createElement('div');
-  divider.style.cssText = `width:60px;height:2px;background:${PAL.border};margin-bottom:20px;opacity:0.5;`;
+  divider.style.cssText = `width:50px;height:1px;background:${PAL.border};margin-bottom:18px;opacity:0.4;`;
   leftPanel.appendChild(divider);
 
   const scenarioContainer = document.createElement('div');
-  scenarioContainer.style.cssText = 'display:flex;flex-direction:column;gap:14px;flex:1;';
+  scenarioContainer.style.cssText = 'display:flex;flex-direction:column;gap:12px;flex:1;overflow:hidden;';
   leftPanel.appendChild(scenarioContainer);
 
   const hintEl = document.createElement('div');
   hintEl.style.cssText = [
     `color:${PAL.accent};font-size:11px;font-style:italic;`,
-    'margin-top:auto;padding-top:24px;opacity:0;transition:opacity 0.5s;',
-    'letter-spacing:0.05em;',
+    'margin-top:auto;padding-top:20px;opacity:0;transition:opacity 0.5s;letter-spacing:0.05em;',
   ].join('');
   hintEl.textContent = 'Cliquez pour entrer dans ce monde…';
   leftPanel.appendChild(hintEl);
 
   // Right panel — canvas map
   const rightPanel = document.createElement('div');
-  rightPanel.style.cssText = 'flex:1;position:relative;overflow:hidden;';
+  rightPanel.style.cssText = 'flex:1;position:relative;overflow:hidden;min-width:0;';
   overlay.appendChild(rightPanel);
 
   const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
   rightPanel.appendChild(canvas);
 
-  // Vignette on canvas
+  // Vignette overlay
   const vignette = document.createElement('div');
   vignette.style.cssText = [
     'position:absolute;inset:0;pointer-events:none;',
-    'background:radial-gradient(ellipse at center, transparent 50%, rgba(200,170,100,0.25) 100%);',
+    'background:radial-gradient(ellipse at 50% 55%,transparent 45%,rgba(180,145,80,0.22) 100%);',
   ].join('');
   rightPanel.appendChild(vignette);
 
+  // ── C158: Start LLM call IMMEDIATELY (parallel with fade-in) ─────────────
+  const llm = getLLMAdapter();
+  const scenarioPromise: Promise<RunScenario> = llm
+    ? llm.generateRunScenario(biome)
+        .then((r) => r ?? buildFallback(biome))
+        .catch(() => buildFallback(biome))
+    : Promise.resolve(buildFallback(biome));
+
   // ── Fade in ──────────────────────────────────────────────────────────────
   requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
-  await wait(650);
+  await wait(600); // browser paints; LLM has 600ms head start
 
-  // ── Resize canvas ────────────────────────────────────────────────────────
+  // ── Size canvas NOW (DOM has been painted) ────────────────────────────────
   const resizeCanvas = (): void => {
-    canvas.width  = rightPanel.clientWidth;
-    canvas.height = rightPanel.clientHeight;
+    const w = rightPanel.clientWidth  || window.innerWidth  * 0.62;
+    const h = rightPanel.clientHeight || window.innerHeight;
+    canvas.width  = Math.max(w, 200);
+    canvas.height = Math.max(h, 200);
   };
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  // ── Kick off LLM scenario generation (non-blocking) ──────────────────────
-  const llm = getLLMAdapter();
-  let scenarioPromise: Promise<RunScenario>;
-  if (llm) {
-    scenarioPromise = llm.generateRunScenario(biome)
-      .then((r) => r ?? buildFallback(biome))
-      .catch(() => buildFallback(biome));
-  } else {
-    scenarioPromise = Promise.resolve(buildFallback(biome));
-  }
+  // ── Get scenario (LLM or fallback, max 5.5s total incl fade-in) ──────────
+  const scenario = await Promise.race([
+    scenarioPromise,
+    new Promise<RunScenario>((res) => setTimeout(() => res(buildFallback(biome)), 4900)),
+  ]);
 
-  // ── Start map drawing while waiting for LLM ───────────────────────────────
+  // Hide "thinking" placeholder
+  thinkingEl.style.opacity = '0';
+
   const ctx = canvas.getContext('2d')!;
-
-  // We'll draw in phases; get scenario when ready (with max 5s wait)
-  const scenarioTimeoutFallback = new Promise<RunScenario>((res) =>
-    setTimeout(() => res(buildFallback(biome)), 5000),
-  );
-  const scenario = await Promise.race([scenarioPromise, scenarioTimeoutFallback]);
 
   const mapData = buildMapData(canvas.width, canvas.height, scenario.events, biome);
 
