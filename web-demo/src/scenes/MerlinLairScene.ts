@@ -685,11 +685,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   renderer.domElement.focus({ preventScroll: true });
   // C88: aria-live region — screen readers announce zone focus/activation (WCAG 2.1 AA)
   const ariaLive = document.createElement('div');
+  ariaLive.id = 'lair-aria-live'; // C126: stable ID for aria-describedby linkage (WCAG 2.1 SC 1.3.1)
   ariaLive.setAttribute('aria-live', 'polite');
   ariaLive.setAttribute('aria-atomic', 'true');
   ariaLive.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;';
   container.style.position = container.style.position || 'relative';
   container.appendChild(ariaLive);
+  // C126: link canvas to ariaLive region so AT knows where to read descriptions from
+  renderer.domElement.setAttribute('aria-describedby', 'lair-aria-live');
 
   // C101: zone hover lore toast — sighted players need text context (aria-live only serves screen readers)
   const zoneToast = document.createElement('div');

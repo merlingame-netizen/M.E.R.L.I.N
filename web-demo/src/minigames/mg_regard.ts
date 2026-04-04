@@ -46,7 +46,7 @@ export class MinigameRegard extends MinigameBase {
   private readonly canvasH = 360;
 
   // Game config
-  private readonly roundLengths: readonly number[] = [4, 5, 6]; // symbols per round
+  private roundLengths: readonly number[] = [4, 5, 6]; // C126: mutable — set via tieredValue in setup()
   private showTime = 3.0;    // C100: [3.0,2.5,2.0,1.5]s to memorize
   private readonly gridCols = 5;
   private readonly gridRows = 3;
@@ -71,6 +71,13 @@ export class MinigameRegard extends MinigameBase {
 
     // C100: difficulty scaling — less time to memorize at high tiers
     this.showTime = this.tieredValue([3.0, 2.5, 2.0, 1.5] as const);
+    // C126: scale sequence length per round — more symbols to memorize at high tiers
+    this.roundLengths = this.tieredValue([
+      [3, 4, 5],
+      [4, 5, 6],
+      [4, 5, 6],
+      [5, 6, 7],
+    ] as const);
 
     // Title
     const title = document.createElement('div');

@@ -1,0 +1,74 @@
+{
+  "cycle": "C62",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "auditor": "merlin-ai-playtester",
+  "tieredValue_audit": {
+    "total_minigames": 14,
+    "fully_tiered": 13,
+    "partially_tiered": 1,
+    "not_tiered": 0,
+    "detail": [
+      { "file": "mg_apaisement.ts",    "params_tiered": ["totalTime","breathCycleDuration","targetWindow","goodWindow"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_combat_rituel.ts", "params_tiered": ["totalTime","obstacleCount"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_course.ts",        "params_tiered": ["totalRounds","roundTime","decoyCount","hitRadius"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL", "c125_fix": "totalRounds was readonly 8, now mutable tieredValue([6,7,8,8])" },
+      { "file": "mg_echo.ts",          "params_tiered": ["flashDuration","windowDuration","totalRounds"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_equilibre.ts",     "params_tiered": ["totalTime","safeZoneHalf"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_fouille.ts",       "params_tiered": ["totalTime","decoyCount","shuffleInterval"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_herboristerie.ts", "params_tiered": ["totalTime","wrongPenalty"], "readonly_ok": ["canvasW","canvasH","gridCols"], "status": "FULL" },
+      { "file": "mg_negociation.ts",   "params_tiered": ["totalTime","scrollSpeed","spawnInterval"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_ombres.ts",        "params_tiered": ["totalTime","endHalfWidth"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" },
+      { "file": "mg_regard.ts",        "params_tiered": ["showTime"], "readonly_not_tiered": ["roundLengths=[4,5,6]"], "status": "PARTIAL", "note": "roundLengths controls sequence length per round (4/5/6 symbols) — primary cognitive-load param, hardcoded, never scales with tier" },
+      { "file": "mg_runes.ts",         "params_tiered": ["totalTime","flipBackDelay","totalPairs"], "readonly_ok": ["gridCols","tileSize"], "status": "FULL", "note": "gridRows derived from totalPairs — scales implicitly" },
+      { "file": "mg_sang_froid.ts",    "params_tiered": ["totalTime","endRadius","driftSpeed"], "readonly_ok": ["canvasW","canvasH","startRadius=120"], "status": "FULL", "note": "startRadius is intentionally constant (shrink target, not starting zone)" },
+      { "file": "mg_traces.ts",        "params_tiered": ["totalTime","footprintCount","hitRadius"], "status": "FULL" },
+      { "file": "mg_volonte.ts",       "params_tiered": ["totalTime","targetRadius","spawnInterval","maxDistractors"], "readonly_ok": ["canvasW","canvasH"], "status": "FULL" }
+    ],
+    "missing_tieredValue": [
+      "mg_regard.ts — roundLengths: readonly [4,5,6] (3 fixed rounds of 4/5/6 symbols). At tier 0 this gives 4+5+6=15 total targets; at tier 3 the player has less time but the same sequence length — the difficulty asymmetry is incomplete."
+    ]
+  },
+  "bundle_analysis": {
+    "mg_course_fix_verified": true,
+    "mg_course_fix_detail": "Line 77: this.totalRounds = this.tieredValue([6,7,8,8] as const) confirmed. Field is mutable (no readonly). Comment on line 50 documents the C125 change.",
+    "bibliotheque_polygonOffset_verified": true,
+    "bibliotheque_polygonOffset_detail": "Lines 176-186 in LairGLBAssets.ts: polygonOffset=true, factor=-2, units=-4 applied in traverse() after applyFlatShading(). Matches mur_pierre/sol_pierre pattern.",
+    "vite_comment_fix_verified": true,
+    "vite_comment_fix_detail": "Line 22-23 now reads: 'Groups registry + base into a shared chunk; individual mg_*.ts files land in their own micro-chunks (dynamically imported via createMinigame).' Comment partially inaccurate — see minigames_chunk_actual_behavior.",
+    "minigames_chunk_actual_behavior": "MinigameRegistry.ts uses STATIC imports of all 14 mg_*.ts files (import { MinigameApaisement } from './mg_apaisement', etc). Because MinigameRegistry.ts is listed in manualChunks.minigames, Rollup pulls all its transitive static dependencies — all 14 mg_*.ts files — into the minigames chunk as well. Result: all 14 files + MinigameBase + MinigameRegistry bundle into minigames-DGjWMdc3.js (119.85 kB gzip 23.56 kB). The vite.config.ts comment 'individual mg_*.ts files land in their own micro-chunks (dynamically imported via createMinigame)' is WRONG — there are no dynamic imports inside MinigameRegistry.ts. The 14 files are co-bundled, not micro-chunked. This is actually the DESIRED behavior (one deferred chunk, cache-friendly) but the comment misrepresents the mechanism.",
+    "main_gzip_kb": 50.67,
+    "minigames_gzip_kb": 23.56,
+    "three_core_gzip_kb": 135.45
+  },
+  "scores": {
+    "tieredValue_coverage": 9.1,
+    "tieredValue_coverage_note": "13/14 fully tiered. mg_regard.ts roundLengths gap is LOW severity (game is still playable; showTime scaling provides some difficulty gradient).",
+    "bundle_strategy": 8.5,
+    "bundle_strategy_note": "Chunk behavior is correct and cache-optimal. -0.5 for vite.config.ts comment that misdescribes the mechanism (static vs dynamic imports). Not a runtime bug.",
+    "z_fighting_guards": 10.0,
+    "z_fighting_guards_note": "bibliotheque polygonOffset fully confirmed at factor=-2 units=-4. Consistent with mur_pierre/sol_pierre/sol_pierre_tile pattern across all GLB assets.",
+    "global_average": 9.2,
+    "global_average_delta": "-0.03 vs C61 9.23 (within rounding — effectively stable)"
+  },
+  "new_bugs": [
+    {
+      "rank": 1,
+      "severity": "LOW",
+      "title": "mg_regard.ts: roundLengths hardcoded — sequence length does not scale with difficultyTier",
+      "file": "web-demo/src/minigames/mg_regard.ts",
+      "line": 49,
+      "detail": "private readonly roundLengths: readonly number[] = [4, 5, 6]. At all tiers the player memorizes sequences of 4, 5, then 6 symbols across 3 rounds. Only showTime scales. Higher tiers compress memorization time but keep the same symbol count — easy tiers could be harder on rounds 2-3, hard tiers could extend to 7+ symbols.",
+      "fix": "Make roundLengths mutable and set via tieredValue in setup(): this.roundLengths = this.tieredValue([[4,5,6],[4,5,6],[4,6,7],[5,6,8]] as const). Each element is a tuple. Requires tieredValue to support array-of-arrays OR use three separate tieredValue calls for each round slot."
+    },
+    {
+      "rank": 2,
+      "severity": "LOW",
+      "title": "vite.config.ts: comment incorrectly states mg_*.ts land in micro-chunks via dynamic import",
+      "file": "web-demo/vite.config.ts",
+      "line": 23,
+      "detail": "Comment says 'individual mg_*.ts files land in their own micro-chunks (dynamically imported via createMinigame)' — factually wrong. MinigameRegistry.ts uses static imports, so all 14 files are bundled into the single minigames chunk via static dependency resolution. No micro-chunks are created. The runtime behavior is correct; only the documentation is wrong.",
+      "fix": "Replace lines 19-23 with: '// MinigameRegistry.ts statically imports all 14 mg_*.ts files. Listing it here\\n// causes Rollup to include all 14 + MinigameBase in this chunk via static dependency\\n// resolution. MinigameRegistry itself is loaded lazily from main.ts via dynamic import,\\n// so the entire minigames chunk is deferred until first run.'"
+    }
+  ],
+  "verdict": "PROCEED",
+  "verdict_rationale": "C125 fixes verified. 13/14 minigames fully tiered. bibliotheque z-fighting guard confirmed. Bundle chunk behavior is correct (both bugs are LOW severity documentation/completeness issues, no runtime regressions). Score 9.2 is stable vs C61 9.23."
+}
