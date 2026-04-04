@@ -28,10 +28,10 @@ export class MinigameTraces extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C99: difficulty scaling — fewer/larger footprints + more time for new players
-    this.totalTime      = [10, 8, 6, 5][this.difficultyTier] ?? 5;
-    this.footprintCount = [5, 7, 9, 11][this.difficultyTier] ?? 11;
-    this.hitRadius      = [38, 30, 22, 16][this.difficultyTier] ?? 16;
+    // C99/C100: difficulty scaling via tieredValue() helper
+    this.totalTime      = this.tieredValue([10, 8, 6, 5] as const);
+    this.footprintCount = this.tieredValue([5, 7, 9, 11] as const);
+    this.hitRadius      = this.tieredValue([38, 30, 22, 16] as const);
 
     // Title
     const title = document.createElement('div');
@@ -65,14 +65,19 @@ export class MinigameTraces extends MinigameBase {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
-    // Generate footprint positions along a winding path
+    // Generate footprint positions along a randomised winding path.
+    // C100: wave params randomised per-play for replay variety (was identical sine/cos every run).
     this.footprints = [];
     this.currentIndex = 0;
     this.ended = false;
+    const sinFreq = 1.5 + Math.random() * 2.0;   // 1.5–3.5
+    const cosFreq = 2.0 + Math.random() * 2.0;   // 2.0–4.0
+    const sinAmp  = 25  + Math.random() * 40;     // 25–65px
+    const cosAmp  = 15  + Math.random() * 30;     // 15–45px
     for (let i = 0; i < this.footprintCount; i++) {
       const t = (i + 1) / (this.footprintCount + 1);
-      const x = 50 + 300 * t + Math.sin(t * Math.PI * 2) * 40;
-      const y = 350 - 300 * t + Math.cos(t * Math.PI * 3) * 30;
+      const x = 50 + 300 * t + Math.sin(t * Math.PI * sinFreq) * sinAmp;
+      const y = 350 - 300 * t + Math.cos(t * Math.PI * cosFreq) * cosAmp;
       this.footprints.push({ x, y, index: i, hit: false });
     }
 

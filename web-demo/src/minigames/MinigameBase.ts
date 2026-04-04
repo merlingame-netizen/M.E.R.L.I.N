@@ -198,6 +198,15 @@ export abstract class MinigameBase {
   }
 
   /**
+   * Return the per-tier value for this play session.
+   * C100: eliminates `[v0,v1,v2,v3][this.difficultyTier] ?? v3` boilerplate in subclasses.
+   * Example: `this.totalTime = this.tieredValue([30, 25, 20, 15]);`
+   */
+  protected tieredValue<T>(values: readonly [T, T, T, T]): T {
+    return values[Math.min(this.difficultyTier, 3) as 0 | 1 | 2 | 3];
+  }
+
+  /**
    * Real delta time (seconds) since the previous render() call.
    * First call of a play session returns 1/60 (safe default).
    * Capped at 100ms to suppress post-tab-switch / DevTools spikes.
