@@ -638,7 +638,7 @@ function createPotionBottles(): Group {
       transparent: true,
       opacity: 0.78,
       emissive: b.color,
-      emissiveIntensity: 0.25,
+      emissiveIntensity: 0.08, // C129/POTION-EMISSIVE-01: reduce from 0.25 — was too bright vs ambient lair lighting
       flatShading: true,
     });
     const bottle = new Mesh(new CylinderGeometry(0.12, 0.15, 0.55, 8), mat);

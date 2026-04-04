@@ -240,9 +240,10 @@ export function loadLairGLBs(
 
   // Mur pierre: C87 — InstancedMesh replaces 48 clones (48 draw calls → 3).
   // 3 InstancedMeshes (one per rotation: back=0°, left=+90°, right=-90°).
-  // Wall spans y=-5 to y=11 (16u height). C124/LAIR-TILE-01: ROW_H = 16/4 = 4.0u (was 16/3≈5.33u).
-  // 4 rows × 4u = square tiles (4×4). Fixes Y-elongation (was 5.33u tall vs 4u wide).
-  // 3 draw calls unchanged. Instance count: back 24 (was 18), left/right 20 each (was 15). Total 64 (was 48).
+  // Wall spans y=-5 to y=11 (16u height). C129/TILE-ASPECT-01: ROW_H = 5u (3 rows × 5u = 15u coverage).
+  // mur_pierre.glb has 5 stone rows × 4 stone columns. At scale.set(4,5,1): stone=1u×1u (1:1 square).
+  // C124 used ROW_H=4 (stone=1u×0.8u, squat). C129 corrects to ROW_H=5 (1:1 square stones).
+  // 3 draw calls unchanged. Instance count: back 18 (3×6), left/right 15 each (3×5). Total 48.
   loadGLB('/mur_pierre.glb').then((gltf) => {
     if (isDisposed?.()) return; // C81-03
     // Extract first mesh geometry + material from GLB
@@ -262,13 +263,13 @@ export function loadLairGLBs(
     });
     if (!tileGeo || !tileMat) return;
 
-    const ROW_H = 16 / 4; // C124/LAIR-TILE-01: 4.0u — square tiles (was 16/3≈5.33u)
-    const ROWS = 4;
+    const ROW_H = 5; // C129/TILE-ASPECT-01: 5u — 1:1 square stones (5 GLB rows × 5u = 1u/stone; C124 was 4u → 0.8:1 squat)
+    const ROWS = 3; // 3 rows × 5u = 15u (0.8u gap at top hidden behind ceiling beams + fog)
     const rowY = (r: number): number => -5 + ROW_H * (r + 0.5);
     const dummy = new Object3D();
 
-    // Back wall: 24 tiles (6 cols × 4 rows), rotY = 0
-    const backMesh = new InstancedMesh(tileGeo, tileMat, 24);
+    // Back wall: 18 tiles (6 cols × 3 rows), rotY = 0
+    const backMesh = new InstancedMesh(tileGeo, tileMat, 18);
     let idx = 0;
     for (let r = 0; r < ROWS; r++) {
       for (let i = 0; i < 6; i++) {
@@ -281,8 +282,8 @@ export function loadLairGLBs(
     }
     backMesh.instanceMatrix.needsUpdate = true;
 
-    // Left wall: 20 tiles (5 cols × 4 rows), rotY = +90°
-    const leftMesh = new InstancedMesh(tileGeo, tileMat, 20);
+    // Left wall: 15 tiles (5 cols × 3 rows), rotY = +90°
+    const leftMesh = new InstancedMesh(tileGeo, tileMat, 15);
     idx = 0;
     for (let r = 0; r < ROWS; r++) {
       for (let i = 0; i < 5; i++) {
@@ -295,8 +296,8 @@ export function loadLairGLBs(
     }
     leftMesh.instanceMatrix.needsUpdate = true;
 
-    // Right wall: 20 tiles (5 cols × 4 rows), rotY = -90°
-    const rightMesh = new InstancedMesh(tileGeo, tileMat, 20);
+    // Right wall: 15 tiles (5 cols × 3 rows), rotY = -90°
+    const rightMesh = new InstancedMesh(tileGeo, tileMat, 15);
     idx = 0;
     for (let r = 0; r < ROWS; r++) {
       for (let i = 0; i < 5; i++) {
