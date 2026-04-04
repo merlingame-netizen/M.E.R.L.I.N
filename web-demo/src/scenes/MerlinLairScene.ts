@@ -677,6 +677,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entrée pour activer.');
   renderer.domElement.setAttribute('tabindex', '0');
   renderer.domElement.style.touchAction = 'none'; // prevent mobile scroll interference
+  // C102: auto-focus canvas so C85-01 keyboard nav works without requiring a prior click
+  // { preventScroll: true } avoids iOS/desktop layout jump on initial mount
+  renderer.domElement.focus({ preventScroll: true });
   // C88: aria-live region — screen readers announce zone focus/activation (WCAG 2.1 AA)
   const ariaLive = document.createElement('div');
   ariaLive.setAttribute('aria-live', 'polite');
@@ -710,6 +713,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // C102: re-sync DPR on zoom/monitor switch
   };
   window.addEventListener('resize', onResize);
 
@@ -882,7 +886,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         doorFlashTimer = 0;
         (doorPanel.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
-        doorFlashCancelHandle = window.setTimeout(() => { doorFlashing = false; cb(found.zone); }, 380);
+        doorFlashCancelHandle = window.setTimeout(() => {
+          doorFlashing = false;
+          if (!lairDisposed) cb(found.zone); // C102: guard against stale callback after dispose()
+        }, 380);
       } else {
         zoneClickCallback(found.zone);
       }
