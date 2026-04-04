@@ -143,6 +143,14 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
 // that each try to remove 'card-flip' from an already-updated/hidden container.
 let flipTimeoutId = 0;
 
+// C152/CO-01: module-level refs so hideCard() can clean up regardless of call path.
+// Without these, any external hideCard() call (scene transition, future skip-card control)
+// leaves onDigitKey + per-button keydown handlers live on detached nodes indefinitely.
+// The safety timeout at 60s would clean them up, but that is not a substitute.
+let _activeDigitKeyHandler: ((e: KeyboardEvent) => void) | null = null;
+let _activeKeyDownHandlers: Array<{ btn: HTMLElement; handler: (e: KeyboardEvent) => void }> = [];
+let _activeCardSafetyId: ReturnType<typeof setTimeout> | number = 0;
+
 /** T047: Trigger card-flip CSS animation on the card container (0.4s rotateY). */
 function triggerFlipAnimation(): void {
   const container = cardContainer();
@@ -195,6 +203,8 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
         resolve(0);
       }
     }, 60_000);
+    // C152/CO-01: track safety timer at module level so external hideCard() can cancel it
+    _activeCardSafetyId = safetyId;
 
     // Null-guard DOM elements — consistent with HUD pattern (C57)
     const overlayEl = document.getElementById('card-overlay');
@@ -307,6 +317,9 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       targetBtn.classList.add('card-option-selected');
       setTimeout(() => { hideCard(); resolve(idx); }, 200);
     };
+    // C152/CO-01: expose to module scope so hideCard() can remove regardless of call path
+    _activeDigitKeyHandler = onDigitKey;
+    _activeKeyDownHandlers = keyDownHandlers;
     document.addEventListener('keydown', onDigitKey);
 
     // C86/C123: Make overlay visible FIRST, then set narrative text so NVDA/JAWS
@@ -326,6 +339,15 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
 }
 
 export function hideCard(): void {
+  // C152/CO-01: clean up active card event listeners regardless of call path.
+  // removeEventListener is idempotent — safe even if already cleaned by activate() or safetyId.
+  if (_activeDigitKeyHandler !== null) {
+    document.removeEventListener('keydown', _activeDigitKeyHandler);
+    _activeDigitKeyHandler = null;
+  }
+  for (const { btn, handler } of _activeKeyDownHandlers) btn.removeEventListener('keydown', handler);
+  _activeKeyDownHandlers = [];
+  clearTimeout(_activeCardSafetyId);
   const overlayEl = document.getElementById('card-overlay');
   if (overlayEl) overlayEl.classList.remove('visible');
 }

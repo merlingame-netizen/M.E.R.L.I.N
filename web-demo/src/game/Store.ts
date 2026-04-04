@@ -387,7 +387,19 @@ export const store = createStore<MerlinStore>((set, get) => ({
     phase: 'end' as GamePhase,
     // BUG-C88-05: reset activeOgham + oghamCooldowns immediately so the ogham badge
     // doesn't show a stale selection during the showRunSummary async window.
-    run: { ...s.run, active: false, activeOgham: '', oghamCooldowns: {} },
+    // C152/ST-01: also reset fields that are semantically invalid post-run (karma, tension,
+    // biomeCurrency, oghamsDiscovered). RunSummary reads anamThisRun/factionDeltaThisRun/
+    // promises/life/cardsPlayed/factions/biome — all preserved — so this reset is safe.
+    run: {
+      ...s.run,
+      active: false,
+      activeOgham: '',
+      oghamCooldowns: {},
+      karma: 0,
+      tension: 0,
+      biomeCurrency: 0,
+      oghamsDiscovered: [],
+    },
     meta: {
       ...s.meta,
       totalRuns: s.meta.totalRuns + 1,

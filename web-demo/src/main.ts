@@ -878,6 +878,11 @@ async function gameLoop(
       rail.reset();
     }
   }
+  // C152/ML-02: safety-net saveRunEnd after the while loop — covers the theoretical path
+  // where run.active is flipped false externally (debug tool, future feature) causing the
+  // loop to exit via the while-condition check without hitting any break. Idempotent: the
+  // savedThisRun guard makes double-calling harmless for all normal break paths.
+  saveRunEnd();
 }
 
 async function createMinigame(id: string, container: HTMLElement) {
