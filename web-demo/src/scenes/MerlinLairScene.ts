@@ -1162,8 +1162,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Cauldron steam — C82: gate under !lowFpsMode (steam + glow sin is cosmetic)
     if (!lowFpsMode) cauldron.update(elapsedTime, dt);
 
-    // Forest window (leaf sway + glass shimmer)
-    lairWindow.update(elapsedTime);
+    // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
+    // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
+    if (!lowFpsMode) lairWindow.update(elapsedTime);
 
     // C33: dt-based hover scale lerp — smooth Celtic ritual feel (replaces instant setScalar in handlers)
     // 18 units/s → ~100ms transition at 60fps, ~55ms at 30fps. Stops when within 0.001 of target.
@@ -1183,6 +1184,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
     cancelGLBFades(); // C133: stop any in-flight fadeInGLB rAFs immediately (no extra frame after dispose)
     cleanupLairDensity(); // C35: remove moon.target (world-space Object3D — not reached by traverse)
+    scene.remove(lairWindow.windowLight.target); // C83: spotlight target added at world level — not in group, not reached by traverse
     stopAmbient(); // C93-P1: stop forest ambient on scene teardown
     // C117: clear GLB cache before geometry.dispose() — prevents returning disposed-geometry GLTF
     // on second lair visit (cauldron/table/biblio/sol_pierre/crystal_ball added as gltf.scene directly)
