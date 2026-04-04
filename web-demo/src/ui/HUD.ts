@@ -65,24 +65,25 @@ function buildFactionPanel(): void {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:6px;';
 
+    // C171: CeltOS charter — Courier New, phosphor green dim labels
     const label = document.createElement('span');
-    label.style.cssText = 'color:rgba(232,220,200,0.6);font-size:11px;font-family:system-ui;width:60px;text-align:right;';
+    label.style.cssText = 'color:rgba(51,255,102,0.42);font-size:10px;font-family:"Courier New",Courier,monospace;width:60px;text-align:right;letter-spacing:1px;text-transform:uppercase;';
     label.textContent = FACTION_LABELS[faction];
     row.appendChild(label);
 
     const barBg = document.createElement('div');
-    barBg.style.cssText = 'width:80px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;';
+    barBg.style.cssText = 'width:80px;height:5px;background:rgba(51,255,102,0.06);border:1px solid rgba(51,255,102,0.15);border-radius:0;overflow:hidden;';
 
     const barFill = document.createElement('div');
     barFill.id = `faction-fill-${faction}`;
-    barFill.style.cssText = `height:100%;width:0%;background:${FACTION_COLORS[faction]};border-radius:3px;transition:width 0.3s ease;`;
+    barFill.style.cssText = `height:100%;width:0%;background:${FACTION_COLORS[faction]};border-radius:0;transition:width 0.3s ease;`;
     barBg.appendChild(barFill);
     row.appendChild(barBg);
     _factionFillEls[faction] = barFill; // C121/HUD-01: cache for zero-getElementById updateHUD
 
     const val = document.createElement('span');
     val.id = `faction-val-${faction}`;
-    val.style.cssText = 'color:rgba(232,220,200,0.5);font-size:10px;font-family:system-ui;width:24px;';
+    val.style.cssText = 'color:rgba(51,255,102,0.55);font-size:10px;font-family:"Courier New",Courier,monospace;width:24px;';
     val.textContent = '0';
     row.appendChild(val);
     _factionValEls[faction] = val; // C121/HUD-01
@@ -116,14 +117,15 @@ function buildResourcePanel(): void {
   const anamRow = document.createElement('div');
   anamRow.style.cssText = 'display:flex;align-items:center;gap:6px;justify-content:flex-end;';
 
+  // C171: CeltOS charter
   const anamLabel = document.createElement('span');
-  anamLabel.style.cssText = 'color:rgba(205,133,63,0.7);font-size:12px;font-family:system-ui;';
-  anamLabel.textContent = 'Anam';
+  anamLabel.style.cssText = 'color:rgba(51,255,102,0.45);font-size:10px;font-family:"Courier New",Courier,monospace;letter-spacing:2px;text-transform:uppercase;';
+  anamLabel.textContent = 'ANAM';
   anamRow.appendChild(anamLabel);
 
   const anamVal = document.createElement('span');
   anamVal.id = 'anam-value';
-  anamVal.style.cssText = 'color:#cd853f;font-size:14px;font-family:system-ui;font-weight:bold;min-width:28px;';
+  anamVal.style.cssText = 'color:#33ff66;font-size:13px;font-family:"Courier New",Courier,monospace;font-weight:bold;min-width:28px;text-shadow:0 0 6px rgba(51,255,102,0.4);';
   anamVal.textContent = '0';
   anamRow.appendChild(anamVal);
   _anamEl = anamVal; // C121/HUD-01
@@ -134,16 +136,17 @@ function buildResourcePanel(): void {
   const currRow = document.createElement('div');
   currRow.style.cssText = 'display:flex;align-items:center;gap:6px;justify-content:flex-end;';
 
+  // C171: CeltOS charter
   const currLabel = document.createElement('span');
   currLabel.id = 'currency-label';
-  currLabel.style.cssText = 'color:rgba(143,188,143,0.7);font-size:12px;font-family:system-ui;';
-  currLabel.textContent = 'Monnaie';
+  currLabel.style.cssText = 'color:rgba(51,255,102,0.40);font-size:10px;font-family:"Courier New",Courier,monospace;letter-spacing:2px;text-transform:uppercase;';
+  currLabel.textContent = 'MONNAIE';
   currRow.appendChild(currLabel);
   _currLabelEl = currLabel; // C121/HUD-01
 
   const currVal = document.createElement('span');
   currVal.id = 'currency-value';
-  currVal.style.cssText = 'color:#8fbc8f;font-size:14px;font-family:system-ui;font-weight:bold;min-width:28px;';
+  currVal.style.cssText = 'color:rgba(51,255,102,0.75);font-size:13px;font-family:"Courier New",Courier,monospace;font-weight:bold;min-width:28px;';
   currVal.textContent = '0';
   currRow.appendChild(currVal);
   _currEl = currVal; // C121/HUD-01
@@ -165,13 +168,16 @@ export function updateHUD(): void {
   // ARIA progressbar value — BUG-C88-07
   if (_lifeBarContainerEl) _lifeBarContainerEl.setAttribute('aria-valuenow', String(Math.round(lifePercent)));
 
-  // Color transitions for life bar
+  // C171: CRT life bar — danger=red glitch, warning=amber, normal=phosphor green
   if (lifePercent <= 25) {
-    _lifeFillEl.style.background = 'linear-gradient(90deg, #8b0000, #cd5c5c)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #cc1515, #ff3535)';
+    _lifeFillEl.style.boxShadow = '0 0 8px rgba(255,50,50,0.6)';
   } else if (lifePercent <= 50) {
-    _lifeFillEl.style.background = 'linear-gradient(90deg, #8b4513, #cd853f)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #885500, #cc8800)';
+    _lifeFillEl.style.boxShadow = '0 0 6px rgba(200,140,0,0.4)';
   } else {
-    _lifeFillEl.style.background = 'linear-gradient(90deg, #2e6b2e, #5a9a5a)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #1a8833, #33ff66)';
+    _lifeFillEl.style.boxShadow = '0 0 6px rgba(51,255,102,0.4)';
   }
 
   // ARIA live region — announce critical health once on entry (BUG-C88-07)
@@ -186,10 +192,10 @@ export function updateHUD(): void {
     }
   }
 
-  _cardsCountEl.textContent = `Carte ${state.run.cardsPlayed}`;
+  _cardsCountEl.textContent = `CARTE_${state.run.cardsPlayed}`;
 
   const biome = BIOMES[state.run.biome];
-  _biomeNameEl.textContent = biome?.name ?? state.run.biome;
+  _biomeNameEl.textContent = (biome?.name ?? state.run.biome).toUpperCase();
 
   // Update faction bars
   for (const faction of FACTIONS) {
@@ -215,6 +221,7 @@ function buildOghamBadge(): void {
 
   const badge = document.createElement('div');
   badge.id = 'ogham-badge';
+  // C171: CRT ogham badge — gold accent retained (magical emphasis) with CRT border
   badge.style.cssText = [
     'position:absolute',
     'top:8px',
@@ -225,10 +232,12 @@ function buildOghamBadge(): void {
     'gap:6px',
     'pointer-events:none',
     'z-index:15',
-    'background:rgba(0,0,0,0.55)',
-    'border:1px solid rgba(205,170,80,0.6)',
-    'border-radius:20px',
-    'padding:3px 12px',
+    'background:rgba(3,5,3,0.85)',
+    'border:1px solid rgba(205,170,80,0.55)',
+    'border-left:2px solid rgba(205,170,80,0.9)',
+    'border-radius:0 2px 2px 0',
+    'padding:4px 14px',
+    'font-family:"Courier New",Courier,monospace',
   ].join(';');
   _oghamBadgeEl = badge; // C121/HUD-01
 
@@ -240,7 +249,7 @@ function buildOghamBadge(): void {
 
   const nameSpan = document.createElement('span');
   nameSpan.id = 'ogham-badge-name';
-  nameSpan.style.cssText = 'color:#f0c040;font-size:11px;font-family:system-ui;font-weight:600;letter-spacing:0.04em;';
+  nameSpan.style.cssText = 'color:#f0c040;font-size:11px;font-family:"Courier New",Courier,monospace;font-weight:600;letter-spacing:2px;text-transform:uppercase;';
   badge.appendChild(nameSpan);
   _oghamNameEl = nameSpan; // C121/HUD-01
 
@@ -249,7 +258,7 @@ function buildOghamBadge(): void {
   multSpan.style.cssText = [
     'color:#ffe680',
     'font-size:13px',
-    'font-family:system-ui',
+    'font-family:"Courier New",Courier,monospace',
     'font-weight:bold',
     'animation:ogham-pulse 1.2s ease-in-out infinite',
   ].join(';');
