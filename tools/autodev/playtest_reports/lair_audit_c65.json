@@ -1,0 +1,210 @@
+{
+  "timestamp": "2026-04-04T10:00:00Z",
+  "cycle": "C65",
+  "auditor": "merlin-ai-playtester",
+  "subject": "MerlinLairScene + LairGLBAssets + mg_volonte + mg_combat_rituel — AAA ULTRA + DOUBLE MODE QA post-C128",
+  "base_cycle": "C64",
+  "c128_verification": {
+    "table_druidique_polygonOffset": true,
+    "detail_table_druidique": "LairGLBAssets.ts lines 157-168: traverse block applies polygonOffset=true, factor=-2, units=-4 to all MeshStandardMaterial meshes before scene.add(). Comment cites C128, 16-bit GPU risk, and Y=-5.0 adjacency to sol_pierre. Fix is correctly placed (before scene.add, not after) — needsUpdate=true set.",
+    "mg_volonte_keyboard": true,
+    "detail_mg_volonte": "onKeyDown arrow handler at line 158: 4-direction arrow movement, auto-centers on first press (cursorX=centerX, cursorY=centerY), 10px steps, preventDefault on arrow keys. Registered in setup() line 118, removed in endGame() line 204 AND in cleanup() line 373. Full lifecycle covered.",
+    "mg_combat_rituel_keyboard": true,
+    "detail_mg_combat_rituel": "onKeyDown arrow handler at line 175: 4-direction movement, 10px steps, clamps to arenaRadius-8 (line 188-192, same boundary as onPointerMove lines 166-170). Registered in setup() line 112, removed in endGame() line 228 AND in cleanup() line 390. Full lifecycle covered.",
+    "c64_bug1_false_positive_confirmed": true,
+    "detail_c64_bug1": "MerlinLairScene.ts dispose() lines 1168-1173 show ariaLive.parentNode.removeChild(ariaLive) and zoneToast.parentNode.removeChild(zoneToast) both present with parentNode null-guards. The C64 rank-1 bug report described the fix as missing, but the code already contains it — the C64 auditor read the dispose() as incomplete. C65 re-verification confirms both nodes are removed. FALSE POSITIVE confirmed."
+  },
+  "aaa_ultra_scores": {
+    "1_flat_shading_coherence": 9.5,
+    "2_z_fighting_residual": 9.7,
+    "3_materiaux_qualite": 9.4,
+    "4_lighting_dramaturgie": 9.1,
+    "5_GLB_coverage": 9.6,
+    "6_proportions_geometriques": 8.8,
+    "7_style_celtic_coherence": 9.5,
+    "8_bundle_perf": 9.7,
+    "9_memory_leaks": 9.6,
+    "10_fps_budget": 9.2,
+    "11_ux_aria": 9.7,
+    "12_hover_feedback": 9.3,
+    "global_average": 9.43,
+    "delta_vs_c64": "+0.18"
+  },
+  "aaa_ultra_detail": {
+    "1_flat_shading_coherence": {
+      "score": 9.5,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "No change since C64. applyFlatShading() with instanceof MeshStandardMaterial guard covers all 7 GLBs. Crystal ball GLB correctly excluded. Candle clones per-body. Cauldron GLB per-mesh. Procedural geometry all flatShading:true. table_druidique.glb now delegates to applyFlatShading() (line 156 in LairGLBAssets.ts) — confirmed at C65."
+    },
+    "2_z_fighting_residual": {
+      "score": 9.7,
+      "change_vs_c64": "+0.5",
+      "pass": true,
+      "notes": "C128 closes the last known z-fighting gap: table_druidique.glb at Y=-5.0 now has polygonOffset factor=-2 units=-4 applied via traverse before scene.add(). This covers 16-bit GPU depth precision at z=-3 (close camera range). All 5 surface-adjacent GLBs now have polygonOffset: sol_pierre (C112), mur_pierre InstancedMesh (C89/C90), bibliotheque (C125), table_druidique (C128). Residual micro-risk: back wall mortar lines at z=-9.74 vs procedural wall at z=-9.76 (0.02u gap) — no polygonOffset on mortar lines. At z=-9.76 depth with 16-bit buffer the precision is ~0.05u, meaning 0.02u gap is borderline. However mortar lines use a different material (mortarMat vs stoneMat) so WebGL depth test is per-fragment and different materials prevent z-fighting by draw-order. Deduction -0.3 for mortar micro-risk only."
+    },
+    "3_materiaux_qualite": {
+      "score": 9.4,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "No material changes in C128. All clone-before-mutate patterns intact. GLB material cloning (C81-04) verified on cauldron, bougie, table_druidique, bibliotheque, sol_pierre, mur_pierre. Crystal ball GLB material clone with emissive. Potion transparency intact. candleBaseMat/wickMat template disposal (C81-07). No new regression."
+    },
+    "4_lighting_dramaturgie": {
+      "score": 9.1,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "No lighting changes in C128. 5-source rig unchanged. Crystal pulse, candle flicker, door cinematic all verified in C64 analysis. Door flash guard (C121 doorFlashing) confirmed by grep — both pointer and keyboard paths check 'if (doorFlashing) return'. Entry cinematic verified C127. No regression."
+    },
+    "5_GLB_coverage": {
+      "score": 9.6,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "7 GLBs: cauldron_merlin, bougie (3 clones), table_druidique, bibliotheque, sol_pierre, mur_pierre (InstancedMesh), crystal_ball. All 5 interactive zones covered with GLB + procedural fallback. All C81-03 isDisposed() guards verified. All fadeInGLB (C97) calls present. No change since C64."
+    },
+    "6_proportions_geometriques": {
+      "score": 8.8,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "No scale changes in C128. bibliotheque non-uniform scale [1.2,1.0,0.8] issue persists (noted C64, not fixed). sol_pierre floor coverage gap persists. These are known visual approximations accepted by design. No regression."
+    },
+    "7_style_celtic_coherence": {
+      "score": 9.5,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "No lore changes in C128. ZONE_LORE 5 entries verified correct (Cerridwen, Broceliande, Oghams, Merlin chronicles, Bretagne geography). Celtic vocabulary in minigames unchanged. No regression."
+    },
+    "8_bundle_perf": {
+      "score": 9.7,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "Build state post-C128: main 50.77KB gzip (target <200KB — 25% of limit). minigames 24.04KB gzip. three-core 135.45KB gzip. C128 adds two onKeyDown handlers (arrow movement) and one polygonOffset traverse block — delta is ~40 lines, gzip impact <200 bytes. No chunk strategy change. Still well under limits."
+    },
+    "9_memory_leaks": {
+      "score": 9.6,
+      "change_vs_c64": "+0.3",
+      "pass": true,
+      "notes": "C64 deducted -0.7 for ariaLive/zoneToast not removed in dispose(). C65 re-verification: both nodes ARE removed in dispose() (lines 1168-1173). The C64 finding was a false positive. Updated score accordingly. C128 keyboard handlers in mg_volonte and mg_combat_rituel: both removed in endGame() AND cleanup() — no listener leak path. Full dispose() chain now verified complete: lairDisposed flag, clearGLBCache, ResizeObserver disconnect, 6 DOM event listeners, clearTimeout(doorFlashCancelHandle), scene.traverse geometry+material dispose, InstancedMesh explicit dispose (C109), renderer.dispose(), cursor reset, domElement removeChild, ariaLive removeChild, zoneToast removeChild. Residual risk: fadeInGLB rAF tick runs up to durationMs=400ms after scene.add. isDisposed() guard in tick covers this (C122). No further deduction."
+    },
+    "10_fps_budget": {
+      "score": 9.2,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "C128 adds onKeyDown handlers — keyboard events are user-triggered (not per-frame), zero FPS impact. polygonOffset traverse on table_druidique fires once at GLB load, not in render loop. No render budget change. InstancedMesh wall tiles, crystalEntry cache, raycastTargets cache, candle sharedLight all intact. 170 particles pre-lowFpsMode, 90 post. No regression."
+    },
+    "11_ux_aria": {
+      "score": 9.7,
+      "change_vs_c64": "+0.3",
+      "pass": true,
+      "notes": "C64 deducted -0.6 for mg_volonte and mg_combat_rituel lacking keyboard support. C128 adds onKeyDown to both — now all 3 cursor-movement minigames (sang_froid, volonte, combat_rituel) have WCAG 2.1.1 keyboard compliance. mg_volonte: auto-centers on first ArrowKey press (moves cursor from (0,0) to center 190,190), then 10px steps — keyboard-only player can immediately engage target. mg_combat_rituel: starts at center (playerX/Y = centerX/Y), ArrowKey 10px steps with arenaRadius-8 clamp matching pointer path. Both canvases have tabIndex=0, role=application, aria-label. Updated score. Minor residual: mg_course and mg_echo don't have ArrowKey cursor support (they use different interaction models — course is timing-based, echo is symbol-matching — keyboard not applicable to cursor movement). No deduction for non-cursor minigames."
+    },
+    "12_hover_feedback": {
+      "score": 9.3,
+      "change_vs_c64": 0.0,
+      "pass": true,
+      "notes": "No hover system changes in C128. 4-layer hover (cursor, scale, emissive, zoneToast), SFX, keyboard toast sync, GLB visualMesh swap callbacks all intact. Entry cinematic verified C127. No regression."
+    }
+  },
+  "double_mode_scores": {
+    "1_rendu_3d": 9.5,
+    "2_assets_qualite": 9.2,
+    "3_animations_fluides": 9.3,
+    "4_bundle_size": 9.7,
+    "5_performance_fps": 9.2,
+    "6_accessibilite": 9.7,
+    "7_game_feel_feedback": 9.4,
+    "8_equilibrage": 9.5,
+    "9_fun_factor": 9.1,
+    "10_lore_narration": 9.5,
+    "global_average": 9.41
+  },
+  "double_mode_detail": {
+    "1_rendu_3d": {
+      "score": 9.5,
+      "notes": "Flat-shading coherent across procedural + GLB. Z-fighting closed on all 5 surface-adjacent GLBs (C128 completes the set). 5-source AAA lighting rig functional. Fog [12,28] adds depth. Crystal glass translucency (opacity=0.82) differentiated from stone surfaces. Emissive boost on hover creates readable 3D depth feedback. Minor: bibliotheque non-uniform scale normal distortion persists."
+    },
+    "2_assets_qualite": {
+      "score": 9.2,
+      "notes": "7 GLBs loaded with fallbacks. All zones have visual representation. Crystal ball float animation (GLB group tracked via onCrystalGroupLoaded). Candle 3 instances at distinct positions. table_druidique anchored correctly at Y=-5.0 with new polygonOffset. sol_pierre flagstone aesthetic vs procedural box floor is an upgrade. Deduction: bibliotheque non-uniform scale (same as C64), sol_pierre floor may not cover full 24×20 room extent."
+    },
+    "3_animations_fluides": {
+      "score": 9.3,
+      "notes": "Crystal float: GLB group Y oscillation via crystalGLBBaseY+sin(elapsedTime*0.9)*0.12 — smooth. Crystal pulse: emissiveIntensity=0.5+sin(t*1.8)*0.15 — atmospheric. Camera entry (C127): cubic ease-out z=10→7 over 1.2s — smooth deceleration verified. Camera sway: sin*0.1 x + sin*0.06 y — subtle life. Candle flicker: multi-frequency sin for organic warmth. Door cinematic: 7.2Hz flash during 380ms window (~2.7 cycles). Fade-in on all GLBs (C97): 400ms transparent opacity ramp — prevents hard pop-in. No jank sources identified."
+    },
+    "4_bundle_size": {
+      "score": 9.7,
+      "notes": "main 50.77KB gzip = 25.4% of 200KB target. Excellent headroom. three-core chunk isolates Three.js. minigames 24.04KB gzip. C128 adds ~200 bytes gzip. No regression. chunkSizeWarningLimit=550 is correct for three-core chunk. sourcemap and reportCompressedSize enabled for production visibility."
+    },
+    "5_performance_fps": {
+      "score": 9.2,
+      "notes": "InstancedMesh 48→3 draw calls (C87). raycastTargets cached (C122). crystalEntry cached (C118). candle sharedLight saves 2 GPU slots. FPS adaptive: lowFpsMode at <45fps drops dust.update(). 170→90 particles in low mode. 9 sin calls per frame for candles (3 candles × 3 frequencies). rAF loop guarded by lairDisposed (C105). No per-frame allocations identified. Minor: 9 active PointLights on desktop (1 ambient + 4 scene + sharedLight + crystal + cauldron + door) — WebGL2 handles unlimited but shader compile time increases with light count."
+    },
+    "6_accessibilite": {
+      "score": 9.7,
+      "notes": "WCAG 2.1.1 (Keyboard) compliance: Lair keyboard navigation (Tab/ArrowRight/ArrowDown cycle, Enter/Space activate, C85-01), mg_sang_froid ArrowKey cursor (C96), mg_volonte ArrowKey cursor (C128), mg_combat_rituel ArrowKey cursor (C128). WCAG SC 1.3.1: aria-describedby=lair-aria-live (C126). WCAG SC 4.1.3: role=status on zoneToast (C124). All 14 canvases have role=application + aria-label. Timer bars have role=progressbar + aria-valuenow. Status elements have aria-live=polite. mg_volonte canvas has tabIndex=0 for keyboard focus. Minor residual: mg_fouille and mg_herboristerie are click/tap based — no ArrowKey equivalent (interaction model is point-select, not cursor-movement — keyboard Enter/Tab for selection would be needed for full WCAG). Not addressed in C128 scope."
+    },
+    "7_game_feel_feedback": {
+      "score": 9.4,
+      "notes": "Entry cinematic (C127) creates immediate sense of entering a space — z=10→7 cubic ease gives controlled reveal. 4-layer hover system provides layered feedback cues (visual+audio+text+cursor). ZONE_LORE toast gives contextual narrative on hover — sighted player gets Celtic context. SFX on every interaction (hover=sound, click=flip, door=magic_reveal). Door cinematic 380ms creates anticipation before transition. mg_volonte keyboard auto-center on first ArrowKey: removes dead-on-arrival frustration for keyboard users. mg_combat_rituel starts at center — player enters arena centered, immediately threatened by rotating obstacles."
+    },
+    "8_equilibrage": {
+      "score": 9.5,
+      "notes": "14/14 minigames have tieredValue scaling post-C126. mg_volonte 4 tiers: totalTime [12,11,10,9]s, targetRadius [30,26,22,18]px, spawnInterval [0.6,0.5,0.4,0.3]s, maxDistractors [12,14,16,18] — coherent difficulty curve. mg_combat_rituel 4 tiers: totalTime [16,14,12,10]s, obstacleCount [3,4,5,6] — clean scaling. C128 keyboard UX for both: step size 10px is appropriate (canvasW=380, target area=centerRadius 30-18px, 10px per press = 3-5 presses to traverse). ArenaRadius-8 clamp in mg_combat_rituel is consistent with pointer path — keyboard users face same geometric constraints as mouse users. Balanced. mg_volonte auto-center on first arrow: gives keyboard users a small assist (not exploitable — they still need to maintain focus)."
+    },
+    "9_fun_factor": {
+      "score": 9.1,
+      "notes": "Lair functions as a discovery space — 5 zones with distinct Celtic themes reward exploration. zoneToast lore text creates micro-narratives on hover. Crystal float + pulse creates a living focal point. Candle warmth (sharedLight flicker) creates atmospheric depth. Entry cinematic creates a moment of arrival. Minigame diversity: focus (volonte), dodge (combat_rituel), memory (echo/regard), timing (course), stealth (ombres), negotiation (negociation) — covers multiple player archetypes. Deduction: No persistent state visible in lair (reputation bars, ogham count) — player cannot see their progress from hub, reducing investment signal."
+    },
+    "10_lore_narration": {
+      "score": 9.5,
+      "notes": "ZONE_LORE 5 entries grounded in specific mythological anchors: Bretagne geography (map), Ogham runes in sacred stone (crystal), Merlin chronicles (bookshelf), Cerridwen's cauldron of transformation (cauldron), Broceliande forest (door). All zone names in ZONE_ARIA_LABELS are neutral-to-lore (Biomes, Oghams, Journal, Sortir, Chaudron). Minigame themes: Combat Rituel uses ogham runes as arena decorations, Course uses Breton forest terrain, Echo uses ogham symbols, Regard uses ogham sequences, Herboristerie uses Breton flora (shamrock/gui/verveine). Negociation faction vocabulary (druid/korrigan/niamh/ankou) is fully Celtic. French language throughout is consistent with Breton/Celtic register. High cohesion."
+    }
+  },
+  "verdict_aaa": "PROCEED",
+  "verdict_double": "PROCEED",
+  "top3_bugs": [
+    {
+      "rank": 1,
+      "severity": "LOW",
+      "title": "Back wall mortar lines have no polygonOffset — micro z-fighting risk at z=-9.74",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 86,
+      "detail": "Procedural mortar lines (mortarMat, BoxGeometry depth=0.5) are positioned at z=-9.74 while the stone wall back face is at z=-9.76 (BoxGeometry 0.5 thick, center z=-10, back face z=-10.25, front face z=-9.75). The mortar is 0.01u in front of the back face. At depth ~10u with 16-bit depth buffer, precision is ~0.05u — the 0.01u gap is within the noise floor, creating potential z-fighting on mobile 16-bit GPUs (Mali-T720, Adreno 306). The mortar and stone use different materials (mortarMat vs stoneMat) which can create draw-order disambiguation, but this is not guaranteed across all WebGL implementations. All GLB surface-adjacent meshes have been patched (C112, C89/C90, C125, C128) but procedural mortar lines are not.",
+      "fix": "Add polygonOffset to mortarMat: mortarMat.polygonOffset=true; mortarMat.polygonOffsetFactor=-1; mortarMat.polygonOffsetUnits=-2. Lighter than GLB patches (factor=-2, units=-4) since the mortar is intentionally offset by only 0.01u above the wall surface."
+    },
+    {
+      "rank": 2,
+      "severity": "LOW",
+      "title": "bibliotheque.glb non-uniform scale [1.2, 1.0, 0.8] distorts surface normals",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 186,
+      "detail": "scale.set(1.2, 1.0, 0.8) applies non-uniform scaling to bibliotheque.glb. In Three.js, non-uniform scale on a MeshStandardMaterial object with flatShading=true causes the face normals to be recomputed incorrectly unless normalMatrix is kept accurate. Three.js recomputes normalMatrix automatically, but with flatShading the per-face normals are baked at geometry creation time. Under non-uniform scale, a face originally oriented at [0,0,-1] (z-facing) will have its normal stretched by inverse-transpose of the scale matrix, giving a slightly off-axis normal ([0, 0, -1/0.8]=[0, 0, -1.25] normalized). The visual result is subtle light-direction shift on shelf faces. At small scales (1.2/1.0/0.8) the artifact is minor but detectable under the 4-source lighting rig. Not a blocker — shelf is against the right wall, lit primarily by fill light — but creates mild normal shading inconsistency.",
+      "fix": "Adjust GLB export scale in Blender to the 1.2×/0.8z stretch, then export at scale [1,1,1]. Alternatively use scale.set(1.0,1.0,1.0) and adjust the GLB mesh geometry to fit. Short-term: accept the current approximation."
+    },
+    {
+      "rank": 3,
+      "severity": "LOW",
+      "title": "mg_fouille and mg_herboristerie lack keyboard selection support (WCAG 2.1.1 partial gap)",
+      "file": "web-demo/src/minigames/mg_fouille.ts and mg_herboristerie.ts",
+      "line": null,
+      "detail": "These two minigames use point-select interaction (click on grid cells / click on ingredient buttons). Unlike cursor-movement minigames (volonte, combat_rituel, sang_froid) which now all have ArrowKey support post-C128, the click-based minigames have no keyboard Tab+Enter navigation for cell/button selection. A keyboard-only player cannot play mg_fouille or mg_herboristerie. This is a WCAG 2.1.1 gap — all functionality must be operable via keyboard. The other 9 minigames (echo, regard, course, ombres, negociation, apaisement, sang_froid, volonte, combat_rituel) either have pointer-optional-keyboard or are canvas-drawing types where keyboard equivalent is less applicable.",
+      "fix": "For mg_fouille: add tabIndex to each grid cell div and keydown Enter/Space handler for selection. For mg_herboristerie: ingredient buttons should already be focusable (button elements), verify tabIndex and Enter/Space activate. This brings WCAG 2.1.1 to full compliance across the minigame suite."
+    }
+  ],
+  "c65_improvements_over_c64": {
+    "2_z_fighting_residual": "+0.5 — table_druidique polygonOffset closes last surface-adjacent gap",
+    "9_memory_leaks": "+0.3 — ariaLive/zoneToast confirmed removed in dispose() (C64 false positive resolved)",
+    "11_ux_aria": "+0.3 — mg_volonte + mg_combat_rituel keyboard support (C128) completes cursor-minigame WCAG 2.1.1",
+    "aaa_global_delta": "+0.18 (9.25 → 9.43)",
+    "double_global": "9.41 (new baseline)"
+  },
+  "positive_findings": [
+    "C128 table_druidique polygonOffset: traverse before scene.add() is the correct ordering — material mutations before GPU upload. factor=-2/units=-4 matches the established pattern across all GLBs.",
+    "C128 mg_volonte onKeyDown auto-center: moving cursor from (0,0) to center on first ArrowKey prevents the idle-cursor-outside-target frustration without removing the core mechanic challenge.",
+    "C128 mg_combat_rituel: arenaRadius-8 clamp in onKeyDown exactly mirrors the onPointerMove clamping — keyboard and pointer paths have identical spatial constraints. Clean symmetry.",
+    "C64 BUG#1 false positive resolution: ariaLive and zoneToast cleanup was already in dispose() at lines 1168-1173. No orphan DOM nodes on repeated lair visits — this was the most critical ARIA correctness issue and it was already fixed.",
+    "All 14 minigames: tieredValue coverage complete, keyboard cursor support now at 3/3 cursor-type minigames.",
+    "Bundle discipline: 50.77KB main gzip despite 14 minigames + full 3D lair — excellent chunk strategy.",
+    "dispose() chain: 14 distinct cleanup operations covering GPU buffers, DOM nodes, event listeners, timeouts, observer — thorough teardown with no identified leaks post-C128."
+  ],
+  "balance_recommendations": []
+}

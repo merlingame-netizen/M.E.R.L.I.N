@@ -137,6 +137,8 @@ export class MinigameFouille extends MinigameBase {
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onClick);
+    // C129: arrow key + Enter/Space — WCAG 2.1.1 keyboard accessibility
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.timeLeft = this.totalTime;
@@ -202,6 +204,40 @@ export class MinigameFouille extends MinigameBase {
     this.hoverIndex = this.hitTest(this.cursorX, this.cursorY);
   };
 
+  // C129: keyboard navigation — WCAG 2.1.1 (ArrowKeys move virtual cursor; Enter/Space fires click)
+  // Auto-centers on first arrow press. Reuses hitTest() + onClick logic without duplication.
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    const isActivate = e.key === 'Enter' || e.key === ' ';
+    if (!isArrow && !isActivate) return;
+    e.preventDefault();
+    if (isArrow) {
+      if (this.cursorX === 0 && this.cursorY === 0) { this.cursorX = this.canvasW / 2; this.cursorY = this.canvasH / 2; }
+      const step = 20; // larger step than cursor-tracking minigames — objects are spread wider
+      if (e.key === 'ArrowLeft')       this.cursorX = Math.max(0, this.cursorX - step);
+      else if (e.key === 'ArrowRight') this.cursorX = Math.min(this.canvasW, this.cursorX + step);
+      else if (e.key === 'ArrowUp')    this.cursorY = Math.max(0, this.cursorY - step);
+      else if (e.key === 'ArrowDown')  this.cursorY = Math.min(this.canvasH, this.cursorY + step);
+      this.hoverIndex = this.hitTest(this.cursorX, this.cursorY);
+    } else if (isActivate && !this.found) {
+      const idx = this.hitTest(this.cursorX, this.cursorY);
+      if (idx >= 0) {
+        const obj = this.objects[idx];
+        if (obj.isTarget) {
+          this.found = true;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+          const statusEl = document.getElementById('mg-fouille-status');
+          if (statusEl) statusEl.textContent = 'Trouve !';
+          this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
+        } else {
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+          this.clickedWrong = true;
+          this.wrongClickTimer = 0.5;
+        }
+      }
+    }
+  };
+
   private onClick = (e: PointerEvent): void => {
     if (this.found) return;
     if (!this.canvas) return;
@@ -249,6 +285,7 @@ export class MinigameFouille extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     let score = 0;
     if (this.found) {
@@ -368,6 +405,7 @@ export class MinigameFouille extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

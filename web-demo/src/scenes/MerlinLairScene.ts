@@ -38,6 +38,11 @@ function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh; wallsGroup:
   const wallsGroup = new THREE.Group(); // contains only the 3 wall boxes (hidden when mur_pierre.glb loads)
   const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3228, roughness: 0.95, metalness: 0.0, flatShading: true });
   const mortarMat = new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 1.0, metalness: 0.0, flatShading: true });
+  // C129: mortar lines at z=-9.74 are 0.01u in front of back wall front face at z=-9.75.
+  // polygonOffset prevents z-fighting against mur_pierre InstancedMesh tiles on 16-bit depth GPUs.
+  mortarMat.polygonOffset = true;
+  mortarMat.polygonOffsetFactor = -1;
+  mortarMat.polygonOffsetUnits = -2;
 
   // Back wall
   const back = new THREE.Mesh(new THREE.BoxGeometry(24, 16, 0.5), stoneMat);
