@@ -6,7 +6,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover' | 'crystal' | 'cauldron'
-  | 'click' | 'beep' | 'mapDraw' | 'mapZoom' | 'minigame_start' | 'step';
+  | 'click' | 'beep' | 'mapDraw' | 'mapZoom' | 'minigame_start' | 'step' | 'magic_reveal'
+  | 'critical_alert';
 type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
@@ -278,6 +279,49 @@ function playStep(ctx: AudioContext): void {
   osc.stop(t + 0.07);
   // Leaf/dirt crunch: bandpass noise at 800Hz, 28ms
   playNoise(ctx, t, 0.028, 0.03, 800);
+}
+
+// magic_reveal: crystalline ascending trio — 3 panned sine oscillators with glide + short decay
+// Used at crystal keyboard activation and lair door cinematic. Duration ~0.55s, volume 0.12.
+function playMagicReveal(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  const harmonics: [number, number][] = [
+    [400, -0.3],
+    [600,  0.0],
+    [800,  0.3],
+  ];
+  harmonics.forEach(([startHz, pan]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const panner = ctx.createStereoPanner();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(startHz, t);
+    osc.frequency.exponentialRampToValueAtTime(startHz * 1.5, t + 0.3);
+
+    // Envelope: A 0.01s, hold to 0.25s, R to 0.55s
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.01);
+    gain.gain.setValueAtTime(0.12 * 0.3, t + 0.25); // sustain level
+    gain.gain.linearRampToValueAtTime(0, t + 0.55);
+
+    panner.pan.setValueAtTime(pan, t);
+
+    osc.connect(gain);
+    gain.connect(panner);
+    panner.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.57);
+  });
+}
+
+// critical_alert: urgent two-tone alarm — square 880Hz then 660Hz, 120ms each, loud
+// Used in MinigameBase when a critical threshold is crossed.
+function playCriticalAlert(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  playTone(ctx, 880, t,        0.12, 0.28, 'square');
+  playTone(ctx, 660, t + 0.13, 0.12, 0.28, 'square');
 }
 
 // ── Ambient audio (T066) ────────────────────────────────────────────────────
@@ -575,6 +619,7 @@ export function playSound(name: SFXName): void {
     unlock: playUnlock, end: playEnd, crystal: playCrystal, cauldron: playCauldron,
     click: playClick, beep: playBeep, mapDraw: playMapDraw, mapZoom: playMapZoom,
     minigame_start: playMinigameStart, step: playStep,
+    magic_reveal: playMagicReveal, critical_alert: playCriticalAlert,
   };
   try { fns[name]?.(ctx); } catch { /* silent fail */ }
 }
@@ -595,6 +640,8 @@ export function initSFXManager(): void {
     mapZoom: playMapZoom,
     minigame_start: playMinigameStart,
     step: playStep,
+    magic_reveal: playMagicReveal,
+    critical_alert: playCriticalAlert,
   };
 
   const handleSFX = (e: Event): void => {

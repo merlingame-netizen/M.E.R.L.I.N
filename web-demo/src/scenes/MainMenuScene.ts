@@ -909,8 +909,25 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'mapDraw' } }));
   };
 
+  // C171: Menu hover SFX — pointerenter on start/continue buttons
+  const menuStartBtn = document.getElementById('menu-start-btn');
+  const menuContinueBtn = document.getElementById('menu-continue-btn');
+
+  const onStartHover = (): void => {
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
+  };
+  const onContinueHover = (): void => {
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
+  };
+
+  if (menuStartBtn) menuStartBtn.addEventListener('pointerenter', onStartHover);
+  if (menuContinueBtn) menuContinueBtn.addEventListener('pointerenter', onContinueHover);
+
   const dispose = (): void => {
     window.removeEventListener('resize', onResize);
+    // C171: remove hover listeners
+    if (menuStartBtn) menuStartBtn.removeEventListener('pointerenter', onStartHover);
+    if (menuContinueBtn) menuContinueBtn.removeEventListener('pointerenter', onContinueHover);
     // C157: remove title overlay DOM
     if (titleOverlay.parentNode) {
       titleOverlay.parentNode.removeChild(titleOverlay);
