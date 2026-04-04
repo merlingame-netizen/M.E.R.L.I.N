@@ -1238,6 +1238,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   };
 
   const dispose = (): void => {
+    // C154/LAIR-05: null callback first — blocks any post-dispose onPointerAction/onKeyDown
+    // click events during the 300ms cutToBlack window before canvas listeners are removed.
+    // The `if (found && zoneClickCallback)` guard in onPointerAction short-circuits with null.
+    zoneClickCallback = null;
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
     cancelGLBFades(); // C133: stop any in-flight fadeInGLB rAFs immediately (no extra frame after dispose)
     cleanupLairDensity(); // C35: remove moon.target (world-space Object3D — not reached by traverse)

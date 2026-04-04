@@ -411,6 +411,10 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   let activeToast: HTMLDivElement | null = null;
   let activeToastFadeId: ReturnType<typeof setTimeout> | null = null;
   let activeToastRemoveId: ReturnType<typeof setTimeout> | null = null;
+  // C154/LAIR-03: track confirmToast timers separately — these are not part of showZoneToast
+  // and were previously untracked, leaking into the next lair session on fast door-click.
+  let confirmToastFadeId: ReturnType<typeof setTimeout> | null = null;
+  let confirmToastRemoveId: ReturnType<typeof setTimeout> | null = null;
 
   const showZoneToast = (zone: string): void => {
     // Cancel any in-flight fade/remove timers before replacing the toast
@@ -507,9 +511,11 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
         confirmToast.textContent = `Destination : ${pickedLabel}`;
         wrapper!.appendChild(confirmToast);
         requestAnimationFrame(() => requestAnimationFrame(() => { confirmToast.style.opacity = '1'; }));
-        setTimeout(() => {
+        // C154/LAIR-03: track both timer handles so teardown can cancel them on fast door-click
+        confirmToastFadeId = setTimeout(() => {
+          confirmToastFadeId = null;
           confirmToast.style.opacity = '0';
-          setTimeout(() => confirmToast.remove(), 220);
+          confirmToastRemoveId = setTimeout(() => { confirmToastRemoveId = null; confirmToast.remove(); }, 220);
         }, 2200);
         return;
       }
@@ -522,6 +528,10 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   // BUG-06: clear in-flight toast timers before dispose to avoid stale DOM writes
   if (activeToastFadeId !== null) { clearTimeout(activeToastFadeId); activeToastFadeId = null; }
   if (activeToastRemoveId !== null) { clearTimeout(activeToastRemoveId); activeToastRemoveId = null; }
+  // C154/LAIR-03: cancel confirmToast timers — untracked before this fix, could fire against
+  // the reused wrapper in the next lair session on rapid biome-pick → door-click (<2.2s).
+  if (confirmToastFadeId !== null) { clearTimeout(confirmToastFadeId); confirmToastFadeId = null; }
+  if (confirmToastRemoveId !== null) { clearTimeout(confirmToastRemoveId); confirmToastRemoveId = null; }
   activeToast = null; // Timers cleared above — toast element hidden with wrapper
   cutToBlack();
   await new Promise<void>((res) => setTimeout(res, 300));
