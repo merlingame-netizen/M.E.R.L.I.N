@@ -98,7 +98,7 @@ export function loadLairGLBs(
         // C81-04: clone material before mutation to avoid polluting the cached GLB prototype
         child.material = (child.material as MeshStandardMaterial).clone();
         (child.material as MeshStandardMaterial).roughness = 0.9;
-        (child.material as MeshStandardMaterial).metalness = 0.0;
+        (child.material as MeshStandardMaterial).metalness = 0.6; // C137/BUG-C135-02: restore cast-iron metalness (was 0.0 — lost vs procedural 0.6)
         (child.material as MeshStandardMaterial).flatShading = true;
         (child.material as MeshStandardMaterial).needsUpdate = true;
       }

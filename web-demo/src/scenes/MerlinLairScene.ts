@@ -715,6 +715,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C88: aria-live region — screen readers announce zone focus/activation (WCAG 2.1 AA)
   const ariaLive = document.createElement('div');
   ariaLive.id = 'lair-aria-live'; // C126: stable ID for aria-describedby linkage (WCAG 2.1 SC 1.3.1)
+  ariaLive.setAttribute('role', 'status'); // C137/BUG-C135-01: WCAG 2.1 AA — role=status required on aria-live region
   ariaLive.setAttribute('aria-live', 'polite');
   ariaLive.setAttribute('aria-atomic', 'true');
   ariaLive.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;';
