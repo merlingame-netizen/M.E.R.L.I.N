@@ -524,6 +524,71 @@ function createDustMotes(): DustSystem {
   return { points, update };
 }
 
+// ── C157: Magic Dust — green phosphor motes (brownian drift) ─────────────────
+
+interface MagicDustSystem {
+  points: Points;
+  update: (dt: number) => void;
+}
+
+function createMagicDust(): MagicDustSystem {
+  const N = 30;
+  const positions = new Float32Array(N * 3);
+  const velocities = new Float32Array(N * 3);
+
+  for (let i = 0; i < N; i++) {
+    positions[i * 3 + 0] = (Math.random() - 0.5) * 22;
+    positions[i * 3 + 1] = 0.5 + Math.random() * 7.5;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 18;
+    velocities[i * 3 + 0] = (Math.random() - 0.5) * 0.015;
+    velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.007;
+    velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.012;
+  }
+
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new BufferAttribute(positions, 3));
+
+  const mat = new PointsMaterial({
+    color: 0x33ff66,
+    size: 0.04,
+    transparent: true,
+    opacity: 0.35,
+    blending: AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const points = new Points(geo, mat);
+
+  const update = (dt: number): void => {
+    const speed = dt * 60;
+    for (let i = 0; i < N; i++) {
+      // Brownian: add small random kick each frame
+      velocities[i * 3 + 0]! += (Math.random() - 0.5) * 0.0008;
+      velocities[i * 3 + 1]! += (Math.random() - 0.5) * 0.0004;
+      velocities[i * 3 + 2]! += (Math.random() - 0.5) * 0.0006;
+      // Dampen to prevent drift explosion
+      velocities[i * 3 + 0]! *= 0.98;
+      velocities[i * 3 + 1]! *= 0.98;
+      velocities[i * 3 + 2]! *= 0.98;
+
+      positions[i * 3 + 0]! += (velocities[i * 3 + 0] ?? 0) * speed;
+      positions[i * 3 + 1]! += (velocities[i * 3 + 1] ?? 0) * speed;
+      positions[i * 3 + 2]! += (velocities[i * 3 + 2] ?? 0) * speed;
+
+      // Bounce on room bounds (±11, 0.5-8, ±9)
+      if ((positions[i * 3 + 0] ?? 0) > 11)  { positions[i * 3 + 0] = 11;  velocities[i * 3 + 0]! *= -1; }
+      if ((positions[i * 3 + 0] ?? 0) < -11) { positions[i * 3 + 0] = -11; velocities[i * 3 + 0]! *= -1; }
+      if ((positions[i * 3 + 1] ?? 0) > 8)   { positions[i * 3 + 1] = 8;   velocities[i * 3 + 1]! *= -1; }
+      if ((positions[i * 3 + 1] ?? 0) < 0.5) { positions[i * 3 + 1] = 0.5; velocities[i * 3 + 1]! *= -1; }
+      if ((positions[i * 3 + 2] ?? 0) > 9)   { positions[i * 3 + 2] = 9;   velocities[i * 3 + 2]! *= -1; }
+      if ((positions[i * 3 + 2] ?? 0) < -9)  { positions[i * 3 + 2] = -9;  velocities[i * 3 + 2]! *= -1; }
+    }
+    geo.attributes['position']!.needsUpdate = true;
+  };
+
+  return { points, update };
+}
+
 // ── Cauldron with Green Steam ─────────────────────────────────────────────────
 
 interface CauldronSystem {
@@ -570,8 +635,8 @@ function createCauldron(scene: Scene): CauldronSystem {
     group.add(leg);
   }
 
-  // Green glow
-  const glow = new PointLight(0x22cc44, 1.2, 3.5, 2);
+  // C157: green phosphor glow — 0x00ff44, distance 8, range 0.6-1.4 (2Hz sine)
+  const glow = new PointLight(0x00ff44, 1.0, 8, 2);
   glow.position.set(2, -3.2, -7);
   group.add(glow);
 
@@ -599,7 +664,8 @@ function createCauldron(scene: Scene): CauldronSystem {
   group.add(steamPoints);
 
   const update = (t: number, dt: number): void => {
-    glow.intensity = 1.1 + Math.sin(t * 2.3) * 0.15;
+    // C157: intensity oscillates 0.6-1.4 at 2Hz (= 2*PI*2 rad/s ≈ 12.57)
+    glow.intensity = 1.0 + Math.sin(t * (Math.PI * 4)) * 0.4;
     for (let p = 0; p < N; p++) {
       lifetimes[p]! += dt;
       if ((lifetimes[p] ?? 0) >= maxLife) {
@@ -743,6 +809,47 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   ].join('');
   container.appendChild(zoneToast);
 
+  // C157: floating zone label — top-center CRT-style label on hover
+  const zoneFloatLabel = document.createElement('div');
+  zoneFloatLabel.setAttribute('role', 'presentation');
+  zoneFloatLabel.setAttribute('aria-live', 'off');
+  zoneFloatLabel.style.cssText = [
+    'position:absolute;top:20%;left:50%;transform:translateX(-50%);',
+    'color:#33ff66;font:12px Courier New,monospace;',
+    'letter-spacing:0.2em;text-transform:uppercase;',
+    'pointer-events:none;opacity:0;transition:opacity 0.15s ease;',
+    'text-shadow:0 0 8px rgba(51,255,102,0.6);',
+  ].join('');
+  container.appendChild(zoneFloatLabel);
+
+  // C157: door "début de l'aventure" cinematic overlay
+  const doorCinematicOverlay = document.createElement('div');
+  doorCinematicOverlay.style.cssText = [
+    'position:absolute;inset:0;',
+    'display:flex;align-items:center;justify-content:center;',
+    'background:rgba(0,0,0,0);pointer-events:none;z-index:20;',
+    'transition:background 0.8s ease;',
+  ].join('');
+  const doorCinematicText = document.createElement('div');
+  doorCinematicText.style.cssText = [
+    'color:#33ff66;font:12px Courier New,monospace;',
+    'letter-spacing:0.3em;text-transform:uppercase;opacity:0;',
+    'transition:font-size 0.8s ease,opacity 0.2s ease;',
+  ].join('');
+  doorCinematicText.textContent = '[ DEBUT DE L\'AVENTURE ]';
+  doorCinematicOverlay.appendChild(doorCinematicText);
+  container.appendChild(doorCinematicOverlay);
+
+  // C157: zone label map (bracket notation per spec)
+  const ZONE_FLOAT_LABELS: Readonly<Record<string, string>> = {
+    map:       '[ MAP DES BIOMES ]',
+    crystal:   '[ SPHERE DE CRISTAL ]',
+    bookshelf: '[ BIBLIOTHEQUE ]',
+    door:      "[ PORTE DE L'AVENTURE ]",
+    cauldron:  '[ CHAUDRON DE MERLIN ]',
+    skull:     '[ CRANE DU SAGE ]',
+  };
+
   // Scene + Camera
   const scene = new Scene();
   scene.fog = new Fog(0x0d0a08, 12, 28);
@@ -794,6 +901,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.add(candleGroup); // C131/CANDLES-FACTORY-01: moved from inside createCandles() — consistent with all other factories
   const dust = createDustMotes();
   scene.add(dust.points);
+
+  // C157: green phosphor magic dust — brownian drift, complement existing wisps
+  const magicDust = createMagicDust();
+  scene.add(magicDust.points);
 
   const cauldron = createCauldron(scene);
   scene.add(cauldron.group); // C129/BUG-L-DOUBLE-ADD-01: moved from inside createCauldron() — consistent with all other factories
@@ -968,6 +1079,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         renderer.domElement.style.cursor = 'pointer';
         // C82-01: subtle shimmer on zone enter — SFXManager listens via window 'merlin_sfx'
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
+        // C157: show floating top-center zone label
+        zoneFloatLabel.textContent = ZONE_FLOAT_LABELS[currentHovered.zone] ?? '';
+        zoneFloatLabel.style.opacity = '1';
         // C101: show lore toast with zone name + description
         const zone = currentHovered.zone;
         // C104: textContent — XSS-safe, forward-compatible if zone labels come from LLM
@@ -988,6 +1102,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
+        zoneFloatLabel.style.opacity = '0'; // C157: hide float label on unhover
         renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${tabNavCount} zones interactives. Tab pour naviguer, Entrée pour activer.`); // C38/C79: tabNavCount excludes hover-only skull
       }
     }
@@ -1034,8 +1149,22 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         doorFlashTimer = 0;
         (doorPanel.material as MeshStandardMaterial).emissiveIntensity = 1.2;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
+        // C157: door cinematic overlay — dark background + expanding text + mapZoom SFX at 400ms
+        doorCinematicText.style.fontSize = '12px';
+        doorCinematicText.style.opacity = '1';
+        doorCinematicOverlay.style.background = 'rgba(0,0,0,0.6)';
+        // Trigger font-size expansion (CSS transition runs on next paint)
+        window.requestAnimationFrame(() => {
+          doorCinematicText.style.fontSize = '28px';
+        });
+        window.setTimeout(() => {
+          if (!lairDisposed) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'mapZoom' } }));
+        }, 400);
         doorFlashCancelHandle = window.setTimeout(() => {
           doorFlashing = false;
+          // Reset cinematic overlay
+          doorCinematicText.style.opacity = '0';
+          doorCinematicOverlay.style.background = 'rgba(0,0,0,0)';
           if (!lairDisposed) cb(found.zone); // C102: guard against stale callback after dispose()
         }, 380);
       } else {
@@ -1075,6 +1204,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       currentHovered = null;
       renderer.domElement.style.cursor = 'default';
       zoneToast.style.opacity = '0'; // C132/BUG-C131-01: hide lore toast on tap-lift — mouseleave path
+      zoneFloatLabel.style.opacity = '0'; // C157: hide float label on tap-lift
       // was the only path that set opacity=0; touchEnd only cleared emissive/scale but left toast visible.
     }
   };
@@ -1109,8 +1239,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         doorFlashTimer = 0;
         (doorPanel.material as MeshStandardMaterial).emissiveIntensity = 1.2;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
+        // C157: door cinematic overlay (keyboard path — mirrors pointer path)
+        doorCinematicText.style.fontSize = '12px';
+        doorCinematicText.style.opacity = '1';
+        doorCinematicOverlay.style.background = 'rgba(0,0,0,0.6)';
+        window.requestAnimationFrame(() => { doorCinematicText.style.fontSize = '28px'; });
+        window.setTimeout(() => {
+          if (!lairDisposed) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'mapZoom' } }));
+        }, 400);
         doorFlashCancelHandle = window.setTimeout(() => {
           doorFlashing = false;
+          doorCinematicText.style.opacity = '0';
+          doorCinematicOverlay.style.background = 'rgba(0,0,0,0)';
           if (!lairDisposed) kbCb(kbZone);
         }, 380);
       } else {
@@ -1248,6 +1388,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // Dust motes — C102: skip on low-fps devices (pure cosmetic, saves ~1ms/frame)
     if (!lowFpsMode) dust.update(dt);
+    // C157: green phosphor magic dust (same FPS gate as dust — cosmetic)
+    if (!lowFpsMode) magicDust.update(dt);
 
     // Cauldron steam — C82: gate under !lowFpsMode (steam + glow sin is cosmetic)
     if (!lowFpsMode) cauldron.update(elapsedTime, dt);
@@ -1333,6 +1475,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     if (zoneToast.parentNode) {
       zoneToast.parentNode.removeChild(zoneToast);
+    }
+    // C157: remove new DOM elements
+    if (zoneFloatLabel.parentNode) {
+      zoneFloatLabel.parentNode.removeChild(zoneFloatLabel);
+    }
+    if (doorCinematicOverlay.parentNode) {
+      doorCinematicOverlay.parentNode.removeChild(doorCinematicOverlay);
     }
   };
 

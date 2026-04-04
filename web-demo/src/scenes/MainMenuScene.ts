@@ -775,6 +775,64 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const godRay = createGodRay();
   scene.add(godRay.mesh);
 
+  // ── C157: CeltOS title overlay — typewriter glitch animation ─────────────────
+  // DOM overlay on canvas: M.E.R.L.I.N. with sequential letter reveal + glow pulse
+  container.style.position = container.style.position || 'relative';
+
+  const titleOverlay = document.createElement('div');
+  titleOverlay.style.cssText = [
+    'position:absolute;top:18%;left:50%;transform:translateX(-50%);',
+    'pointer-events:none;z-index:10;text-align:center;',
+    'display:flex;flex-direction:column;align-items:center;gap:8px;',
+  ].join('');
+  container.appendChild(titleOverlay);
+
+  const titleEl = document.createElement('div');
+  titleEl.style.cssText = [
+    'font-family:Courier New,monospace;font-size:28px;',
+    'color:#33ff66;letter-spacing:0.4em;',
+    'text-shadow:0 0 8px rgba(51,255,102,0.8);',
+    'animation:merlin-glow-pulse 2s ease-in-out infinite;',
+    'opacity:0;',
+  ].join('');
+  titleOverlay.appendChild(titleEl);
+
+  const subtitleEl = document.createElement('div');
+  subtitleEl.style.cssText = [
+    'font-family:Courier New,monospace;font-size:11px;',
+    'color:rgba(51,255,102,0.45);letter-spacing:0.25em;',
+    'opacity:0;transition:opacity 0.4s ease;',
+  ].join('');
+  subtitleEl.textContent = 'LE JEU DES OGHAMS';
+  titleOverlay.appendChild(subtitleEl);
+
+  // Inject keyframes for glow pulse once (idempotent via ID)
+  if (!document.getElementById('merlin-glow-keyframes')) {
+    const styleTag = document.createElement('style');
+    styleTag.id = 'merlin-glow-keyframes';
+    styleTag.textContent = [
+      '@keyframes merlin-glow-pulse{',
+      '0%,100%{text-shadow:0 0 8px rgba(51,255,102,0.8);}',
+      '50%{text-shadow:0 0 18px rgba(51,255,102,1.0),0 0 32px rgba(51,255,102,0.4);}',
+      '}',
+    ].join('');
+    document.head.appendChild(styleTag);
+  }
+
+  // Typewriter: reveal each character with 80ms delay, then show subtitle after 600ms
+  const TITLE_TEXT = 'M.E.R.L.I.N.';
+  let titleBuilt = '';
+  TITLE_TEXT.split('').forEach((ch, i) => {
+    window.setTimeout(() => {
+      titleBuilt += ch;
+      titleEl.textContent = titleBuilt;
+      if (i === 0) titleEl.style.opacity = '1';
+      if (i === TITLE_TEXT.length - 1) {
+        window.setTimeout(() => { subtitleEl.style.opacity = '1'; }, 600);
+      }
+    }, 80 * i);
+  });
+
   let elapsedTime = 0;
 
   // Dolly walk state — camera animates from cliff position toward tower door
@@ -786,6 +844,8 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   let _dollyActive = false;
   let _dollyElapsed = 0;
   let _dollyOnComplete: (() => void) | null = null;
+  // C157: spray fade during dolly — opacity lerps 0.55→0 over dolly duration
+  let _dollySprayFade = false;
 
   const _dollyLook = new Vector3();
 
@@ -812,15 +872,24 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     if (_dollyActive) {
       _dollyElapsed = Math.min(_dollyElapsed + dt, DOLLY_DURATION);
       const raw = _dollyElapsed / DOLLY_DURATION;
-      // Ease-out cubic: fast start, gentle deceleration as we reach the tower
-      const t = 1 - Math.pow(1 - raw, 3);
+      // Ease-in-out sinusoidal: smooth acceleration and deceleration
+      const t = 0.5 - 0.5 * Math.cos(raw * Math.PI);
 
       camera.position.lerpVectors(DOLLY_CAM_START, DOLLY_CAM_END, t);
       _dollyLook.lerpVectors(DOLLY_LOOK_START, DOLLY_LOOK_END, t);
       camera.lookAt(_dollyLook);
 
+      // C157: fade spray particles and title overlay during dolly
+      if (_dollySprayFade) {
+        const fadeT = Math.min(raw * 1.5, 1.0); // fade completes at 2/3 of dolly
+        const sprayMat = spray.object.material as PointsMaterial;
+        sprayMat.opacity = 0.55 * (1 - fadeT);
+        titleOverlay.style.opacity = String(1 - fadeT);
+      }
+
       if (_dollyElapsed >= DOLLY_DURATION) {
         _dollyActive = false;
+        _dollySprayFade = false;
         const cb = _dollyOnComplete;
         _dollyOnComplete = null;
         cb?.();
@@ -831,14 +900,21 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   };
 
   // Start 6-second camera walk toward tower. Calls onComplete when animation ends.
+  // C157: fires mapDraw SFX at frame 0, fades spray/title overlay during walk.
   const startDolly = (onComplete: () => void): void => {
     _dollyActive = true;
     _dollyElapsed = 0;
     _dollyOnComplete = onComplete;
+    _dollySprayFade = true;
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'mapDraw' } }));
   };
 
   const dispose = (): void => {
     window.removeEventListener('resize', onResize);
+    // C157: remove title overlay DOM
+    if (titleOverlay.parentNode) {
+      titleOverlay.parentNode.removeChild(titleOverlay);
+    }
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
         obj.geometry.dispose();
