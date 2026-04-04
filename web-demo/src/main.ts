@@ -24,6 +24,7 @@ import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
 import { initMerlinLair } from './scenes/MerlinLairScene';
 import { runMerlinIntro } from './ui/MerlinIntro';
+import { showMapGenOverlay } from './ui/MapGenOverlay';
 import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
 import { initSFXManager, startAmbient, stopAmbient, biomeToAmbient } from './audio/SFXManager';
 
@@ -560,6 +561,11 @@ async function main(): Promise<void> {
     const lairResult = await runMerlinLair(app);
     const chosenBiome = lairResult.biomeId;
 
+    // Phase 2c: Map generation overlay — parchment + LLM scenario + progressive map painting
+    // C158: showMapGenOverlay handles its own fade-in/out; it resolves when player clicks
+    // "Entrer" (or auto-continues after 8s). Disguises scene init latency as narrative UX.
+    await showMapGenOverlay(chosenBiome);
+
     // Phase 3: Reveal and enter game
     loading.style.display = 'flex';
     loading.style.opacity = '1';
@@ -580,8 +586,10 @@ async function main(): Promise<void> {
     }
     sceneManager.scene.add(biomeResult.group);
 
-    // Camera rail
-    const rail = CameraRail.createCoastalPath();
+    // Camera rail — biome-specific path (C158: forest has tighter winding path)
+    const rail = chosenBiome === 'foret_broceliande'
+      ? CameraRail.createForestPath()
+      : CameraRail.createCoastalPath();
     rail.setSpeed(WALK_SPEED);
 
     sceneManager.onUpdate((dt) => {

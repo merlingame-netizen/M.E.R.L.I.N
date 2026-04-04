@@ -5,7 +5,22 @@
 
 import type { Card, CardOption } from '../game/CardSystem';
 
-// --- Types ---
+// --- Public types ---
+
+export interface RunScenarioEvent {
+  readonly position: number;  // 0–1 along the path
+  readonly type: 'rencontre' | 'obstacle' | 'tresor' | 'danger' | 'mystere' | 'fin';
+  readonly nom: string;
+  readonly icone: string;
+}
+
+export interface RunScenario {
+  readonly titre: string;
+  readonly scenario: readonly string[];
+  readonly events: readonly RunScenarioEvent[];
+}
+
+// --- Internal types ---
 
 interface GroqMessage {
   readonly role: 'system' | 'user' | 'assistant';
@@ -160,6 +175,44 @@ REGLES: exactement 3 options, chaque option 1-2 effets, verbes de la liste uniqu
       };
     } catch (err: unknown) {
       console.warn('[GroqAdapter] Card generation failed:', err instanceof Error ? err.message : err);
+      return null;
+    }
+  }
+
+  /**
+   * Generate a run scenario: title + narrative paragraphs + event list for map placement.
+   * Returns structured JSON or null on failure (caller uses procedural fallback).
+   */
+  async generateRunScenario(biome: string): Promise<RunScenario | null> {
+    const biomeLabels: Readonly<Record<string, string>> = {
+      cotes_sauvages: 'les Côtes Sauvages de Bretagne',
+      foret_broceliande: 'la Forêt Mystique de Brocéliande',
+      marais_korrigans: 'les Marais des Korrigans',
+      landes_bruyere: 'les Landes de Bruyère',
+      cercles_pierres: 'les Cercles de Pierres Anciens',
+      villages_celtes: 'les Villages Celtes',
+      collines_dolmens: 'les Collines aux Dolmens',
+      iles_mystiques: 'les Îles Mystiques',
+    };
+    const label = biomeLabels[biome] ?? 'un territoire celtique';
+
+    const systemPrompt = `Tu es Merlin, narrateur du jeu de cartes celtique MERLIN. Génère le scénario d'une aventure dans ${label}.
+Réponds UNIQUEMENT en JSON valide (pas de markdown) avec cette structure:
+{"titre":"Titre court (4-6 mots)","scenario":["Paragraphe 1 (20-30 mots)","Paragraphe 2 (20-30 mots)","Paragraphe 3 (20-30 mots)"],"events":[{"position":0.15,"type":"rencontre","nom":"Nom court","icone":"◈"},{"position":0.35,"type":"obstacle","nom":"Nom court","icone":"⬟"},{"position":0.55,"type":"tresor","nom":"Nom court","icone":"◇"},{"position":0.75,"type":"danger","nom":"Nom court","icone":"⬡"},{"position":0.92,"type":"fin","nom":"Nom court","icone":"⊕"}]}
+Types d'événements: rencontre, obstacle, tresor, danger, mystere, fin.
+Style: celtique poetique, present de narration, immersif. Noms liés au biome.`;
+
+    try {
+      const response = await this.chatCompletion(
+        [{ role: 'user', content: systemPrompt }],
+        0.85, 500, true,
+      );
+      if (!response) return null;
+      const parsed = JSON.parse(response) as RunScenario;
+      if (!parsed.titre || !Array.isArray(parsed.scenario) || !Array.isArray(parsed.events)) return null;
+      return parsed;
+    } catch (err: unknown) {
+      console.warn('[GroqAdapter] Scenario generation failed:', err instanceof Error ? err.message : err);
       return null;
     }
   }
