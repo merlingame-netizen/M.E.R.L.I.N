@@ -266,15 +266,19 @@ export class MinigameRunes extends MinigameBase {
     }
   };
 
+  protected cancelTimers(): void {
+    clearInterval(this.timerInterval); // C102: centralised teardown
+    clearTimeout(this.revealTimeout);
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
-    clearInterval(this.timerInterval);
-    clearTimeout(this.revealTimeout);
-    cancelAnimationFrame(this.animFrame);
     this.kbFocusIdx = -1; // C51: clear focus ring before final rAF may fire
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.cancelTimers(); // C102: centralised teardown
 
     // Score: base on pairs found + time bonus
     const pairScore = (this.matchedCount / this.totalPairs) * 70;
@@ -382,11 +386,6 @@ export class MinigameRunes extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    clearTimeout(this.revealTimeout);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

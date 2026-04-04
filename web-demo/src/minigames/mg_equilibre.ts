@@ -197,10 +197,8 @@ export class MinigameEquilibre extends MinigameBase {
     this.nextGustTime = this.elapsedTime + Math.max(0.8, baseInterval + Math.random() * 0.5);
   }
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
-    clearInterval(this.timerInterval);
+  protected cancelTimers(): void {
+    clearInterval(this.timerInterval); // C102: centralised teardown
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
     this.canvas?.removeEventListener('keyup', this.onKeyUp);
@@ -209,6 +207,12 @@ export class MinigameEquilibre extends MinigameBase {
     this.canvas?.removeEventListener('pointerup', this.onPointerUp);
     this.canvas?.removeEventListener('pointerleave', this.onPointerUp);
     this.canvas?.removeEventListener('pointercancel', this.onPointerUp); // C96
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C102: centralised teardown
 
     // Score: percentage of time spent in safe zone
     const totalElapsed = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);
@@ -369,15 +373,6 @@ export class MinigameEquilibre extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    this.canvas?.removeEventListener('keyup', this.onKeyUp);
-    this.canvas?.removeEventListener('blur', this.onBlur);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
-    this.canvas?.removeEventListener('pointerup', this.onPointerUp);
-    this.canvas?.removeEventListener('pointerleave', this.onPointerUp);
-    this.canvas?.removeEventListener('pointercancel', this.onPointerUp); // C96
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

@@ -138,13 +138,17 @@ export class MinigameTraces extends MinigameBase {
     }
   };
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
-    clearInterval(this.timerInterval);
+  protected cancelTimers(): void {
+    clearInterval(this.timerInterval); // C102: centralised teardown
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C102: centralised teardown
 
     const hitCount = this.footprints.filter((f) => f.hit).length;
     const timeBonus = Math.max(0, this.timeLeft / this.totalTime) * 20;
@@ -216,10 +220,6 @@ export class MinigameTraces extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

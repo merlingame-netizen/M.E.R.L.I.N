@@ -203,16 +203,20 @@ export class MinigameVolonte extends MinigameBase {
     ].slice(-this.maxDistractors);
   }
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
-    clearInterval(this.timerInterval);
+  protected cancelTimers(): void {
+    clearInterval(this.timerInterval); // C102: centralised teardown
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
     this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
     this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C102: centralised teardown
 
     const score = this.totalTime > 0
       ? (this.timeOnTarget / this.totalTime) * 100
@@ -377,13 +381,6 @@ export class MinigameVolonte extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
-    this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
-    this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

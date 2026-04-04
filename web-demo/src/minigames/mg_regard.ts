@@ -283,13 +283,17 @@ export class MinigameRegard extends MinigameBase {
     }
   };
 
+  protected cancelTimers(): void {
+    cancelAnimationFrame(this.animFrame); // C102: centralised teardown
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
     this.phase = 'done';
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.cancelTimers(); // C102: centralised teardown
 
     // Score: accuracy model — correct / attempted clicks.
     // C101: previous denominator was sum-of-all-roundLengths (15), which silently included
@@ -477,9 +481,6 @@ export class MinigameRegard extends MinigameBase {
   }
 
   protected cleanup(): void {
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

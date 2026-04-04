@@ -246,13 +246,17 @@ export class MinigameEcho extends MinigameBase {
     this.phaseTimer = this.pauseBetween;
   }
 
+  protected cancelTimers(): void {
+    cancelAnimationFrame(this.animFrame); // C102: centralised teardown
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
     this.phase = 'done';
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.cancelTimers(); // C102: centralised teardown
 
     const finalScore = (this.hits / this.totalRounds) * 100;
     this.finish(finalScore);
@@ -478,9 +482,6 @@ export class MinigameEcho extends MinigameBase {
   }
 
   protected cleanup(): void {
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

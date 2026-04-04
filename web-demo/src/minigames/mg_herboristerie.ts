@@ -335,14 +335,18 @@ export class MinigameHerboristerie extends MinigameBase {
     }
   };
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
-    clearTimeout(this.endTimeout); // C114: cancel pending 300ms delay if endGame fires via timer
+  protected cancelTimers(): void {
+    clearTimeout(this.endTimeout); // C102: C114 cancel pending 300ms delay
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown); // C52: symmetric with cleanup() — matches 13/13 other minigames
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C102: centralised teardown
 
     // Score formula:
     // - Base: (correctPicks / totalTargets) * 80
@@ -494,11 +498,6 @@ export class MinigameHerboristerie extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearTimeout(this.endTimeout); // C114: prevent stale endGame() on destroyed DOM
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

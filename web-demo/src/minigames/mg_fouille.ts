@@ -287,15 +287,19 @@ export class MinigameFouille extends MinigameBase {
     return -1;
   }
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
-    clearTimeout(this.foundTimeout);
+  protected cancelTimers(): void {
+    clearTimeout(this.foundTimeout); // C102: C100 cancel pending 400ms delay
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers(); // C102: centralised teardown
 
     let score = 0;
     if (this.found) {
@@ -437,12 +441,6 @@ export class MinigameFouille extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearTimeout(this.foundTimeout);
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }

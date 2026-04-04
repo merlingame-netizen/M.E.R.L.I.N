@@ -272,14 +272,18 @@ export class MinigameCourse extends MinigameBase {
     }
   }
 
+  protected cancelTimers(): void {
+    clearTimeout(this.endTimeout); // C102: C99 cancel pending timeout (idempotent)
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
     this.gameOver = true;
-    clearTimeout(this.endTimeout); // C99: cancel pending timeout (idempotent)
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.cancelTimers(); // C102: centralised teardown
 
     const finalScore = (this.hits / this.totalRounds) * 100;
     this.finish(finalScore);
@@ -471,10 +475,6 @@ export class MinigameCourse extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearTimeout(this.endTimeout); // C99: cancel orphaned setTimeout if player exits early
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointerdown', this.onClick);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    super.cleanup();
+    super.cleanup(); // calls cancelTimers() — C102
   }
 }
