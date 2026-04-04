@@ -40,13 +40,6 @@ export const ANAM_REWARDS = {
   death_cap_cards: 30,
 } as const;
 
-// --- CARD OPTIONS ---
-export enum CardOption {
-  LEFT = 0,
-  CENTER = 1,
-  RIGHT = 2,
-}
-
 // --- MULTIPLIER TABLE ---
 export interface MultiplierEntry {
   readonly range_min: number;

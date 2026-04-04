@@ -287,16 +287,23 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(ambient);
 
   // 2. Directional sun — low angle, golden celtic light from NW
+  // C135/COAST-SHADOW-01: mirrors MerlinLairScene isLowEndMobile pattern (C89-P2).
+  // 1024×1024 shadow map = ~4MB WebGL renderTarget. On Mali-G57/Adreno 610 devices
+  // (Android + HiDPI) this alone drops from 60fps to ~30fps. Disable shadows on low-end;
+  // ambient + hemi fill keeps silhouette readability without shadow depth.
+  const isLowEndMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.devicePixelRatio >= 2;
   const sun = new DirectionalLight(0xffd8a0, 1.4);
   sun.position.set(-20, 18, 10);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far = 100;
-  sun.shadow.camera.left = -40;
-  sun.shadow.camera.right = 40;
-  sun.shadow.camera.top = 40;
-  sun.shadow.camera.bottom = -40;
+  if (!isLowEndMobile) {
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 100;
+    sun.shadow.camera.left = -40;
+    sun.shadow.camera.right = 40;
+    sun.shadow.camera.top = 40;
+    sun.shadow.camera.bottom = -40;
+  }
   group.add(sun);
 
   // 3. HemisphereLight — sky (soft blue) / ground (dark green) for ambient occlusion feel
