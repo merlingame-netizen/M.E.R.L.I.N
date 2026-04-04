@@ -46,6 +46,10 @@ export class MinigameSangFroid extends MinigameBase {
   private pulsePhase = 0;
   private isInside = false;  // re-evaluated each frame; init false prevents 1-frame free credit
   private nextDriftChange = 2;
+  // C120/SF-01: cached DOM refs — was getElementById every 100ms setInterval + every render frame
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private statusEl: HTMLElement | null = null;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -101,6 +105,9 @@ export class MinigameSangFroid extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Concentration: 100%';
     this.container.appendChild(statusEl);
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.statusEl = statusEl;
 
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
@@ -135,10 +142,8 @@ export class MinigameSangFroid extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-sf-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-sf-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -260,9 +265,8 @@ export class MinigameSangFroid extends MinigameBase {
     const pctInside = this.elapsedTime > 0
       ? Math.round((this.timeInside / this.elapsedTime) * 100)
       : 100;
-    const statusEl = document.getElementById('mg-sf-status');
-    if (statusEl) {
-      statusEl.textContent = `Concentration: ${pctInside}% | Zone: ${Math.round(this.currentRadius)}px`;
+    if (this.statusEl) {
+      this.statusEl.textContent = `Concentration: ${pctInside}% | Zone: ${Math.round(this.currentRadius)}px`;
     }
 
     // Clear

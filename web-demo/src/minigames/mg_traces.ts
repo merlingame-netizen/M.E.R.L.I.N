@@ -25,6 +25,9 @@ export class MinigameTraces extends MinigameBase {
   private animFrame = 0;
   private ended = false;
   private elapsedTime = 0; // C35: accumulated render dt for pulse animation (was performance.now()/200)
+  // C120/TRC-01: cached DOM refs — was getElementById every 100ms setInterval
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -65,6 +68,8 @@ export class MinigameTraces extends MinigameBase {
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,30,20,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
 
     // Generate footprint positions along a randomised winding path.
     // C100: wave params randomised per-play for replay variety (was identical sine/cos every run).
@@ -93,10 +98,8 @@ export class MinigameTraces extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-traces-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-traces-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }

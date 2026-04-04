@@ -47,6 +47,10 @@ export class MinigameApaisement extends MinigameBase {
   private totalAccuracy = 0;
   private ringPulse = 0;
   private showGuide = true;
+  // C120/APA-01: cached DOM refs — was getElementById every 100ms setInterval + every tap
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private scoreEl: HTMLElement | null = null;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -102,6 +106,9 @@ export class MinigameApaisement extends MinigameBase {
     scoreEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     scoreEl.textContent = 'Synchronisation: --';
     this.container.appendChild(scoreEl);
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.scoreEl = scoreEl;
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
@@ -127,10 +134,8 @@ export class MinigameApaisement extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-apaise-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-apaise-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -209,10 +214,9 @@ export class MinigameApaisement extends MinigameBase {
     this.feedbackAlpha = 1.0;
 
     // Update score display
-    const scoreEl = document.getElementById('mg-apaise-score');
-    if (scoreEl && this.taps.length > 0) {
+    if (this.scoreEl && this.taps.length > 0) {
       const avgAcc = this.totalAccuracy / this.taps.length;
-      scoreEl.textContent = `Synchronisation: ${Math.round(avgAcc * 100)}% (${this.taps.length} respirations)`;
+      this.scoreEl.textContent = `Synchronisation: ${Math.round(avgAcc * 100)}% (${this.taps.length} respirations)`;
     }
   }
 

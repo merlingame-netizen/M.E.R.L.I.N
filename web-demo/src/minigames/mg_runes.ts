@@ -47,6 +47,9 @@ export class MinigameRunes extends MinigameBase {
   private revealTimeout = 0;
   private ended = false;
   private kbFocusIdx = 0; // C137: keyboard-focused tile index (ArrowKey grid nav)
+  // C120/RUN-01: cached DOM refs — was getElementById every 100ms setInterval
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
 
   protected setup(): void {
     clearTimeout(this.revealTimeout); // C102: cancel any in-flight flip-back timer on re-play
@@ -55,9 +58,10 @@ export class MinigameRunes extends MinigameBase {
     // C103: tieredValue replaces manual arithmetic — consistent with all other minigames
     this.totalTime     = this.tieredValue([30, 25, 20, 15] as const);
     this.flipBackDelay = this.tieredValue([600, 550, 500, 450] as const);
-    // C116: pair count scales with tier (6→7→8→8). gridRows derived from pair count.
+    // C116: pair count scales with tier. C120/RUN-02: tier 1 was 7 pairs → 14 tiles in 16-slot grid
+    // → 2 empty cells in last row + ArrowDown focus drift (RUN-KB-02). Fixed: 6→8→8→8.
     // RUNE_SET has exactly 8 entries — pairCount must stay ≤ 8.
-    this.totalPairs = this.tieredValue([6, 7, 8, 8] as const);
+    this.totalPairs = this.tieredValue([6, 8, 8, 8] as const);
     this.gridRows   = Math.ceil((this.totalPairs * 2) / this.gridCols); // 3 rows for 6 pairs, 4 for 7-8
 
     // Title
@@ -98,6 +102,9 @@ export class MinigameRunes extends MinigameBase {
     // Generate tiles: 8 pairs = 16 tiles in a 4x4 grid
     this.generateTiles();
 
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+
     // pointerdown covers mouse, touch and stylus — no 'click' needed (avoids double-fire on desktop)
     this.canvas.addEventListener('pointerdown', this.onClick);
     // C137: WCAG 2.1.1 — ArrowKey grid navigation + Enter/Space to flip tile
@@ -115,10 +122,8 @@ export class MinigameRunes extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-runes-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-runes-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }

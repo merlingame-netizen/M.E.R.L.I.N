@@ -18,6 +18,10 @@ export class MinigameOmbres extends MinigameBase {
   private animFrame = 0;
   private timerInterval = 0;
   private ended = false;
+  // C120/OMB-01: cached DOM refs — was getElementById every 100ms setInterval + every render frame
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private statusEl: HTMLElement | null = null;
 
   // C99: cancelTimers() contract — matches mg_combat_rituel reference pattern.
   // Centralises all handle cleanup so both endGame() and cleanup() (via super) call the same code.
@@ -104,6 +108,9 @@ export class MinigameOmbres extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Progression: 0%';
     this.container.appendChild(statusEl);
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.statusEl = statusEl;
 
     // Generate corridor
     this.generateCorridor();
@@ -134,10 +141,8 @@ export class MinigameOmbres extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-ombres-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-ombres-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -232,10 +237,9 @@ export class MinigameOmbres extends MinigameBase {
     }
 
     // Update status
-    const statusEl = document.getElementById('mg-ombres-status');
-    if (statusEl) {
+    if (this.statusEl) {
       const pctProg = Math.round(this.maxProgress * 100);
-      statusEl.textContent = this.colliding
+      this.statusEl.textContent = this.colliding
         ? `COLLISION ! Progression: ${pctProg}%`
         : `Progression: ${pctProg}%`;
     }

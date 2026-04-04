@@ -67,6 +67,9 @@ export class MinigameEcho extends MinigameBase {
   private rippleX = 0;
   private rippleY = 0;
   private rippleTimer = 0;
+  // C120/ECH-01: cached DOM refs — was getElementById in event handlers + render() timeout block
+  private statusElRef: HTMLElement | null = null;
+  private roundElRef: HTMLElement | null = null;
 
   private get centerX(): number { return this.canvasW / 2; }
   private get centerY(): number { return this.canvasH / 2; }
@@ -117,6 +120,8 @@ export class MinigameEcho extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Ecoute...';
     this.container.appendChild(statusEl);
+    this.statusElRef = statusEl;
+    this.roundElRef = roundEl;
 
     // Input — pointer + keyboard (C111: ArrowKeys map to Nord/Est/Sud/Ouest quadrants, WCAG 2.1.1)
     this.canvas.addEventListener('pointerdown', this.onClick);
@@ -176,9 +181,8 @@ export class MinigameEcho extends MinigameBase {
     this.rippleY = my;
     this.rippleTimer = 0;
 
-    const statusEl = document.getElementById('mg-echo-status');
-    if (statusEl) {
-      statusEl.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
+    if (this.statusElRef) {
+      this.statusElRef.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
     }
   };
 
@@ -213,8 +217,7 @@ export class MinigameEcho extends MinigameBase {
       this.rippleY = this.centerY + q.cy;
       this.rippleTimer = 0;
     }
-    const statusEl = document.getElementById('mg-echo-status');
-    if (statusEl) statusEl.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
+    if (this.statusElRef) this.statusElRef.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
   };
 
   private getClickedQuadrant(mx: number, my: number): number {
@@ -235,9 +238,8 @@ export class MinigameEcho extends MinigameBase {
 
   private advanceRound(): void {
     this.currentRound++;
-    const roundEl = document.getElementById('mg-echo-round');
-    if (roundEl) {
-      roundEl.textContent = this.currentRound < this.totalRounds
+    if (this.roundElRef) {
+      this.roundElRef.textContent = this.currentRound < this.totalRounds
         ? `Manche ${this.currentRound + 1} / ${this.totalRounds}`
         : 'Termine !';
     }
@@ -302,9 +304,8 @@ export class MinigameEcho extends MinigameBase {
         this.answered = true;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
 
-        const statusEl = document.getElementById('mg-echo-status');
-        if (statusEl) {
-          statusEl.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
+        if (this.statusElRef) {
+          this.statusElRef.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
         }
       }
     }

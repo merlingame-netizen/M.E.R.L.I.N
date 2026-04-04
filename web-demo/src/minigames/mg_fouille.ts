@@ -73,6 +73,10 @@ export class MinigameFouille extends MinigameBase {
   private cursorX = 0;
   private cursorY = 0;
   private keyboardActive = false; // C130: WCAG 2.4.7 — show crosshair when navigating by keyboard
+  // C120/FOU-01: cached DOM refs — was getElementById every 100ms setInterval + showFoundStatus calls
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private statusEl: HTMLElement | null = null;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -131,6 +135,9 @@ export class MinigameFouille extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Clique sur l\'objet cible...';
     this.container.appendChild(statusEl);
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.statusEl = statusEl;
 
     // Generate objects
     this.generateObjects();
@@ -157,10 +164,8 @@ export class MinigameFouille extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-fouille-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-fouille-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -246,8 +251,7 @@ export class MinigameFouille extends MinigameBase {
   private showFoundStatus(): void {
     const timePct = Math.max(0, this.timeLeft / this.totalTime);
     const bonus = Math.round(50 + timePct * 50);
-    const statusEl = document.getElementById('mg-fouille-status');
-    if (statusEl) statusEl.textContent = `Trouvé ! +${bonus} pts`;
+    if (this.statusEl) this.statusEl.textContent = `Trouvé ! +${bonus} pts`;
   }
 
   private onClick = (e: PointerEvent): void => {

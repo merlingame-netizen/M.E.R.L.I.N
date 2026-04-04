@@ -67,6 +67,10 @@ export class MinigameRegard extends MinigameBase {
   private pulsePhase = 0;
   private kbFocusIdx = -1; // C136: keyboard-focused cell index (-1 = none)
   private recallTimeout = 0; // C105: per-round recall deadline — prevents softlock if player never clicks (RGD-01)
+  // C120/RGD-02: cached DOM refs — was getElementById in render() (~60fps), prepareRound, onClick, onKeyDown
+  private instrElRef: HTMLElement | null = null;
+  private statusElRef: HTMLElement | null = null;
+  private roundElRef: HTMLElement | null = null;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -119,6 +123,9 @@ export class MinigameRegard extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Memorise...';
     this.container.appendChild(statusEl);
+    this.instrElRef = instr;
+    this.statusElRef = statusEl;
+    this.roundElRef = roundEl;
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onClick);
@@ -193,11 +200,8 @@ export class MinigameRegard extends MinigameBase {
     this.phase = 'show';
     this.showTimer = this.showTime;
 
-    const instrEl = document.getElementById('mg-regard-instr');
-    if (instrEl) instrEl.textContent = `Memorise l'ordre des ${seqLen} symboles illumines !`;
-
-    const statusEl = document.getElementById('mg-regard-status');
-    if (statusEl) statusEl.textContent = 'Memorise...';
+    if (this.instrElRef) this.instrElRef.textContent = `Memorise l'ordre des ${seqLen} symboles illumines !`;
+    if (this.statusElRef) this.statusElRef.textContent = 'Memorise...';
   }
 
   private onClick = (e: PointerEvent): void => {
@@ -239,9 +243,8 @@ export class MinigameRegard extends MinigameBase {
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
         }
 
-        const statusEl = document.getElementById('mg-regard-status');
-        if (statusEl) {
-          statusEl.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
+        if (this.statusElRef) {
+          this.statusElRef.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
         }
         break;
       }
@@ -283,8 +286,7 @@ export class MinigameRegard extends MinigameBase {
         this.phase = 'feedback'; this.feedbackCorrect = false; this.feedbackTimer = 0.8;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       }
-      const statusEl = document.getElementById('mg-regard-status');
-      if (statusEl) statusEl.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
+      if (this.statusElRef) this.statusElRef.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
     }
   };
 
@@ -330,10 +332,8 @@ export class MinigameRegard extends MinigameBase {
           this.feedbackTimer = 0.8;
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
         }, 10000);
-        const instrEl = document.getElementById('mg-regard-instr');
-        if (instrEl) instrEl.textContent = 'Clique les symboles dans le bon ordre !';
-        const statusEl = document.getElementById('mg-regard-status');
-        if (statusEl) statusEl.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
+        if (this.instrElRef) this.instrElRef.textContent = 'Clique les symboles dans le bon ordre !';
+        if (this.statusElRef) this.statusElRef.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
       }
     }
 
@@ -341,9 +341,8 @@ export class MinigameRegard extends MinigameBase {
       this.feedbackTimer -= dt;
       if (this.feedbackTimer <= 0) {
         this.currentRound++;
-        const roundEl = document.getElementById('mg-regard-round');
-        if (roundEl) {
-          roundEl.textContent = this.currentRound < this.roundLengths.length
+        if (this.roundElRef) {
+          this.roundElRef.textContent = this.currentRound < this.roundLengths.length
             ? `Manche ${this.currentRound + 1} / ${this.roundLengths.length}`
             : 'Termine !';
         }

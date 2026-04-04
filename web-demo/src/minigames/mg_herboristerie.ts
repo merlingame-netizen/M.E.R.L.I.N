@@ -124,6 +124,9 @@ export class MinigameHerboristerie extends MinigameBase {
   // C96: keyboard navigation — tracks selected cell (keyCol=-1 means inactive)
   private keyCol = -1;
   private keyRow = 0;
+  // C120/HRB-02: cached DOM refs — was getElementById every 100ms setInterval
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -172,6 +175,9 @@ export class MinigameHerboristerie extends MinigameBase {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+
     // Build grid — populates this.targetPlant before aria-label is set
     this.buildGrid();
     this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);
@@ -200,10 +206,8 @@ export class MinigameHerboristerie extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-herb-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-herb-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }

@@ -21,6 +21,10 @@ export class MinigameEquilibre extends MinigameBase {
   private timerInterval = 0;
   private ended = false;
   private statusId = 'mg-eq-status'; // C115: balance % live feedback for player + screen readers
+  // C120/EQ-01: cached DOM refs — was getElementById every 100ms setInterval (3 queries each tick)
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private statusEl: HTMLElement | null = null;
 
   // Game state
   private cursorX = 0; // -1 (left edge) to +1 (right edge), 0 = center
@@ -98,6 +102,9 @@ export class MinigameEquilibre extends MinigameBase {
     statusEl.style.cssText = `width:min(400px,100%);max-width:400px;min-height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Equilibre: —';
     this.container.appendChild(statusEl);
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.statusEl = statusEl;
 
     // Canvas
     this.canvas = document.createElement('canvas');
@@ -140,17 +147,14 @@ export class MinigameEquilibre extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-eq-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-eq-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       // C115: update balance % — uses timeInZone accumulated in render()
       // C40: append zone state so screen-reader players know if they're currently in the safe zone
-      const statusEl = document.getElementById(this.statusId);
-      if (statusEl) {
+      if (this.statusEl) {
         const elapsed = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);
         const zonePct = elapsed > 0 ? Math.round((this.timeInZone / elapsed) * 100) : 100;
-        statusEl.textContent = `Equilibre: ${zonePct}% — ${this.inZone ? 'En zone' : 'Hors zone'}`;
+        this.statusEl.textContent = `Equilibre: ${zonePct}% — ${this.inZone ? 'En zone' : 'Hors zone'}`;
       }
       if (this.timeLeft <= 0) {
         this.endGame();

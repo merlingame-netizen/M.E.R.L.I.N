@@ -79,6 +79,10 @@ export class MinigameNegociation extends MinigameBase {
 
   // Keyboard support (WCAG 2.1.1 C137)
   private kbFocusIdx = 0;
+  // C120/NEG-01: cached DOM refs — was getElementById every 100ms setInterval + every word pick
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private seqEl: HTMLElement | null = null;
 
   private onKeyDown = (e: KeyboardEvent): void => {
     if (this.ended) return;
@@ -112,12 +116,11 @@ export class MinigameNegociation extends MinigameBase {
         this.comboCount = 0;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       }
-      const seqEl = document.getElementById('mg-nego-sequence');
-      if (seqEl) {
+      if (this.seqEl) {
         const words = this.pickedSequence.map((w) =>
           w.isFactionWord ? `[${w.text}]` : w.text
         );
-        seqEl.textContent = `Sequence: ${words.join(' ')}`;
+        this.seqEl.textContent = `Sequence: ${words.join(' ')}`;
       }
       // Advance focus to next visible word
       this.kbFocusIdx = Math.min(this.kbFocusIdx, Math.max(0, visible.length - 2));
@@ -182,6 +185,9 @@ export class MinigameNegociation extends MinigameBase {
     seqLabel.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:12px;text-align:center;font-family:system-ui;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
     seqLabel.textContent = 'Sequence: ...';
     this.container.appendChild(seqLabel);
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.seqEl = seqLabel;
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
@@ -211,10 +217,8 @@ export class MinigameNegociation extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-nego-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-nego-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -298,12 +302,11 @@ export class MinigameNegociation extends MinigameBase {
     }
 
     // Update sequence display
-    const seqEl = document.getElementById('mg-nego-sequence');
-    if (seqEl) {
+    if (this.seqEl) {
       const words = this.pickedSequence.map((w) =>
         w.isFactionWord ? `[${w.text}]` : w.text
       );
-      seqEl.textContent = `Sequence: ${words.join(' ')}`;
+      this.seqEl.textContent = `Sequence: ${words.join(' ')}`;
     }
   };
 
