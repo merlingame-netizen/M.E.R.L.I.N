@@ -479,8 +479,11 @@ export class MinigameHerboristerie extends MinigameBase {
       }
     }
 
-    // C92-P2: render floating penalty toasts + decay
-    this.penaltyToasts = this.penaltyToasts.filter((t) => t.life > 0);
+    // C92-P2: render floating penalty toasts (C119/HRB-01: immutable decay — was mutating t.life in-place)
+    // Decay + filter first (immutable map→filter), then render survivors
+    this.penaltyToasts = this.penaltyToasts
+      .map((t) => ({ ...t, life: t.life - dt }))
+      .filter((t) => t.life > 0);
     for (const t of this.penaltyToasts) {
       const alpha = Math.min(1, t.life / 0.4);
       const rise = (0.8 - t.life) * 30; // float up 30px over lifetime
@@ -489,7 +492,6 @@ export class MinigameHerboristerie extends MinigameBase {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`\u2212${this.wrongPenalty} pts`, t.x, t.y - rise); // C136: tieredValue not hardcoded 8
-      t.life -= dt;
     }
 
     ctx.restore();
