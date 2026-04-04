@@ -72,6 +72,7 @@ export class MinigameFouille extends MinigameBase {
   private hoverIndex = -1;
   private cursorX = 0;
   private cursorY = 0;
+  private keyboardActive = false; // C130: WCAG 2.4.7 — show crosshair when navigating by keyboard
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -149,6 +150,7 @@ export class MinigameFouille extends MinigameBase {
     this.wrongClickTimer = 0;
     this.nextShuffle = this.shuffleInterval;
     this.pulsePhase = 0;
+    this.keyboardActive = false; // C130: reset crosshair visibility on replay
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -212,6 +214,7 @@ export class MinigameFouille extends MinigameBase {
     if (!isArrow && !isActivate) return;
     e.preventDefault();
     if (isArrow) {
+      this.keyboardActive = true; // C130: activate crosshair on first arrow key press
       if (this.cursorX === 0 && this.cursorY === 0) { this.cursorX = this.canvasW / 2; this.cursorY = this.canvasH / 2; }
       const step = 20; // larger step than cursor-tracking minigames — objects are spread wider
       if (e.key === 'ArrowLeft')       this.cursorX = Math.max(0, this.cursorX - step);
@@ -394,6 +397,32 @@ export class MinigameFouille extends MinigameBase {
       const flash = Math.sin(this.pulsePhase * 12) * 0.5 + 0.5;
       ctx.fillStyle = `rgba(205,133,63,${flash * 0.08})`;
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
+    }
+
+    // C130: WCAG 2.4.7 — keyboard cursor crosshair (visible only when navigating by keyboard)
+    if (this.keyboardActive && !this.found) {
+      const cx = this.cursorX;
+      const cy = this.cursorY;
+      const r = 10;
+      const arm = 6;
+      const pulse = 0.7 + Math.sin(this.pulsePhase * 5) * 0.3;
+      ctx.save();
+      ctx.strokeStyle = `rgba(205,133,63,${pulse})`;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = 'rgba(205,133,63,0.6)';
+      ctx.shadowBlur = 4;
+      // Circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+      // Crosshair arms (gap = r + 2, arm length = arm)
+      ctx.beginPath();
+      ctx.moveTo(cx - r - 2 - arm, cy); ctx.lineTo(cx - r - 2, cy);
+      ctx.moveTo(cx + r + 2, cy);       ctx.lineTo(cx + r + 2 + arm, cy);
+      ctx.moveTo(cx, cy - r - 2 - arm); ctx.lineTo(cx, cy - r - 2);
+      ctx.moveTo(cx, cy + r + 2);       ctx.lineTo(cx, cy + r + 2 + arm);
+      ctx.stroke();
+      ctx.restore();
     }
 
     this.animFrame = requestAnimationFrame(() => this.render());
