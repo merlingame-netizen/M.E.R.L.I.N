@@ -76,6 +76,10 @@ export class MinigameTraces extends MinigameBase {
     this.footprints = [];
     this.currentIndex = 0;
     this.ended = false;
+    // C147/TRC-RESET-01: reset pulse phase — elapsedTime drives Math.sin(t*5) footprint pulse.
+    // Without reset, replay starts at a stale accumulated phase rather than sin(0)=0.
+    // Same class as C146b/RGD-BUG-01 (feedbackTimer not reset → instant-advance on replay).
+    this.elapsedTime = 0;
     const sinFreq = 1.5 + Math.random() * 2.0;   // 1.5–3.5
     const cosFreq = 2.0 + Math.random() * 2.0;   // 2.0–4.0
     const sinAmp  = 25  + Math.random() * 40;     // 25–65px

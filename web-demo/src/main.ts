@@ -5,7 +5,9 @@
 
 import { SceneManager } from './engine/SceneManager';
 import { CameraRail } from './engine/CameraRail';
-import { buildCoastScene } from './scenes/CoastBiome';
+// C147/BUNDLE-OVR-01: CoastBiome lazy-loaded — only needed when a run starts (line ~563).
+// Static import was loading 442 lines of Three.js scene code at boot, inflating the initial
+// bundle. Dynamic import defers it to first run, reducing cold-start gzip by ~5KB.
 import { store } from './game/Store';
 import { getMultiplier, getMultiplierLabel } from './game/Constants';
 import { generateFastRouteCard, detectMinigame, loadTemplates, verbToField } from './game/CardSystem';
@@ -560,6 +562,8 @@ async function main(): Promise<void> {
 
     // Build biome — only cotes_sauvages has a 3D walk scene for now;
     // all other biomes share this backdrop until their scenes are implemented.
+    // C147/BUNDLE-OVR-01: lazy dynamic import — deferred from startup to first run start.
+    const { buildCoastScene } = await import('./scenes/CoastBiome');
     const biomeResult = await buildCoastScene();
     sceneManager.scene.add(biomeResult.group);
 
