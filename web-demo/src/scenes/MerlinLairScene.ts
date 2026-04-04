@@ -766,6 +766,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C81-03: disposed flag prevents late-resolving GLBs from adding to a torn-down scene.
   let lairDisposed = false;
   let crystalGLBGroup: THREE.Group | null = null; // C101: stored to sync float animation to GLB
+  // C111: stored to animate GLB emissive in update loop (procedural mat targets hidden sphere post-load)
+  let crystalGLBMat: THREE.MeshStandardMaterial | null = null;
   let doorFlashing = false;    // C101: door cinematic — lights/emissive burst before transition
   let doorFlashTimer = 0;
   let doorFlashCancelHandle = 0; // C102: tracked to allow clearTimeout in dispose()
@@ -783,9 +785,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (entry) entry.visualMesh = mesh;
     },
     // C95: swap crystal visualMesh to GLB mesh so hover emissive targets GLB (not hidden sphere)
+    // C111: also capture GLB material so update loop can animate its emissiveIntensity (BUG-C46-01)
     onCrystalGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'crystal');
       if (entry) entry.visualMesh = mesh;
+      crystalGLBMat = mesh.material as THREE.MeshStandardMaterial;
     },
     // C101: store GLB group so update loop can animate its Y position (float effect)
     onCrystalGroupLoaded: (group) => { crystalGLBGroup = group; },
@@ -1003,6 +1007,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Crystal ball pulse
     crystalData.light.intensity = 2.2 + Math.sin(elapsedTime * 1.8) * 0.4;
     crystalData.mat.emissiveIntensity = 0.5 + Math.sin(elapsedTime * 1.4) * 0.15;
+    // C111: also animate GLB material emissive — procedural mat targets hidden sphere post-load (BUG-C46-01)
+    if (crystalGLBMat) crystalGLBMat.emissiveIntensity = 0.5 + Math.sin(elapsedTime * 1.4) * 0.15;
     const crystalFloatY = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
     crystalData.sphere.position.y = crystalFloatY;
     // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place

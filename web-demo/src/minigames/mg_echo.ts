@@ -114,8 +114,9 @@ export class MinigameEcho extends MinigameBase {
     statusEl.textContent = 'Ecoute...';
     this.container.appendChild(statusEl);
 
-    // Input
+    // Input — pointer + keyboard (C111: ArrowKeys map to Nord/Est/Sud/Ouest quadrants, WCAG 2.1.1)
     this.canvas.addEventListener('pointerdown', this.onClick);
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.currentRound = 0;
@@ -174,6 +175,39 @@ export class MinigameEcho extends MinigameBase {
     }
   };
 
+  // C111: keyboard handler — ArrowUp=Nord, ArrowRight=Est, ArrowDown=Sud, ArrowLeft=Ouest (WCAG 2.1.1)
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (!this.canvas || this.phase !== 'answer' || this.answered) return;
+    const keyMap: Record<string, number> = {
+      ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3,
+    };
+    const quadrant = keyMap[e.key];
+    if (quadrant === undefined) return;
+    e.preventDefault();
+
+    this.answered = true;
+    if (quadrant === this.targetQuadrant) {
+      this.hits++;
+      this.feedback = 'hit';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+    } else {
+      this.feedback = 'miss';
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+    }
+    this.phase = 'feedback';
+    this.feedbackTimer = 0.5;
+    // Ripple at quadrant centre so keyboard players get visual feedback
+    const q = this.quadrants[quadrant];
+    if (q) {
+      this.rippleActive = true;
+      this.rippleX = this.centerX + q.cx;
+      this.rippleY = this.centerY + q.cy;
+      this.rippleTimer = 0;
+    }
+    const statusEl = document.getElementById('mg-echo-status');
+    if (statusEl) statusEl.textContent = `Echos captes: ${this.hits} / ${this.currentRound + 1}`;
+  };
+
   private getClickedQuadrant(mx: number, my: number): number {
     // Simple: determine quadrant by position relative to center
     const dx = mx - this.centerX;
@@ -215,6 +249,7 @@ export class MinigameEcho extends MinigameBase {
     this.phase = 'done';
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const finalScore = (this.hits / this.totalRounds) * 100;
     this.finish(finalScore);
@@ -442,6 +477,7 @@ export class MinigameEcho extends MinigameBase {
   protected cleanup(): void {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }
