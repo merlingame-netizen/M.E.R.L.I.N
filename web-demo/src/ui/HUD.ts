@@ -341,4 +341,6 @@ export function teardownHUD(): void {
   _oghamRuneEl = null;
   _oghamNameEl = null;
   _oghamMultEl = null;
+  // C140/BUG-C140-01: predict toast lives on document.body — remove on run end to avoid z-index:65 overlap on RunSummary
+  document.getElementById('merlin-predict-toast')?.remove();
 }

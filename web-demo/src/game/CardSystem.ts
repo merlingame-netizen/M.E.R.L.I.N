@@ -135,7 +135,7 @@ export function generateFastRouteCard(biome: string): Card {
 
   return {
     id: nextCardId(),
-    narrative: template.narrative,
+    narrative: safeTemplate.narrative, // C140/BUG-C140-03: use safeTemplate narrative (was template — showed malformed card's text with emergency options)
     options,
     biome,
     source: 'fastroute',
