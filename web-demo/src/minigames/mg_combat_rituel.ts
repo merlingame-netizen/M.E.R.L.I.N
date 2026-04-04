@@ -264,6 +264,8 @@ export class MinigameCombatRituel extends MinigameBase {
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       }
     } else {
+      // C83: edge-triggered dodge-recovery — first frame clear after collision (reward the dodge)
+      if (this.hit) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.hit = false;
       this.survivalTime += dt;
 
