@@ -728,18 +728,37 @@ function createPotionBottles(): Group {
 
 // ── Skull ─────────────────────────────────────────────────────────────────────
 
-function createSkull(): { group: Group; cranium: Mesh } {
+function createSkull(): { group: Group; cranium: Mesh; baseY: number } {
+  // C172: upgraded to full low-poly procédural skull (cranium + jaw + eye sockets)
+  // All geometry uses flatShading:true for consistent N64/low-poly aesthetic
+  const BASE_X = 9, BASE_Y = -1.9, BASE_Z = -9;
   const group = new Group();
+  group.position.set(BASE_X, BASE_Y, BASE_Z);
+
   // C79: emissive=0xd4c89a at intensity=0.0 — allows applyHoverTo() to boost on hover (was no-op: emissive 0,0,0 → guard failed)
-  const boneMat = new MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0, flatShading: true, emissive: 0xd4c89a, emissiveIntensity: 0.0 });
-  const cranium = new Mesh(new SphereGeometry(0.22, 8, 7), boneMat);
-  cranium.scale.y = 0.85;
-  cranium.position.set(9, -1.9, -9);
+  const boneMat = new MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.15, flatShading: true, emissive: 0xd4c89a, emissiveIntensity: 0.0 });
+
+  // 1. Cranium — low-poly geode (6×4 segments, flat-shaded facets)
+  const cranium = new Mesh(new SphereGeometry(0.35, 6, 4), boneMat);
+  cranium.scale.set(1.0, 0.85, 0.9);
+  // position relative to group origin (0,0,0)
   group.add(cranium);
-  const jaw = new Mesh(new BoxGeometry(0.28, 0.12, 0.22), boneMat);
-  jaw.position.set(9, -2.18, -9.02);
+
+  // 2. Jaw — box slightly below and forward of cranium
+  const jaw = new Mesh(new BoxGeometry(0.42, 0.18, 0.32, 2, 1, 2), boneMat);
+  jaw.position.set(0, -0.22, 0.05);
   group.add(jaw);
-  return { group, cranium };
+
+  // 3. Eye sockets — dark hollow spheres (left, right)
+  const eyeMat = new MeshStandardMaterial({ color: 0x0a0808, roughness: 1.0, flatShading: true });
+  const leftEye = new Mesh(new SphereGeometry(0.08, 4, 3), eyeMat);
+  leftEye.position.set(-0.12, 0.08, 0.28);
+  group.add(leftEye);
+  const rightEye = new Mesh(new SphereGeometry(0.08, 4, 3), eyeMat);
+  rightEye.position.set(0.12, 0.08, 0.28);
+  group.add(rightEye);
+
+  return { group, cranium, baseY: BASE_Y };
 }
 
 // ── Ambient Lighting — 6-source pass (degraded to 5 on low-end mobile) ── // C52: corrected count (was '5/4', actual 6/5)
@@ -909,7 +928,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const cauldron = createCauldron(scene);
   scene.add(cauldron.group); // C129/BUG-L-DOUBLE-ADD-01: moved from inside createCauldron() — consistent with all other factories
   scene.add(createPotionBottles());
-  const { group: skullGroup, cranium: skullCranium } = createSkull(); scene.add(skullGroup);
+  const { group: skullGroup, cranium: skullCranium, baseY: skullBaseY } = createSkull(); scene.add(skullGroup);
   const cleanupLairDensity = createLairDensity(scene, isLowEndMobile); // C35: cleanup for moon.target; C38: lowEnd gate for biblio PointLight
 
   // Cauldron interactive hit target — C153/CAULDRON-Y-01: aligned to GLB y=-4.65.
@@ -1346,6 +1365,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C174: skull haunting pulse — slow sinusoidal bone-glow (0.7Hz, offset π to phase against crystal)
     const skullEmissive = (skullEntry.hovered ? 0.28 : 0.05) + Math.sin(elapsedTime * 0.7 + Math.PI) * 0.03;
     (skullCranium.material as MeshStandardMaterial).emissiveIntensity = skullEmissive;
+    // C172: skull bob — gentle vertical oscillation (0.8Hz, 0.02 amplitude) — magical/living feel
+    skullGroup.position.y = skullBaseY + Math.sin(elapsedTime * 0.8 * Math.PI * 2) * 0.02;
 
     // C174: periodic cauldron bubble SFX — auditory presence without visual spam
     if (!lowFpsMode) {
