@@ -201,9 +201,9 @@ export class MinigameNegociation extends MinigameBase {
     this.pulsePhase = 0;
     this.kbFocusIdx = 0;
 
-    // Pre-seed some words
+    // Pre-seed some words — C100: clamp lower bound to wordHeight to avoid top-fade removal on first frame
     for (let i = 0; i < 8; i++) {
-      this.spawnWord(Math.random() * this.canvasH * 0.8);
+      this.spawnWord(this.wordHeight + Math.random() * (this.canvasH * 0.8 - this.wordHeight));
     }
 
     // Timer
@@ -346,13 +346,12 @@ export class MinigameNegociation extends MinigameBase {
       this.spawnWord();
     }
 
-    // Update scrolling positions
-    for (const sw of this.scrollingWords) {
-      sw.y -= this.scrollSpeed * dt;
-      if (sw.picked) {
-        sw.fadeAlpha -= dt * 3;
-      }
-    }
+    // Update scrolling positions — C100: immutable map (no direct mutation)
+    this.scrollingWords = this.scrollingWords.map((sw) => ({
+      ...sw,
+      y: sw.y - this.scrollSpeed * dt,
+      fadeAlpha: sw.picked ? sw.fadeAlpha - dt * 3 : sw.fadeAlpha,
+    }));
 
     // Remove off-screen or fully faded words
     this.scrollingWords = this.scrollingWords.filter(
