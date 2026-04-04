@@ -1216,6 +1216,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     renderer.domElement.removeEventListener('keydown', onKeyDown);
     // C120: cancel door flash timeout — lairDisposed guard blocks cb() but closure stays alive 380ms
     clearTimeout(doorFlashCancelHandle);
+    // C97: mur_pierre uses one cloned geometry + one cloned material shared across 3 InstancedMeshes.
+    // Without dedup guards, traverse calls geometry.dispose()/material.dispose() 3× on the same
+    // object, firing redundant WebGL deallocation events. Use Sets to dispose each only once.
+    const disposedGeos = new Set<BufferGeometry>();
+    const disposedMats = new Set<Material>();
     scene.traverse((obj) => {
       if (obj instanceof InstancedMesh) {
         // C109: InstancedMesh.dispose() fires the renderer 'dispose' event so the instanceMatrix
@@ -1223,14 +1228,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         // data leaks on repeated hub ↔ lair navigations — geometry.dispose() alone only clears
         // the base vertex attributes, not the per-instance matrix buffer.
         obj.dispose();
-        obj.geometry.dispose();
-        (obj.material as Material).dispose();
+        if (!disposedGeos.has(obj.geometry)) { disposedGeos.add(obj.geometry); obj.geometry.dispose(); }
+        const mat = obj.material as Material;
+        if (!disposedMats.has(mat)) { disposedMats.add(mat); mat.dispose(); }
       } else if (obj instanceof Mesh || obj instanceof Points) {
-        obj.geometry.dispose();
+        if (!disposedGeos.has(obj.geometry)) { disposedGeos.add(obj.geometry); obj.geometry.dispose(); }
         if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => m.dispose());
+          obj.material.forEach((m) => { if (!disposedMats.has(m)) { disposedMats.add(m); m.dispose(); } });
         } else {
-          (obj.material as Material).dispose();
+          const mat = obj.material as Material;
+          if (!disposedMats.has(mat)) { disposedMats.add(mat); mat.dispose(); }
         }
       }
     });

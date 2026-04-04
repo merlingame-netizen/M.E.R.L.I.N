@@ -277,7 +277,6 @@ export function loadLairGLBs(
       }
     }
     backMesh.instanceMatrix.needsUpdate = true;
-    scene.add(backMesh);
 
     // Left wall: 15 tiles (5 cols × 3 rows), rotY = +90°
     const leftMesh = new InstancedMesh(tileGeo, tileMat, 15);
@@ -292,7 +291,6 @@ export function loadLairGLBs(
       }
     }
     leftMesh.instanceMatrix.needsUpdate = true;
-    scene.add(leftMesh);
 
     // Right wall: 15 tiles (5 cols × 3 rows), rotY = -90°
     const rightMesh = new InstancedMesh(tileGeo, tileMat, 15);
@@ -307,6 +305,13 @@ export function loadLairGLBs(
       }
     }
     rightMesh.instanceMatrix.needsUpdate = true;
+
+    // C97: all 3 InstancedMeshes share tileMat — one fadeInGLB call sets opacity=0 on the shared
+    // material before any scene.add(), so all 48 wall tiles fade in together (consistent with the
+    // other 6 GLBs). Called BEFORE scene.add() so walls start invisible on the first render frame.
+    cancelHandles.push(fadeInGLB(backMesh, 400, isDisposed));
+    scene.add(backMesh);
+    scene.add(leftMesh);
     scene.add(rightMesh);
 
     if (proceduralGroups?.wallsGroup) proceduralGroups.wallsGroup.visible = false;
