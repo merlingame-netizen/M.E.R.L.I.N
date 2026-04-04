@@ -214,6 +214,97 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
   });
 }
 
+// C85: Journal panel — bookshelf zone shows cross-run meta stats
+function showJournalPanel(): Promise<void> {
+  return new Promise((resolve) => {
+    const state = store.getState();
+    const meta = state.meta;
+
+    const overlay = document.createElement('div');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Journal de Merlin');
+    overlay.style.cssText = [
+      'position:fixed;inset:0;z-index:200;',
+      'display:flex;align-items:center;justify-content:center;',
+      'background:rgba(0,0,0,0.65);opacity:0;transition:opacity 0.2s ease;',
+    ].join('');
+
+    const panel = document.createElement('div');
+    panel.style.cssText = [
+      'background:rgba(18,13,7,0.97);border:1px solid rgba(200,150,60,0.5);',
+      'border-radius:12px;padding:28px 32px;max-width:360px;width:88%;',
+      'font-family:Georgia,serif;color:#e8dcc8;text-align:center;',
+    ].join('');
+
+    const titleEl = document.createElement('div');
+    titleEl.textContent = 'Journal de Merlin';
+    titleEl.style.cssText = 'color:#c8a050;font-size:20px;letter-spacing:0.12em;margin-bottom:6px;';
+    panel.appendChild(titleEl);
+
+    const subEl = document.createElement('div');
+    subEl.textContent = 'Chroniques de l\'aventurier';
+    subEl.style.cssText = 'color:rgba(200,170,100,0.45);font-size:12px;font-style:italic;margin-bottom:20px;';
+    panel.appendChild(subEl);
+
+    const FACTION_DISPLAY: Record<string, string> = {
+      druides: 'Druides', anciens: 'Anciens', korrigans: 'Korrigans', niamh: 'Niamh', ankou: 'Ankou',
+    };
+    const factionEntries = Object.entries(meta.factionRep).sort((a, b) => b[1] - a[1]);
+    const topFaction = factionEntries[0];
+    const rows: Array<[string, string]> = [
+      ['Anam accumulé', `${Math.floor(meta.anam)}`],
+      ['Aventures vécues', `${meta.totalRuns}`],
+      ['Oghams maîtrisés', `${meta.oghamsUnlocked.length}`],
+    ];
+    if (topFaction && topFaction[1] > 0) {
+      rows.push(['Alliance', `${FACTION_DISPLAY[topFaction[0]] ?? topFaction[0]} — ${topFaction[1]}`]);
+    }
+
+    const table = document.createElement('div');
+    table.style.cssText = 'margin-bottom:22px;';
+    for (const [label, value] of rows) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(200,150,60,0.12);';
+      const lEl = document.createElement('span');
+      lEl.style.cssText = 'color:rgba(232,220,200,0.6);font-size:13px;';
+      lEl.textContent = label;
+      const vEl = document.createElement('span');
+      vEl.style.cssText = 'color:#c8a050;font-size:14px;';
+      vEl.textContent = value;
+      row.appendChild(lEl);
+      row.appendChild(vEl);
+      table.appendChild(row);
+    }
+    panel.appendChild(table);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Fermer';
+    closeBtn.setAttribute('aria-label', 'Fermer le journal');
+    closeBtn.style.cssText = [
+      'padding:10px 32px;font-size:14px;cursor:pointer;',
+      'background:rgba(80,60,20,0.4);color:rgba(232,220,200,0.8);',
+      'border:1px solid rgba(200,150,60,0.4);border-radius:8px;',
+      'font-family:Georgia,serif;transition:background 0.15s;',
+    ].join('');
+    closeBtn.addEventListener('pointerenter', () => { closeBtn.style.background = 'rgba(100,75,25,0.6)'; });
+    closeBtn.addEventListener('pointerleave', () => { closeBtn.style.background = 'rgba(80,60,20,0.4)'; });
+    closeBtn.addEventListener('click', dismiss);
+    panel.appendChild(closeBtn);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
+
+    function dismiss(): void {
+      document.removeEventListener('keydown', escHandler);
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.remove(); resolve(); }, 220);
+    }
+    function escHandler(e: KeyboardEvent): void { if (e.key === 'Escape') dismiss(); }
+    document.addEventListener('keydown', escHandler);
+  });
+}
+
 async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairOgham: string | null }> {
   // Create wrapper div dynamically (static placement in index.html preferred)
   let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
@@ -252,6 +343,16 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   let selectedBiomeId = 'cotes_sauvages';
   // C84: ogham pre-selected in lair, carried into first card of the upcoming run
   let lairSelectedOgham: string | null = null;
+  // C85: cauldron zone cycles through Merlin quotes
+  let cauldronQuoteIdx = -1;
+  const MERLIN_QUOTES: readonly string[] = [
+    'Le temps est une rivière qui coule à rebours pour les initiés…',
+    'Chaque Ogham que tu maîtrises ouvre un nouveau chemin dans la forêt.',
+    'Ton Anam grandit avec chaque choix courageux. Garde-le précieux.',
+    'Les factions observent. Ce que tu fais dans l\'ombre forge ta légende.',
+    'La mort n\'est qu\'un passage. L\'Anam, lui, demeure à jamais.',
+    'Brocéliande te connaît mieux que tu ne te connais toi-même.',
+  ];
 
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
@@ -312,6 +413,19 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
         if (lairSelectedOgham) {
           showZoneToast('crystal'); // "Pierre des Oghams / Choisissez votre Ogham runique"
         }
+        return;
+      }
+      if (zone === 'bookshelf') {
+        // C85: journal panel — shows cross-run meta stats (anam, runs, oghams, top faction)
+        await showJournalPanel();
+        return;
+      }
+      if (zone === 'cauldron') {
+        // C85: Merlin quotes — cycle through 6 druidic whispers
+        cauldronQuoteIdx = (cauldronQuoteIdx + 1) % MERLIN_QUOTES.length;
+        ZONE_LABELS['cauldron']!.title = 'Merlin murmure…';
+        ZONE_LABELS['cauldron']!.sub = MERLIN_QUOTES[cauldronQuoteIdx]!;
+        showZoneToast('cauldron');
         return;
       }
       if (zone === 'map') {
