@@ -554,6 +554,13 @@ async function main(): Promise<void> {
     // Start renderer
     sceneManager.start();
 
+    // C118: pause 3D render when tab is hidden during gameplay (matches lair C104 pattern)
+    const onGameVisibility = (): void => {
+      if (document.visibilityState === 'hidden') sceneManager.stop();
+      else sceneManager.start();
+    };
+    document.addEventListener('visibilitychange', onGameVisibility);
+
     // T066+C75: Start biome-matched ambient audio as game world reveals
     startAmbient(biomeToAmbient(chosenBiome));
 
@@ -592,6 +599,9 @@ async function main(): Promise<void> {
     // BUG-C88-06: unsubscribe HUD from store — run is over, no point firing updateHUD()
     // during the lair phase for invisible HUD elements.
     teardownHUD();
+
+    // C118: remove gameplay visibility listener before dispose
+    document.removeEventListener('visibilitychange', onGameVisibility);
 
     // BUG-02 / C79-07: dispose() = stop rAF + removeEventListener(resize) + renderer.dispose()
     sceneManager.dispose();
@@ -718,6 +728,7 @@ async function gameLoop(
     let result = { score: 50 }; // neutral fallback
     try {
       playSound('minigame_start'); // C82-06: audio cue signalling minigame phase start (was 'flip' — BUG-C88-03)
+      sceneManager.stop(); // C118: pause 3D render during minigame — both GPU contexts concurrent = frame drops on mobile
       minigameOverlay.classList.add('visible');
       const minigame = await createMinigame(minigameId, minigameContainer);
       result = await minigame.play();
@@ -725,6 +736,7 @@ async function gameLoop(
       console.warn(`[MERLIN] Minigame '${minigameId}' failed, using neutral score 50:`, err);
     } finally {
       minigameOverlay.classList.remove('visible');
+      sceneManager.start(); // C118: resume 3D render after minigame
     }
 
     // 6. SCORE → multiplier
