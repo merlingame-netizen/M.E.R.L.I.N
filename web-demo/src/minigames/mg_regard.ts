@@ -314,7 +314,7 @@ export class MinigameRegard extends MinigameBase {
   }
 
   protected render(): void {
-    if (!this.ctx || !this.canvas || this.phase === 'done') return;
+    if (!this.ctx || !this.canvas || this.ended) return; // C129/BUG-L-REGARD-GUARD-01: align with C106 contract (was this.phase==='done' — silent deviation from all 13 other minigames)
     const ctx = this.ctx;
     const dt = this.getDeltaTime();
     this.pulsePhase += dt;

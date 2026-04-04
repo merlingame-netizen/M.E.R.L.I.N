@@ -552,7 +552,9 @@ function createCauldron(scene: Scene): CauldronSystem {
   body.scale.y = 0.8;
   body.position.set(2, -3.8, -7);
   group.add(body);
-  scene.add(group);
+  // C129/BUG-L-DOUBLE-ADD-01: removed scene.add(group) from here — every other factory returns group and
+  // lets the caller add. Internal scene.add() was the architectural root of BUG-L-07 class (easy to lose
+  // track of where items belong when both scene and group are valid parent targets inside one function).
 
   // Legs
   const legDef: Array<[number, number]> = [[-0.4, -0.3], [0.4, -0.3], [0, 0.5]];
@@ -785,6 +787,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.add(dust.points);
 
   const cauldron = createCauldron(scene);
+  scene.add(cauldron.group); // C129/BUG-L-DOUBLE-ADD-01: moved from inside createCauldron() — consistent with all other factories
   scene.add(createPotionBottles());
   const { group: skullGroup, cranium: skullCranium } = createSkull(); scene.add(skullGroup);
   const cleanupLairDensity = createLairDensity(scene, isLowEndMobile); // C35: cleanup for moon.target; C38: lowEnd gate for biblio PointLight
