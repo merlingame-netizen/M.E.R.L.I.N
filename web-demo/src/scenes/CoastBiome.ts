@@ -28,7 +28,7 @@ function createGround(): Mesh {
   }
   geo.computeVertexNormals();
   const mat = new MeshStandardMaterial({
-    color: 0x72684e, // sandy grey-brown cliff path
+    color: 0xb89e58, // C163: N64 sandy-golden cliff path
     roughness: 0.97, metalness: 0.0, flatShading: true,
   });
   const mesh = new Mesh(geo, mat);
@@ -49,15 +49,16 @@ function createOcean(): OceanResult {
   const pos = geo.attributes.position as BufferAttribute;
   const count = pos.count;
 
-  // Vertex colors: teal near shore → deeper blue-teal further
+  // C163: N64 vivid ocean vertex colors — bright turquoise near shore → deep azure far
   const colors = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const x = pos.getX(i);
     const depth = Math.max(0, Math.min(1, (x + 110) / 220));
-    // Near shore: cyan teal (0x1abfa8), open sea: dark teal (0x0d5d70)
-    colors[i * 3 + 0] = 0.06 + depth * 0.04;
-    colors[i * 3 + 1] = 0.37 - depth * 0.18;
-    colors[i * 3 + 2] = 0.44 + depth * 0.02;
+    // Near shore (depth=1): 0x14e8d0 = (0.078, 0.910, 0.816) vivid N64 turquoise
+    // Open sea  (depth=0): 0x0c5ab8 = (0.047, 0.353, 0.722) deep N64 ocean blue
+    colors[i * 3 + 0] = 0.047 + depth * 0.031;
+    colors[i * 3 + 1] = 0.353 + depth * 0.557;
+    colors[i * 3 + 2] = 0.722 + depth * 0.094;
   }
   geo.setAttribute('color', new BufferAttribute(colors, 3));
 
@@ -123,16 +124,17 @@ interface CloudLayer {
 function createSky(): SkyResult {
   const group = new Group();
 
-  // Base sky sphere — dark dramatic overcast gradient via vertex colors
+  // C163: N64 bright coastal sky — vivid day-blue gradient
   const skyGeo = new SphereGeometry(148, 14, 10);
   const skyPos = skyGeo.attributes.position as BufferAttribute;
   const skyCols = new Float32Array(skyPos.count * 3);
   for (let i = 0; i < skyPos.count; i++) {
     const y = skyPos.getY(i);
     const t = Math.max(0, Math.min(1, (y + 60) / 140));
-    // horizon: teal-grey (0x3a4e52), zenith: very dark blue (0x0e1420)
-    const hr = 0.23, hg = 0.31, hb = 0.32;
-    const zr = 0.055, zg = 0.08, zb = 0.125;
+    // horizon: 0x78c4f0 = (0.471, 0.769, 0.941) N64 vivid sky-blue horizon
+    // zenith:  0x1848c8 = (0.094, 0.282, 0.784) deep clear-blue zenith
+    const hr = 0.471, hg = 0.769, hb = 0.941;
+    const zr = 0.094, zg = 0.282, zb = 0.784;
     skyCols[i * 3 + 0] = hr + (zr - hr) * t;
     skyCols[i * 3 + 1] = hg + (zg - hg) * t;
     skyCols[i * 3 + 2] = hb + (zb - hb) * t;
@@ -189,12 +191,13 @@ function createSky(): SkyResult {
     cloudLayers.push({ group: layerGroup, speed, baseX: 0 });
   };
 
-  // High layer — dark dramatic clouds (0.25–0.38 grey)
-  addCloudLayer(55, [0.22, 0.35], 12, 0.8,  [-80, 60], [0.9, 1.5]);
-  // Mid layer — medium grey (0.35–0.50)
-  addCloudLayer(38, [0.33, 0.48], 14, 1.4,  [-70, 50], [0.8, 1.3]);
-  // Low horizon layer — lighter grey wisps (0.45–0.60)
-  addCloudLayer(22, [0.42, 0.58], 10, 2.0,  [-60, 40], [0.7, 1.1]);
+  // C163: N64 bright white/cream clouds — vivid puffy day clouds
+  // High layer — bright white clouds
+  addCloudLayer(55, [0.90, 0.98], 12, 0.8,  [-80, 60], [0.9, 1.5]);
+  // Mid layer — warm cream clouds
+  addCloudLayer(38, [0.82, 0.94], 14, 1.4,  [-70, 50], [0.8, 1.3]);
+  // Low horizon layer — light sky-tinted wisps
+  addCloudLayer(22, [0.72, 0.88], 10, 2.0,  [-60, 40], [0.7, 1.1]);
 
   return { group, cloudLayers };
 }
@@ -335,8 +338,9 @@ function createTrees(count: number): Group {
 
 function createMenhirs(count: number): Group {
   const group = new Group();
-  const mat  = new MeshStandardMaterial({ color: 0x786e60, roughness: 0.88, flatShading: true });
-  const moss = new MeshStandardMaterial({ color: 0x4a5a38, roughness: 0.95, flatShading: true });
+  // C163: N64 sandstone cliff colours
+  const mat  = new MeshStandardMaterial({ color: 0xa08048, roughness: 0.88, flatShading: true });
+  const moss = new MeshStandardMaterial({ color: 0x5a8830, roughness: 0.95, flatShading: true });
   for (let i = 0; i < count; i++) {
     const h = 2.4 + Math.random() * 3.2;
     const m = new Mesh(new BoxGeometry(0.52, h, 0.36), mat);
@@ -357,7 +361,7 @@ function createMenhirs(count: number): Group {
 
 function createFogPlane(): Mesh {
   const mat = new MeshStandardMaterial({
-    color: 0x7a8a6a,
+    color: 0x4aaa28, // C163: N64 vivid green bushes on cliff top
     transparent: true, opacity: 0.18,
     roughness: 1.0, metalness: 0.0,
     depthWrite: false,
@@ -382,13 +386,12 @@ export interface BiomeSceneResult {
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
-  // ── Lighting ──────────────────────────────────────────────────────────────
-  // Overcast dramatic: cool directional from NW, teal-grey hemisphere, dark ambient
-  group.add(new AmbientLight(0x1a2028, 0.65));
+  // ── C163: N64 bright coastal lighting — warm golden sun + vivid sky hemisphere ──
+  group.add(new AmbientLight(0x5090b8, 0.65));
 
   const isLowEndMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.devicePixelRatio >= 2;
-  const sun = new DirectionalLight(0xb8ccd8, 1.5); // cool overcast sun (not golden)
-  sun.position.set(-18, 20, 8);
+  const sun = new DirectionalLight(0xffe888, 2.2); // C163: warm N64 golden sun
+  sun.position.set(-18, 28, 15);
   if (!isLowEndMobile) {
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -401,12 +404,12 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   }
   group.add(sun);
 
-  // Sky blue-grey / teal-grey ground
-  group.add(new HemisphereLight(0x4a6070, 0x3a4030, 0.55));
+  // Sky blue / sandy-green ground hemisphere
+  group.add(new HemisphereLight(0x78c4f0, 0x6a8840, 0.60));
 
-  // Rim from ocean: cool cyan backlight to separate cliff silhouettes
-  const rim = new DirectionalLight(0x6ab8cc, 0.45);
-  rim.position.set(55, 6, -18);
+  // Ocean fill from sea side — vivid cyan
+  const rim = new DirectionalLight(0x40c8e8, 0.55);
+  rim.position.set(55, 8, -18);
   group.add(rim);
 
   // ── Scene elements ────────────────────────────────────────────────────────

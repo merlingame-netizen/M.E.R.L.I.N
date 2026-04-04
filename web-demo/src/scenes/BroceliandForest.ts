@@ -35,7 +35,7 @@ function createForestGround(): Mesh {
   }
   geo.computeVertexNormals();
   const mat = new MeshStandardMaterial({
-    color: 0x1e3a18,      // deep forest moss
+    color: 0x2e7a18,      // C163: N64 vivid grass-green forest floor
     roughness: 0.98,
     metalness: 0.0,
     flatShading: true,
@@ -64,11 +64,12 @@ function createForestSky(): ForestSkyResult {
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
     const t = Math.max(0, Math.min(1, (y + 160) / 320)); // 0=bottom 1=top
-    // horizon (t=0): 0x1e301e (0.118, 0.188, 0.118) dark forest-green
-    // zenith  (t=1): 0x040a04 (0.016, 0.039, 0.016) near-black
-    cols[i * 3 + 0] = 0.118 - t * 0.102;
-    cols[i * 3 + 1] = 0.188 - t * 0.149;
-    cols[i * 3 + 2] = 0.118 - t * 0.102;
+    // C163: N64 vivid forest night sky — rich blue-indigo
+    // horizon (t=0): 0x2848b8 = (0.157, 0.282, 0.722) vivid deep blue-violet horizon
+    // zenith  (t=1): 0x0c1858 = (0.047, 0.094, 0.345) deep blue zenith
+    cols[i * 3 + 0] = 0.157 - t * 0.110;
+    cols[i * 3 + 1] = 0.282 - t * 0.188;
+    cols[i * 3 + 2] = 0.722 - t * 0.377;
   }
   geo.setAttribute('color', new BufferAttribute(cols, 3));
   const skyMat = new MeshStandardMaterial({
@@ -96,12 +97,13 @@ function createForestSky(): ForestSkyResult {
     cloudLayers.push({ group: g, speed });
   };
 
-  // High dark storm band — dense charcoal-green slabs
-  addLayer(55, [-90, -35], 16, 0.7, [0x0c180c, 0x111e11, 0x0a150a], [12, 24]);
-  // Mid canopy band — medium coverage
-  addLayer(38, [-70, -20], 14, 1.3, [0x162416, 0x192a19, 0x0e1a0e], [8, 18]);
-  // Low horizon wisps — lighter for depth illusion
-  addLayer(22, [-55, -8],  12, 2.1, [0x1c2e1c, 0x203620, 0x172517], [6, 14]);
+  // C163: N64 enchanted forest clouds — visible blue-grey/violet cloud bands
+  // High band — dark blue-grey clouds
+  addLayer(55, [-90, -35], 16, 0.7, [0x182850, 0x1e3060, 0x142048], [12, 24]);
+  // Mid canopy band — medium blue-indigo
+  addLayer(38, [-70, -20], 14, 1.3, [0x243860, 0x2a4070, 0x1e3258], [8, 18]);
+  // Low horizon wisps — lighter mist-blue
+  addLayer(22, [-55, -8],  12, 2.1, [0x304878, 0x385080, 0x2c4470], [6, 14]);
 
   return { skyGroup, cloudLayers };
 }
@@ -117,12 +119,13 @@ function createForestTrees(): Group {
     crownColor: number; trunkColor: number;
     scaleBase: number; scaleVar: number; heightBase: number;
   }> = [
+    // C163: N64 vivid forest trees — Banjo-Kazooie style bright greens
     // Near corridor — flanks the rail path
-    { count: 20, minR: 4, maxR: 14, crownColor: 0x1e4a1e, trunkColor: 0x2a1a0a, scaleBase: 1.1, scaleVar: 0.6, heightBase: 3.5 },
+    { count: 20, minR: 4, maxR: 14, crownColor: 0x2e8a1e, trunkColor: 0x5a3010, scaleBase: 1.1, scaleVar: 0.6, heightBase: 3.5 },
     // Mid distance
-    { count: 28, minR: 14, maxR: 30, crownColor: 0x173817, trunkColor: 0x221508, scaleBase: 0.85, scaleVar: 0.4, heightBase: 3.0 },
-    // Far silhouette layer — very dark, atmospheric
-    { count: 24, minR: 30, maxR: 60, crownColor: 0x0e250e, trunkColor: 0x180f04, scaleBase: 0.65, scaleVar: 0.3, heightBase: 2.5 },
+    { count: 28, minR: 14, maxR: 30, crownColor: 0x247218, trunkColor: 0x482808, scaleBase: 0.85, scaleVar: 0.4, heightBase: 3.0 },
+    // Far silhouette layer — darker but still visible
+    { count: 24, minR: 30, maxR: 60, crownColor: 0x1a5010, trunkColor: 0x301a04, scaleBase: 0.65, scaleVar: 0.3, heightBase: 2.5 },
   ];
 
   for (const layer of layers) {
@@ -451,21 +454,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.028;
 
   // ── Lighting — dark enchanted forest ──────────────────────────────────────
-  // 1. Low ambient — forest is dark, light mostly from wisps and shafts
-  const ambient = new AmbientLight(0x182418, 0.35);
+  // C163: N64 enchanted forest lighting — vivid blue night + moonlight + warm firefly glow
+  // 1. Bright ambient — N64 forests are always visible, even at night
+  const ambient = new AmbientLight(0x202850, 0.55);
   group.add(ambient);
 
-  // 2. Moon / diffuse overhead — cold blue-grey (no direct sun visible)
-  const moonLight = new DirectionalLight(0x8899bb, 0.7);
-  moonLight.position.set(5, 25, 10);
+  // 2. Moon / diffuse overhead — vivid blue-white N64 moonlight
+  const moonLight = new DirectionalLight(0xa0c0ff, 1.0);
+  moonLight.position.set(5, 30, 10);
   group.add(moonLight);
 
-  // 3. Hemisphere — canopy green above, dark soil below
-  const hemi = new HemisphereLight(0x224422, 0x0e1a0a, 0.5);
+  // 3. Hemisphere — vivid blue canopy sky / warm green soil
+  const hemi = new HemisphereLight(0x3060d0, 0x2a6010, 0.65);
   group.add(hemi);
 
-  // 4. Accent — warm amber glow from deeper forest (as if firelight far away)
-  const accent = new DirectionalLight(0xaa7733, 0.28);
+  // 4. Accent — warm amber torch/firelight from deeper forest
+  const accent = new DirectionalLight(0xffa030, 0.45);
   accent.position.set(-15, 4, -40);
   group.add(accent);
 

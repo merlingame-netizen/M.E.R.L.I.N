@@ -6,9 +6,44 @@
   <title>M.E.R.L.I.N. — Le Jeu des Oghams</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a12; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; }
     #app { width: 100%; height: 100%; position: relative; }
     canvas { display: block; touch-action: none; }
+
+    /* ── C163: Global CRT Aesthetic ─────────────────────────────────────── */
+    /* Persistent scan-line overlay across entire viewport */
+    #crt-scanlines {
+      position: fixed; inset: 0; pointer-events: none; z-index: 9996;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px, transparent 2px,
+        rgba(0,0,0,0.10) 2px, rgba(0,0,0,0.10) 4px
+      );
+    }
+    /* Phosphor vignette — dark corners, slight centre glow */
+    #crt-vignette {
+      position: fixed; inset: 0; pointer-events: none; z-index: 9995;
+      background: radial-gradient(ellipse at 50% 50%,
+        transparent 30%, rgba(0,0,0,0.55) 100%
+      );
+    }
+    /* CRT glitch: horizontal tear + chromatic shift, fires every ~6s */
+    @keyframes crt-glitch {
+      0%,88%,100% { clip-path:none; transform:translate(0);  filter:none; }
+      90%  { clip-path:inset(38% 0 56% 0); transform:translate(-3px,0); filter:hue-rotate(25deg) saturate(1.6); }
+      91%  { clip-path:inset(56% 0 24% 0); transform:translate( 3px,0); filter:hue-rotate(-20deg); }
+      92%  { clip-path:none;               transform:translate(-1px,0); filter:none; }
+      93%  { clip-path:inset(10% 0 80% 0); transform:translate( 2px,0); filter:hue-rotate(15deg); }
+      94%  { clip-path:none;               transform:translate(0); filter:none; }
+    }
+    @keyframes crt-title-flicker {
+      0%,85%,100% { opacity:1; text-shadow: 0 0 28px rgba(51,255,102,0.55), 0 2px 8px rgba(0,0,0,0.8); }
+      87% { opacity:0.7; text-shadow: 2px 0 0 rgba(255,0,80,0.6), -2px 0 0 rgba(0,200,255,0.6); }
+      88% { opacity:1; }
+      93% { opacity:0.85; text-shadow: -2px 0 0 rgba(255,0,80,0.4), 2px 0 0 rgba(0,200,255,0.4); }
+      94% { opacity:1; }
+    }
+    .crt-glitch-layer { animation: crt-glitch 7s steps(1) infinite; }
 
     /* ── Boot Screen (T060) ── */
     #boot-screen {
@@ -96,59 +131,66 @@
       margin-bottom: 48px;
     }
     .menu-title-block h1 {
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Courier New', Courier, monospace;
       font-size: 52px;
       letter-spacing: 12px;
-      font-weight: 200;
-      color: #e8dcc8;
-      text-shadow: 0 0 40px rgba(205,133,63,0.6), 0 2px 8px rgba(0,0,0,0.8);
+      font-weight: 700;
+      color: #33ff66;
+      text-shadow: 0 0 28px rgba(51,255,102,0.55), 0 2px 8px rgba(0,0,0,0.8);
+      animation: crt-title-flicker 7s steps(1) infinite;
     }
     .menu-title-block p {
-      font-size: 14px;
-      letter-spacing: 4px;
-      color: #cd853f;
-      opacity: 0.7;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      letter-spacing: 5px;
+      color: #1a8833;
+      opacity: 0.9;
       margin-top: 8px;
+      text-transform: uppercase;
     }
+    /* C163: CRT-style menu buttons — phosphor green terminal aesthetic */
     #menu-start-btn {
-      padding: 16px 56px;
-      background: rgba(139,69,19,0.15);
-      border: 1px solid rgba(205,133,63,0.5);
-      border-radius: 4px;
-      color: #e8dcc8;
-      font-size: 16px;
-      letter-spacing: 4px;
+      padding: 14px 56px;
+      background: rgba(0, 30, 10, 0.7);
+      border: 1px solid rgba(51,255,102,0.65);
+      border-radius: 2px;
+      color: #33ff66;
+      font-size: 14px;
+      letter-spacing: 5px;
       text-transform: uppercase;
       cursor: pointer;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      transition: all 0.4s ease;
-      backdrop-filter: blur(4px);
+      font-family: 'Courier New', Courier, monospace;
+      transition: all 0.2s ease;
+      text-shadow: 0 0 8px rgba(51,255,102,0.5);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.6), 0 0 0 0 rgba(51,255,102,0);
     }
     #menu-start-btn:hover {
-      background: rgba(139,69,19,0.35);
-      border-color: rgba(205,133,63,0.9);
-      box-shadow: 0 0 30px rgba(205,133,63,0.3);
+      background: rgba(0, 50, 15, 0.85);
+      border-color: rgba(51,255,102,1.0);
+      box-shadow: 0 0 22px rgba(51,255,102,0.28), inset 0 0 8px rgba(51,255,102,0.08);
+      text-shadow: 0 0 12px rgba(51,255,102,0.85);
     }
     #menu-continue-btn {
       display: none; /* shown only when save exists */
-      padding: 14px 48px;
-      background: rgba(30,50,20,0.18);
-      border: 1px solid rgba(100,180,80,0.45);
-      border-radius: 4px;
-      color: rgba(180,230,160,0.9);
-      font-size: 14px;
-      letter-spacing: 3px;
+      padding: 12px 48px;
+      background: rgba(0, 20, 8, 0.7);
+      border: 1px solid rgba(51,200,102,0.45);
+      border-radius: 2px;
+      color: rgba(51,200,102,0.9);
+      font-size: 13px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       cursor: pointer;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      transition: all 0.4s ease;
-      backdrop-filter: blur(4px);
-      margin-top: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      transition: all 0.2s ease;
+      margin-top: 10px;
+      text-shadow: 0 0 6px rgba(51,200,102,0.4);
     }
     #menu-continue-btn:hover {
-      background: rgba(30,60,20,0.35);
-      border-color: rgba(120,200,100,0.8);
-      box-shadow: 0 0 24px rgba(100,200,80,0.25);
+      background: rgba(0, 40, 12, 0.85);
+      border-color: rgba(51,200,102,0.85);
+      box-shadow: 0 0 16px rgba(51,200,102,0.22);
+      text-shadow: 0 0 10px rgba(51,200,102,0.75);
     }
     .menu-btn-group {
       display: flex;
@@ -570,7 +612,11 @@
       </div>
       <div class="boot-status" id="boot-status-text" aria-live="polite" aria-atomic="true">Initialisation...</div>
     </div>
-  <div id="app">
+  <!-- C163: CRT persistent overlays — pointer-events:none, always on top of game content -->
+  <div id="crt-scanlines" aria-hidden="true"></div>
+  <div id="crt-vignette" aria-hidden="true"></div>
+
+  <div id="app" class="crt-glitch-layer">
     <!-- Main Menu Canvas Wrapper (Three.js cinematic) -->
     <div id="menu-canvas-wrapper"></div>
     <!-- Merlin's Lair Canvas Wrapper (T062) -->
