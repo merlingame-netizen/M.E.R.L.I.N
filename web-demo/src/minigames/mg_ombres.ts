@@ -194,6 +194,9 @@ export class MinigameOmbres extends MinigameBase {
     // Score = max progress reached * (1 - collision penalty)
     const collisionPenalty = Math.min(1, this.collisionTime / this.totalTime);
     const rawScore = this.maxProgress * 100 * (1 - collisionPenalty * 0.5);
+    // C87: win/lose SFX on game end — win path was previously silent (playtester C87-B1).
+    // Threshold 50: progress ≥ 50% with low collision = unlock, poor navigation = lose.
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: rawScore >= 50 ? 'unlock' : 'lose' } }));
     this.finish(rawScore);
   }
 
