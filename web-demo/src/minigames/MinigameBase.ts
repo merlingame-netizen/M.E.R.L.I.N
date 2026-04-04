@@ -299,8 +299,19 @@ export abstract class MinigameBase {
     });
   }
 
+  /**
+   * Cancel all pending timers (setInterval / rAF handles) for this minigame.
+   * BUG-C88-08: called by cleanup() so handles are always cleared even if cleanup()
+   * fires before endGame() (e.g. overlay resolves early, external teardown).
+   * Subclasses that own timers MUST override this method.
+   */
+  protected cancelTimers(): void {
+    // Default no-op — subclasses with timers override this.
+  }
+
   /** Clean up the minigame UI. */
   protected cleanup(): void {
+    this.cancelTimers(); // BUG-C88-08: ensure handles cleared before DOM teardown
     this.container.innerHTML = '';
   }
 }

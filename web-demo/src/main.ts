@@ -518,8 +518,7 @@ async function main(): Promise<void> {
   // T043: Load FastRoute card templates once (shared across all runs)
   await loadTemplates();
 
-  // C84: Init ogham panel + cross-run data BEFORE first lair visit
-  // (initOghamPanel is idempotent; safe to call again each loop iteration)
+  // C84: Init ogham panel + cross-run data BEFORE first lair visit (once — panel persists across runs)
   initOghamPanel();
   loadAnamFromStorage();
   loadMetaFromStorage();
@@ -564,9 +563,8 @@ async function main(): Promise<void> {
     setTimeout(() => { loading.style.display = 'none'; }, 500);
     revealFromBlack(600);
 
-    // Init HUD + Ogham panel
+    // Init HUD (ogham panel already built at startup line 523 — idempotent, BUG-C88-04 removed)
     initHUD();
-    initOghamPanel();
 
     // C88-01: loadAnamFromStorage/loadMetaFromStorage removed from loop body — they are
     // called once at startup (lines 524-525). Re-loading here every run overwrites
