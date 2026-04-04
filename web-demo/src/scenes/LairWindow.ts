@@ -192,9 +192,10 @@ export function createLairWindow(scene: Scene): WindowResult {
         t.rotation.z = Math.sin(elapsed * 0.7 + i * 1.2) * 0.04;
       });
     }
-    // Night: subtle moonlight shimmer on glass
-    const nightPulse = Math.sin(elapsed * 0.4) * 0.02;
-    glassMat.opacity = 0.28 + nightPulse;
+    // C50: glass shimmers at night only (moonlight reflection) — stable by day.
+    // windowLight.intensity tracks day/night: ~1.0 at noon, ~0.0 at midnight.
+    const nightWeight = Math.max(0, 1 - Math.min(1, windowLight.intensity));
+    glassMat.opacity = 0.28 - nightWeight * 0.05 + Math.sin(elapsed * 0.4) * 0.02 * nightWeight;
   };
 
   scene.add(group);

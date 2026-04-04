@@ -1089,7 +1089,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Camera slow sway — only after entry cinematic to keep pull-in as pure Z track
     if (entryCamDone) {
       camera.position.x = Math.sin(elapsedTime * 0.3 * Math.PI * 2) * 0.1;
-      camera.position.y = 0.5 + Math.sin(elapsedTime * 0.23 * Math.PI * 2) * 0.06;
+      // C50: 0.23→0.17Hz — beat period: |0.3-0.23|⁻¹=14.3s (noticeable loop) → |0.3-0.17|⁻¹=7.7s (below perceptual threshold)
+      camera.position.y = 0.5 + Math.sin(elapsedTime * 0.17 * Math.PI * 2) * 0.06;
     } else {
       camera.position.x = 0;   // no lateral drift during cinematic
       camera.position.y = 0.5; // stable Y baseline
