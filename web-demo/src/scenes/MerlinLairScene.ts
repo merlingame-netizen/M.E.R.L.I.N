@@ -942,6 +942,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
       renderer.domElement.setAttribute('aria-label', `Zone active : ${ZONE_ARIA_LABELS[zone]} — Entrée pour activer`);
       ariaLive.textContent = `${ZONE_ARIA_LABELS[zone]} — Appuyez sur Entrée pour activer`;
+      // C101: sync lore toast with keyboard navigation (onMouseMove only fires on pointer)
+      zoneToast.innerHTML = `<strong style="color:#cd853f;font-size:15px;">${ZONE_ARIA_LABELS[zone]}</strong><span style="color:rgba(232,220,200,0.7);font-size:12px;">${ZONE_LORE[zone]}</span>`;
+      zoneToast.style.opacity = '1';
+    } else {
+      zoneToast.style.opacity = '0';
     }
   };
 
