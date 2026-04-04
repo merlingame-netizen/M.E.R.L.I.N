@@ -216,7 +216,10 @@ export class MinigameApaisement extends MinigameBase {
     // Update score display
     if (this.scoreEl && this.taps.length > 0) {
       const avgAcc = this.totalAccuracy / this.taps.length;
-      this.scoreEl.textContent = `Synchronisation: ${Math.round(avgAcc * 100)}% (${this.taps.length} respirations)`;
+      // C146b/APA-BUG-01: mirror tapBonus in HUD — endGame applies tapBonus=min(1,taps/4) but
+      // HUD was showing avgAcc*100 (no tapBonus). Player with 1 perfect tap saw 100% → scored 10.
+      const tapBonus = Math.min(1.0, this.taps.length / 4);
+      this.scoreEl.textContent = `Synchronisation: ${Math.round(avgAcc * tapBonus * 100)}% (${this.taps.length} respirations)`;
     }
   }
 

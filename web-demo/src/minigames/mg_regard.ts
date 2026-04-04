@@ -139,6 +139,10 @@ export class MinigameRegard extends MinigameBase {
     this.attemptsTotal = 0;
     this.pulsePhase = 0;
     this.kbFocusIdx = -1;
+    // C146b/RGD-BUG-01: reset feedback state — stale feedbackTimer>0 from a previous play()
+    // causes the feedback phase to instant-advance on the very first rAF frame of a replay.
+    this.feedbackTimer = 0;
+    this.feedbackCorrect = false;
 
     this.prepareRound();
   }

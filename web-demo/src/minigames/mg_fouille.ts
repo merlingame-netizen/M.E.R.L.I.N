@@ -167,6 +167,10 @@ export class MinigameFouille extends MinigameBase {
       if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
       if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
+        // C146/FOU-BUG-03: guard on this.found — interval can race a valid click that set
+        // found=true but hasn't yet called clearInterval. Without the guard, endGame() fires
+        // with found=false → score=0 even though the player correctly clicked the target.
+        if (this.found) return;
         this.endGame();
       }
     }, 100);
