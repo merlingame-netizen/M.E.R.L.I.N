@@ -14,7 +14,7 @@ import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardS
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
-import { initHUD, updateHUD, teardownHUD } from './ui/HUD';
+import { initHUD, updateHUD, teardownHUD, setHUDWalkMode } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
@@ -58,10 +58,10 @@ async function runMainMenu(): Promise<{ isNewGame: boolean }> {
   // Configure buttons based on save state
   const hasSave = hasSavedGame();
   if (hasSave) {
-    startBtn.textContent = 'Nouvelle Partie';
+    startBtn.textContent = '> NOUVELLE PARTIE';
     continueBtn.style.display = 'block';
   } else {
-    startBtn.textContent = 'Commencer le Voyage';
+    startBtn.textContent = '> NOUVELLE PARTIE';
     continueBtn.style.display = 'none';
   }
 
@@ -935,10 +935,13 @@ async function gameLoop(
       await showRunSummary('cards_limit'); // safety ceiling — closest matching summary type (unreachable in normal play)
       break;
     }
-    // 1. WALK phase — camera moves along rail
+    // 1. WALK phase — camera moves along rail. C163: HUD fully visible during walk.
+    setHUDWalkMode(true);
     rail.resume();
     await waitSeconds(WALK_SECONDS_BEFORE_CARD);
     rail.pause();
+    // C163: HUD recedes during card/minigame overlay.
+    setHUDWalkMode(false);
 
     // Check if run still active
     if (!state().run.active) break;

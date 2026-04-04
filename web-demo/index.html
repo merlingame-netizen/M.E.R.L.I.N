@@ -162,18 +162,19 @@
       margin-top: 20px;
     }
     /* C168: CRT-style menu buttons — left-aligned phosphor green terminal */
+    /* C163: CRT-style menu buttons — CeltOS phosphor green terminal */
     #menu-start-btn {
       padding: 14px 40px;
-      background: rgba(0, 30, 10, 0.7);
-      border: 1px solid rgba(51,255,102,0.65);
+      background: rgba(2, 10, 4, 0.92);
+      border: 1px solid rgba(51,255,102,0.3);
       border-left: 3px solid rgba(51,255,102,0.9);
       border-radius: 0 2px 2px 0;
-      color: #33ff66;
+      color: rgba(51,255,102,0.85);
       font-size: 13px;
       letter-spacing: 5px;
       text-transform: uppercase;
       cursor: pointer;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: Courier New,monospace;
       transition: all 0.2s ease;
       text-shadow: 0 0 8px rgba(51,255,102,0.5);
       box-shadow: inset 0 0 12px rgba(0,0,0,0.6);
@@ -181,38 +182,38 @@
       text-align: left;
     }
     #menu-start-btn:hover {
-      background: rgba(0, 50, 15, 0.85);
-      border-color: rgba(51,255,102,1.0);
-      border-left-color: #33ff66;
-      box-shadow: 0 0 22px rgba(51,255,102,0.22), inset 0 0 8px rgba(51,255,102,0.08);
+      background: rgba(4, 20, 8, 0.95);
+      border-color: rgba(51,255,102,0.7);
+      border-left-color: rgba(51,255,102,1.0);
+      box-shadow: 0 0 12px rgba(51,255,102,0.15), inset 0 0 8px rgba(51,255,102,0.08);
       text-shadow: 0 0 12px rgba(51,255,102,0.85);
       padding-left: 48px;
     }
     #menu-continue-btn {
       display: none; /* shown only when save exists */
       padding: 12px 40px;
-      background: rgba(0, 20, 8, 0.7);
-      border: 1px solid rgba(51,200,102,0.45);
-      border-left: 3px solid rgba(51,200,102,0.7);
+      background: rgba(1, 8, 2, 0.88);
+      border: 1px solid rgba(51,255,102,0.3);
+      border-left: 3px solid rgba(51,255,102,0.7);
       border-radius: 0 2px 2px 0;
-      color: rgba(51,200,102,0.9);
+      color: rgba(51,255,102,0.85);
       font-size: 12px;
       letter-spacing: 4px;
       text-transform: uppercase;
       cursor: pointer;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: Courier New,monospace;
       transition: all 0.2s ease;
       margin-top: 10px;
-      text-shadow: 0 0 6px rgba(51,200,102,0.4);
+      text-shadow: 0 0 6px rgba(51,255,102,0.35);
       width: 100%;
       text-align: left;
     }
     #menu-continue-btn:hover {
-      background: rgba(0, 40, 12, 0.85);
-      border-color: rgba(51,200,102,0.85);
-      border-left-color: rgba(51,200,102,1.0);
-      box-shadow: 0 0 16px rgba(51,200,102,0.22);
-      text-shadow: 0 0 10px rgba(51,200,102,0.75);
+      background: rgba(4, 20, 8, 0.95);
+      border-color: rgba(51,255,102,0.7);
+      border-left-color: rgba(51,255,102,1.0);
+      box-shadow: 0 0 12px rgba(51,255,102,0.15);
+      text-shadow: 0 0 10px rgba(51,255,102,0.75);
       padding-left: 48px;
     }
     .menu-btn-group {
@@ -692,8 +693,8 @@
         <p>Le Jeu des Oghams</p>
       </div>
       <div class="menu-btn-group">
-        <button id="menu-start-btn">▶ Commencer le Voyage</button>
-        <button id="menu-continue-btn">↺ Continuer l'Aventure</button>
+        <button id="menu-start-btn">&gt; NOUVELLE PARTIE</button>
+        <button id="menu-continue-btn">&gt; CONTINUER</button>
       </div>
       <div class="menu-sys-info" aria-hidden="true">
         CeltOS v2.4 — druid_core.ko<br>

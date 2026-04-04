@@ -43,6 +43,21 @@ let _oghamMultEl: HTMLElement | null = null;
 // when initHUD() is called on every run inside the outer while(true) loop (main.ts).
 let _hudUnsubscribe: (() => void) | null = null;
 
+// Cached #hud root element — used by setHUDWalkMode() for opacity transition. C163/HUD-WALK-01.
+let _hudRootEl: HTMLElement | null = null;
+
+/**
+ * Toggle HUD opacity for walk vs card/minigame phases. C163/HUD-WALK-01.
+ * During walk: opacity 1 (fully visible, player sees life/biome/cards).
+ * During card/minigame overlay: opacity 0.2 (recede — card takes focus).
+ */
+export function setHUDWalkMode(walk: boolean): void {
+  if (!_hudRootEl) _hudRootEl = document.getElementById('hud');
+  if (!_hudRootEl) return;
+  _hudRootEl.style.transition = 'opacity 0.4s ease';
+  _hudRootEl.style.opacity = walk ? '1' : '0.2';
+}
+
 /** Build the faction panel DOM and inject it into the HUD. */
 function buildFactionPanel(): void {
   const hud = document.getElementById('hud');
@@ -321,6 +336,10 @@ export function initHUD(): void {
   _biomeNameEl = document.getElementById('biome-name');
   _lifeBarContainerEl = document.getElementById('life-bar-container');
   _lifeStatusEl = document.getElementById('life-status');
+  // Cache #hud root for setHUDWalkMode(). C163/HUD-WALK-01.
+  _hudRootEl = document.getElementById('hud');
+  // Walk starts immediately — HUD fully visible on run begin.
+  if (_hudRootEl) { _hudRootEl.style.transition = 'opacity 0.4s ease'; _hudRootEl.style.opacity = '1'; }
   // Unsubscribe any previous subscription before re-subscribing — initHUD() is called
   // every run inside the while(true) loop so without this each run would accumulate an
   // extra Zustand subscriber causing updateHUD() to fire N times per state change.
@@ -362,4 +381,7 @@ export function teardownHUD(): void {
   // C145b/NEW-HUD-01: ogham-badge-style <style> injected into document.head in buildOghamBadge().
   // Remove on teardown so it is cleanly re-injected on next initHUD(). Prevents stale <style> accumulation.
   document.getElementById('ogham-badge-style')?.remove();
+  // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
+  if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
+  _hudRootEl = null;
 }
