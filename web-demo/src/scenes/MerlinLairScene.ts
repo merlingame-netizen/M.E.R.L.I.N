@@ -701,6 +701,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
+  // C81-03: disposed flag prevents late-resolving GLBs from adding to a torn-down scene.
+  let lairDisposed = false;
   loadLairGLBs(scene, {
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
@@ -709,7 +711,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       const entry = interactives.find((i) => i.zone === 'cauldron');
       if (entry) entry.visualMesh = mesh;
     },
-  });
+  }, () => lairDisposed);
 
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [
@@ -823,6 +825,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   };
 
   const dispose = (): void => {
+    lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('mousemove', onMouseMove);
     renderer.domElement.removeEventListener('click', onPointerAction);

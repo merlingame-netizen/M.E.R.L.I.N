@@ -24,11 +24,16 @@ export interface LairProceduralGroups {
 export function loadLairGLBs(
   scene: THREE.Scene,
   proceduralGroups?: LairProceduralGroups,
+  // C81-03: caller passes () => true after lair.dispose() fires — prevents late scene.add()
+  isDisposed?: () => boolean,
 ): void {
   // Cauldron: Blender low-poly (bois brun + métal sombre, 34 polys, validated)
   loadGLB('/cauldron_merlin.glb').then((gltf) => {
+    if (isDisposed?.()) return; // C81-03: abort if lair already disposed
     gltf.scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
+        // C81-04: clone material before mutation to avoid polluting the cached GLB prototype
+        child.material = (child.material as THREE.MeshStandardMaterial).clone();
         (child.material as THREE.MeshStandardMaterial).roughness = 0.9;
         (child.material as THREE.MeshStandardMaterial).metalness = 0.0;
         (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
@@ -56,6 +61,7 @@ export function loadLairGLBs(
   // Each clone gets its own material instances (BUG-L-10: shared refs cause
   // all candles to change colour together on hover — breaks flicker animation).
   loadGLB('/bougie.glb').then((gltf) => {
+    if (isDisposed?.()) return; // C81-03
     for (const [cx, cy, cz] of CANDLE_POSITIONS) {
       const clone = gltf.scene.clone(true);
       clone.traverse((child) => {
@@ -72,6 +78,7 @@ export function loadLairGLBs(
 
   // Table druidique: anchored to map-table zone. Hide procedural mapGroup on success.
   loadGLB('/table_druidique.glb').then((gltf) => {
+    if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(-5, -5.0, -3);
     gltf.scene.scale.setScalar(1.0);
     scene.add(gltf.scene);
@@ -80,6 +87,7 @@ export function loadLairGLBs(
 
   // Bibliothèque: right-wall zone. Hide procedural shelfGroup on success.
   loadGLB('/bibliotheque.glb').then((gltf) => {
+    if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(8.8, -5.0, -8);
     gltf.scene.scale.set(1.2, 1.0, 0.8);
     scene.add(gltf.scene);
@@ -89,6 +97,7 @@ export function loadLairGLBs(
   // Sol pierre: Blender flagstone floor (97 polys, vertex-colored).
   // Positioned 0.02 above procedural floor to avoid z-fighting without needing a mesh ref.
   loadGLB('/sol_pierre.glb').then((gltf) => {
+    if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(0, -4.98, 0);
     gltf.scene.scale.set(1.0, 1.0, 1.0);
     scene.add(gltf.scene);
@@ -100,6 +109,7 @@ export function loadLairGLBs(
   // Wall spans y=-5 to y=11 (height 16). Each row is 16/3 ≈ 5.33u tall.
   // Back wall: 6 cols × 3 rows = 18 tiles. Left/right: 5 cols × 3 rows = 15 tiles each.
   loadGLB('/mur_pierre.glb').then((gltf) => {
+    if (isDisposed?.()) return; // C81-03
     const ROW_H = 16 / 3;
     const rowY = (r: number) => -5 + ROW_H * (r + 0.5);
     // Back wall: 6 cols × 3 rows (z-offset 0.02 in front of procedural wall)
