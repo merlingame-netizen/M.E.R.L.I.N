@@ -853,7 +853,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   ];
 
   // C38: update ARIA label now that zone count is known (was placeholder "chargement..." set before this array)
-  renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${interactives.length} zones interactives. Tab pour naviguer, Entrée pour activer.`);
+  // C79: use Tab-navigable count (excludes hover-only 'skull') so AT users aren't told 6 zones when Tab cycles 5
+  const tabNavCount = interactives.filter(i => i.zone !== 'skull').length;
+  renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${tabNavCount} zones interactives. Tab pour naviguer, Entrée pour activer.`);
 
   // C118: cache crystalEntry ref at init — avoids Array.find() closure allocation in 60fps update loop
   const crystalEntry = interactives.find((i) => i.zone === 'crystal')!;
@@ -928,7 +930,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
-        renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${interactives.length} zones interactives. Tab pour naviguer, Entrée pour activer.`); // C38: dynamic count
+        renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${tabNavCount} zones interactives. Tab pour naviguer, Entrée pour activer.`); // C38/C79: tabNavCount excludes hover-only skull
       }
     }
   };

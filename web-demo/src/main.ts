@@ -374,6 +374,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
     cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
     door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
+    skull:     { title: 'Crâne du Sage',        sub: 'Les anciens druides méditaient face à la mort' }, // C79: skull hover lore fallback (click is no-op but toast fires)
   };
   let activeToast: HTMLDivElement | null = null;
   let activeToastFadeId: ReturnType<typeof setTimeout> | null = null;
