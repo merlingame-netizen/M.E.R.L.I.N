@@ -634,8 +634,9 @@ function createSkull(): THREE.Group {
   return group;
 }
 
-// ── Ambient Lighting — 3-source pass (mobile-safe: AmbientLight + key + rim + fill = 4) ──
-function setupLighting(scene: THREE.Scene): void {
+// ── Ambient Lighting — 5-source pass (degraded to 4 on low-end mobile) ──
+// C89-P2: lowEnd=true skips backAccent PointLight (Mali-G57/Adreno 610 budget ~4 lights at 60fps)
+function setupLighting(scene: THREE.Scene, lowEnd = false): void {
   scene.add(new THREE.AmbientLight(0x1a1008, 0.5));                          // dark warm base
   // C85-02: key moved from overhead [0,8,-2] to forward-angled [0,3,2] — creates
   // depth shadows toward back wall, correct Celtic hall dramaturgy
@@ -643,11 +644,14 @@ function setupLighting(scene: THREE.Scene): void {
   key.position.set(0, 3.0, 2); scene.add(key);                              // forward warm fire
   const rim = new THREE.PointLight(0x6699cc, 0.55, 18, 2.0);
   rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
-  const fill = new THREE.PointLight(0xcc8833, 0.4, 16, 2.0);
+  // C89-P2: fill intensity boosted +0.15 on low-end to compensate for missing backAccent depth
+  const fill = new THREE.PointLight(0xcc8833, lowEnd ? 0.55 : 0.4, 16, 2.0);
   fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill left wall
-  // C85-02: back-wall accent — warm ember glow throwing forward shadows from rear
-  const backAccent = new THREE.PointLight(0xff5500, 0.35, 12, 2.0);
-  backAccent.position.set(0, 1.5, -11); scene.add(backAccent);
+  if (!lowEnd) {
+    // C85-02: back-wall accent — warm ember glow throwing forward shadows from rear (skipped on low-end)
+    const backAccent = new THREE.PointLight(0xff5500, 0.35, 12, 2.0);
+    backAccent.position.set(0, 1.5, -11); scene.add(backAccent);
+  }
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────
@@ -688,7 +692,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   window.addEventListener('resize', onResize);
 
   // Build scene elements
-  setupLighting(scene);
+  // C89-P2: detect low-end mobile (Android/iOS high-DPR) → drop 5th PointLight to stay at 60fps
+  const isLowEndMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.devicePixelRatio >= 2;
+  setupLighting(scene, isLowEndMobile);
   const { group: wallsRootGroup, floorMesh, wallsGroup } = createWalls();
   scene.add(wallsRootGroup);
 

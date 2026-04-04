@@ -116,6 +116,10 @@ export function loadLairGLBs(
       if (!tileGeo && child instanceof THREE.Mesh) {
         tileGeo = child.geometry.clone(); // owned copy — safe to dispose independently
         tileMat = (child.material as THREE.MeshStandardMaterial).clone();
+        // C89-P1: polygonOffset prevents micro z-fighting on tile seams (Mali/Adreno 16-bit depth)
+        (tileMat as THREE.MeshStandardMaterial).polygonOffset = true;
+        (tileMat as THREE.MeshStandardMaterial).polygonOffsetFactor = -1;
+        (tileMat as THREE.MeshStandardMaterial).polygonOffsetUnits = -1;
       }
     });
     if (!tileGeo || !tileMat) return;
