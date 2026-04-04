@@ -473,14 +473,24 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   scenarioContainer.style.cssText = 'display:flex;flex-direction:column;gap:12px;flex:1;overflow:hidden;';
   leftPanel.appendChild(scenarioContainer);
 
-  const hintEl = document.createElement('div');
+  const hintEl = document.createElement('button');
+  hintEl.textContent = '[ COMMENCER L\'AVENTURE ]';
   hintEl.style.cssText = [
-    `color:${PAL.accent};font-size:11px;`,
-    `margin-top:auto;padding-top:20px;opacity:0;transition:opacity 0.5s;`,
-    `letter-spacing:0.08em;font-family:'Courier New',monospace;`,
-    `border-left:2px solid ${PAL.border};padding-left:8px;`,
+    `color:${PAL.accent};font-size:clamp(11px,1.2vw,13px);`,
+    `margin-top:auto;padding:10px 14px;opacity:0;transition:opacity 0.5s,box-shadow 0.2s,background 0.2s;`,
+    `letter-spacing:0.14em;font-family:'Courier New',monospace;`,
+    `border:1px solid ${PAL.border};background:rgba(51,255,102,0.04);`,
+    `cursor:pointer;text-transform:uppercase;outline:none;`,
+    `text-shadow:0 0 8px rgba(51,255,102,0.5);`,
   ].join('');
-  hintEl.textContent = '> CLIQUER OU [ENTREE] POUR INITIER_RUN';
+  hintEl.addEventListener('mouseenter', () => {
+    hintEl.style.background = 'rgba(51,255,102,0.10)';
+    hintEl.style.boxShadow = '0 0 14px rgba(51,255,102,0.22)';
+  });
+  hintEl.addEventListener('mouseleave', () => {
+    hintEl.style.background = 'rgba(51,255,102,0.04)';
+    hintEl.style.boxShadow = 'none';
+  });
   leftPanel.appendChild(hintEl);
 
   // Right panel — canvas map
@@ -701,19 +711,27 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   hintEl.style.opacity = '1';
 
   await new Promise<void>((resolve) => {
-    const cleanup = (): void => {
-      overlay.removeEventListener('click', onClick);
+    let resolved = false;
+    const done = (): void => {
+      if (resolved) return;
+      resolved = true;
+      hintEl.removeEventListener('click', onBtnClick);
+      overlay.removeEventListener('click', onOverlayClick);
       document.removeEventListener('keydown', onKey);
+      clearTimeout(autoTimer);
+      resolve();
     };
-    const onClick = (): void => { cleanup(); resolve(); };
+    const onBtnClick = (e: MouseEvent): void => { e.stopPropagation(); done(); };
+    const onOverlayClick = (): void => { done(); };
     const onKey = (e: KeyboardEvent): void => {
-      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); cleanup(); resolve(); }
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); done(); }
     };
-    overlay.addEventListener('click', onClick);
+    hintEl.addEventListener('click', onBtnClick);
+    overlay.addEventListener('click', onOverlayClick);
     document.addEventListener('keydown', onKey);
 
-    // Auto-continue after 8s if no interaction
-    setTimeout(() => { cleanup(); resolve(); }, 8000);
+    // Auto-continue after 10s if no interaction
+    const autoTimer = setTimeout(done, 10000);
   });
 
   // ── Phase 5: zoom-into-map transition ─────────────────────────────────────
