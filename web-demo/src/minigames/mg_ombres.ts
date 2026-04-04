@@ -23,11 +23,11 @@ export class MinigameOmbres extends MinigameBase {
   private readonly canvasW = 420;
   private readonly canvasH = 380;
 
-  // Game config
-  private readonly totalTime = 10;
+  // Game config — totalTime + endHalfWidth scaled by difficultyTier in setup()
+  private totalTime = 16;     // C99: scaled 16/14/12/10s across tiers 0-3
   private readonly segmentCount = 40;
   private readonly startHalfWidth = 55;
-  private readonly endHalfWidth = 18;
+  private endHalfWidth = 30;  // C99: scaled 30/26/22/18px — narrower at high tier
 
   // Game state
   private segments: Segment[] = [];
@@ -44,6 +44,10 @@ export class MinigameOmbres extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C99: difficulty scaling — wider corridor + more time for new players
+    this.totalTime = 16 - this.difficultyTier * 2;     // 16/14/12/10s
+    this.endHalfWidth = 30 - this.difficultyTier * 4;  // 30/26/22/18px
 
     // Title
     const title = document.createElement('div');
@@ -181,7 +185,12 @@ export class MinigameOmbres extends MinigameBase {
     // Check collision
     const seg = this.getSegmentAt(this.progress);
     const distFromCenter = Math.abs(this.cursorY - seg.centerY);
+    const prevColliding = this.colliding;
     this.colliding = distFromCenter > seg.halfWidth;
+    // C99: audio feedback — fire once on collision start (edge-triggered)
+    if (this.colliding && !prevColliding) {
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+    }
     if (this.colliding) {
       this.collisionTime += dt;
     }

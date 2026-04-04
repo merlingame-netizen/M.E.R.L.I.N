@@ -35,9 +35,9 @@ export class MinigameCombatRituel extends MinigameBase {
   private readonly centerY = 190;
   private readonly arenaRadius = 150;
 
-  // Game config
-  private readonly totalTime = 10;
-  private readonly obstacleCount = 5;
+  // Game config — totalTime + obstacleCount scaled by difficultyTier in setup()
+  private totalTime = 16;      // C99: scaled 16/14/12/10s across tiers 0-3
+  private obstacleCount = 3;   // C99: scaled 3/4/5/6 — more obstacles at high tier
   private readonly centerBonusRadius = 40; // px from center for bonus zone
 
   // Game state
@@ -54,6 +54,10 @@ export class MinigameCombatRituel extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C99: difficulty scaling — fewer obstacles + more time for new players
+    this.totalTime = 16 - this.difficultyTier * 2;  // 16/14/12/10s
+    this.obstacleCount = 3 + this.difficultyTier;    // 3/4/5/6 obstacles
 
     // Title
     const title = document.createElement('div');
@@ -229,6 +233,8 @@ export class MinigameCombatRituel extends MinigameBase {
       if (!this.hit) {
         this.hit = true;
         this.hitFlash = 0.5;
+        // C99: audio feedback — first frame of each new collision (edge-triggered)
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       }
     } else {
       this.hit = false;
