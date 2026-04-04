@@ -229,8 +229,7 @@ export class MinigameFouille extends MinigameBase {
         if (obj.isTarget) {
           this.found = true;
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
-          const statusEl = document.getElementById('mg-fouille-status');
-          if (statusEl) statusEl.textContent = 'Trouve !';
+          this.showFoundStatus(); // C134: show inline bonus before overlay
           this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
         } else {
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
@@ -240,6 +239,15 @@ export class MinigameFouille extends MinigameBase {
       }
     }
   };
+
+  // C134: compute and display time-bonus inline so player sees their score before the 400ms overlay.
+  // Previously "Trouve !" appeared with no number; bonus was invisible until endGame() fired.
+  private showFoundStatus(): void {
+    const timePct = Math.max(0, this.timeLeft / this.totalTime);
+    const bonus = Math.round(50 + timePct * 50);
+    const statusEl = document.getElementById('mg-fouille-status');
+    if (statusEl) statusEl.textContent = `Trouvé ! +${bonus} pts`;
+  }
 
   private onClick = (e: PointerEvent): void => {
     if (this.found) return;
@@ -255,8 +263,7 @@ export class MinigameFouille extends MinigameBase {
     if (obj.isTarget) {
       this.found = true;
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
-      const statusEl = document.getElementById('mg-fouille-status');
-      if (statusEl) statusEl.textContent = 'Trouve !';
+      this.showFoundStatus(); // C134: show inline bonus before overlay
       // Short delay before ending to show the found state (stored to allow clearTimeout)
       this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
     } else {
