@@ -804,13 +804,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     if (found !== currentHovered) {
       if (currentHovered) {
         currentHovered.hovered = false;
-        currentHovered.mesh.scale.setScalar(1.0);
+        // C97: scale applied to visualMesh (visible geometry), not hitTarget (invisible raycast mesh)
+        (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.0);
         applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
       }
       currentHovered = found;
       if (currentHovered) {
         currentHovered.hovered = true;
-        currentHovered.mesh.scale.setScalar(1.05);
+        (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.05);
         applyHoverTo(currentHovered, 0.65);
         renderer.domElement.style.cursor = 'pointer';
         // C82-01: subtle shimmer on zone enter — SFXManager listens via window 'merlin_sfx'

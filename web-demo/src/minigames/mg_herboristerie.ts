@@ -268,9 +268,13 @@ export class MinigameHerboristerie extends MinigameBase {
     if (isCorrect) {
       this.correctPicks++;
       this.flashCells.set(idx, { color: 'rgba(90,180,90,0.6)', alpha: 1 });
+      // C97: audio feedback — correct pick
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.wrongPicks++;
       this.flashCells.set(idx, { color: 'rgba(200,60,60,0.6)', alpha: 1 });
+      // C97: audio feedback — wrong pick
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       this.shakeAmount = 6;
       const col = idx % this.gridCols;
       const row = Math.floor(idx / this.gridCols);

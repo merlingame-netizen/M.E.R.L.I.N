@@ -206,7 +206,15 @@ export class MinigameSangFroid extends MinigameBase {
     const dx = this.cursorX - this.zoneX;
     const dy = this.cursorY - this.zoneY;
     const dist = Math.sqrt(dx * dx + dy * dy);
+    const wasInside = this.isInside;
     this.isInside = dist <= this.currentRadius;
+
+    // C97: audio feedback on zone enter/exit transitions (not every frame)
+    if (this.isInside && !wasInside) {
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+    } else if (!this.isInside && wasInside) {
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+    }
 
     if (this.isInside) {
       this.timeInside += dt;
