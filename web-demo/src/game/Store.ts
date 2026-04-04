@@ -281,24 +281,34 @@ export const store = createStore<MerlinStore>((set, get) => ({
     run: { ...s.run, activeOgham: oghamId },
   })),
 
+  // C144/STORE-02: atomic — cooldown check merged into set() to eliminate TOCTOU race.
+  // Previously: get() read state then set() wrote it — two React scheduler ticks,
+  // allowing a second ogham activation to slip through before the first cooldown applied.
   useOgham: (oghamId) => {
-    const s = get();
     const spec = OGHAM_SPECS[oghamId];
     if (!spec) return false;
-    if (!s.meta.oghamsEquipped.includes(oghamId)) return false;
-    if ((s.run.oghamCooldowns[oghamId] ?? 0) > 0) return false;
-
-    set((s) => ({
-      run: {
-        ...s.run,
-        activeOgham: oghamId,
-        oghamCooldowns: { ...s.run.oghamCooldowns, [oghamId]: spec.cooldown },
-      },
-    }));
-    return true;
+    let applied = false;
+    set((s) => {
+      if (!s.meta.oghamsEquipped.includes(oghamId)) return s;
+      if ((s.run.oghamCooldowns[oghamId] ?? 0) > 0) return s;
+      applied = true;
+      return {
+        run: {
+          ...s.run,
+          activeOgham: oghamId,
+          oghamCooldowns: { ...s.run.oghamCooldowns, [oghamId]: spec.cooldown },
+        },
+      };
+    });
+    return applied;
   },
 
+  // C144/STORE-01: guard on run.active — tickCooldowns() is called on a repeating
+  // interval that runs between runs (hub phase). Without the guard, every interval
+  // tick reconstructs oghamCooldowns from an already-empty object — no visible bug
+  // but wastes a set() call and triggers unnecessary subscribers each tick.
   tickCooldowns: () => set((s) => {
+    if (!s.run.active) return s;
     const newCooldowns: Record<string, number> = {};
     for (const [key, val] of Object.entries(s.run.oghamCooldowns)) {
       const remaining = val - 1;
