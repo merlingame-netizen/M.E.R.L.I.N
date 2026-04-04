@@ -41,8 +41,8 @@ function createWalls(): { group: Group; floorMesh: Mesh; wallsGroup: Group } {
   // C129: mortar lines at z=-9.74 are 0.01u in front of back wall front face at z=-9.75.
   // polygonOffset prevents z-fighting against mur_pierre InstancedMesh tiles on 16-bit depth GPUs.
   mortarMat.polygonOffset = true;
-  mortarMat.polygonOffsetFactor = -1;
-  mortarMat.polygonOffsetUnits = -2;
+  mortarMat.polygonOffsetFactor = -2; // C79: align with scene-wide standard (was -1 — weaker than mur_pierre/sol_pierre -2/-4)
+  mortarMat.polygonOffsetUnits = -4;  // C79: -2/-4 matches GLB overlay pattern; prevents mortar z-fight on 16-bit depth GPUs
 
   // Back wall
   const back = new Mesh(new BoxGeometry(24, 16, 0.5), stoneMat);
@@ -644,9 +644,10 @@ function createPotionBottles(): Group {
 
 // ── Skull ─────────────────────────────────────────────────────────────────────
 
-function createSkull(): Group {
+function createSkull(): { group: Group; cranium: Mesh } {
   const group = new Group();
-  const boneMat = new MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0, flatShading: true });
+  // C79: emissive=0xd4c89a at intensity=0.0 — allows applyHoverTo() to boost on hover (was no-op: emissive 0,0,0 → guard failed)
+  const boneMat = new MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0, flatShading: true, emissive: 0xd4c89a, emissiveIntensity: 0.0 });
   const cranium = new Mesh(new SphereGeometry(0.22, 8, 7), boneMat);
   cranium.scale.y = 0.85;
   cranium.position.set(9, -1.9, -9);
@@ -654,7 +655,7 @@ function createSkull(): Group {
   const jaw = new Mesh(new BoxGeometry(0.28, 0.12, 0.22), boneMat);
   jaw.position.set(9, -2.18, -9.02);
   group.add(jaw);
-  return group;
+  return { group, cranium };
 }
 
 // ── Ambient Lighting — 6-source pass (degraded to 5 on low-end mobile) ── // C52: corrected count (was '5/4', actual 6/5)
@@ -775,7 +776,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const cauldron = createCauldron(scene);
   scene.add(createPotionBottles());
-  const skullGroup = createSkull(); scene.add(skullGroup);
+  const { group: skullGroup, cranium: skullCranium } = createSkull(); scene.add(skullGroup);
   const cleanupLairDensity = createLairDensity(scene, isLowEndMobile); // C35: cleanup for moon.target; C38: lowEnd gate for biblio PointLight
 
   // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
@@ -849,7 +850,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     { mesh: doorHit,             zone: 'door',      hovered: false, visualMesh: doorPanel,  baseEmissive: 0.05 },
     { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, visualMesh: cauldron.body, baseEmissive: 0.0 },
     // C78: skull prop hover — shows Celtic lore toast (no click action, no keyboard nav)
-    { mesh: skullGroup,          zone: 'skull',     hovered: false },
+    // C79: cranium as visualMesh so applyHoverTo() emissive boost works (Group.material was undefined → guard failed)
+    { mesh: skullGroup,          zone: 'skull',     hovered: false, visualMesh: skullCranium, baseEmissive: 0.0 },
   ];
 
   // C38: update ARIA label now that zone count is known (was placeholder "chargement..." set before this array)
