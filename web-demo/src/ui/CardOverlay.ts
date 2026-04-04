@@ -170,6 +170,17 @@ function triggerFlipAnimation(): void {
 // C142/COLL: optional reveal flag — coll ogham (reveal_all_options) makes effects persistently visible
 export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
   return new Promise((resolve) => {
+    // C165/CO-01: purge any stale handlers from a previous showCard() that was interrupted
+    // (e.g. scene teardown, rapid card transitions). Without this cleanup, the old
+    // onDigitKey handler stays registered on document and fires on the new card's input.
+    if (_activeCardSafetyId) { clearTimeout(_activeCardSafetyId as number); _activeCardSafetyId = 0; }
+    if (_activeDigitKeyHandler !== null) {
+      document.removeEventListener('keydown', _activeDigitKeyHandler);
+      _activeDigitKeyHandler = null;
+    }
+    for (const { btn, handler } of _activeKeyDownHandlers) btn.removeEventListener('keydown', handler);
+    _activeKeyDownHandlers = [];
+
     // One-shot guard: prevents a second option click during the 200ms gold-highlight
     // animation from calling hideCard()+resolve() a second time (resolve is a no-op
     // after first call, but hideCard() and classList mutations would still fire).

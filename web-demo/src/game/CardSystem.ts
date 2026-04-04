@@ -81,7 +81,12 @@ export async function loadTemplates(): Promise<void> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json() as FastRouteTemplate[];
     if (!Array.isArray(data) || data.length === 0) throw new Error('Empty or invalid cards.json');
-    _templates = data;
+    // C165/CS-01: filter out malformed templates at load time — only keep cards with exactly
+    // 3 options. The safeTemplate guard at generateFastRouteCard() catches them at use-time,
+    // but bad entries inflate the pool and can skew biome-filtered selection.
+    _templates = (data as FastRouteTemplate[]).filter(
+      (t) => Array.isArray(t.options) && t.options.length === 3,
+    );
   } catch (err) {
     // Silent failure: FastRoute pool will be empty, EMERGENCY_TEMPLATE provides fallback.
     // No console.warn — production build must not leak internal paths to browser devtools.
