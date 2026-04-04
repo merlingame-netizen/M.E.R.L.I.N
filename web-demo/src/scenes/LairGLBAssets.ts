@@ -71,6 +71,7 @@ export interface LairProceduralGroups {
   onCauldronGLBLoaded?: (bodyMesh: THREE.Mesh) => void; // callback to update visualMesh in interactives[]
   onCrystalGLBLoaded?: (mesh: THREE.Mesh) => void;      // C95: callback to swap visualMesh to GLB mesh for hover emissive
   onCrystalGroupLoaded?: (group: THREE.Group) => void;  // C101: callback to store GLB group ref for float animation
+  onMapGLBLoaded?: (mesh: THREE.Mesh) => void;          // C121: swap map interactives entry to GLB mesh (mapGroup hidden on load)
 }
 
 export function loadLairGLBs(
@@ -150,6 +151,13 @@ export function loadLairGLBs(
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.mapGroup.visible = false;
+    // C121: notify scene so map interactives entry can swap hit target + visualMesh to GLB mesh.
+    // Without this, raycaster skips the now-invisible procedural scroll and map zone is unclickable.
+    if (proceduralGroups?.onMapGLBLoaded) {
+      let firstMesh: THREE.Mesh | null = null;
+      gltf.scene.traverse((child) => { if (!firstMesh && child instanceof THREE.Mesh) firstMesh = child; });
+      if (firstMesh) proceduralGroups.onMapGLBLoaded(firstMesh);
+    }
   }).catch(() => { /* procedural map table remains */ });
 
   // Bibliothèque: right-wall zone. Hide procedural shelfGroup on success.

@@ -804,6 +804,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C101: store GLB group so update loop can animate its Y position (float effect)
     // C118: also capture base Y so float animation is a delta (not hardcoded -1.0)
     onCrystalGroupLoaded: (group) => { crystalGLBGroup = group; crystalGLBBaseY = group.position.y; },
+    // C121: when table_druidique.glb loads it hides mapGroup — mapHit (scroll) becomes invisible and
+    // raycaster skips invisible meshes, making the map zone permanently unhoverable/unclickable.
+    // Swap both mesh (hit target) and visualMesh to the first GLB mesh so raycasting stays live.
+    onMapGLBLoaded: (mesh) => {
+      const entry = interactives.find((i) => i.zone === 'map');
+      if (entry) { entry.mesh = mesh; entry.visualMesh = mesh; }
+    },
   }, () => lairDisposed);
 
   // C93-P1: forest ambient audio — SFXManager handles AudioContext suspension via pendingAmbientType
@@ -915,6 +922,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       ariaLive.textContent = `${ZONE_ARIA_LABELS[found.zone]} activée`;
       if (found.zone === 'door') {
         // C101: cinematic flash — 380ms burst before transition to give visual drama
+        // C121: guard double-click — second click while flashing would overwrite doorFlashCancelHandle
+        // making the first setTimeout untrackable (cannot be cleared in dispose)
+        if (doorFlashing) return;
         const cb = zoneClickCallback; // capture before setTimeout (TypeScript narrowing)
         doorFlashing = true;
         doorFlashTimer = 0;
