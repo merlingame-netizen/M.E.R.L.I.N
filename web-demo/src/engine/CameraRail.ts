@@ -2,50 +2,50 @@
 // Camera Rail — Spline-based auto-walk camera for 3D biome traversal
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import * as THREE from 'three';
+import { BufferGeometry, CatmullRomCurve3, Line, LineBasicMaterial, PerspectiveCamera, Vector3 } from 'three';
 
 // T063 bob-head constants — 2 Hz frequency, 0.04 amplitude
 const BOB_FREQUENCY = 2.0;  // Hz
 const BOB_AMPLITUDE = 0.04; // world units vertical
 
 export class CameraRail {
-  private readonly curve: THREE.CatmullRomCurve3;
+  private readonly curve: CatmullRomCurve3;
   private progress = 0;
   private speed = 0.008; // Progress per second (0-1 range)
   private paused = false;
-  private readonly lookOffset = new THREE.Vector3(0, 0.3, 0);
+  private readonly lookOffset = new Vector3(0, 0.3, 0);
   private elapsedMoving = 0; // accumulated time while not paused (for bob)
 
-  constructor(points: THREE.Vector3[]) {
-    this.curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
+  constructor(points: Vector3[]) {
+    this.curve = new CatmullRomCurve3(points, false, 'catmullrom', 0.5);
   }
 
   /** Create a default coastal rail path. */
   static createCoastalPath(): CameraRail {
     return new CameraRail([
-      new THREE.Vector3(0, 2, 20),
-      new THREE.Vector3(5, 2.5, 15),
-      new THREE.Vector3(8, 3, 8),
-      new THREE.Vector3(5, 3.5, 2),
-      new THREE.Vector3(0, 3, -5),
-      new THREE.Vector3(-5, 2.5, -12),
-      new THREE.Vector3(-8, 2, -20),
-      new THREE.Vector3(-3, 2.5, -28),
-      new THREE.Vector3(2, 3, -35),
+      new Vector3(0, 2, 20),
+      new Vector3(5, 2.5, 15),
+      new Vector3(8, 3, 8),
+      new Vector3(5, 3.5, 2),
+      new Vector3(0, 3, -5),
+      new Vector3(-5, 2.5, -12),
+      new Vector3(-8, 2, -20),
+      new Vector3(-3, 2.5, -28),
+      new Vector3(2, 3, -35),
     ]);
   }
 
   /** Create a default forest rail path. */
   static createForestPath(): CameraRail {
     return new CameraRail([
-      new THREE.Vector3(0, 1.8, 25),
-      new THREE.Vector3(3, 2, 18),
-      new THREE.Vector3(-2, 2.2, 10),
-      new THREE.Vector3(4, 2.5, 3),
-      new THREE.Vector3(0, 2.3, -5),
-      new THREE.Vector3(-4, 2, -13),
-      new THREE.Vector3(2, 2.2, -22),
-      new THREE.Vector3(0, 2.5, -30),
+      new Vector3(0, 1.8, 25),
+      new Vector3(3, 2, 18),
+      new Vector3(-2, 2.2, 10),
+      new Vector3(4, 2.5, 3),
+      new Vector3(0, 2.3, -5),
+      new Vector3(-4, 2, -13),
+      new Vector3(2, 2.2, -22),
+      new Vector3(0, 2.5, -30),
     ]);
   }
 
@@ -82,7 +82,7 @@ export class CameraRail {
   }
 
   /** Update camera position along the spline. T063: bob-head Y offset applied. */
-  update(camera: THREE.PerspectiveCamera, dt: number): void {
+  update(camera: PerspectiveCamera, dt: number): void {
     if (this.paused || this.progress >= 1) return;
 
     this.elapsedMoving += dt;
@@ -106,10 +106,10 @@ export class CameraRail {
   }
 
   /** Get a debug visualization of the path. */
-  createDebugLine(): THREE.Line {
+  createDebugLine(): Line {
     const points = this.curve.getPoints(100);
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0xff8800, opacity: 0.5, transparent: true });
-    return new THREE.Line(geometry, material);
+    const geometry = new BufferGeometry().setFromPoints(points);
+    const material = new LineBasicMaterial({ color: 0xff8800, opacity: 0.5, transparent: true });
+    return new Line(geometry, material);
   }
 }

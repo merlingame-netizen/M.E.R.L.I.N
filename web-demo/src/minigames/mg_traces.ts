@@ -24,6 +24,7 @@ export class MinigameTraces extends MinigameBase {
   private hitRadius = 38;        // C99: scaled [38,30,22,16]px
   private animFrame = 0;
   private ended = false;
+  private elapsedTime = 0; // C35: accumulated render dt for pulse animation (was performance.now()/200)
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -154,6 +155,7 @@ export class MinigameTraces extends MinigameBase {
   protected render(): void {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
+    this.elapsedTime += this.getDeltaTime(); // C35: accumulate dt for consistent pulse across tab switches
 
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -183,8 +185,8 @@ export class MinigameTraces extends MinigameBase {
         ctx.fill();
         ctx.fillStyle = '#8fbc8f';
       } else if (fp.index === this.currentIndex) {
-        // Current target — pulsing gold
-        const pulse = 1 + Math.sin(performance.now() / 200) * 0.15;
+        // Current target — pulsing gold (C35: elapsed-based, consistent with 13 other minigames)
+        const pulse = 1 + Math.sin(this.elapsedTime * 5) * 0.15; // 5 rad/s ≈ same period as performance.now()/200
         ctx.fillStyle = 'rgba(205,133,63,0.4)';
         ctx.beginPath();
         ctx.arc(0, 0, 22 * pulse, 0, Math.PI * 2);

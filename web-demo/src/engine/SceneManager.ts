@@ -2,26 +2,26 @@
 // Scene Manager — Three.js scene lifecycle, renderer, lighting
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import * as THREE from 'three';
+import { ACESFilmicToneMapping, AmbientLight, Clock, Color, DirectionalLight, FogExp2, HemisphereLight, PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 
 export class SceneManager {
-  readonly scene: THREE.Scene;
-  readonly renderer: THREE.WebGLRenderer;
-  readonly camera: THREE.PerspectiveCamera;
+  readonly scene: Scene;
+  readonly renderer: WebGLRenderer;
+  readonly camera: PerspectiveCamera;
   private animationId = 0;
   private readonly callbacks: Array<(dt: number) => void> = [];
-  private clock = new THREE.Clock();
+  private clock = new Clock();
   // C81-01: stored so dispose() can remove it (window.resize leaks per run without this)
   private readonly onResize: () => void;
 
   constructor(container: HTMLElement) {
     // Scene
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x1a2a3a);
-    this.scene.fog = new THREE.FogExp2(0x1a2a3a, 0.015);
+    this.scene = new Scene();
+    this.scene.background = new Color(0x1a2a3a);
+    this.scene.fog = new FogExp2(0x1a2a3a, 0.015);
 
     // Camera
-    this.camera = new THREE.PerspectiveCamera(
+    this.camera = new PerspectiveCamera(
       55,
       container.clientWidth / container.clientHeight,
       0.1,
@@ -30,15 +30,15 @@ export class SceneManager {
     this.camera.position.set(0, 3, 10);
 
     // Renderer
-    this.renderer = new THREE.WebGLRenderer({
+    this.renderer = new WebGLRenderer({
       antialias: true,
       alpha: false,
     });
     this.renderer.setSize(container.clientWidth, container.clientHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
+    this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.9;
     container.appendChild(this.renderer.domElement);
     this.renderer.domElement.setAttribute('role', 'img');
@@ -58,15 +58,15 @@ export class SceneManager {
 
   private setupLighting(): void {
     // Ambient
-    const ambient = new THREE.AmbientLight(0x6688aa, 0.4);
+    const ambient = new AmbientLight(0x6688aa, 0.4);
     this.scene.add(ambient);
 
     // Hemisphere (sky/ground)
-    const hemi = new THREE.HemisphereLight(0x87ceeb, 0x3a5f3a, 0.5);
+    const hemi = new HemisphereLight(0x87ceeb, 0x3a5f3a, 0.5);
     this.scene.add(hemi);
 
     // Directional (sun)
-    const sun = new THREE.DirectionalLight(0xffeedd, 1.2);
+    const sun = new DirectionalLight(0xffeedd, 1.2);
     sun.position.set(20, 30, 15);
     sun.castShadow = true;
     sun.shadow.mapSize.width = 2048;

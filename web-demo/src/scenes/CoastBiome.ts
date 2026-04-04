@@ -3,14 +3,14 @@
 // Uses existing menu_coast GLBs + procedural ocean, sky, terrain
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import * as THREE from 'three';
+import { AmbientLight, BackSide, BoxGeometry, BufferAttribute, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry, FrontSide, Group, HemisphereLight, Material, Mesh, MeshStandardMaterial, PlaneGeometry, ShaderMaterial, SphereGeometry } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
 
 /** Build a procedural ground plane — flat-shaded for low-poly AAA look. */
-function createGround(): THREE.Mesh {
-  const geo = new THREE.PlaneGeometry(200, 200, 48, 48);
+function createGround(): Mesh {
+  const geo = new PlaneGeometry(200, 200, 48, 48);
   // Gentle terrain undulation
-  const pos = geo.attributes.position as THREE.BufferAttribute;
+  const pos = geo.attributes.position as BufferAttribute;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const z = pos.getY(i); // PlaneGeometry Y = world Z after rotation
@@ -19,22 +19,22 @@ function createGround(): THREE.Mesh {
   }
   geo.computeVertexNormals();
 
-  const mat = new THREE.MeshStandardMaterial({
+  const mat = new MeshStandardMaterial({
     color: 0x2e5228,
     roughness: 0.95,
     metalness: 0.0,
     flatShading: true,
   });
-  const mesh = new THREE.Mesh(geo, mat);
+  const mesh = new Mesh(geo, mat);
   mesh.rotation.x = -Math.PI / 2;
   mesh.receiveShadow = true;
   return mesh;
 }
 
 /** Build a low-poly ocean with flat-shading for faceted wave look. */
-function createOcean(): THREE.Mesh {
-  const geo = new THREE.PlaneGeometry(200, 200, 24, 18);
-  const mat = new THREE.MeshStandardMaterial({
+function createOcean(): Mesh {
+  const geo = new PlaneGeometry(200, 200, 24, 18);
+  const mat = new MeshStandardMaterial({
     color: 0x1a3d5c,
     roughness: 0.3,
     metalness: 0.35,
@@ -42,7 +42,7 @@ function createOcean(): THREE.Mesh {
     opacity: 0.88,
     flatShading: true,
   });
-  const mesh = new THREE.Mesh(geo, mat);
+  const mesh = new Mesh(geo, mat);
   mesh.rotation.x = -Math.PI / 2;
   mesh.position.set(60, -0.5, 0);
   mesh.name = 'ocean_plane';
@@ -56,13 +56,13 @@ function createOcean(): THREE.Mesh {
  * Bottom: mist cream (0x8a9a78) — matches fog plane color for seamless blend.
  * Cycle 33: replaces generic blue 0x4488bb/0xaaccdd.
  */
-function createSky(): THREE.Mesh {
-  const geo = new THREE.SphereGeometry(150, 16, 12);
-  const mat = new THREE.ShaderMaterial({
+function createSky(): Mesh {
+  const geo = new SphereGeometry(150, 16, 12);
+  const mat = new ShaderMaterial({
     uniforms: {
-      topColor:    { value: new THREE.Color(0x2a3240) },  // dark slate-grey zenith
-      midColor:    { value: new THREE.Color(0x4a5a48) },  // grey-green mid
-      bottomColor: { value: new THREE.Color(0x8a9a78) },  // warm mist at horizon
+      topColor:    { value: new Color(0x2a3240) },  // dark slate-grey zenith
+      midColor:    { value: new Color(0x4a5a48) },  // grey-green mid
+      bottomColor: { value: new Color(0x8a9a78) },  // warm mist at horizon
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -85,9 +85,9 @@ function createSky(): THREE.Mesh {
         gl_FragColor = vec4(col, 1.0);
       }
     `,
-    side: THREE.BackSide,
+    side: BackSide,
   });
-  return new THREE.Mesh(geo, mat);
+  return new Mesh(geo, mat);
 }
 
 /**
@@ -97,8 +97,8 @@ function createSky(): THREE.Mesh {
  * Layer 2 (far):  12 trees, small, silhouette-style dark
  * Uses flat-shaded ConeGeometry for conifer (more Celtic than sphere).
  */
-function createTrees(count: number): THREE.Group {
-  const group = new THREE.Group();
+function createTrees(count: number): Group {
+  const group = new Group();
 
   const layers: Array<{ start: number; end: number; minR: number; maxR: number; colorBase: number; scaleBase: number; scaleVar: number }> = [
     { start: 0,  end: 12, minR: 6,  maxR: 18, colorBase: 0x2d6b2d, scaleBase: 1.1, scaleVar: 0.5 },  // near — vivid green
@@ -107,35 +107,35 @@ function createTrees(count: number): THREE.Group {
   ];
 
   for (const layer of layers) {
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a2e12, roughness: 0.95, flatShading: true });
-    const leafMat = new THREE.MeshStandardMaterial({ color: layer.colorBase, roughness: 0.9, flatShading: true });
+    const trunkMat = new MeshStandardMaterial({ color: 0x4a2e12, roughness: 0.95, flatShading: true });
+    const leafMat = new MeshStandardMaterial({ color: layer.colorBase, roughness: 0.9, flatShading: true });
 
     for (let i = layer.start; i < layer.end; i++) {
-      const tree = new THREE.Group();
+      const tree = new Group();
 
       // Per-tree geometry instances — shared geometries cause dispose() to free the GPU
       // buffer on the first traversal hit, leaving all subsequent meshes with dangling refs.
-      const trunkGeo = new THREE.CylinderGeometry(0.08, 0.18, 2.4, 5);
-      const cone1Geo = new THREE.ConeGeometry(1.1, 2.2, 6);
-      const cone2Geo = new THREE.ConeGeometry(0.8, 1.8, 6);
-      const cone3Geo = new THREE.ConeGeometry(0.5, 1.4, 5);
+      const trunkGeo = new CylinderGeometry(0.08, 0.18, 2.4, 5);
+      const cone1Geo = new ConeGeometry(1.1, 2.2, 6);
+      const cone2Geo = new ConeGeometry(0.8, 1.8, 6);
+      const cone3Geo = new ConeGeometry(0.5, 1.4, 5);
 
-      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      const trunk = new Mesh(trunkGeo, trunkMat);
       trunk.castShadow = true;
       tree.add(trunk);
 
       // 3-tier cone stack for Celtic conifer
-      const c1 = new THREE.Mesh(cone1Geo, leafMat);
+      const c1 = new Mesh(cone1Geo, leafMat);
       c1.position.y = 1.4;
       c1.castShadow = true;
       tree.add(c1);
 
-      const c2 = new THREE.Mesh(cone2Geo, leafMat);
+      const c2 = new Mesh(cone2Geo, leafMat);
       c2.position.y = 2.5;
       c2.castShadow = true;
       tree.add(c2);
 
-      const c3 = new THREE.Mesh(cone3Geo, leafMat);
+      const c3 = new Mesh(cone3Geo, leafMat);
       c3.position.y = 3.5;
       c3.castShadow = true;
       tree.add(c3);
@@ -157,13 +157,13 @@ function createTrees(count: number): THREE.Group {
 }
 
 /** Scatter procedural rocks — flat-shaded granite. */
-function createRocks(count: number): THREE.Group {
-  const group = new THREE.Group();
-  const rockMat = new THREE.MeshStandardMaterial({ color: 0x5e5450, roughness: 0.9, flatShading: true });
+function createRocks(count: number): Group {
+  const group = new Group();
+  const rockMat = new MeshStandardMaterial({ color: 0x5e5450, roughness: 0.9, flatShading: true });
 
   for (let i = 0; i < count; i++) {
-    const geo = new THREE.DodecahedronGeometry(0.3 + Math.random() * 0.7, 0);
-    const rock = new THREE.Mesh(geo, rockMat);
+    const geo = new DodecahedronGeometry(0.3 + Math.random() * 0.7, 0);
+    const rock = new Mesh(geo, rockMat);
     rock.castShadow = true;
     const angle = Math.random() * Math.PI * 2;
     const radius = 5 + Math.random() * 50;
@@ -189,13 +189,13 @@ function createRocks(count: number): THREE.Group {
  *  - uTime clamped via mod(uTime, 100.0) to prevent float precision drift on long sessions
  * Expected gain: ~35% fragment cost reduction on tile-based GPUs (GTX 1060 target: 60fps).
  */
-function createFog(): THREE.Mesh {
-  const geo = new THREE.PlaneGeometry(180, 180, 1, 1);
-  const mat = new THREE.ShaderMaterial({
+function createFog(): Mesh {
+  const geo = new PlaneGeometry(180, 180, 1, 1);
+  const mat = new ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
       // Warm breton mist: grey-green instead of cold blue (Cycle 31 AAA pass)
-      uFogColor: { value: new THREE.Color(0x8a9a78) },
+      uFogColor: { value: new Color(0x8a9a78) },
       uDensity: { value: 0.25 },
     },
     vertexShader: `
@@ -229,9 +229,9 @@ function createFog(): THREE.Mesh {
     `,
     transparent: true,
     depthWrite: false,
-    side: THREE.FrontSide,
+    side: FrontSide,
   });
-  const mesh = new THREE.Mesh(geo, mat);
+  const mesh = new Mesh(geo, mat);
   mesh.rotation.x = -Math.PI / 2;
   mesh.position.set(0, 0.8, 0);
   mesh.name = 'fog_plane';
@@ -239,14 +239,14 @@ function createFog(): THREE.Mesh {
 }
 
 /** Standing stones / menhirs — flat-shaded granite look. */
-function createMenhirs(count: number): THREE.Group {
-  const group = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0x787068, roughness: 0.85, flatShading: true });
-  const mossMat = new THREE.MeshStandardMaterial({ color: 0x556644, roughness: 0.95, flatShading: true });
+function createMenhirs(count: number): Group {
+  const group = new Group();
+  const mat = new MeshStandardMaterial({ color: 0x787068, roughness: 0.85, flatShading: true });
+  const mossMat = new MeshStandardMaterial({ color: 0x556644, roughness: 0.95, flatShading: true });
 
   for (let i = 0; i < count; i++) {
     const height = 2.5 + Math.random() * 3.5;
-    const menhir = new THREE.Mesh(new THREE.BoxGeometry(0.55, height, 0.38), mat);
+    const menhir = new Mesh(new BoxGeometry(0.55, height, 0.38), mat);
     menhir.castShadow = true;
     menhir.position.set(
       -18 + Math.random() * 36,
@@ -258,7 +258,7 @@ function createMenhirs(count: number): THREE.Group {
     group.add(menhir);
 
     // Moss patch at base
-    const moss = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.15, 0.5), mossMat);
+    const moss = new Mesh(new BoxGeometry(0.65, 0.15, 0.5), mossMat);
     moss.position.set(menhir.position.x, 0.07, menhir.position.z);
     moss.rotation.y = menhir.rotation.y;
     group.add(moss);
@@ -267,7 +267,7 @@ function createMenhirs(count: number): THREE.Group {
 }
 
 export interface BiomeSceneResult {
-  readonly group: THREE.Group;
+  readonly group: Group;
   readonly update: (dt: number) => void;
   readonly dispose: () => void;
 }
@@ -279,15 +279,15 @@ export interface BiomeSceneResult {
  * Fog: warm breton mist (0x8a9a7a) instead of cold blue.
  */
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
-  const group = new THREE.Group();
+  const group = new Group();
 
   // ── Lighting — AAA 3-source setup ──────────────────────────────────────────
   // 1. Ambient — warm dark base
-  const ambient = new THREE.AmbientLight(0x304028, 0.55);
+  const ambient = new AmbientLight(0x304028, 0.55);
   group.add(ambient);
 
   // 2. Directional sun — low angle, golden celtic light from NW
-  const sun = new THREE.DirectionalLight(0xffd8a0, 1.4);
+  const sun = new DirectionalLight(0xffd8a0, 1.4);
   sun.position.set(-20, 18, 10);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -300,11 +300,11 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(sun);
 
   // 3. HemisphereLight — sky (soft blue) / ground (dark green) for ambient occlusion feel
-  const hemi = new THREE.HemisphereLight(0x7799cc, 0x223316, 0.45);
+  const hemi = new HemisphereLight(0x7799cc, 0x223316, 0.45);
   group.add(hemi);
 
   // 4. Rim light — cool backlight from ocean direction to separate silhouettes
-  const rim = new THREE.DirectionalLight(0x88bbcc, 0.35);
+  const rim = new DirectionalLight(0x88bbcc, 0.35);
   rim.position.set(50, 8, -20);
   group.add(rim);
 
@@ -335,9 +335,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     const model = r.value.scene.clone();
     // Enforce flat-shading consistency with procedural scene meshes
     model.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-        (child.material as THREE.MeshStandardMaterial).flatShading = true;
-        (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+      if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
+        (child.material as MeshStandardMaterial).flatShading = true;
+        (child.material as MeshStandardMaterial).needsUpdate = true;
       }
     });
     model.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
@@ -347,20 +347,20 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
   // Ocean animation — flat-shaded low-poly wave facets via vertex displacement
   const oceanMesh = group.children.find(
-    (c) => c instanceof THREE.Mesh && (c as THREE.Mesh).name === 'ocean_plane'
-  ) as THREE.Mesh | undefined;
+    (c) => c instanceof Mesh && (c as Mesh).name === 'ocean_plane'
+  ) as Mesh | undefined;
 
   // Pre-cache ocean geometry base positions for wave animation
   let oceanBaseY: Float32Array | null = null;
   if (oceanMesh) {
-    const posAttr = oceanMesh.geometry.attributes['position'] as THREE.BufferAttribute;
+    const posAttr = oceanMesh.geometry.attributes['position'] as BufferAttribute;
     oceanBaseY = new Float32Array(posAttr.array as Float32Array);
   }
 
   // Fog animation
   const fogMesh = group.children.find(
-    (c) => c instanceof THREE.Mesh && c.name === 'fog_plane'
-  ) as THREE.Mesh | undefined;
+    (c) => c instanceof Mesh && c.name === 'fog_plane'
+  ) as Mesh | undefined;
 
   // Track whether to skip ocean vertex update this frame (low-FPS adaptive LOD)
   let _skipOceanFrame = false;
@@ -373,7 +373,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     if (oceanMesh && oceanBaseY) {
       _skipOceanFrame = !_skipOceanFrame;
       if (!_skipOceanFrame || dt <= 0.033) {
-        const posAttr = oceanMesh.geometry.attributes['position'] as THREE.BufferAttribute;
+        const posAttr = oceanMesh.geometry.attributes['position'] as BufferAttribute;
         const arr = posAttr.array as Float32Array;
         for (let i = 0; i < posAttr.count; i++) {
           // PlaneGeometry stores X and Y in local space; after mesh.rotation.x=-PI/2
@@ -389,25 +389,25 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
     if (fogMesh) {
-      const fogMat = fogMesh.material as THREE.ShaderMaterial;
+      const fogMat = fogMesh.material as ShaderMaterial;
       fogMat.uniforms['uTime']!.value = t;
     }
   };
 
   const dispose = (): void => {
     group.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof Mesh) {
         child.geometry.dispose();
         if (Array.isArray(child.material)) {
           child.material.forEach((m) => m.dispose());
         } else {
-          (child.material as THREE.Material).dispose();
+          (child.material as Material).dispose();
         }
       }
       // Dispose DirectionalLight shadow maps (WebGLRenderTarget ~4MB each).
       // The traverse only visits Meshes by default so lights need explicit handling.
       // Without this, each run leaks one shadow map on the GPU.
-      if (child instanceof THREE.DirectionalLight && child.shadow.map) {
+      if (child instanceof DirectionalLight && child.shadow.map) {
         child.shadow.map.dispose();
       }
     });

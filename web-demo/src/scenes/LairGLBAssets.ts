@@ -2,7 +2,7 @@
 // Each GLB replaces the procedural mesh; on success the procedural group is hidden.
 // On load failure, procedural fallback stays visible.
 
-import * as THREE from 'three';
+import { BufferGeometry, Color, Group, InstancedMesh, Light, Material, Mesh, MeshStandardMaterial, Object3D, Scene } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
 
 const CANDLE_POSITIONS: Array<[number, number, number]> = [
@@ -16,14 +16,14 @@ const CANDLE_POSITIONS: Array<[number, number, number]> = [
 // Restores transparent=false after completion to avoid depth-sort artifacts.
 // C122: pass isDisposed so the rAF tick auto-stops when the lair is disposed mid-fade —
 // avoids writing to materials on a renderer that has already been torn down.
-function fadeInGLB(group: THREE.Object3D, durationMs = 400, isDisposed?: () => boolean): () => void {
+function fadeInGLB(group: Object3D, durationMs = 400, isDisposed?: () => boolean): () => void {
   let cancelled = false;
-  const meshes: THREE.Mesh[] = [];
+  const meshes: Mesh[] = [];
   group.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
+    if (child instanceof Mesh) {
       // C120: instanceof guard — Blender GLTF always produces MeshStandardMaterial but guard
       // prevents silent failure if any future GLB path brings MeshBasicMaterial (matches C119 philosophy)
-      if (!(child.material instanceof THREE.MeshStandardMaterial)) return;
+      if (!(child.material instanceof MeshStandardMaterial)) return;
       child.material.transparent = true;
       child.material.opacity = 0;
       child.material.needsUpdate = true;
@@ -36,13 +36,13 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400, isDisposed?: () => b
     if (cancelled || isDisposed?.()) return; // C122: bail out if scene was disposed during fade
     const t = Math.min((performance.now() - start) / durationMs, 1);
     for (const m of meshes) {
-      if (m.material instanceof THREE.MeshStandardMaterial) m.material.opacity = t;
+      if (m.material instanceof MeshStandardMaterial) m.material.opacity = t;
     }
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
       for (const m of meshes) {
-        if (!(m.material instanceof THREE.MeshStandardMaterial)) continue;
+        if (!(m.material instanceof MeshStandardMaterial)) continue;
         m.material.opacity = 1;
         m.material.transparent = false;
         m.material.needsUpdate = true;
@@ -54,11 +54,11 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400, isDisposed?: () => b
 }
 
 // C101: enforce flat-shading on all non-crystal GLBs to match procedural mesh aesthetic
-function applyFlatShading(obj: THREE.Object3D): void {
+function applyFlatShading(obj: Object3D): void {
   obj.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
+    if (child instanceof Mesh) {
       // C120: instanceof guard — consistent with C119/fadeInGLB; MeshBasicMaterial has no flatShading
-      if (!(child.material instanceof THREE.MeshStandardMaterial)) return;
+      if (!(child.material instanceof MeshStandardMaterial)) return;
       child.material.flatShading = true;
       child.material.needsUpdate = true;
     }
@@ -66,22 +66,22 @@ function applyFlatShading(obj: THREE.Object3D): void {
 }
 
 export interface LairProceduralGroups {
-  mapGroup: THREE.Group;
-  shelfGroup: THREE.Group;
-  floorMesh?: THREE.Mesh;
-  wallsGroup?: THREE.Group;    // full walls group hidden when mur_pierre.glb loads
-  cauldronGroup?: THREE.Group; // procedural cauldron body+legs hidden when cauldron_merlin.glb loads
-  candleGroup?: THREE.Group;   // procedural candle bodies+wicks+light hidden when bougie.glb loads
-  crystalSphere?: THREE.Mesh;  // C93-P2: procedural sphere hidden when crystal_ball.glb loads (hitTarget/light stay)
-  onCauldronGLBLoaded?: (bodyMesh: THREE.Mesh) => void; // callback to update visualMesh in interactives[]
-  onCrystalGLBLoaded?: (mesh: THREE.Mesh) => void;      // C95: callback to swap visualMesh to GLB mesh for hover emissive
-  onCrystalGroupLoaded?: (group: THREE.Group) => void;  // C101: callback to store GLB group ref for float animation
-  onMapGLBLoaded?: (mesh: THREE.Mesh) => void;          // C121: swap map interactives entry to GLB mesh (mapGroup hidden on load)
-  onShelfGLBLoaded?: (mesh: THREE.Mesh) => void;        // C122: swap bookshelf interactives entry to GLB mesh (shelfGroup hidden on load)
+  mapGroup: Group;
+  shelfGroup: Group;
+  floorMesh?: Mesh;
+  wallsGroup?: Group;    // full walls group hidden when mur_pierre.glb loads
+  cauldronGroup?: Group; // procedural cauldron body+legs hidden when cauldron_merlin.glb loads
+  candleGroup?: Group;   // procedural candle bodies+wicks+light hidden when bougie.glb loads
+  crystalSphere?: Mesh;  // C93-P2: procedural sphere hidden when crystal_ball.glb loads (hitTarget/light stay)
+  onCauldronGLBLoaded?: (bodyMesh: Mesh) => void; // callback to update visualMesh in interactives[]
+  onCrystalGLBLoaded?: (mesh: Mesh) => void;      // C95: callback to swap visualMesh to GLB mesh for hover emissive
+  onCrystalGroupLoaded?: (group: Group) => void;  // C101: callback to store GLB group ref for float animation
+  onMapGLBLoaded?: (mesh: Mesh) => void;          // C121: swap map interactives entry to GLB mesh (mapGroup hidden on load)
+  onShelfGLBLoaded?: (mesh: Mesh) => void;        // C122: swap bookshelf interactives entry to GLB mesh (shelfGroup hidden on load)
 }
 
 export function loadLairGLBs(
-  scene: THREE.Scene,
+  scene: Scene,
   proceduralGroups?: LairProceduralGroups,
   // C81-03: caller passes () => true after lair.dispose() fires — prevents late scene.add()
   isDisposed?: () => boolean,
@@ -94,13 +94,13 @@ export function loadLairGLBs(
   loadGLB('/cauldron_merlin.glb').then((gltf) => {
     if (isDisposed?.()) return; // C81-03: abort if lair already disposed
     gltf.scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof Mesh) {
         // C81-04: clone material before mutation to avoid polluting the cached GLB prototype
-        child.material = (child.material as THREE.MeshStandardMaterial).clone();
-        (child.material as THREE.MeshStandardMaterial).roughness = 0.9;
-        (child.material as THREE.MeshStandardMaterial).metalness = 0.0;
-        (child.material as THREE.MeshStandardMaterial).flatShading = true;
-        (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+        child.material = (child.material as MeshStandardMaterial).clone();
+        (child.material as MeshStandardMaterial).roughness = 0.9;
+        (child.material as MeshStandardMaterial).metalness = 0.0;
+        (child.material as MeshStandardMaterial).flatShading = true;
+        (child.material as MeshStandardMaterial).needsUpdate = true;
       }
     });
     gltf.scene.position.set(2, -4.65, -7);
@@ -110,13 +110,13 @@ export function loadLairGLBs(
     if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;
     // Update interactives[] visualMesh to the GLB body so hover emissive works on GLB path
     if (proceduralGroups?.onCauldronGLBLoaded) {
-      const glbMeshes: THREE.Mesh[] = [];
-      gltf.scene.traverse((child) => { if (child instanceof THREE.Mesh) glbMeshes.push(child); });
+      const glbMeshes: Mesh[] = [];
+      gltf.scene.traverse((child) => { if (child instanceof Mesh) glbMeshes.push(child); });
       // Prefer a mesh named 'body' or 'bowl'; fall back to first mesh if none match
       const bodyMesh = glbMeshes.find((m) => /body|bowl/i.test(m.name)) ?? glbMeshes[0];
       if (bodyMesh) {
-        (bodyMesh.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(0x00aa33);
-        (bodyMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.0;
+        (bodyMesh.material as MeshStandardMaterial).emissive = new Color(0x00aa33);
+        (bodyMesh.material as MeshStandardMaterial).emissiveIntensity = 0.0;
         proceduralGroups.onCauldronGLBLoaded(bodyMesh);
       }
     }
@@ -130,13 +130,13 @@ export function loadLairGLBs(
     for (const [cx, cy, cz] of CANDLE_POSITIONS) {
       const clone = gltf.scene.clone(true);
       clone.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.material = (child.material as THREE.MeshStandardMaterial).clone();
+        if (child instanceof Mesh) {
+          child.material = (child.material as MeshStandardMaterial).clone();
           // C90-P1: set emissiveIntensity=0 baseline — guards against dirty emissive state
           // if a slow-loading GLB resolves after rapid hover/unhover cycles
-          (child.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.0;
-          (child.material as THREE.MeshStandardMaterial).flatShading = true;
-          (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+          (child.material as MeshStandardMaterial).emissiveIntensity = 0.0;
+          (child.material as MeshStandardMaterial).flatShading = true;
+          (child.material as MeshStandardMaterial).needsUpdate = true;
         }
       });
       clone.scale.setScalar(0.42);
@@ -147,7 +147,7 @@ export function loadLairGLBs(
     if (proceduralGroups?.candleGroup) {
       // C112: hide only non-Light children — sharedLight must stay active for candle warmth post-GLB
       proceduralGroups.candleGroup.children.forEach((child) => {
-        if (!(child instanceof THREE.Light)) child.visible = false;
+        if (!(child instanceof Light)) child.visible = false;
       });
     }
   }).catch(() => { /* procedural candle bodies remain */ });
@@ -161,9 +161,9 @@ export function loadLairGLBs(
     // C128: polygonOffset guards against z-fighting on 16-bit depth GPUs (Mali-T720/Adreno 306).
     // table_druidique at Y=-5.0 is adjacent to sol_pierre at Y=-4.98 — same risk pattern as bibliotheque.
     gltf.scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof Mesh) {
         const m = child.material;
-        if (m instanceof THREE.MeshStandardMaterial) {
+        if (m instanceof MeshStandardMaterial) {
           m.polygonOffset = true;
           m.polygonOffsetFactor = -2;
           m.polygonOffsetUnits = -4;
@@ -177,8 +177,8 @@ export function loadLairGLBs(
     // C121: notify scene so map interactives entry can swap hit target + visualMesh to GLB mesh.
     // Without this, raycaster skips the now-invisible procedural scroll and map zone is unclickable.
     if (proceduralGroups?.onMapGLBLoaded) {
-      let firstMesh: THREE.Mesh | null = null;
-      gltf.scene.traverse((child) => { if (!firstMesh && child instanceof THREE.Mesh) firstMesh = child; });
+      let firstMesh: Mesh | null = null;
+      gltf.scene.traverse((child) => { if (!firstMesh && child instanceof Mesh) firstMesh = child; });
       if (firstMesh) proceduralGroups.onMapGLBLoaded(firstMesh);
     }
   }).catch(() => { /* procedural map table remains */ });
@@ -192,9 +192,9 @@ export function loadLairGLBs(
     // C125: non-uniform scale risks micro z-fighting against right-wall tiles at x=11.76.
     // Apply polygonOffset matching sol_pierre / mur_pierre pattern: factor=-2, units=-4.
     gltf.scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof Mesh) {
         const m = child.material;
-        if (m instanceof THREE.MeshStandardMaterial) {
+        if (m instanceof MeshStandardMaterial) {
           m.polygonOffset = true;
           m.polygonOffsetFactor = -2;
           m.polygonOffsetUnits = -4;
@@ -208,8 +208,8 @@ export function loadLairGLBs(
     // C122: shelfHit lives inside shelfGroup — becomes invisible to raycaster when group is hidden.
     // Mirror the onMapGLBLoaded pattern to swap interactives entry to the live GLB mesh.
     if (proceduralGroups?.onShelfGLBLoaded) {
-      let firstMesh: THREE.Mesh | null = null;
-      gltf.scene.traverse((child) => { if (!firstMesh && child instanceof THREE.Mesh) firstMesh = child; });
+      let firstMesh: Mesh | null = null;
+      gltf.scene.traverse((child) => { if (!firstMesh && child instanceof Mesh) firstMesh = child; });
       if (firstMesh) proceduralGroups.onShelfGLBLoaded(firstMesh);
     }
   }).catch(() => { /* procedural bookshelf remains */ });
@@ -225,8 +225,8 @@ export function loadLairGLBs(
     // The 0.02u Y-offset alone is insufficient — at depth ~10u, 16-bit precision is ~0.05u.
     // Matches mur_pierre pattern: factor=-2, units=-4.
     gltf.scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const m = child.material as THREE.MeshStandardMaterial;
+      if (child instanceof Mesh) {
+        const m = child.material as MeshStandardMaterial;
         m.polygonOffset = true;
         m.polygonOffsetFactor = -2;
         m.polygonOffsetUnits = -4;
@@ -244,28 +244,28 @@ export function loadLairGLBs(
   loadGLB('/mur_pierre.glb').then((gltf) => {
     if (isDisposed?.()) return; // C81-03
     // Extract first mesh geometry + material from GLB
-    let tileGeo: THREE.BufferGeometry | null = null;
-    let tileMat: THREE.Material | null = null;
+    let tileGeo: BufferGeometry | null = null;
+    let tileMat: Material | null = null;
     gltf.scene.traverse((child) => {
-      if (!tileGeo && child instanceof THREE.Mesh) {
+      if (!tileGeo && child instanceof Mesh) {
         tileGeo = child.geometry.clone(); // owned copy — safe to dispose independently
-        tileMat = (child.material as THREE.MeshStandardMaterial).clone();
+        tileMat = (child.material as MeshStandardMaterial).clone();
         // C89-P1: polygonOffset prevents micro z-fighting on tile seams (Mali/Adreno 16-bit depth)
         // C90-P2: factor/units bumped -1→-2/-4 — covers shallow camera angles to back wall
-        (tileMat as THREE.MeshStandardMaterial).polygonOffset = true;
-        (tileMat as THREE.MeshStandardMaterial).polygonOffsetFactor = -2;
-        (tileMat as THREE.MeshStandardMaterial).flatShading = true; // C101: match scene aesthetic
-        (tileMat as THREE.MeshStandardMaterial).polygonOffsetUnits = -4;
+        (tileMat as MeshStandardMaterial).polygonOffset = true;
+        (tileMat as MeshStandardMaterial).polygonOffsetFactor = -2;
+        (tileMat as MeshStandardMaterial).flatShading = true; // C101: match scene aesthetic
+        (tileMat as MeshStandardMaterial).polygonOffsetUnits = -4;
       }
     });
     if (!tileGeo || !tileMat) return;
 
     const ROW_H = 16 / 3;
     const rowY = (r: number): number => -5 + ROW_H * (r + 0.5);
-    const dummy = new THREE.Object3D();
+    const dummy = new Object3D();
 
     // Back wall: 18 tiles (6 cols × 3 rows), rotY = 0
-    const backMesh = new THREE.InstancedMesh(tileGeo, tileMat, 18);
+    const backMesh = new InstancedMesh(tileGeo, tileMat, 18);
     let idx = 0;
     for (let r = 0; r < 3; r++) {
       for (let i = 0; i < 6; i++) {
@@ -280,7 +280,7 @@ export function loadLairGLBs(
     scene.add(backMesh);
 
     // Left wall: 15 tiles (5 cols × 3 rows), rotY = +90°
-    const leftMesh = new THREE.InstancedMesh(tileGeo, tileMat, 15);
+    const leftMesh = new InstancedMesh(tileGeo, tileMat, 15);
     idx = 0;
     for (let r = 0; r < 3; r++) {
       for (let i = 0; i < 5; i++) {
@@ -295,7 +295,7 @@ export function loadLairGLBs(
     scene.add(leftMesh);
 
     // Right wall: 15 tiles (5 cols × 3 rows), rotY = -90°
-    const rightMesh = new THREE.InstancedMesh(tileGeo, tileMat, 15);
+    const rightMesh = new InstancedMesh(tileGeo, tileMat, 15);
     idx = 0;
     for (let r = 0; r < 3; r++) {
       for (let i = 0; i < 5; i++) {
@@ -317,13 +317,13 @@ export function loadLairGLBs(
   // C95: onCrystalGLBLoaded callback updates interactives[] visualMesh so hover emissive targets GLB.
   loadGLB('/crystal_ball.glb').then((gltf) => {
     if (isDisposed?.()) return;
-    const glbMeshes: THREE.Mesh[] = [];
+    const glbMeshes: Mesh[] = [];
     gltf.scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.material = (child.material as THREE.MeshStandardMaterial).clone();
-        (child.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(0x6030aa);
-        (child.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.6; // match procedural baseline
-        (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+      if (child instanceof Mesh) {
+        child.material = (child.material as MeshStandardMaterial).clone();
+        (child.material as MeshStandardMaterial).emissive = new Color(0x6030aa);
+        (child.material as MeshStandardMaterial).emissiveIntensity = 0.6; // match procedural baseline
+        (child.material as MeshStandardMaterial).needsUpdate = true;
         glbMeshes.push(child);
       }
     });

@@ -2,7 +2,7 @@
 // Asset Loader — GLB/GLTF loading with caching
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import * as THREE from 'three';
+import { Group, Mesh } from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
@@ -20,7 +20,7 @@ export async function loadGLB(url: string): Promise<GLTF> {
         cache.set(url, gltf);
         // Enable shadows on all meshes
         gltf.scene.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
+          if (child instanceof Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
           }
@@ -48,7 +48,7 @@ export async function loadGLBs(urls: readonly string[]): Promise<Map<string, GLT
 }
 
 /** Clone a loaded GLB scene (for reusing assets). */
-export function cloneGLBScene(gltf: GLTF): THREE.Group {
+export function cloneGLBScene(gltf: GLTF): Group {
   return gltf.scene.clone();
 }
 

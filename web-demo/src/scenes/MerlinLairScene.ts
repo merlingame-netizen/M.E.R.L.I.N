@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (5 sources — key/rim/fill/cauldron/ambient).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import * as THREE from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, Vector2, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -15,10 +15,10 @@ import { clearGLBCache } from '../engine/AssetLoader';
 export type LairZone = 'map' | 'crystal' | 'bookshelf' | 'door' | 'cauldron';
 
 interface InteractiveObject {
-  mesh: THREE.Object3D;
+  mesh: Object3D;
   zone: LairZone;
   hovered: boolean;
-  visualMesh?: THREE.Mesh;   // visible mesh for emissive boost when hitTarget is invisible
+  visualMesh?: Mesh;   // visible mesh for emissive boost when hitTarget is invisible
   baseEmissive?: number;     // emissiveIntensity to restore on unhover
 }
 
@@ -33,11 +33,11 @@ export type { LairTimeParams };
 
 // ── Stone Walls + Floor + Ceiling ────────────────────────────────────────────
 
-function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh; wallsGroup: THREE.Group } {
-  const group = new THREE.Group();
-  const wallsGroup = new THREE.Group(); // contains only the 3 wall boxes (hidden when mur_pierre.glb loads)
-  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3228, roughness: 0.95, metalness: 0.0, flatShading: true });
-  const mortarMat = new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 1.0, metalness: 0.0, flatShading: true });
+function createWalls(): { group: Group; floorMesh: Mesh; wallsGroup: Group } {
+  const group = new Group();
+  const wallsGroup = new Group(); // contains only the 3 wall boxes (hidden when mur_pierre.glb loads)
+  const stoneMat = new MeshStandardMaterial({ color: 0x3a3228, roughness: 0.95, metalness: 0.0, flatShading: true });
+  const mortarMat = new MeshStandardMaterial({ color: 0x2a2420, roughness: 1.0, metalness: 0.0, flatShading: true });
   // C129: mortar lines at z=-9.74 are 0.01u in front of back wall front face at z=-9.75.
   // polygonOffset prevents z-fighting against mur_pierre InstancedMesh tiles on 16-bit depth GPUs.
   mortarMat.polygonOffset = true;
@@ -45,51 +45,51 @@ function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh; wallsGroup:
   mortarMat.polygonOffsetUnits = -2;
 
   // Back wall
-  const back = new THREE.Mesh(new THREE.BoxGeometry(24, 16, 0.5), stoneMat);
+  const back = new Mesh(new BoxGeometry(24, 16, 0.5), stoneMat);
   back.position.set(0, 3, -10);
   group.add(back); wallsGroup.add(back);
 
   // Left wall
-  const left = new THREE.Mesh(new THREE.BoxGeometry(0.5, 16, 20), stoneMat);
+  const left = new Mesh(new BoxGeometry(0.5, 16, 20), stoneMat);
   left.position.set(-12, 3, 0);
   group.add(left); wallsGroup.add(left);
 
   // Right wall
-  const right = new THREE.Mesh(new THREE.BoxGeometry(0.5, 16, 20), stoneMat);
+  const right = new Mesh(new BoxGeometry(0.5, 16, 20), stoneMat);
   right.position.set(12, 3, 0);
   group.add(right); wallsGroup.add(right);
 
   // Flagstone floor
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x201c18, roughness: 0.9, metalness: 0.0, flatShading: true });
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(24, 0.3, 20), floorMat);
+  const floorMat = new MeshStandardMaterial({ color: 0x201c18, roughness: 0.9, metalness: 0.0, flatShading: true });
+  const floor = new Mesh(new BoxGeometry(24, 0.3, 20), floorMat);
   floor.position.set(0, -5, 0);
   group.add(floor);
 
   // Ceiling
-  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x1a1610, roughness: 1.0, metalness: 0.0, flatShading: true });
-  const ceil = new THREE.Mesh(new THREE.BoxGeometry(24, 0.4, 20), ceilMat);
+  const ceilMat = new MeshStandardMaterial({ color: 0x1a1610, roughness: 1.0, metalness: 0.0, flatShading: true });
+  const ceil = new Mesh(new BoxGeometry(24, 0.4, 20), ceilMat);
   ceil.position.set(0, 11, 0);
   group.add(ceil);
 
   // Wooden beams
-  const beamMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
+  const beamMat = new MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
   const beamPositions: Array<[number, number, number]> = [[-4, 10.5, -5], [4, 10.5, -5], [-4, 10.5, 3], [4, 10.5, 3]];
   for (const [x, y, z] of beamPositions) {
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.8), beamMat);
+    const beam = new Mesh(new BoxGeometry(1.2, 0.8, 0.8), beamMat);
     beam.position.set(x, y, z);
     group.add(beam);
   }
   // Cross beams
-  const hBeam1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 16), beamMat);
+  const hBeam1 = new Mesh(new BoxGeometry(0.8, 0.6, 16), beamMat);
   hBeam1.position.set(-4, 10.8, -1);
   group.add(hBeam1);
-  const hBeam2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 16), beamMat);
+  const hBeam2 = new Mesh(new BoxGeometry(0.8, 0.6, 16), beamMat);
   hBeam2.position.set(4, 10.8, -1);
   group.add(hBeam2);
 
   // Stone mortar lines
   for (let i = -3; i <= 3; i++) {
-    const mortar = new THREE.Mesh(new THREE.BoxGeometry(24, 0.08, 0.5), mortarMat);
+    const mortar = new Mesh(new BoxGeometry(24, 0.08, 0.5), mortarMat);
     mortar.position.set(0, i * 1.5 + 3, -9.74);
     group.add(mortar);
   }
@@ -99,10 +99,10 @@ function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh; wallsGroup:
 
 // ── Table with Map/Scroll ────────────────────────────────────────────────────
 
-function createMapTable(): { group: THREE.Group; hitTarget: THREE.Mesh } {
-  const group = new THREE.Group();
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.8, metalness: 0.0, flatShading: true });
-  const mapMat = new THREE.MeshStandardMaterial({
+function createMapTable(): { group: Group; hitTarget: Mesh } {
+  const group = new Group();
+  const woodMat = new MeshStandardMaterial({ color: 0x4a3520, roughness: 0.8, metalness: 0.0, flatShading: true });
+  const mapMat = new MeshStandardMaterial({
     color: 0xc8a96e,
     roughness: 0.6,
     metalness: 0.0,
@@ -112,27 +112,27 @@ function createMapTable(): { group: THREE.Group; hitTarget: THREE.Mesh } {
   });
 
   // Table top
-  const top = new THREE.Mesh(new THREE.BoxGeometry(4, 0.18, 2.5), woodMat);
+  const top = new Mesh(new BoxGeometry(4, 0.18, 2.5), woodMat);
   top.position.set(-5, -2, -3);
   group.add(top);
 
   // Table legs
   const legPositions: Array<[number, number]> = [[-6.8, -4.2], [-3.2, -4.2], [-6.8, -1.8], [-3.2, -1.8]];
   for (const [lx, lz] of legPositions) {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3, 0.2), woodMat);
+    const leg = new Mesh(new BoxGeometry(0.2, 3, 0.2), woodMat);
     leg.position.set(lx, -3.5, lz);
     group.add(leg);
   }
 
   // Map/scroll on table (hit target)
-  const scroll = new THREE.Mesh(new THREE.BoxGeometry(3, 0.08, 1.8), mapMat);
+  const scroll = new Mesh(new BoxGeometry(3, 0.08, 1.8), mapMat);
   scroll.position.set(-5, -1.88, -3);
   group.add(scroll);
 
   // Scroll border
-  const scrollBorder = new THREE.Mesh(
-    new THREE.BoxGeometry(3.1, 0.06, 0.15),
-    new THREE.MeshStandardMaterial({ color: 0x8b6a3a, roughness: 0.7, metalness: 0.1, flatShading: true })
+  const scrollBorder = new Mesh(
+    new BoxGeometry(3.1, 0.06, 0.15),
+    new MeshStandardMaterial({ color: 0x8b6a3a, roughness: 0.7, metalness: 0.1, flatShading: true })
   );
   scrollBorder.position.set(-5, -1.87, -4.0);
   group.add(scrollBorder);
@@ -143,17 +143,17 @@ function createMapTable(): { group: THREE.Group; hitTarget: THREE.Mesh } {
 // ── Crystal Ball ─────────────────────────────────────────────────────────────
 
 interface CrystalResult {
-  group: THREE.Group;
-  hitTarget: THREE.Mesh;
-  light: THREE.PointLight;
-  mat: THREE.MeshStandardMaterial;
-  sphere: THREE.Mesh;
+  group: Group;
+  hitTarget: Mesh;
+  light: PointLight;
+  mat: MeshStandardMaterial;
+  sphere: Mesh;
 }
 
 function createCrystalBall(): CrystalResult {
-  const group = new THREE.Group();
-  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3, flatShading: true });
-  const crystalMat = new THREE.MeshStandardMaterial({
+  const group = new Group();
+  const pedestalMat = new MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3, flatShading: true });
+  const crystalMat = new MeshStandardMaterial({
     color: 0x9060cc,
     roughness: 0.25,
     metalness: 0.1,
@@ -165,26 +165,26 @@ function createCrystalBall(): CrystalResult {
   });
 
   // Pedestal
-  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.55, 0.9, 8), pedestalMat);
+  const pedestal = new Mesh(new CylinderGeometry(0.4, 0.55, 0.9, 8), pedestalMat);
   pedestal.position.set(5, -2, -4);
   group.add(pedestal);
 
   // Crystal sphere (also hit target) — 8×6 segments for readable low-poly facets
-  const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), crystalMat);
+  const sphere = new Mesh(new SphereGeometry(0.7, 8, 6), crystalMat);
   sphere.position.set(5, -1.0, -4);
   group.add(sphere);
 
   // Purple glow — range 5 to avoid bleeding onto back wall (was 8)
-  const light = new THREE.PointLight(0x9060cc, 2.5, 5, 2);
+  const light = new PointLight(0x9060cc, 2.5, 5, 2);
   light.position.set(5, -1.0, -4);
   group.add(light);
 
   // C95: separate invisible hit target — survives sphere.visible=false after crystal_ball.glb loads.
-  // THREE.js raycasting skips objects with .visible=false; material.visible=false is transparent
+  // Three.js raycasting skips objects with .visible=false; material.visible=false is transparent
   // but the object stays raycast-able. Other zones (bookshelf, door, map) use this pattern.
-  const hitSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.85, 6, 5),
-    new THREE.MeshBasicMaterial({ visible: false })
+  const hitSphere = new Mesh(
+    new SphereGeometry(0.85, 6, 5),
+    new MeshBasicMaterial({ visible: false })
   );
   hitSphere.position.set(5, -1.0, -4);
   group.add(hitSphere);
@@ -194,23 +194,23 @@ function createCrystalBall(): CrystalResult {
 
 // ── Bookshelf ─────────────────────────────────────────────────────────────────
 
-function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: THREE.Mesh } {
-  const group = new THREE.Group();
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x2a1a08, emissiveIntensity: 0.0 });
+function createBookshelf(): { group: Group; hitTarget: Mesh; frame: Mesh } {
+  const group = new Group();
+  const shelfMat = new MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x2a1a08, emissiveIntensity: 0.0 });
   // C87: pool of 6 shared book materials — was 18 separate instances (3 rows × 6 books)
   const bookMatPool = [0x8b2020, 0x1a4a2a, 0x1a2a5a, 0x5a3a10, 0x4a1060, 0x6a2010].map(
-    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, metalness: 0.0, flatShading: true })
+    (c) => new MeshStandardMaterial({ color: c, roughness: 0.8, metalness: 0.0, flatShading: true })
   );
 
   // Shelf frame — also returned as visualMesh for emissive hover boost
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(3.5, 5.5, 0.8), shelfMat);
+  const frame = new Mesh(new BoxGeometry(3.5, 5.5, 0.8), shelfMat);
   frame.position.set(8, 0.5, -8);
   group.add(frame);
 
   // 3 shelf rows with books — shared shelf geometry + pooled book materials
-  const shelfGeo = new THREE.BoxGeometry(3.2, 0.12, 0.75);
+  const shelfGeo = new BoxGeometry(3.2, 0.12, 0.75);
   for (let row = 0; row < 3; row++) {
-    const shelf = new THREE.Mesh(shelfGeo, shelfMat);
+    const shelf = new Mesh(shelfGeo, shelfMat);
     shelf.position.set(8, -1.0 + row * 1.7, -8);
     group.add(shelf);
 
@@ -218,8 +218,8 @@ function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: 
     for (let b = 0; b < 6; b++) {
       const bookW = 0.28 + (b * 0.07) % 0.15;
       const bookH = 1.0 + (b * 0.11) % 0.5;
-      const book = new THREE.Mesh(
-        new THREE.BoxGeometry(bookW, bookH, 0.58),
+      const book = new Mesh(
+        new BoxGeometry(bookW, bookH, 0.58),
         bookMatPool[b % bookMatPool.length]!   // C87: reuse pooled material
       );
       book.position.set(8 + xOff + bookW / 2, -0.45 + row * 1.7 + bookH / 2, -8);
@@ -230,9 +230,9 @@ function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: 
   }
 
   // Invisible hit target (front face)
-  const hitTarget = new THREE.Mesh(
-    new THREE.BoxGeometry(3.5, 5.5, 0.15),
-    new THREE.MeshBasicMaterial({ visible: false })
+  const hitTarget = new Mesh(
+    new BoxGeometry(3.5, 5.5, 0.15),
+    new MeshBasicMaterial({ visible: false })
   );
   hitTarget.position.set(8, 0.5, -7.65);
   group.add(hitTarget);
@@ -243,55 +243,55 @@ function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: 
 // ── Door with Light Underneath ────────────────────────────────────────────────
 
 interface DoorResult {
-  group: THREE.Group;
-  hitTarget: THREE.Mesh;
-  lightBeam: THREE.PointLight;
-  doorPanel: THREE.Mesh;  // visible panel for emissive hover boost
+  group: Group;
+  hitTarget: Mesh;
+  lightBeam: PointLight;
+  doorPanel: Mesh;  // visible panel for emissive hover boost
 }
 
 function createDoor(): DoorResult {
-  const group = new THREE.Group();
-  const doorMat = new THREE.MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05, flatShading: true, emissive: 0x5a3010, emissiveIntensity: 0.05 });
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x2a2828, roughness: 0.5, metalness: 0.7, flatShading: true });
-  const lightMat = new THREE.MeshBasicMaterial({ color: 0xffdd88, transparent: true, opacity: 0.85 });
+  const group = new Group();
+  const doorMat = new MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05, flatShading: true, emissive: 0x5a3010, emissiveIntensity: 0.05 });
+  const ironMat = new MeshStandardMaterial({ color: 0x2a2828, roughness: 0.5, metalness: 0.7, flatShading: true });
+  const lightMat = new MeshBasicMaterial({ color: 0xffdd88, transparent: true, opacity: 0.85 });
 
   // Door frame
-  const frameL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 7, 0.5), doorMat);
+  const frameL = new Mesh(new BoxGeometry(0.3, 7, 0.5), doorMat);
   frameL.position.set(-10.1, 0.5, 4);
   group.add(frameL);
-  const frameR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 7, 0.5), doorMat);
+  const frameR = new Mesh(new BoxGeometry(0.3, 7, 0.5), doorMat);
   frameR.position.set(-10.1, 0.5, 7);
   group.add(frameR);
-  const frameTop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 3.6), doorMat);
+  const frameTop = new Mesh(new BoxGeometry(0.3, 0.3, 3.6), doorMat);
   frameTop.position.set(-10.1, 4.2, 5.5);
   group.add(frameTop);
 
   // Door panel
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.15, 6.5, 3), doorMat);
+  const door = new Mesh(new BoxGeometry(0.15, 6.5, 3), doorMat);
   door.position.set(-10.15, 0.25, 5.5);
   group.add(door);
 
   // Iron straps
   for (let i = 0; i < 3; i++) {
-    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 2.8), ironMat);
+    const strap = new Mesh(new BoxGeometry(0.18, 0.12, 2.8), ironMat);
     strap.position.set(-10.07, -1.5 + i * 1.8, 5.5);
     group.add(strap);
   }
 
   // Light sliver under door
-  const lightSliver = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.06, 2.8), lightMat);
+  const lightSliver = new Mesh(new BoxGeometry(0.05, 0.06, 2.8), lightMat);
   lightSliver.position.set(-10.07, -2.17, 5.5);
   group.add(lightSliver);
 
   // Point light seeping through
-  const lightBeam = new THREE.PointLight(0xffdd66, 3.0, 5, 2);
+  const lightBeam = new PointLight(0xffdd66, 3.0, 5, 2);
   lightBeam.position.set(-9.8, -1.8, 5.5);
   group.add(lightBeam);
 
   // Invisible hit target
-  const hitTarget = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 7, 3.5),
-    new THREE.MeshBasicMaterial({ visible: false })
+  const hitTarget = new Mesh(
+    new BoxGeometry(0.5, 7, 3.5),
+    new MeshBasicMaterial({ visible: false })
   );
   hitTarget.position.set(-9.9, 0.5, 5.5);
   group.add(hitTarget);
@@ -302,18 +302,18 @@ function createDoor(): DoorResult {
 // ── Candle System (T064) ──────────────────────────────────────────────────────
 
 interface CandleData {
-  light: THREE.PointLight;
+  light: PointLight;
   particles: Float32Array;
   particleVel: Float32Array;
   particleLife: Float32Array;
-  particleGeo: THREE.BufferGeometry;
+  particleGeo: BufferGeometry;
   phase: number;
   cx: number;
   cy: number;
   cz: number;
 }
 
-function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THREE.Group } {
+function createCandles(scene: Scene): { candles: CandleData[]; group: Group } {
   // Positions match CANDLE_POSITIONS in LairGLBAssets.ts — procedural fallback aligns to GLB placement
   const candlePositions: Array<[number, number, number]> = [
     [-5, -4.85, -7],
@@ -323,7 +323,7 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
 
   // candleBaseMat is a template only — each body gets its own clone() to prevent
   // emissive hover bleed across all 3 candles (BUG-L-CANDLE-SHARED-MAT).
-  const candleBaseMat = new THREE.MeshStandardMaterial({
+  const candleBaseMat = new MeshStandardMaterial({
     color: 0xeedd99,
     roughness: 0.9,
     metalness: 0.0,
@@ -331,16 +331,16 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
     emissiveIntensity: 0.3,
     flatShading: true,
   });
-  const wickMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0, flatShading: true });
+  const wickMat = new MeshStandardMaterial({ color: 0x111111, roughness: 1.0, flatShading: true });
 
   const candles: CandleData[] = [];
   // group holds bodies + wicks + sharedLight — hidden when bougie.glb loads
-  const group = new THREE.Group();
+  const group = new Group();
   scene.add(group);
 
   // Single shared PointLight covers all 3 candles — saves 2 GPU light slots vs individual lights.
   // Positioned at centroid of the 3 candle positions, larger range to cover all.
-  const sharedLight = new THREE.PointLight(0xff9933, 1.8, 9, 2);
+  const sharedLight = new PointLight(0xff9933, 1.8, 9, 2);
   // C108: Y values updated to match actual candlePositions (all cy = -4.85). Former values
   // (-1.6, -4.6, -3.0) were stale from an older layout — light was 1.8u above the flames.
   sharedLight.position.set((-5 + 0 + 3) / 3, (-4.85 + -4.85 + -4.85) / 3 + 0.55, (-7 + -8.5 + -6) / 3);
@@ -351,12 +351,12 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
 
     // Candle body + wick added to group (hidden when bougie.glb loads)
     // candleBaseMat.clone() ensures each body has an independent material ref.
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.7, 8), candleBaseMat.clone());
+    const body = new Mesh(new CylinderGeometry(0.1, 0.12, 0.7, 8), candleBaseMat.clone());
     body.position.set(cx, cy, cz);
     group.add(body);
 
     // Wick
-    const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.1, 4), wickMat);
+    const wick = new Mesh(new CylinderGeometry(0.012, 0.012, 0.1, 4), wickMat);
     wick.position.set(cx, cy + 0.4, cz);
     group.add(wick);
 
@@ -381,19 +381,19 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
       velocities[p * 3 + 2] = (Math.random() - 0.5) * 0.03;
     }
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new BufferAttribute(positions, 3));
 
-    const particleMat = new THREE.PointsMaterial({
+    const particleMat = new PointsMaterial({
       color: 0xff7722,
       size: 0.06,
       transparent: true,
       opacity: 0.75,
-      blending: THREE.AdditiveBlending,
+      blending: AdditiveBlending,
       depthWrite: false,
     });
 
-    const points = new THREE.Points(geo, particleMat);
+    const points = new Points(geo, particleMat);
     // BUG-L-10-CANDLE-MAT fix: add to group (not scene) so particles are hidden
     // when bougie.glb loads and candleGroup.visible = false.
     group.add(points);
@@ -456,7 +456,7 @@ function updateCandles(candles: CandleData[], dt: number, t: number): void {
 // ── Dust Motes ────────────────────────────────────────────────────────────────
 
 interface DustSystem {
-  points: THREE.Points;
+  points: Points;
   update: (dt: number) => void;
 }
 
@@ -474,19 +474,19 @@ function createDustMotes(): DustSystem {
     velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.015;
   }
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new BufferAttribute(positions, 3));
 
-  const mat = new THREE.PointsMaterial({
+  const mat = new PointsMaterial({
     color: 0xddccaa,
     size: 0.04,
     transparent: true,
     opacity: 0.35,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
   });
 
-  const points = new THREE.Points(geo, mat);
+  const points = new Points(geo, mat);
 
   const update = (dt: number): void => {
     const speed = dt * 60;
@@ -510,31 +510,31 @@ function createDustMotes(): DustSystem {
 // ── Cauldron with Green Steam ─────────────────────────────────────────────────
 
 interface CauldronSystem {
-  group: THREE.Group;
-  body: THREE.Mesh;
-  glow: THREE.PointLight;
+  group: Group;
+  body: Mesh;
+  glow: PointLight;
   positions: Float32Array;
   velocities: Float32Array;
   lifetimes: Float32Array;
-  geo: THREE.BufferGeometry;
+  geo: BufferGeometry;
   update: (t: number, dt: number) => void;
 }
 
-function createCauldron(scene: THREE.Scene): CauldronSystem {
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6, flatShading: true, emissive: 0x00aa33, emissiveIntensity: 0.0 });
-  const steamMat = new THREE.PointsMaterial({
+function createCauldron(scene: Scene): CauldronSystem {
+  const ironMat = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6, flatShading: true, emissive: 0x00aa33, emissiveIntensity: 0.0 });
+  const steamMat = new PointsMaterial({
     color: 0x44cc88,
     size: 0.12,
     transparent: true,
     opacity: 0.55,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
   });
 
-  const group = new THREE.Group();
+  const group = new Group();
 
   // Cauldron body
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.65, 10, 8), ironMat);
+  const body = new Mesh(new SphereGeometry(0.65, 10, 8), ironMat);
   body.scale.y = 0.8;
   body.position.set(2, -3.8, -7);
   group.add(body);
@@ -543,13 +543,13 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
   // Legs
   const legDef: Array<[number, number]> = [[-0.4, -0.3], [0.4, -0.3], [0, 0.5]];
   for (const [lx, lz] of legDef) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.5, 5), ironMat);
+    const leg = new Mesh(new CylinderGeometry(0.06, 0.05, 0.5, 5), ironMat);
     leg.position.set(2 + lx, -4.4, -7 + lz);
     group.add(leg);
   }
 
   // Green glow
-  const glow = new THREE.PointLight(0x22cc44, 1.2, 3.5, 2);
+  const glow = new PointLight(0x22cc44, 1.2, 3.5, 2);
   glow.position.set(2, -3.2, -7);
   group.add(glow);
 
@@ -571,9 +571,9 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
     velocities[p * 3 + 2] = (Math.random() - 0.5) * 0.04;
   }
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  const steamPoints = new THREE.Points(geo, steamMat);
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new BufferAttribute(positions, 3));
+  const steamPoints = new Points(geo, steamMat);
   group.add(steamPoints);
 
   const update = (t: number, dt: number): void => {
@@ -602,11 +602,11 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
 
 // ── Potion Bottles ────────────────────────────────────────────────────────────
 
-function createPotionBottles(): THREE.Group {
-  const group = new THREE.Group();
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
+function createPotionBottles(): Group {
+  const group = new Group();
+  const shelfMat = new MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
 
-  const smallShelf = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 0.5), shelfMat);
+  const smallShelf = new Mesh(new BoxGeometry(2.5, 0.1, 0.5), shelfMat);
   smallShelf.position.set(6, -3.5, -7.7);
   group.add(smallShelf);
 
@@ -617,7 +617,7 @@ function createPotionBottles(): THREE.Group {
   ];
 
   for (const b of bottleData) {
-    const mat = new THREE.MeshStandardMaterial({
+    const mat = new MeshStandardMaterial({
       color: b.color,
       roughness: 0.1,
       metalness: 0.0,
@@ -627,10 +627,10 @@ function createPotionBottles(): THREE.Group {
       emissiveIntensity: 0.25,
       flatShading: true,
     });
-    const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.55, 8), mat);
+    const bottle = new Mesh(new CylinderGeometry(0.12, 0.15, 0.55, 8), mat);
     bottle.position.set(b.x, b.y, b.z);
     group.add(bottle);
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 0.18, 6), mat);
+    const neck = new Mesh(new CylinderGeometry(0.06, 0.1, 0.18, 6), mat);
     neck.position.set(b.x, b.y + 0.35, b.z);
     group.add(neck);
   }
@@ -640,14 +640,14 @@ function createPotionBottles(): THREE.Group {
 
 // ── Skull ─────────────────────────────────────────────────────────────────────
 
-function createSkull(): THREE.Group {
-  const group = new THREE.Group();
-  const boneMat = new THREE.MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0, flatShading: true });
-  const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 7), boneMat);
+function createSkull(): Group {
+  const group = new Group();
+  const boneMat = new MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0, flatShading: true });
+  const cranium = new Mesh(new SphereGeometry(0.22, 8, 7), boneMat);
   cranium.scale.y = 0.85;
   cranium.position.set(9, -1.9, -9);
   group.add(cranium);
-  const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.12, 0.22), boneMat);
+  const jaw = new Mesh(new BoxGeometry(0.28, 0.12, 0.22), boneMat);
   jaw.position.set(9, -2.18, -9.02);
   group.add(jaw);
   return group;
@@ -655,31 +655,31 @@ function createSkull(): THREE.Group {
 
 // ── Ambient Lighting — 5-source pass (degraded to 4 on low-end mobile) ──
 // C89-P2: lowEnd=true skips backAccent PointLight (Mali-G57/Adreno 610 budget ~4 lights at 60fps)
-function setupLighting(scene: THREE.Scene, lowEnd = false): void {
-  scene.add(new THREE.AmbientLight(0x1a1008, 0.3));                          // dark warm base (reduced to balance HemiLight below)
+function setupLighting(scene: Scene, lowEnd = false): void {
+  scene.add(new AmbientLight(0x1a1008, 0.3));                          // dark warm base (reduced to balance HemiLight below)
   // C33: HemisphereLight fills stone surfaces — reports flagged every cycle that flatShading relied
   // solely on 5 PointLights with no ambient fill. Sky=blue-grey dungeon vault, ground=warm stone bounce.
   // intensity=0.25: subtle — doesn't wash out dramatic PointLight shadows, just reveals stone facets.
-  scene.add(new THREE.HemisphereLight(0x7080a0, 0x3a2a1a, 0.25));           // sky/ground Celtic fill
+  scene.add(new HemisphereLight(0x7080a0, 0x3a2a1a, 0.25));           // sky/ground Celtic fill
   // C85-02: key moved from overhead [0,8,-2] to forward-angled [0,3,2] — creates
   // depth shadows toward back wall, correct Celtic hall dramaturgy
-  const key = new THREE.PointLight(0xff6618, 0.9, 22, 1.6);
+  const key = new PointLight(0xff6618, 0.9, 22, 1.6);
   key.position.set(0, 3.0, 2); scene.add(key);                              // forward warm fire
-  const rim = new THREE.PointLight(0x6699cc, 0.55, 18, 2.0);
+  const rim = new PointLight(0x6699cc, 0.55, 18, 2.0);
   rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
   // C89-P2: fill intensity boosted +0.15 on low-end to compensate for missing backAccent depth
-  const fill = new THREE.PointLight(0xcc8833, lowEnd ? 0.55 : 0.4, 16, 2.0);
+  const fill = new PointLight(0xcc8833, lowEnd ? 0.55 : 0.4, 16, 2.0);
   fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill left wall
   if (!lowEnd) {
     // C85-02: back-wall accent — warm ember glow throwing forward shadows from rear (skipped on low-end)
-    const backAccent = new THREE.PointLight(0xff5500, 0.35, 12, 2.0);
+    const backAccent = new PointLight(0xff5500, 0.35, 12, 2.0);
     backAccent.position.set(0, 1.5, -11); scene.add(backAccent);
   }
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────
 export function initMerlinLair(container: HTMLElement): LairResult {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  const renderer = new WebGLRenderer({ antialias: true, alpha: false });
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x0d0a08, 1);
@@ -719,10 +719,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   container.appendChild(zoneToast);
 
   // Scene + Camera
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0d0a08, 12, 28);
+  const scene = new Scene();
+  scene.fog = new Fog(0x0d0a08, 12, 28);
 
-  const camera = new THREE.PerspectiveCamera(62, container.clientWidth / container.clientHeight, 0.1, 60);
+  const camera = new PerspectiveCamera(62, container.clientWidth / container.clientHeight, 0.1, 60);
   camera.position.set(0, 0.5, 10); // C127: start pulled back — entry cinematic eases to z=7
   camera.lookAt(0, 0, -4);
 
@@ -776,9 +776,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
   // C107: aligned to visual center — was y=-4.0 (0.2u below visual, BUG-39-13)
-  const cauldronHit = new THREE.Mesh(
-    new THREE.SphereGeometry(0.9, 8, 6),
-    new THREE.MeshBasicMaterial({ visible: false })
+  const cauldronHit = new Mesh(
+    new SphereGeometry(0.9, 8, 6),
+    new MeshBasicMaterial({ visible: false })
   );
   cauldronHit.position.set(2, -3.8, -7);
   scene.add(cauldronHit);
@@ -790,10 +790,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
   // C81-03: disposed flag prevents late-resolving GLBs from adding to a torn-down scene.
   let lairDisposed = false;
-  let crystalGLBGroup: THREE.Group | null = null; // C101: stored to sync float animation to GLB
+  let crystalGLBGroup: Group | null = null; // C101: stored to sync float animation to GLB
   let crystalGLBBaseY = -1.0; // C118: base Y from GLB export root; overwritten by onCrystalGroupLoaded
   // C111: stored to animate GLB emissive in update loop (procedural mat targets hidden sphere post-load)
-  let crystalGLBMat: THREE.MeshStandardMaterial | null = null;
+  let crystalGLBMat: MeshStandardMaterial | null = null;
   let doorFlashing = false;    // C101: door cinematic — lights/emissive burst before transition
   let doorFlashTimer = 0;
   let doorFlashCancelHandle = 0; // C102: tracked to allow clearTimeout in dispose()
@@ -815,7 +815,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     onCrystalGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'crystal');
       if (entry) entry.visualMesh = mesh;
-      crystalGLBMat = mesh.material as THREE.MeshStandardMaterial;
+      crystalGLBMat = mesh.material as MeshStandardMaterial;
     },
     // C101: store GLB group so update loop can animate its Y position (float effect)
     // C118: also capture base Y so float animation is a delta (not hardcoded -1.0)
@@ -850,10 +850,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const crystalEntry = interactives.find((i) => i.zone === 'crystal')!;
   // C122: cache raycaster targets — interactives.map() on every mousemove allocates a 5-element array at 60fps.
   // Refreshed only in onMapGLBLoaded / onShelfGLBLoaded when entry.mesh changes.
-  let raycastTargets: THREE.Object3D[] = interactives.map((i) => i.mesh);
+  let raycastTargets: Object3D[] = interactives.map((i) => i.mesh);
 
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
+  const raycaster = new Raycaster();
+  const mouse = new Vector2();
   let zoneClickCallback: ((zone: LairZone) => void) | null = null;
   let elapsedTime = 0;
   // C127: entry pull-in cinematic — camera eases from z=10 to z=7 over 1.2s
@@ -870,11 +870,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   };
 
   const applyHoverTo = (obj: InteractiveObject, intensity: number): void => {
-    const target = obj.visualMesh ?? (obj.mesh as THREE.Mesh);
+    const target = obj.visualMesh ?? (obj.mesh as Mesh);
     // C119: instanceof guard replaces unsafe cast — MeshBasicMaterial has no emissive property;
     // GLB swaps (onCauldronGLBLoaded) may bring in non-Standard materials → silent no-op was correct
     // behaviour but the cast hid the contract. Now it's explicit.
-    if (!(target.material instanceof THREE.MeshStandardMaterial)) return;
+    if (!(target.material instanceof MeshStandardMaterial)) return;
     if (target.material.emissive) target.material.emissiveIntensity = intensity;
   };
 
@@ -959,7 +959,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         const cb = zoneClickCallback; // capture before setTimeout (TypeScript narrowing)
         doorFlashing = true;
         doorFlashTimer = 0;
-        (doorPanel.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2;
+        (doorPanel.material as MeshStandardMaterial).emissiveIntensity = 1.2;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
         doorFlashCancelHandle = window.setTimeout(() => {
           doorFlashing = false;
@@ -1015,7 +1015,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         const kbCb = zoneClickCallback;
         doorFlashing = true;
         doorFlashTimer = 0;
-        (doorPanel.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2;
+        (doorPanel.material as MeshStandardMaterial).emissiveIntensity = 1.2;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
         doorFlashCancelHandle = window.setTimeout(() => {
           doorFlashing = false;
@@ -1138,7 +1138,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C33: dt-based hover scale lerp — smooth Celtic ritual feel (replaces instant setScalar in handlers)
     // 18 units/s → ~100ms transition at 60fps, ~55ms at 30fps. Stops when within 0.001 of target.
     for (const obj of interactives) {
-      const mesh = (obj.visualMesh ?? obj.mesh) as THREE.Mesh;
+      const mesh = (obj.visualMesh ?? obj.mesh) as Mesh;
       const targetScale = obj.hovered ? 1.05 : 1.0;
       const cur = mesh.scale.x;
       if (Math.abs(cur - targetScale) > 0.001) {
@@ -1170,20 +1170,20 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C120: cancel door flash timeout — lairDisposed guard blocks cb() but closure stays alive 380ms
     clearTimeout(doorFlashCancelHandle);
     scene.traverse((obj) => {
-      if (obj instanceof THREE.InstancedMesh) {
+      if (obj instanceof InstancedMesh) {
         // C109: InstancedMesh.dispose() fires the renderer 'dispose' event so the instanceMatrix
         // GPU buffer (InstancedBufferAttribute) is deallocated. Without this call, instanceMatrix
         // data leaks on repeated hub ↔ lair navigations — geometry.dispose() alone only clears
         // the base vertex attributes, not the per-instance matrix buffer.
         obj.dispose();
         obj.geometry.dispose();
-        (obj.material as THREE.Material).dispose();
-      } else if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
+        (obj.material as Material).dispose();
+      } else if (obj instanceof Mesh || obj instanceof Points) {
         obj.geometry.dispose();
         if (Array.isArray(obj.material)) {
           obj.material.forEach((m) => m.dispose());
         } else {
-          (obj.material as THREE.Material).dispose();
+          (obj.material as Material).dispose();
         }
       }
     });
