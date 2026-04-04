@@ -109,7 +109,7 @@ export class MinigameRunes extends MinigameBase {
     this.firstPick = null;
     this.lockInput = false;
     this.ended = false;
-    this.kbFocusIdx = 0;
+    this.kbFocusIdx = -1; // C105: -1 = no initial focus ring (was 0 — showed amber ring on tile 0 before any keypress, RUN-03)
 
     this.timerInterval = window.setInterval(() => {
       this.timeLeft -= 0.1;
@@ -288,7 +288,7 @@ export class MinigameRunes extends MinigameBase {
   }
 
   protected render(): void {
-    if (!this.ctx || !this.canvas) return;
+    if (!this.ctx || !this.canvas || this.ended) return; // C105: ended guard prevents zombie rAF after cancelAnimationFrame (RUN-01)
     const ctx = this.ctx;
 
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

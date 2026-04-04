@@ -66,6 +66,7 @@ export class MinigameRegard extends MinigameBase {
   private clickedCells: Set<number> = new Set(); // grid indices already clicked
   private pulsePhase = 0;
   private kbFocusIdx = -1; // C136: keyboard-focused cell index (-1 = none)
+  private recallTimeout = 0; // C105: per-round recall deadline — prevents softlock if player never clicks (RGD-01)
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -224,12 +225,14 @@ export class MinigameRegard extends MinigameBase {
 
           if (this.clickedIndex >= this.sequence.length) {
             // Round complete
+            clearTimeout(this.recallTimeout); // C105: cancel recall deadline (RGD-01)
             this.phase = 'feedback';
             this.feedbackCorrect = true;
             this.feedbackTimer = 0.8;
           }
         } else {
           // Wrong -- end round
+          clearTimeout(this.recallTimeout); // C105: cancel recall deadline (RGD-01)
           this.phase = 'feedback';
           this.feedbackCorrect = false;
           this.feedbackTimer = 0.8;
@@ -272,9 +275,11 @@ export class MinigameRegard extends MinigameBase {
         this.clickedIndex++;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
         if (this.clickedIndex >= this.sequence.length) {
+          clearTimeout(this.recallTimeout); // C105: cancel recall deadline (RGD-01)
           this.phase = 'feedback'; this.feedbackCorrect = true; this.feedbackTimer = 0.8;
         }
       } else {
+        clearTimeout(this.recallTimeout); // C105: cancel recall deadline (RGD-01)
         this.phase = 'feedback'; this.feedbackCorrect = false; this.feedbackTimer = 0.8;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       }
@@ -284,6 +289,7 @@ export class MinigameRegard extends MinigameBase {
   };
 
   protected cancelTimers(): void {
+    clearTimeout(this.recallTimeout); // C105: cancel any in-flight recall deadline (RGD-01)
     cancelAnimationFrame(this.animFrame); // C102: centralised teardown
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
@@ -316,6 +322,14 @@ export class MinigameRegard extends MinigameBase {
       this.showTimer -= dt;
       if (this.showTimer <= 0) {
         this.phase = 'recall';
+        // C105: 10s recall deadline — treat expiry as wrong answer to prevent softlock (RGD-01)
+        this.recallTimeout = window.setTimeout(() => {
+          if (this.phase !== 'recall') return; // guard: already transitioned
+          this.phase = 'feedback';
+          this.feedbackCorrect = false;
+          this.feedbackTimer = 0.8;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+        }, 10000);
         const instrEl = document.getElementById('mg-regard-instr');
         if (instrEl) instrEl.textContent = 'Clique les symboles dans le bon ordre !';
         const statusEl = document.getElementById('mg-regard-status');
