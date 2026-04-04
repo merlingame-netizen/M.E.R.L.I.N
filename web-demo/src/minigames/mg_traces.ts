@@ -117,7 +117,7 @@ export class MinigameTraces extends MinigameBase {
       this.currentIndex++;
       if (this.currentIndex >= this.footprintCount) {
         // C99: audio feedback — sequence complete
-        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'ogham_unlock' } }));
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
         this.endGame();
       }
     }

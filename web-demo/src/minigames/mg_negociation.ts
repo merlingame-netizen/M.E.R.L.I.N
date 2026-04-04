@@ -131,6 +131,7 @@ export class MinigameNegociation extends MinigameBase {
     // Sequence display
     const seqLabel = document.createElement('div');
     seqLabel.id = 'mg-nego-sequence';
+    seqLabel.setAttribute('aria-live', 'polite'); // C114
     seqLabel.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:12px;text-align:center;font-family:system-ui;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
     seqLabel.textContent = 'Sequence: ...';
     this.container.appendChild(seqLabel);

@@ -98,6 +98,7 @@ export class MinigameApaisement extends MinigameBase {
     // Score display
     const scoreEl = document.createElement('div');
     scoreEl.id = 'mg-apaise-score';
+    scoreEl.setAttribute('aria-live', 'polite'); // C114
     scoreEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     scoreEl.textContent = 'Synchronisation: --';
     this.container.appendChild(scoreEl);

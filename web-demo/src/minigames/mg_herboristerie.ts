@@ -96,6 +96,7 @@ export class MinigameHerboristerie extends MinigameBase {
   private animFrame = 0;
   private ended = false;
   private timerInterval = 0;
+  private endTimeout = 0; // C114: stored so cleanup() can cancel if player exits within 300ms delay
 
   // Grid config
   private readonly gridCols = 5;
@@ -306,7 +307,7 @@ export class MinigameHerboristerie extends MinigameBase {
     }
 
     if (this.correctPicks >= this.totalTargets) {
-      setTimeout(() => this.endGame(), 300);
+      this.endTimeout = window.setTimeout(() => this.endGame(), 300); // C114: store handle for cleanup()
     }
   }
 
@@ -334,6 +335,7 @@ export class MinigameHerboristerie extends MinigameBase {
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
+    clearTimeout(this.endTimeout); // C114: cancel pending 300ms delay if endGame fires via timer
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
@@ -488,6 +490,7 @@ export class MinigameHerboristerie extends MinigameBase {
   }
 
   protected cleanup(): void {
+    clearTimeout(this.endTimeout); // C114: prevent stale endGame() on destroyed DOM
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);

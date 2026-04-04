@@ -126,6 +126,7 @@ export class MinigameFouille extends MinigameBase {
     // Status
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-fouille-status';
+    statusEl.setAttribute('aria-live', 'polite'); // C114
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Clique sur l\'objet cible...';
     this.container.appendChild(statusEl);
