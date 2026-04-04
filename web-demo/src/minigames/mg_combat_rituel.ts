@@ -108,6 +108,8 @@ export class MinigameCombatRituel extends MinigameBase {
     // Input -- pointer move
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
+    // C128: arrow key cursor — WCAG 2.1.1 keyboard accessibility
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.playerX = this.centerX;
@@ -168,6 +170,28 @@ export class MinigameCombatRituel extends MinigameBase {
     }
   };
 
+  // C128: arrow key cursor — WCAG 2.1.1 (mirrors mg_sang_froid C96 pattern)
+  // Moves playerX/Y by 10px per press; clamps to arena boundary matching onPointerMove.
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    if (!isArrow) return;
+    e.preventDefault();
+    const step = 10;
+    if (e.key === 'ArrowLeft')       this.playerX -= step;
+    else if (e.key === 'ArrowRight') this.playerX += step;
+    else if (e.key === 'ArrowUp')    this.playerY -= step;
+    else if (e.key === 'ArrowDown')  this.playerY += step;
+    // Clamp to arena boundary (same constraint as onPointerMove)
+    const dx = this.playerX - this.centerX;
+    const dy = this.playerY - this.centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > this.arenaRadius - 8) {
+      const scale = (this.arenaRadius - 8) / dist;
+      this.playerX = this.centerX + dx * scale;
+      this.playerY = this.centerY + dy * scale;
+    }
+  };
+
   private checkCollision(): boolean {
     const px = this.playerX - this.centerX;
     const py = this.playerY - this.centerY;
@@ -201,6 +225,7 @@ export class MinigameCombatRituel extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     // Score = survival time percentage (0-80) + center bonus (0-20)
     const survivalPct = (this.survivalTime / this.totalTime) * 80;
@@ -362,6 +387,7 @@ export class MinigameCombatRituel extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

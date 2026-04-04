@@ -1,0 +1,152 @@
+{
+  "timestamp": "2026-04-04T00:00:00Z",
+  "cycle": "C64",
+  "auditor": "merlin-ai-playtester",
+  "subject": "MerlinLairScene + LairGLBAssets + 14 minigames — full AAA ULTRA audit post-C127",
+  "scores": {
+    "1_flat_shading_coherence": 9.5,
+    "2_z_fighting_residual": 9.2,
+    "3_materiaux_qualite": 9.4,
+    "4_lighting_dramaturgie": 9.1,
+    "5_GLB_coverage": 9.6,
+    "6_proportions_geometriques": 8.8,
+    "7_style_celtic_coherence": 9.5,
+    "8_bundle_perf": 9.7,
+    "9_memory_leaks": 9.3,
+    "10_fps_budget": 9.2,
+    "11_ux_aria": 9.4,
+    "12_hover_feedback": 9.3,
+    "global_average": 9.25
+  },
+  "verdict": "PROCEED",
+  "criterion_detail": {
+    "1_flat_shading_coherence": {
+      "score": 9.5,
+      "pass": true,
+      "notes": "All procedural geometry created with flatShading:true on MeshStandardMaterial. applyFlatShading() in LairGLBAssets enforces flatShading on all GLB meshes with instanceof MeshStandardMaterial guard (C120). Crystal ball GLB exception is correct — glass/crystal intentionally skips flatShading to preserve translucency. Candle GLBs (bougie.glb) apply flatShading per-clone. Cauldron GLB sets flatShading=true per mesh in loadLairGLBs. Procedural skull, potions, dust, candles all have flatShading:true. Minor: table_druidique.glb delegates flat-shading to applyFlatShading() but no explicit test for mixed-material GLBs (no deduction — pattern is defensive)."
+    },
+    "2_z_fighting_residual": {
+      "score": 9.2,
+      "pass": true,
+      "notes": "C112 sol_pierre.glb: Y offset +0.02 + polygonOffset factor=-2 units=-4 (covers 16-bit GPU). C112/C89/C90 mur_pierre InstancedMesh: factor=-2 units=-4 on tileMat. C125 bibliotheque.glb: non-uniform scale 1.2/1.0/0.8 against right wall at x=11.76 — polygonOffset factor=-2 units=-4 applied. Back wall mortar lines at z=-9.74 (procedural wall at z=-9.76) — 0.02u gap. RESIDUAL ISSUE: table_druidique.glb at Y=-5.0 vs procedural floor at Y=-5.0 (BoxGeometry Y=-5, thickness 0.3, top face at Y=-4.85) — delta is 0.15u which is fine on desktop but may artifact on 16-bit depth at z=-3 (close to camera). No polygonOffset on table_druidique. Deduction -0.8."
+    },
+    "3_materiaux_qualite": {
+      "score": 9.4,
+      "pass": true,
+      "notes": "All GLB meshes cloned before material mutation (C81-04 pattern). Candle bodies cloned via candleBaseMat.clone() per body, preventing emissive bleed across all 3 candles. Book material pool (6 shared instances, C87) is correct — books don't need independent emissive, only the frame does. Crystal ball GLB: material cloned, emissive=0x6030aa, emissiveIntensity=0.6 baseline. Cauldron GLB: roughness=0.9 metalness=0.0 flatShading=true — good iron quality. Potion bottles: transparent=true opacity=0.78, emissive=color, roughness=0.1 — glass feel. Crystal ball procedural: opacity=0.82, emissive=0x6030aa — correct. All template materials disposed after clone (candleBaseMat, wickMat C81-07). Minor: potion bottle materials not disposed on scene teardown (scene.traverse() catches them as obj.material is MeshStandardMaterial, so no leak). Score: strong."
+    },
+    "4_lighting_dramaturgie": {
+      "score": 9.1,
+      "pass": true,
+      "notes": "5-source lighting (desktop) / 4-source (mobile low-end): AmbientLight 0x1a1008 0.5 + key PointLight 0xff6618 0.9 forward at [0,3,2] + rim 0x6699cc 0.55 from door + fill warm 0xcc8833 0.4 left wall + backAccent 0xff5500 0.35 rear ember. Candle sharedLight 0xff9933 1.8 range=9 (covers 3 candles). Crystal PointLight 0x9060cc 2.5 range=5. Cauldron glow 0x22cc44 1.2 range=3.5. Door beam 0xffdd66 3.0 range=5. Total active lights on desktop = 9 (AmbientLight + 4 scene + sharedLight + crystal + cauldron + door). Three.js per-pixel limit is 8 (WebGL1) or unlimited (WebGL2). Modern browsers use WebGL2 — safe. Mobile limit ~4 hardware lights at 60fps: low-end path drops backAccent to 8 total, borderline. Crystal pulse Math.sin(elapsedTime*1.8)*0.4 over 2.2 baseline — visible and atmospheric. Door cinematic: doorLight.intensity=12+Math.sin(timer*45)*4 — high-frequency flash (45rad/s = 7.2Hz) during 380ms window. Good dramatic dramaturgy. Fog: near=12 far=28 — creates depth toward back wall correctly. Minor deduction: rim light at [8,2,7] near door — may wash out door emissive slightly on high-end. Y=2 is below camera (camera at y=0.5+oscillation) — creates low-angle cool fill which is actually correct for moonlight from door. OK."
+    },
+    "5_GLB_coverage": {
+      "score": 9.6,
+      "pass": true,
+      "notes": "7 GLBs loaded: cauldron_merlin.glb + bougie.glb (3 clones) + table_druidique.glb + bibliotheque.glb + sol_pierre.glb + mur_pierre.glb + crystal_ball.glb. All 5 interactive zones have either GLB or procedural fallback: map=table_druidique.glb (fallback: mapGroup scroll), crystal=crystal_ball.glb (fallback: procedural sphere), bookshelf=bibliotheque.glb (fallback: shelfGroup), door=procedural only (no GLB — correct, door is architectural), cauldron=cauldron_merlin.glb (fallback: cauldron system). All callbacks (onMapGLBLoaded, onShelfGLBLoaded, onCrystalGLBLoaded, onCauldronGLBLoaded, onCrystalGroupLoaded) implemented correctly. C81-03 isDisposed() guard on all 7 GLB loads. Fade-in on all GLBs (C97). Minor: door has no GLB — procedural door is adequate for architectural element. No deduction."
+    },
+    "6_proportions_geometriques": {
+      "score": 8.8,
+      "pass": true,
+      "notes": "Room: 24×16×20 units. Crystal ball GLB scale=0.8 at y=-1.0 (pedestal at y=-2 r=0.4/0.55). Cauldron GLB scale=0.72 at [2,-4.65,-7] — body sphere r=0.65 scale.y=0.8 at y=-3.8, so GLB positioned 0.85u below procedural body: plausible offset for GLB root vs visual center. Candle GLB scale=0.42 — reasonable for candlestick. Table druidique scale=1.0 at y=-5.0 — table top procedural at y=-2 (height ~3 units of space). GLB table likely has its own internal y=0 reference. bibliotheque.glb scale [1.2,1.0,0.8] non-uniform at [8.8,-5.0,-8] — non-uniform scale is a style choice but loses aspect ratio (x squeezed in z). Potential visual issue on high-poly GLBs where scaling distorts shading normals. sol_pierre.glb scale [1,1,1] at y=-4.98 — floor is 24×20 procedurally, sol_pierre may not cover full floor extent (room 24 wide, GLB at origin). Deduction -1.2 for bibliotheque non-uniform scale shading risk and possible floor GLB coverage gap."
+    },
+    "7_style_celtic_coherence": {
+      "score": 9.5,
+      "pass": true,
+      "notes": "ZONE_LORE (5 entries): 'Quelle contree de Bretagne t'appelle ce soir ?' (map) — Breton geography anchoring. 'Les runes d'ogham murmurent dans la pierre sacree' (crystal) — Ogham lore correct. 'Les chroniques de Merlin gardent memoire de tes actes' (bookshelf) — Arthurian/Merlin canon. 'Le chaudron de Cerridwen bouillonne de sagesse ancienne' (cauldron) — Cerridwen is the Welsh goddess of the cauldron of transformation, correct mythological anchor. 'Les bois de Broceliande t'attendent, voyageur' (door) — Broceliande is the legendary Breton forest of Arthurian legend, perfect. Minigame theming: Combat Rituel uses ogham runes (\\u1680 ogham space mark), Course uses ogham alphabet letters, Echo uses ogham symbols as flash targets, Regard uses ogham sequence — all coherent. Negociation uses druid/korrigan/niamh/ankou faction vocabulary — fully Celtic. Herboristerie uses shamrock/gui/verveine — Breton flora. Color palette throughout: dark greens, ambers, purples — Celtic atmosphere. High cohesion."
+    },
+    "8_bundle_perf": {
+      "score": 9.7,
+      "pass": true,
+      "notes": "vite.config.ts: three-core chunk isolates three.js (~529KB raw). chunkSizeWarningLimit=550 suppresses expected warning. Minigames chunk covers MinigameRegistry + MinigameBase only — 14 mg_*.ts files pulled in via static imports in Registry. Bundle sizes from last known build: main 50.77KB (gzip), three-core expected ~180KB gzip, minigames 23.70KB gzip. Main is well under 200KB threshold. reportCompressedSize=true for visibility. sourcemap=true for debugging. Server port 5173 standard. No dynamic imports in vite.config needed — minigame chunk deferred until first run start (correct strategy). No console.log in production files verified (all debug removed per C106). Minor: vite comment updated C126 for accuracy (no deduction since verified accurate)."
+    },
+    "9_memory_leaks": {
+      "score": 9.3,
+      "pass": true,
+      "notes": "dispose() completeness: lairDisposed=true gates all in-flight GLB callbacks. clearGLBCache() before geometry.dispose() prevents stale cached GLTF on second visit. ResizeObserver.disconnect() OR window.removeEventListener fallback. All 6 DOM event listeners removed (mousemove, click, touchmove, touchstart, touchend, keydown). clearTimeout(doorFlashCancelHandle). scene.traverse() disposes geometry+material for all Mesh, Points, InstancedMesh. renderer.domElement.parentNode.removeChild() with null guard. stopAmbient(). cursor reset before removeChild (C119). GLB fadeInGLB: isDisposed() guard in rAF tick. InstancedMesh.dispose() explicit (C109). All minigames: clearInterval(timerInterval), cancelAnimationFrame(animFrame), removeEventListener on all handlers. endTimeout/foundTimeout stored and cleared in cleanup (C99/C100/C114). Minor residual: ariaLive div and zoneToast div added to container but NOT explicitly removed in dispose(). If container.innerHTML is not cleared by caller, these orphan nodes persist. Deduction -0.7."
+    },
+    "10_fps_budget": {
+      "score": 9.2,
+      "pass": true,
+      "notes": "InstancedMesh: 48 wall tiles → 3 InstancedMesh (18+15+15). C87: 48 draw calls → 3. Book materials: 6 pooled (C87). Candle sharedLight: 3 candles → 1 PointLight instead of 3 (saves 2 GPU slots). crystalEntry cached at init (C118) — no Array.find() on 60fps hot path. raycastTargets cached (C122) — no interactives.map() on every mousemove. FPS monitoring: 2s sample window, hysteresis [45,52] (C108). lowFpsMode drops dust.update(dt) — 80 particle positions saved each frame. Crystal pulse: Math.sin(elapsedTime*1.8) — single trig call per frame. Candle flicker: 3 sin calls per candle (multi-frequency) — 9 sin calls total. Acceptable. Camera sway: 2 sin calls. 30 steam particles + 20 particles per candle (3 candles = 60) + 80 dust = 170 particle positions updated per frame (before lowFpsMode). On low-end: dust drops to 0, 90 particles. Raycaster: intersectObjects on 5 targets (cached) — cheap. Minor: Math.PI*2 computed inline in camera sway trig (could be const) — negligible at 60fps. No deduction."
+    },
+    "11_ux_aria": {
+      "score": 9.4,
+      "pass": true,
+      "notes": "Canvas: role=application, aria-label describing 5 zones + interaction model, tabindex=0, aria-describedby=lair-aria-live (C126). ariaLive div: id=lair-aria-live, aria-live=polite, aria-atomic=true, visually hidden (CSS clip/overflow). zoneToast: role=status, aria-live=polite, aria-atomic=true (C124). Keyboard navigation: Tab/ArrowRight/ArrowDown cycle forward, ArrowLeft/ArrowUp cycle backward through 5 zones. Enter/Space activates. Zone activation: ariaLive updated with zone name + 'activee'. Keyboard door path mirrors pointer cinematic (C113). WCAG 2.1 SC 4.1.3 satisfied by role=status on toast. WCAG 2.1 SC 1.3.1 satisfied by aria-describedby link (C126). Minigames: all 14 canvas elements have role=application + aria-label. Timer bars have role=progressbar + aria-valuemin/max/now. Status elements have aria-live=polite. Keyboard support: Echo (ArrowKeys), Herboristerie (ArrowKeys+Enter/Space), Sang-Froid (ArrowKeys). Minor: mg_volonte and mg_combat_rituel do not have explicit keyboard support — pointer-only. Minor deduction -0.6."
+    },
+    "12_hover_feedback": {
+      "score": 9.3,
+      "pass": true,
+      "notes": "4-layer hover system: (1) cursor=pointer on hover, cursor=default on leave. (2) scale 1.0→1.05 on visualMesh. (3) emissiveIntensity boost via applyHoverTo() (0.65 on hover, baseEmissive on leave). (4) zoneToast with zone name + Celtic lore text. SFX: 'hover' sound on zone enter, 'flip' on click, 'magic_reveal' on door. crystalEntry.hovered tracked for pulse override in update loop (C113) — prevents update loop from overriding hover emissive boost. Crystal emissive: unhovered=0.5+sin*0.15, hovered=0.9+sin*0.15 — clear differential. visualMesh correctly targets visible geometry, not invisible hitTarget. onTouchEnd clears hover state (C85-01). Keyboard path syncs lore toast (C101). GLB swap updates visualMesh via callbacks (onCauldronGLBLoaded, onCrystalGLBLoaded, onMapGLBLoaded, onShelfGLBLoaded) — post-load hover works. Minor: cauldron baseEmissive=0.0, door baseEmissive=0.05 — on unhover the procedural cauldron body has emissiveIntensity=0.0 (no ambient glow). This is intentional (cauldron glow comes from cauldron PointLight, not emissive). No deduction."
+    }
+  },
+  "game_feel_analysis": {
+    "entry_cinematic_c127": {
+      "math": "t = min(elapsedTime/1.2, 1.0); eased = 1-(1-t)^3 (cubic ease-out); camera.z = 10 - 3*eased → range [10,7]",
+      "correctness": "PASS — cubic ease-out: t=0→eased=0 (z=10), t=0.5→eased=0.875 (z=7.375), t=1→eased=1.0 (z=7). Starts fast, decelerates smoothly into resting position. ENTRY_CAM_DURATION=1.2s well-chosen: quick enough to feel cinematic, slow enough to orient the player.",
+      "continuity": "Camera sway (Math.sin * 0.1 x, 0.06 y) is applied AFTER entryCamDone, not during. Actually both blocks run concurrently — during cinematic, sway is also applied, creating a compound motion. At t<1.2s: z eases in + x/y sway. This adds life but means z never exactly hits 7.0 during sway phase. Once entryCamDone=true, z is locked at 7 and only sway applies. Acceptable — the oscillation magnitude (0.1x, 0.06y) is small.",
+      "verdict": "SMOOTH"
+    },
+    "door_cinematic": {
+      "doorFlashing_guard": "Both pointer (onPointerAction) and keyboard (onKeyDown Enter) paths check 'if (doorFlashing) return' before starting flash. Prevents double-activation within 380ms window.",
+      "flash_logic": "doorFlashTimer drives doorLight.intensity=12+sin(timer*45)*4. 45rad/s = 7.2Hz strobe. Duration=380ms allows ~2.7 cycles. SFX: magic_reveal fires immediately. Callback fires after setTimeout(380ms) with lairDisposed guard.",
+      "verdict": "SOLID — both input paths correctly guarded"
+    },
+    "transition_flow": "onZoneActivate → zoneClickCallback set externally via onZoneClick(cb). Click → onPointerAction → zoneClickCallback(zone) (or door cinematic delay). Clean separation."
+  },
+  "tieredValue_coverage": {
+    "total_minigames": 14,
+    "fully_tiered": 14,
+    "status": "COMPLETE",
+    "mg_regard_roundLengths": {
+      "tier0": [3, 4, 5],
+      "tier1": [4, 5, 6],
+      "tier2": [4, 5, 6],
+      "tier3": [5, 6, 7],
+      "progression_quality": "GOOD — tier0 is accessible (3 symbols), tier3 is demanding (7 symbols). Tier1=Tier2 is intentional (gradual ramp, not cliff). Reduce expression over 3 rounds creates escalating cognitive load within each run — good game design."
+    }
+  },
+  "top3_bugs": [
+    {
+      "rank": 1,
+      "severity": "MEDIUM",
+      "title": "ariaLive and zoneToast DOM nodes not removed on dispose()",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "line": 1124,
+      "detail": "dispose() removes renderer.domElement via removeChild() but ariaLive (id=lair-aria-live) and zoneToast divs remain attached to container. On repeated lair visits, duplicate IDs accumulate in the DOM. aria-describedby=lair-aria-live will resolve to the FIRST occurrence (oldest orphan) after the second visit, breaking screen reader announcements. Also a minor DOM memory leak.",
+      "fix": "Add to dispose(): ariaLive.parentNode?.removeChild(ariaLive); zoneToast.parentNode?.removeChild(zoneToast); Alternatively add both to a refs array and remove in a loop."
+    },
+    {
+      "rank": 2,
+      "severity": "MEDIUM",
+      "title": "table_druidique.glb has no polygonOffset against floor at Y=-5.0",
+      "file": "web-demo/src/scenes/LairGLBAssets.ts",
+      "line": 154,
+      "detail": "table_druidique.glb is positioned at y=-5.0 (scene.position). The procedural floor box is at y=-5.0 center with thickness 0.3, so its top face is at y=-4.85. Sol_pierre.glb is at y=-4.98 with polygonOffset. Table_druidique has no polygonOffset — its base geometry may intersect sol_pierre at y=-4.98 creating z-fighting at table base on 16-bit depth GPUs (Mali-T720, Adreno 306). All other surface-adjacent GLBs have been patched (C112 sol_pierre, C89/C90 mur_pierre, C125 bibliotheque).",
+      "fix": "Apply polygonOffset factor=-2 units=-4 to table_druidique.glb meshes after applyFlatShading(), matching the established pattern for bibliotheque and sol_pierre."
+    },
+    {
+      "rank": 3,
+      "severity": "LOW",
+      "title": "mg_volonte and mg_combat_rituel have no keyboard cursor support (pointer-only)",
+      "file": "web-demo/src/minigames/mg_volonte.ts and mg_combat_rituel.ts",
+      "line": 115,
+      "detail": "Both minigames track cursor via pointermove/pointerdown only. Keyboard-only players (WCAG 2.1.1) cannot interact with the cursor mechanic. mg_sang_froid and mg_ombres implement ArrowKey cursor movement as reference implementations. mg_volonte has a stationary target (can be played with keyboard), mg_combat_rituel requires cursor dodging which is inherently pointer-oriented but could benefit from arrow key micro-movement (10px steps) as in sang_froid.",
+      "fix": "Add onKeyDown handler to both minigames mirroring the ArrowKey cursor movement pattern from mg_sang_froid.ts (lines 158-171). Center-teleport on first ArrowKey press. This brings them to WCAG 2.1.1 compliance matching the rest of the minigame suite."
+    }
+  ],
+  "balance_recommendations": [],
+  "positive_findings": [
+    "C127 entry cinematic: cubic ease-out math correct, 1.2s duration appropriate, z=10→7 range gives good depth reveal",
+    "C122 raycastTargets cached — eliminates 5-element array allocation on every mousemove at 60fps",
+    "C118 crystalEntry cached — eliminates Array.find() closure on hot 60fps update path",
+    "C125 bibliotheque polygonOffset correctly applied before scene.add() — prevents z-fighting on non-uniform scale",
+    "C121/C122 GLB swap pattern for map and shelf zones is robust — raycasting survives procedural group hide",
+    "C112 sharedLight for 3 candles — saves 2 GPU light slots without visual degradation",
+    "All 14 minigames have tieredValue coverage — COMPLETE as of C126",
+    "mg_regard C126 roundLengths array-of-arrays: TypeScript inference verified safe in C63 audit, no regression",
+    "dispose() is thorough: InstancedMesh GPU buffers (C109), GLB cache (C117), ResizeObserver (C117), cursor reset before removeChild (C119)",
+    "ZONE_LORE 5 entries: all grounded in specific Celtic/Arthurian mythology (Cerridwen, Broceliande)"
+  ]
+}

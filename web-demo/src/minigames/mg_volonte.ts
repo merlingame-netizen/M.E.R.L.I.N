@@ -114,6 +114,8 @@ export class MinigameVolonte extends MinigameBase {
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
+    // C128: arrow key cursor — WCAG 2.1.1 keyboard accessibility (mirrors mg_sang_froid C96 pattern)
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state — cursor at (0,0) so idle player starts OUTSIDE the target (dist≈269 > radius 30).
     this.cursorX = 0;
@@ -151,6 +153,20 @@ export class MinigameVolonte extends MinigameBase {
     this.cursorY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
   };
 
+  // C128: arrow key cursor — WCAG 2.1.1 (mirrors mg_sang_froid C96/C98 pattern)
+  // Auto-centers on first arrow press so keyboard-only players start inside the target zone.
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    if (!isArrow) return;
+    e.preventDefault();
+    if (this.cursorX === 0 && this.cursorY === 0) { this.cursorX = this.centerX; this.cursorY = this.centerY; }
+    const step = 10;
+    if (e.key === 'ArrowLeft')       this.cursorX = Math.max(0, this.cursorX - step);
+    else if (e.key === 'ArrowRight') this.cursorX = Math.min(this.canvasW, this.cursorX + step);
+    else if (e.key === 'ArrowUp')    this.cursorY = Math.max(0, this.cursorY - step);
+    else if (e.key === 'ArrowDown')  this.cursorY = Math.min(this.canvasH, this.cursorY + step);
+  };
+
   private spawnDistractor(): void {
     // Spawn at random position away from center
     const angle = Math.random() * Math.PI * 2;
@@ -185,6 +201,7 @@ export class MinigameVolonte extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const score = this.totalTime > 0
       ? (this.timeOnTarget / this.totalTime) * 100
@@ -353,6 +370,7 @@ export class MinigameVolonte extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

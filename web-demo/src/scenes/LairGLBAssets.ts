@@ -154,6 +154,19 @@ export function loadLairGLBs(
     gltf.scene.position.set(-5, -5.0, -3);
     gltf.scene.scale.setScalar(1.0);
     applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
+    // C128: polygonOffset guards against z-fighting on 16-bit depth GPUs (Mali-T720/Adreno 306).
+    // table_druidique at Y=-5.0 is adjacent to sol_pierre at Y=-4.98 — same risk pattern as bibliotheque.
+    gltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const m = child.material;
+        if (m instanceof THREE.MeshStandardMaterial) {
+          m.polygonOffset = true;
+          m.polygonOffsetFactor = -2;
+          m.polygonOffsetUnits = -4;
+          m.needsUpdate = true;
+        }
+      }
+    });
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.mapGroup.visible = false;
