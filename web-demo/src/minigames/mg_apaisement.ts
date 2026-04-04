@@ -364,8 +364,6 @@ export class MinigameApaisement extends MinigameBase {
 
     // Tap feedback text
     if (this.feedbackAlpha > 0 && this.lastTapFeedback) {
-      ctx.fillStyle = this.feedbackColor.replace(')', `,${this.feedbackAlpha})`).replace('rgb', 'rgba');
-      // Simpler approach: just use the color with globalAlpha
       ctx.save();
       ctx.globalAlpha = this.feedbackAlpha;
       ctx.fillStyle = this.feedbackColor;
