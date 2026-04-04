@@ -5,8 +5,9 @@ import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Point
 
 /** Add shelves, moonlight shaft and parchment rolls to the lair scene.
  *  Returns a cleanup callback that removes the SpotLight target from the scene —
- *  moon.target is world-space (scene.add) so it won't be caught by traverse() in dispose(). */
-export function createLairDensity(scene: Scene): () => void {
+ *  moon.target is world-space (scene.add) so it won't be caught by traverse() in dispose().
+ *  C38: lowEnd=true skips biblio PointLight to stay within Mali-G57/Adreno 610 budget. */
+export function createLairDensity(scene: Scene, lowEnd = false): () => void {
   const group = new Group();
 
   const sM = new MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
@@ -32,9 +33,12 @@ export function createLairDensity(scene: Scene): () => void {
     roll.position.set(x, -4.8, z); group.add(roll);
   }
   // C36: warm amber accent for right-wall bibliotheque zone (no dedicated light before)
-  const biblio = new PointLight(0xffa040, 0.6, 6, 2);
-  biblio.position.set(10, -3.5, -7);
-  group.add(biblio);
+  // C38: skipped on lowEnd (Mali-G57/Adreno 610 mobile budget); y=0 targets book spines (was -3.5 = floor)
+  if (!lowEnd) {
+    const biblio = new PointLight(0xffa040, 0.6, 6, 2);
+    biblio.position.set(10, 0, -7);
+    group.add(biblio);
+  }
 
   scene.add(group);
   // C35: return cleanup so MerlinLairScene.dispose() can remove the world-space target

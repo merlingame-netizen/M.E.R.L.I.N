@@ -772,7 +772,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const cauldron = createCauldron(scene);
   scene.add(createPotionBottles());
   scene.add(createSkull());
-  const cleanupLairDensity = createLairDensity(scene); // C35: capture cleanup for moon.target disposal
+  const cleanupLairDensity = createLairDensity(scene, isLowEndMobile); // C35: cleanup for moon.target; C38: lowEnd gate for biblio PointLight
 
   // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
   // C107: aligned to visual center — was y=-4.0 (0.2u below visual, BUG-39-13)
