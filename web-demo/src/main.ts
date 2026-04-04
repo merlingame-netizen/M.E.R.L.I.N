@@ -716,6 +716,8 @@ async function main(): Promise<void> {
     // Phase 3: Reveal and enter game
     loading.style.display = 'flex';
     loading.style.opacity = '1';
+    // C167: brief CRT-style loading label so player sees feedback during scene init
+    loading.innerHTML = `<div style="color:#33ff66;font-family:'Courier New',Courier,monospace;font-size:13px;letter-spacing:0.1em;">INIT_BIOME: ${chosenBiome.replace(/_/g, '-').toUpperCase()}…</div>`;
 
     // Init scene (fresh per run)
     const sceneManager = new SceneManager(app);
@@ -773,6 +775,7 @@ async function main(): Promise<void> {
     startAmbient(biomeToAmbient(chosenBiome));
 
     // Hide loading screen and reveal game (clear scene-transition black overlay)
+    loading.innerHTML = ''; // C167: clear biome label before hiding
     loading.style.opacity = '0';
     loading.style.transition = 'opacity 0.5s';
     setTimeout(() => { loading.style.display = 'none'; }, 500);

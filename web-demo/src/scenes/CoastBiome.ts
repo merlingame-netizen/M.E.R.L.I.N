@@ -386,6 +386,11 @@ export interface BiomeSceneResult {
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
+  // C167: fog params for sceneManager.updateFog() — matches sky horizon vertex colour
+  // (0.471, 0.769, 0.941) = 0x78c4f0; light coastal sea-haze, density kept low.
+  (group as typeof group & { fogColor: number; fogDensity: number }).fogColor   = 0x78c4f0;
+  (group as typeof group & { fogColor: number; fogDensity: number }).fogDensity = 0.010;
+
   // ── C163: N64 bright coastal lighting — warm golden sun + vivid sky hemisphere ──
   group.add(new AmbientLight(0x5090b8, 0.65));
 

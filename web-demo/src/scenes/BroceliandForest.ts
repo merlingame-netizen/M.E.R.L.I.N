@@ -450,8 +450,10 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   // Atmospheric fog (Three.js scene fog — applied by renderer)
   // Instanced on the group, picked up by SceneManager when scene.fog is set there.
   // We embed fog params in this group for SceneManager to detect.
-  (group as Group & { fogColor?: number; fogDensity?: number }).fogColor   = 0x1a2a18;
-  (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.028;
+  // C167: N64 bright enchanted-night fog — matches sky vertex horizon (0.157, 0.282, 0.722)
+  // Previous: 0x1a2a18 (dark green, old palette) → objects faded into muddy green haze.
+  (group as Group & { fogColor?: number; fogDensity?: number }).fogColor   = 0x2848b8;
+  (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.022;
 
   // ── Lighting — dark enchanted forest ──────────────────────────────────────
   // C163: N64 enchanted forest lighting — vivid blue night + moonlight + warm firefly glow

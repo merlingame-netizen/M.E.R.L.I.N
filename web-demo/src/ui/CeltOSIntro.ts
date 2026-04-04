@@ -276,6 +276,18 @@ export async function runCeltOSIntro(): Promise<void> {
   container.style.cssText = 'position:relative;width:100%;height:100%;';
   overlay.appendChild(container);
 
+  // C167: skip hint — appears bottom-right after 400ms so it doesn't flash on fast loads
+  const skipHint = document.createElement('div');
+  skipHint.textContent = '[ CLIC ou TOUCHE pour passer ]';
+  skipHint.style.cssText = [
+    'position:absolute;bottom:18px;right:18px;',
+    'color:rgba(51,255,102,0.35);font-family:"Courier New",Courier,monospace;font-size:11px;',
+    'letter-spacing:0.08em;pointer-events:none;opacity:0;transition:opacity 0.4s ease;',
+    'z-index:5;',
+  ].join('');
+  overlay.appendChild(skipHint);
+  setTimeout(() => { skipHint.style.opacity = '1'; }, 400);
+
   // C166: click or any key skips the intro immediately.
   // Promise.race() races the 3-phase sequence against the skip signal.
   // Phase 3 contains the real asset fetch (loadTemplates) — it continues in the background
