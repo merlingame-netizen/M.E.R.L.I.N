@@ -100,12 +100,6 @@ function createSky(): THREE.Mesh {
 function createTrees(count: number): THREE.Group {
   const group = new THREE.Group();
 
-  // Shared geometries — cone stacked for Celtic conifer shape
-  const trunkGeo = new THREE.CylinderGeometry(0.08, 0.18, 2.4, 5);
-  const cone1Geo = new THREE.ConeGeometry(1.1, 2.2, 6);
-  const cone2Geo = new THREE.ConeGeometry(0.8, 1.8, 6);
-  const cone3Geo = new THREE.ConeGeometry(0.5, 1.4, 5);
-
   const layers: Array<{ start: number; end: number; minR: number; maxR: number; colorBase: number; scaleBase: number; scaleVar: number }> = [
     { start: 0,  end: 12, minR: 6,  maxR: 18, colorBase: 0x2d6b2d, scaleBase: 1.1, scaleVar: 0.5 },  // near — vivid green
     { start: 12, end: 28, minR: 18, maxR: 32, colorBase: 0x265a26, scaleBase: 0.85, scaleVar: 0.4 }, // mid — darker
@@ -118,6 +112,13 @@ function createTrees(count: number): THREE.Group {
 
     for (let i = layer.start; i < layer.end; i++) {
       const tree = new THREE.Group();
+
+      // Per-tree geometry instances — shared geometries cause dispose() to free the GPU
+      // buffer on the first traversal hit, leaving all subsequent meshes with dangling refs.
+      const trunkGeo = new THREE.CylinderGeometry(0.08, 0.18, 2.4, 5);
+      const cone1Geo = new THREE.ConeGeometry(1.1, 2.2, 6);
+      const cone2Geo = new THREE.ConeGeometry(0.8, 1.8, 6);
+      const cone3Geo = new THREE.ConeGeometry(0.5, 1.4, 5);
 
       const trunk = new THREE.Mesh(trunkGeo, trunkMat);
       trunk.castShadow = true;

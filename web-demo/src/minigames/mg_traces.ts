@@ -22,6 +22,7 @@ export class MinigameTraces extends MinigameBase {
   private readonly totalTime = 8;
   private readonly footprintCount = 7;
   private animFrame = 0;
+  private ended = false;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -61,6 +62,7 @@ export class MinigameTraces extends MinigameBase {
     // Generate footprint positions along a winding path
     this.footprints = [];
     this.currentIndex = 0;
+    this.ended = false;
     for (let i = 0; i < this.footprintCount; i++) {
       const t = (i + 1) / (this.footprintCount + 1);
       const x = 50 + 300 * t + Math.sin(t * Math.PI * 2) * 40;
@@ -106,6 +108,8 @@ export class MinigameTraces extends MinigameBase {
   };
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);

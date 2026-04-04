@@ -44,6 +44,7 @@ export class MinigameRunes extends MinigameBase {
   private readonly totalPairs = 8;
   private animFrame = 0;
   private revealTimeout = 0;
+  private ended = false;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -94,6 +95,7 @@ export class MinigameRunes extends MinigameBase {
     this.matchedCount = 0;
     this.firstPick = null;
     this.lockInput = false;
+    this.ended = false;
 
     this.timerInterval = window.setInterval(() => {
       this.timeLeft -= 0.1;
@@ -191,6 +193,8 @@ export class MinigameRunes extends MinigameBase {
   };
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
