@@ -1153,8 +1153,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       fpsElapsed = 0;
     }
 
-    // Candles (T064)
-    updateCandles(candles, dt, elapsedTime);
+    // Candles (T064) — C81: gate under !lowFpsMode; flicker is cosmetic (same as dust)
+    if (!lowFpsMode) updateCandles(candles, dt, elapsedTime);
 
     // Dust motes — C102: skip on low-fps devices (pure cosmetic, saves ~1ms/frame)
     if (!lowFpsMode) dust.update(dt);
