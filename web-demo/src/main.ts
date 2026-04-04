@@ -315,6 +315,8 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     (app.parentElement ?? document.body).appendChild(wrapper);
   }
   wrapper.style.display = 'block';
+  wrapper.setAttribute('role', 'region');
+  wrapper.setAttribute('aria-label', 'Antre de Merlin');
 
   revealFromBlack(800);
 

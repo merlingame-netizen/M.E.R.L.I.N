@@ -633,13 +633,17 @@ function createSkull(): THREE.Group {
 // ── Ambient Lighting — 3-source pass (mobile-safe: AmbientLight + key + rim + fill = 4) ──
 function setupLighting(scene: THREE.Scene): void {
   scene.add(new THREE.AmbientLight(0x1a1008, 0.5));                          // dark warm base
-  const key = new THREE.PointLight(0xff6618, 1.1, 22, 1.6);
-  key.position.set(0, 8, -2); scene.add(key);                                // overhead warm fire
+  // C85-02: key moved from overhead [0,8,-2] to forward-angled [0,3,2] — creates
+  // depth shadows toward back wall, correct Celtic hall dramaturgy
+  const key = new THREE.PointLight(0xff6618, 0.9, 22, 1.6);
+  key.position.set(0, 3.0, 2); scene.add(key);                              // forward warm fire
   const rim = new THREE.PointLight(0x6699cc, 0.55, 18, 2.0);
   rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
   const fill = new THREE.PointLight(0xcc8833, 0.4, 16, 2.0);
   fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill left wall
-  // shelfFill and cauldron accent removed — crystal + CauldronSystem.glow cover those areas
+  // C85-02: back-wall accent — warm ember glow throwing forward shadows from rear
+  const backAccent = new THREE.PointLight(0xff5500, 0.35, 12, 2.0);
+  backAccent.position.set(0, 1.5, -11); scene.add(backAccent);
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────
@@ -649,6 +653,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x0d0a08, 1);
   container.appendChild(renderer.domElement);
+  // C85-01: ARIA accessibility — canvas is interactive region
+  renderer.domElement.setAttribute('role', 'application');
+  renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entrée pour activer.');
+  renderer.domElement.setAttribute('tabindex', '0');
+  renderer.domElement.style.touchAction = 'none'; // prevent mobile scroll interference
 
   // Scene + Camera
   const scene = new THREE.Scene();
@@ -796,11 +805,65 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const t = e.touches[0] ?? e.changedTouches[0];
     if (t) onPointerAction({ clientX: t.clientX, clientY: t.clientY });
   };
+  // C85-01: touchend clears hover — prevents zones staying visually stuck on mobile
+  const onTouchEnd = (): void => {
+    if (currentHovered) {
+      currentHovered.hovered = false;
+      currentHovered.mesh.scale.setScalar(1.0);
+      applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
+      currentHovered = null;
+      renderer.domElement.style.cursor = 'default';
+    }
+  };
+
+  // C85-01: keyboard navigation — Tab cycles zones, Enter/Space activates
+  const KEYBOARD_ZONES: LairZone[] = ['map', 'crystal', 'bookshelf', 'cauldron', 'door'];
+  const ZONE_ARIA_LABELS: Readonly<Record<LairZone, string>> = {
+    map:       'Carte des Biomes',
+    crystal:   'Pierre des Oghams',
+    bookshelf: 'Journal de Merlin',
+    cauldron:  'Chaudron Druidique',
+    door:      'Sortie vers l\'aventure',
+  };
+  let keyboardZoneIdx = -1;
+  const onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key === 'Tab' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      keyboardZoneIdx = (keyboardZoneIdx + 1) % KEYBOARD_ZONES.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      keyboardZoneIdx = (keyboardZoneIdx - 1 + KEYBOARD_ZONES.length) % KEYBOARD_ZONES.length;
+    } else if ((e.key === 'Enter' || e.key === ' ') && currentHovered && zoneClickCallback) {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
+      zoneClickCallback(currentHovered.zone);
+      return;
+    } else {
+      return;
+    }
+    const zone = KEYBOARD_ZONES[keyboardZoneIdx]!;
+    const next = interactives.find((i) => i.zone === zone) ?? null;
+    if (currentHovered && currentHovered !== next) {
+      currentHovered.hovered = false;
+      currentHovered.mesh.scale.setScalar(1.0);
+      applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
+    }
+    currentHovered = next;
+    if (currentHovered) {
+      currentHovered.hovered = true;
+      currentHovered.mesh.scale.setScalar(1.05);
+      applyHoverTo(currentHovered, 0.65);
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
+      renderer.domElement.setAttribute('aria-label', `Zone active : ${ZONE_ARIA_LABELS[zone]} — Entrée pour activer`);
+    }
+  };
 
   renderer.domElement.addEventListener('mousemove', onMouseMove);
   renderer.domElement.addEventListener('click', onPointerAction);
   renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false });
   renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+  renderer.domElement.addEventListener('touchend', onTouchEnd);
+  renderer.domElement.addEventListener('keydown', onKeyDown);
 
   // Update loop
   const update = (dt: number): void => {
@@ -840,6 +903,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     renderer.domElement.removeEventListener('click', onPointerAction);
     renderer.domElement.removeEventListener('touchmove', onTouchMove);
     renderer.domElement.removeEventListener('touchstart', onTouchStart);
+    renderer.domElement.removeEventListener('touchend', onTouchEnd);
+    renderer.domElement.removeEventListener('keydown', onKeyDown);
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
         obj.geometry.dispose();
