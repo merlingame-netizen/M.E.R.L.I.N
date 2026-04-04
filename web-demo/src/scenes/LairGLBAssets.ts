@@ -14,7 +14,9 @@ const CANDLE_POSITIONS: Array<[number, number, number]> = [
 // C97: GLB fade-in — prevents hard pop-in on slow connections.
 // Fades all mesh opacities from 0 → 1 over durationMs via rAF.
 // Restores transparent=false after completion to avoid depth-sort artifacts.
-function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
+// C122: returns cancel fn — call it in dispose() to stop rAF writing to disposed materials.
+function fadeInGLB(group: THREE.Object3D, durationMs = 400): () => void {
+  let cancelled = false;
   const meshes: THREE.Mesh[] = [];
   group.traverse((child) => {
     if (child instanceof THREE.Mesh) {
@@ -27,9 +29,10 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
       meshes.push(child);
     }
   });
-  if (meshes.length === 0) return;
+  if (meshes.length === 0) return () => { /* nothing to cancel */ };
   const start = performance.now();
   const tick = (): void => {
+    if (cancelled) return; // C122: bail out if scene was disposed during fade
     const t = Math.min((performance.now() - start) / durationMs, 1);
     for (const m of meshes) {
       if (m.material instanceof THREE.MeshStandardMaterial) m.material.opacity = t;
@@ -46,6 +49,7 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
     }
   };
   requestAnimationFrame(tick);
+  return () => { cancelled = true; };
 }
 
 // C101: enforce flat-shading on all non-crystal GLBs to match procedural mesh aesthetic
@@ -72,6 +76,7 @@ export interface LairProceduralGroups {
   onCrystalGLBLoaded?: (mesh: THREE.Mesh) => void;      // C95: callback to swap visualMesh to GLB mesh for hover emissive
   onCrystalGroupLoaded?: (group: THREE.Group) => void;  // C101: callback to store GLB group ref for float animation
   onMapGLBLoaded?: (mesh: THREE.Mesh) => void;          // C121: swap map interactives entry to GLB mesh (mapGroup hidden on load)
+  onShelfGLBLoaded?: (mesh: THREE.Mesh) => void;        // C122: swap bookshelf interactives entry to GLB mesh (shelfGroup hidden on load)
 }
 
 export function loadLairGLBs(
@@ -169,6 +174,13 @@ export function loadLairGLBs(
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;
+    // C122: shelfHit lives inside shelfGroup — becomes invisible to raycaster when group is hidden.
+    // Mirror the onMapGLBLoaded pattern to swap interactives entry to the live GLB mesh.
+    if (proceduralGroups?.onShelfGLBLoaded) {
+      let firstMesh: THREE.Mesh | null = null;
+      gltf.scene.traverse((child) => { if (!firstMesh && child instanceof THREE.Mesh) firstMesh = child; });
+      if (firstMesh) proceduralGroups.onShelfGLBLoaded(firstMesh);
+    }
   }).catch(() => { /* procedural bookshelf remains */ });
 
   // Sol pierre: Blender flagstone floor (97 polys, vertex-colored).

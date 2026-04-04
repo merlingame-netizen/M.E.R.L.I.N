@@ -809,7 +809,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Swap both mesh (hit target) and visualMesh to the first GLB mesh so raycasting stays live.
     onMapGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'map');
-      if (entry) { entry.mesh = mesh; entry.visualMesh = mesh; }
+      if (entry) { entry.mesh = mesh; entry.visualMesh = mesh; raycastTargets = interactives.map((i) => i.mesh); }
+    },
+    // C122: same pattern for bookshelf — shelfHit inside shelfGroup, hidden when bibliotheque.glb loads.
+    onShelfGLBLoaded: (mesh) => {
+      const entry = interactives.find((i) => i.zone === 'bookshelf');
+      if (entry) { entry.mesh = mesh; entry.visualMesh = mesh; raycastTargets = interactives.map((i) => i.mesh); }
     },
   }, () => lairDisposed);
 
@@ -827,6 +832,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // C118: cache crystalEntry ref at init — avoids Array.find() closure allocation in 60fps update loop
   const crystalEntry = interactives.find((i) => i.zone === 'crystal')!;
+  // C122: cache raycaster targets — interactives.map() on every mousemove allocates a 5-element array at 60fps.
+  // Refreshed only in onMapGLBLoaded / onShelfGLBLoaded when entry.mesh changes.
+  let raycastTargets: THREE.Object3D[] = interactives.map((i) => i.mesh);
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -836,8 +844,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const getIntersected = (): InteractiveObject | null => {
     raycaster.setFromCamera(mouse, camera);
-    const targets = interactives.map((i) => i.mesh);
-    const hits = raycaster.intersectObjects(targets, true);
+    const hits = raycaster.intersectObjects(raycastTargets, true);
     if (hits.length === 0) return null;
     const hitObj = hits[0]!.object;
     return interactives.find((i) => i.mesh === hitObj || i.mesh.getObjectById(hitObj.id) !== undefined) ?? null;
