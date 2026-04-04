@@ -452,26 +452,27 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   // We embed fog params in this group for SceneManager to detect.
   // C167: N64 bright enchanted-night fog — matches sky vertex horizon (0.157, 0.282, 0.722)
   // Previous: 0x1a2a18 (dark green, old palette) → objects faded into muddy green haze.
-  (group as Group & { fogColor?: number; fogDensity?: number }).fogColor   = 0x2848b8;
-  (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.022;
+  // C168: dark atmospheric forest — deep indigo-black fog
+  (group as Group & { fogColor?: number; fogDensity?: number }).fogColor   = 0x0e1428;
+  (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.026;
 
   // ── Lighting — dark enchanted forest ──────────────────────────────────────
   // C163: N64 enchanted forest lighting — vivid blue night + moonlight + warm firefly glow
   // 1. Bright ambient — N64 forests are always visible, even at night
-  const ambient = new AmbientLight(0x202850, 0.55);
+  const ambient = new AmbientLight(0x141828, 0.30); // C168: very dark forest ambient
   group.add(ambient);
 
   // 2. Moon / diffuse overhead — vivid blue-white N64 moonlight
-  const moonLight = new DirectionalLight(0xa0c0ff, 1.0);
+  const moonLight = new DirectionalLight(0x4060a0, 0.55); // C168: dim moon through clouds
   moonLight.position.set(5, 30, 10);
   group.add(moonLight);
 
   // 3. Hemisphere — vivid blue canopy sky / warm green soil
-  const hemi = new HemisphereLight(0x3060d0, 0x2a6010, 0.65);
+  const hemi = new HemisphereLight(0x101830, 0x0e1e08, 0.40); // C168: dark canopy hemisphere
   group.add(hemi);
 
   // 4. Accent — warm amber torch/firelight from deeper forest
-  const accent = new DirectionalLight(0xffa030, 0.45);
+  const accent = new DirectionalLight(0xcc6010, 0.50); // C168: warmer fire accent to contrast
   accent.position.set(-15, 4, -40);
   group.add(accent);
 

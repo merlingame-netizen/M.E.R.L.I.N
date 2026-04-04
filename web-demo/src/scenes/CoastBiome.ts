@@ -28,7 +28,7 @@ function createGround(): Mesh {
   }
   geo.computeVertexNormals();
   const mat = new MeshStandardMaterial({
-    color: 0xb89e58, // C163: N64 sandy-golden cliff path
+    color: 0x3a2e18, // C168: dark wet stone cliff path
     roughness: 0.97, metalness: 0.0, flatShading: true,
   });
   const mesh = new Mesh(geo, mat);
@@ -56,9 +56,10 @@ function createOcean(): OceanResult {
     const depth = Math.max(0, Math.min(1, (x + 110) / 220));
     // Near shore (depth=1): 0x14e8d0 = (0.078, 0.910, 0.816) vivid N64 turquoise
     // Open sea  (depth=0): 0x0c5ab8 = (0.047, 0.353, 0.722) deep N64 ocean blue
-    colors[i * 3 + 0] = 0.047 + depth * 0.031;
-    colors[i * 3 + 1] = 0.353 + depth * 0.557;
-    colors[i * 3 + 2] = 0.722 + depth * 0.094;
+    // C168: dark stormy ocean — deep navy to dark teal near shore
+    colors[i * 3 + 0] = 0.020 + depth * 0.019;
+    colors[i * 3 + 1] = 0.063 + depth * 0.172;
+    colors[i * 3 + 2] = 0.118 + depth * 0.204;
   }
   geo.setAttribute('color', new BufferAttribute(colors, 3));
 
@@ -388,14 +389,15 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
   // C167: fog params for sceneManager.updateFog() — matches sky horizon vertex colour
   // (0.471, 0.769, 0.941) = 0x78c4f0; light coastal sea-haze, density kept low.
-  (group as typeof group & { fogColor: number; fogDensity: number }).fogColor   = 0x78c4f0;
-  (group as typeof group & { fogColor: number; fogDensity: number }).fogDensity = 0.010;
+  // C168: dark coastal storm haze
+  (group as typeof group & { fogColor: number; fogDensity: number }).fogColor   = 0x182030;
+  (group as typeof group & { fogColor: number; fogDensity: number }).fogDensity = 0.014;
 
   // ── C163: N64 bright coastal lighting — warm golden sun + vivid sky hemisphere ──
-  group.add(new AmbientLight(0x5090b8, 0.65));
+  group.add(new AmbientLight(0x304050, 0.35)); // C168: dark stormy ambient
 
   const isLowEndMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.devicePixelRatio >= 2;
-  const sun = new DirectionalLight(0xffe888, 2.2); // C163: warm N64 golden sun
+  const sun = new DirectionalLight(0x8898b8, 1.0); // C168: muted stormy sun
   sun.position.set(-18, 28, 15);
   if (!isLowEndMobile) {
     sun.castShadow = true;
@@ -410,10 +412,10 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(sun);
 
   // Sky blue / sandy-green ground hemisphere
-  group.add(new HemisphereLight(0x78c4f0, 0x6a8840, 0.60));
+  group.add(new HemisphereLight(0x1a2840, 0x1a2810, 0.35)); // C168: dark storm hemisphere
 
   // Ocean fill from sea side — vivid cyan
-  const rim = new DirectionalLight(0x40c8e8, 0.55);
+  const rim = new DirectionalLight(0x1a3050, 0.25); // C168: dark sea-side fill
   rim.position.set(55, 8, -18);
   group.add(rim);
 
