@@ -333,11 +333,14 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     const cfg = glbConfigs[i];
     if (r.status !== 'fulfilled' || !cfg) continue;
     const model = r.value.scene.clone();
-    // Enforce flat-shading consistency with procedural scene meshes
+    // C85: clone material before mutation — scene.clone() shares material refs with cached
+    // GLTF, so writing flatShading/needsUpdate directly mutates the cached asset (same
+    // class as LairGLBAssets C81-04 bougie fix). Clone per-mesh to isolate this instance.
     model.traverse((child) => {
       if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
-        (child.material as MeshStandardMaterial).flatShading = true;
-        (child.material as MeshStandardMaterial).needsUpdate = true;
+        child.material = (child.material as MeshStandardMaterial).clone();
+        child.material.flatShading = true;
+        child.material.needsUpdate = true;
       }
     });
     model.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);

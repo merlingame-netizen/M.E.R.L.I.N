@@ -105,6 +105,11 @@ export class MinigameSangFroid extends MinigameBase {
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
+    // C85: pointerleave + pointercancel — if finger lifts off canvas while inside zone,
+    // cursor freezes at last in-zone position giving free timeInside credit on mobile.
+    // Reset to (0,0) — dist ≈ 269px from center >> startRadius 120px, always outside.
+    this.canvas.addEventListener('pointerleave', this.onPointerLeave);
+    this.canvas.addEventListener('pointercancel', this.onPointerLeave);
     // C96: keyboard cursor — arrow keys move virtual cursor 10px per press (full keyboard accessibility)
     this.canvas.addEventListener('keydown', this.onKeyDown);
 
@@ -155,6 +160,12 @@ export class MinigameSangFroid extends MinigameBase {
   // C98: on first arrow key interaction, cursor jumps from (0,0) to canvas center so
   // keyboard-only players don't need 26+ presses just to enter the starting zone.
   // Pointer users always have cursorX/Y updated by pointermove before any keydown fires.
+  // C85: reset cursor to (0,0) on pointer leave/cancel — outside zone at any radius
+  private onPointerLeave = (): void => {
+    this.cursorX = 0;
+    this.cursorY = 0;
+  };
+
   private onKeyDown = (e: KeyboardEvent): void => {
     const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
     if (!isArrow) return;
@@ -178,6 +189,8 @@ export class MinigameSangFroid extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
+    this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const finalScore = this.totalTime > 0
@@ -358,6 +371,8 @@ export class MinigameSangFroid extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
+    this.canvas?.removeEventListener('pointercancel', this.onPointerLeave);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
