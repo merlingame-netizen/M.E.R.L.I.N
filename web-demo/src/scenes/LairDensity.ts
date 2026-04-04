@@ -11,14 +11,16 @@ export function createLairDensity(scene: Scene, lowEnd = false): () => void {
   const group = new Group();
 
   const sM = new MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
-  const bC = [0x6b1a1a, 0x1a3a6b, 0x2a5a1a, 0x5a4a10, 0x3a1060];
+  // C40: 5 shared book materials (was 15 inline — 1 per book × 3 shelves). Reduces WebGL state changes + memory.
+  const bookMats = ([0x6b1a1a, 0x1a3a6b, 0x2a5a1a, 0x5a4a10, 0x3a1060] as const).map(
+    (c) => new MeshStandardMaterial({ color: c, roughness: 0.8, metalness: 0.0, flatShading: true })
+  );
   for (const [y, z] of [[1.5, -2.0], [-0.5, 0.5], [2.5, 3.5]] as [number, number][]) {
     const plank = new Mesh(new BoxGeometry(0.15, 3.2, 0.7), sM);
     plank.position.set(-11.4, y, z); group.add(plank);
     for (let b = 0; b < 5; b++) {
       const bw = 0.3 + (b * 0.09) % 0.14, bh = 0.8 + (b * 0.13) % 0.45;
-      const book = new Mesh(new BoxGeometry(bw, bh, 0.55),
-        new MeshStandardMaterial({ color: bC[b % bC.length]!, roughness: 0.8, metalness: 0.0, flatShading: true }));
+      const book = new Mesh(new BoxGeometry(bw, bh, 0.55), bookMats[b]!);
       book.position.set(-11.55, y - 1.2 + bh / 2, z - 0.8 + b * 0.35); group.add(book);
     }
   }

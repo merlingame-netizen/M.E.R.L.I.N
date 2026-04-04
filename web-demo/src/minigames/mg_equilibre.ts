@@ -30,6 +30,7 @@ export class MinigameEquilibre extends MinigameBase {
   private timeInZone = 0; // seconds spent inside safe zone
   private safeZoneHalf = 0.25; // C100: [0.25,0.20,0.15,0.10] — narrower at high tier
   private wasInZone = false;   // C100: SFX edge-trigger
+  private inZone = false;      // C40: current zone state — read by setInterval for DOM status
 
   // Wind system
   private gusts: WindGust[] = [];
@@ -119,6 +120,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.keysDown = new Set();
     this.ended = false;
     this.wasInZone = false;
+    this.inZone = false;
     this.touchSide = null;
 
     // Input handlers — C34: canvas-scoped keydown/keyup (was document-scoped, risked stuck-key on focus loss).
@@ -141,11 +143,12 @@ export class MinigameEquilibre extends MinigameBase {
       const bar = document.getElementById('mg-eq-timer');
       if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       // C115: update balance % — uses timeInZone accumulated in render()
+      // C40: append zone state so screen-reader players know if they're currently in the safe zone
       const statusEl = document.getElementById(this.statusId);
       if (statusEl) {
         const elapsed = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);
         const zonePct = elapsed > 0 ? Math.round((this.timeInZone / elapsed) * 100) : 100;
-        statusEl.textContent = `Equilibre: ${zonePct}%`;
+        statusEl.textContent = `Equilibre: ${zonePct}% — ${this.inZone ? 'En zone' : 'Hors zone'}`;
       }
       if (this.timeLeft <= 0) {
         this.endGame();
@@ -256,6 +259,7 @@ export class MinigameEquilibre extends MinigameBase {
     if (nowInZone && !this.wasInZone) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     if (!nowInZone && this.wasInZone) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     this.wasInZone = nowInZone;
+    this.inZone = nowInZone; // C40: expose to setInterval for DOM status update
     if (nowInZone) {
       this.timeInZone += dt;
     }
