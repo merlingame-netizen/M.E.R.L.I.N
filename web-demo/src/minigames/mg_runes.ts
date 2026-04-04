@@ -36,13 +36,13 @@ export class MinigameRunes extends MinigameBase {
   private totalTime = 30;    // C103: tieredValue [30,25,20,15]s in setup()
   private flipBackDelay = 600; // C103: tieredValue [600,550,500,450]ms in setup()
   private readonly gridCols = 4;
-  private readonly gridRows = 4;
+  private gridRows = 4;          // C116: mutable — set from tieredValue([3,4,4,4]) in setup()
   private readonly tileSize = 80;
   private readonly tilePad = 12;
   private firstPick: number | null = null;
   private lockInput = false;
   private matchedCount = 0;
-  private readonly totalPairs = 8;
+  private totalPairs = 8;        // C116: mutable — tieredValue([6,7,8,8]); RUNE_SET has exactly 8
   private animFrame = 0;
   private revealTimeout = 0;
   private ended = false;
@@ -51,8 +51,12 @@ export class MinigameRunes extends MinigameBase {
     this.container.innerHTML = '';
 
     // C103: tieredValue replaces manual arithmetic — consistent with all other minigames
-    this.totalTime    = this.tieredValue([30, 25, 20, 15] as const);
+    this.totalTime     = this.tieredValue([30, 25, 20, 15] as const);
     this.flipBackDelay = this.tieredValue([600, 550, 500, 450] as const);
+    // C116: pair count scales with tier (6→7→8→8). gridRows derived from pair count.
+    // RUNE_SET has exactly 8 entries — pairCount must stay ≤ 8.
+    this.totalPairs = this.tieredValue([6, 7, 8, 8] as const);
+    this.gridRows   = Math.ceil((this.totalPairs * 2) / this.gridCols); // 3 rows for 6 pairs, 4 for 7-8
 
     // Title
     const title = document.createElement('div');
@@ -130,12 +134,15 @@ export class MinigameRunes extends MinigameBase {
       indices[j] = tmp;
     }
 
+    // C116: only place totalPairs*2 tiles — when pairCount < 8, last row may have empty slots
     this.tiles = [];
-    for (let row = 0; row < this.gridRows; row++) {
+    let placed = 0;
+    const totalTiles = this.totalPairs * 2;
+    outer: for (let row = 0; row < this.gridRows; row++) {
       for (let col = 0; col < this.gridCols; col++) {
-        const idx = row * this.gridCols + col;
-        const runeIndex = indices[idx];
-        const rune = RUNE_SET[runeIndex];
+        if (placed >= totalTiles) break outer;
+        const runeIndex = indices[placed]!;
+        const rune = RUNE_SET[runeIndex]!;
         this.tiles.push({
           x: this.tilePad + col * (this.tileSize + this.tilePad),
           y: this.tilePad + row * (this.tileSize + this.tilePad),
@@ -144,6 +151,7 @@ export class MinigameRunes extends MinigameBase {
           label: rune.label,
           state: 'hidden',
         });
+        placed++;
       }
     }
   }
