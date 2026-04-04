@@ -843,7 +843,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
         // C101: show lore toast with zone name + description
         const zone = currentHovered.zone;
-        zoneToast.innerHTML = `<strong style="color:#cd853f;font-size:15px;">${ZONE_ARIA_LABELS[zone]}</strong><span style="color:rgba(232,220,200,0.7);font-size:12px;">${ZONE_LORE[zone]}</span>`;
+        // C104: textContent — XSS-safe, forward-compatible if zone labels come from LLM
+        zoneToast.textContent = '';
+        const lbl = document.createElement('strong');
+        lbl.style.cssText = 'color:#cd853f;font-size:15px;';
+        lbl.textContent = ZONE_ARIA_LABELS[zone];
+        const desc = document.createElement('span');
+        desc.style.cssText = 'color:rgba(232,220,200,0.7);font-size:12px;';
+        desc.textContent = ZONE_LORE[zone];
+        zoneToast.appendChild(lbl);
+        zoneToast.appendChild(desc);
         zoneToast.style.opacity = '1';
       } else {
         renderer.domElement.style.cursor = 'default';
@@ -955,7 +964,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       renderer.domElement.setAttribute('aria-label', `Zone active : ${ZONE_ARIA_LABELS[zone]} — Entrée pour activer`);
       ariaLive.textContent = `${ZONE_ARIA_LABELS[zone]} — Appuyez sur Entrée pour activer`;
       // C101: sync lore toast with keyboard navigation (onMouseMove only fires on pointer)
-      zoneToast.innerHTML = `<strong style="color:#cd853f;font-size:15px;">${ZONE_ARIA_LABELS[zone]}</strong><span style="color:rgba(232,220,200,0.7);font-size:12px;">${ZONE_LORE[zone]}</span>`;
+      // C104: textContent — XSS-safe (keyboard path mirrors pointer path)
+      zoneToast.textContent = '';
+      const kLbl = document.createElement('strong');
+      kLbl.style.cssText = 'color:#cd853f;font-size:15px;';
+      kLbl.textContent = ZONE_ARIA_LABELS[zone];
+      const kDesc = document.createElement('span');
+      kDesc.style.cssText = 'color:rgba(232,220,200,0.7);font-size:12px;';
+      kDesc.textContent = ZONE_LORE[zone];
+      zoneToast.appendChild(kLbl);
+      zoneToast.appendChild(kDesc);
       zoneToast.style.opacity = '1';
     } else {
       zoneToast.style.opacity = '0';

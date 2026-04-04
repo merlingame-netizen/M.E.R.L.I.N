@@ -339,6 +339,17 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     lastTs = t;
     lair.update(dt);
   };
+  // C104: pause/resume lair rAF when tab is hidden — saves GPU/CPU/battery on mobile
+  const onLairVisibility = (): void => {
+    if (document.visibilityState === 'hidden') {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    } else if (rafId === 0) {
+      lastTs = performance.now(); // reset to prevent dt spike on resume
+      tick();
+    }
+  };
+  document.addEventListener('visibilitychange', onLairVisibility);
   tick();
 
   // Chosen biome — defaults to cotes_sauvages until player picks via map zone.
@@ -460,6 +471,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   });
 
   cancelAnimationFrame(rafId);
+  document.removeEventListener('visibilitychange', onLairVisibility); // C104: remove lair-specific listener
   // BUG-06: clear in-flight toast timers before dispose to avoid stale DOM writes
   if (activeToastFadeId !== null) { clearTimeout(activeToastFadeId); activeToastFadeId = null; }
   if (activeToastRemoveId !== null) { clearTimeout(activeToastRemoveId); activeToastRemoveId = null; }
