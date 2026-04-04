@@ -1159,8 +1159,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Dust motes — C102: skip on low-fps devices (pure cosmetic, saves ~1ms/frame)
     if (!lowFpsMode) dust.update(dt);
 
-    // Cauldron steam
-    cauldron.update(elapsedTime, dt);
+    // Cauldron steam — C82: gate under !lowFpsMode (steam + glow sin is cosmetic)
+    if (!lowFpsMode) cauldron.update(elapsedTime, dt);
 
     // Forest window (leaf sway + glass shimmer)
     lairWindow.update(elapsedTime);
