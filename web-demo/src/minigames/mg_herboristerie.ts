@@ -67,6 +67,7 @@ export class MinigameHerboristerie extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
+  private ended = false;
   private timerInterval = 0;
 
   // Grid config
@@ -135,6 +136,7 @@ export class MinigameHerboristerie extends MinigameBase {
     // Reset state
     this.timeLeft = this.totalTime;
     this.correctPicks = 0;
+    this.ended = false;
     this.wrongPicks = 0;
     this.elapsedTime = 0;
     this.flashCells = new Map();
@@ -261,6 +263,8 @@ export class MinigameHerboristerie extends MinigameBase {
   };
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);

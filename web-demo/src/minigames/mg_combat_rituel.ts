@@ -26,6 +26,7 @@ export class MinigameCombatRituel extends MinigameBase {
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
   private timerInterval = 0;
+  private ended = false;
 
   // Canvas dimensions
   private readonly canvasW = 380;
@@ -113,6 +114,7 @@ export class MinigameCombatRituel extends MinigameBase {
     this.hit = false;
     this.hitFlash = 0;
     this.pulsePhase = 0;
+    this.ended = false;
 
     // Generate obstacles -- rotating arcs at various radii
     this.obstacles = [];
@@ -187,6 +189,8 @@ export class MinigameCombatRituel extends MinigameBase {
   }
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);

@@ -39,6 +39,7 @@ export class MinigameCourse extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
+  private ended = false;
 
   // Canvas dimensions
   private readonly canvasW = 380;
@@ -125,6 +126,7 @@ export class MinigameCourse extends MinigameBase {
     this.roundTransition = true;
     this.transitionTimer = 0.6;
     this.gameOver = false;
+    this.ended = false;
     this.promptSymbol = '';
 
     this.prepareRound();
@@ -231,6 +233,8 @@ export class MinigameCourse extends MinigameBase {
   }
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     this.gameOver = true;
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);

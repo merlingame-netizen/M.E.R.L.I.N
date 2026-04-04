@@ -25,6 +25,10 @@ const FACTION_LABELS: Readonly<Record<FactionId, string>> = {
 // DOM element accessors are resolved inside updateHUD() with null guards
 // (consistent with faction/resource/ogham elements below — no ! assertions)
 
+// Module-level unsubscribe handle — prevents duplicate Zustand subscriber accumulation
+// when initHUD() is called on every run inside the outer while(true) loop (main.ts).
+let _hudUnsubscribe: (() => void) | null = null;
+
 /** Build the faction panel DOM and inject it into the HUD. */
 function buildFactionPanel(): void {
   const hud = document.getElementById('hud');
@@ -278,6 +282,10 @@ export function initHUD(): void {
   buildFactionPanel();
   buildResourcePanel();
   buildOghamBadge();
-  store.subscribe(updateHUD);
+  // Unsubscribe any previous subscription before re-subscribing — initHUD() is called
+  // every run inside the while(true) loop so without this each run would accumulate an
+  // extra Zustand subscriber causing updateHUD() to fire N times per state change.
+  _hudUnsubscribe?.();
+  _hudUnsubscribe = store.subscribe(updateHUD);
   updateHUD();
 }

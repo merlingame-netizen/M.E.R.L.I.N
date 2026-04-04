@@ -19,6 +19,7 @@ export class MinigameEquilibre extends MinigameBase {
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
   private timerInterval = 0;
+  private ended = false;
 
   // Game state
   private cursorX = 0; // -1 (left edge) to +1 (right edge), 0 = center
@@ -95,6 +96,7 @@ export class MinigameEquilibre extends MinigameBase {
     this.nextGustTime = 1.5 + Math.random();
     this.elapsedTime = 0;
     this.keysDown = new Set();
+    this.ended = false;
     this.touchSide = null;
 
     // Input handlers
@@ -158,6 +160,8 @@ export class MinigameEquilibre extends MinigameBase {
   }
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     document.removeEventListener('keydown', this.onKeyDown);
