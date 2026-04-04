@@ -403,6 +403,12 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
           (child.material as THREE.Material).dispose();
         }
       }
+      // Dispose DirectionalLight shadow maps (WebGLRenderTarget ~4MB each).
+      // The traverse only visits Meshes by default so lights need explicit handling.
+      // Without this, each run leaks one shadow map on the GPU.
+      if (child instanceof THREE.DirectionalLight && child.shadow.map) {
+        child.shadow.map.dispose();
+      }
     });
     group.clear();
   };
