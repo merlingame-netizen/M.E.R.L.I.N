@@ -1,5 +1,5 @@
 // Merlin's Lair — 3D interior hub (T062+T064). 4 zones: Map/Crystal/Bookshelf/Door.
-// Cycle 31: AAA lighting (5 sources — key/rim/fill/cauldron/ambient).
+// Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
 import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, Vector2, WebGLRenderer } from 'three';
@@ -161,7 +161,8 @@ function createCrystalBall(): CrystalResult {
     opacity: 0.82,
     emissive: 0x6030aa,
     emissiveIntensity: 0.6,
-    flatShading: true,
+    // C49: no flatShading — crystal is the only transparent PBR material; smooth normals
+    // enable refractive shimmer on the oracle sphere (all other materials keep flatShading:true).
   });
 
   // Pedestal
