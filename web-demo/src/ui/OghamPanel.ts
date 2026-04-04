@@ -107,7 +107,11 @@ export function showOghamPanel(): Promise<string | null> {
 
       const slot = document.createElement('button');
       slot.setAttribute('aria-label', `${spec.name} — ${spec.description}`);
-      slot.setAttribute('aria-disabled', String(!isAvailable));
+      // C86: use native `disabled` attribute instead of aria-disabled for unavailable slots.
+      // aria-disabled='true' leaves the button in the tab order and still receives keyboard
+      // Enter/Space events via browser default. `disabled` removes the button from tab order
+      // and prevents all synthetic click/keyboard activation — correct WCAG 2.1.1 behavior.
+      if (!isAvailable) slot.disabled = true;
       slot.style.cssText = [
         'width:100px',
         'padding:12px 8px',
@@ -197,6 +201,14 @@ export function showOghamPanel(): Promise<string | null> {
 
     // Show overlay
     overlay.style.display = 'flex';
+    // C86: move focus into dialog on open — WCAG 2.1 SC 2.1.2 (No Keyboard Trap requires
+    // focus to be reachable inside the dialog when it opens). Focus the first available
+    // slot, falling back to skipBtn if all oghams are locked/on cooldown.
+    requestAnimationFrame(() => {
+      // panelEl non-null: guarded by the null check at function entry (resolve(null) path)
+      const firstAvailable = panelEl!.querySelector<HTMLButtonElement>('button:not([disabled])');
+      (firstAvailable ?? skipBtn).focus();
+    });
   });
 }
 

@@ -30,6 +30,14 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
 
 const SUMMARY_OVERLAY_ID = 'run-summary-overlay';
 
+// C86: module-level anchor for the pending restart Promise resolve.
+// showRunSummary() can be re-entered (e.g. run ends while overlay already shown
+// from a previous death) — existing.remove() at line 112 destroys the old restartBtn,
+// orphaning the inline Promise resolve and causing an async deadlock for any caller
+// awaiting the first invocation. Hoisting to module scope with null-guard on re-entry
+// mirrors the OghamPanel resolveChoice pattern.
+let resolveRestart: (() => void) | null = null;
+
 /**
  * Builds a faction row element.
  * Shows current reputation bar + delta annotation from this run.
@@ -106,6 +114,12 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   // Fade scene to dark before showing overlay
   await fadeIn(800);
+
+  // C86: resolve stale awaiter before re-building overlay (re-entry guard)
+  if (resolveRestart) {
+    resolveRestart();
+    resolveRestart = null;
+  }
 
   // Build overlay
   const existing = document.getElementById(SUMMARY_OVERLAY_ID);
@@ -282,9 +296,11 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   // cleanly (new SceneManager, fresh biome, startRun). A hard reload would discard
   // in-memory GroqAdapter singletons and force re-fetching cards.json unnecessarily.
   await new Promise<void>((resolve) => {
+    resolveRestart = resolve;
     restartBtn.addEventListener('click', () => {
       overlay.remove();
       hideCard();
+      resolveRestart = null;
       // C79-05: do NOT call store.reset() here — it wipes meta (anam, factionRep,
       // totalRuns) before main.ts re-hydrates via loadAnamFromStorage() /
       // loadMetaFromStorage(). startRun() in main.ts rebuilds run state cleanly
