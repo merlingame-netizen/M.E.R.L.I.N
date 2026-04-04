@@ -292,8 +292,14 @@ export class MinigameCombatRituel extends MinigameBase {
     // Hit flash decay
     if (this.hitFlash > 0) this.hitFlash -= dt * 2;
 
-    // Update status
-    if (this.statusEl) this.statusEl.textContent = `Survie: ${this.survivalTime.toFixed(1)}s | Centre: ${this.centerTime.toFixed(1)}s`;
+    // Update status — C127/COMB-FORMULA-01: show estimated score matching endGame formula.
+    // Was: raw seconds (e.g. "Survie: 10.0s") — implied 100% but score is weighted %, gap >20pts.
+    // endGame: survivalPct = (survivalTime/totalTime)*80 + centerPct = (centerTime/totalTime)*20.
+    if (this.statusEl) {
+      const estSurv = Math.round((this.survivalTime / this.totalTime) * 80);
+      const estCtr = this.totalTime > 0 ? Math.round((this.centerTime / this.totalTime) * 20) : 0;
+      this.statusEl.textContent = `Score: ~${estSurv + estCtr}% (survie ${estSurv}/80, centre ${estCtr}/20)`;
+    }
 
     // Clear
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);

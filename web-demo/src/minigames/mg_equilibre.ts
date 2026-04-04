@@ -352,9 +352,12 @@ export class MinigameEquilibre extends MinigameBase {
       ctx.restore();
     }
 
-    // Score display (real-time feedback)
-    const currentScore = this.elapsedTime > 0
-      ? Math.round((this.timeInZone / this.elapsedTime) * 100)
+    // Score display (real-time feedback) — C127/EQ-FORMULA-01: use same denominator as endGame()
+    // (totalTime - timeLeft) rather than elapsedTime. elapsedTime accumulates via RAF dt (~60fps)
+    // while timeLeft decrements via setInterval at 10fps → diverge by up to 0.5s at tier 3 (7s).
+    const elapsedForScore = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);
+    const currentScore = elapsedForScore > 0
+      ? Math.round((this.timeInZone / elapsedForScore) * 100)
       : 100;
     ctx.fillStyle = 'rgba(232,220,200,0.7)';
     ctx.font = '14px system-ui';
