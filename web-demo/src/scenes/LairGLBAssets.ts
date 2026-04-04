@@ -67,6 +67,9 @@ export function loadLairGLBs(
       clone.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.material = (child.material as THREE.MeshStandardMaterial).clone();
+          // C90-P1: set emissiveIntensity=0 baseline — guards against dirty emissive state
+          // if a slow-loading GLB resolves after rapid hover/unhover cycles
+          (child.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.0;
         }
       });
       clone.scale.setScalar(0.42);
@@ -117,9 +120,10 @@ export function loadLairGLBs(
         tileGeo = child.geometry.clone(); // owned copy — safe to dispose independently
         tileMat = (child.material as THREE.MeshStandardMaterial).clone();
         // C89-P1: polygonOffset prevents micro z-fighting on tile seams (Mali/Adreno 16-bit depth)
+        // C90-P2: factor/units bumped -1→-2/-4 — covers shallow camera angles to back wall
         (tileMat as THREE.MeshStandardMaterial).polygonOffset = true;
-        (tileMat as THREE.MeshStandardMaterial).polygonOffsetFactor = -1;
-        (tileMat as THREE.MeshStandardMaterial).polygonOffsetUnits = -1;
+        (tileMat as THREE.MeshStandardMaterial).polygonOffsetFactor = -2;
+        (tileMat as THREE.MeshStandardMaterial).polygonOffsetUnits = -4;
       }
     });
     if (!tileGeo || !tileMat) return;

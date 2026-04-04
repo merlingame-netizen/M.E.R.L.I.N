@@ -693,6 +693,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // Build scene elements
   // C89-P2: detect low-end mobile (Android/iOS high-DPR) → drop 5th PointLight to stay at 60fps
+  // C90-P2: intentionally static — evaluated once at scene init. Orientation changes after init
+  // do not re-evaluate; this is acceptable since lighting is rebuilt only on scene reconstruct.
   const isLowEndMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.devicePixelRatio >= 2;
   setupLighting(scene, isLowEndMobile);
   const { group: wallsRootGroup, floorMesh, wallsGroup } = createWalls();
