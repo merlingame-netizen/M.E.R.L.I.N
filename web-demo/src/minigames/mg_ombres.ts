@@ -19,6 +19,16 @@ export class MinigameOmbres extends MinigameBase {
   private timerInterval = 0;
   private ended = false;
 
+  // C99: cancelTimers() contract — matches mg_combat_rituel reference pattern.
+  // Centralises all handle cleanup so both endGame() and cleanup() (via super) call the same code.
+  protected cancelTimers(): void {
+    clearInterval(this.timerInterval);
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas?.removeEventListener('pointerdown', this.onPointerMove); // C99: mirror add below
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
   // Canvas dimensions
   private readonly canvasW = 420;
   private readonly canvasH = 380;
@@ -100,6 +110,9 @@ export class MinigameOmbres extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
+    // C99: pointerdown updates cursor on first mobile tap — without this, touch users start at (30,190)
+    // and progress stays 0 until finger moves. pointermove only fires after movement, not on initial contact.
+    this.canvas.addEventListener('pointerdown', this.onPointerMove);
     // C135: WCAG 2.1.1 — ArrowKeys move cursor through corridor (keyboard-only players scored 0 without this)
     this.canvas.addEventListener('keydown', this.onKeyDown);
 
@@ -186,10 +199,7 @@ export class MinigameOmbres extends MinigameBase {
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.cancelTimers(); // C99: centralised via cancelTimers() — no duplicate list here
 
     // Score = max progress reached * (1 - collision penalty)
     const collisionPenalty = Math.min(1, this.collisionTime / this.totalTime);
@@ -347,10 +357,7 @@ export class MinigameOmbres extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    // C99: super.cleanup() calls cancelTimers() (MinigameBase line 322) — no duplicate list needed here
     super.cleanup();
   }
 }
