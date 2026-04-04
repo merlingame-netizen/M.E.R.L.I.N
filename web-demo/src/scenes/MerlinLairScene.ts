@@ -394,8 +394,9 @@ function createCandles(scene: Scene): { candles: CandleData[]; group: Group } {
     });
 
     const points = new Points(geo, particleMat);
-    // BUG-L-10-CANDLE-MAT fix: add to group (not scene) so particles are hidden
-    // when bougie.glb loads and candleGroup.visible = false.
+    // Add to group so Points can be individually targeted. C47: when bougie.glb loads,
+    // LairGLBAssets hides only Mesh children (bodies+wicks) via `instanceof Mesh` filter —
+    // Points flame particles are intentionally preserved alongside GLB candle geometry.
     group.add(points);
 
     candles.push({
@@ -1168,8 +1169,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     renderer.domElement.removeEventListener('mousemove', onMouseMove);
     renderer.domElement.removeEventListener('click', onPointerAction);
-    renderer.domElement.removeEventListener('touchmove', onTouchMove);
-    renderer.domElement.removeEventListener('touchstart', onTouchStart);
+    renderer.domElement.removeEventListener('touchmove', onTouchMove, { passive: false } as EventListenerOptions);
+    renderer.domElement.removeEventListener('touchstart', onTouchStart, { passive: false } as EventListenerOptions);
     renderer.domElement.removeEventListener('touchend', onTouchEnd);
     renderer.domElement.removeEventListener('keydown', onKeyDown);
     // C120: cancel door flash timeout — lairDisposed guard blocks cb() but closure stays alive 380ms
