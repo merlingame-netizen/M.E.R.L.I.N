@@ -90,13 +90,13 @@ export function showOghamPanel(): Promise<string | null> {
     // Title
     const title = document.createElement('div');
     title.textContent = 'Activer un Ogham ?';
-    title.style.cssText = 'color:#cd853f;font-size:20px;margin-bottom:6px;';
+    title.style.cssText = `color:#33ff66;font-size:14px;letter-spacing:0.18em;font-family:'Courier New',monospace;margin-bottom:6px;text-shadow:0 0 6px rgba(51,255,102,0.3);`;
     panelEl.appendChild(title);
 
     // Subtitle
     const sub = document.createElement('div');
     sub.textContent = 'Choisis un ogham avant de voir la carte, ou passe.';
-    sub.style.cssText = 'color:rgba(232,220,200,0.5);font-size:13px;margin-bottom:20px;';
+    sub.style.cssText = `color:rgba(51,255,102,0.45);font-size:11px;font-family:'Courier New',monospace;margin-bottom:20px;`;
     panelEl.appendChild(sub);
 
     // Ogham slots grid — T052: show ALL oghams, grey out locked ones
@@ -159,13 +159,13 @@ export function showOghamPanel(): Promise<string | null> {
       // Ogham unicode symbol
       const symbolEl = document.createElement('div');
       symbolEl.textContent = spec.unicode;
-      symbolEl.style.cssText = `font-size:28px;color:${isUnlocked ? '#e8dcc8' : 'rgba(180,180,180,0.4)'};line-height:1;`;
+      symbolEl.style.cssText = `font-size:28px;color:${isUnlocked ? 'rgba(51,255,102,0.90)' : 'rgba(51,255,102,0.22)'};line-height:1;`;
       slot.appendChild(symbolEl);
 
       // Ogham name
       const nameEl = document.createElement('div');
       nameEl.textContent = spec.name;
-      nameEl.style.cssText = `font-size:11px;color:${isAvailable ? '#cd853f' : 'rgba(150,150,150,0.6)'};`;
+      nameEl.style.cssText = `font-size:11px;color:${isAvailable ? '#33ff66' : 'rgba(51,255,102,0.30)'};font-family:'Courier New',monospace;`;
       slot.appendChild(nameEl);
 
       // Status row: lock icon, cooldown, or category

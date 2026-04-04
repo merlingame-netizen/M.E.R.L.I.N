@@ -43,7 +43,7 @@ let resolveRestart: (() => void) | null = null;
  * Shows current reputation bar + delta annotation from this run.
  */
 function buildFactionRow(factionId: string, reputation: number, delta: number): HTMLElement {
-  const meta = FACTION_META[factionId] ?? { label: factionId, color: '#e8dcc8' };
+  const meta = FACTION_META[factionId] ?? { label: factionId, color: 'rgba(51,255,102,0.7)' };
   const row = document.createElement('div');
   row.style.cssText = [
     'display:flex',
