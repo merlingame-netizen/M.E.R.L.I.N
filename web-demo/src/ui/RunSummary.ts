@@ -193,8 +193,8 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     statsGrid.appendChild(cell);
   };
 
-  addStat('Cartes jouees', state.run.cardsPlayed);
-  addStat('Anam cette quete', state.run.anamThisRun);
+  addStat('Cartes jouees', state.run.cardsPlayed ?? 0); // C123/RS-NULL-01: save-compat guard
+  addStat('Anam cette quete', state.run.anamThisRun ?? 0); // C123/RS-NULL-01
   addStat('Anam total', state.meta.anam);
   addStat('Vie restante', Math.max(0, state.run.life));
   addStat('Biome atteint', biomeLabel);
@@ -216,7 +216,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   const factionsEl = document.createElement('div');
   factionsEl.style.cssText = 'margin-bottom:24px;';
   const factions = state.run.factions as Record<string, number>;
-  const deltas = state.run.factionDeltaThisRun as Record<string, number>;
+  const deltas = (state.run.factionDeltaThisRun ?? {}) as Record<string, number>; // C123/RS-NULL-02: save-compat guard
   Object.entries(factions).forEach(([id, rep]) => {
     factionsEl.appendChild(buildFactionRow(id, rep, deltas[id] ?? 0));
   });

@@ -171,10 +171,22 @@ export function showCard(card: Card): Promise<number> {
     // eslint-disable-next-line prefer-const
     let onDigitKey!: (e: KeyboardEvent) => void;
 
+    // C123/CARD-LEAK-01: per-button keydown handler refs — needed so safety timeout can
+    // remove them from detached DOM nodes (innerHTML='' discards nodes but not their listeners
+    // until GC; on mobile/low-memory these closures retain the whole Card object for 60s).
+    const keyDownHandlers: Array<{ btn: HTMLElement; handler: (e: KeyboardEvent) => void }> = [];
+
     // 60s safety timeout — last-resort escape if all button paths somehow become
     // unreachable (e.g. DOM mutation by an extension, tab hidden on mobile).
     const safetyId = setTimeout(() => {
-      if (!activated) { activated = true; document.removeEventListener('keydown', onDigitKey); hideCard(); resolve(0); }
+      if (!activated) {
+        activated = true;
+        document.removeEventListener('keydown', onDigitKey);
+        // C123/CARD-LEAK-01: remove per-button keydown handlers before discarding nodes
+        for (const { btn, handler } of keyDownHandlers) btn.removeEventListener('keydown', handler);
+        hideCard();
+        resolve(0);
+      }
     }, 60_000);
 
     // Null-guard DOM elements — consistent with HUD pattern (C57)
@@ -262,6 +274,8 @@ export function showCard(card: Card): Promise<number> {
         }
       };
       btn.addEventListener('keydown', onKeyDown);
+      // C123/CARD-LEAK-01: store handler ref so safety timeout can remove it from detached node
+      keyDownHandlers.push({ btn, handler: onKeyDown });
 
       optContainer.appendChild(btn);
     });
@@ -285,12 +299,12 @@ export function showCard(card: Card): Promise<number> {
     };
     document.addEventListener('keydown', onDigitKey);
 
-    // C86: Set narrative text AFTER overlay becomes visible so NVDA/JAWS re-announces
-    // the content in context of the dialog. Setting textContent while overlay is hidden
-    // (display:none or opacity:0) causes older screen readers to skip the live-region
-    // update since the element is not in the accessibility tree yet.
-    narrativeEl.textContent = card.narrative;
+    // C86/C123: Make overlay visible FIRST, then set narrative text so NVDA/JAWS
+    // re-announces in context of the dialog. Setting textContent while the overlay is
+    // hidden (display:none or opacity:0) causes older screen readers to skip the
+    // live-region update since the element is not in the accessibility tree yet.
     overlayEl.classList.add('visible');
+    narrativeEl.textContent = card.narrative;
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
     // Focus first option so keyboard users don't need to Tab from previous element
