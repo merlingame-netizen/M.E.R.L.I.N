@@ -680,10 +680,11 @@ async function gameLoop(
     // C84: if player pre-selected an ogham in the Lair, use it without showing panel
     const preSelected = state().run.activeOgham;
     const oghamChoice = preSelected || await showOghamPanel();
+    // C135/OC-01/OC-02: capture result — narrative oghams mutate the card before display
+    let oghamResult: ReturnType<typeof applyOghamEffect> | null = null;
     if (oghamChoice) {
       state().useOgham(oghamChoice);
-      // Apply immediate ogham effects (heal, currency, sacrifice, etc.)
-      applyOghamEffect(oghamChoice);
+      oghamResult = applyOghamEffect(oghamChoice);
       updateHUD();
     }
     hideOghamPanel();
@@ -705,7 +706,7 @@ async function gameLoop(
     }
     await fadeIn(600); // runs concurrently with LLM — fade (600ms) overlaps generation
 
-    let card;
+    let card: import('./game/CardSystem').Card;
     try {
       const llmCard = await cardGenPromise;
       hideLLMLoadingHint();
@@ -726,6 +727,29 @@ async function gameLoop(
         source: 'fastroute' as const,
       };
     }
+    // C135/OC-01/OC-02: apply narrative ogham mutations to card before showing
+    if (oghamResult) {
+      const et = oghamResult.effectType;
+      if (et === 'full_reroll' || et === 'force_twist') {
+        card = generateFastRouteCard(state().run.biome);
+      } else if (et === 'regenerate_all_options') {
+        const fresh = generateFastRouteCard(state().run.biome);
+        card = { ...card, options: fresh.options };
+      } else if (et === 'replace_worst_option') {
+        const fresh = generateFastRouteCard(state().run.biome);
+        // Heuristic: score each option (HEAL/ADD = +1, DAMAGE = -1), replace lowest
+        const scoreOpt = (opt: { effects: readonly string[] }) =>
+          opt.effects.reduce((s, e) => s + (/^(HEAL|ADD)/.test(e) ? 1 : /^DAMAGE/.test(e) ? -1 : 0), 0);
+        const worstIdx = ([0, 1, 2] as const).reduce<0 | 1 | 2>(
+          (w, i) => (scoreOpt(card.options[i]) < scoreOpt(card.options[w]) ? i : w),
+          0,
+        );
+        const opts = [...card.options] as [typeof card.options[0], typeof card.options[1], typeof card.options[2]];
+        opts[worstIdx] = fresh.options[worstIdx];
+        card = { ...card, options: opts };
+      }
+    }
+
     await fadeOut(300);
 
     const chosenOption = await showCard(card);
@@ -746,6 +770,7 @@ async function gameLoop(
     } finally {
       minigameOverlay.classList.remove('visible');
       sceneManager.start(); // C118: resume 3D render after minigame
+      minigameContainer.innerHTML = ''; // C135/GL-01: dispose canvas, prevent accumulation
     }
 
     // 6. SCORE → multiplier
