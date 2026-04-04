@@ -206,6 +206,14 @@ export abstract class MinigameBase {
   // C101: edge-trigger for critical_alert SFX — fires once when timeLeft crosses 3s threshold.
   protected criticalAlerted = false;
 
+  /**
+   * Per-subclass localStorage key fragment — prevents cross-minigame difficulty pollution.
+   * C104: default is the concrete class name (preserved by Vite's esbuild; overridable with
+   * a stable literal if minification ever strips class names). Used as suffix in:
+   *   `merlin_mg_plays_${this.storageKey}`
+   */
+  protected get storageKey(): string { return this.constructor.name; }
+
   constructor(container: HTMLElement) {
     this.container = container;
   }
@@ -250,7 +258,7 @@ export abstract class MinigameBase {
     this.lastRenderMs = 0; // reset so getDeltaTime() returns 1/60 on first frame
     // C94: compute difficulty tier from cumulative play count
     try {
-      const plays = parseInt(localStorage.getItem('merlin_mg_plays') ?? '0', 10) || 0;
+      const plays = parseInt(localStorage.getItem(`merlin_mg_plays_${this.storageKey}`) ?? '0', 10) || 0;
       this.difficultyTier = plays < 3 ? 0 : plays < 7 ? 1 : plays < 12 ? 2 : 3;
     } catch { this.difficultyTier = 0; }
     return new Promise((resolve) => {
@@ -278,8 +286,8 @@ export abstract class MinigameBase {
 
     // C94: increment cumulative play count for difficulty ramp
     try {
-      const plays = parseInt(localStorage.getItem('merlin_mg_plays') ?? '0', 10) || 0;
-      localStorage.setItem('merlin_mg_plays', String(plays + 1));
+      const plays = parseInt(localStorage.getItem(`merlin_mg_plays_${this.storageKey}`) ?? '0', 10) || 0;
+      localStorage.setItem(`merlin_mg_plays_${this.storageKey}`, String(plays + 1));
     } catch { /* localStorage unavailable — difficulty stays static */ }
 
     const clamped = validateScore(score);

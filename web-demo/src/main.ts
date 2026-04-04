@@ -616,7 +616,9 @@ async function gameLoop(
   const minigameOverlay = document.getElementById('minigame-overlay');
   if (!minigameContainer || !minigameOverlay) return;
 
+  let _loopSafety = 0; // C104: ceiling guard — run.active + 30-card limit are primary bounds
   while (state().run.active) {
+    if (++_loopSafety > 60) { state().endRun('safety'); break; } // C104: hard ceiling
     // 1. WALK phase — camera moves along rail
     rail.resume();
     await waitSeconds(WALK_SECONDS_BEFORE_CARD);
