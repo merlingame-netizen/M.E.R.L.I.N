@@ -1,9 +1,10 @@
 // =============================================================================
 // GenericBiome — Parametric procedural scene for 6 non-dedicated biomes.
-// Biomes: marais_korrigans, landes_bruyere, cercles_pierres, villages_celtes,
-//         collines_dolmens, iles_mystiques.
+// Biomes: marais_korrigans, landes_bruyere, cercles_pierres,
+//         monts_brumeux, plaine_druides, vallee_anciens.
 // Each biome gets unique terrain color, fog, lighting, stone formations, and
 // ambient particles — distinct atmospheres without duplicate scene files.
+// C159: biome IDs updated to match game design bible + atmosphere tables.
 // =============================================================================
 
 import {
@@ -34,48 +35,48 @@ interface BiomeTheme {
 }
 
 const THEMES: Readonly<Record<string, BiomeTheme>> = {
-  // C168: Dark atmospheric palette — N64 style but moody/stormy, hue identities preserved
+  // C159: atmosphere tables from game design brief — fog/ground/accent per biome
   marais_korrigans: {
-    fogColor: 0x1a3820, fogNear: 5, fogFar: 32,
-    groundColor: 0x1a3a18, skyTop: 0x0a2018, skyMid: 0x1e4a28,
-    ambientColor: 0x152812, keyColor: 0x1e7a40, rimColor: 0x186635,
-    particleColor: 0x3aaa60,
+    fogColor: 0x0a1520, fogNear: 5, fogFar: 32,
+    groundColor: 0x1a2a10, skyTop: 0x060e10, skyMid: 0x0e2018,
+    ambientColor: 0x081008, keyColor: 0x8866cc, rimColor: 0x4433aa,
+    particleColor: 0x8866cc,
     stoneDensity: 5, treeCount: 12, stoneType: 'menhir',
   },
   landes_bruyere: {
-    fogColor: 0x2a1840, fogNear: 8, fogFar: 45,
-    groundColor: 0x2a1438, skyTop: 0x180a30, skyMid: 0x3a1860,
-    ambientColor: 0x201028, keyColor: 0x6030aa, rimColor: 0x381870,
-    particleColor: 0x7040b0,
+    fogColor: 0x1a0e08, fogNear: 8, fogFar: 45,
+    groundColor: 0x3a2010, skyTop: 0x120a04, skyMid: 0x261408,
+    ambientColor: 0x140c06, keyColor: 0xcc6633, rimColor: 0x883322,
+    particleColor: 0xcc6633,
     stoneDensity: 8, treeCount: 4, stoneType: 'menhir',
   },
   cercles_pierres: {
-    fogColor: 0x101840, fogNear: 10, fogFar: 50,
-    groundColor: 0x1a2240, skyTop: 0x080e30, skyMid: 0x1a2858,
-    ambientColor: 0x0e1630, keyColor: 0x3050c0, rimColor: 0x2040a0,
-    particleColor: 0x4060c0,
+    fogColor: 0x080808, fogNear: 10, fogFar: 50,
+    groundColor: 0x282828, skyTop: 0x040404, skyMid: 0x101010,
+    ambientColor: 0x080808, keyColor: 0xe8c84c, rimColor: 0xaa9030,
+    particleColor: 0xe8c84c,
     stoneDensity: 12, treeCount: 0, stoneType: 'circle',
   },
-  villages_celtes: {
-    fogColor: 0x40200a, fogNear: 8, fogFar: 42,
-    groundColor: 0x38200a, skyTop: 0x281408, skyMid: 0x4a2810,
-    ambientColor: 0x301808, keyColor: 0x884820, rimColor: 0x703010,
-    particleColor: 0xaa6020,
-    stoneDensity: 4, treeCount: 18, stoneType: 'ruins',
+  monts_brumeux: {
+    fogColor: 0x101418, fogNear: 6, fogFar: 38,
+    groundColor: 0x202830, skyTop: 0x0a0e12, skyMid: 0x161e28,
+    ambientColor: 0x0c1018, keyColor: 0x4466aa, rimColor: 0x224488,
+    particleColor: 0x4466aa,
+    stoneDensity: 9, treeCount: 5, stoneType: 'menhir',
   },
-  collines_dolmens: {
-    fogColor: 0x1e3a10, fogNear: 6, fogFar: 36,
-    groundColor: 0x1a3010, skyTop: 0x0e2818, skyMid: 0x1e4828,
-    ambientColor: 0x141e10, keyColor: 0x285818, rimColor: 0x1c4410,
-    particleColor: 0x406830,
-    stoneDensity: 6, treeCount: 8, stoneType: 'dolmen',
+  plaine_druides: {
+    fogColor: 0x061206, fogNear: 8, fogFar: 42,
+    groundColor: 0x1a3010, skyTop: 0x040c04, skyMid: 0x0e2010,
+    ambientColor: 0x081208, keyColor: 0x33cc44, rimColor: 0x228833,
+    particleColor: 0x33cc44,
+    stoneDensity: 6, treeCount: 14, stoneType: 'dolmen',
   },
-  iles_mystiques: {
-    fogColor: 0x0a2840, fogNear: 5, fogFar: 28,
-    groundColor: 0x0e2438, skyTop: 0x081830, skyMid: 0x10304a,
-    ambientColor: 0x0a2030, keyColor: 0x1a5888, rimColor: 0x103870,
-    particleColor: 0x2060a0,
-    stoneDensity: 7, treeCount: 6, stoneType: 'menhir',
+  vallee_anciens: {
+    fogColor: 0x14100a, fogNear: 7, fogFar: 40,
+    groundColor: 0x2a1e0e, skyTop: 0x0c0a06, skyMid: 0x181208,
+    ambientColor: 0x100c06, keyColor: 0xd4aa44, rimColor: 0x988830,
+    particleColor: 0xd4aa44,
+    stoneDensity: 7, treeCount: 8, stoneType: 'ruins',
   },
 };
 
@@ -236,6 +237,33 @@ function createStones(theme: BiomeTheme): Group {
   return group;
 }
 
+// ── Scattered rocks / galets ─────────────────────────────────────────────────
+// 8 low-poly boulders dispersed around the path — common to every biome.
+
+function createRocks(groundColor: number): Group {
+  const group = new Group();
+  const R = () => Math.random();
+  // Stone color: slightly lighter/greyer than ground
+  const stoneBase = (groundColor & 0xfefefe) + 0x181818;
+  const stoneMat = new MeshStandardMaterial({ color: stoneBase, roughness: 0.92, metalness: 0.0, flatShading: true });
+
+  for (let i = 0; i < 8; i++) {
+    const scale = 0.4 + R() * 0.8;
+    const rock = new Mesh(new SphereGeometry(scale, 4, 3), stoneMat);
+    const angle = R() * Math.PI * 2;
+    const radius = 4 + R() * 20;
+    rock.position.set(
+      Math.cos(angle) * radius,
+      scale * 0.3 - 1,
+      -5 - R() * 35,
+    );
+    rock.scale.set(1, 0.6 + R() * 0.4, 1);
+    rock.rotation.y = R() * Math.PI;
+    group.add(rock);
+  }
+  return group;
+}
+
 // ── Ambient particles (fireflies / embers / stars) ────────────────────────────
 
 interface ParticleSystem {
@@ -324,18 +352,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const trunkColor = (theme.groundColor & 0xfefefe) + 0x0a0a08;
   group.add(createTrees(theme.treeCount, trunkColor));
   group.add(createStones(theme));
+  group.add(createRocks(theme.groundColor));
 
   // Ambient particles
   const particles = createParticles(theme.particleColor, 60);
   group.add(particles.points);
 
-  // Water plane for marais/iles biomes
-  if (biome === 'marais_korrigans' || biome === 'iles_mystiques') {
+  // Water plane for marais biome
+  if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
-      color: biome === 'iles_mystiques' ? 0x1488ee : 0x28c868,
+      color: 0x1a3a28,
       roughness: 0.1, metalness: 0.35,
-      transparent: true, opacity: 0.75,
-      emissive: biome === 'iles_mystiques' ? 0x0844aa : 0x106630,
+      transparent: true, opacity: 0.70,
+      emissive: 0x0a2418,
       emissiveIntensity: 0.18,
       flatShading: true,
     });
@@ -345,9 +374,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     group.add(water);
   }
 
-  // Landes bruyère: heather bushes (low purple blobs)
+  // Landes bruyere: heather bushes (low orange-purple blobs)
   if (biome === 'landes_bruyere') {
-    const heatherMat = new MeshStandardMaterial({ color: 0xcc55ee, roughness: 0.9, metalness: 0.0, flatShading: true, emissive: 0x8822aa, emissiveIntensity: 0.12 });
+    const heatherMat = new MeshStandardMaterial({ color: 0xcc6633, roughness: 0.9, metalness: 0.0, flatShading: true, emissive: 0x883322, emissiveIntensity: 0.12 });
     for (let i = 0; i < 30; i++) {
       const h = new Mesh(new SphereGeometry(0.3 + Math.random() * 0.4, 5, 4), heatherMat);
       h.scale.y = 0.35;
@@ -356,10 +385,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
   }
 
-  // Villages celtes: hut silhouettes
-  if (biome === 'villages_celtes') {
-    const hutMat = new MeshStandardMaterial({ color: 0x8a6040, roughness: 0.9, metalness: 0.0, flatShading: true });
-    const roofMat = new MeshStandardMaterial({ color: 0xb08840, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x604820, emissiveIntensity: 0.12 });
+  // Vallee anciens: ruined hut silhouettes with warm glow
+  if (biome === 'vallee_anciens') {
+    const hutMat = new MeshStandardMaterial({ color: 0x4a3018, roughness: 0.9, metalness: 0.0, flatShading: true });
+    const roofMat = new MeshStandardMaterial({ color: 0x6a4820, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0xd4aa44, emissiveIntensity: 0.08 });
     for (let i = 0; i < 5; i++) {
       const x = (Math.random() - 0.5) * 40;
       const z = -10 - Math.random() * 30;
@@ -369,6 +398,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const roof = new Mesh(new ConeGeometry(1.5, 1.4, 8), roofMat);
       roof.position.set(x, 1.6, z);
       group.add(roof);
+    }
+  }
+
+  // Monts brumeux: extra mist rocks (large boulders on ridgeline)
+  if (biome === 'monts_brumeux') {
+    const R2 = () => Math.random();
+    const rockMat = new MeshStandardMaterial({ color: 0x384050, roughness: 0.88, metalness: 0.0, flatShading: true });
+    for (let i = 0; i < 6; i++) {
+      const s = 1.2 + R2() * 2.0;
+      const boulder = new Mesh(new SphereGeometry(s, 5, 4), rockMat);
+      boulder.scale.set(1, 0.7 + R2() * 0.3, 1.1 + R2() * 0.4);
+      boulder.position.set((R2() - 0.5) * 50, s * 0.2 - 1, -8 - R2() * 40);
+      boulder.rotation.y = R2() * Math.PI;
+      group.add(boulder);
     }
   }
 

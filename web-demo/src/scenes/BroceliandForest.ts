@@ -6,9 +6,9 @@
 
 import {
   AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry,
-  Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry,
-  Float32BufferAttribute, FogExp2, FrontSide, Group, HemisphereLight, Material,
-  Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Points,
+  CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry,
+  DoubleSide, Float32BufferAttribute, FogExp2, FrontSide, Group, HemisphereLight, Material,
+  Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Points, PointLight,
   PointsMaterial, ShaderMaterial, SphereGeometry, Vector3,
 } from 'three';
 
@@ -530,6 +530,73 @@ function createCanopyRays(): Group {
   return group;
 }
 
+// ── Ground mist discs ─────────────────────────────────────────────────────────
+// 9 low-lying fog patches along the rail path — ground-level atmosphere.
+
+function createGroundMist(): Group {
+  const group = new Group();
+  const positions: [number, number, number][] = [
+    [ 0,   0.1,  -8],
+    [-4,   0.1, -14],
+    [ 5,   0.1, -20],
+    [-2,   0.1, -27],
+    [ 6,   0.1, -35],
+    [-5,   0.1, -42],
+    [ 3,   0.1, -50],
+    [-3,   0.1, -58],
+    [ 0,   0.1, -65],
+  ];
+
+  for (const [x, y, z] of positions) {
+    const radius = 2.5 + R() * 1.5;
+    const geo = new CircleGeometry(radius, 8);
+    const mat = new MeshBasicMaterial({
+      color: 0x0a1a0a,
+      transparent: true,
+      opacity: 0.28 + R() * 0.08,
+      depthWrite: false,
+    });
+    const disc = new Mesh(geo, mat);
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.set(x + (R() - 0.5) * 2, y, z);
+    group.add(disc);
+  }
+  return group;
+}
+
+// ── Volumetric light shaft ─────────────────────────────────────────────────────
+// PointLight pulse + translucent cone volume simulating god rays from canopy.
+
+interface VolumetricLightResult {
+  lightGroup: Group;
+  pointLight: PointLight;
+}
+
+function createVolumetricLight(): VolumetricLightResult {
+  const lightGroup = new Group();
+
+  // The animated point light
+  const pointLight = new PointLight(0x33ff22, 0.8, 30, 1.5);
+  pointLight.position.set(0, 12, -5);
+  lightGroup.add(pointLight);
+
+  // Visual cone volume (wide-top cone pointing down toward ground)
+  const coneGeo = new CylinderGeometry(0.1, 1.5, 10, 8);
+  const coneMat = new MeshBasicMaterial({
+    color: 0x33ff22,
+    transparent: true,
+    opacity: 0.04,
+    depthWrite: false,
+    side: DoubleSide,
+  });
+  const cone = new Mesh(coneGeo, coneMat);
+  // Cone origin is center; offset so wide end is near ground (y=7), narrow end at top (y=12)
+  cone.position.set(0, 7, -5);
+  lightGroup.add(cone);
+
+  return { lightGroup, pointLight };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -538,11 +605,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   // Atmospheric fog (Three.js scene fog — applied by renderer)
   // Instanced on the group, picked up by SceneManager when scene.fog is set there.
   // We embed fog params in this group for SceneManager to detect.
-  // C167: N64 bright enchanted-night fog — matches sky vertex horizon (0.157, 0.282, 0.722)
-  // Previous: 0x1a2a18 (dark green, old palette) → objects faded into muddy green haze.
-  // C168: dark atmospheric forest — deep indigo-black fog
-  (group as Group & { fogColor?: number; fogDensity?: number }).fogColor   = 0x0e1428;
-  (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.026;
+  // C159: dark forest green fog — deep canopy atmosphere
+  (group as Group & { fogColor?: number; fogDensity?: number }).fogColor   = 0x061206;
+  (group as Group & { fogColor?: number; fogDensity?: number }).fogDensity = 0.022;
 
   // ── Lighting — dark enchanted forest ──────────────────────────────────────
   // C163: N64 enchanted forest lighting — vivid blue night + moonlight + warm firefly glow
@@ -573,6 +638,7 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   group.add(createForestMenhirs());
   group.add(createForestDebris());
   group.add(createCanopyRays());
+  group.add(createGroundMist());
 
   const fog = createForestFog();
   group.add(fog);
@@ -582,6 +648,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
   const leaves = createLeafDrift();
   group.add(leaves.object);
+
+  const { lightGroup, pointLight: volLight } = createVolumetricLight();
+  group.add(lightGroup);
 
   // ── Animation state ────────────────────────────────────────────────────────
   let sceneTime = 0;
@@ -598,6 +667,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
     // Falling leaf drift
     leaves.update(dt);
+
+    // Volumetric light pulse — 3s period, intensity 0.6 ↔ 1.0
+    volLight.intensity = 0.8 + Math.sin(sceneTime * (Math.PI * 2 / 3)) * 0.2;
 
     // C162: animated cloud drift — each band at different speed for parallax
     for (const layer of cloudLayers) {
