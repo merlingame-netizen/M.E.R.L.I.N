@@ -162,9 +162,9 @@ export class MinigameVolonte extends MinigameBase {
     if (this.cursorX === 0 && this.cursorY === 0) { this.cursorX = this.centerX; this.cursorY = this.centerY; }
     const step = 10;
     if (e.key === 'ArrowLeft')       this.cursorX = Math.max(0, this.cursorX - step);
-    else if (e.key === 'ArrowRight') this.cursorX = Math.min(this.canvasW, this.cursorX + step);
+    else if (e.key === 'ArrowRight') this.cursorX = Math.min(this.canvasW - 1, this.cursorX + step);
     else if (e.key === 'ArrowUp')    this.cursorY = Math.max(0, this.cursorY - step);
-    else if (e.key === 'ArrowDown')  this.cursorY = Math.min(this.canvasH, this.cursorY + step);
+    else if (e.key === 'ArrowDown')  this.cursorY = Math.min(this.canvasH - 1, this.cursorY + step);
   };
 
   private spawnDistractor(): void {

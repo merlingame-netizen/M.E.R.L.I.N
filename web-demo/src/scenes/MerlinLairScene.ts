@@ -1005,10 +1005,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const KEYBOARD_ZONES: LairZone[] = ['map', 'crystal', 'bookshelf', 'cauldron', 'door'];
   let keyboardZoneIdx = -1;
   const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Tab' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();
       keyboardZoneIdx = (keyboardZoneIdx + 1) % KEYBOARD_ZONES.length;
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    } else if ((e.key === 'Tab' && e.shiftKey) || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
       e.preventDefault();
       keyboardZoneIdx = (keyboardZoneIdx - 1 + KEYBOARD_ZONES.length) % KEYBOARD_ZONES.length;
     } else if ((e.key === 'Enter' || e.key === ' ') && currentHovered && zoneClickCallback) {
