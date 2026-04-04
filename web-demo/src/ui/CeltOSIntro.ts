@@ -276,10 +276,29 @@ export async function runCeltOSIntro(): Promise<void> {
   container.style.cssText = 'position:relative;width:100%;height:100%;';
   overlay.appendChild(container);
 
+  // C166: click or any key skips the intro immediately.
+  // Promise.race() races the 3-phase sequence against the skip signal.
+  // Phase 3 contains the real asset fetch (loadTemplates) — it continues in the background
+  // after skip so templates are still available when the first card is drawn.
+  const skipSignal = new Promise<void>((res) => {
+    const onSkip = (): void => {
+      overlay.removeEventListener('click', onSkip);
+      document.removeEventListener('keydown', onSkip);
+      res();
+    };
+    overlay.addEventListener('click', onSkip, { once: true });
+    document.addEventListener('keydown', onSkip, { once: true });
+  });
+
   try {
-    await runPhase1(container);
-    const logoWrap = await runPhase2(container);
-    await runPhase3(container, logoWrap);
+    await Promise.race([
+      (async () => {
+        await runPhase1(container);
+        const logoWrap = await runPhase2(container);
+        await runPhase3(container, logoWrap);
+      })(),
+      skipSignal,
+    ]);
   } finally {
     overlay.remove();
   }

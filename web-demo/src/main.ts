@@ -737,6 +737,15 @@ async function main(): Promise<void> {
     }
     sceneManager.scene.add(biomeResult.group);
 
+    // C166: Apply biome-specific fog — read from group properties (Forest/Coast) or userData (Generic).
+    // Overrides SceneManager's default dark-blue fog so each biome has correct atmospheric colour.
+    {
+      const g = biomeResult.group as typeof biomeResult.group & { fogColor?: number; fogDensity?: number };
+      const fogColor: number  = g.fogColor ?? (g.userData['fogColor'] as number | undefined) ?? 0x1a2a3a;
+      const fogDensity: number = g.fogDensity ?? (g.userData['fogDensity'] as number | undefined) ?? 0.015;
+      sceneManager.updateFog(fogColor, fogDensity);
+    }
+
     // Camera rail — biome-specific path
     const rail = chosenBiome === 'foret_broceliande'
       ? CameraRail.createForestPath()

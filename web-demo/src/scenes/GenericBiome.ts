@@ -297,10 +297,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const theme = THEMES[biome] ?? DEFAULT_THEME;
   const group = new Group();
 
-  // Fog (applied via scene.fog in main.ts workaround — set on group userData for consumer)
+  // Fog — stored in userData for main.ts to read and apply via sceneManager.updateFog()
+  // Density uses FogExp2 formula: 20% visibility at fogFar → density = sqrt(-ln(0.2)) / fogFar
   group.userData['fogColor'] = theme.fogColor;
   group.userData['fogNear'] = theme.fogNear;
   group.userData['fogFar'] = theme.fogFar;
+  group.userData['fogDensity'] = Math.sqrt(1.609) / theme.fogFar;
 
   // Lighting
   group.add(new AmbientLight(theme.ambientColor, 0.8));

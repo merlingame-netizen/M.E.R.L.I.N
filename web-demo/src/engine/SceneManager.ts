@@ -113,6 +113,18 @@ export class SceneManager {
     animate();
   }
 
+  /**
+   * C166: Update scene fog and background for a biome transition.
+   * Uses the existing FogExp2 instance (created in constructor) — no new allocation.
+   * Also updates the scene background colour so the sky horizon matches the fog.
+   */
+  updateFog(colorHex: number, density: number): void {
+    const fog = this.scene.fog as FogExp2;
+    fog.color.setHex(colorHex);
+    fog.density = density;
+    (this.scene.background as Color).setHex(colorHex);
+  }
+
   /** Stop the render loop. */
   stop(): void {
     this.running = false;
