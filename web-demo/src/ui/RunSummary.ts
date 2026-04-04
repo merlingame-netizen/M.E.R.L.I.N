@@ -2,6 +2,8 @@
 // RunSummary — T046: End-of-run recap overlay
 // Triggered by: life <= 0 OR cardsPlayed >= 30
 // Shows: cards played, factions gained, anam earned, biome reached
+// C167: cinematic polish — scanline pulse header, anam counter RAF, cause banner,
+//       bloc-char faction bars, hover box-shadow + SFX on restart button
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { store } from '../game/Store';
@@ -29,18 +31,39 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
 } as const;
 
 const SUMMARY_OVERLAY_ID = 'run-summary-overlay';
+const SCANLINE_KEYFRAME_ID = 'run-summary-scanline-kf';
 
 // C86: module-level anchor for the pending restart Promise resolve.
 // showRunSummary() can be re-entered (e.g. run ends while overlay already shown
-// from a previous death) — existing.remove() at line 112 destroys the old restartBtn,
+// from a previous death) — existing.remove() destroys the old restartBtn,
 // orphaning the inline Promise resolve and causing an async deadlock for any caller
 // awaiting the first invocation. Hoisting to module scope with null-guard on re-entry
 // mirrors the OghamPanel resolveChoice pattern.
 let resolveRestart: (() => void) | null = null;
 
+// C167: active RAF handle for the anam counter — cancelled on dispose so no orphaned RAF
+let anamRafHandle: number | null = null;
+
 /**
- * Builds a faction row element.
- * Shows current reputation bar + delta annotation from this run.
+ * Inject the scanline-pulse @keyframes once — idempotent via id guard.
+ */
+function ensureScanlineKeyframes(): void {
+  if (document.getElementById(SCANLINE_KEYFRAME_ID)) return;
+  const style = document.createElement('style');
+  style.id = SCANLINE_KEYFRAME_ID;
+  style.textContent = `
+    @keyframes rs-scanline-pulse {
+      0%   { opacity: 0.92; }
+      50%  { opacity: 1; }
+      100% { opacity: 0.92; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/**
+ * Build bloc-char faction bar — "████░░░░░░" style, 10 blocks wide.
+ * Matches the Journal visual language.
  */
 function buildFactionRow(factionId: string, reputation: number, delta: number): HTMLElement {
   const meta = FACTION_META[factionId] ?? { label: factionId, color: 'rgba(51,255,102,0.7)' };
@@ -53,47 +76,74 @@ function buildFactionRow(factionId: string, reputation: number, delta: number): 
   ].join(';');
 
   const label = document.createElement('span');
-  label.style.cssText = `color:${meta.color};font-size:13px;min-width:80px;`;
+  label.style.cssText = `color:${meta.color};font-size:13px;min-width:80px;font-family:Courier New,monospace;`;
   label.textContent = meta.label;
 
-  const barTrack = document.createElement('div');
-  barTrack.style.cssText = [
-    'flex:1',
-    'height:6px',
-    'background:rgba(51,255,102,0.08)',
-    'border-radius:3px',
-    'overflow:hidden',
-  ].join(';');
-
-  const barFill = document.createElement('div');
-  const pct = Math.min(100, Math.round((reputation / 100) * 100));
-  barFill.style.cssText = [
-    `width:${pct}%`,
-    'height:100%',
-    `background:${meta.color}`,
-    'border-radius:3px',
-    'transition:width 0.8s ease',
-  ].join(';');
-  barTrack.appendChild(barFill);
+  // Bloc-char bar: 10 blocks, filled = █, empty = ░
+  const BLOCKS = 10;
+  const filled = Math.round((Math.min(100, Math.max(0, reputation)) / 100) * BLOCKS);
+  const barEl = document.createElement('span');
+  barEl.style.cssText = `flex:1;font-size:13px;letter-spacing:1px;color:${meta.color};opacity:0.85;font-family:Courier New,monospace;`;
+  barEl.textContent = '█'.repeat(filled) + '░'.repeat(BLOCKS - filled);
 
   const score = document.createElement('span');
-  score.style.cssText = 'font-size:13px;opacity:0.7;min-width:30px;text-align:right;';
+  score.style.cssText = 'font-size:13px;opacity:0.7;min-width:30px;text-align:right;font-family:Courier New,monospace;';
   score.textContent = String(reputation);
 
   row.appendChild(label);
-  row.appendChild(barTrack);
+  row.appendChild(barEl);
   row.appendChild(score);
 
   // Delta annotation (+N / -N) from this run
   if (delta !== 0) {
     const deltaEl = document.createElement('span');
     const isPositive = delta > 0;
-    deltaEl.style.cssText = `font-size:11px;min-width:32px;text-align:right;color:${isPositive ? '#7cb87c' : '#b87c7c'};`;
+    deltaEl.style.cssText = `font-size:11px;min-width:32px;text-align:right;color:${isPositive ? '#7cb87c' : '#b87c7c'};font-family:Courier New,monospace;`;
     deltaEl.textContent = `${isPositive ? '+' : ''}${delta}`;
     row.appendChild(deltaEl);
   }
 
   return row;
+}
+
+/**
+ * Animate a number counter from 0 → target over durationMs using RAF.
+ * Ease-out quadratic. Calls onFrame(currentValue) each tick.
+ * Returns the RAF handle so the caller can cancel it on dispose.
+ */
+function animateCounter(
+  target: number,
+  durationMs: number,
+  onFrame: (value: number) => void,
+): number {
+  const startTime = performance.now();
+  let handle = 0;
+
+  const tick = (now: number): void => {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / durationMs);
+    // Ease-out quad: 1 - (1 - t)^2
+    const eased = 1 - (1 - progress) ** 2;
+    const current = Math.round(eased * target);
+    onFrame(current);
+    if (progress < 1) {
+      handle = requestAnimationFrame(tick);
+      anamRafHandle = handle;
+    } else {
+      anamRafHandle = null;
+    }
+  };
+
+  handle = requestAnimationFrame(tick);
+  anamRafHandle = handle;
+  return handle;
+}
+
+/**
+ * Dispatch the merlin SFX custom event for a given sound name.
+ */
+function playSfx(sound: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
 }
 
 /**
@@ -105,13 +155,6 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   const biomeLabel = BIOME_LABELS[state.run.biome] ?? state.run.biome;
 
-  const reasonMessages: Readonly<Record<string, string>> = {
-    death:        'Tu as succombe aux epreuves de la lande\u2026',
-    victory:      'Tu as traverse le biome avec bravoure\u202f!',
-    cards_limit:  'Ton voyage touche a sa fin apr\u00e8s trente epreuves.',
-  } as const;
-  const message = reasonMessages[reason] ?? reasonMessages.death;
-
   // C138/RS-01: re-entry guard BEFORE fadeIn — concurrent death calls previously both
   // entered the 800ms fadeIn, then the second call resolved the first awaiter mid-fade,
   // replacing the summary screen with no player interaction.
@@ -120,8 +163,16 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     resolveRestart = null;
   }
 
+  // Cancel any orphaned anam RAF from a previous overlay
+  if (anamRafHandle !== null) {
+    cancelAnimationFrame(anamRafHandle);
+    anamRafHandle = null;
+  }
+
   // Fade scene to dark before showing overlay
   await fadeIn(800);
+
+  ensureScanlineKeyframes();
 
   // Build overlay
   const existing = document.getElementById(SUMMARY_OVERLAY_ID);
@@ -140,7 +191,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'align-items:center',
     'background:rgba(2,8,2,0.96)',
     'z-index:70',
-    `font-family:'Courier New',monospace`,
+    'font-family:Courier New,monospace',
     'color:rgba(51,255,102,0.88)',
   ].join(';');
 
@@ -156,17 +207,55 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'text-align:center',
   ].join(';');
 
-  // Header
+  // ── C167: Header with scanline pulse animation ───────────────────────────────
   const header = document.createElement('div');
-  header.style.cssText = `font-size:16px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#33ff66;margin-bottom:8px;font-family:'Courier New',monospace;text-shadow:0 0 8px rgba(51,255,102,0.35);`;
+  header.style.cssText = [
+    'font-size:16px',
+    'font-weight:700',
+    'letter-spacing:0.22em',
+    'text-transform:uppercase',
+    'color:#33ff66',
+    'margin-bottom:4px',
+    'font-family:Courier New,monospace',
+    'text-shadow:0 0 8px rgba(51,255,102,0.35)',
+    'animation:rs-scanline-pulse 1.2s ease-in-out infinite',
+  ].join(';');
   header.textContent = '> FIN_DE_QUETE';
   panel.appendChild(header);
 
-  // Reason message
-  const msgEl = document.createElement('div');
-  msgEl.style.cssText = 'font-size:15px;font-style:italic;opacity:0.85;margin-bottom:28px;line-height:1.5;';
-  msgEl.textContent = message;
-  panel.appendChild(msgEl);
+  // Sub-header: biome + card count
+  const cardsPlayed = state.run.cardsPlayed ?? 0;
+  const subHeader = document.createElement('div');
+  subHeader.style.cssText = [
+    'font-size:11px',
+    'color:rgba(51,255,102,0.5)',
+    'letter-spacing:0.14em',
+    'margin-bottom:20px',
+    'font-family:Courier New,monospace',
+  ].join(';');
+  subHeader.textContent = `${biomeLabel} — ${cardsPlayed} carte${cardsPlayed !== 1 ? 's' : ''}`;
+  panel.appendChild(subHeader);
+
+  // ── C167: Cause de fin — colored result banner ───────────────────────────────
+  const isVictory = reason === 'victory' || reason === 'cards_limit';
+  const causeEl = document.createElement('div');
+  causeEl.style.cssText = [
+    'font-size:13px',
+    'font-weight:700',
+    'letter-spacing:0.16em',
+    'text-transform:uppercase',
+    'margin-bottom:24px',
+    'padding:8px 16px',
+    `color:${isVictory ? '#33ff66' : 'rgba(255,80,80,0.9)'}`,
+    `border:1px solid ${isVictory ? 'rgba(51,255,102,0.3)' : 'rgba(255,80,80,0.3)'}`,
+    'border-radius:2px',
+    `background:${isVictory ? 'rgba(51,255,102,0.06)' : 'rgba(255,80,80,0.06)'}`,
+    'font-family:Courier New,monospace',
+  ].join(';');
+  causeEl.textContent = isVictory
+    ? '[ VICTOIRE \u2014 QUETE ACCOMPLIE ]'
+    : '[ DEFAITE \u2014 VIE EPUISEE ]';
+  panel.appendChild(causeEl);
 
   // Divider
   const div1 = document.createElement('hr');
@@ -183,24 +272,28 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'text-align:left',
   ].join(';');
 
-  const addStat = (label: string, value: string | number): void => {
+  const addStat = (label: string, value: string | number, animate?: boolean): HTMLElement => {
     const cell = document.createElement('div');
     const lbl = document.createElement('div');
     lbl.style.cssText = 'font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:2px;';
     lbl.textContent = label;
     const val = document.createElement('div');
-    val.style.cssText = `font-size:16px;font-weight:600;color:#33ff66;font-family:'Courier New',monospace;`;
-    val.textContent = String(value);
+    val.style.cssText = 'font-size:16px;font-weight:600;color:#33ff66;font-family:Courier New,monospace;';
+    val.textContent = animate ? '0' : String(value);
     cell.appendChild(lbl);
     cell.appendChild(val);
     statsGrid.appendChild(cell);
+    return val;
   };
 
-  addStat('Cartes jouees', state.run.cardsPlayed ?? 0); // C123/RS-NULL-01: save-compat guard
-  addStat('Anam cette quete', state.run.anamThisRun ?? 0); // C123/RS-NULL-01
+  addStat('Cartes jouees', cardsPlayed); // C123/RS-NULL-01: save-compat guard
+
+  // C167: anam counter — animated from 0 → target
+  const anamValue = state.run.anamThisRun ?? 0; // C123/RS-NULL-01
+  const anamValEl = addStat('Anam cette quete', anamValue, true);
+
   addStat('Anam total', state.meta.anam);
   addStat('Vie restante', Math.max(0, state.run.life));
-  addStat('Biome atteint', biomeLabel);
 
   panel.appendChild(statsGrid);
 
@@ -215,7 +308,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   factionHeader.textContent = 'Reputation des factions';
   panel.appendChild(factionHeader);
 
-  // Faction bars — show all 5 factions with delta annotation
+  // Faction bloc-char bars — show all 5 factions with delta annotation
   const factionsEl = document.createElement('div');
   factionsEl.style.cssText = 'margin-bottom:24px;';
   const factions = state.run.factions as Record<string, number>;
@@ -241,10 +334,10 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     promisesEl.style.cssText = 'margin-bottom:24px;text-align:left;';
 
     const STATUS_META: Readonly<Record<string, { icon: string; color: string }>> = {
-      fulfilled: { icon: '✓', color: '#7cb87c' },
-      broken:    { icon: '✗', color: '#b87c7c' },
-      expired:   { icon: '⏱', color: 'rgba(51,255,102,0.55)' },
-      active:    { icon: '…', color: '#a0a0b8' },
+      fulfilled: { icon: '\u2713', color: '#7cb87c' },
+      broken:    { icon: '\u2717', color: '#b87c7c' },
+      expired:   { icon: '\u23f1', color: 'rgba(51,255,102,0.55)' },
+      active:    { icon: '\u2026', color: '#a0a0b8' },
     } as const;
 
     for (const p of promises) {
@@ -265,7 +358,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     panel.appendChild(promisesEl);
   }
 
-  // Restart button
+  // ── C167: Restart button with box-shadow hover + SFX ────────────────────────
   const restartBtn = document.createElement('button');
   restartBtn.id = 'run-summary-restart';
   restartBtn.style.cssText = [
@@ -274,21 +367,18 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'cursor:pointer',
     'background:rgba(26,136,51,0.15)',
     'color:#33ff66',
-    'border:1px solid rgba(51,255,102,0.35)',
+    'border:1px solid rgba(51,255,102,0.3)',
     'border-radius:2px',
-    `font-family:'Courier New',monospace`,
+    'font-family:Courier New,monospace',
     'letter-spacing:0.18em',
     'text-transform:uppercase',
     'transition:all 0.2s ease',
   ].join(';');
   restartBtn.textContent = '> REJOUER';
+
   // C87: :focus-visible outline for keyboard users — WCAG 2.4.7 (Focus Visible).
-  // Inline event listeners are used because this element is created dynamically
-  // and no stylesheet is injected by this module.
   // C150/RS-LISTENER-LEAK-01: store all style-mutation handlers as named functions so the
-  // click handler can removeEventListener() before overlay.remove(). Without removal,
-  // 4 listeners accumulate on a detached restartBtn node per run — modern GC eventually
-  // collects them but memory pressure on mobile (low-end ~512MB) can spike between runs.
+  // click handler can removeEventListener() before overlay.remove().
   const onFocus = (): void => {
     restartBtn.style.outline = '2px solid rgba(51,255,102,0.8)';
     restartBtn.style.outlineOffset = '3px';
@@ -297,10 +387,12 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   const onPointerEnter = (): void => {
     restartBtn.style.background = 'rgba(26,136,51,0.35)';
     restartBtn.style.borderColor = 'rgba(51,255,102,0.7)';
+    restartBtn.style.boxShadow = '0 0 14px rgba(51,255,102,0.2)';
   };
   const onPointerLeave = (): void => {
     restartBtn.style.background = 'rgba(26,136,51,0.15)';
-    restartBtn.style.borderColor = 'rgba(51,255,102,0.35)';
+    restartBtn.style.borderColor = 'rgba(51,255,102,0.3)';
+    restartBtn.style.boxShadow = 'none';
   };
   restartBtn.addEventListener('focus', onFocus);
   restartBtn.addEventListener('blur', onBlur);
@@ -311,6 +403,16 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
+
+  // C167: start anam counter animation after DOM insertion
+  if (anamValue > 0) {
+    animateCounter(anamValue, 1200, (v) => {
+      anamValEl.textContent = String(v);
+    });
+  } else {
+    anamValEl.textContent = '0';
+  }
+
   // C87: move focus to restartBtn after DOM insertion — WCAG 2.1 SC 2.1.2 (keyboard reachable on dialog open)
   requestAnimationFrame(() => restartBtn.focus());
 
@@ -321,6 +423,15 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   await new Promise<void>((resolve) => {
     resolveRestart = resolve;
     restartBtn.addEventListener('click', () => {
+      // C167: SFX on click
+      playSfx('click');
+
+      // Cancel any still-running anam RAF before overlay removal
+      if (anamRafHandle !== null) {
+        cancelAnimationFrame(anamRafHandle);
+        anamRafHandle = null;
+      }
+
       // C150/RS-LISTENER-LEAK-01: remove style-mutation listeners before overlay removal
       restartBtn.removeEventListener('focus', onFocus);
       restartBtn.removeEventListener('blur', onBlur);
