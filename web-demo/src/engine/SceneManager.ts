@@ -11,6 +11,8 @@ export class SceneManager {
   private animationId = 0;
   private readonly callbacks: Array<(dt: number) => void> = [];
   private clock = new THREE.Clock();
+  // C81-01: stored so dispose() can remove it (window.resize leaks per run without this)
+  private readonly onResize: () => void;
 
   constructor(container: HTMLElement) {
     // Scene
@@ -45,13 +47,13 @@ export class SceneManager {
     // Lighting
     this.setupLighting();
 
-    // Resize
-    const onResize = () => {
+    // Resize — stored as instance field so dispose() can remove it
+    this.onResize = () => {
       this.camera.aspect = container.clientWidth / container.clientHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(container.clientWidth, container.clientHeight);
     };
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', this.onResize);
   }
 
   private setupLighting(): void {
@@ -103,6 +105,7 @@ export class SceneManager {
 
   dispose(): void {
     this.stop();
+    window.removeEventListener('resize', this.onResize);
     this.renderer.dispose();
   }
 }

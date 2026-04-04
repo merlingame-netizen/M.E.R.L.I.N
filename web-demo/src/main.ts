@@ -424,8 +424,8 @@ async function main(): Promise<void> {
     // --- Gameplay Loop ---
     await gameLoop(sceneManager, rail, biomeResult.update);
 
-    // BUG-02: Stop renderer rAF + biome update loop after run ends to free GPU/CPU
-    sceneManager.stop();
+    // BUG-02 / C79-07: dispose() = stop rAF + removeEventListener(resize) + renderer.dispose()
+    sceneManager.dispose();
     stopAmbient();
     biomeResult.dispose();
 
