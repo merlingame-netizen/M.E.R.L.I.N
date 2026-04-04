@@ -11,6 +11,39 @@ const CANDLE_POSITIONS: Array<[number, number, number]> = [
   [3, -4.85, -6],
 ];
 
+// C97: GLB fade-in — prevents hard pop-in on slow connections.
+// Fades all mesh opacities from 0 → 1 over durationMs via rAF.
+// Restores transparent=false after completion to avoid depth-sort artifacts.
+function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
+  const meshes: THREE.Mesh[] = [];
+  group.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      const mat = child.material as THREE.MeshStandardMaterial;
+      mat.transparent = true;
+      mat.opacity = 0;
+      mat.needsUpdate = true;
+      meshes.push(child);
+    }
+  });
+  if (meshes.length === 0) return;
+  const start = performance.now();
+  const tick = (): void => {
+    const t = Math.min((performance.now() - start) / durationMs, 1);
+    for (const m of meshes) (m.material as THREE.MeshStandardMaterial).opacity = t;
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      for (const m of meshes) {
+        const mat = m.material as THREE.MeshStandardMaterial;
+        mat.opacity = 1;
+        mat.transparent = false;
+        mat.needsUpdate = true;
+      }
+    }
+  };
+  requestAnimationFrame(tick);
+}
+
 export interface LairProceduralGroups {
   mapGroup: THREE.Group;
   shelfGroup: THREE.Group;
@@ -44,6 +77,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(2, -4.65, -7);
     gltf.scene.scale.setScalar(0.72);
     scene.add(gltf.scene);
+    fadeInGLB(gltf.scene); // C97: fade-in on load
     if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;
     // Update interactives[] visualMesh to the GLB body so hover emissive works on GLB path
     if (proceduralGroups?.onCauldronGLBLoaded) {
@@ -77,6 +111,7 @@ export function loadLairGLBs(
       clone.scale.setScalar(0.42);
       clone.position.set(cx, cy, cz);
       scene.add(clone);
+      fadeInGLB(clone); // C97: fade-in per clone
     }
     if (proceduralGroups?.candleGroup) proceduralGroups.candleGroup.visible = false;
   }).catch(() => { /* procedural candle bodies remain */ });
@@ -87,6 +122,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(-5, -5.0, -3);
     gltf.scene.scale.setScalar(1.0);
     scene.add(gltf.scene);
+    fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.mapGroup.visible = false;
   }).catch(() => { /* procedural map table remains */ });
 
@@ -96,6 +132,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(8.8, -5.0, -8);
     gltf.scene.scale.set(1.2, 1.0, 0.8);
     scene.add(gltf.scene);
+    fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;
   }).catch(() => { /* procedural bookshelf remains */ });
 
@@ -106,6 +143,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(0, -4.98, 0);
     gltf.scene.scale.set(1.0, 1.0, 1.0);
     scene.add(gltf.scene);
+    fadeInGLB(gltf.scene); // C97
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
   }).catch(() => { /* procedural floor remains */ });
 
@@ -200,6 +238,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(5, -1.0, -4);
     gltf.scene.scale.setScalar(0.8);
     scene.add(gltf.scene);
+    fadeInGLB(gltf.scene); // C97
     if (proceduralGroups?.crystalSphere) proceduralGroups.crystalSphere.visible = false;
     if (proceduralGroups?.onCrystalGLBLoaded && glbMeshes.length > 0) {
       proceduralGroups.onCrystalGLBLoaded(glbMeshes[0]!);
