@@ -1054,7 +1054,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     renderer.domElement.removeEventListener('touchend', onTouchEnd);
     renderer.domElement.removeEventListener('keydown', onKeyDown);
     scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
+      if (obj instanceof THREE.InstancedMesh) {
+        // C109: InstancedMesh.dispose() fires the renderer 'dispose' event so the instanceMatrix
+        // GPU buffer (InstancedBufferAttribute) is deallocated. Without this call, instanceMatrix
+        // data leaks on repeated hub ↔ lair navigations — geometry.dispose() alone only clears
+        // the base vertex attributes, not the per-instance matrix buffer.
+        obj.dispose();
+        obj.geometry.dispose();
+        (obj.material as THREE.Material).dispose();
+      } else if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
         obj.geometry.dispose();
         if (Array.isArray(obj.material)) {
           obj.material.forEach((m) => m.dispose());
