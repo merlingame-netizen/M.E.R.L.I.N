@@ -53,6 +53,7 @@ export class MinigameEcho extends MinigameBase {
   // Game state
   private currentRound = 0;
   private hits = 0;
+  private roundOutcomes: boolean[] = []; // C103: per-round hit/miss — drives score dot colors
   private phase: 'flash' | 'answer' | 'feedback' | 'pause' | 'done' = 'pause';
   private phaseTimer = 0;
   private targetQuadrant = 0;     // index into quadrants
@@ -124,6 +125,7 @@ export class MinigameEcho extends MinigameBase {
     // Reset state
     this.currentRound = 0;
     this.hits = 0;
+    this.roundOutcomes = []; // C103: reset per-round outcomes on new game
     this.ended = false;
     this.pulsePhase = 0;
     this.rippleActive = false;
@@ -157,9 +159,11 @@ export class MinigameEcho extends MinigameBase {
     if (clickedQuadrant === this.targetQuadrant) {
       this.hits++;
       this.feedback = 'hit';
+      this.roundOutcomes.push(true); // C103: record hit
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.feedback = 'miss';
+      this.roundOutcomes.push(false); // C103: record miss
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
 
@@ -192,9 +196,11 @@ export class MinigameEcho extends MinigameBase {
     if (quadrant === this.targetQuadrant) {
       this.hits++;
       this.feedback = 'hit';
+      this.roundOutcomes.push(true); // C103: record hit
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.feedback = 'miss';
+      this.roundOutcomes.push(false); // C103: record miss
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
     this.phase = 'feedback';
@@ -290,6 +296,7 @@ export class MinigameEcho extends MinigameBase {
       if (this.phaseTimer <= 0 && !this.answered) {
         // Timed out -- miss
         this.feedback = 'miss';
+        this.roundOutcomes.push(false); // C103: timeout = miss
         this.phase = 'feedback';
         this.feedbackTimer = 0.5;
         this.answered = true;
@@ -465,7 +472,10 @@ export class MinigameEcho extends MinigameBase {
       ctx.beginPath();
       ctx.arc(dx, dotY, 6, 0, Math.PI * 2);
       if (i < this.currentRound) {
-        ctx.fillStyle = 'rgba(140,130,120,0.5)';
+        // C103: color by round outcome — green=hit, red=miss
+        ctx.fillStyle = this.roundOutcomes[i]
+          ? 'rgba(80,180,80,0.7)'
+          : 'rgba(200,60,60,0.55)';
       } else if (i === this.currentRound) {
         const cp = 0.5 + Math.sin(this.pulsePhase * 4) * 0.3;
         ctx.fillStyle = `rgba(200,170,100,${cp})`;

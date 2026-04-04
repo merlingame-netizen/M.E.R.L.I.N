@@ -202,10 +202,11 @@ export class MinigameOmbres extends MinigameBase {
     this.cancelTimers(); // C99: centralised via cancelTimers() — no duplicate list here
 
     // Score = max progress reached * (1 - collision penalty)
+    // C103: multiplier raised 0.5→0.85 — wall-hugging (100% collision) now scores ~15, not 50.
+    // Prevents wall-huggers from crossing the ≥50 threshold that triggers 'unlock' SFX (OMB-03).
     const collisionPenalty = Math.min(1, this.collisionTime / this.totalTime);
-    const rawScore = this.maxProgress * 100 * (1 - collisionPenalty * 0.5);
-    // C87: win/lose SFX on game end — win path was previously silent (playtester C87-B1).
-    // Threshold 50: progress ≥ 50% with low collision = unlock, poor navigation = lose.
+    const rawScore = this.maxProgress * 100 * (1 - collisionPenalty * 0.85);
+    // Threshold 50: clean navigation = unlock, heavy collision = lose.
     window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: rawScore >= 50 ? 'unlock' : 'lose' } }));
     this.finish(rawScore);
   }
