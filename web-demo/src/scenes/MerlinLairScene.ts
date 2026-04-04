@@ -656,7 +656,11 @@ function createSkull(): THREE.Group {
 // ── Ambient Lighting — 5-source pass (degraded to 4 on low-end mobile) ──
 // C89-P2: lowEnd=true skips backAccent PointLight (Mali-G57/Adreno 610 budget ~4 lights at 60fps)
 function setupLighting(scene: THREE.Scene, lowEnd = false): void {
-  scene.add(new THREE.AmbientLight(0x1a1008, 0.5));                          // dark warm base
+  scene.add(new THREE.AmbientLight(0x1a1008, 0.3));                          // dark warm base (reduced to balance HemiLight below)
+  // C33: HemisphereLight fills stone surfaces — reports flagged every cycle that flatShading relied
+  // solely on 5 PointLights with no ambient fill. Sky=blue-grey dungeon vault, ground=warm stone bounce.
+  // intensity=0.25: subtle — doesn't wash out dramatic PointLight shadows, just reveals stone facets.
+  scene.add(new THREE.HemisphereLight(0x7080a0, 0x3a2a1a, 0.25));           // sky/ground Celtic fill
   // C85-02: key moved from overhead [0,8,-2] to forward-angled [0,3,2] — creates
   // depth shadows toward back wall, correct Celtic hall dramaturgy
   const key = new THREE.PointLight(0xff6618, 0.9, 22, 1.6);
@@ -883,13 +887,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (currentHovered) {
         currentHovered.hovered = false;
         // C97: scale applied to visualMesh (visible geometry), not hitTarget (invisible raycast mesh)
-        (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.0);
+        // C33: scale now lerped in update loop — no setScalar here
         applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
       }
       currentHovered = found;
       if (currentHovered) {
         currentHovered.hovered = true;
-        (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.05);
+        // C33: scale lerped toward 1.05 in update loop — smooth Celtic ritual feel
         applyHoverTo(currentHovered, 0.65);
         renderer.domElement.style.cursor = 'pointer';
         // C82-01: subtle shimmer on zone enter — SFXManager listens via window 'merlin_sfx'
@@ -982,8 +986,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const onTouchEnd = (): void => {
     if (currentHovered) {
       currentHovered.hovered = false;
-      // C98: scale on visualMesh (visible geometry), not hitTarget (invisible)
-      (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.0);
+      // C98: scale lerped back to 1.0 in update loop — no setScalar needed here
       applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
       currentHovered = null;
       renderer.domElement.style.cursor = 'default';
@@ -1029,14 +1032,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const next = interactives.find((i) => i.zone === zone) ?? null;
     if (currentHovered && currentHovered !== next) {
       currentHovered.hovered = false;
-      // C98: scale on visualMesh (visible geometry), not hitTarget (invisible)
-      (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.0);
+      // C98: scale lerped back to 1.0 in update loop
       applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
     }
     currentHovered = next;
     if (currentHovered) {
       currentHovered.hovered = true;
-      (currentHovered.visualMesh ?? currentHovered.mesh).scale.setScalar(1.05);
+      // C33: scale lerped toward 1.05 in update loop
       applyHoverTo(currentHovered, 0.65);
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
       renderer.domElement.setAttribute('aria-label', `Zone active : ${ZONE_ARIA_LABELS[zone]} — Entrée pour activer`);
@@ -1132,6 +1134,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // Forest window (leaf sway + glass shimmer)
     lairWindow.update(elapsedTime);
+
+    // C33: dt-based hover scale lerp — smooth Celtic ritual feel (replaces instant setScalar in handlers)
+    // 18 units/s → ~100ms transition at 60fps, ~55ms at 30fps. Stops when within 0.001 of target.
+    for (const obj of interactives) {
+      const mesh = (obj.visualMesh ?? obj.mesh) as THREE.Mesh;
+      const targetScale = obj.hovered ? 1.05 : 1.0;
+      const cur = mesh.scale.x;
+      if (Math.abs(cur - targetScale) > 0.001) {
+        mesh.scale.setScalar(cur + (targetScale - cur) * Math.min(1, 18 * dt));
+      }
+    }
 
     renderer.render(scene, camera);
   };
