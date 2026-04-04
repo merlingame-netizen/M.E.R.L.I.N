@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Negociation -- Persuade a spirit with the right words
 // Words scroll upward. Player clicks words that match the target faction's
 // keywords to build a persuasion sequence. Timer 12s. Score = combo bonus
@@ -143,13 +143,13 @@ export class MinigameNegociation extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'NEGOCIATION -- Persuade l\'esprit';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Target faction indicator
     const factionLabel = document.createElement('div');
     factionLabel.textContent = `Cible: ${this.targetFaction}`;
-    factionLabel.style.cssText = 'color:#cd853f;font-size:14px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    factionLabel.style.cssText = 'color:rgba(51,255,102,0.50);font-size:12px;text-align:center;margin-bottom:8px;font-family:Courier New,monospace;';
     this.container.appendChild(factionLabel);
 
     // Timer bar
@@ -182,7 +182,7 @@ export class MinigameNegociation extends MinigameBase {
     const seqLabel = document.createElement('div');
     seqLabel.id = 'mg-nego-sequence';
     seqLabel.setAttribute('aria-live', 'polite'); // C114
-    seqLabel.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:12px;text-align:center;font-family:system-ui;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
+    seqLabel.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(51,255,102,0.45);font-size:11px;text-align:center;font-family:Courier New,monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
     seqLabel.textContent = 'Sequence: ...';
     this.container.appendChild(seqLabel);
     this.timerFillEl = timerFill;

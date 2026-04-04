@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Ombres -- Stealth corridor navigation
 // Player cursor must move through a twisting corridor without touching shadow
 // walls. Corridor narrows over 10s. Score = % distance covered without collision.
@@ -66,13 +66,13 @@ export class MinigameOmbres extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'OMBRES -- Traverse le corridor';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Instruction
     const instr = document.createElement('div');
     instr.textContent = 'Guide ton curseur sans toucher les murs d\'ombre';
-    instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    instr.style.cssText = 'color:rgba(51,255,102,0.50);font-size:11px;text-align:center;margin-bottom:8px;font-family:Courier New,monospace;';
     this.container.appendChild(instr);
 
     // Timer bar
@@ -105,7 +105,7 @@ export class MinigameOmbres extends MinigameBase {
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-ombres-status';
     statusEl.setAttribute('aria-live', 'polite'); // C114
-    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(51,255,102,0.45);font-size:12px;text-align:center;font-family:Courier New,monospace;`;
     statusEl.textContent = 'Progression: 0%';
     this.container.appendChild(statusEl);
     this.timerFillEl = timerFill;

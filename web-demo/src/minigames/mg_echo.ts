@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Echo -- Sound direction (visual-only variant)
 // A Celtic symbol appears briefly in one of 4 quadrants, then vanishes.
 // Player clicks which quadrant it appeared in. 6 rounds, 1.2s window.
@@ -86,19 +86,19 @@ export class MinigameEcho extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'ECHO -- D\'ou vient l\'appel ?';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Instruction
     const instr = document.createElement('div');
     instr.textContent = 'Un symbole apparait brievement. Clique sur le quadrant d\'ou il venait !';
-    instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    instr.style.cssText = 'color:rgba(51,255,102,0.50);font-size:11px;text-align:center;margin-bottom:8px;font-family:Courier New,monospace;';
     this.container.appendChild(instr);
 
     // Round indicator
     const roundEl = document.createElement('div');
     roundEl.id = 'mg-echo-round';
-    roundEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.7);font-size:14px;text-align:center;font-family:system-ui;line-height:24px;`;
+    roundEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(51,255,102,0.60);font-size:12px;text-align:center;font-family:Courier New,monospace;line-height:24px;`;
     roundEl.textContent = `Manche 1 / ${this.totalRounds}`;
     this.container.appendChild(roundEl);
 
@@ -119,7 +119,7 @@ export class MinigameEcho extends MinigameBase {
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-echo-status';
     statusEl.setAttribute('aria-live', 'polite'); // C48: announce score updates to screen readers
-    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(51,255,102,0.45);font-size:12px;text-align:center;font-family:Courier New,monospace;`;
     statusEl.textContent = 'Ecoute...';
     this.container.appendChild(statusEl);
     this.statusElRef = statusEl;

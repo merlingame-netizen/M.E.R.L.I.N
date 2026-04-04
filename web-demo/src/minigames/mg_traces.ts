@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════════════════════
 // Minigame: Traces — Follow a sequence of footprints along a path
 // Click/tap each footprint in order before time runs out
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -40,7 +40,7 @@ export class MinigameTraces extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'TRACES — Suis les empreintes dans l\'ordre';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:16px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:16px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Timer bar

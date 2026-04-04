@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Herboristerie -- Identify the right plant among toxic ones
 // The player sees a grid of plant icons. One target plant is shown at the top.
 // They must click all instances of the target plant while avoiding toxic ones.
@@ -139,7 +139,7 @@ export class MinigameHerboristerie extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'HERBORISTERIE -- Trouve les bonnes plantes';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // C97: instruction — target name set after buildGrid() populates targetPlant

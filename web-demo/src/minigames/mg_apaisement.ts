@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Apaisement -- Breathing rhythm synchronization
 // A pulsing circle expands and contracts rhythmically. Player clicks/taps
 // when the circle reaches its target size (peak expand or peak contract).
@@ -64,13 +64,13 @@ export class MinigameApaisement extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'APAISEMENT -- Respire avec le cercle';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Instruction
     const instr = document.createElement('div');
     instr.textContent = 'Clique quand le cercle atteint son maximum ou minimum.';
-    instr.style.cssText = 'color:#5a8a5a;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    instr.style.cssText = 'color:rgba(51,255,102,0.50);font-size:11px;text-align:center;margin-bottom:8px;font-family:Courier New,monospace;';
     this.container.appendChild(instr);
 
     // Timer bar
@@ -103,7 +103,7 @@ export class MinigameApaisement extends MinigameBase {
     const scoreEl = document.createElement('div');
     scoreEl.id = 'mg-apaise-score';
     scoreEl.setAttribute('aria-live', 'polite'); // C114
-    scoreEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    scoreEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(51,255,102,0.45);font-size:12px;text-align:center;font-family:Courier New,monospace;`;
     scoreEl.textContent = 'Synchronisation: --';
     this.container.appendChild(scoreEl);
     this.timerFillEl = timerFill;

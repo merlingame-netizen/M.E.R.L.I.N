@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Regard -- Memory sequence (memorize ogham symbols, reproduce order)
 // Show 4-6 symbols for 3s, hide them, player clicks in order from shuffled grid.
 // 3 rounds with increasing length (4, 5, 6). Score = correct / total * 100.
@@ -88,20 +88,20 @@ export class MinigameRegard extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'REGARD -- Memorise la sequence';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Instruction
     const instr = document.createElement('div');
     instr.id = 'mg-regard-instr';
     instr.textContent = 'Observe les symboles dans l\'ordre, puis reproduis la sequence !';
-    instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    instr.style.cssText = 'color:rgba(51,255,102,0.50);font-size:11px;text-align:center;margin-bottom:8px;font-family:Courier New,monospace;';
     this.container.appendChild(instr);
 
     // Round indicator
     const roundEl = document.createElement('div');
     roundEl.id = 'mg-regard-round';
-    roundEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.7);font-size:14px;text-align:center;font-family:system-ui;line-height:24px;`;
+    roundEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(51,255,102,0.60);font-size:12px;text-align:center;font-family:Courier New,monospace;line-height:24px;`;
     roundEl.textContent = `Manche 1 / ${this.roundLengths.length}`;
     this.container.appendChild(roundEl);
 
@@ -120,7 +120,7 @@ export class MinigameRegard extends MinigameBase {
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-regard-status';
     statusEl.setAttribute('aria-live', 'polite'); // C114
-    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(51,255,102,0.45);font-size:12px;text-align:center;font-family:Courier New,monospace;`;
     statusEl.textContent = 'Memorise...';
     this.container.appendChild(statusEl);
     this.instrElRef = instr;

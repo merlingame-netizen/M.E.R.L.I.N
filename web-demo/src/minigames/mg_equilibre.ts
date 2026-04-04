@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Equilibre -- Balance on an unstable path
 // The player must keep a balance cursor centered by pressing left/right arrows
 // (or tapping left/right sides of the canvas). Wind gusts push the cursor off
@@ -70,13 +70,13 @@ export class MinigameEquilibre extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'ÉQUILIBRE — Marche sur le fil des druides';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:16px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:16px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Instructions — C133: Celtic-flavored lore (was generic UI copy)
     const instr = document.createElement('div');
     instr.textContent = 'Garde l\'équilibre sur le Chemin d\'Ogham';
-    instr.style.cssText = 'color:rgba(205,133,63,0.6);font-size:13px;text-align:center;margin-bottom:12px;font-family:system-ui;';
+    instr.style.cssText = 'color:rgba(51,255,102,0.40);font-size:11px;text-align:center;margin-bottom:12px;font-family:Courier New,monospace;';
     this.container.appendChild(instr);
 
     // Timer bar
@@ -99,7 +99,7 @@ export class MinigameEquilibre extends MinigameBase {
     statusEl.id = this.statusId;
     statusEl.setAttribute('aria-live', 'polite');
     statusEl.setAttribute('aria-atomic', 'true'); // C41: ensures AT reads full "Equilibre: N% — En/Hors zone" string, not just mutated portion
-    statusEl.style.cssText = `width:min(400px,100%);max-width:400px;min-height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(400px,100%);max-width:400px;min-height:24px;margin:0 auto 8px;color:rgba(51,255,102,0.45);font-size:12px;text-align:center;font-family:Courier New,monospace;`;
     statusEl.textContent = 'Equilibre: —';
     this.container.appendChild(statusEl);
     this.timerFillEl = timerFill;

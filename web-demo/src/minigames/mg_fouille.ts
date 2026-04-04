@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Fouille -- Find the hidden target object among decoys
 // Player must find and click the TARGET object among 15 decoys within 12s.
 // Objects shuffle position every 2s. Score = early bonus if found, 0 if not.
@@ -92,14 +92,14 @@ export class MinigameFouille extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'FOUILLE -- Trouve l\'objet cache';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:4px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Instruction with target name
     const instr = document.createElement('div');
     instr.id = 'mg-fouille-instr';
     instr.textContent = `Cherche : ${this.targetLabel}`;
-    instr.style.cssText = 'color:#cd853f;font-size:15px;text-align:center;margin-bottom:8px;font-family:system-ui;font-weight:bold;';
+    instr.style.cssText = 'color:rgba(51,255,102,0.50);font-size:12px;text-align:center;margin-bottom:8px;font-family:Courier New,monospace;font-weight:700;';
     this.container.appendChild(instr);
 
     // Timer bar
@@ -132,7 +132,7 @@ export class MinigameFouille extends MinigameBase {
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-fouille-status';
     statusEl.setAttribute('aria-live', 'polite'); // C114
-    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(51,255,102,0.45);font-size:12px;text-align:center;font-family:Courier New,monospace;`;
     statusEl.textContent = 'Clique sur l\'objet cible...';
     this.container.appendChild(statusEl);
     this.timerFillEl = timerFill;

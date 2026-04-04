@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Minigame: Runes -- Decipher ogham symbols by matching pairs
 // The player sees ogham runes on stone tiles and must click matching pairs
 // before time runs out. Score based on pairs found + time remaining.
@@ -67,7 +67,7 @@ export class MinigameRunes extends MinigameBase {
     // Title
     const title = document.createElement('div');
     title.textContent = 'RUNES -- Trouve les paires d\'oghams';
-    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:16px;font-family:system-ui;';
+    title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:16px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
     // Timer bar
