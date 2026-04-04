@@ -19,6 +19,7 @@ export class MinigameApaisement extends MinigameBase {
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
   private timerInterval = 0;
+  private ended = false;
 
   // Canvas dimensions
   private readonly canvasW = 380;
@@ -102,6 +103,7 @@ export class MinigameApaisement extends MinigameBase {
     this.timeLeft = this.totalTime;
     this.elapsedTime = 0;
     this.breathPhase = 0;
+    this.ended = false;
     this.currentRadius = this.minRadius;
     this.taps = [];
     this.lastTapFeedback = '';
@@ -189,6 +191,8 @@ export class MinigameApaisement extends MinigameBase {
   };
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);

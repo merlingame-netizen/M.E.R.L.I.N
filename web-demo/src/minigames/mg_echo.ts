@@ -30,6 +30,7 @@ export class MinigameEcho extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
+  private ended = false;
 
   // Canvas dimensions
   private readonly canvasW = 380;
@@ -115,6 +116,7 @@ export class MinigameEcho extends MinigameBase {
     // Reset state
     this.currentRound = 0;
     this.hits = 0;
+    this.ended = false;
     this.pulsePhase = 0;
     this.rippleActive = false;
 
@@ -202,6 +204,8 @@ export class MinigameEcho extends MinigameBase {
   }
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     this.phase = 'done';
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);

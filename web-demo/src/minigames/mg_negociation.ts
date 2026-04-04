@@ -48,6 +48,7 @@ export class MinigameNegociation extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrame = 0;
+  private ended = false;
   private timerInterval = 0;
 
   // Canvas dimensions
@@ -141,6 +142,7 @@ export class MinigameNegociation extends MinigameBase {
     this.comboCount = 0;
     this.maxCombo = 0;
     this.score = 0;
+    this.ended = false;
     this.pulsePhase = 0;
 
     // Pre-seed some words
@@ -247,6 +249,8 @@ export class MinigameNegociation extends MinigameBase {
   };
 
   private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);

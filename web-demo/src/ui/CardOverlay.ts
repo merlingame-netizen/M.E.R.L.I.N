@@ -146,6 +146,11 @@ function triggerFlipAnimation(): void {
 
 export function showCard(card: Card): Promise<number> {
   return new Promise((resolve) => {
+    // One-shot guard: prevents a second option click during the 200ms gold-highlight
+    // animation from calling hideCard()+resolve() a second time (resolve is a no-op
+    // after first call, but hideCard() and classList mutations would still fire).
+    let activated = false;
+
     // Null-guard DOM elements — consistent with HUD pattern (C57)
     const overlayEl = document.getElementById('card-overlay');
     const narrativeEl = document.getElementById('card-text');
@@ -204,6 +209,8 @@ export function showCard(card: Card): Promise<number> {
       if (tooltip) btn.appendChild(tooltip);
 
       const activate = (): void => {
+        if (activated) return;
+        activated = true;
         // T073: Brief gold highlight before overlay hides (200ms feedback)
         btn.classList.add('card-option-selected');
         setTimeout(() => {
