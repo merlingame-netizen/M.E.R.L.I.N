@@ -734,11 +734,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   zoneToast.setAttribute('aria-live', 'off');      // C132: suppress; ariaLive announces mouse hover too
   zoneToast.setAttribute('aria-atomic', 'true');
   zoneToast.style.cssText = [
-    'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);',
-    'background:rgba(10,8,6,0.82);border:1px solid rgba(205,133,63,0.35);border-radius:8px;',
-    'padding:8px 18px;font-family:Georgia,serif;text-align:center;',
-    'pointer-events:none;opacity:0;transition:opacity 0.2s ease;',
-    'display:flex;flex-direction:column;gap:2px;line-height:1.4;min-width:180px;',
+    `position:absolute;bottom:16px;left:50%;transform:translateX(-50%);`,
+    `background:rgba(1,6,2,0.90);border:1px solid rgba(51,255,102,0.25);`,
+    `border-left:2px solid #1a8833;padding:8px 18px;`,
+    `font-family:'Courier New',monospace;text-align:left;`,
+    `pointer-events:none;opacity:0;transition:opacity 0.2s ease;`,
+    `display:flex;flex-direction:column;gap:2px;line-height:1.4;min-width:180px;`,
   ].join('');
   container.appendChild(zoneToast);
 
@@ -972,10 +973,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         // C104: textContent — XSS-safe, forward-compatible if zone labels come from LLM
         zoneToast.textContent = '';
         const lbl = document.createElement('strong');
-        lbl.style.cssText = 'color:#cd853f;font-size:15px;';
+        lbl.style.cssText = `color:#33ff66;font-size:13px;font-family:'Courier New',monospace;letter-spacing:0.08em;`;
         lbl.textContent = ZONE_ARIA_LABELS[zone];
         const desc = document.createElement('span');
-        desc.style.cssText = 'color:rgba(232,220,200,0.7);font-size:12px;';
+        desc.style.cssText = `color:rgba(51,255,102,0.55);font-size:11px;font-family:'Courier New',monospace;`;
         desc.textContent = ZONE_LORE[zone];
         zoneToast.appendChild(lbl);
         zoneToast.appendChild(desc);
@@ -1138,10 +1139,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       // C104: textContent — XSS-safe (keyboard path mirrors pointer path)
       zoneToast.textContent = '';
       const kLbl = document.createElement('strong');
-      kLbl.style.cssText = 'color:#cd853f;font-size:15px;';
+      kLbl.style.cssText = `color:#33ff66;font-size:13px;font-family:'Courier New',monospace;letter-spacing:0.08em;`;
       kLbl.textContent = ZONE_ARIA_LABELS[zone];
       const kDesc = document.createElement('span');
-      kDesc.style.cssText = 'color:rgba(232,220,200,0.7);font-size:12px;';
+      kDesc.style.cssText = `color:rgba(51,255,102,0.55);font-size:11px;font-family:'Courier New',monospace;`;
       kDesc.textContent = ZONE_LORE[zone];
       zoneToast.appendChild(kLbl);
       zoneToast.appendChild(kDesc);

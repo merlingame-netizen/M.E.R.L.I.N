@@ -249,19 +249,27 @@ function showJournalPanel(): Promise<void> {
 
     const panel = document.createElement('div');
     panel.style.cssText = [
-      'background:rgba(18,13,7,0.97);border:1px solid rgba(200,150,60,0.5);',
-      'border-radius:12px;padding:28px 32px;max-width:360px;width:88%;',
-      'font-family:Georgia,serif;color:#e8dcc8;text-align:center;',
+      `background:rgba(2,8,3,0.97);border:1px solid rgba(51,255,102,0.22);`,
+      `padding:28px 32px;max-width:380px;width:88%;`,
+      `font-family:'Courier New',monospace;color:#33ff66;`,
+      `border-left:3px solid #1a8833;`,
     ].join('');
 
     const titleEl = document.createElement('div');
-    titleEl.textContent = 'Journal de Merlin';
-    titleEl.style.cssText = 'color:#c8a050;font-size:20px;letter-spacing:0.12em;margin-bottom:6px;';
+    titleEl.textContent = '> JOURNAL_MERLIN.dat';
+    titleEl.style.cssText = [
+      `color:#33ff66;font-size:clamp(13px,1.8vw,16px);letter-spacing:0.12em;`,
+      `margin-bottom:4px;font-family:'Courier New',monospace;`,
+      `text-shadow:0 0 8px rgba(51,255,102,0.35);`,
+    ].join('');
     panel.appendChild(titleEl);
 
     const subEl = document.createElement('div');
-    subEl.textContent = 'Chroniques de l\'aventurier';
-    subEl.style.cssText = 'color:rgba(200,170,100,0.45);font-size:12px;font-style:italic;margin-bottom:20px;';
+    subEl.textContent = '> CHRONIQUES_AVENTURIER :: LECTURE';
+    subEl.style.cssText = [
+      `color:rgba(51,255,102,0.45);font-size:10px;letter-spacing:0.06em;margin-bottom:20px;`,
+      `font-family:'Courier New',monospace;`,
+    ].join('');
     panel.appendChild(subEl);
 
     const FACTION_DISPLAY: Record<string, string> = {
@@ -282,12 +290,15 @@ function showJournalPanel(): Promise<void> {
     table.style.cssText = 'margin-bottom:22px;';
     for (const [label, value] of rows) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(200,150,60,0.12);';
+      row.style.cssText = [
+        `display:flex;justify-content:space-between;align-items:center;padding:7px 0;`,
+        `border-bottom:1px solid rgba(51,255,102,0.10);`,
+      ].join('');
       const lEl = document.createElement('span');
-      lEl.style.cssText = 'color:rgba(232,220,200,0.6);font-size:13px;';
+      lEl.style.cssText = `color:rgba(51,255,102,0.55);font-size:12px;font-family:'Courier New',monospace;`;
       lEl.textContent = label;
       const vEl = document.createElement('span');
-      vEl.style.cssText = 'color:#c8a050;font-size:14px;';
+      vEl.style.cssText = `color:#33ff66;font-size:13px;font-family:'Courier New',monospace;`;
       vEl.textContent = value;
       row.appendChild(lEl);
       row.appendChild(vEl);
@@ -299,15 +310,16 @@ function showJournalPanel(): Promise<void> {
     closeBtn.textContent = 'Fermer';
     closeBtn.setAttribute('aria-label', 'Fermer le journal');
     closeBtn.style.cssText = [
-      'padding:10px 32px;font-size:14px;cursor:pointer;',
-      'background:rgba(80,60,20,0.4);color:rgba(232,220,200,0.8);',
-      'border:1px solid rgba(200,150,60,0.4);border-radius:8px;',
-      'font-family:Georgia,serif;transition:background 0.15s;',
+      `padding:10px 32px;font-size:12px;cursor:pointer;`,
+      `background:rgba(4,16,6,0.5);color:#33ff66;`,
+      `border:1px solid rgba(51,255,102,0.35);`,
+      `font-family:'Courier New',monospace;transition:background 0.12s;`,
+      `letter-spacing:0.08em;`,
     ].join('');
     // C151/MAIN-JOURNAL-LEAK-01: named handlers so dismiss() can removeEventListener
     // before overlay removal — 2 anonymous pointer listeners on detached closeBtn per visit.
-    const onCloseBtnEnter = (): void => { closeBtn.style.background = 'rgba(100,75,25,0.6)'; };
-    const onCloseBtnLeave = (): void => { closeBtn.style.background = 'rgba(80,60,20,0.4)'; };
+    const onCloseBtnEnter = (): void => { closeBtn.style.background = 'rgba(8,30,12,0.85)'; closeBtn.style.borderColor = 'rgba(51,255,102,0.7)'; };
+    const onCloseBtnLeave = (): void => { closeBtn.style.background = 'rgba(4,16,6,0.5)'; closeBtn.style.borderColor = 'rgba(51,255,102,0.35)'; };
     closeBtn.addEventListener('pointerenter', onCloseBtnEnter);
     closeBtn.addEventListener('pointerleave', onCloseBtnLeave);
     closeBtn.addEventListener('click', dismiss);
@@ -542,10 +554,10 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     toast.setAttribute('aria-atomic', 'true');
     toast.style.cssText = [
       'position:absolute;bottom:15%;left:50%;transform:translateX(-50%);',
-      'background:rgba(10,8,4,0.88);border:1px solid rgba(160,110,50,0.6);',
-      'border-radius:6px;padding:10px 24px;pointer-events:none;z-index:20;',
-      'color:#c8a050;font-family:Georgia,serif;font-size:clamp(13px,2.5vw,16px);',
-      'letter-spacing:0.08em;text-align:center;',
+      `background:rgba(1,6,2,0.92);border:1px solid rgba(51,255,102,0.28);`,
+      `border-left:2px solid #1a8833;padding:10px 24px;pointer-events:none;z-index:20;`,
+      `color:#33ff66;font-family:'Courier New',monospace;font-size:clamp(11px,2vw,13px);`,
+      `letter-spacing:0.1em;text-align:left;`,
       'opacity:0;transition:opacity 0.2s ease;',
     ].join('');
     // C106: textContent — closes C104 scope (was missed in main.ts showZoneToast)
@@ -617,10 +629,10 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
         const confirmToast = document.createElement('div');
         confirmToast.style.cssText = [
           'position:absolute;bottom:8%;left:50%;transform:translateX(-50%);',
-          'background:rgba(10,8,4,0.9);border:1px solid rgba(200,150,60,0.6);',
-          'border-radius:6px;padding:8px 20px;pointer-events:none;z-index:20;',
-          'color:#e8c870;font-family:Georgia,serif;font-size:clamp(12px,2.2vw,15px);',
-          'letter-spacing:0.07em;text-align:center;opacity:0;transition:opacity 0.2s;',
+          `background:rgba(1,6,2,0.92);border:1px solid rgba(51,255,102,0.28);`,
+          `border-left:2px solid #33ff66;padding:8px 20px;pointer-events:none;z-index:20;`,
+          `color:#33ff66;font-family:'Courier New',monospace;font-size:clamp(11px,1.8vw,13px);`,
+          `letter-spacing:0.1em;text-align:left;opacity:0;transition:opacity 0.2s;`,
         ].join('');
         confirmToast.setAttribute('role', 'status');
         confirmToast.setAttribute('aria-live', 'polite');

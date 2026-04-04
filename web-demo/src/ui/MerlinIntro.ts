@@ -91,37 +91,40 @@ export async function runMerlinIntro(): Promise<void> {
   // --- Dialogue box ---
   const dialogueBox = document.createElement('div');
   dialogueBox.style.cssText = [
-    'position:relative;z-index:1;',
-    'max-width:540px;width:88%;',
-    'background:rgba(12,9,5,0.92);',
-    'border:1px solid rgba(200,150,60,0.4);border-radius:8px;',
-    'padding:20px 28px 16px;',
-    'font-family:Georgia,serif;',
+    `position:relative;z-index:1;`,
+    `max-width:560px;width:88%;`,
+    `background:rgba(2,8,3,0.94);`,
+    `border:1px solid rgba(51,255,102,0.20);border-left:3px solid #1a8833;`,
+    `padding:20px 28px 16px;`,
+    `font-family:'Courier New',monospace;`,
   ].join('');
   overlay.appendChild(dialogueBox);
 
   const nameEl = document.createElement('div');
-  nameEl.textContent = 'Merlin';
+  nameEl.textContent = '> MERLIN';
   nameEl.style.cssText = [
-    'color:#c8a050;font-size:13px;letter-spacing:0.18em;',
-    'margin-bottom:10px;text-transform:uppercase;',
+    // Gold kept for Merlin's identity (ogham-gold palette), Courier New for CeltOS consistency
+    `color:#ffcc44;font-size:12px;letter-spacing:0.22em;`,
+    `margin-bottom:10px;text-transform:uppercase;`,
+    `font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(255,204,68,0.35);`,
   ].join('');
   dialogueBox.appendChild(nameEl);
 
   const textEl = document.createElement('div');
   textEl.style.cssText = [
-    'color:rgba(232,220,200,0.92);font-size:15px;line-height:1.65;',
-    'min-height:52px;',
-    'transition:opacity 0.2s;',
+    `color:rgba(51,255,102,0.88);font-size:clamp(13px,1.6vw,15px);line-height:1.7;`,
+    `min-height:52px;font-family:'Courier New',monospace;`,
+    `transition:opacity 0.2s;`,
   ].join('');
   dialogueBox.appendChild(textEl);
 
   const hintEl = document.createElement('div');
-  hintEl.textContent = 'Cliquez pour continuer…';
+  hintEl.textContent = '> [CLIQUER POUR CONTINUER]';
   hintEl.style.cssText = [
-    'color:rgba(200,150,60,0.38);font-size:11px;text-align:right;',
-    'margin-top:10px;font-style:italic;letter-spacing:0.06em;',
-    'opacity:0;transition:opacity 0.5s;',
+    `color:rgba(51,255,102,0.32);font-size:10px;text-align:right;`,
+    `margin-top:10px;letter-spacing:0.08em;`,
+    `font-family:'Courier New',monospace;`,
+    `opacity:0;transition:opacity 0.5s;`,
   ].join('');
   dialogueBox.appendChild(hintEl);
 
