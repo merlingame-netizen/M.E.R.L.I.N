@@ -172,6 +172,19 @@ export function loadLairGLBs(
     gltf.scene.position.set(8.8, -5.0, -8);
     gltf.scene.scale.set(1.2, 1.0, 0.8);
     applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
+    // C125: non-uniform scale risks micro z-fighting against right-wall tiles at x=11.76.
+    // Apply polygonOffset matching sol_pierre / mur_pierre pattern: factor=-2, units=-4.
+    gltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const m = child.material;
+        if (m instanceof THREE.MeshStandardMaterial) {
+          m.polygonOffset = true;
+          m.polygonOffsetFactor = -2;
+          m.polygonOffsetUnits = -4;
+          m.needsUpdate = true;
+        }
+      }
+    });
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;

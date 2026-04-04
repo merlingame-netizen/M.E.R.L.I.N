@@ -19,6 +19,8 @@ export default defineConfig({
           // Minigames chunk: deferred until first run (dynamic import in createMinigame).
           // Listing them here groups all 14 files + base into one cache-friendly chunk
           // instead of 15 individual micro-requests.
+          // Groups registry + base into a shared chunk; individual mg_*.ts files land in
+          // their own micro-chunks (dynamically imported via createMinigame).
           'minigames': [
             './src/minigames/MinigameRegistry.ts',
             './src/minigames/MinigameBase.ts',

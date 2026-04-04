@@ -46,8 +46,8 @@ export class MinigameCourse extends MinigameBase {
   private readonly canvasW = 380;
   private readonly canvasH = 340;
 
-  // Game config — roundTime, decoyCount, hitRadius scaled by difficultyTier in setup()
-  private readonly totalRounds = 8;
+  // Game config — roundTime, decoyCount, hitRadius, totalRounds scaled by difficultyTier in setup()
+  private totalRounds = 8; // C125: mutable — set via tieredValue in setup()
   private roundTime = 2.0;    // C99: scaled [2.0,1.5,1.1,0.8]s across tiers 0-3
   private decoyCount = 2;     // C99: scaled [2,4,5,6] decoys
   private hitRadius = 40;     // C99: scaled [40,32,26,20]px
@@ -74,6 +74,7 @@ export class MinigameCourse extends MinigameBase {
     this.container.innerHTML = '';
 
     // C106: tieredValue replaces unsafe array indexing (no ?? fallback needed — clamps to 0-3)
+    this.totalRounds = this.tieredValue([6, 7, 8, 8] as const); // C125: match other minigames pattern
     this.roundTime  = this.tieredValue([2.0, 1.5, 1.1, 0.8] as const);
     this.decoyCount = this.tieredValue([2, 4, 5, 6] as const);
     this.hitRadius  = this.tieredValue([40, 32, 26, 20] as const);
