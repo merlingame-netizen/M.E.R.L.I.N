@@ -99,6 +99,9 @@ export class SceneManager {
   start(): void {
     if (this.running) return; // C126/VIS-01: prevent double-loop on rapid visibility events
     this.running = true;
+    // C128/CLOCK-01: discard delta accumulated while tab was hidden — without this the first
+    // frame after resume gets dt = full hidden duration (seconds), causing animation jumps.
+    this.clock.getDelta();
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
       const dt = this.clock.getDelta();

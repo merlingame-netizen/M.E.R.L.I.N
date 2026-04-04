@@ -106,7 +106,14 @@ export function showOghamPanel(): Promise<string | null> {
       const isAvailable = isUnlocked && cooldown <= 0;
 
       const slot = document.createElement('button');
-      slot.setAttribute('aria-label', `${spec.name} — ${spec.description}`);
+      // C128/C122-16: locked oghams announce lock status in aria-label — screen readers
+      // cannot reach slot.title (tooltip) without hover; aria-label is the only announced text.
+      slot.setAttribute(
+        'aria-label',
+        isUnlocked
+          ? `${spec.name} — ${spec.description}`
+          : `${spec.name} — Verrouillé, réputation 50 requise`,
+      );
       // C86: use native `disabled` attribute instead of aria-disabled for unavailable slots.
       // aria-disabled='true' leaves the button in the tab order and still receives keyboard
       // Enter/Space events via browser default. `disabled` removes the button from tab order
