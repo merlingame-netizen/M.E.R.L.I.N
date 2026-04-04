@@ -326,6 +326,7 @@ export class MinigameFouille extends MinigameBase {
       this.nextShuffle -= dt;
       if (this.nextShuffle <= 0) {
         this.generateObjects();
+        this.hoverIndex = -1; // C98: reset stale hover index after shuffle — previous index now points to wrong object
         this.nextShuffle = this.shuffleInterval;
       }
     }

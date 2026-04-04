@@ -617,11 +617,19 @@ async function gameLoop(
   if (!minigameContainer || !minigameOverlay) return;
 
   let _loopSafety = 0; // C104: ceiling guard — run.active + 30-card limit are primary bounds
+  // C98: idempotency guard — prevents double-save if startRun() were ever re-entered or called twice.
+  // Sequential break paths already prevent double-save in practice, but this makes the contract explicit.
+  let savedThisRun = false;
+  const saveRunEnd = (): void => {
+    if (savedThisRun) return;
+    savedThisRun = true;
+    saveAnamToStorage();
+    saveMetaToStorage();
+  };
   while (state().run.active) {
     if (++_loopSafety > 60) { // C104: hard ceiling
       state().endRun('safety');
-      saveAnamToStorage();
-      saveMetaToStorage();
+      saveRunEnd();
       playSound('end');
       await showRunSummary('cards_limit');
       break;
@@ -643,8 +651,7 @@ async function gameLoop(
     // 3. Check death after drain
     if (state().checkDeath()) {
       state().endRun('death_drain');
-      saveAnamToStorage();
-      saveMetaToStorage();
+      saveRunEnd();
       playSound('end');
       await showRunSummary('death');
       break;
@@ -753,8 +760,7 @@ async function gameLoop(
     // 9. Check death after effects
     if (state().checkDeath()) {
       state().endRun('death_effects');
-      saveAnamToStorage();
-      saveMetaToStorage();
+      saveRunEnd();
       playSound('end');
       await showRunSummary('death');
       break;
@@ -763,8 +769,7 @@ async function gameLoop(
     // 10a. Check 30-card limit (T046)
     if (state().run.cardsPlayed >= 30) {
       state().endRun('cards_limit');
-      saveAnamToStorage();
-      saveMetaToStorage();
+      saveRunEnd();
       playSound('end');
       await showRunSummary('cards_limit');
       break;
@@ -773,8 +778,7 @@ async function gameLoop(
     // 10b. Check victory condition (rail complete + min cards)
     if (state().run.cardsPlayed >= 25 && rail.isComplete()) {
       state().endRun('victory');
-      saveAnamToStorage();
-      saveMetaToStorage();
+      saveRunEnd();
       playSound('end');
       await showRunSummary('victory');
       break;
