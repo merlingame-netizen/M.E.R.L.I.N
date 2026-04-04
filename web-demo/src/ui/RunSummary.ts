@@ -112,14 +112,16 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   } as const;
   const message = reasonMessages[reason] ?? reasonMessages.death;
 
-  // Fade scene to dark before showing overlay
-  await fadeIn(800);
-
-  // C86: resolve stale awaiter before re-building overlay (re-entry guard)
+  // C138/RS-01: re-entry guard BEFORE fadeIn — concurrent death calls previously both
+  // entered the 800ms fadeIn, then the second call resolved the first awaiter mid-fade,
+  // replacing the summary screen with no player interaction.
   if (resolveRestart) {
     resolveRestart();
     resolveRestart = null;
   }
+
+  // Fade scene to dark before showing overlay
+  await fadeIn(800);
 
   // Build overlay
   const existing = document.getElementById(SUMMARY_OVERLAY_ID);

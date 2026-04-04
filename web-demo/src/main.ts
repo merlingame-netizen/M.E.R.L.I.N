@@ -740,7 +740,8 @@ async function gameLoop(
       };
     }
     // C135/OC-01/OC-02: apply narrative ogham mutations to card before showing
-    if (oghamResult) {
+    // C138/OC-04: guard on .applied — never mutate card if ogham was blocked (sacrifice blocked, etc.)
+    if (oghamResult?.applied) {
       const et = oghamResult.effectType;
       if (et === 'full_reroll' || et === 'force_twist') {
         card = generateFastRouteCard(state().run.biome);
