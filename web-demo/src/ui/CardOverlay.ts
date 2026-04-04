@@ -247,12 +247,17 @@ export function showCard(card: Card): Promise<number> {
 
       btn.addEventListener('click', activate, { once: true });
       // Keyboard activation: Enter and Space — WCAG 2.1.1
-      btn.addEventListener('keydown', (e: KeyboardEvent) => {
+      // C85: named handler so it can self-remove on activation, preventing a closure
+      // leak when hideCard() is called externally (safety timeout) without clearing
+      // optContainer. The click handler uses { once: true }; keydown needs manual removal.
+      const onKeyDown = (e: KeyboardEvent): void => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          btn.removeEventListener('keydown', onKeyDown);
           activate();
         }
-      });
+      };
+      btn.addEventListener('keydown', onKeyDown);
 
       optContainer.appendChild(btn);
     });

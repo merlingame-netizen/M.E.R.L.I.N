@@ -141,7 +141,10 @@ export class MinigameRegard extends MinigameBase {
       return;
     }
 
-    const seqLen = this.roundLengths[this.currentRound];
+    // C85: ?? fallback — TypeScript types arr[N] as number|undefined even with the
+    // currentRound < roundLengths.length guard above; slice(0, undefined) returns the
+    // full SYMBOLS array (15 symbols), making the round unexpectedly long if reached.
+    const seqLen = this.roundLengths[this.currentRound] ?? 4;
     // Pick unique symbols for the sequence
     const shuffled = shuffle(SYMBOLS);
     this.sequence = shuffled.slice(0, seqLen);
