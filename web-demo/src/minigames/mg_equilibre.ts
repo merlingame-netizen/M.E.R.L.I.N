@@ -130,6 +130,11 @@ export class MinigameEquilibre extends MinigameBase {
     this.wasInZone = false;
     this.inZone = false;
     this.touchSide = null;
+    // C148/EQ-WIND-RESET-01: reset wind arrow state — windArrowAlpha>0 from end of prior play
+    // causes a ghost gust arrow to appear briefly at replay start, misleading the player about
+    // initial wind direction. Same class as C146b/RGD-BUG-01 (feedbackTimer stale on replay).
+    this.windArrowAlpha = 0;
+    this.windArrowDir = 0;
 
     // Input handlers — C34: canvas-scoped keydown/keyup (was document-scoped, risked stuck-key on focus loss).
     // blur handler clears keysDown if canvas loses focus mid-hold (tab-away, modal, etc.)

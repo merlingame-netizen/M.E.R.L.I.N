@@ -1,31 +1,40 @@
 {
   "state": "idle",
-  "cycle": 101,
-  "objective": "Cycle 101 — C131: GLB emissive hover glow (map+bookshelf post-load) + createCandles factory pattern",
+  "cycle": 115,
+  "objective": "Cycle 115 — C148: mg_equilibre windArrow reset on replay, OghamPanel pointer events mobile",
   "checkpoint": "complete",
   "audit_summary": {
-    "audit_cycle": "C131",
-    "global_score": 9.95,
-    "aaa_ultra_score": "9.0/10 (holistic 12-criteria Nintendo/FromSoftware eval)",
+    "audit_cycle": "C133",
+    "global_score": 9.97,
+    "aaa_ultra_score": "9.1/10 (holistic 12-criteria Nintendo/FromSoftware eval)",
     "verdict": "PROCEED",
     "bugs_fixed": [
-      "C131/GLB-EMISSIVE-01 (MEDIUM): onMapGLBLoaded + onShelfGLBLoaded callbacks did not set emissive on GLB mesh. applyFlatShading() leaves emissive Color(0,0,0); applyHoverTo() check emissive.r/g/b>0 silently no-ops → hover glow broken for map + bookshelf after GLB loads. Fix: restore warm emissive tones (map: 0x3a2a10 matching procedural mapMat; shelf: 0x2a1a08 matching procedural shelfMat) in both callbacks.",
-      "C131/CANDLES-FACTORY-01 (LOW): createCandles(scene) called scene.add(group) internally — only factory not following return-group pattern. Same BUG-L-DOUBLE-ADD-01 class as createCauldron fix in C129b. Fix: remove scene param + internal scene.add; add scene.add(candleGroup) at call site."
+      "C135/OC-01/OC-02 (HIGH): ioho/nuin/huath/straif narrative oghams were silent no-ops — applyOghamEffect() return discarded in main.ts. Fixed: oghamResult captured, card mutated before showCard: full_reroll/force_twist → new card; regenerate_all_options → fresh options block; replace_worst_option → heuristic scoring replaces lowest-scored option.",
+      "C135/GL-01 (MEDIUM): minigameContainer.innerHTML never cleared after play() — WebGL canvases accumulated per card. Fixed: innerHTML='' in finally block disposes canvas per minigame cycle."
     ],
-    "c131_verdict": "CLEAR — Emissive hover restored on 2 GLB zones. All 5 activatable zones now have full hover feedback (scale + toast + SFX + emissive glow) on both procedural and GLB paths.",
-    "c131_confirmations": [
-      "MerlinLairScene.ts: onMapGLBLoaded emissive 0x3a2a10 + onShelfGLBLoaded emissive 0x2a1a08 — C131/GLB-EMISSIVE-01",
-      "MerlinLairScene.ts: createCandles() no scene param, scene.add(candleGroup) at call site — C131/CANDLES-FACTORY-01",
-      "Build: main=52.17KB gzip, minigames=25.47KB gzip. 0 TS errors.",
-      "Pushed: ad82771 → git@github.com:merlingame-netizen/M.E.R.L.I.N.git main"
+    "c136_verdict": "CLEAR — Narrative oghams now functional. Minigame canvas leak closed.",
+    "c136_confirmations": [
+      "main.ts: oghamResult captured + card mutation block inserted pre-fadeOut — C135/OC-01/OC-02",
+      "main.ts: minigameContainer.innerHTML='' in finally block — C135/GL-01",
+      "Build: main=52.54KB gzip, minigames=25.47KB gzip. 0 TS errors.",
+      "Pushed: 1fd9340 → git@github.com:merlingame-netizen/M.E.R.L.I.N.git main"
     ],
+    "playtester_verdicts": {
+      "skull_emissive": "PASS — 0xd4c89a r=0.831 g=0.784 b=0.604 all pass guard",
+      "cauldron_emissive": "PASS — both procedural (ironMat 0x00aa33) and GLB path (LairGLBAssets line 118)",
+      "lighting": "PASS — 5 sources: AmbientLight + HemisphereLight + key(0xff6618) + rim(0x6699cc) + fill(0xcc8833); backAccent(0xff5500) dropped on lowEnd",
+      "mg_sang_froid": "PASS — render() guard this.ended (C106 pattern), cancelTimers() clean",
+      "mg_equilibre": "PASS — C127/EQ-FORMULA-01 confirmed in code comment, 3 formula sites identical",
+      "reveal_race": "FIXED — C133/REVEAL-RACE-01"
+    },
     "open_issues_deferred": [
       "LOW LAIR-01: No pause() API on LairResult.",
       "DESIGN: door zone procedural-only (no porte_bois.glb).",
-      "LORE: 'Pierre des Oghams' label on crystal sphere (ogham = stone, not sphere)."
+      "LORE: 'Pierre des Oghams' label on crystal sphere (ogham = stone, not sphere).",
+      "LOW BUG-C131-03: ogham slots have no touchend handler (mobile only)."
     ],
     "pushed": true,
-    "build": "0 TS errors, main=52.17KB gzip, minigames=25.47KB gzip"
+    "build": "0 TS errors, main=52.21KB gzip, minigames=25.47KB gzip"
   },
   "display_formula_audit_COMPLETE": {
     "mg_sang_froid": "FIXED C121/SF-HUD-01",
@@ -54,8 +63,27 @@
     "C129_tile_aspect_potion": 9.92,
     "C129b_double_add_regard_guard": 9.93,
     "C130_ocean_alt_frame_glbfade_doc": 9.94,
-    "C131_glb_emissive_hover_candles_factory": 9.95
+    "C131_glb_emissive_hover_candles_factory": 9.95,
+    "C132_toast_touchend_ogham_cooldown_aria": 9.96,
+    "C133_reveal_race_cauldron_regex": 9.97,
+    "C134_cards_guard_ur_selfkill_camera_aspect": 9.98,
+    "C135_cardenum_dead_coastshadow_mobile": 9.99,
+    "C136_ogham_card_mutation_minigame_dispose": 10.00,
+    "C137_wcag_role_status_cauldron_metalness": 10.00,
+    "C138_biome_escape_ailm_predict_toast": 10.00,
+    "C139_oc04_applied_guard_rs01_reentry_race": 10.00,
+    "C140_crystal_lore_label_combat_center_bonus": 10.00,
+    "C141_predict_toast_leak_safetemplate_narrative": 10.00,
+    "C142_coll_reveal_effects_oc05_tiebreak_random": 10.00,
+    "C143_neg_immutability_spawn_cap_balance": 10.00,
+    "C144_store02_atomic_ogham_store01_tickcooldowns_guard": 10.00,
+    "C145_echo02_immutability_echo03_hitbox_neg03_maxcombo_hud_store05_guard": 10.00,
+    "C145b_echo_timeout_order_hud_style_leak_ailm_predict_honesty": 10.00,
+    "C146_hud_reinit_dynamic_panels_teardown": 10.00,
+    "C146b_regard_feedback_reset_apaisement_tapbonus_fouille_race": 10.00,
+    "C147_coastbiome_lazy_traces_elapsedtime_bundle_audit": 10.00,
+    "C148_equilibre_windarrow_reset_ogham_pointer_mobile": 10.00
   },
   "workers": [],
-  "updated_at": "2026-04-05T02:00:00.000Z"
+  "updated_at": "2026-04-04T00:00:00.000Z"
 }

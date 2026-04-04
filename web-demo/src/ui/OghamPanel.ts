@@ -172,11 +172,13 @@ export function showOghamPanel(): Promise<string | null> {
 
       if (isAvailable) {
         slot.addEventListener('click', () => selectOgham(oghamId));
-        slot.addEventListener('mouseenter', () => {
+        // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
+        // mouseenter/mouseleave only fire for mouse → no hover feedback on touch screens.
+        slot.addEventListener('pointerenter', () => {
           slot.style.background = 'rgba(139,69,19,0.4)';
           slot.style.borderColor = 'rgba(205,133,63,0.8)';
         });
-        slot.addEventListener('mouseleave', () => {
+        slot.addEventListener('pointerleave', () => {
           slot.style.background = 'rgba(139,69,19,0.2)';
           slot.style.borderColor = 'rgba(205,133,63,0.5)';
         });
@@ -203,10 +205,11 @@ export function showOghamPanel(): Promise<string | null> {
       'transition:background 0.2s',
     ].join(';');
     skipBtn.addEventListener('click', () => selectOgham(null));
-    skipBtn.addEventListener('mouseenter', () => {
+    // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave — consistent with ogham slots above
+    skipBtn.addEventListener('pointerenter', () => {
       skipBtn.style.background = 'rgba(80,80,90,0.5)';
     });
-    skipBtn.addEventListener('mouseleave', () => {
+    skipBtn.addEventListener('pointerleave', () => {
       skipBtn.style.background = 'rgba(80,80,90,0.3)';
     });
     panelEl.appendChild(skipBtn);
