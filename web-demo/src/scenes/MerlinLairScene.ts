@@ -950,7 +950,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
       ariaLive.textContent = `${ZONE_ARIA_LABELS[currentHovered.zone]} activée`;
-      zoneClickCallback(currentHovered.zone);
+      // C113: keyboard door activation mirrors pointer cinematic — 380ms flash + magic_reveal SFX
+      if (currentHovered.zone === 'door') {
+        const kbZone = currentHovered.zone;
+        const kbCb = zoneClickCallback;
+        doorFlashing = true;
+        doorFlashTimer = 0;
+        (doorPanel.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
+        doorFlashCancelHandle = window.setTimeout(() => {
+          doorFlashing = false;
+          if (!lairDisposed) kbCb(kbZone);
+        }, 380);
+      } else {
+        zoneClickCallback(currentHovered.zone);
+      }
       return;
     } else {
       return;
@@ -1006,9 +1020,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // Crystal ball pulse
     crystalData.light.intensity = 2.2 + Math.sin(elapsedTime * 1.8) * 0.4;
-    crystalData.mat.emissiveIntensity = 0.5 + Math.sin(elapsedTime * 1.4) * 0.15;
+    // C113: boost emissive base when crystal is hovered — unhovered=0.5, hovered=0.9.
+    // Without this, update loop overrides applyHoverTo(0.65) every frame → hover invisible.
+    const crystalHovered = interactives.find((i) => i.zone === 'crystal')?.hovered ?? false;
+    const crystalEmissive = (crystalHovered ? 0.9 : 0.5) + Math.sin(elapsedTime * 1.4) * 0.15;
+    crystalData.mat.emissiveIntensity = crystalEmissive;
     // C111: also animate GLB material emissive — procedural mat targets hidden sphere post-load (BUG-C46-01)
-    if (crystalGLBMat) crystalGLBMat.emissiveIntensity = 0.5 + Math.sin(elapsedTime * 1.4) * 0.15;
+    if (crystalGLBMat) crystalGLBMat.emissiveIntensity = crystalEmissive;
     const crystalFloatY = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
     crystalData.sphere.position.y = crystalFloatY;
     // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place
