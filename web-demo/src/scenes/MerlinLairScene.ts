@@ -772,7 +772,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const cauldron = createCauldron(scene);
   scene.add(createPotionBottles());
   scene.add(createSkull());
-  createLairDensity(scene);
+  const cleanupLairDensity = createLairDensity(scene); // C35: capture cleanup for moon.target disposal
 
   // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
   // C107: aligned to visual center — was y=-4.0 (0.2u below visual, BUG-39-13)
@@ -1152,6 +1152,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const dispose = (): void => {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
     cancelGLBFades(); // C133: stop any in-flight fadeInGLB rAFs immediately (no extra frame after dispose)
+    cleanupLairDensity(); // C35: remove moon.target (world-space Object3D — not reached by traverse)
     stopAmbient(); // C93-P1: stop forest ambient on scene teardown
     // C117: clear GLB cache before geometry.dispose() — prevents returning disposed-geometry GLTF
     // on second lair visit (cauldron/table/biblio/sol_pierre/crystal_ball added as gltf.scene directly)

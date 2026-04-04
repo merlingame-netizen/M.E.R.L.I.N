@@ -3,8 +3,10 @@
 
 import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, Scene, SpotLight } from 'three';
 
-/** Add shelves, moonlight shaft and parchment rolls to the lair scene. */
-export function createLairDensity(scene: Scene): void {
+/** Add shelves, moonlight shaft and parchment rolls to the lair scene.
+ *  Returns a cleanup callback that removes the SpotLight target from the scene —
+ *  moon.target is world-space (scene.add) so it won't be caught by traverse() in dispose(). */
+export function createLairDensity(scene: Scene): () => void {
   const group = new Group();
 
   const sM = new MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
@@ -30,4 +32,6 @@ export function createLairDensity(scene: Scene): void {
     roll.position.set(x, -4.8, z); group.add(roll);
   }
   scene.add(group);
+  // C35: return cleanup so MerlinLairScene.dispose() can remove the world-space target
+  return () => { scene.remove(moon.target); };
 }
