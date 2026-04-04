@@ -5,7 +5,7 @@
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,11 +39,26 @@ interface OceanResult {
 function createLowPolyOcean(): OceanResult {
   // Many segments so flatShading creates visible polygon faces per wave
   const geo = new PlaneGeometry(80, 60, 30, 20);
+
+  // C162: vertex color depth gradient — cyan near shore → deep blue far
+  const posAttr0 = geo.attributes['position'] as BufferAttribute;
+  const vertCols = new Float32Array(posAttr0.count * 3);
+  for (let i = 0; i < posAttr0.count; i++) {
+    const x = posAttr0.getX(i); // local X: +40=near shore (right), -40=deep (left)
+    const shore = Math.max(0, Math.min(1, (x + 40) / 80));
+    // near (shore=1): 0x2ab8a0 = (0.165, 0.722, 0.627)
+    // deep (shore=0): 0x0d2a3a = (0.051, 0.165, 0.227)
+    vertCols[i * 3 + 0] = 0.051 + shore * 0.114;
+    vertCols[i * 3 + 1] = 0.165 + shore * 0.557;
+    vertCols[i * 3 + 2] = 0.227 + shore * 0.400;
+  }
+  geo.setAttribute('color', new BufferAttribute(vertCols, 3));
+
   const mat = new MeshStandardMaterial({
-    color: 0x2a6b5a,
+    vertexColors: true,
     flatShading: true,
-    roughness: 0.8,
-    metalness: 0.1,
+    roughness: 0.75,
+    metalness: 0.15,
   });
 
   const mesh = new Mesh(geo, mat);
@@ -483,18 +498,26 @@ function createClouds(): { group: Group; update: (t: number) => void } {
 }
 
 // ── Sky Background ───────────────────────────────────────────────────────────
-// Large box (BackSide) for dark stormy sky. flatShading for polygon look.
+// C162: vertex-colored SphereGeometry (BackSide) for polygon-gradient stormy sky.
+// Zenith near-black → horizon slate-blue — consistent ISO low-poly style.
 
 function createSkyBox(): Mesh {
-  const geo = new BoxGeometry(400, 200, 400);
-  const mat = new MeshStandardMaterial({
-    color: 0x1a2030,
-    flatShading: true,
-    roughness: 1.0,
-    metalness: 0.0,
-    side: BackSide,
-  });
-  return new Mesh(geo, mat);
+  const geo = new SphereGeometry(280, 20, 14);
+  const pos = geo.attributes['position'] as BufferAttribute;
+  const cols = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    const t = Math.max(0, Math.min(1, (y + 280) / 560)); // 0=bottom 1=top
+    // horizon (t=0): 0x2a3850 = (0.165, 0.220, 0.314) stormy slate-blue
+    // zenith  (t=1): 0x0c1018 = (0.047, 0.063, 0.094) near-black
+    cols[i * 3 + 0] = 0.165 - t * 0.118;
+    cols[i * 3 + 1] = 0.220 - t * 0.157;
+    cols[i * 3 + 2] = 0.314 - t * 0.220;
+  }
+  geo.setAttribute('color', new BufferAttribute(cols, 3));
+  return new Mesh(geo, new MeshStandardMaterial({
+    vertexColors: true, flatShading: true, roughness: 1.0, metalness: 0.0, side: BackSide,
+  }));
 }
 
 // ── Vegetation — Angular Bushes ───────────────────────────────────────────────

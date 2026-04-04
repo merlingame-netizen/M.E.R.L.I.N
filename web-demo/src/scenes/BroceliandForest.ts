@@ -46,40 +46,64 @@ function createForestGround(): Mesh {
   return mesh;
 }
 
-// ── Sky dome (enchanted dusk) ─────────────────────────────────────────────────
+// ── Sky dome (flat-shaded vertex-colored sphere + animated BoxGeometry cloud slabs) ──
+// C162: replace smooth ShaderMaterial gradient with ISO low-poly consistent style.
+// Vertex color: near-black zenith → dark forest-green horizon. 3 animated cloud bands.
 
-function createForestSky(): Mesh {
+interface ForestCloudLayer { group: Group; speed: number; }
+interface ForestSkyResult { skyGroup: Group; cloudLayers: ForestCloudLayer[]; }
+
+function createForestSky(): ForestSkyResult {
+  const skyGroup = new Group();
+  const cloudLayers: ForestCloudLayer[] = [];
+
+  // Vertex-colored SphereGeometry — BackSide so camera is inside
   const geo = new SphereGeometry(160, 16, 12);
-  const mat = new ShaderMaterial({
-    uniforms: {
-      topColor:    { value: new Color(0x0d0f1a) },   // near-black deep zenith
-      midColor:    { value: new Color(0x1a2a1a) },   // dark forest canopy green
-      bottomColor: { value: new Color(0x2a3a2a) },   // horizon mist green
-    },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      void main() {
-        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPos.xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 topColor;
-      uniform vec3 midColor;
-      uniform vec3 bottomColor;
-      varying vec3 vWorldPosition;
-      void main() {
-        float h = clamp(normalize(vWorldPosition).y * 0.5 + 0.5, 0.0, 1.0);
-        vec3 col = h < 0.5
-          ? mix(bottomColor, midColor, h * 2.0)
-          : mix(midColor, topColor, (h - 0.5) * 2.0);
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-    side: BackSide,
+  const pos = geo.attributes['position'] as BufferAttribute;
+  const cols = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    const t = Math.max(0, Math.min(1, (y + 160) / 320)); // 0=bottom 1=top
+    // horizon (t=0): 0x1e301e (0.118, 0.188, 0.118) dark forest-green
+    // zenith  (t=1): 0x040a04 (0.016, 0.039, 0.016) near-black
+    cols[i * 3 + 0] = 0.118 - t * 0.102;
+    cols[i * 3 + 1] = 0.188 - t * 0.149;
+    cols[i * 3 + 2] = 0.118 - t * 0.102;
+  }
+  geo.setAttribute('color', new BufferAttribute(cols, 3));
+  const skyMat = new MeshStandardMaterial({
+    vertexColors: true, flatShading: true, roughness: 1.0, metalness: 0.0, side: BackSide,
   });
-  return new Mesh(geo, mat);
+  skyGroup.add(new Mesh(geo, skyMat));
+
+  // Helper: create one animated cloud band and add to skyGroup
+  const addLayer = (
+    yBase: number, zRange: [number, number], slabCount: number,
+    speed: number, colors: number[], wRange: [number, number],
+  ): void => {
+    const g = new Group();
+    for (let i = 0; i < slabCount; i++) {
+      const color = colors[i % colors.length]!;
+      const w = wRange[0] + R() * (wRange[1] - wRange[0]);
+      const cloudGeo = new BoxGeometry(w, 1.2 + R() * 1.4, 0.35 + R() * 0.25);
+      const cloudMat = new MeshStandardMaterial({ color, flatShading: true, roughness: 1.0, metalness: 0.0 });
+      const mesh = new Mesh(cloudGeo, cloudMat);
+      mesh.position.set(-90 + R() * 180, yBase + R() * 10, zRange[0] + R() * (zRange[1] - zRange[0]));
+      mesh.rotation.y = (R() - 0.5) * 0.4;
+      g.add(mesh);
+    }
+    skyGroup.add(g);
+    cloudLayers.push({ group: g, speed });
+  };
+
+  // High dark storm band — dense charcoal-green slabs
+  addLayer(55, [-90, -35], 16, 0.7, [0x0c180c, 0x111e11, 0x0a150a], [12, 24]);
+  // Mid canopy band — medium coverage
+  addLayer(38, [-70, -20], 14, 1.3, [0x162416, 0x192a19, 0x0e1a0e], [8, 18]);
+  // Low horizon wisps — lighter for depth illusion
+  addLayer(22, [-55, -8],  12, 2.1, [0x1c2e1c, 0x203620, 0x172517], [6, 14]);
+
+  return { skyGroup, cloudLayers };
 }
 
 // ── Dense forest trees ────────────────────────────────────────────────────────
@@ -447,7 +471,8 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
   // ── Scene geometry ─────────────────────────────────────────────────────────
   group.add(createForestGround());
-  group.add(createForestSky());
+  const { skyGroup, cloudLayers } = createForestSky();
+  group.add(skyGroup);
   group.add(createForestTrees());
   group.add(createUndergrowth());
   group.add(createForestMenhirs());
@@ -472,6 +497,14 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
     // Will-o'-wisps orbit
     wisps.update(dt);
+
+    // C162: animated cloud drift — each band at different speed for parallax
+    for (const layer of cloudLayers) {
+      for (const child of layer.group.children) {
+        child.position.x += layer.speed * dt;
+        if (child.position.x > 110) child.position.x -= 220;
+      }
+    }
   };
 
   const dispose = (): void => {
