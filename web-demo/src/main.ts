@@ -23,6 +23,7 @@ import { getLLMAdapter } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
 import { initMerlinLair } from './scenes/MerlinLairScene';
+import { runMerlinIntro } from './ui/MerlinIntro';
 import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
 import { initSFXManager, startAmbient, stopAmbient, biomeToAmbient } from './audio/SFXManager';
 
@@ -30,19 +31,43 @@ import { initSFXManager, startAmbient, stopAmbient, biomeToAmbient } from './aud
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
 const WALK_SPEED = 0.04; // Rail progress per second
 
+// --- Save detection ---
+function hasSavedGame(): boolean {
+  try {
+    return (
+      localStorage.getItem(ANAM_STORAGE_KEY) !== null ||
+      localStorage.getItem(META_STORAGE_KEY) !== null
+    );
+  } catch {
+    return false;
+  }
+}
+
 // --- Main Menu (T061) ---
-// Runs the cinematic Three.js cliff/sea scene. Resolves when player clicks Start.
-async function runMainMenu(): Promise<void> {
+// Runs the cinematic Three.js cliff/sea scene.
+// Returns { isNewGame: true } after 6s camera walk + MerlinIntro on first play,
+// or { isNewGame: false } when player continues an existing save.
+async function runMainMenu(): Promise<{ isNewGame: boolean }> {
   const wrapper = document.getElementById('menu-canvas-wrapper');
   const overlay = document.getElementById('main-menu-overlay');
-  const startBtn = document.getElementById('menu-start-btn');
-  if (!wrapper || !overlay || !startBtn) return;
+  const startBtn = document.getElementById('menu-start-btn') as HTMLButtonElement | null;
+  const continueBtn = document.getElementById('menu-continue-btn') as HTMLButtonElement | null;
+  if (!wrapper || !overlay || !startBtn || !continueBtn) return { isNewGame: true };
+
+  // Configure buttons based on save state
+  const hasSave = hasSavedGame();
+  if (hasSave) {
+    startBtn.textContent = 'Nouvelle Partie';
+    continueBtn.style.display = 'block';
+  } else {
+    startBtn.textContent = 'Commencer le Voyage';
+    continueBtn.style.display = 'none';
+  }
 
   wrapper.classList.add('visible');
 
   const menu = initMainMenu(wrapper);
 
-  // Animation loop for the menu scene
   let menuAnimId = 0;
   let lastTime = performance.now();
   const tick = (): void => {
@@ -54,32 +79,36 @@ async function runMainMenu(): Promise<void> {
   };
 
   // BUG-C53-03: protect RAF against WebGL context loss on mobile (initMainMenu throws)
-  // try/finally guarantees cancelAnimationFrame is always called even on failure.
   try {
     tick();
 
     // T066: Start menu ambient audio (gentle wind drone, 55Hz)
     startAmbient('menu');
 
-    // Show menu UI immediately — camera is static, no dolly to wait for
+    // Show menu UI immediately — camera is static until player acts
     overlay.classList.add('visible');
 
-    // Wait for player to click Start
-    await new Promise<void>((resolve) => {
-      startBtn.addEventListener('click', () => resolve(), { once: true });
+    // Wait for player choice
+    const isNewGame = await new Promise<boolean>((resolve) => {
+      startBtn.addEventListener('click', () => resolve(true), { once: true });
+      continueBtn.addEventListener('click', () => resolve(false), { once: true });
     });
 
-    // T066: Stop menu ambient, transition to forest ambient
+    // T066: Stop menu ambient
     stopAmbient();
-
-    // Transition: fade to black then go to game
     overlay.classList.remove('visible');
-    cutToBlack();
 
-    // startDolly is now a no-op that calls onComplete immediately
-    await new Promise<void>((resolve) => {
-      menu.startDolly(resolve);
-    });
+    if (isNewGame) {
+      // Camera walks toward tower over 6s, then we cut to black
+      await new Promise<void>((resolve) => {
+        menu.startDolly(resolve);
+      });
+    }
+
+    cutToBlack();
+    await new Promise<void>((res) => setTimeout(res, 300));
+
+    return { isNewGame };
   } finally {
     cancelAnimationFrame(menuAnimId);
     menu.dispose();
@@ -512,12 +541,17 @@ async function main(): Promise<void> {
   loading.style.display = 'none';
 
   // Phase 2: Main menu (once — never shown again between runs)
-  await runMainMenu();
+  const menuResult = await runMainMenu();
 
   // C84: Init ogham panel + cross-run data BEFORE first lair visit (once — panel persists across runs)
   initOghamPanel();
   loadAnamFromStorage();
   loadMetaFromStorage();
+
+  // Phase 2b: Merlin intro dialogue — shown only on new game (walk animation already played)
+  if (menuResult.isNewGame) {
+    await runMerlinIntro();
+  }
 
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.

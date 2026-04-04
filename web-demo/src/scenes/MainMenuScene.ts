@@ -21,7 +21,7 @@ interface ParticleData {
 interface MainMenuResult {
   renderer: WebGLRenderer;
   update: (dt: number) => void;
-  /** No-op kept for API compatibility — camera is static. Calls onComplete immediately. */
+  /** Animate camera walk from cliff toward the tower over ~6 s, then calls onComplete. */
   startDolly: (onComplete: () => void) => void;
   dispose: () => void;
 }
@@ -740,6 +740,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   let elapsedTime = 0;
 
+  // Dolly walk state — camera animates from cliff position toward tower door
+  const DOLLY_DURATION = 6.0; // seconds
+  const DOLLY_CAM_START  = new Vector3(-8, 18, 28);
+  const DOLLY_CAM_END    = new Vector3(3, 8, 4);    // approach tower, lower, closer
+  const DOLLY_LOOK_START = new Vector3(4, 2, -10);
+  const DOLLY_LOOK_END   = new Vector3(6, 8, -13);  // tower door area
+  let _dollyActive = false;
+  let _dollyElapsed = 0;
+  let _dollyOnComplete: (() => void) | null = null;
+
+  const _dollyLook = new Vector3();
+
   const update = (dt: number): void => {
     elapsedTime += dt;
     ocean.update(elapsedTime);
@@ -747,12 +759,33 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     foam.update(elapsedTime);
     spray.update(dt);
     godRay.update(dt);
+
+    if (_dollyActive) {
+      _dollyElapsed = Math.min(_dollyElapsed + dt, DOLLY_DURATION);
+      const raw = _dollyElapsed / DOLLY_DURATION;
+      // Ease-out cubic: fast start, gentle deceleration as we reach the tower
+      const t = 1 - Math.pow(1 - raw, 3);
+
+      camera.position.lerpVectors(DOLLY_CAM_START, DOLLY_CAM_END, t);
+      _dollyLook.lerpVectors(DOLLY_LOOK_START, DOLLY_LOOK_END, t);
+      camera.lookAt(_dollyLook);
+
+      if (_dollyElapsed >= DOLLY_DURATION) {
+        _dollyActive = false;
+        const cb = _dollyOnComplete;
+        _dollyOnComplete = null;
+        cb?.();
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
-  // No-op: camera is static. Calls onComplete immediately for flow compatibility.
+  // Start 6-second camera walk toward tower. Calls onComplete when animation ends.
   const startDolly = (onComplete: () => void): void => {
-    onComplete();
+    _dollyActive = true;
+    _dollyElapsed = 0;
+    _dollyOnComplete = onComplete;
   };
 
   const dispose = (): void => {

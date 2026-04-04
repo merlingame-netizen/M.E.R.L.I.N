@@ -129,6 +129,32 @@
       border-color: rgba(205,133,63,0.9);
       box-shadow: 0 0 30px rgba(205,133,63,0.3);
     }
+    #menu-continue-btn {
+      display: none; /* shown only when save exists */
+      padding: 14px 48px;
+      background: rgba(30,50,20,0.18);
+      border: 1px solid rgba(100,180,80,0.45);
+      border-radius: 4px;
+      color: rgba(180,230,160,0.9);
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      transition: all 0.4s ease;
+      backdrop-filter: blur(4px);
+      margin-top: 12px;
+    }
+    #menu-continue-btn:hover {
+      background: rgba(30,60,20,0.35);
+      border-color: rgba(120,200,100,0.8);
+      box-shadow: 0 0 24px rgba(100,200,80,0.25);
+    }
+    .menu-btn-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
     #menu-canvas-wrapper {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -557,7 +583,10 @@
         <h1>M.E.R.L.I.N.</h1>
         <p>Le Jeu des Oghams</p>
       </div>
-      <button id="menu-start-btn">Commencer le Voyage</button>
+      <div class="menu-btn-group">
+        <button id="menu-start-btn">Commencer le Voyage</button>
+        <button id="menu-continue-btn">Continuer l'Aventure</button>
+      </div>
     </div>
     <div id="loading">
       <h1>M.E.R.L.I.N.</h1>
