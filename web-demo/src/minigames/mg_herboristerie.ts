@@ -96,6 +96,9 @@ export class MinigameHerboristerie extends MinigameBase {
   private shakeAmount = 0;
   // C92-P2: floating penalty text — shows "−8 pts" near wrong pick for 0.8s
   private penaltyToasts: Array<{ x: number; y: number; life: number }> = [];
+  // C96: keyboard navigation — tracks selected cell (keyCol=-1 means inactive)
+  private keyCol = -1;
+  private keyRow = 0;
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -141,6 +144,8 @@ export class MinigameHerboristerie extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    // C96: keyboard cell navigation — arrow keys move selection, Enter/Space picks
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.timeLeft = this.totalTime;
@@ -151,6 +156,8 @@ export class MinigameHerboristerie extends MinigameBase {
     this.flashCells = new Map();
     this.shakeAmount = 0;
     this.penaltyToasts = [];
+    this.keyCol = -1;
+    this.keyRow = 0;
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -239,19 +246,11 @@ export class MinigameHerboristerie extends MinigameBase {
     return row * this.gridCols + col;
   }
 
-  private onPointerDown = (e: PointerEvent): void => {
-    if (!this.canvas) return;
-    const rect = this.canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
-
-    const idx = this.getCellAt(x, y);
-    if (idx === null || idx < 0 || idx >= this.cells.length) return;
-
+  private pickCellByIdx(idx: number): void {
+    if (idx < 0 || idx >= this.cells.length) return;
     const cell = this.cells[idx];
-    if (cell.picked) return;
+    if (!cell || cell.picked) return;
 
-    // Mark as picked (immutable update)
     const isCorrect = cell.plant.isTarget;
     this.cells = this.cells.map((c, i) =>
       i === idx ? { ...c, picked: true, correct: isCorrect } : c
@@ -264,15 +263,34 @@ export class MinigameHerboristerie extends MinigameBase {
       this.wrongPicks++;
       this.flashCells.set(idx, { color: 'rgba(200,60,60,0.6)', alpha: 1 });
       this.shakeAmount = 6;
-      // C92-P2: spawn floating penalty toast at cell center
       const col = idx % this.gridCols;
       const row = Math.floor(idx / this.gridCols);
       this.penaltyToasts.push({ x: 20 + col * this.cellSize + this.cellSize / 2, y: 60 + row * this.cellSize + this.cellSize / 2, life: 0.8 });
     }
 
-    // Check if all targets found
     if (this.correctPicks >= this.totalTargets) {
       setTimeout(() => this.endGame(), 300);
+    }
+  }
+
+  private onPointerDown = (e: PointerEvent): void => {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+    const idx = this.getCellAt(x, y);
+    if (idx !== null) this.pickCellByIdx(idx);
+  };
+
+  // C96: keyboard navigation — arrow keys move selection, Enter/Space picks selected cell
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); this.keyCol = this.keyCol < 0 ? 0 : Math.max(0, this.keyCol - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); this.keyCol = Math.min(this.gridCols - 1, Math.max(0, this.keyCol) + 1); }
+    else if (e.key === 'ArrowUp')    { e.preventDefault(); this.keyRow = this.keyRow < 0 ? 0 : Math.max(0, this.keyRow - 1); if (this.keyCol < 0) this.keyCol = 0; }
+    else if (e.key === 'ArrowDown')  { e.preventDefault(); this.keyRow = Math.min(this.gridRows - 1, Math.max(0, this.keyRow) + 1); if (this.keyCol < 0) this.keyCol = 0; }
+    else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (this.keyCol >= 0) this.pickCellByIdx(this.keyRow * this.gridCols + this.keyCol);
     }
   };
 
@@ -380,11 +398,14 @@ export class MinigameHerboristerie extends MinigameBase {
       }
       ctx.fillRect(x + 2, y + 2, this.cellSize - 4, this.cellSize - 4);
 
-      // Cell border
-      ctx.strokeStyle = cell.picked
-        ? (cell.correct ? 'rgba(90,180,90,0.4)' : 'rgba(200,80,80,0.4)')
-        : 'rgba(90,130,70,0.15)';
-      ctx.lineWidth = 1;
+      // Cell border (C96: keyboard selected cell gets bright outline)
+      const isKeySelected = (col === this.keyCol && row === this.keyRow);
+      ctx.strokeStyle = isKeySelected
+        ? `rgba(255,220,120,${0.7 + Math.sin(this.elapsedTime * 6) * 0.3})`
+        : cell.picked
+          ? (cell.correct ? 'rgba(90,180,90,0.4)' : 'rgba(200,80,80,0.4)')
+          : 'rgba(90,130,70,0.15)';
+      ctx.lineWidth = isKeySelected ? 2 : 1;
       ctx.strokeRect(x + 2, y + 2, this.cellSize - 4, this.cellSize - 4);
 
       // Flash overlay
@@ -433,6 +454,7 @@ export class MinigameHerboristerie extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

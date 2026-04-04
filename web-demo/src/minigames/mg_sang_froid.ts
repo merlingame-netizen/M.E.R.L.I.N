@@ -60,9 +60,9 @@ export class MinigameSangFroid extends MinigameBase {
     title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
     this.container.appendChild(title);
 
-    // Instruction
+    // Instruction — C96: mention drift + keyboard controls for accessibility
     const instr = document.createElement('div');
-    instr.textContent = 'Garde ton curseur dans le cercle. Il retrecit...';
+    instr.textContent = 'Garde ton curseur dans le cercle qui rétrécit et dérive. Flèches = déplacer.';
     instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
     this.container.appendChild(instr);
 
@@ -102,6 +102,8 @@ export class MinigameSangFroid extends MinigameBase {
     // Input
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
+    // C96: keyboard cursor — arrow keys move virtual cursor 10px per press (full keyboard accessibility)
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state — cursor at (0,0) so idle player starts OUTSIDE the zone (dist≈269 > radius 120).
     this.cursorX = 0;
@@ -143,6 +145,15 @@ export class MinigameSangFroid extends MinigameBase {
     this.cursorY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
   };
 
+  // C96: arrow key cursor movement — full keyboard accessibility without pointer device
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const step = 10;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); this.cursorX = Math.max(0, this.cursorX - step); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); this.cursorX = Math.min(this.canvasW, this.cursorX + step); }
+    else if (e.key === 'ArrowUp')    { e.preventDefault(); this.cursorY = Math.max(0, this.cursorY - step); }
+    else if (e.key === 'ArrowDown')  { e.preventDefault(); this.cursorY = Math.min(this.canvasH, this.cursorY + step); }
+  };
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
@@ -150,6 +161,7 @@ export class MinigameSangFroid extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     const finalScore = this.totalTime > 0
       ? (this.timeInside / this.totalTime) * 100
@@ -249,8 +261,12 @@ export class MinigameSangFroid extends MinigameBase {
     ctx.arc(this.zoneX, this.zoneY, this.currentRadius, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(${zoneColor},${zonePulse * 0.15})`;
     ctx.fill();
-    ctx.strokeStyle = `rgba(${zoneColor},${zonePulse + 0.3})`;
-    ctx.lineWidth = 2;
+    // C96: pivot telegraph — border flashes white in the 0.3s before a drift direction change
+    const pivotWarning = this.nextDriftChange < 0.3 && this.nextDriftChange > 0;
+    ctx.strokeStyle = pivotWarning
+      ? `rgba(255,220,120,${0.6 + Math.sin(this.pulsePhase * 20) * 0.4})`
+      : `rgba(${zoneColor},${zonePulse + 0.3})`;
+    ctx.lineWidth = pivotWarning ? 3 : 2;
     ctx.stroke();
 
     // Zone center mark
@@ -319,6 +335,7 @@ export class MinigameSangFroid extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }
