@@ -322,7 +322,11 @@ interface CandleData {
   cz: number;
 }
 
-function createCandles(scene: Scene): { candles: CandleData[]; group: Group } {
+// C131/CANDLES-FACTORY-01: removed scene parameter — scene.add(group) moved to call site to match
+// every other factory in this file (createWalls, createMapTable, createCrystalBall, createBookshelf,
+// createDoor, createCauldron all return a group; caller does scene.add). Prevents the BUG-L-DOUBLE-ADD
+// class of bug where internal scene.add creates an ambiguous responsibility boundary.
+function createCandles(): { candles: CandleData[]; group: Group } {
   // Positions match CANDLE_POSITIONS in LairGLBAssets.ts — procedural fallback aligns to GLB placement
   const candlePositions: Array<[number, number, number]> = [
     [-5, -4.85, -7],
@@ -345,7 +349,6 @@ function createCandles(scene: Scene): { candles: CandleData[]; group: Group } {
   const candles: CandleData[] = [];
   // group holds bodies + wicks + sharedLight — hidden when bougie.glb loads
   const group = new Group();
-  scene.add(group);
 
   // Single shared PointLight covers all 3 candles — saves 2 GPU light slots vs individual lights.
   // Positioned at centroid of the 3 candle positions, larger range to cover all.
@@ -782,7 +785,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const { group: doorGroup, hitTarget: doorHit, lightBeam: doorLight, doorPanel } = createDoor();
   scene.add(doorGroup);
 
-  const { candles, group: candleGroup } = createCandles(scene);
+  const { candles, group: candleGroup } = createCandles();
+  scene.add(candleGroup); // C131/CANDLES-FACTORY-01: moved from inside createCandles() — consistent with all other factories
   const dust = createDustMotes();
   scene.add(dust.points);
 
@@ -843,12 +847,35 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Swap both mesh (hit target) and visualMesh to the first GLB mesh so raycasting stays live.
     onMapGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'map');
-      if (entry) { entry.mesh = mesh; entry.visualMesh = mesh; raycastTargets = interactives.map((i) => i.mesh); }
+      if (entry) {
+        entry.mesh = mesh;
+        entry.visualMesh = mesh;
+        // C131/GLB-EMISSIVE-01: table_druidique.glb gets applyFlatShading only — emissive stays
+        // Color(0,0,0) by default. applyHoverTo() guards on emissive.r/g/b > 0; without this fix
+        // the hover emissive boost silently no-ops for the map zone after GLB loads.
+        // Restore same warm parchment emissive as procedural mapMat (0x3a2a10).
+        if (mesh.material instanceof MeshStandardMaterial) {
+          mesh.material.emissive.setHex(0x3a2a10);
+          mesh.material.emissiveIntensity = entry.baseEmissive ?? 0.15;
+        }
+        raycastTargets = interactives.map((i) => i.mesh);
+      }
     },
     // C122: same pattern for bookshelf — shelfHit inside shelfGroup, hidden when bibliotheque.glb loads.
     onShelfGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'bookshelf');
-      if (entry) { entry.mesh = mesh; entry.visualMesh = mesh; raycastTargets = interactives.map((i) => i.mesh); }
+      if (entry) {
+        entry.mesh = mesh;
+        entry.visualMesh = mesh;
+        // C131/GLB-EMISSIVE-01: bibliotheque.glb gets applyFlatShading only — same black emissive problem.
+        // Restore same warm wood emissive as procedural shelfMat (0x2a1a08), intensity=0 to match
+        // procedural baseline (applyHoverTo boosts to 0.65 on hover, restores to 0 on unhover).
+        if (mesh.material instanceof MeshStandardMaterial) {
+          mesh.material.emissive.setHex(0x2a1a08);
+          mesh.material.emissiveIntensity = 0.0;
+        }
+        raycastTargets = interactives.map((i) => i.mesh);
+      }
     },
   }, () => lairDisposed);
 
