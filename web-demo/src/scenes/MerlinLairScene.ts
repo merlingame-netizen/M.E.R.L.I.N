@@ -1058,6 +1058,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
       currentHovered = null;
       renderer.domElement.style.cursor = 'default';
+      zoneToast.style.opacity = '0'; // C132/BUG-C131-01: hide lore toast on tap-lift — mouseleave path
+      // was the only path that set opacity=0; touchEnd only cleared emissive/scale but left toast visible.
     }
   };
 

@@ -1,28 +1,31 @@
 {
   "state": "idle",
-  "cycle": 100,
-  "objective": "Cycle 100 — C130: _oceanAltFrame rename (C122-13) + fadeInGLB cancel-safety doc (BUG-L-GLBFADE-MURTILE-01)",
+  "cycle": 101,
+  "objective": "Cycle 101 — C131: GLB emissive hover glow (map+bookshelf post-load) + createCandles factory pattern",
   "checkpoint": "complete",
   "audit_summary": {
-    "audit_cycle": "C130",
-    "global_score": 9.94,
+    "audit_cycle": "C131",
+    "global_score": 9.95,
+    "aaa_ultra_score": "9.0/10 (holistic 12-criteria Nintendo/FromSoftware eval)",
     "verdict": "PROCEED",
     "bugs_fixed": [
-      "C130/C122-13 (LOW): Rename _skipOceanFrame → _oceanAltFrame in CoastBiome.ts. The old name implied the flag directly controlled skipping; it actually marks which frame-parity is the skip candidate. Updated declaration comment + toggle + condition. Logic unchanged.",
-      "C130/BUG-L-GLBFADE-MURTILE-01 (MEDIUM-doc): Add cancel-safety documentation to LairGLBAssets.ts fadeInGLB call on shared tileMat. Mid-fade cancel via dispose() is safe because scene.traverse() disposes the shared material; next lair visit clones fresh tileMat from re-loaded GLB. No logic change required."
+      "C131/GLB-EMISSIVE-01 (MEDIUM): onMapGLBLoaded + onShelfGLBLoaded callbacks did not set emissive on GLB mesh. applyFlatShading() leaves emissive Color(0,0,0); applyHoverTo() check emissive.r/g/b>0 silently no-ops → hover glow broken for map + bookshelf after GLB loads. Fix: restore warm emissive tones (map: 0x3a2a10 matching procedural mapMat; shelf: 0x2a1a08 matching procedural shelfMat) in both callbacks.",
+      "C131/CANDLES-FACTORY-01 (LOW): createCandles(scene) called scene.add(group) internally — only factory not following return-group pattern. Same BUG-L-DOUBLE-ADD-01 class as createCauldron fix in C129b. Fix: remove scene param + internal scene.add; add scene.add(candleGroup) at call site."
     ],
-    "c130_verdict": "CLEAR — Naming corrected, cancel-safety documented. Only LAIR-01 (no pause() API) remains as tracked LOW.",
-    "c130_confirmations": [
-      "CoastBiome.ts: _oceanAltFrame (3 occurrences) + updated comment — C130/C122-13",
-      "LairGLBAssets.ts: 5-line cancel-safety comment block at fadeInGLB(backMesh) — C130/BUG-L-GLBFADE-MURTILE-01",
-      "Build: main=52.11KB gzip, minigames=25.47KB gzip. 0 TS errors.",
-      "Pushed: c5a092b → git@github.com:merlingame-netizen/M.E.R.L.I.N.git main"
+    "c131_verdict": "CLEAR — Emissive hover restored on 2 GLB zones. All 5 activatable zones now have full hover feedback (scale + toast + SFX + emissive glow) on both procedural and GLB paths.",
+    "c131_confirmations": [
+      "MerlinLairScene.ts: onMapGLBLoaded emissive 0x3a2a10 + onShelfGLBLoaded emissive 0x2a1a08 — C131/GLB-EMISSIVE-01",
+      "MerlinLairScene.ts: createCandles() no scene param, scene.add(candleGroup) at call site — C131/CANDLES-FACTORY-01",
+      "Build: main=52.17KB gzip, minigames=25.47KB gzip. 0 TS errors.",
+      "Pushed: ad82771 → git@github.com:merlingame-netizen/M.E.R.L.I.N.git main"
     ],
     "open_issues_deferred": [
-      "LOW LAIR-01: No pause() API on LairResult."
+      "LOW LAIR-01: No pause() API on LairResult.",
+      "DESIGN: door zone procedural-only (no porte_bois.glb).",
+      "LORE: 'Pierre des Oghams' label on crystal sphere (ogham = stone, not sphere)."
     ],
     "pushed": true,
-    "build": "0 TS errors, main=52.11KB gzip, minigames=25.47KB gzip"
+    "build": "0 TS errors, main=52.17KB gzip, minigames=25.47KB gzip"
   },
   "display_formula_audit_COMPLETE": {
     "mg_sang_froid": "FIXED C121/SF-HUD-01",
@@ -50,8 +53,9 @@
     "C128_clock_delta_aria": 9.91,
     "C129_tile_aspect_potion": 9.92,
     "C129b_double_add_regard_guard": 9.93,
-    "C130_ocean_alt_frame_glbfade_doc": 9.94
+    "C130_ocean_alt_frame_glbfade_doc": 9.94,
+    "C131_glb_emissive_hover_candles_factory": 9.95
   },
   "workers": [],
-  "updated_at": "2026-04-05T01:00:00.000Z"
+  "updated_at": "2026-04-05T02:00:00.000Z"
 }

@@ -108,11 +108,16 @@ export function showOghamPanel(): Promise<string | null> {
       const slot = document.createElement('button');
       // C128/C122-16: locked oghams announce lock status in aria-label — screen readers
       // cannot reach slot.title (tooltip) without hover; aria-label is the only announced text.
+      // C132/BUG-C131-02: 3-way label — cooldown slots must announce cooldown, not just description.
+      // A disabled button with only its description gives no hint about *why* it is unavailable
+      // (WCAG 4.1.2 — name, role, value). Cooldown state is now surfaced as accessible text.
       slot.setAttribute(
         'aria-label',
-        isUnlocked
-          ? `${spec.name} — ${spec.description}`
-          : `${spec.name} — Verrouillé, réputation 50 requise`,
+        !isUnlocked
+          ? `${spec.name} — Verrouillé, réputation 50 requise`
+          : cooldown > 0
+            ? `${spec.name} — En recharge, ${cooldown} carte${cooldown > 1 ? 's' : ''} restante${cooldown > 1 ? 's' : ''}`
+            : `${spec.name} — ${spec.description}`,
       );
       // C86: use native `disabled` attribute instead of aria-disabled for unavailable slots.
       // aria-disabled='true' leaves the button in the tab order and still receives keyboard
