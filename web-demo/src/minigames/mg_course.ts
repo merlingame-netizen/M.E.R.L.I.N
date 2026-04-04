@@ -126,6 +126,7 @@ export class MinigameCourse extends MinigameBase {
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('aria-label', 'Minigame Course — capturez les symboles qui defilent rapidement');
     this.canvas.setAttribute('role', 'application');
+    this.canvas.setAttribute('aria-keyshortcuts', 'Space Enter'); // C43: I-14 — hints valid keys for AT users
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
@@ -137,6 +138,7 @@ export class MinigameCourse extends MinigameBase {
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-course-status';
     statusEl.setAttribute('aria-live', 'polite'); // C114
+    statusEl.setAttribute('aria-atomic', 'true'); // C43: I-14 — consistent with mg_equilibre C41
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Touches: 0 / 0';
     this.container.appendChild(statusEl);
