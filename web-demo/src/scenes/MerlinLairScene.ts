@@ -269,8 +269,14 @@ function createDoor(): DoorResult {
   frameTop.position.set(-10.1, 4.2, 5.5);
   group.add(frameTop);
 
-  // Door panel
-  const door = new Mesh(new BoxGeometry(0.15, 6.5, 3), doorMat);
+  // Door panel — C122/DOOR-ZF-01: clone doorMat to isolate polygonOffset on panel only.
+  // Panel (0.15u thick) overlaps with frame corners (z=4.0±0.25, z=7.0±0.25) at shared X range.
+  // polygonOffset biases panel forward in depth so it renders consistently on top of frame faces.
+  const panelMat = doorMat.clone();
+  panelMat.polygonOffset = true;
+  panelMat.polygonOffsetFactor = -1;
+  panelMat.polygonOffsetUnits = -2;
+  const door = new Mesh(new BoxGeometry(0.15, 6.5, 3), panelMat);
   door.position.set(-10.15, 0.25, 5.5);
   group.add(door);
 

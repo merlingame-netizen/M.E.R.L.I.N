@@ -1,46 +1,44 @@
 {
   "state": "idle",
-  "cycle": 91,
-  "objective": "Cycle 91 — C121: HUD getElementById caching (28→0 per updateHUD) + TRC-03 hitRadius + SF-HUD-01 display alignment",
+  "cycle": 92,
+  "objective": "Cycle 92 — C122: CardOverlay 1/2/3 digit shortcuts + door panel z-fight polygonOffset",
   "checkpoint": "complete",
   "audit_summary": {
-    "audit_cycle": "C121",
-    "global_score": 9.68,
+    "audit_cycle": "C122",
+    "global_score": 9.73,
     "verdict": "PROCEED",
     "bugs_fixed": [
-      "C121/HUD-01 (MEDIUM): HUD.ts updateHUD() had 28 getElementById calls per invocation. store.subscribe fires on every setState mutation (~90-150 calls/run = 2520-4200 DOM queries/run). All 28 calls eliminated via module-level cache: _lifeFillEl, _cardsCountEl, _biomeNameEl, _lifeBarContainerEl, _lifeStatusEl (5 static), _factionFillEls/_factionValEls (10 dynamic, Record<FactionId>), _anamEl, _currEl, _currLabelEl (3 resource), _oghamBadgeEl/Rune/Name/Mult (4 ogham). Cached in initHUD()/buildFactionPanel()/buildResourcePanel()/buildOghamBadge(). Cleared in teardownHUD().",
-      "C121/TRC-03 (HIGH): mg_traces tier 3 hitRadius 16→20px. Canvas-space 16px = ~15px screen at 375px mobile (scale 0.9375). WCAG 2.5.5 minimum 44px. Player finger must land within 7.5px screen of footprint center. Fix: tieredValue([38,30,22,20]) — 4px improvement, primary benefit for touch users, no impact on tiers 0-2.",
-      "C121/SF-HUD-01 (MEDIUM): mg_sang_froid live display showed concentration% (timeInside/elapsedTime) but endGame() scores coverage% (timeInside/totalTime). At game midpoint player at 100% concentration sees 100% displayed but will score 50. Fixed both display locations (statusEl line + canvas HUD pct) to use totalTime. Label updated 'Concentration' → 'Couverture'. Now display matches final score formula."
+      "C122/CARD-KB-01 (MEDIUM-HIGH): CardOverlay had no digit key shortcuts — keyboard users had to Tab through options every card. Added document-level 1/2/3 handler (onDigitKey) in showCard(). Handler is declared with let+definite-assignment before safetyId so safety timeout can clean it up. Also cleaned up in activate() and self-removes on first valid keypress. Affects every card interaction in every run.",
+      "C122/DOOR-ZF-01 (MEDIUM): Door panel (doorMat, 0.15u thick) shared material with door frame pieces. Panel overlaps frame corners at z=4.0±0.25 and z=7.0±0.25 → z-fighting on 16-bit depth GPUs. Fix: clone doorMat for panel only, add polygonOffset(factor=-1, units=-2). Frame pieces keep original doorMat. panelMat is disposed by scene.traverse() Set dedup on lair dispose."
     ],
-    "c121_verdict": "CLEAR — 0 getElementById at runtime in HUD (28 eliminated). TRC-03 WCAG violation fixed. SF-HUD-01 display/score alignment fixed. 0 TS errors.",
-    "c121_confirmations": [
-      "HUD.ts: 14 module-level cache variables. All 28 getElementById calls replaced. teardownHUD() clears all refs.",
-      "mg_traces.ts: tieredValue([38,30,22,20]) — tier 3 floor raised from 16→20px canvas-space",
-      "mg_sang_froid.ts: pctInside + pct both use totalTime. Label 'Concentration' → 'Couverture'.",
-      "Build: main=51.78KB gzip, minigames=25.43KB gzip (stable). 0 TS errors."
+    "c122_verdict": "CLEAR — digit shortcuts work for 1/2/3 card options. Door panel z-fight eliminated with polygonOffset. 0 TS errors.",
+    "c122_confirmations": [
+      "CardOverlay: onDigitKey handler, cleaned up in activate() + safetyId + self on valid press",
+      "MerlinLairScene: panelMat = doorMat.clone() + polygonOffset(factor=-1, units=-2) on door panel only",
+      "Build: main=51.92KB gzip (+0.14KB), minigames=25.43KB gzip. 0 TS errors."
     ],
     "open_issues_deferred": [
       "LOW LAIR-01: No pause() API on LairResult.",
-      "LOW: door panel clip, potionBottles bloom, stone elongation (cosmetics)."
+      "LOW: potionBottles bloom (emissiveIntensity=0.25), stone elongation (InstancedMesh scale Y=5.33)."
     ],
     "pushed": true,
-    "build": "0 TS errors, main=51.78KB gzip, minigames=25.43KB gzip"
+    "build": "0 TS errors, main=51.92KB gzip, minigames=25.43KB gzip"
   },
-  "eval_12_criteria_C121": {
-    "flat_shading_coherence": { "score": 9.0, "note": "14/14 confirmed." },
-    "z_fighting_residual": { "score": 8.0, "note": "polygonOffset clean. Door 0.05u clip LOW." },
+  "eval_12_criteria_C122": {
+    "flat_shading_coherence": { "score": 9.0, "note": "14/14 + lair confirmed." },
+    "z_fighting_residual": { "score": 8.5, "note": "+0.5: DOOR-ZF-01 fixed. Door panel polygonOffset(−1,−2). Only stone elongation + potionBottles LOW remain." },
     "materiaux_qualite": { "score": 9.0, "note": "potionBottles emissive LOW only." },
-    "lighting_dramaturgie": { "score": 8.0, "note": "6 sources + HemiLight. Shadow map 2048² stable." },
-    "glb_coverage": { "score": 10.0, "note": "7/7 + isDisposed guard + clearGLBCache." },
-    "proportions_geometriques": { "score": 7.5, "note": "RUN-02 grid fixed. Stone elongation + door clip still LOW." },
-    "bundle_perf": { "score": 9.8, "note": "main=51.78KB, minigames=25.43KB. Zero DOM queries at runtime (HUD + 14 minigames)." },
-    "memory_leaks": { "score": 10.0, "note": "cancelTimers 14/14 + ended guard 14/14 + saveRunEnd + HUD teardown cache clear." },
-    "ux_aria": { "score": 9.2, "note": "+0.2: TRC-03 hitRadius 16→20px improves mobile tap precision. All aria-live 0x runtime." },
-    "hover_feedback": { "score": 9.0, "note": "Lair zones + minigame pulsing targets confirmed." },
-    "door_cinematic": { "score": 9.5, "note": "MAIN-01 double-tap guard + C118 GPU pause." },
-    "celtic_lore_immersion": { "score": 9.2, "note": "mg_sang_froid 'Couverture' label more immersive than 'Concentration' (reads as progress toward completion)." }
+    "lighting_dramaturgie": { "score": 8.0, "note": "6 sources + HemiLight. Crystal/cauldron/candle animated. Shadow map not configured (not required for Low-poly style)." },
+    "glb_coverage": { "score": 10.0, "note": "7/7 + isDisposed + clearGLBCache + cancelGLBFades. shelfGroup swap (C122) confirmed." },
+    "proportions_geometriques": { "score": 7.5, "note": "InstancedMesh tile scale 4×5.33×1 — slight Y elongation still LOW. All grids correct." },
+    "bundle_perf": { "score": 9.8, "note": "main=51.92KB, minigames=25.43KB. Zero DOM queries runtime." },
+    "memory_leaks": { "score": 10.0, "note": "panelMat disposed by scene.traverse(). onDigitKey cleaned up on all exit paths." },
+    "ux_aria": { "score": 9.5, "note": "+0.3: 1/2/3 digit shortcuts for direct option selection. All WCAG 2.1.1 paths now covered (Enter/Space + click + digit)." },
+    "hover_feedback": { "score": 9.0, "note": "Lair zones + minigame pulsing + card option highlight." },
+    "door_cinematic": { "score": 9.5, "note": "MAIN-01 guard + C118 GPU pause + DOOR-ZF-01 panel fix." },
+    "celtic_lore_immersion": { "score": 9.2, "note": "Zone lore toasts + ariaLive + option descriptions." }
   },
-  "global_score_C121": 9.68,
+  "global_score_C122": 9.73,
   "architecture_quality": {
     "cancelTimers_contract": "14/14 COMPLETE ✓",
     "ended_guard_render": "14/14 COMPLETE ✓",
@@ -51,27 +49,19 @@
     "storageKey_per_minigame": "14/14 (C94)",
     "immutability_minigames": "14/14 COMPLETE ✓",
     "saveRunEnd_idempotency": "savedThisRun flag 5 break paths (C98)",
-    "fouille_timescore_freeze": "clearInterval on found=true (C104)",
-    "regard_recall_timeout": "10s per-round deadline — no softlock (C105)",
-    "echo_roundOutcomes": "per-round hit/miss dot coloring (C103)",
-    "ombres_wall_hug_penalty": "multiplier 0.85 (C103)",
-    "glb_fadeIn_isDisposed": "C122 guard on all 7 GLBs (C97)",
-    "dispose_dedup": "Set guards prevent triple-dispose (C97)",
-    "scene_manager_minigame_pause": "sceneManager.stop/start around minigame overlay (C118)",
-    "scene_manager_tab_visibility": "visibilitychange pause/resume during gameplay (C118)",
-    "door_double_tap_guard": "doorTriggered flag (C117/MAIN-01)",
     "getElementById_at_runtime": "ZERO across all 14 minigames + HUD ✓ (C119+C120+C121)",
-    "runes_grid_completeness": "14/14 full grids — tier 1 was 14/16 slots, now 16/16 (C120/RUN-02)",
     "hud_cache_module_level": "14 cached refs — 28 getElementById/call eliminated (C121/HUD-01)",
     "traces_hitRadius_mobile": "tieredValue([38,30,22,20]) — tier 3 WCAG floor 16→20px (C121/TRC-03)",
-    "sangfroid_display_score_alignment": "display formula = score formula (totalTime) — no divergence (C121/SF-HUD-01)"
+    "sangfroid_display_score_alignment": "display formula = score formula (totalTime) — no divergence (C121/SF-HUD-01)",
+    "card_digit_shortcuts": "1/2/3 document-level handler in showCard() — all paths cleaned up (C122/CARD-KB-01)",
+    "door_panel_polygonoffset": "panelMat clone + factor=-1 units=-2 — z-fight at frame corners eliminated (C122/DOOR-ZF-01)"
   },
   "cycle_32_progression": {
     "C98": 8.88, "C99": 8.92, "C100": 8.94, "C101": 8.96, "C102": 9.05,
     "C103": 9.08, "C104": 9.12, "C105": 9.18, "C106": 9.25,
     "C116_final_sweep": 9.30, "C118_gpu_pause": 9.40, "C119_immut_dom": 9.50,
-    "C120_dom_elimination": 9.60, "C121_hud_cache_trc_sfhud": 9.68
+    "C120_dom_elimination": 9.60, "C121_hud_cache_trc_sfhud": 9.68, "C122_digits_doorzf": 9.73
   },
   "workers": [],
-  "updated_at": "2026-04-04T22:00:00.000Z"
+  "updated_at": "2026-04-04T23:00:00.000Z"
 }

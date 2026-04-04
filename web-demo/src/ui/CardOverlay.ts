@@ -165,10 +165,16 @@ export function showCard(card: Card): Promise<number> {
     // the tuple type. Cast to readonly array to suppress the TS tuple-length overlap error.
     if (!(card.options as readonly CardOption[]).length) { hideCard(); resolve(0); return; }
 
+    // C122/CARD-KB-01: document-level 1/2/3 digit shortcuts — direct option selection
+    // without Tab navigation. Declared here (let + definite-assignment !) so the safety
+    // timeout callback can reference it for cleanup before the assignment runs below.
+    // eslint-disable-next-line prefer-const
+    let onDigitKey!: (e: KeyboardEvent) => void;
+
     // 60s safety timeout — last-resort escape if all button paths somehow become
     // unreachable (e.g. DOM mutation by an extension, tab hidden on mobile).
     const safetyId = setTimeout(() => {
-      if (!activated) { activated = true; hideCard(); resolve(0); }
+      if (!activated) { activated = true; document.removeEventListener('keydown', onDigitKey); hideCard(); resolve(0); }
     }, 60_000);
 
     // Null-guard DOM elements — consistent with HUD pattern (C57)
@@ -234,6 +240,7 @@ export function showCard(card: Card): Promise<number> {
         if (activated) return;
         activated = true;
         clearTimeout(safetyId);
+        document.removeEventListener('keydown', onDigitKey); // C122: cleanup digit shortcut handler
         // T073: Brief gold highlight before overlay hides (200ms feedback)
         btn.classList.add('card-option-selected');
         setTimeout(() => {
@@ -258,6 +265,25 @@ export function showCard(card: Card): Promise<number> {
 
       optContainer.appendChild(btn);
     });
+
+    // C122/CARD-KB-01: assign digit handler now that optContainer is confirmed non-null.
+    // Fires on document so any focused element (not just options) can trigger it.
+    // Self-removes on first valid keypress; also removed by activate() and the safety timeout.
+    onDigitKey = (e: KeyboardEvent): void => {
+      if (activated) { document.removeEventListener('keydown', onDigitKey); return; }
+      const idx = ['1', '2', '3'].indexOf(e.key);
+      if (idx === -1 || idx >= card.options.length) return;
+      e.preventDefault();
+      document.removeEventListener('keydown', onDigitKey);
+      const btns = optContainer.querySelectorAll<HTMLElement>('[role="button"]');
+      const targetBtn = btns[idx];
+      if (!targetBtn) return;
+      activated = true;
+      clearTimeout(safetyId);
+      targetBtn.classList.add('card-option-selected');
+      setTimeout(() => { hideCard(); resolve(idx); }, 200);
+    };
+    document.addEventListener('keydown', onDigitKey);
 
     // C86: Set narrative text AFTER overlay becomes visible so NVDA/JAWS re-announces
     // the content in context of the dialog. Setting textContent while overlay is hidden
