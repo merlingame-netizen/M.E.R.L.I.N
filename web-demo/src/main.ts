@@ -397,7 +397,17 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       'letter-spacing:0.08em;text-align:center;',
       'opacity:0;transition:opacity 0.2s ease;',
     ].join('');
-    toast.innerHTML = `${entry.title}${entry.sub ? `<br><span style="color:rgba(180,150,90,0.6);font-size:0.8em;font-style:italic;">${entry.sub}</span>` : ''}`;
+    // C106: textContent — closes C104 scope (was missed in main.ts showZoneToast)
+    const titleEl = document.createElement('span');
+    titleEl.textContent = entry.title;
+    toast.appendChild(titleEl);
+    if (entry.sub) {
+      toast.appendChild(document.createElement('br'));
+      const subEl = document.createElement('span');
+      subEl.style.cssText = 'color:rgba(180,150,90,0.6);font-size:0.8em;font-style:italic;';
+      subEl.textContent = entry.sub;
+      toast.appendChild(subEl);
+    }
     wrapper!.appendChild(toast);
     activeToast = toast;
     requestAnimationFrame(() => requestAnimationFrame(() => { toast.style.opacity = '1'; }));

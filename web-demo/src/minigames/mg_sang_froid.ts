@@ -346,9 +346,7 @@ export class MinigameSangFroid extends MinigameBase {
     ctx.textBaseline = 'top';
     ctx.fillStyle = this.isInside ? 'rgba(140,200,120,0.85)' : 'rgba(200,90,50,0.85)';
     ctx.fillText(`${pct}%`, 10, 10);
-    ctx.font = '12px system-ui';
-    ctx.fillStyle = 'rgba(200,200,180,0.5)';
-    ctx.fillText(`r:${Math.round(this.currentRadius)}`, 10, 30);
+    // C106: debug radius display removed (was player-visible in production)
 
     this.animFrame = requestAnimationFrame(() => this.render());
   }
