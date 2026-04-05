@@ -324,6 +324,31 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
   statusEl.textContent = STEPS[3]!.label;
   await wait(700);
 
+  // Boot complete — SFX + screen flash
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'win' } }));
+  }, 400);
+
+  // Inject boot-flash keyframes (idempotent)
+  if (!document.getElementById('celtos-boot-flash-style')) {
+    const flashStyle = document.createElement('style');
+    flashStyle.id = 'celtos-boot-flash-style';
+    flashStyle.textContent =
+      '@keyframes celtos-boot-flash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}';
+    document.head.appendChild(flashStyle);
+  }
+  // Full-screen phosphor green flash overlay
+  const flashDiv = document.createElement('div');
+  flashDiv.style.cssText = [
+    'position:fixed;inset:0;',
+    'background:rgba(51,255,102,0.12);',
+    'animation:celtos-boot-flash 800ms ease-out forwards;',
+    'pointer-events:none;z-index:10001;',
+  ].join('');
+  document.body.appendChild(flashDiv);
+  setTimeout(() => { flashDiv.remove(); }, 900);
+
   // CRT power-on glitch after boot complete
   await wait(200);
   container.classList.add('celtos-glitch-active');
