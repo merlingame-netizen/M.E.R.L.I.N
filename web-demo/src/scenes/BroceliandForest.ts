@@ -981,6 +981,13 @@ let swordResonateTimer471: number = 22;
 let swordResonating471: boolean = false;
 let swordResonateT471: number = 0;
 
+// ── Cycle-476: ancient tree with glowing enchanted vines and bioluminescent flowers ──
+let vineTreeGroup476: Group | null = null;
+let vineTreeT476: number = 0;
+let vineFlowerMats476: MeshBasicMaterial[] = [];
+let vineLight476: PointLight | null = null;
+let vineBloomTimer476: number = 12;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2708,6 +2715,91 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(swordStoneGroup471);
   }
 
+  // ── Cycle-476: ancient tree with glowing enchanted vines and bioluminescent flowers ──
+  {
+    vineTreeGroup476 = new Group();
+    vineTreeGroup476.position.set(5, 0, -14);
+
+    // Tree trunk (thick, gnarled — 2 overlapping cylinders for irregular look)
+    const trunk1 = new Mesh(
+      new CylinderGeometry(0.4, 0.55, 4.5, 7),
+      new MeshBasicMaterial({ color: 0x020f04 }),
+    );
+    trunk1.position.y = 2.25;
+    vineTreeGroup476.add(trunk1);
+
+    const trunk2 = new Mesh(
+      new CylinderGeometry(0.3, 0.45, 3.0, 6),
+      new MeshBasicMaterial({ color: 0x020f04 }),
+    );
+    trunk2.position.set(0.15, 3.5, 0.1);
+    vineTreeGroup476.add(trunk2);
+
+    // 3 main branches
+    const branchAngles = [Math.PI * 0.2, Math.PI * 0.9, Math.PI * 1.5];
+    branchAngles.forEach((angle) => {
+      const branch = new Mesh(
+        new CylinderGeometry(0.06, 0.12, 1.8, 5),
+        new MeshBasicMaterial({ color: 0x020f04 }),
+      );
+      branch.rotation.z = Math.PI * 0.3 * Math.cos(angle);
+      branch.rotation.x = Math.PI * 0.15 * Math.sin(angle);
+      branch.position.set(Math.cos(angle) * 0.5, 4.0, Math.sin(angle) * 0.5);
+      vineTreeGroup476!.add(branch);
+    });
+
+    // Spiral vine segments (8 segments spiraling up the trunk)
+    for (let v = 0; v < 8; v++) {
+      const spiralAngle = v * Math.PI * 0.7;
+      const height = 0.4 + v * 0.5;
+      const vine = new Mesh(
+        new CylinderGeometry(0.025, 0.035, 0.55, 4),
+        new MeshBasicMaterial({ color: 0x0d2a14 }),
+      );
+      vine.position.set(
+        Math.cos(spiralAngle) * 0.42,
+        height,
+        Math.sin(spiralAngle) * 0.42,
+      );
+      vine.rotation.z = -Math.cos(spiralAngle) * Math.PI * 0.3;
+      vine.rotation.x = Math.sin(spiralAngle) * Math.PI * 0.2;
+      vineTreeGroup476.add(vine);
+
+      // Bioluminescent flower at vine tip
+      const flower = new Mesh(
+        new SphereGeometry(0.06, 5, 4),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 }),
+      );
+      flower.position.set(
+        Math.cos(spiralAngle) * 0.5,
+        height + 0.1,
+        Math.sin(spiralAngle) * 0.5,
+      );
+      vineFlowerMats476.push(flower.material as MeshBasicMaterial);
+      vineTreeGroup476.add(flower);
+    }
+
+    // Root buttresses
+    for (let r = 0; r < 3; r++) {
+      const rAngle = (r / 3) * Math.PI * 2;
+      const root = new Mesh(
+        new BoxGeometry(0.18, 0.4, 0.9),
+        new MeshBasicMaterial({ color: 0x020f04 }),
+      );
+      root.position.set(Math.cos(rAngle) * 0.4, 0.2, Math.sin(rAngle) * 0.4);
+      root.rotation.y = -rAngle;
+      root.rotation.z = Math.PI * 0.06;
+      vineTreeGroup476.add(root);
+    }
+
+    // PointLight at mid-height
+    vineLight476 = new PointLight(0x33ff66, 0.12, 5.0);
+    vineLight476.position.y = 2.0;
+    vineTreeGroup476.add(vineLight476);
+
+    group.add(vineTreeGroup476);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3337,6 +3429,25 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       swordRuneMats471.forEach((mat) => { mat.opacity = runeOp; });
       if (swordLight471) swordLight471.intensity = lightInt;
     }
+
+    // Cycle-476: vine tree bioluminescent pulse + bloom event
+    vineTreeT476 += dt;
+    vineBloomTimer476 -= dt;
+
+    vineFlowerMats476.forEach((mat, i) => {
+      mat.opacity = 0.45 + 0.2 * Math.sin(vineTreeT476 * 0.9 + i * 0.75);
+    });
+
+    if (vineLight476) {
+      vineLight476.intensity = 0.1 + 0.04 * Math.sin(vineTreeT476 * 0.7);
+    }
+
+    if (vineBloomTimer476 <= 0) {
+      vineBloomTimer476 = 10 + Math.random() * 8;
+      vineFlowerMats476.forEach((mat) => { mat.opacity = 1.0; });
+      if (vineLight476) vineLight476.intensity = 0.5;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+    }
   };
 
   const dispose = (): void => {
@@ -3734,6 +3845,20 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     swordRuneMats471.length = 0;
     swordLight471 = null;
+
+    // Cycle-476: vine tree cleanup
+    if (vineTreeGroup476) {
+      group.remove(vineTreeGroup476);
+      vineTreeGroup476.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      vineTreeGroup476 = null;
+    }
+    vineFlowerMats476.length = 0;
+    vineLight476 = null;
   };
 
   return { group, update, dispose };
