@@ -387,6 +387,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let maraisWispTime = 0;
   const _auroraBands: Mesh[] = [];
   let _auroraTime = 0;
+  let _deadTreeGroup: Group | null = null;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -476,6 +477,51 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     bogRipple.rotation.x = -Math.PI / 2;
     bogRipple.position.set(6, -2.2, -20);
     group.add(bogRipple);
+
+    // Dead gnarled tree — stillness = menace (NO animation)
+    const treeMat = new MeshStandardMaterial({ color: 0x0c110c, roughness: 0.95, metalness: 0.0 });
+    _deadTreeGroup = new Group();
+
+    // Main trunk
+    const trunk = new Mesh(new CylinderGeometry(0.18, 0.28, 5.0, 5), treeMat);
+    trunk.position.set(0, 2.5, 0);
+    trunk.rotation.z = 0.08;
+    _deadTreeGroup.add(trunk);
+
+    // Branch 1 — upper left
+    const branch1 = new Mesh(new CylinderGeometry(0.06, 0.12, 2.5, 4), treeMat);
+    branch1.position.set(-1.2, 4.5, 0);
+    branch1.rotation.z = -0.7;
+    branch1.rotation.y = 0.3;
+    _deadTreeGroup.add(branch1);
+
+    // Branch 2 — upper right
+    const branch2 = new Mesh(new CylinderGeometry(0.05, 0.10, 2.0, 4), treeMat);
+    branch2.position.set(1.0, 4.2, 0.1);
+    branch2.rotation.z = 0.6;
+    branch2.rotation.y = -0.5;
+    _deadTreeGroup.add(branch2);
+
+    // Branch 3 — mid left drooping
+    const branch3 = new Mesh(new CylinderGeometry(0.04, 0.08, 1.8, 4), treeMat);
+    branch3.position.set(-0.9, 2.8, 0.2);
+    branch3.rotation.z = -1.1;
+    _deadTreeGroup.add(branch3);
+
+    // Twig 1 — from branch 1 tip
+    const twig1 = new Mesh(new CylinderGeometry(0.02, 0.04, 1.0, 3), treeMat);
+    twig1.position.set(-2.2, 5.2, 0.1);
+    twig1.rotation.z = -0.5;
+    _deadTreeGroup.add(twig1);
+
+    // Twig 2 — from branch 2 tip
+    const twig2 = new Mesh(new CylinderGeometry(0.02, 0.04, 0.8, 3), treeMat);
+    twig2.position.set(1.8, 5.0, 0.2);
+    twig2.rotation.z = 0.4;
+    _deadTreeGroup.add(twig2);
+
+    _deadTreeGroup.position.set(15, 2.5, -20);
+    group.add(_deadTreeGroup);
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -1070,6 +1116,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _eagleGroup = null;
     _eagleWingL = null;
     _eagleWingR = null;
+    _deadTreeGroup = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
