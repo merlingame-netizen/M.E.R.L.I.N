@@ -599,6 +599,12 @@ const _kelpBulbs: Mesh[] = [];
 // ── Underwater caustic light patches on seabed (C332) ────────────────────
 const _causticPatches: Mesh[] = [];
 
+// ── Storm petrel flock — dusk-only erratic silhouettes (C340) ────────────
+const _petrelGroups: Group[] = [];
+const _petrelWingsL: Mesh[] = [];
+const _petrelWingsR: Mesh[] = [];
+let _currentTimeOfDay: 'day' | 'dawn' | 'dusk' | 'night' = 'dusk';
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -919,6 +925,52 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Storm petrel flock — 10 erratic birds at dusk (C340) ───────────────
+  {
+    const PETREL_CX = 0;
+    const PETREL_CY = 5;
+    const PETREL_CZ = -30;
+    const petrelBodyMat = new MeshBasicMaterial({ color: 0x0c1a10 });
+    const petrelWingMat = new MeshBasicMaterial({ color: 0x0c1a10, side: DoubleSide });
+    const bodyGeo        = new BoxGeometry(0.04, 0.02, 0.18);
+    const wingGeoL       = new BoxGeometry(0.45, 0.02, 0.08);
+    const wingGeoR       = new BoxGeometry(0.45, 0.02, 0.08);
+
+    const R = (): number => Math.random();
+    for (let i = 0; i < 10; i++) {
+      const bird = new Group();
+
+      const body = new Mesh(bodyGeo, petrelBodyMat);
+      bird.add(body);
+
+      const leftWing = new Mesh(wingGeoL, petrelWingMat);
+      leftWing.position.set(-0.225, 0, 0);
+      bird.add(leftWing);
+
+      const rightWing = new Mesh(wingGeoR, petrelWingMat);
+      rightWing.position.set(0.225, 0, 0);
+      bird.add(rightWing);
+
+      const ox = (R() - 0.5) * 14;   // scatter ±7 around center
+      const oy = (R() - 0.5) * 5;    // y offset within 3-8 band
+      const oz = (R() - 0.5) * 10;
+      bird.position.set(PETREL_CX + ox, PETREL_CY + oy, PETREL_CZ + oz);
+      bird.userData = {
+        ox, oy, oz,
+        speed:       1.2 + R() * 1.3,         // 1.2–2.5
+        phase:       R() * Math.PI * 2,
+        flapSpeed:   3.5 + R() * 3.0,          // 3.5–6.5
+        flapAmp:     0.3 + R() * 0.2,           // 0.3–0.5
+        erraticPhase: R() * Math.PI * 2,
+      };
+
+      _petrelGroups.push(bird);
+      _petrelWingsL.push(leftWing);
+      _petrelWingsR.push(rightWing);
+      group.add(bird);
+    }
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1129,6 +1181,42 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     if (_tidePoolLight !== null) {
       _tidePoolLight.intensity = 0.05 + Math.sin(t * 1.1) * 0.03;
     }
+
+    // Storm petrel flock — dusk-only erratic swarm (C340)
+    const petrelsVisible = _currentTimeOfDay === 'dusk';
+    for (let i = 0; i < _petrelGroups.length; i++) {
+      const bird      = _petrelGroups[i]!;
+      const leftWing  = _petrelWingsL[i]!;
+      const rightWing = _petrelWingsR[i]!;
+      bird.visible = petrelsVisible;
+      if (!petrelsVisible) continue;
+
+      const ud = bird.userData as {
+        ox: number; oy: number; oz: number;
+        speed: number; phase: number;
+        flapSpeed: number; flapAmp: number;
+        erraticPhase: number;
+      };
+
+      // Swarm center drifts slowly
+      const pcx = Math.sin(t * 0.3) * 12;
+      const pcz = -30 + Math.sin(t * 0.2) * 8;
+
+      // Per-bird erratic position: orbital + chaotic secondary jitter
+      const bx = pcx + ud.ox + Math.cos(t * ud.speed + ud.phase) * 4 + Math.sin(t * 3.1 + ud.erraticPhase) * 1.5;
+      const by = (5 + ud.oy) + Math.sin(t * ud.speed * 0.7 + ud.phase) * 0.8;
+      const bz = pcz + ud.oz + Math.sin(t * ud.speed + ud.phase) * 3;
+      bird.position.set(bx, by, bz);
+
+      // Fast flap
+      leftWing.rotation.z  =  ud.flapAmp * Math.sin(t * ud.flapSpeed + ud.phase);
+      rightWing.rotation.z = -ud.flapAmp * Math.sin(t * ud.flapSpeed + ud.phase);
+
+      // Direction from velocity
+      const vx = -Math.sin(t * ud.speed + ud.phase) * ud.speed * 4 + Math.cos(t * 3.1 + ud.erraticPhase) * 3.1 * 1.5;
+      const vz =  Math.cos(t * ud.speed + ud.phase) * ud.speed * 3;
+      bird.rotation.y = Math.atan2(vx, vz);
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -1167,6 +1255,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _kelpStrands.length = 0;
     _kelpBulbs.length = 0;
     _causticPatches.length = 0;
+    _petrelGroups.length = 0;
+    _petrelWingsL.length = 0;
+    _petrelWingsR.length = 0;
     group.clear();
   };
 
