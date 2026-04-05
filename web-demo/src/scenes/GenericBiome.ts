@@ -442,6 +442,37 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     const sporeMat = new PointsMaterial({ color: 0x88ffaa, size: 0.08, transparent: true, opacity: 0.5, sizeAttenuation: true });
     landeSporeMesh = new Points(sporeGeo, sporeMat);
     group.add(landeSporeMesh);
+
+    // Distant dolmen — Neolithic megalithic monument (two uprights + capstone)
+    const dolmenStoneL = new Mesh(
+      new BoxGeometry(0.6, 3.5, 0.8),
+      new MeshBasicMaterial({ color: 0x2a3020 })
+    );
+    dolmenStoneL.position.set(-4, -2.25, -35);
+    group.add(dolmenStoneL);
+
+    const dolmenStoneR = new Mesh(
+      new BoxGeometry(0.6, 3, 0.8),
+      new MeshBasicMaterial({ color: 0x1e2818 })
+    );
+    dolmenStoneR.position.set(-1.5, -2.5, -35);
+    group.add(dolmenStoneR);
+
+    const dolmenCap = new Mesh(
+      new BoxGeometry(4.5, 0.5, 1.2),
+      new MeshBasicMaterial({ color: 0x252f1c })
+    );
+    dolmenCap.position.set(-2.75, -0.35, -35);
+    dolmenCap.rotation.z = 0.03;
+    group.add(dolmenCap);
+
+    // Small burial mound (half-sphere dome) behind the dolmen
+    const moundMesh = new Mesh(
+      new SphereGeometry(2.5, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2),
+      new MeshBasicMaterial({ color: 0x1a2010 })
+    );
+    moundMesh.position.set(-2.75, -3.2, -38);
+    group.add(moundMesh);
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
