@@ -8,6 +8,7 @@ import {
   ConeGeometry, CylinderGeometry, DirectionalLight,
   DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
   Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, SphereGeometry,
+  TorusGeometry,
 } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
 
@@ -605,6 +606,11 @@ const _petrelWingsL: Mesh[] = [];
 const _petrelWingsR: Mesh[] = [];
 let _currentTimeOfDay: 'day' | 'dawn' | 'dusk' | 'night' = 'dusk';
 
+// ── Harbor buoy chain — 5-buoy line marking safe harbor entrance (C353) ──
+const _buoyGroups: Group[] = [];
+const _buoyBeacons: Mesh[] = [];
+const _buoyLights: PointLight[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -971,6 +977,86 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Harbor buoy chain — 5 buoys marking safe harbor entrance (C353) ──────
+  // Line from (-15, 0, -10) to (0, 0, -18), 5 evenly spaced buoys.
+  {
+    const BUOY_COUNT   = 5;
+    const START_X      = -15;
+    const START_Z      = -10;
+    const END_X        =   0;
+    const END_Z        = -18;
+    const BUOY_COLOR   = 0x0a1a10;
+    const BEACON_COLOR = 0x33ff66;
+    const buoyMat   = new MeshBasicMaterial({ color: BUOY_COLOR });
+    const floatMat  = new MeshBasicMaterial({ color: BUOY_COLOR });
+    const chainMat  = new MeshBasicMaterial({ color: BUOY_COLOR, transparent: true, opacity: 0.5 });
+
+    // Compute buoy world positions (will be mutated each frame for bob)
+    const buoyBasePos: Array<{ x: number; y: number; z: number }> = [];
+
+    for (let i = 0; i < BUOY_COUNT; i++) {
+      const alpha = i / (BUOY_COUNT - 1);
+      const bx    = START_X + alpha * (END_X - START_X);
+      const bz    = START_Z + alpha * (END_Z - START_Z);
+      const by    = 0.05;
+      buoyBasePos.push({ x: bx, y: by, z: bz });
+
+      const buoyGroup = new Group();
+      buoyGroup.position.set(bx, by, bz);
+
+      // Body
+      const body = new Mesh(new CylinderGeometry(0.12, 0.15, 0.35, 6), buoyMat);
+      buoyGroup.add(body);
+
+      // Float disk at waterline (y = 0 relative to group)
+      const floatDisk = new Mesh(new TorusGeometry(0.18, 0.04, 5, 12), floatMat);
+      floatDisk.rotation.x = Math.PI / 2;
+      floatDisk.position.y = 0;
+      buoyGroup.add(floatDisk);
+
+      // Beacon sphere on top
+      const beaconMesh = new Mesh(
+        new SphereGeometry(0.06, 5, 3),
+        new MeshBasicMaterial({ color: BEACON_COLOR, transparent: true, opacity: 0.7 }),
+      );
+      beaconMesh.position.y = 0.35 / 2 + 0.06;
+      buoyGroup.add(beaconMesh);
+      _buoyBeacons.push(beaconMesh);
+
+      // Point light at beacon position
+      const beaconLight = new PointLight(BEACON_COLOR, 0.12, 2.5);
+      beaconLight.position.y = 0.35 / 2 + 0.06;
+      buoyGroup.add(beaconLight);
+      _buoyLights.push(beaconLight);
+
+      _buoyGroups.push(buoyGroup);
+      group.add(buoyGroup);
+    }
+
+    // Chain segments — 4 links connecting adjacent buoys
+    // Stored in userData so update() can reorient them each frame
+    for (let i = 0; i < BUOY_COUNT - 1; i++) {
+      const a = buoyBasePos[i]!;
+      const b = buoyBasePos[i + 1]!;
+      const dx    = b.x - a.x;
+      const dz    = b.z - a.z;
+      const dist  = Math.sqrt(dx * dx + dz * dz);
+      const midX  = (a.x + b.x) / 2;
+      const midZ  = (a.z + b.z) / 2;
+      const midY  = (a.y + b.y) / 2;
+      const chain = new Mesh(new CylinderGeometry(0.015, 0.015, dist, 4), chainMat);
+      chain.position.set(midX, midY, midZ);
+      // Orient along the XZ axis: rotate around Z axis by -90° then yaw to match direction
+      chain.rotation.x = Math.PI / 2;
+      chain.rotation.z = Math.atan2(dx, dz);
+      chain.userData['buoyA'] = i;
+      chain.userData['buoyB'] = i + 1;
+      group.add(chain);
+      // Store reference on buoyGroup[i] userData for update
+      _buoyGroups[i]!.userData['chainOut'] = chain;
+    }
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1217,6 +1303,27 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       const vz =  Math.cos(t * ud.speed + ud.phase) * ud.speed * 3;
       bird.rotation.y = Math.atan2(vx, vz);
     }
+
+    // Harbor buoy bob + beacon flash + chain stretch (C353)
+    for (let i = 0; i < _buoyGroups.length; i++) {
+      const buoy        = _buoyGroups[i]!;
+      const beaconLight = _buoyLights[i]!;
+      const bobY        = 0.05 + Math.sin(t * 0.8 + i * 0.6) * 0.08;
+      buoy.position.y   = bobY;
+
+      // Beacon intensity flash
+      beaconLight.intensity = 0.08 + Math.sin(t * 2.5 + i * 1.2) * 0.06;
+
+      // Update outgoing chain midpoint Y to follow buoy bob
+      const chainOut = buoy.userData['chainOut'] as Mesh | undefined;
+      if (chainOut !== undefined) {
+        const nextBuoy = _buoyGroups[i + 1];
+        if (nextBuoy !== undefined) {
+          const midY = (bobY + nextBuoy.position.y) / 2;
+          chainOut.position.y = midY;
+        }
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -1258,6 +1365,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _petrelGroups.length = 0;
     _petrelWingsL.length = 0;
     _petrelWingsR.length = 0;
+    _buoyGroups.length   = 0;
+    _buoyBeacons.length  = 0;
+    _buoyLights.length   = 0;
     group.clear();
   };
 
