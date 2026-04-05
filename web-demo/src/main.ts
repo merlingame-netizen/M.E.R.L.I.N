@@ -9,7 +9,7 @@ import { CameraRail } from './engine/CameraRail';
 // Static import was loading 442 lines of Three.js scene code at boot, inflating the initial
 // bundle. Dynamic import defers it to first run, reducing cold-start gzip by ~5KB.
 import { store } from './game/Store';
-import { getMultiplier, getMultiplierLabel, ANAM_REWARDS, ANAM_DEATH_FLOOR, FACTIONS, type FactionId } from './game/Constants';
+import { getMultiplier, getMultiplierLabel, ANAM_REWARDS, ANAM_DEATH_FLOOR, FACTIONS, POWER_MILESTONES, type FactionId } from './game/Constants';
 import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardSystem';
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
@@ -224,14 +224,14 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
     overlay.appendChild(grid);
 
     const BIOME_ENTRIES: Array<[string, string]> = [
-      ['cotes_sauvages',    'Côtes Sauvages'],
       ['foret_broceliande', 'Forêt de Brocéliande'],
-      ['marais_korrigans',  'Marais des Korrigans'],
+      ['cotes_sauvages',    'Côtes Sauvages'],
       ['landes_bruyere',    'Landes de Bruyère'],
+      ['marais_korrigans',  'Marais des Korrigans'],
+      ['villages_celtes',   'Villages Celtes'],
       ['cercles_pierres',   'Cercles de Pierres'],
-      ['monts_brumeux',     'Monts Brumeux'],
-      ['plaine_druides',    'Plaine des Druides'],
-      ['vallee_anciens',    'Vallée des Anciens'],
+      ['collines_dolmens',  'Collines aux Dolmens'],
+      ['iles_mystiques',    'Îles Mystiques'],
     ];
 
     // C205: inject focus-glow CSS once (guard prevents duplicate injection)
@@ -1272,6 +1272,16 @@ async function gameLoop(
     // Announce drain escalation once when threshold is first crossed
     if (_cardsAfterIncrement === 15) showHudToast('Drain intensifie — -2 PV/carte');
     if (_cardsAfterIncrement === 25) showHudToast('Drain critique — -3 PV/carte');
+    // Power milestones (cards 5/10/15/20) — apply heal or show bonus toast
+    const _milestone = POWER_MILESTONES[_cardsAfterIncrement];
+    if (_milestone) {
+      if (_milestone.type === 'HEAL') {
+        state().healLife(_milestone.value);
+        showHudToast(`${_milestone.label} — ${_milestone.desc}`);
+      } else {
+        showHudToast(`${_milestone.label} — ${_milestone.desc}`);
+      }
+    }
     // FIX2: drain toast — brief CRT notification so the player understands the life drop
     {
       const drainToast = document.createElement('div');
@@ -1562,16 +1572,16 @@ function showFallbackToast(): void {
 
 const BIOME_TOAST_ID = 'biome-toast';
 
-/** Biome display labels (French, shown in toast). */
+/** Biome display labels (French, shown in toast). Mirrors BIOMES keys from Constants.ts. */
 const BIOME_LABELS: Readonly<Record<string, string>> = {
-  cotes_sauvages: 'Cotes Sauvages',
   foret_broceliande: 'Foret de Broceliande',
-  marais_korrigans: 'Marais des Korrigans',
-  landes_bruyere: 'Landes de Bruyere',
-  cercles_pierres: 'Cercles de Pierres',
-  monts_brumeux: 'Monts Brumeux',
-  plaine_druides: 'Plaine des Druides',
-  vallee_anciens: 'Vallee des Anciens',
+  landes_bruyere:    'Landes de Bruyere',
+  cotes_sauvages:    'Cotes Sauvages',
+  villages_celtes:   'Villages Celtes',
+  cercles_pierres:   'Cercles de Pierres',
+  marais_korrigans:  'Marais des Korrigans',
+  collines_dolmens:  'Collines aux Dolmens',
+  iles_mystiques:    'Iles Mystiques',
 } as const;
 
 /**
