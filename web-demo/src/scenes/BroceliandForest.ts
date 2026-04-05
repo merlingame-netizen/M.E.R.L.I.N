@@ -9,7 +9,7 @@ import {
   CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry,
   DoubleSide, Float32BufferAttribute, FogExp2, FrontSide, Group, HemisphereLight, Material,
   Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Points, PointLight,
-  PointsMaterial, ShaderMaterial, SphereGeometry, TorusGeometry, Vector3,
+  PointsMaterial, RingGeometry, ShaderMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
 
 import type { BiomeSceneResult } from './CoastBiome';
@@ -898,6 +898,12 @@ let springVisionTimer416 = 0;
 let springVisionDur416 = 8 + Math.random() * 10;
 let springWaterMesh416: Mesh | null = null;
 let springGlowLight416: PointLight | null = null;
+
+// ── Cycle-421: standing Celtic cross ──────────────────────────────────────────
+let celticCrossGroup421: Group | null = null;
+let celticCrossT421 = 0;
+const celticCrossGlows421: Mesh[] = [];
+let celticCrossLight421: PointLight | null = null;
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
@@ -1843,6 +1849,77 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(springGroup416);
   }
 
+  // ── Cycle-421: standing Celtic cross at (0, 0, -28) ──────────────────────────
+  {
+    celticCrossGroup421 = new Group();
+    const stoneMat421 = new MeshStandardMaterial({ color: 0x0a1a10, emissive: new Color(0x040a06), roughness: 0.95, metalness: 0.0 });
+
+    // Base plinth
+    const plinthMesh = new Mesh(new BoxGeometry(1.2, 0.4, 1.2), stoneMat421);
+    plinthMesh.position.set(0, 0.2, 0);
+    celticCrossGroup421.add(plinthMesh);
+
+    // Vertical shaft
+    const shaftMesh = new Mesh(new BoxGeometry(0.28, 3.8, 0.22), stoneMat421);
+    shaftMesh.position.set(0, 2.3, 0);
+    celticCrossGroup421.add(shaftMesh);
+
+    // Horizontal arm
+    const armMesh = new Mesh(new BoxGeometry(1.5, 0.26, 0.22), stoneMat421);
+    armMesh.position.set(0, 3.4, 0);
+    celticCrossGroup421.add(armMesh);
+
+    // Ring (Celtic ring connector)
+    const ringMesh = new Mesh(new TorusGeometry(0.38, 0.08, 6, 16), stoneMat421);
+    ringMesh.position.set(0, 3.4, 0);
+    ringMesh.rotation.x = Math.PI / 2;
+    celticCrossGroup421.add(ringMesh);
+
+    // Cross top
+    const topMesh = new Mesh(new BoxGeometry(0.28, 0.5, 0.22), stoneMat421);
+    topMesh.position.set(0, 4.35, 0);
+    celticCrossGroup421.add(topMesh);
+
+    // Knotwork glow overlays — 4 flat planes on shaft face
+    const glowPositions421 = [0.8, 1.5, 2.2, 2.9];
+    glowPositions421.forEach(y => {
+      const g = new Mesh(
+        new PlaneGeometry(0.22, 0.35),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.2 }),
+      );
+      g.position.set(0, y, 0.12);
+      celticCrossGlows421.push(g);
+      celticCrossGroup421!.add(g);
+    });
+
+    // Ring glow: RingGeometry on ring face
+    const ringGlow = new Mesh(
+      new RingGeometry(0.22, 0.45, 16),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.15 }),
+    );
+    ringGlow.position.set(0, 3.4, 0.12);
+    celticCrossGlows421.push(ringGlow);
+    celticCrossGroup421.add(ringGlow);
+
+    // Moss patches at base
+    const mossMat421 = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.6 });
+    const mossPositions421: [number, number, number][] = [[-0.3, 0.41, 0.2], [0.25, 0.41, -0.15], [-0.1, 0.41, -0.3]];
+    mossPositions421.forEach(([mx, my, mz]) => {
+      const moss = new Mesh(new PlaneGeometry(0.35, 0.25), mossMat421);
+      moss.position.set(mx, my, mz);
+      moss.rotation.x = -Math.PI / 2;
+      celticCrossGroup421!.add(moss);
+    });
+
+    // Ambient glow light
+    celticCrossLight421 = new PointLight(0x33ff66, 0.1, 4.5);
+    celticCrossLight421.position.set(0, 2.5, 0.5);
+    celticCrossGroup421.add(celticCrossLight421);
+
+    celticCrossGroup421.position.set(0, 0, -28);
+    group.add(celticCrossGroup421);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2252,6 +2329,18 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       }
       springGlowLight416.intensity = baseIntensity;
     }
+
+    // Cycle-421: Celtic cross knotwork glow pulse
+    if (celticCrossGroup421) {
+      celticCrossT421 += dt;
+      celticCrossGlows421.forEach((glyph, i) => {
+        const mat = glyph.material as MeshBasicMaterial;
+        mat.opacity = 0.15 + Math.sin(celticCrossT421 * 1.1 + i * 0.5) * 0.1;
+      });
+      if (celticCrossLight421) {
+        celticCrossLight421.intensity = 0.08 + Math.sin(celticCrossT421 * 0.7) * 0.04;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -2448,6 +2537,20 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       springWaterMesh416 = null;
       springGlowLight416 = null;
       springGroup416 = null;
+    }
+    // Cycle-421: Celtic cross cleanup
+    if (celticCrossGroup421) {
+      celticCrossGroup421.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      celticCrossGlows421.length = 0;
+      celticCrossLight421 = null;
+      celticCrossGroup421 = null;
     }
   };
 
