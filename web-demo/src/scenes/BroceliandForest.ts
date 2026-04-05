@@ -1032,6 +1032,15 @@ let wispBeckonTimer497: number = 20 + Math.random() * 10;
 let wispBeckonActive497: boolean = false;
 let wispBeckonT497: number = 0;
 
+// ── Cycle-502: ancient burial cairn with rising ancestral spirits ──────────────
+let cairnGroup502: Group | null = null;
+const cairnSpirits502: Group[] = [];
+const cairnSpiritStates502: ('hidden' | 'rising' | 'hovering' | 'fading')[] = [];
+const cairnSpiritTs502: number[] = [];
+const cairnSpiritTimers502: number[] = [];
+let t502: number = 0;
+let cairnLight502: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3144,6 +3153,132 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(wispGroup497);
   }
 
+  // ── Cycle-502: ancient burial cairn with rising ancestral spirits ─────────────
+  {
+    cairnGroup502 = new Group();
+    const CAIRN_X = 7;
+    const CAIRN_Z = -22;
+
+    // 12 irregular stones forming a rough dome mound
+    const stoneDefs: [number, number, number, number, number, number][] = [
+      [-0.35, 0,  0.30, 0.30, 0.22, 0.30],
+      [ 0.30, 0,  0.30, 0.28, 0.20, 0.25],
+      [-0.40, 0, -0.20, 0.35, 0.25, 0.28],
+      [ 0.35, 0, -0.20, 0.32, 0.18, 0.32],
+      [ 0.00, 0,  0.45, 0.25, 0.22, 0.22],
+      [ 0.00, 0, -0.45, 0.28, 0.20, 0.28],
+      [-0.20, 0,  0.00, 0.38, 0.28, 0.32],
+      [ 0.20, 0,  0.00, 0.36, 0.26, 0.30],
+      [-0.25, 0,  0.20, 0.22, 0.17, 0.24],
+      [ 0.25, 0,  0.20, 0.24, 0.18, 0.26],
+      [-0.15, 0, -0.30, 0.26, 0.15, 0.22],
+      [ 0.15, 0, -0.30, 0.23, 0.16, 0.24],
+    ];
+    const stoneMat502 = new MeshStandardMaterial({ color: 0x060e06, roughness: 0.95, metalness: 0.0 });
+    for (let si = 0; si < stoneDefs.length; si++) {
+      const [ox, , oz, sw, sh, sd] = stoneDefs[si]!;
+      const geo = new BoxGeometry(sw, sh, sd);
+      const mesh = new Mesh(geo, stoneMat502);
+      const yOff = (R() - 0.5) * 0.06;
+      mesh.position.set(CAIRN_X + ox, sh / 2 + yOff, CAIRN_Z + oz);
+      mesh.rotation.y = R() * Math.PI * 2;
+      cairnGroup502.add(mesh);
+    }
+
+    // Top capstone
+    const capGeo = new BoxGeometry(0.5, 0.12, 0.45);
+    const capMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.95, metalness: 0.0 });
+    const capstone = new Mesh(capGeo, capMat);
+    capstone.position.set(CAIRN_X, 0.32, CAIRN_Z);
+    cairnGroup502.add(capstone);
+
+    // Moss wisps — 3 DoubleSide planes draped on stones
+    const mossPositions: [number, number, number][] = [
+      [CAIRN_X - 0.3, 0.15, CAIRN_Z + 0.2],
+      [CAIRN_X + 0.25, 0.12, CAIRN_Z - 0.15],
+      [CAIRN_X + 0.0,  0.18, CAIRN_Z - 0.38],
+    ];
+    const mossMat502 = new MeshStandardMaterial({
+      color: 0x0a1a0a,
+      emissive: new Color(0x1a3322),
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.6,
+      side: DoubleSide,
+      depthWrite: false,
+    });
+    for (const [mx, my, mz] of mossPositions) {
+      const mossGeo = new PlaneGeometry(0.2, 0.15);
+      const moss = new Mesh(mossGeo, mossMat502);
+      moss.position.set(mx, my, mz);
+      moss.rotation.x = -Math.PI / 2 + (R() - 0.5) * 0.5;
+      moss.rotation.z = R() * Math.PI;
+      cairnGroup502.add(moss);
+    }
+
+    // Faint ambient PointLight at cairn top — always on
+    cairnLight502 = new PointLight(0x33ff66, 0.2, 3.0);
+    cairnLight502.position.set(CAIRN_X, 0.5, CAIRN_Z);
+    cairnGroup502.add(cairnLight502);
+
+    // Build 3 ancestor spirits (elongated head + torso + 2 arm planes)
+    const spiritMat = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      emissive: new Color(0x33ff66),
+      emissiveIntensity: 0.9,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false,
+    });
+
+    for (let si = 0; si < 3; si++) {
+      const spiritGroup = new Group();
+
+      // Head — elongated sphere
+      const headGeo = new SphereGeometry(0.1, 6, 8);
+      const headMesh = new Mesh(headGeo, spiritMat.clone());
+      headMesh.scale.y = 1.4;
+      headMesh.position.set(0, 0.35, 0);
+      spiritGroup.add(headMesh);
+
+      // Torso — tapered cylinder
+      const torsoGeo = new CylinderGeometry(0.08, 0.12, 0.5, 6);
+      const torsoMesh = new Mesh(torsoGeo, spiritMat.clone());
+      torsoMesh.position.set(0, 0, 0);
+      spiritGroup.add(torsoMesh);
+
+      // Left arm — thin plane
+      const armGeoL = new PlaneGeometry(0.22, 0.06);
+      const armMatL = (spiritMat.clone()) as MeshStandardMaterial;
+      const armL = new Mesh(armGeoL, armMatL);
+      armL.position.set(-0.16, 0.05, 0);
+      armL.rotation.z = 0.4;
+      armL.material.side = DoubleSide;
+      spiritGroup.add(armL);
+
+      // Right arm — thin plane
+      const armGeoR = new PlaneGeometry(0.22, 0.06);
+      const armMatR = (spiritMat.clone()) as MeshStandardMaterial;
+      const armR = new Mesh(armGeoR, armMatR);
+      armR.position.set(0.16, 0.05, 0);
+      armR.rotation.z = -0.4;
+      armR.material.side = DoubleSide;
+      spiritGroup.add(armR);
+
+      // Hidden by default at cairn top position
+      spiritGroup.position.set(CAIRN_X, 0.3, CAIRN_Z);
+      spiritGroup.visible = false;
+      cairnGroup502.add(spiritGroup);
+      cairnSpirits502.push(spiritGroup);
+      cairnSpiritStates502.push('hidden');
+      cairnSpiritTs502.push(0);
+      // Stagger initial timers: spirit 0=20-30s, 1=27-37s, 2=34-44s
+      cairnSpiritTimers502.push(20 + si * 7 + R() * 10);
+    }
+
+    group.add(cairnGroup502);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -4047,6 +4182,92 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Cycle-502: burial cairn ancestral spirit rise cycle
+    if (cairnGroup502 && cairnSpirits502.length === 3) {
+      t502 += dt;
+      const CAIRN_X = 7;
+      const CAIRN_Z = -22;
+      const RISE_DUR = 2.0;
+      const HOVER_DUR = 1.0;
+      const FADE_DUR = 2.0;
+
+      for (let si = 0; si < 3; si++) {
+        const spirit = cairnSpirits502[si]!;
+        const state = cairnSpiritStates502[si]!;
+
+        if (state === 'hidden') {
+          cairnSpiritTimers502[si]! -= dt;
+          if (cairnSpiritTimers502[si]! <= 0) {
+            // Start rising
+            cairnSpiritStates502[si] = 'rising';
+            cairnSpiritTs502[si] = 0;
+            spirit.position.set(CAIRN_X, 0.3, CAIRN_Z);
+            spirit.visible = true;
+            // Set all part opacities to 0
+            spirit.traverse((child) => {
+              if (child instanceof Mesh) {
+                (child.material as MeshStandardMaterial).opacity = 0;
+              }
+            });
+            window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+          }
+        } else if (state === 'rising') {
+          cairnSpiritTs502[si]! += dt;
+          const prog = Math.min(cairnSpiritTs502[si]! / RISE_DUR, 1.0);
+          const startY = 0.3;
+          const sway = 0.1 * Math.sin(t502 * 2 + si);
+          spirit.position.set(
+            CAIRN_X + sway,
+            startY + 1.5 * prog,
+            CAIRN_Z,
+          );
+          const opacity = 0.7 * prog;
+          spirit.traverse((child) => {
+            if (child instanceof Mesh) {
+              (child.material as MeshStandardMaterial).opacity = opacity;
+            }
+          });
+          spirit.rotation.y += dt * 0.3;
+          if (prog >= 1.0) {
+            cairnSpiritStates502[si] = 'hovering';
+            cairnSpiritTs502[si] = 0;
+          }
+        } else if (state === 'hovering') {
+          cairnSpiritTs502[si]! += dt;
+          const sway = 0.1 * Math.sin(t502 * 2 + si);
+          spirit.position.set(CAIRN_X + sway, 0.3 + 1.5, CAIRN_Z);
+          spirit.rotation.y += dt * 0.5;
+          if (cairnSpiritTs502[si]! >= HOVER_DUR) {
+            cairnSpiritStates502[si] = 'fading';
+            cairnSpiritTs502[si] = 0;
+          }
+        } else if (state === 'fading') {
+          cairnSpiritTs502[si]! += dt;
+          const prog = Math.min(cairnSpiritTs502[si]! / FADE_DUR, 1.0);
+          const startY = 0.3 + 1.5;
+          const sway = 0.1 * Math.sin(t502 * 2 + si);
+          spirit.position.set(
+            CAIRN_X + sway,
+            startY + 1.0 * prog,
+            CAIRN_Z,
+          );
+          const opacity = 0.7 * (1.0 - prog);
+          spirit.traverse((child) => {
+            if (child instanceof Mesh) {
+              (child.material as MeshStandardMaterial).opacity = opacity;
+            }
+          });
+          spirit.rotation.y += dt * 0.3;
+          if (prog >= 1.0) {
+            spirit.visible = false;
+            cairnSpiritStates502[si] = 'hidden';
+            cairnSpiritTimers502[si] = 20 + R() * 10;
+            cairnSpiritTs502[si] = 0;
+          }
+        }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -4529,6 +4750,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     wispUnits497.length = 0;
     wispProgress497.length = 0;
     wispBeckonActive497 = false;
+
+    // Cycle-502: burial cairn cleanup
+    if (cairnGroup502) {
+      group.remove(cairnGroup502);
+      cairnGroup502.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      cairnGroup502 = null;
+    }
+    if (cairnLight502) { cairnLight502.dispose(); cairnLight502 = null; }
+    cairnSpirits502.length = 0;
+    cairnSpiritStates502.length = 0;
+    cairnSpiritTs502.length = 0;
+    cairnSpiritTimers502.length = 0;
+    t502 = 0;
   };
 
   return { group, update, dispose };
