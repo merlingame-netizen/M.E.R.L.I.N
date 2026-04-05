@@ -1267,6 +1267,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _bookmarkMesh: Mesh | null = null;
   let _bookmarkTime = 0;
 
+  // C335: alchemy floor symbols — 4 etched glyphs with sequential glow
+  const _alchemySymbolMeshes: Mesh[] = [];
+  const _alchemyLights: PointLight[] = [];
+  let _alchemyTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1322,6 +1327,104 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(tbGroup);
     _bookshelfGroup = tbGroup;
     _bookmarkMesh = tbBookmark;
+  }
+
+  // C335: alchemy floor symbols — 4 etched glyphs on the flagstone floor (y=-4.85)
+  // Colors: 0x0a2a12 (dim), glow flares to 0x33ff66 (bright) at peak
+  {
+    const FLOOR_Y = -4.85;
+    const DIM_COLOR = 0x0a2a12;
+
+    // Helper: create a MeshBasicMaterial for an alchemy symbol mesh
+    const alchMat = (opacity: number): MeshBasicMaterial =>
+      new MeshBasicMaterial({ color: DIM_COLOR, transparent: true, opacity, depthWrite: false });
+
+    // ── Symbol 1: Circle — torus flat on floor at (-2, -4.85, -6) ────────────
+    {
+      const geo = new TorusGeometry(0.4, 0.03, 6, 24);
+      const mesh = new Mesh(geo, alchMat(0.20));
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(-2, FLOOR_Y + 0.01, -6);
+      scene.add(mesh);
+      _alchemySymbolMeshes.push(mesh);
+      const light = new PointLight(0x33ff66, 0.0, 3);
+      light.position.set(-2, FLOOR_Y + 0.3, -6);
+      scene.add(light);
+      _alchemyLights.push(light);
+    }
+
+    // ── Symbol 2: Triangle — 3 BoxGeometry bars arranged as triangle sides ───
+    {
+      const barGeo = new BoxGeometry(0.7, 0.03, 0.04);
+      const mat = alchMat(0.18);
+      const PX = 2.5, PZ = -9;
+      // Bottom bar — horizontal
+      const b0 = new Mesh(barGeo, mat);
+      b0.position.set(PX, FLOOR_Y + 0.01, PZ + 0.2);
+      scene.add(b0);
+      _alchemySymbolMeshes.push(b0);
+      // Left bar — rotated 60°
+      const b1 = new Mesh(barGeo, mat.clone());
+      b1.position.set(PX - 0.175, FLOOR_Y + 0.01, PZ - 0.1);
+      b1.rotation.y = Math.PI / 3;
+      scene.add(b1);
+      _alchemySymbolMeshes.push(b1);
+      // Right bar — rotated -60°
+      const b2 = new Mesh(barGeo, mat.clone());
+      b2.position.set(PX + 0.175, FLOOR_Y + 0.01, PZ - 0.1);
+      b2.rotation.y = -Math.PI / 3;
+      scene.add(b2);
+      _alchemySymbolMeshes.push(b2);
+      const light = new PointLight(0x33ff66, 0.0, 3);
+      light.position.set(PX, FLOOR_Y + 0.3, PZ);
+      scene.add(light);
+      _alchemyLights.push(light);
+    }
+
+    // ── Symbol 3: Cross within circle — torus + 2 crossing bars ─────────────
+    {
+      const PX = -4, PZ = -9.5;
+      const mat = alchMat(0.15);
+      const torus = new Mesh(new TorusGeometry(0.5, 0.025, 5, 24), mat);
+      torus.rotation.x = -Math.PI / 2;
+      torus.position.set(PX, FLOOR_Y + 0.01, PZ);
+      scene.add(torus);
+      _alchemySymbolMeshes.push(torus);
+      // Horizontal bar
+      const barH = new Mesh(new BoxGeometry(0.9, 0.02, 0.03), mat.clone());
+      barH.position.set(PX, FLOOR_Y + 0.012, PZ);
+      scene.add(barH);
+      _alchemySymbolMeshes.push(barH);
+      // Vertical bar (rotated 90° around Y)
+      const barV = new Mesh(new BoxGeometry(0.9, 0.02, 0.03), mat.clone());
+      barV.rotation.y = Math.PI / 2;
+      barV.position.set(PX, FLOOR_Y + 0.014, PZ);
+      scene.add(barV);
+      _alchemySymbolMeshes.push(barV);
+      const light = new PointLight(0x33ff66, 0.0, 3);
+      light.position.set(PX, FLOOR_Y + 0.3, PZ);
+      scene.add(light);
+      _alchemyLights.push(light);
+    }
+
+    // ── Symbol 4: Spiral — outer + inner torus concentric ────────────────────
+    {
+      const PX = 4, PZ = -7;
+      const outerMesh = new Mesh(new TorusGeometry(0.3, 0.02, 5, 16), alchMat(0.16));
+      outerMesh.rotation.x = -Math.PI / 2;
+      outerMesh.position.set(PX, FLOOR_Y + 0.01, PZ);
+      scene.add(outerMesh);
+      _alchemySymbolMeshes.push(outerMesh);
+      const innerMesh = new Mesh(new TorusGeometry(0.15, 0.02, 5, 12), alchMat(0.16));
+      innerMesh.rotation.x = -Math.PI / 2;
+      innerMesh.position.set(PX, FLOOR_Y + 0.012, PZ);
+      scene.add(innerMesh);
+      _alchemySymbolMeshes.push(innerMesh);
+      const light = new PointLight(0x33ff66, 0.0, 3);
+      light.position.set(PX, FLOOR_Y + 0.3, PZ);
+      scene.add(light);
+      _alchemyLights.push(light);
+    }
   }
 
   // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
@@ -2158,6 +2261,31 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       (_bookmarkMesh.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(_bookmarkTime * 0.8) * 0.3;
     }
 
+    // C335: alchemy floor symbols — sequential glow pulse (4 symbols, 3s offset each)
+    if (!lowFpsMode && _alchemySymbolMeshes.length > 0) {
+      _alchemyTime += dt;
+      const PEAK_OFFSETS = [0, 3, 6, 9]; // seconds — one symbol peaks every 3s
+      // Mesh index ranges per symbol: sym0=[0], sym1=[1,2,3], sym2=[4,5,6], sym3=[7,8]
+      const SYM_MESH_RANGES: Array<[number, number]> = [[0, 0], [1, 3], [4, 6], [7, 8]];
+      const BASE_OPACITIES = [0.20, 0.18, 0.15, 0.16];
+      for (let s = 0; s < 4; s++) {
+        const offset = PEAK_OFFSETS[s]!;
+        const sinVal = Math.sin((_alchemyTime - offset) * 0.5);
+        const opacity = BASE_OPACITIES[s]! + sinVal * 0.08;
+        const [rStart, rEnd] = SYM_MESH_RANGES[s]!;
+        for (let mi = rStart; mi <= rEnd; mi++) {
+          const m = _alchemySymbolMeshes[mi];
+          if (m) (m.material as MeshBasicMaterial).opacity = Math.max(0.04, Math.min(1, opacity));
+        }
+        // Flare point light toward 0.15 at peak (sinVal≈1), fade to 0 at trough
+        const light = _alchemyLights[s];
+        if (light) {
+          const lightTarget = Math.max(0, sinVal) * 0.15;
+          light.intensity += (lightTarget - light.intensity) * Math.min(1, dt * 4);
+        }
+      }
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2318,6 +2446,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C328: clear tome bookshelf refs (geometries/materials disposed by scene.traverse above)
     _bookshelfGroup = null;
     _bookmarkMesh = null;
+    // C335: clear alchemy symbol refs (geometries/materials disposed by scene.traverse above)
+    _alchemySymbolMeshes.length = 0;
+    _alchemyLights.length = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
