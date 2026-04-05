@@ -1286,6 +1286,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _herbBundles355: Group[] = [];
   const _herbLights355: PointLight[] = [];
 
+  // C376: wind chime rods — 5 metallic tubes hanging from ceiling, pendulum physics + chime flash
+  const _chimeRods376: Mesh[] = [];
+  const _chimeLights376: PointLight[] = [];
+  const _chimeAngles376: number[] = [];
+  const _chimeVelocities376: number[] = [];
+
   // C361: enchanted mirror portal — oval frame + ripple surface + vision pulse
   let mirrorGroup361: Group | null = null;
   let mirrorSurface361: Mesh | null = null;
@@ -1637,6 +1643,35 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Shared mats not added to scene — dispose handled via traverse in dispose()
     stemMat.dispose();
     clusterMat.dispose();
+  }
+
+  // C376: wind chime rods — 5 thin metallic tubes hanging from ceiling at (-1.5, 3.2, -2.5)
+  {
+    const ROD_LENGTHS = [0.5, 0.65, 0.45, 0.7, 0.55];
+    const ROD_OFFSETS = [-0.18, -0.09, 0, 0.09, 0.18];
+    const PIVOT_X = -1.5;
+    const PIVOT_Y = 3.2;
+    const PIVOT_Z = -2.5;
+    for (let i = 0; i < ROD_LENGTHS.length; i++) {
+      const len = ROD_LENGTHS[i]!;
+      const xOff = ROD_OFFSETS[i]!;
+      const chimeMat = new MeshStandardMaterial({
+        color: 0x0d2a0d, roughness: 0.2, metalness: 0.7, flatShading: false,
+      });
+      chimeMat.emissive.setHex(0x0d4420);
+      chimeMat.emissiveIntensity = 0.05;
+      const rodGeo = new CylinderGeometry(0.012, 0.012, len, 5);
+      const rod = new Mesh(rodGeo, chimeMat);
+      rod.position.set(PIVOT_X + xOff, PIVOT_Y - len / 2, PIVOT_Z);
+      scene.add(rod);
+      _chimeRods376.push(rod);
+      _chimeAngles376.push(Math.random() * 0.2 - 0.1);
+      _chimeVelocities376.push((Math.random() - 0.5) * 0.3);
+      const light = new PointLight(0x33ff66, 0.0, 1.5);
+      light.position.set(PIVOT_X + xOff, PIVOT_Y - len, PIVOT_Z);
+      scene.add(light);
+      _chimeLights376.push(light);
+    }
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -2568,6 +2603,45 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C376: wind chime pendulum physics + chime flash (cosmetic, gate under !lowFpsMode)
+    if (!lowFpsMode) {
+      const ROD_LENGTHS_376 = [0.5, 0.65, 0.45, 0.7, 0.55];
+      const ROD_OFFSETS_376 = [-0.18, -0.09, 0, 0.09, 0.18];
+      const GRAVITY_376 = 2.5;
+      const DAMPING_376 = 0.995;
+      const PIVOT_X_376 = -1.5;
+      const PIVOT_Y_376 = 3.2;
+      const PIVOT_Z_376 = -2.5;
+      _chimeRods376.forEach((rod, i) => {
+        const len = ROD_LENGTHS_376[i]!;
+        const xOff = ROD_OFFSETS_376[i]!;
+        const prevAngle = _chimeAngles376[i]!;
+        // Pendulum physics
+        const accel = -GRAVITY_376 * Math.sin(_chimeAngles376[i]!) / len;
+        _chimeVelocities376[i] = (_chimeVelocities376[i]! + accel * dt) * DAMPING_376;
+        // Random nudge occasionally
+        if (Math.random() < dt * 0.15) _chimeVelocities376[i] = _chimeVelocities376[i]! + (Math.random() - 0.5) * 0.4;
+        _chimeAngles376[i] = _chimeAngles376[i]! + _chimeVelocities376[i]! * dt;
+        // Update rod position — pivot at top, rod hangs down, swings in XZ plane
+        rod.position.x = PIVOT_X_376 + xOff + Math.sin(_chimeAngles376[i]!) * len / 2;
+        rod.position.y = PIVOT_Y_376 - Math.cos(_chimeAngles376[i]!) * len / 2;
+        rod.rotation.z = _chimeAngles376[i]!;
+        const light = _chimeLights376[i]!;
+        light.position.x = PIVOT_X_376 + xOff + Math.sin(_chimeAngles376[i]!) * len;
+        light.position.y = PIVOT_Y_376 - Math.cos(_chimeAngles376[i]!) * len;
+        // Chime flash at swing reversal (velocity sign change near extremes)
+        const crossedZero = prevAngle * _chimeAngles376[i]! < 0 && Math.abs(_chimeAngles376[i]!) > 0.05;
+        const mat = rod.material as MeshStandardMaterial;
+        if (crossedZero) {
+          mat.emissiveIntensity = 0.25;
+          light.intensity = 0.3;
+        } else {
+          mat.emissiveIntensity = Math.max(0.05, mat.emissiveIntensity * 0.85);
+          light.intensity = Math.max(0.0, light.intensity * 0.85);
+        }
+      });
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -2776,6 +2850,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C355: clear herb bundle refs (geometries/materials disposed by scene.traverse above)
     _herbBundles355.length = 0;
     _herbLights355.length = 0;
+    // C376: remove chime rods and lights explicitly (not under a shared Group)
+    _chimeRods376.forEach(r => { scene.remove(r); r.geometry.dispose(); (r.material as MeshStandardMaterial).dispose(); });
+    _chimeRods376.length = 0;
+    _chimeLights376.forEach(l => { scene.remove(l); });
+    _chimeLights376.length = 0;
+    _chimeAngles376.length = 0;
+    _chimeVelocities376.length = 0;
     // C361: clear mirror portal refs (geometries/materials disposed by scene.traverse above)
     mirrorGroup361 = null;
     mirrorSurface361 = null;
