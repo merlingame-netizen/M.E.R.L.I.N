@@ -427,6 +427,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _moorCircleLight: PointLight | null = null;
   let _watchtowerGroup: Group | null = null;
   let _watchtowerLight: PointLight | null = null;
+  const _spiritBeams: Mesh[] = [];
+  const _spiritLights: PointLight[] = [];
+  let _spiritBeamTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -1113,6 +1116,32 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     group.add(gateGroup);
     _gateGroup = gateGroup;
+
+    // Vertical spirit pillar beams — rising from prominent stelae tops (C351)
+    const spiritBeamPositions: Array<[number, number, number]> = [
+      [-4, 2.0, -28],
+      [ 3, 2.5, -30],
+      [-1, 3.0, -32],
+    ];
+    for (const [bx, by, bz] of spiritBeamPositions) {
+      const beamGeo = new CylinderGeometry(0.0, 0.25, 12, 6, 1, true);
+      const beamMat = new MeshBasicMaterial({
+        color: 0x0a3a1a,
+        transparent: true,
+        opacity: 0.0,
+        side: DoubleSide,
+        depthWrite: false,
+      });
+      const beam = new Mesh(beamGeo, beamMat);
+      beam.position.set(bx, by + 6, bz); // centre of 12-unit column
+      group.add(beam);
+      _spiritBeams.push(beam);
+
+      const pLight = new PointLight(0x33ff66, 0.0, 8);
+      pLight.position.set(bx, by, bz);
+      group.add(pLight);
+      _spiritLights.push(pLight);
+    }
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -2093,6 +2122,25 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const t = _auroraTime;
       _gateLight.intensity = 0.08 + Math.sin(t * 0.4) * 0.04;
     }
+    // Vallee Anciens — spirit pillar beams sequential activation (C351)
+    if (_spiritBeams.length > 0) {
+      _spiritBeamTime += dt;
+      const t = _spiritBeamTime;
+      const cycle = t % 18;
+      _spiritBeams.forEach((beam, i) => {
+        const mat = beam.material as MeshBasicMaterial;
+        const peakStart = i * 6;
+        const peakEnd   = peakStart + 4;
+        if (cycle >= peakStart && cycle < peakEnd) {
+          mat.opacity = 0.10 + Math.sin(t * 2.0) * 0.04;
+        } else {
+          mat.opacity = Math.max(0, mat.opacity - dt * 0.3);
+        }
+        if (i < _spiritLights.length) {
+          _spiritLights[i].intensity = mat.opacity * 0.8;
+        }
+      });
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -2212,6 +2260,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _moorCircleLight = null;
     _watchtowerGroup = null;
     _watchtowerLight = null;
+    _spiritBeams.length = 0;
+    _spiritLights.length = 0;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
