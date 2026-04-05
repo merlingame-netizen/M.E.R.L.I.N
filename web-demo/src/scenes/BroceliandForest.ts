@@ -1011,6 +1011,16 @@ const stoneParticles487: Mesh[] = [];
 let stoneWhisperTimer487: number = 15 + Math.random() * 10;
 let stoneWhisperActive487: boolean = false;
 
+// ── Cycle-492: faerie ring with dancing light motes ───────────────────────────
+let faerieRingGroup492: Group | null = null;
+const faerieCapMats492: MeshStandardMaterial[] = [];
+const faerieMoteMeshes492: Mesh[] = [];
+let t492: number = 0;
+let faerieDanceTimer492: number = 18 + Math.random() * 10;
+let faerieDanceActive492: boolean = false;
+let faerieDanceT492: number = 0;
+const FAERIE_DANCE_DUR492 = 2.0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2968,6 +2978,98 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Cycle-492: faerie ring — 9 glowing mushrooms + 12 dancing light motes ────
+  {
+    faerieRingGroup492 = new Group();
+    faerieCapMats492.length = 0;
+    faerieMoteMeshes492.length = 0;
+
+    const RING_CX = -3;
+    const RING_CZ = -18;
+    const RING_RADIUS = 1.8;
+    const MOTE_RING_RADIUS = 2.0;
+    const MOTE_COUNT = 12;
+    const TRAIL_PER_MOTE = 3;
+
+    const stalkMat492 = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.8 });
+
+    // 9 mushrooms
+    for (let i = 0; i < 9; i++) {
+      const angle = (i / 9) * Math.PI * 2;
+      const mx = RING_CX + Math.cos(angle) * RING_RADIUS;
+      const mz = RING_CZ + Math.sin(angle) * RING_RADIUS;
+      const phase_i = (i / 9) * Math.PI * 2;
+
+      const stalk = new Mesh(new CylinderGeometry(0.04, 0.06, 0.18, 6), stalkMat492);
+      stalk.position.set(mx, 0.09, mz);
+      faerieRingGroup492.add(stalk);
+
+      const capMat = new MeshStandardMaterial({
+        color: 0x0d2a14,
+        emissive: 0x33ff66,
+        emissiveIntensity: 0.7,
+        roughness: 0.7,
+      });
+      capMat.userData = { phase492: phase_i };
+      faerieCapMats492.push(capMat);
+
+      const cap = new Mesh(new SphereGeometry(0.14, 7, 5), capMat);
+      cap.scale.y = 0.45;
+      cap.position.set(mx, 0.22, mz);
+      faerieRingGroup492.add(cap);
+    }
+
+    // 12 main motes + 36 trail ghosts = 48 total
+    const moteGeo = new SphereGeometry(0.03, 4, 3);
+    const trailGeo = new SphereGeometry(0.02, 3, 2);
+
+    const moteData: Array<{ speed: number; phase: number; phaseY: number }> = [];
+    for (let i = 0; i < MOTE_COUNT; i++) {
+      const speed_i = 0.8 + (i / MOTE_COUNT) * 0.8; // 0.8..1.6
+      const phase_i = (i / MOTE_COUNT) * Math.PI * 2;
+      const phaseY_i = (i / MOTE_COUNT) * Math.PI * 2 + 1.0;
+      moteData.push({ speed: speed_i, phase: phase_i, phaseY: phaseY_i });
+
+      const moteMat = new MeshStandardMaterial({
+        color: 0x33ff66,
+        emissive: 0x33ff66,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.9,
+      });
+      const moteMesh = new Mesh(moteGeo.clone(), moteMat);
+      (moteMesh as Mesh & { __moteIdx492?: number }).__moteIdx492 = i;
+      (moteMesh as Mesh & { __trailOffset492?: number }).__trailOffset492 = 0;
+      faerieMoteMeshes492.push(moteMesh);
+      faerieRingGroup492.add(moteMesh);
+
+      // Trail ghosts
+      const trailOpacities = [0.3, 0.15, 0.05];
+      for (let ti = 0; ti < TRAIL_PER_MOTE; ti++) {
+        const trailMat = new MeshStandardMaterial({
+          color: 0x33ff66,
+          emissive: 0x33ff66,
+          emissiveIntensity: 0.6,
+          transparent: true,
+          opacity: trailOpacities[ti]!,
+        });
+        const trailMesh = new Mesh(trailGeo.clone(), trailMat);
+        (trailMesh as Mesh & { __moteIdx492?: number }).__moteIdx492 = i;
+        (trailMesh as Mesh & { __trailOffset492?: number }).__trailOffset492 = -(ti + 1) * 0.15;
+        faerieMoteMeshes492.push(trailMesh);
+        faerieRingGroup492.add(trailMesh);
+      }
+    }
+
+    // Store mote data on group userData for animation
+    faerieRingGroup492.userData['moteData492'] = moteData;
+    faerieRingGroup492.userData['moteCX492'] = RING_CX;
+    faerieRingGroup492.userData['moteCZ492'] = RING_CZ;
+    faerieRingGroup492.userData['moteRingRadius492'] = MOTE_RING_RADIUS;
+
+    group.add(faerieRingGroup492);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3737,6 +3839,57 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Cycle-492: faerie ring — mushroom cap pulse + mote helix dance
+    if (faerieRingGroup492) {
+      t492 += dt;
+
+      // Faerie dance trigger (18-28s interval)
+      if (!faerieDanceActive492) {
+        faerieDanceTimer492 -= dt;
+        if (faerieDanceTimer492 <= 0) {
+          faerieDanceActive492 = true;
+          faerieDanceT492 = 0;
+          faerieDanceTimer492 = 18 + Math.random() * 10;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        }
+      } else {
+        faerieDanceT492 += dt;
+        if (faerieDanceT492 >= FAERIE_DANCE_DUR492) {
+          faerieDanceActive492 = false;
+        }
+      }
+
+      const danceProgress = faerieDanceActive492 ? Math.min(1, faerieDanceT492 / FAERIE_DANCE_DUR492) : 0;
+      const speedMult = faerieDanceActive492 ? 4.0 : 1.0;
+
+      // Cap pulse per mushroom
+      for (let ci = 0; ci < faerieCapMats492.length; ci++) {
+        const capMat = faerieCapMats492[ci]!;
+        const phase_i = (capMat.userData as { phase492: number }).phase492;
+        const baseIntensity = 0.4 + 0.5 * Math.sin(t492 * 1.3 + phase_i);
+        const danceBoost = danceProgress * (2.0 - baseIntensity);
+        capMat.emissiveIntensity = baseIntensity + danceBoost;
+      }
+
+      // Mote positions
+      const moteData = faerieRingGroup492.userData['moteData492'] as Array<{ speed: number; phase: number; phaseY: number }>;
+      const cx: number = faerieRingGroup492.userData['moteCX492'] as number;
+      const cz: number = faerieRingGroup492.userData['moteCZ492'] as number;
+      const ringRadius: number = faerieRingGroup492.userData['moteRingRadius492'] as number;
+
+      for (const moteMesh of faerieMoteMeshes492) {
+        const moteIdx = (moteMesh as Mesh & { __moteIdx492?: number }).__moteIdx492 ?? 0;
+        const trailOffset = (moteMesh as Mesh & { __trailOffset492?: number }).__trailOffset492 ?? 0;
+        const data = moteData[moteIdx]!;
+        const effectiveSpeed = data.speed * speedMult;
+        const phaseOffset = data.phase + trailOffset;
+        const mx = cx + ringRadius * Math.cos(t492 * effectiveSpeed + phaseOffset);
+        const mz = cz + ringRadius * Math.sin(t492 * effectiveSpeed + phaseOffset);
+        const my = 0.3 + 0.5 * Math.sin(t492 * 0.7 + data.phaseY + trailOffset * 2);
+        moteMesh.position.set(mx, my, mz);
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -4184,6 +4337,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     stoneParticles487.length = 0;
     stoneWhisperActive487 = false;
+
+    // Cycle-492: faerie ring cleanup
+    if (faerieRingGroup492) {
+      group.remove(faerieRingGroup492);
+      faerieRingGroup492.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      faerieRingGroup492 = null;
+    }
+    for (const mat of faerieCapMats492) { mat.dispose(); }
+    faerieCapMats492.length = 0;
+    faerieMoteMeshes492.length = 0;
+    faerieDanceActive492 = false;
   };
 
   return { group, update, dispose };
