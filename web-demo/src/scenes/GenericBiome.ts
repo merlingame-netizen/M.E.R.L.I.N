@@ -607,6 +607,13 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let vortexSurging468: boolean = false
   let vortexSurgeT468: number = 0
 
+  // ── Frozen waterfall — monts_brumeux (C473) ───────────────────────────────
+  let iceWaterfallGroup473: Group | null = null
+  let iceWaterfallT473: number = 0
+  let iceIcicles473: Mesh[] = []
+  let iceDrops473: { mesh: Mesh; y: number; active: boolean }[] = []
+  let iceDropTimer473: number = 5
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -2397,6 +2404,71 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     frozenLakeGroup440.position.set(6, 0, -20);
     group.add(frozenLakeGroup440);
+
+    // ── Frozen waterfall (C473) ─────────────────────────────────────────────
+    iceWaterfallGroup473 = new Group()
+    iceWaterfallGroup473.position.set(-5, 0, -16)
+
+    // Cliff rock face (back wall)
+    const cliff = new Mesh(
+      new BoxGeometry(3.0, 5.0, 0.5),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    cliff.position.set(0, 2.5, -0.5)
+    iceWaterfallGroup473!.add(cliff)
+
+    // Frozen cascade (3 overlapping semi-transparent planes)
+    const cascadeDefs = [
+      { x: -0.3, w: 0.8, h: 3.5, y: 2.0 },
+      { x:  0.1, w: 0.6, h: 2.8, y: 2.1 },
+      { x:  0.4, w: 0.5, h: 3.0, y: 1.9 },
+    ]
+    cascadeDefs.forEach((def) => {
+      const cascade = new Mesh(
+        new PlaneGeometry(def.w, def.h),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.55 })
+      )
+      cascade.position.set(def.x, def.y, 0.05)
+      iceWaterfallGroup473!.add(cascade)
+    })
+
+    // 8 icicles hanging from cliff base ledge
+    for (let i = 0; i < 8; i++) {
+      const icicle = new Mesh(
+        new ConeGeometry(0.04 + Math.random() * 0.03, 0.3 + Math.random() * 0.4, 5),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.7 })
+      )
+      icicle.rotation.x = Math.PI  // point downward
+      icicle.position.set(-1.2 + i * 0.35, 0.6, 0.1)
+      iceIcicles473.push(icicle)
+      iceWaterfallGroup473!.add(icicle)
+    }
+
+    // Ice pool at base
+    const icePool = new Mesh(
+      new CylinderGeometry(1.0, 1.1, 0.08, 12),
+      new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.6 })
+    )
+    icePool.position.set(0, 0.04, 0.3)
+    iceWaterfallGroup473!.add(icePool)
+
+    // 3 ice drop particles (pre-created, lifecycle managed)
+    for (let i = 0; i < 3; i++) {
+      const drop = new Mesh(
+        new SphereGeometry(0.03, 3, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 })
+      )
+      drop.position.set(-0.5 + i * 0.5, 0.6, 0.15)
+      iceWaterfallGroup473!.add(drop)
+      iceDrops473.push({ mesh: drop, y: 0.6, active: false })
+    }
+
+    // Faint PointLight
+    const iceLight = new PointLight(0x33ff66, 0.1, 5.0)
+    iceLight.position.set(0, 1.5, 0.5)
+    iceWaterfallGroup473!.add(iceLight)
+
+    group.add(iceWaterfallGroup473)
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -4140,6 +4212,38 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Monts brumeux — frozen waterfall shimmer + ice drops (C473)
+    if (iceWaterfallGroup473) {
+      iceWaterfallT473 += dt
+      iceDropTimer473 -= dt
+
+      // Icicle shimmer
+      iceIcicles473.forEach((ic, i) => {
+        const mat = ic.material as MeshBasicMaterial
+        mat.opacity = 0.6 + 0.15 * Math.sin(iceWaterfallT473 * 0.8 + i * 0.6)
+      })
+
+      // Ice drop lifecycle
+      if (iceDropTimer473 <= 0) {
+        iceDropTimer473 = 3 + Math.random() * 4
+        const inactive = iceDrops473.filter(d => !d.active)
+        if (inactive.length > 0) {
+          const drop = inactive[Math.floor(Math.random() * inactive.length)]
+          drop.active = true
+          drop.y = 0.6
+          drop.mesh.position.y = 0.6
+          ;(drop.mesh.material as MeshBasicMaterial).opacity = 0.8
+        }
+      }
+      iceDrops473.forEach((drop) => {
+        if (!drop.active) return
+        drop.y -= dt * 1.5
+        drop.mesh.position.y = drop.y
+        const mat = drop.mesh.material as MeshBasicMaterial
+        mat.opacity = Math.max(0, 0.8 - (0.6 - drop.y) * 2)
+        if (drop.y < 0.1) drop.active = false
+      })
+    }
     // Landes bruyere — spirit gateway portal shimmer (C437)
     if (gatewayGroup437 && gatewayPortal437 && gatewayLight437) {
       gatewayT437 += dt;
@@ -4497,6 +4601,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     vortexParticles468 = []
     vortexLight468 = null
+    // Frozen waterfall cleanup (C473)
+    if (iceWaterfallGroup473) {
+      iceWaterfallGroup473.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose() }
+        if (c instanceof PointLight) c.dispose()
+      })
+      group.remove(iceWaterfallGroup473)
+      iceWaterfallGroup473 = null
+    }
+    iceIcicles473 = []
+    iceDrops473 = []
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
