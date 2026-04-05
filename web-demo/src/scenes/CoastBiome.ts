@@ -665,6 +665,14 @@ let shipMastGroup420: Group | null = null;
 let shipMastT420 = 0;
 const shipSeaweed420: Mesh[] = [];
 
+// ── Whale tail breach — cotes_sauvages (C444) ─────────────────────────────
+let whaleGroup444: Group | null = null;
+let whaleT444: number = 0;
+let whaleTimer444: number = 30;
+let whaleBreaching444: boolean = false;
+let whaleCycle444: number = 0;
+const whaleSplashParticles444: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1482,6 +1490,58 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(shipMastGroup420);
   }
 
+  // ── Whale tail breach (C444) — cotes_sauvages ─────────────────────────────
+  {
+    whaleGroup444 = new Group();
+
+    // Left fluke
+    const leftFluke = new Mesh(
+      new SphereGeometry(1.2, 6, 4),
+      new MeshBasicMaterial({ color: 0x0a2a14 })
+    );
+    leftFluke.scale.set(1.0, 0.15, 0.6);
+    leftFluke.position.set(-0.8, 0, 0);
+    leftFluke.rotation.z = Math.PI * 0.1;
+    whaleGroup444.add(leftFluke);
+
+    // Right fluke
+    const rightFluke = leftFluke.clone();
+    rightFluke.position.set(0.8, 0, 0);
+    rightFluke.rotation.z = -Math.PI * 0.1;
+    whaleGroup444.add(rightFluke);
+
+    // Tail peduncle (connecting body part)
+    const peduncle = new Mesh(
+      new CylinderGeometry(0.25, 0.35, 1.0, 8),
+      new MeshBasicMaterial({ color: 0x0a2a14 })
+    );
+    peduncle.position.set(0, -0.5, 0);
+    whaleGroup444.add(peduncle);
+
+    // 6 splash droplets spread around base
+    const splashMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0 });
+    const splashOffsets = [
+      [-0.9, 0, 0.5], [0.9, 0, 0.5], [0, 0, -0.8],
+      [-0.6, 0, -0.4], [0.6, 0, -0.4], [0, 0, 0.9],
+    ];
+    for (let i = 0; i < 6; i++) {
+      const dropMesh = new Mesh(
+        new SphereGeometry(0.06, 4, 3),
+        splashMat.clone()
+      );
+      dropMesh.position.set(
+        splashOffsets[i]![0],
+        splashOffsets[i]![1],
+        splashOffsets[i]![2]
+      );
+      whaleGroup444.add(dropMesh);
+      whaleSplashParticles444.push(dropMesh);
+    }
+
+    whaleGroup444.position.set(8, -3, -10);
+    group.add(whaleGroup444);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -1900,6 +1960,51 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
     }
 
+    // ── Whale tail breach (C444) ─────────────────────────────────────────────
+    if (whaleGroup444) {
+      whaleT444 += dt;
+      if (!whaleBreaching444) {
+        whaleTimer444 -= dt;
+        if (whaleTimer444 <= 0) {
+          whaleBreaching444 = true;
+          whaleCycle444 = 0;
+          whaleTimer444 = 25 + Math.random() * 15;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'whoosh' } }));
+        }
+      }
+      if (whaleBreaching444) {
+        whaleCycle444 += dt;
+        if (whaleCycle444 < 1.5) {
+          // Phase: rise from y=-3 to y=1.5
+          whaleGroup444.position.y = -3 + 4.5 * (whaleCycle444 / 1.5);
+          whaleSplashParticles444.forEach((p, i) => {
+            const mat = p.material as MeshBasicMaterial;
+            mat.opacity = 0.8 * Math.sin(whaleCycle444 * Math.PI / 1.5);
+            p.position.y = 0.3 * Math.sin(whaleCycle444 * 3 + i);
+          });
+        } else if (whaleCycle444 < 3.0) {
+          // Phase: hold at apex, slight tilt
+          whaleGroup444.position.y = 1.5;
+          whaleGroup444.rotation.x = 0.2 * ((whaleCycle444 - 1.5) / 1.5);
+        } else if (whaleCycle444 < 5.0) {
+          // Phase: tilt and dive back
+          const tDive = (whaleCycle444 - 3.0) / 2.0;
+          whaleGroup444.position.y = 1.5 - 4.5 * tDive;
+          whaleGroup444.rotation.x = 0.2 + 0.8 * tDive;
+          whaleSplashParticles444.forEach((p) => {
+            const mat = p.material as MeshBasicMaterial;
+            mat.opacity = 0;
+          });
+        } else {
+          // Reset
+          whaleBreaching444 = false;
+          whaleCycle444 = 0;
+          whaleGroup444.position.y = -3;
+          whaleGroup444.rotation.x = 0;
+        }
+      }
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2069,6 +2174,17 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
       shipSeaweed420.length = 0;
       shipMastGroup420 = null;
+    }
+    if (whaleGroup444) {
+      whaleGroup444.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+      });
+      whaleSplashParticles444.length = 0;
+      whaleGroup444 = null;
     }
     group.clear();
   };
