@@ -71,6 +71,15 @@ export class MinigameCourse extends MinigameBase {
   private transitionTimer = 0;
   private gameOver = false;
 
+  // Visual enhancement: scan-line sweep during transition
+  private scanLineY = 0;
+
+  // Visual enhancement: dot ripple rings per scored round
+  private dotRipples: { index: number; age: number }[] = [];
+
+  // Visual enhancement: orbiting sparks around target
+  private sparkAngles: readonly number[] = [0, 1.05, 2.09, 3.14, 4.19, 5.24];
+
   // Prompt display
   private promptSymbol = '';
 
@@ -170,6 +179,8 @@ export class MinigameCourse extends MinigameBase {
     this.gameOver = false;
     this.ended = false;
     this.promptSymbol = '';
+    this.scanLineY = 0;
+    this.dotRipples = [];
 
     this.prepareRound();
   }
@@ -256,6 +267,10 @@ export class MinigameCourse extends MinigameBase {
   };
 
   private advanceRound(): void {
+    // VIS-3: spawn dot ripple for the round just completed
+    if (this.feedback === 'hit') {
+      this.dotRipples = [...this.dotRipples, { index: this.currentRound, age: 0 }];
+    }
     this.currentRound++;
     if (this.roundEl) {
       this.roundEl.textContent = this.currentRound < this.totalRounds
@@ -300,12 +315,19 @@ export class MinigameCourse extends MinigameBase {
     // Handle transition
     if (this.roundTransition) {
       this.transitionTimer -= dt;
+      // VIS-1: advance scan-line sweep during transition (top → bottom)
+      this.scanLineY = (1 - Math.max(0, this.transitionTimer / 0.6)) * this.canvasH;
       if (this.transitionTimer <= 0) {
         this.roundTransition = false;
         this.roundActive = true;
         this.roundElapsed = 0;
       }
     }
+
+    // VIS-3: age dot ripples
+    this.dotRipples = this.dotRipples
+      .map(r => ({ ...r, age: r.age + dt }))
+      .filter(r => r.age < 0.5);
 
     // Handle round timer
     if (this.roundActive) {
@@ -340,6 +362,23 @@ export class MinigameCourse extends MinigameBase {
       const r = 40 + i * 30;
       ctx.beginPath();
       ctx.arc(this.canvasW / 2, this.canvasH / 2, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // VIS-1: scan-line sweep during round transition
+    if (this.roundTransition && this.scanLineY > 0 && this.scanLineY < this.canvasH) {
+      const sweepGrad = ctx.createLinearGradient(0, this.scanLineY - 12, 0, this.scanLineY + 4);
+      sweepGrad.addColorStop(0, 'rgba(51,255,102,0)');
+      sweepGrad.addColorStop(0.5, 'rgba(51,255,102,0.18)');
+      sweepGrad.addColorStop(1, 'rgba(51,255,102,0)');
+      ctx.fillStyle = sweepGrad;
+      ctx.fillRect(0, this.scanLineY - 12, this.canvasW, 16);
+      // bright leading edge
+      ctx.strokeStyle = 'rgba(51,255,102,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, this.scanLineY);
+      ctx.lineTo(this.canvasW, this.scanLineY);
       ctx.stroke();
     }
 
@@ -420,6 +459,20 @@ export class MinigameCourse extends MinigameBase {
         ctx.beginPath();
         ctx.arc(this.target.x, this.target.y, this.hitRadius, 0, Math.PI * 2);
         ctx.fill();
+
+        // VIS-2: orbiting sparks around target
+        const orbitR = this.hitRadius + 10;
+        const spinSpeed = this.pulsePhase * 2.5;
+        for (let s = 0; s < this.sparkAngles.length; s++) {
+          const angle = this.sparkAngles[s] + spinSpeed;
+          const sx = this.target.x + Math.cos(angle) * orbitR;
+          const sy = this.target.y + Math.sin(angle) * orbitR;
+          const sparkBright = 0.3 + Math.abs(Math.sin(this.pulsePhase * 4 + s)) * 0.6;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(51,255,102,${alpha * sparkBright * 0.75})`;
+          ctx.fill();
+        }
       }
     }
 
@@ -471,6 +524,19 @@ export class MinigameCourse extends MinigameBase {
       ctx.strokeStyle = 'rgba(51,255,102,0.18)';
       ctx.lineWidth = 1;
       ctx.stroke();
+
+      // VIS-3: draw ripple rings for hit dots
+      const ripple = this.dotRipples.find(r => r.index === i);
+      if (ripple !== undefined) {
+        const rp = ripple.age / 0.5; // 0..1
+        const rippleR = 6 + rp * 14;
+        const rippleAlpha = (1 - rp) * 0.7;
+        ctx.beginPath();
+        ctx.arc(dx, dotY, rippleR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(51,255,102,${rippleAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
     }
 
     this.animFrame = requestAnimationFrame(() => this.render());
