@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Line, LineBasicMaterial, LineLoop, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, RingGeometry, Scene, SphereGeometry, TorusGeometry, Vector2, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Line, LineBasicMaterial, LineLoop, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, RingGeometry, Scene, SphereGeometry, TorusGeometry, Vector2, Vector3, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1522,6 +1522,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let clockMoonMat508: MeshStandardMaterial | null = null;
   let clockLight508: PointLight | null = null;
   let clockChimeTimer508: number = 30;
+
+  // C513 — magical map table
+  let mapTableGroup513: Group | null = null;
+  let t513: number = 0;
+  const mapMarkerMats513: MeshStandardMaterial[] = [];
+  const mapLineMats513: LineBasicMaterial[] = [];
+  let mapLight513: PointLight | null = null;
+  let mapActivateTimer513: number = 15 + Math.random() * 10;
+  let mapActivating513: boolean = false;
+  let mapActivateT513: number = 0;
+  let mapActiveTerritory513: number = 0;
 
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
@@ -3977,6 +3988,80 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(clockGroup508);
   }
 
+  // C513 — magical map table with glowing biome territories
+  {
+    mapTableGroup513 = new Group();
+
+    // Table surface
+    const tableSurfaceMat513 = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.85, metalness: 0.1 });
+    const tableSurface = new Mesh(new BoxGeometry(1.6, 0.06, 1.0), tableSurfaceMat513);
+    tableSurface.position.set(0, 0.78, 0);
+    mapTableGroup513.add(tableSurface);
+
+    // 4 table legs
+    const legMat513 = new MeshStandardMaterial({ color: 0x060e06, roughness: 0.9, metalness: 0.05 });
+    const legOffsets: Array<[number, number]> = [[-0.72, -0.44], [0.72, -0.44], [-0.72, 0.44], [0.72, 0.44]];
+    for (const [lx, lz] of legOffsets) {
+      const leg = new Mesh(new CylinderGeometry(0.06, 0.07, 0.75, 5), legMat513);
+      leg.position.set(lx, 0.375, lz);
+      mapTableGroup513.add(leg);
+    }
+
+    // Map parchment
+    const parchMat513 = new MeshStandardMaterial({
+      color: 0x061008, emissive: new Color(0x0d2010),
+      emissiveIntensity: 0.2, roughness: 0.95, metalness: 0.0, side: DoubleSide
+    });
+    const parch = new Mesh(new PlaneGeometry(1.4, 0.85), parchMat513);
+    parch.rotation.x = -Math.PI / 2;
+    parch.position.set(0, 0.82, 0);
+    mapTableGroup513.add(parch);
+
+    // Territory marker positions (relative to map center, y=0.83)
+    const markerPositions: Array<[number, number, number]> = [
+      [-0.4, 0.83, -0.2],
+      [0.2,  0.83, -0.3],
+      [-0.1, 0.83,  0.1],
+      [0.4,  0.83,  0.0],
+      [0.0,  0.83,  0.3],
+      [-0.3, 0.83,  0.25],
+    ];
+    for (let mi = 0; mi < markerPositions.length; mi++) {
+      const mmat = new MeshStandardMaterial({
+        color: 0x0a2a14, emissive: new Color(0x33ff66),
+        emissiveIntensity: 0.8, roughness: 0.6, metalness: 0.1
+      });
+      mapMarkerMats513.push(mmat);
+      const marker = new Mesh(new SphereGeometry(0.06, 6, 5), mmat);
+      marker.position.set(markerPositions[mi][0], markerPositions[mi][1], markerPositions[mi][2]);
+      mapTableGroup513.add(marker);
+    }
+
+    // Connection lines between adjacent territory pairs
+    const linePairs: Array<[number, number]> = [[0,1],[1,2],[2,4],[3,4],[4,5]];
+    for (let li = 0; li < linePairs.length; li++) {
+      const [a, b] = linePairs[li];
+      const pa = markerPositions[a];
+      const pb = markerPositions[b];
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new BufferAttribute(new Float32Array([
+        pa[0], pa[1], pa[2],
+        pb[0], pb[1], pb[2]
+      ]), 3));
+      const lmat = new LineBasicMaterial({ color: 0x1a5522, opacity: 0.4, transparent: true });
+      mapLineMats513.push(lmat);
+      mapTableGroup513.add(new Line(geo, lmat));
+    }
+
+    // Point light hovering above map
+    mapLight513 = new PointLight(0x33ff66, 0.4, 5.0);
+    mapLight513.position.set(0, 1.5, 0);
+    mapTableGroup513.add(mapLight513);
+
+    mapTableGroup513.position.set(1.8, 0, -3.5);
+    scene.add(mapTableGroup513);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -5562,6 +5647,60 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C513 — magical map table animation
+    if (mapTableGroup513) {
+      t513 += dt;
+
+      // Territory markers pulse independently
+      for (let mi = 0; mi < mapMarkerMats513.length; mi++) {
+        const mm = mapMarkerMats513[mi];
+        if (mm) mm.emissiveIntensity = 0.6 + 0.5 * Math.sin(t513 * 1.5 + mi * 1.1);
+      }
+
+      // Connection lines breathe
+      for (let li = 0; li < mapLineMats513.length; li++) {
+        const lm = mapLineMats513[li];
+        if (lm) lm.opacity = 0.3 + 0.2 * Math.sin(t513 * 0.9 + li * 0.8);
+      }
+
+      // Map parchment emissive breathes — targets the parch child (index 2 in group)
+      const parchChild = mapTableGroup513.children[2] as Mesh | undefined;
+      if (parchChild && parchChild.material) {
+        (parchChild.material as MeshStandardMaterial).emissiveIntensity = 0.15 + 0.1 * Math.sin(t513 * 0.6);
+      }
+
+      // PointLight slowly drifts + flickers
+      if (mapLight513) {
+        mapLight513.position.x = 0.0 + 0.1 * Math.sin(t513 * 0.4);
+        mapLight513.intensity = 0.35 + 0.1 * Math.sin(t513 * 3.1);
+      }
+
+      // Random territory "activation" every 15-25s
+      if (!mapActivating513) {
+        mapActivateTimer513 -= dt;
+        if (mapActivateTimer513 <= 0) {
+          mapActivating513 = true;
+          mapActivateT513 = 0;
+          mapActiveTerritory513 = Math.floor(Math.random() * mapMarkerMats513.length);
+          mapActivateTimer513 = 15 + Math.random() * 10;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+        }
+      } else {
+        mapActivateT513 += dt;
+        const activeFrac = Math.min(mapActivateT513 / 1.5, 1.0);
+        const fade = activeFrac < 0.5 ? 1.0 : 2.0 - activeFrac * 2.0;
+        const mm = mapMarkerMats513[mapActiveTerritory513];
+        if (mm) mm.emissiveIntensity = 0.8 + 1.7 * Math.max(0, 1.0 - activeFrac);
+        for (let li = 0; li < mapLineMats513.length; li++) {
+          const lm = mapLineMats513[li];
+          if (lm) lm.opacity = Math.max(lm.opacity, fade);
+        }
+        if (mapActivateT513 >= 1.5) {
+          mapActivating513 = false;
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -6119,6 +6258,19 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     clockHourHand508 = null;
     clockMinuteHand508 = null;
     clockLight508 = null;
+    // C513 — magical map table dispose
+    if (mapTableGroup513) {
+      mapTableGroup513.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof Line) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(mapTableGroup513);
+      mapTableGroup513 = null;
+    }
+    mapMarkerMats513.length = 0;
+    mapLineMats513.length = 0;
+    mapLight513 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {

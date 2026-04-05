@@ -1,26 +1,29 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 173,
-  "task_id": "T173",
+  "cycle": 30,
+  "task_id": "C511",
   "status": "PASS",
   "confidence": "HIGH",
   "evidence": [
-    "npx tsc: 0 errors",
-    "vite build: clean in 4.03s, index-xQc16uDs.js 219.50 kB gzip 66.18 kB",
-    "GroqAdapter.ts: prompt C173 uppercase verbs + explicit effect rules in systemPrompt",
-    "VALID_FACTIONS + VALID_EVENT_TYPES readonly sets added for validation",
-    "validateEffect(): filters unknown factions + malformed formats silently, returns null",
-    "sanitizeOption(): verb/text fallbacks, max 2 effects enforced, verb uppercased",
-    "options count fixup: >3 trimmed to 3, ==2 duplicate 3rd (ATTENDRE fallback), <2 retries",
-    "generateRunScenario(): JSON strip+parse, event type+position validation, null if 0 valid events",
-    "generateMerlinWhisper(): quote strip regex, 80-char word-boundary truncation, null if <5 chars",
-    "commit 946ffd4 on main (linter auto-fixed TS2352 cast)"
+    "tsc: 0 errors",
+    "vite build: success in 4.67s, GenericBiome-BAIFVrVq.js 86.33 kB",
+    "GenericBiome.ts: 182 lines inserted across vars/init/animation/cleanup",
+    "8+ mesh parts: legs×2, torso, shoulders×2, arms×2, head, brow ridge, eyes×2, rune carving",
+    "Outer vars pattern respected: all 9 vars declared before any if(biome) block",
+    "Colossus positioned at group (10,0,-18), stone color 0x0a1a0a roughness 0.9",
+    "Awakening cycle: 40-60s random timer, 5-phase 8.5s sequence",
+    "Phase 1(0-0.5s): eyes pulse 0.3->2.0; Phase 2(0.5-3.5s): head ±0.3rad; Phase 3(1-3s): arms ±0.2rad; Phase 4: rune->1.5; Phase 5(6.5-8.5s): fade to dormant",
+    "Idle: eyes sin(t*0.5) range 0.2-0.35, rune sin(t*0.7+0.5) range 0.15-0.25, weight shift 0.008*sin(t*0.3)",
+    "SFX merlin_sfx:pulse dispatched at awakening start",
+    "Cleanup block added after totem C481 cleanup, all refs nulled",
+    "git commit d62b1fe pushed to main"
   ],
   "blockers": [],
   "next_steps": [
-    "Test live Groq generation in web-export to verify JSON quality with new prompt",
-    "Monitor console.info logs for option/effect sanitization hits in browser devtools"
+    "Visual QA in browser at https://web-export-pi.vercel.app — select vallee_anciens biome",
+    "Confirm colossus visible at far side of valley (10, 0, -18)",
+    "Wait 40-60s to observe awakening tremor sequence"
   ],
   "needs_more_context": [],
-  "tokens_used_approx": 3100
+  "tokens_used_approx": 3200
 }

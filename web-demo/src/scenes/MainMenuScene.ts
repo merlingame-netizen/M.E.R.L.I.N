@@ -932,6 +932,16 @@ let oghamResoActive510: boolean = false;
 let oghamResoT510: number = 0;
 const oghamResoIds510: number[] = [];
 
+// C515 — CeltOS Boot Data Stream
+let dataStreamGroup515: Group | null = null;
+let streamT515: number = 0;
+const streamParticleMats515: MeshBasicMaterial[] = [];
+const streamColumnScrolls515: number[] = [0, 0, 0, 0, 0, 0];
+let streamBurstTimer515: number = 20 + Math.random() * 10;
+let streamBurstCol515: number = -1;
+let streamBurstT515: number = 0;
+let streamFlipTimer515: number = 3 + Math.random() * 2;
+
 let auroraT495 = 0;
 let auroraRibbons495: Mesh[] = [];
 let auroraRibbonMats495: MeshBasicMaterial[] = [];
@@ -2286,6 +2296,78 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C515: CeltOS data stream update
+    if (dataStreamGroup515) {
+      streamT515 += dt;
+
+      // Burst timer
+      streamBurstTimer515 -= dt;
+      if (streamBurstTimer515 <= 0 && streamBurstT515 <= 0) {
+        streamBurstCol515 = Math.floor(Math.random() * 6);
+        streamBurstT515 = 1.5;
+        streamBurstTimer515 = 20 + Math.random() * 10;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'pulse' } }));
+      }
+      if (streamBurstT515 > 0) streamBurstT515 = Math.max(0, streamBurstT515 - dt);
+
+      // Bit-flip timer
+      streamFlipTimer515 -= dt;
+      let flipMatIdx = -1;
+      if (streamFlipTimer515 <= 0) {
+        flipMatIdx = Math.floor(Math.random() * 90);
+        streamFlipTimer515 = 3 + Math.random() * 2;
+      }
+
+      // Advance scrolls
+      for (let col = 0; col < 6; col++) {
+        const COL_SPEEDS515 = [0.8, 1.1, 0.7, 1.3, 0.9, 1.0];
+        const burstMult = (streamBurstT515 > 0 && col === streamBurstCol515) ? 5 : 1;
+        streamColumnScrolls515[col] = (streamColumnScrolls515[col]! + COL_SPEEDS515[col]! * burstMult * dt);
+      }
+
+      const PARTS_PER_COL = 15;
+      const SPACING = 1.5;
+      const TOTAL_HEIGHT = PARTS_PER_COL * SPACING;
+      const BASE_Y = 7.5;
+
+      dataStreamGroup515.children.forEach((child, flatIdx) => {
+        const mesh = child as Mesh;
+        const col: number = mesh.userData['col515'] as number;
+        const partIdx: number = mesh.userData['partIdx515'] as number;
+
+        const scroll = streamColumnScrolls515[col]!;
+        const raw = (partIdx * SPACING + scroll) % TOTAL_HEIGHT;
+        const yPos = BASE_Y + raw - TOTAL_HEIGHT / 2;
+        mesh.position.y = yPos;
+
+        // Normalise position in column: 0=bottom, 1=top
+        const normY = Math.max(0, Math.min(1, (yPos - (BASE_Y - TOTAL_HEIGHT / 2)) / TOTAL_HEIGHT));
+        const mat = streamParticleMats515[flatIdx];
+        if (!mat) return;
+
+        const isBurst = streamBurstT515 > 0 && col === streamBurstCol515;
+        if (isBurst) {
+          mat.color.setHex(0x33ff66);
+          mat.opacity = 0.95;
+        } else if (flatIdx === flipMatIdx) {
+          mat.color.setHex(0x99ffcc);
+          mat.opacity = 1.0;
+        } else {
+          mat.color.setHex(0x33ff66);
+          mat.opacity = Math.max(0.05, Math.min(0.9, 0.1 + 0.8 * normY));
+        }
+
+        // Head glow: brightest particle at top of wrap
+        const isHead = normY > 0.92;
+        if (isHead && !isBurst) {
+          mat.opacity = 1.0;
+          mesh.scale.setScalar(1.4);
+        } else {
+          mesh.scale.setScalar(1.0);
+        }
+      });
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -3520,6 +3602,46 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
     oghamRingGroup510 = ring510;
     scene.add(ring510);
+  }
+
+  // C515: CeltOS Boot Data Stream — 6 vertical particle columns
+  {
+    const COL_X515 = [-12, -7, -2, 3, 8, 13];
+    const COL_SPEEDS515 = [0.8, 1.1, 0.7, 1.3, 0.9, 1.0];
+    const PARTS_PER_COL = 15;
+    const SPACING = 1.5;
+    const TOTAL_HEIGHT = PARTS_PER_COL * SPACING;
+    const BASE_Z = -37;
+    const BASE_Y = 7.5; // center of the column range
+
+    const group515 = new Group();
+    const sharedGeo515 = new SphereGeometry(0.05, 4, 4);
+
+    for (let col = 0; col < 6; col++) {
+      for (let p = 0; p < PARTS_PER_COL; p++) {
+        const mat = new MeshBasicMaterial({
+          color: 0x33ff66,
+          transparent: true,
+          opacity: 0.1,
+          depthWrite: false,
+        });
+        streamParticleMats515.push(mat);
+        const mesh = new Mesh(sharedGeo515, mat);
+        const initY = BASE_Y + (p * SPACING - TOTAL_HEIGHT / 2);
+        mesh.position.set(COL_X515[col]!, initY, BASE_Z);
+        // Store col and partIdx in userData for update
+        mesh.userData['col515'] = col;
+        mesh.userData['partIdx515'] = p;
+        mesh.userData['colSpeed515'] = COL_SPEEDS515[col];
+        mesh.userData['totalHeight515'] = TOTAL_HEIGHT;
+        mesh.userData['spacing515'] = SPACING;
+        mesh.userData['baseY515'] = BASE_Y;
+        group515.add(mesh);
+      }
+    }
+
+    dataStreamGroup515 = group515;
+    scene.add(group515);
   }
 
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin

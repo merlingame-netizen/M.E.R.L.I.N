@@ -1050,6 +1050,18 @@ let t507: number = 0;
 let harpPluckTimer507: number = 1.5 + Math.random() * 1.5;
 let harpChordTimer507: number = 12 + Math.random() * 8;
 
+// ── Cycle-512: enchanted reflective pool ──────────────────────────────────────
+let poolGroup512: Group | null = null;
+const poolStarMats512: MeshStandardMaterial[] = [];
+let poolSurfaceMat512: MeshStandardMaterial | null = null;
+let poolMistMesh512: Mesh | null = null;
+let poolLight512: PointLight | null = null;
+let t512: number = 0;
+let poolVisionTimer512: number = 20 + Math.random() * 10;
+const poolSparks512: Mesh[] = [];
+let poolVisionActive512: boolean = false;
+let poolVisionT512: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3363,6 +3375,121 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(harpGroup507);
   }
 
+  // ── Cycle-512: enchanted reflective pool ──────────────────────────────────────
+  {
+    poolGroup512 = new Group();
+    poolStarMats512.length = 0;
+    poolSparks512.length = 0;
+
+    // Pool surface disc
+    const surfGeo = new CylinderGeometry(1.5, 1.5, 0.04, 20);
+    poolSurfaceMat512 = new MeshStandardMaterial({
+      color: 0x010802,
+      emissive: 0x0a1a10,
+      emissiveIntensity: 0.2,
+      roughness: 0.0,
+      metalness: 0.5,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const surfMesh = new Mesh(surfGeo, poolSurfaceMat512);
+    surfMesh.position.set(0, 0.01, 0);
+    poolGroup512.add(surfMesh);
+
+    // 8 rim stones
+    for (let ri = 0; ri < 8; ri++) {
+      const angle = (ri / 8) * Math.PI * 2;
+      const rimGeo = new BoxGeometry(0.2, 0.12, 0.15);
+      const rimMat = new MeshStandardMaterial({ color: 0x060e06, roughness: 0.95, metalness: 0.05 });
+      const rimMesh = new Mesh(rimGeo, rimMat);
+      rimMesh.position.set(Math.cos(angle) * 1.6, 0.06, Math.sin(angle) * 1.6);
+      rimMesh.rotation.y = -angle;
+      rimMesh.rotation.z = 0.12; // angled inward
+      poolGroup512.add(rimMesh);
+    }
+
+    // 12 reflected stars just below pool surface
+    for (let si = 0; si < 12; si++) {
+      const starGeo = new SphereGeometry(0.03, 5, 4);
+      const starMat = new MeshStandardMaterial({
+        emissive: 0x33ff66,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.7,
+        roughness: 1.0,
+        metalness: 0.0,
+      });
+      const starMesh = new Mesh(starGeo, starMat);
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 1.2;
+      starMesh.position.set(
+        Math.cos(angle) * radius,
+        -(0.01 + Math.random() * 0.04),
+        Math.sin(angle) * radius,
+      );
+      poolGroup512.add(starMesh);
+      poolStarMats512.push(starMat);
+    }
+
+    // 3 lily pads
+    const lilyOffsets: [number, number][] = [[-0.6, 0.4], [0.5, -0.3], [0.1, 0.9]];
+    for (let li = 0; li < 3; li++) {
+      const lilyGeo = new CylinderGeometry(0.18, 0.18, 0.02, 10);
+      const lilyMat = new MeshStandardMaterial({
+        color: 0x061008,
+        emissive: 0x0d2a14,
+        emissiveIntensity: 0.2,
+        roughness: 0.9,
+        metalness: 0.0,
+      });
+      const lilyMesh = new Mesh(lilyGeo, lilyMat);
+      lilyMesh.position.set(lilyOffsets[li]![0], 0.02, lilyOffsets[li]![1]);
+      lilyMesh.userData['lilyIdx'] = li;
+      poolGroup512.add(lilyMesh);
+    }
+
+    // Eerie upward glow just below surface
+    poolLight512 = new PointLight(0x33ff66, 0.2, 5.0);
+    poolLight512.position.set(0, -0.05, 0);
+    poolGroup512.add(poolLight512);
+
+    // Mist plane hovering above pool
+    const mistGeo = new PlaneGeometry(2.5, 0.4);
+    const mistMat = new MeshStandardMaterial({
+      color: 0x0a1a0a,
+      emissive: 0x1a3322,
+      emissiveIntensity: 0.15,
+      transparent: true,
+      opacity: 0.3,
+      side: DoubleSide,
+    });
+    poolMistMesh512 = new Mesh(mistGeo, mistMat);
+    poolMistMesh512.position.set(0, 0.15, 0);
+    poolGroup512.add(poolMistMesh512);
+
+    // Pre-create 6 portal vision sparks (hidden by default)
+    for (let pi = 0; pi < 6; pi++) {
+      const spkGeo = new SphereGeometry(0.04, 5, 4);
+      const spkMat = new MeshStandardMaterial({
+        emissive: 0x66ffaa,
+        emissiveIntensity: 0.0,
+        transparent: true,
+        opacity: 0.0,
+        roughness: 1.0,
+        metalness: 0.0,
+      });
+      const spkMesh = new Mesh(spkGeo, spkMat);
+      const angle = (pi / 6) * Math.PI * 2;
+      spkMesh.position.set(Math.cos(angle) * 0.8, -0.02, Math.sin(angle) * 0.8);
+      spkMesh.visible = false;
+      poolGroup512.add(spkMesh);
+      poolSparks512.push(spkMesh);
+    }
+
+    poolGroup512.position.set(4, 0, -20);
+    group.add(poolGroup512);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -4421,6 +4548,81 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         );
       }
     }
+
+    // Cycle-512: enchanted reflective pool animation
+    if (poolGroup512) {
+      t512 += dt;
+
+      // Pool surface breathes very slowly
+      if (poolSurfaceMat512) {
+        poolSurfaceMat512.emissiveIntensity = 0.15 + 0.1 * Math.sin(t512 * 0.4);
+      }
+
+      // Reflected stars twinkle
+      poolStarMats512.forEach((mat, i) => {
+        mat.emissiveIntensity = 0.5 + 0.5 * Math.sin(t512 * 2.1 + i * 1.3);
+      });
+
+      // PointLight flickers gently
+      if (poolLight512) {
+        poolLight512.intensity = 0.15 + 0.08 * Math.sin(t512 * 2.7);
+      }
+
+      // Mist drifts slowly
+      if (poolMistMesh512) {
+        poolMistMesh512.position.x = 0.05 * Math.sin(t512 * 0.6);
+        poolMistMesh512.rotation.y += 0.02 * dt;
+      }
+
+      // Lily pads rotate very slowly (0.05 rad/s each)
+      poolGroup512.children.forEach((child) => {
+        if ((child as Mesh).isMesh && (child as Mesh).userData['lilyIdx'] !== undefined) {
+          child.rotation.y += 0.05 * dt;
+        }
+      });
+
+      // Portal vision: appears every 20-30s
+      poolVisionTimer512 -= dt;
+      if (poolVisionTimer512 <= 0 && !poolVisionActive512) {
+        poolVisionActive512 = true;
+        poolVisionT512 = 0;
+        poolVisionTimer512 = 20 + Math.random() * 10;
+        poolSparks512.forEach((spk) => {
+          spk.visible = true;
+          spk.position.y = -0.02;
+        });
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+      }
+
+      if (poolVisionActive512) {
+        poolVisionT512 += dt;
+        const visionDur = 4.0;
+        const vt = poolVisionT512 / visionDur;
+        poolSparks512.forEach((spk, pi) => {
+          const phase = pi / 6;
+          const sparkT = Math.max(0, vt - phase * 0.15);
+          const fadeIn = Math.min(sparkT * 4, 1.0);
+          const fadeOut = sparkT > 0.6 ? Math.max(0, 1.0 - (sparkT - 0.6) / 0.4) : 1.0;
+          const alpha = fadeIn * fadeOut;
+          const spkMat = (spk as Mesh).material as MeshStandardMaterial;
+          spkMat.opacity = alpha * 0.9;
+          spkMat.emissiveIntensity = alpha * 2.0;
+          spk.position.y = -0.02 + sparkT * 0.35;
+        });
+        if (poolSurfaceMat512) {
+          poolSurfaceMat512.emissiveIntensity = (0.15 + 0.1 * Math.sin(t512 * 0.4)) + vt * (1.0 - vt) * 4.0 * 0.4;
+        }
+        if (poolVisionT512 >= visionDur) {
+          poolVisionActive512 = false;
+          poolSparks512.forEach((spk) => {
+            spk.visible = false;
+            const spkMat = (spk as Mesh).material as MeshStandardMaterial;
+            spkMat.opacity = 0.0;
+            spkMat.emissiveIntensity = 0.0;
+          });
+        }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -4945,6 +5147,32 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     t507 = 0;
     harpPluckTimer507 = 1.5 + Math.random() * 1.5;
     harpChordTimer507 = 12 + Math.random() * 8;
+
+    // Cycle-512: enchanted reflective pool cleanup
+    if (poolGroup512) {
+      group.remove(poolGroup512);
+      poolGroup512.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            (c.material as Material[]).forEach((m) => m.dispose());
+          } else {
+            (c.material as Material).dispose();
+          }
+        }
+      });
+      poolGroup512 = null;
+    }
+    for (const mat of poolStarMats512) { mat.dispose(); }
+    poolStarMats512.length = 0;
+    poolSparks512.length = 0;
+    poolSurfaceMat512 = null;
+    poolMistMesh512 = null;
+    poolLight512 = null;
+    t512 = 0;
+    poolVisionTimer512 = 20 + Math.random() * 10;
+    poolVisionActive512 = false;
+    poolVisionT512 = 0;
   };
 
   return { group, update, dispose };

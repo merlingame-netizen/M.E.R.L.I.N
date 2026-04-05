@@ -786,6 +786,18 @@ const mermaidArmMeshes504: { mesh: Mesh; side: 1 | -1 }[] = [];
 
 // ── Ancient sea altar emerging at low tide (C509) ────────────────────────
 let altarSeaGroup509: Group | null = null;
+
+// ── Deep jellyfish bloom rising from the depths (C514) ───────────────────
+let deepJellyGroup514: Group | null = null;
+let t514: number = 0;
+const deepJellies514: Group[] = [];
+const deepJellyBellMats514: MeshStandardMaterial[] = [];
+type DeepJellyState514 = 'resting' | 'rising' | 'hover' | 'sinking';
+let deepJellyState514: DeepJellyState514 = 'resting';
+let deepJellyStateT514: number = 0;
+let deepJellyTimer514: number = 50 + Math.random() * 20;
+const deepJellyBaseYs514: number[] = [];
+const deepJellyTargetYs514: number[] = [];
 let t509: number = 0;
 type AltarSeaState509 = 'submerged' | 'rising' | 'emerged' | 'sinking';
 let altarSeaState509: AltarSeaState509 = 'submerged';
@@ -2741,6 +2753,97 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(altarSeaGroup509);
   }
 
+  // ── Deep jellyfish bloom rising from the depths (C514) ──────────────────
+  {
+    deepJellyGroup514 = new Group();
+    const R = (): number => Math.random();
+
+    const bellMat = new MeshStandardMaterial({
+      color: 0x0a2a14, emissive: 0x33ff66, emissiveIntensity: 0.2,
+      transparent: true, opacity: 0.45, roughness: 0.5, metalness: 0.0,
+    });
+    const innerGlowMat = new MeshStandardMaterial({
+      color: 0x0a2a14, emissive: 0x33ff66, emissiveIntensity: 0.4,
+      transparent: true, opacity: 0.3, roughness: 0.5, metalness: 0.0,
+    });
+    const armMat = new MeshStandardMaterial({
+      color: 0x0a2a14, emissive: 0x33ff66, emissiveIntensity: 0.2,
+      transparent: true, opacity: 0.5, side: DoubleSide, roughness: 0.6,
+    });
+    const tentacleMat = new MeshStandardMaterial({
+      color: 0x0a2a14, emissive: 0x1a5522, emissiveIntensity: 0.1,
+      transparent: true, opacity: 0.4, roughness: 0.7,
+    });
+
+    deepJellyBellMats514.push(bellMat, innerGlowMat);
+
+    const jellyXs = [-7.5, -4.5, -1.8, 1.2, 3.8, 5.5, 7.2, -6.0];
+    const jellyZs = [-19, -23, -20, -25, -21, -18, -24, -22];
+    const jellyDepths = [-3.5, -4.2, -3.0, -4.8, -3.8, -4.0, -3.2, -5.0];
+
+    for (let ji = 0; ji < 8; ji++) {
+      const jelly = new Group();
+      const phase = R() * Math.PI * 2;
+      jelly.userData['phase'] = phase;
+
+      // Bell dome
+      const bellGeo = new SphereGeometry(0.28, 10, 7);
+      const bell = new Mesh(bellGeo, bellMat.clone());
+      bell.scale.set(1, 0.55, 1);
+      jelly.add(bell);
+      deepJellyBellMats514.push(bell.material as MeshStandardMaterial);
+
+      // Inner glow dome
+      const innerGeo = new SphereGeometry(0.18, 8, 6);
+      const inner = new Mesh(innerGeo, innerGlowMat.clone());
+      inner.scale.set(1, 0.5, 1);
+      jelly.add(inner);
+      deepJellyBellMats514.push(inner.material as MeshStandardMaterial);
+
+      // Oral arms — 6 PlaneGeometry hanging down from bell center
+      const armGeo = new PlaneGeometry(0.06, 0.5);
+      for (let ai = 0; ai < 6; ai++) {
+        const arm = new Mesh(armGeo, armMat.clone());
+        const armAngle = (ai / 6) * Math.PI * 2;
+        arm.position.set(
+          Math.cos(armAngle) * 0.05,
+          -0.2,
+          Math.sin(armAngle) * 0.05,
+        );
+        arm.rotation.y = armAngle;
+        arm.userData['armIdx'] = ai;
+        jelly.add(arm);
+      }
+
+      // Tentacles — 8 thin cylinders hanging from bell edge
+      const tentGeo = new CylinderGeometry(0.008, 0.003, 0.7, 3);
+      for (let ti = 0; ti < 8; ti++) {
+        const tentAngle = (ti / 8) * Math.PI * 2;
+        const tent = new Mesh(tentGeo, tentacleMat.clone());
+        tent.position.set(
+          Math.cos(tentAngle) * 0.26,
+          -0.2,
+          Math.sin(tentAngle) * 0.26,
+        );
+        // Fan outward
+        tent.rotation.z = Math.cos(tentAngle) * 0.25;
+        tent.rotation.x = Math.sin(tentAngle) * 0.25;
+        tent.userData['tentIdx'] = ti;
+        jelly.add(tent);
+      }
+
+      const baseY = jellyDepths[ji]!;
+      deepJellyBaseYs514.push(baseY);
+      deepJellyTargetYs514.push(-0.5 + R() * 1.5);
+
+      jelly.position.set(jellyXs[ji]!, baseY, jellyZs[ji]!);
+      deepJellyGroup514.add(jelly);
+      deepJellies514.push(jelly);
+    }
+
+    group.add(deepJellyGroup514);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -3802,6 +3905,96 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
           wavePhase395 = 0;
           waveWaitT395 = 8.0 + Math.random() * 4.0;
           waveFace395.rotation.x = -Math.PI / 2; // reset to flat
+        }
+      }
+    }
+
+    // ── Deep jellyfish bloom rising from the depths (C514) ──────────────────
+    if (deepJellyGroup514) {
+      t514 += dt;
+
+      // Bloom state machine
+      if (deepJellyState514 === 'resting') {
+        deepJellyTimer514 -= dt;
+        if (deepJellyTimer514 <= 0) {
+          deepJellyState514 = 'rising';
+          deepJellyStateT514 = 0;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        }
+      } else if (deepJellyState514 === 'rising') {
+        deepJellyStateT514 += dt;
+        const p = Math.min(deepJellyStateT514 / 8.0, 1.0);
+        for (let ji = 0; ji < deepJellies514.length; ji++) {
+          const jelly = deepJellies514[ji]!;
+          const baseY = deepJellyBaseYs514[ji]!;
+          const targetY = deepJellyTargetYs514[ji]!;
+          jelly.position.y = baseY + (targetY - baseY) * p;
+          // Ramp up emissive
+          const bellMat514 = (jelly.children[0] as Mesh | undefined)?.material as MeshStandardMaterial | undefined;
+          if (bellMat514) bellMat514.emissiveIntensity = 0.2 + 0.3 * p;
+          const innerMat514 = (jelly.children[1] as Mesh | undefined)?.material as MeshStandardMaterial | undefined;
+          if (innerMat514) innerMat514.emissiveIntensity = 0.4 + 0.8 * p;
+        }
+        if (p >= 1.0) {
+          deepJellyState514 = 'hover';
+          deepJellyStateT514 = 0;
+        }
+      } else if (deepJellyState514 === 'hover') {
+        deepJellyStateT514 += dt;
+        if (deepJellyStateT514 >= 5.0) {
+          deepJellyState514 = 'sinking';
+          deepJellyStateT514 = 0;
+        }
+      } else if (deepJellyState514 === 'sinking') {
+        deepJellyStateT514 += dt;
+        const p = Math.min(deepJellyStateT514 / 5.0, 1.0);
+        for (let ji = 0; ji < deepJellies514.length; ji++) {
+          const jelly = deepJellies514[ji]!;
+          const baseY = deepJellyBaseYs514[ji]!;
+          const targetY = deepJellyTargetYs514[ji]!;
+          jelly.position.y = targetY + (baseY - targetY) * p;
+          // Ramp down emissive
+          const bellMat514 = (jelly.children[0] as Mesh | undefined)?.material as MeshStandardMaterial | undefined;
+          if (bellMat514) bellMat514.emissiveIntensity = 0.5 - 0.3 * p;
+          const innerMat514 = (jelly.children[1] as Mesh | undefined)?.material as MeshStandardMaterial | undefined;
+          if (innerMat514) innerMat514.emissiveIntensity = 1.2 - 0.8 * p;
+        }
+        if (p >= 1.0) {
+          deepJellyState514 = 'resting';
+          deepJellyStateT514 = 0;
+          deepJellyTimer514 = 50 + Math.random() * 20;
+        }
+      }
+
+      // Per-jellyfish animation always active
+      for (let ji = 0; ji < deepJellies514.length; ji++) {
+        const jelly = deepJellies514[ji]!;
+        const phase: number = jelly.userData['phase'] as number;
+
+        // Bell pulse — scale.y oscillates 0.5–0.65
+        const bellPulse = 0.575 + 0.075 * Math.sin(t514 * 1.5 + phase);
+        const bell514 = jelly.children[0];
+        if (bell514) bell514.scale.y = bellPulse;
+        const inner514 = jelly.children[1];
+        if (inner514) inner514.scale.y = bellPulse * (0.5 / 0.55);
+
+        // Animate arms and tentacles (children index 2+)
+        for (let ci = 2; ci < jelly.children.length; ci++) {
+          const child = jelly.children[ci]!;
+          const userData = child.userData as Record<string, unknown>;
+          if ('armIdx' in userData) {
+            const armIdx = userData['armIdx'] as number;
+            child.rotation.z = 0.1 * Math.sin(t514 * 2.8 + armIdx * 1.0);
+          } else if ('tentIdx' in userData) {
+            const tentIdx = userData['tentIdx'] as number;
+            child.rotation.x = 0.15 * Math.sin(t514 * 2.0 + tentIdx * 0.4 + phase);
+          }
+        }
+
+        // Slow bob at base depth when resting
+        if (deepJellyState514 === 'resting') {
+          const baseY = deepJellyBaseYs514[ji]!;
+          jelly.position.y = baseY + 0.08 * Math.sin(t514 * 0.4 + phase);
         }
       }
     }
