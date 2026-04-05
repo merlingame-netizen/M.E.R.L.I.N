@@ -17,6 +17,7 @@ import {
   DodecahedronGeometry,
   Float32BufferAttribute,
   FogExp2,
+  Group,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -421,6 +422,69 @@ function buildSun(): Mesh {
   return new Mesh(geo, mat);
 }
 
+// ── Seabirds (C527) ───────────────────────────────────────────────────────────
+
+interface SeabirdDatum {
+  group: Group;
+  orbitR: number;   // orbit radius X
+  orbitRz: number;  // orbit radius Z
+  orbitCx: number;  // orbit centre X
+  orbitCz: number;  // orbit centre Z
+  orbitY: number;   // orbit height
+  speed: number;    // rad/s
+  phase: number;    // initial angle
+  wingL: Mesh;
+  wingR: Mesh;
+  flapFreq: number;
+  flapAmp: number;
+}
+
+function buildSeabirds(): SeabirdDatum[] {
+  const wingMat = new MeshStandardMaterial({ color: 0xd8dde0, roughness: 0.9, metalness: 0.0, flatShading: true });
+  const bodyMat = new MeshStandardMaterial({ color: 0xb8c0c8, roughness: 0.9, metalness: 0.0, flatShading: true });
+  const birds: SeabirdDatum[] = [];
+
+  const configs: Array<{ rx: number; rz: number; cx: number; cz: number; y: number; spd: number; phase: number }> = [
+    { rx: 12, rz:  8, cx: -3, cz: -22, y: 12, spd: 0.28, phase: 0.0  },
+    { rx:  9, rz:  6, cx:  4, cz: -16, y: 16, spd: 0.22, phase: 1.1  },
+    { rx: 14, rz:  9, cx: -8, cz: -28, y: 10, spd: 0.18, phase: 2.5  },
+    { rx:  8, rz:  5, cx:  7, cz: -10, y: 14, spd: 0.33, phase: 3.7  },
+    { rx: 11, rz:  7, cx:  0, cz: -20, y: 18, spd: 0.20, phase: 5.0  },
+  ];
+
+  for (const cfg of configs) {
+    const g = new Group();
+
+    // Tiny body
+    const body = new Mesh(new BoxGeometry(0.28, 0.10, 0.18), bodyMat);
+    g.add(body);
+
+    // Left wing — angled forward
+    const wingL = new Mesh(new BoxGeometry(0.80, 0.06, 0.22), wingMat);
+    wingL.position.set(-0.5, 0.02, 0.04);
+    wingL.rotation.z = 0.25;
+    g.add(wingL);
+
+    // Right wing
+    const wingR = new Mesh(new BoxGeometry(0.80, 0.06, 0.22), wingMat);
+    wingR.position.set(0.5, 0.02, 0.04);
+    wingR.rotation.z = -0.25;
+    g.add(wingR);
+
+    birds.push({
+      group: g,
+      orbitR: cfg.rx, orbitRz: cfg.rz,
+      orbitCx: cfg.cx, orbitCz: cfg.cz,
+      orbitY: cfg.y,
+      speed: cfg.spd, phase: cfg.phase,
+      wingL, wingR,
+      flapFreq: 1.8 + Math.random() * 0.8,
+      flapAmp:  0.30 + Math.random() * 0.15,
+    });
+  }
+  return birds;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): {
@@ -493,6 +557,10 @@ export function initMainMenu(container: HTMLElement): {
   sunObj.position.set(tod.sunX, tod.sunY, -40);
   scene.add(sunObj);
 
+  // ── Seabirds (C527) ──────────────────────────────────────────────────────
+  const seabirds = buildSeabirds();
+  for (const b of seabirds) scene.add(b.group);
+
   // ── Title overlay ─────────────────────────────────────────────────────────
   const titleOverlay = buildTitleOverlay();
   container.appendChild(titleOverlay);
@@ -552,6 +620,24 @@ export function initMainMenu(container: HTMLElement): {
 
     // Tower window flicker
     tower.windowLight.intensity = 2.0 + Math.sin(elapsed * 5.8) * 0.45 + Math.sin(elapsed * 9.2) * 0.15;
+
+    // Seabirds orbit + flap (C527)
+    for (const b of seabirds) {
+      const angle = b.phase + elapsed * b.speed;
+      b.group.position.set(
+        b.orbitCx + Math.cos(angle) * b.orbitR,
+        b.orbitY  + Math.sin(elapsed * 0.35 + b.phase) * 0.8,
+        b.orbitCz + Math.sin(angle) * b.orbitRz,
+      );
+      // Face direction of travel (tangent)
+      b.group.rotation.y = -(angle + Math.PI * 0.5);
+      // Wing flap
+      const flap = Math.sin(elapsed * b.flapFreq * Math.PI * 2 + b.phase) * b.flapAmp;
+      b.wingL.rotation.z =  0.25 + flap;
+      b.wingR.rotation.z = -0.25 - flap;
+      // Bank into turns
+      b.group.rotation.z = flap * 0.4;
+    }
 
     // Camera: fixed in idle, dolly when started
     if (dollyActive) {
