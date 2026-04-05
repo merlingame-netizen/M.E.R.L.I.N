@@ -14,7 +14,7 @@ import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardS
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
-import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain } from './ui/HUD';
+import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain, showOghamActivated } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
@@ -1229,6 +1229,8 @@ async function gameLoop(
       state().useOgham(oghamChoice);
       oghamResult = applyOghamEffect(oghamChoice);
       updateHUD();
+      // C259: flash toast notification for the activated ogham
+      showOghamActivated(oghamChoice);
     }
     hideOghamPanel();
 

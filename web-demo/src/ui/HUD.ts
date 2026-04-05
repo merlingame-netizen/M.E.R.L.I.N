@@ -500,6 +500,71 @@ export function flashFactionGain(factionName: string): void {
   }, 320);
 }
 
+// =============================================================================
+// C259 — Ogham activation toast (top-right flash notification)
+// =============================================================================
+
+/**
+ * Inject the hud-ogham-slide CSS keyframes once into document.head.
+ * Idempotent — safe to call multiple times.
+ */
+function ensureOghamToastStyle(): void {
+  if (document.getElementById('hud-ogham-toast-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-ogham-toast-style';
+  s.textContent = `
+    @keyframes hud-ogham-slide {
+      0%   { opacity:0; transform:translateX(20px); }
+      15%  { opacity:1; transform:translateX(0); }
+      75%  { opacity:1; transform:translateX(0); }
+      100% { opacity:0; transform:translateX(10px); }
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * Show a brief CeltOS-styled toast when an ogham is activated.
+ * Reads OGHAM_SPECS[oghamId] for name + unicode glyph.
+ * Creates #hud-ogham-toast at top-right; auto-removes after 2.5 s.
+ * No-op if oghamId is not found in OGHAM_SPECS.
+ */
+export function showOghamActivated(oghamId: string): void {
+  const spec = OGHAM_SPECS[oghamId];
+  if (!spec) return;
+
+  ensureOghamToastStyle();
+
+  // Remove previous toast if still alive
+  document.getElementById('hud-ogham-toast')?.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'hud-ogham-toast';
+  toast.style.cssText = [
+    'position:fixed',
+    'top:80px',
+    'right:16px',
+    'background:rgba(1,8,2,0.92)',
+    'border:1px solid rgba(51,255,102,0.4)',
+    'border-left:3px solid #33ff66',
+    'padding:6px 12px',
+    'font-family:\'Courier New\',monospace',
+    'font-size:11px',
+    'color:#33ff66',
+    'z-index:100',
+    'pointer-events:none',
+    'letter-spacing:0.15em',
+    'animation:hud-ogham-slide 2.5s ease forwards',
+  ].join(';');
+
+  toast.textContent = `${spec.unicode} ${spec.name.toUpperCase()}`;
+  document.body.appendChild(toast);
+
+  window.setTimeout(() => {
+    document.getElementById('hud-ogham-toast')?.remove();
+  }, 2500);
+}
+
 /** Unsubscribe HUD from store — call when entering lair/menu to stop unnecessary renders. BUG-C88-06. */
 export function teardownHUD(): void {
   _hudUnsubscribe?.();
@@ -542,6 +607,9 @@ export function teardownHUD(): void {
   // C240: reset critical alert flag and remove pulse style.
   _criticalAlerted = false;
   document.getElementById('hud-critical-style')?.remove();
+  // C259: remove ogham toast and its style on teardown.
+  document.getElementById('hud-ogham-toast')?.remove();
+  document.getElementById('hud-ogham-toast-style')?.remove();
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;
