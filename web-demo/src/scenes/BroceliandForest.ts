@@ -966,6 +966,12 @@ let tumulusT461: number = 0;
 let tumulusGlowMat461: MeshBasicMaterial | null = null;
 let tumulusLight461: PointLight | null = null;
 
+// ── Cycle-466: enchanted mossy stone bridge over glowing forest stream ────────
+let bridgeGroup466: Group | null = null;
+let bridgeT466: number = 0;
+let bridgeStreamMat466: MeshBasicMaterial | null = null;
+let bridgeLight466: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2512,6 +2518,90 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(tumulus461);
   }
 
+  // ── Cycle-466: enchanted mossy stone bridge over glowing forest stream ──────
+  {
+    bridgeGroup466 = new Group();
+    bridgeGroup466.position.set(3, 0, -10);
+
+    // Stream channel (sunken floor)
+    const streamBed = new Mesh(
+      new BoxGeometry(4.0, 0.1, 1.2),
+      new MeshBasicMaterial({ color: 0x010802 })
+    );
+    streamBed.position.y = -0.25;
+    bridgeGroup466.add(streamBed);
+
+    // Stream water surface
+    const streamWater = new Mesh(
+      new BoxGeometry(3.8, 0.04, 1.0),
+      new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.7 })
+    );
+    streamWater.position.y = -0.15;
+    bridgeStreamMat466 = streamWater.material as MeshBasicMaterial;
+    bridgeGroup466.add(streamWater);
+
+    // Left abutment
+    const leftAbutment = new Mesh(
+      new BoxGeometry(0.6, 1.0, 1.5),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    leftAbutment.position.set(-1.5, 0.3, 0);
+    bridgeGroup466.add(leftAbutment);
+
+    // Right abutment
+    const rightAbutment = new Mesh(
+      new BoxGeometry(0.6, 1.0, 1.5),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    rightAbutment.position.set(1.5, 0.3, 0);
+    bridgeGroup466.add(rightAbutment);
+
+    // Bridge deck (walkway on top)
+    const deck = new Mesh(
+      new BoxGeometry(3.4, 0.22, 1.3),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    deck.position.y = 0.82;
+    bridgeGroup466.add(deck);
+
+    // 2 low parapets (side walls)
+    for (const side of [-1, 1]) {
+      const parapet = new Mesh(
+        new BoxGeometry(3.2, 0.35, 0.15),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      parapet.position.set(0, 1.1, side * 0.58);
+      bridgeGroup466.add(parapet);
+    }
+
+    // Arch soffit: curved underside suggestion
+    const archSoffit = new Mesh(
+      new TorusGeometry(1.0, 0.2, 4, 12, Math.PI),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    archSoffit.rotation.z = Math.PI;
+    archSoffit.position.y = 0.6;
+    bridgeGroup466.add(archSoffit);
+
+    // 5 moss patches on bridge surfaces
+    for (let i = 0; i < 5; i++) {
+      const moss = new Mesh(
+        new SphereGeometry(0.08 + Math.random() * 0.05, 4, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.35 })
+      );
+      moss.scale.y = 0.25;
+      moss.position.set(-1.2 + i * 0.6, 0.94, (Math.random() - 0.5) * 0.5);
+      bridgeGroup466.add(moss);
+    }
+
+    // Stream PointLight
+    bridgeLight466 = new PointLight(0x33ff66, 0.2, 4.0);
+    bridgeLight466.position.set(0, -0.1, 0);
+    bridgeGroup466.add(bridgeLight466);
+
+    group.add(bridgeGroup466);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3085,6 +3175,15 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (tumulusLight461) {
       tumulusLight461.intensity = 0.15 + 0.07 * Math.sin(tumulusT461 * 0.7);
     }
+
+    // Cycle-466: bridge stream shimmer
+    bridgeT466 += dt;
+    if (bridgeStreamMat466) {
+      bridgeStreamMat466.opacity = 0.6 + 0.15 * Math.sin(bridgeT466 * 1.4);
+    }
+    if (bridgeLight466) {
+      bridgeLight466.intensity = 0.18 + 0.07 * Math.sin(bridgeT466 * 1.4);
+    }
   };
 
   const dispose = (): void => {
@@ -3448,6 +3547,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     tumulusGlowMat461 = null;
     tumulusLight461 = null;
+
+    // Cycle-466: bridge cleanup
+    if (bridgeGroup466) {
+      group.remove(bridgeGroup466);
+      bridgeGroup466.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (Array.isArray(mat)) {
+          mat.forEach(m => m.dispose());
+        } else if (mat) {
+          (mat as Material).dispose();
+        }
+      });
+      bridgeGroup466 = null;
+    }
+    bridgeStreamMat466 = null;
+    bridgeLight466 = null;
   };
 
   return { group, update, dispose };
