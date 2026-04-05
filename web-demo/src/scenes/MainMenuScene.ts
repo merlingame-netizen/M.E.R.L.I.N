@@ -805,6 +805,11 @@ let _crannGroup423: Group | null = null;
 let _crannT423 = 0;
 let _crannLeafLight423: PointLight | null = null;
 
+// C427 — distant stone circle silhouette
+let _stoneCircleGroup427: Group | null = null;
+let _stoneCircleT427 = 0;
+let _stoneCircleLight427: PointLight | null = null;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1545,6 +1550,13 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C427: stone circle ancient energy pulse
+    if (_stoneCircleGroup427 && _stoneCircleLight427) {
+      _stoneCircleT427 += dt;
+      // Very slow energy pulse — ancient and steady
+      _stoneCircleLight427.intensity = 0.06 + Math.sin(_stoneCircleT427 * 0.35) * 0.03;
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -1787,6 +1799,57 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   _crannGroup423.position.set(-12, 0, -45);
   scene.add(_crannGroup423);
 
+  // C427 — distant stone circle
+  _stoneCircleGroup427 = new Group();
+
+  const stoneDarkMat = new MeshBasicMaterial({ color: 0x050f08 });
+  const NUM_STONES = 8;
+  const RING_RADIUS = 3.2;
+
+  // Standing stones
+  for (let si = 0; si < NUM_STONES; si++) {
+    const angle = (si / NUM_STONES) * Math.PI * 2;
+    const stoneH = 2.2 + (si % 3) * 0.4; // varying heights
+    const stoneW = 0.45 + (si % 2) * 0.1;
+    const stone = new Mesh(new BoxGeometry(stoneW, stoneH, 0.3), stoneDarkMat);
+    stone.position.set(
+      Math.cos(angle) * RING_RADIUS,
+      stoneH / 2,
+      Math.sin(angle) * RING_RADIUS
+    );
+    stone.rotation.y = angle; // face inward
+    _stoneCircleGroup427.add(stone);
+  }
+
+  // Lintel stones (4 pairs of adjacent stones get a cap)
+  for (let li = 0; li < 4; li++) {
+    const angle1 = (li * 2 / NUM_STONES) * Math.PI * 2;
+    const angle2 = ((li * 2 + 1) / NUM_STONES) * Math.PI * 2;
+    const midAngle = (angle1 + angle2) / 2;
+    const lintelH = 2.8; // top of shorter stone
+    const lintel = new Mesh(new BoxGeometry(1.6, 0.35, 0.3), stoneDarkMat);
+    lintel.position.set(
+      Math.cos(midAngle) * RING_RADIUS,
+      lintelH + 0.175,
+      Math.sin(midAngle) * RING_RADIUS
+    );
+    lintel.rotation.y = midAngle;
+    _stoneCircleGroup427.add(lintel);
+  }
+
+  // Central altar stone: flat slab
+  const altar = new Mesh(new BoxGeometry(1.0, 0.2, 0.6), stoneDarkMat);
+  altar.position.set(0, 0.1, 0);
+  _stoneCircleGroup427.add(altar);
+
+  // Faint green energy glow at center (ancient power)
+  _stoneCircleLight427 = new PointLight(0x33ff66, 0.08, 8.0);
+  _stoneCircleLight427.position.set(0, 1.5, 0);
+  _stoneCircleGroup427.add(_stoneCircleLight427);
+
+  _stoneCircleGroup427.position.set(16, 0, -44);
+  scene.add(_stoneCircleGroup427);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -1958,6 +2021,24 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       scene.remove(_crannGroup423);
       _crannGroup423 = null;
       _crannLeafLight423 = null;
+    }
+
+    // C427: dispose stone circle
+    if (_stoneCircleGroup427) {
+      _stoneCircleGroup427.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            c.material.forEach((m: Material) => m.dispose());
+          } else {
+            (c.material as Material).dispose();
+          }
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(_stoneCircleGroup427);
+      _stoneCircleLight427 = null;
+      _stoneCircleGroup427 = null;
     }
 
     scene.traverse((obj) => {
