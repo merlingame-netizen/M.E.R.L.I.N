@@ -560,36 +560,39 @@ function addBootCompletePhase(terminalEl: HTMLElement, onDone: () => void): void
 }
 
 // =============================================================================
-// Phase 2 — CELTOS pixel logo drawn column by column (terminal scan, left→right)
+// Phase 2 — CELTOS pixel logo drawn large, column by column, then BIENVENUE
 // =============================================================================
 
-async function runPhase2(container: HTMLDivElement): Promise<HTMLDivElement> {
-  const cols = LOGO_GRID[0]?.length ?? 23;
-  const rows = LOGO_GRID.length;
-  const logoW = cols * BLOCK_STEP - BLOCK_GAP;
-  const logoH = rows * BLOCK_STEP - BLOCK_GAP;
+// Big block size for the centred logo reveal
+const BIG_BLOCK = 24;
+const BIG_GAP   = 3;
+const BIG_STEP  = BIG_BLOCK + BIG_GAP;
 
+async function runPhase2(container: HTMLDivElement): Promise<HTMLDivElement> {
+  const cols  = LOGO_GRID[0]?.length ?? 23;
+  const rows  = LOGO_GRID.length;
+  const logoW = cols * BIG_STEP - BIG_GAP;
+  const logoH = rows * BIG_STEP - BIG_GAP;
+
+  // Wrapper: centred, sits slightly above mid-screen
   const logoWrap = document.createElement('div');
   logoWrap.style.cssText = [
-    'position:absolute;left:50%;top:50%;',
+    'position:absolute;left:50%;top:44%;',
     'transform:translate(-50%,-50%);',
     `width:${logoW}px;height:${logoH}px;`,
   ].join('');
   container.appendChild(logoWrap);
 
-  // Build all block elements — hidden initially
-  // Grouped by column for left-to-right scan reveal
+  // Build blocks, grouped by column
   const colGroups: HTMLDivElement[][] = Array.from({ length: cols }, () => []);
-
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (!LOGO_GRID[r]?.[c]) continue;
       const block = document.createElement('div');
       block.style.cssText = [
         'position:absolute;',
-        `left:${c * BLOCK_STEP}px;`,
-        `top:${r * BLOCK_STEP}px;`,
-        `width:${BLOCK_SIZE}px;height:${BLOCK_SIZE}px;`,
+        `left:${c * BIG_STEP}px;top:${r * BIG_STEP}px;`,
+        `width:${BIG_BLOCK}px;height:${BIG_BLOCK}px;`,
         `background:${CRT.PHOSPHOR};`,
         'opacity:0;',
       ].join('');
@@ -598,39 +601,52 @@ async function runPhase2(container: HTMLDivElement): Promise<HTMLDivElement> {
     }
   }
 
-  // Scan cursor — a vertical green line that sweeps left to right
+  // Vertical scan cursor
   const cursor = document.createElement('div');
   cursor.style.cssText = [
-    'position:absolute;top:0;',
-    `width:2px;height:${logoH}px;`,
+    'position:absolute;top:0;left:0;',
+    `width:3px;height:${logoH}px;`,
     `background:${CRT.BRIGHT};`,
-    'opacity:0.85;box-shadow:0 0 6px rgba(51,255,102,0.7);',
+    'box-shadow:0 0 10px rgba(51,255,102,0.8);',
   ].join('');
   logoWrap.appendChild(cursor);
 
-  // Scan: reveal each column with cursor advancing 22ms/col
-  const COL_DELAY = 22;
+  // Scan left → right, 18 ms per column
   for (let c = 0; c < cols; c++) {
-    await wait(COL_DELAY);
-    // Move cursor to current column
-    cursor.style.left = `${c * BLOCK_STEP - 1}px`;
-    // Reveal all pixels in this column instantly
-    for (const block of colGroups[c] ?? []) {
-      block.style.opacity = '1';
-    }
+    await wait(18);
+    cursor.style.left = `${c * BIG_STEP - 1}px`;
+    for (const b of colGroups[c] ?? []) b.style.opacity = '1';
   }
-
-  // Cursor disappears after scan
-  await wait(80);
+  await wait(60);
   cursor.remove();
 
-  // Brief amber flash — whole logo turns amber then snaps back
-  const allBlocks = logoWrap.querySelectorAll<HTMLDivElement>('div');
-  allBlocks.forEach(b => { b.style.background = CRT.AMBER; });
-  await wait(120);
-  allBlocks.forEach(b => { b.style.background = CRT.PHOSPHOR; });
-  await wait(400);
+  // Amber flash
+  logoWrap.querySelectorAll<HTMLDivElement>('div').forEach(b => {
+    b.style.background = CRT.AMBER;
+  });
+  await wait(110);
+  logoWrap.querySelectorAll<HTMLDivElement>('div').forEach(b => {
+    b.style.background = CRT.PHOSPHOR;
+  });
 
+  // "v4.2 KERNEL" subtitle already visible; now add BIENVENUE beneath logo
+  const welcome = document.createElement('div');
+  welcome.style.cssText = [
+    'position:absolute;left:50%;',
+    `top:calc(44% + ${logoH / 2 + 28}px);`,
+    'transform:translateX(-50%);',
+    `font-family:'Courier New',monospace;letter-spacing:0.22em;`,
+    `font-size:15px;color:${CRT.PHOSPHOR};`,
+    'opacity:0;transition:opacity 0.45s;',
+    'white-space:nowrap;text-align:center;',
+    `text-shadow:0 0 14px rgba(51,255,102,0.55);`,
+  ].join('');
+  welcome.textContent = '> BIENVENUE DANS LE JEU DES OGHAMS';
+  container.appendChild(welcome);
+  await wait(30);
+  welcome.style.opacity = '1';
+
+  await wait(900);
   return logoWrap;
 }
 
@@ -828,17 +844,15 @@ export async function runCeltOSIntro(): Promise<void> {
     document.addEventListener('keydown', onSkip, { once: true });
   });
 
+  // Fire loadTemplates in background — card system needs it regardless of skip
+  loadTemplates().catch(() => { /* silent — CardSystem has fallback */ });
+
   try {
     await Promise.race([
       (async () => {
         await runPhase1(container);
-        await runFactionMatrixScan(container);
-        // BOOT COMPLETE dramatic reveal (Cycle 368)
-        await new Promise<void>((resolve) => {
-          addBootCompletePhase(container, resolve);
-        });
-        const logoWrap = await runPhase2(container);
-        await runPhase3(container, logoWrap);
+        await runPhase2(container);
+        await wait(800);
       })(),
       skipSignal,
     ]);
