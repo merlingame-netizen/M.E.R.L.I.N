@@ -5,6 +5,53 @@
 
 export type SceneState = 'BOOT' | 'MENU' | 'LAIR' | 'GAME';
 
+// ─── Biome tint flash (Cycle 377) ────────────────────────────────────────────
+// CeltOS color law: all tints are green-family only, very low opacity.
+
+const BIOME_TINTS: Record<string, string> = {
+  foret_broceliande: 'rgba(10, 40, 10, 0.15)',  // deep forest green
+  cotes_sauvages:    'rgba(10, 30, 25, 0.15)',  // ocean teal
+  plaine_druides:    'rgba(15, 35, 5, 0.15)',   // harvest field green
+  landes_bruyere:    'rgba(8, 20, 8, 0.15)',    // moor dark green
+  cercles_pierres:   'rgba(5, 20, 15, 0.15)',   // stone circle moss
+  marais_korrigans:  'rgba(5, 25, 10, 0.15)',   // bog swamp green
+  monts_brumeux:     'rgba(8, 22, 18, 0.15)',   // mountain mist teal
+  vallee_anciens:    'rgba(12, 30, 20, 0.15)',  // ancient valley green
+  merlin_lair:       'rgba(15, 40, 15, 0.15)',  // lair magic green
+};
+const DEFAULT_TINT = 'rgba(10, 30, 10, 0.12)';
+
+/** Inject the @keyframes biome-flash CSS rule once, guarded by element id. */
+function _ensureBiomeFlashStyle(): void {
+  if (document.getElementById('biome-flash-style-377')) return;
+  const style = document.createElement('style');
+  style.id = 'biome-flash-style-377';
+  style.textContent = `
+@keyframes biome-flash {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  100% { opacity: 0; }
+}`;
+  document.head.appendChild(style);
+}
+
+/**
+ * Brief full-screen color flash using the destination biome's signature tint.
+ * Fires and forgets — the flash div self-removes after 350 ms.
+ */
+function flashBiomeTint(biome: string, containerEl: HTMLElement): void {
+  _ensureBiomeFlashStyle();
+  const tint = BIOME_TINTS[biome] ?? DEFAULT_TINT;
+  const flash = document.createElement('div');
+  flash.style.cssText = `
+    position: fixed; inset: 0; background: ${tint};
+    pointer-events: none; z-index: 9998;
+    animation: biome-flash 0.3s ease forwards;
+  `;
+  containerEl.appendChild(flash);
+  setTimeout(() => flash.remove(), 350);
+}
+
 const TRANSITION_RUNES = ['ᚁ','ᚂ','ᚃ','ᚄ','ᚅ','ᚆ','ᚇ','ᚈ','ᚉ','ᚋ','ᚌ','ᚍ','ᚎ'];
 
 interface BiomeTransitionData {
@@ -99,6 +146,11 @@ export function transition(
  *                  uses biome-specific rune, color, and label.
  */
 export function cutToBlack(biomeKey?: string): void {
+  // C377: Biome-tinted color flash fires before the main overlay takes over.
+  if (biomeKey != null) {
+    flashBiomeTint(biomeKey, document.body);
+  }
+
   sfx('beep'); // C185: CRT cut feedback
   const { el } = getOverlay();
 
