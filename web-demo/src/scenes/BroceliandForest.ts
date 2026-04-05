@@ -9,7 +9,7 @@ import {
   CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry,
   DoubleSide, Float32BufferAttribute, FogExp2, FrontSide, Group, HemisphereLight, Material,
   Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Points, PointLight,
-  PointsMaterial, ShaderMaterial, SphereGeometry, Vector3,
+  PointsMaterial, ShaderMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
 
 import type { BiomeSceneResult } from './CoastBiome';
@@ -853,6 +853,32 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(crow);
   }
 
+  // ── Mystical floating lantern — CeltOS-green glowing orb deep in the forest ──
+  let _lanternMesh: Mesh | null = null;
+  let _lanternLight: PointLight | null = null;
+  let _lanternTime = 0;
+  {
+    const lanternGeo = new SphereGeometry(0.25, 8, 6);
+    const lanternMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.9 });
+    _lanternMesh = new Mesh(lanternGeo, lanternMat);
+    _lanternMesh.position.set(-8, 2.5, -28);
+    group.add(_lanternMesh);
+
+    _lanternLight = new PointLight(0x33ff66, 0.8, 8);
+    _lanternLight.position.set(-8, 2.5, -28);
+    group.add(_lanternLight);
+
+    const cageGeo = new TorusGeometry(0.3, 0.04, 4, 8);
+    const cageMat = new MeshBasicMaterial({ color: 0x1a3010 });
+    const cage = new Mesh(cageGeo, cageMat);
+    cage.position.set(-8, 2.5, -28);
+    cage.rotation.z = Math.PI / 2;
+    group.add(cage);
+    // Attach cage as child of lantern for synchronized bobbing
+    _lanternMesh.add(cage);
+    cage.position.set(0, 0, 0);
+  }
+
   // ── Firefly swarm — 20 glowing CeltOS-green particles drifting through forest ─
   const _fireflyMeshes: Mesh[] = [];
   let _fireflyTime = 0;
@@ -943,6 +969,18 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     // Crow flock flight
     crowFlock.update(sceneTime, dt);
 
+    // Floating lantern bob + pulse
+    _lanternTime += dt;
+    if (_lanternMesh) {
+      _lanternMesh.position.y = 2.5 + Math.sin(_lanternTime * 0.7) * 0.3;
+      _lanternMesh.position.x = -8 + Math.sin(_lanternTime * 0.4) * 0.15;
+      (_lanternMesh.material as MeshBasicMaterial).opacity = 0.7 + Math.sin(_lanternTime * 1.5) * 0.2;
+    }
+    if (_lanternLight) {
+      _lanternLight.position.copy(_lanternMesh!.position);
+      _lanternLight.intensity = 0.6 + Math.sin(_lanternTime * 1.5) * 0.2;
+    }
+
     // Firefly swarm drift + twinkle
     _fireflyTime += dt;
     for (const fly of _fireflyMeshes) {
@@ -972,6 +1010,8 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       mat.dispose();
     }
     _fireflyMeshes.length = 0;
+    _lanternMesh = null;
+    _lanternLight = null;
   };
 
   return { group, update, dispose };
