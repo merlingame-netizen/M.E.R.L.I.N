@@ -10,8 +10,8 @@
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
   ConeGeometry, CylinderGeometry, DodecahedronGeometry, Fog, Group, HemisphereLight,
-  InstancedMesh, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
-  PointLight, Points, PointsMaterial, SphereGeometry, Vector3,
+  InstancedMesh, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
+  PointLight, Points, PointsMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
 
 import type { BiomeSceneResult } from './CoastBiome';
@@ -368,6 +368,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let landeSporeTime = 0;
   let cerclesInscriptionMats: MeshStandardMaterial[] = [];
   let cerclesTime = 0;
+  let altarRuneRing: Mesh | null = null;
+  let altarRuneTime = 0;
   let valleeWispMesh: Points | null = null;
   let valleeWispTime = 0;
   let montsWindMesh: Points | null = null;
@@ -564,6 +566,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     const upright2 = new Mesh(new BoxGeometry(0.25, 1.2, 0.25), stoneMat);
     upright2.position.set(0.7, -0.25, -15);
     group.add(upright2);
+    // Central altar flat stone (cylinder)
+    const altarStone = new Mesh(
+      new CylinderGeometry(1.2, 1.4, 0.25, 8),
+      new MeshLambertMaterial({ color: 0x2a3a2a, emissive: 0x0a1a0a }),
+    );
+    altarStone.position.set(0, -0.87, -15);
+    group.add(altarStone);
+    // Rotating rune ring flat on ground
+    const runeMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 });
+    altarRuneRing = new Mesh(new TorusGeometry(2.5, 0.08, 6, 32), runeMat);
+    altarRuneRing.position.set(0, -0.75, -15);
+    altarRuneRing.rotation.x = -Math.PI / 2;
+    group.add(altarRuneRing);
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -697,6 +712,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         stMat.emissiveIntensity = 0.06 + Math.sin(cerclesTime * 0.3) * 0.04;
       }
     }
+    // Cercles de Pierres — rotating altar rune ring
+    if (altarRuneRing !== null) {
+      altarRuneTime += dt;
+      altarRuneRing.rotation.z += dt * 0.25;
+      (altarRuneRing.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(altarRuneTime * 1.2) * 0.25;
+    }
     // Vallee Anciens — ancestor will-o-wisp drift
     if (valleeWispMesh !== null) {
       valleeWispTime += dt;
@@ -731,6 +752,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
   const dispose = (): void => {
     plaineWispMeshes = [];
+    altarRuneRing = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
