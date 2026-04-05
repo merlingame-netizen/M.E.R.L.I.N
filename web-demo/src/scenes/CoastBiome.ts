@@ -717,6 +717,19 @@ let fishLeaderX479: number = 0;
 let fishLeaderY479: number = -1.5;
 let fishLeaderZ479: number = -6;
 
+// ── Tide pools with starfish and anemones (C484) ──────────────────────────
+let t484: number = 0;
+let crabTimer484: number = 15 + Math.random() * 10;
+let crabActive484: boolean = false;
+let crabProgress484: number = 0;
+const tidePoolGroup484: Group[] = [];
+const tidePoolWaterMats484: MeshStandardMaterial[] = [];
+const starfishMeshes484: Mesh[] = [];
+const anemonteTentacles484: { mesh: Mesh; phase: number; poolIdx: number }[] = [];
+const crabMeshes484: Mesh[] = [];
+const crabStartPos484: [number, number, number][] = [];
+const crabEndPos484: [number, number, number][] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -2012,6 +2025,154 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(fishSchoolGroup479);
   }
 
+  // ── Tide pools with starfish and anemones (C484) ──────────────────────────
+  {
+    const poolPositions: [number, number, number][] = [
+      [6, 0.01, -5],
+      [8, 0.01, -8],
+    ];
+
+    const waterMat = new MeshStandardMaterial({
+      color: 0x0a1a10,
+      emissive: 0x0a3320,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.85,
+      metalness: 0.1,
+      roughness: 0.0,
+    });
+
+    const starfishMat = new MeshStandardMaterial({
+      color: 0x1a4428,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.5,
+      flatShading: true,
+    });
+
+    const anemoneBodyMat = new MeshStandardMaterial({
+      color: 0x0d3322,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.7,
+      flatShading: true,
+    });
+
+    poolPositions.forEach((pos, poolIdx) => {
+      const poolGroup = new Group();
+      poolGroup.position.set(pos[0], pos[1], pos[2]);
+
+      // Water disc
+      const poolRadius = 0.8 + Math.random() * 0.4;
+      const waterMesh = new Mesh(
+        new CylinderGeometry(poolRadius, poolRadius, 0.05, 16),
+        waterMat.clone(),
+      );
+      waterMesh.position.y = 0;
+      poolGroup.add(waterMesh);
+      tidePoolWaterMats484.push(waterMesh.material as MeshStandardMaterial);
+
+      // 3 starfish per pool
+      for (let s = 0; s < 3; s++) {
+        const starGroup = new Group();
+        const angle = (s / 3) * Math.PI * 2;
+        const r = 0.3 + Math.random() * 0.35;
+        starGroup.position.set(
+          Math.cos(angle) * r,
+          0.04,
+          Math.sin(angle) * r,
+        );
+        // 5 arms at 72° intervals, each tilted 90° to lie flat
+        for (let a = 0; a < 5; a++) {
+          const armAngle = (a / 5) * Math.PI * 2;
+          const arm = new Mesh(
+            new ConeGeometry(0.04, 0.25, 4),
+            starfishMat,
+          );
+          arm.rotation.z = Math.PI / 2; // lie flat
+          arm.rotation.y = armAngle;
+          arm.position.set(
+            Math.cos(armAngle) * 0.1,
+            0,
+            Math.sin(armAngle) * 0.1,
+          );
+          starGroup.add(arm);
+        }
+        poolGroup.add(starGroup);
+        // Store the group container as a Mesh-like for Y rotation animation
+        (starGroup as any).__poolIdx = poolIdx;
+        starfishMeshes484.push(starGroup as unknown as Mesh);
+      }
+
+      // 4 sea anemones per pool
+      for (let an = 0; an < 4; an++) {
+        const anemoneGroup = new Group();
+        const angle = (an / 4) * Math.PI * 2 + 0.4;
+        const r = 0.4 + Math.random() * 0.3;
+        anemoneGroup.position.set(
+          Math.cos(angle) * r,
+          0.04,
+          Math.sin(angle) * r,
+        );
+
+        // Central stalk
+        const stalk = new Mesh(
+          new CylinderGeometry(0.03, 0.05, 0.15, 5),
+          anemoneBodyMat,
+        );
+        stalk.position.y = 0.075;
+        anemoneGroup.add(stalk);
+
+        // 6 tentacles splayed at top
+        for (let tt = 0; tt < 6; tt++) {
+          const tentAngle = (tt / 6) * Math.PI * 2;
+          const tentacle = new Mesh(
+            new ConeGeometry(0.02, 0.12, 3),
+            anemoneBodyMat,
+          );
+          tentacle.position.set(
+            Math.cos(tentAngle) * 0.04,
+            0.15,
+            Math.sin(tentAngle) * 0.04,
+          );
+          // Tilt outward from center
+          tentacle.rotation.z = 0.5;
+          tentacle.rotation.y = tentAngle;
+          anemoneGroup.add(tentacle);
+          anemonteTentacles484.push({
+            mesh: tentacle,
+            phase: Math.random() * Math.PI * 2,
+            poolIdx,
+          });
+        }
+
+        poolGroup.add(anemoneGroup);
+      }
+
+      // Hermit crab (hidden initially)
+      const crab = new Mesh(
+        new BoxGeometry(0.08, 0.06, 0.06),
+        new MeshStandardMaterial({
+          color: 0x1a3a28,
+          emissive: 0x224433,
+          emissiveIntensity: 0.3,
+          flatShading: true,
+        }),
+      );
+      crab.visible = false;
+      crab.position.y = 0.04;
+      poolGroup.add(crab);
+      crabMeshes484.push(crab);
+      // Edge-to-edge start/end within pool radius
+      const cr = (poolRadius - 0.12);
+      const startA = Math.random() * Math.PI * 2;
+      const endA = startA + Math.PI + (Math.random() - 0.5) * 0.8;
+      crabStartPos484.push([Math.cos(startA) * cr, 0.04, Math.sin(startA) * cr]);
+      crabEndPos484.push([Math.cos(endA) * cr, 0.04, Math.sin(endA) * cr]);
+
+      group.add(poolGroup);
+      tidePoolGroup484.push(poolGroup);
+    });
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2630,6 +2791,55 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     });
 
+    // ── Tide pools animation (C484) ───────────────────────────────────────
+    t484 += dt;
+
+    // Water ripple emissiveIntensity oscillation
+    tidePoolWaterMats484.forEach((mat) => {
+      mat.emissiveIntensity = 0.2 + 0.15 * Math.sin(t484 * 0.8);
+    });
+
+    // Starfish slow Y rotation
+    starfishMeshes484.forEach((sf, i) => {
+      sf.rotation.y += 0.015 * dt * (i % 2 === 0 ? 1 : -1);
+    });
+
+    // Anemone tentacle sway
+    anemonteTentacles484.forEach((td) => {
+      td.mesh.rotation.x = 0.5 + 0.25 * Math.sin(t484 * 1.5 + td.phase);
+      td.mesh.rotation.z = td.mesh.rotation.z + 0.1 * Math.sin(t484 * 1.3 + td.phase + 1.0) * dt;
+    });
+
+    // Hermit crab per pool
+    crabTimer484 -= dt;
+    if (crabTimer484 <= 0 && !crabActive484) {
+      crabActive484 = true;
+      crabProgress484 = 0;
+      // Activate one crab (alternate by time)
+      const crabIdx = Math.floor(t484 / 20) % crabMeshes484.length;
+      crabMeshes484.forEach((c, i) => { c.visible = (i === crabIdx); });
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'splash' } }));
+    }
+    if (crabActive484) {
+      crabProgress484 = Math.min(1, crabProgress484 + dt * 0.12);
+      const crabIdx = Math.floor(t484 / 20) % crabMeshes484.length;
+      const crab = crabMeshes484[crabIdx];
+      if (crab) {
+        const sp = crabStartPos484[crabIdx];
+        const ep = crabEndPos484[crabIdx];
+        if (sp && ep) {
+          crab.position.x = sp[0] + (ep[0] - sp[0]) * crabProgress484;
+          crab.position.y = sp[1];
+          crab.position.z = sp[2] + (ep[2] - sp[2]) * crabProgress484;
+        }
+      }
+      if (crabProgress484 >= 1) {
+        crabActive484 = false;
+        crabTimer484 = 15 + Math.random() * 10;
+        crabMeshes484.forEach((c) => { c.visible = false; });
+      }
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2885,6 +3095,23 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       fishSchoolGroup479 = null;
     }
     fishBodies479.length = 0;
+    tidePoolGroup484.forEach((pg) => {
+      pg.traverse((c) => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        if ((c as Mesh).material) {
+          const mat = (c as Mesh).material;
+          if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+          else (mat as Material).dispose();
+        }
+      });
+    });
+    tidePoolGroup484.length = 0;
+    tidePoolWaterMats484.length = 0;
+    starfishMeshes484.length = 0;
+    anemonteTentacles484.length = 0;
+    crabMeshes484.length = 0;
+    crabStartPos484.length = 0;
+    crabEndPos484.length = 0;
     group.clear();
   };
 
