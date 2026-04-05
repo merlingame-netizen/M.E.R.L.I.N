@@ -435,6 +435,131 @@ async function runFactionMatrixScan(container: HTMLDivElement): Promise<void> {
 }
 
 // =============================================================================
+// Phase 1c — BOOT COMPLETE dramatic reveal
+// =============================================================================
+
+/** Inject CSS for the BOOT COMPLETE phase (idempotent). */
+function _ensureBootCompleteStyle(): void {
+  if (document.getElementById('celtos-boot-complete-style')) return;
+  const s = document.createElement('style');
+  s.id = 'celtos-boot-complete-style';
+  s.textContent = `
+    .celtos-boot-flash {
+      animation: boot-flash 0.4s ease forwards;
+    }
+    @keyframes boot-flash {
+      0%   { background: rgba(51,255,102,0.0); }
+      20%  { background: rgba(51,255,102,0.15); }
+      100% { background: rgba(51,255,102,0.0); }
+    }
+    .celtos-press-key {
+      color: #33ff66;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      animation: press-key-blink 0.6s step-end infinite;
+    }
+    @keyframes press-key-blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/** Type `text` into `el` one character at a time at `speed` ms/char. */
+function _typeText(el: HTMLElement, text: string, speed: number, onDone: () => void): void {
+  let i = 0;
+  const id = setInterval(() => {
+    if (i >= text.length) { clearInterval(id); onDone(); return; }
+    el.textContent += text[i++];
+  }, speed);
+}
+
+/**
+ * BOOT COMPLETE dramatic reveal sequence.
+ * Runs after the faction matrix scan and before the logo/loading-bar phases.
+ * Resolves via `onDone` when the player presses any key or clicks.
+ */
+function addBootCompletePhase(terminalEl: HTMLElement, onDone: () => void): void {
+  _ensureBootCompleteStyle();
+
+  const BASE_STYLE = [
+    'font-family:"Courier New",monospace;',
+    'font-size:13px;',
+    'color:#33ff66;',
+    'line-height:22px;',
+  ].join('');
+
+  // Wrapper centered in terminalEl
+  const wrap = document.createElement('div');
+  wrap.style.cssText = [
+    'position:absolute;left:50%;top:50%;',
+    'transform:translate(-50%,-50%);',
+    'text-align:left;',
+  ].join('');
+  terminalEl.appendChild(wrap);
+
+  // Line 1 — types "CELTOS v2.4 INITIALIZED"
+  const line1 = document.createElement('div');
+  line1.style.cssText = BASE_STYLE;
+  wrap.appendChild(line1);
+
+  // Line 2 — types "MERLIN INTERFACE ACTIVE"
+  const line2 = document.createElement('div');
+  line2.style.cssText = BASE_STYLE + 'margin-top:4px;';
+  wrap.appendChild(line2);
+
+  // Press-any-key line
+  const pressKeyEl = document.createElement('span');
+  pressKeyEl.className = 'celtos-press-key';
+  pressKeyEl.textContent = '> PRESS ANY KEY';
+  pressKeyEl.style.cssText = [
+    'display:none;',
+    'margin-top:18px;',
+    'display:none;',
+  ].join('');
+
+  const pressKeyDiv = document.createElement('div');
+  pressKeyDiv.style.cssText = 'margin-top:18px;display:none;';
+  pressKeyDiv.appendChild(pressKeyEl);
+  wrap.appendChild(pressKeyDiv);
+
+  // ---- Sequence ----
+
+  // 300ms pause, then type line 1
+  setTimeout(() => {
+    _typeText(line1, '> CELTOS v2.4 INITIALIZED', 30, () => {
+      // 200ms pause, then type line 2
+      setTimeout(() => {
+        _typeText(line2, '> MERLIN INTERFACE ACTIVE', 30, () => {
+          // Flash: add class, then remove after animation completes (400ms)
+          terminalEl.classList.add('celtos-boot-flash');
+          setTimeout(() => {
+            terminalEl.classList.remove('celtos-boot-flash');
+
+            // Show blinking press-any-key
+            pressKeyDiv.style.display = 'block';
+
+            // Listen for input — call onDone once
+            let fired = false;
+            const trigger = (): void => {
+              if (fired) return;
+              fired = true;
+              document.removeEventListener('keydown', trigger);
+              terminalEl.removeEventListener('click', trigger);
+              wrap.remove();
+              onDone();
+            };
+            document.addEventListener('keydown', trigger);
+            terminalEl.addEventListener('click', trigger);
+          }, 400);
+        });
+      }, 200);
+    });
+  }, 300);
+}
+
+// =============================================================================
 // Phase 2 — CELTOS pixel logo (blocks fall from top)
 // =============================================================================
 
@@ -701,6 +826,10 @@ export async function runCeltOSIntro(): Promise<void> {
       (async () => {
         await runPhase1(container);
         await runFactionMatrixScan(container);
+        // BOOT COMPLETE dramatic reveal (Cycle 368)
+        await new Promise<void>((resolve) => {
+          addBootCompletePhase(container, resolve);
+        });
         const logoWrap = await runPhase2(container);
         await runPhase3(container, logoWrap);
       })(),
