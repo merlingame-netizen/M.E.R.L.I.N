@@ -794,6 +794,13 @@ const fogBeaconFlameMats515: MeshStandardMaterial[] = [];
 const fogBeaconWispMats515: MeshStandardMaterial[] = [];
 let fogBeaconLight515: PointLight | null = null;
 
+// ── Driftwood tide-marker poles with lantern (C518) ─────────────────────
+let tideMarkerGroup518: Group | null = null;
+const tideMarkerPoles518: Group[] = [];
+let tideMarkerFlameMat518: MeshStandardMaterial | null = null;
+let tideMarkerLight518: PointLight | null = null;
+let t518: number = 0;
+
 // ── Ghost ship wraith drifting through coastal fog (C512) ────────────────
 let ghostShipGroup512: Group | null = null;
 let t512: number = 0;
@@ -3068,6 +3075,118 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(ghostShipGroup512);
   }
 
+  // ── Driftwood tide-marker poles with lantern (C518) ─────────────────────
+  {
+    const tmg518 = new Group();
+    tideMarkerGroup518 = tmg518;
+    const R = (): number => Math.random();
+
+    // Driftwood material — bleached grey-brown, rough, flat-shaded N64
+    const driftwoodMat = new MeshStandardMaterial({
+      color: 0x8a7260,
+      roughness: 0.95, metalness: 0.0,
+      flatShading: true,
+    });
+    // Rope coil material — warm ochre sisal
+    const ropeMat = new MeshStandardMaterial({
+      color: 0xc49a3c,
+      roughness: 0.88, metalness: 0.0,
+      flatShading: true,
+    });
+    // Barnacle cluster material — chalky off-white
+    const barnaMat = new MeshStandardMaterial({
+      color: 0xd4cfc0,
+      roughness: 0.97, metalness: 0.0,
+      flatShading: true,
+    });
+    // Lantern housing — dark iron
+    const ironMat = new MeshStandardMaterial({
+      color: 0x1a1208,
+      roughness: 0.80, metalness: 0.35,
+      flatShading: true,
+    });
+
+    // Build 5 poles of varying height
+    const poleHeights = [3.4, 4.8, 3.9, 2.8, 4.2];
+    const poleOffsets: [number, number][] = [
+      [0, 0], [1.6, 0.9], [-1.4, 1.2], [2.8, -0.4], [-2.2, -0.8],
+    ];
+
+    poleOffsets.forEach(([ox, oz], pi) => {
+      const h = poleHeights[pi] ?? 3.5;
+      const poleGroup = new Group();
+
+      // Shaft — slightly tapered cylinder, 6-sided for N64 low-poly
+      const shaft = new Mesh(
+        new CylinderGeometry(0.07, 0.13, h, 6, 3),
+        driftwoodMat,
+      );
+      // Slight twist lean per pole
+      shaft.rotation.z = (R() - 0.5) * 0.18;
+      shaft.rotation.x = (R() - 0.5) * 0.10;
+      shaft.position.y = h / 2 - 0.3;
+      poleGroup.add(shaft);
+
+      // Rope coil ring — small torus, one or two per pole
+      const coilCount = R() > 0.5 ? 2 : 1;
+      for (let ci = 0; ci < coilCount; ci++) {
+        const coilY = 0.6 + ci * 0.35 + R() * 0.25;
+        const coil = new Mesh(new TorusGeometry(0.12, 0.04, 5, 8), ropeMat);
+        coil.rotation.x = Math.PI / 2;
+        coil.position.y = coilY;
+        poleGroup.add(coil);
+      }
+
+      // Barnacle clusters — 3-5 small dodecahedra near the waterline
+      const barnaCount = 3 + Math.floor(R() * 3);
+      for (let bi = 0; bi < barnaCount; bi++) {
+        const barna = new Mesh(new DodecahedronGeometry(0.05 + R() * 0.04, 0), barnaMat);
+        const angle = R() * Math.PI * 2;
+        barna.position.set(
+          Math.cos(angle) * (0.10 + R() * 0.04),
+          0.1 + R() * 0.5,
+          Math.sin(angle) * (0.10 + R() * 0.04),
+        );
+        barna.rotation.set(R() * Math.PI, R() * Math.PI, 0);
+        poleGroup.add(barna);
+      }
+
+      // Tallest pole (index 1) gets the lantern cap
+      if (pi === 1) {
+        // Iron cap housing — small box
+        const capMesh = new Mesh(new BoxGeometry(0.28, 0.22, 0.28, 2, 1, 2), ironMat);
+        capMesh.position.y = h;
+        poleGroup.add(capMesh);
+        // Amber lantern flame glow — small cone
+        const flameMat = new MeshStandardMaterial({
+          color: 0xffaa22,
+          roughness: 0.6, metalness: 0.0,
+          flatShading: true,
+          transparent: true, opacity: 0.82,
+          emissive: 0xff8800, emissiveIntensity: 0.9,
+        });
+        tideMarkerFlameMat518 = flameMat;
+        const flame = new Mesh(new ConeGeometry(0.06, 0.18, 5, 1), flameMat);
+        flame.position.y = h + 0.22;
+        flame.name = 'tide_flame';
+        poleGroup.add(flame);
+        // Warm amber PointLight
+        tideMarkerLight518 = new PointLight(0xffaa22, 0.65, 8.0);
+        tideMarkerLight518.position.set(ox, h + 0.3, oz);
+        tmg518.add(tideMarkerLight518);
+      }
+
+      poleGroup.position.set(ox, -0.28, oz);
+      tmg518.add(poleGroup);
+      tideMarkerPoles518.push(poleGroup);
+    });
+
+    // Place the cluster in the near shallows, just at waterline
+    tmg518.position.set(28, 0.1, 8);
+    tmg518.rotation.y = 0.35;
+    group.add(tmg518);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -4296,6 +4415,29 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         fogBeaconLight515.intensity = 1.2 * pulse;
       }
     }
+
+    // ── Driftwood tide-marker poles with lantern (C518) ─────────────────
+    if (tideMarkerGroup518) {
+      t518 += dt;
+      // Each pole sways independently in the tidal current
+      tideMarkerPoles518.forEach((pole, pi) => {
+        const phase = pi * 1.3;
+        const swayX = 0.025 * Math.sin(t518 * 0.6 + phase);
+        const swayZ = 0.018 * Math.cos(t518 * 0.5 + phase + 0.7);
+        pole.rotation.x = swayX;
+        pole.rotation.z = swayZ;
+      });
+      // Flicker the lantern flame
+      if (tideMarkerFlameMat518) {
+        const flicker = 0.75 + 0.25 * Math.sin(t518 * 7.3) * Math.sin(t518 * 3.1);
+        tideMarkerFlameMat518.opacity = 0.70 + 0.12 * flicker;
+        tideMarkerFlameMat518.emissiveIntensity = 0.8 + 0.2 * flicker;
+      }
+      if (tideMarkerLight518) {
+        const lPulse = 0.80 + 0.20 * Math.sin(t518 * 5.2);
+        tideMarkerLight518.intensity = 0.65 * lPulse;
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -4621,6 +4763,21 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     fogBeaconWispMats515.length = 0;
     fogBeaconLight515 = null;
     t515 = 0;
+    if (tideMarkerGroup518) {
+      tideMarkerGroup518.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      tideMarkerGroup518 = null;
+    }
+    tideMarkerPoles518.length = 0;
+    tideMarkerFlameMat518 = null;
+    tideMarkerLight518 = null;
+    t518 = 0;
     group.clear();
   };
 
