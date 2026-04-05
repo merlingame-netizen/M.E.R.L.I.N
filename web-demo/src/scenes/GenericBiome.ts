@@ -442,6 +442,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let crowNextFlap358 = 0;
   let crowFlapT358 = -1;
 
+  // Moonbeam shaft — cercles_pierres (C362)
+  let moonbeamMesh362: Mesh | null = null;
+  let moonbeamLight362: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1624,6 +1628,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       _ravenGroups.push(ravenGroup);
       _ravenWings.push(wings);
     }
+
+    // Moonbeam shaft descending onto central altar (C362)
+    const beamGeo362 = new CylinderGeometry(0.15, 0.8, 20, 8, 1, true);
+    const beamMat362 = new MeshBasicMaterial({
+      color: 0x0a2a0a, transparent: true, opacity: 0.08,
+      side: DoubleSide, depthWrite: false,
+    });
+    moonbeamMesh362 = new Mesh(beamGeo362, beamMat362);
+    moonbeamMesh362.position.set(0, 7.38, -15);
+    group.add(moonbeamMesh362);
+
+    moonbeamLight362 = new PointLight(0x33ff66, 0.12, 5.0);
+    moonbeamLight362.position.set(0, -0.12, -15);
+    group.add(moonbeamLight362);
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -2231,6 +2249,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         _ravenWings[ri].rotation.z = ud.flapAmp * Math.sin(t * ud.flapSpeed + ud.phase);
       }
     }
+    // Cercles de Pierres — moonbeam shaft pulse (C362)
+    if (moonbeamMesh362 !== null) {
+      const t = Date.now() * 0.001;
+      const pulse = 0.08 + Math.sin(t * 0.5) * 0.04 + Math.sin(t * 0.13) * 0.02;
+      (moonbeamMesh362.material as MeshBasicMaterial).opacity = pulse;
+      moonbeamMesh362.rotation.y += dt * 0.05;
+      if (moonbeamLight362 !== null) {
+        moonbeamLight362.intensity = pulse * 1.5;
+      }
+    }
     // Vallee Anciens — ancestor will-o-wisp drift
     if (valleeWispMesh !== null) {
       valleeWispTime += dt;
@@ -2409,6 +2437,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _moorCircleLight = null;
     _watchtowerGroup = null;
     _watchtowerLight = null;
+    // Moonbeam shaft cleanup (C362)
+    if (moonbeamMesh362) { group.remove(moonbeamMesh362); (moonbeamMesh362.geometry as BufferGeometry).dispose(); moonbeamMesh362 = null; }
+    if (moonbeamLight362) { group.remove(moonbeamLight362); moonbeamLight362.dispose(); moonbeamLight362 = null; }
     // Crow on dolmen cleanup (C358)
     if (crowGroup358) { group.remove(crowGroup358); crowGroup358.traverse(c => { if ((c as Mesh).geometry) (c as Mesh).geometry.dispose(); }); crowGroup358 = null; }
     crowWings358 = [];
