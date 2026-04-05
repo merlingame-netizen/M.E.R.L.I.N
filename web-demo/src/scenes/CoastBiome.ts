@@ -596,6 +596,9 @@ const _seagullWingsR: Mesh[] = [];
 const _kelpStrands: Mesh[] = [];
 const _kelpBulbs: Mesh[] = [];
 
+// ── Underwater caustic light patches on seabed (C332) ────────────────────
+const _causticPatches: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -891,6 +894,31 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Underwater caustic light patches on seabed (C332) ───────────────────
+  // 8 flat PlaneGeometry patches that simulate light filtering through water.
+  // CeltOS charter: 0x0a2a1a (dark teal base), opacity flickers 0.01–0.11.
+  {
+    const R = (): number => Math.random();
+    for (let i = 0; i < 8; i++) {
+      const patch = new Mesh(
+        new PlaneGeometry(1.2 + R() * 0.8, 0.8 + R() * 0.6),
+        new MeshBasicMaterial({ color: 0x0a2a1a, transparent: true, opacity: 0, depthWrite: false }),
+      );
+      patch.rotation.x = -Math.PI / 2;
+      const bx = -10 + R() * 20;   // x ∈ [-10, 10]
+      const bz = -5  - R() * 13;   // z ∈ [-5, -18]
+      patch.position.set(bx, -0.05, bz);
+      patch.userData = {
+        baseX: bx,
+        baseZ: bz,
+        phase: R() * Math.PI * 2,
+        speed: 0.8 + R() * 0.7,    // 0.8–1.5 flicker rate
+      };
+      _causticPatches.push(patch);
+      group.add(patch);
+    }
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1072,6 +1100,26 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // Caustic light patches — shimmer + drift + warp (C332)
+    for (let i = 0; i < _causticPatches.length; i++) {
+      const patch = _causticPatches[i]!;
+      const ph    = patch.userData['phase'] as number;
+      const sp    = patch.userData['speed'] as number;
+      const bx    = patch.userData['baseX'] as number;
+      const bz    = patch.userData['baseZ'] as number;
+
+      // Opacity flicker: 0.01–0.11
+      (patch.material as MeshBasicMaterial).opacity = Math.max(0, 0.06 + Math.sin(t * sp + ph) * 0.05);
+
+      // Slight underwater current drift on X
+      patch.position.x = bx + Math.sin(t * 0.3 + ph) * 0.3;
+      patch.position.z = bz;
+
+      // Scale pulse — patches warp like real caustics
+      patch.scale.x = 1.0 + Math.sin(t * sp * 1.3 + ph) * 0.15;
+      patch.scale.z = 1.0 + Math.cos(t * sp * 0.9 + ph) * 0.12;
+    }
+
     // Tide pool crab scuttle + water shimmer (C308)
     if (_crabGroup !== null) {
       _crabGroup.position.x = 5.8 + Math.sin(t * 0.35) * 0.3;
@@ -1118,6 +1166,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _seagullWingsR.length = 0;
     _kelpStrands.length = 0;
     _kelpBulbs.length = 0;
+    _causticPatches.length = 0;
     group.clear();
   };
 
