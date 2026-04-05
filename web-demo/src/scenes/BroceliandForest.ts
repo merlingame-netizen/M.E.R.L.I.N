@@ -1070,6 +1070,14 @@ const totemWispMats513: MeshStandardMaterial[] = [];
 let totemLight513: PointLight | null = null;
 let t513: number = 0;
 
+// ── Cycle-516: druidic offering altar with violet flame and ember sparks ──────
+let altarGroup516: Group | null = null;
+let altarFlameMat516: MeshStandardMaterial | null = null;
+let altarLight516: PointLight | null = null;
+const altarEmberMats516: MeshStandardMaterial[] = [];
+const altarEmberPhases516: number[] = [];
+let t516: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3598,6 +3606,112 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(totemGroup513);
   }
 
+  // ── Cycle-516: druidic offering altar — flat dolmen slab + violet sacrificial flame ──
+  {
+    altarGroup516 = new Group();
+    altarEmberMats516.length = 0;
+    altarEmberPhases516.length = 0;
+
+    const ALTAR_X = 14;
+    const ALTAR_Z = -22;
+
+    // Three support legs — irregular monolith pillars
+    const legMat = new MeshStandardMaterial({
+      color: 0x3a3020, roughness: 0.92, metalness: 0.0, flatShading: true,
+    });
+    const legDefs: [number, number, number, number][] = [
+      // x_offset, z_offset, height, lean_z
+      [-0.55, -0.30, 1.05,  0.06],
+      [ 0.55, -0.30, 0.90, -0.07],
+      [  0.0,  0.50, 0.98,  0.03],
+    ];
+    for (const [lx, lz, ht, lean] of legDefs) {
+      const legGeo = new CylinderGeometry(0.12, 0.18, ht, 5);
+      const leg = new Mesh(legGeo, legMat);
+      leg.position.set(lx, ht / 2, lz);
+      leg.rotation.z = lean;
+      altarGroup516.add(leg);
+    }
+
+    // Altar slab — flat rough dolmen capstone
+    const slabGeo = new BoxGeometry(1.6, 0.18, 1.0);
+    const slabMat = new MeshStandardMaterial({
+      color: 0x2e2618, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const slab = new Mesh(slabGeo, slabMat);
+    slab.position.set(0, 1.08, 0);
+    altarGroup516.add(slab);
+
+    // Carved rune groove on slab surface — faint violet glowing lines
+    const runeGrooveGeo = new BoxGeometry(0.9, 0.02, 0.06);
+    const runeGrooveMat = new MeshStandardMaterial({
+      color: 0x3a00aa, emissive: 0x7722ff, emissiveIntensity: 0.55,
+      roughness: 0.6, metalness: 0.0, flatShading: true,
+    });
+    for (let ri = 0; ri < 3; ri++) {
+      const groove = new Mesh(runeGrooveGeo, runeGrooveMat);
+      groove.position.set((ri - 1) * 0.30, 1.17, 0);
+      groove.rotation.y = ri * 0.25;
+      altarGroup516.add(groove);
+    }
+
+    // Offering bowl — shallow cylinder atop slab center
+    const bowlGeo = new CylinderGeometry(0.28, 0.22, 0.10, 8);
+    const bowlMat = new MeshStandardMaterial({
+      color: 0x1a1008, roughness: 0.88, metalness: 0.15, flatShading: true,
+    });
+    const bowl = new Mesh(bowlGeo, bowlMat);
+    bowl.position.set(0, 1.22, 0);
+    altarGroup516.add(bowl);
+
+    // Violet flame — elongated tapered cone, vivid N64 magenta-violet
+    const flameGeo = new ConeGeometry(0.14, 0.55, 6);
+    altarFlameMat516 = new MeshStandardMaterial({
+      color: 0x9922ff, emissive: 0xcc44ff, emissiveIntensity: 1.4,
+      roughness: 0.3, metalness: 0.0, flatShading: true,
+      transparent: true, opacity: 0.88,
+    });
+    const flameMesh = new Mesh(flameGeo, altarFlameMat516);
+    flameMesh.position.set(0, 1.57, 0);
+    altarGroup516.add(flameMesh);
+
+    // Inner flame core — brighter smaller cone
+    const coreMat = new MeshStandardMaterial({
+      color: 0xeeccff, emissive: 0xffffff, emissiveIntensity: 1.8,
+      roughness: 0.2, metalness: 0.0, flatShading: true,
+      transparent: true, opacity: 0.72,
+    });
+    const coreMesh = new Mesh(new ConeGeometry(0.07, 0.28, 5), coreMat);
+    coreMesh.position.set(0, 1.50, 0);
+    altarGroup516.add(coreMesh);
+
+    // 6 orbiting ember sparks — tiny DodecahedronGeometry at varying heights
+    const emberColors: number[] = [0xcc44ff, 0x9922ff, 0xff55ee, 0xaa33dd, 0xee88ff, 0x7711cc];
+    for (let ei = 0; ei < 6; ei++) {
+      const emberGeo = new DodecahedronGeometry(0.04 + Math.random() * 0.03, 0);
+      const emberMat = new MeshStandardMaterial({
+        color: emberColors[ei % emberColors.length]!,
+        emissive: emberColors[ei % emberColors.length]!,
+        emissiveIntensity: 1.1,
+        roughness: 0.4, metalness: 0.0, flatShading: true,
+        transparent: true, opacity: 0.80,
+      });
+      const emberMesh = new Mesh(emberGeo, emberMat);
+      altarGroup516.add(emberMesh);
+      altarEmberMats516.push(emberMat);
+      altarEmberPhases516.push((ei / 6) * Math.PI * 2);
+    }
+
+    // Point light — pulsing violet altar glow
+    altarLight516 = new PointLight(0xaa44ff, 0.55, 8);
+    altarLight516.position.set(0, 1.6, 0);
+    altarGroup516.add(altarLight516);
+
+    altarGroup516.position.set(ALTAR_X, 0, ALTAR_Z);
+    altarGroup516.rotation.y = -0.4;
+    group.add(altarGroup516);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -4765,6 +4879,42 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         totemLight513.intensity = 0.25 + 0.15 * Math.sin(t513 * 1.4);
       }
     }
+
+    // Cycle-516: druidic offering altar animation
+    if (altarGroup516) {
+      t516 += dt;
+
+      // Violet flame flicker — fast emissive pulse + slight scale breathe
+      if (altarFlameMat516) {
+        altarFlameMat516.emissiveIntensity = 1.2 + 0.35 * Math.sin(t516 * 7.2) + (Math.random() - 0.5) * 0.12;
+        altarFlameMat516.opacity = 0.80 + 0.12 * Math.sin(t516 * 5.5);
+      }
+
+      // Point light pulse — violet breathing
+      if (altarLight516) {
+        altarLight516.intensity = 0.45 + 0.20 * Math.sin(t516 * 3.1) + (Math.random() - 0.5) * 0.06;
+      }
+
+      // Ember orbit — each spark circles at increasing radius and height
+      for (let ei = 0; ei < altarEmberMats516.length; ei++) {
+        const phase = altarEmberPhases516[ei]!;
+        const orbitAngle = t516 * (1.2 + ei * 0.18) + phase;
+        const orbitR = 0.22 + ei * 0.06;
+        const orbitY = 1.55 + ei * 0.12 + Math.sin(t516 * 2.0 + phase) * 0.08;
+        // Access ember mesh — children offset: 3 legs + slab + 3 grooves + bowl + flame + core = 10, then embers at [10..15]
+        const emberMesh = altarGroup516.children[10 + ei];
+        if (emberMesh) {
+          emberMesh.position.set(
+            Math.cos(orbitAngle) * orbitR,
+            orbitY,
+            Math.sin(orbitAngle) * orbitR,
+          );
+        }
+        const mat = altarEmberMats516[ei]!;
+        mat.opacity = 0.60 + 0.25 * Math.sin(t516 * 4.0 + phase);
+        mat.emissiveIntensity = 0.8 + 0.45 * Math.sin(t516 * 3.3 + phase);
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -5334,6 +5484,28 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     totemWispMeshes513.length = 0;
     if (totemLight513) { totemLight513.dispose(); totemLight513 = null; }
     t513 = 0;
+
+    // Cycle-516: druidic offering altar cleanup
+    if (altarGroup516) {
+      group.remove(altarGroup516);
+      altarGroup516.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            (c.material as Material[]).forEach((m) => m.dispose());
+          } else {
+            (c.material as Material).dispose();
+          }
+        }
+      });
+      altarGroup516 = null;
+    }
+    for (const mat of altarEmberMats516) { mat.dispose(); }
+    altarEmberMats516.length = 0;
+    altarEmberPhases516.length = 0;
+    if (altarFlameMat516) { altarFlameMat516.dispose(); altarFlameMat516 = null; }
+    if (altarLight516) { altarLight516.dispose(); altarLight516 = null; }
+    t516 = 0;
   };
 
   return { group, update, dispose };
