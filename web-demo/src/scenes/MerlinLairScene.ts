@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1278,6 +1278,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _mapParchment: Mesh | null = null;
   let _mapParchmentTime = 0;
 
+  // C347: back-ledge candle arc — 5 candles with independent green flame flicker
+  const _candleFlames: Mesh[] = [];
+  const _candleLights: PointLight[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1511,6 +1515,46 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     scene.add(group);
     _mapTableGroup = group;
+  }
+
+  // C347: back-ledge candle arc — 5 candles at x=-1.0..1.4, y=-3.0, z=-9.8
+  // Wax: 0x0a180a, Flame: 0x33ff66 (CeltOS charter — zero amber/orange/yellow)
+  {
+    const CANDLE_Y = -3.0;
+    const CANDLE_Z = -9.8;
+    const CANDLE_X_POSITIONS = [-1.0, -0.4, 0.2, 0.8, 1.4];
+    const waxMat = new MeshBasicMaterial({ color: 0x0a180a });
+    const flameMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.92 });
+
+    const heightVariations = [0.0, 0.12, -0.06, 0.18, 0.04]; // deterministic slight height variation
+
+    for (let i = 0; i < CANDLE_X_POSITIONS.length; i++) {
+      const cx = CANDLE_X_POSITIONS[i]!;
+      const candleH = 0.35 + heightVariations[i]!;
+
+      // Wax column
+      const waxBody = new Mesh(new CylinderGeometry(0.05, 0.06, candleH, 6), waxMat.clone());
+      waxBody.position.set(cx, CANDLE_Y + candleH / 2, CANDLE_Z);
+      scene.add(waxBody);
+
+      // Wax drip ring at base — slightly wider
+      const waxDrip = new Mesh(new CylinderGeometry(0.05, 0.08, 0.06, 6), waxMat.clone());
+      waxDrip.position.set(cx, CANDLE_Y + 0.03, CANDLE_Z);
+      scene.add(waxDrip);
+
+      // Flame cone at top of wax column
+      const flameY = CANDLE_Y + candleH + 0.06; // sits just above wax top
+      const flame = new Mesh(new ConeGeometry(0.04, 0.12, 4), flameMat.clone());
+      flame.position.set(cx, flameY, CANDLE_Z);
+      scene.add(flame);
+      _candleFlames.push(flame);
+
+      // Per-candle green glow
+      const candleLight = new PointLight(0x33ff66, 0.2, 2.5);
+      candleLight.position.set(cx, flameY, CANDLE_Z);
+      scene.add(candleLight);
+      _candleLights.push(candleLight);
+    }
   }
 
   // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
@@ -2380,6 +2424,20 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C343: map scroll glow — very slow intensity drift
     if (_mapScrollLight) {
       _mapScrollLight.intensity = 0.06 + Math.sin(elapsedTime * 0.4) * 0.02;
+    }
+
+    // C347: candle arc flicker — per-candle independent phase (cosmetic, gate under !lowFpsMode)
+    if (!lowFpsMode && _candleFlames.length > 0) {
+      const t = elapsedTime;
+      for (let i = 0; i < _candleFlames.length; i++) {
+        const flame = _candleFlames[i]!;
+        const scaleX = 0.8 + Math.sin(t * 7.3 + i * 1.2) * 0.3;
+        const scaleY = 0.9 + Math.sin(t * 6.1 + i * 2.1) * 0.2;
+        flame.scale.set(scaleX, scaleY, scaleX);
+        flame.rotation.z = Math.sin(t * 4.2 + i * 1.7) * 0.12;
+        const light = _candleLights[i];
+        if (light) light.intensity = 0.15 + Math.sin(t * 8.5 + i * 2.3) * 0.1;
+      }
     }
 
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
