@@ -886,6 +886,11 @@ const mistPlanes405: Mesh[] = [];
 const mistBaseY405: number[] = [];
 let mistT405 = 0;
 
+// ── Cycle-410: waterfall cascade ───────────────────────────────────────────────
+let waterfallGroup410: Group | null = null;
+let waterfallT410 = 0;
+const waterfallPlanes410: Mesh[] = [];
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1731,6 +1736,60 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(mistGroup405);
   }
 
+  // ── Cycle-410: waterfall cascade at (-10, 0, -18) ────────────────────────────
+  {
+    waterfallGroup410 = new Group();
+
+    // Rock ledge atop the falls
+    const ledgeMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const ledge = new Mesh(new BoxGeometry(2.5, 0.5, 0.6), ledgeMat);
+    ledge.position.set(0, 2.5, 0);
+    waterfallGroup410.add(ledge);
+
+    // Side walls
+    for (const sx of [-1, 1]) {
+      const side = new Mesh(new BoxGeometry(0.5, 3, 0.5), ledgeMat);
+      side.position.set(sx, 1.2, 0);
+      waterfallGroup410.add(side);
+    }
+
+    // 3 water cascade planes
+    for (let pi = 0; pi < 3; pi++) {
+      const planeGeo = new PlaneGeometry(0.5, 2.5, 2, 12);
+      const planeMat = new MeshBasicMaterial({
+        color: 0x0d2a14,
+        transparent: true,
+        opacity: 0.65,
+        side: DoubleSide,
+        depthWrite: false,
+      });
+      const plane = new Mesh(planeGeo, planeMat);
+      plane.position.set(-0.6 + pi * 0.6, 1.25, 0.05);
+      waterfallGroup410.add(plane);
+      waterfallPlanes410.push(plane);
+    }
+
+    // Splash pool
+    const poolGeo = new CircleGeometry(1.0, 12);
+    const poolMat = new MeshBasicMaterial({
+      color: 0x0a2a14,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const pool = new Mesh(poolGeo, poolMat);
+    pool.rotation.x = -Math.PI / 2;
+    pool.position.set(0, 0.05, 0.3);
+    waterfallGroup410.add(pool);
+
+    // Pool glow
+    const poolGlow = new PointLight(0x33ff66, 0.08, 3.5);
+    poolGlow.position.set(0, 0.2, 0.3);
+    waterfallGroup410.add(poolGlow);
+
+    waterfallGroup410.position.set(-10, 0, -18);
+    group.add(waterfallGroup410);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2089,6 +2148,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         plane.rotation.y += dt * 0.05;
       });
     }
+
+    // Cycle-410: waterfall cascade animation
+    if (waterfallGroup410) {
+      waterfallT410 += dt * 1.2;
+      waterfallPlanes410.forEach((plane, pi) => {
+        const pos = plane.geometry.attributes['position'] as BufferAttribute;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          // Horizontal ripple that scrolls downward
+          const wave = Math.sin(y * 3 + waterfallT410 * 4 + pi * 1.1) * 0.04;
+          pos.setX(i, x + wave - (pi - 1) * 0.02); // slight lean per stream
+        }
+        pos.needsUpdate = true;
+        // Opacity flicker for foam effect
+        (plane.material as MeshBasicMaterial).opacity = 0.55 + Math.sin(waterfallT410 * 3 + pi) * 0.15;
+      });
+    }
   };
 
   const dispose = (): void => {
@@ -2252,6 +2329,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       mistPlanes405.length = 0;
       mistBaseY405.length = 0;
       mistGroup405 = null;
+    }
+    // Cycle-410: waterfall cleanup
+    if (waterfallGroup410) {
+      waterfallGroup410.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            c.material.forEach(m => m.dispose());
+          } else {
+            c.material.dispose();
+          }
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      waterfallPlanes410.length = 0;
+      waterfallGroup410 = null;
     }
   };
 

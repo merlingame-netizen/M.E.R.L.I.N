@@ -1338,7 +1338,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     seaCaveGroup411.add(interior);
 
     // 8 algae patches on interior walls
-    const caveGroupRef = seaCaveGroup411;
+    const caveGroupRef = seaCaveGroup411!;
     const leftAlgaeYs = [0.8, 1.5, 2.2, 3.0];
     const rightAlgaeYs = [1.0, 1.8, 2.5, 3.2];
     leftAlgaeYs.forEach(y => {
