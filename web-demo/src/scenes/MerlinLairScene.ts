@@ -1553,6 +1553,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const tabletRuneMats519: MeshStandardMaterial[] = [];
   let t519 = 0;
 
+  // C524 — alchemist bookshelf on right wall with tomes and candle
+  let shelfGroup524: Group | null = null;
+  let shelfCandleLight524: PointLight | null = null;
+  let shelfCandleMat524: MeshStandardMaterial | null = null;
+  let t524 = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -4321,6 +4327,86 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(tabletGroup519);
   }
 
+  // ── C524 — Alchemist bookshelf on right wall ──────────────────────────────
+  {
+    shelfGroup524 = new Group();
+
+    const woodMat = new MeshStandardMaterial({ color: 0x2e1a0a, roughness: 0.88, metalness: 0.0, flatShading: true });
+    const SHELF_W = 2.1;
+    const SHELF_D = 0.42;
+    const SHELF_GAP = 0.88;
+    const SHELF_LEVELS = 3;
+
+    // Back panel
+    const backGeo = new BoxGeometry(SHELF_W + 0.06, SHELF_GAP * SHELF_LEVELS + 0.18, 0.08);
+    shelfGroup524.add(new Mesh(backGeo, woodMat));
+
+    // Side uprights
+    for (const sx of [-SHELF_W * 0.5 - 0.04, SHELF_W * 0.5 + 0.04]) {
+      const upGeo = new BoxGeometry(0.08, SHELF_GAP * SHELF_LEVELS + 0.18, SHELF_D);
+      const up = new Mesh(upGeo, woodMat);
+      up.position.set(sx, 0, SHELF_D * 0.5 - 0.04);
+      shelfGroup524.add(up);
+    }
+
+    // Horizontal shelves
+    for (let s = 0; s <= SHELF_LEVELS; s++) {
+      const shelfY = -SHELF_GAP * SHELF_LEVELS * 0.5 + s * SHELF_GAP;
+      const shelfGeo = new BoxGeometry(SHELF_W, 0.08, SHELF_D);
+      const shelf = new Mesh(shelfGeo, woodMat);
+      shelf.position.set(0, shelfY, SHELF_D * 0.5 - 0.04);
+      shelfGroup524.add(shelf);
+    }
+
+    // Tomes — rows of books on each shelf level (except top, which has candle)
+    const TOME_COLORS = [0x8b1a1a, 0x1a3a8b, 0x1a7a2a, 0x7a5a10, 0x5a1a7a, 0x1a6a6a];
+    for (let s = 0; s < SHELF_LEVELS; s++) {
+      const shelfY = -SHELF_GAP * SHELF_LEVELS * 0.5 + s * SHELF_GAP + 0.04;
+      const tomeCount = 7 + Math.floor(Math.random() * 4);
+      let curX = -SHELF_W * 0.5 + 0.08;
+      for (let b = 0; b < tomeCount && curX < SHELF_W * 0.5 - 0.08; b++) {
+        const tw = 0.12 + Math.random() * 0.10;
+        const th = 0.52 + Math.random() * 0.26;
+        const td = SHELF_D * 0.7 + Math.random() * 0.08;
+        const col = TOME_COLORS[b % TOME_COLORS.length] ?? 0x551111;
+        const tomeMat = new MeshStandardMaterial({ color: col, roughness: 0.92, metalness: 0.0, flatShading: true });
+        const tomeGeo = new BoxGeometry(tw, th, td);
+        const tome = new Mesh(tomeGeo, tomeMat);
+        tome.position.set(curX + tw * 0.5, shelfY + th * 0.5, SHELF_D * 0.4);
+        tome.rotation.y = (Math.random() - 0.5) * 0.08;
+        shelfGroup524.add(tome);
+        curX += tw + 0.01 + Math.random() * 0.02;
+      }
+    }
+
+    // Candle on top shelf
+    const topShelfY = SHELF_GAP * SHELF_LEVELS * 0.5;
+    const candleBodyMat = new MeshStandardMaterial({ color: 0xf0e8c0, roughness: 0.85, metalness: 0.0, flatShading: true });
+    const candleGeo = new BoxGeometry(0.16, 0.44, 0.16);
+    const candle = new Mesh(candleGeo, candleBodyMat);
+    candle.position.set(0.6, topShelfY + 0.26, SHELF_D * 0.4);
+    shelfGroup524.add(candle);
+
+    shelfCandleMat524 = new MeshStandardMaterial({
+      color: 0xffcc44, roughness: 0.5, metalness: 0.0, flatShading: false,
+      transparent: true, opacity: 0.85,
+      emissive: new Color(0xff8800), emissiveIntensity: 1.0,
+    });
+    const flameGeo = new BoxGeometry(0.07, 0.14, 0.07);
+    const flame = new Mesh(flameGeo, shelfCandleMat524);
+    flame.position.set(0.6, topShelfY + 0.55, SHELF_D * 0.4);
+    shelfGroup524.add(flame);
+
+    shelfCandleLight524 = new PointLight(0xffbb44, 0.65, 5.5);
+    shelfCandleLight524.position.set(0.6, topShelfY + 0.6, SHELF_D * 0.4);
+    shelfGroup524.add(shelfCandleLight524);
+
+    // Place against right wall, centred around z=-2
+    shelfGroup524.position.set(9.4, -3.2, -2.0);
+    shelfGroup524.rotation.y = -Math.PI * 0.5; // face inward
+    scene.add(shelfGroup524);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -6023,6 +6109,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C524 — alchemist bookshelf: candle flicker
+    if (shelfGroup524) {
+      t524 += dt;
+      if (shelfCandleMat524) {
+        shelfCandleMat524.emissiveIntensity = 0.85 + 0.35 * Math.sin(t524 * 8.2) * Math.sin(t524 * 3.7);
+        shelfCandleMat524.opacity = 0.78 + 0.12 * Math.sin(t524 * 5.1);
+      }
+      if (shelfCandleLight524) {
+        shelfCandleLight524.intensity = 0.55 + 0.22 * Math.sin(t524 * 6.4) + (Math.random() - 0.5) * 0.06;
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -6628,6 +6726,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     for (const rm of tabletRuneMats519) rm.dispose();
     tabletRuneMats519.length = 0;
     tabletLight519 = null;
+    // C524 — alchemist bookshelf dispose
+    if (shelfGroup524) {
+      shelfGroup524.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(shelfGroup524);
+      shelfGroup524 = null;
+    }
+    if (shelfCandleLight524) { shelfCandleLight524.dispose(); shelfCandleLight524 = null; }
+    shelfCandleMat524 = null;
+    t524 = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
