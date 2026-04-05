@@ -22,10 +22,14 @@ const FACTION_LABELS: Readonly<Record<FactionId, string>> = {
   ankou: 'Ankou',
 } as const;
 
+// Cards limit — mirrors the 30-card ceiling in main.ts (T046)
+const CARDS_LIMIT = 30;
+
 // Module-level element caches — populated in initHUD() / build* functions, cleared in teardownHUD().
 // Eliminates 22 getElementById calls per updateHUD() invocation (C121/HUD-01).
 let _lifeFillEl: HTMLElement | null = null;
 let _cardsCountEl: HTMLElement | null = null;
+let _progressFillEl: HTMLElement | null = null;
 let _biomeNameEl: HTMLElement | null = null;
 let _lifeBarContainerEl: HTMLElement | null = null;
 let _lifeStatusEl: HTMLElement | null = null;
@@ -209,6 +213,17 @@ export function updateHUD(): void {
 
   _cardsCountEl.textContent = `CARTE_${state.run.cardsPlayed}`;
 
+  // Run progress bar update
+  if (_progressFillEl) {
+    const progress = Math.min(state.run.cardsPlayed / CARDS_LIMIT, 1);
+    _progressFillEl.style.width = `${progress * 100}%`;
+    if (progress > 0.8) {
+      _progressFillEl.style.boxShadow = '0 0 4px rgba(51,255,102,0.5)';
+    } else {
+      _progressFillEl.style.boxShadow = '';
+    }
+  }
+
   const biome = BIOMES[state.run.biome];
   _biomeNameEl.textContent = (biome?.name ?? state.run.biome).toUpperCase();
 
@@ -227,6 +242,36 @@ export function updateHUD(): void {
   if (_currLabelEl && biome) _currLabelEl.textContent = biome.currency_name;
 
   updateOghamBadge();
+}
+
+/** Build and inject the run progress bar beneath the cards counter element. */
+function buildProgressBar(): void {
+  // Progress style — guard against duplicate injection
+  if (!document.getElementById('hud-progress-style')) {
+    const style = document.createElement('style');
+    style.id = 'hud-progress-style';
+    style.textContent = [
+      '#hud-progress-bar{width:100%;height:3px;background:rgba(51,255,102,0.12);border-radius:2px;overflow:hidden;margin-top:2px;}',
+      '#hud-progress-fill{height:100%;background:linear-gradient(90deg,#1a8833,#33ff66);border-radius:2px;transition:width 0.5s ease;}',
+    ].join('');
+    document.head.appendChild(style);
+  }
+
+  // Create bar only if cards-count element exists and bar not already present
+  const cardsEl = document.getElementById('cards-count');
+  if (!cardsEl || document.getElementById('hud-progress-bar')) return;
+
+  const bar = document.createElement('div');
+  bar.id = 'hud-progress-bar';
+
+  const fill = document.createElement('div');
+  fill.id = 'hud-progress-fill';
+  fill.style.width = '0%';
+  bar.appendChild(fill);
+
+  // Insert bar immediately after cards-count element in its parent
+  cardsEl.parentNode?.insertBefore(bar, cardsEl.nextSibling);
+  _progressFillEl = fill;
 }
 
 /** Build the ogham active badge (top-center). Hidden by default. */
@@ -330,9 +375,11 @@ export function initHUD(): void {
   buildFactionPanel();
   buildResourcePanel();
   buildOghamBadge();
+  buildProgressBar();
   // Cache static HTML elements (created in index.html, not by build functions). C121/HUD-01.
   _lifeFillEl = document.getElementById('life-fill');
   _cardsCountEl = document.getElementById('cards-count');
+  _progressFillEl = document.getElementById('hud-progress-fill');
   _biomeNameEl = document.getElementById('biome-name');
   _lifeBarContainerEl = document.getElementById('life-bar-container');
   _lifeStatusEl = document.getElementById('life-status');
@@ -433,6 +480,7 @@ export function teardownHUD(): void {
   _oghamRuneEl = null;
   _oghamNameEl = null;
   _oghamMultEl = null;
+  _progressFillEl = null;
   // C146/HUD-REINIT-01: remove dynamic panels from DOM so buildFactionPanel/buildResourcePanel/
   // buildOghamBadge fully reconstruct them on the next initHUD() call. Without removal, the
   // document.getElementById() guards inside each builder return early, leaving all module-level
@@ -447,6 +495,9 @@ export function teardownHUD(): void {
   document.getElementById('ogham-badge-style')?.remove();
   // C180: hud-anim-styles <style> injected by ensureHUDAnimStyles(). Remove on teardown.
   document.getElementById('hud-anim-styles')?.remove();
+  // C225: progress bar — remove bar element and style from DOM on teardown.
+  document.getElementById('hud-progress-bar')?.remove();
+  document.getElementById('hud-progress-style')?.remove();
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;
