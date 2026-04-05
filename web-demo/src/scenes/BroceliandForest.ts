@@ -867,6 +867,13 @@ let hollowTreeLight387: PointLight | null = null;
 let hollowPulseT387 = -1;
 let hollowNextPulse387 = 8.0;
 
+// ── Cycle-392: ancient stone well with glowing magical water ──────────────────
+let wellGroup392: Group | null = null;
+let wellWater392: Mesh | null = null;
+let wellLight392: PointLight | null = null;
+let wellRippleT392 = -1;
+let wellNextRipple392 = 12.0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1563,6 +1570,75 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     hollowNextPulse387 = 8.0 + Math.random() * 5.0;
   }
 
+  // ── Cycle-392: ancient stone well with glowing magical water ─────────────────
+  {
+    wellGroup392 = new Group();
+    const stoneMat392 = new MeshStandardMaterial({ color: 0x1a2a1a, roughness: 0.95 });
+    const woodMat392 = new MeshStandardMaterial({ color: 0x0a1a05, roughness: 0.9 });
+
+    // Well wall (open ring)
+    const wallGeo = new CylinderGeometry(0.5, 0.55, 0.5, 12, 1, true);
+    const wall = new Mesh(wallGeo, stoneMat392);
+    wall.position.y = 0.25;
+    wellGroup392.add(wall);
+
+    // Wall top ring
+    const topRing = new Mesh(new TorusGeometry(0.52, 0.06, 6, 12), stoneMat392);
+    topRing.rotation.x = Math.PI / 2;
+    topRing.position.y = 0.52;
+    wellGroup392.add(topRing);
+
+    // Wall bottom ring
+    const botRing = new Mesh(new TorusGeometry(0.52, 0.05, 6, 12), stoneMat392);
+    botRing.rotation.x = Math.PI / 2;
+    botRing.position.y = 0.02;
+    wellGroup392.add(botRing);
+
+    // Water surface
+    const waterGeo = new CircleGeometry(0.45, 12);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterMat392 = new MeshStandardMaterial({
+      color: 0x051505,
+      emissive: new Color(0x0d4420),
+      emissiveIntensity: 0.15,
+      transparent: true,
+      opacity: 0.75,
+      roughness: 0.1,
+      metalness: 0.3,
+    });
+    wellWater392 = new Mesh(waterGeo, waterMat392);
+    wellWater392.position.y = 0.38;
+    wellGroup392.add(wellWater392);
+
+    // Beam crosspiece
+    const beam = new Mesh(new BoxGeometry(0.08, 0.08, 1.3), woodMat392);
+    beam.position.y = 0.85;
+    beam.rotation.y = 0.4;
+    wellGroup392.add(beam);
+
+    // Two support posts
+    ([-0.5, 0.5] as number[]).forEach(sx => {
+      const post = new Mesh(new BoxGeometry(0.07, 0.5, 0.07), woodMat392);
+      post.position.set(sx * Math.cos(0.4), 0.65, sx * Math.sin(0.4));
+      wellGroup392!.add(post);
+    });
+
+    // Bucket (hanging from beam center)
+    const bucketGeo = new CylinderGeometry(0.06, 0.05, 0.12, 6);
+    const bucket = new Mesh(bucketGeo, woodMat392);
+    bucket.position.y = 0.62;
+    wellGroup392.add(bucket);
+
+    // Water glow light
+    wellLight392 = new PointLight(0x33ff66, 0.08, 2.5);
+    wellLight392.position.y = 0.5;
+    wellGroup392.add(wellLight392);
+
+    wellGroup392.position.set(7, 0, -10);
+    group.add(wellGroup392);
+    wellNextRipple392 = 12.0 + Math.random() * 6.0;
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1868,6 +1944,32 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Cycle-392: stone well — water shimmer + ripple event
+    if (wellWater392 && wellLight392) {
+      const mat392 = wellWater392.material as MeshStandardMaterial;
+      mat392.emissiveIntensity = 0.12 + Math.sin(sceneTime * 0.8) * 0.05;
+      wellLight392.intensity = 0.06 + Math.sin(sceneTime * 0.6) * 0.03;
+
+      wellNextRipple392 -= dt;
+      if (wellNextRipple392 <= 0 && wellRippleT392 < 0) {
+        wellRippleT392 = 0;
+        wellNextRipple392 = 12.0 + Math.random() * 6.0;
+      }
+      if (wellRippleT392 >= 0) {
+        wellRippleT392 += dt;
+        if (wellRippleT392 < 0.5) {
+          mat392.emissiveIntensity = 0.12 + (wellRippleT392 / 0.5) * 0.18;
+          wellLight392.intensity = 0.06 + (wellRippleT392 / 0.5) * 0.14;
+        } else if (wellRippleT392 < 1.0) {
+          const t = (wellRippleT392 - 0.5) / 0.5;
+          mat392.emissiveIntensity = 0.30 - t * 0.18;
+          wellLight392.intensity = 0.20 - t * 0.14;
+        } else {
+          wellRippleT392 = -1;
+        }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -1986,6 +2088,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       hollowTreeGroup387 = null;
     }
     if (hollowTreeLight387) { hollowTreeLight387.dispose(); hollowTreeLight387 = null; }
+    // Cycle-392: stone well cleanup
+    if (wellGroup392) {
+      group.remove(wellGroup392);
+      wellGroup392.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      wellGroup392 = null;
+    }
+    wellWater392 = null;
+    if (wellLight392) { wellLight392.dispose(); wellLight392 = null; }
   };
 
   return { group, update, dispose };
