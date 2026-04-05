@@ -10,7 +10,7 @@
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
   ConeGeometry, CylinderGeometry, DodecahedronGeometry, Fog, Group, HemisphereLight,
-  InstancedMesh, Mesh, MeshStandardMaterial, Object3D, PlaneGeometry,
+  InstancedMesh, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
   PointLight, Points, PointsMaterial, SphereGeometry, Vector3,
 } from 'three';
 
@@ -380,6 +380,32 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     water.position.y = -0.6;
     group.add(water);
     maraisWater = water;
+
+    // Korrigan silhouettes — small dark humanoid shapes at swamp's edge
+    const korriganMat = new MeshBasicMaterial({ color: 0x050a08 });
+    const korriganPositions: Array<[number, number, number]> = [
+      [-8, -0.5, -18], [5, -0.5, -22], [-3, -0.5, -30],
+      [11, -0.5, -15], [-14, -0.5, -25], [7, -0.5, -35],
+    ];
+    korriganPositions.forEach(([x, y, z]) => {
+      const figure = new Group();
+      // Body (short cylinder — korrigans are small)
+      const body = new Mesh(new CylinderGeometry(0.18, 0.22, 0.7, 6), korriganMat);
+      body.position.y = 0.35;
+      figure.add(body);
+      // Head (small sphere)
+      const head = new Mesh(new SphereGeometry(0.14, 5, 4), korriganMat);
+      head.position.y = 0.85;
+      figure.add(head);
+      // Hat (cone — korrigans wear pointed hats)
+      const hat = new Mesh(new ConeGeometry(0.14, 0.35, 6), korriganMat);
+      hat.position.y = 1.1;
+      figure.add(hat);
+      figure.position.set(x, y, z);
+      // Random slight rotation for variety
+      figure.rotation.y = Math.random() * Math.PI * 2;
+      group.add(figure);
+    });
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
