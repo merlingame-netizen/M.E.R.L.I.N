@@ -789,6 +789,48 @@ function createAncientRuins(): Group {
   return group;
 }
 
+// ── Celtic cross standing stone monument ─────────────────────────────────────
+// C288: Single tall Celtic cross at forest edge — shaft, bar, ring, plinth.
+// Position x=-20, z=-32 — clear of fairy ring (z=-18, x=5) and ruins (z=-41~-45, x=-12~+14).
+
+function createCelticCross(): Group {
+  const group = new Group();
+  const CROSS_X = -20;
+  const CROSS_Y_BASE = 0;
+  const CROSS_Z = -32;
+  const STONE_COLOR = 0x2a3020;
+
+  // Vertical shaft: tall rectangular pillar
+  const shaftGeo = new BoxGeometry(0.35, 4.5, 0.2);
+  const shaftMat = new MeshBasicMaterial({ color: STONE_COLOR });
+  const shaft = new Mesh(shaftGeo, shaftMat);
+  shaft.position.set(CROSS_X, CROSS_Y_BASE + 2.25, CROSS_Z);
+  group.add(shaft);
+
+  // Horizontal bar: shorter piece at ~2/3 height
+  const barGeo = new BoxGeometry(1.8, 0.35, 0.2);
+  const barMat = new MeshBasicMaterial({ color: STONE_COLOR });
+  const bar = new Mesh(barGeo, barMat);
+  bar.position.set(CROSS_X, CROSS_Y_BASE + 3.0, CROSS_Z);
+  group.add(bar);
+
+  // Ring circle at intersection (TorusGeometry flat, facing forward)
+  const ringGeo = new TorusGeometry(0.75, 0.12, 6, 16);
+  const ringMat = new MeshBasicMaterial({ color: STONE_COLOR });
+  const ring = new Mesh(ringGeo, ringMat);
+  ring.position.set(CROSS_X, CROSS_Y_BASE + 3.0, CROSS_Z + 0.05);
+  group.add(ring);
+
+  // Base plinth
+  const plinthGeo = new BoxGeometry(0.7, 0.3, 0.4);
+  const plinthMat = new MeshBasicMaterial({ color: 0x1e2818 });
+  const plinth = new Mesh(plinthGeo, plinthMat);
+  plinth.position.set(CROSS_X, CROSS_Y_BASE + 0.15, CROSS_Z);
+  group.add(plinth);
+
+  return group;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -833,6 +875,7 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   group.add(torchGroup);
   group.add(createForestDebris());
   group.add(createAncientRuins());
+  group.add(createCelticCross());
   group.add(createCanopyRays());
   group.add(createGroundMist());
 
