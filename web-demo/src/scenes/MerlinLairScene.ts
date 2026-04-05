@@ -1423,6 +1423,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let scryingOrbVisionActive452: boolean = false;
   let scryingOrbVisionT452: number = 0;
 
+  // C457 — magical stone fireplace with green flames
+  let fireplaceGroup457: Group | null = null;
+  let fireplaceT457: number = 0;
+  let fireplaceFlames457: Mesh[] = [];
+  let fireplaceSparks457: Mesh[] = [];
+  let fireplaceLight457: PointLight | null = null;
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2694,6 +2701,109 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scryingOrbGroup452.add(scryingOrbLight452);
 
     scene.add(scryingOrbGroup452);
+  }
+
+  // C457 — magical stone fireplace (back wall, centered)
+  {
+    fireplaceGroup457 = new Group();
+    fireplaceGroup457.position.set(0, 0, -4.5);
+
+    // Stone surround: left pillar, right pillar, lintel
+    const leftPillar = new Mesh(
+      new BoxGeometry(0.3, 1.6, 0.3),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    leftPillar.position.set(-0.85, 0.8, 0);
+    fireplaceGroup457.add(leftPillar);
+
+    const rightPillar = new Mesh(
+      new BoxGeometry(0.3, 1.6, 0.3),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    rightPillar.position.set(0.85, 0.8, 0);
+    fireplaceGroup457.add(rightPillar);
+
+    const lintel = new Mesh(
+      new BoxGeometry(2.0, 0.25, 0.3),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    lintel.position.set(0, 1.75, 0);
+    fireplaceGroup457.add(lintel);
+
+    // Mantelpiece (wide shelf above lintel)
+    const mantel = new Mesh(
+      new BoxGeometry(2.4, 0.1, 0.5),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    mantel.position.set(0, 1.92, 0.1);
+    fireplaceGroup457.add(mantel);
+
+    // Hearth floor (dark slab)
+    const hearth = new Mesh(
+      new BoxGeometry(1.5, 0.08, 0.6),
+      new MeshBasicMaterial({ color: 0x020f04 })
+    );
+    hearth.position.set(0, 0.04, 0.2);
+    fireplaceGroup457.add(hearth);
+
+    // Back wall of fireplace opening
+    const backWall = new Mesh(
+      new BoxGeometry(1.4, 1.6, 0.06),
+      new MeshBasicMaterial({ color: 0x010802 })
+    );
+    backWall.position.set(0, 0.8, -0.1);
+    fireplaceGroup457.add(backWall);
+
+    // 3 logs
+    for (let i = 0; i < 3; i++) {
+      const log = new Mesh(
+        new CylinderGeometry(0.055, 0.07, 1.0, 6),
+        new MeshBasicMaterial({ color: 0x020f04 })
+      );
+      log.rotation.z = Math.PI * 0.5;
+      log.position.set(-0.3 + i * 0.3, 0.1, 0.1);
+      fireplaceGroup457.add(log);
+    }
+
+    // 4 flame cones (staggered sizes)
+    const flameDefs457 = [
+      { h: 0.9,  r: 0.22, x: -0.2,  y: 0.15 },
+      { h: 1.3,  r: 0.18, x:  0.1,  y: 0.15 },
+      { h: 0.7,  r: 0.15, x:  0.35, y: 0.15 },
+      { h: 1.0,  r: 0.12, x: -0.4,  y: 0.15 },
+    ];
+    flameDefs457.forEach((def) => {
+      const flame = new Mesh(
+        new ConeGeometry(def.r, def.h, 6),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.75 })
+      );
+      flame.position.set(def.x, def.y + def.h / 2, 0.1);
+      fireplaceGroup457!.add(flame);
+      fireplaceFlames457.push(flame);
+    });
+
+    // 8 spark particles
+    for (let i = 0; i < 8; i++) {
+      const spark = new Mesh(
+        new SphereGeometry(0.02, 3, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.9 })
+      );
+      spark.position.set((Math.random() - 0.5) * 0.8, 0.2 + Math.random() * 0.8, 0.1);
+      spark.userData = {
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: 0.5 + Math.random() * 0.5,
+        phase: Math.random() * Math.PI * 2,
+      };
+      fireplaceGroup457!.add(spark);
+      fireplaceSparks457.push(spark);
+    }
+
+    // Dynamic firelight
+    fireplaceLight457 = new PointLight(0x33ff66, 1.2, 8.0);
+    fireplaceLight457.position.set(0, 0.8, 0.4);
+    fireplaceGroup457.add(fireplaceLight457);
+
+    scene.add(fireplaceGroup457);
   }
 
   // C438 — potion bottle shelf
@@ -4153,6 +4263,35 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C457 — fireplace update
+    fireplaceT457 += dt;
+
+    // Flame flicker
+    fireplaceFlames457.forEach((flame, i) => {
+      const f = 0.85 + 0.2 * Math.sin(fireplaceT457 * 5.0 + i * 1.7);
+      flame.scale.set(f, 0.9 + 0.15 * Math.sin(fireplaceT457 * 4.0 + i), f);
+      const mat = flame.material as MeshBasicMaterial;
+      mat.opacity = 0.6 + 0.2 * Math.sin(fireplaceT457 * 4.5 + i * 2.3);
+    });
+
+    // Sparks rise and reset
+    fireplaceSparks457.forEach((spark) => {
+      const ud = spark.userData as { vx: number; vy: number; phase: number };
+      spark.position.y += ud.vy * dt;
+      spark.position.x += Math.sin(fireplaceT457 * 3 + ud.phase) * 0.01;
+      const mat = spark.material as MeshBasicMaterial;
+      mat.opacity = Math.max(0, 1.0 - (spark.position.y - 0.2) / 1.5);
+      if (spark.position.y > 1.7 || mat.opacity <= 0.02) {
+        spark.position.set((Math.random() - 0.5) * 0.6, 0.2, 0.1);
+        mat.opacity = 0.9;
+      }
+    });
+
+    // Light flicker
+    if (fireplaceLight457) {
+      fireplaceLight457.intensity = 1.0 + 0.4 * Math.sin(fireplaceT457 * 6.0);
+    }
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -4597,6 +4736,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     scryingOrbMat452 = null;
     scryingOrbLight452 = null;
+    // C457 — fireplace dispose
+    if (fireplaceGroup457) {
+      fireplaceGroup457.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(fireplaceGroup457);
+      fireplaceGroup457 = null;
+    }
+    fireplaceFlames457 = [];
+    fireplaceSparks457 = [];
+    fireplaceLight457 = null;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
