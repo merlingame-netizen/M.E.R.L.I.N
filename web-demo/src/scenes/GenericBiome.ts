@@ -381,6 +381,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _eagleAngle = 0;
   let _lakeMesh: Mesh | null = null;
   let _lakeLight: PointLight | null = null;
+  let _waterfallGroup: Group | null = null;
+  let _waterfallLight: PointLight | null = null;
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
   let plaineObeliskGlowMat: MeshBasicMaterial | null = null;
@@ -999,6 +1001,55 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     lakeLight.position.set(0, 0.5, -22);
     group.add(lakeLight);
     _lakeLight = lakeLight;
+
+    // Frozen waterfall on left mountain face (C330)
+    const waterfallGroup = new Group();
+    // Main ice sheet
+    const iceSheetMat = new MeshBasicMaterial({
+      color: 0x0a1e1a,
+      transparent: true,
+      opacity: 0.45,
+      side: DoubleSide,
+    });
+    const iceSheet = new Mesh(new PlaneGeometry(3.5, 7.0), iceSheetMat);
+    iceSheet.position.set(-8, 3.5, -43);
+    iceSheet.rotation.y = 0.4;
+    iceSheet.rotation.x = -0.1;
+    waterfallGroup.add(iceSheet);
+    // Ice ridges — 4 vertical strips
+    const ridgeMat = new MeshBasicMaterial({ color: 0x0c2218 });
+    const ridgeXOffsets = [-8.8, -8.3, -7.7, -7.2];
+    for (const rx of ridgeXOffsets) {
+      const ridge = new Mesh(new BoxGeometry(0.15, 7.0, 0.08), ridgeMat);
+      ridge.position.set(rx, 3.5, -43);
+      waterfallGroup.add(ridge);
+    }
+    // Frozen splash base
+    const splashMat = new MeshBasicMaterial({
+      color: 0x0a1e1a,
+      transparent: true,
+      opacity: 0.55,
+    });
+    const splash = new Mesh(new CylinderGeometry(1.5, 2.0, 0.3, 8), splashMat);
+    splash.position.set(-8, -0.15, -43);
+    waterfallGroup.add(splash);
+    // Icicles — 6 hanging from bottom of ice sheet
+    const icicleMat = new MeshBasicMaterial({ color: 0x0d2a22 });
+    const icicleXPositions = [-9, -8.6, -8.2, -7.8, -7.4, -7];
+    for (const ix of icicleXPositions) {
+      const icicleLen = 0.4 + Math.random() * 0.3;
+      const icicle = new Mesh(new ConeGeometry(0.05, icicleLen, 4), icicleMat);
+      icicle.position.set(ix, -0.05, -43);
+      icicle.rotation.x = Math.PI;
+      waterfallGroup.add(icicle);
+    }
+    group.add(waterfallGroup);
+    _waterfallGroup = waterfallGroup;
+    // Glow — very subtle green shimmer
+    const waterfallLight = new PointLight(0x33ff66, 0.06, 8);
+    waterfallLight.position.set(-8, 1.5, -42.5);
+    group.add(waterfallLight);
+    _waterfallLight = waterfallLight;
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -1582,6 +1633,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const t = Date.now() * 0.001;
       _lakeLight.intensity = 0.03 + Math.sin(t * 0.4) * 0.02;
     }
+    // Monts brumeux — frozen waterfall shimmer (C330)
+    if (_waterfallGroup !== null) {
+      const t = Date.now() * 0.001;
+      const iceSheetMesh = _waterfallGroup.children[0] as Mesh;
+      (iceSheetMesh.material as MeshBasicMaterial).opacity = 0.42 + Math.sin(t * 0.18) * 0.04;
+    }
+    if (_waterfallLight !== null) {
+      const t = Date.now() * 0.001;
+      _waterfallLight.intensity = 0.04 + Math.sin(t * 0.3) * 0.02;
+    }
   };
 
   const dispose = (): void => {
@@ -1605,6 +1666,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _eagleWingR = null;
     _lakeMesh = null;
     _lakeLight = null;
+    _waterfallGroup = null;
+    _waterfallLight = null;
     _deadTreeGroup = null;
     _templeGroup = null;
     _heatherMeshes.length = 0;
