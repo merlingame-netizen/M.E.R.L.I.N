@@ -1400,6 +1400,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _runeRings: Mesh[] = [];
   let _runeCircleLight: PointLight | null = null;
 
+  // C441 — celestial star map parchment (closure-scope vars)
+  let starMapGroup441: Group | null = null;
+  let starMapT441: number = 0;
+  const starDots441: Mesh[] = [];
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2490,6 +2495,78 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     _runeCircleGroup.position.set(0, 0.01, -1);
     scene.add(_runeCircleGroup);
+  }
+
+  // C441 — celestial star map parchment
+  {
+    starMapGroup441 = new Group();
+    starMapGroup441.position.set(-2.8, 2.4, -3.8);
+    starMapGroup441.rotation.set(0, Math.PI * 0.15, 0);
+
+    // Parchment backing
+    const parchBacking = new Mesh(
+      new PlaneGeometry(1.4, 1.0),
+      new MeshBasicMaterial({ color: 0x020f04, transparent: true, opacity: 0.85 })
+    );
+    starMapGroup441.add(parchBacking);
+
+    // Border frame — 4 thin strips: top, bottom, left, right
+    const borderMat = new MeshBasicMaterial({ color: 0x0d2a14 });
+    const borderDefs: Array<[number, number, number, number, number, number]> = [
+      [1.4, 0.04, 0.04,  0,  0.52, 0],  // top
+      [1.4, 0.04, 0.04,  0, -0.52, 0],  // bottom
+      [0.04, 1.0, 0.04, -0.72, 0, 0],   // left
+      [0.04, 1.0, 0.04,  0.72, 0, 0],   // right
+    ];
+    for (const [bw, bh, bd, bx, by, bz] of borderDefs) {
+      const strip = new Mesh(new BoxGeometry(bw, bh, bd), borderMat);
+      strip.position.set(bx, by, bz + 0.01);
+      starMapGroup441.add(strip);
+    }
+
+    // 15 star dot positions (u,v in [-0.6..0.6, -0.45..0.45])
+    const starPositions: Array<[number, number]> = [
+      [-0.42, 0.30], [-0.10, 0.38], [ 0.25, 0.32], [ 0.50, 0.20], [ 0.40, -0.05],
+      [ 0.15, -0.30], [-0.20, -0.38], [-0.50, -0.18], [-0.55, 0.05], [ 0.00, 0.10],
+      [-0.28, 0.10], [ 0.30, 0.08], [ 0.55, -0.30], [-0.05, -0.10], [ 0.18, 0.38],
+    ];
+    const starGeo = new SphereGeometry(0.018, 4, 4);
+    for (const [sx, sy] of starPositions) {
+      const dot = new Mesh(
+        starGeo,
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 1.0 })
+      );
+      dot.position.set(sx, sy, 0.02);
+      starDots441.push(dot);
+      starMapGroup441.add(dot);
+    }
+
+    // 6 constellation lines — connect groups of 3-4 stars by index
+    const constellationSets: Array<number[]> = [
+      [0, 1, 2, 3],   // top arc
+      [4, 9, 6],      // center-right to center-bottom-left
+      [5, 13, 11],    // bottom mid
+      [7, 8, 0],      // left side
+      [10, 9, 14],    // inner cluster
+      [3, 4, 12],     // right column
+    ];
+    const lineMat = new LineBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.5 });
+    for (const indices of constellationSets) {
+      const points: Vector3[] = indices.map(idx => {
+        const [sx, sy] = starPositions[idx];
+        return new Vector3(sx, sy, 0.015);
+      });
+      const lineGeo = new BufferGeometry().setFromPoints(points);
+      const line = new Line(lineGeo, lineMat);
+      starMapGroup441.add(line);
+    }
+
+    // Ambient point light at parchment center, offset toward viewer
+    const starLight = new PointLight(0x33ff66, 0.08, 3.0);
+    starLight.position.set(0, 0, 0.3);
+    starMapGroup441.add(starLight);
+
+    scene.add(starMapGroup441);
   }
 
   // C438 — potion bottle shelf
@@ -3868,6 +3945,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C441 — celestial star map parchment update
+    if (starMapGroup441) {
+      starMapT441 += dt;
+      starDots441.forEach((dot, i) => {
+        const mat = dot.material as MeshBasicMaterial;
+        mat.opacity = 0.7 + 0.3 * Math.sin(starMapT441 * 1.2 + i * 0.7);
+      });
+    }
+
     // C438 — potion bottle shelf update
     if (_potionShelfGroup) {
       _potionShelfT += dt;
@@ -4273,6 +4359,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.remove(_runeCircleGroup);
       _runeCircleGroup = null;
     }
+    // C441 — celestial star map parchment dispose
+    if (starMapGroup441) {
+      starMapGroup441.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        else if (c instanceof Line) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(starMapGroup441);
+      starMapGroup441 = null;
+    }
+    starDots441.length = 0;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
