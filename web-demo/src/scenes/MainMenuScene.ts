@@ -762,78 +762,103 @@ function createStarConstellationCanvas(container: HTMLElement): StarCanvasResult
 }
 
 // ── Ogham Rune Rain ──────────────────────────────────────────────────────────
-// C176: Matrix-style CeltOS green rain of ancient Celtic script characters
-// overlaid behind the menu DOM but above the Three.js canvas.
+// C297: Particle-based rune rain — 40 individual ogham characters falling
+// behind the text overlay (z-index:0). CeltOS green only, idempotent guard.
+
+interface RuneParticle {
+  x: number;
+  y: number;
+  speed: number;
+  char: string;
+  opacity: number;
+  size: number;
+}
 
 interface RuneRainResult {
   canvas: HTMLCanvasElement;
   dispose: () => void;
 }
 
+let _runeRainRafId = 0;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
+  // Idempotent guard — reuse canvas if already present
+  const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
+  if (existing) {
+    return {
+      canvas: existing,
+      dispose: () => {
+        cancelAnimationFrame(_runeRainRafId);
+        existing.remove();
+      },
+    };
+  }
+
   const canvas = document.createElement('canvas');
-  canvas.style.cssText = [
-    'position:absolute;inset:0;z-index:1;pointer-events:none;',
-    'opacity:0.18;mix-blend-mode:screen;',
-  ].join('');
+  canvas.id = 'menu-rune-rain';
+  canvas.style.cssText =
+    'position:absolute;inset:0;pointer-events:none;z-index:0;opacity:0.18;';
   canvas.width = container.clientWidth || window.innerWidth;
   canvas.height = container.clientHeight || window.innerHeight;
   container.appendChild(canvas);
 
   const ctx = canvas.getContext('2d')!;
-  const RUNES = 'ᚁᚂᚃᚄᚅᚆᚇᚈᚉᚊᚋᚌᚍᚎᚏᚐᚑᚒᚓᚔᚕᚖᚗᚘᚙᚚ';
-  const COL_SIZE = 18; // px per column
-  const cols = Math.floor(canvas.width / COL_SIZE);
-  const drops = new Float32Array(cols).fill(0);
-  // Stagger start positions
-  for (let i = 0; i < cols; i++) drops[i] = -Math.random() * (canvas.height / COL_SIZE);
+  const OGHAM_CHARS: string[] = [
+    'ᚁ','ᚂ','ᚃ','ᚄ','ᚅ','ᚆ','ᚇ','ᚈ','ᚉ','ᚊ',
+    'ᚋ','ᚌ','ᚍ','ᚎ','ᚏ','ᚐ','ᚑ','ᚒ',
+  ];
+  const PARTICLE_COUNT = 40;
 
-  let rafId = 0;
-  const draw = (): void => {
-    // Fade trail — semi-transparent clear
-    ctx.fillStyle = 'rgba(1,6,2,0.18)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const makeParticle = (w: number, h: number): RuneParticle => ({
+    x: Math.random() * w,
+    y: Math.random() * h,
+    speed: 0.4 + Math.random() * 0.8,
+    char: OGHAM_CHARS[Math.floor(Math.random() * OGHAM_CHARS.length)]!,
+    opacity: Math.random(),
+    size: 11 + Math.floor(Math.random() * 8),
+  });
 
-    ctx.font = `${COL_SIZE - 2}px "Courier New", monospace`;
-    ctx.textAlign = 'center';
+  const w = canvas.width;
+  const h = canvas.height;
+  const particles: RuneParticle[] = Array.from({ length: PARTICLE_COUNT }, () =>
+    makeParticle(w, h),
+  );
 
-    for (let i = 0; i < cols; i++) {
-      const y = Math.floor(drops[i]!) * COL_SIZE;
-      if (y < 0) { drops[i]! += 0.3 + Math.random() * 0.4; continue; }
+  const loop = (): void => {
+    const cw = canvas.width;
+    const ch = canvas.height;
+    ctx.clearRect(0, 0, cw, ch);
 
-      // Leading char — bright
-      ctx.fillStyle = '#33ff66';
-      const ch = RUNES[Math.floor(Math.random() * RUNES.length)]!;
-      ctx.fillText(ch, i * COL_SIZE + COL_SIZE / 2, y + COL_SIZE);
-
-      // Trail char below — dimmer
-      if (y + COL_SIZE * 2 < canvas.height) {
-        ctx.fillStyle = '#1a8833';
-        const trailCh = RUNES[Math.floor(Math.random() * RUNES.length)]!;
-        ctx.fillText(trailCh, i * COL_SIZE + COL_SIZE / 2, y + COL_SIZE * 2);
+    for (const p of particles) {
+      p.y += p.speed;
+      if (p.y > ch) {
+        p.y = -20;
+        p.x = Math.random() * cw;
+        p.char = OGHAM_CHARS[Math.floor(Math.random() * OGHAM_CHARS.length)]!;
+        p.opacity = Math.random();
+        p.size = 11 + Math.floor(Math.random() * 8);
+        p.speed = 0.4 + Math.random() * 0.8;
       }
-
-      drops[i]! += 0.25 + Math.random() * 0.3;
-      if (drops[i]! * COL_SIZE > canvas.height && Math.random() > 0.975) {
-        drops[i] = -Math.floor(Math.random() * 20);
-      }
+      ctx.fillStyle = `rgba(51,255,102,${(0.4 + p.opacity * 0.6).toFixed(2)})`;
+      ctx.font = `${p.size}px Courier New`;
+      ctx.fillText(p.char, p.x, p.y);
     }
-    rafId = requestAnimationFrame(draw);
+
+    _runeRainRafId = requestAnimationFrame(loop);
   };
 
-  rafId = requestAnimationFrame(draw);
+  _runeRainRafId = requestAnimationFrame(loop);
 
   const onResize = (): void => {
     canvas.width = container.clientWidth || window.innerWidth;
     canvas.height = container.clientHeight || window.innerHeight;
-    for (let i = 0; i < cols; i++) drops[i] = Math.random() * (canvas.height / COL_SIZE);
   };
   window.addEventListener('resize', onResize);
 
   return {
     canvas,
     dispose: () => {
-      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(_runeRainRafId);
       window.removeEventListener('resize', onResize);
       canvas.remove();
     },
