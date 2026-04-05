@@ -189,6 +189,60 @@ const FACTION_GLOW: Record<string, string> = {
   central:   'rgba(51,255,102,0.20)',  // neutral green
 };
 
+// ── Faction SVG background pattern map (C300) ─────────────────────────────
+// Each value is a ready-to-use CSS background-image data URL.
+// All patterns use rgba(51,255,102,...) green family — CeltOS charter compliant.
+
+function buildSvgDataUrl(svgBody: string, w = 20, h = 20): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${svgBody}</svg>`;
+  // Minimal URL encoding: encode only characters that break data URLs in CSS
+  const encoded = svg
+    .replace(/%/g, '%25')
+    .replace(/#/g, '%23')
+    .replace(/\n/g, '')
+    .replace(/"/g, "'");
+  return `url("data:image/svg+xml,${encoded}")`;
+}
+
+const FACTION_PATTERN: Record<string, string> = {
+  // Interlocking circles — Celtic triquetra style
+  druides: buildSvgDataUrl(
+    `<circle cx='10' cy='5' r='6' fill='none' stroke='rgba(51,255,102,0.12)' stroke-width='1'/>` +
+    `<circle cx='5' cy='14' r='6' fill='none' stroke='rgba(51,255,102,0.12)' stroke-width='1'/>` +
+    `<circle cx='15' cy='14' r='6' fill='none' stroke='rgba(51,255,102,0.12)' stroke-width='1'/>`,
+  ),
+  // Diamond grid
+  anciens: buildSvgDataUrl(
+    `<path d='M10,0 L20,10 L10,20 L0,10 Z' fill='none' stroke='rgba(51,255,102,0.10)' stroke-width='1'/>`,
+  ),
+  // Chaotic zig-zag lines
+  korrigans: buildSvgDataUrl(
+    `<polyline points='0,5 4,1 8,9 12,3 16,11 20,5' fill='none' stroke='rgba(51,255,102,0.09)' stroke-width='1'/>` +
+    `<polyline points='0,15 4,11 8,19 12,13 16,18 20,15' fill='none' stroke='rgba(51,255,102,0.09)' stroke-width='1'/>`,
+  ),
+  // Flowing wave curves
+  niamh: buildSvgDataUrl(
+    `<path d='M0,10 Q5,0 10,10 Q15,20 20,10' fill='none' stroke='rgba(51,255,102,0.11)' stroke-width='1'/>` +
+    `<path d='M0,20 Q5,10 10,20' fill='none' stroke='rgba(51,255,102,0.11)' stroke-width='1'/>`,
+  ),
+  // Skull-like X crosses
+  ankou: buildSvgDataUrl(
+    `<line x1='2' y1='2' x2='8' y2='8' stroke='rgba(51,255,102,0.08)' stroke-width='1'/>` +
+    `<line x1='8' y1='2' x2='2' y2='8' stroke='rgba(51,255,102,0.08)' stroke-width='1'/>` +
+    `<line x1='12' y1='12' x2='18' y2='18' stroke='rgba(51,255,102,0.08)' stroke-width='1'/>` +
+    `<line x1='18' y1='12' x2='12' y2='18' stroke='rgba(51,255,102,0.08)' stroke-width='1'/>`,
+  ),
+};
+
+// Neutral / default: simple dot grid
+const FACTION_PATTERN_DEFAULT: string = buildSvgDataUrl(
+  `<circle cx='10' cy='10' r='1' fill='rgba(51,255,102,0.07)'/>`,
+);
+
+function getFactionPattern(factionKey: string): string {
+  return FACTION_PATTERN[factionKey] ?? FACTION_PATTERN_DEFAULT;
+}
+
 // ── Title colour by faction (C244) ─────────────────────────────────────────
 
 const FACTION_TITLE_COLOUR: Record<string, string> = {
@@ -470,6 +524,11 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     const existingFlavor = container?.querySelector('.card-flavor');
     if (existingFlavor) existingFlavor.remove();
 
+    // C300: faction key resolved here so both the container block and the
+    // options loop below can share it without redundant DOM access.
+    const faction: string | undefined = ((card as unknown) as Record<string, unknown>).faction as string | undefined;
+    const factionKey = (faction ?? 'central').toLowerCase();
+
     if (container) {
       const badge = document.createElement('div');
       badge.className = 'card-biome-badge';
@@ -480,7 +539,6 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       container.insertBefore(badge, container.firstChild);
 
       // Faction badge — defensive access (faction not in Card interface)
-      const faction: string | undefined = ((card as unknown) as Record<string, unknown>).faction as string | undefined;
       if (faction) {
         const factionColour = getFactionColour(faction);
         const fBadge = document.createElement('span');
@@ -494,7 +552,6 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       }
 
       // C244: faction-tinted glow on the main card panel
-      const factionKey = (faction ?? 'central').toLowerCase();
       const factionGlow = FACTION_GLOW[factionKey] ?? FACTION_GLOW['central'] as string;
       container.style.boxShadow = `0 0 18px ${factionGlow}, inset 0 0 6px ${factionGlow}`;
 
@@ -542,6 +599,11 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       btn.setAttribute('aria-label', `${option.verb} — ${option.text}`);
       // Required so absolutely-positioned .card-opt-num and .card-opt-ogham are anchored here
       btn.style.position = 'relative';
+
+      // C300: faction SVG background pattern — subtle decorative tile on card back
+      btn.style.backgroundImage = getFactionPattern(factionKey);
+      btn.style.backgroundSize = '20px 20px';
+      btn.style.backgroundRepeat = 'repeat';
 
       // Number badge (top-left corner)
       const numBadge = document.createElement('span');
