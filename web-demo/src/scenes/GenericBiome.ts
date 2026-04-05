@@ -374,6 +374,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let valleeWispTime = 0;
   let montsWindMesh: Points | null = null;
   let montsWindTime = 0;
+  let montsSnowMeshes: Mesh[] = [];
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
   let maraisWispMeshes: Mesh[] = [];
@@ -608,6 +609,23 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     mistPlane.position.set(0, -1, -43);
     mistPlane.rotation.x = -0.12;
     group.add(mistPlane);
+    // Snowflake particles — 60 pale white flakes falling gently across the ridge
+    const snowGeo = new SphereGeometry(0.06, 3, 2);
+    const snowMat = new MeshBasicMaterial({ color: 0xddeeff, transparent: true, opacity: 0.7 });
+    for (let i = 0; i < 60; i++) {
+      const snow = new Mesh(snowGeo, snowMat);
+      const sx = (Math.random() - 0.5) * 60;
+      const sy = -1 + Math.random() * 11;
+      const sz = -3 - Math.random() * 39;
+      snow.position.set(sx, sy, sz);
+      snow.userData = {
+        speed: 0.5 + Math.random() * 0.5,
+        driftX: (Math.random() - 0.5) * 0.3,
+        startY: sy,
+      };
+      group.add(snow);
+      montsSnowMeshes.push(snow);
+    }
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -841,11 +859,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       }
       pos.needsUpdate = true;
     }
+    // Monts brumeux — snowflakes falling gently with slight lateral drift
+    for (const snow of montsSnowMeshes) {
+      snow.position.y -= snow.userData['speed'] * dt;
+      snow.position.x += snow.userData['driftX'] * dt;
+      if (snow.position.y < -2) {
+        snow.position.y = snow.userData['startY'];
+        snow.position.x = (Math.random() - 0.5) * 60;
+      }
+    }
   };
 
   const dispose = (): void => {
     plaineWispMeshes = [];
     maraisWispMeshes = [];
+    montsSnowMeshes = [];
     altarRuneRing = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
