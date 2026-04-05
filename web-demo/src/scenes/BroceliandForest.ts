@@ -908,6 +908,12 @@ const ravenT426: number[] = [];
 const ravenWingL426: Mesh[] = [];
 const ravenWingR426: Mesh[] = [];
 let celticCrossT421 = 0;
+
+// ── Cycle-430: druidic candle circle ──────────────────────────────────────────
+let candleCircleGroup430: Group | null = null;
+let candleT430 = 0;
+const candleFlames430: Mesh[] = [];
+let candleCenterLight430: PointLight | null = null;
 const celticCrossGlows421: Mesh[] = [];
 let celticCrossLight421: PointLight | null = null;
 
@@ -1972,6 +1978,67 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     ravenMat.dispose();
   }
 
+  // ── Cycle-430: druidic candle circle ──────────────────────────────────────────
+  {
+    candleCircleGroup430 = new Group();
+
+    const NUM_CANDLES = 7;
+    const CIRCLE_R = 0.9;
+    const waxMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const flameMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.85 });
+
+    for (let ci = 0; ci < NUM_CANDLES; ci++) {
+      const angle = (ci / NUM_CANDLES) * Math.PI * 2;
+      const cx = Math.cos(angle) * CIRCLE_R;
+      const cz = Math.sin(angle) * CIRCLE_R;
+
+      // Wax column
+      const candleHeight = 0.18 + (ci % 3) * 0.06;
+      const wax = new Mesh(new CylinderGeometry(0.025, 0.028, candleHeight, 6), waxMat);
+      wax.position.set(cx, candleHeight / 2, cz);
+
+      // Wick: tiny cylinder on top
+      const wick = new Mesh(new CylinderGeometry(0.004, 0.004, 0.025, 4), waxMat);
+      wick.position.set(cx, candleHeight + 0.012, cz);
+
+      // Flame: small cone
+      const flame = new Mesh(
+        new ConeGeometry(0.022, 0.07, 5, 1, true),
+        flameMat.clone(),
+      );
+      flame.position.set(cx, candleHeight + 0.055, cz);
+      candleFlames430.push(flame);
+
+      // Small flame glow: PointLight per candle every other candle to keep light count down
+      if (ci % 2 === 0) {
+        const candleLight = new PointLight(0x33ff66, 0.04, 1.5);
+        candleLight.position.set(cx, candleHeight + 0.1, cz);
+        candleCircleGroup430.add(candleLight);
+      }
+
+      candleCircleGroup430.add(wax, wick, flame);
+    }
+
+    // Central glyph: flat hexagonal plane on ground
+    const glyphGeo = new CircleGeometry(0.5, 6);
+    const glyphMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.08, depthWrite: false });
+    const glyph = new Mesh(glyphGeo, glyphMat);
+    glyph.rotation.x = -Math.PI / 2;
+    glyph.position.set(0, 0.01, 0);
+    candleCircleGroup430.add(glyph);
+
+    // Central ambient light
+    candleCenterLight430 = new PointLight(0x33ff66, 0.15, 3.5);
+    candleCenterLight430.position.set(0, 0.5, 0);
+    candleCircleGroup430.add(candleCenterLight430);
+
+    candleCircleGroup430.position.set(4, 0, -20);
+    group.add(candleCircleGroup430);
+
+    waxMat.dispose();
+    flameMat.dispose();
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2409,6 +2476,20 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       if (ravenWingL426[i]) ravenWingL426[i]!.rotation.z = flap;
       if (ravenWingR426[i]) ravenWingR426[i]!.rotation.z = -flap;
     });
+
+    // Cycle-430: druidic candle circle — independent flame flicker
+    if (candleCircleGroup430) {
+      candleT430 += dt;
+      candleFlames430.forEach((flame, i) => {
+        const mat = flame.material as MeshBasicMaterial;
+        mat.opacity = 0.7 + Math.sin(candleT430 * 7.3 + i * 1.1) * 0.2;
+        flame.scale.y = 0.85 + Math.sin(candleT430 * 9.1 + i * 0.7) * 0.2;
+        flame.scale.x = 0.9 + Math.sin(candleT430 * 5.7 + i * 1.4) * 0.12;
+      });
+      if (candleCenterLight430) {
+        candleCenterLight430.intensity = 0.12 + Math.sin(candleT430 * 1.2) * 0.05;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -2634,6 +2715,20 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     ravenT426.length = 0;
     ravenWingL426.length = 0;
     ravenWingR426.length = 0;
+    // Cycle-430: druidic candle circle cleanup
+    if (candleCircleGroup430) {
+      candleCircleGroup430.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      candleFlames430.length = 0;
+      candleCenterLight430 = null;
+      candleCircleGroup430 = null;
+    }
   };
 
   return { group, update, dispose };
