@@ -358,6 +358,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const particles = createParticles(theme.particleColor, 60);
   group.add(particles.points);
 
+  // Outer refs for biome-specific animated elements (captured by update closure)
+  let plaineDruideFireLight: PointLight | null = null;
+  let plaineDruideFireMesh: Mesh | null = null;
+  let maraisWater: Mesh | null = null;
+  let maraisWaterTime = 0;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -415,12 +421,6 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(boulder);
     }
   }
-
-  // Outer refs for biome-specific animated elements (captured by update closure)
-  let plaineDruideFireLight: PointLight | null = null;
-  let plaineDruideFireMesh: Mesh | null = null;
-  let maraisWater: Mesh | null = null;
-  let maraisWaterTime = 0;
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
   if (biome === 'cercles_pierres') {
