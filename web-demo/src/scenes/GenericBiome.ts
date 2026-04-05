@@ -383,6 +383,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let plaineWispTime = 0;
   let plaineObeliskGlowMat: MeshBasicMaterial | null = null;
   let plaineObeliskTime = 0;
+  let _wellGroup: Group | null = null;
+  let _wellBucket: Mesh | null = null;
+  let _wellLight: PointLight | null = null;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
   const _auroraBands: Mesh[] = [];
@@ -942,6 +945,66 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     glowPlane.position.set(0, 0, -17.45);
     group.add(glowPlane);
     plaineObeliskGlowMat = glowMat;
+
+    // ── Stone well (C303) ────────────────────────────────────────────────────
+    const wellGroup = new Group();
+
+    // Base ring
+    const wellBaseMat = new MeshStandardMaterial({ color: 0x1a2215, roughness: 0.95, metalness: 0.0, flatShading: true });
+    const wellBase = new Mesh(new CylinderGeometry(0.9, 1.0, 0.25, 12), wellBaseMat);
+    wellBase.position.set(8, 0.12, -14);
+    wellGroup.add(wellBase);
+
+    // Wall cylinder (open-ended)
+    const wellWallMat = new MeshStandardMaterial({ color: 0x1a2215, roughness: 0.95, metalness: 0.0, flatShading: true, side: DoubleSide });
+    const wellWall = new Mesh(new CylinderGeometry(0.75, 0.8, 0.9, 12, 1, true), wellWallMat);
+    wellWall.position.set(8, 0.7, -14);
+    wellGroup.add(wellWall);
+
+    // Cap ring
+    const wellCapMat = new MeshStandardMaterial({ color: 0x121a0e, roughness: 0.95, metalness: 0.0, flatShading: true });
+    const wellCap = new Mesh(new CylinderGeometry(0.85, 0.85, 0.08, 12), wellCapMat);
+    wellCap.position.set(8, 1.2, -14);
+    wellGroup.add(wellCap);
+
+    // Left post
+    const wellPostMat = new MeshStandardMaterial({ color: 0x0c1008, roughness: 0.98, metalness: 0.0, flatShading: true });
+    const wellPostL = new Mesh(new CylinderGeometry(0.05, 0.05, 1.4, 5), wellPostMat);
+    wellPostL.position.set(7.6, 1.6, -14);
+    wellGroup.add(wellPostL);
+
+    // Right post
+    const wellPostR = new Mesh(new CylinderGeometry(0.05, 0.05, 1.4, 5), wellPostMat);
+    wellPostR.position.set(8.4, 1.6, -14);
+    wellGroup.add(wellPostR);
+
+    // Crossbeam (horizontal)
+    const wellBeam = new Mesh(new CylinderGeometry(0.04, 0.04, 0.9, 5), wellPostMat);
+    wellBeam.rotation.z = Math.PI / 2;
+    wellBeam.position.set(8, 2.3, -14);
+    wellGroup.add(wellBeam);
+
+    // Rope
+    const wellRopeMat = new MeshStandardMaterial({ color: 0x0a0e0a, roughness: 0.98, metalness: 0.0, flatShading: true });
+    const wellRope = new Mesh(new CylinderGeometry(0.01, 0.01, 0.6, 3), wellRopeMat);
+    wellRope.position.set(8, 1.6, -14);
+    wellGroup.add(wellRope);
+
+    // Bucket
+    const wellBucketMat = new MeshStandardMaterial({ color: 0x0c1008, roughness: 0.95, metalness: 0.0, flatShading: true });
+    const wellBucket = new Mesh(new CylinderGeometry(0.12, 0.10, 0.22, 6), wellBucketMat);
+    wellBucket.position.set(8, 1.6, -14);
+    wellGroup.add(wellBucket);
+
+    // Magical water glow (PointLight inside the well)
+    const wellGlowLight = new PointLight(0x33ff66, 0.12, 2.5);
+    wellGlowLight.position.set(8, 0.4, -14);
+    wellGroup.add(wellGlowLight);
+
+    group.add(wellGroup);
+    _wellGroup = wellGroup;
+    _wellBucket = wellBucket;
+    _wellLight = wellGlowLight;
   }
 
   const update = (dt: number): void => {
@@ -974,6 +1037,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (plaineObeliskGlowMat) {
       plaineObeliskTime += dt;
       plaineObeliskGlowMat.opacity = 0.12 + Math.sin(plaineObeliskTime * 0.6) * 0.08;
+    }
+    // Plaine des Druides — stone well bucket sway + magical water pulse
+    if (_wellBucket !== null) {
+      const t = Date.now() * 0.001;
+      _wellBucket.rotation.z = Math.sin(t * 0.4) * 0.05;
+    }
+    if (_wellLight !== null) {
+      const t = Date.now() * 0.001;
+      _wellLight.intensity = 0.08 + Math.sin(t * 0.7) * 0.04;
     }
     // Marais korrigans — chaotic will-o'-wisp particles
     if (maraisWispMeshes.length > 0) {
@@ -1109,6 +1181,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const dispose = (): void => {
     plaineWispMeshes = [];
     plaineObeliskGlowMat = null;
+    _wellGroup = null;
+    _wellBucket = null;
+    _wellLight = null;
     maraisWispMeshes = [];
     _auroraBands.length = 0;
     montsSnowMeshes = [];
