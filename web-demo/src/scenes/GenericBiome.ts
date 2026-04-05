@@ -635,6 +635,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let vortexSurging468: boolean = false
   let vortexSurgeT468: number = 0
 
+  // ── Ritual altar with eternal flame — cercles_pierres (C496) ─────────────
+  let altarGroup496: Group | null = null
+  let altarFlames496: Mesh[] = []
+  let altarRunes496: Mesh[] = []
+  let altarLight496: PointLight | null = null
+  let altarT496: number = 0
+  let altarSurgeTimer496: number = 25 + Math.random() * 15
+  let altarSurging496: boolean = false
+  let altarSurgeT496: number = 0
+
   // ── Frozen waterfall — monts_brumeux (C473) ───────────────────────────────
   let iceWaterfallGroup473: Group | null = null
   let iceWaterfallT473: number = 0
@@ -1751,6 +1761,86 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     vortexGroup468!.add(vortexLight468)
 
     group.add(vortexGroup468)
+  }
+
+  // ── Ritual altar with eternal flame — cercles_pierres (C496) ─────────────
+  if (biome === 'cercles_pierres') {
+    altarGroup496 = new Group()
+    altarGroup496.position.set(0, 0, 0)
+
+    // Altar table
+    const altarBody = new Mesh(
+      new BoxGeometry(1.2, 0.5, 0.8),
+      new MeshStandardMaterial({ color: 0x0a1a10, roughness: 0.9, metalness: 0.0, flatShading: true })
+    )
+    altarBody.position.y = 0.25
+    altarGroup496.add(altarBody)
+
+    // Altar top face trim — slightly wider
+    const altarTrim = new Mesh(
+      new BoxGeometry(1.3, 0.05, 0.9),
+      new MeshStandardMaterial({ color: 0x0d2010, roughness: 0.85, metalness: 0.0, flatShading: true })
+    )
+    altarTrim.position.y = 0.52
+    altarGroup496.add(altarTrim)
+
+    // 4 corner runes
+    const runeOffsets: Array<[number, number]> = [[-0.5, -0.32], [0.5, -0.32], [-0.5, 0.32], [0.5, 0.32]]
+    runeOffsets.forEach(([rx, rz]) => {
+      const rune = new Mesh(
+        new CylinderGeometry(0.04, 0.04, 0.08, 6),
+        new MeshStandardMaterial({ color: 0x0d2010, emissive: 0x33ff66, emissiveIntensity: 0.6, roughness: 0.7 })
+      )
+      rune.position.set(rx, 0.58, rz)
+      altarGroup496!.add(rune)
+      altarRunes496.push(rune)
+    })
+
+    // Flame bowl
+    const flameBowl = new Mesh(
+      new CylinderGeometry(0.15, 0.18, 0.1, 8),
+      new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, flatShading: true })
+    )
+    flameBowl.position.y = 0.58
+    altarGroup496.add(flameBowl)
+
+    // 5 flame cones in cluster
+    const flameOffsets: Array<[number, number]> = [[0, 0], [0.05, 0.04], [-0.05, 0.04], [0.04, -0.05], [-0.04, -0.04]]
+    flameOffsets.forEach(([fx, fz], fi) => {
+      const flame = new Mesh(
+        new ConeGeometry(0.07, 0.28, 4),
+        new MeshStandardMaterial({
+          color: 0x33ff66,
+          emissive: 0x33ff66,
+          emissiveIntensity: 1.8,
+          transparent: true,
+          opacity: 0.75,
+          roughness: 0.4,
+        })
+      )
+      flame.position.set(fx, 0.7 + fi * 0.01, fz)
+      flame.userData['phase'] = fi * 1.26
+      altarGroup496!.add(flame)
+      altarFlames496.push(flame)
+    })
+
+    // 3 ritual offerings on altar surface
+    const offeringPositions: Array<[number, number, number]> = [[-0.28, 0.57, 0], [0.28, 0.57, 0.1], [0.0, 0.57, -0.25]]
+    offeringPositions.forEach(([ox, oy, oz]) => {
+      const offering = new Mesh(
+        new BoxGeometry(0.08, 0.04, 0.06),
+        new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.95, flatShading: true })
+      )
+      offering.position.set(ox, oy, oz)
+      altarGroup496!.add(offering)
+    })
+
+    // PointLight at flame position
+    altarLight496 = new PointLight(0x33ff66, 1.0, 6.0)
+    altarLight496.position.set(0, 0.75, 0)
+    altarGroup496.add(altarLight496)
+
+    group.add(altarGroup496)
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -4678,6 +4768,71 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Cercles de Pierres — ritual altar eternal flame (C496)
+    if (altarGroup496) {
+      altarT496 += dt
+      altarSurgeTimer496 -= dt
+
+      const t496 = altarT496
+
+      // Flame cone animation: scale.y oscillates 0.7–1.3, opacity 0.5–0.9
+      altarFlames496.forEach((flame, i) => {
+        const phase = flame.userData['phase'] as number
+        const scaleY = 0.7 + 0.6 * Math.abs(Math.sin(t496 * 1.4 + phase))
+        flame.scale.y = scaleY
+        const mat = flame.material as MeshStandardMaterial
+        mat.opacity = 0.5 + 0.4 * (0.5 + 0.5 * Math.sin(t496 * 1.8 + phase + 0.5))
+        if (!altarSurging496) {
+          mat.emissiveIntensity = 1.8 + 0.3 * Math.sin(t496 * 2.3 + phase)
+        }
+      })
+
+      // Corner runes pulse
+      altarRunes496.forEach((rune, i) => {
+        const mat = rune.material as MeshStandardMaterial
+        if (!altarSurging496) {
+          mat.emissiveIntensity = 0.4 + 0.4 * Math.sin(t496 * 2.1 + i * Math.PI / 2)
+        }
+      })
+
+      // PointLight flicker
+      if (altarLight496 && !altarSurging496) {
+        altarLight496.intensity = 0.8 + 0.4 * Math.sin(t496 * 6.3 + Math.sin(t496 * 2.7))
+      }
+
+      // Ritual surge trigger
+      if (altarSurgeTimer496 <= 0) {
+        altarSurgeTimer496 = 25 + Math.random() * 15
+        altarSurging496 = true
+        altarSurgeT496 = 0
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }))
+      }
+
+      // Surge animation: 0–1.5s spike, 1.5–3.5s fade
+      if (altarSurging496) {
+        altarSurgeT496 += dt
+        const surgeIn = Math.min(altarSurgeT496 / 0.3, 1.0)
+        const surgeOut = altarSurgeT496 > 1.5 ? 1.0 - Math.min((altarSurgeT496 - 1.5) / 2.0, 1.0) : 1.0
+        const surgeFactor = surgeIn * surgeOut
+
+        altarFlames496.forEach((flame) => {
+          const mat = flame.material as MeshStandardMaterial
+          mat.emissiveIntensity = 1.8 + (3.5 - 1.8) * surgeFactor
+        })
+        altarRunes496.forEach((rune) => {
+          const mat = rune.material as MeshStandardMaterial
+          mat.emissiveIntensity = 0.6 + (2.0 - 0.6) * surgeFactor
+        })
+        if (altarLight496) {
+          altarLight496.intensity = 1.0 + (3.0 - 1.0) * surgeFactor
+        }
+
+        if (altarSurgeT496 >= 3.5) {
+          altarSurging496 = false
+          if (altarLight496) altarLight496.intensity = 1.0
+        }
+      }
+    }
     // Monts brumeux — frozen waterfall shimmer + ice drops (C473)
     if (iceWaterfallGroup473) {
       iceWaterfallT473 += dt
@@ -5131,6 +5286,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     vortexParticles468 = []
     vortexLight468 = null
+    // Ritual altar eternal flame cleanup (C496)
+    if (altarGroup496) {
+      altarGroup496.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshStandardMaterial).dispose() }
+        if (c instanceof PointLight) c.dispose()
+      })
+      group.remove(altarGroup496)
+      altarGroup496 = null
+    }
+    altarFlames496 = []
+    altarRunes496 = []
+    altarLight496 = null
+    altarSurging496 = false
     // Frozen waterfall cleanup (C473)
     if (iceWaterfallGroup473) {
       iceWaterfallGroup473.traverse((c) => {
