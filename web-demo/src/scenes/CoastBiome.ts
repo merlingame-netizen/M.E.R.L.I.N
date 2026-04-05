@@ -829,6 +829,11 @@ const altarSeaDroplets509: Mesh[] = [];
 const altarSeaBaseY509: number = -1.2;
 let altarSeaPeakSFX509: boolean = false;
 
+// ── Celtic sea torc ring monument (C523) ─────────────────────────────────────
+let seaTorcGroup523: Group | null = null;
+let seaTorcLight523: PointLight | null = null;
+let t523: number = 0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -3187,6 +3192,74 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(tmg518);
   }
 
+  // ── Celtic sea torc ring monument (C523) ─────────────────────────────────
+  {
+    seaTorcGroup523 = new Group();
+
+    // Bronze patina torc — chunky 8-tube torus, N64 low-poly
+    const torcMat = new MeshStandardMaterial({
+      color: 0x7a5020, roughness: 0.78, metalness: 0.42, flatShading: true,
+      emissive: new Color(0x331800), emissiveIntensity: 0.25,
+    });
+    const torcGeo = new TorusGeometry(2.2, 0.30, 8, 12);
+    const torcMesh = new Mesh(torcGeo, torcMat);
+    // Stand it vertically — facing the player (rotation about X)
+    torcMesh.rotation.x = Math.PI * 0.5;
+    torcMesh.position.y = 2.2;
+    seaTorcGroup523.add(torcMesh);
+
+    // Runic band marks — 6 thin box notches evenly spaced around the ring
+    const runeMat = new MeshStandardMaterial({
+      color: 0xffcc44, roughness: 0.35, metalness: 0.2, flatShading: true,
+      emissive: new Color(0xdd8800), emissiveIntensity: 0.7,
+    });
+    const RUNE_COUNT = 6;
+    for (let r = 0; r < RUNE_COUNT; r++) {
+      const angle = (r / RUNE_COUNT) * Math.PI * 2;
+      const runeGeo = new BoxGeometry(0.14, 0.52, 0.38);
+      const rune = new Mesh(runeGeo, runeMat);
+      // Position on the torus surface (radius 2.2 from center)
+      rune.position.set(
+        Math.cos(angle) * 2.2,
+        2.2 + Math.sin(angle) * 2.2,
+        0,
+      );
+      rune.rotation.z = angle;
+      seaTorcGroup523.add(rune);
+    }
+
+    // Base anchoring stones — 4 DodecahedronGeometry around the foot
+    const stoneMat = new MeshStandardMaterial({
+      color: 0x3c3428, roughness: 0.96, metalness: 0.0, flatShading: true,
+    });
+    const stonePositions: Array<[number, number]> = [[-1.0, 0.6], [1.0, 0.5], [-0.4, 1.0], [0.4, -0.8]];
+    for (const [sx, sz] of stonePositions) {
+      const s = 0.28 + Math.random() * 0.16;
+      const sGeo = new DodecahedronGeometry(s, 0);
+      const stone = new Mesh(sGeo, stoneMat);
+      stone.position.set(sx, s * 0.4, sz);
+      stone.rotation.y = Math.random() * Math.PI;
+      seaTorcGroup523.add(stone);
+    }
+
+    // Sandy base slab beneath the monument
+    const slabGeo = new BoxGeometry(3.2, 0.18, 2.0);
+    const slabMat = new MeshStandardMaterial({ color: 0x9a8060, roughness: 0.97, metalness: 0.0, flatShading: true });
+    const slab = new Mesh(slabGeo, slabMat);
+    slab.position.set(0, -0.09, 0);
+    seaTorcGroup523.add(slab);
+
+    // Central amber-gold PointLight — shines through the ring
+    seaTorcLight523 = new PointLight(0xffbb44, 1.0, 11);
+    seaTorcLight523.position.set(0, 2.2, 0.3);
+    seaTorcGroup523.add(seaTorcLight523);
+
+    // Place on a rocky spit protruding into the sea — near shore but dramatic
+    seaTorcGroup523.position.set(-14, 0.06, -18);
+    seaTorcGroup523.rotation.y = 0.9;
+    group.add(seaTorcGroup523);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -4438,6 +4511,20 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         tideMarkerLight518.intensity = 0.65 * lPulse;
       }
     }
+
+    // ── Celtic sea torc ring (C523) ─────────────────────────────────────────
+    if (seaTorcGroup523) {
+      t523 += dt;
+      // Very slow axial rotation — ring turns in the wind like a weather vane
+      const torcMesh = seaTorcGroup523.children[0];
+      if (torcMesh) {
+        torcMesh.rotation.y = Math.sin(t523 * 0.18) * 0.08;
+      }
+      // Amber light pulse — slow sacred breathing (~9s period)
+      if (seaTorcLight523) {
+        seaTorcLight523.intensity = 0.80 + 0.28 * Math.sin(t523 * 0.70) + (Math.random() - 0.5) * 0.04;
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -4778,6 +4865,19 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     tideMarkerFlameMat518 = null;
     tideMarkerLight518 = null;
     t518 = 0;
+    if (seaTorcGroup523) {
+      seaTorcGroup523.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+      });
+      group.remove(seaTorcGroup523);
+      seaTorcGroup523 = null;
+    }
+    if (seaTorcLight523) { seaTorcLight523.dispose(); seaTorcLight523 = null; }
+    t523 = 0;
     group.clear();
   };
 
