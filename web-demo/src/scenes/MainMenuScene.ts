@@ -5,7 +5,7 @@
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Line, LineBasicMaterial, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -784,6 +784,18 @@ let _runeRainContainer406: HTMLDivElement | null = null;
 let _mountainGroup409: Group | null = null;
 let _mountainT409 = 0;
 
+// C414: shooting star comet streaks
+const _comets414: {
+  line: Line;
+  active: boolean;
+  t: number;
+  duration: number;
+  startX: number; startY: number; startZ: number;
+  dx: number; dy: number;
+  nextFire: number;
+}[] = [];
+let _cometSceneRef414: Scene | null = null;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1466,6 +1478,44 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C414: shooting star comet streaks
+    _comets414.forEach(comet => {
+      if (!comet.active) {
+        comet.nextFire -= dt;
+        if (comet.nextFire <= 0) {
+          comet.active = true;
+          comet.t = 0;
+          comet.startX = -20 + Math.random() * 10;
+          comet.startY = 8 + Math.random() * 6;
+          comet.startZ = -45;
+          comet.dx = 18 + Math.random() * 8;
+          comet.dy = -(2 + Math.random() * 3);
+          comet.duration = 0.8 + Math.random() * 0.4;
+          comet.nextFire = 10 + Math.random() * 12;
+          (comet.line.material as LineBasicMaterial).opacity = 0.85;
+        }
+      } else {
+        comet.t += dt;
+        const progress = comet.t / comet.duration;
+        if (progress >= 1.0) {
+          comet.active = false;
+          (comet.line.material as LineBasicMaterial).opacity = 0.0;
+          return;
+        }
+        const positions = comet.line.geometry.attributes['position'] as BufferAttribute;
+        const TAIL = 8;
+        for (let pi = 0; pi < TAIL; pi++) {
+          const tailT = Math.max(0, progress - pi * 0.018);
+          const tx = comet.startX + comet.dx * tailT;
+          const ty = comet.startY + comet.dy * tailT;
+          positions.setXYZ(pi, tx, ty, comet.startZ);
+        }
+        positions.needsUpdate = true;
+        const fade = progress < 0.7 ? 1.0 : 1.0 - (progress - 0.7) / 0.3;
+        (comet.line.material as LineBasicMaterial).opacity = 0.85 * fade;
+      }
+    });
+
     renderer.render(scene, camera);
   };
 
@@ -1593,6 +1643,29 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     _mountainGroup409 = new Group();
     _mountainGroup409.add(farMesh, midMesh, nearMesh, glowMesh);
     scene.add(_mountainGroup409);
+  }
+
+  // C414: shooting star comets
+  _cometSceneRef414 = scene;
+  {
+    const NUM_COMETS = 3;
+    for (let ci = 0; ci < NUM_COMETS; ci++) {
+      const points: Vector3[] = [];
+      for (let pi = 0; pi < 8; pi++) points.push(new Vector3(0, 0, 0));
+      const cometGeo = new BufferGeometry().setFromPoints(points);
+      const cometMat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 });
+      const cometLine = new Line(cometGeo, cometMat);
+      scene.add(cometLine);
+      _comets414.push({
+        line: cometLine,
+        active: false,
+        t: 0,
+        duration: 0.8 + Math.random() * 0.4,
+        startX: 0, startY: 0, startZ: -45,
+        dx: 0, dy: 0,
+        nextFire: 4 + ci * 6 + Math.random() * 4,
+      });
+    }
   }
 
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
@@ -1733,6 +1806,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       scene.remove(_mountainGroup409);
       _mountainGroup409 = null;
     }
+
+    // C414: dispose comet streaks
+    _comets414.forEach(comet => {
+      comet.line.geometry.dispose();
+      (comet.line.material as LineBasicMaterial).dispose();
+      if (_cometSceneRef414) _cometSceneRef414.remove(comet.line);
+    });
+    _comets414.length = 0;
+    _cometSceneRef414 = null;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
