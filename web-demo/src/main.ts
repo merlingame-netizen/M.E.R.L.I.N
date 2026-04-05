@@ -704,7 +704,11 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     const t = performance.now();
     const dt = Math.min((t - lastTs) / 1000, 0.05);
     lastTs = t;
-    lair.update(dt);
+    try {
+      lair.update(dt);
+    } catch (e) {
+      console.error('[LAIR] update error:', e);
+    }
     if (_firstFrame) {
       _firstFrame = false;
       revealFromBlack(800);
@@ -1026,11 +1030,22 @@ async function main(): Promise<void> {
     await runMerlinIntro();
   }
 
+  // Safety: clear black overlay in case lair init is slow or fails
+  // revealFromBlack is idempotent (calling twice is harmless)
+  revealFromBlack(400).catch(() => undefined);
+
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.
   while (true) {
-    // Phase 2b: Lair Hub — returns chosen biome + optional pre-selected ogham
-    const lairResult = await runMerlinLair(app);
+    let lairResult: { biomeId: string; lairOgham: string | null };
+    try {
+      lairResult = await runMerlinLair(app);
+    } catch (e) {
+      console.error('[MAIN] lair error, retrying:', e);
+      revealFromBlack(300).catch(() => undefined);
+      await new Promise<void>(r => setTimeout(r, 500));
+      continue;
+    }
     const chosenBiome = lairResult.biomeId;
 
     // Phase 2c: Map generation overlay — parchment + LLM scenario + progressive map painting
