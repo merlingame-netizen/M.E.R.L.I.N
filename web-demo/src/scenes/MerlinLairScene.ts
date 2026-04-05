@@ -1141,6 +1141,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _scryingVisionMesh: Mesh | null = null;
   let _scryingTime = 0;
 
+  // C284: wall-mounted astrolabe — 3 concentric torus rings on the back wall
+  let _astroRing1: Mesh | null = null;
+  let _astroRing2: Mesh | null = null;
+  let _astroRing3: Mesh | null = null;
+  let _astroTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1260,6 +1266,37 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const poolLight = new PointLight(0x33ff66, 0.4, 3);
     poolLight.position.set(2, POOL_Y + 0.5, -6);
     scene.add(poolLight);
+  }
+
+  // C284: astrolabe — 3 concentric torus rings mounted on back wall (z ≈ -9.75, back wall front face)
+  // Position: left side of wall (-4, 0.5) — clear of window (right), door (centre), and mortar lines.
+  {
+    const ASTRO_X = -4;
+    const ASTRO_Y = 0.5;
+    const ASTRO_Z = -9.75; // flush against front face of back wall
+
+    const ring1Mat = new MeshBasicMaterial({ color: 0x22aa55, transparent: true, opacity: 0.7 });
+    const ring1 = new Mesh(new TorusGeometry(1.2, 0.04, 6, 32), ring1Mat);
+    ring1.position.set(ASTRO_X, ASTRO_Y, ASTRO_Z);
+    scene.add(ring1);
+    _astroRing1 = ring1;
+
+    const ring2Mat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 });
+    const ring2 = new Mesh(new TorusGeometry(0.8, 0.04, 6, 24), ring2Mat);
+    ring2.position.set(ASTRO_X, ASTRO_Y, ASTRO_Z + 0.02);
+    scene.add(ring2);
+    _astroRing2 = ring2;
+
+    const ring3Mat = new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.9 });
+    const ring3 = new Mesh(new TorusGeometry(0.4, 0.04, 6, 16), ring3Mat);
+    ring3.position.set(ASTRO_X, ASTRO_Y, ASTRO_Z + 0.04);
+    scene.add(ring3);
+    _astroRing3 = ring3;
+
+    const centerMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    const center = new Mesh(new SphereGeometry(0.08, 6, 4), centerMat);
+    center.position.set(ASTRO_X, ASTRO_Y, ASTRO_Z + 0.06);
+    scene.add(center);
   }
 
   // Forest window + day/night/season cycle
@@ -1859,6 +1896,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _scryingVisionMesh.scale.set(scale, scale, 1);
     }
 
+    // C284: astrolabe ring rotation — 3 rings at different speeds/directions (cosmetic, gate under !lowFpsMode)
+    if (!lowFpsMode) {
+      _astroTime += dt;
+      if (_astroRing1) _astroRing1.rotation.z += dt * 0.08;   // outer: very slow clockwise
+      if (_astroRing2) _astroRing2.rotation.z -= dt * 0.15;   // middle: counter-clockwise
+      if (_astroRing3) _astroRing3.rotation.z += dt * 0.25;   // inner: faster clockwise
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2008,6 +2053,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C277: clear scrying pool refs (geometries/materials disposed by scene.traverse above)
     _scryingPoolMesh = null;
     _scryingVisionMesh = null;
+    // C284: clear astrolabe ring refs (geometries/materials disposed by scene.traverse above)
+    _astroRing1 = _astroRing2 = _astroRing3 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
