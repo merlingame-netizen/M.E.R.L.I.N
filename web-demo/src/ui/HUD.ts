@@ -1004,4 +1004,98 @@ export function teardownHUD(): void {
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;
+  // C352: danger vignette — remove element and CSS on teardown.
+  teardownDangerVignette();
+}
+
+// =============================================================================
+// C352 — Screen-edge danger vignette (intensifies at low life)
+// =============================================================================
+
+/**
+ * Inject the vignette-pulse CSS keyframes once into document.head.
+ * Idempotent — guarded by #hud-vignette-style.
+ */
+function ensureVignetteStyle(): void {
+  if (document.getElementById('hud-vignette-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-vignette-style';
+  s.textContent = `
+    @keyframes vignette-pulse {
+      0%, 100% { opacity: 0.6; }
+      50%       { opacity: 1.0; }
+    }
+    .hud-vignette-critical {
+      animation: vignette-pulse 0.8s ease-in-out infinite;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * Create and append the danger vignette overlay div to document.body.
+ * Idempotent — no-op if #hud-danger-vignette already exists.
+ */
+export function initDangerVignette(): void {
+  if (document.getElementById('hud-danger-vignette')) return;
+  ensureVignetteStyle();
+  const el = document.createElement('div');
+  el.id = 'hud-danger-vignette';
+  el.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'pointer-events:none',
+    'z-index:200',
+    'background:radial-gradient(ellipse at center, transparent 60%, rgba(255,0,0,0) 100%)',
+    'transition:background 0.5s ease',
+    'opacity:0',
+  ].join(';');
+  document.body.appendChild(el);
+}
+
+/**
+ * Update the danger vignette intensity based on current life fraction.
+ *
+ * Thresholds (% of maxLife):
+ *   > 40%   : invisible (opacity 0)
+ *   20-40%  : mild   — rgba(255,0,0,0.12) at edges
+ *   10-20%  : strong — rgba(255,0,0,0.25) at edges
+ *   ≤ 10%   : critical — rgba(255,0,0,0.40) at edges + vignette-pulse animation
+ *
+ * @param life    - Current life value.
+ * @param maxLife - Maximum life value (used to compute fraction).
+ */
+export function updateDangerVignette(life: number, maxLife: number): void {
+  const el = document.getElementById('hud-danger-vignette') as HTMLElement | null;
+  if (!el) return;
+
+  const safeMax = maxLife > 0 ? maxLife : 1;
+  const pct = (life / safeMax) * 100;
+
+  if (pct > 40) {
+    el.style.opacity = '0';
+    el.style.background = 'radial-gradient(ellipse at center, transparent 60%, rgba(255,0,0,0) 100%)';
+    el.classList.remove('hud-vignette-critical');
+  } else if (pct > 20) {
+    el.style.opacity = '1';
+    el.style.background = 'radial-gradient(ellipse at center, transparent 60%, rgba(255,0,0,0.12) 100%)';
+    el.classList.remove('hud-vignette-critical');
+  } else if (pct > 10) {
+    el.style.opacity = '1';
+    el.style.background = 'radial-gradient(ellipse at center, transparent 60%, rgba(255,0,0,0.25) 100%)';
+    el.classList.remove('hud-vignette-critical');
+  } else {
+    el.style.opacity = '1';
+    el.style.background = 'radial-gradient(ellipse at center, transparent 60%, rgba(255,0,0,0.40) 100%)';
+    el.classList.add('hud-vignette-critical');
+  }
+}
+
+/**
+ * Remove the danger vignette div and its CSS style from the DOM.
+ * Idempotent — no-op if they do not exist.
+ */
+export function teardownDangerVignette(): void {
+  document.getElementById('hud-danger-vignette')?.remove();
+  document.getElementById('hud-vignette-style')?.remove();
 }
