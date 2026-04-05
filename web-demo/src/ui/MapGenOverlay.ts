@@ -1086,3 +1086,165 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   document.getElementById('map-dive-style')?.remove();
   overlay.remove();
 }
+
+// ── Biome drop animation ──────────────────────────────────────────────────────
+//
+// Dramatic "zoom-drop" animation played when the player confirms a biome node.
+// Caller provides the biomeKey and a callback invoked after the 1400ms sequence.
+//
+// Phase 1 — Focus      (  0–400ms) : ring pulse + map canvas dims
+// Phase 2 — Lock       (400–800ms) : biome title scales up + crosshair flash
+// Phase 3 — Drop       (800–1400ms): whole overlay zooms in and fades out
+// Phase 4 — Complete   (1400ms)    : onComplete() + reset styles
+
+export function playBiomeDropAnimation(
+  biomeKey: string,
+  onComplete: () => void,
+): void {
+  // ── Locate the overlay root ──────────────────────────────────────────────
+  const overlay = document.getElementById('mapgen-overlay') as HTMLElement | null;
+  if (!overlay) {
+    onComplete();
+    return;
+  }
+
+  // ── Inject crosshair keyframe (guarded) ──────────────────────────────────
+  if (!document.getElementById('biome-drop-style')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'biome-drop-style';
+    styleEl.textContent = [
+      '@keyframes biome-crosshair-flash{',
+      '  0%{opacity:0;transform:translate(-50%,-50%) scale(0.6)}',
+      ' 30%{opacity:1;transform:translate(-50%,-50%) scale(1.0)}',
+      ' 70%{opacity:1;transform:translate(-50%,-50%) scale(1.0)}',
+      '100%{opacity:0;transform:translate(-50%,-50%) scale(1.2)}',
+      '}',
+    ].join('');
+    document.head.appendChild(styleEl);
+  }
+
+  // ── Resolve node position (data-biome attr → canvas center fallback) ─────
+  const canvas = overlay.querySelector('canvas') as HTMLCanvasElement | null;
+
+  let nodeCx: number;
+  let nodeCy: number;
+
+  const namedNode = overlay.querySelector(
+    `[data-biome="${biomeKey}"]`,
+  ) as HTMLElement | null;
+
+  if (namedNode) {
+    const r  = namedNode.getBoundingClientRect();
+    const or = overlay.getBoundingClientRect();
+    nodeCx = r.left + r.width  / 2 - or.left;
+    nodeCy = r.top  + r.height / 2 - or.top;
+  } else if (canvas) {
+    nodeCx = canvas.offsetLeft + canvas.offsetWidth  / 2;
+    nodeCy = canvas.offsetTop  + canvas.offsetHeight / 2;
+  } else {
+    nodeCx = overlay.offsetWidth  / 2;
+    nodeCy = overlay.offsetHeight / 2;
+  }
+
+  // ── Phase 1: Focus (0–400ms) ─────────────────────────────────────────────
+  sfx('select');
+
+  if (canvas) {
+    canvas.style.transition = 'opacity 0.35s ease';
+    canvas.style.opacity    = '0.3';
+  }
+
+  const ring = document.createElement('div');
+  ring.style.cssText = [
+    'position:absolute',
+    `left:${nodeCx}px`,
+    `top:${nodeCy}px`,
+    'width:0px',
+    'height:0px',
+    'border-radius:50%',
+    'border:2px solid rgba(51,255,102,0.9)',
+    'box-sizing:border-box',
+    'transform:translate(-50%,-50%)',
+    'pointer-events:none',
+    'z-index:100',
+    'opacity:1',
+    'transition:width 0.4s ease-out,height 0.4s ease-out,opacity 0.4s ease-out',
+  ].join(';');
+  overlay.appendChild(ring);
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    ring.style.width   = '120px';
+    ring.style.height  = '120px';
+    ring.style.opacity = '0';
+  }));
+
+  // ── Phase 2: Lock (400–800ms) ─────────────────────────────────────────────
+  setTimeout(() => {
+    sfx('confirm');
+
+    const titleEl = document.getElementById('map-biome-title') as HTMLElement | null;
+    if (titleEl) {
+      titleEl.style.transition      = 'transform 0.35s ease-out, color 0.35s ease-out';
+      titleEl.style.transform       = 'scale(1.4)';
+      titleEl.style.color           = 'rgba(51,255,102,1.0)';
+      titleEl.style.transformOrigin = 'left center';
+    }
+
+    const crosshair = document.createElement('div');
+    crosshair.textContent = '+';
+    crosshair.style.cssText = [
+      'position:absolute',
+      `left:${nodeCx}px`,
+      `top:${nodeCy}px`,
+      'font-size:28px',
+      'color:rgba(51,255,102,1.0)',
+      "font-family:'Courier New',monospace",
+      'font-weight:bold',
+      'pointer-events:none',
+      'z-index:101',
+      'opacity:0',
+      'transform:translate(-50%,-50%) scale(0.6)',
+      'animation:biome-crosshair-flash 0.4s ease-out forwards',
+      'text-shadow:0 0 12px rgba(51,255,102,0.8)',
+    ].join(';');
+    overlay.appendChild(crosshair);
+
+    setTimeout(() => { crosshair.parentNode?.removeChild(crosshair); }, 450);
+  }, 400);
+
+  // ── Phase 3: Drop (800–1400ms) ────────────────────────────────────────────
+  setTimeout(() => {
+    sfx('transition');
+
+    overlay.style.transformOrigin = `${nodeCx}px ${nodeCy}px`;
+    overlay.style.transition      = 'transform 0.6s ease-in, opacity 0.6s ease-in';
+    overlay.style.transform       = 'scale(2.2)';
+    overlay.style.opacity         = '0';
+  }, 800);
+
+  // ── Phase 4: Complete (1400ms) ────────────────────────────────────────────
+  setTimeout(() => {
+    if (canvas) {
+      canvas.style.transition = '';
+      canvas.style.opacity    = '';
+    }
+
+    const titleEl = document.getElementById('map-biome-title') as HTMLElement | null;
+    if (titleEl) {
+      titleEl.style.transition      = '';
+      titleEl.style.transform       = '';
+      titleEl.style.color           = '';
+      titleEl.style.transformOrigin = '';
+    }
+
+    overlay.style.transition      = '';
+    overlay.style.transform       = '';
+    overlay.style.opacity         = '';
+    overlay.style.transformOrigin = '';
+
+    ring.parentNode?.removeChild(ring);
+    document.getElementById('biome-drop-style')?.remove();
+
+    onComplete();
+  }, 1400);
+}
