@@ -578,6 +578,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let bonFireSparks448: Mesh[] = []
   let bonfireLight448: PointLight | null = null
 
+  // ── Moss-covered ancient stone throne — vallee_anciens (C453) ─────────────
+  let throneGroup453: Group | null = null
+  let throneT453: number = 0
+  let throneMossPatches453: Mesh[] = []
+  let throneLight453: PointLight | null = null
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1729,6 +1735,79 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     ghostGroup425.position.set(-3, 0, -18);
     group.add(ghostGroup425);
+
+    // Moss-covered ancient stone throne (C453)
+    throneGroup453 = new Group()
+    throneGroup453.position.set(0, 0, -6)
+
+    // Throne seat
+    const seat = new Mesh(
+      new BoxGeometry(1.2, 0.25, 0.9),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    seat.position.y = 0.7
+    throneGroup453.add(seat)
+
+    // Throne back (tall slab)
+    const back = new Mesh(
+      new BoxGeometry(1.2, 1.6, 0.2),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    back.position.set(0, 1.5, -0.38)
+    throneGroup453.add(back)
+
+    // Two armrests
+    for (const side of [-1, 1]) {
+      const arm = new Mesh(
+        new BoxGeometry(0.2, 0.12, 0.85),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      arm.position.set(side * 0.56, 0.9, -0.03)
+      throneGroup453.add(arm)
+    }
+
+    // Two front legs
+    for (const side of [-1, 1]) {
+      const leg = new Mesh(
+        new CylinderGeometry(0.1, 0.12, 0.7, 5),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      leg.position.set(side * 0.45, 0.35, 0.35)
+      throneGroup453.add(leg)
+    }
+
+    // Throne base slab
+    const base = new Mesh(
+      new BoxGeometry(1.5, 0.15, 1.2),
+      new MeshBasicMaterial({ color: 0x020f04 })
+    )
+    base.position.y = 0.08
+    throneGroup453.add(base)
+
+    // 8 moss patches (SphereGeometry, flattened, scattered on throne surfaces)
+    const mossPositions = [
+      { x: -0.3, y: 0.84, z: 0.1 }, { x: 0.2, y: 0.84, z: -0.2 },
+      { x: -0.4, y: 1.5, z: -0.28 }, { x: 0.3, y: 1.8, z: -0.28 },
+      { x: -0.5, y: 0.95, z: 0.05 }, { x: 0.5, y: 0.95, z: 0.05 },
+      { x: 0.0, y: 2.1, z: -0.28 }, { x: -0.1, y: 0.84, z: 0.3 },
+    ]
+    mossPositions.forEach((pos) => {
+      const moss = new Mesh(
+        new SphereGeometry(0.1 + Math.random() * 0.06, 5, 4),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.5 })
+      )
+      moss.position.set(pos.x, pos.y, pos.z)
+      moss.scale.y = 0.3
+      throneGroup453!.add(moss)
+      throneMossPatches453.push(moss)
+    })
+
+    // Throne PointLight (at seat level)
+    throneLight453 = new PointLight(0x33ff66, 0.15, 5.0)
+    throneLight453.position.set(0, 1.0, 0)
+    throneGroup453.add(throneLight453)
+
+    group.add(throneGroup453)
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -3741,6 +3820,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (bonfireLight448) {
       bonfireLight448.intensity = 0.65 + 0.3 * Math.sin(bonfireT448 * 5.0);
     }
+    // Vallee des Anciens — moss throne bioluminescence pulse (C453)
+    throneT453 += dt;
+    // Moss bioluminescence pulse
+    throneMossPatches453.forEach((moss, i) => {
+      const mat = moss.material as MeshBasicMaterial;
+      mat.opacity = 0.35 + 0.2 * Math.sin(throneT453 * 0.7 + i * 0.9);
+    });
+    // Light breathe
+    if (throneLight453) {
+      throneLight453.intensity = 0.12 + 0.06 * Math.sin(throneT453 * 0.5);
+    }
     // Cercles de Pierres — moonrise arc across sky (C433)
     if (stoneMoonGroup433 && stoneMoonMesh433 && stoneMoonLight433) {
       stoneMoonT433 += dt;
@@ -4078,6 +4168,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     bonfireFlames448 = [];
     bonFireSparks448 = [];
     bonfireLight448 = null;
+    // Moss throne cleanup (C453)
+    if (throneGroup453) {
+      throneGroup453.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose(); }
+      });
+      throneGroup453 = null;
+    }
+    throneMossPatches453 = [];
+    throneLight453 = null;
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
