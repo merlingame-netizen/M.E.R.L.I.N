@@ -422,6 +422,55 @@ function buildSun(): Mesh {
   return new Mesh(geo, mat);
 }
 
+// ── Fishing boat (C529) ───────────────────────────────────────────────────────
+
+interface BoatData { group: Group; baseY: number }
+
+function buildFishingBoat(): BoatData {
+  const g = new Group();
+
+  // Hull — tapered box, dark weathered wood
+  const hullMat = new MeshStandardMaterial({ color: 0x1e1408, roughness: 0.97, metalness: 0.0, flatShading: true });
+  const hull = new Mesh(new BoxGeometry(2.8, 0.7, 1.1), hullMat);
+  hull.position.y = 0.1;
+  g.add(hull);
+
+  // Hull lip / gunwale
+  const gunMat = new MeshStandardMaterial({ color: 0x2e1e0c, roughness: 0.95, metalness: 0.0, flatShading: true });
+  const gunL = new Mesh(new BoxGeometry(2.9, 0.12, 0.10), gunMat);
+  gunL.position.set(0, 0.46, 0.55);
+  g.add(gunL);
+  const gunR = new Mesh(new BoxGeometry(2.9, 0.12, 0.10), gunMat);
+  gunR.position.set(0, 0.46, -0.55);
+  g.add(gunR);
+
+  // Mast — slim cylinder
+  const mastMat = new MeshStandardMaterial({ color: 0x3a2010, roughness: 0.96, metalness: 0.0, flatShading: true });
+  const mast = new Mesh(new CylinderGeometry(0.055, 0.075, 3.4, 5), mastMat);
+  mast.position.set(-0.3, 2.1, 0);
+  g.add(mast);
+
+  // Sail — two BoxGeometry panels, off-white, angled out
+  const sailMat = new MeshStandardMaterial({ color: 0xc8b88a, roughness: 0.9, metalness: 0.0, flatShading: true, side: 2 });
+  const sail = new Mesh(new BoxGeometry(0.06, 2.4, 1.4), sailMat);
+  sail.position.set(-0.1, 2.2, 0.3);
+  sail.rotation.y = 0.25;
+  g.add(sail);
+
+  // Bow prow — angled wedge (thin BoxGeometry tilted)
+  const prowMat = new MeshStandardMaterial({ color: 0x160e04, roughness: 0.98, metalness: 0.0, flatShading: true });
+  const prow = new Mesh(new BoxGeometry(0.5, 0.55, 1.0), prowMat);
+  prow.position.set(1.55, 0.08, 0);
+  prow.rotation.z = -0.28;
+  g.add(prow);
+
+  const BASE_Y = -3.05;
+  g.position.set(-22, BASE_Y, -32);
+  g.rotation.y = 0.6;
+
+  return { group: g, baseY: BASE_Y };
+}
+
 // ── Heather bushes (C528) ─────────────────────────────────────────────────────
 
 function buildHeather(): Mesh[] {
@@ -597,6 +646,10 @@ export function initMainMenu(container: HTMLElement): {
   sunObj.position.set(tod.sunX, tod.sunY, -40);
   scene.add(sunObj);
 
+  // ── Fishing boat (C529) ──────────────────────────────────────────────────
+  const boat529 = buildFishingBoat();
+  scene.add(boat529.group);
+
   // ── Seabirds (C527) ──────────────────────────────────────────────────────
   const seabirds = buildSeabirds();
   for (const b of seabirds) scene.add(b.group);
@@ -660,6 +713,11 @@ export function initMainMenu(container: HTMLElement): {
 
     // Tower window flicker
     tower.windowLight.intensity = 2.0 + Math.sin(elapsed * 5.8) * 0.45 + Math.sin(elapsed * 9.2) * 0.15;
+
+    // Fishing boat gentle bob + drift (C529)
+    boat529.group.position.y = boat529.baseY + Math.sin(elapsed * 0.55) * 0.18 + Math.sin(elapsed * 0.83) * 0.09;
+    boat529.group.rotation.z = Math.sin(elapsed * 0.48) * 0.04;
+    boat529.group.rotation.x = Math.sin(elapsed * 0.71) * 0.025;
 
     // Seabirds orbit + flap (C527)
     for (const b of seabirds) {
