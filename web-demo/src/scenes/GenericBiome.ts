@@ -548,6 +548,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let stoneMoonMesh433: Mesh | null = null;
   let stoneMoonLight433: PointLight | null = null;
 
+  // ── Spirit gateway arch — landes_bruyere (C437) ──────────────────────────
+  let gatewayGroup437: Group | null = null;
+  let gatewayT437 = 0;
+  let gatewayPortal437: Mesh | null = null;
+  let gatewayLight437: PointLight | null = null;
+  let gatewayPulseTimer437 = 0;
+  let gatewayNextPulse437 = 8 + Math.random() * 12;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1300,6 +1308,58 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     menhirGroup417.position.set(5, 0, -18);
     group.add(menhirGroup417);
+
+    // ── Spirit gateway arch (C437) ───────────────────────────────────────────
+    gatewayGroup437 = new Group();
+
+    const pillarMat437 = new MeshBasicMaterial({ color: 0x0a1a10 });
+
+    // Left pillar
+    const leftPillar437 = new Mesh(new BoxGeometry(0.5, 3.5, 0.45), pillarMat437);
+    leftPillar437.position.set(-0.85, 1.75, 0);
+    gatewayGroup437.add(leftPillar437);
+
+    // Right pillar (slightly different height for organic feel)
+    const rightPillar437 = new Mesh(new BoxGeometry(0.5, 3.2, 0.45), pillarMat437);
+    rightPillar437.position.set(0.85, 1.6, 0);
+    gatewayGroup437.add(rightPillar437);
+
+    // Lintel
+    const lintel437 = new Mesh(new BoxGeometry(2.1, 0.4, 0.45), pillarMat437);
+    lintel437.position.set(0, 3.55, 0);
+    gatewayGroup437.add(lintel437);
+
+    // Moss patches — 3 per pillar at base/mid/top on front face (z+0.23)
+    const mossMat437 = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.5, side: DoubleSide });
+    const mossYPositions = [0.4, 1.75, 3.1];
+    const pillarXPositions = [-0.85, 0.85];
+    pillarXPositions.forEach(px => {
+      mossYPositions.forEach(py => {
+        const moss = new Mesh(new PlaneGeometry(0.3, 0.4), mossMat437);
+        moss.position.set(px, py, 0.23);
+        gatewayGroup437!.add(moss);
+      });
+    });
+
+    // Portal shimmer plane
+    const portalMat437 = new MeshBasicMaterial({
+      color: 0x33ff66,
+      transparent: true,
+      opacity: 0.04,
+      side: DoubleSide,
+      depthWrite: false,
+    });
+    gatewayPortal437 = new Mesh(new PlaneGeometry(1.5, 3.1), portalMat437);
+    gatewayPortal437.position.set(0, 1.55, 0.05);
+    gatewayGroup437.add(gatewayPortal437);
+
+    // Portal glow light
+    gatewayLight437 = new PointLight(0x33ff66, 0.06, 4.5);
+    gatewayLight437.position.set(0, 2, 0.5);
+    gatewayGroup437.add(gatewayLight437);
+
+    gatewayGroup437.position.set(-8, 0, -25);
+    group.add(gatewayGroup437);
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -3450,6 +3510,29 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const zenithFactor = Math.sin(arcAngle);
       stoneMoonLight433.intensity = zenithFactor * 0.35;
     }
+    // Landes bruyere — spirit gateway portal shimmer (C437)
+    if (gatewayGroup437 && gatewayPortal437 && gatewayLight437) {
+      gatewayT437 += dt;
+      gatewayPulseTimer437 += dt;
+
+      // Portal idle shimmer
+      const mat = gatewayPortal437.material as MeshBasicMaterial;
+      mat.opacity = 0.03 + Math.sin(gatewayT437 * 1.3) * 0.015;
+
+      // Pulse event: something crossing through
+      if (gatewayPulseTimer437 >= gatewayNextPulse437) {
+        gatewayPulseTimer437 = 0;
+        gatewayNextPulse437 = 8 + Math.random() * 14;
+      }
+      if (gatewayPulseTimer437 < 1.5) {
+        const pt = gatewayPulseTimer437 / 1.5;
+        const pulse = Math.sin(pt * Math.PI) * 0.35;
+        mat.opacity = 0.03 + pulse;
+        gatewayLight437.intensity = 0.06 + pulse * 0.8;
+      } else {
+        gatewayLight437.intensity = 0.05 + Math.sin(gatewayT437 * 0.7) * 0.02;
+      }
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3735,6 +3818,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       stoneMoonMesh433 = null;
       stoneMoonLight433 = null;
       stoneMoonGroup433 = null;
+    }
+    // Spirit gateway arch cleanup (C437)
+    if (gatewayGroup437) {
+      gatewayGroup437.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      gatewayPortal437 = null;
+      gatewayLight437 = null;
+      gatewayGroup437 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
