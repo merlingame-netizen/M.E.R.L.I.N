@@ -393,6 +393,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _deadTreeGroup: Group | null = null;
   const _altarFireMeshes: Mesh[] = [];
   let _altarFireLight: PointLight | null = null;
+  const _heatherMeshes: Mesh[] = [];
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -599,6 +600,53 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     );
     figureHood.position.set(-12, -0.85, -38);
     group.add(figureHood);
+
+    // Heather ground cover — 20 clumps of tiny sphere clusters + 8 tall stalks
+    const heatherGeoSmall = new SphereGeometry(0.08, 3, 2);
+    const heatherGeoTall  = new SphereGeometry(0.12, 3, 2);
+    const heatherMat2     = new MeshBasicMaterial({ color: 0x1a2a15 });
+    const R = () => Math.random();
+
+    for (let ci = 0; ci < 20; ci++) {
+      const cx = (R() - 0.5) * 36;          // x ∈ [-18, 18]
+      const cz = -8 - R() * 27;             // z ∈ [-8, -35]
+      const cy = -(R() * 0.05);             // y ∈ [0, -0.05]
+
+      // 3 spheres per clump, slightly offset from centre
+      for (let si = 0; si < 3; si++) {
+        const s = new Mesh(heatherGeoSmall, heatherMat2);
+        s.position.set(
+          cx + (R() - 0.5) * 0.4,
+          cy + R() * 0.08,
+          cz + (R() - 0.5) * 0.4
+        );
+        const scl = 0.7 + R() * 0.6;        // 0.7 – 1.3
+        s.scale.setScalar(scl);
+        // Every 4th sphere gets a sway phase
+        if ((ci * 3 + si) % 4 === 0) {
+          s.userData['swayPhase'] = R() * Math.PI * 2;
+        }
+        group.add(s);
+        _heatherMeshes.push(s);
+      }
+    }
+
+    // 8 taller heather stalks
+    for (let ti = 0; ti < 8; ti++) {
+      const stalk = new Mesh(heatherGeoTall, heatherMat2);
+      stalk.position.set(
+        (R() - 0.5) * 36,
+        -(R() * 0.05),
+        -8 - R() * 27
+      );
+      const scl = 0.7 + R() * 0.6;
+      stalk.scale.set(scl, scl * 1.4, scl);
+      if (ti % 4 === 0) {
+        stalk.userData['swayPhase'] = R() * Math.PI * 2;
+      }
+      group.add(stalk);
+      _heatherMeshes.push(stalk);
+    }
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -1116,6 +1164,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       }
       pos.needsUpdate = true;
     }
+    // Landes bruyere — heather wind sway (every 4th mesh has swayPhase)
+    if (_heatherMeshes.length > 0) {
+      const t = Date.now() * 0.001;
+      for (const mesh of _heatherMeshes) {
+        const swayPhase = mesh.userData['swayPhase'] as number | undefined;
+        if (swayPhase !== undefined) {
+          mesh.rotation.z = Math.sin(t * 0.6 + swayPhase) * 0.05;
+        }
+      }
+    }
     // Cercles de Pierres — pulsing Ogham inscription emissive
     if (cerclesInscriptionMats.length > 0) {
       cerclesTime += dt;
@@ -1237,6 +1295,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _eagleWingL = null;
     _eagleWingR = null;
     _deadTreeGroup = null;
+    _heatherMeshes.length = 0;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
