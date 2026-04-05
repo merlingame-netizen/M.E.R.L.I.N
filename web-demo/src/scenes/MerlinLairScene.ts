@@ -1315,6 +1315,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _scaleNextSpark384 = 8.0;
   let _scaleSparkT384 = -1;
 
+  // C391: pendulum wall clock — dark ornate case, swinging pendulum, rotating hands, chime flash
+  let _clockGroup391: Group | null = null;
+  let _clockPendulum391: Group | null = null;
+  let _clockHourHand391: Mesh | null = null;
+  let _clockMinuteHand391: Mesh | null = null;
+  let _clockChimeLight391: PointLight | null = null;
+  let _clockAngle391 = 0;
+  let _clockVelocity391 = 1.2;
+  let _clockChimeT391 = -1;
+  let _clockNextChime391 = 15.0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1797,6 +1808,69 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _scaleGroup384.position.set(1.5, 0, -4.0);
     scene.add(_scaleGroup384);
     _scaleNextSpark384 = 8.0 + Math.random() * 4.0;
+  }
+
+  // C391: pendulum wall clock — dark ornate case on left wall (x=-3.2, y=2.0, z=-3.0)
+  {
+    _clockGroup391 = new Group();
+    const clockCaseMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.7, metalness: 0.4 });
+    const clockFaceMat = new MeshStandardMaterial({ color: 0x051505, emissiveIntensity: 0.05, roughness: 0.4, metalness: 0.1 });
+    clockFaceMat.emissive.setHex(0x0d4420);
+    const handMat = new MeshStandardMaterial({ color: 0x0d2a0d, roughness: 0.3, metalness: 0.6 });
+
+    // Clock case (box)
+    const caseBox = new Mesh(new BoxGeometry(0.5, 0.5, 0.08), clockCaseMat);
+    _clockGroup391.add(caseBox);
+
+    // Clock face (disc, cylinder on its side)
+    const face = new Mesh(new CylinderGeometry(0.22, 0.22, 0.02, 12), clockFaceMat);
+    face.rotation.x = Math.PI / 2;
+    face.position.z = 0.05;
+    _clockGroup391.add(face);
+
+    // Hour hand
+    _clockHourHand391 = new Mesh(new BoxGeometry(0.025, 0.12, 0.015), handMat);
+    _clockHourHand391.position.set(0, 0.04, 0.07);
+    _clockGroup391.add(_clockHourHand391);
+
+    // Minute hand
+    _clockMinuteHand391 = new Mesh(new BoxGeometry(0.015, 0.16, 0.015), handMat);
+    _clockMinuteHand391.position.set(0, 0.06, 0.08);
+    _clockGroup391.add(_clockMinuteHand391);
+
+    // Pendulum housing extension below clock case
+    const housing = new Mesh(new BoxGeometry(0.35, 0.55, 0.06), clockCaseMat.clone());
+    housing.position.y = -0.52;
+    _clockGroup391.add(housing);
+
+    // Pendulum group (pivots from top of housing)
+    _clockPendulum391 = new Group();
+    _clockPendulum391.position.set(0, -0.27, 0);
+    // Rod
+    const pendulumRod = new Mesh(new BoxGeometry(0.012, 0.38, 0.012), handMat.clone());
+    pendulumRod.position.y = -0.19;
+    _clockPendulum391.add(pendulumRod);
+    // Weight disc
+    const pendulumWeight = new Mesh(new CylinderGeometry(0.06, 0.06, 0.04, 8), clockCaseMat.clone());
+    pendulumWeight.rotation.x = Math.PI / 2;
+    pendulumWeight.position.y = -0.4;
+    _clockPendulum391.add(pendulumWeight);
+    _clockGroup391.add(_clockPendulum391);
+
+    // Chime light
+    _clockChimeLight391 = new PointLight(0x33ff66, 0.0, 2.5);
+    _clockChimeLight391.position.set(0, 0, 0.3);
+    _clockGroup391.add(_clockChimeLight391);
+
+    _clockGroup391.position.set(-3.2, 2.0, -3.0);
+    _clockGroup391.rotation.y = Math.PI / 2;
+    scene.add(_clockGroup391);
+    _clockNextChime391 = 15.0 + Math.random() * 10.0;
+
+    // Dispose template mats (clones in use, templates not in scene)
+    clockCaseMat.dispose();
+    clockFaceMat.dispose();
+    handMat.dispose();
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -2828,6 +2902,40 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C391: pendulum wall clock — physics swing, hand rotation, chime flash
+    if (!lowFpsMode && _clockPendulum391) {
+      const clockL = 0.4;
+      const clockG = 9.8;
+      const clockAccel = -(clockG / clockL) * Math.sin(_clockAngle391);
+      _clockVelocity391 = (_clockVelocity391 + clockAccel * dt) * 0.999;
+      if (Math.abs(_clockVelocity391) < 0.3 && Math.abs(_clockAngle391) < 0.05) {
+        _clockVelocity391 = 1.2 * (Math.random() > 0.5 ? 1 : -1);
+      }
+      _clockAngle391 += _clockVelocity391 * dt;
+      _clockPendulum391.rotation.z = _clockAngle391;
+
+      if (_clockHourHand391) _clockHourHand391.rotation.z = -elapsedTime * 0.00145;
+      if (_clockMinuteHand391) _clockMinuteHand391.rotation.z = -elapsedTime * 0.01745;
+
+      _clockNextChime391 -= dt;
+      if (_clockNextChime391 <= 0 && _clockChimeT391 < 0) {
+        _clockChimeT391 = 0;
+        _clockNextChime391 = 15.0 + Math.random() * 10.0;
+        _clockVelocity391 *= 1.5;
+      }
+      if (_clockChimeT391 >= 0 && _clockChimeLight391) {
+        _clockChimeT391 += dt;
+        if (_clockChimeT391 < 0.2) {
+          _clockChimeLight391.intensity = (_clockChimeT391 / 0.2) * 0.25;
+        } else if (_clockChimeT391 < 0.4) {
+          _clockChimeLight391.intensity = 0.25 - ((_clockChimeT391 - 0.2) / 0.2) * 0.25;
+        } else {
+          _clockChimeLight391.intensity = 0;
+          _clockChimeT391 = -1;
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3066,6 +3174,20 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _scalePanLeft384 = null;
     _scalePanRight384 = null;
     if (_scaleSparkLight384) { _scaleSparkLight384.dispose(); _scaleSparkLight384 = null; }
+    // C391: remove clock group and all children
+    if (_clockGroup391) {
+      scene.remove(_clockGroup391);
+      _clockGroup391.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) (mat as MeshStandardMaterial).dispose();
+      });
+      _clockGroup391 = null;
+    }
+    _clockPendulum391 = null;
+    _clockHourHand391 = null;
+    _clockMinuteHand391 = null;
+    if (_clockChimeLight391) { _clockChimeLight391.dispose(); _clockChimeLight391 = null; }
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
