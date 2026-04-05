@@ -614,6 +614,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let iceDrops473: { mesh: Mesh; y: number; active: boolean }[] = []
   let iceDropTimer473: number = 5
 
+  // ── Drowned bell tower — marais_korrigans (C478) ──────────────────────────
+  let bellTowerGroup478: Group | null = null
+  let bellTowerT478: number = 0
+  let bellGroup478: Group | null = null
+  let bellTolling478: boolean = false
+  let bellTollT478: number = 0
+  let bellTollTimer478: number = 20
+  let towerAlgaeMats478: Mesh[] = []
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1022,6 +1031,95 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       wispLights443.push(light)
     })
     group.add(wispGroup443)
+
+    // Drowned bell tower (C478)
+    bellTowerGroup478 = new Group()
+    bellTowerGroup478.position.set(5, -0.8, -15)
+
+    // Foundation (wide slab at ground level)
+    const foundation = new Mesh(
+      new BoxGeometry(2.0, 0.3, 2.0),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    foundation.position.y = 0.15
+    bellTowerGroup478!.add(foundation)
+
+    // Lower tower section (below water — darker, algae covered)
+    const lowerTower = new Mesh(
+      new BoxGeometry(1.5, 1.8, 1.5),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    lowerTower.position.y = 1.2
+    bellTowerGroup478!.add(lowerTower)
+
+    // 4 algae patches on lower section
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2
+      const algae = new Mesh(
+        new SphereGeometry(0.2 + Math.random() * 0.1, 5, 4),
+        new MeshBasicMaterial({ color: 0x0d2a14 })
+      )
+      algae.scale.y = 0.3
+      algae.position.set(Math.cos(angle) * 0.78, 0.5 + Math.random() * 0.8, Math.sin(angle) * 0.78)
+      towerAlgaeMats478.push(algae)
+      bellTowerGroup478!.add(algae)
+    }
+
+    // Upper tower section (above water, deteriorated)
+    const upperTower = new Mesh(
+      new BoxGeometry(1.3, 2.5, 1.3),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    upperTower.position.y = 3.05
+    bellTowerGroup478!.add(upperTower)
+
+    // Belfry openings: 4 arch cutouts suggested by darker planes on each face
+    for (let i = 0; i < 4; i++) {
+      const archAngle = (i / 4) * Math.PI * 2
+      const archPlane = new Mesh(
+        new PlaneGeometry(0.5, 0.7),
+        new MeshBasicMaterial({ color: 0x010802, side: DoubleSide })
+      )
+      archPlane.position.set(Math.cos(archAngle) * 0.66, 4.0, Math.sin(archAngle) * 0.66)
+      archPlane.rotation.y = -archAngle
+      bellTowerGroup478!.add(archPlane)
+    }
+
+    // Roof (pyramid)
+    const roof = new Mesh(
+      new CylinderGeometry(0, 0.85, 1.0, 4),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    roof.rotation.y = Math.PI * 0.25
+    roof.position.y = 5.3
+    bellTowerGroup478!.add(roof)
+
+    // Bell (torus shape)
+    bellGroup478 = new Group()
+    bellGroup478.position.y = 4.2
+
+    const bellBody = new Mesh(
+      new TorusGeometry(0.25, 0.07, 6, 16, Math.PI * 1.5),
+      new MeshBasicMaterial({ color: 0x1a8833 })
+    )
+    bellBody.rotation.x = Math.PI * 0.5
+    bellGroup478!.add(bellBody)
+
+    const bellBottom = new Mesh(
+      new CylinderGeometry(0.25, 0.28, 0.08, 10),
+      new MeshBasicMaterial({ color: 0x1a8833 })
+    )
+    bellBottom.position.y = -0.12
+    bellGroup478!.add(bellBottom)
+
+    bellTowerGroup478!.add(bellGroup478)
+
+    // Glow light at water line
+    const towerLight = new PointLight(0x33ff66, 0.12, 5.0)
+    towerLight.position.set(0, 0.8, 0)
+    bellTowerGroup478!.add(towerLight)
+
+    group.add(bellTowerGroup478)
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -4244,6 +4342,29 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         if (drop.y < 0.1) drop.active = false
       })
     }
+    // Marais korrigans — drowned bell tower toll (C478)
+    if (bellTowerGroup478) {
+      bellTowerT478 += dt
+      bellTollTimer478 -= dt
+
+      // Trigger toll
+      if (bellTollTimer478 <= 0) {
+        bellTollTimer478 = 18 + Math.random() * 12
+        bellTolling478 = true
+        bellTollT478 = 0
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'bell' } }))
+      }
+
+      // Bell swing animation
+      if (bellTolling478 && bellGroup478) {
+        bellTollT478 += dt
+        bellGroup478.rotation.z = 0.4 * Math.sin(bellTollT478 * 8.0) * Math.exp(-bellTollT478 * 1.5)
+        if (bellTollT478 > 3.0) {
+          bellTolling478 = false
+          bellGroup478.rotation.z = 0
+        }
+      }
+    }
     // Landes bruyere — spirit gateway portal shimmer (C437)
     if (gatewayGroup437 && gatewayPortal437 && gatewayLight437) {
       gatewayT437 += dt;
@@ -4612,6 +4733,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     iceIcicles473 = []
     iceDrops473 = []
+    // Drowned bell tower cleanup (C478)
+    if (bellTowerGroup478) {
+      bellTowerGroup478.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose() }
+        if (c instanceof PointLight) c.dispose()
+      })
+      group.remove(bellTowerGroup478)
+      bellTowerGroup478 = null
+    }
+    bellGroup478 = null
+    bellTolling478 = false
+    towerAlgaeMats478 = []
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
