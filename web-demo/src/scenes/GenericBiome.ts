@@ -435,6 +435,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _spiritBeams: Mesh[] = [];
   const _spiritLights: PointLight[] = [];
   let _spiritBeamTime = 0;
+  // ── Crow on dolmen (C358) ─────────────────────────────────────────────────
+  let crowGroup358: Group | null = null;
+  let crowWings358: Mesh[] = [];
+  let crowWingMat358: MeshStandardMaterial | null = null;
+  let crowNextFlap358 = 0;
+  let crowFlapT358 = -1;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -923,6 +929,62 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       towerLight.position.set(-23.4, 4.2, -44.6);
       group.add(towerLight);
       _watchtowerLight = towerLight;
+    }
+
+    // Crow perched on dolmen capstone (C358)
+    {
+      crowGroup358 = new Group();
+      const crowMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9 });
+
+      // Body
+      const bodyGeo = new BoxGeometry(0.18, 0.14, 0.28);
+      const body = new Mesh(bodyGeo, crowMat);
+      crowGroup358.add(body);
+
+      // Head
+      const headGeo = new BoxGeometry(0.12, 0.12, 0.12);
+      const head = new Mesh(headGeo, crowMat);
+      head.position.set(0, 0.1, 0.12);
+      crowGroup358.add(head);
+
+      // Beak
+      const beakGeo = new BoxGeometry(0.04, 0.04, 0.1);
+      const beak = new Mesh(beakGeo, crowMat);
+      beak.position.set(0, 0.09, 0.22);
+      crowGroup358.add(beak);
+
+      // Tail
+      const tailGeo = new BoxGeometry(0.12, 0.06, 0.18);
+      const tail = new Mesh(tailGeo, crowMat);
+      tail.position.set(0, 0.0, -0.2);
+      tail.rotation.x = 0.3;
+      crowGroup358.add(tail);
+
+      // Eye
+      const eyeGeo = new SphereGeometry(0.015, 4, 3);
+      const eyeMat = new MeshBasicMaterial({ color: 0x33ff66 });
+      const eye = new Mesh(eyeGeo, eyeMat);
+      eye.position.set(0.045, 0.12, 0.17);
+      crowGroup358.add(eye);
+
+      // Wings (folded flat against body by default)
+      crowWingMat358 = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, emissive: new Color(0x33ff66), emissiveIntensity: 0.0 });
+      for (const sx of [-1, 1]) {
+        const wingGeo = new BoxGeometry(0.22, 0.04, 0.24);
+        const wing = new Mesh(wingGeo, crowWingMat358.clone());
+        wing.position.set(sx * 0.18, 0.02, -0.02);
+        wing.rotation.z = sx * 0.15;
+        wing.userData['side'] = sx;
+        crowGroup358.add(wing);
+        crowWings358.push(wing);
+      }
+
+      // Dolmen capstone at (-2.75, -0.35, -35), capstone top y = -0.10
+      // Crow body half-height = 0.07 → group y = -0.03
+      crowGroup358.position.set(-2.75, -0.03, -35);
+      group.add(crowGroup358);
+
+      crowNextFlap358 = 8 + Math.random() * 4;
     }
   }
 
@@ -2075,6 +2137,31 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (_moorCircleLight !== null) {
       _moorCircleLight.intensity = 0.03 + Math.sin(Date.now() * 0.001 * 0.2) * 0.02;
     }
+    // Landes bruyere — crow on dolmen head tilt + wing flap (C358)
+    if (crowGroup358 !== null) {
+      const t358 = Date.now() * 0.001;
+      // Idle head tilt (children[1] = head)
+      crowGroup358.children[1].rotation.y = Math.sin(t358 * 0.3) * 0.12;
+      crowGroup358.children[1].rotation.x = Math.sin(t358 * 0.2 + 1) * 0.05;
+
+      // Wing flap timer
+      crowNextFlap358 -= dt;
+      if (crowNextFlap358 <= 0 && crowFlapT358 < 0) {
+        crowFlapT358 = 0;
+        crowNextFlap358 = 8 + Math.random() * 4;
+      }
+      if (crowFlapT358 >= 0) {
+        crowFlapT358 += dt;
+        const flapPhase = Math.min(crowFlapT358 / 1.0, 1.0);
+        const flapAngle = Math.sin(flapPhase * Math.PI) * 0.9;
+        const emissive = Math.sin(flapPhase * Math.PI) * 0.12;
+        crowWings358.forEach(w => {
+          w.rotation.z = (w.userData['side'] as number) * (0.15 + flapAngle);
+          (w.material as MeshStandardMaterial).emissiveIntensity = emissive;
+        });
+        if (crowFlapT358 >= 1.0) crowFlapT358 = -1;
+      }
+    }
     // Cercles de Pierres — pulsing Ogham inscription emissive
     if (cerclesInscriptionMats.length > 0) {
       cerclesTime += dt;
@@ -2322,6 +2409,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _moorCircleLight = null;
     _watchtowerGroup = null;
     _watchtowerLight = null;
+    // Crow on dolmen cleanup (C358)
+    if (crowGroup358) { group.remove(crowGroup358); crowGroup358.traverse(c => { if ((c as Mesh).geometry) (c as Mesh).geometry.dispose(); }); crowGroup358 = null; }
+    crowWings358 = [];
+    if (crowWingMat358) { crowWingMat358.dispose(); crowWingMat358 = null; }
     _spiritBeams.length = 0;
     _spiritLights.length = 0;
     group.traverse((obj) => {
