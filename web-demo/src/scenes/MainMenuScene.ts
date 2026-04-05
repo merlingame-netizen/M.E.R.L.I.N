@@ -1194,6 +1194,43 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   // C176: Ogham rune rain overlay — injected behind menu DOM, above Three.js canvas
   const runeRain = createRuneRainCanvas(container);
 
+  // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
+  const menuOverlayEl = document.getElementById('main-menu-overlay');
+  if (!document.getElementById('menu-border-style')) {
+    const borderStyle = document.createElement('style');
+    borderStyle.id = 'menu-border-style';
+    borderStyle.textContent = [
+      '@property --border-angle{',
+      'syntax:"<angle>";',
+      'inherits:true;',
+      'initial-value:0turn;}',
+      '@keyframes celtos-border-spin{',
+      'from{--border-angle:0turn}',
+      'to{--border-angle:1turn}}',
+      '@keyframes celtos-border-glow{',
+      '0%,100%{border-color:rgba(51,255,102,0.15)}',
+      '50%{border-color:rgba(51,255,102,0.55)}}',
+      '.celtos-border-animated{',
+      '--border-angle:0turn;',
+      'border:1px solid rgba(51,255,102,0.3);',
+      'padding:2px;',
+      'background:',
+      'linear-gradient(rgba(1,8,2,0.97),rgba(1,8,2,0.97)) padding-box,',
+      'conic-gradient(',
+      'from var(--border-angle),',
+      'rgba(51,255,102,0.08) 0%,',
+      'rgba(51,255,102,0.6) 20%,',
+      'rgba(51,255,102,0.08) 40%,',
+      'rgba(51,255,102,0.0) 60%,',
+      'rgba(51,255,102,0.6) 80%,',
+      'rgba(51,255,102,0.08) 100%',
+      ') border-box;',
+      'animation:celtos-border-spin 4s linear infinite,celtos-border-glow 4s ease-in-out infinite;}',
+    ].join('');
+    document.head.appendChild(borderStyle);
+  }
+  if (menuOverlayEl) menuOverlayEl.classList.add('celtos-border-animated');
+
   // C256: Mouse parallax on constellation canvas
   let _menuMouseX = 0;
   let _menuMouseY = 0;
@@ -1228,6 +1265,10 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     // C200: remove CTA style element
     const ctaStyle = document.getElementById('celtos-title-anim');
     if (ctaStyle && ctaStyle.parentNode) ctaStyle.parentNode.removeChild(ctaStyle);
+    // C276: remove border style and class
+    const borderStyleEl = document.getElementById('menu-border-style');
+    if (borderStyleEl && borderStyleEl.parentNode) borderStyleEl.parentNode.removeChild(borderStyleEl);
+    if (menuOverlayEl) menuOverlayEl.classList.remove('celtos-border-animated');
     // C157: remove title overlay DOM
     if (titleOverlay.parentNode) {
       titleOverlay.parentNode.removeChild(titleOverlay);
