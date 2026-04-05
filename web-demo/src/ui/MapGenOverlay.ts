@@ -870,6 +870,20 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   await zonesDone;
   await wait(400);
 
+  // ── Inject map-dive CSS keyframe (guarded) ───────────────────────────────
+  if (!document.getElementById('map-dive-style')) {
+    const diveStyle = document.createElement('style');
+    diveStyle.id = 'map-dive-style';
+    diveStyle.textContent = `
+      @keyframes map-dive {
+        0%   { transform: scale(1) translateY(0);     opacity: 1; }
+        40%  { transform: scale(1.8) translateY(-5%); opacity: 0.9; }
+        100% { transform: scale(4.5) translateY(-15%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(diveStyle);
+  }
+
   // ── Phase 4: show "Entrer" hint + wait for click ──────────────────────────
   hintEl.style.opacity = '1';
 
@@ -884,10 +898,23 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
       clearTimeout(autoTimer);
       resolve();
     };
-    const onBtnClick = (e: MouseEvent): void => { sfx('click'); e.stopPropagation(); done(); };
-    const onOverlayClick = (): void => { done(); };
+    const triggerDiveAndDone = (stopProp?: MouseEvent): void => {
+      if (resolved) return;
+      // Prevent double-click
+      hintEl.disabled = true;
+      hintEl.style.opacity = '0.5';
+      if (stopProp) stopProp.stopPropagation();
+      // Fire SFX immediately
+      sfx('mapZoom');
+      // Apply dive animation to the whole overlay
+      overlay.style.animation = 'map-dive 700ms cubic-bezier(0.4,0,1,1) forwards';
+      // Delay actual resolution by 650ms so animation is visible
+      setTimeout(done, 650);
+    };
+    const onBtnClick = (e: MouseEvent): void => { sfx('click'); triggerDiveAndDone(e); };
+    const onOverlayClick = (): void => { triggerDiveAndDone(); };
     const onKey = (e: KeyboardEvent): void => {
-      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); done(); }
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); triggerDiveAndDone(); }
     };
     hintEl.addEventListener('click', onBtnClick);
     overlay.addEventListener('click', onOverlayClick);
@@ -904,7 +931,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     cancelAnimationFrame(animState.rafId);
     animState.rafId = 0;
   }
-  sfx('mapZoom');
+  // sfx('mapZoom') already fired at button-click time (dive cinematic)
 
   const entryPt = mapData.pathPoints[0]!;
   const scaleTarget = 8;
@@ -926,5 +953,6 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
 
   // ── Cleanup ───────────────────────────────────────────────────────────────
   window.removeEventListener('resize', resizeCanvas);
+  document.getElementById('map-dive-style')?.remove();
   overlay.remove();
 }
