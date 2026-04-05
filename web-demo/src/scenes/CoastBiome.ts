@@ -8,7 +8,7 @@ import {
   ConeGeometry, CylinderGeometry, DirectionalLight,
   DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
   Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Points,
-  PointsMaterial, SphereGeometry,
+  PointsMaterial, SphereGeometry, SpotLight,
   TorusGeometry,
 } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
@@ -645,6 +645,11 @@ let turtleDir = 1;
 let _turtleFrontL: Mesh | null = null;
 let _turtleFrontR: Mesh | null = null;
 
+// ── Lighthouse rotating beacon — cotes_sauvages (C404) ────────────────────
+let lighthouseGroup404: Group | null = null;
+let lighthouseBeaconLight404: SpotLight | null = null;
+let lighthouseT404 = 0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1253,6 +1258,49 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(turtleGroup);
   }
 
+  // ── Lighthouse rotating beacon (C404) — cotes_sauvages ───────────────────
+  {
+    lighthouseGroup404 = new Group();
+
+    // Base
+    const baseMat = new MeshStandardMaterial({ color: 0x0a1a10, roughness: 0.9, flatShading: true });
+    const base = new Mesh(new CylinderGeometry(0.8, 1.0, 1.2, 8), baseMat);
+    base.position.set(0, 0.6, 0);
+    lighthouseGroup404.add(base);
+
+    // Tower
+    const towerMat = new MeshStandardMaterial({ color: 0x0a1a10, roughness: 0.85, flatShading: true });
+    const tower = new Mesh(new CylinderGeometry(0.4, 0.6, 8, 8), towerMat);
+    tower.position.set(0, 4, 0);
+    lighthouseGroup404.add(tower);
+
+    // Tower top cap
+    const capMat = new MeshStandardMaterial({ color: 0x0d2a14, roughness: 0.8, flatShading: true });
+    const cap = new Mesh(new CylinderGeometry(0.7, 0.7, 0.3, 8), capMat);
+    cap.position.set(0, 8.15, 0);
+    lighthouseGroup404.add(cap);
+
+    // Lantern housing
+    const lanternMat = new MeshStandardMaterial({ color: 0x0a2a14, emissive: 0x0d3310, roughness: 0.7, flatShading: true });
+    const lantern = new Mesh(new CylinderGeometry(0.35, 0.35, 0.6, 8), lanternMat);
+    lantern.position.set(0, 8.6, 0);
+    lighthouseGroup404.add(lantern);
+
+    // Beacon point light — starts off, pulses during rotation
+    const beaconPoint = new PointLight(0x33ff66, 0.0, 18.0);
+    beaconPoint.position.set(0, 8.6, 0);
+    lighthouseGroup404.add(beaconPoint);
+
+    // SpotLight — narrow rotating beam
+    const spot = new SpotLight(0x33ff66, 0.6, 40, Math.PI * 0.04, 0.3);
+    spot.position.set(0, 8.6, 0);
+    lighthouseBeaconLight404 = spot;
+    lighthouseGroup404.add(spot);
+
+    lighthouseGroup404.position.set(14, 0, -35);
+    group.add(lighthouseGroup404);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -1616,6 +1664,17 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       if (turtleT < -12) turtleDir =  1;
     }
 
+    // ── Lighthouse rotating beacon (C404) ─────────────────────────────────
+    if (lighthouseGroup404 && lighthouseBeaconLight404) {
+      lighthouseT404 += dt * 0.8;
+      lighthouseBeaconLight404.rotation.y = lighthouseT404;
+      const beamAngle = lighthouseT404 % (Math.PI * 2);
+      const facingCamera = Math.cos(beamAngle - Math.PI);
+      lighthouseBeaconLight404.intensity = Math.max(0, facingCamera) * 0.8;
+      const pointLight = lighthouseGroup404.children.find(c => c instanceof PointLight) as PointLight | undefined;
+      if (pointLight) pointLight.intensity = 0.3 + Math.sin(lighthouseT404 * 2) * 0.3;
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -1750,6 +1809,18 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
     _turtleFrontL = null;
     _turtleFrontR = null;
+    if (lighthouseGroup404) {
+      lighthouseGroup404.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof SpotLight || c instanceof PointLight) c.dispose();
+      });
+      lighthouseGroup404 = null;
+      lighthouseBeaconLight404 = null;
+    }
     group.clear();
   };
 
