@@ -787,6 +787,12 @@ const mermaidArmMeshes504: { mesh: Mesh; side: 1 | -1 }[] = [];
 // ── Ancient sea altar emerging at low tide (C509) ────────────────────────
 let altarSeaGroup509: Group | null = null;
 
+// ── Ghost ship wraith drifting through coastal fog (C512) ────────────────
+let ghostShipGroup512: Group | null = null;
+let t512: number = 0;
+const ghostSailMats512: MeshStandardMaterial[] = [];
+let ghostShipLight512: PointLight | null = null;
+
 // ── Deep jellyfish bloom rising from the depths (C514) ───────────────────
 let deepJellyGroup514: Group | null = null;
 let t514: number = 0;
@@ -2844,6 +2850,105 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(deepJellyGroup514);
   }
 
+  // ── Ghost ship wraith drifting through coastal fog (C512) ─────────────────
+  {
+    ghostShipGroup512 = new Group();
+    const R = (): number => Math.random();
+
+    // Hull — low-poly boat shape using two merged wedge boxes
+    const hullMat = new MeshStandardMaterial({
+      color: 0x0a1a12,
+      roughness: 0.9, metalness: 0.05,
+      flatShading: true,
+      transparent: true, opacity: 0.78,
+      emissive: 0x001a08, emissiveIntensity: 0.4,
+    });
+    const hullBase = new Mesh(new BoxGeometry(8, 0.9, 2.6, 4, 1, 2), hullMat);
+    hullBase.position.set(0, 0, 0);
+    ghostShipGroup512.add(hullBase);
+
+    // Prow wedge — tapered front
+    const prowGeo = new ConeGeometry(1.3, 2.2, 4, 1);
+    const prowMesh = new Mesh(prowGeo, hullMat);
+    prowMesh.rotation.z = -Math.PI / 2;
+    prowMesh.position.set(5.1, 0.1, 0);
+    ghostShipGroup512.add(prowMesh);
+
+    // Stern block
+    const sternMesh = new Mesh(new BoxGeometry(1.4, 1.4, 2.6, 2, 1, 2), hullMat);
+    sternMesh.position.set(-4.2, 0.4, 0);
+    ghostShipGroup512.add(sternMesh);
+
+    // Mast — tall thin cylinder
+    const mastMat = new MeshStandardMaterial({
+      color: 0x091510, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const mastMesh = new Mesh(new CylinderGeometry(0.08, 0.12, 7.5, 5, 1), mastMat);
+    mastMesh.position.set(0.5, 4.2, 0);
+    ghostShipGroup512.add(mastMesh);
+
+    // Bowsprit — angled forward mast
+    const bowsprit = new Mesh(new CylinderGeometry(0.06, 0.08, 3.5, 4, 1), mastMat);
+    bowsprit.rotation.z = -Math.PI / 5;
+    bowsprit.position.set(3.2, 1.5, 0);
+    ghostShipGroup512.add(bowsprit);
+
+    // Main sail — flat low-poly plane with spectral green glow
+    const sailMat = new MeshStandardMaterial({
+      color: 0x062010,
+      roughness: 1.0, metalness: 0.0,
+      flatShading: true,
+      transparent: true, opacity: 0.55,
+      emissive: 0x33ff66, emissiveIntensity: 0.22,
+      side: DoubleSide,
+    });
+    ghostSailMats512.push(sailMat);
+
+    const mainSailGeo = new PlaneGeometry(3.5, 5.2, 3, 4);
+    // Billow verts slightly
+    const mSailPos = mainSailGeo.attributes['position'] as BufferAttribute;
+    for (let i = 0; i < mSailPos.count; i++) {
+      const u = mSailPos.getX(i) / 3.5 + 0.5;
+      mSailPos.setZ(i, Math.sin(u * Math.PI) * 0.45 * (0.7 + R() * 0.3));
+    }
+    mainSailGeo.computeVertexNormals();
+    const mainSail = new Mesh(mainSailGeo, sailMat);
+    mainSail.position.set(0.5, 3.5, 0);
+    ghostShipGroup512.add(mainSail);
+
+    // Fore-sail — smaller triangular-ish plane
+    const foreSailMat = new MeshStandardMaterial({
+      color: 0x051a0c,
+      roughness: 1.0, metalness: 0.0,
+      flatShading: true,
+      transparent: true, opacity: 0.45,
+      emissive: 0x33ff66, emissiveIntensity: 0.15,
+      side: DoubleSide,
+    });
+    ghostSailMats512.push(foreSailMat);
+    const foreSailGeo = new PlaneGeometry(2.0, 3.8, 2, 3);
+    const fSailPos = foreSailGeo.attributes['position'] as BufferAttribute;
+    for (let i = 0; i < fSailPos.count; i++) {
+      const u = fSailPos.getX(i) / 2.0 + 0.5;
+      fSailPos.setZ(i, Math.sin(u * Math.PI) * 0.3 * (0.6 + R() * 0.4));
+    }
+    foreSailGeo.computeVertexNormals();
+    const foreSail = new Mesh(foreSailGeo, foreSailMat);
+    foreSail.rotation.y = 0.18;
+    foreSail.position.set(3.0, 2.2, 0);
+    ghostShipGroup512.add(foreSail);
+
+    // Spectral PointLight — green N64 charter glow
+    ghostShipLight512 = new PointLight(0x33ff66, 0.45, 18);
+    ghostShipLight512.position.set(0.5, 4.5, 0);
+    ghostShipGroup512.add(ghostShipLight512);
+
+    // Position ship far out on the ocean — drifts slowly across
+    ghostShipGroup512.position.set(60, 0.1, -22);
+    ghostShipGroup512.rotation.y = Math.PI * 0.12;
+    group.add(ghostShipGroup512);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -3909,6 +4014,25 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // ── Ghost ship wraith drifting through coastal fog (C512) ───────────────
+    if (ghostShipGroup512) {
+      t512 += dt;
+      // Slow drift across ocean surface — full cycle ~120 s
+      ghostShipGroup512.position.x = 60 - ((t512 * 0.42) % 90);
+      // Gentle roll and bob
+      ghostShipGroup512.rotation.z = 0.04 * Math.sin(t512 * 0.55);
+      ghostShipGroup512.position.y = 0.1 + 0.12 * Math.sin(t512 * 0.45);
+      // Sails pulse emissive — spectral breathing
+      const sailPulse = 0.18 + 0.10 * Math.sin(t512 * 0.8);
+      for (const sm of ghostSailMats512) {
+        sm.emissiveIntensity = sailPulse;
+      }
+      // Light flicker
+      if (ghostShipLight512) {
+        ghostShipLight512.intensity = 0.40 + 0.12 * Math.sin(t512 * 1.9 + 0.7);
+      }
+    }
+
     // ── Deep jellyfish bloom rising from the depths (C514) ──────────────────
     if (deepJellyGroup514) {
       t514 += dt;
@@ -4294,6 +4418,20 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     altarSeaDroplets509.length = 0;
     altarSeaState509 = 'submerged';
     altarSeaTimer509 = 35 + Math.random() * 20;
+    if (ghostShipGroup512) {
+      ghostShipGroup512.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      ghostShipGroup512 = null;
+    }
+    ghostSailMats512.length = 0;
+    ghostShipLight512 = null;
+    t512 = 0;
     group.clear();
   };
 
