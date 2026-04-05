@@ -645,6 +645,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let altarSurging496: boolean = false
   let altarSurgeT496: number = 0
 
+  // ── Mountain shrine with prayer bells — monts_brumeux (C501) ────────────
+  let shrineGroup501: Group | null = null
+  let shrineBells501: Mesh[] = []
+  let shrineBellTimers501: number[] = []
+  let shrineBellAmps501: number[] = []
+  let shrineFlagMats501: MeshStandardMaterial[] = []
+  let shrineAltarMat501: MeshStandardMaterial | null = null
+  let shrineT501: number = 0
+  let shrineLight501: PointLight | null = null
+
   // ── Frozen waterfall — monts_brumeux (C473) ───────────────────────────────
   let iceWaterfallGroup473: Group | null = null
   let iceWaterfallT473: number = 0
@@ -2800,6 +2810,108 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     iceWaterfallGroup473!.add(iceLight)
 
     group.add(iceWaterfallGroup473)
+
+    // ── Mountain shrine with prayer bells (C501) ───────────────────────────
+    shrineGroup501 = new Group()
+    shrineGroup501.position.set(6, 0, -12)
+
+    // Shrine base
+    const shrineBase = new Mesh(
+      new BoxGeometry(0.9, 0.4, 0.6),
+      new MeshStandardMaterial({ color: 0x0a1a10, roughness: 0.9, metalness: 0.0 })
+    )
+    shrineBase.position.set(0, 0.2, 0)
+    shrineGroup501.add(shrineBase)
+
+    // Shrine roof (pyramid)
+    const shrineRoof = new Mesh(
+      new CylinderGeometry(0, 0.7, 0.4, 4),
+      new MeshStandardMaterial({ color: 0x0d2010, roughness: 0.85, metalness: 0.0 })
+    )
+    shrineRoof.position.set(0, 0.6, 0)
+    shrineGroup501.add(shrineRoof)
+
+    // Arch pillars (2) and lintel (1)
+    const archMat = new MeshStandardMaterial({ color: 0x0d1a0d, roughness: 0.88, metalness: 0.0 })
+    const pillarL = new Mesh(new BoxGeometry(0.08, 0.5, 0.06), archMat)
+    pillarL.position.set(-0.3, 0.65, 0.32)
+    shrineGroup501.add(pillarL)
+    const pillarR = new Mesh(new BoxGeometry(0.08, 0.5, 0.06), archMat)
+    pillarR.position.set(0.3, 0.65, 0.32)
+    shrineGroup501.add(pillarR)
+    const lintel = new Mesh(new BoxGeometry(0.7, 0.06, 0.06), archMat)
+    lintel.position.set(0, 0.93, 0.32)
+    shrineGroup501.add(lintel)
+
+    // Altar stone with emissive glow
+    shrineAltarMat501 = new MeshStandardMaterial({
+      color: 0x0a1a10, emissive: 0x33ff66, emissiveIntensity: 0.8,
+      roughness: 0.7, metalness: 0.1
+    })
+    const altarStone = new Mesh(new SphereGeometry(0.08, 6, 5), shrineAltarMat501)
+    altarStone.position.set(0, 0.48, 0)
+    shrineGroup501.add(altarStone)
+
+    // Interior point light
+    shrineLight501 = new PointLight(0x33ff66, 0.3, 4.0)
+    shrineLight501.position.set(0, 0.48, 0)
+    shrineGroup501.add(shrineLight501)
+
+    // 5 prayer bells hung from roof overhang
+    const bellMat = new MeshStandardMaterial({ color: 0x4a3208, metalness: 0.8, roughness: 0.3 })
+    const clapperMat = new MeshStandardMaterial({ color: 0x2a1c04, metalness: 0.7, roughness: 0.4 })
+    const bellXPositions = [-0.5, -0.25, 0, 0.25, 0.5]
+    const bellFreqs = [1.5, 1.9, 2.1, 1.7, 2.5]
+    const bellPhases = [0, 1.1, 2.3, 3.7, 5.0]
+    const bellGustIntervals = [12, 15, 18, 14, 20]
+    bellXPositions.forEach((bx, i) => {
+      const hangGroup = new Group()
+      hangGroup.position.set(bx, 0.75, 0.1)
+      // String rod
+      const stringRod = new Mesh(
+        new CylinderGeometry(0.005, 0.005, 0.15, 4),
+        new MeshStandardMaterial({ color: 0x1a1006, roughness: 0.9, metalness: 0.0 })
+      )
+      stringRod.position.set(0, -0.075, 0)
+      hangGroup.add(stringRod)
+      // Bell body (open at bottom)
+      const bell = new Mesh(new CylinderGeometry(0.06, 0.04, 0.1, 8, 1, true), bellMat)
+      bell.position.set(0, -0.2, 0)
+      hangGroup.add(bell)
+      // Clapper
+      const clapper = new Mesh(new SphereGeometry(0.02, 5, 4), clapperMat)
+      clapper.position.set(0, -0.24, 0)
+      hangGroup.add(clapper)
+      shrineGroup501!.add(hangGroup)
+      shrineBells501.push(bell)
+      bell.userData = {
+        hangGroup,
+        freq: bellFreqs[i],
+        phase: bellPhases[i],
+        gustTimer: bellGustIntervals[i] + Math.random() * 8,
+        gustActive: false,
+        gustT: 0
+      }
+      shrineBellTimers501.push(bellGustIntervals[i] + Math.random() * 8)
+      shrineBellAmps501.push(0.25)
+    })
+
+    // 3 prayer flag triangles strung between positions
+    const flagColors = [0x0a2a14, 0x0d3320, 0x061008]
+    flagColors.forEach((col, fi) => {
+      const flagMat = new MeshStandardMaterial({
+        color: col, roughness: 0.9, metalness: 0.0,
+        transparent: true, opacity: 0.7, side: 2
+      })
+      shrineFlagMats501.push(flagMat)
+      const flag = new Mesh(new PlaneGeometry(0.15, 0.1), flagMat)
+      flag.position.set(-0.25 + fi * 0.25, 0.85, -0.1)
+      flag.rotation.y = (fi - 1) * 0.3
+      flag.userData = { flagIdx: fi }
+      shrineGroup501!.add(flag)
+    })
+
+    group.add(shrineGroup501)
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -4865,6 +4977,45 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         if (drop.y < 0.1) drop.active = false
       })
     }
+    // Monts brumeux — mountain shrine bells + flags (C501)
+    if (shrineGroup501) {
+      shrineT501 += dt
+      // Animate each bell
+      shrineBells501.forEach((bell) => {
+        const ud = bell.userData as {
+          hangGroup: Group; freq: number; phase: number;
+          gustTimer: number; gustActive: boolean; gustT: number
+        }
+        ud.gustTimer -= dt
+        if (ud.gustTimer <= 0) {
+          ud.gustTimer = 12 + Math.random() * 8
+          ud.gustActive = true
+          ud.gustT = 0
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }))
+        }
+        let amp = 0.25 + Math.random() * 0.1
+        let freq = ud.freq
+        if (ud.gustActive) {
+          ud.gustT += dt
+          const gustFade = Math.max(0, 1.0 - ud.gustT / 1.5)
+          amp = amp + (0.6 - amp) * gustFade
+          freq = freq + (6.0 - freq) * gustFade
+          if (ud.gustT >= 1.5) ud.gustActive = false
+        }
+        ud.hangGroup.rotation.z = amp * Math.sin(shrineT501 * freq + ud.phase)
+      })
+      // Animate prayer flags
+      shrineGroup501.children.forEach((child) => {
+        if (child instanceof Mesh && child.userData.flagIdx !== undefined) {
+          const fi: number = child.userData.flagIdx as number
+          child.rotation.z = 0.1 * Math.sin(shrineT501 * 3.5 + fi * 1.2)
+        }
+      })
+      // Altar glow pulse
+      if (shrineAltarMat501) {
+        shrineAltarMat501.emissiveIntensity = 0.6 + 0.4 * Math.sin(shrineT501 * 1.8)
+      }
+    }
     // Marais korrigans — drowned bell tower toll (C478)
     if (bellTowerGroup478) {
       bellTowerT478 += dt
@@ -5299,6 +5450,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     altarRunes496 = []
     altarLight496 = null
     altarSurging496 = false
+    // Mountain shrine cleanup (C501)
+    if (shrineGroup501) {
+      shrineGroup501.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose() }
+        if (c instanceof PointLight) c.dispose()
+      })
+      group.remove(shrineGroup501)
+      shrineGroup501 = null
+    }
+    shrineBells501 = []
+    shrineBellTimers501 = []
+    shrineBellAmps501 = []
+    shrineFlagMats501 = []
+    shrineAltarMat501 = null
+    shrineLight501 = null
     // Frozen waterfall cleanup (C473)
     if (iceWaterfallGroup473) {
       iceWaterfallGroup473.traverse((c) => {
