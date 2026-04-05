@@ -671,6 +671,10 @@ function showGroqSettingsModal(): Promise<void> {
   });
 }
 
+// Tracks whether the guided lair tour should fire on the next lair visit.
+// Set to true for new game, false for continue. Reset here to avoid re-firing.
+let _isFirstLairVisit = true;
+
 async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairOgham: string | null }> {
   // Create wrapper div dynamically (static placement in index.html preferred)
   let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
@@ -711,7 +715,12 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     }
     if (_firstFrame) {
       _firstFrame = false;
-      revealFromBlack(800);
+      revealFromBlack(800).then(async () => {
+        if (_isFirstLairVisit) {
+          _isFirstLairVisit = false;
+          await runMerlinIntro();
+        }
+      }).catch(() => undefined);
     }
   };
   // C104: pause/resume lair rAF when tab is hidden — saves GPU/CPU/battery on mobile
@@ -808,6 +817,13 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       }, 220);
     }, 1800);
   };
+
+  // Listen for intro zone highlight events dispatched by MerlinIntro
+  const onIntroZone = (e: Event): void => {
+    const zone = (e as CustomEvent<{ zone: string }>).detail.zone;
+    showZoneToast(zone);
+  };
+  window.addEventListener('merlin_intro_zone', onIntroZone);
 
   // Wait for door click (only zone that starts a run)
   await new Promise<void>((resolve) => {
@@ -960,6 +976,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   if (confirmToastFadeId !== null) { clearTimeout(confirmToastFadeId); confirmToastFadeId = null; }
   if (confirmToastRemoveId !== null) { clearTimeout(confirmToastRemoveId); confirmToastRemoveId = null; }
   activeToast = null; // Timers cleared above — toast element hidden with wrapper
+  window.removeEventListener('merlin_intro_zone', onIntroZone);
   cutToBlack();
   await new Promise<void>((res) => setTimeout(res, 300));
   lair.dispose();
@@ -1025,14 +1042,13 @@ async function main(): Promise<void> {
   loadAnamFromStorage();
   loadMetaFromStorage();
 
-  // Phase 2b: Merlin intro dialogue — shown only on new game (walk animation already played)
+  // Phase 2b: Guided lair tour fires inside runMerlinLair on first reveal.
+  // Set _isFirstLairVisit so the lair triggers runMerlinIntro after revealFromBlack.
   if (menuResult.isNewGame) {
-    await runMerlinIntro();
+    _isFirstLairVisit = true;
+  } else {
+    _isFirstLairVisit = false;
   }
-
-  // Safety: clear black overlay in case lair init is slow or fails
-  // revealFromBlack is idempotent (calling twice is harmless)
-  revealFromBlack(400).catch(() => undefined);
 
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.

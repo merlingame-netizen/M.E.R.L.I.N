@@ -4,13 +4,17 @@
 // Shown after the "Nouvelle Partie" walk animation, before the lair.
 // =============================================================================
 
-// C164: druidic register — 4 lines, 40ms/char, pause 600ms between
+// Guided lair tour — 5 lines, one per visible zone
 const MERLIN_LINES: readonly string[] = [
-  'Je suis Merlin — né entre deux souffles, gardien du nemeton et des vingt-cinq oghams.',
-  'Brocéliande n\'est pas une forêt. C\'est un miroir. Elle te montrera ce que tu fuis.',
-  'Ton Anam est la seule monnaie qui survive à la mort. Dépense-le avec sagesse.',
-  'Les Sidhe observent. Les druides attendent. Entre, voyageur — et choisis bien.',
+  'Bienvenue dans mon antre. Cette carte révèle les huit biomes de Brocéliande — chaque contrée abrite ses propres épreuves et ses secrets.',
+  'La Sphère de Cristal garde les Oghams anciens. Avant chaque expédition, éveille un ogham : il façonnera chacun de tes choix dans le biome.',
+  'Ce journal est ta mémoire entre les mondes. Tes runs passés, tes réputations auprès des factions — tout y est consigné.',
+  'Le Chaudron de l\'Awen distille la sagesse des druides. Consulte-le avant de partir — il te livrera ce que les pierres murmurent.',
+  'La porte de la forêt t\'attend, voyageur. Commence par la Forêt de Brocéliande — c\'est là que ton Anam s\'éveille. Clique sur la porte pour partir.',
 ];
+
+// Zone event names matched to each line (for lair highlight)
+const ZONE_EVENTS: readonly string[] = ['map', 'crystal', 'bookshelf', 'cauldron', 'door'];
 
 function wait(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
@@ -194,7 +198,12 @@ export async function runMerlinIntro(): Promise<void> {
       textEl.style.opacity = '1';
     }
 
-    await typewrite(textEl, MERLIN_LINES[i]!, 40);
+    await typewrite(textEl, MERLIN_LINES[i]!, 32);
+    // Dispatch zone highlight event for the lair to react to
+    const zone = ZONE_EVENTS[i];
+    if (zone) {
+      window.dispatchEvent(new CustomEvent('merlin_intro_zone', { detail: { zone } }));
+    }
     hintEl.style.opacity = '1';
 
     await new Promise<void>((resolve) => {
