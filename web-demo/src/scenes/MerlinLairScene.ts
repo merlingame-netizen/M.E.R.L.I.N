@@ -1124,6 +1124,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _runeRing2: Mesh | null = null;
   let _runeRingTime = 0;
 
+  // C264: glowing potion vials on left-wall shelf
+  let _vialMeshes: Mesh[] = [];
+  let _vialLights: PointLight[] = [];
+  let _vialTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1167,6 +1172,33 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _runeRing2.rotation.x = -Math.PI / 2;
     _runeRing2.position.set(0, FLOOR_Y + 0.02, RING_Z);
     scene.add(_runeRing2);
+  }
+
+  // C264: create 3 glowing potion vials on left-wall shelf (z=-8.5, shelfY=-3.5 → bottle base at shelfY+0.25=-3.25)
+  {
+    const SHELF_Y = -3.5;
+    const VIAL_Y = SHELF_Y + 0.25;
+    const vialDefs: Array<{ x: number; color: number; intensity: number }> = [
+      { x: -2.5, color: 0x22ff44, intensity: 0.3 },
+      { x: -2.0, color: 0x44ff88, intensity: 0.25 },
+      { x: -1.5, color: 0x00cc44, intensity: 0.2 },
+    ];
+    const bodyGeo = new CylinderGeometry(0.12, 0.15, 0.5, 8);
+    const stopperGeo = new SphereGeometry(0.13, 6, 4);
+    for (const vd of vialDefs) {
+      const mat = new MeshBasicMaterial({ color: vd.color });
+      const body = new Mesh(bodyGeo, mat);
+      body.position.set(vd.x, VIAL_Y, -8.5);
+      scene.add(body);
+      const stopper = new Mesh(stopperGeo, mat);
+      stopper.position.set(vd.x, VIAL_Y + 0.25, -8.5);
+      scene.add(stopper);
+      _vialMeshes.push(body, stopper);
+      const light = new PointLight(vd.color, vd.intensity, 1.5);
+      light.position.set(vd.x, VIAL_Y, -8.5);
+      scene.add(light);
+      _vialLights.push(light);
+    }
   }
 
   // Forest window + day/night/season cycle
@@ -1740,6 +1772,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C264: vial light pulse — gentle sine intensity oscillation
+    if (!lowFpsMode) {
+      _vialTime += dt;
+      for (let i = 0; i < _vialLights.length; i++) {
+        _vialLights[i].intensity = 0.2 + Math.sin(_vialTime * 1.2 + i * 1.1) * 0.1;
+      }
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -1879,6 +1919,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C241: clear rune ring refs (geometries/materials disposed by scene.traverse above)
     _runeRing1 = null;
     _runeRing2 = null;
+    // C264: clear vial refs (geometries/materials disposed by scene.traverse above)
+    _vialMeshes = [];
+    _vialLights = [];
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
