@@ -942,6 +942,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const { group: doorGroup, hitTarget: doorHit, lightBeam: doorLight, doorPanel } = createDoor();
   scene.add(doorGroup);
+  // C188: green rune inscription glow — fades in/out on door hover (lerped in update)
+  const doorRuneLight = new PointLight(0x33ff66, 0.0, 8);
+  doorRuneLight.position.set(-9.8, 0.5, 5.5);
+  scene.add(doorRuneLight);
 
   const { candles, group: candleGroup } = createCandles();
   scene.add(candleGroup); // C131/CANDLES-FACTORY-01: moved from inside createCandles() — consistent with all other factories

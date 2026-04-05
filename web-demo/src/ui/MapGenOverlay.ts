@@ -691,23 +691,16 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
+      drawBiomeDecorations(ctx, canvas.width, canvas.height, biome);
       drawPathAt(ctx, mapData.pathPoints, p);
       stampGrain();
       drawCelticBorder(ctx, canvas.width, canvas.height);
       if (p > 0.5) drawCompassRose(ctx, roseX, roseY, roseSize);
 
-      // Start/end markers
+      // Start marker — hero position
       if (p > 0.05) {
         const start = mapData.pathPoints[0]!;
-        ctx.beginPath();
-        ctx.arc(start.x, start.y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = PAL.accent;
-        ctx.fill();
-        ctx.fillStyle = PAL.bg;
-        ctx.font = `bold 9px 'Courier New',monospace`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('▶', start.x, start.y);
+        drawHeroMarker(ctx, start.x, start.y);
       }
 
       if (p >= 1) {
@@ -731,20 +724,13 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     ctx.fillStyle = PAL.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
+    drawBiomeDecorations(ctx, canvas.width, canvas.height, biome);
     drawPathAt(ctx, mapData.pathPoints, 1);
     stampGrain();
 
-    // Draw path start marker
+    // Draw hero marker at path start
     const start = mapData.pathPoints[0]!;
-    ctx.beginPath();
-    ctx.arc(start.x, start.y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = PAL.accent;
-    ctx.fill();
-    ctx.fillStyle = PAL.bg;
-    ctx.font = `bold 9px 'Courier New',monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('▶', start.x, start.y);
+    drawHeroMarker(ctx, start.x, start.y);
 
     // Event nodes
     for (let i = 0; i < mapData.events.length; i++) {

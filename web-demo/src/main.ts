@@ -347,6 +347,24 @@ function showJournalPanel(): Promise<void> {
       panel.appendChild(row);
     }
 
+    // --- Section: Lore du Jour ---
+    const JOURNAL_LORE: readonly string[] = [
+      '"Le druide lit le monde à l\'envers du miroir."',
+      '"Chaque ogham est un monde que les mains du temps ont tracé."',
+      '"La forêt de Brocéliande est la mémoire que les pierres ont gardée."',
+      '"L\'Anam voyage entre les vies comme le vent entre les frênes."',
+      '"Connais ton geis, porte-le sans fléchir, il est ton bouclier."',
+    ];
+    const runsTotal = meta.totalRuns ?? 0;
+    const loreEl = document.createElement('div');
+    loreEl.style.cssText = [
+      `border-top:1px solid rgba(26,136,51,0.3);margin-top:14px;padding-top:12px;`,
+      `color:rgba(51,200,100,0.60);font-size:clamp(9px,1.1vw,11px);`,
+      `font-family:'Courier New',monospace;line-height:1.6;font-style:italic;`,
+    ].join('');
+    loreEl.textContent = JOURNAL_LORE[runsTotal % JOURNAL_LORE.length]!;
+    panel.appendChild(loreEl);
+
     // --- Spacer ---
     const spacer = document.createElement('div');
     spacer.style.cssText = 'height:18px;';
@@ -581,9 +599,9 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
     map:       { title: 'Carte des Biomes',    sub: 'Vers quelle contrée vous aventurer ?' }, // C45: Celtic register + CTA (was generic "Choisissez votre destination")
-    crystal:   { title: 'Sphère de Cristal',     sub: 'Choisissez votre Ogham runique' },
-    bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
-    cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
+    crystal:   { title: 'Sphère de Cristal',     sub: 'Les oghams anciens y dorment — éveillez-en un' },
+    bookshelf: { title: 'Journal de Merlin',   sub: 'Vos mémoires de voyage entre les mondes' },
+    cauldron:  { title: "Chaudron de l'Awen",  sub: 'Merlin parle à ceux qui osent écouter' },
     door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
     skull:     { title: 'Crâne du Sage',        sub: 'Les anciens druides méditaient face à la mort' }, // C79: skull hover lore fallback (click is no-op but toast fires)
   };
