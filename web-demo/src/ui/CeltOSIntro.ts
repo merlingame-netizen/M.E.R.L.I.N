@@ -17,6 +17,16 @@ const CRT = {
   BORDER:  '#1a3320',
 } as const;
 
+const CELTOS_ASCII = [
+  '  \u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557',
+  ' \u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255d\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255d\u2588\u2588\u2551  \u2554\u2550\u2550\u2588\u2588\u2554\u2550\u2550\u255d\u2588\u2588\u2554\u2550\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255d',
+  ' \u2588\u2588\u2551     \u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2551     \u2588\u2588\u2551   \u2588\u2588\u2551   \u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557',
+  ' \u2588\u2588\u2551     \u2588\u2588\u2554\u2550\u2550\u255d  \u2588\u2588\u2551     \u2588\u2588\u2551   \u2588\u2588\u2551   \u2588\u2588\u2551\u2554\u2550\u2550\u2550\u2550\u2588\u2588\u2551',
+  ' \u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2551   \u255a\u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255d\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551',
+  '  \u255a\u2550\u2550\u2550\u2550\u2550\u255d\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u255d\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u255d\u255a\u2550\u255d    \u255a\u2550\u2550\u2550\u2550\u2550\u255d \u255a\u2550\u2550\u2550\u2550\u2550\u2550\u255d',
+  '                        v4.2 KERNEL',
+].join('\n');
+
 const BOOT_LINES: readonly string[] = [
   'CELTOS v4.2 KERNEL \u2014 INITIATING MEMORY NODES',
   'LOADING /dev/ogham/18 ... [OK]',
@@ -107,6 +117,23 @@ async function runPhase1(container: HTMLDivElement): Promise<void> {
     `color:${CRT.DIM};text-align:left;min-width:320px;`,
   ].join('');
   container.appendChild(lineArea);
+
+  // ASCII art logo — prepended above boot lines
+  const asciiPre = document.createElement('pre');
+  asciiPre.textContent = CELTOS_ASCII;
+  asciiPre.style.cssText = [
+    'color:rgba(51,255,102,0.6);',
+    "font-family:'Courier New',monospace;",
+    'font-size:7px;line-height:1.1;',
+    'margin:0 0 8px 0;overflow:hidden;white-space:pre;',
+    'opacity:0;transition:opacity 0.5s ease;',
+  ].join('');
+  lineArea.appendChild(asciiPre);
+  // Trigger fade-in on next frame
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { asciiPre.style.opacity = '0.6'; });
+  });
+  await wait(500);
 
   // Blinking cursor element (reused, appended after each line)
   const cursor = document.createElement('span');
