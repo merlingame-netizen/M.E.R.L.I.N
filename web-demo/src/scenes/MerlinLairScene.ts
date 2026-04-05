@@ -1282,6 +1282,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _candleFlames: Mesh[] = [];
   const _candleLights: PointLight[] = [];
 
+  // C355: hanging herb bundles — 5 clusters dangling from ceiling beams, slow pendulum sway
+  const _herbBundles355: Group[] = [];
+  const _herbLights355: PointLight[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1555,6 +1559,77 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.add(candleLight);
       _candleLights.push(candleLight);
     }
+  }
+
+  // C355: hanging herb bundles — 5 clusters of dried herbs/flowers dangling from ceiling beams
+  // Ceiling underside at y ≈ 11 - 0.4/2 = 10.8. Beams at y ≈ 10.5. Bundles hang at y = 3.5 (long rope implied).
+  // CeltOS charter: green family only — 0x1a3a1a stems, 0x2a5a2a clusters, 0x33ff66 light, 0x0d4420 emissive.
+  {
+    const HERB_POSITIONS: Array<[number, number, number]> = [
+      [-2, 3.5, -3], [1, 3.5, -2.5], [-1, 3.5, -4.5], [2.5, 3.5, -3.5], [0, 3.5, -2],
+    ];
+    const stemMat = new MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.9, metalness: 0.0, flatShading: true });
+    const clusterMat = new MeshStandardMaterial({
+      color: 0x2a5a2a, roughness: 0.85, metalness: 0.0, flatShading: true,
+      emissive: new (stemMat.emissive.constructor as new (hex: number) => typeof stemMat.emissive)(0x0d4420),
+      emissiveIntensity: 0.04,
+    });
+    // Use explicit hex setHex — avoids needing to import Color
+    clusterMat.emissive.setHex(0x0d4420);
+    const STEM_COUNTS = [3, 4, 5, 3, 4]; // deterministic per bundle
+    const STEM_OFFSETS: Array<Array<[number, number]>> = [
+      [[-0.03, -0.01], [0.02, 0.04], [-0.01, -0.04]],
+      [[-0.04, 0.02], [0.03, -0.03], [0.00, 0.05], [-0.02, -0.02]],
+      [[-0.03, -0.02], [0.04, 0.01], [-0.01, 0.04], [0.02, -0.03], [0.00, 0.00]],
+      [[-0.02, 0.03], [0.03, -0.01], [0.00, -0.04]],
+      [[-0.03, 0.02], [0.04, -0.02], [0.01, 0.05], [-0.02, -0.03]],
+    ];
+    const STEM_ROTS: Array<Array<number>> = [
+      [0.1, -0.15, 0.2],
+      [-0.1, 0.18, -0.12, 0.08],
+      [0.15, -0.1, 0.2, -0.18, 0.05],
+      [0.12, -0.14, 0.08],
+      [-0.08, 0.16, -0.12, 0.1],
+    ];
+    for (let bi = 0; bi < HERB_POSITIONS.length; bi++) {
+      const [bx, by, bz] = HERB_POSITIONS[bi]!;
+      const bundle = new Group();
+      bundle.position.set(bx, by, bz);
+      const count = STEM_COUNTS[bi]!;
+      const offsets = STEM_OFFSETS[bi]!;
+      const rots = STEM_ROTS[bi]!;
+      const stemH = 0.3 + bi * 0.04; // subtle height variation per bundle
+      // Stems hanging downward (cylinder long axis = Y by default)
+      for (let si = 0; si < count; si++) {
+        const [ox, oz] = offsets[si]!;
+        const stem = new Mesh(new CylinderGeometry(0.01, 0.015, stemH, 4), stemMat.clone());
+        stem.position.set(ox, -stemH / 2, oz);
+        stem.rotation.z = rots[si]!;
+        bundle.add(stem);
+      }
+      // Leaf/flower cluster — 8 tiny spheres at bottom of bundle
+      const clusterY = -stemH - 0.04;
+      const CLUSTER_OFFSETS: Array<[number, number, number]> = [
+        [-0.04, 0, -0.03], [0.04, 0, -0.02], [0, 0.04, 0.03], [-0.03, -0.03, 0.02],
+        [0.03, 0.03, -0.04], [-0.02, 0, 0.04], [0.02, -0.04, 0], [0, 0.02, -0.02],
+      ];
+      for (const [cx, cy, cz] of CLUSTER_OFFSETS) {
+        const sphere = new Mesh(new SphereGeometry(0.03, 4, 3), clusterMat.clone());
+        sphere.position.set(cx, clusterY + cy, cz);
+        bundle.add(sphere);
+      }
+      // Ambient herb glow — faint green PointLight at cluster position
+      const herbLight = new PointLight(0x33ff66, 0.05, 1.2);
+      herbLight.position.set(0, clusterY, 0);
+      bundle.add(herbLight);
+      _herbLights355.push(herbLight);
+
+      scene.add(bundle);
+      _herbBundles355.push(bundle);
+    }
+    // Shared mats not added to scene — dispose handled via traverse in dispose()
+    stemMat.dispose();
+    clusterMat.dispose();
   }
 
   // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
@@ -2440,6 +2515,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C355: herb bundle sway — slow pendulum motion per bundle (cosmetic, gate under !lowFpsMode)
+    if (!lowFpsMode) {
+      _herbBundles355.forEach((bundle, i) => {
+        bundle.rotation.z = Math.sin(elapsedTime * 0.4 + i * 1.1) * 0.04;
+        bundle.rotation.x = Math.sin(elapsedTime * 0.3 + i * 0.7) * 0.02;
+      });
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2607,6 +2690,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _mapTableGroup = null;
     _mapScrollLight = null;
     _mapParchment = null;
+    // C355: clear herb bundle refs (geometries/materials disposed by scene.traverse above)
+    _herbBundles355.length = 0;
+    _herbLights355.length = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
