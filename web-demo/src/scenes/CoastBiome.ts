@@ -702,6 +702,12 @@ let surfMenhirFoamMat469: MeshBasicMaterial | null = null;
 const surfMenhirGlyphs469: Mesh[] = [];
 let surfMenhirWaveTimer469: number = 25;
 
+// ── Bioluminescent plankton bloom (C474) ──────────────────────────────────
+let planktonGroup474: Group | null = null;
+let planktonT474: number = 0;
+const planktonParticles474: Mesh[] = [];
+// Store per-particle data inline via userData
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1912,6 +1918,38 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(surfMenhirGroup469);
   }
 
+  // ── Bioluminescent plankton bloom (C474) ──────────────────────────────────
+  {
+    planktonGroup474 = new Group();
+    planktonGroup474.position.set(0, -0.5, -8);  // ocean surface area
+
+    for (let i = 0; i < 40; i++) {
+      const p = new Mesh(
+        new SphereGeometry(0.035, 3, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 })
+      );
+      // Random spread in a flat volume (ocean surface layer)
+      p.position.set(
+        (Math.random() - 0.5) * 14,
+        -0.1 + (Math.random() - 0.5) * 0.4,
+        (Math.random() - 0.5) * 8
+      );
+      // Store drift data
+      (p as any).__px = p.position.x;
+      (p as any).__pz = p.position.z;
+      (p as any).__phase = Math.random() * Math.PI * 2;
+      (p as any).__speed = 0.15 + Math.random() * 0.25;
+      (p as any).__pulseSpeed = 0.8 + Math.random() * 1.5;
+      (p as any).__driftX = (Math.random() - 0.5) * 0.3;
+      (p as any).__driftZ = (Math.random() - 0.5) * 0.2;
+
+      planktonParticles474.push(p);
+      planktonGroup474!.add(p);
+    }
+
+    group.add(planktonGroup474);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2466,6 +2504,31 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'water_drop' } }));
     }
 
+    // ── Plankton bloom animation (C474) ───────────────────────────────────
+    planktonT474 += dt;
+    planktonParticles474.forEach((p) => {
+      const phase = (p as any).__phase as number;
+      const pulseSpeed = (p as any).__pulseSpeed as number;
+      const driftX = (p as any).__driftX as number;
+      const driftZ = (p as any).__driftZ as number;
+      const px = (p as any).__px as number;
+      const pz = (p as any).__pz as number;
+
+      // Drift slowly
+      p.position.x = px + driftX * Math.sin(planktonT474 * 0.2 + phase);
+      p.position.z = pz + driftZ * Math.cos(planktonT474 * 0.15 + phase);
+      p.position.y = -0.1 + 0.08 * Math.sin(planktonT474 * pulseSpeed + phase);
+
+      // Opacity pulse — most are faint, occasional bright flash
+      const basePulse = 0.3 + 0.3 * Math.sin(planktonT474 * pulseSpeed + phase);
+      const mat = p.material as MeshBasicMaterial;
+      mat.opacity = Math.max(0, basePulse);
+
+      // Wrap around if drifted too far
+      if (p.position.x > 7) p.position.x = -7;
+      if (p.position.x < -7) p.position.x = 7;
+    });
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2701,6 +2764,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
     surfMenhirFoamMat469 = null;
     surfMenhirGlyphs469.length = 0;
+    if (planktonGroup474) {
+      planktonGroup474.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as MeshBasicMaterial).dispose();
+        }
+      });
+      planktonGroup474 = null;
+    }
+    planktonParticles474.length = 0;
     group.clear();
   };
 
