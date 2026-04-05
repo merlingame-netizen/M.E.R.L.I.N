@@ -656,6 +656,26 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
   if (biome === 'cercles_pierres') {
+    // Outer ring of 8 peripheral standing stones (background, added C279)
+    const STONE_RING_RADIUS = 8;
+    const STONE_COLORS = [0x2a3020, 0x1e2818, 0x1a2a14, 0x2a3020, 0x1e2818, 0x1a2a14, 0x2a3020, 0x1e2818];
+    const STONE_HEIGHTS = [3.5, 5.0, 4.2, 3.8, 5.5, 3.2, 4.8, 4.0];
+    const STONE_WIDTHS = [0.5, 0.4, 0.55, 0.45, 0.4, 0.5, 0.45, 0.5];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const x = Math.cos(angle) * STONE_RING_RADIUS;
+      const z = -15 + Math.sin(angle) * STONE_RING_RADIUS;
+      const h = STONE_HEIGHTS[i];
+      const w = STONE_WIDTHS[i];
+      const stoneGeo = new BoxGeometry(w, h, w * 0.6);
+      const stoneMat2 = new MeshBasicMaterial({ color: STONE_COLORS[i] });
+      const stone = new Mesh(stoneGeo, stoneMat2);
+      stone.position.set(x, h / 2 - 3, z);
+      stone.rotation.y = angle;
+      stone.rotation.z = (Math.random() - 0.5) * 0.08;
+      group.add(stone);
+    }
+
     const R2 = () => Math.random();
     const stoneMat = new MeshStandardMaterial({
       color: 0x6a5e48, roughness: 0.90, metalness: 0.0, flatShading: true,
