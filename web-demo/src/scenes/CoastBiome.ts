@@ -528,6 +528,10 @@ let lighthouseLight: PointLight | null = null;
 let _foamMeshes: Mesh[] = [];
 let _foamTimer = 0;
 
+// ── Tide pool anemones (C273) ─────────────────────────────────────────────────
+let _anemoneMeshes: Mesh[] = [];
+let _anemoneTime = 0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -616,6 +620,37 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
   // ── Shipwreck silhouette on right-side rocks (C253) ──────────────────────
   group.add(createShipwreck());
+
+  // ── Tide pool anemones on rocks near shipwreck area (C273) ───────────────
+  _anemoneMeshes = [];
+  _anemoneTime = 0;
+  const anemonePositions: [number, number, number][] = [
+    [12, -0.5, -15],
+    [13.5, -0.5, -16],
+    [14, -0.5, -14],
+    [11, -0.5, -14.5],
+    [15, -0.5, -15.5],
+  ];
+  const anemoneColors = [0xcc2266, 0x22aa66, 0x1a7a55, 0xcc2266, 0x22aa66];
+  for (let i = 0; i < 5; i++) {
+    const pos = anemonePositions[i]!;
+    const color = anemoneColors[i]!;
+    const mat = new MeshBasicMaterial({ color });
+
+    // Stalk — static cylinder base
+    const stalk = new Mesh(new CylinderGeometry(0.15, 0.2, 0.3, 6), mat.clone());
+    stalk.position.set(pos[0], pos[1] + 0.15, pos[2]);
+    group.add(stalk);
+
+    // Dome — partial sphere top (pulsing tentacle crown)
+    const dome = new Mesh(
+      new SphereGeometry(0.3, 6, 4, 0, Math.PI * 2, 0, Math.PI * 0.6),
+      mat.clone(),
+    );
+    dome.position.set(pos[0], pos[1] + 0.3, pos[2]);
+    _anemoneMeshes.push(dome);
+    group.add(dome);
+  }
 
   // ── Sea foam particle pool — 15 pooled spheres (C243) ────────────────────
   _foamMeshes = [];
@@ -706,6 +741,14 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     // Seabird flock soaring
     seabirdFlock.update(t, dt);
 
+    // Tide pool anemone pulse (C273)
+    _anemoneTime += dt;
+    for (let i = 0; i < _anemoneMeshes.length; i++) {
+      const phase = i * 0.8;
+      const pulse = 0.9 + Math.sin(_anemoneTime * 1.3 + phase) * 0.12;
+      _anemoneMeshes[i]!.scale.set(pulse, 0.8 + Math.sin(_anemoneTime * 0.9 + phase) * 0.15, pulse);
+    }
+
     // Sea foam particle bursts at wave crests (C243)
     _foamTimer += dt;
     if (_foamTimer > 0.15) {
@@ -754,6 +797,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       mat.dispose();
     }
     _foamMeshes = [];
+    _anemoneMeshes = [];
     group.clear();
   };
 
