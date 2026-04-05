@@ -483,6 +483,13 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let scarecrowGroup382: Group | null = null;
   let scarecrowEyes382: Mesh[] = [];
 
+  // ── Korrigan spirit dancers — marais_korrigans (C394) ────────────────────
+  let korrGroup394: Group | null = null;
+  let korrFigures394: Group[] = [];
+  let korrTime394 = 0;
+  let korrDir394 = 1;
+  let korrNextDir394 = 8.0;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -766,6 +773,49 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     toadGroup374.position.set(3, 0, -18);
     group.add(toadGroup374);
+
+    // Korrigan spirit dancers ring dance (C394)
+    korrGroup394 = new Group();
+    const korrMat = new MeshStandardMaterial({ color: 0x050a05, roughness: 0.95 });
+
+    // Central post with carved face
+    const korrPost = new Mesh(new CylinderGeometry(0.06, 0.08, 1.2, 6), korrMat);
+    korrPost.position.y = 0.6;
+    korrGroup394.add(korrPost);
+
+    // Carved face indicator (emissive plane)
+    const korrFaceMat = new MeshStandardMaterial({ color: 0x051505, emissive: new Color(0x0d4420), emissiveIntensity: 0.15 });
+    const korrFace = new Mesh(new PlaneGeometry(0.1, 0.1), korrFaceMat);
+    korrFace.position.set(0, 1.0, 0.065);
+    korrGroup394.add(korrFace);
+
+    // Post glow
+    const korrPostLight = new PointLight(0x33ff66, 0.08, 3.0);
+    korrPostLight.position.y = 1.1;
+    korrGroup394.add(korrPostLight);
+
+    // 3 korrigan figures
+    for (let ki = 0; ki < 3; ki++) {
+      const fig = new Group();
+      // Body (short squat cylinder)
+      const kfBody = new Mesh(new CylinderGeometry(0.1, 0.14, 0.55, 6), korrMat);
+      kfBody.position.y = 0.28;
+      fig.add(kfBody);
+      // Head
+      const kfHead = new Mesh(new SphereGeometry(0.1, 6, 4), korrMat);
+      kfHead.position.y = 0.65;
+      fig.add(kfHead);
+      // Hat (small cone)
+      const kfHat = new Mesh(new ConeGeometry(0.07, 0.2, 5), korrMat);
+      kfHat.position.y = 0.85;
+      fig.add(kfHat);
+
+      korrGroup394.add(fig);
+      korrFigures394.push(fig);
+    }
+
+    korrGroup394.position.set(-3, 0, -15);
+    group.add(korrGroup394);
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -2518,6 +2568,30 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       toadGroup374.position.y = Math.sin(t374 * 0.3) * 0.02;
       toadGroup374.rotation.z = Math.sin(t374 * 0.2 + 1) * 0.01;
     }
+    // Korrigan spirit dancers ring dance animation (C394)
+    if (korrFigures394.length > 0 && korrGroup394) {
+      korrTime394 += dt * korrDir394 * 0.6;
+
+      korrNextDir394 -= dt;
+      if (korrNextDir394 <= 0) {
+        korrDir394 *= -1;
+        korrNextDir394 = 8.0 + Math.random() * 2.0;
+      }
+
+      const DANCE_RADIUS = 0.9;
+      korrFigures394.forEach((fig, i) => {
+        const angle = korrTime394 + (i / 3) * Math.PI * 2;
+        const fx = Math.cos(angle) * DANCE_RADIUS;
+        const fz = Math.sin(angle) * DANCE_RADIUS;
+        const fy = Math.abs(Math.sin(korrTime394 * 3 + i * 1.5)) * 0.12;
+        fig.position.set(fx, fy, fz);
+        fig.rotation.y = -angle + Math.PI / 2;
+
+        // Head bob
+        const head = fig.children[1];
+        if (head) head.position.y = 0.65 + Math.sin(korrTime394 * 4 + i) * 0.03;
+      });
+    }
     // Landes bruyere spore drift — slow rightward wind + gentle vertical bob
     if (landeSporeMesh !== null) {
       landeSporeTime += dt;
@@ -2881,6 +2955,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     // Toad on lily pad cleanup (C374)
     if (toadGroup374) { group.remove(toadGroup374); toadGroup374.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); toadGroup374 = null; }
     toadBody374 = null;
+    // Korrigan spirit dancers cleanup (C394)
+    if (korrGroup394) { group.remove(korrGroup394); korrGroup394.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); korrGroup394 = null; }
+    korrFigures394 = [];
     _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
