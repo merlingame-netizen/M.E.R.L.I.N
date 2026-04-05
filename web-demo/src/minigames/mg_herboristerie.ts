@@ -22,6 +22,42 @@ interface CellState {
   readonly correct: boolean | null; // null = not yet picked
 }
 
+/** Immutable particle for correct-pick burst. */
+interface BurstParticle {
+  readonly x: number;
+  readonly y: number;
+  readonly vx: number;
+  readonly vy: number;
+  readonly life: number; // 0..0.4
+}
+
+/** Immutable floating score toast (+1 / −N). */
+interface ScoreToast {
+  readonly x: number;
+  readonly y: number;
+  readonly life: number;
+  readonly text: string;
+  readonly color: string;
+}
+
+/** Inject CeltOS visual-enhancement CSS (idempotent). */
+function injectHerborisserieStyles(): void {
+  const STYLE_ID = 'mg-herb-celtos-styles';
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+    @keyframes herb-timer-pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.75; }
+    }
+    #mg-herb-timer-fill[data-urgent="1"] {
+      animation: herb-timer-pulse 0.6s ease-in-out infinite;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // Plant pool (curated for celtic herboristerie feel)
 // C92-P1: append U+FE0E (VS-15) to force text-presentation on glyphs that may
 // render as color emoji on Android canvas (☘ U+2618, ☠ U+2620, ⚙ U+2699).
@@ -119,8 +155,9 @@ export class MinigameHerboristerie extends MinigameBase {
   // Visual feedback
   private flashCells: Map<number, { color: string; alpha: number }> = new Map();
   private shakeAmount = 0;
-  // C92-P2: floating penalty text — shows "−8 pts" near wrong pick for 0.8s
-  private penaltyToasts: Array<{ x: number; y: number; life: number }> = [];
+  // C266: unified floating score toasts (+1 green / −N red) and burst particles
+  private scoreToasts: ScoreToast[] = [];
+  private burstParticles: BurstParticle[] = [];
   // C96: keyboard navigation — tracks selected cell (keyCol=-1 means inactive)
   private keyCol = -1;
   private keyRow = 0;
@@ -130,6 +167,7 @@ export class MinigameHerboristerie extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+    injectHerborisserieStyles();
 
     // C106: tieredValue replaces manual arithmetic — consistent with all other minigames
     this.totalTime    = this.tieredValue([15, 13, 11, 9] as const);
@@ -197,7 +235,8 @@ export class MinigameHerboristerie extends MinigameBase {
     this.elapsedTime = 0;
     this.flashCells = new Map();
     this.shakeAmount = 0;
-    this.penaltyToasts = [];
+    this.scoreToasts = [];
+    this.burstParticles = [];
     this.keyCol = -1;
     this.keyRow = 0;
 
@@ -206,7 +245,18 @@ export class MinigameHerboristerie extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerFillEl) {
+        this.timerFillEl.style.width = `${pct}%`;
+        // C266: timer color shift green→yellow→red as time runs out
+        const timerColor = pct > 50
+          ? '#5a9a5a'
+          : pct > 25
+            ? '#c8a020'
+            : '#c84040';
+        this.timerFillEl.style.background = timerColor;
+        // pulse animation when below 25 %
+        this.timerFillEl.setAttribute('data-urgent', pct <= 25 ? '1' : '0');
+      }
       if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
@@ -297,20 +347,47 @@ export class MinigameHerboristerie extends MinigameBase {
       i === idx ? { ...c, picked: true, correct: isCorrect } : c
     );
 
+    const cellCol = idx % this.gridCols;
+    const cellRow = Math.floor(idx / this.gridCols);
+    const cellCx = 20 + cellCol * this.cellSize + this.cellSize / 2;
+    const cellCy = 60 + cellRow * this.cellSize + this.cellSize / 2;
+
     if (isCorrect) {
       this.correctPicks++;
       this.flashCells.set(idx, { color: 'rgba(90,180,90,0.6)', alpha: 1 });
       // C97: audio feedback — correct pick
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+      // C266: burst particles — 6 radial green sparks
+      for (let p = 0; p < 6; p++) {
+        const angle = (p / 6) * Math.PI * 2;
+        const speed = 40 + Math.random() * 30;
+        this.burstParticles = [...this.burstParticles, {
+          x: cellCx, y: cellCy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 0.4,
+        }];
+      }
+      // C266: floating +1 toast above the cell
+      this.scoreToasts = [...this.scoreToasts, {
+        x: cellCx, y: cellCy,
+        life: 0.7,
+        text: '+1',
+        color: 'rgba(51,255,102,',
+      }];
     } else {
       this.wrongPicks++;
       this.flashCells.set(idx, { color: 'rgba(26,136,51,0.6)', alpha: 1 });
       // C97: audio feedback — wrong pick
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       this.shakeAmount = 6;
-      const col = idx % this.gridCols;
-      const row = Math.floor(idx / this.gridCols);
-      this.penaltyToasts.push({ x: 20 + col * this.cellSize + this.cellSize / 2, y: 60 + row * this.cellSize + this.cellSize / 2, life: 0.8 });
+      // C266: unified score toast (red penalty) replaces old penaltyToasts
+      this.scoreToasts = [...this.scoreToasts, {
+        x: cellCx, y: cellCy,
+        life: 0.8,
+        text: `\u2212${this.wrongPenalty} pts`,
+        color: 'rgba(220,60,60,',
+      }];
     }
 
     if (this.correctPicks >= this.totalTargets) {
@@ -483,19 +560,32 @@ export class MinigameHerboristerie extends MinigameBase {
       }
     }
 
-    // C92-P2: render floating penalty toasts (C119/HRB-01: immutable decay — was mutating t.life in-place)
-    // Decay + filter first (immutable map→filter), then render survivors
-    this.penaltyToasts = this.penaltyToasts
+    // C266: unified floating score toasts (immutable decay)
+    this.scoreToasts = this.scoreToasts
       .map((t) => ({ ...t, life: t.life - dt }))
       .filter((t) => t.life > 0);
-    for (const t of this.penaltyToasts) {
-      const alpha = Math.min(1, t.life / 0.4);
-      const rise = (0.8 - t.life) * 30; // float up 30px over lifetime
-      ctx.fillStyle = `rgba(26,136,51,${alpha})`;
+    for (const t of this.scoreToasts) {
+      const maxLife = t.text.startsWith('+') ? 0.7 : 0.8;
+      const alpha = Math.min(1, t.life / (maxLife * 0.5));
+      const rise = (maxLife - t.life) * 40;
+      ctx.fillStyle = `${t.color}${alpha})`;
       ctx.font = 'bold 14px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`\u2212${this.wrongPenalty} pts`, t.x, t.y - rise); // C136: tieredValue not hardcoded 8
+      ctx.fillText(t.text, t.x, t.y - rise);
+    }
+
+    // C266: burst particles — correct-pick radial sparks
+    this.burstParticles = this.burstParticles
+      .map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, life: p.life - dt }))
+      .filter((p) => p.life > 0);
+    for (const p of this.burstParticles) {
+      const alpha = p.life / 0.4;
+      const r = 3 * alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.5, r), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(51,255,102,${alpha * 0.9})`;
+      ctx.fill();
     }
 
     ctx.restore();
