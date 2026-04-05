@@ -916,8 +916,11 @@ function setupLighting(scene: Scene, lowEnd = false): void {
 
 // ── Main Export ──────────────────────────────────────────────────────────────
 export function initMerlinLair(container: HTMLElement): LairResult {
+  // Guard: fall back to window dimensions if container hasn't been laid out yet (clientWidth/Height = 0)
+  const initW = container.clientWidth  || window.innerWidth;
+  const initH = container.clientHeight || window.innerHeight;
   const renderer = new WebGLRenderer({ antialias: true, alpha: false });
-  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setSize(initW, initH);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x0d0a08, 1);
   container.appendChild(renderer.domElement);
@@ -1145,13 +1148,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const scene = new Scene();
   scene.fog = new Fog(0x0d0a08, 12, 28);
 
-  const camera = new PerspectiveCamera(62, container.clientWidth / container.clientHeight, 0.1, 60);
+  const camera = new PerspectiveCamera(62, initW / initH, 0.1, 60);
   camera.position.set(0, 0.5, 10); // C127: start pulled back — entry cinematic eases to z=7
   camera.lookAt(0, 0, -4);
 
   const onResize = (): void => {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
+    const w = container.clientWidth  || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
