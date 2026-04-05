@@ -391,6 +391,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _auroraBands: Mesh[] = [];
   let _auroraTime = 0;
   let _deadTreeGroup: Group | null = null;
+  const _altarFireMeshes: Mesh[] = [];
+  let _altarFireLight: PointLight | null = null;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -872,6 +874,26 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     altarRuneRing.position.set(0, -0.75, -15);
     altarRuneRing.rotation.x = -Math.PI / 2;
     group.add(altarRuneRing);
+
+    // Ritual altar fire — 12 rising green flame particles above altar center (C306)
+    const flameMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 1.0 });
+    for (let i = 0; i < 12; i++) {
+      const particle = new Mesh(new SphereGeometry(0.06, 4, 3), flameMat.clone());
+      particle.userData = {
+        baseX: (Math.random() - 0.5) * 0.4,
+        baseZ: -15 + (Math.random() - 0.5) * 0.4,
+        riseSpeed: 0.8 + Math.random() * 0.8,
+        phase: Math.random() * Math.PI * 2,
+        maxHeight: 0.8 + Math.random() * 0.6,
+      };
+      group.add(particle);
+      _altarFireMeshes.push(particle);
+    }
+    // Altar fire point light
+    const altarFireLight = new PointLight(0x33ff66, 0.6, 5);
+    altarFireLight.position.set(0, 0.8, -15);
+    group.add(altarFireLight);
+    _altarFireLight = altarFireLight;
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -1113,6 +1135,27 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       altarRuneRing.rotation.z += dt * 0.25;
       (altarRuneRing.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(altarRuneTime * 1.2) * 0.25;
     }
+    // Cercles de Pierres — rising altar fire particles
+    if (_altarFireMeshes.length > 0) {
+      const t = Date.now() * 0.001;
+      for (const particle of _altarFireMeshes) {
+        const { baseX, baseZ, riseSpeed, phase, maxHeight } = particle.userData as {
+          baseX: number; baseZ: number; riseSpeed: number; phase: number; maxHeight: number;
+        };
+        const progress = ((t * riseSpeed + phase) % (Math.PI * 2)) / (Math.PI * 2);
+        particle.position.x = baseX + Math.sin(t * 2.3 + phase) * 0.08;
+        particle.position.y = 0.5 + progress * maxHeight;
+        particle.position.z = baseZ;
+        const s = (1 - progress) * 0.8 + 0.2;
+        particle.scale.setScalar(s);
+        (particle.material as MeshBasicMaterial).opacity = 1 - progress;
+      }
+    }
+    // Cercles de Pierres — altar fire light pulse
+    if (_altarFireLight !== null) {
+      const t = Date.now() * 0.001;
+      _altarFireLight.intensity = 0.4 + Math.sin(t * 2.1) * 0.2;
+    }
     // Vallee Anciens — ancestor will-o-wisp drift
     if (valleeWispMesh !== null) {
       valleeWispTime += dt;
@@ -1188,6 +1231,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
+    _altarFireMeshes.length = 0;
+    _altarFireLight = null;
     _eagleGroup = null;
     _eagleWingL = null;
     _eagleWingR = null;
