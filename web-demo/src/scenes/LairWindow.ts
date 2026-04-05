@@ -314,6 +314,33 @@ export function createLairWindow(scene: Scene): WindowResult {
     }
   }
 
+  // ── Rain streaks on glass pane (night + dusk, z=-9.3, in front of glass) ──
+
+  const _rainStreaks: Mesh[] = [];
+
+  {
+    const streakMat = new MeshBasicMaterial({
+      color: 0x1a4433,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const streakGeo = new BoxGeometry(0.02, 0.3, 0.01);
+    for (let i = 0; i < 15; i++) {
+      const mesh = new Mesh(streakGeo, streakMat.clone());
+      const sx = -4 + Math.random() * 8;     // x ∈ [-4, 4] — across the window frame
+      const sy = 3 + Math.random() * 5;      // y ∈ [3, 8]
+      mesh.position.set(sx + 4.0, sy, -9.3); // offset by window center x=4.0
+      mesh.rotation.z = 0.05;               // slight wind-drift angle
+      mesh.userData = {
+        speed:  2.0 + Math.random() * 2.5,  // 2.0 – 4.5 units/s
+      };
+      mesh.visible = false;
+      group.add(mesh);
+      _rainStreaks.push(mesh);
+    }
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   let currentSeason: Season = 'spring';
@@ -425,6 +452,26 @@ export function createLairWindow(scene: Scene): WindowResult {
         if (fly.position.y <  2 || fly.position.y > 7) { fly.userData['vy'] = -vy; }
         // Twinkle: modulate opacity around the lerped base
         mat.opacity = mat.opacity * (0.6 + Math.sin(elapsed * 4 + phase) * 0.4);
+      }
+    });
+
+    // Rain streaks — fall down the glass pane at night + dusk
+    const rainVisible = currentTimeOfDay === 'night' || currentTimeOfDay === 'dusk';
+    _rainStreaks.forEach(streak => {
+      const mat = streak.material as MeshBasicMaterial;
+      if (rainVisible) {
+        if (!streak.visible) { streak.visible = true; }
+        mat.opacity = 0.4;
+        const speed = streak.userData['speed'] as number;
+        streak.position.y -= dt * speed;
+        // Reset when fallen below window sill area
+        if (streak.position.y < 2.5) {
+          streak.position.y = 8.5 + Math.random() * 1.0;
+          streak.position.x = 4.0 + (-4 + Math.random() * 8); // center x=4.0 ± 4
+        }
+      } else {
+        streak.visible = false;
+        mat.opacity = 0;
       }
     });
 
