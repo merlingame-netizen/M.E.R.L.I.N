@@ -831,6 +831,12 @@ function createCelticCross(): Group {
   return group;
 }
 
+// ── Dawn dew droplets — module-level time-of-day + droplet state ─────────────
+// Outer-var pattern: assigned inside builder, animated in update closure.
+let _forestTimeOfDay: 'day' | 'dawn' | 'dusk' | 'night' = 'day';
+const _dewDroplets: Mesh[] = [];
+const _dewLights: PointLight[] = [];
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1244,6 +1250,51 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     buildOwl(8, 6.0, -35, 0.85, -0.8, 1);
   }
 
+  // ── Dawn dew droplets — 25 small spheres on near ground, visible only at dawn ──
+  // CeltOS charter: color 0x0a2a1a (dark green-teal), sparkle 0x33ff66.
+  // Scattered x=[-15,15] z=[-5,-20] y=0.04. Module-level arrays reused across runs.
+  _dewDroplets.length = 0;
+  _dewLights.length = 0;
+  {
+    const DEW_COUNT = 25;
+    const dewGeo = new SphereGeometry(0.04, 4, 3);
+    for (let i = 0; i < DEW_COUNT; i++) {
+      const mat = new MeshBasicMaterial({
+        color: 0x0a2a1a,
+        transparent: true,
+        opacity: 0,
+      });
+      const drop = new Mesh(dewGeo, mat);
+      drop.position.set(
+        -15 + R() * 30,
+        0.04,
+        -5 - R() * 15,
+      );
+      drop.visible = false;
+      drop.userData = {
+        phase: R() * Math.PI * 2,
+        sparkleTimer: 2 + R() * 2,   // seconds until next sparkle
+      };
+      _dewDroplets.push(drop);
+      group.add(drop);
+    }
+
+    // 4 subtle PointLights at dew cluster positions — dawn shimmer
+    const lightPositions: [number, number, number][] = [
+      [-10, 0.2, -8],
+      [  5, 0.2, -12],
+      [ -4, 0.2, -17],
+      [ 11, 0.2, -6],
+    ];
+    for (let li = 0; li < lightPositions.length; li++) {
+      const [lx, ly, lz] = lightPositions[li]!;
+      const dewLight = new PointLight(0x33ff66, 0.0, 2);
+      dewLight.position.set(lx, ly, lz);
+      _dewLights.push(dewLight);
+      group.add(dewLight);
+    }
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1413,6 +1464,42 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       (fly.material as MeshBasicMaterial).opacity =
         0.4 + Math.sin(_fireflyTime * 3 + (fly.userData as { phase: number }).phase) * 0.4;
     }
+
+    // Dawn dew droplets — glistening on ground surfaces, only visible at dawn
+    const isDawn = _forestTimeOfDay === 'dawn';
+    for (let di = 0; di < _dewDroplets.length; di++) {
+      const drop = _dewDroplets[di]!;
+      const ud = drop.userData as { phase: number; sparkleTimer: number };
+      if (!isDawn) {
+        drop.visible = false;
+        (drop.material as MeshBasicMaterial).opacity = 0;
+        continue;
+      }
+      drop.visible = true;
+      // Countdown to next sparkle event
+      ud.sparkleTimer -= dt;
+      if (ud.sparkleTimer <= 0) {
+        // Brief sparkle — opacity spike for 80 ms then normal return
+        (drop.material as MeshBasicMaterial).opacity = 0.9;
+        // Reset timer: next sparkle in 2-4 seconds (staggered)
+        ud.sparkleTimer = 2 + R() * 2;
+      } else if (ud.sparkleTimer <= 0.08) {
+        // Still within sparkle window: hold high
+        (drop.material as MeshBasicMaterial).opacity = 0.9;
+      } else {
+        // Normal glistening
+        (drop.material as MeshBasicMaterial).opacity =
+          0.4 + Math.sin(sceneTime * 2.0 + ud.phase) * 0.15;
+      }
+    }
+
+    // Dew cluster lights — subtle dawn shimmer
+    for (let li = 0; li < _dewLights.length; li++) {
+      const dl = _dewLights[li]!;
+      dl.intensity = isDawn
+        ? 0.06 + Math.sin(sceneTime * 1.5 + li) * 0.03
+        : 0;
+    }
   };
 
   const dispose = (): void => {
@@ -1441,6 +1528,8 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     _treantEyeLights.length = 0;
     _owlHeads.length = 0;
     _owlEyeLights.length = 0;
+    _dewDroplets.length = 0;
+    _dewLights.length = 0;
   };
 
   return { group, update, dispose };
