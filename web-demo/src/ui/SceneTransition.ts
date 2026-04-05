@@ -81,6 +81,68 @@ function sfx(sound: string): void {
 
 let _overlay: TransitionOverlay | null = null;
 
+// ─── Cinematic letterbox bars (Cycle 397) ────────────────────────────────────
+
+let letterboxTop397: HTMLElement | null = null;
+let letterboxBottom397: HTMLElement | null = null;
+
+function ensureLetterboxStyle397(): void {
+  if (document.getElementById('letterbox-style-397')) return;
+  const style = document.createElement('style');
+  style.id = 'letterbox-style-397';
+  style.textContent = `
+.letterbox-bar-397 {
+  position: fixed;
+  left: 0; right: 0;
+  height: 60px;
+  background: rgba(1, 8, 2, 0.97);
+  z-index: 9997;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.letterbox-bar-397.top {
+  top: 0;
+  border-bottom: 1px solid rgba(51,255,102,0.4);
+  transform: translateY(-100%);
+}
+.letterbox-bar-397.bottom {
+  bottom: 0;
+  border-top: 1px solid rgba(51,255,102,0.4);
+  transform: translateY(100%);
+}
+.letterbox-bar-397.visible {
+  transform: translateY(0);
+}`;
+  document.head.appendChild(style);
+}
+
+function showLetterbox397(): void {
+  ensureLetterboxStyle397();
+  if (!letterboxTop397) {
+    letterboxTop397 = document.createElement('div');
+    letterboxTop397.className = 'letterbox-bar-397 top';
+    document.body.appendChild(letterboxTop397);
+  }
+  if (!letterboxBottom397) {
+    letterboxBottom397 = document.createElement('div');
+    letterboxBottom397.className = 'letterbox-bar-397 bottom';
+    document.body.appendChild(letterboxBottom397);
+  }
+  requestAnimationFrame(() => {
+    letterboxTop397?.classList.add('visible');
+    letterboxBottom397?.classList.add('visible');
+  });
+}
+
+function hideLetterbox397(): void {
+  letterboxTop397?.classList.remove('visible');
+  letterboxBottom397?.classList.remove('visible');
+  setTimeout(() => {
+    letterboxTop397?.remove(); letterboxTop397 = null;
+    letterboxBottom397?.remove(); letterboxBottom397 = null;
+  }, 400);
+}
+
 function getOverlay(): TransitionOverlay {
   if (_overlay) return _overlay;
 
@@ -146,6 +208,9 @@ export function transition(
  *                  uses biome-specific rune, color, and label.
  */
 export function cutToBlack(biomeKey?: string): void {
+  // C397: Cinematic letterbox bars slide in before any other effect.
+  showLetterbox397();
+
   // C377: Biome-tinted color flash fires before the main overlay takes over.
   if (biomeKey != null) {
     flashBiomeTint(biomeKey, document.body);
@@ -263,7 +328,11 @@ export function revealFromBlack(durationMs = 500): Promise<void> {
           el.style.opacity = '0';
           el.style.pointerEvents = 'none';
         });
-        setTimeout(resolve, durationMs);
+        setTimeout(() => {
+          // C397: Retract letterbox bars as the scene finishes revealing.
+          hideLetterbox397();
+          resolve();
+        }, durationMs);
       }, 60);
     }, 50);
   });
