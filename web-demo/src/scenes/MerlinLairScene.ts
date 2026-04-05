@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Line, LineBasicMaterial, LineLoop, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Line, LineBasicMaterial, LineLoop, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, RingGeometry, Scene, SphereGeometry, TorusGeometry, Vector2, Vector3, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1390,6 +1390,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _sandVel: { y: number; life: number; maxLife: number }[] = [];
   let _hourglassLight: PointLight | null = null;
 
+  // C436 — floor summoning rune circle (closure-scope vars)
+  let _runeCircleGroup: Group | null = null;
+  let _runeCircleT = 0;
+  let _runeActivateTimer = 0;
+  let _runeNextActivate = 10 + Math.random() * 20;
+  let _runeActivating = false;
+  let _runeActiveDur = 0;
+  const _runeRings: Mesh[] = [];
+  let _runeCircleLight: PointLight | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2408,6 +2418,72 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _hourglassGroup.add(topBulb, botBulb, neck, topRing, botRing, midRing, _hourglassLight);
     _hourglassGroup.position.set(-0.5, 1.8, -3.5);
     scene.add(_hourglassGroup);
+  }
+
+  // C436 — floor summoning rune circle
+  {
+    _runeCircleGroup = new Group();
+
+    const dimMat = (): MeshBasicMaterial => new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.35, depthWrite: false });
+    const glowMat = (): MeshBasicMaterial => new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.25, depthWrite: false });
+
+    // 3 concentric rings using RingGeometry
+    const ringRadii = [0.6, 1.0, 1.35];
+    ringRadii.forEach((r) => {
+      const ring = new Mesh(
+        new RingGeometry(r - 0.02, r + 0.02, 32),
+        dimMat()
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(0, 0, 0);
+      _runeRings.push(ring);
+      _runeCircleGroup!.add(ring);
+    });
+
+    // 6-pointed star — 6 thin diamond shapes radiating from center
+    for (let si = 0; si < 6; si++) {
+      const angle = (si / 6) * Math.PI * 2;
+      const spoke = new Mesh(
+        new PlaneGeometry(0.04, 1.2),
+        dimMat()
+      );
+      spoke.rotation.x = -Math.PI / 2;
+      spoke.rotation.z = angle;
+      spoke.position.set(0, 0, 0);
+      _runeRings.push(spoke);
+      _runeCircleGroup!.add(spoke);
+    }
+
+    // 12 rune tick marks at the outer ring
+    for (let ti = 0; ti < 12; ti++) {
+      const angle = (ti / 12) * Math.PI * 2;
+      const tick = new Mesh(
+        new PlaneGeometry(0.035, 0.1),
+        dimMat()
+      );
+      tick.rotation.x = -Math.PI / 2;
+      tick.rotation.z = angle;
+      tick.position.set(Math.cos(angle) * 1.35, 0, Math.sin(angle) * 1.35);
+      _runeRings.push(tick);
+      _runeCircleGroup!.add(tick);
+    }
+
+    // Central glow disc
+    const centerDisc = new Mesh(
+      new CircleGeometry(0.15, 12),
+      glowMat()
+    );
+    centerDisc.rotation.x = -Math.PI / 2;
+    _runeRings.push(centerDisc);
+    _runeCircleGroup.add(centerDisc);
+
+    // Light
+    _runeCircleLight = new PointLight(0x33ff66, 0.05, 4.0);
+    _runeCircleLight.position.set(0, 0.3, 0);
+    _runeCircleGroup.add(_runeCircleLight);
+
+    _runeCircleGroup.position.set(0, 0.01, -1);
+    scene.add(_runeCircleGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3672,6 +3748,44 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C436 — floor summoning rune circle update
+    if (_runeCircleGroup) {
+      _runeCircleT += dt;
+      _runeActivateTimer += dt;
+
+      // Trigger activation
+      if (_runeActivateTimer >= _runeNextActivate && !_runeActivating) {
+        _runeActivating = true;
+        _runeActiveDur = 0;
+        _runeActivateTimer = 0;
+        _runeNextActivate = 25 + Math.random() * 20;
+      }
+
+      let baseOpacity: number;
+      if (_runeActivating) {
+        _runeActiveDur += dt;
+        if (_runeActiveDur > 4.0) _runeActivating = false;
+        // Pulse: rise 0-0.5s, hold shimmer 0.5-3s, fade 3-4s
+        const at = _runeActiveDur;
+        if (at < 0.5) baseOpacity = (at / 0.5) * 0.8;
+        else if (at < 3.0) baseOpacity = 0.8 + Math.sin(at * 5) * 0.15;
+        else baseOpacity = (1.0 - (at - 3.0)) * 0.8;
+        if (_runeCircleLight) _runeCircleLight.intensity = baseOpacity * 0.4;
+        // Slow rotation when active
+        _runeCircleGroup.rotation.y = _runeCircleT * 0.3;
+      } else {
+        baseOpacity = 0.25 + Math.sin(_runeCircleT * 0.7) * 0.08;
+        if (_runeCircleLight) _runeCircleLight.intensity = 0.04 + Math.sin(_runeCircleT * 0.5) * 0.02;
+        // Very slow idle rotation
+        _runeCircleGroup.rotation.y = _runeCircleT * 0.04;
+      }
+
+      _runeRings.forEach((el, i) => {
+        const mat = el.material as MeshBasicMaterial;
+        mat.opacity = baseOpacity * (0.85 + Math.sin(_runeCircleT * 1.2 + i * 0.4) * 0.15);
+      });
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -4043,6 +4157,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _hourglassLight = null;
       scene.remove(_hourglassGroup);
       _hourglassGroup = null;
+    }
+    // C436 — floor summoning rune circle dispose
+    if (_runeCircleGroup) {
+      _runeCircleGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _runeRings.length = 0;
+      _runeCircleLight = null;
+      scene.remove(_runeCircleGroup);
+      _runeCircleGroup = null;
     }
   };
 
