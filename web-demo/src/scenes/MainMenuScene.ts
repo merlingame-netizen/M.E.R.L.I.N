@@ -921,6 +921,17 @@ const meteorTrailLen505: number[] = [];
 const meteorPhase505: number[] = [];
 let meteorStrayIdx505: number = -1;
 
+// C510 — Floating Ogham Stones in Orbital Ring
+let oghamRingGroup510: Group | null = null;
+let oghamT510: number = 0;
+const oghamStones510: Group[] = [];
+const oghamInscMats510: MeshStandardMaterial[] = [];
+let oghamLight510: PointLight | null = null;
+let oghamResoTimer510: number = 30 + Math.random() * 15;
+let oghamResoActive510: boolean = false;
+let oghamResoT510: number = 0;
+const oghamResoIds510: number[] = [];
+
 let auroraT495 = 0;
 let auroraRibbons495: Mesh[] = [];
 let auroraRibbonMats495: MeshBasicMaterial[] = [];
@@ -2230,6 +2241,51 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       meteorGeos505[i].attributes['position'].needsUpdate = true;
     }
 
+    // C510: Ogham Ring update
+    if (oghamRingGroup510) {
+      oghamT510 += dt;
+      const ORBIT_SPEED = 0.12;
+
+      // Resonance trigger
+      oghamResoTimer510 -= dt;
+      if (!oghamResoActive510 && oghamResoTimer510 <= 0) {
+        oghamResoActive510 = true;
+        oghamResoT510 = 0;
+        oghamResoTimer510 = 30 + Math.random() * 15;
+        oghamResoIds510.length = 0;
+        const start = Math.floor(Math.random() * 18);
+        oghamResoIds510.push(start, (start + 1) % 18, (start + 2) % 18);
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'pulse' } }));
+      }
+      let resoActive = false;
+      let currentOrbitMult = 1.0;
+      if (oghamResoActive510) {
+        oghamResoT510 += dt;
+        if (oghamResoT510 >= 3.0) {
+          oghamResoActive510 = false;
+          oghamResoIds510.length = 0;
+        } else {
+          resoActive = true;
+          currentOrbitMult = 2.0;
+        }
+      }
+
+      oghamRingGroup510.rotation.z += ORBIT_SPEED * currentOrbitMult * dt;
+
+      for (let i = 0; i < 18; i++) {
+        const stone = oghamStones510[i];
+        if (!stone) continue;
+        stone.rotation.x = 0.1 * Math.sin(oghamT510 * 1.5 + i * 0.7);
+
+        const mat = oghamInscMats510[i];
+        if (!mat) continue;
+        const isReso = resoActive && oghamResoIds510.includes(i);
+        mat.emissiveIntensity = isReso
+          ? 2.5
+          : 0.5 + 0.3 * Math.sin(oghamT510 * 1.2 + i * 0.35);
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -3412,6 +3468,60 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     scene.add(grp505);
   }
 
+  // C510: Floating Ogham Stones — init
+  {
+    const ring510 = new Group();
+    ring510.position.set(0, 10, -28);
+    ring510.rotation.x = 0.4;
+
+    const stoneGeo = new BoxGeometry(0.12, 0.32, 0.06);
+    const inscGeo = new PlaneGeometry(0.08, 0.26);
+    const RING_RADIUS = 8;
+
+    for (let i = 0; i < 18; i++) {
+      const baseAngle = i * (Math.PI * 2 / 18);
+      const stonePivot = new Group();
+
+      const stoneMat = new MeshStandardMaterial({
+        color: 0x0a1a0a,
+        roughness: 0.85,
+        metalness: 0.0,
+      });
+      const stoneBox = new Mesh(stoneGeo, stoneMat);
+      stonePivot.add(stoneBox);
+
+      const inscMat = new MeshStandardMaterial({
+        color: 0x33ff66,
+        emissive: new Color(0x33ff66),
+        emissiveIntensity: 0.6,
+        transparent: true,
+        opacity: 0.85,
+        roughness: 0.5,
+      });
+      const inscPlane = new Mesh(inscGeo, inscMat);
+      inscPlane.position.z = 0.035;
+      stonePivot.add(inscPlane);
+      oghamInscMats510.push(inscMat);
+
+      stonePivot.position.set(
+        RING_RADIUS * Math.cos(baseAngle),
+        RING_RADIUS * Math.sin(baseAngle),
+        0
+      );
+      stonePivot.rotation.z = baseAngle + Math.PI / 2;
+
+      ring510.add(stonePivot);
+      oghamStones510.push(stonePivot);
+    }
+
+    const light510 = new PointLight(0x33ff66, 0.3, 15);
+    ring510.add(light510);
+    oghamLight510 = light510;
+
+    oghamRingGroup510 = ring510;
+    scene.add(ring510);
+  }
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -3765,6 +3875,28 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     meteorSpeed505.length = 0;
     meteorTrailLen505.length = 0;
     meteorPhase505.length = 0;
+
+    // C510: dispose Ogham ring
+    oghamInscMats510.forEach((mat) => { mat.dispose(); });
+    oghamInscMats510.length = 0;
+    if (oghamRingGroup510) {
+      oghamRingGroup510.traverse((obj) => {
+        if (obj instanceof Mesh) {
+          obj.geometry.dispose();
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m: Material) => m.dispose());
+          } else {
+            (obj.material as Material).dispose();
+          }
+        }
+        if (obj instanceof PointLight) obj.dispose();
+      });
+      scene.remove(oghamRingGroup510);
+      oghamRingGroup510 = null;
+    }
+    oghamStones510.length = 0;
+    oghamLight510 = null;
+    oghamResoIds510.length = 0;
 
     // C495: dispose aurora ribbons
     if (auroraGroup495) {
