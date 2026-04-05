@@ -45,12 +45,12 @@
     }
     .crt-glitch-layer { animation: crt-glitch 7s steps(1) infinite; }
 
-    /* ── Boot Screen (T060) ── */
+    /* ── Boot Screen (T060 — legacy, hidden; CeltOS overlay handles first visual) ── */
     #boot-screen {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;

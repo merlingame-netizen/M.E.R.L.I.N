@@ -560,7 +560,7 @@ function addBootCompletePhase(terminalEl: HTMLElement, onDone: () => void): void
 }
 
 // =============================================================================
-// Phase 2 — CELTOS pixel logo (blocks fall from top)
+// Phase 2 — CELTOS pixel logo drawn column by column (terminal scan, left→right)
 // =============================================================================
 
 async function runPhase2(container: HTMLDivElement): Promise<HTMLDivElement> {
@@ -572,57 +572,64 @@ async function runPhase2(container: HTMLDivElement): Promise<HTMLDivElement> {
   const logoWrap = document.createElement('div');
   logoWrap.style.cssText = [
     'position:absolute;left:50%;top:50%;',
-    `transform:translate(-50%,-50%);`,
+    'transform:translate(-50%,-50%);',
     `width:${logoW}px;height:${logoH}px;`,
-    'opacity:0;transition:opacity 0.2s;',
   ].join('');
   container.appendChild(logoWrap);
 
-  // Build block elements
-  const blocks: HTMLDivElement[] = [];
+  // Build all block elements — hidden initially
+  // Grouped by column for left-to-right scan reveal
+  const colGroups: HTMLDivElement[][] = Array.from({ length: cols }, () => []);
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (!LOGO_GRID[r]?.[c]) continue;
       const block = document.createElement('div');
-      const finalTop = r * BLOCK_STEP;
       block.style.cssText = [
         'position:absolute;',
         `left:${c * BLOCK_STEP}px;`,
-        `top:${finalTop}px;`,
+        `top:${r * BLOCK_STEP}px;`,
         `width:${BLOCK_SIZE}px;height:${BLOCK_SIZE}px;`,
-        `background:${(r + c) % 2 === 0 ? CRT.PHOSPHOR : CRT.BRIGHT};`,
-        // Start above viewport — will fall into place
-        `transform:translateY(${-350 - Math.random() * 200}px);`,
-        'transition:transform 0.35s cubic-bezier(0.33,1,0.68,1);',
+        `background:${CRT.PHOSPHOR};`,
+        'opacity:0;',
       ].join('');
-      block.dataset['col'] = String(c);
       logoWrap.appendChild(block);
-      blocks.push(block);
+      colGroups[c]?.push(block);
     }
   }
 
-  // Sort by column for staggered fall
-  blocks.sort((a, b) => Number(a.dataset['col']) - Number(b.dataset['col']));
+  // Scan cursor — a vertical green line that sweeps left to right
+  const cursor = document.createElement('div');
+  cursor.style.cssText = [
+    'position:absolute;top:0;',
+    `width:2px;height:${logoH}px;`,
+    `background:${CRT.BRIGHT};`,
+    'opacity:0.85;box-shadow:0 0 6px rgba(51,255,102,0.7);',
+  ].join('');
+  logoWrap.appendChild(cursor);
 
-  // Show wrapper
-  await wait(50);
-  logoWrap.style.opacity = '1';
+  // Scan: reveal each column with cursor advancing 22ms/col
+  const COL_DELAY = 22;
+  for (let c = 0; c < cols; c++) {
+    await wait(COL_DELAY);
+    // Move cursor to current column
+    cursor.style.left = `${c * BLOCK_STEP - 1}px`;
+    // Reveal all pixels in this column instantly
+    for (const block of colGroups[c] ?? []) {
+      block.style.opacity = '1';
+    }
+  }
 
-  // Trigger falls with staggered delays
-  blocks.forEach((block, i) => {
-    setTimeout(() => {
-      block.style.transform = 'translateY(0)';
-    }, i * 15 + Math.random() * 20);
-  });
+  // Cursor disappears after scan
+  await wait(80);
+  cursor.remove();
 
-  // Wait for all falls to complete (~blocks * 15ms + 350ms anim)
-  await wait(blocks.length * 15 + 400);
-
-  // Flash amber, then back to phosphor
-  blocks.forEach(b => { b.style.background = CRT.AMBER; b.style.transition = 'background 0.15s'; });
-  await wait(150);
-  blocks.forEach(b => { b.style.background = CRT.PHOSPHOR; });
-  await wait(500);
+  // Brief amber flash — whole logo turns amber then snaps back
+  const allBlocks = logoWrap.querySelectorAll<HTMLDivElement>('div');
+  allBlocks.forEach(b => { b.style.background = CRT.AMBER; });
+  await wait(120);
+  allBlocks.forEach(b => { b.style.background = CRT.PHOSPHOR; });
+  await wait(400);
 
   return logoWrap;
 }
