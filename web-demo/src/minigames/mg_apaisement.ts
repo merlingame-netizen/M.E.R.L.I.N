@@ -47,6 +47,8 @@ export class MinigameApaisement extends MinigameBase {
   private totalAccuracy = 0;
   private ringPulse = 0;
   private showGuide = true;
+  // C278: ripple rings — two expanding rings emitted on each tap
+  private ripples: Array<{ radius: number; alpha: number; color: string }> = [];
   // C120/APA-01: cached DOM refs — was getElementById every 100ms setInterval + every tap
   private timerFillEl: HTMLElement | null = null;
   private timerBarEl: HTMLElement | null = null;
@@ -128,6 +130,7 @@ export class MinigameApaisement extends MinigameBase {
     this.totalAccuracy = 0;
     this.ringPulse = 0;
     this.showGuide = true;
+    this.ripples = [];
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -198,20 +201,30 @@ export class MinigameApaisement extends MinigameBase {
 
     // Visual feedback
     this.ringPulse = 1.0;
+    let rippleColor: string;
     if (accuracy >= 0.9) {
       this.lastTapFeedback = 'Parfait !';
-      this.feedbackColor = '#60c060';
+      this.feedbackColor = '#33ff66';
+      rippleColor = 'rgba(51,255,102,';
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else if (accuracy >= 0.5) {
       this.lastTapFeedback = 'Bien';
       this.feedbackColor = '#a0b060';
+      rippleColor = 'rgba(160,176,96,';
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.lastTapFeedback = 'Decale...';
-      this.feedbackColor = '#b06040';
+      this.feedbackColor = '#dc2828';
+      rippleColor = 'rgba(220,40,40,';
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
     this.feedbackAlpha = 1.0;
+    // C278: spawn two staggered ripple rings at current circle radius
+    this.ripples = [
+      ...this.ripples,
+      { radius: this.currentRadius, alpha: 0.7, color: rippleColor },
+      { radius: this.currentRadius - 8, alpha: 0.4, color: rippleColor },
+    ];
 
     // Update score display
     if (this.scoreEl && this.taps.length > 0) {
@@ -267,6 +280,10 @@ export class MinigameApaisement extends MinigameBase {
     // Feedback decay
     if (this.feedbackAlpha > 0) this.feedbackAlpha -= dt * 1.5;
     if (this.ringPulse > 0) this.ringPulse -= dt * 3;
+    // C278: advance ripple rings — expand outward and fade
+    this.ripples = this.ripples
+      .map(r => ({ ...r, radius: r.radius + dt * 55, alpha: r.alpha - dt * 1.8 }))
+      .filter(r => r.alpha > 0);
 
     // Clear
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);
@@ -299,6 +316,58 @@ export class MinigameApaisement extends MinigameBase {
     ctx.setLineDash([4, 8]);
     ctx.stroke();
     ctx.setLineDash([]);
+
+    // C278: Breath arc — sweeping arc around the outer ring showing current breath phase position
+    {
+      const isExpanding = this.breathPhase < 0.5;
+      const arcRadius = this.maxRadius + 12;
+      const arcStart = -Math.PI / 2;
+      const arcEnd = arcStart + this.breathPhase * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(this.centerX, this.centerY, arcRadius, arcStart, arcEnd);
+      ctx.strokeStyle = isExpanding ? 'rgba(51,255,102,0.55)' : 'rgba(51,200,180,0.45)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+      // Dot at arc tip
+      const tipX = this.centerX + Math.cos(arcEnd) * arcRadius;
+      const tipY = this.centerY + Math.sin(arcEnd) * arcRadius;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = isExpanding ? '#33ff66' : '#33ccb4';
+      ctx.fill();
+    }
+
+    // C278: Peak proximity glow — corona around circle brightens as it nears max/min
+    {
+      const distToExpand = Math.abs(this.breathPhase - 0.5);
+      const distToContract = Math.min(this.breathPhase, 1.0 - this.breathPhase);
+      const nearPeak = Math.max(0, 1 - Math.min(distToExpand, distToContract) / (this.targetWindow * 2));
+      if (nearPeak > 0) {
+        const glowRadius = this.currentRadius + 18;
+        const glowGrad = ctx.createRadialGradient(
+          this.centerX, this.centerY, this.currentRadius,
+          this.centerX, this.centerY, glowRadius
+        );
+        glowGrad.addColorStop(0, `rgba(51,255,102,${nearPeak * 0.35})`);
+        glowGrad.addColorStop(1, 'rgba(51,255,102,0)');
+        ctx.beginPath();
+        ctx.arc(this.centerX, this.centerY, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.fill();
+      }
+    }
+
+    // C278: Ripple rings — expanding fading rings emitted on each tap
+    for (const rip of this.ripples) {
+      ctx.beginPath();
+      ctx.arc(this.centerX, this.centerY, rip.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `${rip.color}${rip.alpha.toFixed(2)})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
     // Guide text (first few seconds)
     if (this.showGuide && this.elapsedTime < 5) {
