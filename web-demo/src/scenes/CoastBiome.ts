@@ -592,6 +592,10 @@ const _seagullGroups: Group[] = [];
 const _seagullWingsL: Mesh[] = [];
 const _seagullWingsR: Mesh[] = [];
 
+// ── Kelp forest — tall swaying strands in shallow water (C324) ───────────
+const _kelpStrands: Mesh[] = [];
+const _kelpBulbs: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -847,6 +851,46 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Kelp forest — 12 tall swaying strands near shoreline (C324) ─────────
+  {
+    const kelpMat = new MeshBasicMaterial({ color: 0x0a1f12 });
+    const bulbMat = new MeshBasicMaterial({ color: 0x0a1f12, transparent: true, opacity: 0.7 });
+    const R = (): number => Math.random();
+
+    // Scatter indices for bulbs — attach bulbs to strands 0, 3, 7, 10
+    const bulbStrandIndices = new Set([0, 3, 7, 10]);
+
+    for (let i = 0; i < 12; i++) {
+      const height = 3.5 + R() * 2.0;
+      const strand = new Mesh(
+        new CylinderGeometry(0.04, 0.08, height, 5),
+        kelpMat,
+      );
+      const sx = -12 + R() * 24;           // x ∈ [-12, 12]
+      const sz = -6 + -(R() * 8);          // z ∈ [-6, -14]
+      const sy = height / 2 - 0.5;         // base sits on seabed
+      strand.position.set(sx, sy, sz);
+      strand.userData = {
+        swayPhase: R() * Math.PI * 2,
+        swaySpeed: 0.5 + R() * 0.7,        // 0.5–1.2
+        height,
+        baseX: sx,
+        baseZ: sz,
+      };
+      _kelpStrands.push(strand);
+      group.add(strand);
+
+      // Bulb at strand top for selected strands
+      if (bulbStrandIndices.has(i)) {
+        const bulb = new Mesh(new SphereGeometry(0.18, 5, 4), bulbMat);
+        bulb.position.set(sx, sy + height / 2, sz);   // starts at strand top
+        bulb.userData = { strandIndex: i };
+        _kelpBulbs.push(bulb);
+        group.add(bulb);
+      }
+    }
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1000,6 +1044,34 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       bird.rotation.y = Math.atan2(vx, vz);
     }
 
+    // Kelp forest sway — seaweed in current (C324)
+    for (let i = 0; i < _kelpStrands.length; i++) {
+      const strand = _kelpStrands[i]!;
+      const sp = strand.userData['swaySpeed'] as number;
+      const ph = strand.userData['swayPhase'] as number;
+      strand.rotation.z = Math.sin(t * sp + ph) * 0.12;
+      strand.rotation.x = Math.cos(t * sp * 0.7 + ph) * 0.06;
+    }
+    for (let i = 0; i < _kelpBulbs.length; i++) {
+      const bulb = _kelpBulbs[i]!;
+      const si   = bulb.userData['strandIndex'] as number;
+      const strand = _kelpStrands[si];
+      if (strand !== undefined) {
+        const sp = strand.userData['swaySpeed'] as number;
+        const ph = strand.userData['swayPhase'] as number;
+        const h  = strand.userData['height'] as number;
+        const sy = strand.userData['baseX'] !== undefined ? (h / 2 - 0.5) : 0;
+        // Bulb follows strand tip position, accounting for sway rotation
+        const swayZ = Math.sin(t * sp + ph) * 0.12 * (h / 2);
+        const swayX = Math.cos(t * sp * 0.7 + ph) * 0.06 * (h / 2);
+        bulb.position.set(
+          (strand.userData['baseX'] as number) + swayX,
+          sy + h / 2,
+          (strand.userData['baseZ'] as number) + swayZ,
+        );
+      }
+    }
+
     // Tide pool crab scuttle + water shimmer (C308)
     if (_crabGroup !== null) {
       _crabGroup.position.x = 5.8 + Math.sin(t * 0.35) * 0.3;
@@ -1044,6 +1116,8 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _seagullGroups.length = 0;
     _seagullWingsL.length = 0;
     _seagullWingsR.length = 0;
+    _kelpStrands.length = 0;
+    _kelpBulbs.length = 0;
     group.clear();
   };
 
