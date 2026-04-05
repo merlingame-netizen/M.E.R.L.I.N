@@ -787,6 +787,13 @@ const mermaidArmMeshes504: { mesh: Mesh; side: 1 | -1 }[] = [];
 // ── Ancient sea altar emerging at low tide (C509) ────────────────────────
 let altarSeaGroup509: Group | null = null;
 
+// ── Celtic fog-warning beacon — eternal teal flame on sea rock (C515) ────
+let fogBeaconGroup515: Group | null = null;
+let t515: number = 0;
+const fogBeaconFlameMats515: MeshStandardMaterial[] = [];
+const fogBeaconWispMats515: MeshStandardMaterial[] = [];
+let fogBeaconLight515: PointLight | null = null;
+
 // ── Ghost ship wraith drifting through coastal fog (C512) ────────────────
 let ghostShipGroup512: Group | null = null;
 let t512: number = 0;
@@ -2850,6 +2857,118 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(deepJellyGroup514);
   }
 
+  // ── Celtic fog-warning beacon — eternal teal flame on sea rock (C515) ────
+  {
+    fogBeaconGroup515 = new Group();
+    const R = (): number => Math.random();
+
+    // Sea rock base — irregular low-poly boulder
+    const rockMat = new MeshStandardMaterial({
+      color: 0x2a3a3e, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const rockGeo = new DodecahedronGeometry(1.8, 0);
+    const rockPos = rockGeo.attributes['position'] as BufferAttribute;
+    for (let i = 0; i < rockPos.count; i++) {
+      rockPos.setX(i, rockPos.getX(i) * (0.85 + R() * 0.3));
+      rockPos.setY(i, rockPos.getY(i) * (0.55 + R() * 0.2));
+      rockPos.setZ(i, rockPos.getZ(i) * (0.85 + R() * 0.3));
+    }
+    rockGeo.computeVertexNormals();
+    const rock = new Mesh(rockGeo, rockMat);
+    rock.position.set(0, -0.4, 0);
+    fogBeaconGroup515.add(rock);
+
+    // Stone plinth — 3-tier cylinder stack
+    const plinthMat = new MeshStandardMaterial({
+      color: 0x4a5a5e, roughness: 0.92, metalness: 0.0, flatShading: true,
+    });
+    const tier1 = new Mesh(new CylinderGeometry(0.70, 0.85, 0.55, 6, 1), plinthMat);
+    tier1.position.set(0, 1.1, 0);
+    fogBeaconGroup515.add(tier1);
+    const tier2 = new Mesh(new CylinderGeometry(0.50, 0.68, 0.50, 6, 1), plinthMat);
+    tier2.position.set(0, 1.77, 0);
+    fogBeaconGroup515.add(tier2);
+    const tier3 = new Mesh(new CylinderGeometry(0.30, 0.48, 0.38, 6, 1), plinthMat);
+    tier3.position.set(0, 2.21, 0);
+    fogBeaconGroup515.add(tier3);
+
+    // Ogham etch lines on tier1 — thin emissive rings
+    const etchMat = new MeshStandardMaterial({
+      color: 0x14e8b8, emissive: 0x14e8b8, emissiveIntensity: 0.6,
+      roughness: 0.5, metalness: 0.0, flatShading: true,
+    });
+    for (let ei = 0; ei < 3; ei++) {
+      const etch = new Mesh(new TorusGeometry(0.72, 0.025, 4, 8), etchMat);
+      etch.rotation.x = Math.PI / 2;
+      etch.position.set(0, 0.85 + ei * 0.18, 0);
+      fogBeaconGroup515.add(etch);
+    }
+
+    // Eternal teal-orange flame — 3 overlapping cone layers with animation
+    const flameColors = [0x14e8b8, 0x22d4ff, 0xffaa22];
+    const flameSizes  = [0.22, 0.15, 0.10];
+    const flameHeights = [0.55, 0.40, 0.30];
+    for (let fi = 0; fi < 3; fi++) {
+      const fMat = new MeshStandardMaterial({
+        color: flameColors[fi]!, emissive: flameColors[fi]!, emissiveIntensity: 1.0,
+        roughness: 0.4, metalness: 0.0,
+        transparent: true, opacity: 0.80 - fi * 0.12,
+        flatShading: true,
+      });
+      fogBeaconFlameMats515.push(fMat);
+      const fGeo = new ConeGeometry(flameSizes[fi]!, flameHeights[fi]!, 5, 1);
+      const fPos = fGeo.attributes['position'] as BufferAttribute;
+      for (let vi = 0; vi < fPos.count; vi++) {
+        if (fPos.getY(vi) > 0) {
+          fPos.setX(vi, fPos.getX(vi) + (R() - 0.5) * 0.04);
+          fPos.setZ(vi, fPos.getZ(vi) + (R() - 0.5) * 0.04);
+        }
+      }
+      fGeo.computeVertexNormals();
+      const flame = new Mesh(fGeo, fMat);
+      flame.position.set((fi - 1) * 0.04, 2.60 + flameHeights[fi]! * 0.5, (fi % 2 === 0 ? 1 : -1) * 0.03);
+      fogBeaconGroup515.add(flame);
+    }
+
+    // Fog wisps — 6 thin rising planes that spiral up
+    const wispBaseColor = 0x8adde8;
+    for (let wi = 0; wi < 6; wi++) {
+      const wMat = new MeshStandardMaterial({
+        color: wispBaseColor, emissive: wispBaseColor, emissiveIntensity: 0.3,
+        roughness: 0.8, metalness: 0.0,
+        transparent: true, opacity: 0.25 + R() * 0.12,
+        flatShading: true,
+      });
+      fogBeaconWispMats515.push(wMat);
+      const wGeo = new PlaneGeometry(0.18 + R() * 0.14, 0.55 + R() * 0.3, 2, 3);
+      const wPos = wGeo.attributes['position'] as BufferAttribute;
+      for (let vi = 0; vi < wPos.count; vi++) {
+        wPos.setX(vi, wPos.getX(vi) + (R() - 0.5) * 0.08);
+        wPos.setZ(vi, wPos.getZ(vi) + (R() - 0.5) * 0.08);
+      }
+      wGeo.computeVertexNormals();
+      const wisp = new Mesh(wGeo, wMat);
+      const angle = (wi / 6) * Math.PI * 2;
+      wisp.position.set(
+        Math.cos(angle) * (0.12 + R() * 0.08),
+        2.75 + R() * 0.3,
+        Math.sin(angle) * (0.12 + R() * 0.08),
+      );
+      wisp.rotation.y = angle;
+      wisp.name = `wisp_${wi}`;
+      fogBeaconGroup515.add(wisp);
+    }
+
+    // Warm amber-teal PointLight above flame
+    fogBeaconLight515 = new PointLight(0x22d4c8, 1.2, 12);
+    fogBeaconLight515.position.set(0, 3.2, 0);
+    fogBeaconGroup515.add(fogBeaconLight515);
+
+    // Position: mid-distance on a sea rock just off the cliff
+    fogBeaconGroup515.position.set(-18, 0.15, -22);
+    group.add(fogBeaconGroup515);
+  }
+
   // ── Ghost ship wraith drifting through coastal fog (C512) ─────────────────
   {
     ghostShipGroup512 = new Group();
@@ -4122,6 +4241,61 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // ── Celtic fog-warning beacon (C515) ────────────────────────────────────
+    if (fogBeaconGroup515) {
+      t515 += dt;
+      // Animate flame layers: flicker in scale + opacity
+      fogBeaconFlameMats515.forEach((mat, fi) => {
+        const flicker = 0.82 + 0.18 * Math.sin(t515 * (6.0 + fi * 2.3) + fi * 1.1);
+        mat.opacity = Math.max(0.05, (0.80 - fi * 0.12) * flicker);
+        // Shift emissive hue between teal and warm amber
+        const shift = 0.5 + 0.5 * Math.sin(t515 * 1.8 + fi * 0.9);
+        const r = fi === 2 ? 1.0 : shift * 0.08;
+        const g = fi === 2 ? 0.67 : 0.85 + shift * 0.15;
+        const b = fi === 2 ? 0.13 : 0.72 + shift * 0.28;
+        mat.emissive.setRGB(r * 0.6, g * 0.6, b * 0.6);
+      });
+      // Animate flame meshes: subtle scale sway
+      let flameIdx = 0;
+      fogBeaconGroup515.traverse((child) => {
+        if (child instanceof Mesh) {
+          const geo = child.geometry;
+          if (geo instanceof ConeGeometry || (geo.type === 'ConeGeometry')) {
+            child.scale.x = 0.92 + 0.08 * Math.sin(t515 * 7.1 + flameIdx);
+            child.scale.z = 0.92 + 0.08 * Math.cos(t515 * 5.9 + flameIdx);
+            flameIdx++;
+          }
+        }
+      });
+      // Animate wisps: spiral upward, fade near top, respawn at base
+      fogBeaconWispMats515.forEach((mat, wi) => {
+        const wispChild = fogBeaconGroup515!.getObjectByName(`wisp_${wi}`);
+        if (wispChild) {
+          const speed = 0.18 + wi * 0.02;
+          wispChild.position.y += speed * dt;
+          // Spiral rotation
+          const angle = (wi / 6) * Math.PI * 2 + t515 * (0.3 + wi * 0.05);
+          const r = 0.12 + 0.05 * Math.sin(t515 * 0.5 + wi);
+          wispChild.position.x = Math.cos(angle) * r;
+          wispChild.position.z = Math.sin(angle) * r;
+          wispChild.rotation.y = angle + Math.PI / 2;
+          // Fade out as wisp rises, respawn at flame base
+          const relY = wispChild.position.y - 2.75;
+          if (relY > 1.6) {
+            wispChild.position.y = 2.75 + Math.random() * 0.1;
+            mat.opacity = 0.25 + Math.random() * 0.12;
+          } else {
+            mat.opacity = (0.30 + Math.random() * 0.05) * Math.max(0, 1 - relY / 1.6);
+          }
+        }
+      });
+      // Pulse the point light
+      if (fogBeaconLight515) {
+        const pulse = 0.85 + 0.15 * Math.sin(t515 * 2.4);
+        fogBeaconLight515.intensity = 1.2 * pulse;
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -4432,6 +4606,21 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     ghostSailMats512.length = 0;
     ghostShipLight512 = null;
     t512 = 0;
+    if (fogBeaconGroup515) {
+      fogBeaconGroup515.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      fogBeaconGroup515 = null;
+    }
+    fogBeaconFlameMats515.length = 0;
+    fogBeaconWispMats515.length = 0;
+    fogBeaconLight515 = null;
+    t515 = 0;
     group.clear();
   };
 
