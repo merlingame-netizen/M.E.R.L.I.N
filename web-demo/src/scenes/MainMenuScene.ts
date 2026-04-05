@@ -5,7 +5,7 @@
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -781,6 +781,8 @@ interface RuneRainResult {
 
 let _runeRainRafId = 0;
 let _runeRainContainer406: HTMLDivElement | null = null;
+let _mountainGroup409: Group | null = null;
+let _mountainT409 = 0;
 
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
@@ -1455,6 +1457,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C409: glow pulse on mountain snow-cap
+    if (_mountainGroup409) {
+      _mountainT409 += dt;
+      const glowM = _mountainGroup409.children[3] as Mesh;
+      if (glowM) {
+        (glowM.material as MeshBasicMaterial).opacity = 0.06 + Math.sin(_mountainT409 * 0.4) * 0.03;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -1539,6 +1550,50 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   });
   document.body.appendChild(runeOverlay406);
   _runeRainContainer406 = runeOverlay406;
+
+  // C409: Layered mountain range silhouettes — depth parallax background
+  {
+    const makeMountainShape = (peaks: [number, number][], baseY: number, width: number): ShapeGeometry => {
+      const shape = new Shape();
+      shape.moveTo(-width / 2, baseY);
+      peaks.forEach(([x, y]) => shape.lineTo(x, y));
+      shape.lineTo(width / 2, baseY);
+      shape.closePath();
+      return new ShapeGeometry(shape);
+    };
+    const farPeaks: [number, number][] = [
+      [-18,0],[-14,4],[-10,2],[-6,7],[-2,3],[2,8],[6,4],[10,6],[14,2],[18,0],
+    ];
+    const farMesh = new Mesh(
+      makeMountainShape(farPeaks, -3, 36),
+      new MeshBasicMaterial({ color: 0x050f08, transparent: true, opacity: 0.9, depthWrite: false }),
+    );
+    farMesh.position.set(0, -1, -50);
+    const midPeaks: [number, number][] = [
+      [-15,0],[-11,3],[-7,5],[-3,2],[1,6],[5,3],[9,5],[13,2],[15,0],
+    ];
+    const midMesh = new Mesh(
+      makeMountainShape(midPeaks, -3, 30),
+      new MeshBasicMaterial({ color: 0x071408, transparent: true, opacity: 0.92, depthWrite: false }),
+    );
+    midMesh.position.set(0, -1, -40);
+    const nearPeaks: [number, number][] = [
+      [-12,0],[-8,2],[-4,4],[0,1],[4,3],[8,1.5],[12,0],
+    ];
+    const nearMesh = new Mesh(
+      makeMountainShape(nearPeaks, -3, 24),
+      new MeshBasicMaterial({ color: 0x030a04, transparent: true, opacity: 0.95, depthWrite: false }),
+    );
+    nearMesh.position.set(0, -1, -30);
+    const glowMesh = new Mesh(
+      new PlaneGeometry(1.0, 0.3),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.08, depthWrite: false }),
+    );
+    glowMesh.position.set(2, 7.5, -50);
+    _mountainGroup409 = new Group();
+    _mountainGroup409.add(farMesh, midMesh, nearMesh, glowMesh);
+    scene.add(_mountainGroup409);
+  }
 
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
@@ -1665,6 +1720,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       scene.remove(moonLight373);
       moonLight373.dispose();
       moonLight373 = null;
+    }
+
+    // C409: dispose mountain silhouette group
+    if (_mountainGroup409) {
+      _mountainGroup409.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as MeshBasicMaterial).dispose();
+        }
+      });
+      scene.remove(_mountainGroup409);
+      _mountainGroup409 = null;
     }
 
     scene.traverse((obj) => {
