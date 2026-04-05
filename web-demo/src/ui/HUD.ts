@@ -188,8 +188,8 @@ export function updateHUD(): void {
     _lifeFillEl.style.background = 'linear-gradient(90deg, #cc1515, #ff3535)';
     _lifeFillEl.style.boxShadow = '0 0 8px rgba(255,50,50,0.6)';
   } else if (lifePercent <= 50) {
-    _lifeFillEl.style.background = 'linear-gradient(90deg, #885500, #cc8800)';
-    _lifeFillEl.style.boxShadow = '0 0 6px rgba(200,140,0,0.4)';
+    _lifeFillEl.style.background = 'linear-gradient(90deg, #7b0000, #cc2200)';
+    _lifeFillEl.style.boxShadow = '0 0 6px rgba(200,40,0,0.5)';
   } else {
     _lifeFillEl.style.background = 'linear-gradient(90deg, #1a8833, #33ff66)';
     _lifeFillEl.style.boxShadow = '0 0 6px rgba(51,255,102,0.4)';

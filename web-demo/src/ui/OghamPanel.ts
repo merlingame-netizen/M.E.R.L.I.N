@@ -178,7 +178,7 @@ export function showOghamPanel(): Promise<string | null> {
       if (!isUnlocked) {
         const branchLabel = BRANCH_LABEL[spec.branch] ?? spec.branch;
         infoEl.textContent = '\uD83D\uDD12 rep 50';
-        infoEl.style.cssText = 'font-size:10px;color:rgba(180,140,100,0.6);';
+        infoEl.style.cssText = 'font-size:10px;color:rgba(51,200,102,0.5);';
         slot.title = `D\u00e9bloquez ${branchLabel} \u2014 r\u00e9putation 50 requise`;
       } else if (cooldown > 0) {
         infoEl.textContent = `CD: ${cooldown}`;

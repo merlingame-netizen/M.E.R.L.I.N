@@ -730,7 +730,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     if (entry.sub) {
       toast.appendChild(document.createElement('br'));
       const subEl = document.createElement('span');
-      subEl.style.cssText = 'color:rgba(180,150,90,0.6);font-size:0.8em;font-style:italic;';
+      subEl.style.cssText = 'color:rgba(51,255,102,0.45);font-size:0.8em;font-style:italic;';
       subEl.textContent = entry.sub;
       toast.appendChild(subEl);
     }
