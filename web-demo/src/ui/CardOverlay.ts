@@ -14,6 +14,35 @@ function sfx(sound: string): void {
   window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
 }
 
+// ── Badge + flavor styles injection (idempotent) ──────────────────────────
+
+function ensureCardBadgeStyles(): void {
+  if (document.getElementById('card-badge-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'card-badge-styles';
+  s.textContent = `
+    .card-faction-badge {
+      display: inline-block;
+      font: bold 0.65rem 'Courier New', monospace;
+      padding: 2px 6px;
+      border-radius: 2px;
+      vertical-align: middle;
+      margin-left: 8px;
+      letter-spacing: 0.05em;
+      background: rgba(0,0,0,0.6);
+    }
+    .card-flavor {
+      font: italic 0.72rem 'Courier New', monospace;
+      color: rgba(51,255,102,0.55);
+      border-top: 1px solid rgba(51,255,102,0.15);
+      padding-top: 6px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
 // ── Verb-select animation style injection (idempotent) ─────────────────────
 
 function ensureCardSelectStyle(): void {
@@ -195,6 +224,7 @@ function triggerFlipAnimation(): void {
 // C142/COLL: optional reveal flag — coll ogham (reveal_all_options) makes effects persistently visible
 export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
   ensureCardSelectStyle();
+  ensureCardBadgeStyles();
   return new Promise((resolve) => {
     // C165/CO-01: purge any stale handlers from a previous showCard() that was interrupted
     // (e.g. scene teardown, rapid card transitions). Without this cleanup, the old
@@ -259,11 +289,16 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     // on the hot path (called every card). Capture once; null-guard on the outer block suffices.
     const container = cardContainer();
 
-    // Biome badge (T067)
+    // Biome badge + faction badge (T067)
     const existingBadge = container?.querySelector('.card-biome-badge');
     if (existingBadge) existingBadge.remove();
+    const existingFactionBadge = container?.querySelector('.card-faction-badge');
+    if (existingFactionBadge) existingFactionBadge.remove();
     const dividerEl = container?.querySelector('.card-divider');
     if (dividerEl) dividerEl.remove();
+    // Remove stale flavor text from previous card
+    const existingFlavor = container?.querySelector('.card-flavor');
+    if (existingFlavor) existingFlavor.remove();
 
     if (container) {
       const badge = document.createElement('div');
@@ -274,11 +309,43 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       if (card.source === 'llm') badge.title = 'Carte générée par Merlin (Groq)';
       container.insertBefore(badge, container.firstChild);
 
+      // Faction badge — defensive access (faction not in Card interface)
+      const faction: string | undefined = ((card as unknown) as Record<string, unknown>).faction as string | undefined;
+      if (faction) {
+        const factionColour = getFactionColour(faction);
+        const fBadge = document.createElement('span');
+        fBadge.className = 'card-faction-badge';
+        fBadge.textContent = faction.charAt(0).toUpperCase();
+        fBadge.title = faction;
+        fBadge.setAttribute('aria-label', `Faction: ${faction}`);
+        fBadge.style.borderColor = factionColour;
+        fBadge.style.color = factionColour;
+        badge.appendChild(fBadge);
+      }
+
       const divider = document.createElement('div');
       divider.className = 'card-divider';
       // Insert divider before narrative
       const narrativeEl = container.querySelector('.card-narrative');
       if (narrativeEl) container.insertBefore(divider, narrativeEl);
+
+      // Flavor text — defensive access (flavor/lore not in Card interface)
+      const cardAny = card as unknown as Record<string, unknown>;
+      const flavor: string | undefined =
+        (cardAny.flavor as string | undefined) ??
+        (cardAny.lore as string | undefined);
+      if (flavor) {
+        const flavorEl = document.createElement('p');
+        flavorEl.className = 'card-flavor';
+        flavorEl.textContent = flavor;
+        // Insert after narrative element (or append to container as fallback)
+        const narrativeNode = container.querySelector('.card-narrative');
+        if (narrativeNode && narrativeNode.nextSibling) {
+          container.insertBefore(flavorEl, narrativeNode.nextSibling);
+        } else if (narrativeNode) {
+          container.appendChild(flavorEl);
+        }
+      }
     }
 
     // Options (T067 + T068) — optContainer already resolved above
