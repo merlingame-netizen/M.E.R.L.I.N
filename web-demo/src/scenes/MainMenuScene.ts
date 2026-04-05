@@ -1036,6 +1036,29 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const orbs = createMenuOrbs();
   scene.add(orbs.group);
 
+  // ── C356: Ambient magical dust — 120 tiny green motes floating slowly upward ──
+  let ambientParticles356: Points | null = null;
+  let ambientParticlePositions356: Float32Array | null = null;
+  let ambientParticlePhases356: Float32Array | null = null;
+  {
+    const COUNT = 120;
+    const positions = new Float32Array(COUNT * 3);
+    const phases = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 30;       // x: -15 to 15
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 16;       // y: -8 to 8
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 6 - 5;    // z: behind scene
+      phases[i] = Math.random() * Math.PI * 2;
+    }
+    const geom356 = new BufferGeometry();
+    geom356.setAttribute('position', new BufferAttribute(positions, 3));
+    const mat356 = new PointsMaterial({ color: 0x33ff66, size: 0.06, transparent: true, opacity: 0.3, depthWrite: false });
+    ambientParticles356 = new Points(geom356, mat356);
+    ambientParticlePositions356 = positions;
+    ambientParticlePhases356 = phases;
+    scene.add(ambientParticles356);
+  }
+
   // ── C321: CeltOS title overlay — letter-by-letter reveal + glow pulse ────────
   // DOM overlay on canvas: M.E.R.L.I.N. each letter fades+slides in individually.
   container.style.position = container.style.position || 'relative';
@@ -1171,6 +1194,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     spray.update(dt);
     godRay.update(dt);
     orbs.update(dt);
+
+    // C356: animate ambient magical dust particles
+    if (ambientParticles356 !== null && ambientParticlePositions356 !== null) {
+      const pos = ambientParticlePositions356;
+      const COUNT = pos.length / 3;
+      for (let i = 0; i < COUNT; i++) {
+        pos[i * 3 + 1] += 0.003; // slow float up
+        pos[i * 3]     += Math.sin(elapsedTime * 0.2 + ambientParticlePhases356![i]) * 0.001; // drift
+        if (pos[i * 3 + 1] > 8) pos[i * 3 + 1] = -8; // wrap around
+      }
+      (ambientParticles356.geometry as BufferGeometry).attributes['position'].needsUpdate = true;
+    }
 
     // C168: day/night cycle — slow sine oscillation (period ~180s)
     // dayT: 0=storm-night, 1=storm-day. Always stormy, never fully bright.
@@ -1323,6 +1358,14 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     if (titleOverlay.parentNode) {
       titleOverlay.parentNode.removeChild(titleOverlay);
     }
+    // C356: remove ambient particle field
+    if (ambientParticles356 !== null) {
+      scene.remove(ambientParticles356);
+      ambientParticles356 = null;
+    }
+    ambientParticlePositions356 = null;
+    ambientParticlePhases356 = null;
+
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
         obj.geometry.dispose();
