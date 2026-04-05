@@ -954,6 +954,12 @@ let poolWaterMat451: MeshBasicMaterial | null = null;
 let poolRippleTimer451: number = 15;
 const poolLilyPads451: Mesh[] = [];
 
+// ── Cycle-456: ancient hollow oak tree with glowing heartwood interior ────────
+let hollowOakGroup456: Group | null = null;
+let hollowOakT456: number = 0;
+let hollowOakInnerMat456: MeshBasicMaterial | null = null;
+let hollowOakLight456: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2356,6 +2362,68 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(poolGroup451);
   }
 
+  // ── Cycle-456: ancient hollow oak tree ───────────────────────────────────────
+  {
+    hollowOakGroup456 = new Group();
+    hollowOakGroup456.position.set(6, 0, -20);
+
+    // Outer trunk (open-ended cylinder)
+    const trunk = new Mesh(
+      new CylinderGeometry(0.9, 1.1, 3.5, 10, 1, true),
+      new MeshBasicMaterial({ color: 0x0a1a10, side: DoubleSide })
+    );
+    trunk.position.y = 1.75;
+    hollowOakGroup456.add(trunk);
+
+    // Inner hollow surface (slightly smaller, glowing)
+    const inner = new Mesh(
+      new CylinderGeometry(0.75, 0.9, 3.4, 10, 1, true),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.15, side: DoubleSide })
+    );
+    inner.position.y = 1.75;
+    hollowOakInnerMat456 = inner.material as MeshBasicMaterial;
+    hollowOakGroup456.add(inner);
+
+    // Floor disc inside hollow
+    const floor = new Mesh(
+      new CylinderGeometry(0.85, 0.85, 0.06, 10),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    floor.position.y = 0.04;
+    hollowOakGroup456.add(floor);
+
+    // 3 root buttresses radiating from base
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2 + Math.PI * 0.2;
+      const root = new Mesh(
+        new BoxGeometry(0.25, 0.5, 1.2),
+        new MeshBasicMaterial({ color: 0x020f04 })
+      );
+      root.position.set(Math.cos(angle) * 0.9, 0.2, Math.sin(angle) * 0.9);
+      root.rotation.y = -angle;
+      root.rotation.z = Math.PI * 0.08;
+      hollowOakGroup456.add(root);
+    }
+
+    // Partial canopy suggestion: 2 branch stubs at top
+    for (const side of [-1, 1]) {
+      const branch = new Mesh(
+        new CylinderGeometry(0.05, 0.1, 1.4, 5),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      branch.position.set(side * 0.5, 3.8, 0);
+      branch.rotation.z = side * Math.PI * 0.25;
+      hollowOakGroup456.add(branch);
+    }
+
+    // Inner PointLight
+    hollowOakLight456 = new PointLight(0x33ff66, 0.4, 4.0);
+    hollowOakLight456.position.y = 1.0;
+    hollowOakGroup456.add(hollowOakLight456);
+
+    group.add(hollowOakGroup456);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2911,6 +2979,15 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       if (poolWaterMat451) poolWaterMat451.opacity = 1.0;
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'water_drop' } }));
     }
+
+    // Cycle-456: hollow oak heartwood pulse
+    hollowOakT456 += dt;
+    if (hollowOakInnerMat456) {
+      hollowOakInnerMat456.opacity = 0.1 + 0.08 * Math.sin(hollowOakT456 * 0.6);
+    }
+    if (hollowOakLight456) {
+      hollowOakLight456.intensity = 0.35 + 0.12 * Math.sin(hollowOakT456 * 0.6);
+    }
   };
 
   const dispose = (): void => {
@@ -3238,6 +3315,25 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     poolWaterMat451 = null;
     poolLilyPads451.length = 0;
+
+    // Cycle-456: hollow oak cleanup
+    if (hollowOakGroup456) {
+      group.remove(hollowOakGroup456);
+      hollowOakGroup456.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      hollowOakGroup456 = null;
+    }
+    hollowOakInnerMat456 = null;
+    hollowOakLight456 = null;
   };
 
   return { group, update, dispose };
