@@ -687,6 +687,80 @@ function createGodRay(): { mesh: Mesh; update: (dt: number) => void } {
   return { mesh, update };
 }
 
+// ── Star / Constellation Background ─────────────────────────────────────────
+// C229: Static 2D star field on a canvas behind the rune rain (z-index:0).
+// Stars are drawn once (no RAF) — saves GPU. Positions are deterministic so the
+// constellation looks the same on every load (seeded via Math.sin hash).
+
+interface StarCanvasResult {
+  canvas: HTMLCanvasElement;
+  dispose: () => void;
+}
+
+function createStarConstellationCanvas(container: HTMLElement): StarCanvasResult {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'menu-stars-canvas';
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // Insert as first child so it sits behind everything else in the container
+  if (container.firstChild) {
+    container.insertBefore(canvas, container.firstChild);
+  } else {
+    container.appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext('2d')!;
+  const W = canvas.width;
+  const H = canvas.height;
+  const STAR_COUNT = 120;
+
+  // Deterministic pseudo-random via sin hash — same layout every load
+  const hash = (n: number): number => {
+    const v = Math.sin(n * 127.1) * 43758.5453;
+    return v - Math.floor(v); // fractional part in [0, 1)
+  };
+
+  // Build star positions
+  const sx = new Float32Array(STAR_COUNT);
+  const sy = new Float32Array(STAR_COUNT);
+  for (let i = 0; i < STAR_COUNT; i++) {
+    sx[i] = hash(i * 1.0) * W;
+    sy[i] = hash(i * 2.0 + 0.5) * H;
+  }
+
+  // Draw stars
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const alpha = 0.05 + hash(i * 3.0 + 1.0) * 0.20; // [0.05, 0.25]
+    const radius = 1.0 + hash(i * 4.0 + 2.0) * 1.0;   // [1, 2] px
+    ctx.beginPath();
+    ctx.arc(sx[i]!, sy[i]!, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(51,255,102,${alpha.toFixed(3)})`;
+    ctx.fill();
+  }
+
+  // Draw constellation lines — 6 pairs connecting deterministic star indices
+  const CONSTELLATION_PAIRS: [number, number][] = [
+    [0, 7], [7, 14], [14, 3], [3, 28], [28, 45], [45, 60],
+  ];
+  ctx.strokeStyle = 'rgba(51,255,102,0.08)';
+  ctx.lineWidth = 1;
+  for (const [a, b] of CONSTELLATION_PAIRS) {
+    ctx.beginPath();
+    ctx.moveTo(sx[a]!, sy[a]!);
+    ctx.lineTo(sx[b]!, sy[b]!);
+    ctx.stroke();
+  }
+
+  return {
+    canvas,
+    dispose: () => {
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    },
+  };
+}
+
 // ── Ogham Rune Rain ──────────────────────────────────────────────────────────
 // C176: Matrix-style CeltOS green rain of ancient Celtic script characters
 // overlaid behind the menu DOM but above the Three.js canvas.
@@ -1114,6 +1188,9 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   if (menuStartBtn) menuStartBtn.addEventListener('pointerenter', onStartHover);
   if (menuContinueBtn) menuContinueBtn.addEventListener('pointerenter', onContinueHover);
 
+  // C229: Static star/constellation background canvas — lowest z-index, drawn once
+  const starBg = createStarConstellationCanvas(container);
+
   // C176: Ogham rune rain overlay — injected behind menu DOM, above Three.js canvas
   const runeRain = createRuneRainCanvas(container);
 
@@ -1122,6 +1199,8 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     // C171: remove hover listeners
     if (menuStartBtn) menuStartBtn.removeEventListener('pointerenter', onStartHover);
     if (menuContinueBtn) menuContinueBtn.removeEventListener('pointerenter', onContinueHover);
+    // C229: remove static star background canvas
+    starBg.dispose();
     // C176: stop rune rain RAF and remove canvas
     runeRain.dispose();
     // C200: clear all typewriter timers
