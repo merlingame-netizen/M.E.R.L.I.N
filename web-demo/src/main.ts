@@ -1193,6 +1193,7 @@ async function gameLoop(
     try {
       const llmCard = await cardGenPromise;
       hideLLMLoadingHint();
+      if (llm !== null && llmCard === null) showFallbackToast();
       card = llmCard ?? generateFastRouteCard(state().run.biome);
     } catch (err) {
       hideLLMLoadingHint();
@@ -1380,6 +1381,27 @@ function showLLMLoadingHint(): void {
 
 function hideLLMLoadingHint(): void {
   document.getElementById(LLM_HINT_ID)?.remove();
+}
+
+/** Show a brief toast when Groq LLM is configured but returns null (fallback to FastRoute). */
+function showFallbackToast(): void {
+  const toast = document.createElement('div');
+  toast.style.cssText = [
+    'position:fixed; top:12px; left:50%; transform:translateX(-50%);',
+    'background:rgba(1,8,2,0.92); border:1px solid rgba(51,255,102,0.3);',
+    'color:rgba(51,255,102,0.7); font:0.65rem Courier New,monospace;',
+    'padding:5px 14px; z-index:9999; pointer-events:none;',
+    'letter-spacing:0.08em; opacity:0; transition:opacity 0.3s;',
+  ].join('');
+  toast.textContent = '> MODE LOCAL: FASTROUTE ACTIV\u00c9';
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  const fadeTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.parentNode?.removeChild(toast), 300);
+  }, 2000);
+  // Guard: if node is removed early (e.g. scene teardown), cancel the timer
+  toast.addEventListener('remove', () => clearTimeout(fadeTimer), { once: true });
 }
 
 // --- Biome toast (T045: 2s overlay shown on run start and biome entry) ---
