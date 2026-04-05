@@ -730,6 +730,16 @@ const crabMeshes484: Mesh[] = [];
 const crabStartPos484: [number, number, number][] = [];
 const crabEndPos484: [number, number, number][] = [];
 
+// ── Sunken shipwreck hull (C489) ──────────────────────────────────────────
+let wreckGroup489: Group | null = null;
+let t489: number = 0;
+const wreckKelpMeshes489: Mesh[] = [];
+let wreckLight489: PointLight | null = null;
+let wreckHullMat489: MeshStandardMaterial | null = null;
+let wreckGhostTimer489: number = 25 + Math.random() * 15;
+let wreckGhostActive489: boolean = false;
+let wreckGhostT489: number = 0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -2173,6 +2183,98 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     });
   }
 
+  // ── Sunken shipwreck hull (C489) ──────────────────────────────────────────
+  {
+    wreckGroup489 = new Group();
+
+    // Hull main body
+    wreckHullMat489 = new MeshStandardMaterial({
+      color: 0x0a1a0a,
+      roughness: 0.95,
+      metalness: 0.0,
+      flatShading: true,
+      emissive: 0x0a1a0a,
+      emissiveIntensity: 0.0,
+    });
+    const hull489 = new Mesh(new BoxGeometry(3.0, 1.2, 0.8), wreckHullMat489);
+    wreckGroup489.add(hull489);
+
+    // Hull bottom keel — curved cylinder, rotated 90° on Z
+    const keelMat = new MeshStandardMaterial({
+      color: 0x0a1a0a, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const keel489 = new Mesh(new CylinderGeometry(0.4, 0.5, 3.0, 6, 1, true), keelMat);
+    keel489.rotation.z = Math.PI / 2;
+    keel489.position.y = -0.5;
+    const _wg489 = wreckGroup489;
+    _wg489.add(keel489);
+
+    // 3 broken ribs
+    const ribMat = new MeshStandardMaterial({
+      color: 0x0a1a0a, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const ribOffsets: [number, number][] = [[-1.0, -0.15], [0.0, 0.0], [1.0, 0.15]];
+    ribOffsets.forEach(([rx, rz]) => {
+      const rib = new Mesh(new BoxGeometry(0.05, 1.0, 0.05), ribMat);
+      rib.position.set(rx, 0.5, rz * 0.1);
+      rib.rotation.z = rz === 0 ? 0.0 : rz < 0 ? -0.26 : 0.26;
+      _wg489.add(rib);
+    });
+
+    // Broken mast stump
+    const mastMat = new MeshStandardMaterial({
+      color: 0x0a1a0a, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const mast489 = new Mesh(new CylinderGeometry(0.08, 0.1, 1.5, 6), mastMat);
+    mast489.position.set(1.2, 0.6, 0.0);
+    mast489.rotation.z = 0.436; // ~25°
+    _wg489.add(mast489);
+
+    // 6 barnacle clusters
+    const barnMat = new MeshStandardMaterial({
+      color: 0x0d1f0d, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    const barnPositions: [number, number, number][] = [
+      [-1.2, -0.3, 0.35], [-0.4, -0.4, -0.35], [0.3, -0.3, 0.35],
+      [1.0, -0.4, -0.35], [-0.8, 0.4, 0.35], [0.6, 0.4, -0.35],
+    ];
+    barnPositions.forEach(([bx, by, bz]) => {
+      const barnacle = new Mesh(new SphereGeometry(0.08, 5, 5), barnMat);
+      barnacle.scale.y = 0.4;
+      barnacle.position.set(bx, by, bz);
+      _wg489.add(barnacle);
+    });
+
+    // Interior glow point light
+    wreckLight489 = new PointLight(0x33ff66, 0.5, 4.0);
+    wreckLight489.position.set(0, 0, 0);
+    _wg489.add(wreckLight489);
+
+    // 4 kelp wisps
+    const kelpMat489 = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.6,
+      roughness: 0.95,
+      metalness: 0.0,
+      emissive: 0x1a5522,
+      emissiveIntensity: 0.4,
+    });
+    const kelpPhases489: number[] = [0.0, 1.57, 3.14, 4.71];
+    kelpPhases489.forEach((phase, i) => {
+      const wisp = new Mesh(new PlaneGeometry(0.1, 0.8), kelpMat489);
+      const angle = (i / 4) * Math.PI * 2;
+      wisp.position.set(Math.cos(angle) * 1.2, 0.2, Math.sin(angle) * 0.3);
+      (wisp as any).__kelpPhase489 = phase;
+      wreckKelpMeshes489.push(wisp);
+      _wg489.add(wisp);
+    });
+
+    _wg489.position.set(-10, -0.4, -8);
+    group.add(_wg489);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2840,6 +2942,44 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // ── Sunken shipwreck hull animation (C489) ────────────────────────────
+    t489 += dt;
+
+    // Kelp wisp sway
+    wreckKelpMeshes489.forEach((wisp) => {
+      const phase = (wisp as any).__kelpPhase489 as number;
+      wisp.rotation.z = Math.sin(t489 * 1.2 + phase) * 0.3;
+    });
+
+    // Interior glow flicker
+    if (wreckLight489) {
+      wreckLight489.intensity = 0.4 + 0.15 * Math.sin(t489 * 3.1 + 0.7);
+    }
+
+    // Ghost ship echo — timer-driven hull shimmer
+    wreckGhostTimer489 -= dt;
+    if (wreckGhostTimer489 <= 0 && !wreckGhostActive489) {
+      wreckGhostActive489 = true;
+      wreckGhostT489 = 0;
+      wreckGhostTimer489 = 25 + Math.random() * 15;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+    }
+    if (wreckGhostActive489 && wreckHullMat489) {
+      wreckGhostT489 += dt;
+      let ghostIntensity = 0;
+      if (wreckGhostT489 < 1.0) {
+        // Fade in over 1s
+        ghostIntensity = (wreckGhostT489 / 1.0) * 0.5;
+      } else if (wreckGhostT489 < 3.0) {
+        // Fade out over 2s
+        ghostIntensity = (1.0 - (wreckGhostT489 - 1.0) / 2.0) * 0.5;
+      } else {
+        wreckGhostActive489 = false;
+        ghostIntensity = 0;
+      }
+      wreckHullMat489.emissiveIntensity = Math.max(0, ghostIntensity);
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -3112,6 +3252,20 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     crabMeshes484.length = 0;
     crabStartPos484.length = 0;
     crabEndPos484.length = 0;
+    if (wreckGroup489) {
+      wreckGroup489.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      wreckGroup489 = null;
+    }
+    wreckKelpMeshes489.length = 0;
+    wreckLight489 = null;
+    wreckHullMat489 = null;
     group.clear();
   };
 
