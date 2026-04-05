@@ -2,9 +2,34 @@
 // Minigame: Regard -- Memory sequence (memorize ogham symbols, reproduce order)
 // Show 4-6 symbols for 3s, hide them, player clicks in order from shuffled grid.
 // 3 rounds with increasing length (4, 5, 6). Score = correct / total * 100.
+// C290: Visual enhancements —
+//   1. Score toasts: floating "+1" / "✗" text from clicked cell
+//   2. Particle bursts: green sparks on correct click
+//   3. Show-phase sequential reveal arc: each target symbol sweeps in order
 // =============================================================================
 
 import { MinigameBase } from './MinigameBase';
+
+// C290: Score toast — floats upward from a clicked cell
+interface ScoreToast {
+  x: number;
+  y: number;
+  text: string;
+  color: string; // rgba string
+  life: number;  // seconds remaining
+  readonly maxLife: number;
+}
+
+// C290: Particle for burst effect on correct click
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;  // seconds remaining
+  readonly maxLife: number;
+  readonly radius: number;
+}
 
 /** Immutable symbol cell in the grid. */
 interface GridCell {
@@ -67,6 +92,12 @@ export class MinigameRegard extends MinigameBase {
   private pulsePhase = 0;
   private kbFocusIdx = -1; // C136: keyboard-focused cell index (-1 = none)
   private recallTimeout = 0; // C105: per-round recall deadline — prevents softlock if player never clicks (RGD-01)
+  // C290: visual enhancement state
+  private toasts: ScoreToast[] = [];
+  private particles: Particle[] = [];
+  // C290: sequential reveal — index of the last symbol lit during show phase (-1 = none shown yet)
+  private revealIndex = -1;
+  private revealTimer = 0; // time until next symbol reveal during show phase
   // C120/RGD-02: cached DOM refs — was getElementById in render() (~60fps), prepareRound, onClick, onKeyDown
   private instrElRef: HTMLElement | null = null;
   private statusElRef: HTMLElement | null = null;
@@ -139,6 +170,11 @@ export class MinigameRegard extends MinigameBase {
     this.attemptsTotal = 0;
     this.pulsePhase = 0;
     this.kbFocusIdx = -1;
+    // C290: reset visual enhancement state
+    this.toasts = [];
+    this.particles = [];
+    this.revealIndex = -1;
+    this.revealTimer = 0;
     // C146b/RGD-BUG-01: reset feedback state — stale feedbackTimer>0 from a previous play()
     // causes the feedback phase to instant-advance on the very first rAF frame of a replay.
     this.feedbackTimer = 0;
@@ -203,6 +239,11 @@ export class MinigameRegard extends MinigameBase {
     this.clickedCells = new Set();
     this.phase = 'show';
     this.showTimer = this.showTime;
+    // C290: reset sequential reveal for new round — first symbol fires after 0.2s
+    this.revealIndex = -1;
+    this.revealTimer = 0.2;
+    this.toasts = [];
+    this.particles = [];
 
     if (this.instrElRef) this.instrElRef.textContent = `Memorise l'ordre des ${seqLen} symboles illumines !`;
     if (this.statusElRef) this.statusElRef.textContent = 'Memorise...';
@@ -230,6 +271,9 @@ export class MinigameRegard extends MinigameBase {
           this.correctTotal++;
           this.clickedIndex++;
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+          // C290: toast + particle burst on correct click
+          this.spawnToast(cell.gridX, cell.gridY - 20, true);
+          this.spawnParticles(cell.gridX, cell.gridY);
 
           if (this.clickedIndex >= this.sequence.length) {
             // Round complete
@@ -245,6 +289,8 @@ export class MinigameRegard extends MinigameBase {
           this.feedbackCorrect = false;
           this.feedbackTimer = 0.8;
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+          // C290: error toast on wrong click
+          this.spawnToast(cell.gridX, cell.gridY - 20, false);
         }
 
         if (this.statusElRef) {
@@ -281,6 +327,9 @@ export class MinigameRegard extends MinigameBase {
         this.correctTotal++;
         this.clickedIndex++;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+        // C290: toast + particles for keyboard confirm
+        this.spawnToast(cell.gridX, cell.gridY - 20, true);
+        this.spawnParticles(cell.gridX, cell.gridY);
         if (this.clickedIndex >= this.sequence.length) {
           clearTimeout(this.recallTimeout); // C105: cancel recall deadline (RGD-01)
           this.phase = 'feedback'; this.feedbackCorrect = true; this.feedbackTimer = 0.8;
@@ -289,10 +338,90 @@ export class MinigameRegard extends MinigameBase {
         clearTimeout(this.recallTimeout); // C105: cancel recall deadline (RGD-01)
         this.phase = 'feedback'; this.feedbackCorrect = false; this.feedbackTimer = 0.8;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+        // C290: error toast for keyboard confirm
+        this.spawnToast(cell.gridX, cell.gridY - 20, false);
       }
       if (this.statusElRef) this.statusElRef.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
     }
   };
+
+  // C290: spawn a floating score toast at canvas position (x, y)
+  private spawnToast(x: number, y: number, correct: boolean): void {
+    const toast: ScoreToast = {
+      x,
+      y,
+      text: correct ? '+1' : '✗',
+      color: correct ? 'rgba(51,255,102,' : 'rgba(220,80,80,',
+      life: 0.9,
+      maxLife: 0.9,
+    };
+    this.toasts = [...this.toasts, toast];
+  }
+
+  // C290: spawn particle burst at canvas position (x, y) on correct click
+  private spawnParticles(x: number, y: number): void {
+    const count = 10;
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+      const speed = 40 + Math.random() * 60;
+      newParticles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0.5 + Math.random() * 0.3,
+        maxLife: 0.8,
+        radius: 2 + Math.random() * 2,
+      });
+    }
+    this.particles = [...this.particles, ...newParticles];
+  }
+
+  // C290: draw and advance toasts + particles each frame
+  private renderEffects(ctx: CanvasRenderingContext2D, dt: number): void {
+    // Toasts
+    const nextToasts: ScoreToast[] = [];
+    for (const t of this.toasts) {
+      const updated = { ...t, life: t.life - dt, y: t.y - 30 * dt };
+      if (updated.life > 0) {
+        const alpha = Math.min(1, updated.life / updated.maxLife);
+        ctx.save();
+        ctx.font = 'bold 18px Courier New';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = `${updated.color}${alpha.toFixed(2)})`;
+        ctx.fillText(updated.text, updated.x, updated.y);
+        ctx.restore();
+        nextToasts.push(updated);
+      }
+    }
+    this.toasts = nextToasts;
+
+    // Particles
+    const nextParticles: Particle[] = [];
+    for (const p of this.particles) {
+      const updated = {
+        ...p,
+        x: p.x + p.vx * dt,
+        y: p.y + p.vy * dt,
+        vx: p.vx * 0.92,
+        vy: p.vy * 0.92,
+        life: p.life - dt,
+      };
+      if (updated.life > 0) {
+        const alpha = updated.life / updated.maxLife;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(updated.x, updated.y, updated.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(51,255,102,${alpha.toFixed(2)})`;
+        ctx.fill();
+        ctx.restore();
+        nextParticles.push(updated);
+      }
+    }
+    this.particles = nextParticles;
+  }
 
   protected cancelTimers(): void {
     clearTimeout(this.recallTimeout); // C105: cancel any in-flight recall deadline (RGD-01)
@@ -326,6 +455,19 @@ export class MinigameRegard extends MinigameBase {
     // Phase transitions
     if (this.phase === 'show') {
       this.showTimer -= dt;
+      // C290: sequential reveal — advance revealIndex at intervals during show phase
+      if (this.revealIndex < this.sequence.length - 1) {
+        this.revealTimer -= dt;
+        if (this.revealTimer <= 0) {
+          this.revealIndex++;
+          // Space reveals evenly across the show window (leave 0.3s buffer at end)
+          const interval = this.sequence.length > 1
+            ? (this.showTime - 0.3) / this.sequence.length
+            : this.showTime;
+          this.revealTimer = interval;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'select' } }));
+        }
+      }
       if (this.showTimer <= 0) {
         this.phase = 'recall';
         // C105: 10s recall deadline — treat expiry as wrong answer to prevent softlock (RGD-01)
@@ -449,6 +591,26 @@ export class MinigameRegard extends MinigameBase {
         ctx.font = '12px Courier New';
         ctx.fillStyle = 'rgba(51,255,102,0.80)';
         ctx.fillText(`${cell.targetIndex + 1}`, cell.gridX, cell.gridY + 18);
+
+        // C290: sequential reveal arc — draw a sweeping arc ring for symbols revealed so far
+        if (cell.targetIndex <= this.revealIndex) {
+          const arcRadius = this.cellSize / 2 - 3;
+          // The arc rotates based on how long ago this symbol was revealed
+          const revealAge = (this.revealIndex - cell.targetIndex);
+          const arcAlpha = Math.max(0.2, 0.85 - revealAge * 0.15);
+          // Animated sweep angle: each newly revealed symbol has a spinning highlight
+          const sweepAngle = cell.targetIndex === this.revealIndex
+            ? (1 - (this.revealTimer > 0 ? this.revealTimer : 0) * 0.5) * Math.PI * 2
+            : Math.PI * 2;
+          const startAngle = -Math.PI / 2 + this.pulsePhase * 1.2;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cell.gridX, cell.gridY, arcRadius, startAngle, startAngle + sweepAngle);
+          ctx.strokeStyle = `rgba(51,255,102,${arcAlpha.toFixed(2)})`;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.restore();
+        }
       }
     }
 
@@ -493,6 +655,9 @@ export class MinigameRegard extends MinigameBase {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+
+    // C290: render floating toasts + particle bursts on top of everything
+    this.renderEffects(ctx, dt);
 
     this.animFrame = requestAnimationFrame(() => this.render());
   }

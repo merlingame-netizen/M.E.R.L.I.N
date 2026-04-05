@@ -1147,6 +1147,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _astroRing3: Mesh | null = null;
   let _astroTime = 0;
 
+  // C292: skull shelf — 3 skulls with pulsing green eye glow
+  const _skullLights: PointLight[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1297,6 +1300,53 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const center = new Mesh(new SphereGeometry(0.08, 6, 4), centerMat);
     center.position.set(ASTRO_X, ASTRO_Y, ASTRO_Z + 0.06);
     scene.add(center);
+  }
+
+  // C292: skull shelf — shelf plank + 3 skulls (cranium + jaw) with green eye PointLights
+  {
+    const SHELF_COLOR = 0x1a1208;
+    const BONE_COLOR  = 0xc8c0a8;
+    const skullShelfGroup = new Group();
+
+    // Shelf plank
+    const shelfPlankMat = new MeshStandardMaterial({ color: SHELF_COLOR, roughness: 0.8, metalness: 0.1 });
+    const shelfPlank = new Mesh(new BoxGeometry(1.4, 0.06, 0.2), shelfPlankMat);
+    shelfPlank.position.set(-3.5, -2.8, -9.6);
+    skullShelfGroup.add(shelfPlank);
+
+    const skullDefs: Array<{ x: number; y: number; z: number; scale: number; rotY: number }> = [
+      { x: -3.5, y: -2.6, z: -9.6, scale: 1.00, rotY:  0.0  }, // center
+      { x: -3.8, y: -2.6, z: -9.6, scale: 0.90, rotY:  0.4  }, // left
+      { x: -3.2, y: -2.6, z: -9.6, scale: 0.85, rotY: -0.3  }, // right
+    ];
+
+    const boneMat = new MeshStandardMaterial({ color: BONE_COLOR, roughness: 0.8, metalness: 0.1 });
+
+    for (const sd of skullDefs) {
+      const skullG = new Group();
+      skullG.position.set(sd.x, sd.y, sd.z);
+      skullG.scale.setScalar(sd.scale);
+      skullG.rotation.y = sd.rotY;
+
+      // Cranium
+      const cranium = new Mesh(new SphereGeometry(0.14, 8, 6), boneMat);
+      skullG.add(cranium);
+
+      // Jaw — offset -0.07 Y below cranium centre
+      const jaw = new Mesh(new BoxGeometry(0.14, 0.06, 0.12), boneMat);
+      jaw.position.set(0, -0.07, 0);
+      skullG.add(jaw);
+
+      // Green eye glow — at eye level (+0.02 Y, -0.05 Z relative to cranium)
+      const eyeLight = new PointLight(0x33ff66, 0.15, 1.0);
+      eyeLight.position.set(0, 0.02, -0.05);
+      cranium.add(eyeLight);
+      _skullLights.push(eyeLight);
+
+      skullShelfGroup.add(skullG);
+    }
+
+    scene.add(skullShelfGroup);
   }
 
   // Forest window + day/night/season cycle
@@ -1904,6 +1954,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (_astroRing3) _astroRing3.rotation.z += dt * 0.25;   // inner: faster clockwise
     }
 
+    // C292: skull shelf eye glow pulse — staggered per skull
+    _skullLights.forEach((light, i) => {
+      light.intensity = 0.08 + Math.sin(elapsedTime * 0.9 + i * 1.3) * 0.07;
+    });
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2055,6 +2110,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _scryingVisionMesh = null;
     // C284: clear astrolabe ring refs (geometries/materials disposed by scene.traverse above)
     _astroRing1 = _astroRing2 = _astroRing3 = null;
+    // C292: clear skull light refs (geometries/materials disposed by scene.traverse above)
+    _skullLights.length = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
