@@ -770,6 +770,20 @@ let serpentTimer494: number = 20 + Math.random() * 15;
 const splashParticles494: Mesh[] = [];
 const serpentSegMats494: MeshStandardMaterial[] = [];
 
+// ── Mermaid silhouette glimpsed through a wave (C504) ─────────────────────
+let mermaidGroup504: Group | null = null;
+let t504: number = 0;
+type MermaidState504 = 'hidden' | 'approach' | 'hover' | 'retreat';
+let mermaidState504: MermaidState504 = 'hidden';
+let mermaidStateT504: number = 0;
+let mermaidTimer504: number = 25 + Math.random() * 15;
+const mermaidMats504: MeshStandardMaterial[] = [];
+let mermaidLight504: PointLight | null = null;
+let mermaidTailMesh504: Mesh | null = null;
+let mermaidTailFluke504: Group | null = null;
+const mermaidHairMeshes504: Mesh[] = [];
+const mermaidArmMeshes504: { mesh: Mesh; side: 1 | -1 }[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -2498,6 +2512,87 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(serpentGroup494);
   }
 
+  // ── Mermaid silhouette glimpsed through a wave (C504) ─────────────────────
+  {
+    mermaidGroup504 = new Group();
+    mermaidMats504.length = 0;
+    mermaidHairMeshes504.length = 0;
+    mermaidArmMeshes504.length = 0;
+
+    const makeMat504 = (): MeshStandardMaterial => {
+      const m = new MeshStandardMaterial({
+        color: 0x0a2a14,
+        emissive: 0x33ff66,
+        emissiveIntensity: 0.9,
+        transparent: true,
+        opacity: 0.0,
+      });
+      mermaidMats504.push(m);
+      return m;
+    };
+
+    // Torso
+    const torso = new Mesh(new CylinderGeometry(0.06, 0.1, 0.45, 6), makeMat504());
+    torso.position.set(0, 0, 0);
+    mermaidGroup504.add(torso);
+
+    // Head
+    const head = new Mesh(new SphereGeometry(0.1, 7, 6), makeMat504());
+    head.position.set(0, 0.325, 0);
+    mermaidGroup504.add(head);
+
+    // Arms (2) — angled outward at ±40° from torso sides
+    for (const side of [-1, 1] as const) {
+      const arm = new Mesh(new CylinderGeometry(0.025, 0.03, 0.3, 4), makeMat504());
+      arm.rotation.z = side * (40 * Math.PI / 180);
+      arm.position.set(side * 0.14, 0.08, 0);
+      mermaidGroup504.add(arm);
+      mermaidArmMeshes504.push({ mesh: arm, side });
+    }
+
+    // Tail — below torso, tapering down
+    const tail = new Mesh(new CylinderGeometry(0.09, 0.04, 0.5, 6), makeMat504());
+    tail.position.set(0, -0.475, 0);
+    mermaidGroup504.add(tail);
+    mermaidTailMesh504 = tail;
+
+    // Tail fluke — 2 PlaneGeometry angled into a V at tail tip
+    const flukeGroup = new Group();
+    flukeGroup.position.set(0, -0.725, 0);
+    for (const angle of [-0.4, 0.4]) {
+      const fluke = new Mesh(new PlaneGeometry(0.2, 0.12), makeMat504());
+      (fluke.material as MeshStandardMaterial).side = DoubleSide;
+      fluke.rotation.y = angle;
+      flukeGroup.add(fluke);
+    }
+    mermaidGroup504.add(flukeGroup);
+    mermaidTailFluke504 = flukeGroup;
+
+    // Long hair — 4 strands flowing upward/backward from head
+    for (let h = 0; h < 4; h++) {
+      const hair = new Mesh(new CylinderGeometry(0.015, 0.005, 0.4, 4), makeMat504());
+      const angleOffset = (h / 4) * Math.PI * 0.6 - 0.15;
+      hair.position.set(
+        Math.sin(angleOffset) * 0.07,
+        0.38 + 0.2,
+        Math.cos(angleOffset) * 0.04 - 0.06,
+      );
+      hair.rotation.z = (h % 2 === 0 ? 1 : -1) * 0.15;
+      hair.rotation.x = -0.2;
+      mermaidGroup504.add(hair);
+      mermaidHairMeshes504.push(hair);
+    }
+
+    // Faint PointLight inside group
+    mermaidLight504 = new PointLight(0x33ff66, 0.0, 4.0);
+    mermaidLight504.position.set(0, 0, 0);
+    mermaidGroup504.add(mermaidLight504);
+
+    // Position: just below water surface (negative Y), far into scene
+    mermaidGroup504.position.set(-6, -1.5, -10);
+    group.add(mermaidGroup504);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -3269,6 +3364,73 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // ── Mermaid silhouette glimpsed through a wave (C504) ────────────────────
+    if (mermaidGroup504 && mermaidLight504) {
+      t504 += dt;
+
+      if (mermaidState504 === 'hidden') {
+        mermaidTimer504 -= dt;
+        if (mermaidTimer504 <= 0) {
+          mermaidState504 = 'approach';
+          mermaidStateT504 = 0;
+          mermaidGroup504.position.y = -1.5;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        }
+
+      } else if (mermaidState504 === 'approach') {
+        mermaidStateT504 += dt;
+        const p = Math.min(mermaidStateT504 / 2.0, 1.0);
+        const opacity = p * 0.65;
+        mermaidMats504.forEach((m) => { m.opacity = opacity; });
+        mermaidLight504.intensity = opacity * 0.5;
+        mermaidGroup504.position.y = -1.5 + p * 1.2; // rises to y=-0.3
+        if (p >= 1.0) {
+          mermaidState504 = 'hover';
+          mermaidStateT504 = 0;
+        }
+
+      } else if (mermaidState504 === 'hover') {
+        mermaidStateT504 += dt;
+        // Tail undulation
+        if (mermaidTailMesh504) {
+          mermaidTailMesh504.rotation.x = 0.3 * Math.sin(t504 * 2.5);
+        }
+        // Tail fluke follows with lag
+        if (mermaidTailFluke504) {
+          mermaidTailFluke504.rotation.x = 0.4 * Math.sin(t504 * 2.5 + 0.5);
+        }
+        // Hair sway
+        mermaidHairMeshes504.forEach((hair, hairIdx) => {
+          hair.rotation.z = 0.2 * Math.sin(t504 * 1.8 + hairIdx * 0.5);
+        });
+        // Arms drift — reaching forward
+        mermaidArmMeshes504.forEach(({ mesh, side }) => {
+          mesh.rotation.z = side * (0.4 + 0.1 * Math.sin(t504 * 1.3));
+        });
+        // Overall gentle rock
+        mermaidGroup504.rotation.z = 0.05 * Math.sin(t504 * 0.8);
+        if (mermaidStateT504 >= 1.5) {
+          mermaidState504 = 'retreat';
+          mermaidStateT504 = 0;
+        }
+
+      } else if (mermaidState504 === 'retreat') {
+        mermaidStateT504 += dt;
+        const p = Math.min(mermaidStateT504 / 1.5, 1.0);
+        const opacity = 0.65 * (1.0 - p);
+        mermaidMats504.forEach((m) => { m.opacity = opacity; });
+        mermaidLight504.intensity = opacity * 0.5;
+        mermaidGroup504.position.y = -0.3 - p * 1.2; // descends back to y=-1.5
+        if (p >= 1.0) {
+          mermaidState504 = 'hidden';
+          mermaidStateT504 = 0;
+          mermaidTimer504 = 25 + Math.random() * 15;
+          mermaidGroup504.position.y = -1.5;
+          mermaidGroup504.rotation.z = 0;
+        }
+      }
+    }
+
     // ── Dolphin pod leaping (C499) ────────────────────────────────────────────
     t499 += dt;
     for (let i = 0; i < 4; i++) {
@@ -3667,6 +3829,25 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     serpentSegMats494.length = 0;
     serpentState494 = 'hidden';
     serpentTimer494 = 20 + Math.random() * 15;
+    if (mermaidGroup504) {
+      mermaidGroup504.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      mermaidGroup504 = null;
+    }
+    mermaidMats504.length = 0;
+    mermaidLight504 = null;
+    mermaidTailMesh504 = null;
+    mermaidTailFluke504 = null;
+    mermaidHairMeshes504.length = 0;
+    mermaidArmMeshes504.length = 0;
+    mermaidState504 = 'hidden';
+    mermaidTimer504 = 25 + Math.random() * 15;
     group.clear();
   };
 
