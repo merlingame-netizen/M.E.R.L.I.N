@@ -4,10 +4,11 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import {
-  AmbientLight, BackSide, BoxGeometry, BufferAttribute, CircleGeometry, Color,
+  AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color,
   ConeGeometry, CylinderGeometry, DirectionalLight,
   DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
-  Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, SphereGeometry,
+  Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Points,
+  PointsMaterial, SphereGeometry,
   TorusGeometry,
 } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
@@ -611,6 +612,13 @@ const _buoyGroups: Group[] = [];
 const _buoyBeacons: Mesh[] = [];
 const _buoyLights: PointLight[] = [];
 
+// ── Sea spray burst particles at cliff base (C359) ────────────────────────
+let sprayPoints359: Points | null = null;
+let sprayPositions359: Float32Array | null = null;
+let sprayVelocities359: Array<[number, number, number]> = [];
+let sprayLifetimes359: Float32Array | null = null;
+let sprayNextBurst359 = 3.0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1057,6 +1065,26 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Sea spray burst particles at cliff base (C359) ───────────────────────
+  {
+    const SPRAY_COUNT = 40;
+    const sprayPos = new Float32Array(SPRAY_COUNT * 3);
+    const sprayLife = new Float32Array(SPRAY_COUNT).fill(-1); // -1 = inactive
+    const sprayVel: Array<[number, number, number]> = [];
+    for (let i = 0; i < SPRAY_COUNT; i++) {
+      sprayPos[i * 3] = 0; sprayPos[i * 3 + 1] = -100; sprayPos[i * 3 + 2] = 0; // hide inactive
+      sprayVel.push([0, 0, 0]);
+    }
+    const sprayGeo = new BufferGeometry();
+    sprayGeo.setAttribute('position', new BufferAttribute(sprayPos, 3));
+    const sprayMat = new PointsMaterial({ color: 0x1a6633, size: 0.08, transparent: true, opacity: 0.35, depthWrite: false });
+    sprayPoints359 = new Points(sprayGeo, sprayMat);
+    sprayPositions359 = sprayPos;
+    sprayVelocities359 = sprayVel;
+    sprayLifetimes359 = sprayLife;
+    group.add(sprayPoints359);
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1324,6 +1352,54 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Sea spray burst particles at cliff base (C359)
+    if (sprayPoints359 !== null && sprayPositions359 !== null && sprayLifetimes359 !== null) {
+      // Burst timer
+      sprayNextBurst359 -= dt;
+      if (sprayNextBurst359 <= 0) {
+        sprayNextBurst359 = 3.0 + Math.random() * 2.0;
+        const burstX = (Math.random() - 0.5) * 12; // along cliff base
+        const burstZ = -18 + Math.random() * 3;     // near cliffs
+        let launched = 0;
+        for (let i = 0; i < 40 && launched < 10; i++) {
+          if (sprayLifetimes359[i]! < 0) {
+            sprayLifetimes359[i] = 1.2 + Math.random() * 0.4;
+            sprayPositions359[i * 3]     = burstX + (Math.random() - 0.5) * 0.5;
+            sprayPositions359[i * 3 + 1] = 0.2;
+            sprayPositions359[i * 3 + 2] = burstZ + (Math.random() - 0.5) * 0.5;
+            sprayVelocities359[i] = [
+              (Math.random() - 0.5) * 0.8,
+              1.5 + Math.random() * 1.2,
+              (Math.random() - 0.5) * 0.8,
+            ];
+            launched++;
+          }
+        }
+      }
+
+      // Update particles
+      const GRAVITY = -3.0;
+      let anyActive = false;
+      for (let i = 0; i < 40; i++) {
+        if (sprayLifetimes359[i]! < 0) continue;
+        anyActive = true;
+        sprayLifetimes359[i] -= dt;
+        if (sprayLifetimes359[i]! <= 0) {
+          sprayLifetimes359[i] = -1;
+          sprayPositions359[i * 3 + 1] = -100; // hide
+          continue;
+        }
+        const vel = sprayVelocities359[i]!;
+        vel[1] += GRAVITY * dt;
+        sprayPositions359[i * 3]     += vel[0] * dt;
+        sprayPositions359[i * 3 + 1] += vel[1] * dt;
+        sprayPositions359[i * 3 + 2] += vel[2] * dt;
+      }
+      if (anyActive || sprayNextBurst359 < 0.5) {
+        (sprayPoints359.geometry as BufferGeometry).attributes['position']!.needsUpdate = true;
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -1368,6 +1444,15 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _buoyGroups.length   = 0;
     _buoyBeacons.length  = 0;
     _buoyLights.length   = 0;
+    if (sprayPoints359 !== null) {
+      group.remove(sprayPoints359);
+      sprayPoints359.geometry.dispose();
+      (sprayPoints359.material as PointsMaterial).dispose();
+      sprayPoints359 = null;
+    }
+    sprayPositions359 = null;
+    sprayVelocities359 = [];
+    sprayLifetimes359 = null;
     group.clear();
   };
 
