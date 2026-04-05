@@ -1400,6 +1400,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _runeRings: Mesh[] = [];
   let _runeCircleLight: PointLight | null = null;
 
+  // C438 — potion bottle shelf
+  let _potionShelfGroup: Group | null = null;
+  let _potionShelfT = 0;
+  const _potionLiquids: Mesh[] = [];
+  const _potionLights: PointLight[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2484,6 +2490,82 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     _runeCircleGroup.position.set(0, 0.01, -1);
     scene.add(_runeCircleGroup);
+  }
+
+  // C438 — potion bottle shelf
+  {
+    _potionShelfGroup = new Group();
+
+    // Shelf plank
+    const shelfMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const shelf = new Mesh(new BoxGeometry(1.4, 0.06, 0.22), shelfMat);
+    shelf.position.set(0, 0, 0);
+    _potionShelfGroup.add(shelf);
+
+    // Wall bracket supports: 2 small blocks
+    const brL = new Mesh(new BoxGeometry(0.06, 0.2, 0.18), shelfMat);
+    brL.position.set(-0.6, -0.13, 0);
+    const brR = new Mesh(new BoxGeometry(0.06, 0.2, 0.18), shelfMat);
+    brR.position.set(0.6, -0.13, 0);
+    _potionShelfGroup.add(brL, brR);
+
+    // 5 bottles with varying shapes
+    const bottleDefs = [
+      { x: -0.52, bottleH: 0.38, bottleR: 0.07,  fillH: 0.22, fillR: 0.055 },
+      { x: -0.25, bottleH: 0.5,  bottleR: 0.055, fillH: 0.35, fillR: 0.04  },
+      { x: 0,     bottleH: 0.42, bottleR: 0.08,  fillH: 0.15, fillR: 0.065 },
+      { x: 0.25,  bottleH: 0.32, bottleR: 0.065, fillH: 0.25, fillR: 0.05  },
+      { x: 0.52,  bottleH: 0.48, bottleR: 0.06,  fillH: 0.42, fillR: 0.048 },
+    ];
+
+    const glassMat = new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.5 });
+
+    bottleDefs.forEach((def, i) => {
+      const baseY = 0.03 + def.bottleH / 2;
+
+      // Bottle body
+      const bottle = new Mesh(
+        new CylinderGeometry(def.bottleR * 0.85, def.bottleR, def.bottleH, 8),
+        glassMat.clone()
+      );
+      bottle.position.set(def.x, baseY, 0);
+
+      // Bottle neck
+      const neck = new Mesh(
+        new CylinderGeometry(def.bottleR * 0.3, def.bottleR * 0.6, def.bottleH * 0.25, 6),
+        glassMat.clone()
+      );
+      neck.position.set(def.x, baseY + def.bottleH / 2 * 0.7, 0);
+
+      // Cork
+      const cork = new Mesh(
+        new CylinderGeometry(def.bottleR * 0.28, def.bottleR * 0.28, 0.04, 5),
+        shelfMat
+      );
+      cork.position.set(def.x, baseY + def.bottleH * 0.62, 0);
+
+      // Liquid fill (inside bottle, glowing)
+      const liquidMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 });
+      const liquid = new Mesh(
+        new CylinderGeometry(def.fillR * 0.9, def.fillR, def.fillH, 8),
+        liquidMat
+      );
+      liquid.position.set(def.x, 0.03 + def.fillH / 2, 0);
+      _potionLiquids.push(liquid);
+
+      // Per-bottle glow light (sparse — every other)
+      if (i % 2 === 0) {
+        const pLight = new PointLight(0x33ff66, 0.06, 1.2);
+        pLight.position.set(def.x, baseY, 0.15);
+        _potionLights.push(pLight);
+        _potionShelfGroup!.add(pLight);
+      }
+
+      _potionShelfGroup!.add(bottle, neck, cork, liquid);
+    });
+
+    _potionShelfGroup.position.set(3, 1.5, -2.5);
+    scene.add(_potionShelfGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3786,6 +3868,24 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C438 — potion bottle shelf update
+    if (_potionShelfGroup) {
+      _potionShelfT += dt;
+      // Liquid bubble pulse — each bottle at different frequency
+      _potionLiquids.forEach((liq, i) => {
+        const freq = 1.2 + i * 0.3;
+        const phase = i * 0.8;
+        liq.scale.y = 1.0 + Math.sin(_potionShelfT * freq + phase) * 0.06;
+        liq.scale.x = 1.0 + Math.sin(_potionShelfT * freq * 1.3 + phase) * 0.03;
+        const mat = liq.material as MeshBasicMaterial;
+        mat.opacity = 0.75 + Math.sin(_potionShelfT * freq * 2 + phase) * 0.12;
+      });
+      // Light flicker
+      _potionLights.forEach((light, i) => {
+        light.intensity = 0.05 + Math.sin(_potionShelfT * 1.8 + i * 1.1) * 0.025;
+      });
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -4172,6 +4272,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _runeCircleLight = null;
       scene.remove(_runeCircleGroup);
       _runeCircleGroup = null;
+    }
+    // C438 — potion bottle shelf dispose
+    if (_potionShelfGroup) {
+      _potionShelfGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _potionLiquids.length = 0;
+      _potionLights.length = 0;
+      scene.remove(_potionShelfGroup);
+      _potionShelfGroup = null;
     }
   };
 
