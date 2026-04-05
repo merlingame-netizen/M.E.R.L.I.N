@@ -1159,6 +1159,91 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(tg);
   }
 
+  // ── Perched owl silhouettes — 2 owls watching from high branches ──────────────
+  // CeltOS charter: ZERO amber/orange/yellow. Body 0x0c1a0c, eyes 0x33ff66.
+  const _owlHeads: Mesh[] = [];
+  const _owlEyeLights: PointLight[] = [];
+  {
+    const owlBodyMat  = new MeshBasicMaterial({ color: 0x0c1a0c });
+    const owlEyeMat   = new MeshBasicMaterial({ color: 0x33ff66 });
+
+    const buildOwl = (
+      px: number, py: number, pz: number,
+      scaleFactor: number,
+      rotY: number,
+      owlIndex: number,
+    ): void => {
+      const owlGroup = new Group();
+
+      // Body — 6-sided cylinder
+      const bodyGeo = new CylinderGeometry(0.12, 0.18, 0.42, 6);
+      const body = new Mesh(bodyGeo, owlBodyMat);
+      owlGroup.add(body);
+
+      // Head — sphere atop body, slight forward tilt
+      const headGeo = new SphereGeometry(0.15, 6, 4);
+      const head = new Mesh(headGeo, owlBodyMat);
+      head.position.set(0, 0.32, 0.02);
+      head.rotation.x = 0.15;
+      owlGroup.add(head);
+      _owlHeads.push(head);
+
+      // Ear tufts — small cones at top of head
+      const tuftGeo = new ConeGeometry(0.04, 0.12, 3);
+      const tuftL = new Mesh(tuftGeo, owlBodyMat);
+      tuftL.position.set(-0.07, 0.46, 0.02);
+      tuftL.rotation.z = -0.25;
+      owlGroup.add(tuftL);
+
+      const tuftR = new Mesh(tuftGeo, owlBodyMat);
+      tuftR.position.set(0.07, 0.46, 0.02);
+      tuftR.rotation.z = 0.25;
+      owlGroup.add(tuftR);
+
+      // Wings — boxes offset left/right with slight angle
+      const wingGeo = new BoxGeometry(0.08, 0.28, 0.22);
+      const wingL = new Mesh(wingGeo, owlBodyMat);
+      wingL.position.set(-0.17, -0.02, 0);
+      wingL.rotation.z = 0.12;
+      wingL.userData = { side: 'L', owlIndex };
+      owlGroup.add(wingL);
+
+      const wingR = new Mesh(wingGeo, owlBodyMat);
+      wingR.position.set(0.17, -0.02, 0);
+      wingR.rotation.z = -0.12;
+      wingR.userData = { side: 'R', owlIndex };
+      owlGroup.add(wingR);
+
+      // Glowing eyes — 2 small spheres
+      const eyeGeo = new SphereGeometry(0.025, 4, 3);
+      const eyeOffsets: [number, number, number][] = [
+        [-0.055, 0.32, 0.13],
+        [ 0.055, 0.32, 0.13],
+      ];
+      for (let ei = 0; ei < eyeOffsets.length; ei++) {
+        const [ex, ey, ez] = eyeOffsets[ei]!;
+        const eyeMesh = new Mesh(eyeGeo, owlEyeMat);
+        eyeMesh.position.set(ex, ey, ez);
+        owlGroup.add(eyeMesh);
+
+        const eyeLight = new PointLight(0x33ff66, 0.08, 1.5);
+        eyeLight.position.set(px + ex * scaleFactor, py + ey * scaleFactor, pz + ez * scaleFactor);
+        group.add(eyeLight);
+        _owlEyeLights.push(eyeLight);
+      }
+
+      owlGroup.position.set(px, py, pz);
+      owlGroup.scale.setScalar(scaleFactor);
+      owlGroup.rotation.y = rotY;
+      group.add(owlGroup);
+    };
+
+    // Owl 1 — perched on branch at (-15, 4.5, -30)
+    buildOwl(-15, 4.5, -30, 1.0, 0.3, 0);
+    // Owl 2 — perched higher at (8, 6.0, -35), slightly smaller, rotated differently
+    buildOwl(8, 6.0, -35, 0.85, -0.8, 1);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1281,6 +1366,41 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       _treantEyeLights[ti]!.intensity = 0.12 + Math.sin(sceneTime * 0.4 + ti * 0.5) * 0.08;
     }
 
+    // Owl head scan + wing rustle + eye pulse + occasional blink
+    // _owlHeads: [owl0Head, owl1Head]  _owlEyeLights: [owl0eyeL, owl0eyeR, owl1eyeL, owl1eyeR]
+    for (let oi = 0; oi < _owlHeads.length; oi++) {
+      const head = _owlHeads[oi]!;
+      // Slow head scan — different phase per owl
+      head.rotation.y = Math.sin(sceneTime * 0.2 + oi * 1.5) * 0.4;
+
+      // Wing micro-rustle — side stored in userData on wing children
+      const owlGroup = head.parent;
+      if (owlGroup) {
+        for (const child of owlGroup.children) {
+          const ud = child.userData as { side?: string };
+          if (ud.side === 'L') {
+            child.rotation.z = 0.12 + Math.sin(sceneTime * 0.15 + oi * 2.3) * 0.05;
+          } else if (ud.side === 'R') {
+            child.rotation.z = -0.12 - Math.sin(sceneTime * 0.15 + oi * 2.3) * 0.05;
+          }
+        }
+      }
+
+      // Eye pulse — 2 lights per owl
+      for (let ei = 0; ei < 2; ei++) {
+        const lightIdx = oi * 2 + ei;
+        const eyeLight = _owlEyeLights[lightIdx];
+        if (eyeLight) {
+          // Occasional blink: every ~6s window offset per owl, eyes shut for 100ms
+          const blinkCycle = (sceneTime + oi * 2.3) % 6.0;
+          const blinking = blinkCycle < 0.1;
+          eyeLight.intensity = blinking
+            ? 0
+            : 0.06 + Math.sin(sceneTime * 0.8 + ei * 1.5 + oi * 2.7) * 0.04;
+        }
+      }
+    }
+
     // Firefly swarm drift + twinkle
     _fireflyTime += dt;
     for (const fly of _fireflyMeshes) {
@@ -1319,6 +1439,8 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     _treantGroup = null;
     _treantBody = null;
     _treantEyeLights.length = 0;
+    _owlHeads.length = 0;
+    _owlEyeLights.length = 0;
   };
 
   return { group, update, dispose };
