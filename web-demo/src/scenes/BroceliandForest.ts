@@ -755,6 +755,40 @@ function createCrowFlock(): CrowFlockResult {
   return { crows, crowMats, update };
 }
 
+// ── Ancient stone column ruins ────────────────────────────────────────────────
+// C246: 5 standing stones in slight arc at depth z=-41 to -45, plus a fallen lintel.
+
+function createAncientRuins(): Group {
+  const group = new Group();
+
+  // Standing stone definitions: [radiusTop, radiusBottom, height, x, y, z, rotZ, color]
+  const stones: [number, number, number, number, number, number, number, number][] = [
+    [0.40, 0.50, 5.0, -12, -0.5, -42,  0.05, 0x2a3020],
+    [0.35, 0.45, 6.5,  -6, -0.5, -44, -0.04, 0x1e2818],
+    [0.45, 0.50, 4.0,   0, -0.5, -45,  0.00, 0x252f1c],
+    [0.38, 0.48, 7.0,   6, -0.5, -43,  0.06, 0x2a3020],
+    [0.30, 0.40, 3.5,  14, -0.5, -41, -0.08, 0x1e2818],
+  ];
+
+  for (const [rTop, rBot, ht, x, y, z, rz, col] of stones) {
+    const geo = new CylinderGeometry(rTop, rBot, ht, 5);
+    const mat = new MeshBasicMaterial({ color: col });
+    const mesh = new Mesh(geo, mat);
+    mesh.position.set(x, y + ht / 2, z);
+    mesh.rotation.z = rz;
+    group.add(mesh);
+  }
+
+  // Fallen lintel — ruined trilith crosspiece across stones 2 & 3
+  const lintelGeo = new BoxGeometry(8, 0.4, 0.5);
+  const lintelMat = new MeshBasicMaterial({ color: 0x252f1c });
+  const lintel = new Mesh(lintelGeo, lintelMat);
+  lintel.position.set(-3, 2.5, -43.5);
+  group.add(lintel);
+
+  return group;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -798,6 +832,7 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   const { group: torchGroup, torchLights } = createForestTorches();
   group.add(torchGroup);
   group.add(createForestDebris());
+  group.add(createAncientRuins());
   group.add(createCanopyRays());
   group.add(createGroundMist());
 
