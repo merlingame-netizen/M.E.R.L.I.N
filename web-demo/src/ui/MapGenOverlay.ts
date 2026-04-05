@@ -770,6 +770,23 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   const roseY = 52;
   const roseSize = 22;
 
+  // ── Cursor orb — glowing dot that travels the path as it's drawn ─────────
+  const cursorOrb = document.createElement('div');
+  cursorOrb.id = 'map-cursor-orb';
+  cursorOrb.style.cssText = [
+    'position:absolute',
+    'width:10px',
+    'height:10px',
+    'border-radius:50%',
+    'background:rgba(51,255,102,0.9)',
+    'box-shadow:0 0 8px rgba(51,255,102,0.8), 0 0 16px rgba(51,255,102,0.4)',
+    'transform:translate(-50%,-50%)',
+    'pointer-events:none',
+    'z-index:10',
+    'transition:opacity 0.3s',
+  ].join(';');
+  rightPanel.appendChild(cursorOrb);
+
   const mapData = buildMapData(canvas.width, canvas.height, scenario.events, biome);
 
   // ── Phase 1: draw terrain patches ────────────────────────────────────────
@@ -891,8 +908,16 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
         animState.progress = Math.min(animState.progress + dt / PATH_ANIM_MS, 1);
         redrawCanvas();
 
+        // Position cursor orb at the leading edge of the drawn path
+        const orbPt = getPathPoint(mapData.pathPoints, animState.progress);
+        cursorOrb.style.left = orbPt.x + 'px';
+        cursorOrb.style.top  = orbPt.y + 'px';
+
         if (animState.progress >= 1) {
           animState.phase = 'zones';
+          // Fade out orb then remove it
+          cursorOrb.style.opacity = '0';
+          setTimeout(() => { cursorOrb.parentNode?.removeChild(cursorOrb); }, 350);
           pathResolve();
         }
       } else if (animState.phase === 'zones') {
