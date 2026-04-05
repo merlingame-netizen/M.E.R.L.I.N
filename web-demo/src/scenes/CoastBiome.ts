@@ -625,6 +625,10 @@ let whaleLight367: PointLight | null = null;
 let whaleBreach367T = -1;   // -1 = resting, 0+ = animating
 let whaleNext367 = 20.0 + Math.random() * 15.0;
 
+// ── Bioluminescent wave crests (C371) ─────────────────────────────────────
+let waveCrests371: Mesh[] = [];
+let waveCrestData371: Array<{ z: number; speed: number; light: PointLight }> = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1106,6 +1110,28 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(whaleLight367);
   }
 
+  // ── Bioluminescent wave crests (C371) ─────────────────────────────────────
+  {
+    const crestMat = new MeshBasicMaterial({
+      color: 0x0d3a1a, transparent: true, opacity: 0.0, depthWrite: false, side: DoubleSide,
+    });
+    const WAVE_COUNT = 4;
+    for (let i = 0; i < WAVE_COUNT; i++) {
+      const crestGeo = new PlaneGeometry(18, 0.12);
+      crestGeo.rotateX(-Math.PI / 2);
+      const crest = new Mesh(crestGeo, crestMat.clone());
+      const startZ = -28 + i * 7;
+      crest.position.set(0, -0.55, startZ);
+      group.add(crest);
+      waveCrests371.push(crest);
+
+      const light = new PointLight(0x33ff66, 0.0, 4.0);
+      light.position.set(0, -0.25, startZ);
+      group.add(light);
+      waveCrestData371.push({ z: startZ, speed: 0.8 + Math.random() * 0.4, light });
+    }
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1457,6 +1483,32 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         whaleBreach367T = -1;
       }
     }
+
+    // ── Bioluminescent wave crests (C371) ───────────────────────────────────
+    waveCrests371.forEach((crest, i) => {
+      const data = waveCrestData371[i];
+      if (!data) return;
+      data.z += data.speed * dt;
+
+      if (data.z > -2) {
+        data.z = -28 - Math.random() * 4;
+        data.speed = 0.8 + Math.random() * 0.4;
+      }
+
+      crest.position.z = data.z;
+      data.light.position.z = data.z;
+
+      const distToShore = Math.abs(data.z - (-2));
+      const breakZone = 6.0;
+      if (distToShore < breakZone) {
+        const brightness = Math.pow(1.0 - distToShore / breakZone, 2);
+        (crest.material as MeshBasicMaterial).opacity = brightness * 0.45;
+        data.light.intensity = brightness * 0.2;
+      } else {
+        (crest.material as MeshBasicMaterial).opacity = 0.0;
+        data.light.intensity = 0.0;
+      }
+    });
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -1512,6 +1564,14 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     sprayLifetimes359 = null;
     if (whaleMesh367) { group.remove(whaleMesh367); whaleMesh367.geometry.dispose(); (whaleMesh367.material as MeshStandardMaterial).dispose(); whaleMesh367 = null; }
     if (whaleLight367) { group.remove(whaleLight367); whaleLight367.dispose(); whaleLight367 = null; }
+    waveCrests371.forEach(c => {
+      group.remove(c);
+      c.geometry.dispose();
+      (c.material as MeshBasicMaterial).dispose();
+    });
+    waveCrests371 = [];
+    waveCrestData371.forEach(d => { group.remove(d.light); d.light.dispose(); });
+    waveCrestData371 = [];
     group.clear();
   };
 
