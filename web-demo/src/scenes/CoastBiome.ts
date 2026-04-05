@@ -708,6 +708,15 @@ let planktonT474: number = 0;
 const planktonParticles474: Mesh[] = [];
 // Store per-particle data inline via userData
 
+// ── Bioluminescent fish school (C479) ─────────────────────────────────────
+let fishSchoolGroup479: Group | null = null;
+let fishSchoolT479: number = 0;
+const fishBodies479: Group[] = [];
+// Leader position (computed each frame)
+let fishLeaderX479: number = 0;
+let fishLeaderY479: number = -1.5;
+let fishLeaderZ479: number = -6;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1950,6 +1959,59 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(planktonGroup474);
   }
 
+  // ── Bioluminescent fish school (C479) ───────────────────────────────────
+  {
+    fishSchoolGroup479 = new Group();
+    fishSchoolGroup479.position.set(-2, 0, -6);
+
+    for (let i = 0; i < 20; i++) {
+      const fishGroup = new Group();
+
+      // Body: elongated box
+      const body = new Mesh(
+        new BoxGeometry(0.08, 0.05, 0.2),
+        new MeshBasicMaterial({ color: 0x0d2a14 })
+      );
+      fishGroup.add(body);
+
+      // Tail fin: small plane angled at back
+      const tail = new Mesh(
+        new PlaneGeometry(0.06, 0.08),
+        new MeshBasicMaterial({ color: 0x0d2a14, side: DoubleSide })
+      );
+      tail.position.z = 0.12;
+      tail.rotation.y = Math.PI * 0.5;
+      fishGroup.add(tail);
+
+      // Bioluminescent stripe (thin plane on body side)
+      const stripe = new Mesh(
+        new PlaneGeometry(0.16, 0.018),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7, side: DoubleSide })
+      );
+      stripe.position.y = 0.018;
+      fishGroup.add(stripe);
+
+      // Scatter loosely around school center
+      fishGroup.position.set(
+        (Math.random() - 0.5) * 3,
+        -1.0 + (Math.random() - 0.5) * 1.0,
+        (Math.random() - 0.5) * 3
+      );
+
+      // Store school offset (each fish has a slightly different target offset from leader)
+      (fishGroup as any).__offsetX = (Math.random() - 0.5) * 2.0;
+      (fishGroup as any).__offsetY = (Math.random() - 0.5) * 0.8;
+      (fishGroup as any).__offsetZ = (Math.random() - 0.5) * 2.0;
+      (fishGroup as any).__phase = Math.random() * Math.PI * 2;
+      (fishGroup as any).__tailPhase = Math.random() * Math.PI * 2;
+
+      fishSchoolGroup479!.add(fishGroup);
+      fishBodies479.push(fishGroup);
+    }
+
+    group.add(fishSchoolGroup479);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2529,6 +2591,45 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       if (p.position.x < -7) p.position.x = 7;
     });
 
+    // ── Fish school animation (C479) ─────────────────────────────────────
+    fishSchoolT479 += dt;
+
+    // Leader traces an ellipse in the ocean
+    fishLeaderX479 = Math.cos(fishSchoolT479 * 0.3) * 5;
+    fishLeaderY479 = -1.5 + 0.5 * Math.sin(fishSchoolT479 * 0.4);
+    fishLeaderZ479 = Math.sin(fishSchoolT479 * 0.25) * 3;
+
+    // Each fish follows leader + offset
+    fishBodies479.forEach((fish) => {
+      const ox = (fish as any).__offsetX as number;
+      const oy = (fish as any).__offsetY as number;
+      const oz = (fish as any).__offsetZ as number;
+      const phase = (fish as any).__phase as number;
+      const tailPhase = (fish as any).__tailPhase as number;
+
+      // Target position
+      const tx = fishLeaderX479 + ox + 0.3 * Math.sin(fishSchoolT479 * 1.2 + phase);
+      const ty = fishLeaderY479 + oy + 0.15 * Math.sin(fishSchoolT479 * 0.9 + phase);
+      const tz = fishLeaderZ479 + oz + 0.2 * Math.cos(fishSchoolT479 * 1.1 + phase);
+
+      // Smooth follow (lerp)
+      fish.position.x += (tx - fish.position.x) * 2.5 * dt;
+      fish.position.y += (ty - fish.position.y) * 2.5 * dt;
+      fish.position.z += (tz - fish.position.z) * 2.5 * dt;
+
+      // Face direction of movement
+      const dx = tx - fish.position.x;
+      const dz = tz - fish.position.z;
+      if (Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01) {
+        fish.rotation.y = Math.atan2(dx, dz);
+      }
+
+      // Tail waggle (rotate children[1] = tail)
+      if (fish.children[1]) {
+        fish.children[1].rotation.z = 0.3 * Math.sin(fishSchoolT479 * 5 + tailPhase);
+      }
+    });
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2774,6 +2875,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       planktonGroup474 = null;
     }
     planktonParticles474.length = 0;
+    if (fishSchoolGroup479) {
+      fishSchoolGroup479.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as MeshBasicMaterial).dispose();
+        }
+      });
+      fishSchoolGroup479 = null;
+    }
+    fishBodies479.length = 0;
     group.clear();
   };
 
