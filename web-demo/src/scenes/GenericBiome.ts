@@ -9,7 +9,7 @@
 
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
-  CircleGeometry, ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
+  CircleGeometry, Color, ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
   InstancedMesh, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
   PointLight, Points, PointsMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
@@ -400,6 +400,11 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _cropCircleMeshes: Mesh[] = [];
   let _cropCircleLight: PointLight | null = null;
   let _cropCircleTime = 0;
+  // ── Menhir procession (C354) ─────────────────────────────────────────────
+  let menhirGroup354: Group | null = null;
+  let menhirMeshes354: Mesh[] = [];
+  let menhirLights354: PointLight[] = [];
+  let _menhirElapsed354 = 0;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
   const _bogFireflies: Mesh[] = [];
@@ -1792,6 +1797,46 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     cropGlow.position.set(-6, 0.5, -25);
     group.add(cropGlow);
     _cropCircleLight = cropGlow;
+
+    // ── Menhir procession (C354) ─────────────────────────────────────────────
+    // 7 standing stones leading from mid-field toward the obelisk at (0,0,-18)
+    menhirGroup354 = new Group();
+    const _mR = () => Math.random();
+    for (let mi = 0; mi < 7; mi++) {
+      const t354 = mi / 6; // 0..1 along the line
+      const baseX = -8 + t354 * 6;  // -8 to -2
+      const baseZ = -10 - t354 * 8; // -10 to -18
+      const jitterX = (_mR() - 0.5) * 0.6;
+      const jitterZ = (_mR() - 0.5) * 0.6;
+      const geo = new BoxGeometry(
+        0.3 + _mR() * 0.1,
+        2.5 + _mR() * 0.8,
+        0.25 + _mR() * 0.08,
+      );
+      const mat = new MeshStandardMaterial({
+        color: 0x2a4a2a,
+        roughness: 0.95,
+        metalness: 0.0,
+        emissive: new Color(0x0d4420),
+        emissiveIntensity: 0.05,
+      });
+      const mesh = new Mesh(geo, mat);
+      const height = (geo.parameters as { height: number }).height;
+      mesh.position.set(baseX + jitterX, height * 0.5 - 0.5, baseZ + jitterZ);
+      mesh.rotation.y = (_mR() - 0.5) * 0.15;
+      menhirGroup354.add(mesh);
+      menhirMeshes354.push(mesh);
+    }
+    // Two point lights at start and end of procession
+    const mLight0 = new PointLight(0x33ff66, 0.0, 4);
+    mLight0.position.set(-8, 1.5, -10);
+    menhirGroup354.add(mLight0);
+    menhirLights354.push(mLight0);
+    const mLight1 = new PointLight(0x33ff66, 0.0, 4);
+    mLight1.position.set(-2, 1.5, -18);
+    menhirGroup354.add(mLight1);
+    menhirLights354.push(mLight1);
+    group.add(menhirGroup354);
   }
 
   const update = (dt: number): void => {
@@ -1863,6 +1908,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (_cropCircleLight !== null) {
       const t = _cropCircleTime;
       _cropCircleLight.intensity = 0.02 + Math.sin(t * 0.15) * 0.02;
+    }
+    // Plaine des Druides — menhir procession wave pulse (C354)
+    if (menhirMeshes354.length > 0) {
+      _menhirElapsed354 += dt;
+      const cycle354 = (_menhirElapsed354 % 7.0) / 7.0; // 0..1 over 7s
+      menhirMeshes354.forEach((m, i) => {
+        const phase = i / menhirMeshes354.length;
+        const wave = Math.max(0, 1 - Math.abs(cycle354 - phase) * 6);
+        (m.material as MeshStandardMaterial).emissiveIntensity = 0.05 + wave * 0.10;
+      });
+      // pulse light at start and end of procession
+      if (menhirLights354[0]) menhirLights354[0].intensity = (menhirMeshes354[0].material as MeshStandardMaterial).emissiveIntensity * 0.4;
+      if (menhirLights354[1]) menhirLights354[1].intensity = (menhirMeshes354[menhirMeshes354.length - 1].material as MeshStandardMaterial).emissiveIntensity * 0.4;
     }
     // Marais korrigans — chaotic will-o'-wisp particles
     if (maraisWispMeshes.length > 0) {
@@ -2222,6 +2280,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _moonLight = null;
     _cropCircleMeshes.length = 0;
     _cropCircleLight = null;
+    // Menhir procession cleanup (C354)
+    if (menhirGroup354) { group.remove(menhirGroup354); menhirGroup354.traverse(c => { if ((c as Mesh).geometry) (c as Mesh).geometry.dispose(); }); menhirGroup354 = null; }
+    menhirMeshes354 = [];
+    menhirLights354 = [];
     maraisWispMeshes = [];
     _bogFireflies.length = 0;
     _bogFireflyLights.length = 0;
