@@ -696,6 +696,120 @@ export function updateFactionDisplay(factions: Record<string, number>): void {
   }
 }
 
+// =============================================================================
+// C323 — Life bar drain sweep animation (-1 drain at card start)
+// =============================================================================
+
+/**
+ * Inject the drain animation CSS once into document.head.
+ * Idempotent — guarded by #hud-drain-style.
+ */
+function ensureDrainStyles(): void {
+  if (document.getElementById('hud-drain-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-drain-style';
+  s.textContent = `
+    @keyframes hud-drain-highlight {
+      0%   { background: rgba(255,60,60,0.9); }
+      100% { background: rgba(255,60,60,0); }
+    }
+    @keyframes hud-life-val-red {
+      0%   { color: rgba(255,80,80,1.0); text-shadow: 0 0 8px rgba(255,80,80,0.7); }
+      100% { color: #33ff66; text-shadow: none; }
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * Play a two-phase drain sweep animation on the life bar.
+ * Phase 1 (0-150ms):  Red highlight overlay on the segment about to be removed.
+ * Phase 2 (150-450ms): Bar width transitions to new value; a red streak tracks the edge.
+ * SFX: fires `life_loss` at phase 2 start (150ms).
+ * Life value element (#hud-life-value) flashes red → green over 500ms if present.
+ *
+ * @param currentLife - Life value BEFORE the drain (the value currently shown).
+ * @param maxLife     - Maximum life (used to compute bar percentages).
+ */
+export function playDrainAnimation(currentLife: number, maxLife: number): void {
+  ensureDrainStyles();
+
+  const fillEl = _lifeFillEl ?? document.getElementById('life-fill') as HTMLElement | null;
+  if (!fillEl) return;
+
+  const safeMax = maxLife > 0 ? maxLife : 1;
+  const currentPct = Math.max(0, Math.min(100, (currentLife / safeMax) * 100));
+  const newPct     = Math.max(0, Math.min(100, ((currentLife - 1) / safeMax) * 100));
+
+  // --- Phase 1: red highlight overlay on the bar fill (150ms) ---
+  const highlight = document.createElement('div');
+  highlight.style.cssText = [
+    'position:absolute',
+    'top:0',
+    'right:0',
+    'height:100%',
+    // Width of the highlight = the 1-HP segment being removed
+    `width:${Math.max(2, currentPct - newPct)}%`,
+    'background:rgba(255,60,60,0.9)',
+    'pointer-events:none',
+    'z-index:2',
+    'animation:hud-drain-highlight 150ms ease-out forwards',
+  ].join(';');
+
+  // Ensure the fill bar has relative/absolute positioning for the overlay
+  const origPosition = fillEl.style.position;
+  if (!origPosition || origPosition === 'static') {
+    fillEl.style.position = 'relative';
+  }
+  fillEl.appendChild(highlight);
+
+  // --- Phase 2 (starts at 150ms): width transition + red streak ---
+  window.setTimeout(() => {
+    // Fire SFX at phase 2 start
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'life_loss' } }));
+
+    // Remove highlight overlay
+    highlight.remove();
+
+    // Animate bar width to new value
+    const prevTransition = fillEl.style.transition;
+    fillEl.style.transition = 'width 300ms ease-in';
+    fillEl.style.width = `${newPct}%`;
+
+    // Red streak that rides the drain edge
+    const streak = document.createElement('div');
+    streak.style.cssText = [
+      'position:absolute',
+      'right:0',
+      'top:0',
+      'height:100%',
+      'width:4px',
+      'background:rgba(255,60,60,0.7)',
+      'pointer-events:none',
+      'z-index:3',
+      'transition:opacity 300ms ease-in',
+    ].join(';');
+    fillEl.appendChild(streak);
+
+    // Restore original transition and clean up streak after phase 2 completes
+    window.setTimeout(() => {
+      fillEl.style.transition = prevTransition;
+      streak.remove();
+    }, 320);
+  }, 150);
+
+  // --- Counter text flash: #hud-life-value red → green over 500ms (optional element) ---
+  const valEl = document.getElementById('hud-life-value') as HTMLElement | null;
+  if (valEl) {
+    valEl.style.animation = 'none';
+    void valEl.offsetWidth; // force reflow
+    valEl.style.animation = 'hud-life-val-red 500ms ease-out forwards';
+    window.setTimeout(() => {
+      valEl.style.animation = '';
+    }, 520);
+  }
+}
+
 /** Unsubscribe HUD from store — call when entering lair/menu to stop unnecessary renders. BUG-C88-06. */
 export function teardownHUD(): void {
   _hudUnsubscribe?.();
@@ -749,6 +863,8 @@ export function teardownHUD(): void {
   // C259: remove ogham toast and its style on teardown.
   document.getElementById('hud-ogham-toast')?.remove();
   document.getElementById('hud-ogham-toast-style')?.remove();
+  // C323: remove drain animation style on teardown.
+  document.getElementById('hud-drain-style')?.remove();
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;
