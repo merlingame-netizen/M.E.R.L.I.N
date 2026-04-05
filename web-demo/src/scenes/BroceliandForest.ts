@@ -891,6 +891,14 @@ let waterfallGroup410: Group | null = null;
 let waterfallT410 = 0;
 const waterfallPlanes410: Mesh[] = [];
 
+// ── Cycle-416: spring of visions ──────────────────────────────────────────────
+let springGroup416: Group | null = null;
+let springT416 = 0;
+let springVisionTimer416 = 0;
+let springVisionDur416 = 8 + Math.random() * 10;
+let springWaterMesh416: Mesh | null = null;
+let springGlowLight416: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1790,6 +1798,51 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(waterfallGroup410);
   }
 
+  // ── Cycle-416: Spring of Visions at (8, 0, -25) ────────────────────────────
+  {
+    springGroup416 = new Group();
+
+    // Basin rim
+    const rimGeo = new TorusGeometry(1.1, 0.2, 6, 16);
+    const rimMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const rim = new Mesh(rimGeo, rimMat);
+    rim.position.set(0, 0.18, 0);
+    springGroup416.add(rim);
+
+    // Basin floor
+    const floorGeo = new CylinderGeometry(0.9, 0.9, 0.25, 16);
+    const floorMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const floor = new Mesh(floorGeo, floorMat);
+    floor.position.set(0, 0.0, 0);
+    springGroup416.add(floor);
+
+    // 6 upright rim stones
+    for (let si = 0; si < 6; si++) {
+      const angle = (si / 6) * Math.PI * 2;
+      const stoneGeo = new BoxGeometry(0.15, 0.35, 0.15);
+      const stoneMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+      const stone = new Mesh(stoneGeo, stoneMat);
+      stone.position.set(Math.cos(angle) * 1.1, 0.28, Math.sin(angle) * 1.1);
+      springGroup416.add(stone);
+    }
+
+    // Water surface
+    const waterGeo = new CircleGeometry(0.88, 20);
+    const waterMat = new MeshBasicMaterial({ color: 0x0d3318, transparent: true, opacity: 0.85, depthWrite: false });
+    springWaterMesh416 = new Mesh(waterGeo, waterMat);
+    springWaterMesh416.rotation.x = -Math.PI / 2;
+    springWaterMesh416.position.set(0, 0.22, 0);
+    springGroup416.add(springWaterMesh416);
+
+    // Pool glow light
+    springGlowLight416 = new PointLight(0x33ff66, 0.2, 4.0);
+    springGlowLight416.position.set(0, 0.5, 0);
+    springGroup416.add(springGlowLight416);
+
+    springGroup416.position.set(8, 0, -25);
+    group.add(springGroup416);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2166,6 +2219,39 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         (plane.material as MeshBasicMaterial).opacity = 0.55 + Math.sin(waterfallT410 * 3 + pi) * 0.15;
       });
     }
+
+    // Cycle-416: spring of visions animation
+    if (springGroup416 && springWaterMesh416 && springGlowLight416) {
+      springT416 += dt;
+      springVisionTimer416 += dt;
+
+      // Water surface ripple (animate geometry vertices)
+      const waterPos = springWaterMesh416.geometry.attributes['position'] as BufferAttribute;
+      for (let vi = 0; vi < waterPos.count; vi++) {
+        const x = waterPos.getX(vi);
+        const z = waterPos.getZ(vi);
+        const dist = Math.sqrt(x * x + z * z);
+        waterPos.setY(vi, Math.sin(dist * 5 - springT416 * 2.5) * 0.018);
+      }
+      waterPos.needsUpdate = true;
+
+      // Base light pulse
+      let baseIntensity = 0.18 + Math.sin(springT416 * 1.3) * 0.06;
+
+      // Vision flash event
+      if (springVisionTimer416 >= springVisionDur416) {
+        springVisionTimer416 = 0;
+        springVisionDur416 = 8 + Math.random() * 10;
+      }
+      if (springVisionTimer416 < 0.5) {
+        // Flash: bright surge then fade
+        const ft = springVisionTimer416 / 0.5;
+        baseIntensity += Math.sin(ft * Math.PI) * 0.5;
+        const mat = springWaterMesh416.material as MeshBasicMaterial;
+        mat.opacity = 0.85 + Math.sin(ft * Math.PI) * 0.15;
+      }
+      springGlowLight416.intensity = baseIntensity;
+    }
   };
 
   const dispose = (): void => {
@@ -2345,6 +2431,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       });
       waterfallPlanes410.length = 0;
       waterfallGroup410 = null;
+    }
+    // Cycle-416: spring of visions cleanup
+    if (springGroup416) {
+      springGroup416.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            c.material.forEach(m => m.dispose());
+          } else {
+            c.material.dispose();
+          }
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      springWaterMesh416 = null;
+      springGlowLight416 = null;
+      springGroup416 = null;
     }
   };
 
