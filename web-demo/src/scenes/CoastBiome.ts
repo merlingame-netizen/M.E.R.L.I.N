@@ -638,6 +638,13 @@ let wavePhase395 = 0;     // 0=wait, 1=rise, 2=curl, 3=crash, 4=dissipate
 let wavePhaseT395 = 0;
 let waveWaitT395 = 0;
 
+// ── Sea turtle swimming — cotes_sauvages (C399) ───────────────────────────
+let turtleGroup: Group | null = null;
+let turtleT = 0;
+let turtleDir = 1;
+let _turtleFrontL: Mesh | null = null;
+let _turtleFrontR: Mesh | null = null;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1197,6 +1204,55 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(model);
   }
 
+  // ── Sea turtle (C399) — cotes_sauvages ───────────────────────────────────
+  {
+    const shellMat = new MeshStandardMaterial({ color: 0x0a2a14, emissive: 0x0d3310, roughness: 0.85, flatShading: true });
+    const headMat  = new MeshStandardMaterial({ color: 0x0a2a14, roughness: 0.85, flatShading: true });
+    const flipMat  = new MeshStandardMaterial({ color: 0x0a2a14, roughness: 0.85, flatShading: true });
+
+    turtleGroup = new Group();
+
+    // Shell — flattened sphere
+    const shell = new Mesh(new SphereGeometry(0.6, 8, 6), shellMat);
+    shell.scale.set(1, 0.45, 1.3);
+    turtleGroup.add(shell);
+
+    // Head
+    const head = new Mesh(new SphereGeometry(0.2, 6, 4), headMat);
+    head.position.set(0, 0, 0.8);
+    turtleGroup.add(head);
+
+    // Flippers — 4x BoxGeometry(0.5, 0.06, 0.25)
+    // Front-left
+    const flipFL = new Mesh(new BoxGeometry(0.5, 0.06, 0.25), flipMat.clone());
+    flipFL.position.set(-0.55, 0, 0.3);
+    flipFL.rotation.y = -0.4;
+    turtleGroup.add(flipFL);
+    _turtleFrontL = flipFL;
+
+    // Front-right
+    const flipFR = new Mesh(new BoxGeometry(0.5, 0.06, 0.25), flipMat.clone());
+    flipFR.position.set(0.55, 0, 0.3);
+    flipFR.rotation.y = 0.4;
+    turtleGroup.add(flipFR);
+    _turtleFrontR = flipFR;
+
+    // Rear-left
+    const flipRL = new Mesh(new BoxGeometry(0.5, 0.06, 0.25), flipMat.clone());
+    flipRL.position.set(-0.5, 0, -0.4);
+    flipRL.rotation.y = 0.5;
+    turtleGroup.add(flipRL);
+
+    // Rear-right
+    const flipRR = new Mesh(new BoxGeometry(0.5, 0.06, 0.25), flipMat.clone());
+    flipRR.position.set(0.5, 0, -0.4);
+    flipRR.rotation.y = -0.5;
+    turtleGroup.add(flipRR);
+
+    turtleGroup.position.set(-8, -0.3, -20);
+    group.add(turtleGroup);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -1548,6 +1604,18 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     });
 
+    // ── Sea turtle swimming (C399) ────────────────────────────────────────
+    if (turtleGroup !== null) {
+      turtleT += dt * 0.3 * turtleDir;
+      turtleGroup.position.x = -8 + Math.sin(turtleT * 0.5) * 3;
+      turtleGroup.position.y = Math.sin(turtleT) * 0.15 - 0.3;
+      turtleGroup.rotation.y = Math.sin(turtleT * 0.5) * 0.3;
+      if (_turtleFrontL !== null) _turtleFrontL.rotation.z =  Math.sin(turtleT * 3) * 0.3;
+      if (_turtleFrontR !== null) _turtleFrontR.rotation.z = -Math.sin(turtleT * 3) * 0.3;
+      if (turtleT > 12)  turtleDir = -1;
+      if (turtleT < -12) turtleDir =  1;
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -1672,6 +1740,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
     waveFace395 = null; waveCrest395 = null;
     if (waveFlashLight395) { waveFlashLight395.dispose(); waveFlashLight395 = null; }
+    if (turtleGroup !== null) {
+      turtleGroup.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        if ((c as Mesh).material) ((c as Mesh).material as MeshStandardMaterial).dispose();
+      });
+      group.remove(turtleGroup);
+      turtleGroup = null;
+    }
+    _turtleFrontL = null;
+    _turtleFrontR = null;
     group.clear();
   };
 
