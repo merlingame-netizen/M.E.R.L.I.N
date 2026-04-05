@@ -401,6 +401,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _bogFireflies: Mesh[] = [];
   const _bogFireflyLights: PointLight[] = [];
   const _fogTendrils: Mesh[] = [];
+  let _lureWisp: Mesh | null = null;
+  let _lureLight: PointLight | null = null;
+  const _lureTrailOrbs: Mesh[] = [];
+  const _lureTrailPositions: Array<[number, number, number]> = [];
   const _auroraBands: Mesh[] = [];
   let _auroraTime = 0;
   let _deadTreeGroup: Group | null = null;
@@ -412,6 +416,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _altarFireLight: PointLight | null = null;
   const _dancerGroups: Group[] = [];
   const _dancerArmGroups: Group[] = [];
+  const _ravenGroups: Group[] = [];
+  const _ravenWings: Mesh[] = [];
   const _heatherMeshes: Mesh[] = [];
   let _moorCircleGroup: Group | null = null;
   let _moorCircleLight: PointLight | null = null;
@@ -626,6 +632,38 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       };
       group.add(tendril);
       _fogTendrils.push(tendril);
+    }
+
+    // Lure wisp — large beckoning will-o'-wisp on figure-8 path (C345)
+    const lureMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    const lureOrb = new Mesh(new SphereGeometry(0.3, 8, 6), lureMat);
+    lureOrb.position.set(0, 1.2, -18);
+    group.add(lureOrb);
+    _lureWisp = lureOrb;
+
+    const lureLight = new PointLight(0x33ff66, 0.8, 8);
+    lureLight.position.copy(lureOrb.position);
+    group.add(lureLight);
+    _lureLight = lureLight;
+
+    // Trail orbs (5 progressively older positions)
+    const trailScales: number[] = [0.7, 0.55, 0.4, 0.25, 0.1];
+    const trailOpacities: number[] = [0.6, 0.45, 0.3, 0.18, 0.08];
+    for (let i = 0; i < 5; i++) {
+      const trailMat = new MeshBasicMaterial({
+        color: 0x33ff66,
+        transparent: true,
+        opacity: trailOpacities[i]!,
+      });
+      const trailOrb = new Mesh(new SphereGeometry(0.10, 5, 3), trailMat);
+      trailOrb.position.set(0, 1.2, -18);
+      trailOrb.scale.setScalar(trailScales[i]!);
+      group.add(trailOrb);
+      _lureTrailOrbs.push(trailOrb);
+    }
+    // Seed trail with current position so orbs don't start at origin
+    for (let i = 0; i < 5; i++) {
+      _lureTrailPositions.push([0, 1.2, -18]);
     }
   }
 
@@ -1315,6 +1353,48 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       _dancerGroups.push(figureGroup);
       _dancerArmGroups.push(armsGroup);
     }
+
+    // Circling raven flock — 7 birds soaring overhead in a loose gyre (C342)
+    const RAVEN_COLOR = 0x080e08;
+    const ravenBodyMat = new MeshBasicMaterial({ color: RAVEN_COLOR });
+    const ravenWingMat = new MeshBasicMaterial({ color: RAVEN_COLOR });
+    const ravenBodyGeo = new BoxGeometry(0.06, 0.02, 0.25);
+    const ravenWingGeo = new BoxGeometry(0.55, 0.02, 0.12);
+    const RAVEN_COUNT = 7;
+    const ravenParams = [
+      { radius: 7.0, orbitSpeed: -0.35, flapSpeed: 2.2, flapAmp: 0.28, yOffset:  1.5 },
+      { radius: 5.5, orbitSpeed: -0.42, flapSpeed: 1.9, flapAmp: 0.32, yOffset: -0.8 },
+      { radius: 8.5, orbitSpeed: -0.31, flapSpeed: 2.8, flapAmp: 0.21, yOffset:  0.4 },
+      { radius: 6.2, orbitSpeed: -0.47, flapSpeed: 2.5, flapAmp: 0.35, yOffset: -1.2 },
+      { radius: 9.0, orbitSpeed: -0.38, flapSpeed: 2.0, flapAmp: 0.25, yOffset:  2.0 },
+      { radius: 5.0, orbitSpeed: -0.44, flapSpeed: 3.0, flapAmp: 0.20, yOffset: -0.3 },
+      { radius: 7.8, orbitSpeed: -0.33, flapSpeed: 2.3, flapAmp: 0.30, yOffset:  1.0 },
+    ];
+    for (let ri = 0; ri < RAVEN_COUNT; ri++) {
+      const phase = (ri / RAVEN_COUNT) * Math.PI * 2;
+      const p = ravenParams[ri];
+      const ravenGroup = new Group();
+      const body = new Mesh(ravenBodyGeo, ravenBodyMat);
+      ravenGroup.add(body);
+      const wings = new Mesh(ravenWingGeo, ravenWingMat);
+      ravenGroup.add(wings);
+      ravenGroup.position.set(
+        p.radius * Math.cos(phase),
+        12 + p.yOffset,
+        -15 + p.radius * Math.sin(phase),
+      );
+      ravenGroup.userData = {
+        radius: p.radius,
+        orbitSpeed: p.orbitSpeed,
+        phase,
+        flapSpeed: p.flapSpeed,
+        flapAmp: p.flapAmp,
+        yOffset: p.yOffset,
+      };
+      group.add(ravenGroup);
+      _ravenGroups.push(ravenGroup);
+      _ravenWings.push(wings);
+    }
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -1727,6 +1807,29 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         tendril.rotation.z = Math.sin(t * speed * 2.0 + phase) * 0.08;
       }
     }
+    // Marais korrigans — lure wisp figure-8 path with trailing orbs (C345)
+    if (_lureWisp !== null && _lureLight !== null) {
+      const t = Date.now() * 0.001;
+      const lx = Math.sin(t * 0.18) * 7;
+      const ly = 1.2 + Math.sin(t * 0.36) * 0.6;
+      const lz = -18 + Math.sin(t * 0.18) * Math.cos(t * 0.18) * 4;
+      _lureWisp.position.set(lx, ly, lz);
+      _lureLight.position.set(lx, ly, lz);
+      _lureLight.intensity = 0.6 + Math.sin(t * 1.5) * 0.2;
+      const pulse = 0.9 + Math.sin(t * 2.0) * 0.12;
+      _lureWisp.scale.setScalar(pulse);
+      // Push new position into ring buffer
+      _lureTrailPositions.push([lx, ly, lz]);
+      if (_lureTrailPositions.length > 5) _lureTrailPositions.shift();
+      // Position trail orbs at stored (older) positions
+      for (let i = 0; i < _lureTrailOrbs.length; i++) {
+        const trailOrb = _lureTrailOrbs[i];
+        const pos = _lureTrailPositions[_lureTrailPositions.length - 1 - i];
+        if (trailOrb !== undefined && pos !== undefined) {
+          trailOrb.position.set(pos[0], pos[1], pos[2]);
+        }
+      }
+    }
     // Landes bruyere spore drift — slow rightward wind + gentle vertical bob
     if (landeSporeMesh !== null) {
       landeSporeTime += dt;
@@ -1915,6 +2018,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _bogFireflies.length = 0;
     _bogFireflyLights.length = 0;
     _fogTendrils.length = 0;
+    _lureWisp = null;
+    _lureLight = null;
+    _lureTrailOrbs.length = 0;
+    _lureTrailPositions.length = 0;
     _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
