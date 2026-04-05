@@ -472,6 +472,137 @@ function typewriterText(
 // a detached narrativeEl, retaining the Card closure until the interval ends.
 let _activeTypewriter: TypewriterHandle | null = null;
 
+// ── C360: Holographic rune watermark ─────────────────────────────────────────
+// Module-level map: card element → RAF id for the pulse/rotation loop.
+// Keyed by element reference so teardown can cancel without a separate id field.
+const _runeRafMap = new WeakMap<HTMLElement, number>();
+// Counter for unique watermark element ids
+let _runeCounter = 0;
+
+/** Inject the .rune-watermark style block once into <head>. */
+function ensureRuneWatermarkStyle(): void {
+  if (document.getElementById('rune-watermark-style')) return;
+  const style = document.createElement('style');
+  style.id = 'rune-watermark-style';
+  style.textContent = `
+    .rune-watermark { transition: opacity 0.8s ease; }
+  `;
+  document.head.appendChild(style);
+}
+
+/**
+ * Create and inject a rotating/pulsing SVG triquetra watermark inside `cardEl`.
+ * @param cardEl   The card container element (must have position:relative or similar).
+ * @param oghamId  Optional ogham name — its Unicode glyph is rendered in the SVG center.
+ */
+function injectRuneWatermark(cardEl: HTMLElement, oghamId?: string): void {
+  ensureRuneWatermarkStyle();
+
+  // Remove any stale watermark first (idempotent)
+  teardownRuneWatermark(cardEl);
+
+  const id = `rune-watermark-${_runeCounter++}`;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.id = id;
+  svg.classList.add('rune-watermark');
+  svg.setAttribute('viewBox', '0 0 80 80');
+  svg.setAttribute('xmlns', ns);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.cssText = [
+    'position:absolute',
+    'top:50%',
+    'left:50%',
+    'transform:translate(-50%,-50%)',
+    'width:80px',
+    'height:80px',
+    'pointer-events:none',
+    'z-index:0',
+    'opacity:0.06',
+  ].join(';');
+
+  // Triquetra approximation — three-lobed Celtic knot using cubic bezier arcs
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', [
+    'M 40,20 C 55,5 75,15 70,30 C 65,45 50,45 40,40 C 30,45 15,45 10,30 C 5,15 25,5 40,20 Z',
+    'M 40,20 C 40,35 55,55 65,58 C 75,61 80,48 70,38 C 60,28 48,32 40,40',
+    'M 40,20 C 40,35 25,55 15,58 C 5,61 0,48 10,38 C 20,28 32,32 40,40',
+  ].join(' '));
+  path.setAttribute('stroke', '#33ff66');
+  path.setAttribute('stroke-width', '1.5');
+  path.setAttribute('fill', 'none');
+  svg.appendChild(path);
+
+  // Ogham letter in center — only when a known glyph is available
+  if (oghamId) {
+    const glyph = OGHAM_GLYPHS[oghamId];
+    if (glyph) {
+      const text = document.createElementNS(ns, 'text');
+      text.setAttribute('x', '40');
+      text.setAttribute('y', '44');
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.setAttribute('font-size', '10');
+      text.setAttribute('fill', '#33ff66');
+      text.setAttribute('opacity', '0.5');
+      text.textContent = glyph;
+      svg.appendChild(text);
+    }
+  }
+
+  cardEl.appendChild(svg);
+
+  // Animation state — captured in RAF closure
+  let angle = 0;
+  let startTime: number | null = null;
+
+  function animFrame(now: number): void {
+    if (startTime === null) startTime = now;
+    const elapsed = (now - startTime) / 1000; // seconds
+
+    // Rotation: full 360° every 15 seconds
+    angle = ((elapsed / 15) * 360) % 360;
+    // Opacity pulse: 0.04 → 0.10 → 0.04 (period ~15.7s)
+    const opacity = 0.06 + Math.sin(elapsed * 0.4) * 0.03;
+
+    svg.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
+    svg.style.opacity = String(Math.max(0.04, Math.min(0.10, opacity)));
+
+    const rafId = requestAnimationFrame(animFrame);
+    _runeRafMap.set(cardEl, rafId);
+  }
+
+  const initialRafId = requestAnimationFrame(animFrame);
+  _runeRafMap.set(cardEl, initialRafId);
+}
+
+/**
+ * Flash the rune watermark to 0.25 opacity, then fade back over 800ms.
+ * Uses the CSS transition already set on .rune-watermark.
+ */
+function flashRuneWatermark(cardEl: HTMLElement): void {
+  const svg = cardEl.querySelector<SVGElement>('.rune-watermark');
+  if (!svg) return;
+  svg.style.opacity = '0.25';
+  // After one frame, let the CSS transition take it back to the animated baseline.
+  // We restore to the mid-range idle opacity (0.07); the RAF loop will resume smoothly.
+  setTimeout(() => {
+    svg.style.opacity = '0.07';
+  }, 800);
+}
+
+/** Cancel the RAF loop and remove the SVG element from `cardEl`. */
+function teardownRuneWatermark(cardEl: HTMLElement): void {
+  const rafId = _runeRafMap.get(cardEl);
+  if (rafId !== undefined) {
+    cancelAnimationFrame(rafId);
+    _runeRafMap.delete(cardEl);
+  }
+  const existing = cardEl.querySelector('.rune-watermark');
+  if (existing) existing.remove();
+}
+
 // ── T047: Card flip animation ──────────────────────────────────────────────
 
 // C126/FLIP-01: module-level timeout ID so rapid showCard() calls cancel the previous
@@ -645,6 +776,23 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       }
     }
 
+    // C360: inject holographic rune watermark on the card panel
+    if (container) {
+      // Pick ogham id from the first option that has an ACTIVATE_OGHAM effect, if any
+      let cardOghamId: string | undefined;
+      for (const opt of card.options) {
+        for (const eff of opt.effects) {
+          const s = eff as string;
+          if (s.startsWith('ACTIVATE_OGHAM:')) {
+            cardOghamId = s.split(':')[1];
+            break;
+          }
+        }
+        if (cardOghamId) break;
+      }
+      injectRuneWatermark(container, cardOghamId);
+    }
+
     // Options (T067 + T068) — optContainer already resolved above
     optContainer.innerHTML = '';
 
@@ -717,6 +865,8 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
         btn.classList.add('card-option-selected');
         // C179: verb-select flash animation before hiding
         btn.classList.add('selected');
+        // C360: flash the rune watermark on selection
+        if (container) flashRuneWatermark(container);
         await new Promise<void>(r => setTimeout(r, 120)); // brief flash
         hideCard();
         resolve(index);
@@ -893,6 +1043,10 @@ export function hideCard(): void {
     optContainer.style.pointerEvents = '';
     optContainer.style.transition = '';
   }
+  // C360: teardown rune watermark RAF and SVG element
+  const containerEl = cardContainer();
+  if (containerEl) teardownRuneWatermark(containerEl);
+
   const overlayEl = document.getElementById('card-overlay');
   if (overlayEl) overlayEl.classList.remove('visible');
 }
