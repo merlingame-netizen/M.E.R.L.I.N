@@ -483,6 +483,10 @@ let lighthouseMesh: Mesh | null = null;
 let lighthouseBeamMesh: Mesh | null = null;
 let lighthouseLight: PointLight | null = null;
 
+// ── Sea foam particle pool (C243) ─────────────────────────────────────────────
+let _foamMeshes: Mesh[] = [];
+let _foamTimer = 0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -569,6 +573,21 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(bird);
   }
 
+  // ── Sea foam particle pool — 15 pooled spheres (C243) ────────────────────
+  _foamMeshes = [];
+  _foamTimer = 0;
+  const foamGeo = new SphereGeometry(0.15, 4, 3);
+  for (let i = 0; i < 15; i++) {
+    const foamMesh = new Mesh(
+      foamGeo,
+      new MeshBasicMaterial({ color: 0xf0fff0, transparent: true, opacity: 0 }),
+    );
+    foamMesh.position.set(0, -10, 0);
+    foamMesh.userData = { active: false, lifetime: 0, maxLife: 0.6, x: 0, z: 0 };
+    _foamMeshes.push(foamMesh);
+    group.add(foamMesh);
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -642,6 +661,32 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
     // Seabird flock soaring
     seabirdFlock.update(t, dt);
+
+    // Sea foam particle bursts at wave crests (C243)
+    _foamTimer += dt;
+    if (_foamTimer > 0.15) {
+      _foamTimer = 0;
+      const inactive = _foamMeshes.find(f => !f.userData['active']);
+      if (inactive) {
+        inactive.userData['active'] = true;
+        inactive.userData['lifetime'] = 0;
+        inactive.userData['x'] = (Math.random() - 0.5) * 30;
+        inactive.userData['z'] = -8 + (Math.random() - 0.5) * 15;
+        inactive.position.set(inactive.userData['x'], 0.1, inactive.userData['z']);
+      }
+    }
+    for (const foam of _foamMeshes) {
+      if (!foam.userData['active']) continue;
+      foam.userData['lifetime'] += dt;
+      const t2 = foam.userData['lifetime'] / foam.userData['maxLife'];
+      const opacity = t2 < 0.3 ? (t2 / 0.3) * 0.7 : (1 - (t2 - 0.3) / 0.7) * 0.7;
+      (foam.material as MeshBasicMaterial).opacity = Math.max(0, opacity);
+      foam.position.y = 0.1 + Math.sin(t2 * Math.PI) * 0.15;
+      if (foam.userData['lifetime'] >= foam.userData['maxLife']) {
+        foam.userData['active'] = false;
+        foam.position.y = -10;
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -664,6 +709,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     for (const mat of seabirdFlock.birdMats) {
       mat.dispose();
     }
+    _foamMeshes = [];
     group.clear();
   };
 
