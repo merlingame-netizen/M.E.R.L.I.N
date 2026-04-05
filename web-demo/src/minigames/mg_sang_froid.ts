@@ -46,6 +46,13 @@ export class MinigameSangFroid extends MinigameBase {
   private pulsePhase = 0;
   private isInside = false;  // re-evaluated each frame; init false prevents 1-frame free credit
   private nextDriftChange = 2;
+
+  // Visual trail: circular buffer of last N cursor positions
+  private readonly trailLen = 8;
+  private trailX: Float32Array = new Float32Array(8);
+  private trailY: Float32Array = new Float32Array(8);
+  private trailHead = 0;
+
   // C120/SF-01: cached DOM refs — was getElementById every 100ms setInterval + every render frame
   private timerFillEl: HTMLElement | null = null;
   private timerBarEl: HTMLElement | null = null;
@@ -136,6 +143,9 @@ export class MinigameSangFroid extends MinigameBase {
     this.pulsePhase = 0;
     this.isInside = false;
     this.nextDriftChange = 2;
+    this.trailX = new Float32Array(this.trailLen);
+    this.trailY = new Float32Array(this.trailLen);
+    this.trailHead = 0;
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -270,8 +280,30 @@ export class MinigameSangFroid extends MinigameBase {
       this.statusEl.textContent = `Couverture: ${pctInside}% | Zone: ${Math.round(this.currentRadius)}px`;
     }
 
+    // Update cursor trail — advance circular buffer head each frame
+    this.trailHead = (this.trailHead + 1) % this.trailLen;
+    this.trailX[this.trailHead] = this.cursorX;
+    this.trailY[this.trailHead] = this.cursorY;
+
     // Clear
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+
+    // Enhancement 1: Danger vignette — red corner glow when cursor is outside zone,
+    // intensity ramps with distance beyond the safe-zone boundary.
+    if (!this.isInside) {
+      const dx2 = this.cursorX - this.zoneX;
+      const dy2 = this.cursorY - this.zoneY;
+      const distFromEdge = Math.sqrt(dx2 * dx2 + dy2 * dy2) - this.currentRadius;
+      const vigIntensity = Math.min(distFromEdge / 120, 1) * 0.55;
+      const vig = ctx.createRadialGradient(
+        this.canvasW / 2, this.canvasH / 2, this.canvasW * 0.3,
+        this.canvasW / 2, this.canvasH / 2, this.canvasW * 0.75
+      );
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, `rgba(180,30,20,${vigIntensity})`);
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, this.canvasW, this.canvasH);
+    }
 
     // Background grid (subtle)
     ctx.strokeStyle = 'rgba(46,107,79,0.08)';
@@ -318,6 +350,20 @@ export class MinigameSangFroid extends MinigameBase {
     ctx.lineWidth = pivotWarning ? 3 : 2;
     ctx.stroke();
 
+    // Enhancement 2: Radius countdown arc — a clockwise arc drawn atop the zone border
+    // showing how much of the total shrink range has elapsed (full circle = start, 0 = end).
+    // Color shifts from green to amber as the zone approaches its minimum size.
+    const shrinkProgress = Math.min(this.elapsedTime / this.totalTime, 1);
+    const arcEnd = -Math.PI / 2 + (1 - shrinkProgress) * Math.PI * 2;
+    const arcAlpha = 0.45 + Math.sin(this.pulsePhase * 3) * 0.15;
+    const arcGreen = Math.round(255 * (1 - shrinkProgress));
+    const arcRed = Math.round(51 + 204 * shrinkProgress);
+    ctx.beginPath();
+    ctx.arc(this.zoneX, this.zoneY, this.currentRadius + 6, -Math.PI / 2, arcEnd, false);
+    ctx.strokeStyle = `rgba(${arcRed},${arcGreen},51,${arcAlpha})`;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
     // Zone center mark
     ctx.beginPath();
     ctx.arc(this.zoneX, this.zoneY, 3, 0, Math.PI * 2);
@@ -338,6 +384,24 @@ export class MinigameSangFroid extends MinigameBase {
     // Cursor
     const cx = this.cursorX;
     const cy = this.cursorY;
+
+    // Enhancement 3: Cursor trail — draw fading ghost dots from oldest to newest position.
+    // Skips slots where the cursor has not moved yet (all zeros on init = outside zone).
+    for (let i = 1; i <= this.trailLen; i++) {
+      const idx = (this.trailHead - i + this.trailLen) % this.trailLen;
+      const tx = this.trailX[idx];
+      const ty = this.trailY[idx];
+      if (tx === 0 && ty === 0) continue;
+      const age = i / this.trailLen;          // 0 = newest slot, 1 = oldest
+      const trailAlpha = (1 - age) * 0.35;
+      const trailRadius = 5 * (1 - age * 0.6);
+      ctx.beginPath();
+      ctx.arc(tx, ty, trailRadius, 0, Math.PI * 2);
+      ctx.fillStyle = this.isInside
+        ? `rgba(51,255,102,${trailAlpha})`
+        : `rgba(26,136,51,${trailAlpha})`;
+      ctx.fill();
+    }
 
     // Cursor glow
     const cursorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 14);
