@@ -10,7 +10,7 @@
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
   CircleGeometry, Color, ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
-  InstancedMesh, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
+  InstancedMesh, Line, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
   PointLight, Points, PointsMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
 
@@ -555,6 +555,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let gatewayLight437: PointLight | null = null;
   let gatewayPulseTimer437 = 0;
   let gatewayNextPulse437 = 8 + Math.random() * 12;
+
+  // ── Frozen mountain lake — monts_brumeux (C440) ───────────────────────────
+  let frozenLakeGroup440: Group | null = null;
+  let frozenLakeT440 = 0;
+  let frozenLakeCreakTimer440 = 0;
+  let frozenLakeNextCreak440 = 12 + Math.random() * 15;
+  let frozenLakeIceSurface440: Mesh | null = null;
+  let frozenLakeLight440: PointLight | null = null;
+  const frozenLakeCracks440: Line[] = [];
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -2075,6 +2084,62 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     eagleGroup412.position.set(4, 11, -15);
     group.add(eagleGroup412);
+
+    // ── Frozen mountain lake (C440) ──────────────────────────────────────────
+    frozenLakeGroup440 = new Group();
+
+    // Lake bed — dark water visible beneath
+    const lakeBedMat = new MeshBasicMaterial({ color: 0x0d3318 });
+    const lakeBed = new Mesh(new CylinderGeometry(3.5, 3.5, 0.08, 16), lakeBedMat);
+    lakeBed.position.set(0, -0.04, 0);
+    frozenLakeGroup440.add(lakeBed);
+
+    // Ice surface
+    const iceMat = new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.75 });
+    const iceSurface = new Mesh(new CylinderGeometry(3.4, 3.4, 0.06, 16), iceMat);
+    iceSurface.position.set(0, 0, 0);
+    frozenLakeGroup440.add(iceSurface);
+    frozenLakeIceSurface440 = iceSurface;
+
+    // Snow rim
+    const snowRimMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const snowRim = new Mesh(new TorusGeometry(3.45, 0.25, 4, 16), snowRimMat);
+    snowRim.position.set(0, 0.03, 0);
+    snowRim.rotation.x = Math.PI / 2;
+    frozenLakeGroup440.add(snowRim);
+
+    // Ice crack lines — 8 lines from center to edge
+    for (let ci = 0; ci < 8; ci++) {
+      const angle = (ci / 8) * Math.PI * 2;
+      const crackPoints: number[] = [];
+      // Start at center
+      crackPoints.push(0, 0.04, 0);
+      // Two intermediate jagged points
+      const r1 = 1.0 + Math.random() * 0.4;
+      const a1 = angle + (Math.random() - 0.5) * 0.3;
+      crackPoints.push(Math.cos(a1) * r1, 0.04, Math.sin(a1) * r1);
+      const r2 = 1.9 + Math.random() * 0.4;
+      const a2 = angle + (Math.random() - 0.5) * 0.3;
+      crackPoints.push(Math.cos(a2) * r2, 0.04, Math.sin(a2) * r2);
+      // End at edge
+      crackPoints.push(Math.cos(angle) * 2.8, 0.04, Math.sin(angle) * 2.8);
+
+      const crackGeo = new BufferGeometry();
+      crackGeo.setAttribute('position', new BufferAttribute(new Float32Array(crackPoints), 3));
+      const crackMat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.18 });
+      const crackLine = new Line(crackGeo, crackMat);
+      frozenLakeGroup440.add(crackLine);
+      frozenLakeCracks440.push(crackLine);
+    }
+
+    // Point light — subtle green reflection glow
+    const frozenLakeGlow440 = new PointLight(0x33ff66, 0.12, 8.0);
+    frozenLakeGlow440.position.set(0, 0.5, 0);
+    frozenLakeGroup440.add(frozenLakeGlow440);
+    frozenLakeLight440 = frozenLakeGlow440;
+
+    frozenLakeGroup440.position.set(6, 0, -20);
+    group.add(frozenLakeGroup440);
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -3422,6 +3487,37 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const flapAngle = Math.sin(eagleWingT412) * 0.18;
       if (eagleWingL412) eagleWingL412.rotation.z = flapAngle;
       if (eagleWingR412) eagleWingR412.rotation.z = -flapAngle;
+    }
+    // Monts brumeux — frozen mountain lake shimmer + creak flash (C440)
+    if (frozenLakeGroup440 && frozenLakeIceSurface440 && frozenLakeLight440) {
+      frozenLakeT440 += dt;
+      frozenLakeCreakTimer440 += dt;
+
+      // Ice surface reflection shimmer
+      const iceMat = frozenLakeIceSurface440.material as MeshBasicMaterial;
+      iceMat.opacity = 0.70 + Math.sin(frozenLakeT440 * 0.6) * 0.06;
+
+      // Creak event: cracks briefly flash brighter
+      if (frozenLakeCreakTimer440 >= frozenLakeNextCreak440) {
+        frozenLakeCreakTimer440 = 0;
+        frozenLakeNextCreak440 = 12 + Math.random() * 18;
+      }
+
+      let crackOpacity = 0.18;
+      if (frozenLakeCreakTimer440 < 0.4) {
+        crackOpacity = 0.18 + (frozenLakeCreakTimer440 / 0.4) * 0.6;
+        frozenLakeLight440.intensity = 0.12 + (frozenLakeCreakTimer440 / 0.4) * 0.4;
+      } else if (frozenLakeCreakTimer440 < 0.8) {
+        crackOpacity = 0.78 - ((frozenLakeCreakTimer440 - 0.4) / 0.4) * 0.6;
+        frozenLakeLight440.intensity = 0.52 - ((frozenLakeCreakTimer440 - 0.4) / 0.4) * 0.4;
+      } else {
+        frozenLakeLight440.intensity = 0.10 + Math.sin(frozenLakeT440 * 0.8) * 0.03;
+      }
+
+      frozenLakeCracks440.forEach((crack, i) => {
+        const crackMat = crack.material as LineBasicMaterial;
+        crackMat.opacity = crackOpacity * (0.8 + Math.sin(frozenLakeT440 * 0.5 + i) * 0.2);
+      });
     }
     // Landes bruyere — carved menhir spiral pulse (C417)
     if (menhirGroup417) {

@@ -928,6 +928,12 @@ let harpVibrateDur435 = 0;
 const harpStrings435: Line[] = [];
 let harpLight435: PointLight | null = null;
 
+// ── Cycle-439: glowing dragonfly swarm ───────────────────────────────────────
+const dragonflySwarm439: Group[] = [];
+const dragonflyT439: number[] = [];
+const dragonflyWingPairs439: Mesh[][] = [];
+let dragonflyCloudT439 = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2111,6 +2117,69 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(harpGroup435);
   }
 
+  // ── Cycle-439: dragonfly swarm ────────────────────────────────────────────────
+  {
+    const NUM_DRAGONFLIES = 12;
+    const SWARM_CENTER = new Vector3(5, 0, -16);
+
+    const bodyMat439 = new MeshBasicMaterial({ color: 0x0d2a14 });
+    const wingMat439 = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.55, side: DoubleSide });
+
+    for (let di = 0; di < NUM_DRAGONFLIES; di++) {
+      const dragonfly = new Group();
+
+      // Body: tiny elongated box
+      const body = new Mesh(new BoxGeometry(0.025, 0.025, 0.1), bodyMat439);
+      dragonfly.add(body);
+
+      // Wings: 2 flat ellipse-like planes (PlaneGeometry scaled)
+      const wingPair: Mesh[] = [];
+      const wingGeo = new PlaneGeometry(0.08, 0.035);
+
+      const wingL = new Mesh(wingGeo, wingMat439.clone());
+      wingL.position.set(-0.055, 0, 0.01);
+      wingL.rotation.z = 0.3;
+      wingPair.push(wingL);
+      dragonfly.add(wingL);
+
+      const wingR = new Mesh(wingGeo.clone(), wingMat439.clone());
+      wingR.position.set(0.055, 0, 0.01);
+      wingR.rotation.z = -0.3;
+      wingPair.push(wingR);
+      dragonfly.add(wingR);
+
+      // Tail wings (smaller rear pair)
+      const tailWingL = new Mesh(new PlaneGeometry(0.06, 0.025), wingMat439.clone());
+      tailWingL.position.set(-0.045, 0, -0.04);
+      tailWingL.rotation.z = 0.2;
+      wingPair.push(tailWingL);
+      dragonfly.add(tailWingL);
+
+      const tailWingR = new Mesh(new PlaneGeometry(0.06, 0.025), wingMat439.clone());
+      tailWingR.position.set(0.045, 0, -0.04);
+      tailWingR.rotation.z = -0.2;
+      wingPair.push(tailWingR);
+      dragonfly.add(tailWingR);
+
+      // Random starting position within swarm cloud
+      const r = Math.random() * 3.0;
+      const angle = Math.random() * Math.PI * 2;
+      dragonfly.position.set(
+        SWARM_CENTER.x + Math.cos(angle) * r,
+        1.5 + Math.random() * 1.5,
+        SWARM_CENTER.z + Math.sin(angle) * r,
+      );
+
+      dragonflySwarm439.push(dragonfly);
+      dragonflyT439.push(Math.random() * Math.PI * 2);
+      dragonflyWingPairs439.push(wingPair);
+      group.add(dragonfly);
+    }
+
+    bodyMat439.dispose();
+    wingMat439.dispose();
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2596,6 +2665,38 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         if (harpLight435) harpLight435.intensity = 0.05 + Math.sin(harpT435 * 0.6) * 0.02;
       }
     }
+
+    // Cycle-439: dragonfly swarm orbit + wing flutter + bioluminescence
+    dragonflyCloudT439 += dt;
+    dragonflySwarm439.forEach((df, di) => {
+      dragonflyT439[di] += dt * (1.5 + di * 0.08);
+      const t = dragonflyT439[di]!;
+
+      // Lissajous-like wandering orbit
+      const orbitR = 1.2 + Math.sin(t * 0.3 + di) * 0.6;
+      const orbitAngle = t * 0.4 + di * (Math.PI * 2 / 12);
+      df.position.x = 5 + Math.cos(orbitAngle) * orbitR + Math.sin(t * 0.7) * 0.4;
+      df.position.z = -16 + Math.sin(orbitAngle) * orbitR + Math.cos(t * 0.5) * 0.3;
+      df.position.y = 1.8 + Math.sin(t * 1.2 + di * 0.5) * 0.5;
+
+      // Face direction of travel
+      df.rotation.y = orbitAngle + Math.PI / 2;
+      df.rotation.z = Math.sin(t * 0.8) * 0.15;
+
+      // Wing flutter (very fast)
+      const flutter = Math.sin(t * 18) * 0.5;
+      const wings = dragonflyWingPairs439[di]!;
+      if (wings[0]) wings[0].rotation.y = flutter;
+      if (wings[1]) wings[1].rotation.y = -flutter;
+      if (wings[2]) wings[2].rotation.y = flutter * 0.7;
+      if (wings[3]) wings[3].rotation.y = -flutter * 0.7;
+
+      // Wing opacity pulse (bioluminescence)
+      wings.forEach((w, wi) => {
+        const mat = w.material as MeshBasicMaterial;
+        mat.opacity = 0.4 + Math.sin(t * 3 + wi * 0.4) * 0.25;
+      });
+    });
   };
 
   const dispose = (): void => {
@@ -2853,6 +2954,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       harpLight435 = null;
       harpGroup435 = null;
     }
+    // Cycle-439: dragonfly swarm cleanup
+    dragonflySwarm439.forEach(df => {
+      df.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            (c.material as Material[]).forEach(m => m.dispose());
+          } else {
+            (c.material as Material).dispose();
+          }
+        }
+      });
+    });
+    dragonflySwarm439.length = 0;
+    dragonflyT439.length = 0;
+    dragonflyWingPairs439.length = 0;
   };
 
   return { group, update, dispose };
