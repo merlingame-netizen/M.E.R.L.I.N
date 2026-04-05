@@ -1439,6 +1439,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let calendarSurging462: boolean = false;
   let calendarSurgeT462: number = 0;
 
+  // C467 — hanging crystal cluster
+  let crystalCluster467: Group | null = null;
+  let crystalT467: number = 0;
+  let crystalMeshes467: Mesh[] = [];
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2878,6 +2883,62 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     calendarDisc462!.add(calendarDiscLight462);
 
     scene.add(calendarDisc462);
+  }
+
+  // C467 — hanging crystal cluster
+  {
+    crystalCluster467 = new Group();
+    crystalCluster467.position.set(1.0, 4.0, -2.5);
+
+    // 9 crystal definitions — position, height, radius, tilt
+    const crystalDefs = [
+      { x: 0,     z: 0,    h: 0.9,  r: 0.1,   tiltX: 0,     tiltZ: 0    },
+      { x: 0.25,  z: 0.15, h: 0.65, r: 0.08,  tiltX: 0.15,  tiltZ: 0.1  },
+      { x: -0.22, z: 0.18, h: 0.75, r: 0.09,  tiltX: -0.1,  tiltZ: 0.2  },
+      { x: 0.18,  z: -0.2, h: 0.55, r: 0.07,  tiltX: 0.2,   tiltZ: -0.1 },
+      { x: -0.3,  z: -0.1, h: 0.7,  r: 0.08,  tiltX: -0.15, tiltZ: -0.2 },
+      { x: 0.35,  z: -0.05,h: 0.45, r: 0.06,  tiltX: 0.25,  tiltZ: 0.15 },
+      { x: -0.1,  z: -0.3, h: 0.6,  r: 0.07,  tiltX: 0.1,   tiltZ: -0.25},
+      { x: 0.1,   z: 0.32, h: 0.5,  r: 0.065, tiltX: -0.2,  tiltZ: 0.15 },
+      { x: -0.35, z: 0.1,  h: 0.4,  r: 0.055, tiltX: 0.05,  tiltZ: -0.3 },
+    ];
+
+    crystalDefs.forEach((def) => {
+      // Crystal = ConeGeometry pointing DOWN (tip at bottom)
+      const crystal = new Mesh(
+        new ConeGeometry(def.r, def.h, 5),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.6 })
+      );
+      // Hang from ceiling: tip points down (rotate 180° so tip is at bottom)
+      crystal.rotation.x = Math.PI;
+      crystal.rotation.z = def.tiltZ;
+      // Position: y offset so top is at cluster origin, tip hangs down
+      crystal.position.set(def.x, -def.h / 2, def.z);
+      crystalMeshes467.push(crystal);
+      crystalCluster467!.add(crystal);
+
+      // Glowing tip sphere
+      const tip = new Mesh(
+        new SphereGeometry(def.r * 0.6, 4, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 })
+      );
+      tip.position.set(def.x, -def.h, def.z);
+      crystalCluster467!.add(tip);
+    });
+
+    // Ceiling mount plate
+    const mount = new Mesh(
+      new CylinderGeometry(0.5, 0.5, 0.08, 8),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    mount.position.y = 0.04;
+    crystalCluster467!.add(mount);
+
+    // PointLight from cluster
+    const crystalLight = new PointLight(0x33ff66, 0.15, 5.0);
+    crystalCluster467!.add(crystalLight);
+
+    scene.add(crystalCluster467);
   }
 
   // C438 — potion bottle shelf
@@ -4409,6 +4470,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C467 — hanging crystal cluster update
+    crystalT467 += dt;
+    crystalMeshes467.forEach((crystal, i) => {
+      crystal.rotation.y = crystalT467 * 0.2 + i * 0.7;
+      const mat = crystal.material as MeshBasicMaterial;
+      mat.opacity = 0.45 + 0.2 * Math.sin(crystalT467 * 1.1 + i * 0.8);
+    });
+    if (crystalCluster467) {
+      crystalCluster467.rotation.x = 0.04 * Math.sin(crystalT467 * 0.3);
+      crystalCluster467.rotation.z = 0.03 * Math.sin(crystalT467 * 0.4 + 0.5);
+    }
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -4874,6 +4947,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     calendarRunesMats462 = [];
     calendarDiscLight462 = null;
+    // C467 — hanging crystal cluster dispose
+    if (crystalCluster467) {
+      crystalCluster467.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(crystalCluster467);
+      crystalCluster467 = null;
+    }
+    crystalMeshes467 = [];
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
