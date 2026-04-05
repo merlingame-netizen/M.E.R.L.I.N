@@ -660,6 +660,11 @@ const seaCaveAlgae411: Mesh[] = [];
 const dolphinPod415: Group[] = [];
 const dolphinT415: number[] = [0, 2.2, 4.4];
 
+// ── Sunken ship mast — cotes_sauvages (C420) ──────────────────────────────
+let shipMastGroup420: Group | null = null;
+let shipMastT420 = 0;
+const shipSeaweed420: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1415,6 +1420,68 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Sunken ship mast (C420) — cotes_sauvages ─────────────────────────────
+  {
+    shipMastGroup420 = new Group();
+    const darkWoodMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+
+    // Main mast — tilted cylinder
+    const mastGeo = new CylinderGeometry(0.08, 0.12, 5.5, 6);
+    const mastMesh = new Mesh(mastGeo, darkWoodMat);
+    mastMesh.position.set(0, 2.75, 0);
+    mastMesh.rotation.z = 0.12;
+    shipMastGroup420.add(mastMesh);
+
+    // Yardarm — horizontal crossbar
+    const yardGeo = new CylinderGeometry(0.05, 0.07, 3.8, 5);
+    const yardMesh = new Mesh(yardGeo, darkWoodMat);
+    yardMesh.position.set(0, 4.8, 0);
+    yardMesh.rotation.z = Math.PI / 2;
+    shipMastGroup420.add(yardMesh);
+
+    // Crow's nest
+    const nestGeo = new CylinderGeometry(0.3, 0.3, 0.2, 8, 1, false);
+    const nestMesh = new Mesh(nestGeo, darkWoodMat);
+    nestMesh.position.set(0, 3.8, 0);
+    shipMastGroup420.add(nestMesh);
+
+    // Tattered sail remnant
+    const sailGeo = new PlaneGeometry(1.5, 1.2);
+    const sailMat = new MeshBasicMaterial({ color: 0x0a1a10, transparent: true, opacity: 0.6, side: DoubleSide });
+    const sailMesh = new Mesh(sailGeo, sailMat);
+    sailMesh.position.set(-0.5, 4.0, 0);
+    shipMastGroup420.add(sailMesh);
+
+    // Rigging ropes — 3 angled lines from mast top to yardarm ends
+    const ropeAngles = [-0.8, 0.0, 0.8];
+    for (let i = 0; i < 3; i++) {
+      const ropeGeo = new CylinderGeometry(0.015, 0.015, 2.2, 3);
+      const ropeMesh = new Mesh(ropeGeo, darkWoodMat);
+      ropeMesh.position.set(ropeAngles[i]! * 0.9, 4.6, 0);
+      ropeMesh.rotation.z = ropeAngles[i]! * 0.5;
+      shipMastGroup420.add(ropeMesh);
+    }
+
+    // 6 seaweed strands hanging from yardarm
+    const seaweedMat = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.8 });
+    const seaweedXPositions = [-1.6, -0.96, -0.32, 0.32, 0.96, 1.6];
+    for (let i = 0; i < 6; i++) {
+      const weedGeo = new CylinderGeometry(0.02, 0.02, 0.6, 3);
+      const weedMesh = new Mesh(weedGeo, seaweedMat.clone());
+      weedMesh.position.set(seaweedXPositions[i]!, 4.5, 0);
+      shipMastGroup420.add(weedMesh);
+      shipSeaweed420.push(weedMesh);
+    }
+
+    // Ambient depth shimmer point light
+    const depthLight = new PointLight(0x33ff66, 0.04, 6.0);
+    depthLight.position.set(0, 1.0, 0);
+    shipMastGroup420.add(depthLight);
+
+    shipMastGroup420.position.set(-6, -1, -38);
+    group.add(shipMastGroup420);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -1823,6 +1890,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     });
 
+    // ── Sunken ship mast sway (C420) ────────────────────────────────────────
+    if (shipMastGroup420) {
+      shipMastT420 += dt * 0.4;
+      shipMastGroup420.rotation.z = 0.12 + Math.sin(shipMastT420 * 0.6) * 0.03;
+      shipSeaweed420.forEach((weed, i) => {
+        weed.rotation.z = Math.sin(shipMastT420 * 1.2 + i * 0.5) * 0.2;
+        weed.rotation.x = Math.sin(shipMastT420 * 0.9 + i * 0.8) * 0.1;
+      });
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -1985,6 +2062,14 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     });
     dolphinPod415.length = 0;
     dolphinT415.length = 0;
+    if (shipMastGroup420) {
+      shipMastGroup420.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      shipSeaweed420.length = 0;
+      shipMastGroup420 = null;
+    }
     group.clear();
   };
 
