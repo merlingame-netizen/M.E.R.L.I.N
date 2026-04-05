@@ -9,7 +9,7 @@
 
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
-  ConeGeometry, CylinderGeometry, DodecahedronGeometry, Fog, Group, HemisphereLight,
+  ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
   InstancedMesh, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
   PointLight, Points, PointsMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
@@ -528,6 +528,34 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     });
     montsWindMesh = new Points(windGeo, windMat);
     group.add(montsWindMesh);
+    // Distant mountain ridge silhouettes — 3 peaks in background
+    const peakCentral = new Mesh(
+      new ConeGeometry(12, 18, 4),
+      new MeshBasicMaterial({ color: 0x0a100a }),
+    );
+    peakCentral.scale.x = 1.8;
+    peakCentral.position.set(0, 2, -45);
+    group.add(peakCentral);
+    const peakLeft = new Mesh(
+      new ConeGeometry(9, 13, 4),
+      new MeshBasicMaterial({ color: 0x0d150d }),
+    );
+    peakLeft.position.set(-18, -1, -42);
+    group.add(peakLeft);
+    const peakRight = new Mesh(
+      new ConeGeometry(10, 15, 4),
+      new MeshBasicMaterial({ color: 0x0c130c }),
+    );
+    peakRight.position.set(16, 0, -44);
+    group.add(peakRight);
+    // Thin mist plane spanning mountain base
+    const mistPlane = new Mesh(
+      new PlaneGeometry(80, 6),
+      new MeshBasicMaterial({ color: 0x1a2a1a, transparent: true, opacity: 0.3, side: DoubleSide }),
+    );
+    mistPlane.position.set(0, -1, -43);
+    mistPlane.rotation.x = -0.12;
+    group.add(mistPlane);
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
