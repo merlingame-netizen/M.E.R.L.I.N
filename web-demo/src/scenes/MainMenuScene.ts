@@ -810,6 +810,10 @@ let _stoneCircleGroup427: Group | null = null;
 let _stoneCircleT427 = 0;
 let _stoneCircleLight427: PointLight | null = null;
 
+// C431 — CeltOS boot terminal
+let _celtosTerminal431: HTMLDivElement | null = null;
+let _celtosInterval431: ReturnType<typeof setInterval> | null = null;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1850,6 +1854,122 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   _stoneCircleGroup427.position.set(16, 0, -44);
   scene.add(_stoneCircleGroup427);
 
+  // C431 — CeltOS boot terminal
+  if (!document.getElementById('celtos-terminal-431')) {
+    const style = document.createElement('style');
+    style.id = 'celtos-terminal-431-style';
+    style.textContent = `
+    #celtos-terminal-431 {
+      position: fixed;
+      bottom: 18px;
+      left: 18px;
+      width: 320px;
+      background: rgba(1,8,2,0.92);
+      border: 1px solid #1a8833;
+      border-radius: 2px;
+      padding: 8px 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #1a8833;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 0 12px rgba(51,255,102,0.15);
+      overflow: hidden;
+      max-height: 140px;
+    }
+    #celtos-terminal-431 .ct-line {
+      line-height: 1.5;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #celtos-terminal-431 .ct-line.bright { color: #33ff66; }
+    #celtos-terminal-431 .ct-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 12px;
+      background: #33ff66;
+      animation: ctblink 1s step-end infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes ctblink { 0%,100%{opacity:1} 50%{opacity:0} }
+  `;
+    document.head.appendChild(style);
+  }
+
+  const terminal = document.createElement('div');
+  terminal.id = 'celtos-terminal-431';
+  document.body.appendChild(terminal);
+  _celtosTerminal431 = terminal;
+
+  const BOOT_SEQUENCES = [
+    [
+      { text: 'CeltOS v4.2.1 — MERLIN KERNEL', bright: true },
+      { text: 'Loading druidic modules... [OK]' },
+      { text: 'Ogham subsystem: 18 glyphs active' },
+      { text: 'LLM bridge: GROQ/qwen — connected' },
+      { text: 'Ley line network: nominal' },
+      { text: 'Biome renderer: 8 zones loaded [OK]', bright: true },
+    ],
+    [
+      { text: 'MERLIN.EXE — Arcane Process Manager', bright: true },
+      { text: 'Faction registry: 5 entities loaded' },
+      { text: 'FastRoute pool: 500+ cards indexed' },
+      { text: 'Brocéliande fog: enabled' },
+      { text: 'Memory palace: run_state.json clean' },
+      { text: 'SYSTEM READY >', bright: true },
+    ],
+    [
+      { text: '>> DIAGNOSTIC MODE <<', bright: true },
+      { text: 'Crystal orb: calibrated' },
+      { text: 'Pendulum clock: synchronized' },
+      { text: 'Familiar status: sleeping (nominal)' },
+      { text: 'Cauldron temp: 98.6°D (optimal)' },
+      { text: 'All systems: OPERATIONAL', bright: true },
+    ],
+  ];
+
+  let seqIdx = 0;
+
+  function runBootSequence(): void {
+    if (!_celtosTerminal431) return;
+    _celtosTerminal431.innerHTML = '';
+    const seq = BOOT_SEQUENCES[seqIdx % BOOT_SEQUENCES.length];
+    seqIdx++;
+    let lineIdx = 0;
+
+    function addLine(): void {
+      if (!_celtosTerminal431 || lineIdx >= seq.length) {
+        if (_celtosTerminal431) {
+          const cursor = document.createElement('span');
+          cursor.className = 'ct-cursor';
+          _celtosTerminal431.appendChild(cursor);
+        }
+        return;
+      }
+      const item = seq[lineIdx++];
+      const line = document.createElement('div');
+      line.className = 'ct-line' + (item.bright ? ' bright' : '');
+      line.textContent = item.text;
+      _celtosTerminal431.appendChild(line);
+      const fullText = item.text;
+      line.textContent = '';
+      let charIdx = 0;
+      const charInterval = setInterval(() => {
+        if (charIdx < fullText.length) {
+          line.textContent += fullText[charIdx++];
+        } else {
+          clearInterval(charInterval);
+          setTimeout(addLine, 120);
+        }
+      }, 28);
+    }
+
+    addLine();
+  }
+
+  runBootSequence();
+  _celtosInterval431 = setInterval(runBootSequence, 30000);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2040,6 +2160,12 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       _stoneCircleLight427 = null;
       _stoneCircleGroup427 = null;
     }
+
+    // C431: dispose CeltOS terminal
+    if (_celtosInterval431) { clearInterval(_celtosInterval431); _celtosInterval431 = null; }
+    if (_celtosTerminal431) { _celtosTerminal431.remove(); _celtosTerminal431 = null; }
+    const ctStyle = document.getElementById('celtos-terminal-431-style');
+    if (ctStyle) ctStyle.remove();
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
