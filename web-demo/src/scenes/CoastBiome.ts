@@ -740,6 +740,16 @@ let wreckGhostTimer489: number = 25 + Math.random() * 15;
 let wreckGhostActive489: boolean = false;
 let wreckGhostT489: number = 0;
 
+// ── Sea serpent breach (C494) ─────────────────────────────────────────────
+let serpentGroup494: Group | null = null;
+let t494: number = 0;
+type SerpentState494 = 'hidden' | 'rising' | 'hang' | 'diving';
+let serpentState494: SerpentState494 = 'hidden';
+let serpentStateT494: number = 0;
+let serpentTimer494: number = 20 + Math.random() * 15;
+const splashParticles494: Mesh[] = [];
+const serpentSegMats494: MeshStandardMaterial[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -2275,6 +2285,93 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(_wg489);
   }
 
+  // ── Sea serpent breach (C494) ─────────────────────────────────────────────
+  {
+    serpentGroup494 = new Group();
+    serpentGroup494.position.set(5, 0, -12);
+    serpentGroup494.visible = false;
+
+    const segRadii: number[] = [0.25, 0.22, 0.20, 0.17, 0.13, 0.08];
+    // Pre-computed arc positions and Y-rotations for each segment
+    const segPositions: [number, number, number][] = [
+      [-2.0, 0.0, 0],
+      [-1.2, 2.0, 0],
+      [-0.3, 3.5, 0],
+      [ 0.6, 3.8, 0],
+      [ 1.5, 2.5, 0],
+      [ 2.2, 0.5, 0],
+    ];
+    // Z-rotation (radians): head tilts 60° up, tail tilts 60° down
+    const segRotZ: number[] = [
+      -Math.PI / 3,   // seg0 head: 60° forward/up
+      -Math.PI / 6,   // seg1: 30° up
+       0.0,           // seg2: near horizontal
+       0.0,           // seg3: peak
+       Math.PI / 6,   // seg4: 30° down
+       Math.PI / 3,   // seg5 tail: 60° down
+    ];
+    const roughnessAlternating: number[] = [0.6, 0.8, 0.6, 0.8, 0.6, 0.8];
+
+    for (let i = 0; i < 6; i++) {
+      const r = segRadii[i]!;
+      const mat = new MeshStandardMaterial({
+        color: 0x0a2a14,
+        emissive: 0x1a4428,
+        emissiveIntensity: 0.3,
+        roughness: roughnessAlternating[i]!,
+        metalness: 0.0,
+        flatShading: true,
+      });
+      serpentSegMats494.push(mat);
+
+      const segMesh = new Mesh(new CylinderGeometry(r * 0.85, r, 0.7, 8), mat);
+      const pos = segPositions[i]!;
+      segMesh.position.set(pos[0], pos[1], pos[2]);
+      segMesh.rotation.z = segRotZ[i]!;
+      serpentGroup494.add(segMesh);
+    }
+
+    // Head cap — SphereGeometry at seg0 front
+    const headCapMat = new MeshStandardMaterial({
+      color: 0x0a2a14, emissive: 0x1a4428, emissiveIntensity: 0.3,
+      roughness: 0.7, metalness: 0.0, flatShading: true,
+    });
+    serpentSegMats494.push(headCapMat);
+    const headCap = new Mesh(new SphereGeometry(0.25, 8, 6), headCapMat);
+    const headPos = segPositions[0]!;
+    headCap.position.set(headPos[0] - 0.3, headPos[1] + 0.1, headPos[2]);
+    serpentGroup494.add(headCap);
+
+    // Eyes — 2 small emissive spheres
+    const eyeMat = new MeshStandardMaterial({
+      color: 0x33ff66, emissive: 0x33ff66, emissiveIntensity: 1.0, roughness: 0.3,
+    });
+    serpentSegMats494.push(eyeMat);
+    const eyeL = new Mesh(new SphereGeometry(0.04, 5, 4), eyeMat);
+    eyeL.position.set(headPos[0] - 0.52, headPos[1] + 0.2, headPos[2] + 0.12);
+    serpentGroup494.add(eyeL);
+    const eyeR = new Mesh(new SphereGeometry(0.04, 5, 4), eyeMat.clone());
+    eyeR.position.set(headPos[0] - 0.52, headPos[1] + 0.2, headPos[2] - 0.12);
+    serpentGroup494.add(eyeR);
+
+    // Splash particles — 8 small spheres, placed at group origin (water surface)
+    const splashMat = new MeshStandardMaterial({
+      color: 0x1a4060, emissive: 0x0a2040, emissiveIntensity: 0.2,
+      roughness: 0.8, transparent: true, opacity: 0.0,
+    });
+    for (let i = 0; i < 8; i++) {
+      const sp = new Mesh(new SphereGeometry(0.06, 4, 4), splashMat.clone());
+      const angle = (i / 8) * Math.PI * 2;
+      sp.position.set(Math.cos(angle) * 0.8, 0, Math.sin(angle) * 0.4);
+      (sp as any).__spAngle494 = angle;
+      (sp as any).__spSpeed494 = 1.5 + Math.random() * 1.0;
+      splashParticles494.push(sp);
+      serpentGroup494.add(sp);
+    }
+
+    group.add(serpentGroup494);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2980,6 +3077,72 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       wreckHullMat489.emissiveIntensity = Math.max(0, ghostIntensity);
     }
 
+    // ── Sea serpent breach (C494) ────────────────────────────────────────────
+    if (serpentGroup494) {
+      t494 += dt;
+
+      if (serpentState494 === 'hidden') {
+        serpentTimer494 -= dt;
+        if (serpentTimer494 <= 0) {
+          serpentState494 = 'rising';
+          serpentStateT494 = 0;
+          serpentGroup494.visible = true;
+          serpentGroup494.scale.setScalar(0);
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'splash' } }));
+        }
+
+      } else if (serpentState494 === 'rising') {
+        serpentStateT494 += dt;
+        const progress = Math.min(serpentStateT494 / 1.5, 1.0);
+        serpentGroup494.scale.setScalar(progress);
+        serpentGroup494.position.y = 0.05 * Math.sin(t494 * 2);
+        // Animate splash particles during rise
+        splashParticles494.forEach((sp, i) => {
+          const angle = (sp as any).__spAngle494 as number;
+          const spd = (sp as any).__spSpeed494 as number;
+          const spT = serpentStateT494;
+          sp.position.set(
+            Math.cos(angle) * 0.8 + Math.cos(angle) * spd * spT,
+            Math.sin(spT * Math.PI) * 1.5,
+            Math.sin(angle) * 0.4 + Math.sin(angle) * spd * spT * 0.5,
+          );
+          const mat = sp.material as MeshStandardMaterial;
+          mat.opacity = (spT < 1.0) ? Math.sin(spT * Math.PI) * 0.75 : 0.0;
+          // Unused variable guard
+          void i;
+        });
+        if (progress >= 1.0) {
+          serpentState494 = 'hang';
+          serpentStateT494 = 0;
+        }
+
+      } else if (serpentState494 === 'hang') {
+        serpentStateT494 += dt;
+        serpentGroup494.position.y = 0.05 * Math.sin(t494 * 2);
+        // Hide splash
+        splashParticles494.forEach((sp) => {
+          (sp.material as MeshStandardMaterial).opacity = 0;
+        });
+        if (serpentStateT494 >= 0.5) {
+          serpentState494 = 'diving';
+          serpentStateT494 = 0;
+        }
+
+      } else if (serpentState494 === 'diving') {
+        serpentStateT494 += dt;
+        const progress = Math.min(serpentStateT494 / 1.0, 1.0);
+        serpentGroup494.scale.setScalar(1.0 - progress);
+        serpentGroup494.position.y = 0.05 * Math.sin(t494 * 2);
+        if (progress >= 1.0) {
+          serpentState494 = 'hidden';
+          serpentStateT494 = 0;
+          serpentTimer494 = 20 + Math.random() * 15;
+          serpentGroup494.visible = false;
+          serpentGroup494.scale.setScalar(1);
+        }
+      }
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -3266,6 +3429,20 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     wreckKelpMeshes489.length = 0;
     wreckLight489 = null;
     wreckHullMat489 = null;
+    if (serpentGroup494) {
+      serpentGroup494.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+      });
+      serpentGroup494 = null;
+    }
+    splashParticles494.length = 0;
+    serpentSegMats494.length = 0;
+    serpentState494 = 'hidden';
+    serpentTimer494 = 20 + Math.random() * 15;
     group.clear();
   };
 
