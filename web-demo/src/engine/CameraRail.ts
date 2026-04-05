@@ -8,6 +8,11 @@ import { BufferGeometry, CatmullRomCurve3, Line, LineBasicMaterial, PerspectiveC
 const BOB_FREQUENCY = 2.0;  // Hz
 const BOB_AMPLITUDE = 0.04; // world units vertical
 
+// C190 lateral sway + roll — N64 walk feel (Banjo-Kazooie / OoT style)
+const SWAY_FREQUENCY  = 1.0;   // Hz — half of bob (one sway per two steps)
+const SWAY_AMPLITUDE  = 0.012; // world units lateral (30% of bob amplitude)
+const ROLL_AMPLITUDE  = 0.004; // radians — very subtle Z-tilt
+
 export class CameraRail {
   private readonly curve: CatmullRomCurve3;
   private progress = 0;
@@ -95,9 +100,13 @@ export class CameraRail {
     this.elapsedMoving = 0;
   }
 
-  /** Update camera position along the spline. T063: bob-head Y offset applied. */
+  /** Update camera position along the spline. T063: bob-head Y offset. C190: lateral sway + roll. */
   update(camera: PerspectiveCamera, dt: number): void {
-    if (this.paused || this.progress >= 1) return;
+    if (this.paused || this.progress >= 1) {
+      // C190: lerp roll back to 0 while paused so it doesn't freeze mid-tilt
+      camera.rotation.z += (0 - camera.rotation.z) * Math.min(1, dt * 4);
+      return;
+    }
 
     this.elapsedMoving += dt;
     // Velocity fade-in: ramp from 50% to 100% speed over first 3 seconds
@@ -107,8 +116,11 @@ export class CameraRail {
     const position = this.curve.getPointAt(this.progress);
 
     // T063: Bob-head — sinusoidal Y offset simulating walking motion
-    const bob = Math.sin(this.elapsedMoving * BOB_FREQUENCY * Math.PI * 2) * BOB_AMPLITUDE;
+    const bob  = Math.sin(this.elapsedMoving * BOB_FREQUENCY  * Math.PI * 2) * BOB_AMPLITUDE;
+    // C190: lateral sway — half-frequency gives one side-sway per two vertical bobs (N64 feel)
+    const sway = Math.sin(this.elapsedMoving * SWAY_FREQUENCY * Math.PI * 2) * SWAY_AMPLITUDE;
     position.y += bob;
+    position.x += sway;
 
     camera.position.copy(position);
 
@@ -117,6 +129,9 @@ export class CameraRail {
     const lookAt = this.curve.getPointAt(lookProgress);
     lookAt.add(this.lookOffset);
     camera.lookAt(lookAt);
+
+    // C190: subtle Z-roll tied to sway phase — camera tilts gently into each side-step
+    camera.rotation.z = Math.sin(this.elapsedMoving * SWAY_FREQUENCY * Math.PI * 2) * ROLL_AMPLITUDE;
   }
 
   /** Get a debug visualization of the path. */

@@ -182,6 +182,13 @@ export class GroqAdapter {
     } catch {
       // sessionStorage unavailable (e.g., private browsing restriction)
     }
+    // 3. Try localStorage (persisted across sessions with user consent)
+    try {
+      const persisted = localStorage.getItem('merlin_groq_key');
+      if (persisted && persisted.trim().length >= 10) {
+        return new GroqAdapter(persisted.trim());
+      }
+    } catch { /* localStorage unavailable */ }
     return null;
   }
 
@@ -531,6 +538,12 @@ export function injectAPIKey(key: string): boolean {
   } catch {
     // sessionStorage unavailable — key still usable in-memory this session
   }
+  // Persist to localStorage if user opted in
+  try {
+    if (localStorage.getItem('merlin_groq_persist') === '1') {
+      localStorage.setItem('merlin_groq_key', trimmed);
+    }
+  } catch { /* ignore */ }
   _instance = new GroqAdapter(trimmed);
   console.info('[MERLIN] Groq API key injected at runtime — cloud mode active');
   return true;
@@ -540,7 +553,11 @@ export function injectAPIKey(key: string): boolean {
  * Remove the runtime API key and revert to FastRoute fallback.
  */
 export function clearAPIKey(): void {
-  try { sessionStorage.removeItem('merlin_groq_key'); } catch { /* ignore */ }
+  try {
+    sessionStorage.removeItem('merlin_groq_key');
+    localStorage.removeItem('merlin_groq_key');
+    localStorage.removeItem('merlin_groq_persist');
+  } catch { /* ignore */ }
   _instance = null;
   console.info('[MERLIN] Groq API key cleared — FastRoute fallback active');
 }

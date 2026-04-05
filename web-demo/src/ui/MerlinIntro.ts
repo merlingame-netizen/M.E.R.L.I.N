@@ -24,7 +24,28 @@ async function typewrite(el: HTMLElement, text: string, charMs = 26): Promise<vo
   }
 }
 
+function ensureMerlinIntroStyles(): void {
+  if (document.getElementById('merlin-intro-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'merlin-intro-styles';
+  s.textContent = `
+    #merlin-intro-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom, transparent 0px, transparent 1px,
+        rgba(0,0,0,0.15) 1px, rgba(0,0,0,0.15) 2px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
 export async function runMerlinIntro(): Promise<void> {
+  ensureMerlinIntroStyles();
   const overlay = document.createElement('div');
   overlay.id = 'merlin-intro-overlay';
   overlay.style.cssText = [
