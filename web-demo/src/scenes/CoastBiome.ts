@@ -629,6 +629,15 @@ let whaleNext367 = 20.0 + Math.random() * 15.0;
 let waveCrests371: Mesh[] = [];
 let waveCrestData371: Array<{ z: number; speed: number; light: PointLight }> = [];
 
+// ── Breaking wave (C395) ───────────────────────────────────────────────────
+let waveGroup395: Group | null = null;
+let waveFace395: Mesh | null = null;
+let waveCrest395: Mesh | null = null;
+let waveFlashLight395: PointLight | null = null;
+let wavePhase395 = 0;     // 0=wait, 1=rise, 2=curl, 3=crash, 4=dissipate
+let wavePhaseT395 = 0;
+let waveWaitT395 = 0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1132,6 +1141,35 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Breaking wave (C395) ──────────────────────────────────────────────────
+  {
+    waveGroup395 = new Group();
+
+    // Wave face (tall plane, starts flat/invisible)
+    const waveFaceGeo = new PlaneGeometry(12, 3.5, 1, 8); // wide, tall
+    const waveFaceMat = new MeshBasicMaterial({ color: 0x071f0f, transparent: true, opacity: 0.0, side: DoubleSide, depthWrite: false });
+    waveFace395 = new Mesh(waveFaceGeo, waveFaceMat);
+    waveFace395.rotation.x = -Math.PI / 2; // start flat (lying on water)
+    waveFace395.position.y = 0.1;
+    waveGroup395.add(waveFace395);
+
+    // Crest strip (thin bright strip at top of wave)
+    const waveCrestGeo = new PlaneGeometry(12, 0.3);
+    const waveCrestMat = new MeshBasicMaterial({ color: 0x1a6633, transparent: true, opacity: 0.0, side: DoubleSide, depthWrite: false });
+    waveCrest395 = new Mesh(waveCrestGeo, waveCrestMat);
+    waveCrest395.position.y = 1.75; // top of wave face
+    waveGroup395.add(waveCrest395);
+
+    // Crash flash light
+    waveFlashLight395 = new PointLight(0x33ff66, 0.0, 10);
+    waveFlashLight395.position.set(0, 2, 0);
+    waveGroup395.add(waveFlashLight395);
+
+    waveGroup395.position.set(0, 0, -32);
+    group.add(waveGroup395);
+    waveWaitT395 = 5.0 + Math.random() * 3.0; // initial wait
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1509,6 +1547,61 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         data.light.intensity = 0.0;
       }
     });
+
+    // ── Breaking wave (C395) ────────────────────────────────────────────────
+    if (waveFace395 && waveCrest395 && waveFlashLight395) {
+      const faceMat = waveFace395.material as MeshBasicMaterial;
+      const crestMat = waveCrest395.material as MeshBasicMaterial;
+
+      if (wavePhase395 === 0) {
+        // Waiting
+        waveWaitT395 -= dt;
+        faceMat.opacity = 0;
+        crestMat.opacity = 0;
+        waveFlashLight395.intensity = 0;
+        if (waveWaitT395 <= 0) { wavePhase395 = 1; wavePhaseT395 = 0; }
+
+      } else if (wavePhase395 === 1) {
+        // Rising (1.5s): rotate face from flat to vertical
+        wavePhaseT395 += dt;
+        const t = Math.min(wavePhaseT395 / 1.5, 1.0);
+        waveFace395.rotation.x = -Math.PI / 2 + t * (Math.PI / 2); // flat → vertical
+        faceMat.opacity = t * 0.45;
+        crestMat.opacity = t * 0.4;
+        if (wavePhaseT395 >= 1.5) { wavePhase395 = 2; wavePhaseT395 = 0; }
+
+      } else if (wavePhase395 === 2) {
+        // Curling (0.5s): top rotates forward
+        wavePhaseT395 += dt;
+        const t = Math.min(wavePhaseT395 / 0.5, 1.0);
+        waveFace395.rotation.x = t * 0.4; // slight forward lean
+        faceMat.opacity = 0.45 + t * 0.1;
+        crestMat.opacity = 0.4 + t * 0.3;
+        if (wavePhaseT395 >= 0.5) { wavePhase395 = 3; wavePhaseT395 = 0; }
+
+      } else if (wavePhase395 === 3) {
+        // Crash (0.5s): flash + face falls
+        wavePhaseT395 += dt;
+        const t = Math.min(wavePhaseT395 / 0.5, 1.0);
+        waveFlashLight395.intensity = Math.sin(t * Math.PI) * 0.35;
+        faceMat.opacity = 0.55 * (1 - t);
+        crestMat.opacity = 0.7 * (1 - t);
+        waveFace395.rotation.x = 0.4 + t * 1.2;
+        if (wavePhaseT395 >= 0.5) { wavePhase395 = 4; wavePhaseT395 = 0; }
+
+      } else if (wavePhase395 === 4) {
+        // Dissipate (0.8s)
+        wavePhaseT395 += dt;
+        faceMat.opacity = 0;
+        crestMat.opacity = 0;
+        waveFlashLight395.intensity = Math.max(0, 0.1 * (1 - wavePhaseT395 / 0.8));
+        if (wavePhaseT395 >= 0.8) {
+          wavePhase395 = 0;
+          waveWaitT395 = 8.0 + Math.random() * 4.0;
+          waveFace395.rotation.x = -Math.PI / 2; // reset to flat
+        }
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -1572,6 +1665,13 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     waveCrests371 = [];
     waveCrestData371.forEach(d => { group.remove(d.light); d.light.dispose(); });
     waveCrestData371 = [];
+    if (waveGroup395) {
+      group.remove(waveGroup395);
+      waveGroup395.traverse(c => { if ((c as Mesh).geometry) (c as Mesh).geometry.dispose(); if ((c as Mesh).material) ((c as Mesh).material as MeshBasicMaterial).dispose(); });
+      waveGroup395 = null;
+    }
+    waveFace395 = null; waveCrest395 = null;
+    if (waveFlashLight395) { waveFlashLight395.dispose(); waveFlashLight395 = null; }
     group.clear();
   };
 
