@@ -800,6 +800,11 @@ let _cometSceneRef414: Scene | null = null;
 const _fogPlanes419: Mesh[] = [];
 let _fogT419 = 0;
 
+// C423 — Crann Bethadh (Celtic Tree of Life)
+let _crannGroup423: Group | null = null;
+let _crannT423 = 0;
+let _crannLeafLight423: PointLight | null = null;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1531,6 +1536,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       });
     }
 
+    // C423: animate Crann Bethadh tree sway and leaf light pulse
+    if (_crannGroup423) {
+      _crannT423 += dt;
+      _crannGroup423.rotation.z = Math.sin(_crannT423 * 0.15) * 0.015;
+      if (_crannLeafLight423) {
+        _crannLeafLight423.intensity = 0.12 + Math.sin(_crannT423 * 0.5) * 0.05;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -1710,6 +1724,69 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     });
   }
 
+  // C423 — Crann Bethadh (Celtic Tree of Life)
+  _crannGroup423 = new Group();
+
+  const trunkMat = new MeshBasicMaterial({ color: 0x050f08 });
+  const crownMat = new MeshBasicMaterial({ color: 0x0a1a0e, transparent: true, opacity: 0.92 });
+  const glowMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.06, depthWrite: false });
+
+  // Main trunk: tapered cylinder, very tall
+  const trunk = new Mesh(new CylinderGeometry(0.4, 0.9, 8, 7), trunkMat);
+  trunk.position.set(0, 4, 0);
+
+  // Root buttresses: 4 flat wedge-like BoxGeometry at base
+  const rootAngles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+  rootAngles.forEach(angle => {
+    const root = new Mesh(new BoxGeometry(0.5, 0.6, 2.5), trunkMat);
+    root.position.set(Math.sin(angle) * 1.2, 0.3, Math.cos(angle) * 1.2);
+    root.rotation.y = angle;
+    root.rotation.x = 0.3;
+    _crannGroup423!.add(root);
+  });
+
+  // Main canopy: 5 overlapping SphereGeometry spheres for crown
+  const crownOffsets = [
+    { x: 0,    y: 10.5, z:  0,    r: 4.5 },
+    { x: -3.5, y: 9,    z:  0,    r: 3.0 },
+    { x:  3.5, y: 9,    z:  0,    r: 3.0 },
+    { x: -2,   y: 11.5, z:  0.5,  r: 2.2 },
+    { x:  2,   y: 11.5, z: -0.5,  r: 2.2 },
+  ];
+  crownOffsets.forEach(({ x, y, z, r }) => {
+    const crown = new Mesh(new SphereGeometry(r, 8, 6), crownMat);
+    crown.position.set(x, y, z);
+    _crannGroup423!.add(crown);
+    const glow = new Mesh(new SphereGeometry(r * 1.15, 6, 5), glowMat.clone());
+    glow.position.set(x, y, z);
+    _crannGroup423!.add(glow);
+  });
+
+  // Major branches: 6 thick angled cylinders
+  const branchDefs = [
+    { x: -2,   y: 7, z:  0, rx:  0.5, rz: -0.6, len: 3.5 },
+    { x:  2,   y: 7, z:  0, rx:  0.5, rz:  0.6, len: 3.5 },
+    { x: -1.5, y: 9, z:  0, rx:  0.3, rz: -0.8, len: 2.8 },
+    { x:  1.5, y: 9, z:  0, rx:  0.3, rz:  0.8, len: 2.8 },
+    { x:  0,   y: 8, z: -1, rx: -0.4, rz:  0,   len: 2.5 },
+    { x:  0,   y: 8, z:  1, rx:  0.4, rz:  0,   len: 2.5 },
+  ];
+  branchDefs.forEach(({ x, y, z, rx, rz, len }) => {
+    const branch = new Mesh(new CylinderGeometry(0.1, 0.2, len, 5), trunkMat);
+    branch.position.set(x, y, z);
+    branch.rotation.x = rx;
+    branch.rotation.z = rz;
+    _crannGroup423!.add(branch);
+  });
+
+  // Canopy point light
+  _crannLeafLight423 = new PointLight(0x33ff66, 0.15, 12.0);
+  _crannLeafLight423.position.set(0, 11, 0);
+
+  _crannGroup423.add(trunk, _crannLeafLight423);
+  _crannGroup423.position.set(-12, 0, -45);
+  scene.add(_crannGroup423);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -1865,6 +1942,23 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       scene.remove(plane);
     });
     _fogPlanes419.length = 0;
+
+    // C423: dispose Crann Bethadh tree
+    if (_crannGroup423) {
+      _crannGroup423.traverse(obj => {
+        if (obj instanceof Mesh) {
+          obj.geometry.dispose();
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m: Material) => m.dispose());
+          } else {
+            (obj.material as Material).dispose();
+          }
+        }
+      });
+      scene.remove(_crannGroup423);
+      _crannGroup423 = null;
+      _crannLeafLight423 = null;
+    }
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
