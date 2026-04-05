@@ -500,6 +500,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let labyrinthGroup403: Group | null = null;
   let labyrinthMossT403 = 0;
 
+  // ── Central altar ritual fire — cercles_pierres (C407) ────────────────────
+  let altarFireGroup407: Group | null = null;
+  let altarFireT407 = 0;
+  const altarEmbers407: Mesh[] = [];
+  const altarEmberVel407: { vx: number; vy: number; life: number; maxLife: number }[] = [];
+  let altarFireCone407: Mesh | null = null;
+  let altarFireLight407: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -2009,6 +2017,69 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     group.add(druidGroup390);
   }
 
+  // Central altar ritual fire — cercles_pierres (C407)
+  if (biome === 'cercles_pierres') {
+    altarFireGroup407 = new Group();
+
+    // Flat stone altar
+    const altarStoneMesh = new Mesh(
+      new BoxGeometry(1.2, 0.2, 0.8),
+      new MeshLambertMaterial({ color: 0x0a1a10 }),
+    );
+    altarStoneMesh.position.set(0, 0.1, -15);
+    altarFireGroup407.add(altarStoneMesh);
+
+    // Fire base log
+    const logMesh = new Mesh(
+      new CylinderGeometry(0.15, 0.2, 0.3, 6),
+      new MeshLambertMaterial({ color: 0x0a1a0a }),
+    );
+    logMesh.position.set(0, 0.3, -15);
+    altarFireGroup407.add(logMesh);
+
+    // Main fire cone
+    const fireCone = new Mesh(
+      new ConeGeometry(0.25, 1.4, 8, 1, true),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7, side: DoubleSide }),
+    );
+    fireCone.position.set(0, 0.95, -15);
+    altarFireGroup407.add(fireCone);
+    altarFireCone407 = fireCone;
+
+    // Inner flame
+    const innerFlame = new Mesh(
+      new ConeGeometry(0.12, 1.0, 6, 1, true),
+      new MeshBasicMaterial({ color: 0x1aff55, transparent: true, opacity: 0.9, side: DoubleSide }),
+    );
+    innerFlame.position.set(0, 1.0, -15);
+    altarFireGroup407.add(innerFlame);
+
+    // Fire point light
+    const fireLight = new PointLight(0x33ff66, 0.5, 8.0);
+    fireLight.position.set(0, 1.5, -15);
+    altarFireGroup407.add(fireLight);
+    altarFireLight407 = fireLight;
+
+    // 12 ember particles
+    for (let i = 0; i < 12; i++) {
+      const ember = new Mesh(
+        new SphereGeometry(0.03, 3, 2),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 1.0 }),
+      );
+      ember.position.set(0, 0.3, -15);
+      altarFireGroup407.add(ember);
+      altarEmbers407.push(ember);
+      altarEmberVel407.push({
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: Math.random() * 1.2 + 0.4,
+        life: Math.random() * 1.5,
+        maxLife: Math.random() * 1.5 + 0.8,
+      });
+    }
+
+    group.add(altarFireGroup407);
+  }
+
   // Plaine des Druides: scattered ritual poles + central sacred fire
   if (biome === 'plaine_druides') {
     const R2 = () => Math.random();
@@ -2928,6 +2999,35 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const labLight = labyrinthGroup403.children.find(c => c instanceof PointLight) as PointLight | undefined;
       if (labLight) labLight.intensity = 0.04 + Math.sin(labyrinthMossT403 * 0.6) * 0.015;
     }
+    // Cercles de Pierres — central altar ritual fire (C407)
+    if (altarFireGroup407) {
+      altarFireT407 += dt;
+      if (altarFireCone407) {
+        altarFireCone407.scale.x = 0.85 + Math.sin(altarFireT407 * 8.3) * 0.18;
+        altarFireCone407.scale.z = 0.85 + Math.sin(altarFireT407 * 7.1 + 1) * 0.18;
+        altarFireCone407.scale.y = 0.9 + Math.sin(altarFireT407 * 5.7) * 0.12;
+        (altarFireCone407.material as MeshBasicMaterial).opacity = 0.6 + Math.sin(altarFireT407 * 11) * 0.15;
+      }
+      if (altarFireLight407) {
+        altarFireLight407.intensity = 0.45 + Math.sin(altarFireT407 * 9.3) * 0.12;
+      }
+      altarEmbers407.forEach((ember, i) => {
+        const vel = altarEmberVel407[i];
+        vel.life += dt;
+        if (vel.life > vel.maxLife) {
+          vel.life = 0;
+          vel.maxLife = Math.random() * 1.5 + 0.8;
+          vel.vx = (Math.random() - 0.5) * 0.6;
+          vel.vy = Math.random() * 1.2 + 0.4;
+          ember.position.set(0, 0.3, -15);
+        } else {
+          ember.position.x += vel.vx * dt;
+          ember.position.y += vel.vy * dt;
+          ember.position.y -= dt * 0.15;
+          (ember.material as MeshBasicMaterial).opacity = 1.0 - vel.life / vel.maxLife;
+        }
+      });
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3137,6 +3237,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         if (c instanceof PointLight) c.dispose();
       });
       labyrinthGroup403 = null;
+    }
+    // Central altar ritual fire cleanup (C407)
+    if (altarFireGroup407) {
+      altarFireGroup407.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      altarEmbers407.length = 0;
+      altarEmberVel407.length = 0;
+      altarFireCone407 = null;
+      altarFireLight407 = null;
+      altarFireGroup407 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
