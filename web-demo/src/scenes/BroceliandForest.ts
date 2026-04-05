@@ -991,6 +991,36 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Ground mist layer — 3 large drifting planes close to ground (CeltOS charter) ──
+  // Colors: 0x0a2010 family, opacity max 0.18. Slow lateral drift + breathing opacity.
+  const _mistLayers: Mesh[] = [];
+  const _mistBases: number[] = [0.12, 0.09, 0.07];
+  {
+    const mistDefs: [number, number, number, number, number, number, number][] = [
+      // w,  d,   x,    y,     z,    color,      baseOpacity
+      [40, 12,   0, 0.15, -20, 0x0a2010, 0.12],
+      [35, 10,   0, 0.25, -25, 0x0d2515, 0.09],
+      [30,  8,   0, 0.35, -15, 0x081808, 0.07],
+    ];
+    for (let i = 0; i < mistDefs.length; i++) {
+      const [w, d, x, y, z, color, baseOpacity] = mistDefs[i]!;
+      const geo = new PlaneGeometry(w, d);
+      const mat = new MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: baseOpacity,
+        depthWrite: false,
+        side: DoubleSide,
+      });
+      const mesh = new Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(x, y, z);
+      _mistLayers.push(mesh);
+      _mistBases[i] = baseOpacity;
+      group.add(mesh);
+    }
+  }
+
   // ── Rain drizzle — 80 thin pale blue-grey streaks falling through forest ─────
   const _rainMeshes: Mesh[] = [];
   let _rainTime = 0;
@@ -1140,6 +1170,15 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       wl.intensity = 0.2 + Math.sin(sceneTime * 2.0 + ud.phase) * 0.2;
     }
 
+    // Ground mist layer drift + opacity breathing
+    if (_mistLayers[0]) _mistLayers[0].position.x = Math.sin(sceneTime * 0.06) * 4;
+    if (_mistLayers[1]) _mistLayers[1].position.x = Math.cos(sceneTime * 0.08) * 3;
+    if (_mistLayers[2]) _mistLayers[2].position.x = Math.sin(sceneTime * 0.05 + 1.2) * 5;
+    for (let mi = 0; mi < _mistLayers.length; mi++) {
+      const mmat = _mistLayers[mi]!.material as MeshBasicMaterial;
+      mmat.opacity = _mistBases[mi]! + Math.sin(sceneTime * 0.12 + mi * 1.1) * 0.03;
+    }
+
     // Firefly swarm drift + twinkle
     _fireflyTime += dt;
     for (const fly of _fireflyMeshes) {
@@ -1168,6 +1207,7 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     for (const mat of crowFlock.crowMats) {
       mat.dispose();
     }
+    _mistLayers.length = 0;
     _wispMeshes.length = 0;
     _wispLights.length = 0;
     _rainMeshes.length = 0;
