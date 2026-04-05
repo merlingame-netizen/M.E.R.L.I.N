@@ -875,6 +875,15 @@ let sigilSurgeT480: number = 0;
 // C485 — Celtic constellation overlay (12 stars, 3 constellations, activation cycle)
 interface C485Star { mesh: Mesh; speed: number; phase: number; }
 let _constGroup485: Group | null = null;
+
+// C490 — Celtic knotwork mandala
+let mandalGroup490: Group | null = null;
+let mandalT490 = 0;
+let mandalLineMats490: LineBasicMaterial[] = [];
+let mandalLight490: PointLight | null = null;
+let mandalPulseTimer490: number = 35 + Math.random() * 20;
+let mandalPulsing490: boolean = false;
+let mandalPulseT490: number = 0;
 let _t485 = 0;
 let _constStars485: C485Star[] = [];
 let _constLineMats485: LineBasicMaterial[] = [];
@@ -891,6 +900,28 @@ let _constActivateTimer485 = 30 + Math.random() * 20;
 let _constActiveCon485 = -1;   // which constellation is surging
 let _constSurgeT485 = 0;
 let _constCycleIdx485 = 0;
+
+// ── C490: Celtic Knotwork Mandala helpers ────────────────────────────────────
+
+function makeCircle490(radius: number, segments: number): Float32Array {
+  const pts: number[] = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    pts.push(Math.cos(a) * radius, 0, Math.sin(a) * radius);
+  }
+  return new Float32Array(pts);
+}
+
+function makeTriquetra490(r: number, segments: number, rotY: number): Float32Array {
+  const pts: number[] = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * Math.PI * 2;
+    const x = r * Math.sin(t) * (1 + 0.5 * Math.cos(3 * t));
+    const z = r * Math.cos(t) * (1 + 0.5 * Math.cos(3 * t));
+    pts.push(x * Math.cos(rotY) - z * Math.sin(rotY), 0, x * Math.sin(rotY) + z * Math.cos(rotY));
+  }
+  return new Float32Array(pts);
+}
 
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
@@ -1930,6 +1961,43 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C490: Celtic knotwork mandala animation
+    mandalT490 += dt;
+    if (mandalGroup490) {
+      mandalGroup490.rotation.y += 0.008 * dt;
+      mandalGroup490.rotation.z = 0.1 * Math.sin(mandalT490 * 0.4);
+      // Triquetra lines breathe (indices 11 and 12 = the two triquetras after 2 circles + 8 spokes)
+      const triqOpacity = 0.6 + 0.3 * Math.sin(mandalT490 * 0.9);
+      // Indices: 0=outerCircle, 1=innerCircle, 2..9=spokes(8), 10=triquetra1, 11=triquetra2, 12=rosette
+      if (mandalLineMats490[10]) mandalLineMats490[10]!.opacity = triqOpacity;
+      if (mandalLineMats490[11]) mandalLineMats490[11]!.opacity = triqOpacity;
+    }
+    // Activation pulse timer
+    if (!mandalPulsing490) {
+      mandalPulseTimer490 -= dt;
+      if (mandalPulseTimer490 <= 0) {
+        mandalPulsing490 = true;
+        mandalPulseT490 = 0;
+        mandalPulseTimer490 = 35 + Math.random() * 20;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+      }
+    } else {
+      mandalPulseT490 += dt;
+      if (mandalPulseT490 < 0.5) {
+        // Spike to 1.0 over 0.5s
+        const p = mandalPulseT490 / 0.5;
+        for (const m of mandalLineMats490) { m.opacity = Math.min(1.0, m.opacity + p * 0.4); }
+        if (mandalLight490) mandalLight490.intensity = 0.2 + p * 1.8;
+      } else if (mandalPulseT490 < 3.5) {
+        // Fade over 3s
+        const p = (mandalPulseT490 - 0.5) / 3.0;
+        if (mandalLight490) mandalLight490.intensity = 2.0 - p * 1.8;
+      } else {
+        if (mandalLight490) mandalLight490.intensity = 0.2;
+        mandalPulsing490 = false;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -2891,6 +2959,58 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(_constGroup485);
 
+  // C490: Celtic knotwork mandala — large glowing mandala floating high in sky
+  {
+    const grp = new Group();
+    grp.position.set(0, 12, -30);
+    grp.rotation.x = 0.3;
+
+    const makeLine = (pts: Float32Array, color: number, opacity: number): Line => {
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(pts, 3));
+      const mat = new LineBasicMaterial({ color, transparent: true, opacity });
+      mandalLineMats490.push(mat);
+      return new Line(geo, mat);
+    };
+
+    // 1. Outer circle
+    grp.add(makeLine(makeCircle490(6.0, 32), 0x1a8833, 0.6));
+    // 2. Inner circle
+    grp.add(makeLine(makeCircle490(4.5, 32), 0x1a8833, 0.6));
+    // 3. Radial spokes (8 at 45° intervals)
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const spokeGeo = new BufferGeometry();
+      spokeGeo.setAttribute('position', new Float32BufferAttribute(new Float32Array([
+        Math.cos(a) * 4.5, 0, Math.sin(a) * 4.5,
+        Math.cos(a) * 6.0, 0, Math.sin(a) * 6.0,
+      ]), 3));
+      const spokeMat = new LineBasicMaterial({ color: 0x0d4420, transparent: true, opacity: 0.4 });
+      mandalLineMats490.push(spokeMat);
+      grp.add(new Line(spokeGeo, spokeMat));
+    }
+    // 4. Two interlocking triquetra paths
+    grp.add(makeLine(makeTriquetra490(3.5, 128, 0), 0x33ff66, 0.8));
+    grp.add(makeLine(makeTriquetra490(3.5, 128, Math.PI / 3), 0x33ff66, 0.8));
+    // 5. Center rosette
+    const rosetteSegs = 128;
+    const rosPts: number[] = [];
+    for (let i = 0; i <= rosetteSegs; i++) {
+      const t = (i / rosetteSegs) * Math.PI * 2;
+      const r = 1.5;
+      rosPts.push(r * Math.sin(t) * (1 + 0.3 * Math.cos(6 * t)), 0, r * Math.cos(t) * (1 + 0.3 * Math.cos(6 * t)));
+    }
+    grp.add(makeLine(new Float32Array(rosPts), 0x33ff66, 1.0));
+
+    // Ambient point light inside mandala
+    const mLight = new PointLight(0x33ff66, 0.2, 15);
+    grp.add(mLight);
+    mandalLight490 = mLight;
+
+    mandalGroup490 = grp;
+    scene.add(grp);
+  }
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -3202,6 +3322,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       _constGroup485 = null;
     }
     _constStars485 = [];
+
+    // C490: dispose mandala
+    mandalLineMats490.forEach((m) => { m.dispose(); });
+    mandalLineMats490 = [];
+    if (mandalGroup490) {
+      mandalGroup490.traverse((c) => {
+        if (c instanceof Line) { c.geometry.dispose(); }
+      });
+      scene.remove(mandalGroup490);
+      mandalGroup490 = null;
+    }
+    mandalLight490 = null;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
