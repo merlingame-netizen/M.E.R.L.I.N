@@ -383,6 +383,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _lakeLight: PointLight | null = null;
   let _waterfallGroup: Group | null = null;
   let _waterfallLight: PointLight | null = null;
+  let _goatGroup: Group | null = null;
+  let _goatHead: Mesh | null = null;
+  let _goatTail: Mesh | null = null;
+  let _goatBody: Mesh | null = null;
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
   let plaineObeliskGlowMat: MeshBasicMaterial | null = null;
@@ -421,6 +425,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _heatherMeshes: Mesh[] = [];
   let _moorCircleGroup: Group | null = null;
   let _moorCircleLight: PointLight | null = null;
+  let _watchtowerGroup: Group | null = null;
+  let _watchtowerLight: PointLight | null = null;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -1232,6 +1238,62 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     waterfallLight.position.set(-8, 1.5, -42.5);
     group.add(waterfallLight);
     _waterfallLight = waterfallLight;
+
+    // Mountain goat silhouette grazing on a ledge (C346)
+    const goatMat = new MeshLambertMaterial({ color: 0x0c1a10 });
+    const goatGroup = new Group();
+
+    // Body
+    const bodyMesh = new Mesh(new BoxGeometry(0.35, 0.22, 0.55), goatMat);
+    bodyMesh.position.set(-12, 6.5, -44);
+    goatGroup.add(bodyMesh);
+
+    // Neck
+    const neckMesh = new Mesh(new BoxGeometry(0.1, 0.15, 0.1), goatMat);
+    neckMesh.position.set(-12, 6.64, -43.86);
+    goatGroup.add(neckMesh);
+
+    // Head
+    const headMesh = new Mesh(new BoxGeometry(0.14, 0.16, 0.18), goatMat);
+    headMesh.position.set(-12, 6.72, -43.72);
+    goatGroup.add(headMesh);
+
+    // Horn L
+    const hornL = new Mesh(new CylinderGeometry(0.01, 0.02, 0.18, 3), goatMat);
+    hornL.position.set(-12.05, 6.88, -43.68);
+    hornL.rotation.x = 0.4;
+    goatGroup.add(hornL);
+
+    // Horn R
+    const hornR = new Mesh(new CylinderGeometry(0.01, 0.02, 0.18, 3), goatMat);
+    hornR.position.set(-11.95, 6.88, -43.68);
+    hornR.rotation.x = 0.4;
+    goatGroup.add(hornR);
+
+    // 4 legs at body corners, extending down
+    const legPositions: Array<[number, number, number]> = [
+      [-12.12, 6.265, -43.78],
+      [-11.88, 6.265, -43.78],
+      [-12.12, 6.265, -44.22],
+      [-11.88, 6.265, -44.22],
+    ];
+    legPositions.forEach(([lx, ly, lz]) => {
+      const leg = new Mesh(new BoxGeometry(0.05, 0.25, 0.05), goatMat);
+      leg.position.set(lx, ly, lz);
+      goatGroup.add(leg);
+    });
+
+    // Tail
+    const tailMesh = new Mesh(new BoxGeometry(0.04, 0.08, 0.02), goatMat);
+    tailMesh.position.set(-12, 6.52, -44.28);
+    tailMesh.rotation.x = -0.5;
+    goatGroup.add(tailMesh);
+
+    group.add(goatGroup);
+    _goatGroup = goatGroup;
+    _goatHead = headMesh;
+    _goatTail = tailMesh;
+    _goatBody = bodyMesh;
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -2015,6 +2077,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const t = Date.now() * 0.001;
       _waterfallLight.intensity = 0.04 + Math.sin(t * 0.3) * 0.02;
     }
+    // Monts brumeux — mountain goat grazing animation (C346)
+    if (_goatHead !== null || _goatTail !== null || _goatBody !== null) {
+      const t = Date.now() * 0.001;
+      if (_goatHead !== null) {
+        _goatHead.rotation.x = Math.sin(t * 0.4) * 0.15;
+      }
+      if (_goatTail !== null) {
+        _goatTail.rotation.z = Math.sin(t * 2.5) * 0.2;
+      }
+      if (_goatBody !== null) {
+        _goatBody.rotation.z = Math.sin(t * 0.15) * 0.02;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -2052,6 +2127,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _lakeLight = null;
     _waterfallGroup = null;
     _waterfallLight = null;
+    _goatGroup = null;
+    _goatHead = null;
+    _goatTail = null;
+    _goatBody = null;
     _deadTreeGroup = null;
     _templeGroup = null;
     _gateGroup = null;
