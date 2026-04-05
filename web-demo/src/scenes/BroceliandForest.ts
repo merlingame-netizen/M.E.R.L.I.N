@@ -849,6 +849,13 @@ let runestoneLight363: PointLight | null = null;
 let runestoneRippleT363 = -1;
 let runestoneNextRipple363 = 12.0;
 
+// ── Cycle-375: forest deer silhouette grazing at forest edge ──────────────────
+let deerGroup375: Group | null = null;
+let deerHead375: Group | null = null;
+let deerGrazeT375 = 0;
+let deerAlertT375 = -1;
+let deerNextAlert375 = 15.0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1398,6 +1405,66 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(runestoneGroup363);
   }
 
+  // ── Cycle-375: forest deer silhouette grazing at forest edge ─────────────────
+  {
+    deerGroup375 = new Group();
+    const bodyMat = new MeshStandardMaterial({ color: 0x071407, roughness: 0.95 });
+    const antlerMat = new MeshStandardMaterial({ color: 0x0a1f0a, roughness: 0.95 });
+
+    // Body
+    const body = new Mesh(new BoxGeometry(0.6, 0.35, 1.0), bodyMat);
+    body.position.y = 0.6;
+    deerGroup375.add(body);
+
+    // Neck
+    const neck = new Mesh(new BoxGeometry(0.18, 0.35, 0.2), bodyMat);
+    neck.position.set(0, 0.85, 0.35);
+    neck.rotation.x = -0.3;
+    deerGroup375.add(neck);
+
+    // Head group (for grazing animation)
+    deerHead375 = new Group();
+    deerHead375.position.set(0, 1.0, 0.5);
+
+    const head = new Mesh(new BoxGeometry(0.2, 0.2, 0.3), bodyMat);
+    deerHead375.add(head);
+
+    // Eyes
+    const eyeMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    ([-0.08, 0.08] as number[]).forEach(ex => {
+      const eye = new Mesh(new SphereGeometry(0.018, 4, 3), eyeMat);
+      eye.position.set(ex, 0.04, 0.14);
+      deerHead375!.add(eye);
+    });
+
+    // Antlers
+    ([-0.07, 0.07] as number[]).forEach((ax, idx) => {
+      const sign = idx === 0 ? -1 : 1;
+      const antlerBase = new Mesh(new CylinderGeometry(0.015, 0.02, 0.25, 4), antlerMat);
+      antlerBase.position.set(ax, 0.18, 0.0);
+      antlerBase.rotation.z = ax * 0.3;
+      const branch = new Mesh(new CylinderGeometry(0.01, 0.015, 0.15, 4), antlerMat);
+      branch.position.set(ax * 0.6, 0.12, 0.04);
+      branch.rotation.z = ax * 0.8;
+      antlerBase.add(branch);
+      deerHead375!.add(antlerBase);
+      void sign;
+    });
+
+    deerGroup375.add(deerHead375);
+
+    // Legs (4)
+    ([ [-0.18, -0.22], [0.18, -0.22], [-0.18, 0.22], [0.18, 0.22] ] as [number, number][]).forEach(([lx, lz]) => {
+      const leg = new Mesh(new BoxGeometry(0.1, 0.55, 0.1), bodyMat);
+      leg.position.set(lx, 0.27, lz);
+      deerGroup375!.add(leg);
+    });
+
+    deerGroup375.position.set(-8, 0, -14);
+    deerGroup375.rotation.y = 0.5;
+    group.add(deerGroup375);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1620,6 +1687,31 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       streamLights357[si]!.intensity = 0.08 + Math.sin(sceneTime * 0.9 + si * 1.3) * 0.04;
     }
 
+    // Cycle-375: deer grazing animation
+    if (deerHead375 && deerGroup375) {
+      deerGrazeT375 += dt * 0.4;
+      const graze = Math.sin(deerGrazeT375) * 0.5 + 0.5; // 0 to 1
+      deerHead375.rotation.x = graze * 0.6; // nod forward to graze
+      deerHead375.position.y = 1.0 - graze * 0.3;
+
+      deerNextAlert375 -= dt;
+      if (deerNextAlert375 <= 0 && deerAlertT375 < 0) {
+        deerAlertT375 = 0;
+        deerNextAlert375 = 12.0 + Math.random() * 8.0;
+      }
+      if (deerAlertT375 >= 0) {
+        deerAlertT375 += dt;
+        if (deerAlertT375 < 2.0) {
+          deerHead375.rotation.x = -0.1; // head up
+          deerHead375.position.y = 1.05;
+        } else {
+          deerAlertT375 = -1; // resume grazing
+        }
+      }
+
+      deerGroup375.rotation.y = 0.5 + Math.sin(sceneTime * 0.1) * 0.03;
+    }
+
     // Cycle-363: runestone carving pulse + ripple
     if (runestoneCarvings363) {
       const mat = runestoneCarvings363.material as MeshStandardMaterial;
@@ -1709,6 +1801,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     runestoneCarvings363 = null;
     if (runestoneLight363) { runestoneLight363.dispose(); runestoneLight363 = null; }
+    // Cycle-375: deer cleanup
+    if (deerGroup375) {
+      group.remove(deerGroup375);
+      deerGroup375.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      deerGroup375 = null;
+    }
+    deerHead375 = null;
   };
 
   return { group, update, dispose };
