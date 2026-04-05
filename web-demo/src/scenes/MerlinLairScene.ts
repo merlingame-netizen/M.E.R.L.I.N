@@ -1306,6 +1306,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let mirrorPulseT361 = -1;
   let mirrorNextPulse361 = 10.0;
 
+  // C384: alchemical balance scale — pendulum arm, two pans on chains, green spark events
+  let _scaleGroup384: Group | null = null;
+  let _scaleArm384: Mesh | null = null;
+  let _scalePanLeft384: Group | null = null;
+  let _scalePanRight384: Group | null = null;
+  let _scaleSparkLight384: PointLight | null = null;
+  let _scaleNextSpark384 = 8.0;
+  let _scaleSparkT384 = -1;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1729,6 +1738,65 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     });
 
     _orbNextVision380 = 12.0 + Math.random() * 6.0;
+  }
+
+  // C384: alchemical balance scale — pendulum arm + two hanging pans + spark light
+  {
+    _scaleGroup384 = new Group();
+    const scaleMat = new MeshStandardMaterial({ color: 0x0d200d, roughness: 0.3, metalness: 0.7 });
+    const panMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.5, metalness: 0.6 });
+
+    // Base and column
+    const base384 = new Mesh(new CylinderGeometry(0.2, 0.25, 0.06, 8), scaleMat);
+    _scaleGroup384.add(base384);
+    const column384 = new Mesh(new CylinderGeometry(0.025, 0.03, 0.7, 6), scaleMat);
+    column384.position.y = 0.38;
+    _scaleGroup384.add(column384);
+
+    // Top pivot sphere
+    const pivot384 = new Mesh(new SphereGeometry(0.04, 6, 5), scaleMat);
+    pivot384.position.y = 0.73;
+    _scaleGroup384.add(pivot384);
+
+    // Balance arm (rotates around pivot)
+    _scaleArm384 = new Mesh(new BoxGeometry(0.7, 0.025, 0.025), scaleMat);
+    _scaleArm384.position.y = 0.73;
+    _scaleGroup384.add(_scaleArm384);
+
+    // Left pan group
+    _scalePanLeft384 = new Group();
+    _scalePanLeft384.position.set(-0.32, 0.73, 0);
+    for (let i = 0; i < 3; i++) {
+      const link = new Mesh(new BoxGeometry(0.01, 0.07, 0.01), scaleMat);
+      link.position.y = -0.05 - i * 0.07;
+      _scalePanLeft384.add(link);
+    }
+    const panL = new Mesh(new CylinderGeometry(0.1, 0.08, 0.02, 8), panMat);
+    panL.position.y = -0.28;
+    _scalePanLeft384.add(panL);
+    _scaleGroup384.add(_scalePanLeft384);
+
+    // Right pan group (mirror)
+    _scalePanRight384 = new Group();
+    _scalePanRight384.position.set(0.32, 0.73, 0);
+    for (let i = 0; i < 3; i++) {
+      const link = new Mesh(new BoxGeometry(0.01, 0.07, 0.01), scaleMat);
+      link.position.y = -0.05 - i * 0.07;
+      _scalePanRight384.add(link);
+    }
+    const panR = new Mesh(new CylinderGeometry(0.1, 0.08, 0.02, 8), panMat);
+    panR.position.y = -0.28;
+    _scalePanRight384.add(panR);
+    _scaleGroup384.add(_scalePanRight384);
+
+    // Spark light (over left pan)
+    _scaleSparkLight384 = new PointLight(0x33ff66, 0.0, 1.5);
+    _scaleSparkLight384.position.set(-0.32, 0.45, 0);
+    _scaleGroup384.add(_scaleSparkLight384);
+
+    _scaleGroup384.position.set(1.5, 0, -4.0);
+    scene.add(_scaleGroup384);
+    _scaleNextSpark384 = 8.0 + Math.random() * 4.0;
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -2735,6 +2803,31 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C384: alchemical balance scale — pendulum tilt + spark events
+    if (!lowFpsMode && _scaleArm384) {
+      const tilt = Math.sin(elapsedTime * 0.4) * 0.12 + Math.sin(elapsedTime * 0.7) * 0.04;
+      _scaleArm384.rotation.z = tilt;
+      if (_scalePanLeft384) _scalePanLeft384.rotation.z = -tilt * 0.5;
+      if (_scalePanRight384) _scalePanRight384.rotation.z = tilt * 0.5;
+
+      _scaleNextSpark384 -= dt;
+      if (_scaleNextSpark384 <= 0 && _scaleSparkT384 < 0) {
+        _scaleSparkT384 = 0;
+        _scaleNextSpark384 = 8.0 + Math.random() * 4.0;
+      }
+      if (_scaleSparkT384 >= 0 && _scaleSparkLight384) {
+        _scaleSparkT384 += dt;
+        if (_scaleSparkT384 < 0.2) {
+          _scaleSparkLight384.intensity = (_scaleSparkT384 / 0.2) * 0.4;
+        } else if (_scaleSparkT384 < 0.6) {
+          _scaleSparkLight384.intensity = 0.4 - ((_scaleSparkT384 - 0.2) / 0.4) * 0.4;
+        } else {
+          _scaleSparkLight384.intensity = 0;
+          _scaleSparkT384 = -1;
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -2959,6 +3052,20 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     mirrorGroup361 = null;
     mirrorSurface361 = null;
     if (mirrorLight361) { mirrorLight361 = null; }
+    // C384: remove balance scale group and all children
+    if (_scaleGroup384) {
+      scene.remove(_scaleGroup384);
+      _scaleGroup384.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) (mat as MeshStandardMaterial).dispose();
+      });
+      _scaleGroup384 = null;
+    }
+    _scaleArm384 = null;
+    _scalePanLeft384 = null;
+    _scalePanRight384 = null;
+    if (_scaleSparkLight384) { _scaleSparkLight384.dispose(); _scaleSparkLight384 = null; }
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
