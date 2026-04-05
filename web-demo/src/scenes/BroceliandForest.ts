@@ -879,6 +879,26 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     cage.position.set(0, 0, 0);
   }
 
+  // ── Rain drizzle — 80 thin pale blue-grey streaks falling through forest ─────
+  const _rainMeshes: Mesh[] = [];
+  let _rainTime = 0;
+  {
+    const rainGeo = new CylinderGeometry(0.01, 0.01, 0.3, 3);
+    const rainMat = new MeshBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.25 });
+    for (let i = 0; i < 80; i++) {
+      const drop = new Mesh(rainGeo, rainMat);
+      const startY = -2 + R() * 10;
+      drop.position.set(
+        -25 + R() * 50,
+        startY,
+        -35 + R() * 32,
+      );
+      drop.userData = { startY, speed: 4 + R() * 3, range: 10 };
+      _rainMeshes.push(drop);
+      group.add(drop);
+    }
+  }
+
   // ── Firefly swarm — 20 glowing CeltOS-green particles drifting through forest ─
   const _fireflyMeshes: Mesh[] = [];
   let _fireflyTime = 0;
@@ -981,6 +1001,17 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       _lanternLight.intensity = 0.6 + Math.sin(_lanternTime * 1.5) * 0.2;
     }
 
+    // Rain drizzle fall + subtle wind drift
+    _rainTime += dt;
+    for (const drop of _rainMeshes) {
+      drop.position.y -= (drop.userData as { speed: number; startY: number; range: number }).speed * dt;
+      drop.position.x += 0.5 * dt;
+      if (drop.position.y < (drop.userData as { startY: number; range: number }).startY - (drop.userData as { range: number }).range) {
+        drop.position.y = (drop.userData as { startY: number }).startY;
+      }
+      if (drop.position.x > 25) drop.position.x -= 50;
+    }
+
     // Firefly swarm drift + twinkle
     _fireflyTime += dt;
     for (const fly of _fireflyMeshes) {
@@ -1009,6 +1040,7 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     for (const mat of crowFlock.crowMats) {
       mat.dispose();
     }
+    _rainMeshes.length = 0;
     _fireflyMeshes.length = 0;
     _lanternMesh = null;
     _lanternLight = null;
