@@ -1512,6 +1512,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const crystalWisps503: Mesh[] = [];
   let crystalFogSphere503: Mesh | null = null;
 
+  // C508 — enchanted moon phase clock
+  let clockGroup508: Group | null = null;
+  let t508: number = 0;
+  let clockHourHand508: Mesh | null = null;
+  let clockMinuteHand508: Mesh | null = null;
+  const clockMarkerMats508: MeshStandardMaterial[] = [];
+  let clockRimMat508: MeshStandardMaterial | null = null;
+  let clockMoonMat508: MeshStandardMaterial | null = null;
+  let clockLight508: PointLight | null = null;
+  let clockChimeTimer508: number = 30;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -3882,6 +3893,90 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(crystalGroup503);
   }
 
+  // C508 — enchanted moon phase clock
+  {
+    clockGroup508 = new Group();
+
+    // Clock body — flat disc mounted on wall
+    const bodyMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, metalness: 0.05, flatShading: true });
+    const body = new Mesh(new CylinderGeometry(0.35, 0.35, 0.08, 16), bodyMat);
+    body.rotation.x = Math.PI / 2;
+    clockGroup508.add(body);
+
+    // Clock face ring (outer rim)
+    const rimMat = new MeshStandardMaterial({
+      color: 0x1a3a12, roughness: 0.7, metalness: 0.05,
+      emissive: 0x33ff66, emissiveIntensity: 0.3, flatShading: true,
+    });
+    clockRimMat508 = rimMat;
+    const rim = new Mesh(new TorusGeometry(0.34, 0.025, 6, 20), rimMat);
+    clockGroup508.add(rim);
+
+    // 12 hour markers arranged radially at radius 0.27
+    for (let mi = 0; mi < 12; mi++) {
+      const markerMat = new MeshStandardMaterial({
+        color: 0x0d2a14, roughness: 0.8, metalness: 0.0,
+        emissive: 0x33ff66, emissiveIntensity: 0.5, flatShading: true,
+      });
+      clockMarkerMats508.push(markerMat);
+      const marker = new Mesh(new CylinderGeometry(0.015, 0.015, 0.06, 4), markerMat);
+      const angle = (mi / 12) * Math.PI * 2;
+      const r = 0.27;
+      marker.position.set(Math.sin(angle) * r, Math.cos(angle) * r, 0.05);
+      clockGroup508.add(marker);
+    }
+
+    // Moon phase disc at clock center
+    const moonMat = new MeshStandardMaterial({
+      color: 0x0a2a14, roughness: 0.7, metalness: 0.0,
+      emissive: 0x33ff66, emissiveIntensity: 0.6,
+    });
+    clockMoonMat508 = moonMat;
+    const moon = new Mesh(new SphereGeometry(0.12, 12, 8), moonMat);
+    moon.scale.z = 0.2;
+    moon.position.set(0, 0, 0.06);
+    clockGroup508.add(moon);
+
+    // Hour hand
+    const handMat = new MeshStandardMaterial({
+      color: 0x0d3322, roughness: 0.8, metalness: 0.0,
+      emissive: 0x1a5522, emissiveIntensity: 0.4, flatShading: true,
+    });
+    const hourHand = new Mesh(new BoxGeometry(0.04, 0.22, 0.02), handMat);
+    hourHand.position.set(0, 0.11, 0.07);
+    clockHourHand508 = hourHand;
+    clockGroup508.add(hourHand);
+
+    // Hour hand ornament at base
+    const hourOrnMat = handMat.clone();
+    const hourOrn = new Mesh(new TorusGeometry(0.04, 0.01, 4, 8), hourOrnMat);
+    hourOrn.position.set(0, 0, 0.07);
+    clockGroup508.add(hourOrn);
+
+    // Minute hand
+    const minHandMat = handMat.clone();
+    const minuteHand = new Mesh(new BoxGeometry(0.025, 0.30, 0.02), minHandMat);
+    minuteHand.position.set(0, 0.15, 0.08);
+    clockMinuteHand508 = minuteHand;
+    clockGroup508.add(minuteHand);
+
+    // Minute hand ornament at base
+    const minOrnMat = handMat.clone();
+    const minOrn = new Mesh(new TorusGeometry(0.04, 0.01, 4, 8), minOrnMat);
+    minOrn.position.set(0, 0, 0.08);
+    clockGroup508.add(minOrn);
+
+    // PointLight at clock face
+    clockLight508 = new PointLight(0x33ff66, 0.25, 3.0);
+    clockLight508.position.set(0, 0, 0.3);
+    clockGroup508.add(clockLight508);
+
+    // Group position: wall-mounted on left wall, facing into room
+    clockGroup508.position.set(-3.2, 1.8, -3.8);
+    clockGroup508.rotation.y = Math.PI * 0.5;
+    scene.add(clockGroup508);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -5427,6 +5522,46 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C508 — enchanted moon phase clock
+    if (clockGroup508) {
+      t508 += dt;
+
+      // Rotate hands
+      if (clockHourHand508) {
+        clockHourHand508.rotation.z = -t508 / 720 * Math.PI * 2;
+      }
+      if (clockMinuteHand508) {
+        clockMinuteHand508.rotation.z = -t508 / 60 * Math.PI * 2;
+      }
+
+      // Moon phase disc pulsing emissive (slow ~2min cycle)
+      if (clockMoonMat508) {
+        clockMoonMat508.emissiveIntensity = 0.5 + 0.3 * Math.sin(t508 * 0.05);
+      }
+
+      // Clock face ring breathing
+      if (clockRimMat508) {
+        clockRimMat508.emissiveIntensity = 0.25 + 0.15 * Math.sin(t508 * 0.7);
+      }
+
+      // Hour markers glow pulse
+      for (let mi = 0; mi < clockMarkerMats508.length; mi++) {
+        const mm = clockMarkerMats508[mi];
+        if (mm) mm.emissiveIntensity = 0.4 + 0.2 * Math.sin(t508 * 2.0 + mi * Math.PI / 6);
+      }
+
+      // Hour chime every 30s
+      clockChimeTimer508 -= dt;
+      if (clockChimeTimer508 <= 0) {
+        clockChimeTimer508 = 30;
+        // Surge all markers and rim
+        for (const mm of clockMarkerMats508) if (mm) mm.emissiveIntensity = 1.5;
+        if (clockRimMat508) clockRimMat508.emissiveIntensity = 1.0;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+        // Fade back over 1s via next frame updates
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -5969,6 +6104,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     crystalOuterMat503 = null;
     crystalLight503 = null;
     crystalFogSphere503 = null;
+    // C508 — enchanted moon phase clock dispose
+    if (clockGroup508) {
+      clockGroup508.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(clockGroup508);
+      clockGroup508 = null;
+    }
+    clockMarkerMats508.length = 0;
+    clockRimMat508 = null;
+    clockMoonMat508 = null;
+    clockHourHand508 = null;
+    clockMinuteHand508 = null;
+    clockLight508 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
