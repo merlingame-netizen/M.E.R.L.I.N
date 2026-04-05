@@ -584,6 +584,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let throneMossPatches453: Mesh[] = []
   let throneLight453: PointLight | null = null
 
+  // ── Druidic totem pole — vallee_anciens (C481) ───────────────────────────
+  let totemGroup481: Group | null = null
+  let totemT481: number = 0
+  let totemEyes481: Mesh[] = []
+  let totemNextPulse481: number = 20 + Math.random() * 15
+  let totemPulsePhase481: number = 0   // 0=idle, 1=rising, 2=fading
+  let totemPulseTimer481: number = 0
+
   // ── Stone medicine wheel — plaine_druides (C458) ──────────────────────────
   let medicineWheelGroup458: Group | null = null
   let medicineWheelT458: number = 0
@@ -2055,6 +2063,56 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     throneGroup453.add(throneLight453)
 
     group.add(throneGroup453)
+
+    // Druidic totem pole (C481)
+    totemGroup481 = new Group()
+    totemGroup481.position.set(-8, 0, -12)
+
+    // Three stacked pole sections (CylinderGeometry: radiusTop, radiusBottom, height, radialSeg)
+    const poleMat481 = new MeshStandardMaterial({ color: 0x1a3322, roughness: 0.85, metalness: 0.0 })
+    const sectionDefs481 = [
+      { rTop: 0.20, rBot: 0.25, h: 2.0, y: 1.0 },
+      { rTop: 0.18, rBot: 0.20, h: 2.0, y: 3.0 },
+      { rTop: 0.15, rBot: 0.18, h: 2.0, y: 5.0 },
+    ]
+    sectionDefs481.forEach((s) => {
+      const seg = new Mesh(
+        new CylinderGeometry(s.rTop, s.rBot, s.h, 8),
+        poleMat481
+      )
+      seg.position.y = s.y
+      totemGroup481!.add(seg)
+    })
+
+    // Three carved face medallions at y=1.5, 3.0, 4.5
+    const faceMat481 = new MeshStandardMaterial({ color: 0x1e3d28, roughness: 0.8, metalness: 0.0 })
+    const faceHeights481 = [1.5, 3.0, 4.5]
+    faceHeights481.forEach((fy) => {
+      const face = new Mesh(
+        new CylinderGeometry(0.3, 0.3, 0.05, 12),
+        faceMat481
+      )
+      face.rotation.x = Math.PI / 2
+      face.position.set(0.22, fy, 0)
+      totemGroup481!.add(face)
+
+      // Two glowing eyes per medallion
+      const eyeMat = new MeshStandardMaterial({
+        color: 0x33ff66,
+        emissive: new Color(0x33ff66),
+        emissiveIntensity: 0.8,
+        roughness: 0.3,
+        metalness: 0.0,
+      })
+      for (const ex of [-0.09, 0.09]) {
+        const eye = new Mesh(new SphereGeometry(0.06, 6, 6), eyeMat.clone())
+        eye.position.set(0.25, fy + 0.04, ex)
+        totemGroup481!.add(eye)
+        totemEyes481.push(eye)
+      }
+    })
+
+    group.add(totemGroup481)
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -4200,6 +4258,37 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (throneLight453) {
       throneLight453.intensity = 0.12 + 0.06 * Math.sin(throneT453 * 0.5);
     }
+    // Vallee des Anciens — druidic totem pole animation (C481)
+    if (totemGroup481) {
+      totemT481 += dt;
+      // Slow Y-axis rotation
+      totemGroup481.rotation.y += 0.015 * dt;
+      // Spirit activation pulse state machine
+      totemNextPulse481 -= dt;
+      if (totemPulsePhase481 === 0 && totemNextPulse481 <= 0) {
+        totemPulsePhase481 = 1;
+        totemPulseTimer481 = 0;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'pulse' } }));
+      }
+      if (totemPulsePhase481 === 1) {
+        totemPulseTimer481 += dt;
+        const p = Math.min(totemPulseTimer481 / 0.3, 1.0);
+        totemEyes481.forEach((eye) => {
+          (eye.material as MeshStandardMaterial).emissiveIntensity = 0.8 + p * 1.2;
+        });
+        if (totemPulseTimer481 >= 0.3) { totemPulsePhase481 = 2; totemPulseTimer481 = 0; }
+      } else if (totemPulsePhase481 === 2) {
+        totemPulseTimer481 += dt;
+        const p = Math.min(totemPulseTimer481 / 1.5, 1.0);
+        totemEyes481.forEach((eye) => {
+          (eye.material as MeshStandardMaterial).emissiveIntensity = 2.0 - p * 1.2;
+        });
+        if (totemPulseTimer481 >= 1.5) {
+          totemPulsePhase481 = 0;
+          totemNextPulse481 = 20 + Math.random() * 15;
+        }
+      }
+    }
     // Plaine des Druides — stone medicine wheel energy pulse (C458)
     medicineWheelT458 += dt;
     // Energy lines pulse with phase offset per spoke
@@ -4693,6 +4782,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     throneMossPatches453 = [];
     throneLight453 = null;
+    // Druidic totem pole cleanup (C481)
+    if (totemGroup481) {
+      totemGroup481.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshStandardMaterial).dispose(); }
+      });
+      totemGroup481 = null;
+    }
+    totemEyes481 = [];
+    totemT481 = 0;
+    totemNextPulse481 = 20 + Math.random() * 15;
+    totemPulsePhase481 = 0;
+    totemPulseTimer481 = 0;
     // Stone medicine wheel cleanup (C458)
     if (medicineWheelGroup458) {
       medicineWheelGroup458.traverse((c) => {
