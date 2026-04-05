@@ -665,6 +665,95 @@ function createVolumetricLight(): VolumetricLightResult {
   return { lightGroup, pointLight };
 }
 
+// ── Crow flock — animated silhouette birds in the canopy ─────────────────────
+
+interface CrowState {
+  phase: number;
+  speed: number;
+  dir: 1 | -1;
+  restTimer: number;
+}
+
+interface CrowFlockResult {
+  crows: Group[];
+  crowMats: MeshBasicMaterial[];
+  update: (t: number, dt: number) => void;
+}
+
+function createCrowFlock(): CrowFlockResult {
+  const crows: Group[] = [];
+  const crowMats: MeshBasicMaterial[] = [];
+  const states: CrowState[] = [];
+
+  const wingMat = new MeshBasicMaterial({ color: 0x080808, side: DoubleSide });
+  crowMats.push(wingMat);
+
+  const wingGeo = new PlaneGeometry(0.6, 0.25);
+
+  for (let i = 0; i < 4; i++) {
+    const crow = new Group();
+
+    // Left wing — angled outward at +45°
+    const leftWing = new Group();
+    const lMesh = new Mesh(wingGeo, wingMat);
+    lMesh.position.set(-0.3, 0, 0);
+    leftWing.add(lMesh);
+    leftWing.rotation.z = Math.PI / 4;
+    crow.add(leftWing);
+
+    // Right wing — angled outward at -45°
+    const rightWing = new Group();
+    const rMesh = new Mesh(wingGeo, wingMat);
+    rMesh.position.set(0.3, 0, 0);
+    rightWing.add(rMesh);
+    rightWing.rotation.z = -Math.PI / 4;
+    crow.add(rightWing);
+
+    crow.position.set(
+      -20 + R() * 40,
+      8 + R() * 5,
+      -5 - R() * 25,
+    );
+
+    const state: CrowState = {
+      phase:     R() * Math.PI * 2,
+      speed:     1.5 + R() * 1.0,
+      dir:       (R() < 0.5 ? 1 : -1) as 1 | -1,
+      restTimer: R() * 8,
+    };
+    states.push(state);
+    crows.push(crow);
+  }
+
+  const update = (t: number, dt: number): void => {
+    for (let i = 0; i < crows.length; i++) {
+      const crow  = crows[i]!;
+      const state = states[i]!;
+
+      // Wing flap — left wing index 0, right wing index 1
+      const leftWing  = crow.children[0]!;
+      const rightWing = crow.children[1]!;
+      leftWing.rotation.z  =  Math.PI / 4 + Math.sin(t * 6 + state.phase) * 0.6;
+      rightWing.rotation.z = -Math.PI / 4 - Math.sin(t * 6 + state.phase) * 0.6;
+
+      // Flight movement
+      crow.position.x += state.dir * state.speed * dt;
+      crow.position.y += Math.sin(t * 0.8 + state.phase) * 0.2 * dt;
+
+      // Reset when crow exits view laterally
+      if (Math.abs(crow.position.x) > 35) {
+        crow.position.x  = -state.dir * (28 + R() * 6);
+        crow.position.y  =  8 + R() * 5;
+        crow.position.z  = -5 - R() * 25;
+        state.phase      =  R() * Math.PI * 2;
+        state.speed      =  1.5 + R() * 1.0;
+      }
+    }
+  };
+
+  return { crows, crowMats, update };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -723,6 +812,11 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   const { lightGroup, pointLight: volLight } = createVolumetricLight();
   group.add(lightGroup);
 
+  const crowFlock = createCrowFlock();
+  for (const crow of crowFlock.crows) {
+    group.add(crow);
+  }
+
   // ── Animation state ────────────────────────────────────────────────────────
   let sceneTime = 0;
 
@@ -759,6 +853,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         if (child.position.x > 110) child.position.x -= 220;
       }
     }
+
+    // Crow flock flight
+    crowFlock.update(sceneTime, dt);
   };
 
   const dispose = (): void => {
@@ -772,6 +869,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     });
+    for (const mat of crowFlock.crowMats) {
+      mat.dispose();
+    }
   };
 
   return { group, update, dispose };
