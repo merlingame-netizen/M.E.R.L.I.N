@@ -567,6 +567,10 @@ export interface BiomeSceneResult {
 let lighthouseMesh: Mesh | null = null;
 let lighthouseBeamMesh: Mesh | null = null;
 let lighthouseLight: PointLight | null = null;
+let _beamGroup: Group | null = null;
+let _beamCone: Mesh | null = null;
+let _beamAngle = 0;
+let _beamFlashed = false;
 
 // ── Sea foam particle pool (C243) ─────────────────────────────────────────────
 let _foamMeshes: Mesh[] = [];
@@ -660,13 +664,34 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   lighthouseLight.position.set(-20, 9, -35);
   group.add(lighthouseLight);
 
-  // Rotating beam — flat thin box centered at tower top, rotates around Y axis
+  // Rotating beam group — both the bright center streak and volumetric cone child
+  _beamGroup = new Group();
+  _beamGroup.position.set(-20, 9, -35);
+  _beamAngle = 0;
+  _beamFlashed = false;
+
+  // Center streak — thin bright box (existing beam)
   lighthouseBeamMesh = new Mesh(
     new BoxGeometry(0.1, 0.2, 25),
     new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.15 }),
   );
-  lighthouseBeamMesh.position.set(-20, 9, -35);
-  group.add(lighthouseBeamMesh);
+  // Box geometry is centered; offset so tip is at origin and beam fans away in +Z
+  lighthouseBeamMesh.position.set(0, 0, 12.5);
+  _beamGroup.add(lighthouseBeamMesh);
+
+  // Volumetric cone — open cone with tip at lens, fans 25 units out horizontally
+  // CylinderGeometry(radiusTop, radiusBottom, height, radialSeg, heightSeg, openEnded)
+  _beamCone = new Mesh(
+    new CylinderGeometry(0.0, 0.8, 25, 8, 1, true),
+    new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.04, side: DoubleSide }),
+  );
+  // Rotate 90° on X so cone points horizontally (+Z direction) with tip at origin
+  _beamCone.rotation.x = Math.PI / 2;
+  // Cylinder origin is at its center height; shift so tip aligns at group origin
+  _beamCone.position.set(0, 0, 12.5);
+  _beamGroup.add(_beamCone);
+
+  group.add(_beamGroup);
 
   // Soaring seabird flock — pale silhouettes on coastal thermals
   const seabirdFlock = createSeabirdFlock();
@@ -888,9 +913,26 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     // Subtle sun intensity flicker (overcast clouds passing)
     sun.intensity = 1.5 + Math.sin(t * 0.18) * 0.12 + Math.sin(t * 0.43) * 0.06;
 
-    // Lighthouse beam — slow Y-axis rotation
-    if (lighthouseBeamMesh !== null) {
-      lighthouseBeamMesh.rotation.y += dt * 0.4;
+    // Lighthouse beam — slow Y-axis rotation of the beam group
+    if (_beamGroup !== null) {
+      _beamAngle = (_beamAngle + dt * 0.4) % (Math.PI * 2);
+      _beamGroup.rotation.y = _beamAngle;
+    }
+
+    // Lighthouse lens pulse — slow breathing intensity
+    if (lighthouseLight !== null) {
+      lighthouseLight.intensity = 0.5 + Math.sin(t * 0.4) * 0.15;
+
+      // Secondary flash when beam passes roughly toward camera (angle ≈ 0 ± 0.3 rad)
+      const facingCamera = _beamAngle < 0.3 || _beamAngle > Math.PI * 2 - 0.3;
+      if (facingCamera && !_beamFlashed) {
+        lighthouseLight.intensity += 0.3;
+        _beamFlashed = true;
+        // Auto-clear flag after 100 ms so flash doesn't re-trigger until next revolution
+        setTimeout(() => { _beamFlashed = false; }, 100);
+      } else if (!facingCamera) {
+        _beamFlashed = false;
+      }
     }
 
     // Seabird flock soaring
@@ -994,6 +1036,11 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _boatGroup = null;
     _crabGroup = null;
     _tidePoolLight = null;
+    _beamGroup = null;
+    _beamCone = null;
+    lighthouseBeamMesh = null;
+    lighthouseLight = null;
+    lighthouseMesh = null;
     _seagullGroups.length = 0;
     _seagullWingsL.length = 0;
     _seagullWingsR.length = 0;
