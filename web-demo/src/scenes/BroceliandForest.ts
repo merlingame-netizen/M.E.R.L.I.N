@@ -988,6 +988,18 @@ let vineFlowerMats476: MeshBasicMaterial[] = [];
 let vineLight476: PointLight | null = null;
 let vineBloomTimer476: number = 12;
 
+// ── Cycle-482: ghost fox spirit apparition ────────────────────────────────────
+let foxGroup482: Group | null = null;
+const foxBodyMats482: MeshStandardMaterial[] = [];
+let t482: number = 0;
+type FoxState482 = 'visible' | 'fading_out' | 'hidden' | 'fading_in';
+let foxState482: FoxState482 = 'fading_in';
+let foxStateTimer482: number = 0;
+let foxVisibleDur482: number = 8 + Math.random() * 7;
+let foxHiddenDur482: number = 10 + Math.random() * 10;
+const FOX_FADE_DUR482 = 2.0;
+const FOX_OPACITY482 = 0.75;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2800,6 +2812,55 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(vineTreeGroup476);
   }
 
+  // ── Cycle-482: ghost fox spirit ───────────────────────────────────────────
+  {
+    foxGroup482 = new Group();
+    foxGroup482.position.set(-6, 0.3, -10);
+
+    const foxMat = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      emissive: new Color(0x33ff66),
+      emissiveIntensity: 1.2,
+      transparent: true,
+      opacity: 0.0,   // starts hidden; fading_in will bring it up
+    });
+    foxBodyMats482.push(foxMat);
+
+    // Torso
+    const torso = new Mesh(new CylinderGeometry(0.05, 0.12, 0.4, 6), foxMat);
+    torso.rotation.x = Math.PI / 2;
+    foxGroup482.add(torso);
+
+    // Head — front-top of torso
+    const head = new Mesh(new SphereGeometry(0.12, 6, 5), foxMat);
+    head.position.set(0, 0.12, 0.22);
+    foxGroup482.add(head);
+
+    // Ears — two pointed cones on top of head
+    const earL = new Mesh(new ConeGeometry(0.05, 0.12, 4), foxMat);
+    earL.position.set(-0.07, 0.24, 0.22);
+    foxGroup482.add(earL);
+
+    const earR = new Mesh(new ConeGeometry(0.05, 0.12, 4), foxMat);
+    earR.position.set(0.07, 0.24, 0.22);
+    foxGroup482.add(earR);
+
+    // Tail — 5 spheres tapering from r=0.06 to r=0.03, arcing behind the body
+    const tailRadii = [0.06, 0.055, 0.047, 0.038, 0.03];
+    for (let i = 0; i < 5; i++) {
+      const segment = new Mesh(new SphereGeometry(tailRadii[i]!, 5, 4), foxMat);
+      const a = (i / 4) * (Math.PI * 0.6) - Math.PI * 0.1;
+      segment.position.set(
+        0,
+        0.05 + Math.sin(a) * 0.18,
+        -0.15 - Math.cos(a) * 0.22,
+      );
+      foxGroup482.add(segment);
+    }
+
+    group.add(foxGroup482);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3448,6 +3509,74 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       if (vineLight476) vineLight476.intensity = 0.5;
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
     }
+
+    // Cycle-482: fox spirit movement + apparition state machine
+    if (foxGroup482) {
+      t482 += dt * 0.4;
+
+      // Figure-8 path: cx=-4, cz=-10, xR=5, zR=3
+      const cx = -4;
+      const cz = -10;
+      const xR = 5;
+      const zR = 3;
+      const prevX = foxGroup482.position.x;
+      const prevZ = foxGroup482.position.z;
+      const nx = cx + xR * Math.sin(t482);
+      const nz = cz + zR * Math.sin(2 * t482) * 0.5;
+      foxGroup482.position.set(nx, 0.3, nz);
+
+      const dx = nx - prevX;
+      const dz = nz - prevZ;
+      if (Math.abs(dx) > 0.0001 || Math.abs(dz) > 0.0001) {
+        foxGroup482.rotation.y = Math.atan2(dx, dz);
+      }
+
+      // Apparition state machine
+      foxStateTimer482 += dt;
+      let targetOpacity = 0;
+
+      switch (foxState482) {
+        case 'fading_in': {
+          const p = Math.min(foxStateTimer482 / FOX_FADE_DUR482, 1);
+          targetOpacity = p * FOX_OPACITY482;
+          if (foxStateTimer482 >= FOX_FADE_DUR482) {
+            foxState482 = 'visible';
+            foxStateTimer482 = 0;
+            foxVisibleDur482 = 8 + Math.random() * 7;
+          }
+          break;
+        }
+        case 'visible': {
+          targetOpacity = FOX_OPACITY482;
+          if (foxStateTimer482 >= foxVisibleDur482) {
+            foxState482 = 'fading_out';
+            foxStateTimer482 = 0;
+          }
+          break;
+        }
+        case 'fading_out': {
+          const p = Math.min(foxStateTimer482 / FOX_FADE_DUR482, 1);
+          targetOpacity = (1 - p) * FOX_OPACITY482;
+          if (foxStateTimer482 >= FOX_FADE_DUR482) {
+            foxState482 = 'hidden';
+            foxStateTimer482 = 0;
+            foxHiddenDur482 = 10 + Math.random() * 10;
+          }
+          break;
+        }
+        case 'hidden': {
+          targetOpacity = 0;
+          if (foxStateTimer482 >= foxHiddenDur482) {
+            foxState482 = 'fading_in';
+            foxStateTimer482 = 0;
+            window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+          }
+          break;
+        }
+      }
+
+      foxBodyMats482.forEach(m => { m.opacity = targetOpacity; });
+    }
   };
 
   const dispose = (): void => {
@@ -3859,6 +3988,19 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     vineFlowerMats476.length = 0;
     vineLight476 = null;
+
+    // Cycle-482: fox spirit cleanup
+    if (foxGroup482) {
+      group.remove(foxGroup482);
+      foxGroup482.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      foxGroup482 = null;
+    }
+    foxBodyMats482.length = 0;
   };
 
   return { group, update, dispose };
