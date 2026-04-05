@@ -847,6 +847,11 @@ let obeliskSurgeT455: number = 0;
 let longshipGroup460: Group | null = null;
 let longshipT460: number = 0;
 
+// C465 — Spectral ancestor procession circling in the far background
+let ancestorGroup465: Group | null = null;
+let ancestorT465: number = 0;
+let ancestorFigures465: Group[] = [];
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1723,6 +1728,28 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       longshipGroup460.rotation.z = 0.03 * Math.sin(longshipT460 * 0.4);
     }
 
+    // C465: Spectral ancestor procession — 5 figures orbit slowly, breathing opacity
+    ancestorT465 += dt;
+    ancestorFigures465.forEach((fig) => {
+      const figData = fig as unknown as Record<string, number>;
+      const speed = figData['__orbitSpeed'];
+      const phase = figData['__orbitPhase'];
+      const angle = ancestorT465 * speed + phase;
+      fig.position.x = Math.cos(angle) * 8;
+      fig.position.z = Math.sin(angle) * 8;
+      fig.rotation.y = -angle + Math.PI * 0.5;
+      fig.position.y = 0.1 * Math.sin(ancestorT465 * 0.8 + phase);
+      const opacity = 0.15 + 0.08 * Math.sin(ancestorT465 * 0.3 + phase);
+      fig.traverse((child) => {
+        if (child instanceof Mesh) {
+          const mat = child.material as MeshBasicMaterial;
+          if (mat.transparent) {
+            mat.opacity = opacity * (mat.color.getHex() === 0x33ff66 ? 2.5 : 1.0);
+          }
+        }
+      });
+    });
+
     renderer.render(scene, camera);
   };
 
@@ -2395,6 +2422,58 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(longshipGroup460);
 
+  // C465 — Spectral ancestor procession circling in the far background
+  ancestorGroup465 = new Group();
+  ancestorGroup465.position.set(-2, -3, -40);
+
+  for (let i = 0; i < 5; i++) {
+    const figGroup = new Group();
+
+    // Body torso
+    const torso465 = new Mesh(
+      new BoxGeometry(0.35, 0.65, 0.25),
+      new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.2 }),
+    );
+    torso465.position.y = 1.0;
+    figGroup.add(torso465);
+
+    // Head
+    const head465 = new Mesh(
+      new SphereGeometry(0.2, 5, 4),
+      new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.18 }),
+    );
+    head465.position.y = 1.6;
+    figGroup.add(head465);
+
+    // Robe/cloak
+    const robe465 = new Mesh(
+      new BoxGeometry(0.42, 0.9, 0.28),
+      new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.22 }),
+    );
+    robe465.position.y = 0.45;
+    figGroup.add(robe465);
+
+    // Very faint eye glow
+    const eyeGlow465 = new Mesh(
+      new SphereGeometry(0.03, 3, 3),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 }),
+    );
+    eyeGlow465.position.set(0, 1.62, 0.18);
+    figGroup.add(eyeGlow465);
+
+    // Initial orbit position
+    const startAngle = (i / 5) * Math.PI * 2;
+    figGroup.position.set(Math.cos(startAngle) * 8, 0, Math.sin(startAngle) * 8);
+
+    (figGroup as unknown as Record<string, number>)['__orbitPhase'] = startAngle;
+    (figGroup as unknown as Record<string, number>)['__orbitSpeed'] = 0.06 + i * 0.003;
+
+    ancestorGroup465!.add(figGroup);
+    ancestorFigures465.push(figGroup);
+  }
+
+  scene.add(ancestorGroup465);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2645,6 +2724,16 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       scene.remove(longshipGroup460);
       longshipGroup460 = null;
     }
+
+    // C465: dispose spectral ancestor procession
+    if (ancestorGroup465) {
+      ancestorGroup465.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(ancestorGroup465);
+      ancestorGroup465 = null;
+    }
+    ancestorFigures465 = [];
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
