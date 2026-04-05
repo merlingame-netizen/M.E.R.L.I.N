@@ -186,6 +186,119 @@ function animateCountUp(el: HTMLElement, target: number, duration = 800): void {
   requestAnimationFrame(step);
 }
 
+// Faction accent colors for animated bar chart labels (C304)
+const FACTION_BAR_COLORS: Readonly<Record<string, string>> = {
+  druides:   '#33ff66',
+  anciens:   '#88ffcc',
+  korrigans: '#cc44ff',
+  niamh:     '#44bbff',
+  ankou:     '#ff4444',
+} as const;
+
+const FACTION_BAR_WIDTH = 20;
+
+/**
+ * C304: Animate faction bar chart inside container.
+ * Each row grows from 0 filled chars to final value over 1200ms.
+ * Rows start with a 150ms stagger between them.
+ */
+function animateFactionBars(
+  factions: Record<string, number>,
+  container: HTMLElement,
+): void {
+  const entries = Object.entries(factions);
+  entries.forEach(([id, score], idx) => {
+    const color = FACTION_BAR_COLORS[id] ?? 'rgba(51,255,102,0.9)';
+    const clampedScore = Math.min(100, Math.max(0, score));
+    const finalFilled = Math.round((clampedScore / 100) * FACTION_BAR_WIDTH);
+    const scoreStr = String(clampedScore).padStart(3, '\u00a0'); // right-align in 3 chars (non-breaking space)
+
+    // Row container
+    const row = document.createElement('div');
+    row.style.cssText = [
+      'display:flex',
+      'align-items:center',
+      'gap:8px',
+      'margin-bottom:5px',
+      `font-family:'Courier New',monospace`,
+      'font-size:12px',
+    ].join(';');
+
+    // Faction label
+    const labelEl = document.createElement('span');
+    labelEl.style.cssText = [
+      `color:${color}`,
+      'min-width:72px',
+      'letter-spacing:0.05em',
+    ].join(';');
+    labelEl.textContent = id.padEnd(9, ' ');
+
+    // Bar element — starts empty
+    const barEl = document.createElement('span');
+    barEl.style.cssText = [
+      'letter-spacing:1px',
+      'font-size:12px',
+    ].join(';');
+
+    // Score number
+    const scoreEl = document.createElement('span');
+    scoreEl.style.cssText = [
+      'min-width:28px',
+      'text-align:right',
+      'color:rgba(51,255,102,0.7)',
+      'font-size:12px',
+    ].join(';');
+    scoreEl.textContent = scoreStr;
+
+    row.appendChild(labelEl);
+    row.appendChild(barEl);
+    row.appendChild(scoreEl);
+    container.appendChild(row);
+
+    // Animate bar growth with staggered start
+    const delay = idx * 150;
+    const duration = 1200;
+
+    const renderBar = (filledCount: number): void => {
+      // Build bar with colored spans
+      // Clear previous content
+      barEl.innerHTML = '';
+      if (filledCount > 0) {
+        const filledSpan = document.createElement('span');
+        filledSpan.style.cssText = `color:rgba(51,255,102,0.9);`;
+        filledSpan.textContent = '█'.repeat(filledCount);
+        barEl.appendChild(filledSpan);
+      }
+      const emptyCount = FACTION_BAR_WIDTH - filledCount;
+      if (emptyCount > 0) {
+        const emptySpan = document.createElement('span');
+        emptySpan.style.cssText = `color:rgba(51,255,102,0.2);`;
+        emptySpan.textContent = '░'.repeat(emptyCount);
+        barEl.appendChild(emptySpan);
+      }
+    };
+
+    // Initial state: all empty
+    renderBar(0);
+
+    setTimeout(() => {
+      const startTime = performance.now();
+      const tick = (now: number): void => {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        // Ease-out quad: 1 - (1 - t)^2
+        const eased = 1 - (1 - progress) ** 2;
+        const filledNow = Math.round(eased * finalFilled);
+        renderBar(filledNow);
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        }
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+  });
+}
+
 /**
  * Show the end-of-run summary overlay.
  * Resolves when the player clicks "Rejouer".
@@ -462,9 +575,31 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     statsGrid.after(domEl);
   }
 
+  // ── C304: Animated faction reputation bar chart ─────────────────────────────
+  const factionBarsSection = document.createElement('div');
+  factionBarsSection.id = 'run-summary-factions';
+  factionBarsSection.style.cssText = [
+    'margin-top:16px',
+    'text-align:left',
+  ].join(';');
+
+  const factionBarsLabel = document.createElement('div');
+  factionBarsLabel.style.cssText = [
+    'font-size:10px',
+    'text-transform:uppercase',
+    'letter-spacing:3px',
+    'color:rgba(51,255,102,0.35)',
+    'margin-bottom:10px',
+    `font-family:'Courier New',monospace`,
+  ].join(';');
+  factionBarsLabel.textContent = 'RÉPUTATIONS FINALES';
+  factionBarsSection.appendChild(factionBarsLabel);
+
+  panel.appendChild(factionBarsSection);
+
   // Divider
   const div2 = document.createElement('hr');
-  div2.style.cssText = 'border:none;border-top:1px solid rgba(51,255,102,0.12);margin-bottom:16px;';
+  div2.style.cssText = 'border:none;border-top:1px solid rgba(51,255,102,0.12);margin-bottom:16px;margin-top:20px;';
   panel.appendChild(div2);
 
   // Faction section header
@@ -568,6 +703,9 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
+
+  // C304: animate faction bar chart (starts after a short delay so overlay is fully painted)
+  setTimeout(() => animateFactionBars(factionsMap, factionBarsSection), 400);
 
   // C238: staggered count-up animations for all numeric stats
   // Cards played — delay 300ms
