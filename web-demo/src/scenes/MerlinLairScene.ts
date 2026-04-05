@@ -1547,6 +1547,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const chandelierFlameMats517: MeshStandardMaterial[] = [];
   let t517 = 0;
 
+  // C519 — runic stone tablet leaning against left wall
+  let tabletGroup519: Group | null = null;
+  let tabletLight519: PointLight | null = null;
+  const tabletRuneMats519: MeshStandardMaterial[] = [];
+  let t519 = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -4244,6 +4250,77 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(chandelierGroup517);
   }
 
+  // C519 — runic stone tablet leaning against left wall (x=-9.5, y=0, z=-6)
+  // Low-poly basalt slab with 5 amber ogham stick-runes; slow amber pulse glow.
+  {
+    tabletGroup519 = new Group();
+
+    // Main stone slab — dark basalt, flatShading
+    const slabMat = new MeshStandardMaterial({
+      color: 0x1a1510,
+      roughness: 0.92,
+      metalness: 0.0,
+      flatShading: true,
+    });
+    const slab = new Mesh(new BoxGeometry(0.18, 2.4, 1.0), slabMat);
+    tabletGroup519.add(slab);
+
+    // Stone border edge — slightly lighter flat trim
+    const trimMat = new MeshStandardMaterial({ color: 0x2a2018, roughness: 0.88, metalness: 0.0, flatShading: true });
+    for (const [tz, th] of [[-0.52, 2.4], [0.52, 2.4]] as [number, number][]) {
+      const edge = new Mesh(new BoxGeometry(0.14, th, 0.04), trimMat);
+      edge.position.set(0, 0, tz);
+      tabletGroup519.add(edge);
+    }
+    const topEdge = new Mesh(new BoxGeometry(0.14, 0.04, 1.0), trimMat);
+    topEdge.position.set(0, 1.22, 0);
+    tabletGroup519.add(topEdge);
+    const botEdge = new Mesh(new BoxGeometry(0.14, 0.04, 1.0), trimMat);
+    botEdge.position.set(0, -1.22, 0);
+    tabletGroup519.add(botEdge);
+
+    // 5 ogham stick-runes carved into the face of the slab
+    // Ogham runes = vertical stem with horizontal notches — use thin boxes
+    // Positions along z axis of the slab face, evenly spaced
+    const RUNE_ZS = [-0.36, -0.18, 0, 0.18, 0.36];
+    for (let ri = 0; ri < RUNE_ZS.length; ri++) {
+      const rz = RUNE_ZS[ri]!;
+      const runeMat = new MeshStandardMaterial({
+        color: 0xcc8822,
+        roughness: 0.55,
+        metalness: 0.1,
+        emissive: 0xcc7711,
+        emissiveIntensity: 0.6,
+        flatShading: true,
+      });
+      tabletRuneMats519.push(runeMat);
+
+      // Vertical stem of rune
+      const stem = new Mesh(new BoxGeometry(0.1, 1.4, 0.025), runeMat);
+      stem.position.set(0.11, 0, rz);
+      tabletGroup519.add(stem);
+
+      // 1-3 horizontal notches per rune (varying per rune for variety)
+      const notchCount = 1 + (ri % 3);
+      for (let ni = 0; ni < notchCount; ni++) {
+        const ny = -0.4 + ni * 0.4;
+        const notch = new Mesh(new BoxGeometry(0.1, 0.025, 0.16 + ri * 0.04), runeMat);
+        notch.position.set(0.11, ny, rz);
+        tabletGroup519.add(notch);
+      }
+    }
+
+    // Amber glow emanating from carved runes
+    tabletLight519 = new PointLight(0xdd8833, 0.6, 4.5, 2);
+    tabletLight519.position.set(0.8, 0, 0);
+    tabletGroup519.add(tabletLight519);
+
+    // Position: leaning against left wall, slightly tilted outward
+    tabletGroup519.position.set(-9.5, -1.2, -6.0);
+    tabletGroup519.rotation.z = 0.15;  // slight lean away from wall
+    scene.add(tabletGroup519);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -5933,6 +6010,19 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C519 — runic stone tablet: slow amber rune pulse
+    if (tabletGroup519) {
+      t519 += dt;
+      // Slow-breathing amber glow on rune emissive (period ~8s)
+      const pulse519 = 0.5 + 0.5 * Math.sin(t519 * 0.78);
+      for (const rmat of tabletRuneMats519) {
+        rmat.emissiveIntensity = 0.4 + pulse519 * 0.65;
+      }
+      if (tabletLight519) {
+        tabletLight519.intensity = 0.45 + pulse519 * 0.45;
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -6526,6 +6616,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     chandelierFlameMats517.length = 0;
     chandelierLight517 = null;
+    // C519 — runic stone tablet dispose
+    if (tabletGroup519) {
+      tabletGroup519.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(tabletGroup519);
+      tabletGroup519 = null;
+    }
+    for (const rm of tabletRuneMats519) rm.dispose();
+    tabletRuneMats519.length = 0;
+    tabletLight519 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
