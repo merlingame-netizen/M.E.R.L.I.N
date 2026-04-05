@@ -947,6 +947,13 @@ let wellT446: number = 0;
 let wellWaterMat446: MeshBasicMaterial | null = null;
 let wellRippleTimer446: number = 10;
 
+// ── Cycle-451: moonlit forest pool with lily pads and droplet ripple events ───
+let poolGroup451: Group | null = null;
+let poolT451: number = 0;
+let poolWaterMat451: MeshBasicMaterial | null = null;
+let poolRippleTimer451: number = 15;
+const poolLilyPads451: Mesh[] = [];
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2294,6 +2301,61 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(wellGroup446);
   }
 
+  // ── Cycle-451: moonlit forest pool ───────────────────────────────────────────
+  {
+    poolGroup451 = new Group();
+    poolGroup451.position.set(-4, 0, -12);
+
+    // Pool bed (slightly sunken)
+    const poolBed = new Mesh(
+      new CylinderGeometry(1.8, 2.0, 0.15, 16),
+      new MeshBasicMaterial({ color: 0x020f04 })
+    );
+    poolBed.position.y = -0.1;
+    poolGroup451.add(poolBed);
+
+    // Water surface
+    const water451 = new Mesh(
+      new CylinderGeometry(1.75, 1.75, 0.05, 20),
+      new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.75 })
+    );
+    water451.position.y = 0.02;
+    poolWaterMat451 = water451.material as MeshBasicMaterial;
+    poolGroup451.add(water451);
+
+    // 7 surrounding stones
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2;
+      const stone = new Mesh(
+        new SphereGeometry(0.2 + Math.random() * 0.1, 5, 4),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      stone.position.set(Math.cos(angle) * 2.0, 0.05, Math.sin(angle) * 2.0);
+      stone.scale.y = 0.6;
+      poolGroup451.add(stone);
+    }
+
+    // 5 lily pads (flat discs)
+    for (let i = 0; i < 5; i++) {
+      const pad = new Mesh(
+        new CylinderGeometry(0.18, 0.18, 0.02, 8),
+        new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.85 })
+      );
+      const angle = (i / 5) * Math.PI * 2 + 0.3;
+      const r = 0.5 + Math.random() * 0.8;
+      pad.position.set(Math.cos(angle) * r, 0.05, Math.sin(angle) * r);
+      poolGroup451.add(pad);
+      poolLilyPads451.push(pad);
+    }
+
+    // Glow PointLight at pool center
+    const poolLight451 = new PointLight(0x33ff66, 0.1, 4.0);
+    poolLight451.position.y = 0.5;
+    poolGroup451.add(poolLight451);
+
+    group.add(poolGroup451);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2834,6 +2896,21 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'water_drop' } }));
       if (wellWaterMat446) wellWaterMat446.opacity = 1.0;
     }
+
+    // Cycle-451: moonlit forest pool — shimmer, lily bob, droplet ripple
+    poolT451 += dt;
+    poolRippleTimer451 -= dt;
+    if (poolWaterMat451) {
+      poolWaterMat451.opacity = 0.65 + 0.15 * Math.sin(poolT451 * 1.2);
+    }
+    poolLilyPads451.forEach((pad, i) => {
+      pad.position.y = 0.05 + 0.015 * Math.sin(poolT451 * 0.8 + i * 1.1);
+    });
+    if (poolRippleTimer451 <= 0) {
+      poolRippleTimer451 = 12 + Math.random() * 8;
+      if (poolWaterMat451) poolWaterMat451.opacity = 1.0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'water_drop' } }));
+    }
   };
 
   const dispose = (): void => {
@@ -3142,6 +3219,25 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       wellGroup446 = null;
     }
     wellWaterMat446 = null;
+
+    // Cycle-451: moonlit forest pool cleanup
+    if (poolGroup451) {
+      group.remove(poolGroup451);
+      poolGroup451.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      poolGroup451 = null;
+    }
+    poolWaterMat451 = null;
+    poolLilyPads451.length = 0;
   };
 
   return { group, update, dispose };
