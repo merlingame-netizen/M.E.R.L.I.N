@@ -366,6 +366,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let maraisWaterTime = 0;
   let landeSporeMesh: Points | null = null;
   let landeSporeTime = 0;
+  let cerclesInscriptionMats: MeshStandardMaterial[] = [];
+  let cerclesTime = 0;
+  let valleeWispMesh: Points | null = null;
+  let valleeWispTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -456,6 +460,27 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       tower.rotation.y = -Math.PI * 0.25;
       group.add(tower);
     }).catch(() => { /* GLB optional */ });
+    // Ancestor will-o-wisps — 25 ghostly pale-green motes drifting near the ruins
+    const VALLEE_WISP_COUNT = 25;
+    const wispGeo = new BufferGeometry();
+    const wispPos = new Float32Array(VALLEE_WISP_COUNT * 3);
+    for (let i = 0; i < VALLEE_WISP_COUNT; i++) {
+      wispPos[i * 3]     = (Math.random() - 0.5) * 30;       // x ∈ [-15, 15]
+      wispPos[i * 3 + 1] = 0.5 + Math.random() * 2.0;        // y ∈ [0.5, 2.5]
+      wispPos[i * 3 + 2] = -12 - Math.random() * 28;         // z ∈ [-12, -40]
+    }
+    wispGeo.setAttribute('position', new BufferAttribute(wispPos, 3));
+    const wispMat = new PointsMaterial({
+      color: 0xaaffcc,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.4,
+      blending: AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    valleeWispMesh = new Points(wispGeo, wispMat);
+    group.add(valleeWispMesh);
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -487,6 +512,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       color: 0x6a5e48, roughness: 0.90, metalness: 0.0, flatShading: true,
       emissive: 0x221810, emissiveIntensity: 0.06,
     });
+    const inscriptionMat = new MeshStandardMaterial({
+      color: 0x8a7a5e, roughness: 0.85, metalness: 0.0, flatShading: true,
+      emissive: 0x33ff66, emissiveIntensity: 0.04,
+    });
+    // Collect mats for pulsing animation
+    cerclesInscriptionMats = [inscriptionMat, stoneMat];
     const RING_R = 7.5;
     const STONE_COUNT = 7;
     for (let i = 0; i < STONE_COUNT; i++) {
@@ -499,12 +530,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       stone.castShadow = true;
       group.add(stone);
     }
-    // Central altar flat stone
-    const altarMat = new MeshStandardMaterial({
-      color: 0x8a7a5e, roughness: 0.85, metalness: 0.0, flatShading: true,
-      emissive: 0x33ff66, emissiveIntensity: 0.04,
-    });
-    const altar = new Mesh(new BoxGeometry(2.0, 0.25, 1.0), altarMat);
+    // Central altar flat stone — uses inscriptionMat (emissive 0x33ff66)
+    const altar = new Mesh(new BoxGeometry(2.0, 0.25, 1.0), inscriptionMat);
     altar.position.set(0, -0.62, -15);
     group.add(altar);
     // Two altar uprights
@@ -606,6 +633,36 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         pos.setX(i, pos.getX(i) + 0.3 * dt);
         pos.setY(i, pos.getY(i) + Math.sin(landeSporeTime * 0.5 + i * 0.7) * 0.015);
         if (pos.getX(i) > 30) pos.setX(i, -30);
+      }
+      pos.needsUpdate = true;
+    }
+    // Cercles de Pierres — pulsing Ogham inscription emissive
+    if (cerclesInscriptionMats.length > 0) {
+      cerclesTime += dt;
+      // Index 0 = inscriptionMat (altar, brighter pulse), index 1 = stoneMat (subtler)
+      const insMat = cerclesInscriptionMats[0];
+      const stMat  = cerclesInscriptionMats[1];
+      if (insMat !== undefined) {
+        insMat.emissiveIntensity = 0.3 + Math.sin(cerclesTime * 0.5) * 0.2;
+      }
+      if (stMat !== undefined) {
+        stMat.emissiveIntensity = 0.06 + Math.sin(cerclesTime * 0.3) * 0.04;
+      }
+    }
+    // Vallee Anciens — ancestor will-o-wisp drift
+    if (valleeWispMesh !== null) {
+      valleeWispTime += dt;
+      const pos = valleeWispMesh.geometry.getAttribute('position') as BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        const phase = i * 0.8;
+        pos.setY(i, pos.getY(i) + Math.sin(valleeWispTime * 0.4 + phase) * 0.008);
+        pos.setX(i, pos.getX(i) + Math.cos(valleeWispTime * 0.3 + phase * 0.7) * 0.006);
+        // Wrap Y to keep wisps hovering above ground
+        if (pos.getY(i) > 3.0)  pos.setY(i, 0.5);
+        if (pos.getY(i) < 0.3)  pos.setY(i, 2.5);
+        // Wrap X within scene bounds
+        if (pos.getX(i) > 15)  pos.setX(i, -15);
+        if (pos.getX(i) < -15) pos.setX(i, 15);
       }
       pos.needsUpdate = true;
     }
