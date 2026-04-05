@@ -837,6 +837,11 @@ let _forestTimeOfDay: 'day' | 'dawn' | 'dusk' | 'night' = 'day';
 const _dewDroplets: Mesh[] = [];
 const _dewLights: PointLight[] = [];
 
+// ── Cycle-357: stone bridge over forest stream ────────────────────────────────
+let bridgeGroup357: Group | null = null;
+let streamMesh357: Mesh | null = null;
+const streamLights357: PointLight[] = [];
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1295,6 +1300,61 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Cycle-357: ancient stone bridge over glimmering forest stream ─────────────
+  {
+    bridgeGroup357 = new Group();
+    const stoneMat357 = new MeshStandardMaterial({ color: 0x2a3a2a, roughness: 0.95, metalness: 0.0 });
+
+    // Main deck — bridge spans x=-3..3, runs in x direction, z width 1.8
+    const deckGeo = new BoxGeometry(6.2, 0.25, 1.8);
+    const deck = new Mesh(deckGeo, stoneMat357);
+    deck.position.set(0, 0.12, -12);
+    bridgeGroup357.add(deck);
+
+    // 3 arch blocks beneath the deck
+    for (let i = 0; i < 3; i++) {
+      const ax = (i - 1) * 1.8;
+      const archGeo = new BoxGeometry(1.4, 0.4, 1.6);
+      const arch = new Mesh(archGeo, stoneMat357);
+      arch.position.set(ax, -0.15, -12);
+      bridgeGroup357.add(arch);
+    }
+
+    // Parapets — low walls running along the length (x-axis), offset in z
+    for (const pz of [-12 + 0.8, -12 - 0.8]) {
+      const paraGeo = new BoxGeometry(6.2, 0.4, 0.22);
+      const para = new Mesh(paraGeo, stoneMat357);
+      para.position.set(0, 0.45, pz);
+      bridgeGroup357.add(para);
+    }
+
+    // Stream water plane — animated PlaneGeometry beneath bridge
+    const streamGeo = new PlaneGeometry(8, 4, 8, 4);
+    streamGeo.rotateX(-Math.PI / 2);
+    const streamMat357 = new MeshStandardMaterial({
+      color: 0x0a2a0a,
+      emissive: new Color(0x0d4420),
+      emissiveIntensity: 0.12,
+      transparent: true,
+      opacity: 0.7,
+      roughness: 0.3,
+      metalness: 0.1,
+    });
+    streamMesh357 = new Mesh(streamGeo, streamMat357);
+    streamMesh357.position.set(0, -0.3, -12);
+    bridgeGroup357.add(streamMesh357);
+
+    // Stream PointLights — faint green moonlit water glow
+    for (const lx of [-1.5, 1.5]) {
+      const sl = new PointLight(0x33ff66, 0.1, 3.5);
+      sl.position.set(lx, -0.1, -12);
+      bridgeGroup357.add(sl);
+      streamLights357.push(sl);
+    }
+
+    group.add(bridgeGroup357);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1500,6 +1560,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         ? 0.06 + Math.sin(sceneTime * 1.5 + li) * 0.03
         : 0;
     }
+
+    // Cycle-357: stream shimmer + vertex wave + stream light pulse
+    if (streamMesh357) {
+      const shimmer = 0.08 + Math.sin(sceneTime * 1.2) * 0.04;
+      (streamMesh357.material as MeshStandardMaterial).emissiveIntensity = shimmer;
+      const posAttr = (streamMesh357.geometry as BufferGeometry).attributes['position'] as BufferAttribute;
+      for (let i = 0; i < posAttr.count; i++) {
+        const sx = posAttr.getX(i);
+        const sz = posAttr.getZ(i);
+        posAttr.setY(i, Math.sin(sx * 0.8 + sceneTime * 1.5) * 0.04 + Math.sin(sz * 1.2 + sceneTime) * 0.02);
+      }
+      posAttr.needsUpdate = true;
+    }
+    for (let si = 0; si < streamLights357.length; si++) {
+      streamLights357[si]!.intensity = 0.08 + Math.sin(sceneTime * 0.9 + si * 1.3) * 0.04;
+    }
   };
 
   const dispose = (): void => {
@@ -1530,6 +1606,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     _owlEyeLights.length = 0;
     _dewDroplets.length = 0;
     _dewLights.length = 0;
+    // Cycle-357: bridge + stream cleanup
+    if (bridgeGroup357) {
+      group.remove(bridgeGroup357);
+      bridgeGroup357.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      bridgeGroup357 = null;
+    }
+    streamMesh357 = null;
+    streamLights357.length = 0;
   };
 
   return { group, update, dispose };
