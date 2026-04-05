@@ -276,6 +276,9 @@ export function createLairWindow(scene: Scene): WindowResult {
 
   // ── Aurora bands (3 horizontal planes, CeltOS green, night only) ─────────
 
+  // ── Stained-glass refraction patches on floor (cycle-372) ───────────────
+  let refractionPatches372: Mesh[] = [];
+
   let auroraMeshes: Mesh[] = [];
   const auroraYPositions = [7.5, 8.2, 8.9];
   auroraMeshes = auroraYPositions.map((y, i) => {
@@ -286,6 +289,34 @@ export function createLairWindow(scene: Scene): WindowResult {
     group.add(mesh);
     return mesh;
   });
+
+  // ── Stained-glass light patches on lair floor (cycle-372) ───────────────
+  // Colored light from the window refracting onto the floor below (y=0.01).
+
+  {
+    const patchColors = [0x0a1f0a, 0x0d3a1a, 0x1a6633];
+    const patchConfigs = [
+      { x: -0.8, z: -3.2, w: 0.4,  d: 0.9, phase: 0.0 },
+      { x: 0.2,  z: -3.5, w: 0.6,  d: 0.7, phase: 1.2 },
+      { x: 0.9,  z: -3.1, w: 0.35, d: 1.1, phase: 2.4 },
+    ];
+
+    patchConfigs.forEach((cfg, i) => {
+      const patchGeo = new PlaneGeometry(cfg.w, cfg.d);
+      patchGeo.rotateX(-Math.PI / 2); // lay flat on floor
+      const patchMat = new MeshBasicMaterial({
+        color: patchColors[i % patchColors.length],
+        transparent: true,
+        opacity: 0.08,
+        depthWrite: false,
+      });
+      const patch = new Mesh(patchGeo, patchMat);
+      patch.position.set(cfg.x, 0.01, cfg.z);
+      patch.userData['phase'] = cfg.phase;
+      group.add(patch);
+      refractionPatches372.push(patch);
+    });
+  }
 
   // ── Fireflies (visible outside window at night + dusk) ───────────────────
 
@@ -519,6 +550,17 @@ export function createLairWindow(scene: Scene): WindowResult {
         _shootingStarTimer    = 8 + Math.random() * 4;
       }
     }
+
+    // Stained-glass refraction patches — shift & pulse (cycle-372)
+    refractionPatches372.forEach(patch => {
+      const phase = patch.userData['phase'] as number;
+      // Slowly shift position (light source moving)
+      patch.position.x += Math.sin(elapsed * 0.08 + phase) * 0.0005;
+      patch.rotation.y = Math.sin(elapsed * 0.05 + phase) * 0.08;
+      // Pulse opacity
+      (patch.material as MeshBasicMaterial).opacity =
+        0.06 + Math.sin(elapsed * 0.4 + phase) * 0.04 + Math.sin(elapsed * 0.17 + phase * 2) * 0.02;
+    });
   };
 
   scene.add(group);
