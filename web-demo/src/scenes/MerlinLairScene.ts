@@ -1380,6 +1380,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _catEyeR: Mesh | null = null;
   let _catHead: Group | null = null;
 
+  // C432: floating hourglass
+  let _hourglassGroup: Group | null = null;
+  let _hourglassT = 0;
+  let _hourglassFlipTimer = 0;
+  let _hourglassNextFlip = 20 + Math.random() * 15;
+  let _hourglassFlipping = false;
+  const _sandParticles: Mesh[] = [];
+  const _sandVel: { y: number; life: number; maxLife: number }[] = [];
+  let _hourglassLight: PointLight | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2346,6 +2356,58 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _catGroup.add(cushion, _catBody, _catHead, tail);
     _catGroup.position.set(-1.5, 0.15, -2);
     scene.add(_catGroup);
+  }
+
+  // C432 — floating hourglass
+  {
+    _hourglassGroup = new Group();
+
+    const frameMat = new MeshBasicMaterial({ color: 0x0a2a14 });
+    const glassMat = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.35, side: DoubleSide });
+
+    const topBulb = new Mesh(new SphereGeometry(0.18, 8, 6), glassMat.clone());
+    topBulb.scale.set(1, 0.7, 1);
+    topBulb.position.set(0, 0.22, 0);
+
+    const botBulb = new Mesh(new SphereGeometry(0.18, 8, 6), glassMat.clone());
+    botBulb.scale.set(1, 0.7, 1);
+    botBulb.position.set(0, -0.22, 0);
+
+    const neck = new Mesh(new CylinderGeometry(0.018, 0.018, 0.1, 6), glassMat.clone());
+    neck.position.set(0, 0, 0);
+
+    const ringGeo = new TorusGeometry(0.2, 0.025, 5, 14);
+    const topRing = new Mesh(ringGeo, frameMat);
+    topRing.position.set(0, 0.42, 0);
+    const botRing = new Mesh(ringGeo.clone(), frameMat);
+    botRing.position.set(0, -0.42, 0);
+    const midRing = new Mesh(new TorusGeometry(0.03, 0.02, 4, 8), frameMat);
+    midRing.position.set(0, 0, 0);
+
+    for (let pi = 0; pi < 3; pi++) {
+      const angle = (pi / 3) * Math.PI * 2;
+      const pillar = new Mesh(new CylinderGeometry(0.015, 0.015, 0.84, 4), frameMat);
+      pillar.position.set(Math.cos(angle) * 0.19, 0, Math.sin(angle) * 0.19);
+      _hourglassGroup.add(pillar);
+    }
+
+    for (let si = 0; si < 8; si++) {
+      const sand = new Mesh(
+        new SphereGeometry(0.013, 3, 2),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 })
+      );
+      sand.position.set(0, 0.18 - si * 0.045, 0);
+      _sandParticles.push(sand);
+      _sandVel.push({ y: -0.3 - si * 0.02, life: si * 0.15, maxLife: 0.8 + Math.random() * 0.3 });
+      _hourglassGroup.add(sand);
+    }
+
+    _hourglassLight = new PointLight(0x33ff66, 0.1, 2.5);
+    _hourglassLight.position.set(0, 0, 0);
+
+    _hourglassGroup.add(topBulb, botBulb, neck, topRing, botRing, midRing, _hourglassLight);
+    _hourglassGroup.position.set(-0.5, 1.8, -3.5);
+    scene.add(_hourglassGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3571,6 +3633,45 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (_catEyeR) (_catEyeR.material as MeshBasicMaterial).opacity = eyeOpacity;
     }
 
+    // C432: floating hourglass update
+    if (_hourglassGroup) {
+      _hourglassT += dt;
+      _hourglassFlipTimer += dt;
+
+      _hourglassGroup.position.y = 1.8 + Math.sin(_hourglassT * 0.55) * 0.08;
+      _hourglassGroup.rotation.y = _hourglassT * 0.2;
+
+      if (_hourglassFlipTimer >= _hourglassNextFlip && !_hourglassFlipping) {
+        _hourglassFlipping = true;
+        _hourglassFlipTimer = 0;
+        _hourglassNextFlip = 20 + Math.random() * 15;
+      }
+      if (_hourglassFlipping) {
+        _hourglassGroup.rotation.z += dt * 3.0;
+        if (_hourglassGroup.rotation.z >= Math.PI) {
+          _hourglassGroup.rotation.z = 0;
+          _hourglassFlipping = false;
+        }
+      }
+
+      _sandParticles.forEach((sand, i) => {
+        const vel = _sandVel[i];
+        vel.life += dt;
+        if (vel.life >= vel.maxLife) {
+          vel.life = 0;
+          sand.position.set((Math.random() - 0.5) * 0.02, 0.18, (Math.random() - 0.5) * 0.02);
+        } else {
+          sand.position.y += vel.y * dt;
+          const t = vel.life / vel.maxLife;
+          (sand.material as MeshBasicMaterial).opacity = t < 0.2 ? (t / 0.2) * 0.9 : (1 - t) * 0.9;
+        }
+      });
+
+      if (_hourglassLight) {
+        _hourglassLight.intensity = 0.08 + Math.sin(_hourglassT * 1.8) * 0.04;
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3926,6 +4027,22 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _catBody = null; _catEyeL = null; _catEyeR = null; _catHead = null;
       scene.remove(_catGroup);
       _catGroup = null;
+    }
+    // C432: floating hourglass
+    if (_hourglassGroup) {
+      _hourglassGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _sandParticles.length = 0;
+      _sandVel.length = 0;
+      _hourglassLight = null;
+      scene.remove(_hourglassGroup);
+      _hourglassGroup = null;
     }
   };
 
