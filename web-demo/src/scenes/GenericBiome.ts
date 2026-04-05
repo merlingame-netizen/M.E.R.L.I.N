@@ -515,6 +515,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let eagleWingL412: Mesh | null = null;
   let eagleWingR412: Mesh | null = null;
 
+  // ── Carved menhir with glowing spirals — landes_bruyere (C417) ───────────
+  let menhirGroup417: Group | null = null;
+  let menhirT417 = 0;
+  const menhirCarveGlows417: Mesh[] = [];
+  let menhirLight417: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1159,6 +1165,55 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
 
     group.add(ignisFatuusGroup386);
+
+    // ── Carved menhir with glowing spiral energy (C417) ──────────────────────
+    menhirGroup417 = new Group();
+
+    // Main stone — tapering pillar
+    const menhirMainMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const menhirMain = new Mesh(new CylinderGeometry(0.22, 0.35, 3.5, 6), menhirMainMat);
+    menhirMain.position.set(0, 1.75, 0);
+    menhirGroup417.add(menhirMain);
+
+    // Base stone
+    const menhirBase = new Mesh(new CylinderGeometry(0.38, 0.42, 0.3, 6), new MeshBasicMaterial({ color: 0x0a1a10 }));
+    menhirBase.position.set(0, 0.15, 0);
+    menhirGroup417.add(menhirBase);
+
+    // Cap rock
+    const menhirCap = new Mesh(new SphereGeometry(0.22, 5, 4), new MeshBasicMaterial({ color: 0x0a1a10 }));
+    menhirCap.scale.set(1, 0.6, 1);
+    menhirCap.position.set(0, 3.62, 0);
+    menhirGroup417.add(menhirCap);
+
+    // Spiral carvings — 5 flat disc planes stacked up the stone surface
+    const spiralYPositions = [0.8, 1.3, 1.8, 2.3, 2.8];
+    spiralYPositions.forEach((yPos, i) => {
+      const glyph = new Mesh(
+        new PlaneGeometry(0.55, 0.55),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.25 }),
+      );
+      glyph.position.set(0, yPos, 0.23);
+      glyph.rotation.z = i * 0.3;
+      menhirGroup417!.add(glyph);
+      menhirCarveGlows417.push(glyph);
+    });
+
+    // Energy aura — open cylinder
+    const menhirAura = new Mesh(
+      new CylinderGeometry(0.28, 0.42, 3.5, 8, 1, true),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.04, side: DoubleSide, depthWrite: false }),
+    );
+    menhirAura.position.set(0, 1.75, 0);
+    menhirGroup417.add(menhirAura);
+
+    // Druidic point light
+    menhirLight417 = new PointLight(0x33ff66, 0.15, 5.0);
+    menhirLight417.position.set(0, 2.5, 0);
+    menhirGroup417.add(menhirLight417);
+
+    menhirGroup417.position.set(5, 0, -18);
+    group.add(menhirGroup417);
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -3103,6 +3158,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       if (eagleWingL412) eagleWingL412.rotation.z = flapAngle;
       if (eagleWingR412) eagleWingR412.rotation.z = -flapAngle;
     }
+    // Landes bruyere — carved menhir spiral pulse (C417)
+    if (menhirGroup417) {
+      menhirT417 += dt;
+      menhirCarveGlows417.forEach((glyph, i) => {
+        const mat = glyph.material as MeshBasicMaterial;
+        mat.opacity = 0.18 + Math.sin(menhirT417 * 1.8 + i * 0.7) * 0.15;
+        glyph.rotation.z = (i * 0.3) + menhirT417 * (0.1 + i * 0.02);
+      });
+      if (menhirLight417) {
+        menhirLight417.intensity = 0.12 + Math.sin(menhirT417 * 0.9) * 0.05;
+      }
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3334,6 +3401,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       eagleWingL412 = null;
       eagleWingR412 = null;
       eagleGroup412 = null;
+    }
+    // Carved menhir cleanup (C417)
+    if (menhirGroup417) {
+      menhirGroup417.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(menhirGroup417);
+      menhirCarveGlows417.length = 0;
+      menhirLight417 = null;
+      menhirGroup417 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
