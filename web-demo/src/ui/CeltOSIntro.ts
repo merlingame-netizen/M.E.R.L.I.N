@@ -298,12 +298,20 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
 
   fillEl.style.width = '30%';
   statusEl.textContent = STEPS[0]!.label;
+  // Milestone flicker at ~33%
+  fillEl.style.opacity = '0.4';
+  await wait(60);
+  fillEl.style.opacity = '1';
   await wait(400);
 
   fillEl.style.width = '60%';
   statusEl.textContent = STEPS[1]!.label;
   // Wait for real fetch to complete before advancing past 60%
   await fetchDone;
+  // Milestone flicker at ~66%
+  fillEl.style.opacity = '0.4';
+  await wait(60);
+  fillEl.style.opacity = '1';
 
   fillEl.style.width = '85%';
   statusEl.textContent = STEPS[2]!.label;
@@ -315,6 +323,17 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
   statusEl.style.color = CRT.AMBER;
   statusEl.textContent = STEPS[3]!.label;
   await wait(700);
+
+  // CRT power-on glitch after boot complete
+  await wait(200);
+  container.classList.add('celtos-glitch-active');
+  // Brief green flash (CRT tube warming)
+  container.style.transition = 'background 0.05s';
+  container.style.background = 'rgba(4,16,6,0.98)';
+  await wait(50);
+  container.style.background = 'rgba(1,8,2,0.97)';
+  container.style.transition = '';
+  await wait(500);
 
   // Fade out everything
   container.style.transition = 'opacity 0.5s';
