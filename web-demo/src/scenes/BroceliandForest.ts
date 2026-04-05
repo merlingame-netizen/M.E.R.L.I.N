@@ -1041,6 +1041,15 @@ const cairnSpiritTimers502: number[] = [];
 let t502: number = 0;
 let cairnLight502: PointLight | null = null;
 
+// ── Cycle-507: self-playing magical harp ──────────────────────────────────────
+let harpGroup507: Group | null = null;
+const harpStringGeos507: BufferGeometry[] = [];
+const harpStringMats507: LineBasicMaterial[] = [];
+const harpPluckState507: number[] = [];
+let t507: number = 0;
+let harpPluckTimer507: number = 1.5 + Math.random() * 1.5;
+let harpChordTimer507: number = 12 + Math.random() * 8;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3279,6 +3288,81 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(cairnGroup502);
   }
 
+  // ── Cycle-507: self-playing magical harp ──────────────────────────────────────
+  {
+    harpGroup507 = new Group();
+    harpStringGeos507.length = 0;
+    harpStringMats507.length = 0;
+    harpPluckState507.length = 0;
+
+    const frameMat = new MeshStandardMaterial({ color: 0x3a2008, metalness: 0.3, roughness: 0.6 });
+
+    // Neck — partial torus forming the curved arch at top
+    const neck = new Mesh(new TorusGeometry(0.6, 0.04, 6, 12, Math.PI * 0.6), frameMat);
+    neck.position.set(0, 1.0, 0);
+    neck.rotation.z = Math.PI * 0.7;
+    harpGroup507.add(neck);
+
+    // Pillar — vertical left side (front column)
+    const pillar = new Mesh(new CylinderGeometry(0.05, 0.07, 1.4, 6), frameMat);
+    pillar.position.set(-0.35, 0.7, 0);
+    harpGroup507.add(pillar);
+
+    // Soundboard — angled body back-right
+    const soundboard = new Mesh(new CylinderGeometry(0.04, 0.06, 1.2, 5), frameMat);
+    soundboard.position.set(0.18, 0.6, 0);
+    soundboard.rotation.z = 0.22;
+    harpGroup507.add(soundboard);
+
+    // Base foot
+    const base = new Mesh(new BoxGeometry(0.35, 0.08, 0.15), frameMat);
+    base.position.set(0, 0, 0);
+    harpGroup507.add(base);
+
+    // 8 strings — Lines with 5 vertices each (endpoints fixed, middle 3 animate on pluck)
+    const STRING_COUNT = 8;
+    const topAnchorY = 1.3;
+    const botAnchorY = 0.1;
+    for (let si = 0; si < STRING_COUNT; si++) {
+      const t = si / (STRING_COUNT - 1);
+      // Strings fan from left pillar side toward right soundboard side
+      const xTop = -0.28 + t * 0.44;
+      const xBot = -0.22 + t * 0.36;
+
+      const positions = new Float32Array(5 * 3);
+      // Vertex 0 — top anchor
+      positions[0] = xTop; positions[1] = topAnchorY; positions[2] = 0;
+      // Vertices 1-3 — middle (interpolated at 25%, 50%, 75%)
+      for (let vi = 1; vi <= 3; vi++) {
+        const frac = vi / 4;
+        positions[vi * 3 + 0] = xTop + (xBot - xTop) * frac;
+        positions[vi * 3 + 1] = topAnchorY + (botAnchorY - topAnchorY) * frac;
+        positions[vi * 3 + 2] = 0;
+      }
+      // Vertex 4 — bottom anchor
+      positions[12] = xBot; positions[13] = botAnchorY; positions[14] = 0;
+
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(positions, 3));
+      const mat = new LineBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.7 });
+      const line = new Line(geo, mat);
+      harpGroup507.add(line);
+      harpStringGeos507.push(geo);
+      harpStringMats507.push(mat);
+      harpPluckState507.push(0);
+    }
+
+    // Ambient glow
+    const harpGlow = new PointLight(0x33ff66, 0.3, 5.0);
+    harpGlow.position.set(0, 0.7, 0);
+    harpGroup507.add(harpGlow);
+
+    // Position: lean against tree at (-12, 0, -14), slight tilt
+    harpGroup507.position.set(-12, 0, -14);
+    harpGroup507.rotation.z = 0.08;
+    group.add(harpGroup507);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -4268,6 +4352,75 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Cycle-507: self-playing magical harp string vibration + pluck animation
+    if (harpGroup507 && harpStringGeos507.length === 8) {
+      t507 += dt;
+      const DECAY_RATE = 2.5;
+
+      // Pluck timer — random single string
+      harpPluckTimer507 -= dt;
+      if (harpPluckTimer507 <= 0) {
+        const si = Math.floor(Math.random() * 8);
+        harpPluckState507[si] = 1.0;
+        harpPluckTimer507 = 1.5 + Math.random() * 1.5;
+      }
+
+      // Chord burst timer — 3-4 strings simultaneously
+      harpChordTimer507 -= dt;
+      if (harpChordTimer507 <= 0) {
+        const chordCount = 3 + Math.floor(Math.random() * 2);
+        const allIdx = Array.from({ length: 8 }, (_v, i) => i).sort(() => Math.random() - 0.5);
+        for (let ci = 0; ci < chordCount; ci++) {
+          harpPluckState507[allIdx[ci]!] = 1.5;
+        }
+        harpChordTimer507 = 12 + Math.random() * 8;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+      }
+
+      // Animate each string
+      for (let si = 0; si < 8; si++) {
+        const ps = harpPluckState507[si]!;
+        if (ps <= 0) continue;
+
+        // Decay pluck state
+        harpPluckState507[si] = Math.max(0, ps - DECAY_RATE * dt);
+        const curPs = harpPluckState507[si]!;
+
+        // Update string geometry — midpoint vibration
+        const geo = harpStringGeos507[si]!;
+        const posArr = geo.attributes['position']!.array as Float32Array;
+
+        // Vertices 1-3 are the animatable mid-points; 0 and 4 stay fixed
+        for (let vi = 1; vi <= 3; vi++) {
+          const frac = vi / 4;
+          const xTop = posArr[0]!;
+          const xBot = posArr[12]!;
+          const yTop = posArr[1]!;
+          const yBot = posArr[13]!;
+          const xBase = xTop + (xBot - xTop) * frac;
+          const yBase = yTop + (yBot - yTop) * frac;
+          const bulge = Math.sin(curPs * Math.PI * 3) * 0.06 * curPs;
+          posArr[vi * 3 + 0] = xBase + bulge;
+          posArr[vi * 3 + 1] = yBase;
+          posArr[vi * 3 + 2] = 0;
+        }
+        geo.attributes['position']!.needsUpdate = true;
+
+        // Update string material — opacity and color glow
+        const mat = harpStringMats507[si]!;
+        mat.opacity = 0.7 + 0.3 * curPs;
+        // Lerp color from 0x1a8833 toward 0x33ff66 by curPs
+        const baseR = 0x1a / 255, baseG = 0x88 / 255, baseB = 0x33 / 255;
+        const glowR = 0x33 / 255, glowG = 0xff / 255, glowB = 0x66 / 255;
+        const factor = Math.min(curPs, 1.0);
+        mat.color.setRGB(
+          baseR + (glowR - baseR) * factor,
+          baseG + (glowG - baseG) * factor,
+          baseB + (glowB - baseB) * factor,
+        );
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -4768,6 +4921,30 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     cairnSpiritTs502.length = 0;
     cairnSpiritTimers502.length = 0;
     t502 = 0;
+
+    // Cycle-507: magical harp cleanup
+    if (harpGroup507) {
+      group.remove(harpGroup507);
+      harpGroup507.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+        if ((c as Line).isLine) {
+          (c as Line).geometry.dispose();
+          ((c as Line).material as Material).dispose();
+        }
+      });
+      harpGroup507 = null;
+    }
+    for (const geo of harpStringGeos507) { geo.dispose(); }
+    harpStringGeos507.length = 0;
+    for (const mat of harpStringMats507) { mat.dispose(); }
+    harpStringMats507.length = 0;
+    harpPluckState507.length = 0;
+    t507 = 0;
+    harpPluckTimer507 = 1.5 + Math.random() * 1.5;
+    harpChordTimer507 = 12 + Math.random() * 8;
   };
 
   return { group, update, dispose };
