@@ -1364,6 +1364,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _astroRingMid: Group | null = null;
   let _astroRingInner: Group | null = null;
 
+  // C424: ceiling star projector
+  let _starProjGroup: Group | null = null;
+  let _starProjT = 0;
+  const _starDots: Mesh[] = [];
+  let _starProjLight: PointLight | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2189,6 +2195,94 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _astroGroup.add(_astroRingOuter, _astroRingMid, _astroRingInner, ptrH, ptrV, ptrCore, astroLight);
     _astroGroup.position.set(0, 3.2, -4);
     scene.add(_astroGroup);
+  }
+
+  // C424: ceiling star projector — device at (1.5, 0, -2), projects star map onto ceiling y=4
+  {
+    _starProjGroup = new Group();
+
+    // Projector body
+    const bodyMat = new MeshBasicMaterial({ color: 0x0a2a14 });
+    const body = new Mesh(new BoxGeometry(0.18, 0.12, 0.18), bodyMat);
+    body.position.set(0, 0.06, 0);
+    _starProjGroup.add(body);
+
+    // Lens
+    const lensMat = new MeshBasicMaterial({ color: 0x0d3318 });
+    const lens = new Mesh(new CylinderGeometry(0.04, 0.06, 0.08, 6), lensMat);
+    lens.position.set(0, 0.16, 0);
+    _starProjGroup.add(lens);
+
+    // Core glow sphere
+    const coreMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    const core = new Mesh(new SphereGeometry(0.025, 4, 3), coreMat);
+    core.position.set(0, 0.16, 0);
+    _starProjGroup.add(core);
+
+    // Ceiling projection plane (dim base)
+    const ceilPlaneMat = new MeshBasicMaterial({
+      color: 0x0d2a14,
+      transparent: true,
+      opacity: 0.12,
+      depthWrite: false,
+      side: DoubleSide
+    });
+    const ceilPlane = new Mesh(new PlaneGeometry(3.5, 3.0), ceilPlaneMat);
+    ceilPlane.position.set(0, 4.05, 0);
+    ceilPlane.rotation.x = Math.PI / 2;
+    _starProjGroup.add(ceilPlane);
+
+    // 15 star dots scattered on ceiling (y=4.1)
+    const starMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 });
+    const starPositions: Array<[number, number, number]> = [
+      [-1.2, 4.1, -0.8], [-0.5, 4.1, -1.1], [0.3, 4.1, -0.9], [0.9, 4.1, -1.3], [1.1, 4.1, -0.4],
+      [0.6, 4.1,  0.3], [-0.2, 4.1,  0.7], [-0.9, 4.1,  0.5], [-1.3, 4.1,  0.1], [0.0, 4.1,  0.2],
+      [-0.6, 4.1, -0.3], [0.5, 4.1, -0.5], [1.2, 4.1,  0.6], [-0.3, 4.1,  1.0], [0.8, 4.1,  0.9]
+    ];
+    for (const [sx, sy, sz] of starPositions) {
+      const dot = new Mesh(new SphereGeometry(0.035, 4, 3), starMat.clone());
+      dot.position.set(sx, sy, sz);
+      _starProjGroup.add(dot);
+      _starDots.push(dot);
+    }
+
+    // 10 constellation lines connecting pairs of stars
+    const linePairs: Array<[number, number]> = [
+      [0, 1], [1, 2], [2, 3], [3, 4], [4, 5],
+      [5, 6], [6, 7], [7, 8], [9, 10], [11, 12]
+    ];
+    const lineMat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.35 });
+    for (const [ai, bi] of linePairs) {
+      const pa = starPositions[ai];
+      const pb = starPositions[bi];
+      const pts = [
+        new Vector3(pa[0], pa[1], pa[2]),
+        new Vector3(pb[0], pb[1], pb[2])
+      ];
+      const lineGeo = new BufferGeometry().setFromPoints(pts);
+      const line = new Line(lineGeo, lineMat.clone());
+      _starProjGroup.add(line);
+    }
+
+    // Projection cone (visual beam from device up to ceiling)
+    const coneMat = new MeshBasicMaterial({
+      color: 0x33ff66,
+      transparent: true,
+      opacity: 0.03,
+      side: DoubleSide,
+      depthWrite: false
+    });
+    const cone = new Mesh(new ConeGeometry(1.8, 4.0, 8, 1, true), coneMat);
+    cone.position.set(0, 2.1, 0);
+    _starProjGroup.add(cone);
+
+    // Ambient point light near ceiling
+    _starProjLight = new PointLight(0x33ff66, 0.08, 5.0);
+    _starProjLight.position.set(0, 3.5, 0);
+    _starProjGroup.add(_starProjLight);
+
+    _starProjGroup.position.set(1.5, 0, -2);
+    scene.add(_starProjGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3365,6 +3459,20 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _astroGroup.rotation.z = Math.sin(_astroT * 0.2) * 0.08;
     }
 
+    // C424: ceiling star projector — twinkle + slow rotation + light pulse
+    if (_starProjGroup) {
+      _starProjT += dt;
+      _starProjGroup.rotation.y = _starProjT * 0.015;
+      for (let si = 0; si < _starDots.length; si++) {
+        const dot = _starDots[si];
+        const mat = dot.material as MeshBasicMaterial;
+        mat.opacity = 0.5 + 0.3 * Math.sin(_starProjT * 1.5 + si * 0.7);
+      }
+      if (_starProjLight) {
+        _starProjLight.intensity = 0.06 + 0.04 * Math.sin(_starProjT * 1.2);
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3688,6 +3796,25 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _astroRingInner = null;
       scene.remove(_astroGroup);
       _astroGroup = null;
+    }
+    // C424: ceiling star projector
+    if (_starProjGroup) {
+      _starProjGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        } else if (c instanceof Line) {
+          c.geometry.dispose();
+          (c.material as LineBasicMaterial).dispose();
+        } else if (c instanceof PointLight) {
+          c.dispose();
+        }
+      });
+      _starDots.length = 0;
+      _starProjLight = null;
+      scene.remove(_starProjGroup);
+      _starProjGroup = null;
     }
   };
 
