@@ -1194,11 +1194,28 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   // C176: Ogham rune rain overlay — injected behind menu DOM, above Three.js canvas
   const runeRain = createRuneRainCanvas(container);
 
+  // C256: Mouse parallax on constellation canvas
+  let _menuMouseX = 0;
+  let _menuMouseY = 0;
+  const _menuMouseHandler = (e: MouseEvent): void => {
+    _menuMouseX = (e.clientX / window.innerWidth - 0.5) * 2;  // -1 to +1
+    _menuMouseY = (e.clientY / window.innerHeight - 0.5) * 2; // -1 to +1
+  };
+  document.addEventListener('mousemove', _menuMouseHandler);
+  const _parallaxInterval: ReturnType<typeof setInterval> = setInterval(() => {
+    const maxShift = 12;
+    starBg.canvas.style.transform =
+      `translate(${(-_menuMouseX * maxShift).toFixed(2)}px, ${(-_menuMouseY * maxShift).toFixed(2)}px)`;
+  }, 16);
+
   const dispose = (): void => {
     window.removeEventListener('resize', onResize);
     // C171: remove hover listeners
     if (menuStartBtn) menuStartBtn.removeEventListener('pointerenter', onStartHover);
     if (menuContinueBtn) menuContinueBtn.removeEventListener('pointerenter', onContinueHover);
+    // C256: remove mouse parallax listeners and interval
+    document.removeEventListener('mousemove', _menuMouseHandler);
+    clearInterval(_parallaxInterval);
     // C229: remove static star background canvas
     starBg.dispose();
     // C176: stop rune rain RAF and remove canvas
