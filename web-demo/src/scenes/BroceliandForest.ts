@@ -874,6 +874,12 @@ let wellLight392: PointLight | null = null;
 let wellRippleT392 = -1;
 let wellNextRipple392 = 12.0;
 
+// ── Cycle-400: fairy lights string between trees ───────────────────────────────
+let fairyLightsGroup: Group | null = null;
+let fairyT = 0;
+let _fairyBulbs: Mesh[] = [];
+let _fairyPointLight: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1639,6 +1645,59 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     wellNextRipple392 = 12.0 + Math.random() * 6.0;
   }
 
+  // ── Cycle-400: fairy lights string between two trees ──────────────────────
+  {
+    fairyLightsGroup = new Group();
+
+    // Catenary string: 20 points from (-3,2.5,-10) to (4,2.5,-10), droop at y=2.0
+    const startX = -3; const endX = 4; const midY = 2.0; const stringY = 2.5; const stringZ = -10;
+    const ptCount = 20;
+    const positions = new Float32Array(ptCount * 3);
+    for (let i = 0; i < ptCount; i++) {
+      const t = i / (ptCount - 1);
+      const x = startX + t * (endX - startX);
+      // Parabolic droop: 0 at ends, max sag at middle
+      const sag = 4 * (midY - stringY) * t * (1 - t);
+      const y = stringY + sag;
+      positions[i * 3 + 0] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = stringZ;
+    }
+    const stringGeo = new BufferGeometry();
+    stringGeo.setAttribute('position', new Float32BufferAttribute(positions, 3));
+    const stringMat = new MeshBasicMaterial({ color: 0x0a2a14 });
+    // Use LineSegments-compatible approach: Three.Line needs LineBasicMaterial
+    // but we only have MeshBasicMaterial imported. Import Line via BufferGeometry trick:
+    // Actually create a thin tube-like representation with Points for the wire visual,
+    // and bulbs are the main visual element. Use Points for the wire.
+    const wireMat = new PointsMaterial({ color: 0x0a2a14, size: 0.04 });
+    const wire = new Points(stringGeo, wireMat);
+    fairyLightsGroup.add(wire);
+    stringMat.dispose(); // not used
+
+    // 8 glowing bulbs evenly spaced along the catenary
+    _fairyBulbs = [];
+    const bulbGeo = new SphereGeometry(0.07, 4, 3);
+    for (let i = 0; i < 8; i++) {
+      const t = i / 7; // 0..1
+      const x = startX + t * (endX - startX);
+      const sag = 4 * (midY - stringY) * t * (1 - t);
+      const y = stringY + sag;
+      const bulbMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 1.0 });
+      const bulb = new Mesh(bulbGeo, bulbMat);
+      bulb.position.set(x, y, stringZ);
+      fairyLightsGroup.add(bulb);
+      _fairyBulbs.push(bulb);
+    }
+
+    // Point light at midpoint for ambient glow
+    _fairyPointLight = new PointLight(0x33ff66, 0.15, 5.0);
+    _fairyPointLight.position.set(0.5, midY, stringZ);
+    fairyLightsGroup.add(_fairyPointLight);
+
+    group.add(fairyLightsGroup);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1970,6 +2029,16 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Cycle-400: fairy lights twinkle + light flicker
+    fairyT += dt;
+    for (let i = 0; i < _fairyBulbs.length; i++) {
+      const bulb = _fairyBulbs[i]!;
+      (bulb.material as MeshBasicMaterial).opacity = 0.7 + Math.sin(fairyT * 3 + i * 0.8) * 0.3;
+    }
+    if (_fairyPointLight) {
+      _fairyPointLight.intensity = 0.12 + Math.sin(fairyT * 2.5) * 0.05;
+    }
   };
 
   const dispose = (): void => {
@@ -2106,6 +2175,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     wellWater392 = null;
     if (wellLight392) { wellLight392.dispose(); wellLight392 = null; }
+    // Cycle-400: fairy lights cleanup
+    if (fairyLightsGroup) {
+      group.remove(fairyLightsGroup);
+      fairyLightsGroup.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      fairyLightsGroup = null;
+    }
+    _fairyBulbs = [];
+    if (_fairyPointLight) { _fairyPointLight.dispose(); _fairyPointLight = null; }
   };
 
   return { group, update, dispose };
