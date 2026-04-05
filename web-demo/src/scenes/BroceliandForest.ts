@@ -1000,6 +1000,17 @@ let foxHiddenDur482: number = 10 + Math.random() * 10;
 const FOX_FADE_DUR482 = 2.0;
 const FOX_OPACITY482 = 0.75;
 
+// ── Cycle-487: ancient whispering stone face ───────────────────────────────────
+let stoneGroup487: Group | null = null;
+let stoneEyeL487: Mesh | null = null;
+let stoneEyeR487: Mesh | null = null;
+let stoneEyeMatL487: MeshStandardMaterial | null = null;
+let stoneEyeMatR487: MeshStandardMaterial | null = null;
+let t487: number = 0;
+const stoneParticles487: Mesh[] = [];
+let stoneWhisperTimer487: number = 15 + Math.random() * 10;
+let stoneWhisperActive487: boolean = false;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2861,6 +2872,102 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(foxGroup482);
   }
 
+  // ── Cycle-487: ancient stone face that whispers ────────────────────────────
+  {
+    stoneGroup487 = new Group();
+    const STONE_X = 10;
+    const STONE_Y = 1.1;
+    const STONE_Z = -16;
+
+    // Main body — moss-covered standing stone, slightly irregular via rotation
+    const stoneBodyGeo = new BoxGeometry(0.8, 2.2, 0.5);
+    const stoneBodyMat = new MeshStandardMaterial({
+      color: 0x0a1a10,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    const stoneBody = new Mesh(stoneBodyGeo, stoneBodyMat);
+    stoneBody.rotation.z = 0.03;
+    stoneBody.rotation.y = 0.05;
+    stoneGroup487.add(stoneBody);
+
+    // Moss patches — 4 billboard planes on the stone face
+    const mossMat487 = new MeshStandardMaterial({
+      color: 0x0d2a14,
+      emissive: 0x1a3322,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.7,
+      side: DoubleSide,
+    });
+    const mossOffsets: [number, number, number][] = [
+      [-0.15,  0.55, 0.26],
+      [ 0.18, -0.3,  0.26],
+      [-0.2,  -0.7,  0.26],
+      [ 0.05,  0.1,  0.26],
+    ];
+    for (const [mx, my, mz] of mossOffsets) {
+      const mossMesh = new Mesh(new PlaneGeometry(0.3, 0.2), mossMat487);
+      mossMesh.position.set(mx, my, mz);
+      stoneGroup487.add(mossMesh);
+    }
+
+    // Carved eye sockets — slightly inset into stone face
+    stoneEyeMatL487 = new MeshStandardMaterial({
+      color: 0x010802,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.4,
+    });
+    stoneEyeMatR487 = new MeshStandardMaterial({
+      color: 0x010802,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.4,
+    });
+
+    stoneEyeL487 = new Mesh(new SphereGeometry(0.09, 6, 6), stoneEyeMatL487);
+    stoneEyeL487.position.set(-0.18, 0.35, 0.22);
+    stoneGroup487.add(stoneEyeL487);
+
+    stoneEyeR487 = new Mesh(new SphereGeometry(0.09, 6, 6), stoneEyeMatR487);
+    stoneEyeR487.position.set(0.18, 0.35, 0.22);
+    stoneGroup487.add(stoneEyeR487);
+
+    // Carved mouth — thin box below face center
+    const mouthGeo = new BoxGeometry(0.2, 0.04, 0.05);
+    const mouthMat = new MeshStandardMaterial({ color: 0x010802, roughness: 0.95 });
+    const mouth = new Mesh(mouthGeo, mouthMat);
+    mouth.position.set(0, -0.05, 0.28);
+    stoneGroup487.add(mouth);
+
+    stoneGroup487.position.set(STONE_X, STONE_Y, STONE_Z);
+    group.add(stoneGroup487);
+
+    // Pre-create 10 mist particles — hidden until whisper breath triggers
+    const mistMat487 = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.6,
+      transparent: true,
+      opacity: 0.0,
+    });
+    for (let pi = 0; pi < 10; pi++) {
+      const p = new Mesh(new SphereGeometry(0.04, 4, 4), mistMat487.clone());
+      p.visible = false;
+      // mouth world position: STONE_X + ~0, STONE_Y + (-0.05), STONE_Z + ~0.28
+      p.position.set(
+        STONE_X + (Math.random() - 0.5) * 0.12,
+        STONE_Y - 0.05 + (Math.random() - 0.5) * 0.06,
+        STONE_Z + 0.28,
+      );
+      (p as Mesh & { __life487?: number; __vx?: number; __vy?: number; __vz?: number }).__life487 = 0;
+      (p as Mesh & { __vx?: number }).__vx = (Math.random() - 0.5) * 0.3;
+      (p as Mesh & { __vy?: number }).__vy = 0.25 + Math.random() * 0.15;
+      (p as Mesh & { __vz?: number }).__vz = 0.3 + Math.random() * 0.2;
+      stoneParticles487.push(p);
+      group.add(p);
+    }
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3577,6 +3684,59 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
       foxBodyMats482.forEach(m => { m.opacity = targetOpacity; });
     }
+
+    // Cycle-487: whispering stone face — eye pulse + mist breath
+    if (stoneGroup487 && stoneEyeMatL487 && stoneEyeMatR487) {
+      t487 += dt;
+
+      // Eye glow pulse
+      stoneEyeMatL487.emissiveIntensity = 0.2 + (Math.sin(t487 * 0.7) * 0.5 + 0.5) * 0.6;
+      stoneEyeMatR487.emissiveIntensity = 0.2 + (Math.sin(t487 * 0.7 + Math.PI * 0.3) * 0.5 + 0.5) * 0.6;
+
+      // Whisper timer
+      if (!stoneWhisperActive487) {
+        stoneWhisperTimer487 -= dt;
+        if (stoneWhisperTimer487 <= 0) {
+          // Trigger whisper breath
+          stoneWhisperActive487 = true;
+          stoneWhisperTimer487 = 15 + Math.random() * 10;
+          for (const p of stoneParticles487) {
+            const px = stoneGroup487.position.x + (Math.random() - 0.5) * 0.12;
+            const py = stoneGroup487.position.y - 0.05 + (Math.random() - 0.5) * 0.06;
+            const pz = stoneGroup487.position.z + 0.28;
+            p.position.set(px, py, pz);
+            p.visible = true;
+            (p as Mesh & { __life487?: number }).__life487 = 0;
+            (p as Mesh & { __vx?: number }).__vx = (Math.random() - 0.5) * 0.3;
+            (p as Mesh & { __vy?: number }).__vy = 0.25 + Math.random() * 0.15;
+            (p as Mesh & { __vz?: number }).__vz = 0.3 + Math.random() * 0.2;
+            (p.material as MeshStandardMaterial).opacity = 0.7;
+          }
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        }
+      } else {
+        // Animate active mist particles
+        let anyAlive = false;
+        for (const p of stoneParticles487) {
+          if (!p.visible) continue;
+          const life = ((p as Mesh & { __life487?: number }).__life487 ?? 0) + dt / 2.0;
+          (p as Mesh & { __life487?: number }).__life487 = life;
+          if (life >= 1.0) {
+            p.visible = false;
+            (p.material as MeshStandardMaterial).opacity = 0.0;
+          } else {
+            anyAlive = true;
+            p.position.x += ((p as Mesh & { __vx?: number }).__vx ?? 0) * dt;
+            p.position.y += ((p as Mesh & { __vy?: number }).__vy ?? 0) * dt;
+            p.position.z += ((p as Mesh & { __vz?: number }).__vz ?? 0) * dt;
+            (p.material as MeshStandardMaterial).opacity = 0.7 * (1 - life);
+          }
+        }
+        if (!anyAlive) {
+          stoneWhisperActive487 = false;
+        }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -4001,6 +4161,29 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       foxGroup482 = null;
     }
     foxBodyMats482.length = 0;
+
+    // Cycle-487: whispering stone cleanup
+    if (stoneGroup487) {
+      group.remove(stoneGroup487);
+      stoneGroup487.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      stoneGroup487 = null;
+    }
+    stoneEyeL487 = null;
+    stoneEyeR487 = null;
+    if (stoneEyeMatL487) { stoneEyeMatL487.dispose(); stoneEyeMatL487 = null; }
+    if (stoneEyeMatR487) { stoneEyeMatR487.dispose(); stoneEyeMatR487 = null; }
+    for (const p of stoneParticles487) {
+      group.remove(p);
+      p.geometry.dispose();
+      (p.material as Material).dispose();
+    }
+    stoneParticles487.length = 0;
+    stoneWhisperActive487 = false;
   };
 
   return { group, update, dispose };
