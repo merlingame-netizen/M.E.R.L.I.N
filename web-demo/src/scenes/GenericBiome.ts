@@ -390,6 +390,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _wellLight: PointLight | null = null;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
+  const _bogFireflies: Mesh[] = [];
+  const _bogFireflyLights: PointLight[] = [];
   const _auroraBands: Mesh[] = [];
   let _auroraTime = 0;
   let _deadTreeGroup: Group | null = null;
@@ -531,6 +533,55 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     _deadTreeGroup.position.set(15, 2.5, -20);
     group.add(_deadTreeGroup);
+
+    // Erratic firefly swarm — 18 malevolent motes lurching through the bog (C319)
+    // 12 bright (0x33ff66) + 6 dim (0x1a5522), scattered x=[-15,15] y=[0.3,2.5] z=[-8,-32]
+    const _ffGeo = new SphereGeometry(0.05, 4, 3);
+    for (let i = 0; i < 18; i++) {
+      const isBright = i < 12;
+      const ffMat = new MeshBasicMaterial({
+        color: isBright ? 0x33ff66 : 0x1a5522,
+        transparent: true,
+        opacity: 0.8,
+      });
+      const ff = new Mesh(_ffGeo, ffMat);
+      const R = Math.random;
+      ff.position.set(
+        (R() - 0.5) * 30,       // x ∈ [-15, 15]
+        0.3 + R() * 2.2,         // y ∈ [0.3, 2.5]
+        -8 - R() * 24,           // z ∈ [-8, -32]
+      );
+      // Target position and state
+      ff.userData = {
+        tx: ff.position.x,
+        ty: ff.position.y,
+        tz: ff.position.z,
+        moveSpeed: 2.0 + R() * 2.0,   // 2.0–4.0
+        moveTimer: 0,
+        restTimer: 0,
+        resting: false,
+        phase: R() * Math.PI * 2,
+      };
+      group.add(ff);
+      _bogFireflies.push(ff);
+
+      // Every 3rd bright firefly gets a point light
+      if (isBright && i % 3 === 0) {
+        const ffLight = new PointLight(0x33ff66, 0.0, 0);
+        ffLight.position.copy(ff.position);
+        group.add(ffLight);
+        _bogFireflyLights.push(ffLight);
+        ff.userData['lightIndex'] = _bogFireflyLights.length - 1;
+      }
+    }
+    // Assign fresh random targets to all fireflies
+    for (const ff of _bogFireflies) {
+      const R = Math.random;
+      ff.userData['tx'] = (R() - 0.5) * 30;
+      ff.userData['ty'] = 0.3 + R() * 2.2;
+      ff.userData['tz'] = -8 - R() * 24;
+      ff.userData['moveTimer'] = 1.2 + R() * 1.3; // initial move interval 1.2–2.5s
+    }
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -1222,6 +1273,59 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         (wisp.material as MeshBasicMaterial).opacity = 0.3 + Math.abs(Math.sin(t * 4.5 + phase)) * 0.5;
       }
     }
+    // Marais korrigans — erratic firefly swarm (C319)
+    if (_bogFireflies.length > 0) {
+      const t = Date.now() * 0.001;
+      for (const ff of _bogFireflies) {
+        const ud = ff.userData as {
+          tx: number; ty: number; tz: number;
+          moveSpeed: number; moveTimer: number; restTimer: number;
+          resting: boolean; phase: number; lightIndex?: number;
+        };
+
+        if (ud.resting) {
+          ud.restTimer -= dt;
+          if (ud.restTimer <= 0) {
+            // Pick new random target and start moving
+            const R = Math.random;
+            ud.tx = (R() - 0.5) * 30;
+            ud.ty = 0.3 + R() * 2.2;
+            ud.tz = -8 - R() * 24;
+            ud.moveTimer = 1.2 + R() * 1.3;
+            ud.resting = false;
+          }
+        } else {
+          // Lerp toward target
+          const dx = ud.tx - ff.position.x;
+          const dy = ud.ty - ff.position.y;
+          const dz = ud.tz - ff.position.z;
+          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          if (dist < 0.05) {
+            // Close enough — freeze briefly
+            ud.resting = true;
+            ud.restTimer = 0.3 + Math.random() * 0.5;
+          } else {
+            const step = Math.min(ud.moveSpeed * dt, dist);
+            const inv = step / dist;
+            ff.position.x += dx * inv;
+            ff.position.y += dy * inv;
+            ff.position.z += dz * inv;
+          }
+        }
+
+        // Fast flicker opacity
+        (ff.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(t * 8.0 + ud.phase) * 0.4;
+
+        // Sync attached point light if any
+        if (ud.lightIndex !== undefined) {
+          const fl = _bogFireflyLights[ud.lightIndex];
+          if (fl !== undefined) {
+            fl.position.copy(ff.position);
+            fl.intensity = 0.15 + Math.sin(t * 7.0 + ud.phase) * 0.15;
+          }
+        }
+      }
+    }
     // Marais swamp water — subtle vertex displacement ripple
     if (maraisWater !== null) {
       maraisWaterTime += dt;
@@ -1387,6 +1491,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _wellBucket = null;
     _wellLight = null;
     maraisWispMeshes = [];
+    _bogFireflies.length = 0;
+    _bogFireflyLights.length = 0;
     _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
