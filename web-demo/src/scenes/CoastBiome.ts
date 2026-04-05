@@ -619,6 +619,12 @@ let sprayVelocities359: Array<[number, number, number]> = [];
 let sprayLifetimes359: Float32Array | null = null;
 let sprayNextBurst359 = 3.0;
 
+// ── Distant whale breach animation (C367) ─────────────────────────────────
+let whaleMesh367: Mesh | null = null;
+let whaleLight367: PointLight | null = null;
+let whaleBreach367T = -1;   // -1 = resting, 0+ = animating
+let whaleNext367 = 20.0 + Math.random() * 15.0;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1085,6 +1091,21 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(sprayPoints359);
   }
 
+  // ── Distant whale breach animation (C367) ─────────────────────────────────
+  {
+    const whaleGeo = new SphereGeometry(0.8, 8, 5);
+    whaleGeo.scale(1.0, 0.4, 2.5); // elongated body shape
+    const whaleMat = new MeshStandardMaterial({ color: 0x071a07, roughness: 0.9 });
+    whaleMesh367 = new Mesh(whaleGeo, whaleMat);
+    whaleMesh367.position.set(-12, -2, -28); // far distance, below water
+    whaleMesh367.visible = false;
+    group.add(whaleMesh367);
+
+    whaleLight367 = new PointLight(0x33ff66, 0.0, 8);
+    whaleLight367.position.set(-12, 0, -28);
+    group.add(whaleLight367);
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -1400,6 +1421,42 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         (sprayPoints359.geometry as BufferGeometry).attributes['position']!.needsUpdate = true;
       }
     }
+
+    // Whale breach timer (C367)
+    whaleNext367 -= dt;
+    if (whaleNext367 <= 0 && whaleBreach367T < 0) {
+      whaleBreach367T = 0;
+      whaleNext367 = 20.0 + Math.random() * 15.0;
+      if (whaleMesh367) whaleMesh367.visible = true;
+    }
+
+    if (whaleBreach367T >= 0 && whaleMesh367) {
+      whaleBreach367T += dt;
+      const t = whaleBreach367T;
+
+      if (t < 0.8) {
+        // Rising phase
+        const rise = Math.sin((t / 0.8) * Math.PI * 0.5);
+        whaleMesh367.position.y = -2 + rise * 5;
+        whaleMesh367.rotation.z = rise * 0.4; // arc lean
+      } else if (t < 1.5) {
+        // Falling phase
+        const fall = (t - 0.8) / 0.7;
+        whaleMesh367.position.y = 3 - fall * 5;
+        whaleMesh367.rotation.z = 0.4 - fall * 0.6;
+        // Splash light on entry
+        if (whaleMesh367.position.y < 0.5 && whaleLight367) {
+          whaleLight367.intensity = Math.max(0, (0.5 - whaleMesh367.position.y) / 0.5) * 0.4;
+        }
+      } else {
+        // Done
+        whaleMesh367.visible = false;
+        whaleMesh367.position.y = -2;
+        whaleMesh367.rotation.z = 0;
+        if (whaleLight367) whaleLight367.intensity = 0;
+        whaleBreach367T = -1;
+      }
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -1453,6 +1510,8 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     sprayPositions359 = null;
     sprayVelocities359 = [];
     sprayLifetimes359 = null;
+    if (whaleMesh367) { group.remove(whaleMesh367); whaleMesh367.geometry.dispose(); (whaleMesh367.material as MeshStandardMaterial).dispose(); whaleMesh367 = null; }
+    if (whaleLight367) { group.remove(whaleLight367); whaleLight367.dispose(); whaleLight367 = null; }
     group.clear();
   };
 
