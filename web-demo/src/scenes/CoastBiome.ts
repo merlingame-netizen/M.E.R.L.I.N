@@ -7,7 +7,7 @@ import {
   AmbientLight, BackSide, BoxGeometry, BufferAttribute, Color,
   ConeGeometry, CylinderGeometry, DirectionalLight,
   DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
-  Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SphereGeometry,
+  Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, SphereGeometry,
 } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
 
@@ -478,6 +478,11 @@ export interface BiomeSceneResult {
 
 // ── Main builder ──────────────────────────────────────────────────────────────
 
+// ── Lighthouse outer-var declarations (outer-var pattern: assign inside builder) ──
+let lighthouseMesh: Mesh | null = null;
+let lighthouseBeamMesh: Mesh | null = null;
+let lighthouseLight: PointLight | null = null;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -527,6 +532,36 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(createTrees(40));
   group.add(createMenhirs(6));
   group.add(createFogPlane());
+
+  // ── Lighthouse — tall tower on left cliff with rotating green beam ─────────
+  // Tower body: white-ish cylinder at left cliff position
+  lighthouseMesh = new Mesh(
+    new CylinderGeometry(0.3, 0.5, 8, 8),
+    new MeshStandardMaterial({ color: 0xdde8dd, roughness: 0.85, flatShading: true }),
+  );
+  lighthouseMesh.position.set(-20, 4, -35);
+  group.add(lighthouseMesh);
+
+  // Lens housing sphere at tower top
+  const lensMesh = new Mesh(
+    new SphereGeometry(0.8, 8, 6),
+    new MeshBasicMaterial({ color: 0x33ff66 }),
+  );
+  lensMesh.position.set(-20, 9, -35);
+  group.add(lensMesh);
+
+  // Point light at lighthouse top — green CeltOS charter
+  lighthouseLight = new PointLight(0x33ff66, 0.6, 30);
+  lighthouseLight.position.set(-20, 9, -35);
+  group.add(lighthouseLight);
+
+  // Rotating beam — flat thin box centered at tower top, rotates around Y axis
+  lighthouseBeamMesh = new Mesh(
+    new BoxGeometry(0.1, 0.2, 25),
+    new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.15 }),
+  );
+  lighthouseBeamMesh.position.set(-20, 9, -35);
+  group.add(lighthouseBeamMesh);
 
   // Soaring seabird flock — pale silhouettes on coastal thermals
   const seabirdFlock = createSeabirdFlock();
@@ -599,6 +634,11 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
     // Subtle sun intensity flicker (overcast clouds passing)
     sun.intensity = 1.5 + Math.sin(t * 0.18) * 0.12 + Math.sin(t * 0.43) * 0.06;
+
+    // Lighthouse beam — slow Y-axis rotation
+    if (lighthouseBeamMesh !== null) {
+      lighthouseBeamMesh.rotation.y += dt * 0.4;
+    }
 
     // Seabird flock soaring
     seabirdFlock.update(t, dt);
