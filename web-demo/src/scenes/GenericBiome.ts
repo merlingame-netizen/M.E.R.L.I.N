@@ -597,6 +597,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let medicineWheelT458: number = 0
   let medicineWheelLines458: Mesh[] = []
 
+  // ── Fire oracle pit — plaine_druides (C486) ───────────────────────────────
+  let oracleGroup486: Group | null = null
+  let oracleFlames486: Mesh[] = []
+  let oracleSparks486: Mesh[] = []
+  let oracleLight486: PointLight | null = null
+  let oracleT486: number = 0
+  let oracleTimer486: number = 22 + Math.random() * 16
+  let oracleActive486: boolean = false
+  let oracleSparksT486: number = 0
+
   // ── Stone guardian statue — landes_bruyere (C463) ─────────────────────────
   let guardianGroup463: Group | null = null
   let guardianT463: number = 0
@@ -3516,6 +3526,80 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     group.add(medicineWheelGroup458)
   }
 
+  // ── Fire oracle pit — plaine_druides (C486) ───────────────────────────────
+  if (biome === 'plaine_druides') {
+    oracleGroup486 = new Group()
+    oracleGroup486.position.set(3, 0, 8)
+
+    // Stone rim
+    const rimMat = new MeshBasicMaterial({ color: 0x0d2010 })
+    const rimMesh = new Mesh(new CylinderGeometry(1.2, 1.4, 0.3, 12), rimMat)
+    rimMesh.position.y = 0.15
+    oracleGroup486.add(rimMesh)
+
+    // Inner pit floor
+    const floorMesh = new Mesh(
+      new CylinderGeometry(1.0, 1.0, 0.05, 12),
+      new MeshBasicMaterial({ color: 0x010802 })
+    )
+    floorMesh.position.y = 0.03
+    oracleGroup486.add(floorMesh)
+
+    // 5 standing stones at radius 1.8, 72° apart
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2
+      const stone = new Mesh(
+        new BoxGeometry(0.15, 0.6, 0.1),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      stone.position.set(Math.cos(angle) * 1.8, 0.3, Math.sin(angle) * 1.8)
+      stone.rotation.x = (Math.random() - 0.5) * 0.2
+      stone.rotation.z = (Math.random() - 0.5) * 0.2
+      oracleGroup486.add(stone)
+    }
+
+    // Central fire: 8 flame particles
+    for (let i = 0; i < 8; i++) {
+      const flameMat = new MeshStandardMaterial({
+        color: 0x0a2a14,
+        emissive: new Color(0x33ff66),
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.8,
+      })
+      const flame = new Mesh(new ConeGeometry(0.06, 0.25, 4), flameMat)
+      flame.position.set(
+        (Math.random() - 0.5) * 0.2,
+        0.15 + Math.random() * 0.05,
+        (Math.random() - 0.5) * 0.2
+      )
+      // Tip pointing up: cone default has apex at +Y, which is correct
+      flame.userData = { phase: Math.random() * Math.PI * 2, speed: 2.5 + Math.random() * 2.0 }
+      oracleFlames486.push(flame)
+      oracleGroup486.add(flame)
+    }
+
+    // Fire PointLight
+    oracleLight486 = new PointLight(0x33ff66, 0.8, 4.0)
+    oracleLight486.position.set(0, 0.5, 0)
+    oracleGroup486.add(oracleLight486)
+
+    // Pre-create 12 spark particles (hidden)
+    for (let i = 0; i < 12; i++) {
+      const spark = new Mesh(
+        new SphereGeometry(0.03, 4, 4),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0 })
+      )
+      spark.position.set(0, 0.15, 0)
+      spark.visible = false
+      spark.userData = { vx: 0, vz: 0, vy: 0 }
+      oracleSparks486.push(spark)
+      oracleGroup486.add(spark)
+    }
+
+    group.add(oracleGroup486)
+  }
+
   const update = (dt: number): void => {
     particles.update(dt);
     // Gentle key light flicker
@@ -4296,6 +4380,72 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const mat = line.material as MeshBasicMaterial;
       mat.opacity = 0.2 + 0.2 * Math.sin(medicineWheelT458 * 0.8 + i * (Math.PI / 4));
     });
+    // Plaine des Druides — fire oracle pit (C486)
+    if (oracleGroup486) {
+      oracleT486 += dt;
+      // Animate each flame: scale Y and opacity oscillation
+      oracleFlames486.forEach((flame, i) => {
+        const { phase, speed } = flame.userData as { phase: number; speed: number };
+        const t = oracleT486 * speed + phase;
+        flame.scale.y = 0.6 + 0.6 * Math.abs(Math.sin(t));
+        const mat = flame.material as MeshStandardMaterial;
+        mat.opacity = 0.5 + 0.4 * Math.abs(Math.sin(t * 0.7 + phase));
+        flame.rotation.y += 0.3 * dt;
+      });
+      // Light intensity flicker
+      if (oracleLight486) {
+        oracleLight486.intensity = 0.6 + 0.4 * Math.sin(oracleT486 * 7.3 + Math.sin(oracleT486 * 3.1));
+      }
+      // Oracle vision timer
+      if (!oracleActive486) {
+        oracleTimer486 -= dt;
+        if (oracleTimer486 <= 0) {
+          oracleActive486 = true;
+          oracleSparksT486 = 0;
+          oracleTimer486 = 22 + Math.random() * 16;
+          // Spike flame emissive
+          oracleFlames486.forEach((flame) => {
+            (flame.material as MeshStandardMaterial).emissiveIntensity = 3.0;
+          });
+          // Activate sparks with random upward velocities
+          oracleSparks486.forEach((spark) => {
+            spark.visible = true;
+            spark.position.set(
+              (Math.random() - 0.5) * 0.15,
+              0.15,
+              (Math.random() - 0.5) * 0.15
+            );
+            spark.userData.vx = (Math.random() - 0.5) * 0.8;
+            spark.userData.vz = (Math.random() - 0.5) * 0.8;
+            spark.userData.vy = 1.0 + Math.random() * 0.8;
+            (spark.material as MeshBasicMaterial).opacity = 1.0;
+          });
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+        }
+      } else {
+        // Oracle vision active: rise and fade sparks
+        oracleSparksT486 += dt;
+        const progress = oracleSparksT486 / 1.5;
+        oracleSparks486.forEach((spark) => {
+          spark.position.x += spark.userData.vx * dt * 0.4;
+          spark.position.y += spark.userData.vy * dt;
+          spark.position.z += spark.userData.vz * dt * 0.4;
+          (spark.material as MeshBasicMaterial).opacity = Math.max(0, 1.0 - progress);
+          if (oracleSparksT486 >= 1.5) {
+            spark.visible = false;
+            spark.position.set(0, 0.15, 0);
+          }
+        });
+        // Fade flame emissive back to normal
+        const fadeP = Math.min(oracleSparksT486 / 0.8, 1.0);
+        oracleFlames486.forEach((flame) => {
+          (flame.material as MeshStandardMaterial).emissiveIntensity = 3.0 - fadeP * 1.5;
+        });
+        if (oracleSparksT486 >= 1.5) {
+          oracleActive486 = false;
+        }
+      }
+    }
     // Landes bruyere — stone guardian watcher (C463)
     if (guardianGroup463) {
       guardianT463 += dt
@@ -4802,6 +4952,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       medicineWheelGroup458 = null;
     }
     medicineWheelLines458 = [];
+    // Fire oracle pit cleanup (C486)
+    if (oracleGroup486) {
+      oracleGroup486.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(oracleGroup486);
+      oracleGroup486 = null;
+    }
+    oracleFlames486 = [];
+    oracleSparks486 = [];
+    oracleLight486 = null;
+    oracleActive486 = false;
+    oracleT486 = 0;
     // Stone guardian cleanup (C463)
     if (guardianGroup463) {
       guardianGroup463.traverse((c) => {
