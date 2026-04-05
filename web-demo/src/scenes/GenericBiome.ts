@@ -15,6 +15,7 @@ import {
 } from 'three';
 
 import type { BiomeSceneResult } from './CoastBiome';
+import { loadGLB } from '../engine/AssetLoader';
 
 // ── Biome theme definitions ───────────────────────────────────────────────────
 
@@ -395,7 +396,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   // Vallee anciens: ruined hut silhouettes with warm glow
   if (biome === 'vallee_anciens') {
     const hutMat = new MeshStandardMaterial({ color: 0x4a3018, roughness: 0.9, metalness: 0.0, flatShading: true });
-    const roofMat = new MeshStandardMaterial({ color: 0x6a4820, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0xd4aa44, emissiveIntensity: 0.08 });
+    const roofMat = new MeshStandardMaterial({ color: 0x6a4820, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x22aa55, emissiveIntensity: 0.08 });
     for (let i = 0; i < 5; i++) {
       const x = (Math.random() - 0.5) * 40;
       const z = -10 - Math.random() * 30;
@@ -406,6 +407,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       roof.position.set(x, 1.6, z);
       group.add(roof);
     }
+    // Load tower_unified.glb as distant landmark
+    loadGLB('/assets/models/tower_unified.glb').then(gltf => {
+      const tower = gltf.scene.clone();
+      tower.position.set(12, 0, -35);
+      tower.scale.setScalar(2.5);
+      tower.rotation.y = -Math.PI * 0.25;
+      group.add(tower);
+    }).catch(() => { /* GLB optional */ });
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -420,6 +429,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       boulder.rotation.y = R2() * Math.PI;
       group.add(boulder);
     }
+    // Load rocks_set.glb as additional detail
+    loadGLB('/assets/models/rocks_set.glb').then(gltf => {
+      const rocks = gltf.scene.clone();
+      rocks.position.set(-8, -1.2, -20);
+      rocks.scale.setScalar(3.5);
+      rocks.rotation.y = Math.PI * 0.3;
+      group.add(rocks);
+    }).catch(() => { /* GLB optional */ });
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
