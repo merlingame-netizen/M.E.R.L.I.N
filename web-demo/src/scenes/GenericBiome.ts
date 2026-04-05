@@ -598,6 +598,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let guardianWatching463: boolean = false
   let guardianWatchT463: number = 0
 
+  // ── Earth energy vortex — cercles_pierres (C468) ──────────────────────────
+  let vortexGroup468: Group | null = null
+  let vortexT468: number = 0
+  let vortexParticles468: Mesh[] = []
+  let vortexLight468: PointLight | null = null
+  let vortexSurgeTimer468: number = 20
+  let vortexSurging468: boolean = false
+  let vortexSurgeT468: number = 0
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1497,6 +1506,53 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     guardianGroup463!.add(guardianLight463)
 
     group.add(guardianGroup463)
+
+    // ── Earth energy vortex (C468) ────────────────────────────────────────────
+    vortexGroup468 = new Group()
+    vortexGroup468.position.set(0, 0, -5)
+
+    // Ground ring
+    const groundRing = new Mesh(
+      new TorusGeometry(1.2, 0.06, 4, 32),
+      new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.5 })
+    )
+    groundRing.rotation.x = Math.PI * 0.5
+    groundRing.position.y = 0.04
+    vortexGroup468!.add(groundRing)
+
+    // Inner ground disc (faint glow)
+    const groundDisc = new Mesh(
+      new CylinderGeometry(1.1, 1.1, 0.02, 20),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.06 })
+    )
+    groundDisc.position.y = 0.02
+    vortexGroup468!.add(groundDisc)
+
+    // 16 helix particles
+    for (let i = 0; i < 16; i++) {
+      const particle = new Mesh(
+        new SphereGeometry(0.055, 4, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 })
+      )
+      const angle = (i / 16) * Math.PI * 2 * 2
+      const height = (i / 16) * 3.0
+      const radius = 0.6 - height * 0.15
+      particle.position.set(
+        Math.cos(angle) * Math.max(radius, 0.1),
+        height,
+        Math.sin(angle) * Math.max(radius, 0.1)
+      )
+      particle.userData['helixIndex'] = i
+      vortexGroup468!.add(particle)
+      vortexParticles468.push(particle)
+    }
+
+    // PointLight at center
+    vortexLight468 = new PointLight(0x33ff66, 0.3, 6.0)
+    vortexLight468.position.y = 1.0
+    vortexGroup468!.add(vortexLight468)
+
+    group.add(vortexGroup468)
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -4039,6 +4095,51 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const zenithFactor = Math.sin(arcAngle);
       stoneMoonLight433.intensity = zenithFactor * 0.35;
     }
+    // Cercles de Pierres — earth energy vortex (C468)
+    if (vortexGroup468) {
+      vortexT468 += dt
+      vortexSurgeTimer468 -= dt
+
+      const surgeSpeed = vortexSurging468 ? 4.0 : 0.8
+
+      vortexParticles468.forEach((p, i) => {
+        const basePhase = (i / 16) * Math.PI * 2 * 2
+        const timePhase = vortexT468 * surgeSpeed
+        const angle = basePhase + timePhase
+        const heightFrac = ((vortexT468 * surgeSpeed * 0.15 + (i / 16)) % 1.0)
+        const height = heightFrac * 3.2
+        const radius = Math.max(0.6 - height * 0.15, 0.08)
+        p.position.set(
+          Math.cos(angle) * radius,
+          height,
+          Math.sin(angle) * radius
+        )
+        const mat = p.material as MeshBasicMaterial
+        mat.opacity = vortexSurging468
+          ? (0.9 - heightFrac * 0.4)
+          : (0.6 - heightFrac * 0.35) + 0.15 * Math.sin(vortexT468 * 2.0 + i * 0.5)
+      })
+
+      if (vortexLight468 && !vortexSurging468) {
+        vortexLight468.intensity = 0.25 + 0.1 * Math.sin(vortexT468 * 1.2)
+      }
+
+      if (vortexSurgeTimer468 <= 0) {
+        vortexSurgeTimer468 = 15 + Math.random() * 10
+        vortexSurging468 = true
+        vortexSurgeT468 = 0
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }))
+      }
+
+      if (vortexSurging468) {
+        vortexSurgeT468 += dt
+        if (vortexLight468) vortexLight468.intensity = 0.8 - 0.5 * (vortexSurgeT468 / 2.0)
+        if (vortexSurgeT468 >= 2.0) {
+          vortexSurging468 = false
+          if (vortexLight468) vortexLight468.intensity = 0.25
+        }
+      }
+    }
     // Landes bruyere — spirit gateway portal shimmer (C437)
     if (gatewayGroup437 && gatewayPortal437 && gatewayLight437) {
       gatewayT437 += dt;
@@ -4386,6 +4487,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     guardianEyeMats463 = [];
     guardianLight463 = null;
+    // Earth energy vortex cleanup (C468)
+    if (vortexGroup468) {
+      vortexGroup468.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose() }
+      })
+      group.remove(vortexGroup468)
+      vortexGroup468 = null
+    }
+    vortexParticles468 = []
+    vortexLight468 = null
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
