@@ -60,6 +60,15 @@ export class MinigameEquilibre extends MinigameBase {
   private windArrowAlpha = 0;
   private windArrowDir = 0;
 
+  // C270: Visual enhancements
+  // Trail: circular buffer of recent cursor positions with timestamps
+  private readonly trailMaxLen = 18;
+  private trail: Array<{ x: number; t: number }> = [];
+  // Out-of-zone flash: red overlay alpha
+  private outOfZoneFlash = 0;
+  // Wind gust pulse rings: expanding rings spawned on each gust
+  private gustRings: Array<{ x: number; radius: number; alpha: number }> = [];
+
   protected setup(): void {
     this.container.innerHTML = '';
 
@@ -135,6 +144,10 @@ export class MinigameEquilibre extends MinigameBase {
     // initial wind direction. Same class as C146b/RGD-BUG-01 (feedbackTimer stale on replay).
     this.windArrowAlpha = 0;
     this.windArrowDir = 0;
+    // C270: reset visual enhancement state
+    this.trail = [];
+    this.outOfZoneFlash = 0;
+    this.gustRings = [];
 
     // Input handlers — C34: canvas-scoped keydown/keyup (was document-scoped, risked stuck-key on focus loss).
     // blur handler clears keysDown if canvas loses focus mid-hold (tab-away, modal, etc.)
@@ -201,6 +214,8 @@ export class MinigameEquilibre extends MinigameBase {
     });
     this.windArrowAlpha = 1;
     this.windArrowDir = direction;
+    // C270: spawn gust pulse ring at arrow position
+    this.gustRings.push({ x: this.canvasW / 2, radius: 10, alpha: 0.85 });
     // Next gust comes sooner as time progresses
     const baseInterval = 2.5 - (this.elapsedTime / this.totalTime) * 1.5;
     this.nextGustTime = this.elapsedTime + Math.max(0.8, baseInterval + Math.random() * 0.5);
@@ -283,6 +298,20 @@ export class MinigameEquilibre extends MinigameBase {
     // Fade wind arrow
     this.windArrowAlpha = Math.max(0, this.windArrowAlpha - dt * 1.5);
 
+    // C270-1: Trail — record cursor pixel position each frame
+    const cursorPixelXForTrail = this.canvasW / 2 + (this.cursorX * this.canvasW * 0.85) / 2;
+    this.trail.push({ x: cursorPixelXForTrail, t: this.elapsedTime });
+    if (this.trail.length > this.trailMaxLen) this.trail.shift();
+
+    // C270-2: Out-of-zone flash — spike to 0.35 when leaving zone, decay each frame
+    if (!nowInZone && this.outOfZoneFlash < 0.12) this.outOfZoneFlash = 0.35;
+    this.outOfZoneFlash = Math.max(0, this.outOfZoneFlash - dt * 1.8);
+
+    // C270-3: Advance gust rings — expand radius, fade alpha
+    this.gustRings = this.gustRings
+      .map((r) => ({ x: r.x, radius: r.radius + dt * 80, alpha: r.alpha - dt * 1.4 }))
+      .filter((r) => r.alpha > 0);
+
     // --- Drawing ---
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);
 
@@ -296,6 +325,21 @@ export class MinigameEquilibre extends MinigameBase {
     const centerX = this.canvasW / 2;
     const pathWidth = this.canvasW * 0.85;
     const safePixels = pathWidth * this.safeZoneHalf;
+
+    // C270-2: Out-of-zone red screen flash (drawn before path so path renders on top)
+    if (this.outOfZoneFlash > 0) {
+      ctx.fillStyle = `rgba(220,40,40,${this.outOfZoneFlash.toFixed(3)})`;
+      ctx.fillRect(0, 0, this.canvasW, this.canvasH);
+    }
+
+    // C270-3: Gust pulse rings at wind indicator position
+    for (const ring of this.gustRings) {
+      ctx.beginPath();
+      ctx.arc(ring.x, 50, ring.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(51,255,102,${ring.alpha.toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
     // Draw path (full width)
     ctx.fillStyle = 'rgba(80,70,55,0.5)';
@@ -341,6 +385,21 @@ export class MinigameEquilibre extends MinigameBase {
     ctx.arc(cursorPixelX, this.pathY, 3, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(51,255,102,0.85)';
     ctx.fill();
+
+    // C270-1: Trail — fading dots behind cursor along path
+    const now = this.elapsedTime;
+    const trailDecay = 0.45; // seconds for a dot to vanish
+    for (let i = 0; i < this.trail.length - 1; i++) {
+      const dot = this.trail[i];
+      const age = now - dot.t;
+      const alpha = Math.max(0, 1 - age / trailDecay);
+      if (alpha <= 0) continue;
+      const radius = 2 + (1 - age / trailDecay) * 4;
+      ctx.beginPath();
+      ctx.arc(dot.x, this.pathY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(51,255,102,${(alpha * 0.45).toFixed(3)})`;
+      ctx.fill();
+    }
 
     // Wind indicator arrow
     if (this.windArrowAlpha > 0.01) {
