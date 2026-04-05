@@ -304,6 +304,137 @@ async function runPhase1(container: HTMLDivElement): Promise<void> {
 }
 
 // =============================================================================
+// Phase 1b — Faction Matrix Scan
+// =============================================================================
+
+interface FactionDef {
+  name: string;
+  barLen: number; // 1-16 filled blocks (random flavor)
+}
+
+const FACTION_DEFS: readonly FactionDef[] = [
+  { name: 'DRUIDES  ', barLen: 8  },
+  { name: 'ANCIENS  ', barLen: 6  },
+  { name: 'KORRIGANS', barLen: 13 },
+  { name: 'NIAMH    ', barLen: 4  },
+  { name: 'ANKOU    ', barLen: 7  },
+];
+
+const FACTION_BAR_TOTAL = 20;
+
+/** Build a progress bar string: filled █ + empty ░ characters. */
+function _buildBar(filled: number, total: number): string {
+  return '█'.repeat(Math.max(0, Math.min(filled, total))) +
+         '░'.repeat(Math.max(0, total - Math.min(filled, total)));
+}
+
+/** Random 8-char uppercase hex code. */
+function _randomHex8(): string {
+  return Math.floor(Math.random() * 0xffffffff)
+    .toString(16)
+    .toUpperCase()
+    .padStart(8, '0');
+}
+
+async function runFactionMatrixScan(container: HTMLDivElement): Promise<void> {
+  const TEXT_COLOR = 'rgba(51,255,102,0.85)';
+  const BASE_STYLE = [
+    'font-family:"Courier New",monospace;',
+    'font-size:12px;',
+    'color:' + TEXT_COLOR + ';',
+    'letter-spacing:1px;',
+    'line-height:1.7;',
+    'white-space:pre;',
+  ].join('');
+
+  // Outer wrapper — centered, appears via opacity transition
+  const wrap = document.createElement('div');
+  wrap.style.cssText = [
+    'position:absolute;left:50%;top:50%;',
+    'transform:translate(-50%,-50%);',
+    'opacity:0;transition:opacity 0.3s ease;',
+  ].join('');
+  container.appendChild(wrap);
+
+  // Header line
+  const header = document.createElement('div');
+  header.style.cssText = BASE_STYLE + 'margin-bottom:10px;opacity:0.9;';
+  header.textContent = 'FACTION MATRIX \u2014 SCAN EN COURS...';
+  wrap.appendChild(header);
+
+  // Spacer
+  const spacer = document.createElement('div');
+  spacer.style.cssText = BASE_STYLE + 'height:6px;';
+  wrap.appendChild(spacer);
+
+  // Container for faction lines
+  const factionArea = document.createElement('div');
+  factionArea.style.cssText = BASE_STYLE;
+  wrap.appendChild(factionArea);
+
+  // Bottom summary area (hidden initially)
+  const summaryArea = document.createElement('div');
+  summaryArea.style.cssText = BASE_STYLE + 'margin-top:12px;opacity:0;transition:opacity 0.3s ease;';
+  wrap.appendChild(summaryArea);
+
+  // Fade in the wrapper
+  await wait(50);
+  wrap.style.opacity = '1';
+  await wait(300);
+
+  // Render each faction line with progressive bar fill
+  for (let fi = 0; fi < FACTION_DEFS.length; fi++) {
+    const def = FACTION_DEFS[fi]!;
+
+    const lineEl = document.createElement('div');
+    lineEl.style.cssText = BASE_STYLE + 'opacity:0;transition:opacity 0.1s;';
+    // Initial state: no bar yet, "SCAN EN COURS" label
+    lineEl.textContent = '> ' + def.name + '  ' + _buildBar(0, FACTION_BAR_TOTAL) + '  -- SCAN EN COURS';
+    factionArea.appendChild(lineEl);
+
+    // SFX on appearance
+    window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'select' } }));
+
+    // Fade line in
+    await wait(20);
+    lineEl.style.opacity = '1';
+
+    // Animate bar fill: 0 → def.barLen over 400ms (~20 frames, 20ms each)
+    const FILL_FRAMES = 20;
+    const FILL_INTERVAL = 400 / FILL_FRAMES;
+    for (let frame = 1; frame <= FILL_FRAMES; frame++) {
+      await wait(FILL_INTERVAL);
+      const filled = Math.round((frame / FILL_FRAMES) * def.barLen);
+      lineEl.textContent = '> ' + def.name + '  ' + _buildBar(filled, FACTION_BAR_TOTAL) + '  -- SCAN EN COURS';
+    }
+
+    // Final state: full bar with ANALYSE label
+    lineEl.textContent = '> ' + def.name + '  ' + _buildBar(def.barLen, FACTION_BAR_TOTAL) + '  -- ANALYSE';
+
+    // Stagger before next faction
+    await wait(200);
+  }
+
+  // 300ms pause before summary
+  await wait(300);
+
+  const hexCode = _randomHex8();
+  summaryArea.innerHTML =
+    '\nALIGNEMENT: NEUTRE\n' +
+    'MATRICULE: ' + hexCode;
+  summaryArea.style.opacity = '1';
+
+  // Hold for readability
+  await wait(900);
+
+  // Fade out entire faction matrix panel
+  wrap.style.transition = 'opacity 0.4s ease';
+  wrap.style.opacity = '0';
+  await wait(420);
+  wrap.remove();
+}
+
+// =============================================================================
 // Phase 2 — CELTOS pixel logo (blocks fall from top)
 // =============================================================================
 
@@ -569,6 +700,7 @@ export async function runCeltOSIntro(): Promise<void> {
     await Promise.race([
       (async () => {
         await runPhase1(container);
+        await runFactionMatrixScan(container);
         const logoWrap = await runPhase2(container);
         await runPhase3(container, logoWrap);
       })(),
