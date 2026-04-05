@@ -142,6 +142,18 @@ function sanitizeOption(raw: Record<string, unknown>, index: number): import('..
   return { verb, text, field, effects };
 }
 
+// --- Biome atmosphere hints (short English one-liners injected as ATMOSPHERE: in system prompt) ---
+const BIOME_ATMOSPHERE: Readonly<Record<string, string>> = {
+  cotes_sauvages:    'salt-drenched cliffs where the sea swallows ancient names',
+  foret_broceliande: 'ancient trees murmur forgotten names in the language of moss and stone',
+  marais_korrigans:  'green mist coils between rotting reeds where laughter has no source',
+  landes_bruyere:    'violet heather shivers under a sky stretched thin as memory',
+  cercles_pierres:   'ley-lines hum beneath bare feet and moonlight pools in the cup-marks',
+  villages_celtes:   'forge-smoke and herb-scent weave through the laughter of children chasing geese',
+  collines_dolmens:  'ancestors breathe upward through the earth; the grass bends without wind',
+  iles_mystiques:    'silver fog erases the horizon and the seals watch with human eyes',
+} as const;
+
 // --- Config ---
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -211,10 +223,27 @@ export class GroqAdapter {
     const atmosphere = biomeAtmosphere[biome] ?? 'Paysage celtique mysterieux de Bretagne.';
 
     // C216: richer Celtic lore context — factions, ogham runes, sacred verbs, 2nd-person narrative.
+    // C250: faction sacred verbs + Celtic proper nouns + physical sensation rules + biome atmosphere hint.
     // Three-attempt retry with temperature escalation: 0.7 (strict) → 0.9 → 1.0 (creative fallback).
+    const biomeAtmosphereHint = BIOME_ATMOSPHERE[biome] ?? 'a mysterious Celtic landscape steeped in old magic';
     const systemPrompt = `Tu es le narrateur du jeu MERLIN (Bretagne celtique). Atmosphere: ${atmosphere}
+ATMOSPHERE: ${biomeAtmosphereHint}
 FACTIONS: Druides(sagesse/nature), Anciens(ancetres/temps), Korrigans(chaos/ruse), Niamh(eau/guerison), Ankou(mort/transformation).
 RUNES OGHAM: Beith=nouveau-depart, Huath=epreuve, Ruis=metamorphose, Sail=intuition, Muin=secret, Gort=quete.
+
+VERBES SACRES PAR FACTION (utiliser ces verbes dans les textes des options quand la faction est concernee):
+- Druides: entrelacer, purifier, ancrer, eveiller, tisser, reveler, proteger
+- Anciens: souvenir, oublier, figer, traverser, contempler, inscrire, preserver
+- Korrigans: tromper, derober, perturber, rire, transformer, devier, enchevetrer
+- Niamh: guerir, apaiser, chanter, rayonner, offrir, benir, restaurer
+- Ankou: liberer, traverser, accepter, transformer, effacer, moissonner, renouveler
+
+REGLES DE STYLE:
+- Utiliser des noms propres celtiques: Broceliande, Avalon, Tir na nOg, Nemeton, Sidh, Aes Sidhe, Dagda, Brigid, Cernunnos
+- Les titres de cartes doivent faire 2-4 mots, poetiques, sans termes generiques heroic-fantasy
+- Les descriptions doivent evoquer des sensations physiques (sons, textures, odeurs)
+- Les effets doivent sembler des consequences naturelles, pas des mecaniques de jeu
+
 REGLE ABSOLUE: Reponds UNIQUEMENT avec du JSON valide. Pas de markdown. Commence par { et termine par }.
 
 Structure JSON exacte:
