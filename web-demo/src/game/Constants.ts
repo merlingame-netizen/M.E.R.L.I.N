@@ -38,7 +38,13 @@ export const ANAM_REWARDS = {
   faction_honored: 5,
   faction_threshold: 80,
   death_cap_cards: 30,
+  /** Bonus Anam added on the first 3 runs to unlock a first Ogham faster. */
+  starter_bonus: 20,
+  starter_runs: 3,
 } as const;
+
+/** Minimum Anam earned on any run, even if the player dies early (floor prevents near-zero frustration). */
+export const ANAM_DEATH_FLOOR = 5;
 
 // --- MULTIPLIER TABLE ---
 export interface MultiplierEntry {
@@ -49,11 +55,11 @@ export interface MultiplierEntry {
 }
 
 export const MULTIPLIER_TABLE: readonly MultiplierEntry[] = [
-  { range_min: 0, range_max: 20, label: 'echec_critique', factor: -1.5 },
-  { range_min: 21, range_max: 50, label: 'echec', factor: -1.0 },
-  { range_min: 51, range_max: 79, label: 'reussite_partielle', factor: 0.5 },
-  { range_min: 80, range_max: 94, label: 'reussite', factor: 1.0 },
-  { range_min: 95, range_max: 100, label: 'reussite_critique', factor: 1.5 },
+  { range_min: 0,  range_max: 20,  label: 'echec_critique',    factor: 0.0 },
+  { range_min: 21, range_max: 50,  label: 'echec',             factor: 0.0 },
+  { range_min: 51, range_max: 79,  label: 'reussite_partielle', factor: 0.5 },
+  { range_min: 80, range_max: 94,  label: 'reussite',          factor: 1.0 },
+  { range_min: 95, range_max: 100, label: 'reussite_critique',  factor: 1.5 },
 ] as const;
 
 export function getMultiplier(score: number): number {

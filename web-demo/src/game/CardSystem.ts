@@ -42,11 +42,17 @@ export function verbToField(verb: string): string {
   return 'esprit';
 }
 
-/** Picks a minigame appropriate for a lexical field. */
+/** Anti-repeat: last minigame played, to avoid consecutive identical minigames. */
+let _lastMinigame = '';
+
+/** Picks a minigame appropriate for a lexical field, avoiding consecutive repeats. */
 export function pickMinigame(field: string): string {
   const options = FIELD_MINIGAMES[field];
   if (!options || options.length === 0) return 'traces';
-  return pick(options);
+  const available = options.length > 1 ? options.filter(m => m !== _lastMinigame) : options;
+  const picked = pick(available.length > 0 ? available : options);
+  _lastMinigame = picked;
+  return picked;
 }
 
 // --- FastRoute template loader (T043: externalized to public/data/cards.json) ---

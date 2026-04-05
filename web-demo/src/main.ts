@@ -9,12 +9,12 @@ import { CameraRail } from './engine/CameraRail';
 // Static import was loading 442 lines of Three.js scene code at boot, inflating the initial
 // bundle. Dynamic import defers it to first run, reducing cold-start gzip by ~5KB.
 import { store } from './game/Store';
-import { getMultiplier, getMultiplierLabel } from './game/Constants';
+import { getMultiplier, getMultiplierLabel, ANAM_REWARDS, ANAM_DEATH_FLOOR, FACTIONS, type FactionId } from './game/Constants';
 import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardSystem';
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
-import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain, showOghamActivated, showFactionDelta } from './ui/HUD';
+import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain, showOghamActivated, showFactionDelta, showHudToast } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
@@ -1193,6 +1193,29 @@ async function main(): Promise<void> {
   }
 }
 
+/** Award structured end-of-run Anam bonus (base + victory + starter + death floor). */
+function awardRunEndAnam(ending: string): void {
+  const s = store.getState();
+  const run = s.run;
+  const meta = s.meta;
+  let bonus = ANAM_REWARDS.base;
+  if (ending === 'victory') bonus += ANAM_REWARDS.victory_bonus;
+  // Faction honored bonus
+  for (const f of FACTIONS) {
+    if ((run.factions[f as FactionId] ?? 0) >= ANAM_REWARDS.faction_threshold) {
+      bonus += ANAM_REWARDS.faction_honored;
+    }
+  }
+  // Starter bonus for first N runs
+  if (meta.totalRuns < ANAM_REWARDS.starter_runs) bonus += ANAM_REWARDS.starter_bonus;
+  // Death floor: ensure at least ANAM_DEATH_FLOOR total Anam for this run
+  if (ending.startsWith('death')) {
+    const earnedSoFar = run.anamThisRun + bonus;
+    if (earnedSoFar < ANAM_DEATH_FLOOR) bonus += ANAM_DEATH_FLOOR - earnedSoFar;
+  }
+  if (bonus > 0) s.addAnam(bonus);
+}
+
 async function gameLoop(
   sceneManager: SceneManager,
   rail: CameraRail,
@@ -1217,6 +1240,7 @@ async function gameLoop(
   };
   while (state().run.active) {
     if (++_loopSafety > 60) { // C104: hard ceiling
+      awardRunEndAnam('safety');
       state().endRun('safety');
       saveRunEnd();
       playSound('end');
@@ -1245,6 +1269,9 @@ async function gameLoop(
       1;
     state().drainLifeScaled();
     flashLifeDamage(); // C182: HUD flash on life drain
+    // Announce drain escalation once when threshold is first crossed
+    if (_cardsAfterIncrement === 15) showHudToast('Drain intensifie — -2 PV/carte');
+    if (_cardsAfterIncrement === 25) showHudToast('Drain critique — -3 PV/carte');
     // FIX2: drain toast — brief CRT notification so the player understands the life drop
     {
       const drainToast = document.createElement('div');
@@ -1269,6 +1296,7 @@ async function gameLoop(
 
     // 3. Check death after drain
     if (state().checkDeath()) {
+      awardRunEndAnam('death_drain');
       state().endRun('death_drain');
       saveRunEnd();
       playSound('end');
@@ -1433,6 +1461,7 @@ async function gameLoop(
 
     // 9. Check death after effects
     if (state().checkDeath()) {
+      awardRunEndAnam('death_effects');
       state().endRun('death_effects');
       saveRunEnd();
       playSound('end');
@@ -1442,6 +1471,7 @@ async function gameLoop(
 
     // 10a. Check 30-card limit (T046)
     if (state().run.cardsPlayed >= 30) {
+      awardRunEndAnam('cards_limit');
       state().endRun('cards_limit');
       saveRunEnd();
       playSound('end');
@@ -1451,6 +1481,7 @@ async function gameLoop(
 
     // 10b. Check victory condition (rail complete + min cards)
     if (state().run.cardsPlayed >= 25 && rail.isComplete()) {
+      awardRunEndAnam('victory');
       state().endRun('victory');
       saveRunEnd();
       playSound('end');

@@ -122,7 +122,7 @@ function buildFactionPanel(): void {
     row.appendChild(label);
 
     const barBg = document.createElement('div');
-    barBg.style.cssText = 'width:80px;height:5px;background:rgba(51,255,102,0.06);border:1px solid rgba(51,255,102,0.15);border-radius:0;overflow:hidden;';
+    barBg.style.cssText = 'width:100px;height:8px;background:rgba(51,255,102,0.15);border:1px solid rgba(51,255,102,0.25);border-radius:0;overflow:hidden;';
 
     const barFill = document.createElement('div');
     barFill.id = `faction-fill-${faction}`;
@@ -1249,4 +1249,29 @@ export function updateDangerVignette(life: number, maxLife: number): void {
 export function teardownDangerVignette(): void {
   document.getElementById('hud-danger-vignette')?.remove();
   document.getElementById('hud-vignette-style')?.remove();
+}
+
+/**
+ * Show a brief HUD toast beneath the life bar — amber/orange color to distinguish
+ * from green CeltOS messages. Used for drain stage escalation announcements.
+ */
+export function showHudToast(text: string, durationMs = 3000): void {
+  const toast = document.createElement('div');
+  toast.textContent = `> ${text}`;
+  toast.style.cssText = [
+    'position:fixed;top:70px;left:50%;transform:translateX(-50%);',
+    'background:rgba(30,15,0,0.88);border:1px solid rgba(220,140,30,0.5);',
+    'border-left:2px solid rgba(220,140,30,0.9);',
+    'color:rgba(220,160,50,0.95);font-family:Courier New,monospace;',
+    'font-size:10px;letter-spacing:2px;padding:4px 16px;',
+    'z-index:50;pointer-events:none;',
+    'opacity:0;transition:opacity 0.2s;',
+  ].join('');
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.5s';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 520);
+  }, durationMs);
 }
