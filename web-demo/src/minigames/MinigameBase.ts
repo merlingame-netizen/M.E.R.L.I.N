@@ -205,6 +205,48 @@ function showOutcomeOverlay(container: HTMLElement, score: number, level: Outcom
   });
 }
 
+// ── GO! flash overlay ─────────────────────────────────────────────────────────
+
+function showGoFlash(container: HTMLElement): Promise<void> {
+  return new Promise(resolve => {
+    const flash = document.createElement('div');
+    flash.textContent = 'GO!';
+    flash.style.cssText = [
+      'position:absolute', 'inset:0',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'font-family:Courier New,monospace',
+      'font-size:64px', 'font-weight:bold',
+      'color:#33ff66',
+      'text-shadow:0 0 20px rgba(51,255,102,0.8)',
+      'pointer-events:none',
+      'z-index:50',
+      'animation:go-flash-anim 0.7s ease-out forwards',
+    ].join(';');
+
+    // Inject keyframes once
+    if (!document.getElementById('go-flash-style')) {
+      const s = document.createElement('style');
+      s.id = 'go-flash-style';
+      s.textContent = `@keyframes go-flash-anim {
+        0%   { opacity:0; transform:scale(0.5); }
+        30%  { opacity:1; transform:scale(1.1); }
+        60%  { opacity:1; transform:scale(1.0); }
+        100% { opacity:0; transform:scale(1.3); }
+      }`;
+      document.head.appendChild(s);
+    }
+
+    if (!['relative', 'absolute', 'fixed', 'sticky'].includes(getComputedStyle(container).position)) {
+      container.style.position = 'relative';
+    }
+    container.appendChild(flash);
+    setTimeout(() => {
+      flash.remove();
+      resolve();
+    }, 700);
+  });
+}
+
 // ── Abstract base ─────────────────────────────────────────────────────────────
 
 export abstract class MinigameBase {
@@ -280,6 +322,9 @@ export abstract class MinigameBase {
       this.resolve = resolve;
       this.startTime = performance.now();
       this.setup();
+      // C248: GO! flash overlay — fire-and-forget, does not delay minigame start
+      sfx('minigame_start');
+      showGoFlash(this.container); // intentionally not awaited
       this.render();
     });
   }
