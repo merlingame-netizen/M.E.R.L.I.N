@@ -1456,6 +1456,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let alchemyBubbles477: { mesh: Mesh; y: number; maxY: number; speed: number; active: boolean }[] = []
   let alchemyBubbleTimer477: number = 1.5
 
+  // C483 — mechanical brass telescope
+  let telescopeGroup483: Group | null = null
+  let t483: number = 0
+  let telescopeLensMat483: MeshStandardMaterial | null = null
+  let telescopePulse483: number = 0
+  let telescopePulseTimer483: number = 25 + Math.random() * 15
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -3135,6 +3142,73 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(alchemyGroup477)
   }
 
+  // C483 — mechanical brass telescope
+  {
+    const brassMat = new MeshStandardMaterial({ color: 0x8b6914, metalness: 0.8, roughness: 0.3 })
+    telescopeLensMat483 = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.4,
+      transparent: true,
+      opacity: 0.7,
+    })
+
+    telescopeGroup483 = new Group()
+    // Position on table, tilted 30° upward
+    telescopeGroup483.position.set(3, 0.8, 1)
+    telescopeGroup483.rotation.x = -0.52 // ~30° up
+
+    // Main barrel
+    const barrel = new Mesh(new CylinderGeometry(0.12, 0.16, 1.2, 8), brassMat)
+    barrel.rotation.z = Math.PI * 0.5 // lay horizontal
+    telescopeGroup483.add(barrel)
+
+    // Eyepiece (back end, local x = -0.75)
+    const eyepiece = new Mesh(new CylinderGeometry(0.1, 0.12, 0.3, 8), brassMat)
+    eyepiece.rotation.z = Math.PI * 0.5
+    eyepiece.position.x = -0.75
+    telescopeGroup483.add(eyepiece)
+
+    // Objective lens housing (front end, local x = +0.75)
+    const objHousing = new Mesh(new CylinderGeometry(0.18, 0.16, 0.15, 8), brassMat)
+    objHousing.rotation.z = Math.PI * 0.5
+    objHousing.position.x = 0.75
+    telescopeGroup483.add(objHousing)
+
+    // Lens glass disc at front
+    const lens = new Mesh(new CylinderGeometry(0.15, 0.15, 0.04, 8), telescopeLensMat483)
+    lens.rotation.z = Math.PI * 0.5
+    lens.position.x = 0.84
+    telescopeGroup483.add(lens)
+
+    // Brass ring bands along barrel
+    const ringPositions = [-0.35, 0, 0.35]
+    ringPositions.forEach((px) => {
+      const ring = new Mesh(new TorusGeometry(0.15, 0.02, 4, 8), brassMat)
+      ring.rotation.y = Math.PI * 0.5
+      ring.position.x = px
+      telescopeGroup483!.add(ring)
+    })
+
+    // Tripod — 3 legs spreading outward
+    const tripodAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3]
+    tripodAngles.forEach((angle) => {
+      const leg = new Mesh(
+        new CylinderGeometry(0.02, 0.02, 0.8, 4),
+        new MeshStandardMaterial({ color: 0x8b6914, metalness: 0.7, roughness: 0.4 })
+      )
+      // Tilt each leg outward from the barrel's hinge point
+      const spread = 0.35
+      leg.position.set(-0.3, -0.5, 0)
+      leg.rotation.z = 0.45 * Math.cos(angle)
+      leg.position.x = -0.3 + spread * Math.cos(angle)
+      leg.position.z = spread * Math.sin(angle)
+      telescopeGroup483!.add(leg)
+    })
+
+    scene.add(telescopeGroup483)
+  }
+
   // C438 — potion bottle shelf
   {
     _potionShelfGroup = new Group();
@@ -4711,6 +4785,32 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (b.y > b.maxY || mat477.opacity <= 0) b.active = false;
     });
 
+    // C483 — mechanical brass telescope update
+    if (telescopeGroup483 && telescopeLensMat483) {
+      t483 += dt
+      // Pan left-right and subtle elevation oscillation
+      telescopeGroup483.rotation.y = Math.sin(t483 * 0.3) * 0.6
+      telescopeGroup483.rotation.x = -0.52 + Math.sin(t483 * 0.15) * 0.15
+
+      // Stellar detection pulse timer
+      telescopePulseTimer483 -= dt
+      if (telescopePulseTimer483 <= 0) {
+        telescopePulse483 = 0.5
+        telescopePulseTimer483 = 25 + Math.random() * 15
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }))
+      }
+
+      // Fade in / fade out of lens glow
+      if (telescopePulse483 > 0) {
+        telescopePulse483 -= dt
+        const pulse = Math.max(0, telescopePulse483)
+        const t = pulse / 0.5 // 1 at start, 0 at end
+        telescopeLensMat483.emissiveIntensity = 0.4 + 1.6 * Math.sin(t * Math.PI)
+      } else {
+        telescopeLensMat483.emissiveIntensity = 0.4
+      }
+    }
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -5207,6 +5307,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     alchemyLiquidMats477 = [];
     alchemyBubbles477 = [];
+    // C483 — mechanical brass telescope dispose
+    if (telescopeGroup483) {
+      telescopeGroup483.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(telescopeGroup483);
+      telescopeGroup483 = null;
+    }
+    telescopeLensMat483 = null;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
