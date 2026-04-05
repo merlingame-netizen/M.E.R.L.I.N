@@ -95,6 +95,24 @@ function ensureCeltOSStyles(): void {
       pointer-events: none;
       z-index: 10;
     }
+    #celtos-scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.15) 0px,
+        rgba(0,0,0,0.15) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      animation: scanline-scroll 8s linear infinite;
+    }
+    @keyframes scanline-scroll {
+      from { background-position: 0 0; }
+      to   { background-position: 0 24px; }
+    }
     @keyframes celtos-glitch {
       0%, 94%, 100% { transform: none; opacity: 1; }
       95%  { transform: translate(-2px, 0) skewX(-3deg); opacity: 0.85; }
@@ -107,8 +125,34 @@ function ensureCeltOSStyles(): void {
   document.head.appendChild(s);
 }
 
+/** Inject a short green glitch flash div into `container`, auto-removed after `durationMs`. */
+function _glitchFlash(container: HTMLElement, durationMs: number): void {
+  const h = 10 + Math.random() * 30; // 10–40% of container height
+  const t = Math.random() * (100 - h);
+  const div = document.createElement('div');
+  div.style.cssText = [
+    'position:absolute;left:0;width:100%;pointer-events:none;',
+    `top:${t.toFixed(1)}%;height:${h.toFixed(1)}%;`,
+    'background:rgba(51,255,102,0.04);',
+    'z-index:2;',
+  ].join('');
+  container.appendChild(div);
+  setTimeout(() => { div.remove(); }, durationMs);
+}
+
+/** Apply a translateX glitch to `el`, reset after `durationMs`. */
+function _glitchShift(el: HTMLElement, px: number, durationMs: number): void {
+  el.style.transform = `translateX(${px}px)`;
+  setTimeout(() => { el.style.transform = ''; }, durationMs);
+}
+
 async function runPhase1(container: HTMLDivElement): Promise<void> {
   _ensureBlinkStyle();
+
+  // Scrolling scanline overlay behind boot text
+  const scanlineDiv = document.createElement('div');
+  scanlineDiv.id = 'celtos-scanlines';
+  container.appendChild(scanlineDiv);
 
   const lineArea = document.createElement('div');
   lineArea.style.cssText = [
@@ -141,7 +185,31 @@ async function runPhase1(container: HTMLDivElement): Promise<void> {
   cursor.style.cssText =
     'animation:crt-cursor-blink 0.8s step-end infinite;margin-left:2px;';
 
+  // Random glitch interval — active during lines 3-10 (indices 2-9)
+  let glitchIntervalId: ReturnType<typeof setInterval> | null = null;
+
+  const startGlitchInterval = (): void => {
+    glitchIntervalId = setInterval(() => {
+      if (Math.random() < 0.15) {
+        _glitchShift(container, 2, 80);
+        _glitchFlash(container, 80);
+      }
+    }, 800);
+  };
+
+  const stopGlitchInterval = (): void => {
+    if (glitchIntervalId !== null) {
+      clearInterval(glitchIntervalId);
+      glitchIntervalId = null;
+    }
+  };
+
   for (let i = 0; i < BOOT_LINES.length; i++) {
+    // Start glitch interval when entering the 3-10 range (0-based index 2)
+    if (i === 2) startGlitchInterval();
+    // Stop when leaving that range
+    if (i === 10) stopGlitchInterval();
+
     const line = document.createElement('div');
     const text = BOOT_LINES[i] ?? '';
     line.style.opacity = '0';
@@ -171,11 +239,46 @@ async function runPhase1(container: HTMLDivElement): Promise<void> {
     }
   }
 
+  // Ensure glitch interval is cleared (safety — in case BOOT_LINES.length <= 10)
+  stopGlitchInterval();
+
   // After last line, leave cursor visible briefly
   const lastLine = lineArea.lastElementChild as HTMLElement | null;
   if (lastLine) lastLine.appendChild(cursor);
   await wait(300);
   if (cursor.parentNode) cursor.parentNode.removeChild(cursor);
+
+  // Final reveal glitch sequence — 3 rapid flashes over 300ms
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'transition' } }));
+
+  // Flash 1: shift right
+  _glitchShift(container, 3, 80);
+  _glitchFlash(container, 80);
+  await wait(100);
+
+  // Flash 2: shift left
+  _glitchShift(container, -3, 80);
+  _glitchFlash(container, 80);
+  await wait(100);
+
+  // Flash 3: shift right again
+  _glitchShift(container, 3, 80);
+  _glitchFlash(container, 80);
+  await wait(100);
+
+  // Green flash overlay for 150ms
+  const greenFlash = document.createElement('div');
+  greenFlash.style.cssText = [
+    'position:absolute;inset:0;pointer-events:none;',
+    'background:rgba(51,255,102,0.08);',
+    'z-index:3;',
+  ].join('');
+  container.appendChild(greenFlash);
+  await wait(150);
+  greenFlash.remove();
+
+  // Ensure container is back to normal transform after glitch shifts
+  container.style.transform = '';
 
   // Flash all lines to bright phosphor, then amber
   await wait(100);
@@ -195,6 +298,9 @@ async function runPhase1(container: HTMLDivElement): Promise<void> {
   lineArea.style.opacity = '0';
   await wait(420);
   lineArea.remove();
+
+  // Remove scanline overlay when phase ends
+  scanlineDiv.remove();
 }
 
 // =============================================================================
