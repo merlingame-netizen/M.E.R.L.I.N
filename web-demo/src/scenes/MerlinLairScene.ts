@@ -598,20 +598,13 @@ interface CauldronSystem {
   positions: Float32Array;
   velocities: Float32Array;
   lifetimes: Float32Array;
-  geo: BufferGeometry;
+  geoGreen: BufferGeometry;
+  geoTeal: BufferGeometry;
   update: (t: number, dt: number) => void;
 }
 
 function createCauldron(scene: Scene): CauldronSystem {
   const ironMat = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6, flatShading: true, emissive: 0x00aa33, emissiveIntensity: 0.0 });
-  const steamMat = new PointsMaterial({
-    color: 0x44cc88,
-    size: 0.12,
-    transparent: true,
-    opacity: 0.55,
-    blending: AdditiveBlending,
-    depthWrite: false,
-  });
 
   const group = new Group();
 
@@ -640,8 +633,12 @@ function createCauldron(scene: Scene): CauldronSystem {
   glow.position.set(2, -3.2, -7);
   group.add(glow);
 
-  // Steam particles
-  const N = 30;
+  // C177: cauldron smoke — 50 particles (was 30), rising smoke with upward drift.
+  // Color split: indices 0-29 = green 0x33ff66, indices 30-49 = blue-teal 0x22aaff.
+  // Two separate BufferGeometries (one per color band) sharing contiguous regions of
+  // the same positions Float32Array — avoids per-vertex color attributes, lower GPU overhead.
+  const N = 50;
+  const N_GREEN = 30;
   const positions = new Float32Array(N * 3);
   const velocities = new Float32Array(N * 3);
   const lifetimes = new Float32Array(N);
@@ -658,10 +655,33 @@ function createCauldron(scene: Scene): CauldronSystem {
     velocities[p * 3 + 2] = (Math.random() - 0.5) * 0.04;
   }
 
-  const geo = new BufferGeometry();
-  geo.setAttribute('position', new BufferAttribute(positions, 3));
-  const steamPoints = new Points(geo, steamMat);
-  group.add(steamPoints);
+  // Green band: particles 0–29 (view into same buffer, no copy)
+  const posGreen = new Float32Array(positions.buffer, 0, N_GREEN * 3);
+  const geoGreen = new BufferGeometry();
+  geoGreen.setAttribute('position', new BufferAttribute(posGreen, 3));
+  const steamMatGreen = new PointsMaterial({
+    color: 0x33ff66,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.55,
+    blending: AdditiveBlending,
+    depthWrite: false,
+  });
+  group.add(new Points(geoGreen, steamMatGreen));
+
+  // Teal band: particles 30–49 (view offset by N_GREEN * 3 floats * 4 bytes/float)
+  const posTeal = new Float32Array(positions.buffer, N_GREEN * 3 * 4, (N - N_GREEN) * 3);
+  const geoTeal = new BufferGeometry();
+  geoTeal.setAttribute('position', new BufferAttribute(posTeal, 3));
+  const steamMatTeal = new PointsMaterial({
+    color: 0x22aaff,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.55,
+    blending: AdditiveBlending,
+    depthWrite: false,
+  });
+  group.add(new Points(geoTeal, steamMatTeal));
 
   const update = (t: number, dt: number): void => {
     // C157: intensity oscillates 0.6-1.4 at 2Hz (= 2*PI*2 rad/s ≈ 12.57)
@@ -678,14 +698,17 @@ function createCauldron(scene: Scene): CauldronSystem {
         velocities[p * 3 + 2] = (Math.random() - 0.5) * 0.04;
       } else {
         positions[p * 3 + 0]! += (velocities[p * 3 + 0] ?? 0) * dt;
+        // C177: rising smoke — upward drift acceleration
+        velocities[p * 3 + 1]! += 0.8 * dt;
         positions[p * 3 + 1]! += (velocities[p * 3 + 1] ?? 0) * dt;
         positions[p * 3 + 2]! += (velocities[p * 3 + 2] ?? 0) * dt;
       }
     }
-    geo.attributes['position']!.needsUpdate = true;
+    geoGreen.attributes['position']!.needsUpdate = true;
+    geoTeal.attributes['position']!.needsUpdate = true;
   };
 
-  return { group, body, glow, positions, velocities, lifetimes, geo, update };
+  return { group, body, glow, positions, velocities, lifetimes, geoGreen, geoTeal, update };
 }
 
 // ── Potion Bottles ────────────────────────────────────────────────────────────
