@@ -33,6 +33,7 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
 const SUMMARY_OVERLAY_ID = 'run-summary-overlay';
 const SCANLINE_KEYFRAME_ID = 'run-summary-scanline-kf';
 const KNOT_STYLE_ID = 'run-summary-knot-style';
+const OGHAM_HIGHLIGHT_STYLE_ID = 'ogham-highlight-style-369';
 
 // C86: module-level anchor for the pending restart Promise resolve.
 // showRunSummary() can be re-entered (e.g. run ends while overlay already shown
@@ -363,6 +364,68 @@ function animateFactionBars(
       };
       requestAnimationFrame(tick);
     }, delay);
+  });
+}
+
+/**
+ * C369: Inject ogham highlight CSS once — idempotent via id guard.
+ * CeltOS color law: green glow only, zero amber/orange/yellow/white/blue.
+ */
+function ensureOghamHighlightStyle369(): void {
+  if (document.getElementById(OGHAM_HIGHLIGHT_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = OGHAM_HIGHLIGHT_STYLE_ID;
+  style.textContent = `
+    .ogham-earned-highlight {
+      box-shadow: 0 0 8px rgba(51,255,102,0.5);
+      border: 1px solid rgba(51,255,102,0.4) !important;
+      border-radius: 3px;
+      animation: ogham-earn-pop 0.4s ease;
+    }
+    @keyframes ogham-earn-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .ogham-earned-tick {
+      color: #33ff66;
+      font-size: 14px;
+      opacity: 0;
+      animation: tick-fadein 0.3s ease forwards;
+    }
+    @keyframes tick-fadein {
+      from { opacity: 0; transform: translateX(-4px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/**
+ * C369: Highlight oghams used during the run, one by one in sequence.
+ * Each matching row gets a green glow border, a scale pop animation, and a ✓ tick.
+ * Sequence plays at 300ms per ogham starting from delayMs after call.
+ */
+function highlightEarnedOghams(
+  oghamsUsed: string[],
+  containerEl: HTMLElement,
+  delayMs: number,
+): void {
+  ensureOghamHighlightStyle369();
+  oghamsUsed.forEach((oghamId, i) => {
+    setTimeout(() => {
+      const rows = containerEl.querySelectorAll('[data-ogham], .ogham-row, .summary-ogham');
+      rows.forEach((row) => {
+        const el = row as HTMLElement;
+        if (el.dataset['ogham'] === oghamId || el.textContent?.includes(oghamId)) {
+          el.classList.add('ogham-earned-highlight');
+          const tick = document.createElement('span');
+          tick.textContent = ' \u2713';
+          tick.className = 'ogham-earned-tick';
+          row.appendChild(tick);
+        }
+      });
+    }, delayMs + i * 300);
   });
 }
 
@@ -729,6 +792,61 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     panel.appendChild(promisesEl);
   }
 
+  // ── C369: Oghams équipés cette quête — sequential highlight after count-up ──
+  const oghamsEquipped = state.meta.oghamsEquipped as readonly string[];
+  let oghamSectionEl: HTMLElement | null = null;
+  if (oghamsEquipped.length > 0) {
+    const divOgham = document.createElement('hr');
+    divOgham.style.cssText = 'border:none;border-top:1px solid rgba(51,255,102,0.12);margin-bottom:16px;margin-top:4px;';
+    panel.appendChild(divOgham);
+
+    const oghamHeader = document.createElement('div');
+    oghamHeader.style.cssText = [
+      'font-size:10px',
+      'text-transform:uppercase',
+      'letter-spacing:3px',
+      'color:rgba(51,255,102,0.35)',
+      'margin-bottom:10px',
+      `font-family:'Courier New',monospace`,
+    ].join(';');
+    oghamHeader.textContent = 'OGHAMS UTILISÉS';
+    panel.appendChild(oghamHeader);
+
+    const oghamList = document.createElement('div');
+    oghamList.id = 'run-summary-oghams';
+    oghamList.style.cssText = 'margin-bottom:20px;text-align:left;';
+    oghamSectionEl = oghamList;
+
+    oghamsEquipped.forEach((id) => {
+      const row = document.createElement('div');
+      row.setAttribute('data-ogham', id);
+      row.style.cssText = [
+        'display:flex',
+        'align-items:center',
+        'gap:8px',
+        'margin-bottom:5px',
+        'padding:3px 6px',
+        'font-size:12px',
+        `font-family:'Courier New',monospace`,
+        'color:rgba(51,255,102,0.65)',
+      ].join(';');
+
+      const runeEl = document.createElement('span');
+      runeEl.style.cssText = 'color:rgba(51,255,102,0.4);font-size:11px;';
+      runeEl.setAttribute('aria-hidden', 'true');
+      runeEl.textContent = '\u16AA';
+
+      const nameEl = document.createElement('span');
+      nameEl.textContent = id;
+
+      row.appendChild(runeEl);
+      row.appendChild(nameEl);
+      oghamList.appendChild(row);
+    });
+
+    panel.appendChild(oghamList);
+  }
+
   // ── C167: Restart button with box-shadow hover + SFX ────────────────────────
   const restartBtn = document.createElement('button');
   restartBtn.id = 'run-summary-restart';
@@ -804,6 +922,11 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   // Life remaining — delay 750ms
   setTimeout(() => animateCountUp(lifeValEl, Math.max(0, state.run.life), 800), 750);
 
+  // C369: highlight oghams sequentially after count-up animations complete (~1550ms total)
+  if (oghamSectionEl !== null) {
+    highlightEarnedOghams([...oghamsEquipped], oghamSectionEl, 1600);
+  }
+
   // C87: move focus to restartBtn after DOM insertion — WCAG 2.1 SC 2.1.2 (keyboard reachable on dialog open)
   requestAnimationFrame(() => restartBtn.focus());
 
@@ -821,6 +944,14 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
       if (anamRafHandle !== null) {
         cancelAnimationFrame(anamRafHandle);
         anamRafHandle = null;
+      }
+
+      // C369: clean up ogham highlight classes and tick elements before overlay removal
+      if (oghamSectionEl !== null) {
+        oghamSectionEl.querySelectorAll('.ogham-earned-highlight').forEach((el) => {
+          el.classList.remove('ogham-earned-highlight');
+        });
+        oghamSectionEl.querySelectorAll('.ogham-earned-tick').forEach((el) => el.remove());
       }
 
       // C150/RS-LISTENER-LEAK-01: remove style-mutation listeners before overlay removal
