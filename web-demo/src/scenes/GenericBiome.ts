@@ -379,6 +379,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _eagleWingL: Mesh | null = null;
   let _eagleWingR: Mesh | null = null;
   let _eagleAngle = 0;
+  let _lakeMesh: Mesh | null = null;
+  let _lakeLight: PointLight | null = null;
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
   let plaineObeliskGlowMat: MeshBasicMaterial | null = null;
@@ -391,6 +393,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _auroraBands: Mesh[] = [];
   let _auroraTime = 0;
   let _deadTreeGroup: Group | null = null;
+  let _templeGroup: Group | null = null;
   const _altarFireMeshes: Mesh[] = [];
   let _altarFireLight: PointLight | null = null;
   const _heatherMeshes: Mesh[] = [];
@@ -851,6 +854,41 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _eagleGroup = eagleGroup;
     _eagleWingL = wingL;
     _eagleWingR = wingR;
+
+    // Frozen lake surface
+    const lakeGeo = new PlaneGeometry(18, 12);
+    const lakeMat = new MeshBasicMaterial({
+      color: 0x0a1a18,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+      side: DoubleSide,
+    });
+    const lakeMesh = new Mesh(lakeGeo, lakeMat);
+    lakeMesh.rotation.x = -Math.PI / 2;
+    lakeMesh.position.set(0, -0.02, -22);
+    group.add(lakeMesh);
+    _lakeMesh = lakeMesh;
+
+    // Ice crack lines
+    const crackMat = new MeshBasicMaterial({ color: 0x1a2e2a });
+    const crackDefs: [number, number, number, number, number, number, number][] = [
+      [0.03, 0.01, 4.2, -2, 0.01, -20, 0.3],
+      [0.03, 0.01, 3.8,  3, 0.01, -23, -0.2],
+      [0.03, 0.01, 2.9, -5, 0.01, -24, 0.7],
+    ];
+    for (const [w, h, d, cx, cy, cz, ry] of crackDefs) {
+      const crack = new Mesh(new BoxGeometry(w, h, d), crackMat);
+      crack.position.set(cx, cy, cz);
+      crack.rotation.y = ry;
+      group.add(crack);
+    }
+
+    // Subtle shimmer point light
+    const lakeLight = new PointLight(0x33ff66, 0.05, 12);
+    lakeLight.position.set(0, 0.5, -22);
+    group.add(lakeLight);
+    _lakeLight = lakeLight;
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -1277,6 +1315,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         _eagleWingR.rotation.z = 0.3 - Math.sin(t * 1.8) * 0.15;
       }
     }
+    // Monts brumeux — frozen lake shimmer
+    if (_lakeMesh !== null) {
+      const t = Date.now() * 0.001;
+      (_lakeMesh.material as MeshBasicMaterial).opacity = 0.50 + Math.sin(t * 0.25) * 0.05;
+    }
+    if (_lakeLight !== null) {
+      const t = Date.now() * 0.001;
+      _lakeLight.intensity = 0.03 + Math.sin(t * 0.4) * 0.02;
+    }
   };
 
   const dispose = (): void => {
@@ -1294,6 +1341,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _eagleGroup = null;
     _eagleWingL = null;
     _eagleWingR = null;
+    _lakeMesh = null;
+    _lakeLight = null;
     _deadTreeGroup = null;
     _heatherMeshes.length = 0;
     group.traverse((obj) => {
