@@ -7,6 +7,23 @@ export type SceneState = 'BOOT' | 'MENU' | 'LAIR' | 'GAME';
 
 const TRANSITION_RUNES = ['ᚁ','ᚂ','ᚃ','ᚄ','ᚅ','ᚆ','ᚇ','ᚈ','ᚉ','ᚋ','ᚌ','ᚍ','ᚎ'];
 
+interface BiomeTransitionData {
+  runes: string[];
+  color: string;
+  label: string;
+}
+
+const BIOME_TRANSITION_DATA: Record<string, BiomeTransitionData> = {
+  'cotes_sauvages':    { runes: ['ᚉ','ᚊ','ᚋ'], color: 'rgba(51,200,180,0.85)',  label: 'CÔTES SAUVAGES' },
+  'foret_broceliande': { runes: ['ᚁ','ᚂ','ᚃ'], color: 'rgba(51,255,102,0.85)',  label: 'FORÊT DE BROCÉLIANDE' },
+  'plaine_druides':    { runes: ['ᚄ','ᚅ','ᚆ'], color: 'rgba(80,255,120,0.85)',  label: 'PLAINE DES DRUIDES' },
+  'landes_bruyere':    { runes: ['ᚇ','ᚈ','ᚉ'], color: 'rgba(40,180,90,0.85)',   label: 'LANDES DE BRUYÈRE' },
+  'cercles_pierres':   { runes: ['ᚊ','ᚋ','ᚌ'], color: 'rgba(100,255,150,0.85)', label: 'CERCLES DE PIERRES' },
+  'marais_korrigans':  { runes: ['ᚍ','ᚎ','ᚏ'], color: 'rgba(30,140,80,0.85)',   label: 'MARAIS DES KORRIGANS' },
+  'monts_brumeux':     { runes: ['ᚐ','ᚑ','ᚒ'], color: 'rgba(60,180,160,0.85)',  label: 'MONTS BRUMEUX' },
+  'vallee_anciens':    { runes: ['ᚁ','ᚌ','ᚒ'], color: 'rgba(70,220,130,0.85)',  label: 'VALLÉE DES ANCIENS' },
+};
+
 interface TransitionOverlay {
   el: HTMLDivElement;
 }
@@ -77,8 +94,11 @@ export function transition(
  *  1. Brief phosphor-green flash (40ms) — CRT capacitor discharge
  *  2. Smooth 0.3s fade to full black
  * Black is held until revealFromBlack().
+ *
+ * @param biomeKey  Optional biome identifier. When provided and recognized,
+ *                  uses biome-specific rune, color, and label.
  */
-export function cutToBlack(): void {
+export function cutToBlack(biomeKey?: string): void {
   sfx('beep'); // C185: CRT cut feedback
   const { el } = getOverlay();
 
@@ -100,29 +120,61 @@ export function cutToBlack(): void {
       }, 320);
     });
 
-    // Show a random Celtic rune briefly on the black screen (fire-and-forget)
-    const rune = TRANSITION_RUNES[Math.floor(Math.random() * TRANSITION_RUNES.length)];
+    // Resolve biome data (or fall back to defaults)
+    const biomeData = biomeKey != null ? BIOME_TRANSITION_DATA[biomeKey] : undefined;
+    const runePool = biomeData ? biomeData.runes : TRANSITION_RUNES;
+    const runeColor = biomeData ? biomeData.color : 'rgba(51,255,102,0.6)';
+    const shadowColor = biomeData ? biomeData.color : 'rgba(51,255,102,0.8)';
+    const rune = runePool[Math.floor(Math.random() * runePool.length)];
+
+    // Show rune briefly on the black screen (fire-and-forget)
     const runeEl = document.createElement('div');
     runeEl.textContent = rune;
     runeEl.style.cssText = [
       'position:absolute',
       'inset:0',
       'display:flex',
+      'flex-direction:column',
       'align-items:center',
       'justify-content:center',
+      'gap:16px',
       'font-family:Courier New,monospace',
       'font-size:72px',
-      'color:rgba(51,255,102,0.6)',
-      'text-shadow:0 0 30px rgba(51,255,102,0.8)',
+      `color:${runeColor}`,
+      `text-shadow:0 0 30px ${shadowColor}`,
       'pointer-events:none',
       'opacity:0',
       'transition:opacity 0.3s ease',
     ].join(';');
     el.appendChild(runeEl);
+
+    // Biome label element (only when biome is recognized)
+    let labelEl: HTMLSpanElement | null = null;
+    if (biomeData) {
+      labelEl = document.createElement('span');
+      labelEl.textContent = `— ${biomeData.label} —`;
+      labelEl.style.cssText = [
+        'font:9px Courier New,monospace',
+        'letter-spacing:3px',
+        `color:${biomeData.color}`,
+        'opacity:0',
+        'transition:opacity 0.3s ease',
+        'font-size:9px',
+      ].join(';');
+      runeEl.appendChild(labelEl);
+    }
+
     requestAnimationFrame(() => {
       runeEl.style.opacity = '1';
+      // Fade-in label with 0.15s delay
+      if (labelEl) {
+        setTimeout(() => {
+          if (labelEl) labelEl.style.opacity = '1';
+        }, 150);
+      }
       setTimeout(() => {
         runeEl.style.opacity = '0';
+        if (labelEl) labelEl.style.opacity = '0';
         setTimeout(() => runeEl.remove(), 300);
       }, 600);
     });
