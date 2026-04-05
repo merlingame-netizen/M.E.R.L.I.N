@@ -490,6 +490,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let korrDir394 = 1;
   let korrNextDir394 = 8.0;
 
+  // ── Hermit's mountain cave entrance — monts_brumeux (C398) ───────────────
+  let caveGroup398: Group | null = null;
+  let caveGlowLight398: PointLight | null = null;
+  let caveShadowT398 = -1;
+  let caveNextShadow398 = 10.0;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1689,6 +1695,48 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(clusterGroup);
       crystalGroups366.push(clusterGroup);
     });
+
+    // Hermit's mountain cave entrance (C398)
+    caveGroup398 = new Group();
+    const rockMat398 = new MeshStandardMaterial({ color: 0x1a2a1e, roughness: 0.95 });
+
+    // Cave mouth arch — 3 rough stone blocks forming an arch
+    const leftPillar = new Mesh(new BoxGeometry(0.5, 1.8, 0.4), rockMat398);
+    leftPillar.position.set(-0.65, 0.9, 0);
+    caveGroup398.add(leftPillar);
+
+    const rightPillar = new Mesh(new BoxGeometry(0.5, 1.8, 0.4), rockMat398);
+    rightPillar.position.set(0.65, 0.9, 0);
+    caveGroup398.add(rightPillar);
+
+    const archTop = new Mesh(new BoxGeometry(1.6, 0.55, 0.45), rockMat398);
+    archTop.position.set(0, 1.93, 0);
+    caveGroup398.add(archTop);
+
+    // Cave interior darkness
+    const interiorMat398 = new MeshBasicMaterial({ color: 0x010501, transparent: true, opacity: 0.96, depthWrite: false });
+    const interior398 = new Mesh(new PlaneGeometry(0.95, 1.75), interiorMat398);
+    interior398.position.set(0, 0.88, 0.01);
+    caveGroup398.add(interior398);
+
+    // Inner glow
+    caveGlowLight398 = new PointLight(0x33ff66, 0.08, 4.0);
+    caveGlowLight398.position.set(0, 0.8, -1.5);
+    caveGroup398.add(caveGlowLight398);
+
+    // Icicles hanging above entrance
+    const icicleMat398 = new MeshStandardMaterial({ color: 0x0a2a1a, roughness: 0.2, metalness: 0.3, emissive: new Color(0x0d3310), emissiveIntensity: 0.08, transparent: true, opacity: 0.7 });
+    for (let i = 0; i < 5; i++) {
+      const h398 = 0.15 + Math.random() * 0.2;
+      const icicle398 = new Mesh(new ConeGeometry(0.025, h398, 4), icicleMat398.clone());
+      icicle398.rotation.x = Math.PI; // point down
+      icicle398.position.set(-0.35 + i * 0.18, 1.85, 0.04);
+      caveGroup398.add(icicle398);
+    }
+
+    caveGroup398.position.set(-5, 0, -28);
+    group.add(caveGroup398);
+    caveNextShadow398 = 10.0 + Math.random() * 5.0;
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -2921,6 +2969,24 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       });
     }
+    // Monts brumeux — hermit cave inner glow flicker + shadow event (C398)
+    if (caveGlowLight398) {
+      // Slow flicker (hermit's fire)
+      caveGlowLight398.intensity = 0.06 + Math.sin(montsWindTime * 1.8) * 0.03 + Math.sin(montsWindTime * 3.1) * 0.02;
+
+      // Shadow event (brief dimming = someone passes by)
+      caveNextShadow398 -= dt;
+      if (caveNextShadow398 <= 0 && caveShadowT398 < 0) {
+        caveShadowT398 = 0;
+        caveNextShadow398 = 10.0 + Math.random() * 5.0;
+      }
+      if (caveShadowT398 >= 0) {
+        caveShadowT398 += dt;
+        if (caveShadowT398 < 0.3) caveGlowLight398.intensity *= 0.3;
+        else if (caveShadowT398 < 0.6) caveGlowLight398.intensity *= 0.5;
+        else { caveShadowT398 = -1; }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -2992,6 +3058,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     });
     crystalGroups366 = [];
     crystalLights366 = [];
+    // Hermit cave entrance cleanup (C398)
+    if (caveGroup398) { group.remove(caveGroup398); caveGroup398.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); caveGroup398 = null; }
+    if (caveGlowLight398) { caveGlowLight398.dispose(); caveGlowLight398 = null; }
     _deadTreeGroup = null;
     _templeGroup = null;
     _gateGroup = null;
