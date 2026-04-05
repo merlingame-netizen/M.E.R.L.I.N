@@ -508,6 +508,13 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let altarFireCone407: Mesh | null = null;
   let altarFireLight407: PointLight | null = null;
 
+  // ── Soaring eagle — monts_brumeux (C412) ──────────────────────────────────
+  let eagleGroup412: Group | null = null;
+  let eagleT412 = 0;
+  let eagleWingT412 = 0;
+  let eagleWingL412: Mesh | null = null;
+  let eagleWingR412: Mesh | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1782,6 +1789,59 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     caveGroup398.position.set(-5, 0, -28);
     group.add(caveGroup398);
     caveNextShadow398 = 10.0 + Math.random() * 5.0;
+
+    // ── Soaring eagle (C412) ─────────────────────────────────────────────────
+    const eagle412Mat = new MeshLambertMaterial({ color: 0x0a2a14, flatShading: true });
+    const eagle412WingMat = new MeshLambertMaterial({ color: 0x0d2a14, flatShading: true });
+    eagleGroup412 = new Group();
+
+    // Body — elongated torso
+    const eagleBody412 = new Mesh(new BoxGeometry(0.35, 0.12, 0.55), eagle412Mat);
+    eagleGroup412.add(eagleBody412);
+
+    // Head
+    const eagleHead412 = new Mesh(new SphereGeometry(0.1, 4, 3), eagle412Mat);
+    eagleHead412.position.set(0, 0.05, 0.28);
+    eagleGroup412.add(eagleHead412);
+
+    // Tail — slightly tilted
+    const eagleTail412 = new Mesh(new BoxGeometry(0.18, 0.05, 0.22), eagle412Mat);
+    eagleTail412.position.set(0, -0.02, -0.28);
+    eagleTail412.rotation.x = 0.12;
+    eagleTail412.scale.x = 0.7;
+    eagleGroup412.add(eagleTail412);
+
+    // Left wing
+    const wingL412 = new Mesh(new BoxGeometry(0.9, 0.04, 0.3), eagle412WingMat);
+    wingL412.position.set(-0.62, 0, 0.05);
+    eagleGroup412.add(wingL412);
+    eagleWingL412 = wingL412;
+
+    // Right wing
+    const wingR412 = new Mesh(new BoxGeometry(0.9, 0.04, 0.3), eagle412WingMat);
+    wingR412.position.set(0.62, 0, 0.05);
+    eagleGroup412.add(wingR412);
+    eagleWingR412 = wingR412;
+
+    // Wing tip feathers — left (fan of 3)
+    const featherOffsets: Array<[number, number]> = [[-0.04, 0], [0, 0.06], [0.04, -0.06]];
+    featherOffsets.forEach(([dz, dx]) => {
+      const lf = new Mesh(new BoxGeometry(0.12, 0.03, 0.18), eagle412WingMat);
+      lf.position.set(-1.12 + dx, 0, 0.05 + dz);
+      lf.rotation.z = 0.08;
+      eagleGroup412!.add(lf);
+    });
+
+    // Wing tip feathers — right (mirrored)
+    featherOffsets.forEach(([dz, dx]) => {
+      const rf = new Mesh(new BoxGeometry(0.12, 0.03, 0.18), eagle412WingMat);
+      rf.position.set(1.12 - dx, 0, 0.05 + dz);
+      rf.rotation.z = -0.08;
+      eagleGroup412!.add(rf);
+    });
+
+    eagleGroup412.position.set(4, 11, -15);
+    group.add(eagleGroup412);
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -3028,6 +3088,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       });
     }
+    // Monts brumeux — soaring eagle slow banking circle + wing flap (C412)
+    if (eagleGroup412) {
+      eagleT412 += dt * 0.18;
+      eagleWingT412 += dt * 0.9;
+      const orbitR = 6.0;
+      const cx = 0, cz = -20;
+      eagleGroup412.position.x = cx + Math.cos(eagleT412) * orbitR;
+      eagleGroup412.position.z = cz + Math.sin(eagleT412) * orbitR;
+      eagleGroup412.position.y = 11 + Math.sin(eagleT412 * 2.3) * 0.8;
+      eagleGroup412.rotation.y = -(eagleT412 + Math.PI / 2);
+      eagleGroup412.rotation.z = Math.sin(eagleT412) * 0.25;
+      const flapAngle = Math.sin(eagleWingT412) * 0.18;
+      if (eagleWingL412) eagleWingL412.rotation.z = flapAngle;
+      if (eagleWingR412) eagleWingR412.rotation.z = -flapAngle;
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3249,6 +3324,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       altarFireCone407 = null;
       altarFireLight407 = null;
       altarFireGroup407 = null;
+    }
+    // Soaring eagle cleanup (C412)
+    if (eagleGroup412) {
+      eagleGroup412.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+      });
+      group.remove(eagleGroup412);
+      eagleWingL412 = null;
+      eagleWingR412 = null;
+      eagleGroup412 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
