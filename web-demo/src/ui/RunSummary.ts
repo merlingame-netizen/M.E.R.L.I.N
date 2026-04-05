@@ -239,7 +239,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     `font-family:'Courier New',monospace;font-size:10px;`,
     'letter-spacing:0.1em;margin-bottom:4px;',
   ].join('');
-  const runNum = (state.meta?.runsTotal ?? 0) + 1; // +1 since endRun was already called
+  const runNum = state.meta.totalRuns; // endRun already incremented totalRuns
   runMeta.textContent = `RUN_${String(runNum).padStart(3, '0')} :: ${biomeLabel.toUpperCase()}`;
   panel.appendChild(runMeta);
 
