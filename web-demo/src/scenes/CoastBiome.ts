@@ -468,6 +468,47 @@ function createSeabirdFlock(): SeabirdFlockResult {
   return { birds, birdMats, update };
 }
 
+// ── Shipwreck silhouette — partially submerged on right-side rocks (C253) ────
+// Dark weathered wood colors per CeltOS charter: 0x1a1208 / 0x120e06 (no amber).
+
+function createShipwreck(): Group {
+  const group = new Group();
+  const darkWood     = new MeshBasicMaterial({ color: 0x1a1208 });
+  const nearBlackWood = new MeshBasicMaterial({ color: 0x120e06 });
+
+  // Hull — large box listing to port
+  const hull = new Mesh(new BoxGeometry(8, 2.5, 3), darkWood);
+  hull.position.set(18, -1.5, -25);
+  hull.rotation.z = 0.35;
+  group.add(hull);
+
+  // Broken main mast — tilted toward water
+  const mast = new Mesh(new CylinderGeometry(0.12, 0.15, 7, 4), nearBlackWood);
+  mast.position.set(20, 1.5, -24);
+  mast.rotation.z = -0.6;
+  group.add(mast);
+
+  // Mast spar — horizontal cross-piece
+  const spar = new Mesh(new CylinderGeometry(0.08, 0.1, 4, 4), nearBlackWood);
+  spar.position.set(19, 3, -24.5);
+  spar.rotation.z = Math.PI / 2;
+  group.add(spar);
+
+  // Rigging rope hints — two thin angled lines connecting mast to hull edge
+  const rope1 = new Mesh(new CylinderGeometry(0.03, 0.03, 4, 3), nearBlackWood);
+  rope1.position.set(21, 1.8, -24.2);
+  rope1.rotation.z = -1.1;
+  group.add(rope1);
+
+  const rope2 = new Mesh(new CylinderGeometry(0.03, 0.03, 4, 3), nearBlackWood);
+  rope2.position.set(19.5, 2.1, -25.0);
+  rope2.rotation.z = -0.85;
+  rope2.rotation.y = 0.2;
+  group.add(rope2);
+
+  return group;
+}
+
 // ── Export interface ──────────────────────────────────────────────────────────
 
 export interface BiomeSceneResult {
@@ -572,6 +613,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   for (const bird of seabirdFlock.birds) {
     group.add(bird);
   }
+
+  // ── Shipwreck silhouette on right-side rocks (C253) ──────────────────────
+  group.add(createShipwreck());
 
   // ── Sea foam particle pool — 15 pooled spheres (C243) ────────────────────
   _foamMeshes = [];
