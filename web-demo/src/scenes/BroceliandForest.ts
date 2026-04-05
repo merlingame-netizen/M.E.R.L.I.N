@@ -1062,6 +1062,14 @@ const poolSparks512: Mesh[] = [];
 let poolVisionActive512: boolean = false;
 let poolVisionT512: number = 0;
 
+// ── Cycle-513: Ogham totem pillar ────────────────────────────────────────────
+let totemGroup513: Group | null = null;
+const totemNotchMats513: MeshStandardMaterial[] = [];
+const totemWispMeshes513: Mesh[] = [];
+const totemWispMats513: MeshStandardMaterial[] = [];
+let totemLight513: PointLight | null = null;
+let t513: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3490,6 +3498,106 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(poolGroup512);
   }
 
+  // ── Cycle-513: Ogham totem pillar ──────────────────────────────────────────
+  {
+    totemGroup513 = new Group();
+    totemNotchMats513.length = 0;
+    totemWispMeshes513.length = 0;
+    totemWispMats513.length = 0;
+
+    // Main pillar — tall octagonal wood trunk
+    const pillarGeo = new CylinderGeometry(0.22, 0.28, 4.2, 8);
+    const pillarMat = new MeshStandardMaterial({
+      color: 0x3b2008,
+      roughness: 0.96,
+      metalness: 0.0,
+      flatShading: true,
+    });
+    const pillarMesh = new Mesh(pillarGeo, pillarMat);
+    pillarMesh.position.set(0, 2.1, 0);
+    totemGroup513.add(pillarMesh);
+
+    // Carved Ogham notch bands — 5 groups of short diagonal slabs
+    const notchColors: number[] = [0x0ad4b8, 0x33ff66, 0x1aff99, 0x0ad4b8, 0x22ddaa];
+    for (let ni = 0; ni < 5; ni++) {
+      const yBand = 0.7 + ni * 0.7;
+      const notchCount = 2 + ni % 3;
+      for (let nj = 0; nj < notchCount; nj++) {
+        const notchGeo = new BoxGeometry(0.5, 0.06, 0.04);
+        const notchMat = new MeshStandardMaterial({
+          color: notchColors[ni % notchColors.length]!,
+          emissive: notchColors[ni % notchColors.length]!,
+          emissiveIntensity: 0.6,
+          roughness: 0.5,
+          metalness: 0.1,
+          flatShading: true,
+        });
+        const notchMesh = new Mesh(notchGeo, notchMat);
+        notchMesh.position.set(0.21, yBand + nj * 0.14, 0);
+        notchMesh.rotation.z = 0.25;
+        totemGroup513.add(notchMesh);
+        totemNotchMats513.push(notchMat);
+      }
+    }
+
+    // Totem cap — angular crown finial
+    const capGeo = new ConeGeometry(0.3, 0.55, 6);
+    const capMat = new MeshStandardMaterial({
+      color: 0x2a1505,
+      roughness: 0.9,
+      metalness: 0.0,
+      flatShading: true,
+    });
+    const capMesh = new Mesh(capGeo, capMat);
+    capMesh.position.set(0, 4.47, 0);
+    totemGroup513.add(capMesh);
+
+    // Base ring — 6 mossy field stones
+    for (let bi = 0; bi < 6; bi++) {
+      const angle = (bi / 6) * Math.PI * 2;
+      const stoneGeo = new DodecahedronGeometry(0.18 + Math.random() * 0.08, 0);
+      const stoneMat = new MeshStandardMaterial({
+        color: 0x2a4a1a,
+        roughness: 0.95,
+        metalness: 0.0,
+        flatShading: true,
+      });
+      const stoneMesh = new Mesh(stoneGeo, stoneMat);
+      stoneMesh.position.set(Math.cos(angle) * 0.62, 0.12, Math.sin(angle) * 0.62);
+      stoneMesh.rotation.set(Math.random() * 0.5, Math.random() * Math.PI, Math.random() * 0.4);
+      totemGroup513.add(stoneMesh);
+    }
+
+    // 3 orbiting spirit wisps
+    const wispColors: number[] = [0x33ff66, 0x0ad4b8, 0x1aff99];
+    for (let wi = 0; wi < 3; wi++) {
+      const wispGeo = new SphereGeometry(0.09, 6, 5);
+      const wispMat = new MeshStandardMaterial({
+        color: wispColors[wi]!,
+        emissive: wispColors[wi]!,
+        emissiveIntensity: 1.2,
+        roughness: 0.3,
+        metalness: 0.0,
+        flatShading: true,
+        transparent: true,
+        opacity: 0.82,
+      });
+      const wispMesh = new Mesh(wispGeo, wispMat);
+      totemGroup513.add(wispMesh);
+      totemWispMeshes513.push(wispMesh);
+      totemWispMats513.push(wispMat);
+    }
+
+    // Central PointLight — teal glow from Ogham marks
+    totemLight513 = new PointLight(0x22ddaa, 0.35, 7);
+    totemLight513.position.set(0, 2.1, 0);
+    totemGroup513.add(totemLight513);
+
+    totemGroup513.position.set(-6, 0, -10);
+    totemGroup513.rotation.y = Math.PI * 0.3;
+    group.add(totemGroup513);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -4623,6 +4731,40 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         }
       }
     }
+
+    // Cycle-513: Ogham totem pillar animation
+    if (totemGroup513) {
+      t513 += dt;
+
+      // Slow idle rotation of the entire totem
+      totemGroup513.rotation.y += 0.008 * dt;
+
+      // Ogham notch marks pulse in sequence — teal breathe
+      totemNotchMats513.forEach((mat, i) => {
+        mat.emissiveIntensity = 0.4 + 0.4 * Math.sin(t513 * 1.8 + i * 0.6);
+      });
+
+      // Orbiting wisps — each on its own tilted orbit ring
+      totemWispMeshes513.forEach((wisp, wi) => {
+        const orbitAngle = t513 * (0.7 + wi * 0.22) + (wi * Math.PI * 2) / 3;
+        const orbitRadius = 0.7 + wi * 0.15;
+        const orbitTilt = 0.3 + wi * 0.2;
+        const yBase = 1.6 + wi * 0.5;
+        wisp.position.set(
+          Math.cos(orbitAngle) * orbitRadius,
+          yBase + Math.sin(orbitAngle * 1.3 + wi) * orbitTilt,
+          Math.sin(orbitAngle) * orbitRadius,
+        );
+        const wispMat = totemWispMats513[wi]!;
+        wispMat.emissiveIntensity = 0.8 + 0.5 * Math.sin(t513 * 2.5 + wi * 1.1);
+        wispMat.opacity = 0.65 + 0.2 * Math.sin(t513 * 1.7 + wi * 2.3);
+      });
+
+      // PointLight flickers softly with teal pulse
+      if (totemLight513) {
+        totemLight513.intensity = 0.25 + 0.15 * Math.sin(t513 * 1.4);
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -5173,6 +5315,25 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     poolVisionTimer512 = 20 + Math.random() * 10;
     poolVisionActive512 = false;
     poolVisionT512 = 0;
+
+    // Cycle-513: Ogham totem pillar cleanup
+    if (totemGroup513) {
+      group.remove(totemGroup513);
+      totemGroup513.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      totemGroup513 = null;
+    }
+    for (const mat of totemNotchMats513) { mat.dispose(); }
+    totemNotchMats513.length = 0;
+    for (const mat of totemWispMats513) { mat.dispose(); }
+    totemWispMats513.length = 0;
+    totemWispMeshes513.length = 0;
+    if (totemLight513) { totemLight513.dispose(); totemLight513 = null; }
+    t513 = 0;
   };
 
   return { group, update, dispose };
