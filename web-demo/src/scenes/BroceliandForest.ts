@@ -1065,6 +1065,100 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Treant silhouette — looming living-tree creature deep in the background ───
+  // CeltOS charter: ZERO amber/orange/yellow. Color 0x0c1a0c (very dark green).
+  let _treantGroup: Group | null = null;
+  const _treantEyeLights: PointLight[] = [];
+  let _treantBody: Mesh | null = null;
+  {
+    const treantMat = new MeshBasicMaterial({ color: 0x0c1a0c });
+    const tg = new Group();
+    _treantGroup = tg;
+
+    // Body trunk
+    const bodyGeo = new CylinderGeometry(0.6, 1.0, 8.0, 6);
+    const bodyMesh = new Mesh(bodyGeo, treantMat);
+    bodyMesh.position.set(20, 4.0, -48);
+    _treantBody = bodyMesh;
+    tg.add(bodyMesh);
+
+    // Left arm — thick branch extending up-left
+    const lArmGeo = new CylinderGeometry(0.2, 0.4, 5.0, 5);
+    const lArm = new Mesh(lArmGeo, treantMat);
+    lArm.position.set(18, 6.5, -48);
+    lArm.rotation.z = 0.9;
+    lArm.rotation.y = 0.2;
+    tg.add(lArm);
+
+    // Right arm
+    const rArmGeo = new CylinderGeometry(0.2, 0.4, 4.5, 5);
+    const rArm = new Mesh(rArmGeo, treantMat);
+    rArm.position.set(22.5, 6.0, -48);
+    rArm.rotation.z = -0.8;
+    rArm.rotation.y = -0.3;
+    tg.add(rArm);
+
+    // Head crown — slightly flattened sphere
+    const crownGeo = new SphereGeometry(1.2, 6, 4);
+    const crown = new Mesh(crownGeo, treantMat);
+    crown.position.set(20, 8.8, -48);
+    crown.scale.y = 0.7;
+    tg.add(crown);
+
+    // Root left — rising from ground
+    const rootLGeo = new CylinderGeometry(0.15, 0.3, 2.5, 4);
+    const rootL = new Mesh(rootLGeo, treantMat);
+    rootL.position.set(18.5, -0.2, -48);
+    rootL.rotation.z = 0.5;
+    tg.add(rootL);
+
+    // Root right
+    const rootRGeo = new CylinderGeometry(0.15, 0.3, 2.2, 4);
+    const rootR = new Mesh(rootRGeo, treantMat);
+    rootR.position.set(21.5, -0.2, -48);
+    rootR.rotation.z = -0.4;
+    tg.add(rootR);
+
+    // Sub-branches (4) branching from arm tips at various angles
+    const subBranchDefs: [number, number, number, number, number, number, number][] = [
+      // x,    y,    z,   rz,   ry,  rx
+      [16.5, 8.2, -48, 1.2, 0.4, 0.1, 0],
+      [15.8, 7.0, -48, 0.9, -0.3, 0.2, 0],
+      [24.0, 8.0, -48, -1.1, -0.5, -0.1, 0],
+      [23.2, 6.8, -48, -1.4, 0.3, 0.1, 0],
+    ];
+    const subGeo = new CylinderGeometry(0.06, 0.14, 2.0, 4);
+    for (const [bx, by, bz, rz, ry, rx] of subBranchDefs) {
+      const sub = new Mesh(subGeo, treantMat);
+      sub.position.set(bx, by, bz);
+      sub.rotation.z = rz;
+      sub.rotation.y = ry;
+      sub.rotation.x = rx;
+      tg.add(sub);
+    }
+
+    // Two glowing eyes
+    const eyeGeo = new SphereGeometry(0.08, 5, 4);
+    const eyeMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    const eyePositions: [number, number, number][] = [
+      [19.6, 8.6, -47.5],
+      [20.4, 8.6, -47.5],
+    ];
+    for (let ei = 0; ei < eyePositions.length; ei++) {
+      const [ex, ey, ez] = eyePositions[ei]!;
+      const eye = new Mesh(eyeGeo, eyeMat);
+      eye.position.set(ex, ey, ez);
+      tg.add(eye);
+
+      const eyeLight = new PointLight(0x33ff66, 0.2, 4);
+      eyeLight.position.set(ex, ey, ez);
+      tg.add(eyeLight);
+      _treantEyeLights.push(eyeLight);
+    }
+
+    group.add(tg);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1179,6 +1273,14 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       mmat.opacity = _mistBases[mi]! + Math.sin(sceneTime * 0.12 + mi * 1.1) * 0.03;
     }
 
+    // Treant — barely perceptible breath + eye pulse
+    if (_treantBody) {
+      _treantBody.scale.x = 1.0 + Math.sin(sceneTime * 0.15) * 0.01;
+    }
+    for (let ti = 0; ti < _treantEyeLights.length; ti++) {
+      _treantEyeLights[ti]!.intensity = 0.12 + Math.sin(sceneTime * 0.4 + ti * 0.5) * 0.08;
+    }
+
     // Firefly swarm drift + twinkle
     _fireflyTime += dt;
     for (const fly of _fireflyMeshes) {
@@ -1214,6 +1316,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     _fireflyMeshes.length = 0;
     _lanternMesh = null;
     _lanternLight = null;
+    _treantGroup = null;
+    _treantBody = null;
+    _treantEyeLights.length = 0;
   };
 
   return { group, update, dispose };
