@@ -463,6 +463,105 @@ function drawCelticBorder(ctx: CanvasRenderingContext2D, w: number, h: number): 
   }
 }
 
+// ── Animated path draw helper ─────────────────────────────────────────────────
+//
+// Draws the path progressively using requestAnimationFrame with ease-in-out.
+// Adds a "writing tip" glow and a 3-dot spark trail (comet-tail effect).
+//
+// @param ctx           Canvas 2D context
+// @param pathPoints    Array of {x,y} points forming the path
+// @param totalDuration Animation duration in ms (default 1200)
+// @param onDrawComplete Callback fired once the full path is drawn
+
+function animatePathDraw(
+  ctx: CanvasRenderingContext2D,
+  pathPoints: ReadonlyArray<MapPoint>,
+  totalDuration: number,
+  onDrawComplete: () => void,
+): void {
+  if (pathPoints.length < 2) {
+    onDrawComplete();
+    return;
+  }
+
+  const startTime = performance.now();
+  // Ring buffer: last 4 tip positions (index 0 = most recent)
+  const tipTrail: MapPoint[] = [];
+
+  /** Ease-in-out cubic mapping t ∈ [0,1] → [0,1] */
+  const easeInOut = (t: number): number =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  /** Resolve the current tip position given eased progress */
+  const tipPoint = (easedProgress: number): MapPoint => {
+    const total = pathPoints.length - 1;
+    const seg = easedProgress * total;
+    const i = Math.min(Math.floor(seg), total - 1);
+    const frac = seg - i;
+    const from = pathPoints[i]!;
+    const to = pathPoints[i + 1]!;
+    return { x: from.x + (to.x - from.x) * frac, y: from.y + (to.y - from.y) * frac };
+  };
+
+  const tick = (now: number): void => {
+    const rawT = Math.min((now - startTime) / totalDuration, 1);
+    const easedT = easeInOut(rawT);
+
+    // Draw the path up to easedT points
+    const drawn = Math.floor(easedT * (pathPoints.length - 1));
+    ctx.beginPath();
+    ctx.moveTo(pathPoints[0]!.x, pathPoints[0]!.y);
+    for (let i = 1; i <= drawn && i < pathPoints.length; i++) {
+      ctx.lineTo(pathPoints[i]!.x, pathPoints[i]!.y);
+    }
+    // Partial last segment
+    if (drawn < pathPoints.length - 1) {
+      const frac = easedT * (pathPoints.length - 1) - drawn;
+      const from = pathPoints[drawn]!;
+      const to = pathPoints[drawn + 1]!;
+      ctx.lineTo(from.x + (to.x - from.x) * frac, from.y + (to.y - from.y) * frac);
+    }
+    ctx.strokeStyle = 'rgba(51,255,102,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Compute current tip position
+    const tip = tipPoint(easedT);
+
+    // Maintain trail ring buffer (newest first)
+    tipTrail.unshift({ ...tip });
+    if (tipTrail.length > 4) tipTrail.length = 4;
+
+    // Spark trail — 3 previous positions, fading opacity (comet tail)
+    const TRAIL_OPACITIES = [0.5, 0.3, 0.15] as const;
+    for (let j = 1; j < tipTrail.length && j <= 3; j++) {
+      const pt = tipTrail[j]!;
+      const opacity = TRAIL_OPACITIES[j - 1]!;
+      const radius = 3 - j * 0.6;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, Math.max(radius, 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(51,255,102,${opacity})`;
+      ctx.fill();
+    }
+
+    // Writing tip glow — bright circle at the leading edge
+    ctx.beginPath();
+    ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(51,255,102,0.9)';
+    ctx.fill();
+
+    if (rawT < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      onDrawComplete();
+    }
+  };
+
+  requestAnimationFrame(tick);
+}
+
 // ── Easing helpers ────────────────────────────────────────────────────────────
 
 /** Ease-out bounce — maps t ∈ [0,1] to a bounced value ∈ [0,1] */
@@ -492,6 +591,8 @@ interface AnimState {
   zoneTimers: number[];
   rafId: number;
   lastTs: number;
+  /** Recent tip positions for spark trail (index 0 = most recent) */
+  tipTrail: MapPoint[];
 }
 
 // ── Wait helper ───────────────────────────────────────────────────────────────
@@ -843,6 +944,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     zoneTimers: new Array<number>(mapData.events.length).fill(-1),
     rafId: 0,
     lastTs: 0,
+    tipTrail: [],
   };
 
   /** Y offset for a zone (0 = settled, ZONE_DROP_PX = start) using bounce */
@@ -860,6 +962,35 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     return Math.min(elapsed / ZONE_DROP_MS, 1);
   };
 
+  // Spark-trail + writing-tip glow drawn on top of the path during path phase
+  const drawPathTip = (): void => {
+    if (animState.phase !== 'path' || animState.progress <= 0) return;
+
+    const tip = getPathPoint(mapData.pathPoints, animState.progress);
+
+    // Maintain trail ring buffer (4 entries max, newest first)
+    animState.tipTrail.unshift({ ...tip });
+    if (animState.tipTrail.length > 4) animState.tipTrail.length = 4;
+
+    // Spark trail — 3 older positions, decreasing opacity (comet tail)
+    const TRAIL_OPACITIES = [0.5, 0.3, 0.15] as const;
+    for (let j = 1; j < animState.tipTrail.length && j <= 3; j++) {
+      const pt = animState.tipTrail[j]!;
+      const opacity = TRAIL_OPACITIES[j - 1]!;
+      const radius = Math.max(3 - j * 0.6, 0.5);
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(51,255,102,${opacity})`;
+      ctx.fill();
+    }
+
+    // Writing tip — bright glow at the leading edge
+    ctx.beginPath();
+    ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(51,255,102,0.9)';
+    ctx.fill();
+  };
+
   // Shared full-canvas redraw used by both phases
   const redrawCanvas = (): void => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -868,6 +999,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
     drawBiomeDecorations(ctx, canvas.width, canvas.height, biome);
     drawPathAt(ctx, mapData.pathPoints, animState.progress);
+    // Writing tip glow + spark trail on top of the drawn path
+    drawPathTip();
     stampGrain();
     const start = mapData.pathPoints[0]!;
     if (animState.progress > 0.05) drawHeroMarker(ctx, start.x, start.y);
