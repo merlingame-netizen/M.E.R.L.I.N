@@ -934,6 +934,13 @@ const dragonflyT439: number[] = [];
 const dragonflyWingPairs439: Mesh[][] = [];
 let dragonflyCloudT439 = 0;
 
+// ── Cycle-442: fairy mushroom ring ────────────────────────────────────────────
+let mushroomRingGroup442: Group | null = null;
+let mushroomT442: number = 0;
+let mushroomCaps442: Mesh[] = [];
+let mushroomWisp442: Mesh | null = null;
+let wispT442: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2180,6 +2187,49 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     wingMat439.dispose();
   }
 
+  // ── Cycle-442: fairy mushroom ring ──────────────────────────────────────────
+  {
+    mushroomRingGroup442 = new Group();
+    mushroomRingGroup442.position.set(-3, 0, -8);
+    mushroomCaps442 = [];
+
+    for (let i = 0; i < 9; i++) {
+      const angle = i * Math.PI * 2 / 9;
+      const rx = Math.cos(angle) * 1.2;
+      const rz = Math.sin(angle) * 1.2;
+
+      // Stem
+      const stemGeo = new CylinderGeometry(0.04, 0.06, 0.3, 6);
+      const stemMat = new MeshBasicMaterial({ color: 0x020f04 });
+      const stem = new Mesh(stemGeo, stemMat);
+      stem.position.set(rx, 0.15, rz);
+      mushroomRingGroup442.add(stem);
+
+      // Cap
+      const capGeo = new SphereGeometry(0.14, 6, 4);
+      const capMat = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.9 });
+      const cap = new Mesh(capGeo, capMat);
+      cap.scale.y = 0.5;
+      cap.position.set(rx, 0.38, rz);
+      mushroomCaps442.push(cap);
+      mushroomRingGroup442.add(cap);
+    }
+
+    // Wisp orb in center
+    const wispGeo = new SphereGeometry(0.08, 6, 6);
+    const wispMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 });
+    mushroomWisp442 = new Mesh(wispGeo, wispMat);
+    mushroomWisp442.position.set(0, 0.8, 0);
+    mushroomRingGroup442.add(mushroomWisp442);
+
+    // Center point light
+    const wispLight442 = new PointLight(0x33ff66, 0.15, 3.5);
+    wispLight442.position.set(0, 0.5, 0);
+    mushroomRingGroup442.add(wispLight442);
+
+    group.add(mushroomRingGroup442);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2697,6 +2747,17 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         mat.opacity = 0.4 + Math.sin(t * 3 + wi * 0.4) * 0.25;
       });
     });
+
+    // Cycle-442: mushroom ring bioluminescence + wisp hover
+    mushroomT442 += dt;
+    wispT442 += dt;
+    mushroomCaps442.forEach((cap, i) => {
+      const mat = cap.material as MeshBasicMaterial;
+      mat.opacity = 0.6 + 0.35 * Math.sin(mushroomT442 * 0.8 + i * 0.7);
+    });
+    if (mushroomWisp442) {
+      mushroomWisp442.position.y = 0.8 + 0.15 * Math.sin(wispT442 * 1.3);
+    }
   };
 
   const dispose = (): void => {
@@ -2970,6 +3031,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     dragonflySwarm439.length = 0;
     dragonflyT439.length = 0;
     dragonflyWingPairs439.length = 0;
+
+    // Cycle-442: mushroom ring cleanup
+    if (mushroomRingGroup442) {
+      mushroomRingGroup442.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            (c.material as Material[]).forEach(m => m.dispose());
+          } else {
+            (c.material as Material).dispose();
+          }
+        }
+      });
+      mushroomRingGroup442 = null;
+    }
+    mushroomCaps442 = [];
+    mushroomWisp442 = null;
   };
 
   return { group, update, dispose };
