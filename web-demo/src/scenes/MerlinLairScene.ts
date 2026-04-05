@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, ConeGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Line, LineBasicMaterial, LineLoop, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, Vector3, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1334,6 +1334,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _scrollNextRead396 = 10.0;
   let _scrollUnrollT396 = 0;
 
+  // C401: spider web with dew drops — upper-left corner (-3.5, 3.2, -2.5)
+  let _webGroup: Group | null = null;
+  let _webDewT = 0;
+  const _webDewSpheres: Mesh[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1922,6 +1927,66 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // Dispose template mats (clones in use, templates not in scene)
     rollMat.dispose();
+  }
+
+  // C401: spider web with dew drops — upper-left corner (-3.5, 3.2, -2.5)
+  {
+    _webGroup = new Group();
+    const wireMat = new LineBasicMaterial({ color: 0x0d2a12 });
+
+    // 6 radial spokes from center to radius 0.6
+    const SPOKE_COUNT = 6;
+    const SPOKE_RADIUS = 0.6;
+    for (let si = 0; si < SPOKE_COUNT; si++) {
+      const angle = (si / SPOKE_COUNT) * Math.PI * 2;
+      const spokeGeo = new BufferGeometry().setFromPoints([
+        new Vector3(0, 0, 0),
+        new Vector3(Math.cos(angle) * SPOKE_RADIUS, Math.sin(angle) * SPOKE_RADIUS, 0),
+      ]);
+      const spoke = new Line(spokeGeo, wireMat);
+      _webGroup.add(spoke);
+    }
+
+    // 3 concentric ring polygons at radii 0.2, 0.4, 0.6 (12-segment LineLoop)
+    const RING_SEGMENTS = 12;
+    for (const ringR of [0.2, 0.4, 0.6]) {
+      const ringPoints: Vector3[] = [];
+      for (let ri = 0; ri <= RING_SEGMENTS; ri++) {
+        const a = (ri / RING_SEGMENTS) * Math.PI * 2;
+        ringPoints.push(new Vector3(Math.cos(a) * ringR, Math.sin(a) * ringR, 0));
+      }
+      const ringGeo = new BufferGeometry().setFromPoints(ringPoints);
+      const ring = new LineLoop(ringGeo, wireMat);
+      _webGroup.add(ring);
+    }
+
+    // 12 dew drops placed at random positions on the spokes
+    const dewGeo = new SphereGeometry(0.025, 4, 3);
+    const dewMat = new MeshStandardMaterial({
+      color: 0x1a4a22,
+      emissive: 0x0a2a0e,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.7,
+    });
+    for (let di = 0; di < 12; di++) {
+      const spokeAngle = (Math.floor(di * SPOKE_COUNT / 12) / SPOKE_COUNT) * Math.PI * 2;
+      const t = 0.15 + Math.random() * 0.8;
+      const dew = new Mesh(dewGeo, dewMat.clone());
+      dew.position.set(Math.cos(spokeAngle) * SPOKE_RADIUS * t, Math.sin(spokeAngle) * SPOKE_RADIUS * t, 0.005);
+      _webDewSpheres.push(dew);
+      _webGroup.add(dew);
+    }
+
+    _webGroup.rotation.z = 0.15;
+    _webGroup.rotation.x = -0.2;
+    _webGroup.position.set(-3.5, 3.2, -2.5);
+    scene.add(_webGroup);
+
+    // Dispose template geo/mat (clones in use)
+    dewGeo.dispose();
+    dewMat.dispose();
+    wireMat.dispose();
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3021,6 +3086,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C401: spider web dew drops glistening + subtle sway
+    if (_webGroup) {
+      _webDewT += dt;
+      for (let i = 0; i < _webDewSpheres.length; i++) {
+        const dew = _webDewSpheres[i];
+        (dew.material as MeshStandardMaterial).opacity = 0.55 + Math.sin(_webDewT * 1.5 + i * 0.4) * 0.25;
+      }
+      _webGroup.rotation.z = 0.15 + Math.sin(_webDewT * 0.3) * 0.02;
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3285,6 +3360,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     _scrollFace396 = null;
     if (_scrollLight396) { _scrollLight396.dispose(); _scrollLight396 = null; }
+    // C401: spider web + dew drops
+    if (_webGroup) {
+      scene.remove(_webGroup);
+      _webGroup.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) (mat as MeshStandardMaterial | LineBasicMaterial).dispose();
+      });
+      _webGroup = null;
+    }
+    _webDewSpheres.length = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
