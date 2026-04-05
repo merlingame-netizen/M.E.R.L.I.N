@@ -32,6 +32,7 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
 
 const SUMMARY_OVERLAY_ID = 'run-summary-overlay';
 const SCANLINE_KEYFRAME_ID = 'run-summary-scanline-kf';
+const KNOT_STYLE_ID = 'run-summary-knot-style';
 
 // C86: module-level anchor for the pending restart Promise resolve.
 // showRunSummary() can be re-entered (e.g. run ends while overlay already shown
@@ -162,6 +163,72 @@ function showAnamSparkle(anamEl: HTMLElement): void {
     }));
     setTimeout(() => spark.remove(), 900);
   }
+}
+
+/**
+ * C329: Inject the knot-draw @keyframes once — idempotent via id guard.
+ */
+function ensureKnotStyles(): void {
+  if (document.getElementById(KNOT_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = KNOT_STYLE_ID;
+  style.textContent = `
+    @keyframes knot-draw {
+      from { stroke-dashoffset: 300; }
+      to   { stroke-dashoffset: 0;   }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/**
+ * C329: Build the animated Celtic knotwork SVG divider.
+ * Draw-on animation starts 0.8s after the summary appears (after stats count-up).
+ * Stroke colors are CeltOS green only — rgba(51,255,102,...).
+ */
+function buildCelticKnotDivider(): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = [
+    'margin-top:12px',
+    'margin-bottom:12px',
+    'width:100%',
+    'overflow:hidden',
+  ].join(';');
+
+  const animStyle = [
+    'stroke-dasharray:300',
+    'stroke-dashoffset:300',
+    'animation:knot-draw 1.5s ease-out 0.8s forwards',
+  ].join(';');
+
+  wrapper.innerHTML = [
+    '<svg width="100%" height="24" viewBox="0 0 300 24"',
+    '     preserveAspectRatio="none"',
+    '     xmlns="http://www.w3.org/2000/svg"',
+    '     aria-hidden="true">',
+    '  <line x1="0" y1="12" x2="300" y2="12"',
+    '        stroke="rgba(51,255,102,0.3)" stroke-width="1"/>',
+    // Primary interlocking ovals (drawn on)
+    `  <ellipse cx="50"  cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="80"  cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="110" cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="140" cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="170" cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="200" cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="230" cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    `  <ellipse cx="260" cy="12" rx="14" ry="6" fill="none" stroke="rgba(51,255,102,0.5)" stroke-width="1.2" style="${animStyle}"/>`,
+    // Overlay interlocking ovals (shifted +15px — create weave illusion)
+    `  <ellipse cx="65"  cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    `  <ellipse cx="95"  cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    `  <ellipse cx="125" cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    `  <ellipse cx="155" cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    `  <ellipse cx="185" cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    `  <ellipse cx="215" cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    `  <ellipse cx="245" cy="12" rx="14" ry="6" fill="rgba(1,8,2,0.6)" stroke="rgba(51,255,102,0.4)" stroke-width="1" style="${animStyle}"/>`,
+    '</svg>',
+  ].join('\n');
+
+  return wrapper;
 }
 
 /**
@@ -341,6 +408,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   await fadeIn(800);
 
   ensureScanlineKeyframes();
+  ensureKnotStyles();
 
   // Build overlay
   const existing = document.getElementById(SUMMARY_OVERLAY_ID);
@@ -574,6 +642,9 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     domEl.textContent = `FACTION DOMINANTE: ${domMeta.label.toUpperCase()} (${domRep})`;
     statsGrid.after(domEl);
   }
+
+  // ── C329: Celtic knotwork SVG divider — between stats and faction bars ──────
+  panel.appendChild(buildCelticKnotDivider());
 
   // ── C304: Animated faction reputation bar chart ─────────────────────────────
   const factionBarsSection = document.createElement('div');
