@@ -44,19 +44,19 @@ function hourToLightParams(hour: number, season: Season): { color: Color; intens
   let intensity: number;
 
   if (h >= 5 && h < 8) {
-    // Dawn: orange-pink blush
+    // Dawn: cool blue-green forest light (CeltOS forest palette — no amber)
     const t = (h - 5) / 3;
-    color = new Color().setRGB(1.0, 0.5 + t * 0.35, 0.2 + t * 0.5);
+    color = new Color().setRGB(0.3 + t * 0.4, 0.55 + t * 0.35, 0.45 + t * 0.3);
     intensity = 0.3 + t * 0.7;
   } else if (h >= 8 && h < 17) {
-    // Day: warm white light
+    // Day: cool forest-filtered daylight
     const seasonBright = season === 'summer' ? 1.2 : season === 'winter' ? 0.85 : 1.0;
-    color = new Color(0xfff5e0);
+    color = new Color(0xd4f0e8);
     intensity = 1.1 * seasonBright;
   } else if (h >= 17 && h < 20) {
-    // Dusk: orange-red sunset
+    // Dusk: deep forest blue-green fade (CeltOS — no sunset amber)
     const t = (h - 17) / 3;
-    color = new Color().setRGB(1.0, 0.4 - t * 0.3, 0.05);
+    color = new Color().setRGB(0.1 + t * 0.05, 0.25 - t * 0.1, 0.35 - t * 0.1);
     intensity = 1.0 - t * 0.85;
   } else {
     // Night: cold moonlight
@@ -73,8 +73,15 @@ function hourToLightParams(hour: number, season: Season): { color: Color; intens
 export function createLairWindow(scene: Scene): WindowResult {
   const group = new Group();
 
-  // Stone window frame (back wall z=-9.75)
-  const frameMat = new MeshStandardMaterial({ color: 0x2e2924, roughness: 0.98, metalness: 0.0, flatShading: true });
+  // Stone window frame (back wall z=-9.75) — emissive for glow pulse
+  const frameMat = new MeshStandardMaterial({
+    color: 0x2e2924,
+    roughness: 0.98,
+    metalness: 0.0,
+    flatShading: true,
+    emissive: new Color(0x002200),
+    emissiveIntensity: 0.03,
+  });
   // Left jamb
   const jambL = new Mesh(new BoxGeometry(0.4, 4.4, 0.5), frameMat);
   jambL.position.set(2.6, 3.5, -9.75);
@@ -160,7 +167,7 @@ export function createLairWindow(scene: Scene): WindowResult {
 
   // ── Spotlight through window ──────────────────────────────────────────────
 
-  const windowLight = new SpotLight(0xfff5e0, 1.0, 20, Math.PI / 5, 0.5, 1.8);
+  const windowLight = new SpotLight(0xd4f0e8, 1.0, 20, Math.PI / 5, 0.5, 1.8);
   windowLight.position.set(4.0, 5.0, -9.0);
   windowLight.target.position.set(2.5, -2.0, -3.0);  // casts onto floor below
   group.add(windowLight);        // in group so it disappears with the window if group.visible=false

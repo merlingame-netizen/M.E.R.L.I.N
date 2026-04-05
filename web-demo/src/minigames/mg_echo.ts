@@ -111,7 +111,7 @@ export class MinigameEcho extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:2px solid rgba(100,80,140,0.4);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:2px solid rgba(51,200,100,0.4);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
@@ -333,7 +333,7 @@ export class MinigameEcho extends MinigameBase {
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);
 
     // Background -- subtle concentric sound waves from center
-    ctx.strokeStyle = 'rgba(100,80,140,0.05)';
+    ctx.strokeStyle = 'rgba(51,200,100,0.05)';
     ctx.lineWidth = 1;
     const waveOffset = (this.pulsePhase * 30) % 40;
     for (let i = 0; i < 8; i++) {
@@ -483,12 +483,12 @@ export class MinigameEcho extends MinigameBase {
           : 'rgba(200,60,60,0.55)';
       } else if (i === this.currentRound) {
         const cp = 0.5 + Math.sin(this.pulsePhase * 4) * 0.3;
-        ctx.fillStyle = `rgba(200,170,100,${cp})`;
+        ctx.fillStyle = `rgba(51,255,102,${cp * 0.8})`;
       } else {
         ctx.fillStyle = 'rgba(80,70,60,0.3)';
       }
       ctx.fill();
-      ctx.strokeStyle = 'rgba(200,170,100,0.2)';
+      ctx.strokeStyle = 'rgba(51,255,102,0.18)';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
