@@ -880,6 +880,12 @@ let fairyT = 0;
 let _fairyBulbs: Mesh[] = [];
 let _fairyPointLight: PointLight | null = null;
 
+// ── Cycle-405: ground mist tendrils ────────────────────────────────────────────
+let mistGroup405: Group | null = null;
+const mistPlanes405: Mesh[] = [];
+const mistBaseY405: number[] = [];
+let mistT405 = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1698,6 +1704,33 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(fairyLightsGroup);
   }
 
+  // ── Cycle-405: ground mist tendrils ──────────────────────────────────────────
+  {
+    mistGroup405 = new Group();
+    const mistPositions: [number, number, number][] = [
+      [-6, 0, -8], [2, 0, -11], [-4, 0, -16],
+      [7, 0, -13], [-2, 0, -19], [5, 0, -22],
+    ];
+    for (let i = 0; i < mistPositions.length; i++) {
+      const [px, , pz] = mistPositions[i]!;
+      const geo = new PlaneGeometry(0.4, 2.5);
+      const mat = new MeshBasicMaterial({
+        color: 0x0d2a14,
+        transparent: true,
+        opacity: 0.0,
+        depthWrite: false,
+        side: DoubleSide,
+      });
+      const plane = new Mesh(geo, mat);
+      plane.position.set(px, -0.5, pz);
+      plane.rotation.y = Math.random() * Math.PI * 2;
+      mistBaseY405.push(-0.5);
+      mistPlanes405.push(plane);
+      mistGroup405.add(plane);
+    }
+    group.add(mistGroup405);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2039,6 +2072,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (_fairyPointLight) {
       _fairyPointLight.intensity = 0.12 + Math.sin(fairyT * 2.5) * 0.05;
     }
+
+    // Cycle-405: ground mist tendrils
+    if (mistGroup405) {
+      mistT405 += dt * 0.25;
+      mistPlanes405.forEach((plane, i) => {
+        const phase = mistT405 + i * 1.1;
+        const cycle = phase % 6.0;
+        const rising = cycle < 3.0;
+        const t = rising ? cycle / 3.0 : (cycle - 3.0) / 3.0;
+        plane.position.y = rising
+          ? mistBaseY405[i]! + t * 2.2
+          : mistBaseY405[i]! + 2.2 + t * 0.5;
+        const mat = plane.material as MeshBasicMaterial;
+        mat.opacity = rising ? t * 0.18 : (1.0 - t) * 0.18;
+        plane.rotation.y += dt * 0.05;
+      });
+    }
   };
 
   const dispose = (): void => {
@@ -2193,6 +2243,16 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     _fairyBulbs = [];
     if (_fairyPointLight) { _fairyPointLight.dispose(); _fairyPointLight = null; }
+    // Cycle-405: mist tendrils cleanup
+    if (mistGroup405) {
+      mistPlanes405.forEach(p => {
+        p.geometry.dispose();
+        (p.material as MeshBasicMaterial).dispose();
+      });
+      mistPlanes405.length = 0;
+      mistBaseY405.length = 0;
+      mistGroup405 = null;
+    }
   };
 
   return { group, update, dispose };
