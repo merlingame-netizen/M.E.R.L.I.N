@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, Vector2, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1119,6 +1119,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _bubbleMeshes: Mesh[] = [];
   let _bubbleTimer = 0;
 
+  // C241: floor rune circles — dual counter-rotating torus rings on lair floor
+  let _runeRing1: Mesh | null = null;
+  let _runeRing2: Mesh | null = null;
+  let _runeRingTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1143,6 +1148,25 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.add(bm);
       _bubbleMeshes.push(bm);
     }
+  }
+
+  // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
+  {
+    const FLOOR_Y = -4.85;
+    const RING_Z = -8;
+    const outerGeo = new TorusGeometry(3.5, 0.06, 6, 48);
+    const outerMat = new MeshBasicMaterial({ color: 0x22aa55, transparent: true, opacity: 0.35 });
+    _runeRing1 = new Mesh(outerGeo, outerMat);
+    _runeRing1.rotation.x = -Math.PI / 2;
+    _runeRing1.position.set(0, FLOOR_Y + 0.02, RING_Z);
+    scene.add(_runeRing1);
+
+    const innerGeo = new TorusGeometry(2.0, 0.04, 6, 32);
+    const innerMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.5 });
+    _runeRing2 = new Mesh(innerGeo, innerMat);
+    _runeRing2.rotation.x = -Math.PI / 2;
+    _runeRing2.position.set(0, FLOOR_Y + 0.02, RING_Z);
+    scene.add(_runeRing2);
   }
 
   // Forest window + day/night/season cycle
@@ -1703,6 +1727,19 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C241: floor rune rings — slow counter-rotation + opacity pulse (cosmetic, gate under !lowFpsMode)
+    if (!lowFpsMode) {
+      _runeRingTime += dt;
+      if (_runeRing1) {
+        _runeRing1.rotation.z += dt * 0.15;
+        (_runeRing1.material as MeshBasicMaterial).opacity = 0.25 + Math.sin(_runeRingTime * 0.5) * 0.1;
+      }
+      if (_runeRing2) {
+        _runeRing2.rotation.z -= dt * 0.22;
+        (_runeRing2.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(_runeRingTime * 0.7 + 1.0) * 0.12;
+      }
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -1839,6 +1876,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     // C231: clear bubble refs (geometries/materials disposed by scene.traverse above)
     _bubbleMeshes = [];
+    // C241: clear rune ring refs (geometries/materials disposed by scene.traverse above)
+    _runeRing1 = null;
+    _runeRing2 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
