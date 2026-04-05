@@ -685,6 +685,11 @@ let kelpGroup454: Group | null = null;
 let kelpT454: number = 0;
 const kelpStalks454: Mesh[][] = [];
 
+// ── Drowned city ruins — Ker-Is (C459) ────────────────────────────────────
+let ruinsGroup459: Group | null = null;
+let ruinsT459: number = 0;
+const ruinsMossPatches459: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1660,6 +1665,81 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(kelpGroup454);
   }
 
+  // ── Drowned city ruins — Ker-Is (C459) ────────────────────────────────────
+  {
+    ruinsGroup459 = new Group();
+    ruinsGroup459.position.set(-8, -1.5, -15);
+
+    // Column definitions: [x, z, height, radius]
+    const columnDefs = [
+      { x: 0,   z: 0,   h: 3.5, r: 0.35 },  // tall
+      { x: 2.5, z: -1,  h: 2.0, r: 0.3  },  // medium
+      { x: -2,  z: 0.5, h: 1.2, r: 0.25 },  // short (broken)
+      { x: 3.5, z: 1.5, h: 4.0, r: 0.38 },  // arch left pillar
+      { x: 5.5, z: 1.5, h: 4.0, r: 0.38 },  // arch right pillar
+    ];
+
+    columnDefs.forEach((def) => {
+      // Column shaft
+      const col = new Mesh(
+        new CylinderGeometry(def.r * 0.85, def.r, def.h, 8),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      col.position.set(def.x, def.h / 2, def.z);
+      ruinsGroup459!.add(col);
+
+      // Capital (top slab)
+      const capital = new Mesh(
+        new BoxGeometry(def.r * 2.4, 0.18, def.r * 2.4),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      capital.position.set(def.x, def.h + 0.09, def.z);
+      ruinsGroup459!.add(capital);
+
+      // 2 moss patches per column
+      for (let m = 0; m < 2; m++) {
+        const moss = new Mesh(
+          new SphereGeometry(0.1 + Math.random() * 0.08, 5, 4),
+          new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 })
+        );
+        moss.scale.y = 0.25;
+        moss.position.set(
+          def.x + (Math.random() - 0.5) * def.r * 1.5,
+          0.5 + Math.random() * (def.h - 0.5),
+          def.z + (Math.random() - 0.5) * def.r * 1.5
+        );
+        ruinsMossPatches459.push(moss);
+        ruinsGroup459!.add(moss);
+      }
+    });
+
+    // Archway lintel between columns 4 and 5
+    const lintel = new Mesh(
+      new BoxGeometry(2.3, 0.25, 0.7),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    lintel.position.set(4.5, 4.12, 1.5);
+    ruinsGroup459!.add(lintel);
+
+    // Scattered rubble: 4 broken pieces on the ground
+    for (let i = 0; i < 4; i++) {
+      const rubble = new Mesh(
+        new BoxGeometry(0.3 + Math.random() * 0.4, 0.15, 0.2 + Math.random() * 0.3),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      rubble.position.set(-1 + i * 1.2, 0.08, -0.5 + Math.random() * 1.0);
+      rubble.rotation.y = Math.random() * Math.PI;
+      ruinsGroup459!.add(rubble);
+    }
+
+    // Ambient ruin light
+    const ruinLight = new PointLight(0x33ff66, 0.1, 6.0);
+    ruinLight.position.set(2, 2, 0);
+    ruinsGroup459!.add(ruinLight);
+
+    group.add(ruinsGroup459);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2165,6 +2245,13 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
     }
 
+    // ── Ker-Is ruins moss bioluminescence (C459) ─────────────────────────────
+    ruinsT459 += dt;
+    ruinsMossPatches459.forEach((moss, i) => {
+      const mat = moss.material as MeshBasicMaterial;
+      mat.opacity = 0.3 + 0.15 * Math.sin(ruinsT459 * 0.5 + i * 0.8);
+    });
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2369,6 +2456,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       kelpGroup454 = null;
     }
     kelpStalks454.length = 0;
+    if (ruinsGroup459) {
+      ruinsGroup459.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      ruinsGroup459 = null;
+    }
+    ruinsMossPatches459.length = 0;
     group.clear();
   };
 
