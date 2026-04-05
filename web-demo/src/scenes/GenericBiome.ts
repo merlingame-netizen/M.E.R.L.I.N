@@ -375,6 +375,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let montsWindMesh: Points | null = null;
   let montsWindTime = 0;
   let montsSnowMeshes: Mesh[] = [];
+  let _eagleGroup: Group | null = null;
+  let _eagleWingL: Mesh | null = null;
+  let _eagleWingR: Mesh | null = null;
+  let _eagleAngle = 0;
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
   let plaineObeliskGlowMat: MeshBasicMaterial | null = null;
@@ -697,6 +701,32 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(snow);
       montsSnowMeshes.push(snow);
     }
+    // Soaring eagle silhouette — flat BoxGeometry planes grouped and animated in a slow circle
+    const eagleMat = new MeshBasicMaterial({ color: 0x0a0f0a });
+    const eagleGroup = new Group();
+    // Body
+    const eagleBody = new Mesh(new BoxGeometry(0.15, 0.08, 0.6), eagleMat);
+    eagleGroup.add(eagleBody);
+    // Left wing
+    const wingL = new Mesh(new BoxGeometry(1.8, 0.04, 0.5), eagleMat);
+    wingL.position.set(-0.95, 0, 0.05);
+    wingL.rotation.z = -0.3;
+    eagleGroup.add(wingL);
+    // Right wing
+    const wingR = new Mesh(new BoxGeometry(1.8, 0.04, 0.5), eagleMat);
+    wingR.position.set(0.95, 0, 0.05);
+    wingR.rotation.z = 0.3;
+    eagleGroup.add(wingR);
+    // Tail
+    const eagleTail = new Mesh(new BoxGeometry(0.08, 0.04, 0.35), eagleMat);
+    eagleTail.position.set(0, 0, -0.47);
+    eagleGroup.add(eagleTail);
+    // Initial position
+    eagleGroup.position.set(8, 12, -50);
+    group.add(eagleGroup);
+    _eagleGroup = eagleGroup;
+    _eagleWingL = wingL;
+    _eagleWingR = wingR;
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -979,6 +1009,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         snow.position.x = (Math.random() - 0.5) * 60;
       }
     }
+    // Monts brumeux — soaring eagle slow circle + wing flap
+    if (_eagleGroup !== null) {
+      _eagleAngle += dt * 0.12;
+      const t = Date.now() * 0.001;
+      _eagleGroup.position.x = Math.cos(_eagleAngle) * 10 + 0;
+      _eagleGroup.position.z = Math.sin(_eagleAngle) * 8 - 45;
+      _eagleGroup.rotation.y = -_eagleAngle + Math.PI / 2;
+      if (_eagleWingL !== null) {
+        _eagleWingL.rotation.z = -0.3 + Math.sin(t * 1.8) * 0.15;
+      }
+      if (_eagleWingR !== null) {
+        _eagleWingR.rotation.z = 0.3 - Math.sin(t * 1.8) * 0.15;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -987,6 +1031,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     maraisWispMeshes = [];
     montsSnowMeshes = [];
     altarRuneRing = null;
+    _eagleGroup = null;
+    _eagleWingL = null;
+    _eagleWingR = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
