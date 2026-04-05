@@ -38,6 +38,26 @@ function extractOghamGlyph(option: CardOption): string | null {
   return null;
 }
 
+// ── Card flip-reveal animation styles injection (idempotent) ─────────────
+
+function ensureCardFlipStyles(): void {
+  if (document.getElementById('card-flip-style')) return;
+  const s = document.createElement('style');
+  s.id = 'card-flip-style';
+  s.textContent = `
+    @keyframes card-flip-in {
+      0%   { transform: perspective(600px) rotateY(-90deg); opacity: 0; }
+      40%  { opacity: 1; }
+      100% { transform: perspective(600px) rotateY(0deg); opacity: 1; }
+    }
+    .card-flip-reveal {
+      animation: card-flip-in 0.45s cubic-bezier(0.34,1.2,0.64,1) forwards;
+      transform-origin: center center;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
 // ── Option slide-in animation styles injection (idempotent) ──────────────
 
 function ensureCardOptAnimStyles(): void {
@@ -370,6 +390,7 @@ function triggerFlipAnimation(): void {
 
 // C142/COLL: optional reveal flag — coll ogham (reveal_all_options) makes effects persistently visible
 export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
+  ensureCardFlipStyles();
   ensureCardSelectStyle();
   ensureCardBadgeStyles();
   ensureCardOptBadgeStyles();
@@ -659,6 +680,12 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     overlayEl.classList.add('visible');
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
+    // C261: 3D perspective flip-reveal on the main card panel
+    if (container) {
+      container.classList.remove('card-flip-reveal');
+      void container.offsetWidth; // force reflow to restart animation
+      container.classList.add('card-flip-reveal');
+    }
 
     // C224/TW: cancel any previous typewriter from a rapid showCard() call
     if (_activeTypewriter !== null) {
