@@ -941,6 +941,12 @@ let mushroomCaps442: Mesh[] = [];
 let mushroomWisp442: Mesh | null = null;
 let wispT442: number = 0;
 
+// ── Cycle-446: ancient stone wishing well with glowing water + vision ripples ─
+let wellGroup446: Group | null = null;
+let wellT446: number = 0;
+let wellWaterMat446: MeshBasicMaterial | null = null;
+let wellRippleTimer446: number = 10;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2230,6 +2236,64 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(mushroomRingGroup442);
   }
 
+  // ── Cycle-446: ancient stone wishing well ────────────────────────────────────
+  {
+    wellGroup446 = new Group();
+
+    const stoneMat446 = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const topStoneMat446 = new MeshBasicMaterial({ color: 0x0d2a14 });
+    const woodMat446 = new MeshBasicMaterial({ color: 0x020f04 });
+    const ropeMat446 = new MeshBasicMaterial({ color: 0x0d2a14 });
+
+    // Well wall — open cylinder
+    const wall446 = new Mesh(new CylinderGeometry(0.5, 0.55, 0.8, 12, 1, true), stoneMat446);
+    wall446.position.y = 0.4;
+    wellGroup446.add(wall446);
+
+    // Base ring at y=0
+    const baseRing446 = new Mesh(new TorusGeometry(0.55, 0.06, 4, 12), stoneMat446);
+    baseRing446.rotation.x = Math.PI / 2;
+    baseRing446.position.y = 0;
+    wellGroup446.add(baseRing446);
+
+    // Top ring at y=0.8
+    const topRing446 = new Mesh(new TorusGeometry(0.5, 0.05, 4, 12), topStoneMat446);
+    topRing446.rotation.x = Math.PI / 2;
+    topRing446.position.y = 0.8;
+    wellGroup446.add(topRing446);
+
+    // Water surface at y=0.3 inside well
+    const waterGeo446 = new CylinderGeometry(0.44, 0.44, 0.04, 16);
+    const waterMat446 = new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.7 });
+    wellWaterMat446 = waterMat446;
+    const water446 = new Mesh(waterGeo446, waterMat446);
+    water446.position.y = 0.3;
+    wellGroup446.add(water446);
+
+    // Crossbeam at y=1.1 spanning well top
+    const beam446 = new Mesh(new BoxGeometry(1.2, 0.08, 0.08), woodMat446);
+    beam446.position.y = 1.1;
+    wellGroup446.add(beam446);
+
+    // Rope hanging from center crossbeam at y=0.8
+    const rope446 = new Mesh(new CylinderGeometry(0.015, 0.015, 0.6, 4), ropeMat446);
+    rope446.position.y = 0.8;
+    wellGroup446.add(rope446);
+
+    // Bucket at bottom of rope
+    const bucket446 = new Mesh(new CylinderGeometry(0.06, 0.05, 0.1, 6), stoneMat446);
+    bucket446.position.y = 0.5;
+    wellGroup446.add(bucket446);
+
+    // Glow point light at water level
+    const glowLight446 = new PointLight(0x33ff66, 0.12, 2.5);
+    glowLight446.position.y = 0.35;
+    wellGroup446.add(glowLight446);
+
+    wellGroup446.position.set(2, 0, -5);
+    group.add(wellGroup446);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2758,6 +2822,18 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (mushroomWisp442) {
       mushroomWisp442.position.y = 0.8 + 0.15 * Math.sin(wispT442 * 1.3);
     }
+
+    // Cycle-446: stone wishing well — water shimmer + vision ripple event
+    wellT446 += dt;
+    wellRippleTimer446 -= dt;
+    if (wellWaterMat446) {
+      wellWaterMat446.opacity = 0.55 + 0.2 * Math.sin(wellT446 * 1.8);
+    }
+    if (wellRippleTimer446 <= 0) {
+      wellRippleTimer446 = 8 + Math.random() * 7;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'water_drop' } }));
+      if (wellWaterMat446) wellWaterMat446.opacity = 1.0;
+    }
   };
 
   const dispose = (): void => {
@@ -3048,6 +3124,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     mushroomCaps442 = [];
     mushroomWisp442 = null;
+
+    // Cycle-446: stone wishing well cleanup
+    if (wellGroup446) {
+      group.remove(wellGroup446);
+      wellGroup446.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      wellGroup446 = null;
+    }
+    wellWaterMat446 = null;
   };
 
   return { group, update, dispose };
