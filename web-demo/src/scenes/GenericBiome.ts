@@ -466,6 +466,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let toadGroup374: Group | null = null;
   let toadBody374: Mesh | null = null;
 
+  // ── Harvest scarecrow silhouette — plaine_druides (C382) ─────────────────
+  let scarecrowGroup382: Group | null = null;
+  let scarecrowEyes382: Mesh[] = [];
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -2110,6 +2114,61 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     bonfireGroup370.position.set(2, 0, -14);
     group.add(bonfireGroup370);
+
+    // ── Harvest scarecrow silhouette (C382) ──────────────────────────────────
+    scarecrowGroup382 = new Group();
+    const scMat = new MeshStandardMaterial({ color: 0x0a1a05, roughness: 0.9 });
+
+    // Vertical post
+    const scPost = new Mesh(new BoxGeometry(0.08, 2.2, 0.08), scMat);
+    scPost.position.y = 1.1;
+    scarecrowGroup382.add(scPost);
+
+    // Horizontal arm post
+    const scArms = new Mesh(new BoxGeometry(1.4, 0.08, 0.08), scMat);
+    scArms.position.y = 1.6;
+    scarecrowGroup382.add(scArms);
+
+    // Body (stuffed sack)
+    const scBody = new Mesh(new BoxGeometry(0.3, 0.5, 0.2), scMat);
+    scBody.position.y = 1.35;
+    scarecrowGroup382.add(scBody);
+
+    // Head
+    const scHead = new Mesh(new BoxGeometry(0.22, 0.22, 0.18), scMat);
+    scHead.position.y = 1.75;
+    scarecrowGroup382.add(scHead);
+
+    // Pointed hat (cone)
+    const scHatGeo = new ConeGeometry(0.14, 0.3, 6);
+    const scHat = new Mesh(scHatGeo, scMat);
+    scHat.position.y = 2.02;
+    scarecrowGroup382.add(scHat);
+
+    // Hat brim
+    const scBrim = new Mesh(new CylinderGeometry(0.2, 0.2, 0.04, 8), scMat);
+    scBrim.position.y = 1.88;
+    scarecrowGroup382.add(scBrim);
+
+    // Glowing eyes
+    const scEyeMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 });
+    ([-0.06, 0.06] as number[]).forEach(ex => {
+      const scEye = new Mesh(new SphereGeometry(0.02, 4, 3), scEyeMat.clone());
+      scEye.position.set(ex, 1.77, 0.1);
+      scarecrowGroup382!.add(scEye);
+      scarecrowEyes382.push(scEye);
+    });
+
+    // Arm sleeves (hanging cloth suggestion)
+    ([-0.5, 0.5] as number[]).forEach(ax => {
+      const scSleeve = new Mesh(new BoxGeometry(0.18, 0.35, 0.14), scMat);
+      scSleeve.position.set(ax, 1.5, 0);
+      scSleeve.rotation.z = ax * 0.15;
+      scarecrowGroup382!.add(scSleeve);
+    });
+
+    scarecrowGroup382.position.set(-5, 0, -12);
+    group.add(scarecrowGroup382);
   }
 
   const update = (dt: number): void => {
@@ -2227,6 +2286,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
           ember370.visible = true;
           data370.life = 0;
         }
+      });
+    }
+    // Plaine des Druides — harvest scarecrow wind sway + eye glow (C382)
+    if (scarecrowGroup382 !== null) {
+      const tSc = Date.now() * 0.001;
+      scarecrowGroup382.rotation.z = Math.sin(tSc * 0.6) * 0.03 + Math.sin(tSc * 1.3) * 0.015;
+      scarecrowEyes382.forEach(eye => {
+        (eye.material as MeshBasicMaterial).opacity = 0.15 + Math.sin(tSc * 0.5) * 0.1;
       });
     }
     // Marais korrigans — chaotic will-o'-wisp particles
@@ -2743,6 +2810,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     // Ancient tomb entrance cleanup (C378)
     if (tombGroup378) { group.remove(tombGroup378); tombGroup378.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); tombGroup378 = null; }
     if (tombGlowLight378) { tombGlowLight378.dispose(); tombGlowLight378 = null; }
+    // Harvest scarecrow cleanup (C382)
+    if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
+    scarecrowEyes382 = [];
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
