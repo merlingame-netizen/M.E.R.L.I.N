@@ -896,3 +896,122 @@ export function hideCard(): void {
   const overlayEl = document.getElementById('card-overlay');
   if (overlayEl) overlayEl.classList.remove('visible');
 }
+
+// ── C331: Decision timer arc ───────────────────────────────────────────────
+// A canvas-based countdown arc drawn clockwise from the top of the card overlay.
+// Colors: normal  rgba(51,255,102,0.6) | urgent (>80% depleted) rgba(255,60,60,0.7)
+// The background ring stays at rgba(51,255,102,0.1) throughout.
+
+const TIMER_CANVAS_ID = 'card-timer-arc';
+const TIMER_CANVAS_SIZE = 360;
+const TIMER_RADIUS = 170;
+const TIMER_CENTER = TIMER_CANVAS_SIZE / 2; // 180
+
+// Module-level RAF handle so stopDecisionTimer() can cancel inflight animation.
+let _timerRafId: number = 0;
+
+/**
+ * Start a circular countdown arc around the card overlay.
+ * Idempotent: if a canvas already exists the call is a no-op.
+ *
+ * @param durationMs  Total countdown duration in milliseconds.
+ * @param onExpire    Optional callback invoked when the timer completes.
+ */
+export function startDecisionTimer(durationMs: number, onExpire?: () => void): void {
+  // Idempotent guard
+  if (document.getElementById(TIMER_CANVAS_ID)) return;
+
+  const overlay = document.getElementById('card-overlay');
+  if (!overlay) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.id = TIMER_CANVAS_ID;
+  canvas.width = TIMER_CANVAS_SIZE;
+  canvas.height = TIMER_CANVAS_SIZE;
+  canvas.style.cssText = [
+    'position:absolute',
+    `width:${TIMER_CANVAS_SIZE}px`,
+    `height:${TIMER_CANVAS_SIZE}px`,
+    `top:50%`,
+    `left:50%`,
+    `transform:translate(-50%,-50%)`,
+    'pointer-events:none',
+    'z-index:100',
+  ].join(';');
+
+  // The overlay needs to be a positioning parent
+  const prevPosition = overlay.style.position;
+  if (!prevPosition || prevPosition === 'static') {
+    overlay.style.position = 'relative';
+  }
+  overlay.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { canvas.remove(); return; }
+
+  const startTime = performance.now();
+
+  function drawFrame(now: number): void {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / durationMs, 1); // 0 → 1
+
+    ctx!.clearRect(0, 0, TIMER_CANVAS_SIZE, TIMER_CANVAS_SIZE);
+
+    // Background ring — always visible, dim full circle
+    ctx!.beginPath();
+    ctx!.arc(TIMER_CENTER, TIMER_CENTER, TIMER_RADIUS, 0, 2 * Math.PI);
+    ctx!.strokeStyle = 'rgba(51,255,102,0.1)';
+    ctx!.lineWidth = 3;
+    ctx!.lineCap = 'round';
+    ctx!.stroke();
+
+    // Remaining arc: from -π/2 to -π/2 + (1 - progress) * 2π (clockwise depletion)
+    const remaining = 1 - progress;
+    const startAngle = -Math.PI / 2;
+    const endAngle = startAngle + remaining * 2 * Math.PI;
+
+    if (remaining > 0) {
+      // Urgent when more than 80% depleted (remaining < 0.2)
+      const urgent = remaining < 0.2;
+      ctx!.beginPath();
+      ctx!.arc(TIMER_CENTER, TIMER_CENTER, TIMER_RADIUS, startAngle, endAngle);
+      ctx!.strokeStyle = urgent ? 'rgba(255,60,60,0.7)' : 'rgba(51,255,102,0.6)';
+      ctx!.lineWidth = 3;
+      ctx!.lineCap = 'round';
+      ctx!.stroke();
+
+      // Shake offset in urgent phase: canvas drifts by ±2px along X using sin
+      if (urgent) {
+        const shakeX = Math.sin(now * 0.03) * 2; // ~sin(t*30) in seconds
+        canvas.style.transform = `translate(calc(-50% + ${shakeX}px), -50%)`;
+      } else {
+        canvas.style.transform = 'translate(-50%, -50%)';
+      }
+    }
+
+    if (progress >= 1) {
+      // Timer complete
+      canvas.remove();
+      _timerRafId = 0;
+      onExpire?.();
+      return;
+    }
+
+    _timerRafId = requestAnimationFrame(drawFrame);
+  }
+
+  _timerRafId = requestAnimationFrame(drawFrame);
+}
+
+/**
+ * Cancel the decision timer and remove its canvas immediately.
+ * Safe to call even if no timer is running.
+ */
+export function stopDecisionTimer(): void {
+  if (_timerRafId !== 0) {
+    cancelAnimationFrame(_timerRafId);
+    _timerRafId = 0;
+  }
+  const canvas = document.getElementById(TIMER_CANVAS_ID);
+  if (canvas) canvas.remove();
+}
