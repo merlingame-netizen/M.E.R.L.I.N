@@ -1348,6 +1348,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _cauldronLight: PointLight | null = null;
   let _potionSurface: Mesh | null = null;
 
+  // C413: floating spell tome
+  let _tomeGroup: Group | null = null;
+  let _tomeT = 0;
+  let _tomePageFlipTimer = 0;
+  let _tomePageFlipDur = 0;
+  let _tomePageL: Mesh | null = null;
+  let _tomePageR: Mesh | null = null;
+  let _tomeGlowLight: PointLight | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2055,6 +2064,64 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     _cauldronGroup.position.set(-2, 0, -5);
     scene.add(_cauldronGroup);
+  }
+
+  // C413 — floating spell tome
+  {
+    _tomeGroup = new Group();
+
+    // Lectern base
+    const lecternGeo = new BoxGeometry(0.5, 0.9, 0.4);
+    const lecternMat = new MeshStandardMaterial({ color: 0x0a1a10, emissive: 0x050a08, roughness: 0.9, metalness: 0.0 });
+    const lecternMesh = new Mesh(lecternGeo, lecternMat);
+    lecternMesh.position.set(0, 0.45, 0);
+
+    // Lectern top slant
+    const topGeo = new BoxGeometry(0.55, 0.06, 0.45);
+    const topMesh = new Mesh(topGeo, lecternMat);
+    topMesh.position.set(0, 0.92, 0);
+    topMesh.rotation.x = 0.2;
+
+    // Book cover (back spine)
+    const spineGeo = new BoxGeometry(0.08, 0.35, 0.28);
+    const spineMat = new MeshStandardMaterial({ color: 0x0a2a14, emissive: 0x050f08, roughness: 0.8, metalness: 0.0 });
+    const spineMesh = new Mesh(spineGeo, spineMat);
+    spineMesh.position.set(0, 1.22, 0);
+
+    // Left page
+    const pageGeo = new BoxGeometry(0.22, 0.28, 0.02);
+    const pageMat = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.85 });
+    _tomePageL = new Mesh(pageGeo, pageMat);
+    _tomePageL.position.set(-0.15, 1.22, 0);
+    _tomePageL.rotation.y = 0.15;
+
+    // Right page
+    _tomePageR = new Mesh(pageGeo.clone(), pageMat.clone() as MeshBasicMaterial);
+    _tomePageR.position.set(0.15, 1.22, 0);
+    _tomePageR.rotation.y = -0.15;
+
+    // Glow lines on pages (thin planes for rune text effect)
+    const runeLineMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.3 });
+    for (let li = 0; li < 4; li++) {
+      const lineGeo = new PlaneGeometry(0.16, 0.018);
+      const lineMesh = new Mesh(lineGeo, runeLineMat);
+      lineMesh.position.set(-0.15, 1.28 - li * 0.05, 0.012);
+      _tomeGroup.add(lineMesh);
+      const lineR = new Mesh(lineGeo.clone(), runeLineMat.clone() as MeshBasicMaterial);
+      lineR.position.set(0.15, 1.28 - li * 0.05, 0.012);
+      _tomeGroup.add(lineR);
+    }
+
+    // Point light above book
+    _tomeGlowLight = new PointLight(0x33ff66, 0.2, 3.5);
+    _tomeGlowLight.position.set(0, 1.55, 0);
+
+    _tomePageFlipTimer = 0;
+    _tomePageFlipDur = 4 + Math.random() * 6;
+
+    _tomeGroup.add(lecternMesh, topMesh, spineMesh, _tomePageL, _tomePageR, _tomeGlowLight);
+    _tomeGroup.position.set(2.5, 0, -3);
+    scene.add(_tomeGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3191,6 +3258,37 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C413: floating spell tome — hover, rotate, page flip, glow pulse
+    if (_tomeGroup) {
+      _tomeT += dt;
+      _tomePageFlipTimer += dt;
+
+      // Hover float
+      _tomeGroup.position.y = Math.sin(_tomeT * 0.7) * 0.06;
+      // Slow rotation
+      _tomeGroup.rotation.y = Math.sin(_tomeT * 0.25) * 0.15;
+
+      // Light pulse
+      if (_tomeGlowLight) {
+        _tomeGlowLight.intensity = 0.18 + Math.sin(_tomeT * 2.1) * 0.06;
+      }
+
+      // Page flip event trigger
+      if (_tomePageFlipTimer >= _tomePageFlipDur) {
+        _tomePageFlipTimer = 0;
+        _tomePageFlipDur = 4 + Math.random() * 6;
+      }
+      // Animate pages during flip (first 0.6s of cycle)
+      if (_tomePageL && _tomePageR) {
+        if (_tomePageFlipTimer < 0.6) {
+          const ft = _tomePageFlipTimer / 0.6;
+          _tomePageL.rotation.y = 0.15 + Math.sin(ft * Math.PI) * 0.4;
+          _tomePageR.rotation.y = -0.15 - Math.sin(ft * Math.PI) * 0.4;
+          if (_tomeGlowLight) _tomeGlowLight.intensity = 0.35 + Math.sin(ft * Math.PI) * 0.25;
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3482,6 +3580,22 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _cauldronLight = null;
       _potionSurface = null;
       _cauldronGroup = null;
+    }
+    // C413: floating spell tome
+    if (_tomeGroup) {
+      _tomeGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _tomePageL = null;
+      _tomePageR = null;
+      _tomeGlowLight = null;
+      scene.remove(_tomeGroup);
+      _tomeGroup = null;
     }
   };
 
