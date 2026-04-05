@@ -1292,6 +1292,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _chimeAngles376: number[] = [];
   const _chimeVelocities376: number[] = [];
 
+  // C380: crystal orb rack — 3 glowing orbs on iron stands, independent vision flare events
+  const _orbMeshes380: Mesh[] = [];
+  const _orbLights380: PointLight[] = [];
+  let _orbVisionT380 = -1;
+  let _orbNextVision380 = 12.0;
+  let _orbVisionIdx380 = 0;
+
   // C361: enchanted mirror portal — oval frame + ripple surface + vision pulse
   let mirrorGroup361: Group | null = null;
   let mirrorSurface361: Mesh | null = null;
@@ -1672,6 +1679,56 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.add(light);
       _chimeLights376.push(light);
     }
+  }
+
+  // C380: crystal orb rack — wooden/iron rack with 3 glowing nebula orbs on the bookshelf side
+  {
+    const standMat380 = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.8, metalness: 0.5 });
+
+    // Rack shelf — horizontal bar spanning 3 orb positions
+    const rackShelf = new Mesh(new BoxGeometry(1.0, 0.06, 0.12), standMat380);
+    rackShelf.position.set(-2.5, 1.1, -3.8);
+    scene.add(rackShelf);
+
+    const ORB_OFFSETS_380 = [-0.32, 0, 0.32];
+    ORB_OFFSETS_380.forEach((ox, i) => {
+      // Stand post
+      const post = new Mesh(new CylinderGeometry(0.015, 0.02, 0.25, 5), standMat380.clone());
+      post.position.set(-2.5 + ox, 0.975, -3.8);
+      scene.add(post);
+
+      // Cradle ring
+      const cradle = new Mesh(new TorusGeometry(0.09, 0.015, 6, 10), standMat380.clone());
+      cradle.position.set(-2.5 + ox, 1.21, -3.8);
+      cradle.rotation.x = Math.PI / 2;
+      scene.add(cradle);
+
+      // Crystal orb
+      const orbGeo = new SphereGeometry(0.1, 10, 8);
+      const orbMat = new MeshStandardMaterial({
+        color: 0x051505,
+        emissive: new (MeshStandardMaterial.prototype.emissive.constructor as unknown as new (hex: number) => typeof MeshStandardMaterial.prototype.emissive)(0x0d4420),
+        emissiveIntensity: 0.15,
+        roughness: 0.0,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.65,
+      });
+      orbMat.emissive.setHex(0x0d4420);
+      const orb = new Mesh(orbGeo, orbMat);
+      orb.position.set(-2.5 + ox, 1.22, -3.8);
+      orb.userData['phase'] = i * 1.3;
+      scene.add(orb);
+      _orbMeshes380.push(orb);
+
+      // Orb point light
+      const orbLight = new PointLight(0x33ff66, 0.10, 2.5);
+      orbLight.position.set(-2.5 + ox, 1.22, -3.8);
+      scene.add(orbLight);
+      _orbLights380.push(orbLight);
+    });
+
+    _orbNextVision380 = 12.0 + Math.random() * 6.0;
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -2642,6 +2699,42 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C380: crystal orb nebula pulse + vision flare events
+    if (!lowFpsMode) {
+      _orbMeshes380.forEach((orb, i) => {
+        const phase = orb.userData['phase'] as number;
+        const pulse = 0.12 + Math.sin(elapsedTime * 0.7 + phase) * 0.06 + Math.sin(elapsedTime * 1.3 + phase * 2) * 0.03;
+        (orb.material as MeshStandardMaterial).emissiveIntensity = pulse;
+        if (_orbLights380[i]) _orbLights380[i]!.intensity = pulse * 0.8;
+      });
+
+      // Vision event timer
+      _orbNextVision380 -= dt;
+      if (_orbNextVision380 <= 0 && _orbVisionT380 < 0) {
+        _orbVisionT380 = 0;
+        _orbVisionIdx380 = Math.floor(Math.random() * 3);
+        _orbNextVision380 = 12.0 + Math.random() * 6.0;
+      }
+      if (_orbVisionT380 >= 0) {
+        _orbVisionT380 += dt;
+        const vOrb = _orbMeshes380[_orbVisionIdx380];
+        const vLight = _orbLights380[_orbVisionIdx380];
+        if (vOrb && vLight) {
+          if (_orbVisionT380 < 0.5) {
+            const t = _orbVisionT380 / 0.5;
+            (vOrb.material as MeshStandardMaterial).emissiveIntensity = 0.15 + t * 0.35;
+            vLight.intensity = 0.10 + t * 0.40;
+          } else if (_orbVisionT380 < 1.2) {
+            const t = (_orbVisionT380 - 0.5) / 0.7;
+            (vOrb.material as MeshStandardMaterial).emissiveIntensity = 0.50 - t * 0.35;
+            vLight.intensity = 0.50 - t * 0.40;
+          } else {
+            _orbVisionT380 = -1;
+          }
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -2857,6 +2950,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _chimeLights376.length = 0;
     _chimeAngles376.length = 0;
     _chimeVelocities376.length = 0;
+    // C380: remove orb meshes and lights explicitly (not under a shared Group)
+    _orbMeshes380.forEach(o => { scene.remove(o); o.geometry.dispose(); (o.material as MeshStandardMaterial).dispose(); });
+    _orbMeshes380.length = 0;
+    _orbLights380.forEach(l => { scene.remove(l); l.dispose(); });
+    _orbLights380.length = 0;
     // C361: clear mirror portal refs (geometries/materials disposed by scene.traverse above)
     mirrorGroup361 = null;
     mirrorSurface361 = null;
