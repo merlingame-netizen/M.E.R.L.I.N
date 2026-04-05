@@ -1414,6 +1414,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let mirrorFlashT447: number = 0;
   let mirrorLight447: PointLight | null = null;
 
+  // C452 — floating scrying orb (closure-scope vars)
+  let scryingOrbGroup452: Group | null = null;
+  let scryingOrbT452: number = 0;
+  let scryingOrbMat452: MeshBasicMaterial | null = null;
+  let scryingOrbLight452: PointLight | null = null;
+  let scryingOrbVisionTimer452: number = 18;
+  let scryingOrbVisionActive452: boolean = false;
+  let scryingOrbVisionT452: number = 0;
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2628,6 +2637,63 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     mirrorGroup447.add(mirrorLight447);
 
     scene.add(mirrorGroup447);
+  }
+
+  // C452 — floating scrying orb
+  {
+    scryingOrbGroup452 = new Group();
+    scryingOrbGroup452.position.set(0.5, 0.9, -1.5);
+
+    // Pedestal: 3-tier stacked cylinders
+    const pedestalBase = new Mesh(
+      new CylinderGeometry(0.25, 0.3, 0.08, 8),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    pedestalBase.position.y = -0.55;
+    scryingOrbGroup452.add(pedestalBase);
+
+    const pedestalMid = new Mesh(
+      new CylinderGeometry(0.1, 0.22, 0.25, 6),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    pedestalMid.position.y = -0.38;
+    scryingOrbGroup452.add(pedestalMid);
+
+    const pedestalTop = new Mesh(
+      new CylinderGeometry(0.2, 0.12, 0.06, 8),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    pedestalTop.position.y = -0.22;
+    scryingOrbGroup452.add(pedestalTop);
+
+    // Crystal orb outer shell (transparent dark glass)
+    const orbOuter = new Mesh(
+      new SphereGeometry(0.2, 12, 10),
+      new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.55 })
+    );
+    scryingOrbMat452 = orbOuter.material as MeshBasicMaterial;
+    scryingOrbGroup452.add(orbOuter);
+
+    // Inner glow core (smaller bright sphere inside)
+    const orbCore = new Mesh(
+      new SphereGeometry(0.1, 8, 8),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 })
+    );
+    scryingOrbGroup452.add(orbCore);
+
+    // Orbit ring (thin torus around orb equator)
+    const orbitRing = new Mesh(
+      new TorusGeometry(0.22, 0.015, 4, 24),
+      new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.6 })
+    );
+    orbitRing.rotation.x = Math.PI * 0.3;
+    scryingOrbGroup452.add(orbitRing);
+
+    // PointLight at orb center
+    scryingOrbLight452 = new PointLight(0x33ff66, 0.35, 5.0);
+    scryingOrbGroup452.add(scryingOrbLight452);
+
+    scene.add(scryingOrbGroup452);
   }
 
   // C438 — potion bottle shelf
@@ -4042,6 +4108,51 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C452 — floating scrying orb update
+    scryingOrbT452 += dt;
+    scryingOrbVisionTimer452 -= dt;
+
+    if (scryingOrbGroup452) {
+      // Levitation: bob up and down
+      scryingOrbGroup452.position.y = 0.9 + 0.08 * Math.sin(scryingOrbT452 * 0.9);
+      // Slow rotation
+      scryingOrbGroup452.rotation.y = scryingOrbT452 * 0.2;
+    }
+
+    // Outer orb opacity breathe
+    if (scryingOrbMat452 && !scryingOrbVisionActive452) {
+      scryingOrbMat452.opacity = 0.45 + 0.15 * Math.sin(scryingOrbT452 * 1.4);
+    }
+
+    // Light breathe
+    if (scryingOrbLight452 && !scryingOrbVisionActive452) {
+      scryingOrbLight452.intensity = 0.3 + 0.1 * Math.sin(scryingOrbT452 * 1.8);
+    }
+
+    // Trigger vision
+    if (scryingOrbVisionTimer452 <= 0) {
+      scryingOrbVisionTimer452 = 15 + Math.random() * 10;
+      scryingOrbVisionActive452 = true;
+      scryingOrbVisionT452 = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+    }
+
+    // Vision animation
+    if (scryingOrbVisionActive452) {
+      scryingOrbVisionT452 += dt;
+      if (scryingOrbVisionT452 < 0.4) {
+        const p = scryingOrbVisionT452 / 0.4;
+        if (scryingOrbMat452) scryingOrbMat452.opacity = 0.55 + 0.45 * p;
+        if (scryingOrbLight452) scryingOrbLight452.intensity = 0.3 + 1.2 * p;
+      } else if (scryingOrbVisionT452 < 1.5) {
+        const p = (scryingOrbVisionT452 - 0.4) / 1.1;
+        if (scryingOrbMat452) scryingOrbMat452.opacity = 1.0 - 0.5 * p;
+        if (scryingOrbLight452) scryingOrbLight452.intensity = 1.5 - 1.2 * p;
+      } else {
+        scryingOrbVisionActive452 = false;
+      }
+    }
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -4476,6 +4587,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     mirrorSurfaceMat447 = null;
     mirrorLight447 = null;
+    // C452 — floating scrying orb dispose
+    if (scryingOrbGroup452) {
+      scryingOrbGroup452.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(scryingOrbGroup452);
+      scryingOrbGroup452 = null;
+    }
+    scryingOrbMat452 = null;
+    scryingOrbLight452 = null;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
