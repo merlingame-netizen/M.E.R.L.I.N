@@ -650,6 +650,12 @@ let lighthouseGroup404: Group | null = null;
 let lighthouseBeaconLight404: SpotLight | null = null;
 let lighthouseT404 = 0;
 
+// ── Sea cave with bioluminescent algae — cotes_sauvages (C411) ─────────────
+let seaCaveGroup411: Group | null = null;
+let seaCaveT411 = 0;
+let seaCaveLight411: PointLight | null = null;
+const seaCaveAlgae411: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1301,6 +1307,69 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(lighthouseGroup404);
   }
 
+  // ── Sea cave with bioluminescent algae (C411) — cotes_sauvages ────────────
+  {
+    seaCaveGroup411 = new Group();
+
+    // Left rock wall
+    const leftWallGeo = new BoxGeometry(1.2, 4, 1.5);
+    const rockMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const leftWall = new Mesh(leftWallGeo, rockMat);
+    leftWall.position.set(-1.6, 2, 0);
+    seaCaveGroup411.add(leftWall);
+
+    // Right rock wall
+    const rightWallGeo = new BoxGeometry(1.2, 4, 1.5);
+    const rightWall = new Mesh(rightWallGeo, new MeshBasicMaterial({ color: 0x0a1a10 }));
+    rightWall.position.set(1.6, 2, 0);
+    seaCaveGroup411.add(rightWall);
+
+    // Arch top
+    const archGeo = new BoxGeometry(4.5, 1.2, 1.5);
+    const arch = new Mesh(archGeo, new MeshBasicMaterial({ color: 0x0a1a10 }));
+    arch.position.set(0, 4.6, 0);
+    seaCaveGroup411.add(arch);
+
+    // Cave dark interior
+    const interiorGeo = new PlaneGeometry(3.0, 4.0);
+    const interior = new Mesh(interiorGeo, new MeshBasicMaterial({ color: 0x010501, opacity: 0.97, transparent: true }));
+    interior.position.set(0, 2, 0.2);
+    interior.rotation.y = Math.PI;
+    seaCaveGroup411.add(interior);
+
+    // 8 algae patches on interior walls
+    const caveGroupRef = seaCaveGroup411;
+    const leftAlgaeYs = [0.8, 1.5, 2.2, 3.0];
+    const rightAlgaeYs = [1.0, 1.8, 2.5, 3.2];
+    leftAlgaeYs.forEach(y => {
+      const geo = new PlaneGeometry(0.3, 0.4);
+      const mat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 });
+      const patch = new Mesh(geo, mat);
+      patch.position.set(-1.1, y, 0.3);
+      patch.rotation.y = Math.PI / 2;
+      caveGroupRef.add(patch);
+      seaCaveAlgae411.push(patch);
+    });
+    rightAlgaeYs.forEach(y => {
+      const geo = new PlaneGeometry(0.3, 0.4);
+      const mat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 });
+      const patch = new Mesh(geo, mat);
+      patch.position.set(1.1, y, 0.3);
+      patch.rotation.y = -Math.PI / 2;
+      caveGroupRef.add(patch);
+      seaCaveAlgae411.push(patch);
+    });
+
+    // Inner glow
+    const glow = new PointLight(0x33ff66, 0.3, 5.0);
+    glow.position.set(0, 1.5, 0.5);
+    seaCaveLight411 = glow;
+    seaCaveGroup411.add(glow);
+
+    seaCaveGroup411.position.set(-18, 0, -30);
+    group.add(seaCaveGroup411);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -1675,6 +1744,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       if (pointLight) pointLight.intensity = 0.3 + Math.sin(lighthouseT404 * 2) * 0.3;
     }
 
+    // ── Sea cave bioluminescence (C411) ─────────────────────────────────────
+    if (seaCaveGroup411 && seaCaveLight411) {
+      seaCaveT411 += dt;
+      seaCaveLight411.intensity = 0.25 + Math.sin(seaCaveT411 * 1.2) * 0.08 + Math.sin(seaCaveT411 * 2.7) * 0.04;
+      seaCaveAlgae411.forEach((patch, i) => {
+        const mat = patch.material as MeshBasicMaterial;
+        mat.opacity = 0.3 + Math.sin(seaCaveT411 * 1.5 + i * 0.7) * 0.15;
+      });
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -1820,6 +1899,15 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
       lighthouseGroup404 = null;
       lighthouseBeaconLight404 = null;
+    }
+    if (seaCaveGroup411) {
+      seaCaveGroup411.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      seaCaveAlgae411.length = 0;
+      seaCaveLight411 = null;
+      seaCaveGroup411 = null;
     }
     group.clear();
   };
