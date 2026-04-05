@@ -372,6 +372,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let valleeWispTime = 0;
   let montsWindMesh: Points | null = null;
   let montsWindTime = 0;
+  let plaineWispMeshes: Mesh[] = [];
+  let plaineWispTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -609,6 +611,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     // Store references for animation in update()
     plaineDruideFireLight = fireLight;
     plaineDruideFireMesh = fireCore;
+    // Orbiting druid wisps — 8 green will-o'-wisps circling the druid stone
+    const wispGeo = new SphereGeometry(0.12, 6, 4);
+    for (let i = 0; i < 8; i++) {
+      const wispMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 });
+      const wisp = new Mesh(wispGeo, wispMat);
+      const orbitRadius = 4 + (i % 3) * 1.5;
+      const orbitY = 1.2 + (i % 4) * 0.4;
+      wisp.userData = { orbitRadius, orbitY, phase: (i / 8) * Math.PI * 2, speed: 0.4 + (i % 3) * 0.15 };
+      group.add(wisp);
+      plaineWispMeshes.push(wisp);
+    }
   }
 
   const update = (dt: number): void => {
@@ -622,6 +635,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (plaineDruideFireMesh !== null) {
       (plaineDruideFireMesh.material as MeshStandardMaterial).emissiveIntensity =
         1.2 + Math.sin(Date.now() * 0.012) * 0.4;
+    }
+    // Plaine des Druides — orbiting druid wisps
+    if (plaineWispMeshes.length > 0) {
+      plaineWispTime += dt;
+      for (const wisp of plaineWispMeshes) {
+        const { orbitRadius, orbitY, phase, speed } = wisp.userData as { orbitRadius: number; orbitY: number; phase: number; speed: number };
+        const angle = plaineWispTime * speed + phase;
+        wisp.position.set(
+          Math.cos(angle) * orbitRadius,
+          orbitY + Math.sin(plaineWispTime * 1.3 + phase) * 0.2,
+          Math.sin(angle) * orbitRadius - 12,
+        );
+        (wisp.material as MeshBasicMaterial).opacity = 0.5 + Math.sin(plaineWispTime * 2 + phase) * 0.2;
+      }
     }
     // Marais swamp water — subtle vertex displacement ripple
     if (maraisWater !== null) {
@@ -703,6 +730,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   };
 
   const dispose = (): void => {
+    plaineWispMeshes = [];
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
