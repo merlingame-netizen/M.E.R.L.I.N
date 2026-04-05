@@ -1129,6 +1129,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _vialLights: PointLight[] = [];
   let _vialTime = 0;
 
+  // C269: spell tome on map table — auto-open/close cycle (8s period)
+  let _tomePivotGroup: Group | null = null;
+  let _tomeCoverMesh: Mesh | null = null;
+  let _tomePagesMesh: Mesh | null = null;
+  let _tomeTime = 0;
+  let _tomeOpenAngle = 0; // 0 = closed, PI*0.6 = fully open
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1199,6 +1206,32 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.add(light);
       _vialLights.push(light);
     }
+  }
+
+  // C269: spell tome — sits on map table, cover rotates open/closed on 8s cycle.
+  // Table top surface at y = -2 + 0.09 = -1.91; scroll at -1.88. Tome sits at -1.75 (slightly elevated).
+  // Pivot group positions cover hinge at spine edge (x + 0.275) so rotation.z opens like a book.
+  {
+    const TOME_X = -5;
+    const TOME_Y = -1.75;
+    const TOME_Z = -5;
+    const pagesMat = new MeshBasicMaterial({ color: 0x1a1c14 });
+    const coverMat = new MeshBasicMaterial({ color: 0x0a1208 });
+    // Pages (book body) — slightly narrower than cover
+    const pages = new Mesh(new BoxGeometry(0.55, 0.06, 0.75), pagesMat);
+    pages.position.set(TOME_X, TOME_Y, TOME_Z);
+    scene.add(pages);
+    _tomePagesMesh = pages;
+    // Cover pivot group — origin at the spine (left edge x - 0.275)
+    const pivotGroup = new Group();
+    pivotGroup.position.set(TOME_X - 0.275, TOME_Y + 0.04, TOME_Z);
+    // Cover mesh positioned to the right of the pivot (center offset +0.275)
+    const cover = new Mesh(new BoxGeometry(0.55, 0.02, 0.75), coverMat);
+    cover.position.set(0.275, 0, 0);
+    pivotGroup.add(cover);
+    scene.add(pivotGroup);
+    _tomeCoverMesh = cover;
+    _tomePivotGroup = pivotGroup;
   }
 
   // Forest window + day/night/season cycle
@@ -1780,6 +1813,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C269: spell tome open/close cycle — 8s period, opens over 1s, stays open 3s, then closes
+    if (!lowFpsMode && _tomePivotGroup) {
+      _tomeTime += dt;
+      const cycle = _tomeTime % 8;
+      const targetAngle = (cycle > 2 && cycle < 5) ? Math.PI * 0.6 : 0;
+      _tomeOpenAngle += (targetAngle - _tomeOpenAngle) * Math.min(dt * 2, 1);
+      _tomePivotGroup.rotation.z = _tomeOpenAngle;
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -1922,6 +1964,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C264: clear vial refs (geometries/materials disposed by scene.traverse above)
     _vialMeshes = [];
     _vialLights = [];
+    // C269: clear tome refs (geometries/materials disposed by scene.traverse above)
+    _tomeCoverMesh = null;
+    _tomePagesMesh = null;
+    _tomePivotGroup = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
