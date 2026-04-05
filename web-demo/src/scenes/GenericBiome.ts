@@ -377,6 +377,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let montsSnowMeshes: Mesh[] = [];
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
+  let plaineObeliskGlowMat: MeshBasicMaterial | null = null;
+  let plaineObeliskTime = 0;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
 
@@ -759,6 +761,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(wisp);
       plaineWispMeshes.push(wisp);
     }
+    // Central obelisk monument
+    const obeliskBodyMat = new MeshBasicMaterial({ color: 0x2a3020 });
+    const obeliskBody = new Mesh(new CylinderGeometry(0.4, 0.6, 10, 4), obeliskBodyMat);
+    obeliskBody.position.set(0, 0, -18);
+    group.add(obeliskBody);
+    const obeliskCapMat = new MeshBasicMaterial({ color: 0x2a3020 });
+    const obeliskCap = new Mesh(new CylinderGeometry(0, 0.4, 1.5, 4), obeliskCapMat);
+    obeliskCap.position.set(0, 5.75, -18);
+    group.add(obeliskCap);
+    // Rune inscription glow on obelisk face
+    const glowMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.2 });
+    const glowPlane = new Mesh(new PlaneGeometry(0.3, 1.2), glowMat);
+    glowPlane.position.set(0, 0, -17.45);
+    group.add(glowPlane);
+    plaineObeliskGlowMat = glowMat;
   }
 
   const update = (dt: number): void => {
@@ -786,6 +803,11 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         );
         (wisp.material as MeshBasicMaterial).opacity = 0.5 + Math.sin(plaineWispTime * 2 + phase) * 0.2;
       }
+    }
+    // Plaine des Druides — obelisk rune glow pulse
+    if (plaineObeliskGlowMat) {
+      plaineObeliskTime += dt;
+      plaineObeliskGlowMat.opacity = 0.12 + Math.sin(plaineObeliskTime * 0.6) * 0.08;
     }
     // Marais korrigans — chaotic will-o'-wisp particles
     if (maraisWispMeshes.length > 0) {
@@ -896,6 +918,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
   const dispose = (): void => {
     plaineWispMeshes = [];
+    plaineObeliskGlowMat = null;
     maraisWispMeshes = [];
     montsSnowMeshes = [];
     altarRuneRing = null;
