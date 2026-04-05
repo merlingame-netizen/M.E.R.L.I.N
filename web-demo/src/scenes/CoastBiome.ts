@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import {
-  AmbientLight, BackSide, BoxGeometry, BufferAttribute, Color,
+  AmbientLight, BackSide, BoxGeometry, BufferAttribute, CircleGeometry, Color,
   ConeGeometry, CylinderGeometry, DirectionalLight,
   DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
   Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, SphereGeometry,
@@ -579,6 +579,10 @@ let _anemoneTime = 0;
 // ── Distant fishing boat silhouette (C293) ────────────────────────────────
 let _boatGroup: Group | null = null;
 
+// ── Tide pool + scuttling crab (C308) ─────────────────────────────────────
+let _crabGroup: Group | null = null;
+let _tidePoolLight: PointLight | null = null;
+
 // ── Seagull flock — animated loose formation (C298) ──────────────────────
 const _seagullGroups: Group[] = [];
 const _seagullWingsL: Mesh[] = [];
@@ -953,6 +957,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       const vz = Math.cos(t * ud.speed + ud.phase + Math.PI / 2) * ud.speed * 2;
       bird.rotation.y = Math.atan2(vx, vz);
     }
+
+    // Tide pool crab scuttle + water shimmer (C308)
+    if (_crabGroup !== null) {
+      _crabGroup.position.x = 5.8 + Math.sin(t * 0.35) * 0.3;
+      _crabGroup.position.z = -8.2 + Math.cos(t * 0.28) * 0.2;
+      _crabGroup.rotation.y = Math.sin(t * 0.35) * 0.4;
+    }
+    if (_tidePoolLight !== null) {
+      _tidePoolLight.intensity = 0.05 + Math.sin(t * 1.1) * 0.03;
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -978,6 +992,8 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _foamMeshes = [];
     _anemoneMeshes = [];
     _boatGroup = null;
+    _crabGroup = null;
+    _tidePoolLight = null;
     _seagullGroups.length = 0;
     _seagullWingsL.length = 0;
     _seagullWingsR.length = 0;
