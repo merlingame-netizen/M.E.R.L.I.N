@@ -456,6 +456,11 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let moonbeamMesh362: Mesh | null = null;
   let moonbeamLight362: PointLight | null = null;
 
+  // Cloaked druid silhouettes — cercles_pierres (C390)
+  let druidGroup390: Group | null = null;
+  let druidArmLeft390: Mesh | null = null;
+  let druidArmRight390: Mesh | null = null;
+
   // ── Ancient tomb entrance — vallee_anciens (C378) ─────────────────────────
   let tombGroup378: Group | null = null;
   let tombGlowLight378: PointLight | null = null;
@@ -1811,6 +1816,62 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     moonbeamLight362 = new PointLight(0x33ff66, 0.12, 5.0);
     moonbeamLight362.position.set(0, -0.12, -15);
     group.add(moonbeamLight362);
+
+    // Cloaked druid silhouette figures at stone circle (C390)
+    druidGroup390 = new Group();
+    const figMat = new MeshStandardMaterial({ color: 0x050d05, roughness: 0.95 });
+    const armMat = new MeshStandardMaterial({
+      color: 0x050d05, roughness: 0.95,
+      emissive: new Color(0x0d4420), emissiveIntensity: 0.08,
+    });
+
+    const DRUID_CIRCLE_R = 3.0;
+    const ALTAR_X = 0;
+    const ALTAR_Z = -15;
+
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2 + Math.PI / 10;
+      const fx = ALTAR_X + Math.cos(angle) * DRUID_CIRCLE_R;
+      const fz = ALTAR_Z + Math.sin(angle) * DRUID_CIRCLE_R;
+
+      const figGroup = new Group();
+
+      // Cloak/body — tapered cylinder silhouette
+      const body = new Mesh(new CylinderGeometry(0.14, 0.22, 1.6, 6), figMat);
+      body.position.y = 0.8;
+      figGroup.add(body);
+
+      // Hood/head — small sphere
+      const hood = new Mesh(new SphereGeometry(0.15, 6, 5), figMat);
+      hood.scale.set(1, 1.1, 1);
+      hood.position.y = 1.7;
+      figGroup.add(hood);
+
+      // Aura light
+      const aura = new PointLight(0x33ff66, 0.04, 1.5);
+      aura.position.y = 1.0;
+      figGroup.add(aura);
+
+      // Figure i===2 gets raised arms (the ritualist)
+      if (i === 2) {
+        druidArmLeft390 = new Mesh(new BoxGeometry(0.08, 0.55, 0.08), armMat);
+        druidArmLeft390.position.set(-0.22, 1.3, 0);
+        druidArmLeft390.rotation.z = -0.8;
+        figGroup.add(druidArmLeft390);
+
+        druidArmRight390 = new Mesh(new BoxGeometry(0.08, 0.55, 0.08), armMat);
+        druidArmRight390.position.set(0.22, 1.3, 0);
+        druidArmRight390.rotation.z = 0.8;
+        figGroup.add(druidArmRight390);
+      }
+
+      figGroup.position.set(fx, 0, fz);
+      figGroup.rotation.y = Math.atan2(-Math.cos(angle), -Math.sin(angle));
+      figGroup.userData['bobPhase'] = i * 0.8;
+      druidGroup390.add(figGroup);
+    }
+
+    group.add(druidGroup390);
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -2613,6 +2674,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         moonbeamLight362.intensity = pulse * 1.5;
       }
     }
+    // Cercles de Pierres — cloaked druid figures cloak ripple + arm animation (C390)
+    if (druidGroup390 !== null) {
+      const t390 = Date.now() * 0.001;
+      druidGroup390.children.forEach((fig) => {
+        const phase = (fig as Group).userData['bobPhase'] as number || 0;
+        (fig as Group).scale.x = 1.0 + Math.sin(t390 * 1.2 + phase) * 0.015;
+        (fig as Group).scale.z = 1.0 + Math.sin(t390 * 0.9 + phase + 1) * 0.01;
+      });
+      if (druidArmLeft390 !== null && druidArmRight390 !== null) {
+        const armAngle = 0.8 + Math.sin(t390 * 0.3) * 0.25;
+        druidArmLeft390.rotation.z = -armAngle;
+        druidArmRight390.rotation.z = armAngle;
+      }
+    }
     // Vallee Anciens — ancestor will-o-wisp drift
     if (valleeWispMesh !== null) {
       valleeWispTime += dt;
@@ -2853,6 +2928,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     // Moonbeam shaft cleanup (C362)
     if (moonbeamMesh362) { group.remove(moonbeamMesh362); (moonbeamMesh362.geometry as BufferGeometry).dispose(); moonbeamMesh362 = null; }
     if (moonbeamLight362) { group.remove(moonbeamLight362); moonbeamLight362.dispose(); moonbeamLight362 = null; }
+    // Cloaked druid figures cleanup (C390)
+    if (druidGroup390) { group.remove(druidGroup390); druidGroup390.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else (cm.material as MeshStandardMaterial).dispose(); } }); druidGroup390 = null; }
+    druidArmLeft390 = null;
+    druidArmRight390 = null;
     // Crow on dolmen cleanup (C358)
     if (crowGroup358) { group.remove(crowGroup358); crowGroup358.traverse(c => { if ((c as Mesh).geometry) (c as Mesh).geometry.dispose(); }); crowGroup358 = null; }
     crowWings358 = [];
