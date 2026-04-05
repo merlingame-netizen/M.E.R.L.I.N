@@ -5,7 +5,7 @@
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Line, LineBasicMaterial, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Line, LineBasicMaterial, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, TorusGeometry, Vector3, WebGLRenderer } from 'three';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -824,6 +824,12 @@ let _stormAmbientLight434: PointLight | null = null;
 let _stormFlashActive434 = false;
 let _stormFlashDur434 = 0;
 
+// C445 — Celtic knotwork portal ring
+let _portalGroup445: Group | null = null;
+let _portalT445: number = 0;
+let _portalGlyphs445: Mesh[] = [];
+let _portalRingMat445: MeshBasicMaterial | null = null;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1623,6 +1629,22 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C445: Celtic knotwork portal ring
+    _portalT445 += dt;
+    if (_portalGroup445) {
+      _portalGroup445.rotation.z = _portalT445 * 0.08;
+      _portalGroup445.rotation.y = Math.PI * 0.1 + Math.sin(_portalT445 * 0.2) * 0.05;
+    }
+    if (_portalRingMat445) {
+      _portalRingMat445.opacity = 0.6 + 0.2 * Math.sin(_portalT445 * 1.5);
+    }
+    _portalGlyphs445.forEach((g, i) => {
+      const angle = (i / 8) * Math.PI * 2 + _portalT445 * 0.15;
+      g.position.x = Math.cos(angle) * 2.2;
+      g.position.y = Math.sin(angle) * 2.2;
+      (g.material as MeshBasicMaterial).opacity = 0.5 + 0.4 * Math.sin(_portalT445 * 2.0 + i * 0.8);
+    });
+
     renderer.render(scene, camera);
   };
 
@@ -2069,6 +2091,46 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   _stormGroup434.position.set(20, 12, -48);
   scene.add(_stormGroup434);
 
+  // C445 — Celtic knotwork portal ring
+  _portalGroup445 = new Group();
+  _portalGroup445.position.set(-6, 2, -15);
+  _portalGroup445.rotation.y = Math.PI * 0.1;
+
+  const portalRing = new Mesh(
+    new TorusGeometry(2.2, 0.12, 8, 48),
+    new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.75 }),
+  );
+  _portalRingMat445 = portalRing.material as MeshBasicMaterial;
+  _portalGroup445.add(portalRing);
+
+  const innerRing = new Mesh(
+    new TorusGeometry(1.8, 0.05, 6, 36),
+    new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 }),
+  );
+  _portalGroup445.add(innerRing);
+
+  const portalFace = new Mesh(
+    new CircleGeometry(1.75, 32),
+    new MeshBasicMaterial({ color: 0x010802, transparent: true, opacity: 0.6, side: DoubleSide }),
+  );
+  _portalGroup445.add(portalFace);
+
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const glyph = new Mesh(
+      new PlaneGeometry(0.18, 0.18),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8, side: DoubleSide }),
+    );
+    glyph.position.set(Math.cos(angle) * 2.2, Math.sin(angle) * 2.2, 0.05);
+    _portalGlyphs445.push(glyph);
+    _portalGroup445.add(glyph);
+  }
+
+  const portalLight = new PointLight(0x33ff66, 0.25, 10);
+  _portalGroup445.add(portalLight);
+
+  scene.add(_portalGroup445);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2278,6 +2340,17 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       scene.remove(_stormGroup434);
       _stormGroup434 = null;
     }
+
+    // C445: dispose Celtic knotwork portal ring
+    if (_portalGroup445) {
+      _portalGroup445.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(_portalGroup445);
+      _portalGroup445 = null;
+    }
+    _portalGlyphs445 = [];
+    _portalRingMat445 = null;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
