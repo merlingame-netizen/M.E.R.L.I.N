@@ -972,6 +972,15 @@ let bridgeT466: number = 0;
 let bridgeStreamMat466: MeshBasicMaterial | null = null;
 let bridgeLight466: PointLight | null = null;
 
+// ── Cycle-471: enchanted sword embedded in stone — Caliburn/Excalibur ─────────
+let swordStoneGroup471: Group | null = null;
+let swordStoneT471: number = 0;
+let swordRuneMats471: MeshBasicMaterial[] = [];
+let swordLight471: PointLight | null = null;
+let swordResonateTimer471: number = 22;
+let swordResonating471: boolean = false;
+let swordResonateT471: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2602,6 +2611,103 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(bridgeGroup466);
   }
 
+  // ── Cycle-471: enchanted sword in stone — forest clearing ────────────────────
+  {
+    swordStoneGroup471 = new Group();
+    swordStoneGroup471.position.set(0, 0, -7);
+
+    // Pedestal stone — 3 overlapping boxes for irregular boulder shape
+    const rock1 = new Mesh(
+      new BoxGeometry(1.2, 0.9, 1.0),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    rock1.position.y = 0.45;
+    swordStoneGroup471.add(rock1);
+
+    const rock2 = new Mesh(
+      new BoxGeometry(0.9, 0.7, 0.85),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    rock2.position.set(0.2, 0.55, 0.1);
+    swordStoneGroup471.add(rock2);
+
+    const rock3 = new Mesh(
+      new BoxGeometry(0.8, 0.6, 0.9),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    rock3.position.set(-0.15, 0.5, -0.1);
+    swordStoneGroup471.add(rock3);
+
+    // Sword grip/pommel
+    const grip = new Mesh(
+      new CylinderGeometry(0.06, 0.06, 0.35, 6),
+      new MeshBasicMaterial({ color: 0x020f04 })
+    );
+    grip.position.y = 1.1;
+    swordStoneGroup471.add(grip);
+
+    // Crossguard
+    const crossguard = new Mesh(
+      new BoxGeometry(0.5, 0.07, 0.1),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    crossguard.position.y = 1.35;
+    swordStoneGroup471.add(crossguard);
+
+    // Blade lower section
+    const bladeLower = new Mesh(
+      new BoxGeometry(0.08, 1.2, 0.04),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    bladeLower.position.y = 1.97;
+    swordStoneGroup471.add(bladeLower);
+
+    // Blade upper section
+    const bladeUpper = new Mesh(
+      new BoxGeometry(0.05, 0.6, 0.03),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    bladeUpper.position.y = 2.87;
+    swordStoneGroup471.add(bladeUpper);
+
+    // Blade tip
+    const bladeTip = new Mesh(
+      new CylinderGeometry(0.0, 0.025, 0.2, 4),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    bladeTip.position.y = 3.27;
+    swordStoneGroup471.add(bladeTip);
+
+    // 4 rune planes along blade face — pulsing green energy
+    for (let i = 0; i < 4; i++) {
+      const rune = new Mesh(
+        new PlaneGeometry(0.06, 0.1),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 })
+      );
+      rune.position.set(0.05, 1.5 + i * 0.35, 0);
+      swordRuneMats471.push(rune.material as MeshBasicMaterial);
+      swordStoneGroup471.add(rune);
+    }
+
+    // 4 bioluminescent moss patches on stone surface
+    for (let i = 0; i < 4; i++) {
+      const moss = new Mesh(
+        new SphereGeometry(0.08 + Math.random() * 0.05, 4, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.3 })
+      );
+      moss.scale.y = 0.25;
+      moss.position.set(-0.3 + i * 0.2, 0.7 + Math.random() * 0.3, 0.52);
+      swordStoneGroup471.add(moss);
+    }
+
+    // Ambient rune PointLight
+    swordLight471 = new PointLight(0x33ff66, 0.18, 4.0);
+    swordLight471.position.set(0, 2.0, 0.3);
+    swordStoneGroup471.add(swordLight471);
+
+    group.add(swordStoneGroup471);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3184,6 +3290,53 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (bridgeLight466) {
       bridgeLight466.intensity = 0.18 + 0.07 * Math.sin(bridgeT466 * 1.4);
     }
+
+    // Cycle-471: sword resonance animation
+    swordStoneT471 += dt;
+    swordResonateTimer471 -= dt;
+
+    // Rune breathing (idle)
+    if (!swordResonating471) {
+      swordRuneMats471.forEach((mat, i) => {
+        mat.opacity = 0.45 + 0.2 * Math.sin(swordStoneT471 * 0.9 + i * 0.6);
+      });
+      if (swordLight471) {
+        swordLight471.intensity = 0.15 + 0.06 * Math.sin(swordStoneT471 * 0.9);
+      }
+    }
+
+    // Trigger resonance
+    if (swordResonateTimer471 <= 0) {
+      swordResonateTimer471 = 18 + Math.random() * 12;
+      swordResonating471 = true;
+      swordResonateT471 = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+    }
+
+    // Resonance animation: 0.4s ramp up, 0.6s hold, 1.0s fade
+    if (swordResonating471) {
+      swordResonateT471 += dt;
+      let runeOp: number;
+      let lightInt: number;
+      if (swordResonateT471 < 0.4) {
+        const p = swordResonateT471 / 0.4;
+        runeOp = 0.6 + 0.4 * p;
+        lightInt = 0.18 + 0.7 * p;
+      } else if (swordResonateT471 < 1.0) {
+        runeOp = 1.0;
+        lightInt = 0.88;
+      } else if (swordResonateT471 < 2.0) {
+        const p = (swordResonateT471 - 1.0) / 1.0;
+        runeOp = 1.0 - 0.55 * p;
+        lightInt = 0.88 - 0.7 * p;
+      } else {
+        runeOp = 0.45;
+        lightInt = 0.18;
+        swordResonating471 = false;
+      }
+      swordRuneMats471.forEach((mat) => { mat.opacity = runeOp; });
+      if (swordLight471) swordLight471.intensity = lightInt;
+    }
   };
 
   const dispose = (): void => {
@@ -3564,6 +3717,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     bridgeStreamMat466 = null;
     bridgeLight466 = null;
+
+    // Cycle-471: sword in stone cleanup
+    if (swordStoneGroup471) {
+      group.remove(swordStoneGroup471);
+      swordStoneGroup471.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (Array.isArray(mat)) {
+          (mat as Material[]).forEach(m => m.dispose());
+        } else if (mat) {
+          (mat as Material).dispose();
+        }
+      });
+      swordStoneGroup471 = null;
+    }
+    swordRuneMats471.length = 0;
+    swordLight471 = null;
   };
 
   return { group, update, dispose };
