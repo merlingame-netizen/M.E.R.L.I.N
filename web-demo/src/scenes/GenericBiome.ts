@@ -364,6 +364,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let plaineDruideFireMesh: Mesh | null = null;
   let maraisWater: Mesh | null = null;
   let maraisWaterTime = 0;
+  let landeSporeMesh: Points | null = null;
+  let landeSporeTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -417,6 +419,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       h.position.set((Math.random() - 0.5) * 60, -0.75, -5 - Math.random() * 50);
       group.add(h);
     }
+    // Heather spore particles — gentle mint-green motes drifting in the wind
+    const SPORE_COUNT = 80;
+    const sporeGeo = new BufferGeometry();
+    const sporePos = new Float32Array(SPORE_COUNT * 3);
+    for (let i = 0; i < SPORE_COUNT; i++) {
+      sporePos[i * 3]     = (Math.random() - 0.5) * 60;
+      sporePos[i * 3 + 1] = 0.3 + Math.random() * 3.0;
+      sporePos[i * 3 + 2] = -5 - Math.random() * 50;
+    }
+    sporeGeo.setAttribute('position', new BufferAttribute(sporePos, 3));
+    const sporeMat = new PointsMaterial({ color: 0x88ffaa, size: 0.08, transparent: true, opacity: 0.5, sizeAttenuation: true });
+    landeSporeMesh = new Points(sporeGeo, sporeMat);
+    group.add(landeSporeMesh);
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -582,6 +597,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       }
       pos.needsUpdate = true;
       maraisWater.geometry.computeVertexNormals();
+    }
+    // Landes bruyere spore drift — slow rightward wind + gentle vertical bob
+    if (landeSporeMesh !== null) {
+      landeSporeTime += dt;
+      const pos = landeSporeMesh.geometry.getAttribute('position') as BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        pos.setX(i, pos.getX(i) + 0.3 * dt);
+        pos.setY(i, pos.getY(i) + Math.sin(landeSporeTime * 0.5 + i * 0.7) * 0.015);
+        if (pos.getX(i) > 30) pos.setX(i, -30);
+      }
+      pos.needsUpdate = true;
     }
   };
 
