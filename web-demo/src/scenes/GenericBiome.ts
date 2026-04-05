@@ -536,6 +536,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let ghostHead425: Mesh | null = null;
   let ghostLight425: PointLight | null = null;
 
+  // ── Stone sundial — plaine_druides (C429) ────────────────────────────────
+  let sundialGroup429: Group | null = null;
+  let sundialT429 = 0;
+  let sundialShadow429: Mesh | null = null;
+  let sundialLight429: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -2682,6 +2688,63 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     scarecrowGroup382.position.set(-5, 0, -12);
     group.add(scarecrowGroup382);
+
+    // ── Stone sundial (C429) ─────────────────────────────────────────────────
+    sundialGroup429 = new Group();
+
+    // Base disc
+    const sdBase = new Mesh(
+      new CylinderGeometry(0.75, 0.8, 0.12, 16),
+      new MeshLambertMaterial({ color: 0x0a1a10 }),
+    );
+    sdBase.position.set(0, 0.06, 0);
+    sundialGroup429.add(sdBase);
+
+    // Pedestal
+    const sdPedestal = new Mesh(
+      new CylinderGeometry(0.2, 0.25, 0.6, 8),
+      new MeshLambertMaterial({ color: 0x0a1a10 }),
+    );
+    sdPedestal.position.set(0, -0.25, 0);
+    sundialGroup429.add(sdPedestal);
+
+    // Gnomon (pointer) — tilted like a real sundial
+    const sdGnomon = new Mesh(
+      new BoxGeometry(0.05, 0.5, 0.04),
+      new MeshLambertMaterial({ color: 0x0a1a10 }),
+    );
+    sdGnomon.position.set(0, 0.37, 0);
+    sdGnomon.rotation.z = 0.5;
+    sundialGroup429.add(sdGnomon);
+
+    // 12 hour tick marks around the rim
+    const tickMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 });
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const tick = new Mesh(new BoxGeometry(0.06, 0.04, 0.12), tickMat);
+      tick.position.set(Math.cos(angle) * 0.6, 0.13, Math.sin(angle) * 0.6);
+      tick.rotation.y = -angle;
+      sundialGroup429.add(tick);
+    }
+
+    // Shadow plane (gnomon shadow)
+    const sdShadow = new Mesh(
+      new PlaneGeometry(0.65, 0.04),
+      new MeshBasicMaterial({ color: 0x0a1a10, transparent: true, opacity: 0.7 }),
+    );
+    sdShadow.rotation.x = -Math.PI / 2;
+    sdShadow.position.set(0, 0.13, 0);
+    sundialGroup429.add(sdShadow);
+    sundialShadow429 = sdShadow;
+
+    // Point light
+    const sdLight = new PointLight(0x33ff66, 0.08, 3.0);
+    sdLight.position.set(0, 0.5, 0);
+    sundialGroup429.add(sdLight);
+    sundialLight429 = sdLight;
+
+    sundialGroup429.position.set(-4, 0, -10);
+    group.add(sundialGroup429);
   }
 
   const update = (dt: number): void => {
@@ -3319,6 +3382,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       ghostGroup425.position.x = -3 + Math.sin(ghostT425 * 0.25) * 0.4;
       ghostGroup425.rotation.y = Math.sin(ghostT425 * 0.15) * 0.5;
     }
+    // Plaine des Druides — stone sundial rotating shadow (C429)
+    if (sundialGroup429) {
+      sundialT429 += dt;
+      // Shadow rotates slowly (full rotation every 120s = simulated day cycle)
+      if (sundialShadow429) {
+        sundialShadow429.rotation.y = sundialT429 * (Math.PI * 2 / 120);
+        // Shadow length pulses slightly
+        sundialShadow429.scale.x = 0.9 + Math.sin(sundialT429 * 0.1) * 0.15;
+      }
+      // Tick marks pulse gently
+      if (sundialLight429) {
+        sundialLight429.intensity = 0.07 + Math.sin(sundialT429 * 0.8) * 0.025;
+      }
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3582,6 +3659,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.remove(ghostGroup425);
       ghostBody425 = null; ghostHead425 = null; ghostLight425 = null;
       ghostGroup425 = null;
+    }
+    // Stone sundial cleanup (C429)
+    if (sundialGroup429) {
+      sundialGroup429.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(sundialGroup429);
+      sundialShadow429 = null;
+      sundialLight429 = null;
+      sundialGroup429 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
