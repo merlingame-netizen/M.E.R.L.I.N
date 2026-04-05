@@ -960,6 +960,12 @@ let hollowOakT456: number = 0;
 let hollowOakInnerMat456: MeshBasicMaterial | null = null;
 let hollowOakLight456: PointLight | null = null;
 
+// ── Cycle-461: druidic burial mound (tumulus) with glowing dolmen entrance ────
+let tumulus461: Group | null = null;
+let tumulusT461: number = 0;
+let tumulusGlowMat461: MeshBasicMaterial | null = null;
+let tumulusLight461: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -2424,6 +2430,88 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(hollowOakGroup456);
   }
 
+  // ── Cycle-461: druidic burial mound (tumulus) with glowing dolmen entrance ──
+  {
+    tumulus461 = new Group();
+    tumulus461.position.set(-8, 0, -18);
+
+    // Earth mound: flattened hemisphere
+    const mound = new Mesh(
+      new SphereGeometry(2.0, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.5),
+      new MeshBasicMaterial({ color: 0x020f04 })
+    );
+    mound.scale.y = 0.55;
+    mound.position.y = 0.01;
+    tumulus461.add(mound);
+
+    // Ground cap (covers bottom of sphere)
+    const groundCap = new Mesh(
+      new CylinderGeometry(2.0, 2.0, 0.06, 12),
+      new MeshBasicMaterial({ color: 0x010802 })
+    );
+    groundCap.position.y = 0.03;
+    tumulus461.add(groundCap);
+
+    // Dolmen entrance: left upright stone
+    const leftUpright = new Mesh(
+      new BoxGeometry(0.22, 1.0, 0.28),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    leftUpright.position.set(-0.42, 0.5, 1.92);
+    tumulus461.add(leftUpright);
+
+    // Dolmen entrance: right upright stone
+    const rightUpright = new Mesh(
+      new BoxGeometry(0.22, 1.0, 0.28),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    rightUpright.position.set(0.42, 0.5, 1.92);
+    tumulus461.add(rightUpright);
+
+    // Dolmen entrance: lintel
+    const dolmenLintel = new Mesh(
+      new BoxGeometry(1.1, 0.22, 0.32),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    dolmenLintel.position.set(0, 1.08, 1.92);
+    tumulus461.add(dolmenLintel);
+
+    // Dark passage floor inside entrance
+    const passageFloor = new Mesh(
+      new BoxGeometry(0.6, 0.04, 0.8),
+      new MeshBasicMaterial({ color: 0x010802 })
+    );
+    passageFloor.position.set(0, 0.02, 1.7);
+    tumulus461.add(passageFloor);
+
+    // Glowing inner plane (visible through entrance gap)
+    const innerGlow = new Mesh(
+      new PlaneGeometry(0.55, 0.8),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.12 })
+    );
+    innerGlow.position.set(0, 0.5, 1.5);
+    tumulusGlowMat461 = innerGlow.material as MeshBasicMaterial;
+    tumulus461.add(innerGlow);
+
+    // PointLight inside mound
+    tumulusLight461 = new PointLight(0x33ff66, 0.18, 4.0);
+    tumulusLight461.position.set(0, 0.5, 0.8);
+    tumulus461.add(tumulusLight461);
+
+    // 3 small stones scattered in front of entrance
+    for (let i = 0; i < 3; i++) {
+      const stone = new Mesh(
+        new SphereGeometry(0.1 + Math.random() * 0.08, 5, 4),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      );
+      stone.scale.y = 0.5;
+      stone.position.set(-0.5 + i * 0.5, 0.05, 2.3 + Math.random() * 0.3);
+      tumulus461.add(stone);
+    }
+
+    group.add(tumulus461);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2988,6 +3076,15 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (hollowOakLight456) {
       hollowOakLight456.intensity = 0.35 + 0.12 * Math.sin(hollowOakT456 * 0.6);
     }
+
+    // Cycle-461: tumulus dolmen glow pulse
+    tumulusT461 += dt;
+    if (tumulusGlowMat461) {
+      tumulusGlowMat461.opacity = 0.08 + 0.06 * Math.sin(tumulusT461 * 0.7);
+    }
+    if (tumulusLight461) {
+      tumulusLight461.intensity = 0.15 + 0.07 * Math.sin(tumulusT461 * 0.7);
+    }
   };
 
   const dispose = (): void => {
@@ -3334,6 +3431,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     hollowOakInnerMat456 = null;
     hollowOakLight456 = null;
+
+    // Cycle-461: tumulus cleanup
+    if (tumulus461) {
+      group.remove(tumulus461);
+      tumulus461.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (Array.isArray(mat)) {
+          mat.forEach(m => m.dispose());
+        } else if (mat) {
+          (mat as Material).dispose();
+        }
+      });
+      tumulus461 = null;
+    }
+    tumulusGlowMat461 = null;
+    tumulusLight461 = null;
   };
 
   return { group, update, dispose };
