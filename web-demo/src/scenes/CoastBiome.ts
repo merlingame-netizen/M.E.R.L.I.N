@@ -509,6 +509,50 @@ function createShipwreck(): Group {
   return group;
 }
 
+// ── Distant fishing boat silhouette on horizon (C293) ────────────────────────
+// Small dark silhouette ~58 units out to sea; gentle bob + lateral drift in update().
+
+function createFishingBoat(): Group {
+  const group = new Group();
+  const silMat = new MeshBasicMaterial({ color: 0x0a1008 });
+
+  // Hull
+  const hull = new Mesh(new BoxGeometry(3.5, 0.8, 1.2), silMat);
+  hull.position.set(0, 0, 0);
+  group.add(hull);
+
+  // Cabin — centered on hull, offset +0.75 Y
+  const cabin = new Mesh(new BoxGeometry(0.9, 0.7, 0.8), silMat);
+  cabin.position.set(0, 0.75, 0);
+  group.add(cabin);
+
+  // Mast — vertical cylinder from hull center
+  const mast = new Mesh(new CylinderGeometry(0.04, 0.04, 3.5, 4), silMat);
+  mast.position.set(0, 1.75, 0); // 3.5/2 above hull center
+  group.add(mast);
+
+  // Boom — horizontal, rotated 90° on Z, at -0.6 Y relative to mast top
+  const boom = new Mesh(new CylinderGeometry(0.03, 0.03, 2.0, 4), silMat);
+  boom.rotation.z = Math.PI / 2;
+  boom.position.set(0, 1.75 + 3.5 / 2 - 0.6, 0); // near mast top, offset -0.6
+  group.add(boom);
+
+  // Sail — DoubleSide translucent dark green, offset slightly from mast
+  const sailMat = new MeshBasicMaterial({
+    color: 0x1a2a1a,
+    side: DoubleSide,
+    transparent: true,
+    opacity: 0.7,
+  });
+  const sail = new Mesh(new PlaneGeometry(1.6, 2.2), sailMat);
+  sail.position.set(0.5, 2.35, 0); // offset from mast toward boom
+  group.add(sail);
+
+  // Place group at horizon
+  group.position.set(10, 0.2, -58);
+  return group;
+}
+
 // ── Export interface ──────────────────────────────────────────────────────────
 
 export interface BiomeSceneResult {
@@ -531,6 +575,9 @@ let _foamTimer = 0;
 // ── Tide pool anemones (C273) ─────────────────────────────────────────────────
 let _anemoneMeshes: Mesh[] = [];
 let _anemoneTime = 0;
+
+// ── Distant fishing boat silhouette (C293) ────────────────────────────────
+let _boatGroup: Group | null = null;
 
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
@@ -716,6 +763,10 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(glowPlane);
   }
 
+  // ── Distant fishing boat silhouette on horizon (C293) ────────────────────
+  _boatGroup = createFishingBoat();
+  group.add(_boatGroup);
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -823,6 +874,12 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         foam.position.y = -10;
       }
     }
+
+    // Distant fishing boat — gentle bob + slow lateral drift (C293)
+    if (_boatGroup !== null) {
+      _boatGroup.position.y = 0.2 + Math.sin(t * 0.5) * 0.12;
+      _boatGroup.position.x = 10 + Math.sin(t * 0.08) * 1.5;
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -847,6 +904,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
     _foamMeshes = [];
     _anemoneMeshes = [];
+    _boatGroup = null;
     group.clear();
   };
 
