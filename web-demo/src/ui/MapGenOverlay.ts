@@ -582,6 +582,67 @@ function easeOutBounce(t: number): number {
   }
 }
 
+// ── Node reveal animation ─────────────────────────────────────────────────────
+//
+// Draws the pop-in flourish on top of a settled zone node:
+//   • Ring expands radius 0 → 12px over 200ms, rgba(51,255,102,0.8) stroke
+//   • Dot appears  scale 0 → 1.2 → 1.0 over 250ms  (3-keyframe bounce)
+//   • Label fades  opacity 0 → 1   over 200ms  (starts 100ms after dot)
+//
+// elapsed — time since this node's reveal started (ms)
+
+function drawNodeReveal(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  label: string,
+  elapsed: number,
+): void {
+  if (elapsed <= 0) return;
+
+  ctx.save();
+
+  // ── Ring expansion: 0 → 12px radius over 200ms ───────────────────────────
+  const RING_MS = 200;
+  const ringT = Math.min(elapsed / RING_MS, 1);
+  const ringRadius = ringT * 12;
+  const ringOpacity = ringT < 1 ? 0.8 - ringT * 0.6 : 0.2;
+  ctx.beginPath();
+  ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(51,255,102,${ringOpacity})`;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // ── Dot scale: 0 → 1.2 → 1.0 over 250ms ─────────────────────────────────
+  const DOT_MS = 250;
+  const dotT = Math.min(elapsed / DOT_MS, 1);
+  // Keyframe: 0–0.6 → scale up to 1.2, 0.6–1.0 → settle to 1.0
+  const dotScale = dotT < 0.6
+    ? (dotT / 0.6) * 1.2
+    : 1.2 - ((dotT - 0.6) / 0.4) * 0.2;
+  const dotR = 5 * dotScale;
+  ctx.beginPath();
+  ctx.arc(x, y, dotR, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(51,255,102,0.9)';
+  ctx.fill();
+
+  // ── Label fade: opacity 0 → 1 over 200ms, offset 100ms ──────────────────
+  const LABEL_OFFSET_MS = 100;
+  const LABEL_MS = 200;
+  const labelElapsed = elapsed - LABEL_OFFSET_MS;
+  if (labelElapsed > 0) {
+    const labelAlpha = Math.min(labelElapsed / LABEL_MS, 1);
+    ctx.globalAlpha = labelAlpha;
+    ctx.fillStyle = '#33ff66';
+    ctx.font = `bold 8px 'Courier New',monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label.toUpperCase(), x, y + 18);
+  }
+
+  ctx.restore();
+}
+
 // ── Animation state type ──────────────────────────────────────────────────────
 
 interface AnimState {
@@ -589,6 +650,10 @@ interface AnimState {
   phase: 'path' | 'zones' | 'done';
   /** Per-zone elapsed time in ms (starts counting when zone drop-in begins) */
   zoneTimers: number[];
+  /** Per-node reveal animation elapsed time (-1 = not started yet) */
+  nodeRevealTimers: number[];
+  /** Tracks which nodes have already fired their reveal SFX */
+  nodeRevealSfxFired: boolean[];
   rafId: number;
   lastTs: number;
   /** Recent tip positions for spark trail (index 0 = most recent) */
@@ -942,6 +1007,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     progress: 0,
     phase: 'path',
     zoneTimers: new Array<number>(mapData.events.length).fill(-1),
+    nodeRevealTimers: new Array<number>(mapData.events.length).fill(-1),
+    nodeRevealSfxFired: new Array<boolean>(mapData.events.length).fill(false),
     rafId: 0,
     lastTs: 0,
     tipTrail: [],
@@ -1019,6 +1086,17 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
         drawEventNode(ctx, pt.x, pt.y, ev, alpha);
         ctx.restore();
       }
+      // Node reveal flourish on top of each settled node
+      for (let i = 0; i < mapData.events.length; i++) {
+        const revealElapsed = animState.nodeRevealTimers[i]!;
+        if (revealElapsed <= 0) continue;
+        const ev = mapData.events[i]!;
+        const pt = getPathPoint(mapData.pathPoints, ev.position);
+        // Only draw reveal once the node is mostly settled (zoneTimer > 150ms)
+        const zoneElapsed = animState.zoneTimers[i]!;
+        if (zoneElapsed < 150) continue;
+        drawNodeReveal(ctx, pt.x, pt.y, ev.nom, revealElapsed);
+      }
     }
 
     drawCelticBorder(ctx, canvas.width, canvas.height);
@@ -1064,9 +1142,32 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
           const next = t + dt;
           animState.zoneTimers[i] = next;
           if (next < ZONE_DROP_MS) allDone = false;
+
+          // Start node reveal flourish once the zone is mostly settled (150ms in)
+          if (next >= 150 && animState.nodeRevealTimers[i]! < 0) {
+            animState.nodeRevealTimers[i] = 0;
+          }
         }
 
-        if (allDone && animState.zoneTimers.every((t) => t >= 0)) {
+        // Advance reveal timers and fire SFX once per node
+        const NODE_REVEAL_TOTAL_MS = 350; // ring + dot + label complete
+        let revealAllDone = true;
+        for (let i = 0; i < animState.nodeRevealTimers.length; i++) {
+          const rt = animState.nodeRevealTimers[i]!;
+          if (rt < 0) { revealAllDone = false; continue; }
+          // Fire SFX on first frame of reveal
+          if (!animState.nodeRevealSfxFired[i]) {
+            animState.nodeRevealSfxFired[i] = true;
+            sfx('select');
+          }
+          const nextRt = rt + dt;
+          animState.nodeRevealTimers[i] = nextRt;
+          if (nextRt < NODE_REVEAL_TOTAL_MS) revealAllDone = false;
+        }
+
+        const allZonesDone = animState.zoneTimers.every((t) => t >= 0) &&
+          animState.zoneTimers.every((t) => t >= ZONE_DROP_MS);
+        if (allDone && allZonesDone && revealAllDone) {
           animState.phase = 'done';
           zonesResolve();
           return; // stop RAF
@@ -1099,11 +1200,11 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   // Trigger zone drop-ins one by one, staggered, as paragraphs typewrite
   let rafActive = true; // kept for Phase 5 cancel compat
 
-  // Kick off zone timers progressively (staggered by 80ms regardless of text)
+  // Kick off zone timers progressively (staggered by 150ms per node)
   const triggerZonesSequentially = async (): Promise<void> => {
     for (let i = 0; i < animState.zoneTimers.length; i++) {
-      animState.zoneTimers[i] = 0; // start this zone's drop-in
-      await wait(ZONE_STAGGER);
+      animState.zoneTimers[i] = 0; // start this zone's drop-in + reveal sequence
+      await wait(150);
     }
   };
 
