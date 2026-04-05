@@ -2,7 +2,7 @@
 // Window on back-right wall area [4, 3.5, -9.75], facing +Z (into scene).
 // Forest silhouettes at z=-10.6 (behind glass). Light through window adapts to hour/season.
 
-import { BoxGeometry, Color, ConeGeometry, DoubleSide, FrontSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Scene, SphereGeometry, SpotLight } from 'three';
+import { BoxGeometry, CircleGeometry, Color, ConeGeometry, DoubleSide, FrontSide, Group, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Scene, SphereGeometry, SpotLight } from 'three';
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 
@@ -207,9 +207,31 @@ export function createLairWindow(scene: Scene): WindowResult {
     return starMesh;
   });
 
+  // ── Moon disc (night + dawn, CeltOS pale green-white) ────────────────────
+
+  let moonMesh: Mesh | null = null;
+  const moonMat = new MeshBasicMaterial({ color: 0xddeedd, transparent: true, opacity: 0 });
+  moonMesh = new Mesh(new CircleGeometry(1.2, 16), moonMat);
+  moonMesh.position.set(4, 5, -9.5);
+  group.add(moonMesh);
+
+  // ── Aurora bands (3 horizontal planes, CeltOS green, night only) ─────────
+
+  let auroraMeshes: Mesh[] = [];
+  const auroraYPositions = [7.5, 8.2, 8.9];
+  auroraMeshes = auroraYPositions.map((y, i) => {
+    const mat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0, side: DoubleSide });
+    const mesh = new Mesh(new PlaneGeometry(12, 0.4), mat);
+    mesh.position.set(0, y, -9.5);
+    mesh.userData['phase'] = i * 0.8;
+    group.add(mesh);
+    return mesh;
+  });
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   let currentSeason: Season = 'spring';
+  let currentTimeOfDay: 'day' | 'dawn' | 'dusk' | 'night' = 'day';
 
   const updateTime = (params: LairTimeParams): void => {
     currentSeason = params.season;
@@ -234,6 +256,17 @@ export function createLairWindow(scene: Scene): WindowResult {
     const h = ((params.hour % 24) + 24) % 24;
     const isNight = h < 5 || h >= 20;
     starMeshes.forEach(s => { s.visible = isNight; });
+
+    // Track time-of-day for moon/aurora lerp targets
+    if (h >= 5 && h < 8) {
+      currentTimeOfDay = 'dawn';
+    } else if (h >= 8 && h < 17) {
+      currentTimeOfDay = 'day';
+    } else if (h >= 17 && h < 20) {
+      currentTimeOfDay = 'dusk';
+    } else {
+      currentTimeOfDay = 'night';
+    }
   };
 
   const update = (elapsed: number): void => {
@@ -256,6 +289,27 @@ export function createLairWindow(scene: Scene): WindowResult {
     const breathe = Math.sin(elapsed * (Math.PI * 2 / 8)); // -1 .. 1, period = 8s
     frameMat.emissiveIntensity = 0.075 + breathe * 0.045; // oscillates 0.03 .. 0.12
     windowInteriorLight.intensity = 0.15 + breathe * 0.08; // oscillates 0.07 .. 0.23
+
+    // Moon disc — fade in at night (0.85) and dawn (0.4), hidden otherwise
+    if (moonMesh !== null) {
+      const mat = moonMesh.material as MeshBasicMaterial;
+      const moonTarget = currentTimeOfDay === 'night' ? 0.85
+        : currentTimeOfDay === 'dawn' ? 0.4
+        : 0;
+      // elapsed is cumulative — use fixed 60fps step for lerp (smooth regardless of framerate)
+      mat.opacity = MathUtils.lerp(mat.opacity, moonTarget, 0.016 * 1.5);
+    }
+
+    // Aurora bands — gentle wave + opacity fade (night only)
+    auroraMeshes.forEach(mesh => {
+      const mat = mesh.material as MeshBasicMaterial;
+      const phase = mesh.userData['phase'] as number;
+      const auroraTarget = currentTimeOfDay === 'night'
+        ? 0.08 + Math.sin(elapsed * 0.3 + phase) * 0.04
+        : 0;
+      mat.opacity = MathUtils.lerp(mat.opacity, auroraTarget, 0.016 * 1.5);
+      mesh.position.x = Math.sin(elapsed * 0.2 + phase) * 0.5;
+    });
   };
 
   scene.add(group);
