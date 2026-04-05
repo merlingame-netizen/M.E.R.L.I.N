@@ -814,6 +814,16 @@ let _stoneCircleLight427: PointLight | null = null;
 let _celtosTerminal431: HTMLDivElement | null = null;
 let _celtosInterval431: ReturnType<typeof setInterval> | null = null;
 
+// C434 — distant lightning storm
+let _stormGroup434: Group | null = null;
+let _stormT434 = 0;
+let _stormFlashTimer434 = 0;
+let _stormNextFlash434 = 6 + Math.random() * 10;
+const _lightningBolts434: Line[] = [];
+let _stormAmbientLight434: PointLight | null = null;
+let _stormFlashActive434 = false;
+let _stormFlashDur434 = 0;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1561,6 +1571,58 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       _stoneCircleLight427.intensity = 0.06 + Math.sin(_stoneCircleT427 * 0.35) * 0.03;
     }
 
+    // C434: distant lightning storm
+    if (_stormGroup434) {
+      _stormT434 += dt;
+      _stormFlashTimer434 += dt;
+
+      // Trigger lightning
+      if (_stormFlashTimer434 >= _stormNextFlash434 && !_stormFlashActive434) {
+        _stormFlashActive434 = true;
+        _stormFlashDur434 = 0;
+        _stormNextFlash434 = 8 + Math.random() * 12;
+        _stormFlashTimer434 = 0;
+
+        // Randomize bolt paths (in group-local space, from cloud base downward)
+        const numBolts = 1 + Math.floor(Math.random() * 3);
+        _lightningBolts434.forEach((bolt, bi) => {
+          if (bi < numBolts) {
+            const sx = (Math.random() - 0.5) * 5;
+            const pts = [
+              new Vector3(sx, -2, 0),
+              new Vector3(sx + (Math.random() - 0.5) * 1.5, -4.5, 0),
+              new Vector3(sx + (Math.random() - 0.5) * 2, -7, 0),
+              new Vector3(sx + (Math.random() - 0.5) * 1, -9, 0),
+            ];
+            bolt.geometry.setFromPoints(pts);
+            (bolt.material as LineBasicMaterial).opacity = 0.95;
+          } else {
+            (bolt.material as LineBasicMaterial).opacity = 0.0;
+          }
+        });
+      }
+
+      if (_stormFlashActive434) {
+        _stormFlashDur434 += dt;
+        // Flash: bright for 0.08s, then fast fade
+        const flashT = _stormFlashDur434;
+        let boltOpacity = 0;
+        if (flashT < 0.08) boltOpacity = 0.95;
+        else if (flashT < 0.25) boltOpacity = (1.0 - (flashT - 0.08) / 0.17) * 0.95;
+        else {
+          _stormFlashActive434 = false;
+          boltOpacity = 0;
+        }
+        _lightningBolts434.forEach(bolt => {
+          if ((bolt.material as LineBasicMaterial).opacity > 0)
+            (bolt.material as LineBasicMaterial).opacity = boltOpacity;
+        });
+        if (_stormAmbientLight434) _stormAmbientLight434.intensity = boltOpacity * 0.4;
+      } else {
+        if (_stormAmbientLight434) _stormAmbientLight434.intensity = 0.015 + Math.sin(_stormT434 * 0.3) * 0.008;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -1970,6 +2032,43 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   runBootSequence();
   _celtosInterval431 = setInterval(runBootSequence, 30000);
 
+  // C434 — distant lightning storm
+  _stormGroup434 = new Group();
+
+  const cloudMat434 = new MeshBasicMaterial({ color: 0x0a1a0e, transparent: true, opacity: 0.88, depthWrite: false });
+
+  // Storm cloud mass: 5 overlapping SphereGeometry blobs
+  const cloudDefs434 = [
+    { x: 0, y: 0, z: 0, r: 4.5 },
+    { x: -3.5, y: -1, z: 1, r: 3.2 },
+    { x: 3.5, y: -0.5, z: -1, r: 3.8 },
+    { x: 1, y: 2, z: 0.5, r: 2.8 },
+    { x: -2, y: 1.5, z: -1, r: 2.5 },
+  ];
+  cloudDefs434.forEach(({ x, y, z, r }) => {
+    const cloud = new Mesh(new SphereGeometry(r, 7, 5), cloudMat434.clone());
+    cloud.position.set(x, y, z);
+    _stormGroup434!.add(cloud);
+  });
+
+  // Pre-build 3 lightning bolt lines (hidden by default)
+  for (let bi = 0; bi < 3; bi++) {
+    const boltPoints = [new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 0)];
+    const boltGeo = new BufferGeometry().setFromPoints(boltPoints);
+    const boltMat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 });
+    const bolt = new Line(boltGeo, boltMat);
+    _lightningBolts434.push(bolt);
+    _stormGroup434!.add(bolt);
+  }
+
+  // Ambient storm glow light (dim, occasional flash)
+  _stormAmbientLight434 = new PointLight(0x33ff66, 0.02, 30.0);
+  _stormAmbientLight434.position.set(0, -3, 0);
+  _stormGroup434.add(_stormAmbientLight434);
+
+  _stormGroup434.position.set(20, 12, -48);
+  scene.add(_stormGroup434);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2166,6 +2265,19 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     if (_celtosTerminal431) { _celtosTerminal431.remove(); _celtosTerminal431 = null; }
     const ctStyle = document.getElementById('celtos-terminal-431-style');
     if (ctStyle) ctStyle.remove();
+
+    // C434: dispose distant lightning storm
+    if (_stormGroup434) {
+      _stormGroup434.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof Line) { c.geometry.dispose(); (c.material as LineBasicMaterial).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _lightningBolts434.length = 0;
+      _stormAmbientLight434 = null;
+      scene.remove(_stormGroup434);
+      _stormGroup434 = null;
+    }
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
