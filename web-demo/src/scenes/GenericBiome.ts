@@ -376,6 +376,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let montsWindTime = 0;
   let plaineWispMeshes: Mesh[] = [];
   let plaineWispTime = 0;
+  let maraisWispMeshes: Mesh[] = [];
+  let maraisWispTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -418,6 +420,25 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       figure.rotation.y = Math.random() * Math.PI * 2;
       group.add(figure);
     });
+
+    // Chaotic will-o'-wisp particles — korrigans = chaos/trickery, erratic movement
+    const wispMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 });
+    for (let i = 0; i < 10; i++) {
+      const wisp = new Mesh(new SphereGeometry(0.1, 4, 3), wispMat.clone());
+      wisp.position.set(
+        (Math.random() - 0.5) * 30,
+        0.2 + Math.random() * 1.3,
+        -8 - Math.random() * 17,
+      );
+      wisp.userData = {
+        phase: Math.random() * Math.PI * 2,
+        noiseX: Math.random() * 10,
+        noiseZ: Math.random() * 10,
+        speed: 0.8 + Math.random() * 0.6,
+      };
+      group.add(wisp);
+      maraisWispMeshes.push(wisp);
+    }
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -724,6 +745,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         (wisp.material as MeshBasicMaterial).opacity = 0.5 + Math.sin(plaineWispTime * 2 + phase) * 0.2;
       }
     }
+    // Marais korrigans — chaotic will-o'-wisp particles
+    if (maraisWispMeshes.length > 0) {
+      maraisWispTime += dt;
+      for (const wisp of maraisWispMeshes) {
+        const { phase, noiseX, noiseZ, speed } = wisp.userData as { phase: number; noiseX: number; noiseZ: number; speed: number };
+        const t = maraisWispTime * speed;
+        wisp.position.x = Math.sin(t * 0.7 + noiseX) * 8 + Math.sin(t * 1.3 + phase) * 4;
+        wisp.position.y = 0.6 + Math.sin(t * 1.1 + phase) * 0.4 + Math.abs(Math.sin(t * 2.3)) * 0.3;
+        wisp.position.z = -15 + Math.sin(t * 0.5 + noiseZ) * 8 + Math.cos(t * 0.9) * 3;
+        // Erratic opacity flicker
+        (wisp.material as MeshBasicMaterial).opacity = 0.3 + Math.abs(Math.sin(t * 4.5 + phase)) * 0.5;
+      }
+    }
     // Marais swamp water — subtle vertex displacement ripple
     if (maraisWater !== null) {
       maraisWaterTime += dt;
@@ -811,6 +845,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
   const dispose = (): void => {
     plaineWispMeshes = [];
+    maraisWispMeshes = [];
     altarRuneRing = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
