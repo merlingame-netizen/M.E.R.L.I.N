@@ -366,6 +366,222 @@ export function showStreakBreak(container: HTMLElement): void {
   });
 }
 
+// ── Win / Lose result screen ──────────────────────────────────────────────────
+
+/**
+ * Full-screen result overlay shown after a minigame ends.
+ *
+ * Win:  green rune ᚁ, "VICTOIRE", score count-up, 12 green particle burst.
+ * Lose: red rune ᚔ, "DÉFAITE", score dim, 3 red scanline flashes.
+ *
+ * Pressing any key or clicking fires `onDismiss()` exactly once.
+ * CSS keyframes are injected once (idempotent via id guard).
+ */
+export function showMinigameResult(
+  container: HTMLElement,
+  won: boolean,
+  score: number,
+  onDismiss: () => void
+): void {
+  // ── CSS (idempotent) ───────────────────────────────────────────────────────
+  if (!document.getElementById('minigame-result-style')) {
+    const s = document.createElement('style');
+    s.id = 'minigame-result-style';
+    s.textContent = `
+      @keyframes mgr-rune-pop {
+        0%   { transform: scale(0);   opacity: 0; }
+        65%  { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(1.0); opacity: 1; }
+      }
+      @keyframes mgr-blink {
+        0%, 100% { opacity: 0.45; }
+        50%       { opacity: 0.85; }
+      }
+      @keyframes mgr-particle {
+        0%   { transform: translate(0,0) scale(1);   opacity: 1; }
+        100% { transform: var(--tx,40px) var(--ty,-60px) scale(0); opacity: 0; }
+      }
+      @keyframes mgr-scanline {
+        0%   { opacity: 0.7; }
+        50%  { opacity: 0.05; }
+        100% { opacity: 0; }
+      }
+      @keyframes mgr-fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // ── Ensure container is positioned ────────────────────────────────────────
+  if (!['relative', 'absolute', 'fixed', 'sticky'].includes(getComputedStyle(container).position)) {
+    container.style.position = 'relative';
+  }
+
+  // ── Dismiss guard ─────────────────────────────────────────────────────────
+  let _resultDismissed = false;
+  const dismiss = (): void => {
+    if (_resultDismissed) return;
+    _resultDismissed = true;
+    document.removeEventListener('keydown', onKey);
+    overlay.removeEventListener('click', onClick);
+    overlay.style.transition = 'opacity 0.2s ease';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 220);
+    onDismiss();
+  };
+  const onKey = (): void => dismiss();
+  const onClick = (): void => dismiss();
+
+  // ── Overlay shell ─────────────────────────────────────────────────────────
+  const overlay = document.createElement('div');
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.style.cssText = [
+    'position:absolute',
+    'inset:0',
+    'display:flex',
+    'flex-direction:column',
+    'align-items:center',
+    'justify-content:center',
+    'z-index:110',
+    won ? 'background:rgba(1,8,2,0.92)' : 'background:rgba(8,1,2,0.92)',
+    'border-radius:inherit',
+    'animation:mgr-fade-in 0.25s ease forwards',
+    'cursor:pointer',
+  ].join(';');
+
+  // ── Ogham rune ────────────────────────────────────────────────────────────
+  const rune = document.createElement('div');
+  rune.textContent = won ? '\u1681' : '\u1694'; // ᚁ / ᚔ
+  rune.style.cssText = [
+    'font-size:72px',
+    won ? 'color:rgba(51,255,102,1.0)' : 'color:rgba(255,60,60,0.9)',
+    won ? 'text-shadow:0 0 28px rgba(51,255,102,0.7)' : 'text-shadow:0 0 20px rgba(255,60,60,0.6)',
+    'animation:mgr-rune-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards',
+    'line-height:1',
+    'margin-bottom:12px',
+    'display:block',
+  ].join(';');
+
+  // ── Result label ──────────────────────────────────────────────────────────
+  const label = document.createElement('div');
+  label.textContent = won ? 'VICTOIRE' : 'DÉFAITE';
+  label.style.cssText = [
+    'font-family:\'Courier New\',monospace',
+    'font-size:28px',
+    'font-weight:700',
+    won ? 'color:rgba(51,255,102,0.95)' : 'color:rgba(255,80,80,0.9)',
+    won ? 'text-shadow:0 0 14px rgba(51,255,102,0.5)' : 'text-shadow:0 0 10px rgba(255,60,60,0.5)',
+    'letter-spacing:6px',
+    'margin-bottom:20px',
+  ].join(';');
+
+  // ── Score counter ─────────────────────────────────────────────────────────
+  const scoreEl = document.createElement('div');
+  const clamped = Math.max(0, Math.min(100, Math.round(score)));
+  scoreEl.textContent = '0';
+  scoreEl.style.cssText = [
+    'font-family:\'Courier New\',monospace',
+    'font-size:48px',
+    'font-weight:700',
+    won ? 'color:rgba(51,255,102,0.95)' : 'color:rgba(255,80,80,0.5)',
+    won ? 'text-shadow:0 0 20px rgba(51,255,102,0.4)' : 'none',
+    'margin-bottom:28px',
+  ].join(';');
+
+  // Count-up animation over 600ms
+  const countUpDuration = 600;
+  const countUpStart = performance.now();
+  const tickCountUp = (): void => {
+    const elapsed = performance.now() - countUpStart;
+    const t = Math.min(elapsed / countUpDuration, 1);
+    // ease-out cubic
+    const eased = 1 - Math.pow(1 - t, 3);
+    scoreEl.textContent = String(Math.round(eased * clamped));
+    if (t < 1) requestAnimationFrame(tickCountUp);
+  };
+  requestAnimationFrame(tickCountUp);
+
+  // ── Dismiss hint ──────────────────────────────────────────────────────────
+  const hint = document.createElement('div');
+  hint.textContent = '[APPUYER POUR CONTINUER]';
+  hint.style.cssText = [
+    'font-family:\'Courier New\',monospace',
+    'font-size:10px',
+    'letter-spacing:2px',
+    won ? 'color:rgba(51,255,102,0.55)' : 'color:rgba(255,80,80,0.45)',
+    'animation:mgr-blink 1.4s ease-in-out infinite',
+    'position:absolute',
+    'bottom:20px',
+  ].join(';');
+
+  overlay.appendChild(rune);
+  overlay.appendChild(label);
+  overlay.appendChild(scoreEl);
+  overlay.appendChild(hint);
+  container.appendChild(overlay);
+
+  // ── Win: 12 green particle burst ──────────────────────────────────────────
+  if (won) {
+    const particleCount = 12;
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2;
+      const dist = 55 + Math.random() * 50;
+      const tx = `${Math.round(Math.cos(angle) * dist)}px`;
+      const ty = `${Math.round(Math.sin(angle) * dist - 20)}px`;
+
+      const p = document.createElement('div');
+      p.style.cssText = [
+        'position:absolute',
+        'top:50%',
+        'left:50%',
+        'width:6px',
+        'height:6px',
+        'border-radius:50%',
+        'background:rgba(51,255,102,0.9)',
+        'box-shadow:0 0 6px rgba(51,255,102,0.6)',
+        'pointer-events:none',
+        `--tx:translate(${tx},${ty})`,
+        `animation:mgr-particle 0.7s ease-out ${(i * 30)}ms forwards`,
+      ].join(';');
+      overlay.appendChild(p);
+    }
+  }
+
+  // ── Lose: 3 red scanline flashes ──────────────────────────────────────────
+  if (!won) {
+    for (let i = 0; i < 3; i++) {
+      const scan = document.createElement('div');
+      scan.style.cssText = [
+        'position:absolute',
+        'inset:0',
+        'pointer-events:none',
+        'border-radius:inherit',
+        'background:repeating-linear-gradient(',
+        '  0deg,',
+        '  rgba(255,30,30,0.08) 0px,',
+        '  rgba(255,30,30,0.08) 2px,',
+        '  transparent 2px,',
+        '  transparent 4px)',
+        `animation:mgr-scanline 0.3s ease-out ${i * 100}ms forwards`,
+      ].join('');
+      overlay.appendChild(scan);
+    }
+  }
+
+  // ── SFX ───────────────────────────────────────────────────────────────────
+  sfx(won ? 'minigame_win' : 'minigame_lose');
+
+  // ── Event listeners ───────────────────────────────────────────────────────
+  // Small delay so the keydown that triggered the minigame end doesn't immediately dismiss
+  setTimeout(() => {
+    document.addEventListener('keydown', onKey);
+    overlay.addEventListener('click', onClick);
+  }, 350);
+}
+
 // ── Abstract base ─────────────────────────────────────────────────────────────
 
 export abstract class MinigameBase {
