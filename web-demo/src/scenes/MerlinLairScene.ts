@@ -1471,6 +1471,19 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let orreryAccelTimer488: number = 20 + Math.random() * 10;
   let orreryAccel488: number = 1.0;
 
+  // C493 — enchanted quill writing by itself
+  const wispAngles493: readonly number[] = [-0.35, 0, 0.35];
+  let quillGroup493: Group | null = null;
+  let t493: number = 0;
+  let quillState493: 'dipping' | 'writing' | 'returning' = 'dipping';
+  let quillStateT493: number = 0;
+  let quillWriteDur493: number = 4;
+  const quillWaypoints493: Vector3[] = [];
+  let quillWaypointIdx493: number = 0;
+  const inkDots493: Mesh[] = [];
+  let inkDotCount493: number = 0;
+  let quillLight493: PointLight | null = null;
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -3347,6 +3360,117 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(_potionShelfGroup);
   }
 
+  // C493 — enchanted quill writing by itself — parchment + inkwell + animated quill
+  {
+    quillGroup493 = new Group();
+    quillGroup493.position.set(-2.5, 0.85, -1.5);
+
+    // Parchment — flat plane on desk surface
+    const parchMat493 = new MeshStandardMaterial({
+      color: 0x0a1a0a,
+      emissive: 0x0d2010,
+      emissiveIntensity: 0.1,
+      roughness: 0.9,
+      metalness: 0.0,
+      flatShading: true,
+    });
+    const parch493 = new Mesh(new PlaneGeometry(0.8, 0.6), parchMat493);
+    parch493.rotation.x = -Math.PI / 2 + 0.05;
+    parch493.position.set(0, 0, 0);
+    quillGroup493.add(parch493);
+
+    // Inkwell body (tapered cylinder)
+    const inkMat493 = new MeshStandardMaterial({
+      color: 0x010802,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.4,
+      roughness: 0.5,
+      metalness: 0.2,
+      flatShading: true,
+    });
+    const inkBody = new Mesh(new CylinderGeometry(0.06, 0.08, 0.12, 8), inkMat493);
+    inkBody.position.set(-0.3, 0.06, 0.1);
+    quillGroup493.add(inkBody);
+    // Ink surface sphere (glowing top)
+    const inkSurface = new Mesh(new SphereGeometry(0.06, 8, 6), inkMat493.clone());
+    inkSurface.position.set(-0.3, 0.12, 0.1);
+    quillGroup493.add(inkSurface);
+
+    // Quill shaft
+    const shaftMat493 = new MeshStandardMaterial({ color: 0x0a2a14, roughness: 0.85, metalness: 0.0, flatShading: true });
+    const shaft493 = new Mesh(new CylinderGeometry(0.008, 0.015, 0.45, 5), shaftMat493);
+    // Quill tip (cone at bottom)
+    const tipMat493 = new MeshStandardMaterial({ color: 0x0d3322, roughness: 0.7, metalness: 0.0, flatShading: true });
+    const tip493 = new Mesh(new ConeGeometry(0.008, 0.06, 4), tipMat493);
+    tip493.position.set(0, -0.255, 0); // bottom of shaft
+    // Feather wisps — 3 planes fanned at top of shaft
+    const wispMat493 = new MeshStandardMaterial({
+      color: 0x0a1a10,
+      emissive: 0x1a3322,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.7,
+      side: DoubleSide,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+    const wispGroup493 = new Group();
+    for (let wi = 0; wi < 3; wi++) {
+      const wisp = new Mesh(new PlaneGeometry(0.08, 0.2), wispMat493.clone());
+      wisp.position.set(0, 0.12, 0); // top of shaft
+      wisp.rotation.z = wispAngles493[wi]!;
+      wispGroup493.add(wisp);
+    }
+
+    // Quill sub-group (shaft + tip + wisps) — positioned at inkwell initially
+    const quillSubGroup = new Group();
+    quillSubGroup.add(shaft493);
+    quillSubGroup.add(tip493);
+    quillSubGroup.add(wispGroup493);
+    quillSubGroup.position.set(-0.3, 0.18, 0.1); // inkwell position
+    quillSubGroup.rotation.z = -0.3;
+    quillSubGroup.rotation.x = 0.5;
+    quillSubGroup.userData['wispGroup'] = wispGroup493;
+    quillGroup493.add(quillSubGroup);
+    quillGroup493.userData['quill'] = quillSubGroup;
+
+    // 8 ink dots (pre-created, hidden) — revealed one by one during writing
+    const inkDotMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.85 });
+    const inkDotGeo = new SphereGeometry(0.015, 4, 3);
+    // Writing waypoints (local to group, on parchment surface y≈0.02)
+    quillWaypoints493.push(
+      new Vector3(-0.2,  0.02, -0.1),
+      new Vector3( 0.1,  0.02,  0.05),
+      new Vector3( 0.2,  0.02, -0.12),
+      new Vector3(-0.05, 0.02,  0.12),
+    );
+    // Place dots at waypoints (will be hidden, revealed during writing)
+    for (let di = 0; di < 8; di++) {
+      const wp = quillWaypoints493[di % quillWaypoints493.length]!;
+      const dot = new Mesh(inkDotGeo, inkDotMat.clone());
+      dot.position.copy(wp);
+      dot.position.x += (di % 2 === 0 ? 0.02 : -0.02) * Math.floor(di / 2);
+      dot.position.z += (di % 3 === 0 ? 0.02 : -0.01) * Math.floor(di / 3);
+      dot.visible = false;
+      quillGroup493.add(dot);
+      inkDots493.push(dot);
+    }
+
+    // PointLight at quill tip — follows quill group position in world space
+    quillLight493 = new PointLight(0x33ff66, 0.15, 2.0);
+    quillLight493.position.set(-0.3, 0.18, 0.1);
+    quillGroup493.add(quillLight493);
+
+    scene.add(quillGroup493);
+
+    // Init state
+    quillWriteDur493 = 4 + Math.random() * 4; // 4-8s writing phase
+    quillState493 = 'dipping';
+    quillStateT493 = 0;
+    quillWaypointIdx493 = 0;
+    inkDotCount493 = 0;
+  }
+
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
   {
     mirrorGroup361 = new Group();
@@ -4926,6 +5050,78 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C493 — enchanted quill writing by itself
+    if (quillGroup493) {
+      t493 += dt;
+      const quillSub = quillGroup493.userData['quill'] as Group | undefined;
+      const wispGrp = quillSub?.userData['wispGroup'] as Group | undefined;
+
+      if (quillSub) {
+        // Feather wisp flutter
+        if (wispGrp) {
+          wispGrp.children.forEach((child, wi) => {
+            child.rotation.z = wispAngles493[wi]! + 0.08 * Math.sin(t493 * 3.5 + wi * 1.2);
+          });
+        }
+
+        if (quillState493 === 'dipping') {
+          quillStateT493 += dt;
+          // Lerp quill down into inkwell (tip toward y=0.06 = ink surface)
+          const dipProgress = Math.min(1, quillStateT493 / 1.0);
+          quillSub.position.set(-0.3, 0.18 - dipProgress * 0.1, 0.1);
+          if (quillLight493) quillLight493.position.set(-0.3, 0.18 - dipProgress * 0.1, 0.1);
+          if (dipProgress >= 1) {
+            quillState493 = 'writing';
+            quillStateT493 = 0;
+            quillWriteDur493 = 4 + Math.random() * 4;
+            quillWaypointIdx493 = 0;
+          }
+        } else if (quillState493 === 'writing') {
+          quillStateT493 += dt;
+          // Move quill across waypoints on parchment
+          const totalWPs = quillWaypoints493.length;
+          const segDur = quillWriteDur493 / totalWPs;
+          const segIdx = Math.min(totalWPs - 1, Math.floor(quillStateT493 / segDur));
+          const segT = Math.min(1, (quillStateT493 - segIdx * segDur) / segDur);
+          const fromWP = quillWaypoints493[segIdx]!;
+          const toWP = quillWaypoints493[(segIdx + 1) % totalWPs]!;
+          const wx = fromWP.x + (toWP.x - fromWP.x) * segT;
+          const wz = fromWP.z + (toWP.z - fromWP.z) * segT;
+          quillSub.position.set(wx, 0.05, wz);
+          if (quillLight493) quillLight493.position.set(wx, 0.05, wz);
+          // Reveal ink dots at waypoint transitions
+          if (segIdx > quillWaypointIdx493) {
+            quillWaypointIdx493 = segIdx;
+            const dotIdx = inkDotCount493 % inkDots493.length;
+            const dot = inkDots493[dotIdx];
+            if (dot) dot.visible = true;
+            inkDotCount493++;
+          }
+          if (quillStateT493 >= quillWriteDur493) {
+            quillState493 = 'returning';
+            quillStateT493 = 0;
+          }
+        } else if (quillState493 === 'returning') {
+          quillStateT493 += dt;
+          const retProgress = Math.min(1, quillStateT493 / 0.5);
+          // Lerp back to inkwell position
+          const curWP = quillWaypoints493[(quillWaypointIdx493) % quillWaypoints493.length]!;
+          const rx = curWP.x + (-0.3 - curWP.x) * retProgress;
+          const rz = curWP.z + (0.1 - curWP.z) * retProgress;
+          quillSub.position.set(rx, 0.05 + retProgress * 0.13, rz);
+          if (quillLight493) quillLight493.position.set(rx, 0.05 + retProgress * 0.13, rz);
+          if (retProgress >= 1) {
+            // Hide all ink dots, chime SFX, restart cycle
+            inkDots493.forEach(d => { d.visible = false; });
+            inkDotCount493 = 0;
+            window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+            quillState493 = 'dipping';
+            quillStateT493 = 0;
+          }
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -5430,6 +5626,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.remove(_potionShelfGroup);
       _potionShelfGroup = null;
     }
+    // C493 — enchanted quill dispose
+    if (quillGroup493) {
+      quillGroup493.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(quillGroup493);
+      quillGroup493 = null;
+    }
+    inkDots493.length = 0;
+    quillLight493 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
