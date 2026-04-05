@@ -422,6 +422,55 @@ function buildSun(): Mesh {
   return new Mesh(geo, mat);
 }
 
+// ── Wind grass tufts (C530) ───────────────────────────────────────────────────
+
+interface GrassBlade { mesh: Mesh; phase: number; freq: number; amp: number }
+
+function buildGrassTufts(): GrassBlade[] {
+  const blades: GrassBlade[] = [];
+  const colors = [0x2a4a10, 0x3a6018, 0x22380c, 0x486820, 0x1e3008];
+
+  // Cluster positions: cliff edge (x negative), path sides, near camera (high z)
+  const clusters: Array<[number, number]> = [
+    // Near camera — very visible
+    [ 0.8, 16], [-1.2, 15], [ 1.5, 13], [-0.5, 14],
+    // Along cliff edge (x negative, left side)
+    [-6.5, 10], [-7.0,  5], [-6.8,  0], [-7.2, -5], [-6.6,-10],
+    // Right side scatter
+    [ 6.0,  8], [ 6.5,  2], [ 7.0, -3], [ 6.2, -8],
+    // Mid-path scatter
+    [ 4.5, 11], [-4.8,  9], [ 5.0, -1], [-5.2, -6],
+  ];
+
+  for (const [cx, cz] of clusters) {
+    const bladeCount = 3 + Math.floor(Math.random() * 3); // 3–5 blades per cluster
+    for (let b = 0; b < bladeCount; b++) {
+      const h = 0.28 + Math.random() * 0.22;
+      const col = colors[Math.floor(Math.random() * colors.length)]!;
+      const mat = new MeshStandardMaterial({
+        color: col, roughness: 0.97, metalness: 0.0, flatShading: true, side: 2,
+      });
+      const geo = new BoxGeometry(0.06, h, 0.04);
+      // Pivot at base: shift geometry so bottom is at y=0
+      geo.translate(0, h * 0.5, 0);
+      const mesh = new Mesh(geo, mat);
+      mesh.position.set(
+        cx + (Math.random() - 0.5) * 0.7,
+        0,
+        cz + (Math.random() - 0.5) * 0.8,
+      );
+      mesh.rotation.y = Math.random() * Math.PI;
+      blades.push({
+        mesh,
+        phase: Math.random() * Math.PI * 2,
+        freq:  1.2 + Math.random() * 0.8,
+        amp:   0.18 + Math.random() * 0.14,
+      });
+    }
+  }
+  return blades;
+}
+
 // ── Fishing boat (C529) ───────────────────────────────────────────────────────
 
 interface BoatData { group: Group; baseY: number }
@@ -646,6 +695,10 @@ export function initMainMenu(container: HTMLElement): {
   sunObj.position.set(tod.sunX, tod.sunY, -40);
   scene.add(sunObj);
 
+  // ── Wind grass tufts (C530) ──────────────────────────────────────────────
+  const grassBlades530 = buildGrassTufts();
+  for (const b of grassBlades530) scene.add(b.mesh);
+
   // ── Fishing boat (C529) ──────────────────────────────────────────────────
   const boat529 = buildFishingBoat();
   scene.add(boat529.group);
@@ -713,6 +766,12 @@ export function initMainMenu(container: HTMLElement): {
 
     // Tower window flicker
     tower.windowLight.intensity = 2.0 + Math.sin(elapsed * 5.8) * 0.45 + Math.sin(elapsed * 9.2) * 0.15;
+
+    // Grass tufts wind sway (C530)
+    for (const b of grassBlades530) {
+      b.mesh.rotation.z = Math.sin(elapsed * b.freq + b.phase) * b.amp;
+      b.mesh.rotation.x = Math.sin(elapsed * b.freq * 0.7 + b.phase + 1.0) * b.amp * 0.4;
+    }
 
     // Fishing boat gentle bob + drift (C529)
     boat529.group.position.y = boat529.baseY + Math.sin(elapsed * 0.55) * 0.18 + Math.sin(elapsed * 0.83) * 0.09;
