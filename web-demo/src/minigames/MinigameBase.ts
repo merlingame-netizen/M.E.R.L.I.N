@@ -247,6 +247,125 @@ function showGoFlash(container: HTMLElement): Promise<void> {
   });
 }
 
+// ── Combo flash overlay ───────────────────────────────────────────────────────
+
+/**
+ * Show a ×N COMBO flash at the top-center of the container.
+ * Only meaningful for comboCount >= 2.
+ * - combo ≥ 3: green glow text-shadow
+ * - combo ≥ 5: second line "INCROYABLE!" at 16px
+ * Fires 'select' SFX once.
+ */
+export function showComboFlash(container: HTMLElement, comboCount: number): void {
+  if (comboCount < 2) return;
+
+  // Inject keyframes + base style once (idempotent)
+  if (!document.getElementById('minigame-combo-style')) {
+    const s = document.createElement('style');
+    s.id = 'minigame-combo-style';
+    s.textContent = `@keyframes combo-pop {
+      0%   { transform: translateX(-50%) scale(0.6); opacity:0; }
+      60%  { transform: translateX(-50%) scale(1.15); opacity:1; }
+      100% { transform: translateX(-50%) scale(1.0); opacity:1; }
+    }`;
+    document.head.appendChild(s);
+  }
+
+  if (!['relative', 'absolute', 'fixed', 'sticky'].includes(getComputedStyle(container).position)) {
+    container.style.position = 'relative';
+  }
+
+  const el = document.createElement('div');
+
+  const glow = comboCount >= 3 ? '0 0 20px rgba(51,255,102,0.8)' : 'none';
+
+  el.style.cssText = [
+    'position:absolute',
+    'top:18%',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'z-index:60',
+    'pointer-events:none',
+    'text-align:center',
+    'animation:combo-pop 0.25s ease-out forwards',
+    `text-shadow:${glow}`,
+  ].join(';');
+
+  // Main combo label
+  const label = document.createElement('div');
+  label.textContent = `\u00D7${comboCount} COMBO`;
+  label.style.cssText = [
+    'font-family:\'Courier New\',monospace',
+    'font-size:28px',
+    'font-weight:bold',
+    'color:rgba(51,255,102,0.95)',
+    'white-space:nowrap',
+    'line-height:1.2',
+  ].join(';');
+  el.appendChild(label);
+
+  // Extra line for high combos
+  if (comboCount >= 5) {
+    const extra = document.createElement('div');
+    extra.textContent = 'INCROYABLE!';
+    extra.style.cssText = [
+      'font-family:\'Courier New\',monospace',
+      'font-size:16px',
+      'font-weight:bold',
+      'color:rgba(51,255,102,0.85)',
+      'white-space:nowrap',
+      'margin-top:4px',
+    ].join(';');
+    el.appendChild(extra);
+  }
+
+  container.appendChild(el);
+
+  sfx('select');
+
+  // Visible 1.2s total (0.25s pop already included), then fade out 0.3s
+  const visibleMs = 1200 - 250; // remaining after pop animation
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.3s ease';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 300);
+  }, visibleMs);
+}
+
+// ── Streak break visual ───────────────────────────────────────────────────────
+
+/**
+ * Brief dim red flash over the container — signals that a streak was reset.
+ * No text, no SFX. 200ms fade-out.
+ */
+export function showStreakBreak(container: HTMLElement): void {
+  if (!['relative', 'absolute', 'fixed', 'sticky'].includes(getComputedStyle(container).position)) {
+    container.style.position = 'relative';
+  }
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = [
+    'position:absolute',
+    'inset:0',
+    'background:rgba(255,60,60,0.12)',
+    'pointer-events:none',
+    'z-index:55',
+    'border-radius:inherit',
+    'opacity:1',
+    'transition:opacity 0.2s ease',
+  ].join(';');
+
+  container.appendChild(overlay);
+
+  // Start fade-out on next frame
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 200);
+    });
+  });
+}
+
 // ── Abstract base ─────────────────────────────────────────────────────────────
 
 export abstract class MinigameBase {
