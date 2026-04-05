@@ -899,6 +899,28 @@ let treeLight500: PointLight | null = null;
 let treeSurgeTimer500: number = 30 + Math.random() * 15;
 let treeSurging500: boolean = false;
 let treeSurgeT500: number = 0;
+
+// C505: Meteor Shower
+let meteorGroup505: Group | null = null;
+let meteorT505global: number = 0;
+let meteorShowerTimer505: number = 45 + Math.random() * 25;
+let meteorShowerActive505: boolean = false;
+let meteorShowerDur505: number = 6;
+let meteorShowerT505: number = 0;
+let meteorStrayTimer505: number = 8 + Math.random() * 7;
+const meteorGeos505: BufferGeometry[] = [];
+const meteorMats505: LineBasicMaterial[] = [];
+const meteorLines505: Line[] = [];
+const meteorActive505: boolean[] = new Array(15).fill(false);
+const meteorPos505: Vector3[] = [];
+const meteorDir505: Vector3[] = [];
+const meteorSpeed505: number[] = [];
+const meteorT505: number[] = new Array(15).fill(0);
+const meteorMaxT505: number[] = new Array(15).fill(2.0);
+const meteorTrailLen505: number[] = [];
+const meteorPhase505: number[] = [];
+let meteorStrayIdx505: number = -1;
+
 let auroraT495 = 0;
 let auroraRibbons495: Mesh[] = [];
 let auroraRibbonMats495: MeshBasicMaterial[] = [];
@@ -2113,6 +2135,101 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C505: Meteor Shower update
+    meteorT505global += dt;
+    // Shower cycle timer
+    if (!meteorShowerActive505) {
+      meteorShowerTimer505 -= dt;
+      if (meteorShowerTimer505 <= 0) {
+        meteorShowerActive505 = true;
+        meteorShowerDur505 = 6 + Math.random() * 4;
+        meteorShowerT505 = 0;
+        meteorShowerTimer505 = 45 + Math.random() * 25;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        // activate all meteors with staggered phases
+        for (let i = 0; i < 15; i++) {
+          if (i !== meteorStrayIdx505) {
+            meteorActive505[i] = true;
+            meteorT505[i] = -meteorPhase505[i] * meteorShowerDur505;
+            meteorMaxT505[i] = 2.0 + Math.random() * 1.5;
+            const sx = -25 + Math.random() * 50;
+            const sy = 18 + Math.random() * 10;
+            const sz = -55 + Math.random() * 20;
+            meteorPos505[i].set(sx, sy, sz);
+          }
+        }
+      }
+      // Stray meteor timer
+      meteorStrayTimer505 -= dt;
+      if (meteorStrayTimer505 <= 0 && meteorStrayIdx505 === -1) {
+        // pick meteor slot that isn't active from shower
+        for (let i = 0; i < 15; i++) {
+          if (!meteorActive505[i]) {
+            meteorStrayIdx505 = i;
+            meteorActive505[i] = true;
+            meteorT505[i] = 0;
+            meteorMaxT505[i] = 2.0 + Math.random() * 1.5;
+            const sx = -25 + Math.random() * 50;
+            const sy = 18 + Math.random() * 10;
+            const sz = -55 + Math.random() * 20;
+            meteorPos505[i].set(sx, sy, sz);
+            break;
+          }
+        }
+        meteorStrayTimer505 = 8 + Math.random() * 7;
+      }
+    } else {
+      meteorShowerT505 += dt;
+      if (meteorShowerT505 >= meteorShowerDur505) {
+        meteorShowerActive505 = false;
+      }
+    }
+    // Per-meteor update
+    for (let i = 0; i < 15; i++) {
+      if (!meteorActive505[i]) {
+        meteorMats505[i].opacity = 0;
+        continue;
+      }
+      meteorT505[i] += dt;
+      const t = meteorT505[i];
+      if (t < 0) { meteorMats505[i].opacity = 0; continue; }
+      const maxT = meteorMaxT505[i];
+      if (t >= maxT) {
+        // reset meteor to new start, deactivate until next shower cycle
+        meteorActive505[i] = false;
+        meteorMats505[i].opacity = 0;
+        if (meteorStrayIdx505 === i) meteorStrayIdx505 = -1;
+        const sx = -25 + Math.random() * 50;
+        const sy = 18 + Math.random() * 10;
+        const sz = -55 + Math.random() * 20;
+        meteorPos505[i].set(sx, sy, sz);
+        continue;
+      }
+      // Move
+      const p = meteorPos505[i];
+      p.addScaledVector(meteorDir505[i], meteorSpeed505[i] * dt);
+      // Opacity: fade in 0.1s, hold 0.9, fade out 0.3s at end
+      let op: number;
+      const maxOp = i === meteorStrayIdx505 ? 0.6 : 0.9;
+      if (t < 0.1) {
+        op = maxOp * (t / 0.1);
+      } else if (t > maxT - 0.3) {
+        op = maxOp * Math.max(0, (maxT - t) / 0.3);
+      } else {
+        op = maxOp;
+      }
+      meteorMats505[i].opacity = op;
+      // Update geometry
+      const trailLen = meteorTrailLen505[i] * 0.8;
+      const tailX = p.x + meteorDir505[i].x * (-trailLen);
+      const tailY = p.y + meteorDir505[i].y * (-trailLen);
+      const tailZ = p.z + meteorDir505[i].z * (-trailLen);
+      const posArr = meteorGeos505[i].attributes['position'].array as Float32Array;
+      posArr[0] = p.x; posArr[1] = p.y; posArr[2] = p.z;
+      posArr[3] = tailX; posArr[4] = tailY; posArr[5] = tailZ;
+      meteorGeos505[i].attributes['position'].needsUpdate = true;
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -3263,6 +3380,38 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     scene.add(grp500);
   }
 
+  // C505: Meteor Shower — init
+  {
+    const grp505 = new Group();
+    const BASE_DIR = new Vector3(0.3, -0.8, 0.2).normalize();
+    for (let i = 0; i < 15; i++) {
+      const geo = new BufferGeometry();
+      const posArr = new Float32Array(6);
+      geo.setAttribute('position', new Float32BufferAttribute(posArr, 3));
+      const mat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 });
+      const line = new Line(geo, mat);
+      grp505.add(line);
+      meteorGeos505.push(geo);
+      meteorMats505.push(mat);
+      meteorLines505.push(line);
+      const dir = new Vector3(
+        BASE_DIR.x + (Math.random() - 0.5) * 0.2,
+        BASE_DIR.y + (Math.random() - 0.5) * 0.2,
+        BASE_DIR.z + (Math.random() - 0.5) * 0.2
+      ).normalize();
+      meteorDir505.push(dir);
+      const sx = -25 + Math.random() * 50;
+      const sy = 18 + Math.random() * 10;
+      const sz = -55 + Math.random() * 20;
+      meteorPos505.push(new Vector3(sx, sy, sz));
+      meteorSpeed505.push(15 + Math.random() * 10);
+      meteorTrailLen505.push(0.6 + Math.random() * 0.6);
+      meteorPhase505.push(Math.random());
+    }
+    meteorGroup505 = grp505;
+    scene.add(grp505);
+  }
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -3600,6 +3749,22 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       treeGroup500 = null;
     }
     treeLight500 = null;
+
+    // C505: dispose meteor shower
+    meteorGeos505.forEach((geo) => { geo.dispose(); });
+    meteorGeos505.length = 0;
+    meteorMats505.forEach((mat) => { mat.dispose(); });
+    meteorMats505.length = 0;
+    if (meteorGroup505) {
+      scene.remove(meteorGroup505);
+      meteorGroup505 = null;
+    }
+    meteorLines505.length = 0;
+    meteorPos505.length = 0;
+    meteorDir505.length = 0;
+    meteorSpeed505.length = 0;
+    meteorTrailLen505.length = 0;
+    meteorPhase505.length = 0;
 
     // C495: dispose aurora ribbons
     if (auroraGroup495) {
