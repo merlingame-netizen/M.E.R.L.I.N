@@ -740,6 +740,65 @@ function buildFactionBars(factions: Readonly<Record<string, number>>): HTMLEleme
   return container;
 }
 
+// ── Fog-of-war reveal (C364) ──────────────────────────────────────────────────
+//
+// Each new/locked map node gets a dark fog overlay that dissolves with a green
+// scanline sweeping downward. Already-visited nodes reveal instantly.
+//
+// applyFogReveal  — wraps a positioned div with the fog effect
+// ensureFogRevealStyle364 — injects shared CSS once (guarded by id)
+
+function ensureFogRevealStyle364(): void {
+  if (document.getElementById('fog-reveal-style-364')) return;
+  const style = document.createElement('style');
+  style.id = 'fog-reveal-style-364';
+  style.textContent = [
+    '.fog-overlay{',
+    '  position:absolute;inset:0;background:rgba(1,8,2,0.85);',
+    '  border-radius:inherit;pointer-events:none;z-index:10;overflow:hidden;',
+    '}',
+    '.fog-overlay::after{',
+    '  content:"";position:absolute;left:0;right:0;height:2px;',
+    '  background:rgba(51,255,102,0.6);',
+    '  animation:none;top:0;',
+    '}',
+    '.fog-revealing{',
+    '  animation:fog-dissolve 0.6s ease forwards;',
+    '}',
+    '.fog-revealing::after{',
+    '  animation:scanline-sweep 0.6s ease forwards;',
+    '}',
+    '@keyframes fog-dissolve{',
+    '  0%{opacity:1}',
+    '  70%{opacity:0.3}',
+    '  100%{opacity:0;pointer-events:none}',
+    '}',
+    '@keyframes scanline-sweep{',
+    '  0%{top:0}',
+    '  100%{top:100%}',
+    '}',
+  ].join('');
+  document.head.appendChild(style);
+}
+
+function applyFogReveal(nodeEl: HTMLElement, instant: boolean): void {
+  ensureFogRevealStyle364();
+  if (instant) return; // visited nodes — no animation needed
+
+  const fog = document.createElement('div');
+  fog.className = 'fog-overlay';
+  nodeEl.appendChild(fog);
+
+  // After 100ms (node has rendered), trigger the scanline dissolve
+  setTimeout(() => {
+    fog.classList.add('fog-revealing');
+    // Remove the fog div after animation completes to keep DOM clean
+    fog.addEventListener('animationend', () => {
+      fog.parentNode?.removeChild(fog);
+    }, { once: true });
+  }, 100);
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function showMapGenOverlay(biome: string): Promise<void> {
@@ -1200,10 +1259,32 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   // Trigger zone drop-ins one by one, staggered, as paragraphs typewrite
   let rafActive = true; // kept for Phase 5 cancel compat
 
+  // Fog-of-war node divs — one per event node, positioned over canvas (C364)
+  ensureFogRevealStyle364();
+  const fogNodeEls: HTMLElement[] = mapData.events.map((ev) => {
+    const pt = getPathPoint(mapData.pathPoints, ev.position);
+    const nodeDiv = document.createElement('div');
+    nodeDiv.style.cssText = [
+      'position:absolute',
+      `left:${Math.round(pt.x - 22)}px`,
+      `top:${Math.round(pt.y - 22)}px`,
+      'width:44px',
+      'height:44px',
+      'border-radius:50%',
+      'pointer-events:none',
+      'z-index:5',
+    ].join(';');
+    rightPanel.appendChild(nodeDiv);
+    return nodeDiv;
+  });
+
   // Kick off zone timers progressively (staggered by 150ms per node)
   const triggerZonesSequentially = async (): Promise<void> => {
     for (let i = 0; i < animState.zoneTimers.length; i++) {
       animState.zoneTimers[i] = 0; // start this zone's drop-in + reveal sequence
+      // Apply fog reveal — all map nodes are treated as new (not visited in run context)
+      const fogEl = fogNodeEls[i];
+      if (fogEl !== undefined) applyFogReveal(fogEl, false);
       await wait(150);
     }
   };
@@ -1318,6 +1399,11 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   // ── Cleanup ───────────────────────────────────────────────────────────────
   window.removeEventListener('resize', resizeCanvas);
   document.getElementById('map-dive-style')?.remove();
+  // Remove any lingering fog-overlay elements (C364)
+  for (const fogEl of fogNodeEls) {
+    fogEl.querySelectorAll('.fog-overlay').forEach((el) => el.parentNode?.removeChild(el));
+    fogEl.parentNode?.removeChild(fogEl);
+  }
   overlay.remove();
 }
 
