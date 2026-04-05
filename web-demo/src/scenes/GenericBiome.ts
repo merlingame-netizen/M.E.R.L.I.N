@@ -521,6 +521,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const menhirCarveGlows417: Mesh[] = [];
   let menhirLight417: PointLight | null = null;
 
+  // ── Rotting swamp dock — marais_korrigans (C422) ──────────────────────────
+  let swampDockGroup422: Group | null = null;
+  let swampDockT422 = 0;
+  const swampDockAlgae422: Mesh[] = [];
+  let swampDockLight422: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -847,6 +853,65 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     korrGroup394.position.set(-3, 0, -15);
     group.add(korrGroup394);
+
+    // Rotting swamp dock (C422)
+    swampDockGroup422 = new Group();
+    const dockWoodMat = new MeshStandardMaterial({ color: 0x0a1a10, emissive: 0x040806 });
+    const dockPostMat = new MeshStandardMaterial({ color: 0x0a1a10, emissive: 0x040806 });
+
+    // 6 dock planks side by side extending in z
+    for (let i = 0; i < 6; i++) {
+      const plank = new Mesh(new BoxGeometry(0.7, 0.06, 0.9), dockWoodMat);
+      plank.position.set(i * 0.7 - 1.75, 0.2, 0);
+      plank.rotation.x = i % 2 === 0 ? 0.05 : -0.03;
+      swampDockGroup422.add(plank);
+    }
+
+    // 4 support posts at corners and mid-points
+    const postPositions: Array<[number, number, number, number]> = [
+      [-1.8, -0.4, 0.45, -0.07],
+      [-1.8, -0.4, -0.45, 0.09],
+      [1.8, -0.4, 0.45, 0.05],
+      [0, -0.4, -0.45, -0.08],
+    ];
+    postPositions.forEach(([px, py, pz, tilt]) => {
+      const post = new Mesh(new CylinderGeometry(0.06, 0.08, 1.2, 5), dockPostMat);
+      post.position.set(px, py, pz);
+      post.rotation.z = tilt;
+      swampDockGroup422!.add(post);
+    });
+
+    // 2 cross-braces at 45 degrees between posts
+    for (let b = 0; b < 2; b++) {
+      const brace = new Mesh(new CylinderGeometry(0.04, 0.04, 1.8, 4), dockPostMat);
+      brace.position.set(b === 0 ? -0.9 : 0.9, -0.1, 0);
+      brace.rotation.z = b === 0 ? Math.PI / 4 : -Math.PI / 4;
+      swampDockGroup422.add(brace);
+    }
+
+    // 4 algae pools (glowing) at water level
+    const algaeMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.2, depthWrite: false });
+    const algaePositions: Array<[number, number, number]> = [
+      [-1.5, 0.01, 0.6],
+      [1.5, 0.01, -0.6],
+      [0.5, 0.01, 0.5],
+      [-0.8, 0.01, -0.4],
+    ];
+    algaePositions.forEach(([ax, ay, az]) => {
+      const algae = new Mesh(new CircleGeometry(0.25, 8), algaeMat.clone());
+      algae.rotation.x = -Math.PI / 2;
+      algae.position.set(ax, ay, az);
+      swampDockGroup422!.add(algae);
+      swampDockAlgae422.push(algae);
+    });
+
+    // Point light for bioluminescent glow
+    swampDockLight422 = new PointLight(0x33ff66, 0.12, 5.0);
+    swampDockLight422.position.set(0, 0.5, 0);
+    swampDockGroup422.add(swampDockLight422);
+
+    swampDockGroup422.position.set(-6, 0, -12);
+    group.add(swampDockGroup422);
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -3170,6 +3235,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         menhirLight417.intensity = 0.12 + Math.sin(menhirT417 * 0.9) * 0.05;
       }
     }
+    // Marais korrigans — rotting swamp dock algae bioluminescence (C422)
+    if (swampDockGroup422) {
+      swampDockT422 += dt;
+      swampDockAlgae422.forEach((algae, i) => {
+        const mat = algae.material as MeshBasicMaterial;
+        mat.opacity = 0.15 + Math.sin(swampDockT422 * 1.4 + i * 0.8) * 0.1;
+      });
+      if (swampDockLight422) {
+        swampDockLight422.intensity = 0.10 + Math.sin(swampDockT422 * 0.9) * 0.04;
+      }
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3412,6 +3488,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       menhirCarveGlows417.length = 0;
       menhirLight417 = null;
       menhirGroup417 = null;
+    }
+    // Rotting swamp dock cleanup (C422)
+    if (swampDockGroup422) {
+      swampDockGroup422.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(swampDockGroup422);
+      swampDockAlgae422.length = 0;
+      swampDockLight422 = null;
+      swampDockGroup422 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
