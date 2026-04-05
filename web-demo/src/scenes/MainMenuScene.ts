@@ -890,6 +890,15 @@ let _constLineMats485: LineBasicMaterial[] = [];
 
 // C495 — Aurora borealis ribbons
 let auroraGroup495: Group | null = null;
+// C500 — Celtic Tree of Life (Crann Bethadh) — Milestone C500
+let treeGroup500: Group | null = null;
+let treeT500: number = 0;
+let treeLeafMats500: MeshStandardMaterial[] = [];
+let treeRootMats500: MeshStandardMaterial[] = [];
+let treeLight500: PointLight | null = null;
+let treeSurgeTimer500: number = 30 + Math.random() * 15;
+let treeSurging500: boolean = false;
+let treeSurgeT500: number = 0;
 let auroraT495 = 0;
 let auroraRibbons495: Mesh[] = [];
 let auroraRibbonMats495: MeshBasicMaterial[] = [];
@@ -2064,6 +2073,46 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       });
     }
 
+    // C500: Celtic Tree of Life animation
+    treeT500 += dt;
+    if (treeGroup500) {
+      treeGroup500.rotation.z = 0.02 * Math.sin(treeT500 * 0.3);
+    }
+    treeLeafMats500.forEach((mat, leafIdx) => {
+      if (!treeSurging500) {
+        mat.emissiveIntensity = 0.3 + 0.3 * Math.sin(treeT500 * 0.8 + leafIdx * 0.7);
+      }
+    });
+    treeRootMats500.forEach((mat, rootIdx) => {
+      mat.emissiveIntensity = 0.2 + 0.2 * Math.sin(treeT500 * 1.1 + rootIdx);
+    });
+    if (!treeSurging500) {
+      treeSurgeTimer500 -= dt;
+      if (treeSurgeTimer500 <= 0) {
+        treeSurging500 = true;
+        treeSurgeT500 = 0;
+        treeSurgeTimer500 = 30 + Math.random() * 15;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+      }
+    } else {
+      treeSurgeT500 += dt;
+      if (treeSurgeT500 < 1.0) {
+        const r = treeSurgeT500 / 1.0;
+        treeLeafMats500.forEach((mat) => { mat.emissiveIntensity = r * 2.0; });
+        if (treeLight500) treeLight500.intensity = 0.4 + r * 1.6;
+      } else if (treeSurgeT500 < 4.0) {
+        const f = (treeSurgeT500 - 1.0) / 3.0;
+        treeLeafMats500.forEach((mat) => { mat.emissiveIntensity = 2.0 * (1.0 - f); });
+        if (treeLight500) treeLight500.intensity = 2.0 - f * 1.6;
+      } else {
+        treeLeafMats500.forEach((mat, leafIdx) => {
+          mat.emissiveIntensity = 0.3 + 0.3 * Math.sin(treeT500 * 0.8 + leafIdx * 0.7);
+        });
+        if (treeLight500) treeLight500.intensity = 0.4;
+        treeSurging500 = false;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -3111,6 +3160,109 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     scene.add(grp495);
   }
 
+  // C500: Celtic Tree of Life (Crann Bethadh) — Milestone C500
+  {
+    const grp500 = new Group();
+    grp500.position.set(15, 0, -30);
+
+    const barkMat500 = new MeshStandardMaterial({ color: 0x061008, roughness: 0.95, flatShading: true });
+
+    // Trunk at local (0, 2.5, 0) — world (15, 2.5, -30)
+    const trunkGeo = new CylinderGeometry(0.4, 0.7, 5.0, 8);
+    const trunk = new Mesh(trunkGeo, barkMat500);
+    trunk.position.set(0, 2.5, 0);
+    grp500.add(trunk);
+
+    // Helper: build a branch sub-group attached to parent
+    const makeBranch500 = (
+      parent: Group,
+      length: number,
+      radiusTop: number,
+      radiusBot: number,
+      angleY: number,
+      tiltFromVertical: number,
+      offsetY: number
+    ): Group => {
+      const bg = new Group();
+      bg.position.set(0, offsetY, 0);
+      bg.rotation.y = angleY;
+      // tilt the branch outward from vertical
+      const branchGeo = new CylinderGeometry(radiusTop, radiusBot, length, 6);
+      const branchMesh = new Mesh(branchGeo, barkMat500);
+      // pivot at base: shift mesh up by half length, rotate
+      branchMesh.position.set(0, length / 2, 0);
+      const pivotGrp = new Group();
+      pivotGrp.rotation.z = tiltFromVertical;
+      pivotGrp.add(branchMesh);
+      bg.add(pivotGrp);
+      parent.add(bg);
+      return pivotGrp; // return the rotated pivot so we can place sub-branches at tip
+    };
+
+    // Leaf cluster helper
+    const addLeaf500 = (parent: Group, localY: number, localX: number, localZ: number): void => {
+      const lmat = new MeshStandardMaterial({
+        color: 0x0a2a14, emissive: new Color(0x33ff66), emissiveIntensity: 0.5,
+        roughness: 0.8, flatShading: true,
+      });
+      treeLeafMats500.push(lmat);
+      const lgeo = new SphereGeometry(0.35, 7, 5);
+      const lmesh = new Mesh(lgeo, lmat);
+      lmesh.scale.set(1.0, 0.6, 1.0);
+      lmesh.position.set(localX, localY, localZ);
+      parent.add(lmesh);
+    };
+    // 6 main branches at trunk top (local y=5.0), every 60°, tilt 35° outward
+    const TRUNK_TOP_Y = 5.0;
+    for (let bi = 0; bi < 6; bi++) {
+      const angleY = (bi / 6) * Math.PI * 2;
+      const tilt = (35 * Math.PI) / 180;
+      const pivot = makeBranch500(grp500, 2.5, 0.06, 0.12, angleY, tilt, TRUNK_TOP_Y);
+      // Leaf at main branch tip — tip is at (0, 2.5, 0) inside pivot frame
+      addLeaf500(pivot, 2.5, 0, 0);
+      // 2 sub-branches per main branch, at tip
+      for (let si = 0; si < 2; si++) {
+        const subTilt = (50 * Math.PI) / 180;
+        const subGrp = new Group();
+        subGrp.position.set(0, 2.5, 0); // tip of main
+        subGrp.rotation.y = (si === 0 ? 0.4 : -0.4);
+        const subPivot = makeBranch500(subGrp as unknown as Group, 1.5, 0.03, 0.06, 0, subTilt, 0);
+        pivot.add(subGrp);
+        addLeaf500(subPivot, 1.5, 0, 0);
+      }
+    }
+
+    // 5 roots radiating at ground level from trunk base
+    for (let ri = 0; ri < 5; ri++) {
+      const angleY = (ri / 5) * Math.PI * 2;
+      const rootGrp = new Group();
+      rootGrp.position.set(0, 0, 0);
+      rootGrp.rotation.y = angleY;
+      const rootGeo = new CylinderGeometry(0.04, 0.08, 2.0, 5);
+      const rmat = new MeshStandardMaterial({
+        color: 0x040c06, roughness: 0.9, flatShading: true,
+        emissive: new Color(0x33ff66), emissiveIntensity: 0.1,
+      });
+      treeRootMats500.push(rmat);
+      const rootMesh = new Mesh(rootGeo, rmat);
+      rootMesh.position.set(0, 1.0, 0);
+      const rootPivot = new Group();
+      rootPivot.rotation.z = (50 * Math.PI) / 180;
+      rootPivot.add(rootMesh);
+      rootGrp.add(rootPivot);
+      grp500.add(rootGrp);
+    }
+
+    // PointLight at trunk mid-height for ambient glow
+    const pLight500 = new PointLight(0x33ff66, 0.4, 20);
+    pLight500.position.set(0, 2.5, 0);
+    grp500.add(pLight500);
+    treeLight500 = pLight500;
+
+    treeGroup500 = grp500;
+    scene.add(grp500);
+  }
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -3434,6 +3586,20 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       mandalGroup490 = null;
     }
     mandalLight490 = null;
+
+    // C500: dispose Celtic Tree of Life
+    treeLeafMats500.forEach((mat) => { mat.dispose(); });
+    treeLeafMats500 = [];
+    treeRootMats500.forEach((mat) => { mat.dispose(); });
+    treeRootMats500 = [];
+    if (treeGroup500) {
+      treeGroup500.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(treeGroup500);
+      treeGroup500 = null;
+    }
+    treeLight500 = null;
 
     // C495: dispose aurora ribbons
     if (auroraGroup495) {
