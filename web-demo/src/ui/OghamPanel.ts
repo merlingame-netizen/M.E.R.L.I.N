@@ -20,6 +20,123 @@ let escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 // controller and passes its signal to every slot + skipBtn listener. On the next show(),
 // the old controller is aborted before nodes are replaced — zero orphaned closures.
 let _slotsAbortController: AbortController | null = null;
+// C365: active typewriter intervals — cancelled on panel hide/rebuild to prevent stale updates
+const _activeTypewriters: Set<ReturnType<typeof setInterval>> = new Set();
+
+// =============================================================================
+// C365 — Ogham inscription scroll animation helpers
+// =============================================================================
+
+/** Inject the og-cursor-blink keyframe stylesheet once (idempotent). */
+function ensureOghamScrollStyle(): void {
+  if (document.getElementById('og-scroll-style')) return;
+  const style = document.createElement('style');
+  style.id = 'og-scroll-style';
+  style.textContent = `@keyframes og-cursor-blink{0%,100%{opacity:1}50%{opacity:0}}`;
+  document.head.appendChild(style);
+}
+
+/**
+ * Animate `text` into `el` character by character at 40 ms/char.
+ * A blinking green cursor `|` tracks the insertion point.
+ * Returns the interval handle so the caller can cancel it early if needed.
+ */
+function typewriterReveal(
+  el: HTMLElement,
+  text: string,
+  onDone?: () => void,
+): ReturnType<typeof setInterval> {
+  el.textContent = '';
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.textContent = '|';
+  cursor.style.cssText = 'color:#33ff66;animation:og-cursor-blink 0.5s step-end infinite;';
+  el.appendChild(cursor);
+
+  const timer = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(timer);
+      _activeTypewriters.delete(timer);
+      cursor.remove();
+      onDone?.();
+      return;
+    }
+    el.insertBefore(document.createTextNode(text[i]), cursor);
+    i++;
+  }, 40);
+
+  _activeTypewriters.add(timer);
+  return timer;
+}
+
+/**
+ * Trigger the charge-flash on a cooldown arc canvas:
+ * Rapidly fills the arc to 1.0 (green) then fades back to `actualFraction`
+ * over 400 ms using linear interpolation.
+ */
+function triggerArcChargeFlash(canvas: HTMLCanvasElement, maxCooldown: number): void {
+  // Draw full green arc immediately
+  drawCooldownArcFlash(canvas, 1.0);
+
+  const startTime = performance.now();
+  const duration = 400;
+
+  function tick(now: number): void {
+    const t = Math.min((now - startTime) / duration, 1);
+    // Lerp from 1.0 → 0 (settled = no remaining cooldown after activation)
+    const fraction = 1.0 - t;
+    if (t < 1) {
+      drawCooldownArcFlash(canvas, fraction);
+      requestAnimationFrame(tick);
+    } else {
+      // Cooldown has been applied — arc is now empty
+      drawCooldownArcFlash(canvas, 0);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/**
+ * Draw the arc at an arbitrary `fraction` (0–1) using the charge-flash green color.
+ * Used exclusively by `triggerArcChargeFlash`.
+ */
+function drawCooldownArcFlash(canvas: HTMLCanvasElement, fraction: number): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const radius = 12;
+  const lineWidth = 3;
+  const startAngle = -Math.PI / 2;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(51,255,102,0.15)';
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Flash arc — always green
+  if (fraction > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, startAngle + fraction * Math.PI * 2, false);
+    ctx.strokeStyle = '#33ff66';
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+}
+
+/** Cancel and remove all active typewriter intervals (called on panel hide/rebuild). */
+function cancelAllTypewriters(): void {
+  for (const t of _activeTypewriters) {
+    clearInterval(t);
+  }
+  _activeTypewriters.clear();
+}
 
 /** Build the ogham panel DOM (called once at init). */
 export function initOghamPanel(): void {
@@ -72,6 +189,10 @@ export function showOghamPanel(): Promise<string | null> {
     }
 
     resolveChoice = resolve;
+
+    // C365: inject scroll keyframe CSS once + cancel any stale typewriter intervals
+    ensureOghamScrollStyle();
+    cancelAllTypewriters();
 
     // Escape key handler — remove previous before adding (guard against double-show)
     if (escapeHandler) document.removeEventListener('keydown', escapeHandler);
@@ -172,9 +293,19 @@ export function showOghamPanel(): Promise<string | null> {
 
       // Ogham name
       const nameEl = document.createElement('div');
-      nameEl.textContent = spec.name;
       nameEl.style.cssText = `font-size:11px;color:${isAvailable ? '#33ff66' : 'rgba(51,255,102,0.30)'};font-family:'Courier New',monospace;`;
+      // C365: available oghams get typewriter animation; locked/cooldown slots set text directly
+      if (!isAvailable) {
+        nameEl.textContent = spec.name;
+      }
       slot.appendChild(nameEl);
+
+      // C365: description line shown only for available oghams (animated after name)
+      const descEl = isAvailable ? document.createElement('div') : null;
+      if (descEl) {
+        descEl.style.cssText = `font-size:9px;color:rgba(51,255,102,0.55);font-family:'Courier New',monospace;max-width:88px;word-break:break-word;text-align:center;min-height:1em;`;
+        slot.appendChild(descEl);
+      }
 
       // Status row: lock icon, cooldown, or category
       const infoEl = document.createElement('div');
@@ -241,6 +372,21 @@ export function showOghamPanel(): Promise<string | null> {
       slot.appendChild(infoEl);
 
       if (isAvailable) {
+        // C365: typewriter reveal — name first, then description, then arc charge flash
+        requestAnimationFrame(() => {
+          typewriterReveal(nameEl, spec.name, () => {
+            if (descEl) {
+              typewriterReveal(descEl, spec.description, () => {
+                // Arc charge flash: only oghams with cooldown have a canvas
+                if (spec.cooldown > 0) {
+                  const cdCanvas = slot.querySelector<HTMLCanvasElement>(`#ogham-cd-arc-${oghamId}`);
+                  if (cdCanvas) triggerArcChargeFlash(cdCanvas, Math.min(spec.cooldown, 8));
+                }
+              });
+            }
+          });
+        });
+
         slot.addEventListener('click', () => selectOgham(oghamId), { signal: slotSignal });
         // C162/BUG-C131-03: touchend — on mobile pointerenter stays "stuck" after tap (no
         // pointerleave fires). Adding touchend fires selectOgham and prevents ghost click
@@ -413,6 +559,8 @@ export function hideOghamPanel(): void {
     _slotsAbortController.abort();
     _slotsAbortController = null;
   }
+  // C365: cancel any running typewriter intervals to prevent stale DOM writes after hide
+  cancelAllTypewriters();
   const overlay = document.getElementById('ogham-panel-overlay');
   if (overlay) overlay.style.display = 'none';
   // Resolve pending promise to prevent async deadlock on scene transitions (BUG-C58-03)
