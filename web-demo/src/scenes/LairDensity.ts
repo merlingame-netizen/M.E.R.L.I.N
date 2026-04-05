@@ -1,7 +1,7 @@
 // LairDensity — extracted from MerlinLairScene (Cycle 34) to stay under 800-line limit.
 // Adds shelves+books, moonlight SpotLight, parchment rolls to the lair scene.
 
-import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, Scene, SpotLight } from 'three';
+import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Scene, SpotLight, SphereGeometry } from 'three';
 
 /** Add shelves, moonlight shaft and parchment rolls to the lair scene.
  *  Returns a cleanup callback that removes the SpotLight target from the scene —
@@ -40,6 +40,32 @@ export function createLairDensity(scene: Scene, lowEnd = false): () => void {
     const biblio = new PointLight(0x22aa55, 0.6, 6, 2);
     biblio.position.set(10, 0, -7);
     group.add(biblio);
+  }
+
+  // C247: Hanging herb bundles — dried clusters near ceiling
+  const herbM = new MeshStandardMaterial({ color: 0x1a2a10, roughness: 0.95, metalness: 0.0, flatShading: true });
+  for (const [x, y, z] of [[-2, 2.5, -5], [0.5, 2.8, -4], [1.8, 2.3, -6]] as [number, number, number][]) {
+    const herb = new Mesh(new SphereGeometry(0.15, 4, 3), herbM);
+    herb.scale.set(0.6, 0.4, 0.6);
+    herb.position.set(x, y, z);
+    group.add(herb);
+  }
+
+  // C247: Glowing rune inscriptions pressed against left wall (+X normal → rotation.y = PI/2)
+  const runeM = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.25 });
+  for (const [x, y, z] of [[-3.8, 1.2, -8], [-3.8, 0.3, -9], [-3.8, 1.6, -10]] as [number, number, number][]) {
+    const rune = new Mesh(new PlaneGeometry(0.6, 0.8), runeM);
+    rune.rotation.y = Math.PI / 2;
+    rune.position.set(x, y, z);
+    group.add(rune);
+  }
+
+  // C247: Small spell components on workbench/table area
+  const spellM = new MeshBasicMaterial({ color: 0x33ff66 });
+  for (const [x, y, z] of [[1.2, -3.8, -7], [1.5, -3.8, -6.8], [0.9, -3.8, -6.6]] as [number, number, number][]) {
+    const orb = new Mesh(new SphereGeometry(0.08, 4, 3), spellM);
+    orb.position.set(x, y, z);
+    group.add(orb);
   }
 
   scene.add(group);
