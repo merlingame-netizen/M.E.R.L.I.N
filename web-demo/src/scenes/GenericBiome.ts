@@ -406,6 +406,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const _dancerGroups: Group[] = [];
   const _dancerArmGroups: Group[] = [];
   const _heatherMeshes: Mesh[] = [];
+  let _moorCircleGroup: Group | null = null;
+  let _moorCircleLight: PointLight | null = null;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -707,6 +709,61 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       }
       group.add(stalk);
       _heatherMeshes.push(stalk);
+    }
+
+    // Weathered standing stone circle — smaller than cercles_pierres, a moor relic
+    {
+      const circleGroup = new Group();
+      const stoneMat = new MeshStandardMaterial({ color: 0x151f12, roughness: 0.95, metalness: 0.0, flatShading: true });
+      const centerX = 10;
+      const centerZ = -26;
+      const radius = 4;
+      const STONE_COUNT = 6;
+      const Rnd = () => Math.random();
+
+      for (let i = 0; i < STONE_COUNT; i++) {
+        const angle = (i / STONE_COUNT) * Math.PI * 2;
+        const w = 0.2 + Rnd() * 0.15;
+        const h = 1.4 + Rnd() * 0.5;
+        const d = 0.18 + Rnd() * 0.08;
+        const stone = new Mesh(new BoxGeometry(w, h, d), stoneMat);
+        stone.position.set(
+          centerX + Math.cos(angle) * radius,
+          h / 2 - 1,
+          centerZ + Math.sin(angle) * radius,
+        );
+        stone.rotation.z = (Rnd() - 0.5) * 0.2;
+        stone.rotation.y = Rnd() * 0.3;
+        circleGroup.add(stone);
+      }
+
+      // Partial lintel spanning stones 0 and 1 (two adjacent stones at top)
+      const lintelMat = new MeshStandardMaterial({ color: 0x111a0f, roughness: 0.95, metalness: 0.0, flatShading: true });
+      const angle0 = 0;
+      const angle1 = (1 / STONE_COUNT) * Math.PI * 2;
+      const s0x = centerX + Math.cos(angle0) * radius;
+      const s0z = centerZ + Math.sin(angle0) * radius;
+      const s1x = centerX + Math.cos(angle1) * radius;
+      const s1z = centerZ + Math.sin(angle1) * radius;
+      const lintel = new Mesh(new BoxGeometry(4.2, 0.18, 0.2), lintelMat);
+      lintel.position.set((s0x + s1x) / 2, 1.8, (s0z + s1z) / 2);
+      lintel.rotation.y = Math.atan2(s1x - s0x, s1z - s0z);
+      circleGroup.add(lintel);
+
+      // Center flat marker stone
+      const markerMat = new MeshStandardMaterial({ color: 0x151f12, roughness: 0.95, metalness: 0.0, flatShading: true });
+      const marker = new Mesh(new CylinderGeometry(0.3, 0.35, 0.12, 6), markerMat);
+      marker.position.set(centerX, -0.94, centerZ);
+      circleGroup.add(marker);
+
+      group.add(circleGroup);
+      _moorCircleGroup = circleGroup;
+
+      // Very subtle ambient glow at circle center
+      const circleLight = new PointLight(0x33ff66, 0.03, 6);
+      circleLight.position.set(centerX, 0.5, centerZ);
+      group.add(circleLight);
+      _moorCircleLight = circleLight;
     }
   }
 
@@ -1506,6 +1563,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Landes bruyere — moor stone circle subtle glow pulse
+    if (_moorCircleLight !== null) {
+      _moorCircleLight.intensity = 0.03 + Math.sin(Date.now() * 0.001 * 0.2) * 0.02;
+    }
     // Cercles de Pierres — pulsing Ogham inscription emissive
     if (cerclesInscriptionMats.length > 0) {
       cerclesTime += dt;
@@ -1671,6 +1732,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _deadTreeGroup = null;
     _templeGroup = null;
     _heatherMeshes.length = 0;
+    _moorCircleGroup = null;
+    _moorCircleLight = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
