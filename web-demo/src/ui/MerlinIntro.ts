@@ -82,7 +82,7 @@ export async function runMerlinIntro(): Promise<void> {
   staff.style.cssText = [
     'position:absolute;bottom:27%;left:calc(50% + 48px);',
     'width:2px;height:200px;transform:rotate(4deg);transform-origin:bottom center;',
-    'background:linear-gradient(to top,rgba(200,160,80,0.65),rgba(200,160,80,0.08));',
+    'background:linear-gradient(to top,rgba(51,255,102,0.55),rgba(51,200,100,0.06));',
   ].join('');
   overlay.appendChild(staff);
 
@@ -91,8 +91,8 @@ export async function runMerlinIntro(): Promise<void> {
   orb.style.cssText = [
     'position:absolute;bottom:calc(27% + 198px);left:calc(50% + 42px);',
     'width:14px;height:14px;border-radius:50%;',
-    'background:radial-gradient(circle at 35% 35%,#e8c870,#c87820);',
-    'box-shadow:0 0 12px rgba(200,160,80,0.6);',
+    'background:radial-gradient(circle at 35% 35%,#88ffcc,#22ff88);',
+    'box-shadow:0 0 14px rgba(51,255,102,0.7),0 0 4px rgba(136,255,204,1.0);',
   ].join('');
   overlay.appendChild(orb);
 
@@ -106,7 +106,7 @@ export async function runMerlinIntro(): Promise<void> {
     star.style.cssText = [
       `position:absolute;left:${x}%;top:${y}%;`,
       `width:${size}px;height:${size}px;border-radius:50%;`,
-      `background:rgba(200,160,80,${alpha});`,
+      `background:rgba(51,255,102,${alpha * 0.7});`,
     ].join('');
     overlay.appendChild(star);
   }
@@ -126,10 +126,9 @@ export async function runMerlinIntro(): Promise<void> {
   const nameEl = document.createElement('div');
   nameEl.textContent = '> MERLIN';
   nameEl.style.cssText = [
-    // Gold kept for Merlin's identity (ogham-gold palette), Courier New for CeltOS consistency
-    `color:#ffcc44;font-size:12px;letter-spacing:0.22em;`,
+    `color:#33ff66;font-size:12px;letter-spacing:0.22em;`,
     `margin-bottom:10px;text-transform:uppercase;`,
-    `font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(255,204,68,0.35);`,
+    `font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(51,255,102,0.35);`,
   ].join('');
   dialogueBox.appendChild(nameEl);
 

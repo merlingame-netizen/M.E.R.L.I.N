@@ -430,7 +430,7 @@ function showGroqSettingsModal(): Promise<void> {
     panel.appendChild(title);
 
     const sub = document.createElement('div');
-    sub.textContent = 'Clé API Groq (tab-session uniquement)';
+    sub.textContent = 'Clé API Groq — Groq.com';
     sub.style.cssText = 'color:rgba(51,255,102,0.5);font-size:11px;margin-bottom:18px;';
     panel.appendChild(sub);
 
@@ -452,6 +452,24 @@ function showGroqSettingsModal(): Promise<void> {
     ].join('');
     panel.appendChild(input);
 
+    const rememberRow = document.createElement('label');
+    rememberRow.style.cssText = [
+      'display:flex;align-items:center;gap:8px;cursor:pointer;',
+      'color:rgba(51,200,100,0.70);font-size:11px;margin-bottom:14px;',
+      `font-family:'Courier New',monospace;`,
+    ].join('');
+
+    const rememberCheck = document.createElement('input');
+    rememberCheck.type = 'checkbox';
+    rememberCheck.id = 'groq-remember';
+    rememberCheck.style.cssText = 'accent-color:#33ff66;width:14px;height:14px;cursor:pointer;';
+    // Pre-check if already persisted
+    try { rememberCheck.checked = localStorage.getItem('merlin_groq_persist') === '1'; } catch { /* ignore */ }
+
+    rememberRow.appendChild(rememberCheck);
+    rememberRow.appendChild(document.createTextNode(' Mémoriser la clé (localStorage)'));
+    panel.appendChild(rememberRow);
+
     const feedback = document.createElement('div');
     feedback.style.cssText = 'font-size:11px;min-height:16px;margin-bottom:14px;';
     panel.appendChild(feedback);
@@ -468,6 +486,16 @@ function showGroqSettingsModal(): Promise<void> {
     applyBtn.addEventListener('click', () => {
       const ok = injectAPIKey(input.value);
       if (ok) {
+        // Persist opt-in
+        try {
+          if (rememberCheck.checked) {
+            localStorage.setItem('merlin_groq_persist', '1');
+            localStorage.setItem('merlin_groq_key', input.value.trim());
+          } else {
+            localStorage.removeItem('merlin_groq_persist');
+            localStorage.removeItem('merlin_groq_key');
+          }
+        } catch { /* ignore */ }
         feedback.style.color = '#33ff66';
         feedback.textContent = '✓ Clé acceptée — mode cloud actif';
         status.textContent = '▶ MODE: CLOUD (Groq actif)';

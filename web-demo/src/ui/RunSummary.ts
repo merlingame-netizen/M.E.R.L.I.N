@@ -140,6 +140,31 @@ function animateCounter(
 }
 
 /**
+ * C193: Show 3 floating '+' sparkles from the anam value element when the counter finishes.
+ * Sparks float upward and fade over 0.8s, then self-remove.
+ */
+function showAnamSparkle(anamEl: HTMLElement): void {
+  for (let i = 0; i < 3; i++) {
+    const spark = document.createElement('span');
+    spark.textContent = '+';
+    spark.style.cssText = [
+      'position:absolute;color:#33ff66;font-size:14px;pointer-events:none;',
+      `left:${50 + (i - 1) * 20}%;`,
+      'top:0;opacity:1;transition:transform 0.8s ease-out,opacity 0.8s ease-out;',
+      `font-family:'Courier New',monospace;`,
+    ].join('');
+    anamEl.style.position = 'relative';
+    anamEl.appendChild(spark);
+    // Trigger animation after paint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      spark.style.transform = `translateY(-${30 + i * 10}px)`;
+      spark.style.opacity = '0';
+    }));
+    setTimeout(() => spark.remove(), 900);
+  }
+}
+
+/**
  * Dispatch the merlin SFX custom event for a given sound name.
  */
 function playSfx(sound: string): void {
@@ -206,6 +231,17 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'border-radius:4px',
     'text-align:center',
   ].join(';');
+
+  // ── C193: Run metadata line — top-right, small CeltOS green ────────────────
+  const runMeta = document.createElement('div');
+  runMeta.style.cssText = [
+    'text-align:right;color:rgba(51,200,100,0.45);',
+    `font-family:'Courier New',monospace;font-size:10px;`,
+    'letter-spacing:0.1em;margin-bottom:4px;',
+  ].join('');
+  const runNum = (state.meta?.runsTotal ?? 0) + 1; // +1 since endRun was already called
+  runMeta.textContent = `RUN_${String(runNum).padStart(3, '0')} :: ${biomeLabel.toUpperCase()}`;
+  panel.appendChild(runMeta);
 
   // ── C167: Header with scanline pulse animation ───────────────────────────────
   const header = document.createElement('div');
@@ -405,9 +441,15 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   document.body.appendChild(overlay);
 
   // C167: start anam counter animation after DOM insertion
+  // C193: showAnamSparkle fires once the counter reaches its target
   if (anamValue > 0) {
+    let sparkShown = false;
     animateCounter(anamValue, 1200, (v) => {
       anamValEl.textContent = String(v);
+      if (v >= anamValue && !sparkShown) {
+        sparkShown = true;
+        showAnamSparkle(anamValEl);
+      }
     });
   } else {
     anamValEl.textContent = '0';
