@@ -810,6 +810,137 @@ export function playDrainAnimation(currentLife: number, maxLife: number): void {
   }
 }
 
+// =============================================================================
+// C339 — Anam score display with animated increment
+// =============================================================================
+
+/** Module-level cached ref for the standalone #hud-anam-value span. */
+let _anamDisplayValueEl: HTMLElement | null = null;
+
+/** Last known anam value — used to detect direction of change in updateAnamDisplay. */
+let _prevAnamValue: number = -1;
+
+/**
+ * Inject the hud-anam CSS once into document.head.
+ * Idempotent — guarded by #hud-anam-style.
+ */
+function ensureAnamDisplayStyle(): void {
+  if (document.getElementById('hud-anam-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-anam-style';
+  s.textContent = `
+    @keyframes hud-anam-glow-out {
+      0%   { box-shadow: 0 0 12px rgba(51,255,102,0.6); }
+      100% { box-shadow: none; }
+    }
+    .hud-anam-glow { animation: hud-anam-glow-out 1s ease-out forwards; }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * Create the persistent Anam score overlay in the top-right corner of the viewport.
+ * Idempotent — no-op if #hud-anam already exists.
+ *
+ * @param initialValue - Starting anam value to display.
+ */
+export function initAnamDisplay(initialValue: number): void {
+  if (document.getElementById('hud-anam')) return;
+
+  ensureAnamDisplayStyle();
+
+  const container = document.createElement('div');
+  container.id = 'hud-anam';
+  container.style.cssText = [
+    'position:fixed',
+    'top:8px',
+    'right:8px',
+    'font:bold 14px "Courier New",Courier,monospace',
+    'color:rgba(51,255,102,0.8)',
+    'background:rgba(1,8,2,0.7)',
+    'padding:3px 8px',
+    'border:1px solid rgba(51,255,102,0.2)',
+    'border-radius:2px',
+    'pointer-events:none',
+    'z-index:110',
+    'display:flex',
+    'align-items:center',
+    'gap:5px',
+  ].join(';');
+
+  const label = document.createElement('span');
+  label.style.cssText = 'font:7px "Courier New",Courier,monospace;color:rgba(51,255,102,0.5);letter-spacing:1px;';
+  label.textContent = '\u1690 ANAM';
+  container.appendChild(label);
+
+  const valueSpan = document.createElement('span');
+  valueSpan.id = 'hud-anam-value';
+  valueSpan.textContent = String(initialValue);
+  container.appendChild(valueSpan);
+
+  document.body.appendChild(container);
+  _anamDisplayValueEl = valueSpan;
+  _prevAnamValue = initialValue;
+}
+
+/**
+ * Update the Anam score display.
+ * If the value increased and animate=true, runs a count-up animation over 800ms ease-out,
+ * adds a brief glow to the container, and fires the `ogham_activate` SFX.
+ * If the value decreased or animate=false, updates instantly.
+ *
+ * @param newValue - New anam value.
+ * @param animate  - Whether to animate (default true).
+ */
+export function updateAnamDisplay(newValue: number, animate: boolean = true): void {
+  const valueEl = _anamDisplayValueEl ?? (document.getElementById('hud-anam-value') as HTMLElement | null);
+  if (!valueEl) return;
+
+  const prev = _prevAnamValue;
+  _prevAnamValue = newValue;
+
+  const increased = prev !== -1 && newValue > prev;
+
+  if (!animate || !increased) {
+    valueEl.textContent = String(newValue);
+    return;
+  }
+
+  // Count-up animation over 800ms ease-out
+  const startVal = prev;
+  const endVal = newValue;
+  const duration = 800;
+  const startTime = performance.now();
+  const animTarget: HTMLElement = valueEl; // narrowed non-null ref for the closure
+
+  function tick(now: number): void {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    // ease-out: 1 - (1 - t)^3
+    const eased = 1 - Math.pow(1 - t, 3);
+    const displayed = Math.round(startVal + (endVal - startVal) * eased);
+    animTarget.textContent = String(displayed);
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    }
+  }
+  requestAnimationFrame(tick);
+
+  // Glow on the container
+  const container = document.getElementById('hud-anam');
+  if (container) {
+    container.classList.remove('hud-anam-glow');
+    void container.offsetWidth; // force reflow
+    container.classList.add('hud-anam-glow');
+    window.setTimeout(() => {
+      container.classList.remove('hud-anam-glow');
+    }, 1000);
+  }
+
+  // SFX
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'ogham_activate' } }));
+}
+
 /** Unsubscribe HUD from store — call when entering lair/menu to stop unnecessary renders. BUG-C88-06. */
 export function teardownHUD(): void {
   _hudUnsubscribe?.();
@@ -865,6 +996,11 @@ export function teardownHUD(): void {
   document.getElementById('hud-ogham-toast-style')?.remove();
   // C323: remove drain animation style on teardown.
   document.getElementById('hud-drain-style')?.remove();
+  // C339: remove standalone anam display and its style on teardown.
+  document.getElementById('hud-anam')?.remove();
+  document.getElementById('hud-anam-style')?.remove();
+  _anamDisplayValueEl = null;
+  _prevAnamValue = -1;
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;
