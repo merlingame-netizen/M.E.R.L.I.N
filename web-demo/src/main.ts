@@ -768,6 +768,31 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
         lairSelectedOgham = await showOghamPanel();
         if (doorTriggered) return; // Early abort if door clicked during await
         if (lairSelectedOgham) {
+          // Inject keyframe once (guarded by id)
+          if (!document.getElementById('ogham-flash-style')) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'ogham-flash-style';
+            styleEl.textContent = [
+              '@keyframes ogham-flash {',
+              '  0%   { opacity: 0; transform: scale(0.5); }',
+              '  20%  { opacity: 1; transform: scale(1.0); }',
+              '  100% { opacity: 0; transform: scale(1.8); }',
+              '}',
+            ].join('\n');
+            document.head.appendChild(styleEl);
+          }
+          // Flash overlay burst
+          const flash = document.createElement('div');
+          flash.style.cssText = [
+            'position:fixed',
+            'inset:0',
+            'pointer-events:none',
+            'z-index:500',
+            'background:radial-gradient(circle at center, rgba(51,255,102,0.25) 0%, rgba(51,255,102,0) 70%)',
+            'animation:ogham-flash 600ms ease-out forwards',
+          ].join(';');
+          document.body.appendChild(flash);
+          setTimeout(() => flash.remove(), 700);
           showZoneToast('crystal'); // "Pierre des Oghams / Choisissez votre Ogham runique"
         }
         return;
