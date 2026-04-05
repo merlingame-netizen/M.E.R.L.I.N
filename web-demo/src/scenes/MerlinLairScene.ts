@@ -1357,6 +1357,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _tomePageR: Mesh | null = null;
   let _tomeGlowLight: PointLight | null = null;
 
+  // C418: suspended astrolabe
+  let _astroGroup: Group | null = null;
+  let _astroT = 0;
+  let _astroRingOuter: Group | null = null;
+  let _astroRingMid: Group | null = null;
+  let _astroRingInner: Group | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2122,6 +2129,66 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _tomeGroup.add(lecternMesh, topMesh, spineMesh, _tomePageL, _tomePageR, _tomeGlowLight);
     _tomeGroup.position.set(2.5, 0, -3);
     scene.add(_tomeGroup);
+  }
+
+  // C418: suspended astrolabe
+  {
+    _astroGroup = new Group();
+
+    // Hanging chain: 4 small spheres above
+    const chainMat = new MeshBasicMaterial({ color: 0x0a2a14 });
+    for (let ci = 0; ci < 4; ci++) {
+      const bead = new Mesh(new SphereGeometry(0.025, 4, 3), chainMat);
+      bead.position.y = 0.15 + ci * 0.12;
+      _astroGroup.add(bead);
+    }
+
+    // Outer ring: TorusGeometry(0.55, 0.04, 6, 24)
+    _astroRingOuter = new Group();
+    const outerRing = new Mesh(
+      new TorusGeometry(0.55, 0.04, 6, 24),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    for (let t = 0; t < 4; t++) {
+      const tick = new Mesh(
+        new BoxGeometry(0.04, 0.12, 0.04),
+        new MeshBasicMaterial({ color: 0x1a4a22 })
+      );
+      tick.position.set(Math.cos(t * Math.PI / 2) * 0.55, Math.sin(t * Math.PI / 2) * 0.55, 0);
+      _astroRingOuter.add(tick);
+    }
+    _astroRingOuter.add(outerRing);
+
+    // Mid ring: TorusGeometry(0.38, 0.035, 6, 20), tilted 35°
+    _astroRingMid = new Group();
+    const midRing = new Mesh(
+      new TorusGeometry(0.38, 0.035, 6, 20),
+      new MeshBasicMaterial({ color: 0x0d3318 })
+    );
+    _astroRingMid.rotation.x = 0.6;
+    _astroRingMid.add(midRing);
+
+    // Inner ring: TorusGeometry(0.22, 0.03, 5, 16), tilted 70°
+    _astroRingInner = new Group();
+    const innerRing = new Mesh(
+      new TorusGeometry(0.22, 0.03, 5, 16),
+      new MeshBasicMaterial({ color: 0x0a2a14 })
+    );
+    _astroRingInner.rotation.z = 1.2;
+    _astroRingInner.add(innerRing);
+
+    // Central star pointer: thin cross of 2 BoxGeometry
+    const pointerMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    const ptrH = new Mesh(new BoxGeometry(0.3, 0.03, 0.03), pointerMat);
+    const ptrV = new Mesh(new BoxGeometry(0.03, 0.3, 0.03), pointerMat);
+    const ptrCore = new Mesh(new SphereGeometry(0.04, 4, 3), new MeshBasicMaterial({ color: 0x33ff66 }));
+
+    // Glow light
+    const astroLight = new PointLight(0x33ff66, 0.12, 3.0);
+
+    _astroGroup.add(_astroRingOuter, _astroRingMid, _astroRingInner, ptrH, ptrV, ptrCore, astroLight);
+    _astroGroup.position.set(0, 3.2, -4);
+    scene.add(_astroGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3289,6 +3356,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C418: suspended astrolabe — multi-ring rotation + gentle sway
+    if (_astroGroup) {
+      _astroT += dt;
+      if (_astroRingOuter) _astroRingOuter.rotation.y = _astroT * 0.3;
+      if (_astroRingMid) _astroRingMid.rotation.y = _astroT * -0.5;
+      if (_astroRingInner) _astroRingInner.rotation.x = _astroT * 0.7;
+      _astroGroup.rotation.z = Math.sin(_astroT * 0.2) * 0.08;
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3596,6 +3672,22 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _tomeGlowLight = null;
       scene.remove(_tomeGroup);
       _tomeGroup = null;
+    }
+    // C418: suspended astrolabe
+    if (_astroGroup) {
+      _astroGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _astroRingOuter = null;
+      _astroRingMid = null;
+      _astroRingInner = null;
+      scene.remove(_astroGroup);
+      _astroGroup = null;
     }
   };
 
