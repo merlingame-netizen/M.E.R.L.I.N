@@ -632,6 +632,70 @@ export function showOghamActivated(oghamId: string): void {
   }, 2500);
 }
 
+// =============================================================================
+// C296 — Faction reputation flash animation on rep change
+// =============================================================================
+
+/**
+ * Inject the hud-faction-flash CSS transition classes once into document.head.
+ * Idempotent — safe to call multiple times.
+ */
+function ensureHudFactionStyles(): void {
+  if (document.getElementById('hud-faction-flash-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-faction-flash-style';
+  s.textContent = `.hud-fac-flash-up { transition: box-shadow 0.6s ease-out; }
+.hud-fac-flash-down { transition: box-shadow 0.6s ease-out; }`;
+  document.head.appendChild(s);
+}
+
+/** Module-level previous faction rep values — -1 means "not yet initialized". */
+const _prevFactions: Record<string, number> = {};
+
+/**
+ * Update faction display and flash the faction row on changes ≥ 3 points.
+ * - Green glow for reputation increase, red glow for decrease.
+ * - Fires `reputation_up` or `reputation_down` SFX once per changed faction.
+ * @param factions - Map of faction key → current reputation value (0-100).
+ */
+export function updateFactionDisplay(factions: Record<string, number>): void {
+  ensureHudFactionStyles();
+
+  for (const faction of Object.keys(factions)) {
+    const newVal: number = factions[faction] ?? 0;
+    const prevVal: number = _prevFactions[faction] ?? -1;
+
+    if (prevVal !== -1) {
+      const delta: number = newVal - prevVal;
+      if (Math.abs(delta) >= 3) {
+        const rowEl = document.getElementById(`hud-fac-${faction}`);
+        if (rowEl) {
+          if (delta > 0) {
+            rowEl.style.transition = 'box-shadow 0.1s ease-in, box-shadow 0.5s ease-out 0.1s';
+            rowEl.style.boxShadow = '0 0 12px rgba(51,255,102,0.8)';
+            rowEl.classList.add('hud-fac-flash-up');
+            rowEl.classList.remove('hud-fac-flash-down');
+          } else {
+            rowEl.style.transition = 'box-shadow 0.1s ease-in, box-shadow 0.5s ease-out 0.1s';
+            rowEl.style.boxShadow = '0 0 12px rgba(255,60,60,0.6)';
+            rowEl.classList.add('hud-fac-flash-down');
+            rowEl.classList.remove('hud-fac-flash-up');
+          }
+          window.setTimeout(() => {
+            rowEl.style.boxShadow = '';
+            rowEl.classList.remove('hud-fac-flash-up', 'hud-fac-flash-down');
+          }, 600);
+        }
+
+        const sfxSound: string = delta > 0 ? 'reputation_up' : 'reputation_down';
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: sfxSound } }));
+      }
+    }
+
+    _prevFactions[faction] = newVal;
+  }
+}
+
 /** Unsubscribe HUD from store — call when entering lair/menu to stop unnecessary renders. BUG-C88-06. */
 export function teardownHUD(): void {
   _hudUnsubscribe?.();
@@ -677,6 +741,11 @@ export function teardownHUD(): void {
   // C271: reset prev life tracker and remove delta style.
   _prevLife = -1;
   document.getElementById('hud-life-delta-style')?.remove();
+  // C296: reset prev faction tracker and remove faction flash style.
+  for (const key of Object.keys(_prevFactions)) {
+    delete _prevFactions[key];
+  }
+  document.getElementById('hud-faction-flash-style')?.remove();
   // C259: remove ogham toast and its style on teardown.
   document.getElementById('hud-ogham-toast')?.remove();
   document.getElementById('hud-ogham-toast-style')?.remove();
