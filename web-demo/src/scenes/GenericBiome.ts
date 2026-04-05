@@ -415,10 +415,105 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
   }
 
+  // Outer refs for biome-specific animated elements (captured by update closure)
+  let plaineDruideFireLight: PointLight | null = null;
+  let plaineDruideFireMesh: Mesh | null = null;
+
+  // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
+  if (biome === 'cercles_pierres') {
+    const R2 = () => Math.random();
+    const stoneMat = new MeshStandardMaterial({
+      color: 0x6a5e48, roughness: 0.90, metalness: 0.0, flatShading: true,
+      emissive: 0x221810, emissiveIntensity: 0.06,
+    });
+    const RING_R = 7.5;
+    const STONE_COUNT = 7;
+    for (let i = 0; i < STONE_COUNT; i++) {
+      const angle = (i / STONE_COUNT) * Math.PI * 2;
+      const ht = 2.4 + R2() * 1.6;
+      const stone = new Mesh(new BoxGeometry(0.55 + R2() * 0.25, ht, 0.35 + R2() * 0.15), stoneMat);
+      stone.position.set(Math.cos(angle) * RING_R, ht / 2 - 1.0, Math.sin(angle) * RING_R - 15);
+      stone.rotation.y = angle + (R2() - 0.5) * 0.3;
+      stone.rotation.z = (R2() - 0.5) * 0.08;
+      stone.castShadow = true;
+      group.add(stone);
+    }
+    // Central altar flat stone
+    const altarMat = new MeshStandardMaterial({
+      color: 0x8a7a5e, roughness: 0.85, metalness: 0.0, flatShading: true,
+      emissive: 0x33ff66, emissiveIntensity: 0.04,
+    });
+    const altar = new Mesh(new BoxGeometry(2.0, 0.25, 1.0), altarMat);
+    altar.position.set(0, -0.62, -15);
+    group.add(altar);
+    // Two altar uprights
+    const upright1 = new Mesh(new BoxGeometry(0.25, 1.2, 0.25), stoneMat);
+    upright1.position.set(-0.7, -0.25, -15);
+    group.add(upright1);
+    const upright2 = new Mesh(new BoxGeometry(0.25, 1.2, 0.25), stoneMat);
+    upright2.position.set(0.7, -0.25, -15);
+    group.add(upright2);
+  }
+
+  // Plaine des Druides: scattered ritual poles + central sacred fire
+  if (biome === 'plaine_druides') {
+    const R2 = () => Math.random();
+    const poleMat = new MeshStandardMaterial({
+      color: 0x3c2810, roughness: 0.98, metalness: 0.0, flatShading: true,
+    });
+    const totemMat = new MeshStandardMaterial({
+      color: 0x5a3818, roughness: 0.92, metalness: 0.0, flatShading: true,
+      emissive: 0xcc4400, emissiveIntensity: 0.15,
+    });
+    // 8 ritual poles scattered around path
+    for (let i = 0; i < 8; i++) {
+      const side = i % 2 === 0 ? 1 : -1;
+      const pole = new Mesh(new CylinderGeometry(0.06, 0.08, 3.0 + R2() * 1.5, 5), poleMat);
+      pole.position.set(side * (4 + R2() * 5), 0.2, -5 - i * 7 + R2() * 3);
+      pole.rotation.z = (R2() - 0.5) * 0.12;
+      group.add(pole);
+      // Small totem cap
+      const cap = new Mesh(new SphereGeometry(0.14, 4, 3), totemMat);
+      cap.position.set(pole.position.x, pole.position.y + 1.7 + R2() * 0.7, pole.position.z);
+      group.add(cap);
+    }
+    // Central sacred fire pit (3 flat stones around a glow)
+    const fireStoneMat = new MeshStandardMaterial({ color: 0x4a3828, roughness: 0.88, flatShading: true });
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2;
+      const fs = new Mesh(new BoxGeometry(0.5, 0.15, 0.28), fireStoneMat);
+      fs.position.set(Math.cos(angle) * 0.7, -0.72, -18 + Math.sin(angle) * 0.7);
+      fs.rotation.y = angle;
+      group.add(fs);
+    }
+    const fireMat = new MeshStandardMaterial({
+      color: 0xff5500, emissive: 0xff3300, emissiveIntensity: 1.2,
+      flatShading: true, roughness: 1.0, metalness: 0.0,
+    });
+    const fireCore = new Mesh(new SphereGeometry(0.22, 4, 3), fireMat);
+    fireCore.position.set(0, -0.45, -18);
+    group.add(fireCore);
+    // Sacred fire PointLight
+    const fireLight = new PointLight(0xff5500, 2.0, 12);
+    fireLight.position.set(0, 0, -18);
+    group.add(fireLight);
+    // Store references for animation in update()
+    plaineDruideFireLight = fireLight;
+    plaineDruideFireMesh = fireCore;
+  }
+
   const update = (dt: number): void => {
     particles.update(dt);
     // Gentle key light flicker
     key.intensity = 1.9 + Math.sin(Date.now() * 0.002) * 0.15;
+    // Sacred fire flicker for plaine_druides
+    if (plaineDruideFireLight !== null) {
+      plaineDruideFireLight.intensity = 2.0 + Math.sin(Date.now() * 0.008) * 0.6 + (Math.random() - 0.5) * 0.3;
+    }
+    if (plaineDruideFireMesh !== null) {
+      (plaineDruideFireMesh.material as MeshStandardMaterial).emissiveIntensity =
+        1.2 + Math.sin(Date.now() * 0.012) * 0.4;
+    }
   };
 
   const dispose = (): void => {

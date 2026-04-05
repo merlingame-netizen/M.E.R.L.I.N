@@ -8,6 +8,31 @@ import type { Card, CardOption } from '../game/CardSystem';
 
 const cardContainer = () => document.querySelector<HTMLElement>('.card-container');
 
+// ── SFX helper ─────────────────────────────────────────────────────────────
+
+function sfx(sound: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
+}
+
+// ── Verb-select animation style injection (idempotent) ─────────────────────
+
+function ensureCardSelectStyle(): void {
+  if (document.getElementById('card-select-anim')) return;
+  const s = document.createElement('style');
+  s.id = 'card-select-anim';
+  s.textContent = `
+    @keyframes verb-select {
+      0%   { transform: scale(1);    color: inherit; }
+      40%  { transform: scale(1.18); color: #33ff66; text-shadow: 0 0 12px rgba(51,255,102,0.8); }
+      100% { transform: scale(1);    color: inherit; }
+    }
+    .card-option.selected .verb {
+      animation: verb-select 0.22s ease-out forwards;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
 // ── Faction colour map (T067) ──────────────────────────────────────────────
 
 const FACTION_COLOURS: Record<string, string> = {
@@ -169,6 +194,7 @@ function triggerFlipAnimation(): void {
 
 // C142/COLL: optional reveal flag — coll ogham (reveal_all_options) makes effects persistently visible
 export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
+  ensureCardSelectStyle();
   return new Promise((resolve) => {
     // C165/CO-01: purge any stale handlers from a previous showCard() that was interrupted
     // (e.g. scene teardown, rapid card transitions). Without this cleanup, the old
@@ -286,17 +312,21 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
         btn.appendChild(tooltip);
       }
 
-      const activate = (): void => {
+      btn.addEventListener('pointerenter', () => sfx('hover'));
+
+      const activate = async (): Promise<void> => {
+        sfx('click');
         if (activated) return;
         activated = true;
         clearTimeout(safetyId);
         document.removeEventListener('keydown', onDigitKey); // C122: cleanup digit shortcut handler
         // T073: Brief gold highlight before overlay hides (200ms feedback)
         btn.classList.add('card-option-selected');
-        setTimeout(() => {
-          hideCard();
-          resolve(index);
-        }, 200);
+        // C179: verb-select flash animation before hiding
+        btn.classList.add('selected');
+        await new Promise<void>(r => setTimeout(r, 120)); // brief flash
+        hideCard();
+        resolve(index);
       };
 
       btn.addEventListener('click', activate, { once: true });

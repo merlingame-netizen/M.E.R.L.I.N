@@ -348,6 +348,70 @@ export function initHUD(): void {
   updateHUD();
 }
 
+// =============================================================================
+// C180 — HUD animation helpers: life damage flash + faction gain pulse
+// =============================================================================
+
+/**
+ * Inject HUD animation keyframes once into document.head.
+ * Idempotent — safe to call multiple times.
+ */
+function ensureHUDAnimStyles(): void {
+  if (document.getElementById('hud-anim-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-anim-styles';
+  s.textContent = `
+    @keyframes hud-life-flash {
+      0%   { color: #ff3333; text-shadow: 0 0 16px rgba(255,51,51,0.9); transform: scale(1.25); }
+      60%  { color: #ff6666; text-shadow: 0 0 8px rgba(255,51,51,0.5); transform: scale(1.1); }
+      100% { color: inherit; text-shadow: none; transform: scale(1); }
+    }
+    .life-damage-flash { animation: hud-life-flash 0.38s ease-out forwards !important; }
+    @keyframes hud-faction-gain {
+      0%   { opacity: 1; transform: translateY(0); }
+      50%  { opacity: 0.7; transform: translateY(-4px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .faction-gain-pulse { animation: hud-faction-gain 0.3s ease-out forwards !important; }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * Flash the life fill bar red briefly to signal damage taken.
+ * Uses the cached `_lifeFillEl` reference (populated by initHUD).
+ * No-op if element is not found.
+ */
+export function flashLifeDamage(): void {
+  ensureHUDAnimStyles();
+  const el = _lifeFillEl;
+  if (!el) return;
+  el.classList.remove('life-damage-flash');
+  // Force reflow so re-adding the class always re-triggers the animation.
+  void el.offsetWidth;
+  el.classList.add('life-damage-flash');
+  window.setTimeout(() => {
+    el.classList.remove('life-damage-flash');
+  }, 400);
+}
+
+/**
+ * Pulse the faction bar fill upward briefly to signal a reputation gain.
+ * @param factionName - A FactionId string (e.g. 'druides', 'ankou', …).
+ * No-op if the element is not found.
+ */
+export function flashFactionGain(factionName: string): void {
+  ensureHUDAnimStyles();
+  const el = _factionFillEls[factionName as FactionId] ?? null;
+  if (!el) return;
+  el.classList.remove('faction-gain-pulse');
+  void el.offsetWidth;
+  el.classList.add('faction-gain-pulse');
+  window.setTimeout(() => {
+    el.classList.remove('faction-gain-pulse');
+  }, 320);
+}
+
 /** Unsubscribe HUD from store — call when entering lair/menu to stop unnecessary renders. BUG-C88-06. */
 export function teardownHUD(): void {
   _hudUnsubscribe?.();
