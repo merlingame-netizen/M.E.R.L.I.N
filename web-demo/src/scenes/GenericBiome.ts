@@ -571,6 +571,13 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let wispOrbs443: Mesh[] = []
   let wispLights443: PointLight[] = []
 
+  // ── Harvest bonfire — plaine_druides (C448) ───────────────────────────────
+  let bonfireGroup448: Group | null = null
+  let bonfireT448: number = 0
+  let bonfireFlames448: Mesh[] = []
+  let bonFireSparks448: Mesh[] = []
+  let bonfireLight448: PointLight | null = null
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -2935,6 +2942,72 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     sundialGroup429.position.set(-4, 0, -10);
     group.add(sundialGroup429);
+
+    // ── Harvest bonfire (C448) ────────────────────────────────────────────────
+    bonfireGroup448 = new Group();
+    bonfireGroup448.position.set(0, 0, -8);
+
+    // Log base: flat cylinder
+    const logBase = new Mesh(
+      new CylinderGeometry(0.45, 0.5, 0.12, 8),
+      new MeshBasicMaterial({ color: 0x020f04 }),
+    );
+    bonfireGroup448.add(logBase);
+
+    // 3 crossed log beams
+    for (let i = 0; i < 3; i++) {
+      const log = new Mesh(
+        new CylinderGeometry(0.05, 0.06, 1.0, 6),
+        new MeshBasicMaterial({ color: 0x020f04 }),
+      );
+      log.rotation.z = Math.PI * 0.35;
+      log.rotation.y = (i / 3) * Math.PI * 2;
+      log.position.y = 0.2;
+      bonfireGroup448.add(log);
+    }
+
+    // 3 flame layers (ConeGeometry, stacked, different heights)
+    const flameDefs = [
+      { h: 0.8, r: 0.3, y: 0.4 },
+      { h: 1.2, r: 0.2, y: 0.6 },
+      { h: 0.6, r: 0.15, y: 0.8 },
+    ];
+    flameDefs.forEach((def) => {
+      const flame = new Mesh(
+        new ConeGeometry(def.r, def.h, 6),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 }),
+      );
+      flame.position.y = def.y;
+      bonfireGroup448!.add(flame);
+      bonfireFlames448.push(flame);
+    });
+
+    // 12 spark particles
+    for (let i = 0; i < 12; i++) {
+      const spark = new Mesh(
+        new SphereGeometry(0.025, 3, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.9 }),
+      );
+      // random initial position in fire column
+      spark.position.set(
+        (Math.random() - 0.5) * 0.3,
+        0.3 + Math.random() * 1.2,
+        (Math.random() - 0.5) * 0.3,
+      );
+      // store phase in userData
+      (spark.userData as Record<string, unknown>)['phase'] = Math.random() * Math.PI * 2;
+      (spark.userData as Record<string, unknown>)['speed'] = 0.4 + Math.random() * 0.6;
+      (spark.userData as Record<string, unknown>)['radius'] = 0.05 + Math.random() * 0.15;
+      bonfireGroup448!.add(spark);
+      bonFireSparks448.push(spark);
+    }
+
+    // PointLight
+    bonfireLight448 = new PointLight(0x33ff66, 0.8, 8.0);
+    bonfireLight448.position.y = 0.8;
+    bonfireGroup448.add(bonfireLight448);
+
+    group.add(bonfireGroup448);
   }
 
   const update = (dt: number): void => {
@@ -3639,6 +3712,35 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         sundialLight429.intensity = 0.07 + Math.sin(sundialT429 * 0.8) * 0.025;
       }
     }
+    // Plaine des Druides — harvest bonfire flicker + sparks (C448)
+    bonfireT448 += dt;
+    // Flame flicker: scale and opacity
+    bonfireFlames448.forEach((flame, i) => {
+      const flicker = 0.85 + 0.2 * Math.sin(bonfireT448 * 4.5 + i * 1.3);
+      flame.scale.set(flicker, 0.9 + 0.15 * Math.sin(bonfireT448 * 3.0 + i), flicker);
+      const mat = flame.material as MeshBasicMaterial;
+      mat.opacity = 0.55 + 0.25 * Math.sin(bonfireT448 * 3.5 + i * 2.1);
+    });
+    // Spark rise and reset
+    bonFireSparks448.forEach((spark) => {
+      spark.position.y += (spark.userData as Record<string, unknown>)['speed'] as number * dt;
+      spark.position.x += Math.sin(bonfireT448 * 2 + ((spark.userData as Record<string, unknown>)['phase'] as number)) * 0.008;
+      const mat = spark.material as MeshBasicMaterial;
+      mat.opacity = Math.max(0, 1.0 - (spark.position.y - 0.3) / 1.5);
+      // Reset when gone
+      if (spark.position.y > 1.8 || mat.opacity <= 0) {
+        spark.position.set(
+          (Math.random() - 0.5) * 0.2,
+          0.3 + Math.random() * 0.3,
+          (Math.random() - 0.5) * 0.2,
+        );
+        mat.opacity = 0.9;
+      }
+    });
+    // Light flicker
+    if (bonfireLight448) {
+      bonfireLight448.intensity = 0.65 + 0.3 * Math.sin(bonfireT448 * 5.0);
+    }
     // Cercles de Pierres — moonrise arc across sky (C433)
     if (stoneMoonGroup433 && stoneMoonMesh433 && stoneMoonLight433) {
       stoneMoonT433 += dt;
@@ -3966,6 +4068,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       sundialLight429 = null;
       sundialGroup429 = null;
     }
+    // Harvest bonfire cleanup (C448)
+    if (bonfireGroup448) {
+      bonfireGroup448.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose(); }
+      });
+      bonfireGroup448 = null;
+    }
+    bonfireFlames448 = [];
+    bonFireSparks448 = [];
+    bonfireLight448 = null;
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
