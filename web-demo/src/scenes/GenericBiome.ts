@@ -3925,6 +3925,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       gatewayLight437 = null;
       gatewayGroup437 = null;
     }
+    // Frozen mountain lake cleanup (C440)
+    if (frozenLakeGroup440) {
+      frozenLakeGroup440.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof Line) { c.geometry.dispose(); (c.material as LineBasicMaterial).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      frozenLakeCracks440.length = 0;
+      frozenLakeIceSurface440 = null;
+      frozenLakeLight440 = null;
+      frozenLakeGroup440 = null;
+    }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
     scarecrowEyes382 = [];
