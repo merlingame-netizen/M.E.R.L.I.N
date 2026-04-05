@@ -38,6 +38,25 @@ function extractOghamGlyph(option: CardOption): string | null {
   return null;
 }
 
+// ── Option slide-in animation styles injection (idempotent) ──────────────
+
+function ensureCardOptAnimStyles(): void {
+  if (document.getElementById('card-opt-anim-style')) return;
+  const s = document.createElement('style');
+  s.id = 'card-opt-anim-style';
+  s.textContent = `
+    @keyframes card-opt-slide-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-opt-animate {
+      opacity: 0;
+      animation: card-opt-slide-in 0.32s ease-out forwards;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
 // ── Option badge + ogham styles injection (idempotent) ────────────────────
 
 function ensureCardOptBadgeStyles(): void {
@@ -332,6 +351,7 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
   ensureCardSelectStyle();
   ensureCardBadgeStyles();
   ensureCardOptBadgeStyles();
+  ensureCardOptAnimStyles();
   return new Promise((resolve) => {
     // C165/CO-01: purge any stale handlers from a previous showCard() that was interrupted
     // (e.g. scene teardown, rapid card transitions). Without this cleanup, the old
@@ -458,9 +478,14 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     // Options (T067 + T068) — optContainer already resolved above
     optContainer.innerHTML = '';
 
+    // C232: single flip sfx when the overlay opens (not per-option)
+    sfx('flip');
+
     card.options.forEach((option, index) => {
       const btn = document.createElement('div');
-      btn.className = 'card-option';
+      btn.className = 'card-option card-opt-animate';
+      const delays = ['0ms', '80ms', '160ms'] as const;
+      btn.style.animationDelay = delays[index] ?? '160ms';
       btn.setAttribute('role', 'button');
       btn.setAttribute('tabindex', '0');
       btn.setAttribute('aria-label', `${option.verb} — ${option.text}`);
