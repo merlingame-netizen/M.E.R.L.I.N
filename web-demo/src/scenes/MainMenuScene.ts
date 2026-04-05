@@ -858,6 +858,11 @@ let moonT470: number = 0;
 let moonFaceMat470: MeshBasicMaterial | null = null;
 let moonLight470: PointLight | null = null;
 
+// C475 — Enchanted drifting leaf particles
+let leafGroup475: Group | null = null;
+let leafT475: number = 0;
+let leafParticles475: Mesh[] = [];
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1773,6 +1778,28 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       moonFaceMat470.opacity = 0.06 + 0.03 * Math.sin(moonT470 * 0.5);
     }
 
+    // C475: enchanted leaf drift and tumble
+    leafT475 += dt;
+    leafParticles475.forEach((leaf) => {
+      const fallSpeed = (leaf as any).__fallSpeed as number;
+      const driftX = (leaf as any).__driftX as number;
+      const spinX = (leaf as any).__spinX as number;
+      const spinY = (leaf as any).__spinY as number;
+      const spinZ = (leaf as any).__spinZ as number;
+
+      leaf.position.y -= fallSpeed * dt;
+      leaf.position.x += Math.sin(leafT475 * 0.5 + leaf.position.z * 0.1) * driftX * dt;
+
+      leaf.rotation.x += spinX * dt;
+      leaf.rotation.y += spinY * dt;
+      leaf.rotation.z += spinZ * dt;
+
+      if (leaf.position.y < -5) {
+        leaf.position.y = 15 + Math.random() * 5;
+        leaf.position.x = (Math.random() - 0.5) * 30;
+      }
+    });
+
     renderer.render(scene, camera);
   };
 
@@ -2547,6 +2574,42 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(moonGroup470);
 
+  // C475 — Enchanted drifting leaf particles
+  leafGroup475 = new Group();
+
+  for (let i = 0; i < 30; i++) {
+    const size = 0.06 + Math.random() * 0.1;
+    const leaf = new Mesh(
+      new PlaneGeometry(size, size * 1.4),
+      new MeshBasicMaterial({
+        color: i % 3 === 0 ? 0x33ff66 : 0x1a8833,
+        transparent: true,
+        opacity: 0.5 + Math.random() * 0.3,
+        side: DoubleSide,
+      })
+    );
+    leaf.position.set(
+      (Math.random() - 0.5) * 30,
+      -2 + Math.random() * 20,
+      (Math.random() - 0.5) * 20
+    );
+    leaf.rotation.set(
+      Math.random() * Math.PI * 2,
+      Math.random() * Math.PI * 2,
+      Math.random() * Math.PI * 2
+    );
+    (leaf as any).__fallSpeed = 0.4 + Math.random() * 0.8;
+    (leaf as any).__driftX = (Math.random() - 0.5) * 0.5;
+    (leaf as any).__spinX = (Math.random() - 0.5) * 1.5;
+    (leaf as any).__spinY = (Math.random() - 0.5) * 2.0;
+    (leaf as any).__spinZ = (Math.random() - 0.5) * 1.8;
+
+    leafParticles475.push(leaf);
+    leafGroup475!.add(leaf);
+  }
+
+  scene.add(leafGroup475);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2818,6 +2881,16 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     }
     moonFaceMat470 = null;
     moonLight470 = null;
+
+    // C475: dispose leaf group
+    if (leafGroup475) {
+      leafGroup475.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(leafGroup475);
+      leafGroup475 = null;
+    }
+    leafParticles475 = [];
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
