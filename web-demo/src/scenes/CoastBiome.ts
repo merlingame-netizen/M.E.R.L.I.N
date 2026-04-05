@@ -6,8 +6,8 @@
 import {
   AmbientLight, BackSide, BoxGeometry, BufferAttribute, Color,
   ConeGeometry, CylinderGeometry, DirectionalLight,
-  DodecahedronGeometry, Group, HemisphereLight,
-  Material, Mesh, MeshStandardMaterial, PlaneGeometry, SphereGeometry,
+  DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
+  Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SphereGeometry,
 } from 'three';
 import { loadGLB } from '../engine/AssetLoader';
 
@@ -374,6 +374,100 @@ function createFogPlane(): Mesh {
   return mesh;
 }
 
+// ── Seabird flock — soaring silhouettes riding coastal thermals ───────────────
+
+interface SeabirdState {
+  phase: number;
+  speed: number;
+  dir: 1 | -1;
+}
+
+interface SeabirdFlockResult {
+  birds: Group[];
+  birdMats: MeshBasicMaterial[];
+  update: (t: number, dt: number) => void;
+}
+
+function createSeabirdFlock(): SeabirdFlockResult {
+  const birds: Group[] = [];
+  const birdMats: MeshBasicMaterial[] = [];
+  const states: SeabirdState[] = [];
+  const R = (): number => Math.random();
+
+  // Pale coastal white-grey — seagull colouring, avoids pure-white bloom
+  const wingMat = new MeshBasicMaterial({ color: 0xe8f0e8, side: DoubleSide });
+  birdMats.push(wingMat);
+
+  const wingGeo = new PlaneGeometry(0.8, 0.2);
+
+  for (let i = 0; i < 5; i++) {
+    const bird = new Group();
+
+    // Left wing — ±35° rest angle (seagulls hold wings flatter than crows)
+    const leftWing = new Group();
+    const lMesh = new Mesh(wingGeo, wingMat);
+    lMesh.position.set(-0.4, 0, 0);
+    leftWing.add(lMesh);
+    leftWing.rotation.z = Math.PI / (180 / 35); // 35°
+    bird.add(leftWing);
+
+    // Right wing — mirror
+    const rightWing = new Group();
+    const rMesh = new Mesh(wingGeo, wingMat);
+    rMesh.position.set(0.4, 0, 0);
+    rightWing.add(rMesh);
+    rightWing.rotation.z = -Math.PI / (180 / 35); // -35°
+    bird.add(rightWing);
+
+    // Higher altitude than forest crows — seagulls soar on thermals
+    bird.position.set(
+      -25 + R() * 50,
+      6  + R() * 8,
+      -5 - R() * 15,
+    );
+
+    const state: SeabirdState = {
+      phase: R() * Math.PI * 2,
+      speed: 2.5 + R() * 1.5,  // 2.5 – 4.0 units/s
+      dir:   (R() < 0.5 ? 1 : -1) as 1 | -1,
+    };
+    states.push(state);
+    birds.push(bird);
+  }
+
+  const update = (t: number, dt: number): void => {
+    for (let i = 0; i < birds.length; i++) {
+      const bird  = birds[i]!;
+      const state = states[i]!;
+
+      // Slower, more majestic flap — seagull soaring rhythm
+      const leftWing  = bird.children[0]!;
+      const rightWing = bird.children[1]!;
+      const flapAngle = Math.PI / (180 / 35); // 35° base
+      const flapAmp   = 0.45;
+      leftWing.rotation.z  =  flapAngle + Math.sin(t * 3.5 + state.phase) * flapAmp;
+      rightWing.rotation.z = -flapAngle - Math.sin(t * 3.5 + state.phase) * flapAmp;
+
+      // Lateral flight
+      bird.position.x += state.dir * state.speed * dt;
+
+      // Gentle vertical soaring — coastal thermals (bigger amplitude than forest)
+      bird.position.y += Math.sin(t * 0.5 + state.phase) * 0.3 * dt;
+
+      // Wider wrap boundary — open coast, birds travel farther
+      if (Math.abs(bird.position.x) > 45) {
+        bird.position.x = -state.dir * (38 + R() * 6);
+        bird.position.y =  6 + R() * 8;
+        bird.position.z = -5 - R() * 15;
+        state.phase     =  R() * Math.PI * 2;
+        state.speed     =  2.5 + R() * 1.5;
+      }
+    }
+  };
+
+  return { birds, birdMats, update };
+}
+
 // ── Export interface ──────────────────────────────────────────────────────────
 
 export interface BiomeSceneResult {
@@ -433,6 +527,12 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(createTrees(40));
   group.add(createMenhirs(6));
   group.add(createFogPlane());
+
+  // Soaring seabird flock — pale silhouettes on coastal thermals
+  const seabirdFlock = createSeabirdFlock();
+  for (const bird of seabirdFlock.birds) {
+    group.add(bird);
+  }
 
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
@@ -499,6 +599,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
 
     // Subtle sun intensity flicker (overcast clouds passing)
     sun.intensity = 1.5 + Math.sin(t * 0.18) * 0.12 + Math.sin(t * 0.43) * 0.06;
+
+    // Seabird flock soaring
+    seabirdFlock.update(t, dt);
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -518,6 +621,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     });
     seenMaterials.forEach((m) => m.dispose());
+    for (const mat of seabirdFlock.birdMats) {
+      mat.dispose();
+    }
     group.clear();
   };
 
