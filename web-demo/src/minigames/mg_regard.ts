@@ -112,7 +112,7 @@ export class MinigameRegard extends MinigameBase {
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:2px solid rgba(100,80,140,0.4);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:2px solid rgba(51,200,100,0.4);cursor:pointer;display:block;margin:0 auto;touch-action:none;max-width:100%;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
@@ -362,7 +362,7 @@ export class MinigameRegard extends MinigameBase {
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);
 
     // Background circles
-    ctx.strokeStyle = 'rgba(100,80,140,0.06)';
+    ctx.strokeStyle = 'rgba(51,200,100,0.06)';
     ctx.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
       ctx.beginPath();
@@ -414,7 +414,7 @@ export class MinigameRegard extends MinigameBase {
       if (this.phase === 'show' && cell.isTarget) {
         // Highlight targets during show phase
         const pulse = 0.4 + Math.sin(this.pulsePhase * 3 + cell.targetIndex * 0.5) * 0.2;
-        bgColor = `rgba(100,80,140,${pulse})`;
+        bgColor = `rgba(51,200,100,${pulse})`;
       } else if (isClicked) {
         bgColor = cell.isTarget && cell.targetIndex < this.clickedIndex
           ? 'rgba(60,140,60,0.4)'
@@ -432,7 +432,7 @@ export class MinigameRegard extends MinigameBase {
         ? 'rgba(51,255,102,0.9)'
         : this.phase === 'show' && cell.isTarget
           ? 'rgba(51,255,102,0.5)'
-          : 'rgba(100,80,140,0.2)';
+          : 'rgba(51,200,100,0.2)';
       ctx.lineWidth = isKbFocus ? 2.5 : 1.5;
       ctx.stroke();
 
@@ -484,12 +484,12 @@ export class MinigameRegard extends MinigameBase {
         ctx.fillStyle = 'rgba(140,130,120,0.5)';
       } else if (i === this.currentRound) {
         const cp = 0.5 + Math.sin(this.pulsePhase * 4) * 0.3;
-        ctx.fillStyle = `rgba(200,170,100,${cp})`;
+        ctx.fillStyle = `rgba(51,255,102,${cp * 0.8})`;
       } else {
         ctx.fillStyle = 'rgba(80,70,60,0.3)';
       }
       ctx.fill();
-      ctx.strokeStyle = 'rgba(200,170,100,0.2)';
+      ctx.strokeStyle = 'rgba(51,255,102,0.18)';
       ctx.lineWidth = 1;
       ctx.stroke();
     }

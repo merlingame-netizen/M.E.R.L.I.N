@@ -2,7 +2,7 @@
 // Window on back-right wall area [4, 3.5, -9.75], facing +Z (into scene).
 // Forest silhouettes at z=-10.6 (behind glass). Light through window adapts to hour/season.
 
-import { BoxGeometry, Color, ConeGeometry, DoubleSide, FrontSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Scene, SpotLight } from 'three';
+import { BoxGeometry, Color, ConeGeometry, DoubleSide, FrontSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Scene, SphereGeometry, SpotLight } from 'three';
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 

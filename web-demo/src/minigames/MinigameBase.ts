@@ -4,6 +4,11 @@
 // Narrative feedback: animated overlay + WebAudio tone, shown 2.2s before resolve.
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// C195: SFX helper — dispatches to SFXManager via CustomEvent (same pattern as all UI files)
+function sfx(sound: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
+}
+
 export type OutcomeLevel = 'desastre' | 'echec' | 'reussite' | 'maitrise';
 
 export interface MinigameResult {
@@ -49,9 +54,9 @@ const OUTCOME_CONFIG: Record<OutcomeLevel, {
   },
   echec: {
     label: 'ÉCHEC',
-    color: '#ff9933',
-    bg: 'rgba(60, 28, 4, 0.92)',
-    border: '#6b4010',
+    color: '#ff6644',
+    bg: 'rgba(60, 12, 4, 0.92)',
+    border: '#8b2010',
     flavor: 'Le druide observe. La voie reste incertaine.',
   },
   reussite: {
@@ -177,6 +182,16 @@ function showOutcomeOverlay(container: HTMLElement, score: number, level: Outcom
     requestAnimationFrame(() => {
       requestAnimationFrame(() => { overlay.style.opacity = '1'; });
     });
+
+    // C195: outcome SFX
+    if (level === 'desastre' || level === 'echec') {
+      sfx('lose');
+    } else if (level === 'maitrise') {
+      sfx('magic_reveal'); // special fanfare for mastery
+      setTimeout(() => sfx('win'), 180); // double sound for emphasis
+    } else {
+      sfx('win'); // reussite
+    }
 
     // Auto-dismiss after 2.2s
     // BUG-02 fix: check overlay.isConnected before resolving (guard against external cleanup())
