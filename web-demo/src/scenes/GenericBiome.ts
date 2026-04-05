@@ -401,6 +401,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _templeGroup: Group | null = null;
   const _altarFireMeshes: Mesh[] = [];
   let _altarFireLight: PointLight | null = null;
+  const _dancerGroups: Group[] = [];
+  const _dancerArmGroups: Group[] = [];
   const _heatherMeshes: Mesh[] = [];
 
   // Water plane for marais biome
@@ -1088,6 +1090,36 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     altarFireLight.position.set(0, 0.8, -15);
     group.add(altarFireLight);
     _altarFireLight = altarFireLight;
+
+    // Spectral dancing figures — 5 ghostly silhouettes orbiting altar at radius 5 (C327)
+    const dancerMat = new MeshBasicMaterial({ color: 0x0a2a1a, transparent: true, opacity: 0.35 });
+    for (let fi = 0; fi < 5; fi++) {
+      const figureGroup = new Group();
+      // Torso
+      const torso = new Mesh(new CylinderGeometry(0.08, 0.14, 0.9, 5), dancerMat);
+      torso.position.set(0, 0, 0);
+      figureGroup.add(torso);
+      // Head
+      const head = new Mesh(new SphereGeometry(0.10, 5, 4), dancerMat);
+      head.position.set(0, 0.55, 0);
+      figureGroup.add(head);
+      // Arms
+      const armsGroup = new Group();
+      const arms = new Mesh(new BoxGeometry(0.5, 0.04, 0.06), dancerMat);
+      armsGroup.add(arms);
+      armsGroup.position.set(0, 0.1, 0);
+      figureGroup.add(armsGroup);
+      // Place figure at initial orbit position
+      const baseAngle = (fi / 5) * Math.PI * 2;
+      figureGroup.position.set(
+        Math.cos(baseAngle) * 5,
+        0.5,
+        -15 + Math.sin(baseAngle) * 5,
+      );
+      group.add(figureGroup);
+      _dancerGroups.push(figureGroup);
+      _dancerArmGroups.push(armsGroup);
+    }
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -1463,6 +1495,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const t = Date.now() * 0.001;
       _altarFireLight.intensity = 0.4 + Math.sin(t * 2.1) * 0.2;
     }
+    // Cercles de Pierres — spectral dancers orbit altar (C327)
+    if (_dancerGroups.length > 0) {
+      const t = Date.now() * 0.001;
+      const orbitSpeed = 0.4;
+      for (let fi = 0; fi < _dancerGroups.length; fi++) {
+        const baseAngle = (fi / 5) * Math.PI * 2;
+        const angle = baseAngle + orbitSpeed * t;
+        const x = Math.cos(angle) * 5;
+        const z = -15 + Math.sin(angle) * 5;
+        const y = 0.5 + Math.sin(t * 1.2 + fi * 1.26) * 0.15;
+        _dancerGroups[fi].position.set(x, y, z);
+        _dancerGroups[fi].rotation.y = -angle + Math.PI / 2;
+        _dancerArmGroups[fi].rotation.z = Math.sin(t * 2.1 + fi * 0.8) * 0.4;
+      }
+    }
     // Vallee Anciens — ancestor will-o-wisp drift
     if (valleeWispMesh !== null) {
       valleeWispTime += dt;
@@ -1551,6 +1598,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     altarRuneRing = null;
     _altarFireMeshes.length = 0;
     _altarFireLight = null;
+    _dancerGroups.length = 0;
+    _dancerArmGroups.length = 0;
     _eagleGroup = null;
     _eagleWingL = null;
     _eagleWingR = null;
