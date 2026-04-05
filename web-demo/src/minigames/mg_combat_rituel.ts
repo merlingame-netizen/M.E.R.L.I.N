@@ -21,6 +21,26 @@ function randRange(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
+/** Brief screen flash overlay for damage (red) or heal (green) feedback. */
+function flashOverlay(container: HTMLElement, color: string, duration = 200): void {
+  const flash = document.createElement('div');
+  flash.style.cssText = [
+    'position:absolute', 'inset:0',
+    `background:${color}`,
+    'pointer-events:none',
+    'z-index:30',
+    'transition:opacity 0.15s ease-out',
+    'opacity:0.4',
+  ].join(';');
+  container.appendChild(flash);
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      flash.style.opacity = '0';
+      setTimeout(() => flash.remove(), 150);
+    }, duration * 0.3);
+  });
+}
+
 export class MinigameCombatRituel extends MinigameBase {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -58,6 +78,10 @@ export class MinigameCombatRituel extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+    // Ensure container is positioned so flash overlay (position:absolute) clips correctly
+    if (!['relative', 'absolute', 'fixed'].includes(this.container.style.position)) {
+      this.container.style.position = 'relative';
+    }
 
     // C103: tieredValue replaces manual arithmetic — consistent with all other minigames
     this.totalTime     = this.tieredValue([16, 14, 12, 10] as const);
@@ -274,10 +298,16 @@ export class MinigameCombatRituel extends MinigameBase {
         this.hitFlash = 0.5;
         // C99: audio feedback — first frame of each new collision (edge-triggered)
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+        // C254: damage flash — red overlay, edge-triggered on first collision frame
+        flashOverlay(this.container, 'rgba(220,40,40,0.35)', 200);
       }
     } else {
       // C83: edge-triggered dodge-recovery — first frame clear after collision (reward the dodge)
-      if (this.hit) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+      if (this.hit) {
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+        // C254: heal/recovery flash — green overlay, edge-triggered on first clear frame after hit
+        flashOverlay(this.container, 'rgba(51,255,102,0.25)', 180);
+      }
       this.hit = false;
       this.survivalTime += dt;
     }
