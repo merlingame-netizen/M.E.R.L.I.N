@@ -256,7 +256,7 @@ function createDoor(): DoorResult {
   const group = new Group();
   const doorMat = new MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05, flatShading: true, emissive: 0x5a3010, emissiveIntensity: 0.05 });
   const ironMat = new MeshStandardMaterial({ color: 0x2a2828, roughness: 0.5, metalness: 0.7, flatShading: true });
-  const lightMat = new MeshBasicMaterial({ color: 0xffdd88, transparent: true, opacity: 0.85 });
+  const lightMat = new MeshBasicMaterial({ color: 0x88ffcc, transparent: true, opacity: 0.85 });
 
   // Door frame
   const frameL = new Mesh(new BoxGeometry(0.3, 7, 0.5), doorMat);
@@ -293,7 +293,7 @@ function createDoor(): DoorResult {
   group.add(lightSliver);
 
   // Point light seeping through
-  const lightBeam = new PointLight(0xffdd66, 3.0, 5, 2);
+  const lightBeam = new PointLight(0x44ffaa, 3.0, 5, 2);
   lightBeam.position.set(-9.8, -1.8, 5.5);
   group.add(lightBeam);
 

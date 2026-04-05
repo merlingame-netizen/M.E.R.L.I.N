@@ -75,8 +75,8 @@ const THEMES: Readonly<Record<string, BiomeTheme>> = {
   vallee_anciens: {
     fogColor: 0x14100a, fogNear: 7, fogFar: 40,
     groundColor: 0x2a1e0e, skyTop: 0x0c0a06, skyMid: 0x181208,
-    ambientColor: 0x100c06, keyColor: 0xd4aa44, rimColor: 0x988830,
-    particleColor: 0xd4aa44,
+    ambientColor: 0x100c06, keyColor: 0x33aa66, rimColor: 0x1a6633,
+    particleColor: 0x33aa66,
     stoneDensity: 7, treeCount: 8, stoneType: 'ruins',
   },
 };
