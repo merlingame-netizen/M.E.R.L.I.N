@@ -2,7 +2,7 @@
 // Window on back-right wall area [4, 3.5, -9.75], facing +Z (into scene).
 // Forest silhouettes at z=-10.6 (behind glass). Light through window adapts to hour/season.
 
-import { BoxGeometry, BufferGeometry, CircleGeometry, Color, ConeGeometry, DoubleSide, Float32BufferAttribute, FrontSide, Group, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, SphereGeometry, SpotLight } from 'three';
+import { BoxGeometry, BufferGeometry, CircleGeometry, Color, ConeGeometry, DoubleSide, Float32BufferAttribute, FrontSide, Group, Line, LineBasicMaterial, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, SphereGeometry, SpotLight, Vector3 } from 'three';
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 
@@ -266,6 +266,38 @@ export function createLairWindow(scene: Scene): WindowResult {
     _shootingStarTimer = 8 + Math.random() * 4;
   }
 
+  // ── Constellation lines (cycle-381) — faint green lines connecting fixed star positions ──
+
+  let constellationLines381: Line[] = [];
+
+  {
+    // Fixed star positions in group/world space — same coordinate range as starfield
+    // z=-9.38: slightly in front of starfield (z=-9.4) so lines are visible
+    const CONST_STARS_381: [number, number, number][] = [
+      [-1.5, 4.5, -9.38], [0.2,  6.8, -9.38], [1.8,  5.4, -9.38],
+      [3.0,  7.2, -9.38], [2.5,  4.0, -9.38], [0.8,  3.5, -9.38],
+      [4.2,  5.8, -9.38], [-0.5, 3.2, -9.38],
+    ];
+
+    // Edge pairs — connect stars to form 3-4 visible constellation segments
+    const CONST_EDGES_381: [number, number][] = [
+      [0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [5, 0], [3, 6], [4, 7],
+    ];
+
+    CONST_EDGES_381.forEach(([a, b]) => {
+      const points = [
+        new Vector3(...CONST_STARS_381[a]),
+        new Vector3(...CONST_STARS_381[b]),
+      ];
+      const geo = new BufferGeometry().setFromPoints(points);
+      const mat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.08, depthWrite: false });
+      const line = new Line(geo, mat);
+      line.visible = false; // shown only at night via updateTime
+      group.add(line);
+      constellationLines381.push(line);
+    });
+  }
+
   // ── Moon disc (night + dawn, CeltOS pale green-white) ────────────────────
 
   let moonMesh: Mesh | null = null;
@@ -406,6 +438,9 @@ export function createLairWindow(scene: Scene): WindowResult {
         }
       });
     }
+
+    // Constellation lines visible at night only
+    constellationLines381.forEach(line => { line.visible = isNight; });
 
     // Track time-of-day for moon/aurora lerp targets
     if (h >= 5 && h < 8) {
@@ -561,6 +596,16 @@ export function createLairWindow(scene: Scene): WindowResult {
       (patch.material as MeshBasicMaterial).opacity =
         0.06 + Math.sin(elapsed * 0.4 + phase) * 0.04 + Math.sin(elapsed * 0.17 + phase * 2) * 0.02;
     });
+
+    // Constellation lines — slow breathing opacity (cycle-381)
+    if (constellationLines381.length > 0) {
+      const baseOpacity = 0.08 + Math.sin(elapsed * 0.15) * 0.04;
+      constellationLines381.forEach((line, i) => {
+        const phase = i * 0.4;
+        (line.material as LineBasicMaterial).opacity =
+          Math.max(0.02, baseOpacity + Math.sin(elapsed * 0.08 + phase) * 0.03);
+      });
+    }
   };
 
   scene.add(group);
