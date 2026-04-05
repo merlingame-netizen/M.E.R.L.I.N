@@ -426,6 +426,66 @@ function getTimeOfDay(hour: number): TODParams {
   };
 }
 
+// ── C521: Ogham standing stone beside the path ───────────────────────────────
+
+interface OghamStoneData {
+  meshes: Mesh[];
+  light: PointLight;
+}
+
+function buildC521OghamStone(): OghamStoneData {
+  const meshes: Mesh[] = [];
+
+  const stoneMat = new MeshStandardMaterial({
+    color: 0x3a3228, roughness: 0.97, metalness: 0.0, flatShading: true,
+  });
+  // Main slab — tall thin standing stone
+  const slabGeo = new BoxGeometry(0.42, 2.95, 0.20);
+  const slab = new Mesh(slabGeo, stoneMat);
+  slab.position.set(-3.4, 1.47, 4.5);
+  slab.rotation.y = 0.22;
+  slab.rotation.z = 0.06; // slight lean
+  meshes.push(slab);
+
+  // Ogham notches — 5 horizontal cuts along the vertical edge (left side)
+  const notchMat = new MeshStandardMaterial({
+    color: 0x88ffaa, roughness: 0.4, metalness: 0.0, flatShading: true,
+    emissive: new Color(0x00cc55), emissiveIntensity: 0.6,
+  });
+  const notchSpacing = 0.42;
+  const notchWidths = [0.26, 0.30, 0.18, 0.28, 0.22];
+  for (let n = 0; n < 5; n++) {
+    const nw = notchWidths[n] ?? 0.24;
+    const notchGeo = new BoxGeometry(nw, 0.055, 0.25);
+    const notch = new Mesh(notchGeo, notchMat);
+    // Position on right face of stone, offset to edge
+    notch.position.set(
+      -3.4 + Math.cos(0.22) * 0.22 - nw * 0.15,
+      0.48 + n * notchSpacing,
+      4.5 + Math.sin(0.22) * 0.22,
+    );
+    notch.rotation.y = 0.22;
+    meshes.push(notch);
+  }
+
+  // Base mossy rubble — two low flat boxes at the foot
+  const baseMat = new MeshStandardMaterial({ color: 0x1e2818, roughness: 1.0, flatShading: true });
+  const base1 = new Mesh(new BoxGeometry(0.82, 0.10, 0.52), baseMat);
+  base1.position.set(-3.4, 0.05, 4.5);
+  base1.rotation.y = 0.22;
+  meshes.push(base1);
+  const base2 = new Mesh(new BoxGeometry(0.55, 0.07, 0.35), baseMat);
+  base2.position.set(-3.65, 0.035, 4.7);
+  base2.rotation.y = 0.5;
+  meshes.push(base2);
+
+  // Green spirit light at the foot of the stone
+  const light = new PointLight(0x44ff88, 0.40, 5.0);
+  light.position.set(-3.4, 0.35, 4.5);
+
+  return { meshes, light };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): {
@@ -497,6 +557,11 @@ export function initMainMenu(container: HTMLElement): {
 
   if (tod.showSun) scene.add(buildSun(tod.sunX, tod.sunY));
 
+  // ── C521: Ogham standing stone ───────────────────────────────────────────
+  const oghamStone = buildC521OghamStone();
+  for (const m of oghamStone.meshes) scene.add(m);
+  scene.add(oghamStone.light);
+
   // ── Title overlay ─────────────────────────────────────────────────────────
   const titleOverlay = buildTitleOverlay();
   container.appendChild(titleOverlay);
@@ -529,6 +594,9 @@ export function initMainMenu(container: HTMLElement): {
 
     // Torch flicker
     torch.light.intensity = 0.9 + Math.sin(elapsed * 7.3) * 0.25 + Math.sin(elapsed * 13.1) * 0.1;
+
+    // C521: Ogham stone green spirit pulse — slow breath ~6s period
+    oghamStone.light.intensity = 0.30 + 0.18 * Math.sin(elapsed * 1.05) + (Math.random() - 0.5) * 0.04;
 
     if (dollyActive) {
       dollyElapsed += dt;
