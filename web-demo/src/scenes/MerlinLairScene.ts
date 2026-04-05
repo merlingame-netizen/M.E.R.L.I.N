@@ -1272,6 +1272,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _alchemyLights: PointLight[] = [];
   let _alchemyTime = 0;
 
+  // C343: map table scattered items — scroll, parchment, rune stones, quill, inkwell
+  let _mapTableGroup: Group | null = null;
+  let _mapScrollLight: PointLight | null = null;
+  let _mapParchment: Mesh | null = null;
+  let _mapParchmentTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1425,6 +1431,86 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.add(light);
       _alchemyLights.push(light);
     }
+  }
+
+  // C343: map table scattered items — rolled scroll, parchment, rune stones, quill, inkwell.
+  // Map table top at (-5, -2, -3), surface y = -2 + 0.09 = -1.91. Scroll hit-target at y=-1.88.
+  // Tome sits at TOME_Z=-5 (north edge). Items placed south of tome (z=-3 area, table surface).
+  {
+    const TABLE_X = -5;
+    const TABLE_Y = -1.91; // table top surface y
+    const group = new Group();
+
+    // ── Rolled map scroll (horizontal cylinder) ──────────────────────────────
+    const scrollMat = new MeshBasicMaterial({ color: 0x1a2a1a });
+    const scrollCyl = new Mesh(new CylinderGeometry(0.08, 0.08, 1.6, 6), scrollMat);
+    scrollCyl.rotation.z = Math.PI / 2; // lay horizontal along X axis
+    scrollCyl.position.set(TABLE_X + 0.3, TABLE_Y + 0.08, -2.5);
+    group.add(scrollCyl);
+
+    // End caps on scroll cylinder
+    const capGeo = new CircleGeometry(0.08, 6);
+    const capMat = new MeshBasicMaterial({ color: 0x1a2a1a, side: DoubleSide });
+    const capLeft = new Mesh(capGeo, capMat);
+    capLeft.rotation.y = Math.PI / 2;
+    capLeft.position.set(TABLE_X + 0.3 - 0.8, TABLE_Y + 0.08, -2.5);
+    group.add(capLeft);
+    const capRight = new Mesh(capGeo, capMat.clone());
+    capRight.rotation.y = -Math.PI / 2;
+    capRight.position.set(TABLE_X + 0.3 + 0.8, TABLE_Y + 0.08, -2.5);
+    group.add(capRight);
+
+    // ── Flat unrolled parchment portion (next to scroll) ─────────────────────
+    const parchMat = new MeshBasicMaterial({ color: 0x0c1a0c, transparent: true, opacity: 0.35, side: DoubleSide, depthWrite: false });
+    const parch = new Mesh(new PlaneGeometry(1.2, 0.8), parchMat);
+    parch.rotation.x = -Math.PI / 2 - 0.1; // flat on table with slight perspective tilt
+    parch.position.set(TABLE_X - 0.7, TABLE_Y + 0.005, -2.6);
+    group.add(parch);
+    _mapParchment = parch;
+
+    // Green glow from map glyphs — above parchment
+    const scrollLight = new PointLight(0x33ff66, 0.08, 3);
+    scrollLight.position.set(TABLE_X - 0.7, TABLE_Y + 0.5, -2.6);
+    group.add(scrollLight);
+    _mapScrollLight = scrollLight;
+
+    // ── 3 rune stone tokens (flat cylinders) ────────────────────────────────
+    const stoneDefs: Array<{ dx: number; dz: number; color: number }> = [
+      { dx: -1.2, dz: -3.2, color: 0x0a140a },
+      { dx: -0.6, dz: -2.2, color: 0x0c160c },
+      { dx:  0.6, dz: -3.5, color: 0x0a140a },
+    ];
+    for (const sd of stoneDefs) {
+      const stone = new Mesh(
+        new CylinderGeometry(0.08, 0.10, 0.04, 6),
+        new MeshBasicMaterial({ color: sd.color })
+      );
+      stone.position.set(TABLE_X + sd.dx, TABLE_Y + 0.02, sd.dz);
+      group.add(stone);
+    }
+
+    // ── Quill / stylus (thin tapered cylinder at slight angle) ───────────────
+    const quill = new Mesh(
+      new CylinderGeometry(0.008, 0.02, 0.8, 4),
+      new MeshBasicMaterial({ color: 0x0a1a0a })
+    );
+    quill.position.set(TABLE_X + 0.8, TABLE_Y + 0.04, -3.3);
+    quill.rotation.z = 0.25; // slight angle across table
+    quill.rotation.y = 0.4;
+    group.add(quill);
+
+    // ── Inkwell (short wide cylinder + flat cap) ─────────────────────────────
+    const inkwellMat = new MeshBasicMaterial({ color: 0x080e08 });
+    const inkwell = new Mesh(new CylinderGeometry(0.06, 0.08, 0.12, 8), inkwellMat);
+    inkwell.position.set(TABLE_X + 1.1, TABLE_Y + 0.06, -2.8);
+    group.add(inkwell);
+    const inkCap = new Mesh(new CircleGeometry(0.06, 8), new MeshBasicMaterial({ color: 0x080e08 }));
+    inkCap.rotation.x = -Math.PI / 2;
+    inkCap.position.set(TABLE_X + 1.1, TABLE_Y + 0.12, -2.8);
+    group.add(inkCap);
+
+    scene.add(group);
+    _mapTableGroup = group;
   }
 
   // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
@@ -2286,6 +2372,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C343: map parchment opacity pulse — gentle sine breathe
+    if (_mapParchment) {
+      _mapParchmentTime += dt;
+      (_mapParchment.material as MeshBasicMaterial).opacity = 0.30 + Math.sin(_mapParchmentTime * 0.5) * 0.05;
+    }
+    // C343: map scroll glow — very slow intensity drift
+    if (_mapScrollLight) {
+      _mapScrollLight.intensity = 0.06 + Math.sin(elapsedTime * 0.4) * 0.02;
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2449,6 +2545,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C335: clear alchemy symbol refs (geometries/materials disposed by scene.traverse above)
     _alchemySymbolMeshes.length = 0;
     _alchemyLights.length = 0;
+    // C343: clear map table group refs (geometries/materials disposed by scene.traverse above)
+    _mapTableGroup = null;
+    _mapScrollLight = null;
+    _mapParchment = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
