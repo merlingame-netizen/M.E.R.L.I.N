@@ -1021,6 +1021,17 @@ let faerieDanceActive492: boolean = false;
 let faerieDanceT492: number = 0;
 const FAERIE_DANCE_DUR492 = 2.0;
 
+// ── Cycle-497: will-o'-wisp procession deeper into the forest ─────────────────
+let wispGroup497: Group | null = null;
+const wispUnits497: Group[] = [];
+const wispProgress497: number[] = [];
+const wispCoreMats497: MeshStandardMaterial[] = [];
+const wispHaloMats497: MeshStandardMaterial[] = [];
+let t497: number = 0;
+let wispBeckonTimer497: number = 20 + Math.random() * 10;
+let wispBeckonActive497: boolean = false;
+let wispBeckonT497: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3070,6 +3081,69 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(faerieRingGroup492);
   }
 
+  // ── Cycle-497: will-o'-wisp procession — 6 wisps drifting deeper into forest ─
+  {
+    wispGroup497 = new Group();
+
+    // Path waypoints (5 points)
+    const waypoints497: Vector3[] = [
+      new Vector3(-5, 1.2, -8),
+      new Vector3(-3, 1.5, -13),
+      new Vector3(-7, 1.0, -18),
+      new Vector3(-4, 1.3, -23),
+      new Vector3(-6, 1.1, -28),
+    ];
+
+    const WISP_COUNT = 6;
+    const WISP_OFFSETS = [0, 0.16, 0.32, 0.48, 0.64, 0.80];
+
+    for (let wi = 0; wi < WISP_COUNT; wi++) {
+      const wispUnit = new Group();
+
+      // Core sphere
+      const coreGeo = new SphereGeometry(0.12, 8, 6);
+      const coreMat = new MeshStandardMaterial({
+        color: 0x33ff66,
+        emissive: new Color(0x33ff66),
+        emissiveIntensity: 1.4,
+        transparent: true,
+        opacity: 0.85,
+      });
+      wispCoreMats497.push(coreMat);
+      const coreMesh = new Mesh(coreGeo, coreMat);
+      wispUnit.add(coreMesh);
+
+      // Halo sphere
+      const haloGeo = new SphereGeometry(0.22, 8, 6);
+      const haloMat = new MeshStandardMaterial({
+        color: 0x1a8833,
+        emissive: new Color(0x1a8833),
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0.2,
+        depthWrite: false,
+      });
+      wispHaloMats497.push(haloMat);
+      const haloMesh = new Mesh(haloGeo, haloMat);
+      wispUnit.add(haloMesh);
+
+      // Point light for local tree illumination
+      const wispLight = new PointLight(0x33ff66, 0.3, 3.0);
+      wispUnit.add(wispLight);
+
+      // Store per-wisp phase as userData
+      wispUnit.userData['wispPhase497'] = wi * (Math.PI * 2 / WISP_COUNT);
+
+      // Initial position along path
+      wispProgress497.push(WISP_OFFSETS[wi]!);
+
+      wispGroup497.add(wispUnit);
+      wispUnits497.push(wispUnit);
+    }
+
+    group.add(wispGroup497);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -3890,6 +3964,89 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         moteMesh.position.set(mx, my, mz);
       }
     }
+
+    // Cycle-497: will-o'-wisp procession
+    if (wispGroup497 && wispUnits497.length > 0) {
+      t497 += dt;
+
+      // Waypoints (must match construction block)
+      const wp497: Vector3[] = [
+        new Vector3(-5, 1.2, -8),
+        new Vector3(-3, 1.5, -13),
+        new Vector3(-7, 1.0, -18),
+        new Vector3(-4, 1.3, -23),
+        new Vector3(-6, 1.1, -28),
+      ];
+      const SEG_COUNT = wp497.length - 1;
+
+      // Helper: interpolate position along [0,1] path
+      const pathPos = (prog: number): Vector3 => {
+        const clamped = Math.max(0, Math.min(1, prog));
+        const raw = clamped * SEG_COUNT;
+        const seg = Math.min(Math.floor(raw), SEG_COUNT - 1);
+        const localT = raw - seg;
+        const a = wp497[seg]!;
+        const b = wp497[seg + 1]!;
+        return new Vector3(
+          a.x + (b.x - a.x) * localT,
+          a.y + (b.y - a.y) * localT,
+          a.z + (b.z - a.z) * localT,
+        );
+      };
+
+      // Beckon event: 20-30s interval, 2s burst
+      const BECKON_DUR = 2.0;
+      if (!wispBeckonActive497) {
+        wispBeckonTimer497 -= dt;
+        if (wispBeckonTimer497 <= 0) {
+          wispBeckonActive497 = true;
+          wispBeckonT497 = 0;
+          wispBeckonTimer497 = 20 + Math.random() * 10;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        }
+      } else {
+        wispBeckonT497 += dt;
+        if (wispBeckonT497 >= BECKON_DUR) {
+          wispBeckonActive497 = false;
+        }
+      }
+
+      const speedMult497 = wispBeckonActive497 ? 3.0 : 1.0;
+      const WISP_SPEED = 0.08;
+
+      for (let wi = 0; wi < wispUnits497.length; wi++) {
+        const wispUnit = wispUnits497[wi]!;
+        const wispPhase: number = wispUnit.userData['wispPhase497'] as number;
+
+        // Advance progress
+        wispProgress497[wi] = (wispProgress497[wi] ?? 0) + WISP_SPEED * speedMult497 * dt;
+
+        // Wrap: when past 1.0, teleport back to just before 0
+        if (wispProgress497[wi]! >= 1.0) {
+          wispProgress497[wi] = 0.01;
+        }
+
+        const basePos = pathPos(wispProgress497[wi]!);
+
+        // Bob
+        const bobY = 0.15 * Math.sin(t497 * 2.2 + wispPhase);
+
+        wispUnit.position.set(basePos.x, basePos.y + bobY, basePos.z);
+
+        // Flicker core emissiveIntensity
+        const coreMat = wispCoreMats497[wi];
+        if (coreMat) {
+          const beckonBoost = wispBeckonActive497 ? (2.5 - 1.6) : 0;
+          coreMat.emissiveIntensity = 1.2 + 0.4 * Math.sin(t497 * 5.1 + wispPhase) + beckonBoost;
+        }
+
+        // Flicker halo opacity
+        const haloMat = wispHaloMats497[wi];
+        if (haloMat) {
+          haloMat.opacity = 0.15 + 0.1 * Math.sin(t497 * 3.3 + wispPhase + 1.0);
+        }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -4353,6 +4510,25 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     faerieCapMats492.length = 0;
     faerieMoteMeshes492.length = 0;
     faerieDanceActive492 = false;
+
+    // Cycle-497: will-o'-wisp procession cleanup
+    if (wispGroup497) {
+      group.remove(wispGroup497);
+      wispGroup497.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      wispGroup497 = null;
+    }
+    for (const mat of wispCoreMats497) { mat.dispose(); }
+    wispCoreMats497.length = 0;
+    for (const mat of wispHaloMats497) { mat.dispose(); }
+    wispHaloMats497.length = 0;
+    wispUnits497.length = 0;
+    wispProgress497.length = 0;
+    wispBeckonActive497 = false;
   };
 
   return { group, update, dispose };
