@@ -13,6 +13,10 @@ interface RuneTile {
   readonly symbol: string;
   readonly label: string;
   state: 'hidden' | 'revealed' | 'matched';
+  // C262: visual animation state
+  flipProgress: number;   // 0..1 — card flip reveal animation
+  matchPulse: number;     // 0..1 — green glow pulse on match (decays to 0)
+  mismatchFlash: number;  // 0..1 — red border flash on mismatch (decays to 0)
 }
 
 // Ogham rune set (unicode + tree name)
@@ -46,6 +50,7 @@ export class MinigameRunes extends MinigameBase {
   private animFrame = 0;
   private revealTimeout = 0;
   private ended = false;
+  private lastRenderTime = 0; // C262: delta-time for animation decay
   private kbFocusIdx = 0; // C137: keyboard-focused tile index (ArrowKey grid nav)
   // C120/RUN-01: cached DOM refs — was getElementById every 100ms setInterval
   private timerFillEl: HTMLElement | null = null;
@@ -160,6 +165,9 @@ export class MinigameRunes extends MinigameBase {
           symbol: rune.symbol,
           label: rune.label,
           state: 'hidden',
+          flipProgress: 0,
+          matchPulse: 0,
+          mismatchFlash: 0,
         });
         placed++;
       }
@@ -182,7 +190,9 @@ export class MinigameRunes extends MinigameBase {
 
     const tile = this.tiles[clickedIndex];
     // Mutate state (tiles are mutable game state, not shared data)
-    (tile as { state: string }).state = 'revealed';
+    (tile as { state: string; flipProgress: number }).state = 'revealed';
+    // C262: trigger card-flip animation from 0→1
+    (tile as { flipProgress: number }).flipProgress = 0;
 
     if (this.firstPick === null) {
       // First pick
@@ -196,6 +206,9 @@ export class MinigameRunes extends MinigameBase {
         // Match found
         (firstTile as { state: string }).state = 'matched';
         (tile as { state: string }).state = 'matched';
+        // C262: green pulse on matched pair
+        (firstTile as { matchPulse: number }).matchPulse = 1;
+        (tile as { matchPulse: number }).matchPulse = 1;
         this.matchedCount++;
         this.firstPick = null;
         this.lockInput = false;
@@ -209,6 +222,9 @@ export class MinigameRunes extends MinigameBase {
         // No match -- flip back after delay
         // C98: audio feedback — mismatch
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+        // C262: red flash on mismatched pair
+        (firstTile as { mismatchFlash: number }).mismatchFlash = 1;
+        (tile as { mismatchFlash: number }).mismatchFlash = 1;
         const fp = this.firstPick;
         this.revealTimeout = window.setTimeout(() => {
           (this.tiles[fp] as { state: string }).state = 'hidden';
@@ -241,6 +257,8 @@ export class MinigameRunes extends MinigameBase {
     const tile = this.tiles[this.kbFocusIdx];
     if (!tile || tile.state !== 'hidden') return;
     (tile as { state: string }).state = 'revealed';
+    // C262: card-flip animation on keyboard reveal
+    (tile as { flipProgress: number }).flipProgress = 0;
 
     if (this.firstPick === null) {
       this.firstPick = this.kbFocusIdx;
@@ -251,6 +269,9 @@ export class MinigameRunes extends MinigameBase {
       if (firstTile.runeIndex === tile.runeIndex) {
         (firstTile as { state: string }).state = 'matched';
         (tile as { state: string }).state = 'matched';
+        // C262: green pulse on matched pair
+        (firstTile as { matchPulse: number }).matchPulse = 1;
+        (tile as { matchPulse: number }).matchPulse = 1;
         this.matchedCount++;
         this.firstPick = null;
         this.lockInput = false;
@@ -260,6 +281,9 @@ export class MinigameRunes extends MinigameBase {
         }
       } else {
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+        // C262: red flash on mismatched pair
+        (firstTile as { mismatchFlash: number }).mismatchFlash = 1;
+        (tile as { mismatchFlash: number }).mismatchFlash = 1;
         const fp = this.firstPick;
         this.revealTimeout = window.setTimeout(() => {
           (this.tiles[fp] as { state: string }).state = 'hidden';
@@ -296,10 +320,29 @@ export class MinigameRunes extends MinigameBase {
     if (!this.ctx || !this.canvas || this.ended) return; // C105: ended guard prevents zombie rAF after cancelAnimationFrame (RUN-01)
     const ctx = this.ctx;
 
+    // C262: delta-time for smooth animation decay (cap at 100ms to handle tab-hidden catch-up)
+    const now = performance.now();
+    const dt = Math.min((now - (this.lastRenderTime || now)) / 1000, 0.1);
+    this.lastRenderTime = now;
+
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     for (let i = 0; i < this.tiles.length; i++) {
       const tile = this.tiles[i]!;
+
+      // C262: advance flip animation — revealed tiles ramp flipProgress 0→1 over ~180ms
+      if (tile.state === 'revealed' && tile.flipProgress < 1) {
+        (tile as { flipProgress: number }).flipProgress = Math.min(1, tile.flipProgress + dt / 0.18);
+      }
+      // C262: decay match pulse 1→0 over ~500ms
+      if (tile.matchPulse > 0) {
+        (tile as { matchPulse: number }).matchPulse = Math.max(0, tile.matchPulse - dt / 0.5);
+      }
+      // C262: decay mismatch flash 1→0 over ~350ms
+      if (tile.mismatchFlash > 0) {
+        (tile as { mismatchFlash: number }).mismatchFlash = Math.max(0, tile.mismatchFlash - dt / 0.35);
+      }
+
       ctx.save();
 
       if (tile.state === 'hidden') {
@@ -316,6 +359,14 @@ export class MinigameRunes extends MinigameBase {
         ctx.fillText('?', tile.x + this.tileSize / 2, tile.y + this.tileSize / 2);
 
       } else if (tile.state === 'revealed') {
+        // C262: card flip — scale X from 0→1 using flipProgress, pivot at tile centre
+        const flip = tile.flipProgress;
+        const cx = tile.x + this.tileSize / 2;
+        const cy = tile.y + this.tileSize / 2;
+        ctx.translate(cx, cy);
+        ctx.scale(flip, 1);
+        ctx.translate(-cx, -cy);
+
         // Revealed -- show rune on lighter stone
         ctx.fillStyle = 'rgba(100,90,75,0.9)';
         this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
@@ -324,6 +375,14 @@ export class MinigameRunes extends MinigameBase {
         ctx.lineWidth = 2;
         this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
         ctx.stroke();
+
+        // C262: mismatch red flash border overlay (drawn only while mismatchFlash > 0)
+        if (tile.mismatchFlash > 0) {
+          ctx.strokeStyle = `rgba(255,60,60,${tile.mismatchFlash * 0.9})`;
+          ctx.lineWidth = 3;
+          this.roundRect(ctx, tile.x - 1, tile.y - 1, this.tileSize + 2, this.tileSize + 2, 9);
+          ctx.stroke();
+        }
 
         // Ogham symbol
         ctx.fillStyle = 'rgba(51,255,102,0.85)';
@@ -338,7 +397,7 @@ export class MinigameRunes extends MinigameBase {
         ctx.fillText(tile.label, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 + 18);
 
       } else {
-        // Matched -- green glow
+        // Matched -- green glow base
         ctx.fillStyle = 'rgba(46,107,46,0.5)';
         this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
         ctx.fill();
@@ -346,6 +405,19 @@ export class MinigameRunes extends MinigameBase {
         ctx.lineWidth = 2;
         this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
         ctx.stroke();
+
+        // C262: match pulse — bright green glow overlay that fades out over 500ms
+        if (tile.matchPulse > 0) {
+          // Use a sine wave so the pulse peaks mid-way through the decay
+          const pulse = Math.sin(tile.matchPulse * Math.PI);
+          ctx.fillStyle = `rgba(51,255,102,${pulse * 0.35})`;
+          this.roundRect(ctx, tile.x, tile.y, this.tileSize, this.tileSize, 8);
+          ctx.fill();
+          ctx.strokeStyle = `rgba(51,255,102,${pulse * 0.95})`;
+          ctx.lineWidth = 3;
+          this.roundRect(ctx, tile.x - 2, tile.y - 2, this.tileSize + 4, this.tileSize + 4, 10);
+          ctx.stroke();
+        }
 
         // Ogham symbol (dimmed)
         ctx.fillStyle = 'rgba(143,188,143,0.7)';
