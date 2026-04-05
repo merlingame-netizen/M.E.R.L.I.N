@@ -1910,6 +1910,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         _dancerArmGroups[fi].rotation.z = Math.sin(t * 2.1 + fi * 0.8) * 0.4;
       }
     }
+    // Cercles de Pierres — circling raven flock overhead (C342)
+    if (_ravenGroups.length > 0) {
+      const t = Date.now() * 0.001;
+      for (let ri = 0; ri < _ravenGroups.length; ri++) {
+        const rg = _ravenGroups[ri];
+        const ud = rg.userData as { radius: number; orbitSpeed: number; phase: number; flapSpeed: number; flapAmp: number; yOffset: number };
+        const angle = ud.phase + ud.orbitSpeed * t;
+        rg.position.x = ud.radius * Math.cos(angle);
+        rg.position.z = -15 + ud.radius * Math.sin(angle);
+        rg.position.y = 12 + ud.yOffset + Math.sin(t * 0.6 + ud.phase) * 0.8;
+        rg.rotation.y = -angle + Math.PI / 2;
+        _ravenWings[ri].rotation.z = ud.flapAmp * Math.sin(t * ud.flapSpeed + ud.phase);
+      }
+    }
     // Vallee Anciens — ancestor will-o-wisp drift
     if (valleeWispMesh !== null) {
       valleeWispTime += dt;
@@ -2029,6 +2043,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _altarFireLight = null;
     _dancerGroups.length = 0;
     _dancerArmGroups.length = 0;
+    _ravenGroups.length = 0;
+    _ravenWings.length = 0;
     _eagleGroup = null;
     _eagleWingL = null;
     _eagleWingR = null;
