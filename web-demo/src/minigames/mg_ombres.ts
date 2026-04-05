@@ -331,9 +331,9 @@ export class MinigameOmbres extends MinigameBase {
     const cursorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16);
     if (this.colliding) {
       const flash = Math.sin(this.pulsePhase * 10) * 0.3 + 0.5;
-      cursorGrad.addColorStop(0, `rgba(200,60,60,${flash})`);
+      cursorGrad.addColorStop(0, `rgba(26,136,51,${flash})`);
     } else {
-      cursorGrad.addColorStop(0, 'rgba(180,160,220,0.6)');
+      cursorGrad.addColorStop(0, 'rgba(51,200,100,0.6)');
     }
     cursorGrad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = cursorGrad;
@@ -344,16 +344,16 @@ export class MinigameOmbres extends MinigameBase {
     // Cursor dot
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-    ctx.fillStyle = this.colliding ? '#e04040' : '#c0b0e0';
+    ctx.fillStyle = this.colliding ? '#1a8833' : '#88ffaa';
     ctx.fill();
-    ctx.strokeStyle = this.colliding ? '#a02020' : '#8070b0';
+    ctx.strokeStyle = this.colliding ? '#33ff66' : '#33cc66';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Collision flash on whole canvas
     if (this.colliding) {
       const flash = Math.sin(this.pulsePhase * 8) * 0.5 + 0.5;
-      ctx.fillStyle = `rgba(160,30,30,${flash * 0.06})`;
+      ctx.fillStyle = `rgba(26,136,51,${flash * 0.06})`;
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
     }
 

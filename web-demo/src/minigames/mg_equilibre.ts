@@ -319,7 +319,7 @@ export class MinigameEquilibre extends MinigameBase {
 
     // Draw cursor
     const cursorPixelX = centerX + (this.cursorX * pathWidth) / 2;
-    const cursorGlow = isInZone ? 'rgba(100,200,100,0.3)' : 'rgba(200,100,100,0.3)';
+    const cursorGlow = isInZone ? 'rgba(51,255,102,0.3)' : 'rgba(26,136,51,0.3)';
 
     // Glow
     ctx.beginPath();

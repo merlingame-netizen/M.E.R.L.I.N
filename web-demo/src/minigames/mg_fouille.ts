@@ -410,7 +410,7 @@ export class MinigameFouille extends MinigameBase {
 
     // Wrong click flash
     if (this.clickedWrong) {
-      ctx.fillStyle = `rgba(180,40,40,${0.15 * (this.wrongClickTimer / 0.5)})`;
+      ctx.fillStyle = `rgba(26,136,51,${0.15 * (this.wrongClickTimer / 0.5)})`;
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
     }
 

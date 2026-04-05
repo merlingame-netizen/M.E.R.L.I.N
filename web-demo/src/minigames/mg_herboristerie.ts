@@ -304,7 +304,7 @@ export class MinigameHerboristerie extends MinigameBase {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.wrongPicks++;
-      this.flashCells.set(idx, { color: 'rgba(200,60,60,0.6)', alpha: 1 });
+      this.flashCells.set(idx, { color: 'rgba(26,136,51,0.6)', alpha: 1 });
       // C97: audio feedback — wrong pick
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       this.shakeAmount = 6;
@@ -452,9 +452,9 @@ export class MinigameHerboristerie extends MinigameBase {
       // Cell border (C96: keyboard selected cell gets bright outline)
       const isKeySelected = (col === this.keyCol && row === this.keyRow);
       ctx.strokeStyle = isKeySelected
-        ? `rgba(255,220,120,${0.7 + Math.sin(this.elapsedTime * 6) * 0.3})`
+        ? `rgba(51,255,102,${0.7 + Math.sin(this.elapsedTime * 6) * 0.3})`
         : cell.picked
-          ? (cell.correct ? 'rgba(90,180,90,0.4)' : 'rgba(200,80,80,0.4)')
+          ? (cell.correct ? 'rgba(51,200,100,0.4)' : 'rgba(26,136,51,0.4)')
           : 'rgba(90,130,70,0.15)';
       ctx.lineWidth = isKeySelected ? 2 : 1;
       ctx.strokeRect(x + 2, y + 2, this.cellSize - 4, this.cellSize - 4);
@@ -478,7 +478,7 @@ export class MinigameHerboristerie extends MinigameBase {
         ctx.font = 'bold 24px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(200,80,80,0.6)';
+        ctx.fillStyle = 'rgba(26,136,51,0.6)';
         ctx.fillText('\u2717', x + this.cellSize / 2, y + this.cellSize / 2);
       }
     }
@@ -491,7 +491,7 @@ export class MinigameHerboristerie extends MinigameBase {
     for (const t of this.penaltyToasts) {
       const alpha = Math.min(1, t.life / 0.4);
       const rise = (0.8 - t.life) * 30; // float up 30px over lifetime
-      ctx.fillStyle = `rgba(220,80,80,${alpha})`;
+      ctx.fillStyle = `rgba(26,136,51,${alpha})`;
       ctx.font = 'bold 14px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

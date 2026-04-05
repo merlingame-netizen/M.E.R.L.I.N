@@ -392,7 +392,7 @@ export class MinigameNegociation extends MinigameBase {
     // Combo display
     if (this.comboCount > 1) {
       const comboPulse = 0.7 + Math.sin(this.pulsePhase * 6) * 0.3;
-      ctx.fillStyle = `rgba(255,200,60,${comboPulse})`;
+      ctx.fillStyle = `rgba(51,255,102,${comboPulse})`;
       ctx.font = 'bold 16px Courier New';
       ctx.textAlign = 'right';
       ctx.fillText(`Combo x${this.comboCount}`, this.canvasW - 12, 16);
@@ -402,7 +402,7 @@ export class MinigameNegociation extends MinigameBase {
     // Without this, player cannot tell when the 25pt bonus is already maxed and further combos add nothing.
     if (this.maxCombo > 0) {
       const capReached = this.maxCombo >= 5;
-      ctx.fillStyle = capReached ? 'rgba(255,200,60,0.9)' : 'rgba(255,200,60,0.45)';
+      ctx.fillStyle = capReached ? 'rgba(51,255,102,0.9)' : 'rgba(51,200,100,0.45)';
       ctx.font = '11px Courier New';
       ctx.textAlign = 'right';
       ctx.fillText(capReached ? 'BONUS MAX \u2713' : `Meilleur: ${this.maxCombo}/5`, this.canvasW - 12, 30);
@@ -481,8 +481,8 @@ export class MinigameNegociation extends MinigameBase {
 
       if (sw.picked) {
         ctx.fillStyle = sw.word.isFactionWord
-          ? `rgba(200,180,60,${alpha})`
-          : `rgba(150,100,100,${alpha})`;
+          ? `rgba(51,200,100,${alpha})`
+          : `rgba(51,200,100,${alpha})`;
       } else {
         ctx.fillStyle = sw.word.isFactionWord
           ? `rgba(51,255,102,${alpha})`

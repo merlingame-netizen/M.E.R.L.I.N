@@ -313,7 +313,7 @@ export class MinigameSangFroid extends MinigameBase {
     // C96: pivot telegraph — border flashes white in the 0.3s before a drift direction change
     const pivotWarning = this.nextDriftChange < 0.3 && this.nextDriftChange > 0;
     ctx.strokeStyle = pivotWarning
-      ? `rgba(255,220,120,${0.6 + Math.sin(this.pulsePhase * 20) * 0.4})`
+      ? `rgba(51,255,102,${0.6 + Math.sin(this.pulsePhase * 20) * 0.4})`
       : `rgba(${zoneColor},${zonePulse + 0.3})`;
     ctx.lineWidth = pivotWarning ? 3 : 2;
     ctx.stroke();
@@ -341,7 +341,7 @@ export class MinigameSangFroid extends MinigameBase {
 
     // Cursor glow
     const cursorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 14);
-    cursorGrad.addColorStop(0, this.isInside ? 'rgba(200,220,180,0.5)' : 'rgba(200,100,60,0.5)');
+    cursorGrad.addColorStop(0, this.isInside ? 'rgba(51,255,102,0.5)' : 'rgba(26,136,51,0.5)');
     cursorGrad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = cursorGrad;
     ctx.beginPath();
@@ -351,9 +351,9 @@ export class MinigameSangFroid extends MinigameBase {
     // Cursor dot
     ctx.beginPath();
     ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-    ctx.fillStyle = this.isInside ? '#c8e0b0' : '#c86030';
+    ctx.fillStyle = this.isInside ? '#88ffaa' : '#1a8833';
     ctx.fill();
-    ctx.strokeStyle = this.isInside ? '#6a9a50' : '#a04020';
+    ctx.strokeStyle = this.isInside ? '#33ff66' : '#33cc66';
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -370,7 +370,7 @@ export class MinigameSangFroid extends MinigameBase {
     ctx.font = 'bold 16px Courier New';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillStyle = this.isInside ? 'rgba(140,200,120,0.85)' : 'rgba(200,90,50,0.85)';
+    ctx.fillStyle = this.isInside ? 'rgba(51,255,102,0.85)' : 'rgba(26,136,51,0.85)';
     ctx.fillText(`${pct}%`, 10, 10);
     // C106: debug radius display removed (was player-visible in production)
 

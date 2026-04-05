@@ -359,7 +359,7 @@ export class MinigameVolonte extends MinigameBase {
     const cx = this.cursorX;
     const cy = this.cursorY;
     const cursorGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 12);
-    cursorGrad.addColorStop(0, this.isOnTarget ? 'rgba(180,220,180,0.6)' : 'rgba(220,180,120,0.6)');
+    cursorGrad.addColorStop(0, this.isOnTarget ? 'rgba(51,255,102,0.6)' : 'rgba(26,136,51,0.6)');
     cursorGrad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = cursorGrad;
     ctx.beginPath();
@@ -368,9 +368,9 @@ export class MinigameVolonte extends MinigameBase {
 
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-    ctx.fillStyle = this.isOnTarget ? '#b0e0b0' : '#e0c080';
+    ctx.fillStyle = this.isOnTarget ? '#88ffaa' : '#1a8833';
     ctx.fill();
-    ctx.strokeStyle = this.isOnTarget ? '#609060' : '#a08050';
+    ctx.strokeStyle = this.isOnTarget ? '#33ff66' : '#33cc66';
     ctx.lineWidth = 2;
     ctx.stroke();
 
