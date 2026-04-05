@@ -182,6 +182,31 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
       ['vallee_anciens',    'Vallée des Anciens'],
     ];
 
+    // C205: inject focus-glow CSS once (guard prevents duplicate injection)
+    if (!document.getElementById('biome-kb-style')) {
+      const kbStyle = document.createElement('style');
+      kbStyle.id = 'biome-kb-style';
+      kbStyle.textContent = [
+        '.biome-btn-focused {',
+        '  box-shadow: 0 0 14px rgba(51,255,102,0.9), inset 0 0 4px rgba(51,255,102,0.2) !important;',
+        '  border-color: #33ff66 !important;',
+        '  color: #33ff66 !important;',
+        '  transform: scale(1.04);',
+        '  transition: all 0.1s ease;',
+        '}',
+      ].join('\n');
+      document.head.appendChild(kbStyle);
+    }
+
+    // C205: collect button refs for index-based keyboard access
+    const buttons: HTMLButtonElement[] = [];
+    let selectedIndex = 0;
+
+    const applyFocusClass = (idx: number): void => {
+      buttons.forEach((b) => b.classList.remove('biome-btn-focused'));
+      if (buttons[idx]) buttons[idx].classList.add('biome-btn-focused');
+    };
+
     for (const [id, label] of BIOME_ENTRIES) {
       const btn = document.createElement('button');
       btn.textContent = `> ${label.toUpperCase()}`;
@@ -217,24 +242,53 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
         playSound('click');
         btn.removeEventListener('pointerenter', onBtnEnter);
         btn.removeEventListener('pointerleave', onBtnLeave);
-        document.removeEventListener('keydown', escapeHandler); // C138/BP-01
+        document.removeEventListener('keydown', kbNavHandler); // C205: unified handler
+        document.getElementById('biome-kb-style')?.remove();   // C205: cleanup style tag
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 220);
         resolve(id);
       });
       grid.appendChild(btn);
+      buttons.push(btn);
     }
 
-    // C138/BP-01: Escape closes picker with default biome — prevents infinite game stall
+    // C138/BP-01 + C205: unified keydown handler — Escape, arrows, Enter
     const defaultBiome = BIOME_ENTRIES[0]![0];
-    const escapeHandler = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      document.removeEventListener('keydown', escapeHandler);
-      overlay.style.opacity = '0';
-      setTimeout(() => overlay.remove(), 220);
-      resolve(defaultBiome);
+    const kbNavHandler = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', kbNavHandler);
+        document.getElementById('biome-kb-style')?.remove();
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 220);
+        resolve(defaultBiome);
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % BIOME_ENTRIES.length;
+        applyFocusClass(selectedIndex);
+        playSound('hover');
+        return;
+      }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + BIOME_ENTRIES.length) % BIOME_ENTRIES.length;
+        applyFocusClass(selectedIndex);
+        playSound('hover');
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Trigger click on the currently focused button — reuses existing click handler
+        // which will removeEventListener and resolve the Promise
+        buttons[selectedIndex]?.click();
+        return;
+      }
     };
-    document.addEventListener('keydown', escapeHandler);
+    document.addEventListener('keydown', kbNavHandler);
+
+    // C205: apply initial focus highlight after buttons are in the DOM
+    applyFocusClass(0);
 
     container.appendChild(overlay);
     requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
