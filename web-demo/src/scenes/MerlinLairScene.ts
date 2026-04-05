@@ -1153,6 +1153,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C301: wall moss/algae patches — slow breathing opacity
   const _mossPatches: Mesh[] = [];
 
+  // C316: cauldron steam wisps — 8 larger, slower, more translucent spheres rising above bubbles
+  const _steamWisps: Mesh[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1176,6 +1179,29 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       (bm.material as MeshBasicMaterial).opacity = 0;
       scene.add(bm);
       _bubbleMeshes.push(bm);
+    }
+  }
+
+  // C316: create 8 steam wisps rising from the cauldron mouth (larger/slower/more translucent than bubbles)
+  {
+    const CAULDRON_X = 2;
+    const CAULDRON_Z = -7;
+    const wispGeo = new SphereGeometry(0.14, 5, 4);
+    for (let wi = 0; wi < 8; wi++) {
+      const wm = new Mesh(wispGeo, new MeshBasicMaterial({ color: 0x1a3a1a, transparent: true, opacity: 0 }));
+      const startX = CAULDRON_X + (Math.random() - 0.5) * 0.6;
+      const startZ = CAULDRON_Z + (Math.random() - 0.5) * 0.6;
+      wm.position.set(startX, -4.0, startZ);
+      wm.userData = {
+        startX,
+        startZ,
+        speed: 0.18 + Math.random() * 0.14,
+        phase: Math.random() * Math.PI * 2,
+        driftX: 0.08 + Math.random() * 0.10,
+        driftZ: 0.08 + Math.random() * 0.10,
+      };
+      scene.add(wm);
+      _steamWisps.push(wm);
     }
   }
 
@@ -1929,6 +1955,25 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C316: steam wisps — rising, billowing, fading (cosmetic, gate under !lowFpsMode)
+    if (!lowFpsMode) {
+      for (const wm of _steamWisps) {
+        const spd    = wm.userData['speed']  as number;
+        const ph     = wm.userData['phase']  as number;
+        const sx     = wm.userData['startX'] as number;
+        const sz     = wm.userData['startZ'] as number;
+        const driftX = wm.userData['driftX'] as number;
+        const driftZ = wm.userData['driftZ'] as number;
+        const progress = ((elapsedTime * spd + ph) % (Math.PI * 2)) / (Math.PI * 2);
+        wm.position.y = -4.0 + progress * 3.5;
+        wm.position.x = sx + Math.sin(elapsedTime * 0.4 + ph) * driftX * progress;
+        wm.position.z = sz + Math.cos(elapsedTime * 0.35 + ph) * driftZ * progress;
+        const s = 0.8 + progress * 1.8;
+        wm.scale.setScalar(s);
+        (wm.material as MeshBasicMaterial).opacity = (1 - progress) * 0.28;
+      }
+    }
+
     // C241: floor rune rings — slow counter-rotation + opacity pulse (cosmetic, gate under !lowFpsMode)
     if (!lowFpsMode) {
       _runeRingTime += dt;
@@ -2143,6 +2188,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _skullLights.length = 0;
     // C301: clear moss patch refs (geometries/materials disposed by scene.traverse above)
     _mossPatches.length = 0;
+    // C316: clear steam wisp refs (geometries/materials disposed by scene.traverse above)
+    _steamWisps.length = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
