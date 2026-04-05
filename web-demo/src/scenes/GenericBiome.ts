@@ -448,6 +448,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let moonbeamMesh362: Mesh | null = null;
   let moonbeamLight362: PointLight | null = null;
 
+  // ── Ritual bonfire — plaine_druides (C370) ───────────────────────────────
+  let bonfireGroup370: Group | null = null;
+  let bonfireFlames370: Mesh[] = [];
+  let bonfireLight370: PointLight | null = null;
+  let bonfireEmbers370: Mesh[] = [];
+  let bonfireEmberData370: Array<{ vy: number; life: number; maxLife: number }> = [];
+  let bonfireElapsed370 = 0;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1963,6 +1971,59 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     menhirGroup354.add(mLight1);
     menhirLights354.push(mLight1);
     group.add(menhirGroup354);
+
+    // ── Green ritual bonfire (C370) ──────────────────────────────────────────
+    bonfireGroup370 = new Group();
+
+    // Log pile — 3 dark cylinders in a triangle
+    const logMat370 = new MeshStandardMaterial({ color: 0x1a1a0a, roughness: 0.95 });
+    const _bfg = bonfireGroup370;
+    [0, 1, 2].forEach(i => {
+      const angle370 = (i / 3) * Math.PI * 2;
+      const log370 = new Mesh(new CylinderGeometry(0.06, 0.08, 0.7, 5), logMat370);
+      log370.position.set(Math.cos(angle370) * 0.2, 0.04, Math.sin(angle370) * 0.2);
+      log370.rotation.z = Math.PI / 2 + angle370 * 0.3;
+      _bfg.add(log370);
+    });
+
+    // Flame tongues — 6 tall thin cones, green palette
+    const flameColors370 = [0x0a3a0a, 0x1a6a1a, 0x33ff66, 0x1a6a1a, 0x0a3a0a, 0x22aa44];
+    for (let fi = 0; fi < 6; fi++) {
+      const fh = 0.5 + Math.random() * 0.7;
+      const flameGeo370 = new ConeGeometry(0.06 + Math.random() * 0.04, fh, 4);
+      const flameMat370 = new MeshBasicMaterial({
+        color: flameColors370[fi % flameColors370.length],
+        transparent: true,
+        opacity: 0.65 + Math.random() * 0.2,
+        depthWrite: false,
+        side: DoubleSide,
+      });
+      const flame370 = new Mesh(flameGeo370, flameMat370);
+      flame370.position.set((Math.random() - 0.5) * 0.2, fh / 2, (Math.random() - 0.5) * 0.2);
+      flame370.userData['baseH'] = fh;
+      flame370.userData['phase'] = Math.random() * Math.PI * 2;
+      bonfireGroup370.add(flame370);
+      bonfireFlames370.push(flame370);
+    }
+
+    // Embers — 8 tiny rising spheres
+    const emberBaseMat370 = new MeshBasicMaterial({ color: 0x33ff66, transparent: true });
+    for (let ei = 0; ei < 8; ei++) {
+      const ember370 = new Mesh(new SphereGeometry(0.015, 3, 2), emberBaseMat370.clone());
+      ember370.position.set((Math.random() - 0.5) * 0.3, Math.random() * 0.3, (Math.random() - 0.5) * 0.3);
+      ember370.visible = false;
+      bonfireGroup370.add(ember370);
+      bonfireEmbers370.push(ember370);
+      bonfireEmberData370.push({ vy: 0.5 + Math.random() * 0.8, life: 0, maxLife: 1.5 + Math.random() });
+    }
+
+    // Flickering point light
+    bonfireLight370 = new PointLight(0x33ff66, 0.5, 8.0);
+    bonfireLight370.position.set(0, 0.8, 0);
+    bonfireGroup370.add(bonfireLight370);
+
+    bonfireGroup370.position.set(2, 0, -14);
+    group.add(bonfireGroup370);
   }
 
   const update = (dt: number): void => {
@@ -2047,6 +2108,40 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       // pulse light at start and end of procession
       if (menhirLights354[0]) menhirLights354[0].intensity = (menhirMeshes354[0].material as MeshStandardMaterial).emissiveIntensity * 0.4;
       if (menhirLights354[1]) menhirLights354[1].intensity = (menhirMeshes354[menhirMeshes354.length - 1].material as MeshStandardMaterial).emissiveIntensity * 0.4;
+    }
+    // Plaine des Druides — green ritual bonfire flickering flames + embers (C370)
+    if (bonfireGroup370 !== null && bonfireFlames370.length > 0) {
+      bonfireElapsed370 += dt;
+      const et370 = bonfireElapsed370;
+      bonfireFlames370.forEach((flame370) => {
+        const phase370 = flame370.userData['phase'] as number;
+        const flicker370 = 0.85 + Math.sin(et370 * 8 + phase370) * 0.15 + Math.sin(et370 * 13.7 + phase370 * 2) * 0.08;
+        flame370.scale.y = flicker370;
+        flame370.scale.x = 0.9 + Math.sin(et370 * 5 + phase370) * 0.1;
+        flame370.rotation.y = Math.sin(et370 * 3 + phase370) * 0.15;
+        (flame370.material as MeshBasicMaterial).opacity = (0.65 + Math.sin(et370 * 6 + phase370) * 0.15) * flicker370;
+      });
+      if (bonfireLight370 !== null) {
+        bonfireLight370.intensity = 0.4 + Math.sin(et370 * 7.3) * 0.15 + Math.sin(et370 * 11.1) * 0.1 + Math.random() * 0.05;
+      }
+      bonfireEmbers370.forEach((ember370, ei) => {
+        const data370 = bonfireEmberData370[ei];
+        if (data370 === undefined) return;
+        if (ember370.visible) {
+          data370.life += dt;
+          ember370.position.y += data370.vy * dt;
+          ember370.position.x += Math.sin(et370 * 2 + ei) * 0.01;
+          (ember370.material as MeshBasicMaterial).opacity = Math.max(0, 1 - data370.life / data370.maxLife);
+          if (data370.life >= data370.maxLife) {
+            ember370.visible = false;
+            data370.life = 0;
+          }
+        } else if (Math.random() < dt * 0.5) {
+          ember370.position.set((Math.random() - 0.5) * 0.2, 0.2, (Math.random() - 0.5) * 0.2);
+          ember370.visible = true;
+          data370.life = 0;
+        }
+      });
     }
     // Marais korrigans — chaotic will-o'-wisp particles
     if (maraisWispMeshes.length > 0) {
@@ -2461,6 +2556,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (menhirGroup354) { group.remove(menhirGroup354); menhirGroup354.traverse(c => { if ((c as Mesh).geometry) (c as Mesh).geometry.dispose(); }); menhirGroup354 = null; }
     menhirMeshes354 = [];
     menhirLights354 = [];
+    // Ritual bonfire cleanup (C370)
+    if (bonfireGroup370) { group.remove(bonfireGroup370); bonfireGroup370.traverse(c => { const m = c as Mesh; if (m.geometry) m.geometry.dispose(); if (m.material) { if (Array.isArray(m.material)) m.material.forEach(mt => mt.dispose()); else m.material.dispose(); } }); bonfireGroup370 = null; }
+    bonfireFlames370 = [];
+    bonfireEmbers370 = [];
+    bonfireEmberData370 = [];
+    if (bonfireLight370) { bonfireLight370.dispose(); bonfireLight370 = null; }
     maraisWispMeshes = [];
     _bogFireflies.length = 0;
     _bogFireflyLights.length = 0;
