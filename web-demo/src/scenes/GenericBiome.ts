@@ -616,6 +616,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let guardianWatching463: boolean = false
   let guardianWatchT463: number = 0
 
+  // ── Spectral wild hunt — landes_bruyere (C491) ────────────────────────────
+  let huntGroup491: Group | null = null
+  let huntRiders491: Group[] = []
+  let huntT491: number = 0
+  let huntSpeed491: number = 1.8
+  let huntBurstTimer491: number = 30 + Math.random() * 15
+  let huntBurstActive491: boolean = false
+  let huntBurstT491: number = 0
+  let huntRiderMats491: MeshStandardMaterial[][] = []
+
   // ── Earth energy vortex — cercles_pierres (C468) ──────────────────────────
   let vortexGroup468: Group | null = null
   let vortexT468: number = 0
@@ -1629,6 +1639,71 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     guardianGroup463!.add(guardianLight463)
 
     group.add(guardianGroup463)
+
+    // ── Spectral wild hunt (C491) ─────────────────────────────────────────────
+    huntGroup491 = new Group()
+    group.add(huntGroup491)
+
+    const riderMat = (): MeshStandardMaterial => new MeshStandardMaterial({
+      color: 0x0a1a10,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.6,
+      transparent: true,
+      opacity: 0.5,
+    })
+
+    for (let ri = 0; ri < 3; ri++) {
+      const rider = new Group()
+      const mats: MeshStandardMaterial[] = []
+
+      // Horse body
+      const bodyMat = riderMat(); mats.push(bodyMat)
+      const horseBody = new Mesh(new BoxGeometry(0.5, 0.35, 0.18), bodyMat)
+      horseBody.position.y = 0.3
+      rider.add(horseBody)
+
+      // Horse neck
+      const neckMat = riderMat(); mats.push(neckMat)
+      const horseNeck = new Mesh(new CylinderGeometry(0.07, 0.1, 0.3, 5), neckMat)
+      horseNeck.position.set(0.2, 0.42, 0)
+      horseNeck.rotation.z = -Math.PI / 6
+      rider.add(horseNeck)
+
+      // Horse head
+      const headMat = riderMat(); mats.push(headMat)
+      const horseHead = new Mesh(new BoxGeometry(0.15, 0.12, 0.1), headMat)
+      horseHead.position.set(0.35, 0.52, 0)
+      rider.add(horseHead)
+
+      // 4 legs
+      const legOffsets: Array<[number, number]> = [
+        [0.18, 0.07], [0.18, -0.07], [-0.18, 0.07], [-0.18, -0.07]
+      ]
+      legOffsets.forEach(([lx, lz], li) => {
+        const legMat = riderMat(); mats.push(legMat)
+        const leg = new Mesh(new CylinderGeometry(0.04, 0.04, 0.3, 4), legMat)
+        leg.position.set(lx, 0.1, lz)
+        leg.userData['legPhase'] = li * Math.PI * 0.5
+        rider.add(leg)
+      })
+
+      // Rider torso
+      const torsoMat = riderMat(); mats.push(torsoMat)
+      const torso = new Mesh(new BoxGeometry(0.14, 0.25, 0.1), torsoMat)
+      torso.position.set(0, 0.55, 0)
+      rider.add(torso)
+
+      // Rider head
+      const riderHeadMat = riderMat(); mats.push(riderHeadMat)
+      const riderHead = new Mesh(new SphereGeometry(0.07, 5, 5), riderHeadMat)
+      riderHead.position.set(0, 0.73, 0)
+      rider.add(riderHead)
+
+      rider.userData['phase'] = ri * 0.4
+      huntRiders491.push(rider)
+      huntRiderMats491.push(mats)
+      huntGroup491!.add(rider)
+    }
 
     // ── Earth energy vortex (C468) ────────────────────────────────────────────
     vortexGroup468 = new Group()
@@ -4486,6 +4561,60 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         if (guardianLight463) guardianLight463.intensity = eyeOp * 0.5
       }
     }
+    // Landes bruyere — spectral wild hunt (C491)
+    if (huntGroup491 && huntRiders491.length > 0) {
+      huntT491 += dt
+      huntBurstTimer491 -= dt
+
+      // Burst trigger
+      if (huntBurstTimer491 <= 0 && !huntBurstActive491) {
+        huntBurstActive491 = true
+        huntBurstT491 = 0
+        huntBurstTimer491 = 30 + Math.random() * 15
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }))
+      }
+      if (huntBurstActive491) {
+        huntBurstT491 += dt
+        if (huntBurstT491 >= 3) {
+          huntBurstActive491 = false
+        }
+      }
+
+      const t491 = huntT491
+      const currentSpeed = huntBurstActive491 ? huntSpeed491 * 2.5 : huntSpeed491
+      const arcCenter = { x: 0, z: -5 }
+      const arcRadius = 15
+      const arcSpan = (120 * Math.PI) / 180
+      const arcStart = -arcSpan * 0.5
+
+      huntRiders491.forEach((rider, ri) => {
+        const phase = rider.userData['phase'] as number
+        const arcAngle = arcStart + ((t491 * currentSpeed * (1 / arcRadius) + phase) % arcSpan)
+        const wx = arcCenter.x + arcRadius * Math.cos(arcAngle)
+        const wz = arcCenter.z + arcRadius * Math.sin(arcAngle)
+        const bob = 0.35 + 0.04 * Math.sin(t491 * 8 + phase)
+        rider.position.set(wx, bob, wz)
+
+        // Face direction of travel
+        const nextAngle = arcAngle + 0.01
+        const dx = Math.cos(nextAngle) - Math.cos(arcAngle)
+        const dz = Math.sin(nextAngle) - Math.sin(arcAngle)
+        rider.rotation.y = Math.atan2(dx, dz)
+
+        // Leg gallop
+        rider.children.forEach((child) => {
+          if (child instanceof Mesh && child.userData['legPhase'] !== undefined) {
+            const lp = child.userData['legPhase'] as number
+            child.rotation.x = Math.sin(t491 * 8 + lp) * 0.4
+          }
+        })
+
+        // Opacity
+        const mats = huntRiderMats491[ri]
+        const opacity = huntBurstActive491 ? 0.85 : 0.5
+        mats.forEach((m) => { m.opacity = opacity })
+      })
+    }
     // Cercles de Pierres — moonrise arc across sky (C433)
     if (stoneMoonGroup433 && stoneMoonMesh433 && stoneMoonLight433) {
       stoneMoonT433 += dt;
@@ -4977,6 +5106,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     guardianEyeMats463 = [];
     guardianLight463 = null;
+    // Spectral wild hunt cleanup (C491)
+    if (huntGroup491) {
+      huntGroup491.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as MeshStandardMaterial).dispose();
+        }
+      });
+      group.remove(huntGroup491);
+      huntGroup491 = null;
+    }
+    huntRiders491 = [];
+    huntRiderMats491 = [];
+    huntBurstActive491 = false;
+    huntT491 = 0;
     // Earth energy vortex cleanup (C468)
     if (vortexGroup468) {
       vortexGroup468.traverse((c) => {
