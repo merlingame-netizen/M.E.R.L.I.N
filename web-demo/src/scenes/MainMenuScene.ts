@@ -5,7 +5,7 @@
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, FogExp2, Group, Line, LineBasicMaterial, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, TorusGeometry, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, Float32BufferAttribute, FogExp2, Group, Line, LineBasicMaterial, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, TorusGeometry, Vector3, WebGLRenderer } from 'three';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -862,6 +862,15 @@ let moonLight470: PointLight | null = null;
 let leafGroup475: Group | null = null;
 let leafT475: number = 0;
 let leafParticles475: Mesh[] = [];
+
+// C480 — Floating Merlin sigil (Celtic star/knot brand mark)
+let sigilGroup480: Group | null = null;
+let sigilT480: number = 0;
+let sigilLineMats480: LineBasicMaterial[] = [];
+let sigilLight480: PointLight | null = null;
+let sigilSurgeTimer480: number = 35;
+let sigilSurging480: boolean = false;
+let sigilSurgeT480: number = 0;
 
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
@@ -1800,6 +1809,54 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     });
 
+    // C480: sigil rotation, float, breathe, surge
+    sigilT480 += dt;
+    sigilSurgeTimer480 -= dt;
+
+    if (sigilGroup480) {
+      sigilGroup480.rotation.z = sigilT480 * 0.05;
+      sigilGroup480.position.y = 8 + 0.5 * Math.sin(sigilT480 * 0.3);
+    }
+
+    if (!sigilSurging480) {
+      sigilLineMats480.forEach((mat, i) => {
+        mat.opacity = 0.5 + 0.2 * Math.sin(sigilT480 * 0.8 + i * 0.5);
+      });
+      if (sigilLight480) {
+        sigilLight480.intensity = 0.35 + 0.1 * Math.sin(sigilT480 * 0.8);
+      }
+    }
+
+    if (sigilSurgeTimer480 <= 0) {
+      sigilSurgeTimer480 = 30 + Math.random() * 20;
+      sigilSurging480 = true;
+      sigilSurgeT480 = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+    }
+
+    if (sigilSurging480) {
+      sigilSurgeT480 += dt;
+      let op: number;
+      let li: number;
+      if (sigilSurgeT480 < 1.0) {
+        op = 0.5 + 0.5 * (sigilSurgeT480 / 1.0);
+        li = 0.35 + 1.0 * (sigilSurgeT480 / 1.0);
+      } else if (sigilSurgeT480 < 2.0) {
+        op = 1.0;
+        li = 1.35;
+      } else if (sigilSurgeT480 < 4.0) {
+        const p = (sigilSurgeT480 - 2.0) / 2.0;
+        op = 1.0 - 0.5 * p;
+        li = 1.35 - 1.0 * p;
+      } else {
+        sigilSurging480 = false;
+        op = 0.5;
+        li = 0.35;
+      }
+      sigilLineMats480.forEach((mat) => { mat.opacity = op; });
+      if (sigilLight480) sigilLight480.intensity = li;
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -2610,6 +2667,76 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(leafGroup475);
 
+  // C480 — Floating Merlin sigil
+  sigilGroup480 = new Group();
+  sigilGroup480.position.set(0, 8, -25);
+
+  function makeLine480(points: number[][], color: number, opacity: number): Line {
+    const geo = new BufferGeometry();
+    const flat = points.reduce<number[]>((acc, p) => acc.concat(p), []);
+    geo.setAttribute('position', new Float32BufferAttribute(flat, 3));
+    const mat = new LineBasicMaterial({ color, transparent: true, opacity });
+    sigilLineMats480.push(mat);
+    return new Line(geo, mat);
+  }
+
+  // Outer ring: 12-sided polygon, radius 2.5
+  const outerPts: number[][] = [];
+  for (let i = 0; i <= 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    outerPts.push([Math.cos(a) * 2.5, Math.sin(a) * 2.5, 0]);
+  }
+  sigilGroup480.add(makeLine480(outerPts, 0x1a8833, 0.6));
+
+  // Inner ring: 8-sided, radius 1.8
+  const innerPts: number[][] = [];
+  for (let i = 0; i <= 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    innerPts.push([Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0]);
+  }
+  sigilGroup480.add(makeLine480(innerPts, 0x33ff66, 0.5));
+
+  // 6-pointed star — first triangle
+  const star1: number[][] = [];
+  for (let i = 0; i <= 6; i++) {
+    const a = (i / 3) * Math.PI * 2 - Math.PI * 0.5;
+    star1.push([Math.cos(a) * 2.1, Math.sin(a) * 2.1, 0]);
+  }
+  sigilGroup480.add(makeLine480(star1, 0x33ff66, 0.7));
+
+  // 6-pointed star — second triangle
+  const star2: number[][] = [];
+  for (let i = 0; i <= 6; i++) {
+    const a = (i / 3) * Math.PI * 2 + Math.PI * 0.5;
+    star2.push([Math.cos(a) * 2.1, Math.sin(a) * 2.1, 0]);
+  }
+  sigilGroup480.add(makeLine480(star2, 0x33ff66, 0.65));
+
+  // Central cross — 4 spokes
+  const spokeDefs480 = [
+    [[0, 0, 0], [0, 1.5, 0]],
+    [[0, 0, 0], [0, -1.5, 0]],
+    [[0, 0, 0], [-1.5, 0, 0]],
+    [[0, 0, 0], [1.5, 0, 0]],
+  ];
+  spokeDefs480.forEach((pts) => {
+    sigilGroup480!.add(makeLine480(pts, 0x33ff66, 0.8));
+  });
+
+  // Center circle, radius 0.4
+  const centerPts480: number[][] = [];
+  for (let i = 0; i <= 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    centerPts480.push([Math.cos(a) * 0.4, Math.sin(a) * 0.4, 0]);
+  }
+  sigilGroup480.add(makeLine480(centerPts480, 0x33ff66, 0.9));
+
+  // PointLight at sigil center
+  sigilLight480 = new PointLight(0x33ff66, 0.4, 20);
+  sigilGroup480.add(sigilLight480);
+
+  scene.add(sigilGroup480);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2891,6 +3018,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       leafGroup475 = null;
     }
     leafParticles475 = [];
+
+    // C480: dispose sigil group
+    sigilLineMats480.forEach((mat) => { mat.dispose(); });
+    sigilLineMats480 = [];
+    if (sigilGroup480) {
+      sigilGroup480.traverse((c) => {
+        if (c instanceof Line) { c.geometry.dispose(); }
+      });
+      scene.remove(sigilGroup480);
+      sigilGroup480 = null;
+    }
+    sigilLight480 = null;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
