@@ -882,6 +882,54 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   doorCinematicOverlay.appendChild(doorCinematicText);
   container.appendChild(doorCinematicOverlay);
 
+  // C201: ambient Merlin whisper panel — lore quotes near cauldron, 8s rotation cycle
+  const WHISPERS: readonly string[] = [
+    "Les Oghams ne mentent jamais… ils choisissent simplement ce qu'ils révèlent.",
+    "Chaque biome porte la mémoire d'un druide disparu.",
+    "L'Anam grandit dans le silence entre les cartes.",
+    "Brocéliande n'est pas un lieu. C'est un état d'esprit.",
+    "Les Korrigans gardent ce que les hommes ont oublié de chercher.",
+    "Une réputation se construit en un run, se détruit en une carte.",
+    "Le Beith protège. Le Huath révèle. Le Ruis transforme.",
+    "Ce qui semble échec est parfois l'amorce d'une maîtrise.",
+    "Les pierres dressées comptent les étoiles depuis avant les hommes.",
+    "Groq murmure, Merlin écoute, le joueur décide.",
+    "Toute run est unique. Nulle route ne se répète dans la forêt.",
+    "Le cauldron ne ment pas — il révèle ce que tu refuses de voir.",
+  ];
+  // Inject style once per page — idempotent guard
+  if (!document.getElementById('lair-whisper-style')) {
+    const whisperStyle = document.createElement('style');
+    whisperStyle.id = 'lair-whisper-style';
+    whisperStyle.textContent = `
+      #lair-whisper {
+        position: absolute;
+        bottom: 22%;
+        left: 50%;
+        transform: translateX(-50%);
+        font: italic 0.78rem 'Courier New', monospace;
+        color: rgba(51,255,102,0.75);
+        text-align: center;
+        max-width: 420px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 1.2s ease;
+        letter-spacing: 0.03em;
+        text-shadow: 0 0 8px rgba(51,255,102,0.4);
+        z-index: 5;
+      }
+    `;
+    document.head.appendChild(whisperStyle);
+  }
+  const whisperEl = (() => {
+    const existing = document.getElementById('lair-whisper');
+    if (existing) return existing as HTMLDivElement;
+    const el = document.createElement('div');
+    el.id = 'lair-whisper';
+    container.appendChild(el);
+    return el;
+  })();
+
   // C157: zone label map (bracket notation per spec)
   const ZONE_FLOAT_LABELS: Readonly<Record<string, string>> = {
     map:       '[ MAP DES BIOMES ]',
@@ -995,6 +1043,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let fpsFrameCount = 0;
   let fpsElapsed = 0;
   let lowFpsMode = false;
+  // C201: whisper rotation state (-1 = waiting for first whisper after WHISPER_START_MS)
+  let whisperIndex = -1;
+  let whisperTimer = 0;          // ms accumulator
+  let whisperFading = false;     // true while fading-out before text swap
+  let whisperFadeTimer = 0;      // ms — counts 1200ms fade-out window
+  const WHISPER_CYCLE_MS = 8000; // 8s between whispers
+  const WHISPER_FADE_MS  = 1200; // 1.2s CSS transition
+  const WHISPER_START_MS = 3000; // 3s initial delay
   const cancelGLBFades = loadLairGLBs(scene, { // C133: capture cancel-all to stop in-flight fadeInGLB rAFs on dispose
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
@@ -1484,6 +1540,39 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C201: ambient whisper rotation — 8s cycle, 1.2s fade-out/in, 3s initial delay.
+    // State: whisperIndex=-1 means "not yet shown first whisper".
+    // whisperFading=true means currently fading out before a text swap.
+    // Cycle: wait WHISPER_CYCLE_MS → fade-out 1.2s → swap text → fade-in → repeat.
+    whisperTimer += dt * 1000;
+    if (!whisperFading) {
+      const threshold = whisperIndex < 0 ? WHISPER_START_MS : WHISPER_CYCLE_MS;
+      if (whisperTimer >= threshold) {
+        if (whisperIndex < 0) {
+          // First whisper: no fade-out needed, just show directly
+          whisperIndex = 0;
+          whisperEl.textContent = WHISPERS[0];
+          whisperEl.style.opacity = '0.75';
+          whisperTimer = 0;
+        } else {
+          // Subsequent whispers: fade out current, then swap
+          whisperFading = true;
+          whisperFadeTimer = 0;
+          whisperEl.style.opacity = '0';
+        }
+      }
+    } else {
+      whisperFadeTimer += dt * 1000;
+      if (whisperFadeTimer >= WHISPER_FADE_MS) {
+        whisperIndex = (whisperIndex + 1) % WHISPERS.length;
+        whisperEl.textContent = WHISPERS[whisperIndex];
+        whisperEl.style.opacity = '0.75';
+        whisperFading = false;
+        whisperTimer = 0;
+        whisperFadeTimer = 0;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -1557,6 +1646,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     if (doorCinematicOverlay.parentNode) {
       doorCinematicOverlay.parentNode.removeChild(doorCinematicOverlay);
+    }
+    // C201: remove whisper panel
+    if (whisperEl.parentNode) {
+      whisperEl.parentNode.removeChild(whisperEl);
     }
   };
 
