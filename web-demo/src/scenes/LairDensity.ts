@@ -37,7 +37,7 @@ export function createLairDensity(scene: Scene, lowEnd = false): () => void {
   // C36: warm amber accent for right-wall bibliotheque zone (no dedicated light before)
   // C38: skipped on lowEnd (Mali-G57/Adreno 610 mobile budget); y=0 targets book spines (was -3.5 = floor)
   if (!lowEnd) {
-    const biblio = new PointLight(0xffa040, 0.6, 6, 2);
+    const biblio = new PointLight(0x22aa55, 0.6, 6, 2);
     biblio.position.set(10, 0, -7);
     group.add(biblio);
   }

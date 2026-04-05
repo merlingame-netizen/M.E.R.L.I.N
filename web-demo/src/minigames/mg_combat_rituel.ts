@@ -330,9 +330,9 @@ export class MinigameCombatRituel extends MinigameBase {
     const centerPulse = 0.15 + Math.sin(this.pulsePhase * 3) * 0.08;
     ctx.beginPath();
     ctx.arc(this.centerX, this.centerY, this.centerBonusRadius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(200,170,60,${centerPulse})`;
+    ctx.fillStyle = `rgba(51,255,102,${centerPulse})`;
     ctx.fill();
-    ctx.strokeStyle = `rgba(200,170,60,${centerPulse + 0.1})`;
+    ctx.strokeStyle = `rgba(51,255,102,${centerPulse + 0.1})`;
     ctx.lineWidth = 1;
     ctx.stroke();
 

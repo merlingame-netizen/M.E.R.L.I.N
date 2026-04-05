@@ -53,8 +53,8 @@ const THEMES: Readonly<Record<string, BiomeTheme>> = {
   cercles_pierres: {
     fogColor: 0x080808, fogNear: 10, fogFar: 50,
     groundColor: 0x282828, skyTop: 0x040404, skyMid: 0x101010,
-    ambientColor: 0x080808, keyColor: 0xe8c84c, rimColor: 0xaa9030,
-    particleColor: 0xe8c84c,
+    ambientColor: 0x080808, keyColor: 0x33ff66, rimColor: 0x1a8833,
+    particleColor: 0x33ff66,
     stoneDensity: 12, treeCount: 0, stoneType: 'circle',
   },
   monts_brumeux: {

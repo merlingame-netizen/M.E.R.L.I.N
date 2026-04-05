@@ -352,7 +352,7 @@ function createCandles(): { candles: CandleData[]; group: Group } {
 
   // Single shared PointLight covers all 3 candles — saves 2 GPU light slots vs individual lights.
   // Positioned at centroid of the 3 candle positions, larger range to cover all.
-  const sharedLight = new PointLight(0xff9933, 1.8, 9, 2);
+  const sharedLight = new PointLight(0x33aa55, 1.8, 9, 2);
   // C108: Y values updated to match actual candlePositions (all cy = -4.85). Former values
   // (-1.6, -4.6, -3.0) were stale from an older layout — light was 1.8u above the flames.
   sharedLight.position.set((-5 + 0 + 3) / 3, (-4.85 + -4.85 + -4.85) / 3 + 0.55, (-7 + -8.5 + -6) / 3);
@@ -799,7 +799,7 @@ function setupLighting(scene: Scene, lowEnd = false): void {
   const rim = new PointLight(0x6699cc, 0.55, 18, 2.0);
   rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
   // C89-P2: fill intensity boosted +0.15 on low-end to compensate for missing backAccent depth
-  const fill = new PointLight(0xcc8833, lowEnd ? 0.55 : 0.4, 16, 2.0);
+  const fill = new PointLight(0x225533, lowEnd ? 0.55 : 0.4, 16, 2.0);
   fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill left wall
   if (!lowEnd) {
     // C85-02: back-wall accent — warm ember glow throwing forward shadows from rear (skipped on low-end)
