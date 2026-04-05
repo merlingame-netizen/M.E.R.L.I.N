@@ -1078,6 +1078,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C174: cache cauldronEntry + skullEntry for emissive animation (same pattern as crystalEntry)
   const cauldronEntry = interactives.find((i) => i.zone === 'cauldron')!;
   const skullEntry = interactives.find((i) => i.zone === 'skull')!;
+  // C188: cache doorEntry for rune light lerp — avoids Array.find() on hot 60fps path
+  const doorEntry = interactives.find((i) => i.zone === 'door')!;
   // C122: cache raycaster targets — interactives.map() on every mousemove allocates a 5-element array at 60fps.
   // Refreshed only in onMapGLBLoaded / onShelfGLBLoaded when entry.mesh changes.
   let raycastTargets: Object3D[] = interactives.map((i) => i.mesh);
@@ -1129,6 +1131,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         renderer.domElement.style.cursor = 'pointer';
         // C82-01: subtle shimmer on zone enter — SFXManager listens via window 'merlin_sfx'
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
+        // C188: approach footstep — one per hover-enter for crystal/bookshelf/skull (illusion of stepping toward object)
+        if (currentHovered.zone === 'crystal' || currentHovered.zone === 'bookshelf' || currentHovered.zone === 'skull') {
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'step' } }));
+        }
         // C157: show floating top-center zone label
         zoneFloatLabel.textContent = ZONE_FLOAT_LABELS[currentHovered.zone] ?? '';
         zoneFloatLabel.style.opacity = '1';
@@ -1218,6 +1224,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
           if (!lairDisposed) cb(found.zone); // C102: guard against stale callback after dispose()
         }, 380);
       } else {
+        // C188: skull click — ominous critical_alert SFX (more fitting than default hover flip)
+        if (found.zone === 'skull') {
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'critical_alert' } }));
+        }
         zoneClickCallback(found.zone);
       }
     }
@@ -1304,6 +1314,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
           if (!lairDisposed) kbCb(kbZone);
         }, 380);
       } else {
+        // C188: skull keyboard Enter — ominous critical_alert SFX (mirrors pointer-path fix)
+        if (currentHovered.zone === 'skull') {
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'critical_alert' } }));
+        }
         zoneClickCallback(currentHovered.zone);
       }
       return;
@@ -1428,7 +1442,6 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // C188: door rune glow — lerp green PointLight toward 1.2 on hover, 0.0 on unhover
     {
-      const doorEntry = interactives.find((i) => i.zone === 'door')!;
       const runeTarget = doorEntry.hovered ? 1.2 : 0.0;
       doorRuneLight.intensity += (runeTarget - doorRuneLight.intensity) * Math.min(1, dt * 6);
     }
