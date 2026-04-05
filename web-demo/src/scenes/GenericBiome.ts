@@ -397,6 +397,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let maraisWispTime = 0;
   const _bogFireflies: Mesh[] = [];
   const _bogFireflyLights: PointLight[] = [];
+  const _fogTendrils: Mesh[] = [];
   const _auroraBands: Mesh[] = [];
   let _auroraTime = 0;
   let _deadTreeGroup: Group | null = null;
@@ -590,6 +591,35 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       ff.userData['ty'] = 0.3 + R() * 2.2;
       ff.userData['tz'] = -8 - R() * 24;
       ff.userData['moveTimer'] = 1.2 + R() * 1.3; // initial move interval 1.2–2.5s
+    }
+
+    // Creeping fog tendrils — 6 low-rising planes hugging the swamp ground (C334)
+    for (let i = 0; i < 6; i++) {
+      const R = Math.random;
+      const tendrilMat = new MeshBasicMaterial({
+        color: 0x061408,
+        transparent: true,
+        opacity: 0,
+        side: DoubleSide,
+        depthWrite: false,
+      });
+      const tendril = new Mesh(
+        new PlaneGeometry(4.0 + R() * 2.0, 1.5 + R() * 0.8),
+        tendrilMat,
+      );
+      const baseX = (R() - 0.5) * 24;  // x ∈ [-12, 12]
+      const baseZ = -8 - R() * 22;     // z ∈ [-8, -30]
+      tendril.rotation.x = -Math.PI / 2 + 0.15;
+      tendril.position.set(baseX, 0.08, baseZ);
+      tendril.userData = {
+        baseX,
+        baseZ,
+        phase: R() * Math.PI * 2,
+        speed: 0.05 + R() * 0.07,      // 0.05–0.12 (extremely slow)
+        maxOpacity: 0.08 + R() * 0.10, // 0.08–0.18
+      };
+      group.add(tendril);
+      _fogTendrils.push(tendril);
     }
   }
 
@@ -1542,6 +1572,22 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       pos.needsUpdate = true;
       maraisWater.geometry.computeVertexNormals();
     }
+    // Marais korrigans — creeping fog tendrils (C334)
+    if (_fogTendrils.length > 0) {
+      const t = Date.now() * 0.001;
+      for (const tendril of _fogTendrils) {
+        const { baseX, baseZ, phase, speed, maxOpacity } = tendril.userData as {
+          baseX: number; baseZ: number; phase: number; speed: number; maxOpacity: number;
+        };
+        (tendril.material as MeshBasicMaterial).opacity = Math.max(
+          0,
+          maxOpacity * (0.5 + Math.sin(t * speed + phase) * 0.5),
+        );
+        tendril.position.x = baseX + Math.sin(t * speed * 0.7 + phase) * 1.5;
+        tendril.position.z = baseZ + Math.cos(t * speed * 0.5 + phase) * 1.0;
+        tendril.rotation.z = Math.sin(t * speed * 2.0 + phase) * 0.08;
+      }
+    }
     // Landes bruyere spore drift — slow rightward wind + gentle vertical bob
     if (landeSporeMesh !== null) {
       landeSporeTime += dt;
@@ -1715,6 +1761,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     maraisWispMeshes = [];
     _bogFireflies.length = 0;
     _bogFireflyLights.length = 0;
+    _fogTendrils.length = 0;
     _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
