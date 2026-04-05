@@ -6,7 +6,8 @@
 import {
   AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color,
   ConeGeometry, CylinderGeometry, DirectionalLight,
-  DodecahedronGeometry, DoubleSide, Group, HemisphereLight,
+  DodecahedronGeometry, DoubleSide, Float32BufferAttribute, Group, HemisphereLight,
+  Line, LineBasicMaterial,
   Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Points,
   PointsMaterial, SphereGeometry, SpotLight,
   TorusGeometry,
@@ -672,6 +673,12 @@ let whaleTimer444: number = 30;
 let whaleBreaching444: boolean = false;
 let whaleCycle444: number = 0;
 const whaleSplashParticles444: Mesh[] = [];
+
+// ── Bioluminescent jellyfish cluster (C449) ────────────────────────────────
+let jellyfishGroup449: Group | null = null;
+let jellyfishT449: number = 0;
+const jellyfishBells449: Mesh[] = [];
+const jellyfishData449: { ox: number; oz: number; phase: number; speed: number }[] = [];
 
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
@@ -1542,6 +1549,69 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(whaleGroup444);
   }
 
+  // ── Bioluminescent jellyfish cluster (C449) ────────────────────────────────
+  {
+    jellyfishGroup449 = new Group();
+    jellyfishGroup449.position.set(-5, -1, -8);
+
+    const jConfigs = [
+      { x: 0,    y: 0,    z: 0,    phase: 0,   speed: 0.9 },
+      { x: 1.5,  y: 0.3,  z: -1,   phase: 1.0, speed: 1.1 },
+      { x: -1.2, y: -0.2, z: -0.8, phase: 2.1, speed: 0.8 },
+      { x: 0.8,  y: 0.5,  z: 1.2,  phase: 3.2, speed: 1.0 },
+      { x: -0.5, y: -0.4, z: 1.5,  phase: 4.0, speed: 1.2 },
+      { x: 2.0,  y: 0.1,  z: 0.5,  phase: 5.1, speed: 0.7 },
+    ];
+
+    jConfigs.forEach((cfg) => {
+      const jGroup = new Group();
+      jGroup.position.set(cfg.x, cfg.y, cfg.z);
+
+      // Bell: flattened sphere for jellyfish dome
+      const bell = new Mesh(
+        new SphereGeometry(0.22, 8, 6),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.55 })
+      );
+      bell.scale.y = 0.45;
+      jGroup.add(bell);
+      jellyfishBells449.push(bell);
+
+      // Glow rim: torus around bell equator
+      const rim = new Mesh(
+        new TorusGeometry(0.22, 0.025, 4, 16),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 })
+      );
+      rim.position.y = -0.05;
+      jGroup.add(rim);
+
+      // 4 tentacles hanging down
+      for (let t = 0; t < 4; t++) {
+        const tAngle = (t / 4) * Math.PI * 2;
+        const tPoints: number[] = [];
+        for (let s = 0; s <= 6; s++) {
+          tPoints.push(
+            Math.cos(tAngle) * 0.1 * (1 - s / 8),
+            -s * 0.12,
+            Math.sin(tAngle) * 0.1 * (1 - s / 8)
+          );
+        }
+        const tGeo = new BufferGeometry();
+        tGeo.setAttribute('position', new Float32BufferAttribute(tPoints, 3));
+        const tentacle = new Line(tGeo, new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.35 }));
+        jGroup.add(tentacle);
+      }
+
+      // Point light per jellyfish
+      const jLight = new PointLight(0x33ff66, 0.08, 2.0);
+      jGroup.add(jLight);
+
+      jellyfishGroup449!.add(jGroup);
+      jellyfishData449.push({ ox: cfg.x, oz: cfg.z, phase: cfg.phase, speed: cfg.speed });
+    });
+
+    group.add(jellyfishGroup449);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2005,6 +2075,29 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // ── Jellyfish cluster pulse and drift (C449) ─────────────────────────────
+    if (jellyfishGroup449) {
+      jellyfishT449 += dt;
+      jellyfishBells449.forEach((bell, i) => {
+        const d = jellyfishData449[i];
+        if (!d) return;
+        // Bell pulse: contract / expand
+        const pulseY = 0.4 + 0.12 * Math.sin(jellyfishT449 * d.speed * 2 + d.phase);
+        const pulseXZ = 0.9 + 0.12 * Math.sin(jellyfishT449 * d.speed + d.phase);
+        bell.scale.set(pulseXZ, pulseY, pulseXZ);
+        // Bell opacity breathing
+        const mat = bell.material as MeshBasicMaterial;
+        mat.opacity = 0.4 + 0.2 * Math.sin(jellyfishT449 * d.speed + d.phase);
+        // Drift parent jGroup
+        const jGroup = bell.parent;
+        if (jGroup) {
+          jGroup.position.y = (d.phase % 1.0) - 0.5 + 0.25 * Math.sin(jellyfishT449 * 0.3 + d.phase);
+          jGroup.position.x = d.ox + 0.3 * Math.sin(jellyfishT449 * 0.2 + d.phase);
+          jGroup.position.z = d.oz + 0.2 * Math.cos(jellyfishT449 * 0.15 + d.phase);
+        }
+      });
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2185,6 +2278,19 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
       whaleSplashParticles444.length = 0;
       whaleGroup444 = null;
+    }
+    if (jellyfishGroup449) {
+      jellyfishGroup449.traverse(c => {
+        if (c instanceof Mesh || c instanceof Line) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      jellyfishBells449.length = 0;
+      jellyfishData449.length = 0;
+      jellyfishGroup449 = null;
     }
     group.clear();
   };
