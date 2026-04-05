@@ -766,6 +766,85 @@ function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   };
 }
 
+// ── C186: Floating magic orbs — Zelda/N64 title screen energy ───────────────
+
+interface OrbData {
+  orbitRadius: number;
+  orbitSpeed: number;
+  orbitPhase: number;
+  orbitTilt: number;
+  bobFreq: number;
+  bobAmp: number;
+  bobPhase: number;
+  baseY: number;
+  light: PointLight;
+}
+
+function createMenuOrbs(): { group: Group; update: (dt: number) => void } {
+  const group = new Group();
+
+  const orbConfigs = [
+    // [color, meshR, orbitR, speed, phase, tilt, baseY]
+    [0x33ff66, 0.09, 6.0,  0.22, 0.0,  0.15, 2.5],   // CeltOS green
+    [0x22aaff, 0.07, 8.5,  0.18, 1.1,  0.25, 3.5],   // blue
+    [0x88ffaa, 0.06, 5.2,  0.30, 2.3,  0.10, 1.8],   // pale green
+    [0xaaffcc, 0.08, 7.0,  0.15, 0.7,  0.35, 4.0],   // cyan-mint
+    [0x44ff88, 0.05, 9.5,  0.25, 3.5,  0.20, 2.0],   // vivid green
+    [0x22ff88, 0.10, 4.5,  0.35, 4.8,  0.05, 3.0],   // emerald
+  ] as const;
+
+  const orbData: OrbData[] = [];
+
+  for (const [color, meshR, orbitR, speed, phase, tilt, baseY] of orbConfigs) {
+    const orbMat = new MeshStandardMaterial({
+      color,
+      emissive: color,
+      emissiveIntensity: 1.0,
+      roughness: 0.3,
+      metalness: 0.1,
+    });
+    const orb = new Mesh(new SphereGeometry(meshR, 6, 5), orbMat);
+    group.add(orb);
+
+    const light = new PointLight(color, 0.8, 6);
+    group.add(light);
+
+    orbData.push({
+      orbitRadius: orbitR,
+      orbitSpeed: speed,
+      orbitPhase: phase,
+      orbitTilt: tilt,
+      bobFreq: 0.7 + Math.random() * 0.6,
+      bobAmp: 0.25,
+      bobPhase: Math.random() * Math.PI * 2,
+      baseY,
+      light,
+    });
+    (light as PointLight & { _orbMesh: Mesh })._orbMesh = orb;
+  }
+
+  let elapsed = 0;
+  const update = (dt: number): void => {
+    elapsed += dt;
+    orbData.forEach((d, i) => {
+      const angle = elapsed * d.orbitSpeed + d.orbitPhase;
+      const x = Math.cos(angle) * d.orbitRadius;
+      const z = (Math.sin(angle) * d.orbitRadius * Math.cos(d.orbitTilt)) - 4;
+      const y = d.baseY + Math.sin(elapsed * d.bobFreq + d.bobPhase) * d.bobAmp;
+
+      const l = orbData[i]!.light;
+      const orb = (l as PointLight & { _orbMesh: Mesh })._orbMesh;
+      orb.position.set(x, y, z);
+      l.position.set(x, y, z);
+
+      // Gentle intensity breathing
+      l.intensity = 0.8 + Math.sin(elapsed * 1.3 + d.orbitPhase) * 0.25;
+    });
+  };
+
+  return { group, update };
+}
+
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
@@ -854,6 +933,10 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const godRay = createGodRay();
   scene.add(godRay.mesh);
 
+  // C186: Floating magic orbs — N64 title screen energy
+  const orbs = createMenuOrbs();
+  scene.add(orbs.group);
+
   // ── C157: CeltOS title overlay — typewriter glitch animation ─────────────────
   // DOM overlay on canvas: M.E.R.L.I.N. with sequential letter reveal + glow pulse
   container.style.position = container.style.position || 'relative';
@@ -935,6 +1018,7 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     foam.update(elapsedTime);
     spray.update(dt);
     godRay.update(dt);
+    orbs.update(dt);
 
     // C168: day/night cycle — slow sine oscillation (period ~180s)
     // dayT: 0=storm-night, 1=storm-day. Always stormy, never fully bright.

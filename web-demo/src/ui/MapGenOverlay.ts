@@ -366,6 +366,68 @@ function getPathPoint(pts: MapPoint[], t: number): MapPoint {
   };
 }
 
+// ── Biome glyph decorations — scattered symbols drawn beneath path ────────────
+
+function drawBiomeDecorations(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  biome: string,
+): void {
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.font = '11px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const BIOME_GLYPHS: Readonly<Record<string, readonly string[]>> = {
+    foret_broceliande: ['♣', '∗', '♠', '∗'],
+    cotes_sauvages:    ['≈', '〰', '∿', '≋'],
+    marais_korrigans:  ['·', '∴', '·', '∵'],
+    landes_bruyere:    ['✦', '∴', '✦', '·'],
+    cercles_pierres:   ['◈', '⊕', '◉', '△'],
+    monts_brumeux:     ['∧', '⌂', '∧', '⌒'],
+    plaine_druides:    ['✤', '❋', '✦', '✤'],
+    vallee_anciens:    ['⌂', '□', '⌂', '◻'],
+  };
+
+  const glyphs = BIOME_GLYPHS[biome] ?? ['·', '∴', '·', '·'];
+  ctx.fillStyle = '#33ff66';
+
+  const seed = biome.length * 137;
+  for (let i = 0; i < 25; i++) {
+    const px = ((seed * (i + 1) * 1237 + i * 4567) % (w - 30)) + 15;
+    const py = ((seed * (i + 3) * 2341 + i * 3891) % (h - 30)) + 15;
+    const glyph = glyphs[i % glyphs.length]!;
+    ctx.fillText(glyph, px, py);
+  }
+  ctx.restore();
+}
+
+// ── Hero position marker at path start ───────────────────────────────────────
+
+function drawHeroMarker(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  ctx.save();
+  // Outer pulse ring
+  ctx.strokeStyle = 'rgba(51,255,102,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(x, y, 10, 0, Math.PI * 2);
+  ctx.stroke();
+  // Inner filled circle
+  ctx.fillStyle = '#33ff66';
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  // ">" cursor symbol above
+  ctx.fillStyle = '#33ff66';
+  ctx.font = 'bold 10px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('>', x, y - 11);
+  ctx.restore();
+}
+
 // ── Border decorator — CRT terminal frame ─────────────────────────────────────
 
 function drawCelticBorder(ctx: CanvasRenderingContext2D, w: number, h: number): void {
@@ -597,6 +659,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
         drawPatchAt(ctx, mapData.terrainPatches[i]!, patchP);
       }
 
+      drawBiomeDecorations(ctx, canvas.width, canvas.height, biome);
       stampGrain();
       drawCelticBorder(ctx, canvas.width, canvas.height);
 
