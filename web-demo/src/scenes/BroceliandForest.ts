@@ -7,7 +7,8 @@
 import {
   AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry,
   CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DodecahedronGeometry,
-  DoubleSide, Float32BufferAttribute, FogExp2, FrontSide, Group, HemisphereLight, Material,
+  DoubleSide, Float32BufferAttribute, FogExp2, FrontSide, Group, HemisphereLight, Line,
+  LineBasicMaterial, Material,
   Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Points, PointLight,
   PointsMaterial, RingGeometry, ShaderMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
@@ -916,6 +917,16 @@ const candleFlames430: Mesh[] = [];
 let candleCenterLight430: PointLight | null = null;
 const celticCrossGlows421: Mesh[] = [];
 let celticCrossLight421: PointLight | null = null;
+
+// ── Cycle-435: bard's harp leaning against oak ────────────────────────────────
+let harpGroup435: Group | null = null;
+let harpT435 = 0;
+let harpVibrateTimer435 = 0;
+let harpNextVibrate435 = 8 + Math.random() * 12;
+let harpVibrating435 = false;
+let harpVibrateDur435 = 0;
+const harpStrings435: Line[] = [];
+let harpLight435: PointLight | null = null;
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
@@ -2039,6 +2050,67 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     flameMat.dispose();
   }
 
+  // ── Cycle-435: bard's harp leaning against oak ───────────────────────────────
+  {
+    harpGroup435 = new Group();
+
+    const frameMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+
+    // Neck: curved arch — approximate with BoxGeometry + rotation
+    const neck = new Mesh(new BoxGeometry(0.08, 1.6, 0.06), frameMat);
+    neck.rotation.z = 0.25;
+    neck.position.set(-0.3, 0.9, 0);
+
+    // Column: vertical front pillar
+    const column = new Mesh(new BoxGeometry(0.07, 1.3, 0.06), frameMat);
+    column.position.set(0.1, 0.65, 0);
+
+    // Soundboard: flat body
+    const body = new Mesh(new BoxGeometry(0.55, 1.1, 0.04), frameMat);
+    body.position.set(-0.1, 0.55, -0.05);
+
+    // Base: foot
+    const base = new Mesh(new BoxGeometry(0.5, 0.1, 0.18), frameMat);
+    base.position.set(-0.1, 0.05, 0);
+
+    // 8 harp strings (vertical lines from neck to base, fanning)
+    const STRING_COUNT = 8;
+    const stringMat = new LineBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.5 });
+    for (let si = 0; si < STRING_COUNT; si++) {
+      const t435 = si / (STRING_COUNT - 1);
+      const topX = -0.25 + t435 * 0.33;
+      const botX = -0.05 + t435 * 0.2;
+      const topY = 1.5 - t435 * 0.35;
+      const pts = [
+        new Vector3(topX, topY, 0),
+        new Vector3(botX, 0.12, 0),
+      ];
+      const strGeo = new BufferGeometry().setFromPoints(pts);
+      const strLine = new Line(strGeo, stringMat.clone());
+      harpStrings435.push(strLine);
+      harpGroup435.add(strLine);
+    }
+    stringMat.dispose();
+
+    // Decorative carved knot on neck top
+    const knotGeo = new TorusGeometry(0.06, 0.018, 4, 8);
+    const knot = new Mesh(knotGeo, frameMat.clone());
+    knot.position.set(-0.35, 1.65, 0);
+
+    // Glow light
+    harpLight435 = new PointLight(0x33ff66, 0.06, 3.0);
+    harpLight435.position.set(-0.1, 0.8, 0.2);
+
+    harpGroup435.add(neck, column, body, base, knot, harpLight435);
+
+    frameMat.dispose();
+
+    // Lean harp against tree (tilt back)
+    harpGroup435.rotation.z = 0.15;
+    harpGroup435.position.set(-4, 0, -22);
+    group.add(harpGroup435);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2490,6 +2562,40 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         candleCenterLight430.intensity = 0.12 + Math.sin(candleT430 * 1.2) * 0.05;
       }
     }
+
+    // Cycle-435: bard's harp — string vibration + ambient idle pulse
+    if (harpGroup435) {
+      harpT435 += dt;
+      harpVibrateTimer435 += dt;
+
+      // Trigger vibration
+      if (harpVibrateTimer435 >= harpNextVibrate435 && !harpVibrating435) {
+        harpVibrating435 = true;
+        harpVibrateDur435 = 0;
+        harpVibrateTimer435 = 0;
+        harpNextVibrate435 = 10 + Math.random() * 14;
+      }
+
+      if (harpVibrating435) {
+        harpVibrateDur435 += dt;
+        if (harpVibrateDur435 > 2.0) {
+          harpVibrating435 = false;
+        }
+        const vibrT = harpVibrateDur435;
+        harpStrings435.forEach((str, i) => {
+          const mat = str.material as LineBasicMaterial;
+          mat.opacity = 0.5 + Math.sin(vibrT * 8 + i * 0.4) * 0.4;
+        });
+        if (harpLight435) harpLight435.intensity = 0.15 + Math.sin(vibrT * 6) * 0.1;
+      } else {
+        // Idle: faint ambient pulse
+        harpStrings435.forEach((str, i) => {
+          const mat = str.material as LineBasicMaterial;
+          mat.opacity = 0.35 + Math.sin(harpT435 * 0.8 + i * 0.3) * 0.15;
+        });
+        if (harpLight435) harpLight435.intensity = 0.05 + Math.sin(harpT435 * 0.6) * 0.02;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -2728,6 +2834,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       candleFlames430.length = 0;
       candleCenterLight430 = null;
       candleCircleGroup430 = null;
+    }
+    // Cycle-435: bard's harp cleanup
+    if (harpGroup435) {
+      harpGroup435.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof Line) {
+          c.geometry.dispose();
+          (c.material as LineBasicMaterial).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      harpStrings435.length = 0;
+      harpLight435 = null;
+      harpGroup435 = null;
     }
   };
 
