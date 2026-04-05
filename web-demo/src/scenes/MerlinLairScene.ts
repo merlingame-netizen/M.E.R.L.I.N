@@ -930,6 +930,62 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     return el;
   })();
 
+  // C220: bookshelf lore excerpt panel — rotating fragments from Merlin's library
+  const BOOK_EXCERPTS: Array<{ title: string; text: string }> = [
+    { title: 'Codex Oghamicus',       text: 'Le Beith protège les seuils. Ne franchis jamais une porte sans invoquer son nom.' },
+    { title: 'Traité des Factions',   text: 'Les Korrigans n\'ont pas de mémoire. Ils ont des habitudes. Ce n\'est pas la même chose.' },
+    { title: 'Chronique de Brocéliande', text: 'La forêt n\'oublie jamais un visage. Elle se souvient des vivants et des morts.' },
+    { title: 'Mémoires d\'Ankou',     text: 'La mort n\'est pas une fin. C\'est une carte que chaque voyageur tire tôt ou tard.' },
+    { title: 'Annales Druidiques',    text: 'L\'Anam se transmet d\'une run à l\'autre comme une flamme de bougie en bougie.' },
+    { title: 'Journal de Niamh',      text: 'Guérir n\'est pas effacer. C\'est apprendre à porter la blessure autrement.' },
+    { title: 'Grimoire des Anciens',  text: 'Chaque Ogham a un prix. Huath te révèle ce que tu préfères ignorer.' },
+    { title: 'Carte des Biomes',      text: 'Les Landes gardent le souvenir de ceux qui ont voulu les traverser trop vite.' },
+    { title: 'Rituel du Cercle',      text: 'Pour activer un cercle de pierres, il faut d\'abord se souvenir de son propre nom.' },
+    { title: 'Secrets du Marais',     text: 'Les feux follets du marais sont les âmes des joueurs qui ont choisi trop vite.' },
+  ];
+  let bookExcerptIndex = 0;
+  const bookExcerptEl = (() => {
+    const existing = document.getElementById('lair-book-excerpt');
+    if (existing) return existing as HTMLDivElement;
+    const panel = document.createElement('div');
+    panel.id = 'lair-book-excerpt';
+    panel.style.cssText = [
+      'position:absolute',
+      'bottom:55%',
+      'left:62%',
+      'width:260px',
+      'background:rgba(1,8,2,0.92)',
+      'border:1px solid rgba(51,255,102,0.3)',
+      'padding:12px',
+      'font-family:\'Courier New\',monospace',
+      'pointer-events:none',
+      'opacity:0',
+      'transition:opacity 0.4s ease',
+      'z-index:6',
+    ].join(';');
+    const titleEl = document.createElement('div');
+    titleEl.className = 'book-title';
+    titleEl.style.cssText = [
+      'font-size:0.65rem',
+      'color:rgba(51,255,102,0.5)',
+      'letter-spacing:0.1em',
+      'text-transform:uppercase',
+      'margin-bottom:6px',
+    ].join(';');
+    const textEl = document.createElement('div');
+    textEl.className = 'book-text';
+    textEl.style.cssText = [
+      'font-size:0.72rem',
+      'color:rgba(51,255,102,0.8)',
+      'font-style:italic',
+      'line-height:1.5',
+    ].join(';');
+    panel.appendChild(titleEl);
+    panel.appendChild(textEl);
+    container.appendChild(panel);
+    return panel;
+  })();
+
   // C157: zone label map (bracket notation per spec)
   const ZONE_FLOAT_LABELS: Readonly<Record<string, string>> = {
     map:       '[ MAP DES BIOMES ]',
@@ -1211,10 +1267,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         renderer.domElement.setAttribute('aria-label', `Zone : ${ZONE_ARIA_LABELS[zone]} — Cliquez pour activer`);
         // C132: announce via ariaLive (zoneToast now aria-live=off to prevent double-announce on keyboard nav)
         ariaLive.textContent = `${ZONE_ARIA_LABELS[zone]} — ${ZONE_LORE[zone]}`;
+        // C220: bookshelf lore excerpt — rotate excerpt on each hover-enter
+        if (zone === 'bookshelf') {
+          const excerpt = BOOK_EXCERPTS[bookExcerptIndex % BOOK_EXCERPTS.length];
+          bookExcerptIndex = (bookExcerptIndex + 1) % BOOK_EXCERPTS.length;
+          const titleNode = bookExcerptEl.querySelector('.book-title') as HTMLDivElement;
+          const textNode  = bookExcerptEl.querySelector('.book-text')  as HTMLDivElement;
+          if (titleNode) titleNode.textContent = excerpt.title;
+          if (textNode)  textNode.textContent  = excerpt.text;
+          bookExcerptEl.style.opacity = '0.9';
+        }
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
         zoneFloatLabel.style.opacity = '0'; // C157: hide float label on unhover
+        bookExcerptEl.style.opacity = '0'; // C220: hide book excerpt on leave
         renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${tabNavCount} zones interactives. Tab pour naviguer, Entrée pour activer.`); // C38/C79: tabNavCount excludes hover-only skull
       }
     }
@@ -1321,6 +1388,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       renderer.domElement.style.cursor = 'default';
       zoneToast.style.opacity = '0'; // C132/BUG-C131-01: hide lore toast on tap-lift — mouseleave path
       zoneFloatLabel.style.opacity = '0'; // C157: hide float label on tap-lift
+      bookExcerptEl.style.opacity = '0'; // C220: hide book excerpt on tap-lift
       // was the only path that set opacity=0; touchEnd only cleared emissive/scale but left toast visible.
     }
   };
@@ -1650,6 +1718,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C201: remove whisper panel
     if (whisperEl.parentNode) {
       whisperEl.parentNode.removeChild(whisperEl);
+    }
+    // C220: remove bookshelf lore excerpt panel
+    if (bookExcerptEl.parentNode) {
+      bookExcerptEl.parentNode.removeChild(bookExcerptEl);
     }
   };
 
