@@ -16,6 +16,18 @@ interface PlacedObject {
   readonly scale: number;
 }
 
+/** Mutable confetti particle for victory burst. */
+interface ConfettiParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;      // 0-1
+  size: number;
+  angle: number;
+  spin: number;
+}
+
 // Object pools for generation
 const TARGET_OBJECTS = [
   'Cle Ogham', 'Bague Sacree', 'Fiole Lune', 'Sceau Druidique',
@@ -73,6 +85,14 @@ export class MinigameFouille extends MinigameBase {
   private cursorX = 0;
   private cursorY = 0;
   private keyboardActive = false; // C130: WCAG 2.4.7 — show crosshair when navigating by keyboard
+
+  // Visual enhancement state
+  private redFlashTimer = 0;        // drives wrong-click red screen flash
+  private foundRingRadius = 0;      // expanding glow ring on target found
+  private foundRingAlpha = 0;       // fades as ring expands
+  private foundTargetX = 0;         // position of the found target
+  private foundTargetY = 0;
+  private confetti: ConfettiParticle[] = []; // victory burst particles
   // C120/FOU-01: cached DOM refs — was getElementById every 100ms setInterval + showFoundStatus calls
   private timerFillEl: HTMLElement | null = null;
   private timerBarEl: HTMLElement | null = null;
@@ -158,6 +178,10 @@ export class MinigameFouille extends MinigameBase {
     this.nextShuffle = this.shuffleInterval;
     this.pulsePhase = 0;
     this.keyboardActive = false; // C130: reset crosshair visibility on replay
+    this.redFlashTimer = 0;
+    this.foundRingRadius = 0;
+    this.foundRingAlpha = 0;
+    this.confetti = [];
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -240,11 +264,18 @@ export class MinigameFouille extends MinigameBase {
           clearInterval(this.timerInterval); // C104: freeze timeLeft at click instant (FOU-01)
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
           this.showFoundStatus(); // C134: show inline bonus before overlay
+          // VFX: expanding glow ring + confetti at target position
+          this.foundTargetX = obj.x;
+          this.foundTargetY = obj.y;
+          this.foundRingRadius = 0;
+          this.foundRingAlpha = 1;
+          this.spawnConfetti(obj.x, obj.y);
           this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
         } else {
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
           this.clickedWrong = true;
           this.wrongClickTimer = 0.5;
+          this.redFlashTimer = 0.35; // VFX: red screen flash
         }
       }
     }
@@ -274,12 +305,19 @@ export class MinigameFouille extends MinigameBase {
       clearInterval(this.timerInterval); // C104: freeze timeLeft at click instant — prevents endGame() 400ms later using a lower timeLeft if tick crosses 0 (FOU-01)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.showFoundStatus(); // C134: show inline bonus before overlay
+      // VFX: start expanding glow ring + confetti burst at target position
+      this.foundTargetX = obj.x;
+      this.foundTargetY = obj.y;
+      this.foundRingRadius = 0;
+      this.foundRingAlpha = 1;
+      this.spawnConfetti(obj.x, obj.y);
       // Short delay before ending to show the found state (stored to allow clearTimeout)
       this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
     } else {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       this.clickedWrong = true;
       this.wrongClickTimer = 0.5;
+      this.redFlashTimer = 0.35; // VFX: red screen flash
     }
   };
 
@@ -304,6 +342,25 @@ export class MinigameFouille extends MinigameBase {
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  /** Spawn 24 confetti squares fanning out from the found target. */
+  private spawnConfetti(cx: number, cy: number): void {
+    const count = 24;
+    this.confetti = [];
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+      const speed = 60 + Math.random() * 80;
+      this.confetti.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        size: 4 + Math.random() * 4,
+        angle: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 8,
+      });
+    }
   }
 
   private endGame(): void {
@@ -408,10 +465,50 @@ export class MinigameFouille extends MinigameBase {
       ctx.restore();
     }
 
-    // Wrong click flash
-    if (this.clickedWrong) {
-      ctx.fillStyle = `rgba(26,136,51,${0.15 * (this.wrongClickTimer / 0.5)})`;
+    // VFX 1: Red screen flash on wrong click
+    if (this.redFlashTimer > 0) {
+      this.redFlashTimer -= dt;
+      const alpha = Math.max(0, this.redFlashTimer / 0.35) * 0.4;
+      ctx.fillStyle = `rgba(200,40,40,${alpha})`;
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
+    }
+
+    // VFX 2: Expanding glow ring on target found
+    if (this.foundRingAlpha > 0) {
+      this.foundRingRadius += dt * 180;
+      this.foundRingAlpha = Math.max(0, this.foundRingAlpha - dt * 3.5);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(this.foundTargetX, this.foundTargetY, this.foundRingRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(51,255,102,${this.foundRingAlpha})`;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = 'rgba(51,255,102,0.8)';
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // VFX 3: Confetti victory burst — small green squares fanning out
+    if (this.confetti.length > 0) {
+      let alive = false;
+      for (const p of this.confetti) {
+        p.life -= dt * 2.8;
+        if (p.life <= 0) continue;
+        alive = true;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 120 * dt; // gravity
+        p.angle += p.spin * dt;
+        ctx.save();
+        ctx.globalAlpha = p.life;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.fillStyle = '#33ff66';
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      if (!alive) this.confetti = [];
     }
 
     // Shuffle warning (flash when about to shuffle)
