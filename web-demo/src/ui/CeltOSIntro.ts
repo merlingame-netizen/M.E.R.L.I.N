@@ -275,6 +275,8 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
     'background:linear-gradient(90deg,#1a8833,#33ff66);',
     'transition:width 0.4s ease;',
   ].join('');
+  // Pulsing glow on the progress bar
+  fillEl.style.boxShadow = '0 0 8px rgba(51,255,102,0.6), 0 0 2px rgba(51,255,102,1.0)';
   trackEl.appendChild(fillEl);
   barGroup.appendChild(trackEl);
   container.appendChild(barGroup);
