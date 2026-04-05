@@ -210,27 +210,23 @@ export class GroqAdapter {
     };
     const atmosphere = biomeAtmosphere[biome] ?? 'Paysage celtique mysterieux de Bretagne.';
 
-    // C173: explicit uppercase verbs, strict effect rules, 3-option example anchors LLM output.
+    // C216: richer Celtic lore context — factions, ogham runes, sacred verbs, 2nd-person narrative.
     // Three-attempt retry with temperature escalation: 0.7 (strict) → 0.9 → 1.0 (creative fallback).
-    const systemPrompt = `Tu es le narrateur du jeu MERLIN (celtique bretagne). Atmosphere: ${atmosphere}
-REGLE ABSOLUE: Reponds UNIQUEMENT avec du JSON valide. Pas de markdown, pas de texte autour. Commence par { et termine par }.
+    const systemPrompt = `Tu es le narrateur du jeu MERLIN (Bretagne celtique). Atmosphere: ${atmosphere}
+FACTIONS: Druides(sagesse/nature), Anciens(ancetres/temps), Korrigans(chaos/ruse), Niamh(eau/guerison), Ankou(mort/transformation).
+RUNES OGHAM: Beith=nouveau-depart, Huath=epreuve, Ruis=metamorphose, Sail=intuition, Muin=secret, Gort=quete.
+REGLE ABSOLUE: Reponds UNIQUEMENT avec du JSON valide. Pas de markdown. Commence par { et termine par }.
 
-Structure JSON exacte — RESPECTE ces champs et types:
-{"narrative":"UNE phrase narrative 15-30 mots, atmosphere celtique, present de narration.","options":[{"verb":"OBSERVER","text":"Description 8-15 mots de l action du joueur.","field":"observation","effects":["HEAL_LIFE:2"]},{"verb":"NEGOCIER","text":"Description 8-15 mots de l action du joueur.","field":"bluff","effects":["ADD_REPUTATION:druides:6"]},{"verb":"FUIR","text":"Description 8-15 mots de l action du joueur.","field":"vigueur","effects":["DAMAGE_LIFE:2","ADD_REPUTATION:ankou:-4"]}]}
+Structure JSON exacte:
+{"narrative":"Vous [verbe]... UNE phrase 15-30 mots, present, 2e personne, atmosphere celtique.","options":[{"verb":"EXPLORER","text":"Vous explorez... 8-15 mots.","field":"observation","effects":["HEAL_LIFE:2"]},{"verb":"NEGOCIER","text":"Vous negociez... 8-15 mots.","field":"bluff","effects":["ADD_REPUTATION:druides:6"]},{"verb":"FUIR","text":"Vous fuyez... 8-15 mots.","field":"vigueur","effects":["DAMAGE_LIFE:2","ADD_REPUTATION:ankou:-4"]}]}
 
-REGLES VERBES (OBLIGATOIRE):
-- verb = 1 mot en MAJUSCULES (ex: OBSERVER, NEGOCIER, FUIR, ECOUTER, INVOQUER)
-- Chaque option doit avoir un verb DIFFERENT
-- Choisir parmi: OBSERVER, ECOUTER, CHERCHER, EXAMINER, NEGOCIER, MENTIR, BLUFFER, FLATTER, RESOUDRE, ANALYSER, DEDUIRE, CALCULER, CROCHETER, ESQUIVER, SCULPTER, DOSER, FRAPPER, SOULEVER, POUSSER, BRISER, MEDITER, CHANTER, INVOQUER, PRIER, DEVINER, SENTIR, TOUCHER, GOUTER, LANCER, PARIER, DEFIER, IMPROVISER, PERSUADER, CONSOLER, INSPIRER, MENACER, VOLER, TRAHIR, SEDUIRE, DISSIMULER, CONTOURNER, SACRIFIER, ATTENDRE, AVANCER, FUIR
+VERBES (1 mot MAJUSCULES, 3 DIFFERENTS parmi): EXPLORER, ECOUTER, CHERCHER, EXAMINER, NEGOCIER, PROTEGER, TRANSFORMER, GUERIR, INVOQUER, REVELER, DEFIER, SACRIFIER, MEDITER, CHANTER, PRIER, PERSUADER, BLUFFER, MENACER, ESQUIVER, ATTENDRE, FUIR, AVANCER, VOLER, BRISER, DEVINER
 
-REGLES EFFETS (OBLIGATOIRE):
-- HEAL_LIFE:N — N entier entre 1 et 5 (ex: HEAL_LIFE:3)
-- DAMAGE_LIFE:N — N entier entre 1 et 5 (ex: DAMAGE_LIFE:2)
-- ADD_REPUTATION:faction:N — faction parmi druides|niamh|korrigans|anciens|ankou, N entre -10 et 10 (ex: ADD_REPUTATION:druides:7)
-- Exactement 1 ou 2 effets par option. Jamais 0, jamais plus de 2.
-- EXACTEMENT 3 options, pas moins, pas plus.
+EFFETS (1 ou 2 par option, JAMAIS 0 ni plus de 2):
+- HEAL_LIFE:N (1-5) | DAMAGE_LIFE:N (1-5)
+- ADD_REPUTATION:faction:N — faction=druides|niamh|korrigans|anciens|ankou, N entre -10 et 10
 
-REGLES FIELD: observation|bluff|logique|finesse|vigueur|esprit|perception|chance`;
+FIELD parmi: observation|bluff|logique|finesse|vigueur|esprit|perception|chance`;
 
     const userPrompt = `Biome: ${biome}. Contexte: ${context}. Genere une rencontre narrative unique.`;
 
@@ -317,22 +313,37 @@ REGLES FIELD: observation|bluff|logique|finesse|vigueur|esprit|perception|chance
    */
   async generateRunScenario(biome: string): Promise<RunScenario | null> {
     const biomeLabels: Readonly<Record<string, string>> = {
-      cotes_sauvages: 'les Côtes Sauvages de Bretagne',
+      cotes_sauvages:    'les Côtes Sauvages de Bretagne',
       foret_broceliande: 'la Forêt Mystique de Brocéliande',
-      marais_korrigans: 'les Marais des Korrigans',
-      landes_bruyere: 'les Landes de Bruyère',
-      cercles_pierres: 'les Cercles de Pierres Anciens',
-      villages_celtes: 'les Villages Celtes',
-      collines_dolmens: 'les Collines aux Dolmens',
-      iles_mystiques: 'les Îles Mystiques',
+      marais_korrigans:  'les Marais des Korrigans',
+      landes_bruyere:    'les Landes de Bruyère',
+      cercles_pierres:   'les Cercles de Pierres Anciens',
+      villages_celtes:   'les Villages Celtes',
+      collines_dolmens:  'les Collines aux Dolmens',
+      iles_mystiques:    'les Îles Mystiques',
+    };
+    // C216: biome-specific keywords injected into scenario prompt for thematic immersion
+    const BIOME_KEYWORDS: Readonly<Record<string, string>> = {
+      foret_broceliande: 'chênes millénaires, brume matinale, cerfs blancs, fontaines magiques',
+      marais_korrigans:  'marécages sombres, feux follets, chants stridents, boue ancestrale',
+      landes_bruyere:    'vent du large, bruyères violettes, menhirs oubliés, horizons infinis',
+      cercles_pierres:   'pierres dressées, alignements astrologiques, sacrifices anciens',
+      monts_brumeux:     'sommets perdus dans les nuages, aigles royaux, vents glacials',
+      plaine_druides:    'prairies sacrées, feux rituels, cérémonies nocturnes, gui blanc',
+      vallee_anciens:    'ruines celtes, ancêtres endormis, artefacts enfouis, portes du temps',
+      cotes_sauvages:    'falaises battues, marée noire, phares abandonnés, naufrages oubliés',
+      villages_celtes:   'forge rougeoyante, marché aux herbes, druides en errance, huttes de torchis',
+      collines_dolmens:  'dolmens moussus, vent portant les voix des ancêtres, herbe haute, silence',
+      iles_mystiques:    'phoque qui parle, plage de galets noirs, cimetière marin, lumière étrange',
     };
     const label = biomeLabels[biome] ?? 'un territoire celtique';
+    const keywords = BIOME_KEYWORDS[biome] ?? 'lieux anciens, brume celtique, présences invisibles';
 
     const systemPrompt = `Tu es Merlin, narrateur du jeu de cartes celtique MERLIN. Génère le scénario d'une aventure dans ${label}.
-Réponds UNIQUEMENT en JSON valide (pas de markdown) avec cette structure:
-{"titre":"Titre court (4-6 mots)","scenario":["Paragraphe 1 (20-30 mots)","Paragraphe 2 (20-30 mots)","Paragraphe 3 (20-30 mots)"],"events":[{"position":0.15,"type":"rencontre","nom":"Nom court","icone":"◈"},{"position":0.35,"type":"obstacle","nom":"Nom court","icone":"⬟"},{"position":0.55,"type":"tresor","nom":"Nom court","icone":"◇"},{"position":0.75,"type":"danger","nom":"Nom court","icone":"⬡"},{"position":0.92,"type":"fin","nom":"Nom court","icone":"⊕"}]}
-Types d'événements: rencontre, obstacle, tresor, danger, mystere, fin.
-Style: celtique poetique, present de narration, immersif. Noms liés au biome.`;
+Mots-clés du biome à utiliser: ${keywords}.
+Réponds UNIQUEMENT en JSON valide (pas de markdown) avec cette structure — EXACTEMENT 5 events aux positions indiquées:
+{"titre":"Titre évocateur 4-6 mots","scenario":["Vous pénétrez dans... (20-30 mots, 2e personne, présent)","Un signe ancien... (20-30 mots)","La quête s'épaissit... (20-30 mots)"],"events":[{"position":0.15,"type":"rencontre","nom":"Nom thématique court","icone":"◈"},{"position":0.35,"type":"obstacle","nom":"Nom thématique court","icone":"⬟"},{"position":0.55,"type":"tresor","nom":"Nom thématique court","icone":"◇"},{"position":0.75,"type":"danger","nom":"Nom thématique court","icone":"⬡"},{"position":0.92,"type":"fin","nom":"Nom thématique court","icone":"⊕"}]}
+Types valides: rencontre, obstacle, tresor, danger, mystere, fin. Noms courts et liés au biome. Style: poétique, celtique, immersif.`;
 
     try {
       const response = await this.chatCompletion(
