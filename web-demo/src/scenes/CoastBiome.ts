@@ -1553,6 +1553,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   {
     jellyfishGroup449 = new Group();
     jellyfishGroup449.position.set(-5, -1, -8);
+    const _jg449 = jellyfishGroup449;
 
     const jConfigs = [
       { x: 0,    y: 0,    z: 0,    phase: 0,   speed: 0.9 },
@@ -1605,7 +1606,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       const jLight = new PointLight(0x33ff66, 0.08, 2.0);
       jGroup.add(jLight);
 
-      jellyfishGroup449!.add(jGroup);
+      _jg449.add(jGroup);
       jellyfishData449.push({ ox: cfg.x, oz: cfg.z, phase: cfg.phase, speed: cfg.speed });
     });
 

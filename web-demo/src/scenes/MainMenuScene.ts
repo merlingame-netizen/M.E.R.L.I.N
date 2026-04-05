@@ -830,6 +830,11 @@ let _portalT445: number = 0;
 let _portalGlyphs445: Mesh[] = [];
 let _portalRingMat445: MeshBasicMaterial | null = null;
 
+// C450 — Sacred crane flock V-formation
+let craneGroup450: Group | null = null;
+let craneT450: number = 0;
+let craneWingPairs450: { left: Mesh; right: Mesh }[] = [];
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1645,6 +1650,22 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       (g.material as MeshBasicMaterial).opacity = 0.5 + 0.4 * Math.sin(_portalT445 * 2.0 + i * 0.8);
     });
 
+    // C450: crane flock flyover
+    craneT450 += dt;
+
+    if (craneGroup450) {
+      const flightCycle = craneT450 % 40;
+      craneGroup450.position.x = 18 - (43 * flightCycle / 40);
+      craneGroup450.position.y = 14 + 1.5 * Math.sin(craneT450 * 0.15);
+      craneGroup450.rotation.y = Math.PI * 0.05 + 0.04 * Math.sin(craneT450 * 0.3);
+    }
+
+    craneWingPairs450.forEach(({ left, right }, i) => {
+      const flapAngle = Math.PI * 0.08 * Math.sin(craneT450 * 3.5 + i * 0.4);
+      left.rotation.z = Math.PI * 0.1 + flapAngle;
+      right.rotation.z = -(Math.PI * 0.1 + flapAngle);
+    });
+
     renderer.render(scene, camera);
   };
 
@@ -2131,6 +2152,61 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(_portalGroup445);
 
+  // C450 — Sacred crane flock V-formation
+  craneGroup450 = new Group();
+
+  const craneFormation = [
+    { x: 0,    y: 0,    z: 0    },
+    { x: -1.2, y: -0.3, z: 0.8  },
+    { x:  1.2, y: -0.3, z: 0.8  },
+    { x: -2.4, y: -0.5, z: 1.6  },
+    { x:  2.4, y: -0.5, z: 1.6  },
+    { x: -3.6, y: -0.7, z: 2.4  },
+    { x:  3.6, y: -0.7, z: 2.4  },
+  ];
+
+  craneFormation.forEach((pos) => {
+    const birdGroup = new Group();
+    birdGroup.position.set(pos.x, pos.y, pos.z);
+
+    const body = new Mesh(
+      new BoxGeometry(0.08, 0.06, 0.5),
+      new MeshBasicMaterial({ color: 0x0d2a14 }),
+    );
+    birdGroup.add(body);
+
+    const leftWing = new Mesh(
+      new PlaneGeometry(0.5, 0.12),
+      new MeshBasicMaterial({ color: 0x0d2a14, side: DoubleSide }),
+    );
+    leftWing.position.set(-0.3, 0.02, 0);
+    leftWing.rotation.z = Math.PI * 0.1;
+    birdGroup.add(leftWing);
+
+    const rightWing = new Mesh(
+      new PlaneGeometry(0.5, 0.12),
+      new MeshBasicMaterial({ color: 0x0d2a14, side: DoubleSide }),
+    );
+    rightWing.position.set(0.3, 0.02, 0);
+    rightWing.rotation.z = -Math.PI * 0.1;
+    birdGroup.add(rightWing);
+
+    const neck = new Mesh(
+      new BoxGeometry(0.04, 0.04, 0.3),
+      new MeshBasicMaterial({ color: 0x0d2a14 }),
+    );
+    neck.position.set(0, 0.04, -0.35);
+    birdGroup.add(neck);
+
+    craneWingPairs450.push({ left: leftWing, right: rightWing });
+    craneGroup450!.add(birdGroup);
+  });
+
+  craneGroup450.position.set(18, 14, -35);
+  craneGroup450.rotation.y = Math.PI * 0.05;
+
+  scene.add(craneGroup450);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2351,6 +2427,16 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     }
     _portalGlyphs445 = [];
     _portalRingMat445 = null;
+
+    // C450: dispose crane flock
+    if (craneGroup450) {
+      craneGroup450.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(craneGroup450);
+      craneGroup450 = null;
+    }
+    craneWingPairs450 = [];
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
