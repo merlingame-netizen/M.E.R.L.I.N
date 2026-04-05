@@ -247,6 +247,46 @@ function showGoFlash(container: HTMLElement): Promise<void> {
   });
 }
 
+// ── Screen shake (C388) ───────────────────────────────────────────────────────
+
+/** Module-level cancel tracker for screen shake. Cancelled on teardown. */
+let shakeCancel388: (() => void) | null = null;
+
+/**
+ * Rapidly translate `containerEl` with CSS transform to produce a shake effect.
+ * Amplitude decays linearly to zero over `durationMs`.
+ * Returns a cancel function that immediately stops the animation and resets transform.
+ */
+function startScreenShake(
+  containerEl: HTMLElement,
+  intensity: number,
+  durationMs: number,
+): () => void {
+  const startTime = performance.now();
+  let rafId = -1;
+
+  function shake(): void {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= durationMs) {
+      containerEl.style.transform = '';
+      return;
+    }
+    const progress = elapsed / durationMs;
+    const decay = 1.0 - progress;
+    const dx = (Math.random() - 0.5) * 2 * intensity * decay;
+    const dy = (Math.random() - 0.5) * 2 * intensity * decay * 0.5;
+    containerEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    rafId = requestAnimationFrame(shake);
+  }
+
+  rafId = requestAnimationFrame(shake);
+
+  return (): void => {
+    cancelAnimationFrame(rafId);
+    containerEl.style.transform = '';
+  };
+}
+
 // ── Combo flash overlay ───────────────────────────────────────────────────────
 
 /**
@@ -322,6 +362,12 @@ export function showComboFlash(container: HTMLElement, comboCount: number): void
   container.appendChild(el);
 
   sfx('select');
+
+  // C388: medium shake on max combo (10+)
+  if (comboCount >= 10) {
+    if (shakeCancel388) { shakeCancel388(); }
+    shakeCancel388 = startScreenShake(container, 5, 300) ?? null;
+  }
 
   // Visible 1.2s total (0.25s pop already included), then fade out 0.3s
   const visibleMs = 1200 - 250; // remaining after pop animation
@@ -574,6 +620,12 @@ export function showMinigameResult(
   // ── SFX ───────────────────────────────────────────────────────────────────
   sfx(won ? 'minigame_win' : 'minigame_lose');
 
+  // C388: strong shake on lose/failure
+  if (!won) {
+    if (shakeCancel388) { shakeCancel388(); }
+    shakeCancel388 = startScreenShake(container, 8, 400) ?? null;
+  }
+
   // ── Event listeners ───────────────────────────────────────────────────────
   // Small delay so the keydown that triggered the minigame end doesn't immediately dismiss
   setTimeout(() => {
@@ -640,6 +692,9 @@ export abstract class MinigameBase {
     if (!this.criticalAlerted && timeLeft <= 3.0) {
       this.criticalAlerted = true;
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'critical_alert' } }));
+      // C388: mild shake on timer critical (last 3 seconds)
+      if (shakeCancel388) { shakeCancel388(); }
+      shakeCancel388 = startScreenShake(this.container, 3, 200) ?? null;
     }
   }
 
@@ -715,6 +770,8 @@ export abstract class MinigameBase {
   /** Clean up the minigame UI. */
   protected cleanup(): void {
     this.cancelTimers(); // BUG-C88-08: ensure handles cleared before DOM teardown
+    // C388: cancel any in-flight screen shake and reset transform
+    if (shakeCancel388) { shakeCancel388(); shakeCancel388 = null; }
     this.container.innerHTML = '';
   }
 }
