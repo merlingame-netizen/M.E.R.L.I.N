@@ -656,6 +656,10 @@ let seaCaveT411 = 0;
 let seaCaveLight411: PointLight | null = null;
 const seaCaveAlgae411: Mesh[] = [];
 
+// ── Dolphin pod leaping — cotes_sauvages (C415) ───────────────────────────
+const dolphinPod415: Group[] = [];
+const dolphinT415: number[] = [0, 2.2, 4.4];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1370,6 +1374,47 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(seaCaveGroup411);
   }
 
+  // ── Dolphin pod leaping (C415) — cotes_sauvages ───────────────────────────
+  {
+    const bodyMat    = new MeshBasicMaterial({ color: 0x0a2a14 });
+    const finMat     = new MeshBasicMaterial({ color: 0x0a2a14 });
+    const flukeMat   = new MeshBasicMaterial({ color: 0x0a2a14 });
+    const snoutMat   = new MeshBasicMaterial({ color: 0x0a2a14 });
+
+    // Build template dolphin
+    const templateDolphin = new Group();
+
+    const bodyGeo = new SphereGeometry(0.3, 8, 5);
+    const bodyMesh = new Mesh(bodyGeo, bodyMat);
+    bodyMesh.scale.set(1, 0.55, 2.2);
+    templateDolphin.add(bodyMesh);
+
+    const dorsalGeo = new ConeGeometry(0.08, 0.25, 4);
+    const dorsalMesh = new Mesh(dorsalGeo, finMat);
+    dorsalMesh.position.set(0, 0.22, -0.1);
+    templateDolphin.add(dorsalMesh);
+
+    const flukeGeo = new BoxGeometry(0.45, 0.06, 0.12);
+    const flukeMesh = new Mesh(flukeGeo, flukeMat);
+    flukeMesh.position.set(0, 0, -0.65);
+    flukeMesh.rotation.x = 0.3;
+    templateDolphin.add(flukeMesh);
+
+    const snoutGeo = new ConeGeometry(0.07, 0.22, 5);
+    const snoutMesh = new Mesh(snoutGeo, snoutMat);
+    snoutMesh.position.set(0, 0.03, 0.7);
+    snoutMesh.rotation.x = -1.55;
+    templateDolphin.add(snoutMesh);
+
+    for (let i = 0; i < 3; i++) {
+      const dolphin = templateDolphin.clone();
+      dolphin.position.set(6 + i * 1.2, -0.5, -25 - i * 0.8);
+      dolphinPod415.push(dolphin);
+      dolphinT415[i] = i * 2.2;
+      group.add(dolphin);
+    }
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -1754,6 +1799,30 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
     }
 
+    // ── Dolphin pod leaping (C415) ───────────────────────────────────────────
+    dolphinPod415.forEach((dolphin, i) => {
+      dolphinT415[i] += dt * 0.7;
+      const cycle = dolphinT415[i] % 7.0;
+
+      const baseX = 6 + i * 1.2;
+      const baseZ = -25 - i * 0.8;
+
+      if (cycle < 2.5) {
+        const t = cycle / 2.5;
+        dolphin.position.y = -0.5 + Math.sin(t * Math.PI) * 2.8;
+        dolphin.position.x = baseX + t * 1.5;
+        dolphin.rotation.x = Math.PI * 0.5 - t * Math.PI;
+        dolphin.visible = true;
+      } else if (cycle < 2.8) {
+        dolphin.position.y = -0.5 - (cycle - 2.5) / 0.3 * 0.8;
+        dolphin.visible = true;
+      } else {
+        dolphin.visible = false;
+        dolphin.position.set(baseX, -0.5, baseZ);
+        dolphin.rotation.x = 0;
+      }
+    });
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -1909,6 +1978,13 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       seaCaveLight411 = null;
       seaCaveGroup411 = null;
     }
+    dolphinPod415.forEach(d => {
+      d.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+      });
+    });
+    dolphinPod415.length = 0;
+    dolphinT415.length = 0;
     group.clear();
   };
 
