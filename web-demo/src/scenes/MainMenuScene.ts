@@ -843,6 +843,10 @@ let obeliskSurgeTimer455: number = 30;
 let obeliskSurgeActive455: boolean = false;
 let obeliskSurgeT455: number = 0;
 
+// C460 — Ghostly Celtic longship sailing across the distant background
+let longshipGroup460: Group | null = null;
+let longshipT460: number = 0;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1710,6 +1714,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C460: Ghostly longship — crosses right→left over 60s, gentle ocean bob
+    longshipT460 += dt;
+    if (longshipGroup460) {
+      const cycle460 = longshipT460 % 60;
+      longshipGroup460.position.x = 30 - (70 * cycle460 / 60);
+      longshipGroup460.position.y = -2 + 0.3 * Math.sin(longshipT460 * 0.4);
+      longshipGroup460.rotation.z = 0.03 * Math.sin(longshipT460 * 0.4);
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -2309,6 +2322,79 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(obeliskGroup455);
 
+  // C460 — Ghostly Celtic longship sailing across the distant background
+  longshipGroup460 = new Group();
+  longshipGroup460.position.set(30, -2, -50);
+  longshipGroup460.rotation.y = Math.PI * 0.05;
+
+  // Hull: elongated tapered box
+  const hull460 = new Mesh(
+    new BoxGeometry(5.0, 0.7, 1.4),
+    new MeshBasicMaterial({ color: 0x0a1a10 }),
+  );
+  hull460.position.y = 0;
+  longshipGroup460.add(hull460);
+
+  // Bow: pointed front wedge
+  const bow460 = new Mesh(
+    new CylinderGeometry(0.01, 0.7, 1.5, 4),
+    new MeshBasicMaterial({ color: 0x0a1a10 }),
+  );
+  bow460.rotation.z = -Math.PI * 0.5;
+  bow460.position.set(3.1, 0, 0);
+  longshipGroup460.add(bow460);
+
+  // Stern: raised back
+  const stern460 = new Mesh(
+    new BoxGeometry(0.5, 0.9, 1.3),
+    new MeshBasicMaterial({ color: 0x0a1a10 }),
+  );
+  stern460.position.set(-2.3, 0.4, 0);
+  longshipGroup460.add(stern460);
+
+  // Mast
+  const mast460 = new Mesh(
+    new CylinderGeometry(0.05, 0.07, 3.5, 5),
+    new MeshBasicMaterial({ color: 0x020f04 }),
+  );
+  mast460.position.set(0.3, 2.0, 0);
+  longshipGroup460.add(mast460);
+
+  // Yard arm (horizontal spar)
+  const yardArm460 = new Mesh(
+    new CylinderGeometry(0.04, 0.04, 2.2, 4),
+    new MeshBasicMaterial({ color: 0x020f04 }),
+  );
+  yardArm460.rotation.z = Math.PI * 0.5;
+  yardArm460.position.set(0.3, 3.2, 0);
+  longshipGroup460.add(yardArm460);
+
+  // Sail: semi-transparent ghostly
+  const sail460 = new Mesh(
+    new PlaneGeometry(2.0, 2.0),
+    new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.2, side: DoubleSide }),
+  );
+  sail460.position.set(0.3, 2.2, 0);
+  longshipGroup460.add(sail460);
+
+  // Sail symbol: faint ogham glyph face
+  const sailSymbol460 = new Mesh(
+    new PlaneGeometry(0.6, 0.6),
+    new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 }),
+  );
+  sailSymbol460.position.set(0.3, 2.2, 0.06);
+  longshipGroup460.add(sailSymbol460);
+
+  // Dragon prow head
+  const prow460 = new Mesh(
+    new SphereGeometry(0.15, 5, 4),
+    new MeshBasicMaterial({ color: 0x0d2a14 }),
+  );
+  prow460.position.set(3.8, 0.3, 0);
+  longshipGroup460.add(prow460);
+
+  scene.add(longshipGroup460);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2550,6 +2636,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     }
     obeliskGlyphs455 = [];
     obeliskSurgeActive455 = false;
+
+    // C460: dispose ghostly longship
+    if (longshipGroup460) {
+      longshipGroup460.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(longshipGroup460);
+      longshipGroup460 = null;
+    }
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
