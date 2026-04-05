@@ -13,6 +13,7 @@
 
 import type { RunScenario, RunScenarioEvent } from '../llm/GroqAdapter';
 import { getLLMAdapter } from '../llm/GroqAdapter';
+import { store } from '../game/Store';
 
 // ── CRT scanline texture (generated once per overlay) ────────────────────────
 
@@ -522,6 +523,57 @@ const BIOME_DISPLAY_NAMES: Record<string, string> = {
   vallee_anciens:    'VALLÉE DES ANCIENS',
 };
 
+// ── Faction reputation mini-bars ─────────────────────────────────────────────
+
+const FACTION_COLORS: Readonly<Record<string, string>> = {
+  druides:   '#33ff66',
+  anciens:   '#64b4ff',
+  korrigans: '#b450ff',
+  niamh:     '#ffb4dc',
+  ankou:     '#8ca0b4',
+} as const;
+
+const FACTION_ABBR: Readonly<Record<string, string>> = {
+  druides:   'DRU',
+  anciens:   'ANC',
+  korrigans: 'KOR',
+  niamh:     'NIA',
+  ankou:     'ANK',
+} as const;
+
+const FACTION_ORDER: ReadonlyArray<string> = [
+  'druides', 'anciens', 'korrigans', 'niamh', 'ankou',
+];
+
+function buildFactionBars(factions: Readonly<Record<string, number>>): HTMLElement {
+  const container = document.createElement('div');
+  container.style.cssText = [
+    'position:absolute;right:8px;top:50%;transform:translateY(-50%);',
+    'display:flex;flex-direction:column;gap:3px;',
+    'pointer-events:none;z-index:10;',
+  ].join('');
+
+  for (const id of FACTION_ORDER) {
+    const rep = Math.max(0, Math.min(100, factions[id] ?? 0));
+    const filled = Math.floor(rep / 12.5);
+    const bar = '█'.repeat(filled) + '░'.repeat(8 - filled);
+    const repStr = String(Math.round(rep)).padStart(2, '0');
+    const color = FACTION_COLORS[id] ?? '#33ff66';
+    const abbr = FACTION_ABBR[id] ?? id.slice(0, 3).toUpperCase();
+
+    const row = document.createElement('div');
+    row.style.cssText = [
+      `color:${color};`,
+      `font-size:9px;font-family:'Courier New',monospace;letter-spacing:0.05em;`,
+      'white-space:nowrap;text-shadow:0 0 4px currentColor;',
+    ].join('');
+    row.textContent = `${abbr} ${bar} ${repStr}`;
+    container.appendChild(row);
+  }
+
+  return container;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function showMapGenOverlay(biome: string): Promise<void> {
@@ -665,6 +717,10 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     'background:radial-gradient(ellipse at 50% 50%,transparent 42%,rgba(0,8,0,0.55) 100%);',
   ].join('');
   rightPanel.appendChild(vignette);
+
+  // Faction reputation mini-bars (C252)
+  const factionBars = buildFactionBars(store.getState().run.factions);
+  rightPanel.appendChild(factionBars);
 
   // ── C158: Start LLM call IMMEDIATELY (parallel with fade-in) ─────────────
   const llm = getLLMAdapter();
