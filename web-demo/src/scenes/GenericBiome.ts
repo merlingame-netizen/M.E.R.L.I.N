@@ -370,6 +370,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let cerclesTime = 0;
   let valleeWispMesh: Points | null = null;
   let valleeWispTime = 0;
+  let montsWindMesh: Points | null = null;
+  let montsWindTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -503,6 +505,25 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       rocks.rotation.y = Math.PI * 0.3;
       group.add(rocks);
     }).catch(() => { /* GLB optional */ });
+    // Alpine wind mist particles — 60 pale icy blue-grey motes drifting across the ridgeline
+    const MONTS_WIND_COUNT = 60;
+    const windGeo = new BufferGeometry();
+    const windPos = new Float32Array(MONTS_WIND_COUNT * 3);
+    for (let i = 0; i < MONTS_WIND_COUNT; i++) {
+      windPos[i * 3]     = (Math.random() - 0.5) * 50;   // x ∈ [-25, 25]
+      windPos[i * 3 + 1] = 0.5 + Math.random() * 7.5;    // y ∈ [0.5, 8]
+      windPos[i * 3 + 2] = -5 - Math.random() * 40;      // z ∈ [-5, -45]
+    }
+    windGeo.setAttribute('position', new BufferAttribute(windPos, 3));
+    const windMat = new PointsMaterial({
+      color: 0xc0d8e0,
+      size: 0.06,
+      transparent: true,
+      opacity: 0.3,
+      sizeAttenuation: true,
+    });
+    montsWindMesh = new Points(windGeo, windMat);
+    group.add(montsWindMesh);
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -551,7 +572,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     });
     const totemMat = new MeshStandardMaterial({
       color: 0x5a3818, roughness: 0.92, metalness: 0.0, flatShading: true,
-      emissive: 0xcc4400, emissiveIntensity: 0.15,
+      emissive: 0x22aa55, emissiveIntensity: 0.15,
     });
     // 8 ritual poles scattered around path
     for (let i = 0; i < 8; i++) {
@@ -663,6 +684,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         // Wrap X within scene bounds
         if (pos.getX(i) > 15)  pos.setX(i, -15);
         if (pos.getX(i) < -15) pos.setX(i, 15);
+      }
+      pos.needsUpdate = true;
+    }
+    // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
+    if (montsWindMesh !== null) {
+      montsWindTime += dt;
+      const t = montsWindTime;
+      const pos = montsWindMesh.geometry.getAttribute('position') as BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        pos.setX(i, pos.getX(i) + 4.0 * dt + Math.sin(t * 0.2 + i * 0.5) * 0.02);
+        pos.setY(i, pos.getY(i) + 0.3 * dt * Math.sin(t * 0.15 + i * 0.9));
+        if (pos.getX(i) > 25)  pos.setX(i, -25);
+        if (pos.getY(i) > 8)   pos.setY(i, 0.5);
       }
       pos.needsUpdate = true;
     }
