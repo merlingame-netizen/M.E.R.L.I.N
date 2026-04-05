@@ -944,6 +944,85 @@ function createMenuOrbs(): { group: Group; update: (dt: number) => void } {
   return { group, update };
 }
 
+// ── C385: Scrolling Celtic knotwork border ────────────────────────────────────
+// CSS-animated SVG decorative border along screen edges.
+// Thin interlaced diamond/chevron paths in CeltOS green (#33ff66) at low opacity.
+// Pattern scrolls along top/bottom (horizontal) and left/right (vertical).
+
+function ensureKnotworkStyle385(): void {
+  if (document.getElementById('knotwork-style-385')) return;
+  const s = document.createElement('style');
+  s.id = 'knotwork-style-385';
+  s.textContent = [
+    '@keyframes knot-scroll-h{from{transform:translateX(0)}to{transform:translateX(-200px)}}',
+    '@keyframes knot-scroll-v{from{transform:translateY(0)}to{transform:translateY(-200px)}}',
+    '.knotwork-top-385,.knotwork-bottom-385{animation:knot-scroll-h 12s linear infinite;}',
+    '.knotwork-left-385,.knotwork-right-385{animation:knot-scroll-v 12s linear infinite;}',
+  ].join('');
+  document.head.appendChild(s);
+}
+
+function createKnotworkBorder385(container: HTMLElement): HTMLElement {
+  ensureKnotworkStyle385();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'knotwork-border-385';
+  wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;';
+
+  const edges: { side: string; style: string }[] = [
+    { side: 'top',    style: 'position:absolute;top:0;left:0;right:0;height:20px;' },
+    { side: 'bottom', style: 'position:absolute;bottom:0;left:0;right:0;height:20px;' },
+    { side: 'left',   style: 'position:absolute;top:0;left:0;bottom:0;width:20px;' },
+    { side: 'right',  style: 'position:absolute;top:0;right:0;bottom:0;width:20px;' },
+  ];
+
+  edges.forEach(({ side, style }) => {
+    const isVert = side === 'left' || side === 'right';
+    const svgW = isVert ? 20 : 200;
+    const svgH = isVert ? 200 : 20;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', String(svgW));
+    svg.setAttribute('height', String(svgH));
+    svg.style.cssText = style + 'overflow:visible;';
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    if (!isVert) {
+      path.setAttribute('d', [
+        'M0,10 L10,4 L20,10 L30,4 L40,10 L50,4 L60,10 L70,4 L80,10 L90,4',
+        'L100,10 L110,4 L120,10 L130,4 L140,10 L150,4 L160,10 L170,4 L180,10 L190,4 L200,10',
+        'M10,16 L20,10 L30,16 L40,10 L50,16 L60,10 L70,16 L80,10 L90,16 L100,10',
+        'L110,16 L120,10 L130,16 L140,10 L150,16 L160,10 L170,16 L180,10 L190,16 L200,10',
+      ].join(' '));
+    } else {
+      path.setAttribute('d', [
+        'M10,0 L4,10 L10,20 L4,30 L10,40 L4,50 L10,60 L4,70 L10,80 L4,90',
+        'L10,100 L4,110 L10,120 L4,130 L10,140 L4,150 L10,160 L4,170 L10,180 L4,190 L10,200',
+        'M16,10 L10,20 L16,30 L10,40 L16,50 L10,60 L16,70 L10,80 L16,90 L10,100',
+        'L16,110 L10,120 L16,130 L10,140 L16,150 L10,160 L16,170 L10,180 L16,190 L10,200',
+      ].join(' '));
+    }
+    path.setAttribute('stroke', '#33ff66');
+    path.setAttribute('stroke-width', '1');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.14');
+    svg.appendChild(path);
+
+    svg.classList.add(`knotwork-${side}-385`);
+    wrap.appendChild(svg);
+  });
+
+  container.appendChild(wrap);
+  return wrap;
+}
+
+function destroyKnotworkBorder385(): void {
+  const el = document.getElementById('knotwork-border-385');
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+  const styleEl = document.getElementById('knotwork-style-385');
+  if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+}
+
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
@@ -1329,6 +1408,9 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   // C176: Ogham rune rain overlay — injected behind menu DOM, above Three.js canvas
   const runeRain = createRuneRainCanvas(container);
 
+  // C385: Scrolling Celtic knotwork border — SVG strips along all 4 screen edges
+  createKnotworkBorder385(container);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -1392,6 +1474,8 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     starBg.dispose();
     // C176: stop rune rain RAF and remove canvas
     runeRain.dispose();
+    // C385: remove knotwork border SVG overlay and its style tag
+    destroyKnotworkBorder385();
     // C200: clear all typewriter timers
     _titleTimers.forEach((id) => window.clearTimeout(id));
     _titleTimers.length = 0;

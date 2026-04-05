@@ -856,6 +856,11 @@ let deerGrazeT375 = 0;
 let deerAlertT375 = -1;
 let deerNextAlert375 = 15.0;
 
+// ── Cycle-383: phosphorescent mushroom ring in forest clearing ────────────────
+let mushroomGroup383: Group | null = null;
+let mushroomCaps383: Mesh[] = [];
+let mushroomRingLight383: PointLight | null = null;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1465,6 +1470,48 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(deerGroup375);
   }
 
+  // ── Cycle-383: phosphorescent mushroom ring in forest clearing ───────────────
+  {
+    mushroomGroup383 = new Group();
+    const stemMat383 = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9 });
+
+    const SHROOM_COUNT = 11;
+    const RING_RADIUS = 1.2;
+    for (let i = 0; i < SHROOM_COUNT; i++) {
+      const angle = (i / SHROOM_COUNT) * Math.PI * 2;
+      const rx = Math.cos(angle) * RING_RADIUS;
+      const rz = Math.sin(angle) * RING_RADIUS;
+      const scale = 0.7 + R() * 0.6;
+
+      // Stem
+      const stemH = 0.15 * scale;
+      const stem = new Mesh(new CylinderGeometry(0.025 * scale, 0.03 * scale, stemH, 5), stemMat383);
+      stem.position.set(rx, stemH / 2, rz);
+      mushroomGroup383.add(stem);
+
+      // Cap
+      const capGeo = new CylinderGeometry(0.1 * scale, 0.05 * scale, 0.06 * scale, 7);
+      const capMat = new MeshStandardMaterial({
+        color: 0x0d2a0d,
+        emissive: new Color(0x0d4420),
+        emissiveIntensity: 0.25,
+        roughness: 0.8,
+      });
+      const cap = new Mesh(capGeo, capMat);
+      cap.position.set(rx, stemH + 0.03 * scale, rz);
+      cap.userData.phase = R() * Math.PI * 2;
+      mushroomGroup383.add(cap);
+      mushroomCaps383.push(cap);
+    }
+
+    // Ring ambient light
+    mushroomRingLight383 = new PointLight(0x33ff66, 0.1, 4.0);
+    mushroomGroup383.add(mushroomRingLight383);
+
+    mushroomGroup383.position.set(3, 0, -16);
+    group.add(mushroomGroup383);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1735,6 +1782,18 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         if (runestoneRippleT363 >= 1.5) runestoneRippleT363 = -1;
       }
     }
+
+    // Cycle-383: mushroom ring — independent cap glow pulse + ring light breathe
+    if (mushroomCaps383.length > 0) {
+      mushroomCaps383.forEach(cap => {
+        const phase = cap.userData.phase as number;
+        const glow = 0.22 + Math.sin(sceneTime * 0.8 + phase) * 0.12;
+        (cap.material as MeshStandardMaterial).emissiveIntensity = glow;
+      });
+      if (mushroomRingLight383) {
+        mushroomRingLight383.intensity = 0.08 + Math.sin(sceneTime * 0.3) * 0.04;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -1818,6 +1877,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       deerGroup375 = null;
     }
     deerHead375 = null;
+    // Cycle-383: mushroom ring cleanup
+    if (mushroomGroup383) {
+      group.remove(mushroomGroup383);
+      mushroomGroup383.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      mushroomGroup383 = null;
+    }
+    mushroomCaps383 = [];
+    if (mushroomRingLight383) { mushroomRingLight383.dispose(); mushroomRingLight383 = null; }
   };
 
   return { group, update, dispose };
