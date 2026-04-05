@@ -1326,6 +1326,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _clockChimeT391 = -1;
   let _clockNextChime391 = 15.0;
 
+  // C396: floating magical parchment scroll — slow unroll/re-roll + read flash event
+  let _scrollGroup396: Group | null = null;
+  let _scrollFace396: Mesh | null = null;
+  let _scrollLight396: PointLight | null = null;
+  let _scrollReadT396 = -1;
+  let _scrollNextRead396 = 10.0;
+  let _scrollUnrollT396 = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1871,6 +1879,49 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     clockCaseMat.dispose();
     clockFaceMat.dispose();
     handMat.dispose();
+  }
+
+  // C396: floating magical parchment scroll — mid-air level (x=0.5, y=1.8, z=-3.5)
+  {
+    _scrollGroup396 = new Group();
+    const rollMat = new MeshStandardMaterial({ color: 0x0d1f0d, roughness: 0.8, metalness: 0.3 });
+    const faceMat396 = new MeshStandardMaterial({
+      color: 0x051505,
+      emissiveIntensity: 0.08,
+      transparent: true,
+      opacity: 0.7,
+      roughness: 0.9,
+    });
+    faceMat396.emissive.setHex(0x0d4420);
+
+    // Left roll
+    const rollL = new Mesh(new CylinderGeometry(0.04, 0.04, 0.25, 6), rollMat.clone());
+    rollL.rotation.z = Math.PI / 2;
+    rollL.position.x = -0.22;
+    _scrollGroup396.add(rollL);
+
+    // Right roll
+    const rollR = new Mesh(new CylinderGeometry(0.04, 0.04, 0.25, 6), rollMat.clone());
+    rollR.rotation.z = Math.PI / 2;
+    rollR.position.x = 0.22;
+    _scrollGroup396.add(rollR);
+
+    // Scroll face (flat parchment between rolls)
+    _scrollFace396 = new Mesh(new PlaneGeometry(0.4, 0.22), faceMat396);
+    _scrollFace396.position.x = 0;
+    _scrollGroup396.add(_scrollFace396);
+
+    // Glow light
+    _scrollLight396 = new PointLight(0x33ff66, 0.06, 1.5);
+    _scrollGroup396.add(_scrollLight396);
+
+    _scrollGroup396.position.set(0.5, 1.8, -3.5);
+    _scrollGroup396.rotation.y = 0.3;
+    scene.add(_scrollGroup396);
+    _scrollNextRead396 = 10.0 + Math.random() * 5.0;
+
+    // Dispose template mats (clones in use, templates not in scene)
+    rollMat.dispose();
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -2936,6 +2987,40 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C396: floating magical parchment scroll — bob, unroll, read flash
+    if (!lowFpsMode && _scrollGroup396 && _scrollFace396) {
+      // Gentle floating bob
+      _scrollGroup396.position.y = 1.8 + Math.sin(elapsedTime * 0.5) * 0.04;
+      _scrollGroup396.rotation.y = 0.3 + Math.sin(elapsedTime * 0.2) * 0.06;
+
+      // Unroll cycle (0→1→0 over 4s)
+      _scrollUnrollT396 += dt * 0.25;
+      const unroll396 = Math.sin(_scrollUnrollT396) * 0.5 + 0.5;
+      _scrollFace396.scale.x = 0.3 + unroll396 * 0.7; // width varies as scroll unrolls
+
+      // Read flash
+      _scrollNextRead396 -= dt;
+      if (_scrollNextRead396 <= 0 && _scrollReadT396 < 0) {
+        _scrollReadT396 = 0;
+        _scrollNextRead396 = 10.0 + Math.random() * 5.0;
+      }
+      if (_scrollReadT396 >= 0) {
+        _scrollReadT396 += dt;
+        const sMat = _scrollFace396.material as MeshStandardMaterial;
+        if (_scrollReadT396 < 0.5) {
+          sMat.emissiveIntensity = 0.08 + (_scrollReadT396 / 0.5) * 0.10;
+        } else if (_scrollReadT396 < 1.0) {
+          sMat.emissiveIntensity = 0.18 - ((_scrollReadT396 - 0.5) / 0.5) * 0.10;
+        } else {
+          sMat.emissiveIntensity = 0.08;
+          _scrollReadT396 = -1;
+        }
+        if (_scrollLight396) _scrollLight396.intensity = (sMat.emissiveIntensity - 0.05) * 2;
+      } else if (_scrollLight396) {
+        _scrollLight396.intensity = 0.05 + Math.sin(elapsedTime * 0.7) * 0.02;
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3188,6 +3273,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _clockHourHand391 = null;
     _clockMinuteHand391 = null;
     if (_clockChimeLight391) { _clockChimeLight391.dispose(); _clockChimeLight391 = null; }
+    // C396: remove floating scroll group and all children
+    if (_scrollGroup396) {
+      scene.remove(_scrollGroup396);
+      _scrollGroup396.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) (mat as MeshStandardMaterial).dispose();
+      });
+      _scrollGroup396 = null;
+    }
+    _scrollFace396 = null;
+    if (_scrollLight396) { _scrollLight396.dispose(); _scrollLight396 = null; }
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
