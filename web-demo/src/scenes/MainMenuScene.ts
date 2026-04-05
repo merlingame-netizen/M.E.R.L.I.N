@@ -1036,8 +1036,8 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const orbs = createMenuOrbs();
   scene.add(orbs.group);
 
-  // ── C157: CeltOS title overlay — typewriter glitch animation ─────────────────
-  // DOM overlay on canvas: M.E.R.L.I.N. with sequential letter reveal + glow pulse
+  // ── C321: CeltOS title overlay — letter-by-letter reveal + glow pulse ────────
+  // DOM overlay on canvas: M.E.R.L.I.N. each letter fades+slides in individually.
   container.style.position = container.style.position || 'relative';
 
   const titleOverlay = document.createElement('div');
@@ -1048,21 +1048,23 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   ].join('');
   container.appendChild(titleOverlay);
 
+  // titleEl wraps individual letter <span>s
   const titleEl = document.createElement('div');
   titleEl.style.cssText = [
     'font-family:Courier New,monospace;font-size:28px;',
     'color:#33ff66;letter-spacing:0.4em;',
-    'text-shadow:0 0 8px rgba(51,255,102,0.8);',
-    'animation:merlin-glow-pulse 2s ease-in-out infinite;',
-    'opacity:0;',
+    'text-shadow:0 0 10px rgba(51,255,102,0.3);',
+    'display:inline-flex;',
   ].join('');
   titleOverlay.appendChild(titleEl);
 
   const subtitleEl = document.createElement('div');
   subtitleEl.style.cssText = [
-    'font:0.9rem "Courier New",monospace;',
-    'color:rgba(51,255,102,0.7);letter-spacing:0.25em;',
-    'opacity:0;transition:opacity 800ms ease;',
+    'font-size:10px;font-family:"Courier New",monospace;',
+    'color:rgba(51,255,102,0.5);letter-spacing:6px;',
+    'opacity:0;',
+    'transform:translateY(4px);',
+    'transition:opacity 600ms ease,transform 600ms ease;',
   ].join('');
   subtitleEl.textContent = 'LE JEU DES OGHAMS';
   titleOverlay.appendChild(subtitleEl);
@@ -1079,11 +1081,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   ctaEl.textContent = 'APPUYEZ SUR ENTRÉE';
   container.appendChild(ctaEl);
 
-  // Inject keyframes — glow pulse + CTA pulse (idempotent via ID)
+  // Inject keyframes — letter reveal + glow pulse + CTA pulse (idempotent via ID)
   if (!document.getElementById('merlin-glow-keyframes')) {
     const styleTag = document.createElement('style');
     styleTag.id = 'merlin-glow-keyframes';
     styleTag.textContent = [
+      '@keyframes title-letter-in{',
+      'from{opacity:0;transform:translateY(-8px);}',
+      'to{opacity:1;transform:translateY(0);}',
+      '}',
       '@keyframes merlin-glow-pulse{',
       '0%,100%{text-shadow:0 0 8px rgba(51,255,102,0.8);}',
       '50%{text-shadow:0 0 18px rgba(51,255,102,1.0),0 0 32px rgba(51,255,102,0.4);}',
@@ -1100,27 +1106,46 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     document.head.appendChild(s);
   }
 
-  // Typewriter: reveal each character with 80ms delay, dispatch beep SFX every 3rd char
-  // Show subtitle (fade 800ms) after last character, then remove CTA stagger delay
+  // C321: Letter-by-letter reveal — each letter is a <span> animated individually.
+  // Fire whoosh SFX at start, then stagger 80ms per letter (200ms duration each).
+  // After all letters (~720ms), trigger glow pulse: strong → fade to resting glow over 800ms.
+  // Subtitle fades in from 500ms offset.
   const TITLE_TEXT = 'M.E.R.L.I.N.';
-  let titleBuilt = '';
   const _titleTimers: number[] = [];
+
+  // Fire whoosh SFX immediately as reveal begins
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'whoosh' } }));
+
   TITLE_TEXT.split('').forEach((ch, i) => {
-    const tid = window.setTimeout(() => {
-      titleBuilt += ch;
-      titleEl.textContent = titleBuilt;
-      if (i === 0) titleEl.style.opacity = '1';
-      // Beep every 3rd character (index 2, 5, 8, ...) to avoid spam
-      if ((i + 1) % 3 === 0) {
-        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'beep' } }));
-      }
-      if (i === TITLE_TEXT.length - 1) {
-        const sid = window.setTimeout(() => { subtitleEl.style.opacity = '0.7'; }, 600);
-        _titleTimers.push(sid);
-      }
-    }, 80 * i);
-    _titleTimers.push(tid);
+    const span = document.createElement('span');
+    span.textContent = ch;
+    span.style.cssText = [
+      'opacity:0;',
+      'display:inline-block;',
+      'animation:title-letter-in 200ms ease-out forwards;',
+      `animation-delay:${80 * i}ms;`,
+    ].join('');
+    titleEl.appendChild(span);
   });
+
+  // After all letters revealed (~80ms × 11 + 200ms = ~1080ms), trigger glow pulse then settle
+  const REVEAL_DONE = 80 * (TITLE_TEXT.length - 1) + 220; // last letter finishes
+  const glowTid = window.setTimeout(() => {
+    titleEl.style.transition = 'text-shadow 800ms ease-out';
+    titleEl.style.textShadow = '0 0 30px rgba(51,255,102,0.6),0 0 60px rgba(51,255,102,0.3)';
+    const settleTid = window.setTimeout(() => {
+      titleEl.style.textShadow = '0 0 10px rgba(51,255,102,0.3)';
+    }, 800);
+    _titleTimers.push(settleTid);
+  }, REVEAL_DONE);
+  _titleTimers.push(glowTid);
+
+  // Subtitle fades in from 500ms after reveal start
+  const subTid = window.setTimeout(() => {
+    subtitleEl.style.opacity = '0.5';
+    subtitleEl.style.transform = 'translateY(0)';
+  }, 500);
+  _titleTimers.push(subTid);
 
   let elapsedTime = 0;
 
