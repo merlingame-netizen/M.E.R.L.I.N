@@ -91,8 +91,18 @@ async function runMainMenu(): Promise<{ isNewGame: boolean }> {
 
     // Wait for player choice
     const isNewGame = await new Promise<boolean>((resolve) => {
-      startBtn.addEventListener('click', () => { playSound('click'); resolve(true); }, { once: true });
-      continueBtn.addEventListener('click', () => { playSound('click'); resolve(false); }, { once: true });
+      startBtn.addEventListener('click', () => {
+        // C197: epic start SFX + brief glow flash before scene transition
+        playSound('minigame_start');
+        startBtn.style.boxShadow = '0 0 24px rgba(51,255,102,0.8), 0 0 8px rgba(51,255,102,1.0)';
+        startBtn.style.color = '#33ff66';
+        resolve(true);
+      }, { once: true });
+      continueBtn.addEventListener('click', () => {
+        // C197: resume/return SFX
+        playSound('unlock');
+        resolve(false);
+      }, { once: true });
     });
 
     // T066: Stop menu ambient
@@ -849,7 +859,7 @@ async function main(): Promise<void> {
     gearBtn.style.borderColor = 'rgba(51,255,102,0.35)';
     gearBtn.style.color = 'rgba(51,255,102,0.65)';
   });
-  gearBtn.addEventListener('click', () => showGroqSettingsModal());
+  gearBtn.addEventListener('click', () => { playSound('click'); showGroqSettingsModal(); });
   document.body.appendChild(gearBtn);
 
   // BUG-01: Save cross-run data on sudden tab close or mobile backgrounding

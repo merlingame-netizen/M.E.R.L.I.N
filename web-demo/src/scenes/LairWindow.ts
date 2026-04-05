@@ -173,6 +173,40 @@ export function createLairWindow(scene: Scene): WindowResult {
   group.add(windowLight);        // in group so it disappears with the window if group.visible=false
   scene.add(windowLight.target); // target stays in world-space so lookAt works correctly
 
+  // ── Window interior glow light (portal effect — breathes on 8s cycle) ────
+
+  const windowInteriorLight = new PointLight(0x22ff66, 0.15, 6);
+  windowInteriorLight.position.set(4.0, 3.5, -9.2); // just inside the window on the room side
+  group.add(windowInteriorLight);
+
+  // ── Stars (visible in night-sky backdrop behind the glass) ───────────────
+
+  const starMat = new MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: new Color(0xd4f0ff),
+    emissiveIntensity: 0.6,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+
+  // 6 star positions scattered across the upper sky area visible through the glass
+  const starPositions: Array<[number, number]> = [
+    [3.15, 5.1],
+    [3.55, 4.7],
+    [4.25, 5.3],
+    [4.65, 4.85],
+    [4.85, 5.15],
+    [3.8,  5.0],
+  ];
+
+  const starMeshes: Mesh[] = starPositions.map(([sx, sy]) => {
+    const starMesh = new Mesh(new SphereGeometry(0.04, 3, 2), starMat);
+    starMesh.position.set(sx, sy, -10.55); // just in front of sky backdrop
+    starMesh.visible = false; // shown only at night via updateTime
+    group.add(starMesh);
+    return starMesh;
+  });
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   let currentSeason: Season = 'spring';
@@ -195,6 +229,11 @@ export function createLairWindow(scene: Scene): WindowResult {
     // Update shared tree material color — one write affects all 6 trunk+canopy meshes
     const treeCol = new Color(SEASON_TREE_COLOR[params.season]);
     treeMat.color.copy(params.season === 'winter' ? new Color(0x2a2828) : treeCol);
+
+    // Show stars only at night (h < 5 || h >= 20)
+    const h = ((params.hour % 24) + 24) % 24;
+    const isNight = h < 5 || h >= 20;
+    starMeshes.forEach(s => { s.visible = isNight; });
   };
 
   const update = (elapsed: number): void => {
@@ -212,6 +251,11 @@ export function createLairWindow(scene: Scene): WindowResult {
     // Three.js clamps opacity silently but the shimmer amplitude formula breaks.
     const nightWeight = 1 - Math.min(1, Math.max(0, windowLight.intensity));
     glassMat.opacity = 0.28 - nightWeight * 0.05 + Math.sin(elapsed * 0.4) * 0.02 * nightWeight;
+
+    // Window portal glow — 8-second breathing cycle (forest green pulse)
+    const breathe = Math.sin(elapsed * (Math.PI * 2 / 8)); // -1 .. 1, period = 8s
+    frameMat.emissiveIntensity = 0.075 + breathe * 0.045; // oscillates 0.03 .. 0.12
+    windowInteriorLight.intensity = 0.15 + breathe * 0.08; // oscillates 0.07 .. 0.23
   };
 
   scene.add(group);
