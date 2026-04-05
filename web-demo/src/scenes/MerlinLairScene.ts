@@ -1463,6 +1463,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let telescopePulse483: number = 0
   let telescopePulseTimer483: number = 25 + Math.random() * 15
 
+  // C488 — armillary sphere / magical orrery
+  let orreryGroup488: Group | null = null;
+  let t488: number = 0;
+  const orreryRings488: Mesh[] = [];
+  let orreryLight488: PointLight | null = null;
+  let orreryAccelTimer488: number = 20 + Math.random() * 10;
+  let orreryAccel488: number = 1.0;
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -3209,6 +3217,60 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(telescopeGroup483)
   }
 
+  // C488 — armillary sphere / magical orrery
+  {
+    const bronzeMat = new MeshStandardMaterial({ color: 0x5a4010, metalness: 0.7, roughness: 0.4, flatShading: true });
+    const centerMat = new MeshStandardMaterial({ color: 0x0a2a14, emissive: 0x33ff66, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.1 });
+    const orbMat488 = new MeshStandardMaterial({ color: 0x0a2a14, emissive: 0x33ff66, emissiveIntensity: 1.0, roughness: 0.5, metalness: 0.1 });
+
+    orreryGroup488 = new Group();
+    orreryGroup488.position.set(-1, 2.5, -2);
+
+    // Chain — 6 torus links hanging from ceiling (y=3.5 down to y=2.8 relative to world, group y=2.5 so local y: 0.3..1.0)
+    const chainLinkGeo = new TorusGeometry(0.03, 0.01, 4, 6);
+    for (let ci = 0; ci < 6; ci++) {
+      const link = new Mesh(chainLinkGeo, bronzeMat);
+      link.position.set(0, 0.3 + ci * 0.117, 0);
+      if (ci % 2 === 1) link.rotation.y = Math.PI / 2;
+      orreryGroup488.add(link);
+    }
+
+    // Outer ring — equatorial, horizontal
+    const outerRing = new Mesh(new TorusGeometry(0.5, 0.025, 6, 24), bronzeMat);
+    orreryGroup488.add(outerRing);
+    orreryRings488.push(outerRing);
+
+    // Middle ring — ecliptic, tilted 23.5° on X
+    const midRing = new Mesh(new TorusGeometry(0.42, 0.02, 6, 20), bronzeMat);
+    midRing.rotation.x = 23.5 * (Math.PI / 180);
+    orreryGroup488.add(midRing);
+    orreryRings488.push(midRing);
+
+    // Inner ring — meridian, tilted 90° on Z
+    const innerRing = new Mesh(new TorusGeometry(0.34, 0.02, 6, 16), bronzeMat);
+    innerRing.rotation.z = Math.PI / 2;
+    orreryGroup488.add(innerRing);
+    orreryRings488.push(innerRing);
+
+    // Central sphere — Earth/the Otherworld
+    const centralSphere = new Mesh(new SphereGeometry(0.1, 8, 8), centerMat);
+    orreryGroup488.add(centralSphere);
+
+    // 3 orbital bodies — attached as children of their ring so they orbit automatically
+    const radii = [0.5, 0.42, 0.34];
+    radii.forEach((r, i) => {
+      const body = new Mesh(new SphereGeometry(0.04, 6, 5), orbMat488);
+      body.position.set(r, 0, 0);
+      orreryRings488[i]!.add(body);
+    });
+
+    // Point light — ambient green glow at center
+    orreryLight488 = new PointLight(0x33ff66, 0.3, 3.0);
+    orreryGroup488.add(orreryLight488);
+
+    scene.add(orreryGroup488);
+  }
+
   // C438 — potion bottle shelf
   {
     _potionShelfGroup = new Group();
@@ -4820,6 +4882,32 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C488 — armillary sphere orrery update
+    if (orreryGroup488) {
+      t488 += dt;
+      // Acceleration event — every 20-30s, speed up 3× for 2s
+      orreryAccelTimer488 -= dt;
+      if (orreryAccelTimer488 <= 0 && orreryAccel488 <= 1.0) {
+        orreryAccel488 = 3.0;
+        orreryAccelTimer488 = 2.0; // event lasts 2s
+      } else if (orreryAccelTimer488 <= 0 && orreryAccel488 > 1.0) {
+        // Decelerate: ramp back down over 1s
+        orreryAccel488 = Math.max(1.0, orreryAccel488 - dt * 2.0);
+        if (orreryAccel488 <= 1.0) {
+          orreryAccel488 = 1.0;
+          orreryAccelTimer488 = 20 + Math.random() * 10;
+        }
+      }
+      const baseRates = [0.2, 0.35, 0.5];
+      orreryRings488.forEach((ring, i) => {
+        ring.rotation.y += baseRates[i]! * orreryAccel488 * dt;
+      });
+      // Light pulse during acceleration
+      if (orreryLight488) {
+        orreryLight488.intensity = orreryAccel488 > 1.5 ? 0.6 + Math.sin(t488 * 8) * 0.2 : 0.3;
+      }
+    }
+
     // C438 — potion bottle shelf update
     if (_potionShelfGroup) {
       _potionShelfT += dt;
@@ -5316,6 +5404,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       telescopeGroup483 = null;
     }
     telescopeLensMat483 = null;
+    // C488 — armillary sphere orrery dispose
+    if (orreryGroup488) {
+      orreryGroup488.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(orreryGroup488);
+      orreryGroup488 = null;
+    }
+    orreryRings488.length = 0;
+    orreryLight488 = null;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
