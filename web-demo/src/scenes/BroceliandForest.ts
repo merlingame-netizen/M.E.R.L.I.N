@@ -901,6 +901,12 @@ let springGlowLight416: PointLight | null = null;
 
 // ── Cycle-421: standing Celtic cross ──────────────────────────────────────────
 let celticCrossGroup421: Group | null = null;
+
+// ── Cycle-426: raven flock circling overhead ───────────────────────────────────
+const ravenFlock426: Group[] = [];
+const ravenT426: number[] = [];
+const ravenWingL426: Mesh[] = [];
+const ravenWingR426: Mesh[] = [];
 let celticCrossT421 = 0;
 const celticCrossGlows421: Mesh[] = [];
 let celticCrossLight421: PointLight | null = null;
@@ -1920,6 +1926,52 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(celticCrossGroup421);
   }
 
+  // ── Cycle-426: raven flock circling overhead ──────────────────────────────────
+  {
+    const bodyGeo = new BoxGeometry(0.12, 0.07, 0.28);
+    const wingLGeo = new BoxGeometry(0.38, 0.03, 0.14);
+    const wingRGeo = new BoxGeometry(0.38, 0.03, 0.14);
+    const headGeo = new SphereGeometry(0.055, 4, 3);
+    const tailGeo = new BoxGeometry(0.08, 0.03, 0.1);
+    const ravenMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+
+    for (let i = 0; i < 6; i++) {
+      const raven = new Group();
+
+      const body = new Mesh(bodyGeo.clone(), ravenMat);
+      raven.add(body);
+
+      const wingL = new Mesh(wingLGeo.clone(), ravenMat);
+      wingL.position.set(-0.25, 0, 0.02);
+      raven.add(wingL);
+      ravenWingL426.push(wingL);
+
+      const wingR = new Mesh(wingRGeo.clone(), ravenMat);
+      wingR.position.set(0.25, 0, 0.02);
+      raven.add(wingR);
+      ravenWingR426.push(wingR);
+
+      const head = new Mesh(headGeo.clone(), ravenMat);
+      head.position.set(0, 0.04, 0.14);
+      raven.add(head);
+
+      const tail = new Mesh(tailGeo.clone(), ravenMat);
+      tail.position.set(0, -0.01, -0.16);
+      raven.add(tail);
+
+      ravenT426.push(i * 1.05);
+      ravenFlock426.push(raven);
+      group.add(raven);
+    }
+    // Dispose template geometries (each raven uses .clone())
+    bodyGeo.dispose();
+    wingLGeo.dispose();
+    wingRGeo.dispose();
+    headGeo.dispose();
+    tailGeo.dispose();
+    ravenMat.dispose();
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -2341,6 +2393,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         celticCrossLight421.intensity = 0.08 + Math.sin(celticCrossT421 * 0.7) * 0.04;
       }
     }
+
+    // Cycle-426: raven flock orbit + wing flap
+    ravenFlock426.forEach((raven, i) => {
+      ravenT426[i] += dt * (0.28 + i * 0.015);
+      const t = ravenT426[i]!;
+      const radius = 4.5 + (i % 3) * 0.8;
+      const cx = 0, cz = -15;
+      raven.position.x = cx + Math.cos(t) * radius;
+      raven.position.z = cz + Math.sin(t) * radius;
+      raven.position.y = 7.5 + (i % 2) * 1.2 + Math.sin(t * 1.7 + i) * 0.4;
+      raven.rotation.y = -(t + Math.PI / 2);
+      raven.rotation.z = Math.sin(t) * 0.2;
+      const flap = Math.sin(t * 4.5 + i * 0.3) * 0.35;
+      if (ravenWingL426[i]) ravenWingL426[i]!.rotation.z = flap;
+      if (ravenWingR426[i]) ravenWingR426[i]!.rotation.z = -flap;
+    });
   };
 
   const dispose = (): void => {
@@ -2552,6 +2620,20 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       celticCrossLight421 = null;
       celticCrossGroup421 = null;
     }
+    // Cycle-426: raven flock cleanup
+    ravenFlock426.forEach(raven => {
+      raven.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+      });
+    });
+    ravenFlock426.length = 0;
+    ravenT426.length = 0;
+    ravenWingL426.length = 0;
+    ravenWingR426.length = 0;
   };
 
   return { group, update, dispose };
