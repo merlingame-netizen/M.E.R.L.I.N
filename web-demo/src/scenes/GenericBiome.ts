@@ -662,6 +662,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let iceDrops473: { mesh: Mesh; y: number; active: boolean }[] = []
   let iceDropTimer473: number = 5
 
+  // ── Stone Colossus Guardian — vallee_anciens (C511) ─────────────────────
+  let colossusGroup511: Group | null = null
+  let colossusEyeMats511: MeshStandardMaterial[] = []
+  let colossusRuneMat511: MeshStandardMaterial | null = null
+  let colossusHead511: Mesh | null = null
+  let colossusArms511: Mesh[] = []
+  let colossusT511: number = 0
+  let colossusAwakeTimer511: number = 40 + Math.random() * 20
+  let colossusAwaking511: boolean = false
+  let colossusAwakeT511: number = 0
+
   // ── Drowned bell tower — marais_korrigans (C478) ──────────────────────────
   let bellTowerGroup478: Group | null = null
   let bellTowerT478: number = 0
@@ -2375,6 +2386,83 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     })
 
     group.add(totemGroup481)
+  }
+
+  // ── Stone Colossus Guardian — vallee_anciens (C511) ──────────────────────
+  if (biome === 'vallee_anciens') {
+    const stoneMat511 = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, metalness: 0.0, flatShading: true })
+
+    colossusGroup511 = new Group()
+    colossusGroup511.position.set(10, 0, -18)
+
+    // Legs (2× CylinderGeometry)
+    for (const lx of [-0.25, 0.25]) {
+      const leg = new Mesh(new CylinderGeometry(0.18, 0.22, 1.0, 6), stoneMat511.clone())
+      leg.position.set(lx, 0.5, 0)
+      colossusGroup511.add(leg)
+    }
+
+    // Torso
+    const torso511 = new Mesh(new BoxGeometry(0.8, 0.9, 0.45), stoneMat511.clone())
+    torso511.position.set(0, 1.6, 0)
+    colossusGroup511.add(torso511)
+
+    // Shoulders (2× SphereGeometry)
+    for (const sx of [-0.48, 0.48]) {
+      const shoulder = new Mesh(new SphereGeometry(0.22, 6, 5), stoneMat511.clone())
+      shoulder.position.set(sx, 1.9, 0)
+      colossusGroup511.add(shoulder)
+    }
+
+    // Arms (2× CylinderGeometry, tilted slightly outward)
+    for (const ax of [-0.6, 0.6]) {
+      const arm = new Mesh(new CylinderGeometry(0.1, 0.14, 0.8, 5), stoneMat511.clone())
+      arm.position.set(ax, 1.5, 0)
+      arm.rotation.z = ax > 0 ? 0.15 : -0.15
+      colossusGroup511.add(arm)
+      colossusArms511.push(arm)
+    }
+
+    // Head
+    colossusHead511 = new Mesh(new BoxGeometry(0.4, 0.38, 0.35), stoneMat511.clone())
+    colossusHead511.position.set(0, 2.55, 0)
+    colossusGroup511.add(colossusHead511)
+
+    // Brow ridge
+    const brow511 = new Mesh(new BoxGeometry(0.42, 0.08, 0.12), stoneMat511.clone())
+    brow511.position.set(0, 2.72, 0.15)
+    colossusGroup511.add(brow511)
+
+    // Eye sockets (2×) — emissive green, dormant
+    for (const ex of [-0.12, 0.12]) {
+      const eyeMat = new MeshStandardMaterial({
+        color: 0x33ff66,
+        emissive: new Color(0x33ff66),
+        emissiveIntensity: 0.3,
+        roughness: 0.4,
+        metalness: 0.0,
+      })
+      const eye = new Mesh(new SphereGeometry(0.07, 6, 5), eyeMat)
+      eye.position.set(ex, 2.6, 0.16)
+      colossusGroup511.add(eye)
+      colossusEyeMats511.push(eyeMat)
+    }
+
+    // Torso rune carving (PlaneGeometry on front face)
+    colossusRuneMat511 = new MeshStandardMaterial({
+      color: 0x33ff66,
+      emissive: new Color(0x33ff66),
+      emissiveIntensity: 0.2,
+      transparent: true,
+      opacity: 0.85,
+      side: DoubleSide,
+      depthWrite: false,
+    })
+    const runeCarving511 = new Mesh(new PlaneGeometry(0.35, 0.5), colossusRuneMat511)
+    runeCarving511.position.set(0, 1.6, 0.228)
+    colossusGroup511.add(runeCarving511)
+
+    group.add(colossusGroup511)
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -4727,6 +4815,85 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Vallee des Anciens — Stone Colossus Guardian awakening (C511)
+    if (colossusGroup511) {
+      colossusT511 += dt
+
+      if (!colossusAwaking511) {
+        // Idle breathing animations
+        colossusEyeMats511.forEach((m) => {
+          m.emissiveIntensity = 0.2 + 0.15 * Math.sin(colossusT511 * 0.5)
+        })
+        if (colossusRuneMat511) {
+          colossusRuneMat511.emissiveIntensity = 0.15 + 0.1 * Math.sin(colossusT511 * 0.7 + 0.5)
+        }
+        colossusGroup511.rotation.z = 0.008 * Math.sin(colossusT511 * 0.3)
+
+        // Countdown to awakening
+        colossusAwakeTimer511 -= dt
+        if (colossusAwakeTimer511 <= 0) {
+          colossusAwaking511 = true
+          colossusAwakeT511 = 0
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'pulse' } }))
+        }
+      } else {
+        // Awakening sequence: total ~8.5s then fade 2s
+        colossusAwakeT511 += dt
+        const t = colossusAwakeT511
+
+        // Phase 1 (0–0.5s): eyes pulse to 2.0
+        if (t < 0.5) {
+          const p = t / 0.5
+          colossusEyeMats511.forEach((m) => { m.emissiveIntensity = 0.3 + p * 1.7 })
+        }
+
+        // Phase 2 (0.5–3.5s): head turns left then right (±0.3 rad over 3s)
+        if (t >= 0.5 && t < 3.5 && colossusHead511) {
+          const p = (t - 0.5) / 3.0
+          colossusHead511.rotation.y = Math.sin(p * Math.PI * 2) * 0.3
+        }
+
+        // Phase 3 (1.0–3.0s): arms raise slightly (rotation.z ±0.2 rad over 2s then back)
+        if (t >= 1.0 && t < 3.0) {
+          const p = (t - 1.0) / 2.0
+          colossusArms511.forEach((arm, i) => {
+            const base = i === 0 ? -0.15 : 0.15
+            arm.rotation.z = base + Math.sin(p * Math.PI) * (i === 0 ? -0.2 : 0.2)
+          })
+        }
+
+        // Phase 4 (0.5–3.5s): rune surges to 1.5
+        if (t >= 0.5 && t < 3.5 && colossusRuneMat511) {
+          const p = Math.min((t - 0.5) / 0.4, 1.0)
+          colossusRuneMat511.emissiveIntensity = 0.2 + p * 1.3
+        }
+
+        // Phase 5 (6.5–8.5s): fade back to dormant
+        if (t >= 6.5) {
+          const p = Math.min((t - 6.5) / 2.0, 1.0)
+          colossusEyeMats511.forEach((m) => { m.emissiveIntensity = 2.0 - p * 1.7 })
+          if (colossusRuneMat511) {
+            colossusRuneMat511.emissiveIntensity = 1.5 - p * 1.3
+          }
+          if (colossusHead511) {
+            colossusHead511.rotation.y *= (1 - p * 0.1)
+          }
+        }
+
+        // End of awakening sequence
+        if (t >= 8.5) {
+          colossusAwaking511 = false
+          colossusAwakeTimer511 = 40 + Math.random() * 20
+          colossusAwakeT511 = 0
+          // Reset arm base rotations
+          colossusArms511.forEach((arm, i) => {
+            arm.rotation.z = i === 0 ? -0.15 : 0.15
+          })
+          if (colossusHead511) colossusHead511.rotation.y = 0
+        }
+      }
+    }
+
     // Plaine des Druides — stone medicine wheel energy pulse (C458)
     medicineWheelT458 += dt;
     // Energy lines pulse with phase offset per spoke
@@ -5516,6 +5683,21 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     totemNextPulse481 = 20 + Math.random() * 15;
     totemPulsePhase481 = 0;
     totemPulseTimer481 = 0;
+    // Stone Colossus Guardian cleanup (C511)
+    if (colossusGroup511) {
+      colossusGroup511.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshStandardMaterial).dispose(); }
+      });
+      colossusGroup511 = null;
+    }
+    colossusEyeMats511 = [];
+    colossusRuneMat511 = null;
+    colossusHead511 = null;
+    colossusArms511 = [];
+    colossusT511 = 0;
+    colossusAwakeTimer511 = 40 + Math.random() * 20;
+    colossusAwaking511 = false;
+    colossusAwakeT511 = 0;
     // Stone medicine wheel cleanup (C458)
     if (medicineWheelGroup458) {
       medicineWheelGroup458.traverse((c) => {
