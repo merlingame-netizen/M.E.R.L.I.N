@@ -381,11 +381,43 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'text-align:left',
   ].join(';');
 
-  const addStat = (label: string, value: string | number, animate?: boolean): HTMLElement => {
+  // C281: ogham rune glyphs as decorative prefixes for each stat label
+  const STAT_RUNES: Record<string, string> = {
+    'carte': 'ᚃ',
+    'anam':  'ᚉ',
+    'vie':   'ᚁ',
+    'score': 'ᚄ',
+    'tour':  'ᚅ',
+  };
+
+  /**
+   * Return the stat label HTML string: rune span + plain label text.
+   * Falls back to plain text if no rune key matches.
+   */
+  const runeLabel = (label: string): HTMLElement => {
+    const lower = label.toLowerCase();
+    const runeKey = Object.keys(STAT_RUNES).find((k) => lower.includes(k));
+    const rune = runeKey ? STAT_RUNES[runeKey] : null;
+    const wrapper = document.createElement('span');
+    if (rune) {
+      const runeSpan = document.createElement('span');
+      runeSpan.style.cssText = `color:rgba(51,255,102,0.5);font-size:0.9em;`;
+      runeSpan.setAttribute('aria-hidden', 'true');
+      runeSpan.textContent = rune + ' ';
+      wrapper.appendChild(runeSpan);
+      wrapper.appendChild(document.createTextNode(label));
+    } else {
+      wrapper.textContent = label;
+    }
+    return wrapper;
+  };
+
+  // Override addStat to inject rune-decorated label element
+  const addStatWithRune = (label: string, value: string | number, animate?: boolean): HTMLElement => {
     const cell = document.createElement('div');
     const lbl = document.createElement('div');
     lbl.style.cssText = 'font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:2px;';
-    lbl.textContent = label;
+    lbl.appendChild(runeLabel(label));
     const val = document.createElement('div');
     val.style.cssText = 'font-size:16px;font-weight:600;color:#33ff66;font-family:Courier New,monospace;';
     val.textContent = animate ? '0' : String(value);
@@ -396,16 +428,39 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   };
 
   // C238: all numeric stats start at '0', animated via animateCountUp with staggered delays
-  const cardsValEl = addStat('Cartes jouees', 0, true); // C123/RS-NULL-01: save-compat guard
+  const cardsValEl = addStatWithRune('Cartes jouees', 0, true); // C123/RS-NULL-01: save-compat guard
 
   // C167: anam counter — animated from 0 → target (with sparkle on finish)
   const anamValue = state.run.anamThisRun ?? 0; // C123/RS-NULL-01
-  const anamValEl = addStat('Anam cette quete', anamValue, true);
+  const anamValEl = addStatWithRune('Anam cette quete', anamValue, true);
 
-  const anamTotalValEl = addStat('Anam total', 0, true);
-  const lifeValEl = addStat('Vie restante', 0, true);
+  const anamTotalValEl = addStatWithRune('Anam total', 0, true);
+  const lifeValEl = addStatWithRune('Vie restante', 0, true);
 
   panel.appendChild(statsGrid);
+
+  // C281: dominant faction line — highest reputation in this run
+  const factionsMap = state.run.factions as Record<string, number>;
+  const dominantEntry = Object.entries(factionsMap).reduce<[string, number] | null>(
+    (best, [id, rep]) => (best === null || rep > best[1] ? [id, rep] : best),
+    null,
+  );
+  if (dominantEntry !== null) {
+    const [domId, domRep] = dominantEntry;
+    const domMeta = FACTION_META[domId] ?? { label: domId, color: 'rgba(51,255,102,0.4)' };
+    const domEl = document.createElement('div');
+    domEl.style.cssText = [
+      'font-size:10px',
+      `color:rgba(51,255,102,0.4)`,
+      `font-family:'Courier New',monospace`,
+      'letter-spacing:0.1em',
+      'margin-top:8px',
+      'text-align:left',
+      'text-transform:uppercase',
+    ].join(';');
+    domEl.textContent = `FACTION DOMINANTE: ${domMeta.label.toUpperCase()} (${domRep})`;
+    statsGrid.after(domEl);
+  }
 
   // Divider
   const div2 = document.createElement('hr');
