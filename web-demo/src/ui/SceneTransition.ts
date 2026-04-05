@@ -5,6 +5,8 @@
 
 export type SceneState = 'BOOT' | 'MENU' | 'LAIR' | 'GAME';
 
+const TRANSITION_RUNES = ['ᚁ','ᚂ','ᚃ','ᚄ','ᚅ','ᚆ','ᚇ','ᚈ','ᚉ','ᚋ','ᚌ','ᚍ','ᚎ'];
+
 interface TransitionOverlay {
   el: HTMLDivElement;
 }
@@ -96,6 +98,33 @@ export function cutToBlack(): void {
       setTimeout(() => {
         el.style.transition = 'opacity 0.55s ease';
       }, 320);
+    });
+
+    // Show a random Celtic rune briefly on the black screen (fire-and-forget)
+    const rune = TRANSITION_RUNES[Math.floor(Math.random() * TRANSITION_RUNES.length)];
+    const runeEl = document.createElement('div');
+    runeEl.textContent = rune;
+    runeEl.style.cssText = [
+      'position:absolute',
+      'inset:0',
+      'display:flex',
+      'align-items:center',
+      'justify-content:center',
+      'font-family:Courier New,monospace',
+      'font-size:72px',
+      'color:rgba(51,255,102,0.6)',
+      'text-shadow:0 0 30px rgba(51,255,102,0.8)',
+      'pointer-events:none',
+      'opacity:0',
+      'transition:opacity 0.3s ease',
+    ].join(';');
+    el.appendChild(runeEl);
+    requestAnimationFrame(() => {
+      runeEl.style.opacity = '1';
+      setTimeout(() => {
+        runeEl.style.opacity = '0';
+        setTimeout(() => runeEl.remove(), 300);
+      }, 600);
     });
   }, 40);
 }
