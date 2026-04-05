@@ -119,6 +119,48 @@ function ensureCardFlipStyles(): void {
   document.head.appendChild(s);
 }
 
+// ── C389: Ghost echo dismiss styles injection (idempotent) ───────────────
+
+function ensureCardGhostStyle389(): void {
+  if (document.getElementById('card-ghost-style-389')) return;
+  const s = document.createElement('style');
+  s.id = 'card-ghost-style-389';
+  s.textContent = `
+    .card-option-ghost {
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none !important;
+    }
+    .card-option-ghost.dissolving {
+      transform: scale(0.85) translateY(8px) !important;
+      opacity: 0.12 !important;
+    }
+    .card-option-ghost.gone {
+      opacity: 0 !important;
+      transition: opacity 0.2s ease;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * C389: Animate unchosen card elements away with a ghost echo dissolve.
+ * Each element scales down to 0.85, fades to near-invisible, then is removed.
+ */
+function triggerGhostDismiss389(unchosen: HTMLElement[], delay: number = 0): void {
+  setTimeout(() => {
+    unchosen.forEach((el, i) => {
+      el.classList.add('card-option-ghost');
+      setTimeout(() => {
+        el.classList.add('dissolving');
+        setTimeout(() => {
+          el.classList.add('gone');
+          setTimeout(() => el.remove(), 200);
+        }, 300);
+      }, i * 50);
+    });
+  }, delay);
+}
+
 // ── Option slide-in animation styles injection (idempotent) ──────────────
 
 function ensureCardOptAnimStyles(): void {
@@ -642,6 +684,7 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
   ensureCardBadgeStyles();
   ensureCardOptBadgeStyles();
   ensureCardOptAnimStyles();
+  ensureCardGhostStyle389();
   return new Promise((resolve) => {
     // C165/CO-01: purge any stale handlers from a previous showCard() that was interrupted
     // (e.g. scene teardown, rapid card transitions). Without this cleanup, the old
@@ -867,6 +910,12 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
         btn.classList.add('selected');
         // C360: flash the rune watermark on selection
         if (container) flashRuneWatermark(container);
+        // C389: ghost echo — unchosen cards dissolve while chosen card exits
+        const allOptionBtns = Array.from(
+          optContainer.querySelectorAll<HTMLElement>('[role="button"]')
+        );
+        const unchosenBtns = allOptionBtns.filter((el) => el !== btn);
+        triggerGhostDismiss389(unchosenBtns, 50);
         await new Promise<void>(r => setTimeout(r, 120)); // brief flash
         hideCard();
         resolve(index);
@@ -927,6 +976,9 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
           clearTimeout(safetyId);
           targetBtn.classList.add('card-option-selected');
           targetBtn.classList.add('selected');
+          // C389: ghost echo for unchosen cards (keyboard path)
+          const allKbBtns = Array.from(btns);
+          triggerGhostDismiss389(allKbBtns.filter((el) => el !== targetBtn), 50);
           setTimeout(() => { hideCard(); resolve(idx); }, 200);
         });
         return;
@@ -940,6 +992,9 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       clearTimeout(safetyId);
       targetBtn.classList.add('card-option-selected');
       targetBtn.classList.add('selected');
+      // C389: ghost echo for unchosen cards (keyboard path)
+      const allKbBtns2 = Array.from(btns);
+      triggerGhostDismiss389(allKbBtns2.filter((el) => el !== targetBtn), 50);
       setTimeout(() => { hideCard(); resolve(idx); }, 200);
     };
     // C152/CO-01: expose to module scope so hideCard() can remove regardless of call path

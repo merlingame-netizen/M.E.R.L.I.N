@@ -444,6 +444,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let crowNextFlap358 = 0;
   let crowFlapT358 = -1;
 
+  // ── Ignis fatuus wisp procession (C386) ──────────────────────────────────
+  let ignisFatuusGroup386: Group | null = null;
+  let ignisMeshes386: Mesh[] = [];
+  let ignisLights386: PointLight[] = [];
+  let ignisTime386 = 0;
+  let ignisDirection386 = 1;
+  let ignisNextReverse386 = 15.0;
+
   // Moonbeam shaft — cercles_pierres (C362)
   let moonbeamMesh362: Mesh | null = null;
   let moonbeamLight362: PointLight | null = null;
@@ -1054,6 +1062,23 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
       crowNextFlap358 = 8 + Math.random() * 4;
     }
+
+    // Ignis fatuus procession — 5 wisps luring travelers across the moor (C386)
+    ignisFatuusGroup386 = new Group();
+    const wispmMat = new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.8 });
+
+    for (let i = 0; i < 5; i++) {
+      const sphere = new Mesh(new SphereGeometry(0.06 - i * 0.008, 6, 4), wispmMat.clone());
+      sphere.userData['idx'] = i;
+      ignisFatuusGroup386.add(sphere);
+      ignisMeshes386.push(sphere);
+
+      const light = new PointLight(0x33ff66, 0.12 - i * 0.015, 2.5);
+      ignisFatuusGroup386.add(light);
+      ignisLights386.push(light);
+    }
+
+    group.add(ignisFatuusGroup386);
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -2482,6 +2507,33 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         if (crowFlapT358 >= 1.0) crowFlapT358 = -1;
       }
     }
+    // Landes bruyere — ignis fatuus wisp procession (C386)
+    if (ignisMeshes386.length > 0 && ignisFatuusGroup386) {
+      ignisTime386 += dt * ignisDirection386 * 0.4;
+
+      // Reverse direction timer
+      ignisNextReverse386 -= dt;
+      if (ignisNextReverse386 <= 0) {
+        ignisDirection386 *= -1;
+        ignisNextReverse386 = 15.0 + Math.random() * 5.0;
+      }
+
+      // Lead wisp traces a sinusoidal path across the moor
+      ignisMeshes386.forEach((mesh, i) => {
+        // Each wisp follows leader with delay i * 0.5s
+        const t = ignisTime386 - i * 0.5;
+        const wx = Math.sin(t * 0.7) * 8;
+        const wz = -20 + Math.sin(t * 1.1) * 3;
+        const wy = 0.5 + Math.sin(t * 2.3) * 0.2 + Math.sin(t * 5.1 + i) * 0.08;
+
+        mesh.position.set(wx, wy, wz);
+        ignisLights386[i].position.set(wx, wy, wz);
+
+        // Flicker opacity and size
+        (mesh.material as MeshBasicMaterial).opacity = 0.65 + Math.sin(landeSporeTime * 8 + i * 1.3) * 0.2;
+        ignisLights386[i].intensity = 0.10 + Math.sin(landeSporeTime * 6 + i * 0.9) * 0.04;
+      });
+    }
     // Cercles de Pierres — pulsing Ogham inscription emissive
     if (cerclesInscriptionMats.length > 0) {
       cerclesTime += dt;
@@ -2813,6 +2865,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
     scarecrowEyes382 = [];
+    // Ignis fatuus wisp procession cleanup (C386)
+    if (ignisFatuusGroup386) { group.remove(ignisFatuusGroup386); ignisFatuusGroup386.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); ignisFatuusGroup386 = null; }
+    ignisMeshes386 = [];
+    ignisLights386 = [];
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
