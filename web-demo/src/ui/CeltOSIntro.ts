@@ -18,15 +18,19 @@ const CRT = {
 } as const;
 
 const BOOT_LINES: readonly string[] = [
-  'CELTOS v3.1.4 \u2014 LE SYST\u00c8ME DES OGHAMS',
-  '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
-  '> init nemeton_kernel...                   OK',
-  '> load ogham_registry [18 runes]...        OK',
-  '> sync faction_memory [5 factions]...      OK',
-  '> mount brocéliande_matrix...              OK',
-  '> calibrate merlin_resonance...            94%',
-  '> weave ley_line_network...                OK',
-  '> SYSTÈME PRÊT \u2014 BIENVENUE, VOYAGEUR',
+  'CELTOS v4.2 KERNEL \u2014 INITIATING MEMORY NODES',
+  'LOADING /dev/ogham/18 ... [OK]',
+  'MOUNTING SACRED_GROVES_PARTITION ... [OK]',
+  'INITIALIZING FACTION_MATRIX (5 branches) ... [OK]',
+  'LINKING /lib/merlin/arcana.so ... [OK]',
+  'CHECKING LEYLINE INTEGRITY ... [OK]',
+  'LOADING FASTROUTE_CARD_POOL (500+ entries) ... [OK]',
+  'SPAWNING DAEMON: merlin-omniscient.service ... [OK]',
+  'CALIBRATING ANAM_ACCUMULATOR ... [OK]',
+  'BINDING BIOME_SHADERS to /dev/gpu ... [OK]',
+  'VERIFYING DRUID_CONSENSUS_PROTOCOL ... [OK]',
+  'SYNCING CAULDRON_STATE ... [OK]',
+  'SYSTEM READY \u2014 AWAITING PLAYER INVOCATION',
 ];
 
 // CELTOS in 5×3 pixel font (23 cols × 5 rows)
