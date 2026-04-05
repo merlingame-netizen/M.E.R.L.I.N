@@ -2,7 +2,7 @@
 // Window on back-right wall area [4, 3.5, -9.75], facing +Z (into scene).
 // Forest silhouettes at z=-10.6 (behind glass). Light through window adapts to hour/season.
 
-import { BoxGeometry, CircleGeometry, Color, ConeGeometry, DoubleSide, FrontSide, Group, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Scene, SphereGeometry, SpotLight } from 'three';
+import { BoxGeometry, BufferGeometry, CircleGeometry, Color, ConeGeometry, DoubleSide, Float32BufferAttribute, FrontSide, Group, MathUtils, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, SphereGeometry, SpotLight } from 'three';
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 
@@ -179,33 +179,92 @@ export function createLairWindow(scene: Scene): WindowResult {
   windowInteriorLight.position.set(4.0, 3.5, -9.2); // just inside the window on the room side
   group.add(windowInteriorLight);
 
-  // ── Stars (visible in night-sky backdrop behind the glass) ───────────────
+  // ── Starfield — 30 points in two tiers (dim + bright), z=-9.4 behind glass ─
 
-  const starMat = new MeshStandardMaterial({
-    color: 0xffffff,
-    emissive: new Color(0xd4f0ff),
-    emissiveIntensity: 0.6,
-    roughness: 1.0,
-    metalness: 0.0,
-  });
+  // Module-level state (outer-var pattern per task spec)
+  let _starPoints: Points | null = null;
+  let _shootingStar: Mesh | null = null;
+  let _shootingStarTimer = 0;          // countdown to next shot (seconds)
+  let _shootingStarActive = false;     // true while streak is travelling
+  let _shootingStarProgress = 0;       // 0..1 across 0.6 s travel
 
-  // 6 star positions scattered across the upper sky area visible through the glass
-  const starPositions: Array<[number, number]> = [
-    [3.15, 5.1],
-    [3.55, 4.7],
-    [4.25, 5.3],
-    [4.65, 4.85],
-    [4.85, 5.15],
-    [3.8,  5.0],
-  ];
+  {
+    // --- dim tier: 20 stars, color 0x1a4422, size 0.025
+    // --- bright tier: 10 stars, color 0x33ff66, size 0.04
+    // Two separate Points objects so each can have its own PointsMaterial
+    // (PointsMaterial.size is per-material, not per-vertex in WebGL 1 fallback).
 
-  const starMeshes: Mesh[] = starPositions.map(([sx, sy]) => {
-    const starMesh = new Mesh(new SphereGeometry(0.04, 3, 2), starMat);
-    starMesh.position.set(sx, sy, -10.55); // just in front of sky backdrop
-    starMesh.visible = false; // shown only at night via updateTime
-    group.add(starMesh);
-    return starMesh;
-  });
+    const dimGeo = new BufferGeometry();
+    const dimPositions: number[] = [];
+    for (let i = 0; i < 20; i++) {
+      dimPositions.push(
+        -6 + Math.random() * 12,  // x ∈ [-6, 6]
+        3  + Math.random() * 6,   // y ∈ [3, 9]
+        -9.4,                     // z — behind window glass plane
+      );
+    }
+    dimGeo.setAttribute('position', new Float32BufferAttribute(dimPositions, 3));
+
+    const brightGeo = new BufferGeometry();
+    const brightPositions: number[] = [];
+    for (let i = 0; i < 10; i++) {
+      brightPositions.push(
+        -6 + Math.random() * 12,
+        3  + Math.random() * 6,
+        -9.4,
+      );
+    }
+    brightGeo.setAttribute('position', new Float32BufferAttribute(brightPositions, 3));
+
+    const dimMat = new PointsMaterial({
+      color: 0x1a4422,
+      size: 0.025,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const brightMat = new PointsMaterial({
+      color: 0x33ff66,
+      size: 0.04,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+
+    const dimPoints  = new Points(dimGeo,    dimMat);
+    const brightPoints = new Points(brightGeo, brightMat);
+
+    // Bundle both into a single Group so we can add them together and address
+    // them via _starPoints userData — but the task spec asks for a single
+    // _starPoints; store the bright one there and dim as a sibling.
+    // We'll animate both by walking group.children in update().
+    group.add(dimPoints);
+    group.add(brightPoints);
+    // _starPoints references the bright one (used for visible toggle check)
+    _starPoints = brightPoints;
+    // Tag both so update() can find them
+    dimPoints.userData['starTier']    = 'dim';
+    brightPoints.userData['starTier'] = 'bright';
+  }
+
+  // ── Shooting star (periodic diagonal streak) ──────────────────────────────
+
+  {
+    const ssMat = new MeshBasicMaterial({
+      color: 0x33ff66,
+      transparent: true,
+      opacity: 0,
+    });
+    const ssMesh = new Mesh(new BoxGeometry(0.8, 0.02, 0.01), ssMat);
+    // Orient the streak diagonally: from (-5,8) to (5,4) → angle ≈ -21.8°
+    ssMesh.rotation.z = Math.atan2(4 - 8, 5 - (-5)); // atan2(dy, dx) → negative (downward)
+    ssMesh.position.set(-5, 8, -9.35);
+    ssMesh.visible = false;
+    group.add(ssMesh);
+    _shootingStar = ssMesh;
+    // Schedule first shot: random delay in [8, 12] seconds
+    _shootingStarTimer = 8 + Math.random() * 4;
+  }
 
   // ── Moon disc (night + dawn, CeltOS pale green-white) ────────────────────
 
@@ -279,10 +338,16 @@ export function createLairWindow(scene: Scene): WindowResult {
     const treeCol = new Color(SEASON_TREE_COLOR[params.season]);
     treeMat.color.copy(params.season === 'winter' ? new Color(0x2a2828) : treeCol);
 
-    // Show stars only at night (h < 5 || h >= 20)
+    // Show star Points tiers only at night (h < 5 || h >= 20)
     const h = ((params.hour % 24) + 24) % 24;
     const isNight = h < 5 || h >= 20;
-    starMeshes.forEach(s => { s.visible = isNight; });
+    if (_starPoints !== null) {
+      group.children.forEach(child => {
+        if ((child as Points).userData['starTier'] !== undefined) {
+          child.visible = isNight;
+        }
+      });
+    }
 
     // Track time-of-day for moon/aurora lerp targets
     if (h >= 5 && h < 8) {
@@ -362,6 +427,51 @@ export function createLairWindow(scene: Scene): WindowResult {
         mat.opacity = mat.opacity * (0.6 + Math.sin(elapsed * 4 + phase) * 0.4);
       }
     });
+
+    // Starfield — twinkle both tiers via uniform PointsMaterial opacity
+    if (_starPoints !== null) {
+      group.children.forEach((child, childIndex) => {
+        const tier = (child as Points).userData['starTier'] as string | undefined;
+        if (tier === undefined) return;
+        const pMat = (child as Points).material as PointsMaterial;
+        const baseOpacity = tier === 'bright' ? 0.9 : 0.55;
+        // Unique phase per Points object; childIndex gives a stable offset
+        pMat.opacity = baseOpacity * (Math.sin(elapsed * 1.5 + childIndex * 0.7) * 0.3 + 0.7);
+      });
+    }
+
+    // Shooting star — countdown → travel → fade, night only
+    if (_shootingStar !== null) {
+      if (currentTimeOfDay === 'night') {
+        if (!_shootingStarActive) {
+          _shootingStarTimer -= dt;
+          if (_shootingStarTimer <= 0) {
+            _shootingStarActive      = true;
+            _shootingStarProgress    = 0;
+            _shootingStar.visible    = true;
+            _shootingStar.position.set(-5, 8, -9.35);
+          }
+        } else {
+          _shootingStarProgress += dt / 0.6;
+          if (_shootingStarProgress >= 1) {
+            _shootingStarActive   = false;
+            _shootingStar.visible = false;
+            _shootingStarTimer    = 8 + Math.random() * 4;
+          } else {
+            const t = _shootingStarProgress;
+            _shootingStar.position.x = MathUtils.lerp(-5, 5, t);
+            _shootingStar.position.y = MathUtils.lerp(8, 4, t);
+            const ssMat = _shootingStar.material as MeshBasicMaterial;
+            ssMat.opacity = (1 - t) * 0.95;
+          }
+        }
+      } else if (_shootingStarActive) {
+        // Left night mid-shot — clean up
+        _shootingStarActive   = false;
+        _shootingStar.visible = false;
+        _shootingStarTimer    = 8 + Math.random() * 4;
+      }
+    }
   };
 
   scene.add(group);
