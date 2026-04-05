@@ -845,6 +845,77 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(circleLight);
       _moorCircleLight = circleLight;
     }
+
+    // Ruined watchtower — broken circular tower in the far background
+    {
+      const towerGroup = new Group();
+      const stoneMat = new MeshBasicMaterial({ color: 0x121b12 });
+      const stoneMatDs = new MeshBasicMaterial({ color: 0x121b12, side: DoubleSide });
+
+      // Base cylinder
+      const base = new Mesh(new CylinderGeometry(1.8, 2.2, 1.2, 8), stoneMat);
+      base.position.set(-22, 0.6, -45);
+      towerGroup.add(base);
+
+      // Lower wall (open-ended cylinder, DoubleSide)
+      const wall = new Mesh(new CylinderGeometry(1.6, 1.8, 5.0, 8, 1, true), stoneMatDs);
+      wall.position.set(-22, 3.5, -45);
+      towerGroup.add(wall);
+
+      // Broken top rim — 3/4 torus
+      const rim = new Mesh(
+        new TorusGeometry(1.65, 0.2, 6, 16, Math.PI * 1.5),
+        new MeshBasicMaterial({ color: 0x0e1a0e })
+      );
+      rim.position.set(-22, 6.1, -45);
+      towerGroup.add(rim);
+
+      // Interior floor glimpse
+      const floor = new Mesh(
+        new CircleGeometry(1.4, 8),
+        new MeshBasicMaterial({ color: 0x0c140c, transparent: true, opacity: 0.4, side: DoubleSide })
+      );
+      floor.position.set(-22, 2.0, -45);
+      floor.rotation.x = -Math.PI / 2;
+      towerGroup.add(floor);
+
+      // Rubble — 5 scattered box pieces around base
+      const rubbleSizes: Array<[number, number, number]> = [
+        [0.7, 0.3, 0.5],
+        [0.5, 0.4, 0.4],
+        [0.9, 0.25, 0.6],
+        [0.4, 0.35, 0.45],
+        [0.6, 0.28, 0.5],
+      ];
+      const rubbleOffsets: Array<[number, number]> = [
+        [2.1, 0.8], [-2.3, -0.6], [1.5, -2.0], [-1.0, 2.2], [2.5, -1.5],
+      ];
+      const rubbleRotations: number[] = [0.3, 1.1, 2.2, 0.7, 1.8];
+      const rubbleMat = new MeshBasicMaterial({ color: 0x121b12 });
+      for (let ri = 0; ri < 5; ri++) {
+        const [rw, rh, rd] = rubbleSizes[ri];
+        const [rx, rz] = rubbleOffsets[ri];
+        const rubble = new Mesh(new BoxGeometry(rw, rh, rd), rubbleMat);
+        rubble.position.set(-22 + rx, rh / 2 - 0.1, -45 + rz);
+        rubble.rotation.y = rubbleRotations[ri];
+        towerGroup.add(rubble);
+      }
+
+      // Arrow slit — dark plane suggesting interior depth
+      const slitMat = new MeshBasicMaterial({ color: 0x060c06, transparent: true, opacity: 0.8, side: DoubleSide });
+      const slit = new Mesh(new PlaneGeometry(0.15, 0.6), slitMat);
+      slit.position.set(-23.5, 4.2, -44.5);
+      towerGroup.add(slit);
+
+      group.add(towerGroup);
+      _watchtowerGroup = towerGroup;
+
+      // Faint glow from arrow slit
+      const towerLight = new PointLight(0x33ff66, 0.05, 4);
+      towerLight.position.set(-23.4, 4.2, -44.6);
+      group.add(towerLight);
+      _watchtowerLight = towerLight;
+    }
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -2139,6 +2210,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _heatherMeshes.length = 0;
     _moorCircleGroup = null;
     _moorCircleLight = null;
+    _watchtowerGroup = null;
+    _watchtowerLight = null;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
