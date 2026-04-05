@@ -818,6 +818,30 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(crow);
   }
 
+  // ── Firefly swarm — 20 glowing CeltOS-green particles drifting through forest ─
+  const _fireflyMeshes: Mesh[] = [];
+  let _fireflyTime = 0;
+  {
+    const flyGeo = new SphereGeometry(0.06, 4, 3);
+    for (let i = 0; i < 20; i++) {
+      const flyMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 });
+      const fly = new Mesh(flyGeo, flyMat);
+      fly.position.set(
+        -25 + R() * 50,
+        0.5 + R() * 3.5,
+        -30 + R() * 25,
+      );
+      fly.userData = {
+        vx: (R() - 0.5) * 0.4,
+        vy: (R() - 0.5) * 0.15,
+        vz: (R() - 0.5) * 0.4,
+        phase: R() * Math.PI * 2,
+      };
+      _fireflyMeshes.push(fly);
+      group.add(fly);
+    }
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -883,6 +907,19 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
     // Crow flock flight
     crowFlock.update(sceneTime, dt);
+
+    // Firefly swarm drift + twinkle
+    _fireflyTime += dt;
+    for (const fly of _fireflyMeshes) {
+      fly.position.x += (fly.userData as { vx: number; vy: number; vz: number; phase: number }).vx * dt;
+      fly.position.y += (fly.userData as { vx: number; vy: number; vz: number; phase: number }).vy * dt;
+      fly.position.z += (fly.userData as { vx: number; vy: number; vz: number; phase: number }).vz * dt;
+      if (fly.position.x < -25 || fly.position.x > 25) (fly.userData as { vx: number }).vx *= -1;
+      if (fly.position.y < 0.3  || fly.position.y > 5)  (fly.userData as { vy: number }).vy *= -1;
+      if (fly.position.z < -32  || fly.position.z > -3)  (fly.userData as { vz: number }).vz *= -1;
+      (fly.material as MeshBasicMaterial).opacity =
+        0.4 + Math.sin(_fireflyTime * 3 + (fly.userData as { phase: number }).phase) * 0.4;
+    }
   };
 
   const dispose = (): void => {
@@ -899,6 +936,7 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     for (const mat of crowFlock.crowMats) {
       mat.dispose();
     }
+    _fireflyMeshes.length = 0;
   };
 
   return { group, update, dispose };
