@@ -1086,6 +1086,12 @@ const wellWispMats520: MeshStandardMaterial[] = [];
 const wellWispPhases520: number[] = [];
 let t520: number = 0;
 
+// ── Enchanted mushroom ring (C526) ────────────────────────────────────────────
+let mushroomRingGroup526: Group | null = null;
+let mushroomLight526: PointLight | null = null;
+const mushroomCapMats526: MeshStandardMaterial[] = [];
+let t526: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3827,6 +3833,49 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(wellGroup520);
   }
 
+  // ── Enchanted mushroom ring (C526) ──────────────────────────────────────────
+  {
+    mushroomRingGroup526 = new Group();
+    const RING_R = 1.6;
+    const CAP_COLORS = [0xdd7700, 0x7722cc, 0x22aa44, 0xdd4422, 0x2266cc, 0xaacc22, 0xcc44aa];
+    const STALK_MAT = new MeshStandardMaterial({
+      color: 0xd4c8a0, roughness: 0.9, metalness: 0.0, flatShading: true,
+    });
+
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2;
+      const x = Math.cos(angle) * RING_R;
+      const z = Math.sin(angle) * RING_R;
+      const h = 0.30 + (i % 3) * 0.10; // varied heights 0.30–0.50
+      const capR = 0.22 + (i % 3) * 0.06;
+
+      // Stalk
+      const stalk = new Mesh(new CylinderGeometry(0.045, 0.065, h, 5, 1), STALK_MAT);
+      stalk.position.set(x, h * 0.5, z);
+      mushroomRingGroup526.add(stalk);
+
+      // Cap — wide flat CylinderGeometry (N64: 6 sides, flatShading)
+      const capMat = new MeshStandardMaterial({
+        color: CAP_COLORS[i]!, roughness: 0.75, metalness: 0.0, flatShading: true,
+        emissive: CAP_COLORS[i]!, emissiveIntensity: 0.55,
+      });
+      mushroomCapMats526.push(capMat);
+      const cap = new Mesh(new CylinderGeometry(0.04, capR, 0.08, 6, 1), capMat);
+      cap.position.set(x, h + 0.03, z);
+      cap.rotation.y = angle;
+      mushroomRingGroup526.add(cap);
+    }
+
+    // Central soft glow
+    mushroomLight526 = new PointLight(0xcc9944, 0.40, 5.5);
+    mushroomLight526.position.set(0, 0.5, 0);
+    mushroomRingGroup526.add(mushroomLight526);
+
+    mushroomRingGroup526.position.set(-11.5, 0, -5.5);
+    mushroomRingGroup526.rotation.y = 0.4;
+    group.add(mushroomRingGroup526);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -5064,6 +5113,17 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         mat.emissiveIntensity = 1.2 + 0.5 * Math.sin(t520 * 2.5 + phase);
       }
     }
+
+    // Enchanted mushroom ring — cap pulse (C526)
+    if (mushroomRingGroup526) {
+      t526 += dt;
+      for (let i = 0; i < mushroomCapMats526.length; i++) {
+        mushroomCapMats526[i]!.emissiveIntensity = 0.35 + 0.55 * Math.abs(Math.sin(t526 * 1.3 + i * 0.9));
+      }
+      if (mushroomLight526) {
+        mushroomLight526.intensity = 0.20 + 0.30 * Math.abs(Math.sin(t526 * 1.1));
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -5677,6 +5737,20 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (wellWaterMat520) { wellWaterMat520.dispose(); wellWaterMat520 = null; }
     if (wellLight520) { wellLight520.dispose(); wellLight520 = null; }
     t520 = 0;
+
+    // Enchanted mushroom ring cleanup (C526)
+    if (mushroomRingGroup526) {
+      group.remove(mushroomRingGroup526);
+      mushroomRingGroup526.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      mushroomRingGroup526 = null;
+    }
+    for (const m of mushroomCapMats526) { m.dispose(); }
+    mushroomCapMats526.length = 0;
+    if (mushroomLight526) { mushroomLight526.dispose(); mushroomLight526 = null; }
+    t526 = 0;
   };
 
   return { group, update, dispose };
