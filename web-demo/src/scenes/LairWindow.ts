@@ -228,6 +228,33 @@ export function createLairWindow(scene: Scene): WindowResult {
     return mesh;
   });
 
+  // ── Fireflies (visible outside window at night + dusk) ───────────────────
+
+  let _windowFireflies: Mesh[] = [];
+  let _prevElapsed = 0;
+
+  {
+    const flyMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0 });
+    const flyGeo = new SphereGeometry(0.06, 4, 3);
+    for (let i = 0; i < 7; i++) {
+      const mesh = new Mesh(flyGeo, flyMat.clone());
+      const sx = -3 + Math.random() * 8;          // x ∈ [-3, 5]
+      const sy = 2 + Math.random() * 5;            // y ∈ [2, 7]
+      const sz = -9.3 - Math.random() * 0.8;       // z ∈ [-9.3, -8.5] — just outside pane
+      mesh.position.set(sx, sy, sz);
+      mesh.userData = {
+        phase:  Math.random() * Math.PI * 2,
+        vx:     (Math.random() - 0.5) * 0.3,
+        vy:     (Math.random() - 0.5) * 0.15,
+        startX: sx,
+        startY: sy,
+        startZ: sz,
+      };
+      group.add(mesh);
+      _windowFireflies.push(mesh);
+    }
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   let currentSeason: Season = 'spring';
@@ -309,6 +336,31 @@ export function createLairWindow(scene: Scene): WindowResult {
         : 0;
       mat.opacity = MathUtils.lerp(mat.opacity, auroraTarget, 0.016 * 1.5);
       mesh.position.x = Math.sin(elapsed * 0.2 + phase) * 0.5;
+    });
+
+    // Fireflies — drift and twinkle outside the window (night + dusk only)
+    const dt = elapsed - _prevElapsed;
+    _prevElapsed = elapsed;
+    const flyOpacityTarget = currentTimeOfDay === 'night' ? 0.8
+      : currentTimeOfDay === 'dusk' ? 0.4
+      : 0;
+    _windowFireflies.forEach(fly => {
+      const mat = fly.material as MeshBasicMaterial;
+      const phase = fly.userData['phase'] as number;
+      const vx    = fly.userData['vx'] as number;
+      const vy    = fly.userData['vy'] as number;
+      // Lerp base opacity toward target
+      mat.opacity = MathUtils.lerp(mat.opacity, flyOpacityTarget, 0.016 * 1.5);
+      if (flyOpacityTarget > 0) {
+        // Drift position
+        fly.position.x += vx * dt;
+        fly.position.y += vy * dt;
+        // Bounce within bounds
+        if (fly.position.x < -3 || fly.position.x > 5) { fly.userData['vx'] = -vx; }
+        if (fly.position.y <  2 || fly.position.y > 7) { fly.userData['vy'] = -vy; }
+        // Twinkle: modulate opacity around the lerped base
+        mat.opacity = mat.opacity * (0.6 + Math.sin(elapsed * 4 + phase) * 0.4);
+      }
     });
   };
 
