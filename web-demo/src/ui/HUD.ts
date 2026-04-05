@@ -567,6 +567,47 @@ export function flashFactionGain(factionName: string): void {
   }, 320);
 }
 
+/**
+ * Show a floating faction delta badge on the right side of the screen.
+ * Appears for 1.8s then fades out. Used after ADD_REPUTATION effects.
+ */
+export function showFactionDelta(faction: string, delta: number): void {
+  const FACTION_BADGE_COLORS: Record<string, string> = {
+    druides:   '#33ff66',
+    anciens:   '#88ffcc',
+    korrigans: '#cc44ff',
+    niamh:     '#44bbff',
+    ankou:     '#ff4444',
+  };
+  const color = FACTION_BADGE_COLORS[faction] ?? '#33ff66';
+  const sign = delta > 0 ? '+' : '';
+  const badge = document.createElement('div');
+  badge.textContent = `${faction.toUpperCase()} ${sign}${delta}`;
+  badge.style.cssText = [
+    'position:fixed',
+    'right:20px',
+    `top:${60 + Math.random() * 40}px`,
+    `color:${color}`,
+    'background:rgba(0,0,0,0.7)',
+    'border-left:2px solid currentColor',
+    'font-family:Courier New,monospace',
+    'font-size:10px',
+    'letter-spacing:2px',
+    'padding:3px 10px',
+    'z-index:40',
+    'pointer-events:none',
+    'opacity:0',
+    'transition:opacity 0.2s',
+  ].join(';');
+  document.body.appendChild(badge);
+  requestAnimationFrame(() => { badge.style.opacity = '1'; });
+  setTimeout(() => {
+    badge.style.transition = 'opacity 0.4s';
+    badge.style.opacity = '0';
+    setTimeout(() => badge.remove(), 420);
+  }, 1800);
+}
+
 // =============================================================================
 // C259 — Ogham activation toast (top-right flash notification)
 // =============================================================================

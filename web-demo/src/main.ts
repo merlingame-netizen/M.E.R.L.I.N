@@ -14,7 +14,7 @@ import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardS
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
-import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain, showOghamActivated } from './ui/HUD';
+import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain, showOghamActivated, showFactionDelta } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
@@ -1237,8 +1237,34 @@ async function gameLoop(
     // 2. DRAIN life (T038: -1 base, -2 after card 15, -3 after card 25)
     // incrementCardsPlayed FIRST so drainLifeScaled reads the correct tier
     state().incrementCardsPlayed();
+    // Read drain amount BEFORE drainLifeScaled to compute the correct tier for the toast
+    const _cardsAfterIncrement = state().run.cardsPlayed;
+    const _drainAmount =
+      _cardsAfterIncrement >= 25 ? 3 :
+      _cardsAfterIncrement >= 15 ? 2 :
+      1;
     state().drainLifeScaled();
     flashLifeDamage(); // C182: HUD flash on life drain
+    // FIX2: drain toast — brief CRT notification so the player understands the life drop
+    {
+      const drainToast = document.createElement('div');
+      drainToast.textContent = `> DRAIN VIE : -${_drainAmount}`;
+      drainToast.style.cssText = [
+        'position:fixed;top:52px;left:50%;transform:translateX(-50%);',
+        'background:rgba(40,0,0,0.82);border:1px solid rgba(220,50,50,0.55);',
+        'border-left:2px solid rgba(220,50,50,0.9);',
+        'color:rgba(220,100,100,0.9);font-family:Courier New,monospace;',
+        'font-size:10px;letter-spacing:3px;padding:4px 14px;',
+        'z-index:50;pointer-events:none;',
+        'opacity:0;transition:opacity 0.15s;',
+      ].join('');
+      document.body.appendChild(drainToast);
+      requestAnimationFrame(() => { drainToast.style.opacity = '1'; });
+      setTimeout(() => {
+        drainToast.style.opacity = '0';
+        setTimeout(() => drainToast.remove(), 160);
+      }, 1500);
+    }
     updateHUD();
 
     // 3. Check death after drain
@@ -1382,7 +1408,11 @@ async function gameLoop(
         } else if (eff.startsWith('ADD_REPUTATION:')) {
           const parts = eff.split(':');
           const faction = parts[1];
-          if (faction) flashFactionGain(faction);
+          const deltaVal = parts[2] ? parseInt(parts[2], 10) : 0;
+          if (faction) {
+            flashFactionGain(faction);
+            showFactionDelta(faction, deltaVal); // FIX4: visible floating badge
+          }
         }
       }
 

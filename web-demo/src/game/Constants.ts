@@ -109,10 +109,10 @@ export const ACTION_VERB_FALLBACK_FIELD = 'esprit';
 
 // --- FIELD → MINIGAME MAPPING ---
 export const FIELD_MINIGAMES: Record<string, readonly string[]> = {
-  chance: ['herboristerie'],
-  bluff: ['negociation'],
+  chance: ['herboristerie', 'fouille'],
+  bluff: ['negociation', 'apaisement'],
   observation: ['fouille', 'regard'],
-  logique: ['runes'],
+  logique: ['runes', 'regard'],
   finesse: ['ombres', 'equilibre'],
   vigueur: ['combat_rituel', 'course'],
   esprit: ['apaisement', 'volonte', 'sang_froid'],
