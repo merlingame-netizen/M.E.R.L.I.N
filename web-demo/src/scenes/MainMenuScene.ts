@@ -422,6 +422,44 @@ function buildSun(): Mesh {
   return new Mesh(geo, mat);
 }
 
+// ── Heather bushes (C528) ─────────────────────────────────────────────────────
+
+function buildHeather(): Mesh[] {
+  const meshes: Mesh[] = [];
+  const colors = [0x7a3a8a, 0x9a4aaa, 0x6a2878, 0xb05ac0, 0x4e1a5e, 0xc87ad0];
+  const positions: Array<[number, number, number, number]> = [
+    // [x, z, scale, colorIdx]  — both sides of the stone path
+    [ 2.8, 15,  0.28, 0], [-3.0, 13, 0.22, 1], [ 3.2,  9, 0.32, 2],
+    [-2.8,  7,  0.25, 3], [ 3.5,  4, 0.20, 4], [-3.3,  1, 0.30, 5],
+    [ 2.9, -3,  0.26, 0], [-3.1, -5, 0.28, 2], [ 3.8, -8, 0.22, 1],
+    [-3.6,-10,  0.31, 3], [ 4.0,-12, 0.24, 4], [-4.2,-14, 0.27, 5],
+    // Wider scatter off-path for density
+    [ 5.5, 12,  0.18, 2], [-5.2,  8, 0.20, 0], [ 6.0,  3, 0.16, 5],
+    [-5.8, -2,  0.19, 1], [ 5.3,-11, 0.21, 3], [-5.0, -7, 0.17, 4],
+  ];
+  for (const [x, z, s, ci] of positions) {
+    // 2–3 overlapping blobs per bush cluster
+    const count = 2 + Math.floor(Math.random() * 2);
+    for (let k = 0; k < count; k++) {
+      const geo = new DodecahedronGeometry(s * (0.7 + Math.random() * 0.5), 0);
+      const mat = new MeshStandardMaterial({
+        color: colors[ci % colors.length]!, roughness: 0.95, metalness: 0.0,
+        flatShading: true,
+        emissive: colors[ci % colors.length]!, emissiveIntensity: 0.06,
+      });
+      const m = new Mesh(geo, mat);
+      m.position.set(
+        x + (Math.random() - 0.5) * 0.5,
+        s * 0.5 + (Math.random() - 0.5) * 0.08,
+        z + (Math.random() - 0.5) * 0.6,
+      );
+      m.rotation.y = Math.random() * Math.PI;
+      meshes.push(m);
+    }
+  }
+  return meshes;
+}
+
 // ── Seabirds (C527) ───────────────────────────────────────────────────────────
 
 interface SeabirdDatum {
@@ -530,6 +568,8 @@ export function initMainMenu(container: HTMLElement): {
   for (const m of buildStonePath())  scene.add(m);
   for (const m of buildRocks())      scene.add(m);
   for (const m of buildOghamStone()) scene.add(m);
+
+  for (const m of buildHeather()) scene.add(m);
 
   const ocean = buildOcean();
   scene.add(ocean.mesh);
