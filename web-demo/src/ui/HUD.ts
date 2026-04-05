@@ -445,6 +445,8 @@ export function teardownHUD(): void {
   // C145b/NEW-HUD-01: ogham-badge-style <style> injected into document.head in buildOghamBadge().
   // Remove on teardown so it is cleanly re-injected on next initHUD(). Prevents stale <style> accumulation.
   document.getElementById('ogham-badge-style')?.remove();
+  // C180: hud-anim-styles <style> injected by ensureHUDAnimStyles(). Remove on teardown.
+  document.getElementById('hud-anim-styles')?.remove();
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;

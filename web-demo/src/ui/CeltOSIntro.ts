@@ -61,6 +61,38 @@ function _ensureBlinkStyle(): void {
   document.head.appendChild(style);
 }
 
+// Inject CeltOS scanline + glitch styles (idempotent)
+function ensureCeltOSStyles(): void {
+  if (document.getElementById('celtos-intro-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'celtos-intro-styles';
+  s.textContent = `
+    .celtos-scanlines::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 1px,
+        rgba(0,0,0,0.22) 1px,
+        rgba(0,0,0,0.22) 2px
+      );
+      pointer-events: none;
+      z-index: 10;
+    }
+    @keyframes celtos-glitch {
+      0%, 94%, 100% { transform: none; opacity: 1; }
+      95%  { transform: translate(-2px, 0) skewX(-3deg); opacity: 0.85; }
+      97%  { transform: translate(2px, 0); opacity: 0.9; }
+      98%  { transform: none; opacity: 0.7; }
+      99%  { transform: translate(-1px, 1px); opacity: 0.95; }
+    }
+    .celtos-glitch-active { animation: celtos-glitch 3.5s ease-in-out infinite; }
+  `;
+  document.head.appendChild(s);
+}
+
 async function runPhase1(container: HTMLDivElement): Promise<void> {
   _ensureBlinkStyle();
 
@@ -293,6 +325,8 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
 // =============================================================================
 
 export async function runCeltOSIntro(): Promise<void> {
+  ensureCeltOSStyles();
+
   // Create full-screen CRT overlay (z-index above everything)
   const overlay = document.createElement('div');
   // Hide legacy #boot-screen HTML element (was z-index:9999 — would cover us)
@@ -300,6 +334,7 @@ export async function runCeltOSIntro(): Promise<void> {
   if (legacyBoot) legacyBoot.style.display = 'none';
 
   overlay.id = 'celtos-intro';
+  overlay.className = 'celtos-scanlines';
   overlay.style.cssText = [
     'position:fixed;inset:0;z-index:10000;',
     `background:${CRT.BG};`,

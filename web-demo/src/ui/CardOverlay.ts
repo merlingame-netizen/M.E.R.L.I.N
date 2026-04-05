@@ -371,9 +371,11 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       const btns = optContainer.querySelectorAll<HTMLElement>('[role="button"]');
       const targetBtn = btns[idx];
       if (!targetBtn) return;
+      sfx('click');
       activated = true;
       clearTimeout(safetyId);
       targetBtn.classList.add('card-option-selected');
+      targetBtn.classList.add('selected');
       setTimeout(() => { hideCard(); resolve(idx); }, 200);
     };
     // C152/CO-01: expose to module scope so hideCard() can remove regardless of call path
