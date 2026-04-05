@@ -496,6 +496,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let caveShadowT398 = -1;
   let caveNextShadow398 = 10.0;
 
+  // ── Stone labyrinth ruins — vallee_anciens (C403) ─────────────────────────
+  let labyrinthGroup403: Group | null = null;
+  let labyrinthMossT403 = 0;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1399,6 +1403,39 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     tombGroup378.rotation.y = -0.4;
     group.add(tombGroup378);
     tombNextFlare378 = 10.0 + Math.random() * 8.0;
+
+    // Stone labyrinth ruins (C403)
+    labyrinthGroup403 = new Group();
+    const wallMat403 = new MeshLambertMaterial({ color: 0x0a1a10, emissive: 0x050f08 });
+    const mossMat403 = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.5 });
+
+    // Wall segments: [geometry_args, position_x, position_y, position_z]
+    const wallDefs403: Array<[number, number, number, number, number, number]> = [
+      // w,    h,    d,    x,    y,     z
+      [3.0, 1.2, 0.3, 4.0, 0.6, -20.0],   // Wall 1: east-west, length 3
+      [0.3, 1.2, 2.5, 5.5, 0.6, -21.25],  // Wall 2: north-south, length 2.5
+      [2.0, 1.2, 0.3, 2.0, 0.6, -23.0],   // Wall 3: east-west, length 2
+      [0.3, 1.2, 1.5, 3.0, 0.6, -22.75],  // Wall 4: north-south, length 1.5
+      [1.0, 1.2, 0.3, 4.5, 0.6, -24.0],   // Wall 5: east-west cap, length 1
+    ];
+
+    for (const [ww, wh, wd, wx, wy, wz] of wallDefs403) {
+      // Wall body
+      const wallMesh = new Mesh(new BoxGeometry(ww, wh, wd), wallMat403);
+      wallMesh.position.set(wx, wy, wz);
+      labyrinthGroup403.add(wallMesh);
+      // Moss overlay on top
+      const mossMesh = new Mesh(new BoxGeometry(ww, 0.05, wd), mossMat403);
+      mossMesh.position.set(wx, wy + 0.65, wz);
+      labyrinthGroup403.add(mossMesh);
+    }
+
+    // Faint ancient green shimmer
+    const labLight403 = new PointLight(0x33ff66, 0.05, 6.0);
+    labLight403.position.set(4, 1.5, -22);
+    labyrinthGroup403.add(labLight403);
+
+    group.add(labyrinthGroup403);
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -2885,6 +2922,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Vallee Anciens — stone labyrinth moss pulse (C403)
+    if (labyrinthGroup403) {
+      labyrinthMossT403 += dt;
+      const labLight = labyrinthGroup403.children.find(c => c instanceof PointLight) as PointLight | undefined;
+      if (labLight) labLight.intensity = 0.04 + Math.sin(labyrinthMossT403 * 0.6) * 0.015;
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3087,6 +3130,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     // Ancient tomb entrance cleanup (C378)
     if (tombGroup378) { group.remove(tombGroup378); tombGroup378.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); tombGroup378 = null; }
     if (tombGlowLight378) { tombGlowLight378.dispose(); tombGlowLight378 = null; }
+    // Stone labyrinth ruins cleanup (C403)
+    if (labyrinthGroup403) {
+      labyrinthGroup403.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      labyrinthGroup403 = null;
+    }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
     scarecrowEyes382 = [];
