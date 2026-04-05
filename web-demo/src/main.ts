@@ -982,10 +982,8 @@ async function main(): Promise<void> {
     await showMapGenOverlay(chosenBiome);
 
     // Phase 3: Reveal and enter game
-    loading.style.display = 'flex';
-    loading.style.opacity = '1';
-    // C167: brief CRT-style loading label so player sees feedback during scene init
-    loading.innerHTML = `<div style="color:#33ff66;font-family:'Courier New',Courier,monospace;font-size:13px;letter-spacing:0.1em;">INIT_BIOME: ${chosenBiome.replace(/_/g, '-').toUpperCase()}…</div>`;
+    // C228: biome-specific full-screen loader replaces the old generic #loading label
+    const biomeLoaderEl = showBiomeLoader(chosenBiome);
 
     // Init scene (fresh per run)
     const sceneManager = new SceneManager(app);
@@ -1005,6 +1003,11 @@ async function main(): Promise<void> {
       const { buildGenericBiomeScene } = await import('./scenes/GenericBiome');
       biomeResult = await buildGenericBiomeScene(chosenBiome);
     }
+    // C228: fade out biome loader once scene is fully built
+    biomeLoaderEl.style.transition = 'opacity 0.4s';
+    biomeLoaderEl.style.opacity = '0';
+    setTimeout(() => { biomeLoaderEl.parentNode?.removeChild(biomeLoaderEl); }, 400);
+
     sceneManager.scene.add(biomeResult.group);
 
     // C166: Apply biome-specific fog — read from group properties (Forest/Coast) or userData (Generic).
@@ -1467,6 +1470,36 @@ function showBiomeToast(biomeId: string): void {
     toast.style.opacity = '0';
     setTimeout(() => { toast.remove(); }, 300);
   }, 1700);
+}
+
+/**
+ * C228: Full-screen biome loading overlay shown during async 3D scene import.
+ * Uses BIOME_LABELS for the display name; falls back to the raw biome id.
+ * Returns the element so the caller can fade it out once the scene is ready.
+ */
+function showBiomeLoader(biome: string): HTMLElement {
+  const name = BIOME_LABELS[biome] ?? biome;
+  const el = document.createElement('div');
+  el.id = 'biome-loader';
+  el.style.cssText = [
+    'position:fixed;inset:0;z-index:800;background:rgba(1,8,2,0.95);',
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+    'font-family:Courier New,monospace;color:rgba(51,255,102,0.8);',
+  ].join('');
+  el.innerHTML = `
+    <div style="font-size:0.65rem;letter-spacing:0.2em;opacity:0.6;margin-bottom:8px;">NEMETON.SYS &gt; CHARGEMENT</div>
+    <div style="font-size:1.1rem;letter-spacing:0.1em;">${name.toUpperCase()}</div>
+    <div style="margin-top:16px;font-size:0.6rem;opacity:0.4;animation:nemeton-blink 1s step-end infinite;">&#x258B;</div>
+  `;
+  document.body.appendChild(el);
+  // Inject blink keyframes once per page lifetime
+  if (!document.getElementById('nemeton-load-style')) {
+    const s = document.createElement('style');
+    s.id = 'nemeton-load-style';
+    s.textContent = '@keyframes nemeton-blink{0%,100%{opacity:0.4}50%{opacity:0}}';
+    document.head.appendChild(s);
+  }
+  return el;
 }
 
 // --- Anam cross-run persistence (localStorage) ---
