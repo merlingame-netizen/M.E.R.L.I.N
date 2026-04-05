@@ -736,8 +736,8 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   document.addEventListener('visibilitychange', onLairVisibility);
   tick();
 
-  // Chosen biome — defaults to cotes_sauvages until player picks via map zone.
-  let selectedBiomeId = 'cotes_sauvages';
+  // Chosen biome — defaults to foret_broceliande (first run narrative) until player picks via map zone.
+  let selectedBiomeId = _isFirstLairVisit ? 'foret_broceliande' : 'cotes_sauvages';
   // C84: ogham pre-selected in lair, carried into first card of the upcoming run
   let lairSelectedOgham: string | null = null;
   // C85: cauldron zone cycles through Merlin quotes

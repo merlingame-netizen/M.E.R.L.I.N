@@ -107,7 +107,7 @@ function createMapTable(): { group: Group; hitTarget: Mesh } {
     roughness: 0.6,
     metalness: 0.0,
     emissive: 0x3a2a10,
-    emissiveIntensity: 0.15,
+    emissiveIntensity: 0.38,  // BUG-L-MAP-EMISSIVE: raised from 0.15 — zone must be readable in a dense scene
     flatShading: true,
   });
 
