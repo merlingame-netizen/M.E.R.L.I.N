@@ -159,6 +159,9 @@ export function showOghamPanel(): Promise<string | null> {
         'align-items:center',
         'gap:4px',
         'transition:background 0.2s, border-color 0.2s',
+      // C311: position:relative required so the absolute-positioned arc canvas
+      // is contained within this slot rather than the nearest positioned ancestor.
+      'position:relative',
       ].join(';');
 
       // Ogham unicode symbol
@@ -202,6 +205,12 @@ export function showOghamPanel(): Promise<string | null> {
           infoEl.appendChild(dot);
         }
         slot.title = `${spec.description} (recharge dans ${cooldown} cartes)`;
+        // C311: cooldown arc canvas overlay — drawn after slot is fully styled.
+        // requestAnimationFrame so the canvas is in the DOM before getContext() is called.
+        requestAnimationFrame(() => {
+          const cdCanvas = getOrCreateCdCanvas(slot, oghamId);
+          drawCooldownArc(cdCanvas, cooldown, Math.min(spec.cooldown, 8));
+        });
       } else {
         // Available: show category + dim dot preview of cooldown cost
         infoEl.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
@@ -321,6 +330,76 @@ function selectOgham(oghamId: string | null): void {
     resolveChoice(oghamId);
     resolveChoice = null;
   }
+}
+
+// =============================================================================
+// C311 — Cooldown arc canvas overlay helpers
+// =============================================================================
+
+/**
+ * Returns the cooldown-arc canvas inside `slotEl`, creating it if absent.
+ * The canvas is 32×32, positioned absolute at top-right of the slot,
+ * pointer-events:none so it never intercepts slot clicks.
+ */
+function getOrCreateCdCanvas(slotEl: HTMLElement, oghamId: string): HTMLCanvasElement {
+  const canvasId = `ogham-cd-arc-${oghamId}`;
+  let canvas = slotEl.querySelector<HTMLCanvasElement>(`#${canvasId}`);
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = canvasId;
+    canvas.width = 32;
+    canvas.height = 32;
+    canvas.style.cssText = 'position:absolute;top:2px;right:2px;pointer-events:none;';
+    slotEl.appendChild(canvas);
+  }
+  return canvas;
+}
+
+/**
+ * Draw a clockwise sweep arc on `canvas` representing `remaining` turns out
+ * of `maxCooldown` (capped at 8).
+ * - Background ring: rgba(51,255,102,0.15)  — full circle
+ * - Locked arc:      rgba(255,60,60,0.7)    — remaining portion
+ * - Center text:     cooldown value in 10px Courier New, rgba(255,60,60,0.9)
+ */
+function drawCooldownArc(canvas: HTMLCanvasElement, remaining: number, maxCooldown: number): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const radius = 12;
+  const lineWidth = 3;
+  const max = Math.max(maxCooldown, 1); // guard against 0
+  const fraction = Math.min(remaining / max, 1);
+  const startAngle = -Math.PI / 2; // 12 o'clock
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background ring (full circle)
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(51,255,102,0.15)';
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Locked arc (clockwise, remaining portion)
+  if (fraction > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, startAngle + fraction * Math.PI * 2, false);
+    ctx.strokeStyle = 'rgba(255,60,60,0.7)';
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // Center cooldown number
+  ctx.fillStyle = 'rgba(255,60,60,0.9)';
+  ctx.font = 'bold 10px Courier New,monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(remaining), cx, cy);
 }
 
 /** Hide the ogham panel (cleanup). Call resolves any pending Promise to avoid async deadlock. */
