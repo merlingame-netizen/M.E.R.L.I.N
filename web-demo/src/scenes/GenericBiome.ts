@@ -584,6 +584,11 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let throneMossPatches453: Mesh[] = []
   let throneLight453: PointLight | null = null
 
+  // ── Stone medicine wheel — plaine_druides (C458) ──────────────────────────
+  let medicineWheelGroup458: Group | null = null
+  let medicineWheelT458: number = 0
+  let medicineWheelLines458: Mesh[] = []
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -3089,6 +3094,63 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     group.add(bonfireGroup448);
   }
 
+  // ── Stone medicine wheel — plaine_druides (C458) ──────────────────────────
+  if (biome === 'plaine_druides') {
+    medicineWheelGroup458 = new Group()
+    medicineWheelGroup458.position.set(4, 0, -10)
+
+    // Hub stone at center
+    const hub = new Mesh(
+      new CylinderGeometry(0.25, 0.3, 0.4, 8),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    hub.position.y = 0.2
+    medicineWheelGroup458!.add(hub)
+
+    // 8 spoke lines (flat box slabs on the ground)
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2
+      const spoke = new Mesh(
+        new BoxGeometry(2.4, 0.08, 0.15),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      spoke.position.set(Math.cos(angle) * 1.2, 0.04, Math.sin(angle) * 1.2)
+      spoke.rotation.y = -angle
+      medicineWheelGroup458!.add(spoke)
+    }
+
+    // Outer ring: 12 stones evenly spaced at radius 2.8
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2
+      const stone = new Mesh(
+        new CylinderGeometry(0.1, 0.14, 0.35, 6),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      stone.position.set(Math.cos(angle) * 2.8, 0.18, Math.sin(angle) * 2.8)
+      medicineWheelGroup458!.add(stone)
+    }
+
+    // Energy glow overlay: 8 thin BoxGeometry strips along the spokes (glowing green)
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2
+      const line = new Mesh(
+        new BoxGeometry(2.2, 0.01, 0.06),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.35 })
+      )
+      line.position.set(Math.cos(angle) * 1.1, 0.1, Math.sin(angle) * 1.1)
+      line.rotation.y = -angle
+      medicineWheelLines458.push(line)
+      medicineWheelGroup458!.add(line)
+    }
+
+    // Center PointLight
+    const wheelLight = new PointLight(0x33ff66, 0.2, 5.0)
+    wheelLight.position.y = 0.5
+    medicineWheelGroup458!.add(wheelLight)
+
+    group.add(medicineWheelGroup458)
+  }
+
   const update = (dt: number): void => {
     particles.update(dt);
     // Gentle key light flicker
@@ -3831,6 +3893,13 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (throneLight453) {
       throneLight453.intensity = 0.12 + 0.06 * Math.sin(throneT453 * 0.5);
     }
+    // Plaine des Druides — stone medicine wheel energy pulse (C458)
+    medicineWheelT458 += dt;
+    // Energy lines pulse with phase offset per spoke
+    medicineWheelLines458.forEach((line, i) => {
+      const mat = line.material as MeshBasicMaterial;
+      mat.opacity = 0.2 + 0.2 * Math.sin(medicineWheelT458 * 0.8 + i * (Math.PI / 4));
+    });
     // Cercles de Pierres — moonrise arc across sky (C433)
     if (stoneMoonGroup433 && stoneMoonMesh433 && stoneMoonLight433) {
       stoneMoonT433 += dt;
@@ -4177,6 +4246,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
     throneMossPatches453 = [];
     throneLight453 = null;
+    // Stone medicine wheel cleanup (C458)
+    if (medicineWheelGroup458) {
+      medicineWheelGroup458.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose(); }
+      });
+      medicineWheelGroup458 = null;
+    }
+    medicineWheelLines458 = [];
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
