@@ -1339,6 +1339,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _webDewT = 0;
   const _webDewSpheres: Mesh[] = [];
 
+  // C408: bubbling cauldron with steam and potion glow — (-2, 0, -5)
+  let _cauldronGroup: Group | null = null;
+  let _cauldronT = 0;
+  let _cauldronBubbleTimer = 0;
+  const _steamPuffs: Mesh[] = [];
+  const _steamVel: { vy: number; life: number; maxLife: number }[] = [];
+  let _cauldronLight: PointLight | null = null;
+  let _potionSurface: Mesh | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1987,6 +1996,65 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     dewGeo.dispose();
     dewMat.dispose();
     wireMat.dispose();
+  }
+
+  // C408: bubbling cauldron with steam and potion glow
+  {
+    _cauldronGroup = new Group();
+
+    // Body
+    const bodyGeo = new SphereGeometry(0.45, 10, 8);
+    const bodyMat = new MeshBasicMaterial({ color: 0x0a1410 });
+    const body = new Mesh(bodyGeo, bodyMat);
+    body.scale.set(1, 0.75, 1);
+    body.position.set(0, 0.35, 0);
+    _cauldronGroup.add(body);
+
+    // Rim ring
+    const rimGeo = new TorusGeometry(0.45, 0.04, 6, 16);
+    const rimMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const rim = new Mesh(rimGeo, rimMat);
+    rim.position.set(0, 0.62, 0);
+    _cauldronGroup.add(rim);
+
+    // 3 legs
+    const legAngles = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
+    legAngles.forEach(angle => {
+      const legGeo = new CylinderGeometry(0.04, 0.06, 0.35, 4);
+      const legMat = new MeshBasicMaterial({ color: 0x0a1410 });
+      const leg = new Mesh(legGeo, legMat);
+      leg.position.set(Math.cos(angle) * 0.3, 0.08, Math.sin(angle) * 0.3);
+      _cauldronGroup!.add(leg);
+    });
+
+    // Potion surface (liquid top)
+    const potionGeo = new CircleGeometry(0.42, 16);
+    const potionMat = new MeshBasicMaterial({ color: 0x0d3318, transparent: true, opacity: 0.9 });
+    _potionSurface = new Mesh(potionGeo, potionMat);
+    _potionSurface.rotation.x = -Math.PI / 2;
+    _potionSurface.position.set(0, 0.64, 0);
+    _cauldronGroup.add(_potionSurface);
+
+    // Cauldron glow light
+    _cauldronLight = new PointLight(0x33ff66, 0.25, 4.0);
+    _cauldronLight.position.set(0, 0.8, 0);
+    _cauldronGroup.add(_cauldronLight);
+
+    // 8 steam puff spheres
+    const puffGeo = new SphereGeometry(0.12, 4, 3);
+    for (let i = 0; i < 8; i++) {
+      const puffMat = new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.0 });
+      const puff = new Mesh(puffGeo.clone(), puffMat);
+      puff.position.set(0, 0.65, 0);
+      const maxLife = 1.5 + i * 0.15;
+      _steamPuffs.push(puff);
+      _steamVel.push({ vy: 0.4 + i * 0.05, life: maxLife * (i / 8), maxLife });
+      _cauldronGroup.add(puff);
+    }
+    puffGeo.dispose();
+
+    _cauldronGroup.position.set(-2, 0, -5);
+    scene.add(_cauldronGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3096,6 +3164,33 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _webGroup.rotation.z = 0.15 + Math.sin(_webDewT * 0.3) * 0.02;
     }
 
+    // C408: bubbling cauldron — potion ripple, light flicker, steam puffs
+    if (_cauldronGroup) {
+      _cauldronT += dt;
+      _cauldronBubbleTimer += dt;
+      if (_potionSurface) {
+        (_potionSurface.material as MeshBasicMaterial).opacity =
+          0.85 + Math.sin(_cauldronT * 4.5) * 0.1;
+      }
+      if (_cauldronLight) {
+        _cauldronLight.intensity = 0.22 + Math.sin(_cauldronT * 7.2) * 0.07;
+      }
+      _steamPuffs.forEach((puff, i) => {
+        const v = _steamVel[i];
+        v.life += dt;
+        if (v.life >= v.maxLife) {
+          v.life = 0;
+          puff.position.set((Math.random() - 0.5) * 0.2, 0.65, (Math.random() - 0.5) * 0.2);
+        } else {
+          const t = v.life / v.maxLife;
+          puff.position.y += v.vy * dt;
+          puff.scale.setScalar(0.5 + t * 1.5);
+          const mat = puff.material as MeshBasicMaterial;
+          mat.opacity = t < 0.3 ? (t / 0.3) * 0.25 : (1 - t) * 0.25;
+        }
+      });
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3371,6 +3466,23 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _webGroup = null;
     }
     _webDewSpheres.length = 0;
+    // C408: cauldron + steam
+    if (_cauldronGroup) {
+      scene.remove(_cauldronGroup);
+      _cauldronGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      _steamPuffs.length = 0;
+      _steamVel.length = 0;
+      _cauldronLight = null;
+      _potionSurface = null;
+      _cauldronGroup = null;
+    }
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
