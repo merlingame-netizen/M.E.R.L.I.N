@@ -1541,6 +1541,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const brazierEmbers514: { mesh: Mesh; phase: number; speed: number }[] = [];
   let t514 = 0;
 
+  // C517 — votive crown chandelier suspended from ceiling beam
+  let chandelierGroup517: Group | null = null;
+  let chandelierLight517: PointLight | null = null;
+  const chandelierFlameMats517: MeshStandardMaterial[] = [];
+  let t517 = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -4153,6 +4159,91 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(brazierGroup514);
   }
 
+  // C517 — votive crown chandelier suspended from ceiling beam (center of lair, y=7.2)
+  {
+    chandelierGroup517 = new Group();
+
+    // Iron crown ring — horizontal torus at y=0
+    const ringMat = new MeshStandardMaterial({ color: 0x1e1510, roughness: 0.6, metalness: 0.75, flatShading: true });
+    const ring = new Mesh(new TorusGeometry(0.72, 0.055, 6, 14), ringMat);
+    ring.rotation.x = Math.PI / 2;
+    chandelierGroup517.add(ring);
+
+    // 4 suspension chains from ring top to ceiling hook (thin cylinders)
+    const chainMat = new MeshStandardMaterial({ color: 0x2a1f14, roughness: 0.55, metalness: 0.8, flatShading: true });
+    const chainAngles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+    for (const ca of chainAngles) {
+      const link = new Mesh(new CylinderGeometry(0.012, 0.012, 0.9, 4), chainMat);
+      link.position.set(Math.cos(ca) * 0.72, 0.45, Math.sin(ca) * 0.72);
+      chandelierGroup517.add(link);
+    }
+    // Central vertical chain connecting to ceiling (longer)
+    const mainChain = new Mesh(new CylinderGeometry(0.018, 0.018, 1.4, 5), chainMat);
+    mainChain.position.set(0, 1.1, 0);
+    chandelierGroup517.add(mainChain);
+
+    // Ceiling hook disc
+    const hookMat = new MeshStandardMaterial({ color: 0x2e2218, roughness: 0.5, metalness: 0.85, flatShading: true });
+    const hook = new Mesh(new CylinderGeometry(0.09, 0.07, 0.1, 6), hookMat);
+    hook.position.set(0, 1.85, 0);
+    chandelierGroup517.add(hook);
+
+    // 8 candle sockets around the ring
+    const socketMat = new MeshStandardMaterial({ color: 0x221810, roughness: 0.65, metalness: 0.7, flatShading: true });
+    const waxMat = new MeshStandardMaterial({ color: 0xf0e8d0, roughness: 0.9, metalness: 0.0, flatShading: true });
+    const CANDLE_COUNT = 8;
+    const flameColors: number[] = [0xff9933, 0xffb844, 0xff7722, 0xffcc55, 0xff8833, 0xffaa33, 0xff6611, 0xffbb44];
+    for (let ci = 0; ci < CANDLE_COUNT; ci++) {
+      const angle = (ci / CANDLE_COUNT) * Math.PI * 2;
+      const cx = Math.cos(angle) * 0.72;
+      const cz = Math.sin(angle) * 0.72;
+
+      // Socket cup
+      const socket = new Mesh(new CylinderGeometry(0.07, 0.055, 0.08, 6), socketMat);
+      socket.position.set(cx, 0.04, cz);
+      chandelierGroup517.add(socket);
+
+      // Wax candle body — slight varied heights
+      const candleH = 0.22 + (ci % 3) * 0.04;
+      const candle = new Mesh(new CylinderGeometry(0.045, 0.05, candleH, 6), waxMat);
+      candle.position.set(cx, 0.04 + candleH * 0.5 + 0.04, cz);
+      chandelierGroup517.add(candle);
+
+      // Drip of wax — small cone at candle base
+      const dripMat = new MeshStandardMaterial({ color: 0xe8dfc0, roughness: 0.95, metalness: 0.0, flatShading: true });
+      const drip = new Mesh(new ConeGeometry(0.042, 0.05, 5), dripMat);
+      drip.position.set(cx + (ci % 2 === 0 ? 0.015 : -0.012), 0.04 + candleH * 0.18, cz);
+      chandelierGroup517.add(drip);
+
+      // Flame — tapered cone, emissive amber
+      const fColor = flameColors[ci % flameColors.length]!;
+      const fmat = new MeshStandardMaterial({
+        color: fColor,
+        roughness: 0.3,
+        metalness: 0.0,
+        emissive: fColor,
+        emissiveIntensity: 1.2,
+        transparent: true,
+        opacity: 0.88,
+        flatShading: true,
+      });
+      chandelierFlameMats517.push(fmat);
+      const flame = new Mesh(new ConeGeometry(0.028, 0.1, 5), fmat);
+      flame.position.set(cx, 0.04 + candleH + 0.04 + 0.05, cz);
+      flame.userData = { phase: (ci / CANDLE_COUNT) * Math.PI * 2, baseX: cx, baseZ: cz, baseY: 0.04 + candleH + 0.04 + 0.05 };
+      chandelierGroup517.add(flame);
+    }
+
+    // Central amber PointLight — warm overhead glow
+    chandelierLight517 = new PointLight(0xffaa44, 1.8, 9.0, 2);
+    chandelierLight517.position.set(0, -0.2, 0);
+    chandelierGroup517.add(chandelierLight517);
+
+    // Hang from ceiling center: y=10.8 (beam level) minus chain length ~1.85 → crown at y=8.8, ring at y=7.0
+    chandelierGroup517.position.set(0.5, 7.0, -3.5);
+    scene.add(chandelierGroup517);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -5816,6 +5907,32 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C517 — votive crown chandelier: per-candle flame flicker + gentle sway
+    if (chandelierGroup517) {
+      t517 += dt;
+      // Gentle whole-chandelier sway (suspended physics approximation)
+      chandelierGroup517.rotation.x = Math.sin(t517 * 0.38) * 0.018 + Math.sin(t517 * 0.71) * 0.009;
+      chandelierGroup517.rotation.z = Math.sin(t517 * 0.45 + 0.9) * 0.016 + Math.sin(t517 * 0.83) * 0.008;
+      // Per-flame flicker
+      const flameObjs = chandelierGroup517.children.filter(c => c.userData['phase'] !== undefined);
+      for (let fi = 0; fi < flameObjs.length; fi++) {
+        const flameObj = flameObjs[fi];
+        if (!(flameObj instanceof Mesh)) continue;
+        const ph: number = flameObj.userData['phase'] as number;
+        const flicker = Math.sin(t517 * 3.7 + ph) * 0.14 + Math.sin(t517 * 6.1 + ph * 1.5) * 0.06;
+        flameObj.scale.x = 1.0 + flicker * 0.5;
+        flameObj.scale.z = 1.0 - flicker * 0.3;
+        flameObj.scale.y = 1.0 + Math.abs(flicker) * 0.25;
+        flameObj.rotation.z = flicker * 0.3;
+        const fmat = chandelierFlameMats517[fi];
+        if (fmat) fmat.emissiveIntensity = 1.0 + 0.5 * (0.5 + 0.5 * Math.sin(t517 * 4.2 + ph));
+      }
+      // Ambient light pulse — warm amber breathing
+      if (chandelierLight517) {
+        chandelierLight517.intensity = 1.7 + Math.sin(t517 * 2.9) * 0.35 + Math.sin(t517 * 5.1) * 0.15;
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -6398,6 +6515,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     brazierFlameMats514.length = 0;
     brazierEmbers514.length = 0;
     brazierLight514 = null;
+    // C517 — votive crown chandelier dispose
+    if (chandelierGroup517) {
+      chandelierGroup517.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(chandelierGroup517);
+      chandelierGroup517 = null;
+    }
+    chandelierFlameMats517.length = 0;
+    chandelierLight517 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
