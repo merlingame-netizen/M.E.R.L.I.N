@@ -10,7 +10,7 @@ import { CameraRail } from './engine/CameraRail';
 // bundle. Dynamic import defers it to first run, reducing cold-start gzip by ~5KB.
 import { store } from './game/Store';
 import { getMultiplier, getMultiplierLabel, ANAM_REWARDS, ANAM_DEATH_FLOOR, FACTIONS, POWER_MILESTONES, type FactionId } from './game/Constants';
-import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardSystem';
+import { generateFastRouteCard, detectMinigame, verbToField, resetMinigameAntiRepeat } from './game/CardSystem';
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
@@ -1159,6 +1159,7 @@ async function main(): Promise<void> {
     // the storage state is always current when the next run starts.
 
     // Start run with the biome the player chose at the map zone
+    resetMinigameAntiRepeat(); // clear cross-run anti-repeat state
     store.getState().startRun(chosenBiome);
     // C88-02: explicitly reset activeOgham before applying lair selection — startRun()
     // does not clear it. If the prior run exited via death_drain (step 3, before step 8
@@ -1282,8 +1283,8 @@ async function gameLoop(
         showHudToast(`${_milestone.label} — ${_milestone.desc}`);
       }
     }
-    // FIX2: drain toast — brief CRT notification so the player understands the life drop
-    {
+    // FIX2: drain toast — suppressed on escalation cards (amber toast covers it already)
+    if (_cardsAfterIncrement !== 15 && _cardsAfterIncrement !== 25) {
       const drainToast = document.createElement('div');
       drainToast.textContent = `> DRAIN VIE : -${_drainAmount}`;
       drainToast.style.cssText = [
@@ -1301,7 +1302,7 @@ async function gameLoop(
         drainToast.style.opacity = '0';
         setTimeout(() => drainToast.remove(), 160);
       }, 1500);
-    }
+    } // end drain toast guard
     updateHUD();
 
     // 3. Check death after drain
@@ -1426,6 +1427,8 @@ async function gameLoop(
     // 6. SCORE → multiplier
     // Align with MULTIPLIER_TABLE: reussite tier starts at 80 (BUG-C62-06)
     playSound(result.score >= 80 ? 'win' : 'lose');
+    // Per-card minigame_won Anam reward (ANAM_REWARDS.minigame_won = 2 per won minigame)
+    if (result.score >= ANAM_REWARDS.minigame_threshold) state().addAnam(ANAM_REWARDS.minigame_won);
     const multiplier = getMultiplier(result.score);
     const label = getMultiplierLabel(result.score);
 

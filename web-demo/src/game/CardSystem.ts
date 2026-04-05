@@ -45,6 +45,9 @@ export function verbToField(verb: string): string {
 /** Anti-repeat: last minigame played, to avoid consecutive identical minigames. */
 let _lastMinigame = '';
 
+/** Reset anti-repeat state — call at the start of each run. */
+export function resetMinigameAntiRepeat(): void { _lastMinigame = ''; }
+
 /** Picks a minigame appropriate for a lexical field, avoiding consecutive repeats. */
 export function pickMinigame(field: string): string {
   const options = FIELD_MINIGAMES[field];
