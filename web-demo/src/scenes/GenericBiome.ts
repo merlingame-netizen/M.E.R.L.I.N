@@ -385,6 +385,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let plaineObeliskTime = 0;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
+  const _auroraBands: Mesh[] = [];
+  let _auroraTime = 0;
 
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
@@ -615,6 +617,29 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       rune.position.set(px, py + gh / 2 + 0.5, pz + gd / 2 + 0.12);
       group.add(rune);
     });
+
+    // Aurora borealis — 3 undulating horizontal bands overhead
+    const auroraConfig: Array<{ y: number; z: number; color: number }> = [
+      { y: 18, z: -30, color: 0x33ff66 },
+      { y: 20, z: -28, color: 0x1a5533 },
+      { y: 22, z: -26, color: 0x0a2a1a },
+    ];
+    for (const cfg of auroraConfig) {
+      const band = new Mesh(
+        new PlaneGeometry(30, 1.2),
+        new MeshBasicMaterial({
+          color: cfg.color,
+          transparent: true,
+          opacity: 0.0,
+          depthWrite: false,
+          side: DoubleSide,
+        }),
+      );
+      band.position.set(0, cfg.y, cfg.z);
+      band.rotation.x = -Math.PI * 0.15;
+      group.add(band);
+      _auroraBands.push(band);
+    }
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -987,6 +1012,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       }
       pos.needsUpdate = true;
     }
+    // Vallee Anciens — aurora borealis undulation
+    if (_auroraBands.length > 0) {
+      _auroraTime += dt;
+      const t = _auroraTime;
+      _auroraBands.forEach((band, i) => {
+        (band.material as MeshBasicMaterial).opacity = Math.max(0, 0.12 + Math.sin(t * 0.3 + i * 1.1) * 0.10);
+        band.position.x = Math.sin(t * 0.2 + i * 0.7) * 3.0;
+        band.rotation.z = Math.sin(t * 0.15 + i * 0.5) * 0.08;
+      });
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -1029,6 +1064,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     plaineWispMeshes = [];
     plaineObeliskGlowMat = null;
     maraisWispMeshes = [];
+    _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
     _eagleGroup = null;
