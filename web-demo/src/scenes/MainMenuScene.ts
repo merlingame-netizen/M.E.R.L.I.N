@@ -687,6 +687,85 @@ function createGodRay(): { mesh: Mesh; update: (dt: number) => void } {
   return { mesh, update };
 }
 
+// ── Ogham Rune Rain ──────────────────────────────────────────────────────────
+// C176: Matrix-style CeltOS green rain of ancient Celtic script characters
+// overlaid behind the menu DOM but above the Three.js canvas.
+
+interface RuneRainResult {
+  canvas: HTMLCanvasElement;
+  dispose: () => void;
+}
+
+function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = [
+    'position:absolute;inset:0;z-index:1;pointer-events:none;',
+    'opacity:0.18;mix-blend-mode:screen;',
+  ].join('');
+  canvas.width = container.clientWidth || window.innerWidth;
+  canvas.height = container.clientHeight || window.innerHeight;
+  container.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d')!;
+  const RUNES = 'ᚁᚂᚃᚄᚅᚆᚇᚈᚉᚊᚋᚌᚍᚎᚏᚐᚑᚒᚓᚔᚕᚖᚗᚘᚙᚚ';
+  const COL_SIZE = 18; // px per column
+  const cols = Math.floor(canvas.width / COL_SIZE);
+  const drops = new Float32Array(cols).fill(0);
+  // Stagger start positions
+  for (let i = 0; i < cols; i++) drops[i] = -Math.random() * (canvas.height / COL_SIZE);
+
+  let rafId = 0;
+  const draw = (): void => {
+    // Fade trail — semi-transparent clear
+    ctx.fillStyle = 'rgba(1,6,2,0.18)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = `${COL_SIZE - 2}px "Courier New", monospace`;
+    ctx.textAlign = 'center';
+
+    for (let i = 0; i < cols; i++) {
+      const y = Math.floor(drops[i]!) * COL_SIZE;
+      if (y < 0) { drops[i]! += 0.3 + Math.random() * 0.4; continue; }
+
+      // Leading char — bright
+      ctx.fillStyle = '#33ff66';
+      const ch = RUNES[Math.floor(Math.random() * RUNES.length)]!;
+      ctx.fillText(ch, i * COL_SIZE + COL_SIZE / 2, y + COL_SIZE);
+
+      // Trail char below — dimmer
+      if (y + COL_SIZE * 2 < canvas.height) {
+        ctx.fillStyle = '#1a8833';
+        const trailCh = RUNES[Math.floor(Math.random() * RUNES.length)]!;
+        ctx.fillText(trailCh, i * COL_SIZE + COL_SIZE / 2, y + COL_SIZE * 2);
+      }
+
+      drops[i]! += 0.25 + Math.random() * 0.3;
+      if (drops[i]! * COL_SIZE > canvas.height && Math.random() > 0.975) {
+        drops[i] = -Math.floor(Math.random() * 20);
+      }
+    }
+    rafId = requestAnimationFrame(draw);
+  };
+
+  rafId = requestAnimationFrame(draw);
+
+  const onResize = (): void => {
+    canvas.width = container.clientWidth || window.innerWidth;
+    canvas.height = container.clientHeight || window.innerHeight;
+    for (let i = 0; i < cols; i++) drops[i] = Math.random() * (canvas.height / COL_SIZE);
+  };
+  window.addEventListener('resize', onResize);
+
+  return {
+    canvas,
+    dispose: () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', onResize);
+      canvas.remove();
+    },
+  };
+}
+
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
@@ -923,11 +1002,16 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   if (menuStartBtn) menuStartBtn.addEventListener('pointerenter', onStartHover);
   if (menuContinueBtn) menuContinueBtn.addEventListener('pointerenter', onContinueHover);
 
+  // C176: Ogham rune rain overlay — injected behind menu DOM, above Three.js canvas
+  const runeRain = createRuneRainCanvas(container);
+
   const dispose = (): void => {
     window.removeEventListener('resize', onResize);
     // C171: remove hover listeners
     if (menuStartBtn) menuStartBtn.removeEventListener('pointerenter', onStartHover);
     if (menuContinueBtn) menuContinueBtn.removeEventListener('pointerenter', onContinueHover);
+    // C176: stop rune rain RAF and remove canvas
+    runeRain.dispose();
     // C157: remove title overlay DOM
     if (titleOverlay.parentNode) {
       titleOverlay.parentNode.removeChild(titleOverlay);

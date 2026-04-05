@@ -909,6 +909,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const crystalData = createCrystalBall();
   scene.add(crystalData.group);
+  // C177: teal PointLight near crystal sphere — breathes in sync with emissive pulse (0x22ffaa, 0.6, 8)
+  const crystalTealLight = new PointLight(0x22ffaa, 0.6, 8);
+  crystalTealLight.position.set(5, -1.0, -4);
+  scene.add(crystalTealLight);
 
   const { group: shelfGroup, hitTarget: shelfHit, frame: shelfFrame } = createBookshelf();
   scene.add(shelfGroup);
@@ -1349,13 +1353,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // Crystal ball pulse
     crystalData.light.intensity = 2.2 + Math.sin(elapsedTime * 1.8) * 0.4;
-    // C113: boost emissive base when crystal is hovered — unhovered=0.5, hovered=0.9.
-    // Without this, update loop overrides applyHoverTo(0.65) every frame → hover invisible.
+    // C177: crystal sphere emissive pulse — 3s period (Math.PI*2/3 rad/s), range 0.3↔1.2.
+    // Hover boosts base by +0.3 (unhovered centre=0.75, hovered centre=1.05) before sine swing.
     // C118: use cached crystalEntry (set at init) — no Array.find() allocation on hot path
-    const crystalEmissive = (crystalEntry.hovered ? 0.9 : 0.5) + Math.sin(elapsedTime * 1.4) * 0.15;
+    const crystalPulse = Math.sin(elapsedTime * (Math.PI * 2 / 3)) * 0.45;
+    const crystalEmissive = (crystalEntry.hovered ? 1.05 : 0.75) + crystalPulse;
     crystalData.mat.emissiveIntensity = crystalEmissive;
     // C111: also animate GLB material emissive — procedural mat targets hidden sphere post-load (BUG-C46-01)
     if (crystalGLBMat) crystalGLBMat.emissiveIntensity = crystalEmissive;
+    // C177: crystal teal glow PointLight breathes in sync with emissive pulse
+    crystalTealLight.intensity = 0.6 + crystalPulse * 0.8;
 
     // C174: cauldron iron emissive pulse — green hot-metal glow (in sync with glow PointLight 2.3Hz)
     const cauldronEmissive = (cauldronEntry.hovered ? 0.18 : 0.06) + Math.sin(elapsedTime * 2.3) * 0.04;
