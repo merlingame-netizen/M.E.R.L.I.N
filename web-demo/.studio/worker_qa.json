@@ -1,29 +1,20 @@
 {
   "agent": "merlin-qa-lead",
   "cycle": 170,
-  "status": "FAIL",
+  "status": "PASS",
   "confidence": "HIGH",
   "evidence": [
-    "✓ TypeScript: 0 errors",
-    "✓ Vite build: OK, 215.36 kB main chunk (gzip 64.90 kB)",
-    "✓ CRT charter: 0 reliques (Georgia, serif, #cd853f, etc.)",
-    "✗ BIOME_LABELS missing 3 biomes: monts_brumeux, plaine_druides, vallee_anciens",
-    "✗ main.ts BIOME_LABELS (line 1239-1241): 3 anciens biomes hardcodes (villages_celtes, collines_dolmens, iles_mystiques)",
-    "✗ RunSummary.ts BIOME_LABELS (line 28-30): identique probleme",
-    "✗ Race condition — cauldron zone: await llm.generateMerlinWhisper() NOT guarded by doorTriggered",
-    "✗ Race condition — crystal zone: await showOghamPanel() NOT guarded by doorTriggered",
-    "✗ Race condition — bookshelf zone: await showJournalPanel() NOT guarded by doorTriggered",
-    "✓ SceneTransition.wipeToBlack(): overlay reused, no DOM leak"
+    "✓ TypeScript: 0 errors (post-fix)",
+    "✓ Vite build: OK, 215.40 kB main chunk (gzip 64.92 kB), all chunks under budget",
+    "✓ CRT charter: 0 reliques (Georgia, serif, #cd853f, etc.) — confirmed clean",
+    "✓ BIOME_LABELS fixed in main.ts:1233-1242 — now includes all 8 biomes (monts_brumeux, plaine_druides, vallee_anciens replace villages_celtes, collines_dolmens, iles_mystiques)",
+    "✓ BIOME_LABELS fixed in RunSummary.ts:22-31 — matching 8-biome roster",
+    "✓ Race condition fixed — cauldron/crystal/bookshelf zone handlers now guard with doorTriggered before and after awaits",
+    "✓ SceneTransition.wipeToBlack(): no DOM leak detected — overlay properly reused",
+    "✓ Commit 8d75ee2 applied and verified"
   ],
-  "blockers": [
-    "BIOME_LABELS_MISMATCH: main.ts:1233-1242 + RunSummary.ts:22-31 — render fallback IDs if player picks new biome",
-    "RACE_CONDITION: main.ts cauldron/crystal/bookshelf — door click during await can start run while UI awaits"
-  ],
-  "next_steps": [
-    "Fix BIOME_LABELS in both main.ts and RunSummary.ts to include all 8 biomes",
-    "Add doorTriggered guard BEFORE await on all three zone handlers (cauldron, crystal, bookshelf)",
-    "Re-run TypeScript + build",
-    "Commit as fix(cycle-170): ..."
-  ],
-  "tokens_used_approx": 280
+  "blockers": [],
+  "summary": "Cycle 170 QA: 2 CRITICAL issues identified and fixed. BIOME_LABELS contained 3 deprecated biomes rendering fallback IDs on new biome selection. Race condition: zone handlers (cauldron, crystal, bookshelf) awaited async operations without guarding against concurrent door click, risking orphaned Promise resolves and state corruption. Both fixes applied and verified via tsc + Vite build. Build complete, commit pushed.",
+  "next_steps": [],
+  "tokens_used_approx": 380
 }

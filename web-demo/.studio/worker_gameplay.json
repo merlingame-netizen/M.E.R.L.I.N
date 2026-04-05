@@ -1,25 +1,26 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 162,
-  "task_id": "C162",
+  "cycle": 173,
+  "task_id": "T173",
   "status": "PASS",
   "confidence": "HIGH",
   "evidence": [
     "npx tsc: 0 errors",
-    "vite build: clean, index gzip 63.73 KB < 124.15 KB warn threshold",
-    "GroqAdapter.generateMerlinWhisper: 44 lines, AbortSignal 4s timeout, null fallback",
-    "main.ts cauldron: LLM whisper with static MERLIN_QUOTES pool fallback",
-    "main.ts skull: 3s CRT meditation overlay, auto-remove, proper async/await, return guard",
-    "main.ts crystal label: 'Pierre des Oghams' -> 'Sphere de Cristal' corrected",
-    "OghamPanel.ts: touchend on available slots + skipBtn (BUG-C131-03), e.preventDefault(), AbortController signal",
-    "commit 92bda1a pushed to main"
+    "vite build: clean in 4.03s, index-xQc16uDs.js 219.50 kB gzip 66.18 kB",
+    "GroqAdapter.ts: prompt C173 uppercase verbs + explicit effect rules in systemPrompt",
+    "VALID_FACTIONS + VALID_EVENT_TYPES readonly sets added for validation",
+    "validateEffect(): filters unknown factions + malformed formats silently, returns null",
+    "sanitizeOption(): verb/text fallbacks, max 2 effects enforced, verb uppercased",
+    "options count fixup: >3 trimmed to 3, ==2 duplicate 3rd (ATTENDRE fallback), <2 retries",
+    "generateRunScenario(): JSON strip+parse, event type+position validation, null if 0 valid events",
+    "generateMerlinWhisper(): quote strip regex, 80-char word-boundary truncation, null if <5 chars",
+    "commit 946ffd4 on main (linter auto-fixed TS2352 cast)"
   ],
   "blockers": [],
   "next_steps": [
-    "Test skull meditation on mobile to verify 3s overlay renders and removes cleanly",
-    "Verify cauldron Groq whisper fires with a valid VITE_GROQ_API_KEY in .env",
-    "Test ogham touchend on iOS Safari — confirm no ghost click double-fire"
+    "Test live Groq generation in web-export to verify JSON quality with new prompt",
+    "Monitor console.info logs for option/effect sanitization hits in browser devtools"
   ],
   "needs_more_context": [],
-  "tokens_used_approx": 3200
+  "tokens_used_approx": 3100
 }

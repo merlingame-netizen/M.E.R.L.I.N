@@ -210,9 +210,15 @@ function createUndergrowth(): Group {
 
 // ── Menhirs — standing stones partially swallowed by forest ──────────────────
 
-function createForestMenhirs(): Group {
+interface ForestMenhirResult { group: Group; menhirLights: PointLight[]; }
+
+function createForestMenhirs(): ForestMenhirResult {
   const group = new Group();
-  const stoneMat = new MeshStandardMaterial({ color: 0x5a5040, roughness: 0.88, flatShading: true });
+  const menhirLights: PointLight[] = [];
+  const stoneMat = new MeshStandardMaterial({
+    color: 0x5a5040, roughness: 0.88, flatShading: true,
+    emissive: 0x001a00, emissiveIntensity: 0.08,
+  });
   const mossMat  = new MeshStandardMaterial({ color: 0x344e28, roughness: 0.98, flatShading: true });
 
   const positions: [number, number, number, number][] = [
@@ -239,16 +245,78 @@ function createForestMenhirs(): Group {
     moss.position.set(x, 0.06, z);
     group.add(moss);
 
-    // Ogham inscription — thin vertical lines on stone (CylinderGeometry carved lines)
-    const inscriptionMat = new MeshStandardMaterial({ color: 0x2a1e10, roughness: 0.99, flatShading: true });
+    // Ogham inscription — thin vertical lines on stone, glowing green runes
+    const inscriptionMat = new MeshStandardMaterial({
+      color: 0x001500, roughness: 0.99, flatShading: true,
+      emissive: 0x00ff22, emissiveIntensity: 0.4,
+    });
     for (let j = 0; j < 3; j++) {
       const line = new Mesh(new BoxGeometry(0.02, 0.25, 0.45), inscriptionMat);
       line.position.set(x + (j - 1) * 0.12, ht * 0.45 + j * 0.08, z);
       line.rotation.y = menhir.rotation.y;
       group.add(line);
     }
+
+    // Druidic glow — faint green point light at menhir base
+    const menhirLight = new PointLight(0x22ff44, 0.25, 5);
+    menhirLight.position.set(x, 0.3, z);
+    group.add(menhirLight);
+    menhirLights.push(menhirLight);
   }
-  return group;
+  return { group, menhirLights };
+}
+
+// ── Forest torch path lights ──────────────────────────────────────────────────
+// 6 torch pillars evenly spaced along the Z path, alternating left/right.
+
+interface TorchEntry { light: PointLight; phase: number; }
+interface ForestTorchResult { group: Group; torchLights: TorchEntry[]; }
+
+function createForestTorches(): ForestTorchResult {
+  const group = new Group();
+  const torchLights: TorchEntry[] = [];
+
+  const poleMat    = new MeshStandardMaterial({ color: 0x4a2808, roughness: 0.98, flatShading: true });
+  const bracketMat = new MeshStandardMaterial({ color: 0x2a2020, roughness: 0.90, flatShading: true });
+  const flameMat   = new MeshStandardMaterial({
+    color: 0xff6010, emissive: 0xff4000, emissiveIntensity: 1.2, flatShading: true,
+  });
+
+  const torchPositions: [number, number][] = [
+    [-3, -8],
+    [ 3, -18],
+    [-3, -28],
+    [ 3, -38],
+    [-3, -48],
+    [ 3, -58],
+  ];
+
+  for (let i = 0; i < torchPositions.length; i++) {
+    const [x, z] = torchPositions[i]!;
+
+    // Wooden pole — ground level, center at Y=1.0 so base sits at Y=0
+    const pole = new Mesh(new CylinderGeometry(0.06, 0.08, 2.0, 5), poleMat);
+    pole.position.set(x, 1.0, z);
+    group.add(pole);
+
+    // Iron bracket at top of pole
+    const bracket = new Mesh(new BoxGeometry(0.04, 0.12, 0.04), bracketMat);
+    bracket.position.set(x, 2.1, z);
+    group.add(bracket);
+
+    // Flame orb
+    const flame = new Mesh(new SphereGeometry(0.12, 4, 3), flameMat);
+    flame.position.set(x, 2.25, z);
+    group.add(flame);
+
+    // Point light attached to flame position
+    const torchLight = new PointLight(0xff6010, 1.2, 10);
+    torchLight.position.set(x, 2.25, z);
+    group.add(torchLight);
+    torchLights.push({ light: torchLight, phase: i * (Math.PI * 2 / torchPositions.length) });
+  }
+
+  return { group, torchLights };
 }
 
 // ── Roots & fallen logs ───────────────────────────────────────────────────────
@@ -635,7 +703,10 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   group.add(skyGroup);
   group.add(createForestTrees());
   group.add(createUndergrowth());
-  group.add(createForestMenhirs());
+  const { group: menhirGroup, menhirLights } = createForestMenhirs();
+  group.add(menhirGroup);
+  const { group: torchGroup, torchLights } = createForestTorches();
+  group.add(torchGroup);
   group.add(createForestDebris());
   group.add(createCanopyRays());
   group.add(createGroundMist());
@@ -670,6 +741,16 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
     // Volumetric light pulse — 3s period, intensity 0.6 ↔ 1.0
     volLight.intensity = 0.8 + Math.sin(sceneTime * (Math.PI * 2 / 3)) * 0.2;
+
+    // Torch flicker — randomized amber fire
+    for (const entry of torchLights) {
+      entry.light.intensity = 1.2 + Math.sin(sceneTime * 8.0 + entry.phase) * 0.25 + (Math.random() - 0.5) * 0.08;
+    }
+
+    // Menhir pulse — slow druidic breathing
+    for (let mi = 0; mi < menhirLights.length; mi++) {
+      menhirLights[mi]!.intensity = 0.25 + Math.sin(sceneTime * 0.6 + mi * 0.9) * 0.12;
+    }
 
     // C162: animated cloud drift — each band at different speed for parallax
     for (const layer of cloudLayers) {

@@ -331,6 +331,20 @@ function drawEventNode(
   ctx.textBaseline = 'middle';
   ctx.fillText(event.icone, x, y);
 
+  // Event-type glyph overlay — CRT terminal identifier
+  const GLYPH_MAP: Record<string, string> = {
+    combat: '⚔', decouverte: '?', repos: '+', danger: '!', mystere: '*',
+  };
+  const nodeR = 13;
+  const glyph = GLYPH_MAP[event.type] ?? '•';
+  ctx.save();
+  ctx.font = `bold ${Math.round(nodeR * 1.1)}px "Courier New", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(1,8,2,0.92)';
+  ctx.fillText(glyph, x, y);
+  ctx.restore();
+
   // Label below — CRT green
   ctx.fillStyle = PAL.ink;
   ctx.font = `8px 'Courier New',monospace`;
@@ -484,6 +498,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     `text-shadow:0 0 8px rgba(51,255,102,0.5);`,
   ].join('');
   hintEl.addEventListener('mouseenter', () => {
+    sfx('hover');
     hintEl.style.background = 'rgba(51,255,102,0.10)';
     hintEl.style.boxShadow = '0 0 14px rgba(51,255,102,0.22)';
   });
@@ -721,7 +736,7 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
       clearTimeout(autoTimer);
       resolve();
     };
-    const onBtnClick = (e: MouseEvent): void => { e.stopPropagation(); done(); };
+    const onBtnClick = (e: MouseEvent): void => { sfx('click'); e.stopPropagation(); done(); };
     const onOverlayClick = (): void => { done(); };
     const onKey = (e: KeyboardEvent): void => {
       if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); done(); }
