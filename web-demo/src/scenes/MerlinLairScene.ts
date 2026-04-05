@@ -1430,6 +1430,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let fireplaceSparks457: Mesh[] = [];
   let fireplaceLight457: PointLight | null = null;
 
+  // C462 — floating runic calendar disc
+  let calendarDisc462: Group | null = null;
+  let calendarDiscT462: number = 0;
+  let calendarRunesMats462: MeshBasicMaterial[] = [];
+  let calendarDiscLight462: PointLight | null = null;
+  let calendarSurgeTimer462: number = 25;
+  let calendarSurging462: boolean = false;
+  let calendarSurgeT462: number = 0;
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2804,6 +2813,71 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     fireplaceGroup457.add(fireplaceLight457);
 
     scene.add(fireplaceGroup457);
+  }
+
+  // C462 — floating runic calendar disc
+  {
+    calendarDisc462 = new Group();
+    calendarDisc462.position.set(-1.5, 2.8, -3.5);
+
+    // Stone pedestal below disc
+    const discPedestal = new Mesh(
+      new CylinderGeometry(0.12, 0.18, 1.8, 6),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    discPedestal.position.y = -1.2;
+    calendarDisc462!.add(discPedestal);
+
+    // Main disc face (cylinder, very flat)
+    const discFace = new Mesh(
+      new CylinderGeometry(0.9, 0.9, 0.1, 16),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    calendarDisc462!.add(discFace);
+
+    // Outer ring (torus around disc edge)
+    const outerRing = new Mesh(
+      new TorusGeometry(0.92, 0.05, 4, 20),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    outerRing.rotation.x = Math.PI * 0.5;
+    calendarDisc462!.add(outerRing);
+
+    // Inner ring
+    const innerRing = new Mesh(
+      new TorusGeometry(0.55, 0.03, 4, 16),
+      new MeshBasicMaterial({ color: 0x1a8833 })
+    );
+    innerRing.rotation.x = Math.PI * 0.5;
+    calendarDisc462!.add(innerRing);
+
+    // 12 rune planes evenly spaced on the disc face
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const rune = new Mesh(
+        new PlaneGeometry(0.12, 0.18),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.5 })
+      );
+      rune.position.set(Math.cos(angle) * 0.7, 0.07, Math.sin(angle) * 0.7);
+      rune.rotation.x = -Math.PI * 0.5;
+      calendarRunesMats462.push(rune.material as MeshBasicMaterial);
+      calendarDisc462!.add(rune);
+    }
+
+    // Hub centre sphere
+    const hub = new Mesh(
+      new SphereGeometry(0.1, 6, 6),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 })
+    );
+    hub.position.y = 0.08;
+    calendarDisc462!.add(hub);
+
+    // PointLight
+    calendarDiscLight462 = new PointLight(0x33ff66, 0.3, 6.0);
+    calendarDiscLight462.position.y = 0.3;
+    calendarDisc462!.add(calendarDiscLight462);
+
+    scene.add(calendarDisc462);
   }
 
   // C438 — potion bottle shelf
@@ -4292,6 +4366,49 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       fireplaceLight457.intensity = 1.0 + 0.4 * Math.sin(fireplaceT457 * 6.0);
     }
 
+    // C462 — floating runic calendar disc update
+    calendarDiscT462 += dt;
+    calendarSurgeTimer462 -= dt;
+
+    if (calendarDisc462) {
+      calendarDisc462.rotation.y = calendarDiscT462 * 0.12;
+      calendarDisc462.position.y = 2.8 + 0.12 * Math.sin(calendarDiscT462 * 0.5);
+    }
+
+    if (!calendarSurging462) {
+      calendarRunesMats462.forEach((mat, i) => {
+        mat.opacity = 0.35 + 0.2 * Math.sin(calendarDiscT462 * 0.9 + i * (Math.PI / 6));
+      });
+      if (calendarDiscLight462) {
+        calendarDiscLight462.intensity = 0.25 + 0.08 * Math.sin(calendarDiscT462 * 1.0);
+      }
+    }
+
+    if (calendarSurgeTimer462 <= 0) {
+      calendarSurgeTimer462 = 20 + Math.random() * 10;
+      calendarSurging462 = true;
+      calendarSurgeT462 = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+    }
+
+    if (calendarSurging462) {
+      calendarSurgeT462 += dt;
+      if (calendarSurgeT462 < 2.0) {
+        const t = calendarSurgeT462 / 2.0;
+        calendarRunesMats462.forEach((mat) => {
+          mat.opacity = 0.8 - 0.4 * t;
+        });
+        if (calendarDiscLight462) {
+          calendarDiscLight462.intensity = 0.25 + 0.8 * (1 - t);
+        }
+        if (calendarDisc462) {
+          calendarDisc462.rotation.y += dt * 1.5;
+        }
+      } else {
+        calendarSurging462 = false;
+      }
+    }
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -4747,6 +4864,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     fireplaceFlames457 = [];
     fireplaceSparks457 = [];
     fireplaceLight457 = null;
+    // C462 — floating runic calendar disc dispose
+    if (calendarDisc462) {
+      calendarDisc462.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(calendarDisc462);
+      calendarDisc462 = null;
+    }
+    calendarRunesMats462 = [];
+    calendarDiscLight462 = null;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
