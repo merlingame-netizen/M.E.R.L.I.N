@@ -569,6 +569,28 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   ].join('');
   leftPanel.appendChild(thinkingEl);
 
+  // Inject blinking cursor keyframe once (guarded by id)
+  if (!document.getElementById('map-think-style')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'map-think-style';
+    styleEl.textContent = '@keyframes celtos-cursor-blink{0%,100%{opacity:1}50%{opacity:0.4}}';
+    document.head.appendChild(styleEl);
+  }
+  thinkingEl.style.animation = 'celtos-cursor-blink 0.8s step-end infinite';
+
+  // Typewriter dots animation while LLM is queried
+  const THINKING_FRAMES = [
+    '> QUERYING_GROQ_API.  ',
+    '> QUERYING_GROQ_API.. ',
+    '> QUERYING_GROQ_API...',
+    '> NEMETON.SYS > ready ',
+  ] as const;
+  let thinkingFrame = 0;
+  const thinkingInterval = setInterval(() => {
+    thinkingFrame = (thinkingFrame + 1) % THINKING_FRAMES.length;
+    thinkingEl.textContent = THINKING_FRAMES[thinkingFrame] ?? THINKING_FRAMES[0];
+  }, 400);
+
   const divider = document.createElement('div');
   divider.style.cssText = [
     `width:100%;height:1px;background:linear-gradient(90deg,${PAL.border},transparent);`,
@@ -646,7 +668,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     new Promise<RunScenario>((res) => setTimeout(() => res(buildFallback(biome)), 4900)),
   ]);
 
-  // Hide "thinking" placeholder
+  // Hide "thinking" placeholder — stop animation first
+  clearInterval(thinkingInterval);
   thinkingEl.style.opacity = '0';
 
   const ctx = canvas.getContext('2d')!;
