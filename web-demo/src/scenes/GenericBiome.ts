@@ -375,6 +375,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let montsWindMesh: Points | null = null;
   let montsWindTime = 0;
   let montsSnowMeshes: Mesh[] = [];
+  let crystalGroups366: Group[] = [];
+  let crystalLights366: PointLight[] = [];
   let _eagleGroup: Group | null = null;
   let _eagleWingL: Mesh | null = null;
   let _eagleWingR: Mesh | null = null;
@@ -1465,6 +1467,50 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _goatHead = headMesh;
     _goatTail = tailMesh;
     _goatBody = bodyMesh;
+
+    // Ice crystal formations on rocky ledges (C366)
+    const crystalMat366 = new MeshStandardMaterial({
+      color: 0x0a2a1a, emissive: new Color(0x0d4420), emissiveIntensity: 0.10,
+      roughness: 0.2, metalness: 0.4, transparent: true, opacity: 0.85,
+    });
+
+    const clusterPositions = [
+      new Vector3(-4, 0.5, -24),
+      new Vector3(3, 1.0, -28),
+      new Vector3(-1, 0.8, -32),
+    ];
+
+    clusterPositions.forEach((clusterPos, ci) => {
+      const clusterGroup = new Group();
+      const count = 4 + ci; // 4, 5, 6 crystals per cluster
+      for (let i = 0; i < count; i++) {
+        const h = 0.4 + Math.random() * 0.6;
+        const geo = new ConeGeometry(0.04 + Math.random() * 0.03, h, 4);
+        const mat = crystalMat366.clone();
+        mat.userData['phase'] = Math.random() * Math.PI * 2;
+        const mesh = new Mesh(geo, mat);
+        mesh.position.set(
+          (Math.random() - 0.5) * 0.4,
+          h / 2,
+          (Math.random() - 0.5) * 0.4,
+        );
+        mesh.rotation.set(
+          (Math.random() - 0.5) * 0.3,
+          Math.random() * Math.PI,
+          (Math.random() - 0.5) * 0.2,
+        );
+        clusterGroup.add(mesh);
+      }
+
+      const light366 = new PointLight(0x33ff66, 0.08, 2.5);
+      light366.position.set(0, 0.3, 0);
+      clusterGroup.add(light366);
+      crystalLights366.push(light366);
+
+      clusterGroup.position.copy(clusterPos);
+      group.add(clusterGroup);
+      crystalGroups366.push(clusterGroup);
+    });
   }
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
@@ -2382,6 +2428,22 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         _goatBody.rotation.z = Math.sin(t * 0.15) * 0.02;
       }
     }
+    // Monts brumeux — ice crystal moonlight shimmer (C366)
+    if (crystalGroups366.length > 0) {
+      const elapsedTime366 = montsWindTime; // reuse accumulated monts time
+      crystalGroups366.forEach((cg, ci) => {
+        cg.children.forEach((child) => {
+          if (child instanceof Mesh && child.material) {
+            const mat = child.material as MeshStandardMaterial;
+            const phase = (mat.userData['phase'] as number) ?? 0;
+            mat.emissiveIntensity = 0.10 + Math.sin(elapsedTime366 * 0.7 + phase + ci * 1.2) * 0.08;
+          }
+        });
+        if (crystalLights366[ci] !== undefined) {
+          crystalLights366[ci].intensity = 0.06 + Math.sin(elapsedTime366 * 0.5 + ci * 0.8) * 0.04;
+        }
+      });
+    }
   };
 
   const dispose = (): void => {
@@ -2427,6 +2489,20 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _goatHead = null;
     _goatTail = null;
     _goatBody = null;
+    // Ice crystal formations cleanup (C366)
+    crystalGroups366.forEach(cg => {
+      group.remove(cg);
+      cg.traverse(c => {
+        const m = c as Mesh;
+        if (m.geometry) m.geometry.dispose();
+        if (m.material) {
+          if (Array.isArray(m.material)) m.material.forEach(mat => mat.dispose());
+          else (m.material as MeshStandardMaterial).dispose();
+        }
+      });
+    });
+    crystalGroups366 = [];
+    crystalLights366 = [];
     _deadTreeGroup = null;
     _templeGroup = null;
     _gateGroup = null;
