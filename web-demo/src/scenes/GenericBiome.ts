@@ -525,6 +525,23 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     );
     moundMesh.position.set(-2.75, -3.2, -38);
     group.add(moundMesh);
+
+    // Mysterious hooded figure — distant silhouette, stillness creates dread
+    const figureMat = new MeshBasicMaterial({ color: 0x0a0e0a });
+    const figureCloak = new Mesh(
+      new CylinderGeometry(0.25, 0.45, 1.8, 6),
+      figureMat
+    );
+    figureCloak.position.set(-12, -2.1, -38);
+    figureCloak.rotation.x = 0.08;
+    group.add(figureCloak);
+
+    const figureHood = new Mesh(
+      new SphereGeometry(0.28, 5, 4, 0, Math.PI * 2, 0, Math.PI * 0.65),
+      new MeshBasicMaterial({ color: 0x080c08 })
+    );
+    figureHood.position.set(-12, -0.85, -38);
+    group.add(figureHood);
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
