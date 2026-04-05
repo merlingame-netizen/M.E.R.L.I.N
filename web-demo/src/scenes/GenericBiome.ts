@@ -540,6 +540,30 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     });
     valleeWispMesh = new Points(wispGeo, wispMat);
     group.add(valleeWispMesh);
+
+    // 4 ancient stone stelae — tall carved pillars with faded rune engravings
+    const stelaeData: Array<{ geo: [number, number, number]; pos: [number, number, number]; rotY: number; color: number }> = [
+      { geo: [0.4, 5, 0.2],    pos: [-10, -0.5, -40], rotY:  0.2,  color: 0x2a3020 },
+      { geo: [0.3, 6.5, 0.18], pos: [ -5, -0.5, -43], rotY: -0.1,  color: 0x1a2010 },
+      { geo: [0.35, 4, 0.2],   pos: [  3, -0.5, -42], rotY:  0.15, color: 0x1e2818 },
+      { geo: [0.4, 7, 0.22],   pos: [ 10, -0.5, -40], rotY: -0.2,  color: 0x2a3020 },
+    ];
+    const runeMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.12 });
+    stelaeData.forEach(({ geo, pos, rotY, color }) => {
+      const [gw, gh, gd] = geo;
+      const [px, py, pz] = pos;
+      const stele = new Mesh(
+        new BoxGeometry(gw, gh, gd),
+        new MeshBasicMaterial({ color }),
+      );
+      stele.position.set(px, py + gh / 2, pz);
+      stele.rotation.y = rotY;
+      group.add(stele);
+      // Faded rune glow — very thin plane pressed against the front face
+      const rune = new Mesh(new PlaneGeometry(0.25, 0.4), runeMat.clone());
+      rune.position.set(px, py + gh / 2 + 0.5, pz + gd / 2 + 0.12);
+      group.add(rune);
+    });
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
