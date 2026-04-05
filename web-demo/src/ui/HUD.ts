@@ -652,6 +652,109 @@ function ensureHudFactionStyles(): void {
 /** Module-level previous faction rep values — -1 means "not yet initialized". */
 const _prevFactions: Record<string, number> = {};
 
+// =============================================================================
+// C393 — Faction reputation surge banner (±15+ points in one card)
+// =============================================================================
+
+interface SurgeBannerData393 {
+  factionName: string;
+  delta: number;
+}
+
+let surgeBannerQueue393: SurgeBannerData393[] = [];
+let surgeBannerActive393 = false;
+let surgeBannerEl393: HTMLElement | null = null;
+
+/**
+ * Inject the surge banner CSS once into document.head.
+ * Idempotent — guarded by #surge-banner-style-393.
+ */
+function ensureSurgeBannerStyle393(): void {
+  if (document.getElementById('surge-banner-style-393')) return;
+  const s = document.createElement('style');
+  s.id = 'surge-banner-style-393';
+  s.textContent = `
+.surge-banner-393 {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: rgba(1, 8, 2, 0.92);
+  border-bottom: 2px solid #33ff66;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 500;
+  transform: translateY(-100%);
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+}
+.surge-banner-393.visible {
+  transform: translateY(0);
+}
+.surge-banner-393 .surge-faction { color: rgba(51,255,102,0.7); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+.surge-banner-393 .surge-amount { color: #33ff66; font-size: 22px; font-weight: bold; }
+.surge-banner-393 .surge-label { color: rgba(51,255,102,0.5); font-size: 10px; letter-spacing: 1px; }
+@keyframes surge-pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+.surge-banner-393.visible .surge-amount { animation: surge-pulse 0.8s ease infinite; }
+  `;
+  document.head.appendChild(s);
+}
+
+function processSurgeBannerQueue393(): void {
+  if (surgeBannerQueue393.length === 0) { surgeBannerActive393 = false; return; }
+  surgeBannerActive393 = true;
+  const item = surgeBannerQueue393.shift();
+  if (!item) { surgeBannerActive393 = false; return; }
+  const { factionName, delta } = item;
+
+  if (!surgeBannerEl393) {
+    surgeBannerEl393 = document.createElement('div');
+    surgeBannerEl393.className = 'surge-banner-393';
+    document.body.appendChild(surgeBannerEl393);
+  }
+
+  const sign = delta > 0 ? '+' : '';
+  surgeBannerEl393.innerHTML = `
+    <span class="surge-faction">${factionName.replace(/_/g, ' ')}</span>
+    <span class="surge-amount">${sign}${delta}</span>
+    <span class="surge-label">R\u00c9PUTATION</span>
+  `;
+
+  requestAnimationFrame(() => {
+    surgeBannerEl393?.classList.add('visible');
+    window.setTimeout(() => {
+      surgeBannerEl393?.classList.remove('visible');
+      window.setTimeout(() => processSurgeBannerQueue393(), 350);
+    }, 2000);
+  });
+}
+
+/**
+ * Show a dramatic faction reputation surge banner when delta ≥ 15 points.
+ * Banners are queued — if multiple factions surge simultaneously each gets its own banner.
+ * @param factionName - The faction key (e.g. 'druides').
+ * @param delta       - Signed reputation change (e.g. +18 or -15).
+ */
+function showSurgeBanner393(factionName: string, delta: number): void {
+  ensureSurgeBannerStyle393();
+  surgeBannerQueue393.push({ factionName, delta });
+  if (!surgeBannerActive393) processSurgeBannerQueue393();
+}
+
+/**
+ * Remove the surge banner element from DOM and reset queue state.
+ * Called from teardownHUD().
+ */
+function teardownSurgeBanner393(): void {
+  surgeBannerEl393?.remove();
+  surgeBannerEl393 = null;
+  surgeBannerQueue393 = [];
+  surgeBannerActive393 = false;
+  document.getElementById('surge-banner-style-393')?.remove();
+}
+
 /**
  * Update faction display and flash the faction row on changes ≥ 3 points.
  * - Green glow for reputation increase, red glow for decrease.
@@ -689,6 +792,11 @@ export function updateFactionDisplay(factions: Record<string, number>): void {
 
         const sfxSound: string = delta > 0 ? 'reputation_up' : 'reputation_down';
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: sfxSound } }));
+
+        // C393: surge banner for large reputation swings (≥15 points)
+        if (Math.abs(delta) >= 15) {
+          showSurgeBanner393(faction, delta);
+        }
       }
     }
 
@@ -994,6 +1102,8 @@ export function teardownHUD(): void {
   // C259: remove ogham toast and its style on teardown.
   document.getElementById('hud-ogham-toast')?.remove();
   document.getElementById('hud-ogham-toast-style')?.remove();
+  // C393: remove surge banner, queue, and style on teardown.
+  teardownSurgeBanner393();
   // C323: remove drain animation style on teardown.
   document.getElementById('hud-drain-style')?.remove();
   // C339: remove standalone anam display and its style on teardown.
