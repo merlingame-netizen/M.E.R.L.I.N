@@ -1490,6 +1490,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _potionLiquids: Mesh[] = [];
   const _potionLights: PointLight[] = [];
 
+  // C498 — floating magical lantern
+  let lanternGroup498: Group | null = null;
+  let t498: number = 0;
+  const lanternGlassMats498: MeshStandardMaterial[] = [];
+  let lanternFlameMat498: MeshStandardMaterial | null = null;
+  let lanternLight498: PointLight | null = null;
+  let lanternBoostTimer498: number = 35 + Math.random() * 15;
+  let lanternBoost498: boolean = false;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -3471,6 +3480,86 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     inkDotCount493 = 0;
   }
 
+  // C498 — floating magical lantern
+  {
+    lanternGroup498 = new Group();
+
+    // Aged brass frame material
+    const brassMat = new MeshStandardMaterial({
+      color: 0x4a3208,
+      metalness: 0.7,
+      roughness: 0.4,
+      flatShading: true,
+    });
+
+    // 4 vertical corner rods
+    const rodOffsets: Array<[number, number]> = [[-0.05, -0.05], [0.05, -0.05], [-0.05, 0.05], [0.05, 0.05]];
+    for (const [rx, rz] of rodOffsets) {
+      const rod = new Mesh(new CylinderGeometry(0.015, 0.015, 0.3, 4), brassMat);
+      rod.position.set(rx, 0, rz);
+      lanternGroup498.add(rod);
+    }
+
+    // Top and bottom caps
+    const topCap = new Mesh(new BoxGeometry(0.12, 0.02, 0.12), brassMat);
+    topCap.position.set(0, 0.16, 0);
+    lanternGroup498.add(topCap);
+    const botCap = new Mesh(new BoxGeometry(0.12, 0.02, 0.12), brassMat);
+    botCap.position.set(0, -0.16, 0);
+    lanternGroup498.add(botCap);
+
+    // 4 glass panels (one per face), emissive green
+    const panelFaces: Array<{ x: number; z: number; ry: number }> = [
+      { x: 0,     z: -0.051, ry: 0 },
+      { x: 0,     z:  0.051, ry: Math.PI },
+      { x: -0.051,z: 0,      ry: Math.PI / 2 },
+      { x:  0.051,z: 0,      ry: -Math.PI / 2 },
+    ];
+    for (let pi = 0; pi < 4; pi++) {
+      const glassMat = new MeshStandardMaterial({
+        color: 0x0a2a14,
+        emissive: 0x33ff66,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.5,
+        side: DoubleSide,
+        roughness: 0.3,
+        metalness: 0.0,
+      });
+      lanternGlassMats498.push(glassMat);
+      const panel = new Mesh(new PlaneGeometry(0.1, 0.28), glassMat);
+      const face = panelFaces[pi]!;
+      panel.position.set(face.x, 0, face.z);
+      panel.rotation.y = face.ry;
+      lanternGroup498.add(panel);
+    }
+
+    // Hanging ring at top
+    const ring = new Mesh(new TorusGeometry(0.04, 0.01, 4, 8), brassMat);
+    ring.position.set(0, 0.22, 0);
+    ring.rotation.x = Math.PI / 2;
+    lanternGroup498.add(ring);
+
+    // Inner flame core
+    lanternFlameMat498 = new MeshStandardMaterial({
+      color: 0x33ff66,
+      emissive: 0x33ff66,
+      emissiveIntensity: 2.0,
+      roughness: 0.5,
+      metalness: 0.0,
+    });
+    const flame = new Mesh(new SphereGeometry(0.05, 6, 6), lanternFlameMat498);
+    lanternGroup498.add(flame);
+
+    // Moving point light
+    lanternLight498 = new PointLight(0x33ff66, 0.6, 5.0);
+    lanternGroup498.add(lanternLight498);
+
+    // Start position on figure-8 path
+    lanternGroup498.position.set(0, 1.8, -1);
+    scene.add(lanternGroup498);
+  }
+
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
   {
     mirrorGroup361 = new Group();
@@ -5122,6 +5211,56 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C498 — floating magical lantern
+    if (lanternGroup498) {
+      t498 += dt;
+
+      // Boost timer — every 35-50s trigger a fast loop (2× speed for 3s)
+      lanternBoostTimer498 -= dt;
+      if (!lanternBoost498 && lanternBoostTimer498 <= 0) {
+        lanternBoost498 = true;
+        lanternBoostTimer498 = 3.0; // boosted duration
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+      } else if (lanternBoost498) {
+        lanternBoostTimer498 -= dt; // counts down 3s boost
+        if (lanternBoostTimer498 <= 0) {
+          lanternBoost498 = false;
+          lanternBoostTimer498 = 35 + Math.random() * 15; // next trigger
+        }
+      }
+
+      const speed = lanternBoost498 ? 2.0 : 1.0;
+      const tEff = t498 * speed;
+
+      // Figure-8 path
+      const cx = 0, cz = -1;
+      const xR = 2.5, zR = 1.5;
+      const lx = cx + xR * Math.sin(tEff * 0.25);
+      const ly = 1.8 + 0.3 * Math.sin(tEff * 0.7);
+      const lz = cz + zR * Math.sin(tEff * 0.5);
+      lanternGroup498.position.set(lx, ly, lz);
+
+      // Y rotation + pendulum swing
+      lanternGroup498.rotation.y += 0.3 * dt;
+      lanternGroup498.rotation.z = 0.08 * Math.sin(tEff * 1.8);
+
+      // Glass panel opacity breathing
+      for (let pi = 0; pi < lanternGlassMats498.length; pi++) {
+        const gMat = lanternGlassMats498[pi];
+        if (gMat) gMat.opacity = 0.4 + 0.2 * Math.sin(tEff * 2.3 + pi * Math.PI / 2);
+      }
+
+      // Inner flame flicker
+      if (lanternFlameMat498) {
+        lanternFlameMat498.emissiveIntensity = 1.8 + 0.4 * Math.sin(tEff * 7.1);
+      }
+
+      // Light intensity pulse
+      if (lanternLight498) {
+        lanternLight498.intensity = 0.5 + 0.2 * Math.sin(tEff * 4.3);
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -5637,6 +5776,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     inkDots493.length = 0;
     quillLight493 = null;
+    // C498 — floating magical lantern dispose
+    if (lanternGroup498) {
+      lanternGroup498.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(lanternGroup498);
+      lanternGroup498 = null;
+    }
+    lanternGlassMats498.length = 0;
+    lanternFlameMat498 = null;
+    lanternLight498 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
