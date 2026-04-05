@@ -1847,11 +1847,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const stemMat = new MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.9, metalness: 0.0, flatShading: true });
     const clusterMat = new MeshStandardMaterial({
       color: 0x2a5a2a, roughness: 0.85, metalness: 0.0, flatShading: true,
-      emissive: new (stemMat.emissive.constructor as new (hex: number) => typeof stemMat.emissive)(0x0d4420),
+      emissive: new Color(0x0d4420),
       emissiveIntensity: 0.04,
     });
-    // Use explicit hex setHex — avoids needing to import Color
-    clusterMat.emissive.setHex(0x0d4420);
     const STEM_COUNTS = [3, 4, 5, 3, 4]; // deterministic per bundle
     const STEM_OFFSETS: Array<Array<[number, number]>> = [
       [[-0.03, -0.01], [0.02, 0.04], [-0.01, -0.04]],
@@ -1963,7 +1961,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       const orbGeo = new SphereGeometry(0.1, 10, 8);
       const orbMat = new MeshStandardMaterial({
         color: 0x051505,
-        emissive: new (MeshStandardMaterial.prototype.emissive.constructor as unknown as new (hex: number) => typeof MeshStandardMaterial.prototype.emissive)(0x0d4420),
+        emissive: new Color(0x0d4420),
         emissiveIntensity: 0.15,
         roughness: 0.0,
         metalness: 0.1,
@@ -3638,7 +3636,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     const surfaceGeo = new PlaneGeometry(1.1, 1.5, 10, 14);
     const surfaceMat = new MeshStandardMaterial({
       color: 0x051505,
-      emissive: new (frameMat361.emissive.constructor as new (hex: number) => typeof frameMat361.emissive)(0x0d4420),
+      emissive: new Color(0x0d4420),
       emissiveIntensity: 0.15,
       transparent: true,
       opacity: 0.82,
