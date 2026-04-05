@@ -65,6 +65,9 @@ async function runMainMenu(): Promise<{ isNewGame: boolean }> {
     continueBtn.style.display = 'none';
   }
 
+  // BUG-FIX: clear any inline display:none set by a previous finally block so
+  // classList.add('visible') can take effect (inline style overrides class).
+  wrapper.style.display = '';
   wrapper.classList.add('visible');
 
   const menu = initMainMenu(wrapper);
