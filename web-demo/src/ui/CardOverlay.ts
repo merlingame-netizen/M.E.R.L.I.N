@@ -253,6 +253,49 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
   return container;
 }
 
+// ── Typewriter animation ───────────────────────────────────────────────────
+
+interface TypewriterHandle {
+  skip: () => void;
+}
+
+/**
+ * Animate `text` into `el` one character at a time at `msPerChar` ms/char.
+ * Returns a handle whose `skip()` jumps immediately to the full text.
+ * `onComplete` is called once — either when the animation finishes naturally
+ * or when skip() is called.
+ */
+function typewriterText(
+  el: HTMLElement,
+  text: string,
+  msPerChar: number,
+  onComplete?: () => void,
+): TypewriterHandle {
+  let i = 0;
+  el.textContent = '';
+  const interval = setInterval(() => {
+    i++;
+    el.textContent = text.slice(0, i);
+    if (i >= text.length) {
+      clearInterval(interval);
+      onComplete?.();
+    }
+  }, msPerChar);
+  return {
+    skip: () => {
+      clearInterval(interval);
+      el.textContent = text;
+      onComplete?.();
+    },
+  };
+}
+
+// C224/TW-01: module-level typewriter handle so hideCard() can cancel an
+// in-progress animation when the overlay is dismissed externally (scene
+// transition, safety timeout). Without this, the setInterval keeps firing on
+// a detached narrativeEl, retaining the Card closure until the interval ends.
+let _activeTypewriter: TypewriterHandle | null = null;
+
 // ── T047: Card flip animation ──────────────────────────────────────────────
 
 // C126/FLIP-01: module-level timeout ID so rapid showCard() calls cancel the previous
@@ -517,6 +560,27 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       const idx = ['1', '2', '3'].indexOf(e.key);
       if (idx === -1 || idx >= card.options.length) return;
       e.preventDefault();
+      // C224/TW: if typewriter is running, skip it first so the user sees the
+      // full text and the options become visible before the option activates.
+      if (_activeTypewriter !== null) {
+        _activeTypewriter.skip();
+        _activeTypewriter = null;
+        // The skip() call triggers onComplete → revealOptions(). Give one frame
+        // for the DOM to update (opacity transition) before activating.
+        requestAnimationFrame(() => {
+          document.removeEventListener('keydown', onDigitKey);
+          const btns = optContainer.querySelectorAll<HTMLElement>('[role="button"]');
+          const targetBtn = btns[idx];
+          if (!targetBtn || activated) return;
+          sfx('click');
+          activated = true;
+          clearTimeout(safetyId);
+          targetBtn.classList.add('card-option-selected');
+          targetBtn.classList.add('selected');
+          setTimeout(() => { hideCard(); resolve(idx); }, 200);
+        });
+        return;
+      }
       document.removeEventListener('keydown', onDigitKey);
       const btns = optContainer.querySelectorAll<HTMLElement>('[role="button"]');
       const targetBtn = btns[idx];
@@ -538,14 +602,57 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     // hidden (display:none or opacity:0) causes older screen readers to skip the
     // live-region update since the element is not in the accessibility tree yet.
     overlayEl.classList.add('visible');
-    narrativeEl.textContent = card.narrative;
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
-    // Focus first option so keyboard users don't need to Tab from previous element
-    requestAnimationFrame(() => {
-      const first = optContainer.querySelector<HTMLElement>('[role="button"]');
-      if (first) first.focus();
-    });
+
+    // C224/TW: cancel any previous typewriter from a rapid showCard() call
+    if (_activeTypewriter !== null) {
+      _activeTypewriter.skip();
+      _activeTypewriter = null;
+    }
+
+    // C224/TW: Hide options until typewriter completes (or skip).
+    // Opacity+pointer-events keeps options in the DOM (so keyboard shortcuts
+    // don't error on missing nodes) while preventing premature interaction.
+    optContainer.style.opacity = '0';
+    optContainer.style.pointerEvents = 'none';
+
+    /** Reveal options and transfer focus to the first button. */
+    const revealOptions = (): void => {
+      optContainer.style.transition = 'opacity 0.3s';
+      optContainer.style.opacity = '1';
+      optContainer.style.pointerEvents = '';
+      requestAnimationFrame(() => {
+        const first = optContainer.querySelector<HTMLElement>('[role="button"]');
+        if (first) first.focus();
+      });
+    };
+
+    // C224/TW: Click/tap anywhere on the card container skips the typewriter.
+    // The listener is { once: true } so it self-removes after first interaction.
+    const skipHandler = (): void => {
+      if (_activeTypewriter !== null) {
+        _activeTypewriter.skip();
+        _activeTypewriter = null;
+      }
+    };
+    if (container) {
+      container.addEventListener('click', skipHandler, { once: true });
+    }
+
+    // C224/TW: Start typewriter — 18ms/char ≈ 2-3s for a 120-char narrative.
+    // onComplete removes the skip click-listener (it already fired or is no
+    // longer needed) and reveals options.
+    _activeTypewriter = typewriterText(
+      narrativeEl,
+      card.narrative,
+      18,
+      () => {
+        _activeTypewriter = null;
+        if (container) container.removeEventListener('click', skipHandler);
+        revealOptions();
+      },
+    );
   });
 }
 
@@ -559,6 +666,19 @@ export function hideCard(): void {
   for (const { btn, handler } of _activeKeyDownHandlers) btn.removeEventListener('keydown', handler);
   _activeKeyDownHandlers = [];
   clearTimeout(_activeCardSafetyId);
+  // C224/TW-01: cancel in-progress typewriter so its setInterval doesn't keep
+  // firing on a detached element after the overlay is hidden.
+  if (_activeTypewriter !== null) {
+    _activeTypewriter.skip();
+    _activeTypewriter = null;
+  }
+  // C224/TW: reset option container visibility for the next card show
+  const optContainer = document.getElementById('card-options');
+  if (optContainer) {
+    optContainer.style.opacity = '';
+    optContainer.style.pointerEvents = '';
+    optContainer.style.transition = '';
+  }
   const overlayEl = document.getElementById('card-overlay');
   if (overlayEl) overlayEl.classList.remove('visible');
 }
