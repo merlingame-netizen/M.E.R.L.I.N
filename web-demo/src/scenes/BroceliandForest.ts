@@ -861,6 +861,12 @@ let mushroomGroup383: Group | null = null;
 let mushroomCaps383: Mesh[] = [];
 let mushroomRingLight383: PointLight | null = null;
 
+// ── Cycle-387: ancient hollow tree with pulsing magical interior ──────────────
+let hollowTreeGroup387: Group | null = null;
+let hollowTreeLight387: PointLight | null = null;
+let hollowPulseT387 = -1;
+let hollowNextPulse387 = 8.0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1512,6 +1518,51 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(mushroomGroup383);
   }
 
+  // ── Cycle-387: ancient hollow tree with glowing magical interior ─────────────
+  {
+    hollowTreeGroup387 = new Group();
+    const trunkMat387 = new MeshStandardMaterial({ color: 0x0a1a05, roughness: 0.95, metalness: 0.0 });
+
+    // Main trunk (slightly tilted)
+    const trunk1 = new Mesh(new CylinderGeometry(0.3, 0.45, 3.5, 7), trunkMat387);
+    trunk1.position.y = 1.75;
+    trunk1.rotation.z = 0.05;
+    hollowTreeGroup387.add(trunk1);
+
+    // Gnarled base bulge
+    const base387 = new Mesh(new SphereGeometry(0.5, 8, 6), trunkMat387);
+    base387.position.y = 0.2;
+    base387.scale.set(1, 0.5, 1);
+    hollowTreeGroup387.add(base387);
+
+    // Major branch fork
+    const branch1_387 = new Mesh(new CylinderGeometry(0.1, 0.2, 1.8, 5), trunkMat387);
+    branch1_387.position.set(0.4, 2.8, 0);
+    branch1_387.rotation.z = 0.5;
+    hollowTreeGroup387.add(branch1_387);
+
+    const branch2_387 = new Mesh(new CylinderGeometry(0.08, 0.15, 1.5, 5), trunkMat387);
+    branch2_387.position.set(-0.35, 3.0, 0);
+    branch2_387.rotation.z = -0.4;
+    hollowTreeGroup387.add(branch2_387);
+
+    // Hollow opening (dark plane suggesting interior)
+    const hollowGeo387 = new CircleGeometry(0.2, 8);
+    const hollowMat387 = new MeshBasicMaterial({ color: 0x010501, transparent: true, opacity: 0.92, depthWrite: false });
+    const hollow387 = new Mesh(hollowGeo387, hollowMat387);
+    hollow387.position.set(0.1, 0.5, 0.42);
+    hollowTreeGroup387.add(hollow387);
+
+    // Hollow glow light (inside trunk)
+    hollowTreeLight387 = new PointLight(0x33ff66, 0.0, 2.0);
+    hollowTreeLight387.position.set(0.1, 0.5, 0.0);
+    hollowTreeGroup387.add(hollowTreeLight387);
+
+    hollowTreeGroup387.position.set(-6, 0, -20);
+    group.add(hollowTreeGroup387);
+    hollowNextPulse387 = 8.0 + Math.random() * 5.0;
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1794,6 +1845,29 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         mushroomRingLight383.intensity = 0.08 + Math.sin(sceneTime * 0.3) * 0.04;
       }
     }
+
+    // Cycle-387: hollow tree — ambient faint glow + occasional pulse event
+    if (hollowTreeLight387) {
+      // Ambient faint glow
+      hollowTreeLight387.intensity = 0.03 + Math.sin(sceneTime * 0.5) * 0.02;
+
+      // Pulse event countdown
+      hollowNextPulse387 -= dt;
+      if (hollowNextPulse387 <= 0 && hollowPulseT387 < 0) {
+        hollowPulseT387 = 0;
+        hollowNextPulse387 = 8.0 + Math.random() * 5.0;
+      }
+      if (hollowPulseT387 >= 0) {
+        hollowPulseT387 += dt;
+        if (hollowPulseT387 < 0.4) {
+          hollowTreeLight387.intensity = 0.03 + (hollowPulseT387 / 0.4) * 0.12;
+        } else if (hollowPulseT387 < 1.0) {
+          hollowTreeLight387.intensity = 0.15 - ((hollowPulseT387 - 0.4) / 0.6) * 0.12;
+        } else {
+          hollowPulseT387 = -1;
+        }
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -1895,6 +1969,23 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     mushroomCaps383 = [];
     if (mushroomRingLight383) { mushroomRingLight383.dispose(); mushroomRingLight383 = null; }
+    // Cycle-387: hollow tree cleanup
+    if (hollowTreeGroup387) {
+      group.remove(hollowTreeGroup387);
+      hollowTreeGroup387.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      hollowTreeGroup387 = null;
+    }
+    if (hollowTreeLight387) { hollowTreeLight387.dispose(); hollowTreeLight387 = null; }
   };
 
   return { group, update, dispose };
