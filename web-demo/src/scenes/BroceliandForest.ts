@@ -1078,6 +1078,14 @@ const altarEmberMats516: MeshStandardMaterial[] = [];
 const altarEmberPhases516: number[] = [];
 let t516: number = 0;
 
+// ── Cycle-520: Celtic spirit well — stone rim, glowing aqua water, rising wisps ──
+let wellGroup520: Group | null = null;
+let wellWaterMat520: MeshStandardMaterial | null = null;
+let wellLight520: PointLight | null = null;
+const wellWispMats520: MeshStandardMaterial[] = [];
+const wellWispPhases520: number[] = [];
+let t520: number = 0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -3712,6 +3720,113 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(altarGroup516);
   }
 
+  // ── Cycle-520: Celtic spirit well — mossy stone rim, luminous aqua water, wisps ──
+  {
+    wellGroup520 = new Group();
+    wellWispMats520.length = 0;
+    wellWispPhases520.length = 0;
+
+    const stoneMat = new MeshStandardMaterial({
+      color: 0x5a5248, roughness: 0.95, metalness: 0.0, flatShading: true,
+    });
+    // Outer rim — hollow cylinder built from stacked stone blocks around circumference
+    const RIM_SEGS = 12;
+    const RIM_R = 0.72;
+    for (let i = 0; i < RIM_SEGS; i++) {
+      const angle = (i / RIM_SEGS) * Math.PI * 2;
+      const bw = 0.32 + (Math.random() - 0.5) * 0.06;
+      const bh = 0.28 + (Math.random() - 0.5) * 0.06;
+      const bd = 0.26;
+      const blockGeo = new BoxGeometry(bw, bh, bd);
+      const block = new Mesh(blockGeo, stoneMat);
+      block.position.set(
+        Math.cos(angle) * RIM_R,
+        bh * 0.5 - 0.02,
+        Math.sin(angle) * RIM_R,
+      );
+      block.rotation.y = angle + Math.PI * 0.5 + (Math.random() - 0.5) * 0.18;
+      wellGroup520.add(block);
+    }
+    // Second row of rim blocks — slightly inset and rotated
+    for (let i = 0; i < RIM_SEGS; i++) {
+      const angle = ((i + 0.5) / RIM_SEGS) * Math.PI * 2;
+      const bw = 0.30 + (Math.random() - 0.5) * 0.06;
+      const bh = 0.26;
+      const bd = 0.24;
+      const blockGeo = new BoxGeometry(bw, bh, bd);
+      const block = new Mesh(blockGeo, stoneMat);
+      block.position.set(
+        Math.cos(angle) * (RIM_R - 0.04),
+        0.28 + bh * 0.5,
+        Math.sin(angle) * (RIM_R - 0.04),
+      );
+      block.rotation.y = angle + Math.PI * 0.5 + (Math.random() - 0.5) * 0.14;
+      wellGroup520.add(block);
+    }
+    // Base ground ring (flat disc) — dark mossy stone
+    const baseGeo = new CylinderGeometry(RIM_R + 0.22, RIM_R + 0.28, 0.08, 16);
+    const baseMat = new MeshStandardMaterial({
+      color: 0x3d3a30, roughness: 0.98, metalness: 0.0, flatShading: true,
+    });
+    const base = new Mesh(baseGeo, baseMat);
+    base.position.set(0, -0.04, 0);
+    wellGroup520.add(base);
+    // Glowing aqua water surface — disc inside rim
+    const waterGeo = new CylinderGeometry(RIM_R - 0.14, RIM_R - 0.14, 0.04, 20);
+    wellWaterMat520 = new MeshStandardMaterial({
+      color: 0x00cccc, roughness: 0.15, metalness: 0.0, flatShading: false,
+      transparent: true, opacity: 0.82,
+      emissive: new Color(0x00ffee), emissiveIntensity: 1.0,
+    });
+    const waterMesh = new Mesh(waterGeo, wellWaterMat520);
+    waterMesh.position.set(0, 0.52, 0);
+    wellGroup520.add(waterMesh);
+    // Rope-post crossbar (two thin horizontal beams)
+    const postMat = new MeshStandardMaterial({ color: 0x6b4c2a, roughness: 0.92, flatShading: true });
+    const beamGeo = new CylinderGeometry(0.055, 0.055, 1.58, 5);
+    const beamH = new Mesh(beamGeo, postMat);
+    beamH.rotation.z = Math.PI * 0.5;
+    beamH.position.set(0, 1.22, 0);
+    wellGroup520.add(beamH);
+    // Two vertical posts
+    const postGeo = new CylinderGeometry(0.07, 0.09, 1.20, 5);
+    for (const side of [-0.72, 0.72]) {
+      const post = new Mesh(postGeo, postMat);
+      post.position.set(side, 0.60, 0);
+      wellGroup520.add(post);
+    }
+    // Rising wisps — 6 small spheres that drift upward
+    const WISP_COUNT = 6;
+    for (let w = 0; w < WISP_COUNT; w++) {
+      const phase = (w / WISP_COUNT) * Math.PI * 2;
+      const wispGeo = new SphereGeometry(0.055 + Math.random() * 0.03, 5, 4);
+      const wispMat = new MeshStandardMaterial({
+        color: 0x44ffee, roughness: 0.3, metalness: 0.0,
+        transparent: true, opacity: 0.72,
+        emissive: new Color(0x00ffcc), emissiveIntensity: 1.4,
+        flatShading: false,
+      });
+      const wispMesh = new Mesh(wispGeo, wispMat);
+      const r = (Math.random() * 0.25 + 0.08);
+      wispMesh.position.set(
+        Math.cos(phase) * r,
+        0.55 + w * 0.22,
+        Math.sin(phase) * r,
+      );
+      wellWispMats520.push(wispMat);
+      wellWispPhases520.push(phase);
+      wellGroup520.add(wispMesh);
+    }
+    // Aqua point light inside the well
+    wellLight520 = new PointLight(0x00ffcc, 0.70, 7.5);
+    wellLight520.position.set(0, 0.65, 0);
+    wellGroup520.add(wellLight520);
+
+    wellGroup520.position.set(7.5, 0, -8.5);
+    wellGroup520.rotation.y = 0.6;
+    group.add(wellGroup520);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -4915,6 +5030,40 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
         mat.emissiveIntensity = 0.8 + 0.45 * Math.sin(t516 * 3.3 + phase);
       }
     }
+
+    // Cycle-520: Celtic spirit well animation — water shimmer + wisp drift
+    if (wellGroup520) {
+      t520 += dt;
+      if (wellWaterMat520) {
+        wellWaterMat520.emissiveIntensity = 0.85 + 0.30 * Math.sin(t520 * 2.3) + (Math.random() - 0.5) * 0.08;
+        wellWaterMat520.opacity = 0.76 + 0.12 * Math.sin(t520 * 1.7);
+      }
+      if (wellLight520) {
+        wellLight520.intensity = 0.55 + 0.22 * Math.sin(t520 * 1.9) + (Math.random() - 0.5) * 0.04;
+      }
+      // Wisps: drift upward in a slow helical spiral, fade at top
+      for (let w = 0; w < wellWispMats520.length; w++) {
+        const phase = wellWispPhases520[w]!;
+        const speed = 0.30 + w * 0.04;
+        const age = ((t520 * speed + phase / (Math.PI * 2)) % 1.0);
+        const yBase = 0.55 + age * 1.8;
+        const spiralR = 0.12 + age * 0.18;
+        const spiralAngle = t520 * (0.8 + w * 0.12) + phase;
+        // children layout: 12*2 rim blocks + base + water + beamH + post*2 + wisps...
+        const WISPOFFSET = 12 * 2 + 5; // 24 blocks + 5 fixed = 29
+        const wispMesh = wellGroup520.children[WISPOFFSET + w];
+        if (wispMesh) {
+          wispMesh.position.set(
+            Math.cos(spiralAngle) * spiralR,
+            yBase,
+            Math.sin(spiralAngle) * spiralR,
+          );
+        }
+        const mat = wellWispMats520[w]!;
+        mat.opacity = age < 0.7 ? (0.65 + 0.2 * Math.sin(t520 * 3.0 + phase)) : (0.65 * (1.0 - (age - 0.7) / 0.3));
+        mat.emissiveIntensity = 1.2 + 0.5 * Math.sin(t520 * 2.5 + phase);
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -5506,6 +5655,28 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     if (altarFlameMat516) { altarFlameMat516.dispose(); altarFlameMat516 = null; }
     if (altarLight516) { altarLight516.dispose(); altarLight516 = null; }
     t516 = 0;
+
+    // Cycle-520: Celtic spirit well cleanup
+    if (wellGroup520) {
+      group.remove(wellGroup520);
+      wellGroup520.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) {
+            (c.material as Material[]).forEach((m) => m.dispose());
+          } else {
+            (c.material as Material).dispose();
+          }
+        }
+      });
+      wellGroup520 = null;
+    }
+    for (const mat of wellWispMats520) { mat.dispose(); }
+    wellWispMats520.length = 0;
+    wellWispPhases520.length = 0;
+    if (wellWaterMat520) { wellWaterMat520.dispose(); wellWaterMat520 = null; }
+    if (wellLight520) { wellLight520.dispose(); wellLight520 = null; }
+    t520 = 0;
   };
 
   return { group, update, dispose };
