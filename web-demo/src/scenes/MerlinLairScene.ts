@@ -1534,6 +1534,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let mapActivateT513: number = 0;
   let mapActiveTerritory513: number = 0;
 
+  // C514 — alchemical brazier with violet fire
+  let brazierGroup514: Group | null = null;
+  let brazierLight514: PointLight | null = null;
+  const brazierFlameMats514: MeshStandardMaterial[] = [];
+  const brazierEmbers514: { mesh: Mesh; phase: number; speed: number }[] = [];
+  let t514 = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -4062,6 +4069,90 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(mapTableGroup513);
   }
 
+  // C514 — alchemical brazier with violet fire (-7, floor=-4.8, 2)
+  {
+    brazierGroup514 = new Group();
+
+    // Base ring — flat octagonal disc
+    const baseMat = new MeshStandardMaterial({ color: 0x1a1210, roughness: 0.75, metalness: 0.55, flatShading: true });
+    const base = new Mesh(new CylinderGeometry(0.48, 0.54, 0.12, 8), baseMat);
+    base.position.set(0, 0, 0);
+    brazierGroup514.add(base);
+
+    // Four iron legs — angled outward
+    const legMat514 = new MeshStandardMaterial({ color: 0x2a2020, roughness: 0.6, metalness: 0.65, flatShading: true });
+    const legOffsets: Array<[number, number]> = [[0.28, 0.28], [-0.28, 0.28], [0.28, -0.28], [-0.28, -0.28]];
+    for (const [lx, lz] of legOffsets) {
+      const leg = new Mesh(new CylinderGeometry(0.04, 0.06, 0.55, 5), legMat514);
+      leg.position.set(lx * 0.6, -0.32, lz * 0.6);
+      leg.rotation.z = Math.sign(lx) * 0.22;
+      leg.rotation.x = Math.sign(lz) * 0.22;
+      brazierGroup514.add(leg);
+    }
+
+    // Bowl — dark iron hemisphere
+    const bowlMat = new MeshStandardMaterial({ color: 0x1c1410, roughness: 0.65, metalness: 0.7, emissive: 0x550088, emissiveIntensity: 0.15, flatShading: true });
+    const bowl = new Mesh(new SphereGeometry(0.42, 8, 5, 0, Math.PI * 2, 0, Math.PI * 0.55), bowlMat);
+    bowl.rotation.x = Math.PI;
+    bowl.position.set(0, 0.18, 0);
+    brazierGroup514.add(bowl);
+
+    // Iron rim ring
+    const rimMat = new MeshStandardMaterial({ color: 0x2e1e10, roughness: 0.55, metalness: 0.8, flatShading: true });
+    const rim = new Mesh(new TorusGeometry(0.4, 0.045, 6, 10), rimMat);
+    rim.position.set(0, 0.22, 0);
+    brazierGroup514.add(rim);
+
+    // Flame cones — 5 tapered prisms forming alchemical fire crown
+    const flameCols: number[] = [0xcc44ff, 0x8822dd, 0xff66cc, 0xaa00ff, 0xee22bb];
+    for (let fi = 0; fi < 5; fi++) {
+      const angle = (fi / 5) * Math.PI * 2;
+      const fmat = new MeshStandardMaterial({
+        color: flameCols[fi % flameCols.length]!,
+        roughness: 0.35,
+        metalness: 0.0,
+        emissive: flameCols[fi % flameCols.length]!,
+        emissiveIntensity: 1.1,
+        transparent: true,
+        opacity: 0.82,
+        flatShading: true,
+      });
+      brazierFlameMats514.push(fmat);
+      const fh = 0.38 + (fi % 3) * 0.08;
+      const flame = new Mesh(new ConeGeometry(0.09, fh, 5), fmat);
+      const fr = 0.18;
+      flame.position.set(Math.cos(angle) * fr, 0.42 + fh * 0.5, Math.sin(angle) * fr);
+      brazierGroup514.add(flame);
+      brazierEmbers514.push({ mesh: flame, phase: (fi / 5) * Math.PI * 2, speed: 2.8 + fi * 0.7 });
+    }
+
+    // Central core flame — tallest
+    const coreMat = new MeshStandardMaterial({
+      color: 0xffd0ff,
+      roughness: 0.3,
+      metalness: 0.0,
+      emissive: 0xee88ff,
+      emissiveIntensity: 1.4,
+      transparent: true,
+      opacity: 0.78,
+      flatShading: true,
+    });
+    brazierFlameMats514.push(coreMat);
+    const core = new Mesh(new ConeGeometry(0.12, 0.58, 6), coreMat);
+    core.position.set(0, 0.72, 0);
+    brazierGroup514.add(core);
+    brazierEmbers514.push({ mesh: core, phase: 0, speed: 4.1 });
+
+    // Violet glow — warm PointLight, range 7
+    brazierLight514 = new PointLight(0xcc44ff, 2.2, 7.5, 2);
+    brazierLight514.position.set(0, 0.9, 0);
+    brazierGroup514.add(brazierLight514);
+
+    // Position: left-forward area of lair, clear of map table and cauldron
+    brazierGroup514.position.set(-7.0, -4.85, 2.0);
+    scene.add(brazierGroup514);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -5701,6 +5792,30 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C514 — alchemical brazier flame flicker + ember sway
+    if (brazierGroup514) {
+      t514 += dt;
+      // Flicker each flame independently: scale XZ breathes, emissiveIntensity pulses
+      for (let fi = 0; fi < brazierEmbers514.length; fi++) {
+        const em = brazierEmbers514[fi];
+        if (!em) continue;
+        const ph = em.phase;
+        const sp = em.speed;
+        const flicker = Math.sin(t514 * sp + ph) * 0.18 + Math.sin(t514 * sp * 1.7 + ph * 1.3) * 0.08;
+        em.mesh.scale.x = 1.0 + flicker * 0.55;
+        em.mesh.scale.z = 1.0 - flicker * 0.35;
+        em.mesh.scale.y = 1.0 + Math.abs(flicker) * 0.22;
+        // Gentle lateral sway around brazier center
+        em.mesh.rotation.z = flicker * 0.25;
+        const fmat = brazierFlameMats514[fi];
+        if (fmat) fmat.emissiveIntensity = 0.9 + 0.55 * (0.5 + 0.5 * Math.sin(t514 * sp * 1.1 + ph));
+      }
+      // PointLight flicker — violet glow intensity 1.4–2.8
+      if (brazierLight514) {
+        brazierLight514.intensity = 2.1 + Math.sin(t514 * 6.3) * 0.55 + Math.sin(t514 * 11.1) * 0.25;
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -6271,6 +6386,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     mapMarkerMats513.length = 0;
     mapLineMats513.length = 0;
     mapLight513 = null;
+    // C514 — alchemical brazier dispose
+    if (brazierGroup514) {
+      brazierGroup514.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(brazierGroup514);
+      brazierGroup514 = null;
+    }
+    brazierFlameMats514.length = 0;
+    brazierEmbers514.length = 0;
+    brazierLight514 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
