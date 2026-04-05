@@ -1426,6 +1426,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       doorLight.intensity = 2.8 + Math.sin(elapsedTime * 4.1) * 0.3;
     }
 
+    // C188: door rune glow — lerp green PointLight toward 1.2 on hover, 0.0 on unhover
+    {
+      const doorEntry = interactives.find((i) => i.zone === 'door')!;
+      const runeTarget = doorEntry.hovered ? 1.2 : 0.0;
+      doorRuneLight.intensity += (runeTarget - doorRuneLight.intensity) * Math.min(1, dt * 6);
+    }
+
     // C102: FPS monitoring — sample every 2s, enable low-fps mode below 45fps
     fpsFrameCount++;
     fpsElapsed += dt;
