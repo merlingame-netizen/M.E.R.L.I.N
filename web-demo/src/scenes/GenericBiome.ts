@@ -589,6 +589,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let medicineWheelT458: number = 0
   let medicineWheelLines458: Mesh[] = []
 
+  // ── Stone guardian statue — landes_bruyere (C463) ─────────────────────────
+  let guardianGroup463: Group | null = null
+  let guardianT463: number = 0
+  let guardianEyeMats463: MeshBasicMaterial[] = []
+  let guardianLight463: PointLight | null = null
+  let guardianWatchTimer463: number = 20
+  let guardianWatching463: boolean = false
+  let guardianWatchT463: number = 0
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1416,6 +1425,78 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     gatewayGroup437.position.set(-8, 0, -25);
     group.add(gatewayGroup437);
+
+    // ── Stone guardian statue (C463) ─────────────────────────────────────────
+    guardianGroup463 = new Group()
+    guardianGroup463.position.set(-5, 0, -14)
+
+    // Base/plinth slab
+    const guardianBase = new Mesh(
+      new BoxGeometry(0.9, 0.2, 0.6),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    guardianBase.position.y = 0.1
+    guardianGroup463!.add(guardianBase)
+
+    // Body (rough rectangular block)
+    const body = new Mesh(
+      new BoxGeometry(0.7, 1.6, 0.45),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    body.position.y = 1.1
+    guardianGroup463!.add(body)
+
+    // Shoulders (wider box)
+    const shoulders = new Mesh(
+      new BoxGeometry(1.0, 0.3, 0.42),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    shoulders.position.y = 1.95
+    guardianGroup463!.add(shoulders)
+
+    // Head (slightly rounded box)
+    const head = new Mesh(
+      new BoxGeometry(0.55, 0.55, 0.42),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    head.position.y = 2.5
+    guardianGroup463!.add(head)
+
+    // Left eye
+    const leftEye = new Mesh(
+      new SphereGeometry(0.06, 5, 4),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 })
+    )
+    leftEye.position.set(-0.14, 2.52, 0.22)
+    guardianEyeMats463.push(leftEye.material as MeshBasicMaterial)
+    guardianGroup463!.add(leftEye)
+
+    // Right eye
+    const rightEye = new Mesh(
+      new SphereGeometry(0.06, 5, 4),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.8 })
+    )
+    rightEye.position.set(0.14, 2.52, 0.22)
+    guardianEyeMats463.push(rightEye.material as MeshBasicMaterial)
+    guardianGroup463!.add(rightEye)
+
+    // Crude arms (angled boxes)
+    for (const side of [-1, 1]) {
+      const arm = new Mesh(
+        new BoxGeometry(0.22, 0.9, 0.38),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      arm.position.set(side * 0.52, 1.3, 0)
+      arm.rotation.z = side * Math.PI * 0.08
+      guardianGroup463!.add(arm)
+    }
+
+    // Glow light at eye level
+    guardianLight463 = new PointLight(0x33ff66, 0.12, 4.0)
+    guardianLight463.position.set(0, 2.5, 0.5)
+    guardianGroup463!.add(guardianLight463)
+
+    group.add(guardianGroup463)
   }
 
   // Vallee anciens: ruined hut silhouettes with warm glow
@@ -3900,6 +3981,46 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       const mat = line.material as MeshBasicMaterial;
       mat.opacity = 0.2 + 0.2 * Math.sin(medicineWheelT458 * 0.8 + i * (Math.PI / 4));
     });
+    // Landes bruyere — stone guardian watcher (C463)
+    if (guardianGroup463) {
+      guardianT463 += dt
+      guardianWatchTimer463 -= dt
+
+      // Eyes steady breathe
+      if (!guardianWatching463) {
+        const eyeOpacity = 0.6 + 0.25 * Math.sin(guardianT463 * 0.4)
+        guardianEyeMats463.forEach((mat) => { mat.opacity = eyeOpacity })
+        if (guardianLight463) {
+          guardianLight463.intensity = 0.1 + 0.04 * Math.sin(guardianT463 * 0.4)
+        }
+      }
+
+      // Trigger watch event
+      if (guardianWatchTimer463 <= 0) {
+        guardianWatchTimer463 = 18 + Math.random() * 12
+        guardianWatching463 = true
+        guardianWatchT463 = 0
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }))
+      }
+
+      // Watch flash: eyes flare over 0.3s, hold 0.5s, fade 0.8s
+      if (guardianWatching463) {
+        guardianWatchT463 += dt
+        let eyeOp: number
+        if (guardianWatchT463 < 0.3) {
+          eyeOp = 0.8 + 0.2 * (guardianWatchT463 / 0.3)
+        } else if (guardianWatchT463 < 0.8) {
+          eyeOp = 1.0
+        } else if (guardianWatchT463 < 1.6) {
+          eyeOp = 1.0 - 0.4 * ((guardianWatchT463 - 0.8) / 0.8)
+        } else {
+          eyeOp = 0.6
+          guardianWatching463 = false
+        }
+        guardianEyeMats463.forEach((mat) => { mat.opacity = eyeOp })
+        if (guardianLight463) guardianLight463.intensity = eyeOp * 0.5
+      }
+    }
     // Cercles de Pierres — moonrise arc across sky (C433)
     if (stoneMoonGroup433 && stoneMoonMesh433 && stoneMoonLight433) {
       stoneMoonT433 += dt;
@@ -4254,6 +4375,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       medicineWheelGroup458 = null;
     }
     medicineWheelLines458 = [];
+    // Stone guardian cleanup (C463)
+    if (guardianGroup463) {
+      guardianGroup463.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(guardianGroup463);
+      guardianGroup463 = null;
+    }
+    guardianEyeMats463 = [];
+    guardianLight463 = null;
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
