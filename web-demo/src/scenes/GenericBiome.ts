@@ -393,6 +393,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _moonGroup: Group | null = null;
   let _moonHalo: Mesh | null = null;
   let _moonLight: PointLight | null = null;
+  const _cropCircleMeshes: Mesh[] = [];
+  let _cropCircleLight: PointLight | null = null;
+  let _cropCircleTime = 0;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
   const _bogFireflies: Mesh[] = [];
@@ -402,6 +405,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _auroraTime = 0;
   let _deadTreeGroup: Group | null = null;
   let _templeGroup: Group | null = null;
+  let _gateGroup: Group | null = null;
+  let _gateLight: PointLight | null = null;
+  let _gateRunePlane: Mesh | null = null;
   const _altarFireMeshes: Mesh[] = [];
   let _altarFireLight: PointLight | null = null;
   const _dancerGroups: Group[] = [];
@@ -941,6 +947,57 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     group.add(templeGroup);
     _templeGroup = templeGroup;
+
+    // Monumental stone gate arch at z=-15 (valley entrance)
+    const gateGroup = new Group();
+    const gateStoneMat = new MeshStandardMaterial({ color: 0x141f14, roughness: 0.97, metalness: 0.0, flatShading: true });
+    const gateArchMat  = new MeshBasicMaterial({ color: 0x0c1a0c });
+
+    // Left pillar
+    const leftPillar = new Mesh(new BoxGeometry(1.2, 8.0, 1.2), gateStoneMat);
+    leftPillar.position.set(-5, 4.0, -15);
+    gateGroup.add(leftPillar);
+
+    // Right pillar
+    const rightPillar = new Mesh(new BoxGeometry(1.2, 8.0, 1.2), gateStoneMat);
+    rightPillar.position.set(5, 4.0, -15);
+    gateGroup.add(rightPillar);
+
+    // Arch keystone / flat lintel
+    const lintelGate = new Mesh(new BoxGeometry(3.5, 1.5, 1.0), gateStoneMat);
+    lintelGate.position.set(0, 8.5, -15);
+    gateGroup.add(lintelGate);
+
+    // Half-torus arch curve (opens upward)
+    const archTorus = new Mesh(new TorusGeometry(2.0, 0.2, 6, 12, Math.PI), gateArchMat);
+    archTorus.position.set(0, 8.0, -15);
+    archTorus.rotation.z = 0;
+    gateGroup.add(archTorus);
+
+    // Corner caps on top of each pillar
+    const capGeo = new CylinderGeometry(0.6, 0.8, 0.5, 6);
+    const leftCap = new Mesh(capGeo, gateStoneMat);
+    leftCap.position.set(-5, 8.25, -15);
+    gateGroup.add(leftCap);
+    const rightCap = new Mesh(capGeo, gateStoneMat);
+    rightCap.position.set(5, 8.25, -15);
+    gateGroup.add(rightCap);
+
+    // Rune carving glow plane centered on lintel front face
+    const runeGateMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.15, side: DoubleSide });
+    const runeGatePlane = new Mesh(new PlaneGeometry(2.0, 0.6), runeGateMat);
+    runeGatePlane.position.set(0, 8.5, -14.5);
+    gateGroup.add(runeGatePlane);
+    _gateRunePlane = runeGatePlane;
+
+    // Ambient gate point light
+    const gateLight = new PointLight(0x33ff66, 0.12, 12);
+    gateLight.position.set(0, 7.0, -14);
+    gateGroup.add(gateLight);
+    _gateLight = gateLight;
+
+    group.add(gateGroup);
+    _gateGroup = gateGroup;
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -1695,6 +1752,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         band.rotation.z = Math.sin(t * 0.15 + i * 0.5) * 0.08;
       });
     }
+    // Vallee Anciens — stone gate rune glow pulse
+    if (_gateRunePlane !== null) {
+      const t = _auroraTime; // reuse same accumulator
+      (_gateRunePlane.material as MeshBasicMaterial).opacity = 0.10 + Math.sin(t * 0.35) * 0.06;
+    }
+    if (_gateLight !== null) {
+      const t = _auroraTime;
+      _gateLight.intensity = 0.08 + Math.sin(t * 0.4) * 0.04;
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -1778,6 +1844,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _waterfallLight = null;
     _deadTreeGroup = null;
     _templeGroup = null;
+    _gateGroup = null;
+    _gateLight = null;
+    _gateRunePlane = null;
     _heatherMeshes.length = 0;
     _moorCircleGroup = null;
     _moorCircleLight = null;
