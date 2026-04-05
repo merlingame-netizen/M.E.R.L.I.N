@@ -1485,6 +1485,71 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _moonGroup = moonGroup;
     _moonHalo = moonHalo;
     _moonLight = moonLight;
+
+    // ── Crop circle formations (C341) ────────────────────────────────────────
+    const cropMat = () => new MeshBasicMaterial({ color: 0x0a1f0a, transparent: true, depthWrite: false });
+
+    // Pattern 1 — main circle at (−6, −0.01, −25)
+    const p1Outer = new Mesh(new TorusGeometry(5.0, 0.06, 5, 48), cropMat());
+    (p1Outer.material as MeshBasicMaterial).opacity = 0.35;
+    p1Outer.rotation.x = -Math.PI / 2;
+    p1Outer.position.set(-6, -0.01, -25);
+    group.add(p1Outer);
+    _cropCircleMeshes.push(p1Outer);
+
+    const p1Inner = new Mesh(new TorusGeometry(2.5, 0.05, 5, 36), cropMat());
+    (p1Inner.material as MeshBasicMaterial).opacity = 0.30;
+    p1Inner.rotation.x = -Math.PI / 2;
+    p1Inner.position.set(-6, -0.01, -25);
+    group.add(p1Inner);
+    _cropCircleMeshes.push(p1Inner);
+
+    const p1Center = new Mesh(new CircleGeometry(0.8, 16), cropMat());
+    (p1Center.material as MeshBasicMaterial).opacity = 0.25;
+    p1Center.rotation.x = -Math.PI / 2;
+    p1Center.position.set(-6, -0.01, -25);
+    group.add(p1Center);
+    _cropCircleMeshes.push(p1Center);
+
+    // Pattern 2 — satellite circle at (2, −0.01, −28)
+    const p2Ring = new Mesh(new TorusGeometry(2.0, 0.05, 5, 32), cropMat());
+    (p2Ring.material as MeshBasicMaterial).opacity = 0.28;
+    p2Ring.rotation.x = -Math.PI / 2;
+    p2Ring.position.set(2, -0.01, -28);
+    group.add(p2Ring);
+    _cropCircleMeshes.push(p2Ring);
+
+    for (let bi = 0; bi < 4; bi++) {
+      const bar = new Mesh(new BoxGeometry(3.8, 0.02, 0.06), cropMat());
+      (bar.material as MeshBasicMaterial).opacity = 0.28;
+      bar.position.set(2, -0.01, -28);
+      bar.rotation.y = (bi / 4) * Math.PI;
+      group.add(bar);
+      _cropCircleMeshes.push(bar);
+    }
+
+    // Pattern 3 — tiny circle at (−10, −0.01, −20)
+    const p3Ring = new Mesh(new TorusGeometry(1.2, 0.04, 5, 24), cropMat());
+    (p3Ring.material as MeshBasicMaterial).opacity = 0.22;
+    p3Ring.rotation.x = -Math.PI / 2;
+    p3Ring.position.set(-10, -0.01, -20);
+    group.add(p3Ring);
+    _cropCircleMeshes.push(p3Ring);
+
+    for (let ci = 0; ci < 2; ci++) {
+      const crossBar = new Mesh(new BoxGeometry(2.2, 0.02, 0.05), cropMat());
+      (crossBar.material as MeshBasicMaterial).opacity = 0.22;
+      crossBar.position.set(-10, -0.01, -20);
+      crossBar.rotation.y = ci * (Math.PI / 2);
+      group.add(crossBar);
+      _cropCircleMeshes.push(crossBar);
+    }
+
+    // Glow point light above main circle
+    const cropGlow = new PointLight(0x33ff66, 0.04, 12);
+    cropGlow.position.set(-6, 0.5, -25);
+    group.add(cropGlow);
+    _cropCircleLight = cropGlow;
   }
 
   const update = (dt: number): void => {
@@ -1539,6 +1604,23 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (_moonLight !== null) {
       const t = Date.now() * 0.001;
       _moonLight.intensity = 0.12 + Math.sin(t * 0.25) * 0.03;
+    }
+    // Plaine des Druides — crop circle slow rotation + glow pulse (C341)
+    if (_cropCircleMeshes.length > 0) {
+      _cropCircleTime += dt;
+      const t = _cropCircleTime;
+      for (const ring of _cropCircleMeshes) {
+        ring.rotation.z += dt * 0.01;
+      }
+      // Center disc (index 2) opacity pulse
+      const disc = _cropCircleMeshes[2];
+      if (disc !== undefined) {
+        (disc.material as MeshBasicMaterial).opacity = 0.20 + Math.sin(t * 0.3) * 0.06;
+      }
+    }
+    if (_cropCircleLight !== null) {
+      const t = _cropCircleTime;
+      _cropCircleLight.intensity = 0.02 + Math.sin(t * 0.15) * 0.02;
     }
     // Marais korrigans — chaotic will-o'-wisp particles
     if (maraisWispMeshes.length > 0) {
@@ -1824,6 +1906,11 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _wellGroup = null;
     _wellBucket = null;
     _wellLight = null;
+    _moonGroup = null;
+    _moonHalo = null;
+    _moonLight = null;
+    _cropCircleMeshes.length = 0;
+    _cropCircleLight = null;
     maraisWispMeshes = [];
     _bogFireflies.length = 0;
     _bogFireflyLights.length = 0;
