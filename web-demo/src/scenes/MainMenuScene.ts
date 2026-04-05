@@ -48,10 +48,11 @@ function createLowPolyOcean(): OceanResult {
     const shore = Math.max(0, Math.min(1, (x + 40) / 80));
     // near (shore=1): 0x18e8d0 = (0.094, 0.910, 0.816) N64 vivid turquoise
     // deep (shore=0): 0x0a5aaa = (0.039, 0.353, 0.667) deep ocean blue
-    // near shore: dark teal, deep: dark navy
-    vertCols[i * 3 + 0] = 0.020 + shore * 0.019;
-    vertCols[i * 3 + 1] = 0.063 + shore * 0.172;
-    vertCols[i * 3 + 2] = 0.118 + shore * 0.204;
+    // Near shore (shore=1): 0x0ad0b8 vivid N64 teal
+    // Deep (shore=0): 0x0848a0 deep N64 ocean blue
+    vertCols[i * 3 + 0] = 0.032 + shore * 0.028; // R: 0.032 → 0.060
+    vertCols[i * 3 + 1] = 0.282 + shore * 0.533; // G: 0.282 → 0.815
+    vertCols[i * 3 + 2] = 0.627 + shore * 0.094; // B: 0.627 → 0.721
   }
   geo.setAttribute('color', new BufferAttribute(vertCols, 3));
 
@@ -70,7 +71,7 @@ function createLowPolyOcean(): OceanResult {
   // Horizon plane: N64 vivid cyan far ocean
   const horizonGeo = new PlaneGeometry(120, 50, 12, 6);
   const horizonMat = new MeshStandardMaterial({
-    color: 0x081828,   // C168: dark navy storm horizon
+    color: 0x0a3060,   // N64 deeper ocean blue horizon
     flatShading: true,
     roughness: 0.6,
     metalness: 0.2,
@@ -1229,10 +1230,10 @@ function destroyKnotworkBorder385(): void {
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
-  // C168: Dark stormy Atlantic coast — near-black bg, heavy overcast fog
+  // N64 vivid deep blue — brighter, saturated oceanic sky
   const scene = new Scene();
-  scene.background = new Color(0x181c28);
-  scene.fog = new FogExp2(0x181c28, 0.012);
+  scene.background = new Color(0x0a1428);
+  scene.fog = new FogExp2(0x0a1428, 0.010);
 
   // Camera: fixed high angle, looking right-to-left over the cliff
   // C134/MM-08: guard against Infinity aspect ratio when container has not yet been laid out
@@ -1266,15 +1267,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   };
   window.addEventListener('resize', onResize);
 
-  // C168: Stormy overcast lighting — cool grey-blue, dim but readable
-  const ambient = new AmbientLight(0x304458, 0.35);
+  // N64 vivid lighting — bright cool moonlight, strong blue fill
+  const ambient = new AmbientLight(0x203858, 0.55);
   scene.add(ambient);
 
-  const sunLight = new DirectionalLight(0x8898c0, 0.9); // muted stormy blue-white
+  const sunLight = new DirectionalLight(0xc8d8f8, 1.2); // bright cool moonlight
   sunLight.position.set(-15, 35, 20);
   scene.add(sunLight);
 
-  const fillLight = new DirectionalLight(0x1a3060, 0.25); // dark blue fill
+  const fillLight = new DirectionalLight(0x204080, 0.4); // stronger blue fill
   fillLight.position.set(10, 10, 30);
   scene.add(fillLight);
 
@@ -1618,15 +1619,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       (ambientParticles356.geometry as BufferGeometry).attributes['position'].needsUpdate = true;
     }
 
-    // C168: day/night cycle — slow sine oscillation (period ~180s)
-    // dayT: 0=storm-night, 1=storm-day. Always stormy, never fully bright.
+    // N64 day/night cycle — slow sine oscillation (period ~180s)
+    // dayT: 0=deep night, 1=moonlit night. Always vivid oceanic palette.
     const dayT = (Math.sin(elapsedTime * (Math.PI * 2) / 180) + 1) / 2;
-    ambient.intensity  = 0.25 + dayT * 0.20;
-    sunLight.intensity = 0.60 + dayT * 0.50;
-    // Fog shifts: night 0x101020 → day 0x202838
-    const fogR = 0.063 + dayT * 0.062;
-    const fogG = 0.063 + dayT * 0.094;
-    const fogB = 0.125 + dayT * 0.095;
+    ambient.intensity  = 0.45 + dayT * 0.20;
+    sunLight.intensity = 0.90 + dayT * 0.50;
+    // Fog shifts: night 0x0a1428 → day 0x102040
+    const fogR = 0.039 + dayT * 0.024;
+    const fogG = 0.078 + dayT * 0.047;
+    const fogB = 0.157 + dayT * 0.095;
     (scene.fog as FogExp2).color.setRGB(fogR, fogG, fogB);
     (scene.background as Color).setRGB(fogR, fogG, fogB);
 
@@ -1655,6 +1656,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
         _dollyOnComplete = null;
         cb?.();
       }
+    }
+
+    // Idle camera: slow sinusoidal pan left-right — N64 attract mode feel
+    if (!_dollyActive) {
+      const panT = elapsedTime * 0.08;
+      const panX = Math.sin(panT) * 3.0;        // ±3 units horizontal swing
+      const panY = 18 + Math.sin(panT * 0.5) * 1.5; // gentle Y breathe
+      camera.position.set(-8 + panX, panY, 28);
+      camera.lookAt(4 + Math.sin(panT * 0.7) * 1.5, 2, -10);
     }
 
     // C409: glow pulse on mountain snow-cap
