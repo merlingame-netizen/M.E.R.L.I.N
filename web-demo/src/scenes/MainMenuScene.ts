@@ -835,6 +835,14 @@ let craneGroup450: Group | null = null;
 let craneT450: number = 0;
 let craneWingPairs450: { left: Mesh; right: Mesh }[] = [];
 
+// C455 — Towering Ogham obelisk with glowing carved inscriptions
+let obeliskGroup455: Group | null = null;
+let obeliskT455: number = 0;
+let obeliskGlyphs455: Mesh[] = [];
+let obeliskSurgeTimer455: number = 30;
+let obeliskSurgeActive455: boolean = false;
+let obeliskSurgeT455: number = 0;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1666,6 +1674,42 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       right.rotation.z = -(Math.PI * 0.1 + flapAngle);
     });
 
+    // C455: Ogham obelisk — breathing glyphs and surge animation
+    obeliskT455 += dt;
+    obeliskSurgeTimer455 -= dt;
+
+    if (!obeliskSurgeActive455) {
+      obeliskGlyphs455.forEach((g, i) => {
+        (g.material as MeshBasicMaterial).opacity = 0.25 + 0.2 * Math.sin(obeliskT455 * 0.6 + i * 0.4);
+      });
+    }
+
+    if (obeliskSurgeTimer455 <= 0) {
+      obeliskSurgeTimer455 = 25 + Math.random() * 15;
+      obeliskSurgeActive455 = true;
+      obeliskSurgeT455 = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+    }
+
+    if (obeliskSurgeActive455) {
+      obeliskSurgeT455 += dt;
+      const surgeProgress = obeliskSurgeT455 / 1.5;
+      obeliskGlyphs455.forEach((g, i) => {
+        const mat = g.material as MeshBasicMaterial;
+        const glyphProgress = i / (obeliskGlyphs455.length - 1);
+        if (obeliskSurgeT455 < 1.5) {
+          const dist = Math.abs(surgeProgress - glyphProgress);
+          mat.opacity = dist < 0.2 ? 0.9 : 0.3;
+        } else {
+          const fadeT = (obeliskSurgeT455 - 1.5) / 0.5;
+          mat.opacity = 0.9 - 0.65 * Math.min(fadeT, 1.0);
+        }
+      });
+      if (obeliskSurgeT455 >= 2.0) {
+        obeliskSurgeActive455 = false;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -2207,6 +2251,64 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(craneGroup450);
 
+  // C455 — Towering Ogham obelisk with glowing carved inscriptions
+  obeliskGroup455 = new Group();
+  obeliskGroup455.position.set(8, 0, -28);
+  obeliskGroup455.rotation.y = -Math.PI * 0.12;
+
+  // Main pillar: tall tapered BoxGeometry
+  const pillar455 = new Mesh(
+    new BoxGeometry(0.7, 5.5, 0.5),
+    new MeshBasicMaterial({ color: 0x0a1a10 }),
+  );
+  pillar455.position.y = 2.75;
+  obeliskGroup455.add(pillar455);
+
+  // Pyramid cap
+  const cap455 = new Mesh(
+    new CylinderGeometry(0, 0.4, 0.8, 4),
+    new MeshBasicMaterial({ color: 0x0a1a10 }),
+  );
+  cap455.position.y = 5.9;
+  obeliskGroup455.add(cap455);
+
+  // Base plinth
+  const plinth455 = new Mesh(
+    new BoxGeometry(1.1, 0.35, 0.8),
+    new MeshBasicMaterial({ color: 0x020f04 }),
+  );
+  plinth455.position.y = 0.18;
+  obeliskGroup455.add(plinth455);
+
+  // 8 glyph planes on the front face — stacked vertically
+  for (let i455 = 0; i455 < 8; i455++) {
+    const glyph455 = new Mesh(
+      new PlaneGeometry(0.3, 0.3),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.4 }),
+    );
+    glyph455.position.set(0, 0.8 + i455 * 0.55, 0.26);
+    obeliskGlyphs455.push(glyph455);
+    obeliskGroup455.add(glyph455);
+  }
+
+  // Ground scatter: 3 small fallen stones around base
+  for (let j455 = 0; j455 < 3; j455++) {
+    const stone455 = new Mesh(
+      new BoxGeometry(0.2 + Math.random() * 0.2, 0.1, 0.15 + Math.random() * 0.1),
+      new MeshBasicMaterial({ color: 0x0a1a10 }),
+    );
+    stone455.position.set(-0.6 + j455 * 0.6, 0.05, 0.4 + Math.random() * 0.2);
+    stone455.rotation.y = Math.random() * Math.PI;
+    obeliskGroup455.add(stone455);
+  }
+
+  // Ambient glow light at base
+  const obeliskLight455 = new PointLight(0x33ff66, 0.12, 8.0);
+  obeliskLight455.position.set(0, 1.0, 0.5);
+  obeliskGroup455.add(obeliskLight455);
+
+  scene.add(obeliskGroup455);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2437,6 +2539,17 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       craneGroup450 = null;
     }
     craneWingPairs450 = [];
+
+    // C455: dispose Ogham obelisk
+    if (obeliskGroup455) {
+      obeliskGroup455.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(obeliskGroup455);
+      obeliskGroup455 = null;
+    }
+    obeliskGlyphs455 = [];
+    obeliskSurgeActive455 = false;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
