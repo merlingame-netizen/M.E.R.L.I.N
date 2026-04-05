@@ -509,6 +509,19 @@ async function typewrite(el: HTMLElement, text: string, ms = 22): Promise<void> 
   }
 }
 
+// ── Biome display names ───────────────────────────────────────────────────────
+
+const BIOME_DISPLAY_NAMES: Record<string, string> = {
+  foret_broceliande: 'FORÊT DE BROCÉLIANDE',
+  cotes_sauvages:    'CÔTES SAUVAGES',
+  marais_korrigans:  'MARAIS DES KORRIGANS',
+  landes_bruyere:    'LANDES DE BRUYÈRE',
+  cercles_pierres:   'CERCLES DE PIERRES',
+  monts_brumeux:     'MONTS BRUMEUX',
+  plaine_druides:    'PLAINE DES DRUIDES',
+  vallee_anciens:    'VALLÉE DES ANCIENS',
+};
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function showMapGenOverlay(biome: string): Promise<void> {
@@ -532,6 +545,19 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     `border-right:1px solid rgba(51,255,102,0.18);overflow:hidden;`,
   ].join('');
   overlay.appendChild(leftPanel);
+
+  // Biome name title header — fades in after 200ms
+  const biomeTitleEl = document.createElement('div');
+  biomeTitleEl.id = 'map-biome-title';
+  const biomeName = BIOME_DISPLAY_NAMES[biome] ?? biome.toUpperCase().replace(/_/g, ' ');
+  biomeTitleEl.textContent = `NEMETON.SYS > ${biomeName}`;
+  biomeTitleEl.style.cssText = [
+    `color:#33ff66;font-family:'Courier New',monospace;font-size:11px;`,
+    `letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;`,
+    `opacity:0;transition:opacity 0.6s;`,
+  ].join('');
+  leftPanel.appendChild(biomeTitleEl);
+  setTimeout(() => { biomeTitleEl.style.opacity = '1'; }, 200);
 
   // CRT system header
   const sigilEl = document.createElement('div');
