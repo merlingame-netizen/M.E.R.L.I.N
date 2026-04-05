@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, CylinderGeometry, DoubleSide, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1150,6 +1150,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C292: skull shelf — 3 skulls with pulsing green eye glow
   const _skullLights: PointLight[] = [];
 
+  // C301: wall moss/algae patches — slow breathing opacity
+  const _mossPatches: Mesh[] = [];
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1347,6 +1350,25 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
 
     scene.add(skullShelfGroup);
+  }
+
+  // C301: wall moss/algae patches — 5 flat planes on stone walls, breathing opacity
+  {
+    const mossDefs: Array<{ w: number; h: number; x: number; y: number; z: number; ry?: number; color: number; opacity: number }> = [
+      { w: 1.2, h: 0.8, x: -6.5 + 0.001, y: -1.5, z: -8,   ry: Math.PI / 2,  color: 0x0a1f0a, opacity: 0.35 },
+      { w: 0.9, h: 1.1, x: -6.5 + 0.001, y: -3.0, z: -6.5, ry: Math.PI / 2,  color: 0x0d2510, opacity: 0.28 },
+      { w: 1.4, h: 0.6, x:  1.0,         y: -2.5, z: -10.5 + 0.001,            color: 0x091a09, opacity: 0.32 },
+      { w: 0.7, h: 0.9, x:  6.5 - 0.001, y: -1.8, z: -7,   ry: -Math.PI / 2, color: 0x0c2010, opacity: 0.25 },
+      { w: 1.0, h: 0.7, x: -2.0,         y: -3.5, z: -10.5 + 0.001,            color: 0x0a1a0a, opacity: 0.30 },
+    ];
+    for (const def of mossDefs) {
+      const mat = new MeshBasicMaterial({ color: def.color, transparent: true, opacity: def.opacity, side: DoubleSide, depthWrite: false });
+      const mesh = new Mesh(new PlaneGeometry(def.w, def.h), mat);
+      mesh.position.set(def.x, def.y, def.z);
+      if (def.ry !== undefined) mesh.rotation.y = def.ry;
+      scene.add(mesh);
+      _mossPatches.push(mesh);
+    }
   }
 
   // Forest window + day/night/season cycle
@@ -1959,6 +1981,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       light.intensity = 0.08 + Math.sin(elapsedTime * 0.9 + i * 1.3) * 0.07;
     });
 
+    // C301: moss/algae breathing opacity — imperceptibly slow sine pulse
+    _mossPatches.forEach((patch, i) => {
+      const mat = patch.material as MeshBasicMaterial;
+      const base = [0.35, 0.28, 0.32, 0.25, 0.30][i];
+      mat.opacity = base + Math.sin(elapsedTime * 0.18 + i * 0.7) * 0.04;
+    });
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2112,6 +2141,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _astroRing1 = _astroRing2 = _astroRing3 = null;
     // C292: clear skull light refs (geometries/materials disposed by scene.traverse above)
     _skullLights.length = 0;
+    // C301: clear moss patch refs (geometries/materials disposed by scene.traverse above)
+    _mossPatches.length = 0;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
