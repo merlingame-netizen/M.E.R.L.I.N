@@ -842,6 +842,13 @@ let bridgeGroup357: Group | null = null;
 let streamMesh357: Mesh | null = null;
 const streamLights357: PointLight[] = [];
 
+// ── Cycle-363: carved runestone with glowing ogham inscription ────────────────
+let runestoneGroup363: Group | null = null;
+let runestoneCarvings363: Mesh | null = null;
+let runestoneLight363: PointLight | null = null;
+let runestoneRippleT363 = -1;
+let runestoneNextRipple363 = 12.0;
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export async function buildForestScene(): Promise<BiomeSceneResult> {
@@ -1355,6 +1362,42 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     group.add(bridgeGroup357);
   }
 
+  // ── Cycle-363: carved runestone with pulsing ogham inscription ───────────────
+  {
+    runestoneGroup363 = new Group();
+
+    // Stone slab
+    const stoneMat363 = new MeshStandardMaterial({ color: 0x1a2a1a, roughness: 0.95, metalness: 0.0 });
+    const slabGeo = new BoxGeometry(0.35, 1.8, 0.1);
+    const slab = new Mesh(slabGeo, stoneMat363);
+    slab.rotation.y = 0.3;
+    runestoneGroup363.add(slab);
+
+    // Carving overlay — same shape, slightly in front, emissive lines
+    const carvingGeo = new PlaneGeometry(0.28, 1.65, 1, 8);
+    const carvingMat = new MeshStandardMaterial({
+      color: 0x0a1a0a,
+      emissive: new Color(0x33ff66),
+      emissiveIntensity: 0.10,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+    });
+    runestoneCarvings363 = new Mesh(carvingGeo, carvingMat);
+    runestoneCarvings363.position.set(0.02, 0, 0.06);
+    runestoneCarvings363.rotation.y = 0.3;
+    runestoneGroup363.add(runestoneCarvings363);
+
+    // Point light
+    runestoneLight363 = new PointLight(0x33ff66, 0.08, 2.5);
+    runestoneLight363.position.set(0, 0.5, 0.4);
+    runestoneGroup363.add(runestoneLight363);
+
+    // Position: near path edge
+    runestoneGroup363.position.set(5, 0, -8);
+    group.add(runestoneGroup363);
+  }
+
   // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
   loadGLB('/assets/cabin_unified.glb').then(gltf => {
     const cabin = gltf.scene.clone();
@@ -1576,6 +1619,30 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     for (let si = 0; si < streamLights357.length; si++) {
       streamLights357[si]!.intensity = 0.08 + Math.sin(sceneTime * 0.9 + si * 1.3) * 0.04;
     }
+
+    // Cycle-363: runestone carving pulse + ripple
+    if (runestoneCarvings363) {
+      const mat = runestoneCarvings363.material as MeshStandardMaterial;
+
+      // Idle pulse
+      mat.emissiveIntensity = 0.10 + Math.sin(sceneTime * 0.6) * 0.04;
+      if (runestoneLight363) runestoneLight363.intensity = 0.08 + Math.sin(sceneTime * 0.6) * 0.04;
+
+      // Ripple timer
+      runestoneNextRipple363 -= dt;
+      if (runestoneNextRipple363 <= 0 && runestoneRippleT363 < 0) {
+        runestoneRippleT363 = 0;
+        runestoneNextRipple363 = 12.0 + Math.random() * 4.0;
+      }
+      if (runestoneRippleT363 >= 0) {
+        runestoneRippleT363 += dt;
+        const progress = runestoneRippleT363 / 1.5;
+        const brightness = Math.sin(Math.min(progress, 1.0) * Math.PI);
+        mat.emissiveIntensity = 0.10 + brightness * 0.10;
+        if (runestoneLight363) runestoneLight363.intensity = 0.08 + brightness * 0.06;
+        if (runestoneRippleT363 >= 1.5) runestoneRippleT363 = -1;
+      }
+    }
   };
 
   const dispose = (): void => {
@@ -1624,6 +1691,24 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
     streamMesh357 = null;
     streamLights357.length = 0;
+    // Cycle-363: runestone cleanup
+    if (runestoneGroup363) {
+      group.remove(runestoneGroup363);
+      runestoneGroup363.traverse(c => {
+        if ((c as Mesh).geometry) (c as Mesh).geometry.dispose();
+        const mat = (c as Mesh).material;
+        if (mat) {
+          if (Array.isArray(mat)) {
+            (mat as Material[]).forEach(m => m.dispose());
+          } else {
+            (mat as Material).dispose();
+          }
+        }
+      });
+      runestoneGroup363 = null;
+    }
+    runestoneCarvings363 = null;
+    if (runestoneLight363) { runestoneLight363.dispose(); runestoneLight363 = null; }
   };
 
   return { group, update, dispose };
