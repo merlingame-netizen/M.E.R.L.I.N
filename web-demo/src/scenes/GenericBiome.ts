@@ -448,6 +448,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let moonbeamMesh362: Mesh | null = null;
   let moonbeamLight362: PointLight | null = null;
 
+  // ── Ancient tomb entrance — vallee_anciens (C378) ─────────────────────────
+  let tombGroup378: Group | null = null;
+  let tombGlowLight378: PointLight | null = null;
+  let tombFlareT378 = -1;
+  let tombNextFlare378 = 10.0;
+
   // ── Ritual bonfire — plaine_druides (C370) ───────────────────────────────
   let bonfireGroup370: Group | null = null;
   let bonfireFlames370: Mesh[] = [];
@@ -1267,6 +1273,42 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(pLight);
       _spiritLights.push(pLight);
     }
+
+    // Ancient tomb entrance — dolmen-style doorway with dark interior (C378)
+    tombGroup378 = new Group();
+    const stoneMat378 = new MeshStandardMaterial({ color: 0x1e2e1e, roughness: 0.95, metalness: 0.0 });
+
+    // Left upright
+    const leftStone378 = new Mesh(new BoxGeometry(0.5, 2.8, 0.4), stoneMat378);
+    leftStone378.position.set(-0.8, 1.4, 0);
+    tombGroup378.add(leftStone378);
+
+    // Right upright
+    const rightStone378 = new Mesh(new BoxGeometry(0.5, 2.8, 0.4), stoneMat378);
+    rightStone378.position.set(0.8, 1.4, 0);
+    tombGroup378.add(rightStone378);
+
+    // Capstone
+    const capStone378 = new Mesh(new BoxGeometry(2.4, 0.45, 0.6), stoneMat378);
+    capStone378.position.set(0, 2.95, 0);
+    tombGroup378.add(capStone378);
+
+    // Dark interior plane
+    const interiorGeo378 = new PlaneGeometry(1.1, 2.5);
+    const interiorMat378 = new MeshBasicMaterial({ color: 0x010501, transparent: true, opacity: 0.95, depthWrite: false });
+    const interior378 = new Mesh(interiorGeo378, interiorMat378);
+    interior378.position.set(0, 1.25, 0.01);
+    tombGroup378.add(interior378);
+
+    // Inner glow light
+    tombGlowLight378 = new PointLight(0x33ff66, 0.0, 4.0);
+    tombGlowLight378.position.set(0, 1.0, -1.5);
+    tombGroup378.add(tombGlowLight378);
+
+    tombGroup378.position.set(6, 0, -35);
+    tombGroup378.rotation.y = -0.4;
+    group.add(tombGroup378);
+    tombNextFlare378 = 10.0 + Math.random() * 8.0;
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -2507,6 +2549,26 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       });
     }
+    // Vallee Anciens — ancient tomb inner glow pulse + occasional flare (C378)
+    if (tombGlowLight378) {
+      tombGlowLight378.intensity = 0.05 + Math.sin(_auroraTime * 0.4) * 0.04;
+      tombNextFlare378 -= dt;
+      if (tombNextFlare378 <= 0 && tombFlareT378 < 0) {
+        tombFlareT378 = 0;
+        tombNextFlare378 = 10.0 + Math.random() * 8.0;
+      }
+      if (tombFlareT378 >= 0) {
+        tombFlareT378 += dt;
+        if (tombFlareT378 < 0.3) {
+          tombGlowLight378.intensity = 0.05 + (tombFlareT378 / 0.3) * 0.10;
+        } else if (tombFlareT378 < 0.8) {
+          tombGlowLight378.intensity = 0.15 - ((tombFlareT378 - 0.3) / 0.5) * 0.10;
+        } else {
+          tombGlowLight378.intensity = 0.05 + Math.sin(_auroraTime * 0.4) * 0.04;
+          tombFlareT378 = -1;
+        }
+      }
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -2678,6 +2740,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (crowWingMat358) { crowWingMat358.dispose(); crowWingMat358 = null; }
     _spiritBeams.length = 0;
     _spiritLights.length = 0;
+    // Ancient tomb entrance cleanup (C378)
+    if (tombGroup378) { group.remove(tombGroup378); tombGroup378.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); tombGroup378 = null; }
+    if (tombGlowLight378) { tombGlowLight378.dispose(); tombGlowLight378 = null; }
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
