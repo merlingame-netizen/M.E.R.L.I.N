@@ -527,6 +527,15 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   const swampDockAlgae422: Mesh[] = [];
   let swampDockLight422: PointLight | null = null;
 
+  // ── Spectral ghost apparition — vallee_anciens (C425) ────────────────────
+  let ghostGroup425: Group | null = null;
+  let ghostT425 = 0;
+  let ghostPhaseTimer425 = 0;
+  let ghostNextAppear425 = 5 + Math.random() * 10;
+  let ghostBody425: Mesh | null = null;
+  let ghostHead425: Mesh | null = null;
+  let ghostLight425: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1571,6 +1580,38 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     labyrinthGroup403.add(labLight403);
 
     group.add(labyrinthGroup403);
+
+    // Spectral ghost apparition (C425)
+    ghostGroup425 = new Group();
+
+    const ghostBodyMat = new MeshBasicMaterial({
+      color: 0x0d2a14,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false,
+      side: DoubleSide,
+    });
+    ghostBody425 = new Mesh(new CylinderGeometry(0.15, 0.1, 0.9, 7), ghostBodyMat);
+    ghostBody425.position.set(0, 0.85, 0);
+    ghostGroup425.add(ghostBody425);
+
+    const ghostHeadMat = ghostBodyMat.clone();
+    ghostHead425 = new Mesh(new SphereGeometry(0.18, 6, 5), ghostHeadMat);
+    ghostHead425.position.set(0, 1.55, 0);
+    ghostGroup425.add(ghostHead425);
+
+    const ghostTrailMat = ghostBodyMat.clone();
+    const ghostTrail425 = new Mesh(new ConeGeometry(0.12, 0.5, 6, 1, true), ghostTrailMat);
+    ghostTrail425.position.set(0, 0.3, 0);
+    ghostTrail425.rotation.x = Math.PI;
+    ghostGroup425.add(ghostTrail425);
+
+    ghostLight425 = new PointLight(0x33ff66, 0.0, 4.0);
+    ghostLight425.position.set(0, 1.2, 0);
+    ghostGroup425.add(ghostLight425);
+
+    ghostGroup425.position.set(-3, 0, -18);
+    group.add(ghostGroup425);
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -3246,6 +3287,38 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         swampDockLight422.intensity = 0.10 + Math.sin(swampDockT422 * 0.9) * 0.04;
       }
     }
+    // Vallee anciens — spectral ghost apparition fade cycle (C425)
+    if (ghostGroup425 && ghostBody425 && ghostHead425 && ghostLight425) {
+      ghostT425 += dt;
+      ghostPhaseTimer425 += dt;
+
+      if (ghostPhaseTimer425 >= ghostNextAppear425) {
+        ghostPhaseTimer425 = 0;
+        ghostNextAppear425 = 15 + Math.random() * 10;
+      }
+
+      const phase = ghostPhaseTimer425;
+      let opacity = 0;
+      if (phase < 2.0) {
+        opacity = (phase / 2.0) * 0.45;
+      } else if (phase < 6.0) {
+        opacity = 0.45 + Math.sin(ghostT425 * 1.5) * 0.08;
+      } else if (phase < 8.0) {
+        opacity = (1.0 - (phase - 6.0) / 2.0) * 0.45;
+      }
+
+      ghostGroup425.traverse(c => {
+        if (c instanceof Mesh) {
+          const mat = c.material as MeshBasicMaterial;
+          if (mat.transparent) mat.opacity = opacity;
+        }
+      });
+      ghostLight425.intensity = opacity * 0.35;
+
+      ghostGroup425.position.y = Math.sin(ghostT425 * 0.6) * 0.2;
+      ghostGroup425.position.x = -3 + Math.sin(ghostT425 * 0.25) * 0.4;
+      ghostGroup425.rotation.y = Math.sin(ghostT425 * 0.15) * 0.5;
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3499,6 +3572,16 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       swampDockAlgae422.length = 0;
       swampDockLight422 = null;
       swampDockGroup422 = null;
+    }
+    // Spectral ghost apparition cleanup (C425)
+    if (ghostGroup425) {
+      ghostGroup425.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(ghostGroup425);
+      ghostBody425 = null; ghostHead425 = null; ghostLight425 = null;
+      ghostGroup425 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
