@@ -1444,6 +1444,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let crystalT467: number = 0;
   let crystalMeshes467: Mesh[] = [];
 
+  // C472 — wall of specimen jars (curiosity cabinet)
+  let specimenGroup472: Group | null = null
+  let specimenT472: number = 0
+  let specimenJarMats472: MeshBasicMaterial[] = []
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2939,6 +2944,83 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     crystalCluster467!.add(crystalLight);
 
     scene.add(crystalCluster467);
+  }
+
+  // C472 — wall of specimen jars (curiosity cabinet)
+  {
+    specimenGroup472 = new Group()
+    specimenGroup472.position.set(-3.5, 1.2, -3.0)
+    specimenGroup472.rotation.y = Math.PI * 0.5  // face room
+
+    // 2 wooden shelves
+    for (let s = 0; s < 2; s++) {
+      const shelf = new Mesh(
+        new BoxGeometry(1.8, 0.06, 0.28),
+        new MeshBasicMaterial({ color: 0x020f04 })
+      )
+      shelf.position.set(0, s * 0.9, 0)
+      specimenGroup472!.add(shelf)
+
+      // Wall mount brackets
+      for (const bx of [-0.7, 0, 0.7]) {
+        const bracket = new Mesh(
+          new BoxGeometry(0.05, 0.18, 0.25),
+          new MeshBasicMaterial({ color: 0x0a1a10 })
+        )
+        bracket.position.set(bx, s * 0.9 - 0.1, -0.08)
+        specimenGroup472!.add(bracket)
+      }
+    }
+
+    // 8 jars — 4 per shelf
+    const jarDefs = [
+      { x: -0.6, shelf: 0, h: 0.28, r: 0.07 },
+      { x: -0.2, shelf: 0, h: 0.22, r: 0.065 },
+      { x:  0.2, shelf: 0, h: 0.32, r: 0.075 },
+      { x:  0.6, shelf: 0, h: 0.25, r: 0.06 },
+      { x: -0.6, shelf: 1, h: 0.26, r: 0.07 },
+      { x: -0.2, shelf: 1, h: 0.3,  r: 0.065 },
+      { x:  0.2, shelf: 1, h: 0.2,  r: 0.06 },
+      { x:  0.6, shelf: 1, h: 0.35, r: 0.08 },
+    ]
+
+    jarDefs.forEach((def, idx) => {
+      const baseY = def.shelf * 0.9 + 0.03 + def.h / 2
+
+      // Jar body (glass)
+      const jar = new Mesh(
+        new CylinderGeometry(def.r, def.r * 0.95, def.h, 8, 1, false),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.45 })
+      )
+      jar.position.set(def.x, baseY, 0)
+      specimenGroup472!.add(jar)
+
+      // Jar cap
+      const cap = new Mesh(
+        new CylinderGeometry(def.r * 1.05, def.r * 1.05, 0.04, 8),
+        new MeshBasicMaterial({ color: 0x0d2a14 })
+      )
+      cap.position.set(def.x, baseY + def.h / 2 + 0.02, 0)
+      specimenGroup472!.add(cap)
+
+      // Specimen inside (small glowing sphere)
+      const specimen = new Mesh(
+        new SphereGeometry(def.r * 0.4, 5, 4),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.75 })
+      )
+      specimen.position.set(def.x, baseY - def.h * 0.15, 0)
+      specimenJarMats472.push(specimen.material as MeshBasicMaterial)
+      specimenGroup472!.add(specimen)
+
+      void idx  // suppress unused index warning
+    })
+
+    // Ambient light for the cabinet
+    const cabinetLight = new PointLight(0x33ff66, 0.08, 3.0)
+    cabinetLight.position.set(0, 1.0, 0.3)
+    specimenGroup472!.add(cabinetLight)
+
+    scene.add(specimenGroup472)
   }
 
   // C438 — potion bottle shelf
@@ -4482,6 +4564,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       crystalCluster467.rotation.z = 0.03 * Math.sin(crystalT467 * 0.4 + 0.5);
     }
 
+    // C472 — specimen jar cabinet update
+    specimenT472 += dt;
+    specimenJarMats472.forEach((mat, i) => {
+      mat.opacity = 0.55 + 0.25 * Math.sin(specimenT472 * (0.7 + i * 0.15) + i * 0.9);
+    });
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -4957,6 +5045,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       crystalCluster467 = null;
     }
     crystalMeshes467 = [];
+    // C472 — specimen jar cabinet dispose
+    if (specimenGroup472) {
+      specimenGroup472.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(specimenGroup472);
+      specimenGroup472 = null;
+    }
+    specimenJarMats472 = [];
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
