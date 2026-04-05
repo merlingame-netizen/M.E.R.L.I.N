@@ -784,6 +784,112 @@ function createSkull(): { group: Group; cranium: Mesh; baseY: number } {
   return { group, cranium, baseY: BASE_Y };
 }
 
+// ── C328: Right-Wall Bookshelf with Tomes ────────────────────────────────────
+
+function createTomeBookshelf(): { group: Group; bookmarkMesh: Mesh } {
+  const group = new Group();
+
+  // Back panel (vertical spine flush against right wall)
+  const backMat = new MeshStandardMaterial({ color: 0x0c1208, roughness: 0.9, metalness: 0.0, flatShading: true });
+  const backPanel = new Mesh(new BoxGeometry(0.1, 4.0, 2.0), backMat);
+  backPanel.position.set(5.8, -1.5, -8.5);
+  group.add(backPanel);
+
+  // 3 horizontal shelf planks — y: -2.8 / -1.5 / -0.2
+  const plankGeo = new BoxGeometry(0.06, 0.06, 1.9);
+  const plankMat = new MeshStandardMaterial({ color: 0x0c1208, roughness: 0.9, metalness: 0.0, flatShading: true });
+  const plankYs = [-2.8, -1.5, -0.2];
+  for (const py of plankYs) {
+    const plank = new Mesh(plankGeo, plankMat);
+    plank.position.set(5.8, py, -8.5);
+    group.add(plank);
+  }
+
+  // 14 tomes spread across 3 shelves (4 / 5 / 5 books per shelf)
+  const SPINE_COLORS = [0x0a1f0a, 0x1a2a1a, 0x0c2010, 0x061408, 0x152a15];
+  interface BookDef { w: number; h: number; z: number; yBase: number; tilt?: number }
+
+  // Build book definitions — lined left-to-right along z axis on each shelf plank
+  // Shelf z range: center -8.5, plank depth 1.9 → z from -9.45 to -7.55
+  const bookDefs: BookDef[] = [];
+
+  // shelf 0 — y=-2.8 — 4 books
+  const shelf0Y = -2.8;
+  const shelf0Books: Array<[number, number, number?]> = [
+    [0.12, 0.38, -0.15],
+    [0.16, 0.30, 0.15],
+    [0.10, 0.42, -0.15],
+    [0.14, 0.35, undefined],
+  ];
+  let zOff0 = -8.5 - (shelf0Books.reduce((s, b) => s + b[0]!, 0) + (shelf0Books.length - 1) * 0.025) / 2;
+  for (const [bw, bh, tilt] of shelf0Books) {
+    bookDefs.push({ w: bw, h: bh, z: zOff0 + bw / 2, yBase: shelf0Y, tilt });
+    zOff0 += bw + 0.025;
+  }
+
+  // shelf 1 — y=-1.5 — 5 books
+  const shelf1Y = -1.5;
+  const shelf1Books: Array<[number, number, number?]> = [
+    [0.10, 0.40, undefined],
+    [0.18, 0.28, 0.15],
+    [0.12, 0.44, undefined],
+    [0.09, 0.36, -0.15],
+    [0.15, 0.32, undefined],
+  ];
+  let zOff1 = -8.5 - (shelf1Books.reduce((s, b) => s + b[0]!, 0) + (shelf1Books.length - 1) * 0.022) / 2;
+  for (const [bw, bh, tilt] of shelf1Books) {
+    bookDefs.push({ w: bw, h: bh, z: zOff1 + bw / 2, yBase: shelf1Y, tilt });
+    zOff1 += bw + 0.022;
+  }
+
+  // shelf 2 — y=-0.2 — 5 books
+  const shelf2Y = -0.2;
+  const shelf2Books: Array<[number, number, number?]> = [
+    [0.13, 0.38, 0.15],
+    [0.11, 0.45, undefined],
+    [0.16, 0.30, undefined],
+    [0.10, 0.40, -0.15],
+    [0.14, 0.34, undefined],
+  ];
+  let zOff2 = -8.5 - (shelf2Books.reduce((s, b) => s + b[0]!, 0) + (shelf2Books.length - 1) * 0.022) / 2;
+  for (const [bw, bh, tilt] of shelf2Books) {
+    bookDefs.push({ w: bw, h: bh, z: zOff2 + bw / 2, yBase: shelf2Y, tilt });
+    zOff2 += bw + 0.022;
+  }
+
+  // Instantiate books
+  let bookmarkMesh: Mesh | null = null;
+  bookDefs.forEach((bd, idx) => {
+    const spineColor = SPINE_COLORS[idx % SPINE_COLORS.length]!;
+    const mat = new MeshStandardMaterial({ color: spineColor, roughness: 0.85, metalness: 0.0, flatShading: true });
+    const book = new Mesh(new BoxGeometry(bd.w, bd.h, 0.14), mat);
+    // Y: shelf plank surface + half book height for it to sit on the plank
+    book.position.set(5.75, bd.yBase + bd.h / 2, bd.z);
+    if (bd.tilt !== undefined) book.rotation.z = bd.tilt;
+    group.add(book);
+
+    // Glowing bookmark — sticks out of book #7 (1-indexed) on shelf 1
+    if (idx === 6) {
+      const bmMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 });
+      const bm = new Mesh(new BoxGeometry(0.02, 0.3, 0.01), bmMat);
+      // Position: top of the book (center + half height + half bookmark height)
+      bm.position.set(5.75, bd.yBase + bd.h + 0.15, bd.z);
+      group.add(bm);
+      bookmarkMesh = bm;
+    }
+  });
+
+  // Fallback if idx=6 somehow missing (TypeScript narrowing guard)
+  if (!bookmarkMesh) {
+    const bmMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 });
+    bookmarkMesh = new Mesh(new BoxGeometry(0.02, 0.3, 0.01), bmMat);
+    bookmarkMesh.position.set(5.75, -0.8, -8.5);
+    group.add(bookmarkMesh);
+  }
+
+  return { group, bookmarkMesh };
+}
+
 // ── Ambient Lighting — 6-source pass (degraded to 5 on low-end mobile) ── // C52: corrected count (was '5/4', actual 6/5)
 // C89-P2: lowEnd=true skips backAccent PointLight (Mali-G57/Adreno 610 budget ~4 lights at 60fps)
 function setupLighting(scene: Scene, lowEnd = false): void {
@@ -1156,6 +1262,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C316: cauldron steam wisps — 8 larger, slower, more translucent spheres rising above bubbles
   const _steamWisps: Mesh[] = [];
 
+  // C328: right-wall decorative bookshelf
+  let _bookshelfGroup: Group | null = null;
+  let _bookmarkMesh: Mesh | null = null;
+  let _bookmarkTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1203,6 +1314,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       scene.add(wm);
       _steamWisps.push(wm);
     }
+  }
+
+  // C328: right-wall decorative bookshelf with tomes and glowing bookmark
+  {
+    const { group: tbGroup, bookmarkMesh: tbBookmark } = createTomeBookshelf();
+    scene.add(tbGroup);
+    _bookshelfGroup = tbGroup;
+    _bookmarkMesh = tbBookmark;
   }
 
   // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
@@ -2033,6 +2152,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       mat.opacity = base + Math.sin(elapsedTime * 0.18 + i * 0.7) * 0.04;
     });
 
+    // C328: bookmark glow pulse — 0.4 + sin(t*0.8)*0.3 range (cosmetic, always-on, cheap)
+    if (_bookmarkMesh) {
+      _bookmarkTime += dt;
+      (_bookmarkMesh.material as MeshBasicMaterial).opacity = 0.4 + Math.sin(_bookmarkTime * 0.8) * 0.3;
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2190,6 +2315,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _mossPatches.length = 0;
     // C316: clear steam wisp refs (geometries/materials disposed by scene.traverse above)
     _steamWisps.length = 0;
+    // C328: clear tome bookshelf refs (geometries/materials disposed by scene.traverse above)
+    _bookshelfGroup = null;
+    _bookmarkMesh = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
