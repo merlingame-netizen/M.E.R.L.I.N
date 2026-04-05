@@ -780,6 +780,7 @@ interface RuneRainResult {
 }
 
 let _runeRainRafId = 0;
+let _runeRainContainer406: HTMLDivElement | null = null;
 
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
@@ -1490,6 +1491,55 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   // C385: Scrolling Celtic knotwork border — SVG strips along all 4 screen edges
   createKnotworkBorder385(container);
 
+  // C406 — falling ogham rune rain
+  if (!document.getElementById('merlin-rune-rain-406')) {
+    const style406 = document.createElement('style');
+    style406.id = 'merlin-rune-rain-406';
+    style406.textContent = `
+      #rune-rain-overlay-406 {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 2;
+        overflow: hidden;
+      }
+      .rune-glyph-406 {
+        position: absolute;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        color: #1a8833;
+        opacity: 0;
+        animation: runefall406 var(--dur, 12s) linear var(--delay, 0s) infinite;
+      }
+      @keyframes runefall406 {
+        0%   { transform: translateY(-40px); opacity: 0; }
+        10%  { opacity: 0.6; }
+        85%  { opacity: 0.4; }
+        100% { transform: translateY(110vh); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style406);
+  }
+  const runeOverlay406 = document.createElement('div');
+  runeOverlay406.id = 'rune-rain-overlay-406';
+  const oghams406 = ['ᚁ','ᚂ','ᚃ','ᚄ','ᚅ','ᚆ','ᚇ','ᚈ','ᚉ','ᚊ','ᚋ','ᚌ','ᚍ','ᚎ','ᚏ','ᚐ','ᚑ','ᚒ','ᚓ','ᚔ'];
+  const cols406 = [4, 9, 15, 22, 31, 38, 48, 57, 63, 72, 80, 88];
+  cols406.forEach((left, i) => {
+    const span = document.createElement('span');
+    span.className = 'rune-glyph-406';
+    span.textContent = oghams406[i % oghams406.length];
+    span.style.left = `${left}%`;
+    const dur = 10 + (i % 5) * 2.5;
+    const delay = -(i * 1.8);
+    span.style.setProperty('--dur', `${dur}s`);
+    span.style.setProperty('--delay', `${delay}s`);
+    if (i % 3 === 0) span.style.color = '#33ff66';
+    runeOverlay406.appendChild(span);
+  });
+  document.body.appendChild(runeOverlay406);
+  _runeRainContainer406 = runeOverlay406;
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -1555,6 +1605,13 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     runeRain.dispose();
     // C385: remove knotwork border SVG overlay and its style tag
     destroyKnotworkBorder385();
+    // C406: remove falling ogham rune rain overlay
+    if (_runeRainContainer406) {
+      _runeRainContainer406.remove();
+      _runeRainContainer406 = null;
+    }
+    const runeStyle406 = document.getElementById('merlin-rune-rain-406');
+    if (runeStyle406) runeStyle406.remove();
     // C200: clear all typewriter timers
     _titleTimers.forEach((id) => window.clearTimeout(id));
     _titleTimers.length = 0;
