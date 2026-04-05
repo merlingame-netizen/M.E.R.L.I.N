@@ -178,6 +178,19 @@ function playSfx(sound: string): void {
 export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'): Promise<void> {
   const state = store.getState();
 
+  // Inline SFX helper
+  const sfx = (sound: string): void => { window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } })); };
+
+  // Reason-specific SFX on show
+  if (reason === 'death') {
+    sfx('lose');
+  } else if (reason === 'victory') {
+    sfx('magic_reveal');
+    setTimeout(() => sfx('win'), 500);
+  } else {
+    sfx('win');
+  }
+
   const biomeLabel = BIOME_LABELS[state.run.biome] ?? state.run.biome;
 
   // C138/RS-01: re-entry guard BEFORE fadeIn — concurrent death calls previously both
@@ -244,20 +257,62 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   panel.appendChild(runMeta);
 
   // ── C167: Header with scanline pulse animation ───────────────────────────────
+  // Reason-specific title color + text-shadow
+  const titleColor = reason === 'death'
+    ? '#ff6644'
+    : reason === 'victory'
+      ? '#33ff66'
+      : 'rgba(51,255,102,0.8)';
+  const titleShadow = reason === 'death'
+    ? '0 0 12px rgba(255,80,40,0.6)'
+    : reason === 'victory'
+      ? '0 0 16px rgba(51,255,102,0.8)'
+      : '0 0 8px rgba(51,255,102,0.35)';
+
   const header = document.createElement('div');
   header.style.cssText = [
     'font-size:16px',
     'font-weight:700',
     'letter-spacing:0.22em',
     'text-transform:uppercase',
-    'color:#33ff66',
+    `color:${titleColor}`,
     'margin-bottom:4px',
     'font-family:Courier New,monospace',
-    'text-shadow:0 0 8px rgba(51,255,102,0.35)',
+    `text-shadow:${titleShadow}`,
     'animation:rs-scanline-pulse 1.2s ease-in-out infinite',
   ].join(';');
   header.textContent = '> FIN_DE_QUETE';
   panel.appendChild(header);
+
+  // Reason-specific subtitle line
+  const subtitleText = reason === 'death'
+    ? "Votre voyage s'achève ici..."
+    : reason === 'victory'
+      ? 'La forêt se souvient de vous.'
+      : 'Le cycle se referme.';
+  const subtitleEl = document.createElement('div');
+  subtitleEl.style.cssText = [
+    'font-size:11px',
+    `color:${reason === 'death' ? 'rgba(255,100,68,0.65)' : 'rgba(51,255,102,0.5)'}`,
+    'letter-spacing:0.1em',
+    'margin-bottom:4px',
+    'font-family:Courier New,monospace',
+  ].join(';');
+  subtitleEl.textContent = subtitleText;
+  panel.appendChild(subtitleEl);
+
+  // Cause-of-death flavor text (death only)
+  if (reason === 'death') {
+    const flavorEl = document.createElement('p');
+    flavorEl.style.cssText = [
+      'font:italic 0.72rem Courier New,monospace',
+      'color:rgba(255,80,40,0.6)',
+      'margin-top:4px',
+      'margin-bottom:0',
+    ].join(';');
+    flavorEl.textContent = 'Les Oghams ne peuvent plus vous guider.';
+    panel.appendChild(flavorEl);
+  }
 
   // Sub-header: biome + card count
   const cardsPlayed = state.run.cardsPlayed ?? 0;
@@ -267,6 +322,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     'color:rgba(51,255,102,0.5)',
     'letter-spacing:0.14em',
     'margin-bottom:20px',
+    'margin-top:10px',
     'font-family:Courier New,monospace',
   ].join(';');
   subHeader.textContent = `${biomeLabel} — ${cardsPlayed} carte${cardsPlayed !== 1 ? 's' : ''}`;
