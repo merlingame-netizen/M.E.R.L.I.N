@@ -9,7 +9,7 @@
 
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
-  ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
+  CircleGeometry, ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
   InstancedMesh, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
   PointLight, Points, PointsMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
@@ -388,6 +388,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let _wellGroup: Group | null = null;
   let _wellBucket: Mesh | null = null;
   let _wellLight: PointLight | null = null;
+  let _moonGroup: Group | null = null;
+  let _moonHalo: Mesh | null = null;
+  let _moonLight: PointLight | null = null;
   let maraisWispMeshes: Mesh[] = [];
   let maraisWispTime = 0;
   const _bogFireflies: Mesh[] = [];
@@ -1218,6 +1221,43 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _wellGroup = wellGroup;
     _wellBucket = wellBucket;
     _wellLight = wellGlowLight;
+
+    // ── Harvest moon (C322) ──────────────────────────────────────────────────
+    const moonGroup = new Group();
+
+    // Moon disc
+    const moonDiscMat = new MeshBasicMaterial({
+      color: 0x1a3a22, transparent: true, opacity: 0.75, side: DoubleSide,
+    });
+    const moonDisc = new Mesh(new CircleGeometry(2.8, 16), moonDiscMat);
+    moonDisc.position.set(12, 18, -50);
+    moonGroup.add(moonDisc);
+
+    // Moon halo (backplate, slightly behind disc)
+    const moonHaloMat = new MeshBasicMaterial({
+      color: 0x0a2a15, transparent: true, opacity: 0.15, side: DoubleSide, depthWrite: false,
+    });
+    const moonHalo = new Mesh(new CircleGeometry(3.5, 16), moonHaloMat);
+    moonHalo.position.set(12, 18, -50.1);
+    moonGroup.add(moonHalo);
+
+    // Glow ring (torus outline)
+    const moonRingMat = new MeshBasicMaterial({
+      color: 0x1a5533, transparent: true, opacity: 0.2, side: DoubleSide,
+    });
+    const moonRing = new Mesh(new TorusGeometry(3.2, 0.15, 6, 32), moonRingMat);
+    moonRing.position.set(12, 18, -50);
+    moonGroup.add(moonRing);
+
+    // Moonlight point light
+    const moonLight = new PointLight(0x33ff66, 0.15, 40);
+    moonLight.position.set(12, 18, -48);
+    moonGroup.add(moonLight);
+
+    group.add(moonGroup);
+    _moonGroup = moonGroup;
+    _moonHalo = moonHalo;
+    _moonLight = moonLight;
   }
 
   const update = (dt: number): void => {
@@ -1259,6 +1299,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (_wellLight !== null) {
       const t = Date.now() * 0.001;
       _wellLight.intensity = 0.08 + Math.sin(t * 0.7) * 0.04;
+    }
+    // Plaine des Druides — harvest moon drift + halo pulse + light pulse (C322)
+    if (_moonGroup !== null) {
+      const t = Date.now() * 0.001;
+      _moonGroup.position.y = 18 + Math.sin(t * 0.02) * 0.5;
+    }
+    if (_moonHalo !== null) {
+      const t = Date.now() * 0.001;
+      (_moonHalo.material as MeshBasicMaterial).opacity = 0.10 + Math.sin(t * 0.3) * 0.05;
+    }
+    if (_moonLight !== null) {
+      const t = Date.now() * 0.001;
+      _moonLight.intensity = 0.12 + Math.sin(t * 0.25) * 0.03;
     }
     // Marais korrigans — chaotic will-o'-wisp particles
     if (maraisWispMeshes.length > 0) {
