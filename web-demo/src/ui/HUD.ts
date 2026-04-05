@@ -50,6 +50,10 @@ let _hudUnsubscribe: (() => void) | null = null;
 // C240: tracks whether the critical_alert SFX has fired for the current run (reset in teardownHUD).
 let _criticalAlerted: boolean = false;
 
+// C271: previous life value used to detect changes and spawn floating delta indicators.
+// -1 means "not yet initialized" (set on first updateHUD call in a run).
+let _prevLife: number = -1;
+
 // Cached #hud root element — used by setHUDWalkMode() for opacity transition. C163/HUD-WALK-01.
 let _hudRootEl: HTMLElement | null = null;
 
@@ -252,6 +256,13 @@ export function updateHUD(): void {
     }
   }
 
+  // C271: floating life delta indicator — fire when life changes between frames
+  const currentLife = state.run.life;
+  if (_prevLife !== -1 && currentLife !== _prevLife) {
+    spawnLifeDelta(currentLife - _prevLife);
+  }
+  _prevLife = currentLife;
+
   _cardsCountEl.textContent = `CARTE_${state.run.cardsPlayed}`;
 
   // Run progress bar update
@@ -283,6 +294,62 @@ export function updateHUD(): void {
   if (_currLabelEl && biome) _currLabelEl.textContent = biome.currency_name;
 
   updateOghamBadge();
+}
+
+// =============================================================================
+// C271 — Life change floating delta indicator (+N / -N)
+// =============================================================================
+
+/**
+ * Inject the hud-life-delta CSS keyframes and class once into document.head.
+ * Idempotent — safe to call multiple times.
+ */
+function ensureLifeDeltaStyle(): void {
+  if (document.getElementById('hud-life-delta-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-life-delta-style';
+  s.textContent = `
+    @keyframes life-delta-float {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-28px); }
+    }
+    .hud-life-delta {
+      position: fixed;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 101;
+      animation: life-delta-float 1.2s ease-out forwards;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/**
+ * Spawn a floating +N / -N indicator near the life bar fill element.
+ * @param delta - Signed life change value (positive = heal, negative = damage).
+ */
+function spawnLifeDelta(delta: number): void {
+  ensureLifeDeltaStyle();
+  const el = document.createElement('div');
+  el.className = 'hud-life-delta';
+  el.textContent = delta > 0 ? `+${delta}` : `${delta}`;
+  el.style.color = delta > 0 ? '#33ff66' : 'rgba(220,50,50,0.9)';
+
+  // Position near the life fill bar — right edge of bar + small offset
+  const lifeEl = _lifeFillEl ?? document.getElementById('life-fill');
+  if (lifeEl) {
+    const rect = lifeEl.getBoundingClientRect();
+    el.style.left = (rect.right + 4) + 'px';
+    el.style.top = rect.top + 'px';
+  } else {
+    el.style.right = '80px';
+    el.style.top = '20px';
+  }
+
+  document.body.appendChild(el);
+  window.setTimeout(() => el.remove(), 1200);
 }
 
 /** Build and inject the run progress bar beneath the cards counter element. */
@@ -607,6 +674,9 @@ export function teardownHUD(): void {
   // C240: reset critical alert flag and remove pulse style.
   _criticalAlerted = false;
   document.getElementById('hud-critical-style')?.remove();
+  // C271: reset prev life tracker and remove delta style.
+  _prevLife = -1;
+  document.getElementById('hud-life-delta-style')?.remove();
   // C259: remove ogham toast and its style on teardown.
   document.getElementById('hud-ogham-toast')?.remove();
   document.getElementById('hud-ogham-toast-style')?.remove();
