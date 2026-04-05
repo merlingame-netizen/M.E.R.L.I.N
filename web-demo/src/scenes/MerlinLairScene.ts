@@ -1405,6 +1405,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let starMapT441: number = 0;
   const starDots441: Mesh[] = [];
 
+  // C447 — enchanted mirror (closure-scope vars)
+  let mirrorGroup447: Group | null = null;
+  let mirrorT447: number = 0;
+  let mirrorSurfaceMat447: MeshBasicMaterial | null = null;
+  let mirrorFlashTimer447: number = 25;
+  let mirrorFlashing447: boolean = false;
+  let mirrorFlashT447: number = 0;
+  let mirrorLight447: PointLight | null = null;
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -2567,6 +2576,58 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     starMapGroup441.add(starLight);
 
     scene.add(starMapGroup441);
+  }
+
+  // C447 — enchanted mirror
+  {
+    mirrorGroup447 = new Group();
+    mirrorGroup447.position.set(3.2, 2.2, -2.0);
+    mirrorGroup447.rotation.set(0, -Math.PI * 0.5, 0);
+
+    // Outer oval frame — TorusGeometry scaled to oval
+    const outerFrameMesh = new Mesh(
+      new TorusGeometry(0.55, 0.1, 6, 24),
+      new MeshBasicMaterial({ color: 0x0d2a14 })
+    );
+    outerFrameMesh.scale.set(1.0, 1.35, 1.0);
+    mirrorGroup447.add(outerFrameMesh);
+
+    // Inner frame decoration
+    const innerFrameMesh = new Mesh(
+      new TorusGeometry(0.5, 0.04, 4, 20),
+      new MeshBasicMaterial({ color: 0x1a8833 })
+    );
+    innerFrameMesh.scale.set(1.0, 1.35, 1.0);
+    mirrorGroup447.add(innerFrameMesh);
+
+    // Mirror surface
+    mirrorSurfaceMat447 = new MeshBasicMaterial({ color: 0x010802, transparent: true, opacity: 0.9 });
+    const mirrorSurface = new Mesh(new PlaneGeometry(0.85, 1.1), mirrorSurfaceMat447);
+    mirrorSurface.position.set(0, 0, 0.02);
+    mirrorGroup447.add(mirrorSurface);
+
+    // Subtle surface glow plane
+    const glowPlane = new Mesh(
+      new PlaneGeometry(0.7, 0.9),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.04 })
+    );
+    glowPlane.position.set(0, 0, 0.03);
+    mirrorGroup447.add(glowPlane);
+
+    // Frame top ornament
+    const topOrnament = new Mesh(
+      new SphereGeometry(0.08, 6, 4),
+      new MeshBasicMaterial({ color: 0x1a8833 })
+    );
+    topOrnament.position.set(0, 0.55 * 1.35 + 0.04, 0);
+    mirrorGroup447.add(topOrnament);
+
+    // Point light offset toward room
+    mirrorLight447 = new PointLight(0x33ff66, 0.06, 4.0);
+    mirrorLight447.position.set(0.3, 0, 0);
+    mirrorGroup447.add(mirrorLight447);
+
+    scene.add(mirrorGroup447);
   }
 
   // C438 — potion bottle shelf
@@ -3945,6 +4006,42 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C447 — enchanted mirror update
+    if (mirrorGroup447) {
+      mirrorT447 += dt;
+      mirrorFlashTimer447 -= dt;
+
+      // Subtle surface swirl via opacity breathing
+      if (mirrorSurfaceMat447 && !mirrorFlashing447) {
+        mirrorSurfaceMat447.opacity = 0.88 + 0.06 * Math.sin(mirrorT447 * 0.7);
+      }
+
+      // Trigger vision flash
+      if (mirrorFlashTimer447 <= 0) {
+        mirrorFlashTimer447 = 20 + Math.random() * 15;
+        mirrorFlashing447 = true;
+        mirrorFlashT447 = 0;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+      }
+
+      // Flash animation: 0-0.3s brighten, 0.3-1.2s fade
+      if (mirrorFlashing447) {
+        mirrorFlashT447 += dt;
+        if (mirrorFlashT447 < 0.3) {
+          const p = mirrorFlashT447 / 0.3;
+          if (mirrorSurfaceMat447) mirrorSurfaceMat447.opacity = 0.9 + 0.1 * p;
+          if (mirrorLight447) mirrorLight447.intensity = 0.06 + 0.5 * p;
+        } else if (mirrorFlashT447 < 1.2) {
+          const p = (mirrorFlashT447 - 0.3) / 0.9;
+          if (mirrorSurfaceMat447) mirrorSurfaceMat447.opacity = 1.0 - 0.12 * p;
+          if (mirrorLight447) mirrorLight447.intensity = 0.56 - 0.5 * p;
+        } else {
+          mirrorFlashing447 = false;
+          if (mirrorLight447) mirrorLight447.intensity = 0.06;
+        }
+      }
+    }
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -4369,6 +4466,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       starMapGroup441 = null;
     }
     starDots441.length = 0;
+    // C447 — enchanted mirror dispose
+    if (mirrorGroup447) {
+      mirrorGroup447.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(mirrorGroup447);
+      mirrorGroup447 = null;
+    }
+    mirrorSurfaceMat447 = null;
+    mirrorLight447 = null;
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
