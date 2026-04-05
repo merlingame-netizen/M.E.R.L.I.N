@@ -23,6 +23,15 @@ interface ScrollingWord {
   fadeAlpha: number;
 }
 
+/** Transient canvas burst effect — green for faction, red for neutral. */
+interface FlashEffect {
+  x: number;
+  y: number;
+  radius: number;
+  alpha: number;
+  readonly isFaction: boolean;
+}
+
 /** Faction keyword pools -- words that resonate with each faction. */
 const FACTION_KEYWORDS: Record<string, readonly string[]> = {
   druides: ['sagesse', 'nature', 'equilibre', 'harmonie', 'racines', 'gui', 'rituel', 'ancien', 'cycle', 'chene'],
@@ -76,6 +85,11 @@ export class MinigameNegociation extends MinigameBase {
 
   // Visual
   private pulsePhase = 0;
+  // C258: transient burst effects on word pick
+  private flashEffects: FlashEffect[] = [];
+  // C258: sequence bar flash timer (>0 = flashing)
+  private seqFlashTimer = 0;
+  private seqFlashFaction = true;
 
   // Keyboard support (WCAG 2.1.1 C137)
   private kbFocusIdx = 0;
@@ -116,6 +130,18 @@ export class MinigameNegociation extends MinigameBase {
         this.comboCount = 0;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
       }
+      // C258: canvas burst + sequence bar flash (keyboard path mirrors pointer path)
+      this.flashEffects = [
+        ...this.flashEffects,
+        { x: sw.x + Math.max(60, sw.word.text.length * 8.5) / 2, y: sw.y, radius: 4, alpha: 0.85, isFaction: sw.word.isFactionWord },
+      ];
+      this.seqFlashFaction = sw.word.isFactionWord;
+      this.seqFlashTimer = 0.55;
+      if (this.seqEl) {
+        this.seqEl.classList.remove('nego-seq-flash-green', 'nego-seq-flash-red');
+        void (this.seqEl as HTMLElement).offsetWidth;
+        this.seqEl.classList.add(sw.word.isFactionWord ? 'nego-seq-flash-green' : 'nego-seq-flash-red');
+      }
       if (this.seqEl) {
         const words = this.pickedSequence.map((w) =>
           w.isFactionWord ? `[${w.text}]` : w.text
@@ -127,8 +153,42 @@ export class MinigameNegociation extends MinigameBase {
     }
   };
 
+  // C258: inject CeltOS visual enhancement CSS once (idempotent)
+  private static injectStyles(): void {
+    if (document.getElementById('mg-nego-styles-c258')) return;
+    const style = document.createElement('style');
+    style.id = 'mg-nego-styles-c258';
+    style.textContent = `
+      @keyframes negoWordPop {
+        0%   { transform: scale(0.5); opacity: 0; }
+        60%  { transform: scale(1.15); opacity: 1; }
+        100% { transform: scale(1);   opacity: 1; }
+      }
+      @keyframes negoSeqFlashGreen {
+        0%   { background: rgba(51,255,102,0.35); color: rgba(51,255,102,1); }
+        60%  { background: rgba(51,255,102,0.18); color: rgba(51,255,102,0.9); }
+        100% { background: transparent;           color: rgba(51,255,102,0.45); }
+      }
+      @keyframes negoSeqFlashRed {
+        0%   { background: rgba(255,60,60,0.30); color: rgba(255,90,90,1); }
+        60%  { background: rgba(255,60,60,0.12); color: rgba(255,90,90,0.85); }
+        100% { background: transparent;          color: rgba(51,255,102,0.45); }
+      }
+      .nego-seq-flash-green {
+        animation: negoSeqFlashGreen 0.55s ease-out forwards;
+        border-radius: 4px;
+      }
+      .nego-seq-flash-red {
+        animation: negoSeqFlashRed 0.55s ease-out forwards;
+        border-radius: 4px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   protected setup(): void {
     this.container.innerHTML = '';
+    MinigameNegociation.injectStyles(); // C258
 
     // C100: difficulty scaling
     this.totalTime     = this.tieredValue([12, 10, 8, 7] as const);
@@ -206,6 +266,8 @@ export class MinigameNegociation extends MinigameBase {
     this.ended = false;
     this.pulsePhase = 0;
     this.kbFocusIdx = 0;
+    this.flashEffects = []; // C258
+    this.seqFlashTimer = 0; // C258
 
     // Pre-seed some words — C100: clamp lower bound to wordHeight to avoid top-fade removal on first frame
     for (let i = 0; i < 8; i++) {
@@ -303,6 +365,22 @@ export class MinigameNegociation extends MinigameBase {
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
 
+    // C258: canvas burst flash at picked word position
+    this.flashEffects = [
+      ...this.flashEffects,
+      { x: sw.x + Math.max(60, sw.word.text.length * 8.5) / 2, y: sw.y, radius: 4, alpha: 0.85, isFaction: sw.word.isFactionWord },
+    ];
+
+    // C258: sequence bar DOM flash (green=faction, red=neutral)
+    this.seqFlashFaction = sw.word.isFactionWord;
+    this.seqFlashTimer = 0.55;
+    if (this.seqEl) {
+      this.seqEl.classList.remove('nego-seq-flash-green', 'nego-seq-flash-red');
+      // Force reflow so animation restarts
+      void (this.seqEl as HTMLElement).offsetWidth;
+      this.seqEl.classList.add(sw.word.isFactionWord ? 'nego-seq-flash-green' : 'nego-seq-flash-red');
+    }
+
     // Update sequence display
     if (this.seqEl) {
       const words = this.pickedSequence.map((w) =>
@@ -317,6 +395,7 @@ export class MinigameNegociation extends MinigameBase {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.flashEffects = []; // C258: clear burst effects on teardown
   }
 
   private endGame(): void {
@@ -496,6 +575,32 @@ export class MinigameNegociation extends MinigameBase {
         ctx.font = 'bold 18px Courier New';
         ctx.fillText('\u2713', sw.x + textWidth - 4, sw.y);
       }
+    }
+
+    // C258: draw and age canvas burst flash effects
+    this.flashEffects = this.flashEffects
+      .map((fx): FlashEffect => ({
+        ...fx,
+        radius: fx.radius + dt * 80,
+        alpha: fx.alpha - dt * 2.8,
+      }))
+      .filter((fx) => fx.alpha > 0);
+
+    for (const fx of this.flashEffects) {
+      const grad = ctx.createRadialGradient(fx.x, fx.y, 0, fx.x, fx.y, fx.radius);
+      if (fx.isFaction) {
+        grad.addColorStop(0, `rgba(51,255,102,${fx.alpha})`);
+        grad.addColorStop(0.5, `rgba(51,255,102,${fx.alpha * 0.4})`);
+        grad.addColorStop(1, `rgba(51,255,102,0)`);
+      } else {
+        grad.addColorStop(0, `rgba(255,80,60,${fx.alpha})`);
+        grad.addColorStop(0.5, `rgba(255,80,60,${fx.alpha * 0.35})`);
+        grad.addColorStop(1, `rgba(255,80,60,0)`);
+      }
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, fx.radius, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     // Bottom fade gradient (words disappear at top)
