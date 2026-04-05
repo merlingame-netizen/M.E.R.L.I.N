@@ -5,7 +5,7 @@
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, Float32BufferAttribute, FogExp2, Group, Line, LineBasicMaterial, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, TorusGeometry, Vector3, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, DoubleSide, Float32BufferAttribute, FogExp2, Group, Line, LineBasicMaterial, LineSegments, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, Shape, ShapeGeometry, SphereGeometry, TorusGeometry, Vector3, WebGLRenderer } from 'three';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -871,6 +871,26 @@ let sigilLight480: PointLight | null = null;
 let sigilSurgeTimer480: number = 35;
 let sigilSurging480: boolean = false;
 let sigilSurgeT480: number = 0;
+
+// C485 — Celtic constellation overlay (12 stars, 3 constellations, activation cycle)
+interface C485Star { mesh: Mesh; speed: number; phase: number; }
+let _constGroup485: Group | null = null;
+let _t485 = 0;
+let _constStars485: C485Star[] = [];
+let _constLineMats485: LineBasicMaterial[] = [];
+let _constStarMats485: MeshStandardMaterial[] = [];
+// Per-constellation: 4 star indices, activation state
+const _CONST_DEFS485: { name: string; cx: number; cy: number; cz: number; shape: 'diamond' | 'V' | 'cross'; indices: number[]; }[] = [
+  { name: 'An Cearc', cx: -10, cy: 18, cz: -35, shape: 'diamond', indices: [0, 1, 2, 3] },
+  { name: 'An Tarbh', cx: 0,   cy: 20, cz: -38, shape: 'V',       indices: [4, 5, 6, 7] },
+  { name: 'An Eala',  cx: 12,  cy: 17, cz: -33, shape: 'cross',   indices: [8, 9, 10, 11] },
+];
+// line material refs per constellation (4 segments each)
+const _constLineMatGroups485: LineBasicMaterial[][] = [[], [], []];
+let _constActivateTimer485 = 30 + Math.random() * 20;
+let _constActiveCon485 = -1;   // which constellation is surging
+let _constSurgeT485 = 0;
+let _constCycleIdx485 = 0;
 
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
@@ -1857,6 +1877,59 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       if (sigilLight480) sigilLight480.intensity = li;
     }
 
+    // C485: Celtic constellation overlay — twinkle, rotation, activation cycle
+    _t485 += dt;
+    if (_constGroup485) {
+      _constGroup485.rotation.y = _t485 * 0.005;
+    }
+    // Star twinkle
+    for (let i = 0; i < _constStars485.length; i++) {
+      const s = _constStars485[i]!;
+      const mat = _constStarMats485[i]!;
+      // Only twinkle if not in an active surge for this star's constellation
+      const conIdx = Math.floor(i / 5); // 5 objects per constellation (4 stars + 1 label)
+      if (_constActiveCon485 !== conIdx) {
+        mat.emissiveIntensity = 1.0 + Math.sin(_t485 * s.speed + s.phase);
+      }
+    }
+    // Activation cycle timer
+    _constActivateTimer485 -= dt;
+    if (_constActivateTimer485 <= 0 && _constActiveCon485 < 0) {
+      _constActiveCon485 = _constCycleIdx485 % 3;
+      _constCycleIdx485++;
+      _constSurgeT485 = 0;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+    }
+    if (_constActiveCon485 >= 0) {
+      _constSurgeT485 += dt;
+      const ci = _constActiveCon485;
+      const baseIdx = ci * 5;
+      if (_constSurgeT485 < 2.0) {
+        // Surge: bright stars + bright lines
+        for (let si = 0; si < 5; si++) {
+          const mat = _constStarMats485[baseIdx + si];
+          if (mat) mat.emissiveIntensity = 3.0;
+        }
+        const lmg = _constLineMatGroups485[ci];
+        if (lmg) { for (const lm of lmg) { lm.opacity = 1.0; } }
+      } else if (_constSurgeT485 < 4.0) {
+        // Fade back
+        const p = (_constSurgeT485 - 2.0) / 2.0;
+        for (let si = 0; si < 5; si++) {
+          const mat = _constStarMats485[baseIdx + si];
+          if (mat) mat.emissiveIntensity = 3.0 - 2.0 * p;
+        }
+        const lmg = _constLineMatGroups485[ci];
+        if (lmg) { for (const lm of lmg) { lm.opacity = 1.0 - 0.5 * p; } }
+      } else {
+        // Done
+        const lmg = _constLineMatGroups485[ci];
+        if (lmg) { for (const lm of lmg) { lm.opacity = 0.5; } }
+        _constActiveCon485 = -1;
+        _constActivateTimer485 = 30 + Math.random() * 20;
+      }
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -2737,6 +2810,87 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(sigilGroup480);
 
+  // C485: Celtic constellation overlay
+  _constGroup485 = new Group();
+  _constStars485 = [];
+  _constStarMats485 = [];
+  _constLineMats485 = [];
+  _constLineMatGroups485[0] = [];
+  _constLineMatGroups485[1] = [];
+  _constLineMatGroups485[2] = [];
+
+  // Star offsets for each constellation shape (relative to center)
+  const starOffsets: Record<string, [number, number, number][]> = {
+    diamond: [[ 0, 3, 0], [ 3, 0, 0], [ 0,-3, 0], [-3, 0, 0]],
+    V:       [[-4,-2, 1], [-2, 0,-1], [ 2, 0,-1], [ 4,-2, 1]],
+    cross:   [[ 0, 3, 0], [ 3, 0, 0], [ 0,-3, 0], [-3, 0, 0]],
+  };
+
+  // Line connectivity per shape (index pairs within the 4 stars)
+  const starEdges: Record<string, [number, number][]> = {
+    diamond: [[0,1],[1,2],[2,3],[3,0]],
+    V:       [[0,1],[1,2],[2,3]],
+    cross:   [[0,2],[1,3]],
+  };
+
+  for (let ci = 0; ci < _CONST_DEFS485.length; ci++) {
+    const def = _CONST_DEFS485[ci]!;
+    const offsets = starOffsets[def.shape]!;
+    const edges = starEdges[def.shape]!;
+    const starPositions: [number, number, number][] = [];
+
+    for (let si = 0; si < 4; si++) {
+      const off = offsets[si]!;
+      const pos: [number, number, number] = [
+        def.cx + off[0],
+        def.cy + off[1],
+        def.cz + off[2],
+      ];
+      starPositions.push(pos);
+
+      const starGeo = new SphereGeometry(0.08, 6, 6);
+      const starMat = new MeshStandardMaterial({
+        color: 0x33ff66,
+        emissive: new Color(0x33ff66),
+        emissiveIntensity: 1.0,
+      });
+      const starMesh = new Mesh(starGeo, starMat);
+      starMesh.position.set(pos[0], pos[1], pos[2]);
+      _constGroup485!.add(starMesh);
+      _constStarMats485.push(starMat);
+      _constStars485.push({ mesh: starMesh, speed: 1.0 + Math.random() * 1.5, phase: Math.random() * Math.PI * 2 });
+    }
+
+    // Central label star (slightly larger)
+    const labelGeo = new SphereGeometry(0.15, 6, 6);
+    const labelMat = new MeshStandardMaterial({
+      color: 0x33ff66,
+      emissive: new Color(0x33ff66),
+      emissiveIntensity: 0.8,
+    });
+    const labelMesh = new Mesh(labelGeo, labelMat);
+    labelMesh.position.set(def.cx, def.cy, def.cz);
+    _constGroup485!.add(labelMesh);
+    _constStarMats485.push(labelMat);
+    _constStars485.push({ mesh: labelMesh, speed: 0.6, phase: Math.random() * Math.PI * 2 });
+
+    // Constellation connecting lines
+    for (const [a, b] of edges) {
+      const pa = starPositions[a]!;
+      const pb = starPositions[b]!;
+      const lineVerts = new Float32Array([pa[0], pa[1], pa[2], pb[0], pb[1], pb[2]]);
+      const lineGeo = new BufferGeometry();
+      lineGeo.setAttribute('position', new Float32BufferAttribute(lineVerts, 3));
+      const lineMat = new LineBasicMaterial({ color: 0x1a8833, opacity: 0.5, transparent: true });
+      const lineSegs = new LineSegments(lineGeo, lineMat);
+      _constGroup485!.add(lineSegs);
+      _constLineMats485.push(lineMat);
+      _constLineMatGroups485[ci]!.push(lineMat);
+    }
+  }
+
+  scene.add(_constGroup485);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -3030,6 +3184,24 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       sigilGroup480 = null;
     }
     sigilLight480 = null;
+
+    // C485: dispose constellation overlay
+    _constLineMats485.forEach((mat) => { mat.dispose(); });
+    _constLineMats485.length = 0;
+    _constStarMats485.forEach((mat) => { mat.dispose(); });
+    _constStarMats485.length = 0;
+    _constLineMatGroups485[0] = [];
+    _constLineMatGroups485[1] = [];
+    _constLineMatGroups485[2] = [];
+    if (_constGroup485) {
+      _constGroup485.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); }
+        if (c instanceof LineSegments) { c.geometry.dispose(); }
+      });
+      scene.remove(_constGroup485);
+      _constGroup485 = null;
+    }
+    _constStars485 = [];
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
