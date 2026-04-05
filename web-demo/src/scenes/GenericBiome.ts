@@ -10,7 +10,7 @@
 import {
   AmbientLight, AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry,
   CircleGeometry, Color, ConeGeometry, CylinderGeometry, DodecahedronGeometry, DoubleSide, Fog, Group, HemisphereLight,
-  InstancedMesh, Line, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, PlaneGeometry,
+  InstancedMesh, Line, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, Object3D, OctahedronGeometry, PlaneGeometry,
   PointLight, Points, PointsMaterial, SphereGeometry, TorusGeometry, Vector3,
 } from 'three';
 
@@ -654,6 +654,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let shrineAltarMat501: MeshStandardMaterial | null = null
   let shrineT501: number = 0
   let shrineLight501: PointLight | null = null
+
+  // ── Fog cairn — monts_brumeux (C525) ─────────────────────────────────────
+  let fogCairnGroup525: Group | null = null
+  let fogCairnCrystalMat525: MeshStandardMaterial | null = null
+  let fogCairnLight525: PointLight | null = null
+  let fogCairnT525: number = 0
 
   // ── Frozen waterfall — monts_brumeux (C473) ───────────────────────────────
   let iceWaterfallGroup473: Group | null = null
@@ -3079,6 +3085,50 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     group.add(shrineGroup501)
   }
 
+  // ── Fog cairn — monts_brumeux (C525) ──────────────────────────────────────
+  if (biome === 'monts_brumeux') {
+    fogCairnGroup525 = new Group()
+
+    // 5 stacked flat stones narrowing upward (N64: BoxGeometry, flatShading)
+    const stoneMat525 = new MeshStandardMaterial({
+      color: 0x3a3c40, roughness: 0.95, metalness: 0.0, flatShading: true,
+      emissive: 0x0a0c10, emissiveIntensity: 0.04,
+    })
+    const stoneSpecs: Array<[number, number, number, number]> = [
+      // [width, height, depth, y]
+      [1.05, 0.22, 0.80, 0.11],
+      [0.88, 0.20, 0.66, 0.32],
+      [0.70, 0.18, 0.55, 0.50],
+      [0.52, 0.16, 0.42, 0.67],
+      [0.36, 0.14, 0.30, 0.82],
+    ]
+    stoneSpecs.forEach(([w, h, d, y], i) => {
+      const stone = new Mesh(new BoxGeometry(w, h, d), stoneMat525)
+      stone.position.set((i % 2 === 0 ? 0.04 : -0.04), y, (i % 3 === 0 ? 0.03 : -0.02))
+      stone.rotation.y = i * 0.31
+      fogCairnGroup525!.add(stone)
+    })
+
+    // Crystal summit: OctahedronGeometry, pale cold blue, emissive
+    fogCairnCrystalMat525 = new MeshStandardMaterial({
+      color: 0x8ab8d0, roughness: 0.2, metalness: 0.0, flatShading: true,
+      emissive: 0x4480a0, emissiveIntensity: 0.7,
+      transparent: true, opacity: 0.88,
+    })
+    const crystal = new Mesh(new OctahedronGeometry(0.18, 0), fogCairnCrystalMat525)
+    crystal.position.set(0, 1.02, 0)
+    crystal.rotation.y = Math.PI / 5
+    fogCairnGroup525.add(crystal)
+
+    // Cold mist light
+    fogCairnLight525 = new PointLight(0x9bbfcc, 0.55, 7.0)
+    fogCairnLight525.position.set(0, 1.2, 0)
+    fogCairnGroup525.add(fogCairnLight525)
+
+    fogCairnGroup525.position.set(-9.5, 0, -14)
+    group.add(fogCairnGroup525)
+  }
+
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
   if (biome === 'cercles_pierres') {
     // Outer ring of 8 peripheral standing stones (background, added C279)
@@ -5260,6 +5310,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         shrineAltarMat501.emissiveIntensity = 0.6 + 0.4 * Math.sin(shrineT501 * 1.8)
       }
     }
+    // Monts brumeux — fog cairn crystal breath (C525)
+    if (fogCairnGroup525) {
+      fogCairnT525 += dt
+      const breathe = 0.55 + 0.45 * Math.sin(fogCairnT525 * 0.9)
+      if (fogCairnCrystalMat525) fogCairnCrystalMat525.emissiveIntensity = 0.4 + 0.6 * breathe
+      if (fogCairnLight525) fogCairnLight525.intensity = 0.3 + 0.45 * breathe
+      // Very slow crystal spin
+      const crystal525 = fogCairnGroup525.children.find(
+        (c) => c instanceof Mesh && (c as Mesh).geometry.type === 'OctahedronGeometry'
+      ) as Mesh | undefined
+      if (crystal525) crystal525.rotation.y += dt * 0.22
+    }
     // Marais korrigans — drowned bell tower toll (C478)
     if (bellTowerGroup478) {
       bellTowerT478 += dt
@@ -5784,6 +5846,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     shrineFlagMats501 = []
     shrineAltarMat501 = null
     shrineLight501 = null
+    // Fog cairn cleanup (C525)
+    if (fogCairnGroup525) {
+      fogCairnGroup525.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshStandardMaterial).dispose() }
+        if (c instanceof PointLight) c.dispose()
+      })
+      group.remove(fogCairnGroup525)
+      fogCairnGroup525 = null
+    }
+    fogCairnCrystalMat525 = null
+    fogCairnLight525 = null
+    fogCairnT525 = 0
     // Frozen waterfall cleanup (C473)
     if (iceWaterfallGroup473) {
       iceWaterfallGroup473.traverse((c) => {
