@@ -13,6 +13,7 @@ import {
 } from 'three';
 
 import type { BiomeSceneResult } from './CoastBiome';
+import { loadGLB } from '../engine/AssetLoader';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -816,6 +817,32 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   for (const crow of crowFlock.crows) {
     group.add(crow);
   }
+
+  // Distant druid cabin (GLB) — deep forest at x=-8, z=-25
+  loadGLB('/assets/cabin_unified.glb').then(gltf => {
+    const cabin = gltf.scene.clone();
+    cabin.position.set(-8, -1.0, -25);
+    cabin.scale.setScalar(1.8);
+    cabin.rotation.y = Math.PI * 0.15;
+    // Apply forest tint — dark green emissive
+    cabin.traverse(child => {
+      if ((child as any).isMesh) {
+        const mesh = child as import('three').Mesh;
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach(m => {
+            if ((m as any).isMeshStandardMaterial) {
+              (m as import('three').MeshStandardMaterial).emissive?.setHex(0x001a00);
+              (m as import('three').MeshStandardMaterial).emissiveIntensity = 0.05;
+            }
+          });
+        } else if ((mesh.material as any).isMeshStandardMaterial) {
+          (mesh.material as import('three').MeshStandardMaterial).emissive?.setHex(0x001a00);
+          (mesh.material as import('three').MeshStandardMaterial).emissiveIntensity = 0.05;
+        }
+      }
+    });
+    group.add(cabin);
+  }).catch(() => { /* GLB optional — forest works without it */ });
 
   // ── Animation state ────────────────────────────────────────────────────────
   let sceneTime = 0;
