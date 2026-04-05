@@ -579,6 +579,11 @@ let _anemoneTime = 0;
 // ── Distant fishing boat silhouette (C293) ────────────────────────────────
 let _boatGroup: Group | null = null;
 
+// ── Seagull flock — animated loose formation (C298) ──────────────────────
+const _seagullGroups: Group[] = [];
+const _seagullWingsL: Mesh[] = [];
+const _seagullWingsR: Mesh[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -767,6 +772,52 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   _boatGroup = createFishingBoat();
   group.add(_boatGroup);
 
+  // ── Seagull flock — 6 birds in loose formation (C298) ───────────────────
+  {
+    const FLOCK_CX = -5;
+    const FLOCK_CY = 14;
+    const FLOCK_CZ = -40;
+    const bodyMat   = new MeshBasicMaterial({ color: 0x0e1a0e });
+    const wingMatL  = new MeshBasicMaterial({ color: 0x0e1a0e, side: DoubleSide });
+    const wingMatR  = new MeshBasicMaterial({ color: 0x0e1a0e, side: DoubleSide });
+    const bodyGeo   = new BoxGeometry(0.08, 0.04, 0.22);
+    const wingGeoL  = new BoxGeometry(0.7, 0.03, 0.18);
+    const wingGeoR  = new BoxGeometry(0.7, 0.03, 0.18);
+
+    const R = (): number => Math.random();
+    for (let i = 0; i < 6; i++) {
+      const bird = new Group();
+
+      const body = new Mesh(bodyGeo, bodyMat);
+      bird.add(body);
+
+      const leftWing  = new Mesh(wingGeoL, wingMatL);
+      leftWing.position.set(-0.35, 0, 0);
+      bird.add(leftWing);
+
+      const rightWing = new Mesh(wingGeoR, wingMatR);
+      rightWing.position.set(0.35, 0, 0);
+      bird.add(rightWing);
+
+      const ox = (R() - 0.5) * 12;   // -6 to +6
+      const oy = (R() - 0.5) * 12;
+      const oz = (R() - 0.5) * 12;
+      bird.position.set(FLOCK_CX + ox, FLOCK_CY + oy, FLOCK_CZ + oz);
+      bird.userData = {
+        ox, oy, oz,
+        speed:    0.3 + R() * 0.4,
+        phase:    R() * Math.PI * 2,
+        flapSpeed: 2.5 + R() * 2.0,
+        flapAmp:   0.25 + R() * 0.20,
+      };
+
+      _seagullGroups.push(bird);
+      _seagullWingsL.push(leftWing);
+      _seagullWingsR.push(rightWing);
+      group.add(bird);
+    }
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
@@ -880,6 +931,28 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       _boatGroup.position.y = 0.2 + Math.sin(t * 0.5) * 0.12;
       _boatGroup.position.x = 10 + Math.sin(t * 0.08) * 1.5;
     }
+
+    // Seagull flock — loose orbital formation with wing flap (C298)
+    const fcx = Math.sin(t * 0.15) * 8;
+    const fcz = -40 + Math.sin(t * 0.11) * 5;
+    for (let i = 0; i < _seagullGroups.length; i++) {
+      const bird      = _seagullGroups[i]!;
+      const leftWing  = _seagullWingsL[i]!;
+      const rightWing = _seagullWingsR[i]!;
+      const ud        = bird.userData as { ox: number; oy: number; oz: number; speed: number; phase: number; flapSpeed: number; flapAmp: number };
+
+      const bx = fcx + ud.ox + Math.cos(t * ud.speed + ud.phase) * 3;
+      const by = (-5 + 14 + ud.oy) + Math.sin(t * 0.8 + ud.phase) * 0.6;
+      const bz = fcz + ud.oz + Math.sin(t * ud.speed + ud.phase) * 2;
+      bird.position.set(bx, by, bz);
+
+      leftWing.rotation.z  =  ud.flapAmp * Math.sin(t * ud.flapSpeed + ud.phase);
+      rightWing.rotation.z = -ud.flapAmp * Math.sin(t * ud.flapSpeed + ud.phase);
+
+      const vx = Math.cos(t * ud.speed + ud.phase) * ud.speed * 3;
+      const vz = Math.cos(t * ud.speed + ud.phase + Math.PI / 2) * ud.speed * 2;
+      bird.rotation.y = Math.atan2(vx, vz);
+    }
   };
 
   // ── Dispose ───────────────────────────────────────────────────────────────
@@ -905,6 +978,9 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     _foamMeshes = [];
     _anemoneMeshes = [];
     _boatGroup = null;
+    _seagullGroups.length = 0;
+    _seagullWingsL.length = 0;
+    _seagullWingsR.length = 0;
     group.clear();
   };
 
