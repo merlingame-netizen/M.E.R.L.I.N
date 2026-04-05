@@ -397,7 +397,7 @@ export class MinigameCourse extends MinigameBase {
         ctx.font = '28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = `rgba(220,200,160,${alpha * targetPulse})`;
+        ctx.fillStyle = `rgba(51,255,102,${alpha * targetPulse})`;
         ctx.fillText(this.target.symbol, this.target.x, this.target.y);
 
         // Keyboard focus ring around target (amber, WCAG C137)

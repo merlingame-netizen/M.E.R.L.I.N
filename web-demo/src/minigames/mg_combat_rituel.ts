@@ -374,7 +374,7 @@ export class MinigameCombatRituel extends MinigameBase {
 
     // Player glow
     const playerGrad = ctx.createRadialGradient(px, py, 0, px, py, 16);
-    playerGrad.addColorStop(0, this.hit ? 'rgba(200,60,60,0.6)' : 'rgba(200,180,100,0.4)');
+    playerGrad.addColorStop(0, this.hit ? 'rgba(200,60,60,0.6)' : 'rgba(51,200,102,0.4)');
     playerGrad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = playerGrad;
     ctx.beginPath();
