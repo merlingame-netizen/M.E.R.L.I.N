@@ -372,6 +372,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     water.rotation.x = -Math.PI / 2;
     water.position.y = -0.6;
     group.add(water);
+    maraisWater = water;
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -418,6 +419,8 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   // Outer refs for biome-specific animated elements (captured by update closure)
   let plaineDruideFireLight: PointLight | null = null;
   let plaineDruideFireMesh: Mesh | null = null;
+  let maraisWater: Mesh | null = null;
+  let maraisWaterTime = 0;
 
   // Cercles de Pierres: Neolithic standing stone ring (7 stones in a circle)
   if (biome === 'cercles_pierres') {
@@ -513,6 +516,29 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     if (plaineDruideFireMesh !== null) {
       (plaineDruideFireMesh.material as MeshStandardMaterial).emissiveIntensity =
         1.2 + Math.sin(Date.now() * 0.012) * 0.4;
+    }
+    // Marais swamp water — subtle vertex displacement ripple
+    if (maraisWater !== null) {
+      maraisWaterTime += dt;
+      const pos = maraisWater.geometry.attributes['position'] as BufferAttribute;
+      const arr = pos.array as Float32Array;
+      const width = 19; // PlaneGeometry(160,160,18,14) → 18+1 = 19 verts/row
+      const height = 15; // 14+1 = 15 rows
+      for (let j = 0; j < height; j++) {
+        for (let i = 0; i < width; i++) {
+          const idx = (j * width + i) * 3;
+          const x = arr[idx]!;
+          const y = arr[idx + 1]!;
+          // Slow swamp ripple — much gentler than coast ocean (bog water barely moves)
+          const wave =
+            Math.sin(x * 0.08 + maraisWaterTime * 0.4) * 0.12 +
+            Math.cos(y * 0.11 + maraisWaterTime * 0.3 + 1.5) * 0.08 +
+            Math.sin(x * 0.15 + y * 0.09 + maraisWaterTime * 0.5) * 0.05;
+          arr[idx + 2] = wave;
+        }
+      }
+      pos.needsUpdate = true;
+      maraisWater.geometry.computeVertexNormals();
     }
   };
 

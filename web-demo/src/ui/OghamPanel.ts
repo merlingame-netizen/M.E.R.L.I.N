@@ -7,6 +7,10 @@
 import { store } from '../game/Store';
 import { OGHAM_SPECS, type OghamSpec } from '../game/Constants';
 
+function sfx(sound: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
+}
+
 // --- Panel state ---
 let panelEl: HTMLElement | null = null;
 let resolveChoice: ((oghamId: string | null) => void) | null = null;
@@ -199,6 +203,7 @@ export function showOghamPanel(): Promise<string | null> {
         // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
         // mouseenter/mouseleave only fire for mouse → no hover feedback on touch screens.
         slot.addEventListener('pointerenter', () => {
+          sfx('hover'); // C184
           slot.style.background = 'rgba(139,69,19,0.4)';
           slot.style.borderColor = 'rgba(51,255,102,0.8)';
         }, { signal: slotSignal });
@@ -236,6 +241,7 @@ export function showOghamPanel(): Promise<string | null> {
     }, { signal: slotSignal });
     // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave — consistent with ogham slots above
     skipBtn.addEventListener('pointerenter', () => {
+      sfx('hover'); // C184
       skipBtn.style.background = 'rgba(80,80,90,0.5)';
     }, { signal: slotSignal });
     skipBtn.addEventListener('pointerleave', () => {
@@ -267,6 +273,11 @@ function selectOgham(oghamId: string | null): void {
   if (overlay) overlay.style.display = 'none';
 
   if (resolveChoice) {
+    if (oghamId !== null) {
+      sfx('crystal'); // C184 — magical selection sound
+    } else {
+      sfx('click'); // C184
+    }
     resolveChoice(oghamId);
     resolveChoice = null;
   }

@@ -14,7 +14,7 @@ import { generateFastRouteCard, detectMinigame, verbToField } from './game/CardS
 import { runCeltOSIntro } from './ui/CeltOSIntro';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
-import { initHUD, updateHUD, teardownHUD, setHUDWalkMode } from './ui/HUD';
+import { initHUD, updateHUD, teardownHUD, setHUDWalkMode, flashLifeDamage, flashFactionGain } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
 // Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
 // until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
@@ -1012,6 +1012,7 @@ async function gameLoop(
     // incrementCardsPlayed FIRST so drainLifeScaled reads the correct tier
     state().incrementCardsPlayed();
     state().drainLifeScaled();
+    flashLifeDamage(); // C182: HUD flash on life drain
     updateHUD();
 
     // 3. Check death after drain
@@ -1144,6 +1145,18 @@ async function gameLoop(
         ? processOghamModifiers(option.effects, activeOgham)
         : option.effects;
       effectResult = applyEffects(modifiedEffects, multiplier);
+
+      // C182: HUD flash feedback based on applied effects
+      for (const eff of effectResult.applied) {
+        if (eff.startsWith('DAMAGE_LIFE')) {
+          flashLifeDamage();
+        } else if (eff.startsWith('ADD_REPUTATION:')) {
+          const parts = eff.split(':');
+          const faction = parts[1];
+          if (faction) flashFactionGain(faction);
+        }
+      }
+
       // C82-04: surface silently-rejected effects for balance tuning visibility
       if (effectResult.rejected.length > 0) {
         console.warn('[MERLIN] Rejected effects (not yet implemented):', effectResult.rejected);

@@ -9,6 +9,10 @@ interface TransitionOverlay {
   el: HTMLDivElement;
 }
 
+function sfx(sound: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
+}
+
 let _overlay: TransitionOverlay | null = null;
 
 function getOverlay(): TransitionOverlay {
@@ -73,6 +77,7 @@ export function transition(
  * Black is held until revealFromBlack().
  */
 export function cutToBlack(): void {
+  sfx('beep'); // C185: CRT cut feedback
   const { el } = getOverlay();
 
   // Phase 1 — CRT green flash (no transition, instant)
@@ -103,6 +108,7 @@ export function cutToBlack(): void {
  *  4. Smooth 0.5s fade to transparent
  */
 export function revealFromBlack(durationMs = 500): Promise<void> {
+  sfx('magic_reveal'); // C185: cinematic reveal
   return new Promise((resolve) => {
     const { el } = getOverlay();
 
@@ -139,6 +145,7 @@ export function wipeToBlack(
   direction: 'left' | 'right' | 'down',
   durationMs = 400
 ): Promise<void> {
+  sfx('mapZoom'); // C185: wipe transition SFX
   return new Promise((resolve) => {
     const { el } = getOverlay();
 
