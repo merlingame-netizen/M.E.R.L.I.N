@@ -740,6 +740,26 @@ let wreckGhostTimer489: number = 25 + Math.random() * 15;
 let wreckGhostActive489: boolean = false;
 let wreckGhostT489: number = 0;
 
+// ── Dolphin pod leaping (C499) ────────────────────────────────────────────
+let dolphinGroup499: Group | null = null;
+let t499: number = 0;
+const dolphins499: Group[] = [];
+
+interface DolphinState499 {
+  leaping: boolean;
+  leapT: number;
+  interval: number;
+  timer: number;
+  startX: number;
+  startY: number;
+  startZ: number;
+  heading: number;
+}
+const dolphinStates499: DolphinState499[] = [];
+const dolphinTimers499: number[] = [];
+const dolphinTs499: number[] = [];
+const splashPool499: Mesh[] = [];
+
 // ── Sea serpent breach (C494) ─────────────────────────────────────────────
 let serpentGroup494: Group | null = null;
 let t494: number = 0;
@@ -2285,6 +2305,112 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(_wg489);
   }
 
+  // ── Dolphin pod leaping (C499) ────────────────────────────────────────────
+  {
+    dolphinGroup499 = new Group();
+
+    const dolphinMat = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      emissive: 0x1a4428,
+      emissiveIntensity: 0.2,
+      roughness: 0.6,
+    });
+
+    // Splash particle pool — 4 dolphins × 4 particles each = 16 total
+    const splashGeo = new SphereGeometry(0.05, 4, 3);
+    for (let i = 0; i < 16; i++) {
+      const sp = new Mesh(splashGeo, new MeshStandardMaterial({
+        color: 0x1a4060,
+        transparent: true,
+        opacity: 0.0,
+        roughness: 0.8,
+      }));
+      sp.position.set(0, -50, 0);
+      splashPool499.push(sp);
+      dolphinGroup499.add(sp);
+    }
+
+    const startPositions: [number, number, number, number][] = [
+      [-2, 0, -15, 0.3],
+      [ 0, 0, -18, -0.2],
+      [ 3, 0, -14, 0.5],
+      [-4, 0, -20, 0.1],
+    ];
+    // Stagger initial timers so dolphins leap at different times
+    const initialIntervals = [14, 17, 12, 19];
+
+    for (let i = 0; i < 4; i++) {
+      const cfg = startPositions[i]!;
+      const dolphin = new Group();
+
+      // Body — elongated cylinder, horizontal
+      const body = new Mesh(
+        new CylinderGeometry(0.1, 0.05, 0.7, 8),
+        dolphinMat.clone(),
+      );
+      body.rotation.z = Math.PI / 2; // horizontal
+      dolphin.add(body);
+
+      // Nose cone — at front (+X after rotation)
+      const nose = new Mesh(
+        new ConeGeometry(0.07, 0.2, 6),
+        dolphinMat.clone(),
+      );
+      nose.rotation.z = -Math.PI / 2;
+      nose.position.set(0.45, 0, 0);
+      dolphin.add(nose);
+
+      // Dorsal fin — on top, tilted slightly back
+      const dorsal = new Mesh(
+        new ConeGeometry(0.04, 0.18, 4),
+        dolphinMat.clone(),
+      );
+      dorsal.position.set(0, 0.1, 0);
+      dorsal.rotation.z = -0.25;
+      dolphin.add(dorsal);
+
+      // Tail flukes — 2 planes angled left/right at rear
+      const flukeMat = new MeshStandardMaterial({
+        color: 0x0a2a14,
+        emissive: 0x1a4428,
+        emissiveIntensity: 0.2,
+        roughness: 0.6,
+        side: DoubleSide,
+      });
+      const flukeL = new Mesh(new PlaneGeometry(0.15, 0.1), flukeMat);
+      flukeL.position.set(-0.38, 0, 0);
+      flukeL.rotation.y = 0.4;
+      dolphin.add(flukeL);
+
+      const flukeR = new Mesh(new PlaneGeometry(0.15, 0.1), flukeMat.clone());
+      flukeR.position.set(-0.38, 0, 0);
+      flukeR.rotation.y = -0.4;
+      dolphin.add(flukeR);
+
+      dolphin.position.set(cfg[0], cfg[1], cfg[2]);
+      dolphin.rotation.y = cfg[3];
+      dolphin.visible = false;
+      dolphins499.push(dolphin);
+      dolphinGroup499.add(dolphin);
+
+      const interval = initialIntervals[i]!;
+      dolphinStates499.push({
+        leaping: false,
+        leapT: 0,
+        interval,
+        timer: i * 4 + 2, // stagger initial delays
+        startX: cfg[0],
+        startY: 0,
+        startZ: cfg[2],
+        heading: cfg[3],
+      });
+      dolphinTimers499.push(i * 4 + 2);
+      dolphinTs499.push(0);
+    }
+
+    group.add(dolphinGroup499);
+  }
+
   // ── Sea serpent breach (C494) ─────────────────────────────────────────────
   {
     serpentGroup494 = new Group();
@@ -3143,6 +3269,89 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // ── Dolphin pod leaping (C499) ────────────────────────────────────────────
+    t499 += dt;
+    for (let i = 0; i < 4; i++) {
+      const state = dolphinStates499[i]!;
+      const dolphin = dolphins499[i]!;
+
+      if (!state.leaping) {
+        state.timer -= dt;
+        if (state.timer <= 0) {
+          // Start leap
+          state.leaping = true;
+          state.leapT = 0;
+          dolphin.visible = true;
+          dolphin.position.set(state.startX, state.startY, state.startZ);
+          dolphin.rotation.y = state.heading;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'splash' } }));
+        }
+      } else {
+        // Total leap duration = rise (0.8s) + peak (0.1s) + dive (0.6s) = 1.5s
+        state.leapT += dt;
+        const totalDuration = 1.5;
+        const p = Math.min(state.leapT / totalDuration, 1.0);
+
+        // Parabolic Y: peakHeight * 4 * p * (1-p), peakHeight = 2.5
+        const waterY = state.startY;
+        dolphin.position.y = waterY + 2.5 * 4.0 * p * (1.0 - p);
+
+        // Horizontal travel — 3 units in heading direction
+        dolphin.position.x = state.startX + Math.sin(state.heading) * 3.0 * p;
+        dolphin.position.z = state.startZ + Math.cos(state.heading) * 3.0 * p;
+
+        // Body pitch: nose-up on way up, nose-down on way down
+        dolphin.rotation.z = -0.8 * (0.5 - p) * Math.PI;
+
+        if (p >= 1.0) {
+          // Dolphin re-enters water — splash particles
+          const splashBase = i * 4;
+          for (let s = 0; s < 4; s++) {
+            const sp = splashPool499[splashBase + s]!;
+            const angle = (s / 4) * Math.PI * 2;
+            sp.position.set(
+              dolphin.position.x + Math.cos(angle) * 0.2,
+              waterY + 0.1,
+              dolphin.position.z + Math.sin(angle) * 0.2,
+            );
+            (sp as any).__splashT499 = 0.0;
+            (sp as any).__splashVY499 = 1.5 + Math.random() * 1.0;
+            (sp as any).__splashAngle499 = angle;
+            (sp.material as MeshStandardMaterial).opacity = 0.7;
+            sp.visible = true;
+          }
+
+          dolphin.visible = false;
+          dolphin.rotation.z = 0;
+          state.leaping = false;
+          state.leapT = 0;
+          state.timer = 12 + Math.random() * 8;
+          // Update start position to where dolphin landed
+          state.startX = dolphin.position.x;
+          state.startZ = dolphin.position.z;
+        }
+      }
+
+      // Animate this dolphin's splash particles
+      const splashBase = i * 4;
+      for (let s = 0; s < 4; s++) {
+        const sp = splashPool499[splashBase + s]!;
+        if (!sp.visible) continue;
+        const spT = ((sp as any).__splashT499 as number) + dt;
+        (sp as any).__splashT499 = spT;
+        const vy = (sp as any).__splashVY499 as number;
+        sp.position.y = (sp as any).__splashVY499 !== undefined
+          ? dolphinStates499[i]!.startY + 0.1 + vy * spT - 2.5 * spT * spT
+          : 0;
+        const opacity = Math.max(0, 0.7 * (1.0 - spT / 0.5));
+        (sp.material as MeshStandardMaterial).opacity = opacity;
+        if (spT >= 0.5) {
+          sp.visible = false;
+          sp.position.set(0, -50, 0);
+        }
+      }
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -3429,6 +3638,21 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     wreckKelpMeshes489.length = 0;
     wreckLight489 = null;
     wreckHullMat489 = null;
+    if (dolphinGroup499) {
+      dolphinGroup499.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+      });
+      dolphinGroup499 = null;
+    }
+    dolphins499.length = 0;
+    dolphinStates499.length = 0;
+    dolphinTimers499.length = 0;
+    dolphinTs499.length = 0;
+    splashPool499.length = 0;
     if (serpentGroup494) {
       serpentGroup494.traverse((c) => {
         if (c instanceof Mesh) {
