@@ -796,6 +796,10 @@ const _comets414: {
 }[] = [];
 let _cometSceneRef414: Scene | null = null;
 
+// C419 — rolling ground fog
+const _fogPlanes419: Mesh[] = [];
+let _fogT419 = 0;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1516,6 +1520,17 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     });
 
+    // C419: animate rolling ground fog
+    if (_fogPlanes419.length > 0) {
+      _fogT419 += dt;
+      _fogPlanes419.forEach(plane => {
+        const { speed, baseX, phase } = plane.userData as { speed: number; baseX: number; phase: number };
+        plane.position.x = baseX + Math.sin(_fogT419 * speed + phase) * 4.0;
+        const mat = plane.material as MeshBasicMaterial;
+        mat.opacity = 0.14 + Math.sin(_fogT419 * 0.3 + phase) * 0.06;
+      });
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -1668,6 +1683,33 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     }
   }
 
+  // C419 — rolling ground fog
+  {
+    const fogConfigs = [
+      { x: -8,  z: -12, width: 22, speed: 0.4,  phase: 0.0 },
+      { x:  5,  z: -18, width: 28, speed: -0.3, phase: 1.8 },
+      { x: -3,  z: -8,  width: 18, speed: 0.25, phase: 3.4 },
+      { x:  10, z: -24, width: 32, speed: -0.5, phase: 0.9 },
+      { x: -12, z: -15, width: 20, speed: 0.35, phase: 2.6 },
+    ];
+    fogConfigs.forEach(cfg => {
+      const fogGeo = new PlaneGeometry(cfg.width, 3.5);
+      const fogMat = new MeshBasicMaterial({
+        color: 0x0a1a0e,
+        transparent: true,
+        opacity: 0.18,
+        depthWrite: false,
+        side: DoubleSide,
+      });
+      const fogMesh = new Mesh(fogGeo, fogMat);
+      fogMesh.rotation.x = -Math.PI / 2;
+      fogMesh.position.set(cfg.x, 0.5, cfg.z);
+      fogMesh.userData = { speed: cfg.speed, baseX: cfg.x, phase: cfg.phase, width: cfg.width };
+      scene.add(fogMesh);
+      _fogPlanes419.push(fogMesh);
+    });
+  }
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -1815,6 +1857,14 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     });
     _comets414.length = 0;
     _cometSceneRef414 = null;
+
+    // C419: dispose ground fog planes
+    _fogPlanes419.forEach(plane => {
+      plane.geometry.dispose();
+      (plane.material as MeshBasicMaterial).dispose();
+      scene.remove(plane);
+    });
+    _fogPlanes419.length = 0;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
