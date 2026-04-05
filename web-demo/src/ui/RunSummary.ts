@@ -172,6 +172,21 @@ function playSfx(sound: string): void {
 }
 
 /**
+ * C238: Animate a numeric element from 0 → target over duration ms.
+ * Ease-out cubic. No cancellation needed — short animation completes quickly.
+ */
+function animateCountUp(el: HTMLElement, target: number, duration = 800): void {
+  const start = performance.now();
+  const step = (now: number): void => {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = String(Math.round(eased * target));
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/**
  * Show the end-of-run summary overlay.
  * Resolves when the player clicks "Rejouer".
  */
@@ -190,6 +205,8 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   } else {
     sfx('win');
   }
+  // C238: summary reveal beep
+  sfx('beep');
 
   const biomeLabel = BIOME_LABELS[state.run.biome] ?? state.run.biome;
 
@@ -378,14 +395,15 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     return val;
   };
 
-  addStat('Cartes jouees', cardsPlayed); // C123/RS-NULL-01: save-compat guard
+  // C238: all numeric stats start at '0', animated via animateCountUp with staggered delays
+  const cardsValEl = addStat('Cartes jouees', 0, true); // C123/RS-NULL-01: save-compat guard
 
-  // C167: anam counter — animated from 0 → target
+  // C167: anam counter — animated from 0 → target (with sparkle on finish)
   const anamValue = state.run.anamThisRun ?? 0; // C123/RS-NULL-01
   const anamValEl = addStat('Anam cette quete', anamValue, true);
 
-  addStat('Anam total', state.meta.anam);
-  addStat('Vie restante', Math.max(0, state.run.life));
+  const anamTotalValEl = addStat('Anam total', 0, true);
+  const lifeValEl = addStat('Vie restante', 0, true);
 
   panel.appendChild(statsGrid);
 
@@ -496,20 +514,31 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
 
-  // C167: start anam counter animation after DOM insertion
+  // C238: staggered count-up animations for all numeric stats
+  // Cards played — delay 300ms
+  setTimeout(() => animateCountUp(cardsValEl, cardsPlayed, 800), 300);
+
+  // C167: anam-this-run — delay 450ms (with sparkle via animateCounter for sparkle callback)
   // C193: showAnamSparkle fires once the counter reaches its target
   if (anamValue > 0) {
     let sparkShown = false;
-    animateCounter(anamValue, 1200, (v) => {
-      anamValEl.textContent = String(v);
-      if (v >= anamValue && !sparkShown) {
-        sparkShown = true;
-        showAnamSparkle(anamValEl);
-      }
-    });
+    setTimeout(() => {
+      animateCounter(anamValue, 1200, (v) => {
+        anamValEl.textContent = String(v);
+        if (v >= anamValue && !sparkShown) {
+          sparkShown = true;
+          showAnamSparkle(anamValEl);
+        }
+      });
+    }, 450);
   } else {
     anamValEl.textContent = '0';
   }
+
+  // Anam total — delay 600ms
+  setTimeout(() => animateCountUp(anamTotalValEl, state.meta.anam, 800), 600);
+  // Life remaining — delay 750ms
+  setTimeout(() => animateCountUp(lifeValEl, Math.max(0, state.run.life), 800), 750);
 
   // C87: move focus to restartBtn after DOM insertion — WCAG 2.1 SC 2.1.2 (keyboard reachable on dialog open)
   requestAnimationFrame(() => restartBtn.focus());
