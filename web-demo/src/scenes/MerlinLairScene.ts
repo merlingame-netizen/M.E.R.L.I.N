@@ -1499,6 +1499,19 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let lanternBoostTimer498: number = 35 + Math.random() * 15;
   let lanternBoost498: boolean = false;
 
+  // C503 — crystal ball with swirling visions
+  let crystalGroup503: Group | null = null;
+  let t503: number = 0;
+  let crystalFogMat503: MeshStandardMaterial | null = null;
+  const crystalWispMats503: MeshStandardMaterial[] = [];
+  let crystalOuterMat503: MeshStandardMaterial | null = null;
+  let crystalLight503: PointLight | null = null;
+  let crystalVisionTimer503: number = 15 + Math.random() * 10;
+  let crystalVisioning503: boolean = false;
+  let crystalVisionT503: number = 0;
+  const crystalWisps503: Mesh[] = [];
+  let crystalFogSphere503: Mesh | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -3790,6 +3803,85 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
   }
 
+  // C503 — crystal ball with swirling visions on carved stand
+  {
+    crystalGroup503 = new Group();
+
+    // Stand base
+    const standBaseMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, metalness: 0.05, flatShading: true });
+    const standBase = new Mesh(new CylinderGeometry(0.22, 0.28, 0.15, 8), standBaseMat);
+    standBase.position.set(0, 0, 0);
+    crystalGroup503.add(standBase);
+
+    // Stand stem
+    const stemMat = new MeshStandardMaterial({ color: 0x0d2010, roughness: 0.9, metalness: 0.05, flatShading: true });
+    const stem = new Mesh(new CylinderGeometry(0.06, 0.1, 0.25, 6), stemMat);
+    stem.position.set(0, 0.2, 0);
+    crystalGroup503.add(stem);
+
+    // Stand cup (cradle)
+    const cupMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, metalness: 0.05, flatShading: true });
+    const cup = new Mesh(new CylinderGeometry(0.18, 0.08, 0.1, 8), cupMat);
+    cup.position.set(0, 0.375, 0);
+    crystalGroup503.add(cup);
+
+    // Crystal ball outer shell
+    const outerMat = new MeshStandardMaterial({
+      color: 0x0a1a10,
+      transparent: true,
+      opacity: 0.35,
+      roughness: 0.0,
+      metalness: 0.1,
+      envMapIntensity: 0,
+    });
+    crystalOuterMat503 = outerMat;
+    const outerSphere = new Mesh(new SphereGeometry(0.28, 16, 12), outerMat);
+    outerSphere.position.set(0, 0.71, 0);
+    crystalGroup503.add(outerSphere);
+
+    // Inner fog sphere
+    const fogMat = new MeshStandardMaterial({
+      color: 0x0a2a14,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.6,
+      transparent: true,
+      opacity: 0.5,
+    });
+    crystalFogMat503 = fogMat;
+    const fogSphere = new Mesh(new SphereGeometry(0.22, 12, 10), fogMat);
+    fogSphere.position.set(0, 0.71, 0);
+    crystalGroup503.add(fogSphere);
+    crystalFogSphere503 = fogSphere;
+
+    // 3 orbiting mist wisps — inclinations 0°, 45°, 90°
+    const wispInclinations = [0, Math.PI / 4, Math.PI / 2];
+    for (let wi = 0; wi < 3; wi++) {
+      const wispMat = new MeshStandardMaterial({
+        color: 0x0a2a14,
+        emissive: 0x33ff66,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.4,
+      });
+      crystalWispMats503.push(wispMat);
+      const wisp = new Mesh(new SphereGeometry(0.08, 6, 5), wispMat);
+      wisp.scale.set(0.4, 0.2, 0.4);
+      wisp.position.set(0, 0.71, 0);
+      wisp.userData = { inclination: wispInclinations[wi] ?? 0, speed: [0.8, 1.1, 0.6][wi] ?? 0.8, angle: wi * Math.PI * 2 / 3 };
+      crystalGroup503.add(wisp);
+      crystalWisps503.push(wisp);
+    }
+
+    // PointLight at ball center
+    crystalLight503 = new PointLight(0x33ff66, 0.5, 4.0);
+    crystalLight503.position.set(0, 0.71, 0);
+    crystalGroup503.add(crystalLight503);
+
+    // Group position: on a table near center of lair
+    crystalGroup503.position.set(0.5, 0.88, 1.5);
+    scene.add(crystalGroup503);
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -5261,6 +5353,80 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C503 — crystal ball with swirling visions
+    if (crystalGroup503) {
+      t503 += dt;
+
+      // Fog sphere slow rotation + pulsing emissive
+      if (crystalFogSphere503) {
+        crystalFogSphere503.rotation.y += 0.3 * dt;
+        crystalFogSphere503.rotation.x += 0.1 * dt;
+      }
+      if (crystalFogMat503) {
+        crystalFogMat503.emissiveIntensity = 0.5 + 0.3 * Math.sin(t503 * 1.2);
+      }
+
+      // Outer shell opacity breathes
+      if (crystalOuterMat503) {
+        crystalOuterMat503.opacity = 0.3 + 0.08 * Math.sin(t503 * 0.9);
+      }
+
+      // Orbiting wisps
+      const WISP_ORBIT_R = 0.14;
+      const BALL_Y503 = 0.71;
+      for (let wi = 0; wi < crystalWisps503.length; wi++) {
+        const w = crystalWisps503[wi];
+        if (!w) continue;
+        const ud = w.userData as { inclination: number; speed: number; angle: number };
+        ud.angle += ud.speed * dt;
+        const incl = ud.inclination;
+        const a = ud.angle;
+        // Orbit in a tilted plane: rotate a unit circle by inclination around X axis
+        const wx = WISP_ORBIT_R * Math.cos(a);
+        const wy503 = WISP_ORBIT_R * Math.sin(a) * Math.cos(incl);
+        const wz = WISP_ORBIT_R * Math.sin(a) * Math.sin(incl);
+        w.position.set(0.5 + wx, 0.88 + BALL_Y503 + wy503, 1.5 + wz);
+      }
+
+      // PointLight flicker
+      if (crystalLight503) {
+        crystalLight503.intensity = 0.4 + 0.2 * Math.sin(t503 * 4.7);
+      }
+
+      // Vision flash timer
+      if (!crystalVisioning503) {
+        crystalVisionTimer503 -= dt;
+        if (crystalVisionTimer503 <= 0) {
+          crystalVisioning503 = true;
+          crystalVisionT503 = 0;
+          crystalVisionTimer503 = 15 + Math.random() * 10;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }));
+        }
+      } else {
+        crystalVisionT503 += dt;
+        const SURGE_IN = 0.3;
+        const FADE_OUT = 1.5;
+        const totalDur = SURGE_IN + FADE_OUT;
+        let prog: number;
+        if (crystalVisionT503 < SURGE_IN) {
+          prog = crystalVisionT503 / SURGE_IN; // 0→1
+          if (crystalFogMat503) crystalFogMat503.emissiveIntensity = 0.5 + prog * 2.0;
+          if (crystalOuterMat503) crystalOuterMat503.opacity = 0.3 + prog * 0.3;
+          if (crystalLight503) crystalLight503.intensity = 0.4 + prog * 1.1;
+          for (const wm of crystalWispMats503) wm.emissiveIntensity = 0.8 + prog * 1.2;
+        } else if (crystalVisionT503 < totalDur) {
+          prog = 1.0 - (crystalVisionT503 - SURGE_IN) / FADE_OUT; // 1→0
+          if (crystalFogMat503) crystalFogMat503.emissiveIntensity = 0.5 + prog * 2.0;
+          if (crystalOuterMat503) crystalOuterMat503.opacity = 0.3 + prog * 0.3;
+          if (crystalLight503) crystalLight503.intensity = 0.4 + prog * 1.1;
+          for (const wm of crystalWispMats503) wm.emissiveIntensity = 0.8 + prog * 1.2;
+        } else {
+          crystalVisioning503 = false;
+          crystalVisionT503 = 0;
+        }
+      }
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -5788,6 +5954,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     lanternGlassMats498.length = 0;
     lanternFlameMat498 = null;
     lanternLight498 = null;
+    // C503 — crystal ball dispose
+    if (crystalGroup503) {
+      crystalGroup503.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(crystalGroup503);
+      crystalGroup503 = null;
+    }
+    crystalWispMats503.length = 0;
+    crystalWisps503.length = 0;
+    crystalFogMat503 = null;
+    crystalOuterMat503 = null;
+    crystalLight503 = null;
+    crystalFogSphere503 = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
