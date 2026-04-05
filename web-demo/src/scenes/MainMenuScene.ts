@@ -852,6 +852,12 @@ let ancestorGroup465: Group | null = null;
 let ancestorT465: number = 0;
 let ancestorFigures465: Group[] = [];
 
+// C470 — CeltOS green moon rising over distant mountains
+let moonGroup470: Group | null = null;
+let moonT470: number = 0;
+let moonFaceMat470: MeshBasicMaterial | null = null;
+let moonLight470: PointLight | null = null;
+
 function createRuneRainCanvas(container: HTMLElement): RuneRainResult {
   // Idempotent guard — reuse canvas if already present
   const existing = document.getElementById('menu-rune-rain') as HTMLCanvasElement | null;
@@ -1750,6 +1756,23 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       });
     });
 
+    // C470: CeltOS green moon — 120s rise/set cycle
+    moonT470 += dt;
+    if (moonGroup470) {
+      const cycle470 = moonT470 % 120;
+      const normalizedCycle470 = cycle470 < 60 ? cycle470 / 60 : (120 - cycle470) / 60;
+      moonGroup470.position.y = -8 + 20 * normalizedCycle470;
+      moonGroup470.position.x = -5 + 3 * Math.sin(moonT470 * 0.008);
+      moonGroup470.rotation.y = moonT470 * 0.02;
+    }
+    if (moonLight470 && moonGroup470) {
+      const heightFrac470 = Math.max(0, (moonGroup470.position.y + 2) / 14);
+      moonLight470.intensity = heightFrac470 * 0.3;
+    }
+    if (moonFaceMat470) {
+      moonFaceMat470.opacity = 0.06 + 0.03 * Math.sin(moonT470 * 0.5);
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -2474,6 +2497,56 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   scene.add(ancestorGroup465);
 
+  // C470 — CeltOS green moon rising over distant mountains
+  moonGroup470 = new Group();
+  moonGroup470.position.set(-5, -8, -45);
+
+  // Moon sphere (dark green body)
+  const moonSphere470 = new Mesh(
+    new SphereGeometry(2.2, 16, 12),
+    new MeshBasicMaterial({ color: 0x0d2a14 }),
+  );
+  moonGroup470.add(moonSphere470);
+
+  // Bright face overlay (CircleGeometry facing camera)
+  const moonFaceMesh470 = new Mesh(
+    new CircleGeometry(2.0, 20),
+    new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.08 }),
+  );
+  moonFaceMesh470.position.z = 2.1;
+  moonFaceMat470 = moonFaceMesh470.material as MeshBasicMaterial;
+  moonGroup470.add(moonFaceMesh470);
+
+  // Halo ring
+  const halo470 = new Mesh(
+    new TorusGeometry(3.0, 0.3, 4, 32),
+    new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.15 }),
+  );
+  moonGroup470.add(halo470);
+
+  // Outer halo (more diffuse)
+  const outerHalo470 = new Mesh(
+    new TorusGeometry(4.2, 0.5, 4, 32),
+    new MeshBasicMaterial({ color: 0x1a8833, transparent: true, opacity: 0.06 }),
+  );
+  moonGroup470.add(outerHalo470);
+
+  // 3 crater circles on moon face
+  for (let ci = 0; ci < 3; ci++) {
+    const crater470 = new Mesh(
+      new CircleGeometry(0.2 + ci * 0.12, 8),
+      new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.3 }),
+    );
+    crater470.position.set(-0.5 + ci * 0.5, 0.3 - ci * 0.35, 2.12);
+    moonGroup470.add(crater470);
+  }
+
+  // Moonlight PointLight (starts dark, fades in as moon rises)
+  moonLight470 = new PointLight(0x33ff66, 0.0, 30);
+  moonGroup470.add(moonLight470);
+
+  scene.add(moonGroup470);
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -2734,6 +2807,17 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       ancestorGroup465 = null;
     }
     ancestorFigures465 = [];
+
+    // C470: dispose moon group
+    if (moonGroup470) {
+      moonGroup470.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+      });
+      scene.remove(moonGroup470);
+      moonGroup470 = null;
+    }
+    moonFaceMat470 = null;
+    moonLight470 = null;
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
