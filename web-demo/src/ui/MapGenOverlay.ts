@@ -462,6 +462,37 @@ function drawCelticBorder(ctx: CanvasRenderingContext2D, w: number, h: number): 
   }
 }
 
+// ── Easing helpers ────────────────────────────────────────────────────────────
+
+/** Ease-out bounce — maps t ∈ [0,1] to a bounced value ∈ [0,1] */
+function easeOutBounce(t: number): number {
+  const n1 = 7.5625;
+  const d1 = 2.75;
+  if (t < 1 / d1) {
+    return n1 * t * t;
+  } else if (t < 2 / d1) {
+    const t2 = t - 1.5 / d1;
+    return n1 * t2 * t2 + 0.75;
+  } else if (t < 2.5 / d1) {
+    const t2 = t - 2.25 / d1;
+    return n1 * t2 * t2 + 0.9375;
+  } else {
+    const t2 = t - 2.625 / d1;
+    return n1 * t2 * t2 + 0.984375;
+  }
+}
+
+// ── Animation state type ──────────────────────────────────────────────────────
+
+interface AnimState {
+  progress: number;
+  phase: 'path' | 'zones' | 'done';
+  /** Per-zone elapsed time in ms (starts counting when zone drop-in begins) */
+  zoneTimers: number[];
+  rafId: number;
+  lastTs: number;
+}
+
 // ── Wait helper ───────────────────────────────────────────────────────────────
 
 function wait(ms: number): Promise<void> {
@@ -673,103 +704,171 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
     tick();
   });
 
-  // ── Phase 2: title + draw path simultaneously ─────────────────────────────
-  const PATH_DURATION = 2200;
-  const pathStart = performance.now();
+  // ── Phase 2 + 3: animated path drawing then zone drop-in ─────────────────
+  //
+  // startMapAnimation() drives both phases via a single RAF loop (animState).
+  // Phase 'path'  : drawProgress 0→1 over 1500ms (dt/1500 per frame)
+  // Phase 'zones' : each zone drops in with ease-out-bounce, staggered 80ms
+  //
+  const PATH_ANIM_MS = 1500;
+  const ZONE_DROP_MS = 300;
+  const ZONE_STAGGER = 80;
+  const ZONE_DROP_PX = 30;
 
-  // Start typing title (CRT uppercase already applied via CSS)
-  typewrite(titleEl, scenario.titre.toUpperCase(), 40);
-  sfx('mapDraw');
+  const animState: AnimState = {
+    progress: 0,
+    phase: 'path',
+    zoneTimers: new Array<number>(mapData.events.length).fill(-1),
+    rafId: 0,
+    lastTs: 0,
+  };
 
-  await new Promise<void>((resolve) => {
-    const tick = (): void => {
-      const elapsed = performance.now() - pathStart;
-      const p = Math.min(elapsed / PATH_DURATION, 1);
+  /** Y offset for a zone (0 = settled, ZONE_DROP_PX = start) using bounce */
+  const zoneYOffset = (i: number): number => {
+    const elapsed = animState.zoneTimers[i]!;
+    if (elapsed < 0) return ZONE_DROP_PX;           // not yet started → hidden above
+    const t = Math.min(elapsed / ZONE_DROP_MS, 1);
+    return ZONE_DROP_PX * (1 - easeOutBounce(t));   // 30 → 0
+  };
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = PAL.bg;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  /** Alpha for a zone (0 before drop-in starts, 1 when settled) */
+  const zoneAlpha = (i: number): number => {
+    const elapsed = animState.zoneTimers[i]!;
+    if (elapsed < 0) return 0;
+    return Math.min(elapsed / ZONE_DROP_MS, 1);
+  };
 
-      for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
-      drawBiomeDecorations(ctx, canvas.width, canvas.height, biome);
-      drawPathAt(ctx, mapData.pathPoints, p);
-      stampGrain();
-      drawCelticBorder(ctx, canvas.width, canvas.height);
-      if (p > 0.5) drawCompassRose(ctx, roseX, roseY, roseSize);
-
-      // Start marker — hero position
-      if (p > 0.05) {
-        const start = mapData.pathPoints[0]!;
-        drawHeroMarker(ctx, start.x, start.y);
-      }
-
-      if (p >= 1) {
-        resolve();
-      } else {
-        requestAnimationFrame(tick);
-      }
-    };
-    tick();
-  });
-
-  // ── Phase 3: scenario paragraphs + event nodes appear ────────────────────
-  const paragraphs = [...scenario.scenario];
-  const eventAlphas = new Array<number>(mapData.events.length).fill(0);
-  let rafActive = true;
-
-  // Start RAF for event nodes appearing while text types
-  const nodeRaf = (): void => {
-    if (!rafActive) return;
+  // Shared full-canvas redraw used by both phases
+  const redrawCanvas = (): void => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = PAL.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (const patch of mapData.terrainPatches) drawPatchAt(ctx, patch, 1);
     drawBiomeDecorations(ctx, canvas.width, canvas.height, biome);
-    drawPathAt(ctx, mapData.pathPoints, 1);
+    drawPathAt(ctx, mapData.pathPoints, animState.progress);
     stampGrain();
-
-    // Draw hero marker at path start
     const start = mapData.pathPoints[0]!;
-    drawHeroMarker(ctx, start.x, start.y);
+    if (animState.progress > 0.05) drawHeroMarker(ctx, start.x, start.y);
+    if (animState.progress > 0.5)  drawCompassRose(ctx, roseX, roseY, roseSize);
 
-    // Event nodes
-    for (let i = 0; i < mapData.events.length; i++) {
-      const ev = mapData.events[i]!;
-      const pt = getPathPoint(mapData.pathPoints, ev.position);
-      drawEventNode(ctx, pt.x, pt.y, ev, eventAlphas[i]!);
+    // Zone icons — only drawn in 'zones' or 'done' phase
+    if (animState.phase !== 'path') {
+      for (let i = 0; i < mapData.events.length; i++) {
+        const ev = mapData.events[i]!;
+        const pt = getPathPoint(mapData.pathPoints, ev.position);
+        const alpha = zoneAlpha(i);
+        if (alpha <= 0) continue;
+        // translate vertically for bounce drop-in
+        ctx.save();
+        ctx.translate(0, zoneYOffset(i));
+        drawEventNode(ctx, pt.x, pt.y, ev, alpha);
+        ctx.restore();
+      }
     }
 
     drawCelticBorder(ctx, canvas.width, canvas.height);
-    drawCompassRose(ctx, roseX, roseY, roseSize);
-    requestAnimationFrame(nodeRaf);
   };
-  nodeRaf();
 
-  // Typewrite paragraphs, reveal event nodes one by one
-  for (let i = 0; i < paragraphs.length; i++) {
-    const para = document.createElement('div');
-    para.style.cssText = [
-      `color:${PAL.ink};font-size:clamp(11px,1.3vw,13px);line-height:1.65;`,
-      `font-family:'Courier New',monospace;`,
-      `border-left:2px solid ${PAL.border};padding-left:8px;`,
-      'opacity:0;transition:opacity 0.3s;',
-    ].join('');
-    scenarioContainer.appendChild(para);
-    requestAnimationFrame(() => requestAnimationFrame(() => { para.style.opacity = '1'; }));
+  // Resolve promises to sequence phases
+  let pathResolve!: () => void;
+  let zonesResolve!: () => void;
+  const pathDone = new Promise<void>((res) => { pathResolve = res; });
+  const zonesDone = new Promise<void>((res) => { zonesResolve = res; });
 
-    await typewrite(para, paragraphs[i]!, 20);
-    sfx('beep');
+  const startMapAnimation = (): void => {
+    if (animState.rafId !== 0) return; // idempotent guard
 
-    // Reveal corresponding event node
-    const evIdx = Math.min(i + 1, mapData.events.length - 1);
-    eventAlphas[evIdx] = 1.0;
+    const tick = (ts: number): void => {
+      const dt = animState.lastTs === 0 ? 0 : ts - animState.lastTs;
+      animState.lastTs = ts;
 
-    await wait(200);
-  }
+      if (animState.phase === 'path') {
+        animState.progress = Math.min(animState.progress + dt / PATH_ANIM_MS, 1);
+        redrawCanvas();
 
-  // Reveal all remaining nodes
-  for (let i = 0; i < eventAlphas.length; i++) eventAlphas[i] = 1.0;
-  await wait(600);
+        if (animState.progress >= 1) {
+          animState.phase = 'zones';
+          pathResolve();
+        }
+      } else if (animState.phase === 'zones') {
+        redrawCanvas();
+
+        // Advance each zone timer that has started
+        let allDone = true;
+        for (let i = 0; i < animState.zoneTimers.length; i++) {
+          const t = animState.zoneTimers[i]!;
+          if (t < 0) { allDone = false; continue; }  // not yet triggered
+          const next = t + dt;
+          animState.zoneTimers[i] = next;
+          if (next < ZONE_DROP_MS) allDone = false;
+        }
+
+        if (allDone && animState.zoneTimers.every((t) => t >= 0)) {
+          animState.phase = 'done';
+          zonesResolve();
+          return; // stop RAF
+        }
+      } else {
+        // 'done' — stop loop
+        return;
+      }
+
+      animState.rafId = requestAnimationFrame(tick);
+    };
+
+    animState.rafId = requestAnimationFrame(tick);
+  };
+
+  // ── Start animation (path phase) ──────────────────────────────────────────
+  // Start typing title concurrently with path drawing
+  typewrite(titleEl, scenario.titre.toUpperCase(), 40);
+  sfx('mapDraw');
+
+  startMapAnimation();
+
+  // Wait for path to fully draw before starting zone drop-ins
+  await pathDone;
+  sfx('beep');
+
+  // ── Phase 3: scenario paragraphs + zone drop-in concurrently ─────────────
+  const paragraphs = [...scenario.scenario];
+
+  // Trigger zone drop-ins one by one, staggered, as paragraphs typewrite
+  let rafActive = true; // kept for Phase 5 cancel compat
+
+  // Kick off zone timers progressively (staggered by 80ms regardless of text)
+  const triggerZonesSequentially = async (): Promise<void> => {
+    for (let i = 0; i < animState.zoneTimers.length; i++) {
+      animState.zoneTimers[i] = 0; // start this zone's drop-in
+      await wait(ZONE_STAGGER);
+    }
+  };
+
+  // Run paragraphs and zone triggers concurrently
+  await Promise.all([
+    // Left panel: typewrite paragraphs
+    (async (): Promise<void> => {
+      for (let i = 0; i < paragraphs.length; i++) {
+        const para = document.createElement('div');
+        para.style.cssText = [
+          `color:${PAL.ink};font-size:clamp(11px,1.3vw,13px);line-height:1.65;`,
+          `font-family:'Courier New',monospace;`,
+          `border-left:2px solid ${PAL.border};padding-left:8px;`,
+          'opacity:0;transition:opacity 0.3s;',
+        ].join('');
+        scenarioContainer.appendChild(para);
+        requestAnimationFrame(() => requestAnimationFrame(() => { para.style.opacity = '1'; }));
+        await typewrite(para, paragraphs[i]!, 20);
+        await wait(200);
+      }
+    })(),
+    // Right panel: trigger zone drop-ins
+    triggerZonesSequentially(),
+  ]);
+
+  // Wait for all zone animations to complete
+  await zonesDone;
+  await wait(400);
 
   // ── Phase 4: show "Entrer" hint + wait for click ──────────────────────────
   hintEl.style.opacity = '1';
@@ -799,7 +898,12 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   });
 
   // ── Phase 5: zoom-into-map transition ─────────────────────────────────────
+  // Cancel any still-running animation RAF to prevent leaks
   rafActive = false;
+  if (animState.rafId !== 0) {
+    cancelAnimationFrame(animState.rafId);
+    animState.rafId = 0;
+  }
   sfx('mapZoom');
 
   const entryPt = mapData.pathPoints[0]!;
