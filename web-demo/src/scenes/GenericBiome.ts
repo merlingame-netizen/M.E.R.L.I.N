@@ -442,6 +442,34 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(wisp);
       maraisWispMeshes.push(wisp);
     }
+
+    // Bog body — dark humanoid silhouette partially submerged (atmospheric dread prop)
+    const bogMat = new MeshBasicMaterial({ color: 0x050a07 });
+
+    // Torso — tilted, partially submerged
+    const bogTorso = new Mesh(new BoxGeometry(0.5, 1.2, 0.3), bogMat);
+    bogTorso.position.set(6, -1.8, -20);
+    bogTorso.rotation.z = 0.3;
+    bogTorso.rotation.y = 0.5;
+    group.add(bogTorso);
+
+    // Head
+    const bogHead = new Mesh(new SphereGeometry(0.2, 5, 4), bogMat);
+    bogHead.position.set(6.3, -0.9, -20);
+    group.add(bogHead);
+
+    // Arm reaching up
+    const bogArm = new Mesh(new CylinderGeometry(0.06, 0.06, 0.8, 4), bogMat);
+    bogArm.position.set(6.7, -1.4, -20);
+    bogArm.rotation.z = -0.6;
+    group.add(bogArm);
+
+    // Water ripple around the bog body
+    const bogRippleMat = new MeshBasicMaterial({ color: 0x1a3020, transparent: true, opacity: 0.4 });
+    const bogRipple = new Mesh(new TorusGeometry(0.6, 0.04, 4, 12), bogRippleMat);
+    bogRipple.rotation.x = -Math.PI / 2;
+    bogRipple.position.set(6, -2.2, -20);
+    group.add(bogRipple);
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
