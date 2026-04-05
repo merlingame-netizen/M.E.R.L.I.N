@@ -1370,6 +1370,16 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _starDots: Mesh[] = [];
   let _starProjLight: PointLight | null = null;
 
+  // C428: sleeping familiar cat
+  let _catGroup: Group | null = null;
+  let _catT = 0;
+  let _catWakeTimer = 0;
+  let _catNextWake = 12 + Math.random() * 15;
+  let _catBody: Mesh | null = null;
+  let _catEyeL: Mesh | null = null;
+  let _catEyeR: Mesh | null = null;
+  let _catHead: Group | null = null;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -2283,6 +2293,59 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     _starProjGroup.position.set(1.5, 0, -2);
     scene.add(_starProjGroup);
+  }
+
+  // C428 — sleeping familiar cat
+  {
+    _catGroup = new Group();
+    _catHead = new Group();
+
+    const catMat = new MeshBasicMaterial({ color: 0x0a1a10 });
+    const eyeMatL = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 });
+    const eyeMatR = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 });
+
+    // Cushion
+    const cushion = new Mesh(new BoxGeometry(0.55, 0.08, 0.45), new MeshBasicMaterial({ color: 0x0a1a10 }));
+    cushion.position.set(0, 0, 0);
+
+    // Body (curled, sleeping position) — scaled sphere
+    const bodyGeo = new SphereGeometry(0.22, 7, 5);
+    _catBody = new Mesh(bodyGeo, catMat);
+    _catBody.scale.set(1.4, 0.75, 1.1);
+    _catBody.position.set(0, 0.14, 0);
+
+    // Head
+    const headMesh = new Mesh(new SphereGeometry(0.13, 6, 5), catMat);
+    headMesh.position.set(0, 0, 0);
+
+    // Ears: 2 small cones
+    const earGeo = new ConeGeometry(0.045, 0.1, 4);
+    const earL = new Mesh(earGeo, catMat);
+    earL.position.set(-0.075, 0.1, 0);
+    earL.rotation.z = -0.3;
+    const earR = new Mesh(earGeo.clone(), catMat);
+    earR.position.set(0.075, 0.1, 0);
+    earR.rotation.z = 0.3;
+
+    // Eyes (tiny spheres, normally invisible — glow when awake)
+    _catEyeL = new Mesh(new SphereGeometry(0.022, 4, 3), eyeMatL);
+    _catEyeL.position.set(-0.045, 0.02, 0.11);
+    _catEyeR = new Mesh(new SphereGeometry(0.022, 4, 3), eyeMatR);
+    _catEyeR.position.set(0.045, 0.02, 0.11);
+
+    // Tail: thin curved cylinder approximation
+    const tail = new Mesh(new CylinderGeometry(0.025, 0.015, 0.35, 4), catMat);
+    tail.position.set(0.18, 0.12, -0.15);
+    tail.rotation.z = 0.8;
+    tail.rotation.x = 0.4;
+
+    _catHead.add(headMesh, earL, earR, _catEyeL, _catEyeR);
+    _catHead.position.set(0.2, 0.22, 0.1); // head resting on body
+    _catHead.rotation.z = 0.5; // tilted in sleep
+
+    _catGroup.add(cushion, _catBody, _catHead, tail);
+    _catGroup.position.set(-1.5, 0.15, -2);
+    scene.add(_catGroup);
   }
 
   // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
@@ -3473,6 +3536,41 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     }
 
+    // C428: sleeping familiar cat — breathing + wake animation
+    if (_catGroup && _catBody) {
+      _catT += dt;
+      _catWakeTimer += dt;
+
+      // Breathing: slow body scale pulse
+      const breath = 1.0 + Math.sin(_catT * 0.9) * 0.035;
+      _catBody.scale.set(1.4 * breath, 0.75, 1.1 * breath);
+
+      // Wake event
+      if (_catWakeTimer >= _catNextWake) {
+        _catWakeTimer = 0;
+        _catNextWake = 20 + Math.random() * 15;
+      }
+
+      // Wake phase: 0-0.5s open eyes, 0.5-3s awake, 3-4s close eyes
+      const wakePhase = _catWakeTimer;
+      let eyeOpacity = 0;
+      if (wakePhase < 0.5) {
+        eyeOpacity = wakePhase / 0.5;
+        if (_catHead) _catHead.rotation.y = -(wakePhase / 0.5) * 0.4;
+      } else if (wakePhase < 3.0) {
+        eyeOpacity = 1.0;
+        if (_catHead) _catHead.rotation.y = -0.4 + Math.sin(wakePhase * 0.8) * 0.3;
+      } else if (wakePhase < 4.0) {
+        eyeOpacity = 1.0 - (wakePhase - 3.0);
+        if (_catHead) _catHead.rotation.y = -(1.0 - (wakePhase - 3.0)) * 0.3;
+      } else {
+        if (_catHead) _catHead.rotation.y = 0;
+      }
+
+      if (_catEyeL) (_catEyeL.material as MeshBasicMaterial).opacity = eyeOpacity;
+      if (_catEyeR) (_catEyeR.material as MeshBasicMaterial).opacity = eyeOpacity;
+    }
+
     // C361: enchanted mirror portal — vertex ripple + vision pulse
     if (!lowFpsMode && mirrorSurface361) {
       // Sinusoidal vertex displacement on mirror surface
@@ -3815,6 +3913,19 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _starProjLight = null;
       scene.remove(_starProjGroup);
       _starProjGroup = null;
+    }
+    // C428: sleeping familiar cat
+    if (_catGroup) {
+      _catGroup.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+      });
+      _catBody = null; _catEyeL = null; _catEyeR = null; _catHead = null;
+      scene.remove(_catGroup);
+      _catGroup = null;
     }
   };
 
