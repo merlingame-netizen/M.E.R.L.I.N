@@ -565,6 +565,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let frozenLakeLight440: PointLight | null = null;
   const frozenLakeCracks440: Line[] = [];
 
+  // ── Floating will-o'-wisps — marais_korrigans (C443) ─────────────────────
+  let wispGroup443: Group | null = null
+  let wispT443: number = 0
+  let wispOrbs443: Mesh[] = []
+  let wispLights443: PointLight[] = []
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -950,6 +956,29 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
 
     swampDockGroup422.position.set(-6, 0, -12);
     group.add(swampDockGroup422);
+
+    // Floating will-o'-wisps (C443)
+    wispGroup443 = new Group()
+    wispGroup443.position.set(-3, 0, -12)  // swamp area offset
+    const wispConfigs = [
+      { x: 0, z: 0, phase: 0, speed: 0.4 },
+      { x: 2, z: -2, phase: 2.1, speed: 0.33 },
+      { x: -2, z: -3, phase: 4.2, speed: 0.5 },
+    ]
+    wispConfigs.forEach((cfg) => {
+      const orb = new Mesh(
+        new SphereGeometry(0.12, 6, 6),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.7 })
+      )
+      orb.position.set(cfg.x, 0.8, cfg.z)
+      wispGroup443!.add(orb)
+      wispOrbs443.push(orb)
+      const light = new PointLight(0x33ff66, 0.2, 3.0)
+      light.position.copy(orb.position)
+      wispGroup443!.add(light)
+      wispLights443.push(light)
+    })
+    group.add(wispGroup443)
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -3542,6 +3571,28 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         swampDockLight422.intensity = 0.10 + Math.sin(swampDockT422 * 0.9) * 0.04;
       }
     }
+    // Marais korrigans — floating will-o'-wisps drift (C443)
+    if (wispOrbs443.length > 0) {
+      wispT443 += dt
+      const wispDriftConfigs = [
+        { ax: 1.5, az: 1.2, px: 0, pz: 0, phase: 0, speed: 0.4 },
+        { ax: 1.8, az: 1.0, px: 2, pz: -2, phase: 2.1, speed: 0.33 },
+        { ax: 1.3, az: 1.6, px: -2, pz: -3, phase: 4.2, speed: 0.5 },
+      ]
+      wispOrbs443.forEach((orb, i) => {
+        const c = wispDriftConfigs[i]
+        if (!c) return
+        orb.position.x = c.px + c.ax * Math.sin(wispT443 * c.speed + c.phase)
+        orb.position.z = c.pz + c.az * Math.cos(wispT443 * c.speed * 0.7 + c.phase)
+        orb.position.y = 0.8 + 0.4 * Math.sin(wispT443 * 1.1 + c.phase)
+        const mat = orb.material as MeshBasicMaterial
+        mat.opacity = 0.5 + 0.3 * Math.sin(wispT443 * 2.0 + i * 1.3)
+        if (wispLights443[i]) {
+          wispLights443[i]!.position.copy(orb.position)
+          wispLights443[i]!.intensity = 0.15 + 0.1 * Math.sin(wispT443 * 2.0 + i * 1.3)
+        }
+      })
+    }
     // Vallee anciens — spectral ghost apparition fade cycle (C425)
     if (ghostGroup425 && ghostBody425 && ghostHead425 && ghostLight425) {
       ghostT425 += dt;
@@ -3883,6 +3934,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       swampDockLight422 = null;
       swampDockGroup422 = null;
     }
+    // Floating will-o'-wisps cleanup (C443)
+    if (wispGroup443) {
+      wispGroup443.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshBasicMaterial).dispose() }
+        if (c instanceof PointLight) { c.dispose() }
+      })
+      group.remove(wispGroup443)
+      wispGroup443 = null
+    }
+    wispOrbs443 = []
+    wispLights443 = []
     // Spectral ghost apparition cleanup (C425)
     if (ghostGroup425) {
       ghostGroup425.traverse(c => {
