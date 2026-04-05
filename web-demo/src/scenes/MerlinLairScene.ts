@@ -2,7 +2,7 @@
 // Cycle 31: AAA lighting (6 sources — key/rim/fill/cauldron/hemi/ambient; C36 added HemisphereLight).
 // Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
-import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
+import { AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CircleGeometry, CylinderGeometry, Fog, Group, HemisphereLight, InstancedMesh, Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera, PointLight, Points, PointsMaterial, Raycaster, Scene, SphereGeometry, TorusGeometry, Vector2, WebGLRenderer } from 'three';
 import { createLairDensity } from './LairDensity';
 import { loadLairGLBs } from './LairGLBAssets';
 import { createLairWindow, type LairTimeParams } from './LairWindow';
@@ -1136,6 +1136,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let _tomeTime = 0;
   let _tomeOpenAngle = 0; // 0 = closed, PI*0.6 = fully open
 
+  // C277: scrying pool — shallow dark bowl + pulsing vision disc on lair floor
+  let _scryingPoolMesh: Mesh | null = null;
+  let _scryingVisionMesh: Mesh | null = null;
+  let _scryingTime = 0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1232,6 +1237,29 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(pivotGroup);
     _tomeCoverMesh = cover;
     _tomePivotGroup = pivotGroup;
+  }
+
+  // C277: scrying pool — shallow dark bowl + pulsing green vision disc
+  // Floor top surface at FLOOR_Y = -4.85. Bowl rim at -4.85 + 0.06 = -4.79.
+  // Position (2, _, -6): 1 unit in front of cauldron (z=-7), clear of crystal ball (x=5) and rune rings (x=0,z=-8).
+  {
+    const POOL_Y = -4.85 + 0.06;
+    const poolMat = new MeshBasicMaterial({ color: 0x050c05 });
+    const pool = new Mesh(new CylinderGeometry(0.8, 0.8, 0.12, 16), poolMat);
+    pool.position.set(2, POOL_Y, -6);
+    scene.add(pool);
+    _scryingPoolMesh = pool;
+
+    const visionMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.3 });
+    const vision = new Mesh(new CircleGeometry(0.7, 16), visionMat);
+    vision.rotation.x = -Math.PI / 2;
+    vision.position.set(2, POOL_Y + 0.07, -6);
+    scene.add(vision);
+    _scryingVisionMesh = vision;
+
+    const poolLight = new PointLight(0x33ff66, 0.4, 3);
+    poolLight.position.set(2, POOL_Y + 0.5, -6);
+    scene.add(poolLight);
   }
 
   // Forest window + day/night/season cycle
@@ -1822,6 +1850,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       _tomePivotGroup.rotation.z = _tomeOpenAngle;
     }
 
+    // C277: scrying pool vision — ripple opacity + scale breathe
+    _scryingTime += dt;
+    if (_scryingVisionMesh) {
+      const mat = _scryingVisionMesh.material as MeshBasicMaterial;
+      mat.opacity = 0.2 + Math.sin(_scryingTime * 1.1) * 0.15 + Math.sin(_scryingTime * 2.7) * 0.05;
+      const scale = 0.95 + Math.sin(_scryingTime * 0.8) * 0.06;
+      _scryingVisionMesh.scale.set(scale, scale, 1);
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -1968,6 +2005,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     _tomeCoverMesh = null;
     _tomePagesMesh = null;
     _tomePivotGroup = null;
+    // C277: clear scrying pool refs (geometries/materials disposed by scene.traverse above)
+    _scryingPoolMesh = null;
+    _scryingVisionMesh = null;
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
