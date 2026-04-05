@@ -667,6 +667,55 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(foamMesh);
   }
 
+  // ── Sea cave arch entrance — left cliff side (C289) ─────────────────────
+  {
+    const CAVE_X = -25;
+    const CAVE_Y = -0.5;
+    const CAVE_Z = -35;
+    const ROCK_COLOR = 0x1a1a14;
+    const DARK_COLOR = 0x0e0e0a;
+
+    // Left pillar
+    const leftPillar = new Mesh(
+      new BoxGeometry(1.5, 5, 1.0),
+      new MeshBasicMaterial({ color: ROCK_COLOR }),
+    );
+    leftPillar.position.set(CAVE_X - 2.0, CAVE_Y + 2.5, CAVE_Z);
+    group.add(leftPillar);
+
+    // Right pillar
+    const rightPillar = new Mesh(
+      new BoxGeometry(1.5, 5, 1.0),
+      new MeshBasicMaterial({ color: ROCK_COLOR }),
+    );
+    rightPillar.position.set(CAVE_X + 2.0, CAVE_Y + 2.5, CAVE_Z);
+    group.add(rightPillar);
+
+    // Arch lintel (top)
+    const arch = new Mesh(
+      new BoxGeometry(5.5, 2.0, 1.0),
+      new MeshBasicMaterial({ color: ROCK_COLOR }),
+    );
+    arch.position.set(CAVE_X, CAVE_Y + 5.5, CAVE_Z);
+    group.add(arch);
+
+    // Dark cave interior (void plane behind arch)
+    const voidPlane = new Mesh(
+      new PlaneGeometry(2.8, 3.5),
+      new MeshBasicMaterial({ color: DARK_COLOR, side: DoubleSide }),
+    );
+    voidPlane.position.set(CAVE_X, CAVE_Y + 2.2, CAVE_Z + 0.1);
+    group.add(voidPlane);
+
+    // Faint green bioluminescent glow from cave interior
+    const glowPlane = new Mesh(
+      new PlaneGeometry(2.0, 2.5),
+      new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.06, side: DoubleSide }),
+    );
+    glowPlane.position.set(CAVE_X, CAVE_Y + 2.2, CAVE_Z + 0.15);
+    group.add(glowPlane);
+  }
+
   // ── GLB overlays (non-blocking) ───────────────────────────────────────────
   const glbBase = '/assets/';
   const glbConfigs = [
