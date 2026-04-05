@@ -1115,6 +1115,36 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   cauldronHit.position.set(2, -4.65, -7);
   scene.add(cauldronHit);
 
+  // C231: cauldron bubble particle system — 12 rising green spheres
+  let _bubbleMeshes: Mesh[] = [];
+  let _bubbleTimer = 0;
+
+  // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
+  {
+    const CAULDRON_X = 2;
+    const CAULDRON_Y = -4.65;
+    const CAULDRON_Z = -7;
+    const bubbleMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.6 });
+    const bubbleGeo = new SphereGeometry(0.05, 4, 3);
+    for (let bi = 0; bi < 12; bi++) {
+      const bm = new Mesh(bubbleGeo, bubbleMat.clone());
+      const bx = CAULDRON_X + (Math.random() - 0.5) * 0.6;
+      const bz = CAULDRON_Z + (Math.random() - 0.5) * 0.6;
+      bm.position.set(bx, CAULDRON_Y + 0.4 + Math.random() * 0.4, bz);
+      bm.userData = {
+        baseX: bx,
+        baseZ: bz,
+        speed: 0.3 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2,
+        active: false,
+        cauldronY: CAULDRON_Y,
+      };
+      (bm.material as MeshBasicMaterial).opacity = 0;
+      scene.add(bm);
+      _bubbleMeshes.push(bm);
+    }
+  }
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -1640,6 +1670,39 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Cauldron steam — C82: gate under !lowFpsMode (steam + glow sin is cosmetic)
     if (!lowFpsMode) cauldron.update(elapsedTime, dt);
 
+    // C231: cauldron bubble particle system — gate under !lowFpsMode (cosmetic)
+    if (!lowFpsMode) {
+      _bubbleTimer += dt;
+      if (_bubbleTimer >= 0.3) {
+        _bubbleTimer = 0;
+        // Activate a random inactive bubble
+        const inactive = _bubbleMeshes.filter((b) => !b.userData['active']);
+        if (inactive.length > 0) {
+          const pick = inactive[Math.floor(Math.random() * inactive.length)];
+          pick.position.y = (pick.userData['cauldronY'] as number) + 0.4;
+          pick.userData['active'] = true;
+        }
+      }
+      for (const bm of _bubbleMeshes) {
+        if (!bm.userData['active']) continue;
+        const cY = bm.userData['cauldronY'] as number;
+        const spd = bm.userData['speed'] as number;
+        const ph  = bm.userData['phase']  as number;
+        const bx  = bm.userData['baseX']  as number;
+        bm.position.y += spd * dt;
+        bm.position.x = bx + Math.sin(elapsedTime * 2 + ph) * 0.05;
+        // Fade opacity 0.6 → 0 as bubble rises from cY+0.4 to cY+1.5
+        const rise = bm.position.y - (cY + 0.4);
+        const t01  = Math.min(1, rise / 1.1);
+        (bm.material as MeshBasicMaterial).opacity = 0.6 * (1 - t01);
+        if (bm.position.y > cY + 1.5) {
+          bm.userData['active'] = false;
+          bm.position.y = cY + 0.4;
+          (bm.material as MeshBasicMaterial).opacity = 0;
+        }
+      }
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -1774,6 +1837,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     if (crystalFortuneEl.parentNode) {
       crystalFortuneEl.parentNode.removeChild(crystalFortuneEl);
     }
+    // C231: clear bubble refs (geometries/materials disposed by scene.traverse above)
+    _bubbleMeshes = [];
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
