@@ -47,6 +47,9 @@ let _oghamMultEl: HTMLElement | null = null;
 // when initHUD() is called on every run inside the outer while(true) loop (main.ts).
 let _hudUnsubscribe: (() => void) | null = null;
 
+// C240: tracks whether the critical_alert SFX has fired for the current run (reset in teardownHUD).
+let _criticalAlerted: boolean = false;
+
 // Cached #hud root element — used by setHUDWalkMode() for opacity transition. C163/HUD-WALK-01.
 let _hudRootEl: HTMLElement | null = null;
 
@@ -60,6 +63,30 @@ export function setHUDWalkMode(walk: boolean): void {
   if (!_hudRootEl) return;
   _hudRootEl.style.transition = 'opacity 0.4s ease';
   _hudRootEl.style.opacity = walk ? '1' : '0.2';
+}
+
+// =============================================================================
+// C240 — Critical health pulse warning (≤20 HP)
+// =============================================================================
+
+/**
+ * Inject the hud-critical-pulse CSS keyframes once into document.head.
+ * Idempotent — safe to call multiple times.
+ */
+function ensureHudCriticalStyles(): void {
+  if (document.getElementById('hud-critical-style')) return;
+  const s = document.createElement('style');
+  s.id = 'hud-critical-style';
+  s.textContent = `
+    @keyframes hud-critical-pulse {
+      0%, 100% { box-shadow: 0 0 0px rgba(200,30,30,0); border-color: rgba(200,30,30,0.3); }
+      50%       { box-shadow: 0 0 16px rgba(200,30,30,0.6); border-color: rgba(200,30,30,0.8); }
+    }
+    .hud-critical {
+      animation: hud-critical-pulse 1.2s ease-in-out infinite;
+    }
+  `;
+  document.head.appendChild(s);
 }
 
 /** Build the faction panel DOM and inject it into the HUD. */
@@ -208,6 +235,20 @@ export function updateHUD(): void {
     } else if (lifePercent > 25 && prevAnnounced) {
       _lifeStatusEl.textContent = '';
       _lifeStatusEl.dataset['criticalAnnounced'] = 'false';
+    }
+  }
+
+  // C240: critical health pulse on life-bar-container at ≤20 HP
+  if (_lifeBarContainerEl) {
+    if (state.run.life <= 20) {
+      ensureHudCriticalStyles();
+      _lifeBarContainerEl.classList.add('hud-critical');
+      if (!_criticalAlerted) {
+        _criticalAlerted = true;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'critical_alert' } }));
+      }
+    } else {
+      _lifeBarContainerEl.classList.remove('hud-critical');
     }
   }
 
@@ -498,6 +539,9 @@ export function teardownHUD(): void {
   // C225: progress bar — remove bar element and style from DOM on teardown.
   document.getElementById('hud-progress-bar')?.remove();
   document.getElementById('hud-progress-style')?.remove();
+  // C240: reset critical alert flag and remove pulse style.
+  _criticalAlerted = false;
+  document.getElementById('hud-critical-style')?.remove();
   // C163/HUD-WALK-01: restore full opacity on teardown (lair/menu phases).
   if (_hudRootEl) { _hudRootEl.style.opacity = '1'; }
   _hudRootEl = null;
