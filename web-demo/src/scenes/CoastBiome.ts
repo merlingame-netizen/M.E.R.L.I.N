@@ -690,6 +690,11 @@ let ruinsGroup459: Group | null = null;
 let ruinsT459: number = 0;
 const ruinsMossPatches459: Mesh[] = [];
 
+// ── Sea stack with circling seabirds (C464) ───────────────────────────────
+let seaStackGroup464: Group | null = null;
+let seaStackT464: number = 0;
+const seaStackBirds464: Group[] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1740,6 +1745,99 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(ruinsGroup459);
   }
 
+  // ── Sea stack with circling seabirds (C464) ───────────────────────────────
+  {
+    seaStackGroup464 = new Group();
+    seaStackGroup464.position.set(12, -0.5, -18);
+
+    // Sea stack main column (tapered cylinder)
+    const stackBase = new Mesh(
+      new CylinderGeometry(1.2, 1.6, 1.5, 8),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    stackBase.position.y = 0.75;
+    seaStackGroup464.add(stackBase);
+
+    const stackMid = new Mesh(
+      new CylinderGeometry(0.9, 1.2, 2.5, 8),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    stackMid.position.y = 2.75;
+    seaStackGroup464.add(stackMid);
+
+    const stackTop = new Mesh(
+      new CylinderGeometry(0.6, 0.9, 2.0, 7),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    stackTop.position.y = 5.0;
+    seaStackGroup464.add(stackTop);
+
+    // Flat top platform
+    const topPlatform = new Mesh(
+      new CylinderGeometry(0.65, 0.65, 0.25, 8),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    topPlatform.position.y = 6.13;
+    seaStackGroup464.add(topPlatform);
+
+    // Sea foam ring at base (dark green, not white)
+    const foam = new Mesh(
+      new TorusGeometry(1.55, 0.18, 4, 16),
+      new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.6 })
+    );
+    foam.rotation.x = Math.PI * 0.5;
+    foam.position.y = 0.08;
+    seaStackGroup464.add(foam);
+
+    // 6 circling birds at varying heights/radii
+    const birdConfigs = [
+      { orbitR: 3.5, orbitY: 7.0, orbitSpeed: 0.5,  phase: 0   },
+      { orbitR: 4.2, orbitY: 5.5, orbitSpeed: 0.4,  phase: 1.0 },
+      { orbitR: 3.0, orbitY: 8.5, orbitSpeed: 0.6,  phase: 2.1 },
+      { orbitR: 5.0, orbitY: 6.5, orbitSpeed: 0.35, phase: 3.2 },
+      { orbitR: 3.8, orbitY: 9.0, orbitSpeed: 0.55, phase: 4.3 },
+      { orbitR: 4.5, orbitY: 7.8, orbitSpeed: 0.45, phase: 5.4 },
+    ];
+
+    birdConfigs.forEach((cfg) => {
+      const birdGroup = new Group();
+
+      // Body
+      const body = new Mesh(
+        new BoxGeometry(0.12, 0.06, 0.35),
+        new MeshBasicMaterial({ color: 0x020f04 })
+      );
+      birdGroup.add(body);
+
+      // Wings (two small planes)
+      const leftWing = new Mesh(
+        new PlaneGeometry(0.35, 0.08),
+        new MeshBasicMaterial({ color: 0x020f04, side: DoubleSide })
+      );
+      leftWing.position.set(-0.2, 0, 0);
+      leftWing.rotation.z = Math.PI * 0.1;
+      birdGroup.add(leftWing);
+
+      const rightWing = leftWing.clone();
+      rightWing.position.set(0.2, 0, 0);
+      rightWing.rotation.z = -Math.PI * 0.1;
+      birdGroup.add(rightWing);
+
+      // Initial position
+      birdGroup.position.set(cfg.orbitR, cfg.orbitY, 0);
+
+      seaStackGroup464!.add(birdGroup);
+      seaStackBirds464.push(birdGroup);
+      // Store config in userData
+      (birdGroup as any).orbitR = cfg.orbitR;
+      (birdGroup as any).orbitY = cfg.orbitY;
+      (birdGroup as any).orbitSpeed = cfg.orbitSpeed;
+      (birdGroup as any).phase = cfg.phase;
+    });
+
+    group.add(seaStackGroup464);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2252,6 +2350,25 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       mat.opacity = 0.3 + 0.15 * Math.sin(ruinsT459 * 0.5 + i * 0.8);
     });
 
+    // ── Sea stack bird orbits (C464) ──────────────────────────────────────
+    seaStackT464 += dt;
+    seaStackBirds464.forEach((bird) => {
+      const r = (bird as any).orbitR as number;
+      const y = (bird as any).orbitY as number;
+      const speed = (bird as any).orbitSpeed as number;
+      const phase = (bird as any).phase as number;
+      const angle = seaStackT464 * speed + phase;
+      bird.position.x = Math.cos(angle) * r;
+      bird.position.z = Math.sin(angle) * r;
+      bird.position.y = y + 0.3 * Math.sin(seaStackT464 * 1.5 + phase);
+      // Face direction of travel (tangent)
+      bird.rotation.y = -angle + Math.PI * 0.5;
+      // Wing flap
+      const wings = bird.children;
+      if (wings[1]) wings[1].rotation.z = Math.PI * 0.1 + 0.12 * Math.sin(seaStackT464 * 4 + phase);
+      if (wings[2]) wings[2].rotation.z = -(Math.PI * 0.1 + 0.12 * Math.sin(seaStackT464 * 4 + phase));
+    });
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2466,6 +2583,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       ruinsGroup459 = null;
     }
     ruinsMossPatches459.length = 0;
+    if (seaStackGroup464) {
+      seaStackGroup464.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      seaStackGroup464 = null;
+    }
+    seaStackBirds464.length = 0;
     group.clear();
   };
 
