@@ -1115,6 +1115,57 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const orbs = createMenuOrbs();
   scene.add(orbs.group);
 
+  // ── C402: Aurora borealis curtain — two billowing green planes in sky ─────────
+  let auroraMesh1: Mesh | null = null;
+  let auroraMesh2: Mesh | null = null;
+  let auroraT = 0;
+  let auroraPos1: Float32Array | null = null;
+  let auroraPos2: Float32Array | null = null;
+  let auroraOrigY1: Float32Array | null = null;
+  let auroraOrigY2: Float32Array | null = null;
+
+  {
+    // Strip 1: wide primary curtain
+    const geo1 = new PlaneGeometry(40, 8, 30, 10);
+    const mat1 = new MeshBasicMaterial({
+      color: 0x33ff66,
+      transparent: true,
+      opacity: 0.08,
+      side: DoubleSide,
+      depthWrite: false,
+    });
+    const origY1 = new Float32Array(geo1.attributes['position'].count);
+    for (let i = 0; i < geo1.attributes['position'].count; i++) {
+      origY1[i] = (geo1.attributes['position'] as BufferAttribute).getY(i);
+    }
+    auroraOrigY1 = origY1;
+    auroraPos1 = geo1.attributes['position'].array as Float32Array;
+    auroraMesh1 = new Mesh(geo1, mat1);
+    auroraMesh1.position.set(0, 12, -30);
+    auroraMesh1.rotation.x = 0.1;
+    scene.add(auroraMesh1);
+
+    // Strip 2: thinner secondary curtain, slight offset
+    const geo2 = new PlaneGeometry(35, 4, 25, 8);
+    const mat2 = new MeshBasicMaterial({
+      color: 0x33ff66,
+      transparent: true,
+      opacity: 0.04,
+      side: DoubleSide,
+      depthWrite: false,
+    });
+    const origY2 = new Float32Array(geo2.attributes['position'].count);
+    for (let i = 0; i < geo2.attributes['position'].count; i++) {
+      origY2[i] = (geo2.attributes['position'] as BufferAttribute).getY(i);
+    }
+    auroraOrigY2 = origY2;
+    auroraPos2 = geo2.attributes['position'].array as Float32Array;
+    auroraMesh2 = new Mesh(geo2, mat2);
+    auroraMesh2.position.set(2, 15, -32);
+    auroraMesh2.rotation.x = 0.1;
+    scene.add(auroraMesh2);
+  }
+
   // ── C356: Ambient magical dust — 120 tiny green motes floating slowly upward ──
   let ambientParticles356: Points | null = null;
   let ambientParticlePositions356: Float32Array | null = null;
@@ -1300,6 +1351,34 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     spray.update(dt);
     godRay.update(dt);
     orbs.update(dt);
+
+    // C402: animate aurora borealis curtains
+    auroraT += dt * 0.4;
+    if (auroraMesh1 !== null && auroraPos1 !== null && auroraOrigY1 !== null) {
+      for (let i = 0; i < auroraPos1.length; i += 3) {
+        const x = auroraPos1[i]!;
+        const baseY = auroraOrigY1[i / 3]!;
+        auroraPos1[i + 1] =
+          baseY +
+          Math.sin(auroraT + x * 0.3) * 1.5 +
+          Math.sin(auroraT * 0.7 + x * 0.15) * 0.8;
+      }
+      (auroraMesh1.geometry as PlaneGeometry).attributes['position'].needsUpdate = true;
+      (auroraMesh1.material as MeshBasicMaterial).opacity =
+        0.06 + Math.sin(auroraT * 0.5) * 0.03;
+    }
+    if (auroraMesh2 !== null && auroraPos2 !== null && auroraOrigY2 !== null) {
+      const t2 = auroraT + 1.2;
+      for (let i = 0; i < auroraPos2.length; i += 3) {
+        const x = auroraPos2[i]!;
+        const baseY = auroraOrigY2[i / 3]!;
+        auroraPos2[i + 1] =
+          baseY +
+          Math.sin(t2 + x * 0.3) * 1.0 +
+          Math.sin(t2 * 0.7 + x * 0.15) * 0.5;
+      }
+      (auroraMesh2.geometry as PlaneGeometry).attributes['position'].needsUpdate = true;
+    }
 
     // C373: animate Celtic moon — slow rotation + cloud sweep
     if (moonMesh373) {
@@ -1499,6 +1578,24 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     }
     ambientParticlePositions356 = null;
     ambientParticlePhases356 = null;
+
+    // C402: dispose aurora curtains
+    if (auroraMesh1) {
+      scene.remove(auroraMesh1);
+      auroraMesh1.geometry.dispose();
+      (auroraMesh1.material as MeshBasicMaterial).dispose();
+      auroraMesh1 = null;
+    }
+    auroraPos1 = null;
+    auroraOrigY1 = null;
+    if (auroraMesh2) {
+      scene.remove(auroraMesh2);
+      auroraMesh2.geometry.dispose();
+      (auroraMesh2.material as MeshBasicMaterial).dispose();
+      auroraMesh2 = null;
+    }
+    auroraPos2 = null;
+    auroraOrigY2 = null;
 
     // C373: dispose Celtic moon
     if (moonMesh373) {
