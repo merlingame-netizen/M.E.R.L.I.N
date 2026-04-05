@@ -879,6 +879,43 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     cage.position.set(0, 0, 0);
   }
 
+  // ── Fairy ring of mushrooms — Celtic magical symbol on the forest floor ──────
+  {
+    const FAIRY_RING_RADIUS = 3;
+    const FAIRY_RING_CENTER_X = 5;
+    const FAIRY_RING_CENTER_Z = -18;
+
+    // Ground glow disc — very faint green underneath the ring
+    const glowGeo = new CircleGeometry(3.5, 16);
+    const glowMat = new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.04 });
+    const glow = new Mesh(glowGeo, glowMat);
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.set(FAIRY_RING_CENTER_X, 0.01, FAIRY_RING_CENTER_Z);
+    group.add(glow);
+
+    for (let i = 0; i < 9; i++) {
+      const angle = (i / 9) * Math.PI * 2;
+      const mx = FAIRY_RING_CENTER_X + Math.cos(angle) * FAIRY_RING_RADIUS;
+      const mz = FAIRY_RING_CENTER_Z + Math.sin(angle) * FAIRY_RING_RADIUS;
+
+      // Stem: thin cylinder, half-height above ground
+      const stemGeo = new CylinderGeometry(0.04, 0.06, 0.25, 5);
+      const stemMat = new MeshBasicMaterial({ color: 0xd4c8a0 });
+      const stem = new Mesh(stemGeo, stemMat);
+      stem.position.set(mx, 0.125, mz);
+      group.add(stem);
+
+      // Cap: partial sphere dome, flipped upward
+      const capGeo = new SphereGeometry(0.12, 6, 4, 0, Math.PI * 2, 0, Math.PI * 0.55);
+      const capColor = i % 3 === 0 ? 0x661a0a : i % 3 === 1 ? 0x8a3010 : 0xaa4418;
+      const capMat = new MeshBasicMaterial({ color: capColor });
+      const cap = new Mesh(capGeo, capMat);
+      cap.position.set(mx, 0.25, mz);
+      cap.rotation.x = Math.PI;
+      group.add(cap);
+    }
+  }
+
   // ── Rain drizzle — 80 thin pale blue-grey streaks falling through forest ─────
   const _rainMeshes: Mesh[] = [];
   let _rainTime = 0;
