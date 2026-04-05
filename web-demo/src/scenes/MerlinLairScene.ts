@@ -986,6 +986,45 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     return panel;
   })();
 
+  // C227: crystal sphere fortune panel — rotating mystical prophecies on hover
+  const CRYSTAL_FORTUNES: string[] = [
+    'La prochaine carte changera le cours de votre run.',
+    'Méfiez-vous du Korrigan qui sourit sans raison.',
+    "L'Ogham Ruis est proche. Sa transformation est inévitable.",
+    'Trois cartes vous séparent d\'une décision cruciale.',
+    'Les Druides ont noté vos choix. Leur mémoire est longue.',
+    'La mort n\'est pas la fin ici — c\'est un passage entre les runs.',
+    'Votre Anam grandit dans l\'ombre. Il sera prêt bientôt.',
+    'Le biome suivant révélera ce que ce biome a caché.',
+    'Huath vous attend au prochain carrefour.',
+    'La forêt se souvient de votre premier choix.',
+    "Niamh murmure : 'Guérir maintenant ou mourir plus tard.'",
+    'Un cercle se ferme. Une porte s\'ouvre.',
+  ];
+  let crystalFortuneIndex = 0;
+  const crystalFortuneEl = (() => {
+    const existing = document.getElementById('crystal-fortune');
+    if (existing) return existing as HTMLDivElement;
+    const el = document.createElement('div');
+    el.id = 'crystal-fortune';
+    el.style.cssText = [
+      'position:absolute',
+      'top:25%',
+      'left:52%',
+      'width:200px',
+      'font:italic 0.7rem \'Courier New\',monospace',
+      'color:rgba(136,255,204,0.85)',
+      'text-align:center',
+      'pointer-events:none',
+      'opacity:0',
+      'transition:opacity 0.5s',
+      'text-shadow:0 0 10px rgba(51,255,102,0.5)',
+      'z-index:6',
+    ].join(';');
+    container.appendChild(el);
+    return el;
+  })();
+
   // C157: zone label map (bracket notation per spec)
   const ZONE_FLOAT_LABELS: Readonly<Record<string, string>> = {
     map:       '[ MAP DES BIOMES ]',
@@ -1277,11 +1316,18 @@ export function initMerlinLair(container: HTMLElement): LairResult {
           if (textNode)  textNode.textContent  = excerpt.text;
           bookExcerptEl.style.opacity = '0.9';
         }
+        // C227: crystal sphere fortune — rotate prophecy on each hover-enter
+        if (zone === 'crystal') {
+          crystalFortuneEl.textContent = CRYSTAL_FORTUNES[crystalFortuneIndex % CRYSTAL_FORTUNES.length];
+          crystalFortuneIndex = (crystalFortuneIndex + 1) % CRYSTAL_FORTUNES.length;
+          crystalFortuneEl.style.opacity = '1';
+        }
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
         zoneFloatLabel.style.opacity = '0'; // C157: hide float label on unhover
         bookExcerptEl.style.opacity = '0'; // C220: hide book excerpt on leave
+        crystalFortuneEl.style.opacity = '0'; // C227: hide crystal fortune on leave
         renderer.domElement.setAttribute('aria-label', `Antre de Merlin — ${tabNavCount} zones interactives. Tab pour naviguer, Entrée pour activer.`); // C38/C79: tabNavCount excludes hover-only skull
       }
     }
@@ -1389,6 +1435,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       zoneToast.style.opacity = '0'; // C132/BUG-C131-01: hide lore toast on tap-lift — mouseleave path
       zoneFloatLabel.style.opacity = '0'; // C157: hide float label on tap-lift
       bookExcerptEl.style.opacity = '0'; // C220: hide book excerpt on tap-lift
+      crystalFortuneEl.style.opacity = '0'; // C227: hide crystal fortune on tap-lift
       // was the only path that set opacity=0; touchEnd only cleared emissive/scale but left toast visible.
     }
   };
@@ -1722,6 +1769,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C220: remove bookshelf lore excerpt panel
     if (bookExcerptEl.parentNode) {
       bookExcerptEl.parentNode.removeChild(bookExcerptEl);
+    }
+    // C227: remove crystal fortune panel
+    if (crystalFortuneEl.parentNode) {
+      crystalFortuneEl.parentNode.removeChild(crystalFortuneEl);
     }
   };
 
