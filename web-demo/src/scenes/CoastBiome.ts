@@ -784,6 +784,19 @@ let mermaidTailFluke504: Group | null = null;
 const mermaidHairMeshes504: Mesh[] = [];
 const mermaidArmMeshes504: { mesh: Mesh; side: 1 | -1 }[] = [];
 
+// ── Ancient sea altar emerging at low tide (C509) ────────────────────────
+let altarSeaGroup509: Group | null = null;
+let t509: number = 0;
+type AltarSeaState509 = 'submerged' | 'rising' | 'emerged' | 'sinking';
+let altarSeaState509: AltarSeaState509 = 'submerged';
+let altarSeaStateT509: number = 0;
+let altarSeaTimer509: number = 35 + Math.random() * 20;
+const altarSeaRuneMats509: MeshStandardMaterial[] = [];
+let altarSeaLight509: PointLight | null = null;
+const altarSeaDroplets509: Mesh[] = [];
+const altarSeaBaseY509: number = -1.2;
+let altarSeaPeakSFX509: boolean = false;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -2593,6 +2606,141 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(mermaidGroup504);
   }
 
+  // ── Ancient sea altar emerging at low tide (C509) ────────────────────────
+  {
+    altarSeaGroup509 = new Group();
+    altarSeaRuneMats509.length = 0;
+    altarSeaDroplets509.length = 0;
+    altarSeaPeakSFX509 = false;
+    altarSeaState509 = 'submerged';
+    altarSeaStateT509 = 0;
+    altarSeaTimer509 = 35 + Math.random() * 20;
+
+    // Main altar body
+    const altarBody = new Mesh(
+      new BoxGeometry(1.0, 0.7, 0.7),
+      new MeshStandardMaterial({ color: 0x060e06, roughness: 0.9, metalness: 0.0, flatShading: true }),
+    );
+    altarBody.position.set(0, 0.35, 0);
+    altarSeaGroup509.add(altarBody);
+
+    // Top slab — slightly overhanging
+    const altarSlab = new Mesh(
+      new BoxGeometry(1.15, 0.08, 0.8),
+      new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9, metalness: 0.0, flatShading: true }),
+    );
+    altarSlab.position.set(0, 0.74, 0);
+    altarSeaGroup509.add(altarSlab);
+
+    // 4 Ogham inscription panels — one on each face (+X, -X, +Z, -Z)
+    const runeOffsets: [number, number, number, number][] = [
+      [ 0.501, 0.35,  0.0,  0.0],   // +X face
+      [-0.501, 0.35,  0.0,  Math.PI], // -X face
+      [ 0.0,   0.35,  0.351, Math.PI / 2],  // +Z face
+      [ 0.0,   0.35, -0.351, -Math.PI / 2], // -Z face
+    ];
+    for (let ri = 0; ri < 4; ri++) {
+      const [rx, ry, rz, ry2] = runeOffsets[ri]!;
+      const runeMat = new MeshStandardMaterial({
+        color: 0x002200,
+        emissive: 0x33ff66,
+        emissiveIntensity: 0.8,
+        transparent: true,
+        opacity: 0.9,
+        roughness: 0.6,
+        metalness: 0.0,
+      });
+      altarSeaRuneMats509.push(runeMat);
+      const runePanel = new Mesh(new PlaneGeometry(0.15, 0.5), runeMat);
+      runePanel.position.set(rx, ry, rz);
+      runePanel.rotation.y = ry2;
+      altarSeaGroup509.add(runePanel);
+    }
+
+    // Barnacle clusters on base — 5 flattened spheres
+    const barnaclePos: [number, number, number][] = [
+      [-0.35, 0.04,  0.25],
+      [ 0.3,  0.04, -0.28],
+      [-0.1,  0.04,  0.32],
+      [ 0.4,  0.04,  0.1],
+      [-0.3,  0.04, -0.1],
+    ];
+    for (const [bx, by, bz] of barnaclePos) {
+      const barnacle = new Mesh(
+        new SphereGeometry(0.07, 5, 4),
+        new MeshStandardMaterial({ color: 0x060e06, roughness: 0.95, flatShading: true }),
+      );
+      barnacle.position.set(bx, by, bz);
+      barnacle.scale.y = 0.35;
+      altarSeaGroup509.add(barnacle);
+    }
+
+    // Sea anemones on top slab — 3 clusters
+    const anemonePos509: [number, number, number][] = [
+      [-0.3, 0.78,  0.2],
+      [ 0.2, 0.78, -0.2],
+      [ 0.0, 0.78,  0.0],
+    ];
+    for (const [ax, ay, az] of anemonePos509) {
+      const anemone = new Mesh(
+        new CylinderGeometry(0.04, 0.06, 0.12, 6),
+        new MeshStandardMaterial({
+          color: 0x0d2a1a,
+          emissive: 0x1a5522,
+          emissiveIntensity: 0.5,
+          roughness: 0.8,
+          flatShading: true,
+        }),
+      );
+      anemone.position.set(ax, ay, az);
+      altarSeaGroup509.add(anemone);
+    }
+
+    // Coral accents — 2 branching cylinders
+    const coralPos509: [number, number, number, number][] = [
+      [-0.45, 0.1,  0.0,  0.3],
+      [ 0.45, 0.1, -0.1, -0.25],
+    ];
+    for (const [cx, cy, cz, cangle] of coralPos509) {
+      const coral = new Mesh(
+        new CylinderGeometry(0.04, 0.02, 0.2, 5),
+        new MeshStandardMaterial({
+          color: 0x051a0f,
+          emissive: 0x0d3322,
+          emissiveIntensity: 0.4,
+          roughness: 0.8,
+          flatShading: true,
+        }),
+      );
+      coral.position.set(cx, cy, cz);
+      coral.rotation.z = cangle;
+      altarSeaGroup509.add(coral);
+    }
+
+    // Point light at altar top
+    altarSeaLight509 = new PointLight(0x33ff66, 0.15, 6.0);
+    altarSeaLight509.position.set(0, 0.9, 0);
+    altarSeaGroup509.add(altarSeaLight509);
+
+    // Water droplet particles — 6 pooled spheres
+    const dropletGeo = new SphereGeometry(0.04, 4, 3);
+    for (let di = 0; di < 6; di++) {
+      const droplet = new Mesh(
+        dropletGeo,
+        new MeshStandardMaterial({ color: 0x1a3a3a, transparent: true, opacity: 0.0, roughness: 0.3 }),
+      );
+      droplet.position.set(0, -50, 0);
+      droplet.visible = false;
+      droplet.userData = { active: false, velY: 0, age: 0, maxAge: 0.8 };
+      altarSeaGroup509.add(droplet);
+      altarSeaDroplets509.push(droplet);
+    }
+
+    // Place group base at (3, altarSeaBaseY509, -6) — normally submerged
+    altarSeaGroup509.position.set(3, altarSeaBaseY509, -6);
+    group.add(altarSeaGroup509);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -3431,6 +3579,95 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       }
     }
 
+    // ── Ancient sea altar emerging at low tide (C509) ────────────────────────
+    if (altarSeaGroup509 && altarSeaLight509) {
+      t509 += dt;
+
+      if (altarSeaState509 === 'submerged') {
+        altarSeaTimer509 -= dt;
+        altarSeaLight509.intensity = 0.15;
+        if (altarSeaTimer509 <= 0) {
+          altarSeaState509 = 'rising';
+          altarSeaStateT509 = 0;
+          altarSeaPeakSFX509 = false;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'splash' } }));
+          // Activate droplet particles
+          for (let di = 0; di < altarSeaDroplets509.length; di++) {
+            const drop = altarSeaDroplets509[di]!;
+            drop.visible = true;
+            drop.position.set(
+              (Math.random() - 0.5) * 0.8,
+              0.7 + Math.random() * 0.15,
+              (Math.random() - 0.5) * 0.5,
+            );
+            drop.userData['active'] = true;
+            drop.userData['velY'] = -0.8 - Math.random() * 0.6;
+            drop.userData['age'] = 0;
+            drop.userData['maxAge'] = 0.5 + Math.random() * 0.3;
+            (drop.material as MeshStandardMaterial).opacity = 0.75;
+          }
+        }
+      } else if (altarSeaState509 === 'rising') {
+        altarSeaStateT509 += dt;
+        const p = Math.min(altarSeaStateT509 / 4.0, 1.0);
+        altarSeaGroup509.position.y = altarSeaBaseY509 + (0.1 - altarSeaBaseY509) * p;
+        altarSeaLight509.intensity = 0.15 + 0.85 * p;
+        if (!altarSeaPeakSFX509 && p >= 1.0) {
+          altarSeaPeakSFX509 = true;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'chime' } }));
+        }
+        if (p >= 1.0) {
+          altarSeaState509 = 'emerged';
+          altarSeaStateT509 = 0;
+          altarSeaStateT509 = 8 + Math.random() * 4;
+        }
+      } else if (altarSeaState509 === 'emerged') {
+        altarSeaStateT509 -= dt;
+        altarSeaLight509.intensity = 1.0;
+        // Rune pulse while emerged
+        for (let ri = 0; ri < altarSeaRuneMats509.length; ri++) {
+          altarSeaRuneMats509[ri]!.emissiveIntensity = 0.8 + 0.5 * Math.sin(t509 * 2.1 + ri);
+        }
+        if (altarSeaStateT509 <= 0) {
+          altarSeaState509 = 'sinking';
+          altarSeaStateT509 = 0;
+        }
+      } else if (altarSeaState509 === 'sinking') {
+        altarSeaStateT509 += dt;
+        const p = Math.min(altarSeaStateT509 / 4.0, 1.0);
+        altarSeaGroup509.position.y = 0.1 + (altarSeaBaseY509 - 0.1) * p;
+        altarSeaLight509.intensity = 1.0 - 0.85 * p;
+        // Fade runes back to base intensity
+        for (let ri = 0; ri < altarSeaRuneMats509.length; ri++) {
+          altarSeaRuneMats509[ri]!.emissiveIntensity = 0.8;
+        }
+        if (p >= 1.0) {
+          altarSeaState509 = 'submerged';
+          altarSeaStateT509 = 0;
+          altarSeaTimer509 = 35 + Math.random() * 20;
+          altarSeaGroup509.position.y = altarSeaBaseY509;
+        }
+      }
+
+      // Animate droplet particles
+      for (let di = 0; di < altarSeaDroplets509.length; di++) {
+        const drop = altarSeaDroplets509[di]!;
+        if (!drop.userData['active']) continue;
+        const age: number = (drop.userData['age'] as number) + dt;
+        drop.userData['age'] = age;
+        const maxAge: number = drop.userData['maxAge'] as number;
+        const velY: number = drop.userData['velY'] as number;
+        drop.position.y += velY * dt;
+        const opacity = Math.max(0, 0.75 * (1.0 - age / maxAge));
+        (drop.material as MeshStandardMaterial).opacity = opacity;
+        if (drop.position.y <= 0 || age >= maxAge) {
+          drop.userData['active'] = false;
+          drop.visible = false;
+          drop.position.set(0, -50, 0);
+        }
+      }
+    }
+
     // ── Dolphin pod leaping (C499) ────────────────────────────────────────────
     t499 += dt;
     for (let i = 0; i < 4; i++) {
@@ -3848,6 +4085,22 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     mermaidArmMeshes504.length = 0;
     mermaidState504 = 'hidden';
     mermaidTimer504 = 25 + Math.random() * 15;
+    if (altarSeaGroup509) {
+      altarSeaGroup509.traverse((c) => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m: Material) => m.dispose());
+          else (c.material as Material).dispose();
+        }
+        if (c instanceof PointLight) c.dispose();
+      });
+      altarSeaGroup509 = null;
+    }
+    altarSeaRuneMats509.length = 0;
+    altarSeaLight509 = null;
+    altarSeaDroplets509.length = 0;
+    altarSeaState509 = 'submerged';
+    altarSeaTimer509 = 35 + Math.random() * 20;
     group.clear();
   };
 
