@@ -680,6 +680,11 @@ let jellyfishT449: number = 0;
 const jellyfishBells449: Mesh[] = [];
 const jellyfishData449: { ox: number; oz: number; phase: number; speed: number }[] = [];
 
+// ── Underwater kelp forest (C454) ─────────────────────────────────────────
+let kelpGroup454: Group | null = null;
+let kelpT454: number = 0;
+const kelpStalks454: Mesh[][] = [];
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1613,6 +1618,48 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(jellyfishGroup449);
   }
 
+  // ── Underwater kelp forest (C454) ─────────────────────────────────────────
+  {
+    kelpGroup454 = new Group();
+    kelpGroup454.position.set(3, -2, -12);
+
+    const kelpPositions: [number, number][] = [
+      [-1.5, 0], [-0.5, 0.8], [0.5, -0.5], [1.5, 0.3],
+      [2.2, -0.8], [-2.2, 0.5], [0, 1.5], [-1.0, -1.2],
+      [1.0, 1.0], [2.8, 0.2],
+    ];
+
+    kelpPositions.forEach(([kx, kz]) => {
+      const stalkHeight = 1.5 + Math.random() * 1.5;
+      const segCount = 4;
+      const segHeight = stalkHeight / segCount;
+      const stalk: Mesh[] = [];
+
+      for (let s = 0; s < segCount; s++) {
+        const isTop = s === segCount - 1;
+        const seg = new Mesh(
+          new CylinderGeometry(isTop ? 0.03 : 0.05, 0.06, segHeight, 4),
+          new MeshBasicMaterial({
+            color: isTop ? 0x33ff66 : 0x0d2a14,
+            transparent: true,
+            opacity: isTop ? 0.8 : 0.9,
+          })
+        );
+        seg.position.set(kx, s * segHeight + segHeight * 0.5, kz);
+        stalk.push(seg);
+        kelpGroup454!.add(seg);
+      }
+
+      kelpStalks454.push(stalk);
+
+      const tipLight = new PointLight(0x33ff66, 0.05, 1.5);
+      tipLight.position.set(kx, stalkHeight, kz);
+      kelpGroup454!.add(tipLight);
+    });
+
+    group.add(kelpGroup454);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2099,6 +2146,25 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       });
     }
 
+    // ── Kelp forest sway (C454) ───────────────────────────────────────────────
+    if (kelpGroup454) {
+      kelpT454 += dt;
+      kelpStalks454.forEach((stalk, ki) => {
+        const phaseOffset = ki * 0.6;
+        stalk.forEach((seg, si) => {
+          const swayAmt = (si / stalk.length) * 0.18;
+          const swayX = swayAmt * Math.sin(kelpT454 * 0.8 + phaseOffset);
+          const swayZ = swayAmt * 0.5 * Math.cos(kelpT454 * 0.6 + phaseOffset + 0.5);
+          seg.rotation.z = swayX * 0.8;
+          seg.rotation.x = swayZ * 0.8;
+          if (si === stalk.length - 1) {
+            const mat = seg.material as MeshBasicMaterial;
+            mat.opacity = 0.6 + 0.25 * Math.sin(kelpT454 * 1.5 + phaseOffset);
+          }
+        });
+      });
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2293,6 +2359,16 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       jellyfishData449.length = 0;
       jellyfishGroup449 = null;
     }
+    if (kelpGroup454) {
+      kelpGroup454.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      kelpGroup454 = null;
+    }
+    kelpStalks454.length = 0;
     group.clear();
   };
 
