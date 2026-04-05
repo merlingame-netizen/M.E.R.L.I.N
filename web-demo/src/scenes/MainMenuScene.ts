@@ -1059,6 +1059,33 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     scene.add(ambientParticles356);
   }
 
+  // ── C373: Celtic moon — large dark green sphere in background ──────────────
+  let moonMesh373: Mesh | null = null;
+  let moonLight373: PointLight | null = null;
+  let moonCloudT373 = -1;
+  let moonNextCloud373 = 8.0;
+
+  // ── C373: Celtic moon construction ──────────────────────────────────────────
+  {
+    const moonGeo = new SphereGeometry(3.5, 16, 12);
+    const moonMat = new MeshStandardMaterial({
+      color: 0x0d2a0d,
+      roughness: 0.9,
+      metalness: 0.0,
+      emissive: new Color(0x0a1f0a),
+      emissiveIntensity: 0.15,
+    });
+    moonMesh373 = new Mesh(moonGeo, moonMat);
+    moonMesh373.position.set(8, 7, -25);
+    scene.add(moonMesh373);
+
+    moonLight373 = new PointLight(0x33ff66, 0.04, 30);
+    moonLight373.position.set(8, 7, -22);
+    scene.add(moonLight373);
+
+    moonNextCloud373 = 8.0 + Math.random() * 5.0;
+  }
+
   // ── C321: CeltOS title overlay — letter-by-letter reveal + glow pulse ────────
   // DOM overlay on canvas: M.E.R.L.I.N. each letter fades+slides in individually.
   container.style.position = container.style.position || 'relative';
@@ -1194,6 +1221,29 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     spray.update(dt);
     godRay.update(dt);
     orbs.update(dt);
+
+    // C373: animate Celtic moon — slow rotation + cloud sweep
+    if (moonMesh373) {
+      moonMesh373.rotation.y += dt * 0.015;
+
+      moonNextCloud373 -= dt;
+      if (moonNextCloud373 <= 0 && moonCloudT373 < 0) {
+        moonCloudT373 = 0;
+        moonNextCloud373 = 8.0 + Math.random() * 6.0;
+      }
+      if (moonCloudT373 >= 0) {
+        moonCloudT373 += dt;
+        const mat = moonMesh373.material as MeshStandardMaterial;
+        if (moonCloudT373 < 1.0) {
+          mat.emissiveIntensity = 0.15 + (moonCloudT373 / 1.0) * 0.10;
+        } else if (moonCloudT373 < 2.0) {
+          mat.emissiveIntensity = 0.25 - ((moonCloudT373 - 1.0) / 1.0) * 0.10;
+        } else {
+          mat.emissiveIntensity = 0.15;
+          moonCloudT373 = -1;
+        }
+      }
+    }
 
     // C356: animate ambient magical dust particles
     if (ambientParticles356 !== null && ambientParticlePositions356 !== null) {
@@ -1365,6 +1415,19 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     }
     ambientParticlePositions356 = null;
     ambientParticlePhases356 = null;
+
+    // C373: dispose Celtic moon
+    if (moonMesh373) {
+      scene.remove(moonMesh373);
+      moonMesh373.geometry.dispose();
+      (moonMesh373.material as MeshStandardMaterial).dispose();
+      moonMesh373 = null;
+    }
+    if (moonLight373) {
+      scene.remove(moonLight373);
+      moonLight373.dispose();
+      moonLight373 = null;
+    }
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
