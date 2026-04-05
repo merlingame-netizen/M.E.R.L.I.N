@@ -337,6 +337,95 @@ function buildMoon(): Mesh {
   return moon;
 }
 
+// ── Sun (daytime only) ────────────────────────────────────────────────────────
+
+function buildSun(x: number, y: number): Mesh {
+  const geo = new SphereGeometry(3.8, 8, 6);
+  const mat = new MeshBasicMaterial({ color: 0xffffc0 });
+  const sun = new Mesh(geo, mat);
+  sun.position.set(x, y, -40);
+  return sun;
+}
+
+// ── Brittany day/night cycle ──────────────────────────────────────────────────
+
+/** Returns current hour (0-23.99) in Brittany (Europe/Paris) timezone. */
+function getBrittanyHour(): number {
+  try {
+    const parts = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris', hour: 'numeric', minute: 'numeric', hour12: false,
+    }).formatToParts(new Date());
+    const h = parseInt(parts.find(p => p.type === 'hour')?.value ?? '12');
+    const m = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0');
+    return h + m / 60;
+  } catch { return 12; }
+}
+
+function lerpCol(a: number, b: number, t: number): number {
+  const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
+  const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
+  return (Math.round(ar + (br - ar) * t) << 16) | (Math.round(ag + (bg - ag) * t) << 8) | Math.round(ab + (bb - ab) * t);
+}
+
+interface TODParams {
+  skyHex: number;
+  ambientHex: number; ambientInt: number;
+  dirHex: number; dirInt: number; dirPos: [number, number, number];
+  showStars: boolean; showMoon: boolean;
+  sunX: number; sunY: number; showSun: boolean;
+}
+
+function getTimeOfDay(hour: number): TODParams {
+  const isNight = hour >= 21 || hour < 5;
+  if (isNight) return {
+    skyHex: 0x060c1a, ambientHex: 0x152030, ambientInt: 0.45,
+    dirHex: 0xc0d8ff, dirInt: 0.70, dirPos: [10, 20, 5],
+    showStars: true, showMoon: true, showSun: false, sunX: 0, sunY: 0,
+  };
+  // Pre-dawn 5-7h
+  if (hour < 7) {
+    const t = (hour - 5) / 2;
+    return {
+      skyHex: lerpCol(0x060c1a, 0x180c08, t), ambientHex: 0x14101a, ambientInt: 0.28 + t * 0.18,
+      dirHex: lerpCol(0x5588aa, 0xff8833, t), dirInt: 0.1 + t * 0.4, dirPos: [-14, 2 + t * 5, -22],
+      showStars: t < 0.55, showMoon: hour < 6.5, showSun: t > 0.4,
+      sunX: -16, sunY: 2 + t * 4,
+    };
+  }
+  // Morning 7-10h
+  if (hour < 10) {
+    const t = (hour - 7) / 3;
+    return {
+      skyHex: lerpCol(0x180c08, 0x1a4878, t), ambientHex: lerpCol(0x201828, 0x304060, t), ambientInt: 0.48 + t * 0.35,
+      dirHex: lerpCol(0xffcc88, 0xfff8e0, t), dirInt: 0.6 + t * 0.6, dirPos: [-13 + t * 6, 8 + t * 12, -28],
+      showStars: false, showMoon: false, showSun: true,
+      sunX: -13 + t * 6, sunY: 8 + t * 12,
+    };
+  }
+  // Day 10-17h
+  if (hour < 17) {
+    const arch = hour < 13.5 ? (hour - 10) / 3.5 : (17 - hour) / 3.5; // sun arc 0→1→0
+    const sunX = -4 + (hour - 10) * 2.5;
+    const sunY = 15 + arch * 14;
+    return {
+      skyHex: 0x1a60b8, ambientHex: 0x405888, ambientInt: 0.85,
+      dirHex: 0xfff8e0, dirInt: 1.2, dirPos: [sunX, sunY, -28],
+      showStars: false, showMoon: false, showSun: true,
+      sunX, sunY,
+    };
+  }
+  // Late afternoon / dusk 17-21h
+  const t = (hour - 17) / 4;
+  return {
+    skyHex: lerpCol(0x1a60b8, 0x060c1a, t),
+    ambientHex: lerpCol(0x405888, 0x152030, t), ambientInt: 0.85 - t * 0.4,
+    dirHex: lerpCol(0xff8833, 0xc0d8ff, t), dirInt: 1.2 - t * 0.9,
+    dirPos: [10 + t * 5, 18 - t * 14, -26],
+    showStars: t > 0.65, showMoon: t > 0.65, showSun: t < 0.6,
+    sunX: 10 + t * 8, sunY: 18 - t * 16,
+  };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): {
@@ -352,22 +441,25 @@ export function initMainMenu(container: HTMLElement): {
   renderer.toneMapping = NoToneMapping;
   container.appendChild(renderer.domElement);
 
+  // ── Brittany time-of-day ─────────────────────────────────────────────────
+  const tod = getTimeOfDay(getBrittanyHour());
+
   // ── Scene ─────────────────────────────────────────────────────────────────
   const scene = new Scene();
-  scene.background = new Color(0x060c1a);
-  scene.fog = new FogExp2(0x060c1a, 0.009);
+  scene.background = new Color(tod.skyHex);
+  scene.fog = new FogExp2(tod.skyHex, 0.009);
 
   // ── Camera ────────────────────────────────────────────────────────────────
   const camera = new PerspectiveCamera(60, (container.clientWidth || window.innerWidth) / (container.clientHeight || window.innerHeight), 0.1, 200);
   camera.position.copy(CAM_START);
   camera.lookAt(LOOK_START);
 
-  // ── Lighting ──────────────────────────────────────────────────────────────
-  const ambientLight = new AmbientLight(0x152030, 0.45);
+  // ── Lighting (day/night adapted) ─────────────────────────────────────────
+  const ambientLight = new AmbientLight(tod.ambientHex, tod.ambientInt);
   scene.add(ambientLight);
 
-  const moonLight = new DirectionalLight(0xc0d8ff, 0.7);
-  moonLight.position.set(10, 20, 5);
+  const moonLight = new DirectionalLight(tod.dirHex, tod.dirInt);
+  moonLight.position.set(...tod.dirPos);
   scene.add(moonLight);
 
   // ── Ocean ─────────────────────────────────────────────────────────────────
@@ -394,9 +486,16 @@ export function initMainMenu(container: HTMLElement): {
   for (const m of torch.meshes) scene.add(m);
   scene.add(torch.light);
 
-  // ── Stars & Moon ──────────────────────────────────────────────────────────
-  scene.add(buildStars());
-  scene.add(buildMoon());
+  // ── Stars, Moon & Sun (time-of-day driven) ───────────────────────────────
+  const starsObj = buildStars();
+  starsObj.visible = tod.showStars;
+  scene.add(starsObj);
+
+  const moonObj = buildMoon();
+  moonObj.visible = tod.showMoon;
+  scene.add(moonObj);
+
+  if (tod.showSun) scene.add(buildSun(tod.sunX, tod.sunY));
 
   // ── Title overlay ─────────────────────────────────────────────────────────
   const titleOverlay = buildTitleOverlay();

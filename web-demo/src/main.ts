@@ -719,6 +719,30 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
         if (_isFirstLairVisit) {
           _isFirstLairVisit = false;
           await runMerlinIntro();
+          // Post-intro: persistent blinking CTA pointing to the door
+          if (!document.getElementById('intro-door-cta')) {
+            const cta = document.createElement('div');
+            cta.id = 'intro-door-cta';
+            cta.textContent = '▶  PORTE DE BROCÉLIANDE — Clique la porte pour commencer';
+            if (!document.getElementById('intro-cta-kf')) {
+              const s = document.createElement('style');
+              s.id = 'intro-cta-kf';
+              s.textContent = '@keyframes cta-blink{0%,100%{opacity:0.95}50%{opacity:0.3}}';
+              document.head.appendChild(s);
+            }
+            cta.style.cssText = [
+              'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);',
+              'background:rgba(0,15,5,0.9);border:1px solid rgba(51,255,102,0.5);',
+              'border-left:3px solid #33ff66;',
+              'color:#33ff66;font-family:Courier New,monospace;',
+              'font-size:11px;letter-spacing:2px;padding:8px 22px;',
+              'z-index:30;pointer-events:none;white-space:nowrap;',
+              'animation:cta-blink 1.4s ease-in-out infinite;',
+            ].join('');
+            document.body.appendChild(cta);
+          }
+          // Re-highlight door zone so player knows where to look
+          window.dispatchEvent(new CustomEvent('merlin_intro_zone', { detail: { zone: 'door' } }));
         }
       }).catch(() => undefined);
     }
@@ -832,6 +856,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
       if (zone === 'door') {
         if (doorTriggered) return;
         doorTriggered = true;
+        document.getElementById('intro-door-cta')?.remove(); // dismiss post-intro CTA
         showZoneToast('door'); // "Entrer dans la forêt" — 600ms total: 200ms fade-in + 400ms fully visible (C45: was 400ms = only 200ms readable)
         setTimeout(resolve, 600);
         return;
