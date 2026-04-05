@@ -46,6 +46,17 @@ function ensureMerlinIntroStyles(): void {
 
 export async function runMerlinIntro(): Promise<void> {
   ensureMerlinIntroStyles();
+
+  // Skip signal — shared across all line-advance promises
+  let _skipFired = false;
+  const _skipResolvers: Array<() => void> = [];
+  const fireSkip = (): void => {
+    if (_skipFired) return;
+    _skipFired = true;
+    _skipResolvers.forEach(r => r());
+    _skipResolvers.length = 0;
+  };
+
   const overlay = document.createElement('div');
   overlay.id = 'merlin-intro-overlay';
   overlay.style.cssText = [
@@ -56,6 +67,26 @@ export async function runMerlinIntro(): Promise<void> {
     'opacity:0;transition:opacity 0.6s;',
   ].join('');
   document.body.appendChild(overlay);
+
+  // ESC key listener — fires skip signal
+  const onESC = (e: KeyboardEvent): void => {
+    if (e.code === 'Escape') { e.preventDefault(); fireSkip(); }
+  };
+  document.addEventListener('keydown', onESC);
+
+  // "PASSER" button — fixed top-right, CeltOS terminal style
+  const skipBtn = document.createElement('button');
+  skipBtn.textContent = '> PASSER [ESC]';
+  skipBtn.style.cssText = [
+    'position:absolute;top:18px;right:20px;z-index:2;',
+    'background:rgba(0,15,5,0.75);border:1px solid rgba(51,255,102,0.4);',
+    'border-left:2px solid rgba(51,255,102,0.7);',
+    'color:rgba(51,255,102,0.75);font-family:\'Courier New\',monospace;',
+    'font-size:10px;letter-spacing:3px;padding:6px 14px;',
+    'cursor:pointer;text-transform:uppercase;',
+  ].join('');
+  skipBtn.addEventListener('click', (e) => { e.stopPropagation(); fireSkip(); });
+  overlay.appendChild(skipBtn);
 
   // --- Merlin silhouette (CSS robe + staff) ---
   const silhouette = document.createElement('div');
@@ -167,7 +198,11 @@ export async function runMerlinIntro(): Promise<void> {
     hintEl.style.opacity = '1';
 
     await new Promise<void>((resolve) => {
+      if (_skipFired) { resolve(); return; }
+      _skipResolvers.push(resolve);
       const cleanup = (): void => {
+        const idx = _skipResolvers.indexOf(resolve);
+        if (idx >= 0) _skipResolvers.splice(idx, 1);
         overlay.removeEventListener('click', onClick);
         document.removeEventListener('keydown', onKey);
       };
@@ -182,9 +217,13 @@ export async function runMerlinIntro(): Promise<void> {
       overlay.addEventListener('click', onClick);
       document.addEventListener('keydown', onKey);
     });
+    if (_skipFired) break; // exit loop immediately on skip
 
     hintEl.style.opacity = '0';
   }
+
+  // Cleanup ESC listener
+  document.removeEventListener('keydown', onESC);
 
   // Fade out
   overlay.style.transition = 'opacity 0.5s';
