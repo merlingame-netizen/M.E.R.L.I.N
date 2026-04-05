@@ -456,6 +456,10 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let bonfireEmberData370: Array<{ vy: number; life: number; maxLife: number }> = [];
   let bonfireElapsed370 = 0;
 
+  // ── Giant sleeping toad on lily pad — marais_korrigans (C374) ────────────
+  let toadGroup374: Group | null = null;
+  let toadBody374: Mesh | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -699,6 +703,46 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     for (let i = 0; i < 5; i++) {
       _lureTrailPositions.push([0, 1.2, -18]);
     }
+
+    // Giant sleeping toad on lily pad (C374)
+    toadGroup374 = new Group();
+
+    // Lily pad
+    const padGeo = new CylinderGeometry(0.7, 0.7, 0.04, 12);
+    const padMat = new MeshStandardMaterial({ color: 0x071f07, roughness: 0.9 });
+    const pad = new Mesh(padGeo, padMat);
+    pad.position.y = -0.02;
+    toadGroup374.add(pad);
+
+    // Toad body
+    const bodyGeo = new SphereGeometry(0.35, 8, 6);
+    const bodyMat = new MeshStandardMaterial({
+      color: 0x0a1f0a, roughness: 0.85, emissive: new Color(0x0d4420), emissiveIntensity: 0.05,
+    });
+    toadBody374 = new Mesh(bodyGeo, bodyMat);
+    toadBody374.scale.set(1.0, 0.6, 1.2);
+    toadBody374.position.y = 0.18;
+    toadGroup374.add(toadBody374);
+
+    // Eyes (glowing green)
+    const eyeGeo = new SphereGeometry(0.07, 6, 4);
+    const eyeMat = new MeshBasicMaterial({ color: 0x33ff66 });
+    ([-0.15, 0.15] as number[]).forEach((ex) => {
+      const eye = new Mesh(eyeGeo, eyeMat);
+      eye.position.set(ex, 0.36, 0.2);
+      toadGroup374!.add(eye);
+    });
+
+    // Feet (4 flat cylinders)
+    ([[-0.25, -0.18], [0.25, -0.18], [-0.28, 0.12], [0.28, 0.12]] as Array<[number, number]>).forEach(([fx, fz]) => {
+      const footGeo = new CylinderGeometry(0.08, 0.1, 0.04, 5);
+      const foot = new Mesh(footGeo, padMat);
+      foot.position.set(fx, 0.05, fz);
+      toadGroup374!.add(foot);
+    });
+
+    toadGroup374.position.set(3, 0, -18);
+    group.add(toadGroup374);
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -2271,6 +2315,14 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Marais korrigans — sleeping toad breathing + lily pad bob (C374)
+    if (toadBody374 !== null && toadGroup374 !== null) {
+      const t374 = Date.now() * 0.001;
+      const breathe = 1.0 + Math.sin(t374 * 0.8) * 0.04;
+      toadBody374.scale.set(breathe, 0.6 * breathe, 1.2 * breathe);
+      toadGroup374.position.y = Math.sin(t374 * 0.3) * 0.02;
+      toadGroup374.rotation.z = Math.sin(t374 * 0.2 + 1) * 0.01;
+    }
     // Landes bruyere spore drift — slow rightward wind + gentle vertical bob
     if (landeSporeMesh !== null) {
       landeSporeTime += dt;
@@ -2570,6 +2622,9 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _lureLight = null;
     _lureTrailOrbs.length = 0;
     _lureTrailPositions.length = 0;
+    // Toad on lily pad cleanup (C374)
+    if (toadGroup374) { group.remove(toadGroup374); toadGroup374.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); toadGroup374 = null; }
+    toadBody374 = null;
     _auroraBands.length = 0;
     montsSnowMeshes = [];
     altarRuneRing = null;
