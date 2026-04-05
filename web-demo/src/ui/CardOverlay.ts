@@ -158,6 +158,28 @@ function getFactionColour(faction: string): string {
   return FACTION_COLOURS[faction.toLowerCase()] ?? 'rgba(51,255,102,0.70)';
 }
 
+// ── Faction glow map (C244) — card panel border glow per faction ───────────
+
+const FACTION_GLOW: Record<string, string> = {
+  druides:   'rgba(51,255,102,0.35)',   // forest green
+  anciens:   'rgba(100,180,255,0.30)',  // time-blue
+  korrigans: 'rgba(180,80,255,0.30)',   // chaos-purple
+  niamh:     'rgba(255,180,220,0.28)', // healing-rose
+  ankou:     'rgba(140,160,180,0.30)', // death-silver
+  central:   'rgba(51,255,102,0.20)',  // neutral green
+};
+
+// ── Title colour by faction (C244) ─────────────────────────────────────────
+
+const FACTION_TITLE_COLOUR: Record<string, string> = {
+  druides:   '#33ff66',
+  anciens:   '#64b4ff',
+  korrigans: '#b450ff',
+  niamh:     '#ffb4dc',
+  ankou:     '#8ca0b4',
+  central:   '#33ff66',
+};
+
 // ── Effect parsing for tooltip (T068) ─────────────────────────────────────
 
 interface ParsedEffect {
@@ -449,6 +471,14 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
         fBadge.style.color = factionColour;
         badge.appendChild(fBadge);
       }
+
+      // C244: faction-tinted glow on the main card panel
+      const factionKey = (faction ?? 'central').toLowerCase();
+      const factionGlow = FACTION_GLOW[factionKey] ?? FACTION_GLOW['central'] as string;
+      container.style.boxShadow = `0 0 18px ${factionGlow}, inset 0 0 6px ${factionGlow}`;
+
+      // C244: faction title-colour tint on the biome badge (card header)
+      badge.style.color = FACTION_TITLE_COLOUR[factionKey] ?? FACTION_TITLE_COLOUR['central'] as string;
 
       const divider = document.createElement('div');
       divider.className = 'card-divider';
