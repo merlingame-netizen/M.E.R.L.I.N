@@ -887,6 +887,15 @@ let mandalPulseT490: number = 0;
 let _t485 = 0;
 let _constStars485: C485Star[] = [];
 let _constLineMats485: LineBasicMaterial[] = [];
+
+// C495 — Aurora borealis ribbons
+let auroraGroup495: Group | null = null;
+let auroraT495 = 0;
+let auroraRibbons495: Mesh[] = [];
+let auroraRibbonMats495: MeshBasicMaterial[] = [];
+let auroraSurgeTimer495: number = 40 + Math.random() * 20;
+let auroraSurging495: boolean = false;
+let auroraSurgeT495: number = 0;
 let _constStarMats485: MeshStandardMaterial[] = [];
 // Per-constellation: 4 star indices, activation state
 const _CONST_DEFS485: { name: string; cx: number; cy: number; cz: number; shape: 'diamond' | 'V' | 'cross'; indices: number[]; }[] = [
@@ -1998,6 +2007,63 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       }
     }
 
+    // C495: aurora borealis ribbons — undulate vertices + opacity pulse + group drift + surge
+    auroraT495 += dt;
+    if (auroraGroup495) {
+      auroraGroup495.position.y = Math.sin(auroraT495 * 0.15) * 1.5;
+    }
+    const _auroraBaseOpacities495 = [0.10, 0.14, 0.08, 0.12];
+    const _auroraPhases495 = [0, 1.2, 2.4, 3.6];
+    const _auroraSpeeds495 = [0.4, 0.6, 0.35, 0.5];
+    const _auroraPhaseOps495 = [0, 0.7, 1.4, 2.1];
+    auroraRibbons495.forEach((ribbon, r) => {
+      const pos = ribbon.geometry.attributes['position'] as BufferAttribute;
+      const speed_r = _auroraSpeeds495[r]!;
+      const phase_r = _auroraPhases495[r]!;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        pos.setY(i, Math.sin(x * 0.3 + auroraT495 * speed_r + phase_r) * 0.8);
+      }
+      pos.needsUpdate = true;
+
+      const mat = auroraRibbonMats495[r]!;
+      const baseOp = _auroraBaseOpacities495[r]!;
+      const phaseOp_r = _auroraPhaseOps495[r]!;
+      if (!auroraSurging495) {
+        mat.opacity = baseOp * (0.7 + 0.5 * Math.sin(auroraT495 * 0.8 + phaseOp_r));
+      }
+    });
+
+    // Surge timer
+    if (!auroraSurging495) {
+      auroraSurgeTimer495 -= dt;
+      if (auroraSurgeTimer495 <= 0) {
+        auroraSurging495 = true;
+        auroraSurgeT495 = 0;
+        auroraSurgeTimer495 = 40 + Math.random() * 20;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'power_up' } }));
+      }
+    } else {
+      auroraSurgeT495 += dt;
+      auroraRibbons495.forEach((_, r) => {
+        const mat = auroraRibbonMats495[r]!;
+        const baseOp = _auroraBaseOpacities495[r]!;
+        const phaseOp_r = _auroraPhaseOps495[r]!;
+        if (auroraSurgeT495 < 4.0) {
+          // Surge: multiply by 3 over first 0.5s, then hold
+          const rampIn = Math.min(auroraSurgeT495 / 0.5, 1.0);
+          mat.opacity = baseOp * (0.7 + 0.5 * Math.sin(auroraT495 * 0.8 + phaseOp_r)) * (1.0 + 2.0 * rampIn);
+        } else if (auroraSurgeT495 < 5.0) {
+          // Fade back over 1s
+          const fadeOut = (auroraSurgeT495 - 4.0) / 1.0;
+          mat.opacity = baseOp * (0.7 + 0.5 * Math.sin(auroraT495 * 0.8 + phaseOp_r)) * (3.0 - 2.0 * fadeOut);
+        } else {
+          mat.opacity = baseOp * (0.7 + 0.5 * Math.sin(auroraT495 * 0.8 + phaseOp_r));
+          if (r === auroraRibbons495.length - 1) auroraSurging495 = false;
+        }
+      });
+    }
+
     renderer.render(scene, camera);
   };
 
@@ -3011,6 +3077,40 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     scene.add(grp);
   }
 
+  // C495: Aurora borealis ribbons — 4 wide horizontal planes in high sky
+  {
+    const ribbonPositions = [
+      { y: 16, z: -45, rx: 0.10, ry: -0.20 },
+      { y: 18, z: -50, rx: 0.05, ry: -0.10 },
+      { y: 20, z: -55, rx: -0.05, ry: 0.10 },
+      { y: 14, z: -40, rx: 0.15, ry: 0.15 },
+    ];
+    const ribbonBaseOpacities = [0.10, 0.14, 0.08, 0.12];
+    const grp495 = new Group();
+
+    for (let ri = 0; ri < 4; ri++) {
+      const cfg = ribbonPositions[ri]!;
+      const geo = new PlaneGeometry(18, 3, 12, 1);
+      const mat = new MeshBasicMaterial({
+        color: 0x33ff66,
+        transparent: true,
+        opacity: ribbonBaseOpacities[ri]!,
+        side: DoubleSide,
+        depthWrite: false,
+      });
+      auroraRibbonMats495.push(mat);
+      const ribbon = new Mesh(geo, mat);
+      ribbon.position.set(0, cfg.y, cfg.z);
+      ribbon.rotation.x = cfg.rx;
+      ribbon.rotation.y = cfg.ry;
+      auroraRibbons495.push(ribbon);
+      grp495.add(ribbon);
+    }
+
+    auroraGroup495 = grp495;
+    scene.add(grp495);
+  }
+
   // C276: Animated Celtic border on #main-menu-overlay — conic-gradient spin
   const menuOverlayEl = document.getElementById('main-menu-overlay');
   if (!document.getElementById('menu-border-style')) {
@@ -3334,6 +3434,18 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
       mandalGroup490 = null;
     }
     mandalLight490 = null;
+
+    // C495: dispose aurora ribbons
+    if (auroraGroup495) {
+      auroraRibbons495.forEach((ribbon) => {
+        ribbon.geometry.dispose();
+        (ribbon.material as MeshBasicMaterial).dispose();
+      });
+      scene.remove(auroraGroup495);
+      auroraGroup495 = null;
+    }
+    auroraRibbons495 = [];
+    auroraRibbonMats495 = [];
 
     scene.traverse((obj) => {
       if (obj instanceof Mesh || obj instanceof Points) {
