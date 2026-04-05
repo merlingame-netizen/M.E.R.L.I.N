@@ -542,6 +542,12 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let sundialShadow429: Mesh | null = null;
   let sundialLight429: PointLight | null = null;
 
+  // ── Moonrise arc — cercles_pierres (C433) ────────────────────────────────
+  let stoneMoonGroup433: Group | null = null;
+  let stoneMoonT433 = 0;
+  let stoneMoonMesh433: Mesh | null = null;
+  let stoneMoonLight433: PointLight | null = null;
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -2305,6 +2311,36 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     }
 
     group.add(altarFireGroup407);
+
+    // ── Moonrise arc (C433) ───────────────────────────────────────────────
+    stoneMoonGroup433 = new Group();
+
+    // Moon sphere — dark green, large, distant
+    const moonSphere433 = new Mesh(
+      new SphereGeometry(1.8, 10, 8),
+      new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.8 }),
+    );
+    stoneMoonMesh433 = moonSphere433;
+    stoneMoonGroup433.add(moonSphere433);
+
+    // Moon glow halo — translucent green shell
+    const moonHalo433 = new Mesh(
+      new SphereGeometry(2.2, 8, 6),
+      new MeshBasicMaterial({
+        color: 0x33ff66, transparent: true, opacity: 0.06,
+        side: DoubleSide, depthWrite: false,
+      }),
+    );
+    stoneMoonGroup433.add(moonHalo433);
+
+    // Point light for dynamic stone illumination
+    const moonLight433 = new PointLight(0x33ff66, 0.3, 25.0);
+    stoneMoonLight433 = moonLight433;
+    stoneMoonGroup433.add(moonLight433);
+
+    // Start below horizon to the left (group-local coords)
+    stoneMoonGroup433.position.set(-18, -2, -25);
+    group.add(stoneMoonGroup433);
   }
 
   // Plaine des Druides: scattered ritual poles + central sacred fire
@@ -3396,6 +3432,24 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         sundialLight429.intensity = 0.07 + Math.sin(sundialT429 * 0.8) * 0.025;
       }
     }
+    // Cercles de Pierres — moonrise arc across sky (C433)
+    if (stoneMoonGroup433 && stoneMoonMesh433 && stoneMoonLight433) {
+      stoneMoonT433 += dt;
+      const arcT = (stoneMoonT433 % 90) / 90;
+      const arcAngle = arcT * Math.PI;
+
+      stoneMoonGroup433.position.x = Math.cos(arcAngle) * 20 - 2;
+      stoneMoonGroup433.position.y = Math.sin(arcAngle) * 16 - 1;
+      stoneMoonGroup433.position.z = -30;
+
+      let moonOpacity = 0.8;
+      if (arcT < 0.15) moonOpacity = (arcT / 0.15) * 0.8;
+      else if (arcT > 0.85) moonOpacity = ((1 - arcT) / 0.15) * 0.8;
+      (stoneMoonMesh433.material as MeshBasicMaterial).opacity = moonOpacity;
+
+      const zenithFactor = Math.sin(arcAngle);
+      stoneMoonLight433.intensity = zenithFactor * 0.35;
+    }
     // Monts brumeux — alpine wind mist drift (fast rightward + gentle vertical float)
     if (montsWindMesh !== null) {
       montsWindTime += dt;
@@ -3670,6 +3724,17 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       sundialShadow429 = null;
       sundialLight429 = null;
       sundialGroup429 = null;
+    }
+    // Moonrise arc cleanup (C433)
+    if (stoneMoonGroup433) {
+      stoneMoonGroup433.traverse(c => {
+        if (c instanceof Mesh) { c.geometry.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material.dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      group.remove(stoneMoonGroup433);
+      stoneMoonMesh433 = null;
+      stoneMoonLight433 = null;
+      stoneMoonGroup433 = null;
     }
     // Harvest scarecrow cleanup (C382)
     if (scarecrowGroup382) { group.remove(scarecrowGroup382); scarecrowGroup382.traverse(c => { const cm = c as Mesh; if (cm.geometry) cm.geometry.dispose(); if (cm.material) { if (Array.isArray(cm.material)) cm.material.forEach(mt => mt.dispose()); else cm.material.dispose(); } }); scarecrowGroup382 = null; }
