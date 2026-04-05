@@ -961,14 +961,26 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   const subtitleEl = document.createElement('div');
   subtitleEl.style.cssText = [
-    'font-family:Courier New,monospace;font-size:11px;',
-    'color:rgba(51,255,102,0.45);letter-spacing:0.25em;',
-    'opacity:0;transition:opacity 0.4s ease;',
+    'font:0.9rem "Courier New",monospace;',
+    'color:rgba(51,255,102,0.7);letter-spacing:0.25em;',
+    'opacity:0;transition:opacity 800ms ease;',
   ].join('');
   subtitleEl.textContent = 'LE JEU DES OGHAMS';
   titleOverlay.appendChild(subtitleEl);
 
-  // Inject keyframes for glow pulse once (idempotent via ID)
+  // C200: CTA pulse prompt — "APPUYEZ SUR ENTRÉE"
+  const ctaEl = document.createElement('div');
+  ctaEl.style.cssText = [
+    'position:absolute;bottom:14%;width:100%;text-align:center;',
+    'font:0.75rem "Courier New",monospace;',
+    'color:rgba(51,255,102,0.6);letter-spacing:0.2em;',
+    'animation:celtos-cta-pulse 1.8s ease infinite;',
+    'pointer-events:none;',
+  ].join('');
+  ctaEl.textContent = 'APPUYEZ SUR ENTRÉE';
+  container.appendChild(ctaEl);
+
+  // Inject keyframes — glow pulse + CTA pulse (idempotent via ID)
   if (!document.getElementById('merlin-glow-keyframes')) {
     const styleTag = document.createElement('style');
     styleTag.id = 'merlin-glow-keyframes';
@@ -981,18 +993,34 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     document.head.appendChild(styleTag);
   }
 
-  // Typewriter: reveal each character with 80ms delay, then show subtitle after 600ms
+  // C200: CTA pulse keyframe (separate guard ID)
+  if (!document.getElementById('celtos-title-anim')) {
+    const s = document.createElement('style');
+    s.id = 'celtos-title-anim';
+    s.textContent = '@keyframes celtos-cta-pulse{0%,100%{opacity:0.3}50%{opacity:1}}';
+    document.head.appendChild(s);
+  }
+
+  // Typewriter: reveal each character with 80ms delay, dispatch beep SFX every 3rd char
+  // Show subtitle (fade 800ms) after last character, then remove CTA stagger delay
   const TITLE_TEXT = 'M.E.R.L.I.N.';
   let titleBuilt = '';
+  const _titleTimers: number[] = [];
   TITLE_TEXT.split('').forEach((ch, i) => {
-    window.setTimeout(() => {
+    const tid = window.setTimeout(() => {
       titleBuilt += ch;
       titleEl.textContent = titleBuilt;
       if (i === 0) titleEl.style.opacity = '1';
+      // Beep every 3rd character (index 2, 5, 8, ...) to avoid spam
+      if ((i + 1) % 3 === 0) {
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'beep' } }));
+      }
       if (i === TITLE_TEXT.length - 1) {
-        window.setTimeout(() => { subtitleEl.style.opacity = '1'; }, 600);
+        const sid = window.setTimeout(() => { subtitleEl.style.opacity = '0.7'; }, 600);
+        _titleTimers.push(sid);
       }
     }, 80 * i);
+    _titleTimers.push(tid);
   });
 
   let elapsedTime = 0;
@@ -1096,6 +1124,14 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     if (menuContinueBtn) menuContinueBtn.removeEventListener('pointerenter', onContinueHover);
     // C176: stop rune rain RAF and remove canvas
     runeRain.dispose();
+    // C200: clear all typewriter timers
+    _titleTimers.forEach((id) => window.clearTimeout(id));
+    _titleTimers.length = 0;
+    // C200: remove CTA element
+    if (ctaEl.parentNode) ctaEl.parentNode.removeChild(ctaEl);
+    // C200: remove CTA style element
+    const ctaStyle = document.getElementById('celtos-title-anim');
+    if (ctaStyle && ctaStyle.parentNode) ctaStyle.parentNode.removeChild(ctaStyle);
     // C157: remove title overlay DOM
     if (titleOverlay.parentNode) {
       titleOverlay.parentNode.removeChild(titleOverlay);
