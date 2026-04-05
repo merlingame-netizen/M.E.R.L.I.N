@@ -181,12 +181,52 @@ export function showOghamPanel(): Promise<string | null> {
         infoEl.style.cssText = 'font-size:10px;color:rgba(51,200,102,0.5);';
         slot.title = `D\u00e9bloquez ${branchLabel} \u2014 r\u00e9putation 50 requise`;
       } else if (cooldown > 0) {
-        infoEl.textContent = `CD: ${cooldown}`;
-        infoEl.style.cssText = 'font-size:10px;color:rgba(200,100,100,0.7);';
+        // Cooldown dot row: red filled = remaining, dim green = already passed
+        infoEl.textContent = '';
+        infoEl.style.cssText = 'display:flex;gap:2px;align-items:center;justify-content:center;margin-top:2px;flex-wrap:wrap;';
+        const cdLabel = document.createElement('span');
+        cdLabel.textContent = 'CD';
+        cdLabel.style.cssText = `font-size:8px;color:rgba(180,80,80,0.7);font-family:'Courier New',monospace;margin-right:2px;flex-shrink:0;`;
+        infoEl.appendChild(cdLabel);
+        const maxDots = Math.min(spec.cooldown, 8);
+        for (let d = 0; d < maxDots; d++) {
+          const dot = document.createElement('span');
+          dot.style.cssText = [
+            'width:5px',
+            'height:5px',
+            'border-radius:50%',
+            `background:${d < cooldown ? 'rgba(180,80,80,0.8)' : 'rgba(51,255,102,0.15)'}`,
+            'display:inline-block',
+            'flex-shrink:0',
+          ].join(';');
+          infoEl.appendChild(dot);
+        }
         slot.title = `${spec.description} (recharge dans ${cooldown} cartes)`;
       } else {
-        infoEl.textContent = spec.category;
-        infoEl.style.cssText = 'font-size:10px;color:rgba(51,255,102,0.4);';
+        // Available: show category + dim dot preview of cooldown cost
+        infoEl.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
+        const catSpan = document.createElement('span');
+        catSpan.textContent = spec.category;
+        catSpan.style.cssText = 'font-size:10px;color:rgba(51,255,102,0.4);';
+        infoEl.appendChild(catSpan);
+        if (spec.cooldown > 0) {
+          const dotRow = document.createElement('span');
+          dotRow.style.cssText = 'display:flex;gap:2px;justify-content:center;flex-wrap:wrap;';
+          const previewDots = Math.min(spec.cooldown, 8);
+          for (let d = 0; d < previewDots; d++) {
+            const dot = document.createElement('span');
+            dot.style.cssText = [
+              'width:4px',
+              'height:4px',
+              'border-radius:50%',
+              'background:rgba(51,255,102,0.12)',
+              'display:inline-block',
+              'flex-shrink:0',
+            ].join(';');
+            dotRow.appendChild(dot);
+          }
+          infoEl.appendChild(dotRow);
+        }
         slot.title = `${spec.description} (CD: ${spec.cooldown} cartes)`;
       }
       slot.appendChild(infoEl);
