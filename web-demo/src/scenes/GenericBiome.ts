@@ -742,6 +742,60 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
       group.add(band);
       _auroraBands.push(band);
     }
+
+    // Partial temple ruins — collapsed structure in background (C317)
+    const templeGroup = new Group();
+    const templeStoneMat = new MeshStandardMaterial({ color: 0x141f14, roughness: 0.96, metalness: 0.0, flatShading: true });
+    const templeDarkMat  = new MeshStandardMaterial({ color: 0x0c150c, roughness: 0.96, metalness: 0.0, flatShading: true });
+
+    // Base platform
+    const platform = new Mesh(new BoxGeometry(14, 0.4, 6), templeStoneMat);
+    platform.position.set(0, -0.2, -43);
+    templeGroup.add(platform);
+
+    // Standing column 1 — full height
+    const col1 = new Mesh(new CylinderGeometry(0.35, 0.4, 5.5, 7), templeStoneMat);
+    col1.position.set(-5, 2.75, -43);
+    templeGroup.add(col1);
+
+    // Standing column 2 — shorter (damaged)
+    const col2 = new Mesh(new CylinderGeometry(0.35, 0.4, 4.2, 7), templeStoneMat);
+    col2.position.set(-1.5, 2.1, -44);
+    templeGroup.add(col2);
+
+    // Fallen column — lying on ground
+    const colFallen = new Mesh(new CylinderGeometry(0.3, 0.35, 5.0, 7), templeStoneMat);
+    colFallen.position.set(3, 0.15, -43.5);
+    colFallen.rotation.z = Math.PI / 2;
+    colFallen.rotation.y = 0.3;
+    templeGroup.add(colFallen);
+
+    // Partial lintel — spans col1 & col2
+    const lintel = new Mesh(new BoxGeometry(5, 0.45, 0.4), templeDarkMat);
+    lintel.position.set(-3.5, 5.5, -43);
+    templeGroup.add(lintel);
+
+    // Rubble blocks — scattered near fallen column
+    const rubbleData: Array<[number, number, number, number, number, number, number]> = [
+      [0.5, 0.3, 0.4,  2.0, -0.15, -42.5,  0.3],
+      [0.8, 0.5, 0.6,  4.5, -0.25, -43.8,  1.1],
+      [0.7, 0.4, 0.5,  1.5, -0.20, -44.5, -0.5],
+      [0.9, 0.6, 0.7,  5.5, -0.30, -42.0,  0.8],
+    ];
+    for (const [rw, rh, rd, rx, ry, rz, ryRot] of rubbleData) {
+      const rubble = new Mesh(new BoxGeometry(rw, rh, rd), templeStoneMat);
+      rubble.position.set(rx, ry, rz);
+      rubble.rotation.y = ryRot;
+      templeGroup.add(rubble);
+    }
+
+    // Glow from cracks — constant dim point light
+    const crackGlow = new PointLight(0x33ff66, 0.08, 8);
+    crackGlow.position.set(0, 0.5, -43);
+    templeGroup.add(crackGlow);
+
+    group.add(templeGroup);
+    _templeGroup = templeGroup;
   }
 
   // Monts brumeux: extra mist rocks (large boulders on ridgeline)
@@ -1344,6 +1398,7 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     _lakeMesh = null;
     _lakeLight = null;
     _deadTreeGroup = null;
+    _templeGroup = null;
     _heatherMeshes.length = 0;
     group.traverse((obj) => {
       if (obj instanceof Mesh) {
