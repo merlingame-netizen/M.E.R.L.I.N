@@ -14,6 +14,69 @@ function sfx(sound: string): void {
   window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound } }));
 }
 
+// ── Ogham glyph map (Unicode Ogham block U+1680–U+169F) ──────────────────
+
+const OGHAM_GLYPHS: Record<string, string> = {
+  Beith:  'ᚁ', Luis:   'ᚂ', Nion:   'ᚃ', Fearn:  'ᚄ', Sail:   'ᚅ',
+  Huath:  'ᚆ', Dair:   'ᚇ', Tinne:  'ᚈ', Coll:   'ᚉ', Quert:  'ᚊ',
+  Muin:   'ᚋ', Gort:   'ᚌ', Ngetal: 'ᚍ', Straif: 'ᚎ', Ruis:   'ᚏ',
+  Ailm:   'ᚐ', Onn:    'ᚑ', Ur:     'ᚒ', Edad:   'ᚓ', Idad:   'ᚔ',
+};
+
+/**
+ * Scan an option's effects for ACTIVATE_OGHAM:Name and return the Unicode glyph,
+ * or null if none found.
+ */
+function extractOghamGlyph(option: CardOption): string | null {
+  for (const eff of option.effects) {
+    const s = eff as string;
+    if (!s.startsWith('ACTIVATE_OGHAM:')) continue;
+    const name = s.split(':')[1] ?? '';
+    const glyph = OGHAM_GLYPHS[name];
+    if (glyph) return glyph;
+  }
+  return null;
+}
+
+// ── Option badge + ogham styles injection (idempotent) ────────────────────
+
+function ensureCardOptBadgeStyles(): void {
+  if (document.getElementById('card-opt-badge-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'card-opt-badge-styles';
+  s.textContent = `
+    .card-opt-num {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font: bold 0.65rem 'Courier New', monospace;
+      color: rgba(51,255,102,0.4);
+      background: rgba(1,8,2,0.7);
+      border: 1px solid rgba(51,255,102,0.2);
+      padding: 1px 5px;
+      border-radius: 2px;
+      pointer-events: none;
+      line-height: 1.4;
+      user-select: none;
+    }
+    .card-opt-ogham {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font: bold 1rem 'Courier New', monospace;
+      color: rgba(51,255,102,0.55);
+      background: rgba(1,8,2,0.7);
+      border: 1px solid rgba(51,255,102,0.25);
+      padding: 0px 5px;
+      border-radius: 2px;
+      pointer-events: none;
+      line-height: 1.4;
+      user-select: none;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
 // ── Badge + flavor styles injection (idempotent) ──────────────────────────
 
 function ensureCardBadgeStyles(): void {
@@ -225,6 +288,7 @@ function triggerFlipAnimation(): void {
 export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
   ensureCardSelectStyle();
   ensureCardBadgeStyles();
+  ensureCardOptBadgeStyles();
   return new Promise((resolve) => {
     // C165/CO-01: purge any stale handlers from a previous showCard() that was interrupted
     // (e.g. scene teardown, rapid card transitions). Without this cleanup, the old
@@ -357,6 +421,25 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
       btn.setAttribute('role', 'button');
       btn.setAttribute('tabindex', '0');
       btn.setAttribute('aria-label', `${option.verb} — ${option.text}`);
+      // Required so absolutely-positioned .card-opt-num and .card-opt-ogham are anchored here
+      btn.style.position = 'relative';
+
+      // Number badge (top-left corner)
+      const numBadge = document.createElement('span');
+      numBadge.className = 'card-opt-num';
+      numBadge.setAttribute('aria-hidden', 'true');
+      numBadge.textContent = String(index + 1);
+      btn.appendChild(numBadge);
+
+      // Ogham glyph badge (top-right corner) — shown only when ACTIVATE_OGHAM effect present
+      const oghamGlyph = extractOghamGlyph(option);
+      if (oghamGlyph !== null) {
+        const oghamBadge = document.createElement('span');
+        oghamBadge.className = 'card-opt-ogham';
+        oghamBadge.setAttribute('aria-hidden', 'true');
+        oghamBadge.textContent = oghamGlyph;
+        btn.appendChild(oghamBadge);
+      }
 
       // Faction dot (T067)
       const dot = buildFactionDot(option);
