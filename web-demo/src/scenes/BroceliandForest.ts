@@ -959,6 +959,38 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     }
   }
 
+  // ── Will-o'-wisp cluster — 3 orbiting CeltOS-green wisps near z=-22 ──────────
+  const _wispMeshes: Mesh[] = [];
+  const _wispLights: PointLight[] = [];
+  {
+    const CX = 12;
+    const CY = 1.2;
+    const CZ = -22;
+    const wispParams: [number, number, number][] = [
+      [1.5, 0.7, 0.0],
+      [2.0, 1.0, 2.1],
+      [2.5, 0.6, 4.2],
+    ];
+    for (const [radius, speed, phase] of wispParams) {
+      const geo = new SphereGeometry(0.18, 6, 4);
+      const mat = new MeshBasicMaterial({ color: 0x33ff66 });
+      const mesh = new Mesh(geo, mat);
+      mesh.position.set(
+        CX + radius * Math.cos(phase),
+        CY,
+        CZ + radius * Math.sin(phase),
+      );
+      mesh.userData = { cx: CX, cy: CY, cz: CZ, radius, speed, phase };
+      group.add(mesh);
+      _wispMeshes.push(mesh);
+
+      const light = new PointLight(0x33ff66, 0.4, 4);
+      light.position.copy(mesh.position);
+      group.add(light);
+      _wispLights.push(light);
+    }
+  }
+
   // ── Rain drizzle — 80 thin pale blue-grey streaks falling through forest ─────
   const _rainMeshes: Mesh[] = [];
   let _rainTime = 0;
@@ -1092,6 +1124,22 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
       if (drop.position.x > 25) drop.position.x -= 50;
     }
 
+    // Will-o'-wisp cluster — orbit + bob + pulse
+    for (let wi = 0; wi < _wispMeshes.length; wi++) {
+      const wm = _wispMeshes[wi]!;
+      const wl = _wispLights[wi]!;
+      const ud = wm.userData as { cx: number; cy: number; cz: number; radius: number; speed: number; phase: number };
+      const wt = sceneTime * ud.speed + ud.phase;
+      const wx = ud.cx + ud.radius * Math.cos(wt);
+      const wy = ud.cy + Math.sin(sceneTime * 1.3 + ud.phase) * 0.4;
+      const wz = ud.cz + ud.radius * Math.sin(wt);
+      wm.position.set(wx, wy, wz);
+      const ws = 0.9 + Math.sin(sceneTime * 1.5 + ud.phase) * 0.1;
+      wm.scale.setScalar(ws);
+      wl.position.set(wx, wy, wz);
+      wl.intensity = 0.2 + Math.sin(sceneTime * 2.0 + ud.phase) * 0.2;
+    }
+
     // Firefly swarm drift + twinkle
     _fireflyTime += dt;
     for (const fly of _fireflyMeshes) {
@@ -1120,6 +1168,8 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
     for (const mat of crowFlock.crowMats) {
       mat.dispose();
     }
+    _wispMeshes.length = 0;
+    _wispLights.length = 0;
     _rainMeshes.length = 0;
     _fireflyMeshes.length = 0;
     _lanternMesh = null;
