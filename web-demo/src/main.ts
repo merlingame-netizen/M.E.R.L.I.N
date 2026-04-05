@@ -131,6 +131,58 @@ async function runMainMenu(): Promise<{ isNewGame: boolean }> {
 
 
 // --- Lair Hub ---
+// ── Biome rune particle ambient ───────────────────────────────────────────────
+// Floating ogham rune symbols drift upward during biome selection (C249).
+let _biomeRuneInterval: ReturnType<typeof setInterval> | null = null;
+
+const _BIOME_RUNE_CHARS = ['ᚁ','ᚂ','ᚃ','ᚄ','ᚅ','ᚆ','ᚇ','ᚈ','ᚉ','ᚊ','ᚋ','ᚌ','ᚍ','ᚎ'];
+
+function startBiomeRuneSpawner(): void {
+  if (_biomeRuneInterval !== null) return; // idempotent guard
+  if (!document.getElementById('biome-rune-style')) {
+    const s = document.createElement('style');
+    s.id = 'biome-rune-style';
+    s.textContent = [
+      '@keyframes rune-float {',
+      '  from { opacity: 0; transform: translateY(0px) rotate(0deg); }',
+      '  15%  { opacity: 0.35; }',
+      '  85%  { opacity: 0.35; }',
+      '  to   { opacity: 0; transform: translateY(-80px) rotate(20deg); }',
+      '}',
+      '.biome-rune-particle {',
+      "  position: fixed;",
+      "  font-family: 'Courier New', monospace;",
+      '  font-size: 18px;',
+      '  color: rgba(51,255,102,0.35);',
+      '  pointer-events: none;',
+      '  z-index: 5;',
+      '  animation: rune-float linear forwards;',
+      '}',
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+  _biomeRuneInterval = setInterval(() => {
+    const el = document.createElement('div');
+    el.className = 'biome-rune-particle';
+    el.textContent = _BIOME_RUNE_CHARS[Math.floor(Math.random() * _BIOME_RUNE_CHARS.length)] ?? 'ᚁ';
+    el.style.left = `${Math.random() * 90 + 5}vw`;
+    el.style.bottom = `${Math.random() * 30}px`;
+    const durationMs = (3 + Math.random() * 2) * 1000;
+    el.style.animationDuration = `${durationMs / 1000}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), durationMs);
+  }, 800);
+}
+
+function stopBiomeRuneSpawner(): void {
+  if (_biomeRuneInterval !== null) {
+    clearInterval(_biomeRuneInterval);
+    _biomeRuneInterval = null;
+  }
+  document.getElementById('biome-rune-style')?.remove();
+  document.querySelectorAll('.biome-rune-particle').forEach((n) => n.remove());
+}
+
 // ── Biome picker overlay ──────────────────────────────────────────────────────
 // Shows an 8-option Celtic biome selector inside the lair wrapper.
 // Only cotes_sauvages currently has a 3D walk scene; the others are accepted
@@ -244,6 +296,7 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
         btn.removeEventListener('pointerleave', onBtnLeave);
         document.removeEventListener('keydown', kbNavHandler); // C205: unified handler
         document.getElementById('biome-kb-style')?.remove();   // C205: cleanup style tag
+        stopBiomeRuneSpawner();                                 // C249: stop rune particles
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 220);
         resolve(id);
@@ -258,6 +311,7 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
       if (e.key === 'Escape') {
         document.removeEventListener('keydown', kbNavHandler);
         document.getElementById('biome-kb-style')?.remove();
+        stopBiomeRuneSpawner();                                 // C249: stop rune particles
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 220);
         resolve(defaultBiome);
@@ -289,6 +343,9 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
 
     // C205: apply initial focus highlight after buttons are in the DOM
     applyFocusClass(0);
+
+    // C249: start ogham rune ambient particles
+    startBiomeRuneSpawner();
 
     container.appendChild(overlay);
     requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
