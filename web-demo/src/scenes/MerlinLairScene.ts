@@ -1449,6 +1449,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let specimenT472: number = 0
   let specimenJarMats472: MeshBasicMaterial[] = []
 
+  // C477 — alchemical distillation apparatus
+  let alchemyGroup477: Group | null = null
+  let alchemyT477: number = 0
+  let alchemyLiquidMats477: MeshBasicMaterial[] = []
+  let alchemyBubbles477: { mesh: Mesh; y: number; maxY: number; speed: number; active: boolean }[] = []
+  let alchemyBubbleTimer477: number = 1.5
+
   // C438 — potion bottle shelf
   let _potionShelfGroup: Group | null = null;
   let _potionShelfT = 0;
@@ -3023,6 +3030,111 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     scene.add(specimenGroup472)
   }
 
+  // C477 — alchemical distillation apparatus
+  {
+    alchemyGroup477 = new Group()
+    alchemyGroup477.position.set(2.5, 0.9, -3.8)
+
+    // Workbench surface
+    const bench = new Mesh(
+      new BoxGeometry(1.4, 0.06, 0.5),
+      new MeshBasicMaterial({ color: 0x020f04 })
+    )
+    bench.position.y = -0.03
+    alchemyGroup477!.add(bench)
+
+    // Stand frame: 3 vertical rods
+    for (let i = 0; i < 3; i++) {
+      const rod = new Mesh(
+        new CylinderGeometry(0.015, 0.015, 1.0, 4),
+        new MeshBasicMaterial({ color: 0x0a1a10 })
+      )
+      rod.position.set(-0.5 + i * 0.5, 0.5, 0)
+      alchemyGroup477!.add(rod)
+    }
+
+    // Horizontal cross-bar
+    const crossbar = new Mesh(
+      new CylinderGeometry(0.012, 0.012, 1.2, 4),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    )
+    crossbar.rotation.z = Math.PI * 0.5
+    crossbar.position.set(0, 0.8, 0)
+    alchemyGroup477!.add(crossbar)
+
+    // Flask definitions: [x, y, radius, height]
+    const flaskDefs477 = [
+      { x: -0.42, y: 0.12, r: 0.1,  h: 0.35 },
+      { x:  0.0,  y: 0.3,  r: 0.08, h: 0.28 },
+      { x:  0.42, y: 0.08, r: 0.12, h: 0.4  },
+    ]
+
+    flaskDefs477.forEach((def) => {
+      // Flask body (sphere scaled to flask proportions)
+      const body = new Mesh(
+        new SphereGeometry(def.r, 8, 7),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.4 })
+      )
+      body.scale.y = def.h / (def.r * 2)
+      body.position.set(def.x, def.y + def.h / 2, 0)
+      alchemyGroup477!.add(body)
+
+      // Flask neck
+      const neck = new Mesh(
+        new CylinderGeometry(def.r * 0.3, def.r * 0.45, def.h * 0.35, 6),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.4 })
+      )
+      neck.position.set(def.x, def.y + def.h + def.h * 0.17, 0)
+      alchemyGroup477!.add(neck)
+
+      // Liquid inside (slightly smaller sphere)
+      const liquid = new Mesh(
+        new SphereGeometry(def.r * 0.75, 7, 6),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.5 })
+      )
+      liquid.scale.y = (def.h * 0.5) / (def.r * 0.75 * 2)
+      liquid.position.set(def.x, def.y + def.h * 0.3, 0)
+      alchemyLiquidMats477.push(liquid.material as MeshBasicMaterial)
+      alchemyGroup477!.add(liquid)
+    })
+
+    // Connecting tubes (angled cylinders between flasks)
+    const tubeDefs477 = [
+      { x1: -0.35, y1: 0.6, x2: -0.08, y2: 0.72 },
+      { x1:  0.08, y1: 0.7, x2:  0.32, y2: 0.58 },
+    ]
+    tubeDefs477.forEach((td) => {
+      const dx = td.x2 - td.x1
+      const dy = td.y2 - td.y1
+      const len = Math.sqrt(dx * dx + dy * dy)
+      const tube = new Mesh(
+        new CylinderGeometry(0.018, 0.018, len, 4),
+        new MeshBasicMaterial({ color: 0x0a2a14, transparent: true, opacity: 0.5 })
+      )
+      tube.position.set((td.x1 + td.x2) / 2, (td.y1 + td.y2) / 2, 0)
+      tube.rotation.z = Math.atan2(dx, dy)
+      alchemyGroup477!.add(tube)
+    })
+
+    // 5 bubble particles (managed lifecycle)
+    for (let i = 0; i < 5; i++) {
+      const bubble = new Mesh(
+        new SphereGeometry(0.02, 3, 3),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.0 })
+      )
+      bubble.position.set(-0.42, 0.12, 0)
+      alchemyGroup477!.add(bubble)
+      alchemyBubbles477.push({ mesh: bubble, y: 0.12, maxY: 0.5, speed: 0.2 + Math.random() * 0.2, active: false })
+    }
+
+    // Ambient glow
+    const alchemyLight477 = new PointLight(0x33ff66, 0.15, 3.0)
+    alchemyLight477.position.set(0, 0.8, 0.3)
+    alchemyGroup477!.add(alchemyLight477)
+
+    scene.add(alchemyGroup477)
+  }
+
   // C438 — potion bottle shelf
   {
     _potionShelfGroup = new Group();
@@ -4570,6 +4682,35 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       mat.opacity = 0.55 + 0.25 * Math.sin(specimenT472 * (0.7 + i * 0.15) + i * 0.9);
     });
 
+    // C477 — alchemical distillation apparatus update
+    alchemyT477 += dt;
+    alchemyBubbleTimer477 -= dt;
+
+    // Liquid shimmer
+    alchemyLiquidMats477.forEach((mat, i) => {
+      mat.opacity = 0.4 + 0.15 * Math.sin(alchemyT477 * (1.2 + i * 0.4));
+    });
+
+    // Bubble lifecycle
+    if (alchemyBubbleTimer477 <= 0) {
+      alchemyBubbleTimer477 = 0.8 + Math.random() * 1.2;
+      const inactive = alchemyBubbles477.find(b => !b.active);
+      if (inactive) {
+        inactive.active = true;
+        inactive.y = 0.12;
+        inactive.mesh.position.y = 0.12;
+        (inactive.mesh.material as MeshBasicMaterial).opacity = 0.7;
+      }
+    }
+    alchemyBubbles477.forEach((b) => {
+      if (!b.active) return;
+      b.y += b.speed * dt;
+      b.mesh.position.y = b.y;
+      const mat477 = b.mesh.material as MeshBasicMaterial;
+      mat477.opacity = 0.7 * (1 - (b.y - 0.12) / 0.4);
+      if (b.y > b.maxY || mat477.opacity <= 0) b.active = false;
+    });
+
     // C441 — celestial star map parchment update
     if (starMapGroup441) {
       starMapT441 += dt;
@@ -5055,6 +5196,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       specimenGroup472 = null;
     }
     specimenJarMats472 = [];
+    // C477 — alchemical distillation apparatus dispose
+    if (alchemyGroup477) {
+      alchemyGroup477.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as Material).dispose(); }
+        if (c instanceof PointLight) c.dispose();
+      });
+      scene.remove(alchemyGroup477);
+      alchemyGroup477 = null;
+    }
+    alchemyLiquidMats477 = [];
+    alchemyBubbles477 = [];
     // C438 — potion bottle shelf dispose
     if (_potionShelfGroup) {
       _potionShelfGroup.traverse(c => {
