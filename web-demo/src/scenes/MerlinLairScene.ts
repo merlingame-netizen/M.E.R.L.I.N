@@ -1286,6 +1286,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const _herbBundles355: Group[] = [];
   const _herbLights355: PointLight[] = [];
 
+  // C361: enchanted mirror portal — oval frame + ripple surface + vision pulse
+  let mirrorGroup361: Group | null = null;
+  let mirrorSurface361: Mesh | null = null;
+  let mirrorLight361: PointLight | null = null;
+  let mirrorPulseT361 = -1;
+  let mirrorNextPulse361 = 10.0;
+
   // C231: create 12 bubble meshes rising from the cauldron (body at 2, -4.65, -7)
   {
     const CAULDRON_X = 2;
@@ -1630,6 +1637,44 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Shared mats not added to scene — dispose handled via traverse in dispose()
     stemMat.dispose();
     clusterMat.dispose();
+  }
+
+  // C361: enchanted mirror portal — tall oval frame leaning against back wall (x=2.5, y=1.2, z=-4.5)
+  {
+    mirrorGroup361 = new Group();
+
+    // Oval frame — torus scaled tall (1.0 × 1.4) to form an oval ring
+    const frameMat361 = new MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.8, metalness: 0.3, flatShading: true });
+    const frameGeo = new TorusGeometry(0.65, 0.08, 8, 20);
+    const frame = new Mesh(frameGeo, frameMat361);
+    frame.scale.set(1.0, 1.4, 1.0);
+    mirrorGroup361.add(frame);
+
+    // Mirror surface — PlaneGeometry subdivided for vertex ripple animation
+    const surfaceGeo = new PlaneGeometry(1.1, 1.5, 10, 14);
+    const surfaceMat = new MeshStandardMaterial({
+      color: 0x051505,
+      emissive: new (frameMat361.emissive.constructor as new (hex: number) => typeof frameMat361.emissive)(0x0d4420),
+      emissiveIntensity: 0.15,
+      transparent: true,
+      opacity: 0.82,
+      roughness: 0.1,
+      metalness: 0.6,
+    });
+    surfaceMat.emissive.setHex(0x0d4420);
+    mirrorSurface361 = new Mesh(surfaceGeo, surfaceMat);
+    mirrorGroup361.add(mirrorSurface361);
+
+    // Green glow light
+    mirrorLight361 = new PointLight(0x33ff66, 0.12, 3.0);
+    mirrorLight361.position.set(0, 0, 0.5);
+    mirrorGroup361.add(mirrorLight361);
+
+    // Position mirror against back wall, slightly tilted forward
+    mirrorGroup361.position.set(2.5, 1.2, -4.5);
+    mirrorGroup361.rotation.x = -0.08;
+
+    scene.add(mirrorGroup361);
   }
 
   // C241: create dual concentric rune rings on lair floor (floor top surface at y = -5 + 0.15 = -4.85)
@@ -2523,6 +2568,44 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       });
     }
 
+    // C361: enchanted mirror portal — vertex ripple + vision pulse
+    if (!lowFpsMode && mirrorSurface361) {
+      // Sinusoidal vertex displacement on mirror surface
+      const pos = (mirrorSurface361.geometry as BufferGeometry).attributes['position'];
+      if (pos) {
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const r = Math.sqrt(x * x + y * y);
+          pos.setZ(i, Math.sin(r * 4.0 - elapsedTime * 2.0) * 0.015 + Math.sin(r * 7.0 + elapsedTime * 1.3) * 0.008);
+        }
+        (pos as BufferAttribute).needsUpdate = true;
+      }
+
+      // Vision pulse timer — triggers every 10–14s
+      mirrorNextPulse361 -= dt;
+      if (mirrorNextPulse361 <= 0 && mirrorPulseT361 < 0) {
+        mirrorPulseT361 = 0;
+        mirrorNextPulse361 = 10.0 + Math.random() * 4.0;
+      }
+      if (mirrorPulseT361 >= 0) {
+        mirrorPulseT361 += dt;
+        const mat = mirrorSurface361.material as MeshStandardMaterial;
+        if (mirrorPulseT361 < 0.4) {
+          mat.emissiveIntensity = 0.15 + (mirrorPulseT361 / 0.4) * 0.45;
+          if (mirrorLight361) mirrorLight361.intensity = 0.12 + (mirrorPulseT361 / 0.4) * 0.5;
+        } else if (mirrorPulseT361 < 1.2) {
+          const decay = 1.0 - (mirrorPulseT361 - 0.4) / 0.8;
+          mat.emissiveIntensity = 0.15 + decay * 0.45;
+          if (mirrorLight361) mirrorLight361.intensity = 0.12 + decay * 0.5;
+        } else {
+          mat.emissiveIntensity = 0.15;
+          if (mirrorLight361) mirrorLight361.intensity = 0.12;
+          mirrorPulseT361 = -1;
+        }
+      }
+    }
+
     // Forest window (leaf sway + glass shimmer) — C83: gate leaf sway under !lowFpsMode
     // Leaf sway = 3 Math.sin/frame (spring/summer, default season) — cosmetic, same category as dust
     if (!lowFpsMode) lairWindow.update(elapsedTime);
@@ -2693,6 +2776,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C355: clear herb bundle refs (geometries/materials disposed by scene.traverse above)
     _herbBundles355.length = 0;
     _herbLights355.length = 0;
+    // C361: clear mirror portal refs (geometries/materials disposed by scene.traverse above)
+    mirrorGroup361 = null;
+    mirrorSurface361 = null;
+    if (mirrorLight361) { mirrorLight361 = null; }
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
