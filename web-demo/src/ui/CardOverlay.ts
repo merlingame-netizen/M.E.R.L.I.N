@@ -38,6 +38,67 @@ function extractOghamGlyph(option: CardOption): string | null {
   return null;
 }
 
+// ── Card overlay entrance animation styles injection (idempotent) ────────
+
+function ensureCardOverlayEnterStyles(): void {
+  if (document.getElementById('card-overlay-enter-style')) return;
+  const s = document.createElement('style');
+  s.id = 'card-overlay-enter-style';
+  s.textContent = `
+    @keyframes card-overlay-enter {
+      from { transform: translateY(-30px) scale(0.94); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .card-overlay-enter {
+      animation: card-overlay-enter 280ms ease-out forwards;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+// ── Spawn green sparks that sweep outward from overlay center (C315) ──────
+
+function spawnCardSparks(overlayEl: HTMLElement): void {
+  const rect = overlayEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  for (let i = 0; i < 6; i++) {
+    const spark = document.createElement('div');
+    const angle = (i / 6) * 2 * Math.PI + (Math.random() * 0.5 - 0.25);
+    const dist = 80 + Math.random() * 60; // 80–140 px
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+
+    spark.style.cssText = [
+      'position:fixed',
+      `left:${cx - 2}px`,
+      `top:${cy - 2}px`,
+      'width:4px',
+      'height:4px',
+      'border-radius:50%',
+      'background:rgba(51,255,102,0.8)',
+      'pointer-events:none',
+      'z-index:9999',
+      'transition:transform 400ms ease-out, opacity 400ms ease-out',
+      'transform:translate(0,0)',
+      'opacity:1',
+    ].join(';');
+
+    document.body.appendChild(spark);
+
+    // Trigger transition on next frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        spark.style.transform = `translate(${dx}px,${dy}px)`;
+        spark.style.opacity = '0';
+      });
+    });
+
+    setTimeout(() => { spark.remove(); }, 400);
+  }
+}
+
 // ── Card flip-reveal animation styles injection (idempotent) ─────────────
 
 function ensureCardFlipStyles(): void {
@@ -444,6 +505,7 @@ function triggerFlipAnimation(): void {
 
 // C142/COLL: optional reveal flag — coll ogham (reveal_all_options) makes effects persistently visible
 export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
+  ensureCardOverlayEnterStyles();
   ensureCardFlipStyles();
   ensureCardSelectStyle();
   ensureCardBadgeStyles();
@@ -740,6 +802,14 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     // hidden (display:none or opacity:0) causes older screen readers to skip the
     // live-region update since the element is not in the accessibility tree yet.
     overlayEl.classList.add('visible');
+
+    // C315: draw whoosh entrance — overlay slides in from top with scale
+    overlayEl.classList.remove('card-overlay-enter');
+    void overlayEl.offsetWidth; // force reflow to restart animation
+    overlayEl.classList.add('card-overlay-enter');
+    sfx('whoosh');
+    spawnCardSparks(overlayEl);
+
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
     // C261: 3D perspective flip-reveal on the main card panel
