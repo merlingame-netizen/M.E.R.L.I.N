@@ -695,6 +695,13 @@ let seaStackGroup464: Group | null = null;
 let seaStackT464: number = 0;
 const seaStackBirds464: Group[] = [];
 
+// ── Ancient surf menhir (C469) ────────────────────────────────────────────
+let surfMenhirGroup469: Group | null = null;
+let surfMenhirT469: number = 0;
+let surfMenhirFoamMat469: MeshBasicMaterial | null = null;
+const surfMenhirGlyphs469: Mesh[] = [];
+let surfMenhirWaveTimer469: number = 25;
+
 export async function buildCoastScene(): Promise<BiomeSceneResult> {
   const group = new Group();
 
@@ -1838,6 +1845,73 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     group.add(seaStackGroup464);
   }
 
+  // ── Ancient surf menhir (C469) ────────────────────────────────────────────
+  {
+    surfMenhirGroup469 = new Group();
+    surfMenhirGroup469.position.set(-4, -1.0, -6);
+
+    // Main menhir shaft — tall tapered box
+    const menhirShaft = new Mesh(
+      new BoxGeometry(0.85, 5.5, 0.65),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    menhirShaft.position.y = 2.75;
+    // Slight lean
+    menhirShaft.rotation.z = 0.04;
+    surfMenhirGroup469!.add(menhirShaft);
+
+    // Wider base (submerged section)
+    const menhirBase = new Mesh(
+      new BoxGeometry(1.1, 1.5, 0.85),
+      new MeshBasicMaterial({ color: 0x0a1a10 })
+    );
+    menhirBase.position.y = 0.0;
+    surfMenhirGroup469!.add(menhirBase);
+
+    // 6 Ogham glyph planes on front face — vertical column
+    for (let i = 0; i < 6; i++) {
+      const glyph = new Mesh(
+        new PlaneGeometry(0.12, 0.2),
+        new MeshBasicMaterial({ color: 0x33ff66, transparent: true, opacity: 0.55 })
+      );
+      glyph.position.set(0.33, 0.8 + i * 0.6, 0);
+      surfMenhirGlyphs469.push(glyph);
+      surfMenhirGroup469!.add(glyph);
+    }
+
+    // Algae/barnacle patches (dark green spheres, flattened)
+    for (let i = 0; i < 5; i++) {
+      const patch = new Mesh(
+        new SphereGeometry(0.1 + Math.random() * 0.07, 4, 3),
+        new MeshBasicMaterial({ color: 0x0d2a14 })
+      );
+      patch.scale.y = 0.3;
+      patch.position.set(
+        (Math.random() - 0.5) * 0.7,
+        -0.3 + Math.random() * 0.8,
+        0.35
+      );
+      surfMenhirGroup469!.add(patch);
+    }
+
+    // Surf foam ring at water line
+    const menhirFoam = new Mesh(
+      new TorusGeometry(0.75, 0.12, 4, 16),
+      new MeshBasicMaterial({ color: 0x0d2a14, transparent: true, opacity: 0.5 })
+    );
+    menhirFoam.rotation.x = Math.PI * 0.5;
+    menhirFoam.position.y = 0.05;
+    surfMenhirFoamMat469 = menhirFoam.material as MeshBasicMaterial;
+    surfMenhirGroup469!.add(menhirFoam);
+
+    // Glow light
+    const menhirLight = new PointLight(0x33ff66, 0.12, 5.0);
+    menhirLight.position.set(0, 2.0, 0.5);
+    surfMenhirGroup469!.add(menhirLight);
+
+    group.add(surfMenhirGroup469);
+  }
+
   // ── Runtime state ─────────────────────────────────────────────────────────
   let sceneTime = 0;
   let _oceanAltFrame = false;
@@ -2369,6 +2443,29 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       if (wings[2]) wings[2].rotation.z = -(Math.PI * 0.1 + 0.12 * Math.sin(seaStackT464 * 4 + phase));
     });
 
+    // ── Surf menhir animation (C469) ──────────────────────────────────────
+    surfMenhirT469 += dt;
+    surfMenhirWaveTimer469 -= dt;
+
+    // Glyph breathing
+    surfMenhirGlyphs469.forEach((g, i) => {
+      const mat = g.material as MeshBasicMaterial;
+      mat.opacity = 0.4 + 0.2 * Math.sin(surfMenhirT469 * 0.7 + i * 0.5);
+    });
+
+    // Foam shimmer
+    if (surfMenhirFoamMat469) {
+      surfMenhirFoamMat469.opacity = 0.4 + 0.15 * Math.sin(surfMenhirT469 * 2.0);
+    }
+
+    // Wave crash event
+    if (surfMenhirWaveTimer469 <= 0) {
+      surfMenhirWaveTimer469 = 20 + Math.random() * 15;
+      // Flash foam
+      if (surfMenhirFoamMat469) surfMenhirFoamMat469.opacity = 0.9;
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'water_drop' } }));
+    }
+
     // ── Breaking wave (C395) ────────────────────────────────────────────────
     if (waveFace395 && waveCrest395 && waveFlashLight395) {
       const faceMat = waveFace395.material as MeshBasicMaterial;
@@ -2593,6 +2690,17 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       seaStackGroup464 = null;
     }
     seaStackBirds464.length = 0;
+    if (surfMenhirGroup469) {
+      surfMenhirGroup469.traverse(c => {
+        if (c instanceof Mesh) {
+          c.geometry.dispose();
+          (c.material as Material).dispose();
+        }
+      });
+      surfMenhirGroup469 = null;
+    }
+    surfMenhirFoamMat469 = null;
+    surfMenhirGlyphs469.length = 0;
     group.clear();
   };
 
