@@ -671,6 +671,18 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
   let bellTollTimer478: number = 20
   let towerAlgaeMats478: Mesh[] = []
 
+  // ── Sunken rune boat — marais_korrigans (C506) ────────────────────────────
+  let runeBoatGroup506: Group | null = null
+  let runeBoatRuneMats506: MeshStandardMaterial[] = []
+  let runeBoatLight506: PointLight | null = null
+  let runeBoatT506: number = 0
+  let runeBoatSurgeTimer506: number = 30 + Math.random() * 15
+  let runeBoatSurging506: boolean = false
+  let runeBoatSurgeT506: number = 0
+  let runeBoatKorriganMat506: MeshStandardMaterial | null = null
+  let runeBoatBaseX506: number = -3
+  let runeBoatBaseZ506: number = -8
+
   // Water plane for marais biome
   if (biome === 'marais_korrigans') {
     const waterMat = new MeshStandardMaterial({
@@ -1168,6 +1180,71 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     bellTowerGroup478!.add(towerLight)
 
     group.add(bellTowerGroup478)
+
+    // Sunken rune boat (C506)
+    runeBoatGroup506 = new Group()
+    runeBoatGroup506.position.set(runeBoatBaseX506, -0.15, runeBoatBaseZ506)
+
+    const hullMat506 = new MeshStandardMaterial({ color: 0x060e06, roughness: 0.95, metalness: 0.0, flatShading: true })
+    const hull = new Mesh(new BoxGeometry(1.8, 0.35, 0.7), hullMat506)
+    hull.position.y = 0
+    runeBoatGroup506.add(hull)
+
+    const deckRimMat506 = new MeshStandardMaterial({ color: 0x0c1a0c, roughness: 0.9, metalness: 0.0, flatShading: true })
+    const deckRim = new Mesh(new BoxGeometry(2.0, 0.08, 0.75), deckRimMat506)
+    deckRim.position.y = 0.135
+    runeBoatGroup506.add(deckRim)
+
+    const mastMat506 = new MeshStandardMaterial({ color: 0x080f08, roughness: 0.95, metalness: 0.0 })
+    const mast = new Mesh(new CylinderGeometry(0.06, 0.08, 0.9, 5), mastMat506)
+    mast.position.set(-0.5, 0.58, 0)
+    mast.rotation.z = 0.22
+    runeBoatGroup506.add(mast)
+
+    const runePlaneMat = new MeshStandardMaterial({
+      color: 0x001a00,
+      emissive: 0x33ff66,
+      emissiveIntensity: 0.7,
+      transparent: true,
+      opacity: 0.9,
+      side: 2,
+    })
+
+    const RUNE_POSITIONS: [number, number, number, number][] = [
+      [-0.6, 0.0, 0.351, 0],
+      [-0.1, 0.0, 0.351, 0],
+      [ 0.4, 0.0, 0.351, 0],
+      [-0.6, 0.0, -0.351, Math.PI],
+      [ 0.1, 0.0, -0.351, Math.PI],
+      [ 0.5, 0.0, -0.351, Math.PI],
+    ]
+    runeBoatRuneMats506 = []
+    for (let ri = 0; ri < RUNE_POSITIONS.length; ri++) {
+      const [rx, ry, rz, ry2] = RUNE_POSITIONS[ri]
+      const mat = runePlaneMat.clone()
+      runeBoatRuneMats506.push(mat)
+      const runePlane = new Mesh(new PlaneGeometry(0.12, 0.18), mat)
+      runePlane.position.set(rx, ry, rz)
+      runePlane.rotation.y = ry2
+      runeBoatGroup506.add(runePlane)
+    }
+
+    const korriganBodyMat = new MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.95, metalness: 0.0, flatShading: true, emissive: 0x000000, emissiveIntensity: 0.0 })
+    runeBoatKorriganMat506 = korriganBodyMat
+    const korriganBody = new Mesh(new BoxGeometry(0.08, 0.1, 0.06), korriganBodyMat)
+    korriganBody.position.set(0.75, 0.22, 0)
+    runeBoatGroup506.add(korriganBody)
+    const korriganHeadMat = korriganBodyMat.clone()
+    const korriganHead = new Mesh(new SphereGeometry(0.06, 5, 4), korriganHeadMat)
+    korriganHead.position.set(0.75, 0.37, 0)
+    runeBoatGroup506.add(korriganHead)
+
+    const boatLight = new PointLight(0x33ff66, 0.4, 4.0)
+    boatLight.position.set(0, 0, 0)
+    runeBoatGroup506.add(boatLight)
+    runeBoatLight506 = boatLight
+
+    group.add(runeBoatGroup506)
   }
 
   // Landes bruyere: heather bushes (low orange-purple blobs)
@@ -5039,6 +5116,66 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
         }
       }
     }
+    // Marais korrigans — sunken rune boat rock & ritual (C506)
+    if (runeBoatGroup506) {
+      runeBoatT506 += dt
+      const t506 = runeBoatT506
+      // Gentle rocking
+      runeBoatGroup506.rotation.z = 0.04 * Math.sin(t506 * 0.8)
+      runeBoatGroup506.rotation.x = 0.02 * Math.sin(t506 * 1.1 + 0.5)
+      // Tiny oval drift
+      runeBoatGroup506.position.x = runeBoatBaseX506 + 0.1 * Math.sin(t506 * 0.3)
+      runeBoatGroup506.position.z = runeBoatBaseZ506 + 0.05 * Math.sin(t506 * 0.5)
+      // Rune pulse (independent per rune)
+      for (let ri = 0; ri < runeBoatRuneMats506.length; ri++) {
+        runeBoatRuneMats506[ri].emissiveIntensity = 0.5 + 0.4 * Math.sin(t506 * 1.8 + ri * 1.0)
+      }
+      // Light flicker
+      if (runeBoatLight506) {
+        runeBoatLight506.intensity = 0.3 + 0.15 * Math.sin(t506 * 3.7 + Math.sin(t506 * 1.3))
+      }
+      // Surge timer countdown
+      if (!runeBoatSurging506) {
+        runeBoatSurgeTimer506 -= dt
+        if (runeBoatSurgeTimer506 <= 0) {
+          runeBoatSurging506 = true
+          runeBoatSurgeT506 = 0
+          runeBoatSurgeTimer506 = 30 + Math.random() * 15
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'shimmer' } }))
+        }
+      } else {
+        runeBoatSurgeT506 += dt
+        const surgePhase = runeBoatSurgeT506
+        let runeIntensity: number
+        let lightIntensity: number
+        let korriganGlow: number
+        if (surgePhase < 0.3) {
+          const p = surgePhase / 0.3
+          runeIntensity = 0.7 + p * (2.5 - 0.7)
+          lightIntensity = 0.4 + p * (1.5 - 0.4)
+          korriganGlow = p * 0.6
+        } else if (surgePhase < 2.0) {
+          runeIntensity = 2.5
+          lightIntensity = 1.5
+          korriganGlow = 0.6
+        } else if (surgePhase < 3.0) {
+          const p = (surgePhase - 2.0) / 1.0
+          runeIntensity = 2.5 - p * (2.5 - 0.7)
+          lightIntensity = 1.5 - p * (1.5 - 0.4)
+          korriganGlow = 0.6 - p * 0.6
+        } else {
+          runeBoatSurging506 = false
+          runeIntensity = 0.7
+          lightIntensity = 0.4
+          korriganGlow = 0.0
+        }
+        for (const mat of runeBoatRuneMats506) {
+          mat.emissiveIntensity = runeIntensity
+        }
+        if (runeBoatLight506) runeBoatLight506.intensity = lightIntensity
+        if (runeBoatKorriganMat506) runeBoatKorriganMat506.emissiveIntensity = korriganGlow
+      }
+    }
     // Landes bruyere — spirit gateway portal shimmer (C437)
     if (gatewayGroup437 && gatewayPortal437 && gatewayLight437) {
       gatewayT437 += dt;
@@ -5488,6 +5625,19 @@ export async function buildGenericBiomeScene(biome: string): Promise<BiomeSceneR
     bellGroup478 = null
     bellTolling478 = false
     towerAlgaeMats478 = []
+    // Sunken rune boat cleanup (C506)
+    if (runeBoatGroup506) {
+      runeBoatGroup506.traverse((c) => {
+        if (c instanceof Mesh) { c.geometry.dispose(); (c.material as MeshStandardMaterial).dispose() }
+        if (c instanceof PointLight) c.dispose()
+      })
+      group.remove(runeBoatGroup506)
+      runeBoatGroup506 = null
+    }
+    runeBoatRuneMats506 = []
+    runeBoatLight506 = null
+    runeBoatKorriganMat506 = null
+    runeBoatSurging506 = false
     // Moonrise arc cleanup (C433)
     if (stoneMoonGroup433) {
       stoneMoonGroup433.traverse(c => {
