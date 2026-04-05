@@ -562,6 +562,88 @@ function animatePathDraw(
   requestAnimationFrame(tick);
 }
 
+// ── Sparkle particle trail (C379) ────────────────────────────────────────────
+//
+// Tiny green sparkle particles float upward along completed path segments,
+// giving the path a magical "recently traveled" feel. DOM-overlay approach
+// on top of the canvas inside the map right panel.
+
+interface PathParticle379 {
+  el: HTMLElement;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+}
+
+let pathParticles379: PathParticle379[] = [];
+let pathParticleContainer379: HTMLElement | null = null;
+let pathSpawnTimer379 = 0;
+
+function initPathParticles379(container: HTMLElement): void {
+  if (pathParticleContainer379) return;
+  pathParticleContainer379 = document.createElement('div');
+  pathParticleContainer379.id = 'path-particles-379';
+  pathParticleContainer379.style.cssText =
+    'position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;';
+  container.appendChild(pathParticleContainer379);
+}
+
+function spawnPathParticle379(x: number, y: number): void {
+  if (!pathParticleContainer379) return;
+  const el = document.createElement('div');
+  el.style.cssText = [
+    'position:absolute',
+    `left:${x}px`,
+    `top:${y}px`,
+    'width:3px',
+    'height:3px',
+    'background:#33ff66',
+    'border-radius:50%',
+    'pointer-events:none',
+    'opacity:0.8',
+    'transform:translate(-50%,-50%)',
+  ].join(';');
+  pathParticleContainer379.appendChild(el);
+  pathParticles379.push({
+    el,
+    x,
+    y,
+    vx: (Math.random() - 0.5) * 20,
+    vy: -15 - Math.random() * 20,
+    life: 0,
+    maxLife: 1.5 + Math.random() * 0.5,
+  });
+}
+
+function updatePathParticles379(dtSec: number): void {
+  pathParticles379 = pathParticles379.filter((p) => {
+    p.life += dtSec;
+    if (p.life >= p.maxLife) {
+      p.el.remove();
+      return false;
+    }
+    p.x += p.vx * dtSec;
+    p.y += p.vy * dtSec;
+    p.vy += 10 * dtSec; // light gravity drag
+    const opacity = (1 - p.life / p.maxLife) * 0.8;
+    p.el.style.left = `${p.x}px`;
+    p.el.style.top = `${p.y}px`;
+    p.el.style.opacity = String(opacity);
+    return true;
+  });
+}
+
+function cleanupPathParticles379(): void {
+  pathParticleContainer379?.remove();
+  pathParticleContainer379 = null;
+  for (const p of pathParticles379) p.el.remove();
+  pathParticles379 = [];
+  pathSpawnTimer379 = 0;
+}
+
 // ── Easing helpers ────────────────────────────────────────────────────────────
 
 /** Ease-out bounce — maps t ∈ [0,1] to a bounced value ∈ [0,1] */
@@ -947,6 +1029,9 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   const factionBars = buildFactionBars(store.getState().run.factions);
   rightPanel.appendChild(factionBars);
 
+  // C379: init sparkle particle container over the canvas
+  initPathParticles379(rightPanel);
+
   // ── C158: Start LLM call IMMEDIATELY (parallel with fade-in) ─────────────
   const llm = getLLMAdapter();
   const scenarioPromise: Promise<RunScenario> = llm
@@ -1178,6 +1263,21 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
         animState.progress = Math.min(animState.progress + dt / PATH_ANIM_MS, 1);
         redrawCanvas();
 
+        // C379: spawn sparkle particles along the completed path at ~2-3/s
+        if (animState.progress > 0) {
+          const dtSec = dt / 1000;
+          pathSpawnTimer379 += dtSec;
+          const SPAWN_INTERVAL = 0.4; // ~2.5 particles/s
+          while (pathSpawnTimer379 >= SPAWN_INTERVAL) {
+            pathSpawnTimer379 -= SPAWN_INTERVAL;
+            // Pick a random position along the already-drawn portion of the path
+            const spawnT = Math.random() * animState.progress;
+            const spawnPt = getPathPoint(mapData.pathPoints, spawnT);
+            spawnPathParticle379(spawnPt.x, spawnPt.y);
+          }
+          updatePathParticles379(dtSec);
+        }
+
         // Position cursor orb at the leading edge of the drawn path
         const orbPt = getPathPoint(mapData.pathPoints, animState.progress);
         cursorOrb.style.left = orbPt.x + 'px';
@@ -1399,6 +1499,8 @@ export async function showMapGenOverlay(biome: string): Promise<void> {
   // ── Cleanup ───────────────────────────────────────────────────────────────
   window.removeEventListener('resize', resizeCanvas);
   document.getElementById('map-dive-style')?.remove();
+  // C379: clean up sparkle particles
+  cleanupPathParticles379();
   // Remove any lingering fog-overlay elements (C364)
   for (const fogEl of fogNodeEls) {
     fogEl.querySelectorAll('.fog-overlay').forEach((el) => el.parentNode?.removeChild(el));
