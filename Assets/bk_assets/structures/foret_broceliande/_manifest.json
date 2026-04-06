@@ -1,0 +1,19 @@
+{
+  "generator": "blender_n64_generator.py (BK v2)",
+  "style": "banjo-kazooie",
+  "category": "structures",
+  "biome": "foret_broceliande",
+  "count": 1,
+  "assets": [
+    {
+      "name": "structure_bk_foret_broceliande_0000.glb",
+      "category": "structures",
+      "biome": "foret_broceliande",
+      "generator": "structure_bk",
+      "variant": 0,
+      "tris": 500,
+      "budget": 500,
+      "file_size_kb": 44.4
+    }
+  ]
+}

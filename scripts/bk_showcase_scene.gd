@@ -1,0 +1,233 @@
+extends Node3D
+## BK Showcase Scene — procedurally places BK assets with BK-style environment.
+## Builds a Broceliande forest clearing at runtime from GLB assets.
+
+const ASSET_BASE: String = "res://Assets/bk_assets/"
+const BIOME: String = "foret_broceliande"
+
+# Layout: category, subfolder, count, radius_min, radius_max, scale_min, scale_max, y_offset
+const PLACEMENTS: Array = [
+	["vegetation", "vegetation", 6, 8.0, 25.0, 0.8, 1.4, 0.0],
+	["rocks", "rocks", 8, 5.0, 22.0, 0.6, 1.2, 0.0],
+	["megaliths", "megaliths", 4, 10.0, 20.0, 0.9, 1.3, 0.0],
+	["structures", "structures", 2, 12.0, 18.0, 0.7, 1.0, 0.0],
+	["collectibles", "collectibles", 5, 3.0, 15.0, 0.8, 1.0, 0.3],
+	["characters", "characters", 3, 6.0, 14.0, 0.8, 1.1, 0.0],
+	["props", "props", 2, 8.0, 16.0, 0.9, 1.1, 0.0],
+]
+
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+
+func _ready() -> void:
+	_rng.seed = 2026
+	_build_ground()
+	_build_environment()
+	_place_assets()
+	_add_info_label()
+
+
+func _build_ground() -> void:
+	# Large green ground plane with BK vertex colors
+	var mesh: PlaneMesh = PlaneMesh.new()
+	mesh.size = Vector2(60.0, 60.0)
+	mesh.subdivide_width = 20
+	mesh.subdivide_depth = 20
+
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.353, 0.541, 0.227)  # GRASS_GREEN
+	mat.roughness = 1.0
+	mat.metallic = 0.0
+	mat.metallic_specular = 0.0
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+
+	var ground_inst: MeshInstance3D = MeshInstance3D.new()
+	ground_inst.mesh = mesh
+	ground_inst.material_override = mat
+	ground_inst.name = "Ground"
+	add_child(ground_inst)
+
+	# Secondary darker ring around edges
+	var ring_mesh: PlaneMesh = PlaneMesh.new()
+	ring_mesh.size = Vector2(100.0, 100.0)
+	ring_mesh.subdivide_width = 4
+	ring_mesh.subdivide_depth = 4
+
+	var ring_mat: StandardMaterial3D = StandardMaterial3D.new()
+	ring_mat.albedo_color = Color(0.227, 0.416, 0.165)  # MOSS_GREEN
+	ring_mat.roughness = 1.0
+	ring_mat.metallic = 0.0
+	ring_mat.metallic_specular = 0.0
+
+	var ring_inst: MeshInstance3D = MeshInstance3D.new()
+	ring_inst.mesh = ring_mesh
+	ring_inst.material_override = ring_mat
+	ring_inst.position.y = -0.01
+	ring_inst.name = "GroundEdge"
+	add_child(ring_inst)
+
+	# Dirt path — narrow strip
+	var path_mesh: PlaneMesh = PlaneMesh.new()
+	path_mesh.size = Vector2(3.0, 50.0)
+
+	var path_mat: StandardMaterial3D = StandardMaterial3D.new()
+	path_mat.albedo_color = Color(0.616, 0.404, 0.286)  # BANJO_BROWN
+	path_mat.roughness = 1.0
+	path_mat.metallic = 0.0
+	path_mat.metallic_specular = 0.0
+
+	var path_inst: MeshInstance3D = MeshInstance3D.new()
+	path_inst.mesh = path_mesh
+	path_inst.material_override = path_mat
+	path_inst.position.y = 0.005
+	path_inst.name = "DirtPath"
+	add_child(path_inst)
+
+
+func _build_environment() -> void:
+	# WorldEnvironment with BK-style warm sky and fog
+	var env: Environment = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.349, 0.749, 0.780)  # SKY_CYAN
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.941, 0.910, 0.816)  # CREAM_LIGHT
+	env.ambient_light_energy = 0.4
+
+	# BK fog — matches sky color, warm
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.349, 0.749, 0.780)  # Same as sky
+	env.fog_density = 0.008
+	env.fog_sky_affect = 1.0
+
+	# Tonemap for warm BK look
+	env.tonemap_mode = Environment.TONE_MAP_FILMIC
+	env.tonemap_white = 6.0
+
+	var world_env: WorldEnvironment = WorldEnvironment.new()
+	world_env.environment = env
+	world_env.name = "WorldEnvironment"
+	add_child(world_env)
+
+	# Key light — warm sun (BK signature warm sunlight)
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.light_color = Color(1.0, 0.95, 0.85)
+	sun.light_energy = 1.2
+	sun.shadow_enabled = true
+	sun.rotation_degrees = Vector3(-45.0, 30.0, 0.0)
+	sun.name = "SunLight"
+	add_child(sun)
+
+	# Fill light — cool blue from opposite side
+	var fill: DirectionalLight3D = DirectionalLight3D.new()
+	fill.light_color = Color(0.7, 0.8, 1.0)
+	fill.light_energy = 0.3
+	fill.shadow_enabled = false
+	fill.rotation_degrees = Vector3(-30.0, -150.0, 0.0)
+	fill.name = "FillLight"
+	add_child(fill)
+
+
+func _place_assets() -> void:
+	var placed_positions: Array[Vector3] = []
+
+	for placement in PLACEMENTS:
+		var category: String = placement[0]
+		var subfolder: String = placement[1]
+		var count: int = placement[2]
+		var r_min: float = placement[3]
+		var r_max: float = placement[4]
+		var s_min: float = placement[5]
+		var s_max: float = placement[6]
+		var y_off: float = placement[7]
+
+		# Find available GLB files for this category
+		var dir_path: String = ASSET_BASE + subfolder + "/" + BIOME + "/"
+		var glb_files: Array = _scan_glb_files(dir_path)
+
+		if glb_files.is_empty():
+			push_warning("BKShowcase: No GLB files in " + dir_path)
+			continue
+
+		for i in range(count):
+			var glb_path: String = glb_files[i % glb_files.size()]
+			_spawn_asset(glb_path, category, i, r_min, r_max, s_min, s_max, y_off, placed_positions)
+
+
+func _scan_glb_files(dir_path: String) -> Array:
+	var files: Array = []
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return files
+	dir.list_dir_begin()
+	var file_name: String = dir.get_next()
+	while file_name != "":
+		if file_name.ends_with(".glb"):
+			files.append(dir_path + file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	return files
+
+
+func _spawn_asset(glb_path: String, category: String, index: int,
+		r_min: float, r_max: float, s_min: float, s_max: float,
+		y_off: float, placed_positions: Array) -> void:
+	# Load GLB as PackedScene
+	var scene: PackedScene = load(glb_path) as PackedScene
+	if scene == null:
+		push_warning("BKShowcase: Failed to load " + glb_path)
+		return
+
+	var instance: Node3D = scene.instantiate() as Node3D
+	if instance == null:
+		return
+
+	# Find non-overlapping position (skip if all attempts fail)
+	var pos: Vector3 = Vector3.ZERO
+	var min_dist: float = 3.0
+	var found_spot: bool = false
+	for _attempt in range(30):
+		var angle: float = _rng.randf() * TAU
+		var radius: float = _rng.randf_range(r_min, r_max)
+		pos = Vector3(cos(angle) * radius, y_off, sin(angle) * radius)
+
+		var too_close: bool = false
+		for existing in placed_positions:
+			if pos.distance_to(existing as Vector3) < min_dist:
+				too_close = true
+				break
+		if not too_close:
+			found_spot = true
+			break
+
+	if not found_spot:
+		instance.queue_free()
+		push_warning("BKShowcase: Could not place " + glb_path + " without overlap, skipping")
+		return
+
+	placed_positions.append(pos)
+
+	instance.position = pos
+	instance.rotation.y = _rng.randf() * TAU
+
+	var s: float = _rng.randf_range(s_min, s_max)
+	instance.scale = Vector3(s, s, s)
+
+	instance.name = category + "_" + str(index)
+	add_child(instance)
+
+
+func _add_info_label() -> void:
+	# HUD with controls info
+	var canvas: CanvasLayer = CanvasLayer.new()
+	canvas.name = "HUD"
+	add_child(canvas)
+
+	var label: Label = Label.new()
+	label.text = "BK Showcase - Foret de Broceliande\nWASD: Move | Mouse: Look | Shift: Fast | Scroll: Speed | Esc: Release mouse"
+	label.position = Vector2(16, 16)
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(0.941, 0.910, 0.816))  # CREAM_LIGHT
+	label.add_theme_color_override("font_shadow_color", Color(0.286, 0.235, 0.184, 0.8))  # SHADOW_BROWN
+	label.add_theme_constant_override("shadow_offset_x", 2)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	canvas.add_child(label)

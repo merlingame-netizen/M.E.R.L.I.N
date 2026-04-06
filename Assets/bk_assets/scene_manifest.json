@@ -1,0 +1,233 @@
+[
+  {
+    "name": "tree_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/vegetation/foret_broceliande/tree_bk_foret_broceliande_0000.glb",
+    "category": "vegetation",
+    "biome": "foret_broceliande",
+    "generator": "tree_bk",
+    "variant": 0,
+    "tris": 400,
+    "budget": 400,
+    "sizeKb": 54.2
+  },
+  {
+    "name": "tree_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/vegetation/foret_broceliande/tree_bk_foret_broceliande_0001.glb",
+    "category": "vegetation",
+    "biome": "foret_broceliande",
+    "generator": "tree_bk",
+    "variant": 1,
+    "tris": 400,
+    "budget": 400,
+    "sizeKb": 53.8
+  },
+  {
+    "name": "tree_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/vegetation/foret_broceliande/tree_bk_foret_broceliande_0002.glb",
+    "category": "vegetation",
+    "biome": "foret_broceliande",
+    "generator": "tree_bk",
+    "variant": 2,
+    "tris": 400,
+    "budget": 400,
+    "sizeKb": 53.5
+  },
+  {
+    "name": "rock_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/rocks/foret_broceliande/rock_bk_foret_broceliande_0000.glb",
+    "category": "rocks",
+    "biome": "foret_broceliande",
+    "generator": "rock_bk",
+    "variant": 0,
+    "tris": 200,
+    "budget": 200,
+    "sizeKb": 28.4
+  },
+  {
+    "name": "rock_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/rocks/foret_broceliande/rock_bk_foret_broceliande_0001.glb",
+    "category": "rocks",
+    "biome": "foret_broceliande",
+    "generator": "rock_bk",
+    "variant": 1,
+    "tris": 200,
+    "budget": 200,
+    "sizeKb": 28.4
+  },
+  {
+    "name": "rock_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/rocks/foret_broceliande/rock_bk_foret_broceliande_0002.glb",
+    "category": "rocks",
+    "biome": "foret_broceliande",
+    "generator": "rock_bk",
+    "variant": 2,
+    "tris": 200,
+    "budget": 200,
+    "sizeKb": 28.4
+  },
+  {
+    "name": "structure_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/structures/foret_broceliande/structure_bk_foret_broceliande_0000.glb",
+    "category": "structures",
+    "biome": "foret_broceliande",
+    "generator": "structure_bk",
+    "variant": 0,
+    "tris": 500,
+    "budget": 500,
+    "sizeKb": 44.4
+  },
+  {
+    "name": "structure_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/structures/foret_broceliande/structure_bk_foret_broceliande_0001.glb",
+    "category": "structures",
+    "biome": "foret_broceliande",
+    "generator": "structure_bk",
+    "variant": 1,
+    "tris": 498,
+    "budget": 500,
+    "sizeKb": 44.5
+  },
+  {
+    "name": "structure_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/structures/foret_broceliande/structure_bk_foret_broceliande_0002.glb",
+    "category": "structures",
+    "biome": "foret_broceliande",
+    "generator": "structure_bk",
+    "variant": 2,
+    "tris": 498,
+    "budget": 500,
+    "sizeKb": 44.2
+  },
+  {
+    "name": "megalith_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/megaliths/foret_broceliande/megalith_bk_foret_broceliande_0000.glb",
+    "category": "megaliths",
+    "biome": "foret_broceliande",
+    "generator": "megalith_bk",
+    "variant": 0,
+    "tris": 250,
+    "budget": 250,
+    "sizeKb": 28.7
+  },
+  {
+    "name": "megalith_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/megaliths/foret_broceliande/megalith_bk_foret_broceliande_0001.glb",
+    "category": "megaliths",
+    "biome": "foret_broceliande",
+    "generator": "megalith_bk",
+    "variant": 1,
+    "tris": 250,
+    "budget": 250,
+    "sizeKb": 28.7
+  },
+  {
+    "name": "megalith_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/megaliths/foret_broceliande/megalith_bk_foret_broceliande_0002.glb",
+    "category": "megaliths",
+    "biome": "foret_broceliande",
+    "generator": "megalith_bk",
+    "variant": 2,
+    "tris": 250,
+    "budget": 250,
+    "sizeKb": 29.4
+  },
+  {
+    "name": "collectible_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/collectibles/foret_broceliande/collectible_bk_foret_broceliande_0000.glb",
+    "category": "collectibles",
+    "biome": "foret_broceliande",
+    "generator": "collectible_bk",
+    "variant": 0,
+    "tris": 80,
+    "budget": 100,
+    "sizeKb": 12.2
+  },
+  {
+    "name": "collectible_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/collectibles/foret_broceliande/collectible_bk_foret_broceliande_0001.glb",
+    "category": "collectibles",
+    "biome": "foret_broceliande",
+    "generator": "collectible_bk",
+    "variant": 1,
+    "tris": 100,
+    "budget": 100,
+    "sizeKb": 13.5
+  },
+  {
+    "name": "collectible_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/collectibles/foret_broceliande/collectible_bk_foret_broceliande_0002.glb",
+    "category": "collectibles",
+    "biome": "foret_broceliande",
+    "generator": "collectible_bk",
+    "variant": 2,
+    "tris": 80,
+    "budget": 100,
+    "sizeKb": 12.2
+  },
+  {
+    "name": "creature_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/characters/foret_broceliande/creature_bk_foret_broceliande_0000.glb",
+    "category": "characters",
+    "biome": "foret_broceliande",
+    "generator": "creature_bk",
+    "variant": 0,
+    "tris": 600,
+    "budget": 600,
+    "sizeKb": 77.4
+  },
+  {
+    "name": "creature_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/characters/foret_broceliande/creature_bk_foret_broceliande_0001.glb",
+    "category": "characters",
+    "biome": "foret_broceliande",
+    "generator": "creature_bk",
+    "variant": 1,
+    "tris": 600,
+    "budget": 600,
+    "sizeKb": 77.4
+  },
+  {
+    "name": "creature_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/characters/foret_broceliande/creature_bk_foret_broceliande_0002.glb",
+    "category": "characters",
+    "biome": "foret_broceliande",
+    "generator": "creature_bk",
+    "variant": 2,
+    "tris": 600,
+    "budget": 600,
+    "sizeKb": 77.4
+  },
+  {
+    "name": "bridge_bk_foret_broceliande_0000.glb",
+    "path": "bk_assets/props/foret_broceliande/bridge_bk_foret_broceliande_0000.glb",
+    "category": "props",
+    "biome": "foret_broceliande",
+    "generator": "bridge_bk",
+    "variant": 0,
+    "tris": 400,
+    "budget": 400,
+    "sizeKb": 45.3
+  },
+  {
+    "name": "bridge_bk_foret_broceliande_0001.glb",
+    "path": "bk_assets/props/foret_broceliande/bridge_bk_foret_broceliande_0001.glb",
+    "category": "props",
+    "biome": "foret_broceliande",
+    "generator": "bridge_bk",
+    "variant": 1,
+    "tris": 400,
+    "budget": 400,
+    "sizeKb": 48.4
+  },
+  {
+    "name": "bridge_bk_foret_broceliande_0002.glb",
+    "path": "bk_assets/props/foret_broceliande/bridge_bk_foret_broceliande_0002.glb",
+    "category": "props",
+    "biome": "foret_broceliande",
+    "generator": "bridge_bk",
+    "variant": 2,
+    "tris": 400,
+    "budget": 400,
+    "sizeKb": 47.8
+  }
+]

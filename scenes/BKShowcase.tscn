@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/bk_showcase_scene.gd" id="1_scene"]
+[ext_resource type="Script" path="res://scripts/bk_free_camera.gd" id="2_camera"]
+
+[node name="BKShowcase" type="Node3D"]
+script = ExtResource("1_scene")
+
+[node name="FreeCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 12)
+current = true
+fov = 65.0
+near = 0.1
+far = 200.0
+script = ExtResource("2_camera")
+move_speed = 6.0
+mouse_sensitivity = 0.002

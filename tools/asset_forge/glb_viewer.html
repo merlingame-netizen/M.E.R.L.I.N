@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>M.E.R.L.I.N. BK Asset Gallery</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#c0ffc0;font-family:'Courier New',monospace}
+header{padding:16px 24px;border-bottom:1px solid #1a3a1a;background:#0d0d15;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+header h1{font-size:16px;color:#40ff60;letter-spacing:2px}
+header .stats{font-size:12px;color:#80a080}
+header .stats span{color:#40ff60;font-weight:bold}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters select,.filters input{padding:6px 10px;background:#0a120a;border:1px solid #1a3a1a;color:#c0ffc0;font-family:inherit;font-size:12px;border-radius:3px}
+.filters select:hover,.filters input:focus{border-color:#40ff60;outline:none}
+.filters input{width:180px}
+.filters input::placeholder{color:#405040}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:16px 24px}
+.card{background:#0d0d15;border:1px solid #1a3a1a;border-radius:6px;overflow:hidden;cursor:pointer;transition:all .2s}
+.card:hover{border-color:#40ff60;transform:translateY(-2px);box-shadow:0 4px 12px rgba(64,255,96,.1)}
+.card .thumb{height:160px;background:#040804;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.card .thumb img{max-width:100%;max-height:100%;object-fit:contain;image-rendering:pixelated}
+.card .thumb .badge{position:absolute;top:6px;right:6px;background:rgba(10,10,15,.85);border:1px solid #1a3a1a;padding:2px 6px;border-radius:3px;font-size:10px}
+.card .thumb .badge .t{color:#ffaa40}
+.card .body{padding:8px 10px}
+.card .body .name{font-size:11px;color:#c0ffc0;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .body .meta{font-size:10px;color:#607060;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+.card .body .meta .cat{color:#6090c0}
+.card .body .meta .biome{color:#a080c0}
+#status{text-align:center;padding:40px;color:#40ff60;font-size:14px}
+.category-header{grid-column:1/-1;padding:12px 0 4px;border-bottom:1px solid #1a3a1a;margin-top:8px}
+.category-header h2{font-size:13px;color:#40ff60;letter-spacing:1px}
+.category-header .count{font-size:11px;color:#608060;margin-left:8px}
+/* Modal */
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:100;align-items:center;justify-content:center}
+#modal.open{display:flex}
+#modal-content{background:#0d0d15;border:2px solid #40ff60;border-radius:10px;max-width:800px;width:92%;max-height:92vh;overflow:hidden}
+#modal-3d{width:100%;height:420px;position:relative;background:#040804;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#modal-canvas{display:none}
+#modal-thumb{max-width:100%;max-height:100%;object-fit:contain;image-rendering:pixelated}
+#qa-panel{position:absolute;top:8px;left:8px;background:rgba(10,10,15,.88);border:1px solid #1a3a1a;border-radius:4px;padding:8px 12px;font-size:11px;color:#80a080;pointer-events:none;min-width:180px;line-height:1.7}
+#qa-panel .val{color:#40ff60;font-weight:bold}
+#qa-panel .warn{color:#ff6040}
+#qa-panel .ok{color:#40ff60}
+#loading-spinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#40ff60;font-size:13px;display:none}
+#loading-spinner.show{display:block}
+#modal-info{padding:16px 20px}
+#modal-info h2{font-size:16px;color:#40ff60;margin-bottom:8px}
+#modal-info .row{font-size:12px;color:#80a080;margin:4px 0}
+#modal-info .row span{color:#ffaa40}
+#modal-nav{display:flex;gap:10px;margin-top:12px}
+#modal-nav button{background:#0a120a;border:1px solid #1a3a1a;color:#40ff60;padding:8px 16px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:4px;flex:1}
+#modal-nav button:hover{background:#0f2a0f;border-color:#40ff60}
+#modal-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#40ff60;font-size:24px;cursor:pointer;z-index:101}
+</style>
+</head>
+<body>
+<header>
+  <h1>M.E.R.L.I.N. BK ASSETS</h1>
+  <div class="stats">Total: <span id="total">0</span> | Shown: <span id="shown">0</span> | Disk: <span id="disk">0</span>KB</div>
+  <div class="filters">
+    <select id="fcat"><option value="all">All Categories</option></select>
+    <select id="fbiome"><option value="all">All Biomes</option></select>
+    <select id="fsort">
+      <option value="name">Sort: Name</option>
+      <option value="tris">Sort: Triangles</option>
+      <option value="size">Sort: Size</option>
+      <option value="category">Sort: Category</option>
+    </select>
+    <input type="text" id="fsearch" placeholder="Search assets...">
+  </div>
+</header>
+<div id="status">Scanning assets...</div>
+<div id="grid"></div>
+<div id="modal">
+  <button id="modal-close">&times;</button>
+  <div id="modal-content">
+    <div id="modal-3d">
+      <img id="modal-thumb" src="" alt="Asset preview">
+      <div id="qa-panel"></div>
+    </div>
+    <div id="modal-info">
+      <h2 id="modal-name">-</h2>
+      <div class="row">Category: <span id="modal-cat">-</span></div>
+      <div class="row">Biome: <span id="modal-biome">-</span></div>
+      <div class="row">Triangles: <span id="modal-tris">-</span></div>
+      <div class="row">Size: <span id="modal-size">-</span></div>
+      <div class="row">Generator: <span id="modal-gen">-</span></div>
+      <div id="modal-nav">
+        <button id="modal-prev">&larr; Previous</button>
+        <button id="modal-dl">Download .glb</button>
+        <button id="modal-next">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var assets=[], filtered=[], modalIdx=-1;
+  var CATS=['vegetation','rocks','structures','megaliths','props','characters','collectibles'];
+  var BIOMES=['foret_broceliande','landes_bruyere','cotes_sauvages','villages_celtes',
+    'cercles_pierres','marais_korrigans','collines_dolmens','iles_mystiques'];
+  var BASE='../../Assets/bk_assets';
+
+
+  // Shape icons per BK generator type (SVG fallback when no PNG thumbnail)
+  var SHAPES = {
+    tree_bk: '<circle cx="50" cy="30" r="25" fill="#5A8A3A"/><rect x="44" y="50" width="12" height="28" fill="#3A2A1A"/><circle cx="50" cy="28" r="18" fill="#3A6A2A" opacity="0.6"/>',
+    rock_bk: '<ellipse cx="50" cy="55" rx="30" ry="22" fill="#7A7A7E"/><ellipse cx="50" cy="45" rx="22" ry="15" fill="#5A5A5E"/><ellipse cx="42" cy="40" rx="8" ry="6" fill="#3A6A2A" opacity="0.5"/>',
+    structure_bk: '<rect x="22" y="42" width="56" height="35" fill="#9D6749" rx="2"/><polygon points="18,45 50,18 82,45" fill="#6A5A2A"/><rect x="42" y="55" width="16" height="22" fill="#493C2F" rx="1"/><circle cx="62" cy="52" r="5" fill="#E8C840" opacity="0.4"/>',
+    megalith_bk: '<polygon points="32,80 28,25 40,8 60,8 72,25 68,80" fill="#7A7A7E" rx="4"/><ellipse cx="50" cy="15" rx="16" ry="8" fill="#3A6A2A" opacity="0.3"/><line x1="50" y1="25" x2="50" y2="60" stroke="#57B8FF" stroke-width="1.5" opacity="0.6"/><line x1="44" y1="35" x2="56" y2="35" stroke="#57B8FF" stroke-width="1" opacity="0.6"/>',
+    collectible_bk: '<circle cx="50" cy="45" r="18" fill="#E8C840"/><circle cx="50" cy="45" r="13" fill="#D8B030"/><polygon points="50,30 54,40 65,42 57,50 59,61 50,55 41,61 43,50 35,42 46,40" fill="#E8C840"/>',
+    creature_bk: '<ellipse cx="50" cy="55" rx="18" ry="20" fill="#60836D"/><circle cx="50" cy="32" r="16" fill="#60836D"/><circle cx="43" cy="28" r="6" fill="#F0E8D0"/><circle cx="57" cy="28" r="6" fill="#F0E8D0"/><circle cx="43" cy="28" r="3" fill="#1a1a1a"/><circle cx="57" cy="28" r="3" fill="#1a1a1a"/>',
+    bridge_bk: '<rect x="8" y="40" width="84" height="10" fill="#9D6749" rx="2"/><rect x="12" y="30" width="5" height="15" fill="#3A2A1A"/><rect x="83" y="30" width="5" height="15" fill="#3A2A1A"/><line x1="12" y1="32" x2="88" y2="32" stroke="#3A2A1A" stroke-width="2"/><rect x="30" y="42" width="8" height="6" fill="#493C2F"/><rect x="55" y="42" width="8" height="6" fill="#493C2F"/>'
+  };
+
+  function makeSVG(generator){
+    var shape = SHAPES[generator] || '<circle cx="50" cy="50" r="20" fill="#3a3a3e"/>';
+    return '<svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">'+
+      '<rect width="100" height="90" fill="#060a06" rx="4"/>'+shape+'</svg>';
+  }
+
+  // ─── QA Panel (from manifest data, no WebGL needed)
+  function showQAMetrics(a){
+    var budget = a.budget || 500;
+    var budgetPass = a.tris <= budget;
+    var panel = document.getElementById('qa-panel');
+    panel.innerHTML =
+      '<div>Triangles: <span class="val">'+a.tris+'</span></div>'+
+      '<div>Budget: <span class="'+(budgetPass?'ok':'warn')+'">'+a.tris+'/'+budget+' '+(budgetPass?'OK':'OVER')+'</span></div>'+
+      '<div>Size: <span class="val">'+a.sizeKb+'KB</span></div>'+
+      '<div>Generator: <span class="val">'+a.generator+'</span></div>'+
+      '<div>Style: <span class="val">Banjo-Kazooie</span></div>';
+  }
+
+  // ─── Scan BK Assets
+  var pending=CATS.length*BIOMES.length, done=0;
+  CATS.forEach(function(cat){
+    BIOMES.forEach(function(biome){
+      fetch(BASE+'/'+cat+'/'+biome+'/_manifest.json')
+        .then(function(r){if(!r.ok)throw 0;return r.json()})
+        .then(function(d){
+          (d.assets||[]).forEach(function(a){
+            assets.push({name:a.name,category:cat,biome:biome,
+              generator:a.generator||'',tris:a.tris||0,budget:a.budget||0,sizeKb:a.file_size_kb||0,
+              path:BASE+'/'+cat+'/'+biome+'/'+a.name});
+          });
+        }).catch(function(){}).finally(function(){
+          done++;
+          document.getElementById('status').textContent='Scanning... '+done+'/'+pending;
+          if(done>=pending) finishScan();
+        });
+    });
+  });
+
+  function finishScan(){
+    document.getElementById('total').textContent=assets.length;
+    var disk=0; assets.forEach(function(a){disk+=a.sizeKb});
+    document.getElementById('disk').textContent=Math.round(disk);
+    if(!assets.length){
+      document.getElementById('status').textContent='No assets found.';
+      return;
+    }
+    document.getElementById('status').style.display='none';
+    populateFilters();
+    applyFilters();
+  }
+
+  function populateFilters(){
+    var cs={},bs={};
+    assets.forEach(function(a){cs[a.category]=1;bs[a.biome]=1});
+    var fc=document.getElementById('fcat'),fb=document.getElementById('fbiome');
+    Object.keys(cs).sort().forEach(function(c){
+      var o=document.createElement('option');o.value=c;o.textContent=c+' ('+assets.filter(function(a){return a.category===c}).length+')';fc.appendChild(o);
+    });
+    Object.keys(bs).sort().forEach(function(b){
+      var o=document.createElement('option');o.value=b;o.textContent=b.replace(/_/g,' ');fb.appendChild(o);
+    });
+  }
+
+  function applyFilters(){
+    var c=document.getElementById('fcat').value;
+    var b=document.getElementById('fbiome').value;
+    var s=document.getElementById('fsearch').value.toLowerCase();
+    var sort=document.getElementById('fsort').value;
+
+    filtered=assets.filter(function(a){
+      if(c!=='all'&&a.category!==c)return false;
+      if(b!=='all'&&a.biome!==b)return false;
+      if(s&&a.name.toLowerCase().indexOf(s)<0&&a.generator.toLowerCase().indexOf(s)<0)return false;
+      return true;
+    });
+
+    filtered.sort(function(a,b){
+      if(sort==='tris')return a.tris-b.tris;
+      if(sort==='size')return a.sizeKb-b.sizeKb;
+      if(sort==='category')return a.category.localeCompare(b.category)||a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name);
+    });
+
+    document.getElementById('shown').textContent=filtered.length;
+    renderGrid();
+  }
+
+  document.getElementById('fcat').onchange=applyFilters;
+  document.getElementById('fbiome').onchange=applyFilters;
+  document.getElementById('fsort').onchange=applyFilters;
+  document.getElementById('fsearch').oninput=applyFilters;
+
+  function renderGrid(){
+    var grid=document.getElementById('grid');
+    grid.innerHTML='';
+    var lastCat='';
+    filtered.forEach(function(a, i){
+      if(document.getElementById('fcat').value==='all' && a.category!==lastCat){
+        lastCat=a.category;
+        var h=document.createElement('div');
+        h.className='category-header';
+        var cnt=filtered.filter(function(x){return x.category===a.category}).length;
+        h.innerHTML='<h2>'+a.category.toUpperCase()+'<span class="count">('+cnt+')</span></h2>';
+        grid.appendChild(h);
+      }
+
+      var card=document.createElement('div');
+      card.className='card';
+
+      // Build card structure without inline onerror (avoids SVG quote escaping issues)
+      var thumbDiv=document.createElement('div');
+      thumbDiv.className='thumb';
+
+      var pngPath = a.path.replace('.glb','.png');
+      var img = document.createElement('img');
+      img.src = pngPath;
+      img.loading = 'lazy';
+      img.onerror = (function(gen){return function(){
+        this.style.display='none';
+        var svgDiv=document.createElement('div');
+        svgDiv.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center';
+        svgDiv.innerHTML=makeSVG(gen);
+        this.parentNode.insertBefore(svgDiv, this);
+      }})(a.generator);
+      thumbDiv.appendChild(img);
+
+      var badge=document.createElement('div');
+      badge.className='badge';
+      badge.innerHTML='<span class="t">'+(a.tris||'?')+' tris</span>';
+      thumbDiv.appendChild(badge);
+
+      var bodyDiv=document.createElement('div');
+      bodyDiv.className='body';
+      bodyDiv.innerHTML=
+        '<div class="name">'+a.name.replace('.glb','')+'</div>'+
+        '<div class="meta">'+
+          '<span class="cat">'+a.category+'</span>'+
+          '<span class="biome">'+a.biome.replace(/_/g,' ')+'</span>'+
+          '<span>'+a.sizeKb+'KB</span>'+
+        '</div>';
+
+      card.appendChild(thumbDiv);
+      card.appendChild(bodyDiv);
+      card.addEventListener('click',(function(idx){return function(e){
+        e.stopPropagation();
+        openModal(idx);
+      }})(i));
+      card.style.cursor='pointer';
+      card.title='Click to preview in 3D';
+
+      grid.appendChild(card);
+    });
+  }
+
+  // ─── Modal Preview (PNG thumbnails — WebGL unavailable)
+  function openModal(idx){
+    if(idx<0||idx>=filtered.length) return;
+    modalIdx=idx;
+    var a=filtered[idx];
+
+    // Show modal FIRST (before any Three.js call)
+    document.getElementById('modal').classList.add('open');
+
+    // Set metadata
+    document.getElementById('modal-name').textContent=a.name.replace('.glb','');
+    document.getElementById('modal-cat').textContent=a.category;
+    document.getElementById('modal-biome').textContent=a.biome.replace(/_/g,' ');
+    document.getElementById('modal-tris').textContent=a.tris||'?';
+    document.getElementById('modal-size').textContent=a.sizeKb+'KB';
+    document.getElementById('modal-gen').textContent=a.generator;
+
+    // Show Blender-rendered PNG thumbnail (WebGL unavailable on this machine)
+    var pngPath = a.path.replace('.glb','.png');
+    document.getElementById('modal-thumb').src = pngPath;
+    showQAMetrics(a);
+  }
+
+  function closeModal(){
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  document.getElementById('modal-close').onclick=closeModal;
+  document.getElementById('modal').onclick=function(e){
+    if(e.target===this) closeModal();
+  };
+  document.getElementById('modal-prev').onclick=function(){openModal(modalIdx-1)};
+  document.getElementById('modal-next').onclick=function(){openModal(modalIdx+1)};
+  document.getElementById('modal-dl').onclick=function(){
+    if(modalIdx<0) return;
+    var a=filtered[modalIdx];
+    var link=document.createElement('a');
+    link.href=a.path; link.download=a.name; link.click();
+  };
+  document.onkeydown=function(e){
+    if(!document.getElementById('modal').classList.contains('open')) return;
+    if(e.key==='Escape') closeModal();
+    if(e.key==='ArrowLeft') openModal(modalIdx-1);
+    if(e.key==='ArrowRight') openModal(modalIdx+1);
+  };
+
+})();
+</script>
+</body>
+</html>

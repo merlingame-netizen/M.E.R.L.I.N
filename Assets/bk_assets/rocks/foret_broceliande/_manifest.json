@@ -1,0 +1,19 @@
+{
+  "generator": "blender_n64_generator.py (BK v2)",
+  "style": "banjo-kazooie",
+  "category": "rocks",
+  "biome": "foret_broceliande",
+  "count": 1,
+  "assets": [
+    {
+      "name": "rock_bk_foret_broceliande_0000.glb",
+      "category": "rocks",
+      "biome": "foret_broceliande",
+      "generator": "rock_bk",
+      "variant": 0,
+      "tris": 200,
+      "budget": 200,
+      "file_size_kb": 28.4
+    }
+  ]
+}

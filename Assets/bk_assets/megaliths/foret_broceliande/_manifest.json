@@ -1,0 +1,19 @@
+{
+  "generator": "blender_n64_generator.py (BK v2)",
+  "style": "banjo-kazooie",
+  "category": "megaliths",
+  "biome": "foret_broceliande",
+  "count": 1,
+  "assets": [
+    {
+      "name": "megalith_bk_foret_broceliande_0000.glb",
+      "category": "megaliths",
+      "biome": "foret_broceliande",
+      "generator": "megalith_bk",
+      "variant": 0,
+      "tris": 250,
+      "budget": 250,
+      "file_size_kb": 28.5
+    }
+  ]
+}
