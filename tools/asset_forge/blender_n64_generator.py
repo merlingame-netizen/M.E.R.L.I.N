@@ -359,12 +359,33 @@ def paint_by_zone(obj, zones: list, fallback_color: tuple = None):
 
 # ─── Export ─────────────────────────────────────────────────────────────────────
 
-def export_glb(obj, filepath: str):
-    """Export single object as GLB with vertex colors preserved."""
+def apply_real_world_scale(obj, gen_name: str):
+    """Scale object to real-world dimensions based on REAL_WORLD_SCALES.
+    Measures current bounding box height and rescales uniformly to match target."""
+    target_factor = REAL_WORLD_SCALES.get(gen_name, 1.0)
+    if target_factor == 1.0:
+        return
+
+    # Measure current bounding box height
+    bbox = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+    min_z = min(v.z for v in bbox)
+    max_z = max(v.z for v in bbox)
+    current_h = max(max_z - min_z, 0.001)
+
+    scale = target_factor / current_h
+    obj.scale *= scale
+    bpy.ops.object.transform_apply(scale=True)
+
+
+def export_glb(obj, filepath: str, gen_name: str = ""):
+    """Export single object as GLB with vertex colors preserved.
+    If gen_name is provided, applies real-world scale before export."""
+    if gen_name:
+        apply_real_world_scale(obj, gen_name)
+
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
-    # Blender 4.x renamed export params; use only universally supported ones
     bpy.ops.export_scene.gltf(
         filepath=filepath,
         export_format='GLB',
@@ -1322,6 +1343,20 @@ TRI_BUDGETS = {
     "bridge_bk":      400,
 }
 
+# Real-world scale factors (1 Blender unit = 1 meter in Godot).
+# Each generator produces assets at a "modeling scale" — these factors
+# rescale them to physically correct dimensions before export.
+# Format: (target_height_meters, reference_current_height_meters)
+REAL_WORLD_SCALES = {
+    "tree_bk":        5.0,   # Chene breton: ~8-12m, but BK stylized = ~5m playable
+    "rock_bk":        1.8,   # Rocher/boulder: ~1-2m across
+    "structure_bk":   3.2,   # Hutte celtique: ~3m walls + roof = ~4.5m total
+    "megalith_bk":    3.5,   # Menhir: ~3-5m typical
+    "collectible_bk": 0.4,   # Ogham pickup: ~20-40cm (hand-sized, visible in scene)
+    "creature_bk":    0.7,   # Korrigan: ~60-80cm (small mythical creature)
+    "bridge_bk":      1.2,   # Pont de bois: already ~3m, slight scale-up to ~3.5m
+}
+
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # MAIN — Batch generation
@@ -1384,7 +1419,7 @@ def main():
             filename = f"{gen_name}_{biome}_{variant:04d}.glb"
             filepath = os.path.join(output_dir, filename)
 
-            export_glb(obj, filepath)
+            export_glb(obj, filepath, gen_name=gen_name)
 
             file_size = os.path.getsize(filepath) if os.path.exists(filepath) else 0
 

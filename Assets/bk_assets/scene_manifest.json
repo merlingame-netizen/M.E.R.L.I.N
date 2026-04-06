@@ -8,7 +8,7 @@
     "variant": 0,
     "tris": 400,
     "budget": 400,
-    "sizeKb": 54.2
+    "sizeKb": 54.1
   },
   {
     "name": "tree_bk_foret_broceliande_0001.glb",
@@ -19,7 +19,7 @@
     "variant": 1,
     "tris": 400,
     "budget": 400,
-    "sizeKb": 53.8
+    "sizeKb": 53.6
   },
   {
     "name": "tree_bk_foret_broceliande_0002.glb",
@@ -30,7 +30,7 @@
     "variant": 2,
     "tris": 400,
     "budget": 400,
-    "sizeKb": 53.5
+    "sizeKb": 53.8
   },
   {
     "name": "rock_bk_foret_broceliande_0000.glb",
@@ -41,7 +41,7 @@
     "variant": 0,
     "tris": 200,
     "budget": 200,
-    "sizeKb": 28.4
+    "sizeKb": 28.3
   },
   {
     "name": "rock_bk_foret_broceliande_0001.glb",
@@ -52,7 +52,7 @@
     "variant": 1,
     "tris": 200,
     "budget": 200,
-    "sizeKb": 28.4
+    "sizeKb": 28.3
   },
   {
     "name": "rock_bk_foret_broceliande_0002.glb",
@@ -63,7 +63,7 @@
     "variant": 2,
     "tris": 200,
     "budget": 200,
-    "sizeKb": 28.4
+    "sizeKb": 28.3
   },
   {
     "name": "structure_bk_foret_broceliande_0000.glb",
@@ -72,9 +72,9 @@
     "biome": "foret_broceliande",
     "generator": "structure_bk",
     "variant": 0,
-    "tris": 500,
+    "tris": 498,
     "budget": 500,
-    "sizeKb": 44.4
+    "sizeKb": 44.1
   },
   {
     "name": "structure_bk_foret_broceliande_0001.glb",
@@ -85,7 +85,7 @@
     "variant": 1,
     "tris": 498,
     "budget": 500,
-    "sizeKb": 44.5
+    "sizeKb": 44.4
   },
   {
     "name": "structure_bk_foret_broceliande_0002.glb",
@@ -94,9 +94,9 @@
     "biome": "foret_broceliande",
     "generator": "structure_bk",
     "variant": 2,
-    "tris": 498,
+    "tris": 500,
     "budget": 500,
-    "sizeKb": 44.2
+    "sizeKb": 44.4
   },
   {
     "name": "megalith_bk_foret_broceliande_0000.glb",
@@ -107,7 +107,7 @@
     "variant": 0,
     "tris": 250,
     "budget": 250,
-    "sizeKb": 28.7
+    "sizeKb": 28.2
   },
   {
     "name": "megalith_bk_foret_broceliande_0001.glb",
@@ -118,7 +118,7 @@
     "variant": 1,
     "tris": 250,
     "budget": 250,
-    "sizeKb": 28.7
+    "sizeKb": 28.0
   },
   {
     "name": "megalith_bk_foret_broceliande_0002.glb",
@@ -129,7 +129,7 @@
     "variant": 2,
     "tris": 250,
     "budget": 250,
-    "sizeKb": 29.4
+    "sizeKb": 28.8
   },
   {
     "name": "collectible_bk_foret_broceliande_0000.glb",
@@ -151,7 +151,7 @@
     "variant": 1,
     "tris": 100,
     "budget": 100,
-    "sizeKb": 13.5
+    "sizeKb": 13.4
   },
   {
     "name": "collectible_bk_foret_broceliande_0002.glb",
@@ -162,7 +162,7 @@
     "variant": 2,
     "tris": 80,
     "budget": 100,
-    "sizeKb": 12.2
+    "sizeKb": 12.1
   },
   {
     "name": "creature_bk_foret_broceliande_0000.glb",
@@ -173,7 +173,7 @@
     "variant": 0,
     "tris": 600,
     "budget": 600,
-    "sizeKb": 77.4
+    "sizeKb": 78.2
   },
   {
     "name": "creature_bk_foret_broceliande_0001.glb",
@@ -184,7 +184,7 @@
     "variant": 1,
     "tris": 600,
     "budget": 600,
-    "sizeKb": 77.4
+    "sizeKb": 77.7
   },
   {
     "name": "creature_bk_foret_broceliande_0002.glb",
@@ -206,7 +206,7 @@
     "variant": 0,
     "tris": 400,
     "budget": 400,
-    "sizeKb": 45.3
+    "sizeKb": 44.4
   },
   {
     "name": "bridge_bk_foret_broceliande_0001.glb",
@@ -228,6 +228,6 @@
     "variant": 2,
     "tris": 400,
     "budget": 400,
-    "sizeKb": 47.8
+    "sizeKb": 47.5
   }
 ]

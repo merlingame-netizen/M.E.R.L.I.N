@@ -6,14 +6,15 @@ const ASSET_BASE: String = "res://Assets/bk_assets/"
 const BIOME: String = "foret_broceliande"
 
 # Layout: category, subfolder, count, radius_min, radius_max, scale_min, scale_max, y_offset
+# Assets are now real-world scale (1 unit = 1 meter), so scale_min/max are minor variation only.
 const PLACEMENTS: Array = [
-	["vegetation", "vegetation", 6, 8.0, 25.0, 0.8, 1.4, 0.0],
-	["rocks", "rocks", 8, 5.0, 22.0, 0.6, 1.2, 0.0],
-	["megaliths", "megaliths", 4, 10.0, 20.0, 0.9, 1.3, 0.0],
-	["structures", "structures", 2, 12.0, 18.0, 0.7, 1.0, 0.0],
-	["collectibles", "collectibles", 5, 3.0, 15.0, 0.8, 1.0, 0.3],
-	["characters", "characters", 3, 6.0, 14.0, 0.8, 1.1, 0.0],
-	["props", "props", 2, 8.0, 16.0, 0.9, 1.1, 0.0],
+	["vegetation", "vegetation", 6, 12.0, 35.0, 0.85, 1.2, 0.0],
+	["rocks", "rocks", 8, 6.0, 30.0, 0.8, 1.3, 0.0],
+	["megaliths", "megaliths", 4, 14.0, 28.0, 0.9, 1.15, 0.0],
+	["structures", "structures", 2, 16.0, 24.0, 0.95, 1.05, 0.0],
+	["collectibles", "collectibles", 5, 4.0, 20.0, 0.9, 1.1, 0.15],
+	["characters", "characters", 3, 8.0, 18.0, 0.9, 1.1, 0.0],
+	["props", "props", 2, 10.0, 22.0, 0.95, 1.05, 0.0],
 ]
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -30,9 +31,9 @@ func _ready() -> void:
 func _build_ground() -> void:
 	# Large green ground plane with BK vertex colors
 	var mesh: PlaneMesh = PlaneMesh.new()
-	mesh.size = Vector2(60.0, 60.0)
-	mesh.subdivide_width = 20
-	mesh.subdivide_depth = 20
+	mesh.size = Vector2(80.0, 80.0)
+	mesh.subdivide_width = 24
+	mesh.subdivide_depth = 24
 
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.albedo_color = Color(0.353, 0.541, 0.227)  # GRASS_GREEN
@@ -49,7 +50,7 @@ func _build_ground() -> void:
 
 	# Secondary darker ring around edges
 	var ring_mesh: PlaneMesh = PlaneMesh.new()
-	ring_mesh.size = Vector2(100.0, 100.0)
+	ring_mesh.size = Vector2(140.0, 140.0)
 	ring_mesh.subdivide_width = 4
 	ring_mesh.subdivide_depth = 4
 
@@ -68,7 +69,7 @@ func _build_ground() -> void:
 
 	# Dirt path — narrow strip
 	var path_mesh: PlaneMesh = PlaneMesh.new()
-	path_mesh.size = Vector2(3.0, 50.0)
+	path_mesh.size = Vector2(4.0, 70.0)
 
 	var path_mat: StandardMaterial3D = StandardMaterial3D.new()
 	path_mat.albedo_color = Color(0.616, 0.404, 0.286)  # BANJO_BROWN

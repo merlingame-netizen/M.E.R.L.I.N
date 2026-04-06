@@ -52,7 +52,7 @@ for category, gen_name, variant in TEST_ASSETS:
         filename = f"{gen_name}_{BIOME}_0000.glb"
         filepath = os.path.join(out_dir, filename)
 
-        gen_mod.export_glb(obj, filepath)
+        gen_mod.export_glb(obj, filepath, gen_name=gen_name)
 
         file_size = os.path.getsize(filepath) if os.path.exists(filepath) else 0
         status = "OK" if tris <= budget else f"OVER ({tris}/{budget})"
