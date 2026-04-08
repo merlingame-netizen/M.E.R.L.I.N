@@ -1,5 +1,6 @@
 """
-Generate full scene batch: 3 variants per category for BK Showcase scene.
+Generate full dense forest batch: BK-style assets for M.E.R.L.I.N.
+11 categories × 6 variants = 72 assets (props has 2 generators → 84 total)
 Run: blender --background --python generate_scene_batch.py
 """
 import bpy
@@ -16,16 +17,22 @@ gen_mod = importlib.import_module("blender_n64_generator")
 
 BIOME = "foret_broceliande"
 OUTPUT_BASE = os.path.normpath(os.path.join(script_dir, "..", "..", "Assets", "bk_assets"))
-VARIANTS_PER_TYPE = 3
+VARIANTS_PER_TYPE = 6
 
+# All categories and their generators
 ASSET_DEFS = [
     ("vegetation",   "tree_bk"),
+    ("bushes",       "bush_bk"),
+    ("groundcover",  "groundcover_bk"),
+    ("mushrooms",    "mushroom_bk"),
+    ("deadwood",     "deadwood_bk"),
     ("rocks",        "rock_bk"),
     ("structures",   "structure_bk"),
     ("megaliths",    "megalith_bk"),
     ("collectibles", "collectible_bk"),
     ("characters",   "creature_bk"),
     ("props",        "bridge_bk"),
+    ("props",        "prop_bk"),
 ]
 
 results = []
@@ -36,10 +43,12 @@ for category, gen_name in ASSET_DEFS:
     os.makedirs(out_dir, exist_ok=True)
 
     gen_func = gen_mod.GENERATORS[category][gen_name]
-    budget = gen_mod.TRI_BUDGETS.get(gen_name, 300)
+    budget = gen_mod.TRI_BUDGETS.get(gen_name, 100)
 
     for v in range(VARIANTS_PER_TYPE):
         gen_mod.clear_scene()
+        import random
+        random.seed(42 + v * 137 + hash(gen_name) % 1000)
 
         try:
             obj = gen_func(BIOME, v)
