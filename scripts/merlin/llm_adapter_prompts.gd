@@ -71,7 +71,7 @@ func format_instructions(cards_played: int) -> String:
 		0:
 			s += "\n\nExemple:\nTu decouvres une source bouillonnante entre les racines. L'eau noircit et une voix chante depuis les profondeurs.\nA) PLONGER — Tu enfonces les mains dans l'eau sombre pour saisir ce qui appelle.\nB) ECOUTER — Tu te penches et tentes de comprendre les mots de la voix.\nC) BLOQUER — Tu empiles des pierres pour sceller la source."
 		1:
-			s += "\n\nExemple:\nTu atteins un cercle de pierres dressees. Au centre, un feu bleu brule sans bois. Des ombres dansent sur les menhirs.\nA) TRAVERSER — Tu franchis le cercle et tends les mains vers la flamme bleue.\nB) GRAVER — Tu traces un ogham sur le menhir avec ta lame.\nC) SIFFLER — Tu imites le chant du merle pour troubler les ombres."
+			s += "\n\nExemple:\nTu atteins un cercle de pierres dressees. Au centre, un feu bleu brule sans bois. Des ombres dansent sur les menhirs.\nA) TRAVERSER — Tu franchis le cercle et tends les mains vers la flamme bleue.\nB) GRAVER — Tu traces une rune sur le menhir avec ta lame.\nC) SIFFLER — Tu imites le chant du merle pour troubler les ombres."
 		2:
 			s += "\n\nExemple:\nTu fais face a un pont de mousse au-dessus d'un ravin. Une creature bloque le passage et tend une main griffue.\nA) NEGOCIER — Tu offres une baie de ta besace en echange du passage.\nB) BONDIR — Tu sautes par-dessus la creature et cours vers l'autre rive.\nC) CARESSER — Tu poses la main sur sa tete moussue pour l'apaiser."
 	s += "\nTu [scene] puis A) B) C). Rien d'autre."

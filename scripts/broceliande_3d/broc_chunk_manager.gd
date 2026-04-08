@@ -9,6 +9,7 @@
 extends RefCounted
 
 const BrocMultiMeshPool = preload("res://scripts/broceliande_3d/broc_multimesh_pool.gd")
+const GrassCarpetClass = preload("res://scripts/vegetation/grass_carpet.gd")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIG
@@ -19,7 +20,7 @@ const CHUNK_SIZE_X: float = 30.0
 const CHUNKS_AHEAD: int = 3  # Extended for billboard distance coverage
 const CHUNKS_BEHIND: int = 1
 const UNLOAD_BEHIND: int = 2
-const BUILD_PER_FRAME: int = 4  # Chunk finalize ops per frame (fewer but heavier)
+const BUILD_BUDGET_USEC: int = 4000  # 4ms time budget per frame (auto-adapts to device speed)
 
 ## Visibility range for all MultiMesh instances (LOD culling)
 ## begin = fade-in start, end = fade-out end (aggressive LOD for GL Compat perf)
@@ -35,14 +36,15 @@ const VIS_RANGE_BILLBOARD: float = 60.0    # Far billboard impostors
 const VIS_RANGE_BILLBOARD_BEGIN: float = 35.0
 
 ## Zone density profiles x10: [trees, small_trees, bushes, detail_count, fog_density_add]
+## Detail counts 3x vs v1 — MultiMesh cost is trivial at 4-20 tris each
 const ZONE_DENSITY: Array[Array] = [
-	[100, 50, 80, 300, 0.0],    # Z0 Lisiere — open (×2.5)
-	[200, 90, 130, 500, 0.005], # Z1 Dense — thick canopy (×2.5)
-	[120, 50, 100, 400, 0.008], # Z2 Dolmen — clearing ring (×2.5)
-	[140, 70, 120, 550, 0.015], # Z3 Mare — wet lush (×2.5)
-	[300, 140, 180, 750, 0.02], # Z4 Profonde — ULTRA dense (×2.5)
-	[160, 70, 120, 420, 0.01],  # Z5 Fontaine — filtered (×2.5)
-	[160, 90, 140, 400, 0.008], # Z6 Cercle — moderate (×2.5)
+	[100, 50, 80, 900, 0.0],     # Z0 Lisiere — open (×2.5)
+	[200, 90, 130, 1500, 0.005], # Z1 Dense — thick canopy (×2.5)
+	[120, 50, 100, 1200, 0.008], # Z2 Dolmen — clearing ring (×2.5)
+	[140, 70, 120, 1600, 0.015], # Z3 Mare — wet lush (×2.5)
+	[300, 140, 180, 2250, 0.02], # Z4 Profonde — ULTRA dense (×2.5)
+	[160, 70, 120, 1260, 0.01],  # Z5 Fontaine — filtered (×2.5)
+	[160, 90, 140, 1200, 0.008], # Z6 Cercle — moderate (×2.5)
 ]
 
 ## Detail type distribution (cumulative weights)
@@ -79,6 +81,10 @@ var _chunks: Dictionary = {}
 var _last_player_chunk: int = -999
 var _global_seed: int = 42
 var _density_mult: float = 1.0  # LLM can override
+
+# Container pool — reuse freed Node3D instead of queue_free/new cycles
+var _container_pool: Array[Node3D] = []
+const MAX_POOL_SIZE: int = 8
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -125,7 +131,7 @@ func generate_initial(player_z: float) -> void:
 
 
 func set_density_mult(mult: float) -> void:
-	_density_mult = clampf(mult, 0.1, 3.0)
+	_density_mult = clampf(mult, 0.1, 10.0)
 
 
 func set_biome_colors(terrain_color: Color) -> void:
@@ -180,9 +186,15 @@ func _chunk_z_range(ci: int) -> Vector2:
 func _create_chunk(ci: int) -> void:
 	if _chunks.has(ci):
 		return
-	var container: Node3D = Node3D.new()
-	container.name = "Chunk_%d" % ci
-	_forest_root.add_child(container)
+	var container: Node3D
+	if _container_pool.size() > 0:
+		container = _container_pool.pop_back()
+		container.name = "Chunk_%d" % ci
+		container.visible = true
+	else:
+		container = Node3D.new()
+		container.name = "Chunk_%d" % ci
+		_forest_root.add_child(container)
 
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(ci, _global_seed))
@@ -292,7 +304,7 @@ func _queue_chunk_build(ci: int) -> void:
 
 
 func _process_build_queues() -> void:
-	var built_this_frame: int = 0
+	var _budget_start: int = Time.get_ticks_usec()
 	for ci: int in _chunks:
 		var chunk: Dictionary = _chunks[ci]
 		if chunk["state"] != ChunkState.BUILDING:
@@ -301,7 +313,7 @@ func _process_build_queues() -> void:
 		var container: Node3D = chunk["container"]
 		var rng: RandomNumberGenerator = chunk["rng"]
 
-		while pending.size() > 0 and built_this_frame < BUILD_PER_FRAME:
+		while pending.size() > 0 and (Time.get_ticks_usec() - _budget_start) < BUILD_BUDGET_USEC:
 			var key: String = pending.pop_front() as String
 			if key == "_grass_carpet":
 				var zone_idx: int = int(chunk.get("_zone_idx", 0))
@@ -322,7 +334,6 @@ func _process_build_queues() -> void:
 				if transforms.has(key):
 					_finalize_multimesh(container, key, transforms[key] as Array[Transform3D])
 			chunk["node_count"] += 1
-			built_this_frame += 1
 
 		if pending.is_empty():
 			chunk["state"] = ChunkState.ACTIVE
@@ -338,7 +349,14 @@ func _unload_chunk(ci: int) -> void:
 	var chunk: Dictionary = _chunks[ci]
 	var container: Node3D = chunk["container"]
 	if is_instance_valid(container):
-		container.queue_free()
+		# Free children (MultiMeshInstance3D) but pool the container
+		for child in container.get_children():
+			child.queue_free()
+		container.visible = false
+		if _container_pool.size() < MAX_POOL_SIZE:
+			_container_pool.append(container)
+		else:
+			container.queue_free()
 	_chunks.erase(ci)
 
 
@@ -408,11 +426,24 @@ func _finalize_multimesh(container: Node3D, key: String, xforms: Array[Transform
 
 	var mm: MultiMesh = MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
 	mm.mesh = mesh
 	mm.instance_count = xforms.size()
 
+	# Determine base color for per-instance jitter
+	var base_col: Color = _get_category_color(key)
+	var jitter_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	jitter_rng.seed = hash(key)
+
 	for i in xforms.size():
 		mm.set_instance_transform(i, xforms[i])
+		var j: float = jitter_rng.randf_range(0.85, 1.15)
+		mm.set_instance_color(i, Color(
+			clampf(base_col.r * j, 0.0, 1.0),
+			clampf(base_col.g * j, 0.0, 1.0),
+			clampf(base_col.b * j, 0.0, 1.0),
+			base_col.a
+		))
 
 	var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	mmi.multimesh = mm
@@ -436,6 +467,19 @@ func _finalize_multimesh(container: Node3D, key: String, xforms: Array[Transform
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
 	container.add_child(mmi)
+
+
+func _get_category_color(key: String) -> Color:
+	if key.begins_with("tree"):
+		return Color(0.45, 0.55, 0.30, 1.0)
+	elif key.begins_with("bush"):
+		return Color(0.35, 0.50, 0.25, 1.0)
+	elif key.contains("mushroom"):
+		return Color(0.70, 0.50, 0.30, 1.0)
+	elif key.contains("rock"):
+		return Color(0.55, 0.52, 0.48, 1.0)
+	else:
+		return Color(0.30, 0.55, 0.20, 1.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -514,46 +558,16 @@ func _spawn_billboard_trees(container: Node3D, xforms: Array[Transform3D]) -> vo
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _spawn_multimesh_grass(container: Node3D, rng: RandomNumberGenerator, z_range: Vector2, count: int) -> void:
-	var grass_mesh: QuadMesh = QuadMesh.new()
-	grass_mesh.size = Vector2(0.3, 0.5)
-	grass_mesh.orientation = PlaneMesh.FACE_Y
-
-	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = _grass_color
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	mat.alpha_scissor_threshold = 0.3
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	grass_mesh.material = mat
-
-	var mm: MultiMesh = MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
-	mm.mesh = grass_mesh
-	mm.instance_count = count
-
-	for i in count:
-		var x: float = rng.randf_range(-CHUNK_SIZE_X * 0.5, CHUNK_SIZE_X * 0.5)
-		var z: float = rng.randf_range(z_range.x, z_range.y)
-		var scale_f: float = rng.randf_range(0.5, 1.3)
-		var rot_y: float = rng.randf_range(0.0, TAU)
-
-		var t: Transform3D = Transform3D.IDENTITY
-		t = t.scaled(Vector3(scale_f, scale_f, scale_f))
-		t = t.rotated(Vector3.UP, rot_y)
-		t.origin = Vector3(x, 0.05, z)
-		mm.set_instance_transform(i, t)
-
-		var green_var: float = rng.randf_range(0.8, 1.2)
-		mm.set_instance_color(i, Color(0.18, 0.35 * green_var, 0.12, 0.9))
-
-	var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.visibility_range_end = VIS_RANGE_GRASS
-	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-	container.add_child(mmi)
+	var carpet: RefCounted = GrassCarpetClass.new()
+	var area: Rect2 = Rect2(-CHUNK_SIZE_X * 0.5, z_range.x, CHUNK_SIZE_X, z_range.y - z_range.x)
+	var config: Dictionary = {
+		"color": _grass_color,
+		"jitter": 0.25,
+		"vis_end": VIS_RANGE_GRASS,
+	}
+	var mmi: MultiMeshInstance3D = carpet.build(null, rng, area, count, config)
+	if mmi:
+		container.add_child(mmi)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -444,6 +444,20 @@ func generate_npc_card(game_state: Dictionary) -> Dictionary:
 	return {}
 
 
+## Generate a pre-run skeleton graph for the given biome/ogham/state.
+## Returns MerlinRunGraph or null on failure.
+func generate_run_skeleton(biome_id: String, ogham_id: String,
+		game_state: Dictionary, save_data: Dictionary) -> MerlinRunGraph:
+	if _generation_in_progress:
+		push_warning("[MOS] Skeleton generation skipped — generation already in progress")
+		return null
+	_generation_in_progress = true
+	var graph: MerlinRunGraph = await MerlinSkeletonGenerator.generate(
+		biome_id, ogham_id, game_state, llm_interface, save_data)
+	_generation_in_progress = false
+	return graph
+
+
 func _try_calendar_event(game_state: Dictionary) -> Dictionary:
 	## Check if a calendar event should be injected as the next card.
 	## Returns a narrative card dict, or empty dict if no event fires.

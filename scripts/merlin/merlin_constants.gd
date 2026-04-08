@@ -1133,3 +1133,60 @@ const ANAM_START := 0                # Anam au démarrage d'un run (cross-run cu
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const LIFE_BAR_SEGMENTS := 10       # 10 barres pixelisées de 10 PV chacune
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAP SKELETON — Pre-run graph generation (biome-based node ranges)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Main path node count per biome (before modifiers).
+## detours_min/max = optional side-paths (each 2-4 extra cards).
+const BIOME_NODE_RANGES: Dictionary = {
+	"foret_broceliande": {"main_min": 10, "main_max": 15, "detours_min": 1, "detours_max": 2},
+	"landes_bruyere":    {"main_min": 12, "main_max": 18, "detours_min": 1, "detours_max": 2},
+	"cotes_sauvages":    {"main_min": 12, "main_max": 18, "detours_min": 1, "detours_max": 2},
+	"villages_celtes":   {"main_min": 14, "main_max": 20, "detours_min": 2, "detours_max": 3},
+	"cercles_pierres":   {"main_min": 16, "main_max": 25, "detours_min": 2, "detours_max": 3},
+	"marais_korrigans":  {"main_min": 16, "main_max": 25, "detours_min": 2, "detours_max": 3},
+	"collines_dolmens":  {"main_min": 20, "main_max": 30, "detours_min": 2, "detours_max": 3},
+	"iles_mystiques":    {"main_min": 22, "main_max": 35, "detours_min": 3, "detours_max": 3},
+}
+
+## Reputation-based path modifiers.
+const MAP_REP_SHORTCUT_THRESHOLD: int = 50   # -2 main nodes (known shortcut)
+const MAP_REP_SHORTCUT_NODES: int = 2
+const MAP_REP_SECRET_THRESHOLD: int = 80     # -4 main nodes + 1 secret detour
+const MAP_REP_SECRET_NODES: int = 4
+
+## Weather types — affect tone and event bias, chosen per-run by RNG + season.
+const WEATHER_TYPES: Dictionary = {
+	"clair":            {"tone": "serein",        "event_bias": "narrative", "season_weight": {"printemps": 3, "ete": 4, "automne": 2, "hiver": 1}},
+	"brume_legere":     {"tone": "mystere",       "event_bias": "mystery",  "season_weight": {"printemps": 3, "ete": 1, "automne": 4, "hiver": 2}},
+	"pluie":            {"tone": "melancolie",    "event_bias": "promise",  "season_weight": {"printemps": 2, "ete": 1, "automne": 4, "hiver": 3}},
+	"orage":            {"tone": "tension",       "event_bias": "event",    "season_weight": {"printemps": 1, "ete": 3, "automne": 2, "hiver": 1}},
+	"neige":            {"tone": "contemplation", "event_bias": "rest",     "season_weight": {"printemps": 0, "ete": 0, "automne": 1, "hiver": 4}},
+	"brouillard_epais": {"tone": "danger",        "event_bias": "event",    "season_weight": {"printemps": 1, "ete": 0, "automne": 3, "hiver": 3}},
+}
+
+## Detour reward types — assigned by LLM or fallback generator.
+const DETOUR_REWARDS: Dictionary = {
+	"ogham_hint":       {"label": "Indice d'Ogham",     "icon": "\u1681", "description": "Revele un Ogham cache dans ce biome"},
+	"anam_bonus":       {"label": "Source d'Anam",       "icon": "#",     "description": "Anam bonus (+15-25)", "min": 15, "max": 25},
+	"lore_fragment":    {"label": "Fragment de Lore",    "icon": "\u2731", "description": "Texte exclusif sur l'histoire du biome"},
+	"reputation_boost": {"label": "Faveur de Faction",   "icon": "\u2726", "description": "Bonus reputation (+10 faction du biome)", "amount": 10},
+}
+
+## Detour card count range (each detour = 2-4 extra cards).
+const DETOUR_CARDS_MIN: int = 2
+const DETOUR_CARDS_MAX: int = 4
+
+## Map skeleton node types (extends NODE_TYPES with detour-specific types).
+const SKELETON_NODE_TYPES: Array[String] = [
+	"narrative", "event", "promise", "rest", "merchant",
+	"mystery", "merlin", "detour_start", "detour_end",
+]
+
+## Tone progression template for arc structure.
+const TONE_ARC: Array[String] = [
+	"mystere", "exploration", "tension", "climax", "resolution", "sagesse",
+]

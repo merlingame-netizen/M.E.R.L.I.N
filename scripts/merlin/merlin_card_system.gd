@@ -521,6 +521,11 @@ func _process_card_tags(run_state: Dictionary, card: Dictionary) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _pick_card_type(context: Dictionary) -> String:
+	# If a run graph is active, use its current node type.
+	var graph_type: String = _get_graph_card_type(context)
+	if graph_type != "":
+		return graph_type
+
 	var cards_played: int = int(context.get("cards_played", 0))
 	var weights: Dictionary = MerlinConstants.CARD_TYPE_WEIGHTS.duplicate()
 
@@ -554,6 +559,36 @@ func _pick_card_type(context: Dictionary) -> String:
 			return type_key
 
 	return "narrative"
+
+
+## Consult the pre-generated run graph for the current node's card type.
+## Returns the mapped card type or "" if no graph / no mapping.
+func _get_graph_card_type(context: Dictionary) -> String:
+	var graph_data: Dictionary = context.get("run_graph", {})
+	if graph_data.is_empty():
+		return ""
+	var graph: MerlinRunGraph = MerlinRunGraph.from_dict(graph_data)
+	if graph.main_path.is_empty():
+		return ""
+	var current: Dictionary = graph.current_node()
+	if current.is_empty():
+		return ""
+	var ntype: String = str(current.get("type", ""))
+	# Map skeleton node types to card system types.
+	match ntype:
+		"narrative":
+			return "narrative"
+		"event":
+			return "event"
+		"promise":
+			return "promise"
+		"merlin":
+			return "merlin_direct"
+		"rest", "merchant", "mystery":
+			return "event"
+		"detour_start", "detour_end":
+			return "narrative"
+	return ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -45,6 +45,11 @@ var _result_ready: bool = false
 var _pending_result: Dictionary = {}
 var _pending_callback: Callable = Callable()
 
+# ── Streaming state ─────────────────────────────────────────────────────────
+var _stream_chunks: Array[String] = []
+var _stream_done: bool = false
+var _stream_full_text: String = ""
+
 # ── Stats ────────────────────────────────────────────────────────────────────
 var stats := {
 	"last_ttft_ms": 0,
@@ -195,6 +200,205 @@ func is_generating_now() -> bool:
 func cancel_generation() -> void:
 	_cancel_requested = true
 	_is_generating = false
+	_mutex.lock()
+	_stream_done = true
+	_mutex.unlock()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STREAMING API — Token-by-token via NDJSON
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Lance une generation en streaming. Les tokens arrivent dans _stream_chunks.
+## Appeler poll_stream() depuis le main thread pour recuperer les chunks.
+func generate_stream_async(prompt: String) -> void:
+	if _is_generating:
+		push_warning("[OllamaBackend] Already generating — ignoring stream request")
+		return
+
+	if _thread != null and _thread.is_started():
+		_thread.wait_to_finish()
+		_thread = null
+
+	_is_generating = true
+	_cancel_requested = false
+
+	_mutex.lock()
+	_stream_chunks.clear()
+	_stream_done = false
+	_stream_full_text = ""
+	_result_ready = false
+	_pending_result = {}
+	_mutex.unlock()
+
+	_thread = Thread.new()
+	_thread.start(_blocking_stream.bind(prompt))
+
+
+## Recupere les tokens accumules depuis le dernier appel. Non-bloquant.
+## Retourne {"chunks": Array[String], "done": bool, "full_text": String, "error": String}
+func poll_stream() -> Dictionary:
+	_mutex.lock()
+	var chunks: Array[String] = _stream_chunks.duplicate()
+	_stream_chunks.clear()
+	var done: bool = _stream_done
+	var full: String = _stream_full_text
+	var result: Dictionary = _pending_result.duplicate(true) if _result_ready else {}
+	_mutex.unlock()
+
+	if done and _thread != null and _thread.is_started():
+		_thread.wait_to_finish()
+		_thread = null
+		_is_generating = false
+
+	var out: Dictionary = {"chunks": chunks, "done": done, "full_text": full}
+	if result.has("error"):
+		out["error"] = result["error"]
+	return out
+
+
+func _blocking_stream(prompt: String) -> void:
+	var start_ms := Time.get_ticks_msec()
+
+	var options := {
+		"temperature": _temperature,
+		"top_p": _top_p,
+		"top_k": _top_k,
+		"repeat_penalty": _repetition_penalty,
+		"num_predict": _max_tokens,
+		"num_ctx": _num_ctx,
+	}
+	var payload := {
+		"model": model,
+		"prompt": prompt,
+		"raw": true,
+		"stream": true,
+		"options": options,
+	}
+	if thinking_mode:
+		payload["think"] = true
+	var body_str := JSON.stringify(payload)
+
+	# Connect.
+	var client := HTTPClient.new()
+	var err := client.connect_to_host(host, port)
+	if err != OK:
+		_store_stream_error("Ollama connect failed: %s" % error_string(err))
+		return
+
+	var connect_start := Time.get_ticks_msec()
+	while client.get_status() == HTTPClient.STATUS_CONNECTING or client.get_status() == HTTPClient.STATUS_RESOLVING:
+		client.poll()
+		OS.delay_msec(10)
+		if _cancel_requested:
+			_store_stream_error("Cancelled")
+			return
+		if Time.get_ticks_msec() - connect_start > CONNECT_TIMEOUT_MS:
+			_store_stream_error("Ollama connect timeout")
+			return
+
+	if client.get_status() != HTTPClient.STATUS_CONNECTED:
+		_store_stream_error("Ollama status: %d" % client.get_status())
+		return
+
+	# Send POST.
+	var headers := [
+		"Content-Type: application/json",
+		"Content-Length: %d" % body_str.to_utf8_buffer().size(),
+	]
+	err = client.request(HTTPClient.METHOD_POST, "/api/generate", headers, body_str)
+	if err != OK:
+		_store_stream_error("Ollama request failed: %s" % error_string(err))
+		return
+
+	while client.get_status() == HTTPClient.STATUS_REQUESTING:
+		client.poll()
+		OS.delay_msec(10)
+		if _cancel_requested:
+			_store_stream_error("Cancelled")
+			return
+
+	if not client.has_response():
+		_store_stream_error("Ollama no response")
+		return
+
+	var status_code: int = client.get_response_code()
+	if status_code != 200:
+		_store_stream_error("Ollama HTTP %d" % status_code)
+		return
+
+	# Read NDJSON stream line by line.
+	var accumulated_text: String = ""
+	var line_buffer: String = ""
+
+	while client.get_status() == HTTPClient.STATUS_BODY:
+		client.poll()
+		var chunk := client.read_response_body_chunk()
+		if chunk.size() > 0:
+			line_buffer += chunk.get_string_from_utf8()
+			# Process complete lines.
+			while "\n" in line_buffer:
+				var nl_pos: int = line_buffer.find("\n")
+				var line: String = line_buffer.substr(0, nl_pos).strip_edges()
+				line_buffer = line_buffer.substr(nl_pos + 1)
+				if line == "":
+					continue
+				var json := JSON.new()
+				if json.parse(line) != OK:
+					continue
+				var obj: Dictionary = json.data if json.data is Dictionary else {}
+				var token: String = str(obj.get("response", ""))
+				if token != "":
+					accumulated_text += token
+					_mutex.lock()
+					_stream_chunks.append(token)
+					_stream_full_text = accumulated_text
+					_mutex.unlock()
+				if obj.get("done", false):
+					# Strip think tags.
+					if "<think>" in accumulated_text:
+						accumulated_text = _strip_thinking_tags(accumulated_text)
+					var total_ms: int = Time.get_ticks_msec() - start_ms
+					var eval_count: int = int(obj.get("eval_count", 0))
+					var eval_ns: int = int(obj.get("eval_duration", 0))
+					var tps: float = eval_count / (eval_ns / 1e9) if eval_ns > 0 else 0.0
+					_update_stats(total_ms, eval_count, tps)
+					_mutex.lock()
+					_stream_full_text = accumulated_text.strip_edges()
+					_stream_done = true
+					_pending_result = {"text": accumulated_text.strip_edges()}
+					_result_ready = true
+					_mutex.unlock()
+					return
+		else:
+			OS.delay_msec(5)
+		if _cancel_requested:
+			_store_stream_error("Cancelled")
+			return
+		if Time.get_ticks_msec() - start_ms > READ_TIMEOUT_MS:
+			_store_stream_error("Ollama stream read timeout")
+			return
+
+	# If we exit the loop without done=true, finalize.
+	if accumulated_text.strip_edges() != "":
+		if "<think>" in accumulated_text:
+			accumulated_text = _strip_thinking_tags(accumulated_text)
+		_mutex.lock()
+		_stream_full_text = accumulated_text.strip_edges()
+		_stream_done = true
+		_pending_result = {"text": accumulated_text.strip_edges()}
+		_result_ready = true
+		_mutex.unlock()
+	else:
+		_store_stream_error("Ollama stream empty response")
+
+
+func _store_stream_error(msg: String) -> void:
+	_mutex.lock()
+	_stream_done = true
+	_pending_result = {"error": msg}
+	_result_ready = true
+	_mutex.unlock()
 
 
 ## Configure les parametres de sampling (compatible MerlinLLM).
@@ -408,6 +612,7 @@ func _store_result(result: Dictionary, _start_ms: int) -> void:
 
 
 func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float) -> void:
+	_mutex.lock()
 	stats.last_total_ms = total_ms
 	stats.last_eval_count = eval_count
 	stats.last_tok_per_sec = tok_per_sec
@@ -419,6 +624,7 @@ func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float) -> void:
 		var n: float = float(stats.llm_calls)
 		stats.avg_total_ms = (stats.avg_total_ms * (n - 1.0) + float(total_ms)) / n
 		stats.avg_tok_per_sec = (stats.avg_tok_per_sec * (n - 1.0) + tok_per_sec) / n
+	_mutex.unlock()
 
 
 ## Strip <think>...</think> reasoning tags from Qwen 3.5 thinking mode output.

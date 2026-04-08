@@ -22,9 +22,23 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.seed = 2026
+	# Hide ScreenFrame border overlay in this showcase scene
+	var sf: Node = get_node_or_null("/root/ScreenFrame")
+	if sf and sf is CanvasLayer:
+		sf.visible = false
+	print("[BKShowcase] Building scene...")
 	_build_ground()
+	print("[BKShowcase] Ground built, children: ", get_child_count())
 	_build_environment()
+	print("[BKShowcase] Environment built, children: ", get_child_count())
 	_place_assets()
+	print("[BKShowcase] Assets placed, children: ", get_child_count())
+	# Dense vegetation background via universal MultiMesh system
+	var VegMgr = preload("res://scripts/vegetation/vegetation_manager.gd")
+	var VegPresets = preload("res://scripts/vegetation/vegetation_presets.gd")
+	var _veg: RefCounted = VegMgr.new()
+	_veg.setup(self, VegPresets.bk_showcase())
+	print("[BKShowcase] Vegetation: ", _veg.get_stats())
 	_add_info_label()
 
 
@@ -86,22 +100,24 @@ func _build_ground() -> void:
 
 
 func _build_environment() -> void:
+	# Override project clear color for BK sky
+	RenderingServer.set_default_clear_color(Color(0.349, 0.749, 0.780))
+
 	# WorldEnvironment with BK-style warm sky and fog
 	var env: Environment = Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.349, 0.749, 0.780)  # SKY_CYAN
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.941, 0.910, 0.816)  # CREAM_LIGHT
-	env.ambient_light_energy = 0.4
+	env.ambient_light_energy = 0.6
 
 	# BK fog — matches sky color, warm
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.349, 0.749, 0.780)  # Same as sky
-	env.fog_density = 0.008
-	env.fog_sky_affect = 1.0
+	env.fog_density = 0.005
 
 	# Tonemap for warm BK look
-	env.tonemap_mode = Environment.TONE_MAP_FILMIC
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 6.0
 
 	var world_env: WorldEnvironment = WorldEnvironment.new()
@@ -112,7 +128,7 @@ func _build_environment() -> void:
 	# Key light — warm sun (BK signature warm sunlight)
 	var sun: DirectionalLight3D = DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.95, 0.85)
-	sun.light_energy = 1.2
+	sun.light_energy = 1.5
 	sun.shadow_enabled = true
 	sun.rotation_degrees = Vector3(-45.0, 30.0, 0.0)
 	sun.name = "SunLight"
@@ -121,7 +137,7 @@ func _build_environment() -> void:
 	# Fill light — cool blue from opposite side
 	var fill: DirectionalLight3D = DirectionalLight3D.new()
 	fill.light_color = Color(0.7, 0.8, 1.0)
-	fill.light_energy = 0.3
+	fill.light_energy = 0.5
 	fill.shadow_enabled = false
 	fill.rotation_degrees = Vector3(-30.0, -150.0, 0.0)
 	fill.name = "FillLight"
@@ -158,6 +174,7 @@ func _scan_glb_files(dir_path: String) -> Array:
 	var files: Array = []
 	var dir: DirAccess = DirAccess.open(dir_path)
 	if dir == null:
+		print("[BKShowcase] DirAccess.open FAILED for: ", dir_path)
 		return files
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
@@ -166,6 +183,7 @@ func _scan_glb_files(dir_path: String) -> Array:
 			files.append(dir_path + file_name)
 		file_name = dir.get_next()
 	dir.list_dir_end()
+	print("[BKShowcase] Scanned ", dir_path, " -> ", files.size(), " GLBs")
 	return files
 
 

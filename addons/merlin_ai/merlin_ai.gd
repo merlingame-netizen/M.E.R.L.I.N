@@ -1235,6 +1235,74 @@ func generate_with_system_stream(system_prompt: String, user_input: String, para
 		on_chunk.call("", true)
 	return {"text": clean_response(collected)}
 
+## Genere en streaming natif HTTP (NDJSON token-by-token).
+## on_chunk(token: String, is_done: bool) est appele pour chaque token.
+## Requiert que narrator_llm soit un OllamaBackend avec generate_stream_async.
+func generate_with_native_stream(system_prompt: String, user_input: String, params_override: Dictionary = {}, on_chunk: Callable = Callable()) -> Dictionary:
+	if not is_ready:
+		return {"error": "LLM non pret"}
+	if narrator_llm == null:
+		return {"error": "Narrator LLM non charge"}
+	if not narrator_llm.has_method("generate_stream_async"):
+		# Fallback to old looped streaming if backend doesn't support native stream.
+		return await generate_with_system_stream(system_prompt, user_input, params_override, on_chunk)
+
+	system_prompt = _inject_language_directive(system_prompt)
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "stream", params_override)
+	var template: String = prompts.get("executor_template", "{system}\n{input}")
+	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
+
+	# Apply params to the backend.
+	var params: Dictionary = narrator_params.duplicate(true)
+	for key in params_override.keys():
+		params[key] = params_override[key]
+	if params.has("temperature"):
+		narrator_llm.set_sampling_params(float(params.temperature), float(params.get("top_p", 0.9)), int(params.get("max_tokens", 256)))
+
+	# Start streaming.
+	narrator_llm.generate_stream_async(prompt)
+
+	# Poll loop — drain chunks and forward to callback.
+	var timeout_ms: int = int(params.get("timeout_ms", 60000))
+	var start_time: int = Time.get_ticks_msec()
+	var collected: String = ""
+	var poll_count: int = 0
+
+	while true:
+		var stream_data: Dictionary = narrator_llm.poll_stream()
+		var chunks: Array = stream_data.get("chunks", [])
+		for token in chunks:
+			collected += str(token)
+			if on_chunk.is_valid():
+				on_chunk.call(str(token), false)
+
+		if stream_data.get("done", false):
+			break
+		if stream_data.has("error"):
+			if on_chunk.is_valid():
+				on_chunk.call("", true)
+			return {"error": stream_data["error"], "text": collected}
+
+		var elapsed: int = Time.get_ticks_msec() - start_time
+		if elapsed > timeout_ms:
+			if narrator_llm.has_method("cancel_generation"):
+				narrator_llm.cancel_generation()
+			if on_chunk.is_valid():
+				on_chunk.call("", true)
+			return {"error": "Stream timeout", "text": collected}
+
+		poll_count += 1
+		if poll_count < 10:
+			await get_tree().process_frame
+		else:
+			await get_tree().create_timer(0.03).timeout
+
+	if on_chunk.is_valid():
+		on_chunk.call("", true)
+	var final_text: String = clean_response(collected)
+	return {"text": final_text}
+
+
 ## Genere une reponse rapide avec le Narrator LLM — utilise pour dialogues, commentaires
 func generate_with_router(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:
 	if not is_ready:

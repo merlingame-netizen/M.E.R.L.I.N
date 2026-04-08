@@ -102,18 +102,40 @@ func get_current_fog_density() -> float:
 
 
 func _create_fog_planes() -> void:
+	# Use dither dissolve shader — avoids alpha blending (expensive on GL Compat)
+	var dissolve_shader: Shader = load("res://shaders/fog_dissolve.gdshader") as Shader
 	var heights: Array[float] = [0.2, 0.6, 1.2]
 	for zc in _zone_centers:
 		for h in heights:
 			if _rng.randf() > 0.4:
-				var plane: MeshInstance3D = _make_billboard_quad(
-					Vector3(zc.x + _rng.randf_range(-4.0, 4.0), h, zc.z + _rng.randf_range(-4.0, 4.0)),
-					Vector2(_rng.randf_range(8.0, 14.0), _rng.randf_range(6.0, 10.0)),
-					Color(0.35, 0.42, 0.32, 0.025),
-					true
-				)
-				plane.set_meta("base_y", h)
-				_fog_planes.append(plane)
+				var pos: Vector3 = Vector3(zc.x + _rng.randf_range(-4.0, 4.0), h, zc.z + _rng.randf_range(-4.0, 4.0))
+				var quad_size: Vector2 = Vector2(_rng.randf_range(8.0, 14.0), _rng.randf_range(6.0, 10.0))
+				var mesh: QuadMesh = QuadMesh.new()
+				mesh.size = quad_size
+				var inst: MeshInstance3D = MeshInstance3D.new()
+				inst.mesh = mesh
+				inst.position = pos
+				inst.rotation_degrees.x = -90.0
+				inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				if dissolve_shader:
+					var mat: ShaderMaterial = ShaderMaterial.new()
+					mat.shader = dissolve_shader
+					mat.set_shader_parameter("fog_color", Color(0.35, 0.42, 0.32, 1.0))
+					mat.set_shader_parameter("near_dist", 2.0)
+					mat.set_shader_parameter("far_dist", 12.0 + _rng.randf_range(0.0, 6.0))
+					mat.set_shader_parameter("density", 0.6)
+					inst.set_surface_override_material(0, mat)
+				else:
+					# Fallback to alpha if shader not found
+					var mat: StandardMaterial3D = StandardMaterial3D.new()
+					mat.albedo_color = Color(0.35, 0.42, 0.32, 0.025)
+					mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+					mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+					inst.set_surface_override_material(0, mat)
+				inst.set_meta("base_y", h)
+				_forest_root.add_child(inst)
+				_fog_planes.append(inst)
 
 
 func _create_mist_curtains() -> void:

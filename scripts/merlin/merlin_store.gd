@@ -187,6 +187,7 @@ func build_default_state() -> Dictionary:
 			"oghams_decouverts": [],
 			"cartes_jouees": [],
 			"heure_debut_run": 0,
+			"run_graph": {},
 		},
 		"oghams": {
 			"skills_unlocked": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
@@ -362,6 +363,11 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return {"ok": true, "ending": end_check}
 
 		# --- MAP ACTIONS (Phase 37 — STS-like world map) ---
+		"SET_RUN_GRAPH":
+			var graph_data: Dictionary = action.get("graph", {})
+			state["run"]["run_graph"] = graph_data
+			return {"ok": true}
+
 		"GENERATE_MAP":
 			var floors: int = int(action.get("floors", MerlinConstants.DEFAULT_MAP_FLOORS))
 			var config: Dictionary = {}

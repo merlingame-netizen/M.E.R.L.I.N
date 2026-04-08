@@ -30,7 +30,7 @@ const FALLBACK_EVENTS: Array[Dictionary] = [
 		],
 	},
 	{
-		"text": "Une pierre gravee d'oghams pulse d'une lueur bleutee.\nLe sol tremble legerement sous tes pieds.",
+		"text": "Une pierre gravee de runes pulse d'une lueur bleutee.\nLe sol tremble legerement sous tes pieds.",
 		"labels": ["Toucher", "Dechiffrer", "Contourner"],
 		"effects": [
 			["ADD_REPUTATION:anciens:5", "HEAL_LIFE:5"],

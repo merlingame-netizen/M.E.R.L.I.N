@@ -140,7 +140,7 @@ func build_path_terrain() -> void:
 		var closest_idx: int = _find_closest_path_point(_zone_centers[i])
 		if closest_idx >= 0 and closest_idx < _path_points.size():
 			var pt: Vector3 = _path_points[closest_idx]
-			_asset_spawner.spawn_broc("menhir_01", pt + Vector3(_rng.randf_range(2.0, 3.5), 0.0, 0.0), _rng.randf_range(1.0, 1.8))
+			_asset_spawner.spawn_broc("menhir_01", pt + Vector3(_rng.randf_range(2.0, 3.5), 0.0, 0.0), _rng.randf_range(0.7, 1.0))
 
 
 func _create_path_multimesh(xforms: Array[Transform3D], mesh: Mesh, mat: Material) -> void:
@@ -179,3 +179,32 @@ func _find_closest_path_point(target: Vector3) -> int:
 			best_dist = d
 			best_idx = i
 	return best_idx
+
+
+func build_occluders() -> void:
+	## Place OccluderInstance3D at zone boundaries to cull hidden chunks.
+	## BoxOccluder3D works in GL Compatibility mode.
+	if _zone_centers.size() < 2:
+		return
+	var placed: int = 0
+	for i in range(_zone_centers.size() - 1):
+		var mid: Vector3 = (_zone_centers[i] + _zone_centers[i + 1]) * 0.5
+		mid.y = 3.5  # Half-height of the occluder box
+
+		# Direction perpendicular to path between zones
+		var dir: Vector3 = (_zone_centers[i + 1] - _zone_centers[i]).normalized()
+		var perp: Vector3 = Vector3(-dir.z, 0.0, dir.x)
+
+		var occluder: BoxOccluder3D = BoxOccluder3D.new()
+		occluder.size = Vector3(30.0, 8.0, 2.0)
+
+		var inst: OccluderInstance3D = OccluderInstance3D.new()
+		inst.occluder = occluder
+		inst.position = mid
+		# Rotate to face perpendicular to zone-to-zone direction
+		if perp.length() > 0.01:
+			inst.look_at(mid + perp, Vector3.UP)
+		inst.name = "ZoneOccluder_%d" % i
+		_forest_root.add_child(inst)
+		placed += 1
+	print("[TerrainBuilder] Occluders placed: %d" % placed)

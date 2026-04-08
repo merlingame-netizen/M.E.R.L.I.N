@@ -5,7 +5,7 @@ extends Node
 
 signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
 
-const HUB_SCENE: String = "res://scenes/MerlinCabinHub.tscn"
+const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 
 # --- Helper modules ---
@@ -43,74 +43,71 @@ const ACT_RIGHT: StringName = &"broc_move_right"
 const ACT_INTERACT: StringName = &"broc_interact"
 const ACT_MOUSE: StringName = &"broc_toggle_mouse"
 
-# --- GLB asset paths ---
+# --- GLB asset paths (BK art direction — real-world scale) ---
+const BK_BASE: String = "res://Assets/bk_assets/"
+const BK_BIOME: String = "foret_broceliande"
+
 const TREE_MODELS: Array[String] = [
-	"res://Assets/3d_models/vegetation/01_Tree_Small.glb",
-	"res://Assets/3d_models/vegetation/02_Tree_Medium.glb",
-	"res://Assets/3d_models/vegetation/03_Tree_Large.glb",
-	"res://Assets/3d_models/vegetation/04_Pine.glb",
-	"res://Assets/3d_models/vegetation/05_Cypress.glb",
-	"res://Assets/3d_models/vegetation/06_Thuya.glb",
-	"res://Assets/3d_models/vegetation/29_Birch.glb",
+	BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0000.glb",
+	BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0001.glb",
+	BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0002.glb",
+	BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0003.glb",
+	BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0004.glb",
+	BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0005.glb",
 ]
 
 const SPECIAL_TREES: Dictionary = {
-	"old_oak": "res://Assets/3d_models/vegetation/08_OldOak_Merlin.glb",
-	"golden": "res://Assets/3d_models/vegetation/09_GoldenTree_Sacred.glb",
-	"spiral": "res://Assets/3d_models/vegetation/10_SpiralTree_Mystic.glb",
-	"willow": "res://Assets/3d_models/vegetation/11_Willow_Enchanted.glb",
-	"silver": "res://Assets/3d_models/vegetation/12_SilverTree_Moon.glb",
-	"dead": "res://Assets/3d_models/vegetation/28_Tree_Dead.glb",
+	"old_oak": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0000.glb",
+	"golden": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0003.glb",
+	"spiral": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0004.glb",
+	"willow": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0002.glb",
+	"silver": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0005.glb",
+	"dead": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0001.glb",
 }
 
 const BUSH_MODELS: Array[String] = [
-	"res://Assets/3d_models/vegetation/07_Bush.glb",
-	"res://Assets/3d_models/vegetation/26_Bush_Flower.glb",
-	"res://Assets/3d_models/vegetation/27_Bush_Thick.glb",
+	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0000.glb",
+	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0001.glb",
+	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0002.glb",
+	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0003.glb",
 ]
 
 const DETAIL_MODELS: Dictionary = {
-	"fern": "res://Assets/3d_models/vegetation/16_Fern.glb",
-	"grass_tall": "res://Assets/3d_models/vegetation/17_Grass_Tall.glb",
-	"grass_short": "res://Assets/3d_models/vegetation/18_Grass_Short.glb",
-	"mushroom_red": "res://Assets/3d_models/vegetation/19_Mushroom_Red.glb",
-	"mushroom_group": "res://Assets/3d_models/vegetation/20_Mushroom_Group.glb",
-	"rock_small": "res://Assets/3d_models/vegetation/21_Rock_Small.glb",
-	"rock_medium": "res://Assets/3d_models/vegetation/22_Rock_Medium.glb",
-	"rock_group": "res://Assets/3d_models/vegetation/23_Rock_Group.glb",
-	"daisy": "res://Assets/3d_models/vegetation/25_Daisy.glb",
-	"lily_pink": "res://Assets/3d_models/vegetation/13_LilyPad_Pink.glb",
-	"lily_white": "res://Assets/3d_models/vegetation/15_LilyPad_White.glb",
-	"cattail": "res://Assets/3d_models/vegetation/24_Cattail.glb",
+	"rock_small": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0000.glb",
+	"rock_medium": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0001.glb",
+	"rock_group": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0004.glb",
+	"lily_pink": BK_BASE + "collectibles/" + BK_BIOME + "/collectible_bk_foret_broceliande_0000.glb",
+	"lily_white": BK_BASE + "collectibles/" + BK_BIOME + "/collectible_bk_foret_broceliande_0003.glb",
+	"cattail": BK_BASE + "collectibles/" + BK_BIOME + "/collectible_bk_foret_broceliande_0005.glb",
 }
 
-# --- Broceliande 3D assets (TripoSR generated) ---
+# --- Broceliande 3D assets (BK art direction) ---
 const BROC_ASSETS: Dictionary = {
-	# Megaliths
-	"dolmen": "res://Assets/3d_models/broceliande/megaliths/dolmen_01.glb",
-	"menhir_01": "res://Assets/3d_models/broceliande/megaliths/menhir_01.glb",
-	"menhir_02": "res://Assets/3d_models/broceliande/megaliths/menhir_02_ogham.glb",
-	"stone_circle": "res://Assets/3d_models/broceliande/megaliths/stone_circle.glb",
-	# Structures
-	"bridge_wood": "res://Assets/3d_models/broceliande/structures/bridge_wood.glb",
-	"root_arch": "res://Assets/3d_models/broceliande/structures/root_arch.glb",
-	"fairy_lantern": "res://Assets/3d_models/broceliande/structures/fairy_lantern.glb",
-	"druid_altar": "res://Assets/3d_models/broceliande/structures/druid_altar.glb",
+	# Megaliths (3.5m real-world)
+	"dolmen": BK_BASE + "megaliths/" + BK_BIOME + "/megalith_bk_foret_broceliande_0000.glb",
+	"menhir_01": BK_BASE + "megaliths/" + BK_BIOME + "/megalith_bk_foret_broceliande_0001.glb",
+	"menhir_02": BK_BASE + "megaliths/" + BK_BIOME + "/megalith_bk_foret_broceliande_0002.glb",
+	"stone_circle": BK_BASE + "megaliths/" + BK_BIOME + "/megalith_bk_foret_broceliande_0003.glb",
+	# Structures (3.2m real-world)
+	"bridge_wood": BK_BASE + "props/" + BK_BIOME + "/bridge_bk_foret_broceliande_0000.glb",
+	"root_arch": BK_BASE + "structures/" + BK_BIOME + "/structure_bk_foret_broceliande_0000.glb",
+	"fairy_lantern": BK_BASE + "collectibles/" + BK_BIOME + "/collectible_bk_foret_broceliande_0001.glb",
+	"druid_altar": BK_BASE + "structures/" + BK_BIOME + "/structure_bk_foret_broceliande_0003.glb",
 	# POI
-	"fountain_barenton": "res://Assets/3d_models/broceliande/poi/fountain_barenton.glb",
-	"merlin_tomb": "res://Assets/3d_models/broceliande/poi/merlin_tomb.glb",
-	"merlin_oak": "res://Assets/3d_models/broceliande/poi/merlin_oak.glb",
-	# Creatures (disabled — GLBs need GUI editor reimport)
-	# "korrigan": "res://Assets/3d_models/broceliande/creatures/korrigan.glb",
-	# "white_doe": "res://Assets/3d_models/broceliande/creatures/white_doe.glb",
-	# "mist_wolf": "res://Assets/3d_models/broceliande/creatures/mist_wolf.glb",
-	# "giant_raven": "res://Assets/3d_models/broceliande/creatures/giant_raven.glb",
-	# Decor
-	"fallen_trunk": "res://Assets/3d_models/broceliande/decor/fallen_trunk.glb",
-	"giant_mushroom": "res://Assets/3d_models/broceliande/decor/giant_mushroom.glb",
-	"root_network": "res://Assets/3d_models/broceliande/decor/root_network.glb",
-	"spider_web": "res://Assets/3d_models/broceliande/decor/spider_web.glb",
-	"giant_stump": "res://Assets/3d_models/broceliande/decor/giant_stump.glb",
+	"fountain_barenton": BK_BASE + "structures/" + BK_BIOME + "/structure_bk_foret_broceliande_0004.glb",
+	"merlin_tomb": BK_BASE + "megaliths/" + BK_BIOME + "/megalith_bk_foret_broceliande_0004.glb",
+	"merlin_oak": BK_BASE + "vegetation/" + BK_BIOME + "/tree_bk_foret_broceliande_0000.glb",
+	# Creatures (0.7m real-world) — 0=korrigan, 1=doe, 2=wolf
+	"korrigan": BK_BASE + "characters/" + BK_BIOME + "/creature_bk_foret_broceliande_0000.glb",
+	"white_doe": BK_BASE + "characters/" + BK_BIOME + "/creature_bk_foret_broceliande_0001.glb",
+	"mist_wolf": BK_BASE + "characters/" + BK_BIOME + "/creature_bk_foret_broceliande_0002.glb",
+	"giant_raven": BK_BASE + "characters/" + BK_BIOME + "/creature_bk_foret_broceliande_0003.glb",
+	# Decor (rocks 1.8m / collectibles 0.4m)
+	"fallen_trunk": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0000.glb",
+	"giant_mushroom": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0003.glb",
+	"root_network": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0004.glb",
+	"spider_web": BK_BASE + "collectibles/" + BK_BIOME + "/collectible_bk_foret_broceliande_0002.glb",
+	"giant_stump": BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0005.glb",
 }
 
 
@@ -190,6 +187,17 @@ var _path_points: PackedVector3Array = PackedVector3Array()
 var _zone_centers: Array[Vector3] = []
 var _zone_names: Array[String] = []  # Loaded from BiomeWalkConfigs in _ready
 
+# Pixel-shrink SubViewport (renders 3D at low_pixel_height, upscales with nearest + CRT)
+var _sub_viewport: SubViewport
+var _viewport_container: SubViewportContainer
+var _retro_material: ShaderMaterial
+
+# Dynamic resolution scaling — auto-adapts to device performance
+const RES_TIERS: Array[Vector2i] = [Vector2i(320, 180), Vector2i(480, 270), Vector2i(640, 360)]
+var _res_tier: int = 0
+var _res_cooldown: float = 0.0
+var _frame_samples: PackedFloat32Array = PackedFloat32Array()
+
 
 func _ready() -> void:
 	_rng.randomize()
@@ -225,6 +233,7 @@ func _ready() -> void:
 	_terrain_builder.set_biome_config(biome_key)
 	_terrain_builder.build_ground()
 	_terrain_builder.build_path_terrain()
+	_terrain_builder.build_occluders()
 	# Apply biome walk speed
 	var biome_walk_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
 	move_speed = float(biome_walk_cfg.get("walk_speed", 3.5))
@@ -299,11 +308,8 @@ func _init_helpers() -> void:
 	# Season system (overlay on top of this Control)
 	_season = BrocSeason.new(forest_root, self)
 
-	# Wind-blown grass (along path borders)
-	var grass_tall: PackedScene = _asset_spawner.detail_scenes.get("grass_tall") as PackedScene
-	var grass_short: PackedScene = _asset_spawner.detail_scenes.get("grass_short") as PackedScene
-	if grass_tall or grass_short:
-		_grass_wind = BrocGrassWind.new(forest_root, _path_points, _zone_centers, grass_tall, grass_short)
+	# Grass now handled by ChunkManager cross-billboard MultiMesh (replaces BrocGrassWind)
+	_grass_wind = null
 
 	# Enhanced atmosphere (zone-aware fog)
 	_atmosphere = BrocAtmosphere.new(forest_root, _zone_centers)
@@ -378,8 +384,12 @@ func _spawn_diag_box() -> void:
 	pass  # Diagnostic removed — 3D rendering confirmed working
 
 
-func _notification(_what: int) -> void:
-	pass  # NOTIFICATION_RESIZED no longer needed — no SubViewport pixel shrink
+func _on_window_resized() -> void:
+	if _viewport_container:
+		var win_size: Vector2 = get_viewport().get_visible_rect().size
+		_viewport_container.size = win_size
+		if _retro_material:
+			_retro_material.set_shader_parameter("screen_size", win_size)
 
 
 func _exit_tree() -> void:
@@ -580,13 +590,90 @@ func _physics_process(delta: float) -> void:
 		var time_name: String = _get_time_of_day_name()
 		_walk_hud.update_zone(zone_name, season_name, time_name)
 
+	# Dynamic resolution scaling — adjust SubViewport size based on frame time
+	_update_dynamic_resolution(delta)
+
+
+func _update_dynamic_resolution(delta: float) -> void:
+	if not _sub_viewport:
+		return
+	_frame_samples.append(delta)
+	if _frame_samples.size() > 30:
+		_frame_samples.remove_at(0)
+	_res_cooldown -= delta
+	if _res_cooldown > 0.0:
+		return
+	_res_cooldown = 0.5
+	var avg: float = 0.0
+	for s in _frame_samples:
+		avg += s
+	avg /= float(_frame_samples.size())
+	var changed: bool = false
+	if avg > 0.018 and _res_tier > 0:
+		_res_tier -= 1
+		changed = true
+	elif avg < 0.012 and _res_tier < RES_TIERS.size() - 1:
+		_res_tier += 1
+		changed = true
+	if changed:
+		var tier: Vector2i = RES_TIERS[_res_tier]
+		_sub_viewport.size = tier
+		if _retro_material:
+			_retro_material.set_shader_parameter("render_size", Vector2(tier.x, tier.y))
+		print("[Broceliande] Dynamic res: tier %d (%dx%d)" % [_res_tier, tier.x, tier.y])
+
 
 # ============================================================
 # VIEWPORT / ENVIRONMENT
 # ============================================================
 
 func _setup_viewport() -> void:
-	pass  # No SubViewport — Camera3D renders directly to main viewport
+	# Pixel-shrink: render 3D at low_pixel_height, upscale with nearest-neighbor + CRT shader.
+	# 320x180 = 16x fewer fragments than 1280x720. Huge win for GL Compat / web.
+	var render_h: int = low_pixel_height
+	var render_w: int = int(float(render_h) * 16.0 / 9.0)
+	render_w += render_w % 2  # Round to even
+
+	# Create SubViewport at low resolution
+	_sub_viewport = SubViewport.new()
+	_sub_viewport.size = Vector2i(render_w, render_h)
+	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_sub_viewport.handle_input_locally = false
+	_sub_viewport.name = "PixelShrinkVP"
+
+	# Reparent World3D under SubViewport (Camera3D renders at low res)
+	var parent: Node = world_root.get_parent()
+	parent.remove_child(world_root)
+	_sub_viewport.add_child(world_root)
+
+	# SubViewportContainer displays the low-res output upscaled
+	_viewport_container = SubViewportContainer.new()
+	_viewport_container.stretch = true
+	_viewport_container.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_viewport_container.name = "PixelShrinkContainer"
+
+	# Apply retro CRT upscale shader (scanlines, curvature, posterization)
+	var retro_shader: Shader = load("res://resources/shaders/retro_screen.gdshader") as Shader
+	if retro_shader:
+		_retro_material = ShaderMaterial.new()
+		_retro_material.shader = retro_shader
+		_retro_material.set_shader_parameter("render_size", Vector2(render_w, render_h))
+		_retro_material.set_shader_parameter("screen_size", Vector2(1280.0, 720.0))
+		_viewport_container.material = _retro_material
+
+	_viewport_container.add_child(_sub_viewport)
+
+	# Size container to fill window
+	var win_size: Vector2 = get_viewport().get_visible_rect().size
+	_viewport_container.size = win_size
+
+	# Insert at index 0 so 3D renders behind HUD CanvasLayer
+	add_child(_viewport_container)
+	move_child(_viewport_container, 0)
+
+	# Handle window resize
+	get_tree().root.size_changed.connect(_on_window_resized)
+	print("[Broceliande] Pixel shrink: %dx%d -> %dx%d" % [render_w, render_h, int(win_size.x), int(win_size.y)])
 
 
 func _setup_environment() -> void:
@@ -869,7 +956,7 @@ func _try_interact() -> void:
 	objective_label.text = "Merlin t'a retrouve au coeur de Broceliande."
 	status_label.text = "Le druide ouvre un passage vers la quete."
 	zone_label.text = "Le Cercle de Pierres — Rencontre"
-	result_text.text = "Au centre du cercle millenaire,\nMerlin se revele dans un halo bleu.\n\nLa quete des Oghams commence."
+	result_text.text = "Au centre du cercle millenaire,\nMerlin se revele dans un halo bleu.\n\nLa quete des Runes commence."
 	result_panel.visible = true
 	crosshair.visible = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -1057,7 +1144,7 @@ func _get_encounter_card(enc_idx: int) -> Dictionary:
 		{"title": "Le Conseil des Druides", "text": "Trois silhouettes encapuchonnees se tiennent en cercle autour d'un feu vert. Leurs chants s'elevent comme de la fumee. Ils semblent attendre quelqu'un.", "choices": [{"label": "Rejoindre le cercle"}, {"label": "Ecouter leurs chants"}, {"label": "Offrir du gui"}]},
 		{"title": "La Danse des Korrigans", "text": "Des etres minuscules dansent en ronde dans une clairiere baignee de lune. Leurs rires tintent comme des clochettes. Le sol sous leurs pieds brille d'or.", "choices": [{"label": "Danser avec eux"}, {"label": "Voler une piece d'or"}, {"label": "Applaudir"}]},
 		{"title": "Le Reflet de Niamh", "text": "Un lac immobile reflete un ciel qui n'est pas le votre. Une silhouette feminine se dessine sous la surface. Sa voix murmure des promesses de Tir na nOg.", "choices": [{"label": "Plonger la main"}, {"label": "Chanter pour elle"}, {"label": "Detourner le regard"}]},
-		{"title": "La Stele des Anciens", "text": "Une pierre dressee porte des inscriptions dans une langue oubliee. Le vent qui la caresse produit un son grave et melodieux. Les ancetres parlent a travers elle.", "choices": [{"label": "Dechiffrer les signes"}, {"label": "Poser le front contre la pierre"}, {"label": "Graver un ogham"}]},
+		{"title": "La Stele des Anciens", "text": "Une pierre dressee porte des inscriptions dans une langue oubliee. Le vent qui la caresse produit un son grave et melodieux. Les ancetres parlent a travers elle.", "choices": [{"label": "Dechiffrer les signes"}, {"label": "Poser le front contre la pierre"}, {"label": "Graver une rune"}]},
 		{"title": "L'Ombre de l'Ankou", "text": "Une charette grince dans le brouillard. Une silhouette haute et maigre la pousse lentement. Ses yeux sont des trous noirs dans un visage de craie. Il ne menace pas — il observe.", "choices": [{"label": "L'affronter du regard"}, {"label": "Offrir un objet"}, {"label": "Fuir dans la brume"}]},
 	]
 	# Shuffle based on encounter index for variety
@@ -1124,9 +1211,9 @@ func _on_run_complete() -> void:
 	btn_menu.pressed.connect(func():
 		var pt: Node = get_node_or_null("/root/PixelTransition")
 		if pt and pt.has_method("transition_to"):
-			pt.transition_to("res://scenes/MerlinCabinHub.tscn")
+			pt.transition_to("res://scenes/HubAntre.tscn")
 		else:
-			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
+			get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
 	)
 	vbox.add_child(btn_menu)
 
