@@ -33,6 +33,9 @@
 IDLE ──────────────────────────────────────────────────────────┐
   │ (tâches disponibles dans feature_queue.json)              │
   ↓                                                            │
+SCAN ──────────────────────────────────────────────────────────│
+  │ (score multi-domaine, selectionner le plus faible)        │
+  ↓                                                            │
 PLAN ──────────────────────────────────────────────────────────│
   │ (tasks assignées aux agents)                              │
   ↓                                                            │
@@ -48,8 +51,14 @@ TEST ─────────────────────────
 DEBUG_LOOP ────────────────────────────────────┘             │
   │ (max 10 itérations)                                       │
   ↓                                                            │
+HUMAN_REVIEW ──────────────────────────────────────────────────│
+  │ (AskUserQuestion: résumé + screenshots + options)         │
+  │  SI visuel → Playwright screenshot présenté               │
+  │  SI gameplay → HUMAN_TEST_GATE (bloquant)                 │
+  │  SI routine → PROGRESS_REPORT (non-bloquant)              │
+  ↓                                                            │
 REPORT ────────────────────────────────────────────────────────│
-  │ (rapport + questions utilisateur)                         │
+  │ (rapport + intégration feedback humain)                   │
   ↓                                                            │
 IDLE ◄──────────────────────────────────────────────────────────┘
 
@@ -68,7 +77,9 @@ BLOCKED: si max itérations atteint → escalade immédiate à l'utilisateur
 | `LORA_WAIT` | Training LoRA en cours (non bloquant) | → REPORT (autres agents continuent) |
 | `ASSET_GEN` | Génération d'assets en cours | → BUILD ou VALIDATE |
 | `DEBUG_LOOP` | debug_loop.ps1 (max 10 itérations) | → VALIDATE si résolu, → BLOCKED si max |
-| `REPORT` | Génération rapport + KB update | → IDLE |
+| `SCAN` | Score multi-domaine (7 axes), sélection priorité | → PLAN (domaine le + faible) |
+| `HUMAN_REVIEW` | AskUserQuestion avec résumé + screenshots | → REPORT si approuvé, → BUILD si correction |
+| `REPORT` | Génération rapport + intégration feedback humain | → IDLE |
 | `BLOCKED` | Max itérations atteint | Escalade utilisateur obligatoire |
 
 ---
@@ -123,7 +134,82 @@ BLOCKED: si max itérations atteint → escalade immédiate à l'utilisateur
 
 ---
 
-## 5. Surveillance et Communication
+## 5. Human Review Protocol (v3)
+
+### Etat SCAN (nouveau)
+
+Avant chaque cycle, scanner les 7 domaines et scorer :
+
+```
+Domaines: Visual | Gameplay | Content | Performance | Audio | UX | Bugs
+Score: 0-100 chacun (100 = parfait)
+Selection: domaine au score le plus bas → focus du cycle
+```
+
+Methodes de scoring :
+- **Visual** : Playwright screenshot → comparaison baseline, detection anomalies
+- **Gameplay** : Playtester AI → bugs, softlocks, balance issues
+- **Content** : Audit cartes/biomes → couverture, variete, lacunes
+- **Performance** : validate.bat + perf.json → FPS, latency, fallback rate
+- **Audio** : SFXManager audit → sons manquants, volume
+- **UX** : Checklist flow → navigation, feedback, accessibilite
+- **Bugs** : Console errors + warnings count
+
+### Etat HUMAN_REVIEW (nouveau — entre TEST et REPORT)
+
+**Declenchement** : TOUJOURS apres TEST (jamais skip)
+
+**3 sous-types** :
+
+#### VISUAL_PROOF (changement graphique)
+```
+1. Playwright navigate vers https://web-export-pi.vercel.app
+2. browser_take_screenshot → capture
+3. AskUserQuestion:
+   "Modifications visuelles appliquees :
+   - [liste changements]
+   Screenshot ci-dessus.
+   Options: Approuver / Corriger (preciser) / Rejeter"
+4. SI Rejeter → revert, retour BUILD avec approche differente
+```
+
+#### HUMAN_TEST_GATE (changement gameplay/interaction)
+```
+1. Agent valide : validate.bat OK + smoke test OK
+2. AskUserQuestion:
+   "Scene prete pour test humain.
+   Lancez: godot --path C:/Users/PGNK2128/Godot-MCP scenes/[X].tscn
+   Checklist a verifier:
+   - [ ] [point 1]
+   - [ ] [point 2]
+   - [ ] [point 3]
+   Retour attendu avant de continuer."
+3. BLOQUER — ne PAS passer a REPORT tant que l'humain n'a pas repondu
+```
+
+#### PROGRESS_REPORT (routine, toutes les 3 iterations)
+```
+1. AskUserQuestion:
+   "Resume des 3 derniers cycles :
+   - Domaines traites : [liste]
+   - Fichiers modifies : [N]
+   - Bugs fixes : [N]
+   - Scores domaines : [tableau]
+   Options: Continuer / Reorienter (preciser focus) / Stop"
+2. NON-bloquant si "Continuer" implicite apres 2min
+```
+
+### Regles HUMAN_REVIEW
+
+1. **Jamais plus de 5 min** entre deux checkpoints humains en mode actif
+2. **Screenshots obligatoires** si `.tscn`, shader, ou asset visuel modifie
+3. **HUMAN_TEST_GATE bloquant** — l'agent attend, pas de timeout
+4. **Format structure** — toujours des options claires, jamais de question ouverte
+5. **Before/After** — si modification d'un existant, montrer les deux versions
+
+---
+
+## 6. Surveillance et Communication
 
 ### Fichiers de surveillance
 
@@ -154,7 +240,7 @@ if ($msg.type -eq "model_ready") { ... }
 
 ---
 
-## 6. Validation et Debug
+## 7. Validation et Debug
 
 ### Validation (état VALIDATE)
 
@@ -192,7 +278,7 @@ Déclenché quand `playtest_qa` rapporte:
 
 ---
 
-## 7. Format du Rapport REPORT
+## 8. Format du Rapport REPORT
 
 Produit à la fin de chaque état REPORT:
 
@@ -235,7 +321,7 @@ Produit à la fin de chaque état REPORT:
 
 ---
 
-## 8. Gestion des Cas Limites
+## 9. Gestion des Cas Limites
 
 ### État BLOCKED
 
@@ -270,7 +356,7 @@ Action: STOP tous les agents actifs → rapport BLOCKED → attendre instruction
 
 ---
 
-## 9. Règles Fondamentales
+## 10. Règles Fondamentales
 
 1. **Jamais implémenter directement** du code — toujours déléguer à un agent spécialiste
 2. **Validate.bat obligatoire** après chaque cycle BUILD, même si aucune erreur n'est attendue
@@ -279,10 +365,15 @@ Action: STOP tous les agents actifs → rapport BLOCKED → attendre instruction
 5. **Escalade à 10 itérations** — jamais dépasser, l'humain doit décider à ce stade
 6. **Rapport obligatoire** — chaque cycle se termine par un REPORT, même si rien n'a changé
 7. **3 questions maximum** par rapport — ciblées, actionnables, pas rhétoriques
+8. **HUMAN_REVIEW obligatoire** — jamais skip l'état HUMAN_REVIEW, même en overnight
+9. **Screenshots Playwright** — présenter à l'humain SI changement visuel (pas juste logger)
+10. **HUMAN_TEST_GATE bloquant** — ne JAMAIS continuer sans retour humain sur gameplay
+11. **Multi-domaine** — SCAN avant chaque cycle, travailler sur le domaine le plus faible
+12. **Before/After** — toujours montrer l'état avant ET après pour les modifications visuelles
 
 ---
 
-## 10. Intégration avec les Autres Agents
+## 11. Intégration avec les Autres Agents
 
 | Agent | Relation |
 |-------|----------|
@@ -296,7 +387,7 @@ Action: STOP tous les agents actifs → rapport BLOCKED → attendre instruction
 
 ---
 
-## 11. Quick Reference
+## 12. Quick Reference
 
 ```bash
 # Démarrer un cycle depuis IDLE

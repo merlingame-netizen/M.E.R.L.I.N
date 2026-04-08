@@ -25,7 +25,76 @@
 
 ---
 
-## 2. Modes d'Operation
+## 2. Human-in-the-Loop Protocol (v3 — MANDATORY)
+
+### Principe
+Chaque cycle studio inclut un **checkpoint humain** via AskUserQuestion. L'agent ne tourne plus en aveugle.
+
+### Checkpoint Types
+
+| Type | Quand | Contenu AskUserQuestion |
+|------|-------|-------------------------|
+| **VISUAL_PROOF** | Apres modification graphique | Screenshot Playwright + resume changements + "Approuver / Corriger / Rejeter" |
+| **PROGRESS_REPORT** | Toutes les 3 iterations | Resume des N changements + metriques + "Continuer / Reorienter / Stop" |
+| **HUMAN_TEST_GATE** | Scene avancee (gameplay/interaction) | "Scene validee par l'agent. Testez: `godot --path . scenes/X.tscn`. Checklist: [...]" + BLOQUER jusqu'au retour |
+| **DECISION_POINT** | Choix architectural/design | Options A/B/C avec pros/cons + "Quel choix ?" |
+
+### Regles
+
+1. **VISUAL_PROOF obligatoire** si un fichier `.tscn`, `.gd` (UI), shader, ou asset visuel est modifie
+2. **Screenshot Playwright** : naviguer vers `https://web-export-pi.vercel.app`, capturer, presenter l'image
+3. **HUMAN_TEST_GATE** si le changement touche : gameplay loop, input handling, scene transitions, minigames
+4. **BLOQUER le cycle** en HUMAN_TEST_GATE — ne pas continuer tant que l'humain n'a pas repondu
+5. **PROGRESS_REPORT** inclut : fichiers modifies, bugs fixes, screenshots before/after si disponibles
+6. **Format AskUserQuestion** : toujours structurer avec options claires (pas de question ouverte vague)
+
+### Workflow Checkpoint
+
+```
+1. Agent complete une modification
+2. validate.bat → OK ?
+3. SI graphique → Playwright screenshot → AskUserQuestion VISUAL_PROOF
+4. SI gameplay → smoke test agent → AskUserQuestion HUMAN_TEST_GATE
+5. SI routine → accumuler, PROGRESS_REPORT toutes les 3 iterations
+6. Attendre reponse humaine
+7. SI "Approuver" → commit + continuer
+8. SI "Corriger" → appliquer correction + re-valider + re-presenter
+9. SI "Rejeter" → revert + tenter approche differente
+```
+
+---
+
+## 3. Multi-Domain Rotation (sans focus impose)
+
+### Principe
+Au lieu d'un focus manuel, le studio **scanne tous les domaines** et travaille sur le plus faible.
+
+### Domaines et scoring
+
+| Domaine | Metriques | Score 0-100 |
+|---------|-----------|-------------|
+| **Visual** | Regressions visuelles, coherence palette, CRT quality | Visual QA report |
+| **Gameplay** | Bugs gameplay, balance factions, edge cases | Playtester AI report |
+| **Content** | Couverture cartes/biomes, variete, lacunes | Content Factory audit |
+| **Performance** | FPS, card gen latency, fallback rate | Perf Profiler |
+| **Audio** | Sons manquants, volume balance, transitions | SFXManager audit |
+| **UX** | Flow navigation, feedback utilisateur, accessibilite | Checklist UX |
+| **Bugs** | Erreurs console, warnings, regressions | validate.bat + logs |
+
+### Algorithme de rotation
+
+```
+1. Scanner chaque domaine → score 0-100
+2. Trier par score croissant (le plus faible en premier)
+3. Travailler sur le domaine le plus faible
+4. Apres fix → re-scorer ce domaine
+5. Passer au suivant si score > 80
+6. Presenter le tableau des scores a l'humain (PROGRESS_REPORT)
+```
+
+---
+
+## 4. Modes d'Operation
 
 ### Quick QA (15 min)
 **Focus**: Smoke test rapide apres un changement
@@ -35,7 +104,7 @@
 2. Capturer 5 screenshots (scenes differentes)
 3. Visual QA compare avec baseline
 4. Diagnostic rapide (checklist visual + gameplay)
-5. Rapport: PASS / ISSUES_FOUND
+5. **AskUserQuestion** : screenshots + PASS/ISSUES_FOUND + "Valider ?"
 
 ### Deep Test (1h)
 **Focus**: Multi-profil playtest complet
@@ -44,7 +113,7 @@
 1. Playtester AI joue 5 runs (1 par archetype)
 2. Balance Analyst agrege les resultats
 3. Regression Guardian compare avec metriques precedentes
-4. Rapport: balance insights + regressions detectees
+4. **AskUserQuestion** : metriques before/after + regressions + "Corriger ou accepter ?"
 
 ### Content Sprint (2h)
 **Focus**: Generation et validation de nouveau contenu
@@ -55,7 +124,7 @@
 3. World Builder cree biome si necessaire
 4. Playtester AI teste le nouveau contenu
 5. Visual QA valide le rendu
-6. Rapport: contenu genere + resultats tests
+6. **AskUserQuestion** : contenu genere (extraits) + screenshots si visuel + "Valider le lot ?"
 
 ### Overnight (7h)
 **Focus**: Full studio cycle autonome
@@ -63,13 +132,15 @@
 **Workflow**: 12 mega-cycles de ~30min
 ```
 Cycle N:
-  1. SETUP    — Choisir focus (rotate: balance/content/visual/perf/security)
-  2. PLAY     — Playtester AI joue 3 runs (profil aleatoire)
-  3. ANALYZE  — Balance Analyst + Visual QA + Perf Profiler
-  4. FIX      — Corriger top 3 issues identifies
-  5. VERIFY   — Regression Guardian + validate.bat
-  6. CONTENT  — Content Factory genere si lacune detectee
-  7. REPORT   — Append au rapport overnight
+  1. SCAN     — Score multi-domaine (Visual/Gameplay/Content/Perf/Audio/UX/Bugs)
+  2. SELECT   — Travailler sur le domaine au score le plus bas
+  3. PLAY     — Playtester AI joue 3 runs (profil aleatoire)
+  4. ANALYZE  — Balance Analyst + Visual QA + Perf Profiler
+  5. FIX      — Corriger top 3 issues identifies
+  6. VERIFY   — Regression Guardian + validate.bat
+  7. PROOF    — Screenshot Playwright SI changement visuel
+  8. HUMAN    — AskUserQuestion (resume + image + scores) toutes les 3 iterations
+  9. REPORT   — Append au rapport overnight
 ```
 
 ### Polish Pass (30 min)
@@ -79,7 +150,8 @@ Cycle N:
 1. Visual QA sur toutes les scenes
 2. Perf Profiler sur 5 runs
 3. Release Quality checklist (60+ items)
-4. Rapport: GO / NO-GO avec details
+4. **AskUserQuestion** : screenshots finales + GO/NO-GO + checklist + "Deployer ?"
+5. **HUMAN_TEST_GATE** : demander test humain complet avant deploy
 
 ---
 
