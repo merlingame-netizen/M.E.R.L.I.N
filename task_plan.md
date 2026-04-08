@@ -4,6 +4,47 @@
 Developper un JDR Parlant roguelite avec LLM local (Qwen 3.5 Multi-Brain heterogene), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
+Phase N64 — Asset Generation Pipeline (2000+ low-poly .glb via Blender headless)
+
+---
+
+## Phase V1 — Adaptation Web Demo → Godot (DA N64 Sombre)
+
+> Reference: `~/Downloads/Imgae_Exemple_Menu.jpg`
+> Source: `web-demo/src/scenes/` (Three.js) → `scripts/menu_3d_pc.gd` (Godot)
+
+### V1.1: Palette & Environment (Menu3DPC) ✅
+- [x] Camera fixe 3/4 (plus d'orbite) — angle reference image
+- [x] Environnement sombre: ciel couvert gris, brume epaisse
+- [x] Sun/lighting: baisser energie, supprimer soleil visible (overcast)
+- [x] Fog: plus dense, couleur sombre
+
+### V1.2: Ocean & Terrain ✅
+- [x] Ocean: darker teal, garder foam mais griser
+- [x] Cliff: repositionner pour montrer le chemin
+- [x] Ajouter chemin de terre/pierre le long de la falaise (7 segments + 20 pierres bord)
+
+### V1.3: Nuages N64 & Vegetation ✅
+- [x] Nuages: BoxMesh opaques gris fonce (20 blocs, 4 couleurs)
+- [x] Vegetation: assombrir tous les verts (grass, bushes, tufts, edge)
+- [x] Pierres/menhirs: tons plus sombres
+
+### V1.4: Cables Neon Celtiques ✅
+- [x] Cables lumineux vert phosphore connectant 6 menhirs (5 cables, 12 segments chacun)
+- [x] Spheres emissives aux noeuds de connexion + point lights
+- [x] Style fibre optique catenary droop
+- [ ] Pulsation animee (a ajouter dans _process — phase suivante)
+
+### V1.5: Polish & Coherence ✅
+- [x] Reduire pierres flottantes (15→6)
+- [x] Rune ring: plus subtil (alpha 0.35, couleur atenuee)
+- [x] Particules: ajuster couleurs au mood sombre (magic, crystal, smoke)
+- [x] Iles distantes: silhouettes plus sombres
+- [ ] Camera transition "Nouvelle Partie": a adapter (phase suivante)
+
+---
+
+## Previous Phase
 Phase P3 — Architecture Multi-Cerveaux Qwen 3.5 (heterogene)
 
 ---

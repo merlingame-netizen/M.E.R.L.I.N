@@ -43,6 +43,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "downloads":   ("adapters.downloads_adapter",   "DownloadsAdapter",   None),
     # ── Wave 10 — Data Explorer (local web app) ─────────────────────
     "data-explorer": ("adapters.data_explorer_adapter", "DataExplorerAdapter", None),
+    # ── Wave 11 — RAG (local vector search) ──────────────────────────
+    "rag":           ("adapters.rag_adapter",           "RagAdapter",          None),
 }
 
 

@@ -1,29 +1,27 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 30,
-  "task_id": "C511",
+  "cycle": 519,
+  "task_id": "C519",
   "status": "PASS",
   "confidence": "HIGH",
   "evidence": [
-    "tsc: 0 errors",
-    "vite build: success in 4.67s, GenericBiome-BAIFVrVq.js 86.33 kB",
-    "GenericBiome.ts: 182 lines inserted across vars/init/animation/cleanup",
-    "8+ mesh parts: legs×2, torso, shoulders×2, arms×2, head, brow ridge, eyes×2, rune carving",
-    "Outer vars pattern respected: all 9 vars declared before any if(biome) block",
-    "Colossus positioned at group (10,0,-18), stone color 0x0a1a0a roughness 0.9",
-    "Awakening cycle: 40-60s random timer, 5-phase 8.5s sequence",
-    "Phase 1(0-0.5s): eyes pulse 0.3->2.0; Phase 2(0.5-3.5s): head ±0.3rad; Phase 3(1-3s): arms ±0.2rad; Phase 4: rune->1.5; Phase 5(6.5-8.5s): fade to dormant",
-    "Idle: eyes sin(t*0.5) range 0.2-0.35, rune sin(t*0.7+0.5) range 0.15-0.25, weight shift 0.008*sin(t*0.3)",
-    "SFX merlin_sfx:pulse dispatched at awakening start",
-    "Cleanup block added after totem C481 cleanup, all refs nulled",
-    "git commit d62b1fe pushed to main"
+    "npx tsc --noEmit: 0 errors",
+    "npx vite build: success in 4.56s, 0 errors, index bundle 108.57 kB gzip (< 124.15 kB gate)",
+    "MerlinLairScene.ts: +102 lines (state vars + init block + update + dispose)",
+    "tabletGroup519 Group: dark basalt slab + 4 trim edges + 5 ogham stick-runes (stem + notches) + PointLight",
+    "amber pulse 0.4-1.05 emissiveIntensity at ~0.78 rad/s (~8s period), PointLight 0.45-0.90 intensity",
+    "flatShading:true on all MeshStandardMaterial, roughness >= 0.55 (runes 0.55, slab 0.92)",
+    "position (-9.5, -1.2, -6.0) left wall, rotation.z=0.15 lean",
+    "dispose: full traverse geometry+material+PointLight.dispose(), array cleanup",
+    "git commit 9717fff: feat(c519): lair runic stone tablet with amber ogham stick-runes and slow pulse",
+    "git push origin main: ok",
+    "vercel --prod: READY — aliased https://web-demo-flame-rho.vercel.app"
   ],
   "blockers": [],
   "next_steps": [
-    "Visual QA in browser at https://web-export-pi.vercel.app — select vallee_anciens biome",
-    "Confirm colossus visible at far side of valley (10, 0, -18)",
-    "Wait 40-60s to observe awakening tremor sequence"
+    "Visual check in browser: MerlinLair — verify tablet visible on left wall at x=-9.5, z=-6",
+    "Confirm amber rune glow readable against existing lair ambient lighting"
   ],
   "needs_more_context": [],
-  "tokens_used_approx": 3200
+  "tokens_used_approx": 4200
 }

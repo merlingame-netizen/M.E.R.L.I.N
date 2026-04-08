@@ -2,6 +2,31 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-04-05 — N64 Asset Generation Pipeline (2000+ .glb)
+
+### Context
+Generer 2000+ assets 3D low-poly style N64/Banjo-Kazooie pour M.E.R.L.I.N. via Blender 4.5 headless.
+Contraintes: 50-300 tris, vertex colors uniquement, .glb, 8 biomes celtiques.
+Pipeline: tools/asset_forge/ → Assets/n64_assets/{category}/{biome}/
+
+### Previous Session: 2026-04-05 — Adaptation Web Demo → Godot (DA N64 Sombre)
+DA cible: N64 sombre Banjo Kazooie, menu cotier avec chemin vers tour, cables neon celtiques.
+Reference image: `~/Downloads/Imgae_Exemple_Menu.jpg`
+
+### Changes
+- **studio_orchestrator.md**: Human-in-the-Loop Protocol v3 (VISUAL_PROOF, PROGRESS_REPORT, HUMAN_TEST_GATE, DECISION_POINT) + Multi-Domain Rotation (7 domaines auto-scoring)
+- **studio-orchestrator-v2.md**: Etats SCAN + HUMAN_REVIEW + 5 regles supplementaires (8-12)
+- **SKILL.md (godot-orchestrator)**: Cycle A→G (was A→E) + HUMAN-IN-THE-LOOP RULES
+- **menu_3d_pc.gd**: EN COURS — adaptation DA N64 sombre
+
+### Decisions
+- Camera: fixe 3/4 le long du chemin (plus d'orbite)
+- Cables: fils lumineux neon vert phosphore connectant menhirs
+- Mood: sombre desature (pas de couleurs vibrantes), overcast
+- Tour: gardee comme focal point au bout du chemin
+
+---
+
 ## Session: 2026-03-07 — Qwen 3.5 Multi-Brain Architecture (Phase P3.1)
 
 ### Changes

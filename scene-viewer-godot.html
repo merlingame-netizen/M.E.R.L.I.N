@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERLIN Godot — Scene Screenshots Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050c05;
+  --panel: rgba(10, 26, 10, 0.9);
+  --phosphor: #33ff66;
+  --dim: #1a8833;
+  --amber: #ffaa00;
+  --amber-dim: #997320;
+  --cyan: #4dd9cc;
+  --danger: #e05c5c;
+  --border: #1a3320;
+  --font: 'VT323', 'Courier New', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: var(--bg); font-family: var(--font); color: var(--phosphor); font-size: 16px; overflow: hidden; }
+.app { display: flex; height: 100vh; }
+
+.sidebar { width: 300px; min-width: 300px; background: rgba(5, 12, 5, 0.95); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+.sidebar-header { padding: 14px; border-bottom: 1px solid var(--border); text-align: center; }
+.sidebar-header h1 { color: var(--amber); font-size: 1.2em; letter-spacing: 3px; }
+.sidebar-header p { color: var(--dim); font-size: 0.7em; margin-top: 4px; }
+
+.section-label { padding: 6px 12px; color: var(--amber-dim); font-size: 0.7em; letter-spacing: 2px; background: rgba(255,170,0,0.03); border-bottom: 1px solid rgba(26,51,32,0.4); }
+
+.scene-item { padding: 6px 12px; cursor: pointer; transition: all 0.12s; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid transparent; }
+.scene-item:hover { background: rgba(20, 50, 20, 0.3); border-left-color: var(--dim); }
+.scene-item.active { background: rgba(20, 50, 20, 0.5); border-left-color: var(--phosphor); }
+.scene-item .name { font-size: 0.85em; }
+.scene-item .lines { color: var(--dim); font-size: 0.65em; }
+.scene-item.missing .name { color: var(--dim); text-decoration: line-through; }
+
+.tag { display: inline-block; padding: 0 4px; border: 1px solid; font-size: 0.6em; margin-left: 4px; border-radius: 2px; }
+.tag-active { color: var(--phosphor); border-color: var(--phosphor); }
+.tag-archive { color: var(--amber-dim); border-color: var(--amber-dim); }
+.tag-unused { color: var(--danger); border-color: var(--danger); }
+
+.main { flex: 1; display: flex; flex-direction: column; }
+.toolbar { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-bottom: 1px solid var(--border); background: rgba(5, 12, 5, 0.9); }
+.toolbar .title { color: var(--amber); font-size: 1em; flex: 1; }
+.toolbar .path { color: var(--dim); font-size: 0.7em; }
+.btn { background: none; border: 1px solid var(--dim); color: var(--phosphor); font-family: var(--font); font-size: 0.8em; padding: 2px 10px; cursor: pointer; }
+.btn:hover { border-color: var(--phosphor); }
+
+.content { flex: 1; display: flex; overflow: hidden; }
+
+.preview { flex: 1; display: flex; align-items: center; justify-content: center; background: #030507; position: relative; }
+.preview img { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: auto; }
+.preview .no-img { color: var(--dim); font-size: 1.2em; text-align: center; padding: 40px; border: 2px dashed var(--border); }
+
+.info { width: 300px; min-width: 300px; background: rgba(5, 12, 5, 0.95); border-left: 1px solid var(--border); padding: 12px; overflow-y: auto; }
+.info.hidden { display: none; }
+.info h3 { color: var(--amber); font-size: 0.8em; margin-bottom: 6px; border-bottom: 1px solid var(--border); padding-bottom: 3px; margin-top: 12px; }
+.info h3:first-child { margin-top: 0; }
+.info-row { display: flex; justify-content: space-between; font-size: 0.75em; padding: 1px 0; }
+.info-row .k { color: var(--dim); }
+.info-row .v { color: var(--phosphor); }
+.info .desc { font-size: 0.75em; color: var(--dim); line-height: 1.5; margin-top: 4px; }
+
+.verdict-btns { margin-top: 16px; display: flex; gap: 6px; }
+.verdict-btns button { font-family: var(--font); font-size: 0.8em; padding: 4px 12px; cursor: pointer; border: 1px solid; background: none; }
+.verdict-btns .keep { color: var(--phosphor); border-color: var(--phosphor); }
+.verdict-btns .keep.selected { background: rgba(51,255,102,0.15); }
+.verdict-btns .delete { color: var(--danger); border-color: var(--danger); }
+.verdict-btns .delete.selected { background: rgba(224,92,92,0.15); }
+.verdict-btns .unsure { color: var(--amber); border-color: var(--amber); }
+.verdict-btns .unsure.selected { background: rgba(255,170,0,0.1); }
+
+.summary-bar { padding: 6px 14px; border-top: 1px solid var(--border); background: rgba(5, 12, 5, 0.95); display: flex; gap: 16px; font-size: 0.75em; }
+.summary-bar .s-keep { color: var(--phosphor); }
+.summary-bar .s-delete { color: var(--danger); }
+.summary-bar .s-unsure { color: var(--amber); }
+.summary-bar .s-none { color: var(--dim); }
+.export-btn { margin-left: auto; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>MERLIN — Godot Scenes</h1>
+      <p>Screenshot Viewer + Triage</p>
+    </div>
+    <div id="scene-list"></div>
+  </div>
+  <div class="main">
+    <div class="toolbar">
+      <span class="title" id="title">Select a scene</span>
+      <span class="path" id="path"></span>
+      <button class="btn" onclick="navScene(-1)">&lt;</button>
+      <button class="btn" onclick="navScene(1)">&gt;</button>
+      <button class="btn" id="btn-info" onclick="toggleInfo()">Info</button>
+    </div>
+    <div class="content">
+      <div class="preview" id="preview"></div>
+      <div class="info" id="info"></div>
+    </div>
+    <div class="summary-bar" id="summary-bar"></div>
+  </div>
+</div>
+
+<script>
+const SCREENSHOT_DIR = 'scene_screenshots/';
+
+const SCENES = [
+  // ACTIVE
+  { id:'Menu3DPC', file:'scenes/Menu3DPC.tscn', img:'Menu3DPC.png', cat:'Active', lines:17, script:'menu_3d_pc.gd', root:'Node', desc:'Menu principal 3D PC. Scene de demarrage du projet.' },
+  { id:'MerlinGame', file:'scenes/MerlinGame.tscn', img:'MerlinGame.png', cat:'Active', lines:20, script:'merlin_game_controller.gd', root:'Node', desc:'Controleur principal du jeu. Instancie MerlinGameUI.' },
+  { id:'MerlinCabinHub', file:'scenes/MerlinCabinHub.tscn', img:'MerlinCabinHub.png', cat:'Active', lines:17, script:'merlin_cabin_hub.gd', root:'Node', desc:'Hub cabane de Merlin. Navigation centrale.' },
+  { id:'BroceliandeForest3D', file:'scenes/BroceliandeForest3D.tscn', img:'BroceliandeForest3D.png', cat:'Active', lines:121, script:'broceliande_forest_3d.gd', root:'Node (3D)', desc:'Foret 3D FPS. Camera premiere personne FOV 70. HUD zone/objectif/status. Panel resultat.' },
+  { id:'MerlinGameUI', file:'scenes/ui/MerlinGameUI.tscn', img:'MerlinGameUI.png', cat:'Active', lines:304, script:'merlin_game_ui.gd', root:'Control', desc:'UI jeu complete: barre vie, essences, deck pioche/cimetiere, carte central (illustration+texte), 3 boutons ABC, horloge, narrateur overlay. Theme merlin_theme.tres.' },
+  { id:'LLMWarmupOverlay', file:'scenes/ui/LLMWarmupOverlay.tscn', img:'LLMWarmupOverlay.png', cat:'Active', lines:40, script:'llm_warmup_overlay.gd', root:'CanvasLayer (z=100)', desc:'Overlay chargement LLM: spinner, titre, barre de progression. Layer 100.' },
+  { id:'TestCardLayers', file:'scenes/test/TestCardLayers.tscn', img:'TestCardLayers.png', cat:'Active', lines:12, script:'test_card_layers.gd', root:'Control', desc:'Scene test pour valider le rendu des layers de cartes.' },
+
+  // ARCHIVE
+  { id:'TestTaniere', file:'archive/scenes/TestTaniere.tscn', img:'archive_TestTaniere.png', cat:'Archive', lines:613, script:'TestTaniere.gd', root:'Control', desc:'Tamagotchi Bestiole: stats, talents, skills, inventaire, minigames. 3 colonnes. Plus grosse scene archive.' },
+  { id:'TestJDRMerlin', file:'archive/scenes/TestJDRMerlin.tscn', img:'archive_TestJDRMerlin.png', cat:'Archive', lines:320, script:'TestJDRMerlin.gd', root:'Control', desc:'JDR creation perso: fiche heros, stats, narration, options. Panel LLM.' },
+  { id:'TestAntreMerlin', file:'archive/scenes/TestAntreMerlin.tscn', img:'archive_TestAntreMerlin.png', cat:'Archive', lines:305, script:'retro_viewport.gd', root:'Control', desc:'Isometrique 3D interieur de l\'antre. Retro viewport effect. Chaudron, meubles, sprites.' },
+  { id:'TestMerlinVoice', file:'archive/scenes/TestMerlinVoice.tscn', img:'archive_TestMerlinVoice.png', cat:'Archive', lines:275, script:'TestMerlinVoice.gd', root:'Control', desc:'Testeur voix Merlin: emotions, phrases, parametres ACVoicebox.' },
+  { id:'IntroMerlinDialogue', file:'archive/scenes/IntroMerlinDialogue.tscn', img:'archive_IntroMerlinDialogue.png', cat:'Archive', lines:232, script:'IntroMerlinDialogue.gd', root:'Control', desc:'Dialogue intro avec portrait, texte, choix (Force/Logic/Finesse). Audio.' },
+  { id:'MerlinTest', file:'archive/scenes/MerlinTest.tscn', img:'archive_MerlinTest.png', cat:'Archive', lines:199, script:'TestMerlinGBA.gd', root:'Control', desc:'Chat LLM Merlin: panel controle + interface conversation.' },
+  { id:'TestLLMScene', file:'archive/scenes/TestLLMScene.tscn', img:'archive_TestLLMScene.png', cat:'Archive', lines:195, script:'TestLLMScene.gd', root:'Control', desc:'Interface test LLM: selection modele, prompt, parametres, tabs output.' },
+  { id:'SceneBroceliandeFPS', file:'archive/scenes/SceneBroceliandeFPS.tscn', img:'archive_SceneBroceliandeFPS.png', cat:'Archive', lines:165, script:'SceneBroceliandeFPS.gd', root:'Control', desc:'FPS pixel art "trouve Merlin" dans Broceliande.' },
+  { id:'TestMerlinGBA', file:'archive/scenes/TestMerlinGBA.tscn', img:'archive_TestMerlinGBA.png', cat:'Archive', lines:126, script:'TestMerlinGBA.gd', root:'Control', desc:'Interface style GBA avec LLM router/executor et chat.' },
+  { id:'TestMerlin', file:'archive/scenes/TestMerlin.tscn', img:'archive_TestMerlin.png', cat:'Archive', lines:120, script:'(none)', root:'Control', desc:'Conversation Merlin: sprite, mood display, historique dialogue, panel choix.' },
+  { id:'TestAventure', file:'archive/scenes/TestAventure.tscn', img:'archive_TestAventure.png', cat:'Archive', lines:77, script:'test_aventure.gd', root:'Control', desc:'Exploration aventure: carte/path, HUD, menu pause.' },
+  { id:'MenuPrincipal_archive', file:'archive/scenes/MenuPrincipal.tscn', img:'archive_MenuPrincipal.png', cat:'Archive', lines:71, script:'MenuPrincipal.gd', root:'Control', desc:'Ancien menu "DRU": New Game, Continue, Options, Test Merlin, Test Taniere, Quit.' },
+  { id:'GameMain', file:'archive/scenes/GameMain.tscn', img:'archive_GameMain.png', cat:'Archive', lines:34, script:'GameMain.gd', root:'Control', desc:'Scene "jeu en developpement" — message temporaire.' },
+  { id:'TestRobotVoice', file:'archive/scenes/TestRobotVoice.tscn', img:'archive_TestRobotVoice.png', cat:'Archive', lines:204, script:'TestRobotVoice.gd', root:'Control', desc:'Testeur voix robot: pitch, volume, chirp.' },
+
+  // UNUSED
+  { id:'MenuOptions', file:'archive/scenes_unused/MenuOptions.tscn', img:'unused_MenuOptions.png', cat:'Unused', lines:381, script:'MenuOptions.gd', root:'Control', desc:'Settings complet: video, audio, calendrier, langue, voix, config AI. Scrollable.' },
+  { id:'Collection', file:'archive/scenes_unused/Collection.tscn', img:'unused_Collection.png', cat:'Unused', lines:193, script:'Collection.gd', root:'Control', desc:'Achievements + inventaire objets. Progression, recents, filtres.' },
+  { id:'MapMonde', file:'archive/scenes_unused/MapMonde.tscn', img:'unused_MapMonde.png', cat:'Unused', lines:125, script:'map_ui.gd', root:'Control', desc:'Carte du monde: selection biome, paths, navigation.' },
+  { id:'Calendar', file:'archive/scenes_unused/Calendar.tscn', img:'unused_Calendar.png', cat:'Unused', lines:111, script:'Calendar.gd', root:'Control', desc:'Calendrier celtique: roue, events, stats, Brumes.' },
+  { id:'MenuPrincipal_unused', file:'archive/scenes_unused/MenuPrincipal.tscn', img:'unused_MenuPrincipal.png', cat:'Unused', lines:106, script:'MenuPrincipalMerlin.gd', root:'Control', desc:'Menu celtique alternatif: parchemin, horloge, boutons collections/calendrier.' },
+  { id:'SceneRencontreMerlin', file:'archive/scenes_unused/SceneRencontreMerlin.tscn', img:'unused_SceneRencontreMerlin.png', cat:'Unused', lines:99, script:'SceneRencontreMerlin.gd', root:'Control', desc:'Rencontre Merlin: portrait, dialogue, reponses dynamiques.' },
+  { id:'ArbreDeVie', file:'archive/scenes_unused/ArbreDeVie.tscn', img:'unused_ArbreDeVie.png', cat:'Unused', lines:91, script:'arbre_de_vie_ui.gd', root:'Control', desc:'Arbre de vie (skill tree): nodes, detail panel, devises.' },
+  { id:'TransitionBiome', file:'archive/scenes_unused/TransitionBiome.tscn', img:'unused_TransitionBiome.png', cat:'Unused', lines:90, script:'TransitionBiome.gd', root:'Control', desc:'Transition biome: pixel art, weather overlay, titre biome, narration arrivee.' },
+  { id:'SelectionSauvegarde', file:'archive/scenes_unused/SelectionSauvegarde.tscn', img:'unused_SelectionSauvegarde.png', cat:'Unused', lines:51, script:'SelectionSauvegarde.gd', root:'Control', desc:'Selection slot de sauvegarde. 3 slots.' },
+];
+
+const verdicts = {};
+let currentIndex = 0;
+let infoVisible = true;
+
+function init() {
+  const list = document.getElementById('scene-list');
+  let cat = '';
+  SCENES.forEach((s, i) => {
+    if (s.cat !== cat) {
+      cat = s.cat;
+      const lbl = document.createElement('div');
+      lbl.className = 'section-label';
+      const tagClass = cat === 'Active' ? 'active' : cat === 'Archive' ? 'archive' : 'unused';
+      lbl.innerHTML = `${cat} <span class="tag tag-${tagClass}">${SCENES.filter(x=>x.cat===cat).length}</span>`;
+      list.appendChild(lbl);
+    }
+    const el = document.createElement('div');
+    el.className = 'scene-item';
+    el.dataset.index = i;
+    el.innerHTML = `<span class="name">${s.id}</span><span class="lines">${s.lines}L</span>`;
+    el.onclick = () => select(i);
+    list.appendChild(el);
+  });
+  select(0);
+  updateSummary();
+}
+
+function select(i) {
+  currentIndex = i;
+  const s = SCENES[i];
+  document.querySelectorAll('.scene-item').forEach((el, j) => el.classList.toggle('active', j === i));
+  document.getElementById('title').textContent = s.id;
+  document.getElementById('path').textContent = s.file;
+
+  const img = new Image();
+  img.onload = () => {
+    document.getElementById('preview').innerHTML = '';
+    document.getElementById('preview').appendChild(img);
+  };
+  img.onerror = () => {
+    document.getElementById('preview').innerHTML = `<div class="no-img">Screenshot not found<br><br><span style="font-size:0.7em;color:var(--dim)">${SCREENSHOT_DIR}${s.img}<br><br>Run ScreenshotTool.tscn in Godot (F6) to capture</span></div>`;
+  };
+  img.src = SCREENSHOT_DIR + s.img;
+
+  const v = verdicts[s.id] || '';
+  document.getElementById('info').innerHTML = `
+    <h3>Scene Info</h3>
+    <div class="info-row"><span class="k">File</span><span class="v">${s.file}</span></div>
+    <div class="info-row"><span class="k">Root</span><span class="v">${s.root}</span></div>
+    <div class="info-row"><span class="k">Script</span><span class="v">${s.script}</span></div>
+    <div class="info-row"><span class="k">Lines</span><span class="v">${s.lines}</span></div>
+    <div class="info-row"><span class="k">Category</span><span class="v">${s.cat}</span></div>
+
+    <h3>Description</h3>
+    <div class="desc">${s.desc}</div>
+
+    <h3>Verdict</h3>
+    <div class="verdict-btns">
+      <button class="keep ${v==='keep'?'selected':''}" onclick="setVerdict('keep')">KEEP</button>
+      <button class="delete ${v==='delete'?'selected':''}" onclick="setVerdict('delete')">DELETE</button>
+      <button class="unsure ${v==='unsure'?'selected':''}" onclick="setVerdict('unsure')">UNSURE</button>
+    </div>
+  `;
+}
+
+function setVerdict(v) {
+  const s = SCENES[currentIndex];
+  verdicts[s.id] = v;
+  select(currentIndex);
+  updateSummary();
+  // Auto-advance
+  if (currentIndex < SCENES.length - 1) setTimeout(() => { navScene(1); }, 200);
+}
+
+function navScene(d) {
+  const n = currentIndex + d;
+  if (n >= 0 && n < SCENES.length) select(n);
+}
+
+function toggleInfo() {
+  infoVisible = !infoVisible;
+  document.getElementById('info').classList.toggle('hidden', !infoVisible);
+}
+
+function updateSummary() {
+  const keep = Object.values(verdicts).filter(v => v === 'keep').length;
+  const del = Object.values(verdicts).filter(v => v === 'delete').length;
+  const unsure = Object.values(verdicts).filter(v => v === 'unsure').length;
+  const none = SCENES.length - keep - del - unsure;
+  document.getElementById('summary-bar').innerHTML = `
+    <span class="s-keep">KEEP: ${keep}</span>
+    <span class="s-delete">DELETE: ${del}</span>
+    <span class="s-unsure">UNSURE: ${unsure}</span>
+    <span class="s-none">Pending: ${none}</span>
+    <button class="btn export-btn" onclick="exportVerdicts()">[ Export ]</button>
+  `;
+}
+
+function exportVerdicts() {
+  const lines = SCENES.map(s => {
+    const v = verdicts[s.id] || 'pending';
+    return `${v.toUpperCase().padEnd(8)} ${s.file}`;
+  });
+  const text = '=== MERLIN SCENE TRIAGE ===\\n' + lines.join('\\n');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'scene_triage.txt';
+  a.click();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); navScene(-1); }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); navScene(1); }
+  if (e.key === 'k') setVerdict('keep');
+  if (e.key === 'd') setVerdict('delete');
+  if (e.key === 'u') setVerdict('unsure');
+});
+
+init();
+</script>
+</body>
+</html>
