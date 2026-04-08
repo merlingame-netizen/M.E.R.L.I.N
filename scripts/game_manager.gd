@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## DRU: LE JEU DES OGHAMS — Version 7.0 - GameManager
+## M.E.R.L.I.N. — Version 7.0 - GameManager
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Autoload singleton managing game state, saves, and progression
 ## @author MaxCorp Interactive

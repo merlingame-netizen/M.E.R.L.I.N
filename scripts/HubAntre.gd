@@ -14,11 +14,12 @@ extends Control
 # =============================================================================
 
 const SCENE_TRANSITION := "res://scenes/TransitionBiome.tscn"
+const SCENE_FOREST := "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_OPTIONS := "res://scenes/MenuOptions.tscn"
 const SCENE_CALENDAR := "res://scenes/Calendar.tscn"
 const SCENE_COLLECTION := "res://scenes/Collection.tscn"
 const SCENE_ARBRE := "res://scenes/ArbreDeVie.tscn"
-const SCENE_MENU := "res://scenes/MenuPrincipal.tscn"
+const SCENE_MENU := "res://scenes/Menu3DPC.tscn"
 const SCENE_MAPMONDE := "res://scenes/MapMonde.tscn"
 
 # =============================================================================
@@ -250,7 +251,10 @@ func _ready() -> void:
 	_play_entry_animation.call_deferred()
 
 	await get_tree().create_timer(1.2).timeout
-	_show_greeting()
+	if _is_first_hub:
+		_show_first_time_welcome()
+	else:
+		_show_greeting()
 
 	# Hub guided tour for first-time players (after IntroTutorial)
 	var gm_tour := get_node_or_null("/root/GameManager")
@@ -578,10 +582,10 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 
 func _on_partir_pressed() -> void:
 	SFXManager.play("partir_fanfare")
-	if _radial.is_open():
-		return
-	var center := _partir_btn.position + Vector2(_partir_btn.custom_minimum_size.x * 0.5, 0)
-	_radial.open(center)
+	# For now: only Broceliande is available — skip radial, launch directly
+	selected_biome = "foret_broceliande"
+	_generate_mission()
+	_launch_adventure()
 
 
 func _on_radial_biome_selected(biome_key: String) -> void:
@@ -654,7 +658,7 @@ func _launch_adventure() -> void:
 		store.state["run"] = run
 
 	_quick_save()
-	PixelTransition.transition_to(SCENE_TRANSITION)
+	PixelTransition.transition_to(SCENE_FOREST)
 
 
 func _store_return_scene() -> void:
@@ -666,6 +670,28 @@ func _store_return_scene() -> void:
 # =============================================================================
 # MERLIN DIALOGUE
 # =============================================================================
+
+func _show_first_time_welcome() -> void:
+	## Cinematic first-time welcome: Merlin explains game concepts step by step.
+	if _bubble == null:
+		return
+	var welcome_lines: Array[String] = [
+		"Bienvenue, voyageur. Je suis Merlin.",
+		"Tu te trouves dans mon antre, entre les mondes.",
+		"Dehors, la foret de Broceliande t'attend.",
+		"Tu y marcheras, et des rencontres viendront a toi sous forme de cartes.",
+		"Chaque carte te propose trois choix. Choisis selon ton instinct.",
+		"Un defi t'eprouvera ensuite — un minijeu qui teste ta finesse.",
+		"Ton score determine la puissance des effets de ton choix.",
+		"Garde un oeil sur ta vitalite. Si elle tombe a zero... la boucle recommence.",
+		"Quand tu seras pret, appuie sur PARTIR. Broceliande t'attend.",
+	]
+	for i in range(welcome_lines.size()):
+		_bubble.show_message(welcome_lines[i], 4.5)
+		await get_tree().create_timer(5.0).timeout
+		if not is_inside_tree():
+			return
+
 
 func _show_greeting() -> void:
 	if _bubble == null:

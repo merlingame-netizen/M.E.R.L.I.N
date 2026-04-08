@@ -188,7 +188,7 @@ func _get_real_progression_stats() -> Array:
 	var total_essence: int = _count_total_essence()
 	return [
 		{"label": "Fins vues", "current": endings_seen.size(), "max": 16},
-		{"label": "Oghams", "current": skills_unlocked.size(), "max": 18},
+		{"label": "Runes", "current": skills_unlocked.size(), "max": 18},
 		{"label": "Talents", "current": unlocked_talents.size(), "max": 28},
 		{"label": "Runs", "current": total_runs, "max": 50},
 		{"label": "Cartes", "current": total_cards, "max": 500},
@@ -596,8 +596,8 @@ func _populate_recent_list() -> void:
 		recent_list.add_child(row)
 
 func _populate_collection() -> void:
-	collection_title_label.text = "Fins & Oghams"
-	collection_subtitle_label.text = "Fins decouvertes et Oghams debloques"
+	collection_title_label.text = "Fins & Runes"
+	collection_subtitle_label.text = "Fins decouvertes et Runes debloquees"
 
 	_clear_children(collection_grid)
 	_clear_children(collection_list)

@@ -263,7 +263,7 @@ func _build_ui_overlay() -> void:
 		"Ah, te voila. La foret t'attendait, comme toujours.",
 		"Entre, entre. Le chaudron est chaud et les etoiles sont alignees.",
 		"Je sentais ta presence dans les ley lines. Assieds-toi.",
-		"Les korrigans m'ont prevenu. Tu cherches les Oghams, n'est-ce pas ?",
+		"Les korrigans m'ont prevenu. Tu cherches les Runes, n'est-ce pas ?",
 	]
 	var greeting: Label = Label.new()
 	greeting.text = greeting_quotes[randi() % greeting_quotes.size()]

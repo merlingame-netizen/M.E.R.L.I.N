@@ -137,7 +137,7 @@ func show_end_screen(ending: Dictionary) -> void:
 	var btn_new: Button = Button.new()
 	btn_new.text = "Nouvelle Aventure"
 	btn_new.custom_minimum_size = Vector2(200, 50)
-	btn_new.pressed.connect(func(): PixelTransition.transition_to("res://scenes/TransitionBiome.tscn"))
+	btn_new.pressed.connect(func(): PixelTransition.transition_to("res://scenes/BroceliandeForest3D.tscn"))
 	btn_box.add_child(btn_new)
 
 

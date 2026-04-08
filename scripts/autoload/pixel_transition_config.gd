@@ -49,6 +49,12 @@ const SCENE_PROFILES := {
 	},
 
 	# --- Main flow ---
+	"res://scenes/Menu3DPC.tscn": {
+		"block_size": 8,
+		"skip_exit": true,
+		"enter_duration": 0.8,
+		"bg_color": Color(0.02, 0.02, 0.02),
+	},
 	"res://scenes/MenuPrincipal.tscn": {
 		"block_size": 10,
 		"enter_duration": 1.0,

@@ -9,8 +9,8 @@ extends RefCounted
 
 ## RAG system prompts for LLM-guided intro phases
 const RAG_INTRO_CONTEXT := "Tu es Merlin le druide. Un voyageur (%s) arrive a Broceliande. 2 phrases maximum: accueille-le. Ton bienveillant. Francais."
-const RAG_OGHAM_REVEAL := "Tu es Merlin. Tu reveles 3 Oghams sacres au voyageur. 2 phrases maximum, ton amuse. Francais."
-const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Oghams, sauvegardes. 2 phrases maximum, ton encourageant. Francais."
+const RAG_OGHAM_REVEAL := "Tu es Merlin. Tu reveles 3 Runes sacrees au voyageur. 2 phrases maximum, ton amuse. Francais."
+const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Runes, sauvegardes. 2 phrases maximum, ton encourageant. Francais."
 
 const LLM_STEP_TIMEOUT := 3.2
 const LLM_POLL_INTERVAL := 0.12

@@ -1,20 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://triade_game_scene"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/merlin_game_controller.gd" id="1_controller"]
-[ext_resource type="PackedScene" path="res://scenes/ui/MerlinGameUI.tscn" id="2_ui_scene"]
+[ext_resource type="Script" path="res://scripts/ui/merlin_game_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/merlin_game_ui.gd" id="2"]
 
 [node name="MerlinGame" type="Node"]
-script = ExtResource("1_controller")
+script = ExtResource("1")
 
-[node name="Background" type="CanvasLayer" parent="."]
-layer = -10
-
-[node name="BG" type="ColorRect" parent="Background"]
+[node name="MerlinGameUI" type="Control" parent="."]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.039, 0.039, 0.071, 1)
-
-[node name="MerlinGameUI" parent="." instance=ExtResource("2_ui_scene")]
+script = ExtResource("2")

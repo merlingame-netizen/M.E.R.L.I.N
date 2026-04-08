@@ -11,7 +11,7 @@ const TOUR_STEPS: Array[Dictionary] = [
 	{"target": "overview", "text": "Bienvenue dans l'Antre. Ton refuge entre les runs."},
 	{"target": "calendar", "text": "Le Calendrier. Saisons et fetes celtiques.", "hotspot_idx": 0},
 	{"target": "arbre", "text": "L'Arbre de Vie. Ta progression, run apres run.", "hotspot_idx": 2},
-	{"target": "collection", "text": "La Collection. Cartes, Oghams, lore — tout ici.", "hotspot_idx": 4},
+	{"target": "collection", "text": "La Collection. Cartes, Runes, lore — tout ici.", "hotspot_idx": 4},
 	{"target": "alignement", "text": "L'Alignement des biomes. Bientot disponible.", "hotspot_idx": 3},
 	{"target": "partir", "text": "PARTIR. Choisis un biome et lance l'aventure."},
 	{"target": "end", "text": "Tu connais l'essentiel. Le reste se decouvre en marchant."},

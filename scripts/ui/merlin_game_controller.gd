@@ -211,6 +211,10 @@ func start_run(seed_value: int = -1) -> void:
 	if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
 		ui.reset_run_visuals()
 
+	# Pre-run: generate skeleton graph + show parchment display
+	if not headless_mode:
+		await _generate_and_show_parchment(biome_key)
+
 	# Opening sequence then narrator intro before first card
 	if ui and is_instance_valid(ui) and not headless_mode:
 		if ui.has_method("show_opening_sequence"):
@@ -263,6 +267,58 @@ func start_run(seed_value: int = -1) -> void:
 	print("[Merlin] start_run() about to await _request_next_card (dt=%dms)" % (Time.get_ticks_msec() - _t0))
 	await _request_next_card()
 	print("[Merlin] start_run() _request_next_card complete (dt=%dms)" % (Time.get_ticks_msec() - _t0))
+
+
+## Parchment display reference (created once, reused).
+var _parchment: ParchmentDisplay = null
+
+
+func _generate_and_show_parchment(biome_key: String) -> void:
+	## Generate the run skeleton graph and show the parchment animation.
+	var t0: int = Time.get_ticks_msec()
+	print("[Merlin] Generating run skeleton for biome=%s" % biome_key)
+
+	# Gather state for generation.
+	var game_state: Dictionary = store.state.get("meta", {}) if store else {}
+	var ogham_id: String = str(store.state.get("run", {}).get("ogham_actif", "")) if store else ""
+	var save_data: Dictionary = {}
+	if store and store.has_method("get_save_data"):
+		save_data = store.get_save_data()
+
+	# Get MOS reference for LLM generation.
+	var mos: MerlinOmniscient = null
+	if store and store.has_method("get_mos"):
+		mos = store.get_mos()
+
+	var graph: MerlinRunGraph = null
+	if mos:
+		graph = await mos.generate_run_skeleton(biome_key, ogham_id, game_state, save_data)
+	else:
+		# Fallback: procedural generation without LLM.
+		print("[Merlin] No MOS available, using procedural skeleton")
+		graph = MerlinSkeletonGenerator._generate_procedural(
+			MerlinSkeletonGenerator._build_context(biome_key, ogham_id, game_state, save_data))
+
+	if graph == null:
+		print("[Merlin] Skeleton generation failed, proceeding without graph")
+		return
+
+	# Store the graph in run state.
+	if store:
+		await store.dispatch({"type": "SET_RUN_GRAPH", "graph": graph.to_dict()})
+
+	print("[Merlin] Skeleton ready in %dms: %d main + %d detour nodes" % [
+		Time.get_ticks_msec() - t0, graph.total_main_nodes, graph.total_detour_nodes])
+
+	# Show parchment display.
+	if ui and is_instance_valid(ui):
+		if _parchment == null:
+			_parchment = ParchmentDisplay.new()
+			ui.add_child(_parchment)
+		_parchment.reveal(graph)
+		await _parchment.animation_finished
+		await _parchment.dismiss()
+		print("[Merlin] Parchment display finished (dt=%dms)" % (Time.get_ticks_msec() - t0))
 
 
 func _request_next_card() -> void:

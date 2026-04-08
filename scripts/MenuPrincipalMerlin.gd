@@ -11,7 +11,7 @@ extends Control
 const TITLE_TEXT := "M  E  R  L  I  N"
 
 const MAIN_MENU_ITEMS := [
-	{"text_key": "MENU_NEW_GAME", "scene": "res://scenes/IntroPersonalityQuiz.tscn", "priority": "primary"},
+	{"text_key": "MENU_NEW_GAME", "scene": "res://scenes/ParchmentPreRun.tscn", "priority": "primary"},
 	{"text_key": "MENU_CONTINUE", "scene": "res://scenes/SelectionSauvegarde.tscn", "priority": "secondary"},
 	{"text_key": "MENU_OPTIONS", "scene": "res://scenes/MenuOptions.tscn", "priority": "tertiary"},
 ]
@@ -436,7 +436,7 @@ func _on_menu_action(scene: String) -> void:
 	if scene == "" or _anim.swipe_in_progress:
 		return
 
-	var game_scenes := ["res://scenes/IntroPersonalityQuiz.tscn", "res://scenes/SelectionSauvegarde.tscn"]
+	var game_scenes := ["res://scenes/ParchmentPreRun.tscn", "res://scenes/SelectionSauvegarde.tscn"]
 	if scene in game_scenes:
 		_start_llm_warmup()
 

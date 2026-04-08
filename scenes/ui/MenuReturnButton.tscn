@@ -3,8 +3,5 @@
 [ext_resource type="Script" path="res://scripts/ui/menu_return_button.gd" id="1"]
 
 [node name="MenuReturnButton" type="Button"]
-custom_minimum_size = Vector2(100, 40)
-offset_right = 100.0
-offset_bottom = 40.0
-focus_mode = 0
+text = "Menu"
 script = ExtResource("1")

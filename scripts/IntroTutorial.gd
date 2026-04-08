@@ -48,11 +48,11 @@ const LORE_BEATS: Array[Dictionary] = [
 		],
 	},
 	{
-		"header": "LES OGHAMS",
+		"header": "LES RUNES",
 		"lines": [
-			"Tu decouvriras des Oghams — des runes anciennes aux pouvoirs oublies.",
-			"Chaque Ogham debloqu\u00e9 ouvre de nouvelles possibilites.",
-			"Les 18 Oghams sont des clefs. Tu les trouveras.",
+			"Tu decouvriras des Runes — des symboles anciens aux pouvoirs oublies.",
+			"Chaque Rune debloquee ouvre de nouvelles possibilites.",
+			"Les 18 Runes sont des clefs. Tu les trouveras.",
 		],
 	},
 ]

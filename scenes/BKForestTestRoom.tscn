@@ -1,0 +1,71 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/bk_forest_test_room.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/bk_ground_camera.gd" id="2_cam"]
+
+[sub_resource type="Environment" id="env"]
+background_mode = 1
+background_color = Color(0.45, 0.72, 0.82, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.95, 0.92, 0.82, 1)
+ambient_light_energy = 0.6
+tonemap_mode = 2
+tonemap_white = 5.0
+fog_enabled = true
+fog_light_color = Color(0.55, 0.72, 0.65, 1)
+fog_sun_scatter = 0.3
+fog_density = 0.006
+fog_sky_affect = 0.4
+
+[node name="BKForestTestRoom" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, 0.25, -0.433, 0, 0.866, 0.5, 0.5, -0.433, 0.75, 0, 30, 0)
+light_color = Color(1, 0.94, 0.82, 1)
+light_energy = 1.6
+shadow_enabled = true
+shadow_opacity = 0.7
+directional_shadow_max_distance = 80.0
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707, -0.707, 0, 0.707, 0.707, 0, 15, 0)
+light_color = Color(0.6, 0.75, 0.95, 1)
+light_energy = 0.4
+shadow_enabled = false
+
+[node name="RimLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 0.5, 0.866, 0, 0.866, -0.5, 0, 20, 0)
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 0.25
+shadow_enabled = false
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.966, 0.259, 0, -0.259, 0.966, 0, 3, 8)
+current = true
+fov = 65.0
+near = 0.05
+far = 150.0
+script = ExtResource("2_cam")
+move_speed = 6.0
+eye_height = 1.7
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="InfoLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 750.0
+offset_bottom = 48.0
+text = "BK Forest — WASD: Walk | Mouse: Look | Shift: Run | Scroll: Speed | Esc: Cursor"
+
+[node name="VersionLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 500.0
+offset_bottom = 76.0
+modulate = Color(1, 1, 1, 0.5)
+text = "Procedural terrain + BK vertex colors + fairy dust"
