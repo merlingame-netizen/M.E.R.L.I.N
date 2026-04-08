@@ -22,11 +22,6 @@
       "mcp__dbeaver__list_connections",
       "mcp__dbeaver__list_insights",
       "mcp__dbeaver__append_insight",
-      "mcp__pbi-workflow-mcp__pbi_lifecycle",
-      "mcp__pbi-workflow-mcp__pbi_query",
-      "mcp__pbi-workflow-mcp__pbi_tmdl",
-      "mcp__pbi-workflow-mcp__pbi_preflight",
-      "mcp__pbi-workflow-mcp__pbi_workflow",
       "Bash(npm cache clean:*)",
       "Bash(npx @google/gemini-cli@latest --version)",
       "Bash(npm install:*)",
@@ -41,13 +36,12 @@
       "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2"
     ]
   },
-  "model": "sonnet",
+  "model": "claude-opus-4-6",
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "godot-mcp",
     "dbeaver",
     "powerbi-modeling-mcp",
-    "powerbi-dashboard-mcp",
-    "pbi-workflow-mcp"
+    "powerbi-dashboard-mcp"
   ]
 }

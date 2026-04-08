@@ -17,7 +17,7 @@
       }
     },
     "powerbi-modeling-mcp": {
-      "command": "C:\\Users\\PGNK2128\\.vscode\\extensions\\analysis-services.powerbi-modeling-mcp-0.1.9-win32-x64\\server\\powerbi-modeling-mcp.exe",
+      "command": "C:\\Users\\PGNK2128\\.vscode\\extensions\\analysis-services.powerbi-modeling-mcp-0.4.0-win32-x64\\server\\powerbi-modeling-mcp.exe",
       "args": [
         "--start"
       ],
@@ -31,15 +31,9 @@
         "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Bureau\\Agents\\Data\\powerbi-dashboard-mcp\\dist\\index.js"
       ]
     },
-    "pbi-workflow-mcp": {
-      "command": "node",
-      "args": [
-        "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2\\pbi-workflow-mcp\\dist\\index.js"
-      ]
-    },
     "pageindex": {
+      "type": "streamable-http",
       "url": "https://api.pageindex.ai/mcp",
-      "transport": "http",
       "headers": {
         "Authorization": "Bearer ${PAGEINDEX_API_KEY}"
       }
@@ -77,8 +71,8 @@
       }
     },
     "figma": {
+      "type": "streamable-http",
       "url": "https://mcp.figma.com/mcp",
-      "transport": "http",
       "headers": {
         "Authorization": "Bearer ${FIGMA_ACCESS_TOKEN}"
       }
@@ -100,8 +94,8 @@
       ]
     },
     "datagouv": {
-      "url": "https://mcp.data.gouv.fr/mcp",
-      "transport": "http"
+      "type": "streamable-http",
+      "url": "https://mcp.data.gouv.fr/mcp"
     }
   }
 }

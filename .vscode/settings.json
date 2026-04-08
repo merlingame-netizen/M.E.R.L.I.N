@@ -1,5 +1,7 @@
 {
     "godotTools.editorPath.godot4": "c:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64.exe",
+    "godotTools.lsp.serverPort": 6008,
+    "godotTools.lsp.autoReconnect.enabled": false,
     "gemini-cli.debug.logging.enabled": true,
     "autodev-v4.remoteTrain.pythonPath": "c:\\Users\\PGNK2128\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
     "autodev-v4.remoteTrain.kaggleUsername": "maximebabonneau",
