@@ -1,4033 +1,996 @@
 {
-  "version": "1.0.0",
-  "protocol": "a2a-file-based",
-  "generated_at": "2026-03-11T00:00:00.000Z",
-  "agent_count": 20,
-  "agents": {
-    "art_direction": {
-      "id": "art_direction",
-      "name": "Art Director",
-      "version": "1.0.0",
-      "description": "Visual style management, pixel art pipeline, CRT aesthetic specialist",
-      "agent_file": ".claude/agents/art_direction.md",
-      "category": "creative",
+  "version": "2.0.0",
+  "generated_at": "2026-04-10T21:29:26.352Z",
+  "total_agents": 103,
+  "by_category": {
+    "core": 7,
+    "creative": 33,
+    "knowledge": 2,
+    "llm": 4,
+    "narrative": 5,
+    "ops": 5,
+    "orchestration": 9,
+    "quality": 31,
+    "ui-ux": 7
+  },
+  "agents": [
+    {
+      "id": "audio_mix",
+      "name": "Audio Mix Agent",
+      "category": "core",
       "capabilities": [
-        {
-          "task_type": "visual_style",
-          "keywords": [
-            "style",
-            "palette",
-            "color",
-            "aesthetic",
-            "CRT",
-            "pixel"
-          ],
-          "confidence": 0.95,
-          "mode": "review"
-        },
-        {
-          "task_type": "asset_creation",
-          "keywords": [
-            "sprite",
-            "icon",
-            "asset",
-            "texture",
-            "animation"
-          ],
-          "confidence": 0.85,
-          "mode": "build"
-        },
-        {
-          "task_type": "shader_design",
-          "keywords": [
-            "shader",
-            "effect",
-            "glow",
-            "scanline",
-            "filter"
-          ],
-          "confidence": 0.8,
-          "mode": "build"
-        }
+        "audio mix"
       ],
-      "inputs": [
-        {
-          "name": "visual_request",
-          "type": "text",
-          "required": true,
-          "description": "Asset or style request"
-        },
-        {
-          "name": "reference_images",
-          "type": "file",
-          "required": false,
-          "description": "Reference images"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "style_guide",
-          "type": "json",
-          "description": "Visual specification"
-        },
-        {
-          "name": "assets",
-          "type": "artifact",
-          "description": "Generated visual assets"
-        }
-      ],
-      "file_scope": [
-        "Assets/**/*.png",
-        "*.shader",
-        "themes/**/*.tres",
-        "scripts/autoload/merlin_visual.gd"
-      ],
-      "dependencies": [
-        "ui_consistency"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
+      "cost_profile": "opus"
     },
-    "audio_specialist": {
-      "id": "audio_specialist",
-      "name": "Audio Specialist",
-      "version": "1.0.0",
-      "description": "SFX implementation, procedural audio, and music management specialist",
-      "agent_file": ".claude/agents/audio_specialist.md",
-      "category": "creative",
+    {
+      "id": "audio_procedural",
+      "name": "Audio Procedural Agent",
+      "category": "core",
       "capabilities": [
-        {
-          "task_type": "sfx_implementation",
-          "keywords": [
-            "sound",
-            "SFX",
-            "audio",
-            "effect",
-            "beep",
-            "procedural"
-          ],
-          "confidence": 0.9,
-          "mode": "build"
-        },
-        {
-          "task_type": "music_management",
-          "keywords": [
-            "music",
-            "BGM",
-            "ambient",
-            "soundtrack"
-          ],
-          "confidence": 0.8,
-          "mode": "build"
-        },
-        {
-          "task_type": "audio_review",
-          "keywords": [
-            "volume",
-            "mixing",
-            "timing",
-            "sync"
-          ],
-          "confidence": 0.75,
-          "mode": "review"
-        }
+        "audio procedural"
       ],
-      "inputs": [
-        {
-          "name": "audio_request",
-          "type": "text",
-          "required": true,
-          "description": "Audio task description"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "audio_implementation",
-          "type": "artifact",
-          "description": "Audio code or configuration"
-        },
-        {
-          "name": "audio_report",
-          "type": "json",
-          "description": "Performance and quality report"
-        }
-      ],
-      "file_scope": [
-        "scripts/**/*.gd",
-        "data/audio/**/*"
-      ],
-      "dependencies": [
-        "ui_consistency"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
+      "cost_profile": "opus"
     },
-    "data_analyst": {
-      "id": "data_analyst",
-      "name": "Data Analysis Specialist",
-      "version": "1.0.0",
-      "description": "Gameplay data analysis, metrics tracking, and balance insights",
-      "agent_file": ".claude/agents/data_analysis_specialist.md",
-      "category": "ops",
+    {
+      "id": "gd_endgame",
+      "name": "GD Endgame Agent",
+      "category": "core",
       "capabilities": [
-        {
-          "task_type": "gameplay_analysis",
-          "keywords": [
-            "data",
-            "metrics",
-            "analytics",
-            "statistics",
-            "distribution"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "balance_analysis",
-          "keywords": [
-            "balance",
-            "difficulty",
-            "curve",
-            "tuning",
-            "fairness"
-          ],
-          "confidence": 0.85,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "report_generation",
-          "keywords": [
-            "report",
-            "summary",
-            "dashboard",
-            "visualization"
-          ],
-          "confidence": 0.8,
-          "mode": "generate"
-        }
+        "gd endgame"
       ],
-      "inputs": [
-        {
-          "name": "gameplay_data",
-          "type": "json",
-          "required": true,
-          "description": "Captured gameplay sessions or metrics"
-        },
-        {
-          "name": "analysis_request",
-          "type": "text",
-          "required": false,
-          "description": "Specific analysis question"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "analysis_report",
-          "type": "json",
-          "description": "Statistical analysis with insights"
-        },
-        {
-          "name": "visualizations",
-          "type": "artifact",
-          "description": "Charts and data visualizations"
-        }
-      ],
-      "file_scope": [
-        "tools/autodev/captures/**/*.json",
-        "data/**/*.json"
-      ],
-      "dependencies": [
-        "debug_qa"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
+      "cost_profile": "sonnet"
     },
-    "debug_qa": {
-      "id": "debug_qa",
-      "name": "Debug QA Specialist",
-      "version": "1.0.0",
-      "description": "GDScript validation, testing, and bug triage specialist",
-      "agent_file": ".claude/agents/debug_qa.md",
-      "category": "quality",
+    {
+      "id": "gd_faction_dynamics",
+      "name": "GD Faction Dynamics Agent",
+      "category": "core",
       "capabilities": [
-        {
-          "task_type": "testing",
-          "keywords": [
-            "test",
-            "GUT",
-            "unit test",
-            "integration",
-            "E2E",
-            "coverage"
-          ],
-          "confidence": 0.95,
-          "mode": "build"
-        },
-        {
-          "task_type": "bug_triage",
-          "keywords": [
-            "bug",
-            "crash",
-            "error",
-            "exception",
-            "regression"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "code_validation",
-          "keywords": [
-            "validate",
-            "lint",
-            "parse",
-            "syntax"
-          ],
-          "confidence": 0.9,
-          "mode": "validate"
-        },
-        {
-          "task_type": "narrative_qa",
-          "keywords": [
-            "narrative",
-            "lore",
-            "consistency",
-            "dialogue"
-          ],
-          "confidence": 0.7,
-          "mode": "review"
-        }
+        "gd faction dynamics"
       ],
-      "inputs": [
-        {
-          "name": "code_changes",
-          "type": "file",
-          "required": true,
-          "description": "Modified GDScript files"
-        },
-        {
-          "name": "bug_report",
-          "type": "text",
-          "required": false,
-          "description": "Bug description and repro steps"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "validation_report",
-          "type": "json",
-          "description": "Validation results with pass/fail"
-        },
-        {
-          "name": "test_files",
-          "type": "artifact",
-          "description": "Generated test scripts"
-        }
-      ],
-      "file_scope": [
-        "scripts/**/*.gd",
-        "test/**/*.gd",
-        "data/ai/test/**/*.json"
-      ],
-      "dependencies": [
-        "godot_expert",
-        "gdscript_kb"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 2
+      "cost_profile": "sonnet"
     },
-    "gdscript_kb": {
-      "id": "gdscript_kb",
-      "name": "GDScript Knowledge Base",
-      "version": "1.0.0",
-      "description": "Living document of GDScript errors, corrections, best practices, and patterns",
-      "agent_file": ".claude/agents/gdscript_knowledge_base.md",
-      "category": "knowledge",
+    {
+      "id": "gd_onboarding",
+      "name": "GD Onboarding Agent",
+      "category": "core",
       "capabilities": [
-        {
-          "task_type": "error_documentation",
-          "keywords": [
-            "error",
-            "fix",
-            "pattern",
-            "correction",
-            "workaround"
-          ],
-          "confidence": 0.95,
-          "mode": "reference"
-        },
-        {
-          "task_type": "best_practices",
-          "keywords": [
-            "best practice",
-            "idiom",
-            "convention",
-            "anti-pattern",
-            "style"
-          ],
-          "confidence": 0.9,
-          "mode": "reference"
-        },
-        {
-          "task_type": "learning_integration",
-          "keywords": [
-            "learn",
-            "feedback",
-            "update KB",
-            "new pattern"
-          ],
-          "confidence": 0.85,
-          "mode": "build"
-        }
+        "gd onboarding"
       ],
-      "inputs": [
-        {
-          "name": "error_context",
-          "type": "json",
-          "required": false,
-          "description": "Error details and context"
-        },
-        {
-          "name": "correction",
-          "type": "text",
-          "required": false,
-          "description": "User-provided correction to document"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "kb_entry",
-          "type": "json",
-          "description": "Knowledge base entry with problem/solution"
-        },
-        {
-          "name": "pattern_doc",
-          "type": "text",
-          "description": "Documented pattern or best practice"
-        }
-      ],
-      "file_scope": [
-        ".claude/agents/gdscript_knowledge_base.md"
-      ],
-      "dependencies": [
-        "debug_qa",
-        "godot_expert"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
+      "cost_profile": "sonnet"
     },
-    "git_commit": {
-      "id": "git_commit",
-      "name": "Git Commit Agent",
-      "version": "1.0.0",
-      "description": "Change analysis, conventional commits, branch management, and changelog generation",
-      "agent_file": ".claude/agents/git_commit.md",
-      "category": "ops",
-      "capabilities": [
-        {
-          "task_type": "commit_creation",
-          "keywords": [
-            "commit",
-            "stage",
-            "diff",
-            "changelog",
-            "conventional"
-          ],
-          "confidence": 0.95,
-          "mode": "build"
-        },
-        {
-          "task_type": "branch_management",
-          "keywords": [
-            "branch",
-            "merge",
-            "rebase",
-            "tag",
-            "version"
-          ],
-          "confidence": 0.85,
-          "mode": "build"
-        },
-        {
-          "task_type": "change_analysis",
-          "keywords": [
-            "changes",
-            "diff",
-            "impact",
-            "scope"
-          ],
-          "confidence": 0.8,
-          "mode": "analyze"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "work_summary",
-          "type": "text",
-          "required": true,
-          "description": "Description of completed work"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "commit_message",
-          "type": "text",
-          "description": "Formatted conventional commit message"
-        },
-        {
-          "name": "changelog_entry",
-          "type": "text",
-          "description": "Changelog section for the changes"
-        }
-      ],
-      "file_scope": [],
-      "dependencies": [
-        "security_specialist"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "godot_expert": {
+    {
       "id": "godot_expert",
       "name": "Godot Expert",
-      "version": "1.0.0",
-      "description": "Godot Engine performance optimization and architecture specialist",
-      "agent_file": ".claude/agents/godot_expert.md",
       "category": "core",
       "capabilities": [
-        {
-          "task_type": "performance_optimization",
-          "keywords": [
-            "slow",
-            "lag",
-            "FPS",
-            "memory",
-            "bottleneck",
-            "profiling"
-          ],
-          "confidence": 0.95,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "gdextension",
-          "keywords": [
-            "GDExtension",
-            "native",
-            "C++",
-            "binding",
-            "MerlinLLM"
-          ],
-          "confidence": 0.9,
-          "mode": "build"
-        },
-        {
-          "task_type": "architecture_review",
-          "keywords": [
-            "architecture",
-            "pattern",
-            "singleton",
-            "autoload",
-            "signal"
-          ],
-          "confidence": 0.85,
-          "mode": "review"
-        },
-        {
-          "task_type": "shader_optimization",
-          "keywords": [
-            "shader",
-            "GPU",
-            "render",
-            "visual"
-          ],
-          "confidence": 0.8,
-          "mode": "build"
-        }
+        "performance_optimization",
+        "gdextension",
+        "architecture_review",
+        "shader_optimization",
+        "cli_validation"
       ],
-      "inputs": [
-        {
-          "name": "source_files",
-          "type": "file",
-          "required": true,
-          "description": "GDScript files to analyze"
-        },
-        {
-          "name": "profiling_data",
-          "type": "json",
-          "required": false,
-          "description": "Runtime profiling output"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "optimization_report",
-          "type": "json",
-          "description": "Findings with severity and fixes"
-        },
-        {
-          "name": "modified_files",
-          "type": "artifact",
-          "description": "Optimized GDScript files"
-        }
-      ],
-      "file_scope": [
-        "scripts/**/*.gd",
-        "addons/**/*.gd",
-        "*.shader"
-      ],
-      "dependencies": [
-        "debug_qa",
-        "performance_specialist"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
+      "cost_profile": "sonnet"
     },
-    "llm_expert": {
-      "id": "llm_expert",
-      "name": "LLM Expert",
-      "version": "1.0.0",
-      "description": "LLM integration, prompt engineering, RAG management, and guardrails specialist",
-      "agent_file": ".claude/agents/llm_expert.md",
-      "category": "llm",
-      "capabilities": [
-        {
-          "task_type": "prompt_engineering",
-          "keywords": [
-            "prompt",
-            "template",
-            "system prompt",
-            "few-shot",
-            "chain-of-thought"
-          ],
-          "confidence": 0.95,
-          "mode": "build"
-        },
-        {
-          "task_type": "rag_management",
-          "keywords": [
-            "RAG",
-            "context",
-            "retrieval",
-            "embedding",
-            "vector"
-          ],
-          "confidence": 0.9,
-          "mode": "build"
-        },
-        {
-          "task_type": "output_parsing",
-          "keywords": [
-            "parse",
-            "JSON",
-            "repair",
-            "format",
-            "GBNF",
-            "grammar"
-          ],
-          "confidence": 0.9,
-          "mode": "build"
-        },
-        {
-          "task_type": "guardrails",
-          "keywords": [
-            "guardrail",
-            "hallucination",
-            "toxicity",
-            "safety",
-            "filter"
-          ],
-          "confidence": 0.85,
-          "mode": "review"
-        },
-        {
-          "task_type": "model_config",
-          "keywords": [
-            "Ollama",
-            "Qwen",
-            "temperature",
-            "top_p",
-            "parameters"
-          ],
-          "confidence": 0.85,
-          "mode": "analyze"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "prompt_files",
-          "type": "file",
-          "required": false,
-          "description": "Existing prompt templates"
-        },
-        {
-          "name": "llm_output",
-          "type": "json",
-          "required": false,
-          "description": "LLM output samples for analysis"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "prompt_recommendations",
-          "type": "json",
-          "description": "Optimized prompts and parameters"
-        },
-        {
-          "name": "guardrail_report",
-          "type": "json",
-          "description": "Safety and quality assessment"
-        }
-      ],
-      "file_scope": [
-        "data/ai/**/*.json",
-        "data/ai/**/*.gbnf",
-        "addons/merlin_ai/**/*.gd"
-      ],
-      "dependencies": [
-        "narrative_writer",
-        "lora_translator"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
-    },
-    "lora_translator": {
-      "id": "lora_translator",
-      "name": "LoRA Gameplay Translator",
-      "version": "1.0.0",
-      "description": "Bridge between gameplay needs and LoRA fine-tuning pipeline",
-      "agent_file": ".claude/agents/lora_gameplay_translator.md",
-      "category": "llm",
-      "capabilities": [
-        {
-          "task_type": "training_translation",
-          "keywords": [
-            "LoRA",
-            "fine-tune",
-            "training",
-            "dataset",
-            "adapter"
-          ],
-          "confidence": 0.95,
-          "mode": "build"
-        },
-        {
-          "task_type": "dataset_design",
-          "keywords": [
-            "dataset",
-            "examples",
-            "golden",
-            "training data"
-          ],
-          "confidence": 0.9,
-          "mode": "generate"
-        },
-        {
-          "task_type": "pipeline_orchestration",
-          "keywords": [
-            "pipeline",
-            "Kaggle",
-            "training run",
-            "hyperparameter"
-          ],
-          "confidence": 0.85,
-          "mode": "orchestrate"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "gameplay_request",
-          "type": "text",
-          "required": true,
-          "description": "Gameplay adaptation need"
-        },
-        {
-          "name": "existing_data",
-          "type": "json",
-          "required": false,
-          "description": "Existing training datasets"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "training_spec",
-          "type": "json",
-          "description": "LoRA training specification"
-        },
-        {
-          "name": "dataset",
-          "type": "artifact",
-          "description": "Generated training data"
-        }
-      ],
-      "file_scope": [
-        "data/ai/training/**/*.json",
-        "tools/lora/**/*.py"
-      ],
-      "dependencies": [
-        "llm_expert",
-        "narrative_writer"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
-    },
-    "merlin_guardian": {
-      "id": "merlin_guardian",
-      "name": "Merlin Behavioral Guardian",
-      "version": "1.0.0",
-      "description": "Merlin personality consistency enforcer across all content",
-      "agent_file": ".claude/agents/merlin_guardian.md",
-      "category": "narrative",
-      "capabilities": [
-        {
-          "task_type": "personality_enforcement",
-          "keywords": [
-            "Merlin",
-            "persona",
-            "character",
-            "voice",
-            "personality"
-          ],
-          "confidence": 0.95,
-          "mode": "validate"
-        },
-        {
-          "task_type": "lore_consistency",
-          "keywords": [
-            "lore",
-            "canon",
-            "continuity",
-            "coherence"
-          ],
-          "confidence": 0.9,
-          "mode": "review"
-        },
-        {
-          "task_type": "prompt_validation",
-          "keywords": [
-            "system prompt",
-            "instruction",
-            "tone"
-          ],
-          "confidence": 0.8,
-          "mode": "validate"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "content",
-          "type": "text",
-          "required": true,
-          "description": "Dialogue or narrative to validate"
-        },
-        {
-          "name": "lore_reference",
-          "type": "file",
-          "required": false,
-          "description": "Lore documents for context"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "consistency_report",
-          "type": "json",
-          "description": "Violations and alignment score"
-        },
-        {
-          "name": "voice_feedback",
-          "type": "text",
-          "description": "Suggestions for better Merlin voice"
-        }
-      ],
-      "file_scope": [
-        "docs/50_lore/**/*.md",
-        "data/**/*.json"
-      ],
-      "dependencies": [
-        "narrative_writer"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "narrative_writer": {
-      "id": "narrative_writer",
-      "name": "Narrative Writer",
-      "version": "1.0.0",
-      "description": "Card writing, scenario creation, story arcs, and Merlin voice specialist",
-      "agent_file": ".claude/agents/narrative_writer.md",
-      "category": "narrative",
-      "capabilities": [
-        {
-          "task_type": "card_writing",
-          "keywords": [
-            "card",
-            "story",
-            "narrative",
-            "scenario",
-            "dialogue",
-            "choice"
-          ],
-          "confidence": 0.95,
-          "mode": "generate"
-        },
-        {
-          "task_type": "arc_design",
-          "keywords": [
-            "arc",
-            "quest",
-            "journey",
-            "progression",
-            "ending"
-          ],
-          "confidence": 0.9,
-          "mode": "generate"
-        },
-        {
-          "task_type": "lore_creation",
-          "keywords": [
-            "lore",
-            "Celtic",
-            "mythology",
-            "Ogham",
-            "Broceliande"
-          ],
-          "confidence": 0.85,
-          "mode": "generate"
-        },
-        {
-          "task_type": "narrative_qa",
-          "keywords": [
-            "tone",
-            "voice",
-            "coherence",
-            "consistency"
-          ],
-          "confidence": 0.85,
-          "mode": "review"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "card_request",
-          "type": "json",
-          "required": false,
-          "description": "Card specification with context"
-        },
-        {
-          "name": "existing_content",
-          "type": "file",
-          "required": false,
-          "description": "Existing narrative files for context"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "card_json",
-          "type": "json",
-          "description": "Generated card data"
-        },
-        {
-          "name": "narrative_report",
-          "type": "json",
-          "description": "QA checklist and consistency findings"
-        }
-      ],
-      "file_scope": [
-        "data/ai/*.json",
-        "data/**/*.json",
-        "data/ai/config/**/*.json"
-      ],
-      "dependencies": [
-        "llm_expert",
-        "merlin_guardian"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
-    },
-    "performance_specialist": {
+    {
       "id": "performance_specialist",
       "name": "Performance Specialist",
-      "version": "1.0.0",
-      "description": "Runtime performance analysis, profiling, and optimization recommendations",
-      "agent_file": ".claude/agents/performance_specialist.md",
       "category": "core",
       "capabilities": [
-        {
-          "task_type": "profiling",
-          "keywords": [
-            "profile",
-            "benchmark",
-            "measure",
-            "timing",
-            "frame"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "optimization",
-          "keywords": [
-            "optimize",
-            "cache",
-            "pool",
-            "batch",
-            "lazy"
-          ],
-          "confidence": 0.85,
-          "mode": "build"
-        },
-        {
-          "task_type": "memory_analysis",
-          "keywords": [
-            "memory",
-            "leak",
-            "allocation",
-            "GC",
-            "reference"
-          ],
-          "confidence": 0.8,
-          "mode": "analyze"
-        }
+        "profiling",
+        "optimization",
+        "memory_analysis"
       ],
-      "inputs": [
-        {
-          "name": "target_files",
-          "type": "file",
-          "required": true,
-          "description": "Files to profile"
-        },
-        {
-          "name": "benchmarks",
-          "type": "json",
-          "required": false,
-          "description": "Baseline performance data"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "performance_report",
-          "type": "json",
-          "description": "Profiling results with hotspots"
-        },
-        {
-          "name": "optimized_files",
-          "type": "artifact",
-          "description": "Optimized code"
-        }
-      ],
-      "file_scope": [
-        "scripts/**/*.gd",
-        "addons/**/*.gd"
-      ],
-      "dependencies": [
-        "godot_expert"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
+      "cost_profile": "haiku"
     },
-    "security_specialist": {
-      "id": "security_specialist",
-      "name": "Security Specialist",
-      "version": "1.0.0",
-      "description": "Security analysis, vulnerability detection, and save system validation",
-      "agent_file": ".claude/agents/security_specialist.md",
-      "category": "quality",
-      "capabilities": [
-        {
-          "task_type": "security_audit",
-          "keywords": [
-            "security",
-            "vulnerability",
-            "injection",
-            "XSS",
-            "OWASP"
-          ],
-          "confidence": 0.9,
-          "mode": "review"
-        },
-        {
-          "task_type": "save_validation",
-          "keywords": [
-            "save",
-            "serialize",
-            "deserialize",
-            "tamper"
-          ],
-          "confidence": 0.85,
-          "mode": "validate"
-        },
-        {
-          "task_type": "secret_scanning",
-          "keywords": [
-            "secret",
-            "API key",
-            "credential",
-            "token",
-            "password"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "code_files",
-          "type": "file",
-          "required": true,
-          "description": "Files to audit"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "security_report",
-          "type": "json",
-          "description": "Vulnerabilities with severity and remediations"
-        }
-      ],
-      "file_scope": [
-        "scripts/**/*.gd",
-        "data/**/*.json",
-        "server/**/*.ts"
-      ],
-      "dependencies": [
-        "debug_qa"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "studio_orchestrator": {
-      "id": "studio_orchestrator",
-      "name": "Studio Orchestrator",
-      "version": "1.0.0",
-      "description": "Autonomous multi-agent orchestration for extended dev modes (Quick QA, Deep Test, Overnight)",
-      "agent_file": ".claude/agents/studio_orchestrator.md",
-      "category": "orchestration",
-      "capabilities": [
-        {
-          "task_type": "studio_orchestration",
-          "keywords": [
-            "studio",
-            "overnight",
-            "deep test",
-            "content sprint",
-            "polish"
-          ],
-          "confidence": 0.95,
-          "mode": "orchestrate"
-        },
-        {
-          "task_type": "agent_coordination",
-          "keywords": [
-            "coordinate",
-            "wave",
-            "cycle",
-            "parallel",
-            "sequential"
-          ],
-          "confidence": 0.9,
-          "mode": "orchestrate"
-        },
-        {
-          "task_type": "metrics_aggregation",
-          "keywords": [
-            "metrics",
-            "report",
-            "aggregate",
-            "summary",
-            "dashboard"
-          ],
-          "confidence": 0.8,
-          "mode": "analyze"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "mode_request",
-          "type": "text",
-          "required": true,
-          "description": "Studio mode to execute"
-        },
-        {
-          "name": "config",
-          "type": "json",
-          "required": false,
-          "description": "Studio configuration overrides"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "studio_report",
-          "type": "json",
-          "description": "Aggregated metrics and findings"
-        },
-        {
-          "name": "agent_logs",
-          "type": "artifact",
-          "description": "Per-agent execution logs"
-        }
-      ],
-      "file_scope": [
-        "tools/autodev/**/*"
-      ],
-      "dependencies": [
-        "task_dispatcher",
-        "debug_qa"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "task_dispatcher": {
-      "id": "task_dispatcher",
-      "name": "Task Dispatcher",
-      "version": "1.0.0",
-      "description": "Route-and-dispatch engine for task classification and multi-agent orchestration",
-      "agent_file": ".claude/agents/task_dispatcher.md",
-      "category": "orchestration",
-      "capabilities": [
-        {
-          "task_type": "task_routing",
-          "keywords": [
-            "dispatch",
-            "route",
-            "assign",
-            "delegate",
-            "classify"
-          ],
-          "confidence": 0.95,
-          "mode": "orchestrate"
-        },
-        {
-          "task_type": "complexity_analysis",
-          "keywords": [
-            "complexity",
-            "scope",
-            "estimate",
-            "decompose"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "workflow_design",
-          "keywords": [
-            "workflow",
-            "pipeline",
-            "sequence",
-            "parallel",
-            "wave"
-          ],
-          "confidence": 0.85,
-          "mode": "orchestrate"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "user_request",
-          "type": "text",
-          "required": true,
-          "description": "User prompt or task description"
-        },
-        {
-          "name": "context",
-          "type": "json",
-          "required": false,
-          "description": "Project context and complexity signals"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "dispatch_plan",
-          "type": "json",
-          "description": "Ordered agent sequence with tasks"
-        },
-        {
-          "name": "skill_recommendations",
-          "type": "json",
-          "description": "Recommended skills to invoke"
-        }
-      ],
-      "file_scope": [],
-      "dependencies": [
-        "studio_orchestrator"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "ui_consistency": {
-      "id": "ui_consistency",
-      "name": "UI Consistency Rules",
-      "version": "1.0.0",
-      "description": "CRT terminal aesthetic enforcement and MerlinVisual color system validator",
-      "agent_file": ".claude/agents/ui_consistency_rules.md",
-      "category": "ui-ux",
-      "capabilities": [
-        {
-          "task_type": "ui_validation",
-          "keywords": [
-            "UI",
-            "interface",
-            "layout",
-            "component",
-            "theme"
-          ],
-          "confidence": 0.95,
-          "mode": "validate"
-        },
-        {
-          "task_type": "color_enforcement",
-          "keywords": [
-            "color",
-            "palette",
-            "CRT_PALETTE",
-            "GBC",
-            "MerlinVisual"
-          ],
-          "confidence": 0.9,
-          "mode": "validate"
-        },
-        {
-          "task_type": "font_management",
-          "keywords": [
-            "font",
-            "VT323",
-            "typography",
-            "text"
-          ],
-          "confidence": 0.85,
-          "mode": "review"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "ui_code",
-          "type": "file",
-          "required": true,
-          "description": "UI-related GDScript or theme files"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "violation_report",
-          "type": "json",
-          "description": "Consistency violations with fixes"
-        }
-      ],
-      "file_scope": [
-        "scripts/ui/**/*.gd",
-        "themes/**/*.tres",
-        "scripts/autoload/merlin_visual.gd"
-      ],
-      "dependencies": [
-        "art_direction"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "playtest_qa": {
-      "id": "playtest_qa",
-      "name": "Playtest QA Specialist",
-      "version": "2.0.0",
-      "description": "Automated playtesting, metrics analysis, and issue detection. Triggers LLM/visual pipelines when metrics fall below thresholds.",
-      "agent_file": ".claude/agents/playtest_qa.md",
-      "category": "quality",
-      "capabilities": [
-        {
-          "task_type": "playtest_execution",
-          "keywords": [
-            "playtest",
-            "test",
-            "simulate",
-            "run game"
-          ],
-          "confidence": 0.95,
-          "mode": "execute"
-        },
-        {
-          "task_type": "metric_analysis",
-          "keywords": [
-            "metrics",
-            "performance",
-            "fps",
-            "crash",
-            "tone",
-            "consistency"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "issue_detection",
-          "keywords": [
-            "detect",
-            "anomaly",
-            "threshold",
-            "below",
-            "underperform"
-          ],
-          "confidence": 0.92,
-          "mode": "detect"
-        },
-        {
-          "task_type": "trigger_routing",
-          "keywords": [
-            "trigger",
-            "lora",
-            "asset",
-            "escalate",
-            "route"
-          ],
-          "confidence": 0.88,
-          "mode": "route"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "game_state",
-          "type": "json",
-          "required": true,
-          "description": "Current game state snapshot"
-        },
-        {
-          "name": "metrics_latest.json",
-          "type": "file",
-          "required": true,
-          "description": "Latest metrics data file"
-        },
-        {
-          "name": "playtest_simulator.ps1",
-          "type": "file",
-          "required": false,
-          "description": "Playtest automation script"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "issue_report",
-          "type": "json",
-          "description": "Detected issues with severity and routing"
-        },
-        {
-          "name": "agent_messages.json:issue_report",
-          "type": "artifact",
-          "description": "Issue report posted to agent message bus"
-        }
-      ],
-      "file_scope": [
-        "tools/autodev/playtest_simulator.ps1",
-        "captures/*",
-        "tools/autodev/status/metrics_*.json"
-      ],
-      "triggers": [
-        "tone_consistency < 0.85",
-        "fps < 30",
-        "crash_rate > 0.10",
-        "json_validity < 0.90"
-      ],
-      "thresholds": {
-        "tone_consistency": 0.85,
-        "fps_minimum": 30,
-        "crash_rate_maximum": 0.10,
-        "json_validity": 0.90
-      },
-      "escalation_routes": {
-        "llm_performance": "lora_trainer",
-        "visual_issue": "asset_generator",
-        "code_bug": "debugger",
-        "design_issue": "orchestrator"
-      },
-      "dependencies": [
-        "task_dispatcher",
-        "studio_orchestrator"
-      ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
-    },
-    "lora_trainer": {
-      "id": "lora_trainer",
-      "name": "LoRA Training Specialist",
-      "version": "2.0.0",
-      "description": "Decides when LoRA training is needed, prepares datasets, orchestrates Kaggle GPU training, validates metrics, and deploys adapters. Manages multi-brain model lifecycle.",
-      "agent_file": ".claude/agents/lora_trainer.md",
-      "category": "llm",
-      "supersedes": "lora_translator",
-      "capabilities": [
-        {
-          "task_type": "training_decision",
-          "keywords": [
-            "lora",
-            "fine-tune",
-            "training",
-            "underperform",
-            "adapter"
-          ],
-          "confidence": 0.92,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "dataset_preparation",
-          "keywords": [
-            "dataset",
-            "augment",
-            "samples",
-            "training data"
-          ],
-          "confidence": 0.88,
-          "mode": "build"
-        },
-        {
-          "task_type": "kaggle_orchestration",
-          "keywords": [
-            "kaggle",
-            "gpu",
-            "kernel",
-            "remote"
-          ],
-          "confidence": 0.95,
-          "mode": "execute"
-        },
-        {
-          "task_type": "model_deployment",
-          "keywords": [
-            "deploy",
-            "adapter",
-            "gguf",
-            "install",
-            "replace"
-          ],
-          "confidence": 0.9,
-          "mode": "execute"
-        },
-        {
-          "task_type": "metrics_validation",
-          "keywords": [
-            "metrics",
-            "tone_consistency",
-            "eval_loss",
-            "diversity",
-            "french"
-          ],
-          "confidence": 0.87,
-          "mode": "validate"
-        }
-      ],
-      "inputs": [
-        {
-          "name": "issue_report:llm_performance",
-          "type": "json",
-          "required": true,
-          "description": "LLM performance issue report from playtest_qa"
-        },
-        {
-          "name": ".merlin_remote/training_roadmap.json",
-          "type": "file",
-          "required": false,
-          "description": "Training roadmap configuration"
-        },
-        {
-          "name": "data/ai/training/*.json",
-          "type": "file",
-          "required": false,
-          "description": "Existing training data samples"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "agent_messages.json:model_ready",
-          "type": "artifact",
-          "description": "Model ready notification posted to agent message bus"
-        },
-        {
-          "name": "addons/merlin_llm/adapters/*.gguf",
-          "type": "artifact",
-          "description": "Deployed LoRA adapter files"
-        }
-      ],
-      "file_scope": [
-        "tools/lora/**",
-        ".merlin_remote/**",
-        "addons/merlin_llm/adapters/**",
-        "data/ai/training/**"
-      ],
-      "training_scripts": [
-        "tools/lora/remote_kaggle_train.py",
-        "tools/lora/generate_brain_datasets.py",
-        "tools/lora/benchmark_lora.py"
-      ],
-      "brain_configs": {
-        "narrator": {
-          "slug": "merlin-lora-narrator-4b",
-          "adapter": "merlin_narrator_lora.gguf"
-        },
-        "gamemaster": {
-          "slug": "merlin-lora-gamemaster-2b",
-          "adapter": "merlin_gamemaster_lora.gguf"
-        },
-        "worker": {
-          "slug": "merlin-lora-worker-0.8b",
-          "adapter": "merlin_worker_lora.gguf"
-        }
-      },
-      "quality_thresholds": {
-        "tone_consistency": 0.85,
-        "json_validity": 0.90,
-        "diversity_self_bleu": 0.40,
-        "french_quality": 0.95
-      },
-      "dependencies": [
-        "task_dispatcher"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
-    },
-    "asset_generator": {
-      "id": "asset_generator",
-      "name": "Asset Generator Specialist",
-      "version": "2.0.0",
-      "description": "Generates game assets using nano-banana (image generation) and Trellis.2 (image-to-3D GLB). Implements 3-level fallback: Trellis 3D -> PNG sprite -> existing library.",
-      "agent_file": ".claude/agents/asset_generator.md",
+    {
+      "id": "art_direction",
+      "name": "Art Director",
       "category": "creative",
       "capabilities": [
-        {
-          "task_type": "image_generation",
-          "keywords": [
-            "generate",
-            "image",
-            "sprite",
-            "nano-banana",
-            "gemini",
-            "visual"
-          ],
-          "confidence": 0.93,
-          "mode": "build"
-        },
-        {
-          "task_type": "3d_generation",
-          "keywords": [
-            "3d",
-            "glb",
-            "trellis",
-            "model",
-            "mesh",
-            "broceliande"
-          ],
-          "confidence": 0.9,
-          "mode": "build"
-        },
-        {
-          "task_type": "asset_integration",
-          "keywords": [
-            "integrate",
-            "import",
-            "scene",
-            "godot",
-            "assets"
-          ],
-          "confidence": 0.88,
-          "mode": "execute"
-        },
-        {
-          "task_type": "style_guidance",
-          "keywords": [
-            "style",
-            "pixel",
-            "low-poly",
-            "celtic",
-            "crt",
-            "aesthetic"
-          ],
-          "confidence": 0.85,
-          "mode": "review"
-        }
+        "visual_style",
+        "asset_creation",
+        "shader_design"
       ],
-      "inputs": [
-        {
-          "name": "asset_request",
-          "type": "json",
-          "required": true,
-          "description": "Asset generation request with type, style, and context"
-        },
-        {
-          "name": "docs/70_graphic/BROCELIANDE_3D_ASSET_PLAN.md",
-          "type": "file",
-          "required": false,
-          "description": "3D asset plan for Broceliande scene"
-        },
-        {
-          "name": "docs/70_graphic/UI_UX_BIBLE.md",
-          "type": "file",
-          "required": false,
-          "description": "Visual style specification"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "assets/3d/generated/*.glb",
-          "type": "artifact",
-          "description": "Generated 3D GLB assets"
-        },
-        {
-          "name": "assets/sprites/generated/*.png",
-          "type": "artifact",
-          "description": "Generated PNG sprite assets"
-        },
-        {
-          "name": "agent_messages.json:asset_ready",
-          "type": "artifact",
-          "description": "Asset ready notification posted to agent message bus"
-        }
-      ],
-      "file_scope": [
-        "assets/**",
-        "server-trellis/**",
-        "docs/70_graphic/**"
-      ],
-      "strategy_levels": [
-        {
-          "level": 1,
-          "name": "Trellis 3D",
-          "requires": [
-            "server-trellis/dist/index.js",
-            ".merlin_remote/kaggle/config.json"
-          ]
-        },
-        {
-          "level": 2,
-          "name": "PNG sprite",
-          "requires": [
-            "nano-banana MCP"
-          ]
-        },
-        {
-          "level": 3,
-          "name": "existing library",
-          "requires": []
-        }
-      ],
-      "style_constraints": {
-        "default_style": "low-poly celtic broceliande",
-        "pixel_art_size": "32x32 or 64x64",
-        "background_for_trellis": "pure white isolated",
-        "color_palette": "MerlinVisual.PALETTE"
-      },
-      "dependencies": [
-        "art_direction",
-        "task_dispatcher"
-      ],
-      "cost_profile": "sonnet",
-      "max_concurrent": 1
+      "cost_profile": "sonnet"
     },
-    "knowledge_keeper": {
-      "id": "knowledge_keeper",
-      "name": "Knowledge Keeper",
-      "version": "2.0.0",
-      "description": "Records best practices and anti-patterns from each development cycle. Updates project_map.json (living project comprehension), maintains BEST_PRACTICES.md, and updates per-agent confidence weights.",
-      "agent_file": ".claude/agents/knowledge_keeper.md",
+    {
+      "id": "asset_generator",
+      "name": "Asset Generator Specialist",
+      "category": "creative",
+      "capabilities": [
+        "image_generation",
+        "3d_generation",
+        "asset_integration",
+        "style_guidance"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "audio_ambiance",
+      "name": "Audio Ambiance Agent",
+      "category": "creative",
+      "capabilities": [
+        "audio ambiance"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "audio_spatial",
+      "name": "Audio Spatial Agent",
+      "category": "creative",
+      "capabilities": [
+        "audio spatial"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "audio_specialist",
+      "name": "Audio Specialist",
+      "category": "creative",
+      "capabilities": [
+        "sfx_implementation",
+        "music_management",
+        "audio_review"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "blender_animator",
+      "name": "Blender Animator",
+      "category": "creative",
+      "capabilities": [
+        "blender animator"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "blender_camera_director",
+      "name": "Blender Camera Director",
+      "category": "creative",
+      "capabilities": [
+        "blender camera director"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "blender_export_engineer",
+      "name": "Blender Export Engineer Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender export engineer"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "blender_lighting_director",
+      "name": "Blender Lighting Director",
+      "category": "creative",
+      "capabilities": [
+        "blender lighting director"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "blender_material_master",
+      "name": "Blender Material Master Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender material master"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "blender_ocean_animator",
+      "name": "Blender Ocean Animator Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender ocean animator"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "blender_scene_compositor",
+      "name": "Blender Scene Compositor",
+      "category": "creative",
+      "capabilities": [
+        "blender scene compositor"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "blender_terrain_sculptor",
+      "name": "Blender Terrain Sculptor Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender terrain sculptor"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "blender_tower_architect",
+      "name": "Blender Tower Architect Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender tower architect"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "blender_vegetation_artist",
+      "name": "Blender Vegetation Artist Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender vegetation artist"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "blender_vfx_artist",
+      "name": "Blender VFX Artist Agent — M.E.R.L.I.N.",
+      "category": "creative",
+      "capabilities": [
+        "blender vfx artist"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "gd_difficulty",
+      "name": "GD Difficulty Agent",
+      "category": "creative",
+      "capabilities": [
+        "gd difficulty"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "gd_economy",
+      "name": "GD Economy Agent",
+      "category": "creative",
+      "capabilities": [
+        "gd economy"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "gd_pacing",
+      "name": "GD Pacing Agent",
+      "category": "creative",
+      "capabilities": [
+        "gd pacing"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "perf_mobile",
+      "name": "Performance Mobile Agent",
+      "category": "creative",
+      "capabilities": [
+        "mobile"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "perf_render",
+      "name": "Performance Render Agent",
+      "category": "creative",
+      "capabilities": [
+        "render"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ui_consistency_rules",
+      "name": "UI Consistency Rules — M.E.R.L.I.N. Agent Instructions",
+      "category": "creative",
+      "capabilities": [
+        "consistency rules"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ux_animation",
+      "name": "UX Animation Agent",
+      "category": "creative",
+      "capabilities": [
+        "animation"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ux_feedback",
+      "name": "UX Feedback Agent",
+      "category": "creative",
+      "capabilities": [
+        "feedback"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ux_readability",
+      "name": "UX Readability Agent",
+      "category": "creative",
+      "capabilities": [
+        "readability"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "vis_animation_art",
+      "name": "Visual Animation Art Agent",
+      "category": "creative",
+      "capabilities": [
+        "animation art"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "vis_celtic_authenticity",
+      "name": "Visual Celtic Authenticity Agent",
+      "category": "creative",
+      "capabilities": [
+        "celtic authenticity"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "vis_layout",
+      "name": "Visual Layout Agent",
+      "category": "creative",
+      "capabilities": [
+        "layout"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "vis_palette",
+      "name": "Visual Palette Agent",
+      "category": "creative",
+      "capabilities": [
+        "palette"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "vis_particle",
+      "name": "Visual Particle Agent",
+      "category": "creative",
+      "capabilities": [
+        "particle"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "vis_scene_composition",
+      "name": "Visual Scene Composition Agent",
+      "category": "creative",
+      "capabilities": [
+        "scene composition"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "vis_shader",
+      "name": "Visual Shader Agent",
+      "category": "creative",
+      "capabilities": [
+        "shader"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "vis_typography",
+      "name": "Visual Typography Agent",
+      "category": "creative",
+      "capabilities": [
+        "typography"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "audio_feedback",
+      "name": "Audio Feedback Agent",
+      "category": "knowledge",
+      "capabilities": [
+        "audio feedback"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "gdscript_kb",
+      "name": "GDScript Knowledge Base",
+      "category": "knowledge",
+      "capabilities": [
+        "error_documentation",
+        "best_practices",
+        "learning_integration"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "llm_expert",
+      "name": "LLM Expert",
+      "category": "llm",
+      "capabilities": [
+        "prompt_engineering",
+        "rag_management",
+        "output_parsing",
+        "guardrails",
+        "model_config"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "lora_translator",
+      "name": "LoRA Gameplay Translator",
+      "category": "llm",
+      "capabilities": [
+        "training_translation",
+        "dataset_design",
+        "pipeline_orchestration"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "lora_trainer",
+      "name": "LoRA Training Specialist",
+      "category": "llm",
+      "capabilities": [
+        "training_decision",
+        "dataset_preparation",
+        "kaggle_orchestration",
+        "model_deployment",
+        "metrics_validation"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "perf_network",
+      "name": "Performance Network Agent",
+      "category": "llm",
+      "capabilities": [
+        "network"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "content_quest_arc",
+      "name": "Content Quest Arc Agent",
+      "category": "narrative",
+      "capabilities": [
+        "content quest arc"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "content_worldbuilding",
+      "name": "Content Worldbuilding Agent",
+      "category": "narrative",
+      "capabilities": [
+        "content worldbuilding"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "lore_writer",
+      "name": "Lore Writer Agent — M.E.R.L.I.N.",
+      "category": "narrative",
+      "capabilities": [
+        "lore writer"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "merlin_guardian",
+      "name": "Merlin Behavioral Guardian",
+      "category": "narrative",
+      "capabilities": [
+        "personality_enforcement",
+        "lore_consistency",
+        "prompt_validation"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "narrative_writer",
+      "name": "Narrative Writer",
+      "category": "narrative",
+      "capabilities": [
+        "card_writing",
+        "arc_design",
+        "lore_creation",
+        "narrative_qa"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "data_analyst",
+      "name": "Data Analysis Specialist",
       "category": "ops",
       "capabilities": [
-        {
-          "task_type": "kb_harvesting",
-          "keywords": [
-            "record",
-            "kb",
-            "best practice",
-            "lesson",
-            "pattern"
-          ],
-          "confidence": 0.95,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "project_mapping",
-          "keywords": [
-            "project map",
-            "dependencies",
-            "system",
-            "architecture"
-          ],
-          "confidence": 0.88,
-          "mode": "build"
-        },
-        {
-          "task_type": "confidence_tracking",
-          "keywords": [
-            "confidence",
-            "memory",
-            "weight",
-            "decay",
-            "learning"
-          ],
-          "confidence": 0.9,
-          "mode": "analyze"
-        },
-        {
-          "task_type": "documentation",
-          "keywords": [
-            "document",
-            "update",
-            "best practices",
-            "anti-pattern",
-            "recipe"
-          ],
-          "confidence": 0.92,
-          "mode": "build"
-        }
+        "gameplay_analysis",
+        "balance_analysis",
+        "report_generation"
       ],
-      "inputs": [
-        {
-          "name": "agent_messages.json:kb_entry",
-          "type": "json",
-          "required": true,
-          "description": "KB entry posted to agent message bus"
-        },
-        {
-          "name": "tools/autodev/status/kb_entries.jsonl",
-          "type": "file",
-          "required": false,
-          "description": "Accumulated knowledge base entries"
-        },
-        {
-          "name": "tools/autodev/project_map.json",
-          "type": "file",
-          "required": false,
-          "description": "Living project comprehension map"
-        }
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "git_commit",
+      "name": "Git Commit Agent",
+      "category": "ops",
+      "capabilities": [
+        "commit_creation",
+        "branch_management",
+        "change_analysis"
       ],
-      "outputs": [
-        {
-          "name": "docs/BEST_PRACTICES.md",
-          "type": "artifact",
-          "description": "Updated best practices documentation"
-        },
-        {
-          "name": "tools/autodev/project_map.json",
-          "type": "json",
-          "description": "Updated project comprehension map"
-        },
-        {
-          "name": "tools/autodev/memory/*.json",
-          "type": "artifact",
-          "description": "Per-agent memory and confidence weight files"
-        }
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "knowledge_keeper",
+      "name": "Knowledge Keeper",
+      "category": "ops",
+      "capabilities": [
+        "kb_harvesting",
+        "project_mapping",
+        "confidence_tracking",
+        "documentation"
       ],
-      "file_scope": [
-        "tools/autodev/status/kb_entries.jsonl",
-        "tools/autodev/project_map.json",
-        "tools/autodev/memory/**",
-        "docs/BEST_PRACTICES.md"
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "perf_battery",
+      "name": "Performance Battery Agent",
+      "category": "ops",
+      "capabilities": [
+        "battery"
       ],
-      "knowledge_types": [
-        "best_practice",
-        "anti_pattern",
-        "fix_recipe",
-        "design_decision",
-        "debug_solution"
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "perf_memory",
+      "name": "Performance Memory Agent",
+      "category": "ops",
+      "capabilities": [
+        "memory"
       ],
-      "dependencies": [
-        "studio_orchestrator"
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "asset-generator",
+      "name": "Asset Generator Agent — M.E.R.L.I.N.",
+      "category": "orchestration",
+      "capabilities": [
+        "asset generator"
       ],
-      "cost_profile": "haiku",
-      "max_concurrent": 1
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "data_analysis_specialist",
+      "name": "Data Analysis Specialist Agent",
+      "category": "orchestration",
+      "capabilities": [
+        "data analysis specialist"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "lora_gameplay_translator",
+      "name": "LoRA Gameplay Translator — M.E.R.L.I.N.",
+      "category": "orchestration",
+      "capabilities": [
+        "lora gameplay translator"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "lora-trainer",
+      "name": "LoRA Trainer Agent — M.E.R.L.I.N.",
+      "category": "orchestration",
+      "capabilities": [
+        "lora trainer"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "qa_integration",
+      "name": "QA Integration Agent",
+      "category": "orchestration",
+      "capabilities": [
+        "integration"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_regression",
+      "name": "QA Regression Agent",
+      "category": "orchestration",
+      "capabilities": [
+        "regression"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "studio_orchestrator",
+      "name": "Studio Orchestrator",
+      "category": "orchestration",
+      "capabilities": [
+        "studio_orchestration",
+        "agent_coordination",
+        "metrics_aggregation"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "studio-orchestrator-v2",
+      "name": "Studio Orchestrator v2 — M.E.R.L.I.N.",
+      "category": "orchestration",
+      "capabilities": [
+        "studio orchestrator v2"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "task_dispatcher",
+      "name": "Task Dispatcher",
+      "category": "orchestration",
+      "capabilities": [
+        "task_routing",
+        "complexity_analysis",
+        "workflow_design"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "CHANGELOG",
+      "name": "Agent CHANGELOG — M.E.R.L.I.N.",
+      "category": "quality",
+      "capabilities": [
+        "changelog"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "perf_auditor",
+      "name": "Agent: Performance Auditor",
+      "category": "quality",
+      "capabilities": [
+        "auditor"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "balance_tuner",
+      "name": "Balance Tuner Agent — M.E.R.L.I.N.",
+      "category": "quality",
+      "capabilities": [
+        "balance tuner"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "blender_qa_renderer",
+      "name": "Blender QA Renderer",
+      "category": "quality",
+      "capabilities": [
+        "blender qa renderer"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "content_card_writer",
+      "name": "Content Card Writer Agent",
+      "category": "quality",
+      "capabilities": [
+        "content card writer"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "content_dialogue",
+      "name": "Content Dialogue Agent",
+      "category": "quality",
+      "capabilities": [
+        "content dialogue"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "content_flavor_text",
+      "name": "Content Flavor Text Agent",
+      "category": "quality",
+      "capabilities": [
+        "content flavor text"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "content_merlin_voice",
+      "name": "Content Merlin Voice Agent",
+      "category": "quality",
+      "capabilities": [
+        "content merlin voice"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "debug_qa",
+      "name": "Debug QA Specialist",
+      "category": "quality",
+      "capabilities": [
+        "testing",
+        "bug_triage",
+        "code_validation",
+        "narrative_qa"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "game_designer",
+      "name": "Game Designer Agent — Game Design Expert",
+      "category": "quality",
+      "capabilities": [
+        "game designer"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "gd_narrative_flow",
+      "name": "GD Narrative Flow Agent",
+      "category": "quality",
+      "capabilities": [
+        "gd narrative flow"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "gd_reward_loop",
+      "name": "GD Reward Loop Agent",
+      "category": "quality",
+      "capabilities": [
+        "gd reward loop"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "gdscript_knowledge_base",
+      "name": "GDScript Knowledge Base — Corrections & Best Practices",
+      "category": "quality",
+      "capabilities": [
+        "gdscript knowledge base"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "lead_godot",
+      "name": "Lead Godot Agent — Lead Godot Engineer",
+      "category": "quality",
+      "capabilities": [
+        "lead godot"
+      ],
+      "cost_profile": "opus"
+    },
+    {
+      "id": "meta_bible_guardian",
+      "name": "Meta Bible Guardian Agent",
+      "category": "quality",
+      "capabilities": [
+        "meta bible guardian"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "meta_code_bible_sync",
+      "name": "Meta Code-Bible Sync Agent",
+      "category": "quality",
+      "capabilities": [
+        "meta code bible sync"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "meta_sprint_reviewer",
+      "name": "Meta Sprint Reviewer Agent",
+      "category": "quality",
+      "capabilities": [
+        "meta sprint reviewer"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "meta_tech_debt",
+      "name": "Meta Tech Debt Agent",
+      "category": "quality",
+      "capabilities": [
+        "meta tech debt"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "playtest_qa",
+      "name": "Playtest QA Specialist",
+      "category": "quality",
+      "capabilities": [
+        "playtest_execution",
+        "metric_analysis",
+        "issue_detection",
+        "trigger_routing"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "qa_boundary",
+      "name": "QA Boundary Agent",
+      "category": "quality",
+      "capabilities": [
+        "boundary"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_coverage",
+      "name": "QA Coverage Agent",
+      "category": "quality",
+      "capabilities": [
+        "coverage"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_data_integrity",
+      "name": "QA Data Integrity Agent",
+      "category": "quality",
+      "capabilities": [
+        "data integrity"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_determinism",
+      "name": "QA Determinism Agent",
+      "category": "quality",
+      "capabilities": [
+        "determinism"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_headless",
+      "name": "QA Headless Agent",
+      "category": "quality",
+      "capabilities": [
+        "headless"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_localization",
+      "name": "QA Localization Agent",
+      "category": "quality",
+      "capabilities": [
+        "localization"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_smoke",
+      "name": "QA Smoke Agent",
+      "category": "quality",
+      "capabilities": [
+        "smoke"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "qa_stress",
+      "name": "QA Stress Agent",
+      "category": "quality",
+      "capabilities": [
+        "stress"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "security_specialist",
+      "name": "Security Specialist",
+      "category": "quality",
+      "capabilities": [
+        "security_audit",
+        "save_validation",
+        "secret_scanning"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "ux_color_blind",
+      "name": "UX Color Blind Agent",
+      "category": "quality",
+      "capabilities": [
+        "color blind"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "visual_auditor",
+      "name": "Visual Auditor Agent",
+      "category": "quality",
+      "capabilities": [
+        "visual auditor"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "visual_predictor",
+      "name": "Visual Predictor Agent — M.E.R.L.I.N.",
+      "category": "quality",
+      "capabilities": [
+        "visual predictor"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "audio_music_flow",
+      "name": "Audio Music Flow Agent",
+      "category": "ui-ux",
+      "capabilities": [
+        "audio music flow"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "perf_loading",
+      "name": "Performance Loading Agent",
+      "category": "ui-ux",
+      "capabilities": [
+        "loading"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ui_consistency",
+      "name": "UI Consistency Rules",
+      "category": "ui-ux",
+      "capabilities": [
+        "ui_validation",
+        "color_enforcement",
+        "font_management"
+      ],
+      "cost_profile": "haiku"
+    },
+    {
+      "id": "ux_cognitive_load",
+      "name": "UX Cognitive Load Agent",
+      "category": "ui-ux",
+      "capabilities": [
+        "cognitive load"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ux_error_states",
+      "name": "UX Error States Agent",
+      "category": "ui-ux",
+      "capabilities": [
+        "error states"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ux_flow",
+      "name": "UX Flow Agent",
+      "category": "ui-ux",
+      "capabilities": [
+        "flow"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "ux_input",
+      "name": "UX Input Agent",
+      "category": "ui-ux",
+      "capabilities": [
+        "input"
+      ],
+      "cost_profile": "sonnet"
     }
-  },
-  "capability_index": {
-    "visual_style": [
-      {
-        "agent_id": "art_direction",
-        "confidence": 0.95,
-        "mode": "review"
-      }
-    ],
-    "asset_creation": [
-      {
-        "agent_id": "art_direction",
-        "confidence": 0.85,
-        "mode": "build"
-      }
-    ],
-    "shader_design": [
-      {
-        "agent_id": "art_direction",
-        "confidence": 0.8,
-        "mode": "build"
-      }
-    ],
-    "sfx_implementation": [
-      {
-        "agent_id": "audio_specialist",
-        "confidence": 0.9,
-        "mode": "build"
-      }
-    ],
-    "music_management": [
-      {
-        "agent_id": "audio_specialist",
-        "confidence": 0.8,
-        "mode": "build"
-      }
-    ],
-    "audio_review": [
-      {
-        "agent_id": "audio_specialist",
-        "confidence": 0.75,
-        "mode": "review"
-      }
-    ],
-    "gameplay_analysis": [
-      {
-        "agent_id": "data_analyst",
-        "confidence": 0.9,
-        "mode": "analyze"
-      }
-    ],
-    "balance_analysis": [
-      {
-        "agent_id": "data_analyst",
-        "confidence": 0.85,
-        "mode": "analyze"
-      }
-    ],
-    "report_generation": [
-      {
-        "agent_id": "data_analyst",
-        "confidence": 0.8,
-        "mode": "generate"
-      }
-    ],
-    "testing": [
-      {
-        "agent_id": "debug_qa",
-        "confidence": 0.95,
-        "mode": "build"
-      }
-    ],
-    "bug_triage": [
-      {
-        "agent_id": "debug_qa",
-        "confidence": 0.9,
-        "mode": "analyze"
-      }
-    ],
-    "code_validation": [
-      {
-        "agent_id": "debug_qa",
-        "confidence": 0.9,
-        "mode": "validate"
-      }
-    ],
-    "narrative_qa": [
-      {
-        "agent_id": "narrative_writer",
-        "confidence": 0.85,
-        "mode": "review"
-      },
-      {
-        "agent_id": "debug_qa",
-        "confidence": 0.7,
-        "mode": "review"
-      }
-    ],
-    "error_documentation": [
-      {
-        "agent_id": "gdscript_kb",
-        "confidence": 0.95,
-        "mode": "reference"
-      }
-    ],
-    "best_practices": [
-      {
-        "agent_id": "gdscript_kb",
-        "confidence": 0.9,
-        "mode": "reference"
-      }
-    ],
-    "learning_integration": [
-      {
-        "agent_id": "gdscript_kb",
-        "confidence": 0.85,
-        "mode": "build"
-      }
-    ],
-    "commit_creation": [
-      {
-        "agent_id": "git_commit",
-        "confidence": 0.95,
-        "mode": "build"
-      }
-    ],
-    "branch_management": [
-      {
-        "agent_id": "git_commit",
-        "confidence": 0.85,
-        "mode": "build"
-      }
-    ],
-    "change_analysis": [
-      {
-        "agent_id": "git_commit",
-        "confidence": 0.8,
-        "mode": "analyze"
-      }
-    ],
-    "performance_optimization": [
-      {
-        "agent_id": "godot_expert",
-        "confidence": 0.95,
-        "mode": "analyze"
-      }
-    ],
-    "gdextension": [
-      {
-        "agent_id": "godot_expert",
-        "confidence": 0.9,
-        "mode": "build"
-      }
-    ],
-    "architecture_review": [
-      {
-        "agent_id": "godot_expert",
-        "confidence": 0.85,
-        "mode": "review"
-      }
-    ],
-    "shader_optimization": [
-      {
-        "agent_id": "godot_expert",
-        "confidence": 0.8,
-        "mode": "build"
-      }
-    ],
-    "prompt_engineering": [
-      {
-        "agent_id": "llm_expert",
-        "confidence": 0.95,
-        "mode": "build"
-      }
-    ],
-    "rag_management": [
-      {
-        "agent_id": "llm_expert",
-        "confidence": 0.9,
-        "mode": "build"
-      }
-    ],
-    "output_parsing": [
-      {
-        "agent_id": "llm_expert",
-        "confidence": 0.9,
-        "mode": "build"
-      }
-    ],
-    "guardrails": [
-      {
-        "agent_id": "llm_expert",
-        "confidence": 0.85,
-        "mode": "review"
-      }
-    ],
-    "model_config": [
-      {
-        "agent_id": "llm_expert",
-        "confidence": 0.85,
-        "mode": "analyze"
-      }
-    ],
-    "training_translation": [
-      {
-        "agent_id": "lora_translator",
-        "confidence": 0.95,
-        "mode": "build"
-      }
-    ],
-    "dataset_design": [
-      {
-        "agent_id": "lora_translator",
-        "confidence": 0.9,
-        "mode": "generate"
-      }
-    ],
-    "pipeline_orchestration": [
-      {
-        "agent_id": "lora_translator",
-        "confidence": 0.85,
-        "mode": "orchestrate"
-      }
-    ],
-    "personality_enforcement": [
-      {
-        "agent_id": "merlin_guardian",
-        "confidence": 0.95,
-        "mode": "validate"
-      }
-    ],
-    "lore_consistency": [
-      {
-        "agent_id": "merlin_guardian",
-        "confidence": 0.9,
-        "mode": "review"
-      }
-    ],
-    "prompt_validation": [
-      {
-        "agent_id": "merlin_guardian",
-        "confidence": 0.8,
-        "mode": "validate"
-      }
-    ],
-    "card_writing": [
-      {
-        "agent_id": "narrative_writer",
-        "confidence": 0.95,
-        "mode": "generate"
-      }
-    ],
-    "arc_design": [
-      {
-        "agent_id": "narrative_writer",
-        "confidence": 0.9,
-        "mode": "generate"
-      }
-    ],
-    "lore_creation": [
-      {
-        "agent_id": "narrative_writer",
-        "confidence": 0.85,
-        "mode": "generate"
-      }
-    ],
-    "profiling": [
-      {
-        "agent_id": "performance_specialist",
-        "confidence": 0.9,
-        "mode": "analyze"
-      }
-    ],
-    "optimization": [
-      {
-        "agent_id": "performance_specialist",
-        "confidence": 0.85,
-        "mode": "build"
-      }
-    ],
-    "memory_analysis": [
-      {
-        "agent_id": "performance_specialist",
-        "confidence": 0.8,
-        "mode": "analyze"
-      }
-    ],
-    "security_audit": [
-      {
-        "agent_id": "security_specialist",
-        "confidence": 0.9,
-        "mode": "review"
-      }
-    ],
-    "save_validation": [
-      {
-        "agent_id": "security_specialist",
-        "confidence": 0.85,
-        "mode": "validate"
-      }
-    ],
-    "secret_scanning": [
-      {
-        "agent_id": "security_specialist",
-        "confidence": 0.9,
-        "mode": "analyze"
-      }
-    ],
-    "studio_orchestration": [
-      {
-        "agent_id": "studio_orchestrator",
-        "confidence": 0.95,
-        "mode": "orchestrate"
-      }
-    ],
-    "agent_coordination": [
-      {
-        "agent_id": "studio_orchestrator",
-        "confidence": 0.9,
-        "mode": "orchestrate"
-      }
-    ],
-    "metrics_aggregation": [
-      {
-        "agent_id": "studio_orchestrator",
-        "confidence": 0.8,
-        "mode": "analyze"
-      }
-    ],
-    "task_routing": [
-      {
-        "agent_id": "task_dispatcher",
-        "confidence": 0.95,
-        "mode": "orchestrate"
-      }
-    ],
-    "complexity_analysis": [
-      {
-        "agent_id": "task_dispatcher",
-        "confidence": 0.9,
-        "mode": "analyze"
-      }
-    ],
-    "workflow_design": [
-      {
-        "agent_id": "task_dispatcher",
-        "confidence": 0.85,
-        "mode": "orchestrate"
-      }
-    ],
-    "ui_validation": [
-      {
-        "agent_id": "ui_consistency",
-        "confidence": 0.95,
-        "mode": "validate"
-      }
-    ],
-    "color_enforcement": [
-      {
-        "agent_id": "ui_consistency",
-        "confidence": 0.9,
-        "mode": "validate"
-      }
-    ],
-    "font_management": [
-      {
-        "agent_id": "ui_consistency",
-        "confidence": 0.85,
-        "mode": "review"
-      }
-    ]
-  },
-  "keyword_index": {
-    "style": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "visual_style",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "best_practices",
-        "confidence": 0.9
-      }
-    ],
-    "palette": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "visual_style",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "color_enforcement",
-        "confidence": 0.9
-      }
-    ],
-    "color": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "visual_style",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "color_enforcement",
-        "confidence": 0.9
-      }
-    ],
-    "aesthetic": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "visual_style",
-        "confidence": 0.95
-      }
-    ],
-    "crt": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "visual_style",
-        "confidence": 0.95
-      }
-    ],
-    "pixel": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "visual_style",
-        "confidence": 0.95
-      }
-    ],
-    "sprite": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "asset_creation",
-        "confidence": 0.85
-      }
-    ],
-    "icon": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "asset_creation",
-        "confidence": 0.85
-      }
-    ],
-    "asset": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "asset_creation",
-        "confidence": 0.85
-      }
-    ],
-    "texture": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "asset_creation",
-        "confidence": 0.85
-      }
-    ],
-    "animation": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "asset_creation",
-        "confidence": 0.85
-      }
-    ],
-    "shader": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "shader_design",
-        "confidence": 0.8
-      },
-      {
-        "agent_id": "godot_expert",
-        "task_type": "shader_optimization",
-        "confidence": 0.8
-      }
-    ],
-    "effect": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "sfx_implementation",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "art_direction",
-        "task_type": "shader_design",
-        "confidence": 0.8
-      }
-    ],
-    "glow": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "shader_design",
-        "confidence": 0.8
-      }
-    ],
-    "scanline": [
-      {
-        "agent_id": "art_direction",
-        "task_type": "shader_design",
-        "confidence": 0.8
-      }
-    ],
-    "filter": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "guardrails",
-        "confidence": 0.85
-      },
-      {
-        "agent_id": "art_direction",
-        "task_type": "shader_design",
-        "confidence": 0.8
-      }
-    ],
-    "sound": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "sfx_implementation",
-        "confidence": 0.9
-      }
-    ],
-    "sfx": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "sfx_implementation",
-        "confidence": 0.9
-      }
-    ],
-    "audio": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "sfx_implementation",
-        "confidence": 0.9
-      }
-    ],
-    "beep": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "sfx_implementation",
-        "confidence": 0.9
-      }
-    ],
-    "procedural": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "sfx_implementation",
-        "confidence": 0.9
-      }
-    ],
-    "music": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "music_management",
-        "confidence": 0.8
-      }
-    ],
-    "bgm": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "music_management",
-        "confidence": 0.8
-      }
-    ],
-    "ambient": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "music_management",
-        "confidence": 0.8
-      }
-    ],
-    "soundtrack": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "music_management",
-        "confidence": 0.8
-      }
-    ],
-    "volume": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "audio_review",
-        "confidence": 0.75
-      }
-    ],
-    "mixing": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "audio_review",
-        "confidence": 0.75
-      }
-    ],
-    "timing": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "profiling",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "audio_review",
-        "confidence": 0.75
-      }
-    ],
-    "sync": [
-      {
-        "agent_id": "audio_specialist",
-        "task_type": "audio_review",
-        "confidence": 0.75
-      }
-    ],
-    "data": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "gameplay_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "metrics": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "gameplay_analysis",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "metrics_aggregation",
-        "confidence": 0.8
-      }
-    ],
-    "analytics": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "gameplay_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "statistics": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "gameplay_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "distribution": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "gameplay_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "balance": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "balance_analysis",
-        "confidence": 0.85
-      }
-    ],
-    "difficulty": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "balance_analysis",
-        "confidence": 0.85
-      }
-    ],
-    "curve": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "balance_analysis",
-        "confidence": 0.85
-      }
-    ],
-    "tuning": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "balance_analysis",
-        "confidence": 0.85
-      }
-    ],
-    "fairness": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "balance_analysis",
-        "confidence": 0.85
-      }
-    ],
-    "report": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "report_generation",
-        "confidence": 0.8
-      },
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "metrics_aggregation",
-        "confidence": 0.8
-      }
-    ],
-    "summary": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "report_generation",
-        "confidence": 0.8
-      },
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "metrics_aggregation",
-        "confidence": 0.8
-      }
-    ],
-    "dashboard": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "report_generation",
-        "confidence": 0.8
-      },
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "metrics_aggregation",
-        "confidence": 0.8
-      }
-    ],
-    "visualization": [
-      {
-        "agent_id": "data_analyst",
-        "task_type": "report_generation",
-        "confidence": 0.8
-      }
-    ],
-    "test": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "testing",
-        "confidence": 0.95
-      }
-    ],
-    "gut": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "testing",
-        "confidence": 0.95
-      }
-    ],
-    "unit test": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "testing",
-        "confidence": 0.95
-      }
-    ],
-    "integration": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "testing",
-        "confidence": 0.95
-      }
-    ],
-    "e2e": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "testing",
-        "confidence": 0.95
-      }
-    ],
-    "coverage": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "testing",
-        "confidence": 0.95
-      }
-    ],
-    "bug": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "bug_triage",
-        "confidence": 0.9
-      }
-    ],
-    "crash": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "bug_triage",
-        "confidence": 0.9
-      }
-    ],
-    "error": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "error_documentation",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "debug_qa",
-        "task_type": "bug_triage",
-        "confidence": 0.9
-      }
-    ],
-    "exception": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "bug_triage",
-        "confidence": 0.9
-      }
-    ],
-    "regression": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "bug_triage",
-        "confidence": 0.9
-      }
-    ],
-    "validate": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "code_validation",
-        "confidence": 0.9
-      }
-    ],
-    "lint": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "code_validation",
-        "confidence": 0.9
-      }
-    ],
-    "parse": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "code_validation",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "llm_expert",
-        "task_type": "output_parsing",
-        "confidence": 0.9
-      }
-    ],
-    "syntax": [
-      {
-        "agent_id": "debug_qa",
-        "task_type": "code_validation",
-        "confidence": 0.9
-      }
-    ],
-    "narrative": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "card_writing",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "debug_qa",
-        "task_type": "narrative_qa",
-        "confidence": 0.7
-      }
-    ],
-    "lore": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "lore_consistency",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "lore_creation",
-        "confidence": 0.85
-      },
-      {
-        "agent_id": "debug_qa",
-        "task_type": "narrative_qa",
-        "confidence": 0.7
-      }
-    ],
-    "consistency": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "narrative_qa",
-        "confidence": 0.85
-      },
-      {
-        "agent_id": "debug_qa",
-        "task_type": "narrative_qa",
-        "confidence": 0.7
-      }
-    ],
-    "dialogue": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "card_writing",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "debug_qa",
-        "task_type": "narrative_qa",
-        "confidence": 0.7
-      }
-    ],
-    "fix": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "error_documentation",
-        "confidence": 0.95
-      }
-    ],
-    "pattern": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "error_documentation",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "godot_expert",
-        "task_type": "architecture_review",
-        "confidence": 0.85
-      }
-    ],
-    "correction": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "error_documentation",
-        "confidence": 0.95
-      }
-    ],
-    "workaround": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "error_documentation",
-        "confidence": 0.95
-      }
-    ],
-    "best practice": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "best_practices",
-        "confidence": 0.9
-      }
-    ],
-    "idiom": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "best_practices",
-        "confidence": 0.9
-      }
-    ],
-    "convention": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "best_practices",
-        "confidence": 0.9
-      }
-    ],
-    "anti-pattern": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "best_practices",
-        "confidence": 0.9
-      }
-    ],
-    "learn": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "learning_integration",
-        "confidence": 0.85
-      }
-    ],
-    "feedback": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "learning_integration",
-        "confidence": 0.85
-      }
-    ],
-    "update kb": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "learning_integration",
-        "confidence": 0.85
-      }
-    ],
-    "new pattern": [
-      {
-        "agent_id": "gdscript_kb",
-        "task_type": "learning_integration",
-        "confidence": 0.85
-      }
-    ],
-    "commit": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "commit_creation",
-        "confidence": 0.95
-      }
-    ],
-    "stage": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "commit_creation",
-        "confidence": 0.95
-      }
-    ],
-    "diff": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "commit_creation",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "git_commit",
-        "task_type": "change_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "changelog": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "commit_creation",
-        "confidence": 0.95
-      }
-    ],
-    "conventional": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "commit_creation",
-        "confidence": 0.95
-      }
-    ],
-    "branch": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "branch_management",
-        "confidence": 0.85
-      }
-    ],
-    "merge": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "branch_management",
-        "confidence": 0.85
-      }
-    ],
-    "rebase": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "branch_management",
-        "confidence": 0.85
-      }
-    ],
-    "tag": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "branch_management",
-        "confidence": 0.85
-      }
-    ],
-    "version": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "branch_management",
-        "confidence": 0.85
-      }
-    ],
-    "changes": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "change_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "impact": [
-      {
-        "agent_id": "git_commit",
-        "task_type": "change_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "scope": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "complexity_analysis",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "git_commit",
-        "task_type": "change_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "slow": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "performance_optimization",
-        "confidence": 0.95
-      }
-    ],
-    "lag": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "performance_optimization",
-        "confidence": 0.95
-      }
-    ],
-    "fps": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "performance_optimization",
-        "confidence": 0.95
-      }
-    ],
-    "memory": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "performance_optimization",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "memory_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "bottleneck": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "performance_optimization",
-        "confidence": 0.95
-      }
-    ],
-    "profiling": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "performance_optimization",
-        "confidence": 0.95
-      }
-    ],
-    "gdextension": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "gdextension",
-        "confidence": 0.9
-      }
-    ],
-    "native": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "gdextension",
-        "confidence": 0.9
-      }
-    ],
-    "c++": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "gdextension",
-        "confidence": 0.9
-      }
-    ],
-    "binding": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "gdextension",
-        "confidence": 0.9
-      }
-    ],
-    "merlinllm": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "gdextension",
-        "confidence": 0.9
-      }
-    ],
-    "architecture": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "architecture_review",
-        "confidence": 0.85
-      }
-    ],
-    "singleton": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "architecture_review",
-        "confidence": 0.85
-      }
-    ],
-    "autoload": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "architecture_review",
-        "confidence": 0.85
-      }
-    ],
-    "signal": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "architecture_review",
-        "confidence": 0.85
-      }
-    ],
-    "gpu": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "shader_optimization",
-        "confidence": 0.8
-      }
-    ],
-    "render": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "shader_optimization",
-        "confidence": 0.8
-      }
-    ],
-    "visual": [
-      {
-        "agent_id": "godot_expert",
-        "task_type": "shader_optimization",
-        "confidence": 0.8
-      }
-    ],
-    "prompt": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "prompt_engineering",
-        "confidence": 0.95
-      }
-    ],
-    "template": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "prompt_engineering",
-        "confidence": 0.95
-      }
-    ],
-    "system prompt": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "prompt_engineering",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "prompt_validation",
-        "confidence": 0.8
-      }
-    ],
-    "few-shot": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "prompt_engineering",
-        "confidence": 0.95
-      }
-    ],
-    "chain-of-thought": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "prompt_engineering",
-        "confidence": 0.95
-      }
-    ],
-    "rag": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "rag_management",
-        "confidence": 0.9
-      }
-    ],
-    "context": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "rag_management",
-        "confidence": 0.9
-      }
-    ],
-    "retrieval": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "rag_management",
-        "confidence": 0.9
-      }
-    ],
-    "embedding": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "rag_management",
-        "confidence": 0.9
-      }
-    ],
-    "vector": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "rag_management",
-        "confidence": 0.9
-      }
-    ],
-    "json": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "output_parsing",
-        "confidence": 0.9
-      }
-    ],
-    "repair": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "output_parsing",
-        "confidence": 0.9
-      }
-    ],
-    "format": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "output_parsing",
-        "confidence": 0.9
-      }
-    ],
-    "gbnf": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "output_parsing",
-        "confidence": 0.9
-      }
-    ],
-    "grammar": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "output_parsing",
-        "confidence": 0.9
-      }
-    ],
-    "guardrail": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "guardrails",
-        "confidence": 0.85
-      }
-    ],
-    "hallucination": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "guardrails",
-        "confidence": 0.85
-      }
-    ],
-    "toxicity": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "guardrails",
-        "confidence": 0.85
-      }
-    ],
-    "safety": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "guardrails",
-        "confidence": 0.85
-      }
-    ],
-    "ollama": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "model_config",
-        "confidence": 0.85
-      }
-    ],
-    "qwen": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "model_config",
-        "confidence": 0.85
-      }
-    ],
-    "temperature": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "model_config",
-        "confidence": 0.85
-      }
-    ],
-    "top_p": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "model_config",
-        "confidence": 0.85
-      }
-    ],
-    "parameters": [
-      {
-        "agent_id": "llm_expert",
-        "task_type": "model_config",
-        "confidence": 0.85
-      }
-    ],
-    "lora": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "training_translation",
-        "confidence": 0.95
-      }
-    ],
-    "fine-tune": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "training_translation",
-        "confidence": 0.95
-      }
-    ],
-    "training": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "training_translation",
-        "confidence": 0.95
-      }
-    ],
-    "dataset": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "training_translation",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "lora_translator",
-        "task_type": "dataset_design",
-        "confidence": 0.9
-      }
-    ],
-    "adapter": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "training_translation",
-        "confidence": 0.95
-      }
-    ],
-    "examples": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "dataset_design",
-        "confidence": 0.9
-      }
-    ],
-    "golden": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "dataset_design",
-        "confidence": 0.9
-      }
-    ],
-    "training data": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "dataset_design",
-        "confidence": 0.9
-      }
-    ],
-    "pipeline": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "pipeline_orchestration",
-        "confidence": 0.85
-      },
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "workflow_design",
-        "confidence": 0.85
-      }
-    ],
-    "kaggle": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "pipeline_orchestration",
-        "confidence": 0.85
-      }
-    ],
-    "training run": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "pipeline_orchestration",
-        "confidence": 0.85
-      }
-    ],
-    "hyperparameter": [
-      {
-        "agent_id": "lora_translator",
-        "task_type": "pipeline_orchestration",
-        "confidence": 0.85
-      }
-    ],
-    "merlin": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "personality_enforcement",
-        "confidence": 0.95
-      }
-    ],
-    "persona": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "personality_enforcement",
-        "confidence": 0.95
-      }
-    ],
-    "character": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "personality_enforcement",
-        "confidence": 0.95
-      }
-    ],
-    "voice": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "personality_enforcement",
-        "confidence": 0.95
-      },
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "narrative_qa",
-        "confidence": 0.85
-      }
-    ],
-    "personality": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "personality_enforcement",
-        "confidence": 0.95
-      }
-    ],
-    "canon": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "lore_consistency",
-        "confidence": 0.9
-      }
-    ],
-    "continuity": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "lore_consistency",
-        "confidence": 0.9
-      }
-    ],
-    "coherence": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "lore_consistency",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "narrative_qa",
-        "confidence": 0.85
-      }
-    ],
-    "instruction": [
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "prompt_validation",
-        "confidence": 0.8
-      }
-    ],
-    "tone": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "narrative_qa",
-        "confidence": 0.85
-      },
-      {
-        "agent_id": "merlin_guardian",
-        "task_type": "prompt_validation",
-        "confidence": 0.8
-      }
-    ],
-    "card": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "card_writing",
-        "confidence": 0.95
-      }
-    ],
-    "story": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "card_writing",
-        "confidence": 0.95
-      }
-    ],
-    "scenario": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "card_writing",
-        "confidence": 0.95
-      }
-    ],
-    "choice": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "card_writing",
-        "confidence": 0.95
-      }
-    ],
-    "arc": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "arc_design",
-        "confidence": 0.9
-      }
-    ],
-    "quest": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "arc_design",
-        "confidence": 0.9
-      }
-    ],
-    "journey": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "arc_design",
-        "confidence": 0.9
-      }
-    ],
-    "progression": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "arc_design",
-        "confidence": 0.9
-      }
-    ],
-    "ending": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "arc_design",
-        "confidence": 0.9
-      }
-    ],
-    "celtic": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "lore_creation",
-        "confidence": 0.85
-      }
-    ],
-    "mythology": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "lore_creation",
-        "confidence": 0.85
-      }
-    ],
-    "ogham": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "lore_creation",
-        "confidence": 0.85
-      }
-    ],
-    "broceliande": [
-      {
-        "agent_id": "narrative_writer",
-        "task_type": "lore_creation",
-        "confidence": 0.85
-      }
-    ],
-    "profile": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "profiling",
-        "confidence": 0.9
-      }
-    ],
-    "benchmark": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "profiling",
-        "confidence": 0.9
-      }
-    ],
-    "measure": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "profiling",
-        "confidence": 0.9
-      }
-    ],
-    "frame": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "profiling",
-        "confidence": 0.9
-      }
-    ],
-    "optimize": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "optimization",
-        "confidence": 0.85
-      }
-    ],
-    "cache": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "optimization",
-        "confidence": 0.85
-      }
-    ],
-    "pool": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "optimization",
-        "confidence": 0.85
-      }
-    ],
-    "batch": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "optimization",
-        "confidence": 0.85
-      }
-    ],
-    "lazy": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "optimization",
-        "confidence": 0.85
-      }
-    ],
-    "leak": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "memory_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "allocation": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "memory_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "gc": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "memory_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "reference": [
-      {
-        "agent_id": "performance_specialist",
-        "task_type": "memory_analysis",
-        "confidence": 0.8
-      }
-    ],
-    "security": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "security_audit",
-        "confidence": 0.9
-      }
-    ],
-    "vulnerability": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "security_audit",
-        "confidence": 0.9
-      }
-    ],
-    "injection": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "security_audit",
-        "confidence": 0.9
-      }
-    ],
-    "xss": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "security_audit",
-        "confidence": 0.9
-      }
-    ],
-    "owasp": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "security_audit",
-        "confidence": 0.9
-      }
-    ],
-    "save": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "save_validation",
-        "confidence": 0.85
-      }
-    ],
-    "serialize": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "save_validation",
-        "confidence": 0.85
-      }
-    ],
-    "deserialize": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "save_validation",
-        "confidence": 0.85
-      }
-    ],
-    "tamper": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "save_validation",
-        "confidence": 0.85
-      }
-    ],
-    "secret": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "secret_scanning",
-        "confidence": 0.9
-      }
-    ],
-    "api key": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "secret_scanning",
-        "confidence": 0.9
-      }
-    ],
-    "credential": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "secret_scanning",
-        "confidence": 0.9
-      }
-    ],
-    "token": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "secret_scanning",
-        "confidence": 0.9
-      }
-    ],
-    "password": [
-      {
-        "agent_id": "security_specialist",
-        "task_type": "secret_scanning",
-        "confidence": 0.9
-      }
-    ],
-    "studio": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "studio_orchestration",
-        "confidence": 0.95
-      }
-    ],
-    "overnight": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "studio_orchestration",
-        "confidence": 0.95
-      }
-    ],
-    "deep test": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "studio_orchestration",
-        "confidence": 0.95
-      }
-    ],
-    "content sprint": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "studio_orchestration",
-        "confidence": 0.95
-      }
-    ],
-    "polish": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "studio_orchestration",
-        "confidence": 0.95
-      }
-    ],
-    "coordinate": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "agent_coordination",
-        "confidence": 0.9
-      }
-    ],
-    "wave": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "agent_coordination",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "workflow_design",
-        "confidence": 0.85
-      }
-    ],
-    "cycle": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "agent_coordination",
-        "confidence": 0.9
-      }
-    ],
-    "parallel": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "agent_coordination",
-        "confidence": 0.9
-      },
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "workflow_design",
-        "confidence": 0.85
-      }
-    ],
-    "sequential": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "agent_coordination",
-        "confidence": 0.9
-      }
-    ],
-    "aggregate": [
-      {
-        "agent_id": "studio_orchestrator",
-        "task_type": "metrics_aggregation",
-        "confidence": 0.8
-      }
-    ],
-    "dispatch": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "task_routing",
-        "confidence": 0.95
-      }
-    ],
-    "route": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "task_routing",
-        "confidence": 0.95
-      }
-    ],
-    "assign": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "task_routing",
-        "confidence": 0.95
-      }
-    ],
-    "delegate": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "task_routing",
-        "confidence": 0.95
-      }
-    ],
-    "classify": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "task_routing",
-        "confidence": 0.95
-      }
-    ],
-    "complexity": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "complexity_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "estimate": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "complexity_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "decompose": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "complexity_analysis",
-        "confidence": 0.9
-      }
-    ],
-    "workflow": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "workflow_design",
-        "confidence": 0.85
-      }
-    ],
-    "sequence": [
-      {
-        "agent_id": "task_dispatcher",
-        "task_type": "workflow_design",
-        "confidence": 0.85
-      }
-    ],
-    "ui": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "ui_validation",
-        "confidence": 0.95
-      }
-    ],
-    "interface": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "ui_validation",
-        "confidence": 0.95
-      }
-    ],
-    "layout": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "ui_validation",
-        "confidence": 0.95
-      }
-    ],
-    "component": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "ui_validation",
-        "confidence": 0.95
-      }
-    ],
-    "theme": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "ui_validation",
-        "confidence": 0.95
-      }
-    ],
-    "crt_palette": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "color_enforcement",
-        "confidence": 0.9
-      }
-    ],
-    "gbc": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "color_enforcement",
-        "confidence": 0.9
-      }
-    ],
-    "merlinvisual": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "color_enforcement",
-        "confidence": 0.9
-      }
-    ],
-    "font": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "font_management",
-        "confidence": 0.85
-      }
-    ],
-    "vt323": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "font_management",
-        "confidence": 0.85
-      }
-    ],
-    "typography": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "font_management",
-        "confidence": 0.85
-      }
-    ],
-    "text": [
-      {
-        "agent_id": "ui_consistency",
-        "task_type": "font_management",
-        "confidence": 0.85
-      }
-    ]
-  },
-  "category_index": {
-    "creative": [
-      "art_direction",
-      "asset_generator",
-      "audio_specialist"
-    ],
-    "ops": [
-      "data_analyst",
-      "git_commit",
-      "knowledge_keeper"
-    ],
-    "quality": [
-      "debug_qa",
-      "playtest_qa",
-      "security_specialist"
-    ],
-    "knowledge": [
-      "gdscript_kb"
-    ],
-    "core": [
-      "godot_expert",
-      "performance_specialist"
-    ],
-    "llm": [
-      "llm_expert",
-      "lora_trainer",
-      "lora_translator"
-    ],
-    "narrative": [
-      "merlin_guardian",
-      "narrative_writer"
-    ],
-    "orchestration": [
-      "studio_orchestrator",
-      "task_dispatcher"
-    ],
-    "ui-ux": [
-      "ui_consistency"
-    ]
-  },
-  "dependency_graph": {
-    "art_direction": [
-      "ui_consistency"
-    ],
-    "audio_specialist": [
-      "ui_consistency"
-    ],
-    "data_analyst": [
-      "debug_qa"
-    ],
-    "debug_qa": [
-      "godot_expert",
-      "gdscript_kb"
-    ],
-    "gdscript_kb": [
-      "debug_qa",
-      "godot_expert"
-    ],
-    "git_commit": [
-      "security_specialist"
-    ],
-    "godot_expert": [
-      "debug_qa",
-      "performance_specialist"
-    ],
-    "llm_expert": [
-      "narrative_writer",
-      "lora_translator"
-    ],
-    "lora_translator": [
-      "llm_expert",
-      "narrative_writer"
-    ],
-    "merlin_guardian": [
-      "narrative_writer"
-    ],
-    "narrative_writer": [
-      "llm_expert",
-      "merlin_guardian"
-    ],
-    "performance_specialist": [
-      "godot_expert"
-    ],
-    "security_specialist": [
-      "debug_qa"
-    ],
-    "studio_orchestrator": [
-      "task_dispatcher",
-      "debug_qa"
-    ],
-    "task_dispatcher": [
-      "studio_orchestrator"
-    ],
-    "ui_consistency": [
-      "art_direction"
-    ],
-    "playtest_qa": [
-      "task_dispatcher",
-      "studio_orchestrator"
-    ],
-    "lora_trainer": [
-      "task_dispatcher"
-    ],
-    "asset_generator": [
-      "art_direction",
-      "task_dispatcher"
-    ],
-    "knowledge_keeper": [
-      "studio_orchestrator"
-    ]
-  }
+  ]
 }

@@ -1,0 +1,41 @@
+{
+  "id": "data_analysis_specialist",
+  "name": "Data Analysis Specialist Agent",
+  "version": "1.0.0",
+  "description": "**One-line summary**: Auto-created specialist for data_analysis",
+  "agent_file": ".claude/agents/data_analysis_specialist.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "data analysis specialist",
+      "keywords": [
+        "trigger=\"data_analysis\" action=\"invoke for auto-created specialist for data_analysis\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.5,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "opus"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "perf_network",
+  "name": "Performance Network Agent",
+  "version": "1.0.0",
+  "description": "You are the **Network Considerations Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/perf_network.md",
+  "category": "llm",
+  "capabilities": [
+    {
+      "task_type": "network",
+      "keywords": [
+        "network",
+        "considerations",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "offlinefirst",
+        "architecture",
+        "dependency"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "addons/merlin_ai/ollama_backend.gd",
+    "addons/merlin_ai/merlin_ai.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "scripts/merlin/merlin_card_system.gd"
+  ],
+  "cost_profile": "opus"
+}

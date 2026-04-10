@@ -1,0 +1,47 @@
+{
+  "id": "visual_auditor",
+  "name": "Visual Auditor Agent",
+  "version": "1.0.0",
+  "description": "Static analysis of graphical identity and visual consistency across the MERLIN codebase.",
+  "agent_file": ".claude/agents/visual_auditor.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "visual auditor",
+      "keywords": [
+        "- any file in `scripts/ui/` is modified"
+      ],
+      "confidence": 0.5,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/ui/",
+    "scripts/autoload/merlin_visual.gd",
+    "scripts/run/biome_config.gd",
+    "scripts/run/biome_particles.gd"
+  ],
+  "cost_profile": "sonnet"
+}

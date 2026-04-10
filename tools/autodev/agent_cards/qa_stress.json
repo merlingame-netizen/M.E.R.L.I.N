@@ -1,0 +1,57 @@
+{
+  "id": "qa_stress",
+  "name": "QA Stress Agent",
+  "version": "1.0.0",
+  "description": "You are the **Stress & Load Tester** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/qa_stress.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "stress",
+      "keywords": [
+        "stress",
+        "load",
+        "tester",
+        "project",
+        "responsible",
+        "for:",
+        "testing",
+        "extreme",
+        "values",
+        "rapid"
+      ],
+      "confidence": 0.7,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/ui/merlin_game_controller.gd",
+    "addons/merlin_ai/merlin_ai.gd",
+    "addons/merlin_ai/ollama_backend.gd"
+  ],
+  "cost_profile": "sonnet"
+}

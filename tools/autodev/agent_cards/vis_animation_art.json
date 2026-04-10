@@ -1,0 +1,54 @@
+{
+  "id": "vis_animation_art",
+  "name": "Visual Animation Art Agent",
+  "version": "1.0.0",
+  "description": "You are the **Art Animation Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/vis_animation_art.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "animation art",
+      "keywords": [
+        "animation",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "sprite",
+        "sheet",
+        "animations",
+        "procedural"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_visual.gd",
+    "docs/70_graphic/UI_UX_BIBLE.md"
+  ],
+  "cost_profile": "sonnet"
+}

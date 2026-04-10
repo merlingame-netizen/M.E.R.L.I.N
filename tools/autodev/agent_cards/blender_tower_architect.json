@@ -1,0 +1,51 @@
+{
+  "id": "blender_tower_architect",
+  "name": "Blender Tower Architect Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**One-line summary**: Designs and builds Celtic stone towers, ruins, dolmens, menhirs, and fortifications in Blender with procedural stone texturing.",
+  "agent_file": ".claude/agents/blender_tower_architect.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender tower architect",
+      "keywords": [
+        "trigger=\"tower",
+        "celtic architecture",
+        "stone circle",
+        "dolmen",
+        "menhir",
+        "ruin",
+        "castle",
+        "fortress",
+        "roundhouse",
+        "cairn",
+        "standing stone\" action=\"design and build celtic stone architecture in blender\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "opus"
+}

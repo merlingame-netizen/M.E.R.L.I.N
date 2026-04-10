@@ -1,0 +1,56 @@
+{
+  "id": "qa_smoke",
+  "name": "QA Smoke Agent",
+  "version": "1.0.0",
+  "description": "You are the **Smoke Test Designer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/qa_smoke.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "smoke",
+      "keywords": [
+        "smoke",
+        "test",
+        "designer",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "quick",
+        "pass/fail",
+        "health"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "tools/cli.py",
+    "tools/cli.py godot smoke",
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_card_system.gd"
+  ],
+  "cost_profile": "sonnet"
+}

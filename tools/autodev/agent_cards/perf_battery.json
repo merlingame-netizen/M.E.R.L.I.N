@@ -1,0 +1,55 @@
+{
+  "id": "perf_battery",
+  "name": "Performance Battery Agent",
+  "version": "1.0.0",
+  "description": "You are the **Battery Optimization Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/perf_battery.md",
+  "category": "ops",
+  "capabilities": [
+    {
+      "task_type": "battery",
+      "keywords": [
+        "battery",
+        "optimization",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "minimizing",
+        "power",
+        "consumption",
+        "mobile"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "addons/merlin_ai/ollama_backend.gd",
+    "scripts/ui/merlin_game_controller.gd",
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "haiku"
+}

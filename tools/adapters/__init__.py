@@ -45,6 +45,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "data-explorer": ("adapters.data_explorer_adapter", "DataExplorerAdapter", None),
     # ── Wave 11 — RAG (local vector search) ──────────────────────────
     "rag":           ("adapters.rag_adapter",           "RagAdapter",          None),
+    # ── Wave 12 — Studio Bridge (autonomous orchestrator) ────────────
+    "studio":        ("adapters.studio_adapter",        "StudioAdapter",       None),
 }
 
 

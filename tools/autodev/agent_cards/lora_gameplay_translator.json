@@ -1,0 +1,55 @@
+{
+  "id": "lora_gameplay_translator",
+  "name": "LoRA Gameplay Translator — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**POINT D'ENTREE FINE-TUNING** — Quand l'utilisateur demande une adaptation du LLM",
+  "agent_file": ".claude/agents/lora_gameplay_translator.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "lora gameplay translator",
+      "keywords": [
+        "```",
+        "lora",
+        "gameplay",
+        "translator",
+        "projet",
+        "role",
+        "faire",
+        "pont",
+        "entre",
+        "demande",
+        "gameplay/narrative"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/LORA_TRAINING_SPEC.html",
+    "docs/VISION_LLM_BI_CERVEAUX.html"
+  ],
+  "cost_profile": "opus"
+}

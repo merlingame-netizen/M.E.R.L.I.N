@@ -1,0 +1,45 @@
+{
+  "id": "gdscript_knowledge_base",
+  "name": "GDScript Knowledge Base — Corrections & Best Practices",
+  "version": "1.0.0",
+  "description": "**FICHIER VIVANT** — Mis a jour automatiquement par l'agent Debug et Optimizer.",
+  "agent_file": ".claude/agents/gdscript_knowledge_base.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "gdscript knowledge base",
+      "keywords": [
+        "gdscript knowledge base"
+      ],
+      "confidence": 0.5,
+      "mode": "reference"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "tools/validate_editor_parse.ps1",
+    "scenes/TestAutoPlay.tscn"
+  ],
+  "cost_profile": "opus"
+}

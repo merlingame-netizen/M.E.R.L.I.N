@@ -1,0 +1,54 @@
+{
+  "id": "vis_shader",
+  "name": "Visual Shader Agent",
+  "version": "1.0.0",
+  "description": "You are the **Shader Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/vis_shader.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "shader",
+      "keywords": [
+        "shader",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "optimizing",
+        "postprocessing",
+        "effects",
+        "creating"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/70_graphic/UI_UX_BIBLE.md",
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "sonnet"
+}

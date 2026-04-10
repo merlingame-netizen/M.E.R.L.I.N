@@ -1,0 +1,55 @@
+{
+  "id": "content_flavor_text",
+  "name": "Content Flavor Text Agent",
+  "version": "1.0.0",
+  "description": "You are the **Flavor Text Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/content_flavor_text.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "content flavor text",
+      "keywords": [
+        "flavor",
+        "text",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "writing",
+        "evocative",
+        "biome",
+        "descriptions"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/merlin/merlin_constants.gd",
+    "docs/70_graphic/UI_UX_BIBLE.md"
+  ],
+  "cost_profile": "sonnet"
+}

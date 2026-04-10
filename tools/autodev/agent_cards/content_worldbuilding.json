@@ -1,0 +1,55 @@
+{
+  "id": "content_worldbuilding",
+  "name": "Content Worldbuilding Agent",
+  "version": "1.0.0",
+  "description": "You are the **Worldbuilding Coherence Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/content_worldbuilding.md",
+  "category": "narrative",
+  "capabilities": [
+    {
+      "task_type": "content worldbuilding",
+      "keywords": [
+        "worldbuilding",
+        "coherence",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "maintaining",
+        "timeline",
+        "geography",
+        "cosmology"
+      ],
+      "confidence": 0.7,
+      "mode": "reference"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/merlin/merlin_constants.gd",
+    "docs/20_card_system/DOC_15_Faction_Alignment_System.md"
+  ],
+  "cost_profile": "sonnet"
+}

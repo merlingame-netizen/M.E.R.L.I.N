@@ -1,0 +1,41 @@
+{
+  "id": "ui_consistency_rules",
+  "name": "UI Consistency Rules — M.E.R.L.I.N. Agent Instructions",
+  "version": "1.0.0",
+  "description": "This document defines the binding rules for all agents working on UI/UX in M.E.R.L.I.N.",
+  "agent_file": ".claude/agents/ui_consistency_rules.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "consistency rules",
+      "keywords": [
+        "ui consistency rules"
+      ],
+      "confidence": 0.5,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "sonnet"
+}

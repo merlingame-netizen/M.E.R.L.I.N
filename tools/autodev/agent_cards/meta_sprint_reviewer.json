@@ -1,0 +1,55 @@
+{
+  "id": "meta_sprint_reviewer",
+  "name": "Meta Sprint Reviewer Agent",
+  "version": "1.0.0",
+  "description": "You are the **Sprint Reviewer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/meta_sprint_reviewer.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "meta sprint reviewer",
+      "keywords": [
+        "sprint",
+        "reviewer",
+        "project",
+        "responsible",
+        "for:",
+        "postsprint",
+        "quality",
+        "assessment",
+        "changes",
+        "made"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/test/",
+    "docs/DEV_PLAN_V2.5.md"
+  ],
+  "cost_profile": "sonnet"
+}

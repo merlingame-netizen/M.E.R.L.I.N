@@ -1,0 +1,55 @@
+{
+  "id": "meta_tech_debt",
+  "name": "Meta Tech Debt Agent",
+  "version": "1.0.0",
+  "description": "You are the **Tech Debt Tracker** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/meta_tech_debt.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "meta tech debt",
+      "keywords": [
+        "tech",
+        "debt",
+        "tracker",
+        "project",
+        "responsible",
+        "for:",
+        "identifying",
+        "cataloging",
+        "technical"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/",
+    "scripts/ui/",
+    "addons/merlin_ai/",
+    "scripts/test/"
+  ],
+  "cost_profile": "sonnet"
+}

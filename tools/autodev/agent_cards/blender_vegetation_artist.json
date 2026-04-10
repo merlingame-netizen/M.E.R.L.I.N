@@ -1,0 +1,52 @@
+{
+  "id": "blender_vegetation_artist",
+  "name": "Blender Vegetation Artist Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**One-line summary**: Creates low-poly trees, bushes, grass tufts, mushrooms, and flowers in Blender with flat shading and MultiMesh-ready topology.",
+  "agent_file": ".claude/agents/blender_vegetation_artist.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender vegetation artist",
+      "keywords": [
+        "trigger=\"vegetation",
+        "tree",
+        "bush",
+        "grass",
+        "mushroom",
+        "flora",
+        "forest",
+        "foliage",
+        "plant",
+        "hedge",
+        "vine",
+        "fern\" action=\"create low-poly vegetation assets in blender\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "opus"
+}

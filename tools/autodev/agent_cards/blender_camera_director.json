@@ -1,0 +1,43 @@
+{
+  "id": "blender_camera_director",
+  "name": "Blender Camera Director",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/blender_camera_director.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender camera director",
+      "keywords": [
+        "- user requests camera setup",
+        "framing",
+        "or composition guidance"
+      ],
+      "confidence": 0.5,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "haiku"
+}

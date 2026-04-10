@@ -156,6 +156,86 @@
       "agent": "godot_expert",
       "files": ["scripts/autoload/game_time_manager.gd"],
       "description": "Singleton qui expose : current_time_normalized (0.0-1.0), current_season (printemps/été/automne/hiver), moon_phase (string), active_festival (string ou vide). Synchronisé avec l'heure système réelle. Branché sur Calendar.gd existant. Signal time_updated(normalized)."
+    },
+    {
+      "id": "P0-DEADCODE-1",
+      "phase": 0,
+      "priority": 1,
+      "status": "pending",
+      "title": "Supprimer dead code merlin_constants.gd (14 ELEMENTS, ESSENCE_*, FLUX_*, etc.)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd"],
+      "description": "DEV_PLAN Phase 0: Supprimer ELEMENTS (14), ESSENCE_DROP_*, ESSENCE_ANCHOR_CARDS, ESSENCE_BASE_REWARDS, ESSENCE_VICTORY_BONUS, ESSENCE_CHUTE_BONUS, ESSENCE_MINIGAME_BONUS, ESSENCE_OGHAM_BONUS, ESSENCE_FACTION_BONUS, FLUX_*, RUN_TYPOLOGIES, DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS, BOND_TIERS, OGHAM_STARTER_SKILLS, CardOption enum. validate.bat apres."
+    },
+    {
+      "id": "P0-DEADCODE-2",
+      "phase": 0,
+      "priority": 2,
+      "status": "pending",
+      "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_store.gd"],
+      "description": "DEV_PLAN Phase 0: Supprimer meta state keys: essence{14}, ogham_fragments, liens, gloire_points, bestiole_evolution. Renommer _init_triade_run -> _init_run, _resolve_triade_choice -> _resolve_choice, _check_triade_run_end -> _check_run_end, _apply_triade_effect -> _apply_effect, _handle_triade_run_end -> _handle_run_end."
+    },
+    {
+      "id": "P0-DEADCODE-3",
+      "phase": 0,
+      "priority": 3,
+      "status": "pending",
+      "title": "Supprimer TRIADE_ action dispatch prefix dans store + callers",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd", "scripts/test_merlin_store.gd"],
+      "description": "DEV_PLAN Phase 0: Renommer TRIADE_START_RUN->START_RUN, TRIADE_GET_CARD->GET_CARD, TRIADE_RESOLVE_CHOICE->RESOLVE_CHOICE, TRIADE_END_RUN->END_RUN, TRIADE_DAMAGE_LIFE->DAMAGE_LIFE, TRIADE_HEAL_LIFE->HEAL_LIFE, TRIADE_GENERATE_MAP->GENERATE_MAP, TRIADE_SELECT_NODE->SELECT_NODE, TRIADE_PROGRESS_MISSION->PROGRESS_MISSION, TRIADE_USE_SKILL->USE_SKILL, TRIADE_APPLY_EFFECTS->APPLY_EFFECTS. Dans tous les callers."
+    },
+    {
+      "id": "P0-DEADCODE-4",
+      "phase": 0,
+      "priority": 4,
+      "status": "pending",
+      "title": "Supprimer dead code merlin_card_system.gd (GAUGES, bestiole)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_card_system.gd"],
+      "description": "DEV_PLAN Phase 0: Supprimer GAUGES const, gauge init in init_run(), gauge checks in check_run_end(), _get_critical_gauges(), gauge effects in _apply_card_effects(), bestiole context block, _get_bestiole_modifier()."
+    },
+    {
+      "id": "P0-DEADCODE-5",
+      "phase": 0,
+      "priority": 5,
+      "status": "pending",
+      "title": "Supprimer dead files (bestiole, souffle HUD, D20 dice)",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/bestiole_sprite.gd", "scripts/ui/bestiole_wheel_system.gd", "scripts/ui/bestiole_creature.gd", "scripts/ui/pixel_bestiole_fox.gd", "scripts/minigames/mg_de_du_destin.gd"],
+      "description": "DEV_PLAN Phase 0: Supprimer entierement les fichiers de systemes morts: bestiole_sprite.gd, bestiole_wheel_system.gd, bestiole_creature.gd, pixel_bestiole_fox.gd, mg_de_du_destin.gd. Verifier existence avant suppression."
+    },
+    {
+      "id": "P1-CONSTANTS-1",
+      "phase": 1,
+      "priority": 6,
+      "status": "pending",
+      "title": "Aligner 18 Oghams sur bible v2.4 (effets corrects)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd"],
+      "description": "DEV_PLAN Phase 1A: Corriger divergences code/bible: duir->heal_immediate(12), onn->add_biome_currency(10), nuin->replace_worst_option, quert->heal_immediate(8), ruis->heal_and_cost(+18PV,-5monnaie), saille->currency_and_heal(+8,+3), ur verifier params. Tous 18 Oghams avec 10 champs obligatoires."
+    },
+    {
+      "id": "P1-CONSTANTS-2",
+      "phase": 1,
+      "priority": 7,
+      "status": "pending",
+      "title": "Ajouter 8 biomes avec seuils maturite et EFFECT_CAPS",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd"],
+      "description": "DEV_PLAN Phase 1B+1C: Ajouter BIOMES dict (8 biomes avec tous champs: name, subtitle, season, difficulty, maturity_threshold, oghams_affinity, currency_name, card_interval_range, pnj, arc, arc_cards, arc_condition). Ajouter BIOME_MATURITY_THRESHOLDS, MATURITY_WEIGHTS. Ajouter EFFECT_CAPS, MULTIPLIER_TABLE, ANAM_REWARDS, TALENT_TIERS."
+    },
+    {
+      "id": "P1-CONSTANTS-3",
+      "phase": 1,
+      "priority": 8,
+      "status": "pending",
+      "title": "Ajouter 45 verbes d'action + mapping champs lexicaux + MOS config",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd"],
+      "description": "DEV_PLAN Phase 1D+1F: Ajouter ACTION_VERBS (8 champs + neutre, 45 verbes), FIELD_MINIGAMES mapping. Ajouter MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS, IN_GAME_PERIODS."
     }
   ]
 }

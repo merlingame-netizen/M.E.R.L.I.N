@@ -1,0 +1,44 @@
+{
+  "id": "blender_animator",
+  "name": "Blender Animator",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/blender_animator.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender animator",
+      "keywords": [
+        "- any animation is requested (keyframe",
+        "shape key",
+        "orbital",
+        "camera path)"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "sonnet"
+}

@@ -1,0 +1,54 @@
+{
+  "id": "audio_procedural",
+  "name": "Audio Procedural Agent",
+  "version": "1.0.0",
+  "description": "You are the **Procedural Audio Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/audio_procedural.md",
+  "category": "core",
+  "capabilities": [
+    {
+      "task_type": "audio procedural",
+      "keywords": [
+        "procedural",
+        "audio",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "celticscale",
+        "tone"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/",
+    "scripts/merlin/merlin_constants.gd",
+    "docs/GAME_DESIGN_BIBLE.md"
+  ],
+  "cost_profile": "opus"
+}

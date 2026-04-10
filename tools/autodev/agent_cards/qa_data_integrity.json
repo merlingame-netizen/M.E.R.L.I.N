@@ -1,0 +1,56 @@
+{
+  "id": "qa_data_integrity",
+  "name": "QA Data Integrity Agent",
+  "version": "1.0.0",
+  "description": "You are the **Data Integrity Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/qa_data_integrity.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "data integrity",
+      "keywords": [
+        "data",
+        "integrity",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "validating",
+        "json",
+        "card",
+        "format"
+      ],
+      "confidence": 0.7,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_save_system.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "docs/GAME_DESIGN_BIBLE.md"
+  ],
+  "cost_profile": "sonnet"
+}

@@ -1,0 +1,58 @@
+{
+  "id": "lore_writer",
+  "name": "Lore Writer Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "You are the **Lore Writer** for the M.E.R.L.I.N. project. You are the deep mythology expert responsible for:",
+  "agent_file": ".claude/agents/lore_writer.md",
+  "category": "narrative",
+  "capabilities": [
+    {
+      "task_type": "lore writer",
+      "keywords": [
+        "lore",
+        "writer",
+        "project",
+        "deep",
+        "mythology",
+        "expert",
+        "responsible",
+        "for:",
+        "celtic"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/50_lore/*",
+    "docs/50_lore/00_LORE_BIBLE_INDEX.md",
+    "docs/50_lore/FACTIONS_LORE.md",
+    "docs/50_lore/CELTIC_FOUNDATION.md",
+    "docs/GAME_DESIGN_BIBLE.md",
+    "docs/50_lore/",
+    "scripts/merlin/merlin_constants.gd"
+  ],
+  "cost_profile": "sonnet"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "merlin-studio-bridge",
+  "version": "1.0.0",
+  "description": "Autonomous studio orchestrator for M.E.R.L.I.N. game project",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "dry-run": "node dist/index.js --dry-run",
+    "sse": "node dist/sse-server.js"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}

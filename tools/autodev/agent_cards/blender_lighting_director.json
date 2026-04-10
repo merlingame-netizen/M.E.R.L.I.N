@@ -1,0 +1,45 @@
+{
+  "id": "blender_lighting_director",
+  "name": "Blender Lighting Director",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/blender_lighting_director.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender lighting director",
+      "keywords": [
+        "- user mentions lighting",
+        "shadows",
+        "fog",
+        "god rays",
+        "volumetric effects"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "sonnet"
+}

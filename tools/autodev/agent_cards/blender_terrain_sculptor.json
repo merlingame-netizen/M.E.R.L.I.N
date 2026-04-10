@@ -1,0 +1,48 @@
+{
+  "id": "blender_terrain_sculptor",
+  "name": "Blender Terrain Sculptor Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**Summary**: Generates low-poly faceted terrain meshes for all 8 biomes via Blender scripting.",
+  "agent_file": ".claude/agents/blender_terrain_sculptor.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender terrain sculptor",
+      "keywords": [
+        "trigger=\"terrain",
+        "displacement",
+        "cliff",
+        "valley",
+        "island",
+        "biome terrain",
+        "heightmap",
+        "erosion\" action=\"invoke\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "haiku"
+}

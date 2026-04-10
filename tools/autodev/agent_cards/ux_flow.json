@@ -1,0 +1,55 @@
+{
+  "id": "ux_flow",
+  "name": "UX Flow Agent",
+  "version": "1.0.0",
+  "description": "You are the **UX Flow Analyst** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/ux_flow.md",
+  "category": "ui-ux",
+  "capabilities": [
+    {
+      "task_type": "flow",
+      "keywords": [
+        "flow",
+        "analyst",
+        "project",
+        "responsible",
+        "for:",
+        "analyzing",
+        "screen",
+        "transitions",
+        "navigation",
+        "clarity"
+      ],
+      "confidence": 0.7,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "docs/70_graphic/UI_UX_BIBLE.md",
+    "scripts/ui/merlin_game_controller.gd"
+  ],
+  "cost_profile": "sonnet"
+}

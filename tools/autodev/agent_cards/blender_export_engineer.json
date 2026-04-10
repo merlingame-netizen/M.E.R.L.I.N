@@ -1,0 +1,46 @@
+{
+  "id": "blender_export_engineer",
+  "name": "Blender Export Engineer Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**Summary**: Handles glTF/GLB export, LOD generation, batch processing, and file size optimization.",
+  "agent_file": ".claude/agents/blender_export_engineer.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender export engineer",
+      "keywords": [
+        "trigger=\"export glb",
+        "gltf",
+        "lod",
+        "batch export",
+        "optimize mesh",
+        "file size\" action=\"invoke\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "haiku"
+}

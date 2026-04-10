@@ -1,0 +1,60 @@
+{
+  "id": "lead_godot",
+  "name": "Lead Godot Agent — Lead Godot Engineer",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/lead_godot.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "lead godot",
+      "keywords": [
+        "- architecture",
+        "lead",
+        "godot",
+        "engineer",
+        "project",
+        "responsible",
+        "for:",
+        "architecture",
+        "review",
+        "gdscript",
+        "patterns"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/ui/merlin_game_controller.gd",
+    "scripts/merlin/merlin_visual.gd",
+    "addons/merlin_ai/merlin_ai.gd",
+    "docs/DEV_PLAN_V2.5.md"
+  ],
+  "cost_profile": "opus"
+}

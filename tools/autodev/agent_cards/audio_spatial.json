@@ -1,0 +1,53 @@
+{
+  "id": "audio_spatial",
+  "name": "Audio Spatial Agent",
+  "version": "1.0.0",
+  "description": "You are the **Spatial Audio Designer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/audio_spatial.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "audio spatial",
+      "keywords": [
+        "spatial",
+        "audio",
+        "designer",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "positioning",
+        "walking"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_constants.gd",
+    "docs/GAME_DESIGN_BIBLE.md"
+  ],
+  "cost_profile": "sonnet"
+}

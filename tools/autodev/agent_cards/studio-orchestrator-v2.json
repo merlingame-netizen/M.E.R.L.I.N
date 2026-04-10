@@ -1,0 +1,56 @@
+{
+  "id": "studio-orchestrator-v2",
+  "name": "Studio Orchestrator v2 — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**One-line summary**: Orchestrateur maître du studio autonome — gère les cycles PLAN→BUILD→VALIDATE→TEST→DEBUG→REPORT avec exécution parallèle et escalade intelligente.",
+  "agent_file": ".claude/agents/studio-orchestrator-v2.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "studio orchestrator v2",
+      "keywords": [
+        "trigger=\"studio v2",
+        "studio orchestrator v2",
+        "autonomous cycle",
+        "development cycle",
+        "plan build validate",
+        "coordinate agents",
+        "parallel agents",
+        "feature queue",
+        "studio mode v2",
+        "orchestrate studio\" action=\"run autonomous plan→build→validate→test→debug→report development cycle\" priority=\"high\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "tools/autodev/status/feature_queue.json",
+    "tools/autodev/status/session.json",
+    "tools/autodev/status/agent_status.json",
+    "tools/autodev/status/agent_messages.json"
+  ],
+  "cost_profile": "opus"
+}

@@ -1,0 +1,60 @@
+{
+  "id": "game_designer",
+  "name": "Game Designer Agent — Game Design Expert",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/game_designer.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "game designer",
+      "keywords": [
+        "- game_design",
+        "game",
+        "design",
+        "expert",
+        "project",
+        "responsible",
+        "for:",
+        "reviewing",
+        "gameplay",
+        "mechanics",
+        "against"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/merlin/merlin_constants.gd",
+    "docs/DEV_PLAN_V2.5.md",
+    "docs/20_card_system/DOC_15_Faction_Alignment_System.md",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_reputation_system.gd",
+    "scripts/merlin/merlin_store.gd"
+  ],
+  "cost_profile": "sonnet"
+}

@@ -1,0 +1,31 @@
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.466Z","data":{"from":"IDLE","to":"SCAN","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.471Z","data":{"from":"SCAN","to":"PLAN","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.473Z","data":{"from":"PLAN","to":"DISPATCH","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.475Z","data":{"from":"DISPATCH","to":"COLLECT","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.476Z","data":{"from":"COLLECT","to":"VALIDATE","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.477Z","data":{"from":"VALIDATE","to":"TEST","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.479Z","data":{"from":"TEST","to":"EVOLVE","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"state_change","timestamp":"2026-04-10T21:24:23.479Z","data":{"from":"EVOLVE","to":"REPORT","cycleId":"CYCLE-2026-04-10-970"}}
+{"type":"cycle_update","timestamp":"2026-04-10T21:24:23.488Z","data":{"cycleId":"CYCLE-2026-04-10-970","duration_seconds":0,"tasksCompleted":0,"tasksFailed":0,"agentsUsed":[],"filesModified":[],"validationPassed":true,"summary":"Cycle CYCLE-2026-04-10-970: 0 work orders processed"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.416Z","data":{"from":"IDLE","to":"SCAN","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.423Z","data":{"from":"SCAN","to":"PLAN","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.426Z","data":{"from":"PLAN","to":"DISPATCH","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.427Z","data":{"from":"DISPATCH","to":"COLLECT","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.429Z","data":{"from":"COLLECT","to":"VALIDATE","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.430Z","data":{"from":"VALIDATE","to":"TEST","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.431Z","data":{"from":"TEST","to":"EVOLVE","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:21.434Z","data":{"from":"EVOLVE","to":"REPORT","cycleId":"CYCLE-2026-04-10-156"}}
+{"type":"cycle_update","timestamp":"2026-04-10T21:29:21.447Z","data":{"cycleId":"CYCLE-2026-04-10-156","duration_seconds":0,"tasksCompleted":0,"tasksFailed":0,"agentsUsed":[],"filesModified":[],"validationPassed":true,"summary":"Cycle CYCLE-2026-04-10-156: 0 work orders processed"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:33.124Z","data":{"from":"IDLE","to":"SCAN","cycleId":"CYCLE-2026-04-10-967"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:33.127Z","data":{"from":"SCAN","to":"PLAN","cycleId":"CYCLE-2026-04-10-967"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:33.130Z","data":{"from":"PLAN","to":"DISPATCH","cycleId":"CYCLE-2026-04-10-967"}}
+{"type":"state_change","timestamp":"2026-04-10T21:29:33.132Z","data":{"from":"DISPATCH","to":"COLLECT","cycleId":"CYCLE-2026-04-10-967"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.836Z","data":{"from":"IDLE","to":"SCAN","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.846Z","data":{"from":"SCAN","to":"PLAN","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.858Z","data":{"from":"PLAN","to":"DISPATCH","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.869Z","data":{"from":"DISPATCH","to":"COLLECT","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.870Z","data":{"from":"COLLECT","to":"VALIDATE","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.872Z","data":{"from":"VALIDATE","to":"TEST","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.874Z","data":{"from":"TEST","to":"EVOLVE","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"state_change","timestamp":"2026-04-10T21:33:35.877Z","data":{"from":"EVOLVE","to":"REPORT","cycleId":"CYCLE-2026-04-10-bb1586c6"}}
+{"type":"cycle_update","timestamp":"2026-04-10T21:33:35.884Z","data":{"cycleId":"CYCLE-2026-04-10-bb1586c6","duration_seconds":0,"tasksCompleted":0,"tasksFailed":0,"agentsUsed":[],"filesModified":[],"validationPassed":true,"summary":"Cycle CYCLE-2026-04-10-bb1586c6: 0 work orders processed"}}

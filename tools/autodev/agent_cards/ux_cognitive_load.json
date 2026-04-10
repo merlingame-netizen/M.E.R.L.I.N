@@ -1,0 +1,56 @@
+{
+  "id": "ux_cognitive_load",
+  "name": "UX Cognitive Load Agent",
+  "version": "1.0.0",
+  "description": "You are the **Cognitive Load Optimizer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/ux_cognitive_load.md",
+  "category": "ui-ux",
+  "capabilities": [
+    {
+      "task_type": "cognitive load",
+      "keywords": [
+        "cognitive",
+        "load",
+        "optimizer",
+        "project",
+        "responsible",
+        "for:",
+        "reducing",
+        "information",
+        "overload",
+        "across"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/70_graphic/UI_UX_BIBLE.md",
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/ui/merlin_game_controller.gd",
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "sonnet"
+}

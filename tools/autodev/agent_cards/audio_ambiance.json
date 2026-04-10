@@ -1,0 +1,55 @@
+{
+  "id": "audio_ambiance",
+  "name": "Audio Ambiance Agent",
+  "version": "1.0.0",
+  "description": "You are the **Ambient Sound Designer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/audio_ambiance.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "audio ambiance",
+      "keywords": [
+        "ambient",
+        "sound",
+        "designer",
+        "project",
+        "responsible",
+        "for:",
+        "creating",
+        "biomespecific",
+        "atmospheric",
+        "soundscapes"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/merlin/merlin_constants.gd",
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "sonnet"
+}

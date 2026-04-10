@@ -1,0 +1,52 @@
+{
+  "id": "blender_vfx_artist",
+  "name": "Blender VFX Artist Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**One-line summary**: Creates particle systems, emissive magic meshes, volumetric fog zones, god ray planes, and crystal glow clusters in Blender.",
+  "agent_file": ".claude/agents/blender_vfx_artist.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender vfx artist",
+      "keywords": [
+        "trigger=\"vfx",
+        "particle",
+        "magic effect",
+        "smoke",
+        "fire",
+        "crystal glow",
+        "bloom",
+        "sparkle",
+        "debris",
+        "god ray",
+        "fog zone",
+        "emissive\" action=\"create visual effects and emissive meshes in blender\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "opus"
+}

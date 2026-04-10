@@ -1,0 +1,48 @@
+{
+  "id": "blender_material_master",
+  "name": "Blender Material Master Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**Summary**: Creates and manages Principled BSDF materials and vertex color workflows for the low-poly art pipeline.",
+  "agent_file": ".claude/agents/blender_material_master.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender material master",
+      "keywords": [
+        "trigger=\"material",
+        "pbr",
+        "vertex color",
+        "shader node",
+        "texture",
+        "roughness",
+        "metallic",
+        "emission\" action=\"invoke\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "haiku"
+}

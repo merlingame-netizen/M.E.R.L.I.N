@@ -1,0 +1,56 @@
+{
+  "id": "balance_tuner",
+  "name": "Balance Tuner Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "You are the **Balance Tuner** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/balance_tuner.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "balance tuner",
+      "keywords": [
+        "balance",
+        "tuner",
+        "project",
+        "responsible",
+        "for:",
+        "numerical",
+        "game",
+        "systems",
+        "life"
+      ],
+      "confidence": 0.7,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_constants.gd",
+    "scripts/merlin/merlin_reputation_system.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "docs/GAME_DESIGN_BIBLE.md",
+    "docs/DEV_PLAN_V2.5.md"
+  ],
+  "cost_profile": "opus"
+}

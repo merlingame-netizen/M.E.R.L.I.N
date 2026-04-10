@@ -1,0 +1,58 @@
+{
+  "id": "lora-trainer",
+  "name": "LoRA Trainer Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**One-line summary**: LoRA fine-tuning specialist — triggered when a brain underperforms metrics, orchestrates full Kaggle training pipeline to adapter deployment.",
+  "agent_file": ".claude/agents/lora-trainer.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "lora trainer",
+      "keywords": [
+        "trigger=\"lora training",
+        "fine-tune brain",
+        "retrain narrator",
+        "retrain gamemaster",
+        "retrain worker",
+        "tone_consistency",
+        "json_validity",
+        "benchmark lora",
+        "deploy adapter",
+        "lora_training_loop\" action=\"orchestrate lora training pipeline for underperforming brain\" priority=\"high\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "tools/lora/lora_training_loop.ps1",
+    "tools/lora/generate_brain_datasets.py",
+    "tools/lora/remote_kaggle_train.py",
+    "tools/lora/benchmark_lora.py",
+    "addons/merlin_llm/adapters/",
+    "docs/LORA_TRAINING_SPEC.html"
+  ],
+  "cost_profile": "opus"
+}

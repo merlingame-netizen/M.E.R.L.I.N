@@ -1,0 +1,57 @@
+{
+  "id": "qa_integration",
+  "name": "QA Integration Agent",
+  "version": "1.0.0",
+  "description": "You are the **Integration Test Designer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/qa_integration.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "integration",
+      "keywords": [
+        "integration",
+        "test",
+        "designer",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "crosssystem",
+        "scenarios"
+      ],
+      "confidence": 0.7,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "scripts/ui/merlin_game_controller.gd",
+    "addons/merlin_ai/merlin_ai.gd"
+  ],
+  "cost_profile": "sonnet"
+}

@@ -1,0 +1,41 @@
+{
+  "id": "blender_scene_compositor",
+  "name": "Blender Scene Compositor",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/blender_scene_compositor.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "blender scene compositor",
+      "keywords": [
+        "- multiple glb assets need assembling into a single scene"
+      ],
+      "confidence": 0.5,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "sonnet"
+}

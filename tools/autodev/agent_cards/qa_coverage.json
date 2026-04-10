@@ -1,0 +1,59 @@
+{
+  "id": "qa_coverage",
+  "name": "QA Coverage Agent",
+  "version": "1.0.0",
+  "description": "You are the **Test Coverage Analyzer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/qa_coverage.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "coverage",
+      "keywords": [
+        "test",
+        "coverage",
+        "analyzer",
+        "project",
+        "responsible",
+        "for:",
+        "identifying",
+        "untested",
+        "code",
+        "paths"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/",
+    "scripts/ui/",
+    "addons/merlin_ai/",
+    "scripts/test/",
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_save_system.gd"
+  ],
+  "cost_profile": "sonnet"
+}

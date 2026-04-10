@@ -1,0 +1,54 @@
+{
+  "id": "asset-generator",
+  "name": "Asset Generator Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "**One-line summary**: Génère des assets visuels (GLB 3D ou sprites PNG) via nano-banana MCP + Trellis.2, avec fallback gracieux sur la bibliothèque existante.",
+  "agent_file": ".claude/agents/asset-generator.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "asset generator",
+      "keywords": [
+        "trigger=\"generate asset",
+        "new asset",
+        "generate 3d model",
+        "generate sprite",
+        "broceliande asset",
+        "trellis",
+        "nano-banana",
+        "asset_generation_loop",
+        "visual quality poor",
+        "asset library\" action=\"generate game assets via nano-banana and trellis pipeline with 3-level fallback\" priority=\"medium\" -->"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/broceliande_3d/broceliande_forest_3d.gd",
+    "docs/70_graphic/UI_UX_BIBLE.md"
+  ],
+  "cost_profile": "haiku"
+}

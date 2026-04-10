@@ -1,0 +1,55 @@
+{
+  "id": "content_merlin_voice",
+  "name": "Content Merlin Voice Agent",
+  "version": "1.0.0",
+  "description": "You are the **Merlin Personality Writer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/content_merlin_voice.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "content merlin voice",
+      "keywords": [
+        "merlin",
+        "personality",
+        "writer",
+        "project",
+        "responsible",
+        "for:",
+        "maintaining",
+        "merlin's",
+        "unique",
+        "voice:"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "addons/merlin_ai/merlin_omniscient.gd"
+  ],
+  "cost_profile": "sonnet"
+}

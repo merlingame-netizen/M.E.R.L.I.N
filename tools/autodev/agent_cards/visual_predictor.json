@@ -1,0 +1,62 @@
+{
+  "id": "visual_predictor",
+  "name": "Visual Predictor Agent — M.E.R.L.I.N.",
+  "version": "1.0.0",
+  "description": "You are the **Visual Predictor** for the M.E.R.L.I.N. project. You generate text-based visual preview predictions of game screens, verifying UI layout correctness, color assignments, component structu",
+  "agent_file": ".claude/agents/visual_predictor.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "visual predictor",
+      "keywords": [
+        "- `scripts/ui/hub_screen.gd`",
+        "visual",
+        "predictor",
+        "project",
+        "generate",
+        "textbased",
+        "preview",
+        "predictions",
+        "game",
+        "screens"
+      ],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/ui/hub_screen.gd",
+    "scripts/ui/faction_rep_bar.gd",
+    "scripts/ui/end_run_screen.gd",
+    "scripts/ui/merlin_game_ui.gd",
+    "scripts/ui/walk_hud.gd",
+    "scripts/ui/card_layer.gd",
+    "scripts/run/journey_map_display.gd",
+    "scripts/run/biome_config.gd",
+    "scripts/autoload/merlin_visual.gd",
+    "scripts/audio/sfx_manager.gd"
+  ],
+  "cost_profile": "sonnet"
+}

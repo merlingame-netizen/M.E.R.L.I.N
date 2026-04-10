@@ -1,0 +1,54 @@
+{
+  "id": "vis_celtic_authenticity",
+  "name": "Visual Celtic Authenticity Agent",
+  "version": "1.0.0",
+  "description": "You are the **Celtic Visual Authenticity Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/vis_celtic_authenticity.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "celtic authenticity",
+      "keywords": [
+        "celtic",
+        "visual",
+        "authenticity",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "ensuring",
+        "symbols"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_constants.gd",
+    "docs/GAME_DESIGN_BIBLE.md",
+    "docs/70_graphic/UI_UX_BIBLE.md"
+  ],
+  "cost_profile": "opus"
+}

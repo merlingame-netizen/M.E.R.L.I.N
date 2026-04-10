@@ -1,0 +1,53 @@
+{
+  "id": "ux_readability",
+  "name": "UX Readability Agent",
+  "version": "1.0.0",
+  "description": "You are the **Text Readability Analyst** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/ux_readability.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "readability",
+      "keywords": [
+        "text",
+        "readability",
+        "analyst",
+        "project",
+        "responsible",
+        "for:",
+        "ensuring",
+        "readable",
+        "font"
+      ],
+      "confidence": 0.7,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/70_graphic/UI_UX_BIBLE.md",
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "sonnet"
+}

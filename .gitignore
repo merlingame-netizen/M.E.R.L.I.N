@@ -376,3 +376,7 @@ tools/swarm/
 # END
 # ===========================================
 tools/figma-bridge/
+tools/autodev/mission-control/node_modules/
+tools/autodev/studio-bridge/node_modules/
+tools/autodev/studio-bridge/dist/
+tools/autodev/mission-control/dist/

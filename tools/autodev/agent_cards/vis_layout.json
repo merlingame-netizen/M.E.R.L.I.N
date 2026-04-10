@@ -1,0 +1,55 @@
+{
+  "id": "vis_layout",
+  "name": "Visual Layout Agent",
+  "version": "1.0.0",
+  "description": "You are the **Layout Architect** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/vis_layout.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "layout",
+      "keywords": [
+        "layout",
+        "architect",
+        "project",
+        "responsible",
+        "for:",
+        "designing",
+        "grid",
+        "systems",
+        "responsive",
+        "layouts"
+      ],
+      "confidence": 0.7,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "docs/70_graphic/UI_UX_BIBLE.md",
+    "scripts/ui/merlin_game_controller.gd",
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "opus"
+}

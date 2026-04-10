@@ -1,0 +1,45 @@
+{
+  "id": "perf_auditor",
+  "name": "Agent: Performance Auditor",
+  "version": "1.0.0",
+  "description": "- **Role**: Static performance analyst for M.E.R.L.I.N. Godot 4.x project",
+  "agent_file": ".claude/agents/perf_auditor.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "auditor",
+      "keywords": [
+        ">10:1"
+      ],
+      "confidence": 0.5,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/run/",
+    "scripts/broceliande_3d/"
+  ],
+  "cost_profile": "sonnet"
+}

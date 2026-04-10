@@ -1,0 +1,53 @@
+{
+  "id": "perf_render",
+  "name": "Performance Render Agent",
+  "version": "1.0.0",
+  "description": "You are the **Render Performance Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/perf_render.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "render",
+      "keywords": [
+        "render",
+        "performance",
+        "specialist",
+        "project",
+        "responsible",
+        "for:",
+        "optimizing",
+        "draw",
+        "calls",
+        "shader"
+      ],
+      "confidence": 0.7,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "file_scope": [
+    "scripts/merlin/merlin_visual.gd"
+  ],
+  "cost_profile": "sonnet"
+}

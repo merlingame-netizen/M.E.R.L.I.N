@@ -1,0 +1,41 @@
+{
+  "id": "blender_qa_renderer",
+  "name": "Blender QA Renderer",
+  "version": "1.0.0",
+  "description": "```yaml",
+  "agent_file": ".claude/agents/blender_qa_renderer.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "blender qa renderer",
+      "keywords": [
+        "- user requests a quality check or visual comparison"
+      ],
+      "confidence": 0.5,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "task_description",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "relevant_files",
+      "type": "file",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "code_changes",
+      "type": "artifact"
+    },
+    {
+      "name": "summary",
+      "type": "text"
+    }
+  ],
+  "cost_profile": "opus"
+}
