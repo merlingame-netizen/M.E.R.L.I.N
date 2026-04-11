@@ -25,25 +25,25 @@ Tu tournes dans un sandbox Linux ephemere (Remote Trigger). Regles critiques:
 
 ## Logique d'alternance
 
-1. Lire la derniere ligne de `tools/autodev/status/events.jsonl`
-2. Si le dernier `cycle_type` etait `dev` → ce cycle est TEST
-3. Si `test` → ce cycle est DEV
-4. Si pas de cycle precedent → DEV
+1. Lire les 5 dernieres lignes de `tools/autodev/status/events.jsonl`
+2. Chercher le dernier evenement avec `"type":"cycle_update"`
+3. Si son `data.cycle_type` etait `"dev"` → ce cycle est TEST
+4. Si `"test"` → ce cycle est DEV
+5. Si pas de `cycle_type` trouve → ce cycle est DEV (defaut)
 
 ## Cycle DEV
 
-1. `git pull origin main`
-2. Lire `feature_queue.json`, filtrer: `status=pending` ET (`type` absent OU `type=dev`)
-3. Selectionner 1-2 taches par priorite (plus petit = plus prioritaire)
-4. Pour chaque tache:
-   a. Lire les fichiers cibles (`task.files`)
+1. Lire `tools/autodev/status/feature_queue.json`
+2. Filtrer: `status=pending` ET (`type` absent OU `type=dev` OU `type` absent)
+3. Selectionner **1 seule tache** par priorite (plus petit numero = plus prioritaire)
+4. Pour cette tache:
+   a. Lire les fichiers cibles (champ `files` de la tache, ou deduire des titres)
    b. Implementer en GDScript: `snake_case`, type hints, JAMAIS `:=` avec CONST
-   c. Verifier via grep que les modifications sont correctes
-5. Mettre a jour `feature_queue.json`: `status=completed`, `completed_at`, `notes`
-6. Logger: ajouter `{"type":"cycle_update","timestamp":"...","data":{"cycle_type":"dev",...}}` dans `events.jsonl`
-7. `git add` fichiers modifies + `feature_queue.json` + `events.jsonl`
-8. `git commit -m "type(scope): description"`
-9. `git push origin main`
+   c. Verifier via `grep` que les modifications sont correctes
+5. Mettre a jour `feature_queue.json`: changer `status` de la tache a `"completed"`, ajouter `"completed_at": "YYYY-MM-DDTHH:MM:SSZ"`, `"notes": "description du travail"`
+6. Ajouter une ligne a `tools/autodev/status/events.jsonl`:
+   `{"type":"cycle_update","timestamp":"YYYY-MM-DDTHH:MM:SSZ","data":{"cycle_type":"dev","task_id":"...","summary":"..."}}`
+7. `git add -A && git commit -m "feat(scope): description" && git push origin main`
 
 ## Cycle TEST
 
