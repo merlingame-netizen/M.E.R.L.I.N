@@ -1,5 +1,3 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = 'merlingame-netizen/M.E.R.L.I.N';
 const BRANCH = 'main';
@@ -46,7 +44,7 @@ async function fetchGitHubFile(path: string): Promise<unknown | null> {
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=30');
