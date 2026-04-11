@@ -33,88 +33,55 @@ export function CommandHeader() {
   const stateClass = STATE_CLASSES[orchestratorState] ?? 'state-badge--idle';
 
   return (
-    <div style={{
-      background: 'var(--bg-panel)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: '4px',
-      padding: '10px 20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Top glow line */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '1px',
-        background: 'linear-gradient(90deg, transparent, var(--cyan), var(--blue), var(--cyan), transparent)',
-        opacity: 0.7,
-      }} />
+    <div className="command-header" role="banner">
+      {/* Top glow line — phosphor green to amber gradient */}
+      <div className="command-header__glow-line" aria-hidden="true" />
 
-      {/* Left: Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '16px',
-          fontWeight: 900,
-          letterSpacing: '3px',
-          color: 'var(--cyan)',
-          textShadow: '0 0 20px rgba(0, 240, 255, 0.3)',
-        }}>
-          M.E.R.L.I.N. MISSION CONTROL
-        </div>
-        <div style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
-          color: 'var(--text-dim)',
-          letterSpacing: '1px',
-        }}>
-          v1.0.0
+      {/* Title row: Celtic title + version */}
+      <div className="command-header__title-row">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className="command-header__celtic-border" aria-hidden="true">
+            &#x2726;&#x2727;&#x2726;
+          </span>
+          <span className="command-header__title">
+            M.E.R.L.I.N.
+          </span>
+          <span className="command-header__celtic-border" aria-hidden="true">
+            &#x2726;&#x2727;&#x2726;
+          </span>
+          <span className="command-header__version">v1.0.0</span>
         </div>
       </div>
 
-      {/* Center: State + Cycle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* Status row: state badge, cycle, connection, uptime */}
+      <div className="command-header__status-row">
         <span className={`state-badge ${stateClass}`}>
           {orchestratorState}
         </span>
+
         {cycleId && (
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
-            color: 'var(--text-secondary)',
-          }}>
+          <span className="command-header__cycle">
             CYCLE {cycleId}
           </span>
         )}
-      </div>
 
-      {/* Right: Connection + Uptime */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className={`connection-dot ${connected ? 'connection-dot--online' : 'connection-dot--offline'}`} />
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '10px',
-            color: connected ? 'var(--green)' : 'var(--red)',
-            letterSpacing: '1px',
-            textTransform: 'uppercase',
-          }}>
+        <div className="command-header__connection">
+          <span
+            className={`connection-dot ${connected ? 'connection-dot--online' : 'connection-dot--offline'}`}
+            role="status"
+            aria-label={connected ? 'Connected' : 'Disconnected'}
+          />
+          <span
+            className="command-header__connection-label"
+            style={{ color: connected ? 'var(--green)' : 'var(--red)' }}
+          >
             {connected ? 'LINKED' : 'OFFLINE'}
           </span>
         </div>
-        <div style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '12px',
-          color: 'var(--text-dim)',
-          letterSpacing: '2px',
-        }}>
+
+        <span className="command-header__uptime" aria-label={`Uptime: ${formatUptime(uptime)}`}>
           {formatUptime(uptime)}
-        </div>
+        </span>
       </div>
     </div>
   );

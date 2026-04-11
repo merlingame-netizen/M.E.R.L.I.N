@@ -13,51 +13,61 @@ export function App() {
   useStateSync();
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateRows: 'auto auto 1fr',
-      gridTemplateColumns: '280px 1fr 320px',
-      height: '100vh',
-      gap: '4px',
-      padding: '4px',
-    }}>
-      {/* Header row - full width */}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <CommandHeader />
-      </div>
+    <div className="crt-screen">
+      {/* CRT scanline overlay */}
+      <div className="crt-scanlines" aria-hidden="true" />
 
-      {/* Timeline row - full width */}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <StateTimeline />
-      </div>
+      <div className="dashboard-layout">
+        {/* Header */}
+        <div className="dashboard-layout__full-row">
+          <CommandHeader />
+        </div>
 
-      {/* Left column: Agent Fleet + Feature Queue */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
-        <div style={{ flex: '1 1 60%', overflow: 'hidden' }}>
-          <AgentFleet />
-        </div>
-        <div style={{ flex: '1 1 40%', overflow: 'hidden' }}>
-          <FeatureQueue />
-        </div>
-      </div>
-
-      {/* Center column: Game Preview + Active Missions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
-        <div style={{ flex: '0 0 280px' }}>
-          <GamePreview />
-        </div>
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <ActiveMissions />
-        </div>
-      </div>
-
-      {/* Right column: Metrics + Alert Feed */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
-        <div style={{ flex: '0 0 auto' }}>
+        {/* Metrics — high priority on mobile */}
+        <div className="dashboard-layout__full-row">
           <MetricsPanel />
         </div>
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <AlertFeed />
+
+        {/* Game Preview — full width, prominent on mobile with 16:9 aspect */}
+        <div className="dashboard-layout__full-row dashboard-layout__game-preview">
+          <GamePreview />
+        </div>
+
+        {/* Timeline */}
+        <div className="dashboard-layout__full-row">
+          <StateTimeline />
+        </div>
+
+        {/* Active Missions — full width before columns */}
+        <div className="dashboard-layout__full-row dashboard-layout__missions-mobile">
+          <ActiveMissions />
+        </div>
+
+        {/* 3-column area: stacks on mobile, splits on tablet/desktop */}
+        <div className="dashboard-layout__columns">
+          {/* Left column: Feature Queue + Agent Fleet */}
+          <div className="dashboard-layout__col dashboard-layout__col--left">
+            <div style={{ flex: '1 1 50%', overflow: 'hidden', minHeight: '200px' }}>
+              <FeatureQueue />
+            </div>
+            <div style={{ flex: '1 1 50%', overflow: 'hidden', minHeight: '200px' }}>
+              <AgentFleet />
+            </div>
+          </div>
+
+          {/* Center column: Active Missions (desktop only, hidden on mobile) + Game Preview (desktop) */}
+          <div className="dashboard-layout__col dashboard-layout__col--center dashboard-layout__desktop-only">
+            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
+              <ActiveMissions />
+            </div>
+          </div>
+
+          {/* Right column: Alert Feed */}
+          <div className="dashboard-layout__col dashboard-layout__col--right">
+            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
+              <AlertFeed />
+            </div>
+          </div>
         </div>
       </div>
     </div>
