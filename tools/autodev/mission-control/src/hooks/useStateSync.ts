@@ -1,75 +1,116 @@
 import { useEffect, useRef } from 'react';
 import { useMissionStore } from '../store/mission-store';
 
-const SSE_URL = import.meta.env.VITE_SSE_URL || 'http://localhost:4201';
+// Cloud-native: poll the Vercel serverless API or fallback to local SSE
+const API_URL = import.meta.env.VITE_API_URL || '/api/status';
+const POLL_INTERVAL = 30_000; // 30s
+
+interface StatusResponse {
+  ok: boolean;
+  timestamp: string;
+  data: {
+    feature_queue?: { tasks?: Array<{ id: string; title: string; priority: number; status: string; agent?: string }> };
+    agent_status?: { agents?: Record<string, { state?: string; current_task?: string | null }> };
+    events?: Array<{ type: string; timestamp?: string; data?: Record<string, unknown> }>;
+    escalation?: { type?: string; message?: string; timestamp?: string } | null;
+    watchdog?: string | null;
+  };
+}
 
 export function useStateSync() {
   const setConnected = useMissionStore(s => s.setConnected);
   const addAlert = useMissionStore(s => s.addAlert);
   const setFeatureQueue = useMissionStore(s => s.setFeatureQueue);
   const setAgents = useMissionStore(s => s.setAgents);
-  const setActiveSessions = useMissionStore(s => s.setActiveSessions);
-  const handleSSEEvent = useMissionStore(s => s.handleSSEEvent);
+  const setOrchestratorState = useMissionStore(s => s.setOrchestratorState);
+  const addCycleToHistory = useMissionStore(s => s.addCycleToHistory);
 
-  const esRef = useRef<EventSource | null>(null);
-  const retryRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const lastTimestampRef = useRef<string>('');
 
   useEffect(() => {
-    function connect() {
-      esRef.current?.close();
-      const es = new EventSource(`${SSE_URL}/events`);
-      esRef.current = es;
+    async function poll() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) {
+          setConnected(false);
+          return;
+        }
 
-      es.onopen = () => {
+        const json: StatusResponse = await res.json();
         setConnected(true);
-        addAlert({ timestamp: new Date().toISOString(), level: 'SUCCESS', message: 'Connected to Studio Bridge', source: 'dashboard' });
-      };
 
-      es.onmessage = (e) => {
-        try {
-          const event = JSON.parse(e.data);
-          if (event.type === 'full_state' || event.type === 'file_update') {
-            const { file, content } = event.data;
-            if (file === 'feature_queue.json') {
-              setFeatureQueue(content.tasks || []);
-            } else if (file === 'agent_status.json' && content.agents) {
-              setAgents(Object.entries(content.agents).map(([id, info]: [string, unknown]) => {
-                const agentInfo = info as { state?: string; current_task?: string | null };
-                return {
-                  id,
-                  name: id.replace(/_/g, ' '),
-                  category: 'core',
-                  state: (agentInfo.state || 'idle') as 'idle' | 'running' | 'blocked' | 'error' | 'completed',
-                  currentTask: agentInfo.current_task || null,
-                };
-              }));
-            } else if (file === 'cloud_sessions.json' && content.active_sessions) {
-              setActiveSessions(content.active_sessions.map((s: Record<string, unknown>) => ({
-                sessionId: s.session_id as string,
-                agentId: s.agent_id as string,
-                taskTitle: (s.task_ids as string[])?.join(', ') || '',
-                startedAt: s.started_at as string,
-                status: s.status as string,
-              })));
+        // Only process if data changed
+        if (json.timestamp === lastTimestampRef.current) return;
+        lastTimestampRef.current = json.timestamp;
+
+        const { data } = json;
+
+        // Feature queue
+        if (data.feature_queue?.tasks) {
+          setFeatureQueue(data.feature_queue.tasks.map(t => ({
+            id: t.id,
+            title: t.title,
+            priority: t.priority,
+            status: t.status as 'pending' | 'in_progress' | 'completed' | 'blocked' | 'dispatched',
+            agent: t.agent,
+          })));
+        }
+
+        // Agents
+        if (data.agent_status?.agents) {
+          setAgents(Object.entries(data.agent_status.agents).map(([id, info]) => ({
+            id,
+            name: id.replace(/_/g, ' '),
+            category: 'core',
+            state: (info.state || 'idle') as 'idle' | 'running' | 'blocked' | 'error' | 'completed',
+            currentTask: info.current_task || null,
+          })));
+        }
+
+        // Events — process last 10 for state changes and cycle updates
+        if (data.events && Array.isArray(data.events)) {
+          const recent = data.events.slice(-10);
+          for (const event of recent) {
+            if (event.type === 'state_change' && event.data) {
+              setOrchestratorState(event.data.to as string);
             }
-          } else {
-            handleSSEEvent(event);
+            if (event.type === 'cycle_update' && event.data) {
+              addCycleToHistory({
+                cycleId: (event.data.cycleId as string) || '',
+                state: 'completed',
+                startedAt: (event.timestamp as string) || '',
+                tasksCompleted: (event.data.tasksCompleted as number) || 0,
+                tasksFailed: (event.data.tasksFailed as number) || 0,
+                agentsUsed: (event.data.agentsUsed as string[]) || [],
+              });
+            }
           }
-        } catch { /* ignore parse errors */ }
-      };
+        }
 
-      es.onerror = () => {
+        // Escalation alert
+        if (data.escalation && typeof data.escalation === 'object' && data.escalation.message) {
+          addAlert({
+            timestamp: data.escalation.timestamp || new Date().toISOString(),
+            level: 'ERROR',
+            message: data.escalation.message,
+            source: 'escalation',
+          });
+        }
+
+      } catch {
         setConnected(false);
-        es.close();
-        esRef.current = null;
-        retryRef.current = setTimeout(connect, 5000);
-      };
+      }
     }
 
-    connect();
+    // Initial poll
+    poll();
+
+    // Poll every 30s
+    intervalRef.current = setInterval(poll, POLL_INTERVAL);
+
     return () => {
-      esRef.current?.close();
-      if (retryRef.current) clearTimeout(retryRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 }
