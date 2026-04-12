@@ -16,6 +16,7 @@ interface StatusResponse {
     watchdog?: string | null;
     feedback_questions?: { questions?: Array<{ id: string; category: string; priority: string; status: string; question: string; context?: string; type: string; options?: string[] | null; screenshot_urls?: string[] | null; created_at: string }> };
     feedback_responses?: { responses?: Array<{ question_id: string; answer: string; additional_notes?: string }> };
+    completed_archive?: { tasks?: Array<{ id: string }> };
   };
 }
 
@@ -28,6 +29,7 @@ export function useStateSync() {
   const addCycleToHistory = useMissionStore(s => s.addCycleToHistory);
   const setFeedbackQuestions = useMissionStore(s => s.setFeedbackQuestions);
   const setLastHeartbeat = useMissionStore(s => s.setLastHeartbeat);
+  const setCompletedCount = useMissionStore(s => s.setCompletedCount);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const lastTimestampRef = useRef<string>('');
@@ -71,6 +73,10 @@ export function useStateSync() {
             currentTask: info.current_task || null,
           })));
         }
+
+        // Completed archive count
+        const archivedCount = data.completed_archive?.tasks?.length || 0;
+        setCompletedCount(archivedCount);
 
         // Events — process last 20 for state changes, cycle updates, and alerts
         if (data.events && Array.isArray(data.events)) {

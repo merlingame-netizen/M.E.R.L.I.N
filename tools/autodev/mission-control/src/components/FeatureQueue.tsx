@@ -6,14 +6,23 @@ function getPriorityClass(priority: number): string {
   return 'priority-dot--low';
 }
 
-function getTypeLabel(task: { id: string; type?: string }): string | null {
-  if (task.id.startsWith('TEST-')) return 'TEST';
-  if (task.id.startsWith('P0-') || task.id.startsWith('P1-')) return 'DEV';
+function getTypeLabel(task: { id: string }): string | null {
+  const id = task.id;
+  if (id.startsWith('TEST-') || id.includes('-TEST') || id.includes('-EDGE') || id.includes('-LLM-')) return 'TEST';
+  if (id.startsWith('P0-') || id.startsWith('P1-') || id.startsWith('S1-') || id.startsWith('S2-') || id.startsWith('S3-')) return 'DEV';
+  return null;
+}
+
+function getSprintLabel(task: { id: string }): string | null {
+  if (task.id.startsWith('S1-')) return 'S1';
+  if (task.id.startsWith('S2-')) return 'S2';
+  if (task.id.startsWith('S3-')) return 'S3';
   return null;
 }
 
 export function FeatureQueue() {
   const tasks = useMissionStore(s => s.featureQueue);
+  const completedCount = useMissionStore(s => s.completedCount);
 
   const sorted = [...tasks]
     .filter(t => t.status !== 'completed')
@@ -36,6 +45,22 @@ export function FeatureQueue() {
         </span>
       </div>
       <div className="panel-body" style={{ padding: '0' }}>
+        {completedCount > 0 && (
+          <div style={{
+            padding: '6px 12px',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--green)',
+            background: 'rgba(0, 255, 136, 0.06)',
+            borderBottom: '1px solid rgba(0, 255, 136, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            <span style={{ fontSize: '13px' }}>&#10003;</span>
+            <span>{completedCount} tasks completed (archived)</span>
+          </div>
+        )}
         {sorted.length === 0 && (
           <div style={{ padding: '12px 16px', opacity: 0.5, fontSize: '12px' }}>
             No tasks in queue
@@ -43,9 +68,24 @@ export function FeatureQueue() {
         )}
         {sorted.map((task) => {
           const typeLabel = getTypeLabel(task);
+          const sprint = getSprintLabel(task);
           return (
             <div key={task.id} className="feature-row">
               <div className={`priority-dot ${getPriorityClass(task.priority)}`} />
+              {sprint && (
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  padding: '1px 3px',
+                  borderRadius: '2px',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: 'var(--text-secondary)',
+                  marginRight: '2px',
+                  letterSpacing: '0.5px',
+                }}>
+                  {sprint}
+                </span>
+              )}
               {typeLabel && (
                 <span style={{
                   fontSize: '9px',

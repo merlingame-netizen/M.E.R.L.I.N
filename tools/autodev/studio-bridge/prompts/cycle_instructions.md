@@ -45,6 +45,16 @@ Apres avoir complete le travail, AVANT le git commit:
 5. Maximum **3 nouvelles questions par cycle**
 6. Commit `feedback_questions.json` et `feedback_responses.json` avec les autres fichiers
 
+## SPRINT PRIORITY (CRITICAL)
+
+La queue est organisee en 3 sprints. **Execute Sprint 1 en entier (P1-P6) avant Sprint 2.**
+- Sprint 1 (S1-*): Core loop jouable — cleanup + Oghams + tests core + LLM validation
+- Sprint 2 (S2-*): Contenu — biomes, verbes, MOS, dead code restant
+- Sprint 3 (S3-*): Polish — edge cases, robustesse LLM
+
+**Ne PAS commencer Sprint 2 tant que TOUTES les taches S1-* sont completed + tests S1-CORE-TEST et S1-LLM-VALIDATE passes.**
+Les taches test sont intercalees — execute-les dans l'ordre de priorite comme les taches dev.
+
 ## Logique d'alternance
 
 1. Lire les 5 dernieres lignes de `tools/autodev/status/events.jsonl`

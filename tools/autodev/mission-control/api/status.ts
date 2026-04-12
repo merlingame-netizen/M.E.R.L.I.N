@@ -10,6 +10,7 @@ const STATUS_FILES = [
   'tools/autodev/status/watchdog.txt',
   'tools/autodev/status/feedback_questions.json',
   'tools/autodev/status/feedback_responses.json',
+  'tools/autodev/status/completed_archive.json',
 ];
 
 async function fetchGitHubFile(path: string): Promise<unknown | null> {
