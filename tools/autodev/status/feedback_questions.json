@@ -53,5 +53,22 @@
       "screenshot_urls": null,
       "created_at": "2026-04-12T16:00:00Z"
     }
+    ,{
+      "id": "q-20260412-005",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "question": "Maintenant que le drain (-1 PV/carte) est supprimé, faut-il conserver la récupération automatique (+5 PV si vie < 20) ?",
+      "context": "Sans le drain, la pression de survie vient uniquement des effets négatifs des cartes. La récupération auto +5 PV sous 20% de vie était conçue pour compenser les runs de drain prolongés. Sans drain, ce mécanisme pourrait rendre le jeu trop permissif (vie qui remonte automatiquement dès qu'elle est basse). Alternatives: le supprimer entièrement, le garder mais le baisser (+2 PV), ou le conditionner à un Ogham spécifique.",
+      "type": "multiple_choice",
+      "options": [
+        "Conserver +5 PV auto (sécurité en cas de malchance)",
+        "Réduire à +2 PV (compromis)",
+        "Supprimer (la survie dépend uniquement des choix)",
+        "Conditionner à un Ogham de soin (ex: Duir)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T21:00:00Z"
+    }
   ]
 }

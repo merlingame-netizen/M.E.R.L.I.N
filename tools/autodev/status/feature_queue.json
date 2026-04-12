@@ -9,6 +9,28 @@
   },
   "tasks": [
     {
+      "id": "BUG-CARDS-PLAYED-FIX",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "pending",
+      "type": "dev",
+      "title": "FIX CRITICAL: Supprimer double increment cards_played dans resolve_card()",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/store_run.gd"],
+      "description": "MerlinCardSystem.resolve_card() ligne 483 incremente run_state['cards_played'] ET store_run.gd ligne 146 incremente encore (double incrément — run_state est une reference a store.state['run'] en GDScript 4). Fix: supprimer lignes 482-483 dans merlin_card_system.gd (card_index et cards_played increments). Garder uniquement l'incrément dans StoreRun.resolve_choice(). Sans ce fix, le MOS hard_max de 50 se declenche a ~25 vraies cartes."
+    },
+    {
+      "id": "BUG-ORPHANED-PIPELINE",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "pending",
+      "type": "dev",
+      "title": "FIX HIGH: Supprimer process_card() orphelin + ajouter pacing recovery dans StoreRun",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/store_run.gd"],
+      "description": "MerlinEffectEngine.process_card() (lignes 71-256) est un pipeline 12-etapes jamais appele dans le flow principal. Supprimer process_card() entierement. Ajouter les etapes manquantes dans StoreRun.resolve_choice(): (1) pacing recovery +5 HP si life>0 ET life<20 apres effets, (2) promise deadline countdown (deja present via check_promise_deadlines). Le drain est supprime (decision directeur q-001). Cooldown deja gere via StoreOghams.tick_cooldowns()."
+    },
+    {
       "id": "S1-CLEANUP-1",
       "sprint": "S1",
       "priority": 1,
@@ -51,17 +73,6 @@
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_constants.gd"],
       "description": "Phase 1A: Corriger duir->heal_immediate(12), onn->add_biome_currency(10), nuin->replace_worst_option, quert->heal_immediate(8), ruis->heal_and_cost(+18PV,-5monnaie), saille->currency_and_heal(+8,+3). Tous 18 Oghams avec 10 champs obligatoires."
-    },
-    {
-      "id": "S1-CORE-TEST",
-      "sprint": "S1",
-      "priority": 5,
-      "status": "pending",
-      "type": "test",
-      "title": "Playtest: 10 runs completes, verifier invariants core loop",
-      "agent": "game_playtester",
-      "files": ["scripts/merlin/merlin_store.gd", "scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/merlin_card_system.gd"],
-      "description": "Simuler 10 sessions completes. Verifier: vie 0-100, rep caps +/-20/carte, MOS soft min 8 / hard max 50, drain -1/carte. Tracer core loop Hub->Biome->Ogham->Carte->Minigame->Effets. Rapport dans test_reports/."
     },
     {
       "id": "S1-LLM-VALIDATE",

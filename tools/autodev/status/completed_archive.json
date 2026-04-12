@@ -119,6 +119,17 @@
       "title": "Créer game_time_manager.gd (singleton cycle jour/nuit global)",
       "agent": "godot_expert",
       "completed_at": "2026-03-15"
+    },
+    {
+      "id": "S1-CORE-TEST",
+      "sprint": "S1",
+      "priority": 5,
+      "status": "completed",
+      "type": "test",
+      "title": "Playtest: 10 runs completes, verifier invariants core loop",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-12T21:00:00Z",
+      "notes": "RESULT=FAIL. 10 invariants PASS, 1 FAIL (INV-11 double increment cards_played). 1 CRITICAL bug found (BUG-CARDS-PLAYED-FIX: double increment via ref mutation + StoreRun both incrementing), 1 HIGH bug (BUG-ORPHANED-PIPELINE: process_card orphaned). 2 MEDIUM bugs. Life/rep/MOS invariants all pass. New tasks BUG-CARDS-PLAYED-FIX and BUG-ORPHANED-PIPELINE added at priority=0. Report: test_reports/S1-CORE-TEST_2026-04-12.json"
     }
   ]
 }
