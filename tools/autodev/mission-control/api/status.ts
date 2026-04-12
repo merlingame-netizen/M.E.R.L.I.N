@@ -9,6 +9,7 @@ const STATUS_FILES = [
   'tools/autodev/status/escalation.json',
   'tools/autodev/status/watchdog.txt',
   'tools/autodev/status/feedback_questions.json',
+  'tools/autodev/status/feedback_responses.json',
 ];
 
 async function fetchGitHubFile(path: string): Promise<unknown | null> {

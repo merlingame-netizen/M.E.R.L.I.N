@@ -15,6 +15,7 @@ interface StatusResponse {
     escalation?: { type?: string; message?: string; timestamp?: string } | null;
     watchdog?: string | null;
     feedback_questions?: { questions?: Array<{ id: string; category: string; priority: string; status: string; question: string; context?: string; type: string; options?: string[] | null; screenshot_urls?: string[] | null; created_at: string }> };
+    feedback_responses?: { responses?: Array<{ question_id: string; answer: string; additional_notes?: string }> };
   };
 }
 
@@ -90,15 +91,24 @@ export function useStateSync() {
           }
         }
 
-        // Feedback questions — merge with current local state to preserve optimistic updates
+        // Feedback questions — merge with server responses + local optimistic state
         if (data.feedback_questions?.questions) {
-          const currentResponses = useMissionStore.getState().feedbackResponses;
-          const currentQuestions = useMissionStore.getState().feedbackQuestions;
-          const answeredIds = new Set(currentResponses.map(r => r.question_id));
-          const localAnsweredIds = new Set(currentQuestions.filter(q => q.status === 'answered').map(q => q.id));
+          // Server-side responses (survives reload)
+          const serverResponseIds = new Set(
+            (data.feedback_responses?.responses || []).map(r => r.question_id)
+          );
+          // Local optimistic state (survives within session)
+          const localResponses = useMissionStore.getState().feedbackResponses;
+          const localAnsweredIds = new Set(localResponses.map(r => r.question_id));
+          const localQuestionAnswered = new Set(
+            useMissionStore.getState().feedbackQuestions.filter(q => q.status === 'answered').map(q => q.id)
+          );
+
           const merged = data.feedback_questions.questions.map(q => ({
             ...q,
-            status: (answeredIds.has(q.id) || localAnsweredIds.has(q.id)) ? 'answered' as const : q.status,
+            status: (serverResponseIds.has(q.id) || localAnsweredIds.has(q.id) || localQuestionAnswered.has(q.id))
+              ? 'answered' as const
+              : q.status,
           }));
           setFeedbackQuestions(merged as any);
         }
