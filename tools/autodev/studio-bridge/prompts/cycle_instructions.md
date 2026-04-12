@@ -75,7 +75,7 @@ Si 0 taches pending (dev ET test): lire `docs/DEV_PLAN_V2.5.md` pour identifier 
 
 A chaque cycle, avant de commencer:
 1. Verifier que `feature_queue.json` a des taches pending. Si 0 pending (dev ET test): lire `docs/DEV_PLAN_V2.5.md` et creer 3-5 nouvelles taches.
-2. Ecrire la date du cycle dans `tools/autodev/status/watchdog.log` (append: `YYYY-MM-DDTHH:MM:SS OK`).
+2. Ecrire la date du cycle dans `tools/autodev/status/watchdog.txt` (append: `YYYY-MM-DDTHH:MM:SS OK`).
 3. Si le cycle echoue pour quelque raison que ce soit, ecrire l'erreur dans `tools/autodev/status/escalation.json` et commit+push quand meme.
 
 ## Regles strictes
