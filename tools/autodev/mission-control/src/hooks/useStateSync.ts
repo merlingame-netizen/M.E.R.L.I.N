@@ -26,7 +26,6 @@ export function useStateSync() {
   const setOrchestratorState = useMissionStore(s => s.setOrchestratorState);
   const addCycleToHistory = useMissionStore(s => s.addCycleToHistory);
   const setFeedbackQuestions = useMissionStore(s => s.setFeedbackQuestions);
-  const feedbackResponses = useMissionStore(s => s.feedbackResponses);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const lastTimestampRef = useRef<string>('');
@@ -91,12 +90,15 @@ export function useStateSync() {
           }
         }
 
-        // Feedback questions
+        // Feedback questions — merge with current local state to preserve optimistic updates
         if (data.feedback_questions?.questions) {
-          const answeredIds = new Set(feedbackResponses.map(r => r.question_id));
+          const currentResponses = useMissionStore.getState().feedbackResponses;
+          const currentQuestions = useMissionStore.getState().feedbackQuestions;
+          const answeredIds = new Set(currentResponses.map(r => r.question_id));
+          const localAnsweredIds = new Set(currentQuestions.filter(q => q.status === 'answered').map(q => q.id));
           const merged = data.feedback_questions.questions.map(q => ({
             ...q,
-            status: answeredIds.has(q.id) ? 'answered' as const : q.status,
+            status: (answeredIds.has(q.id) || localAnsweredIds.has(q.id)) ? 'answered' as const : q.status,
           }));
           setFeedbackQuestions(merged as any);
         }
