@@ -110,6 +110,65 @@ A chaque cycle, avant de commencer:
 2. Ecrire la date du cycle dans `tools/autodev/status/watchdog.txt` (append: `YYYY-MM-DDTHH:MM:SS OK`).
 3. Si le cycle echoue pour quelque raison que ce soit, ecrire l'erreur dans `tools/autodev/status/escalation.json` et commit+push quand meme.
 
+## Self-Improvement (OBLIGATOIRE — chaque cycle)
+
+### 1. Apprendre de ses propres rapports
+
+Avant de coder, lire les derniers test reports dans `tools/autodev/status/test_reports/`:
+- Si un rapport precedent a trouve des patterns de bugs → verifier que le fix actuel ne les reproduit pas
+- Si un rapport a note des invariants PASS → ne pas casser ces invariants
+- Accumuler les lecons dans `tools/autodev/status/studio_learnings.json`
+
+### 2. Self-QA — Verifier son propre travail
+
+Apres chaque modification de code:
+- Grep le fichier modifie pour verifier: pas de `:=` avec CONST, type hints presents, snake_case respecte
+- Si cycle DEV: verifier que les invariants du dernier test report sont toujours respectes
+- Si cycle TEST: comparer avec le rapport precedent — les bugs ont-ils ete fixes ? De nouveaux sont-ils apparus ?
+
+### 3. Agent Evolution — Creer/specialiser des agents
+
+Le studio a des agents virtuels (champ `agent` dans les taches). Les evoluer:
+- Si un type de tache n'a pas d'agent adapte → creer un nouveau agent_id (ex: `llm_prompt_engineer`, `shader_artist`)
+- Si un agent echoue regulierement → noter la faiblesse dans `studio_learnings.json`
+- Si un pattern revient → creer une checklist dans la description de l'agent
+
+### 4. LLM Model Awareness
+
+Pour les taches impliquant le LLM (generation de cartes, prompts):
+- Noter le modele utilise dans le rapport (ex: `qwen3.5:2b`)
+- Si le modele produit des JSON malformes → ajuster le prompt template
+- Si un nouveau modele est disponible dans Ollama → proposer un test comparatif en feedback question
+- Documenter les prompts qui fonctionnent bien dans `studio_learnings.json`
+
+### 5. Metrics Tracking
+
+A chaque cycle, mettre a jour `tools/autodev/status/studio_learnings.json`:
+```json
+{
+  "total_cycles": N,
+  "bugs_found": N,
+  "bugs_fixed": N,
+  "patterns_learned": ["pattern1", "pattern2"],
+  "agent_performance": {"agent_id": {"tasks_completed": N, "bugs_introduced": N}},
+  "llm_quality": {"model": "qwen3.5:2b", "json_success_rate": "N%", "avg_quality": "N/10"}
+}
+```
+
+### 6. Autonomie Decision
+
+Le bot est autorise a prendre des decisions mineures SANS feedback humain:
+- Renommer des variables/fonctions pour clarte
+- Choisir l'ordre d'execution entre taches de meme priorite
+- Creer des taches de suivi (bugs, refactors)
+- Ajuster la priorite +/-1 d'une tache
+
+Decisions qui REQUIERENT feedback humain (via feedback_questions.json):
+- Supprimer un systeme entier
+- Changer l'architecture (nouveau singleton, refonte d'un pattern)
+- Modifier le game design (equilibrage, nouvelles mecaniques)
+- Choix visuels (couleurs, shaders, layout)
+
 ## Regles strictes
 
 - Source de verite: `docs/GAME_DESIGN_BIBLE.md` v2.4

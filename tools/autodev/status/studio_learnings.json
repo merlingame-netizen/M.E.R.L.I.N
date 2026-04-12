@@ -1,0 +1,82 @@
+{
+  "version": "1.0",
+  "description": "Studio bot accumulated knowledge — updated automatically each cycle",
+  "last_updated": "2026-04-12T22:00:00Z",
+  "metrics": {
+    "total_cycles_completed": 1,
+    "total_dev_cycles": 0,
+    "total_test_cycles": 1,
+    "bugs_found": 4,
+    "bugs_fixed": 0,
+    "tasks_completed": 14,
+    "tasks_pending": 14,
+    "current_sprint": "S1"
+  },
+  "patterns_learned": [
+    {
+      "id": "PAT-001",
+      "learned_at": "2026-04-12T21:00:00Z",
+      "source": "S1-CORE-TEST",
+      "pattern": "GDScript 4 dicts are reference types — modifying a dict obtained via .get() mutates the original store state",
+      "severity": "CRITICAL",
+      "applies_to": ["merlin_store.gd", "merlin_card_system.gd", "store_run.gd"]
+    },
+    {
+      "id": "PAT-002",
+      "learned_at": "2026-04-12T21:00:00Z",
+      "source": "S1-CORE-TEST",
+      "pattern": "Orphaned methods can contain important logic — always trace callers before deleting",
+      "severity": "HIGH",
+      "applies_to": ["merlin_effect_engine.gd"]
+    },
+    {
+      "id": "PAT-003",
+      "learned_at": "2026-04-12T21:00:00Z",
+      "source": "S1-CORE-TEST",
+      "pattern": "Director feedback responses override game design constants — check feedback_responses.json before applying any constant",
+      "severity": "MEDIUM",
+      "applies_to": ["merlin_constants.gd"]
+    }
+  ],
+  "agent_performance": {
+    "game_playtester": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "bugs_found": 4,
+      "specialization": "static analysis, invariant simulation, run modeling",
+      "strengths": ["thorough invariant checking", "good report format"],
+      "weaknesses": []
+    },
+    "godot_expert": {
+      "tasks_completed": 13,
+      "bugs_introduced": 0,
+      "specialization": "GDScript implementation, dead code removal, system cleanup",
+      "strengths": ["fast cleanup tasks"],
+      "weaknesses": []
+    }
+  },
+  "llm_quality": {
+    "model": "qwen3.5:2b",
+    "json_success_rate": "not_tested",
+    "avg_quality": "not_tested",
+    "prompt_templates_tested": 0,
+    "notes": "LLM validation (S1-LLM-VALIDATE) not yet executed"
+  },
+  "director_decisions": [
+    {
+      "question_id": "q-20260412-001",
+      "decision": "Aucun drain de vie a chaque carte",
+      "impact": "LIFE_ESSENCE_DRAIN_PER_CARD should be 0",
+      "applied": false
+    }
+  ],
+  "evolution_log": [
+    {
+      "cycle": 1,
+      "date": "2026-04-12T21:00:00Z",
+      "type": "test",
+      "action": "First autonomous test cycle — found 4 bugs, created 2 P0 tasks",
+      "improvement": "Established baseline invariant checklist (11 invariants)"
+    }
+  ]
+}
