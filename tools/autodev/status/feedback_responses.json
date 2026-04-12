@@ -1,4 +1,9 @@
 {
   "version": 1,
-  "responses": []
+  "responses": [
+    {
+      "question_id": "test-ping",
+      "answer": "test"
+    }
+  ]
 }
