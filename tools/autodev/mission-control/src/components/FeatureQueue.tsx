@@ -6,14 +6,15 @@ function getPriorityClass(priority: number): string {
   return 'priority-dot--low';
 }
 
-function getTypeLabel(task: { id: string }): string | null {
+function getTypeLabel(task: { id: string; type?: string }): string | null {
+  if (task.type) return task.type.toUpperCase();
   const id = task.id;
   if (id.startsWith('TEST-') || id.includes('-TEST') || id.includes('-EDGE') || id.includes('-LLM-')) return 'TEST';
-  if (id.startsWith('P0-') || id.startsWith('P1-') || id.startsWith('S1-') || id.startsWith('S2-') || id.startsWith('S3-')) return 'DEV';
-  return null;
+  return 'DEV';
 }
 
-function getSprintLabel(task: { id: string }): string | null {
+function getSprintLabel(task: { id: string; sprint?: string }): string | null {
+  if (task.sprint) return task.sprint.toUpperCase();
   if (task.id.startsWith('S1-')) return 'S1';
   if (task.id.startsWith('S2-')) return 'S2';
   if (task.id.startsWith('S3-')) return 'S3';

@@ -39,6 +39,8 @@ export interface FeatureTask {
   priority: number;
   status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'dispatched';
   agent?: string;
+  sprint?: string;
+  type?: string;
 }
 
 export interface FeedbackQuestion {

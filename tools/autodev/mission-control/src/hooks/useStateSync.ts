@@ -9,7 +9,7 @@ interface StatusResponse {
   ok: boolean;
   timestamp: string;
   data: {
-    feature_queue?: { tasks?: Array<{ id: string; title: string; priority: number; status: string; agent?: string }> };
+    feature_queue?: { tasks?: Array<{ id: string; title: string; priority: number; status: string; agent?: string; sprint?: string; type?: string }> };
     agent_status?: { agents?: Record<string, { state?: string; current_task?: string | null }> };
     events?: Array<{ type: string; timestamp?: string; data?: Record<string, unknown> }>;
     escalation?: { type?: string; message?: string; timestamp?: string } | null;
@@ -60,6 +60,8 @@ export function useStateSync() {
             priority: t.priority,
             status: t.status as 'pending' | 'in_progress' | 'completed' | 'blocked' | 'dispatched',
             agent: t.agent,
+            sprint: t.sprint,
+            type: t.type,
           })));
         }
 

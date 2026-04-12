@@ -101,11 +101,17 @@ export default async function handler(req: any, res: any) {
   try {
     const { sha, data } = await getFileFromGitHub();
 
-    data.responses.push({
-      question_id,
-      answer,
-      additional_notes: additional_notes || undefined,
-    });
+    const existing = data.responses.find((r: FeedbackRequest) => r.question_id === question_id);
+    if (existing) {
+      existing.answer = answer;
+      existing.additional_notes = additional_notes || undefined;
+    } else {
+      data.responses.push({
+        question_id,
+        answer,
+        additional_notes: additional_notes || undefined,
+      });
+    }
 
     const updated = JSON.stringify(data, null, 2);
     const success = await putFileToGitHub(
