@@ -2,6 +2,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = 'merlingame-netizen/M.E.R.L.I.N';
 const BRANCH = 'main';
 const FILE_PATH = 'tools/autodev/status/feedback_responses.json';
+const QUESTIONS_PATH = 'tools/autodev/status/feedback_questions.json';
 
 interface FeedbackRequest {
   question_id: string;
@@ -45,8 +46,8 @@ async function getFileFromGitHub(): Promise<{ sha: string; data: { version: numb
   };
 }
 
-async function putFileToGitHub(content: string, sha: string, message: string): Promise<boolean> {
-  const url = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+async function putFileToGitHub(content: string, sha: string, message: string, path?: string): Promise<boolean> {
+  const url = `https://api.github.com/repos/${REPO}/contents/${path || FILE_PATH}`;
   const headers: Record<string, string> = {
     'Accept': 'application/vnd.github.v3+json',
     'Content-Type': 'application/json',
@@ -115,6 +116,43 @@ export default async function handler(req: any, res: any) {
 
     if (!success) {
       return res.status(500).json({ ok: false, error: 'Failed to write to GitHub' });
+    }
+
+    // Also mark the question as answered in feedback_questions.json
+    try {
+      const qUrl = `https://api.github.com/repos/${REPO}/contents/${QUESTIONS_PATH}?ref=${BRANCH}`;
+      const qHeaders: Record<string, string> = {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'merlin-mission-control',
+      };
+      if (GITHUB_TOKEN) {
+        qHeaders['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+      }
+      const qRes = await fetch(qUrl, { headers: qHeaders });
+      if (qRes.ok) {
+        const qFile: GitHubFileResponse = await qRes.json();
+        const qDecoded = Buffer.from(qFile.content, 'base64').toString('utf-8');
+        const qData = JSON.parse(qDecoded);
+        let changed = false;
+        if (qData.questions && Array.isArray(qData.questions)) {
+          for (const q of qData.questions) {
+            if (q.id === question_id && q.status !== 'answered') {
+              q.status = 'answered';
+              changed = true;
+            }
+          }
+        }
+        if (changed) {
+          await putFileToGitHub(
+            JSON.stringify(qData, null, 2),
+            qFile.sha,
+            `feedback: mark ${question_id} as answered`,
+            QUESTIONS_PATH
+          );
+        }
+      }
+    } catch {
+      // Non-critical — response was already saved
     }
 
     return res.status(200).json({ ok: true, question_id });

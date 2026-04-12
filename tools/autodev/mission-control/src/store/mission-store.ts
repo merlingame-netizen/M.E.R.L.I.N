@@ -75,6 +75,7 @@ interface MissionState {
   feedbackQuestions: FeedbackQuestion[];
   feedbackResponses: FeedbackResponse[];
   feedbackSubmitting: boolean;
+  lastHeartbeat: string | null;
 
   setOrchestratorState: (state: string) => void;
   setAgents: (agents: AgentInfo[]) => void;
@@ -85,6 +86,7 @@ interface MissionState {
   addAlert: (alert: Omit<AlertEntry, 'id'>) => void;
   setDeployStatus: (status: MissionState['deployStatus']) => void;
   setConnected: (connected: boolean) => void;
+  setLastHeartbeat: (heartbeat: string | null) => void;
   setFeedbackQuestions: (questions: FeedbackQuestion[]) => void;
   submitFeedback: (questionId: string, answer: string, notes?: string) => Promise<void>;
   handleSSEEvent: (event: { type: string; data: Record<string, unknown> }) => void;
@@ -104,6 +106,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   feedbackQuestions: [],
   feedbackResponses: [],
   feedbackSubmitting: false,
+  lastHeartbeat: null,
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
   setAgents: (agents) => set({ agents }),
@@ -120,6 +123,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   })),
   setDeployStatus: (deployStatus) => set({ deployStatus }),
   setConnected: (connected) => set({ connected }),
+  setLastHeartbeat: (lastHeartbeat) => set({ lastHeartbeat }),
   setFeedbackQuestions: (questions) => set({ feedbackQuestions: questions }),
   submitFeedback: async (questionId, answer, notes) => {
     set({ feedbackSubmitting: true });

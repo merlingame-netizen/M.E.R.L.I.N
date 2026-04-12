@@ -1,27 +1,25 @@
-import type { FeatureTask } from '../store/mission-store';
-
-const MOCK_TASKS: FeatureTask[] = [
-  { id: 'f1', title: 'Implement Ogham activation UI overlay', priority: 1, status: 'in_progress', agent: 'architect' },
-  { id: 'f2', title: 'Wire minigame scoring to effect engine', priority: 1, status: 'dispatched', agent: 'godot-orch' },
-  { id: 'f3', title: 'Add SFX for faction reputation changes', priority: 2, status: 'pending' },
-  { id: 'f4', title: 'Fix card drain -1 at start of pipeline', priority: 1, status: 'completed', agent: 'tdd-guide' },
-  { id: 'f5', title: 'Implement MOS convergence soft caps', priority: 2, status: 'blocked', agent: 'card-gen' },
-  { id: 'f6', title: 'Add Anam cross-run persistence', priority: 3, status: 'pending' },
-  { id: 'f7', title: 'Build biome maturity scoring system', priority: 2, status: 'dispatched', agent: 'biome-bld' },
-  { id: 'f8', title: 'Create Confiance Merlin tier transitions', priority: 3, status: 'pending' },
-  { id: 'f9', title: 'Implement FastRoute 500+ card variants', priority: 2, status: 'pending' },
-  { id: 'f10', title: 'Add multiplicateur cap global x2.0', priority: 3, status: 'completed', agent: 'code-reviewer' },
-];
+import { useMissionStore } from '../store/mission-store';
 
 function getPriorityClass(priority: number): string {
-  if (priority <= 1) return 'priority-dot--high';
-  if (priority <= 2) return 'priority-dot--medium';
+  if (priority <= 2) return 'priority-dot--high';
+  if (priority <= 5) return 'priority-dot--medium';
   return 'priority-dot--low';
 }
 
+function getTypeLabel(task: { id: string; type?: string }): string | null {
+  if (task.id.startsWith('TEST-')) return 'TEST';
+  if (task.id.startsWith('P0-') || task.id.startsWith('P1-')) return 'DEV';
+  return null;
+}
+
 export function FeatureQueue() {
-  const tasks = MOCK_TASKS;
-  const pendingCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress' || t.status === 'dispatched').length;
+  const tasks = useMissionStore(s => s.featureQueue);
+
+  const sorted = [...tasks]
+    .filter(t => t.status !== 'completed')
+    .sort((a, b) => a.priority - b.priority);
+
+  const pendingCount = sorted.filter(t => t.status === 'pending' || t.status === 'in_progress' || t.status === 'dispatched').length;
 
   return (
     <div className="panel">
@@ -38,18 +36,40 @@ export function FeatureQueue() {
         </span>
       </div>
       <div className="panel-body" style={{ padding: '0' }}>
-        {tasks.map((task) => (
-          <div key={task.id} className="feature-row">
-            <div className={`priority-dot ${getPriorityClass(task.priority)}`} />
-            <span className="feature-title">{task.title}</span>
-            <span className={`feature-status feature-status--${task.status}`}>
-              {task.status.replace('_', ' ')}
-            </span>
-            {task.agent && (
-              <span className="feature-agent">{task.agent}</span>
-            )}
+        {sorted.length === 0 && (
+          <div style={{ padding: '12px 16px', opacity: 0.5, fontSize: '12px' }}>
+            No tasks in queue
           </div>
-        ))}
+        )}
+        {sorted.map((task) => {
+          const typeLabel = getTypeLabel(task);
+          return (
+            <div key={task.id} className="feature-row">
+              <div className={`priority-dot ${getPriorityClass(task.priority)}`} />
+              {typeLabel && (
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  padding: '1px 4px',
+                  borderRadius: '2px',
+                  background: typeLabel === 'TEST' ? 'rgba(255,165,0,0.15)' : 'rgba(0,255,136,0.15)',
+                  color: typeLabel === 'TEST' ? 'var(--amber)' : 'var(--green)',
+                  marginRight: '4px',
+                  letterSpacing: '0.5px',
+                }}>
+                  {typeLabel}
+                </span>
+              )}
+              <span className="feature-title">{task.title}</span>
+              <span className={`feature-status feature-status--${task.status}`}>
+                {task.status.replace('_', ' ')}
+              </span>
+              {task.agent && (
+                <span className="feature-agent">{task.agent}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

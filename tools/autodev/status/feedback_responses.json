@@ -2,36 +2,24 @@
   "version": 1,
   "responses": [
     {
-      "question_id": "q-20260412-003",
-      "answer": "Hybride (titre celtique + corps sans-serif)"
-    },
-    {
       "question_id": "q-20260412-001",
-      "answer": "Rien, pas de drain de vie à chaque carte"
-    },
-    {
-      "question_id": "q-20260412-001",
-      "answer": "Pas de drain de vie"
+      "answer": "Aucun drain de vie à chaque carte",
+      "timestamp": "2026-04-12T17:30:00Z"
     },
     {
       "question_id": "q-20260412-002",
-      "answer": "Je ne vois pas les images"
-    },
-    {
-      "question_id": "q-20260412-001",
-      "answer": "Aucun drain de vie à chaque carte"
-    },
-    {
-      "question_id": "q-20260412-002",
-      "answer": "Je ne vois pas ! L'ambiance doit changer en fonction de saison et heure de journée"
+      "answer": "Je ne vois pas les images ! L'ambiance doit changer en fonction de saison et heure de journée",
+      "timestamp": "2026-04-12T17:35:00Z"
     },
     {
       "question_id": "q-20260412-003",
-      "answer": "Hybride (titre celtique + corps sans-serif)"
+      "answer": "Hybride (titre celtique + corps sans-serif)",
+      "timestamp": "2026-04-12T17:20:00Z"
     },
     {
       "question_id": "q-20260412-004",
-      "answer": "Il faut que ça fasse plus pixelisé, entre la N64 et la PS1 avec des effets propres à ces consoles en ultra low pixel / low polygon avec effets volumétriques cohérents"
+      "answer": "Il faut que ça fasse plus pixelisé, entre la N64 et la PS1 avec des effets propres à ces consoles en ultra low pixel / low polygon avec effets volumétriques cohérents",
+      "timestamp": "2026-04-12T17:40:00Z"
     }
   ]
 }

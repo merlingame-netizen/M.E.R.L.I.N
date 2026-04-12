@@ -1,0 +1,124 @@
+{
+  "version": "1.0",
+  "description": "Archived completed tasks from feature_queue.json",
+  "archived_at": "2026-04-12T18:00:00Z",
+  "tasks": [
+    {
+      "id": "TRIADE-CORE-1",
+      "phase": 1,
+      "priority": 1,
+      "status": "completed",
+      "title": "Supprimer Triade de merlin_constants.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-11"
+    },
+    {
+      "id": "TRIADE-CORE-2",
+      "phase": 1,
+      "priority": 2,
+      "status": "completed",
+      "title": "Nettoyer merlin_store.gd — état Triade",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-11"
+    },
+    {
+      "id": "TRIADE-CORE-3",
+      "phase": 1,
+      "priority": 3,
+      "status": "completed",
+      "title": "Nettoyer merlin_effect_engine.gd — SHIFT_ASPECT/SOUFFLE",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-11"
+    },
+    {
+      "id": "TRIADE-CORE-4",
+      "phase": 1,
+      "priority": 4,
+      "status": "completed",
+      "title": "Nettoyer merlin_card_system.gd — options liées aux aspects",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-11"
+    },
+    {
+      "id": "TRIADE-UI-1",
+      "phase": 1,
+      "priority": 5,
+      "status": "completed",
+      "title": "Remplacer hub_triade_hud.gd par reputation_hud.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-11"
+    },
+    {
+      "id": "TRIADE-UI-2",
+      "phase": 1,
+      "priority": 6,
+      "status": "completed",
+      "title": "Rewire merlin_game_ui.gd et merlin_game_controller.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "TRIADE-AI-1",
+      "phase": 1,
+      "priority": 7,
+      "status": "completed",
+      "title": "Nettoyer context_builder.gd — prompt LLM sans Triade",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "TRIADE-AI-2",
+      "phase": 1,
+      "priority": 8,
+      "status": "completed",
+      "title": "Nettoyer merlin_omniscient.gd + fallback_pool.gd + brain_quality_judge.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "TRIADE-SCENES",
+      "phase": 1,
+      "priority": 9,
+      "status": "completed",
+      "title": "Nettoyer les scènes contrôleurs (4 fichiers)",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "TRIADE-TRAINING",
+      "phase": 1,
+      "priority": 10,
+      "status": "completed",
+      "title": "Invalider training_roadmap.json (modèles entraînés sur Triade)",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "MECANIQUE-DESIGN",
+      "phase": 2,
+      "priority": 11,
+      "status": "completed",
+      "title": "Mettre à jour NEW_MECHANICS_DESIGN.md avec décisions session",
+      "agent": "game_designer",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "REPUTATION-IMPL",
+      "phase": 4,
+      "priority": 12,
+      "status": "completed",
+      "title": "Implémenter merlin_reputation_system.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    },
+    {
+      "id": "DAYTIME-GLOBAL",
+      "phase": 3,
+      "priority": 13,
+      "status": "completed",
+      "title": "Créer game_time_manager.gd (singleton cycle jour/nuit global)",
+      "agent": "godot_expert",
+      "completed_at": "2026-03-15"
+    }
+  ]
+}
