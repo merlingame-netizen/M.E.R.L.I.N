@@ -176,6 +176,13 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 	# Check promise deadlines
 	check_promise_deadlines(state, apply_effect_func)
 
+	# Pacing recovery: +5 PV if life > 0 and life < 20 (bible v2.4)
+	var run_final: Dictionary = state.get("run", {})
+	var life_post: int = int(run_final.get("life_essence", 0))
+	if life_post > 0 and life_post < 20:
+		run_final["life_essence"] = mini(life_post + 5, MerlinConstants.LIFE_ESSENCE_MAX)
+		state["run"] = run_final
+
 	return {"ok": true, "option": option, "cards_played": run["cards_played"]}
 
 

@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-12T22:00:00Z",
+  "last_updated": "2026-04-12T22:30:00Z",
   "metrics": {
-    "total_cycles_completed": 1,
-    "total_dev_cycles": 0,
+    "total_cycles_completed": 2,
+    "total_dev_cycles": 1,
     "total_test_cycles": 1,
     "bugs_found": 4,
-    "bugs_fixed": 0,
-    "tasks_completed": 14,
+    "bugs_fixed": 2,
+    "tasks_completed": 16,
     "tasks_pending": 14,
     "current_sprint": "S1"
   },
@@ -36,6 +36,22 @@
       "pattern": "Director feedback responses override game design constants — check feedback_responses.json before applying any constant",
       "severity": "MEDIUM",
       "applies_to": ["merlin_constants.gd"]
+    },
+    {
+      "id": "PAT-004",
+      "learned_at": "2026-04-12T22:30:00Z",
+      "source": "BUG-ORPHANED-PIPELINE",
+      "pattern": "For large function deletions (200+ lines), Python regex via bash is more reliable than Edit tool with long old_string",
+      "severity": "LOW",
+      "applies_to": ["tooling"]
+    },
+    {
+      "id": "PAT-005",
+      "learned_at": "2026-04-12T22:30:00Z",
+      "source": "BUG-CARDS-PLAYED-FIX",
+      "pattern": "When two systems both increment the same dict field (via reference), remove the secondary one — keep only the canonical owner (StoreRun.resolve_choice is canonical for cards_played)",
+      "severity": "CRITICAL",
+      "applies_to": ["merlin_card_system.gd", "store_run.gd"]
     }
   ],
   "agent_performance": {
@@ -48,11 +64,11 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 13,
+      "tasks_completed": 15,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
-      "strengths": ["fast cleanup tasks"],
-      "weaknesses": []
+      "strengths": ["fast cleanup tasks", "precise bug fixes"],
+      "weaknesses": ["large deletions need Python fallback"]
     }
   },
   "llm_quality": {
@@ -67,7 +83,30 @@
       "question_id": "q-20260412-001",
       "decision": "Aucun drain de vie a chaque carte",
       "impact": "LIFE_ESSENCE_DRAIN_PER_CARD should be 0",
-      "applied": false
+      "applied": true,
+      "applied_at": "2026-04-12T22:30:00Z",
+      "files_modified": ["scripts/merlin/merlin_constants.gd"]
+    },
+    {
+      "question_id": "q-20260412-002",
+      "decision": "Ambiance doit changer en fonction de saison et heure de journee",
+      "impact": "Dynamic ambient: season + time_of_day exposed to LLM context",
+      "applied": false,
+      "task_created": "S3-AMBIENT-LIGHTING"
+    },
+    {
+      "question_id": "q-20260412-003",
+      "decision": "Hybride (titre celtique + corps sans-serif)",
+      "impact": "MerlinVisual: FONT_TITLE (celtic) + FONT_BODY (sans-serif)",
+      "applied": false,
+      "task_created": "S3-TYPOGRAPHY"
+    },
+    {
+      "question_id": "q-20260412-004",
+      "decision": "Ultra low pixel / low polygon N64+PS1 avec effets volumetriques",
+      "impact": "Render pipeline: pixel snap, affine textures, volumetric fog, viewport scale, dithering",
+      "applied": false,
+      "task_created": "S3-PIXEL-RENDER"
     }
   ],
   "evolution_log": [
@@ -77,6 +116,13 @@
       "type": "test",
       "action": "First autonomous test cycle — found 4 bugs, created 2 P0 tasks",
       "improvement": "Established baseline invariant checklist (11 invariants)"
+    },
+    {
+      "cycle": 2,
+      "date": "2026-04-12T22:30:00Z",
+      "type": "dev",
+      "action": "Fixed 2 P0 bugs: double cards_played increment + orphaned process_card(). Applied director q-001 (drain=0). Added pacing recovery. Created 3 S3 tasks from director decisions q-002/003/004.",
+      "improvement": "cards_played now has single canonical increment. MOS will correctly trigger at 50 cards. Process_card() cleaned up (9125 chars removed)."
     }
   ]
 }

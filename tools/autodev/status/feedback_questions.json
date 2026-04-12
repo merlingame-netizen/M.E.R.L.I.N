@@ -6,7 +6,7 @@
       "id": "q-20260412-001",
       "category": "gamedesign",
       "priority": "HIGH",
-      "status": "answered",
+      "status": "applied",
       "question": "Le drain de vie (-1 PV par carte) doit-il s'appliquer AVANT ou APRES les effets de faction ?",
       "context": "Actuellement le drain s'applique en premier (pipeline etape 1). Si applique apres, les bonus de faction pourraient compenser le drain, rendant le jeu plus permissif.",
       "type": "multiple_choice",

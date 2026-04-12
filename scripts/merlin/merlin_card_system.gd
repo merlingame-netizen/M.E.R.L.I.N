@@ -478,10 +478,6 @@ func resolve_card(run_state: Dictionary, card: Dictionary, option_index: int, sc
 			else:
 				rejected.append({"type": "CREATE_PROMISE", "promise_id": pid, "reason": "promise_not_found"})
 
-	# Update card tracking
-	run_state["card_index"] = int(run_state.get("card_index", 0)) + 1
-	run_state["cards_played"] = int(run_state.get("cards_played", 0)) + 1
-
 	# Log to story
 	var story_log: Array = run_state.get("story_log", [])
 	story_log.append({
