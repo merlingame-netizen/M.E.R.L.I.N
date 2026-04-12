@@ -1,4 +1,9 @@
 {
   "version": 1,
-  "responses": []
+  "responses": [
+    {
+      "question_id": "q-20260412-003",
+      "answer": "Hybride (titre celtique + corps sans-serif)"
+    }
+  ]
 }
