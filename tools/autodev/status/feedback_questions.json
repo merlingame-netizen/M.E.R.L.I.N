@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "generated_at": "2026-04-12T16:00:00Z",
+  "questions": [
+    {
+      "id": "q-20260412-001",
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "pending",
+      "question": "Le drain de vie (-1 PV par carte) doit-il s'appliquer AVANT ou APRES les effets de faction ?",
+      "context": "Actuellement le drain s'applique en premier (pipeline etape 1). Si applique apres, les bonus de faction pourraient compenser le drain, rendant le jeu plus permissif.",
+      "type": "multiple_choice",
+      "options": ["Avant les effets (actuel - plus punitif)", "Apres les effets (plus permissif)", "Simultanement (drain + effets calcules ensemble)"],
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T16:00:00Z"
+    },
+    {
+      "id": "q-20260412-002",
+      "category": "graphics",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "question": "Quelle ambiance lumineuse pour la foret de Broceliande ?",
+      "context": "Deux presets shader disponibles : ambiance celtique chaude (tons dores, brume ambre) vs mystique froide (tons bleu-vert, brume argentee).",
+      "type": "image_compare",
+      "options": ["Preset Chaud (Celtic Gold)", "Preset Froid (Mystic Silver)"],
+      "screenshot_urls": [
+        "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_warm.png",
+        "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_cold.png"
+      ],
+      "created_at": "2026-04-12T16:00:00Z"
+    },
+    {
+      "id": "q-20260412-003",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "question": "Quel style de police pour les cartes narratives ?",
+      "context": "Les cartes affichent le texte narratif genere par le LLM. Choix entre une police manuscrite celtique (plus immersive, moins lisible) et une police sans-serif moderne (plus lisible, moins thematique).",
+      "type": "multiple_choice",
+      "options": ["Police celtique manuscrite (immersion)", "Sans-serif moderne (lisibilite)", "Hybride (titre celtique + corps sans-serif)"],
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T16:00:00Z"
+    },
+    {
+      "id": "q-20260412-004",
+      "category": "ux",
+      "priority": "LOW",
+      "status": "pending",
+      "question": "Quel est votre ressenti global sur la direction artistique du jeu ?",
+      "context": "Question ouverte pour recueillir votre vision d'ensemble. Pensez aux couleurs, a l'ambiance, au style graphique, aux animations.",
+      "type": "text",
+      "options": null,
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T16:00:00Z"
+    }
+  ]
+}

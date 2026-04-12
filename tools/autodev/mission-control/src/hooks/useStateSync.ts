@@ -14,6 +14,7 @@ interface StatusResponse {
     events?: Array<{ type: string; timestamp?: string; data?: Record<string, unknown> }>;
     escalation?: { type?: string; message?: string; timestamp?: string } | null;
     watchdog?: string | null;
+    feedback_questions?: { questions?: Array<{ id: string; category: string; priority: string; status: string; question: string; context?: string; type: string; options?: string[] | null; screenshot_urls?: string[] | null; created_at: string }> };
   };
 }
 
@@ -24,6 +25,8 @@ export function useStateSync() {
   const setAgents = useMissionStore(s => s.setAgents);
   const setOrchestratorState = useMissionStore(s => s.setOrchestratorState);
   const addCycleToHistory = useMissionStore(s => s.addCycleToHistory);
+  const setFeedbackQuestions = useMissionStore(s => s.setFeedbackQuestions);
+  const feedbackResponses = useMissionStore(s => s.feedbackResponses);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const lastTimestampRef = useRef<string>('');
@@ -86,6 +89,16 @@ export function useStateSync() {
               });
             }
           }
+        }
+
+        // Feedback questions
+        if (data.feedback_questions?.questions) {
+          const answeredIds = new Set(feedbackResponses.map(r => r.question_id));
+          const merged = data.feedback_questions.questions.map(q => ({
+            ...q,
+            status: answeredIds.has(q.id) ? 'answered' as const : q.status,
+          }));
+          setFeedbackQuestions(merged as any);
         }
 
         // Escalation alert

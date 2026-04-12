@@ -23,6 +23,28 @@ Tu tournes dans un sandbox Linux ephemere (Remote Trigger). Regles critiques:
 - `tools/autodev/status/test_reports/` — Rapports de test
 - `docs/GAME_DESIGN_BIBLE.md` — Bible game design v2.4
 
+## Human Feedback — Lire les reponses du Directeur
+
+Avant de selectionner une tache:
+1. Lire `tools/autodev/status/feedback_responses.json`
+2. Pour chaque reponse non encore traitee (comparer avec `feedback_questions.json` status):
+   - Appliquer la decision du directeur au domaine concerne
+   - Si la reponse change les priorites, mettre a jour `feature_queue.json`
+3. Mettre a jour `feedback_questions.json`: les questions correspondantes passent a `status: "answered"`
+
+## Human Feedback — Generer des questions
+
+Apres avoir complete le travail, AVANT le git commit:
+1. Lire `tools/autodev/status/feedback_questions.json`
+2. NE PAS ajouter de doublons (verifier les IDs existants)
+3. Generer des questions UNIQUEMENT quand:
+   - Un choix de design a 2+ alternatives viables → `type: "multiple_choice"`, `category: "design"` ou `"gamedesign"`
+   - Un changement visuel pourrait aller dans 2 directions → `type: "image_compare"`, `category: "graphics"` ou `"rendering"`
+   - Un flow UX a des compromis → `type: "text"`, `category: "ux"`
+4. Format: `id: "q-{YYYYMMDD}-{NNN}"`, `status: "pending"`, `priority: "HIGH"|"MEDIUM"|"LOW"`
+5. Maximum **3 nouvelles questions par cycle**
+6. Commit `feedback_questions.json` et `feedback_responses.json` avec les autres fichiers
+
 ## Logique d'alternance
 
 1. Lire les 5 dernieres lignes de `tools/autodev/status/events.jsonl`

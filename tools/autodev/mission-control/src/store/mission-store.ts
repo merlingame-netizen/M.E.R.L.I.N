@@ -41,6 +41,26 @@ export interface FeatureTask {
   agent?: string;
 }
 
+export interface FeedbackQuestion {
+  id: string;
+  category: 'design' | 'graphics' | 'gamedesign' | 'rendering' | 'ux' | 'infrastructure';
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  status: 'pending' | 'answered';
+  question: string;
+  context?: string;
+  type: 'multiple_choice' | 'text' | 'image_compare';
+  options?: string[] | null;
+  screenshot_urls?: string[] | null;
+  created_at: string;
+}
+
+export interface FeedbackResponse {
+  question_id: string;
+  answer: string;
+  additional_notes?: string;
+  timestamp: string;
+}
+
 interface MissionState {
   orchestratorState: string;
   cycleId: string | null;
@@ -52,6 +72,9 @@ interface MissionState {
   deployStatus: 'idle' | 'building' | 'deployed' | 'failed';
   lastDeployAt: string | null;
   connected: boolean;
+  feedbackQuestions: FeedbackQuestion[];
+  feedbackResponses: FeedbackResponse[];
+  feedbackSubmitting: boolean;
 
   setOrchestratorState: (state: string) => void;
   setAgents: (agents: AgentInfo[]) => void;
@@ -62,6 +85,8 @@ interface MissionState {
   addAlert: (alert: Omit<AlertEntry, 'id'>) => void;
   setDeployStatus: (status: MissionState['deployStatus']) => void;
   setConnected: (connected: boolean) => void;
+  setFeedbackQuestions: (questions: FeedbackQuestion[]) => void;
+  submitFeedback: (questionId: string, answer: string, notes?: string) => Promise<void>;
   handleSSEEvent: (event: { type: string; data: Record<string, unknown> }) => void;
 }
 
@@ -76,6 +101,9 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   deployStatus: 'idle',
   lastDeployAt: null,
   connected: false,
+  feedbackQuestions: [],
+  feedbackResponses: [],
+  feedbackSubmitting: false,
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
   setAgents: (agents) => set({ agents }),
@@ -92,6 +120,35 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   })),
   setDeployStatus: (deployStatus) => set({ deployStatus }),
   setConnected: (connected) => set({ connected }),
+  setFeedbackQuestions: (questions) => set({ feedbackQuestions: questions }),
+  submitFeedback: async (questionId, answer, notes) => {
+    set({ feedbackSubmitting: true });
+    try {
+      const API_URL = import.meta.env.VITE_API_URL
+        ? `${import.meta.env.VITE_API_URL.replace('/status', '/feedback')}`
+        : '/api/feedback';
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question_id: questionId, answer, additional_notes: notes }),
+      });
+      if (res.ok) {
+        set(s => ({
+          feedbackQuestions: s.feedbackQuestions.map(q =>
+            q.id === questionId ? { ...q, status: 'answered' as const } : q
+          ),
+          feedbackResponses: [...s.feedbackResponses, {
+            question_id: questionId,
+            answer,
+            additional_notes: notes,
+            timestamp: new Date().toISOString(),
+          }],
+        }));
+      }
+    } finally {
+      set({ feedbackSubmitting: false });
+    }
+  },
   handleSSEEvent: (event) => {
     const store = get();
     switch (event.type) {

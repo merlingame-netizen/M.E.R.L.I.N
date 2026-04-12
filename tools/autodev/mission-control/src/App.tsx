@@ -7,6 +7,7 @@ import { AlertFeed } from './components/AlertFeed';
 import { MetricsPanel } from './components/MetricsPanel';
 import { FeatureQueue } from './components/FeatureQueue';
 import { GamePreview } from './components/GamePreview';
+import { HumanFeedback } from './components/HumanFeedback';
 import './styles/scifi-theme.css';
 
 export function App() {
@@ -31,6 +32,11 @@ export function App() {
         {/* Game Preview — full width, prominent on mobile with 16:9 aspect */}
         <div className="dashboard-layout__full-row dashboard-layout__game-preview">
           <GamePreview />
+        </div>
+
+        {/* Director's Inbox — Human Feedback */}
+        <div className="dashboard-layout__full-row">
+          <HumanFeedback />
         </div>
 
         {/* Timeline */}
