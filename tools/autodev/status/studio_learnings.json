@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T21:15:00Z",
+  "last_updated": "2026-04-13T22:00:00Z",
   "metrics": {
-    "total_cycles_completed": 24,
-    "total_dev_cycles": 12,
+    "total_cycles_completed": 25,
+    "total_dev_cycles": 13,
     "total_test_cycles": 12,
     "bugs_found": 21,
-    "bugs_fixed": 13,
-    "tasks_completed": 44,
-    "tasks_pending": 12,
+    "bugs_fixed": 14,
+    "tasks_completed": 45,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -392,6 +392,18 @@
       "applies_to": [
         "scripts/merlin/merlin_skeleton_generator.gd",
         "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-036",
+      "learned_at": "2026-04-13T22:00:00Z",
+      "source": "BUG-PROMISE-SYSTEM-FIX",
+      "pattern": "When unifying two storage systems (e.g. run.promises + run.active_promises → only active_promises), production code may already be fixed while tests still reference the old key. Audit ALL test files with grep for the old key AND the old field name (deadline_day vs deadline_cards). Fix both key access and assertion field names together. Pre-existing method-not-found issues in tests (e.g. engine.process_card() on MerlinEffectEngine) are separate structural bugs — note them but don't silently swallow.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/test/test_effect_engine_unit.gd",
+        "scripts/test/test_effect_engine.gd",
+        "scripts/test/test_process_card_pipeline.gd"
       ]
     },
     {

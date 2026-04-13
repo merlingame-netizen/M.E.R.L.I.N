@@ -1,8 +1,18 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T20:53:21Z",
+  "updated": "2026-04-13T22:00:00Z",
   "archived": [
+    {
+      "id": "BUG-PROMISE-SYSTEM-FIX",
+      "sprint": "S2",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Unifier le systeme de promesses: fusionner ADD_PROMISE + CREATE_PROMISE",
+      "completed_at": "2026-04-13T22:00:00Z",
+      "notes": "Production code was already correct (both _add_promise and _create_promise write to run.active_promises with made_at_card+deadline_cards tracking). Fixed 3 test files: test_effect_engine_unit.gd + test_effect_engine.gd (run['promises'] → active_promises, deadline_day → deadline_cards assertions) + test_process_card_pipeline.gd (4 setup blocks). PAT-036 added."
+    },
     {
       "id": "S4-SMOKE-TEST",
       "sprint": "S4",

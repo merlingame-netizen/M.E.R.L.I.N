@@ -1,7 +1,7 @@
 {
   "version": "3.5",
-  "updated": "2026-04-13T21:15:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 12 pending.",
+  "updated": "2026-04-13T22:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 11 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -15,20 +15,6 @@
     "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
-    {
-      "id": "BUG-PROMISE-SYSTEM-FIX",
-      "sprint": "S2",
-      "priority": 3,
-      "status": "pending",
-      "type": "dev",
-      "title": "Unifier le systeme de promesses: fusionner ADD_PROMISE + CREATE_PROMISE",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd"
-      ],
-      "description": "S2-INTEGRATION audit (HIGH): Dual incompatible promise systems. ADD_PROMISE writes to run.promises, CREATE_PROMISE writes to run.active_promises. check_promise_deadlines() only reads run.active_promises using run.day (never incremented). Fix: (1) Remove run.promises dict, use only run.active_promises. (2) Change _add_promise to write to run.active_promises with deadline_cards tracking (made_at_card + deadline_cards). (3) Fix check_promise_deadlines to compare cards_played >= made_at_card + deadline_cards. (4) Remove _create_promise or redirect to same storage. (5) FULFILL_PROMISE and BREAK_PROMISE must target run.active_promises. (6) Max 2 active promises guard must apply to unified list."
-    },
     {
       "id": "S2-DAY-TICK-FIX",
       "sprint": "S2",
