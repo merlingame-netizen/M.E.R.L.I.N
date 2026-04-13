@@ -23,8 +23,8 @@ const GAMES := {
 	"observation": ["mg_oeil_corbeau", "mg_trace_cerf", "mg_rune_cachee"],
 	"logique": ["mg_enigme_ogham", "mg_noeud_celtique", "mg_pierre_feuille_racine"],
 	"finesse": ["mg_tir_a_larc", "mg_lame_druide", "mg_pas_renard"],
-	"vigueur": ["mg_combat_rituel", "mg_sang_froid", "mg_course"],
-	"esprit": ["mg_volonte", "mg_apaisement", "mg_meditation"],
+	"vigueur": ["mg_combat_rituel", "mg_course"],
+	"esprit": ["mg_volonte", "mg_apaisement", "mg_sang_froid"],
 	"perception": ["mg_ombres", "mg_regard", "mg_echo"],
 }
 

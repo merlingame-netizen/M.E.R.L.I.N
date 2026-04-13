@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T16:00:00Z",
+  "updated": "2026-04-13T16:30:00Z",
   "archived": [
     {
       "id": "S4-SMOKE-TEST",
@@ -293,6 +293,21 @@
       "agent": "game_design_auditor",
       "completed_at": "2026-04-13T16:00:00Z",
       "notes": "TEST PARTIAL_PASS. CHECK-1 PASS: FIELD_MINIGAMES matches bible s.6.2 exactly (9 fields). CHECK-2 PASS: all mg_ scripts exist, scenes/minigames/ not needed (script-based overlays). CHECK-3 PASS: no orphaned scripts (1 orphaned uid artifact). BUG: mg_sang_froid mis-routed to GAMES[vigueur] instead of GAMES[esprit] (HIGH). Created BUG-SANG-FROID-GAMES-FIELD (P5) + S3-MINIGAME-ROUTING-REGRESSION (P13). PAT-029 added."
+    },
+    {
+      "id": "BUG-SANG-FROID-GAMES-FIELD",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix: move mg_sang_froid from GAMES[vigueur] to GAMES[esprit] in registry",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/minigames/minigame_registry.gd"
+      ],
+      "description": "Bible s.6.2 + catalogue: sang_froid is an ESPRIT minigame. But GAMES['vigueur'] = ['mg_combat_rituel', 'mg_sang_froid', 'mg_course'] and GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_meditation']. Esprit-field cards NEVER select mg_sang_froid (unreachable). Vigueur cards sometimes get sang_froid incorrectly. Fix: GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_sang_froid']; GAMES['vigueur'] = ['mg_combat_rituel', 'mg_course']. Leave mg_meditation.gd in place (script stays) but remove from GAMES dispatch until director approves. Also delete orphaned mg_de_du_destin.gd.uid artifact. Found by: S3-MINIGAMES-FIELD-AUDIT.",
+      "completed_at": "2026-04-13T16:30:00Z",
+      "notes": "Fixed: GAMES['esprit']=['mg_volonte','mg_apaisement','mg_sang_froid']; GAMES['vigueur']=['mg_combat_rituel','mg_course']. mg_sang_froid now reachable from esprit-field cards (bible s.6.2 aligned). mg_meditation removed from dispatch (script preserved, pending q-20260413-004). Orphaned mg_de_du_destin.gd.uid deleted. Resolves BUG-ORPHANED-UID-CLEANUP implicitly."
     }
   ]
 }

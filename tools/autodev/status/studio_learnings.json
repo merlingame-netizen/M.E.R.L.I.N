@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T16:00:00Z",
+  "last_updated": "2026-04-13T16:30:00Z",
   "metrics": {
-    "total_cycles_completed": 18,
-    "total_dev_cycles": 9,
+    "total_cycles_completed": 19,
+    "total_dev_cycles": 10,
     "total_test_cycles": 9,
     "bugs_found": 21,
-    "bugs_fixed": 9,
-    "tasks_completed": 38,
-    "tasks_pending": 11,
+    "bugs_fixed": 10,
+    "tasks_completed": 39,
+    "tasks_pending": 10,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -328,6 +328,17 @@
         "scripts/minigames/minigame_registry.gd",
         "scripts/ui/game_controller_minigame.gd"
       ]
+    },
+    {
+      "id": "PAT-030",
+      "learned_at": "2026-04-13T16:30:00Z",
+      "source": "BUG-SANG-FROID-GAMES-FIELD",
+      "pattern": "FIELD_MINIGAMES (merlin_constants.gd, conceptual labels) and GAMES (minigame_registry.gd, dispatch) are parallel systems that MUST stay in sync with bible s.6.2. When bible field->minigame mapping changes, update BOTH systems.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -345,7 +356,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 23,
+      "tasks_completed": 24,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [

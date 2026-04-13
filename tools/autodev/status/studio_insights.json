@@ -99,7 +99,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-13T14:19:16Z"
+    },
+    {
+      "id": "insight-20260413-008",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "mg_meditation.gd is a functional script with no dispatch path — pending director placement decision (q-20260413-004)",
+      "details": "After GAMES['esprit'] aligned to bible s.6.2, mg_meditation no longer dispatched. Script preserved, preload in match block retained. Director must decide: keep as bonus in esprit, move to perception/logique, or add to bible. Task will be created once answered.",
+      "proposed_task": {
+        "title": "Add mg_meditation to GAMES field per director q-20260413-004",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T16:30:00Z"
     }
   ],
-  "updated": "2026-04-13T14:19:16Z"
+  "updated": "2026-04-13T16:30:00Z"
 }
