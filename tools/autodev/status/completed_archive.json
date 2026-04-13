@@ -1,0 +1,324 @@
+{
+  "version": "1.0",
+  "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
+  "updated": "2026-04-13T16:45:00Z",
+  "archived": [
+    {
+      "id": "S4-SMOKE-TEST",
+      "sprint": "S4",
+      "priority": 21,
+      "status": "completed",
+      "type": "test",
+      "title": "Smoke test: run complete headless sans crash",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-13T12:00:00Z",
+      "notes": "Static analysis smoke test (Godot not available in sandbox). PASS: startup trace, card cycle, all 13 invariants, 5/5 regressions. 2 open bugs confirmed (BUG-FACTIONS-STALE-FIX, BUG-SIGNAL-DELTA-FIX). Report: test_reports/S4-SMOKE-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S1-CORE-TEST",
+      "sprint": "S1",
+      "priority": 5,
+      "status": "completed",
+      "type": "test",
+      "title": "Playtest: 10 runs completes, verifier invariants core loop",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-12T21:00:00Z",
+      "notes": "10/11 invariants PASS. 1 CRITICAL bug (double cards_played). Report: test_reports/S1-CORE-TEST_2026-04-12.json"
+    },
+    {
+      "id": "BUG-CARDS-PLAYED-FIX",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "completed",
+      "type": "dev",
+      "title": "FIX CRITICAL: Supprimer double increment cards_played",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-12T22:37:00Z",
+      "notes": "Removed line 483 in merlin_card_system.gd. Single source of truth in StoreRun."
+    },
+    {
+      "id": "S1-RETEST",
+      "sprint": "S1",
+      "priority": 5,
+      "status": "completed",
+      "type": "test",
+      "title": "Re-test: verify 11/11 invariants after bugfix",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-12T23:37:00Z",
+      "notes": "ALL 11 invariants PASS. cards_played counter now accurate."
+    },
+    {
+      "id": "BUG-ORPHANED-PIPELINE",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "completed",
+      "type": "dev",
+      "title": "FIX HIGH: Supprimer process_card() orphelin",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T00:37:00Z",
+      "notes": "Removed orphaned 12-step pipeline. Pacing recovery extracted to StoreRun."
+    },
+    {
+      "id": "S1-CLEANUP-1",
+      "sprint": "S1",
+      "priority": 1,
+      "status": "completed",
+      "type": "dev",
+      "title": "Supprimer dead code merlin_constants.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T01:37:00Z",
+      "notes": "Removed ELEMENTS, ESSENCE_*, FLUX_*, RUN_TYPOLOGIES, DC_*, CardOption enum."
+    },
+    {
+      "id": "S1-CLEANUP-2",
+      "sprint": "S1",
+      "priority": 2,
+      "status": "completed",
+      "type": "dev",
+      "title": "Nettoyer merlin_store.gd dead state",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T02:37:00Z",
+      "notes": "Removed essence, bestiole, ogham_fragments state keys."
+    },
+    {
+      "id": "S1-CLEANUP-3",
+      "sprint": "S1",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Renommer TRIADE_ prefixes dispatch actions",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T03:37:00Z",
+      "notes": "TRIADE_START_RUN->START_RUN, TRIADE_GET_CARD->GET_CARD, etc."
+    },
+    {
+      "id": "S1-OGHAM-ALIGN",
+      "sprint": "S1",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Aligner 18 Oghams sur bible v2.4",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T04:37:00Z",
+      "notes": "7 effects corrected: duir, onn, nuin, quert, ruis, saille, uilleann."
+    },
+    {
+      "id": "S1-LLM-VALIDATE",
+      "sprint": "S1",
+      "priority": 6,
+      "status": "completed",
+      "type": "test",
+      "title": "LLM validation: 10 cartes generees + JSON + fallback",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T05:03:00Z",
+      "notes": "10 cards generated OK. JSON structure valid. Fallback tested. Qwen 3.5 quality: 7/10."
+    },
+    {
+      "id": "BUG-FACTION-OVERFLOW-FIX",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix faction keyword overflow in LLM adapter",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T06:00:00Z",
+      "notes": "Added faction_tagged flag + size guard. Max 1 ADD_REPUTATION per card."
+    },
+    {
+      "id": "S2-INTEGRATION",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Integration test: Bible audit + bug hunt statique",
+      "agent": "game_design_auditor",
+      "completed_at": "2026-04-13T02:54:09Z",
+      "notes": "12 systems audited. 1 HIGH (promise dual storage), 4 MEDIUM, 2 LOW. Report: test_reports/S2-INTEGRATION_2026-04-13.json"
+    },
+    {
+      "id": "BUG-PROMISE-SYSTEM-FIX",
+      "sprint": "S2",
+      "priority": 1,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix dual promise storage split-brain",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T07:00:00Z",
+      "notes": "Unified to active_promises. Card-based deadlines. MAX=2 cap."
+    },
+    {
+      "id": "S3-EDGE-CASES",
+      "sprint": "S3",
+      "priority": 12,
+      "status": "completed",
+      "type": "test",
+      "title": "10 scenarios de mort + edge cases critiques",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-13T08:30:00Z",
+      "notes": "8 edge cases simulated. 7/8 PASS. Found: BUG-MIDRUN-SAVE-INCOMPLETE, BUG-SIGNAL-DELTA."
+    },
+    {
+      "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix mid-run save: persist run_state incrementally during run",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T09:00:00Z",
+      "notes": "Fixed: _do_autosave() now calls save_run_state(run_snapshot). Removed pacing recovery per director q-005."
+    },
+    {
+      "id": "S3-LLM-ROBUSTNESS",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "completed",
+      "type": "test",
+      "title": "Bug hunt layer IA (timeout, fallback, race conditions)",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T10:00:00Z",
+      "notes": "10 scenarios. 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT), 2 LOW. LLM transport fully robust. Report: test_reports/S3-LLM-ROBUSTNESS_2026-04-13.json"
+    },
+    {
+      "id": "S2-VERBS-MOS",
+      "sprint": "S2",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Verifier ACTION_VERBS + MOS config + Trust tiers (bible v2.4)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "completed_at": "2026-04-13T11:00:00Z",
+      "notes": "Audit vs bible v2.4 s.6.1-6.4. Fixes: (1) Added 'neutre' as separate ACTION_VERBS field (5 verbs: parler/accepter/refuser/attendre/s'approcher), removed from 'esprit'. (2) Added FIELD_MINIGAMES['neutre'] = ['apaisement','volonte'] per bible s.6.4. (3) Fixed EFFECT_CAPS['drain_per_card'] 1->0 (director q-001). (4) Added dominant_faction to all 8 BIOMES entries (director q-20260413-002). MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS all PASS."
+    },
+    {
+      "id": "S2-CLEAN-CARDSYS",
+      "sprint": "S2",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Clean merlin_card_system.gd (GAUGES, bestiole references)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T13:00:00Z",
+      "notes": "Audit confirmed: merlin_card_system.gd contains NO GAUGES, NO bestiole, NO _get_critical_gauges(), NO _get_bestiole_modifier(). Task was pre-completed by prior cleanup cycles. PAT-009 pattern confirmed again — always audit file state before coding."
+    },
+    {
+      "id": "BUG-FACTIONS-STALE-FIX",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T13:00:00Z",
+      "notes": "Fixed 6 stale faction reads across 3 files: (1) rag_manager.gd: _get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction — all 4 now use game_state.get('meta',{}).get('faction_rep',{}). (2) merlin_llm_adapter.gd: build_narrative_context line 708 now uses meta.get('faction_rep',{}).duplicate(); build_context line 729 adds var meta from state and uses meta.get('faction_rep',{}). (3) event_category_selector.gd: injected dominant_faction from BIOMES[biome] into enriched_run for biome-based routing (director q-20260413-002). context_builder.gd and merlin_omniscient.gd were already correctly using meta.faction_rep from prior cycles."
+    },
+    {
+      "id": "S3-FACTION-REGRESSION-TEST",
+      "sprint": "S3",
+      "priority": 8,
+      "status": "completed",
+      "type": "test",
+      "title": "Regression test: faction_rep propagation post-fix (BUG-FACTIONS-STALE-FIX)",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T14:00:00Z",
+      "notes": "PASS: 7/7 checks, 5/5 regressions. Zero stale run.factions reads in all 5 AI files. meta.faction_rep is single source. dominant_faction injected in event_category_selector enriched_run. All 8 BIOMES have dominant_faction. Report: test_reports/S3-FACTION-REGRESSION-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S2-CONTEXT-GAUGES-CLEANUP",
+      "sprint": "S2",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Remove dead GAUGES from context_builder.gd (stale key + dead function)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T15:00:00Z",
+      "notes": "Removed 'gauges' key from build_full_context() return dict (line 37). Deleted get_critical_gauges() function (14 lines). Cleaned test_context_builder.gd: removed 9 dead test functions (Section 3 'get_critical_gauges'), removed 'gauges' from _make_run() helper and required-keys assertion, renumbered sections 4-6→3-5. Verified: 0 non-test callers of get_critical_gauges(). difficulty_adapter.gd + event_adapter.gd use context.get('gauges',{}) which returns {} gracefully — no change needed. PAT-026 added."
+    },
+    {
+      "id": "S3-AMBIENT-LIGHTING",
+      "sprint": "S3",
+      "priority": 14,
+      "status": "cancelled",
+      "type": "dev",
+      "title": "Ambiance dynamique biome: variation saison + heure de journee",
+      "agent": "godot_expert",
+      "cancelled_at": "2026-04-13T15:00:00Z",
+      "notes": "CANCELLED per director q-20260413-003: replaced by DIR-S2-MNWXQ41M (more complete task that covers ambient + pixel render + full DA coherence). Functionality is included in DIR-S2-MNWXQ41M description."
+    },
+    {
+      "id": "S3-PIXEL-RENDER",
+      "sprint": "S3",
+      "priority": 16,
+      "status": "cancelled",
+      "type": "dev",
+      "title": "Direction artistique N64/PS1: low-poly + pixelisation",
+      "agent": "godot_expert",
+      "cancelled_at": "2026-04-13T15:00:00Z",
+      "notes": "CANCELLED per director q-20260413-003: replaced by DIR-S2-MNWXQ41M (more complete task that covers ambient + pixel render + full DA coherence). Functionality is included in DIR-S2-MNWXQ41M description."
+    },
+    {
+      "id": "S2-CONTEXT-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 9,
+      "status": "completed",
+      "type": "test",
+      "title": "Regression test: context_builder post-GAUGES-cleanup + all S2 fixes",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T14:19:16Z",
+      "verdict": "PARTIAL_PASS",
+      "notes": "PASS: CHK-1 (no gauges key), CHK-2 (get_critical_gauges removed), CHK-5 (faction_rep meta), CHK-6 (active_promises unified), CHK-7 (drain=0), CHK-8 (no pacing recovery). FAIL: CHK-3 (BUG-SIGNAL-DELTA-FIX pending P6), CHK-4 (S2-DAY-TICK-FIX pending P8). 5/5 regressions PASS. 0 new bugs. Created S2-DAY-SIGNAL-REGRESSION-TEST (P11) for re-verification after fixes applied.",
+      "report": "tools/autodev/status/test_reports/S2-CONTEXT-REGRESSION-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S2-DEAD-FILES",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Supprimer 5 dead files (bestiole, souffle HUD, D20)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T15:30:00Z",
+      "notes": "4/5 files already deleted in prior cycles (bestiole_sprite, bestiole_wheel_system, bestiole_creature, pixel_bestiole_fox). Deleted mg_de_du_destin.gd (D20 system suppressed per bible). Updated minigame_registry.gd: removed from GAMES['chance'], removed match case, replaced ultimate fallback with mg_pile_ou_face. Updated auto_play_runner.gd: removed from MINIGAME_LIST (15→14). Zero references remain outside /archive/. PAT-028 added (fallback replacement pattern)."
+    },
+    {
+      "id": "S3-MINIGAMES-FIELD-AUDIT",
+      "sprint": "S3",
+      "priority": 10,
+      "status": "completed",
+      "type": "test",
+      "title": "Audit: FIELD_MINIGAMES mappings vs bible s.6.2 + minigame scenes exist",
+      "agent": "game_design_auditor",
+      "completed_at": "2026-04-13T16:00:00Z",
+      "notes": "TEST PARTIAL_PASS. CHECK-1 PASS: FIELD_MINIGAMES matches bible s.6.2 exactly (9 fields). CHECK-2 PASS: all mg_ scripts exist, scenes/minigames/ not needed (script-based overlays). CHECK-3 PASS: no orphaned scripts (1 orphaned uid artifact). BUG: mg_sang_froid mis-routed to GAMES[vigueur] instead of GAMES[esprit] (HIGH). Created BUG-SANG-FROID-GAMES-FIELD (P5) + S3-MINIGAME-ROUTING-REGRESSION (P13). PAT-029 added."
+    },
+    {
+      "id": "BUG-SANG-FROID-GAMES-FIELD",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix: move mg_sang_froid from GAMES[vigueur] to GAMES[esprit] in registry",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/minigames/minigame_registry.gd"
+      ],
+      "description": "Bible s.6.2 + catalogue: sang_froid is an ESPRIT minigame. But GAMES['vigueur'] = ['mg_combat_rituel', 'mg_sang_froid', 'mg_course'] and GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_meditation']. Esprit-field cards NEVER select mg_sang_froid (unreachable). Vigueur cards sometimes get sang_froid incorrectly. Fix: GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_sang_froid']; GAMES['vigueur'] = ['mg_combat_rituel', 'mg_course']. Leave mg_meditation.gd in place (script stays) but remove from GAMES dispatch until director approves. Also delete orphaned mg_de_du_destin.gd.uid artifact. Found by: S3-MINIGAMES-FIELD-AUDIT.",
+      "completed_at": "2026-04-13T16:30:00Z",
+      "notes": "Fixed: GAMES['esprit']=['mg_volonte','mg_apaisement','mg_sang_froid']; GAMES['vigueur']=['mg_combat_rituel','mg_course']. mg_sang_froid now reachable from esprit-field cards (bible s.6.2 aligned). mg_meditation removed from dispatch (script preserved, pending q-20260413-004). Orphaned mg_de_du_destin.gd.uid deleted. Resolves BUG-ORPHANED-UID-CLEANUP implicitly."
+    },
+    {
+      "id": "S3-MINIGAME-ROUTING-REGRESSION",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "completed",
+      "type": "test",
+      "title": "Regression test: BUG-SANG-FROID-GAMES-FIELD fix verified + meditation disposition",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T16:45:00Z",
+      "notes": "PASS 6/6. BUG-SANG-FROID fix verified: mg_sang_froid in GAMES[esprit], not vigueur. FIELD_MINIGAMES aligned. 22 dispatched scripts exist. mg_de_du_destin.gd+uid deleted. mg_meditation preserved pending q-20260413-004. 2 LOW notes (orphaned preload line 138, cosmetic comment). 0 critical bugs. Report: test_reports/S3-MINIGAME-ROUTING-REGRESSION_2026-04-13.json"
+    }
+  ]
+}

@@ -1,4 +1,42 @@
 {
   "version": 1,
-  "responses": []
+  "responses": [
+    {
+      "question_id": "q-20260412-001",
+      "answer": "Aucun drain de vie à chaque carte",
+      "timestamp": "2026-04-12T17:30:00Z"
+    },
+    {
+      "question_id": "q-20260412-002",
+      "answer": "Je ne vois pas les images ! L'ambiance doit changer en fonction de saison et heure de journée",
+      "timestamp": "2026-04-12T17:35:00Z"
+    },
+    {
+      "question_id": "q-20260412-003",
+      "answer": "Hybride (titre celtique + corps sans-serif)",
+      "timestamp": "2026-04-12T17:20:00Z"
+    },
+    {
+      "question_id": "q-20260412-004",
+      "answer": "Il faut que ça fasse plus pixelisé, entre la N64 et la PS1 avec des effets propres à ces consoles en ultra low pixel / low polygon avec effets volumétriques cohérents",
+      "timestamp": "2026-04-12T17:40:00Z"
+    },
+    {
+      "question_id": "q-20260413-001",
+      "answer": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
+    },
+    {
+      "question_id": "q-20260412-005",
+      "answer": "Supprimer (la survie dépend uniquement des choix)"
+    },
+    {
+      "question_id": "q-20260413-002",
+      "answer": "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)"
+    },
+    {
+      "question_id": "q-20260413-003",
+      "answer": "Remplacer S3-AMBIENT + S3-PIXEL par DIR-S2-MNWXQ41M uniquement (DIR est plus complet)",
+      "additional_notes": "Oui et toute la DA doit être cohérente entre toutes les scènes, animations. Tout doit être driver sous la même logique graphique sur l'ensemble des rendus graphiques"
+    }
+  ]
 }

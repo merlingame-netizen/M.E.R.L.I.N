@@ -1,0 +1,281 @@
+{
+  "report_id": "S1-CORE-TEST_2026-04-12",
+  "task_id": "S1-CORE-TEST",
+  "agent": "game_playtester",
+  "timestamp": "2026-04-12T21:00:00Z",
+  "cycle_type": "test",
+  "method": "static_analysis + invariant_simulation",
+  "files_analyzed": [
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/merlin/store_run.gd",
+    "scripts/merlin/merlin_constants.gd",
+    "scripts/ui/merlin_game_controller.gd"
+  ],
+
+  "summary": {
+    "overall": "FAIL",
+    "critical_bugs": 1,
+    "high_bugs": 1,
+    "medium_bugs": 2,
+    "passed_invariants": 10,
+    "failed_invariants": 1
+  },
+
+  "invariants": [
+    {
+      "id": "INV-01",
+      "name": "Life clamped 0-100",
+      "status": "PASS",
+      "details": "_apply_life_delta() uses clampi(current + delta, 0, LIFE_ESSENCE_MAX). _damage_life() uses maxi(old-amount, 0). _heal_life() uses mini(old+amount, MAX). All 3 paths correctly enforce the 0-100 range.",
+      "files": ["merlin_effect_engine.gd:540-545", "merlin_store.gd:536-552"]
+    },
+    {
+      "id": "INV-02",
+      "name": "Faction rep delta capped ±20/card",
+      "status": "PASS",
+      "details": "_apply_faction_reputation() enforces clampi(delta, -20, 20) at line 609. scale_and_cap() also applies ADD_REPUTATION cap. Double enforcement is safe.",
+      "files": ["merlin_effect_engine.gd:605-621"]
+    },
+    {
+      "id": "INV-03",
+      "name": "Faction score stays 0-100",
+      "status": "PASS",
+      "details": "clampi(current + capped_delta, FACTION_SCORE_MIN, FACTION_SCORE_MAX) = clampi(x, 0, 100). FACTION_SCORE_START=20 (neutral on run 1).",
+      "files": ["merlin_effect_engine.gd:613", "merlin_constants.gd:1069-1071"]
+    },
+    {
+      "id": "INV-04",
+      "name": "MOS soft_min=8, target=20-25, soft_max=40, hard_max=50",
+      "status": "PASS",
+      "details": "MOS_CONVERGENCE dict confirmed: soft_min_cards=8, target_cards_min=20, target_cards_max=25, soft_max_cards=40, hard_max_cards=50. StoreRun.check_run_end() enforces hard_max end. Card system check_run_end() also enforces hard_max via card_index.",
+      "files": ["merlin_constants.gd:506-511", "store_run.gd:231-244", "merlin_card_system.gd:398-400"]
+    },
+    {
+      "id": "INV-05",
+      "name": "Death check AFTER effects",
+      "status": "PASS",
+      "details": "process_card() pipeline: Step 7 (effects) → Step 8 (protection+pacing) → Step 9 (death check). StoreRun.check_run_end() is called AFTER resolve_choice() in the store RESOLVE_CHOICE handler.",
+      "files": ["merlin_effect_engine.gd:192-196", "merlin_store.gd:316-327"]
+    },
+    {
+      "id": "INV-06",
+      "name": "Drain -1/carte not applied in active main flow",
+      "status": "PASS (with note)",
+      "details": "Active main flow: controller → store.cards.resolve_card() → store.dispatch(RESOLVE_CHOICE) → StoreRun.resolve_choice(). NO drain applied in this path. Director decision q-001 'Aucun drain de vie à chaque carte' is effectively respected. NOTE: LIFE_ESSENCE_DRAIN_PER_CARD constant still set to 1 and orphaned process_card() still contains drain logic — technical debt.",
+      "director_override": "q-20260412-001: Aucun drain de vie à chaque carte",
+      "files": ["merlin_effect_engine.gd:88-89 (orphaned)", "merlin_constants.gd:74", "store_run.gd:132-179"]
+    },
+    {
+      "id": "INV-07",
+      "name": "Pacing recovery +5 HP if life < 20",
+      "status": "PASS",
+      "details": "process_card() step 8.5: if life_post_effects > 0 and life_post_effects < 20 → _apply_life_delta(state, 5). Safety net prevents cheap one-shot deaths. NOTE: this is in orphaned process_card() — not confirmed active in main flow.",
+      "files": ["merlin_effect_engine.gd:180-188"]
+    },
+    {
+      "id": "INV-08",
+      "name": "Promise deadlines tracked correctly",
+      "status": "PASS",
+      "details": "ADD_PROMISE stores made_at_card=cards_played. Deadline check: cards_played - made_at >= deadline. process_card() step 10 and StoreRun.check_promise_deadlines() both track correctly.",
+      "files": ["merlin_effect_engine.gd:198-214", "store_run.gd (check_promise_deadlines)"]
+    },
+    {
+      "id": "INV-09",
+      "name": "Multiplier scaling applied correctly",
+      "status": "PASS",
+      "details": "MerlinEffectEngine.scale_and_cap() + get_multiplier(score) used in both MerlinCardSystem.resolve_card() and process_card() pipeline. ADD_REPUTATION specifically scales args[1] (amount) not args[0] (faction). Correct.",
+      "files": ["merlin_effect_engine.gd:130-135", "merlin_card_system.gd:451-465"]
+    },
+    {
+      "id": "INV-10",
+      "name": "Mercy damage reduction at 3+ consecutive deaths",
+      "status": "PASS",
+      "details": "process_card() step 7: if DAMAGE_LIFE and consecutive_deaths >= 3, scaled_amount *= 0.8. NOTE: in orphaned process_card().",
+      "files": ["merlin_effect_engine.gd:139-144"]
+    },
+    {
+      "id": "INV-11",
+      "name": "cards_played counter accurate",
+      "status": "FAIL",
+      "details": "DOUBLE INCREMENT BUG: MerlinCardSystem.resolve_card() modifies run_state['cards_played'] += 1 where run_state IS a reference to store.state['run'] (GDScript 4 dicts are reference types). Then StoreRun.resolve_choice() ALSO increments state['run']['cards_played'] += 1. Result: 2 increments per card played. MOS hard_max of 50 triggers at ~25 real cards.",
+      "files": ["merlin_card_system.gd:483", "store_run.gd:146"],
+      "severity": "CRITICAL"
+    }
+  ],
+
+  "bugs": [
+    {
+      "id": "BUG-CRITICAL-001",
+      "severity": "CRITICAL",
+      "title": "Double increment cards_played per card",
+      "description": "MerlinCardSystem.resolve_card() increments run_state['cards_played'] at line 483. Since run_state = store.state.get('run', {}) is a reference in GDScript 4, this directly mutates store.state['run']['cards_played']. Then StoreRun.resolve_choice() (called via store.dispatch RESOLVE_CHOICE) increments the same field again at line 146. Result: cards_played = 2× actual count. MOS hard_max (50 cards) triggers at ~25 real cards, cutting runs in half.",
+      "reproduction": "Start a run. Play 25 cards. store.state['run']['cards_played'] will read 50. StoreRun.check_run_end() forces end.",
+      "fix": "Remove the cards_played increment from MerlinCardSystem.resolve_card() (line 483). Keep only the StoreRun.resolve_choice() increment as the single source of truth. Also review card_index vs cards_played divergence.",
+      "files": ["scripts/merlin/merlin_card_system.gd:482-483", "scripts/merlin/store_run.gd:146"],
+      "new_task_id": "BUG-CARDS-PLAYED-FIX"
+    },
+    {
+      "id": "BUG-HIGH-001",
+      "severity": "HIGH",
+      "title": "process_card() is an orphaned 12-step pipeline never called in main flow",
+      "description": "MerlinEffectEngine.process_card() (lines 71-256) implements the full 12-step bible pipeline including drain, protection, pacing, promises, cooldowns. However, NO caller invokes it in the main game path (controller → card_system.resolve_card → store.dispatch RESOLVE_CHOICE). The main flow misses: pacing recovery, mercy reduction, promise deadline countdown, cooldown tick per card. These should be wired into the active flow or the orphaned method should be removed.",
+      "fix": "Either: (a) Wire process_card() into main flow replacing resolve_card() logic, OR (b) Extract the still-relevant steps (pacing recovery, promises, cooldowns) into StoreRun.resolve_choice() and delete process_card(). Option (b) preferred to avoid complexity.",
+      "files": ["scripts/merlin/merlin_effect_engine.gd:71-256"],
+      "new_task_id": "BUG-ORPHANED-PIPELINE"
+    },
+    {
+      "id": "BUG-MED-001",
+      "severity": "MEDIUM",
+      "title": "LIFE_ESSENCE_DRAIN_PER_CARD=1 contradicts director decision",
+      "description": "Constant LIFE_ESSENCE_DRAIN_PER_CARD=1 with comment 'Base drain each card (survival pressure)' contradicts director feedback q-001: 'Aucun drain de vie à chaque carte'. The constant is referenced in the orphaned process_card() but not in the main flow. Should be set to 0 to formally honor director decision and prevent accidental re-introduction.",
+      "fix": "Set LIFE_ESSENCE_DRAIN_PER_CARD to 0 in merlin_constants.gd and update comment.",
+      "files": ["scripts/merlin/merlin_constants.gd:74"],
+      "director_source": "feedback_responses.json q-20260412-001"
+    },
+    {
+      "id": "BUG-MED-002",
+      "severity": "MEDIUM",
+      "title": "card_index and cards_played are divergent trackers",
+      "description": "MerlinCardSystem.resolve_card() increments run_state['card_index'] (line 482) for its own check_run_end(). StoreRun.check_run_end() uses run['cards_played'] (line 213). card_index is only in run_state (passed by reference to card_system), while cards_played is in the authoritative state. With the double-increment fix for cards_played, card_index will become the only non-duplicated tracker but it is not used by the store. Consolidate to a single counter.",
+      "fix": "After fixing BUG-CRITICAL-001: remove card_index from MerlinCardSystem or alias it to cards_played. Use only cards_played as the canonical run position counter.",
+      "files": ["scripts/merlin/merlin_card_system.gd:482", "scripts/merlin/store_run.gd:213"]
+    }
+  ],
+
+  "simulated_runs": [
+    {
+      "run_id": "SIM-01",
+      "scenario": "Normal run, 25 cards, no healing",
+      "life_start": 100,
+      "drain_active": false,
+      "result": "Run forcibly ended by MOS hard_max (cards_played=50 at 25 real cards due to BUG-CRITICAL-001)",
+      "expected": "Run continues to 50 real cards",
+      "pass": false,
+      "bug": "BUG-CRITICAL-001"
+    },
+    {
+      "run_id": "SIM-02",
+      "scenario": "ADD_REPUTATION:druides:30 effect",
+      "faction_before": 20,
+      "expected_delta": 20,
+      "actual_delta": 20,
+      "faction_after": 40,
+      "result": "Cap correctly applied (30 → clamped to 20)",
+      "pass": true
+    },
+    {
+      "run_id": "SIM-03",
+      "scenario": "DAMAGE_LIFE at life=5",
+      "life_before": 5,
+      "damage": 10,
+      "life_after": 0,
+      "result": "clampi correctly prevents negative life",
+      "pass": true
+    },
+    {
+      "run_id": "SIM-04",
+      "scenario": "HEAL_LIFE at life=95",
+      "life_before": 95,
+      "heal": 10,
+      "life_after": 100,
+      "result": "mini correctly caps at LIFE_ESSENCE_MAX=100",
+      "pass": true
+    },
+    {
+      "run_id": "SIM-05",
+      "scenario": "MOS hard_max enforcement",
+      "cards_played": 50,
+      "expected": "Run ends with reason=hard_max",
+      "result": "check_run_end returns ended=true at cards_played>=50 (store) and card_index>=50 (card_system)",
+      "pass": true,
+      "note": "Both MOS checkers fire at 50, but BUG-CRITICAL-001 means this triggers at 25 real cards"
+    },
+    {
+      "run_id": "SIM-06",
+      "scenario": "Faction scores all at 100, apply +20 rep",
+      "faction_before": 100,
+      "delta": 20,
+      "faction_after": 100,
+      "result": "clampi(120, 0, 100) = 100. No overflow.",
+      "pass": true
+    },
+    {
+      "run_id": "SIM-07",
+      "scenario": "Faction scores all at 0, apply -20 rep",
+      "faction_before": 0,
+      "delta": -20,
+      "faction_after": 0,
+      "result": "clampi(-20, 0, 100) = 0. No underflow.",
+      "pass": true
+    },
+    {
+      "run_id": "SIM-08",
+      "scenario": "Victory condition at 25+ cards + mission complete",
+      "cards_played": 25,
+      "mission_progress": 5,
+      "mission_total": 5,
+      "result": "Victory correctly triggered (cards_played >= MIN_CARDS_FOR_VICTORY=25 and mission complete)",
+      "pass": true,
+      "note": "With BUG-CRITICAL-001, this triggers at ~12-13 real cards (25 plays = 12-13 real)"
+    },
+    {
+      "run_id": "SIM-09",
+      "scenario": "Three card options, choose option 2 (RIGHT)",
+      "option": 2,
+      "options_count": 3,
+      "result": "CardOption.RIGHT=2, within bounds. player_profile['audace'] += 1.",
+      "pass": true
+    },
+    {
+      "run_id": "SIM-10",
+      "scenario": "MOS zone tracking at various card counts",
+      "zones": {
+        "0": "none",
+        "8": "low",
+        "20": "rising",
+        "25": "high",
+        "40": "critical",
+        "50": "ended"
+      },
+      "result": "All zone thresholds correct per MOS_CONVERGENCE constants.",
+      "pass": true
+    }
+  ],
+
+  "new_tasks_created": [
+    {
+      "id": "BUG-CARDS-PLAYED-FIX",
+      "sprint": "S1",
+      "priority": 0,
+      "type": "dev",
+      "title": "FIX CRITICAL: Supprimer double increment cards_played dans resolve_card()",
+      "description": "MerlinCardSystem.resolve_card() ligne 483 incrémente run_state['cards_played'] ET store_run.gd ligne 146 incrémente encore. Double incrément. Fix: supprimer ligne 483 (cards_played += 1) et ligne 482 (card_index += 1 — doublon avec store). Garder uniquement l'incrément dans StoreRun.resolve_choice(). Vérifier aussi card_index vs cards_played divergence."
+    },
+    {
+      "id": "BUG-ORPHANED-PIPELINE",
+      "sprint": "S1",
+      "priority": 0,
+      "type": "dev",
+      "title": "FIX HIGH: Supprimer process_card() orphelin ou l'intégrer au flow principal",
+      "description": "MerlinEffectEngine.process_card() (lignes 71-256) est un pipeline 12-étapes jamais appelé dans le flow principal. Contient logique drain (orpheline), pacing recovery, mercy, promises countdown, cooldown decrement. Option préférée: supprimer process_card() entièrement, et ajouter les étapes manquantes pertinentes (pacing recovery +5 HP si life<20, promise deadline countdown) directement dans StoreRun.resolve_choice(). Le cooldown tick est déjà dans StoreRun.resolve_choice() via StoreOghams.tick_cooldowns()."
+    }
+  ],
+
+  "s1_sprint_status": {
+    "dev_tasks_pending": ["S1-CLEANUP-1", "S1-CLEANUP-2", "S1-CLEANUP-3", "S1-OGHAM-ALIGN"],
+    "test_tasks_pending": ["S1-LLM-VALIDATE"],
+    "critical_bugs_found": ["BUG-CARDS-PLAYED-FIX", "BUG-ORPHANED-PIPELINE"],
+    "sprint_blocking": true,
+    "reason": "BUG-CRITICAL-001 (double cards_played) breaks core loop — runs end at ~25 real cards instead of 50. Must fix before sprint can be considered stable."
+  },
+
+  "recommendations": [
+    "Immediately fix BUG-CRITICAL-001 (cards_played double increment) — this breaks the core run loop",
+    "Set LIFE_ESSENCE_DRAIN_PER_CARD=0 to formally honor director decision q-001",
+    "Delete or fully integrate orphaned process_card() pipeline",
+    "Consolidate card_index and cards_played into a single counter",
+    "Re-run this test after critical fix to verify 10 complete simulated runs pass"
+  ]
+}

@@ -23,7 +23,7 @@ const VALID_CODES := {
 	# PROMISE SYSTEM
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_PROMISE": 2,      # ADD_PROMISE:promise_id:deadline_cards (lightweight, cap 2 active)
-	"CREATE_PROMISE": 3,   # CREATE_PROMISE:oath_001:5:description
+	"CREATE_PROMISE": 3,   # CREATE_PROMISE:oath_001:deadline_cards:description
 	"FULFILL_PROMISE": 1,  # FULFILL_PROMISE:oath_001
 	"BREAK_PROMISE": 1,    # BREAK_PROMISE:oath_001
 	# ═══════════════════════════════════════════════════════════════════════════
@@ -56,204 +56,6 @@ func validate_effect(effect_code: String) -> bool:
 	var parsed = _parse_effect(effect_code)
 	return parsed["ok"]
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 12-STEP CARD PIPELINE — Bible v2.4, section 13.3
-# ═══════════════════════════════════════════════════════════════════════════════
-
-## Orchestrates the full 12-step card resolution pipeline.
-## Returns a result dict with all steps, applied effects, and end-of-card status.
-## Steps: 1.DRAIN → 2.CARD → 3.OGHAM? → 4.CHOICE → 5.MINIGAME → 6.SCORE →
-##         7.EFFECTS → 8.PROTECTION → 9.DEATH? → 10.PROMISES → 11.COOLDOWN → 12.RETURN
-##
-## Caller is responsible for steps 2 (display), 4 (player choice), 5 (minigame UI), 12 (3D return).
-## This function handles: 1, 3, 6, 7, 8, 9, 10, 11.
-func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
-		minigame_score: int, active_ogham: String = "") -> Dictionary:
-	minigame_score = clampi(minigame_score, 0, 100)
-	var run: Dictionary = state.get("run", {})
-	var result: Dictionary = {
-		"steps_completed": [],
-		"effects_applied": [],
-		"effects_rejected": [],
-		"ogham_result": {},
-		"multiplier": 1.0,
-		"multiplier_label": "reussite",
-		"life_before": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
-		"life_after": 0,
-		"is_dead": false,
-		"promises_expired": [],
-	}
-
-	# ── Step 1: DRAIN -1 PV ──
-	_apply_life_delta(state, -MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD)
-	result["steps_completed"].append("drain")
-
-	# ── Step 3: OGHAM activation (before choice — already resolved by caller,
-	#            but we apply state effects here if ogham is active) ──
-	if not active_ogham.is_empty():
-		result["ogham_result"] = activate_ogham(active_ogham, state, card)
-		result["steps_completed"].append("ogham")
-
-	# ── Step 5.5: BIOME AFFINITY — +10% score if ogham matches biome ──
-	var current_biome: String = str(run.get("current_biome", ""))
-	if not active_ogham.is_empty() and not current_biome.is_empty():
-		var affinity: Dictionary = StoreFactions.get_biome_affinity_bonus(current_biome, active_ogham)
-		if float(affinity.get("score_bonus", 0.0)) > 0.0:
-			var bonus: int = int(float(minigame_score) * float(affinity.get("score_bonus", 0.0)))
-			minigame_score = clampi(minigame_score + bonus, 0, 100)
-			result["affinity_bonus"] = bonus
-
-	# ── Step 6: SCORE → multiplier ──
-	var is_merlin_direct: bool = str(card.get("type", "")).to_lower() == "merlin_direct"
-	var multiplier: float = 1.0
-	if not is_merlin_direct:
-		multiplier = get_multiplier(minigame_score)
-	result["multiplier"] = multiplier
-	result["multiplier_label"] = get_multiplier_label(minigame_score) if not is_merlin_direct else "merlin_direct"
-	result["steps_completed"].append("score")
-
-	# ── Step 7: APPLY EFFECTS (option effects × multiplier) ──
-	var options: Array = card.get("options", [])
-	if chosen_option >= 0 and chosen_option < options.size():
-		var option: Dictionary = options[chosen_option]
-		var raw_effects: Array = option.get("effects", [])
-		var scaled_effects: Array = []
-		for effect_str in raw_effects:
-			if typeof(effect_str) != TYPE_STRING:
-				continue
-			var parsed: Dictionary = _parse_effect(effect_str)
-			if not parsed["ok"]:
-				result["effects_rejected"].append(effect_str)
-				continue
-			# Scale numeric effects by multiplier
-			var code: String = parsed["code"]
-			if code == "ADD_REPUTATION":
-				# ADD_REPUTATION:faction:amount — scale args[1] (amount), not args[0] (faction name)
-				var raw_amount: int = _to_int(parsed["args"][1])
-				var scaled_amount: int = scale_and_cap(code, raw_amount, multiplier)
-				parsed["args"][1] = str(scaled_amount)
-			elif code in ["DAMAGE_LIFE", "HEAL_LIFE", "ADD_BIOME_CURRENCY", "ADD_ANAM", "ADD_KARMA", "ADD_TENSION"]:
-				var raw_amount: int = _to_int(parsed["args"][0])
-				var scaled_amount: int = scale_and_cap(code, raw_amount, multiplier)
-				# Mercy pacing: reduce damage by 20% if 3+ consecutive deaths
-				if code == "DAMAGE_LIFE":
-					var mercy_stats: Dictionary = state.get("meta", {}).get("stats", {})
-					if int(mercy_stats.get("consecutive_deaths", 0)) >= 3:
-						scaled_amount = int(float(scaled_amount) * 0.8)
-				parsed["args"][0] = str(scaled_amount)
-			# Apply double_positives flag from ogham (tinne)
-			var ogham_flags: Dictionary = result["ogham_result"]
-			if ogham_flags.get("flag", "") == "double_positives":
-				if code in ["HEAL_LIFE", "ADD_BIOME_CURRENCY", "ADD_ANAM"] or (code == "ADD_REPUTATION" and _to_int(parsed["args"][-1]) > 0):
-					var current_val: int = _to_int(parsed["args"][0] if code != "ADD_REPUTATION" else parsed["args"][1])
-					var doubled: int = current_val * 2
-					if code == "ADD_REPUTATION":
-						parsed["args"][1] = str(doubled)
-					else:
-						parsed["args"][0] = str(doubled)
-			# Apply invert_effects flag from ogham (muin) — swap codes
-			if ogham_flags.get("flag", "") == "invert_effects":
-				if code == "DAMAGE_LIFE":
-					parsed["code"] = "HEAL_LIFE"
-				elif code == "HEAL_LIFE":
-					parsed["code"] = "DAMAGE_LIFE"
-			scaled_effects.append(parsed)
-		# ── Step 8: OGHAM PROTECTION (luis/gort/eadhadh filter) ──
-		# Filter effects through protection ogham BEFORE applying to state.
-		if not active_ogham.is_empty() and result["ogham_result"].get("action", "") == "protection_active":
-			scaled_effects = _filter_protection(scaled_effects, active_ogham)
-
-		# Build effect strings and apply
-		for parsed_eff in scaled_effects:
-			var parts: Array = [parsed_eff["code"]]
-			parts.append_array(parsed_eff["args"])
-			var effect_str: String = ":".join(parts)
-			var apply_result: Dictionary = apply_effects(state, [effect_str], "card")
-			result["effects_applied"].append_array(apply_result.get("applied", []))
-			result["effects_rejected"].append_array(apply_result.get("rejected", []))
-	result["steps_completed"].append("protection")
-	result["steps_completed"].append("effects")
-
-	# ── Step 8.5: PACING — Recovery heal + mercy damage reduction ──
-	run = state.get("run", {})
-	var life_post_effects: int = int(run.get("life_essence", 0))
-	# Recovery: +5 PV if life < 20 (bible v2.4 pacing rule)
-	if life_post_effects > 0 and life_post_effects < 20:
-		_apply_life_delta(state, 5)
-		result["pacing_recovery"] = true
-	# Mercy: consecutive_deaths >= 3 tracked in meta.stats
-	var stats: Dictionary = state.get("meta", {}).get("stats", {})
-	var consecutive_deaths: int = int(stats.get("consecutive_deaths", 0))
-	result["mercy_active"] = consecutive_deaths >= 3
-	result["steps_completed"].append("pacing")
-
-	# ── Step 9: DEATH CHECK (AFTER effects + pacing) ──
-	run = state.get("run", {})
-	var life_after: int = int(run.get("life_essence", 0))
-	result["life_after"] = life_after
-	result["is_dead"] = life_after <= 0
-	result["steps_completed"].append("death_check")
-
-	# ── Step 10: PROMISES — countdown and expiration ──
-	var promises: Array = run.get("promises", [])
-	var cards_played: int = int(run.get("cards_played", 0)) + 1
-	run["cards_played"] = cards_played
-	for i in range(promises.size()):
-		var p: Dictionary = promises[i]
-		if str(p.get("status", "")) != "active":
-			continue
-		var made_at: int = int(p.get("made_at_card", 0))
-		var deadline: int = int(p.get("deadline_cards", 0))
-		if cards_played - made_at >= deadline:
-			promises[i] = p.duplicate()
-			promises[i]["status"] = "expired"
-			result["promises_expired"].append(str(p.get("id", "")))
-	run["promises"] = promises
-	state["run"] = run
-	result["steps_completed"].append("promises")
-
-	# ── Step 10b: POWER MILESTONES — heal/bonus at card thresholds ──
-	if MerlinConstants.POWER_MILESTONES.has(cards_played):
-		var milestone: Dictionary = MerlinConstants.POWER_MILESTONES[cards_played]
-		var m_type: String = str(milestone.get("type", ""))
-		var m_value: int = int(milestone.get("value", 0))
-		if m_type == "HEAL":
-			var life_now: int = int(run.get("life_essence", 0))
-			run["life_essence"] = mini(life_now + m_value, MerlinConstants.LIFE_ESSENCE_MAX)
-			result["milestone_heal"] = m_value
-		elif m_type == "MINIGAME_BONUS":
-			var bonus: int = int(run.get("minigame_bonus", 0))
-			run["minigame_bonus"] = bonus + m_value
-			result["milestone_bonus"] = m_value
-		result["milestone_label"] = str(milestone.get("label", ""))
-		result["milestone_desc"] = str(milestone.get("desc", ""))
-		state["run"] = run
-		result["steps_completed"].append("power_milestone")
-
-	# ── Step 11: COOLDOWN — decrement ogham cooldowns ──
-	# Biome affinity gives extra -1 cooldown (total -2 this turn)
-	var affinity_cd_bonus: int = 0
-	if not active_ogham.is_empty() and not current_biome.is_empty():
-		var cd_affinity: Dictionary = StoreFactions.get_biome_affinity_bonus(current_biome, active_ogham)
-		affinity_cd_bonus = int(cd_affinity.get("cooldown_reduction", 0))
-	var cooldowns: Dictionary = run.get("cooldowns", {})
-	var cd_keys: Array = cooldowns.keys().duplicate()
-	for key in cd_keys:
-		var decrement: int = 1
-		if key == active_ogham and affinity_cd_bonus > 0:
-			decrement += affinity_cd_bonus
-			result["affinity_cooldown_bonus"] = affinity_cd_bonus
-		var remaining: int = int(cooldowns[key]) - decrement
-		if remaining <= 0:
-			cooldowns.erase(key)
-		else:
-			cooldowns[key] = remaining
-	run["cooldowns"] = cooldowns
-	state["run"] = run
-	result["steps_completed"].append("cooldown")
-
-	return result
 
 
 func apply_effects(state: Dictionary, effects: Array, source: String = "SYSTEM") -> Dictionary:
@@ -440,7 +242,7 @@ func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) ->
 		push_warning("[EffectEngine] _add_promise: empty promise_id")
 		return false
 	var run: Dictionary = state.get("run", {})
-	var promises: Array = run.get("promises", [])
+	var promises: Array = run.get("active_promises", [])
 	# Cap: max 2 active promises (bible rule)
 	var active_count: int = 0
 	for p in promises:
@@ -451,28 +253,35 @@ func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) ->
 	var cards_played: int = int(run.get("cards_played", 0))
 	var promise: Dictionary = {
 		"id": promise_id,
-		"deadline_cards": deadline_cards,
 		"made_at_card": cards_played,
+		"deadline_cards": deadline_cards,
 		"status": "active",
 	}
 	promises.append(promise)
-	run["promises"] = promises
+	run["active_promises"] = promises
 	state["run"] = run
 	return true
 
 
-func _create_promise(state: Dictionary, promise_id: String, deadline_days: int, description: String) -> bool:
+func _create_promise(state: Dictionary, promise_id: String, deadline_cards: int, description: String) -> bool:
 	if promise_id.is_empty():
 		push_warning("[EffectEngine] _create_promise: empty promise_id")
 		return false
-	var run = state.get("run", {})
-	var promises = run.get("active_promises", [])
-	var current_day = int(run.get("day", 1))
-	var promise = {
+	var run: Dictionary = state.get("run", {})
+	var promises: Array = run.get("active_promises", [])
+	# Cap: max 2 active promises (bible rule)
+	var active_count: int = 0
+	for p in promises:
+		if str(p.get("status", "")) == "active":
+			active_count += 1
+	if active_count >= 2:
+		return false
+	var cards_played: int = int(run.get("cards_played", 0))
+	var promise: Dictionary = {
 		"id": promise_id,
 		"description": description,
-		"created_day": current_day,
-		"deadline_day": current_day + deadline_days,
+		"made_at_card": cards_played,
+		"deadline_cards": deadline_cards,
 		"status": "active",
 	}
 	promises.append(promise)

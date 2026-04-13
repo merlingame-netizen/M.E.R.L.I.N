@@ -80,19 +80,19 @@ func _get_fallback_dialogue(last_run: Dictionary) -> Dictionary:
 	var reason: String = str(last_run.get("reason", ""))
 
 	if runs == 0:
-		return {"text": "Bienvenue, jeune druide. Le chemin t'attend.", "speaker": "merlin"}
+		return {"text": I18nRegistry.t("ui.hub.fallback_dialogue_1"), "speaker": "merlin"}
 
 	match reason:
 		"death":
-			return {"text": "La mort n'est qu'un passage. Tu reviendras plus fort.", "speaker": "merlin"}
+			return {"text": I18nRegistry.t("ui.hub.fallback_death"), "speaker": "merlin"}
 		"hard_max":
-			return {"text": "Tu as parcouru un long chemin. Repose-toi avant de repartir.", "speaker": "merlin"}
+			return {"text": I18nRegistry.t("ui.hub.fallback_hard_max"), "speaker": "merlin"}
 		_:
 			var texts: Array = [
-				"Les arbres murmurent ton nom. Es-tu pret ?",
-				"Chaque run revele un fragment de verite.",
-				"Le vent porte des nouvelles des biomes lointains.",
-				"Les oghams brillent dans l'obscurite. Ils t'appellent.",
+				I18nRegistry.t("ui.hub.fallback_cycle_1"),
+				I18nRegistry.t("ui.hub.fallback_cycle_2"),
+				I18nRegistry.t("ui.hub.fallback_cycle_3"),
+				I18nRegistry.t("ui.hub.fallback_cycle_4"),
 			]
 			return {"text": texts[runs % texts.size()], "speaker": "merlin"}
 

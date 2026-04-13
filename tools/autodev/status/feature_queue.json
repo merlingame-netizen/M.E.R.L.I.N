@@ -1,383 +1,199 @@
 {
-  "version": "1.0",
-  "updated": "2026-04-10T22:42:03.695Z",
-  "description": "Feature queue M.E.R.L.I.N. — géré par studio_loop.ps1. Phases 1-5.",
+  "version": "3.5",
+  "updated": "2026-04-13T16:45:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
+  "sprints": {
+    "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
+    "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
+    "S3": "POLISH & ROBUSTESSE — edge cases, LLM robustesse, UX, pixel render",
+    "S4": "INTEGRATION & EXPORT — web build, CI/CD, demo jouable"
+  },
+  "rules": {
+    "min_pending_tasks": 10,
+    "auto_generate_when_below": "If fewer than 10 pending tasks remain, read docs/DEV_PLAN_V2.5.md and docs/GAME_DESIGN_BIBLE.md to generate new tasks until 10+ pending.",
+    "task_decomposition": "Each task must be completable in 1 cycle (~15 min). Break large features into atomic tasks.",
+    "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
+  },
   "tasks": [
     {
-      "id": "TRIADE-CORE-1",
-      "phase": 1,
-      "priority": 1,
-      "status": "completed",
-      "title": "Supprimer Triade de merlin_constants.gd",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "Supprimer : AspectState enum, TRIADE_ASPECTS array, TRIADE_ASPECT_INFO dict, SOUFFLE_MAX, SOUFFLE_START, TRIADE_OPTION_INFO. Conserver : 18 Oghams (OGHAM_*), 5 factions (FACTION_*), constantes narratives. Valider avec validate.bat après.",
-      "completed_at": "2026-03-11",
-      "notes": "Validé 0 erreurs 0 warnings. Supprimés : AspectState, TRIADE_ASPECTS, TRIADE_ASPECT_INFO, SOUFFLE_MAX/START/SINGLE_USE, TRIADE_OPTION_INFO, ASPECT_DC_PENALTY_*, ASPECT_STATE_NARRATIVE, SOUFFLE_PERK_TYPES, TRIADE_VICTORY_ENDINGS, TRIADE_SESSION, ASPECT_MIN/MAX/DECAY_RATE. TRIADE_NODE_TYPES renommé NODE_TYPES. FACTIONS mis à jour (Array[String], 5 factions canoniques dont niamh). Ajout FACTION_THRESHOLD_CONTENT/ENDING. ATTENTION : callers downstream (merlin_store, merlin_game_ui, merlin_game_controller, rag_manager, HubAntre, TransitionBiome, Collection) référencent encore les symboles supprimés — à traiter dans TRIADE-CORE-2, TRIADE-UI-1/2, TRIADE-SCENES."
-    },
-    {
-      "id": "TRIADE-CORE-2",
-      "phase": 1,
-      "priority": 2,
-      "status": "completed",
-      "title": "Nettoyer merlin_store.gd — état Triade",
+      "id": "BUG-SIGNAL-DELTA-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix reputation_changed signal: emit clamped delta not raw",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_store.gd"
       ],
-      "description": "Supprimer build_default_state() avec corps/ame/monde. Reconstruire état minimal : { tour: int, ogham_actif: String, factions: {druides:0, anciens:0, korrigans:0, niamh:0, ankou:0}, cartes_jouees: Array, run_active: bool }. Supprimer tous les signals liés aux aspects.",
-      "completed_at": "2026-03-11",
-      "notes": "Supprimés: signal souffle_changed, aspects/souffle/perks dans build_default_state(), actions TRIADE_SHIFT_ASPECT/USE_SOUFFLE/ADD_SOUFFLE/SELECT_PERK dans _reduce(), _shift_aspect()/_use_souffle()/_add_souffle() fonctions, _decay_aspects_alignment(), aspects_alignment dans meta, getters get_aspect_state/get_aspect_name/get_all_aspects/get_souffle/is_all_aspects_balanced/count_extreme_aspects. Ajoutés: signal reputation_changed(faction,value,delta), champs factions/tour/run_active/ogham_actif/oghams_decouverts/cartes_jouees/heure_debut_run dans run state. TRIADE_VICTORY_ENDINGS remplacé par dict inline. Erreurs Godot restantes dans d'autres fichiers (rag_manager, game_manager, etc.) — pré-existantes, hors scope CORE-2, à traiter dans TRIADE-UI-1/2, TRIADE-AI-1/2, TRIADE-SCENES."
+      "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: capture old_rep = meta.faction_rep[faction] BEFORE _apply_faction_reputation(), then actual_delta = new_val - old_rep. Emit actual_delta instead of rep_delta. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 598)."
     },
     {
-      "id": "TRIADE-CORE-3",
-      "phase": 1,
-      "priority": 3,
-      "status": "completed",
-      "title": "Nettoyer merlin_effect_engine.gd — SHIFT_ASPECT/SOUFFLE",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd"
-      ],
-      "description": "Supprimer : SHIFT_ASPECT, ADD_ASPECT_ALIGNMENT, USE_SOUFFLE, ADD_SOUFFLE, validation des états BAS/EQUILIBRE/HAUT. Garder : ADD_REPUTATION:faction:amount (déjà présent), effets narratifs (PLAY_SFX, SHOW_DIALOG, etc.). Les effets de cartes ne doivent plus référencer les aspects."
-    },
-    {
-      "id": "TRIADE-CORE-4",
-      "phase": 1,
-      "priority": 4,
-      "status": "completed",
-      "title": "Nettoyer merlin_card_system.gd — options liées aux aspects",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_card_system.gd"
-      ],
-      "description": "Supprimer la logique qui génère des effets liés aux 3 aspects dans les options de cartes. Les 3 options (G/C/D) restent mais leurs effets ne sont plus des SHIFT_ASPECT. Simplifier la validation d'effets pour accepter les nouveaux types seulement.",
-      "completed_at": "2026-03-11",
-      "notes": "Signal aspect_warning(aspect, state) supprimé (vestige Triade). Commentaires d'en-tête mis à jour (v0.4.0, 4 jauges, 1-4 options). Le fichier ne contenait plus aucun effet SHIFT_ASPECT/ADD_ASPECT_ALIGNMENT/USE_SOUFFLE ni référence à AspectState/TRIADE_ASPECTS/TRIADE_OPTION_INFO (déjà nettoyés par Vague 1). validate.bat : 0 erreur dans merlin_card_system.gd — les 9 erreurs signalées sont dans game_manager.gd et merlin_ai.gd (pré-existantes, hors scope CORE-4)."
-    },
-    {
-      "id": "TRIADE-UI-1",
-      "phase": 1,
-      "priority": 5,
-      "status": "completed",
-      "title": "Remplacer hub_triade_hud.gd par reputation_hud.gd",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/ui/hub_triade_hud.gd",
-        "scripts/ui/hub_souffle_bar.gd",
-        "scripts/ui/reputation_hud.gd"
-      ],
-      "description": "Vider hub_triade_hud.gd (laisser fichier vide avec class_name pour éviter erreurs de référence). Supprimer hub_souffle_bar.gd (créer fichier stub). Créer scripts/ui/reputation_hud.gd : affiche 5 factions avec leur niveau (Label simple pour l'instant, pas de design final). Garder la logique fonctionnelle, pas besoin d'UI polie.",
-      "completed_at": "2026-03-11",
-      "notes": "hub_triade_hud.gd → stub minimal (hide()). hub_souffle_bar.gd → stub minimal (hide()). reputation_hud.gd créé : VBoxContainer + 5 Labels (druides/anciens/korrigans/niamh/ankou), connexion signal reputation_changed sur /root/MerlinStore. Les 9 erreurs validate.bat (TRIADE_ASPECTS, SOUFFLE_START, AspectState, ASPECT_STATE_NARRATIVE, TRIADE_NODE_TYPES) sont pré-existantes de TRIADE-CORE-1/2, hors scope TRIADE-UI-1, à traiter dans TRIADE-UI-2, TRIADE-AI-1/2, TRIADE-SCENES."
-    },
-    {
-      "id": "TRIADE-UI-2",
-      "phase": 1,
-      "priority": 6,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W1-A: Removed Triade refs from merlin_game_ui.gd (STATE_LABELS, aspect_panel, update_aspects, ASPECT_COLORS) and merlin_game_controller.gd (is_all_aspects_balanced, aspect modifiers). reputation_hud already wired.",
-      "title": "Rewire merlin_game_ui.gd et merlin_game_controller.gd",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/ui/merlin_game_ui.gd",
-        "scripts/ui/merlin_game_controller.gd"
-      ],
-      "description": "Supprimer les connexions aux signaux d'aspects Triade. Brancher reputation_hud.gd à la place de hub_triade_hud. Le jeu doit pouvoir démarrer sans crash — l'objectif minimal est un jeu fonctionnel sans affichage de Triade."
-    },
-    {
-      "id": "TRIADE-AI-1",
-      "phase": 1,
+      "id": "S2-BIOMES",
+      "sprint": "S2",
       "priority": 7,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W1-B: context_builder already clean. Comments updated in omniscient, difficulty_adapter, event_adapter, decision_history_registry.",
-      "title": "Nettoyer context_builder.gd — prompt LLM sans Triade",
+      "status": "pending",
+      "type": "dev",
+      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
       "agent": "godot_expert",
       "files": [
-        "addons/merlin_ai/context_builder.gd"
+        "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Supprimer la section du prompt qui inclut l'état Corps/Âme/Monde. Le contexte LLM doit maintenant inclure : tour actuel, ogham actif, niveaux de réputation des 5 factions. Mettre à jour le format JSON attendu en retour du LLM."
+      "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6."
     },
     {
-      "id": "TRIADE-AI-2",
-      "phase": 1,
+      "id": "S2-DAY-TICK-FIX",
+      "sprint": "S2",
       "priority": 8,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W1-B: omniscient/fallback_pool/brain_quality_judge already migrated. Comment-only cleanup.",
-      "title": "Nettoyer merlin_omniscient.gd + fallback_pool.gd + brain_quality_judge.gd",
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix run.day counter: increment per card in resolve_choice()",
       "agent": "godot_expert",
       "files": [
-        "addons/merlin_ai/merlin_omniscient.gd",
-        "addons/merlin_ai/generators/fallback_pool.gd",
-        "addons/merlin_ai/brain_quality_judge.gd"
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "merlin_omniscient : supprimer guardrails Triade, supprimer validation d'équilibre des aspects. fallback_pool : générer des cartes sans référence aux aspects. brain_quality_judge : supprimer score 'Triade balance' du critère de qualité."
+      "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add CARDS_PER_DAY constant (merlin_constants.gd) + increment run['day'] in resolve_choice() when cards_played % CARDS_PER_DAY == 0. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 19 store_run.gd)."
     },
     {
-      "id": "TRIADE-SCENES",
-      "phase": 1,
-      "priority": 9,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W1-C: TransitionBiome + Calendar cleaned. HubAntre/IntroTutorial/SceneRencontre/Collection already clean.",
-      "title": "Nettoyer les scènes contrôleurs (4 fichiers)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/HubAntre.gd",
-        "scripts/IntroTutorial.gd",
-        "scripts/SceneRencontreMerlin.gd",
-        "scripts/TransitionBiome.gd"
-      ],
-      "description": "Supprimer toutes les références à la Triade dans ces 4 controllers de scène. IntroTutorial : supprimer le tutoriel sur Corps/Âme/Monde. HubAntre : supprimer l'affichage de l'état des aspects. TransitionBiome : supprimer les transitions conditionnées aux aspects."
-    },
-    {
-      "id": "TRIADE-TRAINING",
-      "phase": 1,
-      "priority": 10,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W1-D: 3 models marked OBSOLETE (gamemaster 300 refs, full-v9 180, narrator 49). worker-v1 clean.",
-      "title": "Invalider training_roadmap.json (modèles entraînés sur Triade)",
-      "agent": "godot_expert",
-      "files": [
-        ".merlin_remote/kaggle/training_roadmap.json"
-      ],
-      "description": "Marquer gamemaster-v2 et narrator-v* comme OBSOLETE dans training_roadmap.json. Ajouter note : 'Entraîné sur Triade — à réentraîner après suppression complète'. Ne pas supprimer les checkpoints existants."
-    },
-    {
-      "id": "MECANIQUE-DESIGN",
-      "phase": 2,
+      "id": "S2-DAY-SIGNAL-REGRESSION-TEST",
+      "sprint": "S2",
       "priority": 11,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W2-C: DESIGN_STATUS.md created. 18 confirmed mechanics, 10 removed, 14 audit docs indexed.",
-      "title": "Mettre à jour NEW_MECHANICS_DESIGN.md avec décisions session",
-      "agent": "game_designer",
+      "status": "pending",
+      "type": "test",
+      "title": "Regression test: BUG-SIGNAL-DELTA-FIX + S2-DAY-TICK-FIX applied correctly",
+      "agent": "bug_hunter",
       "files": [
-        "docs/NEW_MECHANICS_DESIGN.md"
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Documenter les décisions de game design validées. Poser 3 questions clés pour le prochain cycle. Mettre à jour les mécaniques confirmées (Réputation, Oghams, Calendrier) et noter les open questions."
+      "description": "After BUG-SIGNAL-DELTA-FIX and S2-DAY-TICK-FIX are applied, verify: (1) reputation_changed emits actual_delta = new_val - old_rep (not raw rep_delta). Test: faction_rep=95, delta=+20 → emit delta=+5 not +20. (2) CARDS_PER_DAY constant exists in merlin_constants.gd. (3) resolve_choice() increments run['day'] every CARDS_PER_DAY cards. (4) LLM context day field changes over a simulated 30-card run. (5) All S2-CONTEXT-REGRESSION-TEST regressions still PASS."
     },
     {
-      "id": "REPUTATION-IMPL",
-      "phase": 4,
-      "priority": 12,
-      "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W2-A: Instance API added (add_reputation, thresholds, cap ±20, dominant). 10 tests. Store already wired.",
-      "title": "Implémenter merlin_reputation_system.gd",
+      "id": "DIR-S2-MNWXQ41M",
+      "sprint": "S2",
+      "priority": 14,
+      "status": "pending",
+      "type": "dev",
+      "title": "Cycle jour/nuit PS1 + DA cohérente toutes scènes (remplace S3-AMBIENT + S3-PIXEL)",
       "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_reputation_system.gd"
+        "scripts/merlin/merlin_visual.gd",
+        "scripts/merlin/store_run.gd",
+        "addons/merlin_ai/merlin_omniscient.gd"
       ],
-      "description": "Créer le système de réputation : 5 factions (druides/anciens/korrigans/niamh/ankou), valeurs 0-100, seuils 50 et 80, signaux reputation_changed(faction, value, delta). Intégrer dans merlin_store.gd. Basé sur DOC_15_Faction_Alignment_System.md."
+      "description": "Director q-20260413-003 + q-20260412-002 + q-20260412-004: Unified visual task replacing S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER. Cycle jour/nuit en mode PS1 avec volumétrie. Temps réel machine/serveur pour saisons et cycle quotidien. DA cohérente entre TOUTES les scènes et animations. Effets visuels: pixel snap, affine textures, low-poly volumetric fog, dithering shadows, viewport scale. Exposer time_of_day + season dans run state + LLM context. Tout doit être driver sous la même logique graphique. Director note: 'toute la DA doit être cohérente entre toutes les scènes, animations. Tout doit être driver sous la même logique graphique sur l'ensemble des rendus graphiques.'"
     },
     {
-      "id": "DAYTIME-GLOBAL",
-      "phase": 3,
+      "id": "S3-TYPOGRAPHY",
+      "sprint": "S3",
+      "priority": 15,
+      "status": "pending",
+      "type": "dev",
+      "title": "Typographie hybride: titre celtique + corps sans-serif",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_visual.gd"
+      ],
+      "description": "Director q-003: FONT_TITLE (celtique) + FONT_BODY (sans-serif) dans MerlinVisual."
+    },
+    {
+      "id": "S3-STORY-LOG-RAG",
+      "sprint": "S3",
+      "priority": 17,
+      "status": "pending",
+      "type": "dev",
+      "title": "Memoire narrative: RAG pour resume compresse story_log",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/store_run.gd",
+        "addons/merlin_ai/rag_manager.gd"
+      ],
+      "description": "Director q-001: RAG-based narrative memory. add_narrative_entry() per card, get_narrative_summary() for 3-5 items."
+    },
+    {
+      "id": "S3-MINIGAME-ROUTING-REGRESSION",
+      "sprint": "S3",
       "priority": 13,
       "status": "completed",
-      "completed_at": "2026-03-15",
-      "notes": "Studio W2-B: game_time_manager.gd rewritten (normalized time, 6 periods, moon, festivals, LLM context). 10 tests.",
-      "title": "Créer game_time_manager.gd (singleton cycle jour/nuit global)",
-      "agent": "godot_expert",
+      "type": "test",
+      "title": "Regression test: BUG-SANG-FROID-GAMES-FIELD fix verified + meditation disposition",
+      "agent": "bug_hunter",
       "files": [
-        "scripts/autoload/game_time_manager.gd"
-      ],
-      "description": "Singleton qui expose : current_time_normalized (0.0-1.0), current_season (printemps/été/automne/hiver), moon_phase (string), active_festival (string ou vide). Synchronisé avec l'heure système réelle. Branché sur Calendar.gd existant. Signal time_updated(normalized)."
-    },
-    {
-      "id": "P0-DEADCODE-1",
-      "phase": 0,
-      "priority": 1,
-      "status": "pending",
-      "title": "Supprimer dead code merlin_constants.gd (14 ELEMENTS, ESSENCE_*, FLUX_*, etc.)",
-      "agent": "godot_expert",
-      "files": [
+        "scripts/minigames/minigame_registry.gd",
         "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "DEV_PLAN Phase 0: Supprimer ELEMENTS (14), ESSENCE_DROP_*, ESSENCE_ANCHOR_CARDS, ESSENCE_BASE_REWARDS, ESSENCE_VICTORY_BONUS, ESSENCE_CHUTE_BONUS, ESSENCE_MINIGAME_BONUS, ESSENCE_OGHAM_BONUS, ESSENCE_FACTION_BONUS, FLUX_*, RUN_TYPOLOGIES, DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS, BOND_TIERS, OGHAM_STARTER_SKILLS, CardOption enum. validate.bat apres."
+      "description": "After BUG-SANG-FROID-GAMES-FIELD fix: (1) GAMES['esprit'] = [volonte, apaisement, sang_froid] — mg_sang_froid reachable from esprit-field cards. (2) GAMES['vigueur'] = [combat_rituel, course] — sang_froid NOT in vigueur. (3) FIELD_MINIGAMES['esprit'] == GAMES['esprit'] conceptual mapping. (4) All 22 mg_ scripts still exist. (5) mg_de_du_destin.gd.uid orphaned artifact deleted. (6) mg_meditation.gd still present as script (not deleted, pending director decision on placement).",
+      "completed_at": "2026-04-13T16:45:00Z",
+      "notes": "PASS 6/6. BUG-SANG-FROID fix verified: mg_sang_froid in GAMES[esprit], not vigueur. FIELD_MINIGAMES aligned. 22 dispatched scripts exist. mg_de_du_destin.gd+uid deleted. mg_meditation preserved pending q-20260413-004. 2 LOW notes (orphaned preload line 138, cosmetic comment). 0 critical bugs. Report: test_reports/S3-MINIGAME-ROUTING-REGRESSION_2026-04-13.json"
     },
     {
-      "id": "P0-DEADCODE-2",
-      "phase": 0,
-      "priority": 2,
+      "id": "S4-WEB-EXPORT",
+      "sprint": "S4",
+      "priority": 20,
       "status": "pending",
-      "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
+      "type": "dev",
+      "title": "Configurer export web HTML5 automatise",
       "agent": "godot_expert",
       "files": [
+        "export_presets.cfg"
+      ],
+      "description": "Setup Godot HTML5 export. Verify SharedArrayBuffer headers. Output to web-export/."
+    },
+    {
+      "id": "DIR-S2-MNXB57O7",
+      "sprint": "S2",
+      "priority": 21,
+      "status": "pending",
+      "type": "dev",
+      "title": "Refonte Menu Principal",
+      "agent": "godot_expert",
+      "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volumétrie et cycle jour/nuit, la scène doit être plus viable. Deep dive et itère jusqu'à acceptation du retour correct",
+      "files": []
+    },
+    {
+      "id": "S2-ANAM-VERIFY",
+      "sprint": "S2",
+      "priority": 9,
+      "status": "pending",
+      "type": "dev",
+      "title": "Verifier formule Anam cross-run: mort = anam × min(cartes/30, 1.0)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/merlin/store_run.gd",
         "scripts/merlin/merlin_store.gd"
       ],
-      "description": "DEV_PLAN Phase 0: Supprimer meta state keys: essence{14}, ogham_fragments, liens, gloire_points, bestiole_evolution. Renommer _init_triade_run -> _init_run, _resolve_triade_choice -> _resolve_choice, _check_triade_run_end -> _check_run_end, _apply_triade_effect -> _apply_effect, _handle_triade_run_end -> _handle_run_end."
+      "description": "Bible s.5.1: Anam est la monnaie cross-run (~10 runs/noeud). A la mort: gain_anam = run.anam_accumulated * min(run.cards_played / 30.0, 1.0). Verifier: (1) run.anam_accumulated est incremente correctement (non zero). (2) La formule de mort utilise min(cartes/30, 1.0) et non un cap fixe. (3) merlin_save_system.gd persiste meta.total_anam correctement. (4) reset run.anam_accumulated a 0 apres mort. Si formule manquante ou incorrecte: implementer selon bible."
     },
     {
-      "id": "P0-DEADCODE-3",
-      "phase": 0,
-      "priority": 3,
+      "id": "S3-MEDITATION-CLEANUP",
+      "sprint": "S3",
+      "priority": 12,
       "status": "pending",
-      "title": "Supprimer TRIADE_ action dispatch prefix dans store + callers",
+      "type": "dev",
+      "title": "Cleanup mg_meditation: resolve orphaned preload after q-20260413-004 decision",
       "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/ui/merlin_game_controller.gd",
-        "scripts/test_merlin_store.gd"
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/minigames/mg_meditation.gd"
       ],
-      "description": "DEV_PLAN Phase 0: Renommer TRIADE_START_RUN->START_RUN, TRIADE_GET_CARD->GET_CARD, TRIADE_RESOLVE_CHOICE->RESOLVE_CHOICE, TRIADE_END_RUN->END_RUN, TRIADE_DAMAGE_LIFE->DAMAGE_LIFE, TRIADE_HEAL_LIFE->HEAL_LIFE, TRIADE_GENERATE_MAP->GENERATE_MAP, TRIADE_SELECT_NODE->SELECT_NODE, TRIADE_PROGRESS_MISSION->PROGRESS_MISSION, TRIADE_USE_SKILL->USE_SKILL, TRIADE_APPLY_EFFECTS->APPLY_EFFECTS. Dans tous les callers."
+      "description": "BLOCKED until director answers q-20260413-004 (mg_meditation disposition). After answer: (A) If 'delete' → remove mg_meditation.gd + remove match case line 138 from create_minigame(). (B) If 'move to another field' → add mg_meditation to GAMES[field] + keep match case. (C) If 'add to esprit (4 entries)' → add to GAMES['esprit'] + FIELD_MINIGAMES['esprit']. (D) If 'keep for future' → remove match case line 138 only (dead code cleanup). Also fix cosmetic: reorganize match block comments so mg_sang_froid is under # Esprit."
     },
     {
-      "id": "P0-DEADCODE-4",
-      "phase": 0,
-      "priority": 4,
+      "id": "S4-SFXMANAGER-AUDIT",
+      "sprint": "S4",
+      "priority": 19,
       "status": "pending",
-      "title": "Supprimer dead code merlin_card_system.gd (GAUGES, bestiole)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_card_system.gd"
-      ],
-      "description": "DEV_PLAN Phase 0: Supprimer GAUGES const, gauge init in init_run(), gauge checks in check_run_end(), _get_critical_gauges(), gauge effects in _apply_card_effects(), bestiole context block, _get_bestiole_modifier()."
-    },
-    {
-      "id": "P0-DEADCODE-5",
-      "phase": 0,
-      "priority": 5,
-      "status": "pending",
-      "title": "Supprimer dead files (bestiole, souffle HUD, D20 dice)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/ui/bestiole_sprite.gd",
-        "scripts/ui/bestiole_wheel_system.gd",
-        "scripts/ui/bestiole_creature.gd",
-        "scripts/ui/pixel_bestiole_fox.gd",
-        "scripts/minigames/mg_de_du_destin.gd"
-      ],
-      "description": "DEV_PLAN Phase 0: Supprimer entierement les fichiers de systemes morts: bestiole_sprite.gd, bestiole_wheel_system.gd, bestiole_creature.gd, pixel_bestiole_fox.gd, mg_de_du_destin.gd. Verifier existence avant suppression."
-    },
-    {
-      "id": "P1-CONSTANTS-1",
-      "phase": 1,
-      "priority": 6,
-      "status": "pending",
-      "title": "Aligner 18 Oghams sur bible v2.4 (effets corrects)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "DEV_PLAN Phase 1A: Corriger divergences code/bible: duir->heal_immediate(12), onn->add_biome_currency(10), nuin->replace_worst_option, quert->heal_immediate(8), ruis->heal_and_cost(+18PV,-5monnaie), saille->currency_and_heal(+8,+3), ur verifier params. Tous 18 Oghams avec 10 champs obligatoires."
-    },
-    {
-      "id": "P1-CONSTANTS-2",
-      "phase": 1,
-      "priority": 7,
-      "status": "pending",
-      "title": "Ajouter 8 biomes avec seuils maturite et EFFECT_CAPS",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "DEV_PLAN Phase 1B+1C: Ajouter BIOMES dict (8 biomes avec tous champs: name, subtitle, season, difficulty, maturity_threshold, oghams_affinity, currency_name, card_interval_range, pnj, arc, arc_cards, arc_condition). Ajouter BIOME_MATURITY_THRESHOLDS, MATURITY_WEIGHTS. Ajouter EFFECT_CAPS, MULTIPLIER_TABLE, ANAM_REWARDS, TALENT_TIERS."
-    },
-    {
-      "id": "P1-CONSTANTS-3",
-      "phase": 1,
-      "priority": 8,
-      "status": "pending",
-      "title": "Ajouter 45 verbes d'action + mapping champs lexicaux + MOS config",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "DEV_PLAN Phase 1D+1F: Ajouter ACTION_VERBS (8 champs + neutre, 45 verbes), FIELD_MINIGAMES mapping. Ajouter MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS, IN_GAME_PERIODS."
-    },
-    {
-      "id": "TEST-PLAYTEST-1",
-      "phase": 0,
-      "priority": 2,
-      "status": "pending",
-      "title": "Playtest session: core loop flow analysis",
-      "agent": "game_playtester",
       "type": "test",
-      "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_game_controller.gd",
-        "scripts/merlin/merlin_card_system.gd"
-      ],
-      "description": "Simuler 10 sessions de jeu complètes. Tracer le core loop Hub→Biome→Ogham→Carte→Minigame→Effets. Vérifier les invariants: vie 0-100, rep caps ±20/carte, MOS soft min 8 / hard max 50, drain -1/carte au début. Tester les edge cases: vie=1+drain, faction=100+bonus, MOS=50. Écrire le rapport dans tools/autodev/status/test_reports/playtest_core_loop.json"
-    },
-    {
-      "id": "TEST-AUDIT-1",
-      "phase": 0,
-      "priority": 3,
-      "status": "pending",
-      "title": "Game Design Bible audit: code vs spec compliance",
-      "agent": "game_design_auditor",
-      "type": "test",
-      "files": [
-        "docs/GAME_DESIGN_BIBLE.md",
-        "scripts/merlin/merlin_constants.gd",
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_reputation_system.gd"
-      ],
-      "description": "Audit complet code vs GAME_DESIGN_BIBLE.md v2.4. Vérifier les 12 systèmes (vie, factions, oghams, options, champs lexicaux, minigames, MOS, Anam, confiance, multiplicateur, FastRoute, save). Détecter le dead code des systèmes supprimés (Triade, Souffle, Bestiole, Awen, D20, Flux). Écrire le rapport dans tools/autodev/status/test_reports/bible_audit.json"
-    },
-    {
-      "id": "TEST-BUGHUNT-1",
-      "phase": 0,
-      "priority": 4,
-      "status": "pending",
-      "title": "Bug hunt: static analysis of 8 core files",
+      "title": "Audit SFXManager: 30+ sons proceduaux enregistres, zero refs manquantes",
       "agent": "bug_hunter",
-      "type": "test",
       "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_card_system.gd",
-        "scripts/merlin/merlin_game_controller.gd",
-        "scripts/merlin/merlin_llm_adapter.gd",
-        "addons/merlin_ai/merlin_ai.gd",
-        "scripts/merlin/merlin_reputation_system.gd",
-        "scripts/merlin/merlin_save_system.gd"
+        "scripts/merlin/sfx_manager.gd",
+        "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Analyse statique des 8 fichiers core. Chercher: null/invalid access, signal disconnections, type mismatches (:= avec CONST), state machine bugs, resource leaks, game logic bugs (division par 0, overflow). Classer par sévérité CRITICAL/HIGH/MEDIUM/LOW. Écrire le rapport dans tools/autodev/status/test_reports/bug_hunt_core.json"
-    },
-    {
-      "id": "TEST-PLAYTEST-2",
-      "phase": 0,
-      "priority": 6,
-      "status": "pending",
-      "title": "Playtest session: death & edge case scenarios",
-      "agent": "game_playtester",
-      "type": "test",
-      "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "description": "Simuler 10 scénarios de mort et edge cases: vie=0 pendant effet, toutes factions à 0, toutes factions à 100, Ogham sans ressources, MOS hard max atteint, Anam cross-run calcul, save mid-run + restore, Confiance Merlin T0→T3 mid-run, FastRoute carte avec champs manquants, multiplicateur overflow x2.0 cap. Rapport dans tools/autodev/status/test_reports/playtest_edge_cases.json"
-    },
-    {
-      "id": "TEST-BUGHUNT-2",
-      "phase": 0,
-      "priority": 7,
-      "status": "pending",
-      "title": "Bug hunt: LLM integration & AI layer",
-      "agent": "bug_hunter",
-      "type": "test",
-      "files": [
-        "addons/merlin_ai/merlin_ai.gd",
-        "addons/merlin_ai/ollama_backend.gd",
-        "addons/merlin_ai/brain_swarm_config.gd",
-        "addons/merlin_ai/merlin_omniscient.gd",
-        "addons/merlin_ai/rag_manager.gd",
-        "scripts/merlin/merlin_llm_adapter.gd"
-      ],
-      "description": "Analyse statique du layer IA. Chercher: timeout LLM non géré (softlock), JSON malformé du LLM non parsé, fallback manquant si Ollama down, race condition multi-brain, contexte RAG overflow, prompt injection dans les réponses LLM. Rapport dans tools/autodev/status/test_reports/bug_hunt_ai.json"
+      "description": "Bible overview: SFXManager gere 30+ sons proceduaux. Verifier: (1) SFXManager.gd existe et est un autoload valide. (2) >= 30 entrees de sons enregistrees. (3) Aucune ref a un fichier .wav/.ogg/.mp3 manquant. (4) play_sfx() / stop_sfx() existent. (5) Pas de deprecations AudioStreamPlayer Godot 3 vs 4. Rapport: count sons, refs manquantes, pattern procedural."
     }
   ]
 }

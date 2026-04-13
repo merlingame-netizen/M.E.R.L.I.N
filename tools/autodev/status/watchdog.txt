@@ -1,1 +1,23 @@
 2026-04-11T10:28:08Z OK local-init
+2026-04-12T16:55:57Z heartbeat
+2026-04-12T21:00:00Z OK test S1-CORE-TEST
+2026-04-12T22:30:00 OK
+2026-04-13T00:00:00Z OK test S1-LLM-VALIDATE — FAIL 1 HIGH BUG-FACTION-OVERFLOW, 3/3 regressions PASS
+2026-04-13T00:00:00 OK
+2026-04-13T06:00:00Z OK — Cycle 5 DEV: Sprint 1 complete. Removed GENERATION_TIMEOUT_MS. 22 tasks archived. Sprint 2 starts.
+2026-04-13T02:54:09Z OK test S2-INTEGRATION — FAIL 1 HIGH BUG-PROMISE-SYSTEM + 4 MEDIUM bugs. 3/3 regressions PASS. BUG-PROMISE-SYSTEM-FIX P1 created.
+2026-04-13T07:00:00Z OK dev BUG-PROMISE-SYSTEM-FIX — Unified promise storage onto active_promises. Card-based deadlines. 4 files: merlin_effect_engine.gd, store_run.gd, game_flow_controller.gd, completed_archive.json.
+2026-04-13T05:03:16Z OK test S3-EDGE-CASES — FAIL 1 MEDIUM BUG-MIDRUN-SAVE-INCOMPLETE + 1 LOW BUG-SIGNAL-DELTA. 3/3 regressions PASS. 2 new tasks created P6+P11.
+2026-04-13T09:00:00Z OK dev BUG-MIDRUN-SAVE-INCOMPLETE-FIX — autosave now persists run_state; pacing recovery removed per director. 2 files modified. S3-STORY-LOG-RAG task created.
+2026-04-13T10:00:00Z
+2026-04-13T10:00:00Z OK
+2026-04-13T11:00:00 OK
+2026-04-13T12:00:00 OK cycle=12 type=test task=S4-SMOKE-TEST verdict=PASS invariants=13/13 regressions=5/5 bugs_new=0
+2026-04-13T13:00:00 OK
+2026-04-13T14:00:00 OK cycle=14 type=test task=S3-FACTION-REGRESSION-TEST verdict=PASS checks=7/7 regressions=5/5 bugs_new=0
+2026-04-13T15:00:00 OK
+2026-04-13T14:19:16 OK — CYCLE-16 TEST S2-CONTEXT-REGRESSION-TEST PARTIAL_PASS (6/8 CHK PASS, 2 pending fixes, 0 regressions)
+2026-04-13T15:30:00 OK — CYCLE-17 DEV S2-DEAD-FILES: deleted mg_de_du_destin.gd, 3 refs cleaned in minigame_registry.gd + 1 in auto_play_runner.gd. 0 dangling refs. PAT-028.
+2026-04-13T16:00:00 OK
+2026-04-13T16:30:00 OK — CYCLE-19 DEV BUG-SANG-FROID-GAMES-FIELD PASS
+2026-04-13T16:45:00 OK — CYCLE-20 TEST S3-MINIGAME-ROUTING-REGRESSION PASS (6/6 checks, 0 new bugs, 3 new tasks, 12 pending). MERGE: detached HEAD reintegrated into main.

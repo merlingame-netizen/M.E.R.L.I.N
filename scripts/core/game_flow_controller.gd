@@ -330,7 +330,7 @@ func _build_end_run_data(reason: String, run_data: Dictionary) -> Dictionary:
 		"biome": str(run_data.get("biome", "")),
 		"biome_currency": int(run_data.get("biome_currency", 0)),
 		"faction_rep_delta": run_data.get("faction_rep_delta", {}),
-		"promises": run_data.get("promises", []),
+		"promises": run_data.get("active_promises", run_data.get("promises", [])),
 		"story_log": run_data.get("story_log", []),
 		"oghams_used": int(run_data.get("oghams_used", 0)),
 		"minigames_played": int(run_data.get("minigames_played", 0)),

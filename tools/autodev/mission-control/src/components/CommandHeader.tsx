@@ -22,7 +22,7 @@ function formatUptime(seconds: number): string {
 }
 
 export function CommandHeader() {
-  const { orchestratorState, cycleId, connected } = useMissionStore();
+  const { orchestratorState, cycleId, connected, lastHeartbeat } = useMissionStore();
   const [uptime, setUptime] = useState(0);
 
   useEffect(() => {
@@ -78,6 +78,17 @@ export function CommandHeader() {
             {connected ? 'LINKED' : 'OFFLINE'}
           </span>
         </div>
+
+        {lastHeartbeat && (
+          <span className="command-header__heartbeat" style={{
+            fontSize: '10px',
+            color: 'var(--text-secondary)',
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0',
+          }}>
+            HEARTBEAT {lastHeartbeat}
+          </span>
+        )}
 
         <span className="command-header__uptime" aria-label={`Uptime: ${formatUptime(uptime)}`}>
           {formatUptime(uptime)}

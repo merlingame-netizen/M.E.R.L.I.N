@@ -1,0 +1,114 @@
+{
+  "report_id": "S3-MINIGAMES-FIELD-AUDIT_2026-04-13",
+  "task_id": "S3-MINIGAMES-FIELD-AUDIT",
+  "timestamp": "2026-04-13T16:00:00Z",
+  "agent": "game_design_auditor",
+  "cycle_type": "test",
+  "verdict": "PARTIAL_PASS",
+  "summary": "3/3 checks PASS (with notes). 1 bug found: mg_sang_froid mis-routed to GAMES[vigueur] instead of GAMES[esprit]. 1 architectural note: FIELD_MINIGAMES uses conceptual names for LLM/display; actual dispatch uses option[field] -> GAMES dict (two parallel systems). 1 low artifact: orphaned mg_de_du_destin.gd.uid.",
+
+  "checks": [
+    {
+      "id": "CHECK-1",
+      "title": "FIELD_MINIGAMES vs bible s.6.2 exact match",
+      "verdict": "PASS",
+      "details": "All 9 entries in FIELD_MINIGAMES match bible s.6.2 table (lines 317-324) exactly. 'neutre' covered by bible line 869 (verbs neutres → esprit, minigame apaisement/volonte). No missing or extra entries.",
+      "evidence": {
+        "bible_s62_table": {
+          "chance": ["herboristerie"],
+          "bluff": ["negociation"],
+          "observation": ["fouille", "regard"],
+          "logique": ["runes"],
+          "finesse": ["ombres", "equilibre"],
+          "vigueur": ["combat_rituel", "course"],
+          "esprit": ["apaisement", "volonte", "sang_froid"],
+          "perception": ["traces", "echo"]
+        },
+        "FIELD_MINIGAMES_code": {
+          "chance": ["herboristerie"],
+          "bluff": ["negociation"],
+          "observation": ["fouille", "regard"],
+          "logique": ["runes"],
+          "finesse": ["ombres", "equilibre"],
+          "vigueur": ["combat_rituel", "course"],
+          "esprit": ["apaisement", "volonte", "sang_froid"],
+          "perception": ["traces", "echo"],
+          "neutre": ["apaisement", "volonte"]
+        },
+        "match": "EXACT"
+      }
+    },
+    {
+      "id": "CHECK-2",
+      "title": "Minigame implementations exist (scenes/scripts)",
+      "verdict": "PASS",
+      "details": "scenes/minigames/ does NOT exist — minigames are script-only overlays (expected architecture). All 24 mg_ scripts referenced in GAMES dict exist in scripts/minigames/. Architecture note: FIELD_MINIGAMES uses conceptual names (herboristerie, fouille, runes, equilibre, traces) that are labels for LLM/display — actual dispatch uses option['field'] -> GAMES -> mg_ scripts. Two systems serve different purposes.",
+      "existing_scripts": ["mg_apaisement.gd", "mg_bluff_druide.gd", "mg_combat_rituel.gd", "mg_course.gd", "mg_echo.gd", "mg_enigme_ogham.gd", "mg_joute_verbale.gd", "mg_lame_druide.gd", "mg_meditation.gd", "mg_negociation.gd", "mg_noeud_celtique.gd", "mg_oeil_corbeau.gd", "mg_ombres.gd", "mg_pas_renard.gd", "mg_pierre_feuille_racine.gd", "mg_pile_ou_face.gd", "mg_regard.gd", "mg_roue_fortune.gd", "mg_rune_cachee.gd", "mg_sang_froid.gd", "mg_tir_a_larc.gd", "mg_trace_cerf.gd", "mg_volonte.gd"],
+      "missing_implementations": ["herboristerie (conceptual label only)", "fouille (conceptual label only)", "runes (conceptual label only)", "equilibre (conceptual label only)", "traces (conceptual label only)"],
+      "note": "Missing conceptual names are by design — they are LLM hint labels, not code identifiers. The registry GAMES dict provides the actual implementation mapping."
+    },
+    {
+      "id": "CHECK-3",
+      "title": "No orphaned minigame scripts",
+      "verdict": "PASS",
+      "details": "All 23 mg_ scripts in scripts/minigames/ are referenced in GAMES dict. One low-severity artifact: mg_de_du_destin.gd.uid (orphaned uid file after S2-DEAD-FILES deleted the .gd). No functional impact.",
+      "orphaned_uid": "mg_de_du_destin.gd.uid — uid artifact only, .gd already deleted"
+    }
+  ],
+
+  "bugs": [
+    {
+      "id": "BUG-SANG-FROID-GAMES-FIELD",
+      "severity": "HIGH",
+      "title": "mg_sang_froid mis-routed: GAMES[vigueur] should be GAMES[esprit]",
+      "description": "Bible s.6.2 + catalogue (line 337): 'Sang-froid | esprit'. FIELD_MINIGAMES['esprit'] includes 'sang_froid'. But GAMES['vigueur'] = ['mg_combat_rituel', 'mg_sang_froid', 'mg_course'] and GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_meditation']. Result: esprit-field cards NEVER select mg_sang_froid (impossible path), vigueur cards sometimes get sang_froid (wrong mental test for physical action). Fix: move mg_sang_froid from GAMES['vigueur'] to GAMES['esprit'] in minigame_registry.gd.",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "lines": "25-27",
+      "expected_fix": "GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_sang_froid']; GAMES['vigueur'] = ['mg_combat_rituel', 'mg_course']"
+    },
+    {
+      "id": "BUG-MEDITATION-UNLISTED",
+      "severity": "LOW",
+      "title": "mg_meditation in GAMES[esprit] not listed in bible s.6.2",
+      "description": "Bible s.6.2 esprit catalogue: apaisement, volonte, sang_froid. mg_meditation is in GAMES['esprit'] but not in bible. If sang_froid fix is applied, esprit becomes [volonte, apaisement, sang_froid] — meditation would be dropped from dispatch. mg_meditation.gd script would become unreachable. Options: (1) keep as bonus, (2) move to perception or logique, (3) add to bible after director approval.",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 27,
+      "action": "Flag for director approval — do not fix automatically"
+    },
+    {
+      "id": "BUG-ORPHANED-UID",
+      "severity": "LOW",
+      "title": "Orphaned uid artifact: mg_de_du_destin.gd.uid",
+      "description": "S2-DEAD-FILES deleted mg_de_du_destin.gd (D20 suppressed system) but left the .uid file. No functional impact. Cleanup recommended.",
+      "file": "scripts/minigames/mg_de_du_destin.gd.uid",
+      "action": "Delete the orphaned .uid file"
+    }
+  ],
+
+  "architecture_notes": [
+    {
+      "id": "ARCH-001",
+      "title": "FIELD_MINIGAMES and GAMES are parallel systems with different purposes",
+      "description": "FIELD_MINIGAMES (merlin_constants.gd) maps fields to conceptual names (herboristerie, negociation, etc.) for LLM context/display labels stored in option['minigame']. GAMES (minigame_registry.gd) maps fields to mg_ scripts for actual dispatch via option['field'] -> MiniGameRegistry.create_minigame(field). The two systems serve different purposes and should NOT be confused. This architecture is correct but could benefit from documentation.",
+      "verdict": "EXPECTED_BEHAVIOR"
+    }
+  ],
+
+  "regressions_vs_previous": [
+    {"check": "No gauges key in build_full_context()", "status": "NOT_TESTED_THIS_CYCLE"},
+    {"check": "BUG-FACTIONS-STALE fully fixed (S3-FACTION-REGRESSION-TEST)", "status": "NOT_TESTED_THIS_CYCLE"},
+    {"check": "All 23 mg_ scripts accessible via GAMES", "status": "PASS"}
+  ],
+
+  "new_tasks_created": [
+    "BUG-SANG-FROID-GAMES-FIELD (P5, dev)",
+    "BUG-ORPHANED-UID-CLEANUP (P12, dev)"
+  ],
+
+  "invariants_verified": {
+    "FIELD_MINIGAMES_bible_exact_match": "PASS",
+    "all_mg_scripts_exist": "PASS",
+    "all_mg_scripts_referenced": "PASS",
+    "no_scene_files_needed": "PASS (script-based architecture)"
+  }
+}

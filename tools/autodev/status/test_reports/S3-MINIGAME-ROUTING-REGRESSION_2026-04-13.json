@@ -1,0 +1,124 @@
+{
+  "report_id": "S3-MINIGAME-ROUTING-REGRESSION_2026-04-13",
+  "task_id": "S3-MINIGAME-ROUTING-REGRESSION",
+  "agent": "bug_hunter",
+  "timestamp": "2026-04-13T16:45:00Z",
+  "cycle": 20,
+  "overall_result": "PASS",
+  "summary": "BUG-SANG-FROID-GAMES-FIELD fix VERIFIED. 6/6 checks PASS. mg_sang_froid correctly dispatched from esprit field. mg_de_du_destin artifacts fully cleaned. 2 LOW cosmetic notes logged.",
+  "checks": [
+    {
+      "id": "CHECK-1",
+      "description": "GAMES['esprit'] = [mg_volonte, mg_apaisement, mg_sang_froid] — mg_sang_froid reachable from esprit-field cards",
+      "result": "PASS",
+      "evidence": "minigame_registry.gd:27 → \"esprit\": [\"mg_volonte\", \"mg_apaisement\", \"mg_sang_froid\"]",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 27
+    },
+    {
+      "id": "CHECK-2",
+      "description": "GAMES['vigueur'] = [combat_rituel, course] — sang_froid NOT in vigueur",
+      "result": "PASS",
+      "evidence": "minigame_registry.gd:26 → \"vigueur\": [\"mg_combat_rituel\", \"mg_course\"]. mg_sang_froid absent from vigueur list.",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 26
+    },
+    {
+      "id": "CHECK-3",
+      "description": "FIELD_MINIGAMES['esprit'] == GAMES['esprit'] conceptual mapping (both contain apaisement, volonte, sang_froid)",
+      "result": "PASS",
+      "evidence": "merlin_constants.gd:335 FIELD_MINIGAMES['esprit']=[apaisement, volonte, sang_froid]. minigame_registry.gd:27 GAMES['esprit']=[mg_volonte, mg_apaisement, mg_sang_froid]. 3/3 entries aligned.",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "line": 335
+    },
+    {
+      "id": "CHECK-4",
+      "description": "All 22 dispatched mg_ scripts exist (+ 1 unreachable mg_meditation pending q-20260413-004)",
+      "result": "PASS",
+      "evidence": "23 mg_*.gd files found. 22 referenced in GAMES dict all exist. mg_meditation.gd exists (not dispatched, pending director decision). mg_de_du_destin.gd ABSENT (correctly deleted in S2-DEAD-FILES).",
+      "file": "scripts/minigames/",
+      "line": null
+    },
+    {
+      "id": "CHECK-5",
+      "description": "mg_de_du_destin.gd.uid orphaned artifact deleted",
+      "result": "PASS",
+      "evidence": "File not found: scripts/minigames/mg_de_du_destin.gd — DELETED. File not found: scripts/minigames/mg_de_du_destin.gd.uid — DELETED. Zero dangling artifacts.",
+      "file": "scripts/minigames/mg_de_du_destin.gd.uid",
+      "line": null
+    },
+    {
+      "id": "CHECK-6",
+      "description": "mg_meditation.gd still present as script (not deleted, pending director q-20260413-004)",
+      "result": "PASS",
+      "evidence": "scripts/minigames/mg_meditation.gd EXISTS. File preserved as per S3-MINIGAMES-FIELD-AUDIT instructions. Director question q-20260413-004 still pending.",
+      "file": "scripts/minigames/mg_meditation.gd",
+      "line": null
+    }
+  ],
+  "regressions": [
+    {
+      "id": "REG-1",
+      "description": "S3-MINIGAMES-FIELD-AUDIT CHECK-1: FIELD_MINIGAMES dict matches bible s.6.2",
+      "result": "PASS",
+      "notes": "Still aligned: all 8 fields intact, correct lists."
+    },
+    {
+      "id": "REG-2",
+      "description": "S3-MINIGAMES-FIELD-AUDIT CHECK-2: All 22 dispatched mg_ scripts exist (no broken preloads)",
+      "result": "PASS",
+      "notes": "23 physical files (22 dispatched + 1 unreachable). mg_meditation preload in match block line 138 won't cause parse error since file exists."
+    },
+    {
+      "id": "REG-3",
+      "description": "S3-MINIGAMES-FIELD-AUDIT CHECK-3: No orphaned scripts outside GAMES",
+      "result": "PASS_WITH_NOTE",
+      "notes": "mg_meditation.gd is unreachable via GAMES dispatch (intentional, pending q-20260413-004). Not a regression — same state as last report."
+    },
+    {
+      "id": "REG-4",
+      "description": "S2-DEAD-FILES: mg_de_du_destin.gd and .uid fully deleted, no refs remain",
+      "result": "PASS",
+      "notes": "Both files deleted. Zero references found in minigame_registry.gd and auto_play_runner.gd."
+    },
+    {
+      "id": "REG-5",
+      "description": "GAMES['vigueur'] still has only combat_rituel + course (no bloat)",
+      "result": "PASS",
+      "notes": "Exactly 2 entries as per bible s.6.2."
+    }
+  ],
+  "findings": [
+    {
+      "id": "FIND-001",
+      "severity": "LOW",
+      "type": "dead_code",
+      "description": "mg_meditation has orphaned preload match case in create_minigame() but is not in GAMES dict",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 138,
+      "details": "Line 138: `\"mg_meditation\": game = preload(\"res://scripts/minigames/mg_meditation.gd\").new()` — this branch is unreachable since GAMES['esprit']=[mg_volonte, mg_apaisement, mg_sang_froid]. Not a runtime bug (file exists, won't cause parse error). Should be cleaned up when q-20260413-004 is resolved.",
+      "action": "MONITOR — cleanup after q-20260413-004 director response"
+    },
+    {
+      "id": "FIND-002",
+      "severity": "LOW",
+      "type": "cosmetic",
+      "description": "Match block comment '# Vigueur' still groups mg_sang_froid even though it's now esprit field",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 131,
+      "details": "Comment organization doesn't affect runtime (match works by value not comment section). Cosmetic only.",
+      "action": "DEFER — fix alongside FIND-001 when q-20260413-004 resolved"
+    }
+  ],
+  "bugs_found": 0,
+  "bugs_critical": 0,
+  "new_tasks_created": [],
+  "invariants_verified": [
+    "BUG-SANG-FROID-GAMES-FIELD fix: mg_sang_froid correctly in GAMES['esprit']",
+    "mg_sang_froid NOT in GAMES['vigueur']",
+    "FIELD_MINIGAMES['esprit'] aligns with GAMES['esprit']",
+    "22 dispatched minigame scripts exist on disk",
+    "mg_de_du_destin fully deleted (script + uid)",
+    "mg_meditation preserved pending director decision"
+  ]
+}

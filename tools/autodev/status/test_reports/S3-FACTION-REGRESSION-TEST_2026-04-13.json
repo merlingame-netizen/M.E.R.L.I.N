@@ -1,0 +1,112 @@
+{
+  "report_id": "S3-FACTION-REGRESSION-TEST_2026-04-13",
+  "task_id": "S3-FACTION-REGRESSION-TEST",
+  "agent": "bug_hunter",
+  "cycle_type": "test",
+  "timestamp": "2026-04-13T14:00:00Z",
+  "verdict": "PASS",
+  "summary": "BUG-FACTIONS-STALE-FIX complete. Zero stale run.factions reads across all 5 AI subsystems. dominant_faction biome routing fully wired. 5/5 prior regressions PASS. 0 new bugs found.",
+
+  "primary_objective": "Verify BUG-FACTIONS-STALE-FIX: grep all 5 files for run.get('factions') stale reads, verify meta.faction_rep is single source, verify dominant_faction injection",
+
+  "checks": [
+    {
+      "id": "CHECK-001",
+      "name": "Zero stale run.factions reads — rag_manager.gd",
+      "verdict": "PASS",
+      "evidence": "grep run.get('factions') → 0 results. 4 functions (_get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction) all use game_state.get('meta',{}).get('faction_rep',{}) at lines 254, 327, 368, 620"
+    },
+    {
+      "id": "CHECK-002",
+      "name": "Zero stale run.factions reads — context_builder.gd",
+      "verdict": "PASS",
+      "evidence": "grep → 0 stale results. Line 41: meta.get('faction_rep', {}) used in build_full_context factions key"
+    },
+    {
+      "id": "CHECK-003",
+      "name": "Zero stale run.factions reads — event_category_selector.gd",
+      "verdict": "PASS",
+      "evidence": "grep → 0 stale results. Line 103: enriched_run['factions'] = meta.get('faction_rep', {}). faction_rep_delta is a separate run-scoped delta variable (correct — it's the per-run change, not the cumulative rep)"
+    },
+    {
+      "id": "CHECK-004",
+      "name": "Zero stale run.factions reads — merlin_omniscient.gd",
+      "verdict": "PASS",
+      "evidence": "grep → 0 stale results. Lines 507, 734, 2125, 2937-2938 all use meta.get('faction_rep',{}). _get_dominant_faction(faction_rep) called with live data at line 519"
+    },
+    {
+      "id": "CHECK-005",
+      "name": "Zero stale run.factions reads — merlin_llm_adapter.gd",
+      "verdict": "PASS",
+      "evidence": "grep → 0 stale results. Lines 708, 730: meta.get('faction_rep',{}) in build_narrative_context and build_context. Line 721: faction_status built via _build_faction_status_string which reads from state"
+    },
+    {
+      "id": "CHECK-006",
+      "name": "dominant_faction injection in event_category_selector enriched_run",
+      "verdict": "PASS",
+      "evidence": "Line 109: enriched_run['dominant_faction'] = str(biome_data.get('dominant_faction', '')). Trigger checks at lines 377-381 and 547-553 handle dominant_faction_above trigger type"
+    },
+    {
+      "id": "CHECK-007",
+      "name": "BIOMES dominant_faction — all 8 biomes present",
+      "verdict": "PASS",
+      "evidence": "merlin_constants.gd: 8 dominant_faction entries found at lines 414, 424, 434, 444, 454, 464, 474, 484. Values: druides(×2), anciens(×2), korrigans(×2), ankou(×1), niamh(×1)"
+    }
+  ],
+
+  "regressions": [
+    {
+      "id": "REG-001",
+      "name": "cards_played single canonical increment (PAT-005)",
+      "verdict": "PASS",
+      "evidence": "store_run.gd line 146: run['cards_played'] = int(run.get('cards_played',0)) + 1. merlin_card_system.gd: 0 increment sites. Only initialization (line 18) and reads in card_system."
+    },
+    {
+      "id": "REG-002",
+      "name": "LIFE_ESSENCE_DRAIN_PER_CARD = 0 (director q-001)",
+      "verdict": "PASS",
+      "evidence": "merlin_constants.gd line 74: const LIFE_ESSENCE_DRAIN_PER_CARD := 0. EFFECT_CAPS drain_per_card = 0 at line 356."
+    },
+    {
+      "id": "REG-003",
+      "name": "No pacing recovery (+5 HP if life < 20 removed, director q-005)",
+      "verdict": "PASS",
+      "evidence": "grep 'pacing|+5|low_life.*20' in store_run.gd → 0 auto-recovery hits. Only 'low_life_bonus' talent check at line 359 (end-of-run scoring, not mid-run recovery — correct)"
+    },
+    {
+      "id": "REG-004",
+      "name": "active_promises unified storage key (PAT-015)",
+      "verdict": "PASS",
+      "evidence": "merlin_effect_engine.gd: all 4 promise operations (_add_promise/_create_promise/check_promise_deadlines/_get_faction_from_promise) exclusively use 'active_promises' key. 0 orphaned 'promises' key reads."
+    },
+    {
+      "id": "REG-005",
+      "name": "Autosave persists run_state (PAT-016/017)",
+      "verdict": "PASS",
+      "evidence": "merlin_store.gd _do_autosave() lines 518-523: checks run.active flag, builds run_snapshot with biome+card_index mapping, calls save_system.save_run_state(run_snapshot)."
+    }
+  ],
+
+  "open_bugs_confirmed": [
+    {
+      "id": "BUG-SIGNAL-DELTA-FIX",
+      "priority": 6,
+      "status": "pending_fix",
+      "description": "reputation_changed signal emits unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Task in queue at P6."
+    }
+  ],
+
+  "new_bugs": [],
+
+  "patterns_confirmed": [
+    "PAT-019: meta.faction_rep is now the single authoritative source for all 5 AI subsystems",
+    "PAT-025: All 5 files verified — fix is complete with no residual stale reads"
+  ],
+
+  "invariants_checked": 7,
+  "invariants_pass": 7,
+  "invariants_fail": 0,
+  "regressions_checked": 5,
+  "regressions_pass": 5,
+  "regressions_fail": 0
+}

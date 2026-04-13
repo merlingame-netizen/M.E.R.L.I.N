@@ -1,0 +1,119 @@
+{
+  "version": "1.0",
+  "description": "Agent-proposed insights and feature suggestions for the Director",
+  "insights": [
+    {
+      "id": "insight-20260413-001",
+      "agent": "i18n_auditor",
+      "severity": "WARN",
+      "category": "i18n",
+      "message": "192 hardcoded French strings detected across 15 files",
+      "details": "text_registry.json created with ~80 keys. Remaining ~120 strings in merlin_constants.gd (oghams, biomes, talents, verbs) need migration. Priority: UI strings first, then game data.",
+      "proposed_task": {
+        "title": "Migrate remaining 120 strings to text_registry.json",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T12:00:00Z"
+    },
+    {
+      "id": "insight-20260413-002",
+      "agent": "visual_qa",
+      "severity": "ACTION",
+      "category": "visual",
+      "message": "No visual test baseline exists — screenshot pipeline ready but untested",
+      "details": "screenshot_agent.gd and visual_test_runner.py created. Need to run first baseline capture on MerlinGame.tscn and Hub scene to establish reference screenshots.",
+      "proposed_task": {
+        "title": "Run first visual test baseline on 3 core scenes",
+        "sprint": "S3",
+        "type": "test"
+      },
+      "timestamp": "2026-04-13T12:00:00Z"
+    },
+    {
+      "id": "insight-20260413-003",
+      "agent": "platform_tester",
+      "severity": "INFO",
+      "category": "performance",
+      "message": "Triplanar shaders too heavy for mobile — need LOD fallbacks",
+      "details": "low_poly.shader uses multiple texture fetches and depth blending. Mobile devices will struggle. Recommend shader variant with single texture + flat shading for QualityLevel.LOW.",
+      "proposed_task": {
+        "title": "Create mobile-friendly shader variant for LOW quality",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T12:00:00Z"
+    },
+    {
+      "id": "insight-20260413-002",
+      "agent": "godot_expert",
+      "severity": "ACTION",
+      "category": "gameplay",
+      "message": "dominant_faction biome routing injected but not yet wired into trigger evaluation",
+      "details": "enriched_run now carries dominant_faction (e.g. 'korrigans' in marais). _evaluate_triggers() does not yet use it — event sub-types with high faction rep for the biome's dominant faction don't get automatic weight bonuses on entry. Adding a trigger condition using enriched_run['dominant_faction'] + enriched_run['factions'][dominant_faction] would make biome entry feel faction-aware without any JSON config change needed.",
+      "proposed_task": {
+        "title": "S3-DOMINANT-FACTION-TRIGGER: wire dominant_faction into _evaluate_triggers bonus",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T13:00:00Z"
+    },
+    {
+      "id": "insight-20260413-005",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Faction system fully operational — AI subsystems now receive live rep data for the first time",
+      "details": "Prior to BUG-FACTIONS-STALE-FIX, all AI orchestration (omniscient, event router, RAG, context builder, LLM adapter) saw faction_rep as zeros for all runs. With fix confirmed, the game now has a complete data pipeline: player choices → effect engine → meta.faction_rep → all 5 AI systems. First time this full loop is functional. High-value test would be a narrative coherence check: do event categories actually change when one faction reaches 70+ reputation?",
+      "proposed_task": {
+        "title": "Test narrative coherence with high faction rep (manual or simulated run)",
+        "sprint": "S4",
+        "type": "test"
+      },
+      "timestamp": "2026-04-13T14:00:00Z"
+    },
+    {
+      "id": "insight-20260413-006",
+      "agent": "godot_expert",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "run.day always shows 1 — LLM temporal narrative broken",
+      "details": "run.day is initialized to 1 in store_run.gd but never incremented. Every card the LLM receives shows 'Jour 1, N cartes jouees'. Narrative has no temporal progression — a 50-card run feels like Day 1 forever. S2-DAY-TICK-FIX task created (P8). Recommended: 1 day per 3 cards (configurable CARDS_PER_DAY constant). Also affects build_llm_prompt_context which always renders day as '1'.",
+      "proposed_task": {
+        "title": "S2-DAY-TICK-FIX: increment run.day per N cards in resolve_choice()",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T15:00:00Z"
+    },
+    {
+      "id": "insight-20260413-001",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Vestigial gauges_changed signal + MerlinGaugeSystem in merlin_store.gd may be dead code",
+      "details": "S2-CONTEXT-REGRESSION-TEST SF-001: merlin_store.gd still declares gauges_changed signal (line 23) and emits it via StoreMap.update_gauges (line 434). MerlinGaugeSystem.new().build_default_gauges() is called in dispatch handler. If StoreMap and MerlinGaugeSystem are not used elsewhere, this is dead code that could be removed in S2-DEAD-FILES scope. If map/progression gauges are an intentional separate system (not card-cycle gauges), it is benign.",
+      "proposed_task": {
+        "title": "Audit MerlinGaugeSystem + StoreMap — add to S2-DEAD-FILES or keep",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T14:19:16Z"
+    },
+    {
+      "id": "insight-20260413-008",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "mg_meditation.gd is a functional script with no dispatch path — pending director placement decision (q-20260413-004)",
+      "details": "After GAMES['esprit'] aligned to bible s.6.2, mg_meditation no longer dispatched. Script preserved, preload in match block retained. Director must decide: keep as bonus in esprit, move to perception/logique, or add to bible. Task will be created once answered.",
+      "proposed_task": {
+        "title": "Add mg_meditation to GAMES field per director q-20260413-004",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T16:30:00Z"
+    }
+  ],
+  "updated": "2026-04-13T16:30:00Z"
+}

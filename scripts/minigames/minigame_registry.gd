@@ -18,13 +18,13 @@ const FIELDS := {
 
 # Mini-game scenes per field
 const GAMES := {
-	"chance": ["mg_de_du_destin", "mg_pile_ou_face", "mg_roue_fortune"],
+	"chance": ["mg_pile_ou_face", "mg_roue_fortune"],
 	"bluff": ["mg_joute_verbale", "mg_bluff_druide", "mg_negociation"],
 	"observation": ["mg_oeil_corbeau", "mg_trace_cerf", "mg_rune_cachee"],
 	"logique": ["mg_enigme_ogham", "mg_noeud_celtique", "mg_pierre_feuille_racine"],
 	"finesse": ["mg_tir_a_larc", "mg_lame_druide", "mg_pas_renard"],
-	"vigueur": ["mg_combat_rituel", "mg_sang_froid", "mg_course"],
-	"esprit": ["mg_volonte", "mg_apaisement", "mg_meditation"],
+	"vigueur": ["mg_combat_rituel", "mg_course"],
+	"esprit": ["mg_volonte", "mg_apaisement", "mg_sang_froid"],
 	"perception": ["mg_ombres", "mg_regard", "mg_echo"],
 }
 
@@ -112,7 +112,6 @@ static func create_minigame(field: String, difficulty: int = 5, modifiers: Dicti
 	var game: MiniGameBase = null
 	match game_id:
 		# Tier 1
-		"mg_de_du_destin": game = preload("res://scripts/minigames/mg_de_du_destin.gd").new()
 		"mg_pile_ou_face": game = preload("res://scripts/minigames/mg_pile_ou_face.gd").new()
 		"mg_pierre_feuille_racine": game = preload("res://scripts/minigames/mg_pierre_feuille_racine.gd").new()
 		"mg_tir_a_larc": game = preload("res://scripts/minigames/mg_tir_a_larc.gd").new()
@@ -143,8 +142,8 @@ static func create_minigame(field: String, difficulty: int = 5, modifiers: Dicti
 		"mg_echo": game = preload("res://scripts/minigames/mg_echo.gd").new()
 
 	if game == null:
-		# Ultimate fallback: De du Destin
-		game = preload("res://scripts/minigames/mg_de_du_destin.gd").new()
+		# Ultimate fallback: Pile ou Face
+		game = preload("res://scripts/minigames/mg_pile_ou_face.gd").new()
 
 	game.setup(difficulty, modifiers)
 	return game
