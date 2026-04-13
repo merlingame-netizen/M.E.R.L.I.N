@@ -1,6 +1,6 @@
 {
   "version": "3.1",
-  "updated": "2026-04-13T12:00:00Z",
+  "updated": "2026-04-13T13:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -16,20 +16,6 @@
   },
   "tasks": [
     {
-      "id": "BUG-FACTIONS-STALE-FIX",
-      "sprint": "S2",
-      "priority": 5,
-      "status": "pending",
-      "type": "dev",
-      "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
-      "agent": "godot_expert",
-      "files": [
-        "addons/merlin_ai/context_builder.gd",
-        "addons/merlin_ai/merlin_omniscient.gd"
-      ],
-      "description": "HIGH bug from S3-LLM-ROBUSTNESS: run.factions always zeros. Fix: change run.get('factions',{}) to meta.get('faction_rep',{defaults}) in context_builder and omniscient. Also: use BIOMES[biome].dominant_faction for biome-based event routing weight (director q-20260413-002)."
-    },
-    {
       "id": "S2-BIOMES",
       "sprint": "S2",
       "priority": 7,
@@ -43,17 +29,17 @@
       "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6."
     },
     {
-      "id": "S2-CLEAN-CARDSYS",
+      "id": "S2-CONTEXT-GAUGES-CLEANUP",
       "sprint": "S2",
       "priority": 4,
       "status": "pending",
       "type": "dev",
-      "title": "Clean merlin_card_system.gd (GAUGES, bestiole references)",
+      "title": "Remove dead GAUGES from context_builder.gd (stale key + dead function)",
       "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_card_system.gd"
+        "addons/merlin_ai/context_builder.gd"
       ],
-      "description": "Supprimer GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier()."
+      "description": "context_builder.gd still emits stale 'gauges' key (line 37: run.get('gauges',{})) and has dead get_critical_gauges() function (lines 186-199). GAUGES system was removed. Remove the key from build_full_context return dict and delete get_critical_gauges(). Verify no callers via grep."
     },
     {
       "id": "S2-DEAD-FILES",
@@ -84,6 +70,23 @@
         "scripts/merlin/merlin_store.gd"
       ],
       "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: compute actual_delta = new_val - old_val."
+    },
+    {
+      "id": "S3-FACTION-REGRESSION-TEST",
+      "sprint": "S3",
+      "priority": 8,
+      "status": "pending",
+      "type": "test",
+      "title": "Regression test: faction_rep propagation post-fix (BUG-FACTIONS-STALE-FIX)",
+      "agent": "bug_hunter",
+      "files": [
+        "addons/merlin_ai/rag_manager.gd",
+        "addons/merlin_ai/context_builder.gd",
+        "addons/merlin_ai/generators/event_category_selector.gd",
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
+      "description": "Verify BUG-FACTIONS-STALE-FIX is complete: grep all 5 files for run.get('factions') — should find ZERO stale reads. Verify meta.faction_rep is now the single source for all AI subsystems. Also verify dominant_faction injection in event_category_selector enriched_run. Check MerlinConstants.BIOMES has dominant_faction for all 8 biomes."
     },
     {
       "id": "S3-AMBIENT-LIGHTING",

@@ -705,7 +705,7 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 	var player_tendency := _get_player_tendency(hidden)
 
 	return {
-		"factions": run.get("factions", {}).duplicate(),
+		"factions": meta.get("faction_rep", {}).duplicate(),
 		"cards_played": int(run.get("cards_played", 0)),
 		"day": int(run.get("day", 1)),
 		"active_tags": run.get("active_tags", []),
@@ -724,9 +724,10 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 
 func build_context(state: Dictionary) -> Dictionary:
 	var run = state.get("run", {})
+	var meta: Dictionary = state.get("meta", {})
 	return {
 		"life_essence": int(run.get("life_essence", 100)),
-		"factions": run.get("factions", {}),
+		"factions": meta.get("faction_rep", {}),
 		"day": int(run.get("day", 1)),
 		"cards_played": int(run.get("cards_played", 0)),
 		"active_promises": run.get("active_promises", []),

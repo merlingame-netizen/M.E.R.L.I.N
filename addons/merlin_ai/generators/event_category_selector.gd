@@ -103,6 +103,10 @@ func select_event(game_state: Dictionary) -> Dictionary:
 	enriched_run["factions"] = meta.get("faction_rep", {
 		"druides": 0, "anciens": 0, "korrigans": 0, "niamh": 0, "ankou": 0
 	})
+	# Inject dominant faction for biome-based event routing (director q-20260413-002)
+	var biome_name: String = str(run.get("current_biome", ""))
+	var biome_data: Dictionary = MerlinConstants.BIOMES.get(biome_name, {})
+	enriched_run["dominant_faction"] = str(biome_data.get("dominant_faction", ""))
 
 	# Step 1: Compute weighted categories
 	var weights := _compute_category_weights(enriched_run)

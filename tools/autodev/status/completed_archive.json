@@ -190,6 +190,28 @@
       "files": ["scripts/merlin/merlin_constants.gd"],
       "completed_at": "2026-04-13T11:00:00Z",
       "notes": "Audit vs bible v2.4 s.6.1-6.4. Fixes: (1) Added 'neutre' as separate ACTION_VERBS field (5 verbs: parler/accepter/refuser/attendre/s'approcher), removed from 'esprit'. (2) Added FIELD_MINIGAMES['neutre'] = ['apaisement','volonte'] per bible s.6.4. (3) Fixed EFFECT_CAPS['drain_per_card'] 1->0 (director q-001). (4) Added dominant_faction to all 8 BIOMES entries (director q-20260413-002). MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS all PASS."
+    },
+    {
+      "id": "S2-CLEAN-CARDSYS",
+      "sprint": "S2",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Clean merlin_card_system.gd (GAUGES, bestiole references)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T13:00:00Z",
+      "notes": "Audit confirmed: merlin_card_system.gd contains NO GAUGES, NO bestiole, NO _get_critical_gauges(), NO _get_bestiole_modifier(). Task was pre-completed by prior cleanup cycles. PAT-009 pattern confirmed again — always audit file state before coding."
+    },
+    {
+      "id": "BUG-FACTIONS-STALE-FIX",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T13:00:00Z",
+      "notes": "Fixed 6 stale faction reads across 3 files: (1) rag_manager.gd: _get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction — all 4 now use game_state.get('meta',{}).get('faction_rep',{}). (2) merlin_llm_adapter.gd: build_narrative_context line 708 now uses meta.get('faction_rep',{}).duplicate(); build_context line 729 adds var meta from state and uses meta.get('faction_rep',{}). (3) event_category_selector.gd: injected dominant_faction from BIOMES[biome] into enriched_run for biome-based routing (director q-20260413-002). context_builder.gd and merlin_omniscient.gd were already correctly using meta.faction_rep from prior cycles."
     }
   ]
 }

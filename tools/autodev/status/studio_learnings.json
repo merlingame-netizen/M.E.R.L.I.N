@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T12:00:00Z",
+  "last_updated": "2026-04-13T13:00:00Z",
   "metrics": {
-    "total_cycles_completed": 12,
-    "total_dev_cycles": 6,
+    "total_cycles_completed": 13,
+    "total_dev_cycles": 7,
     "total_test_cycles": 6,
     "bugs_found": 18,
-    "bugs_fixed": 8,
-    "tasks_completed": 31,
+    "bugs_fixed": 9,
+    "tasks_completed": 33,
     "tasks_pending": 11,
     "current_sprint": "S2"
   },
@@ -263,6 +263,18 @@
       ]
     },
     {
+      "id": "PAT-025",
+      "learned_at": "2026-04-13T13:00:00Z",
+      "source": "BUG-FACTIONS-STALE-FIX",
+      "pattern": "Stale-read bugs can be partially fixed in prior cycles — always grep ALL readers before claiming a fix is complete. context_builder and omniscient were already fixed; rag_manager (4 functions) and llm_adapter (2 functions) still had stale reads. PAT-009 compound: audit file state + trace ALL call sites, not just the ones mentioned in task description.",
+      "severity": "HIGH",
+      "applies_to": [
+        "addons/merlin_ai/rag_manager.gd",
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "addons/merlin_ai/generators/event_category_selector.gd"
+      ]
+    },
+    {
       "id": "PAT-021",
       "learned_at": "2026-04-13T10:00:00Z",
       "source": "S3-LLM-ROBUSTNESS",
@@ -477,6 +489,13 @@
       "type": "dev",
       "action": "S2-VERBS-MOS: Audited ACTION_VERBS/FIELD_MINIGAMES/MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS vs bible v2.4 s.6.1-6.4. Fixed 3 issues: (1) separated 'neutre' field from 'esprit', (2) added FIELD_MINIGAMES['neutre']=['apaisement','volonte'], (3) EFFECT_CAPS['drain_per_card'] 1->0. Applied director q-20260413-002: added dominant_faction to all 8 BIOMES. All 4 other subsystems PASS.",
       "improvement": "PAT-022 added: neutre is a distinct 9th field, not an esprit subset. Existing tests all compatible — no test checked 'parler'→'esprit' directly. dominant_faction enables biome-aware AI event routing for BUG-FACTIONS-STALE-FIX."
+    },
+    {
+      "cycle": 13,
+      "date": "2026-04-13T13:00:00Z",
+      "type": "dev",
+      "action": "BUG-FACTIONS-STALE-FIX + S2-CLEAN-CARDSYS audit. Confirmed S2-CLEAN-CARDSYS was pre-completed (PAT-009). Fixed 6 stale run.get('factions') reads: rag_manager.gd (4 functions: _get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction), merlin_llm_adapter.gd (build_narrative_context + build_context). All now use meta.get('faction_rep',{}). Injected dominant_faction from BIOMES[biome] into enriched_run in event_category_selector. Added S2-CONTEXT-GAUGES-CLEANUP task (dead gauges key in context_builder) + S3-FACTION-REGRESSION-TEST.",
+      "improvement": "PAT-025: partial prior fixes mean task audits must grep ALL callers, not just task-described files. The faction bug is now fully fixed across all 5 AI subsystems. dominant_faction biome routing now available to event selector trigger system."
     }
   ]
 }
