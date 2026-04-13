@@ -113,7 +113,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-13T16:30:00Z"
+    },
+    {
+      "id": "insight-20260413-021",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Signal delta accuracy restored: reputation UI will now show correct faction changes",
+      "details": "BUG-SIGNAL-DELTA-FIX corrected reputation_changed signal. Previously UI listeners received raw requested delta (up to ±20 even if capped). Now they receive the true applied change. This matters for reputation animation smoothness and achievement tracking (e.g., earned +5 rep at cap, not +20).",
+      "proposed_task": {
+        "title": "Add reputation cap visual indicator when delta is clamped",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T17:00:00Z"
     }
   ],
-  "updated": "2026-04-13T16:30:00Z"
+  "updated": "2026-04-13T17:00:00Z"
 }

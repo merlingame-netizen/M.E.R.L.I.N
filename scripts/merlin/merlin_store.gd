@@ -593,9 +593,11 @@ func _apply_effect(effect: Dictionary) -> void:
 		"ADD_REPUTATION":
 			var faction: String = str(effect.get("faction", ""))
 			var rep_delta: int = int(effect.get("amount", MerlinConstants.FACTION_DELTA_MINOR))
+			var old_rep: float = float(state.get("meta", {}).get("faction_rep", {}).get(faction, MerlinConstants.FACTION_SCORE_START))
 			if effects._apply_faction_reputation(state, faction, rep_delta):
 				var new_val: float = float(state.get("meta", {}).get("faction_rep", {}).get(faction, 0))
-				reputation_changed.emit(faction, new_val, float(rep_delta))
+				var actual_delta: float = new_val - old_rep
+				reputation_changed.emit(faction, new_val, actual_delta)
 		"ADD_ANAM":
 			var anam_amount: int = int(effect.get("amount", MerlinConstants.ANAM_BASE_REWARD))
 			effects._apply_add_anam(state, anam_amount)

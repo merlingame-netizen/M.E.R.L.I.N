@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T16:45:00Z",
+  "last_updated": "2026-04-13T17:00:00Z",
   "metrics": {
-    "total_cycles_completed": 20,
-    "total_dev_cycles": 10,
+    "total_cycles_completed": 21,
+    "total_dev_cycles": 11,
     "total_test_cycles": 10,
     "bugs_found": 21,
-    "bugs_fixed": 10,
-    "tasks_completed": 40,
+    "bugs_fixed": 11,
+    "tasks_completed": 41,
     "tasks_pending": 11,
     "current_sprint": "S2"
   },
@@ -349,6 +349,18 @@
       "applies_to": [
         "scripts/minigames/minigame_registry.gd"
       ]
+    },
+    {
+      "id": "PAT-031",
+      "learned_at": "2026-04-13T17:00:00Z",
+      "source": "BUG-SIGNAL-DELTA-FIX",
+      "pattern": "Capture old state BEFORE mutation to compute actual_delta = new_val - old_val. Never emit raw requested deltas — always emit the actual clamped change applied to state.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_store.gd",
+        "merlin_effect_engine.gd",
+        "signals"
+      ]
     }
   ],
   "agent_performance": {
@@ -366,7 +378,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 24,
+      "tasks_completed": 25,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [

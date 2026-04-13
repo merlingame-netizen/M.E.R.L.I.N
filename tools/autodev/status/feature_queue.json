@@ -1,6 +1,6 @@
 {
   "version": "3.5",
-  "updated": "2026-04-13T16:45:00Z",
+  "updated": "2026-04-13T17:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -15,19 +15,6 @@
     "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
-    {
-      "id": "BUG-SIGNAL-DELTA-FIX",
-      "sprint": "S2",
-      "priority": 6,
-      "status": "pending",
-      "type": "dev",
-      "title": "Fix reputation_changed signal: emit clamped delta not raw",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: capture old_rep = meta.faction_rep[faction] BEFORE _apply_faction_reputation(), then actual_delta = new_val - old_rep. Emit actual_delta instead of rep_delta. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 598)."
-    },
     {
       "id": "S2-BIOMES",
       "sprint": "S2",
@@ -111,22 +98,6 @@
         "addons/merlin_ai/rag_manager.gd"
       ],
       "description": "Director q-001: RAG-based narrative memory. add_narrative_entry() per card, get_narrative_summary() for 3-5 items."
-    },
-    {
-      "id": "S3-MINIGAME-ROUTING-REGRESSION",
-      "sprint": "S3",
-      "priority": 13,
-      "status": "completed",
-      "type": "test",
-      "title": "Regression test: BUG-SANG-FROID-GAMES-FIELD fix verified + meditation disposition",
-      "agent": "bug_hunter",
-      "files": [
-        "scripts/minigames/minigame_registry.gd",
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "After BUG-SANG-FROID-GAMES-FIELD fix: (1) GAMES['esprit'] = [volonte, apaisement, sang_froid] — mg_sang_froid reachable from esprit-field cards. (2) GAMES['vigueur'] = [combat_rituel, course] — sang_froid NOT in vigueur. (3) FIELD_MINIGAMES['esprit'] == GAMES['esprit'] conceptual mapping. (4) All 22 mg_ scripts still exist. (5) mg_de_du_destin.gd.uid orphaned artifact deleted. (6) mg_meditation.gd still present as script (not deleted, pending director decision on placement).",
-      "completed_at": "2026-04-13T16:45:00Z",
-      "notes": "PASS 6/6. BUG-SANG-FROID fix verified: mg_sang_froid in GAMES[esprit], not vigueur. FIELD_MINIGAMES aligned. 22 dispatched scripts exist. mg_de_du_destin.gd+uid deleted. mg_meditation preserved pending q-20260413-004. 2 LOW notes (orphaned preload line 138, cosmetic comment). 0 critical bugs. Report: test_reports/S3-MINIGAME-ROUTING-REGRESSION_2026-04-13.json"
     },
     {
       "id": "S4-WEB-EXPORT",
