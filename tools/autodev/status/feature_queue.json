@@ -1,6 +1,6 @@
 {
   "version": "3.3",
-  "updated": "2026-04-13T14:19:16Z",
+  "updated": "2026-04-13T14:48:26.647Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -155,6 +155,17 @@
         "export_presets.cfg"
       ],
       "description": "Setup Godot HTML5 export. Verify SharedArrayBuffer headers. Output to web-export/."
+    },
+    {
+      "id": "DIR-S2-MNXB57O7",
+      "sprint": "S2",
+      "priority": 21,
+      "status": "pending",
+      "type": "dev",
+      "title": "Refonte Menu Principal",
+      "agent": "godot_expert",
+      "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volumétrie et cycle jour/nuit, la scène doit être plus viable. Deep dive et itère jusqu'à acceptation du retour correct",
+      "files": []
     }
   ]
 }
