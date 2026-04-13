@@ -1,166 +1,173 @@
 {
-  "version": "2.0",
-  "updated": "2026-04-12T20:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — 3 sprints vers prototype jouable. Completed tasks in completed_archive.json.",
+  "version": "3.0",
+  "updated": "2026-04-13T06:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — Sprint 1 COMPLETE. Active: S2 + S3. Minimum 10 pending tasks at all times.",
   "sprints": {
-    "S1": "CORE LOOP JOUABLE — 1 run complete start-to-end sans crash",
-    "S2": "CONTENU & SYSTEMES — 8 biomes, 45 verbes, MOS convergence",
-    "S3": "POLISH & EDGE CASES — Stabilite, robustesse LLM"
+    "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
+    "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
+    "S3": "POLISH & ROBUSTESSE — edge cases, LLM robustesse, UX",
+    "S4": "INTEGRATION & EXPORT — web build, CI/CD, demo jouable"
+  },
+  "rules": {
+    "min_pending_tasks": 10,
+    "auto_generate_when_below": "If fewer than 10 pending tasks remain, read docs/DEV_PLAN_V2.5.md and docs/GAME_DESIGN_BIBLE.md to generate new tasks until 10+ pending.",
+    "task_decomposition": "Each task must be completable in 1 cycle (~15 min). Break large features into atomic tasks.",
+    "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
     {
-      "id": "BUG-CARDS-PLAYED-FIX",
-      "sprint": "S1",
-      "priority": 0,
-      "status": "pending",
-      "type": "dev",
-      "title": "FIX CRITICAL: Supprimer double increment cards_played dans resolve_card()",
-      "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/store_run.gd"],
-      "description": "MerlinCardSystem.resolve_card() ligne 483 incremente run_state['cards_played'] ET store_run.gd ligne 146 incremente encore (double incrément — run_state est une reference a store.state['run'] en GDScript 4). Fix: supprimer lignes 482-483 dans merlin_card_system.gd (card_index et cards_played increments). Garder uniquement l'incrément dans StoreRun.resolve_choice(). Sans ce fix, le MOS hard_max de 50 se declenche a ~25 vraies cartes."
-    },
-    {
-      "id": "BUG-ORPHANED-PIPELINE",
-      "sprint": "S1",
-      "priority": 0,
-      "status": "pending",
-      "type": "dev",
-      "title": "FIX HIGH: Supprimer process_card() orphelin + ajouter pacing recovery dans StoreRun",
-      "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/store_run.gd"],
-      "description": "MerlinEffectEngine.process_card() (lignes 71-256) est un pipeline 12-etapes jamais appele dans le flow principal. Supprimer process_card() entierement. Ajouter les etapes manquantes dans StoreRun.resolve_choice(): (1) pacing recovery +5 HP si life>0 ET life<20 apres effets, (2) promise deadline countdown (deja present via check_promise_deadlines). Le drain est supprime (decision directeur q-001). Cooldown deja gere via StoreOghams.tick_cooldowns()."
-    },
-    {
-      "id": "S1-CLEANUP-1",
-      "sprint": "S1",
+      "id": "S2-SAVE-MIDRUN",
+      "sprint": "S2",
       "priority": 1,
       "status": "pending",
       "type": "dev",
-      "title": "Supprimer dead code merlin_constants.gd (ELEMENTS, ESSENCE_*, FLUX_*)",
+      "title": "Fix mid-run save: persist run_state incrementally during run",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
-      "description": "Phase 0: Supprimer ELEMENTS (14), ESSENCE_DROP_*, ESSENCE_ANCHOR_CARDS, ESSENCE_BASE_REWARDS, ESSENCE_VICTORY_BONUS, ESSENCE_CHUTE_BONUS, ESSENCE_MINIGAME_BONUS, ESSENCE_OGHAM_BONUS, ESSENCE_FACTION_BONUS, FLUX_*, RUN_TYPOLOGIES, DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS, BOND_TIERS, OGHAM_STARTER_SKILLS, CardOption enum. validate.bat apres."
+      "files": ["scripts/merlin/merlin_save_system.gd", "scripts/merlin/merlin_store.gd"],
+      "description": "Save run_state to disk after each card resolved (not just at run end). Use profile JSON run_state field. Handle interruption: reload from last saved card."
     },
     {
-      "id": "S1-CLEANUP-2",
-      "sprint": "S1",
+      "id": "S2-BIOME-INTERVALS",
+      "sprint": "S2",
       "priority": 2,
       "status": "pending",
       "type": "dev",
-      "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
-      "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "Phase 0: Supprimer meta state keys: essence{14}, ogham_fragments, liens, gloire_points, bestiole_evolution. Renommer _init_triade_run -> _init_run, _resolve_triade_choice -> _resolve_choice, etc."
-    },
-    {
-      "id": "S1-CLEANUP-3",
-      "sprint": "S1",
-      "priority": 3,
-      "status": "pending",
-      "type": "dev",
-      "title": "Renommer TRIADE_ action dispatch prefix dans store + callers",
-      "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd", "scripts/test_merlin_store.gd"],
-      "description": "Phase 0: Renommer TRIADE_START_RUN->START_RUN, TRIADE_GET_CARD->GET_CARD, TRIADE_RESOLVE_CHOICE->RESOLVE_CHOICE, etc. Dans tous les callers."
-    },
-    {
-      "id": "S1-OGHAM-ALIGN",
-      "sprint": "S1",
-      "priority": 4,
-      "status": "pending",
-      "type": "dev",
-      "title": "Aligner 18 Oghams sur bible v2.4 (7 effets incorrects)",
+      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_constants.gd"],
-      "description": "Phase 1A: Corriger duir->heal_immediate(12), onn->add_biome_currency(10), nuin->replace_worst_option, quert->heal_immediate(8), ruis->heal_and_cost(+18PV,-5monnaie), saille->currency_and_heal(+8,+3). Tous 18 Oghams avec 10 champs obligatoires."
-    },
-    {
-      "id": "S1-LLM-VALIDATE",
-      "sprint": "S1",
-      "priority": 6,
-      "status": "pending",
-      "type": "test",
-      "title": "Validation LLM: generer 10 cartes, valider JSON + effets",
-      "agent": "bug_hunter",
-      "files": ["addons/merlin_ai/merlin_ai.gd", "scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/merlin_card_system.gd"],
-      "description": "Generer 10 cartes via LLM (Qwen 3.5). Valider: JSON structure matches adapter, effets applicables sans crash, fallback fonctionne si LLM timeout, JSON repair gere les malformations. Rapport dans test_reports/."
-    },
-    {
-      "id": "S2-BIOMES",
-      "sprint": "S2",
-      "priority": 7,
-      "status": "pending",
-      "type": "dev",
-      "title": "Ajouter 8 biomes avec seuils maturite et EFFECT_CAPS",
-      "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
-      "description": "Phase 1B+1C: Ajouter BIOMES dict (8 biomes: name, subtitle, season, difficulty, maturity_threshold, oghams_affinity, currency_name, card_interval_range, pnj, arc). Ajouter BIOME_MATURITY_THRESHOLDS, MATURITY_WEIGHTS, EFFECT_CAPS, MULTIPLIER_TABLE, ANAM_REWARDS, TALENT_TIERS."
+      "description": "Each biome needs card_interval_range, arc conditions, PNJ list per bible v2.4. Add BIOME_ARC_CONDITIONS dict."
     },
     {
       "id": "S2-VERBS-MOS",
       "sprint": "S2",
-      "priority": 8,
+      "priority": 3,
       "status": "pending",
       "type": "dev",
-      "title": "Ajouter 45 verbes d'action + MOS config + Trust tiers",
+      "title": "Verifier ACTION_VERBS + MOS config + Trust tiers (deja partiellement en place)",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_constants.gd"],
-      "description": "Phase 1D+1F: Ajouter ACTION_VERBS (8 champs + neutre, 45 verbes), FIELD_MINIGAMES mapping. Ajouter MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS, IN_GAME_PERIODS."
+      "description": "Audit 45 verbs against bible. Add TRUST_DELTAS if missing. Verify MOS_CONVERGENCE thresholds match bible exactly."
     },
     {
-      "id": "S2-DEADCODE-4",
+      "id": "S2-CLEAN-CARDSYS",
       "sprint": "S2",
-      "priority": 9,
+      "priority": 4,
       "status": "pending",
       "type": "dev",
-      "title": "Clean merlin_card_system.gd (GAUGES, bestiole)",
+      "title": "Clean merlin_card_system.gd (GAUGES, bestiole references)",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_card_system.gd"],
-      "description": "Supprimer GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier()."
+      "description": "Remove GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier(). ~80 lines to remove."
     },
     {
-      "id": "S2-DEADCODE-5",
+      "id": "S2-DEAD-FILES",
       "sprint": "S2",
-      "priority": 10,
+      "priority": 5,
       "status": "pending",
       "type": "dev",
       "title": "Supprimer 5 dead files (bestiole, souffle HUD, D20)",
       "agent": "godot_expert",
       "files": ["scripts/ui/bestiole_sprite.gd", "scripts/ui/bestiole_wheel_system.gd", "scripts/ui/bestiole_creature.gd", "scripts/ui/pixel_bestiole_fox.gd", "scripts/minigames/mg_de_du_destin.gd"],
-      "description": "Supprimer entierement les fichiers de systemes morts. Verifier existence avant suppression."
+      "description": "Delete files entirely. Verify no remaining imports/references via grep."
     },
     {
-      "id": "S2-INTEGRATION",
+      "id": "S2-REP-SIGNAL",
       "sprint": "S2",
-      "priority": 11,
+      "priority": 6,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix reputation_changed signal: emit actual clamped delta not raw delta",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/merlin_reputation_system.gd"],
+      "description": "Signal emits raw delta before clamping. Fix: emit clamped_delta after clampi. HUD shows correct +/- values."
+    },
+    {
+      "id": "S2-INTEGRATION-TEST",
+      "sprint": "S2",
+      "priority": 7,
       "status": "pending",
       "type": "test",
-      "title": "Bible audit + bug hunt statique (8 fichiers core)",
+      "title": "Integration test: Bible audit + bug hunt statique (8 fichiers core)",
       "agent": "game_design_auditor",
       "files": ["docs/GAME_DESIGN_BIBLE.md", "scripts/merlin/merlin_constants.gd", "scripts/merlin/merlin_store.gd", "scripts/merlin/merlin_effect_engine.gd"],
-      "description": "Audit code vs GAME_DESIGN_BIBLE.md v2.4. Verifier 12 systemes. Analyse statique: null/invalid access, type mismatches, state machine bugs. Rapport dans test_reports/."
-    },
-    {
-      "id": "S3-EDGE-CASES",
-      "sprint": "S3",
-      "priority": 12,
-      "status": "pending",
-      "type": "test",
-      "title": "10 scenarios de mort + edge cases",
-      "agent": "game_playtester",
-      "files": ["scripts/merlin/merlin_store.gd", "scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/merlin_save_system.gd"],
-      "description": "Simuler: vie=0 pendant effet, toutes factions a 0/100, Ogham sans ressources, MOS hard max, save mid-run, Confiance T0->T3, FastRoute champs manquants, multiplicateur cap x2.0."
+      "description": "Cross-reference code vs GAME_DESIGN_BIBLE.md v2.4 for all 12 systems. List all divergences. Static analysis for null access, type mismatches."
     },
     {
       "id": "S3-LLM-ROBUSTNESS",
       "sprint": "S3",
-      "priority": 13,
+      "priority": 8,
       "status": "pending",
       "type": "test",
       "title": "Bug hunt layer IA (timeout, fallback, race conditions)",
       "agent": "bug_hunter",
       "files": ["addons/merlin_ai/merlin_ai.gd", "addons/merlin_ai/ollama_backend.gd", "scripts/merlin/merlin_llm_adapter.gd"],
-      "description": "Analyse statique IA: timeout LLM non gere (softlock), JSON malforme, fallback si Ollama down, race condition multi-brain, contexte RAG overflow, prompt injection."
+      "description": "Analyze: LLM timeout handling (softlock risk), JSON malformation recovery, fallback when Ollama down, multi-brain race conditions, RAG overflow."
+    },
+    {
+      "id": "S3-AMBIANCE",
+      "sprint": "S3",
+      "priority": 9,
+      "status": "pending",
+      "type": "dev",
+      "title": "Ambiance dynamique biome: variation saison + heure de journee",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd", "scripts/merlin/merlin_store.gd"],
+      "description": "Wire IN_GAME_PERIODS into biome rendering. Season affects palette, time-of-day affects lighting. Use game_time_manager.gd."
+    },
+    {
+      "id": "S3-TYPO-HYBRID",
+      "sprint": "S3",
+      "priority": 10,
+      "status": "pending",
+      "type": "dev",
+      "title": "Typographie hybride: titre celtique + corps sans-serif",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_visual.gd"],
+      "description": "Director decision q-003: titre celtique manuscrit + corps sans-serif. Add FONT_TITLE and FONT_BODY to MerlinVisual. Apply in card overlay and HUD."
+    },
+    {
+      "id": "S3-ART-DIRECTION",
+      "sprint": "S3",
+      "priority": 11,
+      "status": "pending",
+      "type": "dev",
+      "title": "Direction artistique N64/PS1: low-poly + pixelisation + effets volumetriques",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_visual.gd", "shaders/"],
+      "description": "Director decision q-004: aesthetic retro N64/PS1. Implement screen-space pixelization shader, vertex snapping, limited palette per biome."
+    },
+    {
+      "id": "S3-EDGE-DEATH",
+      "sprint": "S3",
+      "priority": 12,
+      "status": "pending",
+      "type": "test",
+      "title": "10 scenarios de mort + edge cases critiques",
+      "agent": "game_playtester",
+      "files": ["scripts/merlin/merlin_store.gd", "scripts/merlin/merlin_effect_engine.gd"],
+      "description": "Simulate: vie=0 during effect, all factions at 0/100, Ogham without resources, MOS hard max, save mid-run, Trust T0->T3 transitions."
+    },
+    {
+      "id": "S4-WEB-EXPORT",
+      "sprint": "S4",
+      "priority": 13,
+      "status": "pending",
+      "type": "dev",
+      "title": "Configurer export web HTML5 automatise",
+      "agent": "godot_expert",
+      "files": ["export_presets.cfg"],
+      "description": "Setup Godot HTML5 export preset. Verify SharedArrayBuffer headers. Test in browser. Output to web-export/ folder."
+    },
+    {
+      "id": "S4-SMOKE-TEST",
+      "sprint": "S4",
+      "priority": 14,
+      "status": "pending",
+      "type": "test",
+      "title": "Smoke test: lancer le jeu headless et verifier 1 run complete",
+      "agent": "game_playtester",
+      "files": ["scenes/MerlinGame.tscn"],
+      "description": "Run Godot headless with --headless flag. Verify game starts, 1 card cycle completes, no crash. Timeout 60s."
     }
   ]
 }

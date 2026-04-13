@@ -100,8 +100,16 @@ Deplacer les taches `status=completed` dans `tools/autodev/status/completed_arch
 ### Events rotation
 Si `events.jsonl` depasse 200 lignes: garder les 50 dernieres, archiver le reste dans `tools/autodev/status/events_archive/YYYY-MM.jsonl`.
 
-### Auto-generation
-Si 0 taches pending (dev ET test): lire `docs/DEV_PLAN_V2.5.md` pour identifier la prochaine phase et creer les taches.
+### Auto-generation (CRITICAL — 10+ pending tasks minimum)
+**REGLE**: Il doit TOUJOURS y avoir au minimum 10 taches pending dans `feature_queue.json`.
+Si le nombre de taches pending tombe sous 10 apres archivage:
+1. Lire `docs/DEV_PLAN_V2.5.md` et `docs/GAME_DESIGN_BIBLE.md`
+2. Identifier la prochaine phase/sprint logique
+3. Decomposer en taches atomiques (completables en 1 cycle ~15 min)
+4. Creer les taches manquantes jusqu'a avoir 10+ pending
+5. Chaque tache DOIT avoir: id, sprint, priority, type (dev/test), title, agent, files, description
+6. Alterner dev et test: pour chaque 3-4 taches dev, ajouter 1 tache test
+7. Les nouvelles taches suivent la progression: S2→S3→S4→S5 (jamais revenir en arriere)
 
 ## Self-check (watchdog integre)
 

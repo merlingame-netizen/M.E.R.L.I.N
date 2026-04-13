@@ -80,36 +80,51 @@ export function useStateSync() {
         const archivedCount = data.completed_archive?.tasks?.length || 0;
         setCompletedCount(archivedCount);
 
-        // Events — process last 20 for state changes, cycle updates, and alerts
+        // Events — process cycle_updates only (skip state_change noise)
+        // Deduplicate: track which event timestamps we've already processed
         if (data.events && Array.isArray(data.events)) {
+          const existingAlertKeys = new Set(
+            useMissionStore.getState().alerts.map(a => `${a.timestamp}|${a.message}`)
+          );
           const recent = data.events.slice(-20);
+
+          // Set orchestrator state from last event
+          const lastStateChange = [...recent].reverse().find(e => e.type === 'state_change');
+          if (lastStateChange?.data) {
+            setOrchestratorState(lastStateChange.data.to as string);
+          }
+
           for (const event of recent) {
-            if (event.type === 'state_change' && event.data) {
-              setOrchestratorState(event.data.to as string);
-              addAlert({
-                timestamp: (event.timestamp as string) || new Date().toISOString(),
-                level: 'INFO',
-                message: `State: ${event.data.from} → ${event.data.to}`,
-                source: 'orchestrator',
-              });
-            }
             if (event.type === 'cycle_update' && event.data) {
+              const tasks = (event.data.tasksCompleted as number) || 0;
+              const cycleType = (event.data.cycle_type as string) || 'unknown';
+              const taskId = (event.data.task_id as string) || '';
+              const summary = (event.data.summary as string) || '';
+              const cycleId = (event.data.cycleId as string) || '';
+
               addCycleToHistory({
-                cycleId: (event.data.cycleId as string) || '',
+                cycleId,
                 state: 'completed',
                 startedAt: (event.timestamp as string) || '',
-                tasksCompleted: (event.data.tasksCompleted as number) || 0,
+                tasksCompleted: tasks,
                 tasksFailed: (event.data.tasksFailed as number) || 0,
                 agentsUsed: (event.data.agentsUsed as string[]) || [],
               });
-              const tasks = (event.data.tasksCompleted as number) || 0;
-              const cycleType = (event.data.cycle_type as string) || 'unknown';
-              addAlert({
-                timestamp: (event.timestamp as string) || new Date().toISOString(),
-                level: tasks > 0 ? 'SUCCESS' : 'INFO',
-                message: `Cycle ${event.data.cycleId} complete [${cycleType.toUpperCase()}] — ${tasks} tasks done`,
-                source: 'orchestrator',
-              });
+
+              // Build a meaningful message — show task ID and summary, not just "0 tasks done"
+              const displayMsg = taskId
+                ? `[${cycleType.toUpperCase()}] ${taskId}: ${summary.slice(0, 120)}`
+                : `Cycle ${cycleId} [${cycleType.toUpperCase()}] — ${tasks} tasks`;
+
+              const alertKey = `${event.timestamp}|${displayMsg}`;
+              if (!existingAlertKeys.has(alertKey)) {
+                addAlert({
+                  timestamp: (event.timestamp as string) || new Date().toISOString(),
+                  level: tasks > 0 ? 'SUCCESS' : 'INFO',
+                  message: displayMsg,
+                  source: 'orchestrator',
+                });
+              }
             }
           }
         }

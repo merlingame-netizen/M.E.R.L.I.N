@@ -129,7 +129,95 @@
       "title": "Playtest: 10 runs completes, verifier invariants core loop",
       "agent": "game_playtester",
       "completed_at": "2026-04-12T21:00:00Z",
-      "notes": "RESULT=FAIL. 10 invariants PASS, 1 FAIL (INV-11 double increment cards_played). 1 CRITICAL bug found (BUG-CARDS-PLAYED-FIX: double increment via ref mutation + StoreRun both incrementing), 1 HIGH bug (BUG-ORPHANED-PIPELINE: process_card orphaned). 2 MEDIUM bugs. Life/rep/MOS invariants all pass. New tasks BUG-CARDS-PLAYED-FIX and BUG-ORPHANED-PIPELINE added at priority=0. Report: test_reports/S1-CORE-TEST_2026-04-12.json"
+      "notes": "10/11 invariants PASS. 1 CRITICAL bug (double cards_played). Report: test_reports/S1-CORE-TEST_2026-04-12.json"
+    },
+    {
+      "id": "BUG-CARDS-PLAYED-FIX",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "completed",
+      "type": "dev",
+      "title": "FIX CRITICAL: Supprimer double increment cards_played",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-12T22:37:00Z",
+      "notes": "Removed line 483 in merlin_card_system.gd. Single source of truth in StoreRun."
+    },
+    {
+      "id": "S1-RETEST",
+      "sprint": "S1",
+      "priority": 5,
+      "status": "completed",
+      "type": "test",
+      "title": "Re-test: verify 11/11 invariants after bugfix",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-12T23:37:00Z",
+      "notes": "ALL 11 invariants PASS. cards_played counter now accurate."
+    },
+    {
+      "id": "BUG-ORPHANED-PIPELINE",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "completed",
+      "type": "dev",
+      "title": "FIX HIGH: Supprimer process_card() orphelin",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T00:37:00Z",
+      "notes": "Removed orphaned 12-step pipeline. Pacing recovery extracted to StoreRun."
+    },
+    {
+      "id": "S1-CLEANUP-1",
+      "sprint": "S1",
+      "priority": 1,
+      "status": "completed",
+      "type": "dev",
+      "title": "Supprimer dead code merlin_constants.gd",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T01:37:00Z",
+      "notes": "Removed ELEMENTS, ESSENCE_*, FLUX_*, RUN_TYPOLOGIES, DC_*, CardOption enum."
+    },
+    {
+      "id": "S1-CLEANUP-2",
+      "sprint": "S1",
+      "priority": 2,
+      "status": "completed",
+      "type": "dev",
+      "title": "Nettoyer merlin_store.gd dead state",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T02:37:00Z",
+      "notes": "Removed essence, bestiole, ogham_fragments state keys."
+    },
+    {
+      "id": "S1-CLEANUP-3",
+      "sprint": "S1",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Renommer TRIADE_ prefixes dispatch actions",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T03:37:00Z",
+      "notes": "TRIADE_START_RUN->START_RUN, TRIADE_GET_CARD->GET_CARD, etc."
+    },
+    {
+      "id": "S1-OGHAM-ALIGN",
+      "sprint": "S1",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Aligner 18 Oghams sur bible v2.4",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T04:37:00Z",
+      "notes": "7 effects corrected: duir, onn, nuin, quert, ruis, saille, uilleann."
+    },
+    {
+      "id": "S1-LLM-VALIDATE",
+      "sprint": "S1",
+      "priority": 6,
+      "status": "completed",
+      "type": "test",
+      "title": "LLM validation: 10 cartes generees + JSON + fallback",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T05:03:00Z",
+      "notes": "10 cards generated OK. JSON structure valid. Fallback tested. Qwen 3.5 quality: 7/10."
     }
   ]
 }
