@@ -24,6 +24,10 @@
     {
       "question_id": "q-20260413-001",
       "answer": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
+    },
+    {
+      "question_id": "q-20260412-005",
+      "answer": "Supprimer (la survie dépend uniquement des choix)"
     }
   ]
 }
