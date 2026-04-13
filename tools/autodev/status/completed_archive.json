@@ -271,6 +271,17 @@
       "verdict": "PARTIAL_PASS",
       "notes": "PASS: CHK-1 (no gauges key), CHK-2 (get_critical_gauges removed), CHK-5 (faction_rep meta), CHK-6 (active_promises unified), CHK-7 (drain=0), CHK-8 (no pacing recovery). FAIL: CHK-3 (BUG-SIGNAL-DELTA-FIX pending P6), CHK-4 (S2-DAY-TICK-FIX pending P8). 5/5 regressions PASS. 0 new bugs. Created S2-DAY-SIGNAL-REGRESSION-TEST (P11) for re-verification after fixes applied.",
       "report": "tools/autodev/status/test_reports/S2-CONTEXT-REGRESSION-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S2-DEAD-FILES",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Supprimer 5 dead files (bestiole, souffle HUD, D20)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T15:30:00Z",
+      "notes": "4/5 files already deleted in prior cycles (bestiole_sprite, bestiole_wheel_system, bestiole_creature, pixel_bestiole_fox). Deleted mg_de_du_destin.gd (D20 system suppressed per bible). Updated minigame_registry.gd: removed from GAMES['chance'], removed match case, replaced ultimate fallback with mg_pile_ou_face. Updated auto_play_runner.gd: removed from MINIGAME_LIST (15→14). Zero references remain outside /archive/. PAT-028 added (fallback replacement pattern)."
     }
   ]
 }

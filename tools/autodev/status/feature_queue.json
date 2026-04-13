@@ -1,6 +1,6 @@
 {
   "version": "3.3",
-  "updated": "2026-04-13T14:48:26.647Z",
+  "updated": "2026-04-13T15:30:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -15,23 +15,6 @@
     "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
-    {
-      "id": "S2-DEAD-FILES",
-      "sprint": "S2",
-      "priority": 5,
-      "status": "pending",
-      "type": "dev",
-      "title": "Supprimer 5 dead files (bestiole, souffle HUD, D20)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/ui/bestiole_sprite.gd",
-        "scripts/ui/bestiole_wheel_system.gd",
-        "scripts/ui/bestiole_creature.gd",
-        "scripts/ui/pixel_bestiole_fox.gd",
-        "scripts/minigames/mg_de_du_destin.gd"
-      ],
-      "description": "Delete dead system files. Verify no remaining imports/references via grep."
-    },
     {
       "id": "BUG-SIGNAL-DELTA-FIX",
       "sprint": "S2",

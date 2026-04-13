@@ -16,9 +16,9 @@ const MAX_CARDS := 40
 const POLL_TIMEOUT_SEC := 420.0  # 7 min — CPU LLM cold start + generation can take 300s
 const INTER_CARD_DELAY := 0.1
 
-# 15 minigames available in the game
+# 14 minigames available in the game
 const MINIGAME_LIST := [
-	"mg_de_du_destin", "mg_pile_ou_face", "mg_rune_cachee", "mg_roue_fortune",
+	"mg_pile_ou_face", "mg_rune_cachee", "mg_roue_fortune",
 	"mg_lame_druide", "mg_pas_renard", "mg_enigme_ogham", "mg_joute_verbale",
 	"mg_oeil_corbeau", "mg_noeud_celtique", "mg_tir_a_larc", "mg_negociation",
 	"mg_bluff_druide", "mg_pierre_feuille_racine", "mg_trace_cerf",

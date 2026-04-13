@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T14:19:16Z",
+  "last_updated": "2026-04-13T15:30:00Z",
   "metrics": {
-    "total_cycles_completed": 16,
-    "total_dev_cycles": 8,
+    "total_cycles_completed": 17,
+    "total_dev_cycles": 9,
     "total_test_cycles": 8,
     "bugs_found": 18,
     "bugs_fixed": 9,
-    "tasks_completed": 36,
+    "tasks_completed": 37,
     "tasks_pending": 10,
     "current_sprint": "S2"
   },
@@ -286,6 +286,17 @@
       ]
     },
     {
+      "id": "PAT-028",
+      "learned_at": "2026-04-13T15:30:00Z",
+      "source": "S2-DEAD-FILES",
+      "pattern": "When a file serves as the ultimate fallback in a registry/factory pattern, it cannot simply be deleted — the fallback reference must first be redirected to another file in the same category. Audit the match statement AND the post-match null-check fallback path. Choose the next simplest implementation (same category, fewest dependencies).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "tooling"
+      ]
+    },
+    {
       "id": "PAT-021",
       "learned_at": "2026-04-13T10:00:00Z",
       "source": "S3-LLM-ROBUSTNESS",
@@ -322,7 +333,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 22,
+      "tasks_completed": 23,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -532,6 +543,13 @@
       "type": "dev",
       "action": "S2-CONTEXT-GAUGES-CLEANUP: Removed dead 'gauges' key from build_full_context() and deleted get_critical_gauges() function from context_builder.gd. Cleaned 9 dead test functions from test_context_builder.gd. Applied director q-20260413-003: cancelled S3-AMBIENT + S3-PIXEL, promoted DIR-S2-MNWXQ41M to P14 with unified DA spec. Created 3 new tasks: S2-DAY-TICK-FIX (PAT-012 bug, run.day never incremented), S2-CONTEXT-REGRESSION-TEST, S3-MINIGAMES-FIELD-AUDIT. 10 tasks pending.",
       "improvement": "PAT-026: dead functions must be paired with dead test cleanup. run.day always-1 bug (PAT-012) now has explicit task S2-DAY-TICK-FIX."
+    },
+    {
+      "cycle": 17,
+      "date": "2026-04-13T15:30:00Z",
+      "type": "dev",
+      "action": "S2-DEAD-FILES: 4/5 bestiole files already deleted. Deleted mg_de_du_destin.gd (D20 suppressed system). Fixed 3 references in minigame_registry.gd (GAMES array, match case, ultimate fallback→mg_pile_ou_face). Fixed 1 reference in auto_play_runner.gd (MINIGAME_LIST 15→14). Zero references remain outside /archive/.",
+      "improvement": "PAT-028 added: fallback files must have their fallback reference replaced before deletion. godot_expert tasks_completed=23. 10 tasks pending (at minimum)."
     },
     {
       "cycle": 16,
