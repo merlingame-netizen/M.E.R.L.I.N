@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**117 agents + 1 knowledge base** organized by domain.
+**123 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -378,6 +378,22 @@ Wave-based dispatch for 3D asset generation and scene composition.
 python tools/cli.py blender version|create-terrain|create-tower|create-object|create-ocean|batch-generate|scene-compose|list-assets|open|build-scene|render|cleanup|animate|light|material|lod|qa
 ```
 
+### Director Review Agents (6) — NEW
+
+Specialist agents for director-facing review, auditing, and dashboard curation.
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Visual QA Agent** | `visual_qa_agent.md` | **Screenshot analysis as a player, visual bug detection, UI regression** |
+| **UX Reviewer Agent** | `ux_reviewer_agent.md` | **Player-perspective UX evaluation, Nielsen heuristics, beginner experience** |
+| **i18n Auditor Agent** | `i18n_auditor_agent.md` | **Hardcoded string detection, text_registry.json maintenance, coverage tracking** |
+| **Platform Tester Agent** | `platform_tester_agent.md` | **Multi-platform compatibility: input, UI scaling, shaders, export presets** |
+| **Accessibility Agent** | `accessibility_agent.md` | **WCAG contrast, font sizes, color blindness, keyboard/gamepad navigation** |
+| **Dashboard Curator Agent** | `dashboard_curator_agent.md` | **Mission Control enrichment, director-first metrics, auto-evolving dashboard** |
+
+> These agents support the **Command Center** workflow. They propose insights via `studio_insights.json`,
+> which the director reviews on the Mission Control dashboard (approve/dismiss).
+
 ### Shared Resources
 
 | Resource | File | Purpose |
@@ -389,7 +405,7 @@ python tools/cli.py blender version|create-terrain|create-tower|create-object|cr
 ## Summary Count
 
 ```
-Total: 117 agents + 1 knowledge base
+Total: 123 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
@@ -416,6 +432,7 @@ By category:
   Content & Narrative:         6 (content_card_writer, content_dialogue, content_flavor_text, content_quest_arc, content_worldbuilding, content_merlin_voice)
   Meta & Process:              4 (meta_bible_guardian, meta_code_bible_sync, meta_sprint_reviewer, meta_tech_debt)
   Blender Art Pipeline:       12 (terrain_sculptor, ocean_animator, material_master, export_engineer, tower_architect, vegetation_artist, vfx_artist, lighting_director, camera_director, scene_compositor, animator, qa_renderer)
+  Director Review:             6 (visual_qa_agent, ux_reviewer_agent, i18n_auditor_agent, platform_tester_agent, accessibility_agent, dashboard_curator_agent)
   Knowledge Base:              1 (gdscript_knowledge_base)
 ```
 

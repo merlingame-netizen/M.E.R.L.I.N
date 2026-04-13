@@ -17,6 +17,7 @@ interface StatusResponse {
     feedback_questions?: { questions?: Array<{ id: string; category: string; priority: string; status: string; question: string; context?: string; type: string; options?: string[] | null; screenshot_urls?: string[] | null; created_at: string }> };
     feedback_responses?: { responses?: Array<{ question_id: string; answer: string; additional_notes?: string }> };
     completed_archive?: { tasks?: Array<{ id: string }>; archived?: Array<{ id: string }> };
+    studio_insights?: { insights?: Array<{ id: string; agent: string; severity: string; category: string; message: string; details?: string; proposed_task?: { title: string; sprint: string; type: string }; timestamp: string }> };
   };
 }
 
@@ -30,6 +31,7 @@ export function useStateSync() {
   const setFeedbackQuestions = useMissionStore(s => s.setFeedbackQuestions);
   const setLastHeartbeat = useMissionStore(s => s.setLastHeartbeat);
   const setCompletedCount = useMissionStore(s => s.setCompletedCount);
+  const setStudioInsights = useMissionStore(s => s.setStudioInsights);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const lastTimestampRef = useRef<string>('');
@@ -159,6 +161,14 @@ export function useStateSync() {
               : q.status,
           }));
           setFeedbackQuestions(merged as any);
+        }
+
+        // Studio insights
+        if (data.studio_insights?.insights) {
+          setStudioInsights(data.studio_insights.insights.map(i => ({
+            ...i,
+            severity: i.severity as 'ACTION' | 'WARN' | 'INFO',
+          })));
         }
 
         // Escalation alert

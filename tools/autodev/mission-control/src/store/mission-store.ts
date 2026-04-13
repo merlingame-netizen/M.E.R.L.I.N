@@ -45,6 +45,17 @@ export interface FeatureTask {
   files?: string[];
 }
 
+export interface StudioInsight {
+  id: string;
+  agent: string;
+  severity: 'ACTION' | 'WARN' | 'INFO';
+  category: string;
+  message: string;
+  details?: string;
+  proposed_task?: { title: string; sprint: string; type: string };
+  timestamp: string;
+}
+
 export interface FeedbackQuestion {
   id: string;
   category: 'design' | 'graphics' | 'gamedesign' | 'rendering' | 'ux' | 'infrastructure';
@@ -81,9 +92,11 @@ interface MissionState {
   feedbackSubmitting: boolean;
   lastHeartbeat: string | null;
   completedCount: number;
+  studioInsights: StudioInsight[];
 
   setOrchestratorState: (state: string) => void;
   setAgents: (agents: AgentInfo[]) => void;
+  setStudioInsights: (insights: StudioInsight[]) => void;
   updateAgent: (id: string, update: Partial<AgentInfo>) => void;
   setActiveSessions: (sessions: ActiveSession[]) => void;
   setFeatureQueue: (tasks: FeatureTask[]) => void;
@@ -114,8 +127,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   feedbackSubmitting: false,
   lastHeartbeat: null,
   completedCount: 0,
+  studioInsights: [],
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
+  setStudioInsights: (studioInsights) => set({ studioInsights }),
   setAgents: (agents) => set({ agents }),
   updateAgent: (id, update) => set(s => ({
     agents: s.agents.map(a => a.id === id ? { ...a, ...update } : a),

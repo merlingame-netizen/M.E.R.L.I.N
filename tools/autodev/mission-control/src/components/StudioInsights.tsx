@@ -1,34 +1,31 @@
 import { useState } from 'react';
+import { useMissionStore } from '../store/mission-store';
+import type { StudioInsight } from '../store/mission-store';
 
-type Severity = 'INFO' | 'WARN' | 'ACTION';
+type Severity = 'ACTION' | 'WARN' | 'INFO';
 
-interface Insight {
-  id: string;
-  severity: Severity;
-  agent: string;
-  message: string;
-  timestamp: string;
-}
-
-const STATIC_INSIGHTS: Insight[] = [
+const FALLBACK_INSIGHTS: StudioInsight[] = [
   {
     id: 'ins-001',
     severity: 'ACTION',
-    agent: 'Visual QA',
+    agent: 'visual_qa',
+    category: 'visual',
     message: 'No screenshot tests configured yet — recommend enabling visual_test_runner',
     timestamp: '2026-04-13T08:00:00Z',
   },
   {
     id: 'ins-002',
     severity: 'WARN',
-    agent: 'i18n Auditor',
+    agent: 'i18n_auditor',
+    category: 'i18n',
     message: '192 hardcoded French strings detected — text_registry.json needed',
     timestamp: '2026-04-13T07:45:00Z',
   },
   {
     id: 'ins-003',
     severity: 'INFO',
-    agent: 'UX Reviewer',
+    agent: 'platform_tester',
+    category: 'performance',
     message: 'Card overlay text may be too small on mobile (< 11px)',
     timestamp: '2026-04-13T07:30:00Z',
   },
@@ -55,10 +52,13 @@ function formatTime(iso: string): string {
 }
 
 export function StudioInsights() {
+  const storeInsights = useMissionStore(s => s.studioInsights);
+  const insights = storeInsights.length > 0 ? storeInsights : FALLBACK_INSIGHTS;
+
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [approved, setApproved] = useState<Set<string>>(new Set());
 
-  const visible = STATIC_INSIGHTS.filter(i => !dismissed.has(i.id));
+  const visible = insights.filter(i => !dismissed.has(i.id));
 
   const handleDismiss = (id: string) => {
     setDismissed(prev => new Set([...prev, id]));
@@ -80,6 +80,9 @@ export function StudioInsights() {
           letterSpacing: '0',
         }}>
           {visible.length} ACTIVE
+          {storeInsights.length > 0 && (
+            <span style={{ marginLeft: '8px', color: 'var(--green)', fontSize: '9px' }}>LIVE</span>
+          )}
         </span>
       </div>
       <div className="panel-body" style={{ padding: '0' }}>
@@ -99,7 +102,7 @@ export function StudioInsights() {
               borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
               background: isApproved ? 'rgba(0, 255, 136, 0.03)' : 'transparent',
             }}>
-              {/* Top row: severity + agent + timestamp */}
+              {/* Top row: severity + agent + category + timestamp */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -126,6 +129,18 @@ export function StudioInsights() {
                 }}>
                   {insight.agent}
                 </span>
+                {insight.category && (
+                  <span style={{
+                    fontSize: '9px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-dim)',
+                    padding: '1px 4px',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '2px',
+                  }}>
+                    {insight.category}
+                  </span>
+                )}
                 <span style={{
                   marginLeft: 'auto',
                   fontSize: '10px',
@@ -142,10 +157,38 @@ export function StudioInsights() {
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--text-primary)',
                 lineHeight: '1.5',
-                marginBottom: '6px',
+                marginBottom: insight.details ? '2px' : '6px',
               }}>
                 {insight.message}
               </div>
+
+              {/* Details (collapsible) */}
+              {insight.details && (
+                <div style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-dim)',
+                  lineHeight: '1.4',
+                  marginBottom: '6px',
+                  paddingLeft: '8px',
+                  borderLeft: '2px solid rgba(255,255,255,0.06)',
+                }}>
+                  {insight.details}
+                </div>
+              )}
+
+              {/* Proposed task badge */}
+              {insight.proposed_task && (
+                <div style={{
+                  fontSize: '9px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--cyan, #00d4ff)',
+                  marginBottom: '6px',
+                  opacity: 0.8,
+                }}>
+                  PROPOSED: {insight.proposed_task.title} [{insight.proposed_task.sprint}/{insight.proposed_task.type}]
+                </div>
+              )}
 
               {/* Action buttons */}
               <div style={{ display: 'flex', gap: '6px' }}>
