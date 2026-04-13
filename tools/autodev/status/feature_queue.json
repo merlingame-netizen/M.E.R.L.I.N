@@ -1,25 +1,39 @@
 {
   "version": "2.0",
-  "updated": "2026-04-13T06:00:00Z",
+  "updated": "2026-04-13T02:54:09Z",
   "description": "Feature queue M.E.R.L.I.N. — Sprint 1 COMPLETE. Sprint 2 in progress. Completed tasks in completed_archive.json.",
   "sprints": {
     "S1": "CORE LOOP JOUABLE — COMPLETE",
-    "S2": "CONTENU & SYSTEMES — 8 biomes, 45 verbes, MOS convergence",
+    "S2": "CONTENU & SYSTEMES — 8 biomes, 45 verbes, MOS, dead code, integration audit",
     "S3": "POLISH & EDGE CASES — Stabilite, robustesse LLM"
   },
   "tasks": [
+    {
+      "id": "BUG-PROMISE-SYSTEM-FIX",
+      "sprint": "S2",
+      "priority": 1,
+      "status": "pending",
+      "type": "dev",
+      "title": "Unifier le systeme de promesses (dual-system bug)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ],
+      "description": "HIGH bug found in S2-INTEGRATION audit. Deux systemes incompatibles: ADD_PROMISE ecrit dans run.promises (deadline_cards, jamais verifie), CREATE_PROMISE ecrit dans run.active_promises (deadline_day, verifie mais day jamais incremente). Fix: (1) _add_promise() ecrit dans run.active_promises avec made_at_card + deadline_cards. (2) check_promise_deadlines() utilise cards_played >= made_at_card + deadline_cards. (3) Supprimer run.promises du init_run (store_run.gd). (4) Harmoniser _create_promise avec le meme format. (5) _fulfill_promise/_break_promise restent sur active_promises. MAX_ACTIVE_PROMISES check s'applique aux deux paths."
+    },
     {
       "id": "S2-BIOMES",
       "sprint": "S2",
       "priority": 7,
       "status": "pending",
       "type": "dev",
-      "title": "Ajouter 8 biomes avec seuils maturite et EFFECT_CAPS",
+      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Phase 1B+1C: Ajouter BIOMES dict (8 biomes: name, subtitle, season, difficulty, maturity_threshold, oghams_affinity, currency_name, card_interval_range, pnj, arc). Ajouter BIOME_MATURITY_THRESHOLDS, MATURITY_WEIGHTS, EFFECT_CAPS, MULTIPLIER_TABLE, ANAM_REWARDS, TALENT_TIERS."
+      "description": "S2-INTEGRATION audit found 2 MEDIUM bugs in BIOMES dict: (1) BUG-BIOME-INTERVALS: card_interval_range_min/max wrong for 7/8 biomes vs bible s.4.3. Correct values: landes(8-10), cotes_sauvages(6-8), villages_celtes(8-10), cercles_pierres(10-12), marais_korrigans(4-6), collines_dolmens(10-12), iles_mystiques(3-15). (2) BUG-BIOME-ARCS: arc names, arc_cards, arc_condition_faction, arc_condition_value wrong for landes/cotes/villages/cercles/marais/collines/iles vs bible s.3.6. Correct per bible: cotes=niamh:30 (not korrigans:20), iles=ankou:50 (not niamh:60), marais=korrigans:40 (not 50), etc. Also: Phase 1B+1C original spec still applies — add any missing BIOME_MATURITY_THRESHOLDS, MATURITY_WEIGHTS if absent."
     },
     {
       "id": "S2-VERBS-MOS",
@@ -27,12 +41,12 @@
       "priority": 8,
       "status": "pending",
       "type": "dev",
-      "title": "Ajouter 45 verbes d'action + MOS config + Trust tiers",
+      "title": "Verifier ACTION_VERBS + MOS config + Trust tiers (deja partiellement en place)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Phase 1D+1F: Ajouter ACTION_VERBS (8 champs + neutre, 45 verbes), FIELD_MINIGAMES mapping. Ajouter MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS, IN_GAME_PERIODS."
+      "description": "Phase 1D+1F: Audit ACTION_VERBS (8 champs + neutre), FIELD_MINIGAMES mapping, MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS, IN_GAME_PERIODS — tous semblent deja en place d'apres S2-INTEGRATION audit. Verifier completude vs bible v2.4 s.6.1-6.4. Si deja complet, marquer completed apres verification."
     },
     {
       "id": "S2-DEADCODE-4",
@@ -45,7 +59,7 @@
       "files": [
         "scripts/merlin/merlin_card_system.gd"
       ],
-      "description": "Supprimer GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier()."
+      "description": "Supprimer GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier(). Audit avant suppression (PAT-009: verifier callers avant delete)."
     },
     {
       "id": "S2-DEADCODE-5",
@@ -62,23 +76,7 @@
         "scripts/ui/pixel_bestiole_fox.gd",
         "scripts/minigames/mg_de_du_destin.gd"
       ],
-      "description": "Supprimer entierement les fichiers de systemes morts. Verifier existence avant suppression."
-    },
-    {
-      "id": "S2-INTEGRATION",
-      "sprint": "S2",
-      "priority": 11,
-      "status": "pending",
-      "type": "test",
-      "title": "Bible audit + bug hunt statique (8 fichiers core)",
-      "agent": "game_design_auditor",
-      "files": [
-        "docs/GAME_DESIGN_BIBLE.md",
-        "scripts/merlin/merlin_constants.gd",
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd"
-      ],
-      "description": "Audit code vs GAME_DESIGN_BIBLE.md v2.4. Verifier 12 systemes. Analyse statique: null/invalid access, type mismatches, state machine bugs. Rapport dans test_reports/."
+      "description": "Supprimer entierement les fichiers de systemes morts. Verifier existence avant suppression. Verifier callers avec grep avant delete (PAT-009/010)."
     },
     {
       "id": "S3-EDGE-CASES",
@@ -93,7 +91,7 @@
         "scripts/merlin/merlin_effect_engine.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "Simuler: vie=0 pendant effet, toutes factions a 0/100, Ogham sans ressources, MOS hard max, save mid-run, Confiance T0->T3, FastRoute champs manquants, multiplicateur cap x2.0."
+      "description": "Simuler: vie=0 pendant effet, toutes factions a 0/100, Ogham sans ressources, MOS hard max, save mid-run, Confiance T0->T3, FastRoute champs manquants, multiplicateur cap x2.0. Regression: verifier que BUG-PROMISE-SYSTEM-FIX a resolu les deadlines."
     },
     {
       "id": "S3-LLM-ROBUSTNESS",
@@ -108,7 +106,7 @@
         "addons/merlin_ai/ollama_backend.gd",
         "scripts/merlin/merlin_llm_adapter.gd"
       ],
-      "description": "Analyse statique IA: timeout LLM non gere (softlock), JSON malforme, fallback si Ollama down, race condition multi-brain, contexte RAG overflow, prompt injection."
+      "description": "Analyse statique IA: timeout LLM non gere (softlock), JSON malforme, fallback si Ollama down, race condition multi-brain, contexte RAG overflow, prompt injection. Verifier aussi: build_context() factions toujours zeros (BUG-FACTIONS-RUN-STALE de S2-INTEGRATION)."
     },
     {
       "id": "S3-AMBIENT-LIGHTING",

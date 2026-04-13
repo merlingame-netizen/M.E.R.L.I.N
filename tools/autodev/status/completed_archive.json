@@ -245,6 +245,17 @@
       ],
       "completed_at": "2026-04-13T06:00:00Z",
       "notes": "AUDIT: All 18 Oghams verified correct. 6/6 named corrections already in place: duir=heal_immediate(12), onn=add_biome_currency(10), nuin=replace_worst_option, quert=heal_immediate(8), ruis=heal_and_cost(heal:18,currency_cost:5), saille=currency_and_heal(currency:8,heal:3). All 18 have 12 fields (>10 required). OGHAM_FULL_SPECS is complete and bible-aligned."
+    },
+    {
+      "id": "S2-INTEGRATION",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Bible audit + bug hunt statique (8 fichiers core)",
+      "agent": "game_design_auditor",
+      "completed_at": "2026-04-13T02:54:09Z",
+      "notes": "TEST cycle S2-INTEGRATION: 12 systemes audites. FAIL: 1 HIGH (BUG-PROMISE-SYSTEM: dual incompatible promise systems, deadlines never expire), 4 MEDIUM (BUG-RUN-DAY-STALE, BUG-FACTIONS-RUN-STALE, BUG-BIOME-INTERVALS, BUG-BIOME-ARCS), 2 LOW (BUG-EFFECT-CAPS-DRAIN, BUG-STORY-LOG-TRUNCATION). 3/3 regression checks PASS. New P1 dev task BUG-PROMISE-SYSTEM-FIX created. S2-BIOMES task updated to also fix biome intervals and arc conditions. Report: test_reports/S2-INTEGRATION_2026-04-13.json"
     }
   ]
 }

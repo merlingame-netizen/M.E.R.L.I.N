@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T06:00:00Z",
+  "last_updated": "2026-04-13T02:54:09Z",
   "metrics": {
-    "total_cycles_completed": 5,
+    "total_cycles_completed": 6,
     "total_dev_cycles": 3,
-    "total_test_cycles": 2,
-    "bugs_found": 6,
+    "total_test_cycles": 3,
+    "bugs_found": 13,
     "bugs_fixed": 4,
-    "tasks_completed": 22,
+    "tasks_completed": 23,
     "tasks_pending": 10,
     "current_sprint": "S2"
   },
@@ -119,6 +119,49 @@
         "merlin_constants.gd",
         "tooling"
       ]
+    },
+    {
+      "id": "PAT-011",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "GDScript effects systems with two parallel storage keys (run.promises vs run.active_promises, or meta.faction_rep vs run.factions) create split-brain bugs. Always grep for ALL keys a system reads vs writes — if a writer targets key A and the checker reads key B, the system is silently broken.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_effect_engine.gd",
+        "store_run.gd",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-012",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "When a time-tracking variable (run.day) is initialized but never incremented, all deadline logic depending on it silently fails. Always verify time/counter variables are actually ticked somewhere in resolve_choice or the main game loop.",
+      "severity": "HIGH",
+      "applies_to": [
+        "store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-013",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "LLM context builders may have multiple code paths (build_llm_context vs build_context) with different data quality. Always audit BOTH paths. build_llm_context may use faction_status (correct), while build_context may use run.factions dict (stale zeros). GameMaster and Narrator may have different context quality.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_llm_adapter.gd",
+        "llm_adapter_game_master.gd"
+      ]
+    },
+    {
+      "id": "PAT-014",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "Bible s.4.3 'Rythme entre les cartes' table is authoritative for per-biome card intervals. Constants may have been set with generic fallback values instead of per-biome values. Always cross-check BIOMES dict fields against all bible sections (not just s.4.2).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_constants.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -154,6 +197,19 @@
         "found cross-module validation inconsistency",
         "traced effect accumulation paths",
         "regression verification"
+      ],
+      "weaknesses": []
+    },
+    "game_design_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "bugs_found": 7,
+      "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit",
+      "strengths": [
+        "found promise split-brain bug (dual storage keys)",
+        "found biome interval mismatches vs bible s.4.3",
+        "audited both LLM context paths (Narrator vs GameMaster)",
+        "comprehensive 12-system coverage in one cycle"
       ],
       "weaknesses": []
     }
@@ -233,6 +289,13 @@
       "type": "dev",
       "action": "Sprint 1 COMPLETE. Audited S1-CLEANUP-1/2/3 + S1-OGHAM-ALIGN — all already completed by prior Triade cleanup cycles. Removed dead GENERATION_TIMEOUT_MS from merlin_llm_adapter.gd (LOW bug from S1-LLM-VALIDATE). 22 tasks archived. Sprint 2 starts next cycle.",
       "improvement": "Learned: audit file state before coding. Sprint tasks may be pre-completed by earlier cycles. OGHAM_STARTER_SKILLS and CardOption must be kept (heavily used)."
+    },
+    {
+      "cycle": 6,
+      "date": "2026-04-13T02:54:09Z",
+      "type": "test",
+      "action": "S2-INTEGRATION: 12-system bible audit + static analysis. Found 1 HIGH (BUG-PROMISE-SYSTEM: dual promise storage never expires), 4 MEDIUM (day stale, factions run-stale, biome intervals wrong, biome arcs wrong), 2 LOW. 3/3 regressions PASS. Created BUG-PROMISE-SYSTEM-FIX P1. Updated S2-BIOMES to also fix biome intervals/arcs.",
+      "improvement": "Learned: split-brain storage bugs (two keys for same system) are silent — system appears to work but deadlines never fire. Pattern: always trace writer→reader pairs. game_design_auditor agent: excellent for cross-file bible vs code gaps."
     }
   ]
 }

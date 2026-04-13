@@ -1,0 +1,180 @@
+{
+  "report_id": "S2-INTEGRATION_2026-04-13",
+  "task_id": "S2-INTEGRATION",
+  "agent": "game_design_auditor",
+  "timestamp": "2026-04-13T02:54:09Z",
+  "cycle_type": "test",
+  "method": "static_analysis + bible_audit",
+  "files_analyzed": [
+    "docs/GAME_DESIGN_BIBLE.md (v2.4)",
+    "scripts/merlin/merlin_constants.gd",
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/store_run.gd",
+    "scripts/merlin/merlin_llm_adapter.gd"
+  ],
+
+  "summary": {
+    "overall": "FAIL",
+    "critical_bugs": 0,
+    "high_bugs": 1,
+    "medium_bugs": 4,
+    "low_bugs": 2,
+    "design_discrepancies": 2,
+    "systems_audited": 12,
+    "regression_checks_passed": 3
+  },
+
+  "regression_checks": [
+    {
+      "id": "REG-01",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "cards_played single canonical increment (StoreRun.resolve_choice)",
+      "status": "PASS",
+      "details": "store_run.gd:146 remains the sole increment. resolve_card() in card_system has no increment.",
+      "files": ["scripts/merlin/store_run.gd:146"]
+    },
+    {
+      "id": "REG-02",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "Orphaned process_card() still removed from merlin_effect_engine.gd",
+      "status": "PASS",
+      "details": "grep 'func process_card' returns no results. Only comment references remain.",
+      "files": ["scripts/merlin/merlin_effect_engine.gd"]
+    },
+    {
+      "id": "REG-03",
+      "from_report": "S1-LLM-VALIDATE_2026-04-12",
+      "name": "LIFE_ESSENCE_DRAIN_PER_CARD = 0 (director q-20260412-001)",
+      "status": "PASS",
+      "details": "merlin_constants.gd:74: 'const LIFE_ESSENCE_DRAIN_PER_CARD := 0'. Director decision applied.",
+      "files": ["scripts/merlin/merlin_constants.gd:74"]
+    }
+  ],
+
+  "bugs": [
+    {
+      "id": "BUG-PROMISE-SYSTEM",
+      "severity": "HIGH",
+      "title": "Dual incompatible promise subsystems — deadlines never expire",
+      "details": "There are TWO independent promise tracking systems: (1) ADD_PROMISE effect writes to run.promises dict with deadline_cards + made_at_card fields. (2) CREATE_PROMISE effect writes to run.active_promises dict with deadline_day field. check_promise_deadlines() (store_run.gd:312) reads ONLY run.active_promises with deadline_day, comparing against run.day — but run.day is initialized to 1 (store_run.gd:19) and NEVER INCREMENTED. Result: (a) ADD_PROMISE deadlines are never checked at all; (b) CREATE_PROMISE deadlines never expire because day never advances past 1. The FULFILL_PROMISE and BREAK_PROMISE effects also only target run.active_promises, so ADD_PROMISE promises can never be explicitly fulfilled or broken either.",
+      "impact": "Promise system completely non-functional — no deadline expirations, promise caps (max 2 active) apply to different lists. The bible mandates promises as a key narrative mechanic (bible s.3.5: countdown deadlines, promise outcomes affecting trust/rep). This is a HIGH priority fix.",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd:240-263 (_add_promise — writes to run.promises)",
+        "scripts/merlin/merlin_effect_engine.gd:266-283 (_create_promise — writes to run.active_promises)",
+        "scripts/merlin/store_run.gd:312-331 (check_promise_deadlines — reads run.active_promises, uses day)",
+        "scripts/merlin/store_run.gd:19 (day initialized to 1, never incremented)"
+      ],
+      "fix_recommendation": "Unify to one system: (1) Remove run.promises dict, use only run.active_promises. (2) Change _add_promise to write to run.active_promises with deadline_cards tracking (not day). (3) Change check_promise_deadlines to check: cards_played >= made_at_card + deadline_cards. (4) Remove or fix _create_promise to also use cards-based tracking. (5) ADD_PROMISE and CREATE_PROMISE should map to the same storage format."
+    },
+    {
+      "id": "BUG-RUN-DAY-STALE",
+      "severity": "MEDIUM",
+      "title": "run.day never incremented — always 1",
+      "details": "run.day is initialized to 1 in store_run.init_run() (store_run.gd:19). No code anywhere increments it. check_run_end() returns 'days_survived: run.get(day, 1)' which is always 1. CREATE_PROMISE deadlines use current_day which never advances. The 'day' field appears to be vestigial from an earlier calendar system — resolve_choice() doesn't increment it.",
+      "impact": "MEDIUM — primarily affects CREATE_PROMISE deadlines (never expire) and end-screen display (always shows 1 day survived). Low gameplay impact since promise system is already broken (BUG-PROMISE-SYSTEM).",
+      "files": [
+        "scripts/merlin/store_run.gd:19 (init: day = 1)",
+        "scripts/merlin/store_run.gd:215 (check_run_end returns days_survived always 1)",
+        "scripts/merlin/merlin_effect_engine.gd:272 (_create_promise uses current_day)"
+      ],
+      "fix_recommendation": "Either: (a) increment day every N cards_played (e.g. every 5 cards = 1 in-game day), or (b) remove day tracking entirely and use cards_played exclusively for time-based mechanics."
+    },
+    {
+      "id": "BUG-FACTIONS-RUN-STALE",
+      "severity": "MEDIUM",
+      "title": "run.factions dict always zeros — GameMaster context has stale faction data",
+      "details": "merlin_store.gd:177 initializes run.factions to all 0.0 per run. _apply_faction_reputation() updates only state.meta.faction_rep, not run.factions. The LLM Narrator context (build_llm_context) uses faction_status string built from run.faction_context.tiers — which IS updated correctly. However, build_context() (merlin_llm_adapter.gd:725) passes 'factions: run.get(factions, {})' which is always zeros. This context is used by llm_adapter_game_master.gd (lines 26, 60, 87, 248) to read faction reputation for effect generation. The GameMaster generates effects without correct faction state.",
+      "impact": "MEDIUM — Narrator gets correct faction_status via _build_faction_status_string(). GameMaster (effects layer) gets zero faction data. Effect generation may not reflect actual player faction standing. Faction-specific content (≥50 threshold, ≥80 endings) relies on meta.faction_rep which is correct, but GameMaster context is wrong.",
+      "files": [
+        "scripts/merlin/merlin_store.gd:177-183 (run.factions init = 0.0)",
+        "scripts/merlin/merlin_effect_engine.gd:406-423 (_apply_faction_reputation updates meta only)",
+        "scripts/merlin/merlin_llm_adapter.gd:708 (build_llm_context factions = run.factions = zeros)",
+        "scripts/merlin/merlin_llm_adapter.gd:729 (build_context factions = run.factions = zeros)",
+        "scripts/merlin/llm_adapter_game_master.gd:26,60,87 (reads factions dict)"
+      ],
+      "fix_recommendation": "In build_context() and build_llm_context(), replace 'run.get(factions, {})' with the actual cross-run rep from state.meta.faction_rep. OR: update _apply_faction_reputation to mirror changes to run.factions."
+    },
+    {
+      "id": "BUG-BIOME-INTERVALS",
+      "severity": "MEDIUM",
+      "title": "BIOMES card_interval_range doesn't match bible section 4.3",
+      "details": "Bible section 4.3 specifies per-biome 3D walk intervals between cards. The BIOMES constants use different (and mostly wrong) values. Discrepancies: Landes (code: 12-15s, bible: 8-10s), Cotes Sauvages (code: 12-15s, bible: 6-8s), Villages Celtes (code: 10-14s, bible: 8-10s), Cercles Pierres (code: 10-14s, bible: 10-12s minor), Marais Korrigans (code: 10-14s, bible: 4-6s — worst mismatch), Collines Dolmens (code: 8-12s, bible: 10-12s), Iles Mystiques (code: 8-12s, bible: 3-15s). Only Broceliande (12-15s) matches.",
+      "impact": "MEDIUM — Game pacing will be wrong for all non-starter biomes. Marais des Korrigans should feel frantic (4-6s) but uses 10-14s intervals. Iles Mystiques should be unpredictable (3-15s) but uses 8-12s fixed range.",
+      "files": ["scripts/merlin/merlin_constants.gd:409-481 (BIOMES dict card_interval_range)"],
+      "bible_ref": "docs/GAME_DESIGN_BIBLE.md section 4.3 'Rythme entre les cartes' table",
+      "fix_recommendation": "Update BIOMES card_interval_range_min/max to match bible section 4.3 values exactly."
+    },
+    {
+      "id": "BUG-BIOME-ARCS",
+      "severity": "MEDIUM",
+      "title": "Biome arc names, card counts, and trigger conditions differ from bible section 3.6",
+      "details": "Multiple discrepancies between BIOMES constants and bible section 3.6. Key mismatches: (1) landes_bruyere: code arc='le_chant_des_cairns' (bible: 'L'Ermite du Vent'), arc_cards=3 (bible: 4), condition=anciens:25 (bible: '3+ runs dans ce biome'). (2) cotes_sauvages: code arc='le_signal_de_sein' (bible: 'Le Phoque d'Argent'), arc_cards=4 (bible: 3), condition=korrigans:20 (bible: niamh:30). (3) villages_celtes: code arc='le_puits_des_souhaits' (bible: 'L'Assemblee Secrete'), condition=anciens:35 (bible: anciens:40). (4) cercles_pierres: code condition=oghams_owned:5 (bible: 2+ oghams). (5) marais_korrigans: code arc='le_tertre_du_silence' (bible: 'Le Tresor des Feux'), arc_cards=5 (bible: 4), condition=korrigans:50 (bible: korrigans:40). (6) collines_dolmens: code arc='la_voix_de_l_if' (bible: 'La Voix des Rois'), arc_cards=5 (bible: 3), condition=ankou:40 (bible: '5+ fins vues'). (7) iles_mystiques: arc_cards=6 (bible: 5), condition=niamh:60 (bible: ankou:50).",
+      "impact": "MEDIUM — Wrong arcs and trigger conditions. Several arcs trigger on wrong faction (cotes: korrigans instead of niamh, iles: niamh instead of ankou). Arc lengths vary by 1-2 cards. This creates wrong narrative pacing and wrong unlock conditions.",
+      "files": ["scripts/merlin/merlin_constants.gd:418-481 (BIOMES arc_ fields)"],
+      "bible_ref": "docs/GAME_DESIGN_BIBLE.md section 3.6 arc table",
+      "fix_recommendation": "Align BIOMES dict arc_condition_faction and arc_condition_value fields with bible section 3.6. Rename arc IDs to match. Prioritize: cotes_sauvages (wrong faction), iles_mystiques (wrong faction), marais_korrigans (wrong threshold)."
+    },
+    {
+      "id": "BUG-EFFECT-CAPS-DRAIN",
+      "severity": "LOW",
+      "title": "EFFECT_CAPS.drain_per_card = 1 contradicts LIFE_ESSENCE_DRAIN_PER_CARD = 0",
+      "details": "merlin_constants.gd:355 has EFFECT_CAPS dict with 'drain_per_card': 1. merlin_constants.gd:74 has LIFE_ESSENCE_DRAIN_PER_CARD := 0 per director decision q-20260412-001. The drain_per_card key in EFFECT_CAPS is never read by any game code (not in cap_effect() or scale_and_cap()). It is dead misleading data that contradicts the director decision.",
+      "impact": "LOW — Dead data only, no runtime effect. Could mislead future developers.",
+      "files": ["scripts/merlin/merlin_constants.gd:355"],
+      "fix_recommendation": "Change EFFECT_CAPS.drain_per_card from 1 to 0 to match director decision. Or remove the key entirely since it's not used."
+    },
+    {
+      "id": "BUG-STORY-LOG-TRUNCATION",
+      "severity": "LOW",
+      "title": "story_log truncated to 2 entries — minimal LLM narrative context",
+      "details": "store_run.gd:156-157: 'if story_log.size() > 2: story_log = story_log.slice(-2)'. The story log passed to LLM (build_llm_context, build_context) contains only the last 2 card summaries. For a 20-50 card run, the LLM has almost no memory of prior choices. The bible (section 3.2) specifies 'les choix du joueur influencent les cartes suivantes' — with only 2-entry context, narrative coherence across the run is minimal.",
+      "impact": "LOW (by design intent?) — Limits LLM narrative coherence. May be intentional for performance/context budget. If unintentional, increasing to 5-8 entries would improve narrative continuity. Recommend director feedback question.",
+      "files": ["scripts/merlin/store_run.gd:155-158"],
+      "fix_recommendation": "Increase to 5-8 entries if LLM context budget allows (RAG_MANAGER handles budget). Or confirm with director if 2 is intentional."
+    }
+  ],
+
+  "design_discrepancies": [
+    {
+      "id": "DISC-01",
+      "title": "BIOME PNJ IDs don't match bible section 3.7 PNJ names",
+      "details": "BIOMES constants use short key IDs for PNJs ('erwan', 'maelle', 'cadogan', 'brennos', 'gwen_du', 'ildiko', 'morgane') while bible section 3.7 lists full named characters (Aedan l'Ermite, Bran le Passeur, Morwenna la Forge, Seren l'Etoilee, Puck le Lutin, Taliesin le Barde, Branwen la Spectrale). 'morgane' matches the lore character for Iles Mystiques but others are inconsistent. This may be intentional (code keys vs display names) but should be documented.",
+      "severity": "INFO",
+      "action": "Document that BIOMES.pnj field contains code IDs, not display names. Create BIOME_PNJ_NAMES lookup dict or use FACTION_INFO pattern."
+    },
+    {
+      "id": "DISC-02",
+      "title": "BIOME subtitles differ between bible section 4.1 table and constants",
+      "details": "Bible section 4.1 overview table has different subtitles than BIOMES constants. E.g., Landes: bible='L'horizon sans fin' vs code='Ou le vent raconte des histoires'. Iles: bible='Au-dela des brumes' vs code='Ou le monde visible s'acheve'. The section 4.2 detailed descriptions don't give subtitles — these appear to be different versions. Both are evocative. This is cosmetic.",
+      "severity": "INFO",
+      "action": "Use bible section 4.1 subtitles as canonical (source of truth). Or confirm with director."
+    }
+  ],
+
+  "systems_audited": {
+    "01_life_bar": "PASS — clamped 0-100, _apply_life_delta correct, pacing recovery +5 at <20 active",
+    "02_faction_rep": "PARTIAL PASS — meta.faction_rep correctly updated and capped ±20. run.factions dead state (zeros). GameMaster context gets wrong faction data.",
+    "03_oghams": "PASS — 18 Oghams all match bible specs. Cooldown tick per card in StoreOghams. Protection filters correct.",
+    "04_mos_convergence": "PASS — MOS_CONVERGENCE zones match bible: soft_min=8, target=20-25, soft_max=40, hard_max=50. check_run_end() enforces correctly.",
+    "05_multiplier": "PASS — MULTIPLIER_TABLE matches bible s.2.5. get_multiplier() traverses correctly. scale_and_cap() handles sign correctly.",
+    "06_anam_rewards": "PASS — ANAM_REWARDS matches bible s.2.4. Death cap formula (cards/30, min 1.0) implemented correctly in calculate_run_rewards().",
+    "07_biomes": "FAIL — Arc conditions and card intervals mismatch bible (see BUG-BIOME-INTERVALS and BUG-BIOME-ARCS). Biomes dict and maturity thresholds correct.",
+    "08_promises": "FAIL — Dual incompatible systems, deadlines never expire (see BUG-PROMISE-SYSTEM).",
+    "09_minigames": "PASS — MINIGAME_CATALOGUE 14 types match bible. FIELD_MINIGAMES mapping correct.",
+    "10_trust": "PASS — TRUST_TIERS (T0-T3), TRUST_DELTAS match bible s.6.3. trust_changed signal emitted.",
+    "11_save": "PASS — save_system delegates correctly. run_state saved on autosave. Profil unique JSON pattern.",
+    "12_llm_pipeline": "PARTIAL PASS — Narrator context (faction_status) correct. GameMaster context (factions dict) stale zeros."
+  },
+
+  "new_tasks_created": [
+    {
+      "id": "BUG-PROMISE-SYSTEM-FIX",
+      "priority": 1,
+      "sprint": "S2",
+      "type": "dev",
+      "severity": "HIGH",
+      "description": "Unify promise system. Merge ADD_PROMISE and CREATE_PROMISE into one flow using run.active_promises with cards-based deadlines. Fix check_promise_deadlines to use cards_played >= made_at_card + deadline_cards instead of day comparison."
+    }
+  ]
+}

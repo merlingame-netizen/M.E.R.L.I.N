@@ -69,6 +69,23 @@
       ],
       "screenshot_urls": null,
       "created_at": "2026-04-12T21:00:00Z"
+    },
+    {
+      "id": "q-20260413-001",
+      "category": "ux",
+      "priority": "LOW",
+      "status": "pending",
+      "question": "La 'memoire narrative' du LLM est actuellement limitee aux 2 derniers choix du joueur. Est-ce intentionnel ?",
+      "context": "L'historique des cartes (story_log) transmis au LLM est tronque a 2 entrees (store_run.gd:156). Pour un run de 20-50 cartes, le LLM ne 'se souvient' que des 2 dernieres cartes lors de la generation suivante. Avantage: prompt plus court, generation plus rapide. Inconvenient: coherence narrative limitee (Merlin peut 'oublier' un evenement majeur il y a 3 cartes). Options: garder 2 (actuel), augmenter a 5-8 (plus de contexte), ou utiliser le RAG pour un resume compresse des arcs.",
+      "type": "multiple_choice",
+      "options": [
+        "Garder 2 (performance, LLM suffisamment contextualise par tags/flags)",
+        "Augmenter a 5 (equilibre memoire/performance)",
+        "Augmenter a 8 (meilleure coherence, prompts plus longs)",
+        "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-13T02:54:09Z"
     }
   ]
 }
