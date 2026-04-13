@@ -1,289 +1,8 @@
 {
   "version": "1.0",
-  "description": "Archived completed tasks from feature_queue.json",
-  "archived_at": "2026-04-13T09:00:00Z",
-  "tasks": [
-    {
-      "id": "TRIADE-CORE-1",
-      "phase": 1,
-      "priority": 1,
-      "status": "completed",
-      "title": "Supprimer Triade de merlin_constants.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-CORE-2",
-      "phase": 1,
-      "priority": 2,
-      "status": "completed",
-      "title": "Nettoyer merlin_store.gd — état Triade",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-CORE-3",
-      "phase": 1,
-      "priority": 3,
-      "status": "completed",
-      "title": "Nettoyer merlin_effect_engine.gd — SHIFT_ASPECT/SOUFFLE",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-CORE-4",
-      "phase": 1,
-      "priority": 4,
-      "status": "completed",
-      "title": "Nettoyer merlin_card_system.gd — options liées aux aspects",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-UI-1",
-      "phase": 1,
-      "priority": 5,
-      "status": "completed",
-      "title": "Remplacer hub_triade_hud.gd par reputation_hud.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-UI-2",
-      "phase": 1,
-      "priority": 6,
-      "status": "completed",
-      "title": "Rewire merlin_game_ui.gd et merlin_game_controller.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-AI-1",
-      "phase": 1,
-      "priority": 7,
-      "status": "completed",
-      "title": "Nettoyer context_builder.gd — prompt LLM sans Triade",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-AI-2",
-      "phase": 1,
-      "priority": 8,
-      "status": "completed",
-      "title": "Nettoyer merlin_omniscient.gd + fallback_pool.gd + brain_quality_judge.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-SCENES",
-      "phase": 1,
-      "priority": 9,
-      "status": "completed",
-      "title": "Nettoyer les scènes contrôleurs (4 fichiers)",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-TRAINING",
-      "phase": 1,
-      "priority": 10,
-      "status": "completed",
-      "title": "Invalider training_roadmap.json (modèles entraînés sur Triade)",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "MECANIQUE-DESIGN",
-      "phase": 2,
-      "priority": 11,
-      "status": "completed",
-      "title": "Mettre à jour NEW_MECHANICS_DESIGN.md avec décisions session",
-      "agent": "game_designer",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "REPUTATION-IMPL",
-      "phase": 4,
-      "priority": 12,
-      "status": "completed",
-      "title": "Implémenter merlin_reputation_system.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "DAYTIME-GLOBAL",
-      "phase": 3,
-      "priority": 13,
-      "status": "completed",
-      "title": "Créer game_time_manager.gd (singleton cycle jour/nuit global)",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "S1-CORE-TEST",
-      "sprint": "S1",
-      "priority": 5,
-      "status": "completed",
-      "type": "test",
-      "title": "Playtest: 10 runs completes, verifier invariants core loop",
-      "agent": "game_playtester",
-      "completed_at": "2026-04-12T21:00:00Z",
-      "notes": "RESULT=FAIL. 10 invariants PASS, 1 FAIL (INV-11 double increment cards_played). 1 CRITICAL bug found (BUG-CARDS-PLAYED-FIX: double increment via ref mutation + StoreRun both incrementing), 1 HIGH bug (BUG-ORPHANED-PIPELINE: process_card orphaned). 2 MEDIUM bugs. Life/rep/MOS invariants all pass. New tasks BUG-CARDS-PLAYED-FIX and BUG-ORPHANED-PIPELINE added at priority=0. Report: test_reports/S1-CORE-TEST_2026-04-12.json"
-    },
-    {
-      "id": "BUG-CARDS-PLAYED-FIX",
-      "sprint": "S1",
-      "priority": 0,
-      "status": "completed",
-      "type": "dev",
-      "title": "FIX CRITICAL: Supprimer double increment cards_played dans resolve_card()",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_card_system.gd",
-        "scripts/merlin/store_run.gd"
-      ],
-      "completed_at": "2026-04-12T22:30:00Z",
-      "notes": "Removed lines 482-484 from merlin_card_system.gd (comment + card_index + cards_played increments). StoreRun.resolve_choice() remains the single source of truth for cards_played increment. Verified by grep: no increment in resolve_card(). Fix prevents MOS hard_max triggering at ~25 real cards."
-    },
-    {
-      "id": "BUG-ORPHANED-PIPELINE",
-      "sprint": "S1",
-      "priority": 0,
-      "status": "completed",
-      "type": "dev",
-      "title": "FIX HIGH: Supprimer process_card() orphelin + ajouter pacing recovery dans StoreRun",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "completed_at": "2026-04-12T22:30:00Z",
-      "notes": "Deleted process_card() (9125 chars) from merlin_effect_engine.gd via Python regex. Added pacing recovery (+5 HP if 0 < life < 20) to StoreRun.resolve_choice() before return. Set LIFE_ESSENCE_DRAIN_PER_CARD=0 (director decision q-20260412-001). Pacing recovery subject to director q-20260412-005."
-    },
-    {
-      "id": "S1-LLM-VALIDATE",
-      "sprint": "S1",
-      "priority": 6,
-      "status": "completed",
-      "type": "test",
-      "title": "Validation LLM: generer 10 cartes, valider JSON + effets",
-      "agent": "bug_hunter",
-      "files": [
-        "addons/merlin_ai/merlin_ai.gd",
-        "scripts/merlin/merlin_llm_adapter.gd",
-        "scripts/merlin/merlin_card_system.gd"
-      ],
-      "completed_at": "2026-04-13T00:00:00Z",
-      "notes": "TEST cycle: 10 scenarios analyzed. FAIL: 1 HIGH bug (BUG-FACTION-OVERFLOW — faction keyword auto-tag overflow causes _validate_card failure on ~40-60% of Celtic cards). 1 LOW bug (dead constant GENERATION_TIMEOUT_MS). 3/3 regression checks PASS (cards_played fix, process_card removal, drain=0). New task BUG-FACTION-OVERFLOW-FIX created at priority 1. Timeout/fallback/JSON repair all PASS. Report: test_reports/S1-LLM-VALIDATE_2026-04-12.json"
-    },
-    {
-      "id": "BUG-FACTION-OVERFLOW-FIX",
-      "sprint": "S1",
-      "priority": 1,
-      "status": "completed",
-      "completed_at": "2026-04-13T00:00:00Z",
-      "title": "Fix: faction keyword auto-tag overflow silently failing _validate_card",
-      "agent": "godot_expert",
-      "notes": "Fixed in merlin_llm_adapter.gd _wrap_text_as_card(): added faction_tagged bool flag to break outer faction loop after first match, added size guard (< 3 effects). Frequency was 40-60% of Celtic cards. Now at most 1 ADD_REPUTATION per card."
-    },
-    {
-      "id": "S1-CLEANUP-1",
-      "sprint": "S1",
-      "priority": 2,
-      "status": "completed",
-      "type": "dev",
-      "title": "Supprimer dead code merlin_constants.gd (ELEMENTS, ESSENCE_*, FLUX_*)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "completed_at": "2026-04-13T06:00:00Z",
-      "notes": "AUDIT: All listed dead constants (ELEMENTS, ESSENCE_DROP_*, ESSENCE_ANCHOR_CARDS, ESSENCE_BASE_REWARDS, ESSENCE_VICTORY_BONUS, ESSENCE_CHUTE_BONUS, ESSENCE_MINIGAME_BONUS, ESSENCE_OGHAM_BONUS, ESSENCE_FACTION_BONUS, FLUX_*, RUN_TYPOLOGIES, DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS, BOND_TIERS) were already removed in prior Triade cleanup cycles. OGHAM_STARTER_SKILLS and CardOption were listed for removal but are actively used by 8+ files — kept. Bonus: removed dead GENERATION_TIMEOUT_MS from merlin_llm_adapter.gd (LOW bug from S1-LLM-VALIDATE)."
-    },
-    {
-      "id": "S1-CLEANUP-2",
-      "sprint": "S1",
-      "priority": 3,
-      "status": "completed",
-      "type": "dev",
-      "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "completed_at": "2026-04-13T06:00:00Z",
-      "notes": "AUDIT: No dead meta state keys found in merlin_store.gd. 'life_essence' is the live life-bar state (not old Essence system). No bestiole, ogham_fragments, liens, gloire_points, bestiole_evolution keys. No _init_triade_run/_resolve_triade_choice methods. All already cleaned in prior cycles."
-    },
-    {
-      "id": "S1-CLEANUP-3",
-      "sprint": "S1",
-      "priority": 4,
-      "status": "completed",
-      "type": "dev",
-      "title": "Renommer TRIADE_ action dispatch prefix dans store + callers",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/ui/merlin_game_controller.gd",
-        "scripts/test/test_merlin_store.gd"
-      ],
-      "completed_at": "2026-04-13T06:00:00Z",
-      "notes": "AUDIT: No TRIADE_ action dispatch prefixes found in merlin_store.gd or merlin_game_controller.gd. Only remaining TRIADE_ references are in test_fallback_pool.gd FORBIDDEN_EFFECT_TYPES array — a test assertion that these old effects must NOT appear in cards, which is legitimate and correct."
-    },
-    {
-      "id": "S1-OGHAM-ALIGN",
-      "sprint": "S1",
-      "priority": 5,
-      "status": "completed",
-      "type": "dev",
-      "title": "Aligner 18 Oghams sur bible v2.4 (7 effets incorrects)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "completed_at": "2026-04-13T06:00:00Z",
-      "notes": "AUDIT: All 18 Oghams verified correct. 6/6 named corrections already in place: duir=heal_immediate(12), onn=add_biome_currency(10), nuin=replace_worst_option, quert=heal_immediate(8), ruis=heal_and_cost(heal:18,currency_cost:5), saille=currency_and_heal(currency:8,heal:3). All 18 have 12 fields (>10 required). OGHAM_FULL_SPECS is complete and bible-aligned."
-    },
-    {
-      "id": "S2-INTEGRATION",
-      "sprint": "S2",
-      "priority": 11,
-      "status": "completed",
-      "type": "test",
-      "title": "Bible audit + bug hunt statique (8 fichiers core)",
-      "agent": "game_design_auditor",
-      "completed_at": "2026-04-13T02:54:09Z",
-      "notes": "TEST cycle S2-INTEGRATION: 12 systemes audites. FAIL: 1 HIGH (BUG-PROMISE-SYSTEM: dual incompatible promise systems, deadlines never expire), 4 MEDIUM (BUG-RUN-DAY-STALE, BUG-FACTIONS-RUN-STALE, BUG-BIOME-INTERVALS, BUG-BIOME-ARCS), 2 LOW (BUG-EFFECT-CAPS-DRAIN, BUG-STORY-LOG-TRUNCATION). 3/3 regression checks PASS. New P1 dev task BUG-PROMISE-SYSTEM-FIX created. S2-BIOMES task updated to also fix biome intervals and arc conditions. Report: test_reports/S2-INTEGRATION_2026-04-13.json"
-    },
-    {
-      "id": "BUG-PROMISE-SYSTEM-FIX",
-      "sprint": "S2",
-      "priority": 1,
-      "status": "completed",
-      "type": "dev",
-      "title": "Unifier le systeme de promesses (dual-system bug)",
-      "agent": "godot_expert",
-      "completed_at": "2026-04-13T07:00:00Z",
-      "notes": "Fixed dual promise storage split-brain bug (HIGH from S2-INTEGRATION). (1) _add_promise() now writes to run.active_promises instead of orphaned run.promises. (2) _create_promise() unified to same active_promises key + added MAX=2 cap check + switched from day-based (deadline_day) to card-based (made_at_card+deadline_cards) deadlines. (3) check_promise_deadlines() now checks cards_played >= made_at_card + deadline_cards instead of current_day > deadline_day (day was never incremented). (4) game_flow_controller.gd end-summary updated to read active_promises. _fulfill_promise/_break_promise already correct (read active_promises). init_run already correct (initializes active_promises only)."
-    },
-    {
-      "id": "S3-EDGE-CASES",
-      "sprint": "S3",
-      "priority": 12,
-      "status": "completed",
-      "type": "test",
-      "title": "10 scenarios de mort + edge cases",
-      "agent": "game_playtester",
-      "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "completed_at": "2026-04-13T08:30:00Z",
-      "notes": "TEST cycle: 8 edge cases tested. FAIL overall (1 MEDIUM + 1 LOW bug found). 3/3 regressions PASS. EC-01 (life=0): PASS. EC-02 (factions 0/100): PASS + BUG-SIGNAL-DELTA LOW. EC-03 (ogham no resources): PASS. EC-04 (MOS hard_max=50): PASS. EC-05 (save mid-run): FAIL — BUG-MIDRUN-SAVE-INCOMPLETE MEDIUM (autosave meta-only, run_state not updated during run). EC-06 (trust T0->T3): PASS. EC-07 (FastRoute missing fields): PASS. EC-08 (multiplier x2.0): PASS. 2 new tasks created: BUG-MIDRUN-SAVE-INCOMPLETE-FIX (P6), BUG-SIGNAL-DELTA-FIX (P11). Report: test_reports/S3-EDGE-CASES_2026-04-13.json"
-    },
+  "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
+  "updated": "2026-04-13T10:00:00Z",
+  "archived": [
     {
       "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
       "sprint": "S2",
@@ -292,13 +11,25 @@
       "type": "dev",
       "title": "Fix mid-run save: persist run_state incrementally during run",
       "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "description": "S3-EDGE-CASES found MEDIUM bug: _do_autosave() only saves meta (profile), not run_state. game_flow_controller saves a static pre-run intent once (biome+oghams) but never updates it during the run. Fix: in merlin_store._do_autosave(), if run is active, also call save_system.save_run_state(state.get('run', {})). Verify load_run_state() on restart correctly restores life_essence, cards_played, active_promises, story_log, season, faction_context. PAT-009: grep callers of _do_autosave before modifying.",
+      "files": ["scripts/merlin/merlin_store.gd"],
       "completed_at": "2026-04-13T09:00:00Z",
       "notes": "Fixed: _do_autosave() now calls save_run_state(run_snapshot) when run is active. run_snapshot duplicates run dict and adds biome/card_index keys required by save system validator. Also removed pacing recovery (+5 HP when life<20) per director q-20260412-005."
+    },
+    {
+      "id": "S3-LLM-ROBUSTNESS",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "completed",
+      "type": "test",
+      "title": "Bug hunt layer IA (timeout, fallback, race conditions)",
+      "agent": "bug_hunter",
+      "files": [
+        "addons/merlin_ai/merlin_ai.gd",
+        "addons/merlin_ai/ollama_backend.gd",
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
+      "completed_at": "2026-04-13T10:00:00Z",
+      "notes": "TEST cycle: S3-LLM-ROBUSTNESS completed. 10 scenarios analyzed. FAIL: 1 HIGH bug BUG-FACTIONS-STALE-OMNISCIENT (run.factions always zeros, meta.faction_rep never propagated to AI context — omniscient/event routing/NPC dialogue broken), 1 LOW (timeshare race), 1 LOW (story_log prompt overflow at 10 entries). 3/3 regressions PASS. Timeout/fallback/JSON/ChatML injection all robust. New dev task BUG-FACTIONS-STALE-FIX created at P5. Report: test_reports/S3-LLM-ROBUSTNESS_2026-04-13.json"
     }
-  ],
-  "updated": "2026-04-13T08:30:00Z"
+  ]
 }

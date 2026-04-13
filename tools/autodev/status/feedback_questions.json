@@ -99,6 +99,22 @@
       ],
       "screenshot_urls": null,
       "created_at": "2026-04-13T02:54:09Z"
+    },
+    {
+      "id": "q-20260413-002",
+      "category": "gamedesign",
+      "priority": "LOW",
+      "status": "pending",
+      "question": "Les 5 factions ont-elles toutes un poids narratif egal, ou certaines doivent-elles etre prioritaires dans le routage des evenements?",
+      "context": "Bug BUG-FACTIONS-STALE-OMNISCIENT revele que toute la couche IA (omniscient, event_category_selector, NPC dialogue) voyait les factions a zero depuis le debut. Maintenant que le fix va propager meta.faction_rep, le systeme de routage va vraiment reagir aux reputations. Question: est-ce que Ankou (mort/au-dela) doit avoir plus de poids narratif si reputation > 60 ? Est-ce que Niamh (guerriere/noblesse) doit ouvrir des cartes de rang/honneur ? Ou est-ce que toutes les 5 factions ont exactement le meme comportement de routage ?",
+      "type": "multiple_choice",
+      "options": [
+        "Egalite parfaite — meme comportement de routage pour toutes les 5 factions",
+        "Poids asymetrique — Ankou et Druides ont des arcs narratifs plus forts",
+        "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-13T10:00:00Z"
     }
   ]
 }

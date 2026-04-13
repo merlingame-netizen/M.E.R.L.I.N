@@ -1,7 +1,7 @@
 {
   "version": "2.0",
-  "updated": "2026-04-13T09:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — Sprint 2 in progress. BUG-MIDRUN-SAVE-INCOMPLETE-FIX completed. Pacing recovery removed (director q-20260412-005). S3-STORY-LOG-RAG task added (director q-20260413-001).",
+  "updated": "2026-04-13T10:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — Sprint 2 active. S3-LLM-ROBUSTNESS test complete: HIGH bug BUG-FACTIONS-STALE-OMNISCIENT found + 2 LOW bugs. BUG-FACTIONS-STALE-FIX added at P5. Completed tasks moved to archive.",
   "sprints": {
     "S1": "CORE LOOP JOUABLE — COMPLETE",
     "S2": "CONTENU & SYSTEMES — 8 biomes, 45 verbes, MOS, dead code, integration audit",
@@ -9,19 +9,18 @@
   },
   "tasks": [
     {
-      "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "id": "BUG-FACTIONS-STALE-FIX",
       "sprint": "S2",
-      "priority": 6,
-      "status": "completed",
+      "priority": 5,
+      "status": "pending",
       "type": "dev",
-      "title": "Fix mid-run save: persist run_state incrementally during run",
+      "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
       "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_store.gd"
+        "addons/merlin_ai/context_builder.gd",
+        "addons/merlin_ai/merlin_omniscient.gd"
       ],
-      "description": "S3-EDGE-CASES found MEDIUM bug: _do_autosave() only saves meta (profile), not run_state. game_flow_controller saves a static pre-run intent once (biome+oghams) but never updates it during the run. Fix: in merlin_store._do_autosave(), if run is active, also call save_system.save_run_state(state.get('run', {})). Verify load_run_state() on restart correctly restores life_essence, cards_played, active_promises, story_log, season, faction_context. PAT-009: grep callers of _do_autosave before modifying.",
-      "completed_at": "2026-04-13T09:00:00Z",
-      "notes": "Fixed: _do_autosave() now calls save_run_state(run_snapshot) when run is active. run_snapshot duplicates run dict and adds biome/card_index keys required by save system validator. Also removed pacing recovery (+5 HP when life<20) per director q-20260412-005."
+      "description": "HIGH bug from S3-LLM-ROBUSTNESS: run.factions always zeros (never updated). Faction rep is in meta.faction_rep. Fix: (1) In context_builder.build_full_context(game_state): change 'factions': run.get('factions', {}) to 'factions': meta.get('faction_rep', {'druides':50.0,'anciens':50.0,'korrigans':50.0,'niamh':50.0,'ankou':50.0}). (2) In merlin_omniscient._build_event_context(game_state): same fix — replace run.get('factions',{}) with meta.get('faction_rep', {...defaults...}). (3) _get_dominant_faction() call at line 514 will now get real values. PAT-010: grep callers before edit. Also check evaluate_balance_heuristic context paths: game_master reads context.get('factions', {}) — for card-system path this is fine (absent = defaults 50.0); for omniscient path this fix propagates real data. DO NOT touch merlin_card_system._build_llm_context() (it correctly uses faction_rep key directly). After fix: NPC dialogue, event routing, event_category_selector, event_adapter faction conditions will all work correctly."
     },
     {
       "id": "S2-BIOMES",
@@ -91,21 +90,6 @@
         "scripts/merlin/merlin_store.gd"
       ],
       "description": "S3-EDGE-CASES found LOW bug: _apply_effect ADD_REPUTATION branch calls reputation_changed.emit(faction, new_val, float(rep_delta)) where rep_delta is the raw unclamped input. At faction_rep=95 and delta=+20, actual change is +5 but signal emits +20. Fix: read current faction value BEFORE calling _apply_faction_reputation, compute actual_delta = new_val - old_val, emit actual_delta. File: scripts/merlin/merlin_store.gd, _apply_effect() match branch ADD_REPUTATION."
-    },
-    {
-      "id": "S3-LLM-ROBUSTNESS",
-      "sprint": "S3",
-      "priority": 13,
-      "status": "pending",
-      "type": "test",
-      "title": "Bug hunt layer IA (timeout, fallback, race conditions)",
-      "agent": "bug_hunter",
-      "files": [
-        "addons/merlin_ai/merlin_ai.gd",
-        "addons/merlin_ai/ollama_backend.gd",
-        "scripts/merlin/merlin_llm_adapter.gd"
-      ],
-      "description": "Analyse statique IA: timeout LLM non gere (softlock), JSON malforme, fallback si Ollama down, race condition multi-brain, contexte RAG overflow, prompt injection. Verifier aussi: build_context() factions toujours zeros (BUG-FACTIONS-RUN-STALE de S2-INTEGRATION)."
     },
     {
       "id": "S3-AMBIENT-LIGHTING",

@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T09:00:00Z",
+  "last_updated": "2026-04-13T10:00:00Z",
   "metrics": {
-    "total_cycles_completed": 9,
+    "total_cycles_completed": 10,
     "total_dev_cycles": 5,
-    "total_test_cycles": 4,
-    "bugs_found": 15,
+    "total_test_cycles": 5,
+    "bugs_found": 18,
     "bugs_fixed": 7,
-    "tasks_completed": 27,
+    "tasks_completed": 29,
     "tasks_pending": 9,
     "current_sprint": "S2"
   },
@@ -206,6 +206,39 @@
       "applies_to": [
         "scripts/merlin/store_run.gd"
       ]
+    },
+    {
+      "id": "PAT-019",
+      "learned_at": "2026-04-13T10:00:00Z",
+      "source": "S3-LLM-ROBUSTNESS",
+      "pattern": "run.factions (initialized zeros, never updated) vs meta.faction_rep (actual persistent rep): all AI subsystems except merlin_card_system read the stale key. When a system has two separate dicts for the same concept at different scopes (run-local vs meta), always audit ALL readers for key mismatch. The correct key (meta.faction_rep) was available but not routed to context_builder/omniscient.",
+      "severity": "HIGH",
+      "applies_to": [
+        "addons/merlin_ai/context_builder.gd",
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "addons/merlin_ai/generators/event_category_selector.gd"
+      ]
+    },
+    {
+      "id": "PAT-020",
+      "learned_at": "2026-04-13T10:00:00Z",
+      "source": "S3-LLM-ROBUSTNESS",
+      "pattern": "LLM layer robustness verdict: timeout (25s/90s), fallback (is_ready guard), JSON repair (GM calls), ChatML injection (clean_response strips tokens), BG queue (100 cap + drop-oldest), brain timeout (60s) — ALL robust. The main LLM risks are at the DATA level (stale context), not at the transport/protocol level.",
+      "severity": "LOW",
+      "applies_to": [
+        "addons/merlin_ai/merlin_ai.gd",
+        "addons/merlin_ai/ollama_backend.gd"
+      ]
+    },
+    {
+      "id": "PAT-021",
+      "learned_at": "2026-04-13T10:00:00Z",
+      "source": "S3-LLM-ROBUSTNESS",
+      "pattern": "Story log prompt injection: up to 10 entries * 600 chars = 6KB added to prompt. 2B model context ~12KB. No total size guard. At 50+ cards, prompt truncation risk increases. Always enforce total accumulated block size (not just per-entry limits) when appending variable-length history to prompts.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -233,14 +266,15 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 1,
+      "tasks_completed": 2,
       "bugs_introduced": 0,
-      "bugs_found": 2,
+      "bugs_found": 5,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection",
       "strengths": [
         "found cross-module validation inconsistency",
         "traced effect accumulation paths",
-        "regression verification"
+        "regression verification",
+        "cross-module key-mismatch detection (PAT-019)"
       ],
       "weaknesses": []
     },
@@ -378,6 +412,13 @@
       "type": "dev",
       "action": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX: _do_autosave() now persists run_state when run is active. run_snapshot built with biome/card_index key mapping. Also removed pacing recovery per director q-20260412-005. Applied director q-20260413-001: created S3-STORY-LOG-RAG task.",
       "improvement": "PAT-017: autosave now persists run state. PAT-018: no more auto-recovery — survival is choice-driven. story_log RAG tracked as S3 task."
+    },
+    {
+      "cycle": 10,
+      "date": "2026-04-13T10:00:00Z",
+      "type": "test",
+      "action": "S3-LLM-ROBUSTNESS: 10 scenarios analyzed. FAIL: 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT: run.factions always zeros — meta.faction_rep never routed to context_builder/omniscient/event-routing), 2 LOW (timeshare race, story_log prompt overflow). 3/3 regressions PASS. LLM transport layer fully robust (timeout, fallback, ChatML, queue). Created BUG-FACTIONS-STALE-FIX P5.",
+      "improvement": "PAT-019/020/021 added. Key insight: LLM layer has no transport bugs; the faction system was visible to effect engine but invisible to ALL AI orchestration (omniscient, event router, fallback, RAG, NPC dialogue). Fix is surgical: route meta.faction_rep into context_builder."
     }
   ]
 }
