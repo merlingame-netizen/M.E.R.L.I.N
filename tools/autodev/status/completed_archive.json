@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T12:00:00Z",
+  "updated": "2026-04-13T14:00:00Z",
   "archived": [
     {
       "id": "S4-SMOKE-TEST",
@@ -187,7 +187,9 @@
       "type": "dev",
       "title": "Verifier ACTION_VERBS + MOS config + Trust tiers (bible v2.4)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "completed_at": "2026-04-13T11:00:00Z",
       "notes": "Audit vs bible v2.4 s.6.1-6.4. Fixes: (1) Added 'neutre' as separate ACTION_VERBS field (5 verbs: parler/accepter/refuser/attendre/s'approcher), removed from 'esprit'. (2) Added FIELD_MINIGAMES['neutre'] = ['apaisement','volonte'] per bible s.6.4. (3) Fixed EFFECT_CAPS['drain_per_card'] 1->0 (director q-001). (4) Added dominant_faction to all 8 BIOMES entries (director q-20260413-002). MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS all PASS."
     },
@@ -212,6 +214,17 @@
       "agent": "godot_expert",
       "completed_at": "2026-04-13T13:00:00Z",
       "notes": "Fixed 6 stale faction reads across 3 files: (1) rag_manager.gd: _get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction — all 4 now use game_state.get('meta',{}).get('faction_rep',{}). (2) merlin_llm_adapter.gd: build_narrative_context line 708 now uses meta.get('faction_rep',{}).duplicate(); build_context line 729 adds var meta from state and uses meta.get('faction_rep',{}). (3) event_category_selector.gd: injected dominant_faction from BIOMES[biome] into enriched_run for biome-based routing (director q-20260413-002). context_builder.gd and merlin_omniscient.gd were already correctly using meta.faction_rep from prior cycles."
+    },
+    {
+      "id": "S3-FACTION-REGRESSION-TEST",
+      "sprint": "S3",
+      "priority": 8,
+      "status": "completed",
+      "type": "test",
+      "title": "Regression test: faction_rep propagation post-fix (BUG-FACTIONS-STALE-FIX)",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T14:00:00Z",
+      "notes": "PASS: 7/7 checks, 5/5 regressions. Zero stale run.factions reads in all 5 AI files. meta.faction_rep is single source. dominant_faction injected in event_category_selector enriched_run. All 8 BIOMES have dominant_faction. Report: test_reports/S3-FACTION-REGRESSION-TEST_2026-04-13.json"
     }
   ]
 }

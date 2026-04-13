@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T13:00:00Z",
+  "last_updated": "2026-04-13T14:00:00Z",
   "metrics": {
-    "total_cycles_completed": 13,
+    "total_cycles_completed": 14,
     "total_dev_cycles": 7,
-    "total_test_cycles": 6,
+    "total_test_cycles": 7,
     "bugs_found": 18,
     "bugs_fixed": 9,
-    "tasks_completed": 33,
-    "tasks_pending": 11,
+    "tasks_completed": 34,
+    "tasks_pending": 10,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -312,7 +312,7 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 2,
+      "tasks_completed": 3,
       "bugs_introduced": 0,
       "bugs_found": 5,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection",
@@ -496,6 +496,13 @@
       "type": "dev",
       "action": "BUG-FACTIONS-STALE-FIX + S2-CLEAN-CARDSYS audit. Confirmed S2-CLEAN-CARDSYS was pre-completed (PAT-009). Fixed 6 stale run.get('factions') reads: rag_manager.gd (4 functions: _get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction), merlin_llm_adapter.gd (build_narrative_context + build_context). All now use meta.get('faction_rep',{}). Injected dominant_faction from BIOMES[biome] into enriched_run in event_category_selector. Added S2-CONTEXT-GAUGES-CLEANUP task (dead gauges key in context_builder) + S3-FACTION-REGRESSION-TEST.",
       "improvement": "PAT-025: partial prior fixes mean task audits must grep ALL callers, not just task-described files. The faction bug is now fully fixed across all 5 AI subsystems. dominant_faction biome routing now available to event selector trigger system."
+    },
+    {
+      "cycle": 14,
+      "date": "2026-04-13T14:00:00Z",
+      "type": "test",
+      "action": "S3-FACTION-REGRESSION-TEST: 7/7 checks PASS, 5/5 regressions PASS. BUG-FACTIONS-STALE-FIX confirmed complete across all 5 AI subsystems. Zero stale run.factions reads. dominant_faction biome routing fully wired. 0 new bugs.",
+      "improvement": "PAT-025 confirmed via clean audit: all 5 files fully fixed. AI factions are now live for omniscient, event router, context builder, RAG, LLM adapter. Next: BUG-SIGNAL-DELTA-FIX (P6) then S2 remaining dev tasks."
     }
   ]
 }

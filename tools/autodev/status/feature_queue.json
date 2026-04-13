@@ -1,6 +1,6 @@
 {
   "version": "3.1",
-  "updated": "2026-04-13T13:00:00Z",
+  "updated": "2026-04-13T14:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -70,23 +70,6 @@
         "scripts/merlin/merlin_store.gd"
       ],
       "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: compute actual_delta = new_val - old_val."
-    },
-    {
-      "id": "S3-FACTION-REGRESSION-TEST",
-      "sprint": "S3",
-      "priority": 8,
-      "status": "pending",
-      "type": "test",
-      "title": "Regression test: faction_rep propagation post-fix (BUG-FACTIONS-STALE-FIX)",
-      "agent": "bug_hunter",
-      "files": [
-        "addons/merlin_ai/rag_manager.gd",
-        "addons/merlin_ai/context_builder.gd",
-        "addons/merlin_ai/generators/event_category_selector.gd",
-        "addons/merlin_ai/merlin_omniscient.gd",
-        "scripts/merlin/merlin_llm_adapter.gd"
-      ],
-      "description": "Verify BUG-FACTIONS-STALE-FIX is complete: grep all 5 files for run.get('factions') — should find ZERO stale reads. Verify meta.faction_rep is now the single source for all AI subsystems. Also verify dominant_faction injection in event_category_selector enriched_run. Check MerlinConstants.BIOMES has dominant_faction for all 8 biomes."
     },
     {
       "id": "S3-AMBIENT-LIGHTING",

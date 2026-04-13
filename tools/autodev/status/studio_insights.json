@@ -9,7 +9,11 @@
       "category": "i18n",
       "message": "192 hardcoded French strings detected across 15 files",
       "details": "text_registry.json created with ~80 keys. Remaining ~120 strings in merlin_constants.gd (oghams, biomes, talents, verbs) need migration. Priority: UI strings first, then game data.",
-      "proposed_task": { "title": "Migrate remaining 120 strings to text_registry.json", "sprint": "S3", "type": "dev" },
+      "proposed_task": {
+        "title": "Migrate remaining 120 strings to text_registry.json",
+        "sprint": "S3",
+        "type": "dev"
+      },
       "timestamp": "2026-04-13T12:00:00Z"
     },
     {
@@ -19,7 +23,11 @@
       "category": "visual",
       "message": "No visual test baseline exists — screenshot pipeline ready but untested",
       "details": "screenshot_agent.gd and visual_test_runner.py created. Need to run first baseline capture on MerlinGame.tscn and Hub scene to establish reference screenshots.",
-      "proposed_task": { "title": "Run first visual test baseline on 3 core scenes", "sprint": "S3", "type": "test" },
+      "proposed_task": {
+        "title": "Run first visual test baseline on 3 core scenes",
+        "sprint": "S3",
+        "type": "test"
+      },
       "timestamp": "2026-04-13T12:00:00Z"
     },
     {
@@ -29,7 +37,11 @@
       "category": "performance",
       "message": "Triplanar shaders too heavy for mobile — need LOD fallbacks",
       "details": "low_poly.shader uses multiple texture fetches and depth blending. Mobile devices will struggle. Recommend shader variant with single texture + flat shading for QualityLevel.LOW.",
-      "proposed_task": { "title": "Create mobile-friendly shader variant for LOW quality", "sprint": "S4", "type": "dev" },
+      "proposed_task": {
+        "title": "Create mobile-friendly shader variant for LOW quality",
+        "sprint": "S4",
+        "type": "dev"
+      },
       "timestamp": "2026-04-13T12:00:00Z"
     },
     {
@@ -39,8 +51,26 @@
       "category": "gameplay",
       "message": "dominant_faction biome routing injected but not yet wired into trigger evaluation",
       "details": "enriched_run now carries dominant_faction (e.g. 'korrigans' in marais). _evaluate_triggers() does not yet use it — event sub-types with high faction rep for the biome's dominant faction don't get automatic weight bonuses on entry. Adding a trigger condition using enriched_run['dominant_faction'] + enriched_run['factions'][dominant_faction] would make biome entry feel faction-aware without any JSON config change needed.",
-      "proposed_task": { "title": "S3-DOMINANT-FACTION-TRIGGER: wire dominant_faction into _evaluate_triggers bonus", "sprint": "S3", "type": "dev" },
+      "proposed_task": {
+        "title": "S3-DOMINANT-FACTION-TRIGGER: wire dominant_faction into _evaluate_triggers bonus",
+        "sprint": "S3",
+        "type": "dev"
+      },
       "timestamp": "2026-04-13T13:00:00Z"
+    },
+    {
+      "id": "insight-20260413-005",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Faction system fully operational — AI subsystems now receive live rep data for the first time",
+      "details": "Prior to BUG-FACTIONS-STALE-FIX, all AI orchestration (omniscient, event router, RAG, context builder, LLM adapter) saw faction_rep as zeros for all runs. With fix confirmed, the game now has a complete data pipeline: player choices → effect engine → meta.faction_rep → all 5 AI systems. First time this full loop is functional. High-value test would be a narrative coherence check: do event categories actually change when one faction reaches 70+ reputation?",
+      "proposed_task": {
+        "title": "Test narrative coherence with high faction rep (manual or simulated run)",
+        "sprint": "S4",
+        "type": "test"
+      },
+      "timestamp": "2026-04-13T14:00:00Z"
     }
   ]
 }
