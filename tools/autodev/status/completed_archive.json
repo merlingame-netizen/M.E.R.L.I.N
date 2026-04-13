@@ -139,7 +139,10 @@
       "type": "dev",
       "title": "FIX CRITICAL: Supprimer double increment cards_played dans resolve_card()",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/store_run.gd"],
+      "files": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/store_run.gd"
+      ],
       "completed_at": "2026-04-12T22:30:00Z",
       "notes": "Removed lines 482-484 from merlin_card_system.gd (comment + card_index + cards_played increments). StoreRun.resolve_choice() remains the single source of truth for cards_played increment. Verified by grep: no increment in resolve_card(). Fix prevents MOS hard_max triggering at ~25 real cards."
     },
@@ -151,9 +154,29 @@
       "type": "dev",
       "title": "FIX HIGH: Supprimer process_card() orphelin + ajouter pacing recovery dans StoreRun",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/store_run.gd", "scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "completed_at": "2026-04-12T22:30:00Z",
       "notes": "Deleted process_card() (9125 chars) from merlin_effect_engine.gd via Python regex. Added pacing recovery (+5 HP if 0 < life < 20) to StoreRun.resolve_choice() before return. Set LIFE_ESSENCE_DRAIN_PER_CARD=0 (director decision q-20260412-001). Pacing recovery subject to director q-20260412-005."
+    },
+    {
+      "id": "S1-LLM-VALIDATE",
+      "sprint": "S1",
+      "priority": 6,
+      "status": "completed",
+      "type": "test",
+      "title": "Validation LLM: generer 10 cartes, valider JSON + effets",
+      "agent": "bug_hunter",
+      "files": [
+        "addons/merlin_ai/merlin_ai.gd",
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "scripts/merlin/merlin_card_system.gd"
+      ],
+      "completed_at": "2026-04-13T00:00:00Z",
+      "notes": "TEST cycle: 10 scenarios analyzed. FAIL: 1 HIGH bug (BUG-FACTION-OVERFLOW — faction keyword auto-tag overflow causes _validate_card failure on ~40-60% of Celtic cards). 1 LOW bug (dead constant GENERATION_TIMEOUT_MS). 3/3 regression checks PASS (cards_played fix, process_card removal, drain=0). New task BUG-FACTION-OVERFLOW-FIX created at priority 1. Timeout/fallback/JSON repair all PASS. Report: test_reports/S1-LLM-VALIDATE_2026-04-12.json"
     }
   ]
 }

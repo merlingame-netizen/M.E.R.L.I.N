@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "updated": "2026-04-12T22:30:00Z",
+  "updated": "2026-04-13T00:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — 3 sprints vers prototype jouable. Completed tasks in completed_archive.json.",
   "sprints": {
     "S1": "CORE LOOP JOUABLE — 1 run complete start-to-end sans crash",
@@ -9,9 +9,20 @@
   },
   "tasks": [
     {
-      "id": "S1-CLEANUP-1",
+      "id": "BUG-FACTION-OVERFLOW-FIX",
       "sprint": "S1",
       "priority": 1,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix: faction keyword auto-tag overflow silently failing _validate_card",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd"],
+      "description": "HIGH BUG from S1-LLM-VALIDATE: In _wrap_text_as_card() lines 615-626, faction keyword scan adds 1 ADD_REPUTATION per faction match to options_out[2]. Option 2 already has 2 effects (contextual + ADD_KARMA). 2+ faction matches = 4+ effects. MerlinCardSystem._validate_card(line 699) rejects if effects.size() > 3. LLM card thrown away, FastRoute used. Frequency: ~40-60% of Celtic cards (druides+anciens keywords co-occur often). FIX: Add guard before append — 'if options_out[2][\"effects\"].size() < 3: append; break (use flag to exit outer loop after first match)'. This limits auto-tag to max 1 ADD_REPUTATION, keeping option 2 at max 3 effects."
+    },
+    {
+      "id": "S1-CLEANUP-1",
+      "sprint": "S1",
+      "priority": 2,
       "status": "pending",
       "type": "dev",
       "title": "Supprimer dead code merlin_constants.gd (ELEMENTS, ESSENCE_*, FLUX_*)",
@@ -22,7 +33,7 @@
     {
       "id": "S1-CLEANUP-2",
       "sprint": "S1",
-      "priority": 2,
+      "priority": 3,
       "status": "pending",
       "type": "dev",
       "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
@@ -33,7 +44,7 @@
     {
       "id": "S1-CLEANUP-3",
       "sprint": "S1",
-      "priority": 3,
+      "priority": 4,
       "status": "pending",
       "type": "dev",
       "title": "Renommer TRIADE_ action dispatch prefix dans store + callers",
@@ -44,24 +55,13 @@
     {
       "id": "S1-OGHAM-ALIGN",
       "sprint": "S1",
-      "priority": 4,
+      "priority": 5,
       "status": "pending",
       "type": "dev",
       "title": "Aligner 18 Oghams sur bible v2.4 (7 effets incorrects)",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_constants.gd"],
       "description": "Phase 1A: Corriger duir->heal_immediate(12), onn->add_biome_currency(10), nuin->replace_worst_option, quert->heal_immediate(8), ruis->heal_and_cost(+18PV,-5monnaie), saille->currency_and_heal(+8,+3). Tous 18 Oghams avec 10 champs obligatoires."
-    },
-    {
-      "id": "S1-LLM-VALIDATE",
-      "sprint": "S1",
-      "priority": 6,
-      "status": "pending",
-      "type": "test",
-      "title": "Validation LLM: generer 10 cartes, valider JSON + effets",
-      "agent": "bug_hunter",
-      "files": ["addons/merlin_ai/merlin_ai.gd", "scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/merlin_card_system.gd"],
-      "description": "Generer 10 cartes via LLM (Qwen 3.5). Valider: JSON structure matches adapter, effets applicables sans crash, fallback fonctionne si LLM timeout, JSON repair gere les malformations. Rapport dans test_reports/."
     },
     {
       "id": "S2-BIOMES",
