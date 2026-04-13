@@ -20,6 +20,10 @@
       "question_id": "q-20260412-004",
       "answer": "Il faut que ça fasse plus pixelisé, entre la N64 et la PS1 avec des effets propres à ces consoles en ultra low pixel / low polygon avec effets volumétriques cohérents",
       "timestamp": "2026-04-12T17:40:00Z"
+    },
+    {
+      "question_id": "q-20260413-001",
+      "answer": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
     }
   ]
 }
