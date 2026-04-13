@@ -167,6 +167,18 @@
       "agent": "bug_hunter",
       "completed_at": "2026-04-13T10:00:00Z",
       "notes": "10 scenarios. 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT), 2 LOW. LLM transport fully robust. Report: test_reports/S3-LLM-ROBUSTNESS_2026-04-13.json"
+    },
+    {
+      "id": "S2-VERBS-MOS",
+      "sprint": "S2",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Verifier ACTION_VERBS + MOS config + Trust tiers (bible v2.4)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd"],
+      "completed_at": "2026-04-13T11:00:00Z",
+      "notes": "Audit vs bible v2.4 s.6.1-6.4. Fixes: (1) Added 'neutre' as separate ACTION_VERBS field (5 verbs: parler/accepter/refuser/attendre/s'approcher), removed from 'esprit'. (2) Added FIELD_MINIGAMES['neutre'] = ['apaisement','volonte'] per bible s.6.4. (3) Fixed EFFECT_CAPS['drain_per_card'] 1->0 (director q-001). (4) Added dominant_faction to all 8 BIOMES entries (director q-20260413-002). MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS all PASS."
     }
   ]
 }

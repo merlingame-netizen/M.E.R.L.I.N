@@ -313,9 +313,9 @@ const ACTION_VERBS := {
 	"logique": ["dechiffrer", "analyser", "resoudre", "decoder", "interpreter", "etudier"],
 	"finesse": ["se faufiler", "esquiver", "contourner", "se cacher", "escalader", "traverser"],
 	"vigueur": ["combattre", "courir", "fuir", "forcer", "pousser", "resister physiquement"],
-	"esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer",
-			   "parler", "accepter", "refuser", "attendre", "s'approcher"],
+	"esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer"],
 	"perception": ["ecouter", "suivre", "pister", "sentir", "flairer", "tendre l'oreille"],
+	"neutre": ["parler", "accepter", "refuser", "attendre", "s'approcher"],
 }
 
 # Fallback: si le LLM genere un verbe hors des 45, mapper a "esprit"
@@ -334,6 +334,7 @@ const FIELD_MINIGAMES := {
 	"vigueur": ["combat_rituel", "course"],
 	"esprit": ["apaisement", "volonte", "sang_froid"],
 	"perception": ["traces", "echo"],
+	"neutre": ["apaisement", "volonte"],
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -352,7 +353,7 @@ const EFFECT_CAPS := {
 	"LIFE_MIN": 0,
 	"effects_per_option": 3,
 	"score_bonus_cap": 2.0,
-	"drain_per_card": 1,
+	"drain_per_card": 0,
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -410,6 +411,7 @@ const BIOMES := {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande", "subtitle": "Ou les arbres ont des yeux",
 		"season": "printemps", "difficulty": 0, "maturity_threshold": 0,
+		"dominant_faction": "druides",
 		"oghams_affinity": ["quert", "huath", "coll"],
 		"currency_name": "Herbes enchantees",
 		"card_interval_range_min": 12, "card_interval_range_max": 15,
@@ -419,6 +421,7 @@ const BIOMES := {
 	"landes_bruyere": {
 		"name": "Landes de Bruyere", "subtitle": "Ou le vent raconte des histoires",
 		"season": "automne", "difficulty": 1, "maturity_threshold": 15,
+		"dominant_faction": "anciens",
 		"oghams_affinity": ["luis", "onn", "saille"],
 		"currency_name": "Brins de bruyere",
 		"card_interval_range_min": 12, "card_interval_range_max": 15,
@@ -428,6 +431,7 @@ const BIOMES := {
 	"cotes_sauvages": {
 		"name": "Cotes Sauvages", "subtitle": "Ou la mer defie la terre",
 		"season": "ete", "difficulty": 1, "maturity_threshold": 15,
+		"dominant_faction": "korrigans",
 		"oghams_affinity": ["muin", "nuin", "tinne"],
 		"currency_name": "Coquillages",
 		"card_interval_range_min": 12, "card_interval_range_max": 15,
@@ -437,6 +441,7 @@ const BIOMES := {
 	"villages_celtes": {
 		"name": "Villages Celtes", "subtitle": "Ou les hommes forment le destin",
 		"season": "ete", "difficulty": 2, "maturity_threshold": 25,
+		"dominant_faction": "anciens",
 		"oghams_affinity": ["duir", "coll", "beith"],
 		"currency_name": "Pieces de cuivre",
 		"card_interval_range_min": 10, "card_interval_range_max": 14,
@@ -446,6 +451,7 @@ const BIOMES := {
 	"cercles_pierres": {
 		"name": "Cercles de Pierres", "subtitle": "Ou le temps se fissure",
 		"season": "printemps", "difficulty": 3, "maturity_threshold": 30,
+		"dominant_faction": "druides",
 		"oghams_affinity": ["ioho", "straif", "ruis"],
 		"currency_name": "Fragments de rune",
 		"card_interval_range_min": 10, "card_interval_range_max": 14,
@@ -455,6 +461,7 @@ const BIOMES := {
 	"marais_korrigans": {
 		"name": "Marais des Korrigans", "subtitle": "Ou la lumiere ment",
 		"season": "automne", "difficulty": 3, "maturity_threshold": 40,
+		"dominant_faction": "korrigans",
 		"oghams_affinity": ["gort", "eadhadh", "luis"],
 		"currency_name": "Pierres phosphorescentes",
 		"card_interval_range_min": 10, "card_interval_range_max": 14,
@@ -464,6 +471,7 @@ const BIOMES := {
 	"collines_dolmens": {
 		"name": "Collines aux Dolmens", "subtitle": "Ou les morts veillent",
 		"season": "hiver", "difficulty": 4, "maturity_threshold": 50,
+		"dominant_faction": "ankou",
 		"oghams_affinity": ["quert", "ailm", "coll"],
 		"currency_name": "Os graves",
 		"card_interval_range_min": 8, "card_interval_range_max": 12,
@@ -473,6 +481,7 @@ const BIOMES := {
 	"iles_mystiques": {
 		"name": "Iles Mystiques", "subtitle": "Ou le monde visible s'acheve",
 		"season": "hiver", "difficulty": 5, "maturity_threshold": 75,
+		"dominant_faction": "niamh",
 		"oghams_affinity": ["ailm", "ruis", "ioho"],
 		"currency_name": "Ecume solidifiee",
 		"card_interval_range_min": 8, "card_interval_range_max": 12,

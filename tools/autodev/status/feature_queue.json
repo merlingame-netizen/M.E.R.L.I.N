@@ -1,6 +1,6 @@
 {
   "version": "3.1",
-  "updated": "2026-04-13T10:30:00Z",
+  "updated": "2026-04-13T11:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -24,7 +24,7 @@
       "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
       "agent": "godot_expert",
       "files": ["addons/merlin_ai/context_builder.gd", "addons/merlin_ai/merlin_omniscient.gd"],
-      "description": "HIGH bug from S3-LLM-ROBUSTNESS: run.factions always zeros. Fix: change run.get('factions',{}) to meta.get('faction_rep',{defaults}) in context_builder and omniscient."
+      "description": "HIGH bug from S3-LLM-ROBUSTNESS: run.factions always zeros. Fix: change run.get('factions',{}) to meta.get('faction_rep',{defaults}) in context_builder and omniscient. Also: use BIOMES[biome].dominant_faction for biome-based event routing weight (director q-20260413-002)."
     },
     {
       "id": "S2-BIOMES",
@@ -36,17 +36,6 @@
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_constants.gd"],
       "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6."
-    },
-    {
-      "id": "S2-VERBS-MOS",
-      "sprint": "S2",
-      "priority": 3,
-      "status": "pending",
-      "type": "dev",
-      "title": "Verifier ACTION_VERBS + MOS config + Trust tiers (bible v2.4)",
-      "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
-      "description": "Audit ACTION_VERBS (8 champs + neutre), MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS. Verify completude vs bible v2.4 s.6.1-6.4."
     },
     {
       "id": "S2-CLEAN-CARDSYS",

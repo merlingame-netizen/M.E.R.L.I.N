@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T10:00:00Z",
+  "last_updated": "2026-04-13T11:00:00Z",
   "metrics": {
-    "total_cycles_completed": 10,
-    "total_dev_cycles": 5,
+    "total_cycles_completed": 11,
+    "total_dev_cycles": 6,
     "total_test_cycles": 5,
     "bugs_found": 18,
-    "bugs_fixed": 7,
-    "tasks_completed": 29,
-    "tasks_pending": 9,
+    "bugs_fixed": 8,
+    "tasks_completed": 30,
+    "tasks_pending": 10,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -231,6 +231,16 @@
       ]
     },
     {
+      "id": "PAT-022",
+      "learned_at": "2026-04-13T11:00:00Z",
+      "source": "S2-VERBS-MOS",
+      "pattern": "Bible defines 'neutre' as a 9th distinct lexical field (not a subset of 'esprit'). Neutral verbs (parler/accepter/refuser/attendre/s'approcher) must remain separate in ACTION_VERBS with their own FIELD_MINIGAMES entry ['apaisement','volonte']. Merging them into 'esprit' loses the granularity bible s.6.4 specifies (neutral→apaisement/volonte only, not sang_froid).",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
       "id": "PAT-021",
       "learned_at": "2026-04-13T10:00:00Z",
       "source": "S3-LLM-ROBUSTNESS",
@@ -254,7 +264,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 20,
+      "tasks_completed": 21,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -342,6 +352,16 @@
       ]
     },
     {
+      "question_id": "q-20260413-002",
+      "decision": "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)",
+      "impact": "Added dominant_faction to all 8 BIOMES entries. BUG-FACTIONS-STALE-FIX to use it for biome-based AI event routing.",
+      "applied": true,
+      "applied_at": "2026-04-13T11:00:00Z",
+      "files_modified": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
       "question_id": "q-20260413-001",
       "decision": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)",
       "impact": "Task S3-STORY-LOG-RAG created (P17). RAG manager to provide compressed narrative context beyond 2-card story_log limit.",
@@ -419,6 +439,13 @@
       "type": "test",
       "action": "S3-LLM-ROBUSTNESS: 10 scenarios analyzed. FAIL: 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT: run.factions always zeros — meta.faction_rep never routed to context_builder/omniscient/event-routing), 2 LOW (timeshare race, story_log prompt overflow). 3/3 regressions PASS. LLM transport layer fully robust (timeout, fallback, ChatML, queue). Created BUG-FACTIONS-STALE-FIX P5.",
       "improvement": "PAT-019/020/021 added. Key insight: LLM layer has no transport bugs; the faction system was visible to effect engine but invisible to ALL AI orchestration (omniscient, event router, fallback, RAG, NPC dialogue). Fix is surgical: route meta.faction_rep into context_builder."
+    },
+    {
+      "cycle": 11,
+      "date": "2026-04-13T11:00:00Z",
+      "type": "dev",
+      "action": "S2-VERBS-MOS: Audited ACTION_VERBS/FIELD_MINIGAMES/MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS vs bible v2.4 s.6.1-6.4. Fixed 3 issues: (1) separated 'neutre' field from 'esprit', (2) added FIELD_MINIGAMES['neutre']=['apaisement','volonte'], (3) EFFECT_CAPS['drain_per_card'] 1->0. Applied director q-20260413-002: added dominant_faction to all 8 BIOMES. All 4 other subsystems PASS.",
+      "improvement": "PAT-022 added: neutre is a distinct 9th field, not an esprit subset. Existing tests all compatible — no test checked 'parler'→'esprit' directly. dominant_faction enables biome-aware AI event routing for BUG-FACTIONS-STALE-FIX."
     }
   ]
 }
