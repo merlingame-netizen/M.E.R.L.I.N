@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T02:54:09Z",
+  "last_updated": "2026-04-13T07:00:00Z",
   "metrics": {
-    "total_cycles_completed": 6,
-    "total_dev_cycles": 3,
+    "total_cycles_completed": 7,
+    "total_dev_cycles": 4,
     "total_test_cycles": 3,
     "bugs_found": 13,
-    "bugs_fixed": 4,
-    "tasks_completed": 23,
-    "tasks_pending": 10,
+    "bugs_fixed": 5,
+    "tasks_completed": 24,
+    "tasks_pending": 9,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -162,6 +162,17 @@
       "applies_to": [
         "merlin_constants.gd"
       ]
+    },
+    {
+      "id": "PAT-015",
+      "learned_at": "2026-04-13T07:00:00Z",
+      "source": "BUG-PROMISE-SYSTEM-FIX",
+      "pattern": "When two effect creation paths (ADD_PROMISE + CREATE_PROMISE) exist for the same system, both must write to the SAME storage key. Mismatched keys create a silent split-brain where one path's promises are invisible to the checker. Also: always prefer deadline units that are actually tracked (cards_played is incremented per card; run.day was never incremented — so card-based deadlines are reliable, day-based are not).",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -177,7 +188,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 17,
+      "tasks_completed": 18,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -296,6 +307,13 @@
       "type": "test",
       "action": "S2-INTEGRATION: 12-system bible audit + static analysis. Found 1 HIGH (BUG-PROMISE-SYSTEM: dual promise storage never expires), 4 MEDIUM (day stale, factions run-stale, biome intervals wrong, biome arcs wrong), 2 LOW. 3/3 regressions PASS. Created BUG-PROMISE-SYSTEM-FIX P1. Updated S2-BIOMES to also fix biome intervals/arcs.",
       "improvement": "Learned: split-brain storage bugs (two keys for same system) are silent — system appears to work but deadlines never fire. Pattern: always trace writer→reader pairs. game_design_auditor agent: excellent for cross-file bible vs code gaps."
+    },
+    {
+      "cycle": 7,
+      "date": "2026-04-13T07:00:00Z",
+      "type": "dev",
+      "action": "BUG-PROMISE-SYSTEM-FIX: Unified dual promise storage. (1) _add_promise() now writes to active_promises (was: orphaned promises key). (2) _create_promise() unified to active_promises + MAX cap + switched to card-based deadlines (made_at_card + deadline_cards). (3) check_promise_deadlines() now card-based (was: day-based, run.day never incremented). (4) game_flow_controller.gd end-summary reads active_promises. 4 files touched.",
+      "improvement": "PAT-015 added: multi-path systems must route to same storage key; always prefer deadline units that are actually tracked (cards_played YES, run.day NO). Next: S2-BIOMES (priority 7) — fix biome intervals + arc conditions."
     }
   ]
 }

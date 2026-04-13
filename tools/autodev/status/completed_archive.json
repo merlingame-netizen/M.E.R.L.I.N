@@ -256,6 +256,17 @@
       "agent": "game_design_auditor",
       "completed_at": "2026-04-13T02:54:09Z",
       "notes": "TEST cycle S2-INTEGRATION: 12 systemes audites. FAIL: 1 HIGH (BUG-PROMISE-SYSTEM: dual incompatible promise systems, deadlines never expire), 4 MEDIUM (BUG-RUN-DAY-STALE, BUG-FACTIONS-RUN-STALE, BUG-BIOME-INTERVALS, BUG-BIOME-ARCS), 2 LOW (BUG-EFFECT-CAPS-DRAIN, BUG-STORY-LOG-TRUNCATION). 3/3 regression checks PASS. New P1 dev task BUG-PROMISE-SYSTEM-FIX created. S2-BIOMES task updated to also fix biome intervals and arc conditions. Report: test_reports/S2-INTEGRATION_2026-04-13.json"
+    },
+    {
+      "id": "BUG-PROMISE-SYSTEM-FIX",
+      "sprint": "S2",
+      "priority": 1,
+      "status": "completed",
+      "type": "dev",
+      "title": "Unifier le systeme de promesses (dual-system bug)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T07:00:00Z",
+      "notes": "Fixed dual promise storage split-brain bug (HIGH from S2-INTEGRATION). (1) _add_promise() now writes to run.active_promises instead of orphaned run.promises. (2) _create_promise() unified to same active_promises key + added MAX=2 cap check + switched from day-based (deadline_day) to card-based (made_at_card+deadline_cards) deadlines. (3) check_promise_deadlines() now checks cards_played >= made_at_card + deadline_cards instead of current_day > deadline_day (day was never incremented). (4) game_flow_controller.gd end-summary updated to read active_promises. _fulfill_promise/_break_promise already correct (read active_promises). init_run already correct (initializes active_promises only)."
     }
   ]
 }

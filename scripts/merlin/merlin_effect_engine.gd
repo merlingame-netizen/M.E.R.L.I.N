@@ -23,7 +23,7 @@ const VALID_CODES := {
 	# PROMISE SYSTEM
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_PROMISE": 2,      # ADD_PROMISE:promise_id:deadline_cards (lightweight, cap 2 active)
-	"CREATE_PROMISE": 3,   # CREATE_PROMISE:oath_001:5:description
+	"CREATE_PROMISE": 3,   # CREATE_PROMISE:oath_001:deadline_cards:description
 	"FULFILL_PROMISE": 1,  # FULFILL_PROMISE:oath_001
 	"BREAK_PROMISE": 1,    # BREAK_PROMISE:oath_001
 	# ═══════════════════════════════════════════════════════════════════════════
@@ -242,7 +242,7 @@ func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) ->
 		push_warning("[EffectEngine] _add_promise: empty promise_id")
 		return false
 	var run: Dictionary = state.get("run", {})
-	var promises: Array = run.get("promises", [])
+	var promises: Array = run.get("active_promises", [])
 	# Cap: max 2 active promises (bible rule)
 	var active_count: int = 0
 	for p in promises:
@@ -253,28 +253,35 @@ func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) ->
 	var cards_played: int = int(run.get("cards_played", 0))
 	var promise: Dictionary = {
 		"id": promise_id,
-		"deadline_cards": deadline_cards,
 		"made_at_card": cards_played,
+		"deadline_cards": deadline_cards,
 		"status": "active",
 	}
 	promises.append(promise)
-	run["promises"] = promises
+	run["active_promises"] = promises
 	state["run"] = run
 	return true
 
 
-func _create_promise(state: Dictionary, promise_id: String, deadline_days: int, description: String) -> bool:
+func _create_promise(state: Dictionary, promise_id: String, deadline_cards: int, description: String) -> bool:
 	if promise_id.is_empty():
 		push_warning("[EffectEngine] _create_promise: empty promise_id")
 		return false
-	var run = state.get("run", {})
-	var promises = run.get("active_promises", [])
-	var current_day = int(run.get("day", 1))
-	var promise = {
+	var run: Dictionary = state.get("run", {})
+	var promises: Array = run.get("active_promises", [])
+	# Cap: max 2 active promises (bible rule)
+	var active_count: int = 0
+	for p in promises:
+		if str(p.get("status", "")) == "active":
+			active_count += 1
+	if active_count >= 2:
+		return false
+	var cards_played: int = int(run.get("cards_played", 0))
+	var promise: Dictionary = {
 		"id": promise_id,
 		"description": description,
-		"created_day": current_day,
-		"deadline_day": current_day + deadline_days,
+		"made_at_card": cards_played,
+		"deadline_cards": deadline_cards,
 		"status": "active",
 	}
 	promises.append(promise)

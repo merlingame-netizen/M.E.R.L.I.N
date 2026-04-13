@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "updated": "2026-04-13T02:54:09Z",
+  "updated": "2026-04-13T07:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — Sprint 1 COMPLETE. Sprint 2 in progress. Completed tasks in completed_archive.json.",
   "sprints": {
     "S1": "CORE LOOP JOUABLE — COMPLETE",
@@ -8,20 +8,6 @@
     "S3": "POLISH & EDGE CASES — Stabilite, robustesse LLM"
   },
   "tasks": [
-    {
-      "id": "BUG-PROMISE-SYSTEM-FIX",
-      "sprint": "S2",
-      "priority": 1,
-      "status": "pending",
-      "type": "dev",
-      "title": "Unifier le systeme de promesses (dual-system bug)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd"
-      ],
-      "description": "HIGH bug found in S2-INTEGRATION audit. Deux systemes incompatibles: ADD_PROMISE ecrit dans run.promises (deadline_cards, jamais verifie), CREATE_PROMISE ecrit dans run.active_promises (deadline_day, verifie mais day jamais incremente). Fix: (1) _add_promise() ecrit dans run.active_promises avec made_at_card + deadline_cards. (2) check_promise_deadlines() utilise cards_played >= made_at_card + deadline_cards. (3) Supprimer run.promises du init_run (store_run.gd). (4) Harmoniser _create_promise avec le meme format. (5) _fulfill_promise/_break_promise restent sur active_promises. MAX_ACTIVE_PROMISES check s'applique aux deux paths."
-    },
     {
       "id": "S2-BIOMES",
       "sprint": "S2",
