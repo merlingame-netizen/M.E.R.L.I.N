@@ -1,7 +1,7 @@
 {
   "version": "3.5",
-  "updated": "2026-04-13T20:53:21Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 9+ pending.",
+  "updated": "2026-04-13T21:15:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 12 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -57,20 +57,6 @@
         "scripts/merlin/merlin_store.gd"
       ],
       "description": "Bible s.5.1: Anam est la monnaie cross-run (~10 runs/noeud). A la mort: gain_anam = run.anam_accumulated * min(run.cards_played / 30.0, 1.0). Verifier: (1) run.anam_accumulated est incremente correctement (non zero). (2) La formule de mort utilise min(cartes/30, 1.0) et non un cap fixe. (3) merlin_save_system.gd persiste meta.total_anam correctement. (4) reset run.anam_accumulated a 0 apres mort. Si formule manquante ou incorrecte: implementer selon bible."
-    },
-    {
-      "id": "S2-BIOMES-REGRESSION-TEST",
-      "sprint": "S2",
-      "priority": 11,
-      "status": "pending",
-      "type": "test",
-      "title": "Test regression biomes: intervals + arcs alignes sur bible s.3.6/s.4.3",
-      "agent": "game_design_auditor",
-      "files": [
-        "scripts/merlin/merlin_constants.gd",
-        "docs/GAME_DESIGN_BIBLE.md"
-      ],
-      "description": "Verify S2-BIOMES fix: (1) Check all 8 card_interval_range_min/max match bible s.4.3 exactly (foret:12-15, landes:8-10, cotes:6-8, villages:8-10, cercles:10-12, marais:4-6, collines:10-12, iles:3-15). (2) Check arc IDs match bible s.3.6 (l_ermite_du_vent, le_phoque_d_argent, l_assemblee_secrete, le_rituel_oublie, le_tresor_des_feux, la_voix_des_rois, le_passage_de_morgane). (3) Check arc_cards counts (3,4,3,5,4,4,3,5). (4) Check arc_condition_faction and values. (5) Verify new condition types runs_in_biome + fins_vues are present. (6) No regression on foret_broceliande (unchanged)."
     },
     {
       "id": "S3-MEDITATION-CLEANUP",
@@ -180,6 +166,19 @@
       "agent": "godot_expert",
       "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volumétrie et cycle jour/nuit, la scène doit être plus viable. Deep dive et itère jusqu'à acceptation du retour correct",
       "files": []
+    },
+    {
+      "id": "BUG-COTES-FACTION-FIX",
+      "sprint": "S2",
+      "priority": 18,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix cotes_sauvages.dominant_faction: 'korrigans' → 'niamh'",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "NOTE-1 from S2-BIOMES-REGRESSION-TEST: cotes_sauvages.dominant_faction='korrigans' is thematically wrong. Arc condition requires Rep Niamh >= 30, PNJ Maelle is linked to Niamh (gardienne des cotes). Korrigans = marais faction. Fix: change dominant_faction to 'niamh' at line ~435. Trivial 1-line change."
     }
   ]
 }

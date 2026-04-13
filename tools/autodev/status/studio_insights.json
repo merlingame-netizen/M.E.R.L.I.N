@@ -141,6 +141,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-13T20:53:21Z"
+    },
+    {
+      "id": "insight-20260413-001",
+      "agent": "game_design_auditor",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "dominant_faction should align with arc_condition_faction across all biomes",
+      "details": "S2-BIOMES-REGRESSION-TEST found cotes_sauvages.dominant_faction='korrigans' while arc unlock requires Rep Niamh >= 30. When dominant_faction and arc_condition_faction diverge, the LLM context sent before arc-unlock may contradict the arc narrative (routing as korrigans while unlocking via niamh). A single-pass audit of all 8 biomes to verify dominant_faction thematic coherence is recommended.",
+      "proposed_task": {
+        "title": "Fix cotes_sauvages.dominant_faction: korrigans → niamh",
+        "sprint": "S2",
+        "type": "dev",
+        "priority": 18
+      },
+      "timestamp": "2026-04-13T21:15:00Z"
     }
   ],
   "updated": "2026-04-13T20:53:21Z"

@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T20:53:21Z",
+  "last_updated": "2026-04-13T21:15:00Z",
   "metrics": {
-    "total_cycles_completed": 23,
+    "total_cycles_completed": 24,
     "total_dev_cycles": 12,
-    "total_test_cycles": 11,
+    "total_test_cycles": 12,
     "bugs_found": 21,
     "bugs_fixed": 13,
-    "tasks_completed": 43,
+    "tasks_completed": 44,
     "tasks_pending": 12,
     "current_sprint": "S2"
   },
@@ -393,6 +393,16 @@
         "scripts/merlin/merlin_skeleton_generator.gd",
         "scripts/merlin/merlin_constants.gd"
       ]
+    },
+    {
+      "id": "PAT-035",
+      "learned_at": "2026-04-13T21:15:00Z",
+      "source": "S2-BIOMES-REGRESSION-TEST",
+      "pattern": "dominant_faction should align with arc_condition_faction for thematic coherence — cotes_sauvages arc requires Niamh but dominant_faction was set to korrigans. Always cross-check dominant_faction vs arc_condition_faction when setting up biome data.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -436,15 +446,16 @@
       "partial_pass_reports": 1
     },
     "game_design_auditor": {
-      "tasks_completed": 2,
+      "tasks_completed": 3,
       "bugs_introduced": 0,
-      "bugs_found": 7,
+      "bugs_found": 8,
       "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit",
       "strengths": [
         "found promise split-brain bug (dual storage keys)",
         "found biome interval mismatches vs bible s.4.3",
         "audited both LLM context paths (Narrator vs GameMaster)",
-        "comprehensive 12-system coverage in one cycle"
+        "comprehensive 12-system coverage in one cycle",
+        "biome regression: verified 6/6 checks PASS across 8 biomes vs bible s.3.6+s.4.3 in single cycle"
       ],
       "weaknesses": []
     }

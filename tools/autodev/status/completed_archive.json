@@ -379,6 +379,22 @@
       "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6.",
       "completed_at": "2026-04-13T20:53:21Z",
       "notes": "Fixed 7/8 biome intervals (card_interval_range_min/max) per bible s.4.3. Fixed 7/8 arc names, card counts, and trigger conditions per bible s.3.6. New condition types added: runs_in_biome (landes_bruyere), fins_vues (collines_dolmens). PAT-033 added."
+    },
+    {
+      "id": "S2-BIOMES-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Test regression biomes: intervals + arcs alignes sur bible s.3.6/s.4.3",
+      "agent": "game_design_auditor",
+      "files": [
+        "scripts/merlin/merlin_constants.gd",
+        "docs/GAME_DESIGN_BIBLE.md"
+      ],
+      "description": "Verify S2-BIOMES fix: (1) Check all 8 card_interval_range_min/max match bible s.4.3 exactly (foret:12-15, landes:8-10, cotes:6-8, villages:8-10, cercles:10-12, marais:4-6, collines:10-12, iles:3-15). (2) Check arc IDs match bible s.3.6 (l_ermite_du_vent, le_phoque_d_argent, l_assemblee_secrete, le_rituel_oublie, le_tresor_des_feux, la_voix_des_rois, le_passage_de_morgane). (3) Check arc_cards counts (3,4,3,5,4,4,3,5). (4) Check arc_condition_faction and values. (5) Verify new condition types runs_in_biome + fins_vues are present. (6) No regression on foret_broceliande (unchanged).",
+      "completed_at": "2026-04-13T21:15:00Z",
+      "notes": "PASS 6/6 — all intervals, arc IDs, arc_cards, conditions verified vs bible s.3.6/s.4.3. 1 LOW note: cotes dominant_faction mismatch (BUG-COTES-FACTION-FIX created P18)."
     }
   ]
 }
