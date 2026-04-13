@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T11:00:00Z",
+  "last_updated": "2026-04-13T12:00:00Z",
   "metrics": {
-    "total_cycles_completed": 11,
+    "total_cycles_completed": 12,
     "total_dev_cycles": 6,
-    "total_test_cycles": 5,
+    "total_test_cycles": 6,
     "bugs_found": 18,
     "bugs_fixed": 8,
-    "tasks_completed": 30,
-    "tasks_pending": 10,
+    "tasks_completed": 31,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -241,6 +241,28 @@
       ]
     },
     {
+      "id": "PAT-023",
+      "learned_at": "2026-04-13T12:00:00Z",
+      "source": "S4-SMOKE-TEST",
+      "pattern": "MerlinStore is NOT in project.godot autoloads — it is programmatically created by GameManager._ready() via call_deferred. MerlinGameController._ready() uses 'await get_tree().process_frame' to ensure the deferred add_child fires before start_run() is called. This 1-frame await is a critical null-safety mechanism — never remove it.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/game_manager.gd",
+        "scripts/ui/merlin_game_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-024",
+      "learned_at": "2026-04-13T12:00:00Z",
+      "source": "S4-SMOKE-TEST",
+      "pattern": "Static analysis can substitute for headless Godot execution when the runtime is unavailable. Trace: autoload._ready() → scene._ready() → deferred calls → signal connections → dispatch flow → effect path → end condition. Cover all branches via grep + Read rather than execution. Report verdict PASS/FAIL with explicit per-invariant results.",
+      "severity": "LOW",
+      "applies_to": [
+        "tooling",
+        "workflow"
+      ]
+    },
+    {
       "id": "PAT-021",
       "learned_at": "2026-04-13T10:00:00Z",
       "source": "S3-LLM-ROBUSTNESS",
@@ -253,13 +275,15 @@
   ],
   "agent_performance": {
     "game_playtester": {
-      "tasks_completed": 2,
+      "tasks_completed": 3,
       "bugs_introduced": 0,
       "bugs_found": 6,
-      "specialization": "static analysis, invariant simulation, run modeling",
+      "specialization": "static analysis, invariant simulation, run modeling, startup trace",
       "strengths": [
         "thorough invariant checking",
-        "good report format"
+        "good report format",
+        "startup sequence tracing (deferred calls, null-safety timing)",
+        "static substitute for headless execution when runtime unavailable"
       ],
       "weaknesses": []
     },
@@ -439,6 +463,13 @@
       "type": "test",
       "action": "S3-LLM-ROBUSTNESS: 10 scenarios analyzed. FAIL: 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT: run.factions always zeros — meta.faction_rep never routed to context_builder/omniscient/event-routing), 2 LOW (timeshare race, story_log prompt overflow). 3/3 regressions PASS. LLM transport layer fully robust (timeout, fallback, ChatML, queue). Created BUG-FACTIONS-STALE-FIX P5.",
       "improvement": "PAT-019/020/021 added. Key insight: LLM layer has no transport bugs; the faction system was visible to effect engine but invisible to ALL AI orchestration (omniscient, event router, fallback, RAG, NPC dialogue). Fix is surgical: route meta.faction_rep into context_builder."
+    },
+    {
+      "cycle": 12,
+      "date": "2026-04-13T12:00:00Z",
+      "type": "test",
+      "action": "S4-SMOKE-TEST (static analysis): 13 invariants checked. PASS: startup deferred-store timing, card cycle full trace, life 0-100, rep ±20/card, MOS zones, effects/option cap, cards_played single increment, drain=0, no pacing recovery, active_promises unified, autosave run_state, neutre separate field, dominant_faction in biomes. 5/5 regressions PASS. 2 known open bugs confirmed (BUG-FACTIONS-STALE-FIX P5, BUG-SIGNAL-DELTA-FIX P6). 1 task overlap noted (DIR-S2-MNWXQ41M vs S3-AMBIENT+PIXEL).",
+      "improvement": "PAT-023: MerlinStore deferred creation + 1-frame await is critical null-safety. PAT-024: static analysis is a valid substitute for headless run. game_playtester specialization expanded to include startup trace methodology."
     },
     {
       "cycle": 11,

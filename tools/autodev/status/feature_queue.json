@@ -1,6 +1,6 @@
 {
   "version": "3.1",
-  "updated": "2026-04-13T08:32:47.098Z",
+  "updated": "2026-04-13T12:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -151,19 +151,6 @@
         "export_presets.cfg"
       ],
       "description": "Setup Godot HTML5 export. Verify SharedArrayBuffer headers. Output to web-export/."
-    },
-    {
-      "id": "S4-SMOKE-TEST",
-      "sprint": "S4",
-      "priority": 21,
-      "status": "pending",
-      "type": "test",
-      "title": "Smoke test: run complete headless sans crash",
-      "agent": "game_playtester",
-      "files": [
-        "scenes/MerlinGame.tscn"
-      ],
-      "description": "Run Godot headless. Verify game starts, 1 card cycle completes, no crash. Timeout 60s."
     },
     {
       "id": "DIR-S2-MNWXQ41M",

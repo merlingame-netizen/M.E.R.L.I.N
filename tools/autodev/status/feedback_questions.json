@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-04-13T09:00:00Z",
+  "generated_at": "2026-04-13T12:00:00Z",
   "questions": [
     {
       "id": "q-20260412-001",
@@ -99,6 +99,22 @@
       ],
       "screenshot_urls": null,
       "created_at": "2026-04-13T02:54:09Z"
+    },
+    {
+      "id": "q-20260413-003",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "question": "DIR-S2-MNWXQ41M (cycle jour/nuit PS1) semble combiner S3-AMBIENT-LIGHTING + S3-PIXEL-RENDER. Faut-il fusionner ces 3 tâches en une seule tâche 'grand chantier visuel PS1', ou les exécuter séparément dans l'ordre ?",
+      "context": "DIR-S2-MNWXQ41M demande: cycle jour/nuit PS1 temps réel + volumétrie + saisons. S3-AMBIENT-LIGHTING (P14): season+time_of_day dans run state + contexte LLM. S3-PIXEL-RENDER (P16): pixel snap + affine textures + low-poly fog + dithering. Ces 3 tâches touchent les mêmes fichiers (merlin_visual.gd, store_run.gd, merlin_omniscient.gd). Exécutées séparément → risque de conflits de merge. Fusionnées → tâche plus lourde (~3 cycles).",
+      "type": "multiple_choice",
+      "options": [
+        "Fusionner en une seule tâche 'S3-VISUAL-PS1' (cohérence, ~3 cycles)",
+        "Exécuter séparément dans l'ordre: AMBIENT → PIXEL → DIR-MNWXQ41M (plus atomique)",
+        "Remplacer S3-AMBIENT + S3-PIXEL par DIR-S2-MNWXQ41M uniquement (DIR est plus complet)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-13T12:00:00Z"
     },
     {
       "id": "q-20260413-002",

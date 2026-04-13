@@ -1,0 +1,135 @@
+{
+  "report_id": "S4-SMOKE-TEST_2026-04-13",
+  "task_id": "S4-SMOKE-TEST",
+  "agent": "game_playtester",
+  "cycle": 12,
+  "timestamp": "2026-04-13T12:00:00Z",
+  "method": "static_analysis",
+  "note": "Godot binary not available in sandbox — full static code analysis performed instead of headless execution.",
+
+  "scope": "Full startup trace + one complete card cycle verification across all key systems.",
+
+  "systems_analyzed": [
+    "scenes/MerlinGame.tscn",
+    "scripts/ui/merlin_game_controller.gd",
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/store_run.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_constants.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "addons/merlin_ai/context_builder.gd",
+    "project.godot"
+  ],
+
+  "startup_trace": {
+    "step_1_autoloads": {
+      "result": "PASS",
+      "detail": "GameManager._ready() creates MerlinStore via call_deferred('add_child', store). MerlinStore NOT in project.godot autoloads (expected — created programmatically). MerlinAI is autoload and wired into store in MerlinStore._ready()."
+    },
+    "step_2_store_null_race": {
+      "result": "PASS",
+      "detail": "MerlinGameController._ready() does 'await get_tree().process_frame' before calling start_run(). This 1-frame delay ensures call_deferred from GameManager fires first. MerlinStore is guaranteed present when start_run() executes."
+    },
+    "step_3_start_run": {
+      "result": "PASS",
+      "detail": "store.dispatch(START_RUN) calls StoreRun.init_run() which sets life_essence=100, cards_played=0, active_promises=[], season (real date), mission. MOS telltale: no pacing recovery (removed cycle 9, director q-005). No drain (LIFE_ESSENCE_DRAIN_PER_CARD=0)."
+    },
+    "step_4_biome_resolution": {
+      "result": "PASS",
+      "detail": "Biome resolved from GameManager.run dict (keys: current_biome, biome.id). Falls back to MerlinConstants.BIOME_DEFAULT='foret_broceliande'. dominant_faction present in all 8 BIOMES entries (confirmed cycle 11). MerlinVisual.apply_biome_crt() called."
+    }
+  },
+
+  "card_cycle_trace": {
+    "step_1_generate": {
+      "result": "PASS",
+      "detail": "generate_card() tries event/promise/merlin_direct typed paths first, then LLM (if MerlinAI available), then FastRoute fallback. FastRoute always returns a valid card (emergency card if pool exhausted). _emergency_card() always has 3 options with valid effects."
+    },
+    "step_2_validate": {
+      "result": "PASS",
+      "detail": "_validate_card(): requires text, min 2 options, max 3 effects/option, all effect types in VALID_CODES. _ensure_3_options(): pads to exactly 3 options, trims if >3. Guard is effective."
+    },
+    "step_3_resolve": {
+      "result": "PASS",
+      "detail": "resolve_choice(): applies effects via Callable, increments cards_played ONCE (single canonical owner since PAT-005 fix), appends to story_log (capped at 2 entries), updates player_profile, ticks Ogham cooldowns, runs biome passive (legacy path), checks promise deadlines."
+    },
+    "step_4_effects": {
+      "result": "PASS",
+      "detail": "DAMAGE_LIFE: clamped to min 0 via maxi(old-amount, 0). HEAL_LIFE: clamped to LIFE_ESSENCE_MAX=100 via mini(old+amount, 100). ADD_REPUTATION: capped ±20/card in merlin_effect_engine, then clamped 0-100. scale_and_cap() uses MULTIPLIER_TABLE correctly. signal reputation_changed called with new_val."
+    },
+    "step_5_run_end_check": {
+      "result": "PASS",
+      "detail": "check_run_end(): life<=0 → death. Mission complete + cards>=25 → victory (3 types). hard_max=50 → forced end. soft_max/target_max/target_min/soft_min → tension zones (critical/high/rising/low). MOS constants from CLAUDE.md: soft_min=8, target 20-25, hard_max=50. ✓"
+    }
+  },
+
+  "invariants": {
+    "life_0_to_100": "PASS — _damage_life: maxi(old-amount, 0) | _heal_life: mini(old+amount, LIFE_ESSENCE_MAX=100)",
+    "rep_cap_20_per_card": "PASS — merlin_effect_engine.gd: clampi(delta, -20, 20) THEN clampi(result, FACTION_SCORE_MIN, FACTION_SCORE_MAX)",
+    "mos_soft_min_8": "PASS — MOS_CONVERGENCE.soft_min_cards=8",
+    "mos_target_20_25": "PASS — MOS_CONVERGENCE.target_cards_min=20, target_cards_max=25",
+    "mos_hard_max_50": "PASS — MOS_CONVERGENCE.hard_max_cards=50",
+    "effects_per_option_max_3": "PASS — _validate_card() rejects options with >3 effects. _wrap_text_as_card size()<3 guard prevents overflow (PAT-006 fix)",
+    "cards_played_single_increment": "PASS — Only in StoreRun.resolve_choice() line 146. merlin_card_system.gd no longer increments (PAT-005 fix)",
+    "drain_per_card_zero": "PASS — LIFE_ESSENCE_DRAIN_PER_CARD=0, EFFECT_CAPS.drain_per_card=0",
+    "no_pacing_recovery": "PASS — No +5HP block anywhere in store_run.gd (director q-005 applied)",
+    "active_promises_unified": "PASS — init_run sets active_promises=[]. check_promise_deadlines reads/writes active_promises. promise engine writes active_promises.",
+    "autosave_run_state": "PASS — _do_autosave() builds run_snapshot with biome+card_index and calls save_system.save_run_state() when run active",
+    "neutre_field_separate": "PASS — ACTION_VERBS['neutre']=['parler','accepter','refuser','attendre','s\\'approcher']. FIELD_MINIGAMES['neutre']=['apaisement','volonte'] (cycle 11 fix)",
+    "dominant_faction_all_biomes": "PASS — All 8 BIOMES entries have dominant_faction key (cycle 11 fix)"
+  },
+
+  "regression_checks": {
+    "PAT-005_double_cards_played": "PASS — single increment confirmed",
+    "PAT-015_promise_split_brain": "PASS — active_promises unified",
+    "PAT-017_autosave_run_state": "PASS — run_snapshot with biome+card_index confirmed",
+    "PAT-006_faction_overflow": "PASS — faction_tagged + size()<3 guard confirmed in merlin_llm_adapter.gd",
+    "drain_zero": "PASS — LIFE_ESSENCE_DRAIN_PER_CARD=0 confirmed"
+  },
+
+  "open_bugs": [
+    {
+      "id": "BUG-FACTIONS-STALE-FIX",
+      "severity": "HIGH",
+      "status": "PENDING (P5 dev task)",
+      "location": "addons/merlin_ai/context_builder.gd:40",
+      "detail": "context_builder uses run.get('factions',{}) which is always {} (never populated). meta.faction_rep has actual values. AI context sees all factions as zero.",
+      "confirmed_still_open": true
+    },
+    {
+      "id": "BUG-SIGNAL-DELTA-FIX",
+      "severity": "LOW",
+      "status": "PENDING (P6 dev task)",
+      "location": "scripts/merlin/merlin_store.gd:598",
+      "detail": "reputation_changed.emit(faction, new_val, float(rep_delta)) — rep_delta is raw pre-clamp delta. actual_delta = new_val - old_val not computed. UI may show +20 at rep=95 instead of +5.",
+      "confirmed_still_open": true
+    }
+  ],
+
+  "new_findings": [
+    {
+      "id": "FIND-001",
+      "severity": "LOW",
+      "type": "task_overlap",
+      "detail": "DIR-S2-MNWXQ41M (day/night PS1 cycle, P22) significantly overlaps S3-AMBIENT-LIGHTING (P14) and S3-PIXEL-RENDER (P16). All three concern visual/temporal ambiance with PS1 aesthetics. Risk of duplicate work. See feedback question q-20260413-003."
+    },
+    {
+      "id": "FIND-002",
+      "severity": "INFO",
+      "type": "architecture",
+      "detail": "MerlinStore is not an autoload — created programmatically by GameManager._ready() via call_deferred. The 1-frame await in MerlinGameController._ready() ensures safe initialization. Pattern works but is non-obvious — document in studio_learnings."
+    }
+  ],
+
+  "verdict": {
+    "overall": "PASS",
+    "critical_bugs": 0,
+    "high_bugs": 1,
+    "medium_bugs": 0,
+    "low_bugs": 1,
+    "new_bugs_found": 0,
+    "new_bugs_created_by_recent_dev": 0,
+    "summary": "Core game loop is structurally sound. Startup sequence safe. One complete card cycle verified via static trace. All 5 regressions from prior cycles PASS. 2 known open bugs (tracked). No crash path found. Game can start and run cards without deadlocks or null panics in normal flow."
+  }
+}

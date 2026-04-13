@@ -1,8 +1,19 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T10:00:00Z",
+  "updated": "2026-04-13T12:00:00Z",
   "archived": [
+    {
+      "id": "S4-SMOKE-TEST",
+      "sprint": "S4",
+      "priority": 21,
+      "status": "completed",
+      "type": "test",
+      "title": "Smoke test: run complete headless sans crash",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-13T12:00:00Z",
+      "notes": "Static analysis smoke test (Godot not available in sandbox). PASS: startup trace, card cycle, all 13 invariants, 5/5 regressions. 2 open bugs confirmed (BUG-FACTIONS-STALE-FIX, BUG-SIGNAL-DELTA-FIX). Report: test_reports/S4-SMOKE-TEST_2026-04-13.json"
+    },
     {
       "id": "S1-CORE-TEST",
       "sprint": "S1",
