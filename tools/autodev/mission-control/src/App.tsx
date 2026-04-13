@@ -8,6 +8,8 @@ import { MetricsPanel } from './components/MetricsPanel';
 import { FeatureQueue } from './components/FeatureQueue';
 import { GamePreview } from './components/GamePreview';
 import { HumanFeedback } from './components/HumanFeedback';
+import { FileUpload } from './components/FileUpload';
+import { DirectorInstructions } from './components/DirectorInstructions';
 import './styles/scifi-theme.css';
 
 export function App() {
@@ -37,6 +39,12 @@ export function App() {
         {/* Director's Inbox — Human Feedback */}
         <div className="dashboard-layout__full-row">
           <HumanFeedback />
+        </div>
+
+        {/* Director Tools: Instructions + Asset Upload */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <DirectorInstructions />
+          <FileUpload />
         </div>
 
         {/* Timeline */}
