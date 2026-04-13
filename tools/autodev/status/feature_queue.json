@@ -1,6 +1,6 @@
 {
   "version": "3.1",
-  "updated": "2026-04-13T11:00:00Z",
+  "updated": "2026-04-13T08:32:47.098Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -23,7 +23,10 @@
       "type": "dev",
       "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
       "agent": "godot_expert",
-      "files": ["addons/merlin_ai/context_builder.gd", "addons/merlin_ai/merlin_omniscient.gd"],
+      "files": [
+        "addons/merlin_ai/context_builder.gd",
+        "addons/merlin_ai/merlin_omniscient.gd"
+      ],
       "description": "HIGH bug from S3-LLM-ROBUSTNESS: run.factions always zeros. Fix: change run.get('factions',{}) to meta.get('faction_rep',{defaults}) in context_builder and omniscient. Also: use BIOMES[biome].dominant_faction for biome-based event routing weight (director q-20260413-002)."
     },
     {
@@ -34,7 +37,9 @@
       "type": "dev",
       "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6."
     },
     {
@@ -45,7 +50,9 @@
       "type": "dev",
       "title": "Clean merlin_card_system.gd (GAUGES, bestiole references)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_card_system.gd"],
+      "files": [
+        "scripts/merlin/merlin_card_system.gd"
+      ],
       "description": "Supprimer GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier()."
     },
     {
@@ -56,7 +63,13 @@
       "type": "dev",
       "title": "Supprimer 5 dead files (bestiole, souffle HUD, D20)",
       "agent": "godot_expert",
-      "files": ["scripts/ui/bestiole_sprite.gd", "scripts/ui/bestiole_wheel_system.gd", "scripts/ui/bestiole_creature.gd", "scripts/ui/pixel_bestiole_fox.gd", "scripts/minigames/mg_de_du_destin.gd"],
+      "files": [
+        "scripts/ui/bestiole_sprite.gd",
+        "scripts/ui/bestiole_wheel_system.gd",
+        "scripts/ui/bestiole_creature.gd",
+        "scripts/ui/pixel_bestiole_fox.gd",
+        "scripts/minigames/mg_de_du_destin.gd"
+      ],
       "description": "Delete dead system files. Verify no remaining imports/references via grep."
     },
     {
@@ -67,7 +80,9 @@
       "type": "dev",
       "title": "Fix reputation_changed signal: emit clamped delta not raw",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_store.gd"],
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
       "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: compute actual_delta = new_val - old_val."
     },
     {
@@ -78,7 +93,10 @@
       "type": "dev",
       "title": "Ambiance dynamique biome: variation saison + heure de journee",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/store_run.gd", "addons/merlin_ai/merlin_omniscient.gd"],
+      "files": [
+        "scripts/merlin/store_run.gd",
+        "addons/merlin_ai/merlin_omniscient.gd"
+      ],
       "description": "Director q-002: Add time_of_day to run state. Expose season+time to LLM context builder."
     },
     {
@@ -89,7 +107,9 @@
       "type": "dev",
       "title": "Typographie hybride: titre celtique + corps sans-serif",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_visual.gd"],
+      "files": [
+        "scripts/merlin/merlin_visual.gd"
+      ],
       "description": "Director q-003: FONT_TITLE (celtique) + FONT_BODY (sans-serif) dans MerlinVisual."
     },
     {
@@ -100,7 +120,9 @@
       "type": "dev",
       "title": "Direction artistique N64/PS1: low-poly + pixelisation",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_visual.gd"],
+      "files": [
+        "scripts/merlin/merlin_visual.gd"
+      ],
       "description": "Director q-004: pixel snap, affine texture mapping, low-fi fog, reduced viewport scale, dithering shadows."
     },
     {
@@ -111,7 +133,10 @@
       "type": "dev",
       "title": "Memoire narrative: RAG pour resume compresse story_log",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/store_run.gd", "addons/merlin_ai/rag_manager.gd"],
+      "files": [
+        "scripts/merlin/store_run.gd",
+        "addons/merlin_ai/rag_manager.gd"
+      ],
       "description": "Director q-001: RAG-based narrative memory. add_narrative_entry() per card, get_narrative_summary() for 3-5 items."
     },
     {
@@ -122,7 +147,9 @@
       "type": "dev",
       "title": "Configurer export web HTML5 automatise",
       "agent": "godot_expert",
-      "files": ["export_presets.cfg"],
+      "files": [
+        "export_presets.cfg"
+      ],
       "description": "Setup Godot HTML5 export. Verify SharedArrayBuffer headers. Output to web-export/."
     },
     {
@@ -133,8 +160,21 @@
       "type": "test",
       "title": "Smoke test: run complete headless sans crash",
       "agent": "game_playtester",
-      "files": ["scenes/MerlinGame.tscn"],
+      "files": [
+        "scenes/MerlinGame.tscn"
+      ],
       "description": "Run Godot headless. Verify game starts, 1 card cycle completes, no crash. Timeout 60s."
+    },
+    {
+      "id": "DIR-S2-MNWXQ41M",
+      "sprint": "S2",
+      "priority": 22,
+      "status": "pending",
+      "type": "dev",
+      "title": "Cycle jour / Nuit et saison",
+      "agent": "godot_expert",
+      "description": "Mettre en place le cycle jour nuit en mode Playstation 1 avec volumétrie des objets et assets sur lesquels tu te base. Temps réel machine / serveur pour les saisons et cycle quotidien. Effets visuels avancés et cohérents",
+      "files": []
     }
   ]
 }
