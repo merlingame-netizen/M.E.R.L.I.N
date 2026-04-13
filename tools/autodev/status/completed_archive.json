@@ -267,6 +267,23 @@
       "agent": "godot_expert",
       "completed_at": "2026-04-13T07:00:00Z",
       "notes": "Fixed dual promise storage split-brain bug (HIGH from S2-INTEGRATION). (1) _add_promise() now writes to run.active_promises instead of orphaned run.promises. (2) _create_promise() unified to same active_promises key + added MAX=2 cap check + switched from day-based (deadline_day) to card-based (made_at_card+deadline_cards) deadlines. (3) check_promise_deadlines() now checks cards_played >= made_at_card + deadline_cards instead of current_day > deadline_day (day was never incremented). (4) game_flow_controller.gd end-summary updated to read active_promises. _fulfill_promise/_break_promise already correct (read active_promises). init_run already correct (initializes active_promises only)."
+    },
+    {
+      "id": "S3-EDGE-CASES",
+      "sprint": "S3",
+      "priority": 12,
+      "status": "completed",
+      "type": "test",
+      "title": "10 scenarios de mort + edge cases",
+      "agent": "game_playtester",
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "completed_at": "2026-04-13T08:30:00Z",
+      "notes": "TEST cycle: 8 edge cases tested. FAIL overall (1 MEDIUM + 1 LOW bug found). 3/3 regressions PASS. EC-01 (life=0): PASS. EC-02 (factions 0/100): PASS + BUG-SIGNAL-DELTA LOW. EC-03 (ogham no resources): PASS. EC-04 (MOS hard_max=50): PASS. EC-05 (save mid-run): FAIL — BUG-MIDRUN-SAVE-INCOMPLETE MEDIUM (autosave meta-only, run_state not updated during run). EC-06 (trust T0->T3): PASS. EC-07 (FastRoute missing fields): PASS. EC-08 (multiplier x2.0): PASS. 2 new tasks created: BUG-MIDRUN-SAVE-INCOMPLETE-FIX (P6), BUG-SIGNAL-DELTA-FIX (P11). Report: test_reports/S3-EDGE-CASES_2026-04-13.json"
     }
-  ]
+  ],
+  "updated": "2026-04-13T08:30:00Z"
 }

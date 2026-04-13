@@ -1,0 +1,242 @@
+{
+  "report_id": "S3-EDGE-CASES_2026-04-13",
+  "task_id": "S3-EDGE-CASES",
+  "agent": "game_playtester",
+  "timestamp": "2026-04-13T08:30:00Z",
+  "cycle_type": "test",
+  "method": "static_analysis + code_simulation",
+  "files_analyzed": [
+    "scripts/merlin/merlin_store.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_save_system.gd",
+    "scripts/merlin/store_run.gd",
+    "scripts/merlin/store_factions.gd",
+    "scripts/merlin/store_oghams.gd",
+    "scripts/merlin/merlin_constants.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/core/game_flow_controller.gd"
+  ],
+
+  "summary": {
+    "overall": "FAIL",
+    "critical_bugs": 0,
+    "high_bugs": 0,
+    "medium_bugs": 1,
+    "low_bugs": 1,
+    "edge_cases_tested": 8,
+    "edge_cases_passed": 7,
+    "edge_cases_failed": 1,
+    "regression_checks_passed": 3
+  },
+
+  "regression_checks": [
+    {
+      "id": "REG-PROMISE-01",
+      "from_report": "S2-INTEGRATION_2026-04-13",
+      "name": "BUG-PROMISE-SYSTEM-FIX: _add_promise writes to active_promises",
+      "status": "PASS",
+      "details": "merlin_effect_engine.gd:245 — run.get('active_promises', []). Promise unified storage confirmed.",
+      "files": ["scripts/merlin/merlin_effect_engine.gd:245"]
+    },
+    {
+      "id": "REG-PROMISE-02",
+      "from_report": "S2-INTEGRATION_2026-04-13",
+      "name": "BUG-PROMISE-SYSTEM-FIX: check_promise_deadlines uses card-based deadline",
+      "status": "PASS",
+      "details": "store_run.gd: cards_played >= made_at_card + deadline_cards. No day-based deadline. run.day no longer relevant for promises.",
+      "files": ["scripts/merlin/store_run.gd (check_promise_deadlines)"]
+    },
+    {
+      "id": "REG-CARDS-01",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "cards_played single canonical increment (store_run.gd)",
+      "status": "PASS",
+      "details": "store_run.gd resolve_choice(): run['cards_played'] += 1 is the only increment. resolve_card() in card_system only logs to story_log, no increment.",
+      "files": ["scripts/merlin/store_run.gd:146"]
+    }
+  ],
+
+  "edge_cases": [
+    {
+      "id": "EC-01",
+      "title": "vie=0 pendant effet",
+      "status": "PASS",
+      "simulation": "Card with DAMAGE_LIFE:100 on option 0. life_essence=10.",
+      "trace": [
+        "resolve_choice() calls apply_effect_func(DAMAGE_LIFE:100)",
+        "_damage_life(): old=10, maxi(10-100, 0)=0 → life_essence=0",
+        "life_changed.emit(10, 0)",
+        "Pacing recovery: life_post=0, guard (life_post > 0) FAILS → no +5",
+        "resolve_choice() returns {ok:true, cards_played:N}",
+        "merlin_store._reduce: StoreRun.check_run_end(state)",
+        "check_run_end(): life<=0 → {ended:true, life_depleted:true}",
+        "state['run']['active']=false, phase='end', run_ended signal"
+      ],
+      "invariants": [
+        "life clamped to 0 (never negative): PASS",
+        "death detected on next check_run_end: PASS",
+        "pacing recovery never fires at life=0: PASS"
+      ],
+      "notes": "Sequential multi-effect edge: DAMAGE_LIFE:100 + HEAL_LIFE:50 on same option → life goes 0 then 50 → no death. This is intentional (effects resolve fully per card). Verified via _damage_life (maxi clamp) and _heal_life (mini clamp to MAX)."
+    },
+    {
+      "id": "EC-02",
+      "title": "toutes factions a 0 et 100",
+      "status": "PASS",
+      "simulation": "faction=druides at 0, ADD_REPUTATION:druides:-5. faction=ankou at 100, ADD_REPUTATION:ankou:+30.",
+      "trace": [
+        "_apply_faction_reputation(): capped_delta=clampi(-5,-20,20)=-5",
+        "new_score=clampi(0+(-5), 0, 100)=0 → clamps at floor ✓",
+        "_apply_faction_reputation(): capped_delta=clampi(30,-20,20)=20",
+        "new_score=clampi(100+20, 0, 100)=100 → clamps at ceiling ✓"
+      ],
+      "invariants": [
+        "faction_rep clamped to [0,100]: PASS",
+        "per-card delta capped at ±20: PASS"
+      ],
+      "bugs_found": [
+        {
+          "id": "BUG-SIGNAL-DELTA",
+          "severity": "LOW",
+          "description": "reputation_changed.emit(faction, new_val, float(rep_delta)) emits unclamped raw delta, not actual_delta. At faction=95, ADD_REPUTATION:+20 causes actual change of +5, but signal shows +20. UI displays wrong delta badge.",
+          "file": "scripts/merlin/merlin_store.gd (_apply_effect, ADD_REPUTATION branch)",
+          "fix": "Compute actual_delta = new_score - current BEFORE clamping, emit actual_delta instead of float(rep_delta)."
+        }
+      ]
+    },
+    {
+      "id": "EC-03",
+      "title": "Ogham sans ressources (biome_currency=0)",
+      "status": "PASS",
+      "simulation": "Player activates 'luis' (heal_and_cost) with biome_currency=0.",
+      "trace": [
+        "use_ogham(): spec found, cooldown=0, is_starter=true → ok:true",
+        "apply_ogham_effect('heal_and_cost'): heal_func.call(18) → life+18",
+        "run['biome_currency'] = maxi(0, 0-5) = 0 (no underflow, no block) ✓",
+        "Cooldown set to spec.cooldown (3 cards)"
+      ],
+      "invariants": [
+        "Ogham activation not blocked by zero currency: PASS",
+        "biome_currency never goes negative: PASS (maxi guard)",
+        "Cooldown applied after use: PASS"
+      ],
+      "notes": "Ogham PURCHASE (buy_ogham) requires anam >= cost. Ogham ACTIVATION only requires: spec exists, cooldown=0, is_starter or unlocked. No currency check for activation — by design."
+    },
+    {
+      "id": "EC-04",
+      "title": "MOS hard_max (50 cartes)",
+      "status": "PASS",
+      "simulation": "cards_played reaches 50 exactly.",
+      "trace": [
+        "resolve_choice(): cards_played = 49+1 = 50",
+        "check_run_end(): cards_played=50 >= hard_max=50 → ended=true, hard_max:true",
+        "Ending: 'Fin du Temps', score=50*10=500"
+      ],
+      "invariants": [
+        "Run terminates at card 50: PASS",
+        "MOS tension zones escalate correctly (soft_min=8, target_min=20, target_max=25, soft_max=40, hard_max=50): PASS",
+        "hard_max flag set in end_check: PASS"
+      ]
+    },
+    {
+      "id": "EC-05",
+      "title": "Save mid-run",
+      "status": "FAIL",
+      "simulation": "Player starts run, plays 30 cards (life=40, active_promises=[...]), app closes.",
+      "trace": [
+        "game_flow_controller.gd:124: save_run_state() called PRE-RUN with {biome, equipped_oghams, active_ogham}",
+        "This is a static intent snapshot — NOT updated during the run",
+        "_do_autosave(): save_system.save_profile(state.get('meta', {})) — meta only, NOT run_state",
+        "On restart: load_run_state() returns {biome=foret_broceliande, card_index=0, life_essence=100, active_promises=[]}",
+        "Player loses 30 cards of progress"
+      ],
+      "bugs_found": [
+        {
+          "id": "BUG-MIDRUN-SAVE-INCOMPLETE",
+          "severity": "MEDIUM",
+          "title": "Mid-run state is never incrementally saved — only pre-run intent persisted",
+          "details": "game_flow_controller.gd:124 saves a static run_state ONCE before the run starts (biome + oghams only). During the run, _do_autosave() only saves meta (profile). If the player quits at card 30 with life=40 and active promises, load_run_state() returns the initial intent state (life=100, cards_played=0, no promises). The save system has save_run_state() and load_run_state() fully implemented — they just need to be called from resolve_choice or the autosave hook with full run state.",
+          "files": [
+            "scripts/core/game_flow_controller.gd:115-130 (save pre-run intent only)",
+            "scripts/merlin/merlin_store.gd (_do_autosave — saves meta only)"
+          ],
+          "fix_recommendation": "In merlin_store._do_autosave(): also call save_system.save_run_state(state.get('run', {})) if run is active. Alternatively, call save_run_state in resolve_choice (every N cards to avoid I/O overhead, e.g. every 5 cards)."
+        }
+      ]
+    },
+    {
+      "id": "EC-06",
+      "title": "Confiance T0→T3 mid-run",
+      "status": "PASS",
+      "simulation": "trust starts at 0 (T0). 8 kept promises (+10 each) → trust=80 (T3).",
+      "trace": [
+        "update_trust_merlin(+10): StoreFactions.update_trust(state, 10)",
+        "new_value = clampi(0+10, 0, 100) = 10 → T0 (range 0-24)",
+        "... after 3 more: trust=40 → T1 (range 25-49)",
+        "... after 4 more: trust=80 → T3 (range 75-100)",
+        "trust_changed.emit(70, 80, 'T3') ✓"
+      ],
+      "invariants": [
+        "trust clamped to [0,100]: PASS",
+        "get_trust_tier() returns correct tier at all boundaries: PASS",
+        "trust_changed signal fired on change: PASS",
+        "T0=0-24, T1=25-49, T2=50-74, T3=75-100 boundaries correct: PASS"
+      ]
+    },
+    {
+      "id": "EC-07",
+      "title": "FastRoute champs manquants",
+      "status": "PASS",
+      "simulation": "FastRoute pool card missing 'text' field. Validator rejects it.",
+      "trace": [
+        "merlin_card_system.gd:207: push_warning('FastRoute card %s invalid: ...')",
+        "Invalid FastRoute card is skipped",
+        "If no valid FastRoute card: returns {ok:false, error:'llm_no_card'}",
+        "Controller should retry or show error state"
+      ],
+      "invariants": [
+        "Invalid FastRoute cards rejected (not applied to state): PASS",
+        "Fallback chain prevents malformed cards reaching resolve_choice: PASS"
+      ],
+      "notes": "Handling of 'no valid card' in controller is out of scope (covered in S3-LLM-ROBUSTNESS)."
+    },
+    {
+      "id": "EC-08",
+      "title": "Multiplicateur score cap x2.0",
+      "status": "PASS",
+      "simulation": "Minigame score=100 (reussite_critique) on DAMAGE_LIFE:10 effect.",
+      "trace": [
+        "get_multiplier(100): MULTIPLIER_TABLE[-1] range 95-100 → factor=1.5",
+        "scale_and_cap('DAMAGE_LIFE', 10, 1.5): scaled=int(10*1.5)=15, cap_effect → min(15, EFFECT_CAPS.DAMAGE_LIFE.max=15) = 15",
+        "DAMAGE_LIFE:15 applied ✓",
+        "Negative score (0-20): factor=-1.5. scale_and_cap: scaled=int(10*1.5)=15, multiplier<0 → scaled=-15. cap_effect(-15) → negative effects handled by caller"
+      ],
+      "invariants": [
+        "Multiplier range [-1.5, 1.5] per MULTIPLIER_TABLE: PASS",
+        "scale_and_cap applies EFFECT_CAPS after scaling: PASS",
+        "Bible 'cap global x2.0' refers to accumulated external multipliers (talents, etc.) — not exceeded in current code: PASS"
+      ]
+    }
+  ],
+
+  "new_tasks_created": [
+    {
+      "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "type": "dev",
+      "severity": "MEDIUM",
+      "agent": "godot_expert",
+      "description": "In _do_autosave(), also save run_state if run is active. Add save_run_state call in merlin_store._do_autosave() with current run dict. Verify load_run_state() on restart restores life, cards_played, active_promises, story_log."
+    },
+    {
+      "id": "BUG-SIGNAL-DELTA-FIX",
+      "sprint": "S2",
+      "priority": 11,
+      "type": "dev",
+      "severity": "LOW",
+      "agent": "godot_expert",
+      "description": "Fix reputation_changed.emit() in merlin_store._apply_effect to emit actual delta (new_score - old_score) instead of raw rep_delta. Requires reading current faction_rep value BEFORE calling _apply_faction_reputation, then computing actual_delta."
+    }
+  ]
+}

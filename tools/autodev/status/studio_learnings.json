@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T07:00:00Z",
+  "last_updated": "2026-04-13T08:30:00Z",
   "metrics": {
-    "total_cycles_completed": 7,
+    "total_cycles_completed": 8,
     "total_dev_cycles": 4,
-    "total_test_cycles": 3,
-    "bugs_found": 13,
+    "total_test_cycles": 4,
+    "bugs_found": 15,
     "bugs_fixed": 5,
-    "tasks_completed": 24,
-    "tasks_pending": 9,
+    "tasks_completed": 25,
+    "tasks_pending": 10,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -173,13 +173,25 @@
         "scripts/merlin/merlin_effect_engine.gd",
         "scripts/merlin/store_run.gd"
       ]
+    },
+    {
+      "id": "PAT-016",
+      "learned_at": "2026-04-13T08:30:00Z",
+      "source": "S3-EDGE-CASES",
+      "pattern": "Mid-run save requires explicit save_run_state() call in the autosave path — not just a pre-run intent. merlin_store._do_autosave() only saves meta. If run is active, run_state must also be persisted. The save system has save_run_state() fully implemented but it was not wired into the autosave debounce cycle.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/core/game_flow_controller.gd"
+      ]
     }
   ],
   "agent_performance": {
     "game_playtester": {
-      "tasks_completed": 1,
+      "tasks_completed": 2,
       "bugs_introduced": 0,
-      "bugs_found": 4,
+      "bugs_found": 6,
       "specialization": "static analysis, invariant simulation, run modeling",
       "strengths": [
         "thorough invariant checking",
@@ -314,6 +326,13 @@
       "type": "dev",
       "action": "BUG-PROMISE-SYSTEM-FIX: Unified dual promise storage. (1) _add_promise() now writes to active_promises (was: orphaned promises key). (2) _create_promise() unified to active_promises + MAX cap + switched to card-based deadlines (made_at_card + deadline_cards). (3) check_promise_deadlines() now card-based (was: day-based, run.day never incremented). (4) game_flow_controller.gd end-summary reads active_promises. 4 files touched.",
       "improvement": "PAT-015 added: multi-path systems must route to same storage key; always prefer deadline units that are actually tracked (cards_played YES, run.day NO). Next: S2-BIOMES (priority 7) — fix biome intervals + arc conditions."
+    },
+    {
+      "cycle": 8,
+      "date": "2026-04-13T08:30:00Z",
+      "type": "test",
+      "action": "S3-EDGE-CASES: 8 edge cases tested. 3/3 regressions PASS (promise fix confirmed, cards_played canonical, drain=0). 7/8 edge cases PASS. 1 MEDIUM bug: BUG-MIDRUN-SAVE-INCOMPLETE (autosave does not persist run_state). 1 LOW bug: BUG-SIGNAL-DELTA (reputation_changed signal emits unclamped raw delta). 2 new tasks created (P6+P11). Report: S3-EDGE-CASES_2026-04-13.json",
+      "improvement": "PAT-016 added: mid-run save must be wired into autosave. Also confirmed: scale_and_cap IS implemented in effect engine; MULTIPLIER_TABLE IS used (merlin_card_system resolve_card). Ogham activation has no currency check — only cooldown + unlock check. Trust T0-T3 correctly clamped and tiered."
     }
   ]
 }

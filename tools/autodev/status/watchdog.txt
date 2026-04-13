@@ -7,3 +7,4 @@
 2026-04-13T06:00:00Z OK — Cycle 5 DEV: Sprint 1 complete. Removed GENERATION_TIMEOUT_MS. 22 tasks archived. Sprint 2 starts.
 2026-04-13T02:54:09Z OK test S2-INTEGRATION — FAIL 1 HIGH BUG-PROMISE-SYSTEM + 4 MEDIUM bugs. 3/3 regressions PASS. BUG-PROMISE-SYSTEM-FIX P1 created.
 2026-04-13T07:00:00Z OK dev BUG-PROMISE-SYSTEM-FIX — Unified promise storage onto active_promises. Card-based deadlines. 4 files: merlin_effect_engine.gd, store_run.gd, game_flow_controller.gd, completed_archive.json.
+2026-04-13T05:03:16Z OK test S3-EDGE-CASES — FAIL 1 MEDIUM BUG-MIDRUN-SAVE-INCOMPLETE + 1 LOW BUG-SIGNAL-DELTA. 3/3 regressions PASS. 2 new tasks created P6+P11.

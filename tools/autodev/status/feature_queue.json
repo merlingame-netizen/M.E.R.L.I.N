@@ -1,13 +1,26 @@
 {
   "version": "2.0",
-  "updated": "2026-04-13T07:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — Sprint 1 COMPLETE. Sprint 2 in progress. Completed tasks in completed_archive.json.",
+  "updated": "2026-04-13T08:30:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — Sprint 1 COMPLETE. Sprint 2 in progress. S3-EDGE-CASES complete. 2 new bug tasks created from edge case test. Completed tasks in completed_archive.json.",
   "sprints": {
     "S1": "CORE LOOP JOUABLE — COMPLETE",
     "S2": "CONTENU & SYSTEMES — 8 biomes, 45 verbes, MOS, dead code, integration audit",
     "S3": "POLISH & EDGE CASES — Stabilite, robustesse LLM"
   },
   "tasks": [
+    {
+      "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix mid-run save: persist run_state incrementally during run",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "description": "S3-EDGE-CASES found MEDIUM bug: _do_autosave() only saves meta (profile), not run_state. game_flow_controller saves a static pre-run intent once (biome+oghams) but never updates it during the run. Fix: in merlin_store._do_autosave(), if run is active, also call save_system.save_run_state(state.get('run', {})). Verify load_run_state() on restart correctly restores life_essence, cards_played, active_promises, story_log, season, faction_context. PAT-009: grep callers of _do_autosave before modifying."
+    },
     {
       "id": "S2-BIOMES",
       "sprint": "S2",
@@ -65,19 +78,17 @@
       "description": "Supprimer entierement les fichiers de systemes morts. Verifier existence avant suppression. Verifier callers avec grep avant delete (PAT-009/010)."
     },
     {
-      "id": "S3-EDGE-CASES",
-      "sprint": "S3",
-      "priority": 12,
+      "id": "BUG-SIGNAL-DELTA-FIX",
+      "sprint": "S2",
+      "priority": 11,
       "status": "pending",
-      "type": "test",
-      "title": "10 scenarios de mort + edge cases",
-      "agent": "game_playtester",
+      "type": "dev",
+      "title": "Fix reputation_changed signal: emit actual clamped delta not raw delta",
+      "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_save_system.gd"
+        "scripts/merlin/merlin_store.gd"
       ],
-      "description": "Simuler: vie=0 pendant effet, toutes factions a 0/100, Ogham sans ressources, MOS hard max, save mid-run, Confiance T0->T3, FastRoute champs manquants, multiplicateur cap x2.0. Regression: verifier que BUG-PROMISE-SYSTEM-FIX a resolu les deadlines."
+      "description": "S3-EDGE-CASES found LOW bug: _apply_effect ADD_REPUTATION branch calls reputation_changed.emit(faction, new_val, float(rep_delta)) where rep_delta is the raw unclamped input. At faction_rep=95 and delta=+20, actual change is +5 but signal emits +20. Fix: read current faction value BEFORE calling _apply_faction_reputation, compute actual_delta = new_val - old_val, emit actual_delta. File: scripts/merlin/merlin_store.gd, _apply_effect() match branch ADD_REPUTATION."
     },
     {
       "id": "S3-LLM-ROBUSTNESS",
