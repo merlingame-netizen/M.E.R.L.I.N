@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T15:30:00Z",
+  "last_updated": "2026-04-13T16:00:00Z",
   "metrics": {
-    "total_cycles_completed": 17,
+    "total_cycles_completed": 18,
     "total_dev_cycles": 9,
-    "total_test_cycles": 8,
-    "bugs_found": 18,
+    "total_test_cycles": 9,
+    "bugs_found": 21,
     "bugs_fixed": 9,
-    "tasks_completed": 37,
-    "tasks_pending": 10,
+    "tasks_completed": 38,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -316,6 +316,18 @@
         "workflow",
         "tooling"
       ]
+    },
+    {
+      "id": "PAT-029",
+      "learned_at": "2026-04-13T16:00:00Z",
+      "source": "S3-MINIGAMES-FIELD-AUDIT",
+      "pattern": "FIELD_MINIGAMES (merlin_constants.gd) and GAMES (minigame_registry.gd) are parallel systems: FIELD_MINIGAMES holds conceptual labels for LLM/display (herboristerie, negociation, etc.), GAMES holds actual script dispatch (mg_pile_ou_face, etc.). Actual minigame dispatch uses option['field'] -> GAMES, NOT FIELD_MINIGAMES values. Never confuse the two.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd",
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/ui/game_controller_minigame.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -358,7 +370,7 @@
       "weaknesses": []
     },
     "game_design_auditor": {
-      "tasks_completed": 1,
+      "tasks_completed": 2,
       "bugs_introduced": 0,
       "bugs_found": 7,
       "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit",

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-04-13T12:00:00Z",
+  "generated_at": "2026-04-13T16:00:00Z",
   "questions": [
     {
       "id": "q-20260412-001",
@@ -135,6 +135,21 @@
       ],
       "screenshot_urls": null,
       "created_at": "2026-04-13T10:00:00Z"
+    },
+    {
+      "id": "q-20260413-004",
+      "category": "gamedesign",
+      "priority": "LOW",
+      "status": "pending",
+      "question": "mg_meditation.gd existe comme minigame mais n'est pas listé dans la bible s.6.2. Après correction de mg_sang_froid (déplacé vers esprit), GAMES['esprit'] sera [volonte, apaisement, sang_froid]. Que faire de mg_meditation ?",
+      "context": "Audit S3-MINIGAMES-FIELD-AUDIT: Bible esprit = apaisement, volonte, sang_froid. GAMES esprit avait mg_meditation (non-biblique) à la place de mg_sang_froid. Fix appliqué: sang_froid remplace meditation dans GAMES['esprit']. mg_meditation.gd reste comme script mais n'est plus dispatchable.",
+      "type": "multiple_choice",
+      "options": [
+        "Supprimer mg_meditation.gd (scripte non-utilisé)",
+        "Déplacer dans un autre champ (ex: perception ou logique) — lequel ?",
+        "Garder comme bonus esprit (ajouter à GAMES['esprit'] = 4 entrées)",
+        "Garder le script pour usage futur, ne pas dispatcher pour l'instant"
+      ]
     }
   ]
 }

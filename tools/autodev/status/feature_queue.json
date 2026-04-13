@@ -1,6 +1,6 @@
 {
-  "version": "3.3",
-  "updated": "2026-04-13T15:30:00Z",
+  "version": "3.4",
+  "updated": "2026-04-13T16:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -56,18 +56,17 @@
       "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add CARDS_PER_DAY constant (merlin_constants.gd) + increment run['day'] in resolve_choice() when cards_played % CARDS_PER_DAY == 0. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 19 store_run.gd)."
     },
     {
-      "id": "S3-MINIGAMES-FIELD-AUDIT",
-      "sprint": "S3",
-      "priority": 10,
+      "id": "BUG-SANG-FROID-GAMES-FIELD",
+      "sprint": "S2",
+      "priority": 5,
       "status": "pending",
-      "type": "test",
-      "title": "Audit: FIELD_MINIGAMES mappings vs bible s.6.2 + minigame scenes exist",
-      "agent": "game_design_auditor",
+      "type": "dev",
+      "title": "Fix: move mg_sang_froid from GAMES[vigueur] to GAMES[esprit] in registry",
+      "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_constants.gd",
-        "scripts/minigames/"
+        "scripts/minigames/minigame_registry.gd"
       ],
-      "description": "Bible s.6.2 specifies 8 champs lexicaux (force, esprit, nature, eau, feu, ombre, lumiere, neutre) each mapped to 2-3 minigame types. Audit: (1) FIELD_MINIGAMES in merlin_constants.gd matches bible s.6.2 exactly, (2) minigame scene files listed in FIELD_MINIGAMES actually exist in scenes/minigames/, (3) no minigame scene is orphaned (exists but not referenced). Report PASS/FAIL per field with bible quotes."
+      "description": "Bible s.6.2 + catalogue: sang_froid is an ESPRIT minigame. But GAMES['vigueur'] = ['mg_combat_rituel', 'mg_sang_froid', 'mg_course'] and GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_meditation']. Esprit-field cards NEVER select mg_sang_froid (unreachable). Vigueur cards sometimes get sang_froid incorrectly. Fix: GAMES['esprit'] = ['mg_volonte', 'mg_apaisement', 'mg_sang_froid']; GAMES['vigueur'] = ['mg_combat_rituel', 'mg_course']. Leave mg_meditation.gd in place (script stays) but remove from GAMES dispatch until director approves. Also delete orphaned mg_de_du_destin.gd.uid artifact. Found by: S3-MINIGAMES-FIELD-AUDIT."
     },
     {
       "id": "S2-DAY-SIGNAL-REGRESSION-TEST",
@@ -125,6 +124,20 @@
         "addons/merlin_ai/rag_manager.gd"
       ],
       "description": "Director q-001: RAG-based narrative memory. add_narrative_entry() per card, get_narrative_summary() for 3-5 items."
+    },
+    {
+      "id": "S3-MINIGAME-ROUTING-REGRESSION",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "pending",
+      "type": "test",
+      "title": "Regression test: BUG-SANG-FROID-GAMES-FIELD fix verified + meditation disposition",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "After BUG-SANG-FROID-GAMES-FIELD fix: (1) GAMES['esprit'] = [volonte, apaisement, sang_froid] — mg_sang_froid reachable from esprit-field cards. (2) GAMES['vigueur'] = [combat_rituel, course] — sang_froid NOT in vigueur. (3) FIELD_MINIGAMES['esprit'] == GAMES['esprit'] conceptual mapping. (4) All 22 mg_ scripts still exist. (5) mg_de_du_destin.gd.uid orphaned artifact deleted. (6) mg_meditation.gd still present as script (not deleted, pending director decision on placement)."
     },
     {
       "id": "S4-WEB-EXPORT",
