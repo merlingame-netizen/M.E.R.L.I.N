@@ -3,12 +3,12 @@
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
   "last_updated": "2026-04-13T00:00:00Z",
   "metrics": {
-    "total_cycles_completed": 3,
-    "total_dev_cycles": 1,
+    "total_cycles_completed": 4,
+    "total_dev_cycles": 2,
     "total_test_cycles": 2,
     "bugs_found": 6,
-    "bugs_fixed": 2,
-    "tasks_completed": 17,
+    "bugs_fixed": 3,
+    "tasks_completed": 18,
     "tasks_pending": 14,
     "current_sprint": "S1"
   },
@@ -197,6 +197,13 @@
       "type": "test",
       "action": "TEST S1-LLM-VALIDATE: Found HIGH bug BUG-FACTION-OVERFLOW (faction keyword overflow bypasses LLM for ~40-60% of cards). 3/3 regression checks pass. Fallback chain robust. Created BUG-FACTION-OVERFLOW-FIX at priority 1.",
       "improvement": "Learned: two validators (adapter vs card system) have different effect-count rules. Future: align both validators or add pre-validation cap in _wrap_text_as_card."
+    },
+    {
+      "cycle": 4,
+      "date": "2026-04-13T00:00:00Z",
+      "type": "dev",
+      "action": "Fixed BUG-FACTION-OVERFLOW: faction keyword auto-tag in _wrap_text_as_card() now capped at 1 ADD_REPUTATION per card. Added faction_tagged flag + size guard.",
+      "improvement": "~40-60% of Celtic cards will now pass _validate_card correctly instead of silently falling back to FastRoute. LLM cards will be used far more often."
     }
   ]
 }

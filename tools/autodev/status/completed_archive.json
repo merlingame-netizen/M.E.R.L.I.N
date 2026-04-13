@@ -177,6 +177,16 @@
       ],
       "completed_at": "2026-04-13T00:00:00Z",
       "notes": "TEST cycle: 10 scenarios analyzed. FAIL: 1 HIGH bug (BUG-FACTION-OVERFLOW — faction keyword auto-tag overflow causes _validate_card failure on ~40-60% of Celtic cards). 1 LOW bug (dead constant GENERATION_TIMEOUT_MS). 3/3 regression checks PASS (cards_played fix, process_card removal, drain=0). New task BUG-FACTION-OVERFLOW-FIX created at priority 1. Timeout/fallback/JSON repair all PASS. Report: test_reports/S1-LLM-VALIDATE_2026-04-12.json"
+    },
+    {
+      "id": "BUG-FACTION-OVERFLOW-FIX",
+      "sprint": "S1",
+      "priority": 1,
+      "status": "completed",
+      "completed_at": "2026-04-13T00:00:00Z",
+      "title": "Fix: faction keyword auto-tag overflow silently failing _validate_card",
+      "agent": "godot_expert",
+      "notes": "Fixed in merlin_llm_adapter.gd _wrap_text_as_card(): added faction_tagged bool flag to break outer faction loop after first match, added size guard (< 3 effects). Frequency was 40-60% of Celtic cards. Now at most 1 ADD_REPUTATION per card."
     }
   ]
 }

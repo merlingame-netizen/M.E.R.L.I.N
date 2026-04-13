@@ -12,12 +12,16 @@
       "id": "BUG-FACTION-OVERFLOW-FIX",
       "sprint": "S1",
       "priority": 1,
-      "status": "pending",
+      "status": "completed",
       "type": "dev",
       "title": "Fix: faction keyword auto-tag overflow silently failing _validate_card",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_llm_adapter.gd"],
-      "description": "HIGH BUG from S1-LLM-VALIDATE: In _wrap_text_as_card() lines 615-626, faction keyword scan adds 1 ADD_REPUTATION per faction match to options_out[2]. Option 2 already has 2 effects (contextual + ADD_KARMA). 2+ faction matches = 4+ effects. MerlinCardSystem._validate_card(line 699) rejects if effects.size() > 3. LLM card thrown away, FastRoute used. Frequency: ~40-60% of Celtic cards (druides+anciens keywords co-occur often). FIX: Add guard before append — 'if options_out[2][\"effects\"].size() < 3: append; break (use flag to exit outer loop after first match)'. This limits auto-tag to max 1 ADD_REPUTATION, keeping option 2 at max 3 effects."
+      "files": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
+      "description": "HIGH BUG from S1-LLM-VALIDATE: In _wrap_text_as_card() lines 615-626, faction keyword scan adds 1 ADD_REPUTATION per faction match to options_out[2]. Option 2 already has 2 effects (contextual + ADD_KARMA). 2+ faction matches = 4+ effects. MerlinCardSystem._validate_card(line 699) rejects if effects.size() > 3. LLM card thrown away, FastRoute used. Frequency: ~40-60% of Celtic cards (druides+anciens keywords co-occur often). FIX: Add guard before append — 'if options_out[2][\"effects\"].size() < 3: append; break (use flag to exit outer loop after first match)'. This limits auto-tag to max 1 ADD_REPUTATION, keeping option 2 at max 3 effects.",
+      "completed_at": "2026-04-13T00:00:00Z",
+      "notes": "Fixed faction keyword auto-tag overflow in _wrap_text_as_card() lines 615-626. Added faction_tagged flag to break outer loop after first match. Added size guard: append only if options_out[2]['effects'].size() < 3. This limits auto-tag to max 1 ADD_REPUTATION per card, keeping option 2 within 3-effect cap. Verified: no := with CONST[index], snake_case, type hints on new vars."
     },
     {
       "id": "S1-CLEANUP-1",
@@ -27,7 +31,9 @@
       "type": "dev",
       "title": "Supprimer dead code merlin_constants.gd (ELEMENTS, ESSENCE_*, FLUX_*)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "description": "Phase 0: Supprimer ELEMENTS (14), ESSENCE_DROP_*, ESSENCE_ANCHOR_CARDS, ESSENCE_BASE_REWARDS, ESSENCE_VICTORY_BONUS, ESSENCE_CHUTE_BONUS, ESSENCE_MINIGAME_BONUS, ESSENCE_OGHAM_BONUS, ESSENCE_FACTION_BONUS, FLUX_*, RUN_TYPOLOGIES, DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS, BOND_TIERS, OGHAM_STARTER_SKILLS, CardOption enum. validate.bat apres."
     },
     {
@@ -38,7 +44,9 @@
       "type": "dev",
       "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_store.gd"],
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
       "description": "Phase 0: Supprimer meta state keys: essence{14}, ogham_fragments, liens, gloire_points, bestiole_evolution. Renommer _init_triade_run -> _init_run, _resolve_triade_choice -> _resolve_choice, etc."
     },
     {
@@ -49,7 +57,11 @@
       "type": "dev",
       "title": "Renommer TRIADE_ action dispatch prefix dans store + callers",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd", "scripts/test_merlin_store.gd"],
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/ui/merlin_game_controller.gd",
+        "scripts/test_merlin_store.gd"
+      ],
       "description": "Phase 0: Renommer TRIADE_START_RUN->START_RUN, TRIADE_GET_CARD->GET_CARD, TRIADE_RESOLVE_CHOICE->RESOLVE_CHOICE, etc. Dans tous les callers."
     },
     {
@@ -60,7 +72,9 @@
       "type": "dev",
       "title": "Aligner 18 Oghams sur bible v2.4 (7 effets incorrects)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "description": "Phase 1A: Corriger duir->heal_immediate(12), onn->add_biome_currency(10), nuin->replace_worst_option, quert->heal_immediate(8), ruis->heal_and_cost(+18PV,-5monnaie), saille->currency_and_heal(+8,+3). Tous 18 Oghams avec 10 champs obligatoires."
     },
     {
@@ -71,7 +85,9 @@
       "type": "dev",
       "title": "Ajouter 8 biomes avec seuils maturite et EFFECT_CAPS",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "description": "Phase 1B+1C: Ajouter BIOMES dict (8 biomes: name, subtitle, season, difficulty, maturity_threshold, oghams_affinity, currency_name, card_interval_range, pnj, arc). Ajouter BIOME_MATURITY_THRESHOLDS, MATURITY_WEIGHTS, EFFECT_CAPS, MULTIPLIER_TABLE, ANAM_REWARDS, TALENT_TIERS."
     },
     {
@@ -82,7 +98,9 @@
       "type": "dev",
       "title": "Ajouter 45 verbes d'action + MOS config + Trust tiers",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "description": "Phase 1D+1F: Ajouter ACTION_VERBS (8 champs + neutre, 45 verbes), FIELD_MINIGAMES mapping. Ajouter MOS_CONVERGENCE, TRUST_TIERS, TRUST_DELTAS, IN_GAME_PERIODS."
     },
     {
@@ -93,7 +111,9 @@
       "type": "dev",
       "title": "Clean merlin_card_system.gd (GAUGES, bestiole)",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_card_system.gd"],
+      "files": [
+        "scripts/merlin/merlin_card_system.gd"
+      ],
       "description": "Supprimer GAUGES const, gauge init, _get_critical_gauges(), gauge effects, bestiole context, _get_bestiole_modifier()."
     },
     {
@@ -104,7 +124,13 @@
       "type": "dev",
       "title": "Supprimer 5 dead files (bestiole, souffle HUD, D20)",
       "agent": "godot_expert",
-      "files": ["scripts/ui/bestiole_sprite.gd", "scripts/ui/bestiole_wheel_system.gd", "scripts/ui/bestiole_creature.gd", "scripts/ui/pixel_bestiole_fox.gd", "scripts/minigames/mg_de_du_destin.gd"],
+      "files": [
+        "scripts/ui/bestiole_sprite.gd",
+        "scripts/ui/bestiole_wheel_system.gd",
+        "scripts/ui/bestiole_creature.gd",
+        "scripts/ui/pixel_bestiole_fox.gd",
+        "scripts/minigames/mg_de_du_destin.gd"
+      ],
       "description": "Supprimer entierement les fichiers de systemes morts. Verifier existence avant suppression."
     },
     {
@@ -115,7 +141,12 @@
       "type": "test",
       "title": "Bible audit + bug hunt statique (8 fichiers core)",
       "agent": "game_design_auditor",
-      "files": ["docs/GAME_DESIGN_BIBLE.md", "scripts/merlin/merlin_constants.gd", "scripts/merlin/merlin_store.gd", "scripts/merlin/merlin_effect_engine.gd"],
+      "files": [
+        "docs/GAME_DESIGN_BIBLE.md",
+        "scripts/merlin/merlin_constants.gd",
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_effect_engine.gd"
+      ],
       "description": "Audit code vs GAME_DESIGN_BIBLE.md v2.4. Verifier 12 systemes. Analyse statique: null/invalid access, type mismatches, state machine bugs. Rapport dans test_reports/."
     },
     {
@@ -126,7 +157,11 @@
       "type": "test",
       "title": "10 scenarios de mort + edge cases",
       "agent": "game_playtester",
-      "files": ["scripts/merlin/merlin_store.gd", "scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/merlin_save_system.gd"],
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/merlin_save_system.gd"
+      ],
       "description": "Simuler: vie=0 pendant effet, toutes factions a 0/100, Ogham sans ressources, MOS hard max, save mid-run, Confiance T0->T3, FastRoute champs manquants, multiplicateur cap x2.0."
     },
     {
@@ -137,7 +172,11 @@
       "type": "test",
       "title": "Bug hunt layer IA (timeout, fallback, race conditions)",
       "agent": "bug_hunter",
-      "files": ["addons/merlin_ai/merlin_ai.gd", "addons/merlin_ai/ollama_backend.gd", "scripts/merlin/merlin_llm_adapter.gd"],
+      "files": [
+        "addons/merlin_ai/merlin_ai.gd",
+        "addons/merlin_ai/ollama_backend.gd",
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
       "description": "Analyse statique IA: timeout LLM non gere (softlock), JSON malforme, fallback si Ollama down, race condition multi-brain, contexte RAG overflow, prompt injection."
     },
     {
@@ -148,7 +187,10 @@
       "type": "dev",
       "title": "Ambiance dynamique biome: variation saison + heure de journee",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/store_run.gd", "addons/merlin_ai/merlin_omniscient.gd"],
+      "files": [
+        "scripts/merlin/store_run.gd",
+        "addons/merlin_ai/merlin_omniscient.gd"
+      ],
       "description": "Director decision q-20260412-002: ambiance doit changer selon saison (spring/summer/autumn/winter) ET heure de journee (aube/midi/crepuscule/nuit). La saison est deja dans run['season'] (via init_calendar_context). Ajouter 'time_of_day' au run state (calculer depuis Time.get_time_dict_from_system()). Exposer season+time_of_day au LLM context builder pour que les cartes refletent l'ambiance."
     },
     {
@@ -159,7 +201,9 @@
       "type": "dev",
       "title": "Typographie hybride: titre celtique + corps sans-serif",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_visual.gd"],
+      "files": [
+        "scripts/merlin/merlin_visual.gd"
+      ],
       "description": "Director decision q-20260412-003: polices hybrides. Titre des cartes = police celtique (ex: Unciale Antiqua ou similaire). Corps du texte narratif = sans-serif moderne lisible. Configurer dans MerlinVisual: FONT_TITLE et FONT_BODY distincts. S'assurer que les deux polices sont dans res://fonts/."
     },
     {
@@ -170,7 +214,9 @@
       "type": "dev",
       "title": "Direction artistique N64/PS1: low-poly + pixelisation + effets volumetriques",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_visual.gd"],
+      "files": [
+        "scripts/merlin/merlin_visual.gd"
+      ],
       "description": "Director decision q-20260412-004: esthetique ultra low-poly / low-pixel entre N64 et PS1 avec effets volumetriques coherents. Actions: (1) Activer pixel snap sur les meshes 3D, (2) Shader affine texture mapping (pas de correction perspective), (3) Shader fog/brouillard volumetrique low-fi, (4) Reduire la resolution de rendu (viewport scale), (5) Dithering pour les ombres. Documenter dans MerlinVisual les constantes RENDER_SCALE et PIXEL_SNAP_ENABLED."
     }
   ]
