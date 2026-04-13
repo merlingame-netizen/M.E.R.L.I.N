@@ -32,6 +32,11 @@
     {
       "question_id": "q-20260413-002",
       "answer": "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)"
+    },
+    {
+      "question_id": "q-20260413-003",
+      "answer": "Remplacer S3-AMBIENT + S3-PIXEL par DIR-S2-MNWXQ41M uniquement (DIR est plus complet)",
+      "additional_notes": "Oui et toute la DA doit être cohérente entre toutes les scènes, animations. Tout doit être driver sous la même logique graphique sur l'ensemble des rendus graphiques"
     }
   ]
 }
