@@ -127,7 +127,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-13T17:00:00Z"
+    },
+    {
+      "id": "insight-20260413-001",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "arc_condition_type field in BIOMES now has 4 distinct types but evaluator only handles 2",
+      "details": "S2-BIOMES introduced 'runs_in_biome' and 'fins_vues' condition types (landes_bruyere and collines_dolmens arcs). The evaluation code in merlin_skeleton_generator.gd and llm_adapter_map_prompt.gd only handles 'faction_rep' and 'oghams_owned'. Until S2-ARC-CONDITION-EVAL is implemented, these two biomes will never unlock their arcs regardless of player progress. This is a silent logic bug.",
+      "proposed_task": {
+        "title": "Implement arc_condition_type evaluators: runs_in_biome + fins_vues",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T20:53:21Z"
     }
   ],
-  "updated": "2026-04-13T17:00:00Z"
+  "updated": "2026-04-13T20:53:21Z"
 }

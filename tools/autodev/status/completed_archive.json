@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T19:44:09Z",
+  "updated": "2026-04-13T20:53:21Z",
   "archived": [
     {
       "id": "S4-SMOKE-TEST",
@@ -364,6 +364,21 @@
       "completed_at": "2026-04-13T19:44:09Z",
       "verdict": "PARTIAL_PASS",
       "notes": "PARTIAL_PASS 6/9. CHECK-1 PASS: BUG-SIGNAL-DELTA-FIX verified — actual_delta emitted correctly (faction_rep=95+delta=+20 → signal emits +5). CHECK-5 regressions 5/5 PASS. 3 FAIL_PENDING blocked on S2-DAY-TICK-FIX (P8): CARDS_PER_DAY missing, run.day never incremented. Report: test_reports/S2-DAY-SIGNAL-REGRESSION-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S2-BIOMES",
+      "sprint": "S2",
+      "priority": 7,
+      "status": "completed",
+      "type": "dev",
+      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6.",
+      "completed_at": "2026-04-13T20:53:21Z",
+      "notes": "Fixed 7/8 biome intervals (card_interval_range_min/max) per bible s.4.3. Fixed 7/8 arc names, card counts, and trigger conditions per bible s.3.6. New condition types added: runs_in_biome (landes_bruyere), fins_vues (collines_dolmens). PAT-033 added."
     }
   ]
 }

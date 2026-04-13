@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T19:44:09Z",
+  "last_updated": "2026-04-13T20:53:21Z",
   "metrics": {
-    "total_cycles_completed": 22,
-    "total_dev_cycles": 11,
+    "total_cycles_completed": 23,
+    "total_dev_cycles": 12,
     "total_test_cycles": 11,
     "bugs_found": 21,
-    "bugs_fixed": 11,
-    "tasks_completed": 42,
-    "tasks_pending": 10,
+    "bugs_fixed": 13,
+    "tasks_completed": 43,
+    "tasks_pending": 12,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -372,6 +372,27 @@
         "workflow",
         "test_reports"
       ]
+    },
+    {
+      "id": "PAT-033",
+      "learned_at": "2026-04-13T20:53:21Z",
+      "source": "S2-BIOMES",
+      "pattern": "BIOMES dict has 3 parallel data sets: (1) card_interval_range per s.4.3, (2) arc names+counts per s.3.6, (3) arc_condition types. Each must be verified against its own bible section independently.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-034",
+      "learned_at": "2026-04-13T20:53:21Z",
+      "source": "S2-BIOMES",
+      "pattern": "New arc_condition_types 'runs_in_biome' and 'fins_vues' added to BIOMES data but evaluation code (merlin_skeleton_generator.gd, llm_adapter_map_prompt.gd) only handles 'faction_rep' and 'oghams_owned'. Task S2-ARC-CONDITION-EVAL created to implement the missing evaluators.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -389,7 +410,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 25,
+      "tasks_completed": 26,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
