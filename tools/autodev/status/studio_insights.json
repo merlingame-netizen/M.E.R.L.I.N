@@ -71,6 +71,20 @@
         "type": "test"
       },
       "timestamp": "2026-04-13T14:00:00Z"
+    },
+    {
+      "id": "insight-20260413-006",
+      "agent": "godot_expert",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "run.day always shows 1 — LLM temporal narrative broken",
+      "details": "run.day is initialized to 1 in store_run.gd but never incremented. Every card the LLM receives shows 'Jour 1, N cartes jouees'. Narrative has no temporal progression — a 50-card run feels like Day 1 forever. S2-DAY-TICK-FIX task created (P8). Recommended: 1 day per 3 cards (configurable CARDS_PER_DAY constant). Also affects build_llm_prompt_context which always renders day as '1'.",
+      "proposed_task": {
+        "title": "S2-DAY-TICK-FIX: increment run.day per N cards in resolve_choice()",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T15:00:00Z"
     }
   ]
 }

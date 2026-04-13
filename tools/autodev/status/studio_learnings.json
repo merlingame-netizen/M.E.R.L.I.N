@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T14:00:00Z",
+  "last_updated": "2026-04-13T15:00:00Z",
   "metrics": {
-    "total_cycles_completed": 14,
-    "total_dev_cycles": 7,
+    "total_cycles_completed": 15,
+    "total_dev_cycles": 8,
     "total_test_cycles": 7,
     "bugs_found": 18,
     "bugs_fixed": 9,
-    "tasks_completed": 34,
+    "tasks_completed": 35,
     "tasks_pending": 10,
     "current_sprint": "S2"
   },
@@ -275,6 +275,17 @@
       ]
     },
     {
+      "id": "PAT-026",
+      "learned_at": "2026-04-13T15:00:00Z",
+      "source": "S2-CONTEXT-GAUGES-CLEANUP",
+      "pattern": "Dead functions may have corresponding test sections in test files. When deleting a function, grep for its name in test_*.gd files and remove dead tests too. Leaving dead test functions causes parse errors at runtime when the method is called on a class that no longer has it.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/test/",
+        "tooling"
+      ]
+    },
+    {
       "id": "PAT-021",
       "learned_at": "2026-04-13T10:00:00Z",
       "source": "S3-LLM-ROBUSTNESS",
@@ -300,7 +311,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 21,
+      "tasks_completed": 22,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -503,6 +514,13 @@
       "type": "test",
       "action": "S3-FACTION-REGRESSION-TEST: 7/7 checks PASS, 5/5 regressions PASS. BUG-FACTIONS-STALE-FIX confirmed complete across all 5 AI subsystems. Zero stale run.factions reads. dominant_faction biome routing fully wired. 0 new bugs.",
       "improvement": "PAT-025 confirmed via clean audit: all 5 files fully fixed. AI factions are now live for omniscient, event router, context builder, RAG, LLM adapter. Next: BUG-SIGNAL-DELTA-FIX (P6) then S2 remaining dev tasks."
+    },
+    {
+      "cycle": 15,
+      "date": "2026-04-13T15:00:00Z",
+      "type": "dev",
+      "action": "S2-CONTEXT-GAUGES-CLEANUP: Removed dead 'gauges' key from build_full_context() and deleted get_critical_gauges() function from context_builder.gd. Cleaned 9 dead test functions from test_context_builder.gd. Applied director q-20260413-003: cancelled S3-AMBIENT + S3-PIXEL, promoted DIR-S2-MNWXQ41M to P14 with unified DA spec. Created 3 new tasks: S2-DAY-TICK-FIX (PAT-012 bug, run.day never incremented), S2-CONTEXT-REGRESSION-TEST, S3-MINIGAMES-FIELD-AUDIT. 10 tasks pending.",
+      "improvement": "PAT-026: dead functions must be paired with dead test cleanup. run.day always-1 bug (PAT-012) now has explicit task S2-DAY-TICK-FIX."
     }
   ]
 }

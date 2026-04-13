@@ -225,6 +225,39 @@
       "agent": "bug_hunter",
       "completed_at": "2026-04-13T14:00:00Z",
       "notes": "PASS: 7/7 checks, 5/5 regressions. Zero stale run.factions reads in all 5 AI files. meta.faction_rep is single source. dominant_faction injected in event_category_selector enriched_run. All 8 BIOMES have dominant_faction. Report: test_reports/S3-FACTION-REGRESSION-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S2-CONTEXT-GAUGES-CLEANUP",
+      "sprint": "S2",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Remove dead GAUGES from context_builder.gd (stale key + dead function)",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T15:00:00Z",
+      "notes": "Removed 'gauges' key from build_full_context() return dict (line 37). Deleted get_critical_gauges() function (14 lines). Cleaned test_context_builder.gd: removed 9 dead test functions (Section 3 'get_critical_gauges'), removed 'gauges' from _make_run() helper and required-keys assertion, renumbered sections 4-6→3-5. Verified: 0 non-test callers of get_critical_gauges(). difficulty_adapter.gd + event_adapter.gd use context.get('gauges',{}) which returns {} gracefully — no change needed. PAT-026 added."
+    },
+    {
+      "id": "S3-AMBIENT-LIGHTING",
+      "sprint": "S3",
+      "priority": 14,
+      "status": "cancelled",
+      "type": "dev",
+      "title": "Ambiance dynamique biome: variation saison + heure de journee",
+      "agent": "godot_expert",
+      "cancelled_at": "2026-04-13T15:00:00Z",
+      "notes": "CANCELLED per director q-20260413-003: replaced by DIR-S2-MNWXQ41M (more complete task that covers ambient + pixel render + full DA coherence). Functionality is included in DIR-S2-MNWXQ41M description."
+    },
+    {
+      "id": "S3-PIXEL-RENDER",
+      "sprint": "S3",
+      "priority": 16,
+      "status": "cancelled",
+      "type": "dev",
+      "title": "Direction artistique N64/PS1: low-poly + pixelisation",
+      "agent": "godot_expert",
+      "cancelled_at": "2026-04-13T15:00:00Z",
+      "notes": "CANCELLED per director q-20260413-003: replaced by DIR-S2-MNWXQ41M (more complete task that covers ambient + pixel render + full DA coherence). Functionality is included in DIR-S2-MNWXQ41M description."
     }
   ]
 }

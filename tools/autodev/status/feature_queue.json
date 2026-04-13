@@ -1,6 +1,6 @@
 {
-  "version": "3.1",
-  "updated": "2026-04-13T14:00:00Z",
+  "version": "3.2",
+  "updated": "2026-04-13T15:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -15,32 +15,6 @@
     "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
-    {
-      "id": "S2-BIOMES",
-      "sprint": "S2",
-      "priority": 7,
-      "status": "pending",
-      "type": "dev",
-      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6."
-    },
-    {
-      "id": "S2-CONTEXT-GAUGES-CLEANUP",
-      "sprint": "S2",
-      "priority": 4,
-      "status": "pending",
-      "type": "dev",
-      "title": "Remove dead GAUGES from context_builder.gd (stale key + dead function)",
-      "agent": "godot_expert",
-      "files": [
-        "addons/merlin_ai/context_builder.gd"
-      ],
-      "description": "context_builder.gd still emits stale 'gauges' key (line 37: run.get('gauges',{})) and has dead get_critical_gauges() function (lines 186-199). GAUGES system was removed. Remove the key from build_full_context return dict and delete get_critical_gauges(). Verify no callers via grep."
-    },
     {
       "id": "S2-DEAD-FILES",
       "sprint": "S2",
@@ -69,21 +43,78 @@
       "files": [
         "scripts/merlin/merlin_store.gd"
       ],
-      "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: compute actual_delta = new_val - old_val."
+      "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: compute actual_delta = new_val - old_val after clamping."
     },
     {
-      "id": "S3-AMBIENT-LIGHTING",
+      "id": "S2-BIOMES",
+      "sprint": "S2",
+      "priority": 7,
+      "status": "pending",
+      "type": "dev",
+      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6."
+    },
+    {
+      "id": "S2-DAY-TICK-FIX",
+      "sprint": "S2",
+      "priority": 8,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix run.day counter: increment per card in resolve_choice()",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/store_run.gd"
+      ],
+      "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add run['day'] += 1 at start of resolve_choice() (before card draw), or increment per N cards (bible s.4.3: 1 day = 3 cards in most biomes). Prefer per-card increment with configurable CARDS_PER_DAY constant in merlin_constants.gd."
+    },
+    {
+      "id": "S2-CONTEXT-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 9,
+      "status": "pending",
+      "type": "test",
+      "title": "Regression test: context_builder post-GAUGES-cleanup + all S2 fixes",
+      "agent": "bug_hunter",
+      "files": [
+        "addons/merlin_ai/context_builder.gd",
+        "scripts/test/test_context_builder.gd",
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/store_run.gd"
+      ],
+      "description": "Verify: (1) build_full_context no longer emits 'gauges' key, (2) get_critical_gauges removed — no callers remain in non-test files, (3) BUG-SIGNAL-DELTA-FIX applied correctly (actual_delta = new-old), (4) run.day increments when S2-DAY-TICK-FIX applied, (5) all prior regressions still PASS (faction_rep routes, active_promises, drain=0, no pacing recovery)."
+    },
+    {
+      "id": "S3-MINIGAMES-FIELD-AUDIT",
       "sprint": "S3",
+      "priority": 10,
+      "status": "pending",
+      "type": "test",
+      "title": "Audit: FIELD_MINIGAMES mappings vs bible s.6.2 + minigame scenes exist",
+      "agent": "game_design_auditor",
+      "files": [
+        "scripts/merlin/merlin_constants.gd",
+        "scripts/minigames/"
+      ],
+      "description": "Bible s.6.2 specifies 8 champs lexicaux (force, esprit, nature, eau, feu, ombre, lumiere, neutre) each mapped to 2-3 minigame types. Audit: (1) FIELD_MINIGAMES in merlin_constants.gd matches bible s.6.2 exactly, (2) minigame scene files listed in FIELD_MINIGAMES actually exist in scenes/minigames/, (3) no minigame scene is orphaned (exists but not referenced). Report PASS/FAIL per field with bible quotes."
+    },
+    {
+      "id": "DIR-S2-MNWXQ41M",
+      "sprint": "S2",
       "priority": 14,
       "status": "pending",
       "type": "dev",
-      "title": "Ambiance dynamique biome: variation saison + heure de journee",
+      "title": "Cycle jour/nuit PS1 + DA cohérente toutes scènes (remplace S3-AMBIENT + S3-PIXEL)",
       "agent": "godot_expert",
       "files": [
+        "scripts/merlin/merlin_visual.gd",
         "scripts/merlin/store_run.gd",
         "addons/merlin_ai/merlin_omniscient.gd"
       ],
-      "description": "Director q-002: Add time_of_day to run state. Expose season+time to LLM context builder."
+      "description": "Director q-20260413-003 + q-20260412-002 + q-20260412-004: Unified visual task replacing S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER. Cycle jour/nuit en mode PS1 avec volumétrie. Temps réel machine/serveur pour saisons et cycle quotidien. DA cohérente entre TOUTES les scènes et animations. Effets visuels: pixel snap, affine textures, low-poly volumetric fog, dithering shadows, viewport scale. Exposer time_of_day + season dans run state + LLM context. Tout doit être driver sous la même logique graphique. Director note: 'toute la DA doit être cohérente entre toutes les scènes, animations. Tout doit être driver sous la même logique graphique sur l'ensemble des rendus graphiques.'"
     },
     {
       "id": "S3-TYPOGRAPHY",
@@ -97,19 +128,6 @@
         "scripts/merlin/merlin_visual.gd"
       ],
       "description": "Director q-003: FONT_TITLE (celtique) + FONT_BODY (sans-serif) dans MerlinVisual."
-    },
-    {
-      "id": "S3-PIXEL-RENDER",
-      "sprint": "S3",
-      "priority": 16,
-      "status": "pending",
-      "type": "dev",
-      "title": "Direction artistique N64/PS1: low-poly + pixelisation",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_visual.gd"
-      ],
-      "description": "Director q-004: pixel snap, affine texture mapping, low-fi fog, reduced viewport scale, dithering shadows."
     },
     {
       "id": "S3-STORY-LOG-RAG",
@@ -137,17 +155,6 @@
         "export_presets.cfg"
       ],
       "description": "Setup Godot HTML5 export. Verify SharedArrayBuffer headers. Output to web-export/."
-    },
-    {
-      "id": "DIR-S2-MNWXQ41M",
-      "sprint": "S2",
-      "priority": 22,
-      "status": "pending",
-      "type": "dev",
-      "title": "Cycle jour / Nuit et saison",
-      "agent": "godot_expert",
-      "description": "Mettre en place le cycle jour nuit en mode Playstation 1 avec volumétrie des objets et assets sur lesquels tu te base. Temps réel machine / serveur pour les saisons et cycle quotidien. Effets visuels avancés et cohérents",
-      "files": []
     }
   ]
 }

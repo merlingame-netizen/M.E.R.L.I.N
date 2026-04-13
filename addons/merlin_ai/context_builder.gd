@@ -34,7 +34,6 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 
 	return {
 		# === GAME STATE ===
-		"gauges": run.get("gauges", {}),
 		"tour": int(run.get("tour", 1)),
 		"ogham_actif": str(run.get("ogham_actif", "")),
 		"oghams_decouverts": run.get("oghams_decouverts", []),
@@ -181,22 +180,6 @@ func build_llm_prompt_context(full_context: Dictionary) -> String:
 		lines.append("NOTE: Longue session - varier le rythme")
 
 	return "\n".join(lines)
-
-
-func get_critical_gauges(gauges: Dictionary) -> Array:
-	## Retourne les jauges critiques (basses ou hautes).
-	var critical := []
-	const LOW_THRESHOLD := 15
-	const HIGH_THRESHOLD := 85
-
-	for gauge_name in gauges:
-		var value: int = int(gauges[gauge_name])
-		if value <= LOW_THRESHOLD:
-			critical.append("%s CRITIQUE BAS (%d)" % [gauge_name, value])
-		elif value >= HIGH_THRESHOLD:
-			critical.append("%s CRITIQUE HAUT (%d)" % [gauge_name, value])
-
-	return critical
 
 
 func get_experience_tier() -> String:
