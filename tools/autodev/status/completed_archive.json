@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T14:00:00Z",
+  "updated": "2026-04-13T14:19:16Z",
   "archived": [
     {
       "id": "S4-SMOKE-TEST",
@@ -258,6 +258,19 @@
       "agent": "godot_expert",
       "cancelled_at": "2026-04-13T15:00:00Z",
       "notes": "CANCELLED per director q-20260413-003: replaced by DIR-S2-MNWXQ41M (more complete task that covers ambient + pixel render + full DA coherence). Functionality is included in DIR-S2-MNWXQ41M description."
+    },
+    {
+      "id": "S2-CONTEXT-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 9,
+      "status": "completed",
+      "type": "test",
+      "title": "Regression test: context_builder post-GAUGES-cleanup + all S2 fixes",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T14:19:16Z",
+      "verdict": "PARTIAL_PASS",
+      "notes": "PASS: CHK-1 (no gauges key), CHK-2 (get_critical_gauges removed), CHK-5 (faction_rep meta), CHK-6 (active_promises unified), CHK-7 (drain=0), CHK-8 (no pacing recovery). FAIL: CHK-3 (BUG-SIGNAL-DELTA-FIX pending P6), CHK-4 (S2-DAY-TICK-FIX pending P8). 5/5 regressions PASS. 0 new bugs. Created S2-DAY-SIGNAL-REGRESSION-TEST (P11) for re-verification after fixes applied.",
+      "report": "tools/autodev/status/test_reports/S2-CONTEXT-REGRESSION-TEST_2026-04-13.json"
     }
   ]
 }

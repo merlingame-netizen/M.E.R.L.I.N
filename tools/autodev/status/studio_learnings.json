@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T15:00:00Z",
+  "last_updated": "2026-04-13T14:19:16Z",
   "metrics": {
-    "total_cycles_completed": 15,
+    "total_cycles_completed": 16,
     "total_dev_cycles": 8,
-    "total_test_cycles": 7,
+    "total_test_cycles": 8,
     "bugs_found": 18,
     "bugs_fixed": 9,
-    "tasks_completed": 35,
+    "tasks_completed": 36,
     "tasks_pending": 10,
     "current_sprint": "S2"
   },
@@ -294,6 +294,17 @@
       "applies_to": [
         "scripts/merlin/merlin_llm_adapter.gd"
       ]
+    },
+    {
+      "id": "PAT-027",
+      "learned_at": "2026-04-13T14:19:16Z",
+      "source": "S2-CONTEXT-REGRESSION-TEST",
+      "pattern": "When a test task is created BEFORE the fixes it verifies, it will PARTIAL_PASS — the failing checks are pending_not_applied not regressions. Always distinguish CHK_FAIL_PENDING vs CHK_FAIL_REGRESSION in test reports. Schedule a re-verification test (e.g. S2-DAY-SIGNAL-REGRESSION-TEST) to run after the fix cycle. Verdict PARTIAL_PASS is valid and informative — it confirms cleanup was done and regressions are clean while tracking open work.",
+      "severity": "LOW",
+      "applies_to": [
+        "workflow",
+        "tooling"
+      ]
     }
   ],
   "agent_performance": {
@@ -323,7 +334,7 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 3,
+      "tasks_completed": 4,
       "bugs_introduced": 0,
       "bugs_found": 5,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection",
@@ -521,6 +532,13 @@
       "type": "dev",
       "action": "S2-CONTEXT-GAUGES-CLEANUP: Removed dead 'gauges' key from build_full_context() and deleted get_critical_gauges() function from context_builder.gd. Cleaned 9 dead test functions from test_context_builder.gd. Applied director q-20260413-003: cancelled S3-AMBIENT + S3-PIXEL, promoted DIR-S2-MNWXQ41M to P14 with unified DA spec. Created 3 new tasks: S2-DAY-TICK-FIX (PAT-012 bug, run.day never incremented), S2-CONTEXT-REGRESSION-TEST, S3-MINIGAMES-FIELD-AUDIT. 10 tasks pending.",
       "improvement": "PAT-026: dead functions must be paired with dead test cleanup. run.day always-1 bug (PAT-012) now has explicit task S2-DAY-TICK-FIX."
+    },
+    {
+      "cycle": 16,
+      "date": "2026-04-13T14:19:16Z",
+      "type": "test",
+      "action": "S2-CONTEXT-REGRESSION-TEST: 8/8 checks analyzed. PASS: CHK-1 (no gauges key in build_full_context), CHK-2 (get_critical_gauges fully removed, 0 callers), CHK-5 (faction_rep via meta), CHK-6 (active_promises unified), CHK-7 (drain=0), CHK-8 (no pacing recovery). PARTIAL_FAIL: CHK-3 (BUG-SIGNAL-DELTA-FIX pending P6 — raw rep_delta emitted), CHK-4 (S2-DAY-TICK-FIX pending P8 — day never incremented). 5/5 regressions PASS. 0 new bugs. SF-001 LOW: vestigial gauges_changed signal in merlin_store (map gauges, benign). Created S2-DAY-SIGNAL-REGRESSION-TEST P11.",
+      "improvement": "PAT-027 added: PARTIAL_PASS is a valid test verdict when checks fail because fixes are pending, not regressed. Re-verification flow: create downstream test task after fix cycle."
     }
   ]
 }

@@ -85,6 +85,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-13T15:00:00Z"
+    },
+    {
+      "id": "insight-20260413-001",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Vestigial gauges_changed signal + MerlinGaugeSystem in merlin_store.gd may be dead code",
+      "details": "S2-CONTEXT-REGRESSION-TEST SF-001: merlin_store.gd still declares gauges_changed signal (line 23) and emits it via StoreMap.update_gauges (line 434). MerlinGaugeSystem.new().build_default_gauges() is called in dispatch handler. If StoreMap and MerlinGaugeSystem are not used elsewhere, this is dead code that could be removed in S2-DEAD-FILES scope. If map/progression gauges are an intentional separate system (not card-cycle gauges), it is benign.",
+      "proposed_task": {
+        "title": "Audit MerlinGaugeSystem + StoreMap — add to S2-DEAD-FILES or keep",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T14:19:16Z"
     }
-  ]
+  ],
+  "updated": "2026-04-13T14:19:16Z"
 }

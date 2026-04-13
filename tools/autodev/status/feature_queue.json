@@ -1,6 +1,6 @@
 {
-  "version": "3.2",
-  "updated": "2026-04-13T15:00:00Z",
+  "version": "3.3",
+  "updated": "2026-04-13T14:19:16Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -43,7 +43,7 @@
       "files": [
         "scripts/merlin/merlin_store.gd"
       ],
-      "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: compute actual_delta = new_val - old_val after clamping."
+      "description": "Signal emits raw unclamped delta. At faction_rep=95 + delta=+20, emits +20 instead of +5. Fix: capture old_rep = meta.faction_rep[faction] BEFORE _apply_faction_reputation(), then actual_delta = new_val - old_rep. Emit actual_delta instead of rep_delta. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 598)."
     },
     {
       "id": "S2-BIOMES",
@@ -67,25 +67,10 @@
       "title": "Fix run.day counter: increment per card in resolve_choice()",
       "agent": "godot_expert",
       "files": [
-        "scripts/merlin/store_run.gd"
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add run['day'] += 1 at start of resolve_choice() (before card draw), or increment per N cards (bible s.4.3: 1 day = 3 cards in most biomes). Prefer per-card increment with configurable CARDS_PER_DAY constant in merlin_constants.gd."
-    },
-    {
-      "id": "S2-CONTEXT-REGRESSION-TEST",
-      "sprint": "S2",
-      "priority": 9,
-      "status": "pending",
-      "type": "test",
-      "title": "Regression test: context_builder post-GAUGES-cleanup + all S2 fixes",
-      "agent": "bug_hunter",
-      "files": [
-        "addons/merlin_ai/context_builder.gd",
-        "scripts/test/test_context_builder.gd",
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/store_run.gd"
-      ],
-      "description": "Verify: (1) build_full_context no longer emits 'gauges' key, (2) get_critical_gauges removed — no callers remain in non-test files, (3) BUG-SIGNAL-DELTA-FIX applied correctly (actual_delta = new-old), (4) run.day increments when S2-DAY-TICK-FIX applied, (5) all prior regressions still PASS (faction_rep routes, active_promises, drain=0, no pacing recovery)."
+      "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add CARDS_PER_DAY constant (merlin_constants.gd) + increment run['day'] in resolve_choice() when cards_played % CARDS_PER_DAY == 0. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 19 store_run.gd)."
     },
     {
       "id": "S3-MINIGAMES-FIELD-AUDIT",
@@ -100,6 +85,21 @@
         "scripts/minigames/"
       ],
       "description": "Bible s.6.2 specifies 8 champs lexicaux (force, esprit, nature, eau, feu, ombre, lumiere, neutre) each mapped to 2-3 minigame types. Audit: (1) FIELD_MINIGAMES in merlin_constants.gd matches bible s.6.2 exactly, (2) minigame scene files listed in FIELD_MINIGAMES actually exist in scenes/minigames/, (3) no minigame scene is orphaned (exists but not referenced). Report PASS/FAIL per field with bible quotes."
+    },
+    {
+      "id": "S2-DAY-SIGNAL-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "pending",
+      "type": "test",
+      "title": "Regression test: BUG-SIGNAL-DELTA-FIX + S2-DAY-TICK-FIX applied correctly",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "After BUG-SIGNAL-DELTA-FIX and S2-DAY-TICK-FIX are applied, verify: (1) reputation_changed emits actual_delta = new_val - old_rep (not raw rep_delta). Test: faction_rep=95, delta=+20 → emit delta=+5 not +20. (2) CARDS_PER_DAY constant exists in merlin_constants.gd. (3) resolve_choice() increments run['day'] every CARDS_PER_DAY cards. (4) LLM context day field changes over a simulated 30-card run. (5) All S2-CONTEXT-REGRESSION-TEST regressions still PASS."
     },
     {
       "id": "DIR-S2-MNWXQ41M",
