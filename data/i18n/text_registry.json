@@ -1,0 +1,134 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "Central text registry for M.E.R.L.I.N. — all user-facing strings. Key format: category.subcategory.identifier",
+    "languages": ["fr", "en", "es", "it", "pt", "zh", "ja"],
+    "default_language": "fr",
+    "total_keys": 0,
+    "instructions": "Translators: fill empty strings for each language. Keys with %s or %d are format strings — preserve placeholders."
+  },
+
+  "ui": {
+    "hub": {
+      "anam_label": { "fr": "Anam: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "runs_label": { "fr": "Runs: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "maturity_label": { "fr": "Maturite: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "arbre_vie": {
+      "store_unavailable": { "fr": "Store non disponible", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "currency_talent_display": { "fr": "Anam: %d | Talents: %d/%d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "cost_display": { "fr": "Cout: %d Anam (vous avez %d)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "prerequisites_header": { "fr": "Prerequis:", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "status_available": { "fr": "Disponible", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "status_locked": { "fr": "Verrouille", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "status_unlocked": { "fr": "Debloque", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "unlock_button": { "fr": "Debloquer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "cinematic": {
+      "enter_forest": { "fr": "Entrer dans la foret  \u25b6", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "skip_button": { "fr": "Passer \u25b6\u25b6", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "warmup": {
+      "ready_message": { "fr": "M.E.R.L.I.N. est pret.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "parchment": {
+      "skip_prompt": { "fr": "Appuyer pour passer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "loading_message": { "fr": "Merlin prepare le chemin...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "enter_quest": { "fr": "Entrer la Quete", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "generation_error": { "fr": "Erreur de generation...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "tutorial": {
+      "life_display": { "fr": "PV: %d/%d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "card": {
+      "speaker_merlin": { "fr": "Merlin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "thinking_message": { "fr": "Merlin reflechit...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "narrative": {
+      "speak_button": { "fr": "Parler", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "thinking": { "fr": "Merlin reflechit...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "pause_title": { "fr": "PAUSE", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "resume_button": { "fr": "Reprendre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "quit_game": { "fr": "Quitter la Partie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "dice": {
+      "difficulty_label": { "fr": "Difficulte: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "critical_hit": { "fr": "Coup Critique !", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "success_message": { "fr": "Reussite ! (%d >= %d)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "failure_message": { "fr": "Echec... (%d < %d)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "critical_fail": { "fr": "Echec Critique !", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "test_label": { "fr": "Epreuve: %s", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "effects": {
+      "critical_success": { "fr": "Reussite critique !", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "success": { "fr": "Reussite", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "critical_fail": { "fr": "Echec critique...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "failure": { "fr": "Echec", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "endscreen": {
+      "glory_score": { "fr": "Gloire: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "life_depleted": { "fr": "Essences de vie epuisees", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "cards_days_display": { "fr": "Cartes: %d | Jours: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "return_hub": { "fr": "Retour au Hub", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "new_adventure": { "fr": "Nouvelle Aventure", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "path_title": { "fr": "Ton chemin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "rewards_title": { "fr": "Recompenses obtenues", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "lives_journal": { "fr": "Journal des Vies", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "close_button": { "fr": "Fermer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "status": {
+      "day_label": { "fr": "Jour %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mission_progress": { "fr": "Mission %d/%d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mission_unknown": { "fr": "Mission: ???", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "cards_count": { "fr": "Cartes: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "reward": {
+      "difficulty_display": { "fr": "DC %d-%d (%s)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "menu": {
+      "title": { "fr": "M  E  R  L  I  N", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "reset_button": { "fr": "Reinitialiser", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "return_button": { "fr": "Retour", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "menu_button": { "fr": "Menu", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    }
+  },
+
+  "game": {
+    "difficulty": {
+      "easy": { "fr": "Facile", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "normal": { "fr": "Normal", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "hard": { "fr": "Difficile", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "rewards": {
+      "life": { "fr": "Vie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "anam": { "fr": "Anam", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "reputation": { "fr": "Reputation", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mystery": { "fr": "Mystere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "time_periods": {
+      "dawn": { "fr": "aube", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "day": { "fr": "jour", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "dusk": { "fr": "crepuscule", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "night": { "fr": "nuit", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "trust_tiers": {
+      "t0": { "fr": "cryptique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "t1": { "fr": "indices", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "t2": { "fr": "avertissements", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "t3": { "fr": "secrets", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    }
+  },
+
+  "llm": {
+    "generic_labels": {
+      "act": { "fr": "Agir", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "observe": { "fr": "Observer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "continue": { "fr": "Continuer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "status": {
+      "connection_ok": { "fr": "Connexion: OK", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "connection_off": { "fr": "Connexion: OFF", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "loading_narrator": { "fr": "Chargement Brain 1/Narrator...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    }
+  }
+}

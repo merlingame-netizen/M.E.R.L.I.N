@@ -10,6 +10,9 @@ import { GamePreview } from './components/GamePreview';
 import { HumanFeedback } from './components/HumanFeedback';
 import { FileUpload } from './components/FileUpload';
 import { DirectorInstructions } from './components/DirectorInstructions';
+import { SceneSelector } from './components/SceneSelector';
+import { VisualTestResults } from './components/VisualTestResults';
+import { StudioInsights } from './components/StudioInsights';
 import './styles/scifi-theme.css';
 
 export function App() {
@@ -45,6 +48,17 @@ export function App() {
         <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <DirectorInstructions />
           <FileUpload />
+        </div>
+
+        {/* Scene Selector + Visual Test Results */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <SceneSelector />
+          <VisualTestResults />
+        </div>
+
+        {/* Studio Insights */}
+        <div className="dashboard-layout__full-row">
+          <StudioInsights />
         </div>
 
         {/* Timeline */}

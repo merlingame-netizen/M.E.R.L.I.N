@@ -177,6 +177,50 @@ Decisions qui REQUIERENT feedback humain (via feedback_questions.json):
 - Modifier le game design (equilibrage, nouvelles mecaniques)
 - Choix visuels (couleurs, shaders, layout)
 
+## Studio Insights — Agent Feature Proposals (chaque cycle)
+
+Apres chaque cycle termine, SI tu identifies une amelioration pour le jeu ou le dashboard:
+1. Lire `tools/autodev/status/studio_insights.json` (creer si absent)
+2. Ajouter une suggestion avec structure:
+```json
+{
+  "id": "insight-YYYYMMDD-NNN",
+  "agent": "agent_id",
+  "severity": "INFO|WARN|ACTION",
+  "category": "gameplay|ux|performance|i18n|visual|dashboard",
+  "message": "Description courte de la suggestion",
+  "details": "Explication detaillee avec justification",
+  "proposed_task": { "title": "...", "sprint": "S3", "type": "dev" },
+  "timestamp": "ISO8601"
+}
+```
+3. Maximum 1 insight par cycle — qualite > quantite
+4. Le directeur voit ces insights sur le dashboard et peut approuver/rejeter
+
+## i18n — Strings et traduction
+
+Toutes les strings user-facing du jeu sont dans `data/i18n/text_registry.json`.
+- Pour acceder a une string: `I18nRegistry.t("ui.hub.anam_label")` ou `I18nRegistry.tf("key", [args])`
+- NE JAMAIS hardcoder du texte francais dans le code — utiliser le registre
+- Si tu dois ajouter une nouvelle string: l'ajouter dans `text_registry.json` avec la cle FR remplie et les autres langues vides
+- Le `i18n_auditor_agent` detectera les strings hardcoded restantes
+
+## Multi-Platform Awareness
+
+Le jeu cible PC + mobile + web. Regles:
+- `InputAdapter` (autoload) gere touch/mouse/gamepad — ne pas utiliser Input directement pour les interactions UI
+- `PlatformManager` (autoload) detecte la plateforme et ajuste la qualite
+- Touch targets minimum 44px (WCAG)
+- Pas de texte < 11px (illisible sur mobile)
+- Shaders doivent avoir un fallback LOW quality
+
+## Visual Testing (quand implemente)
+
+Le pipeline `tools/autodev/visual-tester/` capture des screenshots de scenes Godot.
+- `screenshot_agent.gd`: capture viewport toutes les 2s, sauvegarde dans `scene_screenshots/`
+- Les screenshots sont analyses par Claude Vision (perspective joueur, pas code)
+- Les bugs visuels detectes doivent etre crees comme taches dans `feature_queue.json`
+
 ## Regles strictes
 
 - Source de verite: `docs/GAME_DESIGN_BIBLE.md` v2.4
