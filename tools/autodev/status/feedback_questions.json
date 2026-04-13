@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-04-12T16:00:00Z",
+  "generated_at": "2026-04-13T09:00:00Z",
   "questions": [
     {
       "id": "q-20260412-001",
@@ -68,7 +68,7 @@
       "id": "q-20260412-005",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "answered",
+      "status": "applied",
       "question": "Maintenant que le drain (-1 PV/carte) est supprimé, faut-il conserver la récupération automatique (+5 PV si vie < 20) ?",
       "context": "Sans le drain, la pression de survie vient uniquement des effets négatifs des cartes. La récupération auto +5 PV sous 20% de vie était conçue pour compenser les runs de drain prolongés. Sans drain, ce mécanisme pourrait rendre le jeu trop permissif (vie qui remonte automatiquement dès qu'elle est basse). Alternatives: le supprimer entièrement, le garder mais le baisser (+2 PV), ou le conditionner à un Ogham spécifique.",
       "type": "multiple_choice",
@@ -79,7 +79,9 @@
         "Conditionner à un Ogham de soin (ex: Duir)"
       ],
       "screenshot_urls": null,
-      "created_at": "2026-04-12T21:00:00Z"
+      "created_at": "2026-04-12T21:00:00Z",
+      "applied_at": "2026-04-13T09:00:00Z",
+      "applied_note": "Pacing recovery (+5 HP if life<20) removed from StoreRun.resolve_choice(). Survival now depends entirely on card choices."
     },
     {
       "id": "q-20260413-001",

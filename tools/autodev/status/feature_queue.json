@@ -1,7 +1,7 @@
 {
   "version": "2.0",
-  "updated": "2026-04-13T08:30:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — Sprint 1 COMPLETE. Sprint 2 in progress. S3-EDGE-CASES complete. 2 new bug tasks created from edge case test. Completed tasks in completed_archive.json.",
+  "updated": "2026-04-13T09:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — Sprint 2 in progress. BUG-MIDRUN-SAVE-INCOMPLETE-FIX completed. Pacing recovery removed (director q-20260412-005). S3-STORY-LOG-RAG task added (director q-20260413-001).",
   "sprints": {
     "S1": "CORE LOOP JOUABLE — COMPLETE",
     "S2": "CONTENU & SYSTEMES — 8 biomes, 45 verbes, MOS, dead code, integration audit",
@@ -12,14 +12,16 @@
       "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
       "sprint": "S2",
       "priority": 6,
-      "status": "pending",
+      "status": "completed",
       "type": "dev",
       "title": "Fix mid-run save: persist run_state incrementally during run",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_store.gd"
       ],
-      "description": "S3-EDGE-CASES found MEDIUM bug: _do_autosave() only saves meta (profile), not run_state. game_flow_controller saves a static pre-run intent once (biome+oghams) but never updates it during the run. Fix: in merlin_store._do_autosave(), if run is active, also call save_system.save_run_state(state.get('run', {})). Verify load_run_state() on restart correctly restores life_essence, cards_played, active_promises, story_log, season, faction_context. PAT-009: grep callers of _do_autosave before modifying."
+      "description": "S3-EDGE-CASES found MEDIUM bug: _do_autosave() only saves meta (profile), not run_state. game_flow_controller saves a static pre-run intent once (biome+oghams) but never updates it during the run. Fix: in merlin_store._do_autosave(), if run is active, also call save_system.save_run_state(state.get('run', {})). Verify load_run_state() on restart correctly restores life_essence, cards_played, active_promises, story_log, season, faction_context. PAT-009: grep callers of _do_autosave before modifying.",
+      "completed_at": "2026-04-13T09:00:00Z",
+      "notes": "Fixed: _do_autosave() now calls save_run_state(run_snapshot) when run is active. run_snapshot duplicates run dict and adds biome/card_index keys required by save system validator. Also removed pacing recovery (+5 HP when life<20) per director q-20260412-005."
     },
     {
       "id": "S2-BIOMES",
@@ -144,6 +146,20 @@
         "scripts/merlin/merlin_visual.gd"
       ],
       "description": "Director decision q-20260412-004: esthetique ultra low-poly / low-pixel entre N64 et PS1 avec effets volumetriques coherents. Actions: (1) Activer pixel snap sur les meshes 3D, (2) Shader affine texture mapping (pas de correction perspective), (3) Shader fog/brouillard volumetrique low-fi, (4) Reduire la resolution de rendu (viewport scale), (5) Dithering pour les ombres. Documenter dans MerlinVisual les constantes RENDER_SCALE et PIXEL_SNAP_ENABLED."
+    },
+    {
+      "id": "S3-STORY-LOG-RAG",
+      "sprint": "S3",
+      "priority": 17,
+      "status": "pending",
+      "type": "dev",
+      "title": "Memoire narrative: RAG pour resume compresse story_log",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/store_run.gd",
+        "addons/merlin_ai/rag_manager.gd"
+      ],
+      "description": "Director decision q-20260413-001: utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe). Actuellement story_log tronque a 2 entrees (store_run.gd:156). Implementation: (1) A chaque resolve_choice, appeler rag_manager.add_narrative_entry(card_text, chosen_label, cards_played). (2) build_llm_context() recupere un resume compresse (3-5 items) via rag_manager.get_narrative_summary(). (3) Story_log reste a 2 pour le contexte immediat, RAG fournit le contexte long-terme. Verifier que rag_manager.gd expose add_narrative_entry() et get_narrative_summary() ou les creer."
     }
   ]
 }

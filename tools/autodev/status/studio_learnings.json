@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T08:30:00Z",
+  "last_updated": "2026-04-13T09:00:00Z",
   "metrics": {
-    "total_cycles_completed": 8,
-    "total_dev_cycles": 4,
+    "total_cycles_completed": 9,
+    "total_dev_cycles": 5,
     "total_test_cycles": 4,
     "bugs_found": 15,
-    "bugs_fixed": 5,
-    "tasks_completed": 25,
-    "tasks_pending": 10,
+    "bugs_fixed": 7,
+    "tasks_completed": 27,
+    "tasks_pending": 9,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -185,6 +185,27 @@
         "scripts/merlin/merlin_save_system.gd",
         "scripts/core/game_flow_controller.gd"
       ]
+    },
+    {
+      "id": "PAT-017",
+      "learned_at": "2026-04-13T09:00:00Z",
+      "source": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "pattern": "_do_autosave() was meta-only. run_state must be added separately via save_run_state(). The save_system._validate_run_state() requires biome and card_index keys — which are stored as current_biome and cards_played in the run dict — so a snapshot translation step is required before calling save_run_state().",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-018",
+      "learned_at": "2026-04-13T09:00:00Z",
+      "source": "q-20260412-005",
+      "pattern": "Director feedback can remove mechanical safety nets (pacing recovery +5HP). When survival is meant to depend entirely on choices, no auto-recovery should exist. Always check feedback_responses.json before implementing any survivability mechanic.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/store_run.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -200,7 +221,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 18,
+      "tasks_completed": 20,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -275,6 +296,23 @@
       "impact": "Render pipeline: pixel snap, affine textures, volumetric fog, viewport scale, dithering",
       "applied": false,
       "task_created": "S3-PIXEL-RENDER"
+    },
+    {
+      "question_id": "q-20260412-005",
+      "decision": "Supprimer la récupération automatique (+5 PV si vie < 20)",
+      "impact": "Pacing recovery removed from StoreRun.resolve_choice(). Survival now depends entirely on choices.",
+      "applied": true,
+      "applied_at": "2026-04-13T09:00:00Z",
+      "files_modified": [
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "question_id": "q-20260413-001",
+      "decision": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)",
+      "impact": "Task S3-STORY-LOG-RAG created (P17). RAG manager to provide compressed narrative context beyond 2-card story_log limit.",
+      "applied": false,
+      "task_created": "S3-STORY-LOG-RAG"
     }
   ],
   "evolution_log": [
@@ -333,6 +371,13 @@
       "type": "test",
       "action": "S3-EDGE-CASES: 8 edge cases tested. 3/3 regressions PASS (promise fix confirmed, cards_played canonical, drain=0). 7/8 edge cases PASS. 1 MEDIUM bug: BUG-MIDRUN-SAVE-INCOMPLETE (autosave does not persist run_state). 1 LOW bug: BUG-SIGNAL-DELTA (reputation_changed signal emits unclamped raw delta). 2 new tasks created (P6+P11). Report: S3-EDGE-CASES_2026-04-13.json",
       "improvement": "PAT-016 added: mid-run save must be wired into autosave. Also confirmed: scale_and_cap IS implemented in effect engine; MULTIPLIER_TABLE IS used (merlin_card_system resolve_card). Ogham activation has no currency check — only cooldown + unlock check. Trust T0-T3 correctly clamped and tiered."
+    },
+    {
+      "cycle": 9,
+      "date": "2026-04-13T09:00:00Z",
+      "type": "dev",
+      "action": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX: _do_autosave() now persists run_state when run is active. run_snapshot built with biome/card_index key mapping. Also removed pacing recovery per director q-20260412-005. Applied director q-20260413-001: created S3-STORY-LOG-RAG task.",
+      "improvement": "PAT-017: autosave now persists run state. PAT-018: no more auto-recovery — survival is choice-driven. story_log RAG tracked as S3 task."
     }
   ]
 }

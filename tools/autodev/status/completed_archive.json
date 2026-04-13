@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks from feature_queue.json",
-  "archived_at": "2026-04-13T06:00:00Z",
+  "archived_at": "2026-04-13T09:00:00Z",
   "tasks": [
     {
       "id": "TRIADE-CORE-1",
@@ -283,6 +283,21 @@
       ],
       "completed_at": "2026-04-13T08:30:00Z",
       "notes": "TEST cycle: 8 edge cases tested. FAIL overall (1 MEDIUM + 1 LOW bug found). 3/3 regressions PASS. EC-01 (life=0): PASS. EC-02 (factions 0/100): PASS + BUG-SIGNAL-DELTA LOW. EC-03 (ogham no resources): PASS. EC-04 (MOS hard_max=50): PASS. EC-05 (save mid-run): FAIL — BUG-MIDRUN-SAVE-INCOMPLETE MEDIUM (autosave meta-only, run_state not updated during run). EC-06 (trust T0->T3): PASS. EC-07 (FastRoute missing fields): PASS. EC-08 (multiplier x2.0): PASS. 2 new tasks created: BUG-MIDRUN-SAVE-INCOMPLETE-FIX (P6), BUG-SIGNAL-DELTA-FIX (P11). Report: test_reports/S3-EDGE-CASES_2026-04-13.json"
+    },
+    {
+      "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix mid-run save: persist run_state incrementally during run",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "description": "S3-EDGE-CASES found MEDIUM bug: _do_autosave() only saves meta (profile), not run_state. game_flow_controller saves a static pre-run intent once (biome+oghams) but never updates it during the run. Fix: in merlin_store._do_autosave(), if run is active, also call save_system.save_run_state(state.get('run', {})). Verify load_run_state() on restart correctly restores life_essence, cards_played, active_promises, story_log, season, faction_context. PAT-009: grep callers of _do_autosave before modifying.",
+      "completed_at": "2026-04-13T09:00:00Z",
+      "notes": "Fixed: _do_autosave() now calls save_run_state(run_snapshot) when run is active. run_snapshot duplicates run dict and adds biome/card_index keys required by save system validator. Also removed pacing recovery (+5 HP when life<20) per director q-20260412-005."
     }
   ],
   "updated": "2026-04-13T08:30:00Z"
