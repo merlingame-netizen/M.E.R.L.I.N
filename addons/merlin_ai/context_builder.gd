@@ -29,7 +29,8 @@ func setup(
 
 func build_full_context(game_state: Dictionary) -> Dictionary:
 	## Construit le contexte complet pour le LLM.
-	var run = game_state.get("run", {})
+	var run: Dictionary = game_state.get("run", {})
+	var meta: Dictionary = game_state.get("meta", {})
 
 	return {
 		# === GAME STATE ===
@@ -37,7 +38,7 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 		"tour": int(run.get("tour", 1)),
 		"ogham_actif": str(run.get("ogham_actif", "")),
 		"oghams_decouverts": run.get("oghams_decouverts", []),
-		"factions": run.get("factions", {
+		"factions": meta.get("faction_rep", {
 			"druides": 0, "anciens": 0, "korrigans": 0, "niamh": 0, "ankou": 0
 		}),
 		"heure_normalisee": float(run.get("heure_normalisee", 0.0)),

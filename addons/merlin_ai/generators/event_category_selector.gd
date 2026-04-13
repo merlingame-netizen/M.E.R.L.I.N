@@ -96,9 +96,16 @@ func select_event(game_state: Dictionary) -> Dictionary:
 		return {}
 
 	var run: Dictionary = game_state.get("run", {})
+	var meta: Dictionary = game_state.get("meta", {})
+
+	# Inject real faction_rep so sub-type selectors see actual rep, not stale zeros
+	var enriched_run: Dictionary = run.duplicate()
+	enriched_run["factions"] = meta.get("faction_rep", {
+		"druides": 0, "anciens": 0, "korrigans": 0, "niamh": 0, "ankou": 0
+	})
 
 	# Step 1: Compute weighted categories
-	var weights := _compute_category_weights(run)
+	var weights := _compute_category_weights(enriched_run)
 
 	# Step 2: Apply anti-repetition penalties
 	weights = _apply_anti_repetition(weights)
@@ -109,7 +116,7 @@ func select_event(game_state: Dictionary) -> Dictionary:
 		return {}
 
 	# Step 4: Select sub-type within category
-	var sub_type := _select_sub_type(category, run)
+	var sub_type := _select_sub_type(category, enriched_run)
 
 	var cat_data: Dictionary = _categories.get(category, {})
 	return {
