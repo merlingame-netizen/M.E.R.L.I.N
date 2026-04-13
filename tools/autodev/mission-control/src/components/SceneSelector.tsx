@@ -18,6 +18,8 @@ export function SceneSelector() {
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [launchResult, setLaunchResult] = useState<string | null>(null);
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL
@@ -41,6 +43,32 @@ export function SceneSelector() {
   }, []);
 
   const selectedScene = scenes.find(s => s.path === selected);
+
+  const handleLaunchTest = async () => {
+    if (!selected) return;
+    setLaunching(true);
+    setLaunchResult(null);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL
+        ? `${import.meta.env.VITE_API_URL.replace('/status', '/visual-test')}`
+        : '/api/visual-test';
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scene: selected, duration: 30 }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setLaunchResult('REQUEST QUEUED');
+      } else {
+        setLaunchResult(data.error || 'Failed');
+      }
+    } catch {
+      setLaunchResult('Network error');
+    } finally {
+      setLaunching(false);
+    }
+  };
 
   return (
     <div className="panel">
@@ -133,7 +161,8 @@ export function SceneSelector() {
         {/* Launch button */}
         <div style={{ padding: '8px 12px' }}>
           <button
-            disabled
+            disabled={!selected || launching}
+            onClick={handleLaunchTest}
             style={{
               width: '100%',
               padding: '6px 12px',
@@ -141,16 +170,29 @@ export function SceneSelector() {
               fontFamily: 'var(--font-mono)',
               fontWeight: 700,
               letterSpacing: '1px',
-              color: 'var(--text-dim)',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: !selected || launching ? 'var(--text-dim)' : 'var(--green)',
+              background: !selected || launching
+                ? 'rgba(255, 255, 255, 0.04)'
+                : 'rgba(0, 255, 136, 0.1)',
+              border: `1px solid ${!selected || launching ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 255, 136, 0.2)'}`,
               borderRadius: '2px',
-              cursor: 'not-allowed',
-              opacity: 0.5,
+              cursor: !selected || launching ? 'not-allowed' : 'pointer',
+              opacity: !selected || launching ? 0.5 : 1,
             }}
           >
-            LAUNCH VISUAL TEST
+            {launching ? 'REQUESTING...' : 'LAUNCH VISUAL TEST'}
           </button>
+          {launchResult && (
+            <div style={{
+              marginTop: '4px',
+              fontSize: '10px',
+              fontFamily: 'var(--font-mono)',
+              color: launchResult === 'REQUEST QUEUED' ? 'var(--green)' : 'var(--amber)',
+              textAlign: 'center',
+            }}>
+              {launchResult}
+            </div>
+          )}
         </div>
       </div>
     </div>

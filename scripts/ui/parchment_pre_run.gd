@@ -62,7 +62,7 @@ func _build_ui() -> void:
 
 	# Loading indicator (shown during generation).
 	_loading_label = Label.new()
-	_loading_label.text = "Merlin prepare le chemin..."
+	_loading_label.text = I18nRegistry.t("ui.parchment.loading_message")
 	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_loading_label.anchor_left = 0.2
 	_loading_label.anchor_right = 0.8
@@ -76,7 +76,7 @@ func _build_ui() -> void:
 
 	# "Entrer la Quête" button (hidden until parchment finishes).
 	_enter_btn = Button.new()
-	_enter_btn.text = "Entrer la Quete"
+	_enter_btn.text = I18nRegistry.t("ui.parchment.enter_quest")
 	_enter_btn.anchor_left = 0.3
 	_enter_btn.anchor_right = 0.7
 	_enter_btn.anchor_top = 0.88
