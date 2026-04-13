@@ -11,7 +11,7 @@ import { HumanFeedback } from './components/HumanFeedback';
 import { FileUpload } from './components/FileUpload';
 import { DirectorInstructions } from './components/DirectorInstructions';
 import { SceneSelector } from './components/SceneSelector';
-import { VisualTestResults } from './components/VisualTestResults';
+import { DevCycleSummary } from './components/DevCycleSummary';
 import { StudioInsights } from './components/StudioInsights';
 import './styles/scifi-theme.css';
 
@@ -50,10 +50,10 @@ export function App() {
           <FileUpload />
         </div>
 
-        {/* Scene Selector + Visual Test Results */}
+        {/* Scene Selector + Dev Cycle Summary */}
         <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <SceneSelector />
-          <VisualTestResults />
+          <DevCycleSummary />
         </div>
 
         {/* Studio Insights */}

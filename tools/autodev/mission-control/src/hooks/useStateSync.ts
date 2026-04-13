@@ -32,6 +32,7 @@ export function useStateSync() {
   const setLastHeartbeat = useMissionStore(s => s.setLastHeartbeat);
   const setCompletedCount = useMissionStore(s => s.setCompletedCount);
   const setStudioInsights = useMissionStore(s => s.setStudioInsights);
+  const setGitActivity = useMissionStore(s => s.setGitActivity);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const lastTimestampRef = useRef<string>('');
@@ -186,14 +187,32 @@ export function useStateSync() {
       }
     }
 
+    async function pollGitActivity() {
+      try {
+        const gitUrl = API_URL.replace('/status', '/git-activity');
+        const res = await fetch(gitUrl);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.ok && json.commits) {
+            setGitActivity(json.commits);
+          }
+        }
+      } catch {
+        // Git activity is non-critical, silently ignore
+      }
+    }
+
     // Initial poll
     poll();
+    pollGitActivity();
 
-    // Poll every 30s
+    // Poll every 30s (status) and 60s (git activity)
     intervalRef.current = setInterval(poll, POLL_INTERVAL);
+    const gitInterval = setInterval(pollGitActivity, 60_000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      clearInterval(gitInterval);
     };
   }, []);
 }

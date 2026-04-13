@@ -60,8 +60,14 @@ export default async function handler(req: any, res: any) {
     const decoded = Buffer.from(file.content, 'base64').toString('utf-8');
     const queue = JSON.parse(decoded);
 
-    // Generate task ID
-    const sprint = body.sprint || 'S2';
+    // Auto-detect current sprint from existing tasks
+    const existingTasks = queue.tasks || [];
+    const sprintCounts: Record<string, number> = {};
+    for (const t of existingTasks) {
+      const s = t.sprint || t.id?.match(/^(?:DIR-|S)(\w+)/)?.[1] || '';
+      if (s) sprintCounts[s] = (sprintCounts[s] || 0) + 1;
+    }
+    const sprint = body.sprint || Object.entries(sprintCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'S2';
     const timestamp = Date.now().toString(36).toUpperCase();
     const taskId = `DIR-${sprint}-${timestamp}`;
 
@@ -78,7 +84,7 @@ export default async function handler(req: any, res: any) {
       status: 'pending',
       type: body.type || 'dev',
       title: body.title.trim(),
-      agent: body.agent || 'godot_expert',
+      agent: body.agent || 'auto',
       description: body.description?.trim() || '',
       files: body.files || [],
     };

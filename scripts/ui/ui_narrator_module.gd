@@ -10,12 +10,12 @@ class_name UINarratorModule
 
 var _ui: MerlinGameUI
 
-const NARRATOR_INTROS: Array[String] = [
-	"Les brumes de Bretagne s'ouvrent devant toi... Le chemin serpente, et l'avenir est incertain.",
-	"La foret murmure ton nom. Merlin veille... mais pour combien de temps encore?",
-	"Le vent porte des echos anciens. Un nouveau cycle commence, voyageur.",
-	"Les pierres se souviennent de chaque pas. Pret a ecrire un nouveau chapitre?",
-	"L'aube se leve sur les landes. Quelque chose attend au bout du sentier.",
+var NARRATOR_INTROS: Array[String] = [
+	I18nRegistry.t("ui.narrator.intro_1"),
+	I18nRegistry.t("ui.narrator.intro_2"),
+	I18nRegistry.t("ui.narrator.intro_3"),
+	I18nRegistry.t("ui.narrator.intro_4"),
+	I18nRegistry.t("ui.narrator.intro_5"),
 ]
 
 var _narrator_active: bool = false
@@ -139,7 +139,7 @@ func _on_thinking_tick() -> void:
 		return
 	_thinking_dots = (_thinking_dots + 1) % 4
 	var dots: String = ".".repeat(_thinking_dots)
-	_ui.card_text.text = "Merlin reflechit" + dots
+	_ui.card_text.text = I18nRegistry.t("ui.narrator.thinking") + dots
 
 	if _thinking_spiral and is_instance_valid(_thinking_spiral):
 		var tw: Tween = _ui.create_tween()
@@ -313,7 +313,7 @@ func show_narrator_intro(biome_key: String = "") -> void:
 		if not _ui.is_inside_tree():
 			return
 		var is_last_page: bool = (page_idx == pages.size() - 1)
-		var continue_hint: String = "[color=#8a7a6a][i]Cliquez pour continuer...[/i][/color]" if not is_last_page else "[color=#8a7a6a][i]Cliquez pour commencer l'aventure...[/i][/color]"
+		var continue_hint: String = "[color=#8a7a6a][i]%s[/i][/color]" % (I18nRegistry.t("ui.narrator.click_continue") if not is_last_page else I18nRegistry.t("ui.narrator.click_start_adventure"))
 		if _ui.card_text and is_instance_valid(_ui.card_text):
 			_ui.card_text.text += "\n\n" + continue_hint
 		_waiting_narrator_click = true
@@ -358,7 +358,7 @@ func show_scenario_intro(title: String, context: String) -> void:
 	SFXManager.play("eye_open")
 	await typewriter_card_text(context)
 	if _ui.card_text and is_instance_valid(_ui.card_text):
-		_ui.card_text.text += "\n\n[color=#8a7a6a][i]Cliquez pour commencer...[/i][/color]"
+		_ui.card_text.text += "\n\n[color=#8a7a6a][i]%s[/i][/color]" % I18nRegistry.t("ui.narrator.click_start")
 	_waiting_narrator_click = true
 	var deadline: int = Time.get_ticks_msec() + 30000
 	while _waiting_narrator_click and _ui.is_inside_tree() and Time.get_ticks_msec() < deadline:

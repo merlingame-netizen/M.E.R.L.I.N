@@ -56,6 +56,15 @@ export interface StudioInsight {
   timestamp: string;
 }
 
+export interface GitCommit {
+  sha: string;
+  message: string;
+  author: string;
+  date: string;
+  type: string;
+  scope: string | null;
+}
+
 export interface FeedbackQuestion {
   id: string;
   category: 'design' | 'graphics' | 'gamedesign' | 'rendering' | 'ux' | 'infrastructure';
@@ -93,8 +102,10 @@ interface MissionState {
   lastHeartbeat: string | null;
   completedCount: number;
   studioInsights: StudioInsight[];
+  gitActivity: GitCommit[];
 
   setOrchestratorState: (state: string) => void;
+  setGitActivity: (commits: GitCommit[]) => void;
   setAgents: (agents: AgentInfo[]) => void;
   setStudioInsights: (insights: StudioInsight[]) => void;
   updateAgent: (id: string, update: Partial<AgentInfo>) => void;
@@ -128,8 +139,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   lastHeartbeat: null,
   completedCount: 0,
   studioInsights: [],
+  gitActivity: [],
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
+  setGitActivity: (gitActivity) => set({ gitActivity }),
   setStudioInsights: (studioInsights) => set({ studioInsights }),
   setAgents: (agents) => set({ agents }),
   updateAgent: (id, update) => set(s => ({

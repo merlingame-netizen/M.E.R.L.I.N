@@ -101,6 +101,32 @@
       "reset_button": { "fr": "Reinitialiser", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
       "return_button": { "fr": "Retour", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
       "menu_button": { "fr": "Menu", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "narrator": {
+      "intro_1": { "fr": "Les brumes de Bretagne s'ouvrent devant toi... Le chemin serpente, et l'avenir est incertain.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_2": { "fr": "La foret murmure ton nom. Merlin veille... mais pour combien de temps encore?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_3": { "fr": "Le vent porte des echos anciens. Un nouveau cycle commence, voyageur.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_4": { "fr": "Les pierres se souviennent de chaque pas. Pret a ecrire un nouveau chapitre?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_5": { "fr": "L'aube se leve sur les landes. Quelque chose attend au bout du sentier.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "click_continue": { "fr": "Cliquez pour continuer...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "click_start_adventure": { "fr": "Cliquez pour commencer l'aventure...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "click_start": { "fr": "Cliquez pour commencer...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "thinking": { "fr": "Merlin reflechit", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "llm": {
+      "choice_fallback": { "fr": "Choix %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "sequel_success": { "fr": "Les echos du passe resonent en ta faveur.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "sequel_failure": { "fr": "Les consequences de tes choix passes te rattrapent.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "world_map": {
+      "event_npc_title": { "fr": "Rencontre sur le chemin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_npc_desc": { "fr": "Un voyageur offre son aide en echange d'un service.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_trade_title": { "fr": "Marchands ambulants", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_trade_desc": { "fr": "Des marchands proposent un echange favorable.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_blessing_title": { "fr": "Benediction druidique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_blessing_desc": { "fr": "Un druide itinerant partage sa sagesse.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_training_title": { "fr": "Campement d'entrainement", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_training_desc": { "fr": "Des guerriers proposent un entrainement.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
     }
   },
 

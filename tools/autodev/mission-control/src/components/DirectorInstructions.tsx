@@ -1,17 +1,13 @@
 import { useState } from 'react';
 
-const SPRINTS = ['S2', 'S3', 'S4'];
-const TYPES = ['dev', 'test'];
-const AGENTS = ['godot_expert', 'bug_hunter', 'game_playtester', 'game_design_auditor', 'narrative_designer'];
+const TYPES = ['dev', 'test', 'fix'];
 
 type SendState = 'idle' | 'sending' | 'success' | 'error';
 
 export function DirectorInstructions() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [sprint, setSprint] = useState('S2');
   const [type, setType] = useState('dev');
-  const [agent, setAgent] = useState('godot_expert');
   const [state, setState] = useState<SendState>('idle');
   const [message, setMessage] = useState('');
 
@@ -36,16 +32,14 @@ export function DirectorInstructions() {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || undefined,
-          sprint,
           type,
-          agent,
         }),
       });
 
       const json = await res.json();
       if (json.ok) {
         setState('success');
-        setMessage(`Task ${json.task.id} added to queue`);
+        setMessage(`Queued: ${json.task.id}`);
         setTitle('');
         setDescription('');
       } else {
@@ -82,20 +76,20 @@ export function DirectorInstructions() {
   return (
     <div className="panel">
       <div className="panel-header">
-        Director Instructions
+        Queue Task
         <span style={{
           marginLeft: 'auto',
           fontSize: '10px',
           color: 'var(--text-secondary)',
           fontFamily: 'var(--font-mono)',
         }}>
-          ADD TASK
+          AUTO-DISPATCH
         </span>
       </div>
       <div className="panel-body" style={{ padding: '10px 12px' }}>
         {/* Title */}
         <div style={{ marginBottom: '6px' }}>
-          <label style={labelStyle}>TASK TITLE *</label>
+          <label style={labelStyle}>TASK *</label>
           <input
             type="text"
             value={title}
@@ -107,44 +101,51 @@ export function DirectorInstructions() {
 
         {/* Description */}
         <div style={{ marginBottom: '6px' }}>
-          <label style={labelStyle}>DESCRIPTION</label>
+          <label style={labelStyle}>DETAILS</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Detailed instructions for the bot..."
-            rows={3}
+            placeholder="Optional context for the bot..."
+            rows={2}
             style={{
               ...inputStyle,
               resize: 'vertical',
-              minHeight: '48px',
+              minHeight: '36px',
             }}
           />
         </div>
 
-        {/* Sprint + Type + Agent row */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '6px',
-          marginBottom: '8px',
-        }}>
-          <div>
-            <label style={labelStyle}>SPRINT</label>
-            <select value={sprint} onChange={e => setSprint(e.target.value)} style={inputStyle}>
-              {SPRINTS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>TYPE</label>
-            <select value={type} onChange={e => setType(e.target.value)} style={inputStyle}>
-              {TYPES.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>AGENT</label>
-            <select value={agent} onChange={e => setAgent(e.target.value)} style={inputStyle}>
-              {AGENTS.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
+        {/* Type selector */}
+        <div style={{ marginBottom: '8px' }}>
+          <label style={labelStyle}>TYPE</label>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {TYPES.map(t => (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                style={{
+                  flex: 1,
+                  padding: '4px 8px',
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  letterSpacing: '1px',
+                  background: type === t
+                    ? t === 'fix' ? 'rgba(255,60,60,0.2)' : t === 'test' ? 'rgba(255,165,0,0.2)' : 'rgba(0,255,136,0.15)'
+                    : 'rgba(255,255,255,0.04)',
+                  color: type === t
+                    ? t === 'fix' ? '#ff6b6b' : t === 'test' ? 'var(--amber)' : 'var(--green)'
+                    : 'var(--text-dim)',
+                  border: `1px solid ${type === t
+                    ? t === 'fix' ? 'rgba(255,60,60,0.3)' : t === 'test' ? 'rgba(255,165,0,0.3)' : 'rgba(0,255,136,0.3)'
+                    : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                }}
+              >
+                {t.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -169,7 +170,7 @@ export function DirectorInstructions() {
             opacity: title.trim().length < 5 ? 0.4 : 1,
           }}
         >
-          {state === 'sending' ? 'SENDING...' : 'ADD TO PENDING QUEUE'}
+          {state === 'sending' ? 'QUEUING...' : 'QUEUE TASK'}
         </button>
 
         {/* Status */}
