@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T17:00:00Z",
+  "last_updated": "2026-04-13T19:44:09Z",
   "metrics": {
-    "total_cycles_completed": 21,
+    "total_cycles_completed": 22,
     "total_dev_cycles": 11,
-    "total_test_cycles": 10,
+    "total_test_cycles": 11,
     "bugs_found": 21,
     "bugs_fixed": 11,
-    "tasks_completed": 41,
-    "tasks_pending": 11,
+    "tasks_completed": 42,
+    "tasks_pending": 10,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -361,6 +361,17 @@
         "merlin_effect_engine.gd",
         "signals"
       ]
+    },
+    {
+      "id": "PAT-032",
+      "learned_at": "2026-04-13T19:44:09Z",
+      "source": "S2-DAY-SIGNAL-REGRESSION-TEST",
+      "pattern": "TEST cycles should verify both the NEW fix AND the still-pending FAIL_PENDING checks from prior test reports. A PARTIAL_PASS is a valid outcome when dependencies are pending — document blocking_task explicitly in each FAIL_PENDING check so the next DEV cycle knows exactly what to implement first.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "workflow",
+        "test_reports"
+      ]
     }
   ],
   "agent_performance": {
@@ -390,7 +401,7 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 5,
+      "tasks_completed": 6,
       "bugs_introduced": 0,
       "bugs_found": 5,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection",
@@ -400,7 +411,8 @@
         "regression verification",
         "cross-module key-mismatch detection (PAT-019)"
       ],
-      "weaknesses": []
+      "weaknesses": [],
+      "partial_pass_reports": 1
     },
     "game_design_auditor": {
       "tasks_completed": 2,

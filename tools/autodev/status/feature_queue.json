@@ -1,6 +1,6 @@
 {
   "version": "3.5",
-  "updated": "2026-04-13T17:00:00Z",
+  "updated": "2026-04-13T19:44:09Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 10+ pending minimum.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -41,21 +41,6 @@
         "scripts/merlin/merlin_constants.gd"
       ],
       "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add CARDS_PER_DAY constant (merlin_constants.gd) + increment run['day'] in resolve_choice() when cards_played % CARDS_PER_DAY == 0. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 19 store_run.gd)."
-    },
-    {
-      "id": "S2-DAY-SIGNAL-REGRESSION-TEST",
-      "sprint": "S2",
-      "priority": 11,
-      "status": "pending",
-      "type": "test",
-      "title": "Regression test: BUG-SIGNAL-DELTA-FIX + S2-DAY-TICK-FIX applied correctly",
-      "agent": "bug_hunter",
-      "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "After BUG-SIGNAL-DELTA-FIX and S2-DAY-TICK-FIX are applied, verify: (1) reputation_changed emits actual_delta = new_val - old_rep (not raw rep_delta). Test: faction_rep=95, delta=+20 → emit delta=+5 not +20. (2) CARDS_PER_DAY constant exists in merlin_constants.gd. (3) resolve_choice() increments run['day'] every CARDS_PER_DAY cards. (4) LLM context day field changes over a simulated 30-card run. (5) All S2-CONTEXT-REGRESSION-TEST regressions still PASS."
     },
     {
       "id": "DIR-S2-MNWXQ41M",
@@ -150,7 +135,7 @@
         "scripts/minigames/minigame_registry.gd",
         "scripts/minigames/mg_meditation.gd"
       ],
-      "description": "BLOCKED until director answers q-20260413-004 (mg_meditation disposition). After answer: (A) If 'delete' → remove mg_meditation.gd + remove match case line 138 from create_minigame(). (B) If 'move to another field' → add mg_meditation to GAMES[field] + keep match case. (C) If 'add to esprit (4 entries)' → add to GAMES['esprit'] + FIELD_MINIGAMES['esprit']. (D) If 'keep for future' → remove match case line 138 only (dead code cleanup). Also fix cosmetic: reorganize match block comments so mg_sang_froid is under # Esprit."
+      "description": "Director q-20260413-004 answered: 'Supprimer mg_meditation.gd (script non-utilisé)' — OPTION A. Steps: (1) Delete scripts/minigames/mg_meditation.gd. (2) Remove 'mg_meditation' match case from create_minigame() in minigame_registry.gd (line 138). (3) Remove 'meditation': 'esprit' entry from TAG_FIELD_MAP in minigame_registry.gd (line 66). (4) Verify no remaining references to mg_meditation outside /archive/. (5) Add PAT for director-driven file deletion. Cosmetic fix: verify mg_sang_froid comment is under # Esprit block."
     },
     {
       "id": "S4-SFXMANAGER-AUDIT",
