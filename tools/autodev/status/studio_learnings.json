@@ -1,16 +1,16 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T00:00:00Z",
+  "last_updated": "2026-04-13T06:00:00Z",
   "metrics": {
-    "total_cycles_completed": 4,
-    "total_dev_cycles": 2,
+    "total_cycles_completed": 5,
+    "total_dev_cycles": 3,
     "total_test_cycles": 2,
     "bugs_found": 6,
-    "bugs_fixed": 3,
-    "tasks_completed": 18,
-    "tasks_pending": 14,
-    "current_sprint": "S1"
+    "bugs_fixed": 4,
+    "tasks_completed": 22,
+    "tasks_pending": 10,
+    "current_sprint": "S2"
   },
   "patterns_learned": [
     {
@@ -97,6 +97,28 @@
       "applies_to": [
         "scripts/merlin/merlin_llm_adapter.gd"
       ]
+    },
+    {
+      "id": "PAT-009",
+      "learned_at": "2026-04-13T06:00:00Z",
+      "source": "S1-CLEANUP-1-AUDIT",
+      "pattern": "Sprint cleanup tasks may already be complete from prior cycles. Always audit actual file state with grep before writing code — prevents redundant work. Cross-reference task descriptions vs file content, not just task status.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "tooling",
+        "workflow"
+      ]
+    },
+    {
+      "id": "PAT-010",
+      "learned_at": "2026-04-13T06:00:00Z",
+      "source": "S1-CLEANUP-1-AUDIT",
+      "pattern": "OGHAM_STARTER_SKILLS and CardOption enum were listed for removal in S1-CLEANUP-1 but are actively used by 8+ files. Task descriptions can be outdated — always grep for callers before deleting any symbol.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_constants.gd",
+        "tooling"
+      ]
     }
   ],
   "agent_performance": {
@@ -112,7 +134,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 15,
+      "tasks_completed": 17,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -204,6 +226,13 @@
       "type": "dev",
       "action": "Fixed BUG-FACTION-OVERFLOW: faction keyword auto-tag in _wrap_text_as_card() now capped at 1 ADD_REPUTATION per card. Added faction_tagged flag + size guard.",
       "improvement": "~40-60% of Celtic cards will now pass _validate_card correctly instead of silently falling back to FastRoute. LLM cards will be used far more often."
+    },
+    {
+      "cycle": 5,
+      "date": "2026-04-13T06:00:00Z",
+      "type": "dev",
+      "action": "Sprint 1 COMPLETE. Audited S1-CLEANUP-1/2/3 + S1-OGHAM-ALIGN — all already completed by prior Triade cleanup cycles. Removed dead GENERATION_TIMEOUT_MS from merlin_llm_adapter.gd (LOW bug from S1-LLM-VALIDATE). 22 tasks archived. Sprint 2 starts next cycle.",
+      "improvement": "Learned: audit file state before coding. Sprint tasks may be pre-completed by earlier cycles. OGHAM_STARTER_SKILLS and CardOption must be kept (heavily used)."
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks from feature_queue.json",
-  "archived_at": "2026-04-12T22:30:00Z",
+  "archived_at": "2026-04-13T06:00:00Z",
   "tasks": [
     {
       "id": "TRIADE-CORE-1",
@@ -187,6 +187,64 @@
       "title": "Fix: faction keyword auto-tag overflow silently failing _validate_card",
       "agent": "godot_expert",
       "notes": "Fixed in merlin_llm_adapter.gd _wrap_text_as_card(): added faction_tagged bool flag to break outer faction loop after first match, added size guard (< 3 effects). Frequency was 40-60% of Celtic cards. Now at most 1 ADD_REPUTATION per card."
+    },
+    {
+      "id": "S1-CLEANUP-1",
+      "sprint": "S1",
+      "priority": 2,
+      "status": "completed",
+      "type": "dev",
+      "title": "Supprimer dead code merlin_constants.gd (ELEMENTS, ESSENCE_*, FLUX_*)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "completed_at": "2026-04-13T06:00:00Z",
+      "notes": "AUDIT: All listed dead constants (ELEMENTS, ESSENCE_DROP_*, ESSENCE_ANCHOR_CARDS, ESSENCE_BASE_REWARDS, ESSENCE_VICTORY_BONUS, ESSENCE_CHUTE_BONUS, ESSENCE_MINIGAME_BONUS, ESSENCE_OGHAM_BONUS, ESSENCE_FACTION_BONUS, FLUX_*, RUN_TYPOLOGIES, DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS, BOND_TIERS) were already removed in prior Triade cleanup cycles. OGHAM_STARTER_SKILLS and CardOption were listed for removal but are actively used by 8+ files — kept. Bonus: removed dead GENERATION_TIMEOUT_MS from merlin_llm_adapter.gd (LOW bug from S1-LLM-VALIDATE)."
+    },
+    {
+      "id": "S1-CLEANUP-2",
+      "sprint": "S1",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Nettoyer merlin_store.gd dead state (essence, bestiole, ogham_fragments)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "completed_at": "2026-04-13T06:00:00Z",
+      "notes": "AUDIT: No dead meta state keys found in merlin_store.gd. 'life_essence' is the live life-bar state (not old Essence system). No bestiole, ogham_fragments, liens, gloire_points, bestiole_evolution keys. No _init_triade_run/_resolve_triade_choice methods. All already cleaned in prior cycles."
+    },
+    {
+      "id": "S1-CLEANUP-3",
+      "sprint": "S1",
+      "priority": 4,
+      "status": "completed",
+      "type": "dev",
+      "title": "Renommer TRIADE_ action dispatch prefix dans store + callers",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/ui/merlin_game_controller.gd",
+        "scripts/test/test_merlin_store.gd"
+      ],
+      "completed_at": "2026-04-13T06:00:00Z",
+      "notes": "AUDIT: No TRIADE_ action dispatch prefixes found in merlin_store.gd or merlin_game_controller.gd. Only remaining TRIADE_ references are in test_fallback_pool.gd FORBIDDEN_EFFECT_TYPES array — a test assertion that these old effects must NOT appear in cards, which is legitimate and correct."
+    },
+    {
+      "id": "S1-OGHAM-ALIGN",
+      "sprint": "S1",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Aligner 18 Oghams sur bible v2.4 (7 effets incorrects)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "completed_at": "2026-04-13T06:00:00Z",
+      "notes": "AUDIT: All 18 Oghams verified correct. 6/6 named corrections already in place: duir=heal_immediate(12), onn=add_biome_currency(10), nuin=replace_worst_option, quert=heal_immediate(8), ruis=heal_and_cost(heal:18,currency_cost:5), saille=currency_and_heal(currency:8,heal:3). All 18 have 12 fields (>10 required). OGHAM_FULL_SPECS is complete and bible-aligned."
     }
   ]
 }

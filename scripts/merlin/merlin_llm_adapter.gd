@@ -26,8 +26,6 @@ const LLM_PARAMS := {
 	"repetition_penalty": 1.4,
 }
 
-const GENERATION_TIMEOUT_MS := 30000
-
 const CELTIC_THEMES: Array[String] = [
 	"nemeton sacre", "brume matinale", "dolmen ancien", "sources enchantees",
 	"korrigans farceurs", "cercle de pierres", "chene millénaire", "sidhe lumineux",
