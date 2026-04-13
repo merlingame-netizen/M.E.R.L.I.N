@@ -140,7 +140,7 @@
       "id": "q-20260413-004",
       "category": "gamedesign",
       "priority": "LOW",
-      "status": "pending",
+      "status": "answered",
       "question": "mg_meditation.gd existe comme minigame mais n'est pas listé dans la bible s.6.2. Après correction de mg_sang_froid (déplacé vers esprit), GAMES['esprit'] sera [volonte, apaisement, sang_froid]. Que faire de mg_meditation ?",
       "context": "Audit S3-MINIGAMES-FIELD-AUDIT: Bible esprit = apaisement, volonte, sang_froid. GAMES esprit avait mg_meditation (non-biblique) à la place de mg_sang_froid. Fix appliqué: sang_froid remplace meditation dans GAMES['esprit']. mg_meditation.gd reste comme script mais n'est plus dispatchable.",
       "type": "multiple_choice",
