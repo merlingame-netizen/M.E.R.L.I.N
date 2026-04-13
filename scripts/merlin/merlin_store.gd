@@ -515,6 +515,12 @@ func _do_autosave() -> void:
 		return
 	_autosave_pending = false
 	save_system.save_profile(state.get("meta", {}))
+	var run: Dictionary = state.get("run", {})
+	if bool(run.get("active", false)):
+		var run_snapshot: Dictionary = run.duplicate(true)
+		run_snapshot["biome"] = str(run.get("current_biome", ""))
+		run_snapshot["card_index"] = int(run.get("cards_played", 0))
+		save_system.save_run_state(run_snapshot)
 	if merlin:
 		merlin.save_all()
 

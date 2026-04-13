@@ -41,6 +41,8 @@ export interface FeatureTask {
   agent?: string;
   sprint?: string;
   type?: string;
+  description?: string;
+  files?: string[];
 }
 
 export interface FeedbackQuestion {

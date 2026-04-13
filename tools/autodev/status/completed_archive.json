@@ -1,125 +1,8 @@
 {
   "version": "1.0",
-  "description": "Archived completed tasks from feature_queue.json",
-  "archived_at": "2026-04-12T18:00:00Z",
-  "tasks": [
-    {
-      "id": "TRIADE-CORE-1",
-      "phase": 1,
-      "priority": 1,
-      "status": "completed",
-      "title": "Supprimer Triade de merlin_constants.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-CORE-2",
-      "phase": 1,
-      "priority": 2,
-      "status": "completed",
-      "title": "Nettoyer merlin_store.gd — état Triade",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-CORE-3",
-      "phase": 1,
-      "priority": 3,
-      "status": "completed",
-      "title": "Nettoyer merlin_effect_engine.gd — SHIFT_ASPECT/SOUFFLE",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-CORE-4",
-      "phase": 1,
-      "priority": 4,
-      "status": "completed",
-      "title": "Nettoyer merlin_card_system.gd — options liées aux aspects",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-UI-1",
-      "phase": 1,
-      "priority": 5,
-      "status": "completed",
-      "title": "Remplacer hub_triade_hud.gd par reputation_hud.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-11"
-    },
-    {
-      "id": "TRIADE-UI-2",
-      "phase": 1,
-      "priority": 6,
-      "status": "completed",
-      "title": "Rewire merlin_game_ui.gd et merlin_game_controller.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-AI-1",
-      "phase": 1,
-      "priority": 7,
-      "status": "completed",
-      "title": "Nettoyer context_builder.gd — prompt LLM sans Triade",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-AI-2",
-      "phase": 1,
-      "priority": 8,
-      "status": "completed",
-      "title": "Nettoyer merlin_omniscient.gd + fallback_pool.gd + brain_quality_judge.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-SCENES",
-      "phase": 1,
-      "priority": 9,
-      "status": "completed",
-      "title": "Nettoyer les scènes contrôleurs (4 fichiers)",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "TRIADE-TRAINING",
-      "phase": 1,
-      "priority": 10,
-      "status": "completed",
-      "title": "Invalider training_roadmap.json (modèles entraînés sur Triade)",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "MECANIQUE-DESIGN",
-      "phase": 2,
-      "priority": 11,
-      "status": "completed",
-      "title": "Mettre à jour NEW_MECHANICS_DESIGN.md avec décisions session",
-      "agent": "game_designer",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "REPUTATION-IMPL",
-      "phase": 4,
-      "priority": 12,
-      "status": "completed",
-      "title": "Implémenter merlin_reputation_system.gd",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
-    {
-      "id": "DAYTIME-GLOBAL",
-      "phase": 3,
-      "priority": 13,
-      "status": "completed",
-      "title": "Créer game_time_manager.gd (singleton cycle jour/nuit global)",
-      "agent": "godot_expert",
-      "completed_at": "2026-03-15"
-    },
+  "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
+  "updated": "2026-04-13T10:00:00Z",
+  "archived": [
     {
       "id": "S1-CORE-TEST",
       "sprint": "S1",
@@ -218,6 +101,72 @@
       "agent": "bug_hunter",
       "completed_at": "2026-04-13T05:03:00Z",
       "notes": "10 cards generated OK. JSON structure valid. Fallback tested. Qwen 3.5 quality: 7/10."
+    },
+    {
+      "id": "BUG-FACTION-OVERFLOW-FIX",
+      "sprint": "S1",
+      "priority": 0,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix faction keyword overflow in LLM adapter",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T06:00:00Z",
+      "notes": "Added faction_tagged flag + size guard. Max 1 ADD_REPUTATION per card."
+    },
+    {
+      "id": "S2-INTEGRATION",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Integration test: Bible audit + bug hunt statique",
+      "agent": "game_design_auditor",
+      "completed_at": "2026-04-13T02:54:09Z",
+      "notes": "12 systems audited. 1 HIGH (promise dual storage), 4 MEDIUM, 2 LOW. Report: test_reports/S2-INTEGRATION_2026-04-13.json"
+    },
+    {
+      "id": "BUG-PROMISE-SYSTEM-FIX",
+      "sprint": "S2",
+      "priority": 1,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix dual promise storage split-brain",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T07:00:00Z",
+      "notes": "Unified to active_promises. Card-based deadlines. MAX=2 cap."
+    },
+    {
+      "id": "S3-EDGE-CASES",
+      "sprint": "S3",
+      "priority": 12,
+      "status": "completed",
+      "type": "test",
+      "title": "10 scenarios de mort + edge cases critiques",
+      "agent": "game_playtester",
+      "completed_at": "2026-04-13T08:30:00Z",
+      "notes": "8 edge cases simulated. 7/8 PASS. Found: BUG-MIDRUN-SAVE-INCOMPLETE, BUG-SIGNAL-DELTA."
+    },
+    {
+      "id": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix mid-run save: persist run_state incrementally during run",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-13T09:00:00Z",
+      "notes": "Fixed: _do_autosave() now calls save_run_state(run_snapshot). Removed pacing recovery per director q-005."
+    },
+    {
+      "id": "S3-LLM-ROBUSTNESS",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "completed",
+      "type": "test",
+      "title": "Bug hunt layer IA (timeout, fallback, race conditions)",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T10:00:00Z",
+      "notes": "10 scenarios. 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT), 2 LOW. LLM transport fully robust. Report: test_reports/S3-LLM-ROBUSTNESS_2026-04-13.json"
     }
   ]
 }

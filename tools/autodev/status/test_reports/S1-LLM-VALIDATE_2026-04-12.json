@@ -1,0 +1,205 @@
+{
+  "report_id": "S1-LLM-VALIDATE_2026-04-12",
+  "task_id": "S1-LLM-VALIDATE",
+  "agent": "bug_hunter",
+  "timestamp": "2026-04-12T23:30:00Z",
+  "cycle_type": "test",
+  "method": "static_analysis + pipeline_simulation",
+  "files_analyzed": [
+    "addons/merlin_ai/merlin_ai.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/merlin/llm_adapter_json_repair.gd",
+    "scripts/merlin/llm_adapter_game_master.gd",
+    "scripts/merlin/llm_adapter_validation.gd",
+    "scripts/merlin/llm_adapter_text_sanitizer.gd",
+    "scripts/merlin/merlin_effect_engine.gd",
+    "scripts/merlin/merlin_constants.gd"
+  ],
+
+  "summary": {
+    "overall": "FAIL",
+    "critical_bugs": 0,
+    "high_bugs": 1,
+    "medium_bugs": 0,
+    "low_bugs": 1,
+    "scenarios_tested": 10,
+    "scenarios_passed": 8,
+    "scenarios_failed": 2,
+    "regression_checks_passed": 3
+  },
+
+  "regression_checks": [
+    {
+      "id": "REG-01",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "cards_played NOT incremented in resolve_card()",
+      "status": "PASS",
+      "details": "resolve_card() in merlin_card_system.gd logs to story_log and applies effects — no cards_played increment. StoreRun.resolve_choice() remains canonical owner.",
+      "files": ["scripts/merlin/merlin_card_system.gd:438-501"]
+    },
+    {
+      "id": "REG-02",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "Orphaned process_card() removed from merlin_effect_engine.gd",
+      "status": "PASS",
+      "details": "grep for 'func process_card' returns no results. Only comment references remain (lines 536, 585 — describe protection filter behavior). 9125 chars successfully deleted.",
+      "files": ["scripts/merlin/merlin_effect_engine.gd"]
+    },
+    {
+      "id": "REG-03",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "LIFE_ESSENCE_DRAIN_PER_CARD = 0 (director q-20260412-001)",
+      "status": "PASS",
+      "details": "merlin_constants.gd line 74: 'const LIFE_ESSENCE_DRAIN_PER_CARD := 0'. Comment confirms director decision applied.",
+      "files": ["scripts/merlin/merlin_constants.gd:74"]
+    }
+  ],
+
+  "scenarios": [
+    {
+      "id": "SCENARIO-01",
+      "name": "Happy path: LLM generates clean text, 0 faction keywords",
+      "status": "PASS",
+      "flow": "generate_card → _generate_card_two_stage → generate_with_system → _wrap_text_as_card → 3 effects (no keyword match) → validate_faction_card → _validate_card → PASS",
+      "details": "Option 2 has exactly 2 effects: [ADD_REPUTATION:faction, ADD_KARMA:2]. Passes _validate_card(effects.size() <= 3). Card returned to caller."
+    },
+    {
+      "id": "SCENARIO-02",
+      "name": "LLM timeout (25s warm / 90s cold)",
+      "status": "PASS",
+      "flow": "_run_llm timeout → return {error: LLM timeout} → _generate_card_two_stage returns {ok: false} → generate_card falls to get_fastroute_card()",
+      "details": "Timeout handled at line merlin_ai.gd:291-295. FastRoute pool provides valid fallback. No crash. LLM_POLL_TIMEOUT_MS=25000ms warm, 90000ms cold start."
+    },
+    {
+      "id": "SCENARIO-03",
+      "name": "Ollama not running (is_ready=false)",
+      "status": "PASS",
+      "flow": "generate_card → is_llm_ready()=false → {ok: false, error: LLM not ready} → FastRoute fallback",
+      "details": "merlin_llm_adapter.gd:267-269. MerlinCardSystem checks llm_result.get('ok', false) at line 162. FastRoute activated."
+    },
+    {
+      "id": "SCENARIO-04",
+      "name": "Malformed JSON from GM brain (smart effects Stage 2.5)",
+      "status": "PASS",
+      "flow": "Smart effects GM call fails → calculate_smart_effects returns [] → Stage 2.5 skipped (smart.size() != 3) → Card uses _wrap_text_as_card effects",
+      "details": "merlin_llm_adapter.gd:390-404: 'if smart.size() == 3' guard. If GM fails, smart=[] → size!=3 → effects unchanged. Card generation continues normally."
+    },
+    {
+      "id": "SCENARIO-05",
+      "name": "1 faction keyword in narrative ('druide' only)",
+      "status": "PASS",
+      "flow": "_wrap_text_as_card faction scan → 1 match → options_out[2].effects = [ADD_REP:f3, ADD_KARMA, ADD_REP:druides] → 3 effects → _validate_card PASS",
+      "details": "3 effects is exactly the max. _validate_card line 699: 'effects.size() > 3'. 3 is not > 3. PASS."
+    },
+    {
+      "id": "SCENARIO-06",
+      "name": "2+ faction keywords in narrative (CRITICAL PATH: 'chene' + 'menhir')",
+      "status": "FAIL",
+      "flow": "_wrap_text_as_card → 2 factions match → options_out[2].effects = [ADD_REP:f3, ADD_KARMA, ADD_REP:druides, ADD_REP:anciens] = 4 effects → validate_faction_card PASS (no size check) → MerlinCardSystem._validate_card FAIL (4 > 3) → FastRoute used",
+      "details": "BUG: faction keyword auto-tagging loop adds 1 effect per faction match. Options starts at 2 effects. 2 faction matches = 4 total. Celtic narrative with both druidic AND primordial/megalithe vocabulary triggers this. Frequency estimate: 40-60% of LLM-generated Celtic cards.",
+      "bug_id": "BUG-FACTION-OVERFLOW",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCENARIO-07",
+      "name": "Narrative fallback #1 used: 'chenes centenaires' + 'pierre moussues' (contains 'ancien')",
+      "status": "FAIL",
+      "flow": "NARRATIVE_FALLBACKS[0]: 'La brume s'epaissit entre les chenes centenaires. Un murmure ancien resonne...' → scan: 'chene' (druides) + 'ancien' (anciens) → 2 matches → 4 effects → same failure",
+      "details": "The first NARRATIVE_FALLBACK itself triggers the bug. Any run where Jaccard dedup uses fallback #1 will also fail _validate_card and silently fall to FastRoute.",
+      "bug_id": "BUG-FACTION-OVERFLOW",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCENARIO-08",
+      "name": "0 verbs extracted, repair call fails",
+      "status": "PASS",
+      "flow": "labels.size()=0 after repair → VERB_POOL_SAFE fallback → 3 labels guaranteed → card built normally",
+      "details": "_wrap_text_as_card:489-513 padding logic. Pool always non-empty (7 triplets × 3 = 21 verbs). Labels always padded to 3."
+    },
+    {
+      "id": "SCENARIO-09",
+      "name": "FastRoute pool exhausted + emergency card",
+      "status": "PASS",
+      "flow": "pool empty → _fastroute_seen.clear() → if still empty → _get_emergency_card() → hardcoded valid card with 3 options",
+      "details": "_get_emergency_card() at line 736 returns valid structure: text + 3 options with valid effects (HEAL_LIFE, ADD_REPUTATION). Always succeeds."
+    },
+    {
+      "id": "SCENARIO-10",
+      "name": "Dead constant GENERATION_TIMEOUT_MS",
+      "status": "WARN",
+      "flow": "merlin_llm_adapter.gd:29 declares 'const GENERATION_TIMEOUT_MS := 30000'. Search shows zero usages of this constant in the generation pipeline.",
+      "details": "The actual timeout is LLM_POLL_TIMEOUT_MS = 25000 (warm) and LLM_POLL_TIMEOUT_FIRST_MS = 90000 (cold) in merlin_ai.gd. GENERATION_TIMEOUT_MS is dead code. Not a crash but misleading for maintainers.",
+      "bug_id": "BUG-DEAD-CONSTANT",
+      "severity": "LOW"
+    }
+  ],
+
+  "bugs": [
+    {
+      "id": "BUG-FACTION-OVERFLOW",
+      "severity": "HIGH",
+      "title": "Faction keyword auto-tag causes effect overflow, silently failing _validate_card",
+      "file": "scripts/merlin/merlin_llm_adapter.gd",
+      "lines": "615-626",
+      "description": "In _wrap_text_as_card(), the faction keyword scan loop appends one ADD_REPUTATION effect to options_out[2] for EACH faction whose keywords appear in the narrative text. Option 2 already has 2 effects: [effects[2] from generate_contextual_effects, ADD_KARMA]. When 2+ factions match their keywords (e.g., 'chene'=druides + 'menhir'=anciens), option 2 has 4+ effects. validate_faction_card() in the adapter does NOT check effect count. But MerlinCardSystem._validate_card() at line 699 enforces max 3 effects per option: 'if effects.size() > 3 → return invalid'. Result: the LLM card is thrown away, FastRoute fallback is used. LLM generation is silently bypassed for ~40-60% of Celtic narrative cards.",
+      "root_cause": "validate_faction_card() (adapter) and _validate_card() (card system) have inconsistent rules. Adapter doesn't cap effects per option; card system does. Faction keyword loop can overflow before hitting the card system validator.",
+      "fix_strategy": "In _wrap_text_as_card() faction keyword loop (line 615-626), add a guard: only append the ADD_REPUTATION effect if options_out[2]['effects'].size() < 3. Add a flag to exit the outer faction loop after the first match (max 1 auto-tag effect). This keeps option 2 within 3 effects while preserving the most relevant faction tag.",
+      "fix_file": "scripts/merlin/merlin_llm_adapter.gd",
+      "fix_lines": "615-626",
+      "task_created": "BUG-FACTION-OVERFLOW-FIX",
+      "task_priority": 1,
+      "frequency": "HIGH — any Celtic narrative with 2+ factions mentioned (druides/anciens co-occur frequently in Celtic lore)"
+    },
+    {
+      "id": "BUG-DEAD-CONSTANT",
+      "severity": "LOW",
+      "title": "GENERATION_TIMEOUT_MS constant in adapter is dead code",
+      "file": "scripts/merlin/merlin_llm_adapter.gd",
+      "lines": "29",
+      "description": "const GENERATION_TIMEOUT_MS := 30000 is declared but never used in the generation pipeline. Actual timeouts are LLM_POLL_TIMEOUT_MS=25000 and LLM_POLL_TIMEOUT_FIRST_MS=90000 in merlin_ai.gd. The discrepancy (30s vs 25s) could mislead maintainers into thinking 30s is the actual timeout.",
+      "fix_strategy": "Remove GENERATION_TIMEOUT_MS from merlin_llm_adapter.gd or replace with a comment referencing the real timeout in merlin_ai.gd.",
+      "task_created": null,
+      "frequency": "N/A — code smell only"
+    }
+  ],
+
+  "llm_architecture_analysis": {
+    "json_repair_coverage": {
+      "status": "ADEQUATE",
+      "details": "4-strategy repair chain: raw JSON extraction → common error fixes → aggressive repair (truncation, bracket closure) → regex field extraction. Used for GM structured calls. Two-stage narrative flow does NOT use JSON repair (free text + programmatic wrapping). JSON repair is defense-in-depth for Stage 2.5 (smart effects) and Stage 3 (consequences)."
+    },
+    "fallback_chain": {
+      "status": "ROBUST",
+      "chain": ["LLM two-stage (primary)", "FastRoute pool (biome-specific)", "FastRoute pool (generic)", "Emergency card (hardcoded)"],
+      "details": "Every failure path has a fallback. Emergency card always works. No softlock possible."
+    },
+    "timeout_handling": {
+      "status": "PASS",
+      "warm_timeout_ms": 25000,
+      "cold_timeout_ms": 90000,
+      "fallback_on_timeout": "FastRoute",
+      "details": "_run_llm() cancels generation on timeout and returns {error: ...}. Caller falls to FastRoute."
+    },
+    "effect_type_consistency": {
+      "status": "PASS",
+      "allowed_effect_types_count": 17,
+      "valid_codes_count": 22,
+      "verdict": "ALLOWED_EFFECT_TYPES ⊆ VALID_CODES. All LLM-generated effects that pass validate_faction_card() will also pass _validate_card() type check. No type mismatch possible."
+    }
+  },
+
+  "new_tasks": [
+    {
+      "id": "BUG-FACTION-OVERFLOW-FIX",
+      "sprint": "S1",
+      "priority": 1,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix: faction keyword auto-tag overflow in _wrap_text_as_card",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd"],
+      "description": "BUG-FACTION-OVERFLOW (HIGH): In _wrap_text_as_card() lines 615-626, the faction keyword scan adds one ADD_REPUTATION to options_out[2] per faction that matches. Option 2 already has 2 effects (contextual + ADD_KARMA), so 2 faction matches = 4 effects, failing _validate_card(max 3). FIX: Add guard before append: 'if options_out[2][\"effects\"].size() < 3'. Add flag to exit outer loop after first match (only 1 auto-tag per card, keeping option 2 at max 3 effects). Test: narrative with 'druide' + 'menhir' keywords should produce valid card (not FastRoute fallback)."
+    }
+  ]
+}

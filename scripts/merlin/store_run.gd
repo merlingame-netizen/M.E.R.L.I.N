@@ -305,14 +305,15 @@ static func handle_run_end(state: Dictionary, end_check: Dictionary, save_system
 static func check_promise_deadlines(state: Dictionary, apply_effect_func: Callable) -> void:
 	var run: Dictionary = state.get("run", {})
 	var promises: Array = run.get("active_promises", [])
-	var current_day: int = int(run.get("day", 1))
+	var cards_played: int = int(run.get("cards_played", 0))
 	var broken_count: int = 0
 
 	for promise in promises:
 		if str(promise.get("status", "")) != "active":
 			continue
-		var deadline: int = int(promise.get("deadline_day", 0))
-		if deadline > 0 and current_day > deadline:
+		var made_at: int = int(promise.get("made_at_card", 0))
+		var deadline_cards: int = int(promise.get("deadline_cards", 0))
+		if deadline_cards > 0 and cards_played >= made_at + deadline_cards:
 			promise["status"] = "broken"
 			broken_count += 1
 

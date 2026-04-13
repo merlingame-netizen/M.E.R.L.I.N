@@ -9,14 +9,14 @@ interface StatusResponse {
   ok: boolean;
   timestamp: string;
   data: {
-    feature_queue?: { tasks?: Array<{ id: string; title: string; priority: number; status: string; agent?: string; sprint?: string; type?: string }> };
+    feature_queue?: { tasks?: Array<{ id: string; title: string; priority: number; status: string; agent?: string; sprint?: string; type?: string; description?: string; files?: string[] }> };
     agent_status?: { agents?: Record<string, { state?: string; current_task?: string | null }> };
     events?: Array<{ type: string; timestamp?: string; data?: Record<string, unknown> }>;
     escalation?: { type?: string; message?: string; timestamp?: string } | null;
     watchdog?: string | null;
     feedback_questions?: { questions?: Array<{ id: string; category: string; priority: string; status: string; question: string; context?: string; type: string; options?: string[] | null; screenshot_urls?: string[] | null; created_at: string }> };
     feedback_responses?: { responses?: Array<{ question_id: string; answer: string; additional_notes?: string }> };
-    completed_archive?: { tasks?: Array<{ id: string }> };
+    completed_archive?: { tasks?: Array<{ id: string }>; archived?: Array<{ id: string }> };
   };
 }
 
@@ -62,6 +62,8 @@ export function useStateSync() {
             agent: t.agent,
             sprint: t.sprint,
             type: t.type,
+            description: t.description,
+            files: t.files,
           })));
         }
 
@@ -77,7 +79,7 @@ export function useStateSync() {
         }
 
         // Completed archive count
-        const archivedCount = data.completed_archive?.tasks?.length || 0;
+        const archivedCount = data.completed_archive?.archived?.length || data.completed_archive?.tasks?.length || 0;
         setCompletedCount(archivedCount);
 
         // Events — process cycle_updates only (skip state_change noise)

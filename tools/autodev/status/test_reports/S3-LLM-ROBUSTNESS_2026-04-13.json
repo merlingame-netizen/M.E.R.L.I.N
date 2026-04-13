@@ -1,0 +1,213 @@
+{
+  "report_id": "S3-LLM-ROBUSTNESS_2026-04-13",
+  "task_id": "S3-LLM-ROBUSTNESS",
+  "agent": "bug_hunter",
+  "timestamp": "2026-04-13T10:00:00Z",
+  "cycle_type": "test",
+  "method": "static_analysis + code_simulation + cross_module_tracing",
+  "files_analyzed": [
+    "addons/merlin_ai/merlin_ai.gd",
+    "addons/merlin_ai/ollama_backend.gd",
+    "addons/merlin_ai/context_builder.gd",
+    "addons/merlin_ai/merlin_omniscient.gd",
+    "addons/merlin_ai/rag_manager.gd",
+    "addons/merlin_ai/generators/event_category_selector.gd",
+    "addons/merlin_ai/generators/fallback_pool.gd",
+    "addons/merlin_ai/processors/event_adapter.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "scripts/merlin/llm_adapter_game_master.gd",
+    "scripts/merlin/llm_adapter_text_sanitizer.gd",
+    "scripts/merlin/merlin_card_system.gd",
+    "scripts/merlin/merlin_store.gd"
+  ],
+
+  "summary": {
+    "overall": "FAIL",
+    "critical_bugs": 0,
+    "high_bugs": 1,
+    "medium_bugs": 1,
+    "low_bugs": 2,
+    "scenarios_tested": 10,
+    "scenarios_passed": 7,
+    "scenarios_failed": 3,
+    "regression_checks_passed": 3
+  },
+
+  "regression_checks": [
+    {
+      "id": "REG-PROMISE-01",
+      "from_report": "S2-INTEGRATION_2026-04-13",
+      "name": "BUG-PROMISE-SYSTEM-FIX: active_promises unified storage",
+      "status": "PASS",
+      "details": "merlin_effect_engine.gd:245 — run.get('active_promises', []). All promise paths unified. Card-based deadlines confirmed.",
+      "files": ["scripts/merlin/merlin_effect_engine.gd:245"]
+    },
+    {
+      "id": "REG-OVERFLOW-01",
+      "from_report": "S1-LLM-VALIDATE_2026-04-12",
+      "name": "BUG-FACTION-OVERFLOW-FIX: faction_tagged flag caps ADD_REPUTATION at 1 per card",
+      "status": "PASS",
+      "details": "merlin_llm_adapter.gd:616 — faction_tagged flag present. Break after first match + size guard on options_out[2].effects.",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd:616-629"]
+    },
+    {
+      "id": "REG-DRAIN-01",
+      "from_report": "S1-CORE-TEST_2026-04-12",
+      "name": "Director q-001: LIFE_ESSENCE_DRAIN_PER_CARD = 0",
+      "status": "PASS",
+      "details": "merlin_constants.gd: LIFE_ESSENCE_DRAIN_PER_CARD := 0 confirmed.",
+      "files": ["scripts/merlin/merlin_constants.gd"]
+    }
+  ],
+
+  "scenarios": [
+    {
+      "id": "SC-LLM-01",
+      "name": "Ollama down on startup",
+      "status": "PASS",
+      "details": "check_available() returns false → start_warmup fails → is_ready stays false → all generate_*() return {error: 'LLM non pret'} → card system falls back to FastRoute. Graceful degradation confirmed.",
+      "files": ["addons/merlin_ai/merlin_ai.gd:173", "addons/merlin_ai/ollama_backend.gd:71"]
+    },
+    {
+      "id": "SC-LLM-02",
+      "name": "LLM generation timeout (warm gen)",
+      "status": "PASS",
+      "details": "LLM_POLL_TIMEOUT_MS=25000ms. When timeout fires: cancel_generation() called, returns {error: 'LLM timeout (Nms)'}. No softlock. Caller in adapter handles error with fallback.",
+      "files": ["addons/merlin_ai/merlin_ai.gd:290-295"]
+    },
+    {
+      "id": "SC-LLM-03",
+      "name": "LLM generation timeout (cold start)",
+      "status": "PASS",
+      "details": "LLM_POLL_TIMEOUT_FIRST_MS=90000ms for cold model load. Retry logic via 30s warmup retry guard. First-gen flag (_first_generation_done) correctly differentiates.",
+      "files": ["addons/merlin_ai/merlin_ai.gd:277, 99-100"]
+    },
+    {
+      "id": "SC-LLM-04",
+      "name": "JSON malformation in GM structured call",
+      "status": "PASS",
+      "details": "calculate_smart_effects() returns [] on parse error (line 216). generate_consequences() returns [] on error (line 405). Both gracefully degrade: card returned without smart effects / consequences.",
+      "files": ["scripts/merlin/llm_adapter_game_master.gd:125-167, 373-406"]
+    },
+    {
+      "id": "SC-LLM-05",
+      "name": "ChatML token injection via story_log",
+      "status": "PASS",
+      "details": "LLM output goes through clean_response() (merlin_ai.gd:2009-2026) which strips <|im_end|>, <|im_start|>, <|endoftext|> before storage. Story_log entries derived from cleaned text.",
+      "files": ["addons/merlin_ai/merlin_ai.gd:2009-2026, 1196"]
+    },
+    {
+      "id": "SC-LLM-06",
+      "name": "Background task queue saturation",
+      "status": "PASS",
+      "details": "BG_QUEUE_MAX_SIZE=100. At limit, oldest task is dropped (pop_front). BG_TASK_TIMEOUT_MS=30000ms releases stuck tasks. BRAIN_BUSY_TIMEOUT_MS=60000ms force-releases primary brains.",
+      "files": ["addons/merlin_ai/merlin_ai.gd:96-97, 2134-2137, 2065-2071"]
+    },
+    {
+      "id": "SC-LLM-07",
+      "name": "Faction context in NPC dialogue and event routing",
+      "status": "FAIL",
+      "bug_id": "BUG-FACTIONS-STALE-OMNISCIENT",
+      "details": "FAIL: merlin_omniscient._build_event_context() reads run.get('factions', {}) which is always zeros (never updated — faction rep lives in meta.faction_rep). NPC dialogue always shows 'Druides=0, Anciens=0, Korrigans=0'. Event adapter condition checks on faction thresholds never trigger. dominant_faction always 'none'.",
+      "files": [
+        "addons/merlin_ai/merlin_omniscient.gd:409, 508, 514",
+        "addons/merlin_ai/context_builder.gd:40-42",
+        "addons/merlin_ai/generators/event_category_selector.gd:285, 538",
+        "addons/merlin_ai/processors/event_adapter.gd:252, 261, 302"
+      ]
+    },
+    {
+      "id": "SC-LLM-08",
+      "name": "Balance heuristic faction evaluation during card generation",
+      "status": "PASS",
+      "details": "PASS (by accidental correctness): merlin_card_system._build_llm_context() does NOT include 'factions' key in context passed to adapter. So context.get('factions', {}) returns {} → all factions default to 50.0 → balance_score=100. The balance heuristic works correctly FOR THIS PATH, but only because the key is absent (fallback default). NOTE: if full run state is passed directly (e.g. run_3d_controller or merlin_store paths), context includes stale zeros.",
+      "files": [
+        "scripts/merlin/merlin_card_system.gd:754-767",
+        "scripts/merlin/llm_adapter_game_master.gd:25-48"
+      ]
+    },
+    {
+      "id": "SC-LLM-09",
+      "name": "SINGLE+ time-sharing model swap race condition",
+      "status": "FAIL",
+      "bug_id": "BUG-TIMESHARE-MODEL-SWAP",
+      "details": "FAIL (LOW): _swap_model_for_role() is called before the pre-flight busy check in _run_llm(). In SINGLE+ mode with coroutine interleaving, a model swap can happen mid-poll loop, causing next request to use wrong model. In practice: pre-flight check serializes LLM access effectively (5s wait + cancel). Theoretical race. Severity: LOW.",
+      "files": ["addons/merlin_ai/merlin_ai.gd:215-253"]
+    },
+    {
+      "id": "SC-LLM-10",
+      "name": "Story log prompt size unbounded on long runs",
+      "status": "FAIL",
+      "bug_id": "BUG-STORY-LOG-PROMPT-OVERFLOW",
+      "details": "FAIL (LOW): _generate_card_two_stage reads up to 10 story_log entries (log_start = maxi(0, story.size()-10)), each entry adds up to 600 chars (text:200 + consequence:120 + action:80 + separator). At 10 entries + motifs: ~7KB of context appended to prompt. 2B model context=4096 tokens (~12KB). At run card 50+, prompts approach context limit, causing Ollama to silently truncate. No explicit size guard on total prompt chars.",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd:310-335"]
+    }
+  ],
+
+  "bugs_found": [
+    {
+      "id": "BUG-FACTIONS-STALE-OMNISCIENT",
+      "severity": "HIGH",
+      "title": "run.factions always zero — omniscient, event routing, NPC dialogue broken",
+      "description": "run.factions is initialized to zeros in merlin_store and NEVER updated. Actual faction rep lives in meta.faction_rep. All AI subsystems that read context.get('factions', {}) or run.get('factions', {}) always see zeros: (1) merlin_omniscient._build_event_context() — dominant_faction always 'none', event routing conditions never trigger; (2) context_builder.build_full_context() — passed to event_category_selector and rag_manager; (3) event_adapter condition checks — faction threshold events never fire; (4) NPC card generation always shows 'Druides=0, Anciens=0'. The 5-faction reputation system is completely invisible to all AI orchestration beyond the card effect engine.",
+      "affected_files": [
+        "addons/merlin_ai/merlin_omniscient.gd:409, 508, 514, 727, 972",
+        "addons/merlin_ai/context_builder.gd:40-42",
+        "addons/merlin_ai/generators/event_category_selector.gd:285, 538",
+        "addons/merlin_ai/generators/fallback_pool.gd:134, 231",
+        "addons/merlin_ai/processors/event_adapter.gd:252, 261, 302",
+        "addons/merlin_ai/rag_manager.gd:254"
+      ],
+      "root_cause": "run.factions dict initialized with {druides:0.0,...} and never updated. Faction rep is applied to meta.faction_rep. The run.factions key was a design artifact from a previous architecture.",
+      "fix": "In context_builder.build_full_context(game_state): replace run.get('factions', {}) with meta.get('faction_rep', {faction: 50.0}). In merlin_omniscient._build_event_context(): same. Propagate fix to event_category_selector and event_adapter callers. This unblocks all faction-aware LLM behavior.",
+      "task_id": "BUG-FACTIONS-STALE-FIX"
+    },
+    {
+      "id": "BUG-TIMESHARE-MODEL-SWAP",
+      "severity": "LOW",
+      "title": "SINGLE+ time-sharing: model swap before pre-flight check allows theoretical race",
+      "description": "_swap_model_for_role() is called at line 240, BEFORE the pre-flight LLM-busy check at line 243. In theory, if coroutine A is polling (between await process_frame calls) and coroutine B enters _run_llm, B will swap the model before checking if A is done. The pre-flight check then sees A's LLM as busy, waits/cancels. After B acquires the LLM, the model is correctly set for B's role. However, if A's generation somehow completed between B's swap and B's generate_async call, the model tag is now wrong. In practice: (1) GDScript coroutines are cooperative, (2) the busy-check provides effective serialization. Very low probability. No production impact observed.",
+      "affected_files": ["addons/merlin_ai/merlin_ai.gd:215-253"],
+      "fix": "Move _swap_model_for_role() call to AFTER the pre-flight busy check completes (after line 253). One-line change.",
+      "task_id": null
+    },
+    {
+      "id": "BUG-STORY-LOG-PROMPT-OVERFLOW",
+      "severity": "LOW",
+      "title": "Story log adds up to 7KB to prompt on long runs — no total size guard",
+      "description": "_generate_card_two_stage reads up to 10 story entries, each contributing up to 600 chars (text 200 + consequence 120 + action 80 + label overhead). Plus motifs line. Total story block: ~7KB. For a 2B model with 4096-token context (~12KB), this consumes ~60% of context budget. Near token limit, Ollama silently truncates the prompt, cutting off system instructions or earlier context. The LLM may generate lower-quality output (missing instructions = worse adherence to format) without any error signal.",
+      "affected_files": ["scripts/merlin/merlin_llm_adapter.gd:310-335"],
+      "fix": "Cap total story_log block at 1500 chars: measure accumulated history_parts length and break when > 1500. Already have per-entry limits (200/120/80 chars) but no total cap.",
+      "task_id": null
+    }
+  ],
+
+  "confirmed_pass": [
+    "Ollama down fallback: is_llm_ready() guard + FastRoute fallback",
+    "LLM timeout: 25s warm / 90s cold, cancel_generation() called, no softlock",
+    "JSON malformation: GM calls return [] on parse error, card still returned",
+    "ChatML injection: clean_response() strips all template tokens from LLM output",
+    "BG queue saturation: BG_QUEUE_MAX_SIZE=100, drop-oldest policy",
+    "BG task stuck: BG_TASK_TIMEOUT_MS=30000ms, BRAIN_BUSY_TIMEOUT_MS=60000ms",
+    "calculate_smart_effects: [] on error, graceful card return",
+    "generate_consequences: [] on error, card returned without consequence text",
+    "Repair call: error handled, generation continues with available labels",
+    "Two-stage pipeline: programmatic JSON wrap, no JSON parsing for narrative (robust)"
+  ],
+
+  "new_tasks": [
+    {
+      "id": "BUG-FACTIONS-STALE-FIX",
+      "sprint": "S2",
+      "priority": 5,
+      "type": "dev",
+      "title": "Fix stale run.factions: propagate meta.faction_rep to AI context",
+      "agent": "godot_expert",
+      "files": [
+        "addons/merlin_ai/context_builder.gd",
+        "addons/merlin_ai/merlin_omniscient.gd"
+      ],
+      "description": "HIGH bug from S3-LLM-ROBUSTNESS: run.factions always zeros (never updated). Faction rep is in meta.faction_rep. Fix: (1) In context_builder.build_full_context(game_state): change 'factions': run.get('factions', {}) to 'factions': meta.get('faction_rep', {'druides':50.0,'anciens':50.0,'korrigans':50.0,'niamh':50.0,'ankou':50.0}). (2) In merlin_omniscient._build_event_context(game_state): same fix — replace run.get('factions',{}) with meta.get('faction_rep', {...defaults...}). (3) _get_dominant_faction() call at line 514 will now get real values. PAT-010: grep callers before edit. Also check evaluate_balance_heuristic context paths: game_master reads context.get('factions', {}) — for card-system path this is fine (absent = defaults 50.0); for omniscient path this fix propagates real data. DO NOT touch merlin_card_system._build_llm_context() (it correctly uses faction_rep key directly)."
+    }
+  ]
+}
