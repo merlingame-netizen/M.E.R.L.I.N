@@ -57,6 +57,10 @@
     {
       "question_id": "q-20260414-005",
       "answer": "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin"
+    },
+    {
+      "question_id": "q-20260414-004",
+      "answer": "Migrer le chemin actif vers game_flow_controller (refonte propre)"
     }
   ]
 }
