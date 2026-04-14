@@ -298,5 +298,23 @@
       "timestamp": "2026-04-14T10:00:00Z"
     }
   ],
-  "updated": "2026-04-14T10:00:00Z"
+  "updated": "2026-04-14T11:00:00Z",
+  "insights_appended": [
+    {
+      "id": "insight-20260414-002",
+      "agent": "save_persistence_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "fins_vues was never validated — arc conditions depending on it (collines_dolmens: fins_vues>=5) could silently fail on corrupted saves",
+      "details": "SPECIALIST-9 audit found _validate() required_keys was missing fins_vues, echo_memory, run_history, and whispers_seen. S2-ARC-CONDITION-EVAL (P16) will add fins_vues-based arc unlocking. Without the validation fix, a tampered save with fins_vues as wrong type would pass validation silently and the collines_dolmens arc would never unlock. Fix applied in SAVE-VALIDATE-FINS-VUES. Run T-SAVE-VALIDATE-REGRESSION (P33) before implementing S2-ARC-CONDITION-EVAL.",
+      "proposed_task": {
+        "id": "T-SAVE-VALIDATE-REGRESSION",
+        "title": "Test _validate() additions before arc condition eval",
+        "sprint": "S2",
+        "type": "test",
+        "priority": 33
+      },
+      "timestamp": "2026-04-14T11:00:00Z"
+    }
+  ]
 }

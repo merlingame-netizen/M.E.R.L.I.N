@@ -557,7 +557,21 @@
       "agent": "godot_expert",
       "completed_at": "2026-04-14T10:00:00Z",
       "notes": "1-line fix at merlin_constants.gd:435. cotes_sauvages.dominant_faction changed 'korrigans'→'niamh'. Rationale: arc condition requires Niamh rep >= 30, PNJ Maelle is guardian of the coasts (Niamh domain). Korrigans = marshland faction (incorrect for coastal biome). Thematic alignment restored."
+    },
+    {
+      "id": "SAVE-VALIDATE-FINS-VUES",
+      "sprint": "S2",
+      "priority": 23,
+      "status": "completed",
+      "type": "dev",
+      "title": "Add fins_vues + echo_memory to _validate() required_keys",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "completed_at": "2026-04-14T11:00:00Z",
+      "notes": "Added fins_vues/echo_memory/run_history/whispers_seen to required_keys (line 249). Type checks added: fins_vues numeric (279), array types for 4 array fields (283-286), echo_memory dict (288-290). Bonus: anam_accumulated added to _validate_run_state() required_keys (296)."
     }
   ],
-  "last_updated": "2026-04-14T10:00:00Z"
+  "last_updated": "2026-04-14T11:00:00Z"
 }

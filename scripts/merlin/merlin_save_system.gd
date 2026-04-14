@@ -246,6 +246,7 @@ static func _validate(meta: Dictionary) -> bool:
 		"anam", "total_runs", "faction_rep", "trust_merlin",
 		"talent_tree", "oghams", "endings_seen", "arc_tags",
 		"biome_runs", "biomes_unlocked", "tutorial_flags", "stats",
+		"fins_vues", "echo_memory", "run_history", "whispers_seen",
 	]
 	for key in required_keys:
 		if not meta.has(key):
@@ -268,19 +269,31 @@ static func _validate(meta: Dictionary) -> bool:
 		if not owned.has(starter):
 			push_warning("[MerlinSave] Missing starter ogham: %s — forcing reset" % starter)
 			return false
-	# Validate type constraints
+	# Validate numeric type constraints
 	if typeof(meta.get("anam")) != TYPE_INT and typeof(meta.get("anam")) != TYPE_FLOAT:
 		push_warning("[MerlinSave] anam must be numeric")
 		return false
 	if typeof(meta.get("trust_merlin")) != TYPE_INT and typeof(meta.get("trust_merlin")) != TYPE_FLOAT:
 		push_warning("[MerlinSave] trust_merlin must be numeric")
 		return false
+	if typeof(meta.get("fins_vues")) != TYPE_INT and typeof(meta.get("fins_vues")) != TYPE_FLOAT:
+		push_warning("[MerlinSave] fins_vues must be numeric")
+		return false
+	# Validate array fields
+	for arr_key: String in ["whispers_seen", "run_history", "endings_seen", "arc_tags"]:
+		if not (meta.get(arr_key) is Array):
+			push_warning("[MerlinSave] %s must be Array" % arr_key)
+			return false
+	# Validate echo_memory is a Dictionary
+	if not (meta.get("echo_memory") is Dictionary):
+		push_warning("[MerlinSave] echo_memory must be Dictionary")
+		return false
 	return true
 
 
 static func _validate_run_state(run_state: Dictionary) -> bool:
 	var required_keys: Array = [
-		"biome", "card_index", "life_essence",
+		"biome", "card_index", "life_essence", "anam_accumulated",
 	]
 	for key in required_keys:
 		if not run_state.has(key):

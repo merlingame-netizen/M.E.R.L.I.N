@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T10:00:00Z",
+  "last_updated": "2026-04-14T11:00:00Z",
   "metrics": {
-    "total_cycles_completed": 36,
-    "total_dev_cycles": 19,
+    "total_cycles_completed": 37,
+    "total_dev_cycles": 20,
     "total_test_cycles": 17,
     "bugs_found": 29,
-    "bugs_fixed": 20,
-    "tasks_completed": 56,
-    "tasks_pending": 15,
+    "bugs_fixed": 21,
+    "tasks_completed": 57,
+    "tasks_pending": 19,
     "current_sprint": "S2",
-    "specialist_cycles_run": 2,
-    "last_specialist": 10
+    "specialist_cycles_run": 3,
+    "last_specialist": 9
   },
   "patterns_learned": [
     {
@@ -583,6 +583,27 @@
       "applies_to": [
         "addons/merlin_ai/merlin_omniscient.gd",
         "addons/merlin_ai/merlin_ai.gd"
+      ]
+    },
+    {
+      "id": "PAT-052",
+      "learned_at": "2026-04-14T11:00:00Z",
+      "source": "SPECIALIST-9-SAVE-AUDIT-2026-04-14b",
+      "pattern": "In merlin_save_system._validate(), default keys are filled BEFORE _validate() is called (load_profile lines 138-141). This means required_keys catches missing-key corruption only if a field is absent, NOT if it has wrong type. Always pair required_key checks with typeof() checks for fields used in arc conditions or gameplay logic.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-053",
+      "learned_at": "2026-04-14T11:00:00Z",
+      "source": "SPECIALIST-9-SAVE-AUDIT-2026-04-14b",
+      "pattern": "When a new run_state field is added (e.g. anam_accumulated), it must also be added to _validate_run_state() required_keys in merlin_save_system.gd. The default-fill (lines 214-217) happens before validate, so old saves auto-fill, but the validate() must reflect the canonical schema or future bugs go undetected.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/merlin/store_run.gd"
       ]
     }
   ],
