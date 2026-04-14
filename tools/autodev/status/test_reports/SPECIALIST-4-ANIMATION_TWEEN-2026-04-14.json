@@ -1,0 +1,167 @@
+{
+  "specialist": 4,
+  "role": "ANIMATION_TWEEN_AUDITOR",
+  "cycle_id": "CYCLE-2026-04-14-spec4-anim-audit",
+  "cycle_type": "test",
+  "timestamp": "2026-04-14T20:30:00Z",
+  "total_checks": 14,
+  "pass": 10,
+  "fail_medium": 2,
+  "fail_low": 2,
+  "warn": 3,
+  "tasks_generated": 6,
+  "summary": "ANIMATION & TWEEN AUDIT — 14 checks. 10 PASS. 4 FAIL (2 MEDIUM, 2 LOW). 3 WARN. Key gap: HUD life bar jumps instantly on damage/heal — no tween animation (hud_controller.gd:90). SelectionSauvegarde buttons have no entry animation. Most UI is well-animated: option hover/press, card reveal, merlin bubble, walk event stagger, transition pixel effects all PASS.",
+  "checks": [
+    {
+      "id": "CHK-01",
+      "area": "HUD LifeBar value update",
+      "file": "scripts/ui/hud_controller.gd",
+      "line": 90,
+      "status": "FAIL_MEDIUM",
+      "finding": "_life_bar.value = current — instant snap, no tween. Life changes (damage or heal) cause bar to jump. Expected: tween_property(life_bar, 'value', current, 0.3) TRANS_CUBIC EASE_OUT.",
+      "task_generated": "ANIM-HUD-LIFE-SMOOTH"
+    },
+    {
+      "id": "CHK-02",
+      "area": "HUD LifeBar damage flash",
+      "file": "scripts/ui/hud_controller.gd",
+      "line": "94-97",
+      "status": "FAIL_LOW",
+      "finding": "Danger color applied instantly: _life_bar.modulate = CRT_PALETTE['danger']. No pulse or flash tween. Missing: brief modulate pulse (white→danger→white) for tactile damage feedback.",
+      "task_generated": "ANIM-HUD-LIFE-DAMAGE-FLASH"
+    },
+    {
+      "id": "CHK-03",
+      "area": "SelectionSauvegarde entry animation",
+      "file": "scripts/SelectionSauvegarde.gd",
+      "line": "70-115",
+      "status": "FAIL_MEDIUM",
+      "finding": "4 save-slot buttons built dynamically but appear instantly with no entry stagger. Scene loads and buttons pop in. Expected: fade-in + scale-from-small stagger (0.08s delay each) like walk_event_overlay.gd:261-265.",
+      "task_generated": "ANIM-SELECTION-SAUVEGARDE-ENTRY"
+    },
+    {
+      "id": "CHK-04",
+      "area": "ParchmentPreRun content stagger",
+      "file": "scripts/ui/parchment_pre_run.gd",
+      "line": "113-200",
+      "status": "FAIL_LOW",
+      "finding": "Run summary content (biome title, ogham list, mission brief) appears all at once. Only 1 tween: enter button fade (line 198-199). Missing: staggered reveal of content sections (biome → ogham → mission → button) for anticipation.",
+      "task_generated": "ANIM-PARCHMENT-CONTENT-STAGGER"
+    },
+    {
+      "id": "CHK-05",
+      "area": "Option button hover/press",
+      "file": "scripts/ui/ui_options_module.gd",
+      "line": "56-118",
+      "status": "PASS",
+      "finding": "Excellent: hover scale (1.07 TRANS_BACK), press squeeze (0.92→1.0 + modulate flash), keyboard highlight. All 3 interaction states animated."
+    },
+    {
+      "id": "CHK-06",
+      "area": "Card reveal animation",
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": "457-468",
+      "status": "PASS",
+      "finding": "Card reveal tween: parallel fade-in + slide-up per node. TRANS_CUBIC/TRANS_BACK. Good."
+    },
+    {
+      "id": "CHK-07",
+      "area": "TransitionBiome pixel animation",
+      "file": "scripts/TransitionBiome.gd",
+      "line": "371-451",
+      "status": "PASS",
+      "finding": "Rich pixel drop animation, glow pulse, biome title fade-in, zoom tween. Full PS1 aesthetic."
+    },
+    {
+      "id": "CHK-08",
+      "area": "HubAntre mist + hover",
+      "file": "scripts/HubAntre.gd",
+      "line": "777-824",
+      "status": "PASS",
+      "finding": "Looping mist tween (TRANS_SINE), partir_btn hover scale (TRANS_BACK), hotspot fade-in. Good ambient animation."
+    },
+    {
+      "id": "CHK-09",
+      "area": "MerlinBubble entry/exit",
+      "file": "scripts/ui/merlin_bubble.gd",
+      "line": "159-167",
+      "status": "PASS",
+      "finding": "Slide-in + fade (TRANS_CUBIC EASE_OUT) and fade-out. Good."
+    },
+    {
+      "id": "CHK-10",
+      "area": "WalkEventOverlay stagger",
+      "file": "scripts/ui/walk_event_overlay.gd",
+      "line": "261-265",
+      "status": "PASS",
+      "finding": "Staggered button entry: modulate+scale+position per button with 0.08s delay increment. TRANS_BACK EASE_OUT. Excellent pattern to replicate in SelectionSauvegarde."
+    },
+    {
+      "id": "CHK-11",
+      "area": "MenuPrincipalMerlin entry + buttons",
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": "375-395",
+      "status": "PASS",
+      "finding": "Entry animation via MenuPrincipalAnimations delegate, mist loop, time-tint, button hover all animated via _anim module."
+    },
+    {
+      "id": "CHK-12",
+      "area": "UIOverlayEndScreen",
+      "file": "scripts/ui/ui_overlay_endscreen.gd",
+      "line": "18-42",
+      "status": "PASS",
+      "finding": "Forest color tween (TRANS_SINE) on end, overlay fade-in (0.8s). Functional. Reward counter lacks count-up animation (WARN-LOW)."
+    },
+    {
+      "id": "CHK-13",
+      "area": "IntroCeltOS boot sequence",
+      "file": "scripts/IntroCeltOS.gd",
+      "line": "370-484",
+      "status": "PASS",
+      "finding": "Full typewriter/boot animation with sequential tweens, blink effect, phase transitions. Polished."
+    },
+    {
+      "id": "CHK-14",
+      "area": "Minigame feedback animations",
+      "file": "scripts/minigames/",
+      "line": "N/A",
+      "status": "WARN",
+      "finding": "12 tween usages across minigames. minigame_base.gd has fade-out on completion. Individual minigames (mg_volonte, mg_apaisement, etc.) need per-check — not blocking."
+    }
+  ],
+  "warnings": [
+    {
+      "id": "WARN-1",
+      "area": "MapMonde.tscn — no script",
+      "finding": "MapMonde.tscn is an empty Control node. HubAntre.gd:23 declares SCENE_MAPMONDE but never uses it in production transitions. Stub scene.",
+      "severity": "LOW"
+    },
+    {
+      "id": "WARN-2",
+      "area": "Dual menu path: MenuPrincipal vs Menu3DPC",
+      "finding": "ui_overlay_narrative.gd:289 transitions to 'res://scenes/MenuPrincipal.tscn' (older MenuPrincipalMerlin.gd). Active main menu is Menu3DPC.tscn. If narrative end-game triggers, player lands on old menu.",
+      "severity": "MEDIUM",
+      "task_generated": "FLOW-NARRATIVE-MENU-PATH-FIX"
+    },
+    {
+      "id": "WARN-3",
+      "area": "TransitionBiome.tscn dead constant",
+      "finding": "HubAntre.gd:16 SCENE_TRANSITION='res://scenes/TransitionBiome.tscn' declared but never used. HubAntre goes directly to BroceliandeForest3D (SCENE_FOREST). Dead constant. Low risk.",
+      "severity": "LOW"
+    }
+  ],
+  "tasks_generated_list": [
+    "ANIM-HUD-LIFE-SMOOTH (P57, dev, MEDIUM)",
+    "ANIM-HUD-LIFE-DAMAGE-FLASH (P58, dev, LOW)",
+    "ANIM-SELECTION-SAUVEGARDE-ENTRY (P59, dev, LOW)",
+    "ANIM-PARCHMENT-CONTENT-STAGGER (P60, dev, LOW)",
+    "FLOW-NARRATIVE-MENU-PATH-FIX (P61, dev, MEDIUM)",
+    "T-ANIM-REGRESSION (P62, test, LOW)"
+  ],
+  "patterns_learned": [
+    "walk_event_overlay.gd stagger pattern (modulate+scale+position with delay increment) is the reference for button entry animations",
+    "HUD bars (ProgressBar) should use tween_property for value changes, not direct assignment",
+    "ParchmentPreRun uses safe PixelTransition fallback pattern: get_node_or_null('/root/PixelTransition') — this is correct for headless compatibility",
+    "MapMonde.tscn is a stub scene — SCENE_MAPMONDE in HubAntre is dead constant"
+  ]
+}

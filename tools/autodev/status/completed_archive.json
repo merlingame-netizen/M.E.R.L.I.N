@@ -29,5 +29,26 @@
     "description": "SPEC-2 CHK-09 FAIL_MEDIUM: store_oghams.gd:78 tick_cooldowns() iterates ALL oghams in skill_cooldowns and decrements all. Bible s.2.2: 'Seul l'Ogham actif se recharge (cooldown diminue à chaque carte). Les Oghams équipés mais inactifs ont leur cooldown en pause.' Fix: pass active_ogham key to tick_cooldowns(), only decrement if skill_id == active_ogham. Signature change: tick_cooldowns(state, active_ogham: String) — update call site in store_run.gd:170.",
     "completed_at": "2026-04-14T19:42:00Z",
     "notes": "IMPLEMENTED: store_oghams.gd tick_cooldowns(state, active_ogham:String='') — only ticks active ogham (bible s.2.2). use_ogham() sets active_this_card in state. store_run.gd:170 passes active_this_card. PAT-079 added: run_3d_controller has parallel local tracking."
+  },
+  {
+    "id": "T-FLOW-SCENE-TRANSITIONS-REGRESSION",
+    "sprint": "S2",
+    "priority": 11,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: verify all active scene transitions reach existing .tscn files",
+    "description": "Code-trace test for all 11 PixelTransition.transition_to() calls in the main flow. Verify: (1) each target .tscn exists, (2) each .tscn has an attached script, (3) no transition goes to a deprecated/archived path. Based on SPECIALIST-0 audit. Check: IntroCeltOS→Menu3DPC, Menu3DPC→HubAntre, Menu3DPC→ParchmentPreRun, ParchmentPreRun→BroceliandeForest3D, HubAntre→TransitionBiome, TransitionBiome→BroceliandeForest3D, BroceliandeForest3D→MerlinGame, MerlinGame→BroceliandeForest3D, BroceliandeForest3D→HubAntre, EndRunScreen→HubAntre.",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/menu_3d_pc.gd",
+      "scripts/HubAntre.gd",
+      "scripts/TransitionBiome.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/ui/end_run_screen.gd"
+    ],
+    "agent": "game_playtester",
+    "completed_at": "2026-04-14T20:35:00Z",
+    "notes": "TEST PASS: all 10 active scene transitions verified. All target .tscn exist with attached scripts. 3 WARNs: dual menu path (MenuPrincipal→should be Menu3DPC, task FLOW-NARRATIVE-MENU-PATH-FIX added), MapMonde stub (low), TransitionBiome dead const (low). No FAIL_HIGH. Safe PixelTransition fallback pattern confirmed in parchment_pre_run + broceliande_forest_3d."
   }
 ]

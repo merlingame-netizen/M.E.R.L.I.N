@@ -602,25 +602,6 @@
     "agent": "scene_flow_fixer"
   },
   {
-    "id": "T-FLOW-SCENE-TRANSITIONS-REGRESSION",
-    "sprint": "S2",
-    "priority": 11,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: verify all active scene transitions reach existing .tscn files",
-    "description": "Code-trace test for all 11 PixelTransition.transition_to() calls in the main flow. Verify: (1) each target .tscn exists, (2) each .tscn has an attached script, (3) no transition goes to a deprecated/archived path. Based on SPECIALIST-0 audit. Check: IntroCeltOS→Menu3DPC, Menu3DPC→HubAntre, Menu3DPC→ParchmentPreRun, ParchmentPreRun→BroceliandeForest3D, HubAntre→TransitionBiome, TransitionBiome→BroceliandeForest3D, BroceliandeForest3D→MerlinGame, MerlinGame→BroceliandeForest3D, BroceliandeForest3D→HubAntre, EndRunScreen→HubAntre.",
-    "files": [
-      "scripts/IntroCeltOS.gd",
-      "scripts/menu_3d_pc.gd",
-      "scripts/HubAntre.gd",
-      "scripts/TransitionBiome.gd",
-      "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "scripts/ui/merlin_game_controller.gd",
-      "scripts/ui/end_run_screen.gd"
-    ],
-    "agent": "game_playtester"
-  },
-  {
     "id": "FLOW-PARCHMENT-HUB-PRE-RUN",
     "sprint": "S3",
     "priority": 33,
@@ -845,5 +826,85 @@
       "scripts/audio/audio_integration.gd"
     ],
     "description": "SPEC-3 SFX-12 FAIL_LOW: audio_integration.gd (456 lines) references class_name SFXEngine which does NOT exist anywhere in codebase. AudioIntegration.wire_run(), wire_hub(), wire_end_screen(), wire_flow() are never called. Entire file is dead code. Decision required: (A) Remove file + update project.godot if registered, (B) Implement SFXEngine class to make it functional. Recommend: feedback question to director, then either delete or stub SFXEngine."
+  },
+  {
+    "id": "ANIM-HUD-LIFE-SMOOTH",
+    "sprint": "S3",
+    "priority": 57,
+    "type": "dev",
+    "status": "pending",
+    "title": "Tween HUD life bar value change (smooth damage/heal animation)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/hud_controller.gd"
+    ],
+    "description": "SPEC-4 ANIM CHK-01: hud_controller.gd:90 sets _life_bar.value = current directly — instant snap. With drain removed (director decision), life changes come from card effects only. Tween for visual clarity: create_tween().tween_property(_life_bar, 'value', float(current), 0.35).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT). Store tween ref to kill on rapid successive changes. Also animate _life_label text with brief scale pulse (1.0→1.15→1.0, 0.2s)."
+  },
+  {
+    "id": "ANIM-HUD-LIFE-DAMAGE-FLASH",
+    "sprint": "S3",
+    "priority": 58,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add damage flash tween to HUD life bar",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/hud_controller.gd"
+    ],
+    "description": "SPEC-4 ANIM CHK-02: hud_controller.gd:94-97 changes bar modulate instantly. Add tactile damage feedback: when life decreases, flash _life_bar.modulate from WHITE to danger color to WHITE over 0.4s (TRANS_SINE). When life increases (heal), brief green flash. Pattern: separate _flash_life_change(is_damage: bool) helper. Track previous life in _prev_life var to detect direction."
+  },
+  {
+    "id": "ANIM-SELECTION-SAUVEGARDE-ENTRY",
+    "sprint": "S3",
+    "priority": 59,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add stagger entry animation to SelectionSauvegarde buttons",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/SelectionSauvegarde.gd"
+    ],
+    "description": "SPEC-4 ANIM CHK-03: SelectionSauvegarde.gd dynamically creates save-slot buttons (lines 70-115) that appear instantly. Reference: walk_event_overlay.gd:261-265 stagger pattern. For each button: start modulate.a=0, scale=Vector2(0.85,0.85), animate to modulate.a=1 + scale=ONE with 0.08s delay per index. Use TRANS_BACK EASE_OUT for scale (feel: buttons spring in from small). Run entry animation in _ready() after all buttons added."
+  },
+  {
+    "id": "ANIM-PARCHMENT-CONTENT-STAGGER",
+    "sprint": "S3",
+    "priority": 60,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add stagger reveal animation to ParchmentPreRun content sections",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/parchment_pre_run.gd"
+    ],
+    "description": "SPEC-4 ANIM CHK-04: parchment_pre_run.gd shows all run summary content simultaneously. Add sequential reveal: (1) biome title fades in (0.3s), (2) ogham list slides in from right after 0.15s, (3) mission brief fades in after 0.3s, (4) enter button fades in (already done at line 198-199, just delay it by 0.5s). Each section starts modulate.a=0. Keep all logic in _start_reveal_sequence() called at end of _start_generation()."
+  },
+  {
+    "id": "FLOW-NARRATIVE-MENU-PATH-FIX",
+    "sprint": "S2",
+    "priority": 61,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix ui_overlay_narrative → MenuPrincipal.tscn should target Menu3DPC.tscn",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/ui_overlay_narrative.gd"
+    ],
+    "description": "SPEC-4 TEST WARN-1: ui_overlay_narrative.gd:289 (and :291 fallback) transitions to 'res://scenes/MenuPrincipal.tscn' (old MenuPrincipalMerlin.gd). Active main menu is res://scenes/Menu3DPC.tscn. If narrative end-game escape triggers, player lands on old 2D menu instead of active 3D menu. Fix: change both references on lines 289 and 291 from MenuPrincipal.tscn to Menu3DPC.tscn. Verify MenuOptions is still Menu3DPC-compatible."
+  },
+  {
+    "id": "T-ANIM-REGRESSION",
+    "sprint": "S3",
+    "priority": 62,
+    "type": "test",
+    "status": "pending",
+    "title": "Test: verify all ANIM tasks implemented (life tween, save stagger, parchment stagger)",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/ui/hud_controller.gd",
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/ui/parchment_pre_run.gd"
+    ],
+    "description": "After ANIM-HUD-LIFE-SMOOTH, ANIM-HUD-LIFE-DAMAGE-FLASH, ANIM-SELECTION-SAUVEGARDE-ENTRY, ANIM-PARCHMENT-CONTENT-STAGGER are completed: (1) grep hud_controller.gd for tween_property on _life_bar — verify not direct .value = assignment. (2) grep SelectionSauvegarde for create_tween + stagger delay. (3) grep parchment_pre_run for sequential modulate.a tween. (4) verify no := with CONST violations introduced. (5) check no orphan tweens (stored refs, kill on update)."
   }
 ]

@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T19:42:00Z",
+  "last_updated": "2026-04-14T20:40:00Z",
   "metrics": {
-    "total_cycles_completed": 52,
+    "total_cycles_completed": 53,
     "total_dev_cycles": 25,
-    "total_test_cycles": 20,
-    "bugs_found": 44,
+    "total_test_cycles": 21,
+    "bugs_found": 46,
     "bugs_fixed": 31,
-    "tasks_completed": 67,
-    "tasks_pending": 62,
+    "tasks_completed": 68,
+    "tasks_pending": 67,
     "current_sprint": "S2",
     "specialist_cycles_run": 9,
-    "last_specialist": 3
+    "last_specialist": 4
   },
   "patterns_learned": [
     {
@@ -855,6 +855,59 @@
       "applies_to": [
         "scripts/audio/audio_integration.gd"
       ]
+    },
+    {
+      "id": "PAT-081",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "SPEC-4-ANIMATION_TWEEN",
+      "pattern": "HUD ProgressBar.value should always be set via tween_property (0.35s TRANS_CUBIC), never direct assignment. Store tween ref, kill on rapid update.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/ui/hud_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-082",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "SPEC-4-ANIMATION_TWEEN",
+      "pattern": "walk_event_overlay.gd:261-265 is the reference stagger pattern: start modulate.a=0, scale=0.85, animate with TRANS_BACK EASE_OUT, delay=0.08*index. Use for any dynamic button list.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/SelectionSauvegarde.gd",
+        "scripts/ui/walk_event_overlay.gd"
+      ]
+    },
+    {
+      "id": "PAT-083",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "SPEC-4-ANIMATION_TWEEN",
+      "pattern": "Safe PixelTransition pattern: get_node_or_null('/root/PixelTransition') with change_scene_to_file fallback is CORRECT — headless-compatible, not a bug.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/ui/parchment_pre_run.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-084",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "T-FLOW-SCENE-TRANSITIONS",
+      "pattern": "ui_overlay_narrative.gd:289 still targets MenuPrincipal.tscn (old menu). Active game uses Menu3DPC.tscn. Dual-menu-path bug: FLOW-NARRATIVE-MENU-PATH-FIX P61.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/ui/ui_overlay_narrative.gd"
+      ]
+    },
+    {
+      "id": "PAT-085",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "T-FLOW-SCENE-TRANSITIONS",
+      "pattern": "MapMonde.tscn is a stub — no script, never transitioned to in production. HubAntre SCENE_MAPMONDE const is dead code.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/HubAntre.gd",
+        "scenes/MapMonde.tscn"
+      ]
     }
   ],
   "agent_performance": {
@@ -945,7 +998,7 @@
       "cycles_run": 1
     },
     "scene_flow_tester": {
-      "tasks_completed": 1
+      "tasks_completed": 2
     },
     "visual_consistency_auditor": {
       "tasks_completed": 1,
@@ -958,6 +1011,10 @@
       "violations_found": 4
     },
     "sfx_audio_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "animation_tween_auditor": {
       "tasks_completed": 1,
       "bugs_introduced": 0
     }
