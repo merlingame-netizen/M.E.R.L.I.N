@@ -53,6 +53,7 @@ const GROUPS: Record<StatusGroup, GroupConfig> = {
 export function FeatureQueue() {
   const tasks = useMissionStore(s => s.featureQueue);
   const completedCount = useMissionStore(s => s.completedCount);
+  const completedTasks = useMissionStore(s => s.completedTasks);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const nonCompleted = [...tasks]
@@ -67,6 +68,20 @@ export function FeatureQueue() {
 
   const total = nonCompleted.length + completedCount;
   const progressPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+  // Sprint progress: count done + remaining per sprint
+  const sprintProgress: Record<string, { done: number; remaining: number }> = {};
+  for (const t of completedTasks) {
+    const s = t.sprint?.toUpperCase() || '??';
+    if (!sprintProgress[s]) sprintProgress[s] = { done: 0, remaining: 0 };
+    sprintProgress[s].done++;
+  }
+  for (const t of nonCompleted) {
+    const s = getSprintLabel(t) || '??';
+    if (!sprintProgress[s]) sprintProgress[s] = { done: 0, remaining: 0 };
+    sprintProgress[s].remaining++;
+  }
+  const sprintOrder = ['S1', 'S2', 'S3', 'S4'].filter(s => sprintProgress[s]);
 
   return (
     <div className="panel">
@@ -121,6 +136,56 @@ export function FeatureQueue() {
                 }} />
               )}
             </div>
+
+            {/* Sprint progress bars */}
+            {sprintOrder.length > 0 && (
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                marginTop: '8px',
+              }}>
+                {sprintOrder.map(sprint => {
+                  const sp = sprintProgress[sprint]!;
+                  const spTotal = sp.done + sp.remaining;
+                  const spPct = spTotal > 0 ? Math.round((sp.done / spTotal) * 100) : 0;
+                  const isComplete = sp.remaining === 0;
+                  return (
+                    <div key={sprint} style={{ flex: 1 }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '9px',
+                        fontFamily: 'var(--font-mono)',
+                        marginBottom: '2px',
+                      }}>
+                        <span style={{
+                          color: isComplete ? 'var(--green)' : 'var(--amber)',
+                          fontWeight: 700,
+                        }}>
+                          {sprint}
+                        </span>
+                        <span style={{ color: 'var(--text-dim)' }}>
+                          {sp.done}/{spTotal}
+                        </span>
+                      </div>
+                      <div style={{
+                        height: '3px',
+                        background: 'rgba(255,255,255,0.06)',
+                        borderRadius: '2px',
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${spPct}%`,
+                          background: isComplete ? 'var(--green)' : 'var(--amber)',
+                          borderRadius: '2px',
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

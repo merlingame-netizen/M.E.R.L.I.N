@@ -101,11 +101,15 @@ interface MissionState {
   feedbackSubmitting: boolean;
   lastHeartbeat: string | null;
   completedCount: number;
+  completedTasks: Array<{ id: string; sprint?: string; title: string; completed_at?: string }>;
+  nextCycleAt: string | null;
   studioInsights: StudioInsight[];
   gitActivity: GitCommit[];
 
   setOrchestratorState: (state: string) => void;
   setGitActivity: (commits: GitCommit[]) => void;
+  setCompletedTasks: (tasks: Array<{ id: string; sprint?: string; title: string; completed_at?: string }>) => void;
+  setNextCycleAt: (time: string | null) => void;
   setAgents: (agents: AgentInfo[]) => void;
   setStudioInsights: (insights: StudioInsight[]) => void;
   updateAgent: (id: string, update: Partial<AgentInfo>) => void;
@@ -138,11 +142,15 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   feedbackSubmitting: false,
   lastHeartbeat: null,
   completedCount: 0,
+  completedTasks: [],
+  nextCycleAt: null,
   studioInsights: [],
   gitActivity: [],
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
   setGitActivity: (gitActivity) => set({ gitActivity }),
+  setCompletedTasks: (completedTasks) => set({ completedTasks }),
+  setNextCycleAt: (nextCycleAt) => set({ nextCycleAt }),
   setStudioInsights: (studioInsights) => set({ studioInsights }),
   setAgents: (agents) => set({ agents }),
   updateAgent: (id, update) => set(s => ({

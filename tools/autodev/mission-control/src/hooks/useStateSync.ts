@@ -33,6 +33,8 @@ export function useStateSync() {
   const setCompletedCount = useMissionStore(s => s.setCompletedCount);
   const setStudioInsights = useMissionStore(s => s.setStudioInsights);
   const setGitActivity = useMissionStore(s => s.setGitActivity);
+  const setCompletedTasks = useMissionStore(s => s.setCompletedTasks);
+  const setNextCycleAt = useMissionStore(s => s.setNextCycleAt);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const lastTimestampRef = useRef<string>('');
@@ -81,9 +83,32 @@ export function useStateSync() {
           })));
         }
 
-        // Completed archive count
-        const archivedCount = data.completed_archive?.archived?.length || data.completed_archive?.tasks?.length || 0;
+        // Completed archive count — key is "archived_tasks" in the JSON
+        const archivedCount =
+          (data.completed_archive as Record<string, unknown>)?.archived_tasks
+            ? ((data.completed_archive as Record<string, unknown>).archived_tasks as unknown[]).length
+            : data.completed_archive?.archived?.length || data.completed_archive?.tasks?.length || 0;
         setCompletedCount(archivedCount);
+
+        // Completed tasks with sprint info (for sprint progress bars)
+        const archivedTasks = (data.completed_archive as Record<string, unknown>)?.archived_tasks as Array<{ id: string; sprint?: string; title: string; completed_at?: string }> | undefined;
+        if (archivedTasks) {
+          setCompletedTasks(archivedTasks.map(t => ({
+            id: t.id,
+            sprint: t.sprint,
+            title: t.title,
+            completed_at: t.completed_at,
+          })));
+        }
+
+        // Next cycle: heartbeat runs at :37 each hour
+        const now = new Date();
+        const nextCycle = new Date(now);
+        nextCycle.setMinutes(37, 0, 0);
+        if (nextCycle.getTime() <= now.getTime()) {
+          nextCycle.setHours(nextCycle.getHours() + 1);
+        }
+        setNextCycleAt(nextCycle.toISOString());
 
         // Events — process cycle_updates only (skip state_change noise)
         // Deduplicate: track which event timestamps we've already processed
