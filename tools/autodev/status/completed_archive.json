@@ -50,5 +50,21 @@
     "agent": "game_playtester",
     "completed_at": "2026-04-14T20:35:00Z",
     "notes": "TEST PASS: all 10 active scene transitions verified. All target .tscn exist with attached scripts. 3 WARNs: dual menu path (MenuPrincipal→should be Menu3DPC, task FLOW-NARRATIVE-MENU-PATH-FIX added), MapMonde stub (low), TransitionBiome dead const (low). No FAIL_HIGH. Safe PixelTransition fallback pattern confirmed in parchment_pre_run + broceliande_forest_3d."
+  },
+  {
+    "id": "MG-FIX-NEUTRE-FALLBACK",
+    "sprint": "S2",
+    "priority": 8,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix neutre field: add GAMES[neutre] to registry OR map neutre → esprit",
+    "description": "merlin_constants.gd:338 FIELD_MINIGAMES has neutre:[apaisement,volonte]. MiniGameRegistry has no GAMES[neutre] → falls back to chance field. If a card has field=neutre, wrong minigame type is played. Fix: add GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:21, and add esprit to MerlinMiniGameSystem.VALID_FIELDS fallback for neutre. Also add detect_field() case for neutre → esprit.",
+    "files": [
+      "scripts/minigames/minigame_registry.gd",
+      "scripts/merlin/merlin_minigame_system.gd"
+    ],
+    "agent": "godot_expert",
+    "completed_at": "2026-04-14T21:44:27Z",
+    "notes": "Fixed: (1) Added GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:29. (2) detect_field() gm_hint check now also accepts GAMES keys (FIELDS.has or GAMES.has) at line 76 — neutre hint now returned correctly. (3) Added neutre to VALID_FIELDS + case neutre→_play_esprit(diff) in merlin_minigame_system.gd run():53."
   }
 ]

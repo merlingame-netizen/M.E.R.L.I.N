@@ -908,7 +908,10 @@
         "scripts/HubAntre.gd",
         "scenes/MapMonde.tscn"
       ]
-    }
+    },
+    "PAT-086: Shader attachment: ShaderMaterial must be explicitly assigned to overlay rect — check _shader_mat is not null before calling set_shader_parameter()",
+    "PAT-087: PS1 aesthetic: vertex snap + UV snap alone insufficient — affine warp (perspective division removal) is the primary PS1 visual signature",
+    "PAT-088: GAMES dict must include all valid gm_hint values used in cards — neutre field was a silent fallback to chance due to missing GAMES[neutre] entry"
   ],
   "agent_performance": {
     "game_playtester": {
@@ -925,7 +928,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 33,
+      "tasks_completed": 34,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -1015,6 +1018,10 @@
       "bugs_introduced": 0
     },
     "animation_tween_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "shader_vfx_auditor": {
       "tasks_completed": 1,
       "bugs_introduced": 0
     }
@@ -1222,7 +1229,7 @@
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ],
-  "total_cycles": 2,
-  "bugs_found": 5,
-  "bugs_fixed": 2
+  "total_cycles": 3,
+  "bugs_found": 10,
+  "bugs_fixed": 3
 }

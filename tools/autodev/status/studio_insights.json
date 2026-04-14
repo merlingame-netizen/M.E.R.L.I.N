@@ -433,5 +433,20 @@
       "id": "SFX-DAMAGE-LIFE-FEEDBACK"
     },
     "timestamp": "2026-04-14T19:42:00Z"
+  },
+  {
+    "id": "insight-20260414-027",
+    "agent": "shader_vfx_auditor",
+    "severity": "WARN",
+    "category": "visual",
+    "message": "BrocScreenVfx screen effects are silently broken — shader never attached",
+    "details": "broc_screen_vfx.gd:46 has a comment saying the shader was removed because ColorRect TEXTURE defaults to white. This causes all glitch/flash/vignette calls to be no-ops. The ps1_material.gdshader is also very minimal (missing affine warp) given the director PS1 mandate. Both are HIGH priority VFX failures visible every play session.",
+    "proposed_task": {
+      "title": "VFX-SCREEN-VFX-REATTACH",
+      "sprint": "S2",
+      "type": "dev",
+      "priority": 23
+    },
+    "timestamp": "2026-04-14T21:44:27Z"
   }
 ]

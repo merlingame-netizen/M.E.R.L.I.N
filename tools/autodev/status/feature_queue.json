@@ -306,20 +306,6 @@
     "agent": "godot_expert"
   },
   {
-    "id": "MG-FIX-NEUTRE-FALLBACK",
-    "sprint": "S2",
-    "priority": 8,
-    "type": "dev",
-    "status": "pending",
-    "title": "Fix neutre field: add GAMES[neutre] to registry OR map neutre → esprit",
-    "description": "merlin_constants.gd:338 FIELD_MINIGAMES has neutre:[apaisement,volonte]. MiniGameRegistry has no GAMES[neutre] → falls back to chance field. If a card has field=neutre, wrong minigame type is played. Fix: add GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:21, and add esprit to MerlinMiniGameSystem.VALID_FIELDS fallback for neutre. Also add detect_field() case for neutre → esprit.",
-    "files": [
-      "scripts/minigames/minigame_registry.gd",
-      "scripts/merlin/merlin_minigame_system.gd"
-    ],
-    "agent": "godot_expert"
-  },
-  {
     "id": "MG-FIX-SFX-DOUBLE-TRIGGER",
     "sprint": "S3",
     "priority": 22,
@@ -906,5 +892,84 @@
       "scripts/ui/parchment_pre_run.gd"
     ],
     "description": "After ANIM-HUD-LIFE-SMOOTH, ANIM-HUD-LIFE-DAMAGE-FLASH, ANIM-SELECTION-SAUVEGARDE-ENTRY, ANIM-PARCHMENT-CONTENT-STAGGER are completed: (1) grep hud_controller.gd for tween_property on _life_bar — verify not direct .value = assignment. (2) grep SelectionSauvegarde for create_tween + stagger delay. (3) grep parchment_pre_run for sequential modulate.a tween. (4) verify no := with CONST violations introduced. (5) check no orphan tweens (stored refs, kill on update)."
+  },
+  {
+    "id": "VFX-SCREEN-VFX-REATTACH",
+    "sprint": "S2",
+    "priority": 23,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix BrocScreenVfx: reattach screen_vfx.gdshader to SubViewport",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broc_screen_vfx.gd"
+    ],
+    "description": "SPEC-5 CHK-06 FAIL_HIGH: broc_screen_vfx.gd:46 comment says shader removed, _shader_mat never assigned. All screen VFX calls (_set_shader) are no-ops. Fix: load SHADER_PATH, create ShaderMaterial, attach to SubViewportContainer via WorldEnvironment compositor OR use a BackBufferCopy node approach. Glitch/scanlines/vignette/flash are all broken without this fix."
+  },
+  {
+    "id": "VFX-PS1-AFFINE-WARP",
+    "sprint": "S2",
+    "priority": 24,
+    "status": "pending",
+    "type": "dev",
+    "title": "Enhance ps1_material.gdshader: affine warp + vertex jitter + 15-bit color",
+    "agent": "godot_expert",
+    "files": [
+      "shaders/ps1_material.gdshader"
+    ],
+    "description": "SPEC-5 CHK-07 FAIL_HIGH: Director q-20260412-004 PS1/N64 aesthetic. Current shader only does vertex snap + UV snap. Missing: (1) affine texture mapping (remove perspective division from UV — classic PS1 texture warble: UV = UV * VERTEX.z / VIEW_MATRIX[3][2]), (2) per-vertex wobble (add noise to VERTEX before snap), (3) 15-bit color quantization (floor(color * 31)/31 per channel), (4) optional dithered alpha for transparency."
+  },
+  {
+    "id": "VFX-SEASON-GROUND-TINT",
+    "sprint": "S2",
+    "priority": 25,
+    "status": "pending",
+    "type": "dev",
+    "title": "Apply GROUND_TINTS to terrain mesh in BrocSeason",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broc_season.gd"
+    ],
+    "description": "SPEC-5 CHK-08 FAIL_MEDIUM: broc_season.gd GROUND_TINTS array defined but never applied. _apply_vegetation_tint() only tints tree meshes via _tint_recursive(). Fix: after calling _apply_vegetation_tint(), also find the terrain MeshInstance3D (by group or name convention ground/terrain) in _forest_root and apply GROUND_TINTS[season] to its StandardMaterial3D albedo_color."
+  },
+  {
+    "id": "VFX-DAYNIGHT-RUNSTATE-EXPOSE",
+    "sprint": "S2",
+    "priority": 26,
+    "status": "pending",
+    "type": "dev",
+    "title": "Expose time_of_day + season to run_state for LLM context",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "SPEC-5 CHK-09 FAIL_MEDIUM: DIR-S2-MNWXQ41M requires time_of_day + season in run_state for LLM. broceliande_forest_3d.gd has _day_night.get_time() (0.0-1.0) and _season.get_current() (0-3) but neither written to store. Fix: (1) Add time_of_day:float + season:int fields to store_run.gd state dict. (2) In broceliande_forest_3d.gd _process(), write MerlinStore.run_state.time_of_day + season each frame (or on change). (3) LLM prompt builder can then include time/season context."
+  },
+  {
+    "id": "VFX-HEAT-HAZE-UV-DISTORT",
+    "sprint": "S3",
+    "priority": 27,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add UV distortion to summer heat haze in seasonal_particles.gdshader",
+    "agent": "godot_expert",
+    "files": [
+      "shaders/seasonal_particles.gdshader"
+    ],
+    "description": "SPEC-5 CHK-10 FAIL_LOW: seasonal_particles.gdshader summer mode (season_type==1) only adds a faint color overlay. Real heat shimmer needs UV displacement. Fix: in summer branch, compute offset = sin(uv.x*30+TIME*2)*0.003 + sin(uv.y*20+TIME*1.5)*0.002, then sample TEXTURE(uv + vec2(offset)) and output with low alpha. Current haze variable just blends a color, no distortion."
+  },
+  {
+    "id": "VFX-DEAD-SHADER-CLEANUP",
+    "sprint": "S3",
+    "priority": 63,
+    "status": "pending",
+    "type": "dev",
+    "title": "Delete dead shaders/bestiole_squish.gdshader (Bestiole system deleted)",
+    "agent": "godot_expert",
+    "files": [
+      "shaders/bestiole_squish.gdshader"
+    ],
+    "description": "SPEC-5 CHK-11 WARN: shaders/bestiole_squish.gdshader is dead code — Bestiole system is listed as DELETED in bible. Grep for any references first, then delete the shader file. If any .tscn or .gd references it, remove those too."
   }
 ]

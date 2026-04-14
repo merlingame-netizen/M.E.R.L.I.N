@@ -26,6 +26,7 @@ const GAMES := {
 	"vigueur": ["mg_combat_rituel", "mg_course"],
 	"esprit": ["mg_volonte", "mg_apaisement", "mg_sang_froid"],
 	"perception": ["mg_ombres", "mg_regard", "mg_echo"],
+	"neutre": ["mg_apaisement", "mg_volonte"],
 }
 
 # Ogham category -> field bonus mapping
@@ -71,8 +72,8 @@ const TAG_FIELD_MAP := {
 
 
 static func detect_field(narrative_text: String, gm_hint: String = "", tags: Array = []) -> String:
-	# GM hint takes priority
-	if gm_hint != "" and FIELDS.has(gm_hint):
+	# GM hint takes priority — also accept game fields not in FIELDS (e.g. "neutre")
+	if gm_hint != "" and (FIELDS.has(gm_hint) or GAMES.has(gm_hint)):
 		return gm_hint
 
 	# Tag-based detection (higher priority than keyword)
