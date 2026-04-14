@@ -1,7 +1,7 @@
 {
   "version": "3.6",
-  "updated": "2026-04-14T01:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 11 pending.",
+  "updated": "2026-04-14T02:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 12 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -28,6 +28,20 @@
         "scripts/merlin/merlin_constants.gd"
       ],
       "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add CARDS_PER_DAY constant (merlin_constants.gd) + increment run['day'] in resolve_choice() when cards_played % CARDS_PER_DAY == 0. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 19 store_run.gd)."
+    },
+    {
+      "id": "BUG-ANAM-DEATH-PENALTY-FIX",
+      "sprint": "S2",
+      "priority": 10,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix Anam death penalty scope: apply ratio to card-effect ADD_ANAM gains",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ],
+      "description": "S2-LOOP-INTEGRITY-CHECK CHK-4: _apply_add_anam() credits ADD_ANAM to meta['anam'] immediately with no death penalty. Death ratio min(cards_played/30,1.0) only applies to the base run-end reward. Bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)' implies ALL in-run anam should be scaled. Fix (pending director q-20260414-001 clarification): (1) In _apply_add_anam(), write ONLY to run['anam_accumulated'] (do NOT update meta during run). (2) In calculate_run_rewards(): add run['anam_accumulated'] to the pool BEFORE applying death ratio. (3) At run end, apply_run_rewards() credits scaled total to meta['anam']. (4) Reset run['anam_accumulated'] = 0 in init_run(). NOTE: Wait for director answer on q-20260414-001 before implementing — if director wants ADD_ANAM to be immediate regardless of death, no change needed."
     },
     {
       "id": "S2-ANAM-VERIFY",

@@ -184,7 +184,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T01:00:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "game_design_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Anam death penalty bypassed by in-run ADD_ANAM card effects — design ambiguity needs director decision",
+      "details": "The bible formula 'Mort = Anam × min(cartes/30, 1.0)' is ambiguous about scope. Currently ADD_ANAM from card effects is credited to meta['anam'] immediately (permanent, no death penalty). Only the base run-end reward (ANAM_BASE_REWARD=10 + bonuses) is scaled by the death ratio. Impact: a player who earns 30 Anam from card choices then dies at card 5 keeps all 30 Anam. If the bible intent is that early-run deaths should yield less total Anam, this needs a fix. If immediate card rewards are intentionally 'confirmed' gains (rewarding smart individual choices regardless of run outcome), no change needed. Director decision requested via q-20260414-001.",
+      "proposed_task": {
+        "title": "BUG-ANAM-DEATH-PENALTY-FIX: scope ADD_ANAM under death ratio",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T02:00:00Z"
     }
   ],
-  "updated": "2026-04-13T20:53:21Z"
+  "updated": "2026-04-14T02:00:00Z"
 }

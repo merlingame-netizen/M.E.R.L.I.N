@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T01:00:00Z",
+  "last_updated": "2026-04-14T02:00:00Z",
   "metrics": {
-    "total_cycles_completed": 27,
+    "total_cycles_completed": 28,
     "total_dev_cycles": 14,
-    "total_test_cycles": 13,
-    "bugs_found": 23,
+    "total_test_cycles": 14,
+    "bugs_found": 24,
     "bugs_fixed": 15,
     "tasks_completed": 48,
-    "tasks_pending": 11,
+    "tasks_pending": 12,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -448,6 +448,17 @@
         "scripts/autoload/SFXManager.gd",
         "scripts/autoload/sfx_recipes_ambient.gd"
       ]
+    },
+    {
+      "id": "PAT-040",
+      "learned_at": "2026-04-14T02:00:00Z",
+      "source": "S2-LOOP-INTEGRITY-CHECK",
+      "pattern": "Dual-scope currency systems (ADD_ANAM writing to both run['anam'] and meta['anam'] simultaneously) create a death-penalty bypass: card-effect gains are permanently credited before run-end scaling can apply. When a currency has both an in-run accumulator and a persistent meta balance, always verify that end-of-run scaling (death multipliers, success bonuses) applies to ALL in-run gains — not just the base reward. If immediate gratification IS intentional, document it explicitly in comments so future audits don't flag it.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -492,9 +503,9 @@
       "partial_pass_reports": 2
     },
     "game_design_auditor": {
-      "tasks_completed": 3,
+      "tasks_completed": 4,
       "bugs_introduced": 0,
-      "bugs_found": 8,
+      "bugs_found": 9,
       "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit",
       "strengths": [
         "found promise split-brain bug (dual storage keys)",
