@@ -1,7 +1,7 @@
 {
   "version": "4.0",
   "updated": "2026-04-14T11:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 19 pending (SAVE-VALIDATE-FINS-VUES completed, 5 new save tasks added).",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 40 pending (T-S2-ARC-CONDITION-REGRESS-V2 completed, 6 new E2E tasks added by SPEC-14).",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -377,21 +377,6 @@
       "agent": "bug_hunter"
     },
     {
-      "id": "T-S2-ARC-CONDITION-REGRESS-V2",
-      "sprint": "S2",
-      "priority": 4,
-      "type": "test",
-      "status": "pending",
-      "title": "Regression test v2: arc_condition_type with get_save_data() implemented",
-      "description": "Re-run T-S2-ARC-CONDITION-REGRESS now that get_save_data() is implemented. CHK-1: biome with 3 runs in biome_runs → arc_condition_type=runs_in_biome should unlock. CHK-2: profile with fins_vues=5 → arc_condition fins_vues<=5 unlocks. CHK-3: profile with oghams.owned=[a,b] size=2 → arc_condition oghams_owned<=2 unlocks. All 6 checks should PASS.",
-      "files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_skeleton_generator.gd",
-        "scripts/merlin/llm_adapter_map_prompt.gd"
-      ],
-      "agent": "bug_hunter"
-    },
-    {
       "id": "3D-BUSH-ASSET-FIX",
       "sprint": "S2",
       "priority": 6,
@@ -487,6 +472,94 @@
         "tools/autodev/status/asset_requests/cotes_sauvages.json"
       ],
       "agent": "godot_expert"
+    },
+    {
+      "id": "E2E-PARCHMENT-PRERUN-PIXEL-TRANSITION",
+      "sprint": "S3",
+      "priority": 99,
+      "status": "pending",
+      "type": "verified",
+      "title": "VERIFIED: parchment_pre_run.gd already uses PixelTransition guard (false positive)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/ui/parchment_pre_run.gd"
+      ],
+      "description": "SPEC-14 FALSE POSITIVE: parchment_pre_run.gd:213-217 already has correct pattern: var pt=get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(SCENE_FOREST) else: get_tree().change_scene_to_file(SCENE_FOREST). No action needed. Verified PASS."
+    },
+    {
+      "id": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER",
+      "sprint": "S4",
+      "priority": 30,
+      "status": "pending",
+      "type": "dev",
+      "title": "Audit + document GameFlowController dead path (HubScreen/Run3D)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/core/game_flow_controller.gd",
+        "scenes/HubScreen.tscn",
+        "scenes/Run3D.tscn"
+      ],
+      "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre→BroceliandeForest3D→MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW — no player impact, but creates confusion for future development."
+    },
+    {
+      "id": "E2E-TEST-FULL-LOOP-CODE-TRACE",
+      "sprint": "S3",
+      "priority": 16,
+      "status": "pending",
+      "type": "test",
+      "title": "E2E code trace: full game loop IntroCeltOS→Hub→Run→MerlinGame→EndScreen→Hub",
+      "agent": "game_playtester",
+      "files": [
+        "scripts/IntroCeltOS.gd",
+        "scripts/HubAntre.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/ui/merlin_game_controller.gd",
+        "scripts/ui/ui_overlay_endscreen.gd"
+      ],
+      "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button → SelectionSauvegarde. CHK-3: SelectionSauvegarde → HubAntre. CHK-4: HubAntre Partir button → BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires → MerlinGame. CHK-6: MerlinGame run_ended → show_end_screen. CHK-7: EndScreen hub button → HubAntre. Check each signal/button connection for completeness."
+    },
+    {
+      "id": "E2E-MERLINSTORE-DEFERRED-RACE-CHECK",
+      "sprint": "S3",
+      "priority": 33,
+      "status": "pending",
+      "type": "dev",
+      "title": "GameManager creates MerlinStore via call_deferred — verify no scene accesses it before frame+1",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/game_manager.gd",
+        "scripts/HubAntre.gd",
+        "scripts/SelectionSauvegarde.gd"
+      ],
+      "description": "SPECIALIST-14: game_manager.gd:677 uses get_tree().root.call_deferred('add_child', store) to create MerlinStore. This means MerlinStore is added AFTER the current frame. Risk: if any scene in the boot chain calls get_node_or_null('/root/MerlinStore') in _ready() during frame 0, it gets null. IntroCeltOS does NOT use MerlinStore (PASS). All gameplay scenes (HubAntre, MerlinGame) are reached after multiple scene transitions so MerlinStore exists by then. Verify: add debug print to game_manager _ready() and confirm call_deferred vs direct add_child. Low risk but worth documenting."
+    },
+    {
+      "id": "E2E-BROC-FOREST-FALLBACK-TRANSITION",
+      "sprint": "S3",
+      "priority": 23,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix BroceliandeForest3D fallback: change_scene_to_file → PixelTransition",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "description": "SPECIALIST-14: broceliande_forest_3d.gd:1228 fallback path uses get_tree().change_scene_to_file(target) when PixelTransition not found. This is reachable if PixelTransition autoload fails to load. The primary path (line 1224) uses PixelTransition. Fix: add null guard pattern: var pt: Node = get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(target) else: get_tree().change_scene_to_file(target). Line 1228 already does this — verify the guard is correct and consistent with other scene transition helpers."
+    },
+    {
+      "id": "T-E2E-INTEGRATION-REGRESSION",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "pending",
+      "type": "test",
+      "title": "Integration regression: verify all autoloads accessible + MerlinStore created",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/game_manager.gd",
+        "project.godot",
+        "scripts/ui/merlin_game_controller.gd"
+      ],
+      "description": "SPECIALIST-14: Regression test for autoload wiring. CHK-1: GameManager autoload in project.godot. CHK-2: MerlinAI autoload in project.godot. CHK-3: game_manager.gd:674 creates MerlinStore via call_deferred. CHK-4: merlin_game_controller.gd:112 store=get_node_or_null('/root/MerlinStore') gets non-null. CHK-5: merlin_game_controller.gd:121 merlin_ai=get_node_or_null('/root/MerlinAI') gets non-null. CHK-6: SFXManager+PixelTransition+I18nRegistry all in project.godot autoloads."
     }
   ]
 }

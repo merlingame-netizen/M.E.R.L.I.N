@@ -337,6 +337,20 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T14:00:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "integration_e2e_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Two parallel game flow paths exist — active vs dead code drift risk",
+      "details": "ACTIVE path: IntroCeltOS→Menu3DPC→SelectionSauvegarde→HubAntre→BroceliandeForest3D→MerlinGame. DEAD path: game_flow_controller.gd (HubScreen→Run3D→EndRunScreen), audio_integration.gd wires to it but no production code instantiates GameFlowController. As features are added to the active path, the dead path will drift further. Risk: a future developer might try to use the dead path and find broken wiring. Recommendation: director decision needed (delete vs document vs migrate).",
+      "proposed_task": {
+        "title": "Director decision: delete/document/migrate GameFlowController dead path",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T15:00:00Z"
     }
   ]
 }

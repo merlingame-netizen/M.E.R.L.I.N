@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T13:00:00Z",
+  "last_updated": "2026-04-14T15:00:00Z",
   "metrics": {
-    "total_cycles_completed": 39,
+    "total_cycles_completed": 40,
     "total_dev_cycles": 21,
-    "total_test_cycles": 18,
+    "total_test_cycles": 19,
     "bugs_found": 37,
     "bugs_fixed": 26,
-    "tasks_completed": 61,
-    "tasks_pending": 30,
+    "tasks_completed": 62,
+    "tasks_pending": 40,
     "current_sprint": "S2",
-    "specialist_cycles_run": 5,
-    "last_specialist": 12
+    "specialist_cycles_run": 6,
+    "last_specialist": 14
   },
   "patterns_learned": [
     {
@@ -687,7 +687,53 @@
     "PAT-061: bk_assets categories (deadwood/groundcover/mushrooms) have assets but no spawning code — verify category coverage in spawner on every new asset batch",
     "PAT-062: BUSH_MODELS const pointing to wrong asset category (rocks/ instead of bushes/) is a silent visual error — all loaded assets need cross-checking against intended category path",
     "PAT-063: FIELD_MINIGAMES stale minigame names (herboristerie/fouille/runes) vs GAMES keys (chance/observation/logique) — always verify FIELD_MINIGAMES values match GAMES keys when adding new minigames",
-    "PAT-064: Timeout/failure fallback score 50 = FULL NEGATIVE (factor=-1.0) vs 51 = PARTIAL (factor=0.5) — always use 51 for technical failures, never 50"
+    "PAT-064: Timeout/failure fallback score 50 = FULL NEGATIVE (factor=-1.0) vs 51 = PARTIAL (factor=0.5) — always use 51 for technical failures, never 50",
+    {
+      "id": "PAT-065",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "GameManager is NOT in the first grep of autoloads — always read full [autoload] section in project.godot. GameManager creates MerlinStore via call_deferred add_child. This is safe since gameplay scenes load after multiple scene transitions.",
+      "severity": "HIGH",
+      "applies_to": [
+        "game_manager.gd",
+        "project.godot",
+        "merlin_store.gd"
+      ]
+    },
+    {
+      "id": "PAT-066",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "Two parallel game flow paths exist: (1) ACTIVE: HubAntre→BroceliandeForest3D→MerlinGame (2) INACTIVE: HubScreen→Run3D→EndRunScreen via game_flow_controller.gd. When adding features to game flow, use the ACTIVE path only.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/HubAntre.gd"
+      ]
+    },
+    {
+      "id": "PAT-067",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "All scene transitions should use PixelTransition.transition_to() not get_tree().change_scene_to_file(). parchment_pre_run.gd:217 is the only remaining raw transition in the primary game path. Always add null guard: if pt and pt.has_method('transition_to'): pt.transition_to(s) else: get_tree().change_scene_to_file(s)",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/ui/parchment_pre_run.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-068",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "T-S2-ARC-CONDITION-REGRESS-V2 PASS. The chain merlin_game_controller→get_save_data()→_build_context()→llm_adapter_map_prompt arc dispatch is complete. Key invariants: (1) save_data.biome_runs[biome_id]→previous_runs; (2) save_data.fins_vues→fins_vues; (3) save_data.oghams.owned.size()→oghams_owned",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ]
+    }
   ],
   "agent_performance": {
     "game_playtester": {

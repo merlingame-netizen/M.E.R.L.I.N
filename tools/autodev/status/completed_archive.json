@@ -238,6 +238,23 @@
       "agent": "godot_expert",
       "completed_at": "2026-04-14T14:00:00Z",
       "notes": "Fallback scores changed 50→51 in game_controller_minigame.gd:55 (creation fail) and :93 (30s timeout). Score 51 = reussite_partielle (factor=0.5) instead of echec (factor=-1.0)."
+    },
+    {
+      "id": "T-S2-ARC-CONDITION-REGRESS-V2",
+      "sprint": "S2",
+      "priority": 4,
+      "type": "test",
+      "status": "completed",
+      "title": "Regression test v2: arc_condition_type with get_save_data() implemented",
+      "description": "Re-run T-S2-ARC-CONDITION-REGRESS now that get_save_data() is implemented. CHK-1: biome with 3 runs in biome_runs → arc_condition_type=runs_in_biome should unlock. CHK-2: profile with fins_vues=5 → arc_condition fins_vues<=5 unlocks. CHK-3: profile with oghams.owned=[a,b] size=2 → arc_condition oghams_owned<=2 unlocks. All 6 checks should PASS.",
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ],
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-14T15:00:00Z",
+      "notes": "SPECIALIST-14 E2E TEST: ALL 6 CHK PASS. get_save_data() impl correct. arc_condition_type dispatch correct for runs_in_biome/fins_vues/oghams_owned. merlin_skeleton_generator._build_context() maps all types correctly. Full arc condition pipeline PASS."
     }
   ],
   "tasks": [
