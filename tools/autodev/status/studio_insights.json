@@ -1,407 +1,410 @@
-[
-  {
-    "id": "insight-20260414-001",
-    "agent": "bug_hunter",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "SFX coverage drift: 7 key game moments (encounter, success, fail, card reveal) play silently",
-    "details": "Audit found 7 sound names called in UI/3D scripts (encounter_card_overlay, book_cinematic, tutorial_card_layer, broceliande_forest_3d) but not registered in SFXManager. Silent fail at key emotional moments: card reveals, encounter triggers, minigame results. BUG-SFX-MISSING-SOUNDS (P5) will fix. Root cause: new callers added without updating _generate_all_sounds() names array — a coverage drift problem. Suggest: add a static assert or comment at top of SFXManager listing ALL expected sound names so future callers can verify at a glance.",
-    "proposed_task": {
-      "title": "Add SFX names table comment header in SFXManager._generate_all_sounds()",
-      "sprint": "S4",
-      "type": "dev"
+{
+  "insights": [
+    {
+      "id": "insight-20260414-001",
+      "agent": "bug_hunter",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "SFX coverage drift: 7 key game moments (encounter, success, fail, card reveal) play silently",
+      "details": "Audit found 7 sound names called in UI/3D scripts (encounter_card_overlay, book_cinematic, tutorial_card_layer, broceliande_forest_3d) but not registered in SFXManager. Silent fail at key emotional moments: card reveals, encounter triggers, minigame results. BUG-SFX-MISSING-SOUNDS (P5) will fix. Root cause: new callers added without updating _generate_all_sounds() names array — a coverage drift problem. Suggest: add a static assert or comment at top of SFXManager listing ALL expected sound names so future callers can verify at a glance.",
+      "proposed_task": {
+        "title": "Add SFX names table comment header in SFXManager._generate_all_sounds()",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T00:15:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T00:15:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260413-002",
-    "agent": "i18n_auditor",
-    "severity": "WARN",
-    "category": "i18n",
-    "message": "192 hardcoded French strings detected across 15 files",
-    "details": "text_registry.json created with ~80 keys. Remaining ~120 strings in merlin_constants.gd (oghams, biomes, talents, verbs) need migration. Priority: UI strings first, then game data.",
-    "proposed_task": {
-      "title": "Migrate remaining 120 strings to text_registry.json",
-      "sprint": "S3",
-      "type": "dev"
+    {
+      "id": "insight-20260413-002",
+      "agent": "i18n_auditor",
+      "severity": "WARN",
+      "category": "i18n",
+      "message": "192 hardcoded French strings detected across 15 files",
+      "details": "text_registry.json created with ~80 keys. Remaining ~120 strings in merlin_constants.gd (oghams, biomes, talents, verbs) need migration. Priority: UI strings first, then game data.",
+      "proposed_task": {
+        "title": "Migrate remaining 120 strings to text_registry.json",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T12:00:00Z",
+      "_old_id": "insight-20260413-001"
     },
-    "timestamp": "2026-04-13T12:00:00Z",
-    "_old_id": "insight-20260413-001"
-  },
-  {
-    "id": "insight-20260413-003",
-    "agent": "visual_qa",
-    "severity": "ACTION",
-    "category": "visual",
-    "message": "No visual test baseline exists — screenshot pipeline ready but untested",
-    "details": "screenshot_agent.gd and visual_test_runner.py created. Need to run first baseline capture on MerlinGame.tscn and Hub scene to establish reference screenshots.",
-    "proposed_task": {
-      "title": "Run first visual test baseline on 3 core scenes",
-      "sprint": "S3",
-      "type": "test"
+    {
+      "id": "insight-20260413-003",
+      "agent": "visual_qa",
+      "severity": "ACTION",
+      "category": "visual",
+      "message": "No visual test baseline exists — screenshot pipeline ready but untested",
+      "details": "screenshot_agent.gd and visual_test_runner.py created. Need to run first baseline capture on MerlinGame.tscn and Hub scene to establish reference screenshots.",
+      "proposed_task": {
+        "title": "Run first visual test baseline on 3 core scenes",
+        "sprint": "S3",
+        "type": "test"
+      },
+      "timestamp": "2026-04-13T12:00:00Z",
+      "_old_id": "insight-20260413-002"
     },
-    "timestamp": "2026-04-13T12:00:00Z",
-    "_old_id": "insight-20260413-002"
-  },
-  {
-    "id": "insight-20260413-004",
-    "agent": "platform_tester",
-    "severity": "INFO",
-    "category": "performance",
-    "message": "Triplanar shaders too heavy for mobile — need LOD fallbacks",
-    "details": "low_poly.shader uses multiple texture fetches and depth blending. Mobile devices will struggle. Recommend shader variant with single texture + flat shading for QualityLevel.LOW.",
-    "proposed_task": {
-      "title": "Create mobile-friendly shader variant for LOW quality",
-      "sprint": "S4",
-      "type": "dev"
+    {
+      "id": "insight-20260413-004",
+      "agent": "platform_tester",
+      "severity": "INFO",
+      "category": "performance",
+      "message": "Triplanar shaders too heavy for mobile — need LOD fallbacks",
+      "details": "low_poly.shader uses multiple texture fetches and depth blending. Mobile devices will struggle. Recommend shader variant with single texture + flat shading for QualityLevel.LOW.",
+      "proposed_task": {
+        "title": "Create mobile-friendly shader variant for LOW quality",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T12:00:00Z",
+      "_old_id": "insight-20260413-003"
     },
-    "timestamp": "2026-04-13T12:00:00Z",
-    "_old_id": "insight-20260413-003"
-  },
-  {
-    "id": "insight-20260413-005",
-    "agent": "godot_expert",
-    "severity": "ACTION",
-    "category": "gameplay",
-    "message": "dominant_faction biome routing injected but not yet wired into trigger evaluation",
-    "details": "enriched_run now carries dominant_faction (e.g. 'korrigans' in marais). _evaluate_triggers() does not yet use it — event sub-types with high faction rep for the biome's dominant faction don't get automatic weight bonuses on entry. Adding a trigger condition using enriched_run['dominant_faction'] + enriched_run['factions'][dominant_faction] would make biome entry feel faction-aware without any JSON config change needed.",
-    "proposed_task": {
-      "title": "S3-DOMINANT-FACTION-TRIGGER: wire dominant_faction into _evaluate_triggers bonus",
-      "sprint": "S3",
-      "type": "dev"
+    {
+      "id": "insight-20260413-005",
+      "agent": "godot_expert",
+      "severity": "ACTION",
+      "category": "gameplay",
+      "message": "dominant_faction biome routing injected but not yet wired into trigger evaluation",
+      "details": "enriched_run now carries dominant_faction (e.g. 'korrigans' in marais). _evaluate_triggers() does not yet use it — event sub-types with high faction rep for the biome's dominant faction don't get automatic weight bonuses on entry. Adding a trigger condition using enriched_run['dominant_faction'] + enriched_run['factions'][dominant_faction] would make biome entry feel faction-aware without any JSON config change needed.",
+      "proposed_task": {
+        "title": "S3-DOMINANT-FACTION-TRIGGER: wire dominant_faction into _evaluate_triggers bonus",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T13:00:00Z",
+      "_old_id": "insight-20260413-002"
     },
-    "timestamp": "2026-04-13T13:00:00Z",
-    "_old_id": "insight-20260413-002"
-  },
-  {
-    "id": "insight-20260413-006",
-    "agent": "bug_hunter",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "Faction system fully operational — AI subsystems now receive live rep data for the first time",
-    "details": "Prior to BUG-FACTIONS-STALE-FIX, all AI orchestration (omniscient, event router, RAG, context builder, LLM adapter) saw faction_rep as zeros for all runs. With fix confirmed, the game now has a complete data pipeline: player choices → effect engine → meta.faction_rep → all 5 AI systems. First time this full loop is functional. High-value test would be a narrative coherence check: do event categories actually change when one faction reaches 70+ reputation?",
-    "proposed_task": {
-      "title": "Test narrative coherence with high faction rep (manual or simulated run)",
-      "sprint": "S4",
-      "type": "test"
+    {
+      "id": "insight-20260413-006",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Faction system fully operational — AI subsystems now receive live rep data for the first time",
+      "details": "Prior to BUG-FACTIONS-STALE-FIX, all AI orchestration (omniscient, event router, RAG, context builder, LLM adapter) saw faction_rep as zeros for all runs. With fix confirmed, the game now has a complete data pipeline: player choices → effect engine → meta.faction_rep → all 5 AI systems. First time this full loop is functional. High-value test would be a narrative coherence check: do event categories actually change when one faction reaches 70+ reputation?",
+      "proposed_task": {
+        "title": "Test narrative coherence with high faction rep (manual or simulated run)",
+        "sprint": "S4",
+        "type": "test"
+      },
+      "timestamp": "2026-04-13T14:00:00Z",
+      "_old_id": "insight-20260413-005"
     },
-    "timestamp": "2026-04-13T14:00:00Z",
-    "_old_id": "insight-20260413-005"
-  },
-  {
-    "id": "insight-20260413-007",
-    "agent": "godot_expert",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "run.day always shows 1 — LLM temporal narrative broken",
-    "details": "run.day is initialized to 1 in store_run.gd but never incremented. Every card the LLM receives shows 'Jour 1, N cartes jouees'. Narrative has no temporal progression — a 50-card run feels like Day 1 forever. S2-DAY-TICK-FIX task created (P8). Recommended: 1 day per 3 cards (configurable CARDS_PER_DAY constant). Also affects build_llm_prompt_context which always renders day as '1'.",
-    "proposed_task": {
-      "title": "S2-DAY-TICK-FIX: increment run.day per N cards in resolve_choice()",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260413-007",
+      "agent": "godot_expert",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "run.day always shows 1 — LLM temporal narrative broken",
+      "details": "run.day is initialized to 1 in store_run.gd but never incremented. Every card the LLM receives shows 'Jour 1, N cartes jouees'. Narrative has no temporal progression — a 50-card run feels like Day 1 forever. S2-DAY-TICK-FIX task created (P8). Recommended: 1 day per 3 cards (configurable CARDS_PER_DAY constant). Also affects build_llm_prompt_context which always renders day as '1'.",
+      "proposed_task": {
+        "title": "S2-DAY-TICK-FIX: increment run.day per N cards in resolve_choice()",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T15:00:00Z",
+      "_old_id": "insight-20260413-006"
     },
-    "timestamp": "2026-04-13T15:00:00Z",
-    "_old_id": "insight-20260413-006"
-  },
-  {
-    "id": "insight-20260413-008",
-    "agent": "bug_hunter",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "Vestigial gauges_changed signal + MerlinGaugeSystem in merlin_store.gd may be dead code",
-    "details": "S2-CONTEXT-REGRESSION-TEST SF-001: merlin_store.gd still declares gauges_changed signal (line 23) and emits it via StoreMap.update_gauges (line 434). MerlinGaugeSystem.new().build_default_gauges() is called in dispatch handler. If StoreMap and MerlinGaugeSystem are not used elsewhere, this is dead code that could be removed in S2-DEAD-FILES scope. If map/progression gauges are an intentional separate system (not card-cycle gauges), it is benign.",
-    "proposed_task": {
-      "title": "Audit MerlinGaugeSystem + StoreMap — add to S2-DEAD-FILES or keep",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260413-008",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Vestigial gauges_changed signal + MerlinGaugeSystem in merlin_store.gd may be dead code",
+      "details": "S2-CONTEXT-REGRESSION-TEST SF-001: merlin_store.gd still declares gauges_changed signal (line 23) and emits it via StoreMap.update_gauges (line 434). MerlinGaugeSystem.new().build_default_gauges() is called in dispatch handler. If StoreMap and MerlinGaugeSystem are not used elsewhere, this is dead code that could be removed in S2-DEAD-FILES scope. If map/progression gauges are an intentional separate system (not card-cycle gauges), it is benign.",
+      "proposed_task": {
+        "title": "Audit MerlinGaugeSystem + StoreMap — add to S2-DEAD-FILES or keep",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T14:19:16Z",
+      "_old_id": "insight-20260413-001"
     },
-    "timestamp": "2026-04-13T14:19:16Z",
-    "_old_id": "insight-20260413-001"
-  },
-  {
-    "id": "insight-20260413-009",
-    "agent": "godot_expert",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "mg_meditation.gd is a functional script with no dispatch path — pending director placement decision (q-20260413-004)",
-    "details": "After GAMES['esprit'] aligned to bible s.6.2, mg_meditation no longer dispatched. Script preserved, preload in match block retained. Director must decide: keep as bonus in esprit, move to perception/logique, or add to bible. Task will be created once answered.",
-    "proposed_task": {
-      "title": "Add mg_meditation to GAMES field per director q-20260413-004",
-      "sprint": "S3",
-      "type": "dev"
+    {
+      "id": "insight-20260413-009",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "mg_meditation.gd is a functional script with no dispatch path — pending director placement decision (q-20260413-004)",
+      "details": "After GAMES['esprit'] aligned to bible s.6.2, mg_meditation no longer dispatched. Script preserved, preload in match block retained. Director must decide: keep as bonus in esprit, move to perception/logique, or add to bible. Task will be created once answered.",
+      "proposed_task": {
+        "title": "Add mg_meditation to GAMES field per director q-20260413-004",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T16:30:00Z",
+      "_old_id": "insight-20260413-008"
     },
-    "timestamp": "2026-04-13T16:30:00Z",
-    "_old_id": "insight-20260413-008"
-  },
-  {
-    "id": "insight-20260413-010",
-    "agent": "godot_expert",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "Signal delta accuracy restored: reputation UI will now show correct faction changes",
-    "details": "BUG-SIGNAL-DELTA-FIX corrected reputation_changed signal. Previously UI listeners received raw requested delta (up to ±20 even if capped). Now they receive the true applied change. This matters for reputation animation smoothness and achievement tracking (e.g., earned +5 rep at cap, not +20).",
-    "proposed_task": {
-      "title": "Add reputation cap visual indicator when delta is clamped",
-      "sprint": "S3",
-      "type": "dev"
+    {
+      "id": "insight-20260413-010",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Signal delta accuracy restored: reputation UI will now show correct faction changes",
+      "details": "BUG-SIGNAL-DELTA-FIX corrected reputation_changed signal. Previously UI listeners received raw requested delta (up to ±20 even if capped). Now they receive the true applied change. This matters for reputation animation smoothness and achievement tracking (e.g., earned +5 rep at cap, not +20).",
+      "proposed_task": {
+        "title": "Add reputation cap visual indicator when delta is clamped",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T17:00:00Z",
+      "_old_id": "insight-20260413-021"
     },
-    "timestamp": "2026-04-13T17:00:00Z",
-    "_old_id": "insight-20260413-021"
-  },
-  {
-    "id": "insight-20260413-011",
-    "agent": "godot_expert",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "arc_condition_type field in BIOMES now has 4 distinct types but evaluator only handles 2",
-    "details": "S2-BIOMES introduced 'runs_in_biome' and 'fins_vues' condition types (landes_bruyere and collines_dolmens arcs). The evaluation code in merlin_skeleton_generator.gd and llm_adapter_map_prompt.gd only handles 'faction_rep' and 'oghams_owned'. Until S2-ARC-CONDITION-EVAL is implemented, these two biomes will never unlock their arcs regardless of player progress. This is a silent logic bug.",
-    "proposed_task": {
-      "title": "Implement arc_condition_type evaluators: runs_in_biome + fins_vues",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260413-011",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "arc_condition_type field in BIOMES now has 4 distinct types but evaluator only handles 2",
+      "details": "S2-BIOMES introduced 'runs_in_biome' and 'fins_vues' condition types (landes_bruyere and collines_dolmens arcs). The evaluation code in merlin_skeleton_generator.gd and llm_adapter_map_prompt.gd only handles 'faction_rep' and 'oghams_owned'. Until S2-ARC-CONDITION-EVAL is implemented, these two biomes will never unlock their arcs regardless of player progress. This is a silent logic bug.",
+      "proposed_task": {
+        "title": "Implement arc_condition_type evaluators: runs_in_biome + fins_vues",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-13T20:53:21Z",
+      "_old_id": "insight-20260413-001"
     },
-    "timestamp": "2026-04-13T20:53:21Z",
-    "_old_id": "insight-20260413-001"
-  },
-  {
-    "id": "insight-20260413-012",
-    "agent": "game_design_auditor",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "dominant_faction should align with arc_condition_faction across all biomes",
-    "details": "S2-BIOMES-REGRESSION-TEST found cotes_sauvages.dominant_faction='korrigans' while arc unlock requires Rep Niamh >= 30. When dominant_faction and arc_condition_faction diverge, the LLM context sent before arc-unlock may contradict the arc narrative (routing as korrigans while unlocking via niamh). A single-pass audit of all 8 biomes to verify dominant_faction thematic coherence is recommended.",
-    "proposed_task": {
-      "title": "Fix cotes_sauvages.dominant_faction: korrigans → niamh",
-      "sprint": "S2",
-      "type": "dev",
-      "priority": 18
+    {
+      "id": "insight-20260413-012",
+      "agent": "game_design_auditor",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "dominant_faction should align with arc_condition_faction across all biomes",
+      "details": "S2-BIOMES-REGRESSION-TEST found cotes_sauvages.dominant_faction='korrigans' while arc unlock requires Rep Niamh >= 30. When dominant_faction and arc_condition_faction diverge, the LLM context sent before arc-unlock may contradict the arc narrative (routing as korrigans while unlocking via niamh). A single-pass audit of all 8 biomes to verify dominant_faction thematic coherence is recommended.",
+      "proposed_task": {
+        "title": "Fix cotes_sauvages.dominant_faction: korrigans → niamh",
+        "sprint": "S2",
+        "type": "dev",
+        "priority": 18
+      },
+      "timestamp": "2026-04-13T21:15:00Z",
+      "_old_id": "insight-20260413-001"
     },
-    "timestamp": "2026-04-13T21:15:00Z",
-    "_old_id": "insight-20260413-001"
-  },
-  {
-    "id": "insight-20260414-013",
-    "agent": "godot_expert",
-    "severity": "INFO",
-    "category": "ux",
-    "message": "7 game-flow SFX sounds were silently missing — no crash, but UX degradation at key moments",
-    "details": "SFXManager.play() returns silently when a name is not registered. This means card reveals, encounter entries, success/fail outcomes, danger warnings, and confirm actions had zero audio feedback. The silent-fail design is intentional for robustness, but it means missing sounds can go undetected indefinitely without static auditing. Consider adding a startup warning log when a registered caller name is not found in names[].",
-    "proposed_task": {
-      "title": "SFXManager: warn on unregistered sound at startup (debug mode)",
-      "sprint": "S4",
-      "type": "dev"
+    {
+      "id": "insight-20260414-013",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "ux",
+      "message": "7 game-flow SFX sounds were silently missing — no crash, but UX degradation at key moments",
+      "details": "SFXManager.play() returns silently when a name is not registered. This means card reveals, encounter entries, success/fail outcomes, danger warnings, and confirm actions had zero audio feedback. The silent-fail design is intentional for robustness, but it means missing sounds can go undetected indefinitely without static auditing. Consider adding a startup warning log when a registered caller name is not found in names[].",
+      "proposed_task": {
+        "title": "SFXManager: warn on unregistered sound at startup (debug mode)",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T01:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T01:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-014",
-    "agent": "game_design_auditor",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "Anam death penalty bypassed by in-run ADD_ANAM card effects — design ambiguity needs director decision",
-    "details": "The bible formula 'Mort = Anam × min(cartes/30, 1.0)' is ambiguous about scope. Currently ADD_ANAM from card effects is credited to meta['anam'] immediately (permanent, no death penalty). Only the base run-end reward (ANAM_BASE_REWARD=10 + bonuses) is scaled by the death ratio. Impact: a player who earns 30 Anam from card choices then dies at card 5 keeps all 30 Anam. If the bible intent is that early-run deaths should yield less total Anam, this needs a fix. If immediate card rewards are intentionally 'confirmed' gains (rewarding smart individual choices regardless of run outcome), no change needed. Director decision requested via q-20260414-001.",
-    "proposed_task": {
-      "title": "BUG-ANAM-DEATH-PENALTY-FIX: scope ADD_ANAM under death ratio",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260414-014",
+      "agent": "game_design_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Anam death penalty bypassed by in-run ADD_ANAM card effects — design ambiguity needs director decision",
+      "details": "The bible formula 'Mort = Anam × min(cartes/30, 1.0)' is ambiguous about scope. Currently ADD_ANAM from card effects is credited to meta['anam'] immediately (permanent, no death penalty). Only the base run-end reward (ANAM_BASE_REWARD=10 + bonuses) is scaled by the death ratio. Impact: a player who earns 30 Anam from card choices then dies at card 5 keeps all 30 Anam. If the bible intent is that early-run deaths should yield less total Anam, this needs a fix. If immediate card rewards are intentionally 'confirmed' gains (rewarding smart individual choices regardless of run outcome), no change needed. Director decision requested via q-20260414-001.",
+      "proposed_task": {
+        "title": "BUG-ANAM-DEATH-PENALTY-FIX: scope ADD_ANAM under death ratio",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T02:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T02:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-015",
-    "agent": "godot_expert",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "Day counter now ticks every 5 cards — consider showing the current day in the LLM prompt and HUD",
-    "details": "S2-DAY-TICK-FIX implemented run['day'] increment (every CARDS_PER_DAY=5 cards). The day value is already passed via run state to LLM context but the HUD may not display it. Exposing 'Jour N' in the card display header would give players a sense of run progression and align with the narrative 'Jour 1' references in generated text.",
-    "proposed_task": {
-      "title": "Display current in-game day in HUD card header",
-      "sprint": "S3",
-      "type": "dev"
+    {
+      "id": "insight-20260414-015",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Day counter now ticks every 5 cards — consider showing the current day in the LLM prompt and HUD",
+      "details": "S2-DAY-TICK-FIX implemented run['day'] increment (every CARDS_PER_DAY=5 cards). The day value is already passed via run state to LLM context but the HUD may not display it. Exposing 'Jour N' in the card display header would give players a sense of run progression and align with the narrative 'Jour 1' references in generated text.",
+      "proposed_task": {
+        "title": "Display current in-game day in HUD card header",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T03:00:00Z",
+      "_old_id": "insight-20260414-002"
     },
-    "timestamp": "2026-04-14T03:00:00Z",
-    "_old_id": "insight-20260414-002"
-  },
-  {
-    "id": "insight-20260414-016",
-    "agent": "game_design_auditor",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "meta.biome_run_counts + meta.fins_vues may not be initialized — arc conditions for landes + collines silently fail",
-    "details": "S2-ARC-CONDITION-EVAL (P16) will add evaluators for 'runs_in_biome' and 'fins_vues' arc condition types. However, if meta.biome_run_counts (dict) and meta.fins_vues (int) are not initialized in init_meta() and not incremented at run-end, the evaluators will always see zero and arcs will never unlock. The S2-ARC-CONDITION-EVAL task description must explicitly include: (1) init_meta() field initialization, (2) apply_run_rewards() increment logic. T-S2-ARC-EVAL-TEST (P19) will catch this if missed.",
-    "proposed_task": {
-      "title": "Ensure meta.biome_run_counts + meta.fins_vues are initialized and incremented in apply_run_rewards()",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260414-016",
+      "agent": "game_design_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "meta.biome_run_counts + meta.fins_vues may not be initialized — arc conditions for landes + collines silently fail",
+      "details": "S2-ARC-CONDITION-EVAL (P16) will add evaluators for 'runs_in_biome' and 'fins_vues' arc condition types. However, if meta.biome_run_counts (dict) and meta.fins_vues (int) are not initialized in init_meta() and not incremented at run-end, the evaluators will always see zero and arcs will never unlock. The S2-ARC-CONDITION-EVAL task description must explicitly include: (1) init_meta() field initialization, (2) apply_run_rewards() increment logic. T-S2-ARC-EVAL-TEST (P19) will catch this if missed.",
+      "proposed_task": {
+        "title": "Ensure meta.biome_run_counts + meta.fins_vues are initialized and incremented in apply_run_rewards()",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T04:00:00Z",
+      "_old_id": "insight-20260414-003"
     },
-    "timestamp": "2026-04-14T04:00:00Z",
-    "_old_id": "insight-20260414-003"
-  },
-  {
-    "id": "insight-20260414-017",
-    "agent": "godot_expert",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "Anam accumulation during run bypasses death penalty — pending director decision",
-    "details": "ADD_ANAM card effects currently credit meta['anam'] immediately during the run, bypassing the death ratio min(cards/30, 1.0). Bible s.5.1 implies all run anam should be scaled at death. Director question q-20260414-001 is pending. Once answered, BUG-ANAM-DEATH-PENALTY-FIX (P10) should be unblocked. If director chooses option A (immediate gain), the current behavior is correct. If option B or C, _apply_add_anam() must write to run['anam_accumulated'] and NOT meta['anam'] during the run.",
-    "proposed_task": {
-      "title": "Unblock BUG-ANAM-DEATH-PENALTY-FIX after q-20260414-001 answered",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260414-017",
+      "agent": "godot_expert",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Anam accumulation during run bypasses death penalty — pending director decision",
+      "details": "ADD_ANAM card effects currently credit meta['anam'] immediately during the run, bypassing the death ratio min(cards/30, 1.0). Bible s.5.1 implies all run anam should be scaled at death. Director question q-20260414-001 is pending. Once answered, BUG-ANAM-DEATH-PENALTY-FIX (P10) should be unblocked. If director chooses option A (immediate gain), the current behavior is correct. If option B or C, _apply_add_anam() must write to run['anam_accumulated'] and NOT meta['anam'] during the run.",
+      "proposed_task": {
+        "title": "Unblock BUG-ANAM-DEATH-PENALTY-FIX after q-20260414-001 answered",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T05:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T05:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-018",
-    "agent": "save_persistence_auditor",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "Save schema _validate() is out of sync with _get_default_profile() — fins_vues and echo_memory not in required_keys",
-    "details": "SPECIALIST-9 audit: _validate() checks 12 required keys but _get_default_profile() has 17 top-level fields. Fields added in recent cycles (fins_vues, echo_memory, run_history, whispers_seen) are not validated. Recommend: update required_keys every time a semantically important field is added to _get_default_profile().",
-    "proposed_task": {
-      "id": "SAVE-VALIDATE-FINS-VUES",
-      "title": "Add fins_vues + echo_memory to _validate() required_keys",
-      "sprint": "S2",
-      "type": "dev",
-      "priority": 23
+    {
+      "id": "insight-20260414-018",
+      "agent": "save_persistence_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Save schema _validate() is out of sync with _get_default_profile() — fins_vues and echo_memory not in required_keys",
+      "details": "SPECIALIST-9 audit: _validate() checks 12 required keys but _get_default_profile() has 17 top-level fields. Fields added in recent cycles (fins_vues, echo_memory, run_history, whispers_seen) are not validated. Recommend: update required_keys every time a semantically important field is added to _get_default_profile().",
+      "proposed_task": {
+        "id": "SAVE-VALIDATE-FINS-VUES",
+        "title": "Add fins_vues + echo_memory to _validate() required_keys",
+        "sprint": "S2",
+        "type": "dev",
+        "priority": 23
+      },
+      "timestamp": "2026-04-14T09:00:00Z",
+      "_old_id": "insight-20260414-003"
     },
-    "timestamp": "2026-04-14T09:00:00Z",
-    "_old_id": "insight-20260414-003"
-  },
-  {
-    "id": "insight-20260414-019",
-    "agent": "game_design_auditor",
-    "severity": "INFO",
-    "category": "gameplay",
-    "message": "run['anam'] is a write-only vestigial field — never consumed by rewards pipeline",
-    "details": "PAT-045 finding: _apply_add_anam() writes to run['anam'] (tracking in-run ADD_ANAM gains) but calculate_run_rewards() and apply_run_rewards() never read this field. The rewards pipeline computes anam from scratch (ANAM_BASE_REWARD + bonuses). This means run.anam tracks something useful (cumulative ADD_ANAM during run) but the data goes nowhere. When q-20260414-001 resolves, this field should either become 'anam_accumulated' (if option B/C chosen) or be removed entirely (if option A chosen — immediate gain is already applied to meta.anam). The current dual-write pattern (run.anam + meta.anam simultaneously) is redundant.",
-    "proposed_task": null,
-    "timestamp": "2026-04-14T06:00:00Z",
-    "_old_id": "insight-20260414-002"
-  },
-  {
-    "id": "insight-20260414-020",
-    "agent": "bug_hunter",
-    "severity": "INFO",
-    "category": "ux",
-    "message": "Documentation lag: 3 docs/*.md files still reference deleted mg_meditation (and potentially other deleted systems)",
-    "details": "T-S3-MEDITATION-VERIFY found that docs/GAME_BEHAVIOR.md, docs/20_card_system/DOC_MINIGAMES.md, and docs/GAME_ENCYCLOPEDIA.md still document mg_meditation as an active minigame. With 18+ cleanup cycles, similar doc lag likely exists for other deleted systems (Triade, Souffle, 4 Jauges, etc). A docs-audit cycle could clean all doc references to deleted systems in one pass — improves onboarding clarity for future contributors.",
-    "proposed_task": {
-      "id": "S4-DOC-AUDIT-CLEANUP",
-      "title": "Docs audit: remove all references to deleted systems (Triade, Souffle, mg_meditation, etc.)",
-      "sprint": "S4",
-      "type": "dev",
-      "priority": 25
+    {
+      "id": "insight-20260414-019",
+      "agent": "game_design_auditor",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "run['anam'] is a write-only vestigial field — never consumed by rewards pipeline",
+      "details": "PAT-045 finding: _apply_add_anam() writes to run['anam'] (tracking in-run ADD_ANAM gains) but calculate_run_rewards() and apply_run_rewards() never read this field. The rewards pipeline computes anam from scratch (ANAM_BASE_REWARD + bonuses). This means run.anam tracks something useful (cumulative ADD_ANAM during run) but the data goes nowhere. When q-20260414-001 resolves, this field should either become 'anam_accumulated' (if option B/C chosen) or be removed entirely (if option A chosen — immediate gain is already applied to meta.anam). The current dual-write pattern (run.anam + meta.anam simultaneously) is redundant.",
+      "proposed_task": null,
+      "timestamp": "2026-04-14T06:00:00Z",
+      "_old_id": "insight-20260414-002"
     },
-    "timestamp": "2026-04-14T08:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-021",
-    "agent": "perf_code_quality_auditor",
-    "severity": "WARN",
-    "category": "performance",
-    "message": "merlin_ai.gd + merlin_omniscient.gd are 5000+ lines combined — technical debt accumulation risk",
-    "details": "SPECIALIST-10 audit found merlin_omniscient.gd at 2951 lines and merlin_ai.gd at 2235 lines (combined 5186 lines). 7 PERF tasks (P24-P29) propose incremental splits. Prioritize PERF-REDUCE-MEGAFUNC (P24) and PERF-AI-PROCESS-EXTRACT (P27) as quick wins in S3.",
-    "proposed_task": {
-      "title": "S4 module split: omniscient_card_gen + omniscient_guardrails + omniscient_arc",
-      "sprint": "S4",
-      "type": "dev"
+    {
+      "id": "insight-20260414-020",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "ux",
+      "message": "Documentation lag: 3 docs/*.md files still reference deleted mg_meditation (and potentially other deleted systems)",
+      "details": "T-S3-MEDITATION-VERIFY found that docs/GAME_BEHAVIOR.md, docs/20_card_system/DOC_MINIGAMES.md, and docs/GAME_ENCYCLOPEDIA.md still document mg_meditation as an active minigame. With 18+ cleanup cycles, similar doc lag likely exists for other deleted systems (Triade, Souffle, 4 Jauges, etc). A docs-audit cycle could clean all doc references to deleted systems in one pass — improves onboarding clarity for future contributors.",
+      "proposed_task": {
+        "id": "S4-DOC-AUDIT-CLEANUP",
+        "title": "Docs audit: remove all references to deleted systems (Triade, Souffle, mg_meditation, etc.)",
+        "sprint": "S4",
+        "type": "dev",
+        "priority": 25
+      },
+      "timestamp": "2026-04-14T08:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T10:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-022",
-    "agent": "game_design_auditor",
-    "severity": "ACTION",
-    "category": "gameplay",
-    "message": "Arc gating system broken for 3 biomes — arcs always unlocked",
-    "details": "merlin_skeleton_generator.gd context dict never passes biome_runs, fins_vues, or oghams_count. When arc_condition_faction is empty, rep_value defaults to FACTION_SCORE_START=20, satisfying all non-faction arc conditions (runs_in_biome>=3, fins_vues>=5, oghams_owned>=2). Progression system gate for landes_bruyere, collines_dolmens, cercles_pierres is non-functional. Players see narrative arcs they haven't 'earned' per game design bible.",
-    "proposed_task": {
-      "title": "S2-ARC-CONDITION-EVAL (already queued, bumped P2)",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260414-021",
+      "agent": "perf_code_quality_auditor",
+      "severity": "WARN",
+      "category": "performance",
+      "message": "merlin_ai.gd + merlin_omniscient.gd are 5000+ lines combined — technical debt accumulation risk",
+      "details": "SPECIALIST-10 audit found merlin_omniscient.gd at 2951 lines and merlin_ai.gd at 2235 lines (combined 5186 lines). 7 PERF tasks (P24-P29) propose incremental splits. Prioritize PERF-REDUCE-MEGAFUNC (P24) and PERF-AI-PROCESS-EXTRACT (P27) as quick wins in S3.",
+      "proposed_task": {
+        "title": "S4 module split: omniscient_card_gen + omniscient_guardrails + omniscient_arc",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T10:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T10:48:35Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-023",
-    "agent": "minigame_system_auditor",
-    "severity": "ACTION",
-    "category": "gameplay",
-    "message": "Minigame difficulty is hardcoded at 5 for all cards — no progression curve",
-    "details": "game_controller_minigame.gd:47 always uses base_diff=5. Bible s.6.3 specifies difficulty scales with card type and biome maturity. Players experience identical challenge on card 1 and card 40 of a run. The MOS tracks engagement but can't respond with increasing difficulty. Adding a simple card_count→difficulty lookup (5+floor(cards_played/10), capped at 10) would improve late-game tension.",
-    "proposed_task": {
-      "title": "Difficulty curve: scale base_diff with cards_played and biome tier",
-      "sprint": "S3",
-      "type": "dev",
-      "id": "MG-FIX-DIFFICULTY-SCALING"
+    {
+      "id": "insight-20260414-022",
+      "agent": "game_design_auditor",
+      "severity": "ACTION",
+      "category": "gameplay",
+      "message": "Arc gating system broken for 3 biomes — arcs always unlocked",
+      "details": "merlin_skeleton_generator.gd context dict never passes biome_runs, fins_vues, or oghams_count. When arc_condition_faction is empty, rep_value defaults to FACTION_SCORE_START=20, satisfying all non-faction arc conditions (runs_in_biome>=3, fins_vues>=5, oghams_owned>=2). Progression system gate for landes_bruyere, collines_dolmens, cercles_pierres is non-functional. Players see narrative arcs they haven't 'earned' per game design bible.",
+      "proposed_task": {
+        "title": "S2-ARC-CONDITION-EVAL (already queued, bumped P2)",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T10:48:35Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T13:00:00Z",
-    "_old_id": "insight-20260414-012"
-  },
-  {
-    "id": "insight-20260414-024",
-    "agent": "3d_scene_asset_auditor",
-    "severity": "ACTION",
-    "category": "visual",
-    "message": "7 of 8 biomes have zero 3D assets — only foret_broceliande populated",
-    "details": "Assets/bk_assets/ only has foret_broceliande assets. landes_bruyere, cotes_sauvages, villages_celtes, cercles_pierres, marais_korrigans, collines_dolmens, iles_mystiques all use procedural fallback geometry when run. Two Blender generation tasks (3D-BIOME-ASSET-GEN-LANDES, 3D-BIOME-ASSET-GEN-COTES) added to generate assets for priority biomes.",
-    "proposed_task": {
-      "title": "Blender: gen all 7 missing biome asset sets",
-      "sprint": "S4",
-      "type": "dev"
+    {
+      "id": "insight-20260414-023",
+      "agent": "minigame_system_auditor",
+      "severity": "ACTION",
+      "category": "gameplay",
+      "message": "Minigame difficulty is hardcoded at 5 for all cards — no progression curve",
+      "details": "game_controller_minigame.gd:47 always uses base_diff=5. Bible s.6.3 specifies difficulty scales with card type and biome maturity. Players experience identical challenge on card 1 and card 40 of a run. The MOS tracks engagement but can't respond with increasing difficulty. Adding a simple card_count→difficulty lookup (5+floor(cards_played/10), capped at 10) would improve late-game tension.",
+      "proposed_task": {
+        "title": "Difficulty curve: scale base_diff with cards_played and biome tier",
+        "sprint": "S3",
+        "type": "dev",
+        "id": "MG-FIX-DIFFICULTY-SCALING"
+      },
+      "timestamp": "2026-04-14T13:00:00Z",
+      "_old_id": "insight-20260414-012"
     },
-    "timestamp": "2026-04-14T14:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-025",
-    "agent": "integration_e2e_auditor",
-    "severity": "WARN",
-    "category": "gameplay",
-    "message": "Two parallel game flow paths exist — active vs dead code drift risk",
-    "details": "ACTIVE path: IntroCeltOS→Menu3DPC→SelectionSauvegarde→HubAntre→BroceliandeForest3D→MerlinGame. DEAD path: game_flow_controller.gd (HubScreen→Run3D→EndRunScreen), audio_integration.gd wires to it but no production code instantiates GameFlowController. As features are added to the active path, the dead path will drift further. Risk: a future developer might try to use the dead path and find broken wiring. Recommendation: director decision needed (delete vs document vs migrate).",
-    "proposed_task": {
-      "title": "Director decision: delete/document/migrate GameFlowController dead path",
-      "sprint": "S4",
-      "type": "dev"
+    {
+      "id": "insight-20260414-024",
+      "agent": "3d_scene_asset_auditor",
+      "severity": "ACTION",
+      "category": "visual",
+      "message": "7 of 8 biomes have zero 3D assets — only foret_broceliande populated",
+      "details": "Assets/bk_assets/ only has foret_broceliande assets. landes_bruyere, cotes_sauvages, villages_celtes, cercles_pierres, marais_korrigans, collines_dolmens, iles_mystiques all use procedural fallback geometry when run. Two Blender generation tasks (3D-BIOME-ASSET-GEN-LANDES, 3D-BIOME-ASSET-GEN-COTES) added to generate assets for priority biomes.",
+      "proposed_task": {
+        "title": "Blender: gen all 7 missing biome asset sets",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T14:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T15:00:00Z",
-    "_old_id": "insight-20260414-001"
-  },
-  {
-    "id": "insight-20260414-026",
-    "agent": "meta_evolution_auditor",
-    "severity": "WARN",
-    "category": "dashboard",
-    "message": "Studio tracking has 7-cycle metric drift: completed_archive has 2/62 tasks, learnings cycle count 7 behind events.jsonl",
-    "details": "Housekeeping (cycle_instructions.md section 'Queue cleanup') requires moving completed tasks to completed_archive.json each cycle. 60 tasks are unarchived. Also studio_learnings.json total_cycles drifted to 40 while events.jsonl has 47. META-ARCHIVE-RECOVER and META-LEARNINGS-SYNC tasks queued.",
-    "proposed_task": {
-      "title": "Recover 60 missing tasks into completed_archive.json",
-      "sprint": "META",
-      "type": "meta"
+    {
+      "id": "insight-20260414-025",
+      "agent": "integration_e2e_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Two parallel game flow paths exist — active vs dead code drift risk",
+      "details": "ACTIVE path: IntroCeltOS→Menu3DPC→SelectionSauvegarde→HubAntre→BroceliandeForest3D→MerlinGame. DEAD path: game_flow_controller.gd (HubScreen→Run3D→EndRunScreen), audio_integration.gd wires to it but no production code instantiates GameFlowController. As features are added to the active path, the dead path will drift further. Risk: a future developer might try to use the dead path and find broken wiring. Recommendation: director decision needed (delete vs document vs migrate).",
+      "proposed_task": {
+        "title": "Director decision: delete/document/migrate GameFlowController dead path",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T15:00:00Z",
+      "_old_id": "insight-20260414-001"
     },
-    "timestamp": "2026-04-14T16:00:00Z"
-  },
-  {
-    "id": "insight-20260414-002",
-    "agent": "scene_flow_tester",
-    "severity": "ACTION",
-    "category": "gameplay",
-    "message": "IntroPersonalityQuiz + SceneRencontreMerlin are orphaned from new game flow",
-    "details": "SPEC-0 audit found that Menu3DPC._start_new_game() routes to ParchmentPreRun, completely skipping IntroPersonalityQuiz.tscn and SceneRencontreMerlin.tscn. These scenes implement the bible-mandated player onboarding (personality quiz → meeting Merlin → Hub 2D). New players never experience the narrative intro. Director feedback q-20260414-005 asks whether to re-wire, delete, or accept the current ParchmentPreRun replacement.",
-    "proposed_task": {
-      "title": "Wire IntroPersonalityQuiz into new game flow (first-run detection)",
-      "sprint": "S2",
-      "type": "dev"
+    {
+      "id": "insight-20260414-026",
+      "agent": "meta_evolution_auditor",
+      "severity": "WARN",
+      "category": "dashboard",
+      "message": "Studio tracking has 7-cycle metric drift: completed_archive has 2/62 tasks, learnings cycle count 7 behind events.jsonl",
+      "details": "Housekeeping (cycle_instructions.md section 'Queue cleanup') requires moving completed tasks to completed_archive.json each cycle. 60 tasks are unarchived. Also studio_learnings.json total_cycles drifted to 40 while events.jsonl has 47. META-ARCHIVE-RECOVER and META-LEARNINGS-SYNC tasks queued.",
+      "proposed_task": {
+        "title": "Recover 60 missing tasks into completed_archive.json",
+        "sprint": "META",
+        "type": "meta"
+      },
+      "timestamp": "2026-04-14T16:00:00Z"
     },
-    "timestamp": "2026-04-14T17:00:00Z"
-  }
-]
+    {
+      "id": "insight-20260414-002",
+      "agent": "scene_flow_tester",
+      "severity": "ACTION",
+      "category": "gameplay",
+      "message": "IntroPersonalityQuiz + SceneRencontreMerlin are orphaned from new game flow",
+      "details": "SPEC-0 audit found that Menu3DPC._start_new_game() routes to ParchmentPreRun, completely skipping IntroPersonalityQuiz.tscn and SceneRencontreMerlin.tscn. These scenes implement the bible-mandated player onboarding (personality quiz → meeting Merlin → Hub 2D). New players never experience the narrative intro. Director feedback q-20260414-005 asks whether to re-wire, delete, or accept the current ParchmentPreRun replacement.",
+      "proposed_task": {
+        "title": "Wire IntroPersonalityQuiz into new game flow (first-run detection)",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T17:00:00Z"
+    }
+  ],
+  "last_updated": "2026-04-14T18:00:00Z"
+}

@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T17:00:00Z",
+  "last_updated": "2026-04-14T18:00:00Z",
   "metrics": {
-    "total_cycles_completed": 49,
-    "total_dev_cycles": 22,
+    "total_cycles_completed": 50,
+    "total_dev_cycles": 23,
     "total_test_cycles": 20,
     "bugs_found": 40,
-    "bugs_fixed": 28,
-    "tasks_completed": 64,
-    "tasks_pending": 50,
+    "bugs_fixed": 29,
+    "tasks_completed": 65,
+    "tasks_pending": 54,
     "current_sprint": "S2",
     "specialist_cycles_run": 7,
-    "last_specialist": 0
+    "last_specialist": 1
   },
   "patterns_learned": [
     {
@@ -792,6 +792,26 @@
       "applies_to": [
         "scripts/SceneRencontreMerlin.gd:10-12"
       ]
+    },
+    {
+      "id": "PAT-075",
+      "learned_at": "2026-04-14T18:00:00Z",
+      "source": "SPECIALIST-1-VISUAL-AUDIT",
+      "pattern": "Color(r, g, b, alpha) modification patterns are acceptable when r/g/b come from a PALETTE variable — only raw numeric Color(0.x, 0.y, 0.z) are violations",
+      "severity": "INFO",
+      "applies_to": [
+        "all_scripts"
+      ]
+    },
+    {
+      "id": "PAT-076",
+      "learned_at": "2026-04-14T18:00:00Z",
+      "source": "SPECIALIST-1-VISUAL-AUDIT",
+      "pattern": "pixel_transition_config.gd has inline TODO comments marking palette violations — always grep for such comments when doing visual audits",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/autoload/pixel_transition_config.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -883,6 +903,10 @@
     },
     "scene_flow_tester": {
       "tasks_completed": 1
+    },
+    "visual_consistency_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {

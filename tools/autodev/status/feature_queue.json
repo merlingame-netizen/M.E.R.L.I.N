@@ -1,6 +1,6 @@
 {
   "version": "4.0",
-  "updated": "2026-04-14T11:00:00Z",
+  "updated": "2026-04-14T18:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 40 pending (T-S2-ARC-CONDITION-REGRESS-V2 completed, 6 new E2E tasks added by SPEC-14).",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -363,19 +363,6 @@
       "agent": "godot_expert"
     },
     {
-      "id": "3D-BUSH-ASSET-FIX",
-      "sprint": "S2",
-      "priority": 6,
-      "type": "dev",
-      "status": "pending",
-      "title": "Fix BUSH_MODELS: load bushes/ category instead of rocks/",
-      "description": "broceliande_forest_3d.gd:68-72 BUSH_MODELS hardcoded to rocks/ category. Bush GLBs exist at Assets/bk_assets/bushes/foret_broceliande/ (6 variants) but are never loaded. Change BUSH_MODELS paths from rocks/ to bushes/ category: bush_bk_foret_broceliande_0000-0005.glb.",
-      "files": [
-        "scripts/broceliande_3d/broceliande_forest_3d.gd"
-      ],
-      "agent": "godot_expert"
-    },
-    {
       "id": "3D-DEADWOOD-GROUNDCOVER-SPAWN",
       "sprint": "S3",
       "priority": 22,
@@ -620,15 +607,14 @@
       "priority": 9,
       "type": "dev",
       "status": "pending",
-      "title": "Wire IntroPersonalityQuiz into new game flow",
-      "description": "Menu3DPC._start_new_game() goes directly to ParchmentPreRun, skipping IntroPersonalityQuiz + SceneRencontreMerlin. Bible: IntroCeltOS→Menu→Quiz→Rencontre→Hub 2D. Fix: if first run (no profile), route to IntroPersonalityQuiz first; then SceneRencontreMerlin → HubAntre. BLOCKED: feedback question q-20260414-005 sent to director (architecture change).",
+      "title": "Delete IntroPersonalityQuiz + SceneRencontreMerlin (director: option B)",
+      "description": "Director decision q-20260414-005: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Actions: (1) Delete scenes/IntroPersonalityQuiz.tscn if exists. (2) Delete scripts/IntroPersonalityQuiz.gd. (3) Delete scenes/SceneRencontreMerlin.tscn if exists. (4) Delete scripts/SceneRencontreMerlin.gd. (5) Check menu_3d_pc.gd for any remaining references to these scenes and remove them. The active flow (Menu3DPC→ParchmentPreRun→Hub) is already correct per SPEC-0 audit.",
       "files": [
-        "scripts/menu_3d_pc.gd:1333-1337",
         "scripts/IntroPersonalityQuiz.gd",
-        "scripts/SceneRencontreMerlin.gd:10-12"
+        "scripts/SceneRencontreMerlin.gd",
+        "scripts/menu_3d_pc.gd"
       ],
-      "agent": "scene_flow_fixer",
-      "blocked_on_feedback": "q-20260414-005"
+      "agent": "godot_expert"
     },
     {
       "id": "FLOW-RENCONTRE-CONSTANTS-CLEANUP",
@@ -705,6 +691,71 @@
         "scripts/merlin/merlin_save_system.gd"
       ],
       "agent": "scene_flow_fixer"
+    },
+    {
+      "id": "VIS-INTROCELOS-PALETTE",
+      "sprint": "S3",
+      "priority": 16,
+      "type": "dev",
+      "status": "pending",
+      "title": "IntroCeltOS.gd: replace local GOLD/BG_BLACK constants with MerlinVisual.PALETTE",
+      "agent": "visual_consistency_auditor",
+      "files": [
+        "scripts/IntroCeltOS.gd"
+      ],
+      "description": "SPECIALIST-1 AUDIT: IntroCeltOS.gd:63-67 defines local color constants (GOLD=Color(0.90,0.75,0.30), GOLD_DIM, GOLD_BRIGHT, GOLD_FAINT, BG_BLACK) violating the rule: ALL colors from MerlinVisual.PALETTE/GBC. Fix: replace with MerlinVisual.PALETTE['gold'], PALETTE['gold_bright'], MerlinVisual.CRT_PALETTE['bg_deep'] etc. Check MerlinVisualPalettes for exact key names. Note: if PALETTE lacks exact matches, add them to MerlinVisualPalettes (do NOT define locally)."
+    },
+    {
+      "id": "VIS-PIXEL-TRANSITION-CONFIG",
+      "sprint": "S3",
+      "priority": 17,
+      "type": "dev",
+      "status": "pending",
+      "title": "pixel_transition_config.gd:56 — replace hardcoded Color(0.02,0.02,0.02) with CRT_PALETTE",
+      "agent": "visual_consistency_auditor",
+      "files": [
+        "scripts/autoload/pixel_transition_config.gd"
+      ],
+      "description": "SPECIALIST-1 AUDIT: pixel_transition_config.gd:56 has bg_color: Color(0.02,0.02,0.02) hardcoded. Line 39 already has a comment noting it should use CRT_PALETTE['bg_deep'] but line 56 was not updated. Fix: replace Color(0.02, 0.02, 0.02) with MerlinVisual.CRT_PALETTE['bg_deep'] (or MerlinVisual.CRT_PALETTE.get('bg_deep', Color.BLACK))."
+    },
+    {
+      "id": "VIS-BK-TEST-ROOM-COLORS",
+      "sprint": "S3",
+      "priority": 35,
+      "type": "dev",
+      "status": "pending",
+      "title": "bk_forest_test_room.gd: migrate 20+ hardcoded Color() to MerlinVisual or biome palette",
+      "agent": "visual_consistency_auditor",
+      "files": [
+        "scripts/bk_forest_test_room.gd"
+      ],
+      "description": "SPECIALIST-1 AUDIT: bk_forest_test_room.gd has 20+ hardcoded Color() values (COL_GRASS, sky colors, sun, water, fog, etc.). As a 3D scene file these should either come from MerlinVisual.BIOME_CRT_PALETTES['broceliande'] or be declared in a BrochBiomePalette constant block. Low priority since this is primarily a test/dev scene but it sets visual precedent. Add a const BIOME_PALETTE block derived from MerlinVisual."
+    },
+    {
+      "id": "VIS-AUDIT-ADDONS",
+      "sprint": "S3",
+      "priority": 36,
+      "type": "test",
+      "status": "pending",
+      "title": "Audit: grep addons/ for Color() violations not from MerlinVisual",
+      "agent": "visual_consistency_auditor",
+      "files": [
+        "addons/merlin_ai/"
+      ],
+      "description": "SPECIALIST-1 AUDIT coverage gap: visual audit only checked scripts/. Run grep Color( on addons/ directory — AI overlay/UI widgets may have hardcoded colors. Generate fix tasks for any violations found."
+    },
+    {
+      "id": "VIS-SCREEN-FRAME-WHITE",
+      "sprint": "S3",
+      "priority": 37,
+      "type": "dev",
+      "status": "pending",
+      "title": "screen_frame.gd:351 — replace Color(1,1,1,0.15) highlight with PALETTE reference",
+      "agent": "visual_consistency_auditor",
+      "files": [
+        "scripts/autoload/screen_frame.gd"
+      ],
+      "description": "SPECIALIST-1 AUDIT: screen_frame.gd:351 uses Color(1.0, 1.0, 1.0, 0.15) for a highlight effect. Should reference MerlinVisual.CRT_PALETTE['phosphor_bright'] or similar white-equivalent key, modified with alpha. Low priority but completes visual consistency."
     }
   ]
 }
