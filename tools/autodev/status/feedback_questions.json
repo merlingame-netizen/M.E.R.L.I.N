@@ -214,7 +214,7 @@
       "id": "q-20260414-004",
       "category": "design",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "question": "game_flow_controller.gd (HubScreen→Run3D→EndRunScreen path) est mort mais audio_integration.gd y est câblé. Faut-il supprimer ce chemin ou le conserver pour une future alternative ?",
       "context": "SPECIALIST-14 audit: deux chemins de jeu coexistent. Chemin ACTIF: HubAntre→BroceliandeForest3D→MerlinGame. Chemin MORT: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn. Aucun script de production n'instancie GameFlowController. Mais audio_integration.gd le référence. Options: (A) Supprimer le chemin mort (HubScreen.tscn, Run3D.tscn, game_flow_controller.gd) pour simplifier. (B) Garder comme chemin alternatif documenté pour future refonte. (C) Migrer le chemin actif vers game_flow_controller (refonte architecturale).",
       "type": "multiple_choice",
