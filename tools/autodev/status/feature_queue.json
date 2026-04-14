@@ -46,7 +46,7 @@
     {
       "id": "S2-ARC-CONDITION-EVAL",
       "sprint": "S2",
-      "priority": 16,
+      "priority": 2,
       "status": "pending",
       "type": "dev",
       "title": "Implementer evaluation arc_condition_type: runs_in_biome et fins_vues",
@@ -56,7 +56,8 @@
         "addons/merlin_ai/merlin_omniscient.gd",
         "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Two new arc_condition_type values added by S2-BIOMES: 'runs_in_biome' (landes_bruyere: value=3) and 'fins_vues' (collines_dolmens: value=5). These need evaluation code in the MOS/arc-condition checker. Currently only 'faction_rep' and 'oghams_owned' are evaluated. Fix: (1) Find where arc_condition_type is evaluated (merlin_skeleton_generator.gd:42, llm_adapter_map_prompt.gd:59-96). (2) Add 'runs_in_biome' case: meta.biome_runs.get(biome_id, 0) >= arc_condition_value (NOTE: field is 'biome_runs' NOT 'biome_run_counts' — see PAT-049). (3) Add 'fins_vues' case: meta.fins_vues >= arc_condition_value. (4) Verify meta has the needed fields (biome_runs dict, fins_vues int). Add constants ARC_CONDITION_TYPES array for documentation."
+      "description": "Two new arc_condition_type values added by S2-BIOMES: 'runs_in_biome' (landes_bruyere: value=3) and 'fins_vues' (collines_dolmens: value=5). These need evaluation code in the MOS/arc-condition checker. Currently only 'faction_rep' and 'oghams_owned' are evaluated. Fix: (1) Find where arc_condition_type is evaluated (merlin_skeleton_generator.gd:42, llm_adapter_map_prompt.gd:59-96). (2) Add 'runs_in_biome' case: meta.biome_runs.get(biome_id, 0) >= arc_condition_value (NOTE: field is 'biome_runs' NOT 'biome_run_counts' — see PAT-049). (3) Add 'fins_vues' case: meta.fins_vues >= arc_condition_value. (4) Verify meta has the needed fields (biome_runs dict, fins_vues int). Add constants ARC_CONDITION_TYPES array for documentation.",
+      "notes": "[BUMPED P16→P2: T-S2-ARC-EVAL-TEST FAIL_CRITICAL — 3 biomes arc always unlocked due to missing context fields and no arc_condition_type dispatch]"
     },
     {
       "id": "S3-STORY-LOG-RAG",
@@ -109,36 +110,6 @@
         "scripts/autoload/sfx_recipes_ambient.gd"
       ],
       "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority — iles_celtes is a late-game biome (maturity score 45+)."
-    },
-    {
-      "id": "SAVE-VALIDATE-FINS-VUES",
-      "sprint": "S2",
-      "priority": 23,
-      "status": "completed",
-      "type": "dev",
-      "title": "Add fins_vues + echo_memory to _validate() required_keys",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "description": "SPECIALIST-9 CHK-7: _validate() required_keys (merlin_save_system.gd:244) missing 'fins_vues', 'echo_memory', 'run_history', 'whispers_seen'. These fields exist in _get_default_profile() but are not validated. Add them to required_keys so a save missing fins_vues triggers default-fill warning + logs. Trivial: add 4 strings to the required_keys array.",
-      "completed_at": "2026-04-14T11:00:00Z",
-      "notes": "Added fins_vues/echo_memory/run_history/whispers_seen to required_keys (line 249). Added type checks: fins_vues numeric (line 279), array types for whispers_seen/run_history/endings_seen/arc_tags (lines 283-286), echo_memory dict (lines 288-290). Bonus: added anam_accumulated to _validate_run_state() required_keys (line 296). 5 new save tasks generated."
-    },
-    {
-      "id": "T-S2-ARC-EVAL-TEST",
-      "sprint": "S2",
-      "priority": 19,
-      "status": "pending",
-      "type": "test",
-      "title": "Verify S2-ARC-CONDITION-EVAL: runs_in_biome + fins_vues condition evaluation",
-      "agent": "game_design_auditor",
-      "files": [
-        "scripts/merlin/merlin_skeleton_generator.gd",
-        "addons/merlin_ai/merlin_omniscient.gd",
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "Run AFTER S2-ARC-CONDITION-EVAL (P16) completes. Verify: (1) Arc condition evaluator handles 'runs_in_biome' — checks meta.biome_run_counts.get(biome_id, 0) >= value. (2) Handles 'fins_vues' — checks meta.fins_vues (or equivalent counter) >= value. (3) Existing conditions 'faction_rep' and 'oghams_owned' still evaluate correctly (regression). (4) landes_bruyere arc unlocks when runs_in_biome >= 3. (5) collines_dolmens arc unlocks when fins_vues >= 5. (6) meta has the required fields (biome_run_counts dict, fins_vues int) — if missing, flag as FAIL_CRITICAL."
     },
     {
       "id": "PERF-REDUCE-MEGAFUNC",
@@ -259,19 +230,6 @@
       "description": "SPECIALIST-9 CHK-8: echo_memory presence now validated (is Dictionary). Sub-keys not validated: deaths_by_biome (should be Dict), dominant_factions_seen (should be Array), choices_log (should be Array). A corrupted echo_memory sub-key would cause silent type errors in analytics code. Fix: add _validate_echo_memory(echo: Dictionary) -> bool helper that checks the 3 sub-keys exist and have correct types. Call from _validate() after existing echo_memory dict check. Helper stays < 15 lines."
     },
     {
-      "id": "T-SAVE-VALIDATE-REGRESSION",
-      "sprint": "S2",
-      "priority": 33,
-      "status": "pending",
-      "type": "test",
-      "title": "Verify SAVE-VALIDATE-FINS-VUES: regression test for _validate() additions",
-      "agent": "bug_hunter",
-      "files": [
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "description": "Run AFTER SAVE-VALIDATE-FINS-VUES (P23) and SAVE-FINS-VUES-CLAMP (P31). Verify: (1) _validate() required_keys includes fins_vues/echo_memory/run_history/whispers_seen. (2) Missing fins_vues → _validate() returns false + push_warning. (3) fins_vues='corrupted_string' → typeof check triggers false return. (4) whispers_seen=null → array check triggers false return. (5) echo_memory=[] (Array not Dict) → dict check triggers false return. (6) Existing passing saves still pass (regression): starter oghams, 5 factions, anam numeric. (7) _validate_run_state() includes anam_accumulated. (8) Old run_state missing anam_accumulated → fill from default → validates OK."
-    },
-    {
       "id": "SAVE-BIOME-RUNS-SUBKEYS",
       "sprint": "S3",
       "priority": 34,
@@ -283,6 +241,71 @@
         "scripts/merlin/merlin_save_system.gd"
       ],
       "description": "SPECIALIST-9: _validate() checks biome_runs exists (is in required_keys) but not its sub-keys. If a save has biome_runs={} (empty dict), arc condition 'runs_in_biome' would silently return 0 for all biomes. Fix: after the existing faction_rep loop in _validate(), add a biome_runs loop: for biome in ['foret_broceliande','landes_bruyere','cotes_sauvages','villages_celtes','cercles_pierres','marais_korrigans','collines_dolmens','iles_mystiques']: if not biome_runs.has(biome): push_warning + return false. Or use MerlinConstants.BIOMES array if it exists."
+    },
+    {
+      "id": "CONST-VIOLATION-FIX-EFFECT-ENGINE",
+      "sprint": "S2",
+      "priority": 3,
+      "status": "pending",
+      "type": "dev",
+      "title": "Fix := with CONST indexing in merlin_effect_engine.gd:93",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd"
+      ],
+      "description": "TRIVIAL: Line 93 uses  — VALID_CODES is a const (line 4). Violates rule: NEVER use := with CONST indexing. Fix: . Also check line 90:  → ."
+    },
+    {
+      "id": "PERF-SKELETON-PROCEDURAL-SPLIT",
+      "sprint": "S3",
+      "priority": 35,
+      "status": "pending",
+      "type": "dev",
+      "title": "Split _generate_procedural() 116 lines in merlin_skeleton_generator.gd",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_skeleton_generator.gd"
+      ],
+      "description": "merlin_skeleton_generator.gd:162 — _generate_procedural() is 116 lines (2.3x limit). Extract: _build_main_path(), _build_detour_nodes(), _assign_card_types(). Each sub-function max 40 lines. Keep _generate_procedural as dispatcher ~20 lines."
+    },
+    {
+      "id": "PERF-ACTIVATE-OGHAM-SPLIT",
+      "sprint": "S3",
+      "priority": 36,
+      "status": "pending",
+      "type": "dev",
+      "title": "Split activate_ogham() 94 lines in merlin_effect_engine.gd",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd"
+      ],
+      "description": "merlin_effect_engine.gd:655 — activate_ogham() is 94 lines (nearly 2x limit). Extract: _validate_ogham_activation(), _apply_ogham_passive(), _apply_ogham_active(). Keep activate_ogham as dispatcher."
+    },
+    {
+      "id": "PERF-MAP-PROMPT-BUILD-SPLIT",
+      "sprint": "S3",
+      "priority": 37,
+      "status": "pending",
+      "type": "dev",
+      "title": "Split build_user_prompt() 92 lines in llm_adapter_map_prompt.gd",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ],
+      "description": "llm_adapter_map_prompt.gd:45 — build_user_prompt() is 92 lines. Extract: _build_params_section(), _build_player_context_section(), _build_arc_section(). Note: _build_arc_section() will be refactored by S2-ARC-CONDITION-EVAL — do AFTER that task."
+    },
+    {
+      "id": "PERF-STORE-RUN-CHECKEND-SPLIT",
+      "sprint": "S3",
+      "priority": 38,
+      "status": "pending",
+      "type": "dev",
+      "title": "Split check_run_end() 75 lines in store_run.gd",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/store_run.gd"
+      ],
+      "description": "store_run.gd:202 — check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
     }
   ]
 }

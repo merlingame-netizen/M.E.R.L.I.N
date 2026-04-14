@@ -605,6 +605,27 @@
         "scripts/merlin/merlin_save_system.gd",
         "scripts/merlin/store_run.gd"
       ]
+    },
+    {
+      "id": "PAT-054",
+      "learned_at": "2026-04-14T10:48:35Z",
+      "source": "SPECIALIST-10-TEST-T-S2-ARC-EVAL-TEST",
+      "pattern": "When arc_condition_faction is '' (empty string), merlin_skeleton_generator.gd:46 falls back to FACTION_SCORE_START=20 as rep_value. This satisfies ALL non-faction arc condition values (runs_in_biome=3, fins_vues=5, oghams_owned=2) because 20>=3/5/2 is always true. Net result: landes_bruyere, collines_dolmens, cercles_pierres arcs are PERMANENTLY UNLOCKED from run 1 — arc gating is completely broken for 3 biomes. Fix requires: (1) context dict must include biome_runs, fins_vues, oghams_count. (2) arc_condition_type must be dispatched in llm_adapter_map_prompt.gd and merlin_skeleton_generator.gd.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ]
+    },
+    {
+      "id": "PAT-055",
+      "learned_at": "2026-04-14T10:48:35Z",
+      "source": "SPECIALIST-10-AUDIT-QUALITY",
+      "pattern": "merlin_effect_engine.gd:93 uses `var expected := int(VALID_CODES[code])` — VALID_CODES is a const (defined line 4). This violates the := with CONST rule. Pattern: always scan new files with `grep ':= int(\\|:= str(\\|:= float(' + cross-check if the RHS begins with an all-caps identifier (likely a CONST).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -634,7 +655,7 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 8,
+      "tasks_completed": 9,
       "bugs_introduced": 0,
       "bugs_found": 7,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection, coverage drift detection",
@@ -649,7 +670,7 @@
       "partial_pass_reports": 2
     },
     "game_design_auditor": {
-      "tasks_completed": 6,
+      "tasks_completed": 7,
       "bugs_introduced": 0,
       "bugs_found": 9,
       "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit, multi-fix regression sweeps",
@@ -662,6 +683,10 @@
         "synthetic multi-fix sweep: 5 recent dev cycles verified in single test cycle when no test tasks in queue"
       ],
       "weaknesses": []
+    },
+    "save_persistence_auditor": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {
@@ -866,5 +891,7 @@
       "action": "T-S3-MEDITATION-VERIFY PASS 6/6. mg_meditation fully cleaned: file deleted, TAG_FIELD_MAP clean, create_minigame() clean, GAMES[esprit]=[volonte,apaisement,sang_froid], test files clean. Applied director q-20260414-001: BUG-ANAM-DEATH-PENALTY-FIX bumped to P5 (all in-run Anam subject to death ratio). 10 pending tasks.",
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
-  ]
+  ],
+  "total_cycles": 1,
+  "bugs_found": 2
 }
