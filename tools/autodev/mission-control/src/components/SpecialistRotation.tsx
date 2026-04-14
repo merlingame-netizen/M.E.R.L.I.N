@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMissionStore } from '../store/mission-store';
 
 const SPECIALISTS = [
@@ -196,7 +197,7 @@ export function SpecialistRotation() {
           })}
         </div>
 
-        {/* Stats footer */}
+        {/* Stats footer + Run Now */}
         <div style={{
           padding: '6px 12px',
           borderTop: '1px solid rgba(255,255,255,0.04)',
@@ -205,12 +206,62 @@ export function SpecialistRotation() {
           fontSize: '10px',
           fontFamily: 'var(--font-mono)',
           color: 'var(--text-dim)',
+          alignItems: 'center',
         }}>
           <span>{specialistCommits.length} audits run</span>
           <span>16 specialists</span>
           <span>cycle every 1h</span>
+          <RunNowButton />
         </div>
       </div>
     </div>
+  );
+}
+
+function RunNowButton() {
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+
+  async function handleRun() {
+    setState('sending');
+    try {
+      const API_URL = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace('/status', '/instructions')
+        : '/api/instructions';
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'PRIORITY: Manual specialist cycle trigger',
+          description: 'Director requested immediate specialist audit cycle via Run Now button.',
+          type: 'dev',
+        }),
+      });
+      setState(res.ok ? 'done' : 'error');
+    } catch {
+      setState('error');
+    }
+    setTimeout(() => setState('idle'), 3000);
+  }
+
+  return (
+    <button
+      onClick={handleRun}
+      disabled={state === 'sending'}
+      style={{
+        marginLeft: 'auto',
+        padding: '3px 10px',
+        fontSize: '10px',
+        fontFamily: 'var(--font-mono)',
+        fontWeight: 700,
+        background: state === 'done' ? 'rgba(0,255,136,0.2)' : state === 'error' ? 'rgba(255,68,68,0.2)' : 'rgba(255,0,255,0.15)',
+        color: state === 'done' ? '#00ff88' : state === 'error' ? '#ff4444' : '#ff00ff',
+        border: `1px solid ${state === 'done' ? '#00ff8844' : state === 'error' ? '#ff444444' : '#ff00ff44'}`,
+        borderRadius: '3px',
+        cursor: state === 'sending' ? 'wait' : 'pointer',
+        letterSpacing: '1px',
+      }}
+    >
+      {state === 'sending' ? 'SENDING...' : state === 'done' ? 'QUEUED' : state === 'error' ? 'FAILED' : 'RUN NOW'}
+    </button>
   );
 }

@@ -13,6 +13,7 @@ import { DirectorInstructions } from './components/DirectorInstructions';
 import { SceneSelector } from './components/SceneSelector';
 import { DevCycleSummary } from './components/DevCycleSummary';
 import { SpecialistRotation } from './components/SpecialistRotation';
+import { VelocityChart } from './components/VelocityChart';
 import { StudioInsights } from './components/StudioInsights';
 import './styles/scifi-theme.css';
 
@@ -56,10 +57,15 @@ export function App() {
           <SpecialistRotation />
         </div>
 
-        {/* Scene Selector + Dev Cycle Summary */}
+        {/* Velocity + Dev Cycle Summary */}
         <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <SceneSelector />
+          <VelocityChart />
           <DevCycleSummary />
+        </div>
+
+        {/* Scene Selector */}
+        <div className="dashboard-layout__full-row">
+          <SceneSelector />
         </div>
 
         {/* Studio Insights */}
