@@ -154,13 +154,12 @@
       ],
       "applied_at": "2026-04-13T19:44:09Z",
       "applied_note": "S3-MEDITATION-CLEANUP task unblocked with Option A: delete mg_meditation.gd, remove match case line 138 from create_minigame(), remove 'meditation' from TAG_FIELD_MAP line 66. Task description updated in feature_queue.json."
-    }
-  ,
+    },
     {
       "id": "q-20260414-001",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "question": "La formule de mort Anam (bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)') doit-elle s'appliquer UNIQUEMENT à la récompense de fin de run, ou AUSSI à l'Anam accumulé via effets de cartes (ADD_ANAM) pendant le run ?",
       "context": "Actuellement, l'effet ADD_ANAM crédite l'Anam directement dans meta['anam'] dès qu'une carte est jouée (gain immédiat et permanent, pas affecté par la mort). Le multiplicateur de mort min(cartes/30, 1.0) ne s'applique qu'à la récompense de base (ANAM_BASE_REWARD + bonus victoire/minigames). Exemple: joueur gagne 20 Anam via cartes puis meurt à la carte 5 → garde 20 Anam de cartes + 3 Anam (10*0.33) base = 23 total. Si la formule bible s'applique à tout: 20 Anam*0.33 + 3 base = 10 total.",
       "type": "multiple_choice",
