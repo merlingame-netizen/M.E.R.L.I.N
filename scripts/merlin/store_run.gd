@@ -14,6 +14,7 @@ static func init_run(state: Dictionary, rng: MerlinRng, scenarios: MerlinScenari
 	run["active"] = true
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
 	run["anam"] = 0
+	run["anam_accumulated"] = 0
 	run["mission"] = generate_mission(rng)
 	run["cards_played"] = 0
 	run["day"] = 1
@@ -341,6 +342,11 @@ static func calculate_run_rewards(state: Dictionary, run_data: Dictionary) -> Di
 
 	anam += minigames_won * MerlinConstants.ANAM_PER_MINIGAME
 	anam += oghams_used * MerlinConstants.ANAM_PER_OGHAM
+
+	# Add card ADD_ANAM gains accumulated during run — subject to death penalty (bible s.5.1)
+	var run_state: Dictionary = state.get("run", {})
+	var card_anam: int = int(run_state.get("anam_accumulated", 0))
+	anam += card_anam
 
 	var faction_rep: Dictionary = state.get("meta", {}).get("faction_rep", {})
 	for faction in faction_rep:

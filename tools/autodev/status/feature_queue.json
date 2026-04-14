@@ -1,6 +1,6 @@
 {
   "version": "4.0",
-  "updated": "2026-04-14T08:00:00Z",
+  "updated": "2026-04-14T09:00:00Z",
   "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 10 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
@@ -19,14 +19,17 @@
       "id": "BUG-ANAM-DEATH-PENALTY-FIX",
       "sprint": "S2",
       "priority": 5,
-      "status": "pending",
+      "status": "completed",
       "type": "dev",
       "title": "Fix Anam death penalty scope: apply ratio to card-effect ADD_ANAM gains",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd"
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_save_system.gd"
       ],
+      "completed_at": "2026-04-14T09:00:00Z",
+      "notes": "Implemented all 4 changes: (1) _apply_add_anam() now writes to run['anam_accumulated'] and run['anam'] (UI display), removes direct meta['anam'] credit. (2) init_run() now resets run['anam_accumulated']=0. (3) calculate_run_rewards() reads run_state.get('anam_accumulated',0) and adds card_anam to base anam BEFORE death ratio. (4) _get_default_run_state() now includes 'anam_accumulated':0 for save/load resume correctness. PAT-048, PAT-049 added.",
       "description": "Director q-20260414-001 APPLIED (Option B: apply death ratio to ALL in-run Anam). Implementation: (1) In _apply_add_anam() (merlin_effect_engine.gd): write ONLY to run[\"anam_accumulated\"] — do NOT update meta[\"anam\"] during run. (2) In calculate_run_rewards() (store_run.gd): add run[\"anam_accumulated\"] to base_reward BEFORE applying death ratio min(cards_played/30, 1.0). (3) In apply_run_rewards(): credit scaled total to meta[\"anam\"]. (4) In init_run(): reset run[\"anam_accumulated\"] = 0. This removes the death-penalty bypass where card ADD_ANAM gains were credited immediately regardless of how early the player died. More punitive, faithful to bible s.5.1 literal interpretation."
     },
     {
@@ -70,7 +73,7 @@
         "addons/merlin_ai/merlin_omniscient.gd",
         "scripts/merlin/merlin_constants.gd"
       ],
-      "description": "Two new arc_condition_type values added by S2-BIOMES: 'runs_in_biome' (landes_bruyere: value=3) and 'fins_vues' (collines_dolmens: value=5). These need evaluation code in the MOS/arc-condition checker. Currently only 'faction_rep' and 'oghams_owned' are evaluated. Fix: (1) Find where arc_condition_type is evaluated (merlin_skeleton_generator.gd:42, llm_adapter_map_prompt.gd:59-96). (2) Add 'runs_in_biome' case: meta.biome_run_counts.get(biome_id, 0) >= arc_condition_value. (3) Add 'fins_vues' case: meta.fins_vues >= arc_condition_value (or equivalent fins counter). (4) Verify meta has the needed fields. Add constants ARC_CONDITION_TYPES array for documentation."
+      "description": "Two new arc_condition_type values added by S2-BIOMES: 'runs_in_biome' (landes_bruyere: value=3) and 'fins_vues' (collines_dolmens: value=5). These need evaluation code in the MOS/arc-condition checker. Currently only 'faction_rep' and 'oghams_owned' are evaluated. Fix: (1) Find where arc_condition_type is evaluated (merlin_skeleton_generator.gd:42, llm_adapter_map_prompt.gd:59-96). (2) Add 'runs_in_biome' case: meta.biome_runs.get(biome_id, 0) >= arc_condition_value (NOTE: field is 'biome_runs' NOT 'biome_run_counts' — see PAT-049). (3) Add 'fins_vues' case: meta.fins_vues >= arc_condition_value. (4) Verify meta has the needed fields (biome_runs dict, fins_vues int). Add constants ARC_CONDITION_TYPES array for documentation."
     },
     {
       "id": "S3-STORY-LOG-RAG",
@@ -136,6 +139,34 @@
         "scripts/autoload/sfx_recipes_ambient.gd"
       ],
       "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority — iles_celtes is a late-game biome (maturity score 45+)."
+    },
+    {
+      "id": "SAVE-VALIDATE-FINS-VUES",
+      "sprint": "S2",
+      "priority": 23,
+      "status": "pending",
+      "type": "dev",
+      "title": "Add fins_vues + echo_memory to _validate() required_keys",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "description": "SPECIALIST-9 CHK-7: _validate() required_keys (merlin_save_system.gd:244) missing 'fins_vues', 'echo_memory', 'run_history', 'whispers_seen'. These fields exist in _get_default_profile() but are not validated. Add them to required_keys so a save missing fins_vues triggers default-fill warning + logs. Trivial: add 4 strings to the required_keys array."
+    },
+    {
+      "id": "T-S2-ANAM-DEATH-PENALTY-REGRESS",
+      "sprint": "S2",
+      "priority": 6,
+      "status": "pending",
+      "type": "test",
+      "title": "Regression test: BUG-ANAM-DEATH-PENALTY-FIX — verify accumulator + death ratio",
+      "agent": "game_design_auditor",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "description": "Run AFTER BUG-ANAM-DEATH-PENALTY-FIX (completed). Verify: (1) _apply_add_anam() writes to run['anam_accumulated'] (effect_engine.gd:440-441). (2) _apply_add_anam() does NOT write to meta['anam'] (check no meta[anam] assignment in that function). (3) init_run() sets run['anam_accumulated']=0 (store_run.gd:17). (4) calculate_run_rewards() reads run_state.get('anam_accumulated',0) and adds card_anam BEFORE death ratio block (store_run.gd:347-349). (5) _get_default_run_state() includes 'anam_accumulated':0 (save_system.gd:83). (6) Death scenario: card_anam=10, cards_played=5, ratio=5/30≈0.167, card contribution=int(10*0.167)=1. Victory scenario: full card_anam credited."
     },
     {
       "id": "T-S2-ARC-EVAL-TEST",

@@ -242,6 +242,22 @@
       "timestamp": "2026-04-14T05:00:00Z"
     },
     {
+      "id": "insight-20260414-003",
+      "agent": "save_persistence_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Save schema _validate() is out of sync with _get_default_profile() — fins_vues and echo_memory not in required_keys",
+      "details": "SPECIALIST-9 audit: _validate() checks 12 required keys but _get_default_profile() has 17 top-level fields. Fields added in recent cycles (fins_vues, echo_memory, run_history, whispers_seen) are not validated. Recommend: update required_keys every time a semantically important field is added to _get_default_profile().",
+      "proposed_task": {
+        "id": "SAVE-VALIDATE-FINS-VUES",
+        "title": "Add fins_vues + echo_memory to _validate() required_keys",
+        "sprint": "S2",
+        "type": "dev",
+        "priority": 23
+      },
+      "timestamp": "2026-04-14T09:00:00Z"
+    },
+    {
       "id": "insight-20260414-002",
       "agent": "game_design_auditor",
       "severity": "INFO",
@@ -268,5 +284,5 @@
       "timestamp": "2026-04-14T08:00:00Z"
     }
   ],
-  "updated": "2026-04-14T06:00:00Z"
+  "updated": "2026-04-14T09:00:00Z"
 }

@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T08:00:00Z",
+  "last_updated": "2026-04-14T09:00:00Z",
   "metrics": {
-    "total_cycles_completed": 34,
-    "total_dev_cycles": 17,
+    "total_cycles_completed": 35,
+    "total_dev_cycles": 18,
     "total_test_cycles": 17,
-    "bugs_found": 24,
-    "bugs_fixed": 18,
-    "tasks_completed": 53,
-    "tasks_pending": 10,
+    "bugs_found": 28,
+    "bugs_fixed": 19,
+    "tasks_completed": 54,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -538,6 +538,28 @@
         "docs/",
         "workflow",
         "tooling"
+      ]
+    },
+    {
+      "id": "PAT-048",
+      "learned_at": "2026-04-14T09:00:00Z",
+      "source": "SPECIALIST-9-SAVE_PERSISTENCE_AUDITOR",
+      "pattern": "Fields added to _get_default_profile() must ALSO be added to _validate() required_keys if they are semantically required for correctness (e.g. fins_vues for arc conditions, biome_runs for maturity). Omitting them from required_keys means old saves pass validation silently, only getting the field filled by the default loop. This is functionally safe but degrades validation coverage — the field appears to be optional when it is not.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-049",
+      "learned_at": "2026-04-14T09:00:00Z",
+      "source": "SPECIALIST-9-SAVE_PERSISTENCE_AUDITOR",
+      "pattern": "Task descriptions that reference dict field names (e.g. meta.biome_run_counts) must be verified against the CANONICAL field names in _get_default_profile() (actual: meta.biome_runs). A mismatch discovered in S2-ARC-CONDITION-EVAL would have caused all 'runs_in_biome' arc conditions to silently return 0 — a hard-to-debug invariant failure. Always grep the save schema before writing task descriptions that reference meta fields.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/merlin/merlin_constants.gd",
+        "workflow"
       ]
     }
   ],

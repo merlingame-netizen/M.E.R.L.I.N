@@ -436,11 +436,11 @@ func _apply_add_anam(state: Dictionary, amount: int) -> bool:
 	var run: Dictionary = state.get("run", {})
 	var run_anam: int = int(run.get("anam", 0))
 	run["anam"] = maxi(run_anam + amount, 0)
+	# Accumulate for death-penalty calculation at run end (bible s.5.1, director q-20260414-001)
+	var accumulated: int = int(run.get("anam_accumulated", 0))
+	run["anam_accumulated"] = maxi(accumulated + amount, 0)
 	state["run"] = run
-	var meta: Dictionary = state.get("meta", {})
-	var meta_anam: int = int(meta.get("anam", 0))
-	meta["anam"] = maxi(meta_anam + amount, 0)
-	state["meta"] = meta
+	# meta["anam"] is credited ONLY via apply_run_rewards() at run end — not during run
 	return true
 
 

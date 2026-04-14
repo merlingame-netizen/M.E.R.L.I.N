@@ -80,6 +80,7 @@ static func _get_default_run_state() -> Dictionary:
 		"events_log": [],
 		"active": true,
 		"anam": 0,
+		"anam_accumulated": 0,
 		"cards_played": 0,
 		"day": 1,
 		"story_log": [],

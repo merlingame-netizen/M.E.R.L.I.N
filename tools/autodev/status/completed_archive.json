@@ -1,8 +1,20 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-14T08:00:00Z",
+  "updated": "2026-04-14T09:00:00Z",
   "archived": [
+    {
+      "id": "BUG-ANAM-DEATH-PENALTY-FIX",
+      "sprint": "S2",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix Anam death penalty scope: apply ratio to card-effect ADD_ANAM gains",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T09:00:00Z",
+      "specialist": 9,
+      "notes": "4 files changed: (1) merlin_effect_engine.gd:_apply_add_anam() — writes to run['anam_accumulated']+run['anam'], removes direct meta['anam'] credit. (2) store_run.gd:init_run() — adds run['anam_accumulated']=0. (3) store_run.gd:calculate_run_rewards() — reads run_state.get('anam_accumulated',0), adds card_anam to base BEFORE death ratio. (4) merlin_save_system.gd:_get_default_run_state() — adds 'anam_accumulated':0 for save/load resume safety. Companion: T-S2-ANAM-DEATH-PENALTY-REGRESS (P6)."
+    },
     {
       "id": "S2-DAY-TICK-FIX",
       "sprint": "S2",

@@ -1,0 +1,94 @@
+{
+  "report_type": "SPECIALIST_AUDIT",
+  "specialist": 9,
+  "role": "SAVE_PERSISTENCE_AUDITOR",
+  "timestamp": "2026-04-14T09:00:00Z",
+  "cycle_id": "CYCLE-2026-04-14-save-persistence-audit",
+  "summary": "PARTIAL_PASS 4/6. Core save/load mechanics are solid (backup, migration, validation, clamping). Critical bug: _apply_add_anam() bypasses death penalty via direct meta['anam'] credit. anam_accumulated field missing from defaults. biome_run_counts vs biome_runs naming mismatch threatens S2-ARC-CONDITION-EVAL. fins_vues not in _validate() required_keys.",
+  "files_audited": [
+    "scripts/merlin/merlin_save_system.gd",
+    "scripts/merlin/store_run.gd",
+    "scripts/merlin/merlin_effect_engine.gd"
+  ],
+  "checks": [
+    {
+      "id": "CHK-1",
+      "name": "All persistent state saved",
+      "status": "PASS",
+      "details": "_get_default_profile() covers: anam, total_runs, fins_vues, faction_rep (5 factions), trust_merlin, talent_tree, oghams (owned+equipped), biome_runs (8 biomes), biomes_unlocked, endings_seen, arc_tags, stats (8 sub-keys), echo_memory, tutorial_flags. Cross-run persistence complete."
+    },
+    {
+      "id": "CHK-2",
+      "name": "Save/load round-trip restores exact state",
+      "status": "PASS",
+      "details": "save_profile() uses .duplicate(true) for deep copy. load_profile() fills missing keys from defaults, clamps anam and faction_rep. Validation guards against malformed data. Backup (.bak) written before every save. Legacy migration (0.4.0→1.0.0) handles essence→anam, humains→niamh rename, dead currencies removal."
+    },
+    {
+      "id": "CHK-3",
+      "name": "Corruption handling: malformed JSON, missing keys, version migration",
+      "status": "PASS",
+      "details": "_try_load_file() handles parse errors gracefully. load_profile() tries backup on failure. _validate() checks required keys and faction structure. _migrate() adds missing keys from defaults. All paths return _get_default_profile() on unrecoverable corruption."
+    },
+    {
+      "id": "CHK-4",
+      "name": "anam_accumulated field in run state defaults",
+      "status": "FAIL_HIGH",
+      "details": "_get_default_run_state() (merlin_save_system.gd:60-95) does NOT include 'anam_accumulated': 0. BUG-ANAM-DEATH-PENALTY-FIX will write to run['anam_accumulated'] but if a run is resumed from save, this field will be absent until init_run() is called. load_run_state() fills missing keys from _get_default_run_state() defaults — so adding it there fixes resume path.",
+      "file": "scripts/merlin/merlin_save_system.gd",
+      "line": 84
+    },
+    {
+      "id": "CHK-5",
+      "name": "meta['anam'] not credited during run (death penalty integrity)",
+      "status": "FAIL_CRITICAL",
+      "details": "_apply_add_anam() (merlin_effect_engine.gd:440-443) directly credits meta['anam'] = maxi(meta_anam + amount, 0). This bypasses the death penalty ratio min(cards_played/30, 1.0). Director q-20260414-001 mandates ALL in-run Anam is subject to the penalty. Task BUG-ANAM-DEATH-PENALTY-FIX (P5) addresses this.",
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "line": 440
+    },
+    {
+      "id": "CHK-6",
+      "name": "biome_runs vs biome_run_counts naming consistency",
+      "status": "FAIL_HIGH",
+      "details": "save_system._get_default_profile() and apply_run_rewards() both use 'biome_runs' (correct). But S2-ARC-CONDITION-EVAL task description references meta.biome_run_counts.get(biome_id, 0) — wrong key. Arc condition evaluator must use 'biome_runs' not 'biome_run_counts' or conditions will always return 0.",
+      "file": "tools/autodev/status/feature_queue.json",
+      "note": "Not a code bug yet (evaluator not implemented) — must be corrected in task description before S2-ARC-CONDITION-EVAL executes"
+    },
+    {
+      "id": "CHK-7",
+      "name": "_validate() required_keys includes all current schema fields",
+      "status": "FAIL_MEDIUM",
+      "details": "_validate() required_keys (merlin_save_system.gd:244-248) does NOT include 'fins_vues', 'echo_memory', 'run_history', 'whispers_seen'. These were added to _get_default_profile() but validation doesn't check them. An old save missing fins_vues passes validation then gets default 0 filled — functionally OK but validation is incomplete.",
+      "file": "scripts/merlin/merlin_save_system.gd",
+      "line": 244
+    },
+    {
+      "id": "CHK-8",
+      "name": "init_run() resets anam_accumulated",
+      "status": "FAIL_HIGH",
+      "details": "init_run() (store_run.gd:12-51) sets run['anam']=0 but does NOT set run['anam_accumulated']=0. After BUG-ANAM-DEATH-PENALTY-FIX, this counter must be reset at run start to avoid carrying over values from a previous (interrupted) run.",
+      "file": "scripts/merlin/store_run.gd",
+      "line": 16
+    }
+  ],
+  "invariants_verified": [
+    "faction_rep clamped 0-100 on load (merlin_save_system.gd:148)",
+    "anam >= 0 on load (merlin_save_system.gd:146)",
+    "life_essence clamped 0-LIFE_ESSENCE_MAX on run_state load (merlin_save_system.gd:222)",
+    "starter oghams validated on load (merlin_save_system.gd:265-269)",
+    "5 factions all present validated (merlin_save_system.gd:254-258)",
+    "backup written before every save (save_profile, save_run_state both call _backup_file)"
+  ],
+  "patterns_added": [
+    {
+      "id": "PAT-048",
+      "pattern": "Fields added to _get_default_profile() must ALSO be added to _validate() required_keys if they are needed for correctness (e.g. fins_vues for arc conditions). Omitting them means validation silently passes old saves — functionally OK due to default-filling but validation is misleading.",
+      "severity": "MEDIUM"
+    },
+    {
+      "id": "PAT-049",
+      "pattern": "Task descriptions that reference field names (e.g. meta.biome_run_counts) must use the CANONICAL name from _get_default_profile() (_biome_runs_). Mismatch discovered between S2-ARC-CONDITION-EVAL description and actual save schema.",
+      "severity": "HIGH"
+    }
+  ],
+  "new_tasks_generated": 5
+}
