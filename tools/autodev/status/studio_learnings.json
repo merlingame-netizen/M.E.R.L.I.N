@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T03:00:00Z",
+  "last_updated": "2026-04-14T04:00:00Z",
   "metrics": {
-    "total_cycles_completed": 29,
+    "total_cycles_completed": 30,
     "total_dev_cycles": 15,
-    "total_test_cycles": 14,
+    "total_test_cycles": 15,
     "bugs_found": 24,
     "bugs_fixed": 16,
     "tasks_completed": 49,
-    "tasks_pending": 11,
+    "tasks_pending": 14,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -470,6 +470,17 @@
         "scripts/merlin/store_run.gd",
         "scripts/merlin/merlin_constants.gd"
       ]
+    },
+    {
+      "id": "PAT-042",
+      "learned_at": "2026-04-14T04:00:00Z",
+      "source": "S2-DAY-TICK-REGRESSION-TEST",
+      "pattern": "When queue has zero test tasks, run a synthetic multi-fix regression sweep covering ALL recent dev cycles (not just the most recent). Verify: each fix's canonical site, its downstream consumers, and that prior regression invariants are still PASS. A synthetic test covering 4-5 recent fixes in one sweep is more valuable than a narrow single-fix check — it catches cross-fix interference early.",
+      "severity": "LOW",
+      "applies_to": [
+        "workflow",
+        "test_reports"
+      ]
     }
   ],
   "agent_performance": {
@@ -514,16 +525,17 @@
       "partial_pass_reports": 2
     },
     "game_design_auditor": {
-      "tasks_completed": 4,
+      "tasks_completed": 5,
       "bugs_introduced": 0,
       "bugs_found": 9,
-      "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit",
+      "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit, multi-fix regression sweeps",
       "strengths": [
         "found promise split-brain bug (dual storage keys)",
         "found biome interval mismatches vs bible s.4.3",
         "audited both LLM context paths (Narrator vs GameMaster)",
         "comprehensive 12-system coverage in one cycle",
-        "biome regression: verified 6/6 checks PASS across 8 biomes vs bible s.3.6+s.4.3 in single cycle"
+        "biome regression: verified 6/6 checks PASS across 8 biomes vs bible s.3.6+s.4.3 in single cycle",
+        "synthetic multi-fix sweep: 5 recent dev cycles verified in single test cycle when no test tasks in queue"
       ],
       "weaknesses": []
     }

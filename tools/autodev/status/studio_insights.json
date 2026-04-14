@@ -212,7 +212,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T03:00:00Z"
+    },
+    {
+      "id": "insight-20260414-003",
+      "agent": "game_design_auditor",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "meta.biome_run_counts + meta.fins_vues may not be initialized — arc conditions for landes + collines silently fail",
+      "details": "S2-ARC-CONDITION-EVAL (P16) will add evaluators for 'runs_in_biome' and 'fins_vues' arc condition types. However, if meta.biome_run_counts (dict) and meta.fins_vues (int) are not initialized in init_meta() and not incremented at run-end, the evaluators will always see zero and arcs will never unlock. The S2-ARC-CONDITION-EVAL task description must explicitly include: (1) init_meta() field initialization, (2) apply_run_rewards() increment logic. T-S2-ARC-EVAL-TEST (P19) will catch this if missed.",
+      "proposed_task": {
+        "title": "Ensure meta.biome_run_counts + meta.fins_vues are initialized and incremented in apply_run_rewards()",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T04:00:00Z"
     }
   ],
-  "updated": "2026-04-14T03:00:00Z"
+  "updated": "2026-04-14T04:00:00Z"
 }
