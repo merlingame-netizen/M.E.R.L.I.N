@@ -1,7 +1,7 @@
 {
   "version": "3.9",
-  "updated": "2026-04-14T06:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 12 pending.",
+  "updated": "2026-04-14T07:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 11 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -28,20 +28,6 @@
         "scripts/merlin/store_run.gd"
       ],
       "description": "S2-LOOP-INTEGRITY-CHECK CHK-4: _apply_add_anam() credits ADD_ANAM to meta['anam'] immediately with no death penalty. Death ratio min(cards_played/30,1.0) only applies to the base run-end reward. Bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)' implies ALL in-run anam should be scaled. Fix (pending director q-20260414-001 clarification): (1) In _apply_add_anam(), write ONLY to run['anam_accumulated'] (do NOT update meta during run). (2) In calculate_run_rewards(): add run['anam_accumulated'] to the pool BEFORE applying death ratio. (3) At run end, apply_run_rewards() credits scaled total to meta['anam']. (4) Reset run['anam_accumulated'] = 0 in init_run(). NOTE: Wait for director answer on q-20260414-001 before implementing — if director wants ADD_ANAM to be immediate regardless of death, no change needed."
-    },
-    {
-      "id": "S3-MEDITATION-CLEANUP",
-      "sprint": "S3",
-      "priority": 12,
-      "status": "pending",
-      "type": "dev",
-      "title": "Cleanup mg_meditation: resolve orphaned preload after q-20260413-004 decision",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/minigames/minigame_registry.gd",
-        "scripts/minigames/mg_meditation.gd"
-      ],
-      "description": "Director q-20260413-004 answered: 'Supprimer mg_meditation.gd (script non-utilisé)' — OPTION A. Steps: (1) Delete scripts/minigames/mg_meditation.gd. (2) Remove 'mg_meditation' match case from create_minigame() in minigame_registry.gd (line 138). (3) Remove 'meditation': 'esprit' entry from TAG_FIELD_MAP in minigame_registry.gd (line 66). (4) Verify no remaining references to mg_meditation outside /archive/. (5) Add PAT for director-driven file deletion. Cosmetic fix: verify mg_sang_froid comment is under # Esprit block."
     },
     {
       "id": "DIR-S2-MNWXQ41M",

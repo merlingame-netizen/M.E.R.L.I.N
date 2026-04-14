@@ -278,53 +278,6 @@ func test_course_barely_passing() -> bool:
 	return true
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# MEDITATION — mg_meditation.gd
-# zone_ratio = time_in_zone / max_time, clamped 0-1
-# score = clamp(zone_ratio * 100, 0, 100)
-# success = score >= 40
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _meditation_score(time_in_zone: float, max_time: float) -> Dictionary:
-	var zone_ratio: float = clampf(time_in_zone / max_time, 0.0, 1.0)
-	var score: int = clampi(int(zone_ratio * 100.0), 0, 100)
-	var success: bool = score >= 40
-	return {"score": score, "success": success}
-
-
-func test_meditation_fully_centered() -> bool:
-	# 6/6 seconds in zone = 100
-	var result: Dictionary = _meditation_score(6.0, 6.0)
-	if int(result["score"]) != 100:
-		push_error("Meditation full: expected 100, got %d" % int(result["score"]))
-		return false
-	return true
-
-
-func test_meditation_zero_focus() -> bool:
-	# 0 seconds in zone = 0
-	var result: Dictionary = _meditation_score(0.0, 6.0)
-	if int(result["score"]) != 0:
-		push_error("Meditation zero: expected 0, got %d" % int(result["score"]))
-		return false
-	if bool(result["success"]):
-		push_error("Meditation zero should not be success")
-		return false
-	return true
-
-
-func test_meditation_threshold() -> bool:
-	# score >= 40 = success. 2.4/6.0 = 40% = 40 = pass. 2.3/6.0 = 38 = fail.
-	var r_pass: Dictionary = _meditation_score(2.4, 6.0)
-	var r_fail: Dictionary = _meditation_score(2.3, 6.0)
-	if not bool(r_pass["success"]):
-		push_error("Meditation 2.4s should pass, score=%d" % int(r_pass["score"]))
-		return false
-	if bool(r_fail["success"]):
-		push_error("Meditation 2.3s should fail, score=%d" % int(r_fail["score"]))
-		return false
-	return true
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # OMBRES — mg_ombres.gd
@@ -485,7 +438,6 @@ func test_all_scores_clamp_0_100() -> bool:
 	var v1: int = _volonte_score(100, 0, 6)     # way over 100
 	var v2: int = _volonte_score(0, 100, 6)      # way under 0
 	var c1: int = int(_course_score(100, 5, 99.0, 5.0)["score"])  # over
-	var m1: int = int(_meditation_score(999.0, 6.0)["score"])     # over
 	if v1 > 100 or v1 < 0:
 		push_error("Volonte extreme high out of range: %d" % v1)
 		return false
@@ -494,9 +446,6 @@ func test_all_scores_clamp_0_100() -> bool:
 		return false
 	if c1 > 100 or c1 < 0:
 		push_error("Course extreme out of range: %d" % c1)
-		return false
-	if m1 > 100 or m1 < 0:
-		push_error("Meditation extreme out of range: %d" % m1)
 		return false
 	return true
 
@@ -557,10 +506,6 @@ func run_all() -> Dictionary:
 		["test_course_timeout_partial", test_course_timeout_partial],
 		["test_course_zero_taps", test_course_zero_taps],
 		["test_course_barely_passing", test_course_barely_passing],
-		# Meditation (3)
-		["test_meditation_fully_centered", test_meditation_fully_centered],
-		["test_meditation_zero_focus", test_meditation_zero_focus],
-		["test_meditation_threshold", test_meditation_threshold],
 		# Ombres (4)
 		["test_ombres_perfect_fast", test_ombres_perfect_fast],
 		["test_ombres_zero_hits", test_ombres_zero_hits],

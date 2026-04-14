@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-14T05:00:00Z",
+  "updated": "2026-04-14T07:00:00Z",
   "archived": [
     {
       "id": "S2-DAY-TICK-FIX",
@@ -399,6 +399,22 @@
       "description": "Bible s.5.1: Anam est la monnaie cross-run (~10 runs/noeud). A la mort: gain_anam = run.anam_accumulated * min(run.cards_played / 30.0, 1.0). Verifier: (1) run.anam_accumulated est incremente correctement (non zero). (2) La formule de mort utilise min(cartes/30, 1.0) et non un cap fixe. (3) merlin_save_system.gd persiste meta.total_anam correctement. (4) reset run.anam_accumulated a 0 apres mort. Si formule manquante ou incorrecte: implementer selon bible.",
       "completed_at": "2026-04-14T05:00:00Z",
       "notes": "Verified Anam formula: death ratio min(cards/30,1.0) CORRECT. Fixed double total_runs increment (was in both handle_run_end + apply_run_rewards, now only apply_run_rewards). Added fins_vues counter to meta in handle_run_end() + _get_default_profile(). Pending: ADD_ANAM card-effect bypass (BUG-ANAM-DEATH-PENALTY-FIX P10, awaiting q-20260414-001)."
+    },
+    {
+      "id": "S3-MEDITATION-CLEANUP",
+      "sprint": "S3",
+      "priority": 12,
+      "status": "completed",
+      "type": "dev",
+      "title": "Cleanup mg_meditation: resolve orphaned preload after q-20260413-004 decision",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/minigames/mg_meditation.gd"
+      ],
+      "description": "Director q-20260413-004 answered: 'Supprimer mg_meditation.gd (script non-utilisé)' — OPTION A. Steps: (1) Delete scripts/minigames/mg_meditation.gd. (2) Remove 'mg_meditation' match case from create_minigame() in minigame_registry.gd (line 138). (3) Remove 'meditation': 'esprit' entry from TAG_FIELD_MAP in minigame_registry.gd (line 66). (4) Verify no remaining references to mg_meditation outside /archive/. (5) Add PAT for director-driven file deletion. Cosmetic fix: verify mg_sang_froid comment is under # Esprit block.",
+      "completed_at": "2026-04-14T07:00:00Z",
+      "notes": "Deleted mg_meditation.gd. Removed 'mg_meditation' match case from create_minigame(). Removed 'meditation':'esprit' from TAG_FIELD_MAP. Moved mg_sang_froid from #Vigueur to #Esprit in match block. Removed 3 meditation test functions + 3 test array entries + m1 clamping check from test_minigames_extra.gd. GAMES['esprit'] = [mg_volonte, mg_apaisement, mg_sang_froid] per bible s.6.2."
     }
   ],
   "tasks": [

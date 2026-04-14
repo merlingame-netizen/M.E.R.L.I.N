@@ -63,7 +63,6 @@ const TAG_FIELD_MAP := {
 	"physical": "vigueur",
 	"endurance": "vigueur",
 	"willpower": "esprit",
-	"meditation": "esprit",
 	"spirit": "esprit",
 	"stealth": "perception",
 	"tracking": "perception",
@@ -130,12 +129,11 @@ static func create_minigame(field: String, difficulty: int = 5, modifiers: Dicti
 		"mg_pas_renard": game = preload("res://scripts/minigames/mg_pas_renard.gd").new()
 		# Vigueur
 		"mg_combat_rituel": game = preload("res://scripts/minigames/mg_combat_rituel.gd").new()
-		"mg_sang_froid": game = preload("res://scripts/minigames/mg_sang_froid.gd").new()
 		"mg_course": game = preload("res://scripts/minigames/mg_course.gd").new()
 		# Esprit
 		"mg_volonte": game = preload("res://scripts/minigames/mg_volonte.gd").new()
 		"mg_apaisement": game = preload("res://scripts/minigames/mg_apaisement.gd").new()
-		"mg_meditation": game = preload("res://scripts/minigames/mg_meditation.gd").new()
+		"mg_sang_froid": game = preload("res://scripts/minigames/mg_sang_froid.gd").new()
 		# Perception
 		"mg_ombres": game = preload("res://scripts/minigames/mg_ombres.gd").new()
 		"mg_regard": game = preload("res://scripts/minigames/mg_regard.gd").new()

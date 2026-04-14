@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T06:00:00Z",
+  "last_updated": "2026-04-14T07:00:00Z",
   "metrics": {
-    "total_cycles_completed": 32,
-    "total_dev_cycles": 16,
+    "total_cycles_completed": 33,
+    "total_dev_cycles": 17,
     "total_test_cycles": 16,
     "bugs_found": 24,
-    "bugs_fixed": 17,
-    "tasks_completed": 51,
-    "tasks_pending": 12,
+    "bugs_fixed": 18,
+    "tasks_completed": 52,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -515,6 +515,18 @@
         "scripts/merlin/merlin_effect_engine.gd",
         "scripts/merlin/store_run.gd"
       ]
+    },
+    {
+      "id": "PAT-046",
+      "learned_at": "2026-04-14T07:00:00Z",
+      "source": "S3-MEDITATION-CLEANUP",
+      "pattern": "When deleting a feature (minigame), audit 3 distinct places: (1) registry match block + CONST dicts (TAG_FIELD_MAP, GAMES) in minigame_registry.gd, (2) test files — 3 sub-locations: standalone test functions block, test runner array entries, AND shared extreme-input test (test_all_scores_clamp_0_100 uses inline _feature_score() helper), (3) the .gd file itself. Also fix the cosmetic comment grouping (# Vigueur / # Esprit) to match actual GAMES dict assignment. All 3 places must be cleaned atomically in one cycle.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/test/test_minigames_extra.gd",
+        "workflow"
+      ]
     }
   ],
   "agent_performance": {
@@ -532,7 +544,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 28,
+      "tasks_completed": 29,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
