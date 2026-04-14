@@ -681,19 +681,6 @@
     "description": "SPECIALIST-1 AUDIT: screen_frame.gd:351 uses Color(1.0, 1.0, 1.0, 0.15) for a highlight effect. Should reference MerlinVisual.CRT_PALETTE['phosphor_bright'] or similar white-equivalent key, modified with alpha. Low priority but completes visual consistency."
   },
   {
-    "id": "GDC-FACTION-ENDING-TRIGGER",
-    "sprint": "S2",
-    "priority": 8,
-    "status": "pending",
-    "type": "dev",
-    "title": "Add faction ending trigger to check_run_end (bible s.3.8: rep >= 80)",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/store_run.gd"
-    ],
-    "description": "SPEC-2 CHK-12 FAIL_HIGH: store_run.gd:202 check_run_end() never checks if any faction has rep >= 80 for ending trigger. FACTION_THRESHOLD_ENDING=80 defined in constants but unused. Bible s.3.8: 'Faction ≥ 80 en fin de scenario → Fin de faction disponible'. Fix: in check_run_end(), when scenario ends (victory or hard_max or cards>=soft_max), check if any faction_rep >= 80 and add faction_ending list to return dict. Complement with FACTION-ENDING-UNLOCK-CHECK test [19]."
-  },
-  {
     "id": "GDC-FOREST3D-STALE-DRAIN",
     "sprint": "S2",
     "priority": 20,
@@ -1056,5 +1043,99 @@
       "scripts/merlin_cabin_hub.gd"
     ],
     "description": "After UX-TOUCH-TARGET-ARBRE and UX-TOUCH-TARGET-SELECTION-SAVE fixes: trace all custom_minimum_size for interactive buttons in active scenes. Verify >= 44px. Also check font_size >= 11 for user-facing labels. Confirm UX-FONT-SIZE-10-FIX was applied."
+  },
+  {
+    "id": "NAR-FACTION-ENDING-UI",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "dev",
+    "title": "Faction ending choice screen when faction_endings_available non-empty",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "end_run_screen.gd must read end_check.faction_endings_available. If non-empty: show choice panel 'Vers qui vous tournez-vous?' with faction buttons (bible s.3.8 fins multiples). If single faction: auto-select. Emit signal faction_ending_chosen(faction_name).",
+    "status": "pending",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE"
+  },
+  {
+    "id": "NAR-TEXT-REGISTRY-POPULATE",
+    "sprint": "S2",
+    "priority": 21,
+    "type": "dev",
+    "title": "Populate text_registry.json with all UI string keys",
+    "agent": "i18n_auditor_agent",
+    "files": [
+      "data/i18n/text_registry.json",
+      "scripts/Calendar.gd"
+    ],
+    "description": "text_registry.json has only 4 empty stubs. Audit ALL scripts for hardcoded French strings and register them as i18n keys. Priority: Calendar.gd season/month names (25+ strings), Collection.gd labels, HubAntre.gd labels.",
+    "status": "pending",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE"
+  },
+  {
+    "id": "NAR-TRUST-TIER-T3-CONTENT",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "dev",
+    "title": "Add 20 T3 trust tier cards to balance tier distribution",
+    "agent": "narrative_designer",
+    "files": [
+      "data/cards/fastroute_sprint21b_danger.json"
+    ],
+    "description": "Trust tier distribution: T0=643 (79.4%), T1=68, T2=55, T3=44 (5.4%). Add 20 new T3 cards across 4+ biomes. Each card needs 3 options with distinct verbs from the closed list.",
+    "status": "pending",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE"
+  },
+  {
+    "id": "NAR-CHANCE-FIELD-BOOST",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "dev",
+    "title": "Add 15 chance-field cards (currently thinnest at 47 cards)",
+    "agent": "narrative_designer",
+    "files": [
+      "data/cards/fastroute_sprint9a_cards.json"
+    ],
+    "description": "chance field has only 47 cards -- thinnest of all 8 champ lexicaux. Add 15 chance-field cards across biomes. Use verbs: tenter sa chance, deviner, fouiller a l'aveugle. Mix factions evenly.",
+    "status": "pending",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE"
+  },
+  {
+    "id": "NAR-FACTION-ENDING-TEST",
+    "sprint": "S2",
+    "priority": 24,
+    "type": "test",
+    "title": "Test faction_endings_available in all 3 check_run_end paths",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/store_run.gd",
+      "scripts/merlin/merlin_reputation_system.gd"
+    ],
+    "description": "Verify: (1) faction rep=80 -> faction_endings_available=[faction] in death/victory/hardmax. (2) rep=79 -> empty array. (3) 2 factions >=80 -> both in array. (4) faction_rep={} -> empty array.",
+    "status": "pending",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE"
+  },
+  {
+    "id": "NAR-CALENDAR-I18N",
+    "sprint": "S3",
+    "priority": 70,
+    "type": "dev",
+    "title": "Migrate Calendar.gd hardcoded strings to text_registry.json",
+    "agent": "i18n_auditor_agent",
+    "files": [
+      "scripts/Calendar.gd",
+      "data/i18n/text_registry.json"
+    ],
+    "description": "Calendar.gd has ~30 hardcoded French strings (months, seasons, Celtic events). Replace with I18nRegistry.t() calls after NAR-TEXT-REGISTRY-POPULATE is done.",
+    "status": "pending",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE"
   }
 ]

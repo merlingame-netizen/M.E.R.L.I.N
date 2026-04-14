@@ -83,5 +83,20 @@
     "agent": "bug_hunter",
     "completed_at": "2026-04-14T22:50:00Z",
     "notes": "PASS: 7/7 invariants verified. select_minigame(unknown)=esprit valid, neutre→detect_field→GAMES fallback all working. No bugs found. See T-MG-APAISEMENT-FALLBACK-VERIFY-2026-04-14.json"
+  },
+  {
+    "id": "GDC-FACTION-ENDING-TRIGGER",
+    "sprint": "S2",
+    "priority": 8,
+    "status": "completed",
+    "type": "dev",
+    "title": "Add faction ending trigger to check_run_end (bible s.3.8: rep >= 80)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "SPEC-2 CHK-12 FAIL_HIGH: store_run.gd:202 check_run_end() never checks if any faction has rep >= 80 for ending trigger. FACTION_THRESHOLD_ENDING=80 defined in constants but unused. Bible s.3.8: 'Faction ≥ 80 en fin de scenario → Fin de faction disponible'. Fix: in check_run_end(), when scenario ends (victory or hard_max or cards>=soft_max), check if any faction_rep >= 80 and add faction_ending list to return dict. Complement with FACTION-ENDING-UNLOCK-CHECK test [19].",
+    "completed_at": "2026-04-14T23:48:58Z",
+    "notes": "Added faction_endings_available to all 3 ending return dicts in check_run_end(). Uses MerlinReputationSystem.get_available_endings(faction_rep) per bible s.3.8. Faction rep from state.meta.faction_rep at run end."
   }
 ]

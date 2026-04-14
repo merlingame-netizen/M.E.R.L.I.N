@@ -202,6 +202,9 @@ static func update_player_profile(state: Dictionary, option: int) -> void:
 
 static func check_run_end(state: Dictionary) -> Dictionary:
 	var run: Dictionary = state.get("run", {})
+	# Faction endings (bible s.3.8): check which factions have rep >= 80 at run end.
+	var faction_rep: Dictionary = state.get("meta", {}).get("faction_rep", {})
+	var faction_endings: Array = MerlinReputationSystem.get_available_endings(faction_rep)
 
 	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 	if life <= 0:
@@ -212,6 +215,7 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 			"cards_played": run.get("cards_played", 0),
 			"days_survived": run.get("day", 1),
 			"life_depleted": true,
+			"faction_endings_available": faction_endings,
 		}
 
 	var mission: Dictionary = run.get("mission", {})
@@ -230,6 +234,7 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 			"score": int(run.get("cards_played", 0)) * 20,
 			"cards_played": run.get("cards_played", 0),
 			"days_survived": run.get("day", 1),
+			"faction_endings_available": faction_endings,
 		}
 
 	# MOS tension tracking (bible v2.4 s.6.2)
@@ -248,6 +253,7 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 			"cards_played": cards_played,
 			"days_survived": run.get("day", 1),
 			"hard_max": true,
+			"faction_endings_available": faction_endings,
 		}
 
 	var tension_zone: String = "none"

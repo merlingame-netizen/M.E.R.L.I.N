@@ -462,5 +462,21 @@
       "type": "test"
     },
     "timestamp": "2026-04-14T22:55:00Z"
+  },
+  {
+    "id": "insight-20260414-029",
+    "agent": "narrative_designer",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "Faction endings implemented in backend but missing UI — critical path incomplete",
+    "details": "check_run_end() now returns faction_endings_available[] (bible s.3.8) but end_run_screen.gd has no code to display the faction choice. Players who earn faction rep >=80 see a normal ending instead of the special faction narrative. NAR-FACTION-ENDING-UI (P9) is the critical follow-up — it should be the NEXT cycle's task.",
+    "proposed_task": {
+      "title": "Faction ending choice screen UI implementation",
+      "sprint": "S2",
+      "type": "dev",
+      "priority": 9,
+      "id": "NAR-FACTION-ENDING-UI"
+    },
+    "timestamp": "2026-04-14T23:50:28Z"
   }
 ]

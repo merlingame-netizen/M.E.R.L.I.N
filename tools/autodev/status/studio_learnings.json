@@ -935,6 +935,38 @@
         "scripts/merlin/merlin_card_system.gd",
         "scripts/minigames/minigame_registry.gd"
       ]
+    },
+    {
+      "id": "PAT-091",
+      "learned_at": "2026-04-14T23:49:54Z",
+      "source": "SPEC-7-NARRATIVE",
+      "pattern": "text_registry.json is a stub with only 4 empty keys — all i18n text currently hardcoded in scripts. Registry architecture exists but population phase not started. Calendar.gd:20-73, Collection.gd:17, HubAntre.gd:848 are the main offenders.",
+      "severity": "HIGH",
+      "applies_to": [
+        "data/i18n/text_registry.json",
+        "scripts/Calendar.gd",
+        "scripts/Collection.gd"
+      ]
+    },
+    {
+      "id": "PAT-092",
+      "learned_at": "2026-04-14T23:49:54Z",
+      "source": "SPEC-7-NARRATIVE",
+      "pattern": "Trust tier skew (T0=79.4%, T3=5.4%) is natural for new content development but T3 cards require deliberate authoring for high-trust player experience. Check tier balance after each content sprint.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "data/cards/"
+      ]
+    },
+    {
+      "id": "PAT-093",
+      "learned_at": "2026-04-14T23:49:54Z",
+      "source": "SPEC-7-NARRATIVE",
+      "pattern": "Verb count drift: 52 unique verbs found vs bible implicit 45-verb closed list. Authors add synonyms organically (tendre l'oreille vs ecouter, chercher au hasard vs fouiller a l'aveugle). Periodic normalization pass needed.",
+      "severity": "LOW",
+      "applies_to": [
+        "data/cards/"
+      ]
     }
   ],
   "agent_performance": {
@@ -952,7 +984,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 34,
+      "tasks_completed": 35,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -1051,6 +1083,14 @@
     },
     "ux_accessibility_auditor": {
       "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "narrative_designer": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0
+    },
+    "i18n_auditor_agent": {
+      "tasks_completed": 0,
       "bugs_introduced": 0
     }
   },
@@ -1257,7 +1297,7 @@
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ],
-  "total_cycles": 3,
+  "total_cycles": 4,
   "bugs_found": 10,
   "bugs_fixed": 3
 }
