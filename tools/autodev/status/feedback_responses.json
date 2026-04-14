@@ -49,6 +49,10 @@
     {
       "question_id": "q-20260414-002",
       "answer": "50 derniers runs"
+    },
+    {
+      "question_id": "q-20260414-003",
+      "answer": "load_profile() entier (accès I/O disque, toujours synchronisé avec le fichier save)"
     }
   ]
 }
