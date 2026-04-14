@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T00:15:00Z",
+  "last_updated": "2026-04-14T01:00:00Z",
   "metrics": {
-    "total_cycles_completed": 26,
-    "total_dev_cycles": 13,
+    "total_cycles_completed": 27,
+    "total_dev_cycles": 14,
     "total_test_cycles": 13,
     "bugs_found": 23,
-    "bugs_fixed": 14,
-    "tasks_completed": 46,
-    "tasks_pending": 12,
+    "bugs_fixed": 15,
+    "tasks_completed": 48,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -437,6 +437,17 @@
         "scripts/autoload/SFXManager.gd",
         "docs/GAME_DESIGN_BIBLE.md"
       ]
+    },
+    {
+      "id": "PAT-039",
+      "learned_at": "2026-04-14T01:00:00Z",
+      "source": "BUG-SFX-MISSING-SOUNDS",
+      "pattern": "SFX audit can reveal silent failures: callers using SFXManager.play('name') never crash when name is absent — they return silently. The only way to detect missing sounds is via static audit (grep callers vs registered names array). Always cross-check caller strings against the names[] array in _generate_all_sounds(), not just the VOLUME mapping. Game flow sounds (card_reveal, encounter, success, fail, neutral, danger, confirm) belong in SFXRecipesAmbient (game-flow split), not SFXRecipes (core UI/transition).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -454,7 +465,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 26,
+      "tasks_completed": 27,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [

@@ -416,6 +416,40 @@
       "description": "Verify S2-BIOMES fix: (1) Check all 8 card_interval_range_min/max match bible s.4.3 exactly (foret:12-15, landes:8-10, cotes:6-8, villages:8-10, cercles:10-12, marais:4-6, collines:10-12, iles:3-15). (2) Check arc IDs match bible s.3.6 (l_ermite_du_vent, le_phoque_d_argent, l_assemblee_secrete, le_rituel_oublie, le_tresor_des_feux, la_voix_des_rois, le_passage_de_morgane). (3) Check arc_cards counts (3,4,3,5,4,4,3,5). (4) Check arc_condition_faction and values. (5) Verify new condition types runs_in_biome + fins_vues are present. (6) No regression on foret_broceliande (unchanged).",
       "completed_at": "2026-04-13T21:15:00Z",
       "notes": "PASS 6/6 — all intervals, arc IDs, arc_cards, conditions verified vs bible s.3.6/s.4.3. 1 LOW note: cotes dominant_faction mismatch (BUG-COTES-FACTION-FIX created P18)."
+    },
+    {
+      "id": "S4-SFXMANAGER-AUDIT",
+      "sprint": "S4",
+      "priority": 19,
+      "status": "completed",
+      "type": "test",
+      "title": "Audit SFXManager: 30+ sons proceduaux enregistres, zero refs manquantes",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ],
+      "description": "Bible overview: SFXManager gere 30+ sons proceduaux. Verifier: (1) SFXManager.gd existe et est un autoload valide. (2) >= 30 entrees de sons enregistrees. (3) Aucune ref a un fichier .wav/.ogg/.mp3 manquant. (4) play_sfx() / stop_sfx() existent. (5) Pas de deprecations AudioStreamPlayer Godot 3 vs 4. Rapport: count sons, refs manquantes, pattern procedural.",
+      "completed_at": "2026-04-14T00:15:00Z",
+      "notes": "PARTIAL_PASS 6/8. PASS: autoload valid, 57 sounds (>30), zero file refs, play()/play_varied() API, no G3 deprecations, 100% gen_ coverage. FAIL_MEDIUM: 7 caller sounds missing from registry (card_reveal, confirm, encounter, success, fail, neutral, danger). FAIL_LOW: amb_iles missing. Created BUG-SFX-MISSING-SOUNDS(P5)+BUG-SFX-AMB-ILES(P22). PAT-037+PAT-038 added."
+    },
+    {
+      "id": "BUG-SFX-MISSING-SOUNDS",
+      "sprint": "S4",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Add 7 missing SFX: card_reveal, confirm, encounter, success, fail, neutral, danger",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ],
+      "description": "S4-SFXMANAGER-AUDIT found 7 sound names called in game scripts but not registered in SFXManager._generate_all_sounds(). They silently skip (no crash, but UX degradation at key moments). Fix: (1) Add gen_ methods to SFXRecipesAmbient for each: gen_card_reveal() (card flip: mid freq click+shimmer), gen_confirm() (positive UI: low chime), gen_encounter() (tension: minor chord swell), gen_success() (minigame win: ascending arp), gen_fail() (minigame lose: descending buzz), gen_neutral() (flat beep), gen_danger() (low pulsing alarm). (2) Add all 7 names to names[] array in SFXManager._generate_all_sounds(). (3) Add volume mappings in _get_volume_for(): card_reveal/confirm→ui, encounter/danger→magic, success/fail/neutral→transition. Callers: book_cinematic.gd:76+208, broceliande_forest_3d.gd:1043, encounter_card_overlay.gd:179+181+183, tutorial_card_layer.gd:407.",
+      "completed_at": "2026-04-14T01:00:00Z",
+      "notes": "Added 7 gen_ methods to sfx_recipes_ambient.gd (card_reveal, confirm, encounter, success, fail, neutral, danger). Added names to SFXManager._generate_all_sounds() names array. Added volume mappings: card_reveal/confirm/neutral→ui, encounter/danger→magic, success/fail→transition. Callers in book_cinematic, broceliande_forest_3d, encounter_card_overlay, tutorial_card_layer now resolve at startup."
     }
-  ]
+  ],
+  "last_updated": "2026-04-14T01:00:00Z"
 }

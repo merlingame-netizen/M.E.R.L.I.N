@@ -170,6 +170,20 @@
         "priority": 18
       },
       "timestamp": "2026-04-13T21:15:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "ux",
+      "message": "7 game-flow SFX sounds were silently missing — no crash, but UX degradation at key moments",
+      "details": "SFXManager.play() returns silently when a name is not registered. This means card reveals, encounter entries, success/fail outcomes, danger warnings, and confirm actions had zero audio feedback. The silent-fail design is intentional for robustness, but it means missing sounds can go undetected indefinitely without static auditing. Consider adding a startup warning log when a registered caller name is not found in names[].",
+      "proposed_task": {
+        "title": "SFXManager: warn on unregistered sound at startup (debug mode)",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T01:00:00Z"
     }
   ],
   "updated": "2026-04-13T20:53:21Z"

@@ -1,7 +1,7 @@
 {
   "version": "3.6",
-  "updated": "2026-04-14T00:15:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE (15 archived). S2+S3 active. 12 pending.",
+  "updated": "2026-04-14T01:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 11 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -114,37 +114,6 @@
         "addons/merlin_ai/rag_manager.gd"
       ],
       "description": "Director q-001: RAG-based narrative memory. add_narrative_entry() per card, get_narrative_summary() for 3-5 items."
-    },
-    {
-      "id": "S4-SFXMANAGER-AUDIT",
-      "sprint": "S4",
-      "priority": 19,
-      "status": "completed",
-      "type": "test",
-      "title": "Audit SFXManager: 30+ sons proceduaux enregistres, zero refs manquantes",
-      "agent": "bug_hunter",
-      "files": [
-        "scripts/autoload/SFXManager.gd",
-        "scripts/autoload/sfx_recipes.gd",
-        "scripts/autoload/sfx_recipes_ambient.gd"
-      ],
-      "description": "Bible overview: SFXManager gere 30+ sons proceduaux. Verifier: (1) SFXManager.gd existe et est un autoload valide. (2) >= 30 entrees de sons enregistrees. (3) Aucune ref a un fichier .wav/.ogg/.mp3 manquant. (4) play_sfx() / stop_sfx() existent. (5) Pas de deprecations AudioStreamPlayer Godot 3 vs 4. Rapport: count sons, refs manquantes, pattern procedural.",
-      "completed_at": "2026-04-14T00:15:00Z",
-      "notes": "PARTIAL_PASS 6/8. PASS: autoload valid, 57 sounds (>30), zero file refs, play()/play_varied() API, no G3 deprecations, 100% gen_ coverage. FAIL_MEDIUM: 7 caller sounds missing from registry (card_reveal, confirm, encounter, success, fail, neutral, danger). FAIL_LOW: amb_iles missing. Created BUG-SFX-MISSING-SOUNDS(P5)+BUG-SFX-AMB-ILES(P22). PAT-037+PAT-038 added."
-    },
-    {
-      "id": "BUG-SFX-MISSING-SOUNDS",
-      "sprint": "S4",
-      "priority": 5,
-      "status": "pending",
-      "type": "dev",
-      "title": "Add 7 missing SFX: card_reveal, confirm, encounter, success, fail, neutral, danger",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/autoload/SFXManager.gd",
-        "scripts/autoload/sfx_recipes_ambient.gd"
-      ],
-      "description": "S4-SFXMANAGER-AUDIT found 7 sound names called in game scripts but not registered in SFXManager._generate_all_sounds(). They silently skip (no crash, but UX degradation at key moments). Fix: (1) Add gen_ methods to SFXRecipesAmbient for each: gen_card_reveal() (card flip: mid freq click+shimmer), gen_confirm() (positive UI: low chime), gen_encounter() (tension: minor chord swell), gen_success() (minigame win: ascending arp), gen_fail() (minigame lose: descending buzz), gen_neutral() (flat beep), gen_danger() (low pulsing alarm). (2) Add all 7 names to names[] array in SFXManager._generate_all_sounds(). (3) Add volume mappings in _get_volume_for(): card_reveal/confirm→ui, encounter/danger→magic, success/fail/neutral→transition. Callers: book_cinematic.gd:76+208, broceliande_forest_3d.gd:1043, encounter_card_overlay.gd:179+181+183, tutorial_card_layer.gd:407."
     },
     {
       "id": "S4-WEB-EXPORT",
