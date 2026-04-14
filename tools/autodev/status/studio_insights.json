@@ -240,7 +240,17 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T05:00:00Z"
+    },
+    {
+      "id": "insight-20260414-002",
+      "agent": "game_design_auditor",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "run['anam'] is a write-only vestigial field — never consumed by rewards pipeline",
+      "details": "PAT-045 finding: _apply_add_anam() writes to run['anam'] (tracking in-run ADD_ANAM gains) but calculate_run_rewards() and apply_run_rewards() never read this field. The rewards pipeline computes anam from scratch (ANAM_BASE_REWARD + bonuses). This means run.anam tracks something useful (cumulative ADD_ANAM during run) but the data goes nowhere. When q-20260414-001 resolves, this field should either become 'anam_accumulated' (if option B/C chosen) or be removed entirely (if option A chosen — immediate gain is already applied to meta.anam). The current dual-write pattern (run.anam + meta.anam simultaneously) is redundant.",
+      "proposed_task": null,
+      "timestamp": "2026-04-14T06:00:00Z"
     }
   ],
-  "updated": "2026-04-14T04:00:00Z"
+  "updated": "2026-04-14T06:00:00Z"
 }

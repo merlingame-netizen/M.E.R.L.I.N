@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T05:00:00Z",
+  "last_updated": "2026-04-14T06:00:00Z",
   "metrics": {
-    "total_cycles_completed": 31,
+    "total_cycles_completed": 32,
     "total_dev_cycles": 16,
-    "total_test_cycles": 15,
+    "total_test_cycles": 16,
     "bugs_found": 24,
     "bugs_fixed": 17,
-    "tasks_completed": 50,
-    "tasks_pending": 13,
+    "tasks_completed": 51,
+    "tasks_pending": 12,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -504,6 +504,17 @@
         "store_run.gd",
         "merlin_constants.gd"
       ]
+    },
+    {
+      "id": "PAT-045",
+      "learned_at": "2026-04-14T06:00:00Z",
+      "source": "T-S2-ANAM-REGRESSION-TEST",
+      "pattern": "run['anam'] is initialized in init_run() and written by _apply_add_anam(), but is NEVER consumed by calculate_run_rewards() or apply_run_rewards(). This makes it a write-only (vestigial) field. When q-20260414-001 resolves, either remove run.anam entirely OR promote it to the rewards pipeline as anam_accumulated. Always verify that written fields have at least one reader in the rewards/persistence pipeline.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -548,7 +559,7 @@
       "partial_pass_reports": 2
     },
     "game_design_auditor": {
-      "tasks_completed": 5,
+      "tasks_completed": 6,
       "bugs_introduced": 0,
       "bugs_found": 9,
       "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit, multi-fix regression sweeps",

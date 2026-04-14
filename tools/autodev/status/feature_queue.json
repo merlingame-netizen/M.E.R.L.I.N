@@ -1,7 +1,7 @@
 {
-  "version": "3.8",
-  "updated": "2026-04-14T05:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 13 pending.",
+  "version": "3.9",
+  "updated": "2026-04-14T06:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 12 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -150,21 +150,6 @@
         "scripts/autoload/sfx_recipes_ambient.gd"
       ],
       "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority — iles_celtes is a late-game biome (maturity score 45+)."
-    },
-    {
-      "id": "T-S2-ANAM-REGRESSION-TEST",
-      "sprint": "S2",
-      "priority": 11,
-      "status": "pending",
-      "type": "test",
-      "title": "Verify S2-ANAM-VERIFY: anam_accumulated + death ratio formula implementation",
-      "agent": "game_design_auditor",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "description": "Run AFTER S2-ANAM-VERIFY (P9) completes. Verify: (1) run.anam_accumulated is incremented by _apply_add_anam() and NOT written directly to meta['anam'] during run. (2) calculate_run_rewards() includes run['anam_accumulated'] in the pool before applying death ratio. (3) death ratio = min(cards_played/30, 1.0) applies to total pool (base + accumulated). (4) apply_run_rewards() credits scaled total to meta['anam']. (5) init_run() resets anam_accumulated=0. Regression: verify q-20260414-001 director decision was applied (whichever option chosen)."
     },
     {
       "id": "T-S3-MEDITATION-VERIFY",

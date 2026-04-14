@@ -1,0 +1,88 @@
+{
+  "report_id": "T-S2-ANAM-REGRESSION-TEST_2026-04-14",
+  "task_id": "T-S2-ANAM-REGRESSION-TEST",
+  "agent": "game_design_auditor",
+  "cycle": "CYCLE-2026-04-14-anam-regression-test",
+  "timestamp": "2026-04-14T06:00:00Z",
+  "verdict": "PARTIAL_PASS",
+  "score": "4/8 PASS, 3 FAIL_PENDING, 1 AWAITING_DIRECTOR",
+  "prerequisite_task": "S2-ANAM-VERIFY (completed)",
+  "context": "S2-ANAM-VERIFY verified the death ratio formula was correct and fixed: (1) double total_runs increment, (2) added fins_vues counter to meta. It did NOT implement anam_accumulated because BUG-ANAM-DEATH-PENALTY-FIX is blocked on director q-20260414-001. Checks CHK-1/2/5 are FAIL_PENDING pending director decision.",
+  "checks": [
+    {
+      "id": "CHK-1",
+      "description": "run.anam_accumulated incremented by _apply_add_anam(), NOT writing to meta.anam during run",
+      "result": "FAIL_PENDING",
+      "evidence": "_apply_add_anam() at engine:433-444 writes to BOTH run['anam'] (line 438) AND meta['anam'] (line 442) immediately. No anam_accumulated field exists. BUG-ANAM-DEATH-PENALTY-FIX (P10) is blocked on director q-20260414-001.",
+      "blocker": "q-20260414-001"
+    },
+    {
+      "id": "CHK-2",
+      "description": "calculate_run_rewards() includes run.anam_accumulated in pool before death ratio",
+      "result": "FAIL_PENDING",
+      "evidence": "calculate_run_rewards() (store_run:331-376) starts from ANAM_BASE_REWARD + bonuses only. No reference to run.anam_accumulated or run.anam. The run.anam field written by _apply_add_anam() is never consumed by the rewards pipeline.",
+      "blocker": "q-20260414-001",
+      "additional_note": "run['anam'] is initialized in init_run():16 and written by _apply_add_anam():438, but is never read by calculate_run_rewards() or apply_run_rewards(). This field is vestigial in the current architecture — either it should be removed or it should feed into rewards when q-20260414-001 is resolved."
+    },
+    {
+      "id": "CHK-3",
+      "description": "Death ratio formula: min(cards_played/30, 1.0) is correct",
+      "result": "PASS",
+      "evidence": "store_run.gd:351-354: death_cap=ANAM_REWARDS['death_cap_cards']=30, ratio=minf(float(cards_played)/float(death_cap), 1.0), anam=int(float(anam)*ratio). Formula matches bible s.5.1 exactly."
+    },
+    {
+      "id": "CHK-4",
+      "description": "apply_run_rewards() credits scaled anam total to meta.anam",
+      "result": "PASS",
+      "evidence": "store_run.gd:382: meta['anam'] = int(meta.get('anam',0)) + anam_earned. Single source of truth. stats.total_anam_earned also updated at line 385."
+    },
+    {
+      "id": "CHK-5",
+      "description": "init_run() resets anam_accumulated = 0",
+      "result": "FAIL_PENDING",
+      "evidence": "init_run() (store_run:12-50) sets run['anam']=0 (line 16) but no anam_accumulated field. Field doesn't exist anywhere in codebase. Blocked on q-20260414-001.",
+      "blocker": "q-20260414-001"
+    },
+    {
+      "id": "CHK-6",
+      "description": "Double total_runs increment fixed: single source of truth in apply_run_rewards()",
+      "result": "PASS",
+      "evidence": "handle_run_end() (store_run:287-305) increments ONLY meta['fins_vues'] (line 290). meta['total_runs'] is incremented ONLY in apply_run_rewards() (line 383). No double-increment. S2-ANAM-VERIFY fix confirmed."
+    },
+    {
+      "id": "CHK-7",
+      "description": "fins_vues counter properly initialized in default profile and incremented on run end",
+      "result": "PASS",
+      "evidence": "merlin_save_system.gd:22: 'fins_vues': 0 in _get_default_profile(). store_run.gd:290: meta['fins_vues'] = int(meta.get('fins_vues',0)) + 1 in handle_run_end(). S2-ANAM-VERIFY fix confirmed. Needed by S2-ARC-CONDITION-EVAL (collines_dolmens arc: fins_vues >= 5)."
+    },
+    {
+      "id": "CHK-8",
+      "description": "Director q-20260414-001 decision applied (whichever option chosen)",
+      "result": "AWAITING_DIRECTOR",
+      "evidence": "q-20260414-001 status is still 'pending' in feedback_questions.json. BUG-ANAM-DEATH-PENALTY-FIX (P10) explicitly states 'Wait for director answer on q-20260414-001 before implementing'. No implementation should proceed until director responds."
+    }
+  ],
+  "regressions_verified": [
+    "CHK-3 PASS: Death ratio formula stable (min(cards/30,1.0))",
+    "CHK-4 PASS: apply_run_rewards credit path stable",
+    "CHK-6 PASS: double total_runs bug NOT reproduced — fix confirmed",
+    "CHK-7 PASS: fins_vues counter operational — S2-ARC-CONDITION-EVAL prerequisite met"
+  ],
+  "new_bugs_created": [],
+  "observations": [
+    "run['anam'] (initialized in init_run, written by _apply_add_anam) is NEVER read by the rewards pipeline. It's a vestigial field. Should be removed OR promoted to anam_accumulated when q-20260414-001 is resolved.",
+    "calculate_maturity_score() uses meta.get('endings_seen',[]).size() for the 'fins_vues' maturity weight (not meta.fins_vues). Both values should correlate (same increment condition) but they're not the same counter.",
+    "BUG-ANAM-DEATH-PENALTY-FIX (P10) remains blocked. Once director answers q-20260414-001, re-run this test."
+  ],
+  "patterns_confirmed": [
+    "PAT-043: Anam formula verified correct (death ratio formula at store_run:352-354)",
+    "PAT-044: fins_vues counter operational (save_system default + handle_run_end increment)"
+  ],
+  "new_pattern": {
+    "id": "PAT-045",
+    "pattern": "run['anam'] is initialized and written by ADD_ANAM effects but is NOT consumed by calculate_run_rewards(). When a field is written but never read in the rewards pipeline, it is architecturally dead weight — either remove it or wire it in. Check for write-only fields whenever a director decision changes reward architecture.",
+    "severity": "LOW",
+    "applies_to": ["scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/store_run.gd"]
+  },
+  "blocking_question": "q-20260414-001 — Must be answered before BUG-ANAM-DEATH-PENALTY-FIX can proceed"
+}
