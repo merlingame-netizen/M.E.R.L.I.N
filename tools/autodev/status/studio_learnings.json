@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-13T22:00:00Z",
+  "last_updated": "2026-04-14T00:15:00Z",
   "metrics": {
-    "total_cycles_completed": 25,
+    "total_cycles_completed": 26,
     "total_dev_cycles": 13,
-    "total_test_cycles": 12,
-    "bugs_found": 21,
+    "total_test_cycles": 13,
+    "bugs_found": 23,
     "bugs_fixed": 14,
-    "tasks_completed": 45,
-    "tasks_pending": 11,
+    "tasks_completed": 46,
+    "tasks_pending": 12,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -415,6 +415,28 @@
       "applies_to": [
         "scripts/merlin/merlin_constants.gd"
       ]
+    },
+    {
+      "id": "PAT-037",
+      "learned_at": "2026-04-14T00:15:00Z",
+      "source": "S4-SFXMANAGER-AUDIT",
+      "pattern": "SFXManager.play() uses graceful-fail (returns early if sound not in _sounds dict). Callers can reference sounds not yet generated — no crash but silent UX degradation. Coverage drift: as new UI/scene scripts call SFXManager.play('new_name'), the gen_new_name() method must be added to SFXRecipes or SFXRecipesAmbient AND the name added to _generate_all_sounds() names array.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ]
+    },
+    {
+      "id": "PAT-038",
+      "learned_at": "2026-04-14T00:15:00Z",
+      "source": "S4-SFXMANAGER-AUDIT",
+      "pattern": "SFXManager actual API is play()/play_varied() — NOT play_sfx()/stop_sfx() as mentioned in GAME_DESIGN_BIBLE overview. Pool cycling (POOL_SIZE=6) replaces explicit stop. Always grep SFXManager.gd for actual method names before auditing callers.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/autoload/SFXManager.gd",
+        "docs/GAME_DESIGN_BIBLE.md"
+      ]
     }
   ],
   "agent_performance": {
@@ -444,18 +466,19 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 6,
+      "tasks_completed": 7,
       "bugs_introduced": 0,
-      "bugs_found": 5,
-      "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection",
+      "bugs_found": 7,
+      "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection, coverage drift detection",
       "strengths": [
         "found cross-module validation inconsistency",
         "traced effect accumulation paths",
         "regression verification",
-        "cross-module key-mismatch detection (PAT-019)"
+        "cross-module key-mismatch detection (PAT-019)",
+        "SFX coverage drift: caller vs registry cross-reference (PAT-037)"
       ],
       "weaknesses": [],
-      "partial_pass_reports": 1
+      "partial_pass_reports": 2
     },
     "game_design_auditor": {
       "tasks_completed": 3,

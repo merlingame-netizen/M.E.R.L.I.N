@@ -3,6 +3,20 @@
   "description": "Agent-proposed insights and feature suggestions for the Director",
   "insights": [
     {
+      "id": "insight-20260414-001",
+      "agent": "bug_hunter",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "SFX coverage drift: 7 key game moments (encounter, success, fail, card reveal) play silently",
+      "details": "Audit found 7 sound names called in UI/3D scripts (encounter_card_overlay, book_cinematic, tutorial_card_layer, broceliande_forest_3d) but not registered in SFXManager. Silent fail at key emotional moments: card reveals, encounter triggers, minigame results. BUG-SFX-MISSING-SOUNDS (P5) will fix. Root cause: new callers added without updating _generate_all_sounds() names array — a coverage drift problem. Suggest: add a static assert or comment at top of SFXManager listing ALL expected sound names so future callers can verify at a glance.",
+      "proposed_task": {
+        "title": "Add SFX names table comment header in SFXManager._generate_all_sounds()",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T00:15:00Z"
+    },
+    {
       "id": "insight-20260413-001",
       "agent": "i18n_auditor",
       "severity": "WARN",

@@ -1,8 +1,19 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-13T22:00:00Z",
+  "updated": "2026-04-14T00:15:00Z",
   "archived": [
+    {
+      "id": "S4-SFXMANAGER-AUDIT",
+      "sprint": "S4",
+      "priority": 19,
+      "status": "completed",
+      "type": "test",
+      "title": "Audit SFXManager: 30+ sons proceduaux enregistres, zero refs manquantes",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-14T00:15:00Z",
+      "notes": "PARTIAL_PASS 6/8. 57 sounds verified, zero audio files, valid autoload, G4 API. 7 missing caller sounds → BUG-SFX-MISSING-SOUNDS(P5). PAT-037+PAT-038 added."
+    },
     {
       "id": "BUG-PROMISE-SYSTEM-FIX",
       "sprint": "S2",
