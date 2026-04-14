@@ -177,7 +177,7 @@
       "id": "q-20260414-002",
       "category": "gamedesign",
       "priority": "LOW",
-      "status": "pending",
+      "status": "answered",
       "question": "run_history dans le profil sauvegarde stocke tous les runs completés sans limite. Après 100+ parties, ce tableau peut devenir volumineux. Faut-il le plafonner ?",
       "context": "merlin_save_system._get_default_profile() initialise run_history:[] (ligne 44). Aucun code ne le tronque actuellement. Chaque entrée run_history contient probablement biome, résultat, durée, anam_earned, fins_vues au moment du run. À raison d'une partie de 15-20 min, un joueur assidu pourrait avoir 200+ runs. Impact: taille fichier save croissante, load_profile() plus lent. Option A: garder illimité (données analytiques complètes). Option B: garder les 20 derniers runs. Option C: garder seulement les statistiques agrégées (pas les runs individuels).",
       "type": "multiple_choice",
