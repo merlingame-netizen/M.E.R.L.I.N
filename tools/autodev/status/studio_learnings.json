@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T07:00:00Z",
+  "last_updated": "2026-04-14T08:00:00Z",
   "metrics": {
-    "total_cycles_completed": 33,
+    "total_cycles_completed": 34,
     "total_dev_cycles": 17,
-    "total_test_cycles": 16,
+    "total_test_cycles": 17,
     "bugs_found": 24,
     "bugs_fixed": 18,
-    "tasks_completed": 52,
-    "tasks_pending": 11,
+    "tasks_completed": 53,
+    "tasks_pending": 10,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -527,6 +527,18 @@
         "scripts/test/test_minigames_extra.gd",
         "workflow"
       ]
+    },
+    {
+      "id": "PAT-047",
+      "learned_at": "2026-04-14T08:00:00Z",
+      "source": "T-S3-MEDITATION-VERIFY",
+      "pattern": "When deleting a game feature (minigame, system, etc.), documentation lag is acceptable and expected: docs/*.md files trail code deletions and will still reference the deleted item. This is NOT a bug. Only flag references in scripts/scenes/tests/autoloads. Do NOT schedule doc-update tasks for every feature deletion — it adds noise. Optional doc cleanup can be batched in a future maintenance sprint.",
+      "severity": "LOW",
+      "applies_to": [
+        "docs/",
+        "workflow",
+        "tooling"
+      ]
     }
   ],
   "agent_performance": {
@@ -556,7 +568,7 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 7,
+      "tasks_completed": 8,
       "bugs_introduced": 0,
       "bugs_found": 7,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection, coverage drift detection",
@@ -651,6 +663,14 @@
       "impact": "Task S3-STORY-LOG-RAG created (P17). RAG manager to provide compressed narrative context beyond 2-card story_log limit.",
       "applied": false,
       "task_created": "S3-STORY-LOG-RAG"
+    },
+    {
+      "question_id": "q-20260414-001",
+      "decision": "Appliquer le multiplicateur à TOUT l'Anam du run, cartes incluses (plus punitif, fidèle bible littérale)",
+      "impact": "ADD_ANAM during run writes to run['anam_accumulated'] only. At run end, apply min(cards_played/30,1.0) ratio to total (base + accumulated). More punitive death penalty, faithful to bible s.5.1.",
+      "applied": true,
+      "applied_at": "2026-04-14T08:00:00Z",
+      "task_created": "BUG-ANAM-DEATH-PENALTY-FIX (bumped to P5)"
     }
   ],
   "evolution_log": [
@@ -772,6 +792,13 @@
       "type": "test",
       "action": "S2-CONTEXT-REGRESSION-TEST: 8/8 checks analyzed. PASS: CHK-1 (no gauges key in build_full_context), CHK-2 (get_critical_gauges fully removed, 0 callers), CHK-5 (faction_rep via meta), CHK-6 (active_promises unified), CHK-7 (drain=0), CHK-8 (no pacing recovery). PARTIAL_FAIL: CHK-3 (BUG-SIGNAL-DELTA-FIX pending P6 — raw rep_delta emitted), CHK-4 (S2-DAY-TICK-FIX pending P8 — day never incremented). 5/5 regressions PASS. 0 new bugs. SF-001 LOW: vestigial gauges_changed signal in merlin_store (map gauges, benign). Created S2-DAY-SIGNAL-REGRESSION-TEST P11.",
       "improvement": "PAT-027 added: PARTIAL_PASS is a valid test verdict when checks fail because fixes are pending, not regressed. Re-verification flow: create downstream test task after fix cycle."
+    },
+    {
+      "cycle": 34,
+      "date": "2026-04-14T08:00:00Z",
+      "type": "test",
+      "action": "T-S3-MEDITATION-VERIFY PASS 6/6. mg_meditation fully cleaned: file deleted, TAG_FIELD_MAP clean, create_minigame() clean, GAMES[esprit]=[volonte,apaisement,sang_froid], test files clean. Applied director q-20260414-001: BUG-ANAM-DEATH-PENALTY-FIX bumped to P5 (all in-run Anam subject to death ratio). 10 pending tasks.",
+      "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ]
 }

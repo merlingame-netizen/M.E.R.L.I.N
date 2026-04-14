@@ -250,6 +250,22 @@
       "details": "PAT-045 finding: _apply_add_anam() writes to run['anam'] (tracking in-run ADD_ANAM gains) but calculate_run_rewards() and apply_run_rewards() never read this field. The rewards pipeline computes anam from scratch (ANAM_BASE_REWARD + bonuses). This means run.anam tracks something useful (cumulative ADD_ANAM during run) but the data goes nowhere. When q-20260414-001 resolves, this field should either become 'anam_accumulated' (if option B/C chosen) or be removed entirely (if option A chosen — immediate gain is already applied to meta.anam). The current dual-write pattern (run.anam + meta.anam simultaneously) is redundant.",
       "proposed_task": null,
       "timestamp": "2026-04-14T06:00:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "bug_hunter",
+      "severity": "INFO",
+      "category": "ux",
+      "message": "Documentation lag: 3 docs/*.md files still reference deleted mg_meditation (and potentially other deleted systems)",
+      "details": "T-S3-MEDITATION-VERIFY found that docs/GAME_BEHAVIOR.md, docs/20_card_system/DOC_MINIGAMES.md, and docs/GAME_ENCYCLOPEDIA.md still document mg_meditation as an active minigame. With 18+ cleanup cycles, similar doc lag likely exists for other deleted systems (Triade, Souffle, 4 Jauges, etc). A docs-audit cycle could clean all doc references to deleted systems in one pass — improves onboarding clarity for future contributors.",
+      "proposed_task": {
+        "id": "S4-DOC-AUDIT-CLEANUP",
+        "title": "Docs audit: remove all references to deleted systems (Triade, Souffle, mg_meditation, etc.)",
+        "sprint": "S4",
+        "type": "dev",
+        "priority": 25
+      },
+      "timestamp": "2026-04-14T08:00:00Z"
     }
   ],
   "updated": "2026-04-14T06:00:00Z"

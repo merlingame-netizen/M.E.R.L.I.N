@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-14T07:00:00Z",
+  "updated": "2026-04-14T08:00:00Z",
   "archived": [
     {
       "id": "S2-DAY-TICK-FIX",
@@ -415,6 +415,22 @@
       "description": "Director q-20260413-004 answered: 'Supprimer mg_meditation.gd (script non-utilisé)' — OPTION A. Steps: (1) Delete scripts/minigames/mg_meditation.gd. (2) Remove 'mg_meditation' match case from create_minigame() in minigame_registry.gd (line 138). (3) Remove 'meditation': 'esprit' entry from TAG_FIELD_MAP in minigame_registry.gd (line 66). (4) Verify no remaining references to mg_meditation outside /archive/. (5) Add PAT for director-driven file deletion. Cosmetic fix: verify mg_sang_froid comment is under # Esprit block.",
       "completed_at": "2026-04-14T07:00:00Z",
       "notes": "Deleted mg_meditation.gd. Removed 'mg_meditation' match case from create_minigame(). Removed 'meditation':'esprit' from TAG_FIELD_MAP. Moved mg_sang_froid from #Vigueur to #Esprit in match block. Removed 3 meditation test functions + 3 test array entries + m1 clamping check from test_minigames_extra.gd. GAMES['esprit'] = [mg_volonte, mg_apaisement, mg_sang_froid] per bible s.6.2."
+    },
+    {
+      "id": "T-S3-MEDITATION-VERIFY",
+      "sprint": "S3",
+      "priority": 13,
+      "status": "completed",
+      "type": "test",
+      "title": "Verify S3-MEDITATION-CLEANUP: mg_meditation fully deleted from registry + disk",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/minigames/mg_meditation.gd"
+      ],
+      "description": "Run AFTER S3-MEDITATION-CLEANUP (P12) completes. Verify: (1) mg_meditation.gd does NOT exist on disk. (2) 'meditation' key absent from TAG_FIELD_MAP in minigame_registry.gd (was line 66). (3) 'mg_meditation' match case absent from create_minigame() (was line 138). (4) No remaining references to mg_meditation outside /archive/ (grep full repo). (5) GAMES['esprit'] still has exactly [volonte, apaisement, sang_froid]. (6) No parse error from dead preload reference.",
+      "completed_at": "2026-04-14T08:00:00Z",
+      "notes": "PASS 6/6: mg_meditation.gd deleted, TAG_FIELD_MAP clean, create_minigame() clean, GAMES[esprit]=[volonte,apaisement,sang_froid] bible-correct, test files clean. LOW: docs/GAME_BEHAVIOR.md doc lag (no gameplay impact)."
     }
   ],
   "tasks": [

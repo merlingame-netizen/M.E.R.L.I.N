@@ -1,7 +1,7 @@
 {
-  "version": "3.9",
-  "updated": "2026-04-14T07:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 11 pending.",
+  "version": "4.0",
+  "updated": "2026-04-14T08:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 10 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -18,7 +18,7 @@
     {
       "id": "BUG-ANAM-DEATH-PENALTY-FIX",
       "sprint": "S2",
-      "priority": 10,
+      "priority": 5,
       "status": "pending",
       "type": "dev",
       "title": "Fix Anam death penalty scope: apply ratio to card-effect ADD_ANAM gains",
@@ -27,7 +27,7 @@
         "scripts/merlin/merlin_effect_engine.gd",
         "scripts/merlin/store_run.gd"
       ],
-      "description": "S2-LOOP-INTEGRITY-CHECK CHK-4: _apply_add_anam() credits ADD_ANAM to meta['anam'] immediately with no death penalty. Death ratio min(cards_played/30,1.0) only applies to the base run-end reward. Bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)' implies ALL in-run anam should be scaled. Fix (pending director q-20260414-001 clarification): (1) In _apply_add_anam(), write ONLY to run['anam_accumulated'] (do NOT update meta during run). (2) In calculate_run_rewards(): add run['anam_accumulated'] to the pool BEFORE applying death ratio. (3) At run end, apply_run_rewards() credits scaled total to meta['anam']. (4) Reset run['anam_accumulated'] = 0 in init_run(). NOTE: Wait for director answer on q-20260414-001 before implementing — if director wants ADD_ANAM to be immediate regardless of death, no change needed."
+      "description": "Director q-20260414-001 APPLIED (Option B: apply death ratio to ALL in-run Anam). Implementation: (1) In _apply_add_anam() (merlin_effect_engine.gd): write ONLY to run[\"anam_accumulated\"] — do NOT update meta[\"anam\"] during run. (2) In calculate_run_rewards() (store_run.gd): add run[\"anam_accumulated\"] to base_reward BEFORE applying death ratio min(cards_played/30, 1.0). (3) In apply_run_rewards(): credit scaled total to meta[\"anam\"]. (4) In init_run(): reset run[\"anam_accumulated\"] = 0. This removes the death-penalty bypass where card ADD_ANAM gains were credited immediately regardless of how early the player died. More punitive, faithful to bible s.5.1 literal interpretation."
     },
     {
       "id": "DIR-S2-MNWXQ41M",
@@ -136,20 +136,6 @@
         "scripts/autoload/sfx_recipes_ambient.gd"
       ],
       "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority — iles_celtes is a late-game biome (maturity score 45+)."
-    },
-    {
-      "id": "T-S3-MEDITATION-VERIFY",
-      "sprint": "S3",
-      "priority": 13,
-      "status": "pending",
-      "type": "test",
-      "title": "Verify S3-MEDITATION-CLEANUP: mg_meditation fully deleted from registry + disk",
-      "agent": "bug_hunter",
-      "files": [
-        "scripts/minigames/minigame_registry.gd",
-        "scripts/minigames/mg_meditation.gd"
-      ],
-      "description": "Run AFTER S3-MEDITATION-CLEANUP (P12) completes. Verify: (1) mg_meditation.gd does NOT exist on disk. (2) 'meditation' key absent from TAG_FIELD_MAP in minigame_registry.gd (was line 66). (3) 'mg_meditation' match case absent from create_minigame() (was line 138). (4) No remaining references to mg_meditation outside /archive/ (grep full repo). (5) GAMES['esprit'] still has exactly [volonte, apaisement, sang_froid]. (6) No parse error from dead preload reference."
     },
     {
       "id": "T-S2-ARC-EVAL-TEST",
