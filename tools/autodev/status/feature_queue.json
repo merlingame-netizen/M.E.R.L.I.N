@@ -1,7 +1,7 @@
 {
   "version": "3.8",
-  "updated": "2026-04-14T04:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 14 pending (11 dev + 3 test).",
+  "updated": "2026-04-14T05:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 13 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -28,21 +28,6 @@
         "scripts/merlin/store_run.gd"
       ],
       "description": "S2-LOOP-INTEGRITY-CHECK CHK-4: _apply_add_anam() credits ADD_ANAM to meta['anam'] immediately with no death penalty. Death ratio min(cards_played/30,1.0) only applies to the base run-end reward. Bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)' implies ALL in-run anam should be scaled. Fix (pending director q-20260414-001 clarification): (1) In _apply_add_anam(), write ONLY to run['anam_accumulated'] (do NOT update meta during run). (2) In calculate_run_rewards(): add run['anam_accumulated'] to the pool BEFORE applying death ratio. (3) At run end, apply_run_rewards() credits scaled total to meta['anam']. (4) Reset run['anam_accumulated'] = 0 in init_run(). NOTE: Wait for director answer on q-20260414-001 before implementing — if director wants ADD_ANAM to be immediate regardless of death, no change needed."
-    },
-    {
-      "id": "S2-ANAM-VERIFY",
-      "sprint": "S2",
-      "priority": 9,
-      "status": "pending",
-      "type": "dev",
-      "title": "Verifier formule Anam cross-run: mort = anam × min(cartes/30, 1.0)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_save_system.gd",
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "description": "Bible s.5.1: Anam est la monnaie cross-run (~10 runs/noeud). A la mort: gain_anam = run.anam_accumulated * min(run.cards_played / 30.0, 1.0). Verifier: (1) run.anam_accumulated est incremente correctement (non zero). (2) La formule de mort utilise min(cartes/30, 1.0) et non un cap fixe. (3) merlin_save_system.gd persiste meta.total_anam correctement. (4) reset run.anam_accumulated a 0 apres mort. Si formule manquante ou incorrecte: implementer selon bible."
     },
     {
       "id": "S3-MEDITATION-CLEANUP",

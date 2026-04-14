@@ -286,8 +286,8 @@ static func get_victory_type(state: Dictionary) -> String:
 
 static func handle_run_end(state: Dictionary, end_check: Dictionary, save_system: MerlinSaveSystem) -> Dictionary:
 	var meta: Dictionary = state.get("meta", {})
-	meta["total_runs"] = int(meta.get("total_runs", 0)) + 1
 	meta["total_cards_played"] = int(meta.get("total_cards_played", 0)) + int(end_check.get("cards_played", 0))
+	meta["fins_vues"] = int(meta.get("fins_vues", 0)) + 1
 
 	var ending: Dictionary = end_check.get("ending", {})
 	var ending_title: String = str(ending.get("title", ""))

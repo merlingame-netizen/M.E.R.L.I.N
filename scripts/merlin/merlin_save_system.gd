@@ -19,6 +19,7 @@ static func _get_default_profile() -> Dictionary:
 	return {
 		"anam": 0,
 		"total_runs": 0,
+		"fins_vues": 0,
 		"faction_rep": {
 			"druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
 			"niamh": 0.0, "ankou": 0.0,

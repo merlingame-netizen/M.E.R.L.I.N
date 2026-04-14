@@ -226,6 +226,20 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T04:00:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "godot_expert",
+      "severity": "WARN",
+      "category": "gameplay",
+      "message": "Anam accumulation during run bypasses death penalty — pending director decision",
+      "details": "ADD_ANAM card effects currently credit meta['anam'] immediately during the run, bypassing the death ratio min(cards/30, 1.0). Bible s.5.1 implies all run anam should be scaled at death. Director question q-20260414-001 is pending. Once answered, BUG-ANAM-DEATH-PENALTY-FIX (P10) should be unblocked. If director chooses option A (immediate gain), the current behavior is correct. If option B or C, _apply_add_anam() must write to run['anam_accumulated'] and NOT meta['anam'] during the run.",
+      "proposed_task": {
+        "title": "Unblock BUG-ANAM-DEATH-PENALTY-FIX after q-20260414-001 answered",
+        "sprint": "S2",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T05:00:00Z"
     }
   ],
   "updated": "2026-04-14T04:00:00Z"

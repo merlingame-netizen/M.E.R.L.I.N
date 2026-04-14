@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T04:00:00Z",
+  "last_updated": "2026-04-14T05:00:00Z",
   "metrics": {
-    "total_cycles_completed": 30,
-    "total_dev_cycles": 15,
+    "total_cycles_completed": 31,
+    "total_dev_cycles": 16,
     "total_test_cycles": 15,
     "bugs_found": 24,
-    "bugs_fixed": 16,
-    "tasks_completed": 49,
-    "tasks_pending": 14,
+    "bugs_fixed": 17,
+    "tasks_completed": 50,
+    "tasks_pending": 13,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -481,6 +481,29 @@
         "workflow",
         "test_reports"
       ]
+    },
+    {
+      "id": "PAT-043",
+      "learned_at": "2026-04-14T05:00:00Z",
+      "source": "S2-ANAM-VERIFY",
+      "pattern": "double total_runs increment: handle_run_end() + apply_run_rewards() both incremented meta['total_runs']. Single source of truth = apply_run_rewards(). Always grep for counter increments across both callers when seeing N+1 bugs.",
+      "severity": "HIGH",
+      "applies_to": [
+        "store_run.gd",
+        "merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-044",
+      "learned_at": "2026-04-14T05:00:00Z",
+      "source": "S2-ANAM-VERIFY",
+      "pattern": "fins_vues is a required integer counter in meta (total run completions). Add it to _get_default_profile() and increment in handle_run_end(). Arc conditions use this field directly (S2-ARC-CONDITION-EVAL).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_save_system.gd",
+        "store_run.gd",
+        "merlin_constants.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -498,7 +521,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 27,
+      "tasks_completed": 28,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
