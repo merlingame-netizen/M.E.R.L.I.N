@@ -22,7 +22,7 @@
       "id": "q-20260412-002",
       "category": "graphics",
       "priority": "MEDIUM",
-      "status": "answered",
+      "status": "applied",
       "question": "Quelle ambiance lumineuse pour la foret de Broceliande ?",
       "context": "Deux presets shader disponibles : ambiance celtique chaude (tons dores, brume ambre) vs mystique froide (tons bleu-vert, brume argentee).",
       "type": "image_compare",
@@ -34,13 +34,16 @@
         "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_warm.png",
         "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_cold.png"
       ],
-      "created_at": "2026-04-12T16:00:00Z"
+      "created_at": "2026-04-12T16:00:00Z",
+      "applied_at": "2026-04-14T18:48:30Z",
+      "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
+      "apply_note": "DIR-S2-MNWXQ41M already in queue: seasonal/time-of-day lighting covers this answer"
     },
     {
       "id": "q-20260412-003",
       "category": "design",
       "priority": "MEDIUM",
-      "status": "answered",
+      "status": "applied",
       "question": "Quel style de police pour les cartes narratives ?",
       "context": "Les cartes affichent le texte narratif genere par le LLM. Choix entre une police manuscrite celtique (plus immersive, moins lisible) et une police sans-serif moderne (plus lisible, moins thematique).",
       "type": "multiple_choice",
@@ -50,19 +53,25 @@
         "Hybride (titre celtique + corps sans-serif)"
       ],
       "screenshot_urls": null,
-      "created_at": "2026-04-12T16:00:00Z"
+      "created_at": "2026-04-12T16:00:00Z",
+      "applied_at": "2026-04-14T18:48:30Z",
+      "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
+      "apply_note": "S3-TYPOGRAPHY task in queue: hybrid font (celtic title + sans-serif body)"
     },
     {
       "id": "q-20260412-004",
       "category": "ux",
       "priority": "LOW",
-      "status": "answered",
+      "status": "applied",
       "question": "Quel est votre ressenti global sur la direction artistique du jeu ?",
       "context": "Question ouverte pour recueillir votre vision d'ensemble. Pensez aux couleurs, a l'ambiance, au style graphique, aux animations.",
       "type": "text",
       "options": null,
       "screenshot_urls": null,
-      "created_at": "2026-04-12T16:00:00Z"
+      "created_at": "2026-04-12T16:00:00Z",
+      "applied_at": "2026-04-14T18:48:30Z",
+      "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
+      "apply_note": "DIR-S2-MNWXQ41M covers N64/PS1 aesthetic with volumetric effects"
     },
     {
       "id": "q-20260412-005",

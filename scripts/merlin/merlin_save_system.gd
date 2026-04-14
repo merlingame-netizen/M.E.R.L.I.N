@@ -294,6 +294,7 @@ static func _validate(meta: Dictionary) -> bool:
 static func _validate_run_state(run_state: Dictionary) -> bool:
 	var required_keys: Array = [
 		"biome", "card_index", "life_essence", "anam_accumulated",
+		"life_max", "faction_rep_delta", "cards_played",
 	]
 	for key in required_keys:
 		if not run_state.has(key):
@@ -305,6 +306,24 @@ static func _validate_run_state(run_state: Dictionary) -> bool:
 	if typeof(run_state.get("life_essence")) != TYPE_INT and typeof(run_state.get("life_essence")) != TYPE_FLOAT:
 		push_warning("[MerlinSave] run_state life_essence must be numeric")
 		return false
+	var life_max: int = int(run_state.get("life_max", 0))
+	if life_max < 1:
+		push_warning("[MerlinSave] run_state life_max must be >= 1, got: %d" % life_max)
+		return false
+	if typeof(run_state.get("cards_played")) != TYPE_INT and typeof(run_state.get("cards_played")) != TYPE_FLOAT:
+		push_warning("[MerlinSave] run_state cards_played must be numeric")
+		return false
+	if int(run_state.get("cards_played", -1)) < 0:
+		push_warning("[MerlinSave] run_state cards_played must be >= 0")
+		return false
+	var rep_delta: Dictionary = run_state.get("faction_rep_delta", {})
+	if not (rep_delta is Dictionary):
+		push_warning("[MerlinSave] run_state faction_rep_delta must be Dictionary")
+		return false
+	for faction: String in MerlinConstants.FACTIONS:
+		if not rep_delta.has(faction):
+			push_warning("[MerlinSave] run_state faction_rep_delta missing faction: %s" % faction)
+			return false
 	return true
 
 

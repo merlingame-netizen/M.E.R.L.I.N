@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T18:00:00Z",
+  "last_updated": "2026-04-14T18:48:30Z",
   "metrics": {
-    "total_cycles_completed": 50,
-    "total_dev_cycles": 23,
+    "total_cycles_completed": 51,
+    "total_dev_cycles": 24,
     "total_test_cycles": 20,
-    "bugs_found": 40,
-    "bugs_fixed": 29,
-    "tasks_completed": 65,
-    "tasks_pending": 54,
+    "bugs_found": 44,
+    "bugs_fixed": 30,
+    "tasks_completed": 66,
+    "tasks_pending": 58,
     "current_sprint": "S2",
-    "specialist_cycles_run": 7,
-    "last_specialist": 1
+    "specialist_cycles_run": 8,
+    "last_specialist": 2
   },
   "patterns_learned": [
     {
@@ -812,6 +812,28 @@
       "applies_to": [
         "scripts/autoload/pixel_transition_config.gd"
       ]
+    },
+    {
+      "id": "PAT-077",
+      "learned_at": "2026-04-14T18:48:30Z",
+      "source": "SPEC-2-GAME_DESIGN_COMPLIANCE",
+      "pattern": "FACTION_THRESHOLD_ENDING=80 is defined in constants but NEVER used in check_run_end() — faction endings (bible s.3.8) are not triggered. Critical gameplay gap.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-078",
+      "learned_at": "2026-04-14T18:48:30Z",
+      "source": "SPEC-2-GAME_DESIGN_COMPLIANCE",
+      "pattern": "store_oghams.gd:78 tick_cooldowns() decrements ALL oghams in cooldown, not just active one. Bible s.2.2 requires only active ogham's cooldown decrements. Requires active_ogham param.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/store_oghams.gd",
+        "scripts/merlin/store_run.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -829,7 +851,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 31,
+      "tasks_completed": 32,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -907,6 +929,12 @@
     "visual_consistency_auditor": {
       "tasks_completed": 1,
       "bugs_introduced": 0
+    },
+    "game_design_compliance_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "audit_checks_run": 24,
+      "violations_found": 4
     }
   },
   "llm_quality": {

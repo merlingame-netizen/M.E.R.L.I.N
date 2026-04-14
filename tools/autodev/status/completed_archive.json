@@ -1,98 +1,17 @@
-{
-  "version": "1.0",
-  "archived_tasks": [
-    {
-      "id": "SAVE-GET-SAVE-DATA-IMPL",
-      "sprint": "S2",
-      "priority": 6,
-      "type": "dev",
-      "status": "completed",
-      "title": "Implement get_save_data() in MerlinStore",
-      "description": "merlin_game_controller.gd:285 calls store.get_save_data() but the method doesn't exist in MerlinStore. save_data stays as {} fallback, so biome_runs/fins_vues/oghams_owned are always default. Need to implement func get_save_data() -> Dictionary in merlin_store.gd returning save_system.load_profile().",
-      "files": [
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "agent": "godot_expert",
-      "completed_at": "2026-04-14T13:00:00Z",
-      "notes": "Implemented: func get_save_data() -> Dictionary returns save_system.load_profile(). Director decision: load_profile() entier (q-20260414-003). Placed in merlin_store.gd:649 convenience getters section."
-    },
-    {
-      "id": "T-S2-ARC-CONDITION-REGRESS",
-      "sprint": "S2",
-      "priority": 4,
-      "type": "test",
-      "status": "completed",
-      "title": "Regression test: arc_condition_type evaluation correctness",
-      "description": "After S2-ARC-CONDITION-EVAL fix: CHK-1: runs_in_biome arc locked run 0, unlocked run 3+. CHK-2: fins_vues arc locked=0 unlocked=5. CHK-3: oghams_owned locked=1 unlocked=2. CHK-4: faction_rep still correct. CHK-5: biome_runs_map key correct. CHK-6: context has fins_vues/oghams_owned keys.",
-      "files": [
-        "scripts/merlin/llm_adapter_map_prompt.gd",
-        "scripts/merlin/merlin_skeleton_generator.gd"
-      ],
-      "agent": "bug_hunter",
-      "completed_at": "2026-04-14T13:00:00Z",
-      "notes": "FAIL_CRITICAL 3/6: CHK-1/2/3 failed due to missing get_save_data(). get_save_data() implemented this cycle in merlin_store.gd:649. CHK-4/5/6 PASS. Root cause fixed. Re-test needed after SAVE-GET-SAVE-DATA-IMPL applied."
-    },
-    {
-      "id": "E2E-PARCHMENT-PRERUN-PIXEL-TRANSITION",
-      "sprint": "S3",
-      "priority": 99,
-      "status": "archived",
-      "type": "verified",
-      "title": "VERIFIED: parchment_pre_run.gd already uses PixelTransition guard (false positive)",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/ui/parchment_pre_run.gd"
-      ],
-      "description": "SPEC-14 FALSE POSITIVE: parchment_pre_run.gd:213-217 already has correct pattern: var pt=get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(SCENE_FOREST) else: get_tree().change_scene_to_file(SCENE_FOREST). No action needed. Verified PASS.",
-      "archived_at": "2026-04-14T16:00:00Z",
-      "notes": "False positive — parchment_pre_run.gd already uses PixelTransition guard. Archived by META-EVOLUTION cycle."
-    },
-    {
-      "id": "META-DASHBOARD-REBUILD",
-      "sprint": "META",
-      "priority": 50,
-      "type": "meta",
-      "status": "completed",
-      "title": "Rebuild live_dashboard.md with real specialist rotation stats",
-      "agent": "meta_evolution_auditor",
-      "files": [
-        "tools/autodev/status/live_dashboard.md"
-      ],
-      "description": "Replace stale AUTODEV v3 worker dashboard with current specialist rotation data: cycle counts, pending tasks by type/sprint, top priority tasks, last 3 cycles, metrics. IMPLEMENTED this cycle.",
-      "completed_at": "2026-04-14T16:00:00Z",
-      "notes": "IMPLEMENTED: Rebuilt live_dashboard.md with real specialist rotation stats (cycle counts, queue, top5 tasks, last3 cycles, specialist coverage grid). Also fixed studio_insights.json duplicate IDs (25 entries → 25 unique sequential IDs). Archived verified false-positive E2E-PARCHMENT-PRERUN-PIXEL-TRANSITION."
-    },
-    {
-      "id": "T-MG-FIELD-COVERAGE-TEST",
-      "sprint": "S2",
-      "priority": 7,
-      "type": "test",
-      "status": "completed",
-      "title": "Test: all 8 lexical fields dispatch correct minigame scripts",
-      "description": "Verify that for each of the 8 fields (chance,bluff,observation,logique,finesse,vigueur,esprit,perception): (1) detect_field() returns the correct field from representative text, (2) create_minigame(field) returns a non-null MiniGameBase subclass, (3) the returned script class matches expected field, (4) neutre field falls back to esprit correctly after MG-FIX-NEUTRE-FALLBACK. Reference: minigame_registry.gd GAMES dict.",
-      "files": [
-        "scripts/minigames/minigame_registry.gd",
-        "scripts/test/test_minigame_system.gd"
-      ],
-      "agent": "bug_hunter",
-      "completed_at": "2026-04-14T17:00:00Z",
-      "notes": "PARTIAL_PASS: 4/6 checks pass. CHK-4 neutre→esprit PASS. CHK-5 FAIL: select_minigame() returned \"apaisement\" (game name) not field name. CHK-6 FAIL: pick_minigame_for_field() same issue. FIXED: both functions now return MerlinConstants.ACTION_VERB_FALLBACK_FIELD. test_effect_engine.gd:1424 expectation updated. BUG-MG-APAISEMENT-FALLBACK resolved."
-    },
-    {
-      "id": "3D-BUSH-ASSET-FIX",
-      "sprint": "S2",
-      "priority": 6,
-      "type": "dev",
-      "status": "completed",
-      "title": "Fix BUSH_MODELS: load bushes/ category instead of rocks/",
-      "description": "broceliande_forest_3d.gd:68-72 BUSH_MODELS hardcoded to rocks/ category. Bush GLBs exist at Assets/bk_assets/bushes/foret_broceliande/ (6 variants) but are never loaded. Change BUSH_MODELS paths from rocks/ to bushes/ category: bush_bk_foret_broceliande_0000-0005.glb.",
-      "files": [
-        "scripts/broceliande_3d/broceliande_forest_3d.gd"
-      ],
-      "agent": "godot_expert",
-      "completed_at": "2026-04-14T18:00:00Z",
-      "notes": "BUSH_MODELS fixed: broceliande_forest_3d.gd:68-74. Changed from rocks/ (0000-0003) to bushes/ (0000-0005) — all 6 bush variants now loaded. Assets confirmed at Assets/bk_assets/bushes/foret_broceliande/"
-    }
-  ],
-  "last_updated": "2026-04-14T18:00:00Z"
-}
+[
+  {
+    "id": "SAVE-RUNSTATE-VALIDATE-EXTEND",
+    "sprint": "S3",
+    "priority": 6,
+    "status": "completed",
+    "type": "dev",
+    "title": "Extend _validate_run_state() with life_max + faction_rep_delta type checks",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SPECIALIST-9 CHK-2: _validate_run_state() currently only checks biome (String), card_index (numeric), life_essence (numeric), anam_accumulated (now added P23). Missing: (1) life_max should be numeric >= 1. (2) faction_rep_delta should be Dictionary with all 5 faction keys. (3) cards_played should be numeric >= 0. Add typeof checks for life_max + cards_played. Add dict-has-key checks for faction_rep_delta (same pattern as _validate() faction loop). Keep _validate_run_state() < 50 lines.",
+    "completed_at": "2026-04-14T18:48:00Z",
+    "notes": "SPEC-2: Extended _validate_run_state() — added life_max (numeric >=1), cards_played (numeric >=0), faction_rep_delta (dict with all 5 factions). Function grows from 15 to 34 lines (< 50 limit). Validates SAVE-RUNSTATE-VALIDATE-EXTEND task description exactly."
+  }
+]
