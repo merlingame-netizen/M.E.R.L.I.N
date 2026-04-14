@@ -1,0 +1,85 @@
+{
+  "specialist": 15,
+  "role": "META_EVOLUTION_AUDITOR",
+  "date": "2026-04-14",
+  "cycle_id": "CYCLE-2026-04-14-spec15-meta-evolution",
+  "cycle_type": "dev",
+  "events_line_count": 47,
+  "specialist_modulo": "47 % 16 = 15",
+  "checks": {
+    "total": 7,
+    "pass": 2,
+    "fail_high": 3,
+    "fail_medium": 2
+  },
+  "findings": [
+    {
+      "id": "META-FIND-01",
+      "severity": "HIGH",
+      "area": "COMMAND_CENTER",
+      "description": "live_dashboard.md is STALE \u2014 shows old AUTODEV v3 worker system (Cycle 1, 5 errors). No current specialist rotation data. Misleads director.",
+      "evidence": "dashboard shows 'Cycle 1', '5 erreurs', idle state",
+      "fix": "Rebuild with real stats from events.jsonl + feature_queue.json"
+    },
+    {
+      "id": "META-FIND-02",
+      "severity": "HIGH",
+      "area": "STUDIO_INSIGHTS",
+      "description": "studio_insights.json has severe ID duplication: insight-20260414-001 appears 9 times, -20260413-001 appears 4 times, 25 entries but only ~13 unique.",
+      "evidence": "Counter({'insight-20260414-001': 9, 'insight-20260413-001': 4, ...})",
+      "fix": "Deduplicate and assign sequential globally-unique IDs"
+    },
+    {
+      "id": "META-FIND-03",
+      "severity": "HIGH",
+      "area": "COMPLETED_ARCHIVE",
+      "description": "completed_archive.json has only 2 tasks, but studio_learnings.json reports 62 tasks_completed. 60 completed tasks are NOT being archived \u2014 housekeeping not consistently applied.",
+      "evidence": "completed_archive.tasks length=2 vs studio_learnings.metrics.tasks_completed=62",
+      "fix": "Reconstruct archive from events.jsonl data, enforce housekeeping each cycle"
+    },
+    {
+      "id": "META-FIND-04",
+      "severity": "MEDIUM",
+      "area": "STUDIO_LEARNINGS_METRICS",
+      "description": "total_cycles_completed=40 but events.jsonl has 47 entries. 7-cycle metric drift. Agent performance tracking missing 5 specialist agents (perf_code_quality, integration_e2e, faction_rep, minigame_system, 3d_scene_asset).",
+      "evidence": "events count=47, metrics.total_cycles_completed=40",
+      "fix": "Sync cycle count to 47, add missing agents to performance tracking"
+    },
+    {
+      "id": "META-FIND-05",
+      "severity": "MEDIUM",
+      "area": "SPECIALIST_COVERAGE",
+      "description": "Only specialists 9-14 have run (6 of 16). Specialists 0-8 and 15 never exercised. Full audit rotation coverage not achieved until today.",
+      "evidence": "specialists_run: {9:2, 10:2, 11:1, 12:1, 13:1, 14:1}",
+      "fix": "Normal \u2014 coverage increases as events accumulate. Document baseline."
+    },
+    {
+      "id": "META-FIND-06",
+      "severity": "MEDIUM",
+      "area": "QUEUE_HYGIENE",
+      "description": "1 'verified' false-positive task (E2E-PARCHMENT-PRERUN-PIXEL-TRANSITION, P99) stuck in pending queue with type='verified'. Should be archived.",
+      "evidence": "task type='verified', priority=99, status=pending",
+      "fix": "Archive to completed_archive.json, remove from queue"
+    },
+    {
+      "id": "META-FIND-07",
+      "severity": "LOW",
+      "area": "SPECIALIST_GAPS",
+      "description": "No i18n/Localization Specialist in rotation \u2014 cycle_instructions.md mandates I18nRegistry usage but no specialist audits for hardcoded strings. No Balance/Economy specialist for Anam/MOS verification.",
+      "evidence": "Roster has 16 specialists, none cover i18n or economy auditing",
+      "fix": "Propose adding i18n to roster (specialist #16 or replace underused slot)"
+    }
+  ],
+  "tasks_generated": [
+    "META-DASHBOARD-REBUILD",
+    "META-INSIGHTS-DEDUP",
+    "META-ARCHIVE-RECOVER",
+    "META-LEARNINGS-SYNC",
+    "META-QUEUE-HYGIENE",
+    "META-i18n-SPECIALIST",
+    "META-BALANCE-SPECIALIST"
+  ],
+  "task_implemented": "META-DASHBOARD-REBUILD",
+  "implementation_scope": "Rebuild live_dashboard.md with real stats. Fix studio_insights.json deduplication. Sync studio_learnings.json metrics.",
+  "timestamp": "2026-04-14T16:00:00Z"
+}
