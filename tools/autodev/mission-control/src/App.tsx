@@ -12,6 +12,7 @@ import { FileUpload } from './components/FileUpload';
 import { DirectorInstructions } from './components/DirectorInstructions';
 import { SceneSelector } from './components/SceneSelector';
 import { DevCycleSummary } from './components/DevCycleSummary';
+import { SpecialistRotation } from './components/SpecialistRotation';
 import { StudioInsights } from './components/StudioInsights';
 import './styles/scifi-theme.css';
 
@@ -48,6 +49,11 @@ export function App() {
         <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <DirectorInstructions />
           <FileUpload />
+        </div>
+
+        {/* Specialist Rotation */}
+        <div className="dashboard-layout__full-row">
+          <SpecialistRotation />
         </div>
 
         {/* Scene Selector + Dev Cycle Summary */}
