@@ -6,6 +6,8 @@ import { ActiveMissions } from './components/ActiveMissions';
 import { AlertFeed } from './components/AlertFeed';
 import { MetricsPanel } from './components/MetricsPanel';
 import { FeatureQueue } from './components/FeatureQueue';
+import { CompletedTasks } from './components/CompletedTasks';
+import { ExecutionTimeline } from './components/ExecutionTimeline';
 import { GamePreview } from './components/GamePreview';
 import { HumanFeedback } from './components/HumanFeedback';
 import { FileUpload } from './components/FileUpload';
@@ -26,92 +28,82 @@ export function App() {
       <div className="crt-scanlines" aria-hidden="true" />
 
       <div className="dashboard-layout">
-        {/* Header */}
+        {/* 1. Header */}
         <div className="dashboard-layout__full-row">
           <CommandHeader />
         </div>
 
-        {/* Metrics — high-level status at a glance */}
+        {/* 2. Metrics — KPIs at a glance + next cycle countdown */}
         <div className="dashboard-layout__full-row">
           <MetricsPanel />
         </div>
 
-        {/* Pipeline state — where are we in the dev cycle? */}
+        {/* 3. Pipeline state — where are we in the dev cycle? */}
         <div className="dashboard-layout__full-row">
           <StateTimeline />
         </div>
 
-        {/* === STATUS ZONE: What's planned / active / done === */}
+        {/* 4. Execution Schedule — WHEN each task will be processed */}
+        <div className="dashboard-layout__full-row">
+          <ExecutionTimeline />
+        </div>
 
-        {/* Task Board (Kanban) — THE answer to "what's happening" */}
+        {/* 5. Task Board (Kanban) — admin CRUD on tasks */}
         <div className="dashboard-layout__full-row">
           <FeatureQueue />
         </div>
 
-        {/* Velocity + Dev Cycle — recent throughput */}
+        {/* 6. Completed Tasks — detailed history */}
+        <div className="dashboard-layout__full-row">
+          <CompletedTasks />
+        </div>
+
+        {/* 7. Velocity + Dev Cycle — throughput metrics */}
         <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <VelocityChart />
           <DevCycleSummary />
         </div>
 
-        {/* Recent commits — what was shipped */}
-        <div className="dashboard-layout__full-row">
-          <ActiveMissions />
-        </div>
-
-        {/* === DIRECTOR ZONE: Your inbox + controls === */}
-
-        {/* Director's Inbox — Human Feedback */}
+        {/* 8. Director's Inbox — Human Feedback */}
         <div className="dashboard-layout__full-row">
           <HumanFeedback />
         </div>
 
-        {/* Director Tools: Instructions + Asset Upload */}
+        {/* 9. Director Tools: Queue Task + Asset Upload */}
         <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <DirectorInstructions />
           <FileUpload />
         </div>
 
-        {/* === SYSTEM ZONE: Specialists, agents, logs === */}
-
-        {/* Specialist Rotation */}
+        {/* 10. Specialist Rotation */}
         <div className="dashboard-layout__full-row">
           <SpecialistRotation />
         </div>
 
-        {/* Game Preview — full width, 16:9 aspect */}
+        {/* 11. Recent git commits */}
+        <div className="dashboard-layout__full-row">
+          <ActiveMissions />
+        </div>
+
+        {/* 12. Game Preview */}
         <div className="dashboard-layout__full-row dashboard-layout__game-preview">
           <GamePreview />
         </div>
 
-        {/* Scene Selector */}
+        {/* 13. Scene Selector */}
         <div className="dashboard-layout__full-row">
           <SceneSelector />
         </div>
 
-        {/* Studio Insights */}
+        {/* 14. Studio Insights */}
         <div className="dashboard-layout__full-row">
           <StudioInsights />
         </div>
 
-        {/* 3-column area: stacks on mobile, splits on tablet/desktop */}
-        <div className="dashboard-layout__columns">
-          {/* Left column: Agent Fleet */}
-          <div className="dashboard-layout__col dashboard-layout__col--left">
-            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
-              <AgentFleet />
-            </div>
-          </div>
-
-          {/* Center column: System Log */}
-          <div className="dashboard-layout__col dashboard-layout__col--center">
-            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
-              <AlertFeed />
-            </div>
-          </div>
-
-          {/* Right column: empty for balance — or future panel */}
-          <div className="dashboard-layout__col dashboard-layout__col--right" />
+        {/* 15. System details: Agents + Logs */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <AgentFleet />
+          <AlertFeed />
         </div>
       </div>
     </div>

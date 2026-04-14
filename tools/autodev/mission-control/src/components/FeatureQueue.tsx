@@ -1,6 +1,23 @@
 import { useState } from 'react';
 import { useMissionStore } from '../store/mission-store';
 
+const ADMIN_API = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace('/status', '/task-admin')
+  : '/api/task-admin';
+
+async function taskAction(action: string, task_id: string, value?: number | string): Promise<boolean> {
+  try {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, task_id, value }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 function getTypeLabel(task: { id: string; type?: string }): string {
   if (task.type) return task.type.toUpperCase();
   if (task.id.startsWith('TEST-') || task.id.includes('-TEST') || task.id.includes('-EDGE') || task.id.includes('-LLM-')) return 'TEST';
@@ -339,6 +356,58 @@ export function FeatureQueue() {
                             <span style={{ color: 'var(--green)' }}>{task.agent}</span>
                           </div>
                         )}
+
+                        {/* Admin actions */}
+                        <div style={{
+                          marginTop: '6px',
+                          paddingTop: '6px',
+                          borderTop: '1px solid rgba(255,255,255,0.06)',
+                          display: 'flex',
+                          gap: '4px',
+                          flexWrap: 'wrap',
+                        }}>
+                          <AdminButton
+                            label="P UP"
+                            color="var(--amber)"
+                            onClick={() => taskAction('update_priority', task.id, Math.max(1, task.priority - 2))}
+                          />
+                          <AdminButton
+                            label="P DOWN"
+                            color="var(--text-dim)"
+                            onClick={() => taskAction('update_priority', task.id, task.priority + 2)}
+                          />
+                          {task.status === 'pending' && (
+                            <AdminButton
+                              label="START"
+                              color="#88ccff"
+                              onClick={() => taskAction('update_status', task.id, 'in_progress')}
+                            />
+                          )}
+                          {task.status === 'pending' && (
+                            <AdminButton
+                              label="BLOCK"
+                              color="#ff6b6b"
+                              onClick={() => taskAction('update_status', task.id, 'blocked')}
+                            />
+                          )}
+                          {task.status === 'blocked' && (
+                            <AdminButton
+                              label="UNBLOCK"
+                              color="var(--green)"
+                              onClick={() => taskAction('update_status', task.id, 'pending')}
+                            />
+                          )}
+                          <AdminButton
+                            label="DELETE"
+                            color="#ff4444"
+                            onClick={async () => {
+                              if (confirm(`Delete task ${task.id}?`)) {
+                                return taskAction('delete', task.id);
+                              }
+                              return false;
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -355,5 +424,37 @@ export function FeatureQueue() {
         )}
       </div>
     </div>
+  );
+}
+
+function AdminButton({ label, color, onClick }: { label: string; color: string; onClick: () => Promise<boolean> }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+
+  async function handle() {
+    setState('loading');
+    const ok = await onClick();
+    setState(!ok ? 'error' : 'done');
+    setTimeout(() => setState('idle'), 2000);
+  }
+
+  return (
+    <button
+      onClick={handle}
+      disabled={state === 'loading'}
+      style={{
+        padding: '2px 6px',
+        fontSize: '8px',
+        fontFamily: 'var(--font-mono)',
+        fontWeight: 700,
+        letterSpacing: '0.5px',
+        background: state === 'done' ? 'rgba(0,255,136,0.15)' : state === 'error' ? 'rgba(255,60,60,0.15)' : 'transparent',
+        color: state === 'done' ? 'var(--green)' : state === 'error' ? '#ff4444' : color,
+        border: `1px solid ${state === 'done' ? 'rgba(0,255,136,0.3)' : state === 'error' ? 'rgba(255,60,60,0.3)' : `${color}44`}`,
+        borderRadius: '2px',
+        cursor: state === 'loading' ? 'wait' : 'pointer',
+      }}
+    >
+      {state === 'loading' ? '...' : state === 'done' ? 'OK' : state === 'error' ? 'ERR' : label}
+    </button>
   );
 }
