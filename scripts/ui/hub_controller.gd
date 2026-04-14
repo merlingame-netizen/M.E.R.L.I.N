@@ -326,7 +326,7 @@ func get_journal() -> Dictionary:
 
 func record_run_end(run_summary: Dictionary) -> void:
 	var run_history: Array = _profile.get("run_history", [])
-	# Keep last 20 runs
+	# Keep last 50 runs (director decision 2026-04-14)
 	run_history.append({
 		"biome": str(run_summary.get("biome", "")),
 		"cards_played": int(run_summary.get("cards_played", 0)),
@@ -335,8 +335,8 @@ func record_run_end(run_summary: Dictionary) -> void:
 		"dominant_faction": str(run_summary.get("dominant_faction", "")),
 		"whisper_seen": str(run_summary.get("whisper_seen", "")),
 	})
-	if run_history.size() > 20:
-		run_history = run_history.slice(run_history.size() - 20)
+	if run_history.size() > 50:
+		run_history = run_history.slice(run_history.size() - 50)
 	_profile["run_history"] = run_history
 	if _save:
 		_save.save_profile(_profile)

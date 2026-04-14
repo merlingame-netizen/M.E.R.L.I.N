@@ -177,7 +177,7 @@
     {
       "id": "SAVE-RUNSTATE-VALIDATE-EXTEND",
       "sprint": "S3",
-      "priority": 30,
+      "priority": 6,
       "status": "pending",
       "type": "dev",
       "title": "Extend _validate_run_state() with life_max + faction_rep_delta type checks",
@@ -279,33 +279,6 @@
       "description": "store_run.gd:202 — check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
     },
     {
-      "id": "SAVE-GET-SAVE-DATA-IMPL",
-      "sprint": "S2",
-      "priority": 6,
-      "type": "dev",
-      "status": "pending",
-      "title": "Implement get_save_data() in MerlinStore",
-      "description": "merlin_game_controller.gd:285 calls store.get_save_data() but the method doesn't exist in MerlinStore. save_data stays as {} fallback, so biome_runs/fins_vues/oghams_owned are always default. Need to implement func get_save_data() -> Dictionary in merlin_store.gd returning save_system.load_profile().",
-      "files": [
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "agent": "godot_expert"
-    },
-    {
-      "id": "T-S2-ARC-CONDITION-REGRESS",
-      "sprint": "S2",
-      "priority": 4,
-      "type": "test",
-      "status": "pending",
-      "title": "Regression test: arc_condition_type evaluation correctness",
-      "description": "After S2-ARC-CONDITION-EVAL fix: CHK-1: runs_in_biome arc locked run 0, unlocked run 3+. CHK-2: fins_vues arc locked=0 unlocked=5. CHK-3: oghams_owned locked=1 unlocked=2. CHK-4: faction_rep still correct. CHK-5: biome_runs_map key correct. CHK-6: context has fins_vues/oghams_owned keys.",
-      "files": [
-        "scripts/merlin/llm_adapter_map_prompt.gd",
-        "scripts/merlin/merlin_skeleton_generator.gd"
-      ],
-      "agent": "bug_hunter"
-    },
-    {
       "id": "FACTION-PERIOD-BONUS-IMPL",
       "sprint": "S3",
       "priority": 18,
@@ -346,6 +319,105 @@
         "scripts/merlin/merlin_reputation_system.gd"
       ],
       "agent": "game_playtester"
+    },
+    {
+      "id": "MG-FIX-FIELD-MINIGAMES-NAMES",
+      "sprint": "S2",
+      "priority": 3,
+      "type": "dev",
+      "status": "pending",
+      "title": "Fix FIELD_MINIGAMES constants: align with actual minigame registry names",
+      "description": "merlin_constants.gd:329 FIELD_MINIGAMES uses old names (herboristerie, fouille, runes) that do not match GAMES keys in minigame_registry.gd. pick_minigame_for_field() (effect_engine:760) and select_minigame() (card_system:228) return invalid names. Update FIELD_MINIGAMES to use field IDs (chance/bluff/etc.) as values pointing to the actual minigame list, OR update pick_minigame_for_field() to delegate to MiniGameRegistry.create_minigame(field). Simplest fix: make FIELD_MINIGAMES values match GAMES keys by adding mg_ prefix and correct names.",
+      "files": [
+        "scripts/merlin/merlin_constants.gd",
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/merlin_card_system.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "MG-FIX-TIMEOUT-SCORE",
+      "sprint": "S2",
+      "priority": 5,
+      "type": "dev",
+      "status": "pending",
+      "title": "Fix minigame timeout fallback score: 50 → 51 (reussite_partielle, not echec)",
+      "description": "game_controller_minigame.gd:88 returns score=50 on 30s timeout. MULTIPLIER_TABLE: 50 maps to range 21-50 factor=-1.0 (FULL NEGATIVE EFFECTS). A rendering/network timeout should not be penalized as hard as deliberate failure. Change fallback score from 50 to 51 (reussite_partielle, factor=0.5). Also check line 55 (minigame creation fail fallback).",
+      "files": [
+        "scripts/ui/game_controller_minigame.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "MG-FIX-DIFFICULTY-SCALING",
+      "sprint": "S3",
+      "priority": 21,
+      "type": "dev",
+      "status": "pending",
+      "title": "Implement difficulty scaling per narrative context (bible s.6.3)",
+      "description": "game_controller_minigame.gd:47 hardcodes base_diff=5 for all cards. Bible s.6.3: difficulty depends on card type (event=+1, Merlin Direct=no minigame). Add difficulty scaling: base by biome MOS score, +1 per card tier, +1 for event cards, +3 for critical (already done). Read card.difficulty or compute from biome maturity score.",
+      "files": [
+        "scripts/ui/game_controller_minigame.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "MG-FIX-NEUTRE-FALLBACK",
+      "sprint": "S2",
+      "priority": 8,
+      "type": "dev",
+      "status": "pending",
+      "title": "Fix neutre field: add GAMES[neutre] to registry OR map neutre → esprit",
+      "description": "merlin_constants.gd:338 FIELD_MINIGAMES has neutre:[apaisement,volonte]. MiniGameRegistry has no GAMES[neutre] → falls back to chance field. If a card has field=neutre, wrong minigame type is played. Fix: add GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:21, and add esprit to MerlinMiniGameSystem.VALID_FIELDS fallback for neutre. Also add detect_field() case for neutre → esprit.",
+      "files": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/merlin/merlin_minigame_system.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "MG-FIX-SFX-DOUBLE-TRIGGER",
+      "sprint": "S3",
+      "priority": 22,
+      "type": "dev",
+      "status": "pending",
+      "title": "Deduplicate minigame success SFX: base class vs controller both play minigame_success",
+      "description": "minigame_base.gd:87 calls SFXManager.play(minigame_success) on success. game_controller_minigame.gd:100 also calls SFXManager.play(minigame_success). Result: success SFX plays twice. Fix: remove the SFX from minigame_base._complete() (base should not know about global SFX) and keep only in game_controller_minigame.gd which has full outcome context.",
+      "files": [
+        "scripts/minigames/minigame_base.gd",
+        "scripts/ui/game_controller_minigame.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "T-MG-FIELD-COVERAGE-TEST",
+      "sprint": "S2",
+      "priority": 7,
+      "type": "test",
+      "status": "pending",
+      "title": "Test: all 8 lexical fields dispatch correct minigame scripts",
+      "description": "Verify that for each of the 8 fields (chance,bluff,observation,logique,finesse,vigueur,esprit,perception): (1) detect_field() returns the correct field from representative text, (2) create_minigame(field) returns a non-null MiniGameBase subclass, (3) the returned script class matches expected field, (4) neutre field falls back to esprit correctly after MG-FIX-NEUTRE-FALLBACK. Reference: minigame_registry.gd GAMES dict.",
+      "files": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/test/test_minigame_system.gd"
+      ],
+      "agent": "bug_hunter"
+    },
+    {
+      "id": "T-S2-ARC-CONDITION-REGRESS-V2",
+      "sprint": "S2",
+      "priority": 4,
+      "type": "test",
+      "status": "pending",
+      "title": "Regression test v2: arc_condition_type with get_save_data() implemented",
+      "description": "Re-run T-S2-ARC-CONDITION-REGRESS now that get_save_data() is implemented. CHK-1: biome with 3 runs in biome_runs → arc_condition_type=runs_in_biome should unlock. CHK-2: profile with fins_vues=5 → arc_condition fins_vues<=5 unlocks. CHK-3: profile with oghams.owned=[a,b] size=2 → arc_condition oghams_owned<=2 unlocks. All 6 checks should PASS.",
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ],
+      "agent": "bug_hunter"
     }
   ]
 }

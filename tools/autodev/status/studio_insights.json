@@ -308,6 +308,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T10:48:35Z"
+    },
+    {
+      "id": "insight-20260414-012",
+      "agent": "minigame_system_auditor",
+      "severity": "ACTION",
+      "category": "gameplay",
+      "message": "Minigame difficulty is hardcoded at 5 for all cards — no progression curve",
+      "details": "game_controller_minigame.gd:47 always uses base_diff=5. Bible s.6.3 specifies difficulty scales with card type and biome maturity. Players experience identical challenge on card 1 and card 40 of a run. The MOS tracks engagement but can't respond with increasing difficulty. Adding a simple card_count→difficulty lookup (5+floor(cards_played/10), capped at 10) would improve late-game tension.",
+      "proposed_task": {
+        "title": "Difficulty curve: scale base_diff with cards_played and biome tier",
+        "sprint": "S3",
+        "type": "dev",
+        "id": "MG-FIX-DIFFICULTY-SCALING"
+      },
+      "timestamp": "2026-04-14T13:00:00Z"
     }
   ]
 }

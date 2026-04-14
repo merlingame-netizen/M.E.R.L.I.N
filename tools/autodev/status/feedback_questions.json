@@ -177,7 +177,7 @@
       "id": "q-20260414-002",
       "category": "gamedesign",
       "priority": "LOW",
-      "status": "answered",
+      "status": "applied",
       "question": "run_history dans le profil sauvegarde stocke tous les runs completés sans limite. Après 100+ parties, ce tableau peut devenir volumineux. Faut-il le plafonner ?",
       "context": "merlin_save_system._get_default_profile() initialise run_history:[] (ligne 44). Aucun code ne le tronque actuellement. Chaque entrée run_history contient probablement biome, résultat, durée, anam_earned, fins_vues au moment du run. À raison d'une partie de 15-20 min, un joueur assidu pourrait avoir 200+ runs. Impact: taille fichier save croissante, load_profile() plus lent. Option A: garder illimité (données analytiques complètes). Option B: garder les 20 derniers runs. Option C: garder seulement les statistiques agrégées (pas les runs individuels).",
       "type": "multiple_choice",
@@ -188,13 +188,15 @@
         "Statistiques agrégées uniquement (pas d'historique individuel)"
       ],
       "screenshot_urls": null,
-      "created_at": "2026-04-14T11:00:00Z"
+      "created_at": "2026-04-14T11:00:00Z",
+      "applied_at": "2026-04-14T13:00:00Z",
+      "applied_note": "hub_controller.gd:338 run_history cap changed from 20 to 50 (director: 50 derniers runs). Comment updated."
     },
     {
       "id": "q-20260414-003",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "answered",
+      "status": "applied",
       "question": "get_save_data() est appelé par MerlinStore mais n'est pas encore implémenté. Quel contenu doit-il retourner ?",
       "context": "merlin_game_controller.gd:285 appelle store.get_save_data() pour construire le contexte biome (previous_runs, fins_vues, oghams_owned). Actuellement la méthode n'existe pas → save_data={} → previous_runs=0, fins_vues=0, oghams=0 toujours. Option A: retourner load_profile() entier (include biome_runs, fins_vues, oghams, etc.). Option B: retourner seulement le sous-ensemble utile pour la génération de skeleton (profil léger). Option C: passer directement meta depuis MerlinStore.state.meta (référence directe, sans I/O disque).",
       "type": "multiple_choice",
@@ -204,7 +206,9 @@
         "state.meta directement (zero I/O, risque de mutation si dict non copié)"
       ],
       "screenshot_urls": null,
-      "created_at": "2026-04-14T12:00:00Z"
+      "created_at": "2026-04-14T12:00:00Z",
+      "applied_at": "2026-04-14T13:00:00Z",
+      "applied_note": "get_save_data() implemented in merlin_store.gd:649 — returns save_system.load_profile() entire disk-synced profile. Director: load_profile() entier. This unblocks arc_condition_type evaluation for runs_in_biome, fins_vues, oghams_owned."
     }
   ]
 }

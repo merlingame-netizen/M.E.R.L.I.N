@@ -1,0 +1,68 @@
+{
+  "report_id": "T-S2-ARC-CONDITION-REGRESS-2026-04-14",
+  "task_id": "T-S2-ARC-CONDITION-REGRESS",
+  "timestamp": "2026-04-14T13:00:00Z",
+  "agent": "bug_hunter",
+  "specialist": 12,
+  "specialist_role": "MINIGAME_SYSTEM_AUDITOR",
+  "verdict": "FAIL_CRITICAL",
+  "checks_pass": 3,
+  "checks_fail": 3,
+  "checks_total": 6,
+  "checks": [
+    {
+      "id": "CHK-1",
+      "name": "runs_in_biome arc locked=0 unlocked=3+",
+      "status": "FAIL_CRITICAL",
+      "reason": "save_data={} (get_save_data() now implemented but was missing) → biome_runs_map={} → previous_runs=0 always. Arc using runs_in_biome condition was always locked regardless of actual run count. FIX: get_save_data() implemented this cycle.",
+      "file": "scripts/merlin/merlin_store.gd",
+      "fixed_in_cycle": true
+    },
+    {
+      "id": "CHK-2",
+      "name": "fins_vues arc locked=0 unlocked=5",
+      "status": "FAIL_CRITICAL",
+      "reason": "same root cause: save_data={} → fins_vues=0 always. FIX: get_save_data() implemented this cycle unblocks.",
+      "file": "scripts/merlin/merlin_store.gd",
+      "fixed_in_cycle": true
+    },
+    {
+      "id": "CHK-3",
+      "name": "oghams_owned locked=1 unlocked=2",
+      "status": "FAIL_CRITICAL",
+      "reason": "save_data={} → oghams={} → owned=[].size()=0. FIX: get_save_data() implemented this cycle unblocks.",
+      "file": "scripts/merlin/merlin_store.gd",
+      "fixed_in_cycle": true
+    },
+    {
+      "id": "CHK-4",
+      "name": "faction_rep arc evaluation correct",
+      "status": "PASS",
+      "reason": "llm_adapter_map_prompt.gd:97 defaults arc_actual_value=rep_value from context.faction_rep. faction_rep sourced from game_state via _build_context → correct. Default 20 < arc_condition_value(30) = locked. Growing rep unlocks arc.",
+      "file": "scripts/merlin/llm_adapter_map_prompt.gd:97"
+    },
+    {
+      "id": "CHK-5",
+      "name": "biome_runs_map uses 'biome_runs' key",
+      "status": "PASS",
+      "reason": "merlin_skeleton_generator.gd:49 uses save_data.get('biome_runs', {}) — correct key. Previous bug 'biome_history' was fixed in S2-ARC-CONDITION-EVAL cycle.",
+      "file": "scripts/merlin/merlin_skeleton_generator.gd:49"
+    },
+    {
+      "id": "CHK-6",
+      "name": "context dict has fins_vues and oghams_owned keys",
+      "status": "PASS",
+      "reason": "merlin_skeleton_generator.gd:74-75 correctly adds fins_vues and oghams_owned to context dict. llm_adapter_map_prompt.gd:100-103 reads them correctly.",
+      "file": "scripts/merlin/merlin_skeleton_generator.gd:74"
+    }
+  ],
+  "root_cause": "S2-ARC-CONDITION-EVAL fixed the arc_condition_type dispatch but did NOT implement get_save_data() in MerlinStore. The dispatch code is correct but save_data={} fallback meant all save-sourced values were 0.",
+  "fix_applied": "get_save_data() implemented in merlin_store.gd:649 — calls save_system.load_profile() to return disk-synced profile with biome_runs, fins_vues, oghams.",
+  "invariants_after_fix": {
+    "runs_in_biome_0": "biome_runs_map.get(biome_id,0)=0 → arc locked when no previous runs in biome",
+    "fins_vues_5": "profile.fins_vues=5 → arc condition <=5 unlocked",
+    "oghams_owned_2": "profile.oghams.owned.size()=2 → arc condition <=2 unlocked",
+    "faction_rep_correct": "rep from game state, not corrupted by save_data gap"
+  },
+  "regression_risk": "NONE — save_system.load_profile() already used in _ready() for meta loading. Adding it to get_save_data() adds one extra disk read per biome skeleton generation (acceptable, director-approved)."
+}

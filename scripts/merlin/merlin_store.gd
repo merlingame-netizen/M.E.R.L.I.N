@@ -643,6 +643,13 @@ func _emit_state_changed() -> void:
 
 # --- CONVENIENCE GETTERS ---
 
+## Returns the full saved profile for biome skeleton generation context.
+## Provides biome_runs, fins_vues, oghams — used by MerlinSkeletonGenerator.
+## Director decision 2026-04-14: always return disk-synced load_profile().
+func get_save_data() -> Dictionary:
+	return save_system.load_profile()
+
+
 func get_life_essence() -> int:
 	return int(state.get("run", {}).get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 

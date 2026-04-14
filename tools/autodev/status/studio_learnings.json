@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T12:00:00Z",
+  "last_updated": "2026-04-14T13:00:00Z",
   "metrics": {
-    "total_cycles_completed": 38,
+    "total_cycles_completed": 39,
     "total_dev_cycles": 21,
-    "total_test_cycles": 17,
-    "bugs_found": 32,
-    "bugs_fixed": 24,
-    "tasks_completed": 59,
-    "tasks_pending": 25,
+    "total_test_cycles": 18,
+    "bugs_found": 37,
+    "bugs_fixed": 26,
+    "tasks_completed": 61,
+    "tasks_pending": 30,
     "current_sprint": "S2",
-    "specialist_cycles_run": 4,
-    "last_specialist": 11
+    "specialist_cycles_run": 5,
+    "last_specialist": 12
   },
   "patterns_learned": [
     {
@@ -649,6 +649,40 @@
         "arc condition evaluation",
         "biome arc system"
       ]
+    },
+    {
+      "id": "PAT-058",
+      "learned_at": "2026-04-14T13:00:00Z",
+      "source": "SPECIALIST-12-MINIGAME-AUDIT",
+      "pattern": "Constants dict naming must be kept in sync with registry dict naming — FIELD_MINIGAMES used by both LLM context and runtime dispatch pick_minigame_for_field(). Old names break the dispatch silently (falls back to default).",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "merlin_constants.gd",
+        "merlin_effect_engine.gd",
+        "merlin_card_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-059",
+      "learned_at": "2026-04-14T13:00:00Z",
+      "source": "T-S2-ARC-CONDITION-REGRESS",
+      "pattern": "When a dispatch fix depends on a data source (get_save_data), ALWAYS implement both in the same cycle — partial fixes create FAIL_CRITICAL tests that look like the fix worked but the data is still empty.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_store.gd",
+        "merlin_skeleton_generator.gd"
+      ]
+    },
+    {
+      "id": "PAT-060",
+      "learned_at": "2026-04-14T13:00:00Z",
+      "source": "SPECIALIST-12-MINIGAME-AUDIT",
+      "pattern": "Score fallback values must be checked against MULTIPLIER_TABLE boundaries. score=50 maps to 'echec' (factor=-1.0, negative effects). For neutral fallback prefer score=51 (reussite_partielle, factor=0.5).",
+      "severity": "HIGH",
+      "applies_to": [
+        "game_controller_minigame.gd",
+        "merlin_constants.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -714,6 +748,10 @@
     "faction_rep_auditor": {
       "tasks_completed": 1,
       "bugs_introduced": 0
+    },
+    "minigame_system_auditor": {
+      "tasks_completed": 1,
+      "bugs_found": 5
     }
   },
   "llm_quality": {

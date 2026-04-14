@@ -207,5 +207,38 @@
       "completed_at": "2026-04-14T12:00:00Z",
       "notes": "FIXED: merlin_effect_engine.gd:93 — 'var expected := int(VALID_CODES[code])' → 'var expected: int = int(VALID_CODES[code])'. Explicit type annotation replaces := with CONST indexing."
     }
+  ],
+  "tasks": [
+    {
+      "id": "SAVE-GET-SAVE-DATA-IMPL",
+      "sprint": "S2",
+      "priority": 6,
+      "type": "dev",
+      "status": "completed",
+      "title": "Implement get_save_data() in MerlinStore",
+      "description": "merlin_game_controller.gd:285 calls store.get_save_data() but the method doesn't exist in MerlinStore. save_data stays as {} fallback, so biome_runs/fins_vues/oghams_owned are always default. Need to implement func get_save_data() -> Dictionary in merlin_store.gd returning save_system.load_profile().",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T13:00:00Z",
+      "notes": "Implemented: func get_save_data() -> Dictionary returns save_system.load_profile(). Director decision: load_profile() entier (q-20260414-003). Placed in merlin_store.gd:649 convenience getters section."
+    },
+    {
+      "id": "T-S2-ARC-CONDITION-REGRESS",
+      "sprint": "S2",
+      "priority": 4,
+      "type": "test",
+      "status": "completed",
+      "title": "Regression test: arc_condition_type evaluation correctness",
+      "description": "After S2-ARC-CONDITION-EVAL fix: CHK-1: runs_in_biome arc locked run 0, unlocked run 3+. CHK-2: fins_vues arc locked=0 unlocked=5. CHK-3: oghams_owned locked=1 unlocked=2. CHK-4: faction_rep still correct. CHK-5: biome_runs_map key correct. CHK-6: context has fins_vues/oghams_owned keys.",
+      "files": [
+        "scripts/merlin/llm_adapter_map_prompt.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd"
+      ],
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-14T13:00:00Z",
+      "notes": "FAIL_CRITICAL 3/6: CHK-1/2/3 failed due to missing get_save_data(). get_save_data() implemented this cycle in merlin_store.gd:649. CHK-4/5/6 PASS. Root cause fixed. Re-test needed after SAVE-GET-SAVE-DATA-IMPL applied."
+    }
   ]
 }
