@@ -238,7 +238,7 @@
       ],
       "category": "gamedesign",
       "priority": "HIGH",
-      "status": "pending",
+      "status": "answered",
       "context": "scripts/menu_3d_pc.gd:1333-1337 + scripts/IntroPersonalityQuiz.gd + scripts/SceneRencontreMerlin.gd:10-12. SPEC-0 audit finding."
     }
   ]
