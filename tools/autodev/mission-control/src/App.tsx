@@ -31,15 +31,35 @@ export function App() {
           <CommandHeader />
         </div>
 
-        {/* Metrics — high priority on mobile */}
+        {/* Metrics — high-level status at a glance */}
         <div className="dashboard-layout__full-row">
           <MetricsPanel />
         </div>
 
-        {/* Game Preview — full width, prominent on mobile with 16:9 aspect */}
-        <div className="dashboard-layout__full-row dashboard-layout__game-preview">
-          <GamePreview />
+        {/* Pipeline state — where are we in the dev cycle? */}
+        <div className="dashboard-layout__full-row">
+          <StateTimeline />
         </div>
+
+        {/* === STATUS ZONE: What's planned / active / done === */}
+
+        {/* Task Board (Kanban) — THE answer to "what's happening" */}
+        <div className="dashboard-layout__full-row">
+          <FeatureQueue />
+        </div>
+
+        {/* Velocity + Dev Cycle — recent throughput */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <VelocityChart />
+          <DevCycleSummary />
+        </div>
+
+        {/* Recent commits — what was shipped */}
+        <div className="dashboard-layout__full-row">
+          <ActiveMissions />
+        </div>
+
+        {/* === DIRECTOR ZONE: Your inbox + controls === */}
 
         {/* Director's Inbox — Human Feedback */}
         <div className="dashboard-layout__full-row">
@@ -52,15 +72,16 @@ export function App() {
           <FileUpload />
         </div>
 
+        {/* === SYSTEM ZONE: Specialists, agents, logs === */}
+
         {/* Specialist Rotation */}
         <div className="dashboard-layout__full-row">
           <SpecialistRotation />
         </div>
 
-        {/* Velocity + Dev Cycle Summary */}
-        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <VelocityChart />
-          <DevCycleSummary />
+        {/* Game Preview — full width, 16:9 aspect */}
+        <div className="dashboard-layout__full-row dashboard-layout__game-preview">
+          <GamePreview />
         </div>
 
         {/* Scene Selector */}
@@ -73,41 +94,24 @@ export function App() {
           <StudioInsights />
         </div>
 
-        {/* Timeline */}
-        <div className="dashboard-layout__full-row">
-          <StateTimeline />
-        </div>
-
-        {/* Active Missions — full width before columns */}
-        <div className="dashboard-layout__full-row dashboard-layout__missions-mobile">
-          <ActiveMissions />
-        </div>
-
         {/* 3-column area: stacks on mobile, splits on tablet/desktop */}
         <div className="dashboard-layout__columns">
-          {/* Left column: Feature Queue + Agent Fleet */}
+          {/* Left column: Agent Fleet */}
           <div className="dashboard-layout__col dashboard-layout__col--left">
-            <div style={{ flex: '1 1 50%', overflow: 'hidden', minHeight: '200px' }}>
-              <FeatureQueue />
-            </div>
-            <div style={{ flex: '1 1 50%', overflow: 'hidden', minHeight: '200px' }}>
+            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
               <AgentFleet />
             </div>
           </div>
 
-          {/* Center column: Active Missions (desktop only, hidden on mobile) + Game Preview (desktop) */}
-          <div className="dashboard-layout__col dashboard-layout__col--center dashboard-layout__desktop-only">
-            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
-              <ActiveMissions />
-            </div>
-          </div>
-
-          {/* Right column: Alert Feed */}
-          <div className="dashboard-layout__col dashboard-layout__col--right">
+          {/* Center column: System Log */}
+          <div className="dashboard-layout__col dashboard-layout__col--center">
             <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
               <AlertFeed />
             </div>
           </div>
+
+          {/* Right column: empty for balance — or future panel */}
+          <div className="dashboard-layout__col dashboard-layout__col--right" />
         </div>
       </div>
     </div>
