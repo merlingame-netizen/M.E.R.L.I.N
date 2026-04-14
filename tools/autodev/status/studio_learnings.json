@@ -683,7 +683,11 @@
         "game_controller_minigame.gd",
         "merlin_constants.gd"
       ]
-    }
+    },
+    "PAT-061: bk_assets categories (deadwood/groundcover/mushrooms) have assets but no spawning code — verify category coverage in spawner on every new asset batch",
+    "PAT-062: BUSH_MODELS const pointing to wrong asset category (rocks/ instead of bushes/) is a silent visual error — all loaded assets need cross-checking against intended category path",
+    "PAT-063: FIELD_MINIGAMES stale minigame names (herboristerie/fouille/runes) vs GAMES keys (chance/observation/logique) — always verify FIELD_MINIGAMES values match GAMES keys when adding new minigames",
+    "PAT-064: Timeout/failure fallback score 50 = FULL NEGATIVE (factor=-1.0) vs 51 = PARTIAL (factor=0.5) — always use 51 for technical failures, never 50"
   ],
   "agent_performance": {
     "game_playtester": {
@@ -752,6 +756,10 @@
     "minigame_system_auditor": {
       "tasks_completed": 1,
       "bugs_found": 5
+    },
+    "3d_scene_asset_auditor": {
+      "tasks_completed": 1,
+      "bugs_found": 3
     }
   },
   "llm_quality": {
@@ -957,6 +965,7 @@
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ],
-  "total_cycles": 1,
-  "bugs_found": 2
+  "total_cycles": 2,
+  "bugs_found": 5,
+  "bugs_fixed": 2
 }

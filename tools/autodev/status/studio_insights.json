@@ -323,6 +323,20 @@
         "id": "MG-FIX-DIFFICULTY-SCALING"
       },
       "timestamp": "2026-04-14T13:00:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "3d_scene_asset_auditor",
+      "severity": "ACTION",
+      "category": "visual",
+      "message": "7 of 8 biomes have zero 3D assets — only foret_broceliande populated",
+      "details": "Assets/bk_assets/ only has foret_broceliande assets. landes_bruyere, cotes_sauvages, villages_celtes, cercles_pierres, marais_korrigans, collines_dolmens, iles_mystiques all use procedural fallback geometry when run. Two Blender generation tasks (3D-BIOME-ASSET-GEN-LANDES, 3D-BIOME-ASSET-GEN-COTES) added to generate assets for priority biomes.",
+      "proposed_task": {
+        "title": "Blender: gen all 7 missing biome asset sets",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T14:00:00Z"
     }
   ]
 }

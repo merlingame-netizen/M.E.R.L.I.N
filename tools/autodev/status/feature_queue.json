@@ -321,34 +321,6 @@
       "agent": "game_playtester"
     },
     {
-      "id": "MG-FIX-FIELD-MINIGAMES-NAMES",
-      "sprint": "S2",
-      "priority": 3,
-      "type": "dev",
-      "status": "pending",
-      "title": "Fix FIELD_MINIGAMES constants: align with actual minigame registry names",
-      "description": "merlin_constants.gd:329 FIELD_MINIGAMES uses old names (herboristerie, fouille, runes) that do not match GAMES keys in minigame_registry.gd. pick_minigame_for_field() (effect_engine:760) and select_minigame() (card_system:228) return invalid names. Update FIELD_MINIGAMES to use field IDs (chance/bluff/etc.) as values pointing to the actual minigame list, OR update pick_minigame_for_field() to delegate to MiniGameRegistry.create_minigame(field). Simplest fix: make FIELD_MINIGAMES values match GAMES keys by adding mg_ prefix and correct names.",
-      "files": [
-        "scripts/merlin/merlin_constants.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_card_system.gd"
-      ],
-      "agent": "godot_expert"
-    },
-    {
-      "id": "MG-FIX-TIMEOUT-SCORE",
-      "sprint": "S2",
-      "priority": 5,
-      "type": "dev",
-      "status": "pending",
-      "title": "Fix minigame timeout fallback score: 50 → 51 (reussite_partielle, not echec)",
-      "description": "game_controller_minigame.gd:88 returns score=50 on 30s timeout. MULTIPLIER_TABLE: 50 maps to range 21-50 factor=-1.0 (FULL NEGATIVE EFFECTS). A rendering/network timeout should not be penalized as hard as deliberate failure. Change fallback score from 50 to 51 (reussite_partielle, factor=0.5). Also check line 55 (minigame creation fail fallback).",
-      "files": [
-        "scripts/ui/game_controller_minigame.gd"
-      ],
-      "agent": "godot_expert"
-    },
-    {
       "id": "MG-FIX-DIFFICULTY-SCALING",
       "sprint": "S3",
       "priority": 21,
@@ -418,6 +390,103 @@
         "scripts/merlin/llm_adapter_map_prompt.gd"
       ],
       "agent": "bug_hunter"
+    },
+    {
+      "id": "3D-BUSH-ASSET-FIX",
+      "sprint": "S2",
+      "priority": 6,
+      "type": "dev",
+      "status": "pending",
+      "title": "Fix BUSH_MODELS: load bushes/ category instead of rocks/",
+      "description": "broceliande_forest_3d.gd:68-72 BUSH_MODELS hardcoded to rocks/ category. Bush GLBs exist at Assets/bk_assets/bushes/foret_broceliande/ (6 variants) but are never loaded. Change BUSH_MODELS paths from rocks/ to bushes/ category: bush_bk_foret_broceliande_0000-0005.glb.",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "3D-DEADWOOD-GROUNDCOVER-SPAWN",
+      "sprint": "S3",
+      "priority": 22,
+      "type": "dev",
+      "status": "pending",
+      "title": "Add spawning for deadwood, groundcover, mushroom assets",
+      "description": "Assets/bk_assets/deadwood/, /groundcover/, /mushrooms/ each have 6 foret_broceliande GLBs but forest_asset_spawner.gd has no code to load or spawn them. Add DEADWOOD_MODELS, GROUNDCOVER_MODELS, MUSHROOM_MODELS arrays to broceliande_forest_3d.gd and spawning calls in ForestZoneBuilder to enrich forest floor.",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/broceliande_3d/forest_asset_spawner.gd",
+        "scripts/broceliande_3d/forest_zone_builder.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "3D-BIOME-TILE-PATH-FIX",
+      "sprint": "S3",
+      "priority": 23,
+      "type": "dev",
+      "status": "pending",
+      "title": "Fix BiomeWalkConfigs TILE_BASE: archive/ → Assets/Tiles/",
+      "description": "biome_walk_configs.gd:8 TILE_BASE='res://archive/3d_models/Tiles_Low_Poly/' but terrain tiles are at res://Assets/Tiles/. Verify forest_terrain_builder.gd uses correct path. Also fix non-existent tile refs for villages_celtes (Tile_38_Path_Grass, Tile_34_Trans_Grass_Dirt) and cercles_pierres (Tile_39_Grass_Rocky) — replace with closest existing tiles (Tile_01 to Tile_31).",
+      "files": [
+        "scripts/broceliande_3d/biome_walk_configs.gd",
+        "scripts/broceliande_3d/forest_terrain_builder.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "3D-PROP-ASSETS-BROC",
+      "sprint": "S3",
+      "priority": 24,
+      "type": "dev",
+      "status": "pending",
+      "title": "Add prop assets to BROC_ASSETS (prop_bk_foret_broceliande_0000-0005)",
+      "description": "Assets/bk_assets/props/foret_broceliande/ has 6 prop GLBs (prop_bk_foret_broceliande_0000-0005.glb) never referenced in BROC_ASSETS. Add 3-4 as named entries (e.g. 'cauldron', 'campfire', 'cart', 'fence') to diversify zone 2 and zone 4 spawning.",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "T-3D-ASSET-COVERAGE",
+      "sprint": "S3",
+      "priority": 25,
+      "type": "test",
+      "status": "pending",
+      "title": "Test: verify all BROC_ASSETS paths exist + bush category correct",
+      "description": "Audit script or test checking: (1) all paths in TREE_MODELS, BUSH_MODELS, BROC_ASSETS exist on disk, (2) BUSH_MODELS uses bushes/ not rocks/ category, (3) no missing tile IDs in BiomeWalkConfigs. Write result to test_reports/.",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/broceliande_3d/biome_walk_configs.gd"
+      ],
+      "agent": "bug_hunter"
+    },
+    {
+      "id": "3D-BIOME-ASSET-GEN-LANDES",
+      "sprint": "S3",
+      "priority": 26,
+      "type": "dev",
+      "status": "pending",
+      "title": "Blender script: generate landes_bruyere 3D assets (6 variants each: vegetation, rocks, props)",
+      "description": "Write tools/blender_scripts/gen_landes_bruyere.py procedurally generating heath/moor assets: low heather bushes, windswept gorse, stone cairns, weathered boulders, standing stones. Export to Assets/bk_assets/vegetation/landes_bruyere/ etc. Also write asset_requests/landes_bruyere.json spec.",
+      "files": [
+        "tools/blender_scripts/gen_landes_bruyere.py",
+        "tools/autodev/status/asset_requests/landes_bruyere.json"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "3D-BIOME-ASSET-GEN-COTES",
+      "sprint": "S3",
+      "priority": 27,
+      "type": "dev",
+      "status": "pending",
+      "title": "Blender script: generate cotes_sauvages 3D assets (6 variants each: rocks, props, vegetation)",
+      "description": "Write tools/blender_scripts/gen_cotes_sauvages.py procedurally generating coastal assets: sea-worn boulders, tidepools, driftwood, coastal shrubs, granite outcroppings, shell clusters. Export to Assets/bk_assets/rocks/cotes_sauvages/ etc. Also write asset_requests/cotes_sauvages.json spec.",
+      "files": [
+        "tools/blender_scripts/gen_cotes_sauvages.py",
+        "tools/autodev/status/asset_requests/cotes_sauvages.json"
+      ],
+      "agent": "godot_expert"
     }
   ]
 }

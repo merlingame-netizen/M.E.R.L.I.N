@@ -206,6 +206,38 @@
       "description": "TRIVIAL: Line 93 uses  — VALID_CODES is a const (line 4). Violates rule: NEVER use := with CONST indexing. Fix: . Also check line 90:  → .",
       "completed_at": "2026-04-14T12:00:00Z",
       "notes": "FIXED: merlin_effect_engine.gd:93 — 'var expected := int(VALID_CODES[code])' → 'var expected: int = int(VALID_CODES[code])'. Explicit type annotation replaces := with CONST indexing."
+    },
+    {
+      "id": "MG-FIX-FIELD-MINIGAMES-NAMES",
+      "sprint": "S2",
+      "priority": 3,
+      "type": "dev",
+      "status": "completed",
+      "title": "Fix FIELD_MINIGAMES constants: align with actual minigame registry names",
+      "description": "merlin_constants.gd:329 FIELD_MINIGAMES uses old names (herboristerie, fouille, runes) that do not match GAMES keys in minigame_registry.gd. pick_minigame_for_field() (effect_engine:760) and select_minigame() (card_system:228) return invalid names. Update FIELD_MINIGAMES to use field IDs (chance/bluff/etc.) as values pointing to the actual minigame list, OR update pick_minigame_for_field() to delegate to MiniGameRegistry.create_minigame(field). Simplest fix: make FIELD_MINIGAMES values match GAMES keys by adding mg_ prefix and correct names.",
+      "files": [
+        "scripts/merlin/merlin_constants.gd",
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/merlin_card_system.gd"
+      ],
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T14:00:00Z",
+      "notes": "FIELD_MINIGAMES updated: values now match GAMES keys (chance/bluff/observation/logique/finesse/vigueur/esprit/perception). neutre maps to esprit. select_minigame() and pick_minigame_for_field() now return valid field names for MerlinMiniGameSystem.run() and MiniGameRegistry.create_minigame()."
+    },
+    {
+      "id": "MG-FIX-TIMEOUT-SCORE",
+      "sprint": "S2",
+      "priority": 5,
+      "type": "dev",
+      "status": "completed",
+      "title": "Fix minigame timeout fallback score: 50 → 51 (reussite_partielle, not echec)",
+      "description": "game_controller_minigame.gd:88 returns score=50 on 30s timeout. MULTIPLIER_TABLE: 50 maps to range 21-50 factor=-1.0 (FULL NEGATIVE EFFECTS). A rendering/network timeout should not be penalized as hard as deliberate failure. Change fallback score from 50 to 51 (reussite_partielle, factor=0.5). Also check line 55 (minigame creation fail fallback).",
+      "files": [
+        "scripts/ui/game_controller_minigame.gd"
+      ],
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T14:00:00Z",
+      "notes": "Fallback scores changed 50→51 in game_controller_minigame.gd:55 (creation fail) and :93 (30s timeout). Score 51 = reussite_partielle (factor=0.5) instead of echec (factor=-1.0)."
     }
   ],
   "tasks": [

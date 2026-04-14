@@ -327,15 +327,15 @@ const ACTION_VERB_FALLBACK_FIELD := "esprit"
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const FIELD_MINIGAMES := {
-	"chance": ["herboristerie"],
-	"bluff": ["negociation"],
-	"observation": ["fouille", "regard"],
-	"logique": ["runes"],
-	"finesse": ["ombres", "equilibre"],
-	"vigueur": ["combat_rituel", "course"],
-	"esprit": ["apaisement", "volonte", "sang_froid"],
-	"perception": ["traces", "echo"],
-	"neutre": ["apaisement", "volonte"],
+	"chance": ["chance"],
+	"bluff": ["bluff"],
+	"observation": ["observation"],
+	"logique": ["logique"],
+	"finesse": ["finesse"],
+	"vigueur": ["vigueur"],
+	"esprit": ["esprit"],
+	"perception": ["perception"],
+	"neutre": ["esprit"],
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

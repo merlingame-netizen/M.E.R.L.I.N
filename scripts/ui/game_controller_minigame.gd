@@ -51,8 +51,8 @@ func run_minigame(field: String, is_critical: bool) -> int:
 	var modifiers: Dictionary = {}
 	var game: Node = MiniGameRegistry.create_minigame(field, base_diff, modifiers)
 	if game == null:
-		push_warning("[Merlin] minigame creation failed for field '%s', using fallback score 50" % field)
-		return 50
+		push_warning("[Merlin] minigame creation failed for field '%s', using fallback score 51" % field)
+		return 51
 
 	SFXManager.play("minigame_start")
 	# Host minigame inside card body if UI has content host
@@ -85,12 +85,12 @@ func run_minigame(field: String, is_critical: bool) -> int:
 			break
 		await _ctrl.get_tree().process_frame
 	if not mg_state[0]:
-		push_warning("[Merlin] minigame timed out after %.0fs, using fallback score 50" % mg_timeout)
+		push_warning("[Merlin] minigame timed out after %.0fs, using fallback score 51" % mg_timeout)
 		if is_instance_valid(game):
 			game.queue_free()
 		if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
 			ui.set_options_visible(true)
-		return 50
+		return 51
 
 	var mg_result: Dictionary = mg_state[1]
 	var score: int = int(mg_result.get("score", 50))
