@@ -73,6 +73,7 @@ const LIFE_ESSENCE_MAX := 100
 const LIFE_ESSENCE_START := 100
 const LIFE_ESSENCE_DRAIN_PER_CARD := 0      # No drain per card (director decision q-20260412-001)
 const MIN_CARDS_FOR_VICTORY := 25           # Victory requires 25+ cards (= MOS target_cards_max). See MOS_CONVERGENCE for full zones.
+const CARDS_PER_DAY := 5                    # Cards played per in-game day (day counter for LLM context)
 const LIFE_ESSENCE_FAIL_DAMAGE := 0         # Normal failure = no life damage
 const LIFE_ESSENCE_EVENT_FAIL_DAMAGE := 6   # Failed event/palier
 const LIFE_ESSENCE_HEAL_PER_REST := 18      # Heal at REST nodes

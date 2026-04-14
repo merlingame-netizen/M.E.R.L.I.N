@@ -198,7 +198,21 @@
         "type": "dev"
       },
       "timestamp": "2026-04-14T02:00:00Z"
+    },
+    {
+      "id": "insight-20260414-002",
+      "agent": "godot_expert",
+      "severity": "INFO",
+      "category": "gameplay",
+      "message": "Day counter now ticks every 5 cards — consider showing the current day in the LLM prompt and HUD",
+      "details": "S2-DAY-TICK-FIX implemented run['day'] increment (every CARDS_PER_DAY=5 cards). The day value is already passed via run state to LLM context but the HUD may not display it. Exposing 'Jour N' in the card display header would give players a sense of run progression and align with the narrative 'Jour 1' references in generated text.",
+      "proposed_task": {
+        "title": "Display current in-game day in HUD card header",
+        "sprint": "S3",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T03:00:00Z"
     }
   ],
-  "updated": "2026-04-14T02:00:00Z"
+  "updated": "2026-04-14T03:00:00Z"
 }

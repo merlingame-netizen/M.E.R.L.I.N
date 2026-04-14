@@ -144,6 +144,9 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 			apply_effect_func.call(effect)
 
 	run["cards_played"] = int(run.get("cards_played", 0)) + 1
+	var cp: int = int(run.get("cards_played", 0))
+	if cp > 0 and cp % MerlinConstants.CARDS_PER_DAY == 0:
+		run["day"] = int(run.get("day", 1)) + 1
 
 	# Record card text + choice in story_log for LLM context variety
 	var story_log: Array = run.get("story_log", [])

@@ -1,15 +1,15 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T02:00:00Z",
+  "last_updated": "2026-04-14T03:00:00Z",
   "metrics": {
-    "total_cycles_completed": 28,
-    "total_dev_cycles": 14,
+    "total_cycles_completed": 29,
+    "total_dev_cycles": 15,
     "total_test_cycles": 14,
     "bugs_found": 24,
-    "bugs_fixed": 15,
-    "tasks_completed": 48,
-    "tasks_pending": 12,
+    "bugs_fixed": 16,
+    "tasks_completed": 49,
+    "tasks_pending": 11,
     "current_sprint": "S2"
   },
   "patterns_learned": [
@@ -458,6 +458,17 @@
       "applies_to": [
         "scripts/merlin/merlin_effect_engine.gd",
         "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-041",
+      "learned_at": "2026-04-14T03:00:00Z",
+      "source": "S2-DAY-TICK-FIX",
+      "pattern": "In-run counters initialized in init_run() (like run['day']=1) that are never incremented elsewhere will stay frozen. The canonical increment site is resolve_choice() in store_run.gd. Day progression formula: every CARDS_PER_DAY cards played, run['day'] increments. Check CARDS_PER_DAY is defined in merlin_constants.gd (not hardcoded) so it can be tuned without code changes.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
       ]
     }
   ],

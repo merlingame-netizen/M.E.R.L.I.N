@@ -1,8 +1,19 @@
 {
   "version": "1.0",
   "description": "Archived completed tasks — M.E.R.L.I.N. Studio Bot",
-  "updated": "2026-04-14T00:15:00Z",
+  "updated": "2026-04-14T03:00:00Z",
   "archived": [
+    {
+      "id": "S2-DAY-TICK-FIX",
+      "sprint": "S2",
+      "priority": 8,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix run.day counter: increment per card in resolve_choice()",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T03:00:00Z",
+      "notes": "Added CARDS_PER_DAY := 5 to merlin_constants.gd (line 76). In store_run.gd resolve_choice(): after cards_played increment, compute cp = cards_played, if cp>0 and cp%CARDS_PER_DAY==0 then run['day']+=1. Day initializes at 1 in init_run(). PAT-041 added."
+    },
     {
       "id": "S4-SFXMANAGER-AUDIT",
       "sprint": "S4",

@@ -1,7 +1,7 @@
 {
-  "version": "3.6",
-  "updated": "2026-04-14T02:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 12 pending.",
+  "version": "3.7",
+  "updated": "2026-04-14T03:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 11 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -15,20 +15,6 @@
     "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
-    {
-      "id": "S2-DAY-TICK-FIX",
-      "sprint": "S2",
-      "priority": 8,
-      "status": "pending",
-      "type": "dev",
-      "title": "Fix run.day counter: increment per card in resolve_choice()",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "PAT-012 (S2-INTEGRATION): run.day is initialized to 1 but never incremented. LLM context always shows 'Jour 1' regardless of run length. Fix: add CARDS_PER_DAY constant (merlin_constants.gd) + increment run['day'] in resolve_choice() when cards_played % CARDS_PER_DAY == 0. Confirmed FAIL in S2-CONTEXT-REGRESSION-TEST (line 19 store_run.gd)."
-    },
     {
       "id": "BUG-ANAM-DEATH-PENALTY-FIX",
       "sprint": "S2",
