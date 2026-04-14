@@ -194,7 +194,7 @@
       "id": "q-20260414-003",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "question": "get_save_data() est appelé par MerlinStore mais n'est pas encore implémenté. Quel contenu doit-il retourner ?",
       "context": "merlin_game_controller.gd:285 appelle store.get_save_data() pour construire le contexte biome (previous_runs, fins_vues, oghams_owned). Actuellement la méthode n'existe pas → save_data={} → previous_runs=0, fins_vues=0, oghams=0 toujours. Option A: retourner load_profile() entier (include biome_runs, fins_vues, oghams, etc.). Option B: retourner seulement le sous-ensemble utile pour la génération de skeleton (profil léger). Option C: passer directement meta depuis MerlinStore.state.meta (référence directe, sans I/O disque).",
       "type": "multiple_choice",
