@@ -729,20 +729,6 @@
     "description": "SPECIALIST-1 AUDIT: screen_frame.gd:351 uses Color(1.0, 1.0, 1.0, 0.15) for a highlight effect. Should reference MerlinVisual.CRT_PALETTE['phosphor_bright'] or similar white-equivalent key, modified with alpha. Low priority but completes visual consistency."
   },
   {
-    "id": "GDC-OGHAM-COOLDOWN-ACTIVE",
-    "sprint": "S2",
-    "priority": 7,
-    "status": "pending",
-    "type": "dev",
-    "title": "Fix tick_cooldowns: only decrement active Ogham's cooldown (bible s.2.2)",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/store_oghams.gd",
-      "scripts/merlin/store_run.gd"
-    ],
-    "description": "SPEC-2 CHK-09 FAIL_MEDIUM: store_oghams.gd:78 tick_cooldowns() iterates ALL oghams in skill_cooldowns and decrements all. Bible s.2.2: 'Seul l'Ogham actif se recharge (cooldown diminue à chaque carte). Les Oghams équipés mais inactifs ont leur cooldown en pause.' Fix: pass active_ogham key to tick_cooldowns(), only decrement if skill_id == active_ogham. Signature change: tick_cooldowns(state, active_ogham: String) — update call site in store_run.gd:170."
-  },
-  {
     "id": "GDC-FACTION-ENDING-TRIGGER",
     "sprint": "S2",
     "priority": 8,
@@ -794,5 +780,70 @@
       "scripts/test/"
     ],
     "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
+  },
+  {
+    "id": "SFX-DAMAGE-LIFE-FEEDBACK",
+    "sprint": "S2",
+    "priority": 19,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add SFX for direct life damage (DAMAGE_LIFE effect)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/game_controller_effects.gd"
+    ],
+    "description": "SPEC-3 SFX-08 FAIL_HIGH: game_controller_effects.gd:187 dispatches DAMAGE_LIFE but plays no SFX for life loss. Only shield activation (line 34) gets skill_activate. Fix: after DAMAGE_LIFE dispatch (line 187), add SFXManager.play('danger') if not blocked by shield. Also: add 'error' SFX if life reaches critical (<20). Check: line 30 guard for new_shield_corps to avoid double SFX with shield."
+  },
+  {
+    "id": "SFX-MENU-PRINCIPAL-HOVER",
+    "sprint": "S2",
+    "priority": 20,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add hover+click SFX to MenuPrincipalMerlin calendar/collections buttons",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/MenuPrincipalMerlin.gd"
+    ],
+    "description": "SPEC-3 SFX-09 FAIL_MEDIUM: calendar_button (line 337) and collections_button (line 340) mouse_entered lambdas only call _anim.on_corner_button_hover — no SFX. _on_calendar_pressed() (line 459) and _on_collections_pressed() (line 470) have no SFX. Fix: add SFXManager.play('hover') in mouse_entered lambdas (after existing anim call). Add _play_ui_sound('click') in _on_calendar_pressed() and _on_collections_pressed() before guard checks."
+  },
+  {
+    "id": "SFX-SELECT-SAVE-BUTTONS",
+    "sprint": "S2",
+    "priority": 21,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add SFX to SelectionSauvegarde continue/new/reset/back buttons",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/SelectionSauvegarde.gd"
+    ],
+    "description": "SPEC-3 SFX-10 FAIL_MEDIUM: All 4 button handlers in SelectionSauvegarde.gd lack SFX. _on_continue_pressed():162 ('confirm'), _on_new_game_pressed():172 ('confirm'), _on_reset_pressed():176 ('error'), _on_back_pressed():190 ('click'). Also add SFXManager.play('hover') in mouse_entered callbacks in _style_button(). Pattern: add SFXManager.play(x) as first line of each handler."
+  },
+  {
+    "id": "SFX-END-RUN-SCREEN-FANFARE",
+    "sprint": "S2",
+    "priority": 22,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add victory/defeat SFX to end_run_screen.gd reveal",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd"
+    ],
+    "description": "SPEC-3 SFX-11 FAIL_MEDIUM: end_run_screen.gd shows run results (score, anam, faction rep) but plays no SFX. On run end reveal: play 'partir_fanfare' if victory (run completed full biome), 'fail' if death, 'confirm' for neutral ending. Also play 'aspect_up'/'aspect_down' when faction rep changes are revealed. Find reveal function (likely _show_results or similar) and add SFXManager.play calls."
+  },
+  {
+    "id": "SFX-AUDIO-INTEGRATION-DEAD",
+    "sprint": "S3",
+    "priority": 55,
+    "status": "pending",
+    "type": "dev",
+    "title": "Archive or delete audio_integration.gd — dead code (SFXEngine missing)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/audio/audio_integration.gd"
+    ],
+    "description": "SPEC-3 SFX-12 FAIL_LOW: audio_integration.gd (456 lines) references class_name SFXEngine which does NOT exist anywhere in codebase. AudioIntegration.wire_run(), wire_hub(), wire_end_screen(), wire_flow() are never called. Entire file is dead code. Decision required: (A) Remove file + update project.godot if registered, (B) Implement SFXEngine class to make it functional. Recommend: feedback question to director, then either delete or stub SFXEngine."
   }
 ]

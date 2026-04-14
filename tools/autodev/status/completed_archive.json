@@ -13,5 +13,21 @@
     "description": "SPECIALIST-9 CHK-2: _validate_run_state() currently only checks biome (String), card_index (numeric), life_essence (numeric), anam_accumulated (now added P23). Missing: (1) life_max should be numeric >= 1. (2) faction_rep_delta should be Dictionary with all 5 faction keys. (3) cards_played should be numeric >= 0. Add typeof checks for life_max + cards_played. Add dict-has-key checks for faction_rep_delta (same pattern as _validate() faction loop). Keep _validate_run_state() < 50 lines.",
     "completed_at": "2026-04-14T18:48:00Z",
     "notes": "SPEC-2: Extended _validate_run_state() — added life_max (numeric >=1), cards_played (numeric >=0), faction_rep_delta (dict with all 5 factions). Function grows from 15 to 34 lines (< 50 limit). Validates SAVE-RUNSTATE-VALIDATE-EXTEND task description exactly."
+  },
+  {
+    "id": "GDC-OGHAM-COOLDOWN-ACTIVE",
+    "sprint": "S2",
+    "priority": 7,
+    "status": "completed",
+    "type": "dev",
+    "title": "Fix tick_cooldowns: only decrement active Ogham's cooldown (bible s.2.2)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/store_oghams.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "SPEC-2 CHK-09 FAIL_MEDIUM: store_oghams.gd:78 tick_cooldowns() iterates ALL oghams in skill_cooldowns and decrements all. Bible s.2.2: 'Seul l'Ogham actif se recharge (cooldown diminue à chaque carte). Les Oghams équipés mais inactifs ont leur cooldown en pause.' Fix: pass active_ogham key to tick_cooldowns(), only decrement if skill_id == active_ogham. Signature change: tick_cooldowns(state, active_ogham: String) — update call site in store_run.gd:170.",
+    "completed_at": "2026-04-14T19:42:00Z",
+    "notes": "IMPLEMENTED: store_oghams.gd tick_cooldowns(state, active_ogham:String='') — only ticks active ogham (bible s.2.2). use_ogham() sets active_this_card in state. store_run.gd:170 passes active_this_card. PAT-079 added: run_3d_controller has parallel local tracking."
   }
 ]

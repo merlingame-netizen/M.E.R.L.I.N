@@ -166,8 +166,9 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 	# Update player profile based on choice
 	update_player_profile(state, option)
 
-	# Tick Ogham cooldowns
-	StoreOghams.tick_cooldowns(state)
+	# Tick active Ogham cooldown only (bible s.2.2 — inactive oghams pause)
+	var active_ogham: String = str(state.get("oghams", {}).get("active_this_card", ""))
+	StoreOghams.tick_cooldowns(state, active_ogham)
 
 	# Biome passive only in legacy path
 	if modulated_effects.is_empty():

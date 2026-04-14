@@ -418,5 +418,20 @@
       "priority": 8
     },
     "timestamp": "2026-04-14T18:48:30Z"
+  },
+  {
+    "id": "insight-20260414-027",
+    "agent": "sfx_audio_auditor",
+    "severity": "WARN",
+    "category": "gameplay",
+    "message": "DAMAGE_LIFE effect dispatched with no audio feedback — player loses life silently",
+    "details": "game_controller_effects.gd:187 dispatches DAMAGE_LIFE for passive biome damage and other sources, but no 'danger' or 'error' SFX is played. The player receives no audio confirmation of life loss, which weakens the emotional impact of survival mechanics. Only shield blocks get skill_activate SFX (line 34). Fix: add SFXManager.play('danger') after DAMAGE_LIFE dispatch.",
+    "proposed_task": {
+      "title": "Add danger SFX on DAMAGE_LIFE",
+      "sprint": "S2",
+      "type": "dev",
+      "id": "SFX-DAMAGE-LIFE-FEEDBACK"
+    },
+    "timestamp": "2026-04-14T19:42:00Z"
   }
 ]

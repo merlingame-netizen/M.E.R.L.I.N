@@ -1,0 +1,44 @@
+{
+  "specialist": 3,
+  "role": "SFX_AUDIO_AUDITOR",
+  "timestamp": "2026-04-14T19:42:00Z",
+  "cycle_id": "CYCLE-2026-04-14-spec3-sfx-audio",
+  "audit_summary": {
+    "total_checks": 12,
+    "pass": 7,
+    "fail_high": 1,
+    "fail_medium": 3,
+    "fail_low": 1
+  },
+  "checks": [
+    {"id": "SFX-01", "result": "PASS", "desc": "SFXManager procedural generation — 62 sounds pre-generated at startup, pool_size=6"},
+    {"id": "SFX-02", "result": "PASS", "desc": "HubAntre.gd — hover/click/ogham_chime/partir_fanfare/whoosh all wired correctly"},
+    {"id": "SFX-03", "result": "PASS", "desc": "TransitionBiome.gd — mist_breath/pixel_cascade/biome_reveal/biome_dissolve/play_biome_ambient() wired"},
+    {"id": "SFX-04", "result": "PASS", "desc": "game_controller_effects.gd — skill_activate/dice_shake/ogham_chime/dice_crit wired"},
+    {"id": "SFX-05", "result": "PASS", "desc": "game_controller_minigame.gd — minigame_start/success/fail wired"},
+    {"id": "SFX-06", "result": "PASS", "desc": "encounter_card_overlay.gd — card_draw/success/fail/neutral wired"},
+    {"id": "SFX-07", "result": "PASS", "desc": "BIOME_KEY_MAP in TransitionBiome correctly maps all 8 biome full keys to short keys"},
+    {"id": "SFX-08", "result": "FAIL_HIGH", "desc": "game_controller_effects.gd:30 — DAMAGE_LIFE dispatched (line 187) but NO SFX played for life loss. Only shield blocks get skill_activate. Missing: danger/error SFX on direct damage.", "file": "scripts/ui/game_controller_effects.gd", "line": 30},
+    {"id": "SFX-09", "result": "FAIL_MEDIUM", "desc": "MenuPrincipalMerlin.gd:337,340 — calendar_button/collections_button mouse_entered handlers missing SFX (only animation). _on_calendar_pressed()/_on_collections_pressed() no SFX.", "file": "scripts/MenuPrincipalMerlin.gd", "lines": "337,340,459,470"},
+    {"id": "SFX-10", "result": "FAIL_MEDIUM", "desc": "SelectionSauvegarde.gd — _on_continue_pressed():162, _on_new_game_pressed():172, _on_reset_pressed():176, _on_back_pressed():190 — no SFX on any button.", "file": "scripts/SelectionSauvegarde.gd", "lines": "139,148,158,162,172,176,190"},
+    {"id": "SFX-11", "result": "FAIL_MEDIUM", "desc": "end_run_screen.gd — no SFX on victory/defeat display. Should play success/fail or partir_fanfare on run end reveal.", "file": "scripts/ui/end_run_screen.gd"},
+    {"id": "SFX-12", "result": "FAIL_LOW", "desc": "audio_integration.gd (456 lines) references SFXEngine class that does NOT exist anywhere in codebase. AudioIntegration.wire_run()/.wire_hub() are never called. Entire file is dead code.", "file": "scripts/audio/audio_integration.gd"}
+  ],
+  "existing_tasks_verified": [
+    "BUG-SFX-AMB-ILES — already in queue (amb_iles missing for iles_mystiques biome)",
+    "MG-FIX-SFX-DOUBLE-TRIGGER — already in queue (minigame success double-play)"
+  ],
+  "new_tasks_generated": [
+    "SFX-DAMAGE-LIFE-FEEDBACK",
+    "SFX-MENU-PRINCIPAL-HOVER",
+    "SFX-SELECT-SAVE-BUTTONS",
+    "SFX-END-RUN-SCREEN-FANFARE",
+    "SFX-AUDIO-INTEGRATION-DEAD"
+  ],
+  "task_implemented": "GDC-OGHAM-COOLDOWN-ACTIVE (P7)",
+  "implementation_summary": "store_oghams.gd: tick_cooldowns() now accepts active_ogham:String=''. Only ticks active ogham's cooldown (bible s.2.2). use_ogham() now sets state['oghams']['active_this_card']=skill_id. store_run.gd:170 passes active_this_card from state to tick_cooldowns().",
+  "patterns_learned": [
+    "PAT-079: run_3d_controller tracks oghams locally (_ogham_cooldowns dict) — separate from StoreOghams. Both systems must stay in sync.",
+    "PAT-080: audio_integration.gd references SFXEngine class that doesn't exist — dead file that should be archived or removed."
+  ]
+}

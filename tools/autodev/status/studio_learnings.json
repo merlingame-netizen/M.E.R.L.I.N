@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T18:48:30Z",
+  "last_updated": "2026-04-14T19:42:00Z",
   "metrics": {
-    "total_cycles_completed": 51,
-    "total_dev_cycles": 24,
+    "total_cycles_completed": 52,
+    "total_dev_cycles": 25,
     "total_test_cycles": 20,
     "bugs_found": 44,
-    "bugs_fixed": 30,
-    "tasks_completed": 66,
-    "tasks_pending": 58,
+    "bugs_fixed": 31,
+    "tasks_completed": 67,
+    "tasks_pending": 62,
     "current_sprint": "S2",
-    "specialist_cycles_run": 8,
-    "last_specialist": 2
+    "specialist_cycles_run": 9,
+    "last_specialist": 3
   },
   "patterns_learned": [
     {
@@ -834,6 +834,27 @@
         "scripts/merlin/store_oghams.gd",
         "scripts/merlin/store_run.gd"
       ]
+    },
+    {
+      "id": "PAT-079",
+      "learned_at": "2026-04-14T19:42:00Z",
+      "source": "SPEC-3-SFX",
+      "pattern": "run_3d_controller has parallel local ogham tracking (_ogham_cooldowns + _active_ogham_this_card) separate from StoreOghams.skill_cooldowns. Both must stay in sync.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/run/run_3d_controller.gd",
+        "scripts/merlin/store_oghams.gd"
+      ]
+    },
+    {
+      "id": "PAT-080",
+      "learned_at": "2026-04-14T19:42:00Z",
+      "source": "SPEC-3-SFX",
+      "pattern": "audio_integration.gd references SFXEngine class that does not exist. Always grep for class_name before using classes from external files.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/audio/audio_integration.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -851,7 +872,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 32,
+      "tasks_completed": 33,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -935,6 +956,10 @@
       "bugs_introduced": 0,
       "audit_checks_run": 24,
       "violations_found": 4
+    },
+    "sfx_audio_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {
