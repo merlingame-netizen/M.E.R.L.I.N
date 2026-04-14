@@ -53,6 +53,10 @@
     {
       "question_id": "q-20260414-003",
       "answer": "load_profile() entier (accès I/O disque, toujours synchronisé avec le fichier save)"
+    },
+    {
+      "question_id": "q-20260414-005",
+      "answer": "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin"
     }
   ]
 }
