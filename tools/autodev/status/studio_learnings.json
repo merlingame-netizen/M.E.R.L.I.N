@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T11:00:00Z",
+  "last_updated": "2026-04-14T12:00:00Z",
   "metrics": {
-    "total_cycles_completed": 37,
-    "total_dev_cycles": 20,
+    "total_cycles_completed": 38,
+    "total_dev_cycles": 21,
     "total_test_cycles": 17,
-    "bugs_found": 29,
-    "bugs_fixed": 21,
-    "tasks_completed": 57,
-    "tasks_pending": 19,
+    "bugs_found": 32,
+    "bugs_fixed": 24,
+    "tasks_completed": 59,
+    "tasks_pending": 25,
     "current_sprint": "S2",
-    "specialist_cycles_run": 3,
-    "last_specialist": 9
+    "specialist_cycles_run": 4,
+    "last_specialist": 11
   },
   "patterns_learned": [
     {
@@ -626,6 +626,29 @@
       "applies_to": [
         "scripts/merlin/merlin_effect_engine.gd"
       ]
+    },
+    {
+      "id": "PAT-056",
+      "learned_at": "2026-04-14T12:00:00Z",
+      "source": "SPEC-11-FACTION-AUDIT",
+      "pattern": "Save data keys must exactly match _get_default_profile() keys — 'biome_history' key never existed (correct key is 'biome_runs'). Always cross-reference save_data key names with _get_default_profile().",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_skeleton_generator.gd",
+        "save_data key naming convention"
+      ]
+    },
+    {
+      "id": "PAT-057",
+      "learned_at": "2026-04-14T12:00:00Z",
+      "source": "SPEC-11-FACTION-AUDIT",
+      "pattern": "arc_condition_type dispatch: when evaluating arc unlock, ALWAYS check arc_condition_type first, then read the correct context key. faction_rep uses rep_value, runs_in_biome uses previous_runs, fins_vues uses fins_vues, oghams_owned uses oghams_owned.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "llm_adapter_map_prompt.gd",
+        "arc condition evaluation",
+        "biome arc system"
+      ]
     }
   ],
   "agent_performance": {
@@ -643,7 +666,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 29,
+      "tasks_completed": 31,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -686,6 +709,10 @@
     },
     "save_persistence_auditor": {
       "tasks_completed": 0,
+      "bugs_introduced": 0
+    },
+    "faction_rep_auditor": {
+      "tasks_completed": 1,
       "bugs_introduced": 0
     }
   },

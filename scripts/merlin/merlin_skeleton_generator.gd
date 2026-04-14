@@ -45,10 +45,10 @@ static func _build_context(biome_id: String, ogham_id: String,
 	var faction_rep: Dictionary = game_state.get("faction_rep", {})
 	var rep_value: int = int(faction_rep.get(faction_biome, MerlinConstants.FACTION_SCORE_START))
 
-	# Biome history from save.
-	var biome_history: Dictionary = save_data.get("biome_history", {}).get(biome_id, {})
-	var previous_runs: int = int(biome_history.get("total_runs", 0))
-	var explored_detours: Array = biome_history.get("explored_detours", [])
+	# Biome history from save (biome_runs: {biome_id: int}).
+	var biome_runs_map: Dictionary = save_data.get("biome_runs", {})
+	var previous_runs: int = int(biome_runs_map.get(biome_id, 0))
+	var explored_detours: Array = save_data.get("explored_detours_" + biome_id, [])
 
 	# Weather selection based on biome season.
 	var season: String = str(biome_data.get("season", "printemps"))
@@ -61,12 +61,18 @@ static func _build_context(biome_id: String, ogham_id: String,
 	var trust_value: int = int(game_state.get("merlin_trust", 50))
 	var trust_tier: int = _trust_to_tier(trust_value)
 
+	# Arc condition context — fins_vues and oghams_owned for non-faction arc types.
+	var fins_vues: int = int(save_data.get("fins_vues", 0))
+	var oghams_owned: int = int(save_data.get("oghams", {}).get("owned", []).size())
+
 	return {
 		"biome_id": biome_id,
 		"ogham_id": ogham_id,
 		"faction_rep": rep_value,
 		"previous_runs": previous_runs,
 		"explored_detours": explored_detours,
+		"fins_vues": fins_vues,
+		"oghams_owned": oghams_owned,
 		"weather": weather,
 		"festival": festival,
 		"trust_tier": trust_tier,

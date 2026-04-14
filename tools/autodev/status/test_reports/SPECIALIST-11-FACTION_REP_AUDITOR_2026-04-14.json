@@ -1,0 +1,140 @@
+{
+  "report_type": "specialist_audit",
+  "specialist": 11,
+  "role": "FACTION_REPUTATION_SYSTEM_AUDITOR",
+  "timestamp": "2026-04-14T12:00:00Z",
+  "cycle_type": "dev",
+  "tasks_implemented": ["S2-ARC-CONDITION-EVAL", "CONST-VIOLATION-FIX-EFFECT-ENGINE"],
+  "audit_checks": {
+    "total": 8,
+    "pass": 5,
+    "fail_critical": 1,
+    "fail_high": 1,
+    "fail_low": 1
+  },
+  "findings": [
+    {
+      "id": "CHK-1",
+      "status": "PASS",
+      "check": "5 factions defined (FACTIONS array)",
+      "detail": "merlin_constants.gd:1067 — ['druides','anciens','korrigans','niamh','ankou'] ✅"
+    },
+    {
+      "id": "CHK-2",
+      "status": "PASS",
+      "check": "Thresholds 50/80 correct",
+      "detail": "FACTION_THRESHOLD_CONTENT=50, FACTION_THRESHOLD_ENDING=80, merlin_reputation_system.gd mirrors ✅"
+    },
+    {
+      "id": "CHK-3",
+      "status": "PASS",
+      "check": "Cross-run persistence meta.faction_rep",
+      "detail": "merlin_store.gd:199 initializes all 5 factions at FACTION_SCORE_START=20, merlin_save_system.gd:148 clamps on load ✅"
+    },
+    {
+      "id": "CHK-4",
+      "status": "PASS",
+      "check": "±20/card cap enforced",
+      "detail": "merlin_effect_engine.gd:414 _apply_faction_reputation clamps delta via clampi ✅"
+    },
+    {
+      "id": "CHK-5",
+      "status": "PASS",
+      "check": "FACTION_SCORE_MIN=0, FACTION_SCORE_MAX=100, FACTION_SCORE_START=20",
+      "detail": "merlin_constants.gd:1079-1081 correct ✅"
+    },
+    {
+      "id": "CHK-6",
+      "status": "FAIL-CRITICAL",
+      "check": "arc_condition_type evaluation in llm_adapter_map_prompt.gd",
+      "file": "scripts/merlin/llm_adapter_map_prompt.gd",
+      "line": 96,
+      "detail": "arc_unlocked always used rep_value>=threshold regardless of arc_condition_type. Biomes with runs_in_biome/fins_vues/oghams_owned were always unlocked from run 1 (rep_value=20>=3/5/2). FIXED: arc_condition_type dispatch added at lines 95-104.",
+      "fixed": true
+    },
+    {
+      "id": "CHK-7",
+      "status": "FAIL-HIGH",
+      "check": "biome_runs key wrong in merlin_skeleton_generator.gd",
+      "file": "scripts/merlin/merlin_skeleton_generator.gd",
+      "line": 49,
+      "detail": "save_data.get('biome_history',...) — key 'biome_history' never exists (should be 'biome_runs'). previous_runs always 0, explored_detours always []. FIXED: now uses biome_runs_map.get(biome_id, 0) + passes fins_vues + oghams_owned.",
+      "fixed": true
+    },
+    {
+      "id": "CHK-8",
+      "status": "FAIL-LOW",
+      "check": "CONST indexing with := in merlin_effect_engine.gd:93",
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "line": 93,
+      "detail": "var expected := int(VALID_CODES[code]) — := with CONST dict indexing violates code style. FIXED: explicit type annotation.",
+      "fixed": true
+    }
+  ],
+  "tasks_generated": [
+    {
+      "id": "SAVE-GET-SAVE-DATA-IMPL",
+      "priority": 6,
+      "sprint": "S2",
+      "type": "dev",
+      "title": "Implement get_save_data() in MerlinStore",
+      "description": "merlin_game_controller.gd:285 calls store.get_save_data() but the method doesn't exist in MerlinStore. save_data stays as {} fallback. Need to implement func get_save_data() -> Dictionary in merlin_store.gd that returns save_system.load_profile().",
+      "files": ["scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "FACTION-PERIOD-BONUS-IMPL",
+      "priority": 18,
+      "sprint": "S3",
+      "type": "dev",
+      "title": "Implement IN_GAME_PERIODS faction bonus in card resolution",
+      "description": "merlin_constants.gd:546-549 defines IN_GAME_PERIODS (aube/jour/crepuscule/nuit) each with faction bonuses +10%/+15%. No code applies these bonuses at card resolution time. Need to check current card index vs period ranges and apply rep multiplier in _apply_faction_reputation.",
+      "files": ["scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/merlin_constants.gd"],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "FACTION-ENDING-UNLOCK-CHECK",
+      "priority": 19,
+      "sprint": "S3",
+      "type": "test",
+      "title": "Test faction ending unlock (threshold 80) triggers correct narrative ending",
+      "description": "Verify that when any faction reaches >=80 in meta.faction_rep, the corresponding ending route is offered at run end. Check MerlinReputationSystem.get_available_endings() is called in run end flow.",
+      "files": ["scripts/merlin/merlin_reputation_system.gd", "scripts/core/game_flow_controller.gd"],
+      "agent": "game_playtester"
+    },
+    {
+      "id": "FACTION-CONTENT-UNLOCK-CHECK",
+      "priority": 20,
+      "sprint": "S3",
+      "type": "test",
+      "title": "Test faction content unlock (threshold 50) gates special cards",
+      "description": "Verify that cards with faction_required >= 50 threshold are only offered when player has corresponding faction_rep >= 50. Check card filtering in merlin_card_system.gd.",
+      "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_reputation_system.gd"],
+      "agent": "game_playtester"
+    },
+    {
+      "id": "T-S2-ARC-CONDITION-REGRESS",
+      "priority": 4,
+      "sprint": "S2",
+      "type": "test",
+      "title": "Regression test: arc_condition_type evaluation correctness",
+      "description": "After S2-ARC-CONDITION-EVAL fix: CHK-1: runs_in_biome arc locked on run 0, unlocked on run 3+. CHK-2: fins_vues arc locked at fins_vues=0, unlocked at 5. CHK-3: oghams_owned arc locked at 1 ogham, unlocked at 2. CHK-4: faction_rep arc still works correctly. CHK-5: biome_runs_map key correct in _build_context.",
+      "files": ["scripts/merlin/llm_adapter_map_prompt.gd", "scripts/merlin/merlin_skeleton_generator.gd"],
+      "agent": "bug_hunter"
+    }
+  ],
+  "patterns_learned": [
+    {
+      "id": "PAT-056",
+      "pattern": "Save data keys must exactly match _get_default_profile() keys — 'biome_history' != 'biome_runs' caused previous_runs=0 always",
+      "severity": "HIGH",
+      "applies_to": ["merlin_skeleton_generator.gd", "save_data key naming"]
+    },
+    {
+      "id": "PAT-057",
+      "pattern": "arc_condition_type dispatch: when evaluating arc unlock, always check arc_condition_type first, then read the correct context key (faction_rep/previous_runs/fins_vues/oghams_owned)",
+      "severity": "CRITICAL",
+      "applies_to": ["llm_adapter_map_prompt.gd", "arc condition evaluation"]
+    }
+  ]
+}

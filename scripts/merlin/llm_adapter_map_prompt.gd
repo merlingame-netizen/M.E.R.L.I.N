@@ -89,11 +89,19 @@ static func build_user_prompt(context: Dictionary) -> String:
 	var trust_tier: int = int(context.get("trust_tier", 0))
 	var trust_value: int = int(context.get("trust_value", 50))
 
-	# Arc info.
+	# Arc info — evaluate arc_condition_type correctly (bible v2.4 s.8).
 	var arc_name: String = str(biome_data.get("arc", ""))
 	var arc_cards: int = int(biome_data.get("arc_cards", 3))
+	var arc_condition_type: String = str(biome_data.get("arc_condition_type", "faction_rep"))
 	var arc_condition_value: int = int(biome_data.get("arc_condition_value", 30))
-	var arc_unlocked: bool = rep_value >= arc_condition_value
+	var arc_actual_value: int = rep_value  # default: faction_rep
+	if arc_condition_type == "runs_in_biome":
+		arc_actual_value = int(context.get("previous_runs", 0))
+	elif arc_condition_type == "fins_vues":
+		arc_actual_value = int(context.get("fins_vues", 0))
+	elif arc_condition_type == "oghams_owned":
+		arc_actual_value = int(context.get("oghams_owned", 0))
+	var arc_unlocked: bool = arc_actual_value >= arc_condition_value
 
 	# Build prompt.
 	var prompt: String = ""
@@ -125,7 +133,7 @@ static func build_user_prompt(context: Dictionary) -> String:
 	if arc_unlocked:
 		prompt += "\nARC NARRATIF : \"%s\" (debloque, %d cartes d'arc a integrer)\n" % [arc_name, arc_cards]
 	else:
-		prompt += "\nARC NARRATIF : \"%s\" (verrouille, rep %s < %d)\n" % [arc_name, faction_biome, arc_condition_value]
+		prompt += "\nARC NARRATIF : \"%s\" (verrouille, %s %d < %d)\n" % [arc_name, arc_condition_type, arc_actual_value, arc_condition_value]
 
 	prompt += "\nSCHEMA JSON ATTENDU:\n"
 	prompt += _json_schema_example(biome_id, season, weather)

@@ -1,177 +1,211 @@
-[
-  {
-    "id": "S2-DAY-SIGNAL-REGRESSION-TEST",
-    "sprint": "S2",
-    "priority": 11,
-    "status": "completed",
-    "type": "test",
-    "title": "Regression test: BUG-SIGNAL-DELTA-FIX + S2-DAY-TICK-FIX applied correctly",
-    "agent": "bug_hunter",
-    "completed_at": "2026-04-13T19:44:09Z",
-    "verdict": "PARTIAL_PASS",
-    "notes": "PARTIAL_PASS 6/9. CHECK-1 PASS: BUG-SIGNAL-DELTA-FIX verified — actual_delta emitted correctly (faction_rep=95+delta=+20 → signal emits +5). CHECK-5 regressions 5/5 PASS. 3 FAIL_PENDING blocked on S2-DAY-TICK-FIX (P8): CARDS_PER_DAY missing, run.day never incremented. Report: test_reports/S2-DAY-SIGNAL-REGRESSION-TEST_2026-04-13.json"
-  },
-  {
-    "id": "S2-BIOMES",
-    "sprint": "S2",
-    "priority": 7,
-    "status": "completed",
-    "type": "dev",
-    "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_constants.gd"
-    ],
-    "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6.",
-    "completed_at": "2026-04-13T20:53:21Z",
-    "notes": "Fixed 7/8 biome intervals (card_interval_range_min/max) per bible s.4.3. Fixed 7/8 arc names, card counts, and trigger conditions per bible s.3.6. New condition types added: runs_in_biome (landes_bruyere), fins_vues (collines_dolmens). PAT-033 added."
-  },
-  {
-    "id": "S2-BIOMES-REGRESSION-TEST",
-    "sprint": "S2",
-    "priority": 11,
-    "status": "completed",
-    "type": "test",
-    "title": "Test regression biomes: intervals + arcs alignes sur bible s.3.6/s.4.3",
-    "agent": "game_design_auditor",
-    "files": [
-      "scripts/merlin/merlin_constants.gd",
-      "docs/GAME_DESIGN_BIBLE.md"
-    ],
-    "description": "Verify S2-BIOMES fix: (1) Check all 8 card_interval_range_min/max match bible s.4.3 exactly (foret:12-15, landes:8-10, cotes:6-8, villages:8-10, cercles:10-12, marais:4-6, collines:10-12, iles:3-15). (2) Check arc IDs match bible s.3.6 (l_ermite_du_vent, le_phoque_d_argent, l_assemblee_secrete, le_rituel_oublie, le_tresor_des_feux, la_voix_des_rois, le_passage_de_morgane). (3) Check arc_cards counts (3,4,3,5,4,4,3,5). (4) Check arc_condition_faction and values. (5) Verify new condition types runs_in_biome + fins_vues are present. (6) No regression on foret_broceliande (unchanged).",
-    "completed_at": "2026-04-13T21:15:00Z",
-    "notes": "PASS 6/6 — all intervals, arc IDs, arc_cards, conditions verified vs bible s.3.6/s.4.3. 1 LOW note: cotes dominant_faction mismatch (BUG-COTES-FACTION-FIX created P18)."
-  },
-  {
-    "id": "S4-SFXMANAGER-AUDIT",
-    "sprint": "S4",
-    "priority": 19,
-    "status": "completed",
-    "type": "test",
-    "title": "Audit SFXManager: 30+ sons proceduaux enregistres, zero refs manquantes",
-    "agent": "bug_hunter",
-    "files": [
-      "scripts/autoload/SFXManager.gd",
-      "scripts/autoload/sfx_recipes.gd",
-      "scripts/autoload/sfx_recipes_ambient.gd"
-    ],
-    "description": "Bible overview: SFXManager gere 30+ sons proceduaux. Verifier: (1) SFXManager.gd existe et est un autoload valide. (2) >= 30 entrees de sons enregistrees. (3) Aucune ref a un fichier .wav/.ogg/.mp3 manquant. (4) play_sfx() / stop_sfx() existent. (5) Pas de deprecations AudioStreamPlayer Godot 3 vs 4. Rapport: count sons, refs manquantes, pattern procedural.",
-    "completed_at": "2026-04-14T00:15:00Z",
-    "notes": "PARTIAL_PASS 6/8. PASS: autoload valid, 57 sounds (>30), zero file refs, play()/play_varied() API, no G3 deprecations, 100% gen_ coverage. FAIL_MEDIUM: 7 caller sounds missing from registry (card_reveal, confirm, encounter, success, fail, neutral, danger). FAIL_LOW: amb_iles missing. Created BUG-SFX-MISSING-SOUNDS(P5)+BUG-SFX-AMB-ILES(P22). PAT-037+PAT-038 added."
-  },
-  {
-    "id": "BUG-SFX-MISSING-SOUNDS",
-    "sprint": "S4",
-    "priority": 5,
-    "status": "completed",
-    "type": "dev",
-    "title": "Add 7 missing SFX: card_reveal, confirm, encounter, success, fail, neutral, danger",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/autoload/SFXManager.gd",
-      "scripts/autoload/sfx_recipes_ambient.gd"
-    ],
-    "description": "S4-SFXMANAGER-AUDIT found 7 sound names called in game scripts but not registered in SFXManager._generate_all_sounds(). They silently skip (no crash, but UX degradation at key moments). Fix: (1) Add gen_ methods to SFXRecipesAmbient for each: gen_card_reveal() (card flip: mid freq click+shimmer), gen_confirm() (positive UI: low chime), gen_encounter() (tension: minor chord swell), gen_success() (minigame win: ascending arp), gen_fail() (minigame lose: descending buzz), gen_neutral() (flat beep), gen_danger() (low pulsing alarm). (2) Add all 7 names to names[] array in SFXManager._generate_all_sounds(). (3) Add volume mappings in _get_volume_for(): card_reveal/confirm→ui, encounter/danger→magic, success/fail/neutral→transition. Callers: book_cinematic.gd:76+208, broceliande_forest_3d.gd:1043, encounter_card_overlay.gd:179+181+183, tutorial_card_layer.gd:407.",
-    "completed_at": "2026-04-14T01:00:00Z",
-    "notes": "Added 7 gen_ methods to sfx_recipes_ambient.gd (card_reveal, confirm, encounter, success, fail, neutral, danger). Added names to SFXManager._generate_all_sounds() names array. Added volume mappings: card_reveal/confirm/neutral→ui, encounter/danger→magic, success/fail→transition. Callers in book_cinematic, broceliande_forest_3d, encounter_card_overlay, tutorial_card_layer now resolve at startup."
-  },
-  {
-    "id": "T-S2-ANAM-REGRESSION-TEST",
-    "sprint": "S2",
-    "priority": 11,
-    "status": "completed",
-    "type": "test",
-    "title": "Verify S2-ANAM-VERIFY: anam_accumulated + death ratio formula implementation",
-    "agent": "game_design_auditor",
-    "files": [
-      "scripts/merlin/merlin_effect_engine.gd",
-      "scripts/merlin/store_run.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "completed_at": "2026-04-14T06:00:00Z",
-    "notes": "PARTIAL_PASS 4/8. CHK-3 PASS: death ratio min(cards/30,1.0) verified (store_run:352-354). CHK-4 PASS: apply_run_rewards credits meta.anam (store_run:382). CHK-6 PASS: double total_runs fix confirmed (single source in apply_run_rewards:383). CHK-7 PASS: fins_vues initialized in _get_default_profile():22 + incremented in handle_run_end():290. CHK-1/2/5 FAIL_PENDING: anam_accumulated not implemented — blocked on q-20260414-001. CHK-8 AWAITING_DIRECTOR. PAT-045 added: run.anam is write-only field (never consumed by rewards pipeline)."
-  },
-  {
-    "id": "T-S2-ANAM-DEATH-PENALTY-REGRESS",
-    "sprint": "S2",
-    "priority": 6,
-    "type": "test",
-    "title": "Regression test: BUG-ANAM-DEATH-PENALTY-FIX — verify accumulator + death ratio",
-    "agent": "game_design_auditor",
-    "completed_at": "2026-04-14T10:00:00Z",
-    "notes": "PASS 5/5. CHK-1: anam_accumulated written in _apply_add_anam() effect_engine:441. CHK-2: meta[anam] NOT written during run (comment-confirmed). CHK-3: anam_accumulated=0 in init_run() store_run:17. CHK-4: card_anam added to rewards BEFORE death ratio block store_run:349. CHK-5: anam_accumulated:0 in _get_default_run_state() save_system:83. Math verified: card_anam=10, cards=5 → int(10*0.167)=1 (correct). Victory scenario: full credit. Implementation faithful to Director q-20260414-001 Option B."
-  },
-  {
-    "id": "BUG-COTES-FACTION-FIX",
-    "sprint": "S2",
-    "priority": 18,
-    "type": "dev",
-    "title": "Fix cotes_sauvages.dominant_faction: 'korrigans' → 'niamh'",
-    "agent": "godot_expert",
-    "completed_at": "2026-04-14T10:00:00Z",
-    "notes": "1-line fix at merlin_constants.gd:435. cotes_sauvages.dominant_faction changed 'korrigans'→'niamh'. Rationale: arc condition requires Niamh rep >= 30, PNJ Maelle is guardian of the coasts (Niamh domain). Korrigans = marshland faction (incorrect for coastal biome). Thematic alignment restored."
-  },
-  {
-    "id": "SAVE-VALIDATE-FINS-VUES",
-    "sprint": "S2",
-    "priority": 23,
-    "status": "completed",
-    "type": "dev",
-    "title": "Add fins_vues + echo_memory to _validate() required_keys",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "completed_at": "2026-04-14T11:00:00Z",
-    "notes": "Added fins_vues/echo_memory/run_history/whispers_seen to required_keys (line 249). Type checks added: fins_vues numeric (279), array types for 4 array fields (283-286), echo_memory dict (288-290). Bonus: anam_accumulated added to _validate_run_state() required_keys (296)."
-  },
-  {
-    "id": "SAVE-VALIDATE-FINS-VUES",
-    "sprint": "S2",
-    "priority": 23,
-    "status": "completed",
-    "type": "dev",
-    "title": "Add fins_vues + echo_memory to _validate() required_keys",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "SPECIALIST-9 CHK-7: _validate() required_keys (merlin_save_system.gd:244) missing 'fins_vues', 'echo_memory', 'run_history', 'whispers_seen'. These fields exist in _get_default_profile() but are not validated. Add them to required_keys so a save missing fins_vues triggers default-fill warning + logs. Trivial: add 4 strings to the required_keys array.",
-    "completed_at": "2026-04-14T11:00:00Z",
-    "notes": "Added fins_vues/echo_memory/run_history/whispers_seen to required_keys (line 249). Added type checks: fins_vues numeric (line 279), array types for whispers_seen/run_history/endings_seen/arc_tags (lines 283-286), echo_memory dict (lines 288-290). Bonus: added anam_accumulated to _validate_run_state() required_keys (line 296). 5 new save tasks generated."
-  },
-  {
-    "id": "T-S2-ARC-EVAL-TEST",
-    "sprint": "S2",
-    "priority": 19,
-    "status": "completed",
-    "type": "test",
-    "title": "Verify S2-ARC-CONDITION-EVAL: runs_in_biome + fins_vues condition evaluation",
-    "agent": "game_design_auditor",
-    "files": [
-      "scripts/merlin/merlin_skeleton_generator.gd",
-      "addons/merlin_ai/merlin_omniscient.gd",
-      "scripts/merlin/merlin_constants.gd"
-    ],
-    "description": "Run AFTER S2-ARC-CONDITION-EVAL (P16) completes. Verify: (1) Arc condition evaluator handles 'runs_in_biome' — checks meta.biome_run_counts.get(biome_id, 0) >= value. (2) Handles 'fins_vues' — checks meta.fins_vues (or equivalent counter) >= value. (3) Existing conditions 'faction_rep' and 'oghams_owned' still evaluate correctly (regression). (4) landes_bruyere arc unlocks when runs_in_biome >= 3. (5) collines_dolmens arc unlocks when fins_vues >= 5. (6) meta has the required fields (biome_run_counts dict, fins_vues int) — if missing, flag as FAIL_CRITICAL.",
-    "completed_at": "2026-04-14T10:48:35Z",
-    "result": "FAIL_CRITICAL",
-    "notes": "FAIL 4/8: arc_condition_type runs_in_biome/fins_vues/oghams_owned never evaluated — llm_adapter_map_prompt.gd:96 always uses rep_value >= arc_condition_value. When arc_condition_faction empty, rep_value=FACTION_SCORE_START=20 satisfies all non-faction thresholds. 3 biomes arc always unlocked. S2-ARC-CONDITION-EVAL bumped P16→P2."
-  },
-  {
-    "id": "T-SAVE-VALIDATE-REGRESSION",
-    "sprint": "S2",
-    "priority": 33,
-    "status": "completed",
-    "type": "test",
-    "title": "Verify SAVE-VALIDATE-FINS-VUES: regression test for _validate() additions",
-    "agent": "bug_hunter",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Run AFTER SAVE-VALIDATE-FINS-VUES (P23) and SAVE-FINS-VUES-CLAMP (P31). Verify: (1) _validate() required_keys includes fins_vues/echo_memory/run_history/whispers_seen. (2) Missing fins_vues → _validate() returns false + push_warning. (3) fins_vues='corrupted_string' → typeof check triggers false return. (4) whispers_seen=null → array check triggers false return. (5) echo_memory=[] (Array not Dict) → dict check triggers false return. (6) Existing passing saves still pass (regression): starter oghams, 5 factions, anam numeric. (7) _validate_run_state() includes anam_accumulated. (8) Old run_state missing anam_accumulated → fill from default → validates OK.",
-    "completed_at": "2026-04-14T10:48:35Z",
-    "result": "PASS",
-    "notes": "PASS 7/8, SKIP 1 (SAVE-FINS-VUES-CLAMP not yet done). All _validate() additions verified: fins_vues type-check, echo_memory dict-check, whispers_seen array-check, anam_accumulated in run_state required_keys."
-  }
-]
+{
+  "archived_tasks": [
+    {
+      "id": "S2-DAY-SIGNAL-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Regression test: BUG-SIGNAL-DELTA-FIX + S2-DAY-TICK-FIX applied correctly",
+      "agent": "bug_hunter",
+      "completed_at": "2026-04-13T19:44:09Z",
+      "verdict": "PARTIAL_PASS",
+      "notes": "PARTIAL_PASS 6/9. CHECK-1 PASS: BUG-SIGNAL-DELTA-FIX verified — actual_delta emitted correctly (faction_rep=95+delta=+20 → signal emits +5). CHECK-5 regressions 5/5 PASS. 3 FAIL_PENDING blocked on S2-DAY-TICK-FIX (P8): CARDS_PER_DAY missing, run.day never incremented. Report: test_reports/S2-DAY-SIGNAL-REGRESSION-TEST_2026-04-13.json"
+    },
+    {
+      "id": "S2-BIOMES",
+      "sprint": "S2",
+      "priority": 7,
+      "status": "completed",
+      "type": "dev",
+      "title": "Corriger intervals biomes + conditions arcs (bible v2.4 s.3.6 + s.4.3)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "S2-INTEGRATION audit: 7/8 biome intervals wrong vs bible s.4.3 + arc names/conditions/counts wrong for 7 biomes vs bible s.3.6.",
+      "completed_at": "2026-04-13T20:53:21Z",
+      "notes": "Fixed 7/8 biome intervals (card_interval_range_min/max) per bible s.4.3. Fixed 7/8 arc names, card counts, and trigger conditions per bible s.3.6. New condition types added: runs_in_biome (landes_bruyere), fins_vues (collines_dolmens). PAT-033 added."
+    },
+    {
+      "id": "S2-BIOMES-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Test regression biomes: intervals + arcs alignes sur bible s.3.6/s.4.3",
+      "agent": "game_design_auditor",
+      "files": [
+        "scripts/merlin/merlin_constants.gd",
+        "docs/GAME_DESIGN_BIBLE.md"
+      ],
+      "description": "Verify S2-BIOMES fix: (1) Check all 8 card_interval_range_min/max match bible s.4.3 exactly (foret:12-15, landes:8-10, cotes:6-8, villages:8-10, cercles:10-12, marais:4-6, collines:10-12, iles:3-15). (2) Check arc IDs match bible s.3.6 (l_ermite_du_vent, le_phoque_d_argent, l_assemblee_secrete, le_rituel_oublie, le_tresor_des_feux, la_voix_des_rois, le_passage_de_morgane). (3) Check arc_cards counts (3,4,3,5,4,4,3,5). (4) Check arc_condition_faction and values. (5) Verify new condition types runs_in_biome + fins_vues are present. (6) No regression on foret_broceliande (unchanged).",
+      "completed_at": "2026-04-13T21:15:00Z",
+      "notes": "PASS 6/6 — all intervals, arc IDs, arc_cards, conditions verified vs bible s.3.6/s.4.3. 1 LOW note: cotes dominant_faction mismatch (BUG-COTES-FACTION-FIX created P18)."
+    },
+    {
+      "id": "S4-SFXMANAGER-AUDIT",
+      "sprint": "S4",
+      "priority": 19,
+      "status": "completed",
+      "type": "test",
+      "title": "Audit SFXManager: 30+ sons proceduaux enregistres, zero refs manquantes",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ],
+      "description": "Bible overview: SFXManager gere 30+ sons proceduaux. Verifier: (1) SFXManager.gd existe et est un autoload valide. (2) >= 30 entrees de sons enregistrees. (3) Aucune ref a un fichier .wav/.ogg/.mp3 manquant. (4) play_sfx() / stop_sfx() existent. (5) Pas de deprecations AudioStreamPlayer Godot 3 vs 4. Rapport: count sons, refs manquantes, pattern procedural.",
+      "completed_at": "2026-04-14T00:15:00Z",
+      "notes": "PARTIAL_PASS 6/8. PASS: autoload valid, 57 sounds (>30), zero file refs, play()/play_varied() API, no G3 deprecations, 100% gen_ coverage. FAIL_MEDIUM: 7 caller sounds missing from registry (card_reveal, confirm, encounter, success, fail, neutral, danger). FAIL_LOW: amb_iles missing. Created BUG-SFX-MISSING-SOUNDS(P5)+BUG-SFX-AMB-ILES(P22). PAT-037+PAT-038 added."
+    },
+    {
+      "id": "BUG-SFX-MISSING-SOUNDS",
+      "sprint": "S4",
+      "priority": 5,
+      "status": "completed",
+      "type": "dev",
+      "title": "Add 7 missing SFX: card_reveal, confirm, encounter, success, fail, neutral, danger",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ],
+      "description": "S4-SFXMANAGER-AUDIT found 7 sound names called in game scripts but not registered in SFXManager._generate_all_sounds(). They silently skip (no crash, but UX degradation at key moments). Fix: (1) Add gen_ methods to SFXRecipesAmbient for each: gen_card_reveal() (card flip: mid freq click+shimmer), gen_confirm() (positive UI: low chime), gen_encounter() (tension: minor chord swell), gen_success() (minigame win: ascending arp), gen_fail() (minigame lose: descending buzz), gen_neutral() (flat beep), gen_danger() (low pulsing alarm). (2) Add all 7 names to names[] array in SFXManager._generate_all_sounds(). (3) Add volume mappings in _get_volume_for(): card_reveal/confirm→ui, encounter/danger→magic, success/fail/neutral→transition. Callers: book_cinematic.gd:76+208, broceliande_forest_3d.gd:1043, encounter_card_overlay.gd:179+181+183, tutorial_card_layer.gd:407.",
+      "completed_at": "2026-04-14T01:00:00Z",
+      "notes": "Added 7 gen_ methods to sfx_recipes_ambient.gd (card_reveal, confirm, encounter, success, fail, neutral, danger). Added names to SFXManager._generate_all_sounds() names array. Added volume mappings: card_reveal/confirm/neutral→ui, encounter/danger→magic, success/fail→transition. Callers in book_cinematic, broceliande_forest_3d, encounter_card_overlay, tutorial_card_layer now resolve at startup."
+    },
+    {
+      "id": "T-S2-ANAM-REGRESSION-TEST",
+      "sprint": "S2",
+      "priority": 11,
+      "status": "completed",
+      "type": "test",
+      "title": "Verify S2-ANAM-VERIFY: anam_accumulated + death ratio formula implementation",
+      "agent": "game_design_auditor",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "completed_at": "2026-04-14T06:00:00Z",
+      "notes": "PARTIAL_PASS 4/8. CHK-3 PASS: death ratio min(cards/30,1.0) verified (store_run:352-354). CHK-4 PASS: apply_run_rewards credits meta.anam (store_run:382). CHK-6 PASS: double total_runs fix confirmed (single source in apply_run_rewards:383). CHK-7 PASS: fins_vues initialized in _get_default_profile():22 + incremented in handle_run_end():290. CHK-1/2/5 FAIL_PENDING: anam_accumulated not implemented — blocked on q-20260414-001. CHK-8 AWAITING_DIRECTOR. PAT-045 added: run.anam is write-only field (never consumed by rewards pipeline)."
+    },
+    {
+      "id": "T-S2-ANAM-DEATH-PENALTY-REGRESS",
+      "sprint": "S2",
+      "priority": 6,
+      "type": "test",
+      "title": "Regression test: BUG-ANAM-DEATH-PENALTY-FIX — verify accumulator + death ratio",
+      "agent": "game_design_auditor",
+      "completed_at": "2026-04-14T10:00:00Z",
+      "notes": "PASS 5/5. CHK-1: anam_accumulated written in _apply_add_anam() effect_engine:441. CHK-2: meta[anam] NOT written during run (comment-confirmed). CHK-3: anam_accumulated=0 in init_run() store_run:17. CHK-4: card_anam added to rewards BEFORE death ratio block store_run:349. CHK-5: anam_accumulated:0 in _get_default_run_state() save_system:83. Math verified: card_anam=10, cards=5 → int(10*0.167)=1 (correct). Victory scenario: full credit. Implementation faithful to Director q-20260414-001 Option B."
+    },
+    {
+      "id": "BUG-COTES-FACTION-FIX",
+      "sprint": "S2",
+      "priority": 18,
+      "type": "dev",
+      "title": "Fix cotes_sauvages.dominant_faction: 'korrigans' → 'niamh'",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T10:00:00Z",
+      "notes": "1-line fix at merlin_constants.gd:435. cotes_sauvages.dominant_faction changed 'korrigans'→'niamh'. Rationale: arc condition requires Niamh rep >= 30, PNJ Maelle is guardian of the coasts (Niamh domain). Korrigans = marshland faction (incorrect for coastal biome). Thematic alignment restored."
+    },
+    {
+      "id": "SAVE-VALIDATE-FINS-VUES",
+      "sprint": "S2",
+      "priority": 23,
+      "status": "completed",
+      "type": "dev",
+      "title": "Add fins_vues + echo_memory to _validate() required_keys",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "completed_at": "2026-04-14T11:00:00Z",
+      "notes": "Added fins_vues/echo_memory/run_history/whispers_seen to required_keys (line 249). Type checks added: fins_vues numeric (279), array types for 4 array fields (283-286), echo_memory dict (288-290). Bonus: anam_accumulated added to _validate_run_state() required_keys (296)."
+    },
+    {
+      "id": "SAVE-VALIDATE-FINS-VUES",
+      "sprint": "S2",
+      "priority": 23,
+      "status": "completed",
+      "type": "dev",
+      "title": "Add fins_vues + echo_memory to _validate() required_keys",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "description": "SPECIALIST-9 CHK-7: _validate() required_keys (merlin_save_system.gd:244) missing 'fins_vues', 'echo_memory', 'run_history', 'whispers_seen'. These fields exist in _get_default_profile() but are not validated. Add them to required_keys so a save missing fins_vues triggers default-fill warning + logs. Trivial: add 4 strings to the required_keys array.",
+      "completed_at": "2026-04-14T11:00:00Z",
+      "notes": "Added fins_vues/echo_memory/run_history/whispers_seen to required_keys (line 249). Added type checks: fins_vues numeric (line 279), array types for whispers_seen/run_history/endings_seen/arc_tags (lines 283-286), echo_memory dict (lines 288-290). Bonus: added anam_accumulated to _validate_run_state() required_keys (line 296). 5 new save tasks generated."
+    },
+    {
+      "id": "T-S2-ARC-EVAL-TEST",
+      "sprint": "S2",
+      "priority": 19,
+      "status": "completed",
+      "type": "test",
+      "title": "Verify S2-ARC-CONDITION-EVAL: runs_in_biome + fins_vues condition evaluation",
+      "agent": "game_design_auditor",
+      "files": [
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "Run AFTER S2-ARC-CONDITION-EVAL (P16) completes. Verify: (1) Arc condition evaluator handles 'runs_in_biome' — checks meta.biome_run_counts.get(biome_id, 0) >= value. (2) Handles 'fins_vues' — checks meta.fins_vues (or equivalent counter) >= value. (3) Existing conditions 'faction_rep' and 'oghams_owned' still evaluate correctly (regression). (4) landes_bruyere arc unlocks when runs_in_biome >= 3. (5) collines_dolmens arc unlocks when fins_vues >= 5. (6) meta has the required fields (biome_run_counts dict, fins_vues int) — if missing, flag as FAIL_CRITICAL.",
+      "completed_at": "2026-04-14T10:48:35Z",
+      "result": "FAIL_CRITICAL",
+      "notes": "FAIL 4/8: arc_condition_type runs_in_biome/fins_vues/oghams_owned never evaluated — llm_adapter_map_prompt.gd:96 always uses rep_value >= arc_condition_value. When arc_condition_faction empty, rep_value=FACTION_SCORE_START=20 satisfies all non-faction thresholds. 3 biomes arc always unlocked. S2-ARC-CONDITION-EVAL bumped P16→P2."
+    },
+    {
+      "id": "T-SAVE-VALIDATE-REGRESSION",
+      "sprint": "S2",
+      "priority": 33,
+      "status": "completed",
+      "type": "test",
+      "title": "Verify SAVE-VALIDATE-FINS-VUES: regression test for _validate() additions",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "description": "Run AFTER SAVE-VALIDATE-FINS-VUES (P23) and SAVE-FINS-VUES-CLAMP (P31). Verify: (1) _validate() required_keys includes fins_vues/echo_memory/run_history/whispers_seen. (2) Missing fins_vues → _validate() returns false + push_warning. (3) fins_vues='corrupted_string' → typeof check triggers false return. (4) whispers_seen=null → array check triggers false return. (5) echo_memory=[] (Array not Dict) → dict check triggers false return. (6) Existing passing saves still pass (regression): starter oghams, 5 factions, anam numeric. (7) _validate_run_state() includes anam_accumulated. (8) Old run_state missing anam_accumulated → fill from default → validates OK.",
+      "completed_at": "2026-04-14T10:48:35Z",
+      "result": "PASS",
+      "notes": "PASS 7/8, SKIP 1 (SAVE-FINS-VUES-CLAMP not yet done). All _validate() additions verified: fins_vues type-check, echo_memory dict-check, whispers_seen array-check, anam_accumulated in run_state required_keys."
+    },
+    {
+      "id": "S2-ARC-CONDITION-EVAL",
+      "sprint": "S2",
+      "priority": 2,
+      "status": "completed",
+      "type": "dev",
+      "title": "Implementer evaluation arc_condition_type: runs_in_biome et fins_vues",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "Two new arc_condition_type values added by S2-BIOMES: 'runs_in_biome' (landes_bruyere: value=3) and 'fins_vues' (collines_dolmens: value=5). These need evaluation code in the MOS/arc-condition checker. Currently only 'faction_rep' and 'oghams_owned' are evaluated. Fix: (1) Find where arc_condition_type is evaluated (merlin_skeleton_generator.gd:42, llm_adapter_map_prompt.gd:59-96). (2) Add 'runs_in_biome' case: meta.biome_runs.get(biome_id, 0) >= arc_condition_value (NOTE: field is 'biome_runs' NOT 'biome_run_counts' — see PAT-049). (3) Add 'fins_vues' case: meta.fins_vues >= arc_condition_value. (4) Verify meta has the needed fields (biome_runs dict, fins_vues int). Add constants ARC_CONDITION_TYPES array for documentation.",
+      "notes": "FIXED: llm_adapter_map_prompt.gd:95-104 — arc_condition_type dispatch added. runs_in_biome uses previous_runs, fins_vues uses fins_vues, oghams_owned uses oghams_owned. merlin_skeleton_generator.gd:49-66 — biome_history→biome_runs_map (correct key), added fins_vues+oghams_owned to context.",
+      "completed_at": "2026-04-14T12:00:00Z"
+    },
+    {
+      "id": "CONST-VIOLATION-FIX-EFFECT-ENGINE",
+      "sprint": "S2",
+      "priority": 3,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix := with CONST indexing in merlin_effect_engine.gd:93",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd"
+      ],
+      "description": "TRIVIAL: Line 93 uses  — VALID_CODES is a const (line 4). Violates rule: NEVER use := with CONST indexing. Fix: . Also check line 90:  → .",
+      "completed_at": "2026-04-14T12:00:00Z",
+      "notes": "FIXED: merlin_effect_engine.gd:93 — 'var expected := int(VALID_CODES[code])' → 'var expected: int = int(VALID_CODES[code])'. Explicit type annotation replaces := with CONST indexing."
+    }
+  ]
+}

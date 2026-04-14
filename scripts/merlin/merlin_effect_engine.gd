@@ -90,7 +90,7 @@ func _parse_effect(effect_code: String) -> Dictionary:
 	var code := parts[0]
 	if not VALID_CODES.has(code):
 		return {"ok": false, "error": "Unknown effect: %s" % code}
-	var expected := int(VALID_CODES[code])
+	var expected: int = int(VALID_CODES[code])
 	var args := parts.slice(1, parts.size())
 	if args.size() != expected:
 		return {"ok": false, "error": "Bad arg count for %s" % code}

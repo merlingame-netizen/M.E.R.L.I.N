@@ -44,22 +44,6 @@
       "description": "Director q-003: FONT_TITLE (celtique) + FONT_BODY (sans-serif) dans MerlinVisual."
     },
     {
-      "id": "S2-ARC-CONDITION-EVAL",
-      "sprint": "S2",
-      "priority": 2,
-      "status": "pending",
-      "type": "dev",
-      "title": "Implementer evaluation arc_condition_type: runs_in_biome et fins_vues",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_skeleton_generator.gd",
-        "addons/merlin_ai/merlin_omniscient.gd",
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "Two new arc_condition_type values added by S2-BIOMES: 'runs_in_biome' (landes_bruyere: value=3) and 'fins_vues' (collines_dolmens: value=5). These need evaluation code in the MOS/arc-condition checker. Currently only 'faction_rep' and 'oghams_owned' are evaluated. Fix: (1) Find where arc_condition_type is evaluated (merlin_skeleton_generator.gd:42, llm_adapter_map_prompt.gd:59-96). (2) Add 'runs_in_biome' case: meta.biome_runs.get(biome_id, 0) >= arc_condition_value (NOTE: field is 'biome_runs' NOT 'biome_run_counts' — see PAT-049). (3) Add 'fins_vues' case: meta.fins_vues >= arc_condition_value. (4) Verify meta has the needed fields (biome_runs dict, fins_vues int). Add constants ARC_CONDITION_TYPES array for documentation.",
-      "notes": "[BUMPED P16→P2: T-S2-ARC-EVAL-TEST FAIL_CRITICAL — 3 biomes arc always unlocked due to missing context fields and no arc_condition_type dispatch]"
-    },
-    {
       "id": "S3-STORY-LOG-RAG",
       "sprint": "S3",
       "priority": 17,
@@ -243,19 +227,6 @@
       "description": "SPECIALIST-9: _validate() checks biome_runs exists (is in required_keys) but not its sub-keys. If a save has biome_runs={} (empty dict), arc condition 'runs_in_biome' would silently return 0 for all biomes. Fix: after the existing faction_rep loop in _validate(), add a biome_runs loop: for biome in ['foret_broceliande','landes_bruyere','cotes_sauvages','villages_celtes','cercles_pierres','marais_korrigans','collines_dolmens','iles_mystiques']: if not biome_runs.has(biome): push_warning + return false. Or use MerlinConstants.BIOMES array if it exists."
     },
     {
-      "id": "CONST-VIOLATION-FIX-EFFECT-ENGINE",
-      "sprint": "S2",
-      "priority": 3,
-      "status": "pending",
-      "type": "dev",
-      "title": "Fix := with CONST indexing in merlin_effect_engine.gd:93",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd"
-      ],
-      "description": "TRIVIAL: Line 93 uses  — VALID_CODES is a const (line 4). Violates rule: NEVER use := with CONST indexing. Fix: . Also check line 90:  → ."
-    },
-    {
       "id": "PERF-SKELETON-PROCEDURAL-SPLIT",
       "sprint": "S3",
       "priority": 35,
@@ -306,6 +277,75 @@
         "scripts/merlin/store_run.gd"
       ],
       "description": "store_run.gd:202 — check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
+    },
+    {
+      "id": "SAVE-GET-SAVE-DATA-IMPL",
+      "sprint": "S2",
+      "priority": 6,
+      "type": "dev",
+      "status": "pending",
+      "title": "Implement get_save_data() in MerlinStore",
+      "description": "merlin_game_controller.gd:285 calls store.get_save_data() but the method doesn't exist in MerlinStore. save_data stays as {} fallback, so biome_runs/fins_vues/oghams_owned are always default. Need to implement func get_save_data() -> Dictionary in merlin_store.gd returning save_system.load_profile().",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "T-S2-ARC-CONDITION-REGRESS",
+      "sprint": "S2",
+      "priority": 4,
+      "type": "test",
+      "status": "pending",
+      "title": "Regression test: arc_condition_type evaluation correctness",
+      "description": "After S2-ARC-CONDITION-EVAL fix: CHK-1: runs_in_biome arc locked run 0, unlocked run 3+. CHK-2: fins_vues arc locked=0 unlocked=5. CHK-3: oghams_owned locked=1 unlocked=2. CHK-4: faction_rep still correct. CHK-5: biome_runs_map key correct. CHK-6: context has fins_vues/oghams_owned keys.",
+      "files": [
+        "scripts/merlin/llm_adapter_map_prompt.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd"
+      ],
+      "agent": "bug_hunter"
+    },
+    {
+      "id": "FACTION-PERIOD-BONUS-IMPL",
+      "sprint": "S3",
+      "priority": 18,
+      "type": "dev",
+      "status": "pending",
+      "title": "Implement IN_GAME_PERIODS faction bonus in card resolution",
+      "description": "merlin_constants.gd:546-549 defines IN_GAME_PERIODS (aube/jour/crepuscule/nuit) each with faction bonuses. No code applies these at card resolution. Check current card index vs period card ranges, apply rep multiplier in _apply_faction_reputation.",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "agent": "godot_expert"
+    },
+    {
+      "id": "FACTION-ENDING-UNLOCK-CHECK",
+      "sprint": "S3",
+      "priority": 19,
+      "type": "test",
+      "status": "pending",
+      "title": "Test faction ending unlock (>=80) triggers correct narrative route",
+      "description": "Verify MerlinReputationSystem.get_available_endings() is called at run end when faction_rep>=80. Check game_flow_controller.gd run end sequence.",
+      "files": [
+        "scripts/merlin/merlin_reputation_system.gd",
+        "scripts/core/game_flow_controller.gd"
+      ],
+      "agent": "game_playtester"
+    },
+    {
+      "id": "FACTION-CONTENT-UNLOCK-CHECK",
+      "sprint": "S3",
+      "priority": 20,
+      "type": "test",
+      "status": "pending",
+      "title": "Test faction content unlock (>=50) gates special cards correctly",
+      "description": "Verify cards with faction_required>=50 only appear when player faction_rep>=50. Check card filtering in merlin_card_system.gd.",
+      "files": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_reputation_system.gd"
+      ],
+      "agent": "game_playtester"
     }
   ]
 }
