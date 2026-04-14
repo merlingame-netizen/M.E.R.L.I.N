@@ -537,7 +537,27 @@
       ],
       "completed_at": "2026-04-14T06:00:00Z",
       "notes": "PARTIAL_PASS 4/8. CHK-3 PASS: death ratio min(cards/30,1.0) verified (store_run:352-354). CHK-4 PASS: apply_run_rewards credits meta.anam (store_run:382). CHK-6 PASS: double total_runs fix confirmed (single source in apply_run_rewards:383). CHK-7 PASS: fins_vues initialized in _get_default_profile():22 + incremented in handle_run_end():290. CHK-1/2/5 FAIL_PENDING: anam_accumulated not implemented — blocked on q-20260414-001. CHK-8 AWAITING_DIRECTOR. PAT-045 added: run.anam is write-only field (never consumed by rewards pipeline)."
+    },
+    {
+      "id": "T-S2-ANAM-DEATH-PENALTY-REGRESS",
+      "sprint": "S2",
+      "priority": 6,
+      "type": "test",
+      "title": "Regression test: BUG-ANAM-DEATH-PENALTY-FIX — verify accumulator + death ratio",
+      "agent": "game_design_auditor",
+      "completed_at": "2026-04-14T10:00:00Z",
+      "notes": "PASS 5/5. CHK-1: anam_accumulated written in _apply_add_anam() effect_engine:441. CHK-2: meta[anam] NOT written during run (comment-confirmed). CHK-3: anam_accumulated=0 in init_run() store_run:17. CHK-4: card_anam added to rewards BEFORE death ratio block store_run:349. CHK-5: anam_accumulated:0 in _get_default_run_state() save_system:83. Math verified: card_anam=10, cards=5 → int(10*0.167)=1 (correct). Victory scenario: full credit. Implementation faithful to Director q-20260414-001 Option B."
+    },
+    {
+      "id": "BUG-COTES-FACTION-FIX",
+      "sprint": "S2",
+      "priority": 18,
+      "type": "dev",
+      "title": "Fix cotes_sauvages.dominant_faction: 'korrigans' → 'niamh'",
+      "agent": "godot_expert",
+      "completed_at": "2026-04-14T10:00:00Z",
+      "notes": "1-line fix at merlin_constants.gd:435. cotes_sauvages.dominant_faction changed 'korrigans'→'niamh'. Rationale: arc condition requires Niamh rep >= 30, PNJ Maelle is guardian of the coasts (Niamh domain). Korrigans = marshland faction (incorrect for coastal biome). Thematic alignment restored."
     }
   ],
-  "last_updated": "2026-04-14T06:00:00Z"
+  "last_updated": "2026-04-14T10:00:00Z"
 }

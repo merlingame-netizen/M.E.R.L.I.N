@@ -432,7 +432,7 @@ const BIOMES := {
 	"cotes_sauvages": {
 		"name": "Cotes Sauvages", "subtitle": "Ou la mer defie la terre",
 		"season": "ete", "difficulty": 1, "maturity_threshold": 15,
-		"dominant_faction": "korrigans",
+		"dominant_faction": "niamh",
 		"oghams_affinity": ["muin", "nuin", "tinne"],
 		"currency_name": "Coquillages",
 		"card_interval_range_min": 6, "card_interval_range_max": 8,

@@ -1,7 +1,7 @@
 {
   "version": "4.0",
-  "updated": "2026-04-14T09:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 10 pending.",
+  "updated": "2026-04-14T10:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 15 pending.",
   "sprints": {
     "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
     "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
@@ -15,23 +15,6 @@
     "priority_algorithm": "P0=critical bugs, P1-P5=sprint current, P6-P10=sprint next, P11+=backlog"
   },
   "tasks": [
-    {
-      "id": "BUG-ANAM-DEATH-PENALTY-FIX",
-      "sprint": "S2",
-      "priority": 5,
-      "status": "completed",
-      "type": "dev",
-      "title": "Fix Anam death penalty scope: apply ratio to card-effect ADD_ANAM gains",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "completed_at": "2026-04-14T09:00:00Z",
-      "notes": "Implemented all 4 changes: (1) _apply_add_anam() now writes to run['anam_accumulated'] and run['anam'] (UI display), removes direct meta['anam'] credit. (2) init_run() now resets run['anam_accumulated']=0. (3) calculate_run_rewards() reads run_state.get('anam_accumulated',0) and adds card_anam to base anam BEFORE death ratio. (4) _get_default_run_state() now includes 'anam_accumulated':0 for save/load resume correctness. PAT-048, PAT-049 added.",
-      "description": "Director q-20260414-001 APPLIED (Option B: apply death ratio to ALL in-run Anam). Implementation: (1) In _apply_add_anam() (merlin_effect_engine.gd): write ONLY to run[\"anam_accumulated\"] — do NOT update meta[\"anam\"] during run. (2) In calculate_run_rewards() (store_run.gd): add run[\"anam_accumulated\"] to base_reward BEFORE applying death ratio min(cards_played/30, 1.0). (3) In apply_run_rewards(): credit scaled total to meta[\"anam\"]. (4) In init_run(): reset run[\"anam_accumulated\"] = 0. This removes the death-penalty bypass where card ADD_ANAM gains were credited immediately regardless of how early the player died. More punitive, faithful to bible s.5.1 literal interpretation."
-    },
     {
       "id": "DIR-S2-MNWXQ41M",
       "sprint": "S2",
@@ -114,19 +97,6 @@
       "files": []
     },
     {
-      "id": "BUG-COTES-FACTION-FIX",
-      "sprint": "S2",
-      "priority": 18,
-      "status": "pending",
-      "type": "dev",
-      "title": "Fix cotes_sauvages.dominant_faction: 'korrigans' → 'niamh'",
-      "agent": "godot_expert",
-      "files": [
-        "scripts/merlin/merlin_constants.gd"
-      ],
-      "description": "NOTE-1 from S2-BIOMES-REGRESSION-TEST: cotes_sauvages.dominant_faction='korrigans' is thematically wrong. Arc condition requires Rep Niamh >= 30, PNJ Maelle is linked to Niamh (gardienne des cotes). Korrigans = marais faction. Fix: change dominant_faction to 'niamh' at line ~435. Trivial 1-line change."
-    },
-    {
       "id": "BUG-SFX-AMB-ILES",
       "sprint": "S4",
       "priority": 22,
@@ -154,21 +124,6 @@
       "description": "SPECIALIST-9 CHK-7: _validate() required_keys (merlin_save_system.gd:244) missing 'fins_vues', 'echo_memory', 'run_history', 'whispers_seen'. These fields exist in _get_default_profile() but are not validated. Add them to required_keys so a save missing fins_vues triggers default-fill warning + logs. Trivial: add 4 strings to the required_keys array."
     },
     {
-      "id": "T-S2-ANAM-DEATH-PENALTY-REGRESS",
-      "sprint": "S2",
-      "priority": 6,
-      "status": "pending",
-      "type": "test",
-      "title": "Regression test: BUG-ANAM-DEATH-PENALTY-FIX — verify accumulator + death ratio",
-      "agent": "game_design_auditor",
-      "files": [
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/store_run.gd",
-        "scripts/merlin/merlin_save_system.gd"
-      ],
-      "description": "Run AFTER BUG-ANAM-DEATH-PENALTY-FIX (completed). Verify: (1) _apply_add_anam() writes to run['anam_accumulated'] (effect_engine.gd:440-441). (2) _apply_add_anam() does NOT write to meta['anam'] (check no meta[anam] assignment in that function). (3) init_run() sets run['anam_accumulated']=0 (store_run.gd:17). (4) calculate_run_rewards() reads run_state.get('anam_accumulated',0) and adds card_anam BEFORE death ratio block (store_run.gd:347-349). (5) _get_default_run_state() includes 'anam_accumulated':0 (save_system.gd:83). (6) Death scenario: card_anam=10, cards_played=5, ratio=5/30≈0.167, card contribution=int(10*0.167)=1. Victory scenario: full card_anam credited."
-    },
-    {
       "id": "T-S2-ARC-EVAL-TEST",
       "sprint": "S2",
       "priority": 19,
@@ -182,6 +137,85 @@
         "scripts/merlin/merlin_constants.gd"
       ],
       "description": "Run AFTER S2-ARC-CONDITION-EVAL (P16) completes. Verify: (1) Arc condition evaluator handles 'runs_in_biome' — checks meta.biome_run_counts.get(biome_id, 0) >= value. (2) Handles 'fins_vues' — checks meta.fins_vues (or equivalent counter) >= value. (3) Existing conditions 'faction_rep' and 'oghams_owned' still evaluate correctly (regression). (4) landes_bruyere arc unlocks when runs_in_biome >= 3. (5) collines_dolmens arc unlocks when fins_vues >= 5. (6) meta has the required fields (biome_run_counts dict, fins_vues int) — if missing, flag as FAIL_CRITICAL."
+    },
+    {
+      "id": "PERF-REDUCE-MEGAFUNC",
+      "sprint": "S3",
+      "priority": 24,
+      "status": "pending",
+      "type": "dev",
+      "title": "Refactor _reduce() megafunction: dispatch to sub-reducers",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "description": "SPECIALIST-10 PQ-005: _reduce() at line 243 is 256 lines — 5x function limit. It's a giant match block handling ALL action types. Refactor: extract 4 sub-reducer helpers called from _reduce(): _reduce_run_actions(), _reduce_meta_actions(), _reduce_ui_actions(), _reduce_system_actions(). Each sub-reducer takes (state, action_type, payload) and returns bool (handled). _reduce() dispatches to correct sub-reducer based on action prefix. Maintains same external API. No logic changes — pure structural split."
+    },
+    {
+      "id": "PERF-RESOLVE-CHOICE-SPLIT",
+      "sprint": "S3",
+      "priority": 25,
+      "status": "pending",
+      "type": "dev",
+      "title": "Split _resolve_choice() in merlin_game_controller.gd (211 lines)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/ui/merlin_game_controller.gd"
+      ],
+      "description": "SPECIALIST-10 PQ-006: _resolve_choice() at line 499 is 211 lines. Mixed UI transitions + game state mutation + LLM trigger. Extract: (1) _resolve_choice_validate(choice_idx) -> bool — validates choice index bounds. (2) _resolve_choice_apply_effects(card, choice_idx) — calls store.dispatch() for game effects. (3) _resolve_choice_transition() — handles fade-out + scene transition. (4) _resolve_choice_trigger_llm() — schedules next card generation. Keep _resolve_choice() as orchestrator calling these 4 helpers in sequence. Each helper < 50 lines."
+    },
+    {
+      "id": "PERF-WRAP-TEXT-SPLIT",
+      "sprint": "S3",
+      "priority": 26,
+      "status": "pending",
+      "type": "dev",
+      "title": "Split _wrap_text_as_card() in merlin_llm_adapter.gd (222 lines)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
+      "description": "SPECIALIST-10 PQ-007: _wrap_text_as_card() at line 435 is 222 lines — parses raw LLM text, validates structure, and wraps into card dict all in one function. Extract: (1) _parse_raw_llm_text(text) -> Dictionary — parses options/title/effects from raw text. (2) _validate_card_structure(card) -> bool — checks required fields, effect caps, option count. (3) _wrap_text_as_card() becomes orchestrator calling parse → validate → assemble. Each helper < 60 lines."
+    },
+    {
+      "id": "PERF-AI-PROCESS-EXTRACT",
+      "sprint": "S3",
+      "priority": 27,
+      "status": "pending",
+      "type": "dev",
+      "title": "Extract _poll_bg_tasks() + _poll_swarm_health() from _process() in merlin_ai.gd",
+      "agent": "godot_expert",
+      "files": [
+        "addons/merlin_ai/merlin_ai.gd"
+      ],
+      "description": "SPECIALIST-10 PQ-008: _process() at line 2045 is 68 lines — exceeds 50-line limit. Logic: (1) swarm scheduler timeout check, (2) legacy timeout check, (3) poll active bg tasks, (4) dispatch queue. Extract: _poll_swarm_health() (lines ~2053-2076), _poll_legacy_timeouts() (lines ~2077-2086), _poll_active_tasks() -> Array[int] (lines ~2090-2107), process_completed_tasks(indices) (lines ~2109-2124). _process() becomes 20 lines calling these helpers. set_process(false) guard preserved."
+    },
+    {
+      "id": "PERF-DEEP-NESTING-SANITIZER",
+      "sprint": "S3",
+      "priority": 28,
+      "status": "pending",
+      "type": "dev",
+      "title": "Reduce 5+ level nesting in llm_adapter_text_sanitizer.gd",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/llm_adapter_text_sanitizer.gd"
+      ],
+      "description": "SPECIALIST-10 PQ-009: 22 instances of 5+ tab nesting in blacklist filtering and label extraction loops (lines 127-189). Use early-return guards and const extraction to flatten. Pattern: for word in list: if word in blacklist: (5 tabs deep) → replace with: if _is_blacklisted(word): continue. Extract _is_blacklisted() helper + NON_VERB_BLACKLIST const at class level."
+    },
+    {
+      "id": "PERF-PARCHMENT-SIGNAL-AUDIT",
+      "sprint": "S3",
+      "priority": 29,
+      "status": "pending",
+      "type": "dev",
+      "title": "Audit + fix parchment_display add_child orphan risk in merlin_game_controller.gd",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/ui/merlin_game_controller.gd",
+        "scripts/ui/parchment_display.gd"
+      ],
+      "description": "SPECIALIST-10 PQ-010: _resolve_choice() calls add_child(_parchment) at line 317 but parchment node has no explicit queue_free or signal disconnect on scene exit. Risk: if _resolve_choice() is called while a previous parchment is still transitioning, duplicate nodes accumulate. Fix: (1) Check is_instance_valid(_parchment) + _parchment.is_inside_tree() before add_child. (2) Store reference and call queue_free on previous if still alive. (3) Or use CONNECT_ONE_SHOT pattern for animation_finished signal to auto-cleanup."
     }
   ]
 }

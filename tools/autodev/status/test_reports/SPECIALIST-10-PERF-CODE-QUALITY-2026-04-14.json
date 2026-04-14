@@ -1,0 +1,120 @@
+{
+  "report_id": "SPECIALIST-10-PERF-CODE-QUALITY-2026-04-14",
+  "specialist": 10,
+  "role": "PERFORMANCE & CODE QUALITY AUDITOR",
+  "timestamp": "2026-04-14T10:00:00Z",
+  "summary": "8 files exceed 800-line limit (2 critical). 8 functions >50 lines. _process() in merlin_ai.gd is 68 lines. 338 deep-nesting instances. Signal management weak in game_controller. No hot-loop allocation issues found.",
+  "checks": [
+    {
+      "id": "PQ-001",
+      "category": "file_size",
+      "severity": "CRITICAL",
+      "file": "addons/merlin_ai/merlin_omniscient.gd",
+      "lines": 2951,
+      "limit": 800,
+      "description": "3.7x over limit. Contains generate_card() (161 lines), _try_llm_generation() (98), check_guardrails_phase8() (88), insert_arc_card() (59). Candidate for split: omniscient_card_gen.gd + omniscient_guardrails.gd + omniscient_arc.gd"
+    },
+    {
+      "id": "PQ-002",
+      "category": "file_size",
+      "severity": "CRITICAL",
+      "file": "addons/merlin_ai/merlin_ai.gd",
+      "lines": 2235,
+      "limit": 800,
+      "description": "2.8x over limit. Contains _process() (68 lines), generate_sequential() (123), _try_init_ollama() (129). Candidate for split: merlin_ai_core.gd + merlin_ai_bg_tasks.gd + merlin_ai_init.gd"
+    },
+    {
+      "id": "PQ-003",
+      "category": "file_size",
+      "severity": "HIGH",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": 1202,
+      "description": "Pure data file. Acceptable as data dict container. Low priority."
+    },
+    {
+      "id": "PQ-004",
+      "category": "file_size",
+      "severity": "HIGH",
+      "file": "scripts/ui/parchment_display.gd",
+      "lines": 1080,
+      "description": "UI file 1.35x over limit. _process() used with set_process(false) guard — acceptable."
+    },
+    {
+      "id": "PQ-005",
+      "category": "function_size",
+      "severity": "HIGH",
+      "file": "scripts/merlin/merlin_store.gd",
+      "function": "_reduce()",
+      "line": 243,
+      "lines": 256,
+      "description": "God reducer — handles ALL action types in one match block. Should dispatch to StoreRun, StoreMetaReducer, etc."
+    },
+    {
+      "id": "PQ-006",
+      "category": "function_size",
+      "severity": "HIGH",
+      "file": "scripts/ui/merlin_game_controller.gd",
+      "function": "_resolve_choice()",
+      "line": 499,
+      "lines": 211,
+      "description": "211 lines of mixed UI + game logic. Should split to _resolve_choice_pre(), _resolve_choice_effects(), _resolve_choice_post()."
+    },
+    {
+      "id": "PQ-007",
+      "category": "function_size",
+      "severity": "HIGH",
+      "file": "scripts/merlin/merlin_llm_adapter.gd",
+      "function": "_wrap_text_as_card()",
+      "line": 435,
+      "lines": 222,
+      "description": "222 lines. Parses + validates + wraps card in single function. Extract _parse_card_from_text(), _validate_card_structure() as helpers."
+    },
+    {
+      "id": "PQ-008",
+      "category": "process_performance",
+      "severity": "MEDIUM",
+      "file": "addons/merlin_ai/merlin_ai.gd",
+      "function": "_process()",
+      "line": 2045,
+      "lines": 68,
+      "description": "_process() is 68 lines. However it has correct set_process(false) guard when idle. Polling logic is valid. Low real-world impact — but violates 50-line function rule. Extract _poll_bg_tasks() + _poll_swarm_health() helpers."
+    },
+    {
+      "id": "PQ-009",
+      "category": "deep_nesting",
+      "severity": "MEDIUM",
+      "file": "scripts/merlin/llm_adapter_text_sanitizer.gd",
+      "instances": 22,
+      "description": "22 instances of 5+ tab nesting in blacklist and label-extraction loops. Use early-return guards and helper functions to flatten."
+    },
+    {
+      "id": "PQ-010",
+      "category": "signal_management",
+      "severity": "MEDIUM",
+      "file": "scripts/ui/merlin_game_controller.gd",
+      "line": 317,
+      "description": "add_child(_parchment) called in _resolve_choice() but no explicit queue_free or disconnect on scene exit. Risk of orphan node on fast repeated calls. Should use autoconnect CONNECT_ONE_SHOT or check is_instance_valid."
+    },
+    {
+      "id": "PQ-011",
+      "category": "allocation_hot_loop",
+      "severity": "LOW",
+      "file": "addons/merlin_ai/merlin_ai.gd",
+      "description": "No hot-loop allocation issues detected. Loops are bounded by _active_bg_tasks.size() which is small (0-4). PASS."
+    }
+  ],
+  "invariants_verified": [
+    "set_process(false) guard present in merlin_ai.gd _process() — PASS",
+    "All signals in merlin_store.gd connected in _ready() — PASS",
+    "add_child nodes in merlin_store.gd are persistent autoload children — PASS (no orphan risk)"
+  ],
+  "tasks_generated": [
+    "PERF-REDUCE-MEGAFUNC",
+    "PERF-RESOLVE-CHOICE-SPLIT",
+    "PERF-WRAP-TEXT-SPLIT",
+    "PERF-OMNISCIENT-SPLIT",
+    "PERF-AI-PROCESS-EXTRACT",
+    "PERF-DEEP-NESTING-SANITIZER",
+    "PERF-PARCHMENT-SIGNAL-AUDIT"
+  ]
+}

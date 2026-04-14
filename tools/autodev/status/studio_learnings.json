@@ -1,16 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T09:00:00Z",
+  "last_updated": "2026-04-14T10:00:00Z",
   "metrics": {
-    "total_cycles_completed": 35,
-    "total_dev_cycles": 18,
+    "total_cycles_completed": 36,
+    "total_dev_cycles": 19,
     "total_test_cycles": 17,
-    "bugs_found": 28,
-    "bugs_fixed": 19,
-    "tasks_completed": 54,
-    "tasks_pending": 11,
-    "current_sprint": "S2"
+    "bugs_found": 29,
+    "bugs_fixed": 20,
+    "tasks_completed": 56,
+    "tasks_pending": 15,
+    "current_sprint": "S2",
+    "specialist_cycles_run": 2,
+    "last_specialist": 10
   },
   "patterns_learned": [
     {
@@ -560,6 +562,27 @@
         "scripts/merlin/merlin_save_system.gd",
         "scripts/merlin/merlin_constants.gd",
         "workflow"
+      ]
+    },
+    {
+      "id": "PAT-050",
+      "learned_at": "2026-04-14T10:00:00Z",
+      "source": "SPECIALIST-10-PERF-CODE-QUALITY",
+      "pattern": "cotes_sauvages dominant_faction must be 'niamh' (not 'korrigans'). Niamh is the guardian-of-coasts faction. Korrigans = marshland biome. Arc condition for cotes_sauvages requires faction_rep niamh >= 30. Wrong dominant_faction causes biome-based event routing to spawn Korrigans cards in a Niamh biome — narrative incoherence and faction rep saturation error.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-051",
+      "learned_at": "2026-04-14T10:00:00Z",
+      "source": "SPECIALIST-10-PERF-CODE-QUALITY",
+      "pattern": "merlin_ai.gd (2235 lines) and merlin_omniscient.gd (2951 lines) are the two largest files — 3-5x over the 400-line guideline. These are primary candidates for module splits. Key extraction targets: omniscient → omniscient_card_gen + omniscient_guardrails + omniscient_arc. merlin_ai → merlin_ai_core + merlin_ai_bg_tasks + merlin_ai_init. Do NOT split prematurely — only when adding new features to these files.",
+      "severity": "LOW",
+      "applies_to": [
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "addons/merlin_ai/merlin_ai.gd"
       ]
     }
   ],

@@ -1,0 +1,77 @@
+{
+  "report_id": "T-S2-ANAM-DEATH-PENALTY-REGRESS-2026-04-14",
+  "task_id": "T-S2-ANAM-DEATH-PENALTY-REGRESS",
+  "agent": "game_design_auditor",
+  "timestamp": "2026-04-14T10:00:00Z",
+  "result": "PASS",
+  "checks_passed": 5,
+  "checks_total": 5,
+  "checks": [
+    {
+      "id": "CHK-1",
+      "description": "_apply_add_anam() writes to run['anam_accumulated']",
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "line": 441,
+      "status": "PASS",
+      "evidence": "run[\"anam_accumulated\"] = maxi(accumulated + amount, 0) — explicit write at line 441"
+    },
+    {
+      "id": "CHK-2",
+      "description": "_apply_add_anam() does NOT write to meta['anam'] during run",
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "line": 443,
+      "status": "PASS",
+      "evidence": "Comment: '# meta[\"anam\"] is credited ONLY via apply_run_rewards() at run end'. No meta[\"anam\"] assignment found in function body."
+    },
+    {
+      "id": "CHK-3",
+      "description": "init_run() sets run['anam_accumulated']=0",
+      "file": "scripts/merlin/store_run.gd",
+      "line": 17,
+      "status": "PASS",
+      "evidence": "run[\"anam_accumulated\"] = 0 present in init_run() body"
+    },
+    {
+      "id": "CHK-4",
+      "description": "calculate_run_rewards() reads anam_accumulated BEFORE death ratio block",
+      "file": "scripts/merlin/store_run.gd",
+      "line": 349,
+      "status": "PASS",
+      "evidence": "var card_anam: int = int(run_state.get('anam_accumulated', 0)); anam += card_anam — added before 'if not is_victory:' death ratio block at ~line 355"
+    },
+    {
+      "id": "CHK-5",
+      "description": "_get_default_run_state() includes 'anam_accumulated':0",
+      "file": "scripts/merlin/merlin_save_system.gd",
+      "line": 83,
+      "status": "PASS",
+      "evidence": "\"anam_accumulated\": 0 present in _get_default_run_state() dict"
+    }
+  ],
+  "math_verification": {
+    "death_scenario": {
+      "card_anam": 10,
+      "cards_played": 5,
+      "death_cap": 30,
+      "ratio": 0.167,
+      "card_contribution": 1,
+      "formula": "int(10 * min(5/30, 1.0)) = int(1.67) = 1",
+      "status": "CORRECT — more punitive than pre-fix (10 → 1)"
+    },
+    "victory_scenario": {
+      "card_anam": 10,
+      "cards_played": 30,
+      "is_victory": true,
+      "ratio": 1.0,
+      "card_contribution": 10,
+      "formula": "Victory path skips death ratio block entirely",
+      "status": "CORRECT — full card_anam credited on victory"
+    }
+  },
+  "regression_notes": [
+    "PAT-045: run['anam'] is still written as vestigial display field (not read by rewards). Acceptable.",
+    "Implementation faithfully matches Director q-20260414-001 Option B (bible s.5.1 literal)"
+  ],
+  "bugs_found": 0,
+  "new_tasks_created": []
+}

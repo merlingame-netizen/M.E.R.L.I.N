@@ -282,7 +282,21 @@
         "priority": 25
       },
       "timestamp": "2026-04-14T08:00:00Z"
+    },
+    {
+      "id": "insight-20260414-001",
+      "agent": "perf_code_quality_auditor",
+      "severity": "WARN",
+      "category": "performance",
+      "message": "merlin_ai.gd + merlin_omniscient.gd are 5000+ lines combined — technical debt accumulation risk",
+      "details": "SPECIALIST-10 audit found merlin_omniscient.gd at 2951 lines and merlin_ai.gd at 2235 lines (combined 5186 lines). 7 PERF tasks (P24-P29) propose incremental splits. Prioritize PERF-REDUCE-MEGAFUNC (P24) and PERF-AI-PROCESS-EXTRACT (P27) as quick wins in S3.",
+      "proposed_task": {
+        "title": "S4 module split: omniscient_card_gen + omniscient_guardrails + omniscient_arc",
+        "sprint": "S4",
+        "type": "dev"
+      },
+      "timestamp": "2026-04-14T10:00:00Z"
     }
   ],
-  "updated": "2026-04-14T09:00:00Z"
+  "updated": "2026-04-14T10:00:00Z"
 }
