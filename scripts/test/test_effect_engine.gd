@@ -1421,8 +1421,8 @@ func test_pick_minigame_chance() -> bool:
 
 func test_pick_minigame_unknown_fallback() -> bool:
 	var mg: String = MerlinEffectEngine.pick_minigame_for_field("nonexistent")
-	if mg != "apaisement":
-		push_error("pick_minigame fallback: expected apaisement, got %s" % mg)
+	if mg != MerlinConstants.ACTION_VERB_FALLBACK_FIELD:
+		push_error("pick_minigame fallback: expected %s, got %s" % [MerlinConstants.ACTION_VERB_FALLBACK_FIELD, mg])
 		return false
 	return true
 

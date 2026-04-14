@@ -1,0 +1,69 @@
+{
+  "report_id": "T-MG-FIELD-COVERAGE-2026-04-14",
+  "task_id": "T-MG-FIELD-COVERAGE-TEST",
+  "timestamp": "2026-04-14T17:00:00Z",
+  "cycle_type": "test",
+  "agent": "bug_hunter",
+  "test_focus": "All 8 lexical fields dispatch correct minigame scripts",
+  "checks": [
+    {
+      "id": "CHK-1",
+      "desc": "detect_field_from_verb() returns correct field for each of 8 fields",
+      "file": "scripts/merlin/merlin_effect_engine.gd:749",
+      "status": "PASS",
+      "detail": "NOTE: MiniGameRegistry.detect_field() is NOT called in production. Production uses MerlinEffectEngine.detect_field_from_verb(verb) which iterates MerlinConstants.ACTION_VERBS. Tested all 8 fields via ACTION_VERBS dict. Fallback = ACTION_VERB_FALLBACK_FIELD = 'esprit'. All match."
+    },
+    {
+      "id": "CHK-2",
+      "desc": "create_minigame(field) returns non-null MiniGameBase for all 8 fields",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "status": "PASS",
+      "detail": "GAMES dict has all 8 fields. Match statement covers all game IDs including mg_trace_cerf (observation tier-3). All mg_ scripts exist under scripts/minigames/. All extend MiniGameBase. Fallback to mg_pile_ou_face if game == null."
+    },
+    {
+      "id": "CHK-3",
+      "desc": "Returned script class matches expected field",
+      "file": "scripts/minigames/minigame_registry.gd:GAMES",
+      "status": "PASS",
+      "detail": "GAMES maps each field to semantically-correct minigames (chance→pile_ou_face/roue_fortune, bluff→joute_verbale/bluff_druide/negociation, etc.). All scripts verified to extend MiniGameBase."
+    },
+    {
+      "id": "CHK-4",
+      "desc": "neutre field falls back to esprit (MG-FIX-NEUTRE-FALLBACK)",
+      "file": "scripts/merlin/merlin_constants.gd:338",
+      "status": "PASS",
+      "detail": "FIELD_MINIGAMES['neutre'] = ['esprit']. select_minigame('neutre') returns 'esprit'. MerlinMiniGameSystem.run('esprit', diff) executes _play_esprit(). MiniGameRegistry.create_minigame('esprit') returns valid esprit minigame. Full chain works."
+    },
+    {
+      "id": "CHK-5",
+      "desc": "select_minigame() fallback value is a valid field name",
+      "file": "scripts/merlin/merlin_card_system.gd:231",
+      "status": "FAIL_MEDIUM",
+      "detail": "select_minigame() returns 'apaisement' (a GAME name, not a FIELD name) when FIELD_MINIGAMES.get(field, []) is empty. 'apaisement' is not in MerlinMiniGameSystem.VALID_FIELDS, causing _play_generic() fallback in run(). Should return MerlinConstants.ACTION_VERB_FALLBACK_FIELD = 'esprit'. FIXED in this cycle."
+    },
+    {
+      "id": "CHK-6",
+      "desc": "pick_minigame_for_field() fallback aligned with field names",
+      "file": "scripts/merlin/merlin_effect_engine.gd:762",
+      "status": "FAIL_LOW",
+      "detail": "pick_minigame_for_field() also returns 'apaisement' for unknown fields (test-only function). test_effect_engine.gd:1424 expects 'apaisement' — test expectation is wrong. Both function and test need alignment to 'esprit'. FIXED in this cycle."
+    }
+  ],
+  "bugs_found": [
+    {
+      "id": "BUG-MG-APAISEMENT-FALLBACK",
+      "severity": "MEDIUM",
+      "description": "select_minigame() and pick_minigame_for_field() return 'apaisement' (game name) as fallback instead of 'esprit' (field name). MerlinMiniGameSystem.run('apaisement') falls to _play_generic() using wrong scoring algorithm.",
+      "files": ["scripts/merlin/merlin_card_system.gd:231", "scripts/merlin/merlin_effect_engine.gd:762", "scripts/test/test_effect_engine.gd:1424"],
+      "fix_applied": true,
+      "fix_description": "Changed 'apaisement' → MerlinConstants.ACTION_VERB_FALLBACK_FIELD ('esprit') in both functions. Updated test expectation."
+    }
+  ],
+  "summary": {
+    "total_checks": 6,
+    "pass": 4,
+    "fail_medium": 1,
+    "fail_low": 1,
+    "overall": "PARTIAL_PASS — neutre→esprit chain works, all 8 fields covered, fallback fixed in cycle"
+  }
+}

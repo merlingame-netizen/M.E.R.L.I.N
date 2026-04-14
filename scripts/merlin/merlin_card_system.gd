@@ -228,7 +228,7 @@ func detect_lexical_field(option_label: String) -> String:
 func select_minigame(field: String) -> String:
 	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
 	if minigames.is_empty():
-		return "apaisement"
+		return MerlinConstants.ACTION_VERB_FALLBACK_FIELD  # "esprit" — valid field name
 	if minigames.size() == 1:
 		return str(minigames[0])
 	var idx: int = _randi_range(0, minigames.size() - 1)

@@ -225,6 +225,21 @@
       ],
       "screenshot_urls": null,
       "created_at": "2026-04-14T15:00:00Z"
+    },
+    {
+      "id": "q-20260414-005",
+      "title": "IntroPersonalityQuiz orphaned — wire into new game flow?",
+      "question": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn sont actuellement inaccessibles depuis le jeu normal (menu_3d_pc._start_new_game() va direct à ParchmentPreRun). La bible dit: Menu→Quiz→Rencontre→Hub. Faut-il: (A) Reconnecter le quiz pour les nouvelles parties (first_run detection), ou (B) Supprimer IntroPersonalityQuiz/SceneRencontreMerlin comme dead code (comme game_flow_controller), ou (C) Garder tel quel (ParchmentPreRun remplace le quiz)?",
+      "type": "multiple_choice",
+      "options": [
+        "A: Reconnecter quiz pour first-run",
+        "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin",
+        "C: Garder ParchmentPreRun comme remplacement (statu quo)"
+      ],
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "pending",
+      "context": "scripts/menu_3d_pc.gd:1333-1337 + scripts/IntroPersonalityQuiz.gd + scripts/SceneRencontreMerlin.gd:10-12. SPEC-0 audit finding."
     }
   ]
 }

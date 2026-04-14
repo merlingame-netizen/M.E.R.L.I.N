@@ -1,12 +1,12 @@
 {
   "version": "4.0",
   "updated": "2026-04-14T11:00:00Z",
-  "description": "Feature queue M.E.R.L.I.N. \u2014 S1 COMPLETE. S2+S3+S4 active. 40 pending (T-S2-ARC-CONDITION-REGRESS-V2 completed, 6 new E2E tasks added by SPEC-14).",
+  "description": "Feature queue M.E.R.L.I.N. — S1 COMPLETE. S2+S3+S4 active. 40 pending (T-S2-ARC-CONDITION-REGRESS-V2 completed, 6 new E2E tasks added by SPEC-14).",
   "sprints": {
-    "S1": "COMPLETE \u2014 Core loop jouable, bugs critiques fixes, LLM valide",
-    "S2": "CONTENU & SYSTEMES \u2014 biomes, verbes, MOS, cleanup restant",
-    "S3": "POLISH & ROBUSTESSE \u2014 edge cases, LLM robustesse, UX, pixel render",
-    "S4": "INTEGRATION & EXPORT \u2014 web build, CI/CD, demo jouable"
+    "S1": "COMPLETE — Core loop jouable, bugs critiques fixes, LLM valide",
+    "S2": "CONTENU & SYSTEMES — biomes, verbes, MOS, cleanup restant",
+    "S3": "POLISH & ROBUSTESSE — edge cases, LLM robustesse, UX, pixel render",
+    "S4": "INTEGRATION & EXPORT — web build, CI/CD, demo jouable"
   },
   "rules": {
     "min_pending_tasks": 10,
@@ -21,14 +21,14 @@
       "priority": 14,
       "status": "pending",
       "type": "dev",
-      "title": "Cycle jour/nuit PS1 + DA coh\u00e9rente toutes sc\u00e8nes (remplace S3-AMBIENT + S3-PIXEL)",
+      "title": "Cycle jour/nuit PS1 + DA cohérente toutes scènes (remplace S3-AMBIENT + S3-PIXEL)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_visual.gd",
         "scripts/merlin/store_run.gd",
         "addons/merlin_ai/merlin_omniscient.gd"
       ],
-      "description": "Director q-20260413-003 + q-20260412-002 + q-20260412-004: Unified visual task replacing S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER. Cycle jour/nuit en mode PS1 avec volum\u00e9trie. Temps r\u00e9el machine/serveur pour saisons et cycle quotidien. DA coh\u00e9rente entre TOUTES les sc\u00e8nes et animations. Effets visuels: pixel snap, affine textures, low-poly volumetric fog, dithering shadows, viewport scale. Exposer time_of_day + season dans run state + LLM context. Tout doit \u00eatre driver sous la m\u00eame logique graphique. Director note: 'toute la DA doit \u00eatre coh\u00e9rente entre toutes les sc\u00e8nes, animations. Tout doit \u00eatre driver sous la m\u00eame logique graphique sur l'ensemble des rendus graphiques.'"
+      "description": "Director q-20260413-003 + q-20260412-002 + q-20260412-004: Unified visual task replacing S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER. Cycle jour/nuit en mode PS1 avec volumétrie. Temps réel machine/serveur pour saisons et cycle quotidien. DA cohérente entre TOUTES les scènes et animations. Effets visuels: pixel snap, affine textures, low-poly volumetric fog, dithering shadows, viewport scale. Exposer time_of_day + season dans run state + LLM context. Tout doit être driver sous la même logique graphique. Director note: 'toute la DA doit être cohérente entre toutes les scènes, animations. Tout doit être driver sous la même logique graphique sur l'ensemble des rendus graphiques.'"
     },
     {
       "id": "S3-TYPOGRAPHY",
@@ -78,7 +78,7 @@
       "type": "dev",
       "title": "Refonte Menu Principal",
       "agent": "godot_expert",
-      "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volum\u00e9trie et cycle jour/nuit, la sc\u00e8ne doit \u00eatre plus viable. Deep dive et it\u00e8re jusqu'\u00e0 acceptation du retour correct",
+      "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volumétrie et cycle jour/nuit, la scène doit être plus viable. Deep dive et itère jusqu'à acceptation du retour correct",
       "files": []
     },
     {
@@ -93,7 +93,7 @@
         "scripts/autoload/SFXManager.gd",
         "scripts/autoload/sfx_recipes_ambient.gd"
       ],
-      "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority \u2014 iles_celtes is a late-game biome (maturity score 45+)."
+      "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority — iles_celtes is a late-game biome (maturity score 45+)."
     },
     {
       "id": "PERF-REDUCE-MEGAFUNC",
@@ -106,7 +106,7 @@
       "files": [
         "scripts/merlin/merlin_store.gd"
       ],
-      "description": "SPECIALIST-10 PQ-005: _reduce() at line 243 is 256 lines \u2014 5x function limit. It's a giant match block handling ALL action types. Refactor: extract 4 sub-reducer helpers called from _reduce(): _reduce_run_actions(), _reduce_meta_actions(), _reduce_ui_actions(), _reduce_system_actions(). Each sub-reducer takes (state, action_type, payload) and returns bool (handled). _reduce() dispatches to correct sub-reducer based on action prefix. Maintains same external API. No logic changes \u2014 pure structural split."
+      "description": "SPECIALIST-10 PQ-005: _reduce() at line 243 is 256 lines — 5x function limit. It's a giant match block handling ALL action types. Refactor: extract 4 sub-reducer helpers called from _reduce(): _reduce_run_actions(), _reduce_meta_actions(), _reduce_ui_actions(), _reduce_system_actions(). Each sub-reducer takes (state, action_type, payload) and returns bool (handled). _reduce() dispatches to correct sub-reducer based on action prefix. Maintains same external API. No logic changes — pure structural split."
     },
     {
       "id": "PERF-RESOLVE-CHOICE-SPLIT",
@@ -119,7 +119,7 @@
       "files": [
         "scripts/ui/merlin_game_controller.gd"
       ],
-      "description": "SPECIALIST-10 PQ-006: _resolve_choice() at line 499 is 211 lines. Mixed UI transitions + game state mutation + LLM trigger. Extract: (1) _resolve_choice_validate(choice_idx) -> bool \u2014 validates choice index bounds. (2) _resolve_choice_apply_effects(card, choice_idx) \u2014 calls store.dispatch() for game effects. (3) _resolve_choice_transition() \u2014 handles fade-out + scene transition. (4) _resolve_choice_trigger_llm() \u2014 schedules next card generation. Keep _resolve_choice() as orchestrator calling these 4 helpers in sequence. Each helper < 50 lines."
+      "description": "SPECIALIST-10 PQ-006: _resolve_choice() at line 499 is 211 lines. Mixed UI transitions + game state mutation + LLM trigger. Extract: (1) _resolve_choice_validate(choice_idx) -> bool — validates choice index bounds. (2) _resolve_choice_apply_effects(card, choice_idx) — calls store.dispatch() for game effects. (3) _resolve_choice_transition() — handles fade-out + scene transition. (4) _resolve_choice_trigger_llm() — schedules next card generation. Keep _resolve_choice() as orchestrator calling these 4 helpers in sequence. Each helper < 50 lines."
     },
     {
       "id": "PERF-WRAP-TEXT-SPLIT",
@@ -132,7 +132,7 @@
       "files": [
         "scripts/merlin/merlin_llm_adapter.gd"
       ],
-      "description": "SPECIALIST-10 PQ-007: _wrap_text_as_card() at line 435 is 222 lines \u2014 parses raw LLM text, validates structure, and wraps into card dict all in one function. Extract: (1) _parse_raw_llm_text(text) -> Dictionary \u2014 parses options/title/effects from raw text. (2) _validate_card_structure(card) -> bool \u2014 checks required fields, effect caps, option count. (3) _wrap_text_as_card() becomes orchestrator calling parse \u2192 validate \u2192 assemble. Each helper < 60 lines."
+      "description": "SPECIALIST-10 PQ-007: _wrap_text_as_card() at line 435 is 222 lines — parses raw LLM text, validates structure, and wraps into card dict all in one function. Extract: (1) _parse_raw_llm_text(text) -> Dictionary — parses options/title/effects from raw text. (2) _validate_card_structure(card) -> bool — checks required fields, effect caps, option count. (3) _wrap_text_as_card() becomes orchestrator calling parse → validate → assemble. Each helper < 60 lines."
     },
     {
       "id": "PERF-AI-PROCESS-EXTRACT",
@@ -145,7 +145,7 @@
       "files": [
         "addons/merlin_ai/merlin_ai.gd"
       ],
-      "description": "SPECIALIST-10 PQ-008: _process() at line 2045 is 68 lines \u2014 exceeds 50-line limit. Logic: (1) swarm scheduler timeout check, (2) legacy timeout check, (3) poll active bg tasks, (4) dispatch queue. Extract: _poll_swarm_health() (lines ~2053-2076), _poll_legacy_timeouts() (lines ~2077-2086), _poll_active_tasks() -> Array[int] (lines ~2090-2107), process_completed_tasks(indices) (lines ~2109-2124). _process() becomes 20 lines calling these helpers. set_process(false) guard preserved."
+      "description": "SPECIALIST-10 PQ-008: _process() at line 2045 is 68 lines — exceeds 50-line limit. Logic: (1) swarm scheduler timeout check, (2) legacy timeout check, (3) poll active bg tasks, (4) dispatch queue. Extract: _poll_swarm_health() (lines ~2053-2076), _poll_legacy_timeouts() (lines ~2077-2086), _poll_active_tasks() -> Array[int] (lines ~2090-2107), process_completed_tasks(indices) (lines ~2109-2124). _process() becomes 20 lines calling these helpers. set_process(false) guard preserved."
     },
     {
       "id": "PERF-DEEP-NESTING-SANITIZER",
@@ -158,7 +158,7 @@
       "files": [
         "scripts/merlin/llm_adapter_text_sanitizer.gd"
       ],
-      "description": "SPECIALIST-10 PQ-009: 22 instances of 5+ tab nesting in blacklist filtering and label extraction loops (lines 127-189). Use early-return guards and const extraction to flatten. Pattern: for word in list: if word in blacklist: (5 tabs deep) \u2192 replace with: if _is_blacklisted(word): continue. Extract _is_blacklisted() helper + NON_VERB_BLACKLIST const at class level."
+      "description": "SPECIALIST-10 PQ-009: 22 instances of 5+ tab nesting in blacklist filtering and label extraction loops (lines 127-189). Use early-return guards and const extraction to flatten. Pattern: for word in list: if word in blacklist: (5 tabs deep) → replace with: if _is_blacklisted(word): continue. Extract _is_blacklisted() helper + NON_VERB_BLACKLIST const at class level."
     },
     {
       "id": "PERF-PARCHMENT-SIGNAL-AUDIT",
@@ -237,7 +237,7 @@
       "files": [
         "scripts/merlin/merlin_skeleton_generator.gd"
       ],
-      "description": "merlin_skeleton_generator.gd:162 \u2014 _generate_procedural() is 116 lines (2.3x limit). Extract: _build_main_path(), _build_detour_nodes(), _assign_card_types(). Each sub-function max 40 lines. Keep _generate_procedural as dispatcher ~20 lines."
+      "description": "merlin_skeleton_generator.gd:162 — _generate_procedural() is 116 lines (2.3x limit). Extract: _build_main_path(), _build_detour_nodes(), _assign_card_types(). Each sub-function max 40 lines. Keep _generate_procedural as dispatcher ~20 lines."
     },
     {
       "id": "PERF-ACTIVATE-OGHAM-SPLIT",
@@ -250,7 +250,7 @@
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "merlin_effect_engine.gd:655 \u2014 activate_ogham() is 94 lines (nearly 2x limit). Extract: _validate_ogham_activation(), _apply_ogham_passive(), _apply_ogham_active(). Keep activate_ogham as dispatcher."
+      "description": "merlin_effect_engine.gd:655 — activate_ogham() is 94 lines (nearly 2x limit). Extract: _validate_ogham_activation(), _apply_ogham_passive(), _apply_ogham_active(). Keep activate_ogham as dispatcher."
     },
     {
       "id": "PERF-MAP-PROMPT-BUILD-SPLIT",
@@ -263,7 +263,7 @@
       "files": [
         "scripts/merlin/llm_adapter_map_prompt.gd"
       ],
-      "description": "llm_adapter_map_prompt.gd:45 \u2014 build_user_prompt() is 92 lines. Extract: _build_params_section(), _build_player_context_section(), _build_arc_section(). Note: _build_arc_section() will be refactored by S2-ARC-CONDITION-EVAL \u2014 do AFTER that task."
+      "description": "llm_adapter_map_prompt.gd:45 — build_user_prompt() is 92 lines. Extract: _build_params_section(), _build_player_context_section(), _build_arc_section(). Note: _build_arc_section() will be refactored by S2-ARC-CONDITION-EVAL — do AFTER that task."
     },
     {
       "id": "PERF-STORE-RUN-CHECKEND-SPLIT",
@@ -276,7 +276,7 @@
       "files": [
         "scripts/merlin/store_run.gd"
       ],
-      "description": "store_run.gd:202 \u2014 check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
+      "description": "store_run.gd:202 — check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
     },
     {
       "id": "FACTION-PERIOD-BONUS-IMPL",
@@ -340,8 +340,8 @@
       "priority": 8,
       "type": "dev",
       "status": "pending",
-      "title": "Fix neutre field: add GAMES[neutre] to registry OR map neutre \u2192 esprit",
-      "description": "merlin_constants.gd:338 FIELD_MINIGAMES has neutre:[apaisement,volonte]. MiniGameRegistry has no GAMES[neutre] \u2192 falls back to chance field. If a card has field=neutre, wrong minigame type is played. Fix: add GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:21, and add esprit to MerlinMiniGameSystem.VALID_FIELDS fallback for neutre. Also add detect_field() case for neutre \u2192 esprit.",
+      "title": "Fix neutre field: add GAMES[neutre] to registry OR map neutre → esprit",
+      "description": "merlin_constants.gd:338 FIELD_MINIGAMES has neutre:[apaisement,volonte]. MiniGameRegistry has no GAMES[neutre] → falls back to chance field. If a card has field=neutre, wrong minigame type is played. Fix: add GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:21, and add esprit to MerlinMiniGameSystem.VALID_FIELDS fallback for neutre. Also add detect_field() case for neutre → esprit.",
       "files": [
         "scripts/minigames/minigame_registry.gd",
         "scripts/merlin/merlin_minigame_system.gd"
@@ -361,20 +361,6 @@
         "scripts/ui/game_controller_minigame.gd"
       ],
       "agent": "godot_expert"
-    },
-    {
-      "id": "T-MG-FIELD-COVERAGE-TEST",
-      "sprint": "S2",
-      "priority": 7,
-      "type": "test",
-      "status": "pending",
-      "title": "Test: all 8 lexical fields dispatch correct minigame scripts",
-      "description": "Verify that for each of the 8 fields (chance,bluff,observation,logique,finesse,vigueur,esprit,perception): (1) detect_field() returns the correct field from representative text, (2) create_minigame(field) returns a non-null MiniGameBase subclass, (3) the returned script class matches expected field, (4) neutre field falls back to esprit correctly after MG-FIX-NEUTRE-FALLBACK. Reference: minigame_registry.gd GAMES dict.",
-      "files": [
-        "scripts/minigames/minigame_registry.gd",
-        "scripts/test/test_minigame_system.gd"
-      ],
-      "agent": "bug_hunter"
     },
     {
       "id": "3D-BUSH-ASSET-FIX",
@@ -410,8 +396,8 @@
       "priority": 23,
       "type": "dev",
       "status": "pending",
-      "title": "Fix BiomeWalkConfigs TILE_BASE: archive/ \u2192 Assets/Tiles/",
-      "description": "biome_walk_configs.gd:8 TILE_BASE='res://archive/3d_models/Tiles_Low_Poly/' but terrain tiles are at res://Assets/Tiles/. Verify forest_terrain_builder.gd uses correct path. Also fix non-existent tile refs for villages_celtes (Tile_38_Path_Grass, Tile_34_Trans_Grass_Dirt) and cercles_pierres (Tile_39_Grass_Rocky) \u2014 replace with closest existing tiles (Tile_01 to Tile_31).",
+      "title": "Fix BiomeWalkConfigs TILE_BASE: archive/ → Assets/Tiles/",
+      "description": "biome_walk_configs.gd:8 TILE_BASE='res://archive/3d_models/Tiles_Low_Poly/' but terrain tiles are at res://Assets/Tiles/. Verify forest_terrain_builder.gd uses correct path. Also fix non-existent tile refs for villages_celtes (Tile_38_Path_Grass, Tile_34_Trans_Grass_Dirt) and cercles_pierres (Tile_39_Grass_Rocky) — replace with closest existing tiles (Tile_01 to Tile_31).",
       "files": [
         "scripts/broceliande_3d/biome_walk_configs.gd",
         "scripts/broceliande_3d/forest_terrain_builder.gd"
@@ -486,7 +472,7 @@
         "scenes/HubScreen.tscn",
         "scenes/Run3D.tscn"
       ],
-      "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre\u2192BroceliandeForest3D\u2192MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW \u2014 no player impact, but creates confusion for future development."
+      "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre→BroceliandeForest3D→MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW — no player impact, but creates confusion for future development."
     },
     {
       "id": "E2E-TEST-FULL-LOOP-CODE-TRACE",
@@ -494,7 +480,7 @@
       "priority": 16,
       "status": "pending",
       "type": "test",
-      "title": "E2E code trace: full game loop IntroCeltOS\u2192Hub\u2192Run\u2192MerlinGame\u2192EndScreen\u2192Hub",
+      "title": "E2E code trace: full game loop IntroCeltOS→Hub→Run→MerlinGame→EndScreen→Hub",
       "agent": "game_playtester",
       "files": [
         "scripts/IntroCeltOS.gd",
@@ -503,7 +489,7 @@
         "scripts/ui/merlin_game_controller.gd",
         "scripts/ui/ui_overlay_endscreen.gd"
       ],
-      "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button \u2192 SelectionSauvegarde. CHK-3: SelectionSauvegarde \u2192 HubAntre. CHK-4: HubAntre Partir button \u2192 BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires \u2192 MerlinGame. CHK-6: MerlinGame run_ended \u2192 show_end_screen. CHK-7: EndScreen hub button \u2192 HubAntre. Check each signal/button connection for completeness."
+      "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button → SelectionSauvegarde. CHK-3: SelectionSauvegarde → HubAntre. CHK-4: HubAntre Partir button → BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires → MerlinGame. CHK-6: MerlinGame run_ended → show_end_screen. CHK-7: EndScreen hub button → HubAntre. Check each signal/button connection for completeness."
     },
     {
       "id": "E2E-MERLINSTORE-DEFERRED-RACE-CHECK",
@@ -511,7 +497,7 @@
       "priority": 33,
       "status": "pending",
       "type": "dev",
-      "title": "GameManager creates MerlinStore via call_deferred \u2014 verify no scene accesses it before frame+1",
+      "title": "GameManager creates MerlinStore via call_deferred — verify no scene accesses it before frame+1",
       "agent": "bug_hunter",
       "files": [
         "scripts/game_manager.gd",
@@ -526,12 +512,12 @@
       "priority": 23,
       "status": "pending",
       "type": "dev",
-      "title": "Fix BroceliandeForest3D fallback: change_scene_to_file \u2192 PixelTransition",
+      "title": "Fix BroceliandeForest3D fallback: change_scene_to_file → PixelTransition",
       "agent": "godot_expert",
       "files": [
         "scripts/broceliande_3d/broceliande_forest_3d.gd"
       ],
-      "description": "SPECIALIST-14: broceliande_forest_3d.gd:1228 fallback path uses get_tree().change_scene_to_file(target) when PixelTransition not found. This is reachable if PixelTransition autoload fails to load. The primary path (line 1224) uses PixelTransition. Fix: add null guard pattern: var pt: Node = get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(target) else: get_tree().change_scene_to_file(target). Line 1228 already does this \u2014 verify the guard is correct and consistent with other scene transition helpers."
+      "description": "SPECIALIST-14: broceliande_forest_3d.gd:1228 fallback path uses get_tree().change_scene_to_file(target) when PixelTransition not found. This is reachable if PixelTransition autoload fails to load. The primary path (line 1224) uses PixelTransition. Fix: add null guard pattern: var pt: Node = get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(target) else: get_tree().change_scene_to_file(target). Line 1228 already does this — verify the guard is correct and consistent with other scene transition helpers."
     },
     {
       "id": "T-E2E-INTEGRATION-REGRESSION",
@@ -581,7 +567,7 @@
       "priority": 53,
       "type": "meta",
       "status": "pending",
-      "title": "Sync studio_learnings.json metrics: cycles 40\u219247, add 5 missing agents",
+      "title": "Sync studio_learnings.json metrics: cycles 40→47, add 5 missing agents",
       "agent": "meta_evolution_auditor",
       "files": [
         "tools/autodev/status/studio_learnings.json"
@@ -612,7 +598,7 @@
       "files": [
         "tools/autodev/studio-bridge/prompts/cycle_instructions.md"
       ],
-      "description": "No specialist verifies Anam economy (10 runs/node), MOS convergence (target 20-25, hard max 50), death penalty ratio, faction cap \u00b120/card. Define checklist and add as specialist role."
+      "description": "No specialist verifies Anam economy (10 runs/node), MOS convergence (target 20-25, hard max 50), death penalty ratio, faction cap ±20/card. Define checklist and add as specialist role."
     },
     {
       "id": "META-QUEUE-HYGIENE-AUTO",
@@ -627,6 +613,98 @@
         "tools/autodev/status/completed_archive.json"
       ],
       "description": "False-positive 'verified' type tasks (like E2E-PARCHMENT-PRERUN) should auto-archive at cycle start. Add housekeeping rule: tasks with type='verified' move to completed_archive.json with status='archived'."
+    },
+    {
+      "id": "FLOW-QUIZ-WIRE-INTRO",
+      "sprint": "S2",
+      "priority": 9,
+      "type": "dev",
+      "status": "pending",
+      "title": "Wire IntroPersonalityQuiz into new game flow",
+      "description": "Menu3DPC._start_new_game() goes directly to ParchmentPreRun, skipping IntroPersonalityQuiz + SceneRencontreMerlin. Bible: IntroCeltOS→Menu→Quiz→Rencontre→Hub 2D. Fix: if first run (no profile), route to IntroPersonalityQuiz first; then SceneRencontreMerlin → HubAntre. BLOCKED: feedback question q-20260414-005 sent to director (architecture change).",
+      "files": [
+        "scripts/menu_3d_pc.gd:1333-1337",
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/SceneRencontreMerlin.gd:10-12"
+      ],
+      "agent": "scene_flow_fixer",
+      "blocked_on_feedback": "q-20260414-005"
+    },
+    {
+      "id": "FLOW-RENCONTRE-CONSTANTS-CLEANUP",
+      "sprint": "S2",
+      "priority": 10,
+      "type": "dev",
+      "status": "pending",
+      "title": "Fix SceneRencontreMerlin dead branching: consolidate or restore SCENE constants",
+      "description": "SceneRencontreMerlin.gd:10-12 has SCENE_HUB = SCENE_BIOME = SCENE_TUTORIAL = BroceliandeForest3D. The branching logic at lines 628-656 (_next_scene = SCENE_BIOME/SCENE_TUTORIAL/SCENE_HUB) is dead code. Either: (A) restore HubAntre as SCENE_HUB, or (B) remove the branching and use a single constant. BLOCKED: depends on FLOW-QUIZ-WIRE-INTRO decision.",
+      "files": [
+        "scripts/SceneRencontreMerlin.gd:10-12",
+        "scripts/SceneRencontreMerlin.gd:628-656"
+      ],
+      "agent": "scene_flow_fixer"
+    },
+    {
+      "id": "T-FLOW-SCENE-TRANSITIONS-REGRESSION",
+      "sprint": "S2",
+      "priority": 11,
+      "type": "test",
+      "status": "pending",
+      "title": "Test: verify all active scene transitions reach existing .tscn files",
+      "description": "Code-trace test for all 11 PixelTransition.transition_to() calls in the main flow. Verify: (1) each target .tscn exists, (2) each .tscn has an attached script, (3) no transition goes to a deprecated/archived path. Based on SPECIALIST-0 audit. Check: IntroCeltOS→Menu3DPC, Menu3DPC→HubAntre, Menu3DPC→ParchmentPreRun, ParchmentPreRun→BroceliandeForest3D, HubAntre→TransitionBiome, TransitionBiome→BroceliandeForest3D, BroceliandeForest3D→MerlinGame, MerlinGame→BroceliandeForest3D, BroceliandeForest3D→HubAntre, EndRunScreen→HubAntre.",
+      "files": [
+        "scripts/IntroCeltOS.gd",
+        "scripts/menu_3d_pc.gd",
+        "scripts/HubAntre.gd",
+        "scripts/TransitionBiome.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/ui/merlin_game_controller.gd",
+        "scripts/ui/end_run_screen.gd"
+      ],
+      "agent": "game_playtester"
+    },
+    {
+      "id": "FLOW-PARCHMENT-HUB-PRE-RUN",
+      "sprint": "S3",
+      "priority": 33,
+      "type": "dev",
+      "status": "pending",
+      "title": "New game: ensure biome+Ogham selection before first run via HubAntre",
+      "description": "ParchmentPreRun→BroceliandeForest3D skips HubAntre entirely, so new players cannot select biome or starter Oghams. Fix: after ParchmentPreRun completes for a first-run player, route to HubAntre first. HubAntre biome selection → TransitionBiome → Forest. Depends on FLOW-QUIZ-WIRE-INTRO architecture decision.",
+      "files": [
+        "scripts/ui/parchment_pre_run.gd:7-217",
+        "scripts/HubAntre.gd"
+      ],
+      "agent": "scene_flow_fixer"
+    },
+    {
+      "id": "MG-APAISEMENT-FALLBACK-VERIFY",
+      "sprint": "S2",
+      "priority": 12,
+      "type": "test",
+      "status": "pending",
+      "title": "Regression test: select_minigame('unknown') returns valid field name",
+      "description": "Verify BUG-MG-APAISEMENT-FALLBACK fix: select_minigame('nonexistent_field') must return MerlinConstants.ACTION_VERB_FALLBACK_FIELD ('esprit'). MerlinMiniGameSystem.run('esprit', 5) must not fall to _play_generic(). Also verify pick_minigame_for_field('unknown') returns 'esprit'. Check test_effect_engine.gd test_pick_minigame_unknown_fallback() passes.",
+      "files": [
+        "scripts/merlin/merlin_card_system.gd:228-235",
+        "scripts/merlin/merlin_effect_engine.gd:759-766",
+        "scripts/test/test_effect_engine.gd:1422-1427"
+      ],
+      "agent": "bug_hunter"
+    },
+    {
+      "id": "FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN",
+      "sprint": "S3",
+      "priority": 34,
+      "type": "dev",
+      "status": "pending",
+      "title": "First-run detection: route new profiles through personality quiz",
+      "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() → transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
+      "files": [
+        "scripts/menu_3d_pc.gd:1333-1337",
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "agent": "scene_flow_fixer"
     }
   ]
 }
