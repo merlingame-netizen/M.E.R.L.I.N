@@ -602,21 +602,6 @@
     "agent": "scene_flow_fixer"
   },
   {
-    "id": "MG-APAISEMENT-FALLBACK-VERIFY",
-    "sprint": "S2",
-    "priority": 12,
-    "type": "test",
-    "status": "pending",
-    "title": "Regression test: select_minigame('unknown') returns valid field name",
-    "description": "Verify BUG-MG-APAISEMENT-FALLBACK fix: select_minigame('nonexistent_field') must return MerlinConstants.ACTION_VERB_FALLBACK_FIELD ('esprit'). MerlinMiniGameSystem.run('esprit', 5) must not fall to _play_generic(). Also verify pick_minigame_for_field('unknown') returns 'esprit'. Check test_effect_engine.gd test_pick_minigame_unknown_fallback() passes.",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd:228-235",
-      "scripts/merlin/merlin_effect_engine.gd:759-766",
-      "scripts/test/test_effect_engine.gd:1422-1427"
-    ],
-    "agent": "bug_hunter"
-  },
-  {
     "id": "FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN",
     "sprint": "S3",
     "priority": 34,
@@ -971,5 +956,105 @@
       "shaders/bestiole_squish.gdshader"
     ],
     "description": "SPEC-5 CHK-11 WARN: shaders/bestiole_squish.gdshader is dead code — Bestiole system is listed as DELETED in bible. Grep for any references first, then delete the shader file. If any .tscn or .gd references it, remove those too."
+  },
+  {
+    "id": "UX-FONT-SIZE-10-FIX",
+    "sprint": "S2",
+    "priority": 64,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix all 10px font sizes to minimum 11px (WCAG + studio rule)",
+    "agent": "ux_accessibility_auditor",
+    "files": [
+      "scripts/calendar_tabs.gd",
+      "scripts/menu_3d_pc.gd",
+      "scripts/ui/ui_config_module.gd",
+      "scripts/Collection.gd"
+    ],
+    "description": "6 occurrences of 10px text violate 'Pas de texte < 11px' rule. Fix: calendar_tabs.gd:110,407 (state/counter 10→11); menu_3d_pc.gd:454,843 (clock/legend 10→11); ui_config_module.gd:250 (caption 10→11); Collection.gd:388 compact small_font_size=10→11. AUDIT: SPEC-6 CHK-01 FAIL_HIGH."
+  },
+  {
+    "id": "UX-TOUCH-TARGET-ARBRE",
+    "sprint": "S2",
+    "priority": 65,
+    "status": "pending",
+    "type": "dev",
+    "title": "arbre_de_vie_ui.gd:284 unlock_btn touch target 36→44px",
+    "agent": "ux_accessibility_auditor",
+    "files": [
+      "scripts/ui/arbre_de_vie_ui.gd"
+    ],
+    "description": "unlock_btn.custom_minimum_size = Vector2(0, 36) at line 284 is below WCAG 44px minimum for touch. Change to Vector2(0, 44). AUDIT: SPEC-6 CHK-02 FAIL_MEDIUM."
+  },
+  {
+    "id": "UX-I18N-COLLECTION",
+    "sprint": "S2",
+    "priority": 66,
+    "status": "pending",
+    "type": "dev",
+    "title": "Collection.gd: replace 9 hardcoded French strings with I18nRegistry",
+    "agent": "i18n_auditor_agent",
+    "files": [
+      "scripts/Collection.gd",
+      "data/i18n/text_registry.json"
+    ],
+    "description": "Lines 504-600: 'Collection', 'Gloire %d', 'Rang %s', 'Passe de Gloire', 'Palier %d - %d / %d', 'Fins & Runes', 'Fins decouvertes et Runes debloquees' hardcoded. Add keys to text_registry.json and replace with I18nRegistry.t()/I18nRegistry.tf(). AUDIT: SPEC-6 CHK-03 FAIL_MEDIUM."
+  },
+  {
+    "id": "UX-I18N-HUBANTRE",
+    "sprint": "S2",
+    "priority": 67,
+    "status": "pending",
+    "type": "dev",
+    "title": "HubAntre.gd: replace 7 hardcoded French strings with I18nRegistry",
+    "agent": "i18n_auditor_agent",
+    "files": [
+      "scripts/HubAntre.gd",
+      "data/i18n/text_registry.json"
+    ],
+    "description": "Lines 848-926: 'Memoires (%d/13)', 'Aucune memoire collectee.\\nContinuez a jouer...', 'Fermer', 'Vies Passees (%d runs)', 'Aucune vie passee.\\nTerminez un run pour commencer le journal.' hardcoded. Add to text_registry.json + replace. AUDIT: SPEC-6 CHK-04 FAIL_MEDIUM."
+  },
+  {
+    "id": "UX-PARCHMENT-COLOR-HARDCODE",
+    "sprint": "S2",
+    "priority": 68,
+    "status": "pending",
+    "type": "dev",
+    "title": "parchment_pre_run.gd:71 hardcoded Color(0.75,0.60,0.25) → MerlinVisual.CRT_PALETTE amber",
+    "agent": "visual_consistency_auditor",
+    "files": [
+      "scripts/ui/parchment_pre_run.gd"
+    ],
+    "description": "Line 71: _loading_label color = Color(0.75, 0.60, 0.25, 0.8) hardcoded. Replace with MerlinVisual.CRT_PALETTE['amber'] (or add alpha separately). Consistent with PALETTE rule. AUDIT: SPEC-6 CHK-10 WARN."
+  },
+  {
+    "id": "UX-TOUCH-TARGET-SELECTION-SAVE",
+    "sprint": "S2",
+    "priority": 69,
+    "status": "pending",
+    "type": "dev",
+    "title": "SelectionSauvegarde.gd: ensure back_button touch target >=44px",
+    "agent": "ux_accessibility_auditor",
+    "files": [
+      "scripts/SelectionSauvegarde.gd"
+    ],
+    "description": "back_button styled via _style_button() with content_margin_top/bottom=8 only — no custom_minimum_size. Add back_button.custom_minimum_size = Vector2(0, 44) after _style_button() call to guarantee WCAG touch target on mobile. AUDIT: SPEC-6 CHK-11 WARN."
+  },
+  {
+    "id": "UX-TEST-TOUCH-TARGETS-REGRESSION",
+    "sprint": "S2",
+    "priority": 70,
+    "status": "pending",
+    "type": "test",
+    "title": "Regression: all active-scene interactive buttons have min height >=44px",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/ui/arbre_de_vie_ui.gd",
+      "scripts/ui/encounter_card_overlay.gd",
+      "scripts/MenuPrincipalMerlin.gd",
+      "scripts/merlin_cabin_hub.gd"
+    ],
+    "description": "After UX-TOUCH-TARGET-ARBRE and UX-TOUCH-TARGET-SELECTION-SAVE fixes: trace all custom_minimum_size for interactive buttons in active scenes. Verify >= 44px. Also check font_size >= 11 for user-facing labels. Confirm UX-FONT-SIZE-10-FIX was applied."
   }
 ]

@@ -66,5 +66,22 @@
     "agent": "godot_expert",
     "completed_at": "2026-04-14T21:44:27Z",
     "notes": "Fixed: (1) Added GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:29. (2) detect_field() gm_hint check now also accepts GAMES keys (FIELDS.has or GAMES.has) at line 76 — neutre hint now returned correctly. (3) Added neutre to VALID_FIELDS + case neutre→_play_esprit(diff) in merlin_minigame_system.gd run():53."
+  },
+  {
+    "id": "MG-APAISEMENT-FALLBACK-VERIFY",
+    "sprint": "S2",
+    "priority": 12,
+    "type": "test",
+    "status": "completed",
+    "title": "Regression test: select_minigame('unknown') returns valid field name",
+    "description": "Verify BUG-MG-APAISEMENT-FALLBACK fix: select_minigame('nonexistent_field') must return MerlinConstants.ACTION_VERB_FALLBACK_FIELD ('esprit'). MerlinMiniGameSystem.run('esprit', 5) must not fall to _play_generic(). Also verify pick_minigame_for_field('unknown') returns 'esprit'. Check test_effect_engine.gd test_pick_minigame_unknown_fallback() passes.",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd:228-235",
+      "scripts/merlin/merlin_effect_engine.gd:759-766",
+      "scripts/test/test_effect_engine.gd:1422-1427"
+    ],
+    "agent": "bug_hunter",
+    "completed_at": "2026-04-14T22:50:00Z",
+    "notes": "PASS: 7/7 invariants verified. select_minigame(unknown)=esprit valid, neutre→detect_field→GAMES fallback all working. No bugs found. See T-MG-APAISEMENT-FALLBACK-VERIFY-2026-04-14.json"
   }
 ]

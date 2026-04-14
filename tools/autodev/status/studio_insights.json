@@ -448,5 +448,19 @@
       "priority": 23
     },
     "timestamp": "2026-04-14T21:44:27Z"
+  },
+  {
+    "id": "insight-20260414-028",
+    "agent": "ux_accessibility_auditor",
+    "severity": "WARN",
+    "category": "ux",
+    "message": "i18n coverage gap: Collection.gd and HubAntre.gd have 16+ hardcoded French strings bypassing I18nRegistry",
+    "details": "Collection.gd:504-600 and HubAntre.gd:848-926 contain player-visible strings hardcoded in French. These are active screens that players interact with during Hub exploration. The i18n_auditor_agent should run a comprehensive sweep of all scripts/ directory for text= assignments with French literals.",
+    "proposed_task": {
+      "title": "i18n_auditor_agent: sweep all scripts/ for hardcoded French user-facing text",
+      "sprint": "S3",
+      "type": "test"
+    },
+    "timestamp": "2026-04-14T22:55:00Z"
   }
 ]

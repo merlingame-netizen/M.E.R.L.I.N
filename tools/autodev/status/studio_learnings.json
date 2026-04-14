@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T20:40:00Z",
+  "last_updated": "2026-04-14T22:55:00Z",
   "metrics": {
-    "total_cycles_completed": 53,
+    "total_cycles_completed": 54,
     "total_dev_cycles": 25,
-    "total_test_cycles": 21,
+    "total_test_cycles": 22,
     "bugs_found": 46,
     "bugs_fixed": 31,
-    "tasks_completed": 68,
-    "tasks_pending": 67,
+    "tasks_completed": 69,
+    "tasks_pending": 78,
     "current_sprint": "S2",
-    "specialist_cycles_run": 9,
-    "last_specialist": 4
+    "specialist_cycles_run": 10,
+    "last_specialist": 6
   },
   "patterns_learned": [
     {
@@ -911,11 +911,35 @@
     },
     "PAT-086: Shader attachment: ShaderMaterial must be explicitly assigned to overlay rect — check _shader_mat is not null before calling set_shader_parameter()",
     "PAT-087: PS1 aesthetic: vertex snap + UV snap alone insufficient — affine warp (perspective division removal) is the primary PS1 visual signature",
-    "PAT-088: GAMES dict must include all valid gm_hint values used in cards — neutre field was a silent fallback to chance due to missing GAMES[neutre] entry"
+    "PAT-088: GAMES dict must include all valid gm_hint values used in cards — neutre field was a silent fallback to chance due to missing GAMES[neutre] entry",
+    {
+      "id": "PAT-089",
+      "learned_at": "2026-04-14T22:55:00Z",
+      "source": "SPEC-6-UX",
+      "pattern": "6 occurrences of 10px font in calendar_tabs.gd, menu_3d_pc.gd, ui_config_module.gd — always check font_size after adding Labels, never go below 11px",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/calendar_tabs.gd",
+        "scripts/menu_3d_pc.gd",
+        "scripts/ui/ui_config_module.gd",
+        "scripts/Collection.gd"
+      ]
+    },
+    {
+      "id": "PAT-090",
+      "learned_at": "2026-04-14T22:55:00Z",
+      "source": "SPEC-6-UX",
+      "pattern": "select_minigame(field) returns field type string (from FIELD_MINIGAMES), not a scene name — two separate lookup tables: FIELD_MINIGAMES (simulation) vs MiniGameRegistry.GAMES (UI instantiation)",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/minigames/minigame_registry.gd"
+      ]
+    }
   ],
   "agent_performance": {
     "game_playtester": {
-      "tasks_completed": 3,
+      "tasks_completed": 4,
       "bugs_introduced": 0,
       "bugs_found": 6,
       "specialization": "static analysis, invariant simulation, run modeling, startup trace",
@@ -1022,6 +1046,10 @@
       "bugs_introduced": 0
     },
     "shader_vfx_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "ux_accessibility_auditor": {
       "tasks_completed": 1,
       "bugs_introduced": 0
     }

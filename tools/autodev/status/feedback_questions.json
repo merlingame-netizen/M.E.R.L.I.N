@@ -223,7 +223,7 @@
       "id": "q-20260414-004",
       "category": "design",
       "priority": "MEDIUM",
-      "status": "answered",
+      "status": "applied",
       "question": "game_flow_controller.gd (HubScreen→Run3D→EndRunScreen path) est mort mais audio_integration.gd y est câblé. Faut-il supprimer ce chemin ou le conserver pour une future alternative ?",
       "context": "SPECIALIST-14 audit: deux chemins de jeu coexistent. Chemin ACTIF: HubAntre→BroceliandeForest3D→MerlinGame. Chemin MORT: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn. Aucun script de production n'instancie GameFlowController. Mais audio_integration.gd le référence. Options: (A) Supprimer le chemin mort (HubScreen.tscn, Run3D.tscn, game_flow_controller.gd) pour simplifier. (B) Garder comme chemin alternatif documenté pour future refonte. (C) Migrer le chemin actif vers game_flow_controller (refonte architecturale).",
       "type": "multiple_choice",
@@ -233,7 +233,9 @@
         "Migrer le chemin actif vers game_flow_controller (refonte propre)"
       ],
       "screenshot_urls": null,
-      "created_at": "2026-04-14T15:00:00Z"
+      "created_at": "2026-04-14T15:00:00Z",
+      "applied_at": "2026-04-14T22:45:00Z",
+      "applied_notes": "Tasks queued: FLOW-QUIZ-WIRE-INTRO (P9), FLOW-RENCONTRE-CONSTANTS-CLEANUP (P10)"
     },
     {
       "id": "q-20260414-005",
@@ -247,8 +249,10 @@
       ],
       "category": "gamedesign",
       "priority": "HIGH",
-      "status": "answered",
-      "context": "scripts/menu_3d_pc.gd:1333-1337 + scripts/IntroPersonalityQuiz.gd + scripts/SceneRencontreMerlin.gd:10-12. SPEC-0 audit finding."
+      "status": "applied",
+      "context": "scripts/menu_3d_pc.gd:1333-1337 + scripts/IntroPersonalityQuiz.gd + scripts/SceneRencontreMerlin.gd:10-12. SPEC-0 audit finding.",
+      "applied_at": "2026-04-14T22:45:00Z",
+      "applied_notes": "Tasks queued: FLOW-QUIZ-WIRE-INTRO (P9), FLOW-RENCONTRE-CONSTANTS-CLEANUP (P10)"
     },
     {
       "id": "q-20260414-006",
@@ -279,6 +283,21 @@
       "priority": "MEDIUM",
       "created_at": "2026-04-14T21:44:27Z",
       "context": "SPEC-5 FAIL_HIGH: broc_screen_vfx.gd:46 shader removed comment. VFX-SCREEN-VFX-REATTACH task queued at P23."
+    },
+    {
+      "id": "q-20260414-008",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "ux",
+      "title": "Biome radial labels: current 11px — readable en style PS1/N64 pixel-art?",
+      "question": "biome_radial.gd:369 dessine les labels de biomes en font_size=11px autour du radial de selection. Avec la DA PS1/N64 low-pixel ciblee, ces labels seront sur fond pixelise. Les garder a 11px (limite min) ou monter a 14px pour la lisibilite mobile/web?",
+      "options": [
+        "A) Garder 11px (coherent avec DA low-pixel, lisibilite acceptable)",
+        "B) Monter a 14px (priorite lisibilite mobile, leger impact DA)",
+        "C) Supprimer les labels texte, utiliser icones seules (full PS1 style)"
+      ],
+      "context": "SPEC-6 CHK-12. La biome_radial est l'ecran de selection de biome depuis le Hub. Sur mobile les labels guident le joueur."
     }
   ]
 }
