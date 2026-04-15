@@ -103,9 +103,13 @@ Deplacer les taches `status=completed` dans `tools/autodev/status/completed_arch
 3. Si doublon detecte → SKIP l'ajout (ne pas dupliquer).
 4. Pattern bash: `python tools/autodev/scripts/dedupe_completed.py` apres tout ajout pour garantir l'idempotence.
 
-### Meta-work cap (CRITICAL — bias gameplay)
-**REGLE**: Sur les 10 dernieres taches dispatched (lire `events.jsonl` cycle_update events), si >= 1 a un scope `dashboard|orchestrator|cycle|cli|monitor|api|mission-control` → SKIP toute nouvelle tache dont le titre/files matche `/dashboard|orchestrator|cycle|cli|monitor|api|mission-control/i`.
-Objectif: max 10% de meta-work par fenetre glissante de 10 cycles. Privilegier gameplay (cards, oghams, minigames, factions, biomes, SFX, narrative, scenes 3D).
+### Meta-work bias (SOFT — prefere gameplay, ne bloque JAMAIS le cycle)
+**REGLE (preference, pas blocage absolu)**:
+1. A l'etape 3 de selection: PREFERER les taches gameplay (cards, oghams, minigames, factions, biomes, SFX, narrative, scenes 3D, godot_expert, game_designer, narrative_specialist, tech_artist) aux taches meta (dashboard, orchestrator, cycle, cli, monitor, api, mission-control).
+2. Priorite egale → choisir la tache gameplay.
+3. **IMPORTANT** : Si la seule tache disponible est meta, L'EXECUTER QUAND MEME. Un cycle sans commit = echec. Mieux vaut meta-work que rien.
+4. Fallback absolu: si aucune tache pending n'est actionnable, generer une tache housekeeping (dedupe archive + rotate events + update watchdog) et commit cette action minimum pour preserver le rythme.
+Objectif long-terme: ~70% gameplay / 30% meta sur 10 cycles glissants. **TOUJOURS shipper quelque chose.**
 
 ### Events rotation
 Si `events.jsonl` depasse 200 lignes: garder les 50 dernieres, archiver le reste dans `tools/autodev/status/events_archive/YYYY-MM.jsonl`.
