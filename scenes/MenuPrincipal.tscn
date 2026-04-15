@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.06, 0.05, 0.08, 1)
+color = Color(0.023, 0.027, 0.051, 1)
 
 [node name="MistLayer" type="ColorRect" parent="."]
 layout_mode = 1
@@ -27,7 +27,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.1, 0.15, 0.3)
+color = Color(0.294, 0.208, 0.549, 0.1)
 
 [node name="CelticOrnamentTop" type="Label" parent="."]
 layout_mode = 1
@@ -36,7 +36,8 @@ anchor_right = 1.0
 offset_bottom = 30.0
 grow_horizontal = 2
 horizontal_alignment = 1
-text = "* - - - - - - - - - - - - - - - - - *"
+text = "\u26E8 \u2500\u2500\u2500 \u2042 \u2500\u2500\u2500 \u2609 \u2500\u2500\u2500 \u2042 \u2500\u2500\u2500 \u26E8"
+modulate = Color(0.82, 0.72, 1.0, 0.7)
 
 [node name="CelticOrnamentBottom" type="Label" parent="."]
 layout_mode = 1
@@ -48,7 +49,8 @@ offset_top = -30.0
 grow_horizontal = 2
 grow_vertical = 0
 horizontal_alignment = 1
-text = "* - - - - - - - - - - - - - - - - - *"
+text = "\u26E8 \u2500\u2500\u2500 \u2042 \u2500\u2500\u2500 \u2609 \u2500\u2500\u2500 \u2042 \u2500\u2500\u2500 \u26E8"
+modulate = Color(0.82, 0.72, 1.0, 0.7)
 
 [node name="Card" type="PanelContainer" parent="."]
 layout_mode = 1
