@@ -321,8 +321,6 @@ scripts/test/run_qa_loop.sh
 scripts/ui/walk_event_overlay.gd
 scripts/ui/walk_hud.gd
 
-# Shaders (untracked new)
-shaders/grass_wind_sway.gdshader
 
 # Server extras
 server-trellis/

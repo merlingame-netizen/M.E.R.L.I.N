@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T05:47:14Z",
+  "last_updated": "2026-04-15T07:00:00Z",
   "metrics": {
-    "total_cycles_completed": 57,
+    "total_cycles_completed": 58,
     "total_dev_cycles": 27,
-    "total_test_cycles": 23,
-    "bugs_found": 55,
-    "bugs_fixed": 34,
-    "tasks_completed": 74,
-    "tasks_pending": 102,
+    "total_test_cycles": 24,
+    "bugs_found": 63,
+    "bugs_fixed": 35,
+    "tasks_completed": 75,
+    "tasks_pending": 106,
     "current_sprint": "S3",
-    "specialist_cycles_run": 12,
-    "last_specialist": 4,
-    "last_updated": "2026-04-15T05:47:14Z"
+    "specialist_cycles_run": 13,
+    "last_specialist": 5,
+    "last_updated": "2026-04-15T07:00:00Z"
   },
   "patterns_learned": [
     {
@@ -1089,6 +1089,38 @@
         "hud_controller.gd",
         "ui_overlay_endscreen.gd",
         "merlin_game_ui.gd"
+      ]
+    },
+    {
+      "id": "PAT-012",
+      "learned_at": "2026-04-15T07:00:00Z",
+      "source": "SPECIALIST-5-SHADER_VFX_AUDITOR_2026-04-15",
+      "pattern": "ShaderMaterial null silent failure: when a shader is removed from a ColorRect, _set_shader_parameter() calls become silent no-ops. ALL visual effects appear broken with zero runtime error. Always add push_warning() guard in _set_shader() when _shader_mat is null.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/broceliande_3d/broc_screen_vfx.gd"
+      ]
+    },
+    {
+      "id": "PAT-013",
+      "learned_at": "2026-04-15T07:00:00Z",
+      "source": "SPECIALIST-5-SHADER_VFX_AUDITOR_2026-04-15",
+      "pattern": "PS1/N64 grass sway: UV.y maps root (0) to tip (1). Apply pow(UV.y, 1.8) for natural height falloff. Use world-space X/Z for cross-instance wind coherence. Quantize displacement with floor(wx/snap)*snap for PS1 stutter look.",
+      "severity": "LOW",
+      "applies_to": [
+        "shaders/grass_wind_sway.gdshader",
+        "scripts/broceliande_3d/broc_grass_wind.gd"
+      ]
+    },
+    {
+      "id": "PAT-014",
+      "learned_at": "2026-04-15T07:00:00Z",
+      "source": "SPECIALIST-5-SHADER_VFX_AUDITOR_2026-04-15",
+      "pattern": "GDScript private method convention (_prefix) is not enforced by the compiler. External classes CAN call _private_method() without error. Always audit for cross-class private calls in RefCounted subsystems (BrocEventVfx, BrocAtmosphere etc).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/broceliande_3d/broc_narrative_director.gd",
+        "scripts/broceliande_3d/broc_event_vfx.gd"
       ]
     }
   ],

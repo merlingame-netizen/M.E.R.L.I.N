@@ -1403,5 +1403,74 @@
       "scripts/ui/merlin_game_ui.gd"
     ],
     "description": "merlin_game_ui.gd:317 — options_container.visible = true instant reveal. Add per-option stagger tween (modulate:a 0→1, 0.2s, delay i*0.07s) for more polished card reveal."
+  },
+  {
+    "id": "VFX-GRASS-WIND-SHADER",
+    "sprint": "S2",
+    "priority": 10,
+    "status": "completed",
+    "type": "dev",
+    "title": "Create missing grass_wind_sway.gdshader",
+    "agent": "vfx_artist",
+    "files": [
+      "shaders/grass_wind_sway.gdshader"
+    ],
+    "description": "SPEC5-FAIL-001: grass_wind_sway.gdshader was missing but referenced in broc_grass_wind.gd:18. Created PS1/N64 Celtic aesthetic shader: vertex_lighting, cull_disabled, height-weighted sway (UV.y^1.8), quantized vertex snap for PS1 stutter, world-space phase coherence across instances.",
+    "completed_at": "2026-04-15T07:00:00Z",
+    "notes": "Implemented by SPEC-5 cycle. Shader uses vertex_snap uniform (default 0.03) for PS1 quantization, wind_strength=0.35, wind_speed=1.5. BrocGrassWind already assigns this shader via _try_load_shader — no code change needed."
+  },
+  {
+    "id": "VFX-DISPATCH-PUBLIC-API",
+    "sprint": "S3",
+    "priority": 16,
+    "status": "pending",
+    "type": "dev",
+    "title": "BrocEventVfx: expose _dispatch_effect as public dispatch_effect()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broc_event_vfx.gd",
+      "scripts/broceliande_3d/broc_narrative_director.gd"
+    ],
+    "description": "SPEC5-WARN-001: broc_narrative_director.gd:71 calls _event_vfx._dispatch_effect() which is a private method (underscore prefix). Add public func dispatch_effect(effect_name: String, player_pos: Vector3) -> void that calls _dispatch_effect internally. Update broc_narrative_director.gd:71 to call dispatch_effect() instead."
+  },
+  {
+    "id": "VFX-SEASONAL-SNOW-WIRE",
+    "sprint": "S3",
+    "priority": 20,
+    "status": "pending",
+    "type": "dev",
+    "title": "Wire seasonal_snow.gdshader for winter blizzard overlay",
+    "agent": "vfx_artist",
+    "files": [
+      "scripts/broceliande_3d/broc_season.gd",
+      "shaders/seasonal_snow.gdshader"
+    ],
+    "description": "SPEC5-WARN-002: seasonal_snow.gdshader exists with .uid but never loaded. BrocSeason uses seasonal_particles.gdshader for ALL seasons (spring petals, summer haze, autumn leaves, winter snow). For WINTER, add a second overlay using seasonal_snow.gdshader (blizzard/heavier snow). Wire in broc_season.gd: _setup_overlay() — add a second canvas layer (layer 6) with the snow shader, activate it only when season==Season.WINTER."
+  },
+  {
+    "id": "VFX-SCREEN-DISTORTION-CLEANUP",
+    "sprint": "S3",
+    "priority": 21,
+    "status": "pending",
+    "type": "dev",
+    "title": "Remove unused screen_distortion.gdshader or wire it",
+    "agent": "vfx_artist",
+    "files": [
+      "shaders/screen_distortion.gdshader"
+    ],
+    "description": "SPEC5-WARN-003: shaders/screen_distortion.gdshader exists but is not referenced in any active script. The crt_terminal.gdshader already includes scanline wobble and barrel distortion (supersedes this). Verify if any .tscn file references it; if not, delete the shader and its .uid to reduce dead code clutter."
+  },
+  {
+    "id": "VFX-OCEAN-WIRE-OR-REMOVE",
+    "sprint": "S4",
+    "priority": 35,
+    "status": "pending",
+    "type": "dev",
+    "title": "Wire ocean_lowpoly.gdshader to coastal biome or delete",
+    "agent": "vfx_artist",
+    "files": [
+      "shaders/ocean_lowpoly.gdshader"
+    ],
+    "description": "SPEC5-INFO-002: ocean_lowpoly.gdshader exists (faceted Gerstner wave + foam) but is not referenced anywhere. Either: (A) Wire to a coastal biome MeshInstance3D in BroceliandeForest3D if a sea/coast biome is planned, or (B) Delete and remove from shaders/ if no coastal biome is in scope for v1. Check DEV_PLAN_V2.5.md for coastal biome status."
   }
 ]
