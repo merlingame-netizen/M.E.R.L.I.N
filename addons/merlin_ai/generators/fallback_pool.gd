@@ -121,15 +121,6 @@ func _select_pools(context: Dictionary) -> Array:
 	else:
 		pools.append_array(cards_by_context.late_game)
 
-	# Par etat de crise
-	var gauges: Dictionary = context.get("gauges", {})
-	for gauge_name in gauges:
-		var value: int = int(gauges[gauge_name])
-		if value < 15:
-			pools.append_array(cards_by_context.crisis_low)
-		elif value > 85:
-			pools.append_array(cards_by_context.crisis_high)
-
 	# Par factions (reputation extremes)
 	var factions: Dictionary = context.get("factions", {})
 	var any_extreme := false

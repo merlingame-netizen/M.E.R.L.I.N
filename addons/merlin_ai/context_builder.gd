@@ -182,6 +182,12 @@ func build_llm_prompt_context(full_context: Dictionary) -> String:
 	return "\n".join(lines)
 
 
+## DEPRECATED — Gauge system suppressed in bible v2.4. Always returns [].
+## Kept for test compatibility; callers always pass {} so output is always [].
+func get_critical_gauges(_gauges: Dictionary) -> Array:
+	return []
+
+
 func get_experience_tier() -> String:
 	if player_profile == null:
 		return "Initie"

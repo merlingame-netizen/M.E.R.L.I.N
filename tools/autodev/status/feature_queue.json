@@ -1246,5 +1246,51 @@
     "description": "If save version > CURRENT_VERSION (downgraded client), migration runs unnecessarily and may corrupt data. Add check: if version > CURRENT_VERSION, push_warning and return defaults rather than migrating.",
     "status": "pending",
     "source": "SPECIALIST-9-SAVE_PERSISTENCE"
+  },
+  {
+    "id": "LLM-GROQ-1",
+    "phase": 1,
+    "priority": 8,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add GROQ_API_KEY missing warning in GroqBackend before HTTP attempt",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/groq_backend.gd"
+    ],
+    "description": "LLM-F6: In GroqBackend, add push_warning when api_key is empty so devs see clear message in console.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
+  },
+  {
+    "id": "LLM-STAT-1",
+    "phase": 2,
+    "priority": 10,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix last_ttft_ms stat never set in OllamaBackend non-streaming path",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/ollama_backend.gd"
+    ],
+    "description": "LLM-F4: Capture timestamp when STATUS_BODY transition occurs in _blocking_generate() to measure TTFT.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
+  },
+  {
+    "id": "LLM-TEST-1",
+    "phase": 2,
+    "priority": 9,
+    "status": "pending",
+    "type": "test",
+    "title": "Test: LLM pipeline integration — brain fallback chain and timeout handling",
+    "agent": "bug_hunter",
+    "files": [
+      "addons/merlin_ai/merlin_ai.gd",
+      "addons/merlin_ai/ollama_backend.gd"
+    ],
+    "description": "Verify: fallback card used on Ollama timeout, poll_result() correct, cancel_generation() clean, generate_async error on double-call.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
   }
 ]

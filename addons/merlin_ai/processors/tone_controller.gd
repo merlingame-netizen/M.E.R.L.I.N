@@ -162,12 +162,6 @@ func get_tone_for_context(context: Dictionary) -> Tone:
 
 
 func _is_crisis_context(context: Dictionary) -> bool:
-	var gauges: Dictionary = context.get("gauges", {})
-	for gauge in gauges:
-		var value: int = int(gauges[gauge])
-		if value < 15 or value > 85:
-			return true
-
 	var factions: Dictionary = context.get("faction_rep_delta", {})
 	var extreme_count := 0
 	for faction in factions:

@@ -1,0 +1,97 @@
+{
+  "specialist": 8,
+  "role": "LLM_PIPELINE_AUDITOR",
+  "timestamp": "2026-04-15T02:49:16Z",
+  "cycle_type": "dev",
+  "audit_scope": [
+    "addons/merlin_ai/ollama_backend.gd",
+    "addons/merlin_ai/merlin_ai.gd",
+    "addons/merlin_ai/groq_backend.gd",
+    "addons/merlin_ai/context_builder.gd",
+    "addons/merlin_ai/rag_manager.gd",
+    "addons/merlin_ai/fast_route.gd",
+    "addons/merlin_ai/brain_swarm_config.gd",
+    "scripts/merlin/merlin_llm_adapter.gd",
+    "scripts/merlin/llm_adapter_json_repair.gd",
+    "scripts/merlin/llm_adapter_prompts.gd",
+    "scripts/merlin/llm_adapter_validation.gd",
+    "scripts/merlin/llm_adapter_game_master.gd"
+  ],
+  "findings": [
+    {
+      "id": "LLM-F1",
+      "severity": "MEDIUM",
+      "title": "Dead 'gauges' key in context_builder.gd build_full_context()",
+      "file": "addons/merlin_ai/context_builder.gd",
+      "line": 36,
+      "detail": "run.get('gauges', {}) always returns {} — the 4-gauge system is SUPPRESSED per bible v2.4. This dead key propagates through the full context and is iterated as no-ops by fallback_pool.gd, difficulty_adapter.gd, tone_controller.gd. Also get_critical_gauges() is dead production code (only called from tests).",
+      "impact": "LLM context pollution, dead code maintenance burden, processor loops on empty dict."
+    },
+    {
+      "id": "LLM-F2",
+      "severity": "MEDIUM",
+      "title": "Queue tasks P0-DEADCODE-1 through P0-DEADCODE-5, P1-CONSTANTS-1/2/3 already implemented",
+      "file": "tools/autodev/status/feature_queue.json",
+      "line": null,
+      "detail": "Verified in code: ELEMENTS/ESSENCE_*/FLUX_* removed from merlin_constants.gd. TRIADE_ prefix removed from merlin_store.gd. Dead state keys (bestiole, ogham_fragments) not found. Bestiole .gd files deleted. OGHAM_FULL_SPECS, BIOMES, ACTION_VERBS, MOS_CONVERGENCE, TRUST_TIERS already present. Queue is stale.",
+      "impact": "Bot wastes cycle time trying to implement already-done tasks. Queue misleads priority."
+    },
+    {
+      "id": "LLM-F3",
+      "severity": "LOW",
+      "title": "OllamaBackend.check_model_available() creates a redundant HTTP connection",
+      "file": "addons/merlin_ai/ollama_backend.gd",
+      "line": 60,
+      "detail": "check_available() and check_model_available() both establish independent HTTP connections to Ollama. check_model_available() re-reads /api/tags body even if check_available() already confirmed the server is up. They are called in sequence in merlin_ai.gd._try_init_ollama().",
+      "impact": "Unnecessary double connect on startup. Minor latency."
+    },
+    {
+      "id": "LLM-F4",
+      "severity": "LOW",
+      "title": "stats.last_ttft_ms never updated in non-streaming OllamaBackend path",
+      "file": "addons/merlin_ai/ollama_backend.gd",
+      "line": 64,
+      "detail": "stats dict declares 'last_ttft_ms': 0 but _blocking_generate() never sets it. Only the streaming path (_blocking_stream) could measure TTFT, but it also doesn't update last_ttft_ms. Telemetry reads always return 0.",
+      "impact": "Misleading telemetry. Minor."
+    },
+    {
+      "id": "LLM-F5",
+      "severity": "LOW",
+      "title": "Dead gauges context in decision_history_registry.gd and merlin_omniscient.gd",
+      "file": "addons/merlin_ai/registries/decision_history_registry.gd",
+      "line": 147,
+      "detail": "Decision history records 'gauges_before' and 'gauges_after' for every card played — both always empty dicts. This bloats the cross-run memory JSON. merlin_omniscient.gd also passes gauges_before/after.",
+      "impact": "Persistent storage bloat. Cross-run memory JSON grows with empty gauge fields."
+    },
+    {
+      "id": "LLM-F6",
+      "severity": "LOW",
+      "title": "GroqBackend: no graceful degradation when GROQ_API_KEY is missing",
+      "file": "addons/merlin_ai/groq_backend.gd",
+      "line": null,
+      "detail": "If api_key is empty after checking ProjectSettings + OS env, generate_async() will attempt HTTP calls with no Authorization header, resulting in 401 errors logged as 'Groq HTTP 401'. No explicit 'key missing' warning before the request attempt.",
+      "impact": "Confusing error messages. Minor UX issue in dev."
+    },
+    {
+      "id": "LLM-F7",
+      "severity": "INFO",
+      "title": "mg_de_du_destin.gd is referenced — P0-DEADCODE-5 should NOT delete it",
+      "file": "scripts/minigames/mg_de_du_destin.gd",
+      "line": null,
+      "detail": "TransitionBiome.gd:526 and minigame_registry.gd:115,147 actively preload and use mg_de_du_destin.gd as a 'chance' minigame (D6, not D20). The bible suppressed the D20 resolution system, not this minigame. Task P0-DEADCODE-5 was wrong to include it.",
+      "impact": "If deleted, minigame registry crashes. Clarified: file should be KEPT."
+    },
+    {
+      "id": "LLM-F8",
+      "severity": "INFO",
+      "title": "Brain profile fallback chain is robust: Ollama -> Groq -> BitNet -> MerlinLLM",
+      "file": "addons/merlin_ai/merlin_ai.gd",
+      "line": 520,
+      "detail": "The _init_local_models() cascade correctly tries all backends in order with graceful fallback. Warmup retry after 30s is implemented. Cold-start timeout (90s) vs warm timeout (25s) distinction is present. Brain swarm profiles (NANO/SINGLE/SINGLE+/DUAL/TRIPLE/QUAD) auto-detect from available RAM.",
+      "impact": "Positive finding: LLM pipeline is resilient."
+    }
+  ],
+  "summary": "LLM pipeline is fundamentally sound with good fallback chains and JSON repair. Main issues are dead gauge code left over from the suppressed 4-gauge system, and a stale feature queue where P0-P1 tasks are already implemented. Priority fix: clean dead gauge context from AI layer + archive stale queue tasks.",
+  "new_tasks_generated": 6,
+  "task_implemented": "LLM-GAUGE-CLEANUP — Remove dead gauges context from context_builder.gd + mark stale queue tasks completed"
+}
