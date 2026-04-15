@@ -132,13 +132,15 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	var risk: String = str(balance.get("risk_faction", "none"))
 	var life: int = int(context.get("life_essence", 100))
 
-	# GM system prompt: example-driven (Qwen 2.5-1.5B responds better to examples than instructions)
-	var system := "JSON only. Example:\n"
-	system += "{\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":5}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]]}\n"
-	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_REPUTATION, ADD_ANAM, ADD_BIOME_CURRENCY.\n"
-	system += "ADD_REPUTATION: {\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}\n"
-	system += "Factions: druides, anciens, korrigans, niamh, ankou.\n"
-	system += "3 arrays = 3 choices. 1-3 effects each. amount 1-20. Rep cap +-20."
+	# GM system prompt: JSON-schema few-shot block (Ollama-compatible, replaces GBNF grammar).
+	# Two examples enforce format + faction/amount constraints without grammar support.
+	var system: String = "Reponds UNIQUEMENT en JSON valide. AUCUN texte avant ou apres.\n"
+	system += "Schema: {\"effects\":[[option_gauche],[option_centre],[option_droite]]}\n"
+	system += "Types: HEAL_LIFE,DAMAGE_LIFE,ADD_KARMA,ADD_REPUTATION,ADD_ANAM,ADD_BIOME_CURRENCY.\n"
+	system += "ADD_REPUTATION requis: {\"type\":\"ADD_REPUTATION\",\"faction\":F,\"amount\":N} (F=druides/anciens/korrigans/niamh/ankou, N=-20..20)\n"
+	system += "Autres: {\"type\":T,\"amount\":N} (N=1..20). 1-3 effets par option. 3 options obligatoires.\n"
+	system += "Ex1 danger: {\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":8}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":5}]]}\n"
+	system += "Ex2 stable: {\"effects\":[[{\"type\":\"ADD_REPUTATION\",\"faction\":\"anciens\",\"amount\":12}],[{\"type\":\"HEAL_LIFE\",\"amount\":4}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":-8}]]}"
 
 	var balance_hint := ""
 	if score < 30:
@@ -155,8 +157,8 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	]
 
 	# GM brain, low temp, no grammar (Ollama-compatible)
-	# max_tokens 150: valid 3-effect JSON needs ~120 chars, 80 truncated too often
-	var gm_params := {"max_tokens": 150, "temperature": 0.15}
+	# max_tokens 200: two-example prompt + 3-option effects JSON needs ~170 chars
+	var gm_params: Dictionary = {"max_tokens": 200, "temperature": 0.15}
 	var result: Dictionary = await merlin_ai.generate_structured(system, user_input, "", gm_params)
 
 	if result.has("text"):
@@ -175,8 +177,13 @@ func _parse_smart_effects_json(raw: String) -> Array:
 	if json_start < 0 or json_end <= json_start:
 		# Try repair: maybe truncated without closing brace
 		if json_start >= 0:
-			var repaired := raw.substr(json_start) + "]}]}"
-			return _try_parse_effects_dict(repaired)
+			# Try multiple closing patterns for different truncation depths
+			var partial: String = raw.substr(json_start)
+			var repair_suffixes: Array[String] = ["]}]}", "}]}]}", "]}"]
+			for suffix: String in repair_suffixes:
+				var attempt: Array = _try_parse_effects_dict(partial + suffix)
+				if attempt.size() == 3:
+					return attempt
 		return []
 
 	var json_str := raw.substr(json_start, json_end - json_start + 1)

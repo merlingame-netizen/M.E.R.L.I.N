@@ -1578,10 +1578,11 @@ func generate_structured(system_prompt: String, user_input: String, grammar: Str
 		params[key] = params_override[key]
 	params.erase("skip_scene_contract")
 	params["_brain_role"] = "gamemaster"
-	# Apply GBNF grammar if provided
+	# Grammar constraint: OllamaBackend.set_grammar() is a no-op (Ollama has no GBNF support).
+	# JSON structure is enforced via few-shot schema examples in the system prompt instead.
 	if grammar != "" and gamemaster_llm.has_method("set_grammar"):
 		gamemaster_llm.set_grammar(grammar, "root")
-		_log("Game Master: GBNF grammar active (%d chars)" % grammar.length())
+		_log("Game Master: grammar param received — Ollama backend uses example-driven JSON constraint (no GBNF)")
 	var result: Dictionary = await _run_llm(gamemaster_llm, prompt, params)
 	if grammar != "" and gamemaster_llm.has_method("clear_grammar"):
 		gamemaster_llm.clear_grammar()
