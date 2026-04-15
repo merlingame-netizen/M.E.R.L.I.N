@@ -63,34 +63,46 @@ Les taches test sont intercalees — execute-les dans l'ordre de priorite comme 
 4. Si `"test"` → ce cycle est DEV
 5. Si pas de `cycle_type` trouve → ce cycle est DEV (defaut)
 
-## Cycle DEV
+## Cycle DEV — MODE BATCH (3-5 taches par cycle)
+
+> Precedemment 1 tache/cycle ~= 1 commit/heure = trop lent. Maintenant un cycle ship un BATCH coherent.
 
 1. Lire `tools/autodev/status/feature_queue.json`
-2. Filtrer: `status=pending` ET (`type` absent OU `type=dev` OU `type` absent)
-3. Selectionner **1 seule tache** par priorite (plus petit numero = plus prioritaire)
-4. Pour cette tache:
-   a. Lire les fichiers cibles (champ `files` de la tache, ou deduire des titres)
+2. Filtrer: `status=pending` ET (`type=dev` OU `type` absent)
+3. **Selectionner 3 a 5 taches** en ordre de priorite:
+   - TOUJOURS inclure la tache P1-P5 de plus haute priorite (si existe)
+   - Remplir le batch avec des taches compatibles: meme domaine (tous LLM, tous VFX, tous minigames...) OU fichiers non conflictuels
+   - Preferer gameplay (cards, oghams, minigames, factions, biomes, SFX, narrative, scenes 3D)
+   - Max 5 taches pour eviter de depasser le budget temps du sandbox (~15min)
+4. Pour CHAQUE tache du batch (sequentiel):
+   a. Lire les fichiers cibles (champ `files`)
    b. Implementer en GDScript: `snake_case`, type hints, JAMAIS `:=` avec CONST
    c. Verifier via `grep` que les modifications sont correctes
-5. Mettre a jour `feature_queue.json`: changer `status` de la tache a `"completed"`, ajouter `"completed_at": "YYYY-MM-DDTHH:MM:SSZ"`, `"notes": "description du travail"`
-6. Ajouter une ligne a `tools/autodev/status/events.jsonl`:
-   `{"type":"cycle_update","timestamp":"YYYY-MM-DDTHH:MM:SSZ","data":{"cycle_type":"dev","task_id":"...","summary":"..."}}`
-7. `git add -A && git commit -m "feat(scope): description" && git push origin main`
+   d. Self-QA: call-site grep si la tache ajoute une fonction (cf. VERIFIER section)
+5. Mettre a jour `feature_queue.json`: pour chaque tache du batch, `status="completed"`, `completed_at`, `notes`
+6. Ajouter UNE ligne a `events.jsonl` listant les N taches completees:
+   `{"type":"cycle_update","timestamp":"...","data":{"cycle_type":"dev","batch_size":N,"task_ids":["T1","T2",...],"summary":"short combined summary"}}`
+7. UN SEUL commit + push pour tout le batch:
+   `git add -A && git commit -m "feat(scope): batch of N fixes (T1, T2, T3)" && git push origin main`
+8. Si une tache du batch echoue: la laisser `status=pending`, noter `notes="failed: reason"`, et CONTINUER avec les autres. Ne jamais bloquer le batch entier sur une tache.
 
-## Cycle TEST
+**Fallback** : si moins de 3 taches compatibles disponibles, shipper ce qu'il y a (1 ou 2 suffisent). Mieux vaut 1 shipee que 0.
+
+## Cycle TEST — MODE BATCH (2-3 rapports par cycle)
 
 1. `git pull origin main`
 2. Lire `feature_queue.json`, filtrer: `type=test`, `status=pending`
-3. Selectionner 1 tache test par priorite
-4. Executer selon l'agent:
-   - `game_playtester`: Simuler des sessions en lisant le code, verifier invariants (vie 0-100, rep caps +-20, MOS 8-50)
-   - `game_design_auditor`: Comparer code vs `GAME_DESIGN_BIBLE.md`, lister ecarts
-   - `bug_hunter`: Analyse statique, chercher null access, type errors, softlocks
-5. Ecrire le rapport JSON dans `tools/autodev/status/test_reports/`
-6. Si bugs CRITICAL: creer des taches dev dans `feature_queue.json` (priority=1)
-7. Mettre a jour `feature_queue.json`: `status=completed`
-8. Logger dans `events.jsonl`: `cycle_type=test`
-9. `git add` + `git commit` + `git push`
+3. Selectionner **2 a 3 taches test** en ordre de priorite (audits peuvent s'executer en sequence rapide)
+4. Pour CHAQUE tache test:
+   a. Executer selon l'agent:
+      - `game_playtester`: Simuler sessions, verifier invariants (vie 0-100, rep caps +-20, MOS 8-50)
+      - `game_design_auditor`: Comparer code vs `GAME_DESIGN_BIBLE.md`, lister ecarts
+      - `bug_hunter`: Analyse statique, null access, type errors, softlocks
+   b. Ecrire rapport JSON dans `test_reports/`
+   c. Si bugs CRITICAL: creer des taches dev (`priority=1`, `type=fix`)
+5. Mettre a jour `feature_queue.json`: toutes les taches du batch `status=completed`
+6. Logger UNE ligne `events.jsonl` avec tous les task_ids + combined summary
+7. UN SEUL commit + push: `test(scope): batch N audits + M new fix tasks`
 
 ## Housekeeping (chaque cycle)
 
