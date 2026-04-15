@@ -532,6 +532,23 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260415-013",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "pending",
+      "title": "SelectionSauvegarde Continue: HubAntre vs direct resume to BroceliandeForest3D?",
+      "question": "When 'Continue' is selected from main menu and an active interrupted run exists in run_state, where should the player be routed?\nA: Always HubAntre (hub), let player choose to re-enter forest themselves (current behavior, safe)\nB: Directly to BroceliandeForest3D.tscn (resumes mid-run immediately, Hades-style)\nC: Show a 'Resume Run?' confirmation screen before entering forest",
+      "options": [
+        "A: Always HubAntre (current safe default)",
+        "B: Direct resume to BroceliandeForest3D (Hades-style)",
+        "C: Confirmation screen before resume"
+      ],
+      "context": "SelectionSauvegarde.gd:4 GAME_SCENE=HubAntre. The bible mentions Hades-style auto-continue. Current code loads profile but does not check active run_state for routing.",
+      "created_at": "2026-04-15T19:45:00Z",
+      "created_by": "SPECIALIST-0-SCENE_FLOW_TESTER"
     }
   ]
 }

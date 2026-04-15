@@ -1,0 +1,137 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "date": "2026-04-15",
+  "cycle_type": "test",
+  "events_count": 112,
+  "summary": "Full scene flow trace — 10 checks, 3 CRITICAL, 2 HIGH, 2 MEDIUM, 3 PASS",
+  "test_tasks_executed": [
+    "T-E2E-CONTINUE-LOAD-VERIFY",
+    "T-GDC-FACTION-ENDING-INTEGRATION"
+  ],
+  "task_implemented": "E2E-MERLINGAME-OBSOLETE-PATH",
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "status": "FIXED_THIS_CYCLE",
+      "check": "BroceliandeForest3D._on_hub() route target",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "lines": "9, 1221-1227",
+      "detail": "GAME_SCENE = 'MerlinGame.tscn' was used when _merlin_found=true. Encounters now handled inline via EncounterCardOverlay. MerlinGame.tscn is dead architecture. FIXED: always route to HUB_SCENE, removed dead GAME_SCENE const.",
+      "verdict": "FIXED"
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "status": "EXISTING_TASK",
+      "check": "IntroPersonalityQuiz + SceneRencontreMerlin deletion",
+      "file": "scenes/IntroPersonalityQuiz.tscn, scenes/SceneRencontreMerlin.tscn",
+      "detail": "Director decision q-20260414-005: delete both. Both .tscn and .gd files still present. Task E2E-DELETE-ORPHAN-SCENES exists in queue but not yet executed.",
+      "verdict": "OPEN — pending task E2E-DELETE-ORPHAN-SCENES"
+    },
+    {
+      "id": "SF-003",
+      "severity": "CRITICAL",
+      "status": "EXISTING_TASK",
+      "check": "GameFlowController dead (not wired)",
+      "file": "scripts/core/game_flow_controller.gd",
+      "detail": "GameFlowController NOT autoload, NOT instantiated in any active scene. Director q-20260414-004: migrate active path to GFC. ARCH-GAMEFLOW-UNWIRED exists. The full Hub->Run->EndScreen signal pipeline is dead code.",
+      "verdict": "OPEN — pending task ARCH-GAMEFLOW-UNWIRED"
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "status": "NEW_TASK",
+      "check": "Menu3DPC Continue → HubAntre (should → SelectionSauvegarde)",
+      "file": "scripts/menu_3d_pc.gd",
+      "line": "1326",
+      "detail": "Continue button routes directly to HubAntre.tscn bypassing SelectionSauvegarde. Player cannot resume from saved run state via main menu Continue.",
+      "verdict": "NEW TASK: FLOW-MENU3D-CONTINUE-FIX"
+    },
+    {
+      "id": "SF-005",
+      "severity": "HIGH",
+      "status": "NEW_TASK",
+      "check": "T-E2E-CONTINUE-LOAD-VERIFY result: PARTIAL FAIL",
+      "file": "scripts/SelectionSauvegarde.gd",
+      "lines": "4, 97-109",
+      "detail": "Profile IS loaded via store.dispatch(LOAD_PROFILE) ✓. BUT GAME_SCENE = HubAntre always. No routing to BroceliandeForest3D for active run_state. run_state interruption resume not implemented.",
+      "verdict": "FAIL — NEW TASK: FLOW-SELECTION-RESUME-ROUTING"
+    },
+    {
+      "id": "SF-006",
+      "severity": "HIGH",
+      "status": "NEW_TASK",
+      "check": "T-GDC-FACTION-ENDING-INTEGRATION result: PARTIAL FAIL",
+      "file": "scripts/merlin/store_run.gd, scripts/core/game_flow_controller.gd",
+      "detail": "store_run.check_run_end() correctly returns faction_endings_available for rep>=80 ✓. MerlinReputationSystem.get_available_endings() works ✓. BUT faction_ending_chosen signal never connected in active path (GameFlowController dead). Faction endings computed but never acted upon.",
+      "verdict": "PARTIAL FAIL — active signal wiring missing (blocker: ARCH-GAMEFLOW-UNWIRED)"
+    },
+    {
+      "id": "SF-007",
+      "severity": "HIGH",
+      "status": "NEW_TASK",
+      "check": "MerlinCardSystem + MerlinSaveSystem not registered as singletons",
+      "file": "scripts/game_manager.gd",
+      "lines": "672-680",
+      "detail": "GameManager._ready() registers MerlinStore ✓ but NOT MerlinCardSystem or MerlinSaveSystem. Multiple scripts call get_node_or_null('/root/MerlinStore') with fallbacks. CardSystem and SaveSystem have no consistent access path.",
+      "verdict": "OPEN — NEW TASK: FLOW-GAMESYSTEM-SINGLETONS"
+    },
+    {
+      "id": "SF-008",
+      "severity": "MEDIUM",
+      "status": "PASS",
+      "check": "All target .tscn files exist on disk",
+      "detail": "HubScreen.tscn, Run3D.tscn, EndRunScreen.tscn, TalentTree.tscn, MerlinGame.tscn, MenuPrincipal.tscn, Menu3DPC.tscn, HubAntre.tscn, BroceliandeForest3D.tscn, SelectionSauvegarde.tscn, ParchmentPreRun.tscn, TransitionBiome.tscn — ALL EXIST.",
+      "verdict": "PASS"
+    },
+    {
+      "id": "SF-009",
+      "severity": "MEDIUM",
+      "status": "NEW_TASK",
+      "check": "PixelTransitionConfig has dead MerlinGame.tscn profile",
+      "file": "scripts/autoload/pixel_transition_config.gd",
+      "line": "71",
+      "detail": "SCENE_PROFILES has entry for 'res://scenes/MerlinGame.tscn' — orphan config after MerlinGame deprecated.",
+      "verdict": "LOW — NEW TASK: FLOW-PIXEL-CONFIG-CLEANUP"
+    },
+    {
+      "id": "SF-010",
+      "severity": "PASS",
+      "check": "IntroCeltOS → Menu3DPC transition",
+      "file": "scripts/IntroCeltOS.gd",
+      "line": "516",
+      "detail": "PixelTransition.transition_to('res://scenes/Menu3DPC.tscn') — scene exists ✓",
+      "verdict": "PASS"
+    },
+    {
+      "id": "SF-011",
+      "severity": "PASS",
+      "check": "ParchmentPreRun → BroceliandeForest3D",
+      "file": "scripts/ui/parchment_pre_run.gd",
+      "line": "217",
+      "detail": "get_tree().change_scene_to_file(SCENE_FOREST) — SCENE_FOREST = BroceliandeForest3D.tscn — exists ✓",
+      "verdict": "PASS"
+    }
+  ],
+  "invariants_check": {
+    "all_tscn_exist": "PASS",
+    "pixel_transition_wired": "PASS",
+    "merlin_store_accessible": "PASS (via GameManager autoload)",
+    "active_run_path_complete": "FAIL (MerlinGame orphan fixed, but GFC still dead)",
+    "continue_loads_run_state": "PARTIAL_FAIL (profile loaded, run_state routing missing)"
+  },
+  "new_tasks_generated": [
+    "FLOW-MENU3D-CONTINUE-FIX",
+    "FLOW-SELECTION-RESUME-ROUTING",
+    "FLOW-GAMESYSTEM-SINGLETONS",
+    "FLOW-PIXEL-CONFIG-CLEANUP",
+    "T-FLOW-FULL-LOOP-TRACE"
+  ],
+  "tasks_completed": [
+    "E2E-MERLINGAME-OBSOLETE-PATH",
+    "T-E2E-CONTINUE-LOAD-VERIFY",
+    "T-GDC-FACTION-ENDING-INTEGRATION"
+  ]
+}

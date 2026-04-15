@@ -3,17 +3,17 @@
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
   "last_updated": "2026-04-15T18:47:19Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
-    "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "total_test_cycles": 27,
+    "bugs_found": 70,
+    "bugs_fixed": 39,
+    "tasks_completed": 88,
+    "tasks_pending": 171,
     "current_sprint": "S3",
     "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "last_specialist": 0,
+    "last_updated": "2026-04-15T19:45:00Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1383,6 +1383,36 @@
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
       ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-15T19:45:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "GAME_SCENE const = MerlinGame.tscn was dead orphan — always route _on_hub() to HUB_SCENE in BroceliandeForest3D. Encounters handled inline via EncounterCardOverlay.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-15T19:45:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "SelectionSauvegarde loads profile via store.dispatch(LOAD_PROFILE) but does NOT check active run_state for routing — always goes to HubAntre. Interrupted runs cannot be resumed.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/SelectionSauvegarde.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-15T19:45:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "GameManager autoload registers MerlinStore as singleton but NOT MerlinCardSystem or MerlinSaveSystem. These must be added to GameManager._ready() for consistent access.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/game_manager.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -1412,7 +1442,7 @@
       ]
     },
     "bug_hunter": {
-      "tasks_completed": 11,
+      "tasks_completed": 13,
       "bugs_introduced": 0,
       "bugs_found": 7,
       "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection, coverage drift detection",
@@ -1535,6 +1565,10 @@
       "tasks_completed": 1,
       "bugs_introduced": 0,
       "findings": 10
+    },
+    "gameplay_programmer": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {

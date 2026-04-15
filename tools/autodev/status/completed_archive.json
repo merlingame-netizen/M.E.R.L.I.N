@@ -109,5 +109,56 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "T-GDC-FACTION-ENDING-INTEGRATION",
+    "sprint": "S2",
+    "priority": 22,
+    "status": "completed",
+    "type": "test",
+    "title": "Integration test: faction ending correctly detected when rep >= 80 at run end",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/store_run.gd",
+      "scripts/test/"
+    ],
+    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS.",
+    "completed_at": "2026-04-15T19:45:00Z",
+    "notes": "TESTED: PARTIAL FAIL — store_run.check_run_end() returns faction_endings_available for rep>=80 ✓ but faction_ending_chosen signal never connected in active path (GameFlowController dead). Blocked by ARCH-GAMEFLOW-UNWIRED."
+  },
+  {
+    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
+    "sprint": "S2",
+    "priority": 12,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-15T19:45:00Z",
+    "notes": "FIXED: removed GAME_SCENE const, _on_hub() now always routes to HUB_SCENE. Encounters handled inline via EncounterCardOverlay."
+  },
+  {
+    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-15T19:45:00Z",
+    "notes": "TESTED: PARTIAL FAIL — profile loaded via store.dispatch(LOAD_PROFILE) ✓ but GAME_SCENE always=HubAntre, no run_state routing to resume interrupted run. New task FLOW-SELECTION-RESUME-ROUTING created."
   }
 ]

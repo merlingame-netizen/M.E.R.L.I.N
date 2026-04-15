@@ -566,20 +566,6 @@
     "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
   },
   {
-    "id": "T-GDC-FACTION-ENDING-INTEGRATION",
-    "sprint": "S2",
-    "priority": 22,
-    "status": "pending",
-    "type": "test",
-    "title": "Integration test: faction ending correctly detected when rep >= 80 at run end",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/merlin/store_run.gd",
-      "scripts/test/"
-    ],
-    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
-  },
-  {
     "id": "SFX-DAMAGE-LIFE-FEEDBACK",
     "sprint": "S2",
     "priority": 19,
@@ -2074,21 +2060,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
-    "sprint": "S2",
-    "priority": 12,
-    "type": "dev",
-    "status": "pending",
-    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
-    "agent": "game_design_coder",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd"
-    ],
-    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-HUBANTRE-SCRIPT-AUDIT",
     "sprint": "S2",
     "priority": 13,
@@ -2101,22 +2072,6 @@
       "scripts/HubAntre.gd"
     ],
     "description": "HubAntre.tscn is the hub destination after forest run but HubAntre.gd appears not to instantiate core game systems (MerlinStore, MerlinCardSystem, MerlinSaveSystem). Verify: does HubAntre rely on persistent MerlinGame.tscn node for systems? Or does it re-init? If systems are missing, player data resets on hub arrival. Add system initialization if missing.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
-    "sprint": "S2",
-    "priority": 22,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/SelectionSauvegarde.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
     "created_at": "2026-04-15T15:45:00Z",
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
@@ -2464,5 +2419,79 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FLOW-MENU3D-CONTINUE-FIX",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "dev",
+    "title": "Fix Menu3DPC Continue button — route to SelectionSauvegarde not HubAntre",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/menu_3d_pc.gd"
+    ],
+    "description": "menu_3d_pc.gd:1326: _glitch_transition routes Continue to HubAntre.tscn directly, bypassing SelectionSauvegarde. Player cannot resume interrupted run from main menu. Fix: route Continue to res://scenes/SelectionSauvegarde.tscn so save state is loaded first.",
+    "status": "pending",
+    "created_at": "2026-04-15T19:45:00Z"
+  },
+  {
+    "id": "FLOW-SELECTION-RESUME-ROUTING",
+    "sprint": "S2",
+    "priority": 2,
+    "type": "dev",
+    "title": "SelectionSauvegarde: check run_state, route to BroceliandeForest3D if active run",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/SelectionSauvegarde.gd"
+    ],
+    "description": "SelectionSauvegarde._auto_continue() always routes to GAME_SCENE=HubAntre.tscn even when an interrupted run_state exists. After loading profile (store.dispatch LOAD_PROFILE), check if state.run.active==true. If active run: route to BroceliandeForest3D.tscn to resume. If no active run: route to HubAntre.tscn. Also update GAME_SCENE const to handle dynamic routing.",
+    "status": "pending",
+    "created_at": "2026-04-15T19:45:00Z"
+  },
+  {
+    "id": "FLOW-GAMESYSTEM-SINGLETONS",
+    "sprint": "S2",
+    "priority": 2,
+    "type": "dev",
+    "title": "Register MerlinCardSystem + MerlinSaveSystem as root singletons in GameManager._ready()",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/game_manager.gd"
+    ],
+    "description": "GameManager._ready() (autoload, line 672) registers MerlinStore as root singleton but NOT MerlinCardSystem or MerlinSaveSystem. Multiple scripts expect /root/MerlinCardSystem and /root/MerlinSaveSystem. Fix: after MerlinStore registration, add: if not get_node_or_null('/root/MerlinCardSystem'): var cs := MerlinCardSystem.new(); cs.name='MerlinCardSystem'; get_tree().root.call_deferred('add_child', cs). Same for MerlinSaveSystem.",
+    "status": "pending",
+    "created_at": "2026-04-15T19:45:00Z"
+  },
+  {
+    "id": "FLOW-PIXEL-CONFIG-CLEANUP",
+    "sprint": "S3",
+    "priority": 6,
+    "type": "dev",
+    "title": "Remove dead MerlinGame.tscn entry from PixelTransitionConfig",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/autoload/pixel_transition_config.gd"
+    ],
+    "description": "pixel_transition_config.gd:71 has SCENE_PROFILES entry for 'res://scenes/MerlinGame.tscn' — orphan config since MerlinGame.tscn is deprecated architecture. Remove the entry to keep config clean.",
+    "status": "pending",
+    "created_at": "2026-04-15T19:45:00Z"
+  },
+  {
+    "id": "T-FLOW-FULL-LOOP-TRACE",
+    "sprint": "S2",
+    "priority": 4,
+    "type": "test",
+    "title": "Test: trace full session loop code path — IntroCeltOS→Menu3DPC→ParchmentPreRun→BroceliandeForest3D→HubAntre",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/menu_3d_pc.gd",
+      "scripts/ui/parchment_pre_run.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/HubAntre.gd"
+    ],
+    "description": "Static code trace of the full new-game session loop. For each transition: (1) verify source script calls PixelTransition.transition_to() with correct target, (2) verify target .tscn exists, (3) check for null-check guards or ResourceLoader.exists() guards, (4) verify PixelTransition autoload is referenced correctly. Look for hardcoded paths vs const usage. Fail if any transition has no guard or routes to dead scene.",
+    "status": "pending",
+    "created_at": "2026-04-15T19:45:00Z"
   }
 ]
