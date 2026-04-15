@@ -2181,280 +2181,6 @@
     "description": "User bug report 2026-04-15: clicking Director tab makes interface 'disappear'. ErrorBoundary deployed 2026-04-15 as mitigation to surface any crash. If no crash visible post-deploy, root cause is CSS layout: drawer__grid--2 with 4 children in .drawer__body overflow-y=auto can create >100vh total height with no internal min-height, collapsing visibly. Fix: add drawer__grid--2 { grid-auto-rows: minmax(200px, auto) } OR split Director into 2x2 sub-grids."
   },
   {
-    "id": "DA-PALETTE-UNIFIED-AUTOLOAD",
-    "sprint": "S3",
-    "priority": 4,
-    "status": "pending",
-    "type": "dev",
-    "title": "Autoload merlin_palette.gd — tokens DA partages toutes scenes",
-    "agent": "tech_artist",
-    "files": [
-      "scripts/autoload/merlin_palette.gd",
-      "project.godot",
-      "scripts/merlin/merlin_visual.gd"
-    ],
-    "description": "Creer autoload MerlinPalette expose constants: BG_OLED Color(0.023,0.027,0.051,1), MIST_VIOLET Color(0.294,0.208,0.549,0.1), ACCENT_VIOLET Color(0.545,0.361,0.965,1), ACCENT_EMERALD Color(0.062,0.725,0.506,1), ACCENT_AMBER Color(0.961,0.619,0.043,1), GHOST_BORDER Color(1,1,1,0.08), RADIUS_LG 14. Remplacer Color() hardcodes dans MenuPrincipal, HubAntre, MerlinCabinHub, HubScreen, cards. Visual coherence cross-scene."
-  },
-  {
-    "id": "DA-ANTRE-VOLUMETRIC-FOG",
-    "sprint": "S3",
-    "priority": 5,
-    "status": "pending",
-    "type": "dev",
-    "title": "Antre Merlin: WorldEnvironment volumetric fog violet low-poly",
-    "agent": "tech_artist",
-    "files": [
-      "scenes/HubAntre.tscn",
-      "shaders/community/low_poly/volumetric_fog.gdshader"
-    ],
-    "description": "Ajouter WorldEnvironment sur HubAntre avec fog.enabled=true, fog_light_color MerlinPalette.ACCENT_VIOLET, fog_density=0.02, volumetric_fog_enabled=true, fog_depth_begin=5, fog_depth_end=30. Shader low-poly custom (vertex_snap + dithering)."
-  },
-  {
-    "id": "INPUT-ABSTRACTION-AUDIT",
-    "sprint": "S2",
-    "priority": 6,
-    "status": "pending",
-    "type": "test",
-    "title": "Audit: minigames hardcoded keys vs InputMap actions",
-    "agent": "bug_hunter",
-    "files": [
-      "scripts/minigames/*.gd"
-    ],
-    "description": "Grep minigames pour hardcoded KEY_* / MOUSE_BUTTON_* / JOY_BUTTON_*. Lister violations. Objectif 100% InputMap actions (ui_accept, ui_cancel, mg_action_a, mg_action_b, mg_direction_*). Rapport test_reports/."
-  },
-  {
-    "id": "LLM-FLOW-AUDIT-E2E",
-    "sprint": "S2",
-    "priority": 7,
-    "status": "pending",
-    "type": "test",
-    "title": "LLM: audit E2E deroule partie (card prompt -> narrative -> ending)",
-    "agent": "llm_pipeline_auditor",
-    "files": [
-      "scripts/merlin/merlin_llm_adapter.gd",
-      "addons/merlin_ai/merlin_ai.gd",
-      "scripts/merlin/store_run.gd"
-    ],
-    "description": "Tracer chemin LLM complet: 1) card_selection prompt, 2) card_effect_json response, 3) parse + apply, 4) narrative_log append, 5) end_run trigger, 6) faction_ending_choice, 7) epilogue_prompt. Lister breakpoints, timings, failure modes."
-  },
-  {
-    "id": "DA-MENU-CELTIC-FONT",
-    "sprint": "S3",
-    "priority": 8,
-    "status": "pending",
-    "type": "dev",
-    "title": "Menu: integrer font celtique FONT_TITLE sur title + ornements",
-    "agent": "tech_artist",
-    "files": [
-      "scripts/MenuPrincipalMerlin.gd",
-      "assets/fonts/celtic.ttf",
-      "scenes/MenuPrincipal.tscn"
-    ],
-    "description": "Acquerir font celtique (MedievalSharp ou Uncial Antiqua via Google Fonts/fontsource). Charger comme FONT_TITLE. Appliquer Title + CelticOrnamentTop + CelticOrnamentBottom. Fallback TextServerFallback si absent."
-  },
-  {
-    "id": "INPUT-GAMEPAD-ACTIONS",
-    "sprint": "S2",
-    "priority": 9,
-    "status": "pending",
-    "type": "dev",
-    "title": "InputMap: ajouter bindings gamepad toutes actions minigame",
-    "agent": "gameplay_programmer",
-    "files": [
-      "project.godot",
-      "scripts/input/input_manager.gd"
-    ],
-    "description": "project.godot InputMap: Joypad bindings sur ui_accept (A/X), ui_cancel (B/O), mg_action_a (X/Square), mg_action_b (Y/Triangle), mg_left/right/up/down (dpad + stick gauche), mg_shoulder_l (LB/L1), mg_shoulder_r (RB/R1). Tester Xbox + DualSense."
-  },
-  {
-    "id": "INPUT-TOUCH-GESTURES",
-    "sprint": "S2",
-    "priority": 10,
-    "status": "pending",
-    "type": "dev",
-    "title": "TouchGestureManager: tap/swipe/hold abstraction pour mobile",
-    "agent": "gameplay_programmer",
-    "files": [
-      "scripts/input/touch_gesture_manager.gd",
-      "scripts/autoload/touch_gesture_manager.gd",
-      "project.godot"
-    ],
-    "description": "Autoload TouchGestureManager emit signals tap(pos), swipe(dir, distance), hold(pos, duration). Convertir en InputEvent actions standard. Swipe up = mg_direction_up, long_hold = mg_action_b. Config dict."
-  },
-  {
-    "id": "INPUT-PROMPT-ADAPTIVE",
-    "sprint": "S2",
-    "priority": 11,
-    "status": "pending",
-    "type": "dev",
-    "title": "Input prompt overlay: detect active device, icons appropriees",
-    "agent": "gameplay_programmer",
-    "files": [
-      "scripts/ui/input_prompt.gd",
-      "scenes/ui/InputPrompt.tscn",
-      "assets/icons/input/*.svg"
-    ],
-    "description": "Overlay adaptatif: Input.is_joy_connected() icons A/B/X/Y, DisplayServer.is_touchscreen_available() Tap/Swipe, else keyboard. Detecter last_input_type et basculer dynamiquement. Cross minigames + menus."
-  },
-  {
-    "id": "DA-CARD-FRAME-VIOLET-BORDER",
-    "sprint": "S3",
-    "priority": 12,
-    "status": "pending",
-    "type": "dev",
-    "title": "Cards in-run: frame glass-panel + violet accent border on hover",
-    "agent": "tech_artist",
-    "files": [
-      "scripts/ui/card_visual.gd",
-      "scenes/ui/CardVisual.tscn",
-      "scripts/merlin/merlin_visual.gd"
-    ],
-    "description": "StyleBoxFlat cards: bg MerlinPalette.BG_OLED alpha 0.6, border MerlinPalette.ACCENT_VIOLET alpha 0.2 normal / 1.0 hover, border 2px, radius 14. Shadow violet soft hover. Backdrop blur si feasible."
-  },
-  {
-    "id": "DA-HUB-CABIN-MATCH",
-    "sprint": "S3",
-    "priority": 13,
-    "status": "pending",
-    "type": "dev",
-    "title": "MerlinCabinHub + HubScreen: alignement DA palette Merlin",
-    "agent": "tech_artist",
-    "files": [
-      "scenes/MerlinCabinHub.tscn",
-      "scenes/HubScreen.tscn",
-      "scripts/HubScreen.gd"
-    ],
-    "description": "Remplacer Color() hardcodes par MerlinPalette.*. Ajouter mist layer violet + rune glow central comme HubAntre. Boutons ghost-border + hover violet."
-  },
-  {
-    "id": "DA-BROCELIANDE-FOG-VIOLET",
-    "sprint": "S3",
-    "priority": 14,
-    "status": "pending",
-    "type": "dev",
-    "title": "BroceliandeForest3D: volumetric fog per-biome",
-    "agent": "tech_artist",
-    "files": [
-      "scenes/BroceliandeForest3D.tscn",
-      "scripts/merlin/merlin_visual.gd",
-      "scripts/3d/biome_environment.gd"
-    ],
-    "description": "Switch WorldEnvironment fog_color selon current_biome: foret #4B3590, marais #5a7a6b, montagne #8a9aab, desert #c9a574, mer #3b6c7a. Trigger on biome change. Immersion per-zone."
-  },
-  {
-    "id": "LLM-PROMPT-CARD-REFINE",
-    "sprint": "S2",
-    "priority": 15,
-    "status": "pending",
-    "type": "dev",
-    "title": "LLM prompts: raffiner card generation (variety cap, tone celtic)",
-    "agent": "narrative_specialist",
-    "files": [
-      "scripts/merlin/llm_adapter_game_master.gd",
-      "addons/merlin_ai/prompts/card_gen.txt"
-    ],
-    "description": "Card prompt template: ton celtic/breton, enforcer variety (pas 2 cards similaires meme run), 5 champ_lexical (druidique/chevaleresque/magique/naturel/mystique), minimum 3 factions touchees sur 20 cards."
-  },
-  {
-    "id": "LLM-NARRATIVE-STORYARCS",
-    "sprint": "S2",
-    "priority": 16,
-    "status": "pending",
-    "type": "dev",
-    "title": "LLM narrative: arcs coherents 3 actes (ouverture/climax/resolution)",
-    "agent": "narrative_specialist",
-    "files": [
-      "scripts/merlin/store_run.gd",
-      "addons/merlin_ai/prompts/story_arc.txt",
-      "scripts/merlin/llm_adapter_narrator.gd"
-    ],
-    "description": "LLM narrator prend narrative_log + current_act + faction_rep et genere 2-3 phrases avancant arc. Act 1 exposition, Act 2 complications faction dominante, Act 3 climax resolution. Tone continuity."
-  },
-  {
-    "id": "LLM-FACTION-DIALOG",
-    "sprint": "S2",
-    "priority": 17,
-    "status": "pending",
-    "type": "dev",
-    "title": "LLM dialogues: contextualises faction dominante",
-    "agent": "narrative_specialist",
-    "files": [
-      "addons/merlin_ai/prompts/faction_dialog.txt",
-      "scripts/merlin/llm_adapter_game_master.gd"
-    ],
-    "description": "NPC dialogue generation prompt prend faction_dominante + faction_rep + recent_choices. Obscurs ton sombre menace, Sages_Esprits energique positif, Druides mystique cryptique. Validate tone via regex."
-  },
-  {
-    "id": "LLM-ENDING-VARIETY",
-    "sprint": "S2",
-    "priority": 18,
-    "status": "pending",
-    "type": "dev",
-    "title": "LLM endings: 12 variantes generees (pas 4 templates)",
-    "agent": "narrative_specialist",
-    "files": [
-      "scripts/run/end_run_screen.gd",
-      "addons/merlin_ai/prompts/ending_gen.txt"
-    ],
-    "description": "Ending generation: dominant_faction (4) x MOS_band (3) x fins_vues + total_runs. Weighted template pool selection + LLM fill details. Min 12 distinct endings. Doc GAME_DESIGN_BIBLE.md."
-  },
-  {
-    "id": "ASSET-CARD-ILLUSTRATIONS-BATCH",
-    "sprint": "S2",
-    "priority": 19,
-    "status": "pending",
-    "type": "content",
-    "title": "Cards: 20 illustrations via nano-banana (dark mystical violet celtic)",
-    "agent": "tech_artist",
-    "files": [
-      "Assets/cards/illustrations/*.png",
-      "tools/asset-forge/card_batch.py"
-    ],
-    "description": "nano-banana (gen-lang-client-0904837539) pour 20 illustrations 512x768 dark-mystical-celtic: druide, korrigan, chevalier, foret-brumeuse, rune-glowing, etc. Batch via script. Save Assets/cards/illustrations/. Update card pool JSON."
-  },
-  {
-    "id": "ASSET-ANTRE-TEXTURES",
-    "sprint": "S2",
-    "priority": 20,
-    "status": "pending",
-    "type": "content",
-    "title": "Antre: pack textures procedurales (pierre runique, bois ancien, brume)",
-    "agent": "tech_artist",
-    "files": [
-      "Assets/textures/antre/*.png",
-      "shaders/procedural/*.gdshader"
-    ],
-    "description": "asset-forge pipeline: 5 textures tileables 512x512: pierre_runique (noise+glyphs), bois_ancien (wood rings), brume_volumique (perlin 3ch), runes_glowing (emissive), tissu_cape (weave). Apply HubAntre materials."
-  },
-  {
-    "id": "ASSET-3D-RUNES-HUNYUAN3D",
-    "sprint": "S2",
-    "priority": 21,
-    "status": "pending",
-    "type": "content",
-    "title": "Runes ogham 3D low-poly via hunyuan3d (8 runes)",
-    "agent": "tech_artist",
-    "files": [
-      "Assets/models/oghams/*.glb",
-      "scenes/3d/ogham_spawn.tscn"
-    ],
-    "description": "8 modeles 3D low-poly ogham MERLIN (M/E/R/L/I/N + AK + RI) via hunyuan3d. Scale 0.3m. Spawn suspension dans Antre, rotation ambiante, emissive violet quand decouverts."
-  },
-  {
-    "id": "ASSET-SFX-CELTIC-PACK",
-    "sprint": "S2",
-    "priority": 22,
-    "status": "pending",
-    "type": "content",
-    "title": "SFX pack celtic: chime/whisper/flow/glyph-activate (4 sons)",
-    "agent": "tech_artist",
-    "files": [
-      "Assets/audio/sfx/celtic/*.ogg",
-      "scripts/merlin/sfx_manager.gd"
-    ],
-    "description": "4 SFX 1-3s: scene_transition_chime (Bb3 bell + reverb), merlin_whisper (filtered voice), mana_flow (water-glass), glyph_activate (pulse + high freq). SFXManager.play_celtic(type)."
-  },
-  {
     "id": "MG-NEW-FORET-TRIO",
     "sprint": "S3",
     "priority": 23,
@@ -2581,5 +2307,162 @@
       "scenes/minigames/grotte/*.tscn"
     ],
     "description": "3 minigames grotte. Decipher=glyph chain 6 symbols, Echo=sequence sonore 5, Torch=direction via ombres. Champ_lexical ancien."
+  },
+  {
+    "id": "MEGA-MENU-PRINCIPAL-REFONTE-COMPLETE",
+    "sprint": "S3",
+    "priority": 4,
+    "status": "pending",
+    "type": "dev",
+    "title": "REFONTE COMPLETE MenuPrincipal — layout, font celtique, particules animees, transitions, sub-screens integres",
+    "agent": "tech_artist",
+    "files": [
+      "scenes/MenuPrincipal.tscn",
+      "scripts/MenuPrincipalMerlin.gd",
+      "scripts/menu_principal_animations.gd",
+      "scripts/menu_principal_theme.gd",
+      "scripts/menu_principal_seasonal.gd",
+      "scripts/menu_principal_voice_panel.gd",
+      "scenes/MenuOptions.tscn",
+      "scenes/Calendar.tscn",
+      "scenes/Collection.tscn",
+      "scenes/SelectionSauvegarde.tscn",
+      "assets/fonts/celtic_title.ttf",
+      "assets/particles/menu_runes.tres",
+      "shaders/menu/vignette_violet.gdshader",
+      "scripts/autoload/merlin_palette.gd"
+    ],
+    "description": "REFONTE TOTALE. Livrer: (1) Autoload MerlinPalette (BG_OLED, MIST_VIOLET, ACCENT_VIOLET, EMERALD, AMBER, GHOST_BORDER) pour coherence cross-scene. (2) Font celtique FONT_TITLE (MedievalSharp/Uncial Antiqua, fallback TextServerFallback). (3) Layout MenuPrincipal: centre-card redesigne panel glassmorphic backdrop_blur, CTA primary violet glow, secondary ghost-border, tertiary minimaliste. (4) GPUParticles2D runes_flottantes (40 runes ogham ascii spinning, emissive violet, 8s lifetime). (5) Mist layer anime noise scrolling 30s. (6) Transition shader vignette_violet fade in/out entre menu et sub-screens. (7) Sub-screens (MenuOptions, Calendar, Collection, SelectionSauvegarde) reprennent la meme palette + panneau glass + transitions. (8) Animation title 'M E R L I N' letter-by-letter reveal 1.2s avec glow accent. (9) Corner buttons (Cal, Col) devenus Material Symbols + tooltip. Target: menu premium AAA-lite."
+  },
+  {
+    "id": "MEGA-ANTRE-MERLIN-REFONTE-VOLUMETRIQUE",
+    "sprint": "S3",
+    "priority": 5,
+    "status": "pending",
+    "type": "dev",
+    "title": "REFONTE Antre de Merlin — 3D volumetrique, eclairage realiste, meshes, runes flottantes, audio spatial",
+    "agent": "tech_artist",
+    "files": [
+      "scenes/HubAntre.tscn",
+      "scripts/HubAntre.gd",
+      "scenes/3d/AntreMerlinRoom.tscn",
+      "assets/models/antre/cave_walls.glb",
+      "assets/models/antre/merlin_cabin.glb",
+      "assets/models/antre/ogham_floating.glb",
+      "assets/models/antre/altar_runique.glb",
+      "shaders/volumetric/fog_celtic.gdshader",
+      "shaders/procedural/rune_glow.gdshader",
+      "shaders/procedural/stone_runic.gdshader",
+      "assets/audio/ambient/antre_loop.ogg",
+      "assets/audio/sfx/celtic/*.ogg",
+      "scripts/3d/antre_camera_controller.gd",
+      "scripts/3d/interactive_ogham.gd"
+    ],
+    "description": "REFONTE TOTALE. Livrer: (1) Scene 3D AntreMerlinRoom integree dans HubAntre via SubViewportContainer. (2) Meshes low-poly hunyuan3d: cave_walls (irregular rock), merlin_cabin (wooden hut), altar_runique (central), ogham_floating (8 glyphs). (3) WorldEnvironment: skybox procedural celtic, volumetric_fog_enabled density 0.03 color ACCENT_VIOLET, glow enabled strength 1.2. (4) 4 OmniLight3D: central_altar (violet intense), torches (amber flicker 4Hz), merlin_cabin_window (emerald warm), fog_bounce_ambient. (5) Shader fog_celtic: noise_3D + vertex_snap + dithering PS1 style. (6) GPUParticles3D: lucioles (15), brume_montante (50 puffs), poussieres_runes (30 motes). (7) 8 OghamFloating.tscn (ogham_floating.glb instances) rotation ambiante + emissive_glow pulsant synchronise. (8) Audio: antre_loop.ogg ambient spatialise, sfx ogham_hum sur hover. (9) Camera controller doux 30deg orbit quand user idle 3s. (10) InteractiveOgham: click/touch = dialogue Merlin LLM-gen. Target: antre vivant immersif mystique."
+  },
+  {
+    "id": "MEGA-SKYBOX-CYCLE-JOUR-NUIT-REALISTE",
+    "sprint": "S3",
+    "priority": 6,
+    "status": "pending",
+    "type": "dev",
+    "title": "Cycle jour/nuit dynamique — skybox procedural + sun/moon light rig + atmospheric scattering + weather",
+    "agent": "tech_artist",
+    "files": [
+      "scripts/autoload/day_night_cycle.gd",
+      "shaders/sky/celtic_sky.gdshader",
+      "shaders/sky/atmospheric_scattering.gdshader",
+      "shaders/weather/rain.gdshader",
+      "shaders/weather/fog_density.gdshader",
+      "scripts/3d/sun_moon_rig.gd",
+      "scripts/3d/weather_manager.gd",
+      "scenes/3d/SkyDomeCeltic.tscn",
+      "scenes/3d/WeatherSystem.tscn",
+      "assets/textures/sky/stars_8k.png",
+      "assets/textures/sky/moon_phases_8.png",
+      "assets/textures/sky/cloud_noise.png",
+      "scripts/merlin/merlin_visual.gd",
+      "scripts/merlin/store_run.gd",
+      "project.godot"
+    ],
+    "description": "REFONTE TOTALE. Livrer: (1) Autoload DayNightCycle: temps reel serveur + decalage magique Merlin, expose time_of_day (0-24h), season (4), weather (clear/cloudy/rain/fog/storm), current_biome. Signaux time_changed, season_changed, weather_changed. (2) Shader celtic_sky: procedural gradient ciel (dawn lavender, noon cyan-pale, dusk amber, night deep-violet) + sun_position uniform + stars_uv mask. (3) Shader atmospheric_scattering: Rayleigh+Mie approx, horizon reddening, color mixing selon sun altitude. (4) SunMoonRig: DirectionalLight3D sun + secondary moon, rotation synced on time_of_day, color_temperature varie (2000K dawn, 5500K noon, 2500K dusk), energy varie 0.1 night -> 1.5 noon. (5) Moon phase texture 8 frames, swapped selon calendar day%8. (6) SkyDomeCeltic: MeshInstance inverted sphere radius 500 avec celtic_sky material. (7) WeatherSystem: GPUParticles3D rain (5000 drops), fog density_multiplier, cloud_noise scrolling. (8) Integration: bind au scene change event de BroceliandeForest3D et HubAntre. (9) Expose dans LLM context (brain reads time/weather pour narrative timing appropriate)."
+  },
+  {
+    "id": "MEGA-VFX-100-ELEMENTS-VOLUMETRIQUES",
+    "sprint": "S3",
+    "priority": 7,
+    "status": "pending",
+    "type": "content",
+    "title": "Injection 100+ elements VFX volumetriques — particules, shaders, ambient effects cross-biomes",
+    "agent": "tech_artist",
+    "files": [
+      "assets/particles/foret/*.tres",
+      "assets/particles/marais/*.tres",
+      "assets/particles/montagne/*.tres",
+      "assets/particles/desert/*.tres",
+      "assets/particles/mer/*.tres",
+      "assets/particles/nemeton/*.tres",
+      "shaders/vfx/god_rays.gdshader",
+      "shaders/vfx/heat_haze.gdshader",
+      "shaders/vfx/bloom_mystique.gdshader",
+      "shaders/vfx/vignette_adaptive.gdshader",
+      "shaders/vfx/chromatic_aberration.gdshader",
+      "shaders/vfx/depth_fog_volumetric.gdshader",
+      "scripts/vfx/vfx_manager.gd",
+      "scripts/vfx/biome_vfx_preset.gd"
+    ],
+    "description": "REFONTE TOTALE. Livrer minimum 100 elements VFX. Particules GPUParticles3D/2D (~70): foret (feuilles_vent x4 seasons, lucioles 30, brume_sol, pollen_dore, toiles_araignee), marais (brume_epaisse, bulles_boue, moustiques, korrigans_ethereal, vers_luminescents), montagne (neige_poudreuse, brouillard_altitude, aigles_feathers, glace_scintillement, vent_debris), desert (sable_vent, mirage_shimmer, etoiles_filantes_ciel_nuit, vautours, lueur_oasis), mer (embruns, algues_drift, plancton_lumineux, mouettes, ecume_vagues), nemeton (runes_flottantes, encens_fumee, souffle_druidique, spectre_ancien, pollen_sacre). Shaders (~15): god_rays (volumetric shafts), heat_haze, bloom_mystique (emerald+violet bias), vignette_adaptive (stress-based), chromatic_aberration (magie intense), depth_fog_volumetric. VFXManager autoload: request_effect(biome, event_type) dispatch au preset approprie. BiomeVFXPreset ressources .tres par biome pour declare particles_active + shader_stack + audio_layer. Target: chaque zone RESPIRE visuellement."
+  },
+  {
+    "id": "MEGA-LLM-PIPELINE-REWRITE-V2",
+    "sprint": "S3",
+    "priority": 8,
+    "status": "pending",
+    "type": "dev",
+    "title": "REWRITE complete LLM pipeline — streaming, retry, context compression, fallbacks, prompt library, test harness",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "scripts/merlin/merlin_llm_adapter.gd",
+      "addons/merlin_ai/merlin_ai.gd",
+      "addons/merlin_ai/rag_manager.gd",
+      "addons/merlin_ai/ollama_backend.gd",
+      "addons/merlin_ai/groq_backend.gd",
+      "addons/merlin_ai/gemini_backend.gd",
+      "addons/merlin_ai/prompts/card_gen.txt",
+      "addons/merlin_ai/prompts/narrator.txt",
+      "addons/merlin_ai/prompts/faction_dialog.txt",
+      "addons/merlin_ai/prompts/ending_gen.txt",
+      "addons/merlin_ai/prompt_library.gd",
+      "addons/merlin_ai/fallback_chain.gd",
+      "addons/merlin_ai/streaming_handler.gd",
+      "scripts/test/test_llm_e2e.gd"
+    ],
+    "description": "REWRITE TOTAL. (1) PromptLibrary .gd: registry centralise cards_gen / narrator / faction / ending / npc_dialogue / epilogue. Chaque prompt = template + variables + expected_schema + timeout + retry_policy. (2) StreamingHandler: OllamaBackend + GroqBackend streaming true, partial tokens emit pour UI typing effect, cancel-safe. (3) FallbackChain: primary (Ollama local) fail -> Groq cloud -> Gemini cloud -> pre-baked fallback text. Log fallback hit pour metrics. (4) Context compression: RAGManager narrative_log depasse 800 tokens -> auto-summary via cheaper model, keep 3200 chars context budget. (5) Retry: exponential backoff 3 tries, respect error types (rate_limit vs malformed vs timeout). (6) Prompts V2: card_gen enforce variety + celtic tone, narrator 3-acts structure, faction_dialog contextualise dominant, ending_gen 12-variant weighted matrix. (7) test_llm_e2e.gd: 5 scenarios runs full pipeline + assertions (timing < 5s, json valid, tone celtic, no repetition). (8) Metrics: ttft, ttlt, retry_count, fallback_depth logged dans stats. (9) GAME_DESIGN_BIBLE.md update: document pipeline v2."
+  },
+  {
+    "id": "MEGA-INPUT-CROSS-PLATFORM-FULL",
+    "sprint": "S3",
+    "priority": 9,
+    "status": "pending",
+    "type": "dev",
+    "title": "Cross-platform input SYSTEM complete — gamepad + tactile + keyboard + adaptive prompts + config UI",
+    "agent": "gameplay_programmer",
+    "files": [
+      "project.godot",
+      "scripts/autoload/input_manager.gd",
+      "scripts/autoload/touch_gesture_manager.gd",
+      "scripts/input/input_remapper.gd",
+      "scripts/input/adaptive_prompt.gd",
+      "scenes/ui/InputPrompt.tscn",
+      "scenes/ui/InputConfigPanel.tscn",
+      "scripts/ui/input_config_panel.gd",
+      "assets/icons/input/xbox/*.svg",
+      "assets/icons/input/dualsense/*.svg",
+      "assets/icons/input/keyboard/*.svg",
+      "assets/icons/input/touch/*.svg",
+      "scripts/minigames/minigame_base.gd",
+      "scripts/merlin/merlin_visual.gd"
+    ],
+    "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
   }
 ]
