@@ -2179,5 +2179,407 @@
       "tools/autodev/mission-control/src/styles/cockpit.css"
     ],
     "description": "User bug report 2026-04-15: clicking Director tab makes interface 'disappear'. ErrorBoundary deployed 2026-04-15 as mitigation to surface any crash. If no crash visible post-deploy, root cause is CSS layout: drawer__grid--2 with 4 children in .drawer__body overflow-y=auto can create >100vh total height with no internal min-height, collapsing visibly. Fix: add drawer__grid--2 { grid-auto-rows: minmax(200px, auto) } OR split Director into 2x2 sub-grids."
+  },
+  {
+    "id": "DA-PALETTE-UNIFIED-AUTOLOAD",
+    "sprint": "S3",
+    "priority": 4,
+    "status": "pending",
+    "type": "dev",
+    "title": "Autoload merlin_palette.gd — tokens DA partages toutes scenes",
+    "agent": "tech_artist",
+    "files": [
+      "scripts/autoload/merlin_palette.gd",
+      "project.godot",
+      "scripts/merlin/merlin_visual.gd"
+    ],
+    "description": "Creer autoload MerlinPalette expose constants: BG_OLED Color(0.023,0.027,0.051,1), MIST_VIOLET Color(0.294,0.208,0.549,0.1), ACCENT_VIOLET Color(0.545,0.361,0.965,1), ACCENT_EMERALD Color(0.062,0.725,0.506,1), ACCENT_AMBER Color(0.961,0.619,0.043,1), GHOST_BORDER Color(1,1,1,0.08), RADIUS_LG 14. Remplacer Color() hardcodes dans MenuPrincipal, HubAntre, MerlinCabinHub, HubScreen, cards. Visual coherence cross-scene."
+  },
+  {
+    "id": "DA-ANTRE-VOLUMETRIC-FOG",
+    "sprint": "S3",
+    "priority": 5,
+    "status": "pending",
+    "type": "dev",
+    "title": "Antre Merlin: WorldEnvironment volumetric fog violet low-poly",
+    "agent": "tech_artist",
+    "files": [
+      "scenes/HubAntre.tscn",
+      "shaders/community/low_poly/volumetric_fog.gdshader"
+    ],
+    "description": "Ajouter WorldEnvironment sur HubAntre avec fog.enabled=true, fog_light_color MerlinPalette.ACCENT_VIOLET, fog_density=0.02, volumetric_fog_enabled=true, fog_depth_begin=5, fog_depth_end=30. Shader low-poly custom (vertex_snap + dithering)."
+  },
+  {
+    "id": "INPUT-ABSTRACTION-AUDIT",
+    "sprint": "S2",
+    "priority": 6,
+    "status": "pending",
+    "type": "test",
+    "title": "Audit: minigames hardcoded keys vs InputMap actions",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/minigames/*.gd"
+    ],
+    "description": "Grep minigames pour hardcoded KEY_* / MOUSE_BUTTON_* / JOY_BUTTON_*. Lister violations. Objectif 100% InputMap actions (ui_accept, ui_cancel, mg_action_a, mg_action_b, mg_direction_*). Rapport test_reports/."
+  },
+  {
+    "id": "LLM-FLOW-AUDIT-E2E",
+    "sprint": "S2",
+    "priority": 7,
+    "status": "pending",
+    "type": "test",
+    "title": "LLM: audit E2E deroule partie (card prompt -> narrative -> ending)",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "scripts/merlin/merlin_llm_adapter.gd",
+      "addons/merlin_ai/merlin_ai.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "Tracer chemin LLM complet: 1) card_selection prompt, 2) card_effect_json response, 3) parse + apply, 4) narrative_log append, 5) end_run trigger, 6) faction_ending_choice, 7) epilogue_prompt. Lister breakpoints, timings, failure modes."
+  },
+  {
+    "id": "DA-MENU-CELTIC-FONT",
+    "sprint": "S3",
+    "priority": 8,
+    "status": "pending",
+    "type": "dev",
+    "title": "Menu: integrer font celtique FONT_TITLE sur title + ornements",
+    "agent": "tech_artist",
+    "files": [
+      "scripts/MenuPrincipalMerlin.gd",
+      "assets/fonts/celtic.ttf",
+      "scenes/MenuPrincipal.tscn"
+    ],
+    "description": "Acquerir font celtique (MedievalSharp ou Uncial Antiqua via Google Fonts/fontsource). Charger comme FONT_TITLE. Appliquer Title + CelticOrnamentTop + CelticOrnamentBottom. Fallback TextServerFallback si absent."
+  },
+  {
+    "id": "INPUT-GAMEPAD-ACTIONS",
+    "sprint": "S2",
+    "priority": 9,
+    "status": "pending",
+    "type": "dev",
+    "title": "InputMap: ajouter bindings gamepad toutes actions minigame",
+    "agent": "gameplay_programmer",
+    "files": [
+      "project.godot",
+      "scripts/input/input_manager.gd"
+    ],
+    "description": "project.godot InputMap: Joypad bindings sur ui_accept (A/X), ui_cancel (B/O), mg_action_a (X/Square), mg_action_b (Y/Triangle), mg_left/right/up/down (dpad + stick gauche), mg_shoulder_l (LB/L1), mg_shoulder_r (RB/R1). Tester Xbox + DualSense."
+  },
+  {
+    "id": "INPUT-TOUCH-GESTURES",
+    "sprint": "S2",
+    "priority": 10,
+    "status": "pending",
+    "type": "dev",
+    "title": "TouchGestureManager: tap/swipe/hold abstraction pour mobile",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/input/touch_gesture_manager.gd",
+      "scripts/autoload/touch_gesture_manager.gd",
+      "project.godot"
+    ],
+    "description": "Autoload TouchGestureManager emit signals tap(pos), swipe(dir, distance), hold(pos, duration). Convertir en InputEvent actions standard. Swipe up = mg_direction_up, long_hold = mg_action_b. Config dict."
+  },
+  {
+    "id": "INPUT-PROMPT-ADAPTIVE",
+    "sprint": "S2",
+    "priority": 11,
+    "status": "pending",
+    "type": "dev",
+    "title": "Input prompt overlay: detect active device, icons appropriees",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/ui/input_prompt.gd",
+      "scenes/ui/InputPrompt.tscn",
+      "assets/icons/input/*.svg"
+    ],
+    "description": "Overlay adaptatif: Input.is_joy_connected() icons A/B/X/Y, DisplayServer.is_touchscreen_available() Tap/Swipe, else keyboard. Detecter last_input_type et basculer dynamiquement. Cross minigames + menus."
+  },
+  {
+    "id": "DA-CARD-FRAME-VIOLET-BORDER",
+    "sprint": "S3",
+    "priority": 12,
+    "status": "pending",
+    "type": "dev",
+    "title": "Cards in-run: frame glass-panel + violet accent border on hover",
+    "agent": "tech_artist",
+    "files": [
+      "scripts/ui/card_visual.gd",
+      "scenes/ui/CardVisual.tscn",
+      "scripts/merlin/merlin_visual.gd"
+    ],
+    "description": "StyleBoxFlat cards: bg MerlinPalette.BG_OLED alpha 0.6, border MerlinPalette.ACCENT_VIOLET alpha 0.2 normal / 1.0 hover, border 2px, radius 14. Shadow violet soft hover. Backdrop blur si feasible."
+  },
+  {
+    "id": "DA-HUB-CABIN-MATCH",
+    "sprint": "S3",
+    "priority": 13,
+    "status": "pending",
+    "type": "dev",
+    "title": "MerlinCabinHub + HubScreen: alignement DA palette Merlin",
+    "agent": "tech_artist",
+    "files": [
+      "scenes/MerlinCabinHub.tscn",
+      "scenes/HubScreen.tscn",
+      "scripts/HubScreen.gd"
+    ],
+    "description": "Remplacer Color() hardcodes par MerlinPalette.*. Ajouter mist layer violet + rune glow central comme HubAntre. Boutons ghost-border + hover violet."
+  },
+  {
+    "id": "DA-BROCELIANDE-FOG-VIOLET",
+    "sprint": "S3",
+    "priority": 14,
+    "status": "pending",
+    "type": "dev",
+    "title": "BroceliandeForest3D: volumetric fog per-biome",
+    "agent": "tech_artist",
+    "files": [
+      "scenes/BroceliandeForest3D.tscn",
+      "scripts/merlin/merlin_visual.gd",
+      "scripts/3d/biome_environment.gd"
+    ],
+    "description": "Switch WorldEnvironment fog_color selon current_biome: foret #4B3590, marais #5a7a6b, montagne #8a9aab, desert #c9a574, mer #3b6c7a. Trigger on biome change. Immersion per-zone."
+  },
+  {
+    "id": "LLM-PROMPT-CARD-REFINE",
+    "sprint": "S2",
+    "priority": 15,
+    "status": "pending",
+    "type": "dev",
+    "title": "LLM prompts: raffiner card generation (variety cap, tone celtic)",
+    "agent": "narrative_specialist",
+    "files": [
+      "scripts/merlin/llm_adapter_game_master.gd",
+      "addons/merlin_ai/prompts/card_gen.txt"
+    ],
+    "description": "Card prompt template: ton celtic/breton, enforcer variety (pas 2 cards similaires meme run), 5 champ_lexical (druidique/chevaleresque/magique/naturel/mystique), minimum 3 factions touchees sur 20 cards."
+  },
+  {
+    "id": "LLM-NARRATIVE-STORYARCS",
+    "sprint": "S2",
+    "priority": 16,
+    "status": "pending",
+    "type": "dev",
+    "title": "LLM narrative: arcs coherents 3 actes (ouverture/climax/resolution)",
+    "agent": "narrative_specialist",
+    "files": [
+      "scripts/merlin/store_run.gd",
+      "addons/merlin_ai/prompts/story_arc.txt",
+      "scripts/merlin/llm_adapter_narrator.gd"
+    ],
+    "description": "LLM narrator prend narrative_log + current_act + faction_rep et genere 2-3 phrases avancant arc. Act 1 exposition, Act 2 complications faction dominante, Act 3 climax resolution. Tone continuity."
+  },
+  {
+    "id": "LLM-FACTION-DIALOG",
+    "sprint": "S2",
+    "priority": 17,
+    "status": "pending",
+    "type": "dev",
+    "title": "LLM dialogues: contextualises faction dominante",
+    "agent": "narrative_specialist",
+    "files": [
+      "addons/merlin_ai/prompts/faction_dialog.txt",
+      "scripts/merlin/llm_adapter_game_master.gd"
+    ],
+    "description": "NPC dialogue generation prompt prend faction_dominante + faction_rep + recent_choices. Obscurs ton sombre menace, Sages_Esprits energique positif, Druides mystique cryptique. Validate tone via regex."
+  },
+  {
+    "id": "LLM-ENDING-VARIETY",
+    "sprint": "S2",
+    "priority": 18,
+    "status": "pending",
+    "type": "dev",
+    "title": "LLM endings: 12 variantes generees (pas 4 templates)",
+    "agent": "narrative_specialist",
+    "files": [
+      "scripts/run/end_run_screen.gd",
+      "addons/merlin_ai/prompts/ending_gen.txt"
+    ],
+    "description": "Ending generation: dominant_faction (4) x MOS_band (3) x fins_vues + total_runs. Weighted template pool selection + LLM fill details. Min 12 distinct endings. Doc GAME_DESIGN_BIBLE.md."
+  },
+  {
+    "id": "ASSET-CARD-ILLUSTRATIONS-BATCH",
+    "sprint": "S2",
+    "priority": 19,
+    "status": "pending",
+    "type": "content",
+    "title": "Cards: 20 illustrations via nano-banana (dark mystical violet celtic)",
+    "agent": "tech_artist",
+    "files": [
+      "Assets/cards/illustrations/*.png",
+      "tools/asset-forge/card_batch.py"
+    ],
+    "description": "nano-banana (gen-lang-client-0904837539) pour 20 illustrations 512x768 dark-mystical-celtic: druide, korrigan, chevalier, foret-brumeuse, rune-glowing, etc. Batch via script. Save Assets/cards/illustrations/. Update card pool JSON."
+  },
+  {
+    "id": "ASSET-ANTRE-TEXTURES",
+    "sprint": "S2",
+    "priority": 20,
+    "status": "pending",
+    "type": "content",
+    "title": "Antre: pack textures procedurales (pierre runique, bois ancien, brume)",
+    "agent": "tech_artist",
+    "files": [
+      "Assets/textures/antre/*.png",
+      "shaders/procedural/*.gdshader"
+    ],
+    "description": "asset-forge pipeline: 5 textures tileables 512x512: pierre_runique (noise+glyphs), bois_ancien (wood rings), brume_volumique (perlin 3ch), runes_glowing (emissive), tissu_cape (weave). Apply HubAntre materials."
+  },
+  {
+    "id": "ASSET-3D-RUNES-HUNYUAN3D",
+    "sprint": "S2",
+    "priority": 21,
+    "status": "pending",
+    "type": "content",
+    "title": "Runes ogham 3D low-poly via hunyuan3d (8 runes)",
+    "agent": "tech_artist",
+    "files": [
+      "Assets/models/oghams/*.glb",
+      "scenes/3d/ogham_spawn.tscn"
+    ],
+    "description": "8 modeles 3D low-poly ogham MERLIN (M/E/R/L/I/N + AK + RI) via hunyuan3d. Scale 0.3m. Spawn suspension dans Antre, rotation ambiante, emissive violet quand decouverts."
+  },
+  {
+    "id": "ASSET-SFX-CELTIC-PACK",
+    "sprint": "S2",
+    "priority": 22,
+    "status": "pending",
+    "type": "content",
+    "title": "SFX pack celtic: chime/whisper/flow/glyph-activate (4 sons)",
+    "agent": "tech_artist",
+    "files": [
+      "Assets/audio/sfx/celtic/*.ogg",
+      "scripts/merlin/sfx_manager.gd"
+    ],
+    "description": "4 SFX 1-3s: scene_transition_chime (Bb3 bell + reverb), merlin_whisper (filtered voice), mana_flow (water-glass), glyph_activate (pulse + high freq). SFXManager.play_celtic(type)."
+  },
+  {
+    "id": "MG-NEW-FORET-TRIO",
+    "sprint": "S3",
+    "priority": 23,
+    "status": "pending",
+    "type": "dev",
+    "title": "Foret celtique: 3 minigames (herborist + whisper + root-trace)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_herborist.gd",
+      "scripts/minigames/mg_whisper.gd",
+      "scripts/minigames/mg_root_trace.gd",
+      "scenes/minigames/foret/*.tscn"
+    ],
+    "description": "3 minigames foret, gamepad+tactile via InputPrompt + TouchGestureManager. Herborist=sort 6 plantes 4s, Whisper=memoriser 4 sons celtes, Root-Trace=dessiner pattern racines. extend minigame_base. Champ_lexical druidique."
+  },
+  {
+    "id": "MG-NEW-MARAIS-TRIO",
+    "sprint": "S3",
+    "priority": 24,
+    "status": "pending",
+    "type": "dev",
+    "title": "Marais korrigan: 3 minigames (korrigan-chase + bog-riddle + mist-navigate)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_korrigan_chase.gd",
+      "scripts/minigames/mg_bog_riddle.gd",
+      "scripts/minigames/mg_mist_navigate.gd",
+      "scenes/minigames/marais/*.tscn"
+    ],
+    "description": "3 minigames marais. Chase=attraper korrigans 15s, Riddle=type-switch words, Navigate=brume swipe direction. Champ_lexical mystique."
+  },
+  {
+    "id": "MG-NEW-MONTAGNE-TRIO",
+    "sprint": "S3",
+    "priority": 25,
+    "status": "pending",
+    "type": "dev",
+    "title": "Montagne sacree: 3 minigames (rock-balance + echo-call + summit-breath)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_rock_balance.gd",
+      "scripts/minigames/mg_echo_call.gd",
+      "scripts/minigames/mg_summit_breath.gd",
+      "scenes/minigames/montagne/*.tscn"
+    ],
+    "description": "3 minigames montagne. Balance=empiler pierres stick tilt, Echo=pulse rhythm match, Breath=sync 4-7-8 touch hold. Champ_lexical spirituel."
+  },
+  {
+    "id": "MG-NEW-DESERT-TRIO",
+    "sprint": "S3",
+    "priority": 26,
+    "status": "pending",
+    "type": "dev",
+    "title": "Desert mystique: 3 minigames (sand-divine + star-align + oasis-find)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_sand_divine.gd",
+      "scripts/minigames/mg_star_align.gd",
+      "scripts/minigames/mg_oasis_find.gd",
+      "scenes/minigames/desert/*.tscn"
+    ],
+    "description": "3 minigames desert. Divine=trace runes sable, Align=constellation 5 etoiles, Oasis=grid limite soif timer. Champ_lexical prophetique."
+  },
+  {
+    "id": "MG-NEW-MER-TRIO",
+    "sprint": "S3",
+    "priority": 27,
+    "status": "pending",
+    "type": "dev",
+    "title": "Mer cote: 3 minigames (tide-time + shell-read + wave-dance)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_tide_time.gd",
+      "scripts/minigames/mg_shell_read.gd",
+      "scripts/minigames/mg_wave_dance.gd",
+      "scenes/minigames/mer/*.tscn"
+    ],
+    "description": "3 minigames mer. Tide=timing marees capture ecrevisses, Shell=audio memory murmure, Wave=rhythm 4 directions. Champ_lexical naturel."
+  },
+  {
+    "id": "MG-NEW-NEMETON-TRIO",
+    "sprint": "S3",
+    "priority": 28,
+    "status": "pending",
+    "type": "dev",
+    "title": "Nemeton druidique: 3 minigames (chant-loop + offering-match + rune-etch)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_chant_loop.gd",
+      "scripts/minigames/mg_offering_match.gd",
+      "scripts/minigames/mg_rune_etch.gd",
+      "scenes/minigames/nemeton/*.tscn"
+    ],
+    "description": "3 minigames temple. Chant=rythme chant sacre 12s, Offering=match 4 offrandes/4 divinites, Etch=precision path follow. Champ_lexical sacre."
+  },
+  {
+    "id": "MG-NEW-VILLAGE-TRIO",
+    "sprint": "S3",
+    "priority": 29,
+    "status": "pending",
+    "type": "dev",
+    "title": "Village breton: 3 minigames (story-tell + trade-barter + festival-dance)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_story_tell.gd",
+      "scripts/minigames/mg_trade_barter.gd",
+      "scripts/minigames/mg_festival.gd",
+      "scenes/minigames/village/*.tscn"
+    ],
+    "description": "3 minigames village. Story=choix dialogue mood foule, Trade=equation troc value, Festival=danse 6 steps. Champ_lexical populaire."
+  },
+  {
+    "id": "MG-NEW-GROTTE-TRIO",
+    "sprint": "S3",
+    "priority": 30,
+    "status": "pending",
+    "type": "dev",
+    "title": "Grotte runique: 3 minigames (glyph-decipher + echo-follow + torch-riddle)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/minigames/mg_glyph_decipher.gd",
+      "scripts/minigames/mg_echo_follow.gd",
+      "scripts/minigames/mg_torch_riddle.gd",
+      "scenes/minigames/grotte/*.tscn"
+    ],
+    "description": "3 minigames grotte. Decipher=glyph chain 6 symbols, Echo=sequence sonore 5, Torch=direction via ombres. Champ_lexical ancien."
   }
 ]
