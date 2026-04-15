@@ -594,5 +594,19 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260415-010",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "End run flow is broken: NEXT_SCENE routes to deleted scene",
+    "details": "end_run_screen.gd:12 — NEXT_SCENE := 'res://scenes/SceneRencontreMerlin.tscn'. Director ordered deletion of this scene (q-20260414-005). The run completion flow would crash in production. FLOW-ENDRUN-NEXT-SCENE-FIX (P3) generated. The core game loop Hub→Run→EndRun→Hub is currently broken at the EndRun→Hub step.",
+    "proposed_task": {
+      "title": "Fix EndRunScreen NEXT_SCENE to HubAntre",
+      "sprint": "S2",
+      "type": "dev"
+    },
+    "timestamp": "2026-04-15T19:45:00Z"
   }
 ]

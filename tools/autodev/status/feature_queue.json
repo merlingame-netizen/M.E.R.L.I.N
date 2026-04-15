@@ -552,20 +552,6 @@
     "description": "SPECIALIST-1 AUDIT: screen_frame.gd:351 uses Color(1.0, 1.0, 1.0, 0.15) for a highlight effect. Should reference MerlinVisual.CRT_PALETTE['phosphor_bright'] or similar white-equivalent key, modified with alpha. Low priority but completes visual consistency."
   },
   {
-    "id": "GDC-FACTION-CONTENT-50-GATE",
-    "sprint": "S2",
-    "priority": 2,
-    "status": "pending",
-    "type": "dev",
-    "title": "Audit + implement faction content unlock gate at rep >= 50 in card pool",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd"
-    ],
-    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
-    "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
-  },
-  {
     "id": "T-GDC-FACTION-ENDING-INTEGRATION",
     "sprint": "S2",
     "priority": 22,
@@ -2040,22 +2026,6 @@
     "description": "bk_forest_test_room.gd:8 const OLD := 'res://Assets/3d_models/' and OLD_TREES[01-03], OLD_MEGALITHS[dolmen_01/menhir_01] reference paths that don't exist (Assets/3d_models/ dir missing). Lines 558-560 use OLD_MEGALITHS in fallback placement. Fix: replace OLD_TREES with BK_TREES (already loaded), replace OLD_MEGALITHS with BK_MEGALITHS[0:2] references."
   },
   {
-    "id": "E2E-FACTION-GATE-WIRE",
-    "sprint": "S2",
-    "priority": 1,
-    "type": "dev",
-    "status": "pending",
-    "title": "Wire faction content gate (rep>=50) into card pool selection — CRITICAL test FAIL",
-    "agent": "game_design_coder",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd",
-      "scripts/merlin/merlin_reputation_system.gd"
-    ],
-    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-DELETE-ORPHAN-SCENES",
     "sprint": "S2",
     "priority": 3,
@@ -2179,5 +2149,81 @@
       "tools/autodev/mission-control/src/styles/cockpit.css"
     ],
     "description": "User bug report 2026-04-15: clicking Director tab makes interface 'disappear'. ErrorBoundary deployed 2026-04-15 as mitigation to surface any crash. If no crash visible post-deploy, root cause is CSS layout: drawer__grid--2 with 4 children in .drawer__body overflow-y=auto can create >100vh total height with no internal min-height, collapsing visibly. Fix: add drawer__grid--2 { grid-auto-rows: minmax(200px, auto) } OR split Director into 2x2 sub-grids."
+  },
+  {
+    "id": "FLOW-ENDRUN-NEXT-SCENE-FIX",
+    "sprint": "S2",
+    "priority": 3,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix end_run_screen.gd:12 NEXT_SCENE → HubAntre.tscn (currently routes to deleted SceneRencontreMerlin)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd"
+    ],
+    "description": "SPECIALIST-0 SF-001 CRITICAL: end_run_screen.gd line 12 — const NEXT_SCENE := 'res://scenes/SceneRencontreMerlin.tscn'. Director ordered deletion of SceneRencontreMerlin (q-20260414-005). After run ends, the game would crash trying to load a deleted scene. Fix: change NEXT_SCENE to 'res://scenes/HubAntre.tscn'.",
+    "created_at": "2026-04-15T19:45:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-15"
+  },
+  {
+    "id": "FLOW-ENDRUN-MENU-SCENE-FIX",
+    "sprint": "S2",
+    "priority": 6,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix end_run_screen.gd:13 MENU_SCENE → Menu3DPC.tscn (currently MenuPrincipal.tscn)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd"
+    ],
+    "description": "SPECIALIST-0 SF-003 HIGH: end_run_screen.gd line 13 — const MENU_SCENE := 'res://scenes/MenuPrincipal.tscn'. The active main menu is Menu3DPC.tscn (IntroCeltOS routes there). Fix: change MENU_SCENE to 'res://scenes/Menu3DPC.tscn'.",
+    "created_at": "2026-04-15T19:45:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-15"
+  },
+  {
+    "id": "T-FLOW-FACTION-GATE-UNIT-TEST",
+    "sprint": "S2",
+    "priority": 5,
+    "status": "pending",
+    "type": "test",
+    "title": "Test: faction cards appear in fastroute pool only when rep >= 50",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/test/test_game_systems.gd"
+    ],
+    "description": "SPECIALIST-0: Verify E2E-FACTION-GATE-WIRE implementation. Test cases: (1) _faction_cards_pool loads 20 cards from faction_fallback_cards.json. (2) get_fastroute_card with faction_rep={} returns no faction cards. (3) get_fastroute_card with faction_rep={'druides': 55} includes druides cards as candidates for matching biome. (4) get_fastroute_card with faction_rep={'druides': 49} excludes druides cards. Write in test_game_systems.gd.",
+    "created_at": "2026-04-15T19:45:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-15"
+  },
+  {
+    "id": "FLOW-SCENE-REFS-EXISTENCE-CHECK",
+    "sprint": "S3",
+    "priority": 10,
+    "status": "pending",
+    "type": "test",
+    "title": "Test: all .tscn paths referenced in GDScript code exist on disk",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/"
+    ],
+    "description": "SPECIALIST-0: Static analysis — grep all .tscn string literals from .gd files, verify each path exists under scenes/. Known broken: SceneRencontreMerlin.tscn (pending deletion), MerlinGame.tscn (orphan path). Report all missing/orphan scene references.",
+    "created_at": "2026-04-15T19:45:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-15"
+  },
+  {
+    "id": "FLOW-BROCELIANDE-HUBS-AUDIT",
+    "sprint": "S3",
+    "priority": 11,
+    "status": "pending",
+    "type": "dev",
+    "title": "Audit BroceliandeForest3D hub routing — remove _merlin_found MerlinGame branch",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "SPECIALIST-0: broceliande_forest_3d.gd:1221 — _on_hub() dispatches to GAME_SCENE (MerlinGame.tscn) when _merlin_found=true, else HUB_SCENE (HubAntre.tscn). Merlin is always found during the walk, so the non-merlin path never triggers. Remove _merlin_found conditional — always route to HubAntre.tscn. Remove GAME_SCENE const. Remove merlin_encounter_complete signal (used only by the old MerlinGame flow). Matches E2E-MERLINGAME-OBSOLETE-PATH but adds signal cleanup.",
+    "created_at": "2026-04-15T19:45:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-15"
   }
 ]

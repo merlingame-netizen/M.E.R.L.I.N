@@ -1383,6 +1383,26 @@
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
       ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-15T19:45:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "EndRunScreen.NEXT_SCENE stale: after deleting a scene, grep ALL const NEXT_SCENE/MENU_SCENE refs to find stale paths. Found end_run_screen.gd:12 still pointing to SceneRencontreMerlin after director deletion order.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/ui/end_run_screen.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-15T19:45:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "Faction content gate wired: faction_fallback_cards.json (20 cards, 4 per faction) loaded into _faction_cards_pool via _load_faction_cards(). get_fastroute_card() now filters by MerlinReputationSystem.get_unlocked_content(). Previously: 0 faction cards ever appeared regardless of rep.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/merlin/merlin_card_system.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -1474,7 +1494,8 @@
       "cycles_run": 2
     },
     "scene_flow_tester": {
-      "tasks_completed": 2
+      "tasks_completed": 3,
+      "bugs_found": 3
     },
     "visual_consistency_auditor": {
       "tasks_completed": 1,
@@ -1535,6 +1556,10 @@
       "tasks_completed": 1,
       "bugs_introduced": 0,
       "findings": 10
+    },
+    "game_design_coder": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {
@@ -1755,8 +1780,9 @@
       }
     }
   ],
-  "total_cycles": 10,
-  "bugs_found": 38,
-  "bugs_fixed": 10,
-  "last_cycle": "2026-04-15T18:47:19Z"
+  "total_cycles": 11,
+  "bugs_found": 41,
+  "bugs_fixed": 12,
+  "last_cycle": "2026-04-15T18:47:19Z",
+  "fix_rate_pct": 29.3
 }

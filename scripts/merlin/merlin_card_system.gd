@@ -35,6 +35,7 @@ var _event_cards_pool: Array = []
 var _promise_cards_pool: Array = []
 var _fastroute_narrative_pool: Array = []
 var _fastroute_merlin_pool: Array = []
+var _faction_cards_pool: Array = []
 
 # Run-scoped tracking
 var _event_cards_seen: Array = []
@@ -59,6 +60,7 @@ func setup(effects: MerlinEffectEngine, llm: MerlinLlmAdapter, rng: MerlinRng) -
 	_load_event_cards()
 	_load_promise_cards()
 	_load_fastroute_cards()
+	_load_faction_cards()
 	_event_selector = EventCategorySelector.new()
 
 
@@ -172,6 +174,7 @@ func generate_card(context: Dictionary) -> Dictionary:
 
 func get_fastroute_card(context: Dictionary) -> Dictionary:
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
 	var candidates: Array = []
 	var generic: Array = []
 
@@ -184,6 +187,11 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 			candidates.append(card)
 		elif card_biome.is_empty():
 			generic.append(card)
+
+	# Inject unlocked faction cards (rep >= 50) as biome-specific candidates
+	for fc in _get_unlocked_faction_cards(biome, faction_rep):
+		if not _fastroute_seen.has(str(fc.get("id", ""))):
+			candidates.append(fc)
 
 	# Prefer biome-specific, fallback to generic
 	if candidates.is_empty():
@@ -208,6 +216,22 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 		return _get_emergency_card()
 	_annotate_fields(v["card"])
 	return _ensure_3_options(v["card"])
+
+
+## Returns faction cards from _faction_cards_pool where player has rep >= 50.
+func _get_unlocked_faction_cards(biome: String, faction_rep: Dictionary) -> Array:
+	var unlocked: Array[String] = MerlinReputationSystem.get_unlocked_content(faction_rep)
+	if unlocked.is_empty():
+		return []
+	var result: Array = []
+	for card in _faction_cards_pool:
+		var card_faction: String = str(card.get("faction", ""))
+		if not unlocked.has(card_faction):
+			continue
+		var card_biome: String = str(card.get("biome", ""))
+		if card_biome == biome or card_biome.is_empty():
+			result.append(card)
+	return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -813,6 +837,15 @@ func _load_fastroute_cards() -> void:
 	for card in data.get("merlin_direct", []):
 		if card is Dictionary:
 			_fastroute_merlin_pool.append(card)
+
+
+func _load_faction_cards() -> void:
+	var data: Dictionary = _load_json("res://data/cards/faction_fallback_cards.json")
+	if data.is_empty():
+		return
+	for card in data.get("faction_cards", []):
+		if card is Dictionary:
+			_faction_cards_pool.append(card)
 
 
 func _load_json(path: String) -> Dictionary:

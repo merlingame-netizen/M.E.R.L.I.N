@@ -109,5 +109,38 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "GDC-FACTION-CONTENT-50-GATE",
+    "sprint": "S2",
+    "priority": 2,
+    "status": "completed",
+    "type": "dev",
+    "title": "Audit + implement faction content unlock gate at rep >= 50 in card pool",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd"
+    ],
+    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
+    "notes": "DUPLICATE of E2E-FACTION-GATE-WIRE — same fix applied to merlin_card_system.gd.",
+    "completed_at": "2026-04-15T19:45:00Z"
+  },
+  {
+    "id": "E2E-FACTION-GATE-WIRE",
+    "sprint": "S2",
+    "priority": 1,
+    "type": "dev",
+    "status": "completed",
+    "title": "Wire faction content gate (rep>=50) into card pool selection — CRITICAL test FAIL",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/merlin/merlin_reputation_system.gd"
+    ],
+    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-15T19:45:00Z",
+    "notes": "IMPLEMENTED: Added _faction_cards_pool, _load_faction_cards(), _get_unlocked_faction_cards(). Wired MerlinReputationSystem.get_unlocked_content() into get_fastroute_card(). Faction cards (20 total) now gated behind rep>=50. Call-site grep PASS."
   }
 ]

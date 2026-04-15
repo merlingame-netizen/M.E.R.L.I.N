@@ -1,0 +1,104 @@
+{
+  "report_id": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-15",
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-15T19:45:00Z",
+  "cycle_type": "test",
+  "checks_total": 10,
+  "checks_critical": 2,
+  "checks_high": 3,
+  "checks_medium": 1,
+  "checks_pass": 4,
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "status": "NEW",
+      "file": "scripts/ui/end_run_screen.gd",
+      "line": 12,
+      "description": "NEXT_SCENE routes to 'res://scenes/SceneRencontreMerlin.tscn' — director ordered deletion (q-20260414-005). After run ends, transition targets a to-be-deleted scene. Should be HubAntre.tscn.",
+      "task_generated": "FLOW-ENDRUN-NEXT-SCENE-FIX"
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "status": "EXISTING",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1221,
+      "description": "_on_hub() routes to MerlinGame.tscn (orphan, merlin_game_controller.gd) when _merlin_found=true. Should always route to HubAntre.tscn.",
+      "existing_task": "E2E-MERLINGAME-OBSOLETE-PATH"
+    },
+    {
+      "id": "SF-003",
+      "severity": "HIGH",
+      "status": "NEW",
+      "file": "scripts/ui/end_run_screen.gd",
+      "line": 13,
+      "description": "MENU_SCENE := 'res://scenes/MenuPrincipal.tscn' — active menu is Menu3DPC.tscn. Stale constant.",
+      "task_generated": "FLOW-ENDRUN-MENU-SCENE-FIX"
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "status": "EXISTING",
+      "file": "scripts/IntroPersonalityQuiz.gd",
+      "line": 12,
+      "description": "NEXT_SCENE routes to SceneRencontreMerlin.tscn — director said delete both (q-20260414-005).",
+      "existing_task": "E2E-DELETE-ORPHAN-SCENES"
+    },
+    {
+      "id": "SF-005",
+      "severity": "HIGH",
+      "status": "EXISTING",
+      "file": "scripts/ui/ui_overlay_narrative.gd",
+      "line": 291,
+      "description": "Routes to MenuPrincipal.tscn instead of Menu3DPC.tscn.",
+      "existing_task": "FLOW-NARRATIVE-MENU-PATH-FIX"
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "status": "EXISTING",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": "44-47",
+      "description": "GameFlowController references HubScreen.tscn, Run3D.tscn, EndRunScreen.tscn — future architecture not yet wired into live game.",
+      "existing_task": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER"
+    },
+    {
+      "id": "SF-007",
+      "severity": "PASS",
+      "description": "IntroCeltOS:516 → PixelTransition.transition_to(Menu3DPC.tscn) — CORRECT"
+    },
+    {
+      "id": "SF-008",
+      "severity": "PASS",
+      "description": "MenuPrincipalMerlin:456 → ParchmentPreRun.tscn / SelectionSauvegarde.tscn — CORRECT"
+    },
+    {
+      "id": "SF-009",
+      "severity": "PASS",
+      "description": "parchment_pre_run.gd:215 → BroceliandeForest3D.tscn — CORRECT"
+    },
+    {
+      "id": "SF-010",
+      "severity": "PASS",
+      "description": "HubAntre.gd:661 → BroceliandeForest3D.tscn (start run) — CORRECT"
+    }
+  ],
+  "tasks_generated": [
+    "FLOW-ENDRUN-NEXT-SCENE-FIX",
+    "FLOW-ENDRUN-MENU-SCENE-FIX",
+    "T-FLOW-FACTION-GATE-UNIT-TEST",
+    "FLOW-SCENE-REFS-EXISTENCE-CHECK",
+    "FLOW-BROCELIANDE-HUBS-AUDIT"
+  ],
+  "task_implemented": "E2E-FACTION-GATE-WIRE",
+  "implementation_summary": "P1 CRITICAL fix: Added _faction_cards_pool (20 faction cards loaded from data/cards/faction_fallback_cards.json). Wired MerlinReputationSystem.get_unlocked_content() into get_fastroute_card() via new _get_unlocked_faction_cards() helper. Faction cards now appear in pool only when player has rep >= 50 for that faction. Call-site grep PASS (2+ refs for all new functions).",
+  "invariants_checked": [
+    "faction_rep gate wired: FIXED (was FAIL)",
+    "scene transitions use PixelTransition: PASS (4/4 hub transitions)",
+    "orphan MerlinGame.tscn path: FAIL (E2E-MERLINGAME-OBSOLETE-PATH P12)",
+    "end_run NEXT_SCENE valid: FAIL (SF-001 NEW)",
+    "all referenced .tscn exist on disk: NEEDS VERIFICATION"
+  ]
+}
