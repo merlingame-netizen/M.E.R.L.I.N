@@ -167,13 +167,6 @@ func _calculate_scaling_factor(effect_type: String, context: Dictionary) -> floa
 
 
 func _is_in_crisis(context: Dictionary) -> bool:
-	# Check gauges
-	var gauges: Dictionary = context.get("gauges", {})
-	for gauge in gauges:
-		var value: int = int(gauges[gauge])
-		if value < 15 or value > 85:
-			return true
-
 	# Check faction reputation deltas for crisis
 	var faction_rep_delta: Dictionary = context.get("faction_rep_delta", {})
 	var extreme_faction_count := 0

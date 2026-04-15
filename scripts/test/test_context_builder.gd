@@ -5,7 +5,6 @@
 ## - build_full_context: field extraction from game_state, defaults
 ## - build_llm_prompt_context: string formatting, heure periods, life danger tiers,
 ##   faction line, late-day label, session flags, fatigued/recommended themes
-## - get_critical_gauges: LOW/HIGH thresholds, mixed gauges
 ## - get_experience_tier: null registry path
 ## - _trust_tier_name: all tiers (0-3, out-of-range)
 ## - _calculate_theme_weights: null narrative path
@@ -50,7 +49,6 @@ func _make_run(
 			"factions": {
 				"druides": 50, "anciens": 50, "korrigans": 50, "niamh": 50, "ankou": 50,
 			},
-			"gauges": {},
 			"active_promises": [],
 			"active_tags": [],
 			"hidden": {"karma": karma, "tension": tension},
@@ -75,7 +73,7 @@ func test_build_full_context_has_required_keys() -> bool:
 	var b: MerlinContextBuilder = _make_builder()
 	var result: Dictionary = b.build_full_context(_make_run())
 	var required: Array[String] = [
-		"gauges", "tour", "ogham_actif", "oghams_decouverts",
+		"tour", "ogham_actif", "oghams_decouverts",
 		"factions", "heure_normalisee", "life_essence", "day",
 		"cards_played", "active_promises", "active_tags",
 		"player", "patterns", "trust", "narrative", "session", "_hidden",
@@ -447,114 +445,7 @@ func test_build_llm_prompt_context_patterns_shown() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 3. get_critical_gauges
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_get_critical_gauges_empty_for_normal_values() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"energie": 50, "moral": 60, "faim": 40}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if not critical.is_empty():
-		push_error("Normal gauge values should produce no critical, got: %s" % str(critical))
-		return false
-	return true
-
-
-func test_get_critical_gauges_detects_low() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"energie": 10, "moral": 50}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if critical.is_empty():
-		push_error("energie=10 should produce a critical entry")
-		return false
-	var found: bool = false
-	for entry in critical:
-		if str(entry).contains("energie") and str(entry).contains("BAS"):
-			found = true
-	if not found:
-		push_error("Critical entry should mention 'energie' and 'BAS', got: %s" % str(critical))
-		return false
-	return true
-
-
-func test_get_critical_gauges_detects_high() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"rage": 90, "energie": 50}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if critical.is_empty():
-		push_error("rage=90 should produce a critical entry")
-		return false
-	var found: bool = false
-	for entry in critical:
-		if str(entry).contains("rage") and str(entry).contains("HAUT"):
-			found = true
-	if not found:
-		push_error("Critical entry should mention 'rage' and 'HAUT', got: %s" % str(critical))
-		return false
-	return true
-
-
-func test_get_critical_gauges_boundary_low_exactly_15() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"vitalite": 15}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if critical.is_empty():
-		push_error("gauge value exactly 15 should be critical low (<=15)")
-		return false
-	return true
-
-
-func test_get_critical_gauges_boundary_high_exactly_85() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"pouvoir": 85}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if critical.is_empty():
-		push_error("gauge value exactly 85 should be critical high (>=85)")
-		return false
-	return true
-
-
-func test_get_critical_gauges_boundary_just_above_low() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"sanity": 16}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if not critical.is_empty():
-		push_error("gauge value 16 should NOT be critical low (threshold is <=15)")
-		return false
-	return true
-
-
-func test_get_critical_gauges_boundary_just_below_high() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"influence": 84}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if not critical.is_empty():
-		push_error("gauge value 84 should NOT be critical high (threshold is >=85)")
-		return false
-	return true
-
-
-func test_get_critical_gauges_multiple_critical() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var gauges: Dictionary = {"energie": 5, "rage": 95, "moral": 50}
-	var critical: Array = b.get_critical_gauges(gauges)
-	if critical.size() < 2:
-		push_error("Two critical gauges should produce 2 entries, got %d" % critical.size())
-		return false
-	return true
-
-
-func test_get_critical_gauges_empty_gauges_dict() -> bool:
-	var b: MerlinContextBuilder = _make_builder()
-	var critical: Array = b.get_critical_gauges({})
-	if not critical.is_empty():
-		push_error("Empty gauges dict should produce empty critical array")
-		return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 4. get_experience_tier
+# 3. get_experience_tier
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_get_experience_tier_null_registry_returns_initie() -> bool:
@@ -567,7 +458,7 @@ func test_get_experience_tier_null_registry_returns_initie() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 5. _trust_tier_name (private helper — tested directly)
+# 4. _trust_tier_name (private helper — tested directly)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_trust_tier_0_is_distant() -> bool:
@@ -625,7 +516,7 @@ func test_trust_tier_negative_returns_inconnu() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 6. _calculate_theme_weights (via build_full_context)
+# 5. _calculate_theme_weights (via build_full_context)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_theme_weights_empty_with_null_narrative() -> bool:
@@ -643,7 +534,7 @@ func test_theme_weights_empty_with_null_narrative() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 7. build_full_context — edge cases
+# 6. build_full_context — edge cases
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_build_full_context_factions_default_when_missing() -> bool:

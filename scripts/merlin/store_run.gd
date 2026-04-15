@@ -14,6 +14,7 @@ static func init_run(state: Dictionary, rng: MerlinRng, scenarios: MerlinScenari
 	run["active"] = true
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
 	run["anam"] = 0
+	run["anam_accumulated"] = 0
 	run["mission"] = generate_mission(rng)
 	run["cards_played"] = 0
 	run["day"] = 1
@@ -144,6 +145,9 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 			apply_effect_func.call(effect)
 
 	run["cards_played"] = int(run.get("cards_played", 0)) + 1
+	var cp: int = int(run.get("cards_played", 0))
+	if cp > 0 and cp % MerlinConstants.CARDS_PER_DAY == 0:
+		run["day"] = int(run.get("day", 1)) + 1
 
 	# Record card text + choice in story_log for LLM context variety
 	var story_log: Array = run.get("story_log", [])
@@ -162,8 +166,9 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 	# Update player profile based on choice
 	update_player_profile(state, option)
 
-	# Tick Ogham cooldowns
-	StoreOghams.tick_cooldowns(state)
+	# Tick active Ogham cooldown only (bible s.2.2 — inactive oghams pause)
+	var active_ogham: String = str(state.get("oghams", {}).get("active_this_card", ""))
+	StoreOghams.tick_cooldowns(state, active_ogham)
 
 	# Biome passive only in legacy path
 	if modulated_effects.is_empty():
@@ -197,6 +202,9 @@ static func update_player_profile(state: Dictionary, option: int) -> void:
 
 static func check_run_end(state: Dictionary) -> Dictionary:
 	var run: Dictionary = state.get("run", {})
+	# Faction endings (bible s.3.8): check which factions have rep >= 80 at run end.
+	var faction_rep: Dictionary = state.get("meta", {}).get("faction_rep", {})
+	var faction_endings: Array = MerlinReputationSystem.get_available_endings(faction_rep)
 
 	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 	if life <= 0:
@@ -207,6 +215,7 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 			"cards_played": run.get("cards_played", 0),
 			"days_survived": run.get("day", 1),
 			"life_depleted": true,
+			"faction_endings_available": faction_endings,
 		}
 
 	var mission: Dictionary = run.get("mission", {})
@@ -225,6 +234,7 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 			"score": int(run.get("cards_played", 0)) * 20,
 			"cards_played": run.get("cards_played", 0),
 			"days_survived": run.get("day", 1),
+			"faction_endings_available": faction_endings,
 		}
 
 	# MOS tension tracking (bible v2.4 s.6.2)
@@ -243,6 +253,7 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 			"cards_played": cards_played,
 			"days_survived": run.get("day", 1),
 			"hard_max": true,
+			"faction_endings_available": faction_endings,
 		}
 
 	var tension_zone: String = "none"
@@ -283,8 +294,8 @@ static func get_victory_type(state: Dictionary) -> String:
 
 static func handle_run_end(state: Dictionary, end_check: Dictionary, save_system: MerlinSaveSystem) -> Dictionary:
 	var meta: Dictionary = state.get("meta", {})
-	meta["total_runs"] = int(meta.get("total_runs", 0)) + 1
 	meta["total_cards_played"] = int(meta.get("total_cards_played", 0)) + int(end_check.get("cards_played", 0))
+	meta["fins_vues"] = int(meta.get("fins_vues", 0)) + 1
 
 	var ending: Dictionary = end_check.get("ending", {})
 	var ending_title: String = str(ending.get("title", ""))
@@ -305,14 +316,15 @@ static func handle_run_end(state: Dictionary, end_check: Dictionary, save_system
 static func check_promise_deadlines(state: Dictionary, apply_effect_func: Callable) -> void:
 	var run: Dictionary = state.get("run", {})
 	var promises: Array = run.get("active_promises", [])
-	var current_day: int = int(run.get("day", 1))
+	var cards_played: int = int(run.get("cards_played", 0))
 	var broken_count: int = 0
 
 	for promise in promises:
 		if str(promise.get("status", "")) != "active":
 			continue
-		var deadline: int = int(promise.get("deadline_day", 0))
-		if deadline > 0 and current_day > deadline:
+		var made_at: int = int(promise.get("made_at_card", 0))
+		var deadline_cards: int = int(promise.get("deadline_cards", 0))
+		if deadline_cards > 0 and cards_played >= made_at + deadline_cards:
 			promise["status"] = "broken"
 			broken_count += 1
 
@@ -337,6 +349,11 @@ static func calculate_run_rewards(state: Dictionary, run_data: Dictionary) -> Di
 
 	anam += minigames_won * MerlinConstants.ANAM_PER_MINIGAME
 	anam += oghams_used * MerlinConstants.ANAM_PER_OGHAM
+
+	# Add card ADD_ANAM gains accumulated during run — subject to death penalty (bible s.5.1)
+	var run_state: Dictionary = state.get("run", {})
+	var card_anam: int = int(run_state.get("anam_accumulated", 0))
+	anam += card_anam
 
 	var faction_rep: Dictionary = state.get("meta", {}).get("faction_rep", {})
 	for faction in faction_rep:

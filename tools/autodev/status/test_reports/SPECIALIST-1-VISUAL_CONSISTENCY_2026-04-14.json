@@ -1,0 +1,87 @@
+{
+  "specialist": 1,
+  "role": "VISUAL_CONSISTENCY_AUDITOR",
+  "cycle_id": "CYCLE-2026-04-14-spec1-visual-audit",
+  "timestamp": "2026-04-14T18:00:00Z",
+  "audit_checks": {
+    "total": 8,
+    "pass": 3,
+    "fail_medium": 2,
+    "fail_low": 3
+  },
+  "findings": [
+    {
+      "id": "VIS-001",
+      "severity": "MEDIUM",
+      "file": "scripts/IntroCeltOS.gd",
+      "lines": "63-67",
+      "description": "5 local color constants (GOLD, GOLD_DIM, GOLD_BRIGHT, GOLD_FAINT, BG_BLACK) with hardcoded RGB. Must use MerlinVisual.PALETTE.",
+      "task_id": "VIS-INTROCELOS-PALETTE"
+    },
+    {
+      "id": "VIS-002",
+      "severity": "MEDIUM",
+      "file": "scripts/autoload/pixel_transition_config.gd",
+      "lines": "56",
+      "description": "bg_color: Color(0.02, 0.02, 0.02) hardcoded — should be CRT_PALETTE['bg_deep'].",
+      "task_id": "VIS-PIXEL-TRANSITION-CONFIG"
+    },
+    {
+      "id": "VIS-003",
+      "severity": "LOW",
+      "file": "scripts/bk_forest_test_room.gd",
+      "lines": "122-685",
+      "description": "20+ hardcoded Color() in test/debug scene.",
+      "task_id": "VIS-BK-TEST-ROOM-COLORS"
+    },
+    {
+      "id": "VIS-004",
+      "severity": "LOW",
+      "file": "scripts/autoload/screen_frame.gd",
+      "lines": "351",
+      "description": "Color(1.0, 1.0, 1.0, 0.15) — should use CRT_PALETTE key.",
+      "task_id": "VIS-SCREEN-FRAME-WHITE"
+    },
+    {
+      "id": "VIS-005",
+      "severity": "PASS",
+      "file": "scripts/menu_3d_pc.gd",
+      "description": "PASS: Color() literals use local vars derived from MerlinVisual."
+    },
+    {
+      "id": "VIS-006",
+      "severity": "PASS",
+      "file": "scripts/broceliande_3d/broc_chunk_manager.gd",
+      "description": "PASS: terrain_color from biome palette."
+    },
+    {
+      "id": "VIS-007",
+      "severity": "PASS",
+      "file": "scripts/autoload/merlin_visual.gd",
+      "description": "PASS: PALETTE/CRT_PALETTE/GBC correct."
+    },
+    {
+      "id": "VIS-008",
+      "severity": "LOW",
+      "file": "addons/",
+      "description": "COVERAGE GAP: addons/ not audited.",
+      "task_id": "VIS-AUDIT-ADDONS"
+    }
+  ],
+  "tasks_implemented": [
+    {
+      "id": "3D-BUSH-ASSET-FIX",
+      "description": "Fixed BUSH_MODELS: rocks/ → bushes/, 4→6 variants"
+    }
+  ],
+  "director_decisions_applied": [
+    {
+      "question_id": "q-20260414-005",
+      "action": "FLOW-QUIZ-WIRE-INTRO updated to deletion task"
+    },
+    {
+      "question_id": "q-20260414-004",
+      "action": "E2E-DEAD-PATH updated to migration task"
+    }
+  ]
+}

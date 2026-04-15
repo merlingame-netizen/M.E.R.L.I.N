@@ -9,6 +9,10 @@ const STATUS_FILES = [
   'tools/autodev/status/escalation.json',
   'tools/autodev/status/watchdog.txt',
   'tools/autodev/status/feedback_questions.json',
+  'tools/autodev/status/feedback_responses.json',
+  'tools/autodev/status/completed_archive.json',
+  'tools/autodev/status/studio_learnings.json',
+  'tools/autodev/status/studio_insights.json',
 ];
 
 async function fetchGitHubFile(path: string): Promise<unknown | null> {
@@ -60,6 +64,42 @@ export default async function handler(req: any, res: any) {
     const key = path.split('/').pop()!.replace(/\.\w+$/, '');
     results[key] = await fetchGitHubFile(path);
   });
+
+  // Also fetch test_reports directory listing
+  fetches.push((async () => {
+    try {
+      const url = `https://api.github.com/repos/${REPO}/contents/tools/autodev/status/test_reports?ref=${BRANCH}`;
+      const headers: Record<string, string> = {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'merlin-mission-control',
+      };
+      if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
+      const dirRes = await fetch(url, { headers });
+      if (dirRes.ok) {
+        const files = await dirRes.json();
+        // Get last 10 reports sorted by name (date-based names sort naturally)
+        const reportFiles = (files as Array<{ name: string; download_url: string }>)
+          .filter((f: { name: string }) => f.name.startsWith('SPECIALIST-') || f.name.endsWith('.json'))
+          .sort((a: { name: string }, b: { name: string }) => b.name.localeCompare(a.name))
+          .slice(0, 10);
+
+        // Fetch content of last 3 reports
+        const reports = await Promise.all(
+          reportFiles.slice(0, 3).map(async (f: { name: string; download_url: string }) => {
+            try {
+              const content = await fetchGitHubFile(`tools/autodev/status/test_reports/${f.name}`);
+              return { name: f.name, content };
+            } catch { return { name: f.name, content: null }; }
+          })
+        );
+        results['test_reports'] = {
+          total: reportFiles.length,
+          files: reportFiles.map((f: { name: string }) => f.name),
+          recent: reports,
+        };
+      }
+    } catch { /* non-critical */ }
+  })());
 
   await Promise.all(fetches);
 

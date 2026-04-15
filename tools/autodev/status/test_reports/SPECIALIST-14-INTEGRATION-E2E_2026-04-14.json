@@ -1,0 +1,85 @@
+{
+  "report_id": "SPECIALIST-14-INTEGRATION-E2E_2026-04-14",
+  "specialist": 14,
+  "specialist_role": "INTEGRATION_E2E_AUDITOR",
+  "cycle_type": "test",
+  "generated_at": "2026-04-14T15:00:00Z",
+  "task_executed": "T-S2-ARC-CONDITION-REGRESS-V2",
+  "task_result": "PASS",
+  "summary": "T-S2-ARC-CONDITION-REGRESS-V2: ALL 6 CHK PASS. Arc conditions evaluate correctly after get_save_data() implementation. Full E2E scene flow PASS. 2 HIGH issues: parchment_pre_run.gd raw change_scene_to_file + dead HubScreen/Run3D parallel path.",
+
+  "test_task": {
+    "id": "T-S2-ARC-CONDITION-REGRESS-V2",
+    "result": "PASS",
+    "checks": [
+      {
+        "id": "CHK-1",
+        "desc": "landes_bruyere (arc_condition_type=runs_in_biome, value=3) with biome_runs[landes_bruyere]=3 → arc_unlocked=true",
+        "status": "PASS",
+        "evidence": "merlin_skeleton_generator.gd:50 biome_runs_map.get(biome_id,0)=3 → previous_runs=3. llm_adapter_map_prompt.gd:98-99 arc_actual_value=int(context.get('previous_runs',0))=3. 3>=3=TRUE"
+      },
+      {
+        "id": "CHK-2",
+        "desc": "collines_dolmens (arc_condition_type=fins_vues, value=5) with save fins_vues=5 → arc_unlocked=true",
+        "status": "PASS",
+        "evidence": "merlin_skeleton_generator.gd:65 fins_vues=int(save_data.get('fins_vues',0))=5. llm_adapter_map_prompt.gd:100-101 arc_actual_value=5. 5>=5=TRUE"
+      },
+      {
+        "id": "CHK-3",
+        "desc": "cercles_pierres (arc_condition_type=oghams_owned, value=2) with oghams.owned size=2 → arc_unlocked=true",
+        "status": "PASS",
+        "evidence": "merlin_skeleton_generator.gd:66 oghams_owned=int(save_data.get('oghams',{}).get('owned',[]).size())=2. llm_adapter_map_prompt.gd:102-103 arc_actual_value=2. 2>=2=TRUE"
+      },
+      {
+        "id": "CHK-4",
+        "desc": "get_save_data() implemented and returns save_system.load_profile()",
+        "status": "PASS",
+        "evidence": "merlin_store.gd:649-650: func get_save_data() -> Dictionary: return save_system.load_profile(). Director decision 2026-04-14 applied."
+      },
+      {
+        "id": "CHK-5",
+        "desc": "merlin_game_controller.gd calls store.get_save_data() with null guard",
+        "status": "PASS",
+        "evidence": "merlin_game_controller.gd:284-286: var save_data: Dictionary = {}; if store and store.has_method('get_save_data'): save_data = store.get_save_data(). Null guard present."
+      },
+      {
+        "id": "CHK-6",
+        "desc": "_build_context() called with save_data, passes fins_vues+oghams_owned+previous_runs to context",
+        "status": "PASS",
+        "evidence": "merlin_game_controller.gd:295: graph = await mos.generate_run_skeleton(biome_key, ogham_id, game_state, save_data). merlin_skeleton_generator.gd:39-76 _build_context maps all 3 arc types to context dict."
+      }
+    ]
+  },
+
+  "e2e_audit": {
+    "total_checks": 14,
+    "pass": 12,
+    "fail_high": 2,
+    "fail_medium": 1,
+    "fail_low": 1,
+    "checks": [
+      {"id": "E2E-1", "desc": "IntroCeltOS → Menu3DPC via PixelTransition", "status": "PASS", "evidence": "IntroCeltOS.gd:516 PixelTransition.transition_to('res://scenes/Menu3DPC.tscn')"},
+      {"id": "E2E-2", "desc": "SelectionSauvegarde → HubAntre via PixelTransition", "status": "PASS", "evidence": "SelectionSauvegarde.gd:202 PixelTransition.transition_to(scene_path) where GAME_SCENE='res://scenes/HubAntre.tscn'"},
+      {"id": "E2E-3", "desc": "HubAntre → BroceliandeForest3D via PixelTransition", "status": "PASS", "evidence": "HubAntre.gd:661 PixelTransition.transition_to(SCENE_FOREST) where SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn'"},
+      {"id": "E2E-4", "desc": "BroceliandeForest3D → MerlinGame (primary path uses PixelTransition)", "status": "PASS", "evidence": "broceliande_forest_3d.gd:1224 pt.transition_to(target). Fallback :1228 direct change_scene flagged separately."},
+      {"id": "E2E-5", "desc": "MerlinGame run end → EndScreen shown", "status": "PASS", "evidence": "merlin_game_controller.gd:665 ui.show_end_screen(ending). ui_overlay_endscreen.gd:18 func show_end_screen()"},
+      {"id": "E2E-6", "desc": "EndScreen → HubAntre via PixelTransition", "status": "PASS", "evidence": "ui_overlay_endscreen.gd:134 btn_hub.pressed.connect(func(): PixelTransition.transition_to('res://scenes/HubAntre.tscn'))"},
+      {"id": "E2E-7", "desc": "Autoloads wired: GameManager creates MerlinStore at boot", "status": "PASS", "evidence": "project.godot GameManager='*res://scripts/game_manager.gd'. game_manager.gd:674-677 creates MerlinStore via call_deferred add_child."},
+      {"id": "E2E-8", "desc": "MerlinAI autoload wired (LLM available)", "status": "PASS", "evidence": "project.godot MerlinAI='*res://addons/merlin_ai/merlin_ai.gd'. merlin_game_controller.gd:121 get_node_or_null('/root/MerlinAI') with warning fallback."},
+      {"id": "E2E-9", "desc": "Continue run: LOAD_PROFILE dispatches load_profile()", "status": "PASS", "evidence": "merlin_store.gd:410-411 'LOAD_PROFILE': var meta = save_system.load_profile(). SelectionSauvegarde.gd:101/165 dispatch({'type': 'LOAD_PROFILE'})."},
+      {"id": "E2E-10", "desc": "ANAM death penalty applied to ALL in-run Anam (director Option B)", "status": "PASS", "evidence": "store_run.gd:346-356 card_anam added to base anam BEFORE ratio applied. ratio=min(cards_played/30,1.0). ADD_ANAM effects credit anam_accumulated not meta.anam directly."},
+      {"id": "E2E-11", "desc": "MerlinStore get_save_data() → arc conditions evaluate correctly", "status": "PASS", "evidence": "T-S2-ARC-CONDITION-REGRESS-V2 ALL 6 CHK PASS. See test_task above."},
+      {"id": "E2E-12", "desc": "EndScreen → new run → BroceliandeForest3D via PixelTransition", "status": "PASS", "evidence": "ui_overlay_endscreen.gd:140 btn_new.pressed.connect(func(): PixelTransition.transition_to('res://scenes/BroceliandeForest3D.tscn'))"},
+      {"id": "E2E-13", "desc": "parchment_pre_run.gd SCENE_FOREST transition bypasses PixelTransition", "status": "FAIL_HIGH", "file": "scripts/ui/parchment_pre_run.gd", "line": 217, "evidence": "get_tree().change_scene_to_file(SCENE_FOREST) — raw scene change. Should use PixelTransition.transition_to() for consistent visual experience."},
+      {"id": "E2E-14", "desc": "Dead parallel game path: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn never used", "status": "FAIL_HIGH", "file": "scripts/core/game_flow_controller.gd", "line": 1, "evidence": "game_flow_controller.gd references HubScreen, Run3D, EndRunScreen. No .tscn or production script instantiates GameFlowController. Active path: HubAntre→BroceliandeForest3D→MerlinGame. Dual-path drift risk."}
+    ]
+  },
+
+  "invariants": {
+    "scene_transitions_use_pixel_transition": "PARTIAL — primary paths use PixelTransition, parchment_pre_run.gd:217 does not",
+    "merlin_store_available_at_game_scenes": "PASS — GameManager autoload creates MerlinStore before any gameplay scene",
+    "arc_condition_evaluation": "PASS — all 3 types (runs_in_biome/fins_vues/oghams_owned) evaluate correctly",
+    "anam_death_penalty": "PASS — card_anam+base all subject to death ratio",
+    "end_screen_returns_to_hub": "PASS — PixelTransition to HubAntre.tscn"
+  }
+}

@@ -26,8 +26,6 @@ const LLM_PARAMS := {
 	"repetition_penalty": 1.4,
 }
 
-const GENERATION_TIMEOUT_MS := 30000
-
 const CELTIC_THEMES: Array[String] = [
 	"nemeton sacre", "brume matinale", "dolmen ancien", "sources enchantees",
 	"korrigans farceurs", "cercle de pierres", "chene millénaire", "sidhe lumineux",
@@ -612,17 +610,23 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 		_last_narrative_fallback_idx = fb_idx2
 		final_text = NARRATIVE_FALLBACKS[fb_idx2]
 
-	# Path B auto-tag: scan final_text for faction keywords
+	# Path B auto-tag: scan final_text for faction keywords (max 1 ADD_REPUTATION per card)
+	# Guard: never push effects array beyond 3 items — _validate_card rejects cards with >3 effects
 	var scan_text: String = final_text.to_lower()
+	var faction_tagged: bool = false
 	for faction_id in MerlinConstants.FACTION_KEYWORDS:
+		if faction_tagged:
+			break
 		var keywords: Array = MerlinConstants.FACTION_KEYWORDS[faction_id]
 		for kw in keywords:
 			if scan_text.find(str(kw)) >= 0:
-				options_out[2]["effects"].append({
-					"type": "ADD_REPUTATION",
-					"faction": faction_id,
-					"amount": MerlinConstants.FACTION_DELTA_MINOR,
-				})
+				if options_out[2]["effects"].size() < 3:
+					options_out[2]["effects"].append({
+						"type": "ADD_REPUTATION",
+						"faction": faction_id,
+						"amount": MerlinConstants.FACTION_DELTA_MINOR,
+					})
+				faction_tagged = true
 				break
 
 	# Detect minigame from narrative text and option verbs
@@ -701,7 +705,7 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 	var player_tendency := _get_player_tendency(hidden)
 
 	return {
-		"factions": run.get("factions", {}).duplicate(),
+		"factions": meta.get("faction_rep", {}).duplicate(),
 		"cards_played": int(run.get("cards_played", 0)),
 		"day": int(run.get("day", 1)),
 		"active_tags": run.get("active_tags", []),
@@ -720,9 +724,10 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 
 func build_context(state: Dictionary) -> Dictionary:
 	var run = state.get("run", {})
+	var meta: Dictionary = state.get("meta", {})
 	return {
 		"life_essence": int(run.get("life_essence", 100)),
-		"factions": run.get("factions", {}),
+		"factions": meta.get("faction_rep", {}),
 		"day": int(run.get("day", 1)),
 		"cards_played": int(run.get("cards_played", 0)),
 		"active_promises": run.get("active_promises", []),

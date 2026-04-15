@@ -215,7 +215,7 @@ func test_add_promise_basic() -> bool:
 	if result["applied"].size() != 1:
 		push_error("ADD_PROMISE: expected 1 applied")
 		return false
-	var promises: Array = state["run"]["promises"]
+	var promises: Array = state["run"]["active_promises"]
 	if promises.size() != 1:
 		push_error("ADD_PROMISE: expected 1 promise, got %d" % promises.size())
 		return false
@@ -239,7 +239,7 @@ func test_add_promise_cap_at_two() -> bool:
 	if result["rejected"].size() != 1:
 		push_error("ADD_PROMISE cap: 3rd promise should be rejected")
 		return false
-	var promises: Array = state["run"]["promises"]
+	var promises: Array = state["run"]["active_promises"]
 	if promises.size() != 2:
 		push_error("ADD_PROMISE cap: should have exactly 2, got %d" % promises.size())
 		return false
@@ -255,8 +255,8 @@ func test_create_and_fulfill_promise() -> bool:
 		push_error("CREATE_PROMISE: expected 1, got %d" % promises.size())
 		return false
 	var p: Dictionary = promises[0]
-	if int(p.get("deadline_day", 0)) != 8:  # day 3 + 5
-		push_error("CREATE_PROMISE: deadline_day should be 8, got %d" % int(p.get("deadline_day", 0)))
+	if int(p.get("deadline_cards", 0)) != 5:  # deadline_cards arg = 5
+		push_error("CREATE_PROMISE: deadline_cards should be 5, got %d" % int(p.get("deadline_cards", 0)))
 		return false
 	# Fulfill
 	engine.apply_effects(state, ["FULFILL_PROMISE:oath_001"])

@@ -71,8 +71,9 @@ enum CardOption { LEFT = 0, CENTER = 1, RIGHT = 2 }
 
 const LIFE_ESSENCE_MAX := 100
 const LIFE_ESSENCE_START := 100
-const LIFE_ESSENCE_DRAIN_PER_CARD := 1      # Base drain each card (survival pressure)
+const LIFE_ESSENCE_DRAIN_PER_CARD := 0      # No drain per card (director decision q-20260412-001)
 const MIN_CARDS_FOR_VICTORY := 25           # Victory requires 25+ cards (= MOS target_cards_max). See MOS_CONVERGENCE for full zones.
+const CARDS_PER_DAY := 5                    # Cards played per in-game day (day counter for LLM context)
 const LIFE_ESSENCE_FAIL_DAMAGE := 0         # Normal failure = no life damage
 const LIFE_ESSENCE_EVENT_FAIL_DAMAGE := 6   # Failed event/palier
 const LIFE_ESSENCE_HEAL_PER_REST := 18      # Heal at REST nodes
@@ -313,9 +314,9 @@ const ACTION_VERBS := {
 	"logique": ["dechiffrer", "analyser", "resoudre", "decoder", "interpreter", "etudier"],
 	"finesse": ["se faufiler", "esquiver", "contourner", "se cacher", "escalader", "traverser"],
 	"vigueur": ["combattre", "courir", "fuir", "forcer", "pousser", "resister physiquement"],
-	"esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer",
-			   "parler", "accepter", "refuser", "attendre", "s'approcher"],
+	"esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer"],
 	"perception": ["ecouter", "suivre", "pister", "sentir", "flairer", "tendre l'oreille"],
+	"neutre": ["parler", "accepter", "refuser", "attendre", "s'approcher"],
 }
 
 # Fallback: si le LLM genere un verbe hors des 45, mapper a "esprit"
@@ -326,14 +327,15 @@ const ACTION_VERB_FALLBACK_FIELD := "esprit"
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const FIELD_MINIGAMES := {
-	"chance": ["herboristerie"],
-	"bluff": ["negociation"],
-	"observation": ["fouille", "regard"],
-	"logique": ["runes"],
-	"finesse": ["ombres", "equilibre"],
-	"vigueur": ["combat_rituel", "course"],
-	"esprit": ["apaisement", "volonte", "sang_froid"],
-	"perception": ["traces", "echo"],
+	"chance": ["chance"],
+	"bluff": ["bluff"],
+	"observation": ["observation"],
+	"logique": ["logique"],
+	"finesse": ["finesse"],
+	"vigueur": ["vigueur"],
+	"esprit": ["esprit"],
+	"perception": ["perception"],
+	"neutre": ["esprit"],
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -352,7 +354,7 @@ const EFFECT_CAPS := {
 	"LIFE_MIN": 0,
 	"effects_per_option": 3,
 	"score_bonus_cap": 2.0,
-	"drain_per_card": 1,
+	"drain_per_card": 0,
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -410,6 +412,7 @@ const BIOMES := {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande", "subtitle": "Ou les arbres ont des yeux",
 		"season": "printemps", "difficulty": 0, "maturity_threshold": 0,
+		"dominant_faction": "druides",
 		"oghams_affinity": ["quert", "huath", "coll"],
 		"currency_name": "Herbes enchantees",
 		"card_interval_range_min": 12, "card_interval_range_max": 15,
@@ -419,65 +422,72 @@ const BIOMES := {
 	"landes_bruyere": {
 		"name": "Landes de Bruyere", "subtitle": "Ou le vent raconte des histoires",
 		"season": "automne", "difficulty": 1, "maturity_threshold": 15,
+		"dominant_faction": "anciens",
 		"oghams_affinity": ["luis", "onn", "saille"],
 		"currency_name": "Brins de bruyere",
-		"card_interval_range_min": 12, "card_interval_range_max": 15,
-		"pnj": "erwan", "arc": "le_chant_des_cairns", "arc_cards": 3,
-		"arc_condition_type": "faction_rep", "arc_condition_faction": "anciens", "arc_condition_value": 25,
+		"card_interval_range_min": 8, "card_interval_range_max": 10,
+		"pnj": "erwan", "arc": "l_ermite_du_vent", "arc_cards": 4,
+		"arc_condition_type": "runs_in_biome", "arc_condition_faction": "", "arc_condition_value": 3,
 	},
 	"cotes_sauvages": {
 		"name": "Cotes Sauvages", "subtitle": "Ou la mer defie la terre",
 		"season": "ete", "difficulty": 1, "maturity_threshold": 15,
+		"dominant_faction": "niamh",
 		"oghams_affinity": ["muin", "nuin", "tinne"],
 		"currency_name": "Coquillages",
-		"card_interval_range_min": 12, "card_interval_range_max": 15,
-		"pnj": "maelle", "arc": "le_signal_de_sein", "arc_cards": 4,
-		"arc_condition_type": "faction_rep", "arc_condition_faction": "korrigans", "arc_condition_value": 20,
+		"card_interval_range_min": 6, "card_interval_range_max": 8,
+		"pnj": "maelle", "arc": "le_phoque_d_argent", "arc_cards": 3,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "niamh", "arc_condition_value": 30,
 	},
 	"villages_celtes": {
 		"name": "Villages Celtes", "subtitle": "Ou les hommes forment le destin",
 		"season": "ete", "difficulty": 2, "maturity_threshold": 25,
+		"dominant_faction": "anciens",
 		"oghams_affinity": ["duir", "coll", "beith"],
 		"currency_name": "Pieces de cuivre",
-		"card_interval_range_min": 10, "card_interval_range_max": 14,
-		"pnj": "cadogan", "arc": "le_puits_des_souhaits", "arc_cards": 4,
-		"arc_condition_type": "faction_rep", "arc_condition_faction": "anciens", "arc_condition_value": 35,
+		"card_interval_range_min": 8, "card_interval_range_max": 10,
+		"pnj": "cadogan", "arc": "l_assemblee_secrete", "arc_cards": 5,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "anciens", "arc_condition_value": 40,
 	},
 	"cercles_pierres": {
 		"name": "Cercles de Pierres", "subtitle": "Ou le temps se fissure",
 		"season": "printemps", "difficulty": 3, "maturity_threshold": 30,
+		"dominant_faction": "druides",
 		"oghams_affinity": ["ioho", "straif", "ruis"],
 		"currency_name": "Fragments de rune",
-		"card_interval_range_min": 10, "card_interval_range_max": 14,
-		"pnj": "brennos", "arc": "l_alignement_perdu", "arc_cards": 5,
-		"arc_condition_type": "oghams_owned", "arc_condition_faction": "", "arc_condition_value": 5,
+		"card_interval_range_min": 10, "card_interval_range_max": 12,
+		"pnj": "brennos", "arc": "le_rituel_oublie", "arc_cards": 4,
+		"arc_condition_type": "oghams_owned", "arc_condition_faction": "", "arc_condition_value": 2,
 	},
 	"marais_korrigans": {
 		"name": "Marais des Korrigans", "subtitle": "Ou la lumiere ment",
 		"season": "automne", "difficulty": 3, "maturity_threshold": 40,
+		"dominant_faction": "korrigans",
 		"oghams_affinity": ["gort", "eadhadh", "luis"],
 		"currency_name": "Pierres phosphorescentes",
-		"card_interval_range_min": 10, "card_interval_range_max": 14,
-		"pnj": "gwen_du", "arc": "le_tertre_du_silence", "arc_cards": 5,
-		"arc_condition_type": "faction_rep", "arc_condition_faction": "korrigans", "arc_condition_value": 50,
+		"card_interval_range_min": 4, "card_interval_range_max": 6,
+		"pnj": "gwen_du", "arc": "le_tresor_des_feux", "arc_cards": 4,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "korrigans", "arc_condition_value": 40,
 	},
 	"collines_dolmens": {
 		"name": "Collines aux Dolmens", "subtitle": "Ou les morts veillent",
 		"season": "hiver", "difficulty": 4, "maturity_threshold": 50,
+		"dominant_faction": "ankou",
 		"oghams_affinity": ["quert", "ailm", "coll"],
 		"currency_name": "Os graves",
-		"card_interval_range_min": 8, "card_interval_range_max": 12,
-		"pnj": "ildiko", "arc": "la_voix_de_l_if", "arc_cards": 5,
-		"arc_condition_type": "faction_rep", "arc_condition_faction": "ankou", "arc_condition_value": 40,
+		"card_interval_range_min": 10, "card_interval_range_max": 12,
+		"pnj": "ildiko", "arc": "la_voix_des_rois", "arc_cards": 3,
+		"arc_condition_type": "fins_vues", "arc_condition_faction": "", "arc_condition_value": 5,
 	},
 	"iles_mystiques": {
 		"name": "Iles Mystiques", "subtitle": "Ou le monde visible s'acheve",
 		"season": "hiver", "difficulty": 5, "maturity_threshold": 75,
+		"dominant_faction": "niamh",
 		"oghams_affinity": ["ailm", "ruis", "ioho"],
 		"currency_name": "Ecume solidifiee",
-		"card_interval_range_min": 8, "card_interval_range_max": 12,
-		"pnj": "morgane", "arc": "le_passage_d_avalon", "arc_cards": 6,
-		"arc_condition_type": "faction_rep", "arc_condition_faction": "niamh", "arc_condition_value": 60,
+		"card_interval_range_min": 3, "card_interval_range_max": 15,
+		"pnj": "morgane", "arc": "le_passage_de_morgane", "arc_cards": 5,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "ankou", "arc_condition_value": 50,
 	},
 }
 

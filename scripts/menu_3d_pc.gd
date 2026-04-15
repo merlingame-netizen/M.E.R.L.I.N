@@ -51,6 +51,24 @@ var _scale: float = 1.0
 var _is_portrait: bool = false
 
 # ═══════════════════════════════════════════════════════════════
+# 3D VIEWPORT (background scene)
+# ═══════════════════════════════════════════════════════════════
+var _3d_container: SubViewportContainer
+var _3d_viewport: SubViewport
+var _3d_camera: Camera3D
+var _3d_env: WorldEnvironment
+var _3d_scene_root: Node3D
+var _camera_idle_phase: float = 0.0
+var _camera_fly_active: bool = false
+var _camera_fly_t: float = 0.0
+
+# Camera positions
+const CAM_IDLE_POS := Vector3(8.0, 4.5, 12.0)
+const CAM_IDLE_LOOK := Vector3(0.0, 2.0, 0.0)
+const CAM_TOWER_POS := Vector3(1.0, 3.0, 3.0)
+const CAM_TOWER_LOOK := Vector3(0.0, 4.0, -1.0)
+
+# ═══════════════════════════════════════════════════════════════
 # UI NODES
 # ═══════════════════════════════════════════════════════════════
 var _background: ColorRect
@@ -150,6 +168,8 @@ func _compute_scale() -> void:
 
 func _on_viewport_resized() -> void:
 	_compute_scale()
+	if _3d_viewport:
+		_3d_viewport.size = get_viewport().get_visible_rect().size
 
 
 func _hide_autoload(autoload_name: String) -> void:
@@ -185,6 +205,7 @@ func _process(delta: float) -> void:
 	_animate_rune_grid(delta)
 	_animate_scan_bar(delta)
 	_apply_vertex_jitter()
+	_animate_3d_camera(delta)
 
 	if not _menu_visible:
 		return
@@ -206,10 +227,162 @@ func _process(delta: float) -> void:
 # BUILD UI
 # ═══════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════
+# 3D BACKGROUND SCENE
+# ═══════════════════════════════════════════════════════════════
+
+func _build_3d_viewport() -> void:
+	_3d_container = SubViewportContainer.new()
+	_3d_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_3d_container.stretch = true
+	_3d_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_3d_container)
+
+	_3d_viewport = SubViewport.new()
+	_3d_viewport.size = Vector2i(
+		int(get_viewport().get_visible_rect().size.x),
+		int(get_viewport().get_visible_rect().size.y)
+	)
+	_3d_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_3d_viewport.msaa_3d = Viewport.MSAA_2X
+	_3d_viewport.transparent_bg = false
+	_3d_container.add_child(_3d_viewport)
+
+	# World environment — dusk coastal atmosphere
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.04, 0.05, 0.08)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.15, 0.12, 0.20)
+	env.ambient_light_energy = 0.4
+	env.tonemap_mode = Environment.TONE_MAP_ACES
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.12, 0.10, 0.18)
+	env.fog_density = 0.015
+	env.glow_enabled = true
+	env.glow_intensity = 0.3
+	env.glow_bloom = 0.1
+	_3d_env = WorldEnvironment.new()
+	_3d_env.environment = env
+	_3d_viewport.add_child(_3d_env)
+
+	# Camera
+	_3d_camera = Camera3D.new()
+	_3d_camera.position = CAM_IDLE_POS
+	_3d_camera.look_at(CAM_IDLE_LOOK)
+	_3d_camera.fov = 55.0
+	_3d_camera.far = 200.0
+	_3d_viewport.add_child(_3d_camera)
+
+	# Directional light — moonlight
+	var sun := DirectionalLight3D.new()
+	sun.light_color = Color(0.55, 0.50, 0.70)
+	sun.light_energy = 0.6
+	sun.rotation_degrees = Vector3(-35, -45, 0)
+	sun.shadow_enabled = true
+	_3d_viewport.add_child(sun)
+
+	# Warm fill light from tower direction
+	var fill := OmniLight3D.new()
+	fill.position = Vector3(0, 5, 0)
+	fill.light_color = Color(0.9, 0.65, 0.25)
+	fill.light_energy = 1.2
+	fill.omni_range = 15.0
+	fill.omni_attenuation = 1.5
+	_3d_viewport.add_child(fill)
+
+	# Scene root
+	_3d_scene_root = Node3D.new()
+	_3d_scene_root.name = "MenuCoastScene"
+	_3d_viewport.add_child(_3d_scene_root)
+
+	# Load pre-composed 3D scene
+	_load_menu_3d_assets()
+
+
+func _load_menu_3d_assets() -> void:
+	# Try menu_scene_v3 first, then v2, then complete, then individual assets
+	var scene_paths: Array[String] = [
+		"res://Assets/3d_models/menu_coast/menu_scene_v3.glb",
+		"res://Assets/3d_models/menu_coast/menu_scene_v2.glb",
+		"res://Assets/3d_models/menu_coast/menu_scene_complete.glb",
+	]
+
+	for path in scene_paths:
+		if ResourceLoader.exists(path):
+			var packed: PackedScene = load(path)
+			if packed:
+				var instance: Node3D = packed.instantiate()
+				_3d_scene_root.add_child(instance)
+				print("[Menu3D] Loaded scene: %s" % path)
+				return
+
+	# Fallback: load individual assets
+	print("[Menu3D] No pre-composed scene found, loading individual assets")
+	_load_individual_assets()
+
+
+func _load_individual_assets() -> void:
+	var assets: Array[Dictionary] = [
+		{"path": "res://Assets/3d_models/menu_coast/celtic_tower.glb", "pos": Vector3(0, 0, 0), "scale": Vector3.ONE},
+		{"path": "res://Assets/3d_models/menu_coast/cliff_unified.glb", "pos": Vector3(0, -1, 0), "scale": Vector3.ONE},
+		{"path": "res://Assets/3d_models/menu_coast/ocean_3.glb", "pos": Vector3(0, -0.5, 5), "scale": Vector3(3, 1, 3)},
+		{"path": "res://Assets/3d_models/menu_coast/rocks_set.glb", "pos": Vector3(4, 0, 3), "scale": Vector3.ONE},
+		{"path": "res://Assets/3d_models/menu_coast/coastal_bush_1.glb", "pos": Vector3(-3, 0, 2), "scale": Vector3.ONE},
+		{"path": "res://Assets/3d_models/menu_coast/cabin_unified.glb", "pos": Vector3(-5, 0, -2), "scale": Vector3.ONE},
+	]
+
+	for asset in assets:
+		var path: String = asset["path"]
+		if ResourceLoader.exists(path):
+			var packed: PackedScene = load(path)
+			if packed:
+				var instance: Node3D = packed.instantiate()
+				instance.position = asset["pos"]
+				instance.scale = asset["scale"]
+				_3d_scene_root.add_child(instance)
+
+
+func _animate_3d_camera(delta: float) -> void:
+	if _3d_camera == null or not is_instance_valid(_3d_camera):
+		return
+
+	if _camera_fly_active:
+		# Fly towards tower on "new game"
+		_camera_fly_t = minf(_camera_fly_t + delta * 0.4, 1.0)
+		var t: float = _ease_in_out(_camera_fly_t)
+		_3d_camera.position = CAM_IDLE_POS.lerp(CAM_TOWER_POS, t)
+		var look_target: Vector3 = CAM_IDLE_LOOK.lerp(CAM_TOWER_LOOK, t)
+		_3d_camera.look_at(look_target)
+	else:
+		# Gentle idle orbit
+		_camera_idle_phase += delta * 0.08
+		var orbit_radius: float = CAM_IDLE_POS.length() * 0.98
+		var height: float = CAM_IDLE_POS.y + sin(_camera_idle_phase * 0.7) * 0.3
+		_3d_camera.position = Vector3(
+			cos(_camera_idle_phase) * orbit_radius,
+			height,
+			sin(_camera_idle_phase) * orbit_radius
+		)
+		_3d_camera.look_at(CAM_IDLE_LOOK + Vector3(0, sin(_camera_idle_phase * 0.5) * 0.2, 0))
+
+
+func _ease_in_out(t: float) -> float:
+	return t * t * (3.0 - 2.0 * t)
+
+
+func _start_camera_fly_to_tower() -> void:
+	_camera_fly_active = true
+	_camera_fly_t = 0.0
+
+
 func _build_ui() -> void:
+	# 3D background viewport (behind everything)
+	_build_3d_viewport()
+
 	_background = ColorRect.new()
 	_background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_background.color = BG_BLACK
+	_background.color = Color(BG_BLACK.r, BG_BLACK.g, BG_BLACK.b, 0.55)
 	add_child(_background)
 
 	# Rune grid (behind particles)
@@ -1149,6 +1322,7 @@ func _on_menu_button(label: String) -> void:
 		"NOUVELLE PARTIE":
 			_start_new_game()
 		"CONTINUER":
+			_start_camera_fly_to_tower()
 			_glitch_transition("res://scenes/HubAntre.tscn")
 		"OPTIONS":
 			_glitch_transition("res://scenes/MenuOptions.tscn")
@@ -1157,6 +1331,7 @@ func _on_menu_button(label: String) -> void:
 
 
 func _start_new_game() -> void:
+	_start_camera_fly_to_tower()
 	if MerlinAI and MerlinAI.has_method("_init_local_models"):
 		MerlinAI._init_local_models()
 	_glitch_transition("res://scenes/ParchmentPreRun.tscn")

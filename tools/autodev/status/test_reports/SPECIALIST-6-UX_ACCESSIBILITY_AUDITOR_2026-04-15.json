@@ -1,0 +1,89 @@
+{
+  "specialist": 6,
+  "role": "UX_ACCESSIBILITY_AUDITOR",
+  "timestamp": "2026-04-15T08:00:00Z",
+  "cycle_type": "dev",
+  "summary": "UX/Accessibility audit: 9 findings (3 HIGH, 4 MEDIUM, 2 LOW). Touch target violations in gameplay-critical paths. Font size below 11px in compact mode. Hardcoded i18n strings.",
+  "findings": [
+    {
+      "id": "UX-TOUCH-HUB-BIOME-BTN",
+      "severity": "FAIL_HIGH",
+      "file": "scripts/ui/hub_screen.gd",
+      "line": 470,
+      "description": "Biome selection button height 36px < MIN_TOUCH_TARGET(48). Core gameplay navigation path.",
+      "rule": "WCAG touch target 44px minimum, studio constant MIN_TOUCH_TARGET=48"
+    },
+    {
+      "id": "UX-TOUCH-HUB-OGHAM-BTN",
+      "severity": "FAIL_HIGH",
+      "file": "scripts/ui/hub_screen.gd",
+      "line": 487,
+      "description": "Ogham selection button height 30px < MIN_TOUCH_TARGET(48). Critical pre-run selection.",
+      "rule": "WCAG + MIN_TOUCH_TARGET=48"
+    },
+    {
+      "id": "UX-TOUCH-MINIGAME-BTN",
+      "severity": "FAIL_HIGH",
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 118,
+      "description": "Base minigame button 100x36px < MIN_TOUCH_TARGET. Affects all 8 champs lexicaux minigames during gameplay.",
+      "rule": "WCAG + MIN_TOUCH_TARGET=48"
+    },
+    {
+      "id": "UX-FONT-10-COMPACT",
+      "severity": "FAIL_HIGH",
+      "file": "scripts/Collection.gd",
+      "line": 388,
+      "description": "small_font_size = 10 in compact_mode (mobile). Studio rule: no text < 11px.",
+      "rule": "docs/70_graphic/UI_UX_BIBLE.md: no text < 11px"
+    },
+    {
+      "id": "UX-TOUCH-ARBRE-UNLOCK",
+      "severity": "FAIL_MEDIUM",
+      "file": "scripts/ui/arbre_de_vie_ui.gd",
+      "line": 284,
+      "description": "Ogham unlock button height 36px < MIN_TOUCH_TARGET(48).",
+      "rule": "MIN_TOUCH_TARGET=48"
+    },
+    {
+      "id": "UX-TOUCH-COLLECTION-TAB",
+      "severity": "FAIL_MEDIUM",
+      "file": "scripts/Collection.gd",
+      "line": 428,
+      "description": "Collection tab buttons: 32px compact / 38px normal — both < MIN_TOUCH_TARGET(48).",
+      "rule": "MIN_TOUCH_TARGET=48"
+    },
+    {
+      "id": "UX-TOUCH-SELECTION-RESET",
+      "severity": "FAIL_MEDIUM",
+      "file": "scripts/SelectionSauvegarde.gd",
+      "line": 146,
+      "description": "Reset profile button height 38px < MIN_TOUCH_TARGET(48).",
+      "rule": "MIN_TOUCH_TARGET=48"
+    },
+    {
+      "id": "UX-I18N-COLLECTION-STRINGS",
+      "severity": "FAIL_MEDIUM",
+      "file": "scripts/Collection.gd",
+      "lines": [504, 512, 516, 599, 600],
+      "description": "5 hardcoded French strings (Collection, Gloire, Rang, Passe de Gloire, Fins & Runes) not using I18nRegistry.",
+      "rule": "cycle_instructions.md i18n section: never hardcode French in code"
+    },
+    {
+      "id": "UX-I18N-HUBANTRE-STRINGS",
+      "severity": "FAIL_LOW",
+      "file": "scripts/HubAntre.gd",
+      "lines": [446, 848, 855, 867, 901, 908],
+      "description": "6 hardcoded French strings (PARTIR EN AVENTURE, Memoires, Fermer, Vies Passees) not using I18nRegistry.",
+      "rule": "i18n: never hardcode French strings"
+    }
+  ],
+  "invariants_passed": [
+    "MIN_TOUCH_TARGET=48 constant defined in merlin_visual.gd:317",
+    "apply_button_theme() applies MIN_TOUCH_TARGET via merlin_visual.gd:365",
+    "EndRunScreen continue button correctly uses 48px height",
+    "BiomeRadial labels at 11px (borderline-acceptable)"
+  ],
+  "tasks_generated": 5,
+  "task_implemented": "NAR-FACTION-ENDING-UI"
+}

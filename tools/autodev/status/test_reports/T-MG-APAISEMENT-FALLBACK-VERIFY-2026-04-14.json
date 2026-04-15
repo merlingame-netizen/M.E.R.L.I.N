@@ -1,0 +1,68 @@
+{
+  "report_id": "T-MG-APAISEMENT-FALLBACK-VERIFY-2026-04-14",
+  "task_id": "MG-APAISEMENT-FALLBACK-VERIFY",
+  "agent": "game_playtester",
+  "timestamp": "2026-04-14T22:50:00Z",
+  "result": "PASS",
+  "summary": "Regression: select_minigame('unknown') + neutre fallback paths fully verified. 7/7 invariants PASS.",
+  "invariants": [
+    {
+      "id": "INV-MG-01",
+      "check": "select_minigame('unknown') returns valid field name",
+      "trace": "merlin_card_system.gd:228 → FIELD_MINIGAMES.get('unknown',[])=[] → ACTION_VERB_FALLBACK_FIELD='esprit'",
+      "result": "PASS",
+      "return_value": "esprit",
+      "in_valid_fields": true
+    },
+    {
+      "id": "INV-MG-02",
+      "check": "select_minigame('') returns valid field name",
+      "trace": "FIELD_MINIGAMES.get('',[])=[] → fallback 'esprit'",
+      "result": "PASS",
+      "return_value": "esprit",
+      "in_valid_fields": true
+    },
+    {
+      "id": "INV-MG-03",
+      "check": "select_minigame('neutre') returns valid field type",
+      "trace": "FIELD_MINIGAMES.get('neutre',['esprit']) size=1 → return 'esprit'",
+      "result": "PASS",
+      "return_value": "esprit",
+      "in_valid_fields": true
+    },
+    {
+      "id": "INV-MG-04",
+      "check": "detect_field('','unknown') returns valid field",
+      "trace": "minigame_registry.gd:74 → gm_hint='unknown' not in FIELDS nor GAMES → keyword scan '' → all scores 0 → default 'chance'",
+      "result": "PASS",
+      "return_value": "chance",
+      "in_valid_fields": true
+    },
+    {
+      "id": "INV-MG-05",
+      "check": "detect_field('','neutre') returns 'neutre' (GAMES fallback)",
+      "trace": "gm_hint='neutre', GAMES.has('neutre')=true → return 'neutre'",
+      "result": "PASS",
+      "return_value": "neutre",
+      "games_has_neutre": true,
+      "note": "Fix from SPEC-3 cycle (GAMES.has fallback at line 76) working correctly"
+    },
+    {
+      "id": "INV-MG-06",
+      "check": "merlin_minigame_system.run('neutre',5) routes to _play_esprit()",
+      "trace": "merlin_minigame_system.gd:53 case 'neutre' → _play_esprit(5) — returns valid score 0-100",
+      "result": "PASS",
+      "valid_fields_has_neutre": true
+    },
+    {
+      "id": "INV-MG-07",
+      "check": "MiniGameRegistry.create_minigame('neutre') finds mg_apaisement/mg_volonte",
+      "trace": "GAMES.has('neutre')=true, game_list=['mg_apaisement','mg_volonte'], both covered in match block",
+      "result": "PASS",
+      "covered_in_match": ["mg_apaisement", "mg_volonte"]
+    }
+  ],
+  "bugs_found": 0,
+  "regression_from_previous": false,
+  "note": "select_minigame() and detect_field() fallback paths stable. No softlocks or crashes possible from unknown field input. neutre field fully wired in all three systems: card_system, minigame_system, and minigame_registry."
+}

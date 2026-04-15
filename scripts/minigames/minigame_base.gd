@@ -80,14 +80,6 @@ func _complete(success: bool, score: int) -> void:
 
 	var result := {"success": success, "score": score, "time_ms": elapsed}
 
-	# SFX
-	var sfx := get_node_or_null("/root/SFXManager")
-	if sfx and sfx.has_method("play"):
-		if success:
-			sfx.play("minigame_success")
-		else:
-			sfx.play("minigame_fail")
-
 	game_completed.emit(result)
 
 	# Auto-remove after short delay

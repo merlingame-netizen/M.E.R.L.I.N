@@ -1,0 +1,143 @@
+{
+  "report_id": "S2-CONTEXT-REGRESSION-TEST_2026-04-13",
+  "task_id": "S2-CONTEXT-REGRESSION-TEST",
+  "agent": "bug_hunter",
+  "timestamp": "2026-04-13T14:19:16Z",
+  "cycle_type": "test",
+  "method": "static_analysis",
+  "verdict": "PARTIAL_PASS",
+  "summary": "2/5 specific checks FAIL (pending fixes not yet applied). 6/8 invariants PASS. 0 regressions. 1 LOW secondary finding.",
+
+  "checks": [
+    {
+      "id": "CHK-1",
+      "description": "build_full_context() no longer emits 'gauges' key",
+      "file": "addons/merlin_ai/context_builder.gd",
+      "verdict": "PASS",
+      "evidence": "build_full_context() return dict contains: tour, ogham_actif, oghams_decouverts, factions, heure_normalisee, life_essence, day, cards_played, active_promises, active_tags, player, patterns, trust, narrative, session, _hidden. No 'gauges' key present. S2-CONTEXT-GAUGES-CLEANUP confirmed applied.",
+      "severity": null
+    },
+    {
+      "id": "CHK-2",
+      "description": "get_critical_gauges() removed — no callers remain in non-test files",
+      "file": "addons/merlin_ai/context_builder.gd",
+      "verdict": "PASS",
+      "evidence": "grep -rn 'get_critical_gauges' scripts/ addons/ → no results. Function fully removed. No dead callers detected in any production file.",
+      "severity": null
+    },
+    {
+      "id": "CHK-3",
+      "description": "BUG-SIGNAL-DELTA-FIX applied: reputation_changed emits clamped actual_delta (new_val - old_val), not raw rep_delta",
+      "file": "scripts/merlin/merlin_store.gd",
+      "line": 598,
+      "verdict": "FAIL",
+      "severity": "LOW",
+      "evidence": "Line 598: reputation_changed.emit(faction, new_val, float(rep_delta)) — emits raw rep_delta (e.g. +20) not actual_delta. BUG-SIGNAL-DELTA-FIX task is still pending (priority 6). At faction_rep=95 + rep_delta=+20: emitted delta=+20 but actual change=+5 (capped at 100). Signal consumers receive inflated delta.",
+      "fix_required": "Before emit: compute old_rep from pre-apply state. actual_delta = new_val - old_rep. Emit actual_delta instead of rep_delta.",
+      "related_task": "BUG-SIGNAL-DELTA-FIX"
+    },
+    {
+      "id": "CHK-4",
+      "description": "run.day increments per card in resolve_choice() (S2-DAY-TICK-FIX)",
+      "file": "scripts/merlin/store_run.gd",
+      "verdict": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Line 19: run['day'] = 1 (initialization). resolve_choice() function (line 132) has no increment of run['day']. All end-run result dicts (lines 208, 227, 244) use run.get('day', 1) which always returns 1. S2-DAY-TICK-FIX task still pending (priority 8). LLM context always shows 'Jour 1' regardless of run length.",
+      "fix_required": "S2-DAY-TICK-FIX: add CARDS_PER_DAY constant + increment run['day'] at resolve_choice() entry.",
+      "related_task": "S2-DAY-TICK-FIX"
+    },
+    {
+      "id": "CHK-5",
+      "description": "faction_rep routes from meta.faction_rep (not stale run.factions)",
+      "file": "addons/merlin_ai/context_builder.gd",
+      "verdict": "PASS",
+      "evidence": "build_full_context() line ~35: 'factions': meta.get('faction_rep', {...defaults...}). Reads from meta (persistent, updated by effect engine). BUG-FACTIONS-STALE-FIX fully applied.",
+      "severity": null
+    },
+    {
+      "id": "CHK-6",
+      "description": "active_promises unified (no split-brain dual storage)",
+      "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_effect_engine.gd"],
+      "verdict": "PASS",
+      "evidence": "store_run.gd line 22: run['active_promises'] = []. Lines 307, 321: check_promise_deadlines reads/writes active_promises. merlin_effect_engine.gd lines 245, 261, 271, 288, 295, 299, 307, 311: all use active_promises. No 'promises' stale key found. BUG-PROMISE-SYSTEM-FIX confirmed applied.",
+      "severity": null
+    },
+    {
+      "id": "CHK-7",
+      "description": "drain_per_card = 0 (director decision q-20260412-001)",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "verdict": "PASS",
+      "evidence": "Line 74: const LIFE_ESSENCE_DRAIN_PER_CARD := 0. EFFECT_CAPS['drain_per_card'] = 0 (line 356). No life drain occurs per card.",
+      "severity": null
+    },
+    {
+      "id": "CHK-8",
+      "description": "No pacing recovery (+5HP auto-recovery) in resolve_choice()",
+      "file": "scripts/merlin/store_run.gd",
+      "verdict": "PASS",
+      "evidence": "grep for 'pacing|recovery|life_essence.*+|life.*recover|+5' in resolve_choice → no results. Director q-20260412-005 fully applied. Survival is choice-driven only.",
+      "severity": null
+    }
+  ],
+
+  "secondary_findings": [
+    {
+      "id": "SF-001",
+      "severity": "LOW",
+      "file": "scripts/merlin/merlin_store.gd",
+      "lines": [23, 219, 432, 434, 662, 663, 666],
+      "description": "Vestigial gauges_changed signal + StoreMap.update_gauges still present in merlin_store.gd. Signal declared at line 23, emitted at line 434 via StoreMap.update_gauges. get_map_gauges() reads map_progression.gauges at lines 662-666. This is map/progression gauge system (separate from card-cycle context gauges). Not a regression — no cross-context impact. Clean-up optional.",
+      "recommendation": "If MerlinGaugeSystem + StoreMap are otherwise alive, this is benign. If they are dead code, add to S2-DEAD-FILES scope."
+    }
+  ],
+
+  "regression_checks": [
+    {
+      "id": "REG-001",
+      "description": "cards_played single canonical increment",
+      "verdict": "PASS",
+      "note": "S4-SMOKE-TEST PAT-023 confirmed. No new code touched this path."
+    },
+    {
+      "id": "REG-002",
+      "description": "BUG-FACTIONS-STALE-FIX: all 5 AI subsystems read meta.faction_rep",
+      "verdict": "PASS",
+      "note": "context_builder confirmed meta.faction_rep. S3-FACTION-REGRESSION-TEST covered rag_manager + llm_adapter + omniscient + event_selector. No regressions introduced by GAUGES-CLEANUP."
+    },
+    {
+      "id": "REG-003",
+      "description": "active_promises unified (no split-brain)",
+      "verdict": "PASS",
+      "note": "CHK-6 confirms. No new code touched effect_engine or store_run promises."
+    },
+    {
+      "id": "REG-004",
+      "description": "drain=0 + no pacing recovery",
+      "verdict": "PASS",
+      "note": "CHK-7 + CHK-8 confirm. No regressions in merlin_constants or store_run."
+    },
+    {
+      "id": "REG-005",
+      "description": "get_critical_gauges fully removed — no ParseError risk from dead callers",
+      "verdict": "PASS",
+      "note": "CHK-2 confirms. test_context_builder.gd also cleaned (PAT-026 applied in cycle 15)."
+    }
+  ],
+
+  "invariants_summary": {
+    "total": 8,
+    "pass": 6,
+    "fail": 2,
+    "fail_list": ["CHK-3 (BUG-SIGNAL-DELTA-FIX pending)", "CHK-4 (S2-DAY-TICK-FIX pending)"],
+    "pass_list": ["CHK-1", "CHK-2", "CHK-5", "CHK-6", "CHK-7", "CHK-8"]
+  },
+
+  "open_bugs_tracked": [
+    {"id": "BUG-SIGNAL-DELTA-FIX", "priority": 6, "status": "pending", "confirmed": true},
+    {"id": "S2-DAY-TICK-FIX", "priority": 8, "status": "pending", "confirmed": true}
+  ],
+
+  "new_bugs_created": [],
+
+  "verdict_rationale": "PARTIAL_PASS: S2-CONTEXT-GAUGES-CLEANUP is fully verified (CHK-1 + CHK-2 PASS). All 5 prior regressions confirmed intact. The 2 failing checks (CHK-3, CHK-4) are not regressions — they are known pending tasks (BUG-SIGNAL-DELTA-FIX P6, S2-DAY-TICK-FIX P8) not yet executed. No new bugs introduced. System is stable for next dev cycle to fix CHK-3 and CHK-4."
+}

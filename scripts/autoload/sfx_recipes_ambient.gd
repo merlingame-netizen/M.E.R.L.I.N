@@ -635,6 +635,125 @@ func gen_amb_villages() -> AudioStreamWAV:
 	return SFXHelpers.make_stream(buf)
 
 
+# =============================================================================
+# GAME FLOW SOUNDS — Card, encounter, outcome feedback
+# =============================================================================
+
+func gen_card_reveal() -> AudioStreamWAV:
+	## Card flip reveal — sharp mid transient + crystal shimmer tail
+	var dur := 0.30
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		# Sharp transient: narrow pulse at 2400Hz, fast exponential decay
+		var click := SFXHelpers.pulse(2400.0, t, 0.15) * 0.14 * exp(-t * 80.0)
+		click += (_rng.randf() * 2.0 - 1.0) * 0.05 * exp(-t * 120.0)
+		# Crystal shimmer tail: high harmonics D6(1175) + A6(1760), slower decay
+		var shimmer := sin(TAU * 1175.0 * t) * 0.04 * exp(-t * 12.0)
+		shimmer += sin(TAU * 1760.0 * t) * 0.025 * exp(-t * 18.0)
+		SFXHelpers.write_sample(buf, i, click + shimmer)
+	return SFXHelpers.make_stream(buf)
+
+
+func gen_confirm() -> AudioStreamWAV:
+	## Positive confirmation — D4+A4 triangle chime (Celtic perfect 5th)
+	var dur := 0.40
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		var env := sin(t / dur * PI) * exp(-t * 3.0)
+		var val := SFXHelpers.tri(294.0, t) * 0.09 * env   # D4 root
+		val += SFXHelpers.tri(440.0, t) * 0.07 * env       # A4 perfect 5th
+		val += SFXHelpers.tri(587.0, t) * 0.04 * env       # D5 octave shimmer
+		SFXHelpers.write_sample(buf, i, val)
+	return SFXHelpers.make_stream(buf)
+
+
+func gen_encounter() -> AudioStreamWAV:
+	## Encounter tension swell — D minor chord slow attack, tremolo unease
+	var dur := 0.60
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		var attack := minf(t / 0.20, 1.0)
+		var decay := 1.0 - maxf(0.0, (t - 0.40) / 0.20)
+		var env := attack * decay
+		# D minor: D3(147) + F3(174.6) + A3(220)
+		var val := SFXHelpers.sq(147.0, t) * 0.07 * env
+		val += SFXHelpers.tri(174.6, t) * 0.06 * env
+		val += SFXHelpers.tri(220.0, t) * 0.05 * env
+		# Slow tremolo at 5Hz for unease
+		val *= 0.75 + 0.25 * sin(TAU * 5.0 * t)
+		SFXHelpers.write_sample(buf, i, val)
+	return SFXHelpers.make_stream(buf)
+
+
+func gen_success() -> AudioStreamWAV:
+	## Encounter success — D Dorian ascending arp: D4 G4 D5 (bright triangle)
+	var dur := 0.45
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		var env := exp(-t * 2.5) * sin(minf(t / 0.01, 1.0) * PI * 0.5)
+		# Three staggered notes — D4(294) G4(392) D5(587)
+		var n1 := SFXHelpers.tri(294.0, t) * 0.10 * clampf(1.0 - abs(t - 0.00) * 14.0, 0.0, 1.0)
+		var n2 := SFXHelpers.tri(392.0, t) * 0.11 * clampf(1.0 - abs(t - 0.10) * 12.0, 0.0, 1.0)
+		var n3 := SFXHelpers.tri(587.0, t) * 0.13 * clampf(1.0 - abs(t - 0.22) * 9.0, 0.0, 1.0)
+		SFXHelpers.write_sample(buf, i, (n1 + n2 + n3) * env)
+	return SFXHelpers.make_stream(buf)
+
+
+func gen_fail() -> AudioStreamWAV:
+	## Encounter fail — descending pitch buzz (350→100Hz) + noise burst
+	var dur := 0.30
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		var env := exp(-t * 7.0) * sin(minf(t / 0.01, 1.0) * PI * 0.5)
+		var freq := lerpf(350.0, 100.0, t / dur)
+		var val := SFXHelpers.sq(freq, t) * 0.12 * env
+		val += (_rng.randf() * 2.0 - 1.0) * 0.06 * exp(-t * 40.0)
+		SFXHelpers.write_sample(buf, i, val)
+	return SFXHelpers.make_stream(buf)
+
+
+func gen_neutral() -> AudioStreamWAV:
+	## Neutral notification — clean A5 sine beep, short bell envelope
+	var dur := 0.12
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		var env := sin(t / dur * PI) * 0.5
+		var val := sin(TAU * 880.0 * t) * 0.12 * env
+		SFXHelpers.write_sample(buf, i, val)
+	return SFXHelpers.make_stream(buf)
+
+
+func gen_danger() -> AudioStreamWAV:
+	## Danger alarm — low A2+Bb2 dissonant pair pulsed at 4Hz (urgency)
+	var dur := 0.80
+	var buf := SFXHelpers.alloc_buffer(dur)
+	var count := SFXHelpers.sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SFXHelpers.SAMPLE_RATE
+		var env := sin(t / dur * PI) * 0.8
+		# 4Hz pulse rhythm (alarm beat)
+		var pulse_lfo := maxf(0.0, sin(TAU * 4.0 * t))
+		# A2(110) + Bb2(116.5) dissonant minor 2nd
+		var val := SFXHelpers.sq(110.0, t) * 0.10 * env * pulse_lfo
+		val += SFXHelpers.sq(116.5, t) * 0.07 * env * pulse_lfo
+		# Sub rumble
+		val += sin(TAU * 55.0 * t) * 0.04 * env
+		SFXHelpers.write_sample(buf, i, val)
+	return SFXHelpers.make_stream(buf)
+
+
 func gen_biome_dissolve() -> AudioStreamWAV:
 	## T.4 Dissolution burst — noise burst decaying + 5 random pixel plucks (D Dorian)
 	var dur := 0.45

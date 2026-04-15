@@ -124,6 +124,12 @@ func _get_volume_for(sound_name: String) -> float:
 	if sound_name in ["minigame_start", "minigame_success", "minigame_fail",
 			"biome_reveal", "partir_fanfare"]:
 		return VOLUME.transition
+	if sound_name in ["card_reveal", "confirm", "neutral"]:
+		return VOLUME.ui
+	if sound_name in ["encounter", "danger"]:
+		return VOLUME.magic
+	if sound_name in ["success", "fail"]:
+		return VOLUME.transition
 	if sound_name in ["camera_focus", "perk_confirm"]:
 		return VOLUME.magic
 	return VOLUME.ui
@@ -152,6 +158,7 @@ func _generate_all_sounds() -> void:
 		"biome_dissolve",
 		"amb_broceliande", "amb_landes", "amb_cotes", "amb_cercles",
 		"amb_marais", "amb_collines", "amb_villages",
+		"card_reveal", "confirm", "encounter", "success", "fail", "neutral", "danger",
 	]
 	for snd_name in names:
 		var method_name: String = "gen_" + snd_name

@@ -153,7 +153,7 @@ func try_sequel_card() -> Dictionary:
 	for j in range(3):
 		var opt: Dictionary = {
 			"direction": ["left", "center", "right"][j],
-			"label": labels[j] if j < labels.size() else "Choix %d" % (j + 1),
+			"label": labels[j] if j < labels.size() else I18nRegistry.tf("ui.llm.choice_fallback", [j + 1]),
 			"effects": sequel_effects[j],
 		}
 		options.append(opt)
@@ -164,8 +164,8 @@ func try_sequel_card() -> Dictionary:
 		"speaker": "Merlin",
 		"type": "narrative",
 		"options": options,
-		"result_success": "Les echos du passe resonent en ta faveur.",
-		"result_failure": "Les consequences de tes choix passés te rattrapent.",
+		"result_success": I18nRegistry.t("ui.llm.sequel_success"),
+		"result_failure": I18nRegistry.t("ui.llm.sequel_failure"),
 		"tags": ["sequel", "llm_generated"],
 		"source_prerun": chosen.get("thread_id", ""),
 	}

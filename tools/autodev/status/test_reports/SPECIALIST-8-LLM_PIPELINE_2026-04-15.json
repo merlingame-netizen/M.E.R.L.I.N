@@ -1,0 +1,110 @@
+{
+  "report_id": "SPECIALIST-8-LLM_PIPELINE_2026-04-15",
+  "specialist": 8,
+  "role": "LLM_PIPELINE_AUDITOR",
+  "cycle_type": "test",
+  "timestamp": "2026-04-15T00:00:00Z",
+  "task_executed": "T-E2E-INTEGRATION-REGRESSION",
+
+  "integration_test": {
+    "task_id": "T-E2E-INTEGRATION-REGRESSION",
+    "result": "PASS",
+    "checks": [
+      {"id": "CHK-1", "result": "PASS", "detail": "GameManager autoload in project.godot line 20"},
+      {"id": "CHK-2", "result": "PASS", "detail": "MerlinAI autoload in project.godot line 21"},
+      {"id": "CHK-3", "result": "PASS", "detail": "game_manager.gd:673-677 creates MerlinStore via call_deferred('add_child', store)"},
+      {"id": "CHK-4", "result": "PASS_WITH_CAVEAT", "detail": "merlin_game_controller.gd:112 store=get_node_or_null('/root/MerlinStore'). Code correct. Race window exists but benign (MerlinGame loads many frames after autoloads). Already tracked in E2E-MERLINSTORE-DEFERRED-RACE-CHECK (P33)."},
+      {"id": "CHK-5", "result": "PASS", "detail": "merlin_game_controller.gd:122 merlin_ai=get_node_or_null('/root/MerlinAI') with push_warning on null"},
+      {"id": "CHK-6", "result": "PASS", "detail": "SFXManager line 28, I18nRegistry line 27, PixelTransition line 30 all in project.godot autoloads"}
+    ],
+    "additional_finding": "All 19 autoload script files verified present on disk (PASS 19/19)"
+  },
+
+  "llm_pipeline_audit": {
+    "files_audited": [
+      "addons/merlin_ai/ollama_backend.gd",
+      "addons/merlin_ai/merlin_ai.gd",
+      "addons/merlin_ai/rag_manager.gd",
+      "addons/merlin_ai/context_builder.gd",
+      "scripts/merlin/merlin_llm_adapter.gd",
+      "scripts/merlin/llm_adapter_json_repair.gd",
+      "scripts/merlin/llm_adapter_validation.gd",
+      "data/ai/config/scenario_prompts.json"
+    ],
+    "total_checks": 14,
+    "pass": 7,
+    "fail_high": 2,
+    "fail_medium": 2,
+    "fail_low": 1,
+    "warn": 2,
+    "findings": [
+      {
+        "id": "LLM-01",
+        "severity": "FAIL_HIGH",
+        "title": "Grammar constraint is a no-op for OllamaBackend",
+        "detail": "ollama_backend.gd:418-428 set_grammar() is explicitly a no-op ('Ollama ne supporte pas GBNF grammar'). merlin_ai.gd:1186-1194 calls target_llm.set_grammar() for GM-routed calls (when params.grammar is set), but this is silently ignored. SmartEffects calculation and all structured JSON generation run WITHOUT grammar constraints. Game Master JSON output is entirely unconstrained — higher risk of malformed effects.",
+        "files": ["addons/merlin_ai/ollama_backend.gd:418-428", "addons/merlin_ai/merlin_ai.gd:1186-1194"],
+        "task": "LLM-GRAMMAR-NOOP"
+      },
+      {
+        "id": "LLM-02",
+        "severity": "FAIL_HIGH",
+        "title": "RAG context hard-truncated to 200 chars despite 800-token budget",
+        "detail": "merlin_llm_adapter.gd:307: `user_prompt += ' Contexte: %s.' % rag_ctx.substr(0, 200)`. RAGManager.get_prioritized_context() returns up to BRAIN_BUDGETS['narrator']=800 tokens (3200 chars). Only 200 chars (~50 tokens) reach the LLM prompt. Narrative continuity and cross-run memory severely degraded. Additionally, the call at line 305 passes no brain_role ('narrator'), falling back to 400-token default instead of 800.",
+        "files": ["scripts/merlin/merlin_llm_adapter.gd:305-307"],
+        "task": "LLM-RAG-CONTEXT-ROLE"
+      },
+      {
+        "id": "LLM-03",
+        "severity": "FAIL_MEDIUM",
+        "title": "context_builder missing named time_of_day and season strings",
+        "detail": "context_builder.gd:build_full_context() includes heure_normalisee (float 0.0-1.0) but no human-readable time_of_day (matin/midi/soir/nuit) or season (printemps/ete/automne/hiver). Director q-20260412-002: 'L'ambiance doit changer en fonction de saison et heure de journée'. The LLM cannot interpolate the float to narrative-quality descriptions. VFX-DAYNIGHT-RUNSTATE-EXPOSE (P26) only handles the run_state exposure side, not the context_builder.",
+        "files": ["addons/merlin_ai/context_builder.gd:30-71"],
+        "task": "LLM-CONTEXT-TIME-NAMED"
+      },
+      {
+        "id": "LLM-04",
+        "severity": "FAIL_MEDIUM",
+        "title": "generate_card() returns empty card with no static fallback",
+        "detail": "merlin_llm_adapter.gd:274: on all failure paths returns {ok:false, card:{}, error:...}. The caller (merlin_card_system.gd) receives an empty card dict — if it doesn't handle this gracefully, the player sees a blank/broken card. The adapter itself has NARRATIVE_FALLBACKS for text but no fallback card construction for the full card struct.",
+        "files": ["scripts/merlin/merlin_llm_adapter.gd:263-274"],
+        "task": "LLM-GENERATE-CARD-FALLBACK"
+      },
+      {
+        "id": "LLM-05",
+        "severity": "FAIL_LOW",
+        "title": "No JSON/text quality tracking in adapter",
+        "detail": "studio_learnings.json stores llm_quality.json_success_rate but MerlinLlmAdapter has no success/failure counters. No way to detect LLM quality degradation across a session. Impossible to track when repair strategies kick in.",
+        "files": ["scripts/merlin/merlin_llm_adapter.gd"],
+        "task": "LLM-QUALITY-STATS-TRACK"
+      },
+      {
+        "id": "LLM-06",
+        "severity": "WARN",
+        "title": "get_prioritized_context called without brain_role",
+        "detail": "merlin_llm_adapter.gd:305 calls rag_mgr.get_prioritized_context(context) without brain_role='narrator'. RAGManager.get_prioritized_context signature is (game_state, brain_role='') — with no role, budget defaults to 400 tokens. Narrator budget is 800 tokens. Missed opportunity for richer context.",
+        "files": ["scripts/merlin/merlin_llm_adapter.gd:305", "addons/merlin_ai/rag_manager.gd:113,191-193"]
+      },
+      {
+        "id": "LLM-07",
+        "severity": "WARN",
+        "title": "No player-facing feedback on Ollama warmup failure",
+        "detail": "If start_warmup() fails (Ollama not running, model not loaded), is_ready stays false. MerlinLlmAdapter.is_llm_ready() returns false — caller gets empty error response. No in-game UI notification. Player experiences silent LLM failure with no indication.",
+        "files": ["addons/merlin_ai/merlin_ai.gd:173-186"]
+      }
+    ],
+    "passing_checks": [
+      "Ollama connection: check_available() + check_model_available() properly implemented with timeout",
+      "Think-tag stripping: _strip_thinking_tags() correctly handles unclosed <think> tags",
+      "Model cascade: QUAD->TRIPLE->DUAL->SINGLE+->SINGLE->NANO fallback chain implemented",
+      "JSON repair: 4-strategy pipeline (extract->fix->aggressive->regex) in llm_adapter_json_repair.gd",
+      "Brain routing: narrator for creative, gamemaster for grammar-constrained calls",
+      "Scenario prompts: 21 templates loaded from data/ai/config/scenario_prompts.json",
+      "Response cache: 200-entry LRU cache prevents redundant LLM calls"
+    ]
+  },
+
+  "new_tasks_generated": 6,
+  "patterns_added": ["PAT-094", "PAT-095"],
+  "summary": "TEST[SPEC-8]: T-E2E-INTEGRATION-REGRESSION ALL 6 CHK PASS. All 19 autoload files exist on disk. MerlinStore deferred race window benign (already tracked P33). LLM PIPELINE AUDIT: 14 checks (7 PASS, 2 FAIL_HIGH, 2 FAIL_MEDIUM, 1 FAIL_LOW, 2 WARN). FAIL_HIGH(2): (1) OllamaBackend.set_grammar() no-op => GM JSON unconstrained (LLM-GRAMMAR-NOOP P14). (2) RAG context truncated to 200 chars despite 800-token narrator budget (LLM-RAG-CONTEXT-ROLE P19). FAIL_MEDIUM(2): context_builder missing named time_of_day/season (LLM-CONTEXT-TIME-NAMED P26-linked), generate_card() no static fallback (LLM-GENERATE-CARD-FALLBACK P22-level). 6 new LLM tasks added (P14-P72)."
+}

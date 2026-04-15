@@ -6,8 +6,17 @@ import { ActiveMissions } from './components/ActiveMissions';
 import { AlertFeed } from './components/AlertFeed';
 import { MetricsPanel } from './components/MetricsPanel';
 import { FeatureQueue } from './components/FeatureQueue';
+import { CompletedTasks } from './components/CompletedTasks';
+import { ExecutionTimeline } from './components/ExecutionTimeline';
 import { GamePreview } from './components/GamePreview';
 import { HumanFeedback } from './components/HumanFeedback';
+import { FileUpload } from './components/FileUpload';
+import { DirectorInstructions } from './components/DirectorInstructions';
+import { SceneSelector } from './components/SceneSelector';
+import { DevCycleSummary } from './components/DevCycleSummary';
+import { SpecialistRotation } from './components/SpecialistRotation';
+import { VelocityChart } from './components/VelocityChart';
+import { StudioInsights } from './components/StudioInsights';
 import './styles/scifi-theme.css';
 
 export function App() {
@@ -19,61 +28,82 @@ export function App() {
       <div className="crt-scanlines" aria-hidden="true" />
 
       <div className="dashboard-layout">
-        {/* Header */}
+        {/* 1. Header */}
         <div className="dashboard-layout__full-row">
           <CommandHeader />
         </div>
 
-        {/* Metrics — high priority on mobile */}
+        {/* 2. Metrics — KPIs at a glance + next cycle countdown */}
         <div className="dashboard-layout__full-row">
           <MetricsPanel />
         </div>
 
-        {/* Game Preview — full width, prominent on mobile with 16:9 aspect */}
-        <div className="dashboard-layout__full-row dashboard-layout__game-preview">
-          <GamePreview />
-        </div>
-
-        {/* Director's Inbox — Human Feedback */}
-        <div className="dashboard-layout__full-row">
-          <HumanFeedback />
-        </div>
-
-        {/* Timeline */}
+        {/* 3. Pipeline state — where are we in the dev cycle? */}
         <div className="dashboard-layout__full-row">
           <StateTimeline />
         </div>
 
-        {/* Active Missions — full width before columns */}
-        <div className="dashboard-layout__full-row dashboard-layout__missions-mobile">
+        {/* 4. Execution Schedule — WHEN each task will be processed */}
+        <div className="dashboard-layout__full-row">
+          <ExecutionTimeline />
+        </div>
+
+        {/* 5. Task Board (Kanban) — admin CRUD on tasks */}
+        <div className="dashboard-layout__full-row">
+          <FeatureQueue />
+        </div>
+
+        {/* 6. Completed Tasks — detailed history */}
+        <div className="dashboard-layout__full-row">
+          <CompletedTasks />
+        </div>
+
+        {/* 7. Velocity + Dev Cycle — throughput metrics */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <VelocityChart />
+          <DevCycleSummary />
+        </div>
+
+        {/* 8. Director's Inbox — Human Feedback */}
+        <div className="dashboard-layout__full-row">
+          <HumanFeedback />
+        </div>
+
+        {/* 9. Director Tools: Queue Task + Asset Upload */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <DirectorInstructions />
+          <FileUpload />
+        </div>
+
+        {/* 10. Specialist Rotation */}
+        <div className="dashboard-layout__full-row">
+          <SpecialistRotation />
+        </div>
+
+        {/* 11. Recent git commits */}
+        <div className="dashboard-layout__full-row">
           <ActiveMissions />
         </div>
 
-        {/* 3-column area: stacks on mobile, splits on tablet/desktop */}
-        <div className="dashboard-layout__columns">
-          {/* Left column: Feature Queue + Agent Fleet */}
-          <div className="dashboard-layout__col dashboard-layout__col--left">
-            <div style={{ flex: '1 1 50%', overflow: 'hidden', minHeight: '200px' }}>
-              <FeatureQueue />
-            </div>
-            <div style={{ flex: '1 1 50%', overflow: 'hidden', minHeight: '200px' }}>
-              <AgentFleet />
-            </div>
-          </div>
+        {/* 12. Game Preview */}
+        <div className="dashboard-layout__full-row dashboard-layout__game-preview">
+          <GamePreview />
+        </div>
 
-          {/* Center column: Active Missions (desktop only, hidden on mobile) + Game Preview (desktop) */}
-          <div className="dashboard-layout__col dashboard-layout__col--center dashboard-layout__desktop-only">
-            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
-              <ActiveMissions />
-            </div>
-          </div>
+        {/* 13. Scene Selector */}
+        <div className="dashboard-layout__full-row">
+          <SceneSelector />
+        </div>
 
-          {/* Right column: Alert Feed */}
-          <div className="dashboard-layout__col dashboard-layout__col--right">
-            <div style={{ flex: 1, overflow: 'hidden', minHeight: '200px' }}>
-              <AlertFeed />
-            </div>
-          </div>
+        {/* 14. Studio Insights */}
+        <div className="dashboard-layout__full-row">
+          <StudioInsights />
+        </div>
+
+        {/* 15. System details: Agents + Logs */}
+        <div className="dashboard-layout__full-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <AgentFleet />
+          <AlertFeed />
         </div>
       </div>
     </div>

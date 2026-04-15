@@ -1,0 +1,143 @@
+{
+  "report_id": "SPEC-0-SCENE-FLOW-2026-04-14",
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-14T17:00:00Z",
+  "cycle_type": "test",
+  "audit_scope": "Full player journey: IntroCeltOS→Menu→Quiz→Rencontre→Hub→Biome→Run3D→Cards→Minigames→End→Hub",
+  "checks": [
+    {
+      "id": "CHK-01",
+      "transition": "IntroCeltOS → Menu3DPC",
+      "file": "scripts/IntroCeltOS.gd:516",
+      "method": "PixelTransition.transition_to('res://scenes/Menu3DPC.tscn')",
+      "status": "PASS",
+      "notes": "Target scene exists at scenes/Menu3DPC.tscn"
+    },
+    {
+      "id": "CHK-02",
+      "transition": "Menu3DPC NOUVEAU JEU → ParchmentPreRun",
+      "file": "scripts/menu_3d_pc.gd:1333-1337",
+      "method": "_glitch_transition('res://scenes/ParchmentPreRun.tscn')",
+      "status": "PASS",
+      "notes": "New game correctly routes to ParchmentPreRun.tscn"
+    },
+    {
+      "id": "CHK-03",
+      "transition": "Menu3DPC CONTINUER → HubAntre",
+      "file": "scripts/menu_3d_pc.gd:1326",
+      "method": "_glitch_transition('res://scenes/HubAntre.tscn')",
+      "status": "PASS",
+      "notes": "Continue save correctly routes to HubAntre.tscn"
+    },
+    {
+      "id": "CHK-04",
+      "transition": "IntroPersonalityQuiz → SceneRencontreMerlin",
+      "file": "scripts/IntroPersonalityQuiz.gd:649",
+      "method": "PixelTransition.transition_to(NEXT_SCENE)",
+      "status": "FAIL_HIGH",
+      "notes": "IntroPersonalityQuiz.tscn is UNREACHABLE from normal gameplay. Menu3DPC new game goes to ParchmentPreRun, not IntroPersonalityQuiz. Quiz only accessible via debug SceneSelector dropdown. Bible: IntroCeltOS→Menu→Quiz→Rencontre→Hub."
+    },
+    {
+      "id": "CHK-05",
+      "transition": "SceneRencontreMerlin → Hub/Biome/Tutorial",
+      "file": "scripts/SceneRencontreMerlin.gd:10-12",
+      "method": "PixelTransition.transition_to(_next_scene)",
+      "status": "WARN",
+      "notes": "SCENE_HUB, SCENE_BIOME, SCENE_TUTORIAL all = 'res://scenes/BroceliandeForest3D.tscn'. Conditional branching at lines 628-656 has no effect — all paths lead to BroceliandeForest3D regardless. Comments say 'Was HubAntre (archived)', 'Was TransitionBiome (archived)'."
+    },
+    {
+      "id": "CHK-06",
+      "transition": "HubAntre → TransitionBiome",
+      "file": "scripts/HubAntre.gd:16",
+      "method": "PixelTransition.transition_to(SCENE_TRANSITION)",
+      "status": "PASS",
+      "notes": "SCENE_TRANSITION = 'res://scenes/TransitionBiome.tscn'. Scene exists. BiomeRadial wired correctly."
+    },
+    {
+      "id": "CHK-07",
+      "transition": "TransitionBiome → BroceliandeForest3D",
+      "file": "scripts/TransitionBiome.gd:17",
+      "method": "NEXT_SCENE = 'res://scenes/BroceliandeForest3D.tscn'",
+      "status": "PASS",
+      "notes": "After biome prep + card generation, transitions to forest 3D walk. Scene exists."
+    },
+    {
+      "id": "CHK-08",
+      "transition": "BroceliandeForest3D → MerlinGame (card pause)",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:9",
+      "method": "GAME_SCENE = 'res://scenes/MerlinGame.tscn'",
+      "status": "PASS",
+      "notes": "Forest triggers card overlay via MerlinGame.tscn. Both scenes exist."
+    },
+    {
+      "id": "CHK-09",
+      "transition": "MerlinGame → BroceliandeForest3D (return)",
+      "file": "scripts/ui/merlin_game_controller.gd:7",
+      "method": "PixelTransition.transition_to(SCENE_FOREST)",
+      "status": "PASS",
+      "notes": "SCENE_FOREST = 'res://scenes/BroceliandeForest3D.tscn'. Correct post-card return."
+    },
+    {
+      "id": "CHK-10",
+      "transition": "BroceliandeForest3D → HubAntre (run end)",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1214",
+      "method": "PixelTransition.transition_to('res://scenes/HubAntre.tscn')",
+      "status": "PASS",
+      "notes": "End-of-run button correctly returns to HubAntre."
+    },
+    {
+      "id": "CHK-11",
+      "transition": "EndRunScreen → HubAntre",
+      "file": "scripts/ui/end_run_screen.gd:3-4",
+      "method": "PixelTransition.transition_to(GAME_SCENE)",
+      "status": "PASS",
+      "notes": "GAME_SCENE = MENU_SCENE_FALLBACK = 'res://scenes/HubAntre.tscn'. Correct."
+    },
+    {
+      "id": "CHK-12",
+      "transition": "ParchmentPreRun → BroceliandeForest3D (new game, no hub)",
+      "file": "scripts/ui/parchment_pre_run.gd:7",
+      "method": "PixelTransition.transition_to(SCENE_FOREST)",
+      "status": "WARN",
+      "notes": "New game flow skips HubAntre biome+Ogham selection entirely. ParchmentPreRun goes directly to forest. Bible: Hub 2D→[Choix biome+Ogham]→Run 3D. First-run players cannot select biome or starter Oghams."
+    },
+    {
+      "id": "CHK-13",
+      "transition": "Run3D.tscn (dead parallel path)",
+      "file": "scripts/run/run_3d_controller.gd",
+      "method": "N/A — no scene transitions in run_3d_controller",
+      "status": "KNOWN_DEAD",
+      "notes": "Confirmed dead path from SPEC-14. Run3D.tscn+run_3d_controller.gd exist but game_flow_controller (that wires them) is not autoloaded. Active run path is BroceliandeForest3D.tscn."
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "pass": 8,
+    "fail_high": 1,
+    "warn": 2,
+    "known_dead": 1,
+    "false_positive": 1
+  },
+  "critical_findings": [
+    {
+      "id": "FLOW-QUIZ-UNREACHABLE",
+      "severity": "HIGH",
+      "description": "IntroPersonalityQuiz.tscn and SceneRencontreMerlin.tscn are unreachable from normal gameplay. New game flow: Menu3DPC._start_new_game() goes to ParchmentPreRun, not IntroPersonalityQuiz. Bible mandates: IntroCeltOS→Menu→Quiz→Rencontre→Hub 2D.",
+      "files": ["scripts/menu_3d_pc.gd:1333-1337", "scripts/IntroPersonalityQuiz.gd"]
+    },
+    {
+      "id": "FLOW-RENCONTRE-CONSTANTS-MERGED",
+      "severity": "MEDIUM",
+      "description": "SceneRencontreMerlin has 3 scene constants (SCENE_HUB, SCENE_BIOME, SCENE_TUTORIAL) all = BroceliandeForest3D. Branching logic is dead code.",
+      "files": ["scripts/SceneRencontreMerlin.gd:10-12"]
+    },
+    {
+      "id": "FLOW-NEW-GAME-SKIPS-HUB",
+      "severity": "MEDIUM",
+      "description": "New game (ParchmentPreRun→Forest) bypasses HubAntre, so biome selection and starter Ogham selection don't happen on first run.",
+      "files": ["scripts/ui/parchment_pre_run.gd:7", "scripts/menu_3d_pc.gd:1337"]
+    }
+  ],
+  "new_tasks_generated": 6
+}

@@ -1,0 +1,124 @@
+{
+  "specialist": 5,
+  "role": "SHADER_VFX_AUDITOR",
+  "cycle_type": "test",
+  "timestamp": "2026-04-15T07:00:00Z",
+  "summary": "Shader & VFX audit: 23 shaders inventoried, 8 findings (2 FAIL_HIGH, 3 FAIL_MEDIUM, 3 FAIL_LOW). Critical: grass_wind_sway.gdshader MISSING (blocks BrocGrassWind), screen_vfx.gdshader not attached to shader material (all screen effects broken except shake). Implemented: created grass_wind_sway.gdshader (PS1 Celtic aesthetic). Generated 5 new tasks.",
+  "audit_scope": {
+    "shaders_found": 23,
+    "shaders_with_uid": 15,
+    "shaders_referenced": 12,
+    "shaders_missing": 1,
+    "shaders_unused": 3
+  },
+  "checklist": {
+    "CHK-1": "List all .gdshader files — PASS: 23 shaders in shaders/ + resources/shaders/",
+    "CHK-2": "grass_wind_sway.gdshader exists — FAIL_HIGH: file MISSING, referenced in broc_grass_wind.gd:18",
+    "CHK-3": "screen_vfx.gdshader attached in BrocScreenVfx — FAIL_HIGH: broc_screen_vfx.gd:46 comment says shader removed, _shader_mat never set -> all flash/vignette/glitch/desaturate effects broken (null ref)",
+    "CHK-4": "seasonal_particles.gdshader loaded — PASS: broc_season.gd:79-80",
+    "CHK-5": "fog_dissolve.gdshader loaded — PASS: broc_atmosphere.gd:106",
+    "CHK-6": "crt_terminal.gdshader loaded — PASS: menu_3d_pc.gd:419",
+    "CHK-7": "crt_static.gdshader loaded — PASS: menu_3d_pc.gd:1121",
+    "CHK-8": "iridescent_border.gdshader loaded — PASS: calendar_tabs.gd:259",
+    "CHK-9": "palette_swap.gdshader loaded — PASS: merlin_visual.gd:621",
+    "CHK-10": "screen_dither.gdshader loaded — PASS: MenuPrincipalMerlin.gd:179",
+    "CHK-11": "retro_screen.gdshader loaded — PASS: broceliande_forest_3d.gd:658",
+    "CHK-12": "card_sky + card_silhouette shaders loaded — PASS: card_scene_compositor.gd:56-57",
+    "CHK-13": "_dispatch_effect private method called externally — FAIL_MEDIUM: broc_narrative_director.gd:71 calls _event_vfx._dispatch_effect() breaking encapsulation convention",
+    "CHK-14": "seasonal_snow.gdshader usage — FAIL_MEDIUM: file exists with UID but not referenced in any active script",
+    "CHK-15": "screen_distortion.gdshader usage — FAIL_MEDIUM: file exists but no active script references it",
+    "CHK-16": "bestiole_squish.gdshader dead code — FAIL_LOW: Bestiole system removed (CLAUDE.md), shader + UID still present",
+    "CHK-17": "ocean_lowpoly.gdshader usage — FAIL_LOW: shader exists, no active script references it",
+    "CHK-18": "world_edge_fog.gdshader usage — PASS: exists, likely assigned to MeshInstance3D in scene; no script reference but no evidence of being broken",
+    "CHK-19": "ps1_material.gdshader quality — PASS: valid spatial shader with vertex snap + UV snap",
+    "CHK-20": "pixelate.gdshader quality — PASS: screen texture post-process with Sobel edge detection",
+    "CHK-21": "color_dither.gdshader quality — PASS: Bayer 4x4 ordered dithering with warm parchment tint",
+    "CHK-22": "crt_terminal.gdshader quality — PASS: comprehensive CRT post-process (curvature, scanlines, dithering, aberration)",
+    "CHK-23": "whisper_glitch.gdshader quality — PASS: subtle SCREEN_TEXTURE glitch overlay for narrative cards"
+  },
+  "findings": [
+    {
+      "id": "SPEC5-FAIL-001",
+      "severity": "FAIL_HIGH",
+      "file": "scripts/broceliande_3d/broc_grass_wind.gd",
+      "line": 18,
+      "message": "grass_wind_sway.gdshader MISSING — BrocGrassWind loads this shader as material_overlay but file does not exist. All grass wind sway VFX absent in forest 3D walk.",
+      "fix": "Created shaders/grass_wind_sway.gdshader (PS1 Celtic sway, vertex quantization, height-weighted displacement)"
+    },
+    {
+      "id": "SPEC5-FAIL-002",
+      "severity": "FAIL_HIGH",
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "line": 46,
+      "message": "screen_vfx.gdshader NOT attached to ShaderMaterial. _shader_mat is never assigned. ALL _set_shader() calls are null-checked no-ops. Effects flash, flash_red, vignette, vignette_red, vignette_gold, glitch, desaturate, hue_green, hue_blue are fully broken. Only 'shake' works (uses viewport.position).",
+      "fix": "Blocked on director q-20260414-007 (BackBufferCopy vs SubViewport approach). Existing task VFX-SCREEN-VFX-REATTACH at P23."
+    },
+    {
+      "id": "SPEC5-WARN-001",
+      "severity": "FAIL_MEDIUM",
+      "file": "scripts/broceliande_3d/broc_narrative_director.gd",
+      "line": 71,
+      "message": "_event_vfx._dispatch_effect() calls private method (underscore prefix) from external class. GDScript convention: _ prefix = private. Should be exposed as dispatch_effect() or similar public API.",
+      "fix": "New task VFX-DISPATCH-PUBLIC-API"
+    },
+    {
+      "id": "SPEC5-WARN-002",
+      "severity": "FAIL_MEDIUM",
+      "file": "shaders/seasonal_snow.gdshader",
+      "line": 0,
+      "message": "seasonal_snow.gdshader exists with .uid but not loaded anywhere. BrocSeason uses seasonal_particles.gdshader for ALL seasons. Winter blizzard mode missing dedicated snow overlay.",
+      "fix": "New task VFX-SEASONAL-SNOW-WIRE"
+    },
+    {
+      "id": "SPEC5-WARN-003",
+      "severity": "FAIL_MEDIUM",
+      "file": "shaders/screen_distortion.gdshader",
+      "line": 0,
+      "message": "screen_distortion.gdshader exists but no active script references it. Likely superseded by crt_terminal.gdshader which includes distortion. Unclear if intentionally kept for future use.",
+      "fix": "New task VFX-SCREEN-DISTORTION-CLEANUP"
+    },
+    {
+      "id": "SPEC5-INFO-001",
+      "severity": "FAIL_LOW",
+      "file": "shaders/bestiole_squish.gdshader",
+      "line": 0,
+      "message": "bestiole_squish.gdshader dead code — Bestiole system fully removed (CLAUDE.md). Shader + .uid still present. Already tracked in VFX-DEAD-SHADER-CLEANUP (P63).",
+      "fix": "VFX-DEAD-SHADER-CLEANUP already in queue at P63"
+    },
+    {
+      "id": "SPEC5-INFO-002",
+      "severity": "FAIL_LOW",
+      "file": "shaders/ocean_lowpoly.gdshader",
+      "line": 0,
+      "message": "ocean_lowpoly.gdshader exists but not referenced in any active script. Could be intended for a coastal biome scene but never wired.",
+      "fix": "New task VFX-OCEAN-WIRE-OR-REMOVE"
+    },
+    {
+      "id": "SPEC5-INFO-003",
+      "severity": "FAIL_LOW",
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "line": 139,
+      "message": "_set_shader() silently does nothing when _shader_mat is null (no push_error/push_warning). Debugging broken VFX is invisible at runtime. Should log warning when shader is missing.",
+      "fix": "Folded into VFX-SCREEN-VFX-REATTACH task"
+    }
+  ],
+  "tasks_generated": [
+    "VFX-GRASS-WIND-SHADER",
+    "VFX-DISPATCH-PUBLIC-API",
+    "VFX-SEASONAL-SNOW-WIRE",
+    "VFX-SCREEN-DISTORTION-CLEANUP",
+    "VFX-OCEAN-WIRE-OR-REMOVE"
+  ],
+  "tasks_implemented": [
+    {
+      "id": "VFX-GRASS-WIND-SHADER",
+      "action": "Created shaders/grass_wind_sway.gdshader — PS1/N64 Celtic grass sway (vertex_lighting, cull_disabled, vertex snap, height-weighted displacement, base/tip color gradient)"
+    }
+  ],
+  "invariants_verified": {
+    "no_new_color_literals": true,
+    "type_hints_present": true,
+    "snake_case_respected": true,
+    "no_yield": true
+  }
+}

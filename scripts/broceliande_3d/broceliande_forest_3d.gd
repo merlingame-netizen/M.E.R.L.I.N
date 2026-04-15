@@ -66,10 +66,12 @@ const SPECIAL_TREES: Dictionary = {
 }
 
 const BUSH_MODELS: Array[String] = [
-	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0000.glb",
-	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0001.glb",
-	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0002.glb",
-	BK_BASE + "rocks/" + BK_BIOME + "/rock_bk_foret_broceliande_0003.glb",
+	BK_BASE + "bushes/" + BK_BIOME + "/bush_bk_foret_broceliande_0000.glb",
+	BK_BASE + "bushes/" + BK_BIOME + "/bush_bk_foret_broceliande_0001.glb",
+	BK_BASE + "bushes/" + BK_BIOME + "/bush_bk_foret_broceliande_0002.glb",
+	BK_BASE + "bushes/" + BK_BIOME + "/bush_bk_foret_broceliande_0003.glb",
+	BK_BASE + "bushes/" + BK_BIOME + "/bush_bk_foret_broceliande_0004.glb",
+	BK_BASE + "bushes/" + BK_BIOME + "/bush_bk_foret_broceliande_0005.glb",
 ]
 
 const DETAIL_MODELS: Dictionary = {

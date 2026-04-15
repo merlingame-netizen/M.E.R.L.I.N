@@ -28,6 +28,7 @@ static func use_ogham(state: Dictionary, skill_id: String) -> Dictionary:
 
 	cooldowns[skill_id] = int(spec.get("cooldown", 3))
 	oghams["skill_cooldowns"] = cooldowns
+	oghams["active_this_card"] = skill_id
 	state["oghams"] = oghams
 
 	return {
@@ -74,17 +75,27 @@ static func apply_ogham_effect(_skill_id: String, spec: Dictionary, state: Dicti
 			pass
 
 
-## Decrement all Ogham cooldowns by 1. Call after each card resolved.
-static func tick_cooldowns(state: Dictionary) -> void:
+## Decrement cooldown for the active Ogham only (bible s.2.2).
+## active_ogham: the ogham used this card. If empty, falls back to state["oghams"]["active_this_card"].
+## Oghams on cooldown but NOT active have their cooldown paused this card.
+static func tick_cooldowns(state: Dictionary, active_ogham: String = "") -> void:
 	var oghams: Dictionary = state.get("oghams", {})
 	var cooldowns: Dictionary = oghams.get("skill_cooldowns", {})
-	var to_remove: Array = []
-	for skill_id in cooldowns:
-		cooldowns[skill_id] = maxi(int(cooldowns[skill_id]) - 1, 0)
-		if int(cooldowns[skill_id]) <= 0:
-			to_remove.append(skill_id)
-	for skill_id in to_remove:
-		cooldowns.erase(skill_id)
+
+	# Resolve which ogham ticks this card
+	var key: String = active_ogham
+	if key.is_empty():
+		key = str(oghams.get("active_this_card", ""))
+
+	# Clear per-card active tracking
+	oghams["active_this_card"] = ""
+
+	# Only decrement the active ogham's cooldown
+	if not key.is_empty() and cooldowns.has(key):
+		cooldowns[key] = maxi(int(cooldowns[key]) - 1, 0)
+		if int(cooldowns[key]) <= 0:
+			cooldowns.erase(key)
+
 	oghams["skill_cooldowns"] = cooldowns
 	state["oghams"] = oghams
 

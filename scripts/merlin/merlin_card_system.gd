@@ -228,7 +228,7 @@ func detect_lexical_field(option_label: String) -> String:
 func select_minigame(field: String) -> String:
 	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
 	if minigames.is_empty():
-		return "apaisement"
+		return MerlinConstants.ACTION_VERB_FALLBACK_FIELD  # "esprit" — valid field name
 	if minigames.size() == 1:
 		return str(minigames[0])
 	var idx: int = _randi_range(0, minigames.size() - 1)
@@ -477,10 +477,6 @@ func resolve_card(run_state: Dictionary, card: Dictionary, option_index: int, sc
 				create_promise(run_state, promise_data)
 			else:
 				rejected.append({"type": "CREATE_PROMISE", "promise_id": pid, "reason": "promise_not_found"})
-
-	# Update card tracking
-	run_state["card_index"] = int(run_state.get("card_index", 0)) + 1
-	run_state["cards_played"] = int(run_state.get("cards_played", 0)) + 1
 
 	# Log to story
 	var story_log: Array = run_state.get("story_log", [])

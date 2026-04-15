@@ -251,7 +251,7 @@ func _get_scene_contract_context() -> String:
 
 func _get_crisis_context(game_state: Dictionary) -> String:
 	var run: Dictionary = game_state.get("run", {})
-	var factions: Dictionary = run.get("factions", {})
+	var factions: Dictionary = game_state.get("meta", {}).get("faction_rep", {})
 	var oghams: Array = run.get("oghams_decouverts", [])
 	var crises: Array[String] = []
 	for faction in factions:
@@ -324,8 +324,7 @@ func _get_player_pattern_context() -> String:
 
 
 func _get_faction_context(game_state: Dictionary) -> String:
-	var run: Dictionary = game_state.get("run", {})
-	var factions: Dictionary = run.get("factions", {})
+	var factions: Dictionary = game_state.get("meta", {}).get("faction_rep", {})
 	if factions.is_empty():
 		return ""
 	var best_name := ""
@@ -366,8 +365,7 @@ func _get_aspects_state_context(game_state: Dictionary) -> String:
 	## B.4: Inject faction reputation states into RAG.
 	## Only factions with extreme reputation (low/high) are mentioned — keeps tokens minimal.
 	## Priority HIGH so LLM colours narrative around the player's current alliances.
-	var run: Dictionary = game_state.get("run", {})
-	var factions: Dictionary = run.get("factions", {})
+	var factions: Dictionary = game_state.get("meta", {}).get("faction_rep", {})
 	if factions.is_empty():
 		return ""
 
@@ -619,7 +617,7 @@ func summarize_and_archive_run(ending: String, final_state: Dictionary) -> void:
 
 
 func _find_dominant_faction(final_state: Dictionary) -> String:
-	var factions: Dictionary = final_state.get("run", {}).get("factions", {})
+	var factions: Dictionary = final_state.get("meta", {}).get("faction_rep", {})
 	var max_val := 0.0
 	var dominant := "neutre"
 	for faction in factions:

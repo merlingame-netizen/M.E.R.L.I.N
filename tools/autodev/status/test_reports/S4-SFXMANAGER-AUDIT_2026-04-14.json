@@ -1,0 +1,104 @@
+{
+  "report_id": "S4-SFXMANAGER-AUDIT_2026-04-14",
+  "task_id": "S4-SFXMANAGER-AUDIT",
+  "agent": "bug_hunter",
+  "timestamp": "2026-04-14T00:15:00Z",
+  "verdict": "PARTIAL_PASS",
+  "summary": "SFXManager audit: 6/8 checks PASS. MEDIUM: 7 caller sounds not registered (silent fail). LOW: amb_iles missing for 8th biome.",
+  "checks": [
+    {
+      "id": "CHECK-1",
+      "name": "SFXManager autoload registered",
+      "result": "PASS",
+      "detail": "project.godot: SFXManager=*res://scripts/autoload/SFXManager.gd. Valid autoload node."
+    },
+    {
+      "id": "CHECK-2",
+      "name": ">=30 procedural sounds registered",
+      "result": "PASS",
+      "detail": "57 sounds in _generate_all_sounds() names array: 19 in SFXRecipes + 38 in SFXRecipesAmbient. Well above bible requirement of 30+."
+    },
+    {
+      "id": "CHECK-3",
+      "name": "Zero audio file references (.wav/.ogg/.mp3)",
+      "result": "PASS",
+      "detail": "Fully procedural: SFXRecipes + SFXRecipesAmbient generate AudioStreamWAV via PCM math. No file loads."
+    },
+    {
+      "id": "CHECK-4",
+      "name": "Public API: play() / play_varied() exist",
+      "result": "PASS",
+      "detail": "play(name, pitch=1.0), play_varied(name, variation=0.1), play_ui_click(), play_biome_ambient(biome_key). NOTE: bible mentions 'play_sfx/stop_sfx' but actual API is play()/play_varied() — pool cycling replaces stop_sfx. Not a bug."
+    },
+    {
+      "id": "CHECK-5",
+      "name": "No Godot 3 deprecations",
+      "result": "PASS",
+      "detail": "Uses AudioStreamPlayer (G4), AudioStreamWAV (G4), linear_to_db() (G4). No yield(), no .connect legacy syntax."
+    },
+    {
+      "id": "CHECK-6",
+      "name": "100% gen_ method coverage for registered sounds",
+      "result": "PASS",
+      "detail": "All 57 names in the names array have matching gen_NAME() methods in SFXRecipes (19) or SFXRecipesAmbient (38). Zero silent-skip sounds."
+    },
+    {
+      "id": "CHECK-7",
+      "name": "No caller sounds missing from registry",
+      "result": "FAIL_MEDIUM",
+      "detail": "7 sound names called via SFXManager.play() in game code but NOT in _generate_all_sounds(). They silently skip (graceful fail, no crash). UX degradation at key moments.",
+      "missing_sounds": [
+        {"name": "card_reveal", "caller": "scripts/ui/book_cinematic.gd:76", "context": "Card flip animation"},
+        {"name": "confirm", "caller": "scripts/ui/book_cinematic.gd:208", "context": "Book confirmation"},
+        {"name": "encounter", "caller": "scripts/broceliande_3d/broceliande_forest_3d.gd:1043", "context": "3D encounter trigger"},
+        {"name": "success", "caller": "scripts/ui/encounter_card_overlay.gd:179", "context": "Minigame success result"},
+        {"name": "fail", "caller": "scripts/ui/encounter_card_overlay.gd:181", "context": "Minigame fail result"},
+        {"name": "neutral", "caller": "scripts/ui/encounter_card_overlay.gd:183", "context": "Minigame neutral result"},
+        {"name": "danger", "caller": "scripts/ui/tutorial_card_layer.gd:407", "context": "Danger alert in tutorial"}
+      ]
+    },
+    {
+      "id": "CHECK-8",
+      "name": "All 8 biome ambient sounds present",
+      "result": "FAIL_LOW",
+      "detail": "7/8 biome ambients registered. Missing: amb_iles (iles_celtes biome). play_biome_ambient('iles') silently fails. Low priority as iles_celtes is a late-game biome (score 45+)."
+    }
+  ],
+  "invariants_verified": [
+    "No audio file loads (procedural-only system) PASS",
+    "No Godot 3 AudioStreamOGGVorbis usage PASS",
+    "Pool size 6 = safe for concurrent sounds PASS",
+    "SFXManager.play() graceful-fail on unknown name PASS"
+  ],
+  "bugs_found": [
+    {
+      "id": "BUG-SFX-MISSING-SOUNDS",
+      "severity": "MEDIUM",
+      "title": "7 sound names called but not registered in SFXManager",
+      "files": ["scripts/autoload/SFXManager.gd", "scripts/autoload/sfx_recipes_ambient.gd"],
+      "description": "card_reveal, confirm, encounter, success, fail, neutral, danger are called in UI/3D scripts but have no gen_ methods. Add to SFXRecipesAmbient + register in _generate_all_sounds() names array.",
+      "created_task": "BUG-SFX-MISSING-SOUNDS"
+    },
+    {
+      "id": "BUG-SFX-AMB-ILES",
+      "severity": "LOW",
+      "title": "Missing amb_iles for iles_celtes biome",
+      "files": ["scripts/autoload/SFXManager.gd", "scripts/autoload/sfx_recipes_ambient.gd"],
+      "description": "8th biome (iles_celtes) has no ambient sound. gen_amb_iles() needs to be added to SFXRecipesAmbient.",
+      "created_task": "BUG-SFX-AMB-ILES"
+    }
+  ],
+  "patterns": [
+    "PAT-037: SFXManager.play() uses graceful-fail (returns if not registered). Callers can reference sounds not yet generated — no crash but silent UX degradation.",
+    "PAT-038: Procedural sound coverage drift — as new callers are added (UI, scenes), the gen_ method must be added or the sound stays silent. Audit caller list vs names array each sprint."
+  ],
+  "stats": {
+    "sounds_registered": 57,
+    "sounds_with_gen_method": 57,
+    "sounds_called_externally": 41,
+    "sounds_missing_from_registry": 7,
+    "biome_ambients_registered": 7,
+    "biome_ambients_missing": 1,
+    "inconsistent_access_patterns": 5
+  }
+}

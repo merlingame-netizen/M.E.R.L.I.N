@@ -39,6 +39,30 @@ export interface FeatureTask {
   priority: number;
   status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'dispatched';
   agent?: string;
+  sprint?: string;
+  type?: string;
+  description?: string;
+  files?: string[];
+}
+
+export interface StudioInsight {
+  id: string;
+  agent: string;
+  severity: 'ACTION' | 'WARN' | 'INFO';
+  category: string;
+  message: string;
+  details?: string;
+  proposed_task?: { title: string; sprint: string; type: string };
+  timestamp: string;
+}
+
+export interface GitCommit {
+  sha: string;
+  message: string;
+  author: string;
+  date: string;
+  type: string;
+  scope: string | null;
 }
 
 export interface FeedbackQuestion {
@@ -75,9 +99,19 @@ interface MissionState {
   feedbackQuestions: FeedbackQuestion[];
   feedbackResponses: FeedbackResponse[];
   feedbackSubmitting: boolean;
+  lastHeartbeat: string | null;
+  completedCount: number;
+  completedTasks: Array<{ id: string; sprint?: string; title: string; completed_at?: string }>;
+  nextCycleAt: string | null;
+  studioInsights: StudioInsight[];
+  gitActivity: GitCommit[];
 
   setOrchestratorState: (state: string) => void;
+  setGitActivity: (commits: GitCommit[]) => void;
+  setCompletedTasks: (tasks: Array<{ id: string; sprint?: string; title: string; completed_at?: string }>) => void;
+  setNextCycleAt: (time: string | null) => void;
   setAgents: (agents: AgentInfo[]) => void;
+  setStudioInsights: (insights: StudioInsight[]) => void;
   updateAgent: (id: string, update: Partial<AgentInfo>) => void;
   setActiveSessions: (sessions: ActiveSession[]) => void;
   setFeatureQueue: (tasks: FeatureTask[]) => void;
@@ -85,6 +119,8 @@ interface MissionState {
   addAlert: (alert: Omit<AlertEntry, 'id'>) => void;
   setDeployStatus: (status: MissionState['deployStatus']) => void;
   setConnected: (connected: boolean) => void;
+  setLastHeartbeat: (heartbeat: string | null) => void;
+  setCompletedCount: (count: number) => void;
   setFeedbackQuestions: (questions: FeedbackQuestion[]) => void;
   submitFeedback: (questionId: string, answer: string, notes?: string) => Promise<void>;
   handleSSEEvent: (event: { type: string; data: Record<string, unknown> }) => void;
@@ -104,8 +140,18 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   feedbackQuestions: [],
   feedbackResponses: [],
   feedbackSubmitting: false,
+  lastHeartbeat: null,
+  completedCount: 0,
+  completedTasks: [],
+  nextCycleAt: null,
+  studioInsights: [],
+  gitActivity: [],
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
+  setGitActivity: (gitActivity) => set({ gitActivity }),
+  setCompletedTasks: (completedTasks) => set({ completedTasks }),
+  setNextCycleAt: (nextCycleAt) => set({ nextCycleAt }),
+  setStudioInsights: (studioInsights) => set({ studioInsights }),
   setAgents: (agents) => set({ agents }),
   updateAgent: (id, update) => set(s => ({
     agents: s.agents.map(a => a.id === id ? { ...a, ...update } : a),
@@ -120,6 +166,8 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   })),
   setDeployStatus: (deployStatus) => set({ deployStatus }),
   setConnected: (connected) => set({ connected }),
+  setLastHeartbeat: (lastHeartbeat) => set({ lastHeartbeat }),
+  setCompletedCount: (completedCount) => set({ completedCount }),
   setFeedbackQuestions: (questions) => set({ feedbackQuestions: questions }),
   submitFeedback: async (questionId, answer, notes) => {
     set({ feedbackSubmitting: true });

@@ -1,0 +1,1565 @@
+{
+  "version": "1.0",
+  "description": "Studio bot accumulated knowledge — updated automatically each cycle",
+  "last_updated": "2026-04-15T09:15:00Z",
+  "metrics": {
+    "total_cycles_completed": 59,
+    "total_dev_cycles": 27,
+    "total_test_cycles": 25,
+    "bugs_found": 63,
+    "bugs_fixed": 35,
+    "tasks_completed": 76,
+    "tasks_pending": 115,
+    "current_sprint": "S3",
+    "specialist_cycles_run": 14,
+    "last_specialist": 7,
+    "last_updated": "2026-04-15T09:15:00Z"
+  },
+  "patterns_learned": [
+    {
+      "id": "PAT-001",
+      "learned_at": "2026-04-12T21:00:00Z",
+      "source": "S1-CORE-TEST",
+      "pattern": "GDScript 4 dicts are reference types — modifying a dict obtained via .get() mutates the original store state",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "merlin_store.gd",
+        "merlin_card_system.gd",
+        "store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-002",
+      "learned_at": "2026-04-12T21:00:00Z",
+      "source": "S1-CORE-TEST",
+      "pattern": "Orphaned methods can contain important logic — always trace callers before deleting",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_effect_engine.gd"
+      ]
+    },
+    {
+      "id": "PAT-003",
+      "learned_at": "2026-04-12T21:00:00Z",
+      "source": "S1-CORE-TEST",
+      "pattern": "Director feedback responses override game design constants — check feedback_responses.json before applying any constant",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-004",
+      "learned_at": "2026-04-12T22:30:00Z",
+      "source": "BUG-ORPHANED-PIPELINE",
+      "pattern": "For large function deletions (200+ lines), Python regex via bash is more reliable than Edit tool with long old_string",
+      "severity": "LOW",
+      "applies_to": [
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-005",
+      "learned_at": "2026-04-12T22:30:00Z",
+      "source": "BUG-CARDS-PLAYED-FIX",
+      "pattern": "When two systems both increment the same dict field (via reference), remove the secondary one — keep only the canonical owner (StoreRun.resolve_choice is canonical for cards_played)",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "merlin_card_system.gd",
+        "store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-006",
+      "learned_at": "2026-04-13T00:00:00Z",
+      "source": "S1-LLM-VALIDATE",
+      "pattern": "validate_faction_card() (adapter) does NOT cap effects per option. _validate_card() (card system) caps at 3. Faction keyword auto-tag loop can exceed this cap on rich Celtic text. Always guard append with effects.size() < 3.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "scripts/merlin/merlin_card_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-007",
+      "learned_at": "2026-04-13T00:00:00Z",
+      "source": "S1-LLM-VALIDATE",
+      "pattern": "Two-stage LLM pipeline uses programmatic JSON wrapping (_wrap_text_as_card), NOT extract_json_from_response(). JSON repair is only used for GM structured calls (smart effects, consequences). LLM card structure is always valid after _wrap_text_as_card if faction overflow is prevented.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "scripts/merlin/llm_adapter_json_repair.gd"
+      ]
+    },
+    {
+      "id": "PAT-008",
+      "learned_at": "2026-04-13T00:00:00Z",
+      "source": "S1-LLM-VALIDATE",
+      "pattern": "NARRATIVE_FALLBACKS[0] contains both chenes (druides kw) and ancien (anciens kw). Fallback cards trigger BUG-FACTION-OVERFLOW too. After fix, regression test must verify fallback cards also pass _validate_card.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ]
+    },
+    {
+      "id": "PAT-009",
+      "learned_at": "2026-04-13T06:00:00Z",
+      "source": "S1-CLEANUP-1-AUDIT",
+      "pattern": "Sprint cleanup tasks may already be complete from prior cycles. Always audit actual file state with grep before writing code — prevents redundant work. Cross-reference task descriptions vs file content, not just task status.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "tooling",
+        "workflow"
+      ]
+    },
+    {
+      "id": "PAT-010",
+      "learned_at": "2026-04-13T06:00:00Z",
+      "source": "S1-CLEANUP-1-AUDIT",
+      "pattern": "OGHAM_STARTER_SKILLS and CardOption enum were listed for removal in S1-CLEANUP-1 but are actively used by 8+ files. Task descriptions can be outdated — always grep for callers before deleting any symbol.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_constants.gd",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-011",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "GDScript effects systems with two parallel storage keys (run.promises vs run.active_promises, or meta.faction_rep vs run.factions) create split-brain bugs. Always grep for ALL keys a system reads vs writes — if a writer targets key A and the checker reads key B, the system is silently broken.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_effect_engine.gd",
+        "store_run.gd",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-012",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "When a time-tracking variable (run.day) is initialized but never incremented, all deadline logic depending on it silently fails. Always verify time/counter variables are actually ticked somewhere in resolve_choice or the main game loop.",
+      "severity": "HIGH",
+      "applies_to": [
+        "store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-013",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "LLM context builders may have multiple code paths (build_llm_context vs build_context) with different data quality. Always audit BOTH paths. build_llm_context may use faction_status (correct), while build_context may use run.factions dict (stale zeros). GameMaster and Narrator may have different context quality.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_llm_adapter.gd",
+        "llm_adapter_game_master.gd"
+      ]
+    },
+    {
+      "id": "PAT-014",
+      "learned_at": "2026-04-13T02:54:09Z",
+      "source": "S2-INTEGRATION",
+      "pattern": "Bible s.4.3 'Rythme entre les cartes' table is authoritative for per-biome card intervals. Constants may have been set with generic fallback values instead of per-biome values. Always cross-check BIOMES dict fields against all bible sections (not just s.4.2).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-015",
+      "learned_at": "2026-04-13T07:00:00Z",
+      "source": "BUG-PROMISE-SYSTEM-FIX",
+      "pattern": "When two effect creation paths (ADD_PROMISE + CREATE_PROMISE) exist for the same system, both must write to the SAME storage key. Mismatched keys create a silent split-brain where one path's promises are invisible to the checker. Also: always prefer deadline units that are actually tracked (cards_played is incremented per card; run.day was never incremented — so card-based deadlines are reliable, day-based are not).",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-016",
+      "learned_at": "2026-04-13T08:30:00Z",
+      "source": "S3-EDGE-CASES",
+      "pattern": "Mid-run save requires explicit save_run_state() call in the autosave path — not just a pre-run intent. merlin_store._do_autosave() only saves meta. If run is active, run_state must also be persisted. The save system has save_run_state() fully implemented but it was not wired into the autosave debounce cycle.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/core/game_flow_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-017",
+      "learned_at": "2026-04-13T09:00:00Z",
+      "source": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX",
+      "pattern": "_do_autosave() was meta-only. run_state must be added separately via save_run_state(). The save_system._validate_run_state() requires biome and card_index keys — which are stored as current_biome and cards_played in the run dict — so a snapshot translation step is required before calling save_run_state().",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-018",
+      "learned_at": "2026-04-13T09:00:00Z",
+      "source": "q-20260412-005",
+      "pattern": "Director feedback can remove mechanical safety nets (pacing recovery +5HP). When survival is meant to depend entirely on choices, no auto-recovery should exist. Always check feedback_responses.json before implementing any survivability mechanic.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-019",
+      "learned_at": "2026-04-13T10:00:00Z",
+      "source": "S3-LLM-ROBUSTNESS",
+      "pattern": "run.factions (initialized zeros, never updated) vs meta.faction_rep (actual persistent rep): all AI subsystems except merlin_card_system read the stale key. When a system has two separate dicts for the same concept at different scopes (run-local vs meta), always audit ALL readers for key mismatch. The correct key (meta.faction_rep) was available but not routed to context_builder/omniscient.",
+      "severity": "HIGH",
+      "applies_to": [
+        "addons/merlin_ai/context_builder.gd",
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "addons/merlin_ai/generators/event_category_selector.gd"
+      ]
+    },
+    {
+      "id": "PAT-020",
+      "learned_at": "2026-04-13T10:00:00Z",
+      "source": "S3-LLM-ROBUSTNESS",
+      "pattern": "LLM layer robustness verdict: timeout (25s/90s), fallback (is_ready guard), JSON repair (GM calls), ChatML injection (clean_response strips tokens), BG queue (100 cap + drop-oldest), brain timeout (60s) — ALL robust. The main LLM risks are at the DATA level (stale context), not at the transport/protocol level.",
+      "severity": "LOW",
+      "applies_to": [
+        "addons/merlin_ai/merlin_ai.gd",
+        "addons/merlin_ai/ollama_backend.gd"
+      ]
+    },
+    {
+      "id": "PAT-022",
+      "learned_at": "2026-04-13T11:00:00Z",
+      "source": "S2-VERBS-MOS",
+      "pattern": "Bible defines 'neutre' as a 9th distinct lexical field (not a subset of 'esprit'). Neutral verbs (parler/accepter/refuser/attendre/s'approcher) must remain separate in ACTION_VERBS with their own FIELD_MINIGAMES entry ['apaisement','volonte']. Merging them into 'esprit' loses the granularity bible s.6.4 specifies (neutral→apaisement/volonte only, not sang_froid).",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-023",
+      "learned_at": "2026-04-13T12:00:00Z",
+      "source": "S4-SMOKE-TEST",
+      "pattern": "MerlinStore is NOT in project.godot autoloads — it is programmatically created by GameManager._ready() via call_deferred. MerlinGameController._ready() uses 'await get_tree().process_frame' to ensure the deferred add_child fires before start_run() is called. This 1-frame await is a critical null-safety mechanism — never remove it.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/game_manager.gd",
+        "scripts/ui/merlin_game_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-024",
+      "learned_at": "2026-04-13T12:00:00Z",
+      "source": "S4-SMOKE-TEST",
+      "pattern": "Static analysis can substitute for headless Godot execution when the runtime is unavailable. Trace: autoload._ready() → scene._ready() → deferred calls → signal connections → dispatch flow → effect path → end condition. Cover all branches via grep + Read rather than execution. Report verdict PASS/FAIL with explicit per-invariant results.",
+      "severity": "LOW",
+      "applies_to": [
+        "tooling",
+        "workflow"
+      ]
+    },
+    {
+      "id": "PAT-025",
+      "learned_at": "2026-04-13T13:00:00Z",
+      "source": "BUG-FACTIONS-STALE-FIX",
+      "pattern": "Stale-read bugs can be partially fixed in prior cycles — always grep ALL readers before claiming a fix is complete. context_builder and omniscient were already fixed; rag_manager (4 functions) and llm_adapter (2 functions) still had stale reads. PAT-009 compound: audit file state + trace ALL call sites, not just the ones mentioned in task description.",
+      "severity": "HIGH",
+      "applies_to": [
+        "addons/merlin_ai/rag_manager.gd",
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "addons/merlin_ai/generators/event_category_selector.gd"
+      ]
+    },
+    {
+      "id": "PAT-026",
+      "learned_at": "2026-04-13T15:00:00Z",
+      "source": "S2-CONTEXT-GAUGES-CLEANUP",
+      "pattern": "Dead functions may have corresponding test sections in test files. When deleting a function, grep for its name in test_*.gd files and remove dead tests too. Leaving dead test functions causes parse errors at runtime when the method is called on a class that no longer has it.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/test/",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-028",
+      "learned_at": "2026-04-13T15:30:00Z",
+      "source": "S2-DEAD-FILES",
+      "pattern": "When a file serves as the ultimate fallback in a registry/factory pattern, it cannot simply be deleted — the fallback reference must first be redirected to another file in the same category. Audit the match statement AND the post-match null-check fallback path. Choose the next simplest implementation (same category, fewest dependencies).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-021",
+      "learned_at": "2026-04-13T10:00:00Z",
+      "source": "S3-LLM-ROBUSTNESS",
+      "pattern": "Story log prompt injection: up to 10 entries * 600 chars = 6KB added to prompt. 2B model context ~12KB. No total size guard. At 50+ cards, prompt truncation risk increases. Always enforce total accumulated block size (not just per-entry limits) when appending variable-length history to prompts.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ]
+    },
+    {
+      "id": "PAT-027",
+      "learned_at": "2026-04-13T14:19:16Z",
+      "source": "S2-CONTEXT-REGRESSION-TEST",
+      "pattern": "When a test task is created BEFORE the fixes it verifies, it will PARTIAL_PASS — the failing checks are pending_not_applied not regressions. Always distinguish CHK_FAIL_PENDING vs CHK_FAIL_REGRESSION in test reports. Schedule a re-verification test (e.g. S2-DAY-SIGNAL-REGRESSION-TEST) to run after the fix cycle. Verdict PARTIAL_PASS is valid and informative — it confirms cleanup was done and regressions are clean while tracking open work.",
+      "severity": "LOW",
+      "applies_to": [
+        "workflow",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-029",
+      "learned_at": "2026-04-13T16:00:00Z",
+      "source": "S3-MINIGAMES-FIELD-AUDIT",
+      "pattern": "FIELD_MINIGAMES (merlin_constants.gd) and GAMES (minigame_registry.gd) are parallel systems: FIELD_MINIGAMES holds conceptual labels for LLM/display (herboristerie, negociation, etc.), GAMES holds actual script dispatch (mg_pile_ou_face, etc.). Actual minigame dispatch uses option['field'] -> GAMES, NOT FIELD_MINIGAMES values. Never confuse the two.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd",
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/ui/game_controller_minigame.gd"
+      ]
+    },
+    {
+      "id": "PAT-030",
+      "learned_at": "2026-04-13T16:30:00Z",
+      "source": "BUG-SANG-FROID-GAMES-FIELD",
+      "pattern": "FIELD_MINIGAMES (merlin_constants.gd, conceptual labels) and GAMES (minigame_registry.gd, dispatch) are parallel systems that MUST stay in sync with bible s.6.2. When bible field->minigame mapping changes, update BOTH systems.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-031",
+      "learned_at": "2026-04-13T16:45:00Z",
+      "source": "S3-MINIGAME-ROUTING-REGRESSION",
+      "pattern": "Match block comments in create_minigame() (# Vigueur, # Esprit) are cosmetic only — match works by value. A minigame can be in GAMES['esprit'] but commented under '# Vigueur' without any runtime effect. Always check GAMES dict, not match block groupings.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd"
+      ]
+    },
+    {
+      "id": "PAT-031",
+      "learned_at": "2026-04-13T17:00:00Z",
+      "source": "BUG-SIGNAL-DELTA-FIX",
+      "pattern": "Capture old state BEFORE mutation to compute actual_delta = new_val - old_val. Never emit raw requested deltas — always emit the actual clamped change applied to state.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_store.gd",
+        "merlin_effect_engine.gd",
+        "signals"
+      ]
+    },
+    {
+      "id": "PAT-032",
+      "learned_at": "2026-04-13T19:44:09Z",
+      "source": "S2-DAY-SIGNAL-REGRESSION-TEST",
+      "pattern": "TEST cycles should verify both the NEW fix AND the still-pending FAIL_PENDING checks from prior test reports. A PARTIAL_PASS is a valid outcome when dependencies are pending — document blocking_task explicitly in each FAIL_PENDING check so the next DEV cycle knows exactly what to implement first.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "workflow",
+        "test_reports"
+      ]
+    },
+    {
+      "id": "PAT-033",
+      "learned_at": "2026-04-13T20:53:21Z",
+      "source": "S2-BIOMES",
+      "pattern": "BIOMES dict has 3 parallel data sets: (1) card_interval_range per s.4.3, (2) arc names+counts per s.3.6, (3) arc_condition types. Each must be verified against its own bible section independently.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-034",
+      "learned_at": "2026-04-13T20:53:21Z",
+      "source": "S2-BIOMES",
+      "pattern": "New arc_condition_types 'runs_in_biome' and 'fins_vues' added to BIOMES data but evaluation code (merlin_skeleton_generator.gd, llm_adapter_map_prompt.gd) only handles 'faction_rep' and 'oghams_owned'. Task S2-ARC-CONDITION-EVAL created to implement the missing evaluators.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-036",
+      "learned_at": "2026-04-13T22:00:00Z",
+      "source": "BUG-PROMISE-SYSTEM-FIX",
+      "pattern": "When unifying two storage systems (e.g. run.promises + run.active_promises → only active_promises), production code may already be fixed while tests still reference the old key. Audit ALL test files with grep for the old key AND the old field name (deadline_day vs deadline_cards). Fix both key access and assertion field names together. Pre-existing method-not-found issues in tests (e.g. engine.process_card() on MerlinEffectEngine) are separate structural bugs — note them but don't silently swallow.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/test/test_effect_engine_unit.gd",
+        "scripts/test/test_effect_engine.gd",
+        "scripts/test/test_process_card_pipeline.gd"
+      ]
+    },
+    {
+      "id": "PAT-035",
+      "learned_at": "2026-04-13T21:15:00Z",
+      "source": "S2-BIOMES-REGRESSION-TEST",
+      "pattern": "dominant_faction should align with arc_condition_faction for thematic coherence — cotes_sauvages arc requires Niamh but dominant_faction was set to korrigans. Always cross-check dominant_faction vs arc_condition_faction when setting up biome data.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-037",
+      "learned_at": "2026-04-14T00:15:00Z",
+      "source": "S4-SFXMANAGER-AUDIT",
+      "pattern": "SFXManager.play() uses graceful-fail (returns early if sound not in _sounds dict). Callers can reference sounds not yet generated — no crash but silent UX degradation. Coverage drift: as new UI/scene scripts call SFXManager.play('new_name'), the gen_new_name() method must be added to SFXRecipes or SFXRecipesAmbient AND the name added to _generate_all_sounds() names array.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ]
+    },
+    {
+      "id": "PAT-038",
+      "learned_at": "2026-04-14T00:15:00Z",
+      "source": "S4-SFXMANAGER-AUDIT",
+      "pattern": "SFXManager actual API is play()/play_varied() — NOT play_sfx()/stop_sfx() as mentioned in GAME_DESIGN_BIBLE overview. Pool cycling (POOL_SIZE=6) replaces explicit stop. Always grep SFXManager.gd for actual method names before auditing callers.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/autoload/SFXManager.gd",
+        "docs/GAME_DESIGN_BIBLE.md"
+      ]
+    },
+    {
+      "id": "PAT-039",
+      "learned_at": "2026-04-14T01:00:00Z",
+      "source": "BUG-SFX-MISSING-SOUNDS",
+      "pattern": "SFX audit can reveal silent failures: callers using SFXManager.play('name') never crash when name is absent — they return silently. The only way to detect missing sounds is via static audit (grep callers vs registered names array). Always cross-check caller strings against the names[] array in _generate_all_sounds(), not just the VOLUME mapping. Game flow sounds (card_reveal, encounter, success, fail, neutral, danger, confirm) belong in SFXRecipesAmbient (game-flow split), not SFXRecipes (core UI/transition).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/autoload/SFXManager.gd",
+        "scripts/autoload/sfx_recipes_ambient.gd"
+      ]
+    },
+    {
+      "id": "PAT-040",
+      "learned_at": "2026-04-14T02:00:00Z",
+      "source": "S2-LOOP-INTEGRITY-CHECK",
+      "pattern": "Dual-scope currency systems (ADD_ANAM writing to both run['anam'] and meta['anam'] simultaneously) create a death-penalty bypass: card-effect gains are permanently credited before run-end scaling can apply. When a currency has both an in-run accumulator and a persistent meta balance, always verify that end-of-run scaling (death multipliers, success bonuses) applies to ALL in-run gains — not just the base reward. If immediate gratification IS intentional, document it explicitly in comments so future audits don't flag it.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-041",
+      "learned_at": "2026-04-14T03:00:00Z",
+      "source": "S2-DAY-TICK-FIX",
+      "pattern": "In-run counters initialized in init_run() (like run['day']=1) that are never incremented elsewhere will stay frozen. The canonical increment site is resolve_choice() in store_run.gd. Day progression formula: every CARDS_PER_DAY cards played, run['day'] increments. Check CARDS_PER_DAY is defined in merlin_constants.gd (not hardcoded) so it can be tuned without code changes.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-042",
+      "learned_at": "2026-04-14T04:00:00Z",
+      "source": "S2-DAY-TICK-REGRESSION-TEST",
+      "pattern": "When queue has zero test tasks, run a synthetic multi-fix regression sweep covering ALL recent dev cycles (not just the most recent). Verify: each fix's canonical site, its downstream consumers, and that prior regression invariants are still PASS. A synthetic test covering 4-5 recent fixes in one sweep is more valuable than a narrow single-fix check — it catches cross-fix interference early.",
+      "severity": "LOW",
+      "applies_to": [
+        "workflow",
+        "test_reports"
+      ]
+    },
+    {
+      "id": "PAT-043",
+      "learned_at": "2026-04-14T05:00:00Z",
+      "source": "S2-ANAM-VERIFY",
+      "pattern": "double total_runs increment: handle_run_end() + apply_run_rewards() both incremented meta['total_runs']. Single source of truth = apply_run_rewards(). Always grep for counter increments across both callers when seeing N+1 bugs.",
+      "severity": "HIGH",
+      "applies_to": [
+        "store_run.gd",
+        "merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-044",
+      "learned_at": "2026-04-14T05:00:00Z",
+      "source": "S2-ANAM-VERIFY",
+      "pattern": "fins_vues is a required integer counter in meta (total run completions). Add it to _get_default_profile() and increment in handle_run_end(). Arc conditions use this field directly (S2-ARC-CONDITION-EVAL).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_save_system.gd",
+        "store_run.gd",
+        "merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-045",
+      "learned_at": "2026-04-14T06:00:00Z",
+      "source": "T-S2-ANAM-REGRESSION-TEST",
+      "pattern": "run['anam'] is initialized in init_run() and written by _apply_add_anam(), but is NEVER consumed by calculate_run_rewards() or apply_run_rewards(). This makes it a write-only (vestigial) field. When q-20260414-001 resolves, either remove run.anam entirely OR promote it to the rewards pipeline as anam_accumulated. Always verify that written fields have at least one reader in the rewards/persistence pipeline.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-046",
+      "learned_at": "2026-04-14T07:00:00Z",
+      "source": "S3-MEDITATION-CLEANUP",
+      "pattern": "When deleting a feature (minigame), audit 3 distinct places: (1) registry match block + CONST dicts (TAG_FIELD_MAP, GAMES) in minigame_registry.gd, (2) test files — 3 sub-locations: standalone test functions block, test runner array entries, AND shared extreme-input test (test_all_scores_clamp_0_100 uses inline _feature_score() helper), (3) the .gd file itself. Also fix the cosmetic comment grouping (# Vigueur / # Esprit) to match actual GAMES dict assignment. All 3 places must be cleaned atomically in one cycle.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/test/test_minigames_extra.gd",
+        "workflow"
+      ]
+    },
+    {
+      "id": "PAT-047",
+      "learned_at": "2026-04-14T08:00:00Z",
+      "source": "T-S3-MEDITATION-VERIFY",
+      "pattern": "When deleting a game feature (minigame, system, etc.), documentation lag is acceptable and expected: docs/*.md files trail code deletions and will still reference the deleted item. This is NOT a bug. Only flag references in scripts/scenes/tests/autoloads. Do NOT schedule doc-update tasks for every feature deletion — it adds noise. Optional doc cleanup can be batched in a future maintenance sprint.",
+      "severity": "LOW",
+      "applies_to": [
+        "docs/",
+        "workflow",
+        "tooling"
+      ]
+    },
+    {
+      "id": "PAT-048",
+      "learned_at": "2026-04-14T09:00:00Z",
+      "source": "SPECIALIST-9-SAVE_PERSISTENCE_AUDITOR",
+      "pattern": "Fields added to _get_default_profile() must ALSO be added to _validate() required_keys if they are semantically required for correctness (e.g. fins_vues for arc conditions, biome_runs for maturity). Omitting them from required_keys means old saves pass validation silently, only getting the field filled by the default loop. This is functionally safe but degrades validation coverage — the field appears to be optional when it is not.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-049",
+      "learned_at": "2026-04-14T09:00:00Z",
+      "source": "SPECIALIST-9-SAVE_PERSISTENCE_AUDITOR",
+      "pattern": "Task descriptions that reference dict field names (e.g. meta.biome_run_counts) must be verified against the CANONICAL field names in _get_default_profile() (actual: meta.biome_runs). A mismatch discovered in S2-ARC-CONDITION-EVAL would have caused all 'runs_in_biome' arc conditions to silently return 0 — a hard-to-debug invariant failure. Always grep the save schema before writing task descriptions that reference meta fields.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/merlin/merlin_constants.gd",
+        "workflow"
+      ]
+    },
+    {
+      "id": "PAT-050",
+      "learned_at": "2026-04-14T10:00:00Z",
+      "source": "SPECIALIST-10-PERF-CODE-QUALITY",
+      "pattern": "cotes_sauvages dominant_faction must be 'niamh' (not 'korrigans'). Niamh is the guardian-of-coasts faction. Korrigans = marshland biome. Arc condition for cotes_sauvages requires faction_rep niamh >= 30. Wrong dominant_faction causes biome-based event routing to spawn Korrigans cards in a Niamh biome — narrative incoherence and faction rep saturation error.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-051",
+      "learned_at": "2026-04-14T10:00:00Z",
+      "source": "SPECIALIST-10-PERF-CODE-QUALITY",
+      "pattern": "merlin_ai.gd (2235 lines) and merlin_omniscient.gd (2951 lines) are the two largest files — 3-5x over the 400-line guideline. These are primary candidates for module splits. Key extraction targets: omniscient → omniscient_card_gen + omniscient_guardrails + omniscient_arc. merlin_ai → merlin_ai_core + merlin_ai_bg_tasks + merlin_ai_init. Do NOT split prematurely — only when adding new features to these files.",
+      "severity": "LOW",
+      "applies_to": [
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "addons/merlin_ai/merlin_ai.gd"
+      ]
+    },
+    {
+      "id": "PAT-052",
+      "learned_at": "2026-04-14T11:00:00Z",
+      "source": "SPECIALIST-9-SAVE-AUDIT-2026-04-14b",
+      "pattern": "In merlin_save_system._validate(), default keys are filled BEFORE _validate() is called (load_profile lines 138-141). This means required_keys catches missing-key corruption only if a field is absent, NOT if it has wrong type. Always pair required_key checks with typeof() checks for fields used in arc conditions or gameplay logic.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-053",
+      "learned_at": "2026-04-14T11:00:00Z",
+      "source": "SPECIALIST-9-SAVE-AUDIT-2026-04-14b",
+      "pattern": "When a new run_state field is added (e.g. anam_accumulated), it must also be added to _validate_run_state() required_keys in merlin_save_system.gd. The default-fill (lines 214-217) happens before validate, so old saves auto-fill, but the validate() must reflect the canonical schema or future bugs go undetected.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-054",
+      "learned_at": "2026-04-14T10:48:35Z",
+      "source": "SPECIALIST-10-TEST-T-S2-ARC-EVAL-TEST",
+      "pattern": "When arc_condition_faction is '' (empty string), merlin_skeleton_generator.gd:46 falls back to FACTION_SCORE_START=20 as rep_value. This satisfies ALL non-faction arc condition values (runs_in_biome=3, fins_vues=5, oghams_owned=2) because 20>=3/5/2 is always true. Net result: landes_bruyere, collines_dolmens, cercles_pierres arcs are PERMANENTLY UNLOCKED from run 1 — arc gating is completely broken for 3 biomes. Fix requires: (1) context dict must include biome_runs, fins_vues, oghams_count. (2) arc_condition_type must be dispatched in llm_adapter_map_prompt.gd and merlin_skeleton_generator.gd.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ]
+    },
+    {
+      "id": "PAT-055",
+      "learned_at": "2026-04-14T10:48:35Z",
+      "source": "SPECIALIST-10-AUDIT-QUALITY",
+      "pattern": "merlin_effect_engine.gd:93 uses `var expected := int(VALID_CODES[code])` — VALID_CODES is a const (defined line 4). This violates the := with CONST rule. Pattern: always scan new files with `grep ':= int(\\|:= str(\\|:= float(' + cross-check if the RHS begins with an all-caps identifier (likely a CONST).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_effect_engine.gd"
+      ]
+    },
+    {
+      "id": "PAT-056",
+      "learned_at": "2026-04-14T12:00:00Z",
+      "source": "SPEC-11-FACTION-AUDIT",
+      "pattern": "Save data keys must exactly match _get_default_profile() keys — 'biome_history' key never existed (correct key is 'biome_runs'). Always cross-reference save_data key names with _get_default_profile().",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_skeleton_generator.gd",
+        "save_data key naming convention"
+      ]
+    },
+    {
+      "id": "PAT-057",
+      "learned_at": "2026-04-14T12:00:00Z",
+      "source": "SPEC-11-FACTION-AUDIT",
+      "pattern": "arc_condition_type dispatch: when evaluating arc unlock, ALWAYS check arc_condition_type first, then read the correct context key. faction_rep uses rep_value, runs_in_biome uses previous_runs, fins_vues uses fins_vues, oghams_owned uses oghams_owned.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "llm_adapter_map_prompt.gd",
+        "arc condition evaluation",
+        "biome arc system"
+      ]
+    },
+    {
+      "id": "PAT-058",
+      "learned_at": "2026-04-14T13:00:00Z",
+      "source": "SPECIALIST-12-MINIGAME-AUDIT",
+      "pattern": "Constants dict naming must be kept in sync with registry dict naming — FIELD_MINIGAMES used by both LLM context and runtime dispatch pick_minigame_for_field(). Old names break the dispatch silently (falls back to default).",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "merlin_constants.gd",
+        "merlin_effect_engine.gd",
+        "merlin_card_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-059",
+      "learned_at": "2026-04-14T13:00:00Z",
+      "source": "T-S2-ARC-CONDITION-REGRESS",
+      "pattern": "When a dispatch fix depends on a data source (get_save_data), ALWAYS implement both in the same cycle — partial fixes create FAIL_CRITICAL tests that look like the fix worked but the data is still empty.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_store.gd",
+        "merlin_skeleton_generator.gd"
+      ]
+    },
+    {
+      "id": "PAT-060",
+      "learned_at": "2026-04-14T13:00:00Z",
+      "source": "SPECIALIST-12-MINIGAME-AUDIT",
+      "pattern": "Score fallback values must be checked against MULTIPLIER_TABLE boundaries. score=50 maps to 'echec' (factor=-1.0, negative effects). For neutral fallback prefer score=51 (reussite_partielle, factor=0.5).",
+      "severity": "HIGH",
+      "applies_to": [
+        "game_controller_minigame.gd",
+        "merlin_constants.gd"
+      ]
+    },
+    "PAT-061: bk_assets categories (deadwood/groundcover/mushrooms) have assets but no spawning code — verify category coverage in spawner on every new asset batch",
+    "PAT-062: BUSH_MODELS const pointing to wrong asset category (rocks/ instead of bushes/) is a silent visual error — all loaded assets need cross-checking against intended category path",
+    "PAT-063: FIELD_MINIGAMES stale minigame names (herboristerie/fouille/runes) vs GAMES keys (chance/observation/logique) — always verify FIELD_MINIGAMES values match GAMES keys when adding new minigames",
+    "PAT-064: Timeout/failure fallback score 50 = FULL NEGATIVE (factor=-1.0) vs 51 = PARTIAL (factor=0.5) — always use 51 for technical failures, never 50",
+    {
+      "id": "PAT-065",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "GameManager is NOT in the first grep of autoloads — always read full [autoload] section in project.godot. GameManager creates MerlinStore via call_deferred add_child. This is safe since gameplay scenes load after multiple scene transitions.",
+      "severity": "HIGH",
+      "applies_to": [
+        "game_manager.gd",
+        "project.godot",
+        "merlin_store.gd"
+      ]
+    },
+    {
+      "id": "PAT-066",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "Two parallel game flow paths exist: (1) ACTIVE: HubAntre→BroceliandeForest3D→MerlinGame (2) INACTIVE: HubScreen→Run3D→EndRunScreen via game_flow_controller.gd. When adding features to game flow, use the ACTIVE path only.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/HubAntre.gd"
+      ]
+    },
+    {
+      "id": "PAT-067",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "All scene transitions should use PixelTransition.transition_to() not get_tree().change_scene_to_file(). parchment_pre_run.gd:217 is the only remaining raw transition in the primary game path. Always add null guard: if pt and pt.has_method('transition_to'): pt.transition_to(s) else: get_tree().change_scene_to_file(s)",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/ui/parchment_pre_run.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-068",
+      "learned_at": "2026-04-14T15:00:00Z",
+      "source": "SPECIALIST-14-E2E",
+      "pattern": "T-S2-ARC-CONDITION-REGRESS-V2 PASS. The chain merlin_game_controller→get_save_data()→_build_context()→llm_adapter_map_prompt arc dispatch is complete. Key invariants: (1) save_data.biome_runs[biome_id]→previous_runs; (2) save_data.fins_vues→fins_vues; (3) save_data.oghams.owned.size()→oghams_owned",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ]
+    },
+    {
+      "id": "PAT-069",
+      "learned_at": "2026-04-14T16:00:00Z",
+      "source": "SPECIALIST-15-META_EVOLUTION",
+      "pattern": "studio_insights.json ID generation generates 'insight-YYYYMMDD-001' each cycle without checking existing IDs — use global counter or suffix from len(insights)+1",
+      "severity": "MEDIUM",
+      "prevention": "When adding insights: new_id = f'insight-{date}-{len(existing_insights)+1:03d}'"
+    },
+    {
+      "id": "PAT-070",
+      "learned_at": "2026-04-14T16:00:00Z",
+      "source": "SPECIALIST-15-META_EVOLUTION",
+      "pattern": "completed_archive.json housekeeping (cycle_instructions.md) not consistently applied — most cycles skip the archive step, leaving only 2/62 tasks archived",
+      "severity": "HIGH",
+      "prevention": "Every cycle end: move ALL completed tasks from feature_queue to completed_archive before pushing"
+    },
+    {
+      "id": "PAT-071",
+      "learned_at": "2026-04-14T17:00:00Z",
+      "source": "SPEC-0-T-MG-FIELD-COVERAGE-TEST",
+      "pattern": "MiniGameRegistry.detect_field() is test-only. Production field detection uses MerlinEffectEngine.detect_field_from_verb(). Don't audit as the same code path.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/minigames/minigame_registry.gd",
+        "scripts/merlin/merlin_effect_engine.gd"
+      ]
+    },
+    {
+      "id": "PAT-072",
+      "learned_at": "2026-04-14T17:00:00Z",
+      "source": "SPEC-0-T-MG-FIELD-COVERAGE-TEST",
+      "pattern": "select_minigame() and pick_minigame_for_field() must return FIELD NAMES not GAME NAMES. Fallback = MerlinConstants.ACTION_VERB_FALLBACK_FIELD. MerlinMiniGameSystem.run() expects field names in VALID_FIELDS.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_card_system.gd:231",
+        "scripts/merlin/merlin_effect_engine.gd:762"
+      ]
+    },
+    {
+      "id": "PAT-073",
+      "learned_at": "2026-04-14T17:00:00Z",
+      "source": "SPEC-0-SCENE-FLOW-TESTER",
+      "pattern": "IntroPersonalityQuiz.tscn is unreachable from normal flow — Menu3DPC._start_new_game() goes to ParchmentPreRun. Only accessible via debug SceneSelector. Bible requires Quiz before Hub.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/menu_3d_pc.gd:1333-1337",
+        "scripts/IntroPersonalityQuiz.gd"
+      ]
+    },
+    {
+      "id": "PAT-074",
+      "learned_at": "2026-04-14T17:00:00Z",
+      "source": "SPEC-0-SCENE-FLOW-TESTER",
+      "pattern": "When multiple SCENE_* constants all point to the same target (archived), the branching logic becomes dead code. Always check if constants diverge — if they all converge, remove branching or add comment.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/SceneRencontreMerlin.gd:10-12"
+      ]
+    },
+    {
+      "id": "PAT-075",
+      "learned_at": "2026-04-14T18:00:00Z",
+      "source": "SPECIALIST-1-VISUAL-AUDIT",
+      "pattern": "Color(r, g, b, alpha) modification patterns are acceptable when r/g/b come from a PALETTE variable — only raw numeric Color(0.x, 0.y, 0.z) are violations",
+      "severity": "INFO",
+      "applies_to": [
+        "all_scripts"
+      ]
+    },
+    {
+      "id": "PAT-076",
+      "learned_at": "2026-04-14T18:00:00Z",
+      "source": "SPECIALIST-1-VISUAL-AUDIT",
+      "pattern": "pixel_transition_config.gd has inline TODO comments marking palette violations — always grep for such comments when doing visual audits",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/autoload/pixel_transition_config.gd"
+      ]
+    },
+    {
+      "id": "PAT-077",
+      "learned_at": "2026-04-14T18:48:30Z",
+      "source": "SPEC-2-GAME_DESIGN_COMPLIANCE",
+      "pattern": "FACTION_THRESHOLD_ENDING=80 is defined in constants but NEVER used in check_run_end() — faction endings (bible s.3.8) are not triggered. Critical gameplay gap.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "id": "PAT-078",
+      "learned_at": "2026-04-14T18:48:30Z",
+      "source": "SPEC-2-GAME_DESIGN_COMPLIANCE",
+      "pattern": "store_oghams.gd:78 tick_cooldowns() decrements ALL oghams in cooldown, not just active one. Bible s.2.2 requires only active ogham's cooldown decrements. Requires active_ogham param.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/store_oghams.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-079",
+      "learned_at": "2026-04-14T19:42:00Z",
+      "source": "SPEC-3-SFX",
+      "pattern": "run_3d_controller has parallel local ogham tracking (_ogham_cooldowns + _active_ogham_this_card) separate from StoreOghams.skill_cooldowns. Both must stay in sync.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/run/run_3d_controller.gd",
+        "scripts/merlin/store_oghams.gd"
+      ]
+    },
+    {
+      "id": "PAT-080",
+      "learned_at": "2026-04-14T19:42:00Z",
+      "source": "SPEC-3-SFX",
+      "pattern": "audio_integration.gd references SFXEngine class that does not exist. Always grep for class_name before using classes from external files.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/audio/audio_integration.gd"
+      ]
+    },
+    {
+      "id": "PAT-081",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "SPEC-4-ANIMATION_TWEEN",
+      "pattern": "HUD ProgressBar.value should always be set via tween_property (0.35s TRANS_CUBIC), never direct assignment. Store tween ref, kill on rapid update.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/ui/hud_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-082",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "SPEC-4-ANIMATION_TWEEN",
+      "pattern": "walk_event_overlay.gd:261-265 is the reference stagger pattern: start modulate.a=0, scale=0.85, animate with TRANS_BACK EASE_OUT, delay=0.08*index. Use for any dynamic button list.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/SelectionSauvegarde.gd",
+        "scripts/ui/walk_event_overlay.gd"
+      ]
+    },
+    {
+      "id": "PAT-083",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "SPEC-4-ANIMATION_TWEEN",
+      "pattern": "Safe PixelTransition pattern: get_node_or_null('/root/PixelTransition') with change_scene_to_file fallback is CORRECT — headless-compatible, not a bug.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/ui/parchment_pre_run.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-084",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "T-FLOW-SCENE-TRANSITIONS",
+      "pattern": "ui_overlay_narrative.gd:289 still targets MenuPrincipal.tscn (old menu). Active game uses Menu3DPC.tscn. Dual-menu-path bug: FLOW-NARRATIVE-MENU-PATH-FIX P61.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/ui/ui_overlay_narrative.gd"
+      ]
+    },
+    {
+      "id": "PAT-085",
+      "learned_at": "2026-04-14T20:40:00Z",
+      "source": "T-FLOW-SCENE-TRANSITIONS",
+      "pattern": "MapMonde.tscn is a stub — no script, never transitioned to in production. HubAntre SCENE_MAPMONDE const is dead code.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/HubAntre.gd",
+        "scenes/MapMonde.tscn"
+      ]
+    },
+    "PAT-086: Shader attachment: ShaderMaterial must be explicitly assigned to overlay rect — check _shader_mat is not null before calling set_shader_parameter()",
+    "PAT-087: PS1 aesthetic: vertex snap + UV snap alone insufficient — affine warp (perspective division removal) is the primary PS1 visual signature",
+    "PAT-088: GAMES dict must include all valid gm_hint values used in cards — neutre field was a silent fallback to chance due to missing GAMES[neutre] entry",
+    {
+      "id": "PAT-089",
+      "learned_at": "2026-04-14T22:55:00Z",
+      "source": "SPEC-6-UX",
+      "pattern": "6 occurrences of 10px font in calendar_tabs.gd, menu_3d_pc.gd, ui_config_module.gd — always check font_size after adding Labels, never go below 11px",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/calendar_tabs.gd",
+        "scripts/menu_3d_pc.gd",
+        "scripts/ui/ui_config_module.gd",
+        "scripts/Collection.gd"
+      ]
+    },
+    {
+      "id": "PAT-090",
+      "learned_at": "2026-04-14T22:55:00Z",
+      "source": "SPEC-6-UX",
+      "pattern": "select_minigame(field) returns field type string (from FIELD_MINIGAMES), not a scene name — two separate lookup tables: FIELD_MINIGAMES (simulation) vs MiniGameRegistry.GAMES (UI instantiation)",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/minigames/minigame_registry.gd"
+      ]
+    },
+    {
+      "id": "PAT-091",
+      "learned_at": "2026-04-14T23:49:54Z",
+      "source": "SPEC-7-NARRATIVE",
+      "pattern": "text_registry.json is a stub with only 4 empty keys — all i18n text currently hardcoded in scripts. Registry architecture exists but population phase not started. Calendar.gd:20-73, Collection.gd:17, HubAntre.gd:848 are the main offenders.",
+      "severity": "HIGH",
+      "applies_to": [
+        "data/i18n/text_registry.json",
+        "scripts/Calendar.gd",
+        "scripts/Collection.gd"
+      ]
+    },
+    {
+      "id": "PAT-092",
+      "learned_at": "2026-04-14T23:49:54Z",
+      "source": "SPEC-7-NARRATIVE",
+      "pattern": "Trust tier skew (T0=79.4%, T3=5.4%) is natural for new content development but T3 cards require deliberate authoring for high-trust player experience. Check tier balance after each content sprint.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "data/cards/"
+      ]
+    },
+    {
+      "id": "PAT-093",
+      "learned_at": "2026-04-14T23:49:54Z",
+      "source": "SPEC-7-NARRATIVE",
+      "pattern": "Verb count drift: 52 unique verbs found vs bible implicit 45-verb closed list. Authors add synonyms organically (tendre l'oreille vs ecouter, chercher au hasard vs fouiller a l'aveugle). Periodic normalization pass needed.",
+      "severity": "LOW",
+      "applies_to": [
+        "data/cards/"
+      ]
+    },
+    {
+      "id": "PAT-094",
+      "learned_at": "2026-04-15T00:00:00Z",
+      "source": "SPEC-8-LLM-AUDIT",
+      "pattern": "OllamaBackend.set_grammar() is a no-op — never assume grammar-constrained decoding works for Ollama. Use few-shot JSON schema in system prompt instead.",
+      "severity": "HIGH",
+      "applies_to": [
+        "addons/merlin_ai/ollama_backend.gd",
+        "scripts/merlin/llm_adapter_game_master.gd"
+      ]
+    },
+    {
+      "id": "PAT-095",
+      "learned_at": "2026-04-15T00:00:00Z",
+      "source": "SPEC-8-LLM-AUDIT",
+      "pattern": "RAG context must pass brain_role to get_prioritized_context() to receive full budget. Without role, budget defaults to 400 tokens; with 'narrator' role, budget is 800 tokens. Always pass the role.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "addons/merlin_ai/rag_manager.gd"
+      ]
+    },
+    {
+      "id": "PAT-096",
+      "learned_at": "2026-04-15T01:30:00Z",
+      "source": "SPEC-9-SAVE_PERSISTENCE",
+      "pattern": "run_history in profile is always [] — apply_run_rewards() never appends. Must add run summary dict (biome, cards_played, anam, victory, timestamp) after each run end.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-097",
+      "learned_at": "2026-04-15T01:30:00Z",
+      "source": "SPEC-9-SAVE_PERSISTENCE",
+      "pattern": "Director q-20260414-005 option B: IntroPersonalityQuiz + SceneRencontreMerlin fully deleted. IntroCeltOS already transitions to Menu3DPC directly.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scenes/",
+        "scripts/autoload/SceneSelector.gd"
+      ]
+    },
+    {
+      "id": "PAT-098",
+      "learned_at": "2026-04-15T01:30:00Z",
+      "source": "SPEC-9-SAVE_PERSISTENCE",
+      "pattern": "load_profile() faction_rep clamp only touches existing keys — must ensure all 5 factions present after load, not just clamp existing ones.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-099",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-SFX-AUDIT",
+      "pattern": "Base class (minigame_base) must NOT call global SFX — only controller layer (game_controller_minigame) has full outcome context. Base class SFX + controller SFX = double trigger every time.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/minigames/minigame_base.gd",
+        "scripts/ui/game_controller_minigame.gd"
+      ]
+    },
+    {
+      "id": "PAT-100",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-SFX-AUDIT",
+      "pattern": "Never use get_node_or_null(\"/root/AutoloadName\") — use the autoload directly. Autoloads are always available as globals in Godot 4. get_node_or_null pattern is fragile and verbose.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/minigames/[all]",
+        "scripts/MenuPrincipalMerlin.gd"
+      ]
+    },
+    {
+      "id": "PAT-101",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-E2E-TEST",
+      "pattern": "E2E task specs can become stale when scene flow changes. Always verify actual change_scene/transition_to calls in code rather than trusting old spec descriptions. Menu3DPC replaces MenuPrincipal as active main menu.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/menu_3d_pc.gd",
+        "scripts/core/game_flow_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-102",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-E2E-TEST",
+      "pattern": "GameFlowController/AudioIntegration/SFXEngine represent a clean-architecture layer that was built in parallel with the working PixelTransition-direct approach. Parallel architectures accumulate signal mismatches. When refactoring, reconcile class names and signal names between the two systems first.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/audio/audio_integration.gd",
+        "scripts/run/end_run_screen.gd",
+        "scripts/ui/end_run_screen.gd"
+      ]
+    },
+    {
+      "id": "PAT-010",
+      "learned_at": "2026-04-15T05:47:14Z",
+      "source": "SPECIALIST-4-ANIM-2026-04-15",
+      "pattern": "push_warning() should always accompany silent error returns in LLM backends — helps debugging config issues without requiring a running game session",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "groq_backend.gd",
+        "ollama_backend.gd"
+      ]
+    },
+    {
+      "id": "PAT-011",
+      "learned_at": "2026-04-15T05:47:14Z",
+      "source": "SPECIALIST-4-ANIM-2026-04-15",
+      "pattern": "Animation audit: scene transitions (PixelTransition) are well-covered. Main gaps are in-game state changes: life bar instant-updates, card panel naked visible toggles, end screen element stagger",
+      "severity": "LOW",
+      "applies_to": [
+        "hud_controller.gd",
+        "ui_overlay_endscreen.gd",
+        "merlin_game_ui.gd"
+      ]
+    },
+    {
+      "id": "PAT-012",
+      "learned_at": "2026-04-15T07:00:00Z",
+      "source": "SPECIALIST-5-SHADER_VFX_AUDITOR_2026-04-15",
+      "pattern": "ShaderMaterial null silent failure: when a shader is removed from a ColorRect, _set_shader_parameter() calls become silent no-ops. ALL visual effects appear broken with zero runtime error. Always add push_warning() guard in _set_shader() when _shader_mat is null.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/broceliande_3d/broc_screen_vfx.gd"
+      ]
+    },
+    {
+      "id": "PAT-013",
+      "learned_at": "2026-04-15T07:00:00Z",
+      "source": "SPECIALIST-5-SHADER_VFX_AUDITOR_2026-04-15",
+      "pattern": "PS1/N64 grass sway: UV.y maps root (0) to tip (1). Apply pow(UV.y, 1.8) for natural height falloff. Use world-space X/Z for cross-instance wind coherence. Quantize displacement with floor(wx/snap)*snap for PS1 stutter look.",
+      "severity": "LOW",
+      "applies_to": [
+        "shaders/grass_wind_sway.gdshader",
+        "scripts/broceliande_3d/broc_grass_wind.gd"
+      ]
+    },
+    {
+      "id": "PAT-014",
+      "learned_at": "2026-04-15T07:00:00Z",
+      "source": "SPECIALIST-5-SHADER_VFX_AUDITOR_2026-04-15",
+      "pattern": "GDScript private method convention (_prefix) is not enforced by the compiler. External classes CAN call _private_method() without error. Always audit for cross-class private calls in RefCounted subsystems (BrocEventVfx, BrocAtmosphere etc).",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/broceliande_3d/broc_narrative_director.gd",
+        "scripts/broceliande_3d/broc_event_vfx.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-001",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "MerlinVisual.MIN_TOUCH_TARGET=48 exists but is NOT applied to hub_screen factory buttons (_make_biome_button, _make_ogham_button). Always check factory functions for touch compliance.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/ui/hub_screen.gd",
+        "scripts/minigames/minigame_base.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-002",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "compact_mode font floor at 10px (Collection.gd:388) violates the 11px minimum. When adding compact_mode font scaling, always clamp: max(scaled_size, 11).",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/Collection.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-003",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "faction_endings_available is computed in store_run.check_run_end() and passed as part of end_check dict. EndRunScreen.show_results(run_data) receives it. No need to recompute — always read from run_data.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/run/end_run_screen.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-004",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "EndRunScreen has two versions: scripts/ui/end_run_screen.gd (EndRunScreenUI, legacy/unused) and scripts/run/end_run_screen.gd (EndRunScreen, production). Always edit the run/ version.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/run/end_run_screen.gd",
+        "scripts/ui/end_run_screen.gd"
+      ]
+    },
+    {
+      "id": "PAT-S7-001",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-UX",
+      "pattern": "AccessibilitySystem (colorblind, text_scale, high_contrast, reduced_motion) is fully implemented but NOT registered as autoload — it is dead code until registered in project.godot",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/accessibility_system.gd",
+        "project.godot"
+      ]
+    },
+    {
+      "id": "PAT-S7-002",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-UX",
+      "pattern": "PlatformManager.get_ui_scale() and get_base_font_size() defined but never called — mobile DPI scaling completely inactive",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/autoload/platform_manager.gd"
+      ]
+    },
+    {
+      "id": "PAT-S7-003",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-UX",
+      "pattern": "MenuPrincipalMerlin all buttons FOCUS_NONE — gamepad/keyboard navigation disabled. Audit focus_mode on all UI screens.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/MenuPrincipalMerlin.gd"
+      ]
+    },
+    {
+      "id": "PAT-S7-004",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-LLM-STAT-1",
+      "pattern": "OllamaBackend._update_stats() now has ttft_ms param (default -1 = use total_ms). Streaming path tracks first_token_ms before while loop. stats.last_ttft_ms is now always set.",
+      "severity": "LOW",
+      "applies_to": [
+        "addons/merlin_ai/ollama_backend.gd"
+      ]
+    }
+  ],
+  "agent_performance": {
+    "game_playtester": {
+      "tasks_completed": 5,
+      "bugs_introduced": 0,
+      "bugs_found": 6,
+      "specialization": "static analysis, invariant simulation, run modeling, startup trace",
+      "strengths": [
+        "thorough invariant checking",
+        "good report format",
+        "startup sequence tracing (deferred calls, null-safety timing)",
+        "static substitute for headless execution when runtime unavailable"
+      ],
+      "weaknesses": []
+    },
+    "godot_expert": {
+      "tasks_completed": 37,
+      "bugs_introduced": 0,
+      "specialization": "GDScript implementation, dead code removal, system cleanup",
+      "strengths": [
+        "fast cleanup tasks",
+        "precise bug fixes"
+      ],
+      "weaknesses": [
+        "large deletions need Python fallback"
+      ]
+    },
+    "bug_hunter": {
+      "tasks_completed": 10,
+      "bugs_introduced": 0,
+      "bugs_found": 7,
+      "specialization": "static analysis, pipeline simulation, cross-system inconsistency detection, coverage drift detection",
+      "strengths": [
+        "found cross-module validation inconsistency",
+        "traced effect accumulation paths",
+        "regression verification",
+        "cross-module key-mismatch detection (PAT-019)",
+        "SFX coverage drift: caller vs registry cross-reference (PAT-037)"
+      ],
+      "weaknesses": [],
+      "partial_pass_reports": 2
+    },
+    "game_design_auditor": {
+      "tasks_completed": 7,
+      "bugs_introduced": 0,
+      "bugs_found": 9,
+      "specialization": "bible vs code gap analysis, cross-system state management, dual-context LLM audit, multi-fix regression sweeps",
+      "strengths": [
+        "found promise split-brain bug (dual storage keys)",
+        "found biome interval mismatches vs bible s.4.3",
+        "audited both LLM context paths (Narrator vs GameMaster)",
+        "comprehensive 12-system coverage in one cycle",
+        "biome regression: verified 6/6 checks PASS across 8 biomes vs bible s.3.6+s.4.3 in single cycle",
+        "synthetic multi-fix sweep: 5 recent dev cycles verified in single test cycle when no test tasks in queue"
+      ],
+      "weaknesses": []
+    },
+    "save_persistence_auditor": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0
+    },
+    "faction_rep_auditor": {
+      "tasks_completed": 2,
+      "bugs_introduced": 0
+    },
+    "minigame_system_auditor": {
+      "tasks_completed": 1,
+      "bugs_found": 5
+    },
+    "3d_scene_asset_auditor": {
+      "tasks_completed": 2,
+      "bugs_found": 3
+    },
+    "perf_code_quality_auditor": {
+      "tasks_completed": 4,
+      "bugs_introduced": 0,
+      "cycles_run": 0
+    },
+    "integration_e2e_auditor": {
+      "tasks_completed": 2,
+      "bugs_introduced": 0,
+      "cycles_run": 0
+    },
+    "meta_evolution_auditor": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0,
+      "cycles_run": 1
+    },
+    "scene_flow_tester": {
+      "tasks_completed": 2
+    },
+    "visual_consistency_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "game_design_compliance_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "audit_checks_run": 24,
+      "violations_found": 4
+    },
+    "sfx_audio_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "animation_tween_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "shader_vfx_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "ux_accessibility_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    },
+    "narrative_designer": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0
+    },
+    "i18n_auditor_agent": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0
+    },
+    "llm_pipeline_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "bugs_found": 5,
+      "specialist_cycle": 8
+    },
+    "sfx_auditor_specialist3": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "sfx_findings": 9,
+      "e2e_chks_passed": 6
+    },
+    "animation_artist": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0,
+      "tasks_audited": 5
+    },
+    "ux_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
+    }
+  },
+  "llm_quality": {
+    "model": "qwen3.5:2b",
+    "json_success_rate": "N/A (two-stage pipeline bypasses JSON parsing for narrative)",
+    "avg_quality": "not_tested",
+    "prompt_templates_tested": 21,
+    "grammar_constraint_status": "BROKEN: OllamaBackend.set_grammar() is no-op — GM JSON unconstrained",
+    "rag_context_status": "DEGRADED: truncated to 200/3200 chars (6.25% of budget) — fix LLM-RAG-CONTEXT-ROLE",
+    "notes": "Two-stage pipeline: Stage 1 free text (no JSON), Stage 2 programmatic wrap. Grammar constraint silently no-op for Ollama — CRITICAL gap for GM effects generation. RAG budget 800 tokens but only 50 tokens delivered."
+  },
+  "director_decisions": [
+    {
+      "question_id": "q-20260412-001",
+      "decision": "Aucun drain de vie a chaque carte",
+      "impact": "LIFE_ESSENCE_DRAIN_PER_CARD should be 0",
+      "applied": true,
+      "applied_at": "2026-04-12T22:30:00Z",
+      "files_modified": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "question_id": "q-20260412-002",
+      "decision": "Ambiance doit changer en fonction de saison et heure de journee",
+      "impact": "Dynamic ambient: season + time_of_day exposed to LLM context",
+      "applied": false,
+      "task_created": "S3-AMBIENT-LIGHTING"
+    },
+    {
+      "question_id": "q-20260412-003",
+      "decision": "Hybride (titre celtique + corps sans-serif)",
+      "impact": "MerlinVisual: FONT_TITLE (celtic) + FONT_BODY (sans-serif)",
+      "applied": false,
+      "task_created": "S3-TYPOGRAPHY"
+    },
+    {
+      "question_id": "q-20260412-004",
+      "decision": "Ultra low pixel / low polygon N64+PS1 avec effets volumetriques",
+      "impact": "Render pipeline: pixel snap, affine textures, volumetric fog, viewport scale, dithering",
+      "applied": false,
+      "task_created": "S3-PIXEL-RENDER"
+    },
+    {
+      "question_id": "q-20260412-005",
+      "decision": "Supprimer la récupération automatique (+5 PV si vie < 20)",
+      "impact": "Pacing recovery removed from StoreRun.resolve_choice(). Survival now depends entirely on choices.",
+      "applied": true,
+      "applied_at": "2026-04-13T09:00:00Z",
+      "files_modified": [
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "question_id": "q-20260413-002",
+      "decision": "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)",
+      "impact": "Added dominant_faction to all 8 BIOMES entries. BUG-FACTIONS-STALE-FIX to use it for biome-based AI event routing.",
+      "applied": true,
+      "applied_at": "2026-04-13T11:00:00Z",
+      "files_modified": [
+        "scripts/merlin/merlin_constants.gd"
+      ]
+    },
+    {
+      "question_id": "q-20260413-001",
+      "decision": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)",
+      "impact": "Task S3-STORY-LOG-RAG created (P17). RAG manager to provide compressed narrative context beyond 2-card story_log limit.",
+      "applied": false,
+      "task_created": "S3-STORY-LOG-RAG"
+    },
+    {
+      "question_id": "q-20260414-001",
+      "decision": "Appliquer le multiplicateur à TOUT l'Anam du run, cartes incluses (plus punitif, fidèle bible littérale)",
+      "impact": "ADD_ANAM during run writes to run['anam_accumulated'] only. At run end, apply min(cards_played/30,1.0) ratio to total (base + accumulated). More punitive death penalty, faithful to bible s.5.1.",
+      "applied": true,
+      "applied_at": "2026-04-14T08:00:00Z",
+      "task_created": "BUG-ANAM-DEATH-PENALTY-FIX (bumped to P5)"
+    }
+  ],
+  "evolution_log": [
+    {
+      "cycle": 1,
+      "date": "2026-04-12T21:00:00Z",
+      "type": "test",
+      "action": "First autonomous test cycle — found 4 bugs, created 2 P0 tasks",
+      "improvement": "Established baseline invariant checklist (11 invariants)"
+    },
+    {
+      "cycle": 2,
+      "date": "2026-04-12T22:30:00Z",
+      "type": "dev",
+      "action": "Fixed 2 P0 bugs: double cards_played increment + orphaned process_card(). Applied director q-001 (drain=0). Added pacing recovery. Created 3 S3 tasks from director decisions q-002/003/004.",
+      "improvement": "cards_played now has single canonical increment. MOS will correctly trigger at 50 cards. Process_card() cleaned up (9125 chars removed)."
+    },
+    {
+      "cycle": 3,
+      "date": "2026-04-13T00:00:00Z",
+      "type": "test",
+      "action": "TEST S1-LLM-VALIDATE: Found HIGH bug BUG-FACTION-OVERFLOW (faction keyword overflow bypasses LLM for ~40-60% of cards). 3/3 regression checks pass. Fallback chain robust. Created BUG-FACTION-OVERFLOW-FIX at priority 1.",
+      "improvement": "Learned: two validators (adapter vs card system) have different effect-count rules. Future: align both validators or add pre-validation cap in _wrap_text_as_card."
+    },
+    {
+      "cycle": 4,
+      "date": "2026-04-13T00:00:00Z",
+      "type": "dev",
+      "action": "Fixed BUG-FACTION-OVERFLOW: faction keyword auto-tag in _wrap_text_as_card() now capped at 1 ADD_REPUTATION per card. Added faction_tagged flag + size guard.",
+      "improvement": "~40-60% of Celtic cards will now pass _validate_card correctly instead of silently falling back to FastRoute. LLM cards will be used far more often."
+    },
+    {
+      "cycle": 5,
+      "date": "2026-04-13T06:00:00Z",
+      "type": "dev",
+      "action": "Sprint 1 COMPLETE. Audited S1-CLEANUP-1/2/3 + S1-OGHAM-ALIGN — all already completed by prior Triade cleanup cycles. Removed dead GENERATION_TIMEOUT_MS from merlin_llm_adapter.gd (LOW bug from S1-LLM-VALIDATE). 22 tasks archived. Sprint 2 starts next cycle.",
+      "improvement": "Learned: audit file state before coding. Sprint tasks may be pre-completed by earlier cycles. OGHAM_STARTER_SKILLS and CardOption must be kept (heavily used)."
+    },
+    {
+      "cycle": 6,
+      "date": "2026-04-13T02:54:09Z",
+      "type": "test",
+      "action": "S2-INTEGRATION: 12-system bible audit + static analysis. Found 1 HIGH (BUG-PROMISE-SYSTEM: dual promise storage never expires), 4 MEDIUM (day stale, factions run-stale, biome intervals wrong, biome arcs wrong), 2 LOW. 3/3 regressions PASS. Created BUG-PROMISE-SYSTEM-FIX P1. Updated S2-BIOMES to also fix biome intervals/arcs.",
+      "improvement": "Learned: split-brain storage bugs (two keys for same system) are silent — system appears to work but deadlines never fire. Pattern: always trace writer→reader pairs. game_design_auditor agent: excellent for cross-file bible vs code gaps."
+    },
+    {
+      "cycle": 7,
+      "date": "2026-04-13T07:00:00Z",
+      "type": "dev",
+      "action": "BUG-PROMISE-SYSTEM-FIX: Unified dual promise storage. (1) _add_promise() now writes to active_promises (was: orphaned promises key). (2) _create_promise() unified to active_promises + MAX cap + switched to card-based deadlines (made_at_card + deadline_cards). (3) check_promise_deadlines() now card-based (was: day-based, run.day never incremented). (4) game_flow_controller.gd end-summary reads active_promises. 4 files touched.",
+      "improvement": "PAT-015 added: multi-path systems must route to same storage key; always prefer deadline units that are actually tracked (cards_played YES, run.day NO). Next: S2-BIOMES (priority 7) — fix biome intervals + arc conditions."
+    },
+    {
+      "cycle": 8,
+      "date": "2026-04-13T08:30:00Z",
+      "type": "test",
+      "action": "S3-EDGE-CASES: 8 edge cases tested. 3/3 regressions PASS (promise fix confirmed, cards_played canonical, drain=0). 7/8 edge cases PASS. 1 MEDIUM bug: BUG-MIDRUN-SAVE-INCOMPLETE (autosave does not persist run_state). 1 LOW bug: BUG-SIGNAL-DELTA (reputation_changed signal emits unclamped raw delta). 2 new tasks created (P6+P11). Report: S3-EDGE-CASES_2026-04-13.json",
+      "improvement": "PAT-016 added: mid-run save must be wired into autosave. Also confirmed: scale_and_cap IS implemented in effect engine; MULTIPLIER_TABLE IS used (merlin_card_system resolve_card). Ogham activation has no currency check — only cooldown + unlock check. Trust T0-T3 correctly clamped and tiered."
+    },
+    {
+      "cycle": 9,
+      "date": "2026-04-13T09:00:00Z",
+      "type": "dev",
+      "action": "BUG-MIDRUN-SAVE-INCOMPLETE-FIX: _do_autosave() now persists run_state when run is active. run_snapshot built with biome/card_index key mapping. Also removed pacing recovery per director q-20260412-005. Applied director q-20260413-001: created S3-STORY-LOG-RAG task.",
+      "improvement": "PAT-017: autosave now persists run state. PAT-018: no more auto-recovery — survival is choice-driven. story_log RAG tracked as S3 task."
+    },
+    {
+      "cycle": 10,
+      "date": "2026-04-13T10:00:00Z",
+      "type": "test",
+      "action": "S3-LLM-ROBUSTNESS: 10 scenarios analyzed. FAIL: 1 HIGH (BUG-FACTIONS-STALE-OMNISCIENT: run.factions always zeros — meta.faction_rep never routed to context_builder/omniscient/event-routing), 2 LOW (timeshare race, story_log prompt overflow). 3/3 regressions PASS. LLM transport layer fully robust (timeout, fallback, ChatML, queue). Created BUG-FACTIONS-STALE-FIX P5.",
+      "improvement": "PAT-019/020/021 added. Key insight: LLM layer has no transport bugs; the faction system was visible to effect engine but invisible to ALL AI orchestration (omniscient, event router, fallback, RAG, NPC dialogue). Fix is surgical: route meta.faction_rep into context_builder."
+    },
+    {
+      "cycle": 12,
+      "date": "2026-04-13T12:00:00Z",
+      "type": "test",
+      "action": "S4-SMOKE-TEST (static analysis): 13 invariants checked. PASS: startup deferred-store timing, card cycle full trace, life 0-100, rep ±20/card, MOS zones, effects/option cap, cards_played single increment, drain=0, no pacing recovery, active_promises unified, autosave run_state, neutre separate field, dominant_faction in biomes. 5/5 regressions PASS. 2 known open bugs confirmed (BUG-FACTIONS-STALE-FIX P5, BUG-SIGNAL-DELTA-FIX P6). 1 task overlap noted (DIR-S2-MNWXQ41M vs S3-AMBIENT+PIXEL).",
+      "improvement": "PAT-023: MerlinStore deferred creation + 1-frame await is critical null-safety. PAT-024: static analysis is a valid substitute for headless run. game_playtester specialization expanded to include startup trace methodology."
+    },
+    {
+      "cycle": 11,
+      "date": "2026-04-13T11:00:00Z",
+      "type": "dev",
+      "action": "S2-VERBS-MOS: Audited ACTION_VERBS/FIELD_MINIGAMES/MOS_CONVERGENCE/TRUST_TIERS/TRUST_DELTAS/IN_GAME_PERIODS vs bible v2.4 s.6.1-6.4. Fixed 3 issues: (1) separated 'neutre' field from 'esprit', (2) added FIELD_MINIGAMES['neutre']=['apaisement','volonte'], (3) EFFECT_CAPS['drain_per_card'] 1->0. Applied director q-20260413-002: added dominant_faction to all 8 BIOMES. All 4 other subsystems PASS.",
+      "improvement": "PAT-022 added: neutre is a distinct 9th field, not an esprit subset. Existing tests all compatible — no test checked 'parler'→'esprit' directly. dominant_faction enables biome-aware AI event routing for BUG-FACTIONS-STALE-FIX."
+    },
+    {
+      "cycle": 13,
+      "date": "2026-04-13T13:00:00Z",
+      "type": "dev",
+      "action": "BUG-FACTIONS-STALE-FIX + S2-CLEAN-CARDSYS audit. Confirmed S2-CLEAN-CARDSYS was pre-completed (PAT-009). Fixed 6 stale run.get('factions') reads: rag_manager.gd (4 functions: _get_crisis_context, _get_faction_context, _get_aspects_state_context, _find_dominant_faction), merlin_llm_adapter.gd (build_narrative_context + build_context). All now use meta.get('faction_rep',{}). Injected dominant_faction from BIOMES[biome] into enriched_run in event_category_selector. Added S2-CONTEXT-GAUGES-CLEANUP task (dead gauges key in context_builder) + S3-FACTION-REGRESSION-TEST.",
+      "improvement": "PAT-025: partial prior fixes mean task audits must grep ALL callers, not just task-described files. The faction bug is now fully fixed across all 5 AI subsystems. dominant_faction biome routing now available to event selector trigger system."
+    },
+    {
+      "cycle": 14,
+      "date": "2026-04-13T14:00:00Z",
+      "type": "test",
+      "action": "S3-FACTION-REGRESSION-TEST: 7/7 checks PASS, 5/5 regressions PASS. BUG-FACTIONS-STALE-FIX confirmed complete across all 5 AI subsystems. Zero stale run.factions reads. dominant_faction biome routing fully wired. 0 new bugs.",
+      "improvement": "PAT-025 confirmed via clean audit: all 5 files fully fixed. AI factions are now live for omniscient, event router, context builder, RAG, LLM adapter. Next: BUG-SIGNAL-DELTA-FIX (P6) then S2 remaining dev tasks."
+    },
+    {
+      "cycle": 15,
+      "date": "2026-04-13T15:00:00Z",
+      "type": "dev",
+      "action": "S2-CONTEXT-GAUGES-CLEANUP: Removed dead 'gauges' key from build_full_context() and deleted get_critical_gauges() function from context_builder.gd. Cleaned 9 dead test functions from test_context_builder.gd. Applied director q-20260413-003: cancelled S3-AMBIENT + S3-PIXEL, promoted DIR-S2-MNWXQ41M to P14 with unified DA spec. Created 3 new tasks: S2-DAY-TICK-FIX (PAT-012 bug, run.day never incremented), S2-CONTEXT-REGRESSION-TEST, S3-MINIGAMES-FIELD-AUDIT. 10 tasks pending.",
+      "improvement": "PAT-026: dead functions must be paired with dead test cleanup. run.day always-1 bug (PAT-012) now has explicit task S2-DAY-TICK-FIX."
+    },
+    {
+      "cycle": 17,
+      "date": "2026-04-13T15:30:00Z",
+      "type": "dev",
+      "action": "S2-DEAD-FILES: 4/5 bestiole files already deleted. Deleted mg_de_du_destin.gd (D20 suppressed system). Fixed 3 references in minigame_registry.gd (GAMES array, match case, ultimate fallback→mg_pile_ou_face). Fixed 1 reference in auto_play_runner.gd (MINIGAME_LIST 15→14). Zero references remain outside /archive/.",
+      "improvement": "PAT-028 added: fallback files must have their fallback reference replaced before deletion. godot_expert tasks_completed=23. 10 tasks pending (at minimum)."
+    },
+    {
+      "cycle": 16,
+      "date": "2026-04-13T14:19:16Z",
+      "type": "test",
+      "action": "S2-CONTEXT-REGRESSION-TEST: 8/8 checks analyzed. PASS: CHK-1 (no gauges key in build_full_context), CHK-2 (get_critical_gauges fully removed, 0 callers), CHK-5 (faction_rep via meta), CHK-6 (active_promises unified), CHK-7 (drain=0), CHK-8 (no pacing recovery). PARTIAL_FAIL: CHK-3 (BUG-SIGNAL-DELTA-FIX pending P6 — raw rep_delta emitted), CHK-4 (S2-DAY-TICK-FIX pending P8 — day never incremented). 5/5 regressions PASS. 0 new bugs. SF-001 LOW: vestigial gauges_changed signal in merlin_store (map gauges, benign). Created S2-DAY-SIGNAL-REGRESSION-TEST P11.",
+      "improvement": "PAT-027 added: PARTIAL_PASS is a valid test verdict when checks fail because fixes are pending, not regressed. Re-verification flow: create downstream test task after fix cycle."
+    },
+    {
+      "cycle": 34,
+      "date": "2026-04-14T08:00:00Z",
+      "type": "test",
+      "action": "T-S3-MEDITATION-VERIFY PASS 6/6. mg_meditation fully cleaned: file deleted, TAG_FIELD_MAP clean, create_minigame() clean, GAMES[esprit]=[volonte,apaisement,sang_froid], test files clean. Applied director q-20260414-001: BUG-ANAM-DEATH-PENALTY-FIX bumped to P5 (all in-run Anam subject to death ratio). 10 pending tasks.",
+      "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
+    }
+  ],
+  "total_cycles": 6,
+  "bugs_found": 24,
+  "bugs_fixed": 4
+}

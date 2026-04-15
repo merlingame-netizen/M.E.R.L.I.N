@@ -504,14 +504,20 @@ func _build_event_context(game_state: Dictionary) -> Dictionary:
 	var meta: Dictionary = game_state.get("meta", {})
 	var hidden: Dictionary = run.get("hidden", {})
 
+	var faction_rep: Dictionary = meta.get("faction_rep", {
+		"druides": 0, "anciens": 0, "korrigans": 0, "niamh": 0, "ankou": 0
+	})
+	var current_biome: String = str(run.get("current_biome", ""))
+	var biome_dominant: String = MerlinConstants.BIOMES.get(current_biome, {}).get("dominant_faction", "")
 	return {
-		"factions": run.get("factions", {}),
+		"factions": faction_rep,
 		"cards_played": int(run.get("cards_played", 0)),
 		"total_runs": int(meta.get("total_runs", 0)),
 		"karma": int(hidden.get("karma", 0)),
 		"tension": int(hidden.get("tension", 0)),
 		"flags": game_state.get("flags", {}),
-		"dominant_faction": _get_dominant_faction(run.get("factions", {})),
+		"dominant_faction": _get_dominant_faction(faction_rep),
+		"biome_dominant_faction": biome_dominant,
 		"trust_merlin": relationship.trust_points if relationship else 0,
 		"endings_seen_count": int(meta.get("endings_seen", []).size()),
 		"calendrier_des_brumes": meta.get("talent_tree", {}).get("unlocked", []).has("calendrier_des_brumes"),
@@ -724,7 +730,8 @@ func _compute_context_hash(game_state: Dictionary) -> int:
 	## Compute a hash of the game state for prefetch validation.
 	## Includes factions, cards_played and life_essence to detect state changes.
 	var run: Dictionary = game_state.get("run", {})
-	var factions: Dictionary = run.get("factions", {})
+	var meta: Dictionary = game_state.get("meta", {})
+	var factions: Dictionary = meta.get("faction_rep", {})
 	var hash_val: int = 0
 	for faction in ["druides", "anciens", "korrigans", "niamh", "ankou"]:
 		hash_val = hash_val * 7 + int(factions.get(faction, 0)) + 2
@@ -2115,7 +2122,7 @@ func generate_dream(game_state: Dictionary) -> String:
 
 	# Build dream context from game state
 	var run: Dictionary = game_state.get("run", {})
-	var factions: Dictionary = run.get("factions", {})
+	var factions: Dictionary = game_state.get("meta", {}).get("faction_rep", {})
 	var ogham: String = str(run.get("ogham_actif", ""))
 	var biome: String = str(run.get("current_biome", "foret_broceliande"))
 	var cards_played: int = int(run.get("cards_this_run", 0))

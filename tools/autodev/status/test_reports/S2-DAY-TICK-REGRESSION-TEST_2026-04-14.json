@@ -1,0 +1,84 @@
+{
+  "report_id": "S2-DAY-TICK-REGRESSION-TEST_2026-04-14",
+  "task_id": "SYNTHETIC-S2-DAY-TICK-REGRESSION",
+  "agent": "game_design_auditor",
+  "timestamp": "2026-04-14T04:00:00Z",
+  "cycle_type": "test",
+  "verdict": "PASS",
+  "summary": "S2-DAY-TICK + multi-fix regression sweep: PASS 5/5. S2-DAY-TICK-FIX verified (CARDS_PER_DAY=5, day increments every 5 cards in resolve_choice()). BUG-SFX-MISSING-SOUNDS verified (7 sounds gen_+registered+routed). BUG-SIGNAL-DELTA-FIX stable. BUG-PROMISE-SYSTEM-FIX stable. S2-BIOMES intervals stable. 2 known-pending items (not regressions). 0 new bugs. Added 3 test tasks to queue.",
+  "prior_reports_read": [
+    "S4-SFXMANAGER-AUDIT_2026-04-14.json",
+    "S2-BIOMES-REGRESSION-TEST (events log)",
+    "S2-DAY-SIGNAL-REGRESSION-TEST (events log)"
+  ],
+  "checks": [
+    {
+      "id": "CHK-1",
+      "name": "S2-DAY-TICK-FIX: CARDS_PER_DAY constant + day increment logic",
+      "result": "PASS",
+      "detail": "merlin_constants.gd:76 — const CARDS_PER_DAY := 5. store_run.gd lines 146-149: cards_played incremented, cp=new value, if cp>0 and cp%CARDS_PER_DAY==0 then run['day']+=1. Day starts at 1 (init_run:19). Progression: card 5→day 2, card 10→day 3. days_survived propagated to all 3 run-end code paths (lines 210, 230, 247, 272). LLM context will now show correct day value.",
+      "invariant": "run['day'] increments from 1 to N as cards_played crosses multiples of 5",
+      "files_checked": ["scripts/merlin/merlin_constants.gd:76", "scripts/merlin/store_run.gd:146-149"]
+    },
+    {
+      "id": "CHK-2",
+      "name": "BUG-SFX-MISSING-SOUNDS: 7 game-flow sounds registered and routed",
+      "result": "PASS",
+      "detail": "All 7 gen_ methods present in sfx_recipes_ambient.gd: gen_card_reveal(642), gen_confirm(659), gen_encounter(674), gen_success(694), gen_fail(710), gen_neutral(725), gen_danger(738). All 7 listed in SFXManager._generate_all_sounds() names[] at line 161. Volume routing correct (lines 127-131): card_reveal/confirm/neutral→ui, encounter/danger→magic, success/fail→transition. CHECK-7 from S4-SFXMANAGER-AUDIT (FAIL_MEDIUM) now resolved.",
+      "invariant": "All SFXManager.play() callers have a matching gen_ method + names[] entry",
+      "files_checked": ["scripts/autoload/sfx_recipes_ambient.gd:639-755", "scripts/autoload/SFXManager.gd:127-161"]
+    },
+    {
+      "id": "CHK-3",
+      "name": "BUG-SIGNAL-DELTA-FIX regression: actual_delta not raw rep_delta",
+      "result": "PASS",
+      "detail": "merlin_store.gd lines 596-600: old_rep captured BEFORE _apply_faction_reputation() call. actual_delta = new_val - old_rep. reputation_changed emits (faction, new_val, actual_delta). Example: rep=95, delta=+20 → new_val=100 (capped), actual_delta=+5 (not +20). Signal consumers receive the clamped truth.",
+      "invariant": "reputation_changed.delta reflects the actual state change, not the requested delta",
+      "files_checked": ["scripts/merlin/merlin_store.gd:596-600"]
+    },
+    {
+      "id": "CHK-4",
+      "name": "BUG-PROMISE-SYSTEM-FIX regression: active_promises + card-based deadlines",
+      "result": "PASS",
+      "detail": "_add_promise() lines 240-261: writes to run['active_promises']. _create_promise() lines 266-288: writes to run['active_promises']. check_promise_deadlines() lines 295-311: reads from run.get('active_promises'). All use made_at_card + deadline_cards (card-based, cards_played IS incremented). No stale run.promises key access. No day-based deadline (run.day was frozen at 1 before this sprint).",
+      "invariant": "Promise write, read, and expiry all use 'active_promises' key with card-based deadlines",
+      "files_checked": ["scripts/merlin/merlin_effect_engine.gd:240-311"]
+    },
+    {
+      "id": "CHK-5",
+      "name": "S2-BIOMES regression: all 8 biomes card intervals vs bible s.4.3",
+      "result": "PASS",
+      "detail": "foret: 12-15, landes: 8-10, cotes: 6-8, villages: 8-10, cercles: 10-12, marais: 4-6, collines: 10-12, iles: 3-15. All match bible s.4.3. Arc IDs intact. arc_condition_types: runs_in_biome (landes), fins_vues (collines) present. Regression of S2-BIOMES stable.",
+      "invariant": "All 8 biomes have card_interval_range_{min,max} matching bible s.4.3 and arc data from s.3.6",
+      "files_checked": ["scripts/merlin/merlin_constants.gd:412-490"]
+    },
+    {
+      "id": "CHK-6",
+      "name": "Anam death formula: ADD_ANAM scope check",
+      "result": "AWAITING_DIRECTOR",
+      "detail": "_apply_add_anam() (line 433-444): credits BOTH run['anam'] AND meta['anam'] immediately. calculate_run_rewards() (line 331-376): death_ratio = min(cards_played/30, 1.0) applied ONLY to base reward (ANAM_BASE + bonuses). Card-effect Anam (ADD_ANAM) bypasses the death multiplier entirely. apply_run_rewards() (line 379-389): ADDS reward to existing meta['anam'] — so ADD_ANAM credits are permanent and stack additively with the scaled reward. Director question q-20260414-001 covers this design choice (pending).",
+      "invariant": "Blocked on q-20260414-001 director decision",
+      "notes": "BUG-ANAM-DEATH-PENALTY-FIX (P10) in queue but correctly blocked on director decision. Not a regression — state unchanged since last cycle."
+    }
+  ],
+  "known_pending": [
+    {
+      "item": "cotes_sauvages.dominant_faction='korrigans' (should be 'niamh' per arc_condition_faction)",
+      "task": "BUG-COTES-FACTION-FIX P18",
+      "severity": "LOW",
+      "note": "Not a regression — task in queue"
+    },
+    {
+      "item": "mg_meditation.gd still exists + registry entry at minigame_registry.gd:66+138",
+      "task": "S3-MEDITATION-CLEANUP P12",
+      "severity": "LOW",
+      "note": "Not a regression — task pending, director decision applied (delete option)"
+    }
+  ],
+  "new_bugs_found": 0,
+  "new_tasks_created": [
+    "T-S2-ANAM-REGRESSION-TEST (P11): verify S2-ANAM-VERIFY implementation post-dev",
+    "T-S3-MEDITATION-VERIFY (P13): verify S3-MEDITATION-CLEANUP complete deletion",
+    "T-S2-ARC-EVAL-TEST (P19): verify S2-ARC-CONDITION-EVAL runs_in_biome+fins_vues logic"
+  ]
+}

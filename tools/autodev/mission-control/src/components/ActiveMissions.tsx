@@ -1,38 +1,35 @@
-import { useState, useEffect } from 'react';
-import type { ActiveSession } from '../store/mission-store';
+import { useMissionStore } from '../store/mission-store';
 
-const MOCK_SESSIONS: ActiveSession[] = [
-  { sessionId: 's-001', agentId: 'architect', taskTitle: 'Design MerlinGame scene flow refactor', startedAt: new Date(Date.now() - 342000).toISOString(), status: 'running' },
-  { sessionId: 's-002', agentId: 'godot-orch', taskTitle: 'Validate BroceliandeForest3D scene tree', startedAt: new Date(Date.now() - 189000).toISOString(), status: 'running' },
-  { sessionId: 's-003', agentId: 'refactor', taskTitle: 'Remove deprecated yield() calls', startedAt: new Date(Date.now() - 95000).toISOString(), status: 'running' },
-  { sessionId: 's-004', agentId: 'biome-bld', taskTitle: 'Generate Broceliande terrain mesh', startedAt: new Date(Date.now() - 540000).toISOString(), status: 'running' },
-  { sessionId: 's-005', agentId: 'code-reviewer', taskTitle: 'Review merlin_store.gd changes', startedAt: new Date(Date.now() - 720000).toISOString(), status: 'completed' },
-  { sessionId: 's-006', agentId: 'llm-adapter', taskTitle: 'Configure Qwen 3.5 multi-brain routing', startedAt: new Date(Date.now() - 900000).toISOString(), status: 'completed' },
-  { sessionId: 's-007', agentId: 'save-sys', taskTitle: 'Implement cross-run profile persistence', startedAt: new Date(Date.now() - 1200000).toISOString(), status: 'completed' },
-  { sessionId: 's-008', agentId: 'visual-w', taskTitle: 'Compile GBC palette shader variants', startedAt: new Date(Date.now() - 60000).toISOString(), status: 'failed' },
-];
+const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
+  feat: { bg: 'rgba(0,255,136,0.15)', color: 'var(--green)' },
+  fix: { bg: 'rgba(255,60,60,0.15)', color: '#ff6b6b' },
+  test: { bg: 'rgba(255,165,0,0.15)', color: 'var(--amber)' },
+  refactor: { bg: 'rgba(100,180,255,0.15)', color: '#88bbff' },
+  docs: { bg: 'rgba(180,140,255,0.15)', color: '#b08cff' },
+  chore: { bg: 'rgba(255,255,255,0.06)', color: 'var(--text-dim)' },
+  perf: { bg: 'rgba(0,255,200,0.15)', color: '#00ffc8' },
+  ci: { bg: 'rgba(255,255,255,0.06)', color: 'var(--text-dim)' },
+};
 
-function formatElapsed(startedAt: string): string {
-  const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
-  const m = Math.floor(elapsed / 60);
-  const s = elapsed % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+function formatTimeAgo(dateStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 export function ActiveMissions() {
-  const [, setTick] = useState(0);
+  const commits = useMissionStore(s => s.gitActivity);
 
-  useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const sessions = MOCK_SESSIONS;
+  const gameDevCount = commits.filter(c =>
+    c.type === 'feat' || c.type === 'fix' || c.type === 'test'
+  ).length;
 
   return (
     <div className="panel">
       <div className="panel-header">
-        Active Missions
+        Recent Dev Activity
         <span style={{
           marginLeft: 'auto',
           fontSize: '10px',
@@ -40,20 +37,72 @@ export function ActiveMissions() {
           fontFamily: 'var(--font-mono)',
           letterSpacing: '0',
         }}>
-          {sessions.filter(s => s.status === 'running').length} RUNNING
+          {commits.length > 0 ? `${gameDevCount}/${commits.length} DEV` : 'LIVE'}
         </span>
       </div>
       <div className="panel-body" style={{ padding: '0' }}>
-        {sessions.map((session) => (
-          <div key={session.sessionId} className="mission-row">
-            <span className="mission-agent">{session.agentId}</span>
-            <span className="mission-task">{session.taskTitle}</span>
-            <span className="mission-time">{formatElapsed(session.startedAt)}</span>
-            <span className={`mission-status mission-status--${session.status}`}>
-              {session.status}
-            </span>
+        {commits.length === 0 ? (
+          <div style={{
+            padding: '16px 12px',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--text-dim)',
+            textAlign: 'center',
+          }}>
+            Loading git activity...
           </div>
-        ))}
+        ) : (
+          commits.map((commit) => {
+            const style = TYPE_COLORS[commit.type] ?? { bg: 'rgba(255,255,255,0.06)', color: 'var(--text-dim)' };
+            // Strip type prefix from message for display
+            const displayMsg = commit.message.replace(/^\w+(\([^)]+\))?:\s*/, '');
+
+            return (
+              <div key={commit.sha} className="mission-row">
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  padding: '1px 4px',
+                  borderRadius: '2px',
+                  background: style.bg,
+                  color: style.color,
+                  letterSpacing: '0.5px',
+                  flexShrink: 0,
+                  minWidth: '36px',
+                  textAlign: 'center',
+                }}>
+                  {commit.type.toUpperCase()}
+                </span>
+                {commit.scope && (
+                  <span style={{
+                    fontSize: '9px',
+                    padding: '1px 3px',
+                    borderRadius: '2px',
+                    background: 'rgba(255,255,255,0.06)',
+                    color: 'var(--text-secondary)',
+                    flexShrink: 0,
+                  }}>
+                    {commit.scope}
+                  </span>
+                )}
+                <span className="mission-task" title={commit.message}>
+                  {displayMsg}
+                </span>
+                <span className="mission-time">
+                  {formatTimeAgo(commit.date)}
+                </span>
+                <span style={{
+                  fontSize: '9px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-dim)',
+                  flexShrink: 0,
+                }}>
+                  {commit.sha}
+                </span>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

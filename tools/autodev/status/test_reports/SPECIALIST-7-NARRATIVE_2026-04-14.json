@@ -1,0 +1,94 @@
+{
+  "specialist": 7,
+  "role": "NARRATIVE_CONTENT_AUDITOR",
+  "cycle_id": "CYCLE-2026-04-14-spec7-narrative",
+  "timestamp": "2026-04-14T23:49:40Z",
+  "audit_checks": {
+    "total": 12,
+    "pass": 6,
+    "fail_high": 1,
+    "fail_medium": 2,
+    "warn": 3
+  },
+  "checks": [
+    {
+      "id": "CHK-01",
+      "status": "PASS",
+      "desc": "Total FastRoute cards: 810 (>500 bible min)"
+    },
+    {
+      "id": "CHK-02",
+      "status": "PASS",
+      "desc": "All 8 biomes covered (83-137 cards each)"
+    },
+    {
+      "id": "CHK-03",
+      "status": "PASS",
+      "desc": "All 5 factions covered (143-188 each)"
+    },
+    {
+      "id": "CHK-04",
+      "status": "PASS",
+      "desc": "All 8 champ lexicaux present in FastRoute pool"
+    },
+    {
+      "id": "CHK-05",
+      "status": "PASS",
+      "desc": "faction_fallback_cards: 20 cards (4/faction), all 3 options"
+    },
+    {
+      "id": "CHK-06",
+      "status": "PASS",
+      "desc": "intro_dialogue.json exists in 7 languages"
+    },
+    {
+      "id": "CHK-07",
+      "status": "FAIL_HIGH",
+      "desc": "text_registry.json has only 4 empty stubs — all UI text hardcoded in scripts (Calendar.gd:20-73, Collection.gd:17-19, HubAntre.gd:848-926)",
+      "task_created": "NAR-TEXT-REGISTRY-POPULATE P21"
+    },
+    {
+      "id": "CHK-08",
+      "status": "FAIL_MEDIUM",
+      "desc": "Trust tier skew: T0=79.4% (643), T3=5.4% (44) — T3 thin for high-trust players",
+      "task_created": "NAR-TRUST-TIER-T3-CONTENT P22"
+    },
+    {
+      "id": "CHK-09",
+      "status": "FAIL_MEDIUM",
+      "desc": "chance field: only 47 cards (thinnest of 8 fields) — below parity with esprit=305, logique=87",
+      "task_created": "NAR-CHANCE-FIELD-BOOST P23"
+    },
+    {
+      "id": "CHK-10",
+      "status": "WARN",
+      "desc": "52 unique verbs found vs bible 45-verb closed list — 7 extra verbs (chercher au hasard, fouiller a l'aveugle, tendre l'oreille, etc.) may cause field detection ambiguity"
+    },
+    {
+      "id": "CHK-11",
+      "status": "WARN",
+      "desc": "Calendar.gd:20-73 ~30 hardcoded French strings (months, seasons, Celtic events)",
+      "task_created": "NAR-CALENDAR-I18N P70"
+    },
+    {
+      "id": "CHK-12",
+      "status": "FIXED",
+      "desc": "check_run_end() was missing faction ending trigger (FACTION_THRESHOLD_ENDING=80). FIXED: Added faction_endings_available to all 3 ending paths. Task GDC-FACTION-ENDING-TRIGGER completed."
+    }
+  ],
+  "tasks_created": [
+    "NAR-FACTION-ENDING-UI (P9) — faction ending choice screen UI",
+    "NAR-TEXT-REGISTRY-POPULATE (P21) — populate i18n registry with all UI keys",
+    "NAR-TRUST-TIER-T3-CONTENT (P22) — add 20 T3 trust cards",
+    "NAR-CHANCE-FIELD-BOOST (P23) — add 15 chance-field cards",
+    "NAR-FACTION-ENDING-TEST (P24) — test faction_endings_available in all paths",
+    "NAR-CALENDAR-I18N (P70) — migrate Calendar.gd strings to registry"
+  ],
+  "task_implemented": "GDC-FACTION-ENDING-TRIGGER (P8)",
+  "implementation_summary": "store_run.gd:check_run_end() — Added var faction_rep = state.meta.faction_rep and var faction_endings = MerlinReputationSystem.get_available_endings(faction_rep) at top. Added faction_endings_available key to all 3 'ended:true' return dicts (life_depleted, victory, hard_max). Bible s.3.8 compliance: faction ending available at run end when any faction rep >= 80.",
+  "patterns_found": [
+    "PAT-091: text_registry.json is a stub — all i18n text currently hardcoded in scripts. Registry architecture exists but needs population.",
+    "PAT-092: Trust tier skew (T0=79.4%) is natural for new content but T3 needs deliberate authoring.",
+    "PAT-093: verb count drift (52 vs 45) suggests authors added synonyms over time — periodic verb normalization needed."
+  ]
+}

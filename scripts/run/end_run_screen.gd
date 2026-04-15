@@ -20,6 +20,7 @@ class_name EndRunScreen
 # ═══════════════════════════════════════════════════════════════════════════════
 
 signal hub_requested
+signal faction_ending_chosen(faction: String)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONSTANTS
@@ -39,6 +40,7 @@ const PANEL_MARGIN: int = 32
 var _run_data: Dictionary = {}
 var _is_victory: bool = false
 var _headless: bool = false
+var _faction_choices: Array[String] = []
 
 # UI references (built programmatically)
 var _bg_panel: Panel = null
@@ -46,6 +48,7 @@ var _title_label: Label = null
 var _stats_container: VBoxContainer = null
 var _continue_button: Button = null
 var _journey_map: JourneyMapDisplay = null
+var _faction_panel: VBoxContainer = null
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -394,4 +397,68 @@ func _make_line_style() -> StyleBoxFlat:
 
 
 func _on_continue_pressed() -> void:
+	var endings: Array = _run_data.get("faction_endings_available", [])
+	_faction_choices.clear()
+	for f in endings:
+		_faction_choices.append(str(f))
+
+	if _faction_choices.size() == 0:
+		hub_requested.emit()
+	elif _faction_choices.size() == 1:
+		# Single faction: auto-select, no UI needed
+		faction_ending_chosen.emit(_faction_choices[0])
+		hub_requested.emit()
+	else:
+		# 2+ factions: replace bottom area with choice panel
+		_continue_button.hide()
+		_show_faction_choice_panel(_faction_choices)
+
+
+func _show_faction_choice_panel(factions: Array[String]) -> void:
+	_faction_panel = VBoxContainer.new()
+	_faction_panel.add_theme_constant_override("separation", 12)
+
+	var title: Label = Label.new()
+	title.text = "Vers qui vous tournez-vous ?"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_bright"])
+	title.add_theme_font_size_override("font_size", 20)
+	_faction_panel.add_child(title)
+
+	var sep: HSeparator = HSeparator.new()
+	sep.add_theme_constant_override("separation", 4)
+	_faction_panel.add_child(sep)
+
+	for faction in factions:
+		var btn: Button = Button.new()
+		btn.text = faction.capitalize()
+		btn.custom_minimum_size = Vector2(240, MerlinVisual.MIN_TOUCH_TARGET)
+		btn.size_flags_horizontal = SIZE_SHRINK_CENTER
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
+		btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE["phosphor_bright"])
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		style.bg_color = MerlinVisual.CRT_PALETTE["bg_panel"]
+		style.border_width_bottom = 2
+		style.border_width_top = 2
+		style.border_width_left = 2
+		style.border_width_right = 2
+		style.border_color = _get_accent_color()
+		style.corner_radius_top_left = 4
+		style.corner_radius_top_right = 4
+		style.corner_radius_bottom_left = 4
+		style.corner_radius_bottom_right = 4
+		btn.add_theme_stylebox_override("normal", style)
+		var style_hover: StyleBoxFlat = style.duplicate()
+		style_hover.bg_color = MerlinVisual.CRT_PALETTE["bg_highlight"]
+		btn.add_theme_stylebox_override("hover", style_hover)
+		btn.pressed.connect(_on_faction_btn_pressed.bind(faction))
+		_faction_panel.add_child(btn)
+
+	# Insert faction panel after continue button's parent vbox
+	var parent: Node = _continue_button.get_parent()
+	parent.add_child(_faction_panel)
+
+
+func _on_faction_btn_pressed(faction: String) -> void:
+	faction_ending_chosen.emit(faction)
 	hub_requested.emit()

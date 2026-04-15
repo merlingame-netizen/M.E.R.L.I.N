@@ -1,0 +1,54 @@
+{
+  "specialist": 2,
+  "role": "GAME_DESIGN_COMPLIANCE_AUDITOR",
+  "timestamp": "2026-04-14T18:47:30Z",
+  "cycle_id": "CYCLE-2026-04-14-spec2-gdc-audit",
+  "bible_version": "v2.4",
+  "audit_checks": {
+    "total": 24,
+    "pass": 18,
+    "fail_high": 2,
+    "fail_medium": 2,
+    "not_checked": 1,
+    "partial": 1
+  },
+  "checks": [
+    {"id": "CHK-01", "area": "Vie", "rule": "Drain = 0/carte (director override q-20260412-001)", "status": "PASS", "location": "merlin_constants.gd:74"},
+    {"id": "CHK-02", "area": "Vie", "rule": "Life clamp 0-100", "status": "PASS", "location": "merlin_effect_engine.gd + EFFECT_CAPS"},
+    {"id": "CHK-03", "area": "Vie", "rule": "HEAL_LIFE max 18 (Ruis)", "status": "PASS", "location": "EFFECT_CAPS.HEAL_LIFE.max:18"},
+    {"id": "CHK-04", "area": "Vie", "rule": "Death check AFTER all effects", "status": "PASS", "location": "run_3d_controller.gd sequencing"},
+    {"id": "CHK-05", "area": "Oghams", "rule": "18 Oghams defined", "status": "PASS", "location": "merlin_constants.gd OGHAM_FULL_SPECS"},
+    {"id": "CHK-06", "area": "Oghams", "rule": "3 starters (beith/luis/quert) cost 0", "status": "PASS", "location": "OGHAM_FULL_SPECS starter=true"},
+    {"id": "CHK-07", "area": "Oghams", "rule": "Max 1 Ogham activation per card", "status": "PASS", "location": "run_3d_controller.gd:439-440 _active_ogham_this_card guard"},
+    {"id": "CHK-08", "area": "Oghams", "rule": "Activation before choice only (not during minigame)", "status": "PASS", "location": "merlin_effect_engine.gd:651"},
+    {"id": "CHK-09", "area": "Oghams", "rule": "Only ACTIVE ogham cooldown decrements (inactive = paused)", "status": "FAIL_MEDIUM", "location": "store_oghams.gd:78 — tick_cooldowns decrements ALL oghams in skill_cooldowns, no active_ogham filter", "task": "GDC-OGHAM-COOLDOWN-ACTIVE"},
+    {"id": "CHK-10", "area": "Factions", "rule": "5 factions 0-100, no decay", "status": "PASS", "location": "store_factions.gd"},
+    {"id": "CHK-11", "area": "Factions", "rule": "Faction rep cap ±20/card", "status": "PASS", "location": "merlin_effect_engine.gd:417"},
+    {"id": "CHK-12", "area": "Factions", "rule": "Faction ending triggered when rep ≥ 80 at scenario end", "status": "FAIL_HIGH", "location": "store_run.gd:202 — check_run_end() has no faction rep ≥ 80 ending check; FACTION_THRESHOLD_ENDING=80 defined but unused in ending logic", "task": "GDC-FACTION-ENDING-TRIGGER"},
+    {"id": "CHK-13", "area": "Factions", "rule": "Special faction cards gated at rep ≥ 50", "status": "NOT_CHECKED", "note": "merlin_card_system.gd faction pool selection not audited — task GDC-FACTION-CONTENT-50-GATE added"},
+    {"id": "CHK-14", "area": "Cards", "rule": "Always exactly 3 options per card", "status": "PASS", "location": "merlin_card_system.gd:721 pad/trim to 3"},
+    {"id": "CHK-15", "area": "Minigames", "rule": "Neutre verbs → esprit field (default)", "status": "PASS", "location": "FIELD_MINIGAMES.neutre:[esprit] + ACTION_VERB_FALLBACK_FIELD='esprit'"},
+    {"id": "CHK-16", "area": "Anam", "rule": "Death penalty: Anam × min(cartes/30, 1.0)", "status": "PASS", "location": "store_run.gd:357-362 uses death_cap=30, minf(ratio,1.0)"},
+    {"id": "CHK-17", "area": "Promesses", "rule": "Max 2 active promises", "status": "PASS", "location": "merlin_constants.gd:987 MAX_ACTIVE_PROMISES=2"},
+    {"id": "CHK-18", "area": "MOS", "rule": "hard_max=50 cards → force end", "status": "PASS", "location": "store_run.gd:242 cards_played >= hard_max"},
+    {"id": "CHK-19", "area": "Confiance", "rule": "Trust tiers T0(0-24) T1(25-49) T2(50-74) T3(75-100)", "status": "PASS", "location": "merlin_constants.gd:525 TRUST_TIERS"},
+    {"id": "CHK-20", "area": "Confiance", "rule": "Trust deltas: kept+10, broken-15", "status": "PASS", "location": "merlin_constants.gd:532 TRUST_DELTAS"},
+    {"id": "CHK-21", "area": "Biomes", "rule": "Maturity formula: runs×2 + fins×5 + oghams×3 + max_rep×1", "status": "PASS", "location": "merlin_constants.gd:505 MATURITY_WEIGHTS correct"},
+    {"id": "CHK-22", "area": "Factions", "rule": "IN_GAME_PERIODS faction bonus applied in card resolve", "status": "FAIL_HIGH", "location": "store_run.gd resolve_choice — get_period_bonus() exists (store_factions.gd:100) but NOT called in resolve path; FACTION-PERIOD-BONUS-IMPL task P18 already queued", "task": "FACTION-PERIOD-BONUS-IMPL (P18 — already in queue)"},
+    {"id": "CHK-23", "area": "Vie", "rule": "No hardcoded life drain in non-canonical scripts", "status": "FAIL_MEDIUM", "location": "broceliande_forest_3d.gd:1075 `life -= 1` ignores DRAIN_PER_CARD=0 + uses dead GameManager.run_state path", "task": "GDC-FOREST3D-STALE-DRAIN"},
+    {"id": "CHK-24", "area": "Save", "rule": "_validate_run_state checks life_max + faction_rep_delta + cards_played", "status": "FIXED", "location": "merlin_save_system.gd:294 — IMPLEMENTED this cycle (SAVE-RUNSTATE-VALIDATE-EXTEND P6)"}
+  ],
+  "new_tasks_generated": [
+    "GDC-OGHAM-COOLDOWN-ACTIVE",
+    "GDC-FACTION-ENDING-TRIGGER",
+    "GDC-FOREST3D-STALE-DRAIN",
+    "GDC-FACTION-CONTENT-50-GATE",
+    "T-GDC-FACTION-ENDING-INTEGRATION"
+  ],
+  "task_implemented": "SAVE-RUNSTATE-VALIDATE-EXTEND",
+  "implementation_notes": "merlin_save_system.gd:294 — extended _validate_run_state() from 15 to 34 lines. Added: (1) life_max required key + numeric check >= 1. (2) cards_played required key + numeric + >= 0 check. (3) faction_rep_delta required key + Dictionary type check + all 5 FACTIONS keys check. Stays < 50 lines.",
+  "patterns_added": [
+    "PAT-077: faction ending trigger (check_run_end) does NOT check rep >= 80 — FACTION_THRESHOLD_ENDING constant defined but unused in ending logic. This is a HIGH compliance gap.",
+    "PAT-078: tick_cooldowns (store_oghams.gd:78) decrements ALL oghams in cooldown — no active_ogham filter. Bible says only active ogham's cooldown decrements."
+  ]
+}

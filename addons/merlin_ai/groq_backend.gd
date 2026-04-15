@@ -85,6 +85,7 @@ func generate_async(prompt: String, callback: Callable) -> void:
 		return
 
 	if api_key.is_empty():
+		push_warning("GroqBackend [%s]: GROQ_API_KEY not set — configure via env var GROQ_API_KEY, ProjectSettings merlin/groq_api_key, or ?groq_key= URL param. Aborting request." % role)
 		if callback.is_valid():
 			callback.call({"error": "No Groq API key configured"})
 		return

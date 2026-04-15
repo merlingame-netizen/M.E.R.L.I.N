@@ -1,0 +1,116 @@
+{
+  "report_id": "S2-DAY-SIGNAL-REGRESSION-TEST_2026-04-13",
+  "task_id": "S2-DAY-SIGNAL-REGRESSION-TEST",
+  "agent": "bug_hunter",
+  "timestamp": "2026-04-13T19:44:09Z",
+  "cycle_id": "CYCLE-2026-04-13-day-signal-regression",
+  "result": "PARTIAL_PASS",
+  "checks_passed": 6,
+  "checks_failed": 3,
+  "checks": [
+    {
+      "id": "CHECK-1",
+      "label": "BUG-SIGNAL-DELTA-FIX: reputation_changed emits actual_delta = new_val - old_rep",
+      "status": "PASS",
+      "file": "scripts/merlin/merlin_store.gd",
+      "lines": "596-600",
+      "evidence": "ADD_REPUTATION handler in _apply_effect(): old_rep captured BEFORE _apply_faction_reputation() call (line 596). actual_delta = new_val - old_rep computed after (line 599). reputation_changed.emit(faction, new_val, actual_delta) uses actual_delta not raw rep_delta (line 600).",
+      "test_scenario": "faction_rep=95, raw_delta=+20 → _apply_faction_reputation clamps to 100 → new_val=100 → actual_delta=100-95=+5 (not +20). Signal correctly emits +5."
+    },
+    {
+      "id": "CHECK-2",
+      "label": "CARDS_PER_DAY constant exists in merlin_constants.gd",
+      "status": "FAIL_PENDING",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "evidence": "grep 'CARDS_PER_DAY' found 0 results. S2-DAY-TICK-FIX not yet applied.",
+      "blocking_task": "S2-DAY-TICK-FIX (P8)"
+    },
+    {
+      "id": "CHECK-3",
+      "label": "resolve_choice() increments run['day'] every CARDS_PER_DAY cards",
+      "status": "FAIL_PENDING",
+      "file": "scripts/merlin/store_run.gd",
+      "lines": "132-179",
+      "evidence": "resolve_choice() increments cards_played (line 146) but NO run['day'] increment logic present. Day counter is initialized to 1 in init_run() (line 19) but never ticked. LLM context will always show 'Jour 1' for entire run.",
+      "blocking_task": "S2-DAY-TICK-FIX (P8)"
+    },
+    {
+      "id": "CHECK-4",
+      "label": "LLM context day field changes over a simulated 30-card run",
+      "status": "FAIL_PENDING",
+      "evidence": "Depends on CHECK-3. run['day'] never incremented → day stays 1 regardless of cards played.",
+      "blocking_task": "S2-DAY-TICK-FIX (P8)"
+    },
+    {
+      "id": "CHECK-5a",
+      "label": "REGRESSION: faction_rep reads meta.faction_rep (not stale run.factions)",
+      "status": "PASS",
+      "file": "scripts/merlin/merlin_store.gd",
+      "lines": "596",
+      "evidence": "ADD_REPUTATION reads state['meta']['faction_rep'][faction]. Stale run.factions not used in effect application path."
+    },
+    {
+      "id": "CHECK-5b",
+      "label": "REGRESSION: active_promises uses run.active_promises (unified key)",
+      "status": "PASS",
+      "file": "scripts/merlin/store_run.gd",
+      "lines": "306-308",
+      "evidence": "check_promise_deadlines() reads run.get('active_promises', []). No split-brain with run.promises key."
+    },
+    {
+      "id": "CHECK-5c",
+      "label": "REGRESSION: drain=0 (no life drain per card in resolve_choice)",
+      "status": "PASS",
+      "file": "scripts/merlin/store_run.gd",
+      "lines": "132-179",
+      "evidence": "resolve_choice() does not call apply_effect_func with DAMAGE_LIFE at start. No drain logic present. Director q-20260412-001 applied correctly."
+    },
+    {
+      "id": "CHECK-5d",
+      "label": "REGRESSION: no pacing_recovery (+5HP if life<20)",
+      "status": "PASS",
+      "file": "scripts/merlin/store_run.gd",
+      "lines": "132-179",
+      "evidence": "resolve_choice() contains no HEAL_LIFE or pacing recovery call. Removed per Director q-20260412-005."
+    },
+    {
+      "id": "CHECK-5e",
+      "label": "REGRESSION: story_log sliced to last 2 entries (awaiting RAG upgrade)",
+      "status": "PASS",
+      "file": "scripts/merlin/store_run.gd",
+      "lines": "149-157",
+      "evidence": "story_log.slice(-2) applied after append. Consistent with current behaviour, pending S3-STORY-LOG-RAG."
+    }
+  ],
+  "regressions_vs_prev_reports": [
+    {
+      "id": "REG-1",
+      "from_report": "S3-MINIGAME-ROUTING-REGRESSION",
+      "check": "mg_sang_froid in GAMES[esprit]",
+      "status": "PASS (not touched by BUG-SIGNAL-DELTA-FIX)"
+    },
+    {
+      "id": "REG-2",
+      "from_report": "S3-FACTION-REGRESSION-TEST",
+      "check": "dominant_faction routing wired (StoreFactions.build_and_store_faction_context called in init_run)",
+      "status": "PASS (store_run.gd line 36)"
+    },
+    {
+      "id": "REG-3",
+      "from_report": "S4-SMOKE-TEST",
+      "check": "cards_played incremented in resolve_choice",
+      "status": "PASS (store_run.gd line 146)"
+    }
+  ],
+  "low_notes": [
+    {
+      "severity": "LOW",
+      "label": "mg_meditation dead preload + TAG_FIELD_MAP entry still present",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "lines": "66, 138",
+      "note": "Director q-20260413-004 answered 'Delete mg_meditation'. S3-MEDITATION-CLEANUP task now unblocked and should clean these in next DEV cycle."
+    }
+  ],
+  "new_bugs": [],
+  "summary": "PARTIAL_PASS 6/9. BUG-SIGNAL-DELTA-FIX fully verified: actual_delta emitted correctly, faction_rep=95+delta=+20 → signal emits +5. 5/5 prior regressions PASS. 3/9 FAIL_PENDING all blocked on S2-DAY-TICK-FIX (P8): CARDS_PER_DAY constant missing, run.day never incremented in resolve_choice. Day counter frozen at 1 for entire run. S3-MEDITATION-CLEANUP unblocked by q-20260413-004 answer."
+}

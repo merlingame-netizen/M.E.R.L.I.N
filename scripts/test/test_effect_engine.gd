@@ -546,7 +546,7 @@ func test_add_promise_basic() -> bool:
 	if result["applied"].size() != 1:
 		push_error("ADD_PROMISE basic: expected 1 applied")
 		return false
-	var promises: Array = state["run"]["promises"]
+	var promises: Array = state["run"]["active_promises"]
 	if promises.size() != 1:
 		push_error("ADD_PROMISE: expected 1 promise")
 		return false
@@ -572,7 +572,7 @@ func test_add_promise_cap_at_two() -> bool:
 	if result["rejected"].size() != 1:
 		push_error("ADD_PROMISE cap: 3rd should be rejected")
 		return false
-	if state["run"]["promises"].size() != 2:
+	if state["run"]["active_promises"].size() != 2:
 		push_error("ADD_PROMISE cap: should have exactly 2")
 		return false
 	return true
@@ -594,8 +594,8 @@ func test_create_promise_basic() -> bool:
 	if str(p.get("id", "")) != "oath_001":
 		push_error("CREATE_PROMISE: wrong id")
 		return false
-	if int(p.get("deadline_day", 0)) != 8:  # day 3 + 5
-		push_error("CREATE_PROMISE: deadline_day should be 8, got %d" % int(p.get("deadline_day", 0)))
+	if int(p.get("deadline_cards", 0)) != 5:  # deadline_cards arg = 5
+		push_error("CREATE_PROMISE: deadline_cards should be 5, got %d" % int(p.get("deadline_cards", 0)))
 		return false
 	if str(p.get("status", "")) != "active":
 		push_error("CREATE_PROMISE: status should be active")
@@ -1421,8 +1421,8 @@ func test_pick_minigame_chance() -> bool:
 
 func test_pick_minigame_unknown_fallback() -> bool:
 	var mg: String = MerlinEffectEngine.pick_minigame_for_field("nonexistent")
-	if mg != "apaisement":
-		push_error("pick_minigame fallback: expected apaisement, got %s" % mg)
+	if mg != MerlinConstants.ACTION_VERB_FALLBACK_FIELD:
+		push_error("pick_minigame fallback: expected %s, got %s" % [MerlinConstants.ACTION_VERB_FALLBACK_FIELD, mg])
 		return false
 	return true
 

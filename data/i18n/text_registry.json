@@ -1,0 +1,323 @@
+{
+  "_meta": {
+    "version": "2.0",
+    "description": "Central text registry for M.E.R.L.I.N. — all user-facing strings. Key format: category.subcategory.identifier",
+    "languages": ["fr", "en", "es", "it", "pt", "zh", "ja"],
+    "default_language": "fr",
+    "total_keys": 234,
+    "instructions": "Translators: fill empty strings for each language. Keys with %s or %d are format strings — preserve placeholders."
+  },
+
+  "ui": {
+    "hub": {
+      "anam_label": { "fr": "Anam: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "runs_label": { "fr": "Runs: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "maturity_label": { "fr": "Maturite: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_dialogue_1": { "fr": "Bienvenue, jeune druide. Le chemin t'attend.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_dialogue_2": { "fr": "Les arbres murmurent ton nom. Es-tu pret ?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_dialogue_3": { "fr": "Chaque pas te rapproche de la verite.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_dialogue_4": { "fr": "Le chemin est long mais la foret veille.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_dialogue_5": { "fr": "Merlin observe en silence. Le voyage commence.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_death": { "fr": "La mort n'est qu'un passage. Tu reviendras plus fort.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_hard_max": { "fr": "Tu as parcouru un long chemin. Repose-toi avant de repartir.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_cycle_1": { "fr": "Les arbres murmurent ton nom. Es-tu pret ?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_cycle_2": { "fr": "Chaque run revele un fragment de verite.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_cycle_3": { "fr": "Le vent porte des nouvelles des biomes lointains.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "fallback_cycle_4": { "fr": "Les oghams brillent dans l'obscurite. Ils t'appellent.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "arbre_vie": {
+      "store_unavailable": { "fr": "Store non disponible", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "currency_talent_display": { "fr": "Anam: %d | Talents: %d/%d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "cost_display": { "fr": "Cout: %d Anam (vous avez %d)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "prerequisites_header": { "fr": "Prerequis:", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "status_available": { "fr": "Disponible", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "status_locked": { "fr": "Verrouille", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "status_unlocked": { "fr": "Debloque", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "unlock_button": { "fr": "Debloquer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "cinematic": {
+      "enter_forest": { "fr": "Entrer dans la foret  \u25b6", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "skip_button": { "fr": "Passer \u25b6\u25b6", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "warmup": {
+      "ready_message": { "fr": "M.E.R.L.I.N. est pret.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "parchment": {
+      "skip_prompt": { "fr": "Appuyer pour passer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "loading_message": { "fr": "Merlin prepare le chemin...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "enter_quest": { "fr": "Entrer la Quete", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "generation_error": { "fr": "Erreur de generation...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "tutorial": {
+      "life_display": { "fr": "PV: %d/%d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "card": {
+      "speaker_merlin": { "fr": "Merlin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "thinking_message": { "fr": "Merlin reflechit...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "narrative": {
+      "speak_button": { "fr": "Parler", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "thinking": { "fr": "Merlin reflechit...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "pause_title": { "fr": "PAUSE", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "resume_button": { "fr": "Reprendre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "quit_game": { "fr": "Quitter la Partie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "dice": {
+      "difficulty_label": { "fr": "Difficulte: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "critical_hit": { "fr": "Coup Critique !", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "success_message": { "fr": "Reussite ! (%d >= %d)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "failure_message": { "fr": "Echec... (%d < %d)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "critical_fail": { "fr": "Echec Critique !", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "test_label": { "fr": "Epreuve: %s", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "effects": {
+      "critical_success": { "fr": "Reussite critique !", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "success": { "fr": "Reussite", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "critical_fail": { "fr": "Echec critique...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "failure": { "fr": "Echec", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "endscreen": {
+      "glory_score": { "fr": "Gloire: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "life_depleted": { "fr": "Essences de vie epuisees", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "cards_days_display": { "fr": "Cartes: %d | Jours: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "return_hub": { "fr": "Retour au Hub", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "new_adventure": { "fr": "Nouvelle Aventure", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "path_title": { "fr": "Ton chemin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "rewards_title": { "fr": "Recompenses obtenues", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "lives_journal": { "fr": "Journal des Vies", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "close_button": { "fr": "Fermer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "status": {
+      "day_label": { "fr": "Jour %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mission_progress": { "fr": "Mission %d/%d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mission_unknown": { "fr": "Mission: ???", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "cards_count": { "fr": "Cartes: %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "reward": {
+      "difficulty_display": { "fr": "DC %d-%d (%s)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "menu": {
+      "title": { "fr": "M  E  R  L  I  N", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "reset_button": { "fr": "Reinitialiser", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "return_button": { "fr": "Retour", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "menu_button": { "fr": "Menu", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "narrator": {
+      "intro_1": { "fr": "Les brumes de Bretagne s'ouvrent devant toi... Le chemin serpente, et l'avenir est incertain.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_2": { "fr": "La foret murmure ton nom. Merlin veille... mais pour combien de temps encore?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_3": { "fr": "Le vent porte des echos anciens. Un nouveau cycle commence, voyageur.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_4": { "fr": "Les pierres se souviennent de chaque pas. Pret a ecrire un nouveau chapitre?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "intro_5": { "fr": "L'aube se leve sur les landes. Quelque chose attend au bout du sentier.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "click_continue": { "fr": "Cliquez pour continuer...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "click_start_adventure": { "fr": "Cliquez pour commencer l'aventure...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "click_start": { "fr": "Cliquez pour commencer...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "thinking": { "fr": "Merlin reflechit", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "llm": {
+      "choice_fallback": { "fr": "Choix %d", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "sequel_success": { "fr": "Les echos du passe resonent en ta faveur.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "sequel_failure": { "fr": "Les consequences de tes choix passes te rattrapent.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "world_map": {
+      "event_npc_title": { "fr": "Rencontre sur le chemin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_npc_desc": { "fr": "Un voyageur offre son aide en echange d'un service.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_trade_title": { "fr": "Marchands ambulants", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_trade_desc": { "fr": "Des marchands proposent un echange favorable.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_blessing_title": { "fr": "Benediction druidique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_blessing_desc": { "fr": "Un druide itinerant partage sa sagesse.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_training_title": { "fr": "Campement d'entrainement", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event_training_desc": { "fr": "Des guerriers proposent un entrainement.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    }
+  },
+
+  "game": {
+    "difficulty": {
+      "easy": { "fr": "Facile", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "normal": { "fr": "Normal", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "hard": { "fr": "Difficile", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "rewards": {
+      "life": { "fr": "Vie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "anam": { "fr": "Anam", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "reputation": { "fr": "Reputation", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mystery": { "fr": "Mystere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "time_periods": {
+      "dawn": { "fr": "aube", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "day": { "fr": "jour", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "dusk": { "fr": "crepuscule", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "night": { "fr": "nuit", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "trust_tiers": {
+      "t0": { "fr": "cryptique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "t1": { "fr": "indices", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "t2": { "fr": "avertissements", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "t3": { "fr": "secrets", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "ogham": {
+      "beith":    { "name": { "fr": "Bouleau", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Revele l'effet complet d'1 option au choix", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "coll":     { "name": { "fr": "Noisetier", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Revele les effets de toutes les options", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ailm":     { "name": { "fr": "Sapin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Predit le theme + champ lexical de la prochaine carte", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "luis":     { "name": { "fr": "Sorbier", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Bloque le prochain effet negatif unique (le premier applique)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "gort":     { "name": { "fr": "Lierre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Reduit tout degat > 10 PV a 5 PV (1 instance, ce tour)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "eadhadh":  { "name": { "fr": "Tremble", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Annule tous les effets negatifs de la carte courante", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "duir":     { "name": { "fr": "Chene", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Soin immediat de +12 PV", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "tinne":    { "name": { "fr": "Houx", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Double les effets positifs de l'option choisie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "onn":      { "name": { "fr": "Ajonc", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Genere +10 monnaie biome instantanement", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "nuin":     { "name": { "fr": "Frene", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Remplace la pire option (plus de negatifs) par une nouvelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "huath":    { "name": { "fr": "Aubepine", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Regenere les 3 options de la carte (nouveau LLM call ou FastRoute)", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "straif":   { "name": { "fr": "Prunellier", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Force un retournement narratif majeur dans la carte suivante", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "quert":    { "name": { "fr": "Pommier", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Soin de +8 PV", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ruis":     { "name": { "fr": "Sureau", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Soin massif +18 PV mais -5 monnaie biome", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "saille":   { "name": { "fr": "Saule", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Regenere +8 monnaie biome + +3 PV", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "muin":     { "name": { "fr": "Vigne", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Inverse positifs/negatifs de l'option choisie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ioho":     { "name": { "fr": "If", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Defausse la carte entiere et en genere une completement nouvelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ur":       { "name": { "fr": "Bruyere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Sacrifie 15 PV, gagne +20 monnaie biome + buff x1.3 score", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "biome": {
+      "foret_broceliande": { "name": { "fr": "Foret de Broceliande", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou les arbres ont des yeux", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Herbes enchantees", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "landes_bruyere":    { "name": { "fr": "Landes de Bruyere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou le vent raconte des histoires", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Brins de bruyere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "cotes_sauvages":    { "name": { "fr": "Cotes Sauvages", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou la mer defie la terre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Coquillages", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "villages_celtes":   { "name": { "fr": "Villages Celtes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou les hommes forment le destin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Pieces de cuivre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "cercles_pierres":   { "name": { "fr": "Cercles de Pierres", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou le temps se fissure", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Fragments de rune", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "marais_korrigans":  { "name": { "fr": "Marais des Korrigans", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou la lumiere ment", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Pierres phosphorescentes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "collines_dolmens":  { "name": { "fr": "Collines aux Dolmens", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou les morts veillent", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Os graves", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "iles_mystiques":    { "name": { "fr": "Iles Mystiques", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "subtitle": { "fr": "Ou le monde visible s'acheve", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "currency": { "fr": "Ecume solidifiee", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "faction": {
+      "druides":   { "name": { "fr": "Druides de Bretagne", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "anciens":   { "name": { "fr": "Les Anciens", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans": { "name": { "fr": "Korrigans des Marais", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "niamh":     { "name": { "fr": "Niamh et Tir na nOg", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ankou":     { "name": { "fr": "L'Ankou", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "faction_tier": {
+      "honore":       { "fr": "Honore", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "sympathisant": { "fr": "Sympathisant", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "neutre":       { "fr": "Neutre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mefiant":      { "fr": "Mefiant", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "hostile":      { "fr": "Hostile", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "minigame": {
+      "traces":        { "name": { "fr": "Traces", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Suivre une sequence d'empreintes sans sortir du chemin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "runes":         { "name": { "fr": "Runes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Dechiffrer un ogham cache dans la pierre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "equilibre":     { "name": { "fr": "Equilibre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Maintenir l'equilibre sur un passage instable", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "herboristerie": { "name": { "fr": "Herboristerie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Identifier la bonne plante parmi les toxiques", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "negociation":   { "name": { "fr": "Negociation", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Convaincre un esprit par les mots justes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "combat_rituel": { "name": { "fr": "Combat Rituel", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Esquiver dans un cercle sacre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "apaisement":    { "name": { "fr": "Apaisement", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Calmer un gardien par le rythme et la respiration", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "sang_froid":    { "name": { "fr": "Sang-froid", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Maintenir le curseur stable malgre les pulsations", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "course":        { "name": { "fr": "Course", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "QTE pour maintenir la poursuite ou fuir", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "fouille":       { "name": { "fr": "Fouille", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Trouver l'indice cache en temps limite", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ombres":        { "name": { "fr": "Ombres", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Se deplacer entre couvertures sans etre vu", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "volonte":       { "name": { "fr": "Volonte", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Tenir le focus malgre les murmures et le doute", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "regard":        { "name": { "fr": "Regard", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Memoriser puis reproduire une sequence de formes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "echo":          { "name": { "fr": "Echo", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Suivre l'intensite sonore vers la bonne direction", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "talent": {
+      "druides_1": { "name": { "fr": "Vigueur du Chene", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10 vie au depart de chaque run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "druides_2": { "name": { "fr": "Symbiose Vegetale", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Reduit de 1 le cooldown des Oghams de categorie nature.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "druides_3": { "name": { "fr": "Esprit du Nemeton", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+15% score aux minigames du champ logique.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "druides_4": { "name": { "fr": "Guerison Profonde", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Double l'effet de guerison des Oghams Recovery.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "druides_5": { "name": { "fr": "Racine Celeste", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Le drain de vie par carte passe de 1 a 0 (annule).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "anciens_1": { "name": { "fr": "Clairvoyance", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Revele 1 effet cache par carte.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "anciens_2": { "name": { "fr": "Sagesse Accumulee", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+5% score a tous les minigames.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "anciens_3": { "name": { "fr": "Troisieme Oeil", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Predit le theme de la prochaine carte.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "anciens_4": { "name": { "fr": "Bouclier Ancestral", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Annule 1 source de degats par run (bouclier).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "anciens_5": { "name": { "fr": "Immortalite du Souvenir", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Survit a la mort 1 fois par run (revient a 10 vie).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans_1": { "name": { "fr": "Doigts de Fee", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+3 Anam bonus par run completee.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans_2": { "name": { "fr": "Chance du Lutin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10% score aux minigames du champ chance.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans_3": { "name": { "fr": "Miroir Inverseur", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Inverse 1 effet negatif en positif par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans_4": { "name": { "fr": "Rythme du Chaos", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "-1 cooldown global sur tous les Oghams.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans_5": { "name": { "fr": "Tresor du Tertre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Double les recompenses Anam en fin de run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "niamh_1": { "name": { "fr": "Douceur de Niamh", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+5 vie sur chaque succes critique.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "niamh_2": { "name": { "fr": "Charme Diplomatique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10% gains de reputation avec toutes les factions.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "niamh_3": { "name": { "fr": "Voile d'Oubli", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Les pertes de reputation sont reduites de 50%.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "niamh_4": { "name": { "fr": "Quatrieme Voie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+1 option narrative par carte (3 -> 4 choix).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "niamh_5": { "name": { "fr": "Source Eternelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+2 vie toutes les 5 cartes (regeneration passive).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ankou_1": { "name": { "fr": "Marche avec l'Ombre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Le drain de vie par carte passe de 1 a 0.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ankou_2": { "name": { "fr": "Regard Sombre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+15% score aux minigames du champ esprit.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ankou_3": { "name": { "fr": "Pacte Sanglant", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Sacrifie 10 vie pour gagner 20 Anam (1 fois par run).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ankou_4": { "name": { "fr": "Prescience Funebre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Voir le theme ET les effets de la prochaine carte.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "ankou_5": { "name": { "fr": "Recolte Sombre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Recompenses Anam +50% si vie <= 25 en fin de run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "central_1": { "name": { "fr": "Coeur Fortifie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Vie max +10 (100 -> 110).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "central_2": { "name": { "fr": "Flux Accelere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "-1 cooldown global sur tous les Oghams.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "central_3": { "name": { "fr": "Oeil de Merlin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Affiche karma et tension dans le HUD.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "central_4": { "name": { "fr": "Maitrise Universelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10% score a tous les minigames.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "calendrier_des_brumes": { "name": { "fr": "Calendrier des Brumes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Revele 7 prochains evenements. Primes aux evenements atteints.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "harmonie_factions": { "name": { "fr": "Harmonie des Factions", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+5 Anam/run si toutes les factions sont >= 50.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "pacte_ombre_lumiere": { "name": { "fr": "Pacte Ombre-Lumiere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Inverse heal et damage 1 fois par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "eveil_ogham": { "name": { "fr": "Eveil d'Ogham", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Equipe 1 Ogham supplementaire (1 -> 2 actifs).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "instinct_sauvage": { "name": { "fr": "Instinct Sauvage", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "1 retry gratuit de minigame par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "boucle_eternelle": { "name": { "fr": "Boucle Eternelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "New Game+: Anam x1.5 par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "talent_tier": {
+      "1": { "fr": "Germe", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "2": { "fr": "Pousse", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "3": { "fr": "Branche", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "4": { "fr": "Cime", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "5": { "fr": "Racine Celeste", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "quest": {
+      "foret_broceliande": { "title": { "fr": "Le Souffle de Barenton", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "La Fontaine de Barenton s'assombrit. Trouve ce qui la trouble et ramene la clarte.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "landes_bruyere":    { "title": { "fr": "Le Chant des Cairns", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "Les cairns du vent se taisent. Retrouve la melodie perdue avant que le silence ne gagne.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "cotes_sauvages":    { "title": { "fr": "Le Signal de Sein", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "L'ile de Sein ne repond plus. Navigue jusqu'au phare et decouvre pourquoi.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "villages_celtes":   { "title": { "fr": "Le Puits des Souhaits", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "L'eau du puits sacre est tarie. Aide le village a retrouver sa source.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "cercles_pierres":   { "title": { "fr": "L'Alignement Perdu", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "Les menhirs de Carnac sont desalignes. Le temps se detraque. Restaure l'accord.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "marais_korrigans":  { "title": { "fr": "Le Tertre du Silence", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "Le chef des korrigans ne rit plus. Descends dans le tertre et affronte le Vide.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "collines_dolmens":  { "title": { "fr": "La Voix de l'If", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "L'if millenaire perd ses branches. Ecoute ses dernieres paroles avant qu'il ne se taise.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "iles_mystiques":    { "title": { "fr": "Le Passage d'Avalon", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "text": { "fr": "Au-dela des brumes, une ile apparait puis s'efface. Trouve le passage avant que la maree ne le scelle.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "expedition": {
+      "baton_marche": { "name": { "fr": "Baton de Marche", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Arme naturelle du voyageur", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "besace":       { "name": { "fr": "Besace du Druide", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Provisions et herbes medicinales", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "lanterne":     { "name": { "fr": "Lanterne d'Ogham", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Eclaire les chemins oublies", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "talisman":     { "name": { "fr": "Talisman Ancien", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Resonne avec les forces invisibles", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "season": {
+      "spring": { "fr": "Printemps", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "summer": { "fr": "Ete", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "autumn": { "fr": "Automne", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "winter": { "fr": "Hiver", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "festival": {
+      "imbolc":     { "name": { "fr": "Imbolc", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Fete du renouveau et de la purification", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "beltane":    { "name": { "fr": "Beltane", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Fete des feux et de la fertilite", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "lughnasadh": { "name": { "fr": "Lughnasadh", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Fete des moissons et de la force", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "samhain":    { "name": { "fr": "Samhain", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Fete des morts et du passage", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
+    },
+    "node_type": {
+      "narrative": { "fr": "Recit", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "event":     { "fr": "Evenement", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "promise":   { "fr": "Promesse", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "rest":      { "fr": "Repos", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "merchant":  { "fr": "Marchand", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "mystery":   { "fr": "Mystere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "merlin":    { "fr": "Merlin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "verb_category": {
+      "chance":     { "fr": "chance", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "bluff":      { "fr": "bluff", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "observation":{ "fr": "observation", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "logique":    { "fr": "logique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "finesse":    { "fr": "finesse", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "vigueur":    { "fr": "vigueur", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "esprit":     { "fr": "esprit", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "perception": { "fr": "perception", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "neutre":     { "fr": "neutre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    }
+  },
+
+  "llm": {
+    "generic_labels": {
+      "act": { "fr": "Agir", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "observe": { "fr": "Observer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "continue": { "fr": "Continuer", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    },
+    "status": {
+      "connection_ok": { "fr": "Connexion: OK", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "connection_off": { "fr": "Connexion: OFF", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
+      "loading_narrator": { "fr": "Chargement Brain 1/Narrator...", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+    }
+  }
+}

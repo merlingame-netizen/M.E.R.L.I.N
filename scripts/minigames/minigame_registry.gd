@@ -18,14 +18,15 @@ const FIELDS := {
 
 # Mini-game scenes per field
 const GAMES := {
-	"chance": ["mg_de_du_destin", "mg_pile_ou_face", "mg_roue_fortune"],
+	"chance": ["mg_pile_ou_face", "mg_roue_fortune"],
 	"bluff": ["mg_joute_verbale", "mg_bluff_druide", "mg_negociation"],
 	"observation": ["mg_oeil_corbeau", "mg_trace_cerf", "mg_rune_cachee"],
 	"logique": ["mg_enigme_ogham", "mg_noeud_celtique", "mg_pierre_feuille_racine"],
 	"finesse": ["mg_tir_a_larc", "mg_lame_druide", "mg_pas_renard"],
-	"vigueur": ["mg_combat_rituel", "mg_sang_froid", "mg_course"],
-	"esprit": ["mg_volonte", "mg_apaisement", "mg_meditation"],
+	"vigueur": ["mg_combat_rituel", "mg_course"],
+	"esprit": ["mg_volonte", "mg_apaisement", "mg_sang_froid"],
 	"perception": ["mg_ombres", "mg_regard", "mg_echo"],
+	"neutre": ["mg_apaisement", "mg_volonte"],
 }
 
 # Ogham category -> field bonus mapping
@@ -63,7 +64,6 @@ const TAG_FIELD_MAP := {
 	"physical": "vigueur",
 	"endurance": "vigueur",
 	"willpower": "esprit",
-	"meditation": "esprit",
 	"spirit": "esprit",
 	"stealth": "perception",
 	"tracking": "perception",
@@ -72,8 +72,8 @@ const TAG_FIELD_MAP := {
 
 
 static func detect_field(narrative_text: String, gm_hint: String = "", tags: Array = []) -> String:
-	# GM hint takes priority
-	if gm_hint != "" and FIELDS.has(gm_hint):
+	# GM hint takes priority — also accept game fields not in FIELDS (e.g. "neutre")
+	if gm_hint != "" and (FIELDS.has(gm_hint) or GAMES.has(gm_hint)):
 		return gm_hint
 
 	# Tag-based detection (higher priority than keyword)
@@ -112,7 +112,6 @@ static func create_minigame(field: String, difficulty: int = 5, modifiers: Dicti
 	var game: MiniGameBase = null
 	match game_id:
 		# Tier 1
-		"mg_de_du_destin": game = preload("res://scripts/minigames/mg_de_du_destin.gd").new()
 		"mg_pile_ou_face": game = preload("res://scripts/minigames/mg_pile_ou_face.gd").new()
 		"mg_pierre_feuille_racine": game = preload("res://scripts/minigames/mg_pierre_feuille_racine.gd").new()
 		"mg_tir_a_larc": game = preload("res://scripts/minigames/mg_tir_a_larc.gd").new()
@@ -131,20 +130,19 @@ static func create_minigame(field: String, difficulty: int = 5, modifiers: Dicti
 		"mg_pas_renard": game = preload("res://scripts/minigames/mg_pas_renard.gd").new()
 		# Vigueur
 		"mg_combat_rituel": game = preload("res://scripts/minigames/mg_combat_rituel.gd").new()
-		"mg_sang_froid": game = preload("res://scripts/minigames/mg_sang_froid.gd").new()
 		"mg_course": game = preload("res://scripts/minigames/mg_course.gd").new()
 		# Esprit
 		"mg_volonte": game = preload("res://scripts/minigames/mg_volonte.gd").new()
 		"mg_apaisement": game = preload("res://scripts/minigames/mg_apaisement.gd").new()
-		"mg_meditation": game = preload("res://scripts/minigames/mg_meditation.gd").new()
+		"mg_sang_froid": game = preload("res://scripts/minigames/mg_sang_froid.gd").new()
 		# Perception
 		"mg_ombres": game = preload("res://scripts/minigames/mg_ombres.gd").new()
 		"mg_regard": game = preload("res://scripts/minigames/mg_regard.gd").new()
 		"mg_echo": game = preload("res://scripts/minigames/mg_echo.gd").new()
 
 	if game == null:
-		# Ultimate fallback: De du Destin
-		game = preload("res://scripts/minigames/mg_de_du_destin.gd").new()
+		# Ultimate fallback: Pile ou Face
+		game = preload("res://scripts/minigames/mg_pile_ou_face.gd").new()
 
 	game.setup(difficulty, modifiers)
 	return game

@@ -1,0 +1,254 @@
+[
+  {
+    "id": "SAVE-RUNSTATE-VALIDATE-EXTEND",
+    "sprint": "S3",
+    "priority": 6,
+    "status": "completed",
+    "type": "dev",
+    "title": "Extend _validate_run_state() with life_max + faction_rep_delta type checks",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SPECIALIST-9 CHK-2: _validate_run_state() currently only checks biome (String), card_index (numeric), life_essence (numeric), anam_accumulated (now added P23). Missing: (1) life_max should be numeric >= 1. (2) faction_rep_delta should be Dictionary with all 5 faction keys. (3) cards_played should be numeric >= 0. Add typeof checks for life_max + cards_played. Add dict-has-key checks for faction_rep_delta (same pattern as _validate() faction loop). Keep _validate_run_state() < 50 lines.",
+    "completed_at": "2026-04-14T18:48:00Z",
+    "notes": "SPEC-2: Extended _validate_run_state() — added life_max (numeric >=1), cards_played (numeric >=0), faction_rep_delta (dict with all 5 factions). Function grows from 15 to 34 lines (< 50 limit). Validates SAVE-RUNSTATE-VALIDATE-EXTEND task description exactly."
+  },
+  {
+    "id": "GDC-OGHAM-COOLDOWN-ACTIVE",
+    "sprint": "S2",
+    "priority": 7,
+    "status": "completed",
+    "type": "dev",
+    "title": "Fix tick_cooldowns: only decrement active Ogham's cooldown (bible s.2.2)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/store_oghams.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "SPEC-2 CHK-09 FAIL_MEDIUM: store_oghams.gd:78 tick_cooldowns() iterates ALL oghams in skill_cooldowns and decrements all. Bible s.2.2: 'Seul l'Ogham actif se recharge (cooldown diminue à chaque carte). Les Oghams équipés mais inactifs ont leur cooldown en pause.' Fix: pass active_ogham key to tick_cooldowns(), only decrement if skill_id == active_ogham. Signature change: tick_cooldowns(state, active_ogham: String) — update call site in store_run.gd:170.",
+    "completed_at": "2026-04-14T19:42:00Z",
+    "notes": "IMPLEMENTED: store_oghams.gd tick_cooldowns(state, active_ogham:String='') — only ticks active ogham (bible s.2.2). use_ogham() sets active_this_card in state. store_run.gd:170 passes active_this_card. PAT-079 added: run_3d_controller has parallel local tracking."
+  },
+  {
+    "id": "T-FLOW-SCENE-TRANSITIONS-REGRESSION",
+    "sprint": "S2",
+    "priority": 11,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: verify all active scene transitions reach existing .tscn files",
+    "description": "Code-trace test for all 11 PixelTransition.transition_to() calls in the main flow. Verify: (1) each target .tscn exists, (2) each .tscn has an attached script, (3) no transition goes to a deprecated/archived path. Based on SPECIALIST-0 audit. Check: IntroCeltOS→Menu3DPC, Menu3DPC→HubAntre, Menu3DPC→ParchmentPreRun, ParchmentPreRun→BroceliandeForest3D, HubAntre→TransitionBiome, TransitionBiome→BroceliandeForest3D, BroceliandeForest3D→MerlinGame, MerlinGame→BroceliandeForest3D, BroceliandeForest3D→HubAntre, EndRunScreen→HubAntre.",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/menu_3d_pc.gd",
+      "scripts/HubAntre.gd",
+      "scripts/TransitionBiome.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/ui/end_run_screen.gd"
+    ],
+    "agent": "game_playtester",
+    "completed_at": "2026-04-14T20:35:00Z",
+    "notes": "TEST PASS: all 10 active scene transitions verified. All target .tscn exist with attached scripts. 3 WARNs: dual menu path (MenuPrincipal→should be Menu3DPC, task FLOW-NARRATIVE-MENU-PATH-FIX added), MapMonde stub (low), TransitionBiome dead const (low). No FAIL_HIGH. Safe PixelTransition fallback pattern confirmed in parchment_pre_run + broceliande_forest_3d."
+  },
+  {
+    "id": "MG-FIX-NEUTRE-FALLBACK",
+    "sprint": "S2",
+    "priority": 8,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix neutre field: add GAMES[neutre] to registry OR map neutre → esprit",
+    "description": "merlin_constants.gd:338 FIELD_MINIGAMES has neutre:[apaisement,volonte]. MiniGameRegistry has no GAMES[neutre] → falls back to chance field. If a card has field=neutre, wrong minigame type is played. Fix: add GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:21, and add esprit to MerlinMiniGameSystem.VALID_FIELDS fallback for neutre. Also add detect_field() case for neutre → esprit.",
+    "files": [
+      "scripts/minigames/minigame_registry.gd",
+      "scripts/merlin/merlin_minigame_system.gd"
+    ],
+    "agent": "godot_expert",
+    "completed_at": "2026-04-14T21:44:27Z",
+    "notes": "Fixed: (1) Added GAMES[neutre]=[mg_apaisement,mg_volonte] to minigame_registry.gd:29. (2) detect_field() gm_hint check now also accepts GAMES keys (FIELDS.has or GAMES.has) at line 76 — neutre hint now returned correctly. (3) Added neutre to VALID_FIELDS + case neutre→_play_esprit(diff) in merlin_minigame_system.gd run():53."
+  },
+  {
+    "id": "MG-APAISEMENT-FALLBACK-VERIFY",
+    "sprint": "S2",
+    "priority": 12,
+    "type": "test",
+    "status": "completed",
+    "title": "Regression test: select_minigame('unknown') returns valid field name",
+    "description": "Verify BUG-MG-APAISEMENT-FALLBACK fix: select_minigame('nonexistent_field') must return MerlinConstants.ACTION_VERB_FALLBACK_FIELD ('esprit'). MerlinMiniGameSystem.run('esprit', 5) must not fall to _play_generic(). Also verify pick_minigame_for_field('unknown') returns 'esprit'. Check test_effect_engine.gd test_pick_minigame_unknown_fallback() passes.",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd:228-235",
+      "scripts/merlin/merlin_effect_engine.gd:759-766",
+      "scripts/test/test_effect_engine.gd:1422-1427"
+    ],
+    "agent": "bug_hunter",
+    "completed_at": "2026-04-14T22:50:00Z",
+    "notes": "PASS: 7/7 invariants verified. select_minigame(unknown)=esprit valid, neutre→detect_field→GAMES fallback all working. No bugs found. See T-MG-APAISEMENT-FALLBACK-VERIFY-2026-04-14.json"
+  },
+  {
+    "id": "GDC-FACTION-ENDING-TRIGGER",
+    "sprint": "S2",
+    "priority": 8,
+    "status": "completed",
+    "type": "dev",
+    "title": "Add faction ending trigger to check_run_end (bible s.3.8: rep >= 80)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "SPEC-2 CHK-12 FAIL_HIGH: store_run.gd:202 check_run_end() never checks if any faction has rep >= 80 for ending trigger. FACTION_THRESHOLD_ENDING=80 defined in constants but unused. Bible s.3.8: 'Faction ≥ 80 en fin de scenario → Fin de faction disponible'. Fix: in check_run_end(), when scenario ends (victory or hard_max or cards>=soft_max), check if any faction_rep >= 80 and add faction_ending list to return dict. Complement with FACTION-ENDING-UNLOCK-CHECK test [19].",
+    "completed_at": "2026-04-14T23:48:58Z",
+    "notes": "Added faction_endings_available to all 3 ending return dicts in check_run_end(). Uses MerlinReputationSystem.get_available_endings(faction_rep) per bible s.3.8. Faction rep from state.meta.faction_rep at run end."
+  },
+  {
+    "id": "T-E2E-INTEGRATION-REGRESSION",
+    "sprint": "S3",
+    "priority": 13,
+    "status": "completed",
+    "type": "test",
+    "title": "Integration regression: verify all autoloads accessible + MerlinStore created",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/game_manager.gd",
+      "project.godot",
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "SPECIALIST-14: Regression test for autoload wiring. CHK-1: GameManager autoload in project.godot. CHK-2: MerlinAI autoload in project.godot. CHK-3: game_manager.gd:674 creates MerlinStore via call_deferred. CHK-4: merlin_game_controller.gd:112 store=get_node_or_null('/root/MerlinStore') gets non-null. CHK-5: merlin_game_controller.gd:121 merlin_ai=get_node_or_null('/root/MerlinAI') gets non-null. CHK-6: SFXManager+PixelTransition+I18nRegistry all in project.godot autoloads.",
+    "completed_at": "2026-04-15T00:00:00Z",
+    "notes": "SPEC-8 TEST: ALL 6 CHK PASS. GameManager/MerlinAI autoloads verified. MerlinStore call_deferred pattern confirmed. All 19 autoload files exist on disk. LLM pipeline audit reveals 2 FAIL_HIGH issues (grammar no-op, RAG truncation) — tasks LLM-GRAMMAR-NOOP + LLM-RAG-CONTEXT-ROLE generated."
+  },
+  {
+    "id": "FLOW-QUIZ-WIRE-INTRO",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "dev",
+    "status": "completed",
+    "title": "Delete IntroPersonalityQuiz + SceneRencontreMerlin (director: option B)",
+    "description": "Director decision q-20260414-005: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Actions: (1) Delete scenes/IntroPersonalityQuiz.tscn if exists. (2) Delete scripts/IntroPersonalityQuiz.gd. (3) Delete scenes/SceneRencontreMerlin.tscn if exists. (4) Delete scripts/SceneRencontreMerlin.gd. (5) Check menu_3d_pc.gd for any remaining references to these scenes and remove them. The active flow (Menu3DPC→ParchmentPreRun→Hub) is already correct per SPEC-0 audit.",
+    "files": [
+      "scripts/IntroPersonalityQuiz.gd",
+      "scripts/SceneRencontreMerlin.gd",
+      "scripts/menu_3d_pc.gd"
+    ],
+    "agent": "godot_expert",
+    "completed_at": "2026-04-15T01:30:00Z",
+    "notes": "Deleted IntroPersonalityQuiz.tscn/.gd, SceneRencontreMerlin.tscn/.gd, quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd. Removed entries from SceneSelector.gd and pixel_transition_config.gd. Director option B applied."
+  },
+  {
+    "id": "FLOW-RENCONTRE-CONSTANTS-CLEANUP",
+    "sprint": "S2",
+    "priority": 10,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix SceneRencontreMerlin dead branching: consolidate or restore SCENE constants",
+    "description": "SceneRencontreMerlin.gd:10-12 has SCENE_HUB = SCENE_BIOME = SCENE_TUTORIAL = BroceliandeForest3D. The branching logic at lines 628-656 (_next_scene = SCENE_BIOME/SCENE_TUTORIAL/SCENE_HUB) is dead code. Either: (A) restore HubAntre as SCENE_HUB, or (B) remove the branching and use a single constant. BLOCKED: depends on FLOW-QUIZ-WIRE-INTRO decision.",
+    "files": [
+      "scripts/SceneRencontreMerlin.gd:10-12",
+      "scripts/SceneRencontreMerlin.gd:628-656"
+    ],
+    "agent": "scene_flow_fixer",
+    "completed_at": "2026-04-15T01:30:00Z",
+    "notes": "Superseded by FLOW-QUIZ-WIRE-INTRO: SceneRencontreMerlin fully deleted, no cleanup needed."
+  },
+  {
+    "id": "MG-FIX-SFX-DOUBLE-TRIGGER",
+    "sprint": "S3",
+    "priority": 22,
+    "type": "dev",
+    "status": "completed",
+    "title": "Deduplicate minigame success SFX: base class vs controller both play minigame_success",
+    "description": "minigame_base.gd:87 calls SFXManager.play(minigame_success) on success. game_controller_minigame.gd:100 also calls SFXManager.play(minigame_success). Result: success SFX plays twice. Fix: remove the SFX from minigame_base._complete() (base should not know about global SFX) and keep only in game_controller_minigame.gd which has full outcome context.",
+    "files": [
+      "scripts/minigames/minigame_base.gd",
+      "scripts/ui/game_controller_minigame.gd"
+    ],
+    "agent": "godot_expert",
+    "completed_at": "2026-04-15T04:50:48Z",
+    "notes": "FIXED: Removed duplicate SFX block (lines 83-89) from minigame_base._complete(). game_controller_minigame.gd:100-102 remains as single source of truth for minigame outcome SFX. Self-QA: no := with CONST, no broken type hints."
+  },
+  {
+    "id": "E2E-TEST-FULL-LOOP-CODE-TRACE",
+    "sprint": "S3",
+    "priority": 16,
+    "status": "completed",
+    "type": "test",
+    "title": "E2E code trace: full game loop IntroCeltOS→Hub→Run→MerlinGame→EndScreen→Hub",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/HubAntre.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/ui/ui_overlay_endscreen.gd"
+    ],
+    "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button → SelectionSauvegarde. CHK-3: SelectionSauvegarde → HubAntre. CHK-4: HubAntre Partir button → BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires → MerlinGame. CHK-6: MerlinGame run_ended → show_end_screen. CHK-7: EndScreen hub button → HubAntre. Check each signal/button connection for completeness.",
+    "completed_at": "2026-04-15T04:50:48Z",
+    "notes": "Traced all 7 CHKs. Result: FUNCTIONAL. Live game uses Menu3DPC→ParchmentPreRun→HubAntre→BroceliandeForest3D→MerlinGame→UIOverlayEndScreen→HubAntre. Spec CHK-2 was stale (SelectionSauvegarde is Continue in legacy MenuPrincipal). GameFlowController is dead architecture. Arch issues logged as ARCH-GAMEFLOW-UNWIRED task."
+  },
+  {
+    "id": "LLM-GROQ-1",
+    "phase": 1,
+    "priority": 8,
+    "status": "completed",
+    "type": "dev",
+    "title": "Add GROQ_API_KEY missing warning in GroqBackend before HTTP attempt",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/groq_backend.gd"
+    ],
+    "description": "LLM-F6: In GroqBackend, add push_warning when api_key is empty so devs see clear message in console.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
+    "completed_at": "2026-04-15T05:47:14Z",
+    "notes": "Added push_warning() in generate_async() before HTTP attempt: logs role, env var, ProjectSettings, and URL param configuration hints. groq_backend.gd:88."
+  },
+  {
+    "id": "NAR-FACTION-ENDING-UI",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "dev",
+    "title": "Faction ending choice screen when faction_endings_available non-empty",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "end_run_screen.gd must read end_check.faction_endings_available. If non-empty: show choice panel 'Vers qui vous tournez-vous?' with faction buttons (bible s.3.8 fins multiples). If single faction: auto-select. Emit signal faction_ending_chosen(faction_name).",
+    "status": "completed",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE",
+    "completed_at": "2026-04-15T08:10:00Z",
+    "notes": "Added faction_ending_chosen signal, _faction_choices state, _show_faction_choice_panel() multi-faction UI, _on_faction_btn_pressed(). Single faction auto-selects. 2+ factions shows buttons. Buttons use MIN_TOUCH_TARGET(48)."
+  },
+  {
+    "id": "VFX-GRASS-WIND-SHADER",
+    "sprint": "S2",
+    "priority": 10,
+    "status": "completed",
+    "type": "dev",
+    "title": "Create missing grass_wind_sway.gdshader",
+    "agent": "vfx_artist",
+    "files": [
+      "shaders/grass_wind_sway.gdshader"
+    ],
+    "description": "SPEC5-FAIL-001: grass_wind_sway.gdshader was missing but referenced in broc_grass_wind.gd:18. Created PS1/N64 Celtic aesthetic shader: vertex_lighting, cull_disabled, height-weighted sway (UV.y^1.8), quantized vertex snap for PS1 stutter, world-space phase coherence across instances.",
+    "completed_at": "2026-04-15T07:00:00Z",
+    "notes": "Implemented by SPEC-5 cycle. Shader uses vertex_snap uniform (default 0.03) for PS1 quantization, wind_strength=0.35, wind_speed=1.5. BrocGrassWind already assigns this shader via _try_load_shader — no code change needed."
+  },
+  {
+    "id": "LLM-STAT-1",
+    "phase": 2,
+    "priority": 10,
+    "status": "completed",
+    "type": "dev",
+    "title": "Fix last_ttft_ms stat never set in OllamaBackend non-streaming path",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/ollama_backend.gd"
+    ],
+    "description": "LLM-F4: Capture timestamp when STATUS_BODY transition occurs in _blocking_generate() to measure TTFT.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
+    "completed_at": "2026-04-15T09:15:00Z",
+    "notes": "Fixed: _update_stats() now accepts optional ttft_ms param and sets stats.last_ttft_ms. Streaming path: tracks first_token_ms before while loop, passes to _update_stats on done=true and loop fallback. Non-streaming path: uses total_ms as TTFT proxy (bulk response, default ttft_ms=-1)."
+  }
+]

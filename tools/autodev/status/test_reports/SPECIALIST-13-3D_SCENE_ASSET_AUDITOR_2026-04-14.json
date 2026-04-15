@@ -1,0 +1,84 @@
+{
+  "specialist": 13,
+  "role": "3D_SCENE_ASSET_AUDITOR",
+  "date": "2026-04-14",
+  "cycle_type": "dev",
+  "audit_checks": {
+    "total": 10,
+    "pass": 3,
+    "fail_critical": 2,
+    "fail_high": 3,
+    "fail_medium": 2
+  },
+  "findings": [
+    {
+      "id": "CHK-1",
+      "status": "FAIL_CRITICAL",
+      "check": "All 8 biomes have bk_assets",
+      "detail": "Only foret_broceliande has GLB assets in Assets/bk_assets/. Other 7 biomes (landes_bruyere, cotes_sauvages, villages_celtes, cercles_pierres, marais_korrigans, collines_dolmens, iles_mystiques) have 0 files. All non-foret biome runs fall back to procedural geometry.",
+      "file": "Assets/bk_assets/"
+    },
+    {
+      "id": "CHK-2",
+      "status": "FAIL_CRITICAL",
+      "check": "BUSH_MODELS loads bush assets",
+      "detail": "broceliande_forest_3d.gd:68-72 BUSH_MODELS hardcoded to rocks/ category. Real bush GLBs exist at Assets/bk_assets/bushes/foret_broceliande/ (6 files) but are NEVER loaded. Bushes spawned in game are actually rocks.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:68"
+    },
+    {
+      "id": "CHK-3",
+      "status": "FAIL_HIGH",
+      "check": "No asset loading for unused categories: deadwood, groundcover, mushrooms",
+      "detail": "Assets/bk_assets/deadwood/, /groundcover/, /mushrooms/ all have foret_broceliande GLBs (6 each) but no spawning code references them. Rich environment categories go unused.",
+      "file": "scripts/broceliande_3d/forest_asset_spawner.gd"
+    },
+    {
+      "id": "CHK-4",
+      "status": "FAIL_HIGH",
+      "check": "BiomeWalkConfigs TILE_BASE references archive/ path",
+      "detail": "biome_walk_configs.gd:8 TILE_BASE = 'res://archive/3d_models/Tiles_Low_Poly/' — tiles are actually at Assets/Tiles/. Tile path resolution depends on forest_terrain_builder.gd appending this prefix.",
+      "file": "scripts/broceliande_3d/biome_walk_configs.gd:8"
+    },
+    {
+      "id": "CHK-5",
+      "status": "FAIL_HIGH",
+      "check": "Non-existent tiles referenced for villages_celtes and cercles_pierres",
+      "detail": "biome_walk_configs.gd references Tile_38_Path_Grass, Tile_34_Trans_Grass_Dirt, Tile_39_Grass_Rocky — only Tile_01 to Tile_31 exist in Assets/Tiles/. These biomes will crash or use fallback tiles.",
+      "file": "scripts/broceliande_3d/biome_walk_configs.gd:62,74"
+    },
+    {
+      "id": "CHK-6",
+      "status": "FAIL_MEDIUM",
+      "check": "BroceliandeForest3D biome_key export unused for asset selection",
+      "detail": "broceliande_forest_3d.gd:115 @export var biome_key. TREE_MODELS/BUSH_MODELS/BROC_ASSETS are all compile-time CONSTs hardcoded to foret_broceliande. biome_key only affects BiomeWalkConfigs (terrain colors, fog). No per-biome asset dictionary.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:115,50"
+    },
+    {
+      "id": "CHK-7",
+      "status": "FAIL_MEDIUM",
+      "check": "prop assets in bk_assets/props/ never used",
+      "detail": "Assets/bk_assets/props/foret_broceliande/ has prop_bk_foret_broceliande_0000-0005.glb (6 files) + bridge variants. Only bridge_bk_foret_broceliande_0000.glb is in BROC_ASSETS. Other props unused.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:92"
+    },
+    {
+      "id": "CHK-8",
+      "status": "PASS",
+      "check": "All BROC_ASSETS paths exist on disk",
+      "detail": "All 20 paths in BROC_ASSETS dictionary verified: structures 0-4, megaliths 0-4, vegetation 0-5, rocks 0-5, collectibles 0-5. All present."
+    },
+    {
+      "id": "CHK-9",
+      "status": "PASS",
+      "check": "ForestAssetSpawner has procedural fallback",
+      "detail": "forest_asset_spawner.gd has complete fallback chain: spawn_random_tree() → create_fallback_tree(), spawn_random_bush() → create_fallback_shrub(). Game won't crash if assets missing."
+    },
+    {
+      "id": "CHK-10",
+      "status": "PASS",
+      "check": "Run3D.tscn wired to run_3d_controller.gd",
+      "detail": "scenes/Run3D.tscn uses script res://scripts/run/run_3d_controller.gd. game_flow_controller.gd:45 SCENE_RUN correctly references it."
+    }
+  ],
+  "new_tasks_generated": 7,
+  "patterns_added": ["PAT-061: bk_assets categories (deadwood/groundcover/mushrooms) exist but lack spawning code — rich assets wasted", "PAT-062: BUSH_MODELS const pointing to wrong asset category is a silent error since fallback rocks still render"]
+}

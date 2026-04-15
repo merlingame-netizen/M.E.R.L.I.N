@@ -1,0 +1,78 @@
+{
+  "report_id": "S2-BIOMES-REGRESSION-TEST_2026-04-13",
+  "task_id": "S2-BIOMES-REGRESSION-TEST",
+  "agent": "game_design_auditor",
+  "timestamp": "2026-04-13T21:15:00Z",
+  "cycle": 24,
+  "overall_result": "PASS",
+  "summary": "S2-BIOMES fix VERIFIED. 6/6 checks PASS. All 8 biomes: card intervals match bible s.4.3, arc IDs match s.3.6, arc_cards (3,4,3,5,4,4,3,5) correct, arc_condition types+values correct. New condition types runs_in_biome (landes) + fins_vues (collines) confirmed present. foret_broceliande unchanged. 1 LOW note: cotes_sauvages.dominant_faction='korrigans' may conflict with arc unlock condition (Rep Niamh ≥ 30). Non-blocking.",
+  "checks": [
+    {
+      "id": "CHECK-1",
+      "description": "card_interval_range_min/max — all 8 biomes match bible s.4.3",
+      "result": "PASS",
+      "evidence": "foret:12-15 ✅  landes:8-10 ✅  cotes:6-8 ✅  villages:8-10 ✅  cercles:10-12 ✅  marais:4-6 ✅  collines:10-12 ✅  iles:3-15 ✅",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": "417-488"
+    },
+    {
+      "id": "CHECK-2",
+      "description": "Arc IDs — all 8 biomes match bible s.3.6",
+      "result": "PASS",
+      "evidence": "foret:le_chene_chantant ✅  landes:l_ermite_du_vent ✅  cotes:le_phoque_d_argent ✅  villages:l_assemblee_secrete ✅  cercles:le_rituel_oublie ✅  marais:le_tresor_des_feux ✅  collines:la_voix_des_rois ✅  iles:le_passage_de_morgane ✅",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": "418-489"
+    },
+    {
+      "id": "CHECK-3",
+      "description": "arc_cards counts — sequence (3,4,3,5,4,4,3,5) matches bible s.3.6",
+      "result": "PASS",
+      "evidence": "foret:3 ✅  landes:4 ✅  cotes:3 ✅  villages:5 ✅  cercles:4 ✅  marais:4 ✅  collines:3 ✅  iles:5 ✅",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": "418-489"
+    },
+    {
+      "id": "CHECK-4",
+      "description": "arc_condition_type + arc_condition_faction + arc_condition_value — 8/8 biomes correct",
+      "result": "PASS",
+      "evidence": "foret:faction_rep/druides/30 ✅  landes:runs_in_biome/''/3 ✅  cotes:faction_rep/niamh/30 ✅  villages:faction_rep/anciens/40 ✅  cercles:oghams_owned/''/2 ✅  marais:faction_rep/korrigans/40 ✅  collines:fins_vues/''/5 ✅  iles:faction_rep/ankou/50 ✅",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": "419-490"
+    },
+    {
+      "id": "CHECK-5",
+      "description": "New condition types runs_in_biome (landes) + fins_vues (collines) present in constants",
+      "result": "PASS",
+      "evidence": "landes_bruyere.arc_condition_type='runs_in_biome' (line 429). collines_dolmens.arc_condition_type='fins_vues' (line 479). S2-ARC-CONDITION-EVAL (P16) task exists to implement evaluation logic.",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": "429,479"
+    },
+    {
+      "id": "CHECK-6",
+      "description": "foret_broceliande UNCHANGED — baseline biome preserved",
+      "result": "PASS",
+      "evidence": "foret_broceliande: card_interval 12-15, arc=le_chene_chantant, arc_cards=3, condition=faction_rep/druides/30. Identical to pre-S2-BIOMES state.",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": "411-420"
+    }
+  ],
+  "notes": [
+    {
+      "id": "NOTE-1",
+      "severity": "LOW",
+      "description": "cotes_sauvages.dominant_faction='korrigans' — thematic mismatch. Arc unlock requires Rep Niamh >= 30 and bible PNJ table lists cotes as Niamh territory. Korrigans are traditionally marais/swamp faction. Non-blocking cosmetic inconsistency.",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "line": 435,
+      "action": "Created BUG-COTES-FACTION-FIX (P18) — low priority fix"
+    }
+  ],
+  "regressions": [],
+  "new_bugs_created": [
+    {
+      "id": "BUG-COTES-FACTION-FIX",
+      "priority": 18,
+      "severity": "LOW",
+      "description": "cotes_sauvages.dominant_faction should be 'niamh' not 'korrigans' — thematic alignment with arc condition + PNJ lore"
+    }
+  ]
+}

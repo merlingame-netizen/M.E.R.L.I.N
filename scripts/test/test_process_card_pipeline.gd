@@ -587,7 +587,7 @@ func test_life_before_recorded() -> bool:
 func test_promise_not_expired_before_deadline() -> bool:
 	var engine := MerlinEffectEngine.new()
 	var state: Dictionary = _make_state(100, 3)
-	state["run"]["promises"] = [
+	state["run"]["active_promises"] = [
 		{"id": "oath_001", "made_at_card": 2, "deadline_cards": 5, "status": "active"},
 	]
 	var card: Dictionary = _make_card([])
@@ -603,7 +603,7 @@ func test_promise_expires_at_deadline() -> bool:
 	# cards_played=6, process_card increments to 7
 	# made_at=2, deadline=5. 7-2=5 >= 5 → expired
 	var state: Dictionary = _make_state(100, 6)
-	state["run"]["promises"] = [
+	state["run"]["active_promises"] = [
 		{"id": "oath_001", "made_at_card": 2, "deadline_cards": 5, "status": "active"},
 	]
 	var card: Dictionary = _make_card([])
@@ -620,7 +620,7 @@ func test_promise_expires_at_deadline() -> bool:
 func test_promise_fulfilled_not_expired() -> bool:
 	var engine := MerlinEffectEngine.new()
 	var state: Dictionary = _make_state(100, 10)
-	state["run"]["promises"] = [
+	state["run"]["active_promises"] = [
 		{"id": "oath_001", "made_at_card": 0, "deadline_cards": 3, "status": "fulfilled"},
 	]
 	var card: Dictionary = _make_card([])
@@ -634,7 +634,7 @@ func test_promise_fulfilled_not_expired() -> bool:
 func test_promise_multiple_expiry() -> bool:
 	var engine := MerlinEffectEngine.new()
 	var state: Dictionary = _make_state(100, 9)
-	state["run"]["promises"] = [
+	state["run"]["active_promises"] = [
 		{"id": "oath_A", "made_at_card": 0, "deadline_cards": 5, "status": "active"},
 		{"id": "oath_B", "made_at_card": 5, "deadline_cards": 5, "status": "active"},
 		{"id": "oath_C", "made_at_card": 8, "deadline_cards": 5, "status": "active"},

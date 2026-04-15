@@ -1,0 +1,137 @@
+{
+  "report_id": "SPEC-6-UX-2026-04-14",
+  "specialist": 6,
+  "role": "UX_ACCESSIBILITY_AUDITOR",
+  "cycle_type": "test",
+  "timestamp": "2026-04-14T22:45:00Z",
+  "summary": "UX/Accessibility audit: 12 checks across touch targets, font sizes, i18n, loading states, input abstraction.",
+  "checks": {
+    "total": 12,
+    "pass": 5,
+    "fail_high": 1,
+    "fail_medium": 3,
+    "fail_low": 1,
+    "warn": 2
+  },
+  "findings": [
+    {
+      "id": "UX-CHK-01",
+      "severity": "FAIL_HIGH",
+      "check": "Font size minimum (>=11px)",
+      "result": "FAIL",
+      "details": "6 occurrences of 10px text found — violates 'Pas de texte < 11px' rule",
+      "locations": [
+        "scripts/calendar_tabs.gd:110 — state indicator 10px",
+        "scripts/calendar_tabs.gd:407 — counter 10px",
+        "scripts/menu_3d_pc.gd:454 — clock label 10px",
+        "scripts/menu_3d_pc.gd:843 — legend labels 10px",
+        "scripts/ui/ui_config_module.gd:250 — caption 10px",
+        "scripts/Collection.gd:388 — compact mode small_font_size=10"
+      ],
+      "task_id": "UX-FONT-SIZE-10-FIX"
+    },
+    {
+      "id": "UX-CHK-02",
+      "severity": "FAIL_MEDIUM",
+      "check": "Touch target minimum (>=44px WCAG)",
+      "result": "FAIL",
+      "details": "arbre_de_vie_ui.gd:284 unlock_btn custom_minimum_size=Vector2(0,36) — below 44px",
+      "locations": ["scripts/ui/arbre_de_vie_ui.gd:284"],
+      "task_id": "UX-TOUCH-TARGET-ARBRE"
+    },
+    {
+      "id": "UX-CHK-03",
+      "severity": "FAIL_MEDIUM",
+      "check": "i18n: no hardcoded French text in Collection.gd",
+      "result": "FAIL",
+      "details": "9 hardcoded French strings found in Collection.gd (Collection, Gloire, Rang, Passe de Gloire, Fins & Runes, etc.)",
+      "locations": ["scripts/Collection.gd:504,506,507,509,510,512,516,599,600"],
+      "task_id": "UX-I18N-COLLECTION"
+    },
+    {
+      "id": "UX-CHK-04",
+      "severity": "FAIL_MEDIUM",
+      "check": "i18n: no hardcoded French text in HubAntre.gd",
+      "result": "FAIL",
+      "details": "7 hardcoded French strings in HubAntre.gd popup dialogs (Memoires, Fermer, Vies Passees, etc.)",
+      "locations": ["scripts/HubAntre.gd:848,855,867,901,908,916,926"],
+      "task_id": "UX-I18N-HUBANTRE"
+    },
+    {
+      "id": "UX-CHK-05",
+      "severity": "PASS",
+      "check": "InputAdapter: no direct Input. in game UI scripts",
+      "result": "PASS",
+      "details": "Direct Input. usage only in debug cameras (bk_free_camera, bk_ground_camera) and test scripts — acceptable"
+    },
+    {
+      "id": "UX-CHK-06",
+      "severity": "PASS",
+      "check": "PlatformManager autoload exists",
+      "result": "PASS",
+      "details": "scripts/autoload/platform_manager.gd present"
+    },
+    {
+      "id": "UX-CHK-07",
+      "severity": "PASS",
+      "check": "LLM loading states: warmup + in-game generation",
+      "result": "PASS",
+      "details": "llm_warmup_overlay.gd handles initial warmup. merlin_game_controller.gd:259-264,387-406 show/hide thinking overlay during card gen"
+    },
+    {
+      "id": "UX-CHK-08",
+      "severity": "PASS",
+      "check": "Touch targets in main game flow (encounter_card_overlay, MenuPrincipalMerlin)",
+      "result": "PASS",
+      "details": "encounter_card_overlay.gd:103 btn=48px; MenuPrincipalMerlin.gd:350 btn=56px; broceliande_forest_3d.gd:1201 btn_menu=48px — all >=44px"
+    },
+    {
+      "id": "UX-CHK-09",
+      "severity": "PASS",
+      "check": "Responsive scaling: compact mode",
+      "result": "PASS",
+      "details": "arbre_de_vie_ui.gd:37,50 breakpoint 560px, title font 28->22. encounter_card_overlay btn 48px unchanged"
+    },
+    {
+      "id": "UX-CHK-10",
+      "severity": "WARN",
+      "check": "Hardcoded color in parchment_pre_run.gd",
+      "result": "WARN",
+      "details": "parchment_pre_run.gd:71 Color(0.75,0.60,0.25,0.8) not from MerlinVisual palette (should use PALETTE['gold'] or CRT_PALETTE['amber'])",
+      "locations": ["scripts/ui/parchment_pre_run.gd:71"],
+      "task_id": "UX-PARCHMENT-COLOR-HARDCODE"
+    },
+    {
+      "id": "UX-CHK-11",
+      "severity": "WARN",
+      "check": "SelectionSauvegarde.gd back_button touch target",
+      "result": "WARN",
+      "details": "SelectionSauvegarde.gd back_button has no custom_minimum_size — depends on theme margin_top+bottom=8+8=16px which may be <44px on mobile",
+      "locations": ["scripts/SelectionSauvegarde.gd:63-82"],
+      "task_id": "UX-TOUCH-TARGET-SELECTION-SAVE"
+    },
+    {
+      "id": "UX-CHK-12",
+      "severity": "FAIL_LOW",
+      "check": "biome_radial.gd font size adequacy for touch use",
+      "result": "WARN",
+      "details": "biome_radial.gd:369 font_size=11 (at exact minimum). Radial icon labels may be unreadable on mobile at small viewport. Icon area not explicitly sized.",
+      "locations": ["scripts/ui/biome_radial.gd:369"]
+    }
+  ],
+  "invariants_preserved": [
+    "Touch targets >=44px in main card flow (encounter_card_overlay, MenuPrincipalMerlin)",
+    "InputAdapter exists and is used for core gameplay inputs",
+    "LLM loading states shown for warmup + in-game generation",
+    "Responsive scaling exists in arbre_de_vie_ui.gd"
+  ],
+  "new_tasks_generated": [
+    "UX-FONT-SIZE-10-FIX (P64, FAIL_HIGH)",
+    "UX-TOUCH-TARGET-ARBRE (P65, FAIL_MEDIUM)",
+    "UX-I18N-COLLECTION (P66, FAIL_MEDIUM)",
+    "UX-I18N-HUBANTRE (P67, FAIL_MEDIUM)",
+    "UX-PARCHMENT-COLOR-HARDCODE (P68, WARN)",
+    "UX-TOUCH-TARGET-SELECTION-SAVE (P69, WARN)",
+    "UX-TEST-TOUCH-TARGETS-REGRESSION (P70, test)"
+  ]
+}

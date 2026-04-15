@@ -1,0 +1,215 @@
+{
+  "report_id": "SPEC10-TEST-2026-04-14b",
+  "specialist": 10,
+  "specialist_role": "PERFORMANCE_CODE_QUALITY_AUDITOR",
+  "cycle_type": "test",
+  "task_id": "T-S2-ARC-EVAL-TEST",
+  "bonus_task": "T-SAVE-VALIDATE-REGRESSION",
+  "timestamp": "2026-04-14T10:48:35Z",
+  "agent": "game_design_auditor + bug_hunter",
+
+  "test_primary": {
+    "id": "T-S2-ARC-EVAL-TEST",
+    "title": "Verify S2-ARC-CONDITION-EVAL: runs_in_biome + fins_vues condition evaluation",
+    "prerequisite_status": "BLOCKED — S2-ARC-CONDITION-EVAL (P16) NOT YET IMPLEMENTED",
+    "overall": "FAIL_CRITICAL",
+    "pass": 3,
+    "fail_critical": 4,
+    "fail_medium": 1,
+    "checks": [
+      {
+        "id": "CHK-1",
+        "description": "arc_condition_type='runs_in_biome' handled separately from faction_rep",
+        "result": "FAIL_CRITICAL",
+        "evidence": "llm_adapter_map_prompt.gd:96 — `var arc_unlocked: bool = rep_value >= arc_condition_value` always uses rep_value regardless of arc_condition_type. merlin_skeleton_generator.gd:46 — when arc_condition_faction='', rep_value defaults to FACTION_SCORE_START=20. landes_bruyere arc (runs_in_biome, value=3): 20>=3=TRUE → arc ALWAYS unlocked.",
+        "file": "scripts/merlin/llm_adapter_map_prompt.gd:96",
+        "file2": "scripts/merlin/merlin_skeleton_generator.gd:46"
+      },
+      {
+        "id": "CHK-2",
+        "description": "arc_condition_type='fins_vues' handled separately",
+        "result": "FAIL_CRITICAL",
+        "evidence": "Same code path. collines_dolmens: arc_condition_faction='', rep_value=20, arc_condition_value=5. 20>=5=TRUE → collines_dolmens arc ALWAYS unlocked from run 1.",
+        "file": "scripts/merlin/llm_adapter_map_prompt.gd:96"
+      },
+      {
+        "id": "CHK-3",
+        "description": "Existing 'faction_rep' condition still evaluates correctly",
+        "result": "PASS",
+        "evidence": "merlin_skeleton_generator.gd:42-46 correctly reads specific faction rep. llm_adapter_map_prompt.gd:59,96 uses the passed rep_value. foret_broceliande(druides>=30), cotes_sauvages(niamh>=30), etc. all correct.",
+        "file": "scripts/merlin/merlin_skeleton_generator.gd:42-67"
+      },
+      {
+        "id": "CHK-4",
+        "description": "arc_condition_type='oghams_owned' handled correctly for cercles_pierres",
+        "result": "FAIL_CRITICAL",
+        "evidence": "Same bug. arc_condition_faction='', rep_value=FACTION_SCORE_START=20, arc_condition_value=2. 20>=2=TRUE → cercles_pierres arc ALWAYS unlocked, regardless of oghams owned count.",
+        "file": "scripts/merlin/llm_adapter_map_prompt.gd:96"
+      },
+      {
+        "id": "CHK-5",
+        "description": "landes_bruyere arc unlocks ONLY when biome_runs['landes_bruyere'] >= 3",
+        "result": "FAIL_CRITICAL",
+        "evidence": "Arc is always unlocked (20>=3). Expected: check meta.biome_runs.get('landes_bruyere', 0) >= 3. Actual: always true from run 1.",
+        "file": "scripts/merlin/merlin_skeleton_generator.gd:46,67"
+      },
+      {
+        "id": "CHK-6",
+        "description": "collines_dolmens arc unlocks ONLY when fins_vues >= 5",
+        "result": "FAIL_CRITICAL",
+        "evidence": "Arc always unlocked (20>=5). Expected: check meta.fins_vues >= 5. Context dict (line 62-75) never passes fins_vues or biome_runs.",
+        "file": "scripts/merlin/merlin_skeleton_generator.gd:62-75"
+      },
+      {
+        "id": "CHK-7",
+        "description": "meta.biome_runs dict exists in save schema with all 8 biome keys",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:36-42 — biome_runs has all 8 biomes with default=0. _validate() required_keys line 248 includes 'biome_runs'.",
+        "file": "scripts/merlin/merlin_save_system.gd:36-42"
+      },
+      {
+        "id": "CHK-8",
+        "description": "meta.fins_vues field exists in save schema",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:22 — fins_vues:0 in _get_default_profile(). _validate():279 type-checks it as numeric.",
+        "file": "scripts/merlin/merlin_save_system.gd:22,279"
+      }
+    ],
+    "root_cause": "merlin_skeleton_generator.gd context dict (lines 62-75) never includes biome_runs, fins_vues, or oghams_count. When arc_condition_faction='', rep_value falls back to FACTION_SCORE_START=20, which satisfies ALL non-faction arc conditions (3, 5, 2) by coincidence. Result: 3 out of 8 biomes have permanently unlocked arcs.",
+    "fix_task": "S2-ARC-CONDITION-EVAL (bumped from P16 → P2 — CRITICAL)"
+  },
+
+  "test_bonus": {
+    "id": "T-SAVE-VALIDATE-REGRESSION",
+    "title": "Verify SAVE-VALIDATE-FINS-VUES: regression test for _validate() additions",
+    "note": "Partial run — SAVE-FINS-VUES-CLAMP (P31) not yet implemented, CHK-9 skipped",
+    "overall": "PASS",
+    "pass": 7,
+    "skip": 1,
+    "fail": 0,
+    "checks": [
+      {
+        "id": "CHK-1",
+        "description": "_validate() required_keys includes fins_vues/echo_memory/run_history/whispers_seen",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:249 — all 4 keys present in required_keys array."
+      },
+      {
+        "id": "CHK-2",
+        "description": "Missing fins_vues → _validate() returns false + push_warning",
+        "result": "PASS",
+        "evidence": "Required_keys loop (line 244-248) calls push_warning + returns false for missing key."
+      },
+      {
+        "id": "CHK-3",
+        "description": "fins_vues='corrupted_string' → typeof check triggers false return",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:279-280 — typeof(meta.get('fins_vues')) != TYPE_INT and != TYPE_FLOAT → push_warning + return false."
+      },
+      {
+        "id": "CHK-4",
+        "description": "whispers_seen=null → array check triggers false return",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:285 — `not (meta.get('whispers_seen') is Array)` → push_warning + return false."
+      },
+      {
+        "id": "CHK-5",
+        "description": "echo_memory=[] (Array not Dict) → dict check triggers false return",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:288-290 — `not (meta.get('echo_memory') is Dictionary)` → push_warning + return false."
+      },
+      {
+        "id": "CHK-6",
+        "description": "Existing passing saves regression: factions, anam, oghams",
+        "result": "PASS",
+        "evidence": "Existing validates (faction_rep keys loop, oghams structure, anam numeric) all present and unchanged."
+      },
+      {
+        "id": "CHK-7",
+        "description": "_validate_run_state() includes anam_accumulated",
+        "result": "PASS",
+        "evidence": "merlin_save_system.gd:296 — required_keys=['biome','card_index','life_essence','anam_accumulated']."
+      },
+      {
+        "id": "CHK-8",
+        "description": "fins_vues and total_runs clamped to max(0) in load_profile()",
+        "result": "SKIP",
+        "evidence": "SAVE-FINS-VUES-CLAMP (P31) not yet implemented. Check deferred."
+      }
+    ]
+  },
+
+  "spec10_audit": {
+    "scope": "Performance & Code Quality — recently modified files",
+    "total_checks": 11,
+    "pass": 6,
+    "medium": 3,
+    "critical": 2,
+    "findings": [
+      {
+        "severity": "CRITICAL",
+        "file": "scripts/merlin/merlin_skeleton_generator.gd:162",
+        "func": "_generate_procedural()",
+        "lines": 116,
+        "issue": "Function 2.3x over 50-line limit"
+      },
+      {
+        "severity": "CRITICAL",
+        "file": "scripts/merlin/merlin_effect_engine.gd:655",
+        "func": "activate_ogham()",
+        "lines": 94,
+        "issue": "Function nearly 2x over limit"
+      },
+      {
+        "severity": "CRITICAL",
+        "file": "scripts/merlin/merlin_effect_engine.gd:93",
+        "issue": ":= with CONST indexing: `var expected := int(VALID_CODES[code])` — VALID_CODES is a const, must use explicit type annotation",
+        "fix": "var expected: int = int(VALID_CODES[code])"
+      },
+      {
+        "severity": "HIGH",
+        "file": "scripts/merlin/llm_adapter_map_prompt.gd:45",
+        "func": "build_user_prompt()",
+        "lines": 92,
+        "issue": "Function nearly 2x over limit"
+      },
+      {
+        "severity": "HIGH",
+        "file": "scripts/merlin/store_run.gd:202",
+        "func": "check_run_end()",
+        "lines": 75,
+        "issue": "Function 50% over limit"
+      },
+      {
+        "severity": "MEDIUM",
+        "file": "scripts/merlin/merlin_save_system.gd:315",
+        "func": "_migrate()",
+        "lines": 56,
+        "issue": "Slightly over limit, acceptable for migration logic"
+      },
+      {
+        "severity": "MEDIUM",
+        "file": "scripts/merlin/store_run.gd:133",
+        "func": "resolve_choice()",
+        "lines": 53,
+        "issue": "Slightly over limit"
+      },
+      {
+        "severity": "MEDIUM",
+        "file": "scripts/merlin/store_run.gd:332",
+        "func": "calculate_run_rewards()",
+        "lines": 53,
+        "issue": "Slightly over limit"
+      }
+    ]
+  },
+
+  "new_tasks_generated": [
+    "S2-ARC-CONDITION-EVAL bumped P16→P2",
+    "CONST-VIOLATION-FIX-EFFECT-ENGINE P3",
+    "PERF-SKELETON-PROCEDURAL-SPLIT P35",
+    "PERF-ACTIVATE-OGHAM-SPLIT P36",
+    "PERF-MAP-PROMPT-BUILD-SPLIT P37",
+    "PERF-STORE-RUN-CHECKEND-SPLIT P38"
+  ]
+}

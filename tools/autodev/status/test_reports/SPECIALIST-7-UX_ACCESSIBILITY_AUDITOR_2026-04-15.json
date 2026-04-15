@@ -1,0 +1,131 @@
+{
+  "specialist": 7,
+  "role": "UX_ACCESSIBILITY_AUDITOR",
+  "date": "2026-04-15",
+  "cycle_type": "test",
+  "auditor": "MERLIN Studio Bot",
+  "summary": "UX/Accessibility audit cycle #2. 9 findings (4 HIGH, 3 MEDIUM, 2 LOW). Major: AccessibilitySystem exists but is not registered as autoload and has zero game integration. PlatformManager.get_ui_scale() is defined but never called in any game script. MenuPrincipalMerlin all buttons have FOCUS_NONE disabling keyboard/gamepad nav. Implementing LLM-STAT-1 (P10 highest-priority dev): last_ttft_ms never set in non-streaming path.",
+  "files_audited": [
+    "scripts/autoload/input_adapter.gd",
+    "scripts/autoload/platform_manager.gd",
+    "scripts/core/accessibility_system.gd",
+    "scripts/MenuOptions.gd",
+    "scripts/MenuPrincipalMerlin.gd",
+    "scripts/SelectionSauvegarde.gd",
+    "scripts/Collection.gd",
+    "scripts/ui/walk_hud.gd",
+    "scripts/minigames/mg_echo.gd",
+    "scripts/hub_antre_tour.gd",
+    "project.godot"
+  ],
+  "findings": [
+    {
+      "id": "F7-001",
+      "severity": "HIGH",
+      "file": "scripts/core/accessibility_system.gd",
+      "line": 1,
+      "category": "accessibility",
+      "description": "AccessibilitySystem (colorblind modes, text_scale, high_contrast, reduced_motion) is NOT registered as autoload in project.godot. The class exists and is fully implemented but has zero game integration. Colorblind corrections and text scaling are dead code.",
+      "impact": "All accessibility features (colorblind, high contrast, reduced motion) are completely non-functional in-game.",
+      "fix": "Register AccessibilitySystem as autoload in project.godot. Wire to MenuOptions.gd with new Accessibility section.",
+      "new_task": "UX-A11Y-SYSTEM-AUTOLOAD"
+    },
+    {
+      "id": "F7-002",
+      "severity": "HIGH",
+      "file": "scripts/autoload/platform_manager.gd",
+      "line": 49,
+      "category": "responsive_scaling",
+      "description": "PlatformManager.get_ui_scale() and get_base_font_size() are defined but NEVER called by any game script. Confirmed by grep of all *.gd files.",
+      "impact": "UI does not scale on mobile/high-DPI screens. On small phones (screen.x < 800), get_ui_scale() returns 1.2 but is ignored.",
+      "fix": "Add PlatformManager.get_ui_scale() call to root Control nodes on _ready(), and use get_base_font_size() for font sizing.",
+      "new_task": "UX-PLATFORM-SCALE-APPLY"
+    },
+    {
+      "id": "F7-003",
+      "severity": "HIGH",
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 347,
+      "category": "keyboard_gamepad_navigation",
+      "description": "ALL main menu buttons have focus_mode = Control.FOCUS_NONE, preventing keyboard/gamepad navigation of the main menu.",
+      "impact": "Gamepad players cannot navigate the main menu at all. Keyboard tab navigation broken.",
+      "fix": "Change to FOCUS_ALL and set up focus neighbors for proper navigation order.",
+      "new_task": "UX-MENU-PRINCIPAL-FOCUS-ALL"
+    },
+    {
+      "id": "F7-004",
+      "severity": "HIGH",
+      "file": "scripts/MenuOptions.gd",
+      "line": 1,
+      "category": "accessibility",
+      "description": "MenuOptions has no accessibility section. ColorblindMode, text_scale, high_contrast, reduced_motion are defined in AccessibilitySystem but no UI controls exist in the options screen for the player to configure them.",
+      "impact": "Players cannot configure accessibility settings even if AccessibilitySystem is wired up.",
+      "fix": "Add Accessibility section to MenuOptions scene with: colorblind dropdown, text_scale slider, high_contrast toggle, reduced_motion toggle.",
+      "new_task": "UX-OPTIONS-ACCESSIBILITY-SECTION"
+    },
+    {
+      "id": "F7-005",
+      "severity": "MEDIUM",
+      "file": "scripts/minigames/mg_echo.gd",
+      "line": 101,
+      "category": "keyboard_gamepad_navigation",
+      "description": "Minigame word-choice buttons have focus_mode = Control.FOCUS_NONE. Players cannot use gamepad/keyboard to select words in the Echo minigame.",
+      "impact": "Minigame inaccessible without mouse/touch on gamepad or keyboard-only setups.",
+      "fix": "Change to FOCUS_ALL for word buttons, add focus-based selection highlight.",
+      "new_task": "UX-MINIGAME-FOCUS-ALL"
+    },
+    {
+      "id": "F7-006",
+      "severity": "MEDIUM",
+      "file": "scripts/hub_antre_tour.gd",
+      "line": 115,
+      "category": "input_abstraction",
+      "description": "hub_antre_tour.gd:115 uses direct Input.is_action_just_pressed() and Input.is_mouse_button_pressed() bypassing InputAdapter, breaking touch/gamepad abstraction for tutorial interaction.",
+      "impact": "Tutorial interaction may not work correctly on gamepad-only or touch-only inputs.",
+      "fix": "Replace with InputAdapter method or connect_to button pressed signal.",
+      "new_task": "UX-HUB-ANTRE-INPUT-ADAPTER"
+    },
+    {
+      "id": "F7-007",
+      "severity": "MEDIUM",
+      "file": "scripts/calendar_tabs.gd",
+      "line": 377,
+      "category": "keyboard_gamepad_navigation",
+      "description": "calendar_tabs.gd:377 lock_btn and reroll_btn have FOCUS_NONE. Calendar controls cannot be reached by keyboard/gamepad.",
+      "impact": "Calendar interactions inaccessible without mouse.",
+      "fix": "Change to FOCUS_ALL for actionable calendar buttons.",
+      "new_task": "UX-CALENDAR-FOCUS-ALL"
+    },
+    {
+      "id": "F7-008",
+      "severity": "LOW",
+      "file": "scripts/ui/walk_hud.gd",
+      "line": 15,
+      "category": "readability",
+      "description": "FONT_SIZE_ZONE = 11 — zone label is exactly at the minimum font size. On mobile at 1.2x scale this renders as ~13px. However on web at 1x it's at the absolute floor. Consider bumping to 12.",
+      "impact": "Zone text barely readable on some screens.",
+      "fix": "Increase FONT_SIZE_ZONE to 12.",
+      "new_task": "ALREADY_COVERED_BY_UX-FONT-SIZE-10-FIX"
+    },
+    {
+      "id": "F7-009",
+      "severity": "LOW",
+      "file": "scripts/autoload/i18n_registry.gd",
+      "line": 0,
+      "category": "i18n",
+      "description": "Only 20 I18nRegistry calls found across all scripts, while hundreds of French strings are hardcoded. This is a massive i18n gap. Previous specialist covered Collection.gd and HubAntre.gd, but IntroCeltOS.gd and other screens remain.",
+      "impact": "Game cannot be localized. Hardcoded strings will break when language is changed.",
+      "fix": "Systematic i18n pass — tracked via existing UX-I18N-* tasks.",
+      "new_task": "ALREADY_COVERED_BY_UX-I18N-*"
+    }
+  ],
+  "new_tasks_generated": 6,
+  "task_implemented": "LLM-STAT-1",
+  "passing_invariants": [
+    "InputAdapter and PlatformManager ARE registered as autoloads",
+    "MerlinVisual.MIN_TOUCH_TARGET = 48 is defined",
+    "SelectionSauvegarde back_button has FOCUS_ALL",
+    "LLMWarmupOverlay loading state exists for LLM init",
+    "touch_active detection in InputAdapter._input() is correct"
+  ]
+}

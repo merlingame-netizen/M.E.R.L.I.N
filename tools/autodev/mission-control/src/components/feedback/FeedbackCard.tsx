@@ -23,13 +23,16 @@ export function FeedbackCard({ question, onSubmit, submitting }: FeedbackCardPro
   const [notes, setNotes] = useState('');
   const isAnswered = question.status === 'answered';
 
-  const canSubmit = question.type === 'text'
-    ? textAnswer.trim().length > 0
-    : selectedOption !== null;
+  const hasOption = selectedOption !== null;
+  const hasText = textAnswer.trim().length > 0;
+  const canSubmit = hasOption || hasText;
 
   function handleSubmit() {
-    const answer = question.type === 'text' ? textAnswer.trim() : selectedOption!;
-    onSubmit(question.id, answer, notes.trim() || undefined);
+    const answer = hasOption ? selectedOption! : textAnswer.trim();
+    const finalNotes = hasOption && hasText
+      ? [textAnswer.trim(), notes.trim()].filter(Boolean).join('\n')
+      : notes.trim() || undefined;
+    onSubmit(question.id, answer, typeof finalNotes === 'string' && finalNotes ? finalNotes : undefined);
   }
 
   const borderColor = CATEGORY_COLORS[question.category] || '#888';
@@ -62,7 +65,7 @@ export function FeedbackCard({ question, onSubmit, submitting }: FeedbackCardPro
                   key={opt}
                   type="button"
                   className={`feedback-option ${selectedOption === opt ? 'feedback-option--selected' : ''}`}
-                  onClick={() => setSelectedOption(opt)}
+                  onClick={() => { setSelectedOption(opt); setTextAnswer(''); }}
                 >
                   {opt}
                 </button>
@@ -75,17 +78,25 @@ export function FeedbackCard({ question, onSubmit, submitting }: FeedbackCardPro
               urls={question.screenshot_urls as [string, string]}
               labels={question.options as [string, string]}
               selected={selectedOption}
-              onSelect={setSelectedOption}
+              onSelect={(label) => { setSelectedOption(label); setTextAnswer(''); }}
             />
           )}
 
-          {question.type === 'text' && (
+          {question.type === 'text' ? (
             <textarea
               className="feedback-textarea"
               placeholder="Enter your directive, Director..."
               value={textAnswer}
               onChange={e => setTextAnswer(e.target.value)}
               rows={4}
+            />
+          ) : (
+            <textarea
+              className="feedback-textarea feedback-textarea--alt"
+              placeholder="Or type your own answer here..."
+              value={textAnswer}
+              onChange={e => { setTextAnswer(e.target.value); if (e.target.value.trim()) setSelectedOption(null); }}
+              rows={2}
             />
           )}
 

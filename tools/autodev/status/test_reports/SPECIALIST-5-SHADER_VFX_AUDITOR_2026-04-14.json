@@ -1,0 +1,141 @@
+{
+  "specialist": 5,
+  "role": "SHADER_VFX_AUDITOR",
+  "timestamp": "2026-04-14T21:44:27Z",
+  "cycle_type": "dev",
+  "audit_summary": {
+    "total_checks": 12,
+    "pass": 6,
+    "fail_high": 2,
+    "fail_medium": 2,
+    "fail_low": 1,
+    "warn": 1
+  },
+  "shaders_found": [
+    "resources/shaders/retro_screen.gdshader",
+    "shaders/bestiole_squish.gdshader",
+    "shaders/card_silhouette.gdshader",
+    "shaders/card_sky.gdshader",
+    "shaders/cliff_rock.gdshader",
+    "shaders/cloud_puff.gdshader",
+    "shaders/color_dither.gdshader",
+    "shaders/crt_static.gdshader",
+    "shaders/crt_terminal.gdshader",
+    "shaders/fog_dissolve.gdshader",
+    "shaders/iridescent_border.gdshader",
+    "shaders/merlin_paper.gdshader",
+    "shaders/ocean_lowpoly.gdshader",
+    "shaders/palette_swap.gdshader",
+    "shaders/pixelate.gdshader",
+    "shaders/ps1_material.gdshader",
+    "shaders/screen_distortion.gdshader",
+    "shaders/screen_dither.gdshader",
+    "shaders/screen_vfx.gdshader",
+    "shaders/seasonal_particles.gdshader",
+    "shaders/seasonal_snow.gdshader",
+    "shaders/whisper_glitch.gdshader",
+    "shaders/world_edge_fog.gdshader"
+  ],
+  "checks": [
+    {
+      "id": "CHK-01",
+      "name": "BiomeParticles coverage",
+      "status": "PASS",
+      "detail": "All 8 biomes mapped in BIOME_PARTICLE_MAP. 7 particle types: rain/fireflies/mist/snow/leaves/embers/spores all configured with procedural ParticleProcessMaterial."
+    },
+    {
+      "id": "CHK-02",
+      "name": "RunEnvironmentManager wiring",
+      "status": "PASS",
+      "detail": "setup()/start()/on_card_start()/on_card_end()/cleanup() API complete. BiomeParticles + BiomeVisualManager + CollectibleSpawner integrated. walk_segment_timing 5-15s per bible s.1.3."
+    },
+    {
+      "id": "CHK-03",
+      "name": "BrocDayNight integration",
+      "status": "PASS",
+      "detail": "broc_day_night.gd: sun color/energy/pitch animated per time. Fog density varies at dawn/dusk. broceliande_forest_3d.gd:525-530 correctly calls _day_night.update() + _atmosphere.update(delta, _day_night.get_time())."
+    },
+    {
+      "id": "CHK-04",
+      "name": "BrocAtmosphere zone fog",
+      "status": "PASS",
+      "detail": "7 zone fog profiles (Z0-Z6). Mist curtains + god rays created procedurally. fog_dissolve.gdshader used for fog planes with fallback to StandardMaterial3D."
+    },
+    {
+      "id": "CHK-05",
+      "name": "BrocSeason shader overlay",
+      "status": "PASS",
+      "detail": "seasonal_particles.gdshader attached via ShaderMaterial to CanvasLayer(layer=5). All 4 seasons configured: spring petals, summer haze, autumn leaves, winter snow."
+    },
+    {
+      "id": "CHK-06",
+      "name": "BrocScreenVfx shader attachment",
+      "status": "FAIL_HIGH",
+      "detail": "broc_screen_vfx.gd:46-48 — comment says 'shader removed'. _shader_mat is NEVER assigned (no ShaderMaterial created). _set_shader() calls at line 169 do nothing since _shader_mat is null. ALL screen VFX effects (vignette, flash_red, glitch, scanlines, desaturate, hue_shift) are silently broken. The SHADER_PATH constant exists at line 29 but is never loaded or used.",
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "line": 46,
+      "task_id": "VFX-SCREEN-VFX-REATTACH"
+    },
+    {
+      "id": "CHK-07",
+      "name": "ps1_material.gdshader completeness",
+      "status": "FAIL_HIGH",
+      "detail": "ps1_material.gdshader: only vertex_snap + UV_snap. Missing key PS1/N64 effects: (1) affine texture mapping (remove perspective correction — quintessential PS1 warble), (2) per-vertex jitter (polygon wobble), (3) color quantization (PS1 had 15-bit color), (4) dithered transparency. Director q-20260412-004 explicitly requested N64/PS1 ultra-low-poly aesthetic.",
+      "file": "shaders/ps1_material.gdshader",
+      "line": 1,
+      "task_id": "VFX-PS1-AFFINE-WARP"
+    },
+    {
+      "id": "CHK-08",
+      "name": "BrocSeason ground tint",
+      "status": "FAIL_MEDIUM",
+      "detail": "broc_season.gd: GROUND_TINTS array defined (line ~23) but _apply_vegetation_tint() only calls _tint_recursive() on _forest_root children — NOT on the terrain mesh. Ground plane keeps default material regardless of season. Autumn/Winter ground should visibly change.",
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "line": 23,
+      "task_id": "VFX-SEASON-GROUND-TINT"
+    },
+    {
+      "id": "CHK-09",
+      "name": "time_of_day/season in run_state",
+      "status": "FAIL_MEDIUM",
+      "detail": "DIR-S2-MNWXQ41M requires time_of_day + season exposed in run_state for LLM context. broceliande_forest_3d.gd has _day_night.get_time() and _season.get_current() but neither is written to store/run_state. LLM cannot vary narrative by time/season. Also store_run.gd lacks time_of_day/season fields.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 525,
+      "task_id": "VFX-DAYNIGHT-RUNSTATE-EXPOSE"
+    },
+    {
+      "id": "CHK-10",
+      "name": "Summer heat haze shader quality",
+      "status": "FAIL_LOW",
+      "detail": "seasonal_particles.gdshader summer mode (season_type==1): only applies a faint color alpha overlay (haze = noise * 0.05 * density). No actual UV distortion/refraction — heat shimmer should displace UV coords using TIME-based sin wave, not just blend a color.",
+      "file": "shaders/seasonal_particles.gdshader",
+      "line": 86,
+      "task_id": "VFX-HEAT-HAZE-UV-DISTORT"
+    },
+    {
+      "id": "CHK-11",
+      "name": "Dead shader: bestiole_squish",
+      "status": "WARN",
+      "detail": "shaders/bestiole_squish.gdshader exists but Bestiole system is listed as DELETED in game design bible (CLAUDE.md: Systemes SUPPRIMES: Bestiole). This shader is dead code consuming space and causing confusion.",
+      "file": "shaders/bestiole_squish.gdshader",
+      "line": 1,
+      "task_id": "VFX-DEAD-SHADER-CLEANUP"
+    },
+    {
+      "id": "CHK-12",
+      "name": "BrocScreenVfx particle burst correctness",
+      "status": "PASS",
+      "detail": "trigger_burst(): sparkle/ember/pollen/water/leaves all spawn GPUParticles3D with SphereMesh draw pass. _cleanup_bursts() checks emitting flag. one_shot=true + explosiveness=0.9 correct for burst effects."
+    }
+  ],
+  "new_tasks_generated": [
+    "VFX-SCREEN-VFX-REATTACH (P23, FAIL_HIGH)",
+    "VFX-PS1-AFFINE-WARP (P24, FAIL_HIGH — PS1 aesthetic)",
+    "VFX-SEASON-GROUND-TINT (P25, FAIL_MEDIUM)",
+    "VFX-DAYNIGHT-RUNSTATE-EXPOSE (P26, FAIL_MEDIUM)",
+    "VFX-HEAT-HAZE-UV-DISTORT (P27, FAIL_LOW)",
+    "VFX-DEAD-SHADER-CLEANUP (P63, WARN)"
+  ],
+  "task_implemented": "MG-FIX-NEUTRE-FALLBACK (P8 GAMEPLAY)",
+  "patterns_added": ["PAT-086", "PAT-087", "PAT-088"]
+}

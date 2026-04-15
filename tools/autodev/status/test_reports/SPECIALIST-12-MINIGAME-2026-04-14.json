@@ -1,0 +1,93 @@
+{
+  "report_id": "SPECIALIST-12-MINIGAME-2026-04-14",
+  "specialist": 12,
+  "specialist_role": "MINIGAME_SYSTEM_AUDITOR",
+  "timestamp": "2026-04-14T13:00:00Z",
+  "cycle_type": "test",
+  "audit_scope": "All 8 lexical fields, 22 minigame scripts, dispatch chain, scoring, MOS integration",
+  "checks_total": 11,
+  "checks_pass": 7,
+  "checks_fail_critical": 1,
+  "checks_fail_high": 2,
+  "checks_fail_medium": 1,
+  "checks": [
+    {
+      "id": "MG-1",
+      "name": "FIELD_MINIGAMES constants vs registry GAMES naming consistency",
+      "status": "FAIL_CRITICAL",
+      "detail": "merlin_constants.gd:329 FIELD_MINIGAMES uses old logical names (herboristerie, fouille, runes, ombres, equilibre, negociation, traces). minigame_registry.gd GAMES uses script IDs (mg_pile_ou_face, mg_oeil_corbeau, etc.). pick_minigame_for_field() in effect_engine:760 and select_minigame() in card_system:228 return old names that are NOT valid field names or GAMES keys. Result: these functions fall back to 'apaisement' or generic path.",
+      "files": ["scripts/merlin/merlin_constants.gd:329", "scripts/merlin/merlin_effect_engine.gd:760", "scripts/merlin/merlin_card_system.gd:228"]
+    },
+    {
+      "id": "MG-2",
+      "name": "8 lexical fields all have GAMES entries in registry",
+      "status": "PASS",
+      "detail": "chance(2), bluff(3), observation(3), logique(3), finesse(3), vigueur(2), esprit(3), perception(3) = 22 minigames across 8 fields. Bible target 15+ exceeded."
+    },
+    {
+      "id": "MG-3",
+      "name": "SUCCESS_THRESHOLD = 80 matches bible",
+      "status": "PASS",
+      "detail": "merlin_minigame_system.gd:19 SUCCESS_THRESHOLD=80. MULTIPLIER_TABLE reussite starts at 80. Consistent."
+    },
+    {
+      "id": "MG-4",
+      "name": "Minigame is mandatory (no skip path)",
+      "status": "PASS",
+      "detail": "game_controller_minigame.gd always calls run_minigame(). Timeout fallback score=50 is used but minigame is never skipped."
+    },
+    {
+      "id": "MG-5",
+      "name": "Timeout fallback score 50 effect on gameplay",
+      "status": "FAIL_HIGH",
+      "detail": "game_controller_minigame.gd:88 returns score=50 on 30s timeout. MULTIPLIER_TABLE: 50 is in range 21-50 → factor=-1.0 → FULL NEGATIVE EFFECTS. A network/rendering timeout applies the same penalty as a deliberate failure. Bible says minigame is mandatory but doesn't mandate timeout = punishment. Recommend: timeout score=51 (reussite_partielle, factor=0.5) as neutral outcome.",
+      "files": ["scripts/ui/game_controller_minigame.gd:88", "scripts/merlin/merlin_constants.gd:364"]
+    },
+    {
+      "id": "MG-6",
+      "name": "Difficulty scaling per bible s.6.3",
+      "status": "FAIL_HIGH",
+      "detail": "game_controller_minigame.gd:47 always uses base_diff=5. Bible says difficulty depends on narrative context (card type, event type, biome maturity). Only is_critical adds +3. All non-critical cards have identical difficulty regardless of biome depth or MOS progression. Breaks progression difficulty curve.",
+      "files": ["scripts/ui/game_controller_minigame.gd:47"]
+    },
+    {
+      "id": "MG-7",
+      "name": "neutre field handling",
+      "status": "FAIL_MEDIUM",
+      "detail": "merlin_constants.gd:338 FIELD_MINIGAMES has 'neutre':[apaisement,volonte]. But registry.create_minigame('neutre') → field not in GAMES → falls back to 'chance'. If merlin_card_system returns 'neutre' field, the wrong minigame type is played.",
+      "files": ["scripts/merlin/merlin_constants.gd:338", "scripts/minigames/minigame_registry.gd:104"]
+    },
+    {
+      "id": "MG-8",
+      "name": "All 22 minigame scripts exist",
+      "status": "PASS",
+      "detail": "All scripts in GAMES dict exist as .gd files. mg_meditation.gd correctly deleted (director q-20260413-004 applied)."
+    },
+    {
+      "id": "MG-9",
+      "name": "MiniGameBase SFX integration",
+      "status": "PASS",
+      "detail": "minigame_base.gd:84-89 calls SFXManager.play(minigame_success/fail). game_controller_minigame.gd:100 also calls minigame_success. Double-trigger risk: both base and controller play success SFX on win. Should deduplicate."
+    },
+    {
+      "id": "MG-10",
+      "name": "Ogham bonus integration",
+      "status": "PASS",
+      "detail": "MiniGameRegistry.get_ogham_bonus() returns +10 for field match, +5 for special. Passed via modifiers.score_bonus. Applied in MiniGameBase._complete():78. Chain is correct."
+    },
+    {
+      "id": "MG-11",
+      "name": "Multiplier table coverage 0-100",
+      "status": "PASS",
+      "detail": "MULTIPLIER_TABLE covers 0-20, 21-50, 51-79, 80-94, 95-100 = full 0-100 range. No gap. resolve_card uses score to select multiplier correctly."
+    }
+  ],
+  "tasks_generated": [
+    "MG-FIX-FIELD-MINIGAMES-NAMES",
+    "MG-FIX-TIMEOUT-SCORE",
+    "MG-FIX-DIFFICULTY-SCALING",
+    "MG-FIX-NEUTRE-FALLBACK",
+    "MG-FIX-SFX-DOUBLE-TRIGGER",
+    "MG-TEST-FULL-FIELD-COVERAGE"
+  ]
+}

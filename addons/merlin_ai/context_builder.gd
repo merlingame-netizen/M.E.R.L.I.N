@@ -29,15 +29,15 @@ func setup(
 
 func build_full_context(game_state: Dictionary) -> Dictionary:
 	## Construit le contexte complet pour le LLM.
-	var run = game_state.get("run", {})
+	var run: Dictionary = game_state.get("run", {})
+	var meta: Dictionary = game_state.get("meta", {})
 
 	return {
 		# === GAME STATE ===
-		"gauges": run.get("gauges", {}),
 		"tour": int(run.get("tour", 1)),
 		"ogham_actif": str(run.get("ogham_actif", "")),
 		"oghams_decouverts": run.get("oghams_decouverts", []),
-		"factions": run.get("factions", {
+		"factions": meta.get("faction_rep", {
 			"druides": 0, "anciens": 0, "korrigans": 0, "niamh": 0, "ankou": 0
 		}),
 		"heure_normalisee": float(run.get("heure_normalisee", 0.0)),
@@ -182,20 +182,10 @@ func build_llm_prompt_context(full_context: Dictionary) -> String:
 	return "\n".join(lines)
 
 
-func get_critical_gauges(gauges: Dictionary) -> Array:
-	## Retourne les jauges critiques (basses ou hautes).
-	var critical := []
-	const LOW_THRESHOLD := 15
-	const HIGH_THRESHOLD := 85
-
-	for gauge_name in gauges:
-		var value: int = int(gauges[gauge_name])
-		if value <= LOW_THRESHOLD:
-			critical.append("%s CRITIQUE BAS (%d)" % [gauge_name, value])
-		elif value >= HIGH_THRESHOLD:
-			critical.append("%s CRITIQUE HAUT (%d)" % [gauge_name, value])
-
-	return critical
+## DEPRECATED — Gauge system suppressed in bible v2.4. Always returns [].
+## Kept for test compatibility; callers always pass {} so output is always [].
+func get_critical_gauges(_gauges: Dictionary) -> Array:
+	return []
 
 
 func get_experience_tier() -> String:

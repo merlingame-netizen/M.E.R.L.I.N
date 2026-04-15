@@ -12,7 +12,7 @@ signal minigame_completed(score: int)
 ## Recognized lexical fields (aligned with MerlinConstants.FIELD_MINIGAMES)
 const VALID_FIELDS: Array[String] = [
 	"chance", "bluff", "observation", "logique",
-	"finesse", "vigueur", "esprit", "perception",
+	"finesse", "vigueur", "esprit", "perception", "neutre",
 ]
 
 ## Success threshold: score >= 80 is a win (bible v2.4)
@@ -50,6 +50,9 @@ func run(test_type: String, difficulty: int, modifiers: Dictionary = {}) -> Dict
 			raw_score = _play_finesse(diff)
 		"chance":
 			raw_score = _play_chance(diff)
+		"neutre":
+			# Neutre maps to esprit scoring (apaisement/volonte minigames)
+			raw_score = _play_esprit(diff)
 		_:
 			# Unknown type: fallback to generic roll
 			raw_score = _play_generic(diff)

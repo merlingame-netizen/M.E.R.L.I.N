@@ -1,0 +1,132 @@
+{
+  "test_id": "T-FLOW-SCENE-TRANSITIONS-REGRESSION",
+  "agent": "scene_flow_tester",
+  "timestamp": "2026-04-14T20:35:00Z",
+  "result": "PASS",
+  "total_checks": 10,
+  "pass": 10,
+  "fail_high": 0,
+  "fail_medium": 0,
+  "warn": 3,
+  "summary": "All 10 active scene transitions verified: correct target .tscn paths, all files exist on disk, all scenes have attached scripts. ParchmentPreRun+BroceliandeForest3D use safe PixelTransition fallback pattern (headless-compatible). 3 WARNs: dual menu path (MenuPrincipal vs Menu3DPC), MapMonde stub, TransitionBiome dead constant.",
+  "checks": [
+    {
+      "id": "CHK-1",
+      "transition": "IntroCeltOS → Menu3DPC",
+      "file": "scripts/IntroCeltOS.gd:516",
+      "code": "PixelTransition.transition_to('res://scenes/Menu3DPC.tscn')",
+      "scene_exists": true,
+      "script_attached": "scripts/menu_3d_pc.gd",
+      "status": "PASS"
+    },
+    {
+      "id": "CHK-2",
+      "transition": "Menu3DPC → ParchmentPreRun (new game)",
+      "file": "scripts/menu_3d_pc.gd:1337",
+      "code": "_glitch_transition('res://scenes/ParchmentPreRun.tscn')",
+      "scene_exists": true,
+      "script_attached": "scripts/ui/parchment_pre_run.gd",
+      "status": "PASS",
+      "note": "Active path: Menu3DPC→ParchmentPreRun (director removed quiz+rencontre path)"
+    },
+    {
+      "id": "CHK-3",
+      "transition": "ParchmentPreRun → BroceliandeForest3D",
+      "file": "scripts/ui/parchment_pre_run.gd:213-217",
+      "code": "pt.transition_to(SCENE_FOREST) where SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn'",
+      "scene_exists": true,
+      "script_attached": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "status": "PASS",
+      "note": "Uses safe PixelTransition fallback pattern: get_node_or_null('/root/PixelTransition') with change_scene_to_file fallback. Headless-compatible."
+    },
+    {
+      "id": "CHK-4",
+      "transition": "HubAntre → BroceliandeForest3D (partir button)",
+      "file": "scripts/HubAntre.gd:661",
+      "code": "PixelTransition.transition_to(SCENE_FOREST) where SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn'",
+      "scene_exists": true,
+      "script_attached": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "status": "PASS",
+      "note": "HubAntre goes DIRECTLY to BroceliandeForest3D, skipping TransitionBiome. SCENE_TRANSITION const is declared but unused."
+    },
+    {
+      "id": "CHK-5",
+      "transition": "BroceliandeForest3D → MerlinGame (encounter)",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1226-1230",
+      "code": "pt.transition_to(GAME_SCENE) where GAME_SCENE='res://scenes/MerlinGame.tscn' when _merlin_found=true",
+      "scene_exists": true,
+      "script_attached": "scripts/ui/merlin_game_controller.gd + merlin_game_ui.gd",
+      "status": "PASS",
+      "note": "Uses same PixelTransition fallback pattern. When _merlin_found=false → HUB_SCENE (HubAntre)."
+    },
+    {
+      "id": "CHK-6",
+      "transition": "BroceliandeForest3D → HubAntre (abort/menu button)",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1214-1218",
+      "code": "pt.transition_to('res://scenes/HubAntre.tscn') with fallback",
+      "scene_exists": true,
+      "script_attached": "scripts/HubAntre.gd",
+      "status": "PASS"
+    },
+    {
+      "id": "CHK-7",
+      "transition": "MerlinGame run_ended → EndScreen overlay",
+      "file": "scripts/ui/merlin_game_controller.gd:658-666",
+      "code": "ui.show_end_screen(ending) — stays in MerlinGame scene, shows overlay",
+      "scene_exists": "N/A (overlay within MerlinGame)",
+      "script_attached": "N/A",
+      "status": "PASS",
+      "note": "No scene transition needed — UIOverlayEndScreen is created dynamically within MerlinGame."
+    },
+    {
+      "id": "CHK-8",
+      "transition": "EndRunScreen → HubAntre (hub button)",
+      "file": "scripts/ui/ui_overlay_endscreen.gd:134",
+      "code": "PixelTransition.transition_to('res://scenes/HubAntre.tscn')",
+      "scene_exists": true,
+      "script_attached": "scripts/HubAntre.gd",
+      "status": "PASS"
+    },
+    {
+      "id": "CHK-9",
+      "transition": "EndRunScreen → BroceliandeForest3D (new run button)",
+      "file": "scripts/ui/ui_overlay_endscreen.gd:140",
+      "code": "PixelTransition.transition_to('res://scenes/BroceliandeForest3D.tscn')",
+      "scene_exists": true,
+      "script_attached": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "status": "PASS"
+    },
+    {
+      "id": "CHK-10",
+      "transition": "All hub sub-scenes from HubAntre",
+      "file": "scripts/HubAntre.gd:563-572",
+      "code": "Calendar, MenuOptions, Collection, ArbreDeVie — all via PixelTransition",
+      "scene_exists": true,
+      "script_attached": "All 4 scenes have scripts",
+      "status": "PASS",
+      "note": "ArbreDeVie.tscn → arbre_de_vie_ui.gd verified. Calendar, Collection, MenuOptions all exist."
+    }
+  ],
+  "warnings": [
+    {
+      "id": "WARN-1",
+      "severity": "MEDIUM",
+      "area": "Dual menu path",
+      "finding": "ui_overlay_narrative.gd:289 transitions to 'res://scenes/MenuPrincipal.tscn' (MenuPrincipalMerlin.gd). Active main menu is Menu3DPC.tscn (menu_3d_pc.gd). If narrative escape triggers, player lands on OLD menu. Fix: update ui_overlay_narrative.gd:289 to target res://scenes/Menu3DPC.tscn.",
+      "task": "FLOW-NARRATIVE-MENU-PATH-FIX"
+    },
+    {
+      "id": "WARN-2",
+      "severity": "LOW",
+      "area": "MapMonde.tscn stub",
+      "finding": "MapMonde.tscn exists but has no script attached (empty Control). HubAntre.gd:23 SCENE_MAPMONDE const declared but NEVER used in transition calls. MapMonde appears only in dev SceneSelector. Not a blocking risk."
+    },
+    {
+      "id": "WARN-3",
+      "severity": "LOW",
+      "area": "TransitionBiome dead constant in HubAntre",
+      "finding": "HubAntre.gd:16 SCENE_TRANSITION='res://scenes/TransitionBiome.tscn' declared but never referenced in transition code. HubAntre goes directly to BroceliandeForest3D. Dead constant — minor code smell."
+    }
+  ],
+  "verdict": "PASS — All active game scene transitions are wired to existing, scripted scenes. No broken transitions in the main game loop. 1 MEDIUM warning: ui_overlay_narrative→MenuPrincipal should target Menu3DPC."
+}
