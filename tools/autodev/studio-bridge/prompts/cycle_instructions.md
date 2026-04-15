@@ -69,11 +69,13 @@ Les taches test sont intercalees — execute-les dans l'ordre de priorite comme 
 
 1. Lire `tools/autodev/status/feature_queue.json`
 2. Filtrer: `status=pending` ET (`type=dev` OU `type` absent)
-3. **Selectionner 3 a 5 taches** en ordre de priorite:
+3. **Selectionner les taches du batch (1-5 selon nature)**:
+   - **PRIORITE ABSOLUE: MEGA-task** — si une tache pending a `id` commencant par `MEGA-`, l'inclure SEULE dans le batch (1 MEGA = 1 cycle entier, ~90min sandbox budget)
+   - Si aucune MEGA disponible: selectionner 3-5 taches normales en ordre de priorite
    - TOUJOURS inclure la tache P1-P5 de plus haute priorite (si existe)
    - Remplir le batch avec des taches compatibles: meme domaine (tous LLM, tous VFX, tous minigames...) OU fichiers non conflictuels
    - Preferer gameplay (cards, oghams, minigames, factions, biomes, SFX, narrative, scenes 3D)
-   - Max 5 taches pour eviter de depasser le budget temps du sandbox (~15min)
+   - Max 5 taches normales pour eviter de depasser le budget temps
 4. Pour CHAQUE tache du batch (sequentiel):
    a. Lire les fichiers cibles (champ `files`)
    b. Implementer en GDScript: `snake_case`, type hints, JAMAIS `:=` avec CONST
@@ -126,7 +128,43 @@ Objectif long-terme: ~70% gameplay / 30% meta sur 10 cycles glissants. **TOUJOUR
 ### Events rotation
 Si `events.jsonl` depasse 200 lignes: garder les 50 dernieres, archiver le reste dans `tools/autodev/status/events_archive/YYYY-MM.jsonl`.
 
-### Auto-generation (CRITICAL — 10+ pending tasks minimum)
+### MEGA REPLENISH (CRITICAL — toujours 6+ MEGA pending)
+
+**REGLE STRICTE**: Apres le batch (etape 5 du cycle DEV), AVANT le commit, executer la replenish:
+
+1. Compter les taches pending dont `id` commence par `MEGA-`.
+2. **Si pending MEGA < 6** : generer (6 - count) nouvelles MEGA-tasks d'envergure pour atteindre 6.
+3. Source du contenu (lire ces fichiers AVANT generation):
+   - `docs/DEV_PLAN_V2.5.md` — roadmap globale
+   - `docs/GAME_DESIGN_BIBLE.md` — features prevues, biomes, factions, mecaniques
+   - `tools/autodev/status/completed_archive.json` last 20 entries — ne pas dupliquer
+   - `tools/autodev/status/feature_queue.json` MEGA pending — pour eviter doublon scope
+4. Critere MEGA (OBLIGATOIRE — si pas atteint, c'est une SMALL):
+   - **10+ fichiers** affectes (`files` array)
+   - **Description >= 250 mots** detaillee avec livrables enumerees (1)..(N)
+   - **Scope transformatif visible** : refonte / system complet / 50+ assets / new feature multi-zone
+   - Type = `dev` ou `content` (jamais `test` pour MEGA)
+5. Format MEGA-task auto-generee:
+   - `id`: `MEGA-<DOMAIN>-<SLUG>-<YYMMDD>` (ex: `MEGA-VFX-GOD-RAYS-260415`)
+   - `priority`: integer 4-12 (selon urgence vs MEGA existantes)
+   - `agent`: tech_artist (DA/VFX) / gameplay_programmer (systems) / narrative_specialist (LLM/story)
+   - `files`: 10-15 paths concrets
+   - `description`: livrables enumerees + cross-refs avec MEGA precedentes
+6. Domaines a couvrir en rotation (les 8 a alterner):
+   - DA-cohesion (palettes, fonts, transitions, glassmorphism)
+   - VFX-volumetrique (particules, shaders, lighting)
+   - Audio-immersif (SFX procedural, ambiant spatialise, voix Merlin)
+   - LLM-pipeline (prompts, fallbacks, narrative arcs)
+   - Minigames-zone (refonte/extension par biome)
+   - 3D-scenes (meshes, shaders, environment)
+   - Input-cross-platform (gamepad/touch/keyboard)
+   - Gameplay-loop (factions, MOS, oghams, cards)
+7. Logger dans `events.jsonl` une ligne `{"type":"mega_replenish","timestamp":"...","data":{"generated":N,"ids":[...]}}`
+8. Inclure ces nouvelles MEGA dans le **meme commit** que le batch principal (atomique).
+
+**Effet attendu**: chaque cycle ship 1-2 MEGA + replenish 1-2 nouvelles. Pipeline auto-alimente avec contenu d'envergure indefini.
+
+### Auto-generation (CRITICAL — 10+ pending tasks minimum, fallback general)
 **REGLE**: Il doit TOUJOURS y avoir au minimum 10 taches pending dans `feature_queue.json`.
 Si le nombre de taches pending tombe sous 10 apres archivage:
 1. Lire `docs/DEV_PLAN_V2.5.md` et `docs/GAME_DESIGN_BIBLE.md`
