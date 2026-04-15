@@ -1700,22 +1700,6 @@
     "created_by": "SPEC-11-FACTION"
   },
   {
-    "id": "FACTION-GAME-FLOW-TEST",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test faction_ending_chosen handler records to echo_memory",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/core/game_flow_controller.gd",
-      "scripts/test/"
-    ],
-    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  },
-  {
     "id": "FACTION-ENDING-NARRATIVE-PERSIST",
     "sprint": "S3",
     "priority": 34,
@@ -2179,5 +2163,84 @@
       "tools/autodev/mission-control/src/styles/cockpit.css"
     ],
     "description": "User bug report 2026-04-15: clicking Director tab makes interface 'disappear'. ErrorBoundary deployed 2026-04-15 as mitigation to surface any crash. If no crash visible post-deploy, root cause is CSS layout: drawer__grid--2 with 4 children in .drawer__body overflow-y=auto can create >100vh total height with no internal min-height, collapsing visibly. Fix: add drawer__grid--2 { grid-auto-rows: minmax(200px, auto) } OR split Director into 2x2 sub-grids."
+  },
+  {
+    "id": "SCENE-FLOW-INTROTUTORIAL-MISSING",
+    "sprint": "S2",
+    "priority": 8,
+    "type": "dev",
+    "status": "pending",
+    "title": "Create or remove IntroTutorial.tscn — script exists but scene missing",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/IntroTutorial.gd",
+      "scenes/"
+    ],
+    "description": "IntroTutorial.gd:15 references SCENE_HUB='res://scenes/HubAntre.tscn' but scenes/IntroTutorial.tscn does NOT exist. Any load() call will crash. Either: (A) create a minimal IntroTutorial.tscn stub with IntroTutorial.gd attached, or (B) delete IntroTutorial.gd if the tutorial is not planned. Check if IntroTutorial is referenced anywhere before deciding.",
+    "created_at": "2026-04-15T19:43:34Z",
+    "created_by": "SPEC-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "SCENE-FLOW-PT-CONFIG-CLEANUP",
+    "sprint": "S2",
+    "priority": 14,
+    "type": "dev",
+    "status": "pending",
+    "title": "Remove MerlinGame.tscn entry from pixel_transition_config.gd",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/autoload/pixel_transition_config.gd"
+    ],
+    "description": "pixel_transition_config.gd:71 has profile entry for 'res://scenes/MerlinGame.tscn' which is an orphan scene. Execute AFTER E2E-MERLINGAME-OBSOLETE-PATH is done. Remove the dict entry to keep the config clean. No other system depends on this entry for active transitions.",
+    "created_at": "2026-04-15T19:43:34Z",
+    "created_by": "SPEC-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "SCENE-FLOW-SCENESELECTOR-CLEANUP",
+    "sprint": "S2",
+    "priority": 16,
+    "type": "dev",
+    "status": "pending",
+    "title": "Remove MerlinGame.tscn from SceneSelector.gd debug tool",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/autoload/SceneSelector.gd"
+    ],
+    "description": "SceneSelector.gd:17 lists MerlinGame.tscn in the debug scene list. This is a dev-only tool but stale entries cause confusion. Remove the MerlinGame entry. Execute after E2E-MERLINGAME-OBSOLETE-PATH confirms MerlinGame path is gone.",
+    "created_at": "2026-04-15T19:43:34Z",
+    "created_by": "SPEC-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "SCENE-FLOW-END-HUB-RETURN-PATH",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "dev",
+    "status": "pending",
+    "title": "Verify EndRunScreen has live return path to HubAntre (softlock risk)",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/run/end_run_screen.gd",
+      "scripts/core/game_flow_controller.gd",
+      "scripts/HubAntre.gd"
+    ],
+    "description": "GameFlowController manages EndRunScreen→Hub return via SCENE_HUB (HubScreen.tscn), but GameFlowController is UNWIRED (ARCH-GAMEFLOW-UNWIRED open). Current live flow: BroceliandeForest3D→HubAntre, but there is no verified live path from EndRunScreen back to HubAntre. Trace: who instantiates EndRunScreen.tscn? Who connects its close/continue signal? If no live wiring exists, add a fallback: connect end_run_screen.run_completed signal in HubAntre or add a direct PixelTransition call in EndRunScreen itself.",
+    "created_at": "2026-04-15T19:43:34Z",
+    "created_by": "SPEC-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "SCENE-FLOW-REGRESSION-TEST",
+    "sprint": "S2",
+    "priority": 18,
+    "type": "test",
+    "status": "pending",
+    "title": "Write scene path existence test: verify all hardcoded res://scenes/ paths exist",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/test/",
+      "scripts/"
+    ],
+    "description": "Write test_scene_paths.gd: grep all .gd files for res://scenes/*.tscn references, then for each path verify FileAccess.file_exists(path). Report FAIL for any missing target. This catches future IntroTutorial-style regressions (script referencing deleted/missing .tscn). Run as part of CI. Covers: pixel_transition_config.gd, SceneSelector.gd, HubAntre.gd, parchment_pre_run.gd, broceliande_forest_3d.gd, all menu scripts.",
+    "created_at": "2026-04-15T19:43:34Z",
+    "created_by": "SPEC-0-SCENE_FLOW_TESTER"
   }
 ]

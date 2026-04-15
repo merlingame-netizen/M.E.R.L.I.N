@@ -1383,11 +1383,41 @@
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
       ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-15T19:43:34Z",
+      "source": "SPEC-0-SCENE_FLOW_TESTER",
+      "pattern": "IntroTutorial.gd exists without matching .tscn — always verify script<->scene pairing. Missing .tscn causes crash on load().",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/IntroTutorial.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-15T19:43:34Z",
+      "source": "SPEC-0-SCENE_FLOW_TESTER",
+      "pattern": "SCENE_FLOW regression test pattern: grep all .gd files for res://scenes/*.tscn, verify each with FileAccess.file_exists(). Catches orphan/missing scene refs automatically.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/test/test_scene_paths.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-15T19:43:34Z",
+      "source": "SPEC-0-SCENE_FLOW_TESTER",
+      "pattern": "Director-ordered deletions (orphan scenes) persist >2 cycles if dev task priority is not P1-P2. E2E-DELETE-ORPHAN-SCENES was priority 3 (not yet acted on). Elevate director-confirmed deletions to priority <=5.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "tools/autodev/status/feature_queue.json"
+      ]
     }
   ],
   "agent_performance": {
     "game_playtester": {
-      "tasks_completed": 6,
+      "tasks_completed": 7,
       "bugs_introduced": 0,
       "bugs_found": 6,
       "specialization": "static analysis, invariant simulation, run modeling, startup trace",
@@ -1755,8 +1785,8 @@
       }
     }
   ],
-  "total_cycles": 10,
-  "bugs_found": 38,
+  "total_cycles": 11,
+  "bugs_found": 45,
   "bugs_fixed": 10,
   "last_cycle": "2026-04-15T18:47:19Z"
 }

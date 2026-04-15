@@ -1,0 +1,117 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "date": "2026-04-15",
+  "timestamp": "2026-04-15T19:43:34Z",
+  "cycle_type": "test",
+  "summary": "Full scene transition graph traced. 2 CRITICAL, 2 HIGH, 3 MEDIUM findings. 1 existing test task executed (FACTION-GAME-FLOW-TEST).",
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "check": "BroceliandeForest3D._on_hub() orphan MerlinGame path",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1222,
+      "detail": "GAME_SCENE = 'res://scenes/MerlinGame.tscn'. When _merlin_found=true, _on_hub() routes to old MerlinGame.tscn. Encounters now handled inline via EncounterCardOverlay — this path is dead and breaks navigation.",
+      "task_ref": "E2E-MERLINGAME-OBSOLETE-PATH (priority 12)"
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "check": "IntroTutorial.tscn missing",
+      "file": "scripts/IntroTutorial.gd",
+      "line": 15,
+      "detail": "IntroTutorial.gd exists (const SCENE_HUB = 'res://scenes/HubAntre.tscn') but scenes/IntroTutorial.tscn does NOT exist. Any attempt to instantiate this scene will crash.",
+      "task_ref": "NEW TASK GENERATED: SCENE-FLOW-INTROTUTORIAL-MISSING"
+    },
+    {
+      "id": "SF-003",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "check": "Orphan scenes not yet deleted per director q-20260414-005",
+      "files": ["scenes/IntroPersonalityQuiz.tscn", "scenes/SceneRencontreMerlin.tscn"],
+      "detail": "Director confirmed deletion (B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin). Both files still present after 2 cycles. E2E-DELETE-ORPHAN-SCENES priority 3 task still pending.",
+      "task_ref": "E2E-DELETE-ORPHAN-SCENES (priority 3, dev)"
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "check": "ui_overlay_narrative routes to MenuPrincipal instead of Menu3DPC",
+      "file": "scripts/ui/ui_overlay_narrative.gd",
+      "line": 291,
+      "detail": "change_scene_to_file('res://scenes/MenuPrincipal.tscn') — but active main menu is Menu3DPC.tscn. Player quitting during narrative overlay lands on wrong menu.",
+      "task_ref": "FLOW-NARRATIVE-MENU-PATH-FIX (priority 61)"
+    },
+    {
+      "id": "SF-005",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "check": "MerlinGame.tscn listed in pixel_transition_config.gd",
+      "file": "scripts/autoload/pixel_transition_config.gd",
+      "line": 71,
+      "detail": "PixelTransitionConfig has profile entry for 'res://scenes/MerlinGame.tscn' — stale orphan config. Should be removed when E2E-MERLINGAME-OBSOLETE-PATH is implemented.",
+      "task_ref": "NEW TASK GENERATED: SCENE-FLOW-PT-CONFIG-CLEANUP"
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "check": "SceneSelector dev tool lists MerlinGame.tscn",
+      "file": "scripts/autoload/SceneSelector.gd",
+      "line": 17,
+      "detail": "Debug SceneSelector still lists MerlinGame.tscn as a navigable scene. Low risk (debug only) but creates confusion.",
+      "task_ref": "NEW TASK GENERATED: SCENE-FLOW-SCENESELECTOR-CLEANUP"
+    },
+    {
+      "id": "SF-007",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "check": "GameFlowController UNWIRED — EndRunScreen has no live return path",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 44,
+      "detail": "GameFlowController manages the full loop (Hub→Run→End→Hub) using HubScreen.tscn + Run3D.tscn + EndRunScreen.tscn. But it is NOT wired into any live scene (ARCH-GAMEFLOW-UNWIRED task open). EndRunScreen currently has no scene transition back to Hub. Player softlock risk.",
+      "task_ref": "ARCH-GAMEFLOW-UNWIRED (priority 40)"
+    },
+    {
+      "id": "SF-008",
+      "severity": "PASS",
+      "check": "IntroCeltOS → Menu3DPC transition",
+      "file": "scripts/IntroCeltOS.gd",
+      "line": 516,
+      "detail": "PixelTransition.transition_to('res://scenes/Menu3DPC.tscn') — scene exists, transition system used. PASS."
+    },
+    {
+      "id": "SF-009",
+      "severity": "PASS",
+      "check": "Menu3DPC → ParchmentPreRun (New Game) transition",
+      "file": "scripts/menu_3d_pc.gd",
+      "line": 1337,
+      "detail": "_glitch_transition('res://scenes/ParchmentPreRun.tscn') — scene exists. PASS."
+    },
+    {
+      "id": "SF-010",
+      "severity": "PASS",
+      "check": "ParchmentPreRun → BroceliandeForest3D",
+      "file": "scripts/ui/parchment_pre_run.gd",
+      "line": 7,
+      "detail": "SCENE_FOREST = 'res://scenes/BroceliandeForest3D.tscn'. Uses PixelTransition with direct fallback. Scene exists. PASS."
+    }
+  ],
+  "invariants_checked": {
+    "all_tscn_targets_verified": false,
+    "scene_transitions_use_pixeltransition": false,
+    "no_orphan_scene_references": false,
+    "full_loop_completable": false
+  },
+  "task_executed": "FACTION-GAME-FLOW-TEST",
+  "tasks_generated": [
+    "SCENE-FLOW-INTROTUTORIAL-MISSING",
+    "SCENE-FLOW-PT-CONFIG-CLEANUP",
+    "SCENE-FLOW-SCENESELECTOR-CLEANUP",
+    "SCENE-FLOW-END-HUB-RETURN-PATH",
+    "SCENE-FLOW-REGRESSION-TEST"
+  ]
+}

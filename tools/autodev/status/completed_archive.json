@@ -109,5 +109,23 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "FACTION-GAME-FLOW-TEST",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "test",
+    "status": "completed",
+    "title": "Test faction_ending_chosen handler records to echo_memory",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/core/game_flow_controller.gd",
+      "scripts/test/"
+    ],
+    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION",
+    "completed_at": "2026-04-15T19:43:34Z",
+    "notes": "test_faction_game_flow.gd written: 7 tests covering valid/invalid/duplicate/null-guard/save/accumulate/key-preservation. Mirrors _on_faction_ending_chosen() logic in game_flow_controller.gd:175-187."
   }
 ]
