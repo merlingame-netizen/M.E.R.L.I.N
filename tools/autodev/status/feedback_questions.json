@@ -450,6 +450,20 @@
         "B: Garder dans observation (comportement actuel du minigame)",
         "C: Créer mg_traces_empreintes.gd pour perception, garder mg_trace_cerf en observation"
       ]
+    },
+    {
+      "id": "q-20260415-009",
+      "type": "multiple_choice",
+      "category": "ux",
+      "status": "pending",
+      "priority": "HIGH",
+      "title": "BroceliandeForest3D: rebuild scene node tree or refactor to pure procedural?",
+      "question": "BroceliandeForest3D.tscn is a stub — the script has 17 @onready vars ($World3D/*, $HUD/**) that resolve null since no nodes exist in .tscn → crash. Two approaches: A) Add full node tree in Godot editor (.tscn gets World3D+Player+HUD nodes), B) Remove all @onready vars, create nodes entirely in _ready() and assign vars manually. Which approach do you prefer?",
+      "options": [
+        "A: Build full node tree in .tscn via Godot editor (cleaner, editor-visible)",
+        "B: Pure procedural — remove @onready, create all nodes in _ready() via code"
+      ],
+      "timestamp": "2026-04-15T14:45:00Z"
     }
   ]
 }

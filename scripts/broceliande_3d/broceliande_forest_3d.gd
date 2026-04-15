@@ -1059,12 +1059,11 @@ func _on_encounter_reached(enc_idx: int) -> void:
 	overlay.card_resolved.connect(func(choice_idx: int, score: int):
 		print("[Forest3D] Card resolved: choice=%d score=%d" % [choice_idx, score])
 
-		# Apply effects: drain life (-1 per card), heal/damage based on score
+		# Apply effects: heal/damage based on score (no per-card drain — director decision)
 		var store: Node = get_node_or_null("/root/GameManager")
 		if store and store.has_method("get") and store.get("run_state") is Dictionary:
 			var run: Dictionary = store.get("run_state") as Dictionary
 			var life: int = int(run.get("life_essence", 100))
-			life -= 1  # Drain per card (Bible v2.4)
 			if score >= 80:
 				life += 5  # Reussite bonus
 			elif score < 30:
@@ -1083,18 +1082,16 @@ func _on_encounter_reached(enc_idx: int) -> void:
 		# Show life change feedback on HUD
 		var life_change: int = 0
 		if score >= 80:
-			life_change = 4  # +5 heal - 1 drain = +4 net
+			life_change = 5  # +5 heal
 		elif score < 30:
-			life_change = -9  # -8 damage - 1 drain = -9 net
-		else:
-			life_change = -1  # just drain
+			life_change = -8  # -8 damage
 		if is_instance_valid(status_label):
 			if life_change > 0:
 				status_label.text = "+%d PV — La foret te sourit." % life_change
-			elif life_change < -5:
+			elif life_change < 0:
 				status_label.text = "%d PV — Les ombres s'epaississent..." % life_change
 			else:
-				status_label.text = "%d PV — Le sentier continue." % life_change
+				status_label.text = "La foret observe en silence."
 
 		# Re-capture mouse for walk
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

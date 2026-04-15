@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T09:15:00Z",
+  "last_updated": "2026-04-15T14:45:00Z",
   "metrics": {
-    "total_cycles_completed": 61,
-    "total_dev_cycles": 29,
+    "total_cycles_completed": 62,
+    "total_dev_cycles": 30,
     "total_test_cycles": 25,
     "bugs_found": 63,
-    "bugs_fixed": 37,
-    "tasks_completed": 79,
-    "tasks_pending": 126,
+    "bugs_fixed": 38,
+    "tasks_completed": 82,
+    "tasks_pending": 149,
     "current_sprint": "S3",
-    "specialist_cycles_run": 16,
-    "last_specialist": 10,
-    "last_updated": "2026-04-15T11:45:00Z"
+    "specialist_cycles_run": 17,
+    "last_specialist": 13,
+    "last_updated": "2026-04-15T14:45:00Z"
   },
   "patterns_learned": [
     {
@@ -685,10 +685,6 @@
         "merlin_constants.gd"
       ]
     },
-    "PAT-061: bk_assets categories (deadwood/groundcover/mushrooms) have assets but no spawning code — verify category coverage in spawner on every new asset batch",
-    "PAT-062: BUSH_MODELS const pointing to wrong asset category (rocks/ instead of bushes/) is a silent visual error — all loaded assets need cross-checking against intended category path",
-    "PAT-063: FIELD_MINIGAMES stale minigame names (herboristerie/fouille/runes) vs GAMES keys (chance/observation/logique) — always verify FIELD_MINIGAMES values match GAMES keys when adding new minigames",
-    "PAT-064: Timeout/failure fallback score 50 = FULL NEGATIVE (factor=-1.0) vs 51 = PARTIAL (factor=0.5) — always use 51 for technical failures, never 50",
     {
       "id": "PAT-065",
       "learned_at": "2026-04-14T15:00:00Z",
@@ -910,9 +906,6 @@
         "scenes/MapMonde.tscn"
       ]
     },
-    "PAT-086: Shader attachment: ShaderMaterial must be explicitly assigned to overlay rect — check _shader_mat is not null before calling set_shader_parameter()",
-    "PAT-087: PS1 aesthetic: vertex snap + UV snap alone insufficient — affine warp (perspective division removal) is the primary PS1 visual signature",
-    "PAT-088: GAMES dict must include all valid gm_hint values used in cards — neutre field was a silent fallback to chance due to missing GAMES[neutre] entry",
     {
       "id": "PAT-089",
       "learned_at": "2026-04-14T22:55:00Z",
@@ -1279,10 +1272,49 @@
         "rag_manager.gd"
       ]
     },
-    "faction_ending_chosen signal must be wired in wire_end_screen() — verify all signals of wired screens are connected",
-    "test assertion values must be updated when constants change: FACTION_SCORE_START was 0, became 20",
-    "dominant_faction in BIOMES dict is defined but routing to LLM prompt not yet implemented",
-    "echo_memory.dominant_factions_seen tracks faction endings chosen cross-run for LLM continuity"
+    {
+      "id": "PAT-SPEC13-001",
+      "learned_at": "2026-04-15T14:45:00Z",
+      "source": "SPECIALIST-13-3D_SCENE_ASSET_AUDITOR",
+      "pattern": "BroceliandeForest3D.tscn is a procedural scene — @onready vars referencing non-existent nodes ALL resolve null. Never use @onready in fully-procedural scenes; create nodes first in _ready() then assign vars manually.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scenes/BroceliandeForest3D.tscn",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-SPEC13-002",
+      "learned_at": "2026-04-15T14:45:00Z",
+      "source": "SPECIALIST-13-3D_SCENE_ASSET_AUDITOR",
+      "pattern": "ResourceLoader.exists() guards protect against missing asset crashes — pattern to follow for all dynamic asset loading.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/menu_3d_pc.gd",
+        "scripts/broceliande_3d/forest_asset_spawner.gd"
+      ]
+    },
+    {
+      "id": "PAT-SPEC13-003",
+      "learned_at": "2026-04-15T14:45:00Z",
+      "source": "SPECIALIST-13-3D_SCENE_ASSET_AUDITOR",
+      "pattern": "arc_condition_type dispatcher VERIFIED CORRECT. S2-ARC-CONDITION-EVAL-V2 was reopened as false-positive. Lesson: always check current code before reopening tasks.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/llm_adapter_map_prompt.gd"
+      ]
+    },
+    {
+      "id": "PAT-SPEC13-004",
+      "learned_at": "2026-04-15T14:45:00Z",
+      "source": "SPECIALIST-13-3D_SCENE_ASSET_AUDITOR",
+      "pattern": "BK_BIOME hardcoded to 'foret_broceliande' in broceliande_forest_3d.gd:43 and glb_asset_placer.gd:6. All 7 other biomes silently reuse foret assets.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/broceliande_3d/glb_asset_placer.gd"
+      ]
+    }
   ],
   "agent_performance": {
     "game_playtester": {
@@ -1299,7 +1331,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 42,
+      "tasks_completed": 45,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [

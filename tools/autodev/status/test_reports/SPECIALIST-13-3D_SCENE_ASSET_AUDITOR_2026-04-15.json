@@ -1,0 +1,79 @@
+{
+  "specialist": 13,
+  "role": "3D_SCENE_ASSET_AUDITOR",
+  "timestamp": "2026-04-15T14:45:00Z",
+  "summary": "Full 3D scene and asset audit. 8 findings (1 CRITICAL, 2 HIGH, 3 MEDIUM, 2 PASS). Verified S2-ARC-CONDITION-EVAL-V2 as correctly implemented (false positive reopen). Fixed GDC-FOREST3D-STALE-DRAIN (removed life -= 1 per card per director decision).",
+  "findings": [
+    {
+      "id": "F13-001",
+      "severity": "CRITICAL",
+      "type": "NULL_CRASH",
+      "location": "scenes/BroceliandeForest3D.tscn",
+      "description": "BroceliandeForest3D.tscn is a minimal stub (Node + script only, no child nodes). broceliande_forest_3d.gd has 17 @onready vars referencing $World3D/*, $HUD/* — all resolve to null. _setup_viewport():647 calls world_root.get_parent() on null → instant crash when scene is loaded.",
+      "task": "3D-BROCELIANDE-TSCN-REBUILD"
+    },
+    {
+      "id": "F13-002",
+      "severity": "HIGH",
+      "type": "MISSING_ASSETS",
+      "location": "scripts/menu_3d_pc.gd:306-332",
+      "description": "Assets/3d_models/ directory completely absent. Menu3D references res://Assets/3d_models/menu_coast/*.glb (9 files). Handled gracefully via ResourceLoader.exists() — no crash but 3D menu background is empty. Director wants celtic aesthetic menu.",
+      "task": "3D-MENU-COAST-ASSETS"
+    },
+    {
+      "id": "F13-003",
+      "severity": "HIGH",
+      "type": "MISSING_ASSETS",
+      "location": "scripts/bk_forest_test_room.gd:111-114",
+      "description": "OLD_TREES and OLD_MEGALITHS arrays reference res://Assets/3d_models/vegetation/*.glb and res://Assets/3d_models/broceliande/megaliths/*.glb — neither path exists. Assets/3d_models/ dir missing. Silent fail via ResourceLoader.exists().",
+      "task": "3D-OLD-ASSET-PATHS-FIX"
+    },
+    {
+      "id": "F13-004",
+      "severity": "MEDIUM",
+      "type": "DEAD_CODE",
+      "location": "scripts/broceliande_3d/biome_walk_configs.gd:12",
+      "description": "const TILE_BASE := 'res://archive/3d_models/Tiles_Low_Poly/' declared but NEVER used in file or referenced elsewhere. Points to archive/ not Assets/Tiles/. Active tiles are in Assets/Tiles/ (Tiles 01-31). Dead constant misleads future devs.",
+      "task": "3D-TILE-BASE-DEAD-CONST"
+    },
+    {
+      "id": "F13-005",
+      "severity": "MEDIUM",
+      "type": "ASSET_COVERAGE",
+      "location": "scripts/broceliande_3d/broceliande_forest_3d.gd:43",
+      "description": "const BK_BIOME: String = 'foret_broceliande' is hardcoded. All 8 biomes in BiomeWalkConfigs share the same foret_broceliande BK assets. Biomes landes_bruyere, cotes_sauvages, etc. load forest trees/rocks even when they should have different assets.",
+      "task": "3D-BIOME-ASSET-ROUTING"
+    },
+    {
+      "id": "F13-006",
+      "severity": "LOW",
+      "type": "VERIFY",
+      "location": "scenes/Run3D.tscn",
+      "description": "Run3D.tscn is also a stub (Node + script). run_3d_controller.gd does NOT use @onready vars — it receives all dependencies via injection. This is INTENTIONAL headless design. PASS.",
+      "task": "3D-RUN3D-TSCN-VERIFY"
+    },
+    {
+      "id": "F13-007",
+      "severity": "PASS",
+      "type": "VERIFIED",
+      "location": "scripts/merlin/llm_adapter_map_prompt.gd:97-104",
+      "description": "S2-ARC-CONDITION-EVAL-V2: arc_condition_type dispatcher IS correctly implemented. Lines 97-103 select arc_actual_value per type (faction_rep/runs_in_biome/fins_vues/oghams_owned). Line 104 >= comparison correct for all types. merlin_skeleton_generator.gd correctly passes biome-specific faction rep. VERIFIED PASS — task was false-positive reopen."
+    },
+    {
+      "id": "F13-008",
+      "severity": "FIXED",
+      "type": "BUG_FIX",
+      "location": "scripts/broceliande_3d/broceliande_forest_3d.gd:1067",
+      "description": "GDC-FOREST3D-STALE-DRAIN: Removed life -= 1 per card drain (director decision q-20260412-001 'Aucun drain de vie a chaque carte'). Updated life_change calculations (+5/−8/0 instead of +4/−9/−1). Updated neutral message to 'La foret observe en silence.'"
+    }
+  ],
+  "glb_inventory": {
+    "active_tiles_count": 31,
+    "bk_assets_foret_broceliande": 72,
+    "bk_biomes_covered": 1,
+    "bk_biomes_total": 8,
+    "archive_glbs": 150,
+    "web_demo_glbs": 12,
+    "missing_dirs": ["Assets/3d_models/"]
+  }
+}
