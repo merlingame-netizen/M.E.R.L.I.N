@@ -967,6 +967,28 @@
       "applies_to": [
         "data/cards/"
       ]
+    },
+    {
+      "id": "PAT-094",
+      "learned_at": "2026-04-15T00:00:00Z",
+      "source": "SPEC-8-LLM-AUDIT",
+      "pattern": "OllamaBackend.set_grammar() is a no-op — never assume grammar-constrained decoding works for Ollama. Use few-shot JSON schema in system prompt instead.",
+      "severity": "HIGH",
+      "applies_to": [
+        "addons/merlin_ai/ollama_backend.gd",
+        "scripts/merlin/llm_adapter_game_master.gd"
+      ]
+    },
+    {
+      "id": "PAT-095",
+      "learned_at": "2026-04-15T00:00:00Z",
+      "source": "SPEC-8-LLM-AUDIT",
+      "pattern": "RAG context must pass brain_role to get_prioritized_context() to receive full budget. Without role, budget defaults to 400 tokens; with 'narrator' role, budget is 800 tokens. Always pass the role.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "addons/merlin_ai/rag_manager.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -1092,14 +1114,22 @@
     "i18n_auditor_agent": {
       "tasks_completed": 0,
       "bugs_introduced": 0
+    },
+    "llm_pipeline_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "bugs_found": 5,
+      "specialist_cycle": 8
     }
   },
   "llm_quality": {
     "model": "qwen3.5:2b",
     "json_success_rate": "N/A (two-stage pipeline bypasses JSON parsing for narrative)",
     "avg_quality": "not_tested",
-    "prompt_templates_tested": 0,
-    "notes": "Two-stage pipeline: Stage 1 free text (no JSON), Stage 2 programmatic wrap. JSON repair used only for GM calls (structured effects). Main LLM quality risk is effect overflow, not JSON malformation."
+    "prompt_templates_tested": 21,
+    "grammar_constraint_status": "BROKEN: OllamaBackend.set_grammar() is no-op — GM JSON unconstrained",
+    "rag_context_status": "DEGRADED: truncated to 200/3200 chars (6.25% of budget) — fix LLM-RAG-CONTEXT-ROLE",
+    "notes": "Two-stage pipeline: Stage 1 free text (no JSON), Stage 2 programmatic wrap. Grammar constraint silently no-op for Ollama — CRITICAL gap for GM effects generation. RAG budget 800 tokens but only 50 tokens delivered."
   },
   "director_decisions": [
     {
@@ -1297,7 +1327,7 @@
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ],
-  "total_cycles": 4,
-  "bugs_found": 10,
+  "total_cycles": 5,
+  "bugs_found": 15,
   "bugs_fixed": 3
 }

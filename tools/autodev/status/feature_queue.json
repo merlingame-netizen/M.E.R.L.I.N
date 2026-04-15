@@ -464,21 +464,6 @@
     "description": "SPECIALIST-14: broceliande_forest_3d.gd:1228 fallback path uses get_tree().change_scene_to_file(target) when PixelTransition not found. This is reachable if PixelTransition autoload fails to load. The primary path (line 1224) uses PixelTransition. Fix: add null guard pattern: var pt: Node = get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(target) else: get_tree().change_scene_to_file(target). Line 1228 already does this — verify the guard is correct and consistent with other scene transition helpers."
   },
   {
-    "id": "T-E2E-INTEGRATION-REGRESSION",
-    "sprint": "S3",
-    "priority": 13,
-    "status": "pending",
-    "type": "test",
-    "title": "Integration regression: verify all autoloads accessible + MerlinStore created",
-    "agent": "bug_hunter",
-    "files": [
-      "scripts/game_manager.gd",
-      "project.godot",
-      "scripts/ui/merlin_game_controller.gd"
-    ],
-    "description": "SPECIALIST-14: Regression test for autoload wiring. CHK-1: GameManager autoload in project.godot. CHK-2: MerlinAI autoload in project.godot. CHK-3: game_manager.gd:674 creates MerlinStore via call_deferred. CHK-4: merlin_game_controller.gd:112 store=get_node_or_null('/root/MerlinStore') gets non-null. CHK-5: merlin_game_controller.gd:121 merlin_ai=get_node_or_null('/root/MerlinAI') gets non-null. CHK-6: SFXManager+PixelTransition+I18nRegistry all in project.godot autoloads."
-  },
-  {
     "id": "META-INSIGHTS-DEDUP",
     "sprint": "META",
     "priority": 51,
@@ -1137,5 +1122,87 @@
     "status": "pending",
     "created_at": "2026-04-14T23:48:58Z",
     "created_by": "SPEC-7-NARRATIVE"
+  },
+  {
+    "id": "LLM-GRAMMAR-NOOP",
+    "sprint": "S2",
+    "priority": 14,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix GM JSON generation: replace no-op grammar constraint with PromptTemplate JSON schema",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "addons/merlin_ai/ollama_backend.gd",
+      "addons/merlin_ai/merlin_ai.gd",
+      "scripts/merlin/llm_adapter_game_master.gd"
+    ],
+    "description": "SPEC-8: ollama_backend.gd:418-428 set_grammar() is a no-op ('Ollama ne supporte pas GBNF'). merlin_ai.gd:1186-1194 silently fails to apply grammar for GM JSON calls. FIX: In LlmAdapterGameMaster.calculate_smart_effects(), wrap the GM prompt with an explicit JSON schema example in the system prompt (few-shot JSON constraint). Add a JSON-schema few-shot block showing expected {effects:[{type, faction, amount}]} structure. This enforces structured output without grammar support."
+  },
+  {
+    "id": "LLM-RAG-CONTEXT-ROLE",
+    "sprint": "S2",
+    "priority": 19,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix RAG context: pass brain_role='narrator' and raise substr limit to 800-token budget",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "scripts/merlin/merlin_llm_adapter.gd"
+    ],
+    "description": "SPEC-8: merlin_llm_adapter.gd:305-307 calls rag_mgr.get_prioritized_context(context) without brain_role AND truncates to 200 chars. FIX: (1) Pass brain_role='narrator' to use 800-token budget. (2) Replace substr(0,200) with substr(0,3200) to allow up to 800 tokens (~3200 chars) of RAG context. RAGManager already enforces the budget internally — the substr was an unnecessary double-truncation."
+  },
+  {
+    "id": "LLM-CONTEXT-TIME-NAMED",
+    "sprint": "S2",
+    "priority": 26,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add named time_of_day and season strings to context_builder.build_full_context()",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "addons/merlin_ai/context_builder.gd"
+    ],
+    "description": "SPEC-8: context_builder.gd:build_full_context() has heure_normalisee (float) but LLM needs named strings for narrative quality. FIX: Derive time_of_day string from heure_normalisee (0.0-0.25=nuit, 0.25-0.5=matin, 0.5-0.75=apres-midi, 0.75-1.0=soir) and add to context dict. Add season string from run.get('season', 'automne'). Then update build_llm_prompt_context() to include 'Heure: matin | Saison: automne' line. Director q-20260412-002 answer: 'ambiance doit changer en fonction de saison et heure de journee'."
+  },
+  {
+    "id": "LLM-GENERATE-CARD-FALLBACK",
+    "sprint": "S2",
+    "priority": 22,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add static fallback card struct in MerlinLlmAdapter.generate_card() failure path",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "scripts/merlin/merlin_llm_adapter.gd"
+    ],
+    "description": "SPEC-8: merlin_llm_adapter.gd:274 returns {ok:false, card:{}} on failure. FIX: On two-stage failure, build a minimal valid card from NARRATIVE_FALLBACKS text + VERB_POOL_SAFE verbs + empty effects (no faction rep impact). Return {ok:true, card:{...}, _fallback:true} so caller can log it. This prevents blank-card crashes from reaching the player."
+  },
+  {
+    "id": "LLM-QUALITY-STATS-TRACK",
+    "sprint": "S3",
+    "priority": 71,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add LLM quality tracking: success/repair/fallback counters in MerlinLlmAdapter",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "scripts/merlin/merlin_llm_adapter.gd"
+    ],
+    "description": "SPEC-8: No session quality tracking. FIX: Add _stats dict to MerlinLlmAdapter: {card_gen_attempts, card_gen_success, card_gen_fallback, json_repair_used, text_fallback_used}. Increment on each path. Add get_quality_stats() method for dashboard access. These metrics can be surfaced in studio_learnings.json at session end."
+  },
+  {
+    "id": "T-LLM-PIPELINE-REGRESSION",
+    "sprint": "S3",
+    "priority": 72,
+    "status": "pending",
+    "type": "test",
+    "title": "Regression test: verify all 4 LLM pipeline fixes applied correctly",
+    "agent": "llm_pipeline_auditor",
+    "files": [
+      "scripts/merlin/merlin_llm_adapter.gd",
+      "addons/merlin_ai/context_builder.gd",
+      "addons/merlin_ai/rag_manager.gd"
+    ],
+    "description": "SPEC-8: After LLM-GRAMMAR-NOOP + LLM-RAG-CONTEXT-ROLE + LLM-CONTEXT-TIME-NAMED + LLM-GENERATE-CARD-FALLBACK are completed. CHK-1: brain_role='narrator' passed to get_prioritized_context(). CHK-2: substr limit >= 3200 chars for RAG context. CHK-3: context_builder returns time_of_day string (matin/midi/soir/nuit). CHK-4: generate_card() failure returns _fallback:true card with valid options array. CHK-5: GM system prompt contains JSON schema example for effects. CHK-6: No regression in existing passing checks from this report."
   }
 ]

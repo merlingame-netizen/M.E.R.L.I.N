@@ -478,5 +478,20 @@
       "id": "NAR-FACTION-ENDING-UI"
     },
     "timestamp": "2026-04-14T23:50:28Z"
+  },
+  {
+    "id": "insight-20260415-001",
+    "agent": "llm_pipeline_auditor",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "RAG context delivers only 6% of narrator budget — narrative memory severely degraded",
+    "details": "merlin_llm_adapter.gd:307 truncates RAG context to 200 chars (50 tokens) while RAGManager 'narrator' budget is 800 tokens (3200 chars). Players will experience LLM generating narratives with poor story continuity — Merlin 'forgets' past events, repeats themes, ignores cross-run memory. Fix is a 2-line change (add brain_role + increase substr limit). High ROI: zero risk, maximum narrative quality improvement.",
+    "proposed_task": {
+      "title": "Fix RAG context: pass brain_role='narrator' to get_prioritized_context()",
+      "sprint": "S2",
+      "type": "dev",
+      "id": "LLM-RAG-CONTEXT-ROLE"
+    },
+    "timestamp": "2026-04-15T00:00:00Z"
   }
 ]
