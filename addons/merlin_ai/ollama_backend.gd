@@ -330,6 +330,7 @@ func _blocking_stream(prompt: String) -> void:
 	# Read NDJSON stream line by line.
 	var accumulated_text: String = ""
 	var line_buffer: String = ""
+	var first_token_ms: int = -1  # TTFT: time to first non-empty token
 
 	while client.get_status() == HTTPClient.STATUS_BODY:
 		client.poll()
@@ -349,6 +350,8 @@ func _blocking_stream(prompt: String) -> void:
 				var obj: Dictionary = json.data if json.data is Dictionary else {}
 				var token: String = str(obj.get("response", ""))
 				if token != "":
+					if first_token_ms < 0:
+						first_token_ms = Time.get_ticks_msec() - start_ms
 					accumulated_text += token
 					_mutex.lock()
 					_stream_chunks.append(token)
@@ -362,7 +365,7 @@ func _blocking_stream(prompt: String) -> void:
 					var eval_count: int = int(obj.get("eval_count", 0))
 					var eval_ns: int = int(obj.get("eval_duration", 0))
 					var tps: float = eval_count / (eval_ns / 1e9) if eval_ns > 0 else 0.0
-					_update_stats(total_ms, eval_count, tps)
+					_update_stats(total_ms, eval_count, tps, first_token_ms)
 					_mutex.lock()
 					_stream_full_text = accumulated_text.strip_edges()
 					_stream_done = true
@@ -383,6 +386,8 @@ func _blocking_stream(prompt: String) -> void:
 	if accumulated_text.strip_edges() != "":
 		if "<think>" in accumulated_text:
 			accumulated_text = _strip_thinking_tags(accumulated_text)
+		var total_ms: int = Time.get_ticks_msec() - start_ms
+		_update_stats(total_ms, 0, 0.0, first_token_ms)
 		_mutex.lock()
 		_stream_full_text = accumulated_text.strip_edges()
 		_stream_done = true
@@ -611,11 +616,13 @@ func _store_result(result: Dictionary, _start_ms: int) -> void:
 	_mutex.unlock()
 
 
-func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float) -> void:
+func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float, ttft_ms: int = -1) -> void:
 	_mutex.lock()
 	stats.last_total_ms = total_ms
 	stats.last_eval_count = eval_count
 	stats.last_tok_per_sec = tok_per_sec
+	# ttft_ms: -1 means non-streaming (bulk response) — use total_ms as TTFT proxy
+	stats.last_ttft_ms = ttft_ms if ttft_ms >= 0 else total_ms
 	stats.llm_calls += 1
 	if stats.llm_calls == 1:
 		stats.avg_total_ms = float(total_ms)

@@ -1201,21 +1201,6 @@
     "source": "SPECIALIST-9-SAVE_PERSISTENCE"
   },
   {
-    "id": "LLM-STAT-1",
-    "phase": 2,
-    "priority": 10,
-    "status": "pending",
-    "type": "dev",
-    "title": "Fix last_ttft_ms stat never set in OllamaBackend non-streaming path",
-    "agent": "godot_expert",
-    "files": [
-      "addons/merlin_ai/ollama_backend.gd"
-    ],
-    "description": "LLM-F4: Capture timestamp when STATUS_BODY transition occurs in _blocking_generate() to measure TTFT.",
-    "created_at": "2026-04-15T02:49:16Z",
-    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
-  },
-  {
     "id": "LLM-TEST-1",
     "phase": 2,
     "priority": 9,
@@ -1516,5 +1501,100 @@
     "description": "SPEC-6 UX FAIL_MEDIUM: reset_btn.custom_minimum_size=Vector2(420,38) at line 146. Fix: change 38 to MerlinVisual.MIN_TOUCH_TARGET (48).",
     "created_at": "2026-04-15T08:10:00Z",
     "source": "SPECIALIST-6-UX_ACCESSIBILITY_AUDITOR"
+  },
+  {
+    "id": "UX-A11Y-SYSTEM-AUTOLOAD",
+    "sprint": "S3",
+    "priority": 22,
+    "type": "dev",
+    "status": "pending",
+    "title": "Register AccessibilitySystem as autoload + wire to MenuOptions",
+    "agent": "ux_auditor",
+    "files": [
+      "scripts/core/accessibility_system.gd",
+      "project.godot",
+      "scripts/MenuOptions.gd"
+    ],
+    "description": "AccessibilitySystem (colorblind, text_scale, high_contrast, reduced_motion) is fully implemented but not registered as autoload. Add to project.godot autoloads as 'AccessibilitySystem'. Wire settings_changed signal to apply colorblind shader if exists.",
+    "created_by": "SPECIALIST-7-UX",
+    "created_at": "2026-04-15T09:15:00Z"
+  },
+  {
+    "id": "UX-PLATFORM-SCALE-APPLY",
+    "sprint": "S3",
+    "priority": 23,
+    "type": "dev",
+    "status": "pending",
+    "title": "Apply PlatformManager.get_ui_scale() to root UI containers",
+    "agent": "ux_auditor",
+    "files": [
+      "scripts/autoload/platform_manager.gd",
+      "scripts/ui/hub_screen.gd",
+      "scripts/SelectionSauvegarde.gd"
+    ],
+    "description": "PlatformManager.get_ui_scale() returns 1.2 for small phones but is never called. Add scale application in _ready() of main UI screens: HubScreen, SelectionSauvegarde, Collection. Use PlatformManager.get_base_font_size() for base font sizing.",
+    "created_by": "SPECIALIST-7-UX",
+    "created_at": "2026-04-15T09:15:00Z"
+  },
+  {
+    "id": "UX-MENU-PRINCIPAL-FOCUS-ALL",
+    "sprint": "S3",
+    "priority": 22,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix MenuPrincipalMerlin: change btn FOCUS_NONE to FOCUS_ALL for keyboard/gamepad nav",
+    "agent": "ux_auditor",
+    "files": [
+      "scripts/MenuPrincipalMerlin.gd"
+    ],
+    "description": "MenuPrincipalMerlin.gd:347 sets btn.focus_mode = Control.FOCUS_NONE for ALL main menu buttons, disabling keyboard Tab and gamepad D-pad navigation. Change to FOCUS_ALL and optionally grab_focus() on the first button in _ready().",
+    "created_by": "SPECIALIST-7-UX",
+    "created_at": "2026-04-15T09:15:00Z"
+  },
+  {
+    "id": "UX-OPTIONS-ACCESSIBILITY-SECTION",
+    "sprint": "S4",
+    "priority": 28,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add Accessibility section to MenuOptions (colorblind, text scale, reduced motion)",
+    "agent": "ux_auditor",
+    "files": [
+      "scripts/MenuOptions.gd",
+      "scenes/MenuOptions.tscn"
+    ],
+    "description": "MenuOptions has no accessibility controls. Add a new AccessibilitySection below the audio section with: ColorblindMode OptionButton (None/Protanopia/Deuteranopia/Tritanopia), TextScale HSlider (0.8-2.0), HighContrast CheckBox, ReducedMotion CheckBox. Connect to AccessibilitySystem singleton.",
+    "created_by": "SPECIALIST-7-UX",
+    "created_at": "2026-04-15T09:15:00Z"
+  },
+  {
+    "id": "UX-MINIGAME-FOCUS-ALL",
+    "sprint": "S3",
+    "priority": 24,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix mg_echo.gd: word-choice buttons FOCUS_NONE → FOCUS_ALL for gamepad/keyboard",
+    "agent": "ux_auditor",
+    "files": [
+      "scripts/minigames/mg_echo.gd"
+    ],
+    "description": "mg_echo.gd:101 sets btn.focus_mode = Control.FOCUS_NONE on word-choice buttons. Gamepad/keyboard players cannot select words. Change to FOCUS_ALL, add focus visual highlight (border color change on focus_entered), grab_focus() on first button when minigame starts.",
+    "created_by": "SPECIALIST-7-UX",
+    "created_at": "2026-04-15T09:15:00Z"
+  },
+  {
+    "id": "UX-HUB-ANTRE-INPUT-ADAPTER",
+    "sprint": "S3",
+    "priority": 25,
+    "type": "dev",
+    "status": "pending",
+    "title": "hub_antre_tour.gd:115 — replace direct Input.is_mouse_button_pressed with InputAdapter",
+    "agent": "ux_auditor",
+    "files": [
+      "scripts/hub_antre_tour.gd"
+    ],
+    "description": "hub_antre_tour.gd:115 directly uses Input.is_action_just_pressed() and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) bypassing InputAdapter. Replace with button.pressed.connect() signal or InputAdapter.is_touch() conditional logic for proper multi-platform support.",
+    "created_by": "SPECIALIST-7-UX",
+    "created_at": "2026-04-15T09:15:00Z"
   }
 ]

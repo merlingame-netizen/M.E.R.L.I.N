@@ -233,5 +233,22 @@
     "description": "SPEC5-FAIL-001: grass_wind_sway.gdshader was missing but referenced in broc_grass_wind.gd:18. Created PS1/N64 Celtic aesthetic shader: vertex_lighting, cull_disabled, height-weighted sway (UV.y^1.8), quantized vertex snap for PS1 stutter, world-space phase coherence across instances.",
     "completed_at": "2026-04-15T07:00:00Z",
     "notes": "Implemented by SPEC-5 cycle. Shader uses vertex_snap uniform (default 0.03) for PS1 quantization, wind_strength=0.35, wind_speed=1.5. BrocGrassWind already assigns this shader via _try_load_shader — no code change needed."
+  },
+  {
+    "id": "LLM-STAT-1",
+    "phase": 2,
+    "priority": 10,
+    "status": "completed",
+    "type": "dev",
+    "title": "Fix last_ttft_ms stat never set in OllamaBackend non-streaming path",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/ollama_backend.gd"
+    ],
+    "description": "LLM-F4: Capture timestamp when STATUS_BODY transition occurs in _blocking_generate() to measure TTFT.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
+    "completed_at": "2026-04-15T09:15:00Z",
+    "notes": "Fixed: _update_stats() now accepts optional ttft_ms param and sets stats.last_ttft_ms. Streaming path: tracks first_token_ms before while loop, passes to _update_stats on done=true and loop fallback. Non-streaming path: uses total_ms as TTFT proxy (bulk response, default ttft_ms=-1)."
   }
 ]

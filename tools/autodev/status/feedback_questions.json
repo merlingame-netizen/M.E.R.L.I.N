@@ -378,5 +378,20 @@
     ],
     "context": "scripts/run/end_run_screen.gd — signal faction_ending_chosen vient d'être ajouté. Le caller devra gérer la suite.",
     "timestamp": "2026-04-15T08:10:00Z"
+  },
+  {
+    "id": "q-20260415-004",
+    "title": "Main menu keyboard/gamepad navigation — enable or keep mouse-only?",
+    "type": "multiple_choice",
+    "category": "ux",
+    "question": "All main menu buttons have FOCUS_NONE. Should keyboard/gamepad nav be enabled?",
+    "options": [
+      "A: Enable FOCUS_ALL for keyboard Tab + gamepad D-pad navigation",
+      "B: Keep FOCUS_NONE — mouse/touch only, cleaner visual"
+    ],
+    "status": "pending",
+    "priority": "LOW",
+    "created_at": "2026-04-15T09:15:00Z",
+    "created_by": "SPECIALIST-7-UX"
   }
 ]

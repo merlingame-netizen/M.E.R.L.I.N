@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T07:00:00Z",
+  "last_updated": "2026-04-15T09:15:00Z",
   "metrics": {
-    "total_cycles_completed": 58,
+    "total_cycles_completed": 59,
     "total_dev_cycles": 27,
-    "total_test_cycles": 24,
+    "total_test_cycles": 25,
     "bugs_found": 63,
     "bugs_fixed": 35,
-    "tasks_completed": 75,
-    "tasks_pending": 106,
+    "tasks_completed": 76,
+    "tasks_pending": 115,
     "current_sprint": "S3",
-    "specialist_cycles_run": 13,
-    "last_specialist": 5,
-    "last_updated": "2026-04-15T07:00:00Z"
+    "specialist_cycles_run": 14,
+    "last_specialist": 7,
+    "last_updated": "2026-04-15T09:15:00Z"
   },
   "patterns_learned": [
     {
@@ -1164,6 +1164,47 @@
       "applies_to": [
         "scripts/run/end_run_screen.gd",
         "scripts/ui/end_run_screen.gd"
+      ]
+    },
+    {
+      "id": "PAT-S7-001",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-UX",
+      "pattern": "AccessibilitySystem (colorblind, text_scale, high_contrast, reduced_motion) is fully implemented but NOT registered as autoload — it is dead code until registered in project.godot",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/accessibility_system.gd",
+        "project.godot"
+      ]
+    },
+    {
+      "id": "PAT-S7-002",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-UX",
+      "pattern": "PlatformManager.get_ui_scale() and get_base_font_size() defined but never called — mobile DPI scaling completely inactive",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/autoload/platform_manager.gd"
+      ]
+    },
+    {
+      "id": "PAT-S7-003",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-UX",
+      "pattern": "MenuPrincipalMerlin all buttons FOCUS_NONE — gamepad/keyboard navigation disabled. Audit focus_mode on all UI screens.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/MenuPrincipalMerlin.gd"
+      ]
+    },
+    {
+      "id": "PAT-S7-004",
+      "learned_at": "2026-04-15T09:15:00Z",
+      "source": "SPECIALIST-7-LLM-STAT-1",
+      "pattern": "OllamaBackend._update_stats() now has ttft_ms param (default -1 = use total_ms). Streaming path tracks first_token_ms before while loop. stats.last_ttft_ms is now always set.",
+      "severity": "LOW",
+      "applies_to": [
+        "addons/merlin_ai/ollama_backend.gd"
       ]
     }
   ],
