@@ -1,0 +1,62 @@
+name: MERLIN Heartbeat Chain
+
+# Fire the claude.ai trigger on every push to main so the studio bot
+# picks up the new state immediately instead of waiting for the next
+# :37 cron tick. Continuous chain: user/bot pushes -> trigger runs ->
+# bot picks a task -> ships -> pushes -> triggers again.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # manual fire for debugging
+
+# Cancel in-flight runs so we always trigger on the latest push.
+concurrency:
+  group: merlin-heartbeat
+  cancel-in-progress: true
+
+jobs:
+  fire-heartbeat:
+    runs-on: ubuntu-latest
+
+    # LOOP GUARD — skip when the bot itself pushed (prevents infinite chain).
+    # Bot commits are authored by "MERLIN Studio Bot <bot@merlin.studio>".
+    # Also allow manual runs via workflow_dispatch, and opt-out with
+    # [skip heartbeat] in the commit message.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.head_commit.author.email != 'bot@merlin.studio' &&
+       !contains(github.event.head_commit.message, '[skip heartbeat]'))
+
+    steps:
+      - name: Fire claude.ai trigger webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.MERLIN_HEARTBEAT_WEBHOOK }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_ACTOR: ${{ github.actor }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "::error::MERLIN_HEARTBEAT_WEBHOOK secret not set."
+            echo "::error::1) Open https://claude.ai automation merlin-heartbeat-v2"
+            echo "::error::2) Go to Webhook tab, copy the URL"
+            echo "::error::3) Add it as repo secret MERLIN_HEARTBEAT_WEBHOOK in Settings > Secrets"
+            exit 1
+          fi
+
+          echo "Firing heartbeat for commit ${COMMIT_SHA} pushed by ${COMMIT_ACTOR}..."
+
+          HTTP_CODE=$(curl -sS -o /tmp/response.json -w "%{http_code}" \
+            -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"source\":\"github-actions\",\"commit\":\"${COMMIT_SHA}\",\"actor\":\"${COMMIT_ACTOR}\"}" || echo "000")
+
+          echo "HTTP ${HTTP_CODE}"
+          cat /tmp/response.json 2>/dev/null || echo "(no response body)"
+          echo ""
+
+          if [ "$HTTP_CODE" = "000" ] || [ "$HTTP_CODE" -ge 400 ]; then
+            echo "::error::Webhook call failed with HTTP ${HTTP_CODE}"
+            exit 1
+          fi
+
+          echo "::notice::Heartbeat chained for ${COMMIT_SHA:0:7}"
