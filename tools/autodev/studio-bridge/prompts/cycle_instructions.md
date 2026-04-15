@@ -97,6 +97,16 @@ Les taches test sont intercalees — execute-les dans l'ordre de priorite comme 
 ### Queue cleanup
 Deplacer les taches `status=completed` dans `tools/autodev/status/completed_archive.json` (creer si absent). Ne garder que pending/in_progress dans `feature_queue.json`.
 
+**DEDUPE GUARD (OBLIGATOIRE avant push archive)**:
+1. Avant d'ajouter une tache a `completed_archive.json`, charger l'archive existante.
+2. Verifier qu'aucune entree n'a deja la meme cle `(id, completed_at)`.
+3. Si doublon detecte → SKIP l'ajout (ne pas dupliquer).
+4. Pattern bash: `python tools/autodev/scripts/dedupe_completed.py` apres tout ajout pour garantir l'idempotence.
+
+### Meta-work cap (CRITICAL — bias gameplay)
+**REGLE**: Sur les 10 dernieres taches dispatched (lire `events.jsonl` cycle_update events), si >= 1 a un scope `dashboard|orchestrator|cycle|cli|monitor|api|mission-control` → SKIP toute nouvelle tache dont le titre/files matche `/dashboard|orchestrator|cycle|cli|monitor|api|mission-control/i`.
+Objectif: max 10% de meta-work par fenetre glissante de 10 cycles. Privilegier gameplay (cards, oghams, minigames, factions, biomes, SFX, narrative, scenes 3D).
+
 ### Events rotation
 Si `events.jsonl` depasse 200 lignes: garder les 50 dernieres, archiver le reste dans `tools/autodev/status/events_archive/YYYY-MM.jsonl`.
 
@@ -133,6 +143,13 @@ Apres chaque modification de code:
 - Grep le fichier modifie pour verifier: pas de `:=` avec CONST, type hints presents, snake_case respecte
 - Si cycle DEV: verifier que les invariants du dernier test report sont toujours respectes
 - Si cycle TEST: comparer avec le rapport precedent — les bugs ont-ils ete fixes ? De nouveaux sont-ils apparus ?
+
+**VERIFIER CALL-SITE GREP (OBLIGATOIRE pour eviter false-positive PASS)**:
+Pour chaque tache marquee `completed` qui declare "added function X" ou "implemented method Y":
+1. Grep le nom de la fonction dans tout le repo: `grep -rn "func X\|X(" --include="*.gd"`
+2. Si trouve UNE SEULE fois (definition seule, aucun call-site) → MARQUER comme `FAIL_CRITICAL` et ROUVRIR la tache (status=pending, priority=1, note "verifier false-positive: function defined but never called").
+3. Si trouve >= 2 fois (definition + au moins 1 call-site) → PASS.
+4. Lecon S2-ARC-CONDITION-EVAL (2026-04-14): la tache avait ete marquee completed alors que le dispatcher n'etait pas cable dans `llm_adapter_map_prompt.gd:96`. Cette regle empeche la repetition.
 
 ### 3. Agent Evolution — Creer/specialiser des agents
 

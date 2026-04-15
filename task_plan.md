@@ -293,3 +293,38 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 | D.5 | ~~Fix gui_embed_subviewports~~ | FAIT |
 
 *Updated: 2026-02-27 — P1.11.2 VALIDE, T.1-T.4 FAIT, Perks wired, trust_merlin live, 10 studio agents*
+
+---
+
+## Phase MC-V3 — Mission Control Cockpit + Pipeline Reset (2026-04-15)
+
+> Source plan: `~/.claude/plans/elegant-yawning-tarjan.md`
+> Out-of-game tooling. No `.gd`/`.tscn` impacted.
+
+### MC-V3.1: Cockpit shell — DONE
+- [x] `useResizable.ts` hook (drag + localStorage persist)
+- [x] `cockpit/TopBar.tsx` (KPI 1-liner)
+- [x] `cockpit/GameStage.tsx` (resizable iframe wrapper)
+- [x] `cockpit/Timeline.tsx` (NEXT/RUNNING/DONE feed)
+- [x] `cockpit/Drawer.tsx` (bottom sheet, 4 mini-tabs)
+- [x] `App.tsx` rewrite (no tabs, cockpit shell)
+- [x] `cockpit.css` styles
+- [x] Delete `views/`, `TabNavigation.tsx`, `views.css`
+- [x] Build green (451 modules, 5.82s)
+
+### MC-V3.2: Pipeline reset — IN PROGRESS
+- [x] Create `tools/autodev/scripts/dedupe_completed.py`
+- [ ] Run dedupe → log removed count
+- [ ] Add dedupe guard in `studio-bridge/src/orchestrator.ts` (push to archive)
+- [ ] Reopen `S2-ARC-CONDITION-EVAL` in `feature_queue.json` with verifier note
+- [ ] Reinforce task-verifier (require call-site grep, not just definition)
+- [ ] Purge `SPLIT-*` / `REDUCE-MEGAFUNC-*` priority >= 30 from queue
+- [ ] Generate 5-10 gameplay tasks (oghams, minigames, FastRoute, factions, SFX)
+- [ ] Add 10% meta-task cap to `studio-bridge/prompts/cycle_instructions.md`
+
+### MC-V3.3: Deploy
+- [ ] `npm run build` + `npx vercel --prod --yes`
+- [ ] Acceptance criteria from approved plan (4.5)
+
+### MC-V3.4: Stitch handoff — BLOCKED
+- Waits on user `project_id` + `screen_id` from https://stitch.withgoogle.com
