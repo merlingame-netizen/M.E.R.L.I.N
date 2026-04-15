@@ -464,6 +464,57 @@
         "B: Pure procedural — remove @onready, create all nodes in _ready() via code"
       ],
       "timestamp": "2026-04-15T14:45:00Z"
+    },
+    {
+      "id": "q-20260415-010",
+      "status": "pending",
+      "priority": "HIGH",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "Faction content unlock (rep>=50): boost existing cards OR unlock new faction-specific card pool?",
+      "question": "Test FACTION-CONTENT-UNLOCK-CHECK confirmed the rep>=50 gate is missing. Two implementation approaches: A) Re-weight existing card pool so faction cards appear more often when rep>=50 (simpler, no new content needed), B) Lock a separate 'faction premium' card pool behind rep>=50 (requires content but cleaner game feel). Which approach?",
+      "options": [
+        {
+          "label": "A",
+          "value": "boost_weight",
+          "description": "Re-weight existing pool — faction cards more likely when rep>=50"
+        },
+        {
+          "label": "B",
+          "value": "unlock_pool",
+          "description": "Separate locked pool — new faction cards unlocked at rep>=50"
+        },
+        {
+          "label": "C",
+          "value": "both",
+          "description": "Both: boost existing + unlock new tier"
+        }
+      ],
+      "created_at": "2026-04-15T15:45:00Z",
+      "source_task": "E2E-FACTION-GATE-WIRE"
+    },
+    {
+      "id": "q-20260415-011",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "GameFlowController migration: refactor active BroceliandeForest3D path INTO GameFlowController, or replace it entirely?",
+      "question": "Director q-20260414-004 ordered migration to GameFlowController. Current active game loop lives in BroceliandeForest3D (inline EncounterCardOverlay) + HubAntre. GameFlowController uses HubScreen+Run3D (currently dead). Two paths: A) Extend GameFlowController to wrap BroceliandeForest3D (non-destructive), B) Replace BroceliandeForest3D loop entirely with GameFlowController+Run3D (cleaner but more risk). Which?",
+      "options": [
+        {
+          "label": "A",
+          "value": "wrap_broc",
+          "description": "Extend GFC to orchestrate BroceliandeForest3D + HubAntre (keep active path)"
+        },
+        {
+          "label": "B",
+          "value": "replace_with_run3d",
+          "description": "Replace with pure GameFlowController + Run3D (full refactor)"
+        }
+      ],
+      "created_at": "2026-04-15T15:45:00Z",
+      "source_task": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER"
     }
   ]
 }

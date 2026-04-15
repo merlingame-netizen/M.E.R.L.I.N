@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T14:45:00Z",
+  "last_updated": "2026-04-15T15:45:00Z",
   "metrics": {
-    "total_cycles_completed": 62,
+    "total_cycles_completed": 63,
     "total_dev_cycles": 30,
-    "total_test_cycles": 25,
-    "bugs_found": 63,
+    "total_test_cycles": 26,
+    "bugs_found": 67,
     "bugs_fixed": 38,
-    "tasks_completed": 82,
-    "tasks_pending": 149,
+    "tasks_completed": 85,
+    "tasks_pending": 152,
     "current_sprint": "S3",
-    "specialist_cycles_run": 17,
-    "last_specialist": 13,
-    "last_updated": "2026-04-15T14:45:00Z"
+    "specialist_cycles_run": 18,
+    "last_specialist": 14,
+    "last_updated": "2026-04-15T15:45:00Z"
   },
   "patterns_learned": [
     {
@@ -1314,6 +1314,38 @@
         "scripts/broceliande_3d/broceliande_forest_3d.gd",
         "scripts/broceliande_3d/glb_asset_placer.gd"
       ]
+    },
+    {
+      "id": "PAT-S14-001",
+      "learned_at": "2026-04-15T15:45:00Z",
+      "source": "SPECIALIST-14-INTEGRATION_E2E",
+      "pattern": "Faction content gate (rep>=50) is defined in BOTH reputation_system.gd AND merlin_constants.gd but called NOWHERE in card_system.gd. Gate defined ≠ gate wired. Always verify with grep for call-site.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_reputation_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-S14-002",
+      "learned_at": "2026-04-15T15:45:00Z",
+      "source": "SPECIALIST-14-INTEGRATION_E2E",
+      "pattern": "Two incompatible hub paths coexist: (a) active BroceliandeForest3D→HubAntre, (b) dead GameFlowController→HubScreen→Run3D. Director ordered migration to GameFlowController (q-20260414-004). Never add features to the dead path.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-S14-003",
+      "learned_at": "2026-04-15T15:45:00Z",
+      "source": "SPECIALIST-14-INTEGRATION_E2E",
+      "pattern": "Duplicate test tasks (FACTION-CONTENT-UNLOCK-CHECK + FACTION-CONTENT-GATE-AUDIT) test same invariant. Future: check for duplicate test coverage before adding test tasks.",
+      "severity": "LOW",
+      "applies_to": [
+        "tools/autodev/status/feature_queue.json"
+      ]
     }
   ],
   "agent_performance": {
@@ -1394,9 +1426,10 @@
       "cycles_run": 0
     },
     "integration_e2e_auditor": {
-      "tasks_completed": 2,
-      "bugs_introduced": 0,
-      "cycles_run": 0
+      "tasks_completed": 5,
+      "bugs_found": 4,
+      "tests_run": 1,
+      "fail_rate": "100%_this_cycle"
     },
     "meta_evolution_auditor": {
       "tasks_completed": 0,

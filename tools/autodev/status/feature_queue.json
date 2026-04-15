@@ -251,20 +251,6 @@
     "agent": "godot_expert"
   },
   {
-    "id": "FACTION-CONTENT-UNLOCK-CHECK",
-    "sprint": "S3",
-    "priority": 20,
-    "type": "test",
-    "status": "pending",
-    "title": "Test faction content unlock (>=50) gates special cards correctly",
-    "description": "Verify cards with faction_required>=50 only appear when player faction_rep>=50. Check card filtering in merlin_card_system.gd.",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd",
-      "scripts/merlin/merlin_reputation_system.gd"
-    ],
-    "agent": "game_playtester"
-  },
-  {
     "id": "MG-FIX-DIFFICULTY-SCALING",
     "sprint": "S3",
     "priority": 21,
@@ -365,17 +351,18 @@
   {
     "id": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER",
     "sprint": "S4",
-    "priority": 30,
+    "priority": 4,
     "status": "pending",
     "type": "dev",
-    "title": "Audit + document GameFlowController dead path (HubScreen/Run3D)",
+    "title": "Migrate active path → GameFlowController per director q-20260414-004 (was: Audit dead path)",
     "agent": "godot_expert",
     "files": [
       "scripts/core/game_flow_controller.gd",
       "scenes/HubScreen.tscn",
       "scenes/Run3D.tscn"
     ],
-    "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre→BroceliandeForest3D→MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW — no player impact, but creates confusion for future development."
+    "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre→BroceliandeForest3D→MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW — no player impact, but creates confusion for future development.",
+    "notes": " [Director q-20260414-004: \"Migrer le chemin actif vers game_flow_controller (refonte propre)\"]"
   },
   {
     "id": "E2E-MERLINSTORE-DEFERRED-RACE-CHECK",
@@ -500,20 +487,6 @@
     "agent": "scene_flow_fixer"
   },
   {
-    "id": "FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN",
-    "sprint": "S3",
-    "priority": 34,
-    "type": "dev",
-    "status": "pending",
-    "title": "First-run detection: route new profiles through personality quiz",
-    "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() → transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
-    "files": [
-      "scripts/menu_3d_pc.gd:1333-1337",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "agent": "scene_flow_fixer"
-  },
-  {
     "id": "VIS-INTROCELOS-PALETTE",
     "sprint": "S3",
     "priority": 16,
@@ -581,7 +554,7 @@
   {
     "id": "GDC-FACTION-CONTENT-50-GATE",
     "sprint": "S2",
-    "priority": 21,
+    "priority": 2,
     "status": "pending",
     "type": "dev",
     "title": "Audit + implement faction content unlock gate at rep >= 50 in card pool",
@@ -589,7 +562,8 @@
     "files": [
       "scripts/merlin/merlin_card_system.gd"
     ],
-    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50."
+    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
+    "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
   },
   {
     "id": "T-GDC-FACTION-ENDING-INTEGRATION",
@@ -1757,22 +1731,6 @@
     "created_by": "SPEC-11-FACTION"
   },
   {
-    "id": "FACTION-CONTENT-GATE-AUDIT",
-    "sprint": "S2",
-    "priority": 21,
-    "type": "test",
-    "status": "pending",
-    "title": "Verify faction content gate (>=50) blocks/allows special cards",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd",
-      "scripts/merlin/merlin_reputation_system.gd"
-    ],
-    "description": "Execute FACTION-CONTENT-UNLOCK-CHECK: verify get_unlocked_content() is called during card pool filtering. Trace merlin_card_system._filter_by_faction() or equivalent. Check: rep=49 -> faction special cards excluded, rep=50 -> included. If no filtering exists yet, create task GDC-FACTION-CONTENT-50-GATE as CRITICAL.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  },
-  {
     "id": "FACTION-SCORE-START-AUDIT",
     "sprint": "S2",
     "priority": 26,
@@ -2080,5 +2038,102 @@
       "scripts/bk_forest_test_room.gd"
     ],
     "description": "bk_forest_test_room.gd:8 const OLD := 'res://Assets/3d_models/' and OLD_TREES[01-03], OLD_MEGALITHS[dolmen_01/menhir_01] reference paths that don't exist (Assets/3d_models/ dir missing). Lines 558-560 use OLD_MEGALITHS in fallback placement. Fix: replace OLD_TREES with BK_TREES (already loaded), replace OLD_MEGALITHS with BK_MEGALITHS[0:2] references."
+  },
+  {
+    "id": "E2E-FACTION-GATE-WIRE",
+    "sprint": "S2",
+    "priority": 1,
+    "type": "dev",
+    "status": "pending",
+    "title": "Wire faction content gate (rep>=50) into card pool selection — CRITICAL test FAIL",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/merlin/merlin_reputation_system.gd"
+    ],
+    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+  },
+  {
+    "id": "E2E-DELETE-ORPHAN-SCENES",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "dev",
+    "status": "pending",
+    "title": "Delete IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn per director q-20260414-005",
+    "agent": "cleanup_agent",
+    "files": [
+      "scenes/IntroPersonalityQuiz.tscn",
+      "scenes/SceneRencontreMerlin.tscn",
+      "scripts/IntroPersonalityQuiz.gd",
+      "scripts/SceneRencontreMerlin.gd"
+    ],
+    "description": "Director q-20260414-005 answer: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Delete both .tscn files and their associated .gd scripts. Remove any references in SceneSelector.gd if present. Verify no active scene transitions target these paths.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+  },
+  {
+    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
+    "sprint": "S2",
+    "priority": 12,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+  },
+  {
+    "id": "E2E-HUBANTRE-SCRIPT-AUDIT",
+    "sprint": "S2",
+    "priority": 13,
+    "type": "dev",
+    "status": "pending",
+    "title": "Verify HubAntre.tscn initializes MerlinStore+SaveSystem or delegates to game controller",
+    "agent": "game_design_coder",
+    "files": [
+      "scenes/HubAntre.tscn",
+      "scripts/HubAntre.gd"
+    ],
+    "description": "HubAntre.tscn is the hub destination after forest run but HubAntre.gd appears not to instantiate core game systems (MerlinStore, MerlinCardSystem, MerlinSaveSystem). Verify: does HubAntre rely on persistent MerlinGame.tscn node for systems? Or does it re-init? If systems are missing, player data resets on hub arrival. Add system initialization if missing.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+  },
+  {
+    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "test",
+    "status": "pending",
+    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+  },
+  {
+    "id": "T-E2E-AUTOLOADS-INIT",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "test",
+    "status": "pending",
+    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   }
 ]

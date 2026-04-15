@@ -44,5 +44,55 @@
     ],
     "completed_at": "2026-04-15T14:45:00Z",
     "notes": "VERIFIED: Run3D.tscn is intentionally minimal (Node + script). run_3d_controller.gd receives all dependencies via injection (store, card_system, effects, etc.) — no @onready vars. Headless design confirmed. No fix needed."
+  },
+  {
+    "id": "FACTION-CONTENT-UNLOCK-CHECK",
+    "sprint": "S3",
+    "priority": 20,
+    "type": "test",
+    "status": "completed",
+    "title": "Test faction content unlock (>=50) gates special cards correctly",
+    "description": "Verify cards with faction_required>=50 only appear when player faction_rep>=50. Check card filtering in merlin_card_system.gd.",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/merlin/merlin_reputation_system.gd"
+    ],
+    "agent": "game_playtester",
+    "completed_at": "2026-04-15T15:45:00Z",
+    "notes": "TEST FAIL: get_unlocked_content() defined in reputation_system.gd:103 but NEVER called in merlin_card_system.gd. Faction gate at rep>=50 completely unwired. Dev task E2E-FACTION-GATE-WIRE created (priority 1)."
+  },
+  {
+    "id": "FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN",
+    "sprint": "S3",
+    "priority": 34,
+    "type": "dev",
+    "status": "cancelled",
+    "title": "First-run detection: route new profiles through personality quiz",
+    "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() → transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
+    "files": [
+      "scripts/menu_3d_pc.gd:1333-1337",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "agent": "scene_flow_fixer",
+    "completed_at": "2026-04-15T15:45:00Z",
+    "notes": "CANCELLED: contradicts director decision q-20260414-005 (\"Supprimer IntroPersonalityQuiz + SceneRencontreMerlin\"). Replacement task E2E-DELETE-ORPHAN-SCENES created."
+  },
+  {
+    "id": "FACTION-CONTENT-GATE-AUDIT",
+    "sprint": "S2",
+    "priority": 21,
+    "type": "test",
+    "status": "completed",
+    "title": "Verify faction content gate (>=50) blocks/allows special cards",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/merlin/merlin_reputation_system.gd"
+    ],
+    "description": "Execute FACTION-CONTENT-UNLOCK-CHECK: verify get_unlocked_content() is called during card pool filtering. Trace merlin_card_system._filter_by_faction() or equivalent. Check: rep=49 -> faction special cards excluded, rep=50 -> included. If no filtering exists yet, create task GDC-FACTION-CONTENT-50-GATE as CRITICAL.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION",
+    "completed_at": "2026-04-15T15:45:00Z",
+    "notes": "Duplicate of FACTION-CONTENT-UNLOCK-CHECK. Same FAIL: faction gate not wired in card pool selection. See test report SPECIALIST-14-INTEGRATION_E2E-2026-04-15.json."
   }
 ]

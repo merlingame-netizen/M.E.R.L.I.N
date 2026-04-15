@@ -1,0 +1,106 @@
+{
+  "report_id": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+  "specialist": 14,
+  "role": "INTEGRATION_E2E_AUDITOR",
+  "cycle_type": "test",
+  "timestamp": "2026-04-15T15:45:00Z",
+  "test_task_executed": "FACTION-CONTENT-UNLOCK-CHECK",
+  "test_task_result": "FAIL",
+  "summary": "Specialist 14 INTEGRATION & E2E AUDIT: 10 checks (1 CRITICAL FAIL, 2 HIGH, 3 MEDIUM, 4 PASS). FACTION-CONTENT-UNLOCK-CHECK FAIL: get_unlocked_content() defined in reputation_system.gd:103 but NEVER called in merlin_card_system.gd. Faction gate at rep>=50 completely unwired. 6 new tasks generated.",
+  "audit_checklist": [
+    {
+      "id": "CHK-01",
+      "name": "All 14 autoloads exist on disk",
+      "result": "PASS",
+      "notes": "screen_frame/ScreenEffects/SceneSelector/LocaleManager/i18n_registry/SFXManager/MerlinVisual/pixel_transition/pixel_content_animator/world_map_system/MusicManager/game_time_manager/InputAdapter/PlatformManager all present"
+    },
+    {
+      "id": "CHK-02",
+      "name": "IntroCeltOS→Menu3DPC transition",
+      "result": "PASS",
+      "notes": "IntroCeltOS.gd:516 PixelTransition.transition_to('res://scenes/Menu3DPC.tscn')"
+    },
+    {
+      "id": "CHK-03",
+      "name": "MenuPrincipal→ParchmentPreRun/SelectionSauvegarde",
+      "result": "PASS",
+      "notes": "MenuPrincipalMerlin.gd:14-15 MENU_NEW_GAME→ParchmentPreRun.tscn, MENU_CONTINUE→SelectionSauvegarde.tscn via PixelTransition"
+    },
+    {
+      "id": "CHK-04",
+      "name": "ParchmentPreRun→BroceliandeForest3D",
+      "result": "PASS",
+      "notes": "parchment_pre_run.gd:7 SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn', line 213-217 PixelTransition.transition_to(SCENE_FOREST)"
+    },
+    {
+      "id": "CHK-05",
+      "name": "BroceliandeForest3D inline encounters (EncounterCardOverlay)",
+      "result": "PASS",
+      "notes": "broceliande_forest_3d.gd:1057 overlay=EncounterCardOverlayScript.new(card) — inline card overlay active, no scene change needed"
+    },
+    {
+      "id": "CHK-06",
+      "name": "Faction content gate (rep>=50) wired in card selection",
+      "result": "FAIL_CRITICAL",
+      "notes": "MerlinReputationSystem.get_unlocked_content() (reputation_system.gd:103) is NEVER called in merlin_card_system.gd. generate_card()/get_fastroute_card() filter by biome+seen only, no faction rep check. FACTION_THRESHOLD_CONTENT=50 in merlin_constants.gd:1068 also unused for pool gating.",
+      "file": "scripts/merlin/merlin_card_system.gd:173-237",
+      "fix_task": "E2E-FACTION-GATE-WIRE"
+    },
+    {
+      "id": "CHK-07",
+      "name": "GameFlowController wired in active game flow",
+      "result": "FAIL_HIGH",
+      "notes": "GameFlowController exists (scripts/core/game_flow_controller.gd) with Hub→Run→EndScreen phases but NO scene instantiates it. Active path uses BroceliandeForest3D+HubAntre, not HubScreen+Run3D. Two incompatible hub paths coexist. Task E2E-DEAD-PATH-GAME-FLOW-CONTROLLER already tracks this.",
+      "file": "scripts/core/game_flow_controller.gd"
+    },
+    {
+      "id": "CHK-08",
+      "name": "BroceliandeForest3D end-of-walk transition correct",
+      "result": "FAIL_HIGH",
+      "notes": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. MerlinGame.tscn is the OLD card scene (merlin_game_controller.gd). If EncounterCardOverlay is the active path, MerlinGame route is an orphan path. Needs investigation.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1221"
+    },
+    {
+      "id": "CHK-09",
+      "name": "Director deletion order applied (IntroPersonalityQuiz+SceneRencontreMerlin)",
+      "result": "FAIL_MEDIUM",
+      "notes": "q-20260414-005 answered 'Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Both .tscn files still exist. Task FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN contradicts deletion decision (says 'route new profiles through quiz').",
+      "file": "scenes/IntroPersonalityQuiz.tscn, scenes/SceneRencontreMerlin.tscn"
+    },
+    {
+      "id": "CHK-10",
+      "name": "ui_overlay_narrative return path",
+      "result": "FAIL_MEDIUM",
+      "notes": "scripts/ui/ui_overlay_narrative.gd:291 navigates back to MenuPrincipal.tscn but Menu3DPC.tscn is the active 3D menu. Task FLOW-NARRATIVE-MENU-PATH-FIX already exists (pending).",
+      "file": "scripts/ui/ui_overlay_narrative.gd:291"
+    }
+  ],
+  "test_task_detail": {
+    "task_id": "FACTION-CONTENT-UNLOCK-CHECK",
+    "question": "Does faction content unlock (rep>=50) gate special cards correctly?",
+    "verdict": "FAIL",
+    "evidence": [
+      "merlin_reputation_system.gd:13 THRESHOLD_CONTENT=50.0 — gate threshold defined",
+      "merlin_reputation_system.gd:103 get_unlocked_content() — returns factions with rep>=50",
+      "merlin_constants.gd:1068 FACTION_THRESHOLD_CONTENT=50 — also defined here",
+      "merlin_card_system.gd:173-237 get_fastroute_card() — filters biome+seen only, NO faction rep check",
+      "merlin_card_system.gd:122 generate_card() — does NOT call get_unlocked_content()",
+      "merlin_card_system.gd:519 _pick_card_type() — no faction gate",
+      "grep result: get_unlocked_content never called outside reputation_system.gd"
+    ],
+    "impact": "Players never see faction-specific special cards regardless of faction reputation. Rep system affects nothing in card pool.",
+    "fix_required": "Wire MerlinReputationSystem.get_unlocked_content(faction_rep) into generate_card()/get_fastroute_card() to boost/enable faction cards when rep>=50"
+  },
+  "also_completed": {
+    "task_id": "FACTION-CONTENT-GATE-AUDIT",
+    "reason": "Same finding as FACTION-CONTENT-UNLOCK-CHECK — both test the same gate, test run covers both"
+  },
+  "new_tasks_generated": [
+    "E2E-FACTION-GATE-WIRE",
+    "E2E-DELETE-ORPHAN-SCENES",
+    "E2E-MERLINGAME-OBSOLETE-PATH",
+    "E2E-HUBANTRE-SCRIPT-AUDIT",
+    "T-E2E-CONTINUE-LOAD-VERIFY",
+    "T-E2E-AUTOLOADS-INIT"
+  ]
+}
