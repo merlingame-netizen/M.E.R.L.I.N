@@ -3,10 +3,9 @@ extends Node
 ## Marche contemplative FPS — Foret de Broceliande.
 ## 7 zones, assets GLB reels, effets volumetriques, cycle jour/nuit, saisons.
 
-signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
+signal merlin_encounter_complete  # Emitted when Merlin found → returning to hub
 
 const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
-const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 
 # --- Helper modules ---
 const BrocAutowalk = preload("res://scripts/broceliande_3d/broc_autowalk.gd")
@@ -1218,10 +1217,9 @@ func _on_run_complete() -> void:
 
 
 func _on_hub() -> void:
-	# After forest walk, go to MerlinGame (card encounters)
-	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
+	# After forest walk, always return to hub (encounters are inline via EncounterCardOverlay)
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("transition_to"):
-		pt.transition_to(target)
+		pt.transition_to(HUB_SCENE)
 	else:
-		get_tree().change_scene_to_file(target)
+		get_tree().change_scene_to_file(HUB_SCENE)

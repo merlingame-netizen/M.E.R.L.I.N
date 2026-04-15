@@ -532,6 +532,39 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260415-013",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "pending",
+      "title": "EndRunScreen: quand doit-il s'afficher dans le flow BroceliandeForest3D ?",
+      "question": "L'EndRunScreen (résumé du run: vie, factions, anam, MOS) n'est actuellement jamais affiché dans le flow live. Quand doit-il apparaître ?",
+      "options": [
+        "A: Après chaque rencontre de cartes (overlay temporaire, 5s puis disparaît)",
+        "B: Uniquement en fin de run complet (toutes les cartes jouées OU vie=0), avant retour au Hub",
+        "C: Seulement en cas de mort (vie=0), la victoire n'a pas d'écran résumé",
+        "D: Jamais — le joueur revient directement au Hub, les stats sont visibles dans ArbreDeVie"
+      ],
+      "context": "scripts/broceliande_3d/broceliande_forest_3d.gd, scenes/EndRunScreen.tscn",
+      "timestamp": "2026-04-15T19:45:00Z"
+    },
+    {
+      "id": "q-20260415-014",
+      "type": "multiple_choice",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "title": "Consolidation: quel EndRunScreen garder ?",
+      "question": "Il existe deux implémentations EndRunScreen : (A) scripts/run/end_run_screen.gd — nouvelle, wired dans GameFlowController, signal hub_requested ; (B) scripts/ui/end_run_screen.gd — ancienne, 3 écrans narratif+journey+rewards+faction. Laquelle garder ?",
+      "options": [
+        "A: Garder scripts/run/end_run_screen.gd (nouvelle, GameFlowController) — supprimer l'ancienne",
+        "B: Garder scripts/ui/end_run_screen.gd (3 écrans détaillés) — migrer vers GameFlowController",
+        "C: Merger les deux (prendre le meilleur des deux)"
+      ],
+      "context": "scripts/run/end_run_screen.gd, scripts/ui/end_run_screen.gd",
+      "timestamp": "2026-04-15T19:45:00Z"
     }
   ]
 }

@@ -2056,39 +2056,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "E2E-DELETE-ORPHAN-SCENES",
-    "sprint": "S2",
-    "priority": 3,
-    "type": "dev",
-    "status": "pending",
-    "title": "Delete IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn per director q-20260414-005",
-    "agent": "cleanup_agent",
-    "files": [
-      "scenes/IntroPersonalityQuiz.tscn",
-      "scenes/SceneRencontreMerlin.tscn",
-      "scripts/IntroPersonalityQuiz.gd",
-      "scripts/SceneRencontreMerlin.gd"
-    ],
-    "description": "Director q-20260414-005 answer: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Delete both .tscn files and their associated .gd scripts. Remove any references in SceneSelector.gd if present. Verify no active scene transitions target these paths.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
-    "sprint": "S2",
-    "priority": 12,
-    "type": "dev",
-    "status": "pending",
-    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
-    "agent": "game_design_coder",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd"
-    ],
-    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-HUBANTRE-SCRIPT-AUDIT",
     "sprint": "S2",
     "priority": 13,
@@ -2464,5 +2431,99 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FLOW-ENDRUN-SHOW-IN-LIVE-FLOW",
+    "sprint": "S1",
+    "priority": 2,
+    "type": "dev",
+    "title": "Show EndRunScreen in live BroceliandeForest3D flow after run ends",
+    "agent": "gameplay_programmer",
+    "status": "pending",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/end_run_screen.gd",
+      "scenes/EndRunScreen.tscn"
+    ],
+    "description": "SPECIALIST-0 CHK-0-06 CRITICAL: EndRunScreen.tscn is never shown in live game. When run ends in BroceliandeForest3D (life=0 or all cards played), the game jumps directly to HubAntre without showing summary. Wire EndRunScreen.tscn into the BroceliandeForest3D flow: instantiate EndRunScreenUI, call setup(run_data), connect return_to_hub signal to transition to HubAntre. Run data must include life_remaining, cards_played, faction_rep_deltas, anam_earned, minigame_scores."
+  },
+  {
+    "id": "FLOW-ENDRUNSCREEN-CONSOLIDATE",
+    "sprint": "S2",
+    "priority": 8,
+    "type": "dev",
+    "title": "Consolidate two EndRunScreen implementations (EndRunScreen vs EndRunScreenUI)",
+    "agent": "gameplay_programmer",
+    "status": "pending",
+    "files": [
+      "scripts/run/end_run_screen.gd",
+      "scripts/ui/end_run_screen.gd",
+      "scenes/EndRunScreen.tscn"
+    ],
+    "description": "SPECIALIST-0 CHK-0-09: Two EndRunScreen classes coexist: scripts/run/end_run_screen.gd (class EndRunScreen, newer, used by GameFlowController) and scripts/ui/end_run_screen.gd (class EndRunScreenUI, older, referenced by scenes/EndRunScreen.tscn). Consolidate to one: update scenes/EndRunScreen.tscn to use scripts/run/end_run_screen.gd. Delete scripts/ui/end_run_screen.gd. Update FLOW-ENDRUN-SHOW-IN-LIVE-FLOW to use the consolidated class."
+  },
+  {
+    "id": "FLOW-GAME-FLOW-CONTROLLER-WIRE",
+    "sprint": "S2",
+    "priority": 4,
+    "type": "dev",
+    "title": "Wire GameFlowController into BroceliandeForest3D live flow (director q-20260414-004)",
+    "agent": "gameplay_programmer",
+    "status": "pending",
+    "files": [
+      "scripts/core/game_flow_controller.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/run/run_3d_controller.gd",
+      "scenes/Run3D.tscn"
+    ],
+    "description": "SPECIALIST-0 CHK-0-08 + director q-20260414-004 'Migrer le chemin actif vers game_flow_controller'. Currently GameFlowController (scripts/core/game_flow_controller.gd) is never instantiated — it wires HubScreen+Run3DController+EndRunScreen but the live path still uses BroceliandeForest3D directly. Per director decision: migrate the active path to use GameFlowController. This requires making GameFlowController an autoload OR instantiating it in a top-level scene. Coordinate with E2E-DEAD-PATH-GAME-FLOW-CONTROLLER (P4)."
+  },
+  {
+    "id": "FLOW-MENU-PRINCIPAL-AUDIT",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "test",
+    "title": "Audit MenuPrincipal.tscn vs Menu3DPC.tscn — determine which is active, delete orphan",
+    "agent": "game_design_auditor",
+    "status": "pending",
+    "files": [
+      "scenes/MenuPrincipal.tscn",
+      "scenes/Menu3DPC.tscn",
+      "scripts/MenuPrincipalMerlin.gd",
+      "scripts/menu_3d_pc.gd"
+    ],
+    "description": "SPECIALIST-0 CHK-0-11: Two main menu scenes coexist. Live flow: IntroCeltOS.gd:516 → Menu3DPC.tscn (ACTIVE). MenuPrincipal.tscn uses MenuPrincipalMerlin.gd which has New Game/Continue/Options. Check: (1) is MenuPrincipal.tscn ever navigated to from live flow? (2) does SceneSelector list it? (3) if orphaned, can it be safely deleted? Generate a delete task or a migration task accordingly."
+  },
+  {
+    "id": "T-FLOW-SCENE-COVERAGE-CHECK",
+    "sprint": "S1",
+    "priority": 6,
+    "type": "test",
+    "title": "Test: verify all scene paths referenced in scripts exist as files",
+    "agent": "bug_hunter",
+    "status": "pending",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/HubAntre.gd",
+      "scripts/TransitionBiome.gd",
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/run/end_run_screen.gd"
+    ],
+    "description": "SPECIALIST-0 audit: static check — grep all 'res://scenes/*.tscn' references across scripts, verify each path exists as a file. Report broken paths. Currently known: GAME_SCENE path to MerlinGame.tscn was fixed (E2E-MERLINGAME-OBSOLETE-PATH) but other stale refs may exist. Use: grep -rh 'res://scenes/.*\\.tscn' scripts/ | sort -u and compare to actual scene files."
+  },
+  {
+    "id": "FLOW-ORPHAN-HELPER-SCRIPTS-DELETE",
+    "sprint": "S1",
+    "priority": 3,
+    "type": "dev",
+    "title": "Confirm quiz_data.gd + rencontre_llm.gd + rencontre_dialogue.gd fully deleted (no compile errors)",
+    "agent": "bug_hunter",
+    "status": "pending",
+    "files": [
+      "scripts/quiz_data.gd",
+      "scripts/rencontre_llm.gd",
+      "scripts/rencontre_dialogue.gd"
+    ],
+    "description": "SPECIALIST-0 CHK-0-10: quiz_data.gd, rencontre_llm.gd, rencontre_dialogue.gd were deleted as part of E2E-DELETE-ORPHAN-SCENES. Verify no remaining scripts import or use class_names RencontreLLM, RencontreDialogue, or QuizData (the grep was clean). If any errors appear at parse time, identify and fix. Also verify .uid files are removed."
   }
 ]

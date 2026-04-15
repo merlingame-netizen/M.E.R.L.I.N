@@ -1383,7 +1383,11 @@
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
       ]
-    }
+    },
+    "PAT-S0-001: EndRunScreen.tscn not shown in live BroceliandeForest3D flow — always check if 'show end screen' is wired before marking run-end flow complete",
+    "PAT-S0-002: GAME_SCENE const pointing to MerlinGame.tscn was dead path — encounters now inline via EncounterCardOverlay; _on_hub() must always route to HUB_SCENE",
+    "PAT-S0-003: Two parallel EndRunScreen implementations (EndRunScreen vs EndRunScreenUI) — must consolidate before using in live flow",
+    "PAT-S0-004: Director deletion orders must also delete helper scripts (quiz_data.gd, rencontre_llm.gd, rencontre_dialogue.gd) as they have no other consumers"
   ],
   "agent_performance": {
     "game_playtester": {
@@ -1535,6 +1539,10 @@
       "tasks_completed": 1,
       "bugs_introduced": 0,
       "findings": 10
+    },
+    "gameplay_programmer": {
+      "tasks_completed": 2,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {
@@ -1755,8 +1763,8 @@
       }
     }
   ],
-  "total_cycles": 10,
-  "bugs_found": 38,
-  "bugs_fixed": 10,
+  "total_cycles": 11,
+  "bugs_found": 44,
+  "bugs_fixed": 12,
   "last_cycle": "2026-04-15T18:47:19Z"
 }

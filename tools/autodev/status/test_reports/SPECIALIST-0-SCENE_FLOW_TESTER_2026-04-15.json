@@ -1,0 +1,115 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-15T19:30:00Z",
+  "cycle_type": "test",
+  "summary": "Full player journey trace: IntroCeltOS → Menu3DPC → ParchmentPreRun/HubAntre → TransitionBiome → BroceliandeForest3D → [run] → Hub. 2 CRITICAL breaks, 4 HIGH, 2 MEDIUM, 2 PASS.",
+  "checks": [
+    {
+      "id": "CHK-0-01",
+      "name": "IntroCeltOS → Menu3DPC",
+      "status": "PASS",
+      "detail": "IntroCeltOS.gd:516 PixelTransition.transition_to('res://scenes/Menu3DPC.tscn') — scene exists."
+    },
+    {
+      "id": "CHK-0-02",
+      "name": "Menu3DPC → ParchmentPreRun (New Game)",
+      "status": "PASS",
+      "detail": "menu_3d_pc.gd:1337 _glitch_transition('res://scenes/ParchmentPreRun.tscn') — scene exists."
+    },
+    {
+      "id": "CHK-0-03",
+      "name": "ParchmentPreRun → BroceliandeForest3D",
+      "status": "PASS",
+      "detail": "parchment_pre_run.gd:215 PixelTransition.transition_to(SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn') — scene exists."
+    },
+    {
+      "id": "CHK-0-04",
+      "name": "HubAntre → TransitionBiome → BroceliandeForest3D",
+      "status": "PASS",
+      "detail": "HubAntre.gd:661 → TransitionBiome.tscn:715 → BroceliandeForest3D.tscn — all scenes exist."
+    },
+    {
+      "id": "CHK-0-05",
+      "name": "BroceliandeForest3D → MerlinGame.tscn (OBSOLETE path)",
+      "status": "CRITICAL_FAIL",
+      "detail": "broceliande_forest_3d.gd:9 GAME_SCENE='res://scenes/MerlinGame.tscn'. _on_hub():1222 routes to MerlinGame.tscn when _merlin_found. MerlinGame.tscn uses old merlin_game_controller.gd (legacy card loop), NOT Run3D.tscn/GameFlowController. Encounters now handled inline via EncounterCardOverlay. This path is DEAD for the new loop. Fix: always route to HUB_SCENE.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1222
+    },
+    {
+      "id": "CHK-0-06",
+      "name": "EndRunScreen shown in live flow",
+      "status": "CRITICAL_FAIL",
+      "detail": "EndRunScreen.tscn (uses scripts/ui/end_run_screen.gd:EndRunScreenUI) is NEVER shown in the live BroceliandeForest3D flow. GameFlowController.wire_end_screen() is the only wiring code, but GameFlowController is never instantiated as autoload or anywhere in live scenes. EndRunScreenUI.return_to_hub signal is also disconnected. Player has NO run summary screen after a run.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": null
+    },
+    {
+      "id": "CHK-0-07",
+      "name": "IntroPersonalityQuiz + SceneRencontreMerlin deleted (director q-20260414-005)",
+      "status": "HIGH_FAIL",
+      "detail": "Director ordered deletion via q-20260414-005. Both scenes still exist: scenes/IntroPersonalityQuiz.tscn + scripts/IntroPersonalityQuiz.gd + scripts/quiz_data.gd and scenes/SceneRencontreMerlin.tscn + scripts/SceneRencontreMerlin.gd + scripts/rencontre_llm.gd + scripts/rencontre_dialogue.gd. Not reachable from live flow but pollute codebase.",
+      "file": "scenes/IntroPersonalityQuiz.tscn",
+      "line": null
+    },
+    {
+      "id": "CHK-0-08",
+      "name": "Run3D.tscn + GameFlowController in live flow",
+      "status": "HIGH_FAIL",
+      "detail": "Run3D.tscn exists (uses run_3d_controller.gd). GameFlowController (scripts/core/game_flow_controller.gd) wires HubScreen + Run3DController + EndRunScreen. Neither is in project.godot autoloads. No scene in live flow instantiates GameFlowController. GAME_SCENE in forest goes to MerlinGame.tscn, not Run3D.tscn. Director decision q-20260414-004 says: Migrer le chemin actif vers game_flow_controller (refonte propre). Task E2E-DEAD-PATH-GAME-FLOW-CONTROLLER P4 covers this.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": null
+    },
+    {
+      "id": "CHK-0-09",
+      "name": "Two EndRunScreen implementations",
+      "status": "HIGH_FAIL",
+      "detail": "scripts/run/end_run_screen.gd (class EndRunScreen) is a newer implementation used by GameFlowController. scripts/ui/end_run_screen.gd (class EndRunScreenUI) is the older version referenced by scenes/EndRunScreen.tscn. Confusion and dead code. Should consolidate.",
+      "file": "scripts/run/end_run_screen.gd",
+      "line": null
+    },
+    {
+      "id": "CHK-0-10",
+      "name": "Orphaned helper scripts (rencontre_llm, rencontre_dialogue, quiz_data)",
+      "status": "HIGH_FAIL",
+      "detail": "scripts/quiz_data.gd, scripts/rencontre_llm.gd, scripts/rencontre_dialogue.gd are helpers for deleted scenes. No other scripts use RencontreLLM, RencontreDialogue, or QuizData outside their defining files. Should be deleted.",
+      "file": "scripts/rencontre_llm.gd",
+      "line": null
+    },
+    {
+      "id": "CHK-0-11",
+      "name": "MenuPrincipal.tscn vs Menu3DPC.tscn — active menu",
+      "status": "MEDIUM_WARN",
+      "detail": "Both scenes exist. Live flow: IntroCeltOS → Menu3DPC.tscn. MenuPrincipalMerlin.gd references ParchmentPreRun/SelectionSauvegarde/MenuOptions which suggests it's a parallel menu. SceneSelector.gd lists both. MenuPrincipal.tscn may be an orphan or alternate entry.",
+      "file": "scenes/MenuPrincipal.tscn",
+      "line": null
+    },
+    {
+      "id": "CHK-0-12",
+      "name": "TransitionBiome.gd NEXT_SCENE comment stale",
+      "status": "MEDIUM_WARN",
+      "detail": "TransitionBiome.gd:17 comment says '# 3D forest walk → then MerlinGame'. MerlinGame path is obsolete. Minor documentation debt.",
+      "file": "scripts/TransitionBiome.gd",
+      "line": 17
+    }
+  ],
+  "counts": {
+    "CRITICAL_FAIL": 2,
+    "HIGH_FAIL": 4,
+    "MEDIUM_WARN": 2,
+    "PASS": 4
+  },
+  "tasks_generated": [
+    "FLOW-ENDRUN-SHOW-IN-LIVE-FLOW",
+    "FLOW-ENDRUNSCREEN-CONSOLIDATE",
+    "FLOW-GAME-FLOW-CONTROLLER-WIRE",
+    "FLOW-MENU-PRINCIPAL-AUDIT",
+    "FLOW-TRANSITION-BIOME-COMMENT-FIX",
+    "FLOW-ORPHAN-HELPER-SCRIPTS-DELETE"
+  ],
+  "tasks_implemented": [
+    "E2E-DELETE-ORPHAN-SCENES",
+    "E2E-MERLINGAME-OBSOLETE-PATH"
+  ]
+}

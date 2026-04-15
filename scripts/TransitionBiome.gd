@@ -14,7 +14,7 @@
 
 extends Control
 
-const NEXT_SCENE := "res://scenes/BroceliandeForest3D.tscn"  # 3D forest walk → then MerlinGame
+const NEXT_SCENE := "res://scenes/BroceliandeForest3D.tscn"  # 3D forest walk → HubAntre after run
 const DATA_PATH := "res://data/post_intro_dialogues.json"
 
 const ANIMATION_SPEED_FACTOR := 1.7
