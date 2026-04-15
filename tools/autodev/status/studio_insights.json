@@ -523,5 +523,19 @@
       "id": "SFX-ADD-OGHAM-UNLOCK-TRIGGER"
     },
     "timestamp": "2026-04-15T04:50:48Z"
+  },
+  {
+    "id": "insight-20260415-001",
+    "agent": "animation_artist",
+    "severity": "INFO",
+    "category": "ux",
+    "message": "HUD life bar updates are instant — smooth tween would improve game feel significantly",
+    "details": "hud_controller.gd:90 sets _life_bar.value = current instantly. With 0.4s tween, players see the bar drain/fill smoothly, reinforcing the life delta feedback already shown by ui_overlay_effects.gd. This is a high-ROI animation that costs ~3 lines of code.",
+    "proposed_task": {
+      "title": "ANIM-HUD-LIFE-SMOOTH already in queue (priority 57)",
+      "sprint": "S3",
+      "type": "dev"
+    },
+    "timestamp": "2026-04-15T05:47:14Z"
   }
 ]

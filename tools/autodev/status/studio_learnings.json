@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T04:50:48Z",
+  "last_updated": "2026-04-15T05:47:14Z",
   "metrics": {
-    "total_cycles_completed": 56,
-    "total_dev_cycles": 26,
+    "total_cycles_completed": 57,
+    "total_dev_cycles": 27,
     "total_test_cycles": 23,
     "bugs_found": 55,
-    "bugs_fixed": 33,
-    "tasks_completed": 73,
-    "tasks_pending": 98,
+    "bugs_fixed": 34,
+    "tasks_completed": 74,
+    "tasks_pending": 102,
     "current_sprint": "S3",
-    "specialist_cycles_run": 11,
-    "last_specialist": 3,
-    "last_updated": "2026-04-15T04:50:48Z"
+    "specialist_cycles_run": 12,
+    "last_specialist": 4,
+    "last_updated": "2026-04-15T05:47:14Z"
   },
   "patterns_learned": [
     {
@@ -1067,6 +1067,29 @@
         "scripts/run/end_run_screen.gd",
         "scripts/ui/end_run_screen.gd"
       ]
+    },
+    {
+      "id": "PAT-010",
+      "learned_at": "2026-04-15T05:47:14Z",
+      "source": "SPECIALIST-4-ANIM-2026-04-15",
+      "pattern": "push_warning() should always accompany silent error returns in LLM backends — helps debugging config issues without requiring a running game session",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "groq_backend.gd",
+        "ollama_backend.gd"
+      ]
+    },
+    {
+      "id": "PAT-011",
+      "learned_at": "2026-04-15T05:47:14Z",
+      "source": "SPECIALIST-4-ANIM-2026-04-15",
+      "pattern": "Animation audit: scene transitions (PixelTransition) are well-covered. Main gaps are in-game state changes: life bar instant-updates, card panel naked visible toggles, end screen element stagger",
+      "severity": "LOW",
+      "applies_to": [
+        "hud_controller.gd",
+        "ui_overlay_endscreen.gd",
+        "merlin_game_ui.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -1204,6 +1227,11 @@
       "bugs_introduced": 0,
       "sfx_findings": 9,
       "e2e_chks_passed": 6
+    },
+    "animation_artist": {
+      "tasks_completed": 0,
+      "bugs_introduced": 0,
+      "tasks_audited": 5
     }
   },
   "llm_quality": {

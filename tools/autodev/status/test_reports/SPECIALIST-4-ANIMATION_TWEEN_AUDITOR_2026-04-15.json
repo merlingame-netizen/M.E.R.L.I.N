@@ -1,0 +1,101 @@
+{
+  "report_id": "SPECIALIST-4-ANIM-2026-04-15",
+  "specialist": 4,
+  "role": "ANIMATION_TWEEN_AUDITOR",
+  "timestamp": "2026-04-15T05:47:14Z",
+  "cycle_events_at_audit": 100,
+  "status": "COMPLETE",
+  "summary": "Animation audit across 40+ active scripts. Most scene transitions use PixelTransition autoload (good). Critical gaps: HUD life bar instant-updates, card panel naked visible toggles, end screen elements appear instantly with no stagger.",
+  "files_audited": [
+    "scripts/ui/hud_controller.gd",
+    "scripts/ui/walk_hud.gd",
+    "scripts/ui/ui_overlay_endscreen.gd",
+    "scripts/ui/ui_overlay_effects.gd",
+    "scripts/ui/merlin_game_ui.gd",
+    "scripts/ui/arbre_de_vie_ui.gd",
+    "scripts/SelectionSauvegarde.gd",
+    "scripts/ui/parchment_pre_run.gd",
+    "scripts/autoload/pixel_transition.gd",
+    "scripts/broceliande_3d/broceliande_forest_3d.gd"
+  ],
+  "strengths": [
+    "PixelTransition autoload is the standard scene change mechanism — good",
+    "ui_overlay_effects.gd has proper life delta flash + zoom tween (lines 158-183)",
+    "ui_overlay_endscreen.gd has forest tween + overlay fade (lines 21-41)",
+    "IntroCeltOS.gd has full stagger tween sequence",
+    "parchment_pre_run.gd has enter_btn fade-in tween (line 198)",
+    "TransitionBiome.gd is the most tween-heavy file (17 usages)"
+  ],
+  "findings": [
+    {
+      "id": "ANIM-FIND-001",
+      "severity": "HIGH",
+      "file": "scripts/ui/hud_controller.gd",
+      "line": 90,
+      "issue": "_life_bar.value = current — instant update, no smooth tween",
+      "note": "Already tracked as ANIM-HUD-LIFE-SMOOTH (priority 57)"
+    },
+    {
+      "id": "ANIM-FIND-002",
+      "severity": "HIGH",
+      "file": "scripts/ui/hud_controller.gd",
+      "line": 94,
+      "issue": "_life_bar.modulate = CRT_PALETTE[danger] — instant color snap, no tween",
+      "proposed_task": "ANIM-LIFE-BAR-DANGER-FLASH"
+    },
+    {
+      "id": "ANIM-FIND-003",
+      "severity": "MEDIUM",
+      "file": "scripts/ui/hud_controller.gd",
+      "lines": "183-210",
+      "issue": "_card_panel.visible = true/false — naked toggle, no fade-in/out tween",
+      "proposed_task": "ANIM-HUD-CARD-PANEL-FADE"
+    },
+    {
+      "id": "ANIM-FIND-004",
+      "severity": "MEDIUM",
+      "file": "scripts/ui/walk_hud.gd",
+      "line": 77,
+      "issue": "_zone_label.visible = true/false — naked toggle, no fade tween",
+      "proposed_task": "ANIM-WALKHUD-ZONE-FADE"
+    },
+    {
+      "id": "ANIM-FIND-005",
+      "severity": "MEDIUM",
+      "file": "scripts/ui/ui_overlay_endscreen.gd",
+      "lines": "60-130",
+      "issue": "End screen elements (title, text, score, rewards, buttons) have no stagger reveal — all appear instantly after overlay fade",
+      "proposed_task": "ANIM-ENDSCREEN-ELEMENT-STAGGER"
+    },
+    {
+      "id": "ANIM-FIND-006",
+      "severity": "LOW",
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 317,
+      "issue": "options_container.visible = true — options appear without stagger animation",
+      "proposed_task": "ANIM-OPTIONS-REVEAL-STAGGER"
+    },
+    {
+      "id": "ANIM-FIND-007",
+      "severity": "LOW",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1218,
+      "issue": "get_tree().change_scene_to_file() called directly (bypasses PixelTransition) in fallback path — already tracked as E2E-BROC-FOREST-FALLBACK-TRANSITION"
+    },
+    {
+      "id": "ANIM-FIND-008",
+      "severity": "INFO",
+      "file": "scripts/ui/parchment_pre_run.gd",
+      "line": 195,
+      "issue": "_enter_btn.visible = true instant before fade tween starts — acceptable (alpha=0 so invisible)"
+    }
+  ],
+  "new_tasks_generated": 5,
+  "task_implemented": "LLM-GROQ-1",
+  "invariants_checked": {
+    "PixelTransition_usage": "PASS — active paths use autoload",
+    "create_tween_not_Tween_new": "PASS — all tweens use create_tween()",
+    "tween_callbacks_for_free": "PASS — popup cleanup via tween_callback(queue_free)",
+    "no_yield_usage": "PASS — all async via await"
+  }
+}

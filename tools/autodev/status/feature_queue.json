@@ -1217,21 +1217,6 @@
     "source": "SPECIALIST-9-SAVE_PERSISTENCE"
   },
   {
-    "id": "LLM-GROQ-1",
-    "phase": 1,
-    "priority": 8,
-    "status": "pending",
-    "type": "dev",
-    "title": "Add GROQ_API_KEY missing warning in GroqBackend before HTTP attempt",
-    "agent": "godot_expert",
-    "files": [
-      "addons/merlin_ai/groq_backend.gd"
-    ],
-    "description": "LLM-F6: In GroqBackend, add push_warning when api_key is empty so devs see clear message in console.",
-    "created_at": "2026-04-15T02:49:16Z",
-    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
-  },
-  {
     "id": "LLM-STAT-1",
     "phase": 2,
     "priority": 10,
@@ -1353,5 +1338,70 @@
       "project.godot"
     ],
     "description": "SPECIALIST-3 E2E arch issue: GameFlowController (class_name GameFlowController) exists with full MENU→HUB→RUN→END_SCREEN phase management but is NOT an autoload and NOT wired in any live scene. Live game uses direct PixelTransition.transition_to() calls. ALSO: EndRunScreen.tscn script uses EndRunScreenUI (return_to_hub signal) but GameFlowController expects EndRunScreen class (hub_requested signal) — signal mismatch. Decision needed: (A) Wire GameFlowController as autoload + fix signal mismatch = clean architecture, (B) Mark as future refactor, comment legacy scripts. Director feedback question recommended before proceeding."
+  },
+  {
+    "id": "ANIM-LIFE-BAR-DANGER-FLASH",
+    "sprint": "S3",
+    "priority": 73,
+    "status": "pending",
+    "type": "dev",
+    "title": "Tween life bar modulate to danger color (smooth flash, not instant snap)",
+    "agent": "animation_artist",
+    "files": [
+      "scripts/ui/hud_controller.gd"
+    ],
+    "description": "hud_controller.gd:94 — _life_bar.modulate = CRT_PALETTE[danger] is instant. Replace with short tween (0.15s) for visual feedback."
+  },
+  {
+    "id": "ANIM-HUD-CARD-PANEL-FADE",
+    "sprint": "S3",
+    "priority": 74,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fade card panel in/out instead of naked visible toggle in HUD",
+    "agent": "animation_artist",
+    "files": [
+      "scripts/ui/hud_controller.gd"
+    ],
+    "description": "hud_controller.gd:183-207 — _card_panel.visible = true/false is instant. Add 0.2s modulate:a tween for card panel show/hide."
+  },
+  {
+    "id": "ANIM-WALKHUD-ZONE-FADE",
+    "sprint": "S3",
+    "priority": 75,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fade walk HUD zone label in/out instead of naked visible toggle",
+    "agent": "animation_artist",
+    "files": [
+      "scripts/ui/walk_hud.gd"
+    ],
+    "description": "walk_hud.gd:77-79 — _zone_label.visible = true/false instant. Add 0.3s modulate:a tween for zone label appearance."
+  },
+  {
+    "id": "ANIM-ENDSCREEN-ELEMENT-STAGGER",
+    "sprint": "S3",
+    "priority": 76,
+    "status": "pending",
+    "type": "dev",
+    "title": "Stagger reveal end screen elements (title, text, score, buttons)",
+    "agent": "animation_artist",
+    "files": [
+      "scripts/ui/ui_overlay_endscreen.gd"
+    ],
+    "description": "ui_overlay_endscreen.gd:60-130 — All elements added to vbox appear instantly after overlay fade. Add stagger: each child fades in 0.1s after previous (modulate:a 0→1, 0.25s, delay i*0.08)."
+  },
+  {
+    "id": "ANIM-OPTIONS-REVEAL-STAGGER",
+    "sprint": "S3",
+    "priority": 77,
+    "status": "pending",
+    "type": "dev",
+    "title": "Stagger reveal card options instead of instant visible = true",
+    "agent": "animation_artist",
+    "files": [
+      "scripts/ui/merlin_game_ui.gd"
+    ],
+    "description": "merlin_game_ui.gd:317 — options_container.visible = true instant reveal. Add per-option stagger tween (modulate:a 0→1, 0.2s, delay i*0.07s) for more polished card reveal."
   }
 ]

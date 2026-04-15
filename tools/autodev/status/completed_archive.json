@@ -183,5 +183,22 @@
     "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button → SelectionSauvegarde. CHK-3: SelectionSauvegarde → HubAntre. CHK-4: HubAntre Partir button → BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires → MerlinGame. CHK-6: MerlinGame run_ended → show_end_screen. CHK-7: EndScreen hub button → HubAntre. Check each signal/button connection for completeness.",
     "completed_at": "2026-04-15T04:50:48Z",
     "notes": "Traced all 7 CHKs. Result: FUNCTIONAL. Live game uses Menu3DPC→ParchmentPreRun→HubAntre→BroceliandeForest3D→MerlinGame→UIOverlayEndScreen→HubAntre. Spec CHK-2 was stale (SelectionSauvegarde is Continue in legacy MenuPrincipal). GameFlowController is dead architecture. Arch issues logged as ARCH-GAMEFLOW-UNWIRED task."
+  },
+  {
+    "id": "LLM-GROQ-1",
+    "phase": 1,
+    "priority": 8,
+    "status": "completed",
+    "type": "dev",
+    "title": "Add GROQ_API_KEY missing warning in GroqBackend before HTTP attempt",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/groq_backend.gd"
+    ],
+    "description": "LLM-F6: In GroqBackend, add push_warning when api_key is empty so devs see clear message in console.",
+    "created_at": "2026-04-15T02:49:16Z",
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
+    "completed_at": "2026-04-15T05:47:14Z",
+    "notes": "Added push_warning() in generate_async() before HTTP attempt: logs role, env var, ProjectSettings, and URL param configuration hints. groq_backend.gd:88."
   }
 ]
