@@ -46,7 +46,7 @@ export default async function handler(req: any, res: any) {
     const rawCommits: GitHubCommit[] = await ghRes.json();
 
     const commits = rawCommits.map(c => {
-      const firstLine = c.commit.message.split('\n')[0];
+      const firstLine = c.commit.message.split('\n')[0] ?? '';
       const typeMatch = firstLine.match(/^(\w+)(?:\(([^)]+)\))?:/);
       return {
         sha: c.sha.slice(0, 7),

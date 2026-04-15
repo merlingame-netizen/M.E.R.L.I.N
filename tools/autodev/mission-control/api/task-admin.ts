@@ -54,7 +54,7 @@ export default async function handler(req: any, res: any) {
       case 'update_priority': {
         const newPriority = typeof body.value === 'number' ? body.value : parseInt(String(body.value), 10);
         if (isNaN(newPriority)) return res.status(400).json({ ok: false, error: 'value must be a number' });
-        tasks[taskIdx].priority = newPriority;
+        tasks[taskIdx]!.priority = newPriority;
         commitMsg = `admin: set ${body.task_id} priority to P${newPriority}`;
         break;
       }
@@ -68,7 +68,7 @@ export default async function handler(req: any, res: any) {
         if (!validStatuses.includes(String(body.value))) {
           return res.status(400).json({ ok: false, error: `value must be one of: ${validStatuses.join(', ')}` });
         }
-        tasks[taskIdx].status = body.value;
+        tasks[taskIdx]!.status = body.value;
         commitMsg = `admin: set ${body.task_id} status to ${body.value}`;
         break;
       }

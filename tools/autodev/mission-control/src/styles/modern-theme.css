@@ -1,0 +1,308 @@
+/* M.E.R.L.I.N. Mission Control — Modern Glass Dark Theme
+ * Inspired by Linear / Vercel / 21st.dev, palette from ui-ux-pro-max */
+
+:root {
+  /* Backgrounds — OLED dark slate */
+  --bg-base: #06070d;
+  --bg-deep: #0a0b14;
+  --bg-panel: rgba(20, 22, 35, 0.6);
+  --bg-elevated: rgba(30, 32, 48, 0.85);
+  --bg-overlay: rgba(10, 11, 20, 0.85);
+
+  /* Glass morphism */
+  --glass-blur: 18px;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Accent palette (modern) */
+  --accent-primary: #8b5cf6;       /* Violet — primary actions, active tab */
+  --accent-primary-soft: rgba(139, 92, 246, 0.16);
+  --accent-secondary: #10b981;     /* Emerald — success, GREEN states */
+  --accent-secondary-soft: rgba(16, 185, 129, 0.14);
+  --accent-warn: #f59e0b;          /* Amber — warnings */
+  --accent-warn-soft: rgba(245, 158, 11, 0.14);
+  --accent-error: #ef4444;         /* Red — errors */
+  --accent-error-soft: rgba(239, 68, 68, 0.14);
+  --accent-info: #3b82f6;          /* Blue — info */
+  --accent-info-soft: rgba(59, 130, 246, 0.14);
+
+  /* Legacy mapping (so existing components don't break) */
+  --green: var(--accent-secondary);
+  --cyan: var(--accent-info);
+  --amber: var(--accent-warn);
+  --red: var(--accent-error);
+  --magenta: var(--accent-primary);
+
+  /* Text */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --text-faint: #475569;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 12px 48px rgba(139, 92, 246, 0.18);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  /* Typography */
+  --font-sans: 'Fira Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'Fira Code', 'JetBrains Mono', 'Menlo', monospace;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+body {
+  /* Ambient gradient mesh */
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(139, 92, 246, 0.10) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(16, 185, 129, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== Glass primitives ===== */
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.glass-panel--elevated {
+  background: var(--bg-elevated);
+  border-color: var(--glass-border-strong);
+}
+
+/* ===== Layout ===== */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell__main {
+  flex: 1;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6) var(--space-10);
+}
+
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dashboard-layout__full-row {
+  width: 100%;
+}
+
+/* ===== Headings ===== */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+h1 { font-size: 24px; }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+
+code, pre, .mono { font-family: var(--font-mono); }
+
+/* ===== Card / Section labels ===== */
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+
+/* ===== Buttons (modern) ===== */
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 120ms ease;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: white;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.btn-primary:hover { background: #7c4ef0; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.btn-ghost:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
+}
+
+/* ===== Status badges (kept compatible with existing JSX) ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* ===== Animations (modern, no CRT) ===== */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes pulse-cyan {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(255, 255, 255, 0.04) 100%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ===== Scrollbars ===== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); background-clip: padding-box; border: 2px solid transparent; }
+
+/* ===== Selection ===== */
+::selection {
+  background: var(--accent-primary-soft);
+  color: var(--text-primary);
+}
+
+/* ===== Compatibility shims (legacy class names from CRT theme) =====
+ * Keep old child components rendering until they are migrated. */
+.crt-screen { min-height: 100vh; }
+.crt-scanlines { display: none; }
+
+.console-card,
+.feature-queue,
+.completed-tasks,
+.metrics-panel,
+.state-timeline,
+.execution-timeline,
+.command-header,
+.dev-cycle-summary,
+.velocity-chart,
+.studio-insights,
+.specialist-rotation,
+.alert-feed,
+.agent-fleet,
+.active-missions,
+.human-feedback,
+.director-instructions,
+.file-upload,
+.scene-selector,
+.game-preview {
+  background: var(--bg-panel);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  color: var(--text-primary);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .app-shell__main { padding: var(--space-3) var(--space-3) var(--space-8); }
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

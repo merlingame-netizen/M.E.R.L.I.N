@@ -85,7 +85,25 @@ export interface FeedbackResponse {
   timestamp: string;
 }
 
+export type TabKey = 'overview' | 'tasks' | 'activity' | 'feedback' | 'game';
+
+const TAB_STORAGE_KEY = 'merlin.activeTab';
+const ALLOWED_TABS: readonly TabKey[] = ['overview', 'tasks', 'activity', 'feedback', 'game'];
+
+function loadInitialTab(): TabKey {
+  if (typeof window === 'undefined') return 'overview';
+  try {
+    const stored = window.localStorage.getItem(TAB_STORAGE_KEY) as TabKey | null;
+    if (stored && ALLOWED_TABS.includes(stored)) return stored;
+  } catch {
+    // ignore (private mode, etc.)
+  }
+  return 'overview';
+}
+
 interface MissionState {
+  activeTab: TabKey;
+  setActiveTab: (tab: TabKey) => void;
   orchestratorState: string;
   cycleId: string | null;
   agents: AgentInfo[];
@@ -127,6 +145,15 @@ interface MissionState {
 }
 
 export const useMissionStore = create<MissionState>((set, get) => ({
+  activeTab: loadInitialTab(),
+  setActiveTab: (tab) => {
+    try {
+      window.localStorage.setItem(TAB_STORAGE_KEY, tab);
+    } catch {
+      // ignore
+    }
+    set({ activeTab: tab });
+  },
   orchestratorState: 'IDLE',
   cycleId: null,
   agents: [],
