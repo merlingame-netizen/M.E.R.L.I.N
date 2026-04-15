@@ -1,0 +1,108 @@
+{
+  "specialist": 10,
+  "role": "PERFORMANCE_CODE_QUALITY_AUDITOR",
+  "timestamp": "2026-04-15T11:45:00Z",
+  "event_count_at_run": 106,
+  "cycle_type": "dev",
+  "summary": "Audited 9 core files + autoloads for function length, file size, _process efficiency, orphan nodes, and hot-path allocations. 7 new issues found, 4 PASS patterns noted.",
+  "findings": [
+    {
+      "id": "PERF-10-001",
+      "severity": "CRITICAL",
+      "category": "file_size",
+      "file": "addons/merlin_ai/merlin_omniscient.gd",
+      "line": 1,
+      "detail": "2951 lines — 7.4x above 400-line rule. Urgent split needed into: card_generator, calendar_adapter, swarm_coordinator, guardrails_engine.",
+      "status": "open",
+      "task_id": "PERF-OMNISCIENT-SPLIT"
+    },
+    {
+      "id": "PERF-10-002",
+      "severity": "CRITICAL",
+      "category": "file_size",
+      "file": "addons/merlin_ai/merlin_ai.gd",
+      "line": 1,
+      "detail": "2236 lines — 5.6x above 400-line rule. Split candidates: brain_router, backend_manager, process_poll_handler.",
+      "status": "open",
+      "task_id": "PERF-MERLIN-AI-SPLIT"
+    },
+    {
+      "id": "PERF-10-003",
+      "severity": "HIGH",
+      "category": "func_length",
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "line": 471,
+      "detail": "_apply_offering() is 184 lines — 3.7x above 50-line rule. Split into _apply_offering_life(), _apply_offering_faction(), _apply_offering_ogham().",
+      "status": "open",
+      "task_id": "PERF-APPLY-OFFERING-SPLIT"
+    },
+    {
+      "id": "PERF-10-004",
+      "severity": "HIGH",
+      "category": "func_length",
+      "file": "scripts/ui/merlin_game_controller.gd",
+      "line": 140,
+      "detail": "start_run() is 136 lines — 2.7x above limit. Delegates to store but mixes setup, signal wiring, and UI init.",
+      "status": "open",
+      "task_id": "PERF-START-RUN-SPLIT"
+    },
+    {
+      "id": "PERF-10-005",
+      "severity": "MEDIUM",
+      "category": "hot_path_allocation",
+      "file": "scripts/merlin/llm_adapter_text_sanitizer.gd",
+      "line": 93,
+      "detail": "10x RegEx.new() called inside sanitizer functions. Allocates/compiles regex on every LLM response. Should be precompiled static class-level constants.",
+      "status": "open",
+      "task_id": "PERF-REGEX-PRECOMPILE-SANITIZER"
+    },
+    {
+      "id": "PERF-10-006",
+      "severity": "MEDIUM",
+      "category": "process_efficiency",
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 146,
+      "detail": "Time.get_time_dict_from_system() called every frame in _process() to check for minute change. Should use a 10s Timer to throttle to 6x/min instead of 3600x/min.",
+      "status": "open",
+      "task_id": "PERF-MENU-TIME-THROTTLE"
+    },
+    {
+      "id": "PERF-10-007",
+      "severity": "LOW",
+      "category": "process_print",
+      "file": "addons/godot_mcp/mcp_server.gd",
+      "line": 91,
+      "detail": "print() on every WebSocket event (connect, data, send) inside _process(). Fine for dev/debug but should be behind OS.is_debug_build() guard for release.",
+      "status": "open",
+      "task_id": "PERF-MCP-PRINT-DEBUG-GUARD"
+    }
+  ],
+  "passes": [
+    {
+      "id": "PASS-10-001",
+      "file": "scripts/autoload/pixel_content_animator.gd",
+      "detail": "_process() uses correct early-return pattern (is_empty check). No allocations in hot path."
+    },
+    {
+      "id": "PASS-10-002",
+      "file": "scripts/autoload/pixel_transition.gd",
+      "detail": "_process() is a clean state machine dispatch. Minimal work per frame."
+    },
+    {
+      "id": "PASS-10-003",
+      "file": "addons/merlin_ai/merlin_ai.gd:149",
+      "detail": "set_process(false) correctly disabled at init, only enabled when background tasks are active. Efficient."
+    },
+    {
+      "id": "PASS-10-004",
+      "file": "scripts/autoload/game_time_manager.gd",
+      "detail": "_process() does only arithmetic, period comparison, signal emit. No allocations. Correct."
+    }
+  ],
+  "task_priority_note": "Implementing LLM-RAG-SUBSTR-FIX (P18) + LLM-RAG-CONTEXT-ROLE (P19) this cycle — same file, same fix, both closed.",
+  "patterns_learned": [
+    "RegEx.new() inside frequently-called functions = hidden allocation per call — always precompile",
+    "Time.get_time_dict_from_system() per frame = unnecessary system call — use Timer for periodic checks",
+    "PERF violations in test files (>400 lines) are acceptable — test files exempt from size rule"
+  ]
+}

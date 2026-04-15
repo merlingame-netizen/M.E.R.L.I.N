@@ -3,17 +3,17 @@
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
   "last_updated": "2026-04-15T09:15:00Z",
   "metrics": {
-    "total_cycles_completed": 60,
-    "total_dev_cycles": 28,
+    "total_cycles_completed": 61,
+    "total_dev_cycles": 29,
     "total_test_cycles": 25,
     "bugs_found": 63,
-    "bugs_fixed": 35,
-    "tasks_completed": 77,
-    "tasks_pending": 119,
+    "bugs_fixed": 37,
+    "tasks_completed": 79,
+    "tasks_pending": 126,
     "current_sprint": "S3",
-    "specialist_cycles_run": 15,
-    "last_specialist": 8,
-    "last_updated": "2026-04-15T10:30:00Z"
+    "specialist_cycles_run": 16,
+    "last_specialist": 10,
+    "last_updated": "2026-04-15T11:45:00Z"
   },
   "patterns_learned": [
     {
@@ -1246,6 +1246,38 @@
       "applies_to": [
         "scripts/merlin/merlin_save_system.gd"
       ]
+    },
+    {
+      "id": "PAT-REGEX-PRECOMPILE",
+      "learned_at": "2026-04-15T11:45:00Z",
+      "source": "SPECIALIST-10-PERF_QUALITY",
+      "pattern": "RegEx.new() inside frequently-called functions = hidden allocation per call. Always precompile regex as class-level static var.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "llm_adapter_text_sanitizer.gd",
+        "llm_adapter_json_repair.gd"
+      ]
+    },
+    {
+      "id": "PAT-TIME-PER-FRAME",
+      "learned_at": "2026-04-15T11:45:00Z",
+      "source": "SPECIALIST-10-PERF_QUALITY",
+      "pattern": "Time.get_time_dict_from_system() per frame = unnecessary system call. Use Timer for periodic checks.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "MenuPrincipalMerlin.gd"
+      ]
+    },
+    {
+      "id": "PAT-RAG-NARRATOR-BUDGET",
+      "learned_at": "2026-04-15T11:45:00Z",
+      "source": "LLM-RAG-SUBSTR-FIX",
+      "pattern": "Always pass brain_role=narrator to get_prioritized_context() for LLM narrative calls. Gives 800-token budget. Omitting + substr(0,200) = only 50 tokens = 6% of available narrative context.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_llm_adapter.gd",
+        "rag_manager.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -1263,7 +1295,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 39,
+      "tasks_completed": 41,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [

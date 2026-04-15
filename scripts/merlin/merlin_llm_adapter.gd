@@ -302,9 +302,9 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 	if _merlin_ai and _merlin_ai.get("rag_manager"):
 		var rag_mgr = _merlin_ai.rag_manager
 		if rag_mgr and rag_mgr.has_method("get_prioritized_context"):
-			rag_ctx = rag_mgr.get_prioritized_context(context)
+			rag_ctx = rag_mgr.get_prioritized_context(context, "narrator")
 	if not rag_ctx.is_empty():
-		user_prompt += " Contexte: %s." % rag_ctx.substr(0, 200)
+		user_prompt += " Contexte: %s." % rag_ctx
 
 	# Include story log for narrative continuity
 	var story_log: Array = context.get("story_log", [])

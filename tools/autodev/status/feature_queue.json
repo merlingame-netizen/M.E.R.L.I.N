@@ -159,21 +159,6 @@
     "description": "SPECIALIST-10 PQ-010: _resolve_choice() calls add_child(_parchment) at line 317 but parchment node has no explicit queue_free or signal disconnect on scene exit. Risk: if _resolve_choice() is called while a previous parchment is still transitioning, duplicate nodes accumulate. Fix: (1) Check is_instance_valid(_parchment) + _parchment.is_inside_tree() before add_child. (2) Store reference and call queue_free on previous if still alive. (3) Or use CONNECT_ONE_SHOT pattern for animation_finished signal to auto-cleanup."
   },
   {
-    "id": "SAVE-FINS-VUES-CLAMP",
-    "sprint": "S2",
-    "priority": 31,
-    "status": "completed",
-    "type": "dev",
-    "title": "Clamp fins_vues + total_runs to maxi(0) in load_profile()",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "SPECIALIST-9: load_profile() clamps meta['anam'] to maxi(0) at line 147 but does NOT clamp fins_vues or total_runs. A tampered save with fins_vues=-999 would pass _validate() (is numeric) but give incorrect arc condition results (fins_vues >= 5 check would never fire). Fix: after line 151 (faction_rep clamp), add: meta['fins_vues'] = maxi(int(meta.get('fins_vues', 0)), 0) and meta['total_runs'] = maxi(int(meta.get('total_runs', 0)), 0). Consistent with existing anam clamp pattern.",
-    "completed_at": "2026-04-15T10:50:45Z",
-    "notes": "Implemented: added fins_vues and total_runs maxi(0) clamps in load_profile() clamping block (merlin_save_system.gd:148-149). Also added trust_merlin clampi(0,100) as SAVE-TRUST-CLAMP HIGH finding."
-  },
-  {
     "id": "SAVE-ECHO-MEMORY-SUBKEYS",
     "sprint": "S3",
     "priority": 32,
@@ -1050,19 +1035,6 @@
     "created_by": "SPEC-7-NARRATIVE"
   },
   {
-    "id": "LLM-RAG-CONTEXT-ROLE",
-    "sprint": "S2",
-    "priority": 19,
-    "status": "pending",
-    "type": "dev",
-    "title": "Fix RAG context: pass brain_role='narrator' and raise substr limit to 800-token budget",
-    "agent": "llm_pipeline_auditor",
-    "files": [
-      "scripts/merlin/merlin_llm_adapter.gd"
-    ],
-    "description": "SPEC-8: merlin_llm_adapter.gd:305-307 calls rag_mgr.get_prioritized_context(context) without brain_role AND truncates to 200 chars. FIX: (1) Pass brain_role='narrator' to use 800-token budget. (2) Replace substr(0,200) with substr(0,3200) to allow up to 800 tokens (~3200 chars) of RAG context. RAGManager already enforces the budget internally — the substr was an unnecessary double-truncation."
-  },
-  {
     "id": "LLM-CONTEXT-TIME-NAMED",
     "sprint": "S2",
     "priority": 26,
@@ -1186,24 +1158,6 @@
     "description": "If save version > CURRENT_VERSION (downgraded client), migration runs unnecessarily and may corrupt data. Add check: if version > CURRENT_VERSION, push_warning and return defaults rather than migrating.",
     "status": "pending",
     "source": "SPECIALIST-9-SAVE_PERSISTENCE"
-  },
-  {
-    "id": "LLM-TEST-1",
-    "phase": 2,
-    "priority": 9,
-    "status": "completed",
-    "type": "test",
-    "title": "Test: LLM pipeline integration — brain fallback chain and timeout handling",
-    "agent": "bug_hunter",
-    "files": [
-      "addons/merlin_ai/merlin_ai.gd",
-      "addons/merlin_ai/ollama_backend.gd"
-    ],
-    "description": "Verify: fallback card used on Ollama timeout, poll_result() correct, cancel_generation() clean, generate_async error on double-call.",
-    "created_at": "2026-04-15T02:49:16Z",
-    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
-    "completed_at": "2026-04-15T10:50:45Z",
-    "notes": "SPEC-9 bug_hunter static analysis: 5 invariants checked. PASS: fallback card, brain busy cleanup, cancel safety, double-call guard. WARN_LOW: stale _pending_callback race in cancel_generation(). New task LLM-CANCEL-STALE-CALLBACK added."
   },
   {
     "id": "SFX-REMOVE-DEAD-DICE",
@@ -1587,19 +1541,6 @@
     "created_at": "2026-04-15T09:15:00Z"
   },
   {
-    "id": "LLM-RAG-SUBSTR-FIX",
-    "sprint": "S2",
-    "priority": 18,
-    "status": "pending",
-    "type": "dev",
-    "title": "Fix RAG context: pass brain_role='narrator' and remove 200-char substr cap",
-    "agent": "llm_pipeline_auditor",
-    "files": [
-      "scripts/merlin/merlin_llm_adapter.gd"
-    ],
-    "description": "AUDIT-8 LLM-AUD-005: merlin_llm_adapter.gd:305 calls rag_mgr.get_prioritized_context(context) without brain_role='narrator'. Gets 400-token (~1600 char) default instead of 800-token (~3200 char) narrator budget. FIX: Pass brain_role='narrator' as second arg. Also verify no explicit substr cap after the call (RAG manager handles budget internally)."
-  },
-  {
     "id": "LLM-GM-JSON-LOG",
     "sprint": "S2",
     "priority": 23,
@@ -1651,21 +1592,6 @@
       "scripts/merlin/llm_adapter_game_master.gd"
     ],
     "description": "After LLM-GRAMMAR-NOOP: verify _parse_smart_effects_json() succeeds on canonical outputs from both Qwen 2B and fallback. CHK-1: parse Ex1 output verbatim → 3 effects arrays. CHK-2: parse Ex2 output verbatim → 3 effects arrays. CHK-3: parse truncated Ex1 with each repair suffix → at least 1 succeeds. CHK-4: max_tokens=200 accommodates Ex1+Ex2 response in token budget (estimate)."
-  },
-  {
-    "id": "SAVE-TRUST-CLAMP",
-    "sprint": "S2",
-    "priority": 30,
-    "status": "completed",
-    "type": "dev",
-    "title": "Clamp trust_merlin to 0-100 in load_profile()",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "SPEC-9 HIGH: trust_merlin validated as numeric but not clamped — tampered save trust_merlin=999 gives T3 content (>80 threshold). Fixed inline with SAVE-FINS-VUES-CLAMP: added clampi(trust_merlin,0,100) to load_profile() clamping block.",
-    "completed_at": "2026-04-15T10:50:45Z",
-    "notes": "Implemented in same commit as SAVE-FINS-VUES-CLAMP"
   },
   {
     "id": "SAVE-EQUIPPED-OGHAM-VALIDATE",
@@ -1731,5 +1657,83 @@
       "addons/merlin_ai/ollama_backend.gd"
     ],
     "description": "SPEC-9 LLM-TEST-1 WARN_LOW: cancel_generation() (ollama_backend.gd:200-211) sets _cancel_requested=true, _is_generating=false, _stream_done=true but does NOT clear _pending_callback=Callable(). Race window: if _blocking_generate() sets _result_ready=true after cancel returns (before next generate_async()), a subsequent external poll_result() call would invoke the stale callback with the old LLM result. Fix: add one line before _mutex.lock() in cancel_generation(): _pending_callback = Callable()."
+  },
+  {
+    "id": "PERF-START-RUN-SPLIT",
+    "sprint": "S3",
+    "priority": 30,
+    "status": "pending",
+    "type": "dev",
+    "title": "Split start_run() 136 lines in merlin_game_controller.gd",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "SPECIALIST-10 PERF-10-004: start_run() at line 140 is 136 lines (2.7x > 50-line rule). Split into _setup_run_state(), _wire_run_signals(), _init_run_ui(). Keep start_run() as orchestrator <20 lines."
+  },
+  {
+    "id": "PERF-APPLY-OFFERING-SPLIT",
+    "sprint": "S3",
+    "priority": 31,
+    "status": "pending",
+    "type": "dev",
+    "title": "Split _apply_offering() 184 lines in merlin_effect_engine.gd",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_effect_engine.gd"
+    ],
+    "description": "SPECIALIST-10 PERF-10-003: _apply_offering() at line 471 is 184 lines (3.7x > 50-line rule). Split into _apply_offering_life_effects(), _apply_offering_faction_effects(), _apply_offering_ogham_effects()."
+  },
+  {
+    "id": "PERF-MENU-TIME-THROTTLE",
+    "sprint": "S3",
+    "priority": 32,
+    "status": "pending",
+    "type": "dev",
+    "title": "Throttle per-frame Time.get_time_dict_from_system() in MenuPrincipalMerlin._process()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/MenuPrincipalMerlin.gd"
+    ],
+    "description": "SPECIALIST-10 PERF-10-006: MenuPrincipalMerlin.gd:146 calls Time.get_time_dict_from_system() every frame at 60fps to check if minute changed. Replace with a Timer (10s interval) or use GameTimeManager signal. Saves ~3540 system calls/min."
+  },
+  {
+    "id": "PERF-REGEX-PRECOMPILE-SANITIZER",
+    "sprint": "S3",
+    "priority": 33,
+    "status": "pending",
+    "type": "dev",
+    "title": "Precompile RegEx instances in llm_adapter_text_sanitizer.gd",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/llm_adapter_text_sanitizer.gd"
+    ],
+    "description": "SPECIALIST-10 PERF-10-005: 10x RegEx.new() called inside sanitizer functions on every LLM response. Move to class-level static var _RX_* constants compiled in _static_init() or _ready(). Eliminates regex compilation on hot path."
+  },
+  {
+    "id": "PERF-OMNISCIENT-SPLIT",
+    "sprint": "S3",
+    "priority": 34,
+    "status": "pending",
+    "type": "dev",
+    "title": "Split merlin_omniscient.gd (2951 lines) into focused modules",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/merlin_omniscient.gd"
+    ],
+    "description": "SPECIALIST-10 PERF-10-001: merlin_omniscient.gd is 2951 lines (7.4x above 400-line rule). Split into: omniscient_card_gen.gd (card generation), omniscient_calendar.gd (calendar/event adapter), omniscient_swarm.gd (swarm coordination), omniscient_guardrails.gd (safety/filters). Keep merlin_omniscient.gd as thin orchestrator <100 lines."
+  },
+  {
+    "id": "PERF-MCP-PRINT-DEBUG-GUARD",
+    "sprint": "S3",
+    "priority": 39,
+    "status": "pending",
+    "type": "dev",
+    "title": "Guard mcp_server.gd print() calls with OS.is_debug_build()",
+    "agent": "godot_expert",
+    "files": [
+      "addons/godot_mcp/mcp_server.gd"
+    ],
+    "description": "SPECIALIST-10 PERF-10-007: mcp_server.gd has print() on every WebSocket event in _process() (connect, data received, sent). Wrap with if OS.is_debug_build(): or use push_verbose() to suppress in release builds."
   }
 ]
