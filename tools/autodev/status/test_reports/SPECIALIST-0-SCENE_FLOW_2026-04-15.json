@@ -1,0 +1,93 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "date": "2026-04-15",
+  "timestamp": "2026-04-15T23:49:13Z",
+  "cycle_type": "test",
+  "summary": "Full player journey audit: IntroCeltOS→Menu→SelectionSauvegarde→HubAntre→BroceliandeForest3D→Cards→RunEnd→Hub. 10 checks. 2 CRITICAL, 2 HIGH, 3 MEDIUM, 3 PASS.",
+  "journey": {
+    "IntroCeltOS": {"status": "PASS", "note": "main_scene confirmed, scenes/IntroCeltOS.tscn exists"},
+    "MenuPrincipal": {"status": "PASS", "note": "scenes/MenuPrincipal.tscn exists"},
+    "SelectionSauvegarde": {"status": "PASS", "note": "HubAntre path correct. MEDIUM: MerlinStore not autoload — LOAD_PROFILE dispatch may silently fail"},
+    "IntroPersonalityQuiz": {"status": "FAIL_HIGH", "note": "Still exists (director q-20260414-005: delete). Task E2E-DELETE-ORPHAN-SCENES P3 pending"},
+    "SceneRencontreMerlin": {"status": "FAIL_HIGH", "note": "Still exists (director q-20260414-005: delete). Same task"},
+    "HubAntre": {"status": "PASS", "note": "SCENE_FOREST=BroceliandeForest3D.tscn correct"},
+    "BroceliandeForest3D": {"status": "PASS", "note": "Exists, walk_event_controller wired, graceful fallback if no MerlinStore"},
+    "BroceliandeForest3D_merlin_found": {"status": "FAIL_CRITICAL", "note": "GAME_SCENE=MerlinGame.tscn (orphan). _on_hub() routes to orphan when _merlin_found=true. Task E2E-MERLINGAME-OBSOLETE-PATH pending."},
+    "RunEnd_transition": {"status": "FAIL_CRITICAL", "note": "walk_event_controller._check_run_end() only checks life<=0. No MOS hard_max, no victory, no faction endings. EndRunScreen.tscn NEVER shown in active path. BroceliandeForest3D has no handler for run_ended signal."},
+    "EndRunScreen": {"status": "FAIL_CRITICAL", "note": "scenes/EndRunScreen.tscn exists but unreachable from active play path. Only accessible via dead GameFlowController path."}
+  },
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "component": "walk_event_controller.gd:385",
+      "issue": "_check_run_end() only checks life<=0. Missing: MOS hard_max (50 cards), victory (mission complete), StoreRun.check_run_end() full logic. Faction endings never evaluated in active path.",
+      "impact": "Run never ends via victory or MOS timeout. Faction endings never shown. Game loop incomplete."
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "component": "broceliande_forest_3d.gd:8-9",
+      "issue": "GAME_SCENE='res://scenes/MerlinGame.tscn' — orphan scene. _on_hub() routes to it when _merlin_found=true. MerlinGame.tscn is the old pre-refactor card scene.",
+      "impact": "When Merlin is found, game crashes or shows stale scene."
+    },
+    {
+      "id": "SF-003",
+      "severity": "CRITICAL",
+      "component": "broceliande_forest_3d.gd",
+      "issue": "BroceliandeForest3D does not listen for run_ended signal from MerlinStore. After walk_event_controller emits run_ended, nothing transitions to EndRunScreen.tscn.",
+      "impact": "Run end has no resolution screen, no rewards, no Anam calculation."
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "component": "scenes/IntroPersonalityQuiz.tscn + scripts/IntroPersonalityQuiz.gd",
+      "issue": "Director q-20260414-005 ordered deletion. Still present.",
+      "impact": "Dead code, potential confusion. Task E2E-DELETE-ORPHAN-SCENES pending."
+    },
+    {
+      "id": "SF-005",
+      "severity": "HIGH",
+      "component": "scenes/SceneRencontreMerlin.tscn + scripts/SceneRencontreMerlin.gd",
+      "issue": "Director ordered deletion. Still present.",
+      "impact": "Dead code. Task E2E-DELETE-ORPHAN-SCENES pending."
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "component": "SelectionSauvegarde.gd:97",
+      "issue": "LOAD_PROFILE dispatch requires MerlinStore on /root. MerlinStore is NOT autoloaded. Silently falls to _build_profile_ui() when store not found.",
+      "impact": "Continue flow broken if entering SelectionSauvegarde without MerlinStore on root (e.g. direct scene entry)."
+    },
+    {
+      "id": "SF-007",
+      "severity": "MEDIUM",
+      "component": "broceliande_forest_3d.gd:377",
+      "issue": "_find_store() returns null if MerlinStore not on /root. Fallback mode: no faction tracking, no save, no card profile. _gameplay_active=true despite missing data.",
+      "impact": "Player can play without any progress being saved or faction reps tracked."
+    },
+    {
+      "id": "SF-008",
+      "severity": "MEDIUM",
+      "component": "HubAntre.gd",
+      "issue": "HubAntre.gd does not read run_state from save system on entry. If player continues an in-progress run, the run_state is not pre-loaded into any active system.",
+      "impact": "Continue run may start fresh instead of resuming from save."
+    },
+    {
+      "id": "SF-PASS-1",
+      "severity": "PASS",
+      "component": "store_run.gd:203",
+      "issue": "check_run_end() data layer correct: faction_rep>=80 detection, all 3 end paths include faction_endings_available.",
+      "impact": "none"
+    },
+    {
+      "id": "SF-PASS-2",
+      "severity": "PASS",
+      "component": "merlin_reputation_system.gd:91",
+      "issue": "get_available_endings() pure static function. Correct threshold 80, handles multi-faction case.",
+      "impact": "none"
+    }
+  ],
+  "new_tasks_generated": ["FLOW-WALK-EVENT-FULL-RUN-END", "FLOW-BROCE-END-RUN-TRANSITION", "T-FLOW-RUN-END-ACTIVE-PATH", "T-SCENE-FLOW-JOURNEY-VERIFY", "FLOW-RUN-STATE-HUB-PICKUP"]
+}

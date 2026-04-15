@@ -594,5 +594,20 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260415-010",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "Game loop has no end: EndRunScreen.tscn unreachable from active path → run ends silently with no resolution",
+    "details": "SPECIALIST-0 audit reveals the core game loop is broken at the end: BroceliandeForest3D's walk_event_controller only detects life=0 but doesn't transition to EndRunScreen. Player plays through cards, life reaches 0, walk_event_controller emits run_ended on MerlinStore but nothing handles it to show EndRunScreen. The player is left in the forest with a dead run state and no way to see their score, Anam rewards, or faction endings. Two P1 tasks generated: FLOW-WALK-EVENT-FULL-RUN-END and FLOW-BROCE-END-RUN-TRANSITION.",
+    "proposed_task": {
+      "title": "Implement complete run-end flow: walk_event→EndRunScreen→HubAntre",
+      "sprint": "S2",
+      "type": "dev",
+      "priority": 1
+    },
+    "timestamp": "2026-04-15T23:49:13Z"
   }
 ]

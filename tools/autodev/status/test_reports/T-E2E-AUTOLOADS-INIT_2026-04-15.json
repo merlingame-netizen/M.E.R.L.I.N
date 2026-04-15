@@ -1,0 +1,43 @@
+{
+  "task_id": "T-E2E-AUTOLOADS-INIT",
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-15T23:49:13Z",
+  "date": "2026-04-15",
+  "result": "MEDIUM",
+  "summary": "MerlinStore/CardSystem not autoloads. BroceliandeForest3D has graceful fallback but core gameplay broken without store.",
+  "checks": [
+    {
+      "check": "MerlinStore is an autoload",
+      "result": "FAIL_MEDIUM",
+      "evidence": "project.godot autoloads: no MerlinStore entry. MerlinStore instantiated in game_manager.gd:675 or HubAntre.gd:210 (var store: MerlinStore = null). Not on /root by default."
+    },
+    {
+      "check": "MerlinCardSystem available at first encounter (enc_idx=0)",
+      "result": "FAIL_MEDIUM",
+      "evidence": "MerlinCardSystem instantiated inside MerlinStore (merlin_store.gd:42 — cards := MerlinCardSystem.new()). Only available if MerlinStore exists. No store → no card system."
+    },
+    {
+      "check": "merlin_save_system loaded (profile exists)",
+      "result": "PASS",
+      "evidence": "SelectionSauvegarde.gd:12 — _save := MerlinSaveSystem.new(). Each user creates their own instance. merlin_save_system.gd is a class, not singleton. No race condition."
+    },
+    {
+      "check": "No null ref crash if direct Forest entry without MerlinGame.tscn",
+      "result": "PASS",
+      "evidence": "broceliande_forest_3d.gd:363-371 — graceful fallback: _walk_event_controller.setup(null, ...) if store not found. print('[Broceliande] Gameplay systems active (fallback mode, no MerlinStore)'). No crash."
+    },
+    {
+      "check": "Fallback mode preserves gameplay integrity",
+      "result": "FAIL_MEDIUM",
+      "evidence": "Fallback mode: no faction_rep tracking, no profile-based cards, no save on run end. _gameplay_active=true but all gameplay data is lost. Player gets 'phantom run' — plays but nothing is recorded."
+    },
+    {
+      "check": "MerlinStore on /root when entering from HubAntre",
+      "result": "UNKNOWN",
+      "evidence": "HubAntre.gd:210 — var store: MerlinStore = null. Store is local to HubAntre, not on /root. BroceliandeForest3D._find_store() checks /root first. Store likely null in active path from HubAntre."
+    }
+  ],
+  "root_cause": "MerlinStore is a scene-local Node, not an autoload or /root singleton. BroceliandeForest3D._find_store() returns null in the active HubAntre→Forest path since HubAntre creates store as local var not added to tree root.",
+  "fix_required": "E2E-HUBANTRE-SCRIPT-AUDIT task. Long-term: GameFlowController migration handles this via dependency injection."
+}

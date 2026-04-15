@@ -1,0 +1,43 @@
+{
+  "task_id": "T-E2E-CONTINUE-LOAD-VERIFY",
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-15T23:49:13Z",
+  "date": "2026-04-15",
+  "result": "MEDIUM",
+  "summary": "Continue path goes to HubAntre.tscn correctly but run_state not explicitly restored. MerlinStore not autoloaded → LOAD_PROFILE may silently fail.",
+  "checks": [
+    {
+      "check": "SelectionSauvegarde goes to HubAntre.tscn on continue",
+      "result": "PASS",
+      "evidence": "SelectionSauvegarde.gd:4 — GAME_SCENE = 'res://scenes/HubAntre.tscn'. Both _auto_continue and _on_continue_pressed use this."
+    },
+    {
+      "check": "load_profile() called before scene change",
+      "result": "PARTIAL",
+      "evidence": "SelectionSauvegarde.gd:100 dispatches LOAD_PROFILE via MerlinStore. But MerlinStore NOT in project.godot autoloads. get_node_or_null('/root/MerlinStore') likely null → fallback to UI shown."
+    },
+    {
+      "check": "MerlinStore available on /root at SelectionSauvegarde",
+      "result": "FAIL_MEDIUM",
+      "evidence": "project.godot autoloads section: ScreenFrame, SFXManager, MerlinVisual, PixelTransition, etc. NO MerlinStore. Without HubAntre or game_manager pre-spawning it, dispatch is a no-op."
+    },
+    {
+      "check": "run_state restored before entering run scene",
+      "result": "FAIL_MEDIUM",
+      "evidence": "SelectionSauvegarde → HubAntre. HubAntre.gd has no run_state read on _ready(). MerlinSaveSystem.load_run_state() is defined but not called in HubAntre. run_state resumption path unclear."
+    },
+    {
+      "check": "No run_state corruption on continue",
+      "result": "PASS",
+      "evidence": "merlin_save_system.gd:222 — _validate_run_state() called on load. Validation fails → returns empty dict (safe). No corruption path."
+    },
+    {
+      "check": "PixelTransition handles the scene change",
+      "result": "PASS",
+      "evidence": "SelectionSauvegarde.gd:202 — PixelTransition.transition_to(scene_path). PixelTransition IS in autoloads. ResourceLoader.exists() checked first."
+    }
+  ],
+  "root_cause": "MerlinStore not autoloaded → LOAD_PROFILE silently fails in SelectionSauvegarde. HubAntre doesn't read run_state on entry.",
+  "fix_required": "FLOW-RUN-STATE-HUB-PICKUP task. Long-term: GameFlowController migration (E2E-DEAD-PATH-GAME-FLOW-CONTROLLER)."
+}

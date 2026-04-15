@@ -1,0 +1,48 @@
+{
+  "task_id": "T-GDC-FACTION-ENDING-INTEGRATION",
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-15T23:49:13Z",
+  "date": "2026-04-15",
+  "result": "FAIL_CRITICAL",
+  "summary": "Faction ending data layer PASS but UI/transition path BROKEN. EndRunScreen never shown in active path.",
+  "checks": [
+    {
+      "check": "store_run.check_run_end() reads faction_rep >= 80",
+      "result": "PASS",
+      "evidence": "store_run.gd:207 — var faction_endings: Array = MerlinReputationSystem.get_available_endings(faction_rep)"
+    },
+    {
+      "check": "Two factions >= 80 → both in array",
+      "result": "PASS",
+      "evidence": "merlin_reputation_system.gd:91 iterates all FACTIONS, appends if >= THRESHOLD_ENDING (80)"
+    },
+    {
+      "check": "rep=79 → not included",
+      "result": "PASS",
+      "evidence": "merlin_reputation_system.gd:93 — if value >= THRESHOLD_ENDING (strict >=, so 79 not included)"
+    },
+    {
+      "check": "faction_endings_available in all 3 end paths",
+      "result": "PASS",
+      "evidence": "store_run.gd:218 (life=0), 237 (victory), 256 (hard_max) all include faction_endings_available"
+    },
+    {
+      "check": "EndRunScreen.tscn shown after run ends in active path",
+      "result": "FAIL_CRITICAL",
+      "evidence": "walk_event_controller._check_run_end():385 only checks life<=0. No MOS, no victory. BroceliandeForest3D has no run_ended signal handler → EndRunScreen never shown."
+    },
+    {
+      "check": "faction_ending_chosen signal emitted in active path",
+      "result": "FAIL_CRITICAL",
+      "evidence": "end_run_screen.gd:23 defines signal faction_ending_chosen but EndRunScreen never instantiated in active path. Signal never emitted."
+    },
+    {
+      "check": "GameFlowController._on_faction_ending_chosen wired",
+      "result": "FAIL_MEDIUM",
+      "evidence": "GameFlowController (scripts/core/game_flow_controller.gd) is the dead path (per PAT-S14-002). Even though wired internally, it's not connected to any active scene."
+    }
+  ],
+  "root_cause": "walk_event_controller._check_run_end() (active path) does NOT call StoreRun.check_run_end(). It only emits run_ended on MerlinStore but BroceliandeForest3D doesn't listen. EndRunScreen.tscn is never loaded.",
+  "fix_required": "FLOW-WALK-EVENT-FULL-RUN-END + FLOW-BROCE-END-RUN-TRANSITION tasks"
+}

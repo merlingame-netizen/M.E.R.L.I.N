@@ -532,6 +532,35 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260415-013",
+      "status": "pending",
+      "priority": "HIGH",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "question": "EndRunScreen.tscn is fully implemented but unreachable in active play path (BroceliandeForest3D never loads it). Two implementation options: (A) Add EndRunScreen as an overlay inside BroceliandeForest3D (keep 3D scene alive in background, overlay on top), or (B) Change scene to EndRunScreen.tscn (full scene replace, simpler). Which do you prefer?",
+      "options": [
+        "A: Overlay inside BroceliandeForest3D (3D stays alive)",
+        "B: Full scene change to EndRunScreen.tscn"
+      ],
+      "context": "Finding SF-003 from SPECIALIST-0 scene flow audit. Both options are technically viable. Option A preserves visual continuity (forest still visible behind end screen). Option B is cleaner code.",
+      "timestamp": "2026-04-15T23:49:13Z"
+    },
+    {
+      "id": "q-20260415-014",
+      "status": "pending",
+      "priority": "HIGH",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "question": "MerlinStore is not an autoload — BroceliandeForest3D falls back to 'fallback mode' (no faction tracking, no save, no profile cards) if player arrives without a MerlinStore on /root. Short-term fix options: (A) Add MerlinStore as autoload in project.godot (simplest, immediate fix), (B) HubAntre ensures MerlinStore is spawned and added to /root before navigating to Forest, (C) Wait for GameFlowController migration (E2E-DEAD-PATH task) which handles dependency injection correctly. Director preference?",
+      "options": [
+        "A: Autoload MerlinStore in project.godot",
+        "B: HubAntre spawns and adds to /root",
+        "C: Wait for GameFlowController migration"
+      ],
+      "context": "Finding SF-007 from SPECIALIST-0 scene flow audit. PAT-S14-002 says director ordered GameFlowController migration (q-20260414-004). But migration is large (MEGA task). Without short-term fix, every run is in fallback mode.",
+      "timestamp": "2026-04-15T23:49:13Z"
     }
   ]
 }

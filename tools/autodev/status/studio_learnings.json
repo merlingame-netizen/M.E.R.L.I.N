@@ -1383,6 +1383,41 @@
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
       ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-15T23:49:13Z",
+      "source": "SPECIALIST-0-SCENE_FLOW",
+      "pattern": "walk_event_controller._check_run_end() is the ACTIVE run-end path. It only checks life<=0. StoreRun.check_run_end() (full MOS/victory/faction check) is only called via MerlinStore.dispatch() or run_3d_controller (dead path). Never assume StoreRun.check_run_end() is called in the active BroceliandeForest3D path.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/broceliande_3d/walk_event_controller.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-15T23:49:13Z",
+      "source": "SPECIALIST-0-SCENE_FLOW",
+      "pattern": "EndRunScreen.tscn exists and is fully implemented but is UNREACHABLE in the active game path. BroceliandeForest3D never loads EndRunScreen. The only path that would show it (GameFlowController) is dead/unwired. All run-end rewards, Anam calculation, and faction ending UI are silently skipped.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/run/end_run_screen.gd",
+        "scenes/EndRunScreen.tscn"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-15T23:49:13Z",
+      "source": "SPECIALIST-0-SCENE_FLOW",
+      "pattern": "MerlinStore is NOT an autoload singleton. It is a class (class_name MerlinStore) instantiated locally: in game_manager.gd:675 or HubAntre.gd:210. BroceliandeForest3D._find_store() tries /root/MerlinStore (will be null in active HubAntre→Forest path). Always verify MerlinStore on /root before assuming dispatch works.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/HubAntre.gd",
+        "project.godot"
+      ]
     }
   ],
   "agent_performance": {
@@ -1474,7 +1509,8 @@
       "cycles_run": 2
     },
     "scene_flow_tester": {
-      "tasks_completed": 2
+      "tasks_completed": 5,
+      "bugs_found": 3
     },
     "visual_consistency_auditor": {
       "tasks_completed": 1,
@@ -1755,8 +1791,9 @@
       }
     }
   ],
-  "total_cycles": 10,
-  "bugs_found": 38,
+  "total_cycles": 11,
+  "bugs_found": 41,
   "bugs_fixed": 10,
-  "last_cycle": "2026-04-15T18:47:19Z"
+  "last_cycle": "2026-04-15T18:47:19Z",
+  "tests_run": 3
 }
