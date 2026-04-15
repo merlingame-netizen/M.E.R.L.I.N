@@ -544,35 +544,6 @@
     "description": "False-positive 'verified' type tasks (like E2E-PARCHMENT-PRERUN) should auto-archive at cycle start. Add housekeeping rule: tasks with type='verified' move to completed_archive.json with status='archived'."
   },
   {
-    "id": "FLOW-QUIZ-WIRE-INTRO",
-    "sprint": "S2",
-    "priority": 9,
-    "type": "dev",
-    "status": "pending",
-    "title": "Delete IntroPersonalityQuiz + SceneRencontreMerlin (director: option B)",
-    "description": "Director decision q-20260414-005: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Actions: (1) Delete scenes/IntroPersonalityQuiz.tscn if exists. (2) Delete scripts/IntroPersonalityQuiz.gd. (3) Delete scenes/SceneRencontreMerlin.tscn if exists. (4) Delete scripts/SceneRencontreMerlin.gd. (5) Check menu_3d_pc.gd for any remaining references to these scenes and remove them. The active flow (Menu3DPC→ParchmentPreRun→Hub) is already correct per SPEC-0 audit.",
-    "files": [
-      "scripts/IntroPersonalityQuiz.gd",
-      "scripts/SceneRencontreMerlin.gd",
-      "scripts/menu_3d_pc.gd"
-    ],
-    "agent": "godot_expert"
-  },
-  {
-    "id": "FLOW-RENCONTRE-CONSTANTS-CLEANUP",
-    "sprint": "S2",
-    "priority": 10,
-    "type": "dev",
-    "status": "pending",
-    "title": "Fix SceneRencontreMerlin dead branching: consolidate or restore SCENE constants",
-    "description": "SceneRencontreMerlin.gd:10-12 has SCENE_HUB = SCENE_BIOME = SCENE_TUTORIAL = BroceliandeForest3D. The branching logic at lines 628-656 (_next_scene = SCENE_BIOME/SCENE_TUTORIAL/SCENE_HUB) is dead code. Either: (A) restore HubAntre as SCENE_HUB, or (B) remove the branching and use a single constant. BLOCKED: depends on FLOW-QUIZ-WIRE-INTRO decision.",
-    "files": [
-      "scripts/SceneRencontreMerlin.gd:10-12",
-      "scripts/SceneRencontreMerlin.gd:628-656"
-    ],
-    "agent": "scene_flow_fixer"
-  },
-  {
     "id": "FLOW-PARCHMENT-HUB-PRE-RUN",
     "sprint": "S3",
     "priority": 33,
@@ -1204,5 +1175,76 @@
       "addons/merlin_ai/rag_manager.gd"
     ],
     "description": "SPEC-8: After LLM-GRAMMAR-NOOP + LLM-RAG-CONTEXT-ROLE + LLM-CONTEXT-TIME-NAMED + LLM-GENERATE-CARD-FALLBACK are completed. CHK-1: brain_role='narrator' passed to get_prioritized_context(). CHK-2: substr limit >= 3200 chars for RAG context. CHK-3: context_builder returns time_of_day string (matin/midi/soir/nuit). CHK-4: generate_card() failure returns _fallback:true card with valid options array. CHK-5: GM system prompt contains JSON schema example for effects. CHK-6: No regression in existing passing checks from this report."
+  },
+  {
+    "id": "SAVE-RUN-HISTORY-APPEND",
+    "sprint": "S2",
+    "priority": 20,
+    "type": "dev",
+    "title": "Populate run_history in apply_run_rewards() — append run entry each run end",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "apply_run_rewards() (store_run.gd:395) never appends to meta['run_history']. Add entry with: biome, cards_played, anam_earned, victory, timestamp. Required for cross-run echo_memory and LLM context per bible s.5.1.",
+    "status": "pending",
+    "source": "SPECIALIST-9-SAVE_PERSISTENCE"
+  },
+  {
+    "id": "SAVE-RUN-HISTORY-CAP",
+    "sprint": "S2",
+    "priority": 21,
+    "type": "dev",
+    "title": "Cap run_history to last 50 entries after append (director: q-20260414-002)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "After appending to run_history in apply_run_rewards(), trim to last 50 entries. Director confirmed '50 derniers runs'. Prevents unbounded save file growth.",
+    "status": "pending",
+    "source": "SPECIALIST-9-SAVE_PERSISTENCE",
+    "director_ref": "q-20260414-002"
+  },
+  {
+    "id": "SAVE-FACTION-REP-ENSURE-ALL",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "dev",
+    "title": "Ensure all 5 factions exist in faction_rep after load_profile()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "load_profile():130 clamps faction_rep only for existing keys. Missing factions (e.g. from partial migration) are skipped. Add loop: for each FACTIONS key not in faction_rep, set to 0.0. Add after clamping loop.",
+    "status": "pending",
+    "source": "SPECIALIST-9-SAVE_PERSISTENCE"
+  },
+  {
+    "id": "SAVE-RUN-STATE-ANAM-CLAMP",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "dev",
+    "title": "Clamp anam_accumulated >= 0 in load_run_state()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "load_run_state() (line ~220) clamps life_essence but not anam_accumulated. Add: rs['anam_accumulated'] = maxi(int(rs.get('anam_accumulated', 0)), 0). Prevents negative anam from corrupted saves.",
+    "status": "pending",
+    "source": "SPECIALIST-9-SAVE_PERSISTENCE"
+  },
+  {
+    "id": "SAVE-VERSION-GUARD",
+    "sprint": "S3",
+    "priority": 28,
+    "type": "dev",
+    "title": "Guard load_profile() against future save versions (v > CURRENT_VERSION)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "If save version > CURRENT_VERSION (downgraded client), migration runs unnecessarily and may corrupt data. Add check: if version > CURRENT_VERSION, push_warning and return defaults rather than migrating.",
+    "status": "pending",
+    "source": "SPECIALIST-9-SAVE_PERSISTENCE"
   }
 ]

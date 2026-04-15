@@ -115,5 +115,38 @@
     "description": "SPECIALIST-14: Regression test for autoload wiring. CHK-1: GameManager autoload in project.godot. CHK-2: MerlinAI autoload in project.godot. CHK-3: game_manager.gd:674 creates MerlinStore via call_deferred. CHK-4: merlin_game_controller.gd:112 store=get_node_or_null('/root/MerlinStore') gets non-null. CHK-5: merlin_game_controller.gd:121 merlin_ai=get_node_or_null('/root/MerlinAI') gets non-null. CHK-6: SFXManager+PixelTransition+I18nRegistry all in project.godot autoloads.",
     "completed_at": "2026-04-15T00:00:00Z",
     "notes": "SPEC-8 TEST: ALL 6 CHK PASS. GameManager/MerlinAI autoloads verified. MerlinStore call_deferred pattern confirmed. All 19 autoload files exist on disk. LLM pipeline audit reveals 2 FAIL_HIGH issues (grammar no-op, RAG truncation) — tasks LLM-GRAMMAR-NOOP + LLM-RAG-CONTEXT-ROLE generated."
+  },
+  {
+    "id": "FLOW-QUIZ-WIRE-INTRO",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "dev",
+    "status": "completed",
+    "title": "Delete IntroPersonalityQuiz + SceneRencontreMerlin (director: option B)",
+    "description": "Director decision q-20260414-005: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Actions: (1) Delete scenes/IntroPersonalityQuiz.tscn if exists. (2) Delete scripts/IntroPersonalityQuiz.gd. (3) Delete scenes/SceneRencontreMerlin.tscn if exists. (4) Delete scripts/SceneRencontreMerlin.gd. (5) Check menu_3d_pc.gd for any remaining references to these scenes and remove them. The active flow (Menu3DPC→ParchmentPreRun→Hub) is already correct per SPEC-0 audit.",
+    "files": [
+      "scripts/IntroPersonalityQuiz.gd",
+      "scripts/SceneRencontreMerlin.gd",
+      "scripts/menu_3d_pc.gd"
+    ],
+    "agent": "godot_expert",
+    "completed_at": "2026-04-15T01:30:00Z",
+    "notes": "Deleted IntroPersonalityQuiz.tscn/.gd, SceneRencontreMerlin.tscn/.gd, quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd. Removed entries from SceneSelector.gd and pixel_transition_config.gd. Director option B applied."
+  },
+  {
+    "id": "FLOW-RENCONTRE-CONSTANTS-CLEANUP",
+    "sprint": "S2",
+    "priority": 10,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix SceneRencontreMerlin dead branching: consolidate or restore SCENE constants",
+    "description": "SceneRencontreMerlin.gd:10-12 has SCENE_HUB = SCENE_BIOME = SCENE_TUTORIAL = BroceliandeForest3D. The branching logic at lines 628-656 (_next_scene = SCENE_BIOME/SCENE_TUTORIAL/SCENE_HUB) is dead code. Either: (A) restore HubAntre as SCENE_HUB, or (B) remove the branching and use a single constant. BLOCKED: depends on FLOW-QUIZ-WIRE-INTRO decision.",
+    "files": [
+      "scripts/SceneRencontreMerlin.gd:10-12",
+      "scripts/SceneRencontreMerlin.gd:628-656"
+    ],
+    "agent": "scene_flow_fixer",
+    "completed_at": "2026-04-15T01:30:00Z",
+    "notes": "Superseded by FLOW-QUIZ-WIRE-INTRO: SceneRencontreMerlin fully deleted, no cleanup needed."
   }
 ]

@@ -59,16 +59,6 @@ const SCENE_PROFILES := {
 		"block_size": 10,
 		"enter_duration": 1.0,
 	},
-	"res://scenes/IntroPersonalityQuiz.tscn": {
-		"block_size": 10,
-		"exit_duration": 0.5,
-		"enter_duration": 0.8,
-	},
-	"res://scenes/SceneRencontreMerlin.tscn": {
-		"block_size": 8,
-		"exit_duration": 0.5,
-		"enter_duration": 1.0,
-	},
 	"res://scenes/HubAntre.tscn": {
 		"block_size": 10,
 		"enter_duration": 0.9,

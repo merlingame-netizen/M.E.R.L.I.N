@@ -493,5 +493,20 @@
       "id": "LLM-RAG-CONTEXT-ROLE"
     },
     "timestamp": "2026-04-15T00:00:00Z"
+  },
+  {
+    "id": "insight-20260415-030",
+    "agent": "save_persistence_auditor",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "run_history is always empty — cross-run memory broken",
+    "details": "apply_run_rewards() never appends to meta['run_history']. This means echo_memory, biome progression stats for RAG context, and the run history dashboard are all broken. Priority: implement SAVE-RUN-HISTORY-APPEND + CAP before S2 completion.",
+    "proposed_task": {
+      "title": "Populate run_history in apply_run_rewards()",
+      "sprint": "S2",
+      "type": "dev",
+      "id": "SAVE-RUN-HISTORY-APPEND"
+    },
+    "timestamp": "2026-04-15T01:30:00Z"
   }
 ]

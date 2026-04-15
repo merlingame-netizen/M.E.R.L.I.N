@@ -7,8 +7,6 @@ extends CanvasLayer
 const SCENES: Array[Dictionary] = [
 	# — Intro —
 	{"label": "IntroCeltOS (Boot)", "path": "res://scenes/IntroCeltOS.tscn"},
-	{"label": "IntroPersonalityQuiz", "path": "res://scenes/IntroPersonalityQuiz.tscn"},
-	{"label": "SceneRencontreMerlin", "path": "res://scenes/SceneRencontreMerlin.tscn"},
 	{"label": "TransitionBiome", "path": "res://scenes/TransitionBiome.tscn"},
 	{"label": "HubAntre", "path": "res://scenes/HubAntre.tscn"},
 	# — Menus —

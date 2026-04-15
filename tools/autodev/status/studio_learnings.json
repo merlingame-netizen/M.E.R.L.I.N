@@ -3,16 +3,17 @@
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
   "last_updated": "2026-04-14T22:55:00Z",
   "metrics": {
-    "total_cycles_completed": 54,
-    "total_dev_cycles": 25,
+    "total_cycles_completed": 55,
+    "total_dev_cycles": 26,
     "total_test_cycles": 22,
     "bugs_found": 46,
     "bugs_fixed": 31,
-    "tasks_completed": 69,
-    "tasks_pending": 78,
+    "tasks_completed": 71,
+    "tasks_pending": 91,
     "current_sprint": "S2",
     "specialist_cycles_run": 10,
-    "last_specialist": 6
+    "last_specialist": 9,
+    "last_updated": "2026-04-15T01:30:00Z"
   },
   "patterns_learned": [
     {
@@ -988,6 +989,37 @@
       "applies_to": [
         "scripts/merlin/merlin_llm_adapter.gd",
         "addons/merlin_ai/rag_manager.gd"
+      ]
+    },
+    {
+      "id": "PAT-096",
+      "learned_at": "2026-04-15T01:30:00Z",
+      "source": "SPEC-9-SAVE_PERSISTENCE",
+      "pattern": "run_history in profile is always [] — apply_run_rewards() never appends. Must add run summary dict (biome, cards_played, anam, victory, timestamp) after each run end.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-097",
+      "learned_at": "2026-04-15T01:30:00Z",
+      "source": "SPEC-9-SAVE_PERSISTENCE",
+      "pattern": "Director q-20260414-005 option B: IntroPersonalityQuiz + SceneRencontreMerlin fully deleted. IntroCeltOS already transitions to Menu3DPC directly.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scenes/",
+        "scripts/autoload/SceneSelector.gd"
+      ]
+    },
+    {
+      "id": "PAT-098",
+      "learned_at": "2026-04-15T01:30:00Z",
+      "source": "SPEC-9-SAVE_PERSISTENCE",
+      "pattern": "load_profile() faction_rep clamp only touches existing keys — must ensure all 5 factions present after load, not just clamp existing ones.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_save_system.gd"
       ]
     }
   ],
