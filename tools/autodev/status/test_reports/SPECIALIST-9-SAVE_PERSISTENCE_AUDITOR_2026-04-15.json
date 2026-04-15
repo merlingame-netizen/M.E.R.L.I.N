@@ -1,0 +1,162 @@
+{
+  "report_id": "SPEC-9-SAVE-2026-04-15",
+  "specialist": 9,
+  "role": "SAVE_PERSISTENCE_AUDITOR",
+  "cycle_type": "test",
+  "timestamp": "2026-04-15T10:50:45Z",
+  "task_executed": "LLM-TEST-1",
+  "files_audited": [
+    "scripts/merlin/merlin_save_system.gd",
+    "scripts/merlin/store_run.gd",
+    "addons/merlin_ai/merlin_ai.gd",
+    "addons/merlin_ai/ollama_backend.gd"
+  ],
+
+  "save_persistence_audit": {
+    "summary": "9 findings (2 HIGH, 4 MEDIUM, 1 LOW, 4 PASS). Implemented SAVE-FINS-VUES-CLAMP + SAVE-TRUST-CLAMP in same commit.",
+    "findings": [
+      {
+        "id": "SAV-TRUST-CLAMP",
+        "severity": "HIGH",
+        "status": "FIXED",
+        "file": "scripts/merlin/merlin_save_system.gd",
+        "line": 152,
+        "description": "trust_merlin validated as numeric (line 276) but NOT clamped to 0-100 range after load. A tampered save with trust_merlin=999 would pass validation and immediately give T3 content (bible: T3 requires trust_merlin>80) from the first run. Fixed by adding clampi(trust_merlin, 0, 100) in load_profile() clamping block.",
+        "fix": "meta['trust_merlin'] = clampi(int(meta.get('trust_merlin', 0)), 0, 100)"
+      },
+      {
+        "id": "SAV-FINS-TOTAL-CLAMP",
+        "severity": "HIGH",
+        "status": "FIXED",
+        "file": "scripts/merlin/merlin_save_system.gd",
+        "line": 152,
+        "description": "fins_vues and total_runs validated as numeric (lines 279-281) but NOT clamped to >=0 after load. Negative values would silently break arc conditions (fins_vues >= 5 check, biome maturity score = total_runs*2). Task SAVE-FINS-VUES-CLAMP (P31) resolved.",
+        "fix": "meta['fins_vues'] = maxi(int(meta.get('fins_vues', 0)), 0); meta['total_runs'] = maxi(int(meta.get('total_runs', 0)), 0)"
+      },
+      {
+        "id": "SAV-EQUIPPED-OGHAM",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "file": "scripts/merlin/merlin_save_system.gd",
+        "line": 266,
+        "description": "_validate() checks oghams has 'owned' and 'equipped' keys (line 266-268) but never verifies that equipped value is actually in the owned array. A tampered save with equipped='muin' (not in owned) would pass validation and the ogham system would start with an invalid active ogham, potentially causing null access in ogham activation.",
+        "task": "SAVE-EQUIPPED-OGHAM-VALIDATE"
+      },
+      {
+        "id": "SAV-ECHO-SUBKEYS",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "echo_memory presence validated (is Dictionary) but sub-keys (deaths_by_biome, dominant_factions_seen, choices_log) not validated. Task SAVE-ECHO-MEMORY-SUBKEYS (P32) already queued.",
+        "task": "SAVE-ECHO-MEMORY-SUBKEYS"
+      },
+      {
+        "id": "SAV-BIOME-SUBKEYS",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "biome_runs exists check present but sub-keys not validated. Empty biome_runs{} passes validation and silently gives 0 for all biome runs, breaking maturity score. Task SAVE-BIOME-RUNS-SUBKEYS (P34) already queued.",
+        "task": "SAVE-BIOME-RUNS-SUBKEYS"
+      },
+      {
+        "id": "SAV-RUN-HISTORY-EMPTY",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "apply_run_rewards() (store_run.gd:392-412) increments total_runs, stats, biome_runs but NEVER appends to run_history[]. HubAntre.gd:887 reads run_history for UI display — always empty. Task SAVE-RUN-HISTORY-APPEND (P20) already queued.",
+        "task": "SAVE-RUN-HISTORY-APPEND"
+      },
+      {
+        "id": "SAV-RUN-STATE-REP-DELTA",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "load_run_state() clamps life_essence (line ~218) but does NOT clamp faction_rep_delta values. Bible s.3.3: caps ±20/carte. Tampered run_state could inject faction_rep_delta: {druides: 9999}, bypassing the per-card cap of ±20.",
+        "task": "SAVE-RUN-STATE-REP-DELTA-CLAMP"
+      },
+      {
+        "id": "SAV-STATS-SUBKEYS",
+        "severity": "LOW",
+        "status": "OPEN",
+        "description": "stats Dictionary validated to exist (line 248) but sub-keys not validated as non-negative integers. stats.total_deaths=-5 would cause consecutive_deaths logic errors. stats.total_cards=-1 would break maturity score.",
+        "task": "SAVE-STATS-SUBKEYS"
+      },
+      {
+        "id": "SAV-BACKUP-OK",
+        "severity": "PASS",
+        "status": "PASS",
+        "description": "Backup strategy (backup before write) is correct. save_profile() calls _backup_file() before _write_file(), ensuring backup has last valid state on crash."
+      },
+      {
+        "id": "SAV-MIGRATION-OK",
+        "severity": "PASS",
+        "status": "PASS",
+        "description": "Legacy migration (_try_migrate_from_legacy) handles slot1-3 + autosave, wraps in profile format, cleans up legacy files. Pattern correct."
+      },
+      {
+        "id": "SAV-FACTION-REP-CLAMP-OK",
+        "severity": "PASS",
+        "status": "PASS",
+        "description": "faction_rep properly clamped 0-100 for all 5 factions after load. Pattern consistent."
+      },
+      {
+        "id": "SAV-RUN-STATE-VALIDATE-OK",
+        "severity": "PASS",
+        "status": "PASS",
+        "description": "_validate_run_state() validates all required keys including anam_accumulated (added by SPEC-9). life_max >= 1 check prevents division by zero."
+      }
+    ]
+  },
+
+  "llm_test_1_execution": {
+    "task_id": "LLM-TEST-1",
+    "agent": "bug_hunter",
+    "method": "static_analysis",
+    "summary": "5 invariants checked (fallback, poll_result, cancel, double-call, busy-leak). 1 WARN_LOW race condition. 4 PASS. No CRITICAL bugs.",
+    "invariants": [
+      {
+        "invariant": "Fallback card used when Ollama times out",
+        "result": "PASS",
+        "detail": "_run_llm() returns {error: 'LLM timeout (Nms)'} on timeout (merlin_ai.gd:295). generate_narrative/structured propagate error dict. merlin_game_controller.gd:414-415 checks dispatch failure and uses FastRoute fallback immediately. Chain is intact."
+      },
+      {
+        "invariant": "poll_result() correct — calls callback exactly once, clears state",
+        "result": "WARN_LOW",
+        "detail": "poll_result() (ollama_backend.gd:166-195) correctly checks _result_ready under mutex, calls callback, clears _pending_callback, waits for thread. BUT cancel_generation() does NOT clear _pending_callback. After cancel, if thread writes _result_ready=true (race window ~ms), a subsequent poll_result() call delivers stale result via stale callback. Risk: LOW — generate_async() resets _result_ready before new call; only an external poll_result() between cancel and next generate would trigger stale delivery. Recommend: add _pending_callback = Callable() to cancel_generation().",
+        "file": "addons/merlin_ai/ollama_backend.gd",
+        "lines": "200-211"
+      },
+      {
+        "invariant": "cancel_generation() cleans up thread safely",
+        "result": "PASS",
+        "detail": "cancel_generation() sets _cancel_requested=true (checked by _blocking_generate to abort HTTP), _is_generating=false, _stream_done=true. Thread continues but _blocking_generate exits early. generate_async() calls _thread.wait_to_finish() before new generation, ensuring clean handoff."
+      },
+      {
+        "invariant": "generate_async() errors on double-call (no concurrent generations)",
+        "result": "PASS",
+        "detail": "ollama_backend.gd:141: if _is_generating: callback({error: 'Already generating'}); return. Double-call correctly returns error via callback without spawning second thread."
+      },
+      {
+        "invariant": "Brain busy flags (_primary_narrator_busy, _primary_gm_busy) cleared on LLM timeout",
+        "result": "PASS",
+        "detail": "generate_narrative() sets _primary_narrator_busy=true, awaits _run_llm() (which handles timeout internally and returns error dict), then sets _primary_narrator_busy=false regardless of error/success (lines 1562-1563). Same pattern for generate_structured (lines 1591-1592). No busy flag leak on timeout. 60s watchdog in _process() (line 2066) provides secondary protection."
+      }
+    ],
+    "new_bug_tasks": [
+      {
+        "id": "LLM-CANCEL-STALE-CALLBACK",
+        "severity": "LOW",
+        "title": "cancel_generation() does not clear _pending_callback — stale callback race",
+        "description": "ollama_backend.gd:200-211: cancel_generation() sets _cancel_requested=true but does not clear _pending_callback=Callable(). If _blocking_generate() completes (writes _result_ready=true) after cancel returns but before next generate_async() call, a stray poll_result() would invoke the stale callback with the old result. Fix: add _pending_callback = Callable() inside cancel_generation() before _mutex.lock().",
+        "file": "addons/merlin_ai/ollama_backend.gd",
+        "line": 200
+      }
+    ]
+  },
+
+  "tasks_generated": [
+    "SAVE-TRUST-CLAMP (IMPLEMENTED)",
+    "SAVE-FINS-VUES-CLAMP (IMPLEMENTED — was P31)",
+    "SAVE-EQUIPPED-OGHAM-VALIDATE (NEW, MEDIUM)",
+    "SAVE-RUN-STATE-REP-DELTA-CLAMP (NEW, MEDIUM)",
+    "SAVE-STATS-SUBKEYS (NEW, LOW)",
+    "SAVE-ROUND-TRIP-TEST (NEW, test)",
+    "LLM-CANCEL-STALE-CALLBACK (NEW, LOW)"
+  ]
+}

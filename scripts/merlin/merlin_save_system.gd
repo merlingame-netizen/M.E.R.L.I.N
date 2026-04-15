@@ -145,6 +145,9 @@ func load_profile() -> Dictionary:
 		return _get_default_profile()
 	# SEC-2: Clamp numeric fields to prevent save-file tampering
 	meta["anam"] = maxi(int(meta.get("anam", 0)), 0)
+	meta["fins_vues"] = maxi(int(meta.get("fins_vues", 0)), 0)
+	meta["total_runs"] = maxi(int(meta.get("total_runs", 0)), 0)
+	meta["trust_merlin"] = clampi(int(meta.get("trust_merlin", 0)), 0, 100)
 	var faction_rep: Dictionary = meta.get("faction_rep", {})
 	for faction in faction_rep:
 		faction_rep[faction] = clampf(float(faction_rep[faction]), 0.0, 100.0)

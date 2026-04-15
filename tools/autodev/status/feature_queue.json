@@ -5,14 +5,14 @@
     "priority": 14,
     "status": "pending",
     "type": "dev",
-    "title": "Cycle jour/nuit PS1 + DA coh\u00e9rente toutes sc\u00e8nes (remplace S3-AMBIENT + S3-PIXEL)",
+    "title": "Cycle jour/nuit PS1 + DA cohérente toutes scènes (remplace S3-AMBIENT + S3-PIXEL)",
     "agent": "godot_expert",
     "files": [
       "scripts/merlin/merlin_visual.gd",
       "scripts/merlin/store_run.gd",
       "addons/merlin_ai/merlin_omniscient.gd"
     ],
-    "description": "Director q-20260413-003 + q-20260412-002 + q-20260412-004: Unified visual task replacing S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER. Cycle jour/nuit en mode PS1 avec volum\u00e9trie. Temps r\u00e9el machine/serveur pour saisons et cycle quotidien. DA coh\u00e9rente entre TOUTES les sc\u00e8nes et animations. Effets visuels: pixel snap, affine textures, low-poly volumetric fog, dithering shadows, viewport scale. Exposer time_of_day + season dans run state + LLM context. Tout doit \u00eatre driver sous la m\u00eame logique graphique. Director note: 'toute la DA doit \u00eatre coh\u00e9rente entre toutes les sc\u00e8nes, animations. Tout doit \u00eatre driver sous la m\u00eame logique graphique sur l'ensemble des rendus graphiques.'"
+    "description": "Director q-20260413-003 + q-20260412-002 + q-20260412-004: Unified visual task replacing S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER. Cycle jour/nuit en mode PS1 avec volumétrie. Temps réel machine/serveur pour saisons et cycle quotidien. DA cohérente entre TOUTES les scènes et animations. Effets visuels: pixel snap, affine textures, low-poly volumetric fog, dithering shadows, viewport scale. Exposer time_of_day + season dans run state + LLM context. Tout doit être driver sous la même logique graphique. Director note: 'toute la DA doit être cohérente entre toutes les scènes, animations. Tout doit être driver sous la même logique graphique sur l'ensemble des rendus graphiques.'"
   },
   {
     "id": "S3-TYPOGRAPHY",
@@ -62,7 +62,7 @@
     "type": "dev",
     "title": "Refonte Menu Principal",
     "agent": "godot_expert",
-    "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volum\u00e9trie et cycle jour/nuit, la sc\u00e8ne doit \u00eatre plus viable. Deep dive et it\u00e8re jusqu'\u00e0 acceptation du retour correct",
+    "description": "Meilleure introduction, shaders et graphismes PS1 avec bonne volumétrie et cycle jour/nuit, la scène doit être plus viable. Deep dive et itère jusqu'à acceptation du retour correct",
     "files": []
   },
   {
@@ -77,7 +77,7 @@
       "scripts/autoload/SFXManager.gd",
       "scripts/autoload/sfx_recipes_ambient.gd"
     ],
-    "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority \u2014 iles_celtes is a late-game biome (maturity score 45+)."
+    "description": "S4-SFXMANAGER-AUDIT: 7/8 biome ambients registered. Missing: amb_iles for iles_celtes biome. SFXManager.play_biome_ambient('iles') silently fails. Fix: (1) Add gen_amb_iles() to SFXRecipesAmbient (ocean waves: low freq sine sweep + white noise, ~2s loop). (2) Add 'amb_iles' to names[] in SFXManager._generate_all_sounds(). LOW priority — iles_celtes is a late-game biome (maturity score 45+)."
   },
   {
     "id": "PERF-REDUCE-MEGAFUNC",
@@ -90,7 +90,7 @@
     "files": [
       "scripts/merlin/merlin_store.gd"
     ],
-    "description": "SPECIALIST-10 PQ-005: _reduce() at line 243 is 256 lines \u2014 5x function limit. It's a giant match block handling ALL action types. Refactor: extract 4 sub-reducer helpers called from _reduce(): _reduce_run_actions(), _reduce_meta_actions(), _reduce_ui_actions(), _reduce_system_actions(). Each sub-reducer takes (state, action_type, payload) and returns bool (handled). _reduce() dispatches to correct sub-reducer based on action prefix. Maintains same external API. No logic changes \u2014 pure structural split."
+    "description": "SPECIALIST-10 PQ-005: _reduce() at line 243 is 256 lines — 5x function limit. It's a giant match block handling ALL action types. Refactor: extract 4 sub-reducer helpers called from _reduce(): _reduce_run_actions(), _reduce_meta_actions(), _reduce_ui_actions(), _reduce_system_actions(). Each sub-reducer takes (state, action_type, payload) and returns bool (handled). _reduce() dispatches to correct sub-reducer based on action prefix. Maintains same external API. No logic changes — pure structural split."
   },
   {
     "id": "PERF-RESOLVE-CHOICE-SPLIT",
@@ -103,7 +103,7 @@
     "files": [
       "scripts/ui/merlin_game_controller.gd"
     ],
-    "description": "SPECIALIST-10 PQ-006: _resolve_choice() at line 499 is 211 lines. Mixed UI transitions + game state mutation + LLM trigger. Extract: (1) _resolve_choice_validate(choice_idx) -> bool \u2014 validates choice index bounds. (2) _resolve_choice_apply_effects(card, choice_idx) \u2014 calls store.dispatch() for game effects. (3) _resolve_choice_transition() \u2014 handles fade-out + scene transition. (4) _resolve_choice_trigger_llm() \u2014 schedules next card generation. Keep _resolve_choice() as orchestrator calling these 4 helpers in sequence. Each helper < 50 lines."
+    "description": "SPECIALIST-10 PQ-006: _resolve_choice() at line 499 is 211 lines. Mixed UI transitions + game state mutation + LLM trigger. Extract: (1) _resolve_choice_validate(choice_idx) -> bool — validates choice index bounds. (2) _resolve_choice_apply_effects(card, choice_idx) — calls store.dispatch() for game effects. (3) _resolve_choice_transition() — handles fade-out + scene transition. (4) _resolve_choice_trigger_llm() — schedules next card generation. Keep _resolve_choice() as orchestrator calling these 4 helpers in sequence. Each helper < 50 lines."
   },
   {
     "id": "PERF-WRAP-TEXT-SPLIT",
@@ -116,7 +116,7 @@
     "files": [
       "scripts/merlin/merlin_llm_adapter.gd"
     ],
-    "description": "SPECIALIST-10 PQ-007: _wrap_text_as_card() at line 435 is 222 lines \u2014 parses raw LLM text, validates structure, and wraps into card dict all in one function. Extract: (1) _parse_raw_llm_text(text) -> Dictionary \u2014 parses options/title/effects from raw text. (2) _validate_card_structure(card) -> bool \u2014 checks required fields, effect caps, option count. (3) _wrap_text_as_card() becomes orchestrator calling parse \u2192 validate \u2192 assemble. Each helper < 60 lines."
+    "description": "SPECIALIST-10 PQ-007: _wrap_text_as_card() at line 435 is 222 lines — parses raw LLM text, validates structure, and wraps into card dict all in one function. Extract: (1) _parse_raw_llm_text(text) -> Dictionary — parses options/title/effects from raw text. (2) _validate_card_structure(card) -> bool — checks required fields, effect caps, option count. (3) _wrap_text_as_card() becomes orchestrator calling parse → validate → assemble. Each helper < 60 lines."
   },
   {
     "id": "PERF-AI-PROCESS-EXTRACT",
@@ -129,7 +129,7 @@
     "files": [
       "addons/merlin_ai/merlin_ai.gd"
     ],
-    "description": "SPECIALIST-10 PQ-008: _process() at line 2045 is 68 lines \u2014 exceeds 50-line limit. Logic: (1) swarm scheduler timeout check, (2) legacy timeout check, (3) poll active bg tasks, (4) dispatch queue. Extract: _poll_swarm_health() (lines ~2053-2076), _poll_legacy_timeouts() (lines ~2077-2086), _poll_active_tasks() -> Array[int] (lines ~2090-2107), process_completed_tasks(indices) (lines ~2109-2124). _process() becomes 20 lines calling these helpers. set_process(false) guard preserved."
+    "description": "SPECIALIST-10 PQ-008: _process() at line 2045 is 68 lines — exceeds 50-line limit. Logic: (1) swarm scheduler timeout check, (2) legacy timeout check, (3) poll active bg tasks, (4) dispatch queue. Extract: _poll_swarm_health() (lines ~2053-2076), _poll_legacy_timeouts() (lines ~2077-2086), _poll_active_tasks() -> Array[int] (lines ~2090-2107), process_completed_tasks(indices) (lines ~2109-2124). _process() becomes 20 lines calling these helpers. set_process(false) guard preserved."
   },
   {
     "id": "PERF-DEEP-NESTING-SANITIZER",
@@ -142,7 +142,7 @@
     "files": [
       "scripts/merlin/llm_adapter_text_sanitizer.gd"
     ],
-    "description": "SPECIALIST-10 PQ-009: 22 instances of 5+ tab nesting in blacklist filtering and label extraction loops (lines 127-189). Use early-return guards and const extraction to flatten. Pattern: for word in list: if word in blacklist: (5 tabs deep) \u2192 replace with: if _is_blacklisted(word): continue. Extract _is_blacklisted() helper + NON_VERB_BLACKLIST const at class level."
+    "description": "SPECIALIST-10 PQ-009: 22 instances of 5+ tab nesting in blacklist filtering and label extraction loops (lines 127-189). Use early-return guards and const extraction to flatten. Pattern: for word in list: if word in blacklist: (5 tabs deep) → replace with: if _is_blacklisted(word): continue. Extract _is_blacklisted() helper + NON_VERB_BLACKLIST const at class level."
   },
   {
     "id": "PERF-PARCHMENT-SIGNAL-AUDIT",
@@ -162,14 +162,16 @@
     "id": "SAVE-FINS-VUES-CLAMP",
     "sprint": "S2",
     "priority": 31,
-    "status": "pending",
+    "status": "completed",
     "type": "dev",
     "title": "Clamp fins_vues + total_runs to maxi(0) in load_profile()",
     "agent": "godot_expert",
     "files": [
       "scripts/merlin/merlin_save_system.gd"
     ],
-    "description": "SPECIALIST-9: load_profile() clamps meta['anam'] to maxi(0) at line 147 but does NOT clamp fins_vues or total_runs. A tampered save with fins_vues=-999 would pass _validate() (is numeric) but give incorrect arc condition results (fins_vues >= 5 check would never fire). Fix: after line 151 (faction_rep clamp), add: meta['fins_vues'] = maxi(int(meta.get('fins_vues', 0)), 0) and meta['total_runs'] = maxi(int(meta.get('total_runs', 0)), 0). Consistent with existing anam clamp pattern."
+    "description": "SPECIALIST-9: load_profile() clamps meta['anam'] to maxi(0) at line 147 but does NOT clamp fins_vues or total_runs. A tampered save with fins_vues=-999 would pass _validate() (is numeric) but give incorrect arc condition results (fins_vues >= 5 check would never fire). Fix: after line 151 (faction_rep clamp), add: meta['fins_vues'] = maxi(int(meta.get('fins_vues', 0)), 0) and meta['total_runs'] = maxi(int(meta.get('total_runs', 0)), 0). Consistent with existing anam clamp pattern.",
+    "completed_at": "2026-04-15T10:50:45Z",
+    "notes": "Implemented: added fins_vues and total_runs maxi(0) clamps in load_profile() clamping block (merlin_save_system.gd:148-149). Also added trust_merlin clampi(0,100) as SAVE-TRUST-CLAMP HIGH finding."
   },
   {
     "id": "SAVE-ECHO-MEMORY-SUBKEYS",
@@ -208,7 +210,7 @@
     "files": [
       "scripts/merlin/merlin_skeleton_generator.gd"
     ],
-    "description": "merlin_skeleton_generator.gd:162 \u2014 _generate_procedural() is 116 lines (2.3x limit). Extract: _build_main_path(), _build_detour_nodes(), _assign_card_types(). Each sub-function max 40 lines. Keep _generate_procedural as dispatcher ~20 lines."
+    "description": "merlin_skeleton_generator.gd:162 — _generate_procedural() is 116 lines (2.3x limit). Extract: _build_main_path(), _build_detour_nodes(), _assign_card_types(). Each sub-function max 40 lines. Keep _generate_procedural as dispatcher ~20 lines."
   },
   {
     "id": "PERF-ACTIVATE-OGHAM-SPLIT",
@@ -221,7 +223,7 @@
     "files": [
       "scripts/merlin/merlin_effect_engine.gd"
     ],
-    "description": "merlin_effect_engine.gd:655 \u2014 activate_ogham() is 94 lines (nearly 2x limit). Extract: _validate_ogham_activation(), _apply_ogham_passive(), _apply_ogham_active(). Keep activate_ogham as dispatcher."
+    "description": "merlin_effect_engine.gd:655 — activate_ogham() is 94 lines (nearly 2x limit). Extract: _validate_ogham_activation(), _apply_ogham_passive(), _apply_ogham_active(). Keep activate_ogham as dispatcher."
   },
   {
     "id": "PERF-MAP-PROMPT-BUILD-SPLIT",
@@ -234,7 +236,7 @@
     "files": [
       "scripts/merlin/llm_adapter_map_prompt.gd"
     ],
-    "description": "llm_adapter_map_prompt.gd:45 \u2014 build_user_prompt() is 92 lines. Extract: _build_params_section(), _build_player_context_section(), _build_arc_section(). Note: _build_arc_section() will be refactored by S2-ARC-CONDITION-EVAL \u2014 do AFTER that task."
+    "description": "llm_adapter_map_prompt.gd:45 — build_user_prompt() is 92 lines. Extract: _build_params_section(), _build_player_context_section(), _build_arc_section(). Note: _build_arc_section() will be refactored by S2-ARC-CONDITION-EVAL — do AFTER that task."
   },
   {
     "id": "PERF-STORE-RUN-CHECKEND-SPLIT",
@@ -247,7 +249,7 @@
     "files": [
       "scripts/merlin/store_run.gd"
     ],
-    "description": "store_run.gd:202 \u2014 check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
+    "description": "store_run.gd:202 — check_run_end() is 75 lines. Extract: _check_death_condition(), _check_escape_condition(), _handle_run_termination(). Keep check_run_end() as < 25 line dispatcher."
   },
   {
     "id": "FACTION-PERIOD-BONUS-IMPL",
@@ -326,8 +328,8 @@
     "priority": 23,
     "type": "dev",
     "status": "pending",
-    "title": "Fix BiomeWalkConfigs TILE_BASE: archive/ \u2192 Assets/Tiles/",
-    "description": "biome_walk_configs.gd:8 TILE_BASE='res://archive/3d_models/Tiles_Low_Poly/' but terrain tiles are at res://Assets/Tiles/. Verify forest_terrain_builder.gd uses correct path. Also fix non-existent tile refs for villages_celtes (Tile_38_Path_Grass, Tile_34_Trans_Grass_Dirt) and cercles_pierres (Tile_39_Grass_Rocky) \u2014 replace with closest existing tiles (Tile_01 to Tile_31).",
+    "title": "Fix BiomeWalkConfigs TILE_BASE: archive/ → Assets/Tiles/",
+    "description": "biome_walk_configs.gd:8 TILE_BASE='res://archive/3d_models/Tiles_Low_Poly/' but terrain tiles are at res://Assets/Tiles/. Verify forest_terrain_builder.gd uses correct path. Also fix non-existent tile refs for villages_celtes (Tile_38_Path_Grass, Tile_34_Trans_Grass_Dirt) and cercles_pierres (Tile_39_Grass_Rocky) — replace with closest existing tiles (Tile_01 to Tile_31).",
     "files": [
       "scripts/broceliande_3d/biome_walk_configs.gd",
       "scripts/broceliande_3d/forest_terrain_builder.gd"
@@ -402,7 +404,7 @@
       "scenes/HubScreen.tscn",
       "scenes/Run3D.tscn"
     ],
-    "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre\u2192BroceliandeForest3D\u2192MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW \u2014 no player impact, but creates confusion for future development."
+    "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre→BroceliandeForest3D→MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW — no player impact, but creates confusion for future development."
   },
   {
     "id": "E2E-MERLINSTORE-DEFERRED-RACE-CHECK",
@@ -410,7 +412,7 @@
     "priority": 33,
     "status": "pending",
     "type": "dev",
-    "title": "GameManager creates MerlinStore via call_deferred \u2014 verify no scene accesses it before frame+1",
+    "title": "GameManager creates MerlinStore via call_deferred — verify no scene accesses it before frame+1",
     "agent": "bug_hunter",
     "files": [
       "scripts/game_manager.gd",
@@ -425,12 +427,12 @@
     "priority": 23,
     "status": "pending",
     "type": "dev",
-    "title": "Fix BroceliandeForest3D fallback: change_scene_to_file \u2192 PixelTransition",
+    "title": "Fix BroceliandeForest3D fallback: change_scene_to_file → PixelTransition",
     "agent": "godot_expert",
     "files": [
       "scripts/broceliande_3d/broceliande_forest_3d.gd"
     ],
-    "description": "SPECIALIST-14: broceliande_forest_3d.gd:1228 fallback path uses get_tree().change_scene_to_file(target) when PixelTransition not found. This is reachable if PixelTransition autoload fails to load. The primary path (line 1224) uses PixelTransition. Fix: add null guard pattern: var pt: Node = get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(target) else: get_tree().change_scene_to_file(target). Line 1228 already does this \u2014 verify the guard is correct and consistent with other scene transition helpers."
+    "description": "SPECIALIST-14: broceliande_forest_3d.gd:1228 fallback path uses get_tree().change_scene_to_file(target) when PixelTransition not found. This is reachable if PixelTransition autoload fails to load. The primary path (line 1224) uses PixelTransition. Fix: add null guard pattern: var pt: Node = get_node_or_null('/root/PixelTransition'); if pt and pt.has_method('transition_to'): pt.transition_to(target) else: get_tree().change_scene_to_file(target). Line 1228 already does this — verify the guard is correct and consistent with other scene transition helpers."
   },
   {
     "id": "META-INSIGHTS-DEDUP",
@@ -465,7 +467,7 @@
     "priority": 53,
     "type": "meta",
     "status": "pending",
-    "title": "Sync studio_learnings.json metrics: cycles 40\u219247, add 5 missing agents",
+    "title": "Sync studio_learnings.json metrics: cycles 40→47, add 5 missing agents",
     "agent": "meta_evolution_auditor",
     "files": [
       "tools/autodev/status/studio_learnings.json"
@@ -496,7 +498,7 @@
     "files": [
       "tools/autodev/studio-bridge/prompts/cycle_instructions.md"
     ],
-    "description": "No specialist verifies Anam economy (10 runs/node), MOS convergence (target 20-25, hard max 50), death penalty ratio, faction cap \u00b120/card. Define checklist and add as specialist role."
+    "description": "No specialist verifies Anam economy (10 runs/node), MOS convergence (target 20-25, hard max 50), death penalty ratio, faction cap ±20/card. Define checklist and add as specialist role."
   },
   {
     "id": "META-QUEUE-HYGIENE-AUTO",
@@ -519,7 +521,7 @@
     "type": "dev",
     "status": "pending",
     "title": "New game: ensure biome+Ogham selection before first run via HubAntre",
-    "description": "ParchmentPreRun\u2192BroceliandeForest3D skips HubAntre entirely, so new players cannot select biome or starter Oghams. Fix: after ParchmentPreRun completes for a first-run player, route to HubAntre first. HubAntre biome selection \u2192 TransitionBiome \u2192 Forest. Depends on FLOW-QUIZ-WIRE-INTRO architecture decision.",
+    "description": "ParchmentPreRun→BroceliandeForest3D skips HubAntre entirely, so new players cannot select biome or starter Oghams. Fix: after ParchmentPreRun completes for a first-run player, route to HubAntre first. HubAntre biome selection → TransitionBiome → Forest. Depends on FLOW-QUIZ-WIRE-INTRO architecture decision.",
     "files": [
       "scripts/ui/parchment_pre_run.gd:7-217",
       "scripts/HubAntre.gd"
@@ -533,7 +535,7 @@
     "type": "dev",
     "status": "pending",
     "title": "First-run detection: route new profiles through personality quiz",
-    "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() \u2192 transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
+    "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() → transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
     "files": [
       "scripts/menu_3d_pc.gd:1333-1337",
       "scripts/merlin/merlin_save_system.gd"
@@ -559,7 +561,7 @@
     "priority": 17,
     "type": "dev",
     "status": "pending",
-    "title": "pixel_transition_config.gd:56 \u2014 replace hardcoded Color(0.02,0.02,0.02) with CRT_PALETTE",
+    "title": "pixel_transition_config.gd:56 — replace hardcoded Color(0.02,0.02,0.02) with CRT_PALETTE",
     "agent": "visual_consistency_auditor",
     "files": [
       "scripts/autoload/pixel_transition_config.gd"
@@ -590,7 +592,7 @@
     "files": [
       "addons/merlin_ai/"
     ],
-    "description": "SPECIALIST-1 AUDIT coverage gap: visual audit only checked scripts/. Run grep Color( on addons/ directory \u2014 AI overlay/UI widgets may have hardcoded colors. Generate fix tasks for any violations found."
+    "description": "SPECIALIST-1 AUDIT coverage gap: visual audit only checked scripts/. Run grep Color( on addons/ directory — AI overlay/UI widgets may have hardcoded colors. Generate fix tasks for any violations found."
   },
   {
     "id": "VIS-SCREEN-FRAME-WHITE",
@@ -598,7 +600,7 @@
     "priority": 37,
     "type": "dev",
     "status": "pending",
-    "title": "screen_frame.gd:351 \u2014 replace Color(1,1,1,0.15) highlight with PALETTE reference",
+    "title": "screen_frame.gd:351 — replace Color(1,1,1,0.15) highlight with PALETTE reference",
     "agent": "visual_consistency_auditor",
     "files": [
       "scripts/autoload/screen_frame.gd"
@@ -616,7 +618,7 @@
     "files": [
       "scripts/broceliande_3d/broceliande_forest_3d.gd"
     ],
-    "description": "SPEC-2 CHK-23 FAIL_MEDIUM: broceliande_forest_3d.gd:1075 has hardcoded `life -= 1` (drain per card) inside the encounter card resolved callback, IGNORING MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD=0 (director decision q-20260412-001). Also mutates GameManager.run_state directly (dead path \u2014 canonical is MerlinStore). This is a dead code path but contradicts the director decision. Fix: remove the `life -= 1` line and the direct GameManager state mutation; rely on run_3d_controller.gd canonical drain system (DRAIN_PER_CARD=0). Also update HUD feedback labels accordingly."
+    "description": "SPEC-2 CHK-23 FAIL_MEDIUM: broceliande_forest_3d.gd:1075 has hardcoded `life -= 1` (drain per card) inside the encounter card resolved callback, IGNORING MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD=0 (director decision q-20260412-001). Also mutates GameManager.run_state directly (dead path — canonical is MerlinStore). This is a dead code path but contradicts the director decision. Fix: remove the `life -= 1` line and the direct GameManager state mutation; rely on run_3d_controller.gd canonical drain system (DRAIN_PER_CARD=0). Also update HUD feedback labels accordingly."
   },
   {
     "id": "GDC-FACTION-CONTENT-50-GATE",
@@ -629,7 +631,7 @@
     "files": [
       "scripts/merlin/merlin_card_system.gd"
     ],
-    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '\u226550: Cartes sp\u00e9ciales de la faction d\u00e9bloqu\u00e9es dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50."
+    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50."
   },
   {
     "id": "T-GDC-FACTION-ENDING-INTEGRATION",
@@ -643,7 +645,7 @@
       "scripts/merlin/store_run.gd",
       "scripts/test/"
     ],
-    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 \u2192 'joueur choisit laquelle' (player choice screen expected). And rep=79 \u2192 no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
+    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
   },
   {
     "id": "SFX-DAMAGE-LIFE-FEEDBACK",
@@ -669,7 +671,7 @@
     "files": [
       "scripts/MenuPrincipalMerlin.gd"
     ],
-    "description": "SPEC-3 SFX-09 FAIL_MEDIUM: calendar_button (line 337) and collections_button (line 340) mouse_entered lambdas only call _anim.on_corner_button_hover \u2014 no SFX. _on_calendar_pressed() (line 459) and _on_collections_pressed() (line 470) have no SFX. Fix: add SFXManager.play('hover') in mouse_entered lambdas (after existing anim call). Add _play_ui_sound('click') in _on_calendar_pressed() and _on_collections_pressed() before guard checks."
+    "description": "SPEC-3 SFX-09 FAIL_MEDIUM: calendar_button (line 337) and collections_button (line 340) mouse_entered lambdas only call _anim.on_corner_button_hover — no SFX. _on_calendar_pressed() (line 459) and _on_collections_pressed() (line 470) have no SFX. Fix: add SFXManager.play('hover') in mouse_entered lambdas (after existing anim call). Add _play_ui_sound('click') in _on_calendar_pressed() and _on_collections_pressed() before guard checks."
   },
   {
     "id": "SFX-SELECT-SAVE-BUTTONS",
@@ -703,7 +705,7 @@
     "priority": 55,
     "status": "pending",
     "type": "dev",
-    "title": "Archive or delete audio_integration.gd \u2014 dead code (SFXEngine missing)",
+    "title": "Archive or delete audio_integration.gd — dead code (SFXEngine missing)",
     "agent": "godot_expert",
     "files": [
       "scripts/audio/audio_integration.gd"
@@ -721,7 +723,7 @@
     "files": [
       "scripts/ui/hud_controller.gd"
     ],
-    "description": "SPEC-4 ANIM CHK-01: hud_controller.gd:90 sets _life_bar.value = current directly \u2014 instant snap. With drain removed (director decision), life changes come from card effects only. Tween for visual clarity: create_tween().tween_property(_life_bar, 'value', float(current), 0.35).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT). Store tween ref to kill on rapid successive changes. Also animate _life_label text with brief scale pulse (1.0\u21921.15\u21921.0, 0.2s)."
+    "description": "SPEC-4 ANIM CHK-01: hud_controller.gd:90 sets _life_bar.value = current directly — instant snap. With drain removed (director decision), life changes come from card effects only. Tween for visual clarity: create_tween().tween_property(_life_bar, 'value', float(current), 0.35).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT). Store tween ref to kill on rapid successive changes. Also animate _life_label text with brief scale pulse (1.0→1.15→1.0, 0.2s)."
   },
   {
     "id": "ANIM-HUD-LIFE-DAMAGE-FLASH",
@@ -768,7 +770,7 @@
     "priority": 61,
     "type": "dev",
     "status": "pending",
-    "title": "Fix ui_overlay_narrative \u2192 MenuPrincipal.tscn should target Menu3DPC.tscn",
+    "title": "Fix ui_overlay_narrative → MenuPrincipal.tscn should target Menu3DPC.tscn",
     "agent": "godot_expert",
     "files": [
       "scripts/ui/ui_overlay_narrative.gd"
@@ -788,7 +790,7 @@
       "scripts/SelectionSauvegarde.gd",
       "scripts/ui/parchment_pre_run.gd"
     ],
-    "description": "After ANIM-HUD-LIFE-SMOOTH, ANIM-HUD-LIFE-DAMAGE-FLASH, ANIM-SELECTION-SAUVEGARDE-ENTRY, ANIM-PARCHMENT-CONTENT-STAGGER are completed: (1) grep hud_controller.gd for tween_property on _life_bar \u2014 verify not direct .value = assignment. (2) grep SelectionSauvegarde for create_tween + stagger delay. (3) grep parchment_pre_run for sequential modulate.a tween. (4) verify no := with CONST violations introduced. (5) check no orphan tweens (stored refs, kill on update)."
+    "description": "After ANIM-HUD-LIFE-SMOOTH, ANIM-HUD-LIFE-DAMAGE-FLASH, ANIM-SELECTION-SAUVEGARDE-ENTRY, ANIM-PARCHMENT-CONTENT-STAGGER are completed: (1) grep hud_controller.gd for tween_property on _life_bar — verify not direct .value = assignment. (2) grep SelectionSauvegarde for create_tween + stagger delay. (3) grep parchment_pre_run for sequential modulate.a tween. (4) verify no := with CONST violations introduced. (5) check no orphan tweens (stored refs, kill on update)."
   },
   {
     "id": "VFX-SCREEN-VFX-REATTACH",
@@ -814,7 +816,7 @@
     "files": [
       "shaders/ps1_material.gdshader"
     ],
-    "description": "SPEC-5 CHK-07 FAIL_HIGH: Director q-20260412-004 PS1/N64 aesthetic. Current shader only does vertex snap + UV snap. Missing: (1) affine texture mapping (remove perspective division from UV \u2014 classic PS1 texture warble: UV = UV * VERTEX.z / VIEW_MATRIX[3][2]), (2) per-vertex wobble (add noise to VERTEX before snap), (3) 15-bit color quantization (floor(color * 31)/31 per channel), (4) optional dithered alpha for transparency."
+    "description": "SPEC-5 CHK-07 FAIL_HIGH: Director q-20260412-004 PS1/N64 aesthetic. Current shader only does vertex snap + UV snap. Missing: (1) affine texture mapping (remove perspective division from UV — classic PS1 texture warble: UV = UV * VERTEX.z / VIEW_MATRIX[3][2]), (2) per-vertex wobble (add noise to VERTEX before snap), (3) 15-bit color quantization (floor(color * 31)/31 per channel), (4) optional dithered alpha for transparency."
   },
   {
     "id": "VFX-SEASON-GROUND-TINT",
@@ -867,7 +869,7 @@
     "files": [
       "shaders/bestiole_squish.gdshader"
     ],
-    "description": "SPEC-5 CHK-11 WARN: shaders/bestiole_squish.gdshader is dead code \u2014 Bestiole system is listed as DELETED in bible. Grep for any references first, then delete the shader file. If any .tscn or .gd references it, remove those too."
+    "description": "SPEC-5 CHK-11 WARN: shaders/bestiole_squish.gdshader is dead code — Bestiole system is listed as DELETED in bible. Grep for any references first, then delete the shader file. If any .tscn or .gd references it, remove those too."
   },
   {
     "id": "UX-FONT-SIZE-10-FIX",
@@ -883,7 +885,7 @@
       "scripts/ui/ui_config_module.gd",
       "scripts/Collection.gd"
     ],
-    "description": "6 occurrences of 10px text violate 'Pas de texte < 11px' rule. Fix: calendar_tabs.gd:110,407 (state/counter 10\u219211); menu_3d_pc.gd:454,843 (clock/legend 10\u219211); ui_config_module.gd:250 (caption 10\u219211); Collection.gd:388 compact small_font_size=10\u219211. AUDIT: SPEC-6 CHK-01 FAIL_HIGH."
+    "description": "6 occurrences of 10px text violate 'Pas de texte < 11px' rule. Fix: calendar_tabs.gd:110,407 (state/counter 10→11); menu_3d_pc.gd:454,843 (clock/legend 10→11); ui_config_module.gd:250 (caption 10→11); Collection.gd:388 compact small_font_size=10→11. AUDIT: SPEC-6 CHK-01 FAIL_HIGH."
   },
   {
     "id": "UX-TOUCH-TARGET-ARBRE",
@@ -891,7 +893,7 @@
     "priority": 65,
     "status": "pending",
     "type": "dev",
-    "title": "arbre_de_vie_ui.gd:284 unlock_btn touch target 36\u219244px",
+    "title": "arbre_de_vie_ui.gd:284 unlock_btn touch target 36→44px",
     "agent": "ux_accessibility_auditor",
     "files": [
       "scripts/ui/arbre_de_vie_ui.gd"
@@ -932,7 +934,7 @@
     "priority": 68,
     "status": "pending",
     "type": "dev",
-    "title": "parchment_pre_run.gd:71 hardcoded Color(0.75,0.60,0.25) \u2192 MerlinVisual.CRT_PALETTE amber",
+    "title": "parchment_pre_run.gd:71 hardcoded Color(0.75,0.60,0.25) → MerlinVisual.CRT_PALETTE amber",
     "agent": "visual_consistency_auditor",
     "files": [
       "scripts/ui/parchment_pre_run.gd"
@@ -950,7 +952,7 @@
     "files": [
       "scripts/SelectionSauvegarde.gd"
     ],
-    "description": "back_button styled via _style_button() with content_margin_top/bottom=8 only \u2014 no custom_minimum_size. Add back_button.custom_minimum_size = Vector2(0, 44) after _style_button() call to guarantee WCAG touch target on mobile. AUDIT: SPEC-6 CHK-11 WARN."
+    "description": "back_button styled via _style_button() with content_margin_top/bottom=8 only — no custom_minimum_size. Add back_button.custom_minimum_size = Vector2(0, 44) after _style_button() call to guarantee WCAG touch target on mobile. AUDIT: SPEC-6 CHK-11 WARN."
   },
   {
     "id": "UX-TEST-TOUCH-TARGETS-REGRESSION",
@@ -1058,7 +1060,7 @@
     "files": [
       "scripts/merlin/merlin_llm_adapter.gd"
     ],
-    "description": "SPEC-8: merlin_llm_adapter.gd:305-307 calls rag_mgr.get_prioritized_context(context) without brain_role AND truncates to 200 chars. FIX: (1) Pass brain_role='narrator' to use 800-token budget. (2) Replace substr(0,200) with substr(0,3200) to allow up to 800 tokens (~3200 chars) of RAG context. RAGManager already enforces the budget internally \u2014 the substr was an unnecessary double-truncation."
+    "description": "SPEC-8: merlin_llm_adapter.gd:305-307 calls rag_mgr.get_prioritized_context(context) without brain_role AND truncates to 200 chars. FIX: (1) Pass brain_role='narrator' to use 800-token budget. (2) Replace substr(0,200) with substr(0,3200) to allow up to 800 tokens (~3200 chars) of RAG context. RAGManager already enforces the budget internally — the substr was an unnecessary double-truncation."
   },
   {
     "id": "LLM-CONTEXT-TIME-NAMED",
@@ -1119,7 +1121,7 @@
     "sprint": "S2",
     "priority": 20,
     "type": "dev",
-    "title": "Populate run_history in apply_run_rewards() \u2014 append run entry each run end",
+    "title": "Populate run_history in apply_run_rewards() — append run entry each run end",
     "agent": "godot_expert",
     "files": [
       "scripts/merlin/store_run.gd"
@@ -1189,9 +1191,9 @@
     "id": "LLM-TEST-1",
     "phase": 2,
     "priority": 9,
-    "status": "pending",
+    "status": "completed",
     "type": "test",
-    "title": "Test: LLM pipeline integration \u2014 brain fallback chain and timeout handling",
+    "title": "Test: LLM pipeline integration — brain fallback chain and timeout handling",
     "agent": "bug_hunter",
     "files": [
       "addons/merlin_ai/merlin_ai.gd",
@@ -1199,7 +1201,9 @@
     ],
     "description": "Verify: fallback card used on Ollama timeout, poll_result() correct, cancel_generation() clean, generate_async error on double-call.",
     "created_at": "2026-04-15T02:49:16Z",
-    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
+    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
+    "completed_at": "2026-04-15T10:50:45Z",
+    "notes": "SPEC-9 bug_hunter static analysis: 5 invariants checked. PASS: fallback card, brain busy cleanup, cancel safety, double-call guard. WARN_LOW: stale _pending_callback race in cancel_generation(). New task LLM-CANCEL-STALE-CALLBACK added."
   },
   {
     "id": "SFX-REMOVE-DEAD-DICE",
@@ -1236,7 +1240,7 @@
       "scripts/minigames/mg_tir_a_larc.gd",
       "scripts/minigames/mg_trace_cerf.gd"
     ],
-    "description": "SPECIALIST-3 SFX-F4: All 11 minigame scripts use fragile get_node_or_null(\"/root/SFXManager\") pattern. Replace each with direct SFXManager autoload call. Pattern: var sfx := get_node_or_null(\"/root/SFXManager\") ... if sfx: sfx.play(x) \u2192 SFXManager.play(x). SFXManager is a registered autoload \u2014 always available. Grep pattern: get_node_or_null.*SFXManager."
+    "description": "SPECIALIST-3 SFX-F4: All 11 minigame scripts use fragile get_node_or_null(\"/root/SFXManager\") pattern. Replace each with direct SFXManager autoload call. Pattern: var sfx := get_node_or_null(\"/root/SFXManager\") ... if sfx: sfx.play(x) → SFXManager.play(x). SFXManager is a registered autoload — always available. Grep pattern: get_node_or_null.*SFXManager."
   },
   {
     "id": "SFX-ADD-OGHAM-UNLOCK-TRIGGER",
@@ -1249,7 +1253,7 @@
     "files": [
       "scripts/merlin/merlin_effect_engine.gd"
     ],
-    "description": "SPECIALIST-3 SFX-F5: _apply_unlock_ogham() at line 451 has no audio feedback. Registered sound ogham_unlock exists in SFXManager but is never called from Ogham unlock flow. Fix: after line 458 (unlocked.append(ogham_name)), add: SFXManager.play(\"ogham_unlock\"). Guard with: if not unlocked.has(ogham_name) already present \u2014 only play on actual new unlock, not repeat calls. One line addition."
+    "description": "SPECIALIST-3 SFX-F5: _apply_unlock_ogham() at line 451 has no audio feedback. Registered sound ogham_unlock exists in SFXManager but is never called from Ogham unlock flow. Fix: after line 458 (unlocked.append(ogham_name)), add: SFXManager.play(\"ogham_unlock\"). Guard with: if not unlocked.has(ogham_name) already present — only play on actual new unlock, not repeat calls. One line addition."
   },
   {
     "id": "SFX-ADD-RUN-END-SFX",
@@ -1291,7 +1295,7 @@
       "scripts/ui/end_run_screen.gd",
       "project.godot"
     ],
-    "description": "SPECIALIST-3 E2E arch issue: GameFlowController (class_name GameFlowController) exists with full MENU\u2192HUB\u2192RUN\u2192END_SCREEN phase management but is NOT an autoload and NOT wired in any live scene. Live game uses direct PixelTransition.transition_to() calls. ALSO: EndRunScreen.tscn script uses EndRunScreenUI (return_to_hub signal) but GameFlowController expects EndRunScreen class (hub_requested signal) \u2014 signal mismatch. Decision needed: (A) Wire GameFlowController as autoload + fix signal mismatch = clean architecture, (B) Mark as future refactor, comment legacy scripts. Director feedback question recommended before proceeding."
+    "description": "SPECIALIST-3 E2E arch issue: GameFlowController (class_name GameFlowController) exists with full MENU→HUB→RUN→END_SCREEN phase management but is NOT an autoload and NOT wired in any live scene. Live game uses direct PixelTransition.transition_to() calls. ALSO: EndRunScreen.tscn script uses EndRunScreenUI (return_to_hub signal) but GameFlowController expects EndRunScreen class (hub_requested signal) — signal mismatch. Decision needed: (A) Wire GameFlowController as autoload + fix signal mismatch = clean architecture, (B) Mark as future refactor, comment legacy scripts. Director feedback question recommended before proceeding."
   },
   {
     "id": "ANIM-LIFE-BAR-DANGER-FLASH",
@@ -1304,7 +1308,7 @@
     "files": [
       "scripts/ui/hud_controller.gd"
     ],
-    "description": "hud_controller.gd:94 \u2014 _life_bar.modulate = CRT_PALETTE[danger] is instant. Replace with short tween (0.15s) for visual feedback."
+    "description": "hud_controller.gd:94 — _life_bar.modulate = CRT_PALETTE[danger] is instant. Replace with short tween (0.15s) for visual feedback."
   },
   {
     "id": "ANIM-HUD-CARD-PANEL-FADE",
@@ -1317,7 +1321,7 @@
     "files": [
       "scripts/ui/hud_controller.gd"
     ],
-    "description": "hud_controller.gd:183-207 \u2014 _card_panel.visible = true/false is instant. Add 0.2s modulate:a tween for card panel show/hide."
+    "description": "hud_controller.gd:183-207 — _card_panel.visible = true/false is instant. Add 0.2s modulate:a tween for card panel show/hide."
   },
   {
     "id": "ANIM-WALKHUD-ZONE-FADE",
@@ -1330,7 +1334,7 @@
     "files": [
       "scripts/ui/walk_hud.gd"
     ],
-    "description": "walk_hud.gd:77-79 \u2014 _zone_label.visible = true/false instant. Add 0.3s modulate:a tween for zone label appearance."
+    "description": "walk_hud.gd:77-79 — _zone_label.visible = true/false instant. Add 0.3s modulate:a tween for zone label appearance."
   },
   {
     "id": "ANIM-ENDSCREEN-ELEMENT-STAGGER",
@@ -1343,7 +1347,7 @@
     "files": [
       "scripts/ui/ui_overlay_endscreen.gd"
     ],
-    "description": "ui_overlay_endscreen.gd:60-130 \u2014 All elements added to vbox appear instantly after overlay fade. Add stagger: each child fades in 0.1s after previous (modulate:a 0\u21921, 0.25s, delay i*0.08)."
+    "description": "ui_overlay_endscreen.gd:60-130 — All elements added to vbox appear instantly after overlay fade. Add stagger: each child fades in 0.1s after previous (modulate:a 0→1, 0.25s, delay i*0.08)."
   },
   {
     "id": "ANIM-OPTIONS-REVEAL-STAGGER",
@@ -1356,7 +1360,7 @@
     "files": [
       "scripts/ui/merlin_game_ui.gd"
     ],
-    "description": "merlin_game_ui.gd:317 \u2014 options_container.visible = true instant reveal. Add per-option stagger tween (modulate:a 0\u21921, 0.2s, delay i*0.07s) for more polished card reveal."
+    "description": "merlin_game_ui.gd:317 — options_container.visible = true instant reveal. Add per-option stagger tween (modulate:a 0→1, 0.2s, delay i*0.07s) for more polished card reveal."
   },
   {
     "id": "VFX-DISPATCH-PUBLIC-API",
@@ -1384,7 +1388,7 @@
       "scripts/broceliande_3d/broc_season.gd",
       "shaders/seasonal_snow.gdshader"
     ],
-    "description": "SPEC5-WARN-002: seasonal_snow.gdshader exists with .uid but never loaded. BrocSeason uses seasonal_particles.gdshader for ALL seasons (spring petals, summer haze, autumn leaves, winter snow). For WINTER, add a second overlay using seasonal_snow.gdshader (blizzard/heavier snow). Wire in broc_season.gd: _setup_overlay() \u2014 add a second canvas layer (layer 6) with the snow shader, activate it only when season==Season.WINTER."
+    "description": "SPEC5-WARN-002: seasonal_snow.gdshader exists with .uid but never loaded. BrocSeason uses seasonal_particles.gdshader for ALL seasons (spring petals, summer haze, autumn leaves, winter snow). For WINTER, add a second overlay using seasonal_snow.gdshader (blizzard/heavier snow). Wire in broc_season.gd: _setup_overlay() — add a second canvas layer (layer 6) with the snow shader, activate it only when season==Season.WINTER."
   },
   {
     "id": "VFX-SCREEN-DISTORTION-CLEANUP",
@@ -1418,7 +1422,7 @@
     "priority": 22,
     "status": "pending",
     "type": "dev",
-    "title": "Fix touch targets in hub_screen.gd: biome btn 36\u219248px, ogham btn 30\u219248px",
+    "title": "Fix touch targets in hub_screen.gd: biome btn 36→48px, ogham btn 30→48px",
     "agent": "godot_expert",
     "files": [
       "scripts/ui/hub_screen.gd"
@@ -1433,7 +1437,7 @@
     "priority": 22,
     "status": "pending",
     "type": "dev",
-    "title": "Fix minigame_base.gd button touch target: 36px \u2192 48px",
+    "title": "Fix minigame_base.gd button touch target: 36px → 48px",
     "agent": "godot_expert",
     "files": [
       "scripts/minigames/minigame_base.gd"
@@ -1448,7 +1452,7 @@
     "priority": 35,
     "status": "pending",
     "type": "dev",
-    "title": "Fix arbre_de_vie_ui.gd Ogham unlock button height: 36\u219248px",
+    "title": "Fix arbre_de_vie_ui.gd Ogham unlock button height: 36→48px",
     "agent": "godot_expert",
     "files": [
       "scripts/ui/arbre_de_vie_ui.gd"
@@ -1468,7 +1472,7 @@
     "files": [
       "scripts/Collection.gd"
     ],
-    "description": "SPEC-6 UX FAIL_HIGH + FAIL_MEDIUM: (1) small_font_size=10 in compact_mode (line 388) < 11px minimum \u2014 fix to 11. (2) tab_btn height 32px compact / 38px normal (line 428) \u2014 fix both to MerlinVisual.MIN_TOUCH_TARGET.",
+    "description": "SPEC-6 UX FAIL_HIGH + FAIL_MEDIUM: (1) small_font_size=10 in compact_mode (line 388) < 11px minimum — fix to 11. (2) tab_btn height 32px compact / 38px normal (line 428) — fix both to MerlinVisual.MIN_TOUCH_TARGET.",
     "created_at": "2026-04-15T08:10:00Z",
     "source": "SPECIALIST-6-UX_ACCESSIBILITY_AUDITOR"
   },
@@ -1478,7 +1482,7 @@
     "priority": 40,
     "status": "pending",
     "type": "dev",
-    "title": "Fix SelectionSauvegarde.gd reset_btn height: 38\u219248px",
+    "title": "Fix SelectionSauvegarde.gd reset_btn height: 38→48px",
     "agent": "godot_expert",
     "files": [
       "scripts/SelectionSauvegarde.gd"
@@ -1558,7 +1562,7 @@
     "priority": 24,
     "type": "dev",
     "status": "pending",
-    "title": "Fix mg_echo.gd: word-choice buttons FOCUS_NONE \u2192 FOCUS_ALL for gamepad/keyboard",
+    "title": "Fix mg_echo.gd: word-choice buttons FOCUS_NONE → FOCUS_ALL for gamepad/keyboard",
     "agent": "ux_auditor",
     "files": [
       "scripts/minigames/mg_echo.gd"
@@ -1573,7 +1577,7 @@
     "priority": 25,
     "type": "dev",
     "status": "pending",
-    "title": "hub_antre_tour.gd:115 \u2014 replace direct Input.is_mouse_button_pressed with InputAdapter",
+    "title": "hub_antre_tour.gd:115 — replace direct Input.is_mouse_button_pressed with InputAdapter",
     "agent": "ux_auditor",
     "files": [
       "scripts/hub_antre_tour.gd"
@@ -1606,7 +1610,7 @@
     "files": [
       "scripts/merlin/llm_adapter_game_master.gd"
     ],
-    "description": "AUDIT-8: When _parse_smart_effects_json() returns empty array after LLM call, there is no logging. Silent fallback makes debugging difficult. FIX: Add push_warning('[GameMaster] JSON parse failed for smart effects \u2014 using heuristic fallback. Raw: %s' % result.text.substr(0, 100)) before returning []."
+    "description": "AUDIT-8: When _parse_smart_effects_json() returns empty array after LLM call, there is no logging. Silent fallback makes debugging difficult. FIX: Add push_warning('[GameMaster] JSON parse failed for smart effects — using heuristic fallback. Raw: %s' % result.text.substr(0, 100)) before returning []."
   },
   {
     "id": "LLM-BALANCE-EVAL-AWAIT",
@@ -1646,6 +1650,86 @@
     "files": [
       "scripts/merlin/llm_adapter_game_master.gd"
     ],
-    "description": "After LLM-GRAMMAR-NOOP: verify _parse_smart_effects_json() succeeds on canonical outputs from both Qwen 2B and fallback. CHK-1: parse Ex1 output verbatim \u2192 3 effects arrays. CHK-2: parse Ex2 output verbatim \u2192 3 effects arrays. CHK-3: parse truncated Ex1 with each repair suffix \u2192 at least 1 succeeds. CHK-4: max_tokens=200 accommodates Ex1+Ex2 response in token budget (estimate)."
+    "description": "After LLM-GRAMMAR-NOOP: verify _parse_smart_effects_json() succeeds on canonical outputs from both Qwen 2B and fallback. CHK-1: parse Ex1 output verbatim → 3 effects arrays. CHK-2: parse Ex2 output verbatim → 3 effects arrays. CHK-3: parse truncated Ex1 with each repair suffix → at least 1 succeeds. CHK-4: max_tokens=200 accommodates Ex1+Ex2 response in token budget (estimate)."
+  },
+  {
+    "id": "SAVE-TRUST-CLAMP",
+    "sprint": "S2",
+    "priority": 30,
+    "status": "completed",
+    "type": "dev",
+    "title": "Clamp trust_merlin to 0-100 in load_profile()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SPEC-9 HIGH: trust_merlin validated as numeric but not clamped — tampered save trust_merlin=999 gives T3 content (>80 threshold). Fixed inline with SAVE-FINS-VUES-CLAMP: added clampi(trust_merlin,0,100) to load_profile() clamping block.",
+    "completed_at": "2026-04-15T10:50:45Z",
+    "notes": "Implemented in same commit as SAVE-FINS-VUES-CLAMP"
+  },
+  {
+    "id": "SAVE-EQUIPPED-OGHAM-VALIDATE",
+    "sprint": "S3",
+    "priority": 33,
+    "status": "pending",
+    "type": "dev",
+    "title": "Validate oghams.equipped is in oghams.owned in _validate()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SPEC-9 MEDIUM: _validate() checks oghams has 'owned' and 'equipped' keys (line 266-268) but never verifies equipped value is in owned array. A tampered save with equipped='muin' (not owned) would pass validation and the ogham system starts with an invalid active ogham. Fix: after the OGHAM_STARTER_SKILLS loop in _validate(), add: if not owned.has(str(oghams.get('equipped',''))): push_warning('equipped ogham not in owned'); return false."
+  },
+  {
+    "id": "SAVE-RUN-STATE-REP-DELTA-CLAMP",
+    "sprint": "S3",
+    "priority": 35,
+    "status": "pending",
+    "type": "dev",
+    "title": "Clamp faction_rep_delta values to ±20 in load_run_state()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SPEC-9 MEDIUM: load_run_state() clamps life_essence but does NOT clamp faction_rep_delta values. Bible s.3.3: caps ±20/carte. Tampered run_state faction_rep_delta:{druides:9999} bypasses the per-card cap. Fix: after the life_essence clamp in load_run_state(), add a loop: for faction in rs.faction_rep_delta: rs.faction_rep_delta[faction] = clampf(float(rs.faction_rep_delta[faction]), -20.0, 20.0)."
+  },
+  {
+    "id": "SAVE-STATS-SUBKEYS",
+    "sprint": "S3",
+    "priority": 36,
+    "status": "pending",
+    "type": "dev",
+    "title": "Validate stats sub-keys as non-negative integers in _validate()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SPEC-9 LOW: stats dict validated to exist but sub-keys not validated as non-negative integers. stats.total_deaths=-5 would cause consecutive_deaths logic errors. stats.total_cards=-1 breaks maturity score. Fix: add _validate_stats(stats: Dictionary) -> bool helper: for stat_key in ['total_cards','total_minigames_won','total_deaths','consecutive_deaths','oghams_discovered_in_runs','total_anam_earned']: if not typeof(stats[stat_key]) in [TYPE_INT,TYPE_FLOAT]: return false. Call from _validate() after existing stats dict check. No clamping — negative stats = corrupted, return false to reset."
+  },
+  {
+    "id": "SAVE-ROUND-TRIP-TEST",
+    "sprint": "S3",
+    "priority": 37,
+    "status": "pending",
+    "type": "test",
+    "title": "Write test_save_system.gd: save/load round-trip + tamper resistance",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/test/test_save_system.gd"
+    ],
+    "description": "SPEC-9: No automated tests for MerlinSaveSystem. Write test_save_system.gd: (1) Round-trip: save default profile -> load -> assert all keys match. (2) Tamper clamp: save with anam=-10, fins_vues=-5, trust_merlin=999 -> load -> assert anam=0, fins_vues=0, trust_merlin=100. (3) Missing key fill: save profile missing 'arc_tags' -> load -> assert arc_tags=[]. (4) Corrupted JSON: write invalid JSON to profile path -> load_profile() -> assert returns empty dict (handled by _validate). (5) Backup recovery: corrupt primary, keep valid backup -> load_profile() -> assert loads from backup. Use same test infrastructure as test_anam_economy.gd."
+  },
+  {
+    "id": "LLM-CANCEL-STALE-CALLBACK",
+    "sprint": "S3",
+    "priority": 38,
+    "status": "pending",
+    "type": "dev",
+    "title": "cancel_generation() should clear _pending_callback to prevent stale delivery",
+    "agent": "godot_expert",
+    "files": [
+      "addons/merlin_ai/ollama_backend.gd"
+    ],
+    "description": "SPEC-9 LLM-TEST-1 WARN_LOW: cancel_generation() (ollama_backend.gd:200-211) sets _cancel_requested=true, _is_generating=false, _stream_done=true but does NOT clear _pending_callback=Callable(). Race window: if _blocking_generate() sets _result_ready=true after cancel returns (before next generate_async()), a subsequent external poll_result() call would invoke the stale callback with the old LLM result. Fix: add one line before _mutex.lock() in cancel_generation(): _pending_callback = Callable()."
   }
 ]
