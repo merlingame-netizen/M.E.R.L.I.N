@@ -170,6 +170,23 @@ func _on_hub_requested() -> void:
 	_set_phase(GamePhase.HUB)
 
 
+## Record chosen faction ending in meta. Called when EndRunScreen emits faction_ending_chosen.
+## Persists to echo_memory.dominant_factions_seen for LLM narrative continuity.
+func _on_faction_ending_chosen(faction: String) -> void:
+	if _store == null or not MerlinConstants.FACTIONS.has(faction):
+		return
+	var meta: Dictionary = _store.state.get("meta", {})
+	var echo: Dictionary = meta.get("echo_memory", {})
+	var seen: Array = echo.get("dominant_factions_seen", [])
+	if not seen.has(faction):
+		seen.append(faction)
+	echo["dominant_factions_seen"] = seen
+	meta["echo_memory"] = echo
+	_store.state["meta"] = meta
+	if _save_system:
+		_save_system.save_profile(meta)
+
+
 ## Navigate to talent tree.
 ## Called when HubScreen emits talent_tree_requested.
 func _on_talent_tree_requested() -> void:
@@ -218,6 +235,7 @@ func wire_end_screen(end_screen: EndRunScreen) -> void:
 	_disconnect_end_screen()
 	_end_screen = end_screen
 	end_screen.hub_requested.connect(_on_hub_requested)
+	end_screen.faction_ending_chosen.connect(_on_faction_ending_chosen)
 
 
 func _disconnect_hub() -> void:
@@ -242,6 +260,8 @@ func _disconnect_end_screen() -> void:
 	if _end_screen != null:
 		if _end_screen.hub_requested.is_connected(_on_hub_requested):
 			_end_screen.hub_requested.disconnect(_on_hub_requested)
+		if _end_screen.faction_ending_chosen.is_connected(_on_faction_ending_chosen):
+			_end_screen.faction_ending_chosen.disconnect(_on_faction_ending_chosen)
 		_end_screen = null
 
 

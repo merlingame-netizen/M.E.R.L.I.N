@@ -1,0 +1,118 @@
+{
+  "specialist": 11,
+  "role": "FACTION_REPUTATION_AUDITOR",
+  "cycle_type": "test",
+  "timestamp": "2026-04-15T12:45:00Z",
+  "task_executed": "FACTION-ENDING-UNLOCK-CHECK",
+  "task_result": "PARTIAL_FAIL",
+  "summary": "Specialist 11 FACTION & REPUTATION AUDIT: 10 checks (2 CRITICAL fixed, 1 HIGH fixed, 2 MEDIUM open, 5 PASS). CRITICAL: faction_ending_chosen signal unwired in game_flow_controller.wire_end_screen() — FIXED. HIGH: test_constants_bible_alignment.gd FACTION_SCORE_START asserted 0, actual 20 — FIXED. biome dominant_faction unused for card routing (MEDIUM). No faction_endings_chosen persistence field (MEDIUM). 6 new tasks generated.",
+  "findings": [
+    {
+      "id": "F11-01",
+      "severity": "CRITICAL",
+      "status": "FIXED",
+      "title": "faction_ending_chosen signal UNWIRED in game_flow_controller",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 217,
+      "description": "wire_end_screen() connected hub_requested only. faction_ending_chosen emitted by end_run_screen.gd:409/463 had zero listeners — player faction choice had no effect on meta/progression. FIXED: added connect/disconnect + _on_faction_ending_chosen() handler that records faction to echo_memory.dominant_factions_seen and saves profile.",
+      "invariant": "FAIL_BEFORE_FIX",
+      "bible_ref": "bible v2.4 s.3.8"
+    },
+    {
+      "id": "F11-02",
+      "severity": "HIGH",
+      "status": "FIXED",
+      "title": "test_constants_bible_alignment.gd stale FACTION_SCORE_START assertion",
+      "file": "scripts/test/test_constants_bible_alignment.gd",
+      "line": 47,
+      "description": "Test asserted FACTION_SCORE_START == 0, but value is 20 (neutral start). Constant was updated to 20 to avoid hostile penalty on run 1. Test was never updated. FIXED: changed expected value to 20.",
+      "invariant": "FAIL_BEFORE_FIX"
+    },
+    {
+      "id": "F11-03",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "title": "Biome dominant_faction constant unused for card content routing",
+      "file": "scripts/merlin/merlin_constants.gd",
+      "line": 415,
+      "description": "BIOMES dict has dominant_faction per biome (druides, anciens, etc.) per director q-20260413-002. merlin_card_system.gd and llm_adapter_prompts.gd use player's actual highest rep as {dominant_faction}, NOT biome's natural faction. merlin_skeleton_generator.gd uses it for path shortcut only. Cards for a Korrigans biome don't naturally bias toward Korrigans content.",
+      "invariant": "WARN"
+    },
+    {
+      "id": "F11-04",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "title": "No faction_endings_chosen tracking in save profile",
+      "file": "scripts/merlin/merlin_save_system.gd",
+      "line": 47,
+      "description": "echo_memory has dominant_factions_seen[] but _on_faction_ending_chosen() now records there. However, there is no dedicated 'faction_endings_chosen' field to distinguish 'highest rep faction' from 'actually completed faction ending'. The LLM has no signal that 'player chose Ankou ending in run 5'.",
+      "invariant": "WARN"
+    },
+    {
+      "id": "F11-05",
+      "severity": "PASS",
+      "title": "Thresholds 50/80 correctly implemented",
+      "description": "THRESHOLD_CONTENT=50, THRESHOLD_ENDING=80 defined in both MerlinReputationSystem and MerlinConstants. get_available_endings() uses >= 80, get_unlocked_content() uses >= 50. All correct.",
+      "invariant": "PASS"
+    },
+    {
+      "id": "F11-06",
+      "severity": "PASS",
+      "title": "check_run_end() includes faction_endings_available in all 3 end paths",
+      "description": "store_run.gd check_run_end(): death path (line 218), victory path (line 237), hard_max path (line 256) all include faction_endings_available from get_available_endings(). Correct.",
+      "invariant": "PASS"
+    },
+    {
+      "id": "F11-07",
+      "severity": "PASS",
+      "title": "Cross-run faction_rep persistence correct",
+      "description": "_apply_faction_reputation() writes to state['meta']['faction_rep'], which is saved via save_system.save_profile(meta). No decay. All cross-run persistence implemented correctly.",
+      "invariant": "PASS"
+    },
+    {
+      "id": "F11-08",
+      "severity": "PASS",
+      "title": "Cap ±20/card enforced at two layers",
+      "description": "merlin_effect_engine._apply_faction_reputation() clamps delta to clampi(delta, -20, 20). MerlinReputationSystem.add_reputation() also clamps to ±CAP_PER_CARD. Double enforcement. Correct.",
+      "invariant": "PASS"
+    },
+    {
+      "id": "F11-09",
+      "severity": "PASS",
+      "title": "All 5 factions defined and initialized consistently",
+      "description": "FACTIONS = [druides, anciens, korrigans, niamh, ankou] in both MerlinConstants and MerlinReputationSystem. merlin_store.gd initializes all 5 at FACTION_SCORE_START=20. Consistent.",
+      "invariant": "PASS"
+    },
+    {
+      "id": "F11-10",
+      "severity": "PASS",
+      "title": "EndRunScreen multi-faction choice UI implemented",
+      "description": "end_run_screen._on_continue_pressed(): 0 factions -> hub_requested, 1 faction -> auto-selects, 2+ factions -> choice panel. _show_faction_choice_panel() creates buttons correctly. Now correctly wired via game_flow_controller.",
+      "invariant": "PASS"
+    }
+  ],
+  "test_task_result": {
+    "task_id": "FACTION-ENDING-UNLOCK-CHECK",
+    "verdict": "PARTIAL_FAIL_FIXED",
+    "checks": [
+      {"check": "get_available_endings() >= 80 correct", "result": "PASS"},
+      {"check": "check_run_end() all 3 paths include faction_endings_available", "result": "PASS"},
+      {"check": "EndRunScreen displays faction choice UI for 2+ factions", "result": "PASS"},
+      {"check": "faction_ending_chosen signal connected in game_flow_controller", "result": "FAIL_FIXED"},
+      {"check": "chosen faction recorded in meta/profile", "result": "FAIL_FIXED"}
+    ]
+  },
+  "invariants_checked": [
+    {"invariant": "faction rep 0-100", "result": "PASS"},
+    {"invariant": "cap ±20/card", "result": "PASS"},
+    {"invariant": "THRESHOLD_CONTENT=50", "result": "PASS"},
+    {"invariant": "THRESHOLD_ENDING=80", "result": "PASS"},
+    {"invariant": "cross-run persistence via meta.faction_rep", "result": "PASS"},
+    {"invariant": "faction_ending_chosen wired", "result": "FAIL_FIXED"},
+    {"invariant": "5 factions canonical list", "result": "PASS"}
+  ],
+  "files_modified": [
+    "scripts/core/game_flow_controller.gd",
+    "scripts/test/test_constants_bible_alignment.gd"
+  ]
+}

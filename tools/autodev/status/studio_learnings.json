@@ -1278,11 +1278,15 @@
         "merlin_llm_adapter.gd",
         "rag_manager.gd"
       ]
-    }
+    },
+    "faction_ending_chosen signal must be wired in wire_end_screen() — verify all signals of wired screens are connected",
+    "test assertion values must be updated when constants change: FACTION_SCORE_START was 0, became 20",
+    "dominant_faction in BIOMES dict is defined but routing to LLM prompt not yet implemented",
+    "echo_memory.dominant_factions_seen tracks faction endings chosen cross-run for LLM continuity"
   ],
   "agent_performance": {
     "game_playtester": {
-      "tasks_completed": 5,
+      "tasks_completed": 6,
       "bugs_introduced": 0,
       "bugs_found": 6,
       "specialization": "static analysis, invariant simulation, run modeling, startup trace",
@@ -1424,6 +1428,11 @@
     "ux_auditor": {
       "tasks_completed": 1,
       "bugs_introduced": 0
+    },
+    "faction_reputation_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "findings": 10
     }
   },
   "llm_quality": {
@@ -1631,7 +1640,7 @@
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ],
-  "total_cycles": 7,
-  "bugs_found": 30,
-  "bugs_fixed": 7
+  "total_cycles": 8,
+  "bugs_found": 32,
+  "bugs_fixed": 9
 }

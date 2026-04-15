@@ -44,8 +44,8 @@ func test_faction_score_bounds() -> bool:
 	if MerlinConstants.FACTION_SCORE_MAX != 100:
 		push_error("FACTION_SCORE_MAX: expected 100, got %d" % MerlinConstants.FACTION_SCORE_MAX)
 		return false
-	if MerlinConstants.FACTION_SCORE_START != 0:
-		push_error("FACTION_SCORE_START: expected 0, got %d" % MerlinConstants.FACTION_SCORE_START)
+	if MerlinConstants.FACTION_SCORE_START != 20:
+		push_error("FACTION_SCORE_START: expected 20 (neutral start), got %d" % MerlinConstants.FACTION_SCORE_START)
 		return false
 	return true
 

@@ -76,5 +76,21 @@
     "description": "SPEC-9 HIGH: trust_merlin validated as numeric but not clamped — tampered save trust_merlin=999 gives T3 content (>80 threshold). Fixed inline with SAVE-FINS-VUES-CLAMP: added clampi(trust_merlin,0,100) to load_profile() clamping block.",
     "completed_at": "2026-04-15T10:50:45Z",
     "notes": "Implemented in same commit as SAVE-FINS-VUES-CLAMP"
+  },
+  {
+    "id": "FACTION-ENDING-UNLOCK-CHECK",
+    "sprint": "S3",
+    "priority": 19,
+    "type": "test",
+    "status": "completed",
+    "title": "Test faction ending unlock (>=80) triggers correct narrative route",
+    "description": "Verify MerlinReputationSystem.get_available_endings() is called at run end when faction_rep>=80. Check game_flow_controller.gd run end sequence.",
+    "files": [
+      "scripts/merlin/merlin_reputation_system.gd",
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "agent": "game_playtester",
+    "completed_at": "2026-04-15T12:45:00Z",
+    "notes": "PARTIAL_FAIL_FIXED: faction_ending_chosen signal was unwired in game_flow_controller.wire_end_screen(). Added connect/disconnect + _on_faction_ending_chosen() handler. Also fixed stale test assertion FACTION_SCORE_START expected 0 (now 20)."
   }
 ]

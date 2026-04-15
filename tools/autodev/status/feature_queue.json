@@ -251,20 +251,6 @@
     "agent": "godot_expert"
   },
   {
-    "id": "FACTION-ENDING-UNLOCK-CHECK",
-    "sprint": "S3",
-    "priority": 19,
-    "type": "test",
-    "status": "pending",
-    "title": "Test faction ending unlock (>=80) triggers correct narrative route",
-    "description": "Verify MerlinReputationSystem.get_available_endings() is called at run end when faction_rep>=80. Check game_flow_controller.gd run end sequence.",
-    "files": [
-      "scripts/merlin/merlin_reputation_system.gd",
-      "scripts/core/game_flow_controller.gd"
-    ],
-    "agent": "game_playtester"
-  },
-  {
     "id": "FACTION-CONTENT-UNLOCK-CHECK",
     "sprint": "S3",
     "priority": 20,
@@ -1735,5 +1721,100 @@
       "addons/godot_mcp/mcp_server.gd"
     ],
     "description": "SPECIALIST-10 PERF-10-007: mcp_server.gd has print() on every WebSocket event in _process() (connect, data received, sent). Wrap with if OS.is_debug_build(): or use push_verbose() to suppress in release builds."
+  },
+  {
+    "id": "FACTION-ENDING-CHOSEN-FIELD",
+    "sprint": "S2",
+    "priority": 18,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add faction_endings_chosen[] field to save profile defaults",
+    "agent": "code_quality_auditor",
+    "files": [
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Add faction_endings_chosen: [] to _get_default_profile() in merlin_save_system.gd. Distinct from dominant_factions_seen: player can have high druides rep without ever completing a druides narrative ending. LLM context needs both signals. Also update _validate() to check the field is an Array.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION"
+  },
+  {
+    "id": "FACTION-BIOME-NATURAL-ROUTING",
+    "sprint": "S2",
+    "priority": 21,
+    "type": "dev",
+    "status": "pending",
+    "title": "Use biome dominant_faction in LLM card prompt context",
+    "agent": "llm_prompt_engineer",
+    "files": [
+      "scripts/merlin/llm_adapter_prompts.gd",
+      "scripts/merlin/merlin_constants.gd"
+    ],
+    "description": "Per director q-20260413-002: each biome has a natural dominant faction. In build_card_prompt(), extract biome_natural_faction = MerlinConstants.BIOMES.get(biome, {}).get(\"dominant_faction\", \"\") and add it as {biome_natural_faction} template var. This biases card generation toward that faction's vocabulary even if player rep is low. e.g., marais_korrigans always mentions korrigan lore regardless of player rep.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION"
+  },
+  {
+    "id": "FACTION-GAME-FLOW-TEST",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "test",
+    "status": "pending",
+    "title": "Test faction_ending_chosen handler records to echo_memory",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/core/game_flow_controller.gd",
+      "scripts/test/"
+    ],
+    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION"
+  },
+  {
+    "id": "FACTION-ENDING-NARRATIVE-PERSIST",
+    "sprint": "S3",
+    "priority": 34,
+    "type": "dev",
+    "status": "pending",
+    "title": "Pass faction_endings_chosen to LLM context for narrative continuity",
+    "agent": "llm_prompt_engineer",
+    "files": [
+      "scripts/merlin/llm_adapter_prompts.gd"
+    ],
+    "description": "In build_card_prompt(), add {faction_endings_chosen} template var listing factions whose endings the player has completed. LLM can reference previous endings (\"Depuis que tu as honore l'Ankou...\"). Requires FACTION-ENDING-CHOSEN-FIELD to be implemented first.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION"
+  },
+  {
+    "id": "FACTION-CONTENT-GATE-AUDIT",
+    "sprint": "S2",
+    "priority": 21,
+    "type": "test",
+    "status": "pending",
+    "title": "Verify faction content gate (>=50) blocks/allows special cards",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/merlin/merlin_reputation_system.gd"
+    ],
+    "description": "Execute FACTION-CONTENT-UNLOCK-CHECK: verify get_unlocked_content() is called during card pool filtering. Trace merlin_card_system._filter_by_faction() or equivalent. Check: rep=49 -> faction special cards excluded, rep=50 -> included. If no filtering exists yet, create task GDC-FACTION-CONTENT-50-GATE as CRITICAL.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION"
+  },
+  {
+    "id": "FACTION-SCORE-START-AUDIT",
+    "sprint": "S2",
+    "priority": 26,
+    "type": "test",
+    "status": "pending",
+    "title": "Verify FACTION_SCORE_START=20 used consistently on new profile",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/merlin/merlin_store.gd",
+      "scripts/merlin/merlin_reputation_system.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Static analysis: (1) merlin_store.gd initializes faction_rep at FACTION_SCORE_START=20 for new profiles, (2) merlin_reputation_system.build_default_factions() returns 0.0 not 20 — divergence. When is each used? (3) load_profile() initializes missing factions at FACTION_SCORE_START or 0? Check merlin_save_system ENSURE_ALL_FACTIONS task covers this.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION"
   }
 ]
