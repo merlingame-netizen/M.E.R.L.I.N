@@ -1,0 +1,85 @@
+{
+  "specialist": 12,
+  "role": "MINIGAME_SYSTEM_AUDITOR",
+  "timestamp": "2026-04-15T13:45:04Z",
+  "cycle_type": "dev",
+  "summary": "Minigame system audit: 10 checks, 6 findings (2 HIGH, 3 MEDIUM, 1 LOW), 4 PASS. Critical: mg_meditation.gd still on disk despite director deletion order. mg_de_du_destin orphaned from registry. mg_trace_cerf mismatched field (observation vs perception per bible). score_to_d20 dead code from removed D20 system still wired in UI. 3 bible catalog minigames have no implementation (Herboristerie, Equilibre, Fouille).",
+  "files_audited": [
+    "scripts/minigames/minigame_registry.gd",
+    "scripts/minigames/minigame_base.gd",
+    "scripts/minigames/mg_trace_cerf.gd",
+    "scripts/minigames/mg_sang_froid.gd",
+    "scripts/minigames/mg_meditation.gd",
+    "scripts/minigames/mg_de_du_destin.gd",
+    "scripts/minigames/mg_regard.gd",
+    "scripts/minigames/mg_volonte.gd",
+    "scripts/minigames/mg_oeil_corbeau.gd",
+    "docs/GAME_DESIGN_BIBLE.md"
+  ],
+  "findings": [
+    {
+      "id": "MG-12-01",
+      "severity": "HIGH",
+      "file": "scripts/minigames/mg_meditation.gd",
+      "line": 1,
+      "description": "mg_meditation.gd still exists on disk. Director decision q-20260413-004 (answered 2026-04-13) explicitly ordered deletion. The applied_note confirms S3-MEDITATION-CLEANUP task was supposed to be created but is absent from feature_queue.json and completed_archive.json. File is not in registry (correct) but still pollutes the minigames/ directory."
+    },
+    {
+      "id": "MG-12-02",
+      "severity": "HIGH",
+      "file": "scripts/minigames/mg_de_du_destin.gd",
+      "line": 1,
+      "description": "mg_de_du_destin.gd (.uid present) is referenced in TransitionBiome.gd:526 and transition_biome_quest_ui.gd:11 for biome transition quests, but NOT listed in minigame_registry.gd GAMES dict or create_minigame() match. It is a chance-type minigame (predict dice high/low) and should be accessible via registry['chance'] field for card-flow minigames."
+    },
+    {
+      "id": "MG-12-03",
+      "severity": "MEDIUM",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 20,
+      "description": "mg_trace_cerf is in GAMES['observation'] (line 20) and its header says 'Observation'. But GAME_DESIGN_BIBLE v2.4 §6.4 Catalogue lists 'Traces' under PERCEPTION field: 'Suivre des empreintes sans quitter le chemin'. Registry mismatch with bible: should be in GAMES['perception'] not 'observation'."
+    },
+    {
+      "id": "MG-12-04",
+      "severity": "LOW",
+      "file": "scripts/minigames/mg_sang_froid.gd",
+      "line": 1,
+      "description": "mg_sang_froid.gd header says '(Vigueur)' but registry correctly places it in GAMES['esprit'] per bible §6.4 ('Sang-froid = esprit'). Header comment is misleading. Registry is correct; file header is wrong."
+    },
+    {
+      "id": "MG-12-05",
+      "severity": "MEDIUM",
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 124,
+      "description": "score_to_d20() function exists in minigame_base.gd:124 and is actively called by scripts/ui/merlin_game_ui.gd:618, scripts/ui/ui_overlays_module.gd:58, scripts/ui/ui_overlay_dice.gd:206. D20 is listed in CLAUDE.md 'Systemes SUPPRIMES' list. This dead system still has active UI wiring — dead code that should be cleaned up to avoid confusion."
+    },
+    {
+      "id": "MG-12-06",
+      "severity": "MEDIUM",
+      "file": "scripts/minigames/minigame_registry.gd",
+      "line": 17,
+      "description": "Bible §6.4 lists 14 minigame types (target 15+). Three bible-canonical names have NO script implementation: (1) 'Herboristerie' (chance) - identify correct plant among toxic; (2) 'Equilibre' (finesse) - maintain balance on unstable passage; (3) 'Fouille' (observation) - find hidden clue in time limit. Registry has only 11 of 14 bible-named types. mg_pile_ou_face/roue_fortune/tir_a_larc are extra entries not in bible catalog."
+    },
+    {
+      "id": "MG-12-07",
+      "severity": "PASS",
+      "description": "All 8 champs lexicaux per bible §6.4 are correctly defined in FIELDS dict: chance, bluff, observation, logique, finesse, vigueur, esprit, perception. Field detection logic (keyword, tag, gm_hint) is correct."
+    },
+    {
+      "id": "MG-12-08",
+      "severity": "PASS",
+      "description": "minigame_base._complete() correctly clamps score, applies score_bonus modifier, emits game_completed signal, and auto-fades with Tween. Defensive coding pattern is solid."
+    },
+    {
+      "id": "MG-12-09",
+      "severity": "PASS",
+      "description": "get_multiplier() and get_multiplier_label() in merlin_effect_engine.gd delegate to MerlinConstants.MULTIPLIER_TABLE — correct single source of truth per bible §6.5."
+    },
+    {
+      "id": "MG-12-10",
+      "severity": "PASS",
+      "description": "create_minigame() in registry has ultimate fallback to mg_pile_ou_face when game_id is unknown. Prevents runtime crashes from empty game lists."
+    }
+  ],
+  "tasks_generated": 8,
+  "task_implemented": "UX-MINIGAME-BASE-TOUCH"
+}

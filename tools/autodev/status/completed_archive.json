@@ -1,96 +1,115 @@
-[
-  {
-    "id": "SAVE-FINS-VUES-CLAMP",
-    "sprint": "S2",
-    "priority": 31,
-    "status": "completed",
-    "type": "dev",
-    "title": "Clamp fins_vues + total_runs to maxi(0) in load_profile()",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "SPECIALIST-9: load_profile() clamps meta['anam'] to maxi(0) at line 147 but does NOT clamp fins_vues or total_runs. A tampered save with fins_vues=-999 would pass _validate() (is numeric) but give incorrect arc condition results (fins_vues >= 5 check would never fire). Fix: after line 151 (faction_rep clamp), add: meta['fins_vues'] = maxi(int(meta.get('fins_vues', 0)), 0) and meta['total_runs'] = maxi(int(meta.get('total_runs', 0)), 0). Consistent with existing anam clamp pattern.",
-    "completed_at": "2026-04-15T10:50:45Z",
-    "notes": "Implemented: added fins_vues and total_runs maxi(0) clamps in load_profile() clamping block (merlin_save_system.gd:148-149). Also added trust_merlin clampi(0,100) as SAVE-TRUST-CLAMP HIGH finding."
-  },
-  {
-    "id": "LLM-RAG-CONTEXT-ROLE",
-    "sprint": "S2",
-    "priority": 19,
-    "status": "completed",
-    "type": "dev",
-    "title": "Fix RAG context: pass brain_role='narrator' and raise substr limit to 800-token budget",
-    "agent": "llm_pipeline_auditor",
-    "files": [
-      "scripts/merlin/merlin_llm_adapter.gd"
-    ],
-    "description": "SPEC-8: merlin_llm_adapter.gd:305-307 calls rag_mgr.get_prioritized_context(context) without brain_role AND truncates to 200 chars. FIX: (1) Pass brain_role='narrator' to use 800-token budget. (2) Replace substr(0,200) with substr(0,3200) to allow up to 800 tokens (~3200 chars) of RAG context. RAGManager already enforces the budget internally — the substr was an unnecessary double-truncation.",
-    "completed_at": "2026-04-15T11:45:00Z",
-    "notes": "Fixed: pass brain_role=narrator to get_prioritized_context() + removed substr(0,200) cap. Narrator budget 800 tokens (3200 chars) vs previous 50 tokens."
-  },
-  {
-    "id": "LLM-TEST-1",
-    "phase": 2,
-    "priority": 9,
-    "status": "completed",
-    "type": "test",
-    "title": "Test: LLM pipeline integration — brain fallback chain and timeout handling",
-    "agent": "bug_hunter",
-    "files": [
-      "addons/merlin_ai/merlin_ai.gd",
-      "addons/merlin_ai/ollama_backend.gd"
-    ],
-    "description": "Verify: fallback card used on Ollama timeout, poll_result() correct, cancel_generation() clean, generate_async error on double-call.",
-    "created_at": "2026-04-15T02:49:16Z",
-    "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
-    "completed_at": "2026-04-15T10:50:45Z",
-    "notes": "SPEC-9 bug_hunter static analysis: 5 invariants checked. PASS: fallback card, brain busy cleanup, cancel safety, double-call guard. WARN_LOW: stale _pending_callback race in cancel_generation(). New task LLM-CANCEL-STALE-CALLBACK added."
-  },
-  {
-    "id": "LLM-RAG-SUBSTR-FIX",
-    "sprint": "S2",
-    "priority": 18,
-    "status": "completed",
-    "type": "dev",
-    "title": "Fix RAG context: pass brain_role='narrator' and remove 200-char substr cap",
-    "agent": "llm_pipeline_auditor",
-    "files": [
-      "scripts/merlin/merlin_llm_adapter.gd"
-    ],
-    "description": "AUDIT-8 LLM-AUD-005: merlin_llm_adapter.gd:305 calls rag_mgr.get_prioritized_context(context) without brain_role='narrator'. Gets 400-token (~1600 char) default instead of 800-token (~3200 char) narrator budget. FIX: Pass brain_role='narrator' as second arg. Also verify no explicit substr cap after the call (RAG manager handles budget internally).",
-    "completed_at": "2026-04-15T11:45:00Z",
-    "notes": "Fixed: pass brain_role=narrator to get_prioritized_context() + removed substr(0,200) cap. Narrator budget 800 tokens (3200 chars) vs previous 50 tokens."
-  },
-  {
-    "id": "SAVE-TRUST-CLAMP",
-    "sprint": "S2",
-    "priority": 30,
-    "status": "completed",
-    "type": "dev",
-    "title": "Clamp trust_merlin to 0-100 in load_profile()",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "SPEC-9 HIGH: trust_merlin validated as numeric but not clamped — tampered save trust_merlin=999 gives T3 content (>80 threshold). Fixed inline with SAVE-FINS-VUES-CLAMP: added clampi(trust_merlin,0,100) to load_profile() clamping block.",
-    "completed_at": "2026-04-15T10:50:45Z",
-    "notes": "Implemented in same commit as SAVE-FINS-VUES-CLAMP"
-  },
-  {
-    "id": "FACTION-ENDING-UNLOCK-CHECK",
-    "sprint": "S3",
-    "priority": 19,
-    "type": "test",
-    "status": "completed",
-    "title": "Test faction ending unlock (>=80) triggers correct narrative route",
-    "description": "Verify MerlinReputationSystem.get_available_endings() is called at run end when faction_rep>=80. Check game_flow_controller.gd run end sequence.",
-    "files": [
-      "scripts/merlin/merlin_reputation_system.gd",
-      "scripts/core/game_flow_controller.gd"
-    ],
-    "agent": "game_playtester",
-    "completed_at": "2026-04-15T12:45:00Z",
-    "notes": "PARTIAL_FAIL_FIXED: faction_ending_chosen signal was unwired in game_flow_controller.wire_end_screen(). Added connect/disconnect + _on_faction_ending_chosen() handler. Also fixed stale test assertion FACTION_SCORE_START expected 0 (now 20)."
-  }
-]
+{
+  "tasks": [
+    {
+      "id": "SAVE-FINS-VUES-CLAMP",
+      "sprint": "S2",
+      "priority": 31,
+      "status": "completed",
+      "type": "dev",
+      "title": "Clamp fins_vues + total_runs to maxi(0) in load_profile()",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "description": "SPECIALIST-9: load_profile() clamps meta['anam'] to maxi(0) at line 147 but does NOT clamp fins_vues or total_runs. A tampered save with fins_vues=-999 would pass _validate() (is numeric) but give incorrect arc condition results (fins_vues >= 5 check would never fire). Fix: after line 151 (faction_rep clamp), add: meta['fins_vues'] = maxi(int(meta.get('fins_vues', 0)), 0) and meta['total_runs'] = maxi(int(meta.get('total_runs', 0)), 0). Consistent with existing anam clamp pattern.",
+      "completed_at": "2026-04-15T10:50:45Z",
+      "notes": "Implemented: added fins_vues and total_runs maxi(0) clamps in load_profile() clamping block (merlin_save_system.gd:148-149). Also added trust_merlin clampi(0,100) as SAVE-TRUST-CLAMP HIGH finding."
+    },
+    {
+      "id": "LLM-RAG-CONTEXT-ROLE",
+      "sprint": "S2",
+      "priority": 19,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix RAG context: pass brain_role='narrator' and raise substr limit to 800-token budget",
+      "agent": "llm_pipeline_auditor",
+      "files": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
+      "description": "SPEC-8: merlin_llm_adapter.gd:305-307 calls rag_mgr.get_prioritized_context(context) without brain_role AND truncates to 200 chars. FIX: (1) Pass brain_role='narrator' to use 800-token budget. (2) Replace substr(0,200) with substr(0,3200) to allow up to 800 tokens (~3200 chars) of RAG context. RAGManager already enforces the budget internally — the substr was an unnecessary double-truncation.",
+      "completed_at": "2026-04-15T11:45:00Z",
+      "notes": "Fixed: pass brain_role=narrator to get_prioritized_context() + removed substr(0,200) cap. Narrator budget 800 tokens (3200 chars) vs previous 50 tokens."
+    },
+    {
+      "id": "LLM-TEST-1",
+      "phase": 2,
+      "priority": 9,
+      "status": "completed",
+      "type": "test",
+      "title": "Test: LLM pipeline integration — brain fallback chain and timeout handling",
+      "agent": "bug_hunter",
+      "files": [
+        "addons/merlin_ai/merlin_ai.gd",
+        "addons/merlin_ai/ollama_backend.gd"
+      ],
+      "description": "Verify: fallback card used on Ollama timeout, poll_result() correct, cancel_generation() clean, generate_async error on double-call.",
+      "created_at": "2026-04-15T02:49:16Z",
+      "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
+      "completed_at": "2026-04-15T10:50:45Z",
+      "notes": "SPEC-9 bug_hunter static analysis: 5 invariants checked. PASS: fallback card, brain busy cleanup, cancel safety, double-call guard. WARN_LOW: stale _pending_callback race in cancel_generation(). New task LLM-CANCEL-STALE-CALLBACK added."
+    },
+    {
+      "id": "LLM-RAG-SUBSTR-FIX",
+      "sprint": "S2",
+      "priority": 18,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix RAG context: pass brain_role='narrator' and remove 200-char substr cap",
+      "agent": "llm_pipeline_auditor",
+      "files": [
+        "scripts/merlin/merlin_llm_adapter.gd"
+      ],
+      "description": "AUDIT-8 LLM-AUD-005: merlin_llm_adapter.gd:305 calls rag_mgr.get_prioritized_context(context) without brain_role='narrator'. Gets 400-token (~1600 char) default instead of 800-token (~3200 char) narrator budget. FIX: Pass brain_role='narrator' as second arg. Also verify no explicit substr cap after the call (RAG manager handles budget internally).",
+      "completed_at": "2026-04-15T11:45:00Z",
+      "notes": "Fixed: pass brain_role=narrator to get_prioritized_context() + removed substr(0,200) cap. Narrator budget 800 tokens (3200 chars) vs previous 50 tokens."
+    },
+    {
+      "id": "SAVE-TRUST-CLAMP",
+      "sprint": "S2",
+      "priority": 30,
+      "status": "completed",
+      "type": "dev",
+      "title": "Clamp trust_merlin to 0-100 in load_profile()",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "description": "SPEC-9 HIGH: trust_merlin validated as numeric but not clamped — tampered save trust_merlin=999 gives T3 content (>80 threshold). Fixed inline with SAVE-FINS-VUES-CLAMP: added clampi(trust_merlin,0,100) to load_profile() clamping block.",
+      "completed_at": "2026-04-15T10:50:45Z",
+      "notes": "Implemented in same commit as SAVE-FINS-VUES-CLAMP"
+    },
+    {
+      "id": "FACTION-ENDING-UNLOCK-CHECK",
+      "sprint": "S3",
+      "priority": 19,
+      "type": "test",
+      "status": "completed",
+      "title": "Test faction ending unlock (>=80) triggers correct narrative route",
+      "description": "Verify MerlinReputationSystem.get_available_endings() is called at run end when faction_rep>=80. Check game_flow_controller.gd run end sequence.",
+      "files": [
+        "scripts/merlin/merlin_reputation_system.gd",
+        "scripts/core/game_flow_controller.gd"
+      ],
+      "agent": "game_playtester",
+      "completed_at": "2026-04-15T12:45:00Z",
+      "notes": "PARTIAL_FAIL_FIXED: faction_ending_chosen signal was unwired in game_flow_controller.wire_end_screen(). Added connect/disconnect + _on_faction_ending_chosen() handler. Also fixed stale test assertion FACTION_SCORE_START expected 0 (now 20)."
+    },
+    {
+      "id": "UX-MINIGAME-BASE-TOUCH",
+      "sprint": "S2",
+      "priority": 22,
+      "status": "completed",
+      "type": "dev",
+      "title": "Fix minigame_base.gd button touch target: 36px → 48px",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/minigames/minigame_base.gd"
+      ],
+      "description": "SPEC-6 UX FAIL_HIGH: minigame_base.gd:118 button custom_minimum_size=Vector2(100,36). During gameplay (all 8 champ lexicaux minigames). Fix: change 36 to MerlinVisual.MIN_TOUCH_TARGET.",
+      "created_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY_AUDITOR",
+      "completed_at": "2026-04-15T13:45:04Z",
+      "notes": "SPEC-12 implemented: changed _make_button() custom_minimum_size height from 36 to MerlinVisual.MIN_TOUCH_TARGET (48px). WCAG-compliant touch targets for all minigame buttons."
+    }
+  ]
+}

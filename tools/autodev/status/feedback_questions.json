@@ -1,423 +1,455 @@
-[
-  {
-    "id": "q-20260412-001",
-    "category": "gamedesign",
-    "priority": "HIGH",
-    "status": "answered",
-    "question": "Le drain de vie (-1 PV par carte) doit-il s'appliquer AVANT ou APRES les effets de faction ?",
-    "context": "Actuellement le drain s'applique en premier (pipeline etape 1). Si applique apres, les bonus de faction pourraient compenser le drain, rendant le jeu plus permissif.",
-    "type": "multiple_choice",
-    "options": [
-      "Avant les effets (actuel - plus punitif)",
-      "Apres les effets (plus permissif)",
-      "Simultanement (drain + effets calcules ensemble)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-12T16:00:00Z"
-  },
-  {
-    "id": "q-20260412-002",
-    "category": "graphics",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "question": "Quelle ambiance lumineuse pour la foret de Broceliande ?",
-    "context": "Deux presets shader disponibles : ambiance celtique chaude (tons dores, brume ambre) vs mystique froide (tons bleu-vert, brume argentee).",
-    "type": "image_compare",
-    "options": [
-      "Preset Chaud (Celtic Gold)",
-      "Preset Froid (Mystic Silver)"
-    ],
-    "screenshot_urls": [
-      "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_warm.png",
-      "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_cold.png"
-    ],
-    "created_at": "2026-04-12T16:00:00Z",
-    "applied_at": "2026-04-14T18:48:30Z",
-    "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
-    "apply_note": "DIR-S2-MNWXQ41M already in queue: seasonal/time-of-day lighting covers this answer"
-  },
-  {
-    "id": "q-20260412-003",
-    "category": "design",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "question": "Quel style de police pour les cartes narratives ?",
-    "context": "Les cartes affichent le texte narratif genere par le LLM. Choix entre une police manuscrite celtique (plus immersive, moins lisible) et une police sans-serif moderne (plus lisible, moins thematique).",
-    "type": "multiple_choice",
-    "options": [
-      "Police celtique manuscrite (immersion)",
-      "Sans-serif moderne (lisibilite)",
-      "Hybride (titre celtique + corps sans-serif)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-12T16:00:00Z",
-    "applied_at": "2026-04-14T18:48:30Z",
-    "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
-    "apply_note": "S3-TYPOGRAPHY task in queue: hybrid font (celtic title + sans-serif body)"
-  },
-  {
-    "id": "q-20260412-004",
-    "category": "ux",
-    "priority": "LOW",
-    "status": "answered",
-    "question": "Quel est votre ressenti global sur la direction artistique du jeu ?",
-    "context": "Question ouverte pour recueillir votre vision d'ensemble. Pensez aux couleurs, a l'ambiance, au style graphique, aux animations.",
-    "type": "text",
-    "options": null,
-    "screenshot_urls": null,
-    "created_at": "2026-04-12T16:00:00Z",
-    "applied_at": "2026-04-14T18:48:30Z",
-    "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
-    "apply_note": "DIR-S2-MNWXQ41M covers N64/PS1 aesthetic with volumetric effects"
-  },
-  {
-    "id": "q-20260412-005",
-    "category": "gamedesign",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "question": "Maintenant que le drain (-1 PV/carte) est supprimé, faut-il conserver la récupération automatique (+5 PV si vie < 20) ?",
-    "context": "Sans le drain, la pression de survie vient uniquement des effets négatifs des cartes. La récupération auto +5 PV sous 20% de vie était conçue pour compenser les runs de drain prolongés. Sans drain, ce mécanisme pourrait rendre le jeu trop permissif (vie qui remonte automatiquement dès qu'elle est basse). Alternatives: le supprimer entièrement, le garder mais le baisser (+2 PV), ou le conditionner à un Ogham spécifique.",
-    "type": "multiple_choice",
-    "options": [
-      "Conserver +5 PV auto (sécurité en cas de malchance)",
-      "Réduire à +2 PV (compromis)",
-      "Supprimer (la survie dépend uniquement des choix)",
-      "Conditionner à un Ogham de soin (ex: Duir)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-12T21:00:00Z",
-    "applied_at": "2026-04-13T09:00:00Z",
-    "applied_note": "Pacing recovery (+5 HP if life<20) removed from StoreRun.resolve_choice(). Survival now depends entirely on card choices."
-  },
-  {
-    "id": "q-20260413-001",
-    "category": "ux",
-    "priority": "LOW",
-    "status": "answered",
-    "question": "La 'memoire narrative' du LLM est actuellement limitee aux 2 derniers choix du joueur. Est-ce intentionnel ?",
-    "context": "L'historique des cartes (story_log) transmis au LLM est tronque a 2 entrees (store_run.gd:156). Pour un run de 20-50 cartes, le LLM ne 'se souvient' que des 2 dernieres cartes lors de la generation suivante. Avantage: prompt plus court, generation plus rapide. Inconvenient: coherence narrative limitee (Merlin peut 'oublier' un evenement majeur il y a 3 cartes). Options: garder 2 (actuel), augmenter a 5-8 (plus de contexte), ou utiliser le RAG pour un resume compresse des arcs.",
-    "type": "multiple_choice",
-    "options": [
-      "Garder 2 (performance, LLM suffisamment contextualise par tags/flags)",
-      "Augmenter a 5 (equilibre memoire/performance)",
-      "Augmenter a 8 (meilleure coherence, prompts plus longs)",
-      "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-13T02:54:09Z",
-    "applied_at": "2026-04-13T15:00:00Z",
-    "applied_note": "S3-STORY-LOG-RAG task created in feature_queue.json (P17): RAG-based narrative memory with add_narrative_entry() per card."
-  },
-  {
-    "id": "q-20260413-003",
-    "category": "design",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "applied_at": "2026-04-13T15:00:00Z",
-    "applied_note": "S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER removed from queue. DIR-S2-MNWXQ41M promoted to P14. Description updated to include both ambient + pixel render specs + director note about full DA coherence across all scenes.",
-    "question": "DIR-S2-MNWXQ41M (cycle jour/nuit PS1) semble combiner S3-AMBIENT-LIGHTING + S3-PIXEL-RENDER. Faut-il fusionner ces 3 tâches en une seule tâche 'grand chantier visuel PS1', ou les exécuter séparément dans l'ordre ?",
-    "context": "DIR-S2-MNWXQ41M demande: cycle jour/nuit PS1 temps réel + volumétrie + saisons. S3-AMBIENT-LIGHTING (P14): season+time_of_day dans run state + contexte LLM. S3-PIXEL-RENDER (P16): pixel snap + affine textures + low-poly fog + dithering. Ces 3 tâches touchent les mêmes fichiers (merlin_visual.gd, store_run.gd, merlin_omniscient.gd). Exécutées séparément → risque de conflits de merge. Fusionnées → tâche plus lourde (~3 cycles).",
-    "type": "multiple_choice",
-    "options": [
-      "Fusionner en une seule tâche 'S3-VISUAL-PS1' (cohérence, ~3 cycles)",
-      "Exécuter séparément dans l'ordre: AMBIENT → PIXEL → DIR-MNWXQ41M (plus atomique)",
-      "Remplacer S3-AMBIENT + S3-PIXEL par DIR-S2-MNWXQ41M uniquement (DIR est plus complet)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-13T12:00:00Z"
-  },
-  {
-    "id": "q-20260413-002",
-    "category": "gamedesign",
-    "priority": "LOW",
-    "status": "answered",
-    "applied_at": "2026-04-13T11:00:00Z",
-    "applied_note": "Added dominant_faction to all 8 BIOMES in merlin_constants.gd. Updated BUG-FACTIONS-STALE-FIX task to use dominant_faction in biome-based event routing.",
-    "question": "Les 5 factions ont-elles toutes un poids narratif egal, ou certaines doivent-elles etre prioritaires dans le routage des evenements?",
-    "context": "Bug BUG-FACTIONS-STALE-OMNISCIENT revele que toute la couche IA (omniscient, event_category_selector, NPC dialogue) voyait les factions a zero depuis le debut. Maintenant que le fix va propager meta.faction_rep, le systeme de routage va vraiment reagir aux reputations. Question: est-ce que Ankou (mort/au-dela) doit avoir plus de poids narratif si reputation > 60 ? Est-ce que Niamh (guerriere/noblesse) doit ouvrir des cartes de rang/honneur ? Ou est-ce que toutes les 5 factions ont exactement le meme comportement de routage ?",
-    "type": "multiple_choice",
-    "options": [
-      "Egalite parfaite — meme comportement de routage pour toutes les 5 factions",
-      "Poids asymetrique — Ankou et Druides ont des arcs narratifs plus forts",
-      "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-13T10:00:00Z"
-  },
-  {
-    "id": "q-20260413-004",
-    "category": "gamedesign",
-    "priority": "LOW",
-    "status": "answered",
-    "question": "mg_meditation.gd existe comme minigame mais n'est pas listé dans la bible s.6.2. Après correction de mg_sang_froid (déplacé vers esprit), GAMES['esprit'] sera [volonte, apaisement, sang_froid]. Que faire de mg_meditation ?",
-    "context": "Audit S3-MINIGAMES-FIELD-AUDIT: Bible esprit = apaisement, volonte, sang_froid. GAMES esprit avait mg_meditation (non-biblique) à la place de mg_sang_froid. Fix appliqué: sang_froid remplace meditation dans GAMES['esprit']. mg_meditation.gd reste comme script mais n'est plus dispatchable.",
-    "type": "multiple_choice",
-    "options": [
-      "Supprimer mg_meditation.gd (scripte non-utilisé)",
-      "Déplacer dans un autre champ (ex: perception ou logique) — lequel ?",
-      "Garder comme bonus esprit (ajouter à GAMES['esprit'] = 4 entrées)",
-      "Garder le script pour usage futur, ne pas dispatcher pour l'instant"
-    ],
-    "applied_at": "2026-04-13T19:44:09Z",
-    "applied_note": "S3-MEDITATION-CLEANUP task unblocked with Option A: delete mg_meditation.gd, remove match case line 138 from create_minigame(), remove 'meditation' from TAG_FIELD_MAP line 66. Task description updated in feature_queue.json."
-  },
-  {
-    "id": "q-20260414-001",
-    "category": "gamedesign",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "question": "La formule de mort Anam (bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)') doit-elle s'appliquer UNIQUEMENT à la récompense de fin de run, ou AUSSI à l'Anam accumulé via effets de cartes (ADD_ANAM) pendant le run ?",
-    "context": "Actuellement, l'effet ADD_ANAM crédite l'Anam directement dans meta['anam'] dès qu'une carte est jouée (gain immédiat et permanent, pas affecté par la mort). Le multiplicateur de mort min(cartes/30, 1.0) ne s'applique qu'à la récompense de base (ANAM_BASE_REWARD + bonus victoire/minigames). Exemple: joueur gagne 20 Anam via cartes puis meurt à la carte 5 → garde 20 Anam de cartes + 3 Anam (10*0.33) base = 23 total. Si la formule bible s'applique à tout: 20 Anam*0.33 + 3 base = 10 total.",
-    "type": "multiple_choice",
-    "options": [
-      "Gain immédiat non affecté — ADD_ANAM de carte est une récompense acquise définitivement (actuel)",
-      "Appliquer le multiplicateur à TOUT l'Anam du run, cartes incluses (plus punitif, fidèle bible littérale)",
-      "Compromis: ADD_ANAM de carte donne 50% immédiat + 50% en fin de run (scalé par mort)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-14T02:00:00Z",
-    "applied_at": "2026-04-14T08:00:00Z",
-    "applied_note": "BUG-ANAM-DEATH-PENALTY-FIX unblocked and bumped to P5. Director chose Option B: apply death ratio min(cards_played/30,1.0) to ALL in-run Anam (ADD_ANAM card gains + base reward). Implementation plan: _apply_add_anam() credits run[\"anam_accumulated\"] only; calculate_run_rewards() adds anam_accumulated to base before applying ratio; init_run() resets anam_accumulated=0."
-  },
-  {
-    "id": "q-20260414-002",
-    "category": "gamedesign",
-    "priority": "LOW",
-    "status": "answered",
-    "question": "run_history dans le profil sauvegarde stocke tous les runs completés sans limite. Après 100+ parties, ce tableau peut devenir volumineux. Faut-il le plafonner ?",
-    "context": "merlin_save_system._get_default_profile() initialise run_history:[] (ligne 44). Aucun code ne le tronque actuellement. Chaque entrée run_history contient probablement biome, résultat, durée, anam_earned, fins_vues au moment du run. À raison d'une partie de 15-20 min, un joueur assidu pourrait avoir 200+ runs. Impact: taille fichier save croissante, load_profile() plus lent. Option A: garder illimité (données analytiques complètes). Option B: garder les 20 derniers runs. Option C: garder seulement les statistiques agrégées (pas les runs individuels).",
-    "type": "multiple_choice",
-    "options": [
-      "Illimité (données complètes pour analytics)",
-      "Plafonner aux 20 derniers runs (équilibre mémoire/historique)",
-      "50 derniers runs",
-      "Statistiques agrégées uniquement (pas d'historique individuel)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-14T11:00:00Z",
-    "applied_at": "2026-04-14T13:00:00Z",
-    "applied_note": "hub_controller.gd:338 run_history cap changed from 20 to 50 (director: 50 derniers runs). Comment updated."
-  },
-  {
-    "id": "q-20260414-003",
-    "category": "gamedesign",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "question": "get_save_data() est appelé par MerlinStore mais n'est pas encore implémenté. Quel contenu doit-il retourner ?",
-    "context": "merlin_game_controller.gd:285 appelle store.get_save_data() pour construire le contexte biome (previous_runs, fins_vues, oghams_owned). Actuellement la méthode n'existe pas → save_data={} → previous_runs=0, fins_vues=0, oghams=0 toujours. Option A: retourner load_profile() entier (include biome_runs, fins_vues, oghams, etc.). Option B: retourner seulement le sous-ensemble utile pour la génération de skeleton (profil léger). Option C: passer directement meta depuis MerlinStore.state.meta (référence directe, sans I/O disque).",
-    "type": "multiple_choice",
-    "options": [
-      "load_profile() entier (accès I/O disque, toujours synchronisé avec le fichier save)",
-      "Sous-ensemble minimal {biome_runs, fins_vues, oghams} (léger, pas d'I/O inutile)",
-      "state.meta directement (zero I/O, risque de mutation si dict non copié)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-14T12:00:00Z",
-    "applied_at": "2026-04-14T13:00:00Z",
-    "applied_note": "get_save_data() implemented in merlin_store.gd:649 — returns save_system.load_profile() entire disk-synced profile. Director: load_profile() entier. This unblocks arc_condition_type evaluation for runs_in_biome, fins_vues, oghams_owned."
-  },
-  {
-    "id": "q-20260414-004",
-    "category": "design",
-    "priority": "MEDIUM",
-    "status": "answered",
-    "question": "game_flow_controller.gd (HubScreen→Run3D→EndRunScreen path) est mort mais audio_integration.gd y est câblé. Faut-il supprimer ce chemin ou le conserver pour une future alternative ?",
-    "context": "SPECIALIST-14 audit: deux chemins de jeu coexistent. Chemin ACTIF: HubAntre→BroceliandeForest3D→MerlinGame. Chemin MORT: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn. Aucun script de production n'instancie GameFlowController. Mais audio_integration.gd le référence. Options: (A) Supprimer le chemin mort (HubScreen.tscn, Run3D.tscn, game_flow_controller.gd) pour simplifier. (B) Garder comme chemin alternatif documenté pour future refonte. (C) Migrer le chemin actif vers game_flow_controller (refonte architecturale).",
-    "type": "multiple_choice",
-    "options": [
-      "Supprimer (HubScreen/Run3D/game_flow_controller = dead code)",
-      "Garder documenté (potentiel futur)",
-      "Migrer le chemin actif vers game_flow_controller (refonte propre)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-14T15:00:00Z",
-    "applied_at": "2026-04-14T22:45:00Z",
-    "applied_notes": "Tasks queued: FLOW-QUIZ-WIRE-INTRO (P9), FLOW-RENCONTRE-CONSTANTS-CLEANUP (P10)"
-  },
-  {
-    "id": "q-20260414-005",
-    "title": "IntroPersonalityQuiz orphaned — wire into new game flow?",
-    "question": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn sont actuellement inaccessibles depuis le jeu normal (menu_3d_pc._start_new_game() va direct à ParchmentPreRun). La bible dit: Menu→Quiz→Rencontre→Hub. Faut-il: (A) Reconnecter le quiz pour les nouvelles parties (first_run detection), ou (B) Supprimer IntroPersonalityQuiz/SceneRencontreMerlin comme dead code (comme game_flow_controller), ou (C) Garder tel quel (ParchmentPreRun remplace le quiz)?",
-    "type": "multiple_choice",
-    "options": [
-      "A: Reconnecter quiz pour first-run",
-      "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin",
-      "C: Garder ParchmentPreRun comme remplacement (statu quo)"
-    ],
-    "category": "gamedesign",
-    "priority": "HIGH",
-    "status": "answered",
-    "context": "scripts/menu_3d_pc.gd:1333-1337 + scripts/IntroPersonalityQuiz.gd + scripts/SceneRencontreMerlin.gd:10-12. SPEC-0 audit finding.",
-    "applied_at": "2026-04-14T22:45:00Z",
-    "applied_notes": "Tasks queued: FLOW-QUIZ-WIRE-INTRO (P9), FLOW-RENCONTRE-CONSTANTS-CLEANUP (P10)"
-  },
-  {
-    "id": "q-20260414-006",
-    "status": "pending",
-    "priority": "MEDIUM",
-    "type": "multiple_choice",
-    "category": "ux",
-    "title": "audio_integration.gd: dead code (SFXEngine manquant) — Supprimer ou implémenter?",
-    "description": "audio_integration.gd (456 lignes) référence une classe SFXEngine qui n'existe nulle part. Les méthodes wire_run(), wire_hub(), wire_end_screen(), wire_flow() ne sont jamais appelées. Le fichier est du dead code complet. Options: A) Supprimer le fichier (garder SFXManager.play() direct comme aujourd'hui), B) Implémenter SFXEngine comme façade entre AudioIntegration et SFXManager (centralise toute logique audio via signaux).",
-    "options": [
-      "A: Supprimer audio_integration.gd (SFXManager.play() direct est suffisant)",
-      "B: Implémenter SFXEngine + câbler AudioIntegration (architecture centralisée)"
-    ],
-    "context_file": "scripts/audio/audio_integration.gd",
-    "timestamp": "2026-04-14T19:42:00Z"
-  },
-  {
-    "id": "q-20260414-007",
-    "title": "BrocScreenVfx shader reattach approach — SubViewport vs WorldEnvironment compositor",
-    "question": "The screen VFX shader (glitch/scanlines/vignette) is currently detached. Two approaches: (A) Use a BackBufferCopy node feeding the ColorRect texture so screen_vfx.gdshader can sample TEXTURE, (B) Use SubViewportContainer + inner SubViewport with the shader on the container material. Which approach do you prefer for minimal scene complexity?",
-    "type": "multiple_choice",
-    "category": "ux",
-    "options": [
-      "A: BackBufferCopy node (simpler, 1 extra node)",
-      "B: SubViewportContainer (more control, matches existing structure)"
-    ],
-    "status": "pending",
-    "priority": "MEDIUM",
-    "created_at": "2026-04-14T21:44:27Z",
-    "context": "SPEC-5 FAIL_HIGH: broc_screen_vfx.gd:46 shader removed comment. VFX-SCREEN-VFX-REATTACH task queued at P23."
-  },
-  {
-    "id": "q-20260414-008",
-    "status": "pending",
-    "priority": "MEDIUM",
-    "type": "multiple_choice",
-    "category": "ux",
-    "title": "Biome radial labels: current 11px — readable en style PS1/N64 pixel-art?",
-    "question": "biome_radial.gd:369 dessine les labels de biomes en font_size=11px autour du radial de selection. Avec la DA PS1/N64 low-pixel ciblee, ces labels seront sur fond pixelise. Les garder a 11px (limite min) ou monter a 14px pour la lisibilite mobile/web?",
-    "options": [
-      "A) Garder 11px (coherent avec DA low-pixel, lisibilite acceptable)",
-      "B) Monter a 14px (priorite lisibilite mobile, leger impact DA)",
-      "C) Supprimer les labels texte, utiliser icones seules (full PS1 style)"
-    ],
-    "context": "SPEC-6 CHK-12. La biome_radial est l'ecran de selection de biome depuis le Hub. Sur mobile les labels guident le joueur."
-  },
-  {
-    "id": "q-20260414-009",
-    "type": "multiple_choice",
-    "category": "gamedesign",
-    "priority": "HIGH",
-    "status": "pending",
-    "title": "Faction ending UI: auto-select vs player choice",
-    "question": "Quand un seul faction a rep >= 80 a la fin du run: (A) Auto-declencher la fin de faction directement (simple, pas de friction), (B) Quand meme afficher l'ecran de choix avec 1 option (coherence UX - toujours le meme flow), (C) Afficher uniquement si 2+ factions eligible (economiser l'ecran pour les cas multi-faction)?",
-    "options": [
-      "A: Auto-select (friction minimale)",
-      "B: Toujours afficher l'ecran meme avec 1 faction",
-      "C: Ecran seulement si 2+ factions eligibles"
-    ],
-    "context": "Bible s.3.8 dit 'le joueur choisit' pour les fins multiples, mais ne precise pas le cas 1 faction unique. NAR-FACTION-ENDING-UI depend de cette decision.",
-    "created_at": "2026-04-14T23:50:17Z",
-    "created_by": "SPEC-7-NARRATIVE"
-  },
-  {
-    "id": "q-20260414-010",
-    "type": "multiple_choice",
-    "category": "design",
-    "priority": "MEDIUM",
-    "status": "pending",
-    "title": "T3 cards tone: high-trust vs initiation content",
-    "question": "Les cartes T3 (haute confiance Merlin) doivent-elles etre: (A) Plus philosophiques et intimes -- Merlin partage des verites profondes sur le monde celtique, (B) Plus dangereuses et ambigues -- choix moraux extremes sans bonne reponse, (C) Initiatiques -- acces a des lieux/rituels secrets qui redesinent le monde?",
-    "options": [
-      "A: Philosophiques et intimes (confiance = profondeur)",
-      "B: Dangereuses et moralement ambigues",
-      "C: Initiatiques (acces lieux/rituels secrets)"
-    ],
-    "context": "44 cards T3 actuelles - distribution trop mince. Besoin de 20 nouvelles (NAR-TRUST-TIER-T3-CONTENT). Le ton determine le profil des auteurs et la direction narrative.",
-    "created_at": "2026-04-14T23:50:17Z",
-    "created_by": "SPEC-7-NARRATIVE"
-  },
-  {
-    "id": "q-20260415-001",
-    "category": "design",
-    "priority": "MEDIUM",
-    "status": "pending",
-    "question": "Les effets de cartes (Game Master JSON) sont générés sans contrainte de format. Quelle approche pour forcer la structure ?",
-    "context": "OllamaBackend.set_grammar() est un no-op pour Ollama (ollama_backend.gd:418-428) — la contrainte GBNF n'est pas supportée. Le Game Master génère donc du JSON libre pour les effets (ex: [{type:ADD_REPUTATION, faction:druides, amount:15}]). Actuellement, le JSON repair (4 stratégies) compense les malformations. Deux alternatives pour forcer la structure sans grammar: (A) Few-shot JSON: ajouter des exemples de JSON correct dans le system prompt du GM (efficace, simple, +50 tokens). (B) Prompt-engineering: reformuler le prompt GM pour éliciter du JSON via instruction explicite ('RÉPONDS UNIQUEMENT avec ce JSON exact: ...'). (C) Statu quo: repair pipeline suffit, pas besoin de forcer.",
-    "type": "multiple_choice",
-    "options": [
-      "A: Few-shot JSON dans system prompt (exemples + schema)",
-      "B: Instruction explicite avec template JSON dans prompt",
-      "C: Statu quo — le repair pipeline est suffisant"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-15T00:00:00Z",
-    "title": "GM JSON structure: few-shot vs instruction vs repair pipeline"
-  },
-  {
-    "id": "q-20260415-002",
-    "category": "gamedesign",
-    "priority": "MEDIUM",
-    "status": "pending",
-    "question": "run_history entries à sauvegarder: quels champs par run? (A) Minimal: biome+cards_played+victory+anam_earned+timestamp, (B) Complet: + life_at_end + dominant_faction + minigames_won + oghams_used",
-    "context": "SPEC-9 audit: run_history never populated. Doit être implémenté. Champs minimal suffisent pour le RAG LLM et l'eco-memory, mais champs complets sont utiles pour stats dashboard.",
-    "type": "multiple_choice",
-    "options": [
-      "A: Minimal (biome, cards_played, victory, anam_earned, timestamp)",
-      "B: Complet (+ life_at_end, dominant_faction, minigames_won, oghams_used)"
-    ],
-    "screenshot_urls": null,
-    "created_at": "2026-04-15T01:30:00Z",
-    "title": "run_history entry schema: minimal vs complet"
-  },
-  {
-    "id": "q-20260415-003",
-    "status": "pending",
-    "priority": "HIGH",
-    "type": "multiple_choice",
-    "category": "gamedesign",
-    "title": "Faction ending choice: quand 2+ factions >= 80, faut-il un texte narratif spécifique par faction?",
-    "question": "L'écran de fin affiche maintenant un choix de faction quand 2+ factions ont rep >=80. Pour chaque faction choisie, doit-on: A) Afficher uniquement un écran de stats standard, B) Générer un texte narratif spécifique via LLM ('Tu te tournes vers les Druides...'), C) Charger un ending pré-écrit par faction depuis data/cards/",
-    "options": [
-      "A: stats standard",
-      "B: LLM narratif par faction",
-      "C: ending pré-écrit"
-    ],
-    "context": "scripts/run/end_run_screen.gd — signal faction_ending_chosen vient d'être ajouté. Le caller devra gérer la suite.",
-    "timestamp": "2026-04-15T08:10:00Z"
-  },
-  {
-    "id": "q-20260415-004",
-    "title": "Main menu keyboard/gamepad navigation — enable or keep mouse-only?",
-    "type": "multiple_choice",
-    "category": "ux",
-    "question": "All main menu buttons have FOCUS_NONE. Should keyboard/gamepad nav be enabled?",
-    "options": [
-      "A: Enable FOCUS_ALL for keyboard Tab + gamepad D-pad navigation",
-      "B: Keep FOCUS_NONE — mouse/touch only, cleaner visual"
-    ],
-    "status": "pending",
-    "priority": "LOW",
-    "created_at": "2026-04-15T09:15:00Z",
-    "created_by": "SPECIALIST-7-UX"
-  },
-  {
-    "id": "q-20260415-005",
-    "status": "pending",
-    "priority": "MEDIUM",
-    "type": "multiple_choice",
-    "category": "gamedesign",
-    "title": "GM JSON prompt: 2-example vs 3-example few-shot",
-    "question": "calculate_smart_effects() now uses 2 few-shot JSON examples (danger + stable). Add a 3rd end-game example (PROGRESS_MISSION + high rep) for better late-game coverage?",
-    "options": [
-      "A: 2 examples (current) — shorter prompt, less token cost",
-      "B: 3 examples — add end-game (PROGRESS_MISSION + high rep swings)",
-      "C: 1 example only — minimize token use"
-    ],
-    "created_at": "2026-04-15T10:30:00Z"
-  },
-  {
-    "id": "q-20260415-006",
-    "title": "faction_endings_chosen: champ dedie vs dominant_factions_seen existant?",
-    "type": "multiple_choice",
-    "category": "gamedesign",
-    "status": "pending",
-    "priority": "MEDIUM",
-    "question": "Le bot a connecte faction_ending_chosen a echo_memory.dominant_factions_seen[]. Mais ce champ semble avoir ete prevu pour 'factions dominantes a la fin d'un run' (pas 'fins narratives completees'). Options: A) OK - utiliser dominant_factions_seen pour les deux usages (pas de distinction). B) Creer faction_endings_chosen[] separe pour tracker uniquement les fins narratives completees (LLM peut dire 'tu as deja honore l'Ankou...'). C) Supprimer le tracking — pas besoin de memoire narrative cross-run sur les endings.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  }
-]
+{
+  "questions": [
+    {
+      "id": "q-20260412-001",
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "answered",
+      "question": "Le drain de vie (-1 PV par carte) doit-il s'appliquer AVANT ou APRES les effets de faction ?",
+      "context": "Actuellement le drain s'applique en premier (pipeline etape 1). Si applique apres, les bonus de faction pourraient compenser le drain, rendant le jeu plus permissif.",
+      "type": "multiple_choice",
+      "options": [
+        "Avant les effets (actuel - plus punitif)",
+        "Apres les effets (plus permissif)",
+        "Simultanement (drain + effets calcules ensemble)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T16:00:00Z"
+    },
+    {
+      "id": "q-20260412-002",
+      "category": "graphics",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "question": "Quelle ambiance lumineuse pour la foret de Broceliande ?",
+      "context": "Deux presets shader disponibles : ambiance celtique chaude (tons dores, brume ambre) vs mystique froide (tons bleu-vert, brume argentee).",
+      "type": "image_compare",
+      "options": [
+        "Preset Chaud (Celtic Gold)",
+        "Preset Froid (Mystic Silver)"
+      ],
+      "screenshot_urls": [
+        "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_warm.png",
+        "https://raw.githubusercontent.com/merlingame-netizen/M.E.R.L.I.N/main/scene_screenshots/forest_cold.png"
+      ],
+      "created_at": "2026-04-12T16:00:00Z",
+      "applied_at": "2026-04-14T18:48:30Z",
+      "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
+      "apply_note": "DIR-S2-MNWXQ41M already in queue: seasonal/time-of-day lighting covers this answer"
+    },
+    {
+      "id": "q-20260412-003",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "question": "Quel style de police pour les cartes narratives ?",
+      "context": "Les cartes affichent le texte narratif genere par le LLM. Choix entre une police manuscrite celtique (plus immersive, moins lisible) et une police sans-serif moderne (plus lisible, moins thematique).",
+      "type": "multiple_choice",
+      "options": [
+        "Police celtique manuscrite (immersion)",
+        "Sans-serif moderne (lisibilite)",
+        "Hybride (titre celtique + corps sans-serif)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T16:00:00Z",
+      "applied_at": "2026-04-14T18:48:30Z",
+      "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
+      "apply_note": "S3-TYPOGRAPHY task in queue: hybrid font (celtic title + sans-serif body)"
+    },
+    {
+      "id": "q-20260412-004",
+      "category": "ux",
+      "priority": "LOW",
+      "status": "answered",
+      "question": "Quel est votre ressenti global sur la direction artistique du jeu ?",
+      "context": "Question ouverte pour recueillir votre vision d'ensemble. Pensez aux couleurs, a l'ambiance, au style graphique, aux animations.",
+      "type": "text",
+      "options": null,
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T16:00:00Z",
+      "applied_at": "2026-04-14T18:48:30Z",
+      "applied_by": "SPEC-2-GAME_DESIGN_COMPLIANCE_AUDITOR",
+      "apply_note": "DIR-S2-MNWXQ41M covers N64/PS1 aesthetic with volumetric effects"
+    },
+    {
+      "id": "q-20260412-005",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "question": "Maintenant que le drain (-1 PV/carte) est supprimé, faut-il conserver la récupération automatique (+5 PV si vie < 20) ?",
+      "context": "Sans le drain, la pression de survie vient uniquement des effets négatifs des cartes. La récupération auto +5 PV sous 20% de vie était conçue pour compenser les runs de drain prolongés. Sans drain, ce mécanisme pourrait rendre le jeu trop permissif (vie qui remonte automatiquement dès qu'elle est basse). Alternatives: le supprimer entièrement, le garder mais le baisser (+2 PV), ou le conditionner à un Ogham spécifique.",
+      "type": "multiple_choice",
+      "options": [
+        "Conserver +5 PV auto (sécurité en cas de malchance)",
+        "Réduire à +2 PV (compromis)",
+        "Supprimer (la survie dépend uniquement des choix)",
+        "Conditionner à un Ogham de soin (ex: Duir)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-12T21:00:00Z",
+      "applied_at": "2026-04-13T09:00:00Z",
+      "applied_note": "Pacing recovery (+5 HP if life<20) removed from StoreRun.resolve_choice(). Survival now depends entirely on card choices."
+    },
+    {
+      "id": "q-20260413-001",
+      "category": "ux",
+      "priority": "LOW",
+      "status": "answered",
+      "question": "La 'memoire narrative' du LLM est actuellement limitee aux 2 derniers choix du joueur. Est-ce intentionnel ?",
+      "context": "L'historique des cartes (story_log) transmis au LLM est tronque a 2 entrees (store_run.gd:156). Pour un run de 20-50 cartes, le LLM ne 'se souvient' que des 2 dernieres cartes lors de la generation suivante. Avantage: prompt plus court, generation plus rapide. Inconvenient: coherence narrative limitee (Merlin peut 'oublier' un evenement majeur il y a 3 cartes). Options: garder 2 (actuel), augmenter a 5-8 (plus de contexte), ou utiliser le RAG pour un resume compresse des arcs.",
+      "type": "multiple_choice",
+      "options": [
+        "Garder 2 (performance, LLM suffisamment contextualise par tags/flags)",
+        "Augmenter a 5 (equilibre memoire/performance)",
+        "Augmenter a 8 (meilleure coherence, prompts plus longs)",
+        "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-13T02:54:09Z",
+      "applied_at": "2026-04-13T15:00:00Z",
+      "applied_note": "S3-STORY-LOG-RAG task created in feature_queue.json (P17): RAG-based narrative memory with add_narrative_entry() per card."
+    },
+    {
+      "id": "q-20260413-003",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "applied_at": "2026-04-13T15:00:00Z",
+      "applied_note": "S3-AMBIENT-LIGHTING and S3-PIXEL-RENDER removed from queue. DIR-S2-MNWXQ41M promoted to P14. Description updated to include both ambient + pixel render specs + director note about full DA coherence across all scenes.",
+      "question": "DIR-S2-MNWXQ41M (cycle jour/nuit PS1) semble combiner S3-AMBIENT-LIGHTING + S3-PIXEL-RENDER. Faut-il fusionner ces 3 tâches en une seule tâche 'grand chantier visuel PS1', ou les exécuter séparément dans l'ordre ?",
+      "context": "DIR-S2-MNWXQ41M demande: cycle jour/nuit PS1 temps réel + volumétrie + saisons. S3-AMBIENT-LIGHTING (P14): season+time_of_day dans run state + contexte LLM. S3-PIXEL-RENDER (P16): pixel snap + affine textures + low-poly fog + dithering. Ces 3 tâches touchent les mêmes fichiers (merlin_visual.gd, store_run.gd, merlin_omniscient.gd). Exécutées séparément → risque de conflits de merge. Fusionnées → tâche plus lourde (~3 cycles).",
+      "type": "multiple_choice",
+      "options": [
+        "Fusionner en une seule tâche 'S3-VISUAL-PS1' (cohérence, ~3 cycles)",
+        "Exécuter séparément dans l'ordre: AMBIENT → PIXEL → DIR-MNWXQ41M (plus atomique)",
+        "Remplacer S3-AMBIENT + S3-PIXEL par DIR-S2-MNWXQ41M uniquement (DIR est plus complet)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-13T12:00:00Z"
+    },
+    {
+      "id": "q-20260413-002",
+      "category": "gamedesign",
+      "priority": "LOW",
+      "status": "answered",
+      "applied_at": "2026-04-13T11:00:00Z",
+      "applied_note": "Added dominant_faction to all 8 BIOMES in merlin_constants.gd. Updated BUG-FACTIONS-STALE-FIX task to use dominant_faction in biome-based event routing.",
+      "question": "Les 5 factions ont-elles toutes un poids narratif egal, ou certaines doivent-elles etre prioritaires dans le routage des evenements?",
+      "context": "Bug BUG-FACTIONS-STALE-OMNISCIENT revele que toute la couche IA (omniscient, event_category_selector, NPC dialogue) voyait les factions a zero depuis le debut. Maintenant que le fix va propager meta.faction_rep, le systeme de routage va vraiment reagir aux reputations. Question: est-ce que Ankou (mort/au-dela) doit avoir plus de poids narratif si reputation > 60 ? Est-ce que Niamh (guerriere/noblesse) doit ouvrir des cartes de rang/honneur ? Ou est-ce que toutes les 5 factions ont exactement le meme comportement de routage ?",
+      "type": "multiple_choice",
+      "options": [
+        "Egalite parfaite — meme comportement de routage pour toutes les 5 factions",
+        "Poids asymetrique — Ankou et Druides ont des arcs narratifs plus forts",
+        "A definir par biome — chaque biome a sa faction dominante naturelle (ex: marais = korrigans)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-13T10:00:00Z"
+    },
+    {
+      "id": "q-20260413-004",
+      "category": "gamedesign",
+      "priority": "LOW",
+      "status": "answered",
+      "question": "mg_meditation.gd existe comme minigame mais n'est pas listé dans la bible s.6.2. Après correction de mg_sang_froid (déplacé vers esprit), GAMES['esprit'] sera [volonte, apaisement, sang_froid]. Que faire de mg_meditation ?",
+      "context": "Audit S3-MINIGAMES-FIELD-AUDIT: Bible esprit = apaisement, volonte, sang_froid. GAMES esprit avait mg_meditation (non-biblique) à la place de mg_sang_froid. Fix appliqué: sang_froid remplace meditation dans GAMES['esprit']. mg_meditation.gd reste comme script mais n'est plus dispatchable.",
+      "type": "multiple_choice",
+      "options": [
+        "Supprimer mg_meditation.gd (scripte non-utilisé)",
+        "Déplacer dans un autre champ (ex: perception ou logique) — lequel ?",
+        "Garder comme bonus esprit (ajouter à GAMES['esprit'] = 4 entrées)",
+        "Garder le script pour usage futur, ne pas dispatcher pour l'instant"
+      ],
+      "applied_at": "2026-04-13T19:44:09Z",
+      "applied_note": "S3-MEDITATION-CLEANUP task unblocked with Option A: delete mg_meditation.gd, remove match case line 138 from create_minigame(), remove 'meditation' from TAG_FIELD_MAP line 66. Task description updated in feature_queue.json."
+    },
+    {
+      "id": "q-20260414-001",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "question": "La formule de mort Anam (bible s.5.1 'Mort = Anam × min(cartes/30, 1.0)') doit-elle s'appliquer UNIQUEMENT à la récompense de fin de run, ou AUSSI à l'Anam accumulé via effets de cartes (ADD_ANAM) pendant le run ?",
+      "context": "Actuellement, l'effet ADD_ANAM crédite l'Anam directement dans meta['anam'] dès qu'une carte est jouée (gain immédiat et permanent, pas affecté par la mort). Le multiplicateur de mort min(cartes/30, 1.0) ne s'applique qu'à la récompense de base (ANAM_BASE_REWARD + bonus victoire/minigames). Exemple: joueur gagne 20 Anam via cartes puis meurt à la carte 5 → garde 20 Anam de cartes + 3 Anam (10*0.33) base = 23 total. Si la formule bible s'applique à tout: 20 Anam*0.33 + 3 base = 10 total.",
+      "type": "multiple_choice",
+      "options": [
+        "Gain immédiat non affecté — ADD_ANAM de carte est une récompense acquise définitivement (actuel)",
+        "Appliquer le multiplicateur à TOUT l'Anam du run, cartes incluses (plus punitif, fidèle bible littérale)",
+        "Compromis: ADD_ANAM de carte donne 50% immédiat + 50% en fin de run (scalé par mort)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-14T02:00:00Z",
+      "applied_at": "2026-04-14T08:00:00Z",
+      "applied_note": "BUG-ANAM-DEATH-PENALTY-FIX unblocked and bumped to P5. Director chose Option B: apply death ratio min(cards_played/30,1.0) to ALL in-run Anam (ADD_ANAM card gains + base reward). Implementation plan: _apply_add_anam() credits run[\"anam_accumulated\"] only; calculate_run_rewards() adds anam_accumulated to base before applying ratio; init_run() resets anam_accumulated=0."
+    },
+    {
+      "id": "q-20260414-002",
+      "category": "gamedesign",
+      "priority": "LOW",
+      "status": "answered",
+      "question": "run_history dans le profil sauvegarde stocke tous les runs completés sans limite. Après 100+ parties, ce tableau peut devenir volumineux. Faut-il le plafonner ?",
+      "context": "merlin_save_system._get_default_profile() initialise run_history:[] (ligne 44). Aucun code ne le tronque actuellement. Chaque entrée run_history contient probablement biome, résultat, durée, anam_earned, fins_vues au moment du run. À raison d'une partie de 15-20 min, un joueur assidu pourrait avoir 200+ runs. Impact: taille fichier save croissante, load_profile() plus lent. Option A: garder illimité (données analytiques complètes). Option B: garder les 20 derniers runs. Option C: garder seulement les statistiques agrégées (pas les runs individuels).",
+      "type": "multiple_choice",
+      "options": [
+        "Illimité (données complètes pour analytics)",
+        "Plafonner aux 20 derniers runs (équilibre mémoire/historique)",
+        "50 derniers runs",
+        "Statistiques agrégées uniquement (pas d'historique individuel)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-14T11:00:00Z",
+      "applied_at": "2026-04-14T13:00:00Z",
+      "applied_note": "hub_controller.gd:338 run_history cap changed from 20 to 50 (director: 50 derniers runs). Comment updated."
+    },
+    {
+      "id": "q-20260414-003",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "question": "get_save_data() est appelé par MerlinStore mais n'est pas encore implémenté. Quel contenu doit-il retourner ?",
+      "context": "merlin_game_controller.gd:285 appelle store.get_save_data() pour construire le contexte biome (previous_runs, fins_vues, oghams_owned). Actuellement la méthode n'existe pas → save_data={} → previous_runs=0, fins_vues=0, oghams=0 toujours. Option A: retourner load_profile() entier (include biome_runs, fins_vues, oghams, etc.). Option B: retourner seulement le sous-ensemble utile pour la génération de skeleton (profil léger). Option C: passer directement meta depuis MerlinStore.state.meta (référence directe, sans I/O disque).",
+      "type": "multiple_choice",
+      "options": [
+        "load_profile() entier (accès I/O disque, toujours synchronisé avec le fichier save)",
+        "Sous-ensemble minimal {biome_runs, fins_vues, oghams} (léger, pas d'I/O inutile)",
+        "state.meta directement (zero I/O, risque de mutation si dict non copié)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-14T12:00:00Z",
+      "applied_at": "2026-04-14T13:00:00Z",
+      "applied_note": "get_save_data() implemented in merlin_store.gd:649 — returns save_system.load_profile() entire disk-synced profile. Director: load_profile() entier. This unblocks arc_condition_type evaluation for runs_in_biome, fins_vues, oghams_owned."
+    },
+    {
+      "id": "q-20260414-004",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "answered",
+      "question": "game_flow_controller.gd (HubScreen→Run3D→EndRunScreen path) est mort mais audio_integration.gd y est câblé. Faut-il supprimer ce chemin ou le conserver pour une future alternative ?",
+      "context": "SPECIALIST-14 audit: deux chemins de jeu coexistent. Chemin ACTIF: HubAntre→BroceliandeForest3D→MerlinGame. Chemin MORT: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn. Aucun script de production n'instancie GameFlowController. Mais audio_integration.gd le référence. Options: (A) Supprimer le chemin mort (HubScreen.tscn, Run3D.tscn, game_flow_controller.gd) pour simplifier. (B) Garder comme chemin alternatif documenté pour future refonte. (C) Migrer le chemin actif vers game_flow_controller (refonte architecturale).",
+      "type": "multiple_choice",
+      "options": [
+        "Supprimer (HubScreen/Run3D/game_flow_controller = dead code)",
+        "Garder documenté (potentiel futur)",
+        "Migrer le chemin actif vers game_flow_controller (refonte propre)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-14T15:00:00Z",
+      "applied_at": "2026-04-14T22:45:00Z",
+      "applied_notes": "Tasks queued: FLOW-QUIZ-WIRE-INTRO (P9), FLOW-RENCONTRE-CONSTANTS-CLEANUP (P10)"
+    },
+    {
+      "id": "q-20260414-005",
+      "title": "IntroPersonalityQuiz orphaned — wire into new game flow?",
+      "question": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn sont actuellement inaccessibles depuis le jeu normal (menu_3d_pc._start_new_game() va direct à ParchmentPreRun). La bible dit: Menu→Quiz→Rencontre→Hub. Faut-il: (A) Reconnecter le quiz pour les nouvelles parties (first_run detection), ou (B) Supprimer IntroPersonalityQuiz/SceneRencontreMerlin comme dead code (comme game_flow_controller), ou (C) Garder tel quel (ParchmentPreRun remplace le quiz)?",
+      "type": "multiple_choice",
+      "options": [
+        "A: Reconnecter quiz pour first-run",
+        "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin",
+        "C: Garder ParchmentPreRun comme remplacement (statu quo)"
+      ],
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "answered",
+      "context": "scripts/menu_3d_pc.gd:1333-1337 + scripts/IntroPersonalityQuiz.gd + scripts/SceneRencontreMerlin.gd:10-12. SPEC-0 audit finding.",
+      "applied_at": "2026-04-14T22:45:00Z",
+      "applied_notes": "Tasks queued: FLOW-QUIZ-WIRE-INTRO (P9), FLOW-RENCONTRE-CONSTANTS-CLEANUP (P10)"
+    },
+    {
+      "id": "q-20260414-006",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "ux",
+      "title": "audio_integration.gd: dead code (SFXEngine manquant) — Supprimer ou implémenter?",
+      "description": "audio_integration.gd (456 lignes) référence une classe SFXEngine qui n'existe nulle part. Les méthodes wire_run(), wire_hub(), wire_end_screen(), wire_flow() ne sont jamais appelées. Le fichier est du dead code complet. Options: A) Supprimer le fichier (garder SFXManager.play() direct comme aujourd'hui), B) Implémenter SFXEngine comme façade entre AudioIntegration et SFXManager (centralise toute logique audio via signaux).",
+      "options": [
+        "A: Supprimer audio_integration.gd (SFXManager.play() direct est suffisant)",
+        "B: Implémenter SFXEngine + câbler AudioIntegration (architecture centralisée)"
+      ],
+      "context_file": "scripts/audio/audio_integration.gd",
+      "timestamp": "2026-04-14T19:42:00Z"
+    },
+    {
+      "id": "q-20260414-007",
+      "title": "BrocScreenVfx shader reattach approach — SubViewport vs WorldEnvironment compositor",
+      "question": "The screen VFX shader (glitch/scanlines/vignette) is currently detached. Two approaches: (A) Use a BackBufferCopy node feeding the ColorRect texture so screen_vfx.gdshader can sample TEXTURE, (B) Use SubViewportContainer + inner SubViewport with the shader on the container material. Which approach do you prefer for minimal scene complexity?",
+      "type": "multiple_choice",
+      "category": "ux",
+      "options": [
+        "A: BackBufferCopy node (simpler, 1 extra node)",
+        "B: SubViewportContainer (more control, matches existing structure)"
+      ],
+      "status": "pending",
+      "priority": "MEDIUM",
+      "created_at": "2026-04-14T21:44:27Z",
+      "context": "SPEC-5 FAIL_HIGH: broc_screen_vfx.gd:46 shader removed comment. VFX-SCREEN-VFX-REATTACH task queued at P23."
+    },
+    {
+      "id": "q-20260414-008",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "ux",
+      "title": "Biome radial labels: current 11px — readable en style PS1/N64 pixel-art?",
+      "question": "biome_radial.gd:369 dessine les labels de biomes en font_size=11px autour du radial de selection. Avec la DA PS1/N64 low-pixel ciblee, ces labels seront sur fond pixelise. Les garder a 11px (limite min) ou monter a 14px pour la lisibilite mobile/web?",
+      "options": [
+        "A) Garder 11px (coherent avec DA low-pixel, lisibilite acceptable)",
+        "B) Monter a 14px (priorite lisibilite mobile, leger impact DA)",
+        "C) Supprimer les labels texte, utiliser icones seules (full PS1 style)"
+      ],
+      "context": "SPEC-6 CHK-12. La biome_radial est l'ecran de selection de biome depuis le Hub. Sur mobile les labels guident le joueur."
+    },
+    {
+      "id": "q-20260414-009",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "pending",
+      "title": "Faction ending UI: auto-select vs player choice",
+      "question": "Quand un seul faction a rep >= 80 a la fin du run: (A) Auto-declencher la fin de faction directement (simple, pas de friction), (B) Quand meme afficher l'ecran de choix avec 1 option (coherence UX - toujours le meme flow), (C) Afficher uniquement si 2+ factions eligible (economiser l'ecran pour les cas multi-faction)?",
+      "options": [
+        "A: Auto-select (friction minimale)",
+        "B: Toujours afficher l'ecran meme avec 1 faction",
+        "C: Ecran seulement si 2+ factions eligibles"
+      ],
+      "context": "Bible s.3.8 dit 'le joueur choisit' pour les fins multiples, mais ne precise pas le cas 1 faction unique. NAR-FACTION-ENDING-UI depend de cette decision.",
+      "created_at": "2026-04-14T23:50:17Z",
+      "created_by": "SPEC-7-NARRATIVE"
+    },
+    {
+      "id": "q-20260414-010",
+      "type": "multiple_choice",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "title": "T3 cards tone: high-trust vs initiation content",
+      "question": "Les cartes T3 (haute confiance Merlin) doivent-elles etre: (A) Plus philosophiques et intimes -- Merlin partage des verites profondes sur le monde celtique, (B) Plus dangereuses et ambigues -- choix moraux extremes sans bonne reponse, (C) Initiatiques -- acces a des lieux/rituels secrets qui redesinent le monde?",
+      "options": [
+        "A: Philosophiques et intimes (confiance = profondeur)",
+        "B: Dangereuses et moralement ambigues",
+        "C: Initiatiques (acces lieux/rituels secrets)"
+      ],
+      "context": "44 cards T3 actuelles - distribution trop mince. Besoin de 20 nouvelles (NAR-TRUST-TIER-T3-CONTENT). Le ton determine le profil des auteurs et la direction narrative.",
+      "created_at": "2026-04-14T23:50:17Z",
+      "created_by": "SPEC-7-NARRATIVE"
+    },
+    {
+      "id": "q-20260415-001",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "question": "Les effets de cartes (Game Master JSON) sont générés sans contrainte de format. Quelle approche pour forcer la structure ?",
+      "context": "OllamaBackend.set_grammar() est un no-op pour Ollama (ollama_backend.gd:418-428) — la contrainte GBNF n'est pas supportée. Le Game Master génère donc du JSON libre pour les effets (ex: [{type:ADD_REPUTATION, faction:druides, amount:15}]). Actuellement, le JSON repair (4 stratégies) compense les malformations. Deux alternatives pour forcer la structure sans grammar: (A) Few-shot JSON: ajouter des exemples de JSON correct dans le system prompt du GM (efficace, simple, +50 tokens). (B) Prompt-engineering: reformuler le prompt GM pour éliciter du JSON via instruction explicite ('RÉPONDS UNIQUEMENT avec ce JSON exact: ...'). (C) Statu quo: repair pipeline suffit, pas besoin de forcer.",
+      "type": "multiple_choice",
+      "options": [
+        "A: Few-shot JSON dans system prompt (exemples + schema)",
+        "B: Instruction explicite avec template JSON dans prompt",
+        "C: Statu quo — le repair pipeline est suffisant"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-15T00:00:00Z",
+      "title": "GM JSON structure: few-shot vs instruction vs repair pipeline"
+    },
+    {
+      "id": "q-20260415-002",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "question": "run_history entries à sauvegarder: quels champs par run? (A) Minimal: biome+cards_played+victory+anam_earned+timestamp, (B) Complet: + life_at_end + dominant_faction + minigames_won + oghams_used",
+      "context": "SPEC-9 audit: run_history never populated. Doit être implémenté. Champs minimal suffisent pour le RAG LLM et l'eco-memory, mais champs complets sont utiles pour stats dashboard.",
+      "type": "multiple_choice",
+      "options": [
+        "A: Minimal (biome, cards_played, victory, anam_earned, timestamp)",
+        "B: Complet (+ life_at_end, dominant_faction, minigames_won, oghams_used)"
+      ],
+      "screenshot_urls": null,
+      "created_at": "2026-04-15T01:30:00Z",
+      "title": "run_history entry schema: minimal vs complet"
+    },
+    {
+      "id": "q-20260415-003",
+      "status": "pending",
+      "priority": "HIGH",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "Faction ending choice: quand 2+ factions >= 80, faut-il un texte narratif spécifique par faction?",
+      "question": "L'écran de fin affiche maintenant un choix de faction quand 2+ factions ont rep >=80. Pour chaque faction choisie, doit-on: A) Afficher uniquement un écran de stats standard, B) Générer un texte narratif spécifique via LLM ('Tu te tournes vers les Druides...'), C) Charger un ending pré-écrit par faction depuis data/cards/",
+      "options": [
+        "A: stats standard",
+        "B: LLM narratif par faction",
+        "C: ending pré-écrit"
+      ],
+      "context": "scripts/run/end_run_screen.gd — signal faction_ending_chosen vient d'être ajouté. Le caller devra gérer la suite.",
+      "timestamp": "2026-04-15T08:10:00Z"
+    },
+    {
+      "id": "q-20260415-004",
+      "title": "Main menu keyboard/gamepad navigation — enable or keep mouse-only?",
+      "type": "multiple_choice",
+      "category": "ux",
+      "question": "All main menu buttons have FOCUS_NONE. Should keyboard/gamepad nav be enabled?",
+      "options": [
+        "A: Enable FOCUS_ALL for keyboard Tab + gamepad D-pad navigation",
+        "B: Keep FOCUS_NONE — mouse/touch only, cleaner visual"
+      ],
+      "status": "pending",
+      "priority": "LOW",
+      "created_at": "2026-04-15T09:15:00Z",
+      "created_by": "SPECIALIST-7-UX"
+    },
+    {
+      "id": "q-20260415-005",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "GM JSON prompt: 2-example vs 3-example few-shot",
+      "question": "calculate_smart_effects() now uses 2 few-shot JSON examples (danger + stable). Add a 3rd end-game example (PROGRESS_MISSION + high rep) for better late-game coverage?",
+      "options": [
+        "A: 2 examples (current) — shorter prompt, less token cost",
+        "B: 3 examples — add end-game (PROGRESS_MISSION + high rep swings)",
+        "C: 1 example only — minimize token use"
+      ],
+      "created_at": "2026-04-15T10:30:00Z"
+    },
+    {
+      "id": "q-20260415-006",
+      "title": "faction_endings_chosen: champ dedie vs dominant_factions_seen existant?",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "question": "Le bot a connecte faction_ending_chosen a echo_memory.dominant_factions_seen[]. Mais ce champ semble avoir ete prevu pour 'factions dominantes a la fin d'un run' (pas 'fins narratives completees'). Options: A) OK - utiliser dominant_factions_seen pour les deux usages (pas de distinction). B) Creer faction_endings_chosen[] separe pour tracker uniquement les fins narratives completees (LLM peut dire 'tu as deja honore l'Ankou...'). C) Supprimer le tracking — pas besoin de memoire narrative cross-run sur les endings.",
+      "created_at": "2026-04-15T12:45:00Z",
+      "created_by": "SPEC-11-FACTION"
+    },
+    {
+      "id": "q-20260415-007",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "title": "mg_de_du_destin: ajouter au registry général ou garder usage spécial seulement?",
+      "question": "mg_de_du_destin.gd (dé du destin: prédire pile/face sur D6) est utilisé uniquement dans TransitionBiome.gd pour les quêtes de transition biome. Faut-il l'ajouter au registry GAMES[\"chance\"] pour qu'il soit aussi sélectionnable lors des cartes normales du run? Ou garder son usage exclusif aux quêtes de biome?",
+      "context": "SPEC-12 MG-12-02: mg_de_du_destin non listé dans minigame_registry.gd mais actif en jeu via un chemin dédié.",
+      "type": "multiple_choice",
+      "options": [
+        "A: Ajouter au registry GAMES[\"chance\"] — plus de variété dans les cartes normales",
+        "B: Garder exclusif aux transitions biome — c'est intentionnel",
+        "C: Renommer en mg_quete_biome.gd pour clarifier son rôle spécial"
+      ]
+    },
+    {
+      "id": "q-20260415-008",
+      "category": "gamedesign",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "title": "mg_trace_cerf: champ observation ou perception selon bible?",
+      "question": "mg_trace_cerf.gd (cliquer sur un marqueur qui se déplace — Trace du Cerf) est dans GAMES[\"observation\"]. La bible §6.4 liste \"Traces\" sous le champ PERCEPTION. Doit-on:\n- A: Déplacer mg_trace_cerf vers GAMES[\"perception\"] pour conformité bible\n- B: Garder dans observation (cliquer un objet visuel = observation)\n- C: Créer un nouveau mg_traces.gd (suivre empreintes) pour perception et garder trace_cerf en observation",
+      "context": "SPEC-12 MG-12-03: Le comportement de trace_cerf (cliquer marqueur mobile) ne correspond pas exactement à \"suivre des empreintes sans quitter le chemin\" décrit dans la bible.",
+      "type": "multiple_choice",
+      "options": [
+        "A: Déplacer vers perception (conformité bible)",
+        "B: Garder dans observation (comportement actuel du minigame)",
+        "C: Créer mg_traces_empreintes.gd pour perception, garder mg_trace_cerf en observation"
+      ]
+    }
+  ]
+}

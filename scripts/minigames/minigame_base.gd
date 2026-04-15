@@ -115,7 +115,7 @@ func _make_button(text: String, callback: Callable) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.add_theme_font_size_override("font_size", 16)
-	b.custom_minimum_size = Vector2(100, 36)
+	b.custom_minimum_size = Vector2(100, MerlinVisual.MIN_TOUCH_TARGET)
 	b.pressed.connect(callback)
 	return b
 
