@@ -552,6 +552,20 @@
     "description": "SPECIALIST-1 AUDIT: screen_frame.gd:351 uses Color(1.0, 1.0, 1.0, 0.15) for a highlight effect. Should reference MerlinVisual.CRT_PALETTE['phosphor_bright'] or similar white-equivalent key, modified with alpha. Low priority but completes visual consistency."
   },
   {
+    "id": "GDC-FACTION-CONTENT-50-GATE",
+    "sprint": "S2",
+    "priority": 2,
+    "status": "pending",
+    "type": "dev",
+    "title": "Audit + implement faction content unlock gate at rep >= 50 in card pool",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd"
+    ],
+    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
+    "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
+  },
+  {
     "id": "T-GDC-FACTION-ENDING-INTEGRATION",
     "sprint": "S2",
     "priority": 22,
@@ -2037,10 +2051,9 @@
       "scripts/merlin/merlin_card_system.gd",
       "scripts/merlin/merlin_reputation_system.gd"
     ],
-    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.\n[MERGED from GDC-FACTION-CONTENT-50-GATE]: SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
+    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
     "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
-    "notes": "Merged with GDC-FACTION-CONTENT-50-GATE (confirmed duplicate). "
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
     "id": "E2E-DELETE-ORPHAN-SCENES",
@@ -2124,81 +2137,47 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "META-QUEUE-PRIORITY-COMPACT",
-    "sprint": "META",
-    "priority": 21,
-    "type": "dev",
+    "id": "GAME-ANTRE-MERLIN-ART",
+    "sprint": "S3",
+    "priority": 2,
     "status": "pending",
-    "title": "Normalize queue priorities: compress P14-P77 range to P14-P40",
-    "agent": "meta_evolution_auditor",
+    "type": "dev",
+    "title": "Antre de Merlin: refonte DA — hors charte actuelle (PS1 celtique, volumetric fog, OLED)",
+    "agent": "tech_artist",
     "files": [
-      "tools/autodev/status/feature_queue.json"
+      "scenes/antre_merlin/*.tscn",
+      "scripts/merlin/merlin_visual.gd",
+      "shaders/community/low_poly/*.gdshader"
     ],
-    "description": "Priority sprawl: P1 to P77 (68 distinct values across 152 tasks). Normalize: keep P1-P13 intact, re-map P14+ to P14-P40 in proportion. Reduces cognitive load and better reflects relative urgency. Script: tools/autodev/scripts/normalize_priorities.py"
+    "description": "Director feedback 2026-04-15: rendu graphique de l'Antre ne correspond pas a la DA PS1 celtique definie (#06070D OLED, vertex snap, affine textures, low-poly volumetric fog). Refaire l'eclairage volumetrique, les materiaux procedural runes druidiques, vertex snap sur meshes, palette Merlin (violet mystique #8B5CF6, emerald Esprits #10B981, amber Obscurs #F59E0B). Cross-check contre DIR-S2-MNWXQ41M (cycle jour/nuit unified visual task)."
   },
   {
-    "id": "META-FIX-RATE-TRACKER",
-    "sprint": "META",
-    "priority": 22,
-    "type": "dev",
+    "id": "GAME-MENU-PRINCIPAL-ART",
+    "sprint": "S3",
+    "priority": 3,
     "status": "pending",
-    "title": "Add fix_rate + cycle_velocity metrics to studio_learnings.json",
-    "agent": "meta_evolution_auditor",
+    "type": "dev",
+    "title": "Menu principal: refonte graphique — typographie celtique + ambiance mystique",
+    "agent": "tech_artist",
     "files": [
-      "tools/autodev/status/studio_learnings.json"
+      "scenes/menu_principal/*.tscn",
+      "scripts/merlin/menu_principal.gd",
+      "scripts/merlin/merlin_visual.gd"
     ],
-    "description": "Current fix rate: 26.3% (10/38 bugs). No per-cycle tracking. Add: fix_rate_pct, cycle_velocity (tasks/cycle), queue_growth_rate (tasks added - tasks done per cycle), estimated_drain_cycles. Update at end of each meta cycle."
+    "description": "Director feedback 2026-04-15: menu principal pas dans l'idee du rendu graphique attendu. Appliquer charte: font celtique FONT_TITLE (S3-TYPOGRAPHY ref), background OLED #06070D avec glass panels backdrop blur 18px, animation de fond subtile (particules oghams, brume volumetrique), boutons avec ghost-border rgba(255,255,255,0.08) + hover violet #8B5CF6. Cross-check MenuPrincipalMerlin FOCUS_NONE fix (Specialist 7 UX finding)."
   },
   {
-    "id": "META-INSIGHTS-PRUNE",
-    "sprint": "META",
-    "priority": 23,
-    "type": "dev",
+    "id": "MC-V3-DRAWER-DIRECTOR-GRID-LAYOUT",
+    "sprint": "S4",
+    "priority": 50,
     "status": "pending",
-    "title": "Prune studio_insights.json to 20 most recent ACTION+WARN entries",
-    "agent": "meta_evolution_auditor",
-    "files": [
-      "tools/autodev/status/studio_insights.json"
-    ],
-    "description": "Currently 39 insights. INFO entries with no proposed_task can be archived. Keep: all ACTION severity, last 10 WARN. Archive rest to tools/autodev/status/insights_archive/YYYY-MM.json. Target: <=20 active insights."
-  },
-  {
-    "id": "META-PATTERNS-PRUNE",
-    "sprint": "META",
-    "priority": 24,
     "type": "dev",
-    "status": "pending",
-    "title": "Deduplicate studio_learnings.patterns_learned: 123 → top 60",
-    "agent": "meta_evolution_auditor",
+    "title": "Cockpit drawer: Director tab layout review — 4 panels en grid 2x2 peut overflow",
+    "agent": "frontend_specialist",
     "files": [
-      "tools/autodev/status/studio_learnings.json"
+      "tools/autodev/mission-control/src/components/cockpit/Drawer.tsx",
+      "tools/autodev/mission-control/src/styles/cockpit.css"
     ],
-    "description": "123 patterns_learned entries accumulated over 10 cycles. Many are redundant or obsolete. Script: (1) cluster by keyword overlap, (2) keep highest-severity from each cluster, (3) keep all CRITICAL/HIGH from last 3 cycles, (4) archive rest. Target: <=60 patterns."
-  },
-  {
-    "id": "META-FEEDBACK-BATCH",
-    "sprint": "META",
-    "priority": 25,
-    "type": "dev",
-    "status": "pending",
-    "title": "Group 19 pending feedback_questions into HIGH/MEDIUM/LOW priority batches",
-    "agent": "meta_evolution_auditor",
-    "files": [
-      "tools/autodev/status/feedback_questions.json"
-    ],
-    "description": "19 unanswered questions accumulating. Director may have question fatigue. Action: (1) tag each pending question with priority HIGH/MED/LOW based on blocking impact, (2) write tools/autodev/status/feedback_batch_for_director.md with organized presentation, (3) mark 5+ LOW questions as auto-decided based on existing bible rules."
-  },
-  {
-    "id": "META-SPECIALIST-16-QUEUE-HEALTH",
-    "sprint": "META",
-    "priority": 26,
-    "type": "dev",
-    "status": "pending",
-    "title": "Add Specialist #16: QUEUE_HEALTH_AUDITOR to cycle_instructions.md",
-    "agent": "meta_evolution_auditor",
-    "files": [
-      "tools/autodev/studio-bridge/prompts/cycle_instructions.md"
-    ],
-    "description": "NEW SPECIALIST: Each cycle (every 16 cycles): count pending tasks, measure growth rate, detect duplicate task pairs by keyword, normalize priorities, enforce max 80 pending by archiving lowest-priority stale tasks, report queue health score 0-100. Also propose expanding to 17-specialist rotation (17 = prime, unique modulo distribution)."
+    "description": "User bug report 2026-04-15: clicking Director tab makes interface 'disappear'. ErrorBoundary deployed 2026-04-15 as mitigation to surface any crash. If no crash visible post-deploy, root cause is CSS layout: drawer__grid--2 with 4 children in .drawer__body overflow-y=auto can create >100vh total height with no internal min-height, collapsing visibly. Fix: add drawer__grid--2 { grid-auto-rows: minmax(200px, auto) } OR split Director into 2x2 sub-grids."
   }
 ]

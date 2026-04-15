@@ -10,6 +10,7 @@ import { HumanFeedback } from '../HumanFeedback';
 import { FileUpload } from '../FileUpload';
 import { SceneSelector } from '../SceneSelector';
 import { SpecialistRotation } from '../SpecialistRotation';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 type DrawerTab = 'tasks' | 'alerts' | 'director' | 'settings';
 
@@ -119,30 +120,30 @@ export function Drawer() {
       case 'tasks':
         return (
           <div className="drawer__grid drawer__grid--2">
-            <FeatureQueue />
-            <CompletedTasks />
+            <ErrorBoundary label="FeatureQueue"><FeatureQueue /></ErrorBoundary>
+            <ErrorBoundary label="CompletedTasks"><CompletedTasks /></ErrorBoundary>
           </div>
         );
       case 'alerts':
         return (
           <div className="drawer__grid drawer__grid--2">
-            <AlertFeed />
-            <StudioInsights />
+            <ErrorBoundary label="AlertFeed"><AlertFeed /></ErrorBoundary>
+            <ErrorBoundary label="StudioInsights"><StudioInsights /></ErrorBoundary>
           </div>
         );
       case 'director':
         return (
           <div className="drawer__grid drawer__grid--2">
-            <DirectorInstructions />
-            <HumanFeedback />
-            <FileUpload />
-            <SceneSelector />
+            <ErrorBoundary label="DirectorInstructions"><DirectorInstructions /></ErrorBoundary>
+            <ErrorBoundary label="HumanFeedback"><HumanFeedback /></ErrorBoundary>
+            <ErrorBoundary label="FileUpload"><FileUpload /></ErrorBoundary>
+            <ErrorBoundary label="SceneSelector"><SceneSelector /></ErrorBoundary>
           </div>
         );
       case 'settings':
         return (
           <div className="drawer__grid">
-            <SpecialistRotation />
+            <ErrorBoundary label="SpecialistRotation"><SpecialistRotation /></ErrorBoundary>
           </div>
         );
     }
