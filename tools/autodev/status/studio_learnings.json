@@ -1122,6 +1122,49 @@
         "scripts/broceliande_3d/broc_narrative_director.gd",
         "scripts/broceliande_3d/broc_event_vfx.gd"
       ]
+    },
+    {
+      "id": "PAT-UX-001",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "MerlinVisual.MIN_TOUCH_TARGET=48 exists but is NOT applied to hub_screen factory buttons (_make_biome_button, _make_ogham_button). Always check factory functions for touch compliance.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/ui/hub_screen.gd",
+        "scripts/minigames/minigame_base.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-002",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "compact_mode font floor at 10px (Collection.gd:388) violates the 11px minimum. When adding compact_mode font scaling, always clamp: max(scaled_size, 11).",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/Collection.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-003",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "faction_endings_available is computed in store_run.check_run_end() and passed as part of end_check dict. EndRunScreen.show_results(run_data) receives it. No need to recompute — always read from run_data.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/run/end_run_screen.gd",
+        "scripts/merlin/store_run.gd"
+      ]
+    },
+    {
+      "id": "PAT-UX-004",
+      "learned_at": "2026-04-15T08:10:00Z",
+      "source": "SPECIALIST-6-UX_ACCESSIBILITY",
+      "pattern": "EndRunScreen has two versions: scripts/ui/end_run_screen.gd (EndRunScreenUI, legacy/unused) and scripts/run/end_run_screen.gd (EndRunScreen, production). Always edit the run/ version.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/run/end_run_screen.gd",
+        "scripts/ui/end_run_screen.gd"
+      ]
     }
   ],
   "agent_performance": {
@@ -1139,7 +1182,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 36,
+      "tasks_completed": 37,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -1264,6 +1307,10 @@
       "tasks_completed": 0,
       "bugs_introduced": 0,
       "tasks_audited": 5
+    },
+    "ux_auditor": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0
     }
   },
   "llm_quality": {
@@ -1471,7 +1518,7 @@
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
     }
   ],
-  "total_cycles": 5,
-  "bugs_found": 15,
-  "bugs_fixed": 3
+  "total_cycles": 6,
+  "bugs_found": 24,
+  "bugs_fixed": 4
 }

@@ -200,5 +200,38 @@
     "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR",
     "completed_at": "2026-04-15T05:47:14Z",
     "notes": "Added push_warning() in generate_async() before HTTP attempt: logs role, env var, ProjectSettings, and URL param configuration hints. groq_backend.gd:88."
+  },
+  {
+    "id": "NAR-FACTION-ENDING-UI",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "dev",
+    "title": "Faction ending choice screen when faction_endings_available non-empty",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/merlin/store_run.gd"
+    ],
+    "description": "end_run_screen.gd must read end_check.faction_endings_available. If non-empty: show choice panel 'Vers qui vous tournez-vous?' with faction buttons (bible s.3.8 fins multiples). If single faction: auto-select. Emit signal faction_ending_chosen(faction_name).",
+    "status": "completed",
+    "created_at": "2026-04-14T23:48:58Z",
+    "created_by": "SPEC-7-NARRATIVE",
+    "completed_at": "2026-04-15T08:10:00Z",
+    "notes": "Added faction_ending_chosen signal, _faction_choices state, _show_faction_choice_panel() multi-faction UI, _on_faction_btn_pressed(). Single faction auto-selects. 2+ factions shows buttons. Buttons use MIN_TOUCH_TARGET(48)."
+  },
+  {
+    "id": "VFX-GRASS-WIND-SHADER",
+    "sprint": "S2",
+    "priority": 10,
+    "status": "completed",
+    "type": "dev",
+    "title": "Create missing grass_wind_sway.gdshader",
+    "agent": "vfx_artist",
+    "files": [
+      "shaders/grass_wind_sway.gdshader"
+    ],
+    "description": "SPEC5-FAIL-001: grass_wind_sway.gdshader was missing but referenced in broc_grass_wind.gd:18. Created PS1/N64 Celtic aesthetic shader: vertex_lighting, cull_disabled, height-weighted sway (UV.y^1.8), quantized vertex snap for PS1 stutter, world-space phase coherence across instances.",
+    "completed_at": "2026-04-15T07:00:00Z",
+    "notes": "Implemented by SPEC-5 cycle. Shader uses vertex_snap uniform (default 0.03) for PS1 quantization, wind_strength=0.35, wind_speed=1.5. BrocGrassWind already assigns this shader via _try_load_shader — no code change needed."
   }
 ]

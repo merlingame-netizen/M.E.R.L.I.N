@@ -362,5 +362,21 @@
     "screenshot_urls": null,
     "created_at": "2026-04-15T01:30:00Z",
     "title": "run_history entry schema: minimal vs complet"
+  },
+  {
+    "id": "q-20260415-003",
+    "status": "pending",
+    "priority": "HIGH",
+    "type": "multiple_choice",
+    "category": "gamedesign",
+    "title": "Faction ending choice: quand 2+ factions >= 80, faut-il un texte narratif spécifique par faction?",
+    "question": "L'écran de fin affiche maintenant un choix de faction quand 2+ factions ont rep >=80. Pour chaque faction choisie, doit-on: A) Afficher uniquement un écran de stats standard, B) Générer un texte narratif spécifique via LLM ('Tu te tournes vers les Druides...'), C) Charger un ending pré-écrit par faction depuis data/cards/",
+    "options": [
+      "A: stats standard",
+      "B: LLM narratif par faction",
+      "C: ending pré-écrit"
+    ],
+    "context": "scripts/run/end_run_screen.gd — signal faction_ending_chosen vient d'être ajouté. Le caller devra gérer la suite.",
+    "timestamp": "2026-04-15T08:10:00Z"
   }
 ]
