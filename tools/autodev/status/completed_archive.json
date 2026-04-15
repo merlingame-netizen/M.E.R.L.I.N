@@ -109,5 +109,77 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "FACTION-SCORE-START-AUDIT",
+    "sprint": "S2",
+    "priority": 26,
+    "type": "test",
+    "status": "completed",
+    "title": "Verify FACTION_SCORE_START=20 used consistently on new profile",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/merlin/merlin_store.gd",
+      "scripts/merlin/merlin_reputation_system.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Static analysis: (1) merlin_store.gd initializes faction_rep at FACTION_SCORE_START=20 for new profiles, (2) merlin_reputation_system.build_default_factions() returns 0.0 not 20 — divergence. When is each used? (3) load_profile() initializes missing factions at FACTION_SCORE_START or 0? Check merlin_save_system ENSURE_ALL_FACTIONS task covers this.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION",
+    "completed_at": "2026-04-15T20:46:24Z",
+    "notes": "PASS — FACTION_SCORE_START=20 consistent across all 5 usages + test assertion"
+  },
+  {
+    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
+    "sprint": "S2",
+    "priority": 12,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-15T20:46:24Z",
+    "notes": "FIXED — _on_hub() now always routes to HUB_SCENE (HubAntre). GAME_SCENE const now unused (FLOW-GAME-SCENE-CONST-CLEANUP task added)"
+  },
+  {
+    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-15T20:46:24Z",
+    "notes": "PASS — awaits store.dispatch(LOAD_PROFILE) before transitioning; graceful fallback on failure"
+  },
+  {
+    "id": "T-E2E-AUTOLOADS-INIT",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-15T20:46:24Z",
+    "notes": "PASS_WITH_NOTE — MerlinStore via GameManager deferred; fallback mode documented; timing race noted as SF-006"
   }
 ]

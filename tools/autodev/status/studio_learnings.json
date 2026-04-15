@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T18:47:19Z",
+  "last_updated": "2026-04-15T20:46:24Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
-    "bugs_fixed": 38,
-    "tasks_completed": 85,
+    "total_test_cycles": 27,
+    "bugs_found": 70,
+    "bugs_fixed": 39,
+    "tasks_completed": 89,
     "tasks_pending": 152,
     "current_sprint": "S3",
-    "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "specialist_cycles_run": 19,
+    "last_specialist": 0,
+    "last_updated": "2026-04-15T20:46:24Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,38 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-15T20:46:24Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "_on_hub() conditional routing to MerlinGame.tscn was an orphan from pre-overlay architecture. When encounter cards moved to overlay, the GAME_SCENE routing was not cleaned up. Always grep for GAME_SCENE/SCENE references after major architecture changes.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-15T20:46:24Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "MerlinStore NOT in project.godot autoloads — added dynamically by GameManager via call_deferred. Scenes checking /root/MerlinStore before GameManager's deferred frame completes will get null. Document this architectural dependency clearly.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/game_manager.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-15T20:46:24Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "Active game flow uses Menu3DPC (3D menu), NOT MenuPrincipal.tscn (2D menu). MenuPrincipalMerlin.gd is a legacy controller. New features should target Menu3DPC + menu_3d_pc.gd.",
+      "severity": "LOW",
+      "applies_to": [
+        "scripts/menu_3d_pc.gd",
+        "scripts/MenuPrincipalMerlin.gd"
       ]
     }
   ],

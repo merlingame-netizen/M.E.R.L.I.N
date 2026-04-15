@@ -70,3 +70,4 @@
 2026-04-15T14:45:00 OK — Specialist 13: 3D_SCENE_ASSET_AUDITOR — 8 findings (1 CRITICAL), 5 new tasks, fixed GDC-FOREST3D-STALE-DRAIN, verified S2-ARC-CONDITION-EVAL-V2
 2026-04-15T15:45:00Z OK — Specialist 14 (INTEGRATION_E2E_AUDITOR) TEST cycle: FACTION-CONTENT-UNLOCK-CHECK FAIL, 6 new tasks, 3 patterns learned
 2026-04-15T18:47:19Z OK — Cycle 10 — Specialist #15 META_EVOLUTION — PASS
+2026-04-15T20:46:24Z OK — Cycle 11 — Specialist #0 SCENE_FLOW_TESTER — PASS (1 CRITICAL fix: _on_hub orphan MerlinGame path, 3 test PASS, 6 new tasks)

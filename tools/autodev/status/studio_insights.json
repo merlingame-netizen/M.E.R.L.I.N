@@ -594,5 +594,19 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260415-010",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "Critical scene routing bug found: _on_hub() in BroceliandeForest3D was routing to orphaned MerlinGame.tscn. Fixed. GAME_SCENE const now dead.",
+    "details": "When _merlin_found=true, hub button was routing to MerlinGame.tscn (old separate card scene). After the architecture change to card overlays within BroceliandeForest3D, this routing was never updated. Now fixed to always route to HubAntre. Also found: 2 orphan scenes still on disk (director ordered deletion), 2 dead consts in HubAntre. MerlinStore added via call_deferred by GameManager — not in autoloads — works but is fragile.",
+    "proposed_task": {
+      "title": "FLOW-GAME-SCENE-CONST-CLEANUP: Remove now-unused GAME_SCENE const from broceliande_forest_3d.gd",
+      "sprint": "S2",
+      "type": "dev"
+    },
+    "timestamp": "2026-04-15T20:46:24Z"
   }
 ]

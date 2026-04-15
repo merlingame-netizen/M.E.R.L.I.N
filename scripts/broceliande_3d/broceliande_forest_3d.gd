@@ -1218,10 +1218,9 @@ func _on_run_complete() -> void:
 
 
 func _on_hub() -> void:
-	# After forest walk, go to MerlinGame (card encounters)
-	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
+	# Return to Hub — card encounters handled as overlay within BroceliandeForest3D
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("transition_to"):
-		pt.transition_to(target)
+		pt.transition_to(HUB_SCENE)
 	else:
-		get_tree().change_scene_to_file(target)
+		get_tree().change_scene_to_file(HUB_SCENE)

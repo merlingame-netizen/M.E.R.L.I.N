@@ -1731,23 +1731,6 @@
     "created_by": "SPEC-11-FACTION"
   },
   {
-    "id": "FACTION-SCORE-START-AUDIT",
-    "sprint": "S2",
-    "priority": 26,
-    "type": "test",
-    "status": "pending",
-    "title": "Verify FACTION_SCORE_START=20 used consistently on new profile",
-    "agent": "bug_hunter",
-    "files": [
-      "scripts/merlin/merlin_store.gd",
-      "scripts/merlin/merlin_reputation_system.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Static analysis: (1) merlin_store.gd initializes faction_rep at FACTION_SCORE_START=20 for new profiles, (2) merlin_reputation_system.build_default_factions() returns 0.0 not 20 — divergence. When is each used? (3) load_profile() initializes missing factions at FACTION_SCORE_START or 0? Check merlin_save_system ENSURE_ALL_FACTIONS task covers this.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  },
-  {
     "id": "MG-DEL-MEDITATION",
     "sprint": "S2",
     "priority": 15,
@@ -2074,21 +2057,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
-    "sprint": "S2",
-    "priority": 12,
-    "type": "dev",
-    "status": "pending",
-    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
-    "agent": "game_design_coder",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd"
-    ],
-    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-HUBANTRE-SCRIPT-AUDIT",
     "sprint": "S2",
     "priority": 13,
@@ -2101,38 +2069,6 @@
       "scripts/HubAntre.gd"
     ],
     "description": "HubAntre.tscn is the hub destination after forest run but HubAntre.gd appears not to instantiate core game systems (MerlinStore, MerlinCardSystem, MerlinSaveSystem). Verify: does HubAntre rely on persistent MerlinGame.tscn node for systems? Or does it re-init? If systems are missing, player data resets on hub arrival. Add system initialization if missing.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
-    "sprint": "S2",
-    "priority": 22,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/SelectionSauvegarde.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "T-E2E-AUTOLOADS-INIT",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "scripts/ui/merlin_game_controller.gd"
-    ],
-    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
     "created_at": "2026-04-15T15:45:00Z",
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
@@ -2179,5 +2115,100 @@
       "tools/autodev/mission-control/src/styles/cockpit.css"
     ],
     "description": "User bug report 2026-04-15: clicking Director tab makes interface 'disappear'. ErrorBoundary deployed 2026-04-15 as mitigation to surface any crash. If no crash visible post-deploy, root cause is CSS layout: drawer__grid--2 with 4 children in .drawer__body overflow-y=auto can create >100vh total height with no internal min-height, collapsing visibly. Fix: add drawer__grid--2 { grid-auto-rows: minmax(200px, auto) } OR split Director into 2x2 sub-grids."
+  },
+  {
+    "id": "FLOW-TRANSITION-BIOME-AUDIT",
+    "sprint": "S2",
+    "priority": 20,
+    "type": "dev",
+    "title": "HubAntre: SCENE_TRANSITION const references TransitionBiome.tscn but no button triggers it — audit + remove dead const",
+    "agent": "game_designer",
+    "files": [
+      "scripts/HubAntre.gd"
+    ],
+    "description": "HubAntre.gd:16 defines SCENE_TRANSITION='res://scenes/TransitionBiome.tscn' but no PixelTransition call uses it. Confirm if TransitionBiome is planned or dead. If dead: remove const + .tscn. If planned: add biome transition button. Specialist-0 SF-004.",
+    "status": "pending",
+    "created_at": "2026-04-15T20:46:24Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "FLOW-MAPMONDE-DEAD-CONST",
+    "sprint": "S2",
+    "priority": 25,
+    "type": "dev",
+    "title": "HubAntre: SCENE_MAPMONDE const defined but no button connects — remove or implement",
+    "agent": "game_designer",
+    "files": [
+      "scripts/HubAntre.gd"
+    ],
+    "description": "HubAntre.gd:23 defines SCENE_MAPMONDE but screenshot tools reference it as 'archive/scenes_unused/MapMonde.tscn'. If archived: remove const. If active: add MapMonde button to HubAntre. Specialist-0 SF-005.",
+    "status": "pending",
+    "created_at": "2026-04-15T20:46:24Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "FLOW-GAME-SCENE-CONST-CLEANUP",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "dev",
+    "title": "broceliande_forest_3d.gd: remove unused GAME_SCENE const (MerlinGame.tscn) after _on_hub fix",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "After E2E-MERLINGAME-OBSOLETE-PATH fix, GAME_SCENE const at line 9 is unused. Remove it. Also check signal merlin_encounter_complete (line 6) — if only emitted internally and never connected, remove too. Specialist-0 SF-007.",
+    "status": "pending",
+    "created_at": "2026-04-15T20:46:24Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "FLOW-MERLINSTORE-DEFERRED-RACE",
+    "sprint": "S2",
+    "priority": 20,
+    "type": "dev",
+    "title": "GameManager adds MerlinStore via call_deferred — add await or explicit check in critical paths",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/game_manager.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "GameManager.gd:673-677 adds MerlinStore via call_deferred. If any scene loads before the deferred call executes, store=null. Add explicit ready_signal or ensure MerlinStore is added synchronously at startup. Specialist-0 SF-006.",
+    "status": "pending",
+    "created_at": "2026-04-15T20:46:24Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "FLOW-MERLIN-CABIN-ORPHAN",
+    "sprint": "S3",
+    "priority": 35,
+    "type": "dev",
+    "title": "MerlinCabinHub.tscn unreachable from game flow — archive or delete",
+    "agent": "godot_expert",
+    "files": [
+      "scenes/MerlinCabinHub.tscn",
+      "scripts/merlin_cabin_hub.gd"
+    ],
+    "description": "MerlinCabinHub.tscn only referenced in screenshot_scenes.gd (test tool). No game scene transitions to it. Archive to archive/scenes_unused/ or delete. Specialist-0 SF-008.",
+    "status": "pending",
+    "created_at": "2026-04-15T20:46:24Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+  },
+  {
+    "id": "T-FLOW-E2E-SCENE-PATHS",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "test",
+    "title": "Test: verify all active scene path consts resolve to existing .tscn files",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/HubAntre.gd",
+      "scripts/ui/parchment_pre_run.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/MenuPrincipalMerlin.gd"
+    ],
+    "description": "Static analysis: for each scene path const (SCENE_FOREST, HUB_SCENE, SCENE_CALENDAR, etc.) in all active scripts, verify the .tscn file exists on disk. Report any broken paths. Specialist-0 follow-up.",
+    "status": "pending",
+    "created_at": "2026-04-15T20:46:24Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
   }
 ]

@@ -1,0 +1,145 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "date": "2026-04-15",
+  "cycle_type": "test",
+  "timestamp": "2026-04-15T20:46:24Z",
+  "total_checks": 12,
+  "summary": "Full player journey audit: IntroCeltOS→Menu3DPC→ParchmentPreRun→BroceliandeForest3D→HubAntre. 1 CRITICAL (orphan MerlinGame.tscn routing), 2 HIGH (orphan scenes on disk), 2 MEDIUM (dead consts), 1 MEDIUM (race condition potential), 6 PASS.",
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "status": "FIXED",
+      "check": "BroceliandeForest3D._on_hub() routing",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1222",
+      "description": "_on_hub() routed to GAME_SCENE (MerlinGame.tscn) when _merlin_found=true. MerlinGame.tscn is orphaned — card encounters are handled via encounter_card_overlay.gd WITHIN BroceliandeForest3D. Fix: always route to HUB_SCENE (HubAntre.tscn).",
+      "fixed_by": "E2E-MERLINGAME-OBSOLETE-PATH"
+    },
+    {
+      "id": "SF-002",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "check": "IntroPersonalityQuiz.tscn still on disk",
+      "file": "scenes/IntroPersonalityQuiz.tscn, scripts/IntroPersonalityQuiz.gd",
+      "description": "Director q-20260414-005 ordered deletion (B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin). Files still on disk. Task E2E-DELETE-ORPHAN-SCENES P3 pending.",
+      "task_ref": "E2E-DELETE-ORPHAN-SCENES"
+    },
+    {
+      "id": "SF-003",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "check": "SceneRencontreMerlin.tscn still on disk",
+      "file": "scenes/SceneRencontreMerlin.tscn, scripts/SceneRencontreMerlin.gd",
+      "description": "Director q-20260414-005 ordered deletion. Still on disk + .uidren artifact. Also quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd are support scripts that should be deleted together.",
+      "task_ref": "E2E-DELETE-ORPHAN-SCENES"
+    },
+    {
+      "id": "SF-004",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "check": "TransitionBiome.tscn dead const in HubAntre",
+      "file": "scripts/HubAntre.gd:16",
+      "description": "SCENE_TRANSITION = 'res://scenes/TransitionBiome.tscn' defined but no button/signal in HubAntre.gd transitions to it. TransitionBiome.tscn exists and has complex logic. Unclear if dead or intended for future use.",
+      "task_ref": "FLOW-TRANSITION-BIOME-AUDIT"
+    },
+    {
+      "id": "SF-005",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "check": "MapMonde.tscn dead const in HubAntre",
+      "file": "scripts/HubAntre.gd:23",
+      "description": "SCENE_MAPMONDE defined but no button triggers it. MapMonde.tscn listed as 'archive/scenes_unused/MapMonde.tscn' in screenshot_scenes.gd — may already be archived but const not cleaned up.",
+      "task_ref": "FLOW-MAPMONDE-DEAD-CONST"
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "check": "MerlinStore deferred add_child potential race",
+      "file": "scripts/game_manager.gd:673-677",
+      "description": "GameManager adds MerlinStore via call_deferred('add_child', store). SelectionSauvegarde and BroceliandeForest3D use get_node_or_null('/root/MerlinStore'). If loaded the same frame as GameManager, store may be null. In practice OK due to multi-frame load chain, but fragile.",
+      "task_ref": "FLOW-MERLINSTORE-DEFERRED-RACE"
+    },
+    {
+      "id": "SF-007",
+      "severity": "LOW",
+      "status": "OPEN",
+      "check": "GAME_SCENE const now unused in broceliande_forest_3d.gd",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:9",
+      "description": "After SF-001 fix, GAME_SCENE const (MerlinGame.tscn) is defined but never referenced. Dead code. Should be removed in a cleanup task.",
+      "task_ref": "FLOW-GAME-SCENE-CONST-CLEANUP"
+    },
+    {
+      "id": "SF-008",
+      "severity": "LOW",
+      "status": "OPEN",
+      "check": "MerlinCabinHub.tscn unreachable",
+      "file": "scenes/MerlinCabinHub.tscn",
+      "description": "Only referenced in screenshot_scenes.gd (test tool). No game scene transitions to it. Candidate for archive.",
+      "task_ref": "FLOW-MERLIN-CABIN-ORPHAN"
+    },
+    {
+      "id": "SF-PASS-1",
+      "severity": "PASS",
+      "check": "IntroCeltOS → Menu3DPC",
+      "description": "IntroCeltOS.gd:516 PixelTransition.transition_to('res://scenes/Menu3DPC.tscn') — correct, target exists."
+    },
+    {
+      "id": "SF-PASS-2",
+      "severity": "PASS",
+      "check": "Menu3DPC → ParchmentPreRun",
+      "description": "menu_3d_pc.gd:1337 _glitch_transition('res://scenes/ParchmentPreRun.tscn') — correct, target exists."
+    },
+    {
+      "id": "SF-PASS-3",
+      "severity": "PASS",
+      "check": "ParchmentPreRun → BroceliandeForest3D",
+      "description": "parchment_pre_run.gd:217 get_tree().change_scene_to_file(SCENE_FOREST) where SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn' — correct."
+    },
+    {
+      "id": "SF-PASS-4",
+      "severity": "PASS",
+      "check": "EndRun → HubAntre / new run",
+      "description": "ui_overlay_endscreen.gd:134 btn_hub → HubAntre, :140 btn_new → BroceliandeForest3D — both correct."
+    },
+    {
+      "id": "SF-PASS-5",
+      "severity": "PASS",
+      "check": "HubAntre → BroceliandeForest3D (run start)",
+      "description": "HubAntre.gd:661 PixelTransition.transition_to(SCENE_FOREST) — correct."
+    },
+    {
+      "id": "SF-PASS-6",
+      "severity": "PASS",
+      "check": "All autoloads exist on disk",
+      "description": "All 14 autoloads in project.godot verified to have corresponding files. 0 missing."
+    }
+  ],
+  "test_tasks_executed": [
+    {
+      "task_id": "T-E2E-CONTINUE-LOAD-VERIFY",
+      "result": "PASS",
+      "details": "SelectionSauvegarde._on_continue_pressed() awaits store.dispatch(LOAD_PROFILE) before transitioning. GAME_SCENE correctly = HubAntre.tscn. Fallback to _build_profile_ui() on failure. MerlinStore available via GameManager autoload deferred add_child."
+    },
+    {
+      "task_id": "T-E2E-AUTOLOADS-INIT",
+      "result": "PASS_WITH_NOTE",
+      "details": "MerlinStore NOT in project.godot autoloads directly. GameManager (autoloaded) creates it via call_deferred at line 673-677. BroceliandeForest3D._find_store() handles null gracefully (fallback mode). Timing race is theoretical — multi-frame scene load chain ensures store is ready. Note: fragile — see SF-006.",
+      "caveats": ["MerlinStore availability depends on GameManager deferred call timing"]
+    },
+    {
+      "task_id": "FACTION-SCORE-START-AUDIT",
+      "result": "PASS",
+      "details": "FACTION_SCORE_START=20 in merlin_constants.gd:1081. Used consistently in: merlin_store.gd:200-204 (all 5 factions), merlin_effect_engine.gd:421, merlin_skeleton_generator.gd:46. test_constants_bible_alignment.gd:47 asserts == 20. 0 hardcoded 0-start values found."
+    }
+  ],
+  "dev_task_implemented": {
+    "task_id": "E2E-MERLINGAME-OBSOLETE-PATH",
+    "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1220-1227",
+    "change": "Removed GAME_SCENE conditional from _on_hub(). Now always routes to HUB_SCENE (HubAntre.tscn). Updated comment to reflect card overlay architecture.",
+    "impact": "CRITICAL fix — prevents game from routing to orphaned MerlinGame.tscn after Merlin encounter. Ensures forest walk always returns to HubAntre."
+  },
+  "new_tasks_generated": 6,
+  "tasks_completed": 4
+}

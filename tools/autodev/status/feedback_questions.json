@@ -532,6 +532,22 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260415-013",
+      "title": "TransitionBiome.tscn: planned future feature or dead code to delete?",
+      "type": "multiple_choice",
+      "category": "design",
+      "priority": "MEDIUM",
+      "status": "pending",
+      "context": "HubAntre.gd:16 defines SCENE_TRANSITION='res://scenes/TransitionBiome.tscn' but no button/signal in HubAntre transitions to it. TransitionBiome.tscn exists with complex logic (landscape, cards, weather, LLM, quest UI scripts). Specialist-0 found it unreachable from game flow.",
+      "options": [
+        "A: Delete — TransitionBiome is dead code (biome selection integrated into HubAntre)",
+        "B: Keep — TransitionBiome is planned for the pre-run cutscene between Hub and Run3D",
+        "C: Archive — move to archive/scenes_unused/ but keep the scripts as reference"
+      ],
+      "created_at": "2026-04-15T20:46:24Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
     }
   ]
 }
