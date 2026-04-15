@@ -579,5 +579,20 @@
       "type": "dev"
     },
     "timestamp": "2026-04-15T14:45:00Z"
+  },
+  {
+    "id": "insight-20260415-009",
+    "agent": "meta_evolution_auditor",
+    "severity": "ACTION",
+    "category": "dashboard",
+    "message": "Fix rate 26.3% (10/38 bugs) — studio finds bugs 3.8x faster than it fixes them",
+    "details": "After 10 cycles, 38 bugs have been found but only 10 fixed. The queue has grown to 157 tasks at +7/cycle. Without intervention (pruning or velocity increase), the backlog will exceed 200 tasks by cycle 16. Recommend: (1) dedicate every 3rd cycle to P1/P2 bug fixes only, (2) director answer q-20260415-012 on pruning strategy.",
+    "proposed_task": {
+      "title": "Add fix_rate + cycle_velocity metrics to studio_learnings.json",
+      "sprint": "META",
+      "type": "dev",
+      "task_id": "META-FIX-RATE-TRACKER"
+    },
+    "timestamp": "2026-04-15T18:47:19Z"
   }
 ]

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T15:45:00Z",
+  "last_updated": "2026-04-15T18:47:19Z",
   "metrics": {
     "total_cycles_completed": 63,
     "total_dev_cycles": 30,
@@ -13,7 +13,13 @@
     "current_sprint": "S3",
     "specialist_cycles_run": 18,
     "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z"
+    "last_updated": "2026-04-15T15:45:00Z",
+    "fix_rate_pct": 26.3,
+    "queue_pending": 157,
+    "queue_growth_rate": "+7/cycle_avg",
+    "estimated_drain_cycles": "150+ (CRITICAL)",
+    "cycle_velocity": "1 task/cycle",
+    "patterns_count": 123
   },
   "patterns_learned": [
     {
@@ -1346,6 +1352,37 @@
       "applies_to": [
         "tools/autodev/status/feature_queue.json"
       ]
+    },
+    {
+      "id": "PAT-S15-001",
+      "learned_at": "2026-04-15T18:47:19Z",
+      "source": "SPECIALIST-15-META_EVOLUTION",
+      "pattern": "Queue duplicate detection: E2E-*-WIRE + GDC-*-GATE often describe the same wiring task from different audit perspectives. Future: check for same file + same threshold in task descriptions before adding.",
+      "severity": "HIGH",
+      "applies_to": [
+        "tools/autodev/status/feature_queue.json"
+      ]
+    },
+    {
+      "id": "PAT-S15-002",
+      "learned_at": "2026-04-15T18:47:19Z",
+      "source": "SPECIALIST-15-META_EVOLUTION",
+      "pattern": "Fix rate below 30% (currently 26.3%): studio generates bugs faster than it fixes them. At least every 3rd cycle should implement a P1/P2 bug fix rather than new feature. Monitor fix_rate_pct in metrics.",
+      "severity": "HIGH",
+      "applies_to": [
+        "tools/autodev/status/studio_learnings.json"
+      ]
+    },
+    {
+      "id": "PAT-S15-003",
+      "learned_at": "2026-04-15T18:47:19Z",
+      "source": "SPECIALIST-15-META_EVOLUTION",
+      "pattern": "completed_archive.json is a plain JSON array (not dict). dedupe_completed.py targets dict keys — will fail with TypeError on plain list. Fixed by inline dedupe in cycle. Note for future: keep archive as plain list.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "tools/autodev/scripts/dedupe_completed.py",
+        "tools/autodev/status/completed_archive.json"
+      ]
     }
   ],
   "agent_performance": {
@@ -1432,9 +1469,9 @@
       "fail_rate": "100%_this_cycle"
     },
     "meta_evolution_auditor": {
-      "tasks_completed": 0,
+      "tasks_completed": 1,
       "bugs_introduced": 0,
-      "cycles_run": 1
+      "cycles_run": 2
     },
     "scene_flow_tester": {
       "tasks_completed": 2
@@ -1703,17 +1740,23 @@
       "type": "test",
       "action": "T-S3-MEDITATION-VERIFY PASS 6/6. mg_meditation fully cleaned: file deleted, TAG_FIELD_MAP clean, create_minigame() clean, GAMES[esprit]=[volonte,apaisement,sang_froid], test files clean. Applied director q-20260414-001: BUG-ANAM-DEATH-PENALTY-FIX bumped to P5 (all in-run Anam subject to death ratio). 10 pending tasks.",
       "improvement": "PAT-047: doc lag after feature deletion is acceptable — docs/*.md reference deleted features but this is not a bug. Only functional code refs need cleanup."
+    },
+    {
+      "cycle": 10,
+      "specialist": 15,
+      "role": "META_EVOLUTION_AUDITOR",
+      "timestamp": "2026-04-15T18:47:19Z",
+      "action": "Merged duplicate P1/P2 faction-gate tasks. Added 6 META tasks. Fix rate alarm: 26.3%. 3 new patterns.",
+      "metrics_snapshot": {
+        "bugs_found": 38,
+        "bugs_fixed": 10,
+        "fix_rate_pct": 26.3,
+        "queue_pending": 157
+      }
     }
   ],
-  "total_cycles": 9,
+  "total_cycles": 10,
   "bugs_found": 38,
   "bugs_fixed": 10,
-  "last_cycle": {
-    "specialist": 12,
-    "role": "MINIGAME_SYSTEM_AUDITOR",
-    "timestamp": "2026-04-15T13:45:04Z",
-    "cycle_type": "dev",
-    "task_implemented": "UX-MINIGAME-BASE-TOUCH",
-    "findings": 6
-  }
+  "last_cycle": "2026-04-15T18:47:19Z"
 }

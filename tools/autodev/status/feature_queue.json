@@ -552,20 +552,6 @@
     "description": "SPECIALIST-1 AUDIT: screen_frame.gd:351 uses Color(1.0, 1.0, 1.0, 0.15) for a highlight effect. Should reference MerlinVisual.CRT_PALETTE['phosphor_bright'] or similar white-equivalent key, modified with alpha. Low priority but completes visual consistency."
   },
   {
-    "id": "GDC-FACTION-CONTENT-50-GATE",
-    "sprint": "S2",
-    "priority": 2,
-    "status": "pending",
-    "type": "dev",
-    "title": "Audit + implement faction content unlock gate at rep >= 50 in card pool",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd"
-    ],
-    "description": "SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
-    "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
-  },
-  {
     "id": "T-GDC-FACTION-ENDING-INTEGRATION",
     "sprint": "S2",
     "priority": 22,
@@ -2051,9 +2037,10 @@
       "scripts/merlin/merlin_card_system.gd",
       "scripts/merlin/merlin_reputation_system.gd"
     ],
-    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
+    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.\n[MERGED from GDC-FACTION-CONTENT-50-GATE]: SPEC-2 CHK-13 NOT_CHECKED: bible s.2.3 '≥50: Cartes spéciales de la faction débloquées dans le pool'. Need to verify: (1) Does merlin_card_system.gd filter cards by faction rep? (2) Is there a special_faction_cards pool? (3) Are cards tagged with required_faction_rep? If not implemented: add rep-gating to card pool selection using faction_rep from state.meta. Special faction cards should only appear if corresponding faction rep >= 50.",
     "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "notes": "Merged with GDC-FACTION-CONTENT-50-GATE (confirmed duplicate). "
   },
   {
     "id": "E2E-DELETE-ORPHAN-SCENES",
@@ -2135,5 +2122,83 @@
     "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
     "created_at": "2026-04-15T15:45:00Z",
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
+  },
+  {
+    "id": "META-QUEUE-PRIORITY-COMPACT",
+    "sprint": "META",
+    "priority": 21,
+    "type": "dev",
+    "status": "pending",
+    "title": "Normalize queue priorities: compress P14-P77 range to P14-P40",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/status/feature_queue.json"
+    ],
+    "description": "Priority sprawl: P1 to P77 (68 distinct values across 152 tasks). Normalize: keep P1-P13 intact, re-map P14+ to P14-P40 in proportion. Reduces cognitive load and better reflects relative urgency. Script: tools/autodev/scripts/normalize_priorities.py"
+  },
+  {
+    "id": "META-FIX-RATE-TRACKER",
+    "sprint": "META",
+    "priority": 22,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add fix_rate + cycle_velocity metrics to studio_learnings.json",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/status/studio_learnings.json"
+    ],
+    "description": "Current fix rate: 26.3% (10/38 bugs). No per-cycle tracking. Add: fix_rate_pct, cycle_velocity (tasks/cycle), queue_growth_rate (tasks added - tasks done per cycle), estimated_drain_cycles. Update at end of each meta cycle."
+  },
+  {
+    "id": "META-INSIGHTS-PRUNE",
+    "sprint": "META",
+    "priority": 23,
+    "type": "dev",
+    "status": "pending",
+    "title": "Prune studio_insights.json to 20 most recent ACTION+WARN entries",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/status/studio_insights.json"
+    ],
+    "description": "Currently 39 insights. INFO entries with no proposed_task can be archived. Keep: all ACTION severity, last 10 WARN. Archive rest to tools/autodev/status/insights_archive/YYYY-MM.json. Target: <=20 active insights."
+  },
+  {
+    "id": "META-PATTERNS-PRUNE",
+    "sprint": "META",
+    "priority": 24,
+    "type": "dev",
+    "status": "pending",
+    "title": "Deduplicate studio_learnings.patterns_learned: 123 → top 60",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/status/studio_learnings.json"
+    ],
+    "description": "123 patterns_learned entries accumulated over 10 cycles. Many are redundant or obsolete. Script: (1) cluster by keyword overlap, (2) keep highest-severity from each cluster, (3) keep all CRITICAL/HIGH from last 3 cycles, (4) archive rest. Target: <=60 patterns."
+  },
+  {
+    "id": "META-FEEDBACK-BATCH",
+    "sprint": "META",
+    "priority": 25,
+    "type": "dev",
+    "status": "pending",
+    "title": "Group 19 pending feedback_questions into HIGH/MEDIUM/LOW priority batches",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/status/feedback_questions.json"
+    ],
+    "description": "19 unanswered questions accumulating. Director may have question fatigue. Action: (1) tag each pending question with priority HIGH/MED/LOW based on blocking impact, (2) write tools/autodev/status/feedback_batch_for_director.md with organized presentation, (3) mark 5+ LOW questions as auto-decided based on existing bible rules."
+  },
+  {
+    "id": "META-SPECIALIST-16-QUEUE-HEALTH",
+    "sprint": "META",
+    "priority": 26,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add Specialist #16: QUEUE_HEALTH_AUDITOR to cycle_instructions.md",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/studio-bridge/prompts/cycle_instructions.md"
+    ],
+    "description": "NEW SPECIALIST: Each cycle (every 16 cycles): count pending tasks, measure growth rate, detect duplicate task pairs by keyword, normalize priorities, enforce max 80 pending by archiving lowest-priority stale tasks, report queue health score 0-100. Also propose expanding to 17-specialist rotation (17 = prime, unique modulo distribution)."
   }
 ]

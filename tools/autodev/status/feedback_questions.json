@@ -515,6 +515,23 @@
       ],
       "created_at": "2026-04-15T15:45:00Z",
       "source_task": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER"
+    },
+    {
+      "id": "q-20260415-012",
+      "type": "multiple_choice",
+      "category": "design",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "title": "Queue growth rate critical: 157 pending tasks — pruning strategy?",
+      "question": "The studio queue has grown to 157 pending tasks (fix rate 26.3%). At 1 task/cycle, it would take 150+ cycles to drain while adding ~6/cycle. Which strategy?",
+      "options": {
+        "A": "Archive bottom 40 lowest-priority tasks (P40+) immediately to focus on top 120",
+        "B": "Cap new task generation at 3/cycle (specialist generates fewer tasks)",
+        "C": "Run 2 tasks per dev cycle instead of 1 (double velocity)",
+        "D": "Keep current pace — long backlog is fine for a solo dev project"
+      },
+      "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
+      "timestamp": "2026-04-15T18:47:19Z"
     }
   ]
 }

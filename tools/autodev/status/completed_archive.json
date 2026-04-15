@@ -94,5 +94,20 @@
     "created_by": "SPEC-11-FACTION",
     "completed_at": "2026-04-15T15:45:00Z",
     "notes": "Duplicate of FACTION-CONTENT-UNLOCK-CHECK. Same FAIL: faction gate not wired in card pool selection. See test report SPECIALIST-14-INTEGRATION_E2E-2026-04-15.json."
+  },
+  {
+    "id": "META-DEDUP-FACTION-GATE",
+    "sprint": "META",
+    "priority": 3,
+    "type": "dev",
+    "status": "completed",
+    "title": "Merge duplicate faction-gate tasks (E2E-FACTION-GATE-WIRE + GDC-FACTION-CONTENT-50-GATE)",
+    "agent": "meta_evolution_auditor",
+    "files": [
+      "tools/autodev/status/feature_queue.json"
+    ],
+    "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
+    "completed_at": "2026-04-15T18:47:19Z",
+    "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
   }
 ]
