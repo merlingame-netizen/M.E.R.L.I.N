@@ -17,6 +17,7 @@ export function GameStage() {
       data-dragging={isDragging || undefined}
     >
       <div className="game-stage__inner">
+        <span className="game-stage__ai-pulse" aria-hidden="true" />
         <GamePreview />
       </div>
       <div
