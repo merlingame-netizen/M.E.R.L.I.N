@@ -148,5 +148,40 @@
     "agent": "scene_flow_fixer",
     "completed_at": "2026-04-15T01:30:00Z",
     "notes": "Superseded by FLOW-QUIZ-WIRE-INTRO: SceneRencontreMerlin fully deleted, no cleanup needed."
+  },
+  {
+    "id": "MG-FIX-SFX-DOUBLE-TRIGGER",
+    "sprint": "S3",
+    "priority": 22,
+    "type": "dev",
+    "status": "completed",
+    "title": "Deduplicate minigame success SFX: base class vs controller both play minigame_success",
+    "description": "minigame_base.gd:87 calls SFXManager.play(minigame_success) on success. game_controller_minigame.gd:100 also calls SFXManager.play(minigame_success). Result: success SFX plays twice. Fix: remove the SFX from minigame_base._complete() (base should not know about global SFX) and keep only in game_controller_minigame.gd which has full outcome context.",
+    "files": [
+      "scripts/minigames/minigame_base.gd",
+      "scripts/ui/game_controller_minigame.gd"
+    ],
+    "agent": "godot_expert",
+    "completed_at": "2026-04-15T04:50:48Z",
+    "notes": "FIXED: Removed duplicate SFX block (lines 83-89) from minigame_base._complete(). game_controller_minigame.gd:100-102 remains as single source of truth for minigame outcome SFX. Self-QA: no := with CONST, no broken type hints."
+  },
+  {
+    "id": "E2E-TEST-FULL-LOOP-CODE-TRACE",
+    "sprint": "S3",
+    "priority": 16,
+    "status": "completed",
+    "type": "test",
+    "title": "E2E code trace: full game loop IntroCeltOS→Hub→Run→MerlinGame→EndScreen→Hub",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/HubAntre.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/ui/ui_overlay_endscreen.gd"
+    ],
+    "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button → SelectionSauvegarde. CHK-3: SelectionSauvegarde → HubAntre. CHK-4: HubAntre Partir button → BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires → MerlinGame. CHK-6: MerlinGame run_ended → show_end_screen. CHK-7: EndScreen hub button → HubAntre. Check each signal/button connection for completeness.",
+    "completed_at": "2026-04-15T04:50:48Z",
+    "notes": "Traced all 7 CHKs. Result: FUNCTIONAL. Live game uses Menu3DPC→ParchmentPreRun→HubAntre→BroceliandeForest3D→MerlinGame→UIOverlayEndScreen→HubAntre. Spec CHK-2 was stale (SelectionSauvegarde is Continue in legacy MenuPrincipal). GameFlowController is dead architecture. Arch issues logged as ARCH-GAMEFLOW-UNWIRED task."
   }
 ]

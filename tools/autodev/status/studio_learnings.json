@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-14T22:55:00Z",
+  "last_updated": "2026-04-15T04:50:48Z",
   "metrics": {
-    "total_cycles_completed": 55,
+    "total_cycles_completed": 56,
     "total_dev_cycles": 26,
-    "total_test_cycles": 22,
-    "bugs_found": 46,
-    "bugs_fixed": 31,
-    "tasks_completed": 71,
-    "tasks_pending": 91,
-    "current_sprint": "S2",
-    "specialist_cycles_run": 10,
-    "last_specialist": 9,
-    "last_updated": "2026-04-15T01:30:00Z"
+    "total_test_cycles": 23,
+    "bugs_found": 55,
+    "bugs_fixed": 33,
+    "tasks_completed": 73,
+    "tasks_pending": 98,
+    "current_sprint": "S3",
+    "specialist_cycles_run": 11,
+    "last_specialist": 3,
+    "last_updated": "2026-04-15T04:50:48Z"
   },
   "patterns_learned": [
     {
@@ -1021,11 +1021,57 @@
       "applies_to": [
         "scripts/merlin/merlin_save_system.gd"
       ]
+    },
+    {
+      "id": "PAT-099",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-SFX-AUDIT",
+      "pattern": "Base class (minigame_base) must NOT call global SFX — only controller layer (game_controller_minigame) has full outcome context. Base class SFX + controller SFX = double trigger every time.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/minigames/minigame_base.gd",
+        "scripts/ui/game_controller_minigame.gd"
+      ]
+    },
+    {
+      "id": "PAT-100",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-SFX-AUDIT",
+      "pattern": "Never use get_node_or_null(\"/root/AutoloadName\") — use the autoload directly. Autoloads are always available as globals in Godot 4. get_node_or_null pattern is fragile and verbose.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/minigames/[all]",
+        "scripts/MenuPrincipalMerlin.gd"
+      ]
+    },
+    {
+      "id": "PAT-101",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-E2E-TEST",
+      "pattern": "E2E task specs can become stale when scene flow changes. Always verify actual change_scene/transition_to calls in code rather than trusting old spec descriptions. Menu3DPC replaces MenuPrincipal as active main menu.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/menu_3d_pc.gd",
+        "scripts/core/game_flow_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-102",
+      "learned_at": "2026-04-15T04:50:48Z",
+      "source": "SPECIALIST-3-E2E-TEST",
+      "pattern": "GameFlowController/AudioIntegration/SFXEngine represent a clean-architecture layer that was built in parallel with the working PixelTransition-direct approach. Parallel architectures accumulate signal mismatches. When refactoring, reconcile class names and signal names between the two systems first.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/audio/audio_integration.gd",
+        "scripts/run/end_run_screen.gd",
+        "scripts/ui/end_run_screen.gd"
+      ]
     }
   ],
   "agent_performance": {
     "game_playtester": {
-      "tasks_completed": 4,
+      "tasks_completed": 5,
       "bugs_introduced": 0,
       "bugs_found": 6,
       "specialization": "static analysis, invariant simulation, run modeling, startup trace",
@@ -1038,7 +1084,7 @@
       "weaknesses": []
     },
     "godot_expert": {
-      "tasks_completed": 35,
+      "tasks_completed": 36,
       "bugs_introduced": 0,
       "specialization": "GDScript implementation, dead code removal, system cleanup",
       "strengths": [
@@ -1152,6 +1198,12 @@
       "bugs_introduced": 0,
       "bugs_found": 5,
       "specialist_cycle": 8
+    },
+    "sfx_auditor_specialist3": {
+      "tasks_completed": 1,
+      "bugs_introduced": 0,
+      "sfx_findings": 9,
+      "e2e_chks_passed": 6
     }
   },
   "llm_quality": {

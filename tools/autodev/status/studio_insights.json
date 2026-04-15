@@ -508,5 +508,20 @@
       "id": "SAVE-RUN-HISTORY-APPEND"
     },
     "timestamp": "2026-04-15T01:30:00Z"
+  },
+  {
+    "id": "insight-20260415-001",
+    "agent": "sfx_auditor_specialist3",
+    "severity": "WARN",
+    "category": "gameplay",
+    "message": "Ogham unlock is the most emotionally significant moment in the game — it has NO audio cue.",
+    "details": "The player receiving a new Ogham (bible: 18 Oghams, core identity system) gets visual feedback only. SFX ogham_unlock is registered and generated at startup but never played. In playtests, players may not notice Ogham unlocks. Adding 1 line (SFXManager.play(\"ogham_unlock\")) in effect_engine._apply_unlock_ogham() would maximize perceived significance of this game moment.",
+    "proposed_task": {
+      "title": "Add SFX on Ogham unlock",
+      "sprint": "S3",
+      "type": "dev",
+      "id": "SFX-ADD-OGHAM-UNLOCK-TRIGGER"
+    },
+    "timestamp": "2026-04-15T04:50:48Z"
   }
 ]

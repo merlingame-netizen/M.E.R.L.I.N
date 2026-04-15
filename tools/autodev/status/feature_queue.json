@@ -306,20 +306,6 @@
     "agent": "godot_expert"
   },
   {
-    "id": "MG-FIX-SFX-DOUBLE-TRIGGER",
-    "sprint": "S3",
-    "priority": 22,
-    "type": "dev",
-    "status": "pending",
-    "title": "Deduplicate minigame success SFX: base class vs controller both play minigame_success",
-    "description": "minigame_base.gd:87 calls SFXManager.play(minigame_success) on success. game_controller_minigame.gd:100 also calls SFXManager.play(minigame_success). Result: success SFX plays twice. Fix: remove the SFX from minigame_base._complete() (base should not know about global SFX) and keep only in game_controller_minigame.gd which has full outcome context.",
-    "files": [
-      "scripts/minigames/minigame_base.gd",
-      "scripts/ui/game_controller_minigame.gd"
-    ],
-    "agent": "godot_expert"
-  },
-  {
     "id": "3D-DEADWOOD-GROUNDCOVER-SPAWN",
     "sprint": "S3",
     "priority": 22,
@@ -417,23 +403,6 @@
       "scenes/Run3D.tscn"
     ],
     "description": "SPECIALIST-14 E2E CHK-14: game_flow_controller.gd + HubScreen.tscn + Run3D.tscn are a parallel game path never used in production (active path: HubAntre→BroceliandeForest3D→MerlinGame). audio_integration.gd wires to GameFlowController. Options: (A) Mark as archived, (B) Delete if confirmed dead, (C) Document as alternate path. First, create task to verify no production script instantiates GameFlowController. If truly dead: file a deletion/archive task. Priority LOW — no player impact, but creates confusion for future development."
-  },
-  {
-    "id": "E2E-TEST-FULL-LOOP-CODE-TRACE",
-    "sprint": "S3",
-    "priority": 16,
-    "status": "pending",
-    "type": "test",
-    "title": "E2E code trace: full game loop IntroCeltOS→Hub→Run→MerlinGame→EndScreen→Hub",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/IntroCeltOS.gd",
-      "scripts/HubAntre.gd",
-      "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "scripts/ui/merlin_game_controller.gd",
-      "scripts/ui/ui_overlay_endscreen.gd"
-    ],
-    "description": "SPECIALIST-14: Trace full player loop in code. CHK-1: IntroCeltOS._transition_to_menu sends to Menu3DPC. CHK-2: Menu3DPC has New Game button → SelectionSauvegarde. CHK-3: SelectionSauvegarde → HubAntre. CHK-4: HubAntre Partir button → BroceliandeForest3D. CHK-5: BroceliandeForest encounter signal fires → MerlinGame. CHK-6: MerlinGame run_ended → show_end_screen. CHK-7: EndScreen hub button → HubAntre. Check each signal/button connection for completeness."
   },
   {
     "id": "E2E-MERLINSTORE-DEFERRED-RACE-CHECK",
@@ -1292,5 +1261,97 @@
     "description": "Verify: fallback card used on Ollama timeout, poll_result() correct, cancel_generation() clean, generate_async error on double-call.",
     "created_at": "2026-04-15T02:49:16Z",
     "source": "SPECIALIST-8-LLM_PIPELINE_AUDITOR"
+  },
+  {
+    "id": "SFX-REMOVE-DEAD-DICE",
+    "sprint": "S3",
+    "priority": 23,
+    "status": "pending",
+    "type": "dev",
+    "title": "Remove dead dice SFX from SFXManager names[] (D20 removed system)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/autoload/SFXManager.gd",
+      "scripts/autoload/sfx_recipes_ambient.gd"
+    ],
+    "description": "SPECIALIST-3 SFX-F2: D20 system removed from bible (~~D20~~) but 5 sounds still generated at startup: dice_shake, dice_roll, dice_land, dice_crit_success, dice_crit_fail (SFXManager.gd:155). Remove these 5 entries from names[] array. Also remove corresponding gen_dice_shake/roll/land/crit_success/crit_fail functions from sfx_recipes_ambient.gd (lines 237-329). Saves ~100ms startup time."
+  },
+  {
+    "id": "SFX-MINIGAME-AUTOLOAD-FIX",
+    "sprint": "S3",
+    "priority": 29,
+    "status": "pending",
+    "type": "dev",
+    "title": "Replace get_node_or_null SFXManager with direct autoload in all minigames",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/minigames/mg_bluff_druide.gd",
+      "scripts/minigames/mg_joute_verbale.gd",
+      "scripts/minigames/mg_lame_druide.gd",
+      "scripts/minigames/mg_negociation.gd",
+      "scripts/minigames/mg_noeud_celtique.gd",
+      "scripts/minigames/mg_oeil_corbeau.gd",
+      "scripts/minigames/mg_pas_renard.gd",
+      "scripts/minigames/mg_pile_ou_face.gd",
+      "scripts/minigames/mg_roue_fortune.gd",
+      "scripts/minigames/mg_tir_a_larc.gd",
+      "scripts/minigames/mg_trace_cerf.gd"
+    ],
+    "description": "SPECIALIST-3 SFX-F4: All 11 minigame scripts use fragile get_node_or_null(\"/root/SFXManager\") pattern. Replace each with direct SFXManager autoload call. Pattern: var sfx := get_node_or_null(\"/root/SFXManager\") ... if sfx: sfx.play(x) → SFXManager.play(x). SFXManager is a registered autoload — always available. Grep pattern: get_node_or_null.*SFXManager."
+  },
+  {
+    "id": "SFX-ADD-OGHAM-UNLOCK-TRIGGER",
+    "sprint": "S3",
+    "priority": 30,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add SFXManager.play(ogham_unlock) in effect_engine _apply_unlock_ogham()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_effect_engine.gd"
+    ],
+    "description": "SPECIALIST-3 SFX-F5: _apply_unlock_ogham() at line 451 has no audio feedback. Registered sound ogham_unlock exists in SFXManager but is never called from Ogham unlock flow. Fix: after line 458 (unlocked.append(ogham_name)), add: SFXManager.play(\"ogham_unlock\"). Guard with: if not unlocked.has(ogham_name) already present — only play on actual new unlock, not repeat calls. One line addition."
+  },
+  {
+    "id": "SFX-ADD-RUN-END-SFX",
+    "sprint": "S3",
+    "priority": 31,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add victory/death SFX at run end in ui_overlay_endscreen.gd",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/ui_overlay_endscreen.gd"
+    ],
+    "description": "SPECIALIST-3 SFX-F6: show_end_screen() at line 18 has no audio cue for run outcome. Registered sounds success, fail, danger all exist in SFXManager but none are called. Fix: at start of show_end_screen(), before tween: if is_victory: SFXManager.play(\"success\") else: SFXManager.play(\"danger\"). One block, 3 lines max."
+  },
+  {
+    "id": "SFX-ADD-FACTION-TIER-SFX",
+    "sprint": "S3",
+    "priority": 33,
+    "status": "pending",
+    "type": "dev",
+    "title": "Add SFX feedback for faction rep threshold crossings (50/80)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_effect_engine.gd"
+    ],
+    "description": "SPECIALIST-3 SFX-F8: _apply_faction_reputation() at line 414 applies delta silently. Bible: threshold 50=content unlock, 80=ending unlock. Add threshold crossing detection: if old_score < 50 and new_score >= 50: SFXManager.play(\"ogham_chime\"); elif old_score < 80 and new_score >= 80: SFXManager.play(\"perk_confirm\"). Store current before update: var current: int = int(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START)). Add after line 423 (faction_rep[faction] = new_score)."
+  },
+  {
+    "id": "ARCH-GAMEFLOW-UNWIRED",
+    "sprint": "S4",
+    "priority": 40,
+    "status": "pending",
+    "type": "dev",
+    "title": "Wire GameFlowController into live game OR document as future refactor target",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/core/game_flow_controller.gd",
+      "scripts/run/end_run_screen.gd",
+      "scripts/ui/end_run_screen.gd",
+      "project.godot"
+    ],
+    "description": "SPECIALIST-3 E2E arch issue: GameFlowController (class_name GameFlowController) exists with full MENU→HUB→RUN→END_SCREEN phase management but is NOT an autoload and NOT wired in any live scene. Live game uses direct PixelTransition.transition_to() calls. ALSO: EndRunScreen.tscn script uses EndRunScreenUI (return_to_hub signal) but GameFlowController expects EndRunScreen class (hub_requested signal) — signal mismatch. Decision needed: (A) Wire GameFlowController as autoload + fix signal mismatch = clean architecture, (B) Mark as future refactor, comment legacy scripts. Director feedback question recommended before proceeding."
   }
 ]
