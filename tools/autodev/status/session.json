@@ -1,14 +1,8 @@
 {
   "state": "running",
-  "objective": "M.E.R.L.I.N. development pipeline — post-diagnostic restart",
-  "workers": [
-    {"name": "llm-lora", "wave": 1, "status": "idle"},
-    {"name": "world-structure", "wave": 1, "status": "idle"},
-    {"name": "visual-polish", "wave": 1, "status": "idle"},
-    {"name": "ui-ux", "wave": 1, "status": "idle"},
-    {"name": "gameplay", "wave": 1, "status": "idle"}
-  ],
-  "updated_at": "2026-04-16T07:06:38.000Z",
-  "cycle": 0,
-  "checkpoint": "Diagnostic cleared: 4x OneDrive corruption (transient) + 1x PS1 parse error (fixed)"
+  "objective": "Autonomous pipeline via Claude Routines — hourly cycles",
+  "workers": [],
+  "updated_at": "2026-04-16T08:10:36.000Z",
+  "cycle": 1,
+  "checkpoint": "Infrastructure complete: SessionStart hook + Director agent + setup_cloud.sh + routine_prompt.md. Feature queue updated (26 done, 10 pending). Mission Control API expanded (12 status files). Ready for /schedule hourly."
 }
