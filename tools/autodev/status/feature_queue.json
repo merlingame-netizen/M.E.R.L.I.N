@@ -2056,27 +2056,9 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "E2E-DELETE-ORPHAN-SCENES",
-    "sprint": "S2",
-    "priority": 3,
-    "type": "dev",
-    "status": "pending",
-    "title": "Delete IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn per director q-20260414-005",
-    "agent": "cleanup_agent",
-    "files": [
-      "scenes/IntroPersonalityQuiz.tscn",
-      "scenes/SceneRencontreMerlin.tscn",
-      "scripts/IntroPersonalityQuiz.gd",
-      "scripts/SceneRencontreMerlin.gd"
-    ],
-    "description": "Director q-20260414-005 answer: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Delete both .tscn files and their associated .gd scripts. Remove any references in SceneSelector.gd if present. Verify no active scene transitions target these paths.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-MERLINGAME-OBSOLETE-PATH",
     "sprint": "S2",
-    "priority": 12,
+    "priority": 5,
     "type": "dev",
     "status": "pending",
     "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
@@ -2464,5 +2446,74 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FLOW-S0-DEAD-TRANSITION-CONST",
+    "sprint": "S2",
+    "priority": 11,
+    "status": "pending",
+    "type": "dev",
+    "title": "HubAntre: wire TransitionBiome.tscn or remove dead SCENE_TRANSITION constant",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/HubAntre.gd",
+      "scripts/TransitionBiome.gd"
+    ],
+    "description": "AUDIT SF-003: HubAntre.gd:16 defines SCENE_TRANSITION := 'res://scenes/TransitionBiome.tscn' but _launch_adventure():661 calls PixelTransition.transition_to(SCENE_FOREST) directly — bypassing TransitionBiome cinematic entirely. Two options: (A) Wire TransitionBiome: change _launch_adventure() to transition_to(SCENE_TRANSITION) and have TransitionBiome.gd auto-forward to BroceliandeForest3D; (B) Remove the dead constant and add comment explaining TransitionBiome is not in active flow. Per director preference for cinematic transitions (q-20260412-002: season/time-of-day ambiance changes), option A is preferred."
+  },
+  {
+    "id": "FLOW-S0-CABIN-HUB-SKIPPED",
+    "sprint": "S3",
+    "priority": 19,
+    "status": "pending",
+    "type": "dev",
+    "title": "Resolve MerlinCabinHub: wire pre-forest cinematic or remove stale comment",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/merlin_cabin_hub.gd",
+      "scenes/MerlinCabinHub.tscn"
+    ],
+    "description": "AUDIT SF-005: BroceliandeForest3D.gd:279 comment says 'Book cinematic is now shown in MerlinCabinHub BEFORE entering forest' but the active flow (HubAntre._launch_adventure) goes directly to BroceliandeForest3D, never through MerlinCabinHub.tscn. MerlinCabinHub.tscn exists with merlin_cabin_hub.gd script. Decision needed: wire MerlinCabinHub as a pre-run cinematic room (HubAntre → MerlinCabinHub → BroceliandeForest3D) OR remove the comment and archive MerlinCabinHub.tscn."
+  },
+  {
+    "id": "FLOW-S0-STALE-SCENE-REGISTRY-CLEANUP",
+    "sprint": "S3",
+    "priority": 21,
+    "status": "pending",
+    "type": "dev",
+    "title": "Remove stale MerlinGame entries from SceneSelector + pixel_transition_config",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/autoload/SceneSelector.gd",
+      "scripts/autoload/pixel_transition_config.gd"
+    ],
+    "description": "AUDIT SF-006: After E2E-MERLINGAME-OBSOLETE-PATH is resolved, clean stale entries: (1) SceneSelector.gd:17 lists MerlinGame — remove entry; (2) pixel_transition_config.gd:71 maps MerlinGame.tscn with transition config — remove entry. Depends on E2E-MERLINGAME-OBSOLETE-PATH completion. Also remove IntroPersonalityQuiz entry if still present in SceneSelector."
+  },
+  {
+    "id": "FLOW-S0-GAME-MANAGER-LEGACY-AUDIT",
+    "sprint": "S3",
+    "priority": 22,
+    "status": "pending",
+    "type": "test",
+    "title": "Audit GameManager autoload: legacy methods vs active code calls",
+    "agent": "bug_hunter",
+    "files": [
+      "scripts/game_manager.gd"
+    ],
+    "description": "AUDIT SF-007: GameManager (autoload) contains methods from old architecture — generate_map(), add_gold(), spend_gold(), get_type_multiplier(), save_to_slot(). GameManager is still in project.godot autoloads but none of these methods appear called from the active M.E.R.L.I.N. game scripts (HubAntre, BroceliandeForest3D, ParchmentPreRun). Grep all active scripts for GameManager usage. If only legacy references exist: propose removal or replacement with MerlinStore/MerlinSaveSystem equivalents."
+  },
+  {
+    "id": "FLOW-S0-MERLINGAME-FIX-RETURN-PATH",
+    "sprint": "S2",
+    "priority": 5,
+    "status": "pending",
+    "type": "dev",
+    "title": "BroceliandeForest3D._on_hub(): replace MerlinGame dead route → HubAntre always",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "AUDIT SF-002 PRIORITY UPGRADE: BroceliandeForest3D.gd:9 GAME_SCENE := 'res://scenes/MerlinGame.tscn'. _on_hub():1221 when _merlin_found=true routes to MerlinGame.tscn (OLD architecture). MerlinGame.tscn is the legacy card encounter scene with no return path back to HubAntre — creates a dead-end. Fix: change _on_hub() to ALWAYS route to HUB_SCENE (HubAntre.tscn) regardless of _merlin_found. Remove GAME_SCENE const. Note: merlin_encounter_complete signal (line 6) should also be emitted and handled upstream if needed. This task supersedes/duplicates E2E-MERLINGAME-OBSOLETE-PATH (P12) — that task should be archived."
   }
 ]

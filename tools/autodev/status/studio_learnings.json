@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T18:47:19Z",
+  "last_updated": "2026-04-16T00:30:00Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
+    "total_test_cycles": 27,
+    "bugs_found": 71,
     "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "tasks_completed": 86,
+    "tasks_pending": 173,
     "current_sprint": "S3",
-    "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "specialist_cycles_run": 19,
+    "last_specialist": 0,
+    "last_updated": "2026-04-16T00:30:00Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,38 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-16T00:30:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "HubAntre defines SCENE_TRANSITION constant (TransitionBiome.tscn) but _launch_adventure() bypasses it — scene transition constants must be verified against actual transition call-sites",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/HubAntre.gd",
+        "scripts/TransitionBiome.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-16T00:30:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "Two parallel hub architectures (HubAntre active, HubScreen+GameFlowController planned) — GameFlowController is never instantiated. Active path diverges from intended architecture.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/ui/hub_screen.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-16T00:30:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "After scene deletion: always delete .uid sidecar files (*.gd.uid, *.tscn.uid) to prevent Godot import errors at next editor launch",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "all scenes/scripts"
       ]
     }
   ],

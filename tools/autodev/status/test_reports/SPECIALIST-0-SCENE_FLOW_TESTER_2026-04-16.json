@@ -1,0 +1,112 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-16T00:00:00Z",
+  "cycle_type": "test",
+  "event_count": 112,
+  "summary": "Full player journey traced: IntroCeltOS → Menu3DPC → MenuPrincipal → {ParchmentPreRun|SelectionSauvegarde} → BroceliandeForest3D → HubAntre → BroceliandeForest3D (loop). 8 checks: 2 CRITICAL (orphan scenes reachable via debug SceneSelector, MerlinGame dead-end), 2 HIGH (SCENE_TRANSITION dead const, GameFlowController unwired), 2 MEDIUM (MerlinCabinHub skipped, two hub architectures), 2 LOW (pixel_config/SceneSelector stale entries).",
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "status": "TASK_EXISTS",
+      "file": "scenes/IntroPersonalityQuiz.tscn",
+      "file_line": "scenes/IntroPersonalityQuiz.tscn:1",
+      "description": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn are orphaned — no active scene routes to them. IntroPersonalityQuiz.gd:12 routes to SceneRencontreMerlin but nothing routes to IntroPersonalityQuiz from the active flow (IntroCeltOS → Menu3DPC skips them). Director confirmed deletion (q-20260414-005).",
+      "existing_task": "E2E-DELETE-ORPHAN-SCENES",
+      "action": "IMPLEMENT_NOW"
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "status": "TASK_EXISTS_LOW_PRIORITY",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "file_line": "scripts/broceliande_3d/broceliande_forest_3d.gd:9,1221-1227",
+      "description": "BroceliandeForest3D.GAME_SCENE = 'res://scenes/MerlinGame.tscn'. _on_hub() when _merlin_found=true routes to MerlinGame.tscn — the OLD card game architecture. MerlinGame.tscn has no return path to HubAntre. Creates a dead-end mid-session. Task E2E-MERLINGAME-OBSOLETE-PATH exists at P12 — needs priority upgrade to P5.",
+      "existing_task": "E2E-MERLINGAME-OBSOLETE-PATH",
+      "action": "UPGRADE_PRIORITY"
+    },
+    {
+      "id": "SF-003",
+      "severity": "HIGH",
+      "status": "NEW",
+      "file": "scripts/HubAntre.gd",
+      "file_line": "scripts/HubAntre.gd:16",
+      "description": "HubAntre.gd defines SCENE_TRANSITION := 'res://scenes/TransitionBiome.tscn' (line 16) but _launch_adventure() at line 661 calls PixelTransition.transition_to(SCENE_FOREST) directly — SCENE_TRANSITION constant is NEVER used. This means the TransitionBiome.tscn biome-entry cinematic is fully bypassed. Intent was HubAntre → TransitionBiome → BroceliandeForest3D.",
+      "task_to_create": "FLOW-S0-DEAD-TRANSITION-CONST"
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "status": "TASK_EXISTS",
+      "file": "scripts/core/game_flow_controller.gd",
+      "file_line": "scripts/core/game_flow_controller.gd:44-47",
+      "description": "GameFlowController (HubScreen→Run3D→EndRunScreen) is a class — NOT registered as autoload and NOT instantiated from any active scene script. The active path is HubAntre→BroceliandeForest3D direct. Two parallel hub architectures coexist with no bridge. Task E2E-DEAD-PATH-GAME-FLOW-CONTROLLER at P4 addresses migration.",
+      "existing_task": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER"
+    },
+    {
+      "id": "SF-005",
+      "severity": "MEDIUM",
+      "status": "NEW",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "file_line": "scripts/broceliande_3d/broceliande_forest_3d.gd:279",
+      "description": "Comment at line 279 states 'Book cinematic is now shown in MerlinCabinHub BEFORE entering forest' but _launch_adventure() in HubAntre skips MerlinCabinHub.tscn entirely — flow goes HubAntre → BroceliandeForest3D directly. MerlinCabinHub.tscn exists and has a script (merlin_cabin_hub.gd) but is never reached. Either wire it or remove stale comment.",
+      "task_to_create": "FLOW-S0-CABIN-HUB-SKIPPED"
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "status": "NEW",
+      "file": "scripts/autoload/SceneSelector.gd",
+      "file_line": "scripts/autoload/SceneSelector.gd:17",
+      "description": "SceneSelector.gd lists 'MerlinGame' → 'res://scenes/MerlinGame.tscn' (line 17). Once E2E-MERLINGAME-OBSOLETE-PATH is resolved and MerlinGame.tscn is deprecated, this entry becomes misleading. Also pixel_transition_config.gd:71 maps MerlinGame.tscn with a config entry.",
+      "task_to_create": "FLOW-S0-STALE-SCENE-REGISTRY-CLEANUP"
+    },
+    {
+      "id": "SF-007",
+      "severity": "LOW",
+      "status": "NEW",
+      "file": "scripts/game_manager.gd",
+      "file_line": "scripts/game_manager.gd (autoload)",
+      "description": "GameManager autoload contains methods from old architecture: generate_map(), add_gold(), spend_gold(), get_type_multiplier(), save_to_slot(). None of these are called from active flow scripts (HubAntre, BroceliandeForest3D, ParchmentPreRun). GameManager may be a legacy autoload with dead code bloating startup.",
+      "task_to_create": "FLOW-S0-GAME-MANAGER-LEGACY-AUDIT"
+    },
+    {
+      "id": "SF-008",
+      "severity": "PASS",
+      "description": "IntroCeltOS → Menu3DPC → MenuPrincipal → ParchmentPreRun → BroceliandeForest3D → HubAntre: all .tscn files EXIST and transitions are wired via PixelTransition. HubAntre side branches (Calendar, Collection, ArbreDeVie, MapMonde, MenuOptions, Menu3DPC) all reference existing .tscn files. SelectionSauvegarde → HubAntre.tscn is correct.",
+      "status": "PASS"
+    }
+  ],
+  "scene_existence_check": {
+    "IntroCeltOS.tscn": "EXISTS",
+    "Menu3DPC.tscn": "EXISTS",
+    "MenuPrincipal.tscn": "EXISTS",
+    "ParchmentPreRun.tscn": "EXISTS",
+    "SelectionSauvegarde.tscn": "EXISTS",
+    "BroceliandeForest3D.tscn": "EXISTS",
+    "HubAntre.tscn": "EXISTS",
+    "TransitionBiome.tscn": "EXISTS (BYPASSED — never called from HubAntre active path)",
+    "Run3D.tscn": "EXISTS (GameFlowController only — not active path)",
+    "MerlinGame.tscn": "EXISTS (ORPHAN — routed from dead BroceliandeForest3D._on_hub path)",
+    "EndRunScreen.tscn": "EXISTS (GameFlowController only — not active path)",
+    "HubScreen.tscn": "EXISTS (GameFlowController only — not active path)",
+    "IntroPersonalityQuiz.tscn": "ORPHAN — scheduled for deletion (director q-20260414-005)",
+    "SceneRencontreMerlin.tscn": "ORPHAN — scheduled for deletion (director q-20260414-005)",
+    "MerlinCabinHub.tscn": "EXISTS (not reachable from active flow)",
+    "Calendar.tscn": "EXISTS",
+    "Collection.tscn": "EXISTS",
+    "ArbreDeVie.tscn": "EXISTS",
+    "MapMonde.tscn": "EXISTS",
+    "MenuOptions.tscn": "EXISTS"
+  },
+  "tasks_generated": 5,
+  "task_implemented": "E2E-DELETE-ORPHAN-SCENES",
+  "invariants_checked": {
+    "all_active_tscn_exist": true,
+    "no_active_path_leads_to_missing_tscn": true,
+    "dead_ends_found": ["MerlinGame.tscn (BroceliandeForest3D._on_hub when _merlin_found=true)"],
+    "orphan_tscn_present": ["IntroPersonalityQuiz.tscn", "SceneRencontreMerlin.tscn"],
+    "bypassed_tscn": ["TransitionBiome.tscn (SCENE_TRANSITION const never called)"]
+  }
+}

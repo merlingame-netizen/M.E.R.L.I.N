@@ -594,5 +594,19 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260416-001",
+    "agent": "scene_flow_tester",
+    "severity": "WARN",
+    "category": "ux",
+    "message": "TransitionBiome.tscn cinematic is bypassed — HubAntre routes directly to BroceliandeForest3D",
+    "details": "HubAntre.gd has a SCENE_TRANSITION const pointing to TransitionBiome.tscn but _launch_adventure() ignores it. The biome-entry cinematic (which could show season/atmosphere data per director feedback q-20260412-002) is never played. Restoring this would add immersion at the cost of ~2s extra load time.",
+    "proposed_task": {
+      "title": "Wire TransitionBiome.tscn back into HubAntre→Forest launch path",
+      "sprint": "S2",
+      "type": "dev"
+    },
+    "timestamp": "2026-04-16T00:30:00Z"
   }
 ]
