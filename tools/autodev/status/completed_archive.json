@@ -1,113 +1,134 @@
-[
-  {
-    "id": "GDC-FOREST3D-STALE-DRAIN",
-    "sprint": "S2",
-    "priority": 20,
-    "status": "completed",
-    "type": "dev",
-    "title": "Remove stale life -= 1 drain from broceliande_forest_3d.gd:1075",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd"
-    ],
-    "description": "SPEC-2 CHK-23 FAIL_MEDIUM: broceliande_forest_3d.gd:1075 has hardcoded `life -= 1` (drain per card) inside the encounter card resolved callback, IGNORING MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD=0 (director decision q-20260412-001). Also mutates GameManager.run_state directly (dead path — canonical is MerlinStore). This is a dead code path but contradicts the director decision. Fix: remove the `life -= 1` line and the direct GameManager state mutation; rely on run_3d_controller.gd canonical drain system (DRAIN_PER_CARD=0). Also update HUD feedback labels accordingly.",
-    "completed_at": "2026-04-15T14:45:00Z",
-    "notes": "Removed life -= 1 per card drain (director decision q-20260412-001). Updated life_change: +5/-8/0. Neutral message changed to 'La foret observe en silence.'"
-  },
-  {
-    "id": "S2-ARC-CONDITION-EVAL-V2",
-    "sprint": "S2",
-    "priority": 1,
-    "status": "completed",
-    "type": "fix",
-    "title": "REOPEN: Wire arc_condition_type dispatcher into llm_adapter_map_prompt.gd:96",
-    "agent": "godot_expert",
-    "files": [
-      "scripts/merlin/llm_adapter_map_prompt.gd",
-      "scripts/merlin/merlin_skeleton_generator.gd",
-      "scripts/merlin/merlin_constants.gd"
-    ],
-    "description": "VERIFIER FALSE-POSITIVE 2026-04-14: dispatcher exists in llm_adapter_map_prompt.gd:95-104 BUT line 96 still uses rep_value >= arc_condition_value as universal check, ignoring the type dispatch. Wire the branch so checkends actually switch on arc_condition_type (gte/lte/eq/range).",
-    "completed_at": "2026-04-15T14:45:00Z",
-    "notes": "VERIFIED PASS: dispatcher correctly wired (lines 97-103). >= comparison valid for all arc_condition_types. merlin_skeleton_generator.gd passes correct biome faction rep. false-positive reopen — no fix needed."
-  },
-  {
-    "id": "3D-RUN3D-TSCN-VERIFY",
-    "sprint": "S3",
-    "priority": 35,
-    "status": "completed",
-    "type": "dev",
-    "title": "Run3D.tscn stub verified as intentional (headless-capable controller)",
-    "agent": "godot_expert",
-    "files": [
-      "scenes/Run3D.tscn"
-    ],
-    "completed_at": "2026-04-15T14:45:00Z",
-    "notes": "VERIFIED: Run3D.tscn is intentionally minimal (Node + script). run_3d_controller.gd receives all dependencies via injection (store, card_system, effects, etc.) — no @onready vars. Headless design confirmed. No fix needed."
-  },
-  {
-    "id": "FACTION-CONTENT-UNLOCK-CHECK",
-    "sprint": "S3",
-    "priority": 20,
-    "type": "test",
-    "status": "completed",
-    "title": "Test faction content unlock (>=50) gates special cards correctly",
-    "description": "Verify cards with faction_required>=50 only appear when player faction_rep>=50. Check card filtering in merlin_card_system.gd.",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd",
-      "scripts/merlin/merlin_reputation_system.gd"
-    ],
-    "agent": "game_playtester",
-    "completed_at": "2026-04-15T15:45:00Z",
-    "notes": "TEST FAIL: get_unlocked_content() defined in reputation_system.gd:103 but NEVER called in merlin_card_system.gd. Faction gate at rep>=50 completely unwired. Dev task E2E-FACTION-GATE-WIRE created (priority 1)."
-  },
-  {
-    "id": "FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN",
-    "sprint": "S3",
-    "priority": 34,
-    "type": "dev",
-    "status": "cancelled",
-    "title": "First-run detection: route new profiles through personality quiz",
-    "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() → transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
-    "files": [
-      "scripts/menu_3d_pc.gd:1333-1337",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "agent": "scene_flow_fixer",
-    "completed_at": "2026-04-15T15:45:00Z",
-    "notes": "CANCELLED: contradicts director decision q-20260414-005 (\"Supprimer IntroPersonalityQuiz + SceneRencontreMerlin\"). Replacement task E2E-DELETE-ORPHAN-SCENES created."
-  },
-  {
-    "id": "FACTION-CONTENT-GATE-AUDIT",
-    "sprint": "S2",
-    "priority": 21,
-    "type": "test",
-    "status": "completed",
-    "title": "Verify faction content gate (>=50) blocks/allows special cards",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd",
-      "scripts/merlin/merlin_reputation_system.gd"
-    ],
-    "description": "Execute FACTION-CONTENT-UNLOCK-CHECK: verify get_unlocked_content() is called during card pool filtering. Trace merlin_card_system._filter_by_faction() or equivalent. Check: rep=49 -> faction special cards excluded, rep=50 -> included. If no filtering exists yet, create task GDC-FACTION-CONTENT-50-GATE as CRITICAL.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION",
-    "completed_at": "2026-04-15T15:45:00Z",
-    "notes": "Duplicate of FACTION-CONTENT-UNLOCK-CHECK. Same FAIL: faction gate not wired in card pool selection. See test report SPECIALIST-14-INTEGRATION_E2E-2026-04-15.json."
-  },
-  {
-    "id": "META-DEDUP-FACTION-GATE",
-    "sprint": "META",
-    "priority": 3,
-    "type": "dev",
-    "status": "completed",
-    "title": "Merge duplicate faction-gate tasks (E2E-FACTION-GATE-WIRE + GDC-FACTION-CONTENT-50-GATE)",
-    "agent": "meta_evolution_auditor",
-    "files": [
-      "tools/autodev/status/feature_queue.json"
-    ],
-    "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
-    "completed_at": "2026-04-15T18:47:19Z",
-    "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
-  }
-]
+{
+  "tasks": [
+    {
+      "id": "GDC-FOREST3D-STALE-DRAIN",
+      "sprint": "S2",
+      "priority": 20,
+      "status": "completed",
+      "type": "dev",
+      "title": "Remove stale life -= 1 drain from broceliande_forest_3d.gd:1075",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "description": "SPEC-2 CHK-23 FAIL_MEDIUM: broceliande_forest_3d.gd:1075 has hardcoded `life -= 1` (drain per card) inside the encounter card resolved callback, IGNORING MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD=0 (director decision q-20260412-001). Also mutates GameManager.run_state directly (dead path — canonical is MerlinStore). This is a dead code path but contradicts the director decision. Fix: remove the `life -= 1` line and the direct GameManager state mutation; rely on run_3d_controller.gd canonical drain system (DRAIN_PER_CARD=0). Also update HUD feedback labels accordingly.",
+      "completed_at": "2026-04-15T14:45:00Z",
+      "notes": "Removed life -= 1 per card drain (director decision q-20260412-001). Updated life_change: +5/-8/0. Neutral message changed to 'La foret observe en silence.'"
+    },
+    {
+      "id": "S2-ARC-CONDITION-EVAL-V2",
+      "sprint": "S2",
+      "priority": 1,
+      "status": "completed",
+      "type": "fix",
+      "title": "REOPEN: Wire arc_condition_type dispatcher into llm_adapter_map_prompt.gd:96",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/llm_adapter_map_prompt.gd",
+        "scripts/merlin/merlin_skeleton_generator.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "description": "VERIFIER FALSE-POSITIVE 2026-04-14: dispatcher exists in llm_adapter_map_prompt.gd:95-104 BUT line 96 still uses rep_value >= arc_condition_value as universal check, ignoring the type dispatch. Wire the branch so checkends actually switch on arc_condition_type (gte/lte/eq/range).",
+      "completed_at": "2026-04-15T14:45:00Z",
+      "notes": "VERIFIED PASS: dispatcher correctly wired (lines 97-103). >= comparison valid for all arc_condition_types. merlin_skeleton_generator.gd passes correct biome faction rep. false-positive reopen — no fix needed."
+    },
+    {
+      "id": "3D-RUN3D-TSCN-VERIFY",
+      "sprint": "S3",
+      "priority": 35,
+      "status": "completed",
+      "type": "dev",
+      "title": "Run3D.tscn stub verified as intentional (headless-capable controller)",
+      "agent": "godot_expert",
+      "files": [
+        "scenes/Run3D.tscn"
+      ],
+      "completed_at": "2026-04-15T14:45:00Z",
+      "notes": "VERIFIED: Run3D.tscn is intentionally minimal (Node + script). run_3d_controller.gd receives all dependencies via injection (store, card_system, effects, etc.) — no @onready vars. Headless design confirmed. No fix needed."
+    },
+    {
+      "id": "FACTION-CONTENT-UNLOCK-CHECK",
+      "sprint": "S3",
+      "priority": 20,
+      "type": "test",
+      "status": "completed",
+      "title": "Test faction content unlock (>=50) gates special cards correctly",
+      "description": "Verify cards with faction_required>=50 only appear when player faction_rep>=50. Check card filtering in merlin_card_system.gd.",
+      "files": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_reputation_system.gd"
+      ],
+      "agent": "game_playtester",
+      "completed_at": "2026-04-15T15:45:00Z",
+      "notes": "TEST FAIL: get_unlocked_content() defined in reputation_system.gd:103 but NEVER called in merlin_card_system.gd. Faction gate at rep>=50 completely unwired. Dev task E2E-FACTION-GATE-WIRE created (priority 1)."
+    },
+    {
+      "id": "FLOW-INTROCALTOS-PERSONALITY-QUIZ-FIRST-RUN",
+      "sprint": "S3",
+      "priority": 34,
+      "type": "dev",
+      "status": "cancelled",
+      "title": "First-run detection: route new profiles through personality quiz",
+      "description": "When MerlinSaveSystem detects no existing profile (first_run=true), gate new game through IntroPersonalityQuiz before ParchmentPreRun. Check in menu_3d_pc.gd._start_new_game(): if not MerlinSaveSystem.profile_exists() → transition to IntroPersonalityQuiz. Depends on FLOW-QUIZ-WIRE-INTRO and director feedback q-20260414-005.",
+      "files": [
+        "scripts/menu_3d_pc.gd:1333-1337",
+        "scripts/merlin/merlin_save_system.gd"
+      ],
+      "agent": "scene_flow_fixer",
+      "completed_at": "2026-04-15T15:45:00Z",
+      "notes": "CANCELLED: contradicts director decision q-20260414-005 (\"Supprimer IntroPersonalityQuiz + SceneRencontreMerlin\"). Replacement task E2E-DELETE-ORPHAN-SCENES created."
+    },
+    {
+      "id": "FACTION-CONTENT-GATE-AUDIT",
+      "sprint": "S2",
+      "priority": 21,
+      "type": "test",
+      "status": "completed",
+      "title": "Verify faction content gate (>=50) blocks/allows special cards",
+      "agent": "game_playtester",
+      "files": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_reputation_system.gd"
+      ],
+      "description": "Execute FACTION-CONTENT-UNLOCK-CHECK: verify get_unlocked_content() is called during card pool filtering. Trace merlin_card_system._filter_by_faction() or equivalent. Check: rep=49 -> faction special cards excluded, rep=50 -> included. If no filtering exists yet, create task GDC-FACTION-CONTENT-50-GATE as CRITICAL.",
+      "created_at": "2026-04-15T12:45:00Z",
+      "created_by": "SPEC-11-FACTION",
+      "completed_at": "2026-04-15T15:45:00Z",
+      "notes": "Duplicate of FACTION-CONTENT-UNLOCK-CHECK. Same FAIL: faction gate not wired in card pool selection. See test report SPECIALIST-14-INTEGRATION_E2E-2026-04-15.json."
+    },
+    {
+      "id": "META-DEDUP-FACTION-GATE",
+      "sprint": "META",
+      "priority": 3,
+      "type": "dev",
+      "status": "completed",
+      "title": "Merge duplicate faction-gate tasks (E2E-FACTION-GATE-WIRE + GDC-FACTION-CONTENT-50-GATE)",
+      "agent": "meta_evolution_auditor",
+      "files": [
+        "tools/autodev/status/feature_queue.json"
+      ],
+      "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
+      "completed_at": "2026-04-15T18:47:19Z",
+      "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+    },
+    {
+      "id": "E2E-FACTION-GATE-WIRE",
+      "sprint": "S2",
+      "priority": 1,
+      "type": "dev",
+      "status": "completed",
+      "title": "Wire faction content gate (rep>=50) into card pool selection — CRITICAL test FAIL",
+      "agent": "game_design_coder",
+      "files": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_reputation_system.gd"
+      ],
+      "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
+      "created_at": "2026-04-15T15:45:00Z",
+      "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+      "completed_at": "2026-04-16T10:00:00Z",
+      "notes": "IMPLEMENTED: wired get_unlocked_content() into get_fastroute_card() and _build_llm_context(). Added _card_dominant_faction() helper. Call-site grep PASS (2 call sites verified)."
+    }
+  ],
+  "last_updated": "2026-04-16T10:00:00Z"
+}

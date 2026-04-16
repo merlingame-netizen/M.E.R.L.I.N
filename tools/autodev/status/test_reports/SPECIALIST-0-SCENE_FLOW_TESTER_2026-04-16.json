@@ -1,0 +1,123 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "date": "2026-04-16",
+  "cycle_type": "test",
+  "events_count_at_run": 112,
+  "summary": "Full scene flow audit tracing all transitions from IntroCeltOS boot to run end. 12 checks total: 2 CRITICAL, 4 HIGH, 4 MEDIUM, 2 PASS. CRITICAL: GameFlowController defined but never instantiated (HubScreen/Run3D path is dead code). CRITICAL: BroceliandeForest3D still routes to MerlinGame.tscn (old card scene) for run encounters. HIGH: Two competing hub scenes (HubAntre active vs HubScreen dead). HIGH: IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn orphan scenes still in /scenes/ (director said delete, q-20260414-005). HIGH: Two competing run scenes (MerlinGame active vs Run3D dead). HIGH: IntroCeltOS routes to Menu3DPC, not MenuPrincipal (GameFlowController uses MenuPrincipal). MEDIUM: ParchmentPreRun bypasses HubAntre. MEDIUM: SelectionSauvegarde routes to HubAntre (old hub). MEDIUM: Some transitions use get_tree().change_scene_to_file() without PixelTransition fallback check. MEDIUM: MerlinCabinHub.tscn status unclear (orphan?). PASS: All .tscn files referenced by active code exist. PASS: Minigame system connected in MerlinGameController.",
+  "checks": [
+    {
+      "id": "SF-001",
+      "check": "IntroCeltOS → Menu3DPC transition",
+      "status": "PASS",
+      "details": "scripts/IntroCeltOS.gd:516 calls PixelTransition.transition_to('res://scenes/Menu3DPC.tscn'). Scene exists.",
+      "file": "scripts/IntroCeltOS.gd",
+      "line": 516
+    },
+    {
+      "id": "SF-002",
+      "check": "GameFlowController instantiation",
+      "status": "CRITICAL_FAIL",
+      "details": "scripts/core/game_flow_controller.gd defines GameFlowController with clean flow (Menu→HubScreen→Run3D→EndRunScreen→Hub) but is NEVER instantiated anywhere. Not an autoload, not in any scene. The entire HubScreen/Run3D path is dead.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 1
+    },
+    {
+      "id": "SF-003",
+      "check": "BroceliandeForest3D → card encounter routing",
+      "status": "CRITICAL_FAIL",
+      "details": "scripts/broceliande_3d/broceliande_forest_3d.gd:9 GAME_SCENE = 'res://scenes/MerlinGame.tscn'. When _merlin_found=true (line 1222) it routes to MerlinGame.tscn (old card scene). The old scene is technically functional but creates a dead-end without a clean EndRun → Hub transition.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 9
+    },
+    {
+      "id": "SF-004",
+      "check": "Orphan scenes IntroPersonalityQuiz + SceneRencontreMerlin",
+      "status": "HIGH_FAIL",
+      "details": "Director q-20260414-005: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Both scenes still exist in /scenes/. IntroPersonalityQuiz.gd:12 still references SceneRencontreMerlin.tscn as NEXT_SCENE. Task E2E-DELETE-ORPHAN-SCENES P3 still pending.",
+      "file": "scenes/IntroPersonalityQuiz.tscn",
+      "line": 0
+    },
+    {
+      "id": "SF-005",
+      "check": "Competing hub scenes: HubAntre vs HubScreen",
+      "status": "HIGH_FAIL",
+      "details": "Active path uses HubAntre.tscn (BroceliandeForest3D:8, SelectionSauvegarde:4, HubAntre.gd). GameFlowController references HubScreen.tscn (core/game_flow_controller.gd:44). HubScreen.tscn exists but is never loaded in active play. Creates confusion.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 44
+    },
+    {
+      "id": "SF-006",
+      "check": "Competing run scenes: MerlinGame vs Run3D",
+      "status": "HIGH_FAIL",
+      "details": "Active path uses MerlinGame.tscn (BroceliandeForest3D:9 GAME_SCENE). GameFlowController uses Run3D.tscn (game_flow_controller.gd:45). Run3D.tscn exists with Run3DController but is never loaded in active play. Director q-20260414-004: migrate to GameFlowController.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 45
+    },
+    {
+      "id": "SF-007",
+      "check": "IntroCeltOS → Menu3DPC vs GameFlowController → MenuPrincipal",
+      "status": "HIGH_FAIL",
+      "details": "IntroCeltOS.gd:516 routes to Menu3DPC. GameFlowController:47 SCENE_MENU = MenuPrincipal. Two menus with different scripting. MenuPrincipalMerlin.gd uses MENU_NEW_GAME→ParchmentPreRun while GameFlowController goes through start_game(). Divergence creates split paths.",
+      "file": "scripts/IntroCeltOS.gd",
+      "line": 516
+    },
+    {
+      "id": "SF-008",
+      "check": "ParchmentPreRun → BroceliandeForest3D (skips HubAntre)",
+      "status": "MEDIUM_FAIL",
+      "details": "scripts/ui/parchment_pre_run.gd:7 SCENE_FOREST = BroceliandeForest3D. New game goes: MenuPrincipal→ParchmentPreRun→BroceliandeForest3D, bypassing HubAntre entirely. Hub is only visited via SelectionSauvegarde (continue game). No biome/ogham selection on first run.",
+      "file": "scripts/ui/parchment_pre_run.gd",
+      "line": 7
+    },
+    {
+      "id": "SF-009",
+      "check": "SelectionSauvegarde → HubAntre (old hub) on continue",
+      "status": "MEDIUM_FAIL",
+      "details": "scripts/SelectionSauvegarde.gd:4 GAME_SCENE = HubAntre.tscn. Continue game loads old hub. Should eventually route to whichever hub is canonical after GFC migration.",
+      "file": "scripts/SelectionSauvegarde.gd",
+      "line": 4
+    },
+    {
+      "id": "SF-010",
+      "check": "Transitions using change_scene_to_file without PixelTransition",
+      "status": "MEDIUM_FAIL",
+      "details": "scripts/broceliande_3d/broceliande_forest_3d.gd:1215 uses direct get_tree().change_scene_to_file('HubAntre') without trying PixelTransition first. Missing pixel transition animation on HubAntre return.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1215
+    },
+    {
+      "id": "SF-011",
+      "check": "MerlinCabinHub.tscn status",
+      "status": "MEDIUM_FAIL",
+      "details": "scenes/MerlinCabinHub.tscn exists. scripts/merlin_cabin_hub.gd references MENU_SCENE = Menu3DPC. Unclear if this is an active scene or orphan. No code in active flow routes to it. Possible 3rd orphan hub.",
+      "file": "scenes/MerlinCabinHub.tscn",
+      "line": 0
+    },
+    {
+      "id": "SF-012",
+      "check": "Minigame system wiring in MerlinGameController",
+      "status": "PASS",
+      "details": "scripts/ui/merlin_game_controller.gd:108 _minigame_runner = GameControllerMinigame.new(self). Line 535: score = await _minigame_runner.run_minigame(mg_field, ...). All 8 lexical field minigames in scripts/minigames/. System correctly connected.",
+      "file": "scripts/ui/merlin_game_controller.gd",
+      "line": 108
+    }
+  ],
+  "new_tasks_generated": [
+    "FLOW-MERLINGAME-ENDRUN-WIRE",
+    "FLOW-HUB-CANONICAL-DECISION",
+    "FLOW-CABINHUB-ORPHAN-AUDIT",
+    "FLOW-BROCELI-PIXEL-TRANSITION",
+    "FLOW-MENU-ALIGNMENT",
+    "FLOW-PARCHMENT-HUB-LINK"
+  ],
+  "task_implemented": "E2E-FACTION-GATE-WIRE",
+  "implementation_files_modified": [
+    "scripts/merlin/merlin_card_system.gd"
+  ],
+  "implementation_notes": "Wired MerlinReputationSystem.get_unlocked_content(faction_rep) into get_fastroute_card() and _build_llm_context(). Faction-gated cards (with 'faction' field) are now excluded when rep < 50. Faction-aligned cards (dominant faction from ADD_REPUTATION effects) are boosted 2x weight. Added _card_dominant_faction() helper. LLM context now includes 'unlocked_factions' array.",
+  "call_site_verification": {
+    "get_unlocked_content": "2 call sites (lines 176, 770 in merlin_card_system.gd) PASS",
+    "_card_dominant_faction": "1 definition (789) + 1 call site (209) PASS"
+  }
+}

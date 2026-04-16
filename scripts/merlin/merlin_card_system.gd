@@ -172,12 +172,18 @@ func generate_card(context: Dictionary) -> Dictionary:
 
 func get_fastroute_card(context: Dictionary) -> Dictionary:
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
+	var unlocked: Array = MerlinReputationSystem.get_unlocked_content(faction_rep)
 	var candidates: Array = []
 	var generic: Array = []
 
 	for card in _fastroute_narrative_pool:
 		var card_id: String = str(card.get("id", ""))
 		if _fastroute_seen.has(card_id):
+			continue
+		# Faction gate: skip faction-locked cards if faction not unlocked (rep < 50)
+		var card_faction: String = str(card.get("faction", ""))
+		if not card_faction.is_empty() and not unlocked.has(card_faction):
 			continue
 		var card_biome: String = str(card.get("biome", ""))
 		if card_biome == biome:
@@ -196,8 +202,16 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 	if candidates.is_empty():
 		return _get_emergency_card()
 
-	var idx: int = _randi_range(0, candidates.size() - 1)
-	var selected: Dictionary = candidates[idx].duplicate(true)
+	# Boost faction-aligned cards (double weight) when factions are unlocked
+	var pool: Array = candidates.duplicate()
+	if not unlocked.is_empty():
+		for card in candidates:
+			var dom: String = _card_dominant_faction(card)
+			if not dom.is_empty() and unlocked.has(dom):
+				pool.append(card)
+
+	var idx: int = _randi_range(0, pool.size() - 1)
+	var selected: Dictionary = pool[idx].duplicate(true)
 	_fastroute_seen.append(str(selected.get("id", "")))
 
 	# Set type, validate, annotate, pad
@@ -752,6 +766,8 @@ func _get_emergency_card() -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_llm_context(context: Dictionary) -> Dictionary:
+	var faction_rep: Dictionary = context.get("faction_rep", {})
+	var unlocked: Array = MerlinReputationSystem.get_unlocked_content(faction_rep)
 	return {
 		"biome": str(context.get("biome", "foret_broceliande")),
 		"card_index": int(context.get("card_index", 0)),
@@ -763,8 +779,28 @@ func _build_llm_context(context: Dictionary) -> Dictionary:
 		"active_tags": context.get("active_tags", []),
 		"active_promises": context.get("active_promises", []),
 		"trust_tier": str(context.get("trust_tier", "T0")),
-		"faction_rep": context.get("faction_rep", {}),
+		"faction_rep": faction_rep,
+		"unlocked_factions": unlocked,
 	}
+
+
+## Returns the dominant faction for a card based on ADD_REPUTATION effects.
+## Counts how many options grant rep to each faction; returns the most common one.
+func _card_dominant_faction(card: Dictionary) -> String:
+	var counts: Dictionary = {}
+	for opt in card.get("options", []):
+		for eff in opt.get("effects", []):
+			if eff.get("type", "") == "ADD_REPUTATION":
+				var f: String = str(eff.get("faction", ""))
+				if not f.is_empty():
+					counts[f] = int(counts.get(f, 0)) + 1
+	var best: String = ""
+	var best_count: int = 0
+	for f in counts:
+		if int(counts[f]) > best_count:
+			best_count = int(counts[f])
+			best = f
+	return best
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

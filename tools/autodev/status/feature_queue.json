@@ -2040,22 +2040,6 @@
     "description": "bk_forest_test_room.gd:8 const OLD := 'res://Assets/3d_models/' and OLD_TREES[01-03], OLD_MEGALITHS[dolmen_01/menhir_01] reference paths that don't exist (Assets/3d_models/ dir missing). Lines 558-560 use OLD_MEGALITHS in fallback placement. Fix: replace OLD_TREES with BK_TREES (already loaded), replace OLD_MEGALITHS with BK_MEGALITHS[0:2] references."
   },
   {
-    "id": "E2E-FACTION-GATE-WIRE",
-    "sprint": "S2",
-    "priority": 1,
-    "type": "dev",
-    "status": "pending",
-    "title": "Wire faction content gate (rep>=50) into card pool selection — CRITICAL test FAIL",
-    "agent": "game_design_coder",
-    "files": [
-      "scripts/merlin/merlin_card_system.gd",
-      "scripts/merlin/merlin_reputation_system.gd"
-    ],
-    "description": "TEST FAIL: MerlinReputationSystem.get_unlocked_content(faction_rep) is never called from merlin_card_system.gd. Wire it: in generate_card() and get_fastroute_card(), pass context['faction_rep'] to get_unlocked_content() and use the result to (a) boost matching faction cards in the pool, (b) include faction-specific cards only when rep>=50. Use FACTION_THRESHOLD_CONTENT=50 from merlin_constants.gd. CALL-SITE GREP REQUIRED after implementation.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-DELETE-ORPHAN-SCENES",
     "sprint": "S2",
     "priority": 3,
@@ -2464,5 +2448,105 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FLOW-MERLINGAME-ENDRUN-WIRE",
+    "sprint": "S2",
+    "priority": 2,
+    "type": "dev",
+    "status": "pending",
+    "title": "Wire EndRunScreen into active BroceliandeForest3D→MerlinGame path",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/ui/end_run_screen.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "SPECIALIST-0 FINDING SF-003: MerlinGame (old card scene) has no clean EndRun→HubAntre transition. When run ends (death or MOS limit), MerlinGameController should instantiate EndRunScreen, show narrative ending, then transition to HubAntre. Wire: MerlinStore.run_ended signal → show EndRunScreen → EndRunScreenUI.return_to_hub() → PixelTransition.transition_to(HubAntre). Call-site grep required after implementation.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "FLOW-HUB-CANONICAL-DECISION",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "dev",
+    "status": "pending",
+    "title": "Audit HubAntre vs HubScreen — declare canonical hub, archive the other",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/HubAntre.gd",
+      "scripts/ui/hub_screen.gd",
+      "scenes/HubAntre.tscn",
+      "scenes/HubScreen.tscn",
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "description": "SPECIALIST-0 FINDING SF-005: Two competing hub scenes exist. HubAntre.tscn is active (used by BroceliandeForest3D, SelectionSauvegarde). HubScreen.tscn is referenced by GameFlowController (dead/unwired). Per director q-20260414-004: migrate to GameFlowController. Decision: HubScreen is the future canonical hub. Task: audit both, ensure HubScreen has all HubAntre features (biome selection, ogham loadout, faction rep display, menu links: Calendar, Collection, ArbreDeVie, Options), then add note to redirect all HubAntre references to HubScreen in the migration task.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "FLOW-CABINHUB-ORPHAN-AUDIT",
+    "sprint": "S2",
+    "priority": 5,
+    "type": "dev",
+    "status": "pending",
+    "title": "Audit MerlinCabinHub.tscn — orphan or active? Archive if unused.",
+    "agent": "game_design_coder",
+    "files": [
+      "scenes/MerlinCabinHub.tscn",
+      "scripts/merlin_cabin_hub.gd"
+    ],
+    "description": "SPECIALIST-0 FINDING SF-011: scenes/MerlinCabinHub.tscn exists with script merlin_cabin_hub.gd (MENU_SCENE=Menu3DPC). No active flow routes to it. Check if anything references it, check git log for last modification. If genuinely unused: move to archive/scenes_unused/ to reduce scene count confusion. Grep first: grep -rn 'MerlinCabinHub' --include='*.gd' --include='*.tscn'.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "FLOW-BROCELI-PIXEL-TRANSITION",
+    "sprint": "S2",
+    "priority": 4,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix BroceliandeForest3D:1215 direct change_scene bypass — use PixelTransition",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "SPECIALIST-0 FINDING SF-010: scripts/broceliande_3d/broceliande_forest_3d.gd:1215 uses get_tree().change_scene_to_file('HubAntre.tscn') directly without trying PixelTransition first. This bypasses the pixel-formation transition animation, creating jarring scene cut. Fix: apply same pattern as line 1211-1215 — check PixelTransition.has_method('transition_to'), use it if available, fallback to change_scene_to_file only if not. The fallback at line 1215 is fine but line 1213 should use transition_to, not already does — re-check line 1215 context.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "FLOW-MENU-ALIGNMENT",
+    "sprint": "S3",
+    "priority": 6,
+    "type": "dev",
+    "status": "pending",
+    "title": "Align IntroCeltOS → MenuPrincipal (not Menu3DPC) after GFC migration",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/menu_3d_pc.gd",
+      "scripts/MenuPrincipalMerlin.gd"
+    ],
+    "description": "SPECIALIST-0 FINDING SF-007: IntroCeltOS.gd:516 routes to Menu3DPC.tscn. GameFlowController (SCENE_MENU) uses MenuPrincipal.tscn. After E2E-DEAD-PATH-GAME-FLOW-CONTROLLER migration is done, update IntroCeltOS to route to MenuPrincipal instead of Menu3DPC. Pre-requisite: E2E-DEAD-PATH-GAME-FLOW-CONTROLLER must be completed first. This task should stay blocked until then.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "FLOW-PARCHMENT-HUB-LINK",
+    "sprint": "S2",
+    "priority": 4,
+    "type": "dev",
+    "status": "pending",
+    "title": "ParchmentPreRun: add biome/ogham selection before forest entry",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/ui/parchment_pre_run.gd",
+      "scripts/HubAntre.gd"
+    ],
+    "description": "SPECIALIST-0 FINDING SF-008: New game path goes MenuPrincipal→ParchmentPreRun→BroceliandeForest3D, bypassing HubAntre entirely. This means the player never selects biome or ogham loadout on first run. ParchmentPreRun should either: (A) pass through HubAntre briefly to allow biome/ogham selection, or (B) embed a simplified biome+ogham picker inline in ParchmentPreRun itself. Consult GAME_DESIGN_BIBLE.md section on Hub 2D to determine correct approach. Do NOT modify GAME_DESIGN_BIBLE.md.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
   }
 ]

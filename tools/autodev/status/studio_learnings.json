@@ -1,20 +1,20 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T18:47:19Z",
+  "last_updated": "2026-04-16T10:00:00Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
-    "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "total_test_cycles": 27,
+    "bugs_found": 73,
+    "bugs_fixed": 39,
+    "tasks_completed": 86,
+    "tasks_pending": 174,
     "current_sprint": "S3",
-    "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
-    "fix_rate_pct": 26.3,
+    "specialist_cycles_run": 19,
+    "last_specialist": 0,
+    "last_updated": "2026-04-16T10:00:00Z",
+    "fix_rate_pct": 53.4,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
     "estimated_drain_cycles": "150+ (CRITICAL)",
@@ -1382,6 +1382,40 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-16T10:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "GameFlowController is defined but never instantiated — the HubScreen/Run3D clean flow path is dead. Active flow remains the OLD path: IntroCeltOS→Menu3DPC→HubAntre→BroceliandeForest3D→MerlinGame.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scenes/HubScreen.tscn",
+        "scenes/Run3D.tscn"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-16T10:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "Fastroute cards have no 'faction' field — faction gating must rely on ADD_REPUTATION effects to determine card affinity. Use _card_dominant_faction() helper to infer faction from options effects.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/merlin/merlin_card_system.gd",
+        "data/ai/fastroute_cards.json"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-16T10:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "New game path (MenuPrincipal→ParchmentPreRun→BroceliandeForest3D) bypasses HubAntre entirely — player never selects biome/ogham on first run. This is a UX gap in the game flow.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/ui/parchment_pre_run.gd",
+        "scripts/HubAntre.gd"
       ]
     }
   ],

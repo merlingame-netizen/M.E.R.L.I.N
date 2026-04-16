@@ -532,6 +532,23 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260416-001",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "priority": "HIGH",
+      "status": "pending",
+      "title": "HubAntre vs HubScreen: quel hub est canonique après migration GFC?",
+      "question": "Deux hubs co-existent: HubAntre.tscn (active, Antre de Merlin 3D avec hotspots) et HubScreen.tscn (nouvelle UI 2D référencée par GameFlowController). Lequel est le Hub 2D définitif de la bible?",
+      "choices": [
+        "A: HubAntre reste le hub canonique — GameFlowController doit le référencer au lieu de HubScreen",
+        "B: HubScreen est le futur hub canonique — migrer toutes les refs HubAntre vers HubScreen (plus propre pour GFC)",
+        "C: Fusionner les deux — HubScreen pour la logique, HubAntre visuellement intégré comme sous-scène"
+      ],
+      "context": "SF-005: scripts/core/game_flow_controller.gd:44 SCENE_HUB='HubScreen.tscn', scripts/HubAntre.gd active. Director said q-20260414-004: migrate to GFC.",
+      "created_at": "2026-04-16T10:00:00Z",
+      "specialist_source": "SPECIALIST-0-SCENE_FLOW_TESTER"
     }
   ]
 }
