@@ -802,8 +802,8 @@ static func detect_field_from_verb(verb: String) -> String:
 static func pick_minigame_for_field(field: String) -> String:
 	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
 	if minigames.is_empty():
-		return MerlinConstants.ACTION_VERB_FALLBACK_FIELD  # "esprit" — valid field name
-	var mg_hash: int = field.hash() % minigames.size()
-	if mg_hash < 0:
-		mg_hash = -mg_hash % minigames.size()
-	return str(minigames[mg_hash])
+		var fallback: Array = MerlinConstants.FIELD_MINIGAMES.get(MerlinConstants.ACTION_VERB_FALLBACK_FIELD, [])
+		if fallback.is_empty():
+			return "esprit"
+		return str(fallback[randi() % fallback.size()])
+	return str(minigames[randi() % minigames.size()])
