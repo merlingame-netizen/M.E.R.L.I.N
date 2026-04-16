@@ -3,17 +3,17 @@
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
   "last_updated": "2026-04-15T18:47:19Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
-    "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "total_test_cycles": 27,
+    "bugs_found": 71,
+    "bugs_fixed": 39,
+    "tasks_completed": 88,
+    "tasks_pending": 171,
     "current_sprint": "S3",
     "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "last_specialist": 0,
+    "last_updated": "2026-04-16T00:30:00Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,38 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-16T00:30:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+      "pattern": "ui_overlay_endscreen.gd is the ACTIVE end screen (MerlinGame.tscn path). EndRunScreen.tscn/end_run_screen.gd is the DEAD path (game_flow_controller only). Any end-screen feature (faction endings, rewards) must be implemented in ui_overlay_endscreen.gd.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/ui/ui_overlay_endscreen.gd",
+        "scripts/run/end_run_screen.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-16T00:30:00Z",
+      "source": "T-E2E-CONTINUE-LOAD-VERIFY-2026-04-16",
+      "pattern": "LOAD_PROFILE restores state['meta'] only. state['run'] requires separate LOAD_RUN_STATE dispatch. Always check has_run_in_progress() before attempting run restoration.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/SelectionSauvegarde.gd",
+        "scripts/merlin/merlin_store.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-16T00:30:00Z",
+      "source": "T-E2E-AUTOLOADS-INIT-2026-04-16",
+      "pattern": "BroceliandeForest3D HUD (lines 894+1063) uses /root/GameManager.get('run_state') which is always null. State is at /root/MerlinStore.state['run']. Never use GameManager for game state — it only manages MerlinStore singleton creation.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
       ]
     }
   ],

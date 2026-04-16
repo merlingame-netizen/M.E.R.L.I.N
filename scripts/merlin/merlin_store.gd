@@ -414,6 +414,13 @@ func _reduce(action: Dictionary) -> Dictionary:
 			state["meta"] = meta
 			return {"ok": true}
 
+		"LOAD_RUN_STATE":
+			var run: Dictionary = save_system.load_run_state()
+			if run.is_empty():
+				return {"ok": false, "has_run": false}
+			state["run"] = run
+			return {"ok": true, "has_run": true}
+
 		# --- LIFE ESSENCE ACTIONS (Phase 43) ---
 		"DAMAGE_LIFE":
 			var amount: int = int(action.get("amount", 1))

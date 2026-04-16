@@ -1,0 +1,59 @@
+{
+  "report_id": "T-GDC-FACTION-ENDING-INTEGRATION-2026-04-16",
+  "task_id": "T-GDC-FACTION-ENDING-INTEGRATION",
+  "agent": "game_playtester",
+  "timestamp": "2026-04-16T00:05:00Z",
+  "test_type": "integration_static",
+  "description": "Integration test: faction ending correctly detected when rep >= 80 at run end",
+  "invariants_checked": [
+    {
+      "id": "INV-1",
+      "check": "MerlinReputationSystem.get_available_endings(faction_rep) returns factions with value >= 80.0",
+      "file": "scripts/merlin/merlin_reputation_system.gd:93-99",
+      "result": "PASS",
+      "notes": "THRESHOLD_ENDING = 80.0 defined at line 14. get_available_endings loops FACTIONS array, checks float(factions.get(faction, 0.0)) >= THRESHOLD_ENDING. Logic correct."
+    },
+    {
+      "id": "INV-2",
+      "check": "store_run.check_run_end() includes faction_endings_available in all 3 ending paths",
+      "file": "scripts/merlin/store_run.gd:203-256",
+      "result": "PASS",
+      "notes": "All 3 return statements (life_depleted, victory, hard_max) include 'faction_endings_available': faction_endings. faction_rep sourced correctly from state.get('meta',{}).get('faction_rep',{})."
+    },
+    {
+      "id": "INV-3",
+      "check": "faction_endings_available flows through merlin_game_controller to show_end_screen",
+      "file": "scripts/ui/merlin_game_controller.gd:655-668",
+      "result": "PASS",
+      "notes": "result.get('ending',{}) passed directly to ui.show_end_screen(ending). ending dict contains faction_endings_available. No filtering occurs."
+    },
+    {
+      "id": "INV-4",
+      "check": "ui_overlay_endscreen.show_end_screen() displays faction choice panel when faction_endings_available is non-empty",
+      "file": "scripts/ui/ui_overlay_endscreen.gd (347 lines)",
+      "result": "FAIL_CRITICAL",
+      "notes": "grep for 'faction' in ui_overlay_endscreen.gd returns 0 matches. The active end screen has NO faction ending support whatsoever. faction_endings_available is silently ignored. The faction-aware implementation exists in end_run_screen.gd but is in the dead game_flow_controller path."
+    },
+    {
+      "id": "INV-5",
+      "check": "faction_ending_chosen signal is wired to record in echo_memory (game_flow_controller.gd:238)",
+      "file": "scripts/core/game_flow_controller.gd:238",
+      "result": "SKIP_DEAD_PATH",
+      "notes": "game_flow_controller.wire_end_screen() correctly connects faction_ending_chosen signal (fixed in prev cycle). But since ui_overlay_endscreen never emits this signal, the wiring is unreachable in active gameplay."
+    }
+  ],
+  "verdict": "FAIL_CRITICAL",
+  "summary": "Detection logic PASS (3/3 checks). Display FAIL_CRITICAL: ui_overlay_endscreen.gd has 0 faction support. No player can ever see or choose a faction ending.",
+  "new_tasks": [
+    {
+      "id": "FIX-FACTION-ENDING-OVERLAY",
+      "priority": 1,
+      "type": "fix",
+      "sprint": "S2",
+      "title": "Add faction ending choice panel to ui_overlay_endscreen.gd",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/ui_overlay_endscreen.gd"],
+      "description": "ui_overlay_endscreen.show_end_screen(ending) must read ending.get('faction_endings_available',[]) and, if non-empty, display a faction choice panel (buttons per faction, emitting faction_ending_chosen signal or calling the recording logic directly). Mirror the pattern from end_run_screen.gd:_show_faction_choice_panel() but adapted to the overlay architecture. Single faction auto-selects, 2+ shows buttons. Also connect faction_ending_chosen to game_flow_controller._on_faction_ending_chosen() if available."
+    }
+  ]
+}

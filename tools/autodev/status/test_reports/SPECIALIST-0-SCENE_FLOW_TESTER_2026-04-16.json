@@ -1,0 +1,75 @@
+{
+  "report_id": "SPEC-0-SCENE-FLOW-2026-04-16",
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-16T00:00:00Z",
+  "cycle_type": "test",
+  "audit_scope": "Full player journey: Menu→ParchmentPreRun/SelectionSauvegarde→HubAntre→TransitionBiome→BroceliandeForest3D→Cards→End→Hub. Delta from 2026-04-14 report.",
+  "checks": [
+    {
+      "id": "CHK-01",
+      "transition": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn deletion",
+      "file": "scenes/IntroPersonalityQuiz.tscn, scenes/SceneRencontreMerlin.tscn",
+      "status": "FAIL_HIGH",
+      "notes": "Director q-20260414-005 answered 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Both .tscn files still exist in scenes/. Task E2E-DELETE-ORPHAN-SCENES (priority 3) is pending but unexecuted."
+    },
+    {
+      "id": "CHK-02",
+      "transition": "SelectionSauvegarde Continue → HubAntre (run_state restoration)",
+      "file": "scripts/SelectionSauvegarde.gd:97-109, scripts/merlin/merlin_store.gd:410-418",
+      "status": "FAIL_HIGH",
+      "notes": "LOAD_PROFILE action only restores state['meta']. state['run'] (life, cards, progress) is never restored. MerlinSaveSystem.load_run_state() exists but is only called in dead game_flow_controller.gd. No LOAD_RUN_STATE action in MerlinStore dispatcher. An interrupted run is silently lost."
+    },
+    {
+      "id": "CHK-03",
+      "transition": "Run end → faction ending choice UI",
+      "file": "scripts/ui/ui_overlay_endscreen.gd (347 lines, 0 faction refs), scripts/run/end_run_screen.gd:400-463",
+      "status": "FAIL_CRITICAL",
+      "notes": "faction_endings_available is correctly computed in store_run.check_run_end() and passed through merlin_game_controller to show_end_screen(ending). BUT ui_overlay_endscreen.gd (active end screen) has ZERO faction handling (grep returns 0). The faction-aware EndRunScreen.gd is only wired in dead game_flow_controller path (Run3D.tscn). Players with rep >= 80 never see faction ending choice."
+    },
+    {
+      "id": "CHK-04",
+      "transition": "BroceliandeForest3D HUD update + card life effects",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:894-897, 1063-1070",
+      "status": "FAIL_MEDIUM",
+      "notes": "Lines 894+1063 use get_node_or_null('/root/GameManager').get('run_state') for HUD update and card life effects. GameManager has no 'run_state' property — state is in MerlinStore.state['run']. HUD life display and card score→life effects are broken (always fall through to defaults)."
+    },
+    {
+      "id": "CHK-05",
+      "transition": "MerlinStore/CardSystem/SaveSystem init before first card",
+      "file": "scripts/game_manager.gd:672-677, scripts/broceliande_3d/walk_event_controller.gd:102-120",
+      "status": "PASS_WITH_WARN",
+      "notes": "PASS in production: GameManager (autoload) adds MerlinStore via call_deferred in _ready(). By the time any user can trigger a card, MerlinStore is available. WARN: _check_run_end() has guard 'if not _store: return' which silently disables tracking if store was null at setup time."
+    },
+    {
+      "id": "CHK-06",
+      "transition": "New game path (ParchmentPreRun → Forest, bypasses HubAntre)",
+      "file": "scripts/ui/parchment_pre_run.gd:7",
+      "status": "KNOWN_MEDIUM",
+      "notes": "Same as previous audit: ParchmentPreRun routes directly to BroceliandeForest3D skipping HubAntre biome/Ogham selection. First-run player cannot choose biome or starters."
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "fail_critical": 1,
+    "fail_high": 2,
+    "fail_medium": 1,
+    "pass_with_warn": 1,
+    "known_medium": 1
+  },
+  "critical_findings": [
+    {
+      "id": "FLOW-FACTION-ENDINGS-NEVER-DISPLAYED",
+      "severity": "CRITICAL",
+      "description": "ui_overlay_endscreen.gd (the active end screen in MerlinGame.tscn) has zero faction ending support. faction_endings_available is correctly computed and passed but silently ignored. Players never see faction choice even at rep >= 80.",
+      "files": ["scripts/ui/ui_overlay_endscreen.gd", "scripts/run/end_run_screen.gd:400-463"]
+    },
+    {
+      "id": "FLOW-CONTINUE-LOSES-RUN-STATE",
+      "severity": "HIGH",
+      "description": "SelectionSauvegarde Continue dispatches LOAD_PROFILE only. state['run'] is never restored. No LOAD_RUN_STATE action in MerlinStore. save_system.load_run_state() only called in dead game_flow_controller.gd.",
+      "files": ["scripts/SelectionSauvegarde.gd:97-109", "scripts/merlin/merlin_store.gd:410-418"]
+    }
+  ],
+  "new_tasks_generated": 5
+}

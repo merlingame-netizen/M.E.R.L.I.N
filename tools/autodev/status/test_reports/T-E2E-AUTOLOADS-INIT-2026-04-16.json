@@ -1,0 +1,55 @@
+{
+  "report_id": "T-E2E-AUTOLOADS-INIT-2026-04-16",
+  "task_id": "T-E2E-AUTOLOADS-INIT",
+  "agent": "game_playtester",
+  "timestamp": "2026-04-16T00:15:00Z",
+  "test_type": "static_analysis",
+  "description": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
+  "invariants_checked": [
+    {
+      "id": "INV-1",
+      "check": "GameManager is registered as Godot autoload",
+      "file": "project.godot",
+      "result": "PASS",
+      "notes": "GameManager listed first in [autoload] section. Runs before any scene."
+    },
+    {
+      "id": "INV-2",
+      "check": "GameManager._ready() creates MerlinStore and adds to /root/",
+      "file": "scripts/game_manager.gd:672-677",
+      "result": "PASS_WITH_WARN",
+      "notes": "PASS: MerlinStore created and added via call_deferred. WARN: call_deferred means MerlinStore is added at END of current frame, not immediately. In normal gameplay, frames elapse between autoload init and scene transitions, so MerlinStore is available in time."
+    },
+    {
+      "id": "INV-3",
+      "check": "MerlinCardSystem and MerlinSaveSystem co-initialized with MerlinStore",
+      "file": "scripts/merlin/merlin_store.gd:35,42",
+      "result": "PASS",
+      "notes": "var save_system := MerlinSaveSystem.new() (line 35), var cards := MerlinCardSystem.new() (line 42). Both instantiated as part of MerlinStore. Available the instant MerlinStore is created."
+    },
+    {
+      "id": "INV-4",
+      "check": "BroceliandeForest3D._find_store() correctly locates MerlinStore at /root/MerlinStore",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:374-383",
+      "result": "PASS",
+      "notes": "Checks has_node('/root/MerlinStore') first, then searches root children for MerlinStore class. Defensive fallback."
+    },
+    {
+      "id": "INV-5",
+      "check": "walk_event_controller guards _check_run_end() when store is null",
+      "file": "scripts/broceliande_3d/walk_event_controller.gd:386",
+      "result": "PASS",
+      "notes": "if not _store: return — prevents crash if MerlinStore was not found at setup time."
+    },
+    {
+      "id": "INV-6",
+      "check": "First card draw only possible after player interaction (not frame 0)",
+      "file": "scripts/broceliande_3d/walk_event_controller.gd:231-249",
+      "result": "PASS",
+      "notes": "Cards are generated after the player walks a distance trigger, not on _ready(). Multiple frames elapse. By then, call_deferred has completed and MerlinStore is available."
+    }
+  ],
+  "verdict": "PASS_WITH_WARN",
+  "summary": "In normal gameplay flow, MerlinStore/CardSystem/SaveSystem are all available before any card draw. The call_deferred race condition only affects frame-0 direct scene loads (debug only). Guards in walk_event_controller prevent crashes. WARN: BroceliandeForest3D at lines 894+1063 uses /root/GameManager.get('run_state') for HUD updates — this is the WRONG node (should be /root/MerlinStore.state['run']). HUD life display and card score→life effects are currently non-functional.",
+  "new_tasks": []
+}

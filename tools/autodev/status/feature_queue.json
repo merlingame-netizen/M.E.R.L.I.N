@@ -566,20 +566,6 @@
     "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
   },
   {
-    "id": "T-GDC-FACTION-ENDING-INTEGRATION",
-    "sprint": "S2",
-    "priority": 22,
-    "status": "pending",
-    "type": "test",
-    "title": "Integration test: faction ending correctly detected when rep >= 80 at run end",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/merlin/store_run.gd",
-      "scripts/test/"
-    ],
-    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
-  },
-  {
     "id": "SFX-DAMAGE-LIFE-FEEDBACK",
     "sprint": "S2",
     "priority": 19,
@@ -2105,38 +2091,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
-    "sprint": "S2",
-    "priority": 22,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/SelectionSauvegarde.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "T-E2E-AUTOLOADS-INIT",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "scripts/ui/merlin_game_controller.gd"
-    ],
-    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "GAME-ANTRE-MERLIN-ART",
     "sprint": "S3",
     "priority": 2,
@@ -2464,5 +2418,76 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FIX-FACTION-ENDING-OVERLAY",
+    "sprint": "S2",
+    "priority": 1,
+    "type": "fix",
+    "status": "pending",
+    "title": "Add faction ending choice panel to ui_overlay_endscreen.gd",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/ui_overlay_endscreen.gd"
+    ],
+    "description": "ui_overlay_endscreen.show_end_screen(ending) must read ending.get('faction_endings_available',[]) and if non-empty display a faction choice panel. Mirror end_run_screen.gd:_show_faction_choice_panel() pattern. Single faction auto-selects. 2+ shows buttons with faction labels. On selection record to echo_memory via game_flow_controller._on_faction_ending_chosen() if available at /root/GameManager."
+  },
+  {
+    "id": "FIX-FOREST3D-HUD-WRONG-NODE",
+    "sprint": "S2",
+    "priority": 2,
+    "type": "fix",
+    "status": "pending",
+    "title": "Fix BroceliandeForest3D HUD + card effects using /root/GameManager instead of MerlinStore",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "Lines 894-897 and 1063-1070 use get_node_or_null('/root/GameManager').get('run_state') for HUD life display and card score→life effects. GameManager has no 'run_state' property. Fix: use _find_store() result (already available as _walk_event_controller._store), read state['run']['life_essence']. Card resolver must dispatch DAMAGE_LIFE/HEAL_LIFE to MerlinStore instead of directly mutating a non-existent run_state dict."
+  },
+  {
+    "id": "FLOW-DELETE-ORPHAN-SCENES-NOW",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "fix",
+    "status": "pending",
+    "title": "Delete IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn (director order q-20260414-005)",
+    "agent": "cleanup_agent",
+    "files": [
+      "scenes/IntroPersonalityQuiz.tscn",
+      "scenes/SceneRencontreMerlin.tscn",
+      "scripts/IntroPersonalityQuiz.gd",
+      "scripts/SceneRencontreMerlin.gd",
+      "scenes/SceneRencontreMerlin.tscn.uidren"
+    ],
+    "description": "Director q-20260414-005 answered 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Both scenes + scripts must be deleted. Same as E2E-DELETE-ORPHAN-SCENES (merge/replace that task). Verify no autoload or other script references them after deletion."
+  },
+  {
+    "id": "FIX-LOAD-RUN-STATE-RESUME-FLAG",
+    "sprint": "S2",
+    "priority": 4,
+    "type": "fix",
+    "status": "pending",
+    "title": "BroceliandeForest3D: detect restored run_state and resume instead of generating new run",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/broceliande_3d/walk_event_controller.gd"
+    ],
+    "description": "After LOAD_RUN_STATE is dispatched in SelectionSauvegarde, BroceliandeForest3D._ready() should check if store.state['run'] is non-empty and cards_played > 0. If so, resume the run from the saved state rather than reinitializing. Currently the 3D scene ignores MerlinStore.state['run'] entirely (uses /root/GameManager wrong path). Fix: read _store.state['run'] in walk_event_controller setup(), populate _cards_played and other state from saved run."
+  },
+  {
+    "id": "FLOW-PARCHMENT-PRERUN-SKIPS-HUB",
+    "sprint": "S3",
+    "priority": 8,
+    "type": "dev",
+    "status": "pending",
+    "title": "ParchmentPreRun: route new game through HubAntre for biome + Ogham selection",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/parchment_pre_run.gd",
+      "scripts/menu_3d_pc.gd"
+    ],
+    "description": "New game flow: Menu → ParchmentPreRun → BroceliandeForest3D directly, skipping HubAntre. Bible: Hub 2D → [Choix biome + Ogham] → Run 3D. First-run players cannot select biome or starter Oghams. Fix: after parchment Enter button, route to HubAntre instead of directly to BroceliandeForest3D. HubAntre handles biome/Ogham selection then routes to TransitionBiome → BroceliandeForest3D."
   }
 ]

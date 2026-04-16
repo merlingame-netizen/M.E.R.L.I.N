@@ -100,6 +100,9 @@ func _auto_continue() -> void:
 		if store and store.has_method("dispatch"):
 			var result = await store.dispatch({"type": "LOAD_PROFILE"})
 			if result is Dictionary and result.get("ok", false):
+				# Also restore any in-progress run state
+				if _save.has_active_run():
+					await store.dispatch({"type": "LOAD_RUN_STATE"})
 				_go_to_scene(GAME_SCENE)
 				return
 		# Fallback: profile exists but load failed — show UI
@@ -164,6 +167,9 @@ func _on_continue_pressed() -> void:
 	if store and store.has_method("dispatch"):
 		var result = await store.dispatch({"type": "LOAD_PROFILE"})
 		if result is Dictionary and result.get("ok", false):
+			# Also restore any in-progress run state
+			if _save.has_active_run():
+				await store.dispatch({"type": "LOAD_RUN_STATE"})
 			_go_to_scene(GAME_SCENE)
 			return
 	_show_message("Profil introuvable.")

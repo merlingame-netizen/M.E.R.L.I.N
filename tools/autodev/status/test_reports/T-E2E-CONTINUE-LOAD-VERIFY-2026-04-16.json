@@ -1,0 +1,59 @@
+{
+  "report_id": "T-E2E-CONTINUE-LOAD-VERIFY-2026-04-16",
+  "task_id": "T-E2E-CONTINUE-LOAD-VERIFY",
+  "agent": "game_playtester",
+  "timestamp": "2026-04-16T00:10:00Z",
+  "test_type": "static_analysis",
+  "description": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
+  "invariants_checked": [
+    {
+      "id": "INV-1",
+      "check": "SelectionSauvegarde._auto_continue() calls LOAD_PROFILE",
+      "file": "scripts/SelectionSauvegarde.gd:97-109",
+      "result": "PASS",
+      "notes": "Dispatches LOAD_PROFILE to MerlinStore. Returns ok:true on success, falls back to UI otherwise."
+    },
+    {
+      "id": "INV-2",
+      "check": "LOAD_PROFILE restores state['run'] from save_system",
+      "file": "scripts/merlin/merlin_store.gd:410-418",
+      "result": "FAIL_HIGH",
+      "notes": "LOAD_PROFILE only calls save_system.load_profile() which restores state['meta'] only. state['run'] (life_essence, cards_played, mission, day, oghams, etc.) is NOT restored. An in-progress run (cards, life, etc.) is silently lost."
+    },
+    {
+      "id": "INV-3",
+      "check": "MerlinStore has LOAD_RUN_STATE action",
+      "file": "scripts/merlin/merlin_store.gd (full dispatch)",
+      "result": "FAIL_HIGH",
+      "notes": "grep for 'LOAD_RUN' in merlin_store.gd: no matches. No LOAD_RUN_STATE action exists in dispatcher."
+    },
+    {
+      "id": "INV-4",
+      "check": "save_system.load_run_state() is called somewhere in active path",
+      "file": "scripts/merlin/merlin_save_system.gd:208",
+      "result": "FAIL_HIGH",
+      "notes": "load_run_state() only called in game_flow_controller.gd:413 (dead path). Not called in SelectionSauvegarde, HubAntre, TransitionBiome, or BroceliandeForest3D."
+    },
+    {
+      "id": "INV-5",
+      "check": "SelectionSauvegarde._on_continue_pressed() also loads run_state",
+      "file": "scripts/SelectionSauvegarde.gd:162-171",
+      "result": "FAIL_HIGH",
+      "notes": "Same pattern as _auto_continue: dispatches only LOAD_PROFILE. No run_state restoration."
+    }
+  ],
+  "verdict": "FAIL_HIGH",
+  "summary": "The Continue flow loads the meta profile (factions, anam, talents) but not the in-progress run state. A player who quits mid-run loses all run progress on Continue. MerlinSaveSystem has load_run_state() and save_run_state() exists and is used, but the restoration path is missing from the active flow.",
+  "new_tasks": [
+    {
+      "id": "FIX-LOAD-RUN-STATE-ACTION",
+      "priority": 1,
+      "type": "fix",
+      "sprint": "S1",
+      "title": "Add LOAD_RUN_STATE action to MerlinStore + call in SelectionSauvegarde Continue",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_store.gd", "scripts/SelectionSauvegarde.gd"],
+      "description": "1. Add 'LOAD_RUN_STATE' case to MerlinStore.dispatch(): call save_system.load_run_state(), if non-empty set state['run'] = loaded_run, return ok:true/false. 2. In SelectionSauvegarde._auto_continue() and _on_continue_pressed(), after LOAD_PROFILE succeeds, check save_system.has_run_in_progress() and if true dispatch LOAD_RUN_STATE. 3. If LOAD_RUN_STATE ok:true, set a flag (or use save system) so BroceliandeForest3D knows it can resume the existing run rather than generate a new one. This restores interrupted runs correctly."
+    }
+  ]
+}

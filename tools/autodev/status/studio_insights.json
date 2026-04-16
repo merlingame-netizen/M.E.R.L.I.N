@@ -594,5 +594,20 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260416-001",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "Active end screen (ui_overlay_endscreen.gd) lacks faction ending panel — core narrative feature invisible to players",
+    "details": "The faction ending system (rep >= 80 triggers choice) is fully implemented in data/detection layers but the display is missing from the active game path. Players completing full runs with faction alignment never see the unique narrative ending. Priority fix: add faction choice panel to ui_overlay_endscreen.show_end_screen(). Mirror end_run_screen.gd:_show_faction_choice_panel() pattern.",
+    "proposed_task": {
+      "title": "Add faction ending panel to ui_overlay_endscreen.gd",
+      "sprint": "S2",
+      "type": "fix",
+      "id": "FIX-FACTION-ENDING-OVERLAY"
+    },
+    "timestamp": "2026-04-16T00:30:00Z"
   }
 ]
