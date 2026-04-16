@@ -78,7 +78,10 @@
       "line": 443,
       "severity": "MEDIUM",
       "description": "Dead reference to removed Flux system: reads run.get(flux) for tension. Flux was removed; tension is now in run.hidden.tension. RAG tension context is always empty.",
-      "suggested_fix": "Read tension from run.get(hidden, {}).get(tension, 0)"
+      "suggested_fix": "Read tension from run.get(hidden, {}).get(tension, 0)",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-010",
@@ -86,7 +89,10 @@
       "line": 1803,
       "severity": "MEDIUM",
       "description": "Dead reference to removed Souffle system: center option cost=1 with comment Centre costs Souffle. Souffle was removed.",
-      "suggested_fix": "Remove cost field or repurpose to valid current system"
+      "suggested_fix": "Remove cost field or repurpose to valid current system",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-011",
@@ -94,7 +100,10 @@
       "line": 954,
       "severity": "MEDIUM",
       "description": "pick_minigame_for_field() uses field.hash() % size, always returning same minigame for same field. Defeats purpose of multiple minigame options per lexical field.",
-      "suggested_fix": "Use randi() or accept card_index for variation"
+      "suggested_fix": "Use randi() or accept card_index for variation",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-012",
@@ -102,7 +111,10 @@
       "line": 438,
       "severity": "MEDIUM",
       "description": "Dot notation access on dictionary (entry.tag, entry.context_default) in configure_from_registry(). Fragile if dict comes from JSON.",
-      "suggested_fix": "Use entry.get(tag, default) pattern consistently"
+      "suggested_fix": "Use entry.get(tag, default) pattern consistently",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-013",
@@ -110,7 +122,10 @@
       "line": 93,
       "severity": "MEDIUM",
       "description": "ClassDB.class_exists(MerlinOmniscient) is dead code: MerlinOmniscient is a GDScript class_name, never registered in ClassDB. Only the fallback script-loading path on line 99 executes.",
-      "suggested_fix": "Remove ClassDB branch, use MerlinOmniscient.new() directly"
+      "suggested_fix": "Remove ClassDB branch, use MerlinOmniscient.new() directly",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-014",
@@ -118,7 +133,10 @@
       "line": 32,
       "severity": "MEDIUM",
       "description": "build_default_factions() initializes all factions to 0.0 but game design says starting rep is 20 (FACTION_SCORE_START). Anyone calling reset() gets Hostile factions instead of Neutral.",
-      "suggested_fix": "Use MerlinConstants.FACTION_SCORE_START instead of 0.0"
+      "suggested_fix": "Use MerlinConstants.FACTION_SCORE_START instead of 0.0",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-015",
@@ -126,7 +144,10 @@
       "line": 23,
       "severity": "MEDIUM",
       "description": "Save default profile sets faction_rep to 0.0, but store default is 20. Fresh profile load returns Hostile factions, causing hostile penalties on first run.",
-      "suggested_fix": "Set defaults to float(MerlinConstants.FACTION_SCORE_START)"
+      "suggested_fix": "Set defaults to float(MerlinConstants.FACTION_SCORE_START)",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     },
     {
       "id": "BUG-016",
@@ -150,7 +171,10 @@
       "line": 574,
       "severity": "LOW",
       "description": "log_aspect_shifted() references removed aspect system. Dead code path that will never be called with meaningful data.",
-      "suggested_fix": "Remove or rename to generic event logger"
+      "suggested_fix": "Remove or rename to generic event logger",
+      "status": "FIXED",
+      "fixed_at": "2026-04-16",
+      "fixed_in": "cycle-4"
     }
   ]
 }
