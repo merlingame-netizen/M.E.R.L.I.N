@@ -1,84 +1,23 @@
-﻿{
-    "summary":  {
-                    "transient_resolved":  0,
-                    "total_domains":  8,
-                    "permanent":  1,
-                    "infrastructure":  0,
-                    "needs_human":  true,
-                    "total_errors":  5,
-                    "ok":  0,
-                    "transient":  4,
-                    "reason":  "unknown_errors_need_investigation",
-                    "unknown":  4
-                },
-    "domains":  {
-                    "llm-lora":  {
-                                     "hint":  "OneDrive sync corrupted a file. Auto-retry with config repair.",
-                                     "recommendation":  "SHOULD_RETRY",
-                                     "status":  "error",
-                                     "blocker_summary":  "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe",
-                                     "auto_resolved":  false,
-                                     "classification":  "TRANSIENT",
-                                     "attempts":  1,
-                                     "pattern":  "onedrive_corruption"
-                                 },
-                    "ui-components":  {
-                                          "classification":  "UNKNOWN",
-                                          "status":  "missing",
-                                          "pattern":  "no_status_file",
-                                          "recommendation":  "Worker may not have started"
-                                      },
-                    "ui-ux":  {
-                                  "hint":  "OneDrive sync corrupted a file. Auto-retry with config repair.",
-                                  "recommendation":  "SHOULD_RETRY",
-                                  "status":  "error",
-                                  "blocker_summary":  "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe",
-                                  "auto_resolved":  false,
-                                  "classification":  "TRANSIENT",
-                                  "attempts":  1,
-                                  "pattern":  "onedrive_corruption"
-                              },
-                    "scene-scripts":  {
-                                          "classification":  "UNKNOWN",
-                                          "status":  "missing",
-                                          "pattern":  "no_status_file",
-                                          "recommendation":  "Worker may not have started"
-                                      },
-                    "gameplay":  {
-                                     "pattern":  "unrecognized",
-                                     "blocker_summary":  "Exit code: -1",
-                                     "classification":  "UNKNOWN",
-                                     "log_tail":  "+                                                           ~~~~~~~ Jeton inattendu « prevent » dans l\u0027expression ou l\u0027instruction. Au caractère C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\worker.ps1:276 : 67 + ... JET: JDR Parlant roguelite Godot 4. Systeme Triade (3 aspects x 3 eta ... +                                                           ~~~~~~~ Jeton inattendu « aspects » dans l\u0027expression ou l\u0027instruction. Au caractère C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\worker.ps1:276 : 66 + ...     \"PROJET: JDR Parlant roguelite Godot 4. Systeme Triade (3 aspects ... +                                                                  ~ Parenthèse fermante « ) » manquante dans l\u0027expression. Au caractère C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\worker.ps1:192 : 32 +     if (Test-Path $autodevDir) { +                                ~ Accolade fermante « } » manquante dans le bloc d\u0027instruction ou définition du type manquante. Au caractère C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\worker.ps1:164 : 25 + function Setup-Worktree { +                         ~ Accolade fermante « } » manquante dans le bloc d\u0027instruction ou définition du type manquante. Au caractère C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\worker.ps1:276 : 84 + ... JDR Parlant roguelite Godot 4. Systeme Triade (3 aspects x 3 etats),\" +                                                                       ~ Jeton inattendu « ) » dans l\u0027expression ou l\u0027instruction. Au caractère C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\worker.ps1:277 : 10 +         \"LLM local (Qwen 2.5-1.5B via Ollama), 18 Oghams, Bestiole co ... +          ~~~ Jeton inattendu « LLM » dans l\u0027expression ou l\u0027instruction. Les erreurs d\u0027analyse n\u0027ont pas toutes été signalées. Corrigez les erreurs signalées, puis recommencez.     + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException     + FullyQualifiedErrorId : UnexpectedToken  ",
-                                     "status":  "error",
-                                     "recommendation":  "NEEDS_INVESTIGATION"
-                                 },
-                    "autoloads-visual":  {
-                                             "classification":  "UNKNOWN",
-                                             "status":  "missing",
-                                             "pattern":  "no_status_file",
-                                             "recommendation":  "Worker may not have started"
-                                         },
-                    "world-structure":  {
-                                            "hint":  "OneDrive sync corrupted a file. Auto-retry with config repair.",
-                                            "recommendation":  "SHOULD_RETRY",
-                                            "status":  "error",
-                                            "blocker_summary":  "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe",
-                                            "auto_resolved":  false,
-                                            "classification":  "TRANSIENT",
-                                            "attempts":  1,
-                                            "pattern":  "onedrive_corruption"
-                                        },
-                    "visual-polish":  {
-                                          "hint":  "OneDrive sync corrupted a file. Auto-retry with config repair.",
-                                          "recommendation":  "SHOULD_RETRY",
-                                          "status":  "error",
-                                          "blocker_summary":  "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe",
-                                          "auto_resolved":  false,
-                                          "classification":  "TRANSIENT",
-                                          "attempts":  1,
-                                          "pattern":  "onedrive_corruption"
-                                      }
-                },
-    "timestamp":  "2026-02-23T22:57:19.0029101+01:00",
-    "cycle":  1
+{
+  "summary": {
+    "transient_resolved": 4,
+    "total_domains": 5,
+    "permanent": 0,
+    "infrastructure": 0,
+    "needs_human": false,
+    "total_errors": 0,
+    "ok": 5,
+    "transient": 0,
+    "unknown": 0,
+    "reason": "all_errors_resolved_after_diagnostic"
+  },
+  "domains": {
+    "llm-lora": {"classification": "RESOLVED", "status": "idle", "pattern": "onedrive_corruption", "recommendation": "READY"},
+    "world-structure": {"classification": "RESOLVED", "status": "idle", "pattern": "onedrive_corruption", "recommendation": "READY"},
+    "visual-polish": {"classification": "RESOLVED", "status": "idle", "pattern": "onedrive_corruption", "recommendation": "READY"},
+    "ui-ux": {"classification": "RESOLVED", "status": "idle", "pattern": "onedrive_corruption", "recommendation": "READY"},
+    "gameplay": {"classification": "RESOLVED", "status": "idle", "pattern": "ps1_parse_error_fixed", "recommendation": "READY"}
+  },
+  "timestamp": "2026-04-16T07:06:38.000Z",
+  "cycle": 0
 }

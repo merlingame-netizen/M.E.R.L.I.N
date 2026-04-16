@@ -1,14 +1,14 @@
 {
   "state": "running",
-  "objective": "Claude Code active \u2014 Bash",
+  "objective": "M.E.R.L.I.N. development pipeline — post-diagnostic restart",
   "workers": [
-    {
-      "name": "Bash",
-      "wave": 1,
-      "status": "running"
-    }
+    {"name": "llm-lora", "wave": 1, "status": "idle"},
+    {"name": "world-structure", "wave": 1, "status": "idle"},
+    {"name": "visual-polish", "wave": 1, "status": "idle"},
+    {"name": "ui-ux", "wave": 1, "status": "idle"},
+    {"name": "gameplay", "wave": 1, "status": "idle"}
   ],
-  "updated_at": "2026-04-08T13:15:06.608824+00:00",
+  "updated_at": "2026-04-16T07:06:38.000Z",
   "cycle": 0,
-  "checkpoint": ""
+  "checkpoint": "Diagnostic cleared: 4x OneDrive corruption (transient) + 1x PS1 parse error (fixed)"
 }

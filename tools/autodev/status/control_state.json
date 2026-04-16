@@ -1,12 +1,12 @@
-﻿{
-    "wave":  "-",
-    "domains":  "",
-    "max_cycles":  0,
-    "state":  "stopped",
-    "cycle":  0,
-    "dry_run":  false,
-    "wave_mode":  false,
-    "detail":  "",
-    "objective":  "",
-    "timestamp":  "2026-02-23T22:59:05.8455619+01:00"
+{
+  "wave": "1",
+  "domains": "llm-lora,world-structure,visual-polish,ui-ux,gameplay",
+  "max_cycles": 10,
+  "state": "running",
+  "cycle": 0,
+  "dry_run": false,
+  "wave_mode": false,
+  "detail": "Restarted after diagnostic — cleared OneDrive corruption + PS1 parse fix",
+  "objective": "Resume development pipeline — 5 Factions, 18 Oghams, MOS",
+  "timestamp": "2026-04-16T07:06:38.000Z"
 }
