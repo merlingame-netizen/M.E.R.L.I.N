@@ -1,7 +1,14 @@
 import { useState, useRef, useCallback } from 'react';
 
+// Game build URLs — GitHub Pages (free, auto-deploy) with Vercel fallback
+const GAME_URLS = [
+  'https://merlingame-netizen.github.io/M.E.R.L.I.N/',
+  'https://web-export-pi.vercel.app',
+];
+
 export function GamePreview() {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [urlIndex, setUrlIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const toggleFullscreen = useCallback(() => {
@@ -12,6 +19,12 @@ export function GamePreview() {
       document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
   }, []);
+
+  const handleIframeError = useCallback(() => {
+    if (urlIndex < GAME_URLS.length - 1) {
+      setUrlIndex(urlIndex + 1);
+    }
+  }, [urlIndex]);
 
   return (
     <div className="panel" style={{ height: '100%' }} ref={containerRef}>
@@ -38,9 +51,9 @@ export function GamePreview() {
       <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         <div className="holo-frame" style={{ height: '100%' }}>
           <iframe
-            src="https://web-export-pi.vercel.app"
+            src={GAME_URLS[urlIndex]}
             title="M.E.R.L.I.N. Game Preview"
-            allow="fullscreen; autoplay"
+            allow="fullscreen; autoplay; cross-origin-isolated"
             style={{
               width: '100%',
               height: '100%',
@@ -49,6 +62,7 @@ export function GamePreview() {
               display: 'block',
             }}
             sandbox="allow-scripts allow-same-origin allow-popups"
+            onError={handleIframeError}
           />
         </div>
       </div>
