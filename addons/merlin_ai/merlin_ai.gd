@@ -1800,8 +1800,6 @@ func generate_sequential(context: Dictionary) -> Dictionary:
 			"label": labels[i],
 			"effects": effects,
 		}
-		if i == 1:
-			opt["cost"] = 1  # Centre costs Souffle
 		options.append(opt)
 
 	var total_ms := Time.get_ticks_msec() - start_time
