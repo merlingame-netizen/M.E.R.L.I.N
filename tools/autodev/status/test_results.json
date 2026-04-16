@@ -1,133 +1,16 @@
 {
   "agent": "bug_hunter",
-  "cycle": 1,
-  "timestamp": "2026-04-16T12:00:00Z",
+  "cycle": 4,
+  "timestamp": "2026-04-16T17:00:00Z",
   "bugs_found": 18,
-  "critical": 2,
-  "high": 6,
-  "medium": 7,
+  "bugs_fixed": 15,
+  "bugs_remaining": 3,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
   "low": 3,
-  "details": [
-    {
-      "id": "BUG-001",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 342,
-      "severity": "CRITICAL",
-      "description": "Missing await on async store.dispatch() for DAMAGE_LIFE drain. dispatch() is async but not awaited here, so life drain may not complete before get_life_essence() check on line 343, reading stale life and skipping death check.",
-      "suggested_fix": "Add await before store.dispatch({type: DAMAGE_LIFE})"
-    },
-    {
-      "id": "BUG-002",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 704,
-      "severity": "CRITICAL",
-      "description": "Missing await on recursive _request_next_card() at end of _resolve_choice(). The async coroutine is fire-and-forget, and is_busy=false on line 703 before the call allows overlapping card requests.",
-      "suggested_fix": "Add await before _request_next_card() on line 704"
-    },
-    {
-      "id": "BUG-003",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 70,
-      "severity": "HIGH",
-      "description": "_BIOME_DISPLAY_NAMES missing iles_mystiques (the 8th biome). Merlin intro speech for this biome will produce garbled text.",
-      "suggested_fix": "Add iles_mystiques: les iles mystiques to the dictionary"
-    },
-    {
-      "id": "BUG-004",
-      "file": "scripts/merlin/merlin_effect_engine.gd",
-      "line": 122,
-      "severity": "HIGH",
-      "description": "Type mismatch in process_card(): expects String-encoded effects (DAMAGE_LIFE:5) but MerlinCardSystem provides Dictionary effects ({type: DAMAGE_LIFE, amount: 5}). The typeof != TYPE_STRING check silently rejects all Dictionary effects.",
-      "suggested_fix": "Align effect formats between the two resolution paths"
-    },
-    {
-      "id": "BUG-005",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 219,
-      "severity": "HIGH",
-      "description": "Transient MerlinGaugeSystem instance created in build_default_state() just to call build_default_gauges(). Creates a new RefCounted every time state is rebuilt.",
-      "suggested_fix": "Make build_default_gauges() static or cache the instance"
-    },
-    {
-      "id": "BUG-006",
-      "file": "scripts/merlin/merlin_card_system.gd",
-      "line": 856,
-      "severity": "HIGH",
-      "description": "Fallback _randi_range() formula is mathematically flawed: from + int(randf() * float(N)) % N can produce biased results and randf()=1.0 edge case.",
-      "suggested_fix": "Use randi_range(from, to) built-in or from + (randi() % (to - from + 1))"
-    },
-    {
-      "id": "BUG-007",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 590,
-      "severity": "HIGH",
-      "description": "In _apply_effect() ADD_REPUTATION branch, directly calls effects._apply_faction_reputation() crossing encapsulation. Could cause inconsistent faction context updates.",
-      "suggested_fix": "Route through dispatch or extract faction update into shared helper"
-    },
-    {
-      "id": "BUG-008",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 532,
-      "severity": "HIGH",
-      "description": "Null reference risk: _reset_ai_for_new_run() accesses merlin_ai_node.session_contexts.clear() without checking if session_contexts property exists on the node.",
-      "suggested_fix": "Add property existence check before .clear()"
-    },
-    {
-      "id": "BUG-009",
-      "file": "addons/merlin_ai/rag_manager.gd",
-      "line": 443,
-      "severity": "MEDIUM",
-      "description": "Dead reference to removed Flux system: reads run.get(flux) for tension. Flux was removed; tension is now in run.hidden.tension. RAG tension context is always empty.",
-      "suggested_fix": "Read tension from run.get(hidden, {}).get(tension, 0)"
-    },
-    {
-      "id": "BUG-010",
-      "file": "addons/merlin_ai/merlin_ai.gd",
-      "line": 1803,
-      "severity": "MEDIUM",
-      "description": "Dead reference to removed Souffle system: center option cost=1 with comment Centre costs Souffle. Souffle was removed.",
-      "suggested_fix": "Remove cost field or repurpose to valid current system"
-    },
-    {
-      "id": "BUG-011",
-      "file": "scripts/merlin/merlin_effect_engine.gd",
-      "line": 954,
-      "severity": "MEDIUM",
-      "description": "pick_minigame_for_field() uses field.hash() % size, always returning same minigame for same field. Defeats purpose of multiple minigame options per lexical field.",
-      "suggested_fix": "Use randi() or accept card_index for variation"
-    },
-    {
-      "id": "BUG-012",
-      "file": "addons/merlin_ai/ollama_backend.gd",
-      "line": 438,
-      "severity": "MEDIUM",
-      "description": "Dot notation access on dictionary (entry.tag, entry.context_default) in configure_from_registry(). Fragile if dict comes from JSON.",
-      "suggested_fix": "Use entry.get(tag, default) pattern consistently"
-    },
-    {
-      "id": "BUG-013",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 93,
-      "severity": "MEDIUM",
-      "description": "ClassDB.class_exists(MerlinOmniscient) is dead code: MerlinOmniscient is a GDScript class_name, never registered in ClassDB. Only the fallback script-loading path on line 99 executes.",
-      "suggested_fix": "Remove ClassDB branch, use MerlinOmniscient.new() directly"
-    },
-    {
-      "id": "BUG-014",
-      "file": "scripts/merlin/merlin_reputation_system.gd",
-      "line": 32,
-      "severity": "MEDIUM",
-      "description": "build_default_factions() initializes all factions to 0.0 but game design says starting rep is 20 (FACTION_SCORE_START). Anyone calling reset() gets Hostile factions instead of Neutral.",
-      "suggested_fix": "Use MerlinConstants.FACTION_SCORE_START instead of 0.0"
-    },
-    {
-      "id": "BUG-015",
-      "file": "scripts/merlin/merlin_save_system.gd",
-      "line": 23,
-      "severity": "MEDIUM",
-      "description": "Save default profile sets faction_rep to 0.0, but store default is 20. Fresh profile load returns Hostile factions, causing hostile penalties on first run.",
-      "suggested_fix": "Set defaults to float(MerlinConstants.FACTION_SCORE_START)"
-    },
+  "summary": "Cycles 1-4: 15/18 bugs fixed. Remaining 3 are LOW severity.",
+  "remaining": [
     {
       "id": "BUG-016",
       "file": "addons/merlin_ai/merlin_omniscient.gd",
@@ -145,12 +28,22 @@
       "suggested_fix": "Lock mutex in get_model_info() or copy stats under lock"
     },
     {
-      "id": "BUG-018",
+      "id": "BUG-018-PARTIAL",
       "file": "addons/merlin_ai/rag_manager.gd",
-      "line": 574,
+      "line": 572,
       "severity": "LOW",
-      "description": "log_aspect_shifted() references removed aspect system. Dead code path that will never be called with meaningful data.",
-      "suggested_fix": "Remove or rename to generic event logger"
+      "description": "log_aspect_shifted() renamed to log_reputation_changed(). Callers in docs still reference old name.",
+      "suggested_fix": "Update DOC_RAG_MANAGER.md references"
     }
+  ],
+  "fixed_this_cycle": [
+    {"id": "BUG-009", "fix": "Dead Flux ref in RAG → reads hidden.tension"},
+    {"id": "BUG-010", "fix": "Removed dead Souffle cost on center option"},
+    {"id": "BUG-011", "fix": "Deterministic minigame → randi()"},
+    {"id": "BUG-012", "fix": "Dot notation → .get() in ollama_backend"},
+    {"id": "BUG-013", "fix": "Dead ClassDB branch removed"},
+    {"id": "BUG-014", "fix": "Faction default 0 → 20 (FACTION_SCORE_START)"},
+    {"id": "BUG-015", "fix": "Save default faction 0 → 20"},
+    {"id": "BUG-018", "fix": "log_aspect_shifted renamed to log_reputation_changed"}
   ]
 }
