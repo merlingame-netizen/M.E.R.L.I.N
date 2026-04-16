@@ -412,7 +412,11 @@ func _reduce(action: Dictionary) -> Dictionary:
 			if meta.is_empty():
 				return {"ok": false}
 			state["meta"] = meta
-			return {"ok": true}
+			# Restore interrupted run_state if present (bible: Hades-style continue).
+			var run_state: Dictionary = save_system.load_run_state()
+			if not run_state.is_empty():
+				state["run"] = run_state
+			return {"ok": true, "has_run": not run_state.is_empty()}
 
 		# --- LIFE ESSENCE ACTIONS (Phase 43) ---
 		"DAMAGE_LIFE":

@@ -566,20 +566,6 @@
     "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
   },
   {
-    "id": "T-GDC-FACTION-ENDING-INTEGRATION",
-    "sprint": "S2",
-    "priority": 22,
-    "status": "pending",
-    "type": "test",
-    "title": "Integration test: faction ending correctly detected when rep >= 80 at run end",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/merlin/store_run.gd",
-      "scripts/test/"
-    ],
-    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
-  },
-  {
     "id": "SFX-DAMAGE-LIFE-FEEDBACK",
     "sprint": "S2",
     "priority": 19,
@@ -1700,22 +1686,6 @@
     "created_by": "SPEC-11-FACTION"
   },
   {
-    "id": "FACTION-GAME-FLOW-TEST",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test faction_ending_chosen handler records to echo_memory",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/core/game_flow_controller.gd",
-      "scripts/test/"
-    ],
-    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  },
-  {
     "id": "FACTION-ENDING-NARRATIVE-PERSIST",
     "sprint": "S3",
     "priority": 34,
@@ -2105,38 +2075,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
-    "sprint": "S2",
-    "priority": 22,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/SelectionSauvegarde.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "T-E2E-AUTOLOADS-INIT",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "scripts/ui/merlin_game_controller.gd"
-    ],
-    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "GAME-ANTRE-MERLIN-ART",
     "sprint": "S3",
     "priority": 2,
@@ -2464,5 +2402,106 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FLOW-DUAL-MENU-AUDIT",
+    "sprint": "S2",
+    "priority": 9,
+    "status": "pending",
+    "type": "test",
+    "title": "Audit dual menu scenes: Menu3DPC.tscn vs MenuPrincipal.tscn",
+    "agent": "game_design_auditor",
+    "files": [
+      "scenes/Menu3DPC.tscn",
+      "scenes/MenuPrincipal.tscn",
+      "scripts/menu_3d_pc.gd",
+      "scripts/MenuPrincipalMerlin.gd"
+    ],
+    "description": "Two menu scenes exist: Menu3DPC.tscn (in active flow: IntroCeltOS→Menu3DPC) and MenuPrincipal.tscn (script: MenuPrincipalMerlin.gd). Specialist #0 found no incoming transitions from Menu3DPC to MenuPrincipal. Determine: (1) is MenuPrincipal.tscn dead? (2) what buttons exist in each? (3) should one be deleted or are they separate screens (e.g. Menu3DPC=3D menu, MenuPrincipal=2D fallback)? Generate task to delete dead scene or document purpose.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "FLOW-HUBSCREEN-RUN3D-ORPHAN",
+    "sprint": "S2",
+    "priority": 11,
+    "status": "pending",
+    "type": "test",
+    "title": "Audit HubScreen.tscn and Run3D.tscn: orphan via dead GameFlowController",
+    "agent": "game_design_auditor",
+    "files": [
+      "scenes/HubScreen.tscn",
+      "scenes/Run3D.tscn",
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "description": "GameFlowController (dead, setup() never called) references SCENE_HUB='scenes/HubScreen.tscn' and SCENE_RUN='scenes/Run3D.tscn'. Active flow uses HubAntre.tscn and BroceliandeForest3D.tscn instead. Once E2E-DEAD-PATH-GAME-FLOW-CONTROLLER migrates the active path to GameFlowController, determine: (1) should HubScreen.tscn replace HubAntre.tscn? (2) is Run3D.tscn a stub or active? (3) delete or integrate? Check scripts attached to each scene.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "T-FLOW-LOADPROFILE-RUNSTATE",
+    "sprint": "S2",
+    "priority": 5,
+    "status": "pending",
+    "type": "test",
+    "title": "Test LOAD_PROFILE now correctly restores run_state on continue",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/merlin_store.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Verify the fix applied by Specialist #0 (2026-04-16): LOAD_PROFILE action now calls save_system.load_run_state() and populates state['run'] if non-empty. Tests: (1) save a run_state via save_system.save_run_state(), dispatch LOAD_PROFILE, assert state['run'] is populated with saved values. (2) no saved run → state['run'] stays default (active:false). (3) return dict has has_run:true when run restored. (4) SelectionSauvegarde continue flow: result.get('has_run') available for future UI differentiation.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "FLOW-MERLINSTORE-DEFERRED-FIX",
+    "sprint": "S2",
+    "priority": 8,
+    "status": "pending",
+    "type": "dev",
+    "title": "Fix MerlinStore deferred add_child timing risk in GameManager",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/game_manager.gd"
+    ],
+    "description": "GameManager._ready():674 uses call_deferred('add_child', store) to register MerlinStore as root singleton. This means MerlinStore is NOT available in the same frame as GameManager._ready(). Any scene accessing /root/MerlinStore in _ready() on the same frame may get null. Fix: change to synchronous add_child (no deferred). Verify: MerlinStore registered immediately at GameManager._ready(). Side effect check: class_name prevents autoload duplication — the guard `if not get_node_or_null('/root/MerlinStore')` still needed.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "FLOW-MERLINGAME-TSCN-DELETE",
+    "sprint": "S2",
+    "priority": 10,
+    "status": "pending",
+    "type": "dev",
+    "title": "Delete or audit MerlinGame.tscn orphan scene",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scenes/MerlinGame.tscn"
+    ],
+    "description": "MerlinGame.tscn is an old game controller scene with no active incoming transitions in the current flow. Previous cycles noted BroceliandeForest3D's _on_hub() used to route there (fixed in cycle 13). Specialist #0 confirms no current flow leads to this scene. Audit: (1) what script does MerlinGame.tscn use? (2) any refs from other .tscn files (search [ext_resource] in all .tscn)? (3) if truly dead, delete file. If it's the predecessor of HubAntre, document in findings.md.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "T-SCENE-FLOW-COMPLETE-PATH",
+    "sprint": "S2",
+    "priority": 14,
+    "status": "pending",
+    "type": "test",
+    "title": "Verify complete scene flow trace: every step has valid .tscn + transition method",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/IntroCeltOS.gd",
+      "scripts/menu_3d_pc.gd",
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/HubAntre.gd",
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/parchment_pre_run.gd"
+    ],
+    "description": "Full scene flow trace audit (bible scene flow: IntroCeltOS → Menu → SelectionSauvegarde → Hub → ParchmentPreRun → Biome3D → Cards → Minigames → EndRun → Hub). For each hop: (1) target scene .tscn exists on disk, (2) PixelTransition.transition_to() or change_scene_to_file() called with correct path, (3) no hardcoded MerlinGame.tscn or Run3D.tscn paths in active flow, (4) orphan scenes (IntroPersonalityQuiz, SceneRencontreMerlin, MerlinGame) have zero incoming transitions from active scripts.",
+    "created_at": "2026-04-16T10:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
   }
 ]

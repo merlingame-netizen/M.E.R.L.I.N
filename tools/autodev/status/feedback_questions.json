@@ -532,6 +532,22 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260416-001",
+      "title": "GameFlowController: migrate to HubAntre or keep HubScreen.tscn?",
+      "category": "design",
+      "type": "multiple_choice",
+      "status": "pending",
+      "priority": "HIGH",
+      "context": "GameFlowController (scripts/core/game_flow_controller.gd) is fully implemented but its setup() is never called. It references HubScreen.tscn (SCENE_HUB) and Run3D.tscn (SCENE_RUN). The active flow uses HubAntre.tscn and BroceliandeForest3D.tscn. Task E2E-DEAD-PATH-GAME-FLOW-CONTROLLER says 'migrate active path to GameFlowController'.",
+      "options": [
+        "A: Wire GameFlowController.setup() into HubAntre._ready() — keep HubAntre.tscn as hub, GameFlowController manages the run flow on top",
+        "B: Build new HubScreen.tscn as the post-migration hub, GameFlowController drives the full loop (replaces HubAntre eventually)",
+        "C: Delete GameFlowController — it duplicates logic already in BroceliandeForest3D, not needed"
+      ],
+      "created_at": "2026-04-16T10:00:00Z",
+      "created_by": "SPECIALIST-0-SCENE_FLOW"
     }
   ]
 }

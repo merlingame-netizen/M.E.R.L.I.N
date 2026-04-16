@@ -4,7 +4,8 @@
     {
       "question_id": "q-20260412-001",
       "answer": "Aucun drain de vie à chaque carte",
-      "timestamp": "2026-04-12T17:30:00Z"
+      "timestamp": "2026-04-12T17:30:00Z",
+      "status": "applied"
     },
     {
       "question_id": "q-20260412-002",
@@ -23,11 +24,13 @@
     },
     {
       "question_id": "q-20260413-001",
-      "answer": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)"
+      "answer": "Utiliser le RAG pour un resume compresse (meilleure solution mais plus complexe)",
+      "status": "applied"
     },
     {
       "question_id": "q-20260412-005",
-      "answer": "Supprimer (la survie dépend uniquement des choix)"
+      "answer": "Supprimer (la survie dépend uniquement des choix)",
+      "status": "applied"
     },
     {
       "question_id": "q-20260413-002",
@@ -40,7 +43,8 @@
     },
     {
       "question_id": "q-20260413-004",
-      "answer": "Supprimer mg_meditation.gd (scripte non-utilisé)"
+      "answer": "Supprimer mg_meditation.gd (scripte non-utilisé)",
+      "status": "applied"
     },
     {
       "question_id": "q-20260414-001",
@@ -56,11 +60,13 @@
     },
     {
       "question_id": "q-20260414-005",
-      "answer": "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin"
+      "answer": "B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin",
+      "status": "applied"
     },
     {
       "question_id": "q-20260414-004",
-      "answer": "Migrer le chemin actif vers game_flow_controller (refonte propre)"
+      "answer": "Migrer le chemin actif vers game_flow_controller (refonte propre)",
+      "status": "applied"
     }
   ]
 }

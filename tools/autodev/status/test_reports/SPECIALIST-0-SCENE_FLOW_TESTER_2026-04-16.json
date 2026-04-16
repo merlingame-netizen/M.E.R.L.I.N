@@ -1,0 +1,141 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "cycle_type": "test",
+  "date": "2026-04-16",
+  "timestamp": "2026-04-16T10:00:00Z",
+  "summary": "Scene flow audit + 3 test tasks executed. 1 CRITICAL BUG fixed (run_state not restored on continue). 7 findings (1 CRITICAL fixed, 2 HIGH, 2 MEDIUM, 2 PASS). 6 new tasks generated.",
+  "scene_flow_audit": {
+    "main_scene": "scenes/IntroCeltOS.tscn",
+    "flow_checks": [
+      {
+        "step": "IntroCeltOS → Menu3DPC",
+        "target_scene": "scenes/Menu3DPC.tscn",
+        "scene_exists": true,
+        "transition_method": "PixelTransition.transition_to()",
+        "result": "PASS"
+      },
+      {
+        "step": "Menu3DPC → SelectionSauvegarde",
+        "target_scene": "scenes/SelectionSauvegarde.tscn",
+        "scene_exists": true,
+        "transition_method": "PixelTransition.transition_to(target_scene)",
+        "result": "PASS",
+        "note": "menu_3d_pc.gd line 1397 calls PixelTransition"
+      },
+      {
+        "step": "SelectionSauvegarde → HubAntre (continue)",
+        "target_scene": "scenes/HubAntre.tscn",
+        "scene_exists": true,
+        "transition_method": "_go_to_scene(GAME_SCENE)",
+        "result": "FIXED",
+        "note": "CRITICAL BUG FIXED: LOAD_PROFILE now also restores run_state into state['run']. Before fix: run_state was silently dropped, every continue started a fresh run."
+      },
+      {
+        "step": "HubAntre → BroceliandeForest3D",
+        "target_scene": "scenes/BroceliandeForest3D.tscn",
+        "scene_exists": true,
+        "transition_method": "PixelTransition.transition_to(SCENE_FOREST)",
+        "result": "PASS"
+      },
+      {
+        "step": "BroceliandeForest3D → HubAntre (run end)",
+        "target_scene": "scenes/HubAntre.tscn",
+        "scene_exists": true,
+        "transition_method": "get_tree().change_scene_to_file()",
+        "result": "PASS",
+        "note": "Fixed in cycle 13"
+      },
+      {
+        "step": "TransitionBiome → BroceliandeForest3D",
+        "target_scene": "scenes/BroceliandeForest3D.tscn",
+        "scene_exists": true,
+        "result": "PASS"
+      }
+    ],
+    "orphan_scenes": [
+      {
+        "scene": "scenes/IntroPersonalityQuiz.tscn",
+        "status": "PENDING_DELETION",
+        "director_decision": "q-20260414-005: delete",
+        "task": "E2E-DELETE-ORPHAN-SCENES (priority 3)"
+      },
+      {
+        "scene": "scenes/SceneRencontreMerlin.tscn",
+        "status": "PENDING_DELETION",
+        "director_decision": "q-20260414-005: delete",
+        "task": "E2E-DELETE-ORPHAN-SCENES (priority 3)"
+      },
+      {
+        "scene": "scenes/MerlinGame.tscn",
+        "status": "ORPHAN - AUDIT NEEDED",
+        "note": "Old game controller scene, no active incoming transitions. Needs fate decision."
+      }
+    ],
+    "dual_menu_issue": {
+      "finding": "Two menu scenes exist: Menu3DPC.tscn (active flow) and MenuPrincipal.tscn (separate script MenuPrincipalMerlin.gd). No incoming transitions to MenuPrincipal.tscn from Menu3DPC found. Possible dead scene.",
+      "severity": "MEDIUM",
+      "task": "FLOW-DUAL-MENU-AUDIT (new)"
+    },
+    "hubscreen_run3d_orphan": {
+      "finding": "GameFlowController references HubScreen.tscn (SCENE_HUB) and Run3D.tscn (SCENE_RUN). Active flow uses HubAntre.tscn and BroceliandeForest3D.tscn. GameFlowController.setup() never called → these scenes are referenced only by dead code.",
+      "severity": "MEDIUM",
+      "task": "FLOW-HUBSCREEN-RUN3D-ORPHAN (new)"
+    }
+  },
+  "test_results": [
+    {
+      "task_id": "T-E2E-CONTINUE-LOAD-VERIFY",
+      "verdict": "FAIL → FIXED",
+      "file": "scripts/merlin/merlin_store.gd:410-415",
+      "finding": "LOAD_PROFILE action only restored state['meta'] — never called save_system.load_run_state(). An interrupted run was silently discarded on every continue.",
+      "fix_applied": "merlin_store.gd:410-418: after loading meta, now calls save_system.load_run_state() and restores state['run'] if non-empty. Returns has_run flag.",
+      "invariants": {
+        "ok_returns_true": "PASS — return dict still has ok:true",
+        "meta_loaded": "PASS — state['meta'] still set",
+        "run_state_restored": "FIXED — state['run'] now populated from disk if interrupted run exists",
+        "no_run_overwrite_if_empty": "PASS — load_run_state() empty dict guard: `if not run_state.is_empty()`"
+      }
+    },
+    {
+      "task_id": "T-E2E-AUTOLOADS-INIT",
+      "verdict": "PARTIAL PASS",
+      "findings": [
+        "GameManager IS autoloaded (project.godot:GameManager) — PASS",
+        "GameManager._ready():673 creates MerlinStore via call_deferred('add_child', store) — TIMING RISK",
+        "BroceliandeForest3D._get_store():376 uses get_node_or_null('/root/MerlinStore') — may return null on first frame",
+        "BroceliandeForest3D has explicit fallback mode (line 369-371) — no null crash guaranteed",
+        "MerlinCardSystem NOT in autoloads — accessed via MerlinStore.card_system property (lazy init)"
+      ],
+      "verdict_details": "No null crash due to fallback, but first card draw may use degraded stub data if deferred add hasn't completed. LOW risk in practice (deferred executes before scene _ready() in Godot 4 autoload order).",
+      "recommendation": "Consider synchronous add_child (without deferred) in GameManager to eliminate timing ambiguity."
+    },
+    {
+      "task_id": "T-GDC-FACTION-ENDING-INTEGRATION",
+      "verdict": "DETECTION: PASS / RECORDING: FAIL (pre-existing)",
+      "findings": [
+        "store_run.check_run_end():203 correctly calls MerlinReputationSystem.get_available_endings(faction_rep) — PASS",
+        "MerlinReputationSystem.get_available_endings():93 correctly checks >= 80.0 for each faction — PASS",
+        "faction_endings_available populated in all 3 check_run_end paths — PASS",
+        "GameFlowController._on_faction_ending_chosen():175 has correct logic (dedup, null guard, save) — LOGIC PASS",
+        "GameFlowController.setup() NEVER called → _store=null → recording silently skipped — RECORDING FAIL"
+      ],
+      "blocked_by": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER (priority 4) — setup() must be called for recording to work",
+      "recommendation": "Unblocked once E2E-DEAD-PATH-GAME-FLOW-CONTROLLER is resolved."
+    },
+    {
+      "task_id": "FACTION-GAME-FLOW-TEST",
+      "verdict": "LOGIC PASS / WIRING FAIL (pre-existing)",
+      "findings": [
+        "_on_faction_ending_chosen: null _store guard at line 177 — PASS",
+        "_on_faction_ending_chosen: invalid faction guard (MerlinConstants.FACTIONS check) — PASS",
+        "_on_faction_ending_chosen: deduplication (seen.has() check) — PASS",
+        "_on_faction_ending_chosen: save_profile called when _save_system not null — PASS",
+        "wire_end_screen() never called (requires setup()) — WIRING FAIL"
+      ],
+      "blocked_by": "Same as T-GDC-FACTION-ENDING-INTEGRATION — GameFlowController.setup() not called"
+    }
+  ],
+  "new_tasks_generated": 6,
+  "files_modified": ["scripts/merlin/merlin_store.gd"]
+}

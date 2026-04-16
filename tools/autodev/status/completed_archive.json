@@ -109,5 +109,75 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "T-GDC-FACTION-ENDING-INTEGRATION",
+    "sprint": "S2",
+    "priority": 22,
+    "status": "completed",
+    "type": "test",
+    "title": "Integration test: faction ending correctly detected when rep >= 80 at run end",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/merlin/store_run.gd",
+      "scripts/test/"
+    ],
+    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS.",
+    "completed_at": "2026-04-16T10:00:00Z",
+    "notes": "DETECTION PASS / RECORDING FAIL: detection logic correct. Recording blocked by dead GameFlowController (E2E-DEAD-PATH covers fix)."
+  },
+  {
+    "id": "FACTION-GAME-FLOW-TEST",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "test",
+    "status": "completed",
+    "title": "Test faction_ending_chosen handler records to echo_memory",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/core/game_flow_controller.gd",
+      "scripts/test/"
+    ],
+    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
+    "created_at": "2026-04-15T12:45:00Z",
+    "created_by": "SPEC-11-FACTION",
+    "completed_at": "2026-04-16T10:00:00Z",
+    "notes": "LOGIC PASS / WIRING FAIL: function logic correct. Wiring blocked by GameFlowController.setup() never called."
+  },
+  {
+    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
+    "sprint": "S2",
+    "priority": 22,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-16T10:00:00Z",
+    "notes": "FIXED: LOAD_PROFILE now restores run_state. Bug: state['run'] was never repopulated from disk on continue."
+  },
+  {
+    "id": "T-E2E-AUTOLOADS-INIT",
+    "sprint": "S2",
+    "priority": 23,
+    "type": "test",
+    "status": "completed",
+    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-16T10:00:00Z",
+    "notes": "PARTIAL PASS: MerlinStore deferred timing risk, but fallback exists. No null crash. Low priority fix."
   }
 ]

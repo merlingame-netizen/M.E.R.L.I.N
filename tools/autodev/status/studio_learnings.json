@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T18:47:19Z",
+  "last_updated": "2026-04-16T10:00:00Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
-    "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "total_test_cycles": 27,
+    "bugs_found": 69,
+    "bugs_fixed": 39,
+    "tasks_completed": 89,
+    "tasks_pending": 171,
     "current_sprint": "S3",
-    "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "specialist_cycles_run": 19,
+    "last_specialist": 0,
+    "last_updated": "2026-04-16T10:00:00Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,38 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-S0-001",
+      "learned_at": "2026-04-16T10:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW",
+      "pattern": "LOAD_PROFILE must restore BOTH state['meta'] AND state['run'] for continue to work. Omitting run_state causes silent fresh-run on every continue.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/SelectionSauvegarde.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-002",
+      "learned_at": "2026-04-16T10:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW",
+      "pattern": "call_deferred('add_child', node) means the node is NOT available in the same frame. Singletons registered this way may return null for get_node_or_null() calls in the immediately following scene's _ready().",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "scripts/game_manager.gd"
+      ]
+    },
+    {
+      "id": "PAT-S0-003",
+      "learned_at": "2026-04-16T10:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW",
+      "pattern": "Detection logic for game systems (faction endings, run conditions) often passes audit while the RECORDING/PERSISTENCE side silently fails because the wiring layer (GameFlowController.setup()) is never called.",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/merlin/store_run.gd"
       ]
     }
   ],
