@@ -15,6 +15,7 @@ const THRESHOLD_ENDING: float = 80.0   # Déblocage fin narrative faction
 const VALUE_MIN: float = 0.0
 const VALUE_MAX: float = 100.0
 const CAP_PER_CARD: float = 20.0       # Max ±20 reputation change per card
+const VALUE_START: float = 20.0        # Starting rep — "Neutre" tier (bible v2.4)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -28,7 +29,7 @@ func _init() -> void:
 	reset()
 
 
-## Réinitialise toutes les réputations à 0.
+## Réinitialise toutes les réputations à VALUE_START (20 = Neutre).
 func reset() -> void:
 	_reputations = build_default_factions()
 
@@ -142,11 +143,11 @@ static func is_valid_faction(faction: String) -> bool:
 	return FACTIONS.has(faction)
 
 
-## Retourne un dict factions vide à 0.0 pour les 5 factions canoniques.
+## Retourne un dict factions à VALUE_START (20.0 = Neutre) pour les 5 factions canoniques.
 static func build_default_factions() -> Dictionary:
 	var result: Dictionary = {}
 	for faction in FACTIONS:
-		result[faction] = 0.0
+		result[faction] = VALUE_START
 	return result
 
 
