@@ -468,6 +468,49 @@
       "notes": "Replaced biased from + int(randf() * float(N)) % N with Godot built-in randi_range(from, to). The _rng path was already correct; only the fallback was flawed."
     },
     {
+      "id": "BUGFIX-HIGH-5",
+      "phase": 3,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix transient MerlinGaugeSystem instance (BUG-005)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_gauge_system.gd"
+      ],
+      "description": "MerlinGaugeSystem.new().build_default_gauges() creates a throwaway RefCounted every call. Made build_default_gauges() static.",
+      "completed_at": "2026-04-16",
+      "notes": "Made build_default_gauges() static since it only reads const data. Caller in merlin_store.gd now calls MerlinGaugeSystem.build_default_gauges() without instantiation. All existing callers on instances remain compatible (GDScript allows calling static on instances)."
+    },
+    {
+      "id": "BUGFIX-HIGH-7",
+      "phase": 3,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix ADD_REPUTATION encapsulation violation (BUG-007)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "description": "ADD_REPUTATION in _apply_effect() was calling effects._apply_faction_reputation() directly, bypassing the dispatch/recording pipeline.",
+      "completed_at": "2026-04-16",
+      "notes": "Replaced direct private method call with effects.apply_effects([effect_str], 'RESOLVE_CHOICE'). Now goes through parsing, validation, recording, and the public API. Effect log now captures ADD_REPUTATION effects from card resolution."
+    },
+    {
+      "id": "BUGFIX-HIGH-8",
+      "phase": 3,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix null reference in _reset_ai_for_new_run (BUG-008)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "description": "Accessed merlin_ai_node.session_contexts.clear() without checking if session_contexts property exists.",
+      "completed_at": "2026-04-16",
+      "notes": "Added guard: if merlin_ai_node.get('session_contexts') != null before .clear(). Prevents crash when MerlinAI node exists but doesn't have session_contexts property (e.g. during initialization or if property was removed)."
+    },
+    {
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
