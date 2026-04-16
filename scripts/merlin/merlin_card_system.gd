@@ -848,5 +848,5 @@ func _randf() -> float:
 func _randi_range(from: int, to: int) -> int:
 	if _rng:
 		return _rng.randi_range(from, to)
-	# Fallback: use randf to avoid modulo bias
-	return from + int(randf() * float(to - from + 1)) % (to - from + 1)
+	# Fallback: use Godot built-in (unbiased)
+	return randi_range(from, to)

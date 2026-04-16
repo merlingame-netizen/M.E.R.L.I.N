@@ -75,6 +75,7 @@ const _BIOME_DISPLAY_NAMES: Dictionary = {
 	"marais_korrigans": "les marais des Korrigans",
 	"cercles_pierres": "les cercles de pierres",
 	"collines_dolmens": "les collines aux dolmens",
+	"iles_mystiques": "les iles mystiques",
 }
 
 const _MERLIN_INTRO_SPEECHES: Array[String] = [

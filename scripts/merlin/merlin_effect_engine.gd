@@ -65,22 +65,65 @@ func apply_effects(state: Dictionary, effects: Array, source: String = "SYSTEM")
 		"errors": [],
 	}
 	for effect in effects:
-		if typeof(effect) != TYPE_STRING:
+		var effect_str: String = ""
+		if typeof(effect) == TYPE_STRING:
+			effect_str = effect
+		elif typeof(effect) == TYPE_DICTIONARY:
+			effect_str = _dict_to_effect_string(effect)
+			if effect_str.is_empty():
+				result["rejected"].append(effect)
+				result["errors"].append("Cannot convert dict effect: %s" % str(effect))
+				continue
+		else:
 			result["rejected"].append(effect)
 			continue
-		var parsed = _parse_effect(effect)
+		var parsed = _parse_effect(effect_str)
 		if not parsed["ok"]:
 			result["rejected"].append(effect)
 			result["errors"].append(parsed["error"])
-			_record(state, effect, source, "rejected")
+			_record(state, effect_str, source, "rejected")
 			continue
 		if _apply_parsed(state, parsed):
-			result["applied"].append(effect)
-			_record(state, effect, source, "applied")
+			result["applied"].append(effect_str)
+			_record(state, effect_str, source, "applied")
 		else:
-			result["rejected"].append(effect)
-			_record(state, effect, source, "rejected")
+			result["rejected"].append(effect_str)
+			_record(state, effect_str, source, "rejected")
 	return result
+
+
+## Converts a dict-format effect to a colon-separated string.
+## e.g. {"type": "HEAL_LIFE", "amount": 5} -> "HEAL_LIFE:5"
+## e.g. {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10} -> "ADD_REPUTATION:druides:10"
+static func _dict_to_effect_string(effect: Dictionary) -> String:
+	var etype: String = str(effect.get("type", ""))
+	if etype.is_empty():
+		return ""
+	if not VALID_CODES.has(etype):
+		return ""
+	var arg_count: int = int(VALID_CODES[etype])
+	match etype:
+		"ADD_REPUTATION":
+			return "%s:%s:%s" % [etype, str(effect.get("faction", "")), str(int(effect.get("amount", 0)))]
+		"ADD_NARRATIVE_DEBT":
+			return "%s:%s:%s" % [etype, str(effect.get("debt_type", effect.get("key", ""))), str(effect.get("description", effect.get("value", "")))]
+		"SET_FLAG":
+			return "%s:%s:%s" % [etype, str(effect.get("flag", effect.get("key", ""))), str(effect.get("value", "true"))]
+		"CREATE_PROMISE":
+			return "%s:%s:%s:%s" % [etype, str(effect.get("promise_id", "")), str(int(effect.get("deadline", 0))), str(effect.get("description", ""))]
+		"ADD_PROMISE":
+			return "%s:%s:%s" % [etype, str(effect.get("promise_id", "")), str(int(effect.get("deadline", 0)))]
+		"OFFERING":
+			return "%s:%s:%s:%s" % [etype, str(int(effect.get("cost", 0))), str(effect.get("reward_type", "")), str(effect.get("reward_value", ""))]
+		_:
+			# Generic: 1-arg effects use "amount", "step", or similar
+			if arg_count == 0:
+				return etype
+			elif arg_count == 1:
+				var val: String = str(effect.get("amount", effect.get("step", effect.get("value", effect.get("id", "")))))
+				return "%s:%s" % [etype, val]
+			else:
+				return ""
 
 
 func _parse_effect(effect_code: String) -> Dictionary:
