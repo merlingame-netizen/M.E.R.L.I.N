@@ -58,8 +58,9 @@ export function useStateSync() {
         const { data } = json;
 
         // Feature queue
-        if (data.feature_queue?.tasks) {
-          setFeatureQueue(data.feature_queue.tasks.map(t => ({
+        const rawTasks = data.feature_queue?.tasks || [];
+        if (rawTasks.length > 0) {
+          setFeatureQueue(rawTasks.map(t => ({
             id: t.id,
             title: t.title,
             priority: t.priority,
@@ -83,15 +84,24 @@ export function useStateSync() {
           })));
         }
 
-        // Completed archive count — key is "archived_tasks" in the JSON
-        const archivedCount =
-          (data.completed_archive as Record<string, unknown>)?.archived_tasks
-            ? ((data.completed_archive as Record<string, unknown>).archived_tasks as unknown[]).length
-            : data.completed_archive?.archived?.length || data.completed_archive?.tasks?.length || 0;
-        setCompletedCount(archivedCount);
+        // Completed archive count — handle both array and object formats
+        let archivedCount = 0;
+        const archive = data.completed_archive as unknown;
+        if (Array.isArray(archive)) {
+          archivedCount = archive.length;
+        } else if (archive && typeof archive === 'object') {
+          const obj = archive as Record<string, unknown>;
+          const list = obj.archived_tasks || obj.archived || obj.tasks;
+          if (Array.isArray(list)) archivedCount = list.length;
+        }
+        // Also count completed tasks in feature_queue itself
+        const fqCompleted = rawTasks.filter((t: { status?: string }) => t.status === 'completed').length;
+        setCompletedCount(Math.max(archivedCount, fqCompleted));
 
         // Completed tasks with sprint info (for sprint progress bars)
-        const archivedTasks = (data.completed_archive as Record<string, unknown>)?.archived_tasks as Array<{ id: string; sprint?: string; title: string; completed_at?: string }> | undefined;
+        const archivedTasks = Array.isArray(archive)
+          ? archive as Array<{ id: string; sprint?: string; title: string; completed_at?: string }>
+          : ((archive as Record<string, unknown>)?.archived_tasks as Array<{ id: string; sprint?: string; title: string; completed_at?: string }> | undefined);
         if (archivedTasks) {
           setCompletedTasks(archivedTasks.map(t => ({
             id: t.id,
