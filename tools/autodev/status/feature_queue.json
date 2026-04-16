@@ -514,7 +514,9 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-16",
+      "notes": "Cycle 4: build_default_factions() now uses MerlinConstants.FACTION_SCORE_START (20). Save defaults and migration updated. 3 test files updated.",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
@@ -527,7 +529,9 @@
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-16",
+      "notes": "Cycle 4: Replaced field.hash()%size with randi()%size for minigame variety. Test updated from determinism check to valid-entry check.",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [

@@ -7,6 +7,8 @@
   "high": 6,
   "medium": 7,
   "low": 3,
+  "fixed_cycle_4": ["BUG-009", "BUG-010", "BUG-011", "BUG-013", "BUG-014", "BUG-015", "BUG-018"],
+  "remaining": ["BUG-012", "BUG-016", "BUG-017"],
   "details": [
     {
       "id": "BUG-001",
