@@ -1,0 +1,97 @@
+{
+  "specialist": 10,
+  "role": "PERFORMANCE & CODE QUALITY AUDITOR",
+  "timestamp": "2026-04-16T00:00:00Z",
+  "events_count": 42,
+  "summary": "Audit of core GDScript scripts: file sizes, function lengths, type hints, _process() efficiency, and code quality violations.",
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "HIGH",
+      "category": "file_size",
+      "description": "9 core files exceed 400-line limit",
+      "details": [
+        "merlin_constants.gd: 1264 lines",
+        "merlin_omniscient.gd: 2949 lines",
+        "merlin_ai.gd: 2236 lines",
+        "merlin_card_system.gd: 852 lines",
+        "merlin_effect_engine.gd: 766 lines",
+        "merlin_store.gd: 762 lines",
+        "merlin_llm_adapter.gd: 806 lines",
+        "merlin_game_controller.gd: 735 lines",
+        "merlin_save_system.gd: 484 lines"
+      ]
+    },
+    {
+      "id": "F02",
+      "severity": "HIGH",
+      "category": "function_length",
+      "description": "Multiple functions exceed 50-line limit",
+      "details": [
+        "merlin_store.gd:243 _reduce() = 257 lines (CRITICAL monolith)",
+        "merlin_game_controller.gd:499 _resolve_choice() = 212 lines",
+        "merlin_llm_adapter.gd:435 _wrap_text_as_card() = 223 lines",
+        "merlin_llm_adapter.gd:280 _generate_card_two_stage() = 155 lines",
+        "merlin_effect_engine.gd:655 activate_ogham() = 111 lines",
+        "merlin_effect_engine.gd:104 _apply_parsed() = 73 lines",
+        "merlin_save_system.gd:239 has_active_run() = 98 lines",
+        "merlin_reputation_system.gd:71 get_dominant() = 94 lines"
+      ]
+    },
+    {
+      "id": "F03",
+      "severity": "CRITICAL",
+      "category": "bug",
+      "file": "scripts/ui/merlin_game_controller.gd:70",
+      "description": "BUG-003: _BIOME_DISPLAY_NAMES missing 'iles_mystiques' — 8th biome produces garbled text"
+    },
+    {
+      "id": "F04",
+      "severity": "CRITICAL",
+      "category": "bug",
+      "file": "scripts/merlin/merlin_effect_engine.gd:64",
+      "description": "BUG-004: apply_effects() rejects ALL dict-format effects silently (typeof != TYPE_STRING). card_system sends dicts — ALL effects dropped."
+    },
+    {
+      "id": "F05",
+      "severity": "HIGH",
+      "category": "bug",
+      "file": "scripts/merlin/merlin_card_system.gd:852",
+      "description": "BUG-006: _randi_range fallback uses modulo bias formula. When randf()=1.0, produces out-of-range index. Should use randi_range() builtin."
+    },
+    {
+      "id": "F06",
+      "severity": "HIGH",
+      "category": "bug",
+      "file": "scripts/merlin/merlin_reputation_system.gd:148 + merlin_save_system.gd:24",
+      "description": "BUG-014/015: Faction default is 0.0 (Hostile) but should be 20.0 (Neutral per tier labels). Affects both build_default_factions() and save system defaults."
+    },
+    {
+      "id": "F07",
+      "severity": "MEDIUM",
+      "category": "performance",
+      "file": "addons/merlin_ai/merlin_ai.gd:2046",
+      "description": "_process() polls _brain_process_manager.poll_health() every frame. Should be timer-based (e.g. every 2s) to reduce CPU overhead."
+    },
+    {
+      "id": "F08",
+      "severity": "MEDIUM",
+      "category": "type_hints",
+      "description": "Multiple vars without type hints in effect_engine.gd and store.gd: 'var parsed = ...' should be 'var parsed: Dictionary = ...'"
+    },
+    {
+      "id": "F09",
+      "severity": "LOW",
+      "category": "deep_nesting",
+      "file": "scripts/merlin/llm_adapter_game_master.gd:184",
+      "description": "4+ level deep nesting in JSON repair loop — consider extract helper functions"
+    }
+  ],
+  "bugs_confirmed": ["BUG-003", "BUG-004", "BUG-006", "BUG-014", "BUG-015"],
+  "invariants_checked": {
+    "no_process_in_core_game": "FAIL — merlin_ai _process() does health polling",
+    "type_hints_mandatory": "PARTIAL — some vars missing type hints",
+    "files_under_400_lines": "FAIL — 9 violations",
+    "functions_under_50_lines": "FAIL — 8+ violations"
+  }
+}

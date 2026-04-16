@@ -594,5 +594,20 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260416-001",
+    "agent": "specialist_10_perf_quality",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "All card effects were silently dropped due to dict/string format mismatch",
+    "details": "card_system.gd sends effects as dicts {type, amount, faction} but effect_engine.apply_effects() only accepted strings. Every resolved card since this code divergence had ZERO effects applied. The fix adds _dict_effect_to_string() conversion. This is the highest-impact silent bug found in the codebase — it completely broke the effect pipeline.",
+    "proposed_task": {
+      "title": "E2E test: verify full effect pipeline card→engine",
+      "sprint": "S3",
+      "type": "test",
+      "priority": 2
+    },
+    "timestamp": "2026-04-16T08:54:17.674456Z"
   }
 ]

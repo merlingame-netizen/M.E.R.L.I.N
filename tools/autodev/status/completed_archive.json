@@ -109,5 +109,62 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "BUGFIX-HIGH-3",
+    "phase": 3,
+    "priority": 2,
+    "status": "completed",
+    "title": "Fix _BIOME_DISPLAY_NAMES missing iles_mystiques (BUG-003)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "Add iles_mystiques to _BIOME_DISPLAY_NAMES dict. 8th biome produces garbled text without it.",
+    "completed_at": "2026-04-16T08:51:41.652201Z",
+    "notes": "Fixed by SPECIALIST-10 batch. All 4 bugs confirmed."
+  },
+  {
+    "id": "BUGFIX-HIGH-4",
+    "phase": 3,
+    "priority": 2,
+    "status": "completed",
+    "title": "Fix effect format mismatch string vs dict (BUG-004)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_effect_engine.gd"
+    ],
+    "description": "process_card expects string effects but card_system sends dict. Silently rejects all dict effects.",
+    "completed_at": "2026-04-16T08:51:41.652201Z",
+    "notes": "Fixed by SPECIALIST-10 batch. All 4 bugs confirmed."
+  },
+  {
+    "id": "BUGFIX-HIGH-6",
+    "phase": 3,
+    "priority": 3,
+    "status": "completed",
+    "title": "Fix _randi_range modulo bias (BUG-006)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_card_system.gd"
+    ],
+    "description": "Replace flawed randf()*N%N formula with randi_range() builtin.",
+    "completed_at": "2026-04-16T08:51:41.652201Z",
+    "notes": "Fixed by SPECIALIST-10 batch. All 4 bugs confirmed."
+  },
+  {
+    "id": "BUGFIX-MED-14",
+    "phase": 3,
+    "priority": 4,
+    "status": "completed",
+    "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/merlin/merlin_reputation_system.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+    "completed_at": "2026-04-16T08:51:41.652201Z",
+    "notes": "Fixed by SPECIALIST-10 batch. All 4 bugs confirmed."
   }
 ]

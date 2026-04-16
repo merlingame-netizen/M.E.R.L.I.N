@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T18:47:19Z",
+  "last_updated": "2026-04-16T08:53:41.142630Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
     "total_test_cycles": 26,
     "bugs_found": 67,
-    "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "bugs_fixed": 42,
+    "tasks_completed": 89,
+    "tasks_pending": 17,
     "current_sprint": "S3",
-    "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "specialist_cycles_run": 19,
+    "last_specialist": 10,
+    "last_updated": "2026-04-16T08:53:41.142630Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,49 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-124",
+      "learned_at": "2026-04-16T08:53:41.142630Z",
+      "source": "SPECIALIST-10",
+      "pattern": "card_system sends dict-format effects {type, amount, faction} but effect_engine.apply_effects() only accepted strings — ALL card effects were silently dropped. Always verify effect format at producer/consumer boundary.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "merlin_card_system.gd",
+        "merlin_effect_engine.gd"
+      ]
+    },
+    {
+      "id": "PAT-125",
+      "learned_at": "2026-04-16T08:53:41.142630Z",
+      "source": "SPECIALIST-10",
+      "pattern": "Faction defaults of 0.0 (Hostile) break game balance on first run. Factions MUST init at 20.0 (Neutral tier, >= 20 threshold) per bible tier labels. Check both build_default_factions() and save_system defaults.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_reputation_system.gd",
+        "merlin_save_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-126",
+      "learned_at": "2026-04-16T08:53:41.142630Z",
+      "source": "SPECIALIST-10",
+      "pattern": "GDScript 4 has randi_range(from, to) as a global builtin — no need for custom fallback. The old formula 'from + int(randf() * N) % N' was biased when randf()=1.0.",
+      "severity": "MEDIUM",
+      "applies_to": [
+        "merlin_card_system.gd"
+      ]
+    },
+    {
+      "id": "PAT-127",
+      "learned_at": "2026-04-16T08:53:41.142630Z",
+      "source": "SPECIALIST-10",
+      "pattern": "Always keep _BIOME_DISPLAY_NAMES in sync with MerlinConstants.BIOMES. The 8th biome iles_mystiques was missing — causing garbled display strings. When adding a biome to constants, immediately add its display name too.",
+      "severity": "HIGH",
+      "applies_to": [
+        "merlin_game_controller.gd",
+        "merlin_constants.gd"
       ]
     }
   ],

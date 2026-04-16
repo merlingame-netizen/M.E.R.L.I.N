@@ -58,6 +58,36 @@ func validate_effect(effect_code: String) -> bool:
 
 
 
+## Converts a dict-format effect (from card_system) to its string equivalent.
+## e.g. {"type":"HEAL_LIFE","amount":5} → "HEAL_LIFE:5"
+## Returns empty string if conversion fails.
+func _dict_effect_to_string(d: Dictionary) -> String:
+	var etype: String = str(d.get("type", ""))
+	if etype.is_empty():
+		return ""
+	match etype:
+		"DAMAGE_LIFE", "HEAL_LIFE", "ADD_ANAM", "ADD_BIOME_CURRENCY", \
+		"ADD_KARMA", "ADD_TENSION", "PROGRESS_MISSION":
+			return "%s:%s" % [etype, str(d.get("amount", 1))]
+		"ADD_REPUTATION":
+			var faction: String = str(d.get("faction", ""))
+			if faction.is_empty():
+				return ""
+			return "ADD_REPUTATION:%s:%s" % [faction, str(d.get("amount", 0))]
+		"UNLOCK_OGHAM":
+			var ogham: String = str(d.get("ogham", d.get("id", "")))
+			if ogham.is_empty():
+				return ""
+			return "UNLOCK_OGHAM:%s" % ogham
+		"SET_FLAG":
+			return "SET_FLAG:%s:%s" % [str(d.get("flag", "")), str(d.get("value", "true"))]
+		"ADD_TAG":
+			return "ADD_TAG:%s" % str(d.get("tag", ""))
+		"PLAY_SFX":
+			return "PLAY_SFX:%s" % str(d.get("sfx", d.get("id", "")))
+	return ""
+
+
 func apply_effects(state: Dictionary, effects: Array, source: String = "SYSTEM") -> Dictionary:
 	var result := {
 		"applied": [],
@@ -65,21 +95,31 @@ func apply_effects(state: Dictionary, effects: Array, source: String = "SYSTEM")
 		"errors": [],
 	}
 	for effect in effects:
-		if typeof(effect) != TYPE_STRING:
+		var effect_str: String = ""
+		if typeof(effect) == TYPE_STRING:
+			effect_str = effect
+		elif typeof(effect) == TYPE_DICTIONARY:
+			effect_str = _dict_effect_to_string(effect)
+			if effect_str.is_empty():
+				result["rejected"].append(effect)
+				result["errors"].append("dict_effect_unrecognised: %s" % str(effect.get("type", "?")))
+				continue
+		else:
 			result["rejected"].append(effect)
+			result["errors"].append("unsupported_effect_type: %s" % typeof(effect))
 			continue
-		var parsed = _parse_effect(effect)
+		var parsed: Dictionary = _parse_effect(effect_str)
 		if not parsed["ok"]:
 			result["rejected"].append(effect)
 			result["errors"].append(parsed["error"])
-			_record(state, effect, source, "rejected")
+			_record(state, effect_str, source, "rejected")
 			continue
 		if _apply_parsed(state, parsed):
 			result["applied"].append(effect)
-			_record(state, effect, source, "applied")
+			_record(state, effect_str, source, "applied")
 		else:
 			result["rejected"].append(effect)
-			_record(state, effect, source, "rejected")
+			_record(state, effect_str, source, "rejected")
 	return result
 
 

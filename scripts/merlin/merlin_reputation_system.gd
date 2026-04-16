@@ -142,11 +142,11 @@ static func is_valid_faction(faction: String) -> bool:
 	return FACTIONS.has(faction)
 
 
-## Retourne un dict factions vide à 0.0 pour les 5 factions canoniques.
+## Retourne un dict factions initialisees a 20.0 (Neutre) pour les 5 factions canoniques.
 static func build_default_factions() -> Dictionary:
 	var result: Dictionary = {}
 	for faction in FACTIONS:
-		result[faction] = 0.0
+		result[faction] = 20.0
 	return result
 
 

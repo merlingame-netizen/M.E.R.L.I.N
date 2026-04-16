@@ -532,6 +532,36 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260416-001",
+      "status": "pending",
+      "priority": "HIGH",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "Faction initial reputation: 20 (Neutre) confirmed?",
+      "question": "BUG-014/015 fixed: factions now start at 20.0 (tier Neutre, seuil >= 20). Est-ce que ca correspond bien a votre intention? Alternative: commencer a 50 (Sympathisant) pour une ambiance plus accueillante en debut de run.",
+      "options": [
+        "A: Garder 20.0 (Neutre) — fidele bible v2.4",
+        "B: Passer a 50.0 (Sympathisant) — debut de run plus accueillant",
+        "C: Varier par biome — chaque biome a sa faction dominante deja a 40"
+      ],
+      "timestamp": "2026-04-16T08:53:55.356008Z"
+    },
+    {
+      "id": "q-20260416-002",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "ux",
+      "title": "Effect log visibility: afficher les effets rejetes dans l'UI?",
+      "question": "BUGFIX-HIGH-4: les effets en format dict etaient silencieusement ignores. Avec le fix, ils sont appliques. Mais les erreurs de conversion sont loggees. Faut-il afficher un indicateur visuel quand un effet est rejete (ex: icone crouge sur la carte)?",
+      "options": [
+        "A: Oui, toujours visible (debug friendly)",
+        "B: Seulement en mode dev/debug",
+        "C: Non, gerer silencieusement — ne pas polluer l'UI"
+      ],
+      "timestamp": "2026-04-16T08:53:55.356008Z"
     }
   ]
 }
