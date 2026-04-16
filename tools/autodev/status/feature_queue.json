@@ -429,37 +429,43 @@
       "id": "BUGFIX-HIGH-3",
       "phase": 3,
       "priority": 2,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix _BIOME_DISPLAY_NAMES missing iles_mystiques (BUG-003)",
       "agent": "godot_expert",
       "files": [
         "scripts/ui/merlin_game_controller.gd"
       ],
-      "description": "Add iles_mystiques to _BIOME_DISPLAY_NAMES dict. 8th biome produces garbled text without it."
+      "description": "Add iles_mystiques to _BIOME_DISPLAY_NAMES dict. 8th biome produces garbled text without it.",
+      "completed_at": "2026-04-16",
+      "notes": "Added iles_mystiques: les iles mystiques to _BIOME_DISPLAY_NAMES dict. Confirmed 8th biome key matches merlin_constants.gd BIOME_KEYS and Bible v2.4."
     },
     {
       "id": "BUGFIX-HIGH-4",
       "phase": 3,
       "priority": 2,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix effect format mismatch string vs dict (BUG-004)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "process_card expects string effects but card_system sends dict. Silently rejects all dict effects."
+      "description": "process_card expects string effects but card_system sends dict. Silently rejects all dict effects.",
+      "completed_at": "2026-04-16",
+      "notes": "Added static _dict_to_effect_string() converter. apply_effects() now accepts both String and Dictionary effects. Dict effects are converted to colon-separated format before parsing. Covers all VALID_CODES including multi-arg effects (ADD_REPUTATION, SET_FLAG, CREATE_PROMISE, etc.)."
     },
     {
       "id": "BUGFIX-HIGH-6",
       "phase": 3,
       "priority": 3,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix _randi_range modulo bias (BUG-006)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_card_system.gd"
       ],
-      "description": "Replace flawed randf()*N%N formula with randi_range() builtin."
+      "description": "Replace flawed randf()*N%N formula with randi_range() builtin.",
+      "completed_at": "2026-04-16",
+      "notes": "Replaced biased from + int(randf() * float(N)) % N with Godot built-in randi_range(from, to). The _rng path was already correct; only the fallback was flawed."
     },
     {
       "id": "BUGFIX-MED-14",
