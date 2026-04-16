@@ -383,8 +383,8 @@ function Build-WorkerPrompt {
         "BRANCH: $branch"
         "WORKING DIRECTORY: $worktreePath"
         ""
-        "PROJET: JDR Parlant roguelite Godot 4. Systeme Triade (3 aspects x 3 etats),"
-        "LLM local (Qwen 2.5-1.5B via Ollama), 18 Oghams, Bestiole compagnon."
+        "PROJET: JDR Parlant roguelite Godot 4. 5 Factions, 18 Oghams, 1 barre de vie,"
+        "LLM local `(Qwen 3.5 Multi-Brain via Ollama`), 8 champs lexicaux, MOS."
         ""
         "SCOPE STRICT -- NE MODIFIE QUE CES FICHIERS:"
         $fileScope

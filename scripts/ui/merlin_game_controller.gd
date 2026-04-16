@@ -339,7 +339,7 @@ func _request_next_card() -> void:
 
 	# Step 1. Life drain BEFORE card (bible s.13.3: "1.DRAIN -1")
 	if store and is_instance_valid(store):
-		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
+		await store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
 		if store.get_life_essence() <= 0:
 			print("[Merlin] Player died from life drain at card %d" % _cards_this_run)
 			is_busy = false
@@ -701,7 +701,7 @@ func _resolve_choice(option: int) -> void:
 
 	# 19. Next card
 	is_busy = false
-	_request_next_card()
+	await _request_next_card()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

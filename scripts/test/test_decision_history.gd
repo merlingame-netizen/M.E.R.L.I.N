@@ -177,42 +177,6 @@ func test_record_choice_increments_total_choices() -> bool:
 	return true
 
 
-func test_record_choice_gauges_before_stored() -> bool:
-	_reg.reset_all()
-	var ctx := _make_ctx(1, "foret", {"vigueur": 80, "esprit": 40})
-	_reg.record_choice(_make_card("c7"), 0, ctx)
-	var entry: Dictionary = _reg.current_run[0]
-	if entry.gauges_before.get("vigueur") != 80:
-		return _fail("gauges_before.vigueur should be 80")
-	return true
-
-
-func test_record_choice_gauges_after_initially_empty() -> bool:
-	_reg.reset_all()
-	_reg.record_choice(_make_card("c8"), 0, _make_ctx())
-	var entry: Dictionary = _reg.current_run[0]
-	if not entry.gauges_after.is_empty():
-		return _fail("gauges_after should be empty until update_last_entry_gauges is called")
-	return true
-
-
-func test_update_last_entry_gauges_sets_values() -> bool:
-	_reg.reset_all()
-	_reg.record_choice(_make_card("c9"), 0, _make_ctx())
-	_reg.update_last_entry_gauges({"vigueur": 60, "esprit": 55})
-	var entry: Dictionary = _reg.current_run[0]
-	if entry.gauges_after.get("esprit") != 55:
-		return _fail("gauges_after.esprit should be 55, got %s" % str(entry.gauges_after.get("esprit")))
-	return true
-
-
-func test_update_last_entry_gauges_on_empty_run_is_safe() -> bool:
-	_reg.reset_all()
-	# Must not crash
-	_reg.update_last_entry_gauges({"vigueur": 50})
-	return true
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. CHOICE RATIOS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -460,53 +424,7 @@ func test_pattern_occurrences_stored() -> bool:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. GAUGE PROTECTION TRACKING
-# ─────────────────────────────────────────────────────────────────────────────
-
-func test_gauge_protection_opportunity_counted_below_25() -> bool:
-	_reg.reset_all()
-	var ctx := _make_ctx(1, "foret", {"vigueur": 10})
-	var card := _make_card("g1", [])
-	_reg.record_choice(card, 0, ctx)
-	if _reg.gauge_patterns["protects_vigueur"].opportunities < 1:
-		return _fail("Should count protection opportunity when vigueur < 25")
-	return true
-
-
-func test_gauge_protection_opportunity_counted_above_75() -> bool:
-	_reg.reset_all()
-	var ctx := _make_ctx(1, "foret", {"vigueur": 90})
-	var card := _make_card("g2", [])
-	_reg.record_choice(card, 0, ctx)
-	if _reg.gauge_patterns["protects_vigueur"].opportunities < 1:
-		return _fail("Should count protection opportunity when vigueur > 75")
-	return true
-
-
-func test_gauge_protection_count_increments_when_protected() -> bool:
-	_reg.reset_all()
-	# vigueur=10 (low) → protect by choosing option 0 (effect target=vigueur, value=-10 is NOT protection)
-	# We need a card with option that raises vigueur (positive effect on vigueur)
-	var card := {
-		"id": "g3",
-		"type": "narrative",
-		"tags": [],
-		"npc_id": "",
-		"options": [
-			{"effects": [{"target": "vigueur", "value": 15}]},   # option 0 — raises vigueur
-			{"effects": []},
-			{"effects": []},
-		],
-	}
-	var ctx := _make_ctx(1, "foret", {"vigueur": 20})
-	_reg.record_choice(card, 0, ctx)
-	if _reg.gauge_patterns["protects_vigueur"].count < 1:
-		return _fail("protects_vigueur count should increment when raising a low-vigueur gauge")
-	return true
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 8. GET PREVIOUS CHOICE ON TAG
+# 7. GET PREVIOUS CHOICE ON TAG
 # ─────────────────────────────────────────────────────────────────────────────
 
 func test_get_previous_choice_on_tag_returns_correct_entry() -> bool:
@@ -581,7 +499,7 @@ func test_get_context_for_llm_has_expected_keys() -> bool:
 	var required_keys := [
 		"cards_this_run", "patterns", "npc_karma",
 		"npcs_met_count", "recent_choices",
-		"promise_acceptance_rate", "most_common_death_gauge"
+		"promise_acceptance_rate",
 	]
 	for k in required_keys:
 		if not ctx.has(k):
@@ -683,26 +601,6 @@ func test_on_run_end_resets_current_run() -> bool:
 	_reg.on_run_end({"final_gauges": {}, "victory": true})
 	if _reg.current_run.size() != 0:
 		return _fail("current_run should be empty after on_run_end")
-	return true
-
-
-func test_on_run_end_tracks_death_gauge() -> bool:
-	_reg.reset_all()
-	_reg.record_choice(_make_card("death_card"), 0, _make_ctx())
-	_reg.on_run_end({"final_gauges": {"vigueur": 0}, "victory": false})
-	if _reg.historical_summary.most_common_death_gauge != "vigueur":
-		return _fail("most_common_death_gauge should be 'vigueur', got '%s'" % _reg.historical_summary.most_common_death_gauge)
-	return true
-
-
-func test_on_run_end_victory_does_not_update_avg_gauge_at_death() -> bool:
-	_reg.reset_all()
-	_reg.record_choice(_make_card("win_card"), 0, _make_ctx())
-	_reg.on_run_end({"final_gauges": {"vigueur": 5}, "victory": true})
-	# No death_count entry expected
-	var death_count: int = _reg.historical_summary.get("death_count", 0)
-	if death_count != 0:
-		return _fail("Victory run should NOT increment death_count, got %d" % death_count)
 	return true
 
 

@@ -23,7 +23,6 @@ const MAX_CURRENT_RUN_ENTRIES := 200
 var current_run: Array[Dictionary] = []
 # Each entry: {
 #   card_id, card_type, option, effects,
-#   gauges_before, gauges_after,
 #   timestamp, day, biome, tags,
 #   decision_time_ms, npc_id
 # }
@@ -70,17 +69,6 @@ const PATTERNS := {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# GAUGE PATTERN TRACKING
-# ═══════════════════════════════════════════════════════════════════════════════
-
-var gauge_patterns := {
-	"protects_vigueur": {"count": 0, "opportunities": 0},
-	"protects_esprit": {"count": 0, "opportunities": 0},
-	"protects_faveur": {"count": 0, "opportunities": 0},
-	"protects_ressources": {"count": 0, "opportunities": 0},
-}
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # NPC KARMA TRACKING
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -97,8 +85,6 @@ var historical_summary := {
 	"center_ratio": 0.0,  # Center choice ratio
 	"right_ratio": 0.5,
 	"promise_acceptance_rate": 0.0,
-	"average_gauge_at_death": {},
-	"most_common_death_gauge": "",
 	"patterns_over_time": {},  # Track pattern evolution
 }
 
@@ -128,8 +114,6 @@ func reset_all() -> void:
 		"center_ratio": 0.0,
 		"right_ratio": 0.5,
 		"promise_acceptance_rate": 0.0,
-		"average_gauge_at_death": {},
-		"most_common_death_gauge": "",
 		"patterns_over_time": {},
 	}
 
@@ -144,8 +128,6 @@ func record_choice(card: Dictionary, option: int, context: Dictionary) -> void:
 		"card_type": card.get("type", "narrative"),
 		"option": option,
 		"effects": _get_option_effects(card, option),
-		"gauges_before": context.get("gauges", {}).duplicate(),
-		"gauges_after": {},  # Filled by update_last_entry_gauges
 		"timestamp": int(Time.get_unix_time_from_system()),
 		"day": context.get("day", 1),
 		"biome": context.get("biome", ""),
@@ -168,18 +150,8 @@ func record_choice(card: Dictionary, option: int, context: Dictionary) -> void:
 	if entry.npc_id != "":
 		_track_npc_interaction(entry)
 
-	# Track gauge protection
-	_track_gauge_protection(entry, context)
-
 	# Detect patterns
 	_detect_patterns()
-
-
-func update_last_entry_gauges(gauges_after: Dictionary) -> void:
-	## Met a jour les jauges finales du dernier choix.
-	if current_run.is_empty():
-		return
-	current_run[-1].gauges_after = gauges_after.duplicate()
 
 
 func _update_choice_ratios(option: int) -> void:
@@ -264,34 +236,6 @@ func get_npc_relationship_summary(npc_id: String) -> String:
 		return "ennemi"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# GAUGE PROTECTION TRACKING
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _track_gauge_protection(entry: Dictionary, context: Dictionary) -> void:
-	var gauges: Dictionary = context.get("gauges", {})
-	var effects: Array = entry.effects
-
-	for gauge_name in gauges:
-		var value: int = int(gauges[gauge_name])
-		var pattern_key: String = "protects_" + str(gauge_name).to_lower()
-
-		if not gauge_patterns.has(pattern_key):
-			continue
-
-		# Check if this was a protection opportunity
-		if value < 25 or value > 75:
-			gauge_patterns[pattern_key].opportunities += 1
-
-			# Check if player protected it
-			for effect in effects:
-				if effect.get("target", "") == gauge_name:
-					var effect_value: int = int(effect.get("value", 0))
-					# Protecting = raising low gauge or lowering high gauge
-					if (value < 25 and effect_value > 0) or (value > 75 and effect_value < 0):
-						gauge_patterns[pattern_key].count += 1
-						break
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # PATTERN DETECTION
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -328,18 +272,6 @@ func _detect_patterns() -> void:
 			if was_new:
 				pattern_detected.emit(pattern_name, consistency)
 
-	# Detect gauge protection patterns
-	for pattern_key in gauge_patterns:
-		var data: Dictionary = gauge_patterns[pattern_key]
-		if data.opportunities >= PATTERN_MIN_OCCURRENCES:
-			var rate: float = float(data.count) / float(data.opportunities)
-			if rate >= PATTERN_DETECTION_THRESHOLD:
-				patterns_detected[pattern_key] = {
-					"confidence": rate,
-					"occurrences": data.opportunities,
-					"last_updated": int(Time.get_unix_time_from_system()),
-				}
-
 
 func get_pattern(pattern_name: String) -> Dictionary:
 	return patterns_detected.get(pattern_name, {})
@@ -355,35 +287,6 @@ func has_pattern(pattern_name: String, min_confidence: float = PATTERN_DETECTION
 
 func on_run_end(ending_data: Dictionary) -> void:
 	## Appele a la fin d'une run.
-	# Track death gauges
-	var gauges: Dictionary = ending_data.get("final_gauges", {})
-	for gauge_name in gauges:
-		var value: int = int(gauges[gauge_name])
-		# Gauge that caused death (0 or 100)
-		if value <= 0 or value >= 100:
-			var death_counts: Dictionary = historical_summary.get("death_gauge_counts", {})
-			death_counts[gauge_name] = death_counts.get(gauge_name, 0) + 1
-			historical_summary["death_gauge_counts"] = death_counts
-
-			# Update most common
-			var max_deaths := 0
-			var most_common := ""
-			for g in death_counts:
-				if death_counts[g] > max_deaths:
-					max_deaths = death_counts[g]
-					most_common = g
-			historical_summary.most_common_death_gauge = most_common
-
-	# Track average gauges at death
-	if not ending_data.get("victory", false):
-		for gauge_name in gauges:
-			var current_avg: float = float(historical_summary.average_gauge_at_death.get(gauge_name, 50))
-			var new_value: float = float(gauges[gauge_name])
-			var count: int = historical_summary.get("death_count", 0) + 1
-			historical_summary.average_gauge_at_death[gauge_name] = (
-				(current_avg * (count - 1) + new_value) / count
-			)
-		historical_summary["death_count"] = historical_summary.get("death_count", 0) + 1
 
 	# Track promise acceptance rate
 	var promises_seen := 0
@@ -428,7 +331,6 @@ func get_context_for_llm() -> Dictionary:
 		"npcs_met_count": npc_karma.size(),
 		"recent_choices": _get_recent_choices_summary(5),
 		"promise_acceptance_rate": historical_summary.promise_acceptance_rate,
-		"most_common_death_gauge": historical_summary.most_common_death_gauge,
 	}
 
 
@@ -481,14 +383,6 @@ func _pattern_to_french(pattern_name: String, data: Dictionary) -> String:
 			return "Le joueur %s prend des risques" % conf_text
 		"avoids_conflict":
 			return "Le joueur %s evite les conflits" % conf_text
-		"protects_vigueur":
-			return "Le joueur %s protege sa Vigueur" % conf_text
-		"protects_esprit":
-			return "Le joueur %s protege son Esprit" % conf_text
-		"protects_faveur":
-			return "Le joueur %s protege sa Faveur" % conf_text
-		"protects_ressources":
-			return "Le joueur %s protege ses Ressources" % conf_text
 
 	return "Pattern: %s (%.0f%%)" % [pattern_name, confidence * 100]
 
@@ -533,7 +427,6 @@ func save_to_disk() -> void:
 		"version": VERSION,
 		"patterns_detected": patterns_detected,
 		"npc_karma": npc_karma,
-		"gauge_patterns": gauge_patterns,
 		"historical_summary": historical_summary,
 	}
 
@@ -562,10 +455,6 @@ func load_from_disk() -> void:
 		patterns_detected = data.patterns_detected
 	if data.has("npc_karma"):
 		npc_karma = data.npc_karma
-	if data.has("gauge_patterns"):
-		for key in data.gauge_patterns:
-			if gauge_patterns.has(key):
-				gauge_patterns[key] = data.gauge_patterns[key]
 	if data.has("historical_summary"):
 		for key in data.historical_summary:
 			if historical_summary.has(key):

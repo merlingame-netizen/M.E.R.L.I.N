@@ -1,18 +1,10 @@
-﻿{
-    "domain":  "llm-lora",
-    "blockers":  [
-                     "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe"
-                 ],
-    "timestamp":  "2026-02-23T10:36:24.7226147+01:00",
-    "current_task":  "",
-    "status":  "error",
-    "files_modified":  [
-
-                       ],
-    "tasks_completed":  [
-
-                        ],
-    "tasks_remaining":  [
-
-                        ]
+{
+  "domain": "llm-lora",
+  "blockers": [],
+  "timestamp": "2026-04-16T07:06:11.000Z",
+  "current_task": "",
+  "status": "idle",
+  "files_modified": [],
+  "tasks_completed": [],
+  "tasks_remaining": []
 }

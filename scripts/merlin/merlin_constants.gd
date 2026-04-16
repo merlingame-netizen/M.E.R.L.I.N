@@ -319,6 +319,11 @@ const ACTION_VERBS := {
 	"neutre": ["parler", "accepter", "refuser", "attendre", "s'approcher"],
 }
 
+# Verbes neutres — mappes au champ "esprit" pour les minigames (bible v2.4 s.6.4)
+# Ils sont inclus dans ACTION_VERBS["esprit"] pour la detection, mais identifies ici
+# pour que le LLM puisse distinguer les verbes neutres des verbes actifs.
+const NEUTRAL_VERBS: Array[String] = ["parler", "accepter", "refuser", "attendre", "s'approcher"]
+
 # Fallback: si le LLM genere un verbe hors des 45, mapper a "esprit"
 const ACTION_VERB_FALLBACK_FIELD := "esprit"
 
@@ -356,6 +361,34 @@ const EFFECT_CAPS := {
 	"score_bonus_cap": 2.0,
 	"drain_per_card": 0,
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EFFECT PIPELINE — Ordre d'application des effets (bible v2.4 s.13.3)
+# Reference absolue pour le code — toute implementation doit suivre cet ordre.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const EFFECT_PIPELINE: Array[String] = [
+	"DRAIN_VIE",          # 1. -1 PV (debut de carte)
+	"AFFICHAGE_CARTE",    # 2. texte + 3 options
+	"ACTIVATION_OGHAM",   # 3. optionnel: le joueur clique sur l'Ogham actif
+	"CHOIX_OPTION",       # 4. le joueur choisit 1 des 3 options
+	"MINIGAME",           # 5. le joueur joue le minigame (sauf Merlin Direct)
+	"SCORE",              # 6. 0-100, multiplicateur calcule
+	"APPLICATION_EFFETS", # 7. effets de l'option choisie, multiplies par le score
+	"OGHAM_POST_EFFECT",  # 8. Oghams de protection filtrent les negatifs APRES le calcul
+	"VERIFICATION_VIE",   # 9. si vie = 0, fin de run
+	"VERIFICATION_PROMESSES", # 10. countdown -1, si expire → carte resolution inseree
+	"COOLDOWN",           # 11. -1 sur l'Ogham actif
+	"RETOUR_3D",          # 12. fondu, marche reprend
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM AFFINITY — Bonus quand un Ogham est utilise dans son biome d'affinite
+# (bible v2.4 s.2.2: +10% score, -1 cooldown)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const OGHAM_AFFINITY_SCORE_BONUS: float = 0.10   # +10% score au prochain minigame
+const OGHAM_AFFINITY_COOLDOWN_BONUS: int = 1      # -1 cooldown (recharge plus rapide)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MULTIPLIER TABLE — Score → multiplicateur d'effets (bible v2.4 s.6.5)
@@ -411,82 +444,82 @@ const TALENT_TIERS := {
 const BIOMES := {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande", "subtitle": "Ou les arbres ont des yeux",
-		"season": "printemps", "difficulty": 0, "maturity_threshold": 0,
+		"season": "printemps", "difficulty": 0, "maturity_threshold": 0,  # bible v2.4 s.4.1: starter, diff 0
 		"dominant_faction": "druides",
 		"oghams_affinity": ["quert", "huath", "coll"],
 		"currency_name": "Herbes enchantees",
-		"card_interval_range_min": 12, "card_interval_range_max": 15,
+		"card_interval_range_min": 12, "card_interval_range_max": 15,  # bible v2.4 s.4.3: calme
 		"pnj": "gwenn", "arc": "le_chene_chantant", "arc_cards": 3,
 		"arc_condition_type": "faction_rep", "arc_condition_faction": "druides", "arc_condition_value": 30,
 	},
 	"landes_bruyere": {
-		"name": "Landes de Bruyere", "subtitle": "Ou le vent raconte des histoires",
-		"season": "automne", "difficulty": 1, "maturity_threshold": 15,
+		"name": "Landes de Bruyere", "subtitle": "L'horizon sans fin",
+		"season": "automne", "difficulty": 1, "maturity_threshold": 15,  # bible v2.4 s.4.1
 		"dominant_faction": "anciens",
 		"oghams_affinity": ["luis", "onn", "saille"],
 		"currency_name": "Brins de bruyere",
-		"card_interval_range_min": 8, "card_interval_range_max": 10,
-		"pnj": "erwan", "arc": "l_ermite_du_vent", "arc_cards": 4,
-		"arc_condition_type": "runs_in_biome", "arc_condition_faction": "", "arc_condition_value": 3,
+		"card_interval_range_min": 8, "card_interval_range_max": 10,  # bible v2.4 s.4.3: modere
+		"pnj": "aedan", "arc": "l_ermite_du_vent", "arc_cards": 4,  # bible v2.4 s.3.6
+		"arc_condition_type": "biome_runs", "arc_condition_faction": "", "arc_condition_value": 3,
 	},
 	"cotes_sauvages": {
-		"name": "Cotes Sauvages", "subtitle": "Ou la mer defie la terre",
-		"season": "ete", "difficulty": 1, "maturity_threshold": 15,
+		"name": "Cotes Sauvages", "subtitle": "L'ocean murmurant",
+		"season": "ete", "difficulty": 0, "maturity_threshold": 15,  # bible v2.4 s.4.1: diff 0
 		"dominant_faction": "niamh",
 		"oghams_affinity": ["muin", "nuin", "tinne"],
 		"currency_name": "Coquillages",
-		"card_interval_range_min": 6, "card_interval_range_max": 8,
-		"pnj": "maelle", "arc": "le_phoque_d_argent", "arc_cards": 3,
+		"card_interval_range_min": 6, "card_interval_range_max": 8,  # bible v2.4 s.4.3: rythme par les vagues
+		"pnj": "bran", "arc": "le_phoque_d_argent", "arc_cards": 3,  # bible v2.4 s.3.6
 		"arc_condition_type": "faction_rep", "arc_condition_faction": "niamh", "arc_condition_value": 30,
 	},
 	"villages_celtes": {
-		"name": "Villages Celtes", "subtitle": "Ou les hommes forment le destin",
-		"season": "ete", "difficulty": 2, "maturity_threshold": 25,
+		"name": "Villages Celtes", "subtitle": "Flammes obstinees",
+		"season": "ete", "difficulty": -1, "maturity_threshold": 25,  # bible v2.4 s.4.1: diff -1
 		"dominant_faction": "anciens",
 		"oghams_affinity": ["duir", "coll", "beith"],
 		"currency_name": "Pieces de cuivre",
-		"card_interval_range_min": 8, "card_interval_range_max": 10,
-		"pnj": "cadogan", "arc": "l_assemblee_secrete", "arc_cards": 5,
+		"card_interval_range_min": 8, "card_interval_range_max": 10,  # bible v2.4 s.4.3: social, modere
+		"pnj": "morwenna", "arc": "l_assemblee_secrete", "arc_cards": 5,  # bible v2.4 s.3.6
 		"arc_condition_type": "faction_rep", "arc_condition_faction": "anciens", "arc_condition_value": 40,
 	},
 	"cercles_pierres": {
-		"name": "Cercles de Pierres", "subtitle": "Ou le temps se fissure",
-		"season": "printemps", "difficulty": 3, "maturity_threshold": 30,
+		"name": "Cercles de Pierres", "subtitle": "Ou le temps hesite",
+		"season": "hiver", "difficulty": 1, "maturity_threshold": 30,  # bible v2.4 s.4.1: hiver, diff 1
 		"dominant_faction": "druides",
 		"oghams_affinity": ["ioho", "straif", "ruis"],
 		"currency_name": "Fragments de rune",
-		"card_interval_range_min": 10, "card_interval_range_max": 12,
-		"pnj": "brennos", "arc": "le_rituel_oublie", "arc_cards": 4,
+		"card_interval_range_min": 10, "card_interval_range_max": 12,  # bible v2.4 s.4.3: lent, mystique
+		"pnj": "seren", "arc": "le_rituel_oublie", "arc_cards": 4,  # bible v2.4 s.3.6
 		"arc_condition_type": "oghams_owned", "arc_condition_faction": "", "arc_condition_value": 2,
 	},
 	"marais_korrigans": {
-		"name": "Marais des Korrigans", "subtitle": "Ou la lumiere ment",
-		"season": "automne", "difficulty": 3, "maturity_threshold": 40,
+		"name": "Marais des Korrigans", "subtitle": "Deception et feux follets",
+		"season": "automne", "difficulty": 2, "maturity_threshold": 40,  # bible v2.4 s.4.1: diff 2
 		"dominant_faction": "korrigans",
 		"oghams_affinity": ["gort", "eadhadh", "luis"],
 		"currency_name": "Pierres phosphorescentes",
-		"card_interval_range_min": 4, "card_interval_range_max": 6,
-		"pnj": "gwen_du", "arc": "le_tresor_des_feux", "arc_cards": 4,
+		"card_interval_range_min": 4, "card_interval_range_max": 6,  # bible v2.4 s.4.3: frenetique, piegeux
+		"pnj": "puck", "arc": "le_tresor_des_feux", "arc_cards": 4,  # bible v2.4 s.3.6
 		"arc_condition_type": "faction_rep", "arc_condition_faction": "korrigans", "arc_condition_value": 40,
 	},
 	"collines_dolmens": {
-		"name": "Collines aux Dolmens", "subtitle": "Ou les morts veillent",
-		"season": "hiver", "difficulty": 4, "maturity_threshold": 50,
+		"name": "Collines aux Dolmens", "subtitle": "Les os de la terre",
+		"season": "printemps", "difficulty": 0, "maturity_threshold": 50,  # bible v2.4 s.4.1: printemps, diff 0
 		"dominant_faction": "ankou",
 		"oghams_affinity": ["quert", "ailm", "coll"],
 		"currency_name": "Os graves",
-		"card_interval_range_min": 10, "card_interval_range_max": 12,
-		"pnj": "ildiko", "arc": "la_voix_des_rois", "arc_cards": 3,
-		"arc_condition_type": "fins_vues", "arc_condition_faction": "", "arc_condition_value": 5,
+		"card_interval_range_min": 10, "card_interval_range_max": 12,  # bible v2.4 s.4.3: paisible
+		"pnj": "taliesin", "arc": "la_voix_des_rois", "arc_cards": 3,  # bible v2.4 s.3.6
+		"arc_condition_type": "endings_seen", "arc_condition_faction": "", "arc_condition_value": 5,
 	},
 	"iles_mystiques": {
-		"name": "Iles Mystiques", "subtitle": "Ou le monde visible s'acheve",
-		"season": "hiver", "difficulty": 5, "maturity_threshold": 75,
+		"name": "Iles Mystiques", "subtitle": "Au-dela des brumes",
+		"season": "samhain", "difficulty": 3, "maturity_threshold": 75,  # bible v2.4 s.4.1: samhain, diff 3
 		"dominant_faction": "niamh",
 		"oghams_affinity": ["ailm", "ruis", "ioho"],
 		"currency_name": "Ecume solidifiee",
-		"card_interval_range_min": 3, "card_interval_range_max": 15,
-		"pnj": "morgane", "arc": "le_passage_de_morgane", "arc_cards": 5,
+		"card_interval_range_min": 3, "card_interval_range_max": 15,  # bible v2.4 s.4.3: imprevisible
+		"pnj": "branwen", "arc": "le_passage_de_morgane", "arc_cards": 5,  # bible v2.4 s.3.6
 		"arc_condition_type": "faction_rep", "arc_condition_faction": "ankou", "arc_condition_value": 50,
 	},
 }
@@ -508,6 +541,35 @@ const MATURITY_WEIGHTS := {
 	"oghams_debloques": 3,
 	"max_faction_rep": 1,
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PNJ RECURRENTS — 1 par biome (bible v2.4 s.3.7)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const BIOME_PNJ_INFO := {
+	"gwenn":    {"name": "Gwenn la Cueilleuse", "biome": "foret_broceliande", "role": "Guide nature, marchande d'herbes", "faction": "druides"},
+	"aedan":    {"name": "Aedan l'Ermite",      "biome": "landes_bruyere",    "role": "Sage solitaire, enigmes",        "faction": ""},
+	"bran":     {"name": "Bran le Passeur",      "biome": "cotes_sauvages",    "role": "Marchand maritime, informations", "faction": "anciens"},
+	"morwenna": {"name": "Morwenna la Forge",    "biome": "villages_celtes",   "role": "Forgeronne, politique locale",   "faction": ""},
+	"seren":    {"name": "Seren l'Etoilee",      "biome": "cercles_pierres",   "role": "Druidesse mystique, rituels",    "faction": "druides"},
+	"puck":     {"name": "Puck le Lutin",        "biome": "marais_korrigans",  "role": "Farceur, marchand de pieges",    "faction": "korrigans"},
+	"taliesin": {"name": "Taliesin le Barde",    "biome": "collines_dolmens",  "role": "Conteur, gardien de memoire",    "faction": "anciens"},
+	"branwen":  {"name": "Branwen la Spectrale", "biome": "iles_mystiques",    "role": "Esprit enigmatique, epreuves",   "faction": "ankou"},
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM DISCOVERY — Probabilites de decouverte en run (bible v2.4 s.2.2)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const OGHAM_DISCOVERY_TRIGGERS := {
+	"pnj_merchant":    {"probability": 0.40, "max_per_run": 1, "label": "PNJ marchand propose un Ogham"},
+	"arc_milestone":   {"probability": 0.30, "max_per_run": 1, "label": "Arc narratif du biome atteint une etape-cle"},
+	"random_3d_event": {"probability": 0.20, "max_per_run": 1, "label": "Evenement aleatoire 3D (rune/inscription)"},
+	"fastroute_tag":   {"probability": 0.10, "max_per_run": 1, "label": "Carte FastRoute avec tag ogham_discovery"},
+}
+const OGHAM_DISCOVERY_MAX_PER_RUN: int = 2
+const OGHAM_ALREADY_OWNED_ANAM_BONUS: int = 5  # +5 Anam si Ogham deja possede
+const OGHAM_DISCOUNT_AFTER_DISCOVERY: float = 0.5  # -50% cout Anam post-decouverte
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MOS CONVERGENCE — Duree de run + confiance Merlin (bible v2.4 s.6.2, s.6.3)
@@ -911,19 +973,19 @@ static func get_mission_template(biome_key: String) -> Dictionary:
 		"broceliande", "foret_broceliande":
 			return {"title": "Le Souffle de Barenton", "text": "La Fontaine de Barenton s'assombrit. Trouve ce qui la trouble et ramene la clarte.", "name": "Foret de Broceliande"}
 		"landes", "landes_bruyere":
-			return {"title": "Le Chant des Cairns", "text": "Les cairns du vent se taisent. Retrouve la melodie perdue avant que le silence ne gagne.", "name": "Landes de Bruyere"}
+			return {"title": "L'Ermite du Vent", "text": "Un sage solitaire a disparu dans les landes. Le vent porte encore ses paroles.", "name": "Landes de Bruyere"}
 		"cotes", "cotes_sauvages":
-			return {"title": "Le Signal de Sein", "text": "L'ile de Sein ne repond plus. Navigue jusqu'au phare et decouvre pourquoi.", "name": "Cotes Sauvages"}
+			return {"title": "Le Phoque d'Argent", "text": "Un phoque d'argent apparait au large. Son chant te guide vers un mystere enfoui.", "name": "Cotes Sauvages"}
 		"villages", "villages_celtes":
-			return {"title": "Le Puits des Souhaits", "text": "L'eau du puits sacre est tarie. Aide le village a retrouver sa source.", "name": "Villages Celtes"}
+			return {"title": "L'Assemblee Secrete", "text": "Les anciens se reunissent en secret. Decouvre ce qu'ils preparent.", "name": "Villages Celtes"}
 		"cercles", "cercles_pierres":
-			return {"title": "L'Alignement Perdu", "text": "Les menhirs de Carnac sont desalignes. Le temps se detraque. Restaure l'accord.", "name": "Cercles de Pierres"}
+			return {"title": "Le Rituel Oublie", "text": "Les menhirs de Carnac resonnent d'un rituel oublie. Retrouve les gestes anciens.", "name": "Cercles de Pierres"}
 		"marais", "marais_korrigans":
-			return {"title": "Le Tertre du Silence", "text": "Le chef des korrigans ne rit plus. Descends dans le tertre et affronte le Vide.", "name": "Marais des Korrigans"}
+			return {"title": "Le Tresor des Feux", "text": "Les feux follets mènent a un tresor oublie. Mais les korrigans veillent.", "name": "Marais des Korrigans"}
 		"collines", "collines_dolmens":
-			return {"title": "La Voix de l'If", "text": "L'if millenaire perd ses branches. Ecoute ses dernieres paroles avant qu'il ne se taise.", "name": "Collines aux Dolmens"}
+			return {"title": "La Voix des Rois", "text": "Les anciens rois parlent depuis les dolmens. Ecoute leur sagesse avant qu'elle ne s'eteigne.", "name": "Collines aux Dolmens"}
 		"iles", "iles_mystiques":
-			return {"title": "Le Passage d'Avalon", "text": "Au-dela des brumes, une ile apparait puis s'efface. Trouve le passage avant que la maree ne le scelle.", "name": "Iles Mystiques"}
+			return {"title": "Le Passage de Morgane", "text": "Au-dela des brumes, Morgane attend. Trouve le passage avant que la maree ne le scelle.", "name": "Iles Mystiques"}
 	return {}
 
 # Card type distribution weights
@@ -1123,10 +1185,10 @@ const FACTION_DELTA_EXTREME := 30   # Acte héroïque ou trahison majeure
 # Keywords pour auto-tag Path B (merlin_llm_adapter._wrap_text_as_card)
 const FACTION_KEYWORDS := {
 	"druides":   ["druide", "ogham", "nemeton", "chene", "barde"],
-	"korrigans": ["korrigan", "farfadet", "marais", "lutin", "fee"],
+	"anciens":   ["ancien", "ancetre", "tradition", "sagesse"],
+	"korrigans": ["korrigan", "fee", "feu follet", "farce", "tresor"],
 	"niamh":     ["niamh", "eau", "lac", "amour", "nostalgie"],
-	"anciens":   ["ancien", "menhir", "dolmen", "eternite", "primordial"],
-	"ankou":     ["ankou", "mort", "faucheuse", "ame", "trepas"],
+	"ankou":     ["ankou", "mort", "passage", "nuit", "ombre"],
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

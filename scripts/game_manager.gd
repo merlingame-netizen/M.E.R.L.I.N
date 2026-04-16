@@ -392,8 +392,6 @@ var run := {
 
 # Meta progression
 var meta := {
-	"essence": {},
-	"ogham_fragments": 0,
 	"total_runs": 0,
 	"total_victories": 0,
 	"unlocked_types": ["nature", "feu", "eau"],
@@ -676,6 +674,3 @@ func _ready() -> void:
 		store.name = "MerlinStore"
 		get_tree().root.call_deferred("add_child", store)
 
-	# Initialize essence dictionary
-	for type_name in TYPES:
-		meta.essence[type_name] = 0

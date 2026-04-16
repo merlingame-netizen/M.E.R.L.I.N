@@ -3,5 +3,13 @@
     "additionalDirectories": [
       "C:\\Users\\PGNK2128\\Downloads"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "bash .claude/hooks/session-start.sh",
+        "timeout": 120
+      }
+    ]
   }
 }
