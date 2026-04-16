@@ -514,26 +514,78 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-16",
+      "notes": "build_default_factions() now uses MerlinConstants.FACTION_SCORE_START (20). Save system _get_default_profile() and migration code updated. Stale test_smoke.gd assertion fixed."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-16",
+      "notes": "Replaced field.hash() % size with randi() % size for proper randomization."
+    },
+    {
+      "id": "BUGFIX-MED-9",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Fix dead flux.tension reference in RAG (BUG-009)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/rag_manager.gd"],
+      "description": "rag_manager reads run.flux.tension (removed Flux system) instead of run.hidden.tension.",
+      "completed_at": "2026-04-16",
+      "notes": "Changed run.get('flux',{}).get('tension',40) to run.get('hidden',{}).get('tension',0)."
+    },
+    {
+      "id": "BUGFIX-MED-10",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Remove dead Souffle cost on center option (BUG-010)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/merlin_ai.gd"],
+      "description": "Center option cost=1 with comment 'Centre costs Souffle' — Souffle system was removed.",
+      "completed_at": "2026-04-16",
+      "notes": "Removed dead cost assignment in sequential pipeline card assembly."
+    },
+    {
+      "id": "BUGFIX-MED-12",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Fix dot notation dict access in ollama_backend (BUG-012)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/ollama_backend.gd"],
+      "description": "entry.tag and entry.context_default use dot notation on Dictionary from JSON. Fragile.",
+      "completed_at": "2026-04-16",
+      "notes": "Changed to entry.get('tag','') and entry.get('context_default',4096)."
+    },
+    {
+      "id": "BUGFIX-MED-13",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Remove ClassDB dead code branch in store (BUG-013)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_store.gd"],
+      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript class_name. Dead branch.",
+      "completed_at": "2026-04-16",
+      "notes": "Removed ClassDB branch. Now loads directly via ResourceLoader.exists() + load()."
     },
     {
       "id": "TEST-PLAYTEST-1",
