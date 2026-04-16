@@ -21,8 +21,8 @@ static func _get_default_profile() -> Dictionary:
 		"total_runs": 0,
 		"fins_vues": 0,
 		"faction_rep": {
-			"druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
-			"niamh": 0.0, "ankou": 0.0,
+			"druides": 20.0, "anciens": 20.0, "korrigans": 20.0,
+			"niamh": 20.0, "ankou": 20.0,
 		},
 		"trust_merlin": 0,
 		"talent_tree": {"unlocked": []},

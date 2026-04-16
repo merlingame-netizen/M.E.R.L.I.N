@@ -15,6 +15,7 @@ const THRESHOLD_ENDING: float = 80.0   # Déblocage fin narrative faction
 const VALUE_MIN: float = 0.0
 const VALUE_MAX: float = 100.0
 const CAP_PER_CARD: float = 20.0       # Max ±20 reputation change per card
+const DEFAULT_START: float = 20.0      # Neutral starting rep (matches MerlinConstants.FACTION_SCORE_START)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -146,7 +147,7 @@ static func is_valid_faction(faction: String) -> bool:
 static func build_default_factions() -> Dictionary:
 	var result: Dictionary = {}
 	for faction in FACTIONS:
-		result[faction] = 0.0
+		result[faction] = DEFAULT_START
 	return result
 
 

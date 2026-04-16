@@ -438,8 +438,7 @@ func _get_karma_tension_context(game_state: Dictionary) -> String:
 		parts.append("Karma: positif fort (%d)" % karma)
 	elif karma <= -5:
 		parts.append("Karma: negatif fort (%d)" % karma)
-	var flux: Dictionary = run.get("flux", {})
-	var tension: int = int(flux.get("tension", 40))
+	var tension: int = int(run.get("hidden", {}).get("tension", 40))
 	if tension >= 70:
 		parts.append("Tension: haute")
 	elif tension <= 20:
@@ -569,9 +568,9 @@ func log_choice_made(option: Dictionary, card_num: int, day: int) -> void:
 	})
 
 
-func log_aspect_shifted(aspect: String, old_state: int, new_state: int, card_num: int, day: int) -> void:
-	_add_journal_entry("aspect_shifted", card_num, day, {
-		"aspect": aspect, "from": old_state, "to": new_state,
+func log_reputation_changed(faction: String, old_value: float, new_value: float, card_num: int, day: int) -> void:
+	_add_journal_entry("reputation_changed", card_num, day, {
+		"faction": faction, "from": old_value, "to": new_value,
 	})
 
 
