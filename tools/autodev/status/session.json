@@ -2,7 +2,7 @@
   "state": "running",
   "objective": "Autonomous pipeline — Cycle Director hourly via Claude Routines",
   "workers": [],
-  "updated_at": "2026-04-16T11:10:58.000Z",
-  "cycle": 3,
-  "checkpoint": "All 6 HIGH bugs fixed (BUG-003 to BUG-008). 7 pending: 2 MEDIUM bugs + 2 playtest + 3 audit. Routine prompt updated with full Director rules."
+  "updated_at": "2026-04-16T16:00:00.000Z",
+  "cycle": 4,
+  "checkpoint": "5 MEDIUM bugs fixed (BUG-009/010/011/013/014/015). Faction defaults 0→20, minigame rng, dead refs cleaned. Remaining: 3 LOW bugs + 3 pending tests."
 }
