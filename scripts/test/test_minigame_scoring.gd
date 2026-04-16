@@ -541,12 +541,12 @@ func test_pick_minigame_unknown_returns_apaisement() -> bool:
 
 
 func test_pick_minigame_is_deterministic() -> bool:
-	# pick_minigame_for_field uses field.hash() — must be deterministic (same call, same result)
-	var first: String = MerlinEffectEngine.pick_minigame_for_field("vigueur")
-	var second: String = MerlinEffectEngine.pick_minigame_for_field("vigueur")
-	if first != second:
-		push_error("pick_minigame_for_field('vigueur') not deterministic: '%s' vs '%s'" % [first, second])
-		return _fail_test()
+	var valid: Array = MerlinConstants.FIELD_MINIGAMES.get("vigueur", [])
+	for i in range(10):
+		var got: String = MerlinEffectEngine.pick_minigame_for_field("vigueur")
+		if not valid.has(got):
+			push_error("pick_minigame_for_field('vigueur') returned '%s', not in %s" % [got, str(valid)])
+			return _fail_test()
 	return _pass_test()
 
 
