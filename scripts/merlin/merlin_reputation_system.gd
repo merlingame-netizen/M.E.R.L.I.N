@@ -142,11 +142,12 @@ static func is_valid_faction(faction: String) -> bool:
 	return FACTIONS.has(faction)
 
 
-## Retourne un dict factions vide à 0.0 pour les 5 factions canoniques.
+## Retourne un dict factions au score de depart pour les 5 factions canoniques.
 static func build_default_factions() -> Dictionary:
 	var result: Dictionary = {}
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
 	for faction in FACTIONS:
-		result[faction] = 0.0
+		result[faction] = start
 	return result
 
 
