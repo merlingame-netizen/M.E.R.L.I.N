@@ -93,10 +93,10 @@ func test_mos_convergence_values() -> bool:
 	return _assert(ok_all, "MOS_CONVERGENCE values mismatch")
 
 
-func test_faction_score_start_is_zero() -> bool:
+func test_faction_score_start_is_neutral() -> bool:
 	return _assert(
-		MerlinConstants.FACTION_SCORE_START == 0,
-		"FACTION_SCORE_START should be 0, got %d" % MerlinConstants.FACTION_SCORE_START
+		MerlinConstants.FACTION_SCORE_START == 20,
+		"FACTION_SCORE_START should be 20 (Neutral), got %d" % MerlinConstants.FACTION_SCORE_START
 	)
 
 
@@ -300,7 +300,7 @@ func test_rep_starts_at_faction_score_start() -> bool:
 		if int(faction_rep.get(faction, -1)) != MerlinConstants.FACTION_SCORE_START:
 			all_at_start = false
 			break
-	return _assert(all_at_start, "All factions should start at FACTION_SCORE_START (0)")
+	return _assert(all_at_start, "All factions should start at FACTION_SCORE_START (%d)" % MerlinConstants.FACTION_SCORE_START)
 
 
 func test_rep_clamped_0_to_100() -> bool:
