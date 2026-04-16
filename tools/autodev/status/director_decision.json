@@ -1,10 +1,10 @@
 {
-  "cycle": 3,
-  "timestamp": "2026-04-16T11:10:58.000Z",
+  "cycle": 4,
+  "timestamp": "2026-04-16T16:30:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-HIGH-5", "BUGFIX-HIGH-7", "BUGFIX-HIGH-8"],
-  "rationale": "All 6 HIGH bugs resolved across 3 cycles. Next: MEDIUM bugs (faction defaults, deterministic minigame) then playtest + bible audit.",
-  "budget": {"files": 4, "lines": 85},
+  "tasks": ["BUGFIX-MED-14", "BUGFIX-MED-11", "BUG-009", "BUG-010", "BUG-013", "BUG-018"],
+  "rationale": "Swept all remaining MEDIUM bugs (faction defaults, deterministic minigame, dead Flux/Souffle/aspect/ClassDB code). 15/18 bugs fixed total. Only 3 LOW priority remain (BUG-012 dict access, BUG-016 NPC 2 options, BUG-017 thread-unsafe stats).",
+  "budget": {"files": 6, "lines": 37},
   "blockers": [],
-  "next_cycle_plan": "Fix BUG-014 (faction default 0→20) + BUG-011 (deterministic minigame). Then TEST-PLAYTEST-1."
+  "next_cycle_plan": "Feature cycle: implement creator feedback — remove life drain per card (q-20260412-001/005), retro N64/PS1 shader pipeline (q-20260412-004), or scene flow refactor (q-20260414-004). Pick highest-impact item."
 }
