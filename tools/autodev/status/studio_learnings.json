@@ -1383,7 +1383,11 @@
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
       ]
-    }
+    },
+    "PAT-S0-001 (2026-04-16): GAME_SCENE const pointing to orphaned scene in forest — check all const *SCENE references for dead targets after each deletion",
+    "PAT-S0-002 (2026-04-16): ui_overlay_narrative quit button was routing to wrong menu (MenuPrincipal vs Menu3DPC) — always grep 'MenuPrincipal.tscn' to find legacy refs",
+    "PAT-S0-003 (2026-04-16): EndRunScreen exists but unreachable because GameFlowController is dead — full end-run summary is never shown to player",
+    "PAT-S0-004 (2026-04-16): BroceliandeForest3D._on_hub() had _merlin_found condition routing to dead MerlinGame — prefer explicit always-HubAntre routing over conditional scene dispatch"
   ],
   "agent_performance": {
     "game_playtester": {
@@ -1474,7 +1478,8 @@
       "cycles_run": 2
     },
     "scene_flow_tester": {
-      "tasks_completed": 2
+      "tasks_completed": 4,
+      "cycles": 1
     },
     "visual_consistency_auditor": {
       "tasks_completed": 1,
@@ -1755,8 +1760,17 @@
       }
     }
   ],
-  "total_cycles": 10,
-  "bugs_found": 38,
-  "bugs_fixed": 10,
-  "last_cycle": "2026-04-15T18:47:19Z"
+  "total_cycles": 11,
+  "bugs_found": 43,
+  "bugs_fixed": 12,
+  "last_cycle": {
+    "timestamp": "2026-04-16T05:44:06Z",
+    "specialist": 0,
+    "role": "SCENE_FLOW_TESTER",
+    "cycle_type": "test",
+    "tasks_completed": 2,
+    "tasks_generated": 5,
+    "bugs_fixed": 2,
+    "bugs_found": 5
+  }
 }

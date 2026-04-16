@@ -109,5 +109,39 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "E2E-MERLINGAME-OBSOLETE-PATH",
+    "sprint": "S2",
+    "priority": 12,
+    "type": "dev",
+    "status": "completed",
+    "title": "Fix BroceliandeForest3D._on_hub() orphan MerlinGame path — route to HubAntre always",
+    "agent": "game_design_coder",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "broceliande_forest_3d.gd:1221-1227 _on_hub(): routes to MerlinGame.tscn when _merlin_found, HubAntre.tscn otherwise. Encounters are now handled inline via EncounterCardOverlay (active path). MerlinGame.tscn (old card scene) should NOT be a navigation target from Forest3D. Remove _merlin_found condition from _on_hub(), always route to HubAntre.tscn. Verify _merlin_found is used for other logic before removing.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-16T05:44:06Z",
+    "notes": "FIXED: broceliande_forest_3d.gd removed GAME_SCENE const, _on_hub() always routes to HUB_SCENE. Specialist 0 SCENE FLOW TESTER."
+  },
+  {
+    "id": "SFT-OVERLAY-NARRATIVE-MENU-VERIFIED",
+    "sprint": "S1",
+    "priority": 5,
+    "status": "completed",
+    "type": "dev",
+    "title": "Fix ui_overlay_narrative.gd pause-menu quit button routing MenuPrincipal→Menu3DPC",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/ui/ui_overlay_narrative.gd"
+    ],
+    "description": "SPECIALIST-0 SFT-CHK-09: ui_overlay_narrative.gd:289,291 was routing quit button to MenuPrincipal.tscn instead of Menu3DPC.tscn. MenuPrincipal.tscn is a legacy scene not in the main flow. Fixed to Menu3DPC.tscn.",
+    "created_at": "2026-04-16T05:44:06Z",
+    "completed_at": "2026-04-16T05:44:06Z",
+    "notes": "FIXED immediately by Specialist 0.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
   }
 ]

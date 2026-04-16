@@ -594,5 +594,21 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260416-001",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "Player never sees run summary (EndRunScreen dead) — forest walk ends with no feedback loop",
+    "details": "After BroceliandeForest3D._on_hub() fix (always→HubAntre), the player goes from 'Merlin found' directly back to the Hub with zero summary of what happened (life gained/lost, reputation changes, ogham effects). EndRunScreen.tscn has complete UI for this but is wired only in the dead GameFlowController. This creates a gap in the core feedback loop — player cannot learn from their run. Priority fix: implement a minimal post-run overlay (life delta, dominant faction, next ogham hint) before HubAntre transition.",
+    "proposed_task": {
+      "title": "Wire EndRunScreen into BroceliandeForest3D post-Merlin-found flow",
+      "sprint": "S2",
+      "priority": 3,
+      "type": "dev",
+      "id": "SFT-ENDRUNSCREEN-NEVER-SHOWN"
+    },
+    "timestamp": "2026-04-16T05:44:06Z"
   }
 ]

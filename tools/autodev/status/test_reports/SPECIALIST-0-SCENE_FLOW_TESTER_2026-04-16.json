@@ -1,0 +1,99 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-16T05:44:06Z",
+  "cycle_type": "test",
+  "events_count_at_run": 112,
+  "summary": "Full player journey traced: IntroCeltOS → Menu3DPC → HubAntre → BroceliandeForest3D ↔ HubAntre (active path). 2 CRITICAL fixes applied, 3 HIGH open, 3 MEDIUM open, 4 PASS.",
+  "checks": [
+    {
+      "id": "SFT-CHK-01",
+      "check": "Main scene entry point",
+      "status": "PASS",
+      "detail": "project.godot: run/main_scene=IntroCeltOS.tscn. File exists. IntroCeltOS.gd:516 → Menu3DPC.tscn via PixelTransition."
+    },
+    {
+      "id": "SFT-CHK-02",
+      "check": "IntroCeltOS → Menu3DPC transition",
+      "status": "PASS",
+      "detail": "IntroCeltOS.gd:516 PixelTransition.transition_to('res://scenes/Menu3DPC.tscn'). Menu3DPC.tscn exists."
+    },
+    {
+      "id": "SFT-CHK-03",
+      "check": "Menu3DPC → next scene routing",
+      "status": "HIGH",
+      "detail": "menu_3d_pc.gd:1326 _glitch_transition('res://scenes/HubAntre.tscn'). Expected flow was Menu→Quiz→Rencontre→Hub, but director cancelled quiz (q-20260414-005). Current direct-to-Hub routing is acceptable post-deletion of orphan scenes, but no first-run check exists."
+    },
+    {
+      "id": "SFT-CHK-04",
+      "check": "IntroPersonalityQuiz dead path",
+      "status": "HIGH",
+      "detail": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn still exist on disk. Not reachable from Menu3DPC. Director q-20260414-005 ordered deletion. Task E2E-DELETE-ORPHAN-SCENES P3 exists but still pending.",
+      "task_ref": "E2E-DELETE-ORPHAN-SCENES"
+    },
+    {
+      "id": "SFT-CHK-05",
+      "check": "HubAntre → BroceliandeForest3D",
+      "status": "PASS",
+      "detail": "HubAntre.gd:661 PixelTransition.transition_to(SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn'). Both exist."
+    },
+    {
+      "id": "SFT-CHK-06",
+      "check": "BroceliandeForest3D _on_hub() orphan MerlinGame path",
+      "status": "CRITICAL_FIXED",
+      "detail": "FIXED: broceliande_forest_3d.gd:1222 was routing to MerlinGame.tscn when _merlin_found=true. Removed GAME_SCENE const, updated _on_hub() to always route to HUB_SCENE (HubAntre.tscn). MerlinGame.tscn is no longer a navigation target from the forest.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "lines": "6-9, 1219-1227"
+    },
+    {
+      "id": "SFT-CHK-07",
+      "check": "GameFlowController + Run3D.tscn wiring",
+      "status": "CRITICAL",
+      "detail": "game_flow_controller.gd class_name GameFlowController. NOT an autoload. NEVER instantiated in any active scene. Run3D.tscn is a bare stub (only script node, no UI/3D tree). GameFlowController references HubScreen.tscn (not HubAntre). This entire architecture (Run3D + GameFlowController + HubScreen + EndRunScreen) is unreachable. Director q-20260414-004 ordered migration. Task E2E-DEAD-PATH-GAME-FLOW-CONTROLLER P4 exists.",
+      "task_ref": "E2E-DEAD-PATH-GAME-FLOW-CONTROLLER"
+    },
+    {
+      "id": "SFT-CHK-08",
+      "check": "EndRunScreen reachability",
+      "status": "CRITICAL",
+      "detail": "EndRunScreen.tscn exists. ui_overlay_endscreen.gd has btn_hub → HubAntre and btn_new → BroceliandeForest3D. BUT EndRunScreen is only wired in GameFlowController which is dead. Active path has no end-run screen shown to player after forest walk completes. Player goes directly back to HubAntre with no summary.",
+      "related": "SFT-CHK-07"
+    },
+    {
+      "id": "SFT-CHK-09",
+      "check": "ui_overlay_narrative wrong menu route",
+      "status": "MEDIUM_FIXED",
+      "detail": "FIXED: ui_overlay_narrative.gd:289,291 was routing to MenuPrincipal.tscn instead of Menu3DPC.tscn. MenuPrincipal.tscn exists but is a legacy/alternate scene not in the main flow. Fixed to Menu3DPC.tscn.",
+      "file": "scripts/ui/ui_overlay_narrative.gd",
+      "lines": "289, 291"
+    },
+    {
+      "id": "SFT-CHK-10",
+      "check": "MapMonde path reachability",
+      "status": "MEDIUM",
+      "detail": "map_ui.gd:495 → TransitionBiome.tscn → BroceliandeForest3D. MapMonde.tscn exists but HubAntre SCENE_MAPMONDE const defined but no hotspot routes to it (only TRANSITION routes are Calendar/Options/Arbre/Collection). MapMonde unreachable from main flow."
+    },
+    {
+      "id": "SFT-CHK-11",
+      "check": "merlin_encounter_complete signal connectivity",
+      "status": "MEDIUM",
+      "detail": "broceliande_forest_3d.gd:6 declares signal merlin_encounter_complete, emitted at :964. Signal updated comment to remove MerlinGame reference. Signal is not connected to any autoload/controller — was intended for GameFlowController (dead). Low player impact now but needed when GameFlowController is wired."
+    },
+    {
+      "id": "SFT-CHK-12",
+      "check": "Scene transitions use PixelTransition correctly",
+      "status": "PASS",
+      "detail": "All main scene transitions use PixelTransition.transition_to() with fallback get_tree().change_scene_to_file(). PixelTransition is an autoload in project.godot. Pattern consistent across Calendar, Collection, HubAntre, IntroCeltOS, Menu3DPC."
+    }
+  ],
+  "files_modified": [
+    "scripts/broceliande_3d/broceliande_forest_3d.gd",
+    "scripts/ui/ui_overlay_narrative.gd"
+  ],
+  "new_tasks_generated": 5,
+  "critical_count": 2,
+  "high_count": 2,
+  "medium_count": 2,
+  "pass_count": 4,
+  "fixed_count": 2
+}
