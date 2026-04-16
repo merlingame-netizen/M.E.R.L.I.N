@@ -803,7 +803,5 @@ static func pick_minigame_for_field(field: String) -> String:
 	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
 	if minigames.is_empty():
 		return MerlinConstants.ACTION_VERB_FALLBACK_FIELD  # "esprit" — valid field name
-	var mg_hash: int = field.hash() % minigames.size()
-	if mg_hash < 0:
-		mg_hash = -mg_hash % minigames.size()
-	return str(minigames[mg_hash])
+	var idx: int = randi_range(0, minigames.size() - 1)
+	return str(minigames[idx])
