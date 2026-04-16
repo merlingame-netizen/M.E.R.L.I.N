@@ -514,26 +514,30 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-16",
+      "notes": "Added VALUE_START=20.0 const. build_default_factions() and save defaults now use 20.0. Migration code uses MerlinConstants.FACTION_SCORE_START."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-16",
+      "notes": "Replaced field.hash()%size with randi_range(0, size-1). Different minigames now selected randomly per lexical field."
     },
     {
       "id": "TEST-PLAYTEST-1",
