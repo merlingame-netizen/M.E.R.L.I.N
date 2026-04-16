@@ -532,6 +532,54 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260416-001",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "status": "pending",
+      "priority": "HIGH",
+      "title": "EndRunScreen: Show after each card session OR only at biome end?",
+      "question": "EndRunScreen.tscn (narrative ending, journey map, rewards, faction choice) is currently not shown at all in the active path. When should it appear?\n\nA) After each BroceliandeForest3D session (every time you return to HubAntre)\nB) Only when the full biome run is completed (all cards/encounters done)\nC) Only on life=0 (death screen variant)",
+      "options": [
+        "A - After each forest session",
+        "B - Only at biome completion",
+        "C - Only on death/game over"
+      ],
+      "created_at": "2026-04-16T00:12:00Z",
+      "context": "SF-002: broceliande_forest_3d.gd:1215 goes directly to HubAntre, bypassing EndRunScreen"
+    },
+    {
+      "id": "q-20260416-002",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "status": "pending",
+      "priority": "HIGH",
+      "title": "MenuPrincipal.tscn vs Menu3DPC.tscn — which is the canonical main menu?",
+      "question": "Two main menu scenes exist: Menu3DPC.tscn (active — used after IntroCeltOS) and MenuPrincipal.tscn (bypassed — only reachable via emergency return). Which should be canonical?\n\nA) Menu3DPC (keep as main menu, archive MenuPrincipal)\nB) MenuPrincipal (wire IntroCeltOS to it, archive Menu3DPC)\nC) Keep both for different contexts (Menu3DPC = first session, MenuPrincipal = return menu)",
+      "options": [
+        "A - Menu3DPC canonical",
+        "B - MenuPrincipal canonical",
+        "C - Both have different roles"
+      ],
+      "created_at": "2026-04-16T00:12:00Z",
+      "context": "SF-005: IntroCeltOS.gd:516 → Menu3DPC. MenuPrincipalMerlin.gd is full implementation but not on main path."
+    },
+    {
+      "id": "q-20260416-003",
+      "type": "multiple_choice",
+      "category": "design",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "title": "BroceliandeForest3D dual destination — MerlinGame.tscn still needed?",
+      "question": "BroceliandeForest3D has two potential destinations: MerlinGame.tscn (via GAME_SCENE signal merlin_encounter_complete) and HubAntre.tscn (via HUB_SCENE). Is MerlinGame.tscn (the 2D card game overlay) still the intended card encounter screen, or is it superseded?\n\nA) Yes — MerlinGame is the card game, wire merlin_encounter_complete properly to show it mid-run\nB) No — card game happens inside BroceliandeForest3D itself, MerlinGame.tscn is dead\nC) MerlinGame.tscn should be renamed/integrated into Run3D architecture",
+      "options": [
+        "A - Wire MerlinGame for card encounters",
+        "B - MerlinGame is dead, delete it",
+        "C - Integrate into Run3D architecture"
+      ],
+      "created_at": "2026-04-16T00:12:00Z",
+      "context": "SF-004: broceliande_forest_3d.gd:9 GAME_SCENE + line 1221 comment vs line 1215 HubAntre transition"
     }
   ]
 }

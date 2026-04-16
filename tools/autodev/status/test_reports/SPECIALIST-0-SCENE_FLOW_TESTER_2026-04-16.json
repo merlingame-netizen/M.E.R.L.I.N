@@ -1,0 +1,90 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "run_date": "2026-04-16T00:00:00Z",
+  "events_count_at_run": 112,
+  "cycle_type": "test",
+  "summary": "Full scene flow audit of the active game path and all .tscn files. 7 findings (2 CRITICAL, 2 HIGH, 3 MEDIUM).",
+  "active_flow_verified": {
+    "IntroCeltOS_to_Menu3DPC": "PASS — PixelTransition.transition_to at scripts/IntroCeltOS.gd:516",
+    "Menu3DPC_to_ParchmentPreRun": "PASS — _glitch_transition at scripts/menu_3d_pc.gd:1337",
+    "ParchmentPreRun_to_BroceliandeForest3D": "PASS — SCENE_FOREST at scripts/ui/parchment_pre_run.gd:217",
+    "BroceliandeForest3D_to_HubAntre": "PASS — HUB_SCENE at scripts/broceliande_3d/broceliande_forest_3d.gd:1215",
+    "HubAntre_to_BroceliandeForest3D": "PASS — SCENE_FOREST at scripts/HubAntre.gd:661",
+    "EndRunScreen": "FAIL — not in active path, only referenced by dead GameFlowController"
+  },
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "title": "GameFlowController never instantiated — dead code",
+      "detail": "scripts/core/game_flow_controller.gd defines a full game loop (Menu→HubScreen→Run3D→EndScreen) but is NEVER instantiated in any active scene, autoload, or script. Director q-20260414-004 explicitly said 'Migrer le chemin actif vers game_flow_controller'. Active path still uses HubAntre+BroceliandeForest3D directly.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "impact": "Entire GameFlowController system (HubScreen.tscn, Run3D.tscn, EndRunScreen.tscn) is unreachable. Director directive not yet applied."
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "title": "EndRunScreen.tscn never shown after run completion",
+      "detail": "BroceliandeForest3D transitions directly to HubAntre.tscn after run end (scripts/broceliande_3d/broceliande_forest_3d.gd:1215). EndRunScreen.tscn (narrative ending, journey map, rewards, faction choice) is completely bypassed. Players never see end-of-run rewards.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1215",
+      "impact": "Missing end-of-run UI. Run rewards, narrative endings, faction choice all inaccessible to player."
+    },
+    {
+      "id": "SF-003",
+      "severity": "HIGH",
+      "title": "Orphan scenes IntroPersonalityQuiz + SceneRencontreMerlin not yet deleted",
+      "detail": "Director q-20260414-005 said 'Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Task E2E-DELETE-ORPHAN-SCENES is pending. 10 files to remove: 2 .tscn, 1 .uidren, 5 .gd scripts (+ quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd), 2 .uid files. No external references confirmed.",
+      "files": [
+        "scenes/IntroPersonalityQuiz.tscn",
+        "scenes/SceneRencontreMerlin.tscn",
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/SceneRencontreMerlin.gd",
+        "scripts/quiz_data.gd",
+        "scripts/rencontre_dialogue.gd",
+        "scripts/rencontre_llm.gd"
+      ],
+      "impact": "Dead code bloat, confusing for future development."
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "title": "BroceliandeForest3D dual destination — HubAntre OR MerlinGame ambiguity",
+      "detail": "scripts/broceliande_3d/broceliande_forest_3d.gd:9 defines GAME_SCENE='res://scenes/MerlinGame.tscn' and line 1221 mentions going to MerlinGame, but line 1215 explicitly goes to HubAntre. The signal merlin_encounter_complete at line 6 references MerlinGame. Unclear which path fires when.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd:1215-1227",
+      "impact": "Potential softlock or wrong scene if merlin_encounter logic fires."
+    },
+    {
+      "id": "SF-005",
+      "severity": "MEDIUM",
+      "title": "MenuPrincipal.tscn not in active flow (superseded by Menu3DPC.tscn)",
+      "detail": "IntroCeltOS goes to Menu3DPC.tscn (scripts/IntroCeltOS.gd:516). MenuPrincipal.tscn is only reached via ui_overlay_narrative.gd (emergency return to menu). scripts/MenuPrincipalMerlin.gd is a full implementation that's mostly bypassed.",
+      "file": "scenes/MenuPrincipal.tscn",
+      "impact": "Dead code confusion. MenuPrincipalMerlin.gd receives maintenance but isn't on main path."
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "title": "Run3D.tscn only referenced by dead GameFlowController",
+      "detail": "scenes/Run3D.tscn uses scripts/run/run_3d_controller.gd. This scene is only in SCENE_RUN constant of GameFlowController (dead code). The actual run is BroceliandeForest3D.tscn.",
+      "file": "scenes/Run3D.tscn",
+      "impact": "Dead scene. Run3DController code (signals, lifecycle) is never executed in production."
+    },
+    {
+      "id": "SF-007",
+      "severity": "MEDIUM",
+      "title": "TransitionBiome.tscn exists but never called in active path",
+      "detail": "scenes/TransitionBiome.tscn has NEXT_SCENE=BroceliandeForest3D.tscn in scripts/TransitionBiome.gd:17 but no script in the active path calls it. It may have been superseded by PixelTransition.",
+      "file": "scenes/TransitionBiome.tscn",
+      "impact": "Orphan scene. If it was intended as a biome transition overlay, it's never shown."
+    }
+  ],
+  "invariants_checked": {
+    "all_active_tscn_exist": "PASS — IntroCeltOS, Menu3DPC, ParchmentPreRun, BroceliandeForest3D, HubAntre all confirmed on disk",
+    "pixel_transition_wired": "PASS — autoload PixelTransition confirmed in scripts/autoload/pixel_transition.gd",
+    "no_cyclic_deadlock": "PASS — HubAntre→Forest→HubAntre loop is intentional (run cycle)",
+    "endrun_screen_accessible": "FAIL — EndRunScreen.tscn exists but unreachable from active path"
+  },
+  "new_tasks_generated": 6,
+  "task_implemented": "E2E-DELETE-ORPHAN-SCENES"
+}

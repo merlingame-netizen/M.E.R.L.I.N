@@ -109,5 +109,25 @@
     "description": "Merged GDC-FACTION-CONTENT-50-GATE (P2) into E2E-FACTION-GATE-WIRE (P1). Both described wiring rep>=50 gate. Removed duplicate to prevent wasted cycle.",
     "completed_at": "2026-04-15T18:47:19Z",
     "notes": "Implemented by Specialist #15 cycle 10. Confirmed duplicate by comparing titles + descriptions."
+  },
+  {
+    "id": "E2E-DELETE-ORPHAN-SCENES",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "dev",
+    "status": "completed",
+    "title": "Delete IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn per director q-20260414-005",
+    "agent": "cleanup_agent",
+    "files": [
+      "scenes/IntroPersonalityQuiz.tscn",
+      "scenes/SceneRencontreMerlin.tscn",
+      "scripts/IntroPersonalityQuiz.gd",
+      "scripts/SceneRencontreMerlin.gd"
+    ],
+    "description": "Director q-20260414-005 answer: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Delete both .tscn files and their associated .gd scripts. Remove any references in SceneSelector.gd if present. Verify no active scene transitions target these paths.",
+    "created_at": "2026-04-15T15:45:00Z",
+    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15",
+    "completed_at": "2026-04-16T00:10:00Z",
+    "notes": "Deleted: IntroPersonalityQuiz.tscn, SceneRencontreMerlin.tscn, .uidren, IntroPersonalityQuiz.gd, SceneRencontreMerlin.gd, quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd, + 2 .uid files. No external references found."
   }
 ]

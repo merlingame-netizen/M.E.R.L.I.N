@@ -2056,24 +2056,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "E2E-DELETE-ORPHAN-SCENES",
-    "sprint": "S2",
-    "priority": 3,
-    "type": "dev",
-    "status": "pending",
-    "title": "Delete IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn per director q-20260414-005",
-    "agent": "cleanup_agent",
-    "files": [
-      "scenes/IntroPersonalityQuiz.tscn",
-      "scenes/SceneRencontreMerlin.tscn",
-      "scripts/IntroPersonalityQuiz.gd",
-      "scripts/SceneRencontreMerlin.gd"
-    ],
-    "description": "Director q-20260414-005 answer: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Delete both .tscn files and their associated .gd scripts. Remove any references in SceneSelector.gd if present. Verify no active scene transitions target these paths.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "E2E-MERLINGAME-OBSOLETE-PATH",
     "sprint": "S2",
     "priority": 12,
@@ -2464,5 +2446,104 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "SF0-ENDRUN-MISSING",
+    "sprint": "S2",
+    "priority": 2,
+    "status": "pending",
+    "type": "dev",
+    "title": "Wire EndRunScreen.tscn into active path after BroceliandeForest3D run completion",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "scenes/EndRunScreen.tscn",
+      "scripts/ui/end_run_screen.gd"
+    ],
+    "description": "SF-002 CRITICAL: After a run ends in BroceliandeForest3D, the game goes directly to HubAntre.tscn (line 1215) — bypassing EndRunScreen.tscn entirely. EndRunScreen provides: narrative ending text, journey map visualization, run rewards display, and faction choice. These are all inaccessible to the player. Fix: after run completion (life=0 or run complete), transition to EndRunScreen.tscn instead of HubAntre. EndRunScreen then returns to HubAntre when player clicks 'Retour au hub'. Confirm run_data dict passed correctly.",
+    "created_at": "2026-04-16T00:10:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "SF0-BROCELIANDE-DUAL-DEST",
+    "sprint": "S2",
+    "priority": 3,
+    "status": "pending",
+    "type": "dev",
+    "title": "Clarify BroceliandeForest3D dual destination (MerlinGame.tscn vs HubAntre.tscn)",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "SF-004 HIGH: broceliande_forest_3d.gd defines GAME_SCENE='res://scenes/MerlinGame.tscn' (line 9) and has signal merlin_encounter_complete (line 6) referencing MerlinGame, but line 1215 goes to HubAntre. Line 1221 comment says 'After forest walk, go to MerlinGame'. Audit: (1) What triggers GAME_SCENE path vs HUB_SCENE path? (2) Is MerlinGame.tscn still needed or is it dead? (3) If merlin_encounter_complete fires, does it correctly lead to the card game? Clean up the logic so there is one clear destination per game state.",
+    "created_at": "2026-04-16T00:10:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "SF0-MENUPRINCIPAL-CLARIFY",
+    "sprint": "S3",
+    "priority": 5,
+    "status": "pending",
+    "type": "dev",
+    "title": "Clarify/consolidate MenuPrincipal.tscn vs Menu3DPC.tscn — one canonical menu",
+    "agent": "godot_expert",
+    "files": [
+      "scenes/MenuPrincipal.tscn",
+      "scenes/Menu3DPC.tscn",
+      "scripts/MenuPrincipalMerlin.gd",
+      "scripts/menu_3d_pc.gd"
+    ],
+    "description": "SF-005 MEDIUM: IntroCeltOS goes to Menu3DPC.tscn. MenuPrincipal.tscn is only reachable via ui_overlay_narrative.gd emergency return. Two menu scenes exist with overlapping features. Decision needed: (A) Keep Menu3DPC as canonical (delete/archive MenuPrincipal), (B) Keep MenuPrincipal (wire IntroCeltOS to it), (C) Keep both for different contexts. The active path is clear (Menu3DPC) but maintenance burden of two menus is high.",
+    "created_at": "2026-04-16T00:10:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "SF0-RUN3D-DEAD-CODE",
+    "sprint": "S3",
+    "priority": 6,
+    "status": "pending",
+    "type": "dev",
+    "title": "Audit Run3D.tscn + Run3DController — dead code or future use?",
+    "agent": "godot_expert",
+    "files": [
+      "scenes/Run3D.tscn",
+      "scripts/run/run_3d_controller.gd",
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "description": "SF-006 MEDIUM: Run3D.tscn uses Run3DController (rich signal-based architecture). Only referenced by GameFlowController (itself dead). Active run is BroceliandeForest3D. Options: (A) Wire Run3DController into BroceliandeForest3D to replace direct scene calls, (B) Delete both, (C) Keep as planned future architecture. Given director q-20260414-004 says 'migrate to GameFlowController', Run3DController may be the intended future approach.",
+    "created_at": "2026-04-16T00:10:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "SF0-TRANSITION-BIOME-UNUSED",
+    "sprint": "S3",
+    "priority": 7,
+    "status": "pending",
+    "type": "dev",
+    "title": "Verify TransitionBiome.tscn usage — wire or archive",
+    "agent": "godot_expert",
+    "files": [
+      "scenes/TransitionBiome.tscn",
+      "scripts/TransitionBiome.gd"
+    ],
+    "description": "SF-007 MEDIUM: TransitionBiome.tscn defines NEXT_SCENE=BroceliandeForest3D.tscn but is never called in the active path. It may have been a loading screen between hub selection and forest entry. Currently PixelTransition handles transitions. Either: (A) Wire it back into ParchmentPreRun→Forest transition for loading screen, (B) Delete as superseded by PixelTransition.",
+    "created_at": "2026-04-16T00:10:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
+  },
+  {
+    "id": "SF0-ORPHAN-SCRIPTS-CLEANUP",
+    "sprint": "S2",
+    "priority": 4,
+    "status": "pending",
+    "type": "dev",
+    "title": "Check and clean orphan scripts from rencontre/quiz deletion (hub_antre_tour, SceneRencontreMerlin references)",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/hub_antre_tour.gd",
+      "scripts/HubAntre.gd"
+    ],
+    "description": "SF-003 follow-up: After deleting SceneRencontreMerlin and IntroPersonalityQuiz, audit for any remaining orphan scripts. Specifically: hub_antre_tour.gd (role unclear), and any script that imported RencontreDialogue/RencontreLLM classes. Also verify SceneSelector.gd does not list removed scenes. grep: grep -rn 'rencontre\\|quiz_data\\|RencontreLLM' scripts/ --include='*.gd'",
+    "created_at": "2026-04-16T00:10:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16"
   }
 ]

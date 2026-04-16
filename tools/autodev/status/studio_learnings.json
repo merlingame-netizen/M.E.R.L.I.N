@@ -3,17 +3,17 @@
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
   "last_updated": "2026-04-15T18:47:19Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
+    "total_test_cycles": 27,
     "bugs_found": 67,
     "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "tasks_completed": 86,
+    "tasks_pending": 174,
     "current_sprint": "S3",
     "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "last_specialist": 0,
+    "last_updated": "2026-04-16T00:10:00Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,38 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-SF0-001",
+      "learned_at": "2026-04-16T00:10:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "EndRunScreen.tscn is never shown in active path — BroceliandeForest3D goes directly to HubAntre, bypassing rewards/narrative/faction choice UI entirely",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scenes/EndRunScreen.tscn"
+      ]
+    },
+    {
+      "id": "PAT-SF0-002",
+      "learned_at": "2026-04-16T00:10:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "GameFlowController (core/game_flow_controller.gd) is fully implemented but never instantiated — entire HubScreen+Run3D+EndScreen pipeline is dead code. Director said to migrate active path to it.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-SF0-003",
+      "learned_at": "2026-04-16T00:10:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "orphan scenes (IntroPersonalityQuiz, SceneRencontreMerlin) + 8 associated files deleted per director q-20260414-005. Always git rm the .uid and .uidren sidecar files too.",
+      "severity": "INFO",
+      "applies_to": [
+        "scenes/",
+        "scripts/"
       ]
     }
   ],
