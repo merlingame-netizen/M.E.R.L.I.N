@@ -87,7 +87,7 @@ const BIOME_MODIFIERS: Dictionary = {
 # =============================================================================
 
 ## Build default gauge values for a new game
-func build_default_gauges() -> Dictionary:
+static func build_default_gauges() -> Dictionary:
 	var gauges: Dictionary = {}
 	for key in GAUGE_KEYS:
 		var def: Dictionary = GAUGES.get(key, {})

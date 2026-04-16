@@ -216,7 +216,7 @@ func build_default_state() -> Dictionary:
 			},
 		},
 		"map_progression": {
-			"gauges": MerlinGaugeSystem.new().build_default_gauges(),
+			"gauges": MerlinGaugeSystem.build_default_gauges(),
 			"current_biome": "foret_broceliande",
 			"completed_biomes": [],
 			"visited_biomes": ["foret_broceliande"],
@@ -534,7 +534,7 @@ func _restore_ai_state() -> void:
 
 func _reset_ai_for_new_run() -> void:
 	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
-	if merlin_ai_node:
+	if merlin_ai_node and merlin_ai_node.get("session_contexts") != null:
 		merlin_ai_node.session_contexts.clear()
 
 # --- LIFE / FAVEUR — Kept in main store (emits signals directly) ---
@@ -594,7 +594,9 @@ func _apply_effect(effect: Dictionary) -> void:
 			var faction: String = str(effect.get("faction", ""))
 			var rep_delta: int = int(effect.get("amount", MerlinConstants.FACTION_DELTA_MINOR))
 			var old_rep: float = float(state.get("meta", {}).get("faction_rep", {}).get(faction, MerlinConstants.FACTION_SCORE_START))
-			if effects._apply_faction_reputation(state, faction, rep_delta):
+			var effect_str: String = "ADD_REPUTATION:%s:%d" % [faction, rep_delta]
+			var result: Dictionary = effects.apply_effects(state, [effect_str], "RESOLVE_CHOICE")
+			if not result.get("applied", []).is_empty():
 				var new_val: float = float(state.get("meta", {}).get("faction_rep", {}).get(faction, 0))
 				var actual_delta: float = new_val - old_rep
 				reputation_changed.emit(faction, new_val, actual_delta)

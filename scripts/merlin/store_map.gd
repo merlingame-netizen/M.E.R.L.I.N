@@ -14,7 +14,7 @@ static func update_gauges(state: Dictionary, action: Dictionary) -> Dictionary:
 		return {"ok": false, "error": "No delta provided"}
 	var map_prog: Dictionary = state.get("map_progression", {})
 	var gauges: Dictionary = map_prog.get("gauges", {})
-	var gauge_sys := MerlinGaugeSystem.new()
+	var gauge_sys: MerlinGaugeSystem = MerlinGaugeSystem.new()
 	var new_gauges: Dictionary = gauge_sys.apply_delta(gauges, delta)
 	map_prog["gauges"] = new_gauges
 	state["map_progression"] = map_prog
