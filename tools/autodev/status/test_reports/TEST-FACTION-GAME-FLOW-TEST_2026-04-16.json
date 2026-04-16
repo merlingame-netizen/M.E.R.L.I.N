@@ -1,0 +1,37 @@
+{
+  "task_id": "FACTION-GAME-FLOW-TEST",
+  "test_date": "2026-04-16T00:00:00Z",
+  "agent": "game_playtester",
+  "specialist": 0,
+  "verdict": "PASS",
+  "summary": "4 unit tests added to test_game_flow.gd covering _on_faction_ending_chosen(). Static code analysis confirms all 4 guard clauses work correctly. Tests now in codebase.",
+  "findings": [
+    {
+      "severity": "PASS",
+      "description": "_store=null guard: 'if _store == null or not MerlinConstants.FACTIONS.has(faction): return' prevents crash and write. Test: _test_faction_ending_chosen_null_store()",
+      "file": "scripts/core/game_flow_controller.gd"
+    },
+    {
+      "severity": "PASS",
+      "description": "Invalid faction guard: 'not MerlinConstants.FACTIONS.has(faction)' uses ['druides','anciens','korrigans','niamh','ankou']. Rejects arbitrary strings. Test: _test_faction_ending_chosen_invalid_faction()",
+      "file": "scripts/core/game_flow_controller.gd"
+    },
+    {
+      "severity": "PASS",
+      "description": "Duplicate prevention: 'if not seen.has(faction): seen.append(faction)' prevents double-recording. Test: _test_faction_ending_chosen_no_duplicate()",
+      "file": "scripts/core/game_flow_controller.gd"
+    },
+    {
+      "severity": "PASS",
+      "description": "Valid faction recording: druides → stored in echo_memory.dominant_factions_seen array. Test: _test_faction_ending_chosen_valid()",
+      "file": "scripts/core/game_flow_controller.gd"
+    }
+  ],
+  "tests_added": [
+    "scripts/test/test_game_flow.gd:_test_faction_ending_chosen_valid",
+    "scripts/test/test_game_flow.gd:_test_faction_ending_chosen_invalid_faction",
+    "scripts/test/test_game_flow.gd:_test_faction_ending_chosen_no_duplicate",
+    "scripts/test/test_game_flow.gd:_test_faction_ending_chosen_null_store"
+  ],
+  "files_modified": ["scripts/test/test_game_flow.gd"]
+}

@@ -1,0 +1,100 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "audit_date": "2026-04-16T00:00:00Z",
+  "auditor": "MERLIN Studio Bot",
+  "summary": "Full scene flow audit: IntroCeltOS→Menu3DPC→{ParchmentPreRun|HubAntre}→BroceliandeForest3D→{MerlinGame|HubAntre}→EndRunScreen. 2 CRITICAL, 2 HIGH, 3 MEDIUM, 1 LOW, 5 PASS.",
+  "checks": [
+    {
+      "id": "SFT-CHK-01",
+      "name": "IntroCeltOS → Menu3DPC transition",
+      "result": "PASS",
+      "detail": "IntroCeltOS.gd:516 calls PixelTransition.transition_to('res://scenes/Menu3DPC.tscn'). Scene exists. Transition guards _transitioning flag. OK."
+    },
+    {
+      "id": "SFT-CHK-02",
+      "name": "Menu3DPC NOUVELLE PARTIE → ParchmentPreRun",
+      "result": "PASS",
+      "detail": "menu_3d_pc.gd:1335 calls _glitch_transition('res://scenes/ParchmentPreRun.tscn'). Scene exists. OK."
+    },
+    {
+      "id": "SFT-CHK-03",
+      "name": "Menu3DPC CONTINUER → profile load before HubAntre",
+      "result": "FAIL_CRITICAL",
+      "detail": "menu_3d_pc.gd:1326 calls _glitch_transition('res://scenes/HubAntre.tscn') DIRECTLY without dispatching LOAD_PROFILE. SelectionSauvegarde.tscn is ORPHANED — not called from Menu3DPC. Profile/run_state never restored on CONTINUER path.",
+      "file": "scripts/menu_3d_pc.gd",
+      "line": 1326
+    },
+    {
+      "id": "SFT-CHK-04",
+      "name": "ParchmentPreRun → BroceliandeForest3D transition",
+      "result": "PASS",
+      "detail": "parchment_pre_run.gd:217 calls PixelTransition.transition_to(SCENE_FOREST). SCENE_FOREST='res://scenes/BroceliandeForest3D.tscn'. Scene exists. OK."
+    },
+    {
+      "id": "SFT-CHK-05",
+      "name": "BroceliandeForest3D post-merlin routing",
+      "result": "FAIL_CRITICAL",
+      "detail": "broceliande_forest_3d.gd:9 GAME_SCENE='res://scenes/MerlinGame.tscn' (old architecture). After _merlin_found=true, routes to MerlinGame.tscn. This scene uses old merlin_game_controller.gd architecture. Should route to new HubAntre-based card flow or ParchmentPreRun.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 9
+    },
+    {
+      "id": "SFT-CHK-06",
+      "name": "HubAntre → BroceliandeForest3D (run start)",
+      "result": "PASS",
+      "detail": "HubAntre.gd:661 calls PixelTransition.transition_to(SCENE_FOREST). All 5 side destinations (Calendar, MenuOptions, ArbreDeVie, Collection, MapMonde) exist on disk. OK."
+    },
+    {
+      "id": "SFT-CHK-07",
+      "name": "EndRunScreen hub_requested → actual scene transition",
+      "result": "FAIL_HIGH",
+      "detail": "GameFlowController._on_hub_requested() (game_flow_controller.gd:164) calls _set_phase(GamePhase.HUB) which only emits phase_changed signal — NO PixelTransition.transition_to() call. GameFlowController is NOT an autoload (not in project.godot). EndRunScreen.tscn does not instantiate GameFlowController. After EndRunScreen, there is no scene transition to HubAntre.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 164
+    },
+    {
+      "id": "SFT-CHK-08",
+      "name": "IntroPersonalityQuiz + SceneRencontreMerlin deletion (director order)",
+      "result": "FAIL_HIGH",
+      "detail": "Director answered q-20260414-005: 'Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Both .tscn and .gd files still exist on disk. rencontre_dialogue.gd and rencontre_llm.gd are supporting scripts still in codebase.",
+      "file": "scenes/IntroPersonalityQuiz.tscn",
+      "line": 1
+    },
+    {
+      "id": "SFT-CHK-09",
+      "name": "GameFlowController scene constants alignment",
+      "result": "WARN_MEDIUM",
+      "detail": "SCENE_HUB='res://scenes/HubScreen.tscn' (exists) but active hub is HubAntre.tscn. SCENE_RUN='res://scenes/Run3D.tscn' (exists but unused in main flow). SCENE_MENU='res://scenes/MenuPrincipal.tscn' (exists but orphaned). Architectural inconsistency.",
+      "file": "scripts/core/game_flow_controller.gd",
+      "line": 44
+    },
+    {
+      "id": "SFT-CHK-10",
+      "name": "MerlinStore availability in BroceliandeForest3D",
+      "result": "PASS",
+      "detail": "GameManager (autoload, first in list) creates MerlinStore in _ready() at game_manager.gd:675 and adds to /root/MerlinStore. BroceliandeForest3D._find_store() checks has_node('/root/MerlinStore') first — PASS. Fallback mode also handled gracefully."
+    },
+    {
+      "id": "SFT-CHK-11",
+      "name": "ParchmentPreRun back/escape path",
+      "result": "WARN_MEDIUM",
+      "detail": "parchment_pre_run.gd has no _unhandled_input ESC handler and no back button visible. Player has no way to return to Menu3DPC from ParchmentPreRun without killing the game.",
+      "file": "scripts/ui/parchment_pre_run.gd",
+      "line": 1
+    },
+    {
+      "id": "SFT-CHK-12",
+      "name": "Dual end_run_screen.gd files",
+      "result": "WARN_MEDIUM",
+      "detail": "scripts/ui/end_run_screen.gd (EndRunScreenUI class, extends Node) vs scripts/run/end_run_screen.gd (EndRunScreen class, extends Control). EndRunScreen.tscn uses scripts/ui/ version. The scripts/run/ version has different signals and implementation. Maintenance risk.",
+      "file": "scripts/run/end_run_screen.gd",
+      "line": 1
+    }
+  ],
+  "pass_count": 5,
+  "fail_critical_count": 2,
+  "fail_high_count": 2,
+  "warn_medium_count": 3,
+  "new_tasks_generated": 7
+}

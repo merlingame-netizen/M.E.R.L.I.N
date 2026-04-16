@@ -1,19 +1,19 @@
 {
   "version": "1.0",
   "description": "Studio bot accumulated knowledge — updated automatically each cycle",
-  "last_updated": "2026-04-15T18:47:19Z",
+  "last_updated": "2026-04-16T00:00:00Z",
   "metrics": {
-    "total_cycles_completed": 63,
+    "total_cycles_completed": 64,
     "total_dev_cycles": 30,
-    "total_test_cycles": 26,
-    "bugs_found": 67,
+    "total_test_cycles": 27,
+    "bugs_found": 73,
     "bugs_fixed": 38,
-    "tasks_completed": 85,
-    "tasks_pending": 152,
+    "tasks_completed": 88,
+    "tasks_pending": 173,
     "current_sprint": "S3",
-    "specialist_cycles_run": 18,
-    "last_specialist": 14,
-    "last_updated": "2026-04-15T15:45:00Z",
+    "specialist_cycles_run": 19,
+    "last_specialist": 0,
+    "last_updated": "2026-04-16T00:00:00Z",
     "fix_rate_pct": 26.3,
     "queue_pending": 157,
     "queue_growth_rate": "+7/cycle_avg",
@@ -1382,6 +1382,38 @@
       "applies_to": [
         "tools/autodev/scripts/dedupe_completed.py",
         "tools/autodev/status/completed_archive.json"
+      ]
+    },
+    {
+      "id": "PAT-SFT-001",
+      "learned_at": "2026-04-16T00:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "SelectionSauvegarde.tscn is orphaned — Menu3DPC CONTINUER bypasses it. Always check if scene selection UIs are actually in the reachable flow.",
+      "severity": "CRITICAL",
+      "applies_to": [
+        "scripts/menu_3d_pc.gd",
+        "scripts/SelectionSauvegarde.gd"
+      ]
+    },
+    {
+      "id": "PAT-SFT-002",
+      "learned_at": "2026-04-16T00:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "GameFlowController._set_phase() only emits signal — it does NOT trigger scene transitions. Scene navigation must be done explicitly with PixelTransition.transition_to().",
+      "severity": "HIGH",
+      "applies_to": [
+        "scripts/core/game_flow_controller.gd"
+      ]
+    },
+    {
+      "id": "PAT-SFT-003",
+      "learned_at": "2026-04-16T00:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER",
+      "pattern": "MerlinStore is NOT in project.godot autoloads — GameManager (autoload) creates it in _ready(). Check game_manager.gd:675 for instantiation logic.",
+      "severity": "INFO",
+      "applies_to": [
+        "scripts/game_manager.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
       ]
     }
   ],

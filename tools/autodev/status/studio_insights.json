@@ -594,5 +594,19 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260416-001",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "3 orphaned scenes discovered: SelectionSauvegarde, IntroPersonalityQuiz, SceneRencontreMerlin — none reachable from main flow",
+    "details": "Scene flow audit found that SelectionSauvegarde.tscn (with correct profile load logic) is orphaned — Menu3DPC CONTINUER bypasses it. IntroPersonalityQuiz and SceneRencontreMerlin were ordered deleted by director but still on disk. Cleaning these up and fixing the continue path would restore run_state persistence on game continue.",
+    "proposed_task": {
+      "title": "Fix CONTINUER path + delete orphan scenes (batch)",
+      "sprint": "S1",
+      "type": "fix"
+    },
+    "timestamp": "2026-04-16T00:00:00Z"
   }
 ]

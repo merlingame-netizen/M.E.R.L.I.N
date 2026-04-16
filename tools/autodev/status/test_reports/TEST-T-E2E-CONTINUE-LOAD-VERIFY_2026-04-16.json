@@ -1,0 +1,34 @@
+{
+  "task_id": "T-E2E-CONTINUE-LOAD-VERIFY",
+  "test_date": "2026-04-16T00:00:00Z",
+  "agent": "game_playtester",
+  "specialist": 0,
+  "verdict": "FAIL_CRITICAL",
+  "summary": "SelectionSauvegarde.gd internal logic is correct BUT it is ORPHANED — Menu3DPC CONTINUER bypasses SelectionSauvegarde entirely, going directly to HubAntre without profile load.",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "description": "Menu3DPC._on_menu_button('CONTINUER') calls _glitch_transition('res://scenes/HubAntre.tscn') — no LOAD_PROFILE dispatch, no SelectionSauvegarde.tscn instantiation. Profile and run_state NOT restored on continue.",
+      "file": "scripts/menu_3d_pc.gd",
+      "line": 1326
+    },
+    {
+      "severity": "HIGH",
+      "description": "SelectionSauvegarde.tscn/.gd are correct: _auto_continue() dispatches LOAD_PROFILE to MerlinStore then navigates to HubAntre — but this scene is never called from Menu3DPC.",
+      "file": "scripts/SelectionSauvegarde.gd",
+      "line": 22
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "MerlinStore IS available (GameManager autoload creates it). So SelectionSauvegarde.gd would work correctly if it were called. The fix is to route CONTINUER through SelectionSauvegarde.",
+      "file": "scripts/game_manager.gd",
+      "line": 674
+    }
+  ],
+  "invariants_broken": [
+    "run_state never restored when player clicks CONTINUER from main menu",
+    "SelectionSauvegarde.tscn is a dead scene — 4 scene change calls all orphaned"
+  ],
+  "recommendation": "Fix Menu3DPC CONTINUER to route through SelectionSauvegarde.tscn (which handles profile load correctly) rather than directly to HubAntre.",
+  "new_task_ids": ["SFT-MENU-CONTINUE-PROFILE-LOAD"]
+}

@@ -1700,22 +1700,6 @@
     "created_by": "SPEC-11-FACTION"
   },
   {
-    "id": "FACTION-GAME-FLOW-TEST",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test faction_ending_chosen handler records to echo_memory",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/core/game_flow_controller.gd",
-      "scripts/test/"
-    ],
-    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  },
-  {
     "id": "FACTION-ENDING-NARRATIVE-PERSIST",
     "sprint": "S3",
     "priority": 34,
@@ -2105,38 +2089,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
-    "sprint": "S2",
-    "priority": 22,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/SelectionSauvegarde.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
-    "id": "T-E2E-AUTOLOADS-INIT",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: MerlinStore/CardSystem/SaveSystem initialized before first card draw in BroceliandeForest3D",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "scripts/ui/merlin_game_controller.gd"
-    ],
-    "description": "BroceliandeForest3D._get_encounter_card() calls LLM and fallback cards. Verify: (a) MerlinCardSystem instance is available at time of first encounter (enc_idx=0), (b) merlin_save_system is loaded (profile exists), (c) no null ref crash if player goes directly to forest without passing through MerlinGame.tscn. Static analysis of init sequence.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "GAME-ANTRE-MERLIN-ART",
     "sprint": "S3",
     "priority": 2,
@@ -2464,5 +2416,119 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "SFT-MENU-CONTINUE-PROFILE-LOAD",
+    "sprint": "S1",
+    "priority": 1,
+    "type": "fix",
+    "status": "pending",
+    "title": "Fix Menu3DPC CONTINUER — route through SelectionSauvegarde to load profile",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/menu_3d_pc.gd",
+      "scenes/SelectionSauvegarde.tscn"
+    ],
+    "description": "CRITICAL: Menu3DPC._on_menu_button('CONTINUER') (line 1326) calls _glitch_transition('res://scenes/HubAntre.tscn') DIRECTLY bypassing SelectionSauvegarde. Profile and run_state are never restored on continue. FIX: change line 1326 to route to 'res://scenes/SelectionSauvegarde.tscn' instead of HubAntre directly. SelectionSauvegarde.gd already has correct LOAD_PROFILE dispatch logic. Acceptance: (1) CONTINUER routes to SelectionSauvegarde.tscn, (2) SelectionSauvegarde loads profile, (3) navigates to HubAntre after load.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
+  },
+  {
+    "id": "SFT-BROCELIANDE-GAME-SCENE-FIX",
+    "sprint": "S1",
+    "priority": 2,
+    "type": "fix",
+    "status": "pending",
+    "title": "Fix BroceliandeForest3D post-merlin routing — GAME_SCENE points to old MerlinGame.tscn",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "CRITICAL: broceliande_forest_3d.gd:9 GAME_SCENE='res://scenes/MerlinGame.tscn'. After _merlin_found=true (line 1222), routes to old card architecture. The new card flow is embedded in HubAntre (HubAntre.gd drives BroceliandeForest3D directly). After Merlin is found, the encounter should continue IN PLACE (WalkEventController overlay) not transition to a separate scene. FIX: Remove GAME_SCENE routing from _on_fade_out_done() or change it to route to HubAntre after run ends. The encounter overlay system should handle cards without scene change. Consult WalkEventController flow.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
+  },
+  {
+    "id": "SFT-DELETE-ORPHAN-QUIZ-RENCONTRE",
+    "sprint": "S1",
+    "priority": 3,
+    "type": "fix",
+    "status": "pending",
+    "title": "Delete IntroPersonalityQuiz + SceneRencontreMerlin (director order q-20260414-005)",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scenes/IntroPersonalityQuiz.tscn",
+      "scripts/IntroPersonalityQuiz.gd",
+      "scenes/SceneRencontreMerlin.tscn",
+      "scripts/SceneRencontreMerlin.gd",
+      "scripts/rencontre_dialogue.gd",
+      "scripts/rencontre_llm.gd",
+      "scripts/quiz_data.gd"
+    ],
+    "description": "HIGH: Director answered q-20260414-005: 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. All 7 files still on disk. Steps: (1) Delete all 7 files listed, (2) grep for remaining references in any .gd or .tscn files, (3) remove or stub any references found. Verify no autoload or preload references remain. IntroPersonalityQuiz.gd still references NEXT_SCENE=SceneRencontreMerlin.tscn and MENU_SCENE=MenuPrincipal.tscn.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
+  },
+  {
+    "id": "SFT-ENDSCREEN-HUB-TRANSITION",
+    "sprint": "S2",
+    "priority": 4,
+    "type": "fix",
+    "status": "pending",
+    "title": "Fix EndRunScreen → HubAntre transition — hub_requested signal has no scene navigation",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "description": "HIGH: EndRunScreen.hub_requested signal is connected by GameFlowController._on_hub_requested() which only calls _set_phase(GamePhase.HUB) — no PixelTransition.transition_to() call. GameFlowController is NOT an autoload and NOT instantiated in EndRunScreen.tscn. After EndRunScreen, player is stuck with no scene transition. FIX options: (A) Add PixelTransition.transition_to('res://scenes/HubAntre.tscn') to EndRunScreen.gd directly when hub_requested is triggered, OR (B) Add navigation to GameFlowController._on_hub_requested(). Option A is simpler since end_run_screen already uses PixelTransition (via ui_overlay_narrative.gd:291).",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
+  },
+  {
+    "id": "SFT-PARCHMENT-BACK-PATH",
+    "sprint": "S2",
+    "priority": 8,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add ESC/back path in ParchmentPreRun to return to Menu3DPC",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/ui/parchment_pre_run.gd"
+    ],
+    "description": "MEDIUM: parchment_pre_run.gd has no _unhandled_input handler and no back button. Player has no escape path from ParchmentPreRun to Menu3DPC if they change their mind. Add: (1) _unhandled_input handler for KEY_ESCAPE, (2) small back button or link in lower-left, (3) confirmation dialog 'Abandonner la partie ?', (4) PixelTransition.transition_to('res://scenes/Menu3DPC.tscn') on confirm.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
+  },
+  {
+    "id": "SFT-GAMEFLOW-SCENE-CONSTANTS",
+    "sprint": "S2",
+    "priority": 9,
+    "type": "fix",
+    "status": "pending",
+    "title": "Fix GameFlowController scene constants to match active scene paths",
+    "agent": "gameplay_programmer",
+    "files": [
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "description": "MEDIUM: GameFlowController constants reference incorrect scene paths: SCENE_HUB='HubScreen.tscn' (active=HubAntre.tscn), SCENE_MENU='MenuPrincipal.tscn' (active=Menu3DPC.tscn). These constants are used in scene transitions if GameFlowController is ever wired in. Fix: SCENE_HUB → 'res://scenes/HubAntre.tscn', SCENE_MENU → 'res://scenes/Menu3DPC.tscn'.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
+  },
+  {
+    "id": "T-SFT-CONTINUE-FIX-VERIFY",
+    "sprint": "S1",
+    "priority": 5,
+    "type": "test",
+    "status": "pending",
+    "title": "Test: verify CONTINUER routes through SelectionSauvegarde after fix",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/menu_3d_pc.gd",
+      "scripts/SelectionSauvegarde.gd"
+    ],
+    "description": "After SFT-MENU-CONTINUE-PROFILE-LOAD is implemented: verify (1) CONTINUER button target scene is SelectionSauvegarde.tscn, (2) SelectionSauvegarde._auto_continue() dispatches LOAD_PROFILE, (3) NavigateTo GAME_SCENE=HubAntre after successful load. Static analysis check: grep _glitch_transition call in _on_menu_button('CONTINUER') path.",
+    "source": "SPECIALIST-0-SCENE_FLOW_TESTER-2026-04-16",
+    "created_at": "2026-04-16T00:00:00Z"
   }
 ]

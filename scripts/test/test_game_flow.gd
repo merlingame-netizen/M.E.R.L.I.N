@@ -46,6 +46,10 @@ func _ready() -> void:
 	_test_full_cycle_hub_run_end_hub()
 	_test_interrupted_run_detection()
 	_test_end_run_data_victory_vs_death()
+	_test_faction_ending_chosen_valid()
+	_test_faction_ending_chosen_invalid_faction()
+	_test_faction_ending_chosen_no_duplicate()
+	_test_faction_ending_chosen_null_store()
 
 	_log("═══════════════════════════════════════")
 	_log("  RESULTS: %d passed, %d failed / %d total" % [_pass_count, _fail_count, _total_count])
@@ -324,6 +328,51 @@ func _test_end_run_data_victory_vs_death() -> void:
 	_assert_true(bool(victory_data.get("victory", false)),
 		"convergence reason should set victory=true")
 
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_valid() -> void:
+	var ctrl: GameFlowController = _make_controller_with_store()
+	ctrl._on_faction_ending_chosen("druides")
+	var meta: Dictionary = ctrl._store.state.get("meta", {})
+	var echo: Dictionary = meta.get("echo_memory", {})
+	var seen: Array = echo.get("dominant_factions_seen", [])
+	_assert_true(seen.has("druides"),
+		"valid faction druides should be recorded in echo_memory.dominant_factions_seen")
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_invalid_faction() -> void:
+	var ctrl: GameFlowController = _make_controller_with_store()
+	ctrl._on_faction_ending_chosen("not_a_faction")
+	var meta: Dictionary = ctrl._store.state.get("meta", {})
+	var echo: Dictionary = meta.get("echo_memory", {})
+	var seen: Array = echo.get("dominant_factions_seen", [])
+	_assert_true(not seen.has("not_a_faction"),
+		"invalid faction should not be written to echo_memory")
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_no_duplicate() -> void:
+	var ctrl: GameFlowController = _make_controller_with_store()
+	ctrl._on_faction_ending_chosen("korrigans")
+	ctrl._on_faction_ending_chosen("korrigans")
+	var meta: Dictionary = ctrl._store.state.get("meta", {})
+	var echo: Dictionary = meta.get("echo_memory", {})
+	var seen: Array = echo.get("dominant_factions_seen", [])
+	var count: int = 0
+	for f: String in seen:
+		if f == "korrigans":
+			count += 1
+	_assert_eq(count, 1, "duplicate faction call should not add twice to dominant_factions_seen")
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_null_store() -> void:
+	var ctrl: GameFlowController = _make_controller()
+	# _store is null — should not crash
+	ctrl._on_faction_ending_chosen("druides")
+	_assert_true(true, "_on_faction_ending_chosen with null store should not crash")
 	ctrl.queue_free()
 
 

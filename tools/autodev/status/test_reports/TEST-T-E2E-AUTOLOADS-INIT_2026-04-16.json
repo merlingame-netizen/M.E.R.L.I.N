@@ -1,0 +1,38 @@
+{
+  "task_id": "T-E2E-AUTOLOADS-INIT",
+  "test_date": "2026-04-16T00:00:00Z",
+  "agent": "game_playtester",
+  "specialist": 0,
+  "verdict": "PASS_WITH_CAVEAT",
+  "summary": "MerlinStore is correctly available via GameManager autoload. BroceliandeForest3D handles null store with graceful fallback. CAVEAT: direct forest scene access in editor skips GameManager init.",
+  "findings": [
+    {
+      "severity": "PASS",
+      "description": "GameManager (first autoload) creates MerlinStore in _ready() at line 675: 'var store := MerlinStore.new(); store.name = \"MerlinStore\"; add_child(store)'. Available at /root/MerlinStore before any scene runs.",
+      "file": "scripts/game_manager.gd",
+      "line": 675
+    },
+    {
+      "severity": "PASS",
+      "description": "BroceliandeForest3D._find_store() checks has_node('/root/MerlinStore') first — PASS in normal game flow. Falls back to SceneTree root scan for MerlinStore instances.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 374
+    },
+    {
+      "severity": "PASS",
+      "description": "Null store handled: _init_gameplay_systems() line 371 prints fallback warning and continues with setup(null, ...). No crash on first encounter without store.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 371
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "CAVEAT: If BroceliandeForest3D.tscn is run directly in Godot editor (F6) without IntroCeltOS as main scene, GameManager still loads as autoload so MerlinStore IS created. However if autoloads are disabled in test mode, store would be null.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    }
+  ],
+  "invariants_checked": [
+    "MerlinStore available at /root/MerlinStore: PASS",
+    "BroceliandeForest3D null-safe on no store: PASS",
+    "MerlinAI available as autoload: PASS"
+  ]
+}

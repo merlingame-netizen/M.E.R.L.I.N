@@ -532,6 +532,56 @@
       },
       "context": "specialist_15_meta_audit: fix_rate=26.3%, queue=157, growth=+7/cycle_avg",
       "timestamp": "2026-04-15T18:47:19Z"
+    },
+    {
+      "id": "q-20260416-001",
+      "status": "pending",
+      "priority": "HIGH",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "BroceliandeForest3D post-Merlin routing",
+      "question": "Quand le joueur 'trouve' Merlin dans la forêt 3D (merlin_found=true), que doit-il se passer ensuite ?",
+      "options": [
+        "A: Les cartes se jouent EN PLACE via l'overlay WalkEventController (pas de changement de scène) — flow actuel non câblé",
+        "B: Transition vers HubAntre.tscn avec état run injecté",
+        "C: Transition vers une nouvelle scène 'carte' dédiée (refonte complète)"
+      ],
+      "context": "Actuellement broceliande_forest_3d.gd:9 route vers l'ancienne MerlinGame.tscn (vieille architecture). L'overlay WalkEventController existe mais n'est peut-être pas entièrement branché.",
+      "created_at": "2026-04-16T00:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+    },
+    {
+      "id": "q-20260416-002",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "ux",
+      "title": "SelectionSauvegarde vs direct HubAntre pour CONTINUER",
+      "question": "Le bouton CONTINUER du menu principal doit-il passer par l'écran SelectionSauvegarde ou aller directement à HubAntre ?",
+      "options": [
+        "A: Via SelectionSauvegarde (montre le profil + stats, confirme avant de charger) — Hades-style",
+        "B: Directement HubAntre mais avec LOAD_PROFILE dispatch en amont (transparent)",
+        "C: Laisser SelectionSauvegarde comme écran standalone accessible depuis HubAntre menu"
+      ],
+      "context": "Actuellement CONTINUER va directement à HubAntre sans charger le profil. SelectionSauvegarde.gd a une logique _auto_continue() correcte mais la scène est orpheline.",
+      "created_at": "2026-04-16T00:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
+    },
+    {
+      "id": "q-20260416-003",
+      "status": "pending",
+      "priority": "MEDIUM",
+      "type": "multiple_choice",
+      "category": "gamedesign",
+      "title": "EndRunScreen → retour Hub : navigation directe ou GameFlowController",
+      "question": "Après l'EndRunScreen, le retour au Hub doit-il être géré par :",
+      "options": [
+        "A: PixelTransition.transition_to('res://scenes/HubAntre.tscn') directement dans end_run_screen.gd (simple, indépendant)",
+        "B: GameFlowController câblé comme singleton/autoload qui gère toutes les transitions de scène"
+      ],
+      "context": "Actuellement hub_requested signal n'entraîne aucune navigation réelle. GameFlowController n'est pas un autoload et n'est pas instancié dans EndRunScreen.tscn.",
+      "created_at": "2026-04-16T00:00:00Z",
+      "source": "SPECIALIST-0-SCENE_FLOW_TESTER"
     }
   ]
 }
