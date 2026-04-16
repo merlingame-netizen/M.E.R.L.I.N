@@ -594,5 +594,20 @@
       "task_id": "META-FIX-RATE-TRACKER"
     },
     "timestamp": "2026-04-15T18:47:19Z"
+  },
+  {
+    "id": "insight-20260416-001",
+    "agent": "scene_flow_tester",
+    "severity": "ACTION",
+    "category": "gameplay",
+    "message": "Two parallel game loops — active OLD path blocks all architecture improvements",
+    "details": "The entire GameFlowController refactor (Run3D, HubScreen, EndRunScreen) is implemented but never entered in production. All new features (faction gate, save system, echo_memory) target the new path which is UNREACHABLE. Until the active path (BroceliandeForest3D→MerlinGame) is either migrated or patched to use new systems, these features have zero player impact. This is the root cause of multiple audit FAIL findings across specialists 11, 12, 14.",
+    "proposed_task": {
+      "title": "Wire GameFlowController or patch old path for critical systems",
+      "sprint": "S2",
+      "type": "dev",
+      "priority": 1
+    },
+    "timestamp": "2026-04-16T02:00:00Z"
   }
 ]

@@ -46,6 +46,10 @@ func _ready() -> void:
 	_test_full_cycle_hub_run_end_hub()
 	_test_interrupted_run_detection()
 	_test_end_run_data_victory_vs_death()
+	_test_faction_ending_chosen_records_echo_memory()
+	_test_faction_ending_chosen_invalid_faction_no_crash()
+	_test_faction_ending_chosen_no_duplicate()
+	_test_faction_ending_chosen_null_store_no_crash()
 
 	_log("═══════════════════════════════════════")
 	_log("  RESULTS: %d passed, %d failed / %d total" % [_pass_count, _fail_count, _total_count])
@@ -324,6 +328,70 @@ func _test_end_run_data_victory_vs_death() -> void:
 	_assert_true(bool(victory_data.get("victory", false)),
 		"convergence reason should set victory=true")
 
+	ctrl.queue_free()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FACTION ENDING CHOSEN — Tests (FACTION-GAME-FLOW-TEST)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _test_faction_ending_chosen_records_echo_memory() -> void:
+	## Valid faction → recorded in echo_memory.dominant_factions_seen.
+	var ctrl: GameFlowController = _make_controller_with_store()
+	var store: MerlinStore = ctrl._store
+
+	# Seed state with empty echo_memory
+	store.state["meta"]["echo_memory"] = {"dominant_factions_seen": []}
+
+	ctrl._on_faction_ending_chosen("druides")
+
+	var echo: Dictionary = store.state.get("meta", {}).get("echo_memory", {})
+	var seen: Array = echo.get("dominant_factions_seen", [])
+	_assert_true(seen.has("druides"),
+		"faction_ending_chosen: valid faction 'druides' should be in dominant_factions_seen")
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_invalid_faction_no_crash() -> void:
+	## Invalid faction string → no write, no crash.
+	var ctrl: GameFlowController = _make_controller_with_store()
+	var store: MerlinStore = ctrl._store
+	store.state["meta"]["echo_memory"] = {"dominant_factions_seen": []}
+
+	ctrl._on_faction_ending_chosen("not_a_real_faction")
+
+	var seen: Array = store.state.get("meta", {}).get("echo_memory", {}).get("dominant_factions_seen", [])
+	_assert_true(seen.is_empty(),
+		"faction_ending_chosen: invalid faction should NOT be written to echo_memory")
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_no_duplicate() -> void:
+	## Same faction chosen twice → only one entry in array.
+	var ctrl: GameFlowController = _make_controller_with_store()
+	var store: MerlinStore = ctrl._store
+	store.state["meta"]["echo_memory"] = {"dominant_factions_seen": ["druides"]}
+
+	ctrl._on_faction_ending_chosen("druides")
+
+	var seen: Array = store.state.get("meta", {}).get("echo_memory", {}).get("dominant_factions_seen", [])
+	var count: int = 0
+	for entry in seen:
+		if entry == "druides":
+			count += 1
+	_assert_eq(count, 1, "faction_ending_chosen: duplicate druides should not be added (count=1)")
+	ctrl.queue_free()
+
+
+func _test_faction_ending_chosen_null_store_no_crash() -> void:
+	## _store=null → method returns without crash.
+	var ctrl: GameFlowController = GameFlowController.new()
+	add_child(ctrl)
+	# setup() not called → _store = null
+
+	ctrl._on_faction_ending_chosen("druides")
+	# If we reach here: no crash
+	_assert_true(true, "faction_ending_chosen: null store should not crash")
 	ctrl.queue_free()
 
 

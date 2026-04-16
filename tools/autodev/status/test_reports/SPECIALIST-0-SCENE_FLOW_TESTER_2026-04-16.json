@@ -1,0 +1,121 @@
+{
+  "specialist": 0,
+  "role": "SCENE_FLOW_TESTER",
+  "timestamp": "2026-04-16T01:44:00Z",
+  "cycle_type": "test",
+  "summary": "Full scene flow trace: IntroCeltOS→Menu3DPC→ParchmentPreRun→BroceliandeForest3D→MerlinGame (OLD path). GameFlowController+Run3D.tscn+HubScreen.tscn NEW path is NEVER entered in production.",
+  "scene_flow_map": {
+    "boot": "IntroCeltOS.tscn (main_scene)",
+    "boot_to_menu": "IntroCeltOS → PixelTransition → Menu3DPC.tscn [EXISTS ✅]",
+    "menu_new_game": "Menu3DPC → _glitch_transition → ParchmentPreRun.tscn [EXISTS ✅]",
+    "menu_continue": "Menu3DPC → _glitch_transition → HubAntre.tscn [EXISTS ✅]",
+    "menu_options": "Menu3DPC → _glitch_transition → MenuOptions.tscn [EXISTS ✅]",
+    "parchment_to_forest": "ParchmentPreRun → PixelTransition → BroceliandeForest3D.tscn [EXISTS ✅]",
+    "forest_to_cards": "BroceliandeForest3D (merlin_found=true) → MerlinGame.tscn [EXISTS, OLD PATH ⚠️]",
+    "forest_to_hub": "BroceliandeForest3D (merlin_found=false) → HubAntre.tscn [EXISTS ✅]",
+    "cards_to_menu": "MerlinGameController → ui_overlay_narrative.gd:291 → MenuPrincipal.tscn [EXISTS ✅]",
+    "hub_to_forest": "HubAntre:661 → PixelTransition → BroceliandeForest3D.tscn [EXISTS ✅]",
+    "end_run_to_hub": "EndRunScreen.tscn (ui/end_run_screen.gd) emits hub_requested → NO scene transition [FAIL ⚠️]",
+    "selection_continue": "SelectionSauvegarde → LOAD_PROFILE → HubAntre.tscn (run_state NOT loaded) [PARTIAL ⚠️]",
+    "new_game_flow_controller": "GameFlowController+Run3D.tscn+HubScreen.tscn → NEVER entered in production [DEAD ❌]"
+  },
+  "findings": [
+    {
+      "id": "SF-001",
+      "severity": "CRITICAL",
+      "title": "GameFlowController never instantiated in production",
+      "detail": "game_flow_controller.gd defines class GameFlowController with wire_hub/wire_run/wire_end_screen. No production code calls GameFlowController.new() or .setup(). The full Run3D.tscn/HubScreen.tscn/EndRunScreen.tscn flow exists but is NEVER entered. The active game path is the OLD BroceliandeForest3D→MerlinGame path.",
+      "files": ["scripts/core/game_flow_controller.gd", "scenes/Run3D.tscn", "scenes/HubScreen.tscn"],
+      "action": "Create task to wire GameFlowController into production entry point"
+    },
+    {
+      "id": "SF-002",
+      "severity": "CRITICAL",
+      "title": "EndRunScreen faction_ending_chosen signal NOT connected to persistence handler",
+      "detail": "EndRunScreen.tscn uses scripts/ui/end_run_screen.gd. Its faction_ending_chosen signal is only connected via GameFlowController.wire_end_screen() which is NEVER called. The signal fires but no handler records to echo_memory.",
+      "files": ["scripts/ui/end_run_screen.gd:23", "scripts/core/game_flow_controller.gd:238"],
+      "action": "Wire faction_ending_chosen in MerlinGameController or end-of-run flow"
+    },
+    {
+      "id": "SF-003",
+      "severity": "HIGH",
+      "title": "SelectionSauvegarde does not restore interrupted run_state",
+      "detail": "SelectionSauvegarde._auto_continue() dispatches LOAD_PROFILE (loads meta only) then goes to HubAntre. MerlinSaveSystem has save_run_state/load_run_state but these are never called in the Continue flow. Interrupted runs cannot be resumed.",
+      "files": ["scripts/SelectionSauvegarde.gd:96-110", "scripts/merlin/merlin_save_system.gd:208-229"],
+      "action": "Add run_state check in SelectionSauvegarde._auto_continue() or Hub scene"
+    },
+    {
+      "id": "SF-004",
+      "severity": "HIGH",
+      "title": "IntroPersonalityQuiz.tscn + SceneRencontreMerlin.tscn exist despite director deletion order",
+      "detail": "Director q-20260414-005 answered 'B: Supprimer IntroPersonalityQuiz + SceneRencontreMerlin'. Task E2E-DELETE-ORPHAN-SCENES (priority 3) still pending. Both files occupy disk space and may cause confusion.",
+      "files": ["scenes/IntroPersonalityQuiz.tscn", "scenes/SceneRencontreMerlin.tscn"],
+      "action": "Execute E2E-DELETE-ORPHAN-SCENES task"
+    },
+    {
+      "id": "SF-005",
+      "severity": "HIGH",
+      "title": "_set_phase() emits signal only — no scene transition",
+      "detail": "GameFlowController._set_phase() calls phase_changed.emit() but does NOT call PixelTransition.transition_to(). Even if wired, a parent orchestrator must listen to phase_changed and drive scene changes. This architectural gap means GameFlowController is incomplete as a standalone scene orchestrator.",
+      "files": ["scripts/core/game_flow_controller.gd:272-283"],
+      "action": "Add scene transition logic to _set_phase() or document that caller is responsible"
+    },
+    {
+      "id": "SF-006",
+      "severity": "MEDIUM",
+      "title": "BroceliandeForest3D:1064 uses store.get('run_state') — likely wrong accessor",
+      "detail": "broceliande_forest_3d.gd:1064 calls store.get('run_state'). MerlinStore stores run data in state['run'], not as a top-level 'run_state' property. The Node.get() method resolves to a Node property accessor, not dictionary key — this call may always return null.",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd:896,1064"],
+      "action": "Verify intended behavior: should be store.state['run'] or save_system.load_run_state()"
+    },
+    {
+      "id": "SF-007",
+      "severity": "MEDIUM",
+      "title": "Two end_run_screen.gd files — unclear which is canonical",
+      "detail": "scripts/ui/end_run_screen.gd (old, used by EndRunScreen.tscn) and scripts/run/end_run_screen.gd (new, for GameFlowController). EndRunScreen.tscn links to ui/ version. The run/ version is orphaned (no .tscn references it).",
+      "files": ["scripts/ui/end_run_screen.gd", "scripts/run/end_run_screen.gd", "scenes/EndRunScreen.tscn"],
+      "action": "Consolidate to one end_run_screen.gd"
+    },
+    {
+      "id": "SF-008",
+      "severity": "INFO",
+      "title": "SceneSelector debug dropdown has stale MerlinGame reference",
+      "detail": "SceneSelector.SCENES includes 'MerlinGame' path. This is the old card game scene — acceptable for dev debug navigation but should be labeled as (deprecated) in the dropdown.",
+      "files": ["scripts/autoload/SceneSelector.gd:17"],
+      "action": "Minor label update (low priority)"
+    }
+  ],
+  "checks_total": 10,
+  "critical": 2,
+  "high": 3,
+  "medium": 2,
+  "info": 1,
+  "pass": 6,
+  "test_tasks_executed": [
+    "T-GDC-FACTION-ENDING-INTEGRATION",
+    "FACTION-GAME-FLOW-TEST",
+    "T-E2E-CONTINUE-LOAD-VERIFY"
+  ],
+  "test_results": {
+    "T-GDC-FACTION-ENDING-INTEGRATION": {
+      "status": "IMPLEMENTED",
+      "verdict": "PASS (logic correct, 5 new tests added to test_store_run.gd)",
+      "detail": "StoreRun.check_run_end() correctly includes faction_endings_available in all return paths. MerlinReputationSystem.get_available_endings() checks >= 80.0. Tests added: rep80_included, rep79_excluded, two_factions, empty_rep, present_in_victory."
+    },
+    "FACTION-GAME-FLOW-TEST": {
+      "status": "IMPLEMENTED",
+      "verdict": "PASS (logic correct, 4 new tests added to test_game_flow.gd)",
+      "detail": "GameFlowController._on_faction_ending_chosen() logic is correct. 4 tests added: records_echo_memory, invalid_no_crash, no_duplicate, null_store_no_crash. WARNING: signal never wired in production (SF-002)."
+    },
+    "T-E2E-CONTINUE-LOAD-VERIFY": {
+      "status": "AUDITED",
+      "verdict": "FAIL - run_state NOT restored on Continue",
+      "detail": "SelectionSauvegarde._auto_continue() dispatches LOAD_PROFILE (loads meta only) then transitions to HubAntre. MerlinSaveSystem.load_run_state() exists but is never called in this flow. Interrupted runs cannot be resumed. New dev task created: FIX-CONTINUE-RUN-STATE."
+    }
+  },
+  "new_tasks_generated": 6,
+  "files_modified": [
+    "scripts/test/test_store_run.gd",
+    "scripts/test/test_game_flow.gd"
+  ]
+}

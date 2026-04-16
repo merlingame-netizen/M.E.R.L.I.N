@@ -566,20 +566,6 @@
     "notes": " [PRIORITY RAISED: test FACTION-CONTENT-UNLOCK-CHECK confirmed gate missing — CRITICAL]"
   },
   {
-    "id": "T-GDC-FACTION-ENDING-INTEGRATION",
-    "sprint": "S2",
-    "priority": 22,
-    "status": "pending",
-    "type": "test",
-    "title": "Integration test: faction ending correctly detected when rep >= 80 at run end",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/merlin/store_run.gd",
-      "scripts/test/"
-    ],
-    "description": "SPEC-2 CHK-12: After GDC-FACTION-ENDING-TRIGGER is implemented, write test in test_integration_e2e.gd or new file: simulate run with faction_rep >= 80, call check_run_end(), assert result contains 'faction_endings' list with correct faction key. Also test: 2 factions >= 80 → 'joueur choisit laquelle' (player choice screen expected). And rep=79 → no faction ending. Uses same test infrastructure as T-S2-ARC-CONDITION-REGRESS."
-  },
-  {
     "id": "SFX-DAMAGE-LIFE-FEEDBACK",
     "sprint": "S2",
     "priority": 19,
@@ -1700,22 +1686,6 @@
     "created_by": "SPEC-11-FACTION"
   },
   {
-    "id": "FACTION-GAME-FLOW-TEST",
-    "sprint": "S2",
-    "priority": 23,
-    "type": "test",
-    "status": "pending",
-    "title": "Test faction_ending_chosen handler records to echo_memory",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/core/game_flow_controller.gd",
-      "scripts/test/"
-    ],
-    "description": "Write unit test for _on_faction_ending_chosen(): (1) valid faction -> recorded in echo_memory.dominant_factions_seen, (2) invalid faction -> no crash, no write, (3) duplicate faction -> not duplicated in array, (4) _store=null -> no crash. Verify save_profile() called after valid faction.",
-    "created_at": "2026-04-15T12:45:00Z",
-    "created_by": "SPEC-11-FACTION"
-  },
-  {
     "id": "FACTION-ENDING-NARRATIVE-PERSIST",
     "sprint": "S3",
     "priority": 34,
@@ -2105,22 +2075,6 @@
     "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
   },
   {
-    "id": "T-E2E-CONTINUE-LOAD-VERIFY",
-    "sprint": "S2",
-    "priority": 22,
-    "type": "test",
-    "status": "pending",
-    "title": "Test: SelectionSauvegarde 'Continue' correctly loads run_state before entering run",
-    "agent": "game_playtester",
-    "files": [
-      "scripts/SelectionSauvegarde.gd",
-      "scripts/merlin/merlin_save_system.gd"
-    ],
-    "description": "Verify code path: SelectionSauvegarde → 'Continue' button → load_profile() called → run_state restored → ParchmentPreRun or BroceliandeForest3D receives correct state. Check if save system provides the run_state to the next scene (via global var, signal, or scene parameter). No run_state corruption on continue.",
-    "created_at": "2026-04-15T15:45:00Z",
-    "source": "SPECIALIST-14-INTEGRATION_E2E-2026-04-15"
-  },
-  {
     "id": "T-E2E-AUTOLOADS-INIT",
     "sprint": "S2",
     "priority": 23,
@@ -2464,5 +2418,101 @@
       "scripts/merlin/merlin_visual.gd"
     ],
     "description": "SYSTEM COMPLET. (1) InputMap project.godot: 18 actions (ui_* 6, mg_action_a/b/c/d, mg_direction_*, mg_shoulder_l/r, mg_pause, mg_cancel) bound keyboard + Xbox + DualSense + Generic gamepad. (2) InputManager autoload: current_device enum (keyboard/xbox/playstation/generic/touch), signal device_changed, detection via last_input_event + joy_connection_changed. (3) TouchGestureManager autoload: tap/double_tap/long_press/swipe_{dir}/pinch/drag signals + map vers InputMap actions. Config via dict (override per-minigame). (4) AdaptivePrompt: component .tscn receives action_name + auto-renders icon correspondant au current_device (xbox A / PS X / KB Space / Touch tap icon). (5) InputConfigPanel .tscn: user remap actions via drag-drop, live preview, save user://input.cfg. (6) InputRemapper: load/save/apply config, override InputMap at runtime. (7) Refactor minigame_base.gd: NEVER reference specific keys, use action names. Remove hardcoded KEY_*. (8) MerlinVisual.prompt_icon(action) helper used across UI. (9) Test matrix: build + play 5 minigames chaque device (keyboard, Xbox, PS5, Android touch, iOS touch emu). Target: zero device-specific code dans gameplay."
+  },
+  {
+    "id": "FIX-CONTINUE-RUN-STATE",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix SelectionSauvegarde: restore run_state on Continue for interrupted runs",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/SelectionSauvegarde.gd",
+      "scripts/merlin/merlin_save_system.gd"
+    ],
+    "description": "SelectionSauvegarde._auto_continue() dispatches LOAD_PROFILE (meta only) then goes to HubAntre. MerlinSaveSystem.load_run_state() exists but is never called. Fix: after LOAD_PROFILE, check save_system.has_run_state() — if true, load run_state into store.state['run'] and go directly to BroceliandeForest3D.tscn to resume interrupted run. If false, go to HubAntre as normal. Add guard: run_state validation (validate_run_state) before resuming. SF-003.",
+    "created_at": "2026-04-16T02:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "FIX-FACTION-SIGNAL-WIRE",
+    "sprint": "S2",
+    "priority": 3,
+    "type": "dev",
+    "status": "pending",
+    "title": "Wire EndRunScreen.faction_ending_chosen to echo_memory persistence in production path",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/merlin/merlin_store.gd"
+    ],
+    "description": "EndRunScreen.tscn (ui/end_run_screen.gd) emits faction_ending_chosen signal but it is NEVER connected to a persistence handler in production. GameFlowController.wire_end_screen() would handle it but GFC is never instantiated. Fix: in MerlinGameController or in the EndRunScreen _ready(), connect faction_ending_chosen to a local handler that writes to meta.echo_memory.dominant_factions_seen via MerlinStore.dispatch({'type': 'FACTION_ENDING_CHOSEN', 'faction': faction}). Add the FACTION_ENDING_CHOSEN action to merlin_store.gd dispatch. SF-002.",
+    "created_at": "2026-04-16T02:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "FIX-BROCELIANDE-RUN-STATE-ACCESSOR",
+    "sprint": "S2",
+    "priority": 5,
+    "type": "dev",
+    "status": "pending",
+    "title": "Fix BroceliandeForest3D store.get('run_state') wrong accessor",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/broceliande_3d/broceliande_forest_3d.gd"
+    ],
+    "description": "broceliande_forest_3d.gd:896 and :1064 use store.get('run_state'). Node.get() resolves to Node property accessor, not dict key — returns null always. MerlinStore stores run data in state['run'] not as Node property 'run_state'. Fix: replace store.get('run_state') with store.state.get('run', {}) for state access. Also verify if save_system.load_run_state() should be called here to restore interrupted runs. SF-006.",
+    "created_at": "2026-04-16T02:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "FIX-GAME-FLOW-CONTROLLER-SET-PHASE-TRANSITIONS",
+    "sprint": "S3",
+    "priority": 8,
+    "type": "dev",
+    "status": "pending",
+    "title": "Add scene transitions to GameFlowController._set_phase()",
+    "agent": "godot_expert",
+    "files": [
+      "scripts/core/game_flow_controller.gd"
+    ],
+    "description": "GameFlowController._set_phase() only emits phase_changed signal without loading scenes. A parent orchestrator must listen and call PixelTransition.transition_to(). This incomplete architecture means GFC cannot function standalone. Fix: add SCENE_* path transitions in _set_phase(): HUB → transition_to(SCENE_HUB), RUN → transition_to(SCENE_RUN), END_SCREEN → transition_to(SCENE_END), TALENT_TREE → transition_to(SCENE_TALENT_TREE). Requires GFC to be an autoload or instantiated by a top-level orchestrator. SF-005.",
+    "created_at": "2026-04-16T02:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "CLEANUP-DUPLICATE-END-RUN-SCREEN",
+    "sprint": "S3",
+    "priority": 9,
+    "type": "dev",
+    "status": "pending",
+    "title": "Consolidate two end_run_screen.gd files into one canonical version",
+    "agent": "cleanup_agent",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/run/end_run_screen.gd",
+      "scenes/EndRunScreen.tscn"
+    ],
+    "description": "Two end_run_screen.gd exist: scripts/ui/ (old, used by EndRunScreen.tscn) and scripts/run/ (new, for GameFlowController flow). EndRunScreen.tscn links to ui/ version; run/ version is orphaned. Decision: merge faction_ending_chosen signal and logic from run/ into ui/ (which is the active one). Delete scripts/run/end_run_screen.gd after merging any missing features. Verify no test_end_run_screen.gd imports run/ version. SF-007.",
+    "created_at": "2026-04-16T02:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
+  },
+  {
+    "id": "T-SF0-FACTION-WIRE-VERIFY",
+    "sprint": "S2",
+    "priority": 6,
+    "type": "test",
+    "status": "pending",
+    "title": "Test: faction_ending_chosen signal actually connected in EndRunScreen production path",
+    "agent": "game_playtester",
+    "files": [
+      "scripts/ui/end_run_screen.gd",
+      "scripts/ui/merlin_game_controller.gd"
+    ],
+    "description": "After FIX-FACTION-SIGNAL-WIRE is implemented: write integration test verifying that when EndRunScreen emits faction_ending_chosen('druides'), the signal reaches the persistence handler and meta.echo_memory.dominant_factions_seen contains 'druides'. Simulate via MerlinGame scene instantiation (headless mode). Check call-site grep: faction_ending_chosen.connect must exist in production code, not just test code.",
+    "created_at": "2026-04-16T02:00:00Z",
+    "source": "SPECIALIST-0-SCENE_FLOW"
   }
 ]

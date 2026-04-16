@@ -776,3 +776,92 @@ func test_check_run_end_victory_score() -> bool:
 		push_error("victory score: expected %d, got %d" % [expected_score, int(result["score"])])
 		return false
 	return true
+
+
+# =============================================================================
+# CHECK_RUN_END — Faction Endings (T-GDC-FACTION-ENDING-INTEGRATION)
+# =============================================================================
+
+func test_check_run_end_faction_ending_at_rep_80() -> bool:
+	## Faction with rep >= 80 must appear in faction_endings_available.
+	var state: Dictionary = _make_state()
+	state["run"]["life_essence"] = 0
+	state["run"]["cards_played"] = 5
+	state["meta"]["faction_rep"] = {"druides": 80.0, "anciens": 40.0, "korrigans": 0.0, "niamh": 0.0, "ankou": 0.0}
+	var result: Dictionary = StoreRun.check_run_end(state)
+	if not result.has("faction_endings_available"):
+		push_error("faction_ending_rep80: result missing faction_endings_available key")
+		return false
+	var endings: Array = result["faction_endings_available"]
+	if not endings.has("druides"):
+		push_error("faction_ending_rep80: druides at 80.0 should be in faction_endings_available, got %s" % str(endings))
+		return false
+	if endings.has("anciens"):
+		push_error("faction_ending_rep80: anciens at 40.0 should NOT be in faction_endings_available")
+		return false
+	return true
+
+
+func test_check_run_end_faction_ending_rep79_excluded() -> bool:
+	## Faction at rep 79 must NOT appear in faction_endings_available.
+	var state: Dictionary = _make_state()
+	state["run"]["life_essence"] = 0
+	state["run"]["cards_played"] = 5
+	state["meta"]["faction_rep"] = {"druides": 79.0, "anciens": 0.0, "korrigans": 0.0, "niamh": 0.0, "ankou": 0.0}
+	var result: Dictionary = StoreRun.check_run_end(state)
+	var endings: Array = result.get("faction_endings_available", [])
+	if endings.has("druides"):
+		push_error("faction_ending_rep79: druides at 79.0 should NOT be in faction_endings_available")
+		return false
+	return true
+
+
+func test_check_run_end_faction_ending_two_factions() -> bool:
+	## Two factions >= 80 must both appear (player gets choice UI).
+	var state: Dictionary = _make_state()
+	state["run"]["life_essence"] = 0
+	state["run"]["cards_played"] = 5
+	state["meta"]["faction_rep"] = {"druides": 85.0, "anciens": 90.0, "korrigans": 20.0, "niamh": 0.0, "ankou": 0.0}
+	var result: Dictionary = StoreRun.check_run_end(state)
+	var endings: Array = result.get("faction_endings_available", [])
+	if not endings.has("druides") or not endings.has("anciens"):
+		push_error("faction_ending_two: both druides(85) and anciens(90) should be in endings, got %s" % str(endings))
+		return false
+	if endings.has("korrigans"):
+		push_error("faction_ending_two: korrigans(20) should NOT be in endings")
+		return false
+	return true
+
+
+func test_check_run_end_faction_ending_empty_rep() -> bool:
+	## No faction_rep set → faction_endings_available should be empty array.
+	var state: Dictionary = _make_state()
+	state["run"]["life_essence"] = 0
+	state["run"]["cards_played"] = 5
+	# faction_rep not set in meta
+	var result: Dictionary = StoreRun.check_run_end(state)
+	var endings: Array = result.get("faction_endings_available", [])
+	if not endings.is_empty():
+		push_error("faction_ending_empty: empty faction_rep should yield empty endings, got %s" % str(endings))
+		return false
+	return true
+
+
+func test_check_run_end_faction_ending_present_in_victory() -> bool:
+	## faction_endings_available must be present on victory path too (bible s.3.8).
+	var state: Dictionary = _make_run_state({
+		"life_essence": 50,
+		"cards_played": MerlinConstants.MIN_CARDS_FOR_VICTORY,
+		"mission": {"progress": 10, "total": 10},
+		"hidden": {"karma": 5, "tension": 0, "player_profile": {}, "resonances_active": [], "narrative_debt": []},
+	})
+	state["meta"]["faction_rep"] = {"druides": 80.0}
+	var result: Dictionary = StoreRun.check_run_end(state)
+	if not result.has("faction_endings_available"):
+		push_error("faction_ending_victory: faction_endings_available missing from victory result")
+		return false
+	var endings: Array = result["faction_endings_available"]
+	if not endings.has("druides"):
+		push_error("faction_ending_victory: druides(80) missing from endings on victory path")
+		return false
+	return true
