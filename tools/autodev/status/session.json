@@ -1,8 +1,8 @@
 {
-  "state": "idle",
-  "objective": "Autonomous pipeline via Claude Routines — hourly cycles",
+  "state": "running",
+  "objective": "Autonomous pipeline — Cycle Director hourly via Claude Routines",
   "workers": [],
-  "updated_at": "2026-04-16T14:00:00Z",
-  "cycle": 2,
-  "checkpoint": "Cycle 2 complete: 3 HIGH bugs fixed (BUG-003 biome name, BUG-004 effect format, BUG-006 rng bias). 3 files modified, 53 lines changed. Committed 9a82044, pushed to main. Remaining: 3 HIGH + 7 MEDIUM + 3 LOW bugs."
+  "updated_at": "2026-04-16T11:10:58.000Z",
+  "cycle": 3,
+  "checkpoint": "All 6 HIGH bugs fixed (BUG-003 to BUG-008). 7 pending: 2 MEDIUM bugs + 2 playtest + 3 audit. Routine prompt updated with full Director rules."
 }
