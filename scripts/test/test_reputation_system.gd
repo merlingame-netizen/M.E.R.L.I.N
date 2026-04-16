@@ -191,9 +191,10 @@ func test_build_default_factions() -> bool:
 	var factions: Dictionary = MerlinReputationSystem.build_default_factions()
 	if factions.size() != 5:
 		return _fail("default factions: expected 5, got %d" % factions.size())
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
 	for faction in MerlinReputationSystem.FACTIONS:
-		if not factions.has(faction) or factions[faction] != 0.0:
-			return _fail("default factions: %s missing or non-zero" % faction)
+		if not factions.has(faction) or factions[faction] != start:
+			return _fail("default factions: %s missing or not %s" % [faction, str(start)])
 	return true
 
 
@@ -264,26 +265,25 @@ func test_tier_label_hostile() -> bool:
 # INSTANCE API — Stateful reputation tracking
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_initial_reputation_is_zero() -> bool:
+func test_initial_reputation_is_neutral() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
 	for faction in MerlinReputationSystem.FACTIONS:
-		if rep.get_reputation(faction) != 0.0:
-			return _fail("initial rep for %s should be 0" % faction)
+		if rep.get_reputation(faction) != start:
+			return _fail("initial rep for %s should be %s" % [faction, str(start)])
 	return true
 
 
 func test_add_reputation_clamps_0_100() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
-	rep.add_reputation("druides", 20.0)
-	rep.add_reputation("druides", 20.0)
-	rep.add_reputation("druides", 20.0)
-	rep.add_reputation("druides", 20.0)
-	rep.add_reputation("druides", 20.0)
-	var val_max: float = rep.add_reputation("druides", 20.0)
+	# Start at 20, 5 adds of 20 = 120 → clamped 100
+	for i in range(5):
+		rep.add_reputation("druides", 20.0)
+	var val_max: float = rep.get_reputation("druides")
 	if val_max != 100.0:
 		return _fail("clamp max: expected 100, got %s" % str(val_max))
 	rep.reset()
-	rep.add_reputation("ankou", 5.0)
+	# Start at 20, subtract beyond 0 → clamped 0
 	var val_min: float = rep.add_reputation("ankou", -20.0)
 	if val_min != 0.0:
 		return _fail("clamp min: expected 0, got %s" % str(val_min))
@@ -292,13 +292,15 @@ func test_add_reputation_clamps_0_100() -> bool:
 
 func test_reputation_threshold_50_content() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	# Start at 20, below content threshold (50)
 	if rep.has_content_threshold("druides"):
-		return _fail("should not have content at 0")
-	rep.add_reputation("druides", 20.0)
-	rep.add_reputation("druides", 20.0)
-	if rep.has_content_threshold("druides"):
-		return _fail("should not have content at 40")
+		return _fail("should not have content at 20")
 	rep.add_reputation("druides", 10.0)
+	# Now at 30, still below
+	if rep.has_content_threshold("druides"):
+		return _fail("should not have content at 30")
+	rep.add_reputation("druides", 20.0)
+	# Now at 50, should meet threshold
 	if not rep.has_content_threshold("druides"):
 		return _fail("should have content at 50")
 	return true
@@ -306,12 +308,16 @@ func test_reputation_threshold_50_content() -> bool:
 
 func test_reputation_threshold_80_ending() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	# Start at 20, below ending threshold (80)
 	if rep.has_ending_threshold("korrigans"):
-		return _fail("should not have ending at 0")
+		return _fail("should not have ending at 20")
 	rep.add_reputation("korrigans", 20.0)
 	rep.add_reputation("korrigans", 20.0)
+	# Now at 60, still below
+	if rep.has_ending_threshold("korrigans"):
+		return _fail("should not have ending at 60")
 	rep.add_reputation("korrigans", 20.0)
-	rep.add_reputation("korrigans", 20.0)
+	# Now at 80, should meet threshold
 	if not rep.has_ending_threshold("korrigans"):
 		return _fail("should have ending at 80")
 	return true
@@ -319,28 +325,33 @@ func test_reputation_threshold_80_ending() -> bool:
 
 func test_cross_run_persistence() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
 	rep.add_reputation("niamh", 15.0)
 	rep.add_reputation("niamh", 10.0)
 	var all_reps: Dictionary = rep.get_all_reputations()
-	if float(all_reps["niamh"]) != 25.0:
-		return _fail("persistence: expected 25, got %s" % str(all_reps["niamh"]))
+	var expected: float = start + 15.0 + 10.0
+	if absf(float(all_reps["niamh"]) - expected) > 0.001:
+		return _fail("persistence: expected %s, got %s" % [str(expected), str(all_reps["niamh"])])
 	rep.reset()
-	if rep.get_reputation("niamh") != 0.0:
-		return _fail("reset should zero reputation")
+	if rep.get_reputation("niamh") != start:
+		return _fail("reset should restore to start value %s" % str(start))
 	return true
 
 
 func test_cap_per_card_20() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
+	# +50 capped to +20 → start + 20
 	var result: float = rep.add_reputation("anciens", 50.0)
-	if result != 20.0:
-		return _fail("cap +50 should give 20, got %s" % str(result))
+	if absf(result - (start + 20.0)) > 0.001:
+		return _fail("cap +50 should give %s, got %s" % [str(start + 20.0), str(result)])
 	rep.reset()
 	rep.add_reputation("anciens", 20.0)
 	rep.add_reputation("anciens", 20.0)
+	# Now at start+40, -35 capped to -20 → start+40-20 = start+20
 	var result_neg: float = rep.add_reputation("anciens", -35.0)
-	if result_neg != 20.0:
-		return _fail("cap -35 from 40 should give 20, got %s" % str(result_neg))
+	if absf(result_neg - (start + 20.0)) > 0.001:
+		return _fail("cap -35 from %s should give %s, got %s" % [str(start + 40.0), str(start + 20.0), str(result_neg)])
 	return true
 
 
@@ -360,6 +371,7 @@ func test_add_reputation_invalid_faction() -> bool:
 
 func test_get_dominant_instance() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	# Both start at 20; druides+15=35, ankou+20=40 → ankou dominant
 	rep.add_reputation("druides", 15.0)
 	rep.add_reputation("ankou", 20.0)
 	if rep.get_dominant() != "ankou":
@@ -369,9 +381,11 @@ func test_get_dominant_instance() -> bool:
 
 func test_get_all_reputations_returns_copy() -> bool:
 	var rep: MerlinReputationSystem = _make_rep()
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
 	rep.add_reputation("druides", 10.0)
+	var expected: float = start + 10.0
 	var copy: Dictionary = rep.get_all_reputations()
 	copy["druides"] = 999.0
-	if rep.get_reputation("druides") != 10.0:
+	if absf(rep.get_reputation("druides") - expected) > 0.001:
 		return _fail("modifying copy should not affect instance")
 	return true

@@ -438,8 +438,8 @@ func _get_karma_tension_context(game_state: Dictionary) -> String:
 		parts.append("Karma: positif fort (%d)" % karma)
 	elif karma <= -5:
 		parts.append("Karma: negatif fort (%d)" % karma)
-	var flux: Dictionary = run.get("flux", {})
-	var tension: int = int(flux.get("tension", 40))
+	var hidden: Dictionary = run.get("hidden", {})
+	var tension: int = int(hidden.get("tension", 0))
 	if tension >= 70:
 		parts.append("Tension: haute")
 	elif tension <= 20:
@@ -569,10 +569,8 @@ func log_choice_made(option: Dictionary, card_num: int, day: int) -> void:
 	})
 
 
-func log_aspect_shifted(aspect: String, old_state: int, new_state: int, card_num: int, day: int) -> void:
-	_add_journal_entry("aspect_shifted", card_num, day, {
-		"aspect": aspect, "from": old_state, "to": new_state,
-	})
+func log_run_generic(event_name: String, data: Dictionary, card_num: int, day: int) -> void:
+	_add_journal_entry(event_name, card_num, day, data)
 
 
 func log_ogham_used(ogham_id: String, card_num: int, day: int) -> void:
