@@ -33,7 +33,6 @@ var play_style := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var skill_assessment := {
-	"gauge_management": 0.5,    # Capacite a equilibrer les jauges
 	"pattern_recognition": 0.5, # Detecte les setups narratifs
 	"risk_assessment": 0.5,     # Fait des tradeoffs informes
 	"memory": 0.5,              # Se souvient des events/NPCs
@@ -52,7 +51,6 @@ var preferences := {
 	"disliked_npcs": [],        # NPCs avec interactions negatives
 	"humor_receptivity": 0.5,   # 0=serieux, 1=aime l'humour
 	"lore_interest": 0.5,       # Interet pour le lore profond
-	"preferred_gauges": [],     # Jauges que le joueur protege
 	"preferred_biomes": [],     # Biomes ou il passe du temps
 }
 
@@ -91,7 +89,6 @@ const DECAY_RATE := 0.995  # Par session (lent retour vers 0.5)
 
 var _theme_counter := {}  # Pour detecter preferences
 var _npc_interactions := {}  # {npc_id: {positive: int, negative: int}}
-var _gauge_protection_count := {}  # {gauge: int} pour detecter preferences
 var _current_run_data := {
 	"cards_played": 0,
 	"crises_survived": 0,
@@ -118,7 +115,6 @@ func reset() -> void:
 		"risk_tolerance": 0.5,
 	}
 	skill_assessment = {
-		"gauge_management": 0.5,
 		"pattern_recognition": 0.5,
 		"risk_assessment": 0.5,
 		"memory": 0.5,
@@ -187,25 +183,9 @@ func _update_play_style_from_tags(tags: Array) -> void:
 		_shift_trait("risk_tolerance", 0.0)
 
 
-func _update_play_style_from_effects(effects: Array, context: Dictionary) -> void:
-	var gauges: Dictionary = context.get("gauges", {})
-
-	for effect in effects:
-		var effect_type: String = effect.get("type", "")
-		var target: String = effect.get("target", "")
-		var value: int = int(effect.get("value", 0))
-
-		if effect_type in ["ADD_GAUGE", "REMOVE_GAUGE"]:
-			# Track gauge protection patterns
-			var gauge_value: int = int(gauges.get(target, 50))
-			if gauge_value < 25 and value > 0:
-				# Joueur protege une jauge basse
-				_gauge_protection_count[target] = _gauge_protection_count.get(target, 0) + 1
-				_update_skill("gauge_management", 0.02)
-			elif gauge_value > 75 and value < 0:
-				# Joueur baisse une jauge haute
-				_gauge_protection_count[target] = _gauge_protection_count.get(target, 0) + 1
-				_update_skill("gauge_management", 0.02)
+func _update_play_style_from_effects(_effects: Array, _context: Dictionary) -> void:
+	# Effects-based play style updates (reserved for future use)
+	pass
 
 
 func _update_patience_from_time(decision_time_ms: int) -> void:
@@ -286,11 +266,9 @@ func update_from_outcome(outcome: Dictionary) -> void:
 	# Crisis management
 	if outcome.get("avoided_crisis", false):
 		_current_run_data["crises_survived"] += 1
-		_update_skill("gauge_management", SKILL_LEARNING_RATE)
 		_update_skill("recovery", SKILL_LEARNING_RATE)
 	elif outcome.get("entered_crisis", false):
 		_current_run_data["crises_failed"] += 1
-		_update_skill("gauge_management", -SKILL_LEARNING_RATE * 0.5)
 
 	# Pattern recognition (if player predicted correctly)
 	if outcome.get("predicted_twist", false):
@@ -508,7 +486,6 @@ func save_to_disk() -> void:
 		"meta": meta,
 		"_theme_counter": _theme_counter,
 		"_npc_interactions": _npc_interactions,
-		"_gauge_protection_count": _gauge_protection_count,
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -558,5 +535,3 @@ func load_from_disk() -> void:
 		_theme_counter = data["_theme_counter"]
 	if data.has("_npc_interactions"):
 		_npc_interactions = data["_npc_interactions"]
-	if data.has("_gauge_protection_count"):
-		_gauge_protection_count = data["_gauge_protection_count"]

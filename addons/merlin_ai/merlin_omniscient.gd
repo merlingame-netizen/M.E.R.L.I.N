@@ -1820,7 +1820,6 @@ func record_choice(card: Dictionary, option: int, outcome: Dictionary) -> void:
 	var decision_time_ms := Time.get_ticks_msec() - _last_card_time_ms
 
 	var context := {
-		"gauges": outcome.get("gauges_before", {}),
 		"decision_time_ms": decision_time_ms,
 		"day": narrative.world.day,
 		"biome": narrative.world.biome,
@@ -1831,7 +1830,6 @@ func record_choice(card: Dictionary, option: int, outcome: Dictionary) -> void:
 	player_profile.update_from_outcome(outcome)
 
 	decision_history.record_choice(card, option, context)
-	decision_history.update_last_entry_gauges(outcome.get("gauges_after", {}))
 
 	session.record_decision(decision_time_ms)
 

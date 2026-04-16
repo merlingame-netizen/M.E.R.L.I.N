@@ -125,25 +125,6 @@ func test_record_choice_caps_run_at_max_entries() -> bool:
 	return true
 
 
-func test_update_last_entry_gauges_sets_gauges_after() -> bool:
-	var reg: DecisionHistoryRegistry = _make_fresh()
-	reg.record_choice(_make_card("c1", []), 0, _make_context())
-	var gauges_after: Dictionary = {"esprit": 60, "vigueur": 40}
-	reg.update_last_entry_gauges(gauges_after)
-	var entry: Dictionary = reg.current_run[-1]
-	if entry["gauges_after"]["esprit"] != 60:
-		push_error("Expected gauges_after.esprit == 60, got %s" % str(entry["gauges_after"].get("esprit")))
-		return false
-	return true
-
-
-func test_update_last_entry_gauges_noop_when_empty() -> bool:
-	## Should not crash when current_run is empty.
-	var reg: DecisionHistoryRegistry = _make_fresh()
-	reg.update_last_entry_gauges({"esprit": 50})
-	return true
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. CHOICE RATIOS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -299,7 +280,7 @@ func test_get_context_for_llm_contains_required_keys() -> bool:
 	var required: Array = [
 		"cards_this_run", "patterns", "npc_karma",
 		"npcs_met_count", "recent_choices",
-		"promise_acceptance_rate", "most_common_death_gauge",
+		"promise_acceptance_rate",
 	]
 	for k in required:
 		if not ctx.has(k):
@@ -330,17 +311,6 @@ func test_on_run_end_resets_current_run() -> bool:
 	reg.on_run_end({"victory": false, "final_gauges": {}})
 	if reg.current_run.size() != 0:
 		push_error("Expected current_run empty after on_run_end()")
-		return false
-	return true
-
-
-func test_on_run_end_tracks_most_common_death_gauge() -> bool:
-	var reg: DecisionHistoryRegistry = _make_fresh()
-	# Value 0 triggers death gauge tracking
-	reg.on_run_end({"victory": false, "final_gauges": {"esprit": 0, "vigueur": 50}})
-	reg.on_run_end({"victory": false, "final_gauges": {"esprit": 0, "vigueur": 50}})
-	if reg.historical_summary["most_common_death_gauge"] != "esprit":
-		push_error("Expected most_common_death_gauge == 'esprit', got '%s'" % reg.historical_summary["most_common_death_gauge"])
 		return false
 	return true
 

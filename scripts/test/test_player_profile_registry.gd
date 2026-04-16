@@ -30,7 +30,6 @@ func _make_fresh() -> PlayerProfileRegistry:
 	reg.reset()
 	reg._theme_counter = {}
 	reg._npc_interactions = {}
-	reg._gauge_protection_count = {}
 	reg.meta["runs_completed"] = 0
 	reg.meta["runs_won"] = 0
 	reg.meta["total_cards_played"] = 0
@@ -70,7 +69,7 @@ func test_reset_sets_all_playstyle_to_half() -> bool:
 
 func test_reset_sets_all_skills_to_half() -> bool:
 	var reg: PlayerProfileRegistry = _make_fresh()
-	reg.skill_assessment["gauge_management"] = 0.9
+	reg.skill_assessment["pattern_recognition"] = 0.9
 	reg.reset()
 	for key in reg.skill_assessment:
 		if not is_equal_approx(float(reg.skill_assessment[key]), 0.5):
@@ -648,30 +647,12 @@ func test_decay_applied_to_all_playstyle_keys() -> bool:
 # 11. UPDATE FROM OUTCOME
 # ─────────────────────────────────────────────────────────────────────────────
 
-func test_outcome_avoided_crisis_improves_gauge_management() -> bool:
-	var reg: PlayerProfileRegistry = _make_fresh()
-	var before: float = float(reg.skill_assessment["gauge_management"])
-	reg.update_from_outcome({"avoided_crisis": true})
-	if float(reg.skill_assessment["gauge_management"]) <= before:
-		return _fail("Expected gauge_management to increase after avoided_crisis")
-	return true
-
-
 func test_outcome_avoided_crisis_improves_recovery() -> bool:
 	var reg: PlayerProfileRegistry = _make_fresh()
 	var before: float = float(reg.skill_assessment["recovery"])
 	reg.update_from_outcome({"avoided_crisis": true})
 	if float(reg.skill_assessment["recovery"]) <= before:
 		return _fail("Expected recovery to increase after avoided_crisis")
-	return true
-
-
-func test_outcome_entered_crisis_reduces_gauge_management() -> bool:
-	var reg: PlayerProfileRegistry = _make_fresh()
-	var before: float = float(reg.skill_assessment["gauge_management"])
-	reg.update_from_outcome({"entered_crisis": true})
-	if float(reg.skill_assessment["gauge_management"]) >= before:
-		return _fail("Expected gauge_management to decrease after entered_crisis")
 	return true
 
 
@@ -806,22 +787,6 @@ func test_get_archetype_title_returns_empty_when_unset() -> bool:
 	var reg: PlayerProfileRegistry = _make_fresh()
 	if reg.get_archetype_title() != "":
 		return _fail("Expected empty archetype_title when unset, got '%s'" % reg.get_archetype_title())
-	return true
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 14. GAUGE PROTECTION — SKILL UPDATE VIA EFFECTS
-# ─────────────────────────────────────────────────────────────────────────────
-
-func test_gauge_protection_low_gauge_adds_management_skill() -> bool:
-	var reg: PlayerProfileRegistry = _make_fresh()
-	var before: float = float(reg.skill_assessment["gauge_management"])
-	# Gauge at 20 (< 25) and positive effect — player protects a low gauge
-	var card: Dictionary = _make_card([], "", [{"effects": [{"type": "ADD_GAUGE", "target": "sante", "value": 10}]}])
-	var ctx: Dictionary = _make_context({"sante": 20})
-	reg.update_from_choice(card, 0, ctx)
-	if float(reg.skill_assessment["gauge_management"]) <= before:
-		return _fail("Expected gauge_management to increase when player heals a low gauge (<25)")
 	return true
 
 

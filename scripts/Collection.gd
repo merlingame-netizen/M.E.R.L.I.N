@@ -185,25 +185,15 @@ func _get_real_progression_stats() -> Array:
 	var skills_unlocked: Array = store.state.get("meta", {}).get("skills_unlocked", [])
 	var total_runs: int = int(meta.get("total_runs", 0))
 	var total_cards: int = int(meta.get("total_cards_played", 0))
-	var total_essence: int = _count_total_essence()
+	var anam: int = int(meta.get("anam", 0))
 	return [
 		{"label": "Fins vues", "current": endings_seen.size(), "max": 16},
 		{"label": "Runes", "current": skills_unlocked.size(), "max": 18},
 		{"label": "Talents", "current": unlocked_talents.size(), "max": 28},
 		{"label": "Runs", "current": total_runs, "max": 50},
 		{"label": "Cartes", "current": total_cards, "max": 500},
-		{"label": "Essences", "current": total_essence, "max": 999},
+		{"label": "Anam", "current": anam, "max": 999},
 	]
-
-
-func _count_total_essence() -> int:
-	if not store:
-		return 0
-	var essence: Dictionary = store.state.get("meta", {}).get("essence", {})
-	var total: int = 0
-	for elem in essence:
-		total += int(essence[elem])
-	return total
 
 
 func _get_real_achievements() -> Array:
