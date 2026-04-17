@@ -22,9 +22,21 @@ jobs:
   export-web:
     name: Export Godot Web Build
     runs-on: ubuntu-latest
-    container: barichello/godot-ci:4.5
+    container: barichello/godot-ci:4.4.1-stable
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup export environment
+        run: |
+          mkdir -p ~/.config/godot ~/.local/share/godot/export_templates/4.4.1.stable
+          # Download web export template if not bundled
+          if [ ! -f ~/.local/share/godot/export_templates/4.4.1.stable/godot.web.template_release.wasm32.zip ]; then
+            echo "Downloading Godot 4.4.1 web export template..."
+            curl -sL "https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz" -o /tmp/templates.tpz
+            cd /tmp && unzip -qo templates.tpz && cp templates/* ~/.local/share/godot/export_templates/4.4.1.stable/ && rm -rf templates templates.tpz
+            echo "Templates installed."
+          fi
+
       - name: Generate export preset
         run: |
           cat > export_presets.cfg << 'PRESET'
@@ -47,24 +59,33 @@ jobs:
           progressive_web_app/enabled=false
           PRESET
           sed -i 's/^          //' export_presets.cfg
+
       - name: Import project
-        run: |
-          mkdir -p ~/.config/godot
-          godot --headless --path . --import --quit || true
+        run: godot --headless --path . --import --quit || true
+
       - name: Parse check
         run: |
           OUTPUT=$(godot --headless --editor --quit-after 10 --path . 2>&1 || true)
           ERRORS=$(echo "$OUTPUT" | grep -c "SCRIPT ERROR" || true)
           if [ "$ERRORS" -gt 0 ]; then echo "::error::$ERRORS script errors"; exit 1; fi
+
       - name: Export Web
         run: |
           mkdir -p web-export
-          godot --headless --export-release "Web" web-export/index.html --path . 2>&1 || true
+          godot --headless --export-release "Web" web-export/index.html --path .
+          # Verify export produced files
+          if [ ! -f web-export/index.html ]; then
+            echo "::error::Export failed — no index.html generated"
+            exit 1
+          fi
+          echo "Export successful: $(ls -la web-export/)"
+
       - uses: actions/upload-artifact@v4
         with:
           name: web-export
           path: web-export/
           retention-days: 7
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web-export/
