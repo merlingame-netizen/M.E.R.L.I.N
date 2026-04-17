@@ -28,7 +28,7 @@ func _init() -> void:
 	reset()
 
 
-## Réinitialise toutes les réputations à 0.
+## Reinitialise toutes les reputations a FACTION_SCORE_START (20).
 func reset() -> void:
 	_reputations = build_default_factions()
 
@@ -142,11 +142,11 @@ static func is_valid_faction(faction: String) -> bool:
 	return FACTIONS.has(faction)
 
 
-## Retourne un dict factions vide à 0.0 pour les 5 factions canoniques.
+## Retourne un dict factions initialisees a FACTION_SCORE_START (20 = Neutre).
 static func build_default_factions() -> Dictionary:
 	var result: Dictionary = {}
 	for faction in FACTIONS:
-		result[faction] = 0.0
+		result[faction] = float(MerlinConstants.FACTION_SCORE_START)
 	return result
 
 
