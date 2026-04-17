@@ -43,3 +43,8 @@
 {"ts":"2026-04-16T15:00:00.000Z","type":"cycle_end","cycle":3,"detail":"Cycle 3 complete: 3 HIGH bugs fixed (BUG-005 transient gauge instance, BUG-007 encapsulation violation, BUG-008 null ref guard). 3 files modified."}
 {"ts":"2026-04-16T11:10:58.000Z","type":"cycle_end","cycle":2,"detail":"Cycle 2: 3 HIGH bugs fixed (BUG-003 biome display, BUG-004 effect format, BUG-006 rng bias). 3 files, 53 lines."}
 {"ts":"2026-04-16T11:10:58.000Z","type":"session_summary","cycle":3,"detail":"Session complete: 8 bugs fixed (2 CRITICAL + 6 HIGH), dead code cleanup (-1505 lines), constants v2.4, autonomous infra deployed. 32/39 tasks done, 7 pending."}
+{"ts": "2026-04-17T08:00:00.000Z", "type": "cycle_start", "cycle": 4, "detail": "Bug hunt cycle: 6 MEDIUM bugs targeted"}
+{"ts": "2026-04-17T08:15:00.000Z", "type": "task_done", "cycle": 4, "detail": "BUG-014/015: Faction defaults 0→20 (Neutral) in reputation_system + save_system + web-demo + test"}
+{"ts": "2026-04-17T08:16:00.000Z", "type": "task_done", "cycle": 4, "detail": "BUG-011: Minigame selection randomized (randi_range replaces hash)"}
+{"ts": "2026-04-17T08:17:00.000Z", "type": "task_done", "cycle": 4, "detail": "BUG-009/010/012/013: Dead refs cleaned (Flux, Souffle, dot notation, ClassDB)"}
+{"ts": "2026-04-17T08:20:00.000Z", "type": "cycle_end", "cycle": 4, "detail": "6 MEDIUM bugs fixed, 9 files, -11 lines net. All MEDIUM bugs from cycle 1 report resolved."}
