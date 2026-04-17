@@ -597,7 +597,7 @@ func _apply_effect(effect: Dictionary) -> void:
 			var effect_str: String = "ADD_REPUTATION:%s:%d" % [faction, rep_delta]
 			var result: Dictionary = effects.apply_effects(state, [effect_str], "RESOLVE_CHOICE")
 			if not result.get("applied", []).is_empty():
-				var new_val: float = float(state.get("meta", {}).get("faction_rep", {}).get(faction, 0))
+				var new_val: float = float(state.get("meta", {}).get("faction_rep", {}).get(faction, MerlinConstants.FACTION_SCORE_START))
 				var actual_delta: float = new_val - old_rep
 				reputation_changed.emit(faction, new_val, actual_delta)
 		"ADD_ANAM":

@@ -107,7 +107,7 @@ func run_all() -> bool:
 	test_pick_minigame_esprit()
 	test_pick_minigame_perception()
 	test_pick_minigame_unknown_returns_apaisement()
-	test_pick_minigame_is_deterministic()
+	test_pick_minigame_returns_valid_member()
 
 	# ── MerlinMiniGameSystem.run() contract ───────────────────────────────────
 	test_run_returns_four_keys()
@@ -540,13 +540,14 @@ func test_pick_minigame_unknown_returns_apaisement() -> bool:
 	return _pass_test()
 
 
-func test_pick_minigame_is_deterministic() -> bool:
-	# pick_minigame_for_field uses field.hash() — must be deterministic (same call, same result)
-	var first: String = MerlinEffectEngine.pick_minigame_for_field("vigueur")
-	var second: String = MerlinEffectEngine.pick_minigame_for_field("vigueur")
-	if first != second:
-		push_error("pick_minigame_for_field('vigueur') not deterministic: '%s' vs '%s'" % [first, second])
-		return _fail_test()
+func test_pick_minigame_returns_valid_member() -> bool:
+	# pick_minigame_for_field uses randi() — result must always be a valid member of the field's list
+	var valid: Array = ["combat_rituel", "course"]
+	for i in range(10):
+		var result: String = MerlinEffectEngine.pick_minigame_for_field("vigueur")
+		if result not in valid:
+			push_error("pick_minigame_for_field('vigueur') returned invalid '%s', expected one of %s" % [result, valid])
+			return _fail_test()
 	return _pass_test()
 
 

@@ -16,7 +16,7 @@ static func build_and_store_faction_context(state: Dictionary) -> void:
 	var context: Dictionary = {"dominant": "", "tiers": {}, "active_effects": []}
 	var dominant_score: int = 0
 	for faction in MerlinConstants.FACTIONS:
-		var score: int = int(faction_rep.get(faction, 0))
+		var score: int = int(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START))
 		var tier: String = faction_score_to_tier(score)
 		context["tiers"][faction] = tier
 		if tier != "neutre":
