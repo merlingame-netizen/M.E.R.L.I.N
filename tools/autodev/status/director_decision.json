@@ -1,10 +1,10 @@
 {
-  "cycle": 3,
-  "timestamp": "2026-04-16T11:10:58.000Z",
+  "cycle": 4,
+  "timestamp": "2026-04-17T10:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-HIGH-5", "BUGFIX-HIGH-7", "BUGFIX-HIGH-8"],
-  "rationale": "All 6 HIGH bugs resolved across 3 cycles. Next: MEDIUM bugs (faction defaults, deterministic minigame) then playtest + bible audit.",
-  "budget": {"files": 4, "lines": 85},
+  "tasks": ["BUGFIX-MED-14", "BUGFIX-MED-11", "BUG-009", "BUG-010", "BUG-012", "BUG-013", "BUG-018"],
+  "rationale": "Clear entire MEDIUM+LOW bug backlog in one cycle. All 7 MEDIUM bugs (BUG-009/010/011/012/013/014/015) + 1 LOW (BUG-018) resolved. Also fixed stale test and web-demo constant. Bug backlog now at 0 CRITICAL, 0 HIGH, 0 MEDIUM — only 2 LOW remain (BUG-016 NPC 2-option cards, BUG-017 thread-unsafe stats).",
+  "budget": {"files": 9, "lines": 73},
   "blockers": [],
-  "next_cycle_plan": "Fix BUG-014 (faction default 0→20) + BUG-011 (deterministic minigame). Then TEST-PLAYTEST-1."
+  "next_cycle_plan": "With bug backlog cleared, next cycle should focus on a high-impact gameplay/visual feature. Candidates: (1) Implement game_flow_controller migration per creator feedback, (2) Add season/time-of-day ambiance per feedback, (3) Remove IntroPersonalityQuiz + SceneRencontreMerlin per feedback. Or run TEST-PLAYTEST-1 first."
 }

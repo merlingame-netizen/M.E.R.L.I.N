@@ -16,13 +16,14 @@ const LEGACY_SLOT_COUNT := 3
 # ═══════════════════════════════════════════════════════════════════════════════
 
 static func _get_default_profile() -> Dictionary:
+	var start_rep: float = float(MerlinConstants.FACTION_SCORE_START)
 	return {
 		"anam": 0,
 		"total_runs": 0,
 		"fins_vues": 0,
 		"faction_rep": {
-			"druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
-			"niamh": 0.0, "ankou": 0.0,
+			"druides": start_rep, "anciens": start_rep, "korrigans": start_rep,
+			"niamh": start_rep, "ankou": start_rep,
 		},
 		"trust_merlin": 0,
 		"talent_tree": {"unlocked": []},
@@ -369,7 +370,7 @@ func _migrate(data: Dictionary) -> Dictionary:
 	# Ensure faction_rep has all 5 factions
 	for faction in MerlinConstants.FACTIONS:
 		if not faction_rep.has(faction):
-			faction_rep[faction] = 0.0
+			faction_rep[faction] = float(MerlinConstants.FACTION_SCORE_START)
 	meta["faction_rep"] = faction_rep
 
 	# Migrate old oghams format if needed
