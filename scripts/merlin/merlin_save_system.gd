@@ -20,10 +20,7 @@ static func _get_default_profile() -> Dictionary:
 		"anam": 0,
 		"total_runs": 0,
 		"fins_vues": 0,
-		"faction_rep": {
-			"druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
-			"niamh": 0.0, "ankou": 0.0,
-		},
+		"faction_rep": MerlinReputationSystem.build_default_factions(),
 		"trust_merlin": 0,
 		"talent_tree": {"unlocked": []},
 		"oghams": {
@@ -366,10 +363,11 @@ func _migrate(data: Dictionary) -> Dictionary:
 		if not meta.has(key):
 			meta[key] = defaults[key]
 
-	# Ensure faction_rep has all 5 factions
+	# Ensure faction_rep has all 5 factions (start at Neutral)
+	var faction_start: float = float(MerlinConstants.FACTION_SCORE_START)
 	for faction in MerlinConstants.FACTIONS:
 		if not faction_rep.has(faction):
-			faction_rep[faction] = 0.0
+			faction_rep[faction] = faction_start
 	meta["faction_rep"] = faction_rep
 
 	# Migrate old oghams format if needed
