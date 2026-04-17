@@ -398,7 +398,7 @@ func _create_chronicle_header() -> void:
 	_chronicle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if font:
 		_chronicle_label.add_theme_font_override("font", font)
-	_chronicle_label.add_theme_font_size_override("font_size", MerlinVisual.TITLE_SMALL)
+	_chronicle_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(MerlinVisual.TITLE_SMALL))
 	_chronicle_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
 	_chronicle_label.position = Vector2(0.0, 12.0)
 	_chronicle_label.size = Vector2(vp.x, 40.0)
@@ -415,7 +415,7 @@ func _create_chronicle_header() -> void:
 	var body_font: Font = MerlinVisual.get_font("body")
 	if body_font:
 		_meta_label.add_theme_font_override("font", body_font)
-	_meta_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
+	_meta_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(MerlinVisual.CAPTION_SIZE))
 	_meta_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
 	_meta_label.position = Vector2(0.0, 48.0)
 	_meta_label.size = Vector2(vp.x, 20.0)
@@ -521,28 +521,37 @@ func _create_radial() -> void:
 
 func _layout_all() -> void:
 	var vp := get_viewport_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
 	for i in _hotspots.size():
 		var def: Dictionary = HOTSPOT_DEFS[i]
-		_hotspots[i].position = vp * Vector2(def["ratio"])
+		var pos: Vector2 = vp * Vector2(def["ratio"])
+		if mr and mr.is_mobile:
+			pos.y = maxf(pos.y, safe_top + 60.0)
+		_hotspots[i].position = pos
 	_layout_partir()
-	# Relayout HUD elements
 	if _chronicle_label:
 		_chronicle_label.size.x = vp.x
+		_chronicle_label.position.y = 12.0 + safe_top
 	if _meta_label:
 		_meta_label.size.x = vp.x
+		_meta_label.position.y = 48.0 + safe_top
 
 
 func _layout_partir() -> void:
 	if _partir_btn == null:
 		return
 	var vp := get_viewport_rect().size
-	var btn_w: float = vp.x * 0.80
-	var btn_h: float = 60.0
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var safe_bottom: float = mr.get_safe_margin_bottom() if mr else 0.0
+	var is_compact: bool = mr != null and mr.is_mobile
+	var btn_w: float = vp.x * (0.92 if is_compact else 0.80)
+	var btn_h: float = 68.0 if is_compact else 60.0
 	_partir_btn.custom_minimum_size = Vector2(btn_w, btn_h)
 	_partir_btn.pivot_offset = Vector2(btn_w * 0.5, btn_h * 0.5)
 	_partir_btn.position = Vector2(
 		(vp.x - btn_w) * 0.5,
-		vp.y - btn_h - 20.0
+		vp.y - btn_h - 20.0 - safe_bottom
 	)
 
 

@@ -33,6 +33,7 @@ MusicManager="*res://scripts/autoload/music_manager.gd"
 GameTimeManager="*res://scripts/autoload/game_time_manager.gd"
 ScreenDither="*res://scripts/ui/screen_dither_layer.gd"
 GameDebugServer="*res://scripts/test/game_debug_server.gd"
+MerlinResponsive="*res://scripts/autoload/merlin_responsive.gd"
 
 [display]
 

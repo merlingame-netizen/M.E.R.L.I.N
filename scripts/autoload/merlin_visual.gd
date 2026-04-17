@@ -608,6 +608,22 @@ static func apply_theme_to_root(root: Control) -> void:
 		root.theme = theme
 
 
+## Responsive font size — delegates to MerlinResponsive if available
+static func responsive_size(base: int) -> int:
+	var mr: Node = Engine.get_main_loop().root.get_node_or_null("MerlinResponsive") if Engine.get_main_loop() else null
+	if mr and mr.has_method("get_font_size"):
+		return mr.get_font_size(base)
+	return base
+
+
+## Apply responsive font size override to a Control node
+static func apply_responsive_font(control: Control, base_size: int, font_type: String = "body") -> void:
+	var font: Font = MerlinVisual.get_font(font_type)
+	if font:
+		control.add_theme_font_override("font", font)
+	control.add_theme_font_size_override("font_size", responsive_size(base_size))
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # KINGDOM TWO CROWNS PORTRAIT HELPERS (D.2)
 # ═══════════════════════════════════════════════════════════════════════════════

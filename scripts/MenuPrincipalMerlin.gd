@@ -346,8 +346,14 @@ func _create_menu_button(label: String, scene: String, is_primary: bool) -> Butt
 	btn.text = label
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.flat = false
-	if is_primary:
-		btn.custom_minimum_size = Vector2(0, 56)
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var min_h: int = 56 if is_primary else MerlinVisual.MIN_TOUCH_TARGET
+	if mr:
+		mr.apply_touch_margins(btn)
+		if is_primary:
+			btn.custom_minimum_size.y = maxf(btn.custom_minimum_size.y, min_h)
+	else:
+		btn.custom_minimum_size = Vector2(0, min_h)
 	btn.pressed.connect(func(): _on_menu_action(scene))
 	btn.mouse_entered.connect(func(): _anim.on_button_hover(btn, true))
 	btn.mouse_exited.connect(func(): _anim.on_button_hover(btn, false))
@@ -382,15 +388,22 @@ func _play_entry_animation() -> void:
 
 func _layout_ui() -> void:
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var is_compact: bool = mr != null and (mr.is_mobile or mr.is_portrait)
 
-	var card_w: float = minf(CARD_MAX_WIDTH, viewport_size.x * 0.85)
-	var card_h: float = minf(CARD_MAX_HEIGHT, viewport_size.y * 0.72)
+	var width_ratio: float = 0.94 if is_compact else 0.85
+	var height_ratio: float = 0.88 if is_compact else 0.72
+	var card_w: float = minf(CARD_MAX_WIDTH, viewport_size.x * width_ratio)
+	var card_h: float = minf(CARD_MAX_HEIGHT, viewport_size.y * height_ratio)
 	var content_min: Vector2 = card_contents.get_combined_minimum_size()
 	if content_min.y > 0.0:
-		var max_h: float = minf(CARD_MAX_HEIGHT, viewport_size.y * 0.88)
+		var max_h: float = minf(CARD_MAX_HEIGHT, viewport_size.y * 0.92)
 		card_h = minf(maxf(card_h, content_min.y + 48.0), max_h)
 	card.size = Vector2(card_w, card_h)
-	card.position = (viewport_size - card.size) * 0.5
+
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+	var card_y: float = (viewport_size.y - card.size.y) * 0.5 + safe_top * 0.5
+	card.position = Vector2((viewport_size.x - card.size.x) * 0.5, card_y)
 	card.pivot_offset = card.size * 0.5
 	_anim.card_target_pos = card.position
 
@@ -398,22 +411,29 @@ func _layout_ui() -> void:
 	_layout_celtic_ornaments(viewport_size)
 	_layout_clock()
 	if _ai_status_label:
-		_ai_status_label.position = Vector2(viewport_size.x - 212, viewport_size.y - 28)
+		var safe_bottom: float = mr.get_safe_margin_bottom() if mr else 0.0
+		_ai_status_label.position = Vector2(viewport_size.x - 212, viewport_size.y - 28 - safe_bottom)
 
 
 func _layout_corner_buttons(viewport_size: Vector2) -> void:
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var safe_bottom: float = mr.get_safe_margin_bottom() if mr else 0.0
+	var btn_size: Vector2 = CORNER_BUTTON_SIZE
+	if mr and mr.is_mobile:
+		btn_size = Vector2(56, 56)
+	var margin: float = CORNER_BUTTON_MARGIN
 	if calendar_button:
 		calendar_button.position = Vector2(
-			CORNER_BUTTON_MARGIN,
-			viewport_size.y - CORNER_BUTTON_SIZE.y - CORNER_BUTTON_MARGIN
+			margin,
+			viewport_size.y - btn_size.y - margin - safe_bottom
 		)
-		calendar_button.size = CORNER_BUTTON_SIZE
+		calendar_button.size = btn_size
 	if collections_button:
 		collections_button.position = Vector2(
-			viewport_size.x - CORNER_BUTTON_SIZE.x - CORNER_BUTTON_MARGIN,
-			viewport_size.y - CORNER_BUTTON_SIZE.y - CORNER_BUTTON_MARGIN
+			viewport_size.x - btn_size.x - margin,
+			viewport_size.y - btn_size.y - margin - safe_bottom
 		)
-		collections_button.size = CORNER_BUTTON_SIZE
+		collections_button.size = btn_size
 
 
 func _on_resized() -> void:
