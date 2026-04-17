@@ -115,8 +115,14 @@ Quand un blocker est rencontre :
 1. Tenter un auto-fix agressif (installer, configurer, adapter, mocker)
 2. Si auto-fix echoue → planifier la resolution dans le prochain cycle
 3. Logger le blocker dans director_decision.json.blockers[]
-4. Poster une question dans feedback_questions.json si decision humaine requise
-5. Continuer les taches faisables — NE JAMAIS bloquer le cycle entier
+4. Poster une question dans feedback_questions.json
+5. CREER UNE GITHUB ISSUE pour notifier le createur (il recoit une notif mobile) :
+   Utiliser mcp__github__issue_write avec:
+   - owner: "merlingame-netizen", repo: "M.E.R.L.I.N"
+   - title: "[Director] Question: ..."
+   - labels: ["director-question"]
+   - body: contexte + options + lien vers feedback_questions.json
+6. Continuer les taches faisables — NE JAMAIS bloquer le cycle entier
 ```
 
 ---
