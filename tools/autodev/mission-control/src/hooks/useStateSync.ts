@@ -96,7 +96,11 @@ export function useStateSync() {
         }
         // Also count completed tasks in feature_queue itself
         const fqCompleted = rawTasks.filter((t: { status?: string }) => t.status === 'completed').length;
-        setCompletedCount(Math.max(archivedCount, fqCompleted));
+        // Only update if we actually have data — avoid overwriting with 0 on rate-limited responses
+        const newCount = Math.max(archivedCount, fqCompleted);
+        if (newCount > 0 || rawTasks.length > 0) {
+          setCompletedCount(newCount);
+        }
 
         // Completed tasks with sprint info (for sprint progress bars)
         const archivedTasks = Array.isArray(archive)

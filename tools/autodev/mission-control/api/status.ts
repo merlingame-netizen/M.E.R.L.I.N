@@ -2,7 +2,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = 'merlingame-netizen/M.E.R.L.I.N';
 const BRANCH = 'main';
 
-// Essential files only — reduces GitHub API calls from 19 to 6
+// Essential files only — reduces GitHub API calls from 19 to 7
 const STATUS_FILES = [
   'tools/autodev/status/feature_queue.json',
   'tools/autodev/status/agent_status.json',
@@ -10,6 +10,7 @@ const STATUS_FILES = [
   'tools/autodev/status/feedback_questions.json',
   'tools/autodev/status/director_decision.json',
   'tools/autodev/status/session.json',
+  'tools/autodev/status/completed_archive.json',
 ];
 
 // In-memory cache to survive rate limits
