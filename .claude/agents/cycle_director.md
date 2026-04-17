@@ -80,28 +80,31 @@ Si un reviewer trouve un probleme CRITICAL :
 
 ## PHASE 5 : PUBLISH (2 min)
 
-```bash
-# 1. Valider (si Godot dispo)
-godot --headless --path . --quit 2>&1 | head -20
+### IMPORTANT — Comment pusher les changements
 
-# 2. Commit
-git add [fichiers modifies]
-git commit -m "type(scope): description"
+**NE PAS utiliser `git push`** — le sandbox cloud n'a pas les credentials git.
+**UTILISER l'outil MCP `mcp__github__push_files`** pour envoyer les fichiers modifies sur GitHub.
 
-# 3. Push
-git push origin main
+Procedure :
+1. Apres toutes les edits, lire le contenu final de chaque fichier modifie
+2. Utiliser `mcp__github__push_files` avec:
+   - owner: "merlingame-netizen"
+   - repo: "M.E.R.L.I.N"
+   - branch: "main"
+   - message: "type(scope): description"
+   - files: [{path: "chemin/fichier.gd", content: "contenu complet"}, ...]
+3. Faire un DEUXIEME appel pour les fichiers status:
+   - message: "chore(studio): cycle N status update"
+   - files: tous les fichiers status JSON mis a jour
 
-# 4. Update status files
-→ session.json (state, cycle, workers, checkpoint)
-→ director_decision.json (cycle, decision, rationale, metrics)
-→ feature_queue.json (marquer les taches completed)
-→ events.jsonl (ajouter une ligne de log)
-→ watchdog.txt (ajouter heartbeat)
+### Fichiers status a mettre a jour (OBLIGATOIRE)
 
-# 5. Push status
-git add tools/autodev/status/
-git commit -m "chore(studio): cycle N status update"
-git push origin main
+Avant le push status, mettre a jour:
+- tools/autodev/status/session.json (state, cycle, workers, checkpoint)
+- tools/autodev/status/director_decision.json (cycle, decision, rationale, metrics)
+- tools/autodev/status/feature_queue.json (marquer les taches completed)
+- tools/autodev/status/events.jsonl (ajouter une ligne de log)
+- tools/autodev/status/watchdog.txt (ajouter heartbeat)
 ```
 
 ## PHASE 6 : BLOCKERS (si necessaire)

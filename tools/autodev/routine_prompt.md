@@ -7,10 +7,11 @@ CLOUD SANDBOX RULES (NON-NEGOCIABLE)
 
 - IGNORE validate.bat, hooks Python, route-and-dispatch.py, gate_enforcer.py — ils n'existent pas ici.
 - IGNORE Post-Dev Checklist and Questioning Protocol.
-- NO git push --force — only git push origin main.
-- If git push fails (non-fast-forward): git pull --rebase origin main, then retry (max 4 retries).
 - JAMAIS AskUserQuestion — mode NON-INTERACTIF. Tu decides seul.
 - Tout code doit etre PRODUCTION-READY des le premier commit. Pas de prototypes, pas de TODOs.
+- CRITICAL: NE JAMAIS utiliser `git push` en bash — ca echoue silencieusement dans le sandbox cloud.
+  TOUJOURS utiliser l'outil MCP `mcp__github__push_files` pour pusher vers GitHub.
+  Owner: merlingame-netizen, Repo: M.E.R.L.I.N, Branch: main.
 
 ═══════════════════════════════════════════════════════
 PLAN D'ACTION
