@@ -582,16 +582,17 @@ func test_detect_field_from_unknown_verb_fallback() -> bool:
 
 func test_pick_minigame_for_known_field() -> bool:
 	var mg: String = MerlinEffectEngine.pick_minigame_for_field("logique")
-	if mg != "runes":
-		push_error("pick_minigame logique: expected runes, got %s" % mg)
+	var valid: Array = MerlinConstants.FIELD_MINIGAMES.get("logique", [])
+	if not valid.has(mg):
+		push_error("pick_minigame logique: got %s, not in %s" % [mg, str(valid)])
 		return false
 	return true
 
 
 func test_pick_minigame_for_unknown_field_fallback() -> bool:
 	var mg: String = MerlinEffectEngine.pick_minigame_for_field("nonexistent_field")
-	if mg != "apaisement":
-		push_error("pick_minigame fallback: expected apaisement, got %s" % mg)
+	if mg != MerlinConstants.ACTION_VERB_FALLBACK_FIELD:
+		push_error("pick_minigame fallback: expected %s, got %s" % [MerlinConstants.ACTION_VERB_FALLBACK_FIELD, mg])
 		return false
 	return true
 

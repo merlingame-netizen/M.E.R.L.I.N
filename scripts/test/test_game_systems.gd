@@ -1066,18 +1066,20 @@ func test_rep_build_default_factions() -> bool:
 	if defaults.size() != 5:
 		push_error("Default factions should have 5 entries")
 		return false
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	for f in MerlinReputationSystem.FACTIONS:
-		if float(defaults.get(f, -1.0)) != 0.0:
-			push_error("Default faction value should be 0.0 for %s" % f)
+		if float(defaults.get(f, -1.0)) != expected:
+			push_error("Default faction value should be %s for %s" % [str(expected), f])
 			return false
 	return true
 
 
-func test_rep_initial_state_all_zero() -> bool:
+func test_rep_initial_state_all_at_start() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	for f in MerlinReputationSystem.FACTIONS:
-		if rs.get_reputation(f) != 0.0:
-			push_error("Initial reputation for %s should be 0.0" % f)
+		if rs.get_reputation(f) != expected:
+			push_error("Initial reputation for %s should be %s" % [f, str(expected)])
 			return false
 	return true
 

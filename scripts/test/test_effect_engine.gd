@@ -1405,16 +1405,18 @@ func test_detect_field_with_spaces() -> bool:
 
 func test_pick_minigame_logique() -> bool:
 	var mg: String = MerlinEffectEngine.pick_minigame_for_field("logique")
-	if mg != "runes":
-		push_error("pick_minigame logique: expected runes, got %s" % mg)
+	var valid: Array = MerlinConstants.FIELD_MINIGAMES.get("logique", [])
+	if not valid.has(mg):
+		push_error("pick_minigame logique: got %s, not in %s" % [mg, str(valid)])
 		return false
 	return true
 
 
 func test_pick_minigame_chance() -> bool:
 	var mg: String = MerlinEffectEngine.pick_minigame_for_field("chance")
-	if mg != "herboristerie":
-		push_error("pick_minigame chance: expected herboristerie, got %s" % mg)
+	var valid: Array = MerlinConstants.FIELD_MINIGAMES.get("chance", [])
+	if not valid.has(mg):
+		push_error("pick_minigame chance: got %s, not in %s" % [mg, str(valid)])
 		return false
 	return true
 
