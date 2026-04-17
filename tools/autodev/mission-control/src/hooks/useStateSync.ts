@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useMissionStore } from '../store/mission-store';
 
-// Cloud-native: poll the Vercel serverless API or fallback to local SSE
+// Cloud-native: poll the Vercel serverless API
 const API_URL = import.meta.env.VITE_API_URL || '/api/status';
 const POLL_INTERVAL = 30_000; // 30s
 
