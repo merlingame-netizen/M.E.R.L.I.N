@@ -232,7 +232,7 @@ func _populate_stats() -> void:
 
 	# Oghams
 	var oghams_used: int = int(_run_data.get("oghams_used", 0))
-	_add_stat_line("Oghams actives", str(oghams_used))
+	_add_stat_line("Runes activees", str(oghams_used))
 
 	# Minigames
 	var minigames_played: int = int(_run_data.get("minigames_played", 0))

@@ -46,7 +46,7 @@ static func infer_reward_type(effects: Array) -> String:
 
 const MINIGAME_CATALOGUE := {
 	"traces": {"name": "Traces", "desc": "Suivre une sequence d'empreintes sans sortir du chemin", "trigger": "piste|trace|empreinte|pas|sentier"},
-	"runes": {"name": "Runes", "desc": "Dechiffrer un ogham cache dans la pierre", "trigger": "rune|ogham|symbole|gravure|inscription"},
+	"runes": {"name": "Runes", "desc": "Dechiffrer une rune cachee dans la pierre", "trigger": "rune|ogham|symbole|gravure|inscription"},
 	"equilibre": {"name": "Equilibre", "desc": "Maintenir l'equilibre sur un passage instable", "trigger": "pont|equilibre|vertige|gouffre|precipice"},
 	"herboristerie": {"name": "Herboristerie", "desc": "Identifier la bonne plante parmi les toxiques", "trigger": "plante|herbe|champignon|racine|cueillir|potion"},
 	"negociation": {"name": "Negociation", "desc": "Convaincre un esprit par les mots justes", "trigger": "esprit|fae|parler|negocier|korrigan|convaincre|marchander"},
@@ -562,7 +562,7 @@ const BIOME_PNJ_INFO := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const OGHAM_DISCOVERY_TRIGGERS := {
-	"pnj_merchant":    {"probability": 0.40, "max_per_run": 1, "label": "PNJ marchand propose un Ogham"},
+	"pnj_merchant":    {"probability": 0.40, "max_per_run": 1, "label": "PNJ marchand propose une Rune"},
 	"arc_milestone":   {"probability": 0.30, "max_per_run": 1, "label": "Arc narratif du biome atteint une etape-cle"},
 	"random_3d_event": {"probability": 0.20, "max_per_run": 1, "label": "Evenement aleatoire 3D (rune/inscription)"},
 	"fastroute_tag":   {"probability": 0.10, "max_per_run": 1, "label": "Carte FastRoute avec tag ogham_discovery"},
@@ -633,7 +633,7 @@ const TALENT_NODES := {
 		"cost": 25,
 		"prerequisites": ["druides_1"],
 		"effect": {"type": "cooldown_reduction", "category": "nature", "value": 1},
-		"description": "Reduit de 1 le cooldown des Oghams de categorie nature.",
+		"description": "Reduit de 1 le cooldown des Runes de categorie nature.",
 		"lore": "Les racines murmurent les secrets du temps.",
 	},
 	"druides_3": {
@@ -651,7 +651,7 @@ const TALENT_NODES := {
 		"cost": 80,
 		"prerequisites": ["druides_3"],
 		"effect": {"type": "heal_bonus", "value": 1.0},
-		"description": "Double l'effet de guerison des Oghams Recovery.",
+		"description": "Double l'effet de guerison des Runes Recovery.",
 		"lore": "La seve de l'arbre-monde coule dans tes veines.",
 	},
 	"druides_5": {
@@ -743,7 +743,7 @@ const TALENT_NODES := {
 		"cost": 80,
 		"prerequisites": ["korrigans_3"],
 		"effect": {"type": "cooldown_reduction", "category": null, "value": 1},
-		"description": "-1 cooldown global sur tous les Oghams.",
+		"description": "-1 cooldown global sur toutes les Runes.",
 		"lore": "Le chaos accelere le cycle des pouvoirs.",
 	},
 	"korrigans_5": {
@@ -863,8 +863,8 @@ const TALENT_NODES := {
 		"cost": 25,
 		"prerequisites": ["central_1"],
 		"effect": {"type": "cooldown_reduction", "category": null, "value": 1},
-		"description": "-1 cooldown global sur tous les Oghams.",
-		"lore": "Le flux d'Ogham repond plus vite a ta volonte.",
+		"description": "-1 cooldown global sur toutes les Runes.",
+		"lore": "Le flux des Runes repond plus vite a ta volonte.",
 	},
 	"central_3": {
 		"branch": "central", "tier": 3,
@@ -914,11 +914,11 @@ const TALENT_NODES := {
 	},
 	"eveil_ogham": {
 		"branch": "central", "tier": 2,
-		"name": "Eveil d'Ogham",
+		"name": "Eveil de Rune",
 		"cost": 35,
 		"prerequisites": ["druides_1"],
 		"effect": {"type": "special_rule", "id": "extra_ogham_slot"},
-		"description": "Equipe 1 Ogham supplementaire (1 → 2 actifs).",
+		"description": "Equipe 1 Rune supplementaire (1 → 2 actifs).",
 		"lore": "L'eveil ouvre un second canal vers le pouvoir ancien.",
 	},
 	"instinct_sauvage": {
@@ -1088,7 +1088,7 @@ const EXPEDITION_TOOLS := {
 		"initial_effect": {"type": "HEAL_LIFE", "amount": 10},
 	},
 	"lanterne": {
-		"name": "Lanterne d'Ogham",
+		"name": "Lanterne des Runes",
 		"icon": "\u2736",  # Star
 		"description": "Eclaire les chemins oublies",
 		"bonus": "Exploration +3 DC",
@@ -1111,7 +1111,7 @@ const EXPEDITION_TOOLS := {
 const EXPEDITION_MERLIN_REACTIONS := {
 	"baton_marche": "Le Baton de Marche... un classique. Il ne te trahira pas.",
 	"besace": "La Besace ! Provisions et prudence. Tu es sage.",
-	"lanterne": "La Lanterne d'Ogham... elle revele ce que l'ombre cache.",
+	"lanterne": "La Lanterne des Runes... elle revele ce que l'ombre cache.",
 	"talisman": "Le Talisman vibre deja. Il sent le voyage.",
 	"jour": "De jour. La lumiere protege... mais attire aussi.",
 	"nuit": "De nuit ? Courageux. Les ombres seront plus bavard.",
@@ -1242,7 +1242,7 @@ const WEATHER_TYPES: Dictionary = {
 
 ## Detour reward types — assigned by LLM or fallback generator.
 const DETOUR_REWARDS: Dictionary = {
-	"ogham_hint":       {"label": "Indice d'Ogham",     "icon": "\u1681", "description": "Revele un Ogham cache dans ce biome"},
+	"ogham_hint":       {"label": "Indice de Rune",      "icon": "\u1681", "description": "Revele une Rune cachee dans ce biome"},
 	"anam_bonus":       {"label": "Source d'Anam",       "icon": "#",     "description": "Anam bonus (+15-25)", "min": 15, "max": 25},
 	"lore_fragment":    {"label": "Fragment de Lore",    "icon": "\u2731", "description": "Texte exclusif sur l'histoire du biome"},
 	"reputation_boost": {"label": "Faveur de Faction",   "icon": "\u2726", "description": "Bonus reputation (+10 faction du biome)", "amount": 10},

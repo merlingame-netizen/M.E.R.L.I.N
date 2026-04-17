@@ -246,7 +246,7 @@ func _build_ogham_section() -> void:
 	header_hbox.add_theme_constant_override("separation", 12)
 	vbox.add_child(header_hbox)
 
-	_ogham_section_label = _make_label("[ OGHAMS ]", 14)
+	_ogham_section_label = _make_label("[ RUNES ]", 14)
 	var amber: Color = MerlinVisual.CRT_PALETTE["amber_dim"]
 	_ogham_section_label.add_theme_color_override("font_color", amber)
 	header_hbox.add_child(_ogham_section_label)

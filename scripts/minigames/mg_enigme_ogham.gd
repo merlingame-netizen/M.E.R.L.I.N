@@ -92,13 +92,13 @@ func _build_ui() -> void:
 	vbox.custom_minimum_size = Vector2(600, 600)
 	add_child(vbox)
 
-	var title: Label = _make_label("Énigme d'Ogham", 32, MG_PALETTE.gold)
+	var title: Label = _make_label("Énigme de Runes", 32, MG_PALETTE.gold)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	vbox.add_child(_make_spacer(30))
 
-	var desc: Label = _make_label("Complétez la séquence d'Oghams.", 20, MG_PALETTE.ink)
+	var desc: Label = _make_label("Complétez la séquence de Runes.", 20, MG_PALETTE.ink)
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(desc)
 

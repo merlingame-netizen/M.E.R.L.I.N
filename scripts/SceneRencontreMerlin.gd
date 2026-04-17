@@ -469,7 +469,7 @@ func _run_phase(phase: Phase) -> void:
 		Phase.LLM_INTRO:
 			_set_merlin_scene_context("scene_rencontre_merlin", {
 				"phase": "llm_intro",
-				"must_reference": ["Oghams", "Factions"]
+				"must_reference": ["Runes", "Factions"]
 			})
 			await _phase_llm_intro()
 		Phase.TRANSITIONING:
@@ -502,7 +502,7 @@ func _phase_llm_intro() -> void:
 		await _dialogue_module.show_text(intro_text)
 	else:
 		_dialogue_module.update_dialogue_badge("static")
-		await _dialogue_module.show_text("Bienvenue a Broceliande, voyageur. Oghams, factions et aventure t'attendent.")
+		await _dialogue_module.show_text("Bienvenue a Broceliande, voyageur. Runes, factions et aventure t'attendent.")
 	if not is_inside_tree():
 		return
 
@@ -547,7 +547,7 @@ func _phase_llm_intro() -> void:
 	# Ogham reveal
 	_dialogue_module.update_dialogue_badge("static")
 	_set_mood("sage")
-	var ogham_line: String = dialogue_data.get("ogham_reveal", {}).get("line", {}).get("text", "Trois Oghams pour commencer ton chemin.")
+	var ogham_line: String = dialogue_data.get("ogham_reveal", {}).get("line", {}).get("text", "Trois Runes pour commencer ton chemin.")
 	var fade_ogham := create_tween()
 	fade_ogham.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 	await fade_ogham.finished
@@ -610,7 +610,7 @@ func _phase_llm_intro() -> void:
 		await _dialogue_module.show_text(mission_text)
 	else:
 		_dialogue_module.update_dialogue_badge("static")
-		await _dialogue_module.show_text("Carte, Oghams, sauvegardes — tout t'attend dans l'Antre. Tu n'es pas seul.")
+		await _dialogue_module.show_text("Carte, Runes, sauvegardes — tout t'attend dans l'Antre. Tu n'es pas seul.")
 	if not is_inside_tree():
 		return
 

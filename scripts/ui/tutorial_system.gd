@@ -37,14 +37,14 @@ const STEP_COUNT: int = 8
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const HINT_TEXTS: Dictionary = {
-	TutorialStep.INTRO: "Ah, voyageur... Bienvenue dans mon antre. Je suis Merlin, et tu es ici parce que les Oghams t'ont appele. Ecoute bien, car ce monde ne pardonne pas l'ignorance.",
-	TutorialStep.HUB_TOUR: "Voici ton refuge entre les voyages. Observe : les factions qui guettent ta loyaute, les biomes qui attendent ton pas, et les Oghams — tes pouvoirs anciens.",
+	TutorialStep.INTRO: "Ah, voyageur... Bienvenue dans mon antre. Je suis Merlin, et tu es ici parce que les Runes t'ont appele. Ecoute bien, car ce monde ne pardonne pas l'ignorance.",
+	TutorialStep.HUB_TOUR: "Voici ton refuge entre les voyages. Observe : les factions qui guettent ta loyaute, les biomes qui attendent ton pas, et les Runes — tes pouvoirs anciens.",
 	TutorialStep.BIOME_SELECT: "Pour ton premier voyage, la Foret de Broceliande t'attend. C'est la que tout commence, voyageur. Choisis-la.",
-	TutorialStep.OGHAM_INTRO: "Les Oghams sont tes pouvoirs. Tu en possedes trois pour commencer : Beith le revelateur, Luis le protecteur, et Quert le guerisseur. Equipe celui qui te parle.",
-	TutorialStep.FIRST_CARD: "Chaque carte te presente trois voies. Lis bien les effets — un choix imprudent peut te couter cher. Active ton Ogham avant de choisir, si tu le souhaites.",
+	TutorialStep.OGHAM_INTRO: "Les Runes sont tes pouvoirs. Tu en possedes trois pour commencer : Beith le revelateur, Luis le protecteur, et Quert le guerisseur. Equipe celui qui te parle.",
+	TutorialStep.FIRST_CARD: "Chaque carte te presente trois voies. Lis bien les effets — un choix imprudent peut te couter cher. Active ta Rune avant de choisir, si tu le souhaites.",
 	TutorialStep.FIRST_MINIGAME: "Chaque action declenche une epreuve. Ton score determine l'intensite des effets. Plus tu reussis, plus le resultat est favorable.",
 	TutorialStep.FIRST_EFFECTS: "Observe comment ton score transforme le monde. La vie, la reputation, les promesses — tout decoule de tes actes et de ta maitrise.",
-	TutorialStep.COMPLETE: "Tu es pret, voyageur. Le chemin s'ouvre devant toi. Que les Oghams te guident... ou te trahissent.",
+	TutorialStep.COMPLETE: "Tu es pret, voyageur. Le chemin s'ouvre devant toi. Que les Runes te guident... ou te trahissent.",
 }
 
 
@@ -54,7 +54,7 @@ const HINT_TEXTS: Dictionary = {
 
 const TOOLTIP_TEXTS: Dictionary = {
 	"first_minigame": "Chaque action declenche une epreuve. Ton score determine l'intensite des effets.",
-	"first_ogham_available": "Clique sur l'icone Ogham pour activer ton pouvoir.",
+	"first_ogham_available": "Clique sur l'icone Rune pour activer ton pouvoir.",
 	"first_faction_change": "Ta reputation aupres des factions evolue. Elle persiste entre les runs.",
 	"first_biome_currency": "La monnaie biome peut etre depensee aupres des marchands ou en offrandes.",
 	"first_promise": "Les promesses ont un delai. Tiens-les pour gagner en reputation.",

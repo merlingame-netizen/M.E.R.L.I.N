@@ -78,7 +78,7 @@ func _draw_tree() -> void:
 	c.draw_rect(Rect2(Vector2.ZERO, Vector2(TREE_SIZE)), Color(0.2, 0.15, 0.08), true)
 
 	# Title
-	c.draw_string(ThemeDB.fallback_font, Vector2(170, 25), "Arbre des Oghams", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.8, 0.7, 0.5))
+	c.draw_string(ThemeDB.fallback_font, Vector2(170, 25), "Arbre des Runes", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.8, 0.7, 0.5))
 
 	# Draw edges first
 	for edge in TREE_EDGES:

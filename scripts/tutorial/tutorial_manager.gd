@@ -34,9 +34,9 @@ const TUTORIAL_CARDS: Array[Dictionary] = [
 	{
 		"id": "tutorial_002",
 		"type": "narrative",
-		"text": "Un symbole ogham brille sur l'ecorce du chene. Merlin pointe du doigt : 'Voici Beith, le Bouleau. Ton premier pouvoir. Utilise-le au bon moment.'",
+		"text": "Une rune brille sur l'ecorce du chene. Merlin pointe du doigt : 'Voici Beith, le Bouleau. Ton premier pouvoir. Utilise-le au bon moment.'",
 		"options": [
-			{"label": "Toucher l'ogham", "verb": "s'approcher", "field": "esprit", "minigame": "apaisement",
+			{"label": "Toucher la rune", "verb": "s'approcher", "field": "esprit", "minigame": "apaisement",
 			 "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
 			{"label": "Dechiffrer les runes", "verb": "dechiffrer", "field": "logique", "minigame": "runes",
 			 "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
@@ -70,12 +70,12 @@ const TUTORIAL_CARDS: Array[Dictionary] = [
 
 const TOOLTIPS: Dictionary = {
 	"choose_option": "Choisis une des 3 options. Chaque choix mene a une epreuve (minigame) differente selon le verbe d'action.",
-	"ogham_activation": "Appuie sur le bouton Ogham pour activer ton pouvoir avant de choisir. Chaque ogham a un cooldown.",
+	"ogham_activation": "Appuie sur le bouton Rune pour activer ton pouvoir avant de choisir. Chaque rune a un cooldown.",
 	"minigame_intro": "L'epreuve teste ton habilete. Ton score (0-100) determine la puissance des effets.",
 	"promise_intro": "Merlin te propose un pacte. Accepter engage ta confiance — tiens ta promesse ou perds sa confiance.",
 	"faction_rep": "Tes choix influencent 5 factions. Atteindre 80+ avec une faction debloque une fin narrative unique.",
 	"biome_currency": "Ramasse la monnaie de biome pendant la marche 3D. Utilise-la chez les marchands PNJ.",
-	"life_low": "Ta vie est basse ! Cherche des options de soin ou utilise un ogham de guerison.",
+	"life_low": "Ta vie est basse ! Cherche des options de soin ou utilise une rune de guerison.",
 	"end_run": "A la fin du run, tu gagnes de l'Anam. Plus tu joues de cartes, plus tu en gagnes.",
 }
 

@@ -23,7 +23,7 @@
       "fallback_cycle_1": { "fr": "Les arbres murmurent ton nom. Es-tu pret ?", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
       "fallback_cycle_2": { "fr": "Chaque run revele un fragment de verite.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
       "fallback_cycle_3": { "fr": "Le vent porte des nouvelles des biomes lointains.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
-      "fallback_cycle_4": { "fr": "Les oghams brillent dans l'obscurite. Ils t'appellent.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
+      "fallback_cycle_4": { "fr": "Les runes brillent dans l'obscurite. Elles t'appellent.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }
     },
     "arbre_vie": {
       "store_unavailable": { "fr": "Store non disponible", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" },
@@ -200,7 +200,7 @@
     },
     "minigame": {
       "traces":        { "name": { "fr": "Traces", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Suivre une sequence d'empreintes sans sortir du chemin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "runes":         { "name": { "fr": "Runes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Dechiffrer un ogham cache dans la pierre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "runes":         { "name": { "fr": "Runes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Dechiffrer une rune cachee dans la pierre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "equilibre":     { "name": { "fr": "Equilibre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Maintenir l'equilibre sur un passage instable", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "herboristerie": { "name": { "fr": "Herboristerie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Identifier la bonne plante parmi les toxiques", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "negociation":   { "name": { "fr": "Negociation", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Convaincre un esprit par les mots justes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
@@ -216,9 +216,9 @@
     },
     "talent": {
       "druides_1": { "name": { "fr": "Vigueur du Chene", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10 vie au depart de chaque run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "druides_2": { "name": { "fr": "Symbiose Vegetale", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Reduit de 1 le cooldown des Oghams de categorie nature.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "druides_2": { "name": { "fr": "Symbiose Vegetale", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Reduit de 1 le cooldown des Runes de categorie nature.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "druides_3": { "name": { "fr": "Esprit du Nemeton", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+15% score aux minigames du champ logique.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "druides_4": { "name": { "fr": "Guerison Profonde", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Double l'effet de guerison des Oghams Recovery.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "druides_4": { "name": { "fr": "Guerison Profonde", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Double l'effet de guerison des Runes Recovery.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "druides_5": { "name": { "fr": "Racine Celeste", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Le drain de vie par carte passe de 1 a 0 (annule).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "anciens_1": { "name": { "fr": "Clairvoyance", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Revele 1 effet cache par carte.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "anciens_2": { "name": { "fr": "Sagesse Accumulee", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+5% score a tous les minigames.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
@@ -228,7 +228,7 @@
       "korrigans_1": { "name": { "fr": "Doigts de Fee", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+3 Anam bonus par run completee.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "korrigans_2": { "name": { "fr": "Chance du Lutin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10% score aux minigames du champ chance.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "korrigans_3": { "name": { "fr": "Miroir Inverseur", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Inverse 1 effet negatif en positif par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "korrigans_4": { "name": { "fr": "Rythme du Chaos", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "-1 cooldown global sur tous les Oghams.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "korrigans_4": { "name": { "fr": "Rythme du Chaos", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "-1 cooldown global sur toutes les Runes.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "korrigans_5": { "name": { "fr": "Tresor du Tertre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Double les recompenses Anam en fin de run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "niamh_1": { "name": { "fr": "Douceur de Niamh", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+5 vie sur chaque succes critique.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "niamh_2": { "name": { "fr": "Charme Diplomatique", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10% gains de reputation avec toutes les factions.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
@@ -241,13 +241,13 @@
       "ankou_4": { "name": { "fr": "Prescience Funebre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Voir le theme ET les effets de la prochaine carte.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "ankou_5": { "name": { "fr": "Recolte Sombre", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Recompenses Anam +50% si vie <= 25 en fin de run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "central_1": { "name": { "fr": "Coeur Fortifie", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Vie max +10 (100 -> 110).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "central_2": { "name": { "fr": "Flux Accelere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "-1 cooldown global sur tous les Oghams.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "central_2": { "name": { "fr": "Flux Accelere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "-1 cooldown global sur toutes les Runes.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "central_3": { "name": { "fr": "Oeil de Merlin", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Affiche karma et tension dans le HUD.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "central_4": { "name": { "fr": "Maitrise Universelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+10% score a tous les minigames.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "calendrier_des_brumes": { "name": { "fr": "Calendrier des Brumes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Revele 7 prochains evenements. Primes aux evenements atteints.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "harmonie_factions": { "name": { "fr": "Harmonie des Factions", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "+5 Anam/run si toutes les factions sont >= 50.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "pacte_ombre_lumiere": { "name": { "fr": "Pacte Ombre-Lumiere", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Inverse heal et damage 1 fois par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "eveil_ogham": { "name": { "fr": "Eveil d'Ogham", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Equipe 1 Ogham supplementaire (1 -> 2 actifs).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "eveil_ogham": { "name": { "fr": "Eveil de Rune", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "Equipe 1 Rune supplementaire (1 -> 2 actifs).", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "instinct_sauvage": { "name": { "fr": "Instinct Sauvage", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "1 retry gratuit de minigame par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "boucle_eternelle": { "name": { "fr": "Boucle Eternelle", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "description": { "fr": "New Game+: Anam x1.5 par run.", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
     },
@@ -271,7 +271,7 @@
     "expedition": {
       "baton_marche": { "name": { "fr": "Baton de Marche", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Arme naturelle du voyageur", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "besace":       { "name": { "fr": "Besace du Druide", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Provisions et herbes medicinales", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
-      "lanterne":     { "name": { "fr": "Lanterne d'Ogham", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Eclaire les chemins oublies", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
+      "lanterne":     { "name": { "fr": "Lanterne des Runes", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Eclaire les chemins oublies", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } },
       "talisman":     { "name": { "fr": "Talisman Ancien", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" }, "desc": { "fr": "Resonne avec les forces invisibles", "en": "", "es": "", "it": "", "pt": "", "zh": "", "ja": "" } }
     },
     "season": {

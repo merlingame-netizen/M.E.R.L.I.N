@@ -251,23 +251,12 @@ func _build_3d_viewport() -> void:
 	_3d_viewport.transparent_bg = false
 	_3d_container.add_child(_3d_viewport)
 
-	# World environment — dusk coastal atmosphere
+	# World environment — procedural sky driven by DayNightManager
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.04, 0.05, 0.08)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.15, 0.12, 0.20)
-	env.ambient_light_energy = 0.4
-	env.tonemap_mode = Environment.TONE_MAP_ACES
-	env.fog_enabled = true
-	env.fog_light_color = Color(0.12, 0.10, 0.18)
-	env.fog_density = 0.015
-	env.glow_enabled = true
-	env.glow_intensity = 0.3
-	env.glow_bloom = 0.1
 	_3d_env = WorldEnvironment.new()
 	_3d_env.environment = env
 	_3d_viewport.add_child(_3d_env)
+	DayNightManager.apply_to_environment(env)
 
 	# Camera
 	_3d_camera = Camera3D.new()
@@ -277,7 +266,7 @@ func _build_3d_viewport() -> void:
 	_3d_camera.far = 200.0
 	_3d_viewport.add_child(_3d_camera)
 
-	# Dynamic lighting — driven by system clock
+	# Dynamic lighting — driven by DayNightManager
 	_3d_sun = DirectionalLight3D.new()
 	_3d_sun.shadow_enabled = true
 	_3d_viewport.add_child(_3d_sun)
@@ -300,95 +289,22 @@ func _build_3d_viewport() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════
-# DAY/NIGHT CYCLE — 3D lighting driven by system clock
+# DAY/NIGHT CYCLE — 3D lighting via DayNightManager autoload
 # ═══════════════════════════════════════════════════════════════
 
-const TIME_LIGHTING := {
-	"night": {
-		"sun_color": Color(0.20, 0.18, 0.35), "sun_energy": 0.25,
-		"sun_angle": Vector3(-15, -60, 0),
-		"fill_color": Color(0.15, 0.12, 0.30), "fill_energy": 0.5,
-		"bg_color": Color(0.02, 0.02, 0.06),
-		"ambient_color": Color(0.08, 0.06, 0.15), "ambient_energy": 0.3,
-		"fog_color": Color(0.05, 0.04, 0.10),
-	},
-	"dawn": {
-		"sun_color": Color(0.95, 0.55, 0.25), "sun_energy": 0.5,
-		"sun_angle": Vector3(-5, -80, 0),
-		"fill_color": Color(0.90, 0.50, 0.20), "fill_energy": 0.8,
-		"bg_color": Color(0.12, 0.06, 0.08),
-		"ambient_color": Color(0.25, 0.15, 0.12), "ambient_energy": 0.4,
-		"fog_color": Color(0.20, 0.12, 0.10),
-	},
-	"morning": {
-		"sun_color": Color(0.95, 0.85, 0.65), "sun_energy": 0.7,
-		"sun_angle": Vector3(-25, -50, 0),
-		"fill_color": Color(0.85, 0.70, 0.35), "fill_energy": 1.0,
-		"bg_color": Color(0.06, 0.06, 0.09),
-		"ambient_color": Color(0.20, 0.18, 0.15), "ambient_energy": 0.45,
-		"fog_color": Color(0.14, 0.12, 0.10),
-	},
-	"midday": {
-		"sun_color": Color(1.0, 0.95, 0.85), "sun_energy": 0.9,
-		"sun_angle": Vector3(-60, -30, 0),
-		"fill_color": Color(0.90, 0.80, 0.50), "fill_energy": 1.0,
-		"bg_color": Color(0.08, 0.08, 0.10),
-		"ambient_color": Color(0.25, 0.22, 0.18), "ambient_energy": 0.5,
-		"fog_color": Color(0.15, 0.13, 0.10),
-	},
-	"afternoon": {
-		"sun_color": Color(0.95, 0.80, 0.50), "sun_energy": 0.75,
-		"sun_angle": Vector3(-40, 30, 0),
-		"fill_color": Color(0.90, 0.70, 0.35), "fill_energy": 1.1,
-		"bg_color": Color(0.06, 0.06, 0.08),
-		"ambient_color": Color(0.22, 0.18, 0.14), "ambient_energy": 0.45,
-		"fog_color": Color(0.14, 0.11, 0.08),
-	},
-	"dusk": {
-		"sun_color": Color(0.90, 0.35, 0.15), "sun_energy": 0.5,
-		"sun_angle": Vector3(-8, 70, 0),
-		"fill_color": Color(0.85, 0.40, 0.15), "fill_energy": 0.9,
-		"bg_color": Color(0.08, 0.04, 0.06),
-		"ambient_color": Color(0.20, 0.10, 0.12), "ambient_energy": 0.35,
-		"fog_color": Color(0.18, 0.08, 0.06),
-	},
-	"evening": {
-		"sun_color": Color(0.35, 0.30, 0.55), "sun_energy": 0.35,
-		"sun_angle": Vector3(-20, -55, 0),
-		"fill_color": Color(0.30, 0.25, 0.45), "fill_energy": 0.7,
-		"bg_color": Color(0.03, 0.03, 0.07),
-		"ambient_color": Color(0.12, 0.10, 0.18), "ambient_energy": 0.35,
-		"fog_color": Color(0.08, 0.06, 0.12),
-	},
-}
-
-func _get_time_of_day() -> String:
-	var hour: int = Time.get_datetime_dict_from_system().get("hour", 12)
-	if hour < 5: return "night"
-	if hour < 7: return "dawn"
-	if hour < 10: return "morning"
-	if hour < 14: return "midday"
-	if hour < 17: return "afternoon"
-	if hour < 20: return "dusk"
-	if hour < 22: return "evening"
-	return "night"
-
 func _apply_time_of_day_lighting() -> void:
-	_time_of_day = _get_time_of_day()
-	var cfg: Dictionary = TIME_LIGHTING.get(_time_of_day, TIME_LIGHTING["night"])
-	var env: Environment = _3d_env.environment
+	_time_of_day = DayNightManager.get_time_of_day()
 
-	_3d_sun.light_color = cfg.sun_color
-	_3d_sun.light_energy = cfg.sun_energy
-	_3d_sun.rotation_degrees = cfg.sun_angle
+	# Sun — from DayNightManager
+	var sun_cfg: Dictionary = DayNightManager.get_sun_config()
+	_3d_sun.light_color = sun_cfg.get("color", Color.WHITE)
+	_3d_sun.light_energy = sun_cfg.get("energy", 0.7)
+	_3d_sun.rotation_degrees = sun_cfg.get("angle", Vector3(-45.0, -45.0, 0.0))
 
-	_3d_fill.light_color = cfg.fill_color
-	_3d_fill.light_energy = cfg.fill_energy
-
-	env.background_color = cfg.bg_color
-	env.ambient_light_color = cfg.ambient_color
-	env.ambient_light_energy = cfg.ambient_energy
-	env.fog_light_color = cfg.fog_color
+	# Fill light — derived from DayNightManager
+	var fill_cfg: Dictionary = DayNightManager.get_fill_light_config()
+	_3d_fill.light_color = fill_cfg.get("color", Color(0.5, 0.5, 0.5))
+	_3d_fill.light_energy = fill_cfg.get("energy", 0.5)
 
 
 func _load_menu_3d_assets() -> void:
