@@ -77,6 +77,9 @@
       "file": "addons/merlin_ai/rag_manager.gd",
       "line": 443,
       "severity": "MEDIUM",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "Dead reference to removed Flux system: reads run.get(flux) for tension. Flux was removed; tension is now in run.hidden.tension. RAG tension context is always empty.",
       "suggested_fix": "Read tension from run.get(hidden, {}).get(tension, 0)"
     },
@@ -85,6 +88,9 @@
       "file": "addons/merlin_ai/merlin_ai.gd",
       "line": 1803,
       "severity": "MEDIUM",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "Dead reference to removed Souffle system: center option cost=1 with comment Centre costs Souffle. Souffle was removed.",
       "suggested_fix": "Remove cost field or repurpose to valid current system"
     },
@@ -93,6 +99,9 @@
       "file": "scripts/merlin/merlin_effect_engine.gd",
       "line": 954,
       "severity": "MEDIUM",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "pick_minigame_for_field() uses field.hash() % size, always returning same minigame for same field. Defeats purpose of multiple minigame options per lexical field.",
       "suggested_fix": "Use randi() or accept card_index for variation"
     },
@@ -109,6 +118,9 @@
       "file": "scripts/merlin/merlin_store.gd",
       "line": 93,
       "severity": "MEDIUM",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "ClassDB.class_exists(MerlinOmniscient) is dead code: MerlinOmniscient is a GDScript class_name, never registered in ClassDB. Only the fallback script-loading path on line 99 executes.",
       "suggested_fix": "Remove ClassDB branch, use MerlinOmniscient.new() directly"
     },
@@ -117,6 +129,9 @@
       "file": "scripts/merlin/merlin_reputation_system.gd",
       "line": 32,
       "severity": "MEDIUM",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "build_default_factions() initializes all factions to 0.0 but game design says starting rep is 20 (FACTION_SCORE_START). Anyone calling reset() gets Hostile factions instead of Neutral.",
       "suggested_fix": "Use MerlinConstants.FACTION_SCORE_START instead of 0.0"
     },
@@ -125,6 +140,9 @@
       "file": "scripts/merlin/merlin_save_system.gd",
       "line": 23,
       "severity": "MEDIUM",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "Save default profile sets faction_rep to 0.0, but store default is 20. Fresh profile load returns Hostile factions, causing hostile penalties on first run.",
       "suggested_fix": "Set defaults to float(MerlinConstants.FACTION_SCORE_START)"
     },
@@ -149,6 +167,9 @@
       "file": "addons/merlin_ai/rag_manager.gd",
       "line": 574,
       "severity": "LOW",
+      "status": "FIXED",
+      "fixed_at": "2026-04-17",
+      "fixed_in": "cycle-4",
       "description": "log_aspect_shifted() references removed aspect system. Dead code path that will never be called with meaningful data.",
       "suggested_fix": "Remove or rename to generic event logger"
     }
