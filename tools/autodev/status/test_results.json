@@ -1,33 +1,27 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
-  "bugs_fixed_this_cycle": [
+  "cycle": 5,
+  "timestamp": "2026-04-17T14:00:00Z",
+  "bugs_fixed_this_cycle": [],
+  "verified_already_fixed": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-14",
+      "description": "Faction default 0 vs 20 mismatch — verified FACTION_SCORE_START=20 in merlin_constants.gd, merlin_reputation_system.gd, merlin_save_system.gd, merlin_store.gd. All correct.",
+      "status": "ALREADY_FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
+      "id": "BUGFIX-MED-11",
+      "description": "Deterministic minigame selection — pick_minigame_for_field() now uses randi() % size instead of field.hash() % size. Already randomized.",
+      "status": "ALREADY_FIXED"
+    }
+  ],
+  "features_deployed": [
     {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
-      "status": "FIXED"
+      "id": "RETRO-PIPELINE-1",
+      "files": ["shaders/retro_psx_post.gdshader", "scripts/autoload/retro_render_pipeline.gd", "project.godot"],
+      "description": "RetroRenderPipeline autoload — unified PSX/N64 post-processing. Bayer 8x8 dithering, color quantization (24 levels), time-of-day tinting (7 periods), seasonal color grading (4 seasons), film grain. 3 presets: off/subtle/full. CanvasLayer 98."
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "First feature cycle. Retro visual pipeline deployed, addressing creator feedback on PSX/N64 aesthetic and time/season-based ambiance. Zero bugs remaining. 16 total bugs resolved across 5 cycles."
 }

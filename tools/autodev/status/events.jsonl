@@ -49,3 +49,8 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-17T14:00:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: First feature cycle. RetroRenderPipeline (PSX post-process + time/season). 2 stale MEDIUM bugs verified fixed."}
+{"ts":"2026-04-17T14:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-14: Verified already fixed — FACTION_SCORE_START=20 in all files"}
+{"ts":"2026-04-17T14:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-11: Verified already fixed — randi() for minigame selection"}
+{"ts":"2026-04-17T14:00:00.000Z","type":"task_done","cycle":5,"detail":"RETRO-PIPELINE-1: RetroRenderPipeline autoload + retro_psx_post.gdshader — unified PSX aesthetic"}
+{"ts":"2026-04-17T14:00:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: RetroRenderPipeline deployed (3 files, ~300 lines). PSX color quantization + Bayer 8x8 dithering + time/season tinting. Visual stack: PSX(98) + border(99) + CRT(100)."}
