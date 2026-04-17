@@ -153,3 +153,33 @@ Ajouter une ligne par evenement :
 ```json
 {"ts": "ISO", "type": "cycle_start|cycle_end|task_done|blocker|escalation", "cycle": N, "detail": "..."}
 ```
+
+## HEALTH CHECK COHERENCE (OBLIGATOIRE — fin de chaque cycle)
+
+Avant de pusher, verifier ces invariants :
+
+### 1. Coherence feature_queue ↔ code reel
+- Chaque tache "completed" doit correspondre a du code REELLEMENT present sur main
+- Ne JAMAIS marquer "completed" sans avoir edite et pousse le code
+- Le nombre de fichiers modifies dans le cycle doit correspondre au budget declare
+
+### 2. Coherence status JSON ↔ etat reel
+- session.json.cycle doit correspondre au numero de cycle reel
+- director_decision.json.tasks doit lister les taches REELLEMENT faites
+- events.jsonl doit avoir une ligne cycle_start ET cycle_end pour chaque cycle
+- watchdog.txt doit avoir un heartbeat a chaque cycle
+
+### 3. Coherence jeu Godot ↔ dashboard
+- Le Game Preview de Mission Control affiche UNIQUEMENT le jeu Godot (via GitHub Pages)
+- PAS de web-demo Three.js — le projet web-demo/ est un legacy qui ne doit PAS etre referencé
+- Le jeu visible dans Mission Control = le meme code que scripts/, scenes/, addons/
+
+### 4. Push via MCP (CRITIQUE)
+- TOUJOURS utiliser mcp__github__push_files pour pusher
+- JAMAIS git push en bash (pas de credentials dans le sandbox cloud)
+- Verifier que le push a reussi en lisant le dernier commit via mcp__github__list_commits
+
+### 5. Pas de references mortes
+- Aucune mention de "Ogham" dans les textes visibles joueur (remplace par "Rune")
+- Aucune reference a Triade, Souffle, Bestiole, Flux, D20, Awen dans le code actif
+- Aucune reference a web-demo ou Three.js dans Mission Control
