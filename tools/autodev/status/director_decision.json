@@ -1,10 +1,10 @@
 {
-  "cycle": 3,
-  "timestamp": "2026-04-16T11:10:58.000Z",
+  "cycle": 4,
+  "timestamp": "2026-04-17T18:30:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-HIGH-5", "BUGFIX-HIGH-7", "BUGFIX-HIGH-8"],
-  "rationale": "All 6 HIGH bugs resolved across 3 cycles. Next: MEDIUM bugs (faction defaults, deterministic minigame) then playtest + bible audit.",
-  "budget": {"files": 4, "lines": 85},
+  "tasks": ["BUGFIX-MED-009", "BUGFIX-MED-010", "BUGFIX-MED-012", "BUGFIX-MED-013"],
+  "rationale": "AI Layer Bug Hunt: all 4 remaining MEDIUM bugs in the AI layer (rag_manager, merlin_ai, ollama_backend, merlin_store). Follows feature→bug hunt cycle pattern after responsive UI + day/night features. All known bugs now resolved.",
+  "budget": {"files": 4, "lines": 22},
   "blockers": [],
-  "next_cycle_plan": "Fix BUG-014 (faction default 0→20) + BUG-011 (deterministic minigame). Then TEST-PLAYTEST-1."
+  "next_cycle_plan": "Feature cycle: implement gameplay or visual improvements. Candidates: faction content unlock gate, typography (celtic titles + sans-serif body), or narrative RAG memory. Check pending feedback_questions for creator input."
 }
