@@ -121,6 +121,13 @@ func _setup_option_buttons() -> void:
 		{"key": "B", "color": MerlinVisual.CRT_PALETTE.amber},
 		{"key": "C", "color": MerlinVisual.CRT_PALETTE.danger},
 	]
+	# Touch-friendly minimum height
+	var mr: Node = Engine.get_main_loop().root.get_node_or_null("MerlinResponsive") if Engine.get_main_loop() else null
+	var btn_min_h: int = 80
+	if mr:
+		btn_min_h = maxi(btn_min_h, MerlinVisual.MIN_TOUCH_TARGET)
+		if mr.is_mobile:
+			btn_min_h = maxi(btn_min_h, 56)
 	for i in range(3):
 		var btn: Button = _ui.option_buttons[i]
 		MerlinVisual.apply_celtic_option_theme(btn, option_configs[i]["color"])
@@ -130,8 +137,10 @@ func _setup_option_buttons() -> void:
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
 		btn.get_parent().mouse_filter = Control.MOUSE_FILTER_PASS
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.custom_minimum_size = Vector2(0, 80)
+		btn.custom_minimum_size = Vector2(0, btn_min_h)
 		btn.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if mr:
+			mr.apply_touch_margins(btn)
 
 	if _ui.options_container and is_instance_valid(_ui.options_container):
 		_ui.options_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -256,13 +256,18 @@ func _on_day_night_period_changed(_new_period: String) -> void:
 
 func _configure_ui() -> void:
 	var vs := get_viewport_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+	var safe_btm: float = mr.get_safe_margin_bottom() if mr else 0.0
 
 	bg.material = null
 	bg.color = MerlinVisual.CRT_PALETTE.bg_dark
 	_apply_day_night_tint()
 
-	_configure_celtic_ornament($CelticTop, Vector2(0, 20), Vector2(vs.x, 30))
-	_configure_celtic_ornament($CelticBottom, Vector2(0, vs.y - 50), Vector2(vs.x, 30))
+	var ornament_top_y: float = maxf(20.0, safe_top + 4.0)
+	var ornament_btm_y: float = vs.y - 50 - safe_btm
+	_configure_celtic_ornament($CelticTop, Vector2(0, ornament_top_y), Vector2(vs.x, 30))
+	_configure_celtic_ornament($CelticBottom, Vector2(0, ornament_btm_y), Vector2(vs.x, 30))
 
 	_weather_mod.configure_weather_system(_weather_overlay, _clock_panel, _clock_label, self, pixel_container)
 
@@ -271,9 +276,16 @@ func _configure_ui() -> void:
 	if body_font == null:
 		body_font = title_font
 
+	# Responsive content width
+	var content_w: float = 600.0
+	if mr:
+		content_w = mr.get_content_width(vs, 600.0)
+	var content_half: float = content_w / 2.0
+
 	biome_title.text = biome_data.get("name", "")
-	biome_title.position = Vector2(vs.x / 2.0 - 300, 55)
-	biome_title.size = Vector2(600, 50)
+	var title_y: float = maxf(55.0, ornament_top_y + 20.0)
+	biome_title.position = Vector2(vs.x / 2.0 - content_half, title_y)
+	biome_title.size = Vector2(content_w, 50)
 	var biome_color_str = biome_data.get("color", "")
 	var font_color: Color = MerlinVisual.CRT_PALETTE.amber
 	if biome_color_str is String and biome_color_str != "":
@@ -285,25 +297,26 @@ func _configure_ui() -> void:
 		biome_title.add_theme_font_override("font", title_font)
 
 	biome_subtitle.text = biome_data.get("subtitle", "")
-	biome_subtitle.position = Vector2(vs.x / 2.0 - 300, 95)
-	biome_subtitle.size = Vector2(600, 30)
+	biome_subtitle.position = Vector2(vs.x / 2.0 - content_half, title_y + 40.0)
+	biome_subtitle.size = Vector2(content_w, 30)
 	biome_subtitle.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	if body_font:
 		biome_subtitle.add_theme_font_override("font", body_font)
 
-	arrival_text.size = Vector2(680, 200)
-	arrival_text.position = Vector2(vs.x / 2.0 - 340, vs.y * 0.65)
+	var arrival_w: float = minf(680.0, content_w * 1.12)
+	arrival_text.size = Vector2(arrival_w, 200)
+	arrival_text.position = Vector2(vs.x / 2.0 - arrival_w / 2.0, vs.y * 0.65)
 	arrival_text.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	if body_font:
 		arrival_text.add_theme_font_override("normal_font", body_font)
-	arrival_text.add_theme_font_size_override("normal_font_size", 18)
+	arrival_text.add_theme_font_size_override("normal_font_size", MerlinVisual.responsive_size(18))
 
-	merlin_comment.size = Vector2(600, 50)
-	merlin_comment.position = Vector2(vs.x / 2.0 - 300, vs.y - 130)
+	merlin_comment.size = Vector2(content_w, 50)
+	merlin_comment.position = Vector2(vs.x / 2.0 - content_half, vs.y - 130 - safe_btm)
 	merlin_comment.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor)
 	if body_font:
 		merlin_comment.add_theme_font_override("normal_font", body_font)
-	merlin_comment.add_theme_font_size_override("normal_font_size", 20)
+	merlin_comment.add_theme_font_size_override("normal_font_size", MerlinVisual.responsive_size(20))
 
 	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
 
@@ -522,9 +535,12 @@ func _phase_quest_preparation() -> void:
 		title_tw.tween_property(biome_title, "modulate:a", 0.25, 0.4)
 		await title_tw.finished
 
+	var mr_quest: Node = get_node_or_null("/root/MerlinResponsive")
+	var quest_safe_btm: float = mr_quest.get_safe_margin_bottom() if mr_quest else 0.0
 	_quest_progress_label = Label.new()
 	_quest_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, vs.y * 0.88)
+	var quest_label_y: float = minf(vs.y * 0.88, vs.y - 40.0 - quest_safe_btm)
+	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, quest_label_y)
 	_quest_progress_label.size = Vector2(400, 28)
 	_quest_progress_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	_quest_progress_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
