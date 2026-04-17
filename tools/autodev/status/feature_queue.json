@@ -514,26 +514,31 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
-        "scripts/merlin/merlin_save_system.gd"
+        "scripts/merlin/merlin_save_system.gd",
+        "web-demo/src/game/Constants.ts"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-17",
+      "notes": "Fixed in reputation_system (build_default_factions), save_system (_get_default_profile + migration), web-demo Constants.ts. All now use FACTION_SCORE_START=20. Stale test_smoke assertion fixed too."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-17",
+      "notes": "Replaced field.hash()%size with randi()%size. Each call now returns a random minigame from the field's pool."
     },
     {
       "id": "TEST-PLAYTEST-1",
