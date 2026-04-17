@@ -514,26 +514,58 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-17",
+      "notes": "build_default_factions() now uses float(MerlinConstants.FACTION_SCORE_START) = 20.0. Save default profile and migration also use the constant. Fresh profiles and reset() now start at Neutral tier."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-17",
+      "notes": "Replaced deterministic field.hash()%size with randi_range(0, size-1). Each call now picks a random minigame from the field's pool."
+    },
+    {
+      "id": "BUGFIX-MED-9",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Fix dead Flux reference in RAG tension context (BUG-009)",
+      "agent": "godot_expert",
+      "files": [
+        "addons/merlin_ai/rag_manager.gd"
+      ],
+      "description": "run.get('flux') reads removed system. Tension is now in run.hidden.tension.",
+      "completed_at": "2026-04-17",
+      "notes": "Changed run.get('flux', {}).get('tension') to run.get('hidden', {}).get('tension'). RAG now reads tension from correct location in run state."
+    },
+    {
+      "id": "BUGFIX-MED-10",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Fix dead Souffle cost on center option (BUG-010)",
+      "agent": "godot_expert",
+      "files": [
+        "addons/merlin_ai/merlin_ai.gd"
+      ],
+      "description": "Center option had cost=1 referencing removed Souffle system.",
+      "completed_at": "2026-04-17",
+      "notes": "Removed dead cost=1 assignment and Souffle comment. Options no longer carry a cost field from the removed system."
     },
     {
       "id": "TEST-PLAYTEST-1",
