@@ -441,8 +441,8 @@ func configure_from_registry(model_key: String) -> bool:
 	if model_key not in MODEL_REGISTRY:
 		return false
 	var entry: Dictionary = MODEL_REGISTRY[model_key]
-	model = str(entry.tag)
-	_num_ctx = int(entry.context_default)
+	model = str(entry.get("tag", ""))
+	_num_ctx = int(entry.get("context_default", 4096))
 	return true
 
 
