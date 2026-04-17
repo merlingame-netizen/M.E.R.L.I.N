@@ -13,7 +13,7 @@
     },
     "souffle_use": {
       "trigger": "first_souffle_spent",
-      "text": "Le Souffle d'Ogham est un don precieux. Il amplifie tes choix, mais ne se regenere que dans l'equilibre. Depense-le avec sagesse, car les moments critiques viendront.",
+      "text": "Le Souffle des Runes est un don precieux. Il amplifie tes choix, mais ne se regenere que dans l'equilibre. Depense-le avec sagesse, car les moments critiques viendront.",
       "merlin_tone": "protecteur"
     },
     "extreme_state": {
@@ -28,7 +28,7 @@
     },
     "bestiole_skill": {
       "trigger": "first_ogham_used",
-      "text": "La Bestiole eveille un Ogham ! Ces pouvoirs anciens te protegent et te guident. Plus votre lien grandit, plus d'Oghams se revelent. Nourris cette amitie.",
+      "text": "La Bestiole eveille une Rune ! Ces pouvoirs anciens te protegent et te guident. Plus votre lien grandit, plus de Runes se revelent. Nourris cette amitie.",
       "merlin_tone": "emerveille"
     },
     "biome_travel": {
