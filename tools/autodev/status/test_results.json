@@ -1,33 +1,29 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
+  "cycle": 5,
+  "timestamp": "2026-04-17T14:30:00Z",
   "bugs_fixed_this_cycle": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
+      "id": "BUGFIX-MED-14",
+      "files": ["scripts/merlin/store_factions.gd", "scripts/merlin/merlin_store.gd"],
+      "description": "Faction rep fallback defaulted to 0 (Hostile) instead of FACTION_SCORE_START (20, Neutral) in build_and_store_faction_context() and _apply_effect() reputation delta calculation.",
       "status": "FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
+      "id": "BUGFIX-MED-11",
+      "files": ["scripts/test/test_minigame_scoring.gd"],
+      "description": "Test test_pick_minigame_is_deterministic asserted hash-based determinism but function already uses randi(). Renamed to test_pick_minigame_returns_valid_member, now validates result membership over 10 calls.",
       "status": "FIXED"
     }
   ],
+  "features_added_this_cycle": [
+    {
+      "id": "WHISPER-SYSTEM",
+      "files": ["scripts/merlin/merlin_whisper_system.gd"],
+      "description": "MerlinWhisperSystem: 19 cryptic whispers triggered by hidden state (karma, tension, factions, trust tier, biome, milestones, promises). Trust-gated, no repeats per run, min 3-card gap.",
+      "status": "ADDED"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "16 total bugs fixed across 5 cycles (2 CRITICAL + 6 HIGH + 8 MEDIUM). First gameplay feature added: whisper system. Codebase clean and expanding."
 }

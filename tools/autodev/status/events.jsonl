@@ -49,3 +49,8 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-17T14:30:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: Fix 2 MEDIUM bugs (BUG-014 faction defaults, BUG-011 minigame test) + new feature MerlinWhisperSystem."}
+{"ts":"2026-04-17T14:30:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-14: faction fallback 0→FACTION_SCORE_START in store_factions.gd and merlin_store.gd"}
+{"ts":"2026-04-17T14:30:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-11: minigame test updated (deterministic→validity check)"}
+{"ts":"2026-04-17T14:30:00.000Z","type":"task_done","cycle":5,"detail":"WHISPER-SYSTEM: MerlinWhisperSystem created — 19 cryptic whispers, trust-gated, karma/tension/faction/biome triggers"}
+{"ts":"2026-04-17T14:30:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: 2 MEDIUM bugs fixed + MerlinWhisperSystem feature. 16 total bugs fixed. 4 files, 273 lines."}
