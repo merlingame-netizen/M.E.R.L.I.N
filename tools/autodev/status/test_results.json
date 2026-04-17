@@ -149,7 +149,7 @@
       {
         "id": "BUG-013",
         "severity": "MEDIUM",
-        "status": "OPEN",
+        "status": "FIXED",
         "description": "ClassDB.class_exists dead code for MerlinOmniscient init"
       }
     ],

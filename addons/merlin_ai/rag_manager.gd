@@ -432,14 +432,14 @@ func _get_tone_context() -> String:
 func _get_karma_tension_context(game_state: Dictionary) -> String:
 	## Build karma and tension context from game state.
 	var run: Dictionary = game_state.get("run", {})
+	var hidden: Dictionary = run.get("hidden", {})
 	var parts: Array[String] = []
-	var karma: int = int(run.get("karma", 0))
+	var karma: int = int(hidden.get("karma", 0))
 	if karma >= 5:
 		parts.append("Karma: positif fort (%d)" % karma)
 	elif karma <= -5:
 		parts.append("Karma: negatif fort (%d)" % karma)
-	var flux: Dictionary = run.get("flux", {})
-	var tension: int = int(flux.get("tension", 40))
+	var tension: int = int(hidden.get("tension", 0))
 	if tension >= 70:
 		parts.append("Tension: haute")
 	elif tension <= 20:

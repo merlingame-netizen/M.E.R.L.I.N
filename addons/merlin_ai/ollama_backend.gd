@@ -441,8 +441,8 @@ func configure_from_registry(model_key: String) -> bool:
 	if model_key not in MODEL_REGISTRY:
 		return false
 	var entry: Dictionary = MODEL_REGISTRY[model_key]
-	model = str(entry.tag)
-	_num_ctx = int(entry.context_default)
+	model = str(entry.get("tag", DEFAULT_MODEL))
+	_num_ctx = int(entry.get("context_default", 4096))
 	return true
 
 
@@ -618,19 +618,19 @@ func _store_result(result: Dictionary, _start_ms: int) -> void:
 
 func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float, ttft_ms: int = -1) -> void:
 	_mutex.lock()
-	stats.last_total_ms = total_ms
-	stats.last_eval_count = eval_count
-	stats.last_tok_per_sec = tok_per_sec
+	stats["last_total_ms"] = total_ms
+	stats["last_eval_count"] = eval_count
+	stats["last_tok_per_sec"] = tok_per_sec
 	# ttft_ms: -1 means non-streaming (bulk response) — use total_ms as TTFT proxy
-	stats.last_ttft_ms = ttft_ms if ttft_ms >= 0 else total_ms
-	stats.llm_calls += 1
-	if stats.llm_calls == 1:
-		stats.avg_total_ms = float(total_ms)
-		stats.avg_tok_per_sec = tok_per_sec
+	stats["last_ttft_ms"] = ttft_ms if ttft_ms >= 0 else total_ms
+	stats["llm_calls"] = stats.get("llm_calls", 0) + 1
+	if stats["llm_calls"] == 1:
+		stats["avg_total_ms"] = float(total_ms)
+		stats["avg_tok_per_sec"] = tok_per_sec
 	else:
-		var n: float = float(stats.llm_calls)
-		stats.avg_total_ms = (stats.avg_total_ms * (n - 1.0) + float(total_ms)) / n
-		stats.avg_tok_per_sec = (stats.avg_tok_per_sec * (n - 1.0) + tok_per_sec) / n
+		var n: float = float(stats["llm_calls"])
+		stats["avg_total_ms"] = (stats.get("avg_total_ms", 0.0) * (n - 1.0) + float(total_ms)) / n
+		stats["avg_tok_per_sec"] = (stats.get("avg_tok_per_sec", 0.0) * (n - 1.0) + tok_per_sec) / n
 	_mutex.unlock()
 
 
