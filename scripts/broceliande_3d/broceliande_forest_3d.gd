@@ -729,6 +729,47 @@ func _setup_environment() -> void:
 	fill.shadow_enabled = false
 	world_root.add_child(fill)
 
+	# --- DayNightManager integration ---
+	# Blend time-of-day lighting into the biome environment.
+	# We keep BG_COLOR mode (GL Compat) but tint ambient, fog, sun from DayNightManager.
+	_apply_day_night_to_environment(env, sun_light, fill)
+
+
+func _apply_day_night_to_environment(env: Environment, sun: DirectionalLight3D, fill: DirectionalLight3D) -> void:
+	## Blend DayNightManager time-of-day colors into the biome environment.
+	## Uses BG_COLOR mode (GL Compat safe) — tints ambient, fog, sun, fill light.
+	var dnm: Node = get_node_or_null("/root/DayNightManager")
+	if dnm == null:
+		return
+	var sun_cfg: Dictionary = dnm.get_sun_config()
+	var fill_cfg: Dictionary = dnm.get_fill_light_config()
+	var period: String = dnm.get_time_of_day()
+	var pcfg: Dictionary = dnm.get_period_config(period)
+
+	# Blend sun color and energy (50% biome / 50% day-night for natural look)
+	sun.light_color = sun.light_color.lerp(sun_cfg.get("color", sun.light_color), 0.5)
+	sun.light_energy = lerpf(sun.light_energy, sun_cfg.get("energy", sun.light_energy) * 2.5, 0.4)
+	var angle: Vector3 = sun_cfg.get("angle", sun.rotation_degrees)
+	sun.rotation_degrees.x = lerpf(sun.rotation_degrees.x, angle.x, 0.3)
+
+	# Blend fill light
+	fill.light_color = fill.light_color.lerp(fill_cfg.get("color", fill.light_color), 0.4)
+	fill.light_energy = lerpf(fill.light_energy, fill_cfg.get("energy", fill.light_energy), 0.3)
+
+	# Blend ambient
+	var dnm_ambient: Color = pcfg.get("ambient_color", env.ambient_light_color)
+	env.ambient_light_color = env.ambient_light_color.lerp(dnm_ambient, 0.35)
+
+	# Blend fog
+	var dnm_fog: Color = pcfg.get("fog_color", env.fog_light_color)
+	env.fog_light_color = env.fog_light_color.lerp(dnm_fog, 0.3)
+
+	# Blend background sky color
+	var dnm_sky_horizon: Color = pcfg.get("sky_horizon_color", env.background_color)
+	env.background_color = env.background_color.lerp(dnm_sky_horizon, 0.3)
+
+	print("[Broceliande] DayNightManager applied — period: %s" % period)
+
 
 func _setup_player() -> void:
 	player.position = Vector3(0.0, 1.2, 2.0) if _path_points.is_empty() else _path_points[0] + Vector3(0.0, 1.2, 0.0)

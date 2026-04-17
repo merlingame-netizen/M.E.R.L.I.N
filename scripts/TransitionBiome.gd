@@ -227,6 +227,30 @@ func _clear_merlin_scene_context() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DAY/NIGHT TINT (2D)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _apply_day_night_tint() -> void:
+	## Tint background based on DayNightManager time of day.
+	var dnm: Node = get_node_or_null("/root/DayNightManager")
+	if dnm == null:
+		return
+	var period: String = dnm.get_time_of_day()
+	var cfg: Dictionary = dnm.get_period_config(period)
+	var ambient_col: Color = cfg.get("ambient_color", Color(0.2, 0.18, 0.15))
+	var base_bg: Color = MerlinVisual.CRT_PALETTE.bg_dark
+	bg.color = base_bg.lerp(ambient_col, 0.25)
+	# Connect for live updates
+	if not dnm.period_changed.is_connected(_on_day_night_period_changed):
+		dnm.period_changed.connect(_on_day_night_period_changed)
+
+
+func _on_day_night_period_changed(_new_period: String) -> void:
+	if bg and is_instance_valid(bg):
+		_apply_day_night_tint()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # UI CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -235,6 +259,7 @@ func _configure_ui() -> void:
 
 	bg.material = null
 	bg.color = MerlinVisual.CRT_PALETTE.bg_dark
+	_apply_day_night_tint()
 
 	_configure_celtic_ornament($CelticTop, Vector2(0, 20), Vector2(vs.x, 30))
 	_configure_celtic_ornament($CelticBottom, Vector2(0, vs.y - 50), Vector2(vs.x, 30))

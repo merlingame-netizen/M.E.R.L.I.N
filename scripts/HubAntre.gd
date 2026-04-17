@@ -290,6 +290,7 @@ func _configure_background() -> void:
 	parchment_bg.material = null
 	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_dark
 	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
+	_apply_day_night_tint()
 
 
 func _setup_voicebox() -> void:
@@ -314,6 +315,29 @@ func _sync_from_state() -> void:
 		store.state["flags"] = {}
 	store.state["flags"]["hub_visited"] = true
 
+
+func _apply_day_night_tint() -> void:
+	## Tint background and mist based on DayNightManager time of day.
+	var dnm: Node = get_node_or_null("/root/DayNightManager")
+	if dnm == null:
+		return
+	var period: String = dnm.get_time_of_day()
+	var cfg: Dictionary = dnm.get_period_config(period)
+	# Blend the ambient color into the background for a subtle time-of-day feel
+	var ambient_col: Color = cfg.get("ambient_color", Color(0.2, 0.18, 0.15))
+	var base_bg: Color = MerlinVisual.CRT_PALETTE.bg_dark
+	parchment_bg.color = base_bg.lerp(ambient_col, 0.25)
+	# Tint mist layer with fog color
+	var fog_col: Color = cfg.get("fog_color", Color(0.15, 0.13, 0.10))
+	var base_mist: Color = MerlinVisual.CRT_PALETTE.mist
+	mist_layer.color = base_mist.lerp(fog_col, 0.3)
+	# Connect to period_changed for live updates during long sessions
+	if not dnm.period_changed.is_connected(_on_day_night_period_changed):
+		dnm.period_changed.connect(_on_day_night_period_changed)
+
+
+func _on_day_night_period_changed(_new_period: String) -> void:
+	_apply_day_night_tint()
 
 
 func _process(delta: float) -> void:

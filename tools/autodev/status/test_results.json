@@ -1,156 +1,158 @@
 {
-  "agent": "bug_hunter",
-  "cycle": 1,
-  "timestamp": "2026-04-16T12:00:00Z",
-  "bugs_found": 18,
-  "critical": 2,
-  "high": 6,
-  "medium": 7,
-  "low": 3,
-  "details": [
+  "agent": "playtest_analyst",
+  "cycle": 2,
+  "timestamp": "2026-04-17T10:00:00Z",
+  "bugs_fixed_this_cycle": [
     {
-      "id": "BUG-001",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 342,
-      "severity": "CRITICAL",
-      "description": "Missing await on async store.dispatch() for DAMAGE_LIFE drain. dispatch() is async but not awaited here, so life drain may not complete before get_life_essence() check on line 343, reading stale life and skipping death check.",
-      "suggested_fix": "Add await before store.dispatch({type: DAMAGE_LIFE})"
+      "id": "BUGFIX-MED-14",
+      "files": [
+        "scripts/merlin/merlin_reputation_system.gd",
+        "scripts/merlin/merlin_save_system.gd",
+        "web-demo/src/game/Constants.ts",
+        "scripts/test/test_smoke.gd"
+      ],
+      "description": "Faction default 0 vs 20 mismatch. build_default_factions() and _get_default_profile() initialized factions to 0.0 (Hostile tier) instead of FACTION_SCORE_START=20 (Neutral). Fixed all init paths + migration fallback + stale smoke test.",
+      "status": "FIXED"
     },
     {
-      "id": "BUG-002",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 704,
-      "severity": "CRITICAL",
-      "description": "Missing await on recursive _request_next_card() at end of _resolve_choice(). The async coroutine is fire-and-forget, and is_busy=false on line 703 before the call allows overlapping card requests.",
-      "suggested_fix": "Add await before _request_next_card() on line 704"
-    },
-    {
-      "id": "BUG-003",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 70,
-      "severity": "HIGH",
-      "description": "_BIOME_DISPLAY_NAMES missing iles_mystiques (the 8th biome). Merlin intro speech for this biome will produce garbled text.",
-      "suggested_fix": "Add iles_mystiques: les iles mystiques to the dictionary"
-    },
-    {
-      "id": "BUG-004",
-      "file": "scripts/merlin/merlin_effect_engine.gd",
-      "line": 122,
-      "severity": "HIGH",
-      "description": "Type mismatch in process_card(): expects String-encoded effects (DAMAGE_LIFE:5) but MerlinCardSystem provides Dictionary effects ({type: DAMAGE_LIFE, amount: 5}). The typeof != TYPE_STRING check silently rejects all Dictionary effects.",
-      "suggested_fix": "Align effect formats between the two resolution paths"
-    },
-    {
-      "id": "BUG-005",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 219,
-      "severity": "HIGH",
-      "description": "Transient MerlinGaugeSystem instance created in build_default_state() just to call build_default_gauges(). Creates a new RefCounted every time state is rebuilt.",
-      "suggested_fix": "Make build_default_gauges() static or cache the instance"
-    },
-    {
-      "id": "BUG-006",
-      "file": "scripts/merlin/merlin_card_system.gd",
-      "line": 856,
-      "severity": "HIGH",
-      "description": "Fallback _randi_range() formula is mathematically flawed: from + int(randf() * float(N)) % N can produce biased results and randf()=1.0 edge case.",
-      "suggested_fix": "Use randi_range(from, to) built-in or from + (randi() % (to - from + 1))"
-    },
-    {
-      "id": "BUG-007",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 590,
-      "severity": "HIGH",
-      "description": "In _apply_effect() ADD_REPUTATION branch, directly calls effects._apply_faction_reputation() crossing encapsulation. Could cause inconsistent faction context updates.",
-      "suggested_fix": "Route through dispatch or extract faction update into shared helper"
-    },
-    {
-      "id": "BUG-008",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 532,
-      "severity": "HIGH",
-      "description": "Null reference risk: _reset_ai_for_new_run() accesses merlin_ai_node.session_contexts.clear() without checking if session_contexts property exists on the node.",
-      "suggested_fix": "Add property existence check before .clear()"
-    },
-    {
-      "id": "BUG-009",
-      "file": "addons/merlin_ai/rag_manager.gd",
-      "line": 443,
-      "severity": "MEDIUM",
-      "description": "Dead reference to removed Flux system: reads run.get(flux) for tension. Flux was removed; tension is now in run.hidden.tension. RAG tension context is always empty.",
-      "suggested_fix": "Read tension from run.get(hidden, {}).get(tension, 0)"
-    },
-    {
-      "id": "BUG-010",
-      "file": "addons/merlin_ai/merlin_ai.gd",
-      "line": 1803,
-      "severity": "MEDIUM",
-      "description": "Dead reference to removed Souffle system: center option cost=1 with comment Centre costs Souffle. Souffle was removed.",
-      "suggested_fix": "Remove cost field or repurpose to valid current system"
-    },
-    {
-      "id": "BUG-011",
-      "file": "scripts/merlin/merlin_effect_engine.gd",
-      "line": 954,
-      "severity": "MEDIUM",
-      "description": "pick_minigame_for_field() uses field.hash() % size, always returning same minigame for same field. Defeats purpose of multiple minigame options per lexical field.",
-      "suggested_fix": "Use randi() or accept card_index for variation"
-    },
-    {
-      "id": "BUG-012",
-      "file": "addons/merlin_ai/ollama_backend.gd",
-      "line": 438,
-      "severity": "MEDIUM",
-      "description": "Dot notation access on dictionary (entry.tag, entry.context_default) in configure_from_registry(). Fragile if dict comes from JSON.",
-      "suggested_fix": "Use entry.get(tag, default) pattern consistently"
-    },
-    {
-      "id": "BUG-013",
-      "file": "scripts/merlin/merlin_store.gd",
-      "line": 93,
-      "severity": "MEDIUM",
-      "description": "ClassDB.class_exists(MerlinOmniscient) is dead code: MerlinOmniscient is a GDScript class_name, never registered in ClassDB. Only the fallback script-loading path on line 99 executes.",
-      "suggested_fix": "Remove ClassDB branch, use MerlinOmniscient.new() directly"
-    },
-    {
-      "id": "BUG-014",
-      "file": "scripts/merlin/merlin_reputation_system.gd",
-      "line": 32,
-      "severity": "MEDIUM",
-      "description": "build_default_factions() initializes all factions to 0.0 but game design says starting rep is 20 (FACTION_SCORE_START). Anyone calling reset() gets Hostile factions instead of Neutral.",
-      "suggested_fix": "Use MerlinConstants.FACTION_SCORE_START instead of 0.0"
-    },
-    {
-      "id": "BUG-015",
-      "file": "scripts/merlin/merlin_save_system.gd",
-      "line": 23,
-      "severity": "MEDIUM",
-      "description": "Save default profile sets faction_rep to 0.0, but store default is 20. Fresh profile load returns Hostile factions, causing hostile penalties on first run.",
-      "suggested_fix": "Set defaults to float(MerlinConstants.FACTION_SCORE_START)"
-    },
-    {
-      "id": "BUG-016",
-      "file": "addons/merlin_ai/merlin_omniscient.gd",
-      "line": 402,
-      "severity": "LOW",
-      "description": "generate_npc_card() produces only 2 options but bible requires 3. If consumed without _ensure_3_options(), UI may crash on index 2 access.",
-      "suggested_fix": "Add third option or ensure card passes through _ensure_3_options()"
-    },
-    {
-      "id": "BUG-017",
-      "file": "addons/merlin_ai/ollama_backend.gd",
-      "line": 614,
-      "severity": "LOW",
-      "description": "Thread-unsafe stat reads: _update_stats() locks mutex for writes, but get_model_info() reads stats without locking, creating potential data race.",
-      "suggested_fix": "Lock mutex in get_model_info() or copy stats under lock"
-    },
-    {
-      "id": "BUG-018",
-      "file": "addons/merlin_ai/rag_manager.gd",
-      "line": 574,
-      "severity": "LOW",
-      "description": "log_aspect_shifted() references removed aspect system. Dead code path that will never be called with meaningful data.",
-      "suggested_fix": "Remove or rename to generic event logger"
+      "id": "BUGFIX-MED-11",
+      "files": [
+        "scripts/merlin/merlin_effect_engine.gd"
+      ],
+      "description": "Deterministic minigame selection. pick_minigame_for_field() used field.hash() % size, always returning the same minigame for a given field. Changed to randi() % size for true randomization.",
+      "status": "FIXED"
     }
-  ]
+  ],
+  "playtest_analysis": {
+    "scope": "Static analysis of core loop: Hub -> Biome -> Card -> Minigame -> Effects -> next card / end",
+    "files_analyzed": [
+      "scripts/ui/merlin_game_controller.gd",
+      "scripts/ui/game_controller_effects.gd",
+      "scripts/ui/game_controller_minigame.gd",
+      "scripts/ui/game_controller_llm.gd",
+      "scripts/ui/game_controller_signals.gd",
+      "scripts/merlin/merlin_store.gd",
+      "scripts/merlin/store_run.gd",
+      "scripts/merlin/merlin_effect_engine.gd",
+      "scripts/merlin/merlin_card_system.gd",
+      "scripts/merlin/merlin_reputation_system.gd",
+      "scripts/merlin/merlin_save_system.gd",
+      "scripts/merlin/merlin_constants.gd"
+    ],
+    "core_loop_trace": {
+      "status": "VERIFIED",
+      "flow": [
+        "1. start_run() -> resets state, dispatches START_RUN, shows parchment + narrator intro",
+        "2. _request_next_card() -> DAMAGE_LIFE drain (amount=0 per director decision), GET_CARD dispatch or buffer/prefetch/fastroute fallback",
+        "3. _handle_card_display() -> detect critical, post-process text, display in UI",
+        "4. _resolve_choice(option) -> determine field, run minigame, resolve_card() via MerlinCardSystem, apply effects via store dispatch RESOLVE_CHOICE",
+        "5. StoreRun.resolve_choice() -> applies modulated effects, increments cards_played, updates story_log, ticks ogham cooldowns, checks promise deadlines",
+        "6. StoreRun.check_run_end() -> checks life<=0, mission complete + 25 cards min, hard_max=50, returns tension_zone",
+        "7. If run_ended -> apply_run_rewards, show end screen. Else -> travel animation -> _request_next_card() (recursive await)"
+      ],
+      "notes": "Flow is complete and well-structured. Modular decomposition into 5 sub-modules is clean."
+    },
+    "invariant_checks": [
+      {
+        "invariant": "Life 0-100",
+        "status": "PASS",
+        "evidence": "LIFE_ESSENCE_MAX=100, LIFE_ESSENCE_START=100. _damage_life() uses maxi(old-amount, 0). _heal_life() uses mini(old+amount, 100). _apply_life_delta() in effect engine uses clampi(current+delta, 0, 100). All paths clamp correctly."
+      },
+      {
+        "invariant": "Rep caps +/-20 per card",
+        "status": "PASS",
+        "evidence": "MerlinEffectEngine._apply_faction_reputation() line 461: capped_delta = clampi(delta, -20, 20). MerlinReputationSystem.add_reputation() line 41: capped = clampf(amount, -CAP_PER_CARD, CAP_PER_CARD). cap_effect('ADD_REPUTATION') also clamps to [-20, 20]. Triple-guarded."
+      },
+      {
+        "invariant": "MOS soft min 8 / hard max 50",
+        "status": "PASS",
+        "evidence": "MOS_CONVERGENCE = {soft_min_cards: 8, target_cards_min: 20, target_cards_max: 25, soft_max_cards: 40, hard_max_cards: 50}. StoreRun.check_run_end() enforces hard_max at 50 (forced end). MIN_CARDS_FOR_VICTORY=25 prevents early victory. Tension zones correctly assigned at soft_min=8."
+      },
+      {
+        "invariant": "Faction rep 0-100",
+        "status": "PASS",
+        "evidence": "_apply_faction_reputation() uses clampi(current+delta, FACTION_SCORE_MIN=0, FACTION_SCORE_MAX=100). Save system clamps on load (line 153). MerlinReputationSystem.add_reputation() clamps to [VALUE_MIN=0, VALUE_MAX=100]."
+      },
+      {
+        "invariant": "3 options per card",
+        "status": "PASS",
+        "evidence": "_request_next_card() validates opts.size() >= 3 at line 442-443 and retries if malformed. _resolve_choice() uses clampi(option, 0, 2) for safe indexing."
+      },
+      {
+        "invariant": "Max 2 active promises",
+        "status": "PASS",
+        "evidence": "_add_promise() and _create_promise() both count active promises and return false if active_count >= 2."
+      },
+      {
+        "invariant": "Multiplier cap x2.0",
+        "status": "NEEDS_VERIFICATION",
+        "evidence": "get_multiplier() reads from MULTIPLIER_TABLE in constants. The table itself should cap at 2.0 but this depends on MULTIPLIER_TABLE data. scale_and_cap() delegates to cap_effect() which enforces per-effect caps but not the global x2.0 cap."
+      }
+    ],
+    "broken_flow_checks": [
+      {
+        "check": "Missing await",
+        "status": "PASS (PREVIOUSLY FIXED)",
+        "evidence": "BUG-001 (missing await on DAMAGE_LIFE dispatch) and BUG-002 (missing await on recursive _request_next_card) from cycle 1 are now fixed: line 343 has 'await store.dispatch' and line 705 has 'await _request_next_card()'. Both confirmed in current code."
+      },
+      {
+        "check": "Null checks on store",
+        "status": "PASS",
+        "evidence": "_request_next_card() checks 'not store' at line 335. _resolve_choice() checks 'not store or not is_instance_valid(store)' at line 505. start_run() checks 'not store' at line 167. All critical paths guarded."
+      },
+      {
+        "check": "is_inside_tree() guards",
+        "status": "PASS",
+        "evidence": "Checked at: _request_next_card() line 331, after dispatch line 409, _resolve_choice() line 508/539/653, start_run() uses await safely. Prevents orphaned coroutines after scene changes."
+      },
+      {
+        "check": "Dead branches",
+        "status": "MINOR_ISSUE",
+        "evidence": "LIFE_ESSENCE_DRAIN_PER_CARD=0 makes the drain dispatch at line 343 a no-op (dispatches DAMAGE_LIFE:0). Not broken but dead code. The death check at line 345 can never trigger from drain alone. Death only occurs via card effects."
+      },
+      {
+        "check": "Minigame timeout safety",
+        "status": "PASS",
+        "evidence": "game_controller_minigame.gd line 81-93: 30s timeout with process_frame polling, returns fallback score 51 on timeout, cleans up game node."
+      },
+      {
+        "check": "Card buffer exhaustion",
+        "status": "PASS",
+        "evidence": "Multiple fallback layers: 1) pre-generated buffer, 2) sequel card (30% chance), 3) MOS prefetch, 4) LLM dispatch, 5) FastRoute pool, 6) LLM retry. Comprehensive fallback chain."
+      }
+    ],
+    "remaining_known_issues": [
+      {
+        "id": "BUG-001/BUG-002",
+        "severity": "CRITICAL",
+        "status": "PREVIOUSLY_FIXED",
+        "note": "Both await bugs from cycle 1 confirmed fixed in current code"
+      },
+      {
+        "id": "BUG-009",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "RAG tension reads dead flux field instead of run.hidden.tension"
+      },
+      {
+        "id": "BUG-010",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "Dead Souffle system reference in merlin_ai.gd center option cost"
+      },
+      {
+        "id": "BUG-012",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "Dot notation dict access in ollama_backend.gd configure_from_registry()"
+      },
+      {
+        "id": "BUG-013",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "description": "ClassDB.class_exists dead code for MerlinOmniscient init"
+      }
+    ],
+    "overall_assessment": "Core game loop is structurally sound. The two fixed bugs (BUGFIX-MED-14 faction init, BUGFIX-MED-11 deterministic minigame) were the last gameplay-impacting MEDIUM issues. Remaining open bugs are dead code references that do not affect gameplay flow. All critical invariants (life 0-100, rep caps, MOS bounds, 3 options, promise cap) are properly enforced with multiple guard layers."
+  }
 }
