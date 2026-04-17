@@ -6,7 +6,7 @@
 export const FACTIONS = ['druides', 'anciens', 'korrigans', 'niamh', 'ankou'] as const;
 export type FactionId = (typeof FACTIONS)[number];
 
-export const FACTION_SCORE_START = 0;
+export const FACTION_SCORE_START = 20;
 export const FACTION_THRESHOLD_CONTENT = 50;
 export const FACTION_THRESHOLD_ENDING = 80;
 export const FACTION_CAP_PER_CARD = 20;
