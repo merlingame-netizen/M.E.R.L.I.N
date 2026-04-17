@@ -90,9 +90,6 @@ Ne mets PAS de guillemets autour de ta reponse. Reponds directement."""
 
 # --- UI nodes ---
 var _background: ColorRect
-var _logo_container: Control
-var _logo_rows: Array[Array] = []  # Array of arrays of ColorRect per row
-var _kernel_label: Label
 var _header_label: Label
 var _log_container: VBoxContainer
 var _log_labels: Array[Label] = []
@@ -270,49 +267,8 @@ func _build_ui() -> void:
 	_background.color = BG_BLACK
 	add_child(_background)
 
-	# Logo container
-	_logo_container = Control.new()
-	_logo_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_logo_container)
-
-	# Build logo blocks (organized by row for scanline reveal)
-	var total_block := BLOCK_SIZE + BLOCK_GAP
-	var grid_width: int = LOGO_GRID[0].size()
-	var grid_height: int = LOGO_GRID.size()
-	var logo_w := grid_width * total_block
-	var logo_h := grid_height * total_block
-	var logo_x := (vp.x - logo_w) / 2.0
-	var logo_y := vp.y * 0.08
-
-	for row in range(grid_height):
-		var row_blocks: Array[ColorRect] = []
-		for col in range(grid_width):
-			if LOGO_GRID[row][col] == 1:
-				var block := ColorRect.new()
-				block.size = Vector2(BLOCK_SIZE, BLOCK_SIZE)
-				block.position = Vector2(logo_x + col * total_block, logo_y + row * total_block)
-				if (row + col) % 2 == 0:
-					block.color = GOLD
-				else:
-					block.color = GOLD_BRIGHT
-				block.modulate.a = 0.0
-				_logo_container.add_child(block)
-				row_blocks.append(block)
-		_logo_rows.append(row_blocks)
-
-	# Kernel version label (under logo)
-	_kernel_label = Label.new()
-	_kernel_label.text = "v4.2 KERNEL"
-	_kernel_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_kernel_label.position = Vector2(logo_x, logo_y + logo_h + 6)
-	_kernel_label.size = Vector2(logo_w, 18)
-	_kernel_label.add_theme_font_size_override("font_size", FONT_KERNEL)
-	_kernel_label.add_theme_color_override("font_color", GOLD_DIM)
-	_kernel_label.modulate.a = 0.0
-	add_child(_kernel_label)
-
-	# Header label
-	var logs_start_y := logo_y + logo_h + 40
+	# Header label — starts near top (no logo above)
+	var logs_start_y := vp.y * 0.08
 	_header_label = Label.new()
 	_header_label.text = BOOT_HEADER
 	_header_label.position = Vector2(vp.x * 0.08, logs_start_y)
@@ -372,29 +328,10 @@ func _process(_delta: float) -> void:
 # ============================================================
 
 func _start_phase_1() -> void:
-	var tween := create_tween()
-
-	# Reveal logo row by row (scanline style)
-	for row_idx in range(_logo_rows.size()):
-		var row_blocks: Array = _logo_rows[row_idx]
-		var row_delay := row_idx * 0.25
-
-		for block_idx in range(row_blocks.size()):
-			var block: ColorRect = row_blocks[block_idx]
-			var delay := row_delay + block_idx * 0.008
-			tween.parallel().tween_property(block, "modulate:a", 1.0, 0.15).set_delay(delay)
-
-		for block_idx in range(row_blocks.size()):
-			var block: ColorRect = row_blocks[block_idx]
-			var orig_color: Color = block.color
-			tween.parallel().tween_property(block, "color", GOLD_BRIGHT, 0.08).set_delay(row_delay)
-			tween.parallel().tween_property(block, "color", orig_color, 0.2).set_delay(row_delay + 0.08)
-
-	# Show kernel version after logo
-	tween.tween_property(_kernel_label, "modulate:a", 0.6, 0.25).set_delay(0.0)
-	tween.tween_callback(func() -> void: SFXManager.play("boot_confirm"))
-	tween.tween_interval(0.3)
-	tween.tween_callback(_start_phase_2)
+	# Skip logo — go straight to boot log lines
+	_header_label.modulate.a = 1.0
+	SFXManager.play("boot_line")
+	_start_phase_2()
 
 
 # ============================================================
