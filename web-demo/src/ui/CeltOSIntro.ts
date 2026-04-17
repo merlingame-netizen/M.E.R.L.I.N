@@ -641,7 +641,7 @@ async function runPhase2(container: HTMLDivElement): Promise<HTMLDivElement> {
     'white-space:nowrap;text-align:center;',
     `text-shadow:0 0 14px rgba(51,255,102,0.55);`,
   ].join('');
-  welcome.textContent = '> BIENVENUE DANS LE JEU DES OGHAMS';
+  welcome.textContent = '> BIENVENUE DANS LE JEU DES RUNES';
   container.appendChild(welcome);
   await wait(30);
   welcome.style.opacity = '1';
