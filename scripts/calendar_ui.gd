@@ -13,7 +13,11 @@ func _init(calendar_node: Control) -> void:
 
 func configure_ui() -> void:
 	var viewport_size: Vector2 = cal.get_viewport().get_visible_rect().size
-	cal.compact_mode = viewport_size.x < cal.MOBILE_BREAKPOINT
+	var mr: Node = cal.get_node_or_null("/root/MerlinResponsive")
+	if mr:
+		cal.compact_mode = mr.is_mobile
+	else:
+		cal.compact_mode = viewport_size.x < 560.0
 
 	# CRT terminal background (no paper shader — CRT post-process handles vignette/grain)
 	cal.parchment_bg.material = null

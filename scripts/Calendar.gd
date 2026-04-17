@@ -467,7 +467,7 @@ func _apply_responsive_layout() -> void:
 	else:
 		compact_mode = viewport_size.x < 560.0
 
-	var card_w: float = MerlinVisual.responsive_size(520) if mr else minf(520.0, viewport_size.x * 0.88)
+	var card_w: float = minf(520.0, viewport_size.x * 0.88)
 	if mr:
 		card_w = mr.get_content_width(viewport_size, 520.0)
 	var card_h := minf(580.0, viewport_size.y * 0.78)
