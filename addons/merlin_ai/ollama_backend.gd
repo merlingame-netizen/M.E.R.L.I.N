@@ -441,8 +441,8 @@ func configure_from_registry(model_key: String) -> bool:
 	if model_key not in MODEL_REGISTRY:
 		return false
 	var entry: Dictionary = MODEL_REGISTRY[model_key]
-	model = str(entry.tag)
-	_num_ctx = int(entry.context_default)
+	model = str(entry.get("tag", ""))
+	_num_ctx = int(entry.get("context_default", 4096))
 	return true
 
 
@@ -468,7 +468,10 @@ func get_model_info() -> Dictionary:
 		"max_tokens": _max_tokens,
 		"model_loaded": _is_generating or check_available(),
 	}
-	info.merge(stats)
+	_mutex.lock()
+	var stats_copy: Dictionary = stats.duplicate()
+	_mutex.unlock()
+	info.merge(stats_copy)
 	return info
 
 
