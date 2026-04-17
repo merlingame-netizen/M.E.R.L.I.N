@@ -644,38 +644,7 @@
   </style>
 </head>
 <body>
-  <!-- Boot Screen T060 — outside #app to prevent composite z-index black patch (Bug 1 fix) -->
-  <div id="boot-screen">
-      <svg class="boot-logo" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Celtic knot: interlaced triquetra-inspired design -->
-        <circle cx="60" cy="60" r="54" stroke="rgba(51,255,102,0.08)" stroke-width="1"/>
-        <circle cx="60" cy="60" r="46" stroke="rgba(51,255,102,0.05)" stroke-width="1"/>
-        <!-- Outer ring with ticks -->
-        <circle cx="60" cy="60" r="52" stroke="#33ff66" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.5"
-          style="animation: spin-slow 20s linear infinite; transform-origin: 60px 60px;"/>
-        <!-- Celtic triquetra knot paths -->
-        <path d="M60 20 C72 28, 88 32, 92 48 C96 64, 84 76, 72 80 C84 84, 94 94, 84 104 C74 114, 60 108, 60 96"
-          stroke="#33ff66" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.9"/>
-        <path d="M60 20 C48 28, 32 32, 28 48 C24 64, 36 76, 48 80 C36 84, 26 94, 36 104 C46 114, 60 108, 60 96"
-          stroke="#33ff66" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.9"/>
-        <path d="M60 96 C60 84, 52 72, 48 80 C44 88, 50 100, 60 104 C70 100, 76 88, 72 80 C68 72, 60 84, 60 96"
-          stroke="rgba(51,255,102,0.6)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-        <!-- Center circle -->
-        <circle cx="60" cy="60" r="6" fill="#33ff66" opacity="0.8"/>
-        <circle cx="60" cy="60" r="3" fill="#1a8833"/>
-        <!-- Rune marks -->
-        <line x1="60" y1="6" x2="60" y2="14" stroke="#33ff66" stroke-width="2" opacity="0.6"/>
-        <line x1="112" y1="60" x2="114" y2="60" stroke="#33ff66" stroke-width="2" opacity="0.6"/>
-        <line x1="6" y1="60" x2="8" y2="60" stroke="#33ff66" stroke-width="2" opacity="0.6"/>
-        <line x1="60" y1="106" x2="60" y2="114" stroke="#33ff66" stroke-width="2" opacity="0.6"/>
-      </svg>
-      <div class="boot-title">M.E.R.L.I.N.</div>
-      <div class="boot-subtitle">Le Jeu des Runes</div>
-      <div class="boot-progress-track">
-        <div class="boot-progress-fill"></div>
-      </div>
-      <div class="boot-status" id="boot-status-text" aria-live="polite" aria-atomic="true">Initialisation...</div>
-    </div>
+  <!-- Boot screen removed — intro skipped, direct to menu -->
   <!-- C163: CRT persistent overlays — pointer-events:none, always on top of game content -->
   <div id="crt-scanlines" aria-hidden="true"></div>
   <div id="crt-vignette" aria-hidden="true"></div>

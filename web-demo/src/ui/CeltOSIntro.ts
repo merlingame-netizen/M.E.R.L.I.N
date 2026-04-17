@@ -787,76 +787,10 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
 // =============================================================================
 
 export async function runCeltOSIntro(): Promise<void> {
-  ensureCeltOSStyles();
-
-  // Create full-screen CRT overlay (z-index above everything)
-  const overlay = document.createElement('div');
-  // Hide legacy #boot-screen HTML element (was z-index:9999 — would cover us)
+  // Hide legacy #boot-screen HTML element
   const legacyBoot = document.getElementById('boot-screen');
   if (legacyBoot) legacyBoot.style.display = 'none';
 
-  overlay.id = 'celtos-intro';
-  overlay.className = 'celtos-scanlines';
-  overlay.style.cssText = [
-    'position:fixed;inset:0;z-index:10000;',
-    `background:${CRT.BG};`,
-    'display:flex;align-items:center;justify-content:center;',
-    'overflow:hidden;',
-  ].join('');
-  document.body.appendChild(overlay);
-
-  // CRT scanline overlay (subtle, CSS only)
-  const scanlines = document.createElement('div');
-  scanlines.style.cssText = [
-    'position:absolute;inset:0;pointer-events:none;',
-    'background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);',
-    'z-index:1;',
-  ].join('');
-  overlay.appendChild(scanlines);
-
-  const container = document.createElement('div');
-  container.style.cssText = 'position:relative;width:100%;height:100%;';
-  overlay.appendChild(container);
-
-  // C167: skip hint — appears bottom-right after 400ms so it doesn't flash on fast loads
-  const skipHint = document.createElement('div');
-  skipHint.textContent = '[ CLIC ou TOUCHE pour passer ]';
-  skipHint.style.cssText = [
-    'position:absolute;bottom:18px;right:18px;',
-    'color:rgba(51,255,102,0.35);font-family:"Courier New",Courier,monospace;font-size:11px;',
-    'letter-spacing:0.08em;pointer-events:none;opacity:0;transition:opacity 0.4s ease;',
-    'z-index:5;',
-  ].join('');
-  overlay.appendChild(skipHint);
-  setTimeout(() => { skipHint.style.opacity = '1'; }, 400);
-
-  // C166: click or any key skips the intro immediately.
-  // Promise.race() races the 3-phase sequence against the skip signal.
-  // Phase 3 contains the real asset fetch (loadTemplates) — it continues in the background
-  // after skip so templates are still available when the first card is drawn.
-  const skipSignal = new Promise<void>((res) => {
-    const onSkip = (): void => {
-      overlay.removeEventListener('click', onSkip);
-      document.removeEventListener('keydown', onSkip);
-      res();
-    };
-    overlay.addEventListener('click', onSkip, { once: true });
-    document.addEventListener('keydown', onSkip, { once: true });
-  });
-
-  // Fire loadTemplates in background — card system needs it regardless of skip
-  loadTemplates().catch(() => { /* silent — CardSystem has fallback */ });
-
-  try {
-    await Promise.race([
-      (async () => {
-        await runPhase1(container);
-        await runPhase2(container);
-        await wait(800);
-      })(),
-      skipSignal,
-    ]);
-  } finally {
-    overlay.remove();
-  }
+  // Skip all visual intro — load assets directly and go to menu
+  await loadTemplates().catch(() => { /* silent — CardSystem has fallback */ });
 }
