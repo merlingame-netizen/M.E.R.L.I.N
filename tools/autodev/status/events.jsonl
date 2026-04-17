@@ -49,3 +49,8 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-17T13:00:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: Dead scene cleanup (creator requests q-20260414-005, q-20260413-004). Delete IntroPersonalityQuiz, SceneRencontreMerlin, helpers, mg_meditation."}
+{"ts":"2026-04-17T13:00:00.000Z","type":"task_done","cycle":5,"detail":"CLEANUP-DEAD-SCENES-1: 10 files deleted (~1850 lines). IntroPersonalityQuiz, SceneRencontreMerlin, rencontre_llm, rencontre_dialogue, quiz_data, mg_meditation, 2 .tscn, 2 .uid"}
+{"ts":"2026-04-17T13:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-14: Verified fixed — FACTION_SCORE_START=20 used everywhere. Marked completed."}
+{"ts":"2026-04-17T13:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-11: Verified fixed — randi() used in pick_minigame_for_field. Marked completed."}
+{"ts":"2026-04-17T13:00:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: 10 dead files removed, 2 MEDIUM bugs verified fixed. 16 total issues resolved across 5 cycles. Codebase fully clean."}

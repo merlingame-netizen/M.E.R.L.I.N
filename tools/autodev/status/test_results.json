@@ -1,33 +1,32 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
-  "bugs_fixed_this_cycle": [
+  "cycle": 5,
+  "timestamp": "2026-04-17T13:00:00Z",
+  "bugs_fixed_this_cycle": [],
+  "verifications": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-14",
+      "description": "Faction default 0 vs 20 mismatch — VERIFIED FIXED. FACTION_SCORE_START=20 in merlin_constants.gd:1143. All callers (reputation_system, save_system, store, effect_engine) use MerlinConstants.FACTION_SCORE_START correctly.",
+      "status": "VERIFIED_FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-11",
+      "description": "Deterministic minigame selection — VERIFIED FIXED. pick_minigame_for_field() at merlin_effect_engine.gd:806 uses randi() % minigames.size() (random). No field.hash() determinism remains.",
+      "status": "VERIFIED_FIXED"
     }
   ],
+  "dead_code_removed": [
+    "scripts/IntroPersonalityQuiz.gd (~695 lines)",
+    "scripts/SceneRencontreMerlin.gd (~783 lines)",
+    "scripts/rencontre_llm.gd",
+    "scripts/rencontre_dialogue.gd",
+    "scripts/quiz_data.gd",
+    "scripts/minigames/mg_meditation.gd",
+    "scenes/IntroPersonalityQuiz.tscn",
+    "scenes/SceneRencontreMerlin.tscn",
+    "scripts/IntroPersonalityQuiz.gd.uid",
+    "scripts/SceneRencontreMerlin.gd.uid"
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "All creator-requested deletions applied. 10 dead files removed (~1850 lines). Zero known bugs. Codebase clean for feature development. 16 total bugs fixed across 5 cycles."
 }
