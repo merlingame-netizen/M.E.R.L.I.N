@@ -5,7 +5,7 @@
     "champ_lexical": "esprit",
     "merlin_direct": true,
     "trust_tier": "T3",
-    "text": "Merlin parle d'une voix qu'il n'a jamais utilisee — sans masque, sans mystere. 'Les Oghams ne sont pas des outils. Ils sont des portes. Chaque arbre que tu as appris a nommer est un passage vers un aspect du monde que les mortels ont oublie. Tu ne les utilises pas — tu leur demandes la permission. Et maintenant, ils te connaissent.'",
+    "text": "Merlin parle d'une voix qu'il n'a jamais utilisee — sans masque, sans mystere. 'Les Runes ne sont pas des outils. Ils sont des portes. Chaque arbre que tu as appris a nommer est un passage vers un aspect du monde que les mortels ont oublie. Tu ne les utilises pas — tu leur demandes la permission. Et maintenant, ils te connaissent.'",
     "options": [
       {
         "label": "Mediter sur cette revelation pour en mesurer la portee",
@@ -38,7 +38,7 @@
         ]
       },
       {
-        "label": "Se concentrer pour sentir les Oghams repondre en toi",
+        "label": "Se concentrer pour sentir les Runes repondre en toi",
         "verb": "se concentrer",
         "effects": [
           {
@@ -194,7 +194,7 @@
     "champ_lexical": "esprit",
     "merlin_direct": true,
     "trust_tier": "T3",
-    "text": "'L'Anam que tu as accumule n'est pas une monnaie,' confie Merlin. 'C'est un fragment de l'ame du monde. Chaque point d'Anam est un moment ou tu as ete en harmonie avec la terre. Les Oghams que tu debloques ne sont pas des recompenses — ce sont des reconnaissances. La terre te reconnait.'",
+    "text": "'L'Anam que tu as accumule n'est pas une monnaie,' confie Merlin. 'C'est un fragment de l'ame du monde. Chaque point d'Anam est un moment ou tu as ete en harmonie avec la terre. Les Runes que tu debloques ne sont pas des recompenses — ce sont des reconnaissances. La terre te reconnait.'",
     "options": [
       {
         "label": "Endurer le poids de cette revelation sur la nature de l'Anam",
@@ -572,10 +572,10 @@
     "champ_lexical": "esprit",
     "merlin_direct": true,
     "trust_tier": "T3",
-    "text": "'Il y a un dernier Ogham,' murmure Merlin. 'Le dix-neuvieme. Celui qui n'est dans aucun livre. Il n'a pas de nom d'arbre parce qu'il n'est pas un arbre — il est la foret entiere. Quand tu l'auras trouve, tu n'auras plus besoin de moi. Et ce jour-la, je pourrai enfin me reposer.'",
+    "text": "'Il y a une derniere Rune,' murmure Merlin. 'Le dix-neuvieme. Celui qui n'est dans aucun livre. Il n'a pas de nom d'arbre parce qu'il n'est pas un arbre — il est la foret entiere. Quand tu l'auras trouve, tu n'auras plus besoin de moi. Et ce jour-la, je pourrai enfin me reposer.'",
     "options": [
       {
-        "label": "Mediter sur le sens du dix-neuvieme Ogham",
+        "label": "Mediter sur le sens du dix-neuvieme Rune",
         "verb": "mediter",
         "effects": [
           {
@@ -590,7 +590,7 @@
         ]
       },
       {
-        "label": "Apaiser Merlin en lui promettant de chercher cet Ogham",
+        "label": "Apaiser Merlin en lui promettant de chercher cette Rune",
         "verb": "apaiser",
         "effects": [
           {
@@ -605,7 +605,7 @@
         ]
       },
       {
-        "label": "Accepter la quete du dernier Ogham comme ton destin",
+        "label": "Accepter la quete du derniere Rune comme ton destin",
         "verb": "accepter",
         "effects": [
           {
@@ -697,7 +697,7 @@
     "text": "L'entite ancienne a corrompu la foret. Les arbres saignent de la seve noire, les animaux fuient en hurlant. Maelgwn est a genoux, ses forces de druide insuffisantes. 'Les arbres appellent a l'aide,' dit-il d'une voix brisee. 'Ils disent ton nom. Pas le mien. Le tien.' Il te regarde avec un melange de terreur et d'espoir.",
     "options": [
       {
-        "label": "Apaiser les arbres en canalisant l'energie des Oghams",
+        "label": "Apaiser les arbres en canalisant l'energie des Runes",
         "verb": "apaiser",
         "effects": [
           {
@@ -1252,7 +1252,7 @@
     "id": "fr_s11c_epilogue_001",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
-    "text": "Le matin suivant, la foret est plus belle qu'elle ne l'a jamais ete. Les oiseaux chantent des melodies que tu n'avais jamais entendues. Un jeune chene a pousse pendant la nuit a l'endroit exact ou tu as dormi. Maelgwn le regarde avec emerveillement. 'Un Ogham vivant,' murmure-t-il. 'Tu as plante quelque chose cette nuit. Quelque chose qui durera des siecles.'",
+    "text": "Le matin suivant, la foret est plus belle qu'elle ne l'a jamais ete. Les oiseaux chantent des melodies que tu n'avais jamais entendues. Un jeune chene a pousse pendant la nuit a l'endroit exact ou tu as dormi. Maelgwn le regarde avec emerveillement. 'Un Rune vivante,' murmure-t-il. 'Tu as plante quelque chose cette nuit. Quelque chose qui durera des siecles.'",
     "options": [
       {
         "label": "Observer le jeune chene pour voir s'il porte un symbole",

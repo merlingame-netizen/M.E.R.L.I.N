@@ -254,7 +254,7 @@
     "id": "fr_s9a_druides_ogham_005",
     "biome": "collines_dolmens",
     "champ_lexical": "finesse",
-    "text": "Maelgwn t'emmene au sommet d'une colline ou un if millenaire se dresse seul. 'Cet arbre garde un ogham que personne n'a active depuis des siecles,' dit-il. 'Il faut glisser la main entre ses branches sans toucher une seule epine. La moindre blessure et l'ogham se rendort.'",
+    "text": "Maelgwn t'emmene au sommet d'une colline ou un if millenaire se dresse seul. 'Cet arbre garde une rune que personne n'a active depuis des siecles,' dit-il. 'Il faut glisser la main entre ses branches sans toucher une seule epine. La moindre blessure et la rune se rendort.'",
     "options": [
       {
         "label": "Se faufiler avec delicatesse entre les branches de l'if",
@@ -443,7 +443,7 @@
     "id": "fr_s9a_druides_quete_008",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
-    "text": "L'ocean rugit contre les falaises ou Maelgwn dit avoir vu un ogham grave dans la roche marine. 'La maree monte vite ici,' previent-il. 'Tu as peut-etre dix respirations pour descendre, lire la gravure, et remonter. Ou tu peux attendre six heures que la maree se retire.'",
+    "text": "L'ocean rugit contre les falaises ou Maelgwn dit avoir vu une rune grave dans la roche marine. 'La maree monte vite ici,' previent-il. 'Tu as peut-etre dix respirations pour descendre, lire la gravure, et remonter. Ou tu peux attendre six heures que la maree se retire.'",
     "options": [
       {
         "label": "Courir vers la roche avant que la maree ne la recouvre",
@@ -941,7 +941,7 @@
     "id": "fr_s9a_anciens_quete_006",
     "biome": "cotes_sauvages",
     "champ_lexical": "finesse",
-    "text": "Un dolmen s'est effondre sur la falaise, revelant une cavite secrete. A l'interieur, des gravures oghams brillent faiblement. 'Personne ne doit savoir que cette cavite existe,' murmure un Ancien. 'Entre, memorise les gravures, et ressors sans rien deplacer. Pas un caillou.'",
+    "text": "Un dolmen s'est effondre sur la falaise, revelant une cavite secrete. A l'interieur, des gravures runiques brillent faiblement. 'Personne ne doit savoir que cette cavite existe,' murmure un Ancien. 'Entre, memorise les gravures, et ressors sans rien deplacer. Pas un caillou.'",
     "options": [
       {
         "label": "Se faufiler dans la cavite avec une delicatesse extreme",
@@ -1504,7 +1504,7 @@
     "id": "fr_s9a_korrigans_quete_005",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
-    "text": "Un Korrigan t'attend derriere l'auberge du village, nerveux. 'Il y a un ogham cache dans la charpente de cette maison,' chuchote-t-il. 'Le proprietaire ne sait pas. Entre, regarde les poutres, et sors avant l'aube. Simple.' Son sourire dit le contraire.",
+    "text": "Un Korrigan t'attend derriere l'auberge du village, nerveux. 'Il y a une rune cache dans la charpente de cette maison,' chuchote-t-il. 'Le proprietaire ne sait pas. Entre, regarde les poutres, et sors avant l'aube. Simple.' Son sourire dit le contraire.",
     "options": [
       {
         "label": "Scruter les poutres de la charpente avec une bougie volee",
@@ -1522,7 +1522,7 @@
         ]
       },
       {
-        "label": "Examiner les murs exterieurs d'abord pour reperer l'ogham",
+        "label": "Examiner les murs exterieurs d'abord pour reperer la rune",
         "verb": "examiner",
         "effects": [
           {
@@ -2129,7 +2129,7 @@
     "id": "fr_s9a_niamh_quete_005",
     "biome": "cotes_sauvages",
     "champ_lexical": "logique",
-    "text": "Une fee des cotes garde un coquillage qui contient un ogham endormi. 'Il ne s'eveille que si tu trouves la bonne frequence,' dit-elle en le tenant a ton oreille. Tu entends la mer — mais aussi des notes, comme une melodie codee. Il faut trouver le schema.",
+    "text": "Une fee des cotes garde un coquillage qui contient une rune endormi. 'Il ne s'eveille que si tu trouves la bonne frequence,' dit-elle en le tenant a ton oreille. Tu entends la mer — mais aussi des notes, comme une melodie codee. Il faut trouver le schema.",
     "options": [
       {
         "label": "Decoder la melodie en identifiant les intervalles entre les notes",
@@ -2815,10 +2815,10 @@
     "id": "fr_s9a_ankou_quete_006",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
-    "text": "L'Ankou te revele qu'un ogham est cache dans l'arbre le plus mort de la foret — un chene foudroyé, noir et creux. 'Les vivants n'y touchent pas par peur,' dit-il. 'Mais l'ogham des morts ne peut etre active que par une main vivante. Ironie, non?'",
+    "text": "L'Ankou te revele qu'une rune est cache dans l'arbre le plus mort de la foret — un chene foudroyé, noir et creux. 'Les vivants n'y touchent pas par peur,' dit-il. 'Mais la rune des morts ne peut etre active que par une main vivante. Ironie, non?'",
     "options": [
       {
-        "label": "Se faufiler dans le tronc creux pour atteindre l'ogham",
+        "label": "Se faufiler dans le tronc creux pour atteindre la rune",
         "verb": "se faufiler",
         "effects": [
           {

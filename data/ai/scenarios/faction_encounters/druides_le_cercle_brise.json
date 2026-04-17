@@ -54,7 +54,7 @@
         "condition": {"flag": "keridwen_contactee"},
         "branches": {
           "default": {
-            "prompt_override": "Quatre druides sont reunis a Barenton — Maelgwn, Keridwen, Talwen et Elouan. Les trois autres n'ont pas pu venir. Talwen entend les voix des Oghams plus fort que jamais: 'Ils chantent une note,' dit-elle, les yeux fermes. 'Une seule note. Si nous la chantons aussi, le cercle se reconnectera.' Mais chanter cette note a un prix — elle vibre a une frequence qui use la Membrane. Reconnecter les cercles pourrait accelerer la fin. Ne rien faire les laisse isoles. Le voyageur doit choisir: chanter avec eux, ou leur demander d'attendre.",
+            "prompt_override": "Quatre druides sont reunis a Barenton — Maelgwn, Keridwen, Talwen et Elouan. Les trois autres n'ont pas pu venir. Talwen entend les voix des Runes plus fort que jamais: 'Ils chantent une note,' dit-elle, les yeux fermes. 'Une seule note. Si nous la chantons aussi, le cercle se reconnectera.' Mais chanter cette note a un prix — elle vibre a une frequence qui use la Membrane. Reconnecter les cercles pourrait accelerer la fin. Ne rien faire les laisse isoles. Le voyageur doit choisir: chanter avec eux, ou leur demander d'attendre.",
             "tone": "sacre",
             "flags_set": ["rituel_propose"]
           }

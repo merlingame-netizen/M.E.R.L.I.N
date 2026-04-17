@@ -6,12 +6,12 @@
   },
   "en": {
     "directive": "Respond in English.",
-    "celtic_gloss": "Keep Celtic terms (nemeton, ogham, sidhe, dolmen, korrigans, brume, menhir, cairn) in their original form but add a brief English gloss the first time each appears in a run (e.g., 'the nemeton — a sacred grove'). After the first mention, use the Celtic term alone.",
+    "celtic_gloss": "Keep Celtic terms (nemeton, rune, sidhe, dolmen, korrigans, brume, menhir, cairn) in their original form but add a brief English gloss the first time each appears in a run (e.g., 'the nemeton — a sacred grove'). After the first mention, use the Celtic term alone.",
     "celtic_strategy": "gloss_first"
   },
   "es": {
     "directive": "Responde en espanol.",
-    "celtic_gloss": "Mantiene los terminos celtas (nemeton, ogham, sidhe, dolmen, korrigans) en su forma original pero anade una breve glosa en espanol la primera vez (ej: 'el nemeton — bosque sagrado').",
+    "celtic_gloss": "Mantiene los terminos celtas (nemeton, rune, sidhe, dolmen, korrigans) en su forma original pero anade una breve glosa en espanol la primera vez (ej: 'el nemeton — bosque sagrado').",
     "celtic_strategy": "gloss_first"
   },
   "it": {
@@ -36,7 +36,7 @@
   },
   "_default": {
     "directive": "Respond in {language_name}.",
-    "celtic_gloss": "Keep Celtic terms (nemeton, ogham, sidhe, dolmen, korrigans) in their original form but add a brief translation the first time each appears.",
+    "celtic_gloss": "Keep Celtic terms (nemeton, rune, sidhe, dolmen, korrigans) in their original form but add a brief translation the first time each appears.",
     "celtic_strategy": "gloss_first"
   },
   "_meta": {

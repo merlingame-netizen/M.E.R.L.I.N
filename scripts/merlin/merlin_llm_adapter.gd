@@ -73,7 +73,7 @@ const NARRATIVE_FALLBACKS: Array[String] = [
 	"Une clairiere baignee de lumiere doree apparait. Au centre, un cercle de champignons luminescents pulse doucement.",
 	"Le cri d'un corbeau dechire le silence. Entre les branches, une silhouette spectrale t'observe.",
 	"Les racines du vieux chene forment un passage vers les profondeurs. Une lueur bleutee en emerge.",
-	"Un ruisseau chante entre les rochers couverts d'ogham. Ses eaux semblent reflechir un ciel different.",
+	"Un ruisseau chante entre les rochers couverts de runes. Ses eaux semblent reflechir un ciel different.",
 	"Le brouillard se leve, revelant un dolmen que personne n'a vu depuis des siecles.",
 ]
 
@@ -194,7 +194,7 @@ func generate_prologue(context: Dictionary) -> Dictionary:
 		+ "3 paragraphes: 1) L'ambiance sensorielle du lieu (sons, odeurs, lumiere). "
 		+ "2) Ce que le voyageur ressent et ce qu'il pressent de sa quete. "
 		+ "3) Un presage ou un detail intrigant lie a la quete qui lance l'aventure. "
-		+ "Vocabulaire celtique: nemeton, ogham, brume, menhir, korrigan. "
+		+ "Vocabulaire celtique: nemeton, rune, brume, menhir, korrigan. "
 		+ "Ton grave et poetique, comme un conteur au coin du feu. "
 		+ "JAMAIS de meta-commentaire. JAMAIS d'anglais."
 	)

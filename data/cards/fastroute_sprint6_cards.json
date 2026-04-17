@@ -381,10 +381,10 @@
     "id": "fr_druides_collines_007",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
-    "text": "Au sommet de la colline, un dolmen s'ouvre sur le vide. Talwen y est assise, les jambes dans le neant, sereine. 'Quand je ferme les yeux ici,' dit-elle, 'je sens les dix-huit Oghams respirer ensemble. Pas comme des symboles — comme des etres. Certains sont fatigues. D'autres sont en colere. Un seul dort encore.' Elle ouvre un oeil. 'Celui qui dort, c'est le tien.'",
+    "text": "Au sommet de la colline, un dolmen s'ouvre sur le vide. Talwen y est assise, les jambes dans le neant, sereine. 'Quand je ferme les yeux ici,' dit-elle, 'je sens les dix-huit Runes respirer ensemble. Pas comme des symboles — comme des etres. Certains sont fatigues. D'autres sont en colere. Un seul dort encore.' Elle ouvre un oeil. 'Celui qui dort, c'est le tien.'",
     "options": [
       {
-        "label": "Mediter au bord du dolmen pour reveiller l'Ogham endormi",
+        "label": "Mediter au bord du dolmen pour reveiller la Rune endormi",
         "verb": "mediter",
         "effects": [
           {
@@ -414,7 +414,7 @@
         ]
       },
       {
-        "label": "Accepter que l'Ogham se reveillera quand il sera pret",
+        "label": "Accepter que la Rune se reveillera quand il sera pret",
         "verb": "accepter",
         "effects": [
           {
@@ -960,7 +960,7 @@
     "text": "Au centre du village, une dalle de granit porte des inscriptions que personne ne lit plus. Lugh s'y tient, sa paume posee sur la pierre comme on touche un ami perdu. 'C'est un contrat,' dit-il. 'Entre les premiers villageois et la terre elle-meme. Si tu le lis correctement, tu comprends pourquoi ce village existe encore. Pourquoi il a survecu a ce qui a detruit les autres.'",
     "options": [
       {
-        "label": "Dechiffrer les inscriptions en comparant avec les Oghams connus",
+        "label": "Dechiffrer les inscriptions en comparant avec les Runes connus",
         "verb": "dechiffrer",
         "effects": [
           {

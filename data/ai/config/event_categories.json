@@ -214,7 +214,7 @@
           }
         },
         "don": {
-          "description": "Cadeau mysterieux, pouvoir d'Ogham revele, faveur de faction",
+          "description": "Cadeau mysterieux, pouvoir de Rune revele, faveur de faction",
           "weight": 0.25,
           "tags": ["ogham", "blessing", "gui", "faction"],
           "triggers": {

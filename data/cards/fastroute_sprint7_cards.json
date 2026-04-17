@@ -2559,10 +2559,10 @@
     "id": "fr_s7_biome_cercles_001",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
-    "text": "Brennos a decouvert un anneau de pierre enfoui sous le cercle principal â€” un second cercle, plus ancien, construit par ceux qui etaient la avant les Anciens. Les gravures sur les pierres enfouies utilisent un alphabet inconnu, ni ogham ni rune. Brennos tremble d'excitation et de peur. 'Si on le decode, on saura pourquoi ils ont construit le cercle du dessus pour le cacher.'",
+    "text": "Brennos a decouvert un anneau de pierre enfoui sous le cercle principal â€” un second cercle, plus ancien, construit par ceux qui etaient la avant les Anciens. Les gravures sur les pierres enfouies utilisent un alphabet inconnu, ni runique ni connu. Brennos tremble d'excitation et de peur. 'Si on le decode, on saura pourquoi ils ont construit le cercle du dessus pour le cacher.'",
     "options": [
       {
-        "label": "Dechiffrer l'alphabet inconnu en comparant avec les oghams",
+        "label": "Dechiffrer l'alphabet inconnu en comparant avec les runes",
         "verb": "dechiffrer",
         "effects": [
           {

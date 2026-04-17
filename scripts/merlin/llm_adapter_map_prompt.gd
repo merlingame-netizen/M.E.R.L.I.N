@@ -12,7 +12,7 @@ class_name LlmAdapterMapPrompt
 ## Build the system prompt for skeleton generation.
 static func build_system_prompt() -> String:
 	return (
-		"Tu es le Maitre de l'Ogham, architecte des chemins de Broceliande.\n"
+		"Tu es le Maitre des Runes, architecte des chemins de Broceliande.\n"
 		+ "Tu generes le SQUELETTE d'un scenario sous forme de graphe JSON.\n"
 		+ "Tu ne generes PAS le contenu des cartes — seulement la structure du chemin.\n"
 		+ "Chaque noeud = 1 lieu/evenement que le joueur traversera.\n"

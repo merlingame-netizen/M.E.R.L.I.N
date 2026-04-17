@@ -156,10 +156,10 @@
 		},
 		{
 			"id": "fr_generic_006",
-			"text": "Un carrefour de trois chemins. Une pierre gravee porte des oghams effaces. Le vent souffle differemment dans chaque direction.",
+			"text": "Un carrefour de trois chemins. Une pierre gravee porte des runes effacees. Le vent souffle differemment dans chaque direction.",
 			"biome": "",
 			"options": [
-				{"label": "Dechiffrer les oghams", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Dechiffrer les runes", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
 				{"label": "Prendre le chemin le plus sombre", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]},
 				{"label": "Suivre le vent le plus chaud", "verb": "suivre", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
 			],
@@ -519,7 +519,7 @@
 		},
 		{
 			"id": "fr_cercles_003",
-			"text": "Un druide fantomatique trace des symboles oghams dans l'air. Chaque symbole reste suspendu quelques secondes.",
+			"text": "Un druide fantomatique trace des runes dans l'air. Chaque symbole reste suspendu quelques secondes.",
 			"biome": "cercles_pierres",
 			"options": [
 				{"label": "Dechiffrer les symboles", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
@@ -695,7 +695,7 @@
 			"arc_stage": 2,
 			"options": [
 				{"label": "Creuser avec precaution", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 3}]},
-				{"label": "Utiliser un ogham de protection", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Utiliser une rune de protection", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
 				{"label": "Envoyer un animal creuser", "verb": "commander", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
 			],
 			"tags": ["arc", "le_chene_chantant", "gwenn", "foret"],
@@ -906,7 +906,7 @@
 			"options": [
 				{"label": "Soulever la pierre seul", "verb": "forcer un passage", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
 				{"label": "Appeler les villageois", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 3}]},
-				{"label": "Utiliser un ogham de force", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]}
+				{"label": "Utiliser une rune de force", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]}
 			],
 			"tags": ["arc", "l_alignement_perdu", "brennos", "cercles"],
 			"arc_condition": {"type": "arc_stage", "arc": "l_alignement_perdu", "min_stage": 2}
@@ -1085,7 +1085,7 @@
 			"arc_stage": 5,
 			"options": [
 				{"label": "Recevoir la benediction de l'if", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15}, {"type": "HEAL_LIFE", "amount": 10}]},
-				{"label": "Graver un ogham sur l'ecorce", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Graver une rune sur l'ecorce", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
 				{"label": "Demander une prophitie", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "ADD_BIOME_CURRENCY", "amount": 10}]}
 			],
 			"tags": ["arc", "la_voix_de_l_if", "ildiko", "collines", "resolution"],
@@ -1292,11 +1292,11 @@
 		{
 			"id": "echo_ogham_recognition",
 			"type": "echo",
-			"text": "L'ogham dans ta main pulse. Il te reconnait. Ce n'est pas la premiere fois que vous travaillez ensemble. L'arbre dont il vient... se souvient de toi.",
+			"text": "La rune dans ta main pulse. Elle te reconnait. Ce n'est pas la premiere fois que vous travaillez ensemble. L'arbre dont elle vient... se souvient de toi.",
 			"options": [
-				{"label": "Parler a l'ogham", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Parler a la rune", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
 				{"label": "Ecouter le souvenir de l'arbre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
-				{"label": "Ranger l'ogham", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+				{"label": "Ranger la rune", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
 			],
 			"tags": ["echo", "meta", "ogham_memory"],
 			"condition": "oghams_owned_above_5"
@@ -1328,7 +1328,7 @@
 		{
 			"id": "twist_storm_001",
 			"type": "twist",
-			"text": "Un orage magique eclate sans prevenir. La foudre frappe le sol, revelant des os anciens et un message ogham grave dans la pierre.",
+			"text": "Un orage magique eclate sans prevenir. La foudre frappe le sol, revelant des os anciens et un message runique grave dans la pierre.",
 			"options": [
 				{"label": "Dechiffrer le message", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
 				{"label": "Collecter les os", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "ADD_BIOME_CURRENCY", "amount": 5}]},

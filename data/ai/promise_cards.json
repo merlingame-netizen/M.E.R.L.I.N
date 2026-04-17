@@ -101,7 +101,7 @@
 			"type": "promise",
 			"promise_id": "walk_with_death",
 			"deadline_cards": 6,
-			"description": "Accepter 3 effets negatifs sans utiliser d'ogham pendant 6 cartes",
+			"description": "Accepter 3 effets negatifs sans utiliser de rune pendant 6 cartes",
 			"text": "'La mort n'est pas une fin,' chuchote l'Ankou. 'Accepte la souffrance 6 tours sans fuir et je te montrerai l'Autre Cote.'",
 			"reward_trust": 10,
 			"penalty_trust": -15,

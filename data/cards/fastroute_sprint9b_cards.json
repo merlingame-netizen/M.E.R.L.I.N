@@ -561,7 +561,7 @@
     "id": "fr_s9b_highrisk_010",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
-    "text": "Un dolmen tremble. Les Anciens disent qu'il va s'effondrer — avec une bibliotheque de gravures oghams a l'interieur. 'Quelqu'un doit entrer et recopier les gravures avant que le toit ne cede,' dit un Ancien d'une voix blanche. 'Mais ce quelqu'un risque de ne pas sortir.'",
+    "text": "Un dolmen tremble. Les Anciens disent qu'il va s'effondrer — avec une bibliotheque de gravures runiques a l'interieur. 'Quelqu'un doit entrer et recopier les gravures avant que le toit ne cede,' dit un Ancien d'une voix blanche. 'Mais ce quelqu'un risque de ne pas sortir.'",
     "options": [
       {
         "label": "Scruter rapidement toutes les gravures pour en memoriser le maximum",
@@ -1278,10 +1278,10 @@
     "id": "fr_s9b_mystery_001",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
-    "text": "Talwen decouvre des champignons disposes en cercle parfait — un anneau de fee, mais fait de champignons inconnus. 'Aucun texte druidique ne les mentionne,' admet-elle. 'Ils pourraient contenir un ogham perdu. Ou un poison. Ou les deux.' Les champignons luisent doucement dans la penombre.",
+    "text": "Talwen decouvre des champignons disposes en cercle parfait — un anneau de fee, mais fait de champignons inconnus. 'Aucun texte druidique ne les mentionne,' admet-elle. 'Ils pourraient contenir une rune perdu. Ou un poison. Ou les deux.' Les champignons luisent doucement dans la penombre.",
     "options": [
       {
-        "label": "Scruter les motifs sur les chapeaux pour identifier une signature ogham",
+        "label": "Scruter les motifs sur les chapeaux pour identifier une signature runique",
         "verb": "scruter",
         "effects": [
           {
@@ -1464,7 +1464,7 @@
     "id": "fr_s9b_mystery_004",
     "biome": "iles_mystiques",
     "champ_lexical": "finesse",
-    "text": "Sur une ile deserte, une porte de pierre se dresse sans mur autour. Quand on la traverse d'un cote, rien ne se passe. Mais une fee affirme que de l'autre cote, elle mene a un jardin ou poussent des oghams vivants — des arbres qui SONT des oghams.",
+    "text": "Sur une ile deserte, une porte de pierre se dresse sans mur autour. Quand on la traverse d'un cote, rien ne se passe. Mais une fee affirme que de l'autre cote, elle mene a un jardin ou poussent des runes vivants — des arbres qui SONT des runes.",
     "options": [
       {
         "label": "Se faufiler par la porte en marchant a reculons",
@@ -1588,7 +1588,7 @@
     "id": "fr_s9b_mystery_006",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
-    "text": "Un puits asseche dans les landes a commence a emettre une lueur verte. Keridwen pense qu'un ogham ancien est enfoui tout en bas. 'Mais les puits asseches sont les tombeaux de l'eau,' dit-elle. 'Descendre est toujours un pari. Ce qu'on trouve en bas n'est jamais ce qu'on attend.'",
+    "text": "Un puits asseche dans les landes a commence a emettre une lueur verte. Keridwen pense qu'une rune ancien est enfoui tout en bas. 'Mais les puits asseches sont les tombeaux de l'eau,' dit-elle. 'Descendre est toujours un pari. Ce qu'on trouve en bas n'est jamais ce qu'on attend.'",
     "options": [
       {
         "label": "Tenter sa chance en descendant avec une corde de bruyere",
@@ -1712,10 +1712,10 @@
     "id": "fr_s9b_mystery_008",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
-    "text": "Sous la place du village, des ouvriers ont trouve une dalle gravee d'oghams inconnus. Les Anciens sont fascines mais nerveux. 'Cette dalle date d'avant nous,' admet l'un d'eux. 'Quelqu'un etait ici avant les Anciens. Et ils avaient des secrets que nous n'avons jamais retrouves.'",
+    "text": "Sous la place du village, des ouvriers ont trouve une dalle gravee de runes inconnus. Les Anciens sont fascines mais nerveux. 'Cette dalle date d'avant nous,' admet l'un d'eux. 'Quelqu'un etait ici avant les Anciens. Et ils avaient des secrets que nous n'avons jamais retrouves.'",
     "options": [
       {
-        "label": "Scruter chaque ogham avec methodie pour creer un catalogue",
+        "label": "Scruter chaque rune avec methodie pour creer un catalogue",
         "verb": "scruter",
         "effects": [
           {
@@ -1792,7 +1792,7 @@
         ]
       },
       {
-        "label": "Decoder les symboles en les comparant aux oghams connus",
+        "label": "Decoder les symboles en les comparant aux runes connus",
         "verb": "decoder",
         "effects": [
           {

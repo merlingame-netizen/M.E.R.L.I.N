@@ -1184,7 +1184,7 @@ const FACTION_DELTA_EXTREME := 30   # Acte héroïque ou trahison majeure
 
 # Keywords pour auto-tag Path B (merlin_llm_adapter._wrap_text_as_card)
 const FACTION_KEYWORDS := {
-	"druides":   ["druide", "ogham", "nemeton", "chene", "barde"],
+	"druides":   ["druide", "ogham", "rune", "nemeton", "chene", "barde"],
 	"anciens":   ["ancien", "ancetre", "tradition", "sagesse"],
 	"korrigans": ["korrigan", "fee", "feu follet", "farce", "tresor"],
 	"niamh":     ["niamh", "eau", "lac", "amour", "nostalgie"],

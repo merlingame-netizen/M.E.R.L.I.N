@@ -28,7 +28,7 @@ func build_llm_biome_context(biome_data: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	parts.append("Tu es le narrateur poetique d'un jeu celtique breton.")
 	parts.append("Biome: %s (%s)." % [biome_data.get("name", ""), biome_data.get("subtitle", "")])
-	parts.append("Gardien: %s. Ogham: %s. Saison: %s." % [
+	parts.append("Gardien: %s. Rune: %s. Saison: %s." % [
 		biome_data.get("gardien", ""), biome_data.get("ogham", ""), biome_data.get("saison", "")])
 	var atmo: Dictionary = biome_data.get("atmosphere", {})
 	if not atmo.is_empty():
@@ -246,9 +246,9 @@ func generate_run_intro(merlin_ai: Node, biome_data: Dictionary, biome_key: Stri
 		+ "Mentionne l'etat du voyageur sans nommer les mecaniques. "
 		+ "Termine par un pressentiment enigmatique sur ce qui attend. "
 		+ "4-6 phrases en francais, ton grave et theatral, comme un conteur au coin du feu. "
-		+ "Pas de guillemets. Vocabulaire celtique: nemeton, ogham, sidhe, dolmen, brume, racines, pierre dressee."
+		+ "Pas de guillemets. Vocabulaire celtique: nemeton, rune, sidhe, dolmen, brume, racines, pierre dressee."
 	)
-	var usr := "Biome: %s (%s). Gardien: %s. Ogham: %s. Genere le monologue du dealer." % [
+	var usr := "Biome: %s (%s). Gardien: %s. Rune: %s. Genere le monologue du dealer." % [
 		biome_name, biome_subtitle_text, guardian, ogham
 	]
 

@@ -36,7 +36,7 @@
         ]
       },
       {
-        "label": "Memoriser la forme de chaque branche pour reconstituer l'ogham",
+        "label": "Memoriser la forme de chaque branche pour reconstituer la rune",
         "verb": "memoriser",
         "effects": [
           {
@@ -125,7 +125,7 @@
     "id": "fr_s10c_ogham_nuin_001",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
-    "text": "Un frene immense — un Nuin — domine un carrefour de sentiers forestiers. Ses racines plongent dans trois directions differentes. Maelgwn explique : 'Le frene connecte les mondes. Ses racines touchent le passe, le present et le futur. L'ogham Nuin permet de remplacer ce qui est mauvais par ce qui pourrait etre bon.'",
+    "text": "Un frene immense — un Nuin — domine un carrefour de sentiers forestiers. Ses racines plongent dans trois directions differentes. Maelgwn explique : 'Le frene connecte les mondes. Ses racines touchent le passe, le present et le futur. La rune Nuin permet de remplacer ce qui est mauvais par ce qui pourrait etre bon.'",
     "options": [
       {
         "label": "Dechiffrer les motifs des racines pour comprendre le pouvoir du Nuin",
@@ -158,7 +158,7 @@
         ]
       },
       {
-        "label": "Etudier l'ecorce du frene pour y trouver l'inscription oghamique",
+        "label": "Etudier l'ecorce du frene pour y trouver l'inscription runique",
         "verb": "etudier",
         "effects": [
           {
@@ -377,7 +377,7 @@
     "text": "Un houx sacre — un Tinne — pousse a l'entree d'un dolmen, ses feuilles piquantes formant une barriere naturelle. Ildiko explique : 'Le houx est l'arbre du guerrier spirituel. Il double la force de ceux qui le meritent. Mais il punit les indignes — ses epines sont empoisonnees pour les menteurs.'",
     "options": [
       {
-        "label": "Examiner les feuilles pour trouver l'inscription oghamique du Tinne",
+        "label": "Examiner les feuilles pour trouver l'inscription runique du Tinne",
         "verb": "examiner",
         "effects": [
           {
@@ -563,7 +563,7 @@
     "id": "fr_s10c_ogham_muin_001",
     "biome": "cotes_sauvages",
     "champ_lexical": "bluff",
-    "text": "Une vigne sauvage — un Muin — escalade les falaises de la presqu'ile de Crozon. Ses grappes changent de couleur selon qui les regarde : pourpres pour les druides, dorees pour les korrigans. Un korrigan vigneron rit : 'Le Muin inverse tout! Le bon vin rend fou et le mauvais rend sage. L'ogham du paradoxe.'",
+    "text": "Une vigne sauvage — un Muin — escalade les falaises de la presqu'ile de Crozon. Ses grappes changent de couleur selon qui les regarde : pourpres pour les druides, dorees pour les korrigans. Un korrigan vigneron rit : 'Le Muin inverse tout! Le bon vin rend fou et le mauvais rend sage. La rune du paradoxe.'",
     "options": [
       {
         "label": "Convaincre le korrigan de partager le secret de la vigne inversante",
@@ -581,7 +581,7 @@
         ]
       },
       {
-        "label": "Marchander une grappe en echange d'une histoire sur l'ogham Muin",
+        "label": "Marchander une grappe en echange d'une histoire sur la rune Muin",
         "verb": "marchander",
         "effects": [
           {
@@ -1012,7 +1012,7 @@
     "id": "fr_s10c_ogham_ur_001",
     "biome": "landes_bruyere",
     "champ_lexical": "esprit",
-    "text": "Un champ de bruyere — un Ur — s'etend a perte de vue sous un ciel de plomb. Les fleurs mauves vibrent d'une energie sombre. Erwan dit : 'L'Ur est l'ogham du sacrifice calculé. Donner son sang a la bruyere pour recevoir plus en retour. Les guerriers faisaient ce pacte avant les batailles.'",
+    "text": "Un champ de bruyere — un Ur — s'etend a perte de vue sous un ciel de plomb. Les fleurs mauves vibrent d'une energie sombre. Erwan dit : 'L'Ur est la rune du sacrifice calculé. Donner son sang a la bruyere pour recevoir plus en retour. Les guerriers faisaient ce pacte avant les batailles.'",
     "options": [
       {
         "label": "Accepter le pacte de la bruyere en offrant quelques gouttes de son sang",
@@ -1142,10 +1142,10 @@
     "id": "fr_s10c_unlock_beith_001",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
-    "text": "Au coeur de la foret, un cercle de bouleaux entoure une pierre plate ou l'ogham Beith est grave en lettres de lumiere. Gwenn recule d'un pas : 'L'arbre t'a choisi. Si tu peux lire ce qui est ecrit, le Beith sera tien.' Les lettres pulsent au rythme de ton coeur.",
+    "text": "Au coeur de la foret, un cercle de bouleaux entoure une pierre plate ou la rune Beith est grave en lettres de lumiere. Gwenn recule d'un pas : 'L'arbre t'a choisi. Si tu peux lire ce qui est ecrit, le Beith sera tien.' Les lettres pulsent au rythme de ton coeur.",
     "options": [
       {
-        "label": "Dechiffrer l'inscription oghamique du Beith gravee dans la lumiere",
+        "label": "Dechiffrer l'inscription runique du Beith gravee dans la lumiere",
         "verb": "dechiffrer",
         "effects": [
           {
@@ -1204,10 +1204,10 @@
     "id": "fr_s10c_unlock_duir_001",
     "biome": "villages_celtes",
     "champ_lexical": "vigueur",
-    "text": "Le grand chene du village a ete frappe par la foudre, mais il vit encore. Dans la cicatrice du bois calcine, l'ogham Duir brille d'un eclat ambré. Cadogan dit : 'Le chene a encaisse la foudre pour toi. Son ogham est maintenant libre. Prends-le si tu peux supporter son poids.'",
+    "text": "Le grand chene du village a ete frappe par la foudre, mais il vit encore. Dans la cicatrice du bois calcine, la rune Duir brille d'un eclat ambré. Cadogan dit : 'Le chene a encaisse la foudre pour toi. Sa rune est maintenant libre. Prends-le si tu peux supporter son poids.'",
     "options": [
       {
-        "label": "Resister physiquement a l'energie residuelle de la foudre pour saisir l'ogham",
+        "label": "Resister physiquement a l'energie residuelle de la foudre pour saisir la rune",
         "verb": "resister physiquement",
         "effects": [
           {
@@ -1265,7 +1265,7 @@
     "id": "fr_s10c_unlock_coll_001",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
-    "text": "Le saumon sacre remonte le ruisseau une derniere fois, portant sur son dos une noisette d'or. A l'interieur, grave en miniature, l'ogham Coll. Maelgwn dit : 'Neuf noisettes contiennent toute la sagesse du monde. Celle-ci est la derniere. Le saumon la delivre a celui qui resout l'enigme finale.'",
+    "text": "Le saumon sacre remonte le ruisseau une derniere fois, portant sur son dos une noisette d'or. A l'interieur, grave en miniature, la rune Coll. Maelgwn dit : 'Neuf noisettes contiennent toute la sagesse du monde. Celle-ci est la derniere. Le saumon la delivre a celui qui resout l'enigme finale.'",
     "options": [
       {
         "label": "Resoudre l'enigme du saumon pour obtenir la noisette de sagesse",
@@ -1327,7 +1327,7 @@
     "id": "fr_s10c_unlock_ailm_001",
     "biome": "cercles_pierres",
     "champ_lexical": "perception",
-    "text": "Au sommet du plus haut menhir du cromlech, une branche de sapin portant l'ogham Ailm est fichee dans la pierre. Brennos dit : 'Seuls ceux qui entendent le futur peuvent l'atteindre. Le menhir s'abaisse pour ceux qui ecoutent au bon moment.'",
+    "text": "Au sommet du plus haut menhir du cromlech, une branche de sapin portant la rune Ailm est fichee dans la pierre. Brennos dit : 'Seuls ceux qui entendent le futur peuvent l'atteindre. Le menhir s'abaisse pour ceux qui ecoutent au bon moment.'",
     "options": [
       {
         "label": "Ecouter le menhir pour percevoir le moment ou il s'abaisse",
@@ -1389,7 +1389,7 @@
     "id": "fr_s10c_unlock_luis_001",
     "biome": "landes_bruyere",
     "champ_lexical": "esprit",
-    "text": "Un sorbier pousse a la frontiere entre les landes vivantes et les landes mortes. Ses baies forment l'ogham Luis en grappes. Une tempete approche. Erwan dit : 'Le sorbier offre sa protection a qui ose rester sous ses branches pendant la tempete. L'ogham Luis se gagne dans l'adversite.'",
+    "text": "Un sorbier pousse a la frontiere entre les landes vivantes et les landes mortes. Ses baies forment la rune Luis en grappes. Une tempete approche. Erwan dit : 'Le sorbier offre sa protection a qui ose rester sous ses branches pendant la tempete. La rune Luis se gagne dans l'adversite.'",
     "options": [
       {
         "label": "Endurer la tempete sous le sorbier pour gagner la protection du Luis",
@@ -1450,7 +1450,7 @@
     "id": "fr_s10c_unlock_quert_001",
     "biome": "iles_mystiques",
     "champ_lexical": "chance",
-    "text": "Sur Avalon, le pommier sacre laisse tomber une unique pomme d'argent. A l'interieur, l'ogham Quert pulse comme un coeur. Morgane dit : 'La pomme ne peut etre ouverte que par celui qui accepte de guerir quelqu'un d'autre avant soi-meme.'",
+    "text": "Sur Avalon, le pommier sacre laisse tomber une unique pomme d'argent. A l'interieur, la rune Quert pulse comme un coeur. Morgane dit : 'La pomme ne peut etre ouverte que par celui qui accepte de guerir quelqu'un d'autre avant soi-meme.'",
     "options": [
       {
         "label": "Tenter sa chance en offrant la pomme a un esprit blesse pres de l'arbre",
@@ -1512,7 +1512,7 @@
     "id": "fr_s10c_unlock_tinne_001",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
-    "text": "Dans un ossuaire abandonne, un houx sacre a pousse a travers un crane ancien. L'ogham Tinne est visible dans les nervures des feuilles, mais seulement sous un angle precis. Ildiko dit : 'Le Tinne exige la precision du guerrier. Trouve l'angle exact, et le pouvoir est a toi.'",
+    "text": "Dans un ossuaire abandonne, un houx sacre a pousse a travers un crane ancien. La rune Tinne est visible dans les nervures des feuilles, mais seulement sous un angle precis. Ildiko dit : 'Le Tinne exige la precision du guerrier. Trouve l'angle exact, et le pouvoir est a toi.'",
     "options": [
       {
         "label": "Examiner les feuilles sous chaque angle possible pour trouver le bon",
@@ -1530,7 +1530,7 @@
         ]
       },
       {
-        "label": "Scruter les nervures pour reperer le motif oghamique",
+        "label": "Scruter les nervures pour reperer le motif runique",
         "verb": "scruter",
         "effects": [
           {
@@ -1574,7 +1574,7 @@
     "id": "fr_s10c_unlock_saille_001",
     "biome": "marais_korrigans",
     "champ_lexical": "perception",
-    "text": "Le saule du marais central laisse pendre une branche unique dans l'eau noire. Au bout, une feuille porte l'ogham Saille en lettres d'eau. Gwen Du murmure : 'La feuille ne se detache que si l'on pleure une larme sincere dans le marais. Pas de larme de crocodile — le saule les reconnait.'",
+    "text": "Le saule du marais central laisse pendre une branche unique dans l'eau noire. Au bout, une feuille porte la rune Saille en lettres d'eau. Gwen Du murmure : 'La feuille ne se detache que si l'on pleure une larme sincere dans le marais. Pas de larme de crocodile — le saule les reconnait.'",
     "options": [
       {
         "label": "Ecouter les souvenirs tristes que le marais murmure pour trouver une larme sincere",
@@ -1636,10 +1636,10 @@
     "id": "fr_s10c_unlock_nuin_001",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
-    "text": "Le frene du carrefour s'ouvre en deux pendant un orage. Dans la fissure, l'ogham Nuin brille d'un vert intense. Maelgwn crie par-dessus le tonnerre : 'Le Nuin apparait quand le monde se fissure! C'est l'ogham du remplacement — prends-le avant que l'arbre ne se referme!'",
+    "text": "Le frene du carrefour s'ouvre en deux pendant un orage. Dans la fissure, la rune Nuin brille d'un vert intense. Maelgwn crie par-dessus le tonnerre : 'Le Nuin apparait quand le monde se fissure! C'est la rune du remplacement — prends-le avant que l'arbre ne se referme!'",
     "options": [
       {
-        "label": "Dechiffrer l'ogham dans la fissure avant qu'elle ne se referme",
+        "label": "Dechiffrer la rune dans la fissure avant qu'elle ne se referme",
         "verb": "dechiffrer",
         "effects": [
           {
@@ -1702,7 +1702,7 @@
     "id": "fr_s10c_unlock_huath_001",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
-    "text": "La haie d'aubepines s'est ouverte cette nuit, revelant un passage orne de l'ogham Huath en fleurs blanches. Le korrigan gardien dort toujours. Gwenn chuchote : 'Le Huath ne s'ouvre qu'a ceux qui passent sans bruit. Un seul craquement et la haie se referme pour un an.'",
+    "text": "La haie d'aubepines s'est ouverte cette nuit, revelant un passage orne de la rune Huath en fleurs blanches. Le korrigan gardien dort toujours. Gwenn chuchote : 'Le Huath ne s'ouvre qu'a ceux qui passent sans bruit. Un seul craquement et la haie se referme pour un an.'",
     "options": [
       {
         "label": "Se faufiler dans le passage en retenant son souffle",
@@ -1764,7 +1764,7 @@
     "id": "fr_s10c_unlock_straif_001",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
-    "text": "Dans le cimetiere de Kerjean, le prunellier a fleuri en plein hiver — signe que l'ogham Straif est pret a etre libere. Ildiko murmure : 'Le Straif ne se donne qu'a ceux qui acceptent que le destin change. Tu dois dire a voix haute ce que tu veux voir changer. L'arbre ecoute.'",
+    "text": "Dans le cimetiere de Kerjean, le prunellier a fleuri en plein hiver — signe que la rune Straif est pret a etre libere. Ildiko murmure : 'Le Straif ne se donne qu'a ceux qui acceptent que le destin change. Tu dois dire a voix haute ce que tu veux voir changer. L'arbre ecoute.'",
     "options": [
       {
         "label": "Accepter le pacte du prunellier en nommant le changement desire",
@@ -1826,7 +1826,7 @@
     "id": "fr_s10c_unlock_gort_001",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
-    "text": "Le lierre geant du marais s'est enroule autour d'un dolmen submerge, formant un cocon vert. A l'interieur, l'ogham Gort brille doucement. Gwen Du previent : 'Le lierre protege ses secrets. Pour atteindre l'ogham, tu dois te laisser envelopper par ses vrilles. Il te relachera quand il jugera que tu es digne.'",
+    "text": "Le lierre geant du marais s'est enroule autour d'un dolmen submerge, formant un cocon vert. A l'interieur, la rune Gort brille doucement. Gwen Du previent : 'Le lierre protege ses secrets. Pour atteindre la rune, tu dois te laisser envelopper par ses vrilles. Il te relachera quand il jugera que tu es digne.'",
     "options": [
       {
         "label": "Se faufiler dans le cocon de lierre et se laisser envelopper volontairement",
@@ -1892,7 +1892,7 @@
     "id": "fr_s10c_unlock_muin_001",
     "biome": "cotes_sauvages",
     "champ_lexical": "bluff",
-    "text": "La vigne sauvage de Crozon porte une grappe unique dont les grains forment l'ogham Muin. Le korrigan vigneron l'offre — mais il y a un piege. 'Mange la grappe et tu obtiens l'ogham. Mais previens — les effets seront inverses pendant un jour. Le bon devient mauvais, le mauvais devient bon.'",
+    "text": "La vigne sauvage de Crozon porte une grappe unique dont les grains forment la rune Muin. Le korrigan vigneron l'offre — mais il y a un piege. 'Mange la grappe et tu obtiens la rune. Mais previens — les effets seront inverses pendant un jour. Le bon devient mauvais, le mauvais devient bon.'",
     "options": [
       {
         "label": "Convaincre le korrigan de te donner la grappe sans manger les grains",
@@ -1954,7 +1954,7 @@
     "id": "fr_s10c_unlock_onn_001",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
-    "text": "L'ajonc des landes a pousse autour d'un tresor korrigan, formant une cage d'epines. Au centre, un disque d'or porte l'ogham Onn. Le korrigan gardien dit : 'L'Onn recompense l'effort. Traverse les epines a mains nues et il est a toi. Ou fabrique un outil — mais ca prend du temps.'",
+    "text": "L'ajonc des landes a pousse autour d'un tresor korrigan, formant une cage d'epines. Au centre, un disque d'or porte la rune Onn. Le korrigan gardien dit : 'L'Onn recompense l'effort. Traverse les epines a mains nues et il est a toi. Ou fabrique un outil — mais ca prend du temps.'",
     "options": [
       {
         "label": "Pousser a travers les epines de l'ajonc pour atteindre le disque d'or",
@@ -2024,7 +2024,7 @@
     "id": "fr_s10c_unlock_ruis_001",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
-    "text": "Le sureau de l'ile de Sein fleurit d'une seule fleur geante en forme de l'ogham Ruis. Morgane dit : 'Le Ruis exige le sacrifice du guerisseur. Pour debloquer cet ogham, tu dois guerir quelqu'un en donnant ta propre force vitale. La fleur absorbera ton offrande.'",
+    "text": "Le sureau de l'ile de Sein fleurit d'une seule fleur geante en forme de la rune Ruis. Morgane dit : 'Le Ruis exige le sacrifice du guerisseur. Pour debloquer cette rune, tu dois guerir quelqu'un en donnant ta propre force vitale. La fleur absorbera ton offrande.'",
     "options": [
       {
         "label": "Mediter en offrant volontairement de sa force vitale au sureau",
@@ -2090,7 +2090,7 @@
     "id": "fr_s10c_unlock_ioho_001",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
-    "text": "L'if millenaire ouvre son tronc creux pour la premiere fois en cent ans. A l'interieur, l'ogham Ioho flotte dans une lumiere blanche. Ildiko murmure : 'Entrer, c'est mourir. Sortir, c'est renaitre avec le pouvoir de tout recommencer. Mais la mort symbolique n'est pas sans douleur.'",
+    "text": "L'if millenaire ouvre son tronc creux pour la premiere fois en cent ans. A l'interieur, la rune Ioho flotte dans une lumiere blanche. Ildiko murmure : 'Entrer, c'est mourir. Sortir, c'est renaitre avec le pouvoir de tout recommencer. Mais la mort symbolique n'est pas sans douleur.'",
     "options": [
       {
         "label": "Combattre sa peur et entrer dans le tronc creux pour la mort symbolique",
@@ -2155,10 +2155,10 @@
     "id": "fr_s10c_unlock_eadhadh_001",
     "biome": "cercles_pierres",
     "champ_lexical": "perception",
-    "text": "Le tremble du cromlech frissonne violemment, ses feuilles formant brievement l'ogham Eadhadh dans leur danse. Brennos dit : 'L'Eadhadh protege des tenebres. Pour le capter, il faut entendre le silence entre les frissons — le moment ou la peur se tait.'",
+    "text": "Le tremble du cromlech frissonne violemment, ses feuilles formant brievement la rune Eadhadh dans leur danse. Brennos dit : 'L'Eadhadh protege des tenebres. Pour le capter, il faut entendre le silence entre les frissons — le moment ou la peur se tait.'",
     "options": [
       {
-        "label": "Ecouter le silence entre les frissons pour saisir l'ogham fugace",
+        "label": "Ecouter le silence entre les frissons pour saisir la rune fugace",
         "verb": "ecouter",
         "effects": [
           {
@@ -2217,7 +2217,7 @@
     "id": "fr_s10c_unlock_ur_001",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
-    "text": "La bruyere des landes forme un cercle parfait autour d'une pierre plate. Sur la pierre, l'ogham Ur est grave au sang sechee. Erwan dit : 'Le dernier guerrier qui l'a active a donne quinze gouttes de sang. L'Ur ne se donne qu'au prix de la chair.'",
+    "text": "La bruyere des landes forme un cercle parfait autour d'une pierre plate. Sur la pierre, la rune Ur est grave au sang sechee. Erwan dit : 'Le dernier guerrier qui l'a active a donne quinze gouttes de sang. L'Ur ne se donne qu'au prix de la chair.'",
     "options": [
       {
         "label": "Resister physiquement a la douleur et offrir son sang a la pierre",
@@ -2282,7 +2282,7 @@
     "id": "fr_s10c_ogham_lore_001",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
-    "text": "Maelgwn rassemble les novices sous un chene. 'Les Oghams ne sont pas des outils,' dit-il. 'Ce sont des pactes entre l'arbre et le druide. Le Beith revele, le Luis protege, le Nuin remplace, le Duir guerit. Mais chacun a un prix. L'arbre se souvient de chaque utilisation. Use trop, et l'arbre te refuse.'",
+    "text": "Maelgwn rassemble les novices sous un chene. 'Les Runes ne sont pas des outils,' dit-il. 'Ce sont des pactes entre l'arbre et le druide. Le Beith revele, le Luis protege, le Nuin remplace, le Duir guerit. Mais chacun a un prix. L'arbre se souvient de chaque utilisation. Use trop, et l'arbre te refuse.'",
     "options": [
       {
         "label": "Mediter sur la nature du pacte entre l'homme et l'arbre",
@@ -2300,7 +2300,7 @@
         ]
       },
       {
-        "label": "Se concentrer sur les quatre premiers Oghams pour les maitriser avant d'avancer",
+        "label": "Se concentrer sur les quatre premiers Runes pour les maitriser avant d'avancer",
         "verb": "se concentrer",
         "effects": [
           {
@@ -2343,10 +2343,10 @@
     "id": "fr_s10c_ogham_lore_002",
     "biome": "cercles_pierres",
     "champ_lexical": "observation",
-    "text": "Dans le cairn de Gavrinis, les spirales murales forment les 18 oghams si on les regarde dans le bon ordre. Brennos allume une bougie et tourne lentement. 'Chaque ogham est un chapitre de l'histoire du monde. Les spirales racontent la creation, la vie, la mort et la renaissance. Dix-huit chapitres. Dix-huit arbres. Un seul livre.'",
+    "text": "Dans le cairn de Gavrinis, les spirales murales forment les 18 runes si on les regarde dans le bon ordre. Brennos allume une bougie et tourne lentement. 'Chaque rune est un chapitre de l'histoire du monde. Les spirales racontent la creation, la vie, la mort et la renaissance. Dix-huit chapitres. Dix-huit arbres. Un seul livre.'",
     "options": [
       {
-        "label": "Observer les spirales pour identifier chaque ogham dans l'ordre",
+        "label": "Observer les spirales pour identifier chaque rune dans l'ordre",
         "verb": "observer",
         "effects": [
           {
@@ -2361,7 +2361,7 @@
         ]
       },
       {
-        "label": "Memoriser la sequence des oghams telle qu'elle apparait dans les spirales",
+        "label": "Memoriser la sequence des runes telle qu'elle apparait dans les spirales",
         "verb": "memoriser",
         "effects": [
           {
@@ -2376,7 +2376,7 @@
         ]
       },
       {
-        "label": "Fixer la bougie pour voir les ombres dessiner les oghams manquants",
+        "label": "Fixer la bougie pour voir les ombres dessiner les runes manquants",
         "verb": "fixer",
         "effects": [
           {
@@ -2404,7 +2404,7 @@
     "id": "fr_s10c_ogham_lore_003",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
-    "text": "Sur Avalon, Morgane montre un jardin ou poussent les 18 arbres oghamiques cote a cote — le seul lieu au monde ou ils coexistent tous. 'Dans l'Autre Monde, les oghams ne sont pas des pouvoirs,' dit-elle. 'Ce sont des langues. Chaque arbre parle au suivant. Ensemble, ils forment une phrase que seul l'Elu peut entendre.'",
+    "text": "Sur Avalon, Morgane montre un jardin ou poussent les 18 arbres runiques cote a cote — le seul lieu au monde ou ils coexistent tous. 'Dans l'Autre Monde, les runes ne sont pas des pouvoirs,' dit-elle. 'Ce sont des langues. Chaque arbre parle au suivant. Ensemble, ils forment une phrase que seul l'Elu peut entendre.'",
     "options": [
       {
         "label": "Mediter au centre du jardin pour entendre la phrase des 18 arbres",
@@ -2470,10 +2470,10 @@
     "id": "fr_s10c_ogham_lore_004",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
-    "text": "Ildiko revele un secret : trois des 18 oghams sont lies a la mort — l'If (Ioho), le Tremble (Eadhadh) et la Bruyere (Ur). 'Ensemble, ils forment le Triangle de l'Ankou. Celui qui maitrise les trois peut negocier avec la mort elle-meme. Mais la mort n'aime pas etre derangee.'",
+    "text": "Ildiko revele un secret : trois des 18 runes sont lies a la mort — l'If (Ioho), le Tremble (Eadhadh) et la Bruyere (Ur). 'Ensemble, ils forment le Triangle de l'Ankou. Celui qui maitrise les trois peut negocier avec la mort elle-meme. Mais la mort n'aime pas etre derangee.'",
     "options": [
       {
-        "label": "Analyser les connexions entre les trois oghams de la mort",
+        "label": "Analyser les connexions entre les trois runes de la mort",
         "verb": "analyser",
         "effects": [
           {
@@ -2531,7 +2531,7 @@
     "id": "fr_s10c_ogham_lore_005",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
-    "text": "Gwen Du connait un secret sur les oghams que personne d'autre ne sait : 'Le Muin, le Gort et l'Onn — ce sont les oghams des korrigans. La vigne inverse, le lierre absorbe, l'ajonc enrichit. Ensemble, ils rendent n'importe quel korrigan invincible au commerce. C'est pour ca que les druides ne veulent pas qu'on les ait.'",
+    "text": "Gwen Du connait un secret sur les runes que personne d'autre ne sait : 'Le Muin, le Gort et l'Onn — ce sont les runes des korrigans. La vigne inverse, le lierre absorbe, l'ajonc enrichit. Ensemble, ils rendent n'importe quel korrigan invincible au commerce. C'est pour ca que les druides ne veulent pas qu'on les ait.'",
     "options": [
       {
         "label": "Negocier avec Gwen Du pour qu'elle partage le secret de la triade korrigan",
@@ -2597,10 +2597,10 @@
     "id": "fr_s10c_ogham_lore_006",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
-    "text": "Cadogan montre un vieux parchemin dans la salle du conseil : la carte des affinites oghamiques par biome. 'Chaque biome renforce certains oghams et en affaiblit d'autres. Utiliser le mauvais ogham dans le mauvais lieu, c'est comme planter un palmier dans la neige — inutile et embarrassant.'",
+    "text": "Cadogan montre un vieux parchemin dans la salle du conseil : la carte des affinites runiques par biome. 'Chaque biome renforce certaines runes et en affaiblit d'autres. Utiliser la mauvaise rune dans le mauvais lieu, c'est comme planter un palmier dans la neige — inutile et embarrassant.'",
     "options": [
       {
-        "label": "Examiner le parchemin pour memoriser les affinites biome-ogham",
+        "label": "Examiner le parchemin pour memoriser les affinites biome-rune",
         "verb": "examiner",
         "effects": [
           {
@@ -2658,7 +2658,7 @@
     "id": "fr_s10c_ogham_lore_007",
     "biome": "cotes_sauvages",
     "champ_lexical": "finesse",
-    "text": "Sur la plage de Carnac, les vagues deposent des galets graves de fragments oghamiques. Un korrigan collecteur les assemble comme un puzzle. 'Chaque maree apporte un morceau. En mille ans, j'ai reconstitue douze des dix-huit oghams. Les six manquants sont les plus puissants — la mer les garde pour elle.'",
+    "text": "Sur la plage de Carnac, les vagues deposent des galets graves de fragments runiques. Un korrigan collecteur les assemble comme un puzzle. 'Chaque maree apporte un morceau. En mille ans, j'ai reconstitue douze des dix-huit runes. Les six manquants sont les plus puissants — la mer les garde pour elle.'",
     "options": [
       {
         "label": "Se faufiler entre les vagues pour attraper un galet grave avant le korrigan",
@@ -2719,10 +2719,10 @@
     "id": "fr_s10c_ogham_lore_008",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
-    "text": "Erwan a trouve une stele portant les 18 oghams disposes en cercle, mais trois sont effaces. Il dit : 'La stele est un verrou. Si on complete les trois oghams manquants dans le bon ordre, elle revele un passage vers un sanctuaire oublie. Mauvais ordre, mauvaise surprise.'",
+    "text": "Erwan a trouve une stele portant les 18 runes disposes en cercle, mais trois sont effaces. Il dit : 'La stele est un verrou. Si on complete les trois runes manquants dans le bon ordre, elle revele un passage vers un sanctuaire oublie. Mauvais ordre, mauvaise surprise.'",
     "options": [
       {
-        "label": "Dechiffrer les traces residuelles des trois oghams effaces",
+        "label": "Dechiffrer les traces residuelles des trois runes effaces",
         "verb": "dechiffrer",
         "effects": [
           {
@@ -2737,7 +2737,7 @@
         ]
       },
       {
-        "label": "Analyser la logique du cercle pour deduire les oghams manquants",
+        "label": "Analyser la logique du cercle pour deduire les runes manquants",
         "verb": "analyser",
         "effects": [
           {
@@ -2784,10 +2784,10 @@
     "id": "fr_s10c_unlock_huath_002",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
-    "text": "Une aubepine solitaire pousse au milieu d'un chemin de terre, ses branches couvertes de rubans nous par les voyageurs. Au pied de l'arbre, une racine forme naturellement l'ogham Huath. Un rouge-gorge se pose dessus et chante trois notes. Erwan dit : 'Le Huath s'offre quand on ne le cherche pas.'",
+    "text": "Une aubepine solitaire pousse au milieu d'un chemin de terre, ses branches couvertes de rubans nous par les voyageurs. Au pied de l'arbre, une racine forme naturellement la rune Huath. Un rouge-gorge se pose dessus et chante trois notes. Erwan dit : 'Le Huath s'offre quand on ne le cherche pas.'",
     "options": [
       {
-        "label": "Tenter sa chance en nouant un ruban et touchant la racine oghamique",
+        "label": "Tenter sa chance en nouant un ruban et touchant la racine runique",
         "verb": "tenter sa chance",
         "effects": [
           {
@@ -2846,10 +2846,10 @@
     "id": "fr_s10c_unlock_muin_002",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
-    "text": "Dans la cave du forgeron de Locronan, une vigne sauvage a pousse a travers le mur de pierre. Les grains forment un motif que Cadogan reconnait : 'C'est l'ogham Muin! La vigne a choisi cette cave. Le forgeron dit qu'elle inverse la qualite du metal — le fer devient or, l'or devient cendre.'",
+    "text": "Dans la cave du forgeron de Locronan, une vigne sauvage a pousse a travers le mur de pierre. Les grains forment un motif que Cadogan reconnait : 'C'est la rune Muin! La vigne a choisi cette cave. Le forgeron dit qu'elle inverse la qualite du metal — le fer devient or, l'or devient cendre.'",
     "options": [
       {
-        "label": "Examiner les grains pour confirmer le motif oghamique du Muin",
+        "label": "Examiner les grains pour confirmer le motif runique du Muin",
         "verb": "examiner",
         "effects": [
           {
@@ -2908,7 +2908,7 @@
     "id": "fr_s10c_ogham_mastery_001",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
-    "text": "Brennos propose une epreuve de maitrise : activer trois oghams en sequence pour creer un effet combine. 'Beith pour reveler, Luis pour proteger, Quert pour guerir. Dans cet ordre, ils forment le Triangle du Novice — la premiere combinaison que tout druide apprend. Montre-moi que tu comprends la sequence.'",
+    "text": "Brennos propose une epreuve de maitrise : activer trois runes en sequence pour creer un effet combine. 'Beith pour reveler, Luis pour proteger, Quert pour guerir. Dans cet ordre, ils forment le Triangle du Novice — la premiere combinaison que tout druide apprend. Montre-moi que tu comprends la sequence.'",
     "options": [
       {
         "label": "Se concentrer pour visualiser la sequence Beith-Luis-Quert en harmonie",
@@ -2926,7 +2926,7 @@
         ]
       },
       {
-        "label": "Mediter sur chaque ogham individuellement avant de les combiner",
+        "label": "Mediter sur chaque rune individuellement avant de les combiner",
         "verb": "mediter",
         "effects": [
           {
@@ -2969,10 +2969,10 @@
     "id": "fr_s10c_ogham_mastery_002",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
-    "text": "L'epreuve ultime des oghams sombres : activer Ioho, Eadhadh et Ur en meme temps. Ildiko recule. 'Personne n'a survecu a la Triple Mort depuis trois generations. Les trois oghams aspirent ta force vitale pour ouvrir un portail direct vers le monde des morts. Si tu reviens, tu es un maitre.'",
+    "text": "L'epreuve ultime des runes sombres : activer Ioho, Eadhadh et Ur en meme temps. Ildiko recule. 'Personne n'a survecu a la Triple Mort depuis trois generations. Les trois runes aspirent ta force vitale pour ouvrir un portail direct vers le monde des morts. Si tu reviens, tu es un maitre.'",
     "options": [
       {
-        "label": "Combattre l'aspiration des trois oghams avec toute sa force vitale",
+        "label": "Combattre l'aspiration des trois runes avec toute sa force vitale",
         "verb": "combattre",
         "effects": [
           {
@@ -3034,10 +3034,10 @@
     "id": "fr_s10c_ogham_mastery_003",
     "biome": "iles_mystiques",
     "champ_lexical": "perception",
-    "text": "Morgane revele la derniere epreuve : entendre la voix de l'ogham que tu n'as pas encore debloque. 'Chaque arbre que tu ne possedes pas t'appelle en silence. Entends son nom, et il viendra a toi. Mais les noms des arbres ne se prononcent pas avec la bouche — ils se prononcent avec le coeur.'",
+    "text": "Morgane revele la derniere epreuve : entendre la voix de la rune que tu n'as pas encore debloque. 'Chaque arbre que tu ne possedes pas t'appelle en silence. Entends son nom, et il viendra a toi. Mais les noms des arbres ne se prononcent pas avec la bouche — ils se prononcent avec le coeur.'",
     "options": [
       {
-        "label": "Ecouter le silence d'Avalon pour percevoir le nom de l'ogham manquant",
+        "label": "Ecouter le silence d'Avalon pour percevoir le nom de la rune manquant",
         "verb": "ecouter",
         "effects": [
           {
@@ -3095,10 +3095,10 @@
     "id": "fr_s10c_ogham_mastery_004",
     "biome": "villages_celtes",
     "champ_lexical": "logique",
-    "text": "Cadogan presente une enigme finale : un plateau de bois avec 18 encoches et 18 jetons oghamiques. 'Place chaque ogham dans la bonne encoche. L'ordre compte — il suit le calendrier des arbres. Beith en premiere position, Ioho en derniere. Les erreurs reveillent les gardiens du plateau.'",
+    "text": "Cadogan presente une enigme finale : un plateau de bois avec 18 encoches et 18 jetons runiques. 'Place chaque rune dans la bonne encoche. L'ordre compte — il suit le calendrier des arbres. Beith en premiere position, Ioho en derniere. Les erreurs reveillent les gardiens du plateau.'",
     "options": [
       {
-        "label": "Resoudre le puzzle en placant les 18 oghams dans l'ordre calendaire",
+        "label": "Resoudre le puzzle en placant les 18 runes dans l'ordre calendaire",
         "verb": "resoudre",
         "effects": [
           {

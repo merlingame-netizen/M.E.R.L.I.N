@@ -145,7 +145,7 @@
     ]
   },
   {
-    "narrative": "Une melodie lointaine guide tes pas vers un cercle de pierres dressees. Chaque menhir porte un ogham different, et la musique semble provenir du centre exact du cercle.",
+    "narrative": "Une melodie lointaine guide tes pas vers un cercle de pierres dressees. Chaque menhir porte une rune different, et la musique semble provenir du centre exact du cercle.",
     "options": [
       {
         "verb": "ecouter",
@@ -157,7 +157,7 @@
       },
       {
         "verb": "dechiffrer",
-        "text": "Tu etudies les oghams graves dans la pierre.",
+        "text": "Tu etudies les runes graves dans la pierre.",
         "effects": [
           "ADD_ANAM:8",
           "ADD_REPUTATION:anciens:4"
@@ -262,11 +262,11 @@
     ]
   },
   {
-    "narrative": "Un cercle de pierres mousseuses entoure un bassin d'eau noire. Des libellules aux ailes dorees dansent a la surface. Le reflet dans l'eau ne montre pas le ciel mais un reseau d'oghams entrelaces.",
+    "narrative": "Un cercle de pierres mousseuses entoure un bassin d'eau noire. Des libellules aux ailes dorees dansent a la surface. Le reflet dans l'eau ne montre pas le ciel mais un reseau de runes entrelaces.",
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu te penches pour lire les oghams dans le reflet.",
+        "text": "Tu te penches pour lire les runes dans le reflet.",
         "effects": [
           "ADD_ANAM:8",
           "ADD_REPUTATION:druides:6"
@@ -465,11 +465,11 @@
     ]
   },
   {
-    "narrative": "Un pont de bois enjambe un ruisseau murmurant. Chaque planche porte un ogham different. Le pont oscille doucement, comme s'il respirait. De l'autre cote, un bosquet de bouleaux blancs brille dans la penombre.",
+    "narrative": "Un pont de bois enjambe un ruisseau murmurant. Chaque planche porte une rune different. Le pont oscille doucement, comme s'il respirait. De l'autre cote, un bosquet de bouleaux blancs brille dans la penombre.",
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu lis chaque ogham en traversant, un pas apres l'autre.",
+        "text": "Tu lis chaque rune en traversant, un pas apres l'autre.",
         "effects": [
           "ADD_ANAM:7",
           "ADD_REPUTATION:druides:5"
@@ -988,11 +988,11 @@
     ]
   },
   {
-    "narrative": "Des algues geantes s'echouent sur le rivage apres la tempete. Entre leurs frondes, des pierres polies portent des gravures oghamiques inconnues. L'air sent l'iode et le mystere.",
+    "narrative": "Des algues geantes s'echouent sur le rivage apres la tempete. Entre leurs frondes, des pierres polies portent des gravures runiques inconnues. L'air sent l'iode et le mystere.",
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu rassembles les pierres et tentes de lire les oghams.",
+        "text": "Tu rassembles les pierres et tentes de lire les runes.",
         "effects": [
           "ADD_ANAM:8",
           "ADD_REPUTATION:druides:4"
@@ -1365,7 +1365,7 @@
     ]
   },
   {
-    "narrative": "Un cercle de pierres basses emerge de la bruyere, a peine visible sous le tapis violet. Au centre, une pierre plate porte un bol de pierre rempli d'eau de pluie. Des runes oghamiques encerclent le bol.",
+    "narrative": "Un cercle de pierres basses emerge de la bruyere, a peine visible sous le tapis violet. Au centre, une pierre plate porte un bol de pierre rempli d'eau de pluie. Des runes runiques encerclent le bol.",
     "options": [
       {
         "verb": "dechiffrer",
@@ -1452,11 +1452,11 @@
     ]
   },
   {
-    "narrative": "Un orage violet s'amoncelle au-dessus des landes. Les eclairs frappent un menhir solitaire encore et encore, mais la pierre ne se fend pas. Chaque impact fait briller les oghams graves dans le granite.",
+    "narrative": "Un orage violet s'amoncelle au-dessus des landes. Les eclairs frappent un menhir solitaire encore et encore, mais la pierre ne se fend pas. Chaque impact fait briller les runes graves dans le granite.",
     "options": [
       {
         "verb": "se concentrer",
-        "text": "Tu fixes les oghams illumines, tentant de les memoriser.",
+        "text": "Tu fixes les runes illumines, tentant de les memoriser.",
         "effects": [
           "ADD_ANAM:8",
           "ADD_REPUTATION:anciens:5"
@@ -1742,11 +1742,11 @@
     ]
   },
   {
-    "narrative": "Le brouillard tombe sur la lande comme un voile. Des lumieres dansent au loin — feux follets ou lanternes de voyageurs? Un poteau de bois grave d'oghams emerge du sol, indiquant trois directions.",
+    "narrative": "Le brouillard tombe sur la lande comme un voile. Des lumieres dansent au loin — feux follets ou lanternes de voyageurs? Un poteau de bois grave de runes emerge du sol, indiquant trois directions.",
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu lis les oghams sur le poteau, cherchant le bon chemin.",
+        "text": "Tu lis les runes sur le poteau, cherchant le bon chemin.",
         "effects": [
           "ADD_ANAM:7",
           "ADD_REPUTATION:anciens:6"
@@ -1829,11 +1829,11 @@
     ]
   },
   {
-    "narrative": "Le vent emporte des graines de chardon geant qui volent comme des etoiles blanches au-dessus de la bruyere. Certaines se posent sur ta peau et y laissent des marques ephemeres en forme d'oghams.",
+    "narrative": "Le vent emporte des graines de chardon geant qui volent comme des etoiles blanches au-dessus de la bruyere. Certaines se posent sur ta peau et y laissent des marques ephemeres en forme de runes.",
     "options": [
       {
         "verb": "memoriser",
-        "text": "Tu lis les oghams dessines par les graines sur ta peau.",
+        "text": "Tu lis les runes dessines par les graines sur ta peau.",
         "effects": [
           "ADD_ANAM:7",
           "ADD_REPUTATION:anciens:6"
@@ -2587,7 +2587,7 @@
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu traces les oghams du bout des doigts, absorbant leur savoir.",
+        "text": "Tu traces les runes du bout des doigts, absorbant leur savoir.",
         "effects": [
           "ADD_ANAM:8",
           "ADD_REPUTATION:druides:7"
@@ -2786,7 +2786,7 @@
     ]
   },
   {
-    "narrative": "Un cercle interieur de sept petites pierres apparait quand la rosee du matin les revele. Elles ne sont visibles qu'a l'aube et forment un heptagone parfait, chaque pierre gravee d'un ogham different.",
+    "narrative": "Un cercle interieur de sept petites pierres apparait quand la rosee du matin les revele. Elles ne sont visibles qu'a l'aube et forment un heptagone parfait, chaque pierre gravee d'une rune different.",
     "options": [
       {
         "verb": "dechiffrer",
@@ -2874,11 +2874,11 @@
     ]
   },
   {
-    "narrative": "Le cercle de pierres entoure un if noueux dont les racines enserrent les menhirs comme des doigts. L'arbre porte des baies rouges en plein hiver et son tronc est grave de dizaines d'oghams superposes.",
+    "narrative": "Le cercle de pierres entoure un if noueux dont les racines enserrent les menhirs comme des doigts. L'arbre porte des baies rouges en plein hiver et son tronc est grave de dizaines de runes superposes.",
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu denoues les couches d'oghams, lisant l'histoire millenaire.",
+        "text": "Tu denoues les couches de runes, lisant l'histoire millenaire.",
         "effects": [
           "ADD_ANAM:8",
           "ADD_REPUTATION:druides:7"
@@ -3889,7 +3889,7 @@
     ]
   },
   {
-    "narrative": "Un tertre funeraire s'est effondre, revelant une chambre ornee de fresques. Les peintures montrent un roi celte recevant un ogham des mains d'un druide. Les couleurs sont encore vives apres des millenaires.",
+    "narrative": "Un tertre funeraire s'est effondre, revelant une chambre ornee de fresques. Les peintures montrent un roi celte recevant une rune des mains d'un druide. Les couleurs sont encore vives apres des millenaires.",
     "options": [
       {
         "verb": "inspecter",
@@ -4063,11 +4063,11 @@
     ]
   },
   {
-    "narrative": "Un pont de dalles traverse un ravin entre deux collines. Chaque dalle porte un ogham different. On dit que seul celui qui marche sur les bons oghams dans le bon ordre atteindra l'autre cote.",
+    "narrative": "Un pont de dalles traverse un ravin entre deux collines. Chaque dalle porte une rune different. On dit que seul celui qui marche sur les bons oghams dans le bon ordre atteindra l'autre cote.",
     "options": [
       {
         "verb": "resoudre",
-        "text": "Tu etudies la sequence d'oghams et cherches la logique.",
+        "text": "Tu etudies la sequence de runes et cherches la logique.",
         "effects": [
           "ADD_ANAM:7",
           "ADD_REPUTATION:anciens:6"
@@ -5546,7 +5546,7 @@
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu lis les noms oghamiques, apprenant qui est passe avant toi.",
+        "text": "Tu lis les noms runiques, apprenant qui est passe avant toi.",
         "effects": [
           "ADD_ANAM:7",
           "ADD_REPUTATION:anciens:8"
@@ -6093,7 +6093,7 @@
     ]
   },
   {
-    "narrative": "Un sifflet d'os depasse de la vase au bord d'un etang noir. Il est sculpte avec soin — des oghams courent le long du tube. Quand le vent passe dessus, il emet une note unique et profonde qui fait fuir les oiseaux.",
+    "narrative": "Un sifflet d'os depasse de la vase au bord d'un etang noir. Il est sculpte avec soin — des runes courent le long du tube. Quand le vent passe dessus, il emet une note unique et profonde qui fait fuir les oiseaux.",
     "options": [
       {
         "verb": "saisir",
@@ -6242,7 +6242,7 @@
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu lis les oghams a voix haute dans le bon ordre.",
+        "text": "Tu lis les runes a voix haute dans le bon ordre.",
         "effects": [
           "ADD_REPUTATION:ankou:8",
           "ADD_BIOME_CURRENCY:5"
@@ -6557,7 +6557,7 @@
     ]
   },
   {
-    "narrative": "Au coeur du nemeton sacre, trois druides tracent les signes de l'ogham Beith sur un bouleau blanc. Leurs voix resonnent en canon, invoquant la purification des anciennes eaux.",
+    "narrative": "Au coeur du nemeton sacre, trois druides tracent les signes de la rune Beith sur un bouleau blanc. Leurs voix resonnent en canon, invoquant la purification des anciennes eaux.",
     "options": [
       {
         "verb": "observer",
@@ -6673,7 +6673,7 @@
     ]
   },
   {
-    "narrative": "Des traces de sabots menent a une source entouree de pierres portant l'ogham Luis - le sorbier. Le sorbier protege des forces obscures selon la tradition des Anciens de Broceliande.",
+    "narrative": "Des traces de sabots menent a une source entouree de pierres portant la rune Luis - le sorbier. Le sorbier protege des forces obscures selon la tradition des Anciens de Broceliande.",
     "options": [
       {
         "verb": "suivre",
@@ -6760,7 +6760,7 @@
     ]
   },
   {
-    "narrative": "Deux anciens se disputent sur l'interpretation de l'ogham Coll - le noisetier. L'un soutient qu'il symbolise la sagesse pratique, l'autre la vision poetique et l'inspiration.",
+    "narrative": "Deux anciens se disputent sur l'interpretation de la rune Coll - le noisetier. L'un soutient qu'il symbolise la sagesse pratique, l'autre la vision poetique et l'inspiration.",
     "options": [
       {
         "verb": "analyser",
@@ -6847,7 +6847,7 @@
     ]
   },
   {
-    "narrative": "Une vieille druidesse taille des baguettes de coudrier sous la pluie. Elle chante un poeme sur les saisons en marquant chaque strophe d'un signe oghamique dans la terre molle.",
+    "narrative": "Une vieille druidesse taille des baguettes de coudrier sous la pluie. Elle chante un poeme sur les saisons en marquant chaque strophe d'un signe runique dans la terre molle.",
     "options": [
       {
         "verb": "memoriser",
@@ -6909,7 +6909,7 @@
     "options": [
       {
         "verb": "ecouter",
-        "text": "Tu apprends trois noms d'oghams inconnus grace a ce spectacle inattendu.",
+        "text": "Tu apprends trois noms de runes inconnus grace a ce spectacle inattendu.",
         "effects": [
           "ADD_ANAM:4",
           "ADD_REPUTATION:korrigans:5"
@@ -6963,7 +6963,7 @@
     ]
   },
   {
-    "narrative": "Une fete votive reunit trois clans autour d'un feu de chene. Les bards chantent l'histoire des oghams depuis Ogma Grianainech jusqu'aux druides fondateurs de Broceliande.",
+    "narrative": "Une fete votive reunit trois clans autour d'un feu de chene. Les bards chantent l'histoire des runes depuis Ogma Grianainech jusqu'aux druides fondateurs de Broceliande.",
     "options": [
       {
         "verb": "ecouter",
@@ -7054,7 +7054,7 @@
     "options": [
       {
         "verb": "aider",
-        "text": "Tu corriges sa pronunciation du nom oghamique avec bienveillance et patience.",
+        "text": "Tu corriges sa pronunciation du nom runique avec bienveillance et patience.",
         "effects": [
           "ADD_REPUTATION:druides:6",
           "ADD_ANAM:3"
@@ -7108,7 +7108,7 @@
     ]
   },
   {
-    "narrative": "Un ermite druidique vit seul dans un creux de rocher tapisse de mousses. Il passe ses journees a graver des oghams sur des galets qu'il jette ensuite dans le ruisseau qui chante.",
+    "narrative": "Un ermite druidique vit seul dans un creux de rocher tapisse de mousses. Il passe ses journees a graver des runes sur des galets qu'il jette ensuite dans le ruisseau qui chante.",
     "options": [
       {
         "verb": "questionner",
@@ -7195,11 +7195,11 @@
     ]
   },
   {
-    "narrative": "Un berger tres age conduit un troupeau de moutons blancs sur la lande. Chaque bete porte une marque ocre derriere l'oreille, tracee d'un signe que tu reconnais comme un Ogham Beith.",
+    "narrative": "Un berger tres age conduit un troupeau de moutons blancs sur la lande. Chaque bete porte une marque ocre derriere l'oreille, tracee d'un signe que tu reconnais comme une Rune Beith.",
     "options": [
       {
         "verb": "s'approcher",
-        "text": "Tu t'approches du berger et lui demandes pourquoi il marque ses betes d'oghams.",
+        "text": "Tu t'approches du berger et lui demandes pourquoi il marque ses betes de runes.",
         "effects": [
           "ADD_REPUTATION:anciens:8",
           "ADD_ANAM:3"
@@ -7207,7 +7207,7 @@
       },
       {
         "verb": "dechiffrer",
-        "text": "Tu examines les marques sur les flancs des moutons: chaque signe est un ogham Beith, protection de naissance.",
+        "text": "Tu examines les marques sur les flancs des moutons: chaque signe est une rune Beith, protection de naissance.",
         "effects": [
           "ADD_REPUTATION:druides:6",
           "ADD_ANAM:4"
@@ -7497,7 +7497,7 @@
       },
       {
         "verb": "graver",
-        "text": "Tu proposes de graver un ogham Luis sur la figure, symbole de protection de l'ame.",
+        "text": "Tu proposes de graver une rune Luis sur la figure, symbole de protection de l'ame.",
         "effects": [
           "ADD_REPUTATION:anciens:8",
           "ADD_REPUTATION:druides:5"
@@ -7592,7 +7592,7 @@
       },
       {
         "verb": "lire",
-        "text": "Tu dechiffres les ocres encore visibles: un Ogham Nion, protection du voyageur. Tu en traces un nouveau par-dessus.",
+        "text": "Tu dechiffres les ocres encore visibles: une Rune Nion, protection du voyageur. Tu en traces un nouveau par-dessus.",
         "effects": [
           "ADD_ANAM:5",
           "ADD_REPUTATION:anciens:8"
@@ -8944,7 +8944,7 @@
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu traces les signes dans la terre, cherchant leur signification parmi les oghams que tu connais.",
+        "text": "Tu traces les signes dans la terre, cherchant leur signification parmi les runes que tu connais.",
         "effects": [
           "ADD_REPUTATION:anciens:16",
           "ADD_REPUTATION:druides:8"
@@ -9657,7 +9657,7 @@
       },
       {
         "verb": "offrir",
-        "text": "Tu deposes un Ogham sculpte dans l'eau, faisant un voeu pour les tiens.",
+        "text": "Tu deposes une Rune sculpte dans l'eau, faisant un voeu pour les tiens.",
         "effects": [
           "ADD_REPUTATION:niamh:14",
           "ADD_REPUTATION:anciens:10"
@@ -9788,12 +9788,12 @@
     ]
   },
   {
-    "narrative": "Des dauphins argentes bondissent hors de l'eau en rythme. Leurs sauts dessinent des Oghams dans l'air avant de disparaitre en ecume.",
+    "narrative": "Des dauphins argentes bondissent hors de l'eau en rythme. Leurs sauts dessinent des Runes dans l'air avant de disparaitre en ecume.",
     "biome": "iles_mystiques",
     "options": [
       {
         "verb": "dechiffrer",
-        "text": "Tu lis les Oghams traces dans l'air, recevant un message du monde aquatique.",
+        "text": "Tu lis les Runes traces dans l'air, recevant un message du monde aquatique.",
         "effects": [
           "ADD_REPUTATION:niamh:14",
           "ADD_REPUTATION:druides:10",
@@ -10794,7 +10794,7 @@
       },
       {
         "verb": "dechiffrer",
-        "text": "Tu passes des heures a lire les oghams. Certains mots emergent: passage, eau, retour.",
+        "text": "Tu passes des heures a lire les runes. Certains mots emergent: passage, eau, retour.",
         "faction": "druides",
         "effects": [
           "ADD_REPUTATION:druides:18",

@@ -2998,7 +2998,7 @@
   },
   {
     "id": "s20_danger_49",
-    "text": "Un champ de bruyere s'enflamme spontanement, coupant toute retraite. Les flammes forment des lettres oghamiques qui epelent un avertissement : celui qui recule perira, celui qui avance souffrira.",
+    "text": "Un champ de bruyere s'enflamme spontanement, coupant toute retraite. Les flammes forment des lettres runiques qui epelent un avertissement : celui qui recule perira, celui qui avance souffrira.",
     "biome": "landes_bruyere",
     "faction": "druides",
     "trust_tier": "T3",
@@ -3020,7 +3020,7 @@
             "amount": 12
           }
         ],
-        "label": "Traverser les flammes oghamiques en courant"
+        "label": "Traverser les flammes runiques en courant"
       },
       {
         "verb": "interpreter",

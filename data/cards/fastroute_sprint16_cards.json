@@ -433,7 +433,7 @@
   },
   {
     "id": "s16_biome_08",
-    "text": "Une tempete de sable magique balaie les landes, revelant des fragments d'une route pavee oubliee. Les pierres portent des inscriptions oghamiques qui menent vers un sanctuaire inconnu.",
+    "text": "Une tempete de sable magique balaie les landes, revelant des fragments d'une route pavee oubliee. Les pierres portent des inscriptions runiques qui menent vers un sanctuaire inconnu.",
     "biome": "landes_bruyere",
     "faction": "druides",
     "trust_tier": "T3",
@@ -2232,7 +2232,7 @@
   },
   {
     "id": "s16_biome_37",
-    "text": "La pierre centrale du cercle se fissure sous vos yeux, liberant un rayon de lumiere pure qui monte vers le ciel. Dans la fissure, un Ogham inconnu pulse d'un pouvoir immemorial.",
+    "text": "La pierre centrale du cercle se fissure sous vos yeux, liberant un rayon de lumiere pure qui monte vers le ciel. Dans la fissure, une Rune inconnu pulse d'un pouvoir immemorial.",
     "biome": "cercles_pierres",
     "faction": "druides",
     "trust_tier": "T2",
@@ -2255,7 +2255,7 @@
             "amount": 8
           }
         ],
-        "label": "Toucher l'Ogham pour recevoir son pouvoir"
+        "label": "Toucher la Rune pour recevoir son pouvoir"
       },
       {
         "verb": "accepter",

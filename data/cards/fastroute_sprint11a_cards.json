@@ -315,10 +315,10 @@
     "id": "fr_s11a_samhain_006",
     "biome": "iles_mystiques",
     "champ_lexical": "logique",
-    "text": "Sur l'ile la plus occidentale, un phare eteint se rallume chaque Samhain. Sa lumiere ne brille que pour les morts, traçant des codes dans la brume. Un gardien spectral te tend un parchemin couvert de symboles oghamiques et pointe vers la lanterne. 'Decode le message avant que la lumiere s'eteigne. Apres, il faudra attendre un an.'",
+    "text": "Sur l'ile la plus occidentale, un phare eteint se rallume chaque Samhain. Sa lumiere ne brille que pour les morts, traçant des codes dans la brume. Un gardien spectral te tend un parchemin couvert de symboles runiques et pointe vers la lanterne. 'Decode le message avant que la lumiere s'eteigne. Apres, il faudra attendre un an.'",
     "options": [
       {
-        "label": "Dechiffrer les symboles oghamiques a la lumiere du phare",
+        "label": "Dechiffrer les symboles runiques a la lumiere du phare",
         "verb": "dechiffrer",
         "effects": [
           {
@@ -2115,7 +2115,7 @@
     "id": "fr_s11a_beltane_011",
     "biome": "landes_bruyere",
     "champ_lexical": "perception",
-    "text": "Des papillons de nuit geants — ailes peintes de visages feeriques — envahissent les landes de Beltane. Chacun porte un message different sur ses ailes, ecrit en ogham minuscule. Erwan essaie de les lire mais ils bougent trop vite. 'Les fees de Niamh envoient leurs invitations,' dit-il. 'Si tu arrives a en lire un, tu sauras ou se tient le grand bal.'",
+    "text": "Des papillons de nuit geants — ailes peintes de visages feeriques — envahissent les landes de Beltane. Chacun porte un message different sur ses ailes, ecrit en rune minuscule. Erwan essaie de les lire mais ils bougent trop vite. 'Les fees de Niamh envoient leurs invitations,' dit-il. 'Si tu arrives a en lire un, tu sauras ou se tient le grand bal.'",
     "options": [
       {
         "label": "Suivre un papillon particulier pour lire son message en vol",
@@ -2984,10 +2984,10 @@
     "id": "fr_s11a_lughnasadh_012",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
-    "text": "Le dernier defi de Lughnasadh sur les landes : un korrigan mathematicien a grave trois equations dans le granit. Chaque equation utilise des symboles oghamiques au lieu de chiffres. 'Lugh comptait en arbres,' explique-t-il. 'Le bouleau est un, le sorbier est deux, le frene est trois. Resous les trois et tu gagneras la Moisson d'Or.'",
+    "text": "Le dernier defi de Lughnasadh sur les landes : un korrigan mathematicien a grave trois equations dans le granit. Chaque equation utilise des symboles runiques au lieu de chiffres. 'Lugh comptait en arbres,' explique-t-il. 'Le bouleau est un, le sorbier est deux, le frene est trois. Resous les trois et tu gagneras la Moisson d'Or.'",
     "options": [
       {
-        "label": "Decoder les symboles oghamiques pour resoudre les equations",
+        "label": "Decoder les symboles runiques pour resoudre les equations",
         "verb": "decoder",
         "effects": [
           {

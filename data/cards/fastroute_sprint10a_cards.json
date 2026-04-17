@@ -2147,10 +2147,10 @@
     "id": "fr_s10a_marais_005",
     "biome": "marais_korrigans",
     "champ_lexical": "logique",
-    "text": "Un chemin de rondins traverse le marais de Fougeres, mais certains rondins sont graves de chiffres oghamiques. L'ordre dans lequel on les foule semble importer — un mauvais pas fait vibrer le bois et la tourbe s'agite. Brennos dit : 'C'est un verrou. Les anciens protegeaient leurs sanctuaires avec des equations.'",
+    "text": "Un chemin de rondins traverse le marais de Fougeres, mais certains rondins sont graves de chiffres runiques. L'ordre dans lequel on les foule semble importer — un mauvais pas fait vibrer le bois et la tourbe s'agite. Brennos dit : 'C'est un verrou. Les anciens protegeaient leurs sanctuaires avec des equations.'",
     "options": [
       {
-        "label": "Dechiffrer les chiffres oghamiques pour trouver la bonne sequence",
+        "label": "Dechiffrer les chiffres runiques pour trouver la bonne sequence",
         "verb": "dechiffrer",
         "effects": [
           {

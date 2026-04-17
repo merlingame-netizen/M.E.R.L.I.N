@@ -56,7 +56,7 @@
   },
   {
     "id": "s14_ogham_02",
-    "text": "Au coeur du nemeton, cinq pierres dressees vibrent a l'unisson. Chacune porte un Ogham different, et leur resonance forme une melodie que la terre elle-meme semble ecouter.",
+    "text": "Au coeur du nemeton, cinq pierres dressees vibrent a l'unisson. Chacune porte une Rune different, et leur resonance forme une melodie que la terre elle-meme semble ecouter.",
     "biome": "cercles_pierres",
     "faction": "anciens",
     "trust_tier": "T0",
@@ -115,7 +115,7 @@
   },
   {
     "id": "s14_ogham_03",
-    "text": "Une brume epaisse enveloppe les landes. Dans le brouillard, des silhouettes dansent autour d'un menhir couvert de mousse et d'inscriptions oghamiques. Leurs voix murmurent des incantations anciennes.",
+    "text": "Une brume epaisse enveloppe les landes. Dans le brouillard, des silhouettes dansent autour d'un menhir couvert de mousse et d'inscriptions runiques. Leurs voix murmurent des incantations anciennes.",
     "biome": "landes_bruyere",
     "faction": "korrigans",
     "trust_tier": "T0",
@@ -171,7 +171,7 @@
   },
   {
     "id": "s14_ogham_04",
-    "text": "Les eaux sombres du marais refletent un ciel charge d'etoiles impossibles. Sous la surface, des Oghams brillent comme des braises, pulsant au rythme d'un coeur enfoui dans la tourbe.",
+    "text": "Les eaux sombres du marais refletent un ciel charge d'etoiles impossibles. Sous la surface, des Runes brillent comme des braises, pulsant au rythme d'un coeur enfoui dans la tourbe.",
     "biome": "marais_korrigans",
     "faction": "ankou",
     "trust_tier": "T0",
@@ -231,7 +231,7 @@
   },
   {
     "id": "s14_ogham_05",
-    "text": "Sur les falaises battues par le vent, une stele porte l'Ogham de la Mer. Les vagues en contrebas semblent repondre a ses inscriptions, formant des motifs ephemeres dans l'ecume.",
+    "text": "Sur les falaises battues par le vent, une stele porte la Rune de la Mer. Les vagues en contrebas semblent repondre a ses inscriptions, formant des motifs ephemeres dans l'ecume.",
     "biome": "cotes_sauvages",
     "faction": "niamh",
     "trust_tier": "T0",
@@ -286,7 +286,7 @@
   },
   {
     "id": "s14_ogham_06",
-    "text": "Dans la grotte de Merlin, les parois sont couvertes de symboles oghamiques qui changent de forme selon l'angle de la lumiere. Un murmure vous invite a toucher la pierre la plus brillante.",
+    "text": "Dans la grotte de Merlin, les parois sont couvertes de symboles runiques qui changent de forme selon l'angle de la lumiere. Un murmure vous invite a toucher la pierre la plus brillante.",
     "biome": "collines_dolmens",
     "faction": "druides",
     "trust_tier": "T0",
@@ -345,7 +345,7 @@
   },
   {
     "id": "s14_ogham_07",
-    "text": "Un if millenaire se dresse au sommet du mont, ses branches tordues par les siecles. Chaque noeud du bois forme un Ogham naturel, comme si l'arbre lui-meme ecrivait l'histoire du monde.",
+    "text": "Un if millenaire se dresse au sommet du mont, ses branches tordues par les siecles. Chaque noeud du bois forme une Rune naturel, comme si l'arbre lui-meme ecrivait l'histoire du monde.",
     "biome": "villages_celtes",
     "faction": "anciens",
     "trust_tier": "T0",
@@ -405,7 +405,7 @@
   },
   {
     "id": "s14_ogham_08",
-    "text": "L'Ogham du Chene apparait grave dans l'air meme, traces de lumiere doree flottant entre les branches de Broceliande. Quiconque les lit a voix haute scelle un pacte avec la foret.",
+    "text": "La Rune du Chene apparait grave dans l'air meme, traces de lumiere doree flottant entre les branches de Broceliande. Quiconque les lit a voix haute scelle un pacte avec la foret.",
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T0",
@@ -462,7 +462,7 @@
   },
   {
     "id": "s14_ogham_09",
-    "text": "Au fond d'une caverne marine, les marees ont sculpte des Oghams dans le sel et la roche. Une fee des eaux veille sur ces inscriptions, sa chevelure d'algues ondulant dans le courant.",
+    "text": "Au fond d'une caverne marine, les marees ont sculpte des Runes dans le sel et la roche. Une fee des eaux veille sur ces inscriptions, sa chevelure d'algues ondulant dans le courant.",
     "biome": "iles_mystiques",
     "faction": "niamh",
     "trust_tier": "T0",
@@ -522,7 +522,7 @@
   },
   {
     "id": "s14_ogham_10",
-    "text": "Les Korrigans ont dissimule un Ogham de pouvoir dans un tertre funeraire. Des feux follets dansent a l'entree, et des rires moqueurs resonnent dans l'obscurite souterraine.",
+    "text": "Les Korrigans ont dissimule une Rune de pouvoir dans un tertre funeraire. Des feux follets dansent a l'entree, et des rires moqueurs resonnent dans l'obscurite souterraine.",
     "biome": "landes_bruyere",
     "faction": "korrigans",
     "trust_tier": "T0",
@@ -582,7 +582,7 @@
   },
   {
     "id": "s14_ogham_11",
-    "text": "Un corbeau blanc se pose devant vous, un rameau d'Ogham dans le bec. Il vous fixe de ses yeux rubis, attendant que vous acceptiez ou refusiez le present de l'Ankou.",
+    "text": "Un corbeau blanc se pose devant vous, un rameau de Rune dans le bec. Il vous fixe de ses yeux rubis, attendant que vous acceptiez ou refusiez le present de l'Ankou.",
     "biome": "marais_korrigans",
     "faction": "ankou",
     "trust_tier": "T0",
@@ -642,7 +642,7 @@
   },
   {
     "id": "s14_ogham_12",
-    "text": "Trois sources jaillissent d'un rocher grave d'Oghams. L'une est claire comme le cristal, la deuxieme rouge comme le sang, la troisieme noire comme la nuit. Chacune murmure une promesse differente.",
+    "text": "Trois sources jaillissent d'un rocher grave de Runes. L'une est claire comme le cristal, la deuxieme rouge comme le sang, la troisieme noire comme la nuit. Chacune murmure une promesse differente.",
     "biome": "villages_celtes",
     "faction": "druides",
     "trust_tier": "T0",
@@ -701,7 +701,7 @@
   },
   {
     "id": "s14_ogham_13",
-    "text": "Un tisserand spectral tisse des fils d'argent entre les arbres, formant un vaste Ogham aerien. Les fils vibrent au vent, et chaque vibration revele un fragment de prophetie ancienne.",
+    "text": "Un tisserand spectral tisse des fils d'argent entre les arbres, formant un vaste Rune aerien. Les fils vibrent au vent, et chaque vibration revele un fragment de prophetie ancienne.",
     "biome": "foret_broceliande",
     "faction": "anciens",
     "trust_tier": "T1",
@@ -760,7 +760,7 @@
   },
   {
     "id": "s14_ogham_14",
-    "text": "Dans les profondeurs de la grotte, un bassin de mercure reflete des constellations inconnues. Les Oghams graves sur le rebord du bassin semblent etre la cle d'une porte entre les mondes.",
+    "text": "Dans les profondeurs de la grotte, un bassin de mercure reflete des constellations inconnues. Les Runes graves sur le rebord du bassin semblent etre la cle d'une porte entre les mondes.",
     "biome": "collines_dolmens",
     "faction": "niamh",
     "trust_tier": "T1",
@@ -781,7 +781,7 @@
             "type": "ADD_PROMISE"
           }
         ],
-        "label": "Lire les Oghams du bassin a haute voix"
+        "label": "Lire les Runes du bassin a haute voix"
       },
       {
         "verb": "observer",
@@ -818,7 +818,7 @@
   },
   {
     "id": "s14_ogham_15",
-    "text": "Un dolmen s'ouvre comme une machoire de pierre. A l'interieur, les Oghams forment une spirale qui descend dans les entrailles de la terre. L'air est charge d'electricite et de soufre.",
+    "text": "Un dolmen s'ouvre comme une machoire de pierre. A l'interieur, les Runes forment une spirale qui descend dans les entrailles de la terre. L'air est charge d'electricite et de soufre.",
     "biome": "cercles_pierres",
     "faction": "ankou",
     "trust_tier": "T1",
@@ -840,7 +840,7 @@
             "amount": 10
           }
         ],
-        "label": "Descendre dans la spirale oghamique"
+        "label": "Descendre dans la spirale runique"
       },
       {
         "verb": "accepter",
@@ -877,7 +877,7 @@
   },
   {
     "id": "s14_ogham_16",
-    "text": "Les Oghams du Houx s'illuminent sous la pluie, chaque goutte revelant un symbole cache. Un cerf blanc apparait entre les arbres, ses bois couverts de mousse et de runes vivantes.",
+    "text": "Les Runes du Houx s'illuminent sous la pluie, chaque goutte revelant un symbole cache. Un cerf blanc apparait entre les arbres, ses bois couverts de mousse et de runes vivantes.",
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T0",
@@ -936,7 +936,7 @@
   },
   {
     "id": "s14_ogham_17",
-    "text": "Une forge abandonnee recele un marteau grave d'Oghams de Feu. Les braises rougeoient encore dans l'atre, comme si le forgeron divin venait a peine de quitter les lieux.",
+    "text": "Une forge abandonnee recele un marteau grave de Runes de Feu. Les braises rougeoient encore dans l'atre, comme si le forgeron divin venait a peine de quitter les lieux.",
     "biome": "villages_celtes",
     "faction": "korrigans",
     "trust_tier": "T0",
@@ -996,7 +996,7 @@
   },
   {
     "id": "s14_ogham_18",
-    "text": "Sur la plage d'Avalon, les vagues deposent des galets parfaitement ronds, chacun portant un Ogham unique. La maree monte et menace d'emporter ces tresors avant que vous ne puissiez tous les lire.",
+    "text": "Sur la plage d'Avalon, les vagues deposent des galets parfaitement ronds, chacun portant une Rune unique. La maree monte et menace d'emporter ces tresors avant que vous ne puissiez tous les lire.",
     "biome": "iles_mystiques",
     "faction": "niamh",
     "trust_tier": "T0",
@@ -1056,7 +1056,7 @@
   },
   {
     "id": "s14_ogham_19",
-    "text": "Un ancien gardien des Oghams emerge de la roche, son corps mi-pierre mi-chair. Il vous pose une enigme: quel Ogham protege et quel Ogham detruit? La reponse determinera votre passage.",
+    "text": "Un ancien gardien des Runes emerge de la roche, son corps mi-pierre mi-chair. Il vous pose une enigme: quel Rune protege et quel Rune detruit? La reponse determinera votre passage.",
     "biome": "collines_dolmens",
     "faction": "anciens",
     "trust_tier": "T1",
@@ -1116,7 +1116,7 @@
   },
   {
     "id": "s14_ogham_20",
-    "text": "Les feux de la Saint-Jean illuminent les landes de Carnac. Autour du feu central, les Oghams graves dans le sol forment un cercle de protection que les tenebres ne peuvent franchir.",
+    "text": "Les feux de la Saint-Jean illuminent les landes de Carnac. Autour du feu central, les Runes graves dans le sol forment un cercle de protection que les tenebres ne peuvent franchir.",
     "biome": "landes_bruyere",
     "faction": "druides",
     "trust_tier": "T0",
@@ -1174,7 +1174,7 @@
   },
   {
     "id": "s14_ogham_21",
-    "text": "Un manuscrit oghamique flotte au-dessus d'un autel de pierre noire. Ses pages tournent toutes seules, revelant des formules qui font trembler l'air autour de vous. Le savoir contenu ici pourrait changer le cours du destin.",
+    "text": "Un manuscrit runique flotte au-dessus d'un autel de pierre noire. Ses pages tournent toutes seules, revelant des formules qui font trembler l'air autour de vous. Le savoir contenu ici pourrait changer le cours du destin.",
     "biome": "cercles_pierres",
     "faction": "anciens",
     "trust_tier": "T1",
@@ -1233,7 +1233,7 @@
   },
   {
     "id": "s14_ogham_22",
-    "text": "Les racines d'un aulne plongent dans un cours d'eau sacre, et chaque racine est gravee d'un Ogham de guerison. L'eau qui coule entre elles acquiert des proprietes curatives extraordinaires.",
+    "text": "Les racines d'un aulne plongent dans un cours d'eau sacre, et chaque racine est gravee d'une Rune de guerison. L'eau qui coule entre elles acquiert des proprietes curatives extraordinaires.",
     "biome": "marais_korrigans",
     "faction": "druides",
     "trust_tier": "T1",
@@ -1293,7 +1293,7 @@
   },
   {
     "id": "s14_ogham_23",
-    "text": "Une tempete d'Oghams se dechaine au-dessus des cotes. Les eclairs tracent des symboles dans le ciel, et chaque coup de tonnerre prononce un mot de pouvoir oublie depuis l'aube des temps.",
+    "text": "Une tempete de Runes se dechaine au-dessus des cotes. Les eclairs tracent des symboles dans le ciel, et chaque coup de tonnerre prononce un mot de pouvoir oublie depuis l'aube des temps.",
     "biome": "cotes_sauvages",
     "faction": "niamh",
     "trust_tier": "T1",
@@ -1315,7 +1315,7 @@
             "amount": 10
           }
         ],
-        "label": "Invoquer la foudre pour graver un Ogham"
+        "label": "Invoquer la foudre pour graver une Rune"
       },
       {
         "verb": "resister mentalement",
@@ -1351,7 +1351,7 @@
   },
   {
     "id": "s14_ogham_24",
-    "text": "Un Ogham de Transformation pulse dans le tronc d'un arbre frappe par la foudre. L'arbre est a moitie vivant, a moitie carbonise, et de ses branches mortes poussent des fleurs d'or.",
+    "text": "Un Rune de Transformation pulse dans le tronc d'un arbre frappe par la foudre. L'arbre est a moitie vivant, a moitie carbonise, et de ses branches mortes poussent des fleurs d'or.",
     "biome": "foret_broceliande",
     "faction": "korrigans",
     "trust_tier": "T1",
@@ -1410,7 +1410,7 @@
   },
   {
     "id": "s14_ogham_25",
-    "text": "Au sommet du cairn le plus ancien, un Ogham de Memoire conserve les souvenirs de tous les druides qui l'ont touche. Poser la main sur cette pierre, c'est voir mille vies defiler en un instant.",
+    "text": "Au sommet du cairn le plus ancien, une Rune de Memoire conserve les souvenirs de tous les druides qui l'ont touche. Poser la main sur cette pierre, c'est voir mille vies defiler en un instant.",
     "biome": "villages_celtes",
     "faction": "anciens",
     "trust_tier": "T1",
@@ -2324,7 +2324,7 @@
   },
   {
     "id": "s14_endgame_15",
-    "text": "Les cinq factions se disputent le controle d'un Ogham de pouvoir supreme. La tension est palpable, et chaque emissaire attend que vous fassiez pencher la balance en faveur de son camp.",
+    "text": "Les cinq factions se disputent le controle d'une Rune de pouvoir supreme. La tension est palpable, et chaque emissaire attend que vous fassiez pencher la balance en faveur de son camp.",
     "biome": "cercles_pierres",
     "faction": "druides",
     "trust_tier": "T2",
@@ -2347,7 +2347,7 @@
             "amount": -8
           }
         ],
-        "label": "Remettre l'Ogham aux Druides"
+        "label": "Remettre la Rune aux Druides"
       },
       {
         "verb": "accepter",
@@ -2361,7 +2361,7 @@
             "amount": 5
           }
         ],
-        "label": "Detruire l'Ogham pour que personne ne l'ait"
+        "label": "Detruire la Rune pour que personne ne l'ait"
       },
       {
         "verb": "accepter",
@@ -2381,7 +2381,7 @@
             "amount": -10
           }
         ],
-        "label": "Garder l'Ogham pour vous"
+        "label": "Garder la Rune pour vous"
       }
     ],
     "champ_lexical": "esprit",
@@ -2389,7 +2389,7 @@
   },
   {
     "id": "s14_endgame_16",
-    "text": "Un ancien dragon celtique sommeille sous les monts d'Arree, son souffle creant des sources chaudes. Les ecailles de la bete portent des Oghams vivants qui racontent la creation du monde.",
+    "text": "Un ancien dragon celtique sommeille sous les monts d'Arree, son souffle creant des sources chaudes. Les ecailles de la bete portent des Runes vivants qui racontent la creation du monde.",
     "biome": "villages_celtes",
     "faction": "anciens",
     "trust_tier": "T2",
@@ -2411,7 +2411,7 @@
             "amount": 3
           }
         ],
-        "label": "Lire les Oghams sur les ecailles du dragon"
+        "label": "Lire les Runes sur les ecailles du dragon"
       },
       {
         "verb": "apaiser",
@@ -2900,7 +2900,7 @@
   },
   {
     "id": "s14_endgame_24",
-    "text": "Le Grand Druide prononce la sentence finale. Les cinq Oghams de pouvoir convergent vers un point unique, et l'avenir de la Bretagne celtique repose entre vos mains tremblantes.",
+    "text": "Le Grand Druide prononce la sentence finale. Les cinq Runes de pouvoir convergent vers un point unique, et l'avenir de la Bretagne celtique repose entre vos mains tremblantes.",
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T3",
@@ -2925,7 +2925,7 @@
             "type": "ADD_PROMISE"
           }
         ],
-        "label": "Unir les cinq Oghams en un seul"
+        "label": "Unir les cinq Runes en un seul"
       },
       {
         "verb": "parler",
@@ -2939,7 +2939,7 @@
             "amount": 15
           }
         ],
-        "label": "Distribuer chaque Ogham a sa faction"
+        "label": "Distribuer chaque Rune a sa faction"
       },
       {
         "verb": "accepter",
@@ -2958,7 +2958,7 @@
             "amount": -3
           }
         ],
-        "label": "Detruire les Oghams pour que nul ne les possede"
+        "label": "Detruire les Runes pour que nul ne les possede"
       }
     ],
     "champ_lexical": "esprit",

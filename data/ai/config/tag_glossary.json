@@ -480,7 +480,7 @@
     },
     "ogham_activated": {
       "category": "system",
-      "description": "Un Ogham du biome s'est active, savoir druidique revele",
+      "description": "Une Rune du biome s'est activee, savoir druidique revele",
       "system_mapping": ["ADD_ANAM:10"],
       "biome_affinity": []
     },

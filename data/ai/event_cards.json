@@ -188,10 +188,10 @@
 			{
 				"id": "event_collines_001",
 				"type": "event",
-				"text": "Un dolmen s'ouvre lentement. A l'interieur, des inscriptions oghams brillent d'une lumiere douce. Les ancetres veulent parler.",
+				"text": "Un dolmen s'ouvre lentement. A l'interieur, des inscriptions runiques brillent d'une lumiere douce. Les ancetres veulent parler.",
 				"options": [
 					{"label": "Entrer dans le dolmen", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "TRIGGER_EVENT", "event_id": "arc_voix_rois"}]},
-					{"label": "Dechiffrer les oghams", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+					{"label": "Dechiffrer les runes", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
 					{"label": "Respecter le repos des morts", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]}
 				],
 				"tags": ["collines", "ancestors", "ogham"]
@@ -215,7 +215,7 @@
 				"text": "La tour en ruines pulse d'une lumiere argentee. Des escaliers de pierre montent en spirale vers un sommet noye dans les nuages. Morgane attend en haut.",
 				"options": [
 					{"label": "Gravir la tour", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
-					{"label": "Invoquer l'Ogham Ailm", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "TRIGGER_EVENT", "event_id": "arc_passage_morgane"}]},
+					{"label": "Invoquer la Rune Ailm", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "TRIGGER_EVENT", "event_id": "arc_passage_morgane"}]},
 					{"label": "Contourner par la plage", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]}
 				],
 				"tags": ["iles", "tower", "morgane", "liminal"]
@@ -379,7 +379,7 @@
 		{
 			"id": "whisper_words_on_stone",
 			"type": "event",
-			"text": "Des mots graves dans la pierre. Pas des oghams. Des mots modernes, impossibles. Tu lis : 'ITERATION' puis un nombre. Le reste est efface.",
+			"text": "Des mots graves dans la pierre. Pas des runes. Des mots modernes, impossibles. Tu lis : 'ITERATION' puis un nombre. Le reste est efface.",
 			"options": [
 				{"label": "Recopier le nombre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]},
 				{"label": "Gratter la pierre", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
