@@ -4,7 +4,6 @@ extends Control
 
 const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
 const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
-const MOBILE_BREAKPOINT := 560.0
 
 const VIEW_PROGRESSION := 0
 const VIEW_RECENTS := 1
@@ -356,16 +355,31 @@ func _apply_panel_style(panel: PanelContainer, fill_color: Color) -> void:
 
 func _update_responsive_style() -> void:
 	var viewport_size := get_viewport_rect().size
-	compact_mode = viewport_size.x <= MOBILE_BREAKPOINT
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	if mr:
+		compact_mode = mr.is_mobile
+	else:
+		compact_mode = viewport_size.x <= 560.0
 
 	var margin_h := 16 if compact_mode else 32
 	var margin_v := 36 if compact_mode else 44
+
+	# Apply safe area margins when available
+	if mr:
+		var safe_top: float = mr.get_safe_margin_top()
+		var safe_btm: float = mr.get_safe_margin_bottom()
+		if safe_top > 0:
+			margin_v = maxi(margin_v, int(safe_top) + 8)
+		if safe_btm > 0:
+			margin_v = maxi(margin_v, int(safe_btm) + 8)
+
 	main_container.add_theme_constant_override("margin_left", margin_h)
 	main_container.add_theme_constant_override("margin_top", margin_v)
 	main_container.add_theme_constant_override("margin_right", margin_h)
 	main_container.add_theme_constant_override("margin_bottom", margin_v)
 
-	layout.add_theme_constant_override("separation", 10 if compact_mode else 14)
+	var spacing: float = mr.get_spacing() if mr else (10.0 if compact_mode else 14.0)
+	layout.add_theme_constant_override("separation", int(spacing))
 	header.add_theme_constant_override("separation", 10)
 	collection_grid.add_theme_constant_override("h_separation", 6 if compact_mode else 8)
 	collection_grid.add_theme_constant_override("v_separation", 6 if compact_mode else 8)
@@ -373,11 +387,18 @@ func _update_responsive_style() -> void:
 	progress_list.add_theme_constant_override("separation", 6)
 	recent_list.add_theme_constant_override("separation", 8)
 
-	body_font_size = 12 if compact_mode else 15
-	section_font_size = 15 if compact_mode else 19
-	small_font_size = 10 if compact_mode else 12
-	icon_tile_size = 28 if compact_mode else 36
-	row_min_height = 44 if compact_mode else 52
+	if mr:
+		body_font_size = mr.get_font_size(15)
+		section_font_size = mr.get_font_size(19)
+		small_font_size = mr.get_font_size(12)
+		icon_tile_size = mr.scaled_i(36)
+		row_min_height = maxi(mr.scaled_i(52), MerlinVisual.MIN_TOUCH_TARGET)
+	else:
+		body_font_size = 12 if compact_mode else 15
+		section_font_size = 15 if compact_mode else 19
+		small_font_size = 10 if compact_mode else 12
+		icon_tile_size = 28 if compact_mode else 36
+		row_min_height = 44 if compact_mode else 52
 
 	# Apply fonts
 	if font_regular:
@@ -413,9 +434,14 @@ func _update_responsive_style() -> void:
 		ornament_top.add_theme_font_override("font", font_regular)
 		ornament_bottom.add_theme_font_override("font", font_regular)
 
-	# Tab buttons sizing
+	# Tab buttons sizing — ensure touch-friendly height
+	var tab_min_h: int = 32 if compact_mode else 38
+	if mr:
+		tab_min_h = maxi(tab_min_h, MerlinVisual.MIN_TOUCH_TARGET)
 	for tab_btn in [btn_progression, btn_recents, btn_collection]:
-		tab_btn.custom_minimum_size = Vector2(0, 32 if compact_mode else 38)
+		tab_btn.custom_minimum_size = Vector2(0, tab_min_h)
+		if mr:
+			mr.apply_touch_margins(tab_btn)
 
 	# Colors
 	title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
@@ -431,6 +457,8 @@ func _update_responsive_style() -> void:
 
 	# Back button styling
 	_style_back_button()
+	if mr:
+		mr.apply_touch_margins(back_button)
 
 func _style_back_button() -> void:
 	var normal := StyleBoxFlat.new()

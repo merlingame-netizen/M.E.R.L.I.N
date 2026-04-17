@@ -76,6 +76,7 @@ func _load_fonts() -> void:
 
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
 
 	# Background - pure black
 	background = ColorRect.new()
@@ -90,22 +91,30 @@ func _build_ui() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
+	# Responsive content width
+	var vp_size: Vector2 = get_viewport_rect().size
+	var content_w: float = 800.0
+	if mr:
+		content_w = mr.get_content_width(vp_size, 800.0)
+
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 40)
-	vbox.custom_minimum_size = Vector2(800, 0)
+	vbox.add_theme_constant_override("separation", 40 if not (mr and mr.is_mobile) else 24)
+	vbox.custom_minimum_size = Vector2(content_w, 0)
 	center.add_child(vbox)
 
 	# Question label
+	var question_min_w: float = minf(700.0, content_w * 0.9)
 	question_label = Label.new()
 	question_label.name = "QuestionLabel"
 	question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	question_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	question_label.custom_minimum_size = Vector2(700, 150)
+	question_label.custom_minimum_size = Vector2(question_min_w, 150)
 	if title_font:
 		question_label.add_theme_font_override("font", title_font)
-	question_label.add_theme_font_size_override("font_size", 28)
+	var question_font_size: int = MerlinVisual.responsive_size(28)
+	question_label.add_theme_font_size_override("font_size", question_font_size)
 	var question_color: Color = MerlinVisual.CRT_PALETTE["phosphor_bright"]
 	question_label.add_theme_color_override("font_color", question_color)
 	question_label.modulate.a = 0
@@ -113,26 +122,29 @@ func _build_ui() -> void:
 
 	# Spacer
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 20)
+	spacer.custom_minimum_size = Vector2(0, 20 if not (mr and mr.is_mobile) else 10)
 	vbox.add_child(spacer)
 
 	# Choices container
 	choices_container = VBoxContainer.new()
 	choices_container.name = "ChoicesContainer"
 	choices_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	choices_container.add_theme_constant_override("separation", 16)
+	choices_container.add_theme_constant_override("separation", 16 if not (mr and mr.is_mobile) else 10)
 	vbox.add_child(choices_container)
 
 	# Progress indicator (bottom)
 	progress_label = Label.new()
 	progress_label.name = "ProgressLabel"
 	progress_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	var progress_bottom_offset: float = 20.0
+	if mr:
+		progress_bottom_offset = maxf(20.0, mr.get_safe_margin_bottom() + 8.0)
 	progress_label.offset_top = -50
-	progress_label.offset_bottom = -20
+	progress_label.offset_bottom = -progress_bottom_offset
 	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if body_font:
 		progress_label.add_theme_font_override("font", body_font)
-	progress_label.add_theme_font_size_override("font_size", 14)
+	progress_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(14))
 	var progress_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
 	progress_label.add_theme_color_override("font_color", progress_color)
 	progress_label.modulate.a = 0
@@ -144,6 +156,7 @@ func _build_ui() -> void:
 # =============================================================================
 
 func _build_skip_button() -> void:
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
 	# Skip button in top-right corner
 	skip_button = Button.new()
 	skip_button.name = "SkipButton"
@@ -152,10 +165,12 @@ func _build_skip_button() -> void:
 	skip_button.focus_mode = Control.FOCUS_NONE
 	skip_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	skip_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+	var skip_top: float = maxf(20.0, safe_top + 8.0)
 	skip_button.offset_left = -120
 	skip_button.offset_right = -20
-	skip_button.offset_top = 20
-	skip_button.offset_bottom = 50
+	skip_button.offset_top = skip_top
+	skip_button.offset_bottom = skip_top + 30
 	if body_font:
 		skip_button.add_theme_font_override("font", body_font)
 	skip_button.add_theme_font_size_override("font_size", 16)
@@ -208,13 +223,13 @@ func _build_skip_button() -> void:
 	buttons_hbox.add_theme_constant_override("separation", 20)
 	modal_vbox.add_child(buttons_hbox)
 
-	# Menu button
+	# Menu button — touch-friendly
 	var menu_btn := Button.new()
 	menu_btn.text = "◀ Menu"
 	menu_btn.flat = true
 	menu_btn.focus_mode = Control.FOCUS_NONE
 	menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	menu_btn.custom_minimum_size = Vector2(100, 40)
+	menu_btn.custom_minimum_size = Vector2(100, maxi(40, MerlinVisual.MIN_TOUCH_TARGET))
 	if body_font:
 		menu_btn.add_theme_font_override("font", body_font)
 	menu_btn.add_theme_font_size_override("font_size", 16)
@@ -225,13 +240,13 @@ func _build_skip_button() -> void:
 	menu_btn.pressed.connect(_skip_to_menu)
 	buttons_hbox.add_child(menu_btn)
 
-	# Continue button
+	# Continue button — touch-friendly
 	var continue_btn := Button.new()
 	continue_btn.text = "Continuer ▸"
 	continue_btn.flat = true
 	continue_btn.focus_mode = Control.FOCUS_NONE
 	continue_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	continue_btn.custom_minimum_size = Vector2(120, 40)
+	continue_btn.custom_minimum_size = Vector2(120, maxi(40, MerlinVisual.MIN_TOUCH_TARGET))
 	if body_font:
 		continue_btn.add_theme_font_override("font", body_font)
 	continue_btn.add_theme_font_size_override("font_size", 16)
@@ -381,20 +396,35 @@ func _show_question(index: int) -> void:
 
 
 func _create_choice_button(text: String, index: int) -> Button:
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
 	var btn := Button.new()
 	btn.text = text
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.custom_minimum_size = Vector2(600, 50)
+
+	# Responsive width and touch-friendly height
+	var btn_w: float = 600.0
+	var btn_h: float = 50.0
+	if mr:
+		var vp_size: Vector2 = get_viewport_rect().size
+		btn_w = mr.get_content_width(vp_size, 600.0)
+		btn_h = maxf(btn_h, float(MerlinVisual.MIN_TOUCH_TARGET))
+		if mr.is_mobile:
+			btn_h = maxf(btn_h, 56.0)
+	btn.custom_minimum_size = Vector2(btn_w, btn_h)
 
 	# Style
 	if body_font:
 		btn.add_theme_font_override("font", body_font)
-	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(20))
 	btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.choice_normal)
 	btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.choice_hover)
 	btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE.choice_selected)
+
+	# Apply touch margins if available
+	if mr:
+		mr.apply_touch_margins(btn)
 
 	# Connect signals
 	btn.pressed.connect(func(): _on_choice_selected(index))

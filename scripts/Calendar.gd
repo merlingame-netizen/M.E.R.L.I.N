@@ -7,7 +7,6 @@ extends Control
 const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
 const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
 const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
-const MOBILE_BREAKPOINT := 560.0
 
 const TAB_EVENTS := 0
 const TAB_STATS := 1
@@ -127,6 +126,7 @@ func _ready() -> void:
 	tabs_helper.populate_all()
 	tabs_helper.set_tab(TAB_EVENTS)
 	get_viewport().size_changed.connect(_on_viewport_resized)
+	_apply_responsive_layout()
 	_play_entry_animation()
 
 
@@ -456,10 +456,20 @@ func _on_back_pressed() -> void:
 
 
 func _on_viewport_resized() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	compact_mode = viewport_size.x < MOBILE_BREAKPOINT
+	_apply_responsive_layout()
 
-	var card_w := minf(520.0, viewport_size.x * 0.88)
+
+func _apply_responsive_layout() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	if mr:
+		compact_mode = mr.is_mobile
+	else:
+		compact_mode = viewport_size.x < 560.0
+
+	var card_w: float = MerlinVisual.responsive_size(520) if mr else minf(520.0, viewport_size.x * 0.88)
+	if mr:
+		card_w = mr.get_content_width(viewport_size, 520.0)
 	var card_h := minf(580.0, viewport_size.y * 0.78)
 	main_card.size = Vector2(card_w, card_h)
 	main_card.position = (viewport_size - main_card.size) / 2
@@ -469,5 +479,16 @@ func _on_viewport_resized() -> void:
 	celtic_ornament_bottom.position.y = viewport_size.y - 65
 
 	back_button.position.y = viewport_size.y - 60
+
+	# Apply safe area margins
+	if mr:
+		var safe_top: float = mr.get_safe_margin_top()
+		var safe_btm: float = mr.get_safe_margin_bottom()
+		if safe_top > 0:
+			main_card.position.y = maxf(main_card.position.y, safe_top + 8.0)
+		if safe_btm > 0:
+			back_button.position.y = viewport_size.y - 60 - safe_btm
+			celtic_ornament_bottom.position.y = viewport_size.y - 65 - safe_btm
+		mr.apply_touch_margins(back_button)
 
 	wheel_container.queue_redraw()
