@@ -1,33 +1,34 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
-  "bugs_fixed_this_cycle": [
+  "cycle": 5,
+  "timestamp": "2026-04-17T21:53:00Z",
+  "bugs_fixed_this_cycle": [],
+  "files_deleted_this_cycle": [
+    "scripts/minigames/mg_meditation.gd",
+    "scripts/IntroPersonalityQuiz.gd",
+    "scripts/IntroPersonalityQuiz.gd.uid",
+    "scenes/IntroPersonalityQuiz.tscn",
+    "scripts/SceneRencontreMerlin.gd",
+    "scripts/SceneRencontreMerlin.gd.uid",
+    "scenes/SceneRencontreMerlin.tscn",
+    "scripts/quiz_data.gd",
+    "scripts/rencontre_dialogue.gd",
+    "scripts/rencontre_llm.gd",
+    "scripts/minigames/mg_de_du_destin.gd",
+    "scripts/minigames/mg_de_du_destin.gd.uid"
+  ],
+  "bugs_verified_already_fixed": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-14",
+      "description": "Faction default 0 vs 20 mismatch — already fixed: FACTION_SCORE_START=20 in merlin_constants.gd:1143, used by build_default_factions() and save_system",
+      "status": "ALREADY_FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-11",
+      "description": "Deterministic minigame selection — already fixed: pick_minigame_for_field uses randi() not hash()%size",
+      "status": "ALREADY_FIXED"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "Human feedback cleanup cycle. 12 dead files deleted (3 scene systems + helpers + .uid files). 2 MEDIUM bugs confirmed pre-fixed. Zero known bugs. Codebase ready for gameplay features."
 }

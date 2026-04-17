@@ -49,3 +49,11 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-17T21:52:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: Human feedback cleanup — delete dead scenes and scripts per creator feedback."}
+{"ts":"2026-04-17T21:52:02.000Z","type":"task_done","cycle":5,"detail":"Deleted mg_meditation.gd per q-20260413-004"}
+{"ts":"2026-04-17T21:52:04.000Z","type":"task_done","cycle":5,"detail":"Deleted IntroPersonalityQuiz.gd + .uid + .tscn per q-20260414-005"}
+{"ts":"2026-04-17T21:52:09.000Z","type":"task_done","cycle":5,"detail":"Deleted SceneRencontreMerlin.gd + .uid + .tscn per q-20260414-005"}
+{"ts":"2026-04-17T21:52:15.000Z","type":"task_done","cycle":5,"detail":"Deleted quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd (orphaned helpers)"}
+{"ts":"2026-04-17T21:52:41.000Z","type":"task_done","cycle":5,"detail":"Deleted mg_de_du_destin.gd + .uid (dead code from P0-DEADCODE-5, not in minigame registry)"}
+{"ts":"2026-04-17T21:52:43.000Z","type":"task_done","cycle":5,"detail":"Verified BUGFIX-MED-14 already fixed (FACTION_SCORE_START=20) and BUGFIX-MED-11 already fixed (randi() in pick_minigame)"}
+{"ts":"2026-04-17T21:53:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: 12 dead files deleted per human feedback. 2 MEDIUM bugs confirmed already-fixed. Codebase clean for feature work."}

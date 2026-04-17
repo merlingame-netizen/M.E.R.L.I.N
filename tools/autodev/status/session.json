@@ -2,7 +2,7 @@
   "state": "running",
   "objective": "Autonomous pipeline — Cycle Director hourly via Claude Routines",
   "workers": [],
-  "updated_at": "2026-04-17T12:00:00.000Z",
-  "cycle": 4,
-  "checkpoint": "All MEDIUM bugs resolved (BUG-009/010/012/013). 0 known bugs remaining. Next: playtest + bible audit, then feature work."
+  "updated_at": "2026-04-17T21:52:00.000Z",
+  "cycle": 5,
+  "checkpoint": "Cycle 5: Human feedback cleanup. Deleted 12 dead files per creator feedback (IntroPersonalityQuiz, SceneRencontreMerlin, mg_meditation, mg_de_du_destin + helpers + .uid). Marked 2 MEDIUM bugs as already-fixed (BUGFIX-MED-14 faction default, BUGFIX-MED-11 minigame rng). Next: feature work — GameFlowController wiring or PSX visual pipeline."
 }
