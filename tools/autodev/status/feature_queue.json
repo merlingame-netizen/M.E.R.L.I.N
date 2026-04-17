@@ -514,26 +514,30 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-17",
+      "notes": "build_default_factions() now uses float(MerlinConstants.FACTION_SCORE_START) = 20. Same in _get_default_profile() and _migrate(). Also fixes BUG-009 (RAG dead flux ref), BUG-010 (dead Souffle cost), BUG-012 (ollama .get()), BUG-013 (ClassDB dead code)."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-17",
+      "notes": "Replaced field.hash() % size with randi_range(0, minigames.size() - 1). Minigame selection now varies per card."
     },
     {
       "id": "TEST-PLAYTEST-1",
