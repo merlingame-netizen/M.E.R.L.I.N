@@ -90,22 +90,10 @@ func _ready() -> void:
 # --- MERLIN OMNISCIENT INITIALIZATION ---
 
 func _init_merlin_omniscient() -> void:
-	if ClassDB.class_exists("MerlinOmniscient"):
-		merlin = MerlinOmniscient.new()
-		merlin.setup(self)
-		add_child(merlin)
-		print("[MerlinStore] MERLIN OMNISCIENT SYSTEM initialized")
-	else:
-		var script_path := "res://addons/merlin_ai/merlin_omniscient.gd"
-		if ResourceLoader.exists(script_path):
-			var script = load(script_path)
-			if script:
-				merlin = script.new()
-				merlin.setup(self)
-				add_child(merlin)
-				print("[MerlinStore] MERLIN OMNISCIENT SYSTEM initialized (script load)")
-		else:
-			print("[MerlinStore] MerlinOmniscient not available - using legacy LLM")
+	merlin = MerlinOmniscient.new()
+	merlin.setup(self)
+	add_child(merlin)
+	print("[MerlinStore] MERLIN OMNISCIENT SYSTEM initialized")
 
 func get_merlin() -> MerlinOmniscient:
 	return merlin
