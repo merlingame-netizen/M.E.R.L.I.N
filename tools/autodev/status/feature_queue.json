@@ -514,26 +514,30 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-17",
+      "notes": "build_default_factions() now uses MerlinConstants.FACTION_SCORE_START (20). Save default profile faction_rep set to 20.0. Migration fallback also uses FACTION_SCORE_START."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-17",
+      "notes": "Replaced field.hash() % size with randi() % size for true randomization across calls."
     },
     {
       "id": "TEST-PLAYTEST-1",
@@ -570,6 +574,84 @@
       ],
       "description": "SessionStart hook, Director agent, setup script, routine prompt for /schedule hourly.",
       "completed_at": "2026-04-16"
+    },
+    {
+      "id": "BUGFIX-MED-009",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Fix dead Flux reference in RAG tension context (BUG-009)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/rag_manager.gd"],
+      "description": "run.get(flux).get(tension) reads dead Flux system. Tension is now in run.hidden.tension.",
+      "completed_at": "2026-04-17",
+      "notes": "Changed run.get(flux, {}) to run.get(hidden, {}). Tension now reads from correct location."
+    },
+    {
+      "id": "BUGFIX-MED-010",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Remove dead Souffle cost on center option (BUG-010)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/merlin_ai.gd"],
+      "description": "Center option had cost=1 referencing removed Souffle system.",
+      "completed_at": "2026-04-17",
+      "notes": "Removed opt[cost] = 1 and Souffle comment from sequential pipeline."
+    },
+    {
+      "id": "BUGFIX-MED-012",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Fix fragile dot notation on dict in ollama_backend (BUG-012)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/ollama_backend.gd"],
+      "description": "entry.tag and entry.context_default use dot notation on Dictionary from JSON.",
+      "completed_at": "2026-04-17",
+      "notes": "Changed to entry.get(tag, '') and entry.get(context_default, 4096)."
+    },
+    {
+      "id": "BUGFIX-MED-013",
+      "phase": 3,
+      "priority": 4,
+      "status": "completed",
+      "title": "Remove dead ClassDB.class_exists check in merlin_store (BUG-013)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_store.gd"],
+      "description": "ClassDB.class_exists(MerlinOmniscient) is dead code for GDScript class_names.",
+      "completed_at": "2026-04-17",
+      "notes": "Removed ClassDB branch. Kept ResourceLoader fallback path for addon safety."
+    },
+    {
+      "id": "BUGFIX-LOW-016",
+      "phase": 4,
+      "priority": 5,
+      "status": "pending",
+      "title": "Fix NPC card generating only 2 options (BUG-016)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/merlin_omniscient.gd"],
+      "description": "generate_npc_card() produces only 2 options but bible requires 3. UI may crash on index 2."
+    },
+    {
+      "id": "BUGFIX-LOW-017",
+      "phase": 4,
+      "priority": 5,
+      "status": "pending",
+      "title": "Fix thread-unsafe stat reads in ollama_backend (BUG-017)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/ollama_backend.gd"],
+      "description": "_update_stats() locks mutex but get_model_info() reads stats without locking."
+    },
+    {
+      "id": "BUGFIX-LOW-018",
+      "phase": 4,
+      "priority": 5,
+      "status": "pending",
+      "title": "Remove dead log_aspect_shifted() in rag_manager (BUG-018)",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/rag_manager.gd"],
+      "description": "log_aspect_shifted() references removed aspect system. Dead code path."
     }
   ]
 }
