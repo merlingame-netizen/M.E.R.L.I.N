@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 
-// Godot game on GitHub Pages — the ONLY game URL (no web-demo fallback)
-const GAME_URL = 'https://merlingame-netizen.github.io/M.E.R.L.I.N/';
+// Godot web export on Vercel (deployed by godot-export.yml workflow)
+const GAME_URL = 'https://web-export-pi.vercel.app';
 
 export function GamePreview() {
   const [isFullscreen, setIsFullscreen] = useState(false);

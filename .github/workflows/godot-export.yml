@@ -63,12 +63,24 @@ jobs:
         run: |
           mkdir -p web-export
           godot --headless --export-release "Web" web-export/index.html --path .
-          # Verify export produced files
           if [ ! -f web-export/index.html ]; then
             echo "::error::Export failed — no index.html generated"
             exit 1
           fi
           echo "Export successful: $(ls -la web-export/)"
+          # Vercel config: serve as static (no build step)
+          cat > web-export/vercel.json << 'VCFG'
+          {
+            "buildCommand": "",
+            "outputDirectory": ".",
+            "framework": null,
+            "headers": [
+              { "source": "/(.*).wasm", "headers": [{"key": "Content-Type", "value": "application/wasm"}] },
+              { "source": "/(.*).pck", "headers": [{"key": "Content-Type", "value": "application/octet-stream"}] }
+            ]
+          }
+          VCFG
+          sed -i 's/^          //' web-export/vercel.json
 
       - uses: actions/upload-artifact@v4
         with:
