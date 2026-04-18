@@ -1,10 +1,27 @@
 {
   "agent": "cycle_director",
-  "cycle": 7,
-  "timestamp": "2026-04-18T18:00:00Z",
-  "type": "feature",
-  "scope": "Cycle 7 feature: PSX retro post-processing (retro_psx_post.gdshader, screen_dither_layer.gd, broceliande_forest_3d.gd, merlin_visual.gd)",
-  "bugs_found": [],
+  "cycle": 8,
+  "timestamp": "2026-04-18T20:00:00Z",
+  "type": "feature+bugfix",
+  "scope": "Cycle 8: encounter_card_overlay.gd v2 (cinematic CRT/PSX presentation), screen_dither_layer.gd (set_color_levels fix)",
+  "bugs_found": [
+    {
+      "id": "BUG-022",
+      "severity": "HIGH",
+      "file": "scripts/ui/encounter_card_overlay.gd",
+      "description": "minigame.start() never called after add_child(minigame) — minigames created but UI never built, game_completed never emitted, card overlay hangs on await",
+      "status": "fixed",
+      "fix": "Added minigame.start() call after add_child(minigame) in _on_choice()"
+    },
+    {
+      "id": "BUG-023",
+      "severity": "LOW",
+      "file": "scripts/ui/screen_dither_layer.gd",
+      "description": "set_color_levels() always sets 'color_levels' param but PSX shader uses 'color_depth'. Harmless (param ignored) but incorrect.",
+      "status": "fixed",
+      "fix": "Route to correct param based on _render_mode (PSX -> color_depth, CRT -> color_levels)"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 7 feature: PSX retro post-processing system. No bugs — feature cycle (bug hunt deferred to cycle 8). 4 files modified, 349 lines. 21 total bugs fixed across cycles 1-6."
+  "overall_assessment": "Cycle 8: 1 HIGH + 1 LOW bug fixed. Encounter card overlay rewritten with cinematic CRT/PSX presentation. 23 total bugs fixed across 8 cycles."
 }

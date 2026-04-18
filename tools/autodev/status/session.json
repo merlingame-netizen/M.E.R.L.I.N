@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 7 Feature — PS1/N64 retro post-processing system",
+  "objective": "Cycle 8 Feature — Cinematic encounter card overlay v2 + minigame start fix",
   "workers": [],
-  "updated_at": "2026-04-18T18:00:00.000Z",
-  "cycle": 7,
-  "checkpoint": "PSX retro rendering mode added to CRTLayer. New shader (retro_psx_post.gdshader) with pixelation, 15-bit color banding, Bayer dithering, warm tint, biome fog profiles. 8 biome color presets, day/night auto-tinting via DayNightManager. 3D scene save/restore render mode. 4 files modified, 349 lines changed."
+  "updated_at": "2026-04-18T20:00:00.000Z",
+  "cycle": 8,
+  "checkpoint": "EncounterCardOverlay v2: typewriter title+body, CRT_PALETTE styling, MerlinVisual style helpers, responsive sizes, touch targets, field hint label, staggered buttons. BUG FIX: minigame.start() was never called (minigames never started). BUG FIX: set_color_levels wrong param in PSX mode. 2 files modified, 211 lines changed."
 }

@@ -60,3 +60,8 @@
 {"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-020: Calendar dict dot notation state.meta→state.get('meta',{})"}
 {"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-021: HubAntre store variable shadowing removed in memoires+journal panels"}
 {"ts":"2026-04-18T16:00:00.000Z","type":"cycle_end","cycle":6,"detail":"Cycle 6 complete: 3 bugs fixed (1 HIGH + 2 MEDIUM). 2 files, 14 lines. 21 total bugs fixed across 6 cycles."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"cycle_start","cycle":8,"detail":"Cycle 8: Bug hunt C7 (no critical bugs) + feature: encounter card overlay v2 + fix minigame.start()"}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-022 HIGH: minigame.start() never called in encounter card overlay — fixed"}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-023 LOW: set_color_levels wrong param for PSX mode — fixed"}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"CARD-OVERLAY-V2: Cinematic CRT/PSX encounter card with typewriter, staggered buttons, field hint"}
+{"ts":"2026-04-18T20:00:00.000Z","type":"cycle_end","cycle":8,"detail":"Cycle 8 complete: 1 HIGH + 1 LOW bug fixed, encounter card overlay v2. 2 files, 211 lines. 23 total bugs fixed across 8 cycles."}
