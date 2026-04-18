@@ -862,7 +862,6 @@ func _play_entry_animation() -> void:
 # =============================================================================
 
 func _show_memoires_panel() -> void:
-	var store: Node = get_node_or_null("/root/MerlinStore")
 	var whispers_seen: Array = []
 	if store and "state" in store:
 		whispers_seen = store.state.get("meta", {}).get("whispers_seen", [])
@@ -913,7 +912,6 @@ func _show_memoires_panel() -> void:
 # =============================================================================
 
 func _show_journal_panel() -> void:
-	var store: Node = get_node_or_null("/root/MerlinStore")
 	var run_history: Array = []
 	var total_runs: int = 0
 	if store and "state" in store:
