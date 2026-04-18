@@ -173,7 +173,10 @@ func set_dither_strength(value: float) -> void:
 
 
 func set_color_levels(value: float) -> void:
-	_material.set_shader_parameter("color_levels", value)
+	if _render_mode == RenderMode.PSX:
+		_material.set_shader_parameter("color_depth", value)
+	else:
+		_material.set_shader_parameter("color_levels", value)
 
 
 func set_tint_blend(value: float) -> void:
