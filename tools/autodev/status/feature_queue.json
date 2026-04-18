@@ -624,6 +624,39 @@
       ],
       "description": "SessionStart hook, Director agent, setup script, routine prompt for /schedule hourly.",
       "completed_at": "2026-04-16"
+    },
+    {
+      "id": "BUGFIX-019",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix Calendar season mapping inconsistency with MerlinVisual",
+      "agent": "bug_hunter",
+      "files": ["scripts/Calendar.gd"],
+      "description": "Calendar._get_season_for_date() used wrong month ranges vs MerlinVisual standard. Feb showed as spring instead of winter, Aug as autumn instead of summer.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-020",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix Calendar dict dot notation (same as BUG-012)",
+      "agent": "bug_hunter",
+      "files": ["scripts/Calendar.gd"],
+      "description": "Calendar._load_meta_stats() used state.meta dot notation on Dictionary. Changed to state.get('meta', {}) with type hint.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-021",
+      "phase": 0,
+      "priority": 3,
+      "status": "completed",
+      "title": "Fix HubAntre store variable shadowing in panel methods",
+      "agent": "bug_hunter",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
+      "completed_at": "2026-04-18"
     }
   ]
 }
