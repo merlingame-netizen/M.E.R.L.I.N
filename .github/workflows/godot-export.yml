@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'tools/autodev/mission-control/**'
+      - 'tools/autodev/**'
       - '*.md'
       - 'memory/**'
   workflow_dispatch:
@@ -22,6 +22,7 @@ jobs:
   export-web:
     name: Export Godot Web Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container: barichello/godot-ci:4.5
     steps:
       - uses: actions/checkout@v4
@@ -84,6 +85,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: export-web
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+    continue-on-error: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
