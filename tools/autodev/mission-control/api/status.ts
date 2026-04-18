@@ -1,94 +1,49 @@
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = 'merlingame-netizen/M.E.R.L.I.N';
 const BRANCH = 'main';
-const STATUS_DIR = 'tools/autodev/status';
 
-const WANTED_FILES: Record<string, string> = {
-  'feature_queue.json': 'feature_queue',
-  'agent_status.json': 'agent_status',
-  'events.jsonl': 'events',
-  'feedback_questions.json': 'feedback_questions',
-  'feedback_responses.json': 'feedback_responses',
-  'director_decision.json': 'director_decision',
-  'session.json': 'session',
-  'completed_archive.json': 'completed_archive',
-  'watchdog.txt': 'watchdog',
-};
+const STATUS_FILES = [
+  'tools/autodev/status/feature_queue.json',
+  'tools/autodev/status/agent_status.json',
+  'tools/autodev/status/events.jsonl',
+  'tools/autodev/status/session.json',
+  'tools/autodev/status/feedback_questions.json',
+  'tools/autodev/status/feedback_responses.json',
+  'tools/autodev/status/completed_archive.json',
+];
 
-let cache: { data: Record<string, unknown>; ts: number; etag: string } | null = null;
-const CACHE_TTL_MS = 90_000;
+let cache: { data: Record<string, unknown>; ts: number } | null = null;
+const CACHE_TTL_MS = 300_000; // 5min cache — 7 files × 12 polls/hr = 84 req/hr (under 5000 auth, edge for unauth)
 
-async function fetchAllStatusFiles(): Promise<Record<string, unknown>> {
-  const results: Record<string, unknown> = {};
-  const headers: Record<string, string> = {
-    'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'merlin-mission-control',
-  };
-  if (GITHUB_TOKEN) {
-    headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
-  }
-  if (cache?.etag) {
-    headers['If-None-Match'] = cache.etag;
-  }
-
+async function fetchGitHubFile(path: string): Promise<unknown | null> {
+  const url = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
   try {
-    const url = `https://api.github.com/repos/${REPO}/contents/${STATUS_DIR}?ref=${BRANCH}`;
-    const dirRes = await fetch(url, { headers });
-
-    if (dirRes.status === 304) {
-      return cache?.data || {};
-    }
-    if (dirRes.status === 403 || dirRes.status === 429) {
-      return cache?.data || {};
-    }
-    if (!dirRes.ok) {
-      return cache?.data || {};
-    }
-
-    const newEtag = dirRes.headers.get('etag') || '';
-    const listing: Array<{ name: string; download_url: string }> = await dirRes.json();
-
-    const filesToFetch = listing.filter(f => WANTED_FILES[f.name]);
-
-    const fetches = filesToFetch.map(async (file) => {
-      const key = WANTED_FILES[file.name];
-      try {
-        const fileRes = await fetch(file.download_url, {
-          headers: { 'User-Agent': 'merlin-mission-control' },
-        });
-        if (!fileRes.ok) { results[key] = null; return; }
-        const text = await fileRes.text();
-
-        if (file.name.endsWith('.jsonl')) {
-          const lines = text.trim().split('\n').filter(Boolean);
-          results[key] = lines.slice(-50).map(line => {
-            try { return JSON.parse(line); }
-            catch { return null; }
-          }).filter(Boolean);
-        } else if (file.name.endsWith('.json')) {
-          results[key] = JSON.parse(text);
-        } else {
-          results[key] = text;
-        }
-      } catch {
-        results[key] = null;
-      }
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'merlin-mission-control' },
     });
+    if (!res.ok) return null;
+    const text = await res.text();
 
-    await Promise.all(fetches);
-
-    cache = { data: results, ts: Date.now(), etag: newEtag };
-    return results;
-
+    if (path.endsWith('.jsonl')) {
+      const lines = text.trim().split('\n').filter(Boolean);
+      return lines.slice(-50).map(line => {
+        try { return JSON.parse(line); }
+        catch { return null; }
+      }).filter(Boolean);
+    }
+    if (path.endsWith('.json')) {
+      return JSON.parse(text);
+    }
+    return text;
   } catch {
-    return cache?.data || {};
+    return null;
   }
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -103,11 +58,33 @@ export default async function handler(req: any, res: any) {
     });
   }
 
-  const data = await fetchAllStatusFiles();
+  const results: Record<string, unknown> = {};
+
+  const fetches = STATUS_FILES.map(async (path) => {
+    const key = path.split('/').pop()!.replace(/\.\w+$/, '');
+    results[key] = await fetchGitHubFile(path);
+  });
+
+  await Promise.all(fetches);
+
+  const allNull = Object.values(results).every(v => v === null);
+  if (allNull && cache) {
+    return res.status(200).json({
+      ok: true,
+      timestamp: new Date().toISOString(),
+      cached: true,
+      stale: true,
+      data: cache.data,
+    });
+  }
+
+  if (!allNull) {
+    cache = { data: results, ts: Date.now() };
+  }
 
   return res.status(200).json({
     ok: true,
     timestamp: new Date().toISOString(),
-    data,
+    data: cache?.data || results,
   });
 }
