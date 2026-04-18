@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
-const GAME_URL = 'https://web-export-pi.vercel.app';
+const GAME_URL = 'https://project-4o9qm.vercel.app';
 const DEPLOY_API = '/api/deploy-status';
 const POLL_INTERVAL = 15_000;
 
