@@ -28,6 +28,7 @@ const BrocScreenVfxClass = preload("res://scripts/broceliande_3d/broc_screen_vfx
 const BrocFaunaBubbleClass = preload("res://scripts/broceliande_3d/broc_fauna_bubble.gd")
 const BrocCreatureSpawnerClass = preload("res://scripts/broceliande_3d/broc_creature_spawner.gd")
 const BrocNarrativeDirectorClass = preload("res://scripts/broceliande_3d/broc_narrative_director.gd")
+const BrocRetroMaterialsClass = preload("res://scripts/broceliande_3d/broc_retro_materials.gd")
 const ForestAssetSpawnerClass = preload("res://scripts/broceliande_3d/forest_asset_spawner.gd")
 const ForestZoneBuilderClass = preload("res://scripts/broceliande_3d/forest_zone_builder.gd")
 const ForestEffectsClass = preload("res://scripts/broceliande_3d/forest_effects.gd")
@@ -174,6 +175,7 @@ var _creature_spawner: RefCounted  # BrocCreatureSpawner
 var _fauna_bubble: RefCounted  # BrocFaunaBubble
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _gameplay_active: bool = false  # true when LLM event system is wired
+var _retro_materials: RefCounted  # BrocRetroMaterials — PS1 vertex jitter on all meshes
 var _saved_crt_preset: String = "medium"
 var _crt_was_visible: bool = true
 
@@ -338,6 +340,10 @@ func _init_helpers() -> void:
 	# LLM Narrative Director (orchestration layer)
 	_narrative_director = BrocNarrativeDirectorClass.new()
 	_narrative_director.setup(_atmosphere, _creature_spawner, _screen_vfx, _event_vfx, _chunk_manager)
+
+	# PS1/N64 retro materials — vertex jitter + color banding on all 3D meshes
+	_retro_materials = BrocRetroMaterialsClass.new()
+	_retro_materials.apply_to_tree(forest_root)
 
 	# Random atmospheric events (legacy, still runs if gameplay not active)
 	_events = BrocEvents.new(forest_root, world_env, sun_light)
