@@ -175,6 +175,7 @@ var _fauna_bubble: RefCounted  # BrocFaunaBubble
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _gameplay_active: bool = false  # true when LLM event system is wired
 var _saved_crt_preset: String = "medium"
+var _saved_render_mode: int = -1
 var _crt_was_visible: bool = true
 
 # Extracted modules
@@ -204,16 +205,17 @@ var _frame_samples: PackedFloat32Array = PackedFloat32Array()
 func _ready() -> void:
 	_rng.randomize()
 	_gravity = float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
-	# Disable ALL autoload CanvasLayers — hint_screen_texture breaks 3D in GL Compatibility
+	# Hide autoload CanvasLayers — hint_screen_texture breaks 3D in GL Compatibility
+	# IMPORTANT: only hide, never queue_free children (autoloads persist across scenes)
 	for child in get_tree().root.get_children():
 		if child is CanvasLayer:
 			if child.has_method("get_crt_preset"):
 				_saved_crt_preset = child.get_crt_preset()
+			if child.has_method("get_render_mode"):
+				_saved_render_mode = child.get_render_mode()
 			_crt_was_visible = child.visible
 			child.visible = false
-			for sub in child.get_children():
-				sub.queue_free()
-			print("[Broceliande] Disabled autoload CanvasLayer: %s" % child.name)
+			print("[Broceliande] Hidden autoload CanvasLayer: %s" % child.name)
 	_asset_spawner = ForestAssetSpawnerClass.new(forest_root, _rng)
 	_asset_spawner.load_assets(TREE_MODELS, BUSH_MODELS, SPECIAL_TREES, DETAIL_MODELS, BROC_ASSETS)
 	_ensure_actions()
@@ -396,10 +398,14 @@ func _on_window_resized() -> void:
 
 func _exit_tree() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	# Restore CRT post-process for other scenes
+	# Restore post-process for other scenes (render mode + preset + visibility)
 	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
 	if crt_layer:
-		if crt_layer.has_method("set_crt_preset"):
+		if _saved_render_mode >= 0 and crt_layer.has_method("set_render_mode"):
+			crt_layer.set_render_mode(_saved_render_mode)
+		if crt_layer.has_method("set_psx_preset") and _saved_render_mode == 1:
+			crt_layer.set_psx_preset(_saved_crt_preset)
+		elif crt_layer.has_method("set_crt_preset"):
 			crt_layer.set_crt_preset(_saved_crt_preset)
 		if crt_layer.has_method("set_enabled"):
 			crt_layer.set_enabled(_crt_was_visible)
@@ -547,7 +553,7 @@ func _physics_process(delta: float) -> void:
 		var is_night: bool = false
 		if _day_night:
 			var t: float = _day_night.get_time()
-			is_night = t >= 0.55 and t < 0.95
+			is_night = t >= 0.85 or t < 0.15
 		_creature_spawner.update(delta, player.position, _current_zone, is_night)
 
 	# Fauna dialogue bubbles
@@ -557,7 +563,7 @@ func _physics_process(delta: float) -> void:
 	# Modulate particles by day/night
 	if _day_night:
 		var t: float = _day_night.get_time()
-		var is_night: bool = t >= 0.55 and t < 0.95
+		var is_night: bool = t >= 0.85 or t < 0.15
 		# Fireflies visible at night, faint during day
 		if _effects:
 			for ff in _effects.firefly_nodes:
@@ -932,13 +938,14 @@ func _update_hud() -> void:
 
 	# Update WalkHUD (PV + Ogham + Essences)
 	if _walk_hud:
-		var store: Node = get_node_or_null("/root/GameManager")
+		var store: Node = _find_store()
 		if store:
-			var run: Dictionary = store.get("run_state") as Dictionary if store.has_method("get") else {}
-			var life: int = int(run.get("life_essence", 100))
-			_walk_hud.update_pv(life, 100)
-			var essences: int = int(run.get("biome_currency", 0))
-			_walk_hud.update_essences(essences)
+			var run: Variant = store.get("run_state")
+			if run is Dictionary:
+				var life: int = int(run.get("life_essence", 100))
+				_walk_hud.update_pv(life, 100)
+				var essences: int = int(run.get("biome_currency", 0))
+				_walk_hud.update_essences(essences)
 		# Default ogham (Beith starter)
 		if _walk_hud.has_method("update_ogham"):
 			_walk_hud.update_ogham("\u1681", "Beith", 0)
@@ -980,11 +987,13 @@ func _get_time_of_day_name() -> String:
 	if not _day_night:
 		return ""
 	var t: float = _day_night.get_time()
-	if t < 0.1 or t > 0.95:
+	if t < 0.15 or t > 0.90:
+		return "Nuit"
+	elif t < 0.30:
 		return "Aube"
-	elif t < 0.35:
-		return "Midi"
-	elif t < 0.55:
+	elif t < 0.70:
+		return "Jour"
+	elif t < 0.85:
 		return "Crepuscule"
 	else:
 		return "Nuit"
@@ -1101,9 +1110,10 @@ func _on_encounter_reached(enc_idx: int) -> void:
 		print("[Forest3D] Card resolved: choice=%d score=%d" % [choice_idx, score])
 
 		# Apply effects: heal/damage based on score (no per-card drain — director decision)
-		var store: Node = get_node_or_null("/root/GameManager")
-		if store and store.has_method("get") and store.get("run_state") is Dictionary:
-			var run: Dictionary = store.get("run_state") as Dictionary
+		var store: Node = _find_store()
+		if store:
+			var run_v: Variant = store.get("run_state")
+			var run: Dictionary = run_v as Dictionary if run_v is Dictionary else {}
 			var life: int = int(run.get("life_essence", 100))
 			if score >= 80:
 				life += 5  # Reussite bonus

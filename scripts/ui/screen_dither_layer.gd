@@ -173,7 +173,10 @@ func set_dither_strength(value: float) -> void:
 
 
 func set_color_levels(value: float) -> void:
-	_material.set_shader_parameter("color_levels", value)
+	if _render_mode == RenderMode.PSX:
+		_material.set_shader_parameter("color_depth", value)
+	else:
+		_material.set_shader_parameter("color_levels", value)
 
 
 func set_tint_blend(value: float) -> void:
@@ -196,9 +199,12 @@ func set_enabled(enabled: bool) -> void:
 
 # === NEW CRT API ===
 
-## Set the phosphor tint color (biome-driven)
+## Set the phosphor/biome tint color
 func set_phosphor_tint(color: Color) -> void:
-	_material.set_shader_parameter("phosphor_tint", color)
+	if _render_mode == RenderMode.PSX:
+		_material.set_shader_parameter("tint_color", color)
+	else:
+		_material.set_shader_parameter("phosphor_tint", color)
 
 
 ## Set CRT screen curvature
