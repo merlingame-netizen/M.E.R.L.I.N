@@ -514,26 +514,30 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-18",
+      "notes": "Already fixed: build_default_factions() uses MerlinConstants.FACTION_SCORE_START=20. save_system default profile also uses FACTION_SCORE_START. Verified across all callers."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-18",
+      "notes": "Already fixed: pick_minigame_for_field() now uses randi() % minigames.size() instead of field.hash(). Verified in merlin_effect_engine.gd:806."
     },
     {
       "id": "TEST-PLAYTEST-1",
@@ -554,6 +558,20 @@
       "agent": "game_design_auditor",
       "files": [],
       "description": "Compare every system in code vs bible v2.4. Report compliance percentage per section."
+    },
+    {
+      "id": "FEAT-AMBIENT-1",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Create MerlinAmbientSystem — unified biome+season+time ambient calculator",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_ambient_system.gd"
+      ],
+      "description": "Pure-function system that blends BIOME_ART_PROFILES + SEASONAL_PALETTES + time-of-day into unified ambient colors (sky gradient, fog, particles, silhouette, weather, CRT params). Addresses creator feedback q-20260412-002 (ambiance saison/heure).",
+      "completed_at": "2026-04-18",
+      "notes": "Created merlin_ambient_system.gd (233 lines). Static API: compute_ambient(biome, season, period, light) returns 17-field dict. Weather system with season×biome probability tables. Period tints for 6 time periods. Integrates with GameTimeManager via compute_ambient_from_time_manager(). All 8 biomes supported."
     },
     {
       "id": "INFRA-ROUTINE-1",
