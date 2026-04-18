@@ -44,24 +44,29 @@
 {"ts":"2026-04-16T11:10:58.000Z","type":"cycle_end","cycle":2,"detail":"Cycle 2: 3 HIGH bugs fixed (BUG-003 biome display, BUG-004 effect format, BUG-006 rng bias). 3 files, 53 lines."}
 {"ts":"2026-04-16T11:10:58.000Z","type":"session_summary","cycle":3,"detail":"Session complete: 8 bugs fixed (2 CRITICAL + 6 HIGH), dead code cleanup (-1505 lines), constants v2.4, autonomous infra deployed. 32/39 tasks done, 7 pending."}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_start","cycle":4,"detail":"Cycle 4: Fix 4 remaining MEDIUM bugs (BUG-009/010/012/013). All dead code references from removed systems."}
-{"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-009: RAG flux→hidden.tension fix in rag_manager.gd"}
+{"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-009: RAG flux\u2192hidden.tension fix in rag_manager.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-010: Souffle cost dead code removed in merlin_ai.gd"}
-{"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
+{"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation\u2192get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
-{"type":"task_completed","timestamp":"2026-04-18T14:25:00.000Z","data":{"taskId":"BUGFIX-MED-14","agent":"godot_expert","summary":"Faction default 0→20 fixed in reputation_system + save_system"}}
-{"type":"task_completed","timestamp":"2026-04-18T14:25:00.000Z","data":{"taskId":"BUGFIX-MED-11","agent":"godot_expert","summary":"Deterministic minigame → randi() randomization"}}
+{"type":"task_completed","timestamp":"2026-04-18T14:25:00.000Z","data":{"taskId":"BUGFIX-MED-14","agent":"godot_expert","summary":"Faction default 0\u219220 fixed in reputation_system + save_system"}}
+{"type":"task_completed","timestamp":"2026-04-18T14:25:00.000Z","data":{"taskId":"BUGFIX-MED-11","agent":"godot_expert","summary":"Deterministic minigame \u2192 randi() randomization"}}
 {"type":"task_completed","timestamp":"2026-04-18T14:28:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-1","agent":"ui_worker","summary":"MerlinResponsive autoload: scaling, safe areas, swipe, breakpoints"}}
 {"type":"task_completed","timestamp":"2026-04-18T14:30:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-2","agent":"ui_worker","summary":"6 scenes adapted: MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome"}}
 {"type":"task_completed","timestamp":"2026-04-18T14:20:00.000Z","data":{"taskId":"DAYNIGHT-SCENES","agent":"daynight_worker","summary":"Day/night wired in HubAntre, TransitionBiome, BroceliandeForest3D"}}
 {"type":"state_change","timestamp":"2026-04-18T14:30:00.000Z","data":{"from":"DISPATCH","to":"VALIDATE","cycleId":"CYCLE-2026-04-18-005"}}
 {"ts":"2026-04-18T16:00:00.000Z","type":"cycle_start","cycle":6,"detail":"Cycle 6: Bug hunt on cycle 5 files (mobile responsive + day/night). 10 files scanned."}
 {"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-019: Calendar season mapping aligned to MerlinVisual standard (3-5/6-8/9-11/else)"}
-{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-020: Calendar dict dot notation state.meta→state.get('meta',{})"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-020: Calendar dict dot notation state.meta\u2192state.get('meta',{})"}
 {"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-021: HubAntre store variable shadowing removed in memoires+journal panels"}
 {"ts":"2026-04-18T16:00:00.000Z","type":"cycle_end","cycle":6,"detail":"Cycle 6 complete: 3 bugs fixed (1 HIGH + 2 MEDIUM). 2 files, 14 lines. 21 total bugs fixed across 6 cycles."}
 {"ts":"2026-04-18T20:00:00.000Z","type":"cycle_start","cycle":8,"detail":"Cycle 8: Bug hunt C7 (no critical bugs) + feature: encounter card overlay v2 + fix minigame.start()"}
-{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-022 HIGH: minigame.start() never called in encounter card overlay — fixed"}
-{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-023 LOW: set_color_levels wrong param for PSX mode — fixed"}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-022 HIGH: minigame.start() never called in encounter card overlay \u2014 fixed"}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-023 LOW: set_color_levels wrong param for PSX mode \u2014 fixed"}
 {"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"CARD-OVERLAY-V2: Cinematic CRT/PSX encounter card with typewriter, staggered buttons, field hint"}
 {"ts":"2026-04-18T20:00:00.000Z","type":"cycle_end","cycle":8,"detail":"Cycle 8 complete: 1 HIGH + 1 LOW bug fixed, encounter card overlay v2. 2 files, 211 lines. 23 total bugs fixed across 8 cycles."}
+{"ts":"2026-04-18T22:00:00.000Z","type":"cycle_start","cycle":9,"detail":"Cycle 9: Bug hunt C8 \u2014 discovered C8 code fixes were NEVER PUSHED (only status JSONs committed)"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-024 HIGH: minigame.start() missing (C8 BUG-022 fix never pushed) \u2014 re-fixed and committed"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) \u2014 re-fixed and committed"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}

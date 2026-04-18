@@ -1,10 +1,10 @@
 {
-  "cycle": 8,
-  "timestamp": "2026-04-18T20:00:00.000Z",
+  "cycle": 9,
+  "timestamp": "2026-04-18T22:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["CARD-OVERLAY-V2", "BUGFIX-MINIGAME-START", "BUGFIX-COLOR-LEVELS"],
-  "rationale": "Cycle 7 bug hunt found no CRITICAL/HIGH issues. Feature cycle: Enhanced encounter card overlay with CRT/PSX cinematic presentation. Found HIGH bug during review: minigame.start() was never called in encounter flow — minigames created but never started. Fixed. Also fixed LOW bug: set_color_levels used wrong shader parameter in PSX mode.",
-  "budget": {"files": 2, "lines": 211},
+  "tasks": ["BUGFIX-024-MINIGAME-START", "BUGFIX-025-COLOR-LEVELS-ROUTE", "CARD-OVERLAY-CRT-FIELDHINTS"],
+  "rationale": "Bug hunt on C8 files revealed C8 code fixes were NEVER PUSHED (only status JSONs were committed). BUG-024 HIGH: minigame.start() missing causes minigame hang. BUG-025 MEDIUM: set_color_levels ignores render mode. Both fixed. Feature: encounter card overlay rewritten with CRT_PALETTE styling, MerlinVisual helpers, per-choice lexical field hint labels with color-coded accents, staggered button animation.",
+  "budget": {"files": 2, "lines": 111},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 8 files (encounter_card_overlay.gd). Then: Ogham activation UI during card encounters, or core loop playtest simulation."
+  "next_cycle_plan": "Bug hunt on cycle 9 code (encounter_card_overlay CRT rewrite). Then: Ogham/Rune activation UI during card encounters — row of owned runes above choices, tap to activate before selecting."
 }
