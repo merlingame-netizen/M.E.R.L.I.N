@@ -228,13 +228,13 @@ func _determine_current_context() -> void:
 
 
 func _get_season_for_date(month: int) -> String:
-	if month >= 11 or month <= 1:
-		return "winter"
-	elif month >= 2 and month <= 4:
+	if month >= 3 and month <= 5:
 		return "spring"
-	elif month >= 5 and month <= 7:
+	elif month >= 6 and month <= 8:
 		return "summer"
-	return "autumn"
+	elif month >= 9 and month <= 11:
+		return "autumn"
+	return "winter"
 
 
 func _get_day_of_year(month: int, day: int) -> int:
@@ -328,7 +328,7 @@ func get_events_in_window(from_date: String, to_date: String) -> Array:
 func _load_meta_stats() -> void:
 	var merlin_store = get_node_or_null("/root/MerlinStore")
 	if merlin_store and merlin_store.state.has("meta"):
-		var meta = merlin_store.state.meta
+		var meta: Dictionary = merlin_store.state.get("meta", {})
 		meta_stats = {
 			"total_runs": meta.get("total_runs", 0),
 			"total_cards_played": meta.get("total_cards_played", 0),
