@@ -657,6 +657,60 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-024",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix minigame.start() never called in encounter overlay (C8 fix never pushed)",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "BUG-022 was marked fixed in cycle 8 but code was never pushed. Minigames were created and added but start() was never called, causing game_completed to never emit and the overlay to hang.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-025",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Add timeout guard on await minigame.game_completed",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "No timeout on await minigame.game_completed. If minigame crashes, overlay hangs forever. Added 90s SceneTreeTimer that force-completes with penalty score.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-029",
+      "phase": 0,
+      "priority": 3,
+      "status": "completed",
+      "title": "Fix set_color_levels PSX routing (C8 fix never pushed)",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/screen_dither_layer.gd"],
+      "description": "BUG-023 was marked fixed but never pushed. set_color_levels() always set 'color_levels' but PSX shader uses 'color_depth'.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "CARD-OVERLAY-V2-TYPEWRITER",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Encounter card overlay v2: typewriter text, staggered buttons, field hint",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "Typewriter effect for title and body text. Staggered button animations with slide-up. Field hint label showing detected lexical field. Full CRT_PALETTE integration.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "RUNE-ACTIVATION-UI",
+      "phase": 5,
+      "priority": 1,
+      "status": "pending",
+      "title": "Rune activation button in encounter card overlay",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "Bible v2.4: activation avant choix uniquement, 1 Ogham/carte max. Add a rune selection step before choice buttons. Show unlocked runes with their effects, let player activate one (or skip)."
     }
   ]
 }

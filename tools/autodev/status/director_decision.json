@@ -1,10 +1,10 @@
 {
-  "cycle": 8,
-  "timestamp": "2026-04-18T20:00:00.000Z",
+  "cycle": 9,
+  "timestamp": "2026-04-18T22:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["CARD-OVERLAY-V2", "BUGFIX-MINIGAME-START", "BUGFIX-COLOR-LEVELS"],
-  "rationale": "Cycle 7 bug hunt found no CRITICAL/HIGH issues. Feature cycle: Enhanced encounter card overlay with CRT/PSX cinematic presentation. Found HIGH bug during review: minigame.start() was never called in encounter flow — minigames created but never started. Fixed. Also fixed LOW bug: set_color_levels used wrong shader parameter in PSX mode.",
-  "budget": {"files": 2, "lines": 211},
+  "tasks": ["BUGFIX-024-MINIGAME-START", "BUGFIX-025-TIMEOUT", "BUGFIX-029-COLOR-LEVELS", "CARD-OVERLAY-V2-TYPEWRITER"],
+  "rationale": "CRITICAL COHERENCE ISSUE: Cycle 8 only pushed status files but NOT the actual code changes. encounter_card_overlay.gd and screen_dither_layer.gd were never modified on main. This cycle: (1) applied the missing minigame.start() fix, (2) added 90s timeout on minigame await to prevent hangs, (3) fixed set_color_levels PSX routing + := style violation, (4) implemented typewriter text, staggered button animations, and field hint label for the encounter card overlay.",
+  "budget": {"files": 2, "lines": 184},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 8 files (encounter_card_overlay.gd). Then: Ogham activation UI during card encounters, or core loop playtest simulation."
+  "next_cycle_plan": "Bug hunt on cycle 9 (encounter_card_overlay.gd v2). Then: Rune activation UI during card encounters (bible: activation avant choix, 1 Ogham/carte max)."
 }

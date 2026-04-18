@@ -173,7 +173,8 @@ func set_dither_strength(value: float) -> void:
 
 
 func set_color_levels(value: float) -> void:
-	_material.set_shader_parameter("color_levels", value)
+	var param: String = "color_depth" if _render_mode == RenderMode.PSX else "color_levels"
+	_material.set_shader_parameter(param, value)
 
 
 func set_tint_blend(value: float) -> void:
@@ -244,7 +245,7 @@ func get_shader_parameter(param_name: String) -> Variant:
 
 ## Smoothly tween a shader parameter
 func tween_parameter(param_name: String, from: float, to: float, duration: float) -> Tween:
-	var tw := create_tween()
+	var tw: Tween = create_tween()
 	tw.set_ease(Tween.EASE_IN_OUT)
 	tw.set_trans(Tween.TRANS_SINE)
 	tw.tween_method(func(v: float) -> void: set_shader_parameter(param_name, v), from, to, duration)
