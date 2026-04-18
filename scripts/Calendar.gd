@@ -328,7 +328,7 @@ func get_events_in_window(from_date: String, to_date: String) -> Array:
 func _load_meta_stats() -> void:
 	var merlin_store = get_node_or_null("/root/MerlinStore")
 	if merlin_store and merlin_store.state.has("meta"):
-		var meta = merlin_store.state.meta
+		var meta: Dictionary = merlin_store.state.get("meta", {})
 		meta_stats = {
 			"total_runs": meta.get("total_runs", 0),
 			"total_cards_played": meta.get("total_cards_played", 0),

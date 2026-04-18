@@ -102,7 +102,8 @@ func _configure_main_card(viewport_size: Vector2) -> void:
 
 	# Configure wheel
 	cal.wheel_container.custom_minimum_size = Vector2(0, 140 if not cal.compact_mode else 100)
-	cal.wheel_container.draw.connect(cal._on_wheel_draw)
+	if not cal.wheel_container.draw.is_connected(cal._on_wheel_draw):
+		cal.wheel_container.draw.connect(cal._on_wheel_draw)
 
 	# Configure next event panel
 	_configure_event_panel()

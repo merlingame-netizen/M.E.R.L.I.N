@@ -156,6 +156,8 @@ func _process(delta: float) -> void:
 	# Mouse parallax on matrix background
 	if is_instance_valid(_matrix_bg):
 		var vs := get_viewport().get_visible_rect().size
+		if vs.x < 1.0 or vs.y < 1.0:
+			return
 		var mouse := get_viewport().get_mouse_position()
 		var offset_x: float = (mouse.x / vs.x - 0.5) * -8.0
 		var offset_y: float = (mouse.y / vs.y - 0.5) * -4.0
