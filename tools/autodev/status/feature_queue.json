@@ -624,6 +624,21 @@
       ],
       "description": "SessionStart hook, Director agent, setup script, routine prompt for /schedule hourly.",
       "completed_at": "2026-04-16"
+    },
+    {
+      "id": "RETRO-MAT-1",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "PS1/N64 vertex jitter + retro material pipeline for all 3D meshes",
+      "agent": "graphics_worker",
+      "files": [
+        "shaders/ps1_material.gdshader",
+        "scripts/broceliande_3d/broc_retro_materials.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "description": "Enhanced ps1_material.gdshader with temporal vertex jitter, clip-space snapping, UV quantization, 15-bit color banding, binary transparency. Created BrocRetroMaterials module that walks forest node tree and applies PS1 material to all MeshInstance3D while preserving albedo textures. Per-category jitter: megaliths 0.001, rocks 0.002, trees 0.003, creatures 0.008.",
+      "completed_at": "2026-04-18"
     }
   ]
 }

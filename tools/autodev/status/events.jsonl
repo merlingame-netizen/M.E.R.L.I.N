@@ -55,4 +55,6 @@
 {"type":"task_completed","timestamp":"2026-04-18T14:30:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-2","agent":"ui_worker","summary":"6 scenes adapted: MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome"}}
 {"type":"task_completed","timestamp":"2026-04-18T14:20:00.000Z","data":{"taskId":"DAYNIGHT-SCENES","agent":"daynight_worker","summary":"Day/night wired in HubAntre, TransitionBiome, BroceliandeForest3D"}}
 {"type":"state_change","timestamp":"2026-04-18T14:30:00.000Z","data":{"from":"DISPATCH","to":"VALIDATE","cycleId":"CYCLE-2026-04-18-005"}}
->>>>>>> 0e1a812 (chore(status): sync Mission Control data — 18/18 bugs, mobile responsive, day/night)
+{"ts":"2026-04-18T16:00:00.000Z","type":"cycle_start","cycle":6,"detail":"Cycle 6: PS1/N64 retro material pipeline — vertex jitter + color banding on all 3D meshes"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"RETRO-MAT-1: Enhanced ps1_material.gdshader + BrocRetroMaterials module. 3 files, 176 lines."}
+{"ts":"2026-04-18T16:00:00.000Z","type":"cycle_end","cycle":6,"detail":"Cycle 6 complete: PS1 vertex jitter pipeline deployed. Per-category jitter on all forest meshes. 15-bit color, UV snap, clip-space snapping."}

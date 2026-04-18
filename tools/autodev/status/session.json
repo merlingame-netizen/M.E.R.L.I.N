@@ -1,8 +1,8 @@
 {
   "state": "running",
-  "objective": "Mobile UI/UX responsive — MerlinResponsive + adaptive layouts across 8 scenes",
+  "objective": "PS1/N64 retro material pipeline — vertex jitter + color banding on all 3D meshes",
   "workers": [],
-  "updated_at": "2026-04-18T14:30:00.000Z",
-  "cycle": 5,
-  "checkpoint": "All 18/18 bugs fixed. Mobile responsive system deployed: MerlinResponsive autoload, 6 scenes adapted (MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome). Day/night cycle in 3 scenes. Playtest: 6/6 invariants pass. Godot Export #152 deploying to Vercel."
+  "updated_at": "2026-04-18T16:00:00.000Z",
+  "cycle": 6,
+  "checkpoint": "Enhanced ps1_material.gdshader with temporal vertex jitter, clip-space snapping, UV quantization, 15-bit color banding. Created BrocRetroMaterials module. Per-asset jitter: megaliths 0.001, trees 0.003, creatures 0.008. Wired into BroceliandeForest3D. 3 files changed, 176 insertions."
 }
