@@ -51,8 +51,6 @@ echo "[Step 5] Scene Smoke Tests..."
 SCENES=(
     "res://scenes/IntroCeltOS.tscn"
     "res://scenes/MenuPrincipal.tscn"
-    "res://scenes/IntroPersonalityQuiz.tscn"
-    "res://scenes/SceneRencontreMerlin.tscn"
     "res://scenes/SelectionSauvegarde.tscn"
     "res://scenes/HubAntre.tscn"
     "res://scenes/TransitionBiome.tscn"

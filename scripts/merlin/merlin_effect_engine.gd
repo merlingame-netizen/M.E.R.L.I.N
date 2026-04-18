@@ -439,7 +439,7 @@ func _build_faction_context(rep_dict: Dictionary) -> Dictionary:
 	var dominant: String = ""
 	var dominant_score: int = 0
 	for faction in MerlinConstants.FACTIONS:
-		var score: int = int(rep_dict.get(faction, 0))
+		var score: int = int(rep_dict.get(faction, MerlinConstants.FACTION_SCORE_START))
 		var tier: String = _score_to_tier(score)
 		tiers[faction] = tier
 		if tier != "neutre":
@@ -803,5 +803,5 @@ static func pick_minigame_for_field(field: String) -> String:
 	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
 	if minigames.is_empty():
 		return MerlinConstants.ACTION_VERB_FALLBACK_FIELD  # "esprit" — valid field name
-	var index: int = randi() % minigames.size()
+	var index: int = randi_range(0, minigames.size() - 1)
 	return str(minigames[index])

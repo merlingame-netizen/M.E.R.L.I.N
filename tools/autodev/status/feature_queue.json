@@ -514,26 +514,50 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-18",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
-        "scripts/merlin/merlin_save_system.gd"
+        "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "notes": "Fixed all .get(faction, 0.0) fallbacks to use MerlinConstants.FACTION_SCORE_START (20) in merlin_reputation_system.gd (9 occurrences) and merlin_effect_engine.gd _build_faction_context (1 occurrence). Save system already uses FACTION_SCORE_START correctly."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-18",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "notes": "Changed randi() % size to randi_range(0, size-1) for consistency with BUGFIX-HIGH-6 fix. The hash-based selection was already replaced by randi() in a prior edit; this fix removes modulo bias."
+    },
+    {
+      "id": "FLOW-DELETE-1",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "completed_at": "2026-04-18",
+      "title": "Delete dead scenes IntroPersonalityQuiz + SceneRencontreMerlin",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/IntroPersonalityQuiz.gd",
+        "scenes/IntroPersonalityQuiz.tscn",
+        "scripts/SceneRencontreMerlin.gd",
+        "scenes/SceneRencontreMerlin.tscn",
+        "scripts/quiz_data.gd",
+        "scripts/rencontre_llm.gd",
+        "scripts/rencontre_dialogue.gd"
+      ],
+      "description": "Human feedback q-20260414-005: delete IntroPersonalityQuiz + SceneRencontreMerlin. Also deleted helper scripts (quiz_data, rencontre_llm, rencontre_dialogue) and uid files. Cleaned CI and test references in godot-ci.yml, validate_headless.sh, capture_baselines.ps1.",
+      "notes": "10 files deleted. 3 config files updated to remove dead scene references. Menu3DPC already routes new game to ParchmentPreRun (no broken transitions)."
     },
     {
       "id": "TEST-PLAYTEST-1",

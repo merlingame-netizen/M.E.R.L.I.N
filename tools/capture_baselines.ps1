@@ -14,7 +14,6 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $Scenes = @(
     @{ name = "MenuPrincipal";        path = "res://scenes/MenuPrincipal.tscn" },
     @{ name = "IntroCeltOS";          path = "res://scenes/IntroCeltOS.tscn" },
-    @{ name = "IntroPersonalityQuiz"; path = "res://scenes/IntroPersonalityQuiz.tscn" },
     @{ name = "HubAntre";             path = "res://scenes/HubAntre.tscn" },
     @{ name = "TransitionBiome";      path = "res://scenes/TransitionBiome.tscn" },
     @{ name = "SelectionSauvegarde";  path = "res://scenes/SelectionSauvegarde.tscn" },

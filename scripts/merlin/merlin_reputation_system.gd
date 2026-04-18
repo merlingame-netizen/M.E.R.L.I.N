@@ -39,7 +39,7 @@ func add_reputation(faction: String, amount: float) -> float:
 	if not FACTIONS.has(faction):
 		return -1.0
 	var capped: float = clampf(amount, -CAP_PER_CARD, CAP_PER_CARD)
-	var current: float = float(_reputations.get(faction, 0.0))
+	var current: float = float(_reputations.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 	var new_value: float = clampf(current + capped, VALUE_MIN, VALUE_MAX)
 	_reputations[faction] = new_value
 	return new_value
@@ -49,7 +49,7 @@ func add_reputation(faction: String, amount: float) -> float:
 func get_reputation(faction: String) -> float:
 	if not FACTIONS.has(faction):
 		return 0.0
-	return float(_reputations.get(faction, 0.0))
+	return float(_reputations.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 
 
 ## Retourne un dict de toutes les réputations (copie).
@@ -59,12 +59,12 @@ func get_all_reputations() -> Dictionary:
 
 ## Vérifie si une faction a atteint le seuil contenu (>= 50).
 func has_content_threshold(faction: String) -> bool:
-	return float(_reputations.get(faction, 0.0)) >= THRESHOLD_CONTENT
+	return float(_reputations.get(faction, float(MerlinConstants.FACTION_SCORE_START))) >= THRESHOLD_CONTENT
 
 
 ## Vérifie si une faction a atteint le seuil fin (>= 80).
 func has_ending_threshold(faction: String) -> bool:
-	return float(_reputations.get(faction, 0.0)) >= THRESHOLD_ENDING
+	return float(_reputations.get(faction, float(MerlinConstants.FACTION_SCORE_START))) >= THRESHOLD_ENDING
 
 
 ## Retourne la faction dominante (plus haute rep). "" si toutes à 0.
@@ -82,7 +82,7 @@ static func apply_delta(factions: Dictionary, faction: String, delta: float) -> 
 	var result: Dictionary = factions.duplicate()
 	if not FACTIONS.has(faction):
 		return result
-	var current: float = float(result.get(faction, 0.0))
+	var current: float = float(result.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 	var new_value: float = clampf(current + delta, VALUE_MIN, VALUE_MAX)
 	result[faction] = new_value
 	return result
@@ -93,7 +93,7 @@ static func apply_delta(factions: Dictionary, faction: String, delta: float) -> 
 static func get_available_endings(factions: Dictionary) -> Array[String]:
 	var result: Array[String] = []
 	for faction in FACTIONS:
-		var value: float = float(factions.get(faction, 0.0))
+		var value: float = float(factions.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 		if value >= THRESHOLD_ENDING:
 			result.append(faction)
 	return result
@@ -103,7 +103,7 @@ static func get_available_endings(factions: Dictionary) -> Array[String]:
 static func get_unlocked_content(factions: Dictionary) -> Array[String]:
 	var result: Array[String] = []
 	for faction in FACTIONS:
-		var value: float = float(factions.get(faction, 0.0))
+		var value: float = float(factions.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 		if value >= THRESHOLD_CONTENT:
 			result.append(faction)
 	return result
@@ -115,7 +115,7 @@ static func get_dominant_faction(factions: Dictionary) -> String:
 	var dominant: String = ""
 	var dominant_value: float = 0.0
 	for faction in FACTIONS:
-		var value: float = float(factions.get(faction, 0.0))
+		var value: float = float(factions.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 		if value > dominant_value:
 			dominant_value = value
 			dominant = faction
@@ -127,7 +127,7 @@ static func get_dominant_faction(factions: Dictionary) -> String:
 static func describe_factions(factions: Dictionary) -> String:
 	var parts: Array[String] = []
 	for faction in FACTIONS:
-		var value: float = float(factions.get(faction, 0.0))
+		var value: float = float(factions.get(faction, float(MerlinConstants.FACTION_SCORE_START)))
 		var label: String = faction.capitalize()
 		parts.append(label + ":" + str(int(value)))
 	return " ".join(parts)

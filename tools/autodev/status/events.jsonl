@@ -49,3 +49,8 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: Fix 2 remaining MEDIUM bugs (faction defaults, minigame rng) + delete dead scenes (IntroPersonalityQuiz + SceneRencontreMerlin)."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-14: Faction fallbacks 0→20 (FACTION_SCORE_START) in reputation_system + effect_engine"}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-11: Minigame selection randi()%N → randi_range(0,N-1) in effect_engine"}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"FLOW-DELETE-1: Deleted 10 dead scene files (IntroPersonalityQuiz + SceneRencontreMerlin + helpers). Cleaned CI/test refs."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: 2 bugs fixed, 10 dead files removed, 3 config files cleaned. 16 total bugs fixed across 5 cycles."}
