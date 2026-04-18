@@ -657,6 +657,72 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-022",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix forest queue_free destroying CRTLayer children permanently (CRITICAL)",
+      "agent": "bug_hunter",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "Forest _ready() called queue_free() on autoload CanvasLayer children, permanently destroying CRTLayer's ColorRect. Changed to hide-only. Added render mode save/restore in _exit_tree.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-023",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix time-of-day label wrong ranges in forest HUD",
+      "agent": "bug_hunter",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "_get_time_of_day_name() showed Midi during dawn (0.1-0.35) and Nuit from 0.55. Corrected to Nuit<0.15, Aube 0.15-0.30, Jour 0.30-0.70, Crepuscule 0.70-0.85, Nuit>0.90.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-024",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix is_night threshold too early (fireflies in afternoon)",
+      "agent": "bug_hunter",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "is_night was t>=0.55 (afternoon). Changed to t>=0.85 or t<0.15 matching CRTLayer set_time_tint ranges. Affects creature spawning and firefly/pollen particles.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-025",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix forest HUD referencing /root/GameManager instead of MerlinStore",
+      "agent": "bug_hunter",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "_update_hud() and _on_encounter_reached() used get_node_or_null('/root/GameManager'). Replaced with _find_store() which finds MerlinStore. Life display and encounter effects now work.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-026",
+      "phase": 0,
+      "priority": 3,
+      "status": "completed",
+      "title": "Fix set_color_levels wrong shader param in PSX mode",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/screen_dither_layer.gd"],
+      "description": "set_color_levels() set 'color_levels' param which doesn't exist in PSX shader. Now dispatches to 'color_depth' in PSX mode, 'color_levels' in CRT mode.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-027",
+      "phase": 0,
+      "priority": 3,
+      "status": "completed",
+      "title": "Fix set_phosphor_tint setting CRT-only param in PSX mode",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/screen_dither_layer.gd"],
+      "description": "set_phosphor_tint() set 'phosphor_tint' (CRT-only). Now dispatches to 'tint_color' in PSX mode. Biome tinting now works in both render modes.",
+      "completed_at": "2026-04-18"
     }
   ]
 }

@@ -7,3 +7,4 @@
 2026-04-17T12:00:00.000Z cycle-4-complete 4-medium-bugs-fixed zero-known-bugs
 2026-04-18T16:00:00.000Z cycle-6-bughunt 3-bugs-fixed calendar-season+dict+hubantre-shadowing
 2026-04-18T18:00:00.000Z cycle-7-feature psx-retro-post-processing 4files-349lines default-render-mode-psx
+2026-04-18T20:00:00.000Z cycle-8-bughunt 6-bugs-fixed 1critical+3high+2medium forest-crt-postprocess-integrity

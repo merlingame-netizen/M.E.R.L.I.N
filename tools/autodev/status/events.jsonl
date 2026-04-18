@@ -60,3 +60,10 @@
 {"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-020: Calendar dict dot notation state.meta→state.get('meta',{})"}
 {"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUG-021: HubAntre store variable shadowing removed in memoires+journal panels"}
 {"ts":"2026-04-18T16:00:00.000Z","type":"cycle_end","cycle":6,"detail":"Cycle 6 complete: 3 bugs fixed (1 HIGH + 2 MEDIUM). 2 files, 14 lines. 21 total bugs fixed across 6 cycles."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"cycle_start","cycle":8,"detail":"Cycle 8: Bug hunt on cycle 7 files (PSX retro shader, CRTLayer, forest 3D, merlin_visual)."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-022 CRITICAL: Forest queue_free destroyed CRTLayer children. Changed to hide-only + render mode save/restore."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-023 HIGH: Time-of-day labels wrong ranges. Midi→Aube at dawn, corrected all thresholds."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-024 HIGH: is_night 0.55→0.85 — fireflies/creatures now spawn at correct time."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-025 HIGH: GameManager→MerlinStore — forest HUD and encounters now use correct store."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-026+027 MEDIUM: CRTLayer shader param dispatch — color_levels/phosphor_tint now mode-aware."}
+{"ts":"2026-04-18T20:00:00.000Z","type":"cycle_end","cycle":8,"detail":"Cycle 8 complete: 6 bugs fixed (1 CRITICAL + 3 HIGH + 2 MEDIUM). 2 files, 40 lines. 24 total bugs fixed across 8 cycles."}

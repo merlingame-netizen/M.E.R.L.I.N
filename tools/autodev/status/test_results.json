@@ -1,10 +1,17 @@
 {
   "agent": "cycle_director",
-  "cycle": 7,
-  "timestamp": "2026-04-18T18:00:00Z",
-  "type": "feature",
-  "scope": "Cycle 7 feature: PSX retro post-processing (retro_psx_post.gdshader, screen_dither_layer.gd, broceliande_forest_3d.gd, merlin_visual.gd)",
-  "bugs_found": [],
+  "cycle": 8,
+  "timestamp": "2026-04-18T20:00:00Z",
+  "type": "bug_hunt",
+  "scope": "Cycle 8 bug hunt on cycle 7 files (retro_psx_post.gdshader, screen_dither_layer.gd, broceliande_forest_3d.gd, merlin_visual.gd)",
+  "bugs_found": [
+    {"id": "BUG-022", "severity": "CRITICAL", "file": "broceliande_forest_3d.gd", "line": "210-216", "description": "queue_free() on autoload CanvasLayer children destroyed CRTLayer permanently after leaving forest", "fix": "Changed to hide-only, added render mode save/restore"},
+    {"id": "BUG-023", "severity": "HIGH", "file": "broceliande_forest_3d.gd", "line": "979-990", "description": "Time-of-day labels wrong: Midi during dawn, Nuit from 0.55", "fix": "Corrected ranges: Nuit<0.15, Aube 0.15-0.30, Jour 0.30-0.70, Crepuscule 0.70-0.85"},
+    {"id": "BUG-024", "severity": "HIGH", "file": "broceliande_forest_3d.gd", "line": "549,561", "description": "is_night threshold 0.55 was 30% too early, fireflies at full in afternoon", "fix": "Changed to t>=0.85 or t<0.15"},
+    {"id": "BUG-025", "severity": "HIGH", "file": "broceliande_forest_3d.gd", "line": "935,1104", "description": "HUD and encounter effects referenced /root/GameManager instead of MerlinStore", "fix": "Replaced with _find_store() calls"},
+    {"id": "BUG-026", "severity": "MEDIUM", "file": "screen_dither_layer.gd", "line": "176", "description": "set_color_levels() set 'color_levels' param which doesn't exist in PSX shader", "fix": "Dispatch to 'color_depth' in PSX mode"},
+    {"id": "BUG-027", "severity": "MEDIUM", "file": "screen_dither_layer.gd", "line": "201", "description": "set_phosphor_tint() set CRT-only 'phosphor_tint' param in PSX mode", "fix": "Dispatch to 'tint_color' in PSX mode"}
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 7 feature: PSX retro post-processing system. No bugs — feature cycle (bug hunt deferred to cycle 8). 4 files modified, 349 lines. 21 total bugs fixed across cycles 1-6."
+  "overall_assessment": "Cycle 8 bug hunt: 6 bugs found and fixed (1 CRITICAL + 3 HIGH + 2 MEDIUM). retro_psx_post.gdshader and merlin_visual.gd were clean. All bugs in broceliande_forest_3d.gd (4) and screen_dither_layer.gd (2). 24 total bugs fixed across 8 cycles."
 }

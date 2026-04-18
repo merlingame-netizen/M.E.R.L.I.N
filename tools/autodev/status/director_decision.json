@@ -1,10 +1,10 @@
 {
-  "cycle": 7,
-  "timestamp": "2026-04-18T18:00:00.000Z",
+  "cycle": 8,
+  "timestamp": "2026-04-18T20:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["PSX-RETRO-POST-1"],
-  "rationale": "Feature cycle: PS1/N64 retro visual system. Creator feedback (q-20260412-004) explicitly requested N64/PS1 pixelated look with volumetric effects. Existing CRT terminal shader creates green phosphor look, not retro console. New PSX shader adds resolution pixelation, 15-bit color banding, warm earth tints per biome, day/night auto-tinting. Replaces CRT as default render mode.",
-  "budget": {"files": 4, "lines": 349},
+  "tasks": ["BUGFIX-022", "BUGFIX-023", "BUGFIX-024", "BUGFIX-025", "BUGFIX-026", "BUGFIX-027"],
+  "rationale": "Bug hunt cycle on 4 files modified in cycle 7 (PSX retro shader). Following feature→bug hunt alternation. Found 1 CRITICAL (forest destroying autoload children), 3 HIGH (wrong time labels, premature night, wrong store ref), 2 MEDIUM (shader param mismatches). All 6 fixed and verified.",
+  "budget": {"files": 2, "lines": 40},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 7 files (retro_psx_post.gdshader, screen_dither_layer.gd, broceliande_forest_3d.gd, merlin_visual.gd). Then: PROTECT effect implementation or core loop playtest."
+  "next_cycle_plan": "Feature cycle: PROTECT effect implementation (bible v2.4 section 8 — Ogham protection shields), or core loop playtest (TEST-PLAYTEST-1), or MOS convergence system implementation."
 }
