@@ -49,3 +49,8 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: First feature cycle. Target: MerlinAmbientSystem (biome+season+time ambient calculator)."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-14: Faction default 0→20 mismatch — already fixed in code, marked completed."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-11: Deterministic minigame selection — already fixed (randi()), marked completed."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"FEAT-AMBIENT-1: Created merlin_ambient_system.gd (233 lines). Static ambient calculator: 8 biomes × 4 seasons × 6 periods × 5 weather types."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: MerlinAmbientSystem created. 2 stale bugs closed. First gameplay feature added. Budget: 1 file, 233 lines."}

@@ -1,33 +1,29 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
-  "bugs_fixed_this_cycle": [
+  "cycle": 5,
+  "timestamp": "2026-04-18T10:00:00Z",
+  "bugs_fixed_this_cycle": [],
+  "stale_bugs_closed": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-14",
+      "files": ["scripts/merlin/merlin_reputation_system.gd", "scripts/merlin/merlin_save_system.gd"],
+      "description": "Faction default 0 vs 20 mismatch — already fixed: build_default_factions() and save_system both use FACTION_SCORE_START=20.",
+      "status": "ALREADY_FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
+      "id": "BUGFIX-MED-11",
+      "files": ["scripts/merlin/merlin_effect_engine.gd"],
+      "description": "Deterministic minigame selection — already fixed: pick_minigame_for_field() uses randi() instead of field.hash().",
+      "status": "ALREADY_FIXED"
+    }
+  ],
+  "features_added": [
     {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
-      "status": "FIXED"
+      "id": "FEAT-AMBIENT-1",
+      "files": ["scripts/merlin/merlin_ambient_system.gd"],
+      "description": "MerlinAmbientSystem — pure static ambient calculator. Blends biome (8 profiles) + season (4) + time-of-day (6 periods) + weather (5 types with season×biome probability). Returns 17-field dict with sky gradient, fog, particles, silhouette, lighting, weather, CRT params."
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "First feature cycle. Ambient system provides the missing link between GameTimeManager and scene rendering. All 8 biomes × 4 seasons × 6 time periods produce distinct ambiances. Weather adds stochastic variety (mist heavier in marais, storms on cotes, snow in hiver). Next step: wire into Run3D scene controller."
 }
