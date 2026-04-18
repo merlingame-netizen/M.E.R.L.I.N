@@ -624,6 +624,36 @@
       ],
       "description": "SessionStart hook, Director agent, setup script, routine prompt for /schedule hourly.",
       "completed_at": "2026-04-16"
+    },
+    {
+      "id": "ATMOSPHERE-GLOBAL-1",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "MerlinAtmosphere autoload — global Celtic atmospheric particles",
+      "agent": "atmosphere_worker",
+      "files": [
+        "scripts/autoload/merlin_atmosphere.gd",
+        "project.godot"
+      ],
+      "description": "Global CanvasLayer (layer 97) with 4 particle types: floating Ogham runes, curved wisps, ambient motes, seasonal weather (pollen/fireflies/leaves/snow). Time-aware spawn rates per 7 day periods. Driven by DayNightManager + MerlinVisual season. CRT palette colors.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGHUNT-CYCLE5-FIX",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix 3 bugs from cycle 5 static analysis",
+      "agent": "bug_hunter",
+      "type": "fix",
+      "files": [
+        "scripts/Calendar.gd",
+        "scripts/calendar_ui.gd",
+        "scripts/MenuPrincipalMerlin.gd"
+      ],
+      "description": "Calendar.gd: dot-access on Dictionary (state.meta -> state.get). calendar_ui.gd: duplicate signal connection on resize. MenuPrincipalMerlin.gd: division by zero with minimized viewport.",
+      "completed_at": "2026-04-18"
     }
   ]
 }

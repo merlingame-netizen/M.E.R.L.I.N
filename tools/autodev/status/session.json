@@ -1,8 +1,8 @@
 {
-  "state": "running",
-  "objective": "Mobile UI/UX responsive — MerlinResponsive + adaptive layouts across 8 scenes",
-  "workers": [],
-  "updated_at": "2026-04-18T14:30:00.000Z",
-  "cycle": 5,
-  "checkpoint": "All 18/18 bugs fixed. Mobile responsive system deployed: MerlinResponsive autoload, 6 scenes adapted (MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome). Day/night cycle in 3 scenes. Playtest: 6/6 invariants pass. Godot Export #152 deploying to Vercel."
+  "state": "completed",
+  "objective": "Cycle 6: Atmospheric particle system + bug hunt fixes from cycle 5",
+  "workers": ["bug_hunter", "atmosphere_worker"],
+  "updated_at": "2026-04-18T16:00:00.000Z",
+  "cycle": 6,
+  "checkpoint": "MerlinAtmosphere autoload created: floating Ogham runes, wisps, motes, seasonal weather (spring pollen, summer fireflies, autumn leaves, winter snow). Time-aware spawn rates (7 periods). 3 cycle-5 bugs fixed: Calendar dict access, calendar_ui duplicate signal, MenuPrincipal viewport div-by-zero. events.jsonl merge conflict resolved."
 }

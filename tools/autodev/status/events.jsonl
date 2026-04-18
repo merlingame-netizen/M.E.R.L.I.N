@@ -55,4 +55,7 @@
 {"type":"task_completed","timestamp":"2026-04-18T14:30:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-2","agent":"ui_worker","summary":"6 scenes adapted: MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome"}}
 {"type":"task_completed","timestamp":"2026-04-18T14:20:00.000Z","data":{"taskId":"DAYNIGHT-SCENES","agent":"daynight_worker","summary":"Day/night wired in HubAntre, TransitionBiome, BroceliandeForest3D"}}
 {"type":"state_change","timestamp":"2026-04-18T14:30:00.000Z","data":{"from":"DISPATCH","to":"VALIDATE","cycleId":"CYCLE-2026-04-18-005"}}
->>>>>>> 0e1a812 (chore(status): sync Mission Control data — 18/18 bugs, mobile responsive, day/night)
+{"ts":"2026-04-18T16:00:00.000Z","type":"cycle_start","cycle":6,"detail":"Cycle 6: Bug hunt cycle 5 files + MerlinAtmosphere global particle system"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUGHUNT-CYCLE5: 3 bugs fixed (Calendar dict access, calendar_ui dup signal, MenuPrincipal viewport div/0)"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"ATMOSPHERE-GLOBAL-1: MerlinAtmosphere autoload — runes, wisps, motes, seasonal weather, time-aware"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"cycle_end","cycle":6,"detail":"Cycle 6 complete: 1 feature (MerlinAtmosphere 290 lines) + 3 bugfixes + merge conflict fix. 5 files modified."}
