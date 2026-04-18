@@ -49,3 +49,10 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"type":"task_completed","timestamp":"2026-04-18T14:25:00.000Z","data":{"taskId":"BUGFIX-MED-14","agent":"godot_expert","summary":"Faction default 0→20 fixed in reputation_system + save_system"}}
+{"type":"task_completed","timestamp":"2026-04-18T14:25:00.000Z","data":{"taskId":"BUGFIX-MED-11","agent":"godot_expert","summary":"Deterministic minigame → randi() randomization"}}
+{"type":"task_completed","timestamp":"2026-04-18T14:28:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-1","agent":"ui_worker","summary":"MerlinResponsive autoload: scaling, safe areas, swipe, breakpoints"}}
+{"type":"task_completed","timestamp":"2026-04-18T14:30:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-2","agent":"ui_worker","summary":"6 scenes adapted: MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome"}}
+{"type":"task_completed","timestamp":"2026-04-18T14:20:00.000Z","data":{"taskId":"DAYNIGHT-SCENES","agent":"daynight_worker","summary":"Day/night wired in HubAntre, TransitionBiome, BroceliandeForest3D"}}
+{"type":"state_change","timestamp":"2026-04-18T14:30:00.000Z","data":{"from":"DISPATCH","to":"VALIDATE","cycleId":"CYCLE-2026-04-18-005"}}
+>>>>>>> 0e1a812 (chore(status): sync Mission Control data — 18/18 bugs, mobile responsive, day/night)

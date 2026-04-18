@@ -1,9 +1,12 @@
 {
   "agents": {
-    "cycle_director": {"state": "active", "current_task": "Autonomous hourly cycles via Claude Routines", "last_cycle": 3, "domain": "orchestration"},
-    "bug_hunter": {"state": "idle", "current_task": null, "last_cycle": 1, "bugs_found": 18, "bugs_fixed": 8},
-    "godot_expert": {"state": "idle", "current_task": null, "last_cycle": 3},
-    "bible_agent": {"state": "idle", "current_task": null, "last_cycle": 0}
+    "cycle_director": {"state": "active", "current_task": "Cycle 5 — Mobile UI/UX + deployment", "last_cycle": 5, "domain": "orchestration"},
+    "bug_hunter": {"state": "completed", "current_task": null, "last_cycle": 4, "bugs_found": 18, "bugs_fixed": 18},
+    "godot_expert": {"state": "active", "current_task": "MerlinResponsive autoload + scene adaptation", "last_cycle": 5},
+    "bible_agent": {"state": "idle", "current_task": null, "last_cycle": 0},
+    "ui_worker": {"state": "completed", "current_task": null, "last_cycle": 5, "domain": "responsive", "scenes_adapted": 6},
+    "daynight_worker": {"state": "completed", "current_task": null, "last_cycle": 4, "domain": "visual", "scenes_wired": 3},
+    "playtester": {"state": "completed", "current_task": null, "last_cycle": 4, "invariants_passed": 6}
   },
-  "updated_at": "2026-04-16T18:25:25.000Z"
+  "updated_at": "2026-04-18T14:30:00.000Z"
 }

@@ -514,26 +514,80 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-18",
+      "notes": "Changed initialization from 0.0 to float(FACTION_SCORE_START) in reputation_system + save_system + web-demo Constants.ts. All 18/18 bugs now resolved."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-18",
+      "notes": "Replaced field.hash() % size with randi() % size for true random selection."
+    },
+    {
+      "id": "MOBILE-RESPONSIVE-1",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "MerlinResponsive autoload — mobile scaling, safe areas, touch gestures",
+      "agent": "ui_worker",
+      "files": [
+        "scripts/autoload/merlin_responsive.gd",
+        "scripts/autoload/merlin_visual.gd",
+        "project.godot"
+      ],
+      "description": "Central responsive system: viewport scaling, device detection (mobile/tablet/desktop), safe area awareness (notch/cutout), swipe touch gestures, breakpoint signals, responsive font scaling.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "MOBILE-RESPONSIVE-2",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "Adapt 6 UI scenes for mobile — responsive layouts + touch targets",
+      "agent": "ui_worker",
+      "files": [
+        "scripts/MenuPrincipalMerlin.gd",
+        "scripts/HubAntre.gd",
+        "scripts/Calendar.gd",
+        "scripts/Collection.gd",
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/TransitionBiome.gd",
+        "scripts/calendar_ui.gd",
+        "scripts/ui/ui_config_module.gd"
+      ],
+      "description": "All scenes adapted with safe area margins, responsive content widths, touch-friendly button heights (48-56px), responsive font sizes via MerlinVisual.responsive_size().",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "DAYNIGHT-SCENES",
+      "phase": 4,
+      "priority": 3,
+      "status": "completed",
+      "title": "Wire DayNightManager into 3 scenes (HubAntre, TransitionBiome, BroceliandeForest3D)",
+      "agent": "daynight_worker",
+      "files": [
+        "scripts/HubAntre.gd",
+        "scripts/TransitionBiome.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "description": "2D scenes: subtle color tint blend (25-30%). 3D scene: sun/fill/ambient/fog blending (30-50%). Conservative ratios preserve biome identity.",
+      "completed_at": "2026-04-18"
     },
     {
       "id": "TEST-PLAYTEST-1",
