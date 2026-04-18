@@ -1831,7 +1831,7 @@ function showOghamUnlockToast(oghamName: string): void {
     'transition:opacity 0.35s ease',
     'text-align:center',
   ].join(';');
-  toast.textContent = `\u16AA Ogham ${oghamName} d\u00e9verrouill\u00e9`;
+  toast.textContent = `\u16AA Rune ${oghamName} d\u00e9verrouill\u00e9e`;
   document.body.appendChild(toast);
 
   requestAnimationFrame(() => {

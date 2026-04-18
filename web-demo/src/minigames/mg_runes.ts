@@ -71,7 +71,7 @@ export class MinigameRunes extends MinigameBase {
 
     // Title
     const title = document.createElement('div');
-    title.textContent = 'RUNES -- Trouve les paires d\'oghams';
+    title.textContent = 'RUNES -- Trouve les paires de runes';
     title.style.cssText = 'color:rgba(51,255,102,0.88);font-size:14px;text-align:center;margin-bottom:16px;font-family:Courier New,monospace;';
     this.container.appendChild(title);
 
