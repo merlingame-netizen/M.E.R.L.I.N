@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-04-16T07:30:00.000Z",
+  "updated": "2026-04-18T18:00:00.000Z",
   "description": "Feature queue M.E.R.L.I.N. — managed by Cycle Director (autonomous hourly via Claude Routines).",
   "tasks": [
     {
@@ -656,6 +656,22 @@
       "agent": "bug_hunter",
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "PSX-RETRO-POST-1",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "PS1/N64 retro post-processing system — PSX render mode for CRTLayer",
+      "agent": "ui_worker",
+      "files": [
+        "shaders/retro_psx_post.gdshader",
+        "scripts/ui/screen_dither_layer.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/autoload/merlin_visual.gd"
+      ],
+      "description": "New PSX render mode replacing CRT terminal as default. Shader: pixelation, 15-bit color, Bayer 4x4 dithering, scanlines, warm biome tint, fog. CRTLayer: PSX presets (subtle/medium/heavy), 8 biome profiles, day/night auto-tinting. Creator request q-20260412-004.",
       "completed_at": "2026-04-18"
     }
   ]
