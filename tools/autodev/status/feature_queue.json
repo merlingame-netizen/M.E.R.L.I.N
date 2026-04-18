@@ -624,6 +624,33 @@
       ],
       "description": "SessionStart hook, Director agent, setup script, routine prompt for /schedule hourly.",
       "completed_at": "2026-04-16"
+    },
+    {
+      "id": "BUGFIX-FOREST-STORE",
+      "phase": 3,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix BroceliandeForest3D using dead /root/GameManager path instead of _find_store()",
+      "agent": "bug_hunter",
+      "files": [
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
+      "description": "HUD update and encounter damage/heal were referencing /root/GameManager (wrong singleton name). Changed to _find_store() which correctly finds MerlinStore. Fixed state key access to use state.run.life_essence.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "RETRO-SHADER-PS1",
+      "phase": 5,
+      "priority": 3,
+      "status": "completed",
+      "title": "Enhanced PS1/CRT retro_screen.gdshader — chromatic aberration, Bayer dithering, phosphor bleed",
+      "agent": "shader_worker",
+      "files": [
+        "resources/shaders/retro_screen.gdshader",
+        "shaders/ps1_material.gdshader"
+      ],
+      "description": "Full rewrite of retro_screen.gdshader with authentic PS1/CRT effects: chromatic aberration (RGB convergence), phosphor bleed (horizontal color spread), Bayer 4x4 ordered dithering, warm phosphor tint, desaturation, interlace field flicker. ps1_material.gdshader cleaned with nearest-neighbor filtering and removed broken affine warp.",
+      "completed_at": "2026-04-18"
     }
   ]
 }

@@ -932,12 +932,12 @@ func _update_hud() -> void:
 
 	# Update WalkHUD (PV + Ogham + Essences)
 	if _walk_hud:
-		var store: Node = get_node_or_null("/root/GameManager")
-		if store:
-			var run: Dictionary = store.get("run_state") as Dictionary if store.has_method("get") else {}
+		var hud_store: Node = _find_store()
+		if hud_store and hud_store.state.has("run"):
+			var run: Dictionary = hud_store.state.get("run", {}) as Dictionary
 			var life: int = int(run.get("life_essence", 100))
 			_walk_hud.update_pv(life, 100)
-			var essences: int = int(run.get("biome_currency", 0))
+			var essences: int = int(run.get("faveurs", 0))
 			_walk_hud.update_essences(essences)
 		# Default ogham (Beith starter)
 		if _walk_hud.has_method("update_ogham"):
@@ -1101,9 +1101,9 @@ func _on_encounter_reached(enc_idx: int) -> void:
 		print("[Forest3D] Card resolved: choice=%d score=%d" % [choice_idx, score])
 
 		# Apply effects: heal/damage based on score (no per-card drain — director decision)
-		var store: Node = get_node_or_null("/root/GameManager")
-		if store and store.has_method("get") and store.get("run_state") is Dictionary:
-			var run: Dictionary = store.get("run_state") as Dictionary
+		var enc_store: Node = _find_store()
+		if enc_store and enc_store.state.has("run"):
+			var run: Dictionary = enc_store.state.get("run", {}) as Dictionary
 			var life: int = int(run.get("life_essence", 100))
 			if score >= 80:
 				life += 5  # Reussite bonus

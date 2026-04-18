@@ -1,8 +1,11 @@
 {
-  "state": "running",
-  "objective": "Mobile UI/UX responsive — MerlinResponsive + adaptive layouts across 8 scenes",
-  "workers": [],
-  "updated_at": "2026-04-18T14:30:00.000Z",
-  "cycle": 5,
-  "checkpoint": "All 18/18 bugs fixed. Mobile responsive system deployed: MerlinResponsive autoload, 6 scenes adapted (MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome). Day/night cycle in 3 scenes. Playtest: 6/6 invariants pass. Godot Export #152 deploying to Vercel."
+  "state": "complete",
+  "objective": "Cycle 6: Bug hunt (GameManager→MerlinStore) + PS1/CRT retro shader enhancement",
+  "workers": [
+    {"name": "bug_hunter", "task": "BUGFIX-FOREST-STORE", "status": "done"},
+    {"name": "shader_worker", "task": "RETRO-SHADER-PS1", "status": "done"}
+  ],
+  "updated_at": "2026-04-18T16:00:00.000Z",
+  "cycle": 6,
+  "checkpoint": "Bug fixed: BroceliandeForest3D HUD and encounter effects now use _find_store() instead of dead /root/GameManager path. retro_screen.gdshader enhanced with PS1 effects (chromatic aberration, phosphor bleed, Bayer dithering, warm palette, interlacing). ps1_material.gdshader cleaned up (vertex snap, UV snap, color banding, nearest filtering)."
 }

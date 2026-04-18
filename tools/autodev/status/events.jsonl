@@ -55,4 +55,7 @@
 {"type":"task_completed","timestamp":"2026-04-18T14:30:00.000Z","data":{"taskId":"MOBILE-RESPONSIVE-2","agent":"ui_worker","summary":"6 scenes adapted: MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome"}}
 {"type":"task_completed","timestamp":"2026-04-18T14:20:00.000Z","data":{"taskId":"DAYNIGHT-SCENES","agent":"daynight_worker","summary":"Day/night wired in HubAntre, TransitionBiome, BroceliandeForest3D"}}
 {"type":"state_change","timestamp":"2026-04-18T14:30:00.000Z","data":{"from":"DISPATCH","to":"VALIDATE","cycleId":"CYCLE-2026-04-18-005"}}
->>>>>>> 0e1a812 (chore(status): sync Mission Control data — 18/18 bugs, mobile responsive, day/night)
+{"ts":"2026-04-18T16:00:00.000Z","type":"cycle_start","cycle":6,"detail":"Cycle 6: Bug hunt on cycle 5 files + PS1/CRT retro shader enhancement"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"BUGFIX-FOREST-STORE: Fixed /root/GameManager→_find_store() in BroceliandeForest3D (HUD + encounter effects)"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"task_done","cycle":6,"detail":"RETRO-SHADER-PS1: Enhanced retro_screen.gdshader with chromatic aberration, Bayer dithering, phosphor bleed, warm tint, interlacing"}
+{"ts":"2026-04-18T16:00:00.000Z","type":"cycle_end","cycle":6,"detail":"Cycle 6 complete: 1 HIGH bug fixed, 2 shaders enhanced (retro_screen + ps1_material). 3 files, ~95 lines. 15 total bugs fixed."}
