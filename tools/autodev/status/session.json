@@ -1,8 +1,8 @@
 {
   "state": "running",
-  "objective": "Mobile UI/UX responsive — MerlinResponsive + adaptive layouts across 8 scenes",
+  "objective": "Cycle 6 Bug Hunt — Static analysis of cycle 5 files (mobile responsive + day/night)",
   "workers": [],
-  "updated_at": "2026-04-18T14:30:00.000Z",
-  "cycle": 5,
-  "checkpoint": "All 18/18 bugs fixed. Mobile responsive system deployed: MerlinResponsive autoload, 6 scenes adapted (MenuPrincipal, HubAntre, Calendar, Collection, IntroQuiz, TransitionBiome). Day/night cycle in 3 scenes. Playtest: 6/6 invariants pass. Godot Export #152 deploying to Vercel."
+  "updated_at": "2026-04-18T16:00:00.000Z",
+  "cycle": 6,
+  "checkpoint": "Bug hunt on cycle 5 files. 3 bugs found and fixed: BUG-019 Calendar season mapping inconsistency, BUG-020 Calendar dict dot notation, BUG-021 HubAntre store variable shadowing. 2 files modified, 14 lines changed."
 }
