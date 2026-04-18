@@ -1,33 +1,39 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
+  "cycle": 5,
+  "timestamp": "2026-04-18T10:00:00Z",
   "bugs_fixed_this_cycle": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
+      "id": "BUGFIX-MED-14",
+      "files": [
+        "scripts/test/test_game_systems.gd",
+        "scripts/test/test_reputation_system.gd",
+        "scripts/test/test_reputation_unit.gd"
+      ],
+      "description": "15 tests hardcoded 0.0 as initial faction value but FACTION_SCORE_START was changed to 20 (Neutre tier). Tests now reference MerlinConstants.FACTION_SCORE_START dynamically.",
       "status": "FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-11",
+      "files": ["scripts/merlin/merlin_effect_engine.gd"],
+      "description": "pick_minigame_for_field already uses randi() for randomization. Bug was filed against old hash-based code that was already replaced. Verified as already-fixed.",
+      "status": "ALREADY_FIXED"
     }
   ],
+  "dead_code_removed": {
+    "id": "DEAD-SCENES-1",
+    "files_deleted": [
+      "scripts/IntroPersonalityQuiz.gd",
+      "scripts/SceneRencontreMerlin.gd",
+      "scripts/quiz_data.gd",
+      "scripts/rencontre_dialogue.gd",
+      "scripts/rencontre_llm.gd",
+      "scenes/IntroPersonalityQuiz.tscn",
+      "scenes/SceneRencontreMerlin.tscn"
+    ],
+    "lines_removed": 2044,
+    "rationale": "Creator directive q-20260414-005. Scenes not in active flow (IntroCeltOS → Menu3DPC → ParchmentPreRun/HubAntre)."
+  },
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "All known bugs resolved. 15 total bugs fixed + 1 verified-already-fixed across 5 cycles. 2044 lines of dead scene code removed. Codebase clean for feature development."
 }

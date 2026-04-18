@@ -2,7 +2,7 @@
   "state": "running",
   "objective": "Autonomous pipeline — Cycle Director hourly via Claude Routines",
   "workers": [],
-  "updated_at": "2026-04-17T12:00:00.000Z",
-  "cycle": 4,
-  "checkpoint": "All MEDIUM bugs resolved (BUG-009/010/012/013). 0 known bugs remaining. Next: playtest + bible audit, then feature work."
+  "updated_at": "2026-04-18T10:00:00.000Z",
+  "cycle": 5,
+  "checkpoint": "Cycle 5: BUGFIX-MED-14 fixed (15 tests aligned with FACTION_SCORE_START=20). Dead scenes removed (IntroPersonalityQuiz + SceneRencontreMerlin, -2044 lines). BUGFIX-MED-11 verified already fixed. Next: feature work or scene flow refactor."
 }

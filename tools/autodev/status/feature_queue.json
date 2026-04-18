@@ -514,26 +514,50 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
-        "scripts/merlin/merlin_reputation_system.gd",
-        "scripts/merlin/merlin_save_system.gd"
+        "scripts/test/test_game_systems.gd",
+        "scripts/test/test_reputation_system.gd",
+        "scripts/test/test_reputation_unit.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-18",
+      "notes": "FACTION_SCORE_START was already 20 in constants. Fixed 15 tests across 3 test files that hardcoded 0.0 instead of using MerlinConstants.FACTION_SCORE_START."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-18",
+      "notes": "Verified already fixed: pick_minigame_for_field uses randi() not hash(). Bug was filed against old code."
+    },
+    {
+      "id": "DEAD-SCENES-1",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Remove dead IntroPersonalityQuiz + SceneRencontreMerlin",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/SceneRencontreMerlin.gd",
+        "scripts/quiz_data.gd",
+        "scripts/rencontre_dialogue.gd",
+        "scripts/rencontre_llm.gd",
+        "scenes/IntroPersonalityQuiz.tscn",
+        "scenes/SceneRencontreMerlin.tscn"
+      ],
+      "description": "Creator directive q-20260414-005. Scenes not in active flow. 7 scripts + 2 scenes removed (-2044 lines).",
+      "completed_at": "2026-04-18"
     },
     {
       "id": "TEST-PLAYTEST-1",
