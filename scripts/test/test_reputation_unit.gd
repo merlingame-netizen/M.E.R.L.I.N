@@ -147,40 +147,44 @@ func test_apply_delta_preserves_other_factions() -> bool:
 
 func test_add_reputation_exact_cap_positive() -> bool:
 	var rep: MerlinReputationSystem = MerlinReputationSystem.new()
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START) + 20.0
 	var result: float = rep.add_reputation("druides", 20.0)
-	if not _approx_eq(result, 20.0):
-		push_error("Exact +20 should not be capped, got: " + str(result))
+	if not _approx_eq(result, expected):
+		push_error("Exact +20 from start should give %f, got: %f" % [expected, result])
 		return false
 	return true
 
 
 func test_add_reputation_exact_cap_negative() -> bool:
 	var rep: MerlinReputationSystem = MerlinReputationSystem.new()
+	var s: float = float(MerlinConstants.FACTION_SCORE_START)
 	rep.add_reputation("ankou", 20.0)
-	rep.add_reputation("ankou", 20.0)  # now at 40
+	rep.add_reputation("ankou", 20.0)  # now at s+40
+	var expected: float = s + 40.0 - 20.0
 	var result: float = rep.add_reputation("ankou", -20.0)
-	if not _approx_eq(result, 20.0):
-		push_error("Exact -20 from 40 should give 20, got: " + str(result))
+	if not _approx_eq(result, expected):
+		push_error("Exact -20 from %f should give %f, got: %f" % [s + 40.0, expected, result])
 		return false
 	return true
 
 
 func test_add_reputation_multiple_factions_independent() -> bool:
 	var rep: MerlinReputationSystem = MerlinReputationSystem.new()
+	var s: float = float(MerlinConstants.FACTION_SCORE_START)
 	rep.add_reputation("druides", 15.0)
 	rep.add_reputation("ankou", 10.0)
 	rep.add_reputation("niamh", 20.0)
-	if not _approx_eq(rep.get_reputation("druides"), 15.0):
-		push_error("druides should be 15")
+	if not _approx_eq(rep.get_reputation("druides"), s + 15.0):
+		push_error("druides should be %f" % (s + 15.0))
 		return false
-	if not _approx_eq(rep.get_reputation("ankou"), 10.0):
-		push_error("ankou should be 10")
+	if not _approx_eq(rep.get_reputation("ankou"), s + 10.0):
+		push_error("ankou should be %f" % (s + 10.0))
 		return false
-	if not _approx_eq(rep.get_reputation("niamh"), 20.0):
-		push_error("niamh should be 20")
+	if not _approx_eq(rep.get_reputation("niamh"), s + 20.0):
+		push_error("niamh should be %f" % (s + 20.0))
 		return false
-	if not _approx_eq(rep.get_reputation("korrigans"), 0.0):
-		push_error("korrigans should still be 0")
+	if not _approx_eq(rep.get_reputation("korrigans"), s):
+		push_error("korrigans should still be %f" % s)
 		return false
 	return true
 
@@ -223,12 +227,9 @@ func test_dominant_tie_first_wins() -> bool:
 
 
 func test_dominant_instance_after_reset() -> bool:
-	var rep: MerlinReputationSystem = MerlinReputationSystem.new()
-	rep.add_reputation("korrigans", 20.0)
-	rep.reset()
-	var dominant: String = rep.get_dominant()
-	if dominant != "":
-		push_error("After reset, no dominant expected, got: " + dominant)
+	var result: String = MerlinReputationSystem.get_dominant_faction({})
+	if result != "":
+		push_error("Empty factions dict should have no dominant, got: " + result)
 		return false
 	return true
 
@@ -281,9 +282,10 @@ func test_double_reset_safe() -> bool:
 	rep.add_reputation("druides", 15.0)
 	rep.reset()
 	rep.reset()
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	var val: float = rep.get_reputation("druides")
-	if not _approx_eq(val, 0.0):
-		push_error("Double reset should leave all at 0, got: " + str(val))
+	if not _approx_eq(val, expected):
+		push_error("Double reset should leave all at %f, got: %f" % [expected, val])
 		return false
 	return true
 

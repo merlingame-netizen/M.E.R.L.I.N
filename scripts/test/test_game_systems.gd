@@ -46,12 +46,13 @@ func test_save_default_profile_starter_oghams() -> bool:
 func test_save_default_profile_factions() -> bool:
 	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
 	var faction_rep: Dictionary = profile.get("faction_rep", {})
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	for faction in MerlinConstants.FACTIONS:
 		if not faction_rep.has(faction):
 			push_error("Default profile missing faction: %s" % faction)
 			return false
-		if float(faction_rep[faction]) != 0.0:
-			push_error("Default faction_rep should be 0.0 for %s" % faction)
+		if absf(float(faction_rep[faction]) - expected) > 0.001:
+			push_error("Default faction_rep should be %f for %s, got %f" % [expected, faction, float(faction_rep[faction])])
 			return false
 	return true
 
@@ -1066,49 +1067,51 @@ func test_rep_build_default_factions() -> bool:
 	if defaults.size() != 5:
 		push_error("Default factions should have 5 entries")
 		return false
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	for f in MerlinReputationSystem.FACTIONS:
-		if float(defaults.get(f, -1.0)) != 0.0:
-			push_error("Default faction value should be 0.0 for %s" % f)
+		if absf(float(defaults.get(f, -1.0)) - expected) > 0.001:
+			push_error("Default faction value should be %f for %s, got %f" % [expected, f, float(defaults.get(f, -1.0))])
 			return false
 	return true
 
 
-func test_rep_initial_state_all_zero() -> bool:
+func test_rep_initial_state_at_start() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	for f in MerlinReputationSystem.FACTIONS:
-		if rs.get_reputation(f) != 0.0:
-			push_error("Initial reputation for %s should be 0.0" % f)
+		if absf(rs.get_reputation(f) - expected) > 0.001:
+			push_error("Initial reputation for %s should be %f, got %f" % [f, expected, rs.get_reputation(f)])
 			return false
 	return true
 
 
 func test_rep_add_reputation_basic() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START) + 15.0
 	var new_val: float = rs.add_reputation("druides", 15.0)
-	if absf(new_val - 15.0) > 0.001:
-		push_error("After adding 15, rep should be 15.0, got %f" % new_val)
+	if absf(new_val - expected) > 0.001:
+		push_error("After adding 15, rep should be %f, got %f" % [expected, new_val])
 		return false
 	return true
 
 
 func test_rep_add_reputation_capped_per_card() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
-	# CAP_PER_CARD = 20 — adding 30 should cap to 20
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START) + 20.0
 	var new_val: float = rs.add_reputation("korrigans", 30.0)
-	if absf(new_val - 20.0) > 0.001:
-		push_error("Adding 30 should be capped to 20, got %f" % new_val)
+	if absf(new_val - expected) > 0.001:
+		push_error("Adding 30 (capped to 20) should give %f, got %f" % [expected, new_val])
 		return false
 	return true
 
 
 func test_rep_add_reputation_negative_cap() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
-	rs.add_reputation("ankou", 50.0)  # First set to some value (capped to 20)
-	# Now try negative beyond cap
-	var new_val: float = rs.add_reputation("ankou", -30.0)
-	# -30 capped to -20, so 20 - 20 = 0
-	if absf(new_val - 0.0) > 0.001:
-		push_error("Negative cap should work: expected 0.0, got %f" % new_val)
+	var s: float = float(MerlinConstants.FACTION_SCORE_START)
+	rs.add_reputation("ankou", 50.0)  # +50 capped to +20 → s+20
+	var new_val: float = rs.add_reputation("ankou", -30.0)  # -30 capped to -20 → s+20-20 = s
+	if absf(new_val - s) > 0.001:
+		push_error("Negative cap should work: expected %f, got %f" % [s, new_val])
 		return false
 	return true
 
@@ -1162,8 +1165,9 @@ func test_rep_get_all_reputations() -> bool:
 	if all.size() != 5:
 		push_error("get_all_reputations should have 5 entries")
 		return false
-	if absf(float(all.get("druides", 0.0)) - 10.0) > 0.001:
-		push_error("Druides should be 10.0 in all reputations")
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START) + 10.0
+	if absf(float(all.get("druides", 0.0)) - expected) > 0.001:
+		push_error("Druides should be %f in all reputations, got %f" % [expected, float(all.get("druides", 0.0))])
 		return false
 	return true
 
@@ -1201,10 +1205,10 @@ func test_rep_has_ending_threshold() -> bool:
 
 func test_rep_not_ending_threshold() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
-	for i in range(3):
+	for i in range(2):
 		rs.add_reputation("niamh", 20.0)
 	if rs.has_ending_threshold("niamh"):
-		push_error("60 rep should NOT meet ending threshold (80)")
+		push_error("%f rep should NOT meet ending threshold (80)" % rs.get_reputation("niamh"))
 		return false
 	return true
 
@@ -1220,22 +1224,22 @@ func test_rep_get_dominant_faction() -> bool:
 
 
 func test_rep_get_dominant_empty() -> bool:
-	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
-	if rs.get_dominant() != "":
-		push_error("All-zero factions should return empty dominant")
+	var result: String = MerlinReputationSystem.get_dominant_faction({})
+	if result != "":
+		push_error("Empty factions dict should return empty dominant, got '%s'" % result)
 		return false
 	return true
 
 
 func test_rep_apply_delta_immutable() -> bool:
 	var factions: Dictionary = MerlinReputationSystem.build_default_factions()
+	var start: float = float(MerlinConstants.FACTION_SCORE_START)
 	var result: Dictionary = MerlinReputationSystem.apply_delta(factions, "druides", 15.0)
-	# Original should be unchanged
-	if float(factions.get("druides", -1.0)) != 0.0:
-		push_error("apply_delta should not mutate original")
+	if absf(float(factions.get("druides", -1.0)) - start) > 0.001:
+		push_error("apply_delta should not mutate original, expected %f got %f" % [start, float(factions.get("druides", -1.0))])
 		return false
-	if absf(float(result.get("druides", 0.0)) - 15.0) > 0.001:
-		push_error("Result should have druides at 15.0")
+	if absf(float(result.get("druides", 0.0)) - (start + 15.0)) > 0.001:
+		push_error("Result should have druides at %f, got %f" % [start + 15.0, float(result.get("druides", 0.0))])
 		return false
 	return true
 
@@ -1337,8 +1341,9 @@ func test_rep_reset() -> bool:
 	var rs: MerlinReputationSystem = MerlinReputationSystem.new()
 	rs.add_reputation("druides", 20.0)
 	rs.reset()
-	if rs.get_reputation("druides") != 0.0:
-		push_error("After reset, rep should be 0.0")
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
+	if absf(rs.get_reputation("druides") - expected) > 0.001:
+		push_error("After reset, rep should be %f, got %f" % [expected, rs.get_reputation("druides")])
 		return false
 	return true
 

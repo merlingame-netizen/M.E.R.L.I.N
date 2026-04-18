@@ -191,9 +191,10 @@ func test_build_default_factions() -> bool:
 	var factions: Dictionary = MerlinReputationSystem.build_default_factions()
 	if factions.size() != 5:
 		return _fail("default factions: expected 5, got %d" % factions.size())
+	var expected: float = float(MerlinConstants.FACTION_SCORE_START)
 	for faction in MerlinReputationSystem.FACTIONS:
-		if not factions.has(faction) or factions[faction] != 0.0:
-			return _fail("default factions: %s missing or non-zero" % faction)
+		if not factions.has(faction) or absf(float(factions[faction]) - expected) > 0.001:
+			return _fail("default factions: %s missing or not at %f" % [faction, expected])
 	return true
 
 
