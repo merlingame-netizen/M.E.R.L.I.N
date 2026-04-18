@@ -657,6 +657,20 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "CARD-OVERLAY-V2",
+      "phase": 5,
+      "priority": 3,
+      "status": "completed",
+      "title": "Cinematic encounter card overlay v2 — CRT/PSX typewriter + minigame start fix",
+      "agent": "ui_worker",
+      "files": [
+        "scripts/ui/encounter_card_overlay.gd",
+        "scripts/ui/screen_dither_layer.gd"
+      ],
+      "description": "Rewrote encounter card overlay: typewriter text reveals, MerlinVisual CRT_PALETTE styling, responsive fonts, touch targets, field hint, staggered buttons. Fixed HIGH bug: minigame.start() never called. Fixed LOW bug: set_color_levels wrong param in PSX mode.",
+      "completed_at": "2026-04-18"
     }
   ]
 }
