@@ -175,6 +175,7 @@ var _fauna_bubble: RefCounted  # BrocFaunaBubble
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _gameplay_active: bool = false  # true when LLM event system is wired
 var _saved_crt_preset: String = "medium"
+var _saved_render_mode: int = -1
 var _crt_was_visible: bool = true
 
 # Extracted modules
@@ -209,6 +210,8 @@ func _ready() -> void:
 		if child is CanvasLayer:
 			if child.has_method("get_crt_preset"):
 				_saved_crt_preset = child.get_crt_preset()
+			if child.has_method("get_render_mode"):
+				_saved_render_mode = child.get_render_mode()
 			_crt_was_visible = child.visible
 			child.visible = false
 			for sub in child.get_children():
@@ -396,10 +399,17 @@ func _on_window_resized() -> void:
 
 func _exit_tree() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	# Restore CRT post-process for other scenes
 	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
 	if crt_layer:
-		if crt_layer.has_method("set_crt_preset"):
+		if _saved_render_mode >= 0 and crt_layer.has_method("set_render_mode"):
+			crt_layer.set_render_mode(_saved_render_mode)
+			if _saved_render_mode == 1:
+				if crt_layer.has_method("set_psx_preset"):
+					crt_layer.set_psx_preset(_saved_crt_preset)
+			else:
+				if crt_layer.has_method("set_crt_preset"):
+					crt_layer.set_crt_preset(_saved_crt_preset)
+		elif crt_layer.has_method("set_crt_preset"):
 			crt_layer.set_crt_preset(_saved_crt_preset)
 		if crt_layer.has_method("set_enabled"):
 			crt_layer.set_enabled(_crt_was_visible)

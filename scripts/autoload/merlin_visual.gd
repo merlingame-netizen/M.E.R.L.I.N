@@ -289,7 +289,7 @@ static func create_biome_palette_texture(biome: String) -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 
-## Apply biome CRT profile to ScreenDither (CRTLayer autoload)
+## Apply biome visual profile to ScreenDither (CRTLayer autoload)
 static func apply_biome_crt(biome: String) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
@@ -297,11 +297,13 @@ static func apply_biome_crt(biome: String) -> void:
 	var crt: Node = tree.root.get_node_or_null("ScreenDither")
 	if crt == null:
 		return
+	if crt.has_method("set_biome"):
+		crt.set_biome(biome)
 	var palette: Array = BIOME_CRT_PALETTES.get(biome, BIOME_CRT_PALETTES["broceliande"])
 	var profile: Dictionary = BIOME_CRT_PROFILES.get(biome, BIOME_CRT_PROFILES["broceliande"])
-	# Set phosphor tint to biome's mid-bright color (index 5)
+	if crt.has_method("get_render_mode") and crt.get_render_mode() == 1:
+		return
 	crt.set_phosphor_tint(palette[5])
-	# Apply biome distortion profile
 	for param_name: String in profile:
 		crt.set_shader_parameter(param_name, profile[param_name])
 
