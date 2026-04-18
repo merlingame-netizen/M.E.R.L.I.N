@@ -49,3 +49,8 @@
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-012: Dict dot notation→get() in ollama_backend.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"task_done","cycle":4,"detail":"BUG-013: ClassDB dead code simplified in merlin_store.gd"}
 {"ts":"2026-04-17T12:00:00.000Z","type":"cycle_end","cycle":4,"detail":"Cycle 4 complete: 4 MEDIUM bugs fixed. 0 known bugs remaining. 14 total bugs fixed across 4 cycles. Codebase clean for features."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"cycle_start","cycle":5,"detail":"Cycle 5: First feature cycle. Scene cleanup + MerlinTrustSystem. Domain: Code Architecture."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"SCENE-CLEANUP-1: Deleted 7 dead onboarding files (IntroPersonalityQuiz, SceneRencontreMerlin, quiz_data, rencontre_dialogue, rencontre_llm + 2 .tscn). Human directive q-20260414-005."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"FEATURE-TRUST-1: Created merlin_trust_system.gd — Confiance Merlin T0-T3, 0-100 clamped, mid-run changes, LLM context generation, promise-linked deltas."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"task_done","cycle":5,"detail":"BUGFIX-MED-14/11: Verified already-fixed. FACTION_SCORE_START=20, pick_minigame uses randi()."}
+{"ts":"2026-04-18T10:00:00.000Z","type":"cycle_end","cycle":5,"detail":"Cycle 5 complete: 7 dead files deleted, MerlinTrustSystem implemented, 2 bugs verified fixed. 8 files changed, ~120 lines. First feature cycle."}

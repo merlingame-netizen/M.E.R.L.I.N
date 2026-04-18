@@ -514,26 +514,62 @@
       "id": "BUGFIX-MED-14",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix faction default 0 vs 20 mismatch (BUG-014/015)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_reputation_system.gd",
         "scripts/merlin/merlin_save_system.gd"
       ],
-      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default."
+      "description": "build_default_factions initializes to 0 (Hostile) instead of 20 (Neutral). Same in save default.",
+      "completed_at": "2026-04-18",
+      "notes": "Verified already-fixed: FACTION_SCORE_START=20 in merlin_constants.gd. Both reputation_system and save_system reference this constant correctly."
     },
     {
       "id": "BUGFIX-MED-11",
       "phase": 3,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Fix deterministic minigame selection (BUG-011)",
       "agent": "godot_expert",
       "files": [
         "scripts/merlin/merlin_effect_engine.gd"
       ],
-      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization."
+      "description": "pick_minigame_for_field uses field.hash()%size always returning same minigame. Add randomization.",
+      "completed_at": "2026-04-18",
+      "notes": "Verified already-fixed: pick_minigame_for_field() uses randi() % size for random selection."
+    },
+    {
+      "id": "SCENE-CLEANUP-1",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Delete dead onboarding scenes (IntroPersonalityQuiz + SceneRencontreMerlin)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/SceneRencontreMerlin.gd",
+        "scripts/quiz_data.gd",
+        "scripts/rencontre_dialogue.gd",
+        "scripts/rencontre_llm.gd",
+        "scenes/IntroPersonalityQuiz.tscn",
+        "scenes/SceneRencontreMerlin.tscn"
+      ],
+      "description": "Human directive q-20260414-005: delete IntroPersonalityQuiz + SceneRencontreMerlin. Menu already routes to ParchmentPreRun. 7 files deleted (~79KB).",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "FEATURE-TRUST-1",
+      "phase": 3,
+      "priority": 3,
+      "status": "completed",
+      "title": "Implement MerlinTrustSystem (Confiance Merlin T0-T3)",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/merlin/merlin_trust_system.gd"
+      ],
+      "description": "Bible v2.4 s.6.3: Centralized trust management. 0-100 clamped, T0-T3 tiers, mid-run immediate changes, LLM context generation, promise integration deltas.",
+      "completed_at": "2026-04-18"
     },
     {
       "id": "TEST-PLAYTEST-1",

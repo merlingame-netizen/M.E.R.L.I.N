@@ -1,33 +1,20 @@
 {
   "agent": "cycle_director",
-  "cycle": 4,
-  "timestamp": "2026-04-17T12:00:00Z",
-  "bugs_fixed_this_cycle": [
+  "cycle": 5,
+  "timestamp": "2026-04-18T10:00:00Z",
+  "bugs_fixed_this_cycle": [],
+  "verified_already_fixed": [
     {
-      "id": "BUGFIX-MED-9",
-      "files": ["addons/merlin_ai/rag_manager.gd"],
-      "description": "RAG tension read from dead run.flux field instead of run.hidden.tension. Always returned default 40 instead of actual tension value.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-14",
+      "description": "Faction default 0 vs 20 mismatch — FACTION_SCORE_START already set to 20 in merlin_constants.gd L1143. Both merlin_reputation_system.gd and merlin_save_system.gd reference this constant correctly.",
+      "status": "ALREADY_FIXED"
     },
     {
-      "id": "BUGFIX-MED-10",
-      "files": ["addons/merlin_ai/merlin_ai.gd"],
-      "description": "Dead Souffle cost assignment (opt['cost']=1) in sequential pipeline step 4. Souffle system removed.",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-12",
-      "files": ["addons/merlin_ai/ollama_backend.gd"],
-      "description": "Dot notation dict access (entry.tag, entry.context_default) in configure_from_registry(). Fails silently in GDScript typed Dictionary. Changed to entry.get().",
-      "status": "FIXED"
-    },
-    {
-      "id": "BUGFIX-MED-13",
-      "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "ClassDB.class_exists('MerlinOmniscient') always false for GDScript classes. Dead code branch with ResourceLoader fallback. Simplified to direct instantiation.",
-      "status": "FIXED"
+      "id": "BUGFIX-MED-11",
+      "description": "Deterministic minigame selection — pick_minigame_for_field() in merlin_effect_engine.gd L806 already uses randi() % size for random selection. Bug report was based on older code.",
+      "status": "ALREADY_FIXED"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "All known bugs from the static analysis hunt are now resolved. 2 CRITICAL + 6 HIGH + 6 MEDIUM = 14 total bugs fixed across 4 cycles. Codebase is clean for feature development."
+  "overall_assessment": "Zero known bugs. 14 bugs fixed across cycles 1-4. 2 additional bugs verified already-fixed in cycle 5. Codebase clean."
 }
