@@ -113,15 +113,34 @@ jobs:
     if: github.ref == 'refs/heads/main'
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: web-export
           path: web-export/
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: web-export
-          vercel-args: '--prod'
+
+      - name: Prepare Vercel prebuilt output
+        run: |
+          mkdir -p .vercel/output/static
+          cp -r web-export/* .vercel/output/static/
+          cat > .vercel/output/config.json << 'EOF'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/(.*)", "dest": "/index.html" }
+            ],
+            "overrides": {}
+          }
+          EOF
+          sed -i 's/^          //' .vercel/output/config.json
+          echo "Prebuilt output ready: $(ls .vercel/output/static/)"
+
+      - name: Deploy prebuilt to Vercel
+        run: |
+          npm i -g vercel@latest
+          vercel deploy --prebuilt --prod --yes \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --scope=${{ secrets.VERCEL_ORG_ID }} 2>&1 || echo "::warning::Vercel deploy failed"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
