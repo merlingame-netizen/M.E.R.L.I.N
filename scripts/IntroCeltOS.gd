@@ -20,7 +20,7 @@ const LOGO_GRID := [
 # ═══════════════════════════════════════════════════════════════
 # Boot log pools — 12 picked randomly each launch
 # ═══════════════════════════════════════════════════════════════
-const BOOT_HEADER := "CELTOS v4.2 KERNEL — INITIATING MEMORY NODES"
+const BOOT_HEADER := "CELTOS v4.2 — INITIATING MEMORY NODES"
 
 const BOOT_LOG_POOL := [
 	"LOADING /dev/rune/18 ... [OK]",
