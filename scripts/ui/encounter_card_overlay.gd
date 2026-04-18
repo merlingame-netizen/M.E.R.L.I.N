@@ -1,11 +1,28 @@
 extends CanvasLayer
-## EncounterCardOverlay — Shows a narrative card with 3 choices over the frozen 3D scene.
-## Emits `card_resolved(choice_idx, score)` when the player picks and plays a minigame.
-## Self-destructs after resolution.
+## EncounterCardOverlay — CRT-styled narrative card with 3 choices.
+## Emits card_resolved(choice_idx, score) after minigame. Self-destructs.
 
 class_name EncounterCardOverlay
 
 signal card_resolved(choice_idx: int, score: int)
+
+const _FIELD_LABELS := {
+	"chance": "Chance", "bluff": "Eloquence", "observation": "Observation",
+	"logique": "Logique", "finesse": "Finesse", "vigueur": "Vigueur",
+	"esprit": "Esprit", "perception": "Perception", "neutre": "Intuition",
+}
+
+const _FIELD_COLORS := {
+	"chance": Color(1.0, 0.85, 0.3),
+	"bluff": Color(0.9, 0.5, 1.0),
+	"observation": Color(0.3, 0.85, 0.8),
+	"logique": Color(0.5, 0.7, 1.0),
+	"finesse": Color(1.0, 0.5, 0.3),
+	"vigueur": Color(1.0, 0.3, 0.3),
+	"esprit": Color(0.6, 1.0, 0.8),
+	"perception": Color(0.8, 0.8, 0.5),
+	"neutre": Color(0.6, 0.6, 0.6),
+}
 
 var _card_data: Dictionary = {}
 var _bg: ColorRect
@@ -13,6 +30,7 @@ var _panel: PanelContainer
 var _title_label: Label
 var _text_label: RichTextLabel
 var _buttons: Array[Button] = []
+var _field_hints: Array[Label] = []
 
 
 func _init(card: Dictionary = {}) -> void:
@@ -23,71 +41,68 @@ func _ready() -> void:
 	layer = 15
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
-	# SFX
 	if is_instance_valid(SFXManager):
 		SFXManager.play("card_draw")
 
-	# Dark overlay bg
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
+
 	_bg = ColorRect.new()
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_bg.color = Color(0.0, 0.02, 0.0, 0.0)
+	_bg.color = Color(pal.bg_deep.r, pal.bg_deep.g, pal.bg_deep.b, 0.0)
 	_bg.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_bg)
 
-	# Fade in
 	var fade_tw: Tween = create_tween()
-	fade_tw.tween_property(_bg, "color:a", 0.85, 0.6)
+	fade_tw.tween_property(_bg, "color:a", 0.88, 0.5)
 
-	var font: Font = MerlinVisual.get_font("terminal") if is_instance_valid(MerlinVisual) else null
-
-	# Card panel (centered)
 	_panel = PanelContainer.new()
-	_panel.anchor_left = 0.15; _panel.anchor_right = 0.85
-	_panel.anchor_top = 0.1; _panel.anchor_bottom = 0.9
+	_panel.anchor_left = 0.12; _panel.anchor_right = 0.88
+	_panel.anchor_top = 0.08; _panel.anchor_bottom = 0.92
 	_panel.offset_left = 0; _panel.offset_right = 0
 	_panel.offset_top = 0; _panel.offset_bottom = 0
-	var panel_style: StyleBoxFlat = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.02, 0.04, 0.02, 0.95)
-	panel_style.border_color = Color(0.12, 0.60, 0.24, 0.5)
-	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(8)
-	panel_style.set_content_margin_all(24)
-	_panel.add_theme_stylebox_override("panel", panel_style)
-	_panel.theme = Theme.new()
+	_panel.add_theme_stylebox_override("panel", MerlinVisual.make_card_panel_style(true))
+	_panel.modulate.a = 0.0
 	add_child(_panel)
+
+	var panel_tw: Tween = create_tween()
+	panel_tw.tween_property(_panel, "modulate:a", 1.0, 0.4).set_delay(0.15)
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 16)
+	vbox.add_theme_constant_override("separation", 12)
 	_panel.add_child(vbox)
 
 	# Title
 	_title_label = Label.new()
 	_title_label.text = str(_card_data.get("title", "Rencontre en Broceliande"))
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if font: _title_label.add_theme_font_override("font", font)
-	_title_label.add_theme_font_size_override("font_size", 28)
-	_title_label.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2))
+	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	MerlinVisual.apply_responsive_font(_title_label, 26, "terminal")
+	_title_label.add_theme_color_override("font_color", pal.amber)
 	vbox.add_child(_title_label)
 
-	# Separator
-	vbox.add_child(HSeparator.new())
+	var sep1: HSeparator = HSeparator.new()
+	sep1.add_theme_color_override("separator", pal.border)
+	vbox.add_child(sep1)
 
-	# Text body
+	# Body text
 	_text_label = RichTextLabel.new()
 	_text_label.bbcode_enabled = false
 	_text_label.text = str(_card_data.get("text", "Les brumes s'ecartent..."))
 	_text_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_text_label.scroll_active = true
-	if font: _text_label.add_theme_font_override("normal_font", font)
-	_text_label.add_theme_font_size_override("normal_font_size", 16)
-	_text_label.add_theme_color_override("default_color", Color(0.2, 1.0, 0.4))
+	var body_font: Font = MerlinVisual.get_font("terminal")
+	if body_font:
+		_text_label.add_theme_font_override("normal_font", body_font)
+	_text_label.add_theme_font_size_override("normal_font_size", MerlinVisual.responsive_size(16))
+	_text_label.add_theme_color_override("default_color", pal.phosphor)
 	vbox.add_child(_text_label)
 
-	# Separator
-	vbox.add_child(HSeparator.new())
+	var sep2: HSeparator = HSeparator.new()
+	sep2.add_theme_color_override("separator", pal.border)
+	vbox.add_child(sep2)
 
-	# 3 Choice buttons
+	# Choice buttons with field hints
 	var choices: Array = _card_data.get("choices", []) as Array
 	if choices.is_empty():
 		choices = [
@@ -96,30 +111,46 @@ func _ready() -> void:
 			{"label": "Invoquer les esprits", "preview": "Mystique"},
 		]
 
+	var card_text: String = str(_card_data.get("text", ""))
+	var tags: Array = _card_data.get("tags", []) as Array
+
 	for i in mini(choices.size(), 3):
 		var choice: Dictionary = choices[i] if choices[i] is Dictionary else {"label": str(choices[i])}
+		var choice_label: String = str(choice.get("label", "..."))
+
+		var field: String = MiniGameRegistry.detect_field(
+			card_text + " " + choice_label,
+			str(choice.get("field", "")),
+			tags
+		)
+
+		var row: VBoxContainer = VBoxContainer.new()
+		row.add_theme_constant_override("separation", 2)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 		var btn: Button = Button.new()
-		btn.text = str(choice.get("label", "..."))
-		btn.custom_minimum_size = Vector2(0, 48)
+		btn.text = choice_label
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if font: btn.add_theme_font_override("font", font)
-		btn.add_theme_font_size_override("font_size", 18)
-		btn.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4))
-		btn.add_theme_color_override("font_hover_color", Color(1.0, 0.75, 0.2))
-		var btn_style: StyleBoxFlat = StyleBoxFlat.new()
-		btn_style.bg_color = Color(0.03, 0.06, 0.03, 0.8)
-		btn_style.border_color = Color(0.12, 0.60, 0.24, 0.3)
-		btn_style.set_border_width_all(1)
-		btn_style.set_corner_radius_all(4)
-		btn_style.set_content_margin_all(8)
-		btn.add_theme_stylebox_override("normal", btn_style)
-		var hover_s: StyleBoxFlat = btn_style.duplicate()
-		hover_s.border_color = Color(1.0, 0.75, 0.2, 0.5)
-		hover_s.bg_color = Color(0.05, 0.08, 0.03, 0.9)
-		btn.add_theme_stylebox_override("hover", hover_s)
+		var accent: Color = _FIELD_COLORS.get(field, pal.phosphor_dim)
+		MerlinVisual.apply_celtic_option_theme(btn, accent)
+		MerlinVisual.apply_responsive_font(btn, 17, "terminal")
 		btn.pressed.connect(_on_choice.bind(i))
-		vbox.add_child(btn)
+		row.add_child(btn)
 		_buttons.append(btn)
+
+		var hint: Label = Label.new()
+		hint.text = "  %s" % _FIELD_LABELS.get(field, field)
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		hint.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(11))
+		hint.add_theme_color_override("font_color", Color(accent.r, accent.g, accent.b, 0.6))
+		row.add_child(hint)
+		_field_hints.append(hint)
+
+		row.modulate.a = 0.0
+		vbox.add_child(row)
+
+		var row_tw: Tween = create_tween()
+		row_tw.tween_property(row, "modulate:a", 1.0, 0.3).set_delay(0.4 + i * 0.12)
 
 
 func _on_choice(idx: int) -> void:
@@ -131,35 +162,46 @@ func _on_choice(idx: int) -> void:
 	if idx < choices.size() and choices[idx] is Dictionary:
 		choice = choices[idx] as Dictionary
 
-	# Try to launch a real minigame via MerlinMiniGameSystem
-	# Detect lexical field from card text → launch matching minigame
 	var card_text: String = str(_card_data.get("text", "")) + " " + str(choice.get("label", ""))
-	var field: String = MiniGameRegistry.detect_field(card_text)
+	var tags: Array = _card_data.get("tags", []) as Array
+	var field: String = MiniGameRegistry.detect_field(card_text, str(choice.get("field", "")), tags)
 	var minigame: MiniGameBase = MiniGameRegistry.create_minigame(field, 5)
 
 	var score: int = 0
 	if minigame:
-		print("[EncounterCard] Launching minigame: %s (field: %s)" % [minigame.get_class(), field])
 		add_child(minigame)
-		# Wait for minigame completion
+		minigame.start()
 		var result: Dictionary = await minigame.game_completed
 		score = int(result.get("score", 50))
 		minigame.queue_free()
 	else:
-		# Fallback: random score if no minigame available
 		score = randi_range(40, 95)
 
-	print("[EncounterCard] Choice %d → score %d (field: %s)" % [idx, score, field])
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
 
-	# Show result with tier label
-	var tier: String = "Echec critique" if score < 20 else ("Echec" if score < 50 else ("Reussite partielle" if score < 80 else ("Reussite!" if score < 95 else "Reussite critique!")))
-	var tier_color: Color = Color(1.0, 0.2, 0.15) if score < 50 else (Color(1.0, 0.75, 0.2) if score < 80 else Color(0.2, 1.0, 0.4))
+	# Result tier
+	var tier: String
+	var tier_color: Color
+	if score >= 95:
+		tier = "Reussite critique!"
+		tier_color = pal.cyan_bright
+	elif score >= 80:
+		tier = "Reussite!"
+		tier_color = pal.success
+	elif score >= 50:
+		tier = "Reussite partielle"
+		tier_color = pal.amber
+	elif score >= 20:
+		tier = "Echec"
+		tier_color = pal.amber_dim
+	else:
+		tier = "Echec critique"
+		tier_color = pal.danger
 
-	_title_label.text = "%s — %d/100" % [tier, score]
+	_title_label.text = "%s  %d/100" % [tier, score]
 	_title_label.add_theme_color_override("font_color", tier_color)
 
-	# Narrative response based on score
-	var response: String = ""
+	var response: String
 	if score >= 95:
 		response = "Les etoiles s'alignent. Le pouvoir des anciens coule en toi."
 	elif score >= 80:
@@ -173,7 +215,6 @@ func _on_choice(idx: int) -> void:
 
 	_text_label.text = str(choice.get("label", "")) + "\n\n" + response
 
-	# SFX based on tier
 	if is_instance_valid(SFXManager):
 		if score >= 80:
 			SFXManager.play("success")
@@ -182,17 +223,16 @@ func _on_choice(idx: int) -> void:
 		else:
 			SFXManager.play("neutral")
 
-	# Brief pulse effect on the background
 	var pulse_tw: Tween = create_tween()
 	pulse_tw.tween_property(_bg, "color:a", 0.92, 0.2)
-	pulse_tw.tween_property(_bg, "color:a", 0.85, 0.3)
+	pulse_tw.tween_property(_bg, "color:a", 0.88, 0.3)
 
 	await get_tree().create_timer(2.5).timeout
 
 	var fade_tw: Tween = create_tween()
 	fade_tw.tween_property(_bg, "color:a", 0.0, 0.5)
 	fade_tw.parallel().tween_property(_panel, "modulate:a", 0.0, 0.5)
-	fade_tw.tween_callback(func():
+	fade_tw.tween_callback(func() -> void:
 		card_resolved.emit(idx, score)
 		queue_free()
 	)
