@@ -1,10 +1,10 @@
 {
-  "cycle": 8,
-  "timestamp": "2026-04-18T20:00:00.000Z",
+  "cycle": 9,
+  "timestamp": "2026-04-18T22:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["CARD-OVERLAY-V2", "BUGFIX-MINIGAME-START", "BUGFIX-COLOR-LEVELS"],
-  "rationale": "Cycle 7 bug hunt found no CRITICAL/HIGH issues. Feature cycle: Enhanced encounter card overlay with CRT/PSX cinematic presentation. Found HIGH bug during review: minigame.start() was never called in encounter flow — minigames created but never started. Fixed. Also fixed LOW bug: set_color_levels used wrong shader parameter in PSX mode.",
-  "budget": {"files": 2, "lines": 211},
+  "tasks": ["BUGFIX-022-REAL", "BUGFIX-023-REAL", "BUGFIX-024-TIMEOUT", "FEAT-RUNE-PANEL"],
+  "rationale": "Cycle 8 bug hunt discovered that code fixes (BUG-022 minigame.start, BUG-023 color_levels) were never committed — only status files were pushed. Applied the actual fixes plus a 30s timeout safety on minigame await. Feature: added Rune activation panel to encounter card overlay, implementing the bible's 'Ogham activation before choice' requirement.",
+  "budget": {"files": 2, "lines": 180},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 8 files (encounter_card_overlay.gd). Then: Ogham activation UI during card encounters, or core loop playtest simulation."
+  "next_cycle_plan": "Bug hunt on cycle 9 rune panel code. Then: implement ogham effects visible during minigame (reveal options, predict next card), or core loop playtest simulation."
 }

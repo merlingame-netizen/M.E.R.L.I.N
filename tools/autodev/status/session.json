@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 8 Feature — Cinematic encounter card overlay v2 + minigame start fix",
+  "objective": "Cycle 9 — Bug hunt cycle 8 + Rune activation panel in encounter card",
   "workers": [],
-  "updated_at": "2026-04-18T20:00:00.000Z",
-  "cycle": 8,
-  "checkpoint": "EncounterCardOverlay v2: typewriter title+body, CRT_PALETTE styling, MerlinVisual style helpers, responsive sizes, touch targets, field hint label, staggered buttons. BUG FIX: minigame.start() was never called (minigames never started). BUG FIX: set_color_levels wrong param in PSX mode. 2 files modified, 211 lines changed."
+  "updated_at": "2026-04-18T22:00:00.000Z",
+  "cycle": 9,
+  "checkpoint": "Bug hunt: BUG-022 minigame.start() ACTUALLY committed (was missing from cycle 8 push), BUG-023 set_color_levels PSX routing ACTUALLY committed, BUG-024 minigame 30s timeout added. Feature: Rune activation panel in encounter card overlay — player can activate 1 ogham before choosing, buttons disabled during rune phase, ogham modifiers passed to minigame. dispatch() API fixed (Dict not String). 2 files modified."
 }

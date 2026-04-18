@@ -65,3 +65,10 @@
 {"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-023 LOW: set_color_levels wrong param for PSX mode — fixed"}
 {"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"CARD-OVERLAY-V2: Cinematic CRT/PSX encounter card with typewriter, staggered buttons, field hint"}
 {"ts":"2026-04-18T20:00:00.000Z","type":"cycle_end","cycle":8,"detail":"Cycle 8 complete: 1 HIGH + 1 LOW bug fixed, encounter card overlay v2. 2 files, 211 lines. 23 total bugs fixed across 8 cycles."}
+{"ts":"2026-04-18T22:00:00.000Z","type":"cycle_start","cycle":9,"detail":"Cycle 9: Bug hunt cycle 8 (phantom fixes discovered) + feat rune activation panel"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-022-REAL CRITICAL: minigame.start() was never committed in cycle 8 — actually fixed now"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-023-REAL LOW: set_color_levels PSX routing was never committed — actually fixed now"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-024 HIGH: 30s timeout on minigame await prevents infinite hang"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 HIGH: dispatch() API mismatch (String vs Dict) caught during review — fixed"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"FEAT-RUNE-PANEL: Rune activation UI in encounter card — ogham before choice per bible"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 4 bugs fixed (1 CRITICAL + 2 HIGH + 1 LOW), rune panel added. 2 files, ~180 lines. 27 total bugs fixed across 9 cycles."}

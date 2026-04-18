@@ -657,6 +657,39 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-022-REAL",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Actually commit minigame.start() fix (phantom cycle 8 fix)",
+      "agent": "cycle_director",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "Cycle 8 claimed to fix BUG-022 but only pushed status files. Code change was never committed. Actually applied the fix + 30s timeout safety.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-023-REAL",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Actually commit set_color_levels PSX routing fix (phantom cycle 8 fix)",
+      "agent": "cycle_director",
+      "files": ["scripts/ui/screen_dither_layer.gd"],
+      "description": "Cycle 8 claimed to fix BUG-023 but code was never committed. Applied PSX->color_depth routing.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "FEAT-RUNE-PANEL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Rune activation panel in encounter card overlay",
+      "agent": "cycle_director",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "Per bible: Ogham activation before choice selection, 1 per card max. Rune row with available oghams + Skip button, choice buttons disabled during rune phase, ogham modifiers passed to minigame.",
+      "completed_at": "2026-04-18"
     }
   ]
 }
