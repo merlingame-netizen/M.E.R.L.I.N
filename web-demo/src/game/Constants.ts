@@ -149,7 +149,7 @@ export const MINIGAME_CATALOGUE: Record<string, MinigameSpec> = {
   echo: { name: 'Echo', desc: 'Suivre l\'intensite sonore vers la bonne direction', trigger: 'voix|appel|son|echo|ecouter|cri|chant' },
 } as const;
 
-// --- OGHAM SPECS (18 Oghams) ---
+// --- OGHAM SPECS (18 Runes) ---
 export interface OghamSpec {
   readonly name: string;
   readonly tree: string;

@@ -95,7 +95,7 @@ export class MinigameRunes extends MinigameBase {
     const canvasHeight = this.gridRows * (this.tileSize + this.tilePad) + this.tilePad;
 
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', 'Runes Oghams — cliquez les paires de runes identiques avant la fin du temps');
+    this.canvas.setAttribute('aria-label', 'Runes anciennes — cliquez les paires de runes identiques avant la fin du temps');
     this.canvas.setAttribute('role', 'application');
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = canvasWidth;

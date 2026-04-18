@@ -29,7 +29,7 @@ const CELTOS_ASCII = [
 
 const BOOT_LINES: readonly string[] = [
   'CELTOS v4.2 KERNEL \u2014 INITIATING MEMORY NODES',
-  'LOADING /dev/ogham/18 ... [OK]',
+  'LOADING /dev/rune/18 ... [OK]',
   'MOUNTING SACRED_GROVES_PARTITION ... [OK]',
   'INITIALIZING FACTION_MATRIX (5 branches) ... [OK]',
   'LINKING /lib/merlin/arcana.so ... [OK]',

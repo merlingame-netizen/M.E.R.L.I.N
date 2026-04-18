@@ -10,10 +10,12 @@ config_version=5
 
 [application]
 
-config/name="DRU"
+config/name="MERLIN"
 run/main_scene="res://scenes/IntroCeltOS.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0.02, 0.04, 0.02, 1)
 
 [autoload]
 

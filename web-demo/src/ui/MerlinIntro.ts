@@ -7,7 +7,7 @@
 // Guided lair tour — 5 lines, one per visible zone
 const MERLIN_LINES: readonly string[] = [
   'Bienvenue dans mon antre. Cette carte révèle les huit biomes de Brocéliande — chaque contrée abrite ses propres épreuves et ses secrets.',
-  'La Sphère de Cristal garde les Oghams anciens. Avant chaque expédition, éveille un ogham : il façonnera chacun de tes choix dans le biome.',
+  'La Sphère de Cristal garde les Runes anciennes. Avant chaque expédition, éveille une rune : il façonnera chacun de tes choix dans le biome.',
   'Ce journal est ta mémoire entre les mondes. Tes runs passés, tes réputations auprès des factions — tout y est consigné.',
   'Le Chaudron de l\'Awen distille la sagesse des druides. Consulte-le avant de partir — il te livrera ce que les pierres murmurent.',
   'La porte de la forêt t\'attend, voyageur. Commence par la Forêt de Brocéliande — c\'est là que ton Anam s\'éveille. Clique sur la porte pour partir.',

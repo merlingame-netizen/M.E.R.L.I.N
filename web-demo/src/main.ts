@@ -424,7 +424,7 @@ function showJournalPanel(): Promise<void> {
     panel.appendChild(crtSection('M\u00c9MOIRE DES QU\u00caTES'));
     panel.appendChild(crtRow('  Voyages accomplis  :', `${meta.totalRuns}`));
     panel.appendChild(crtRow('  Anam accumulé      :', `${Math.floor(meta.anam)}`));
-    panel.appendChild(crtRow('  Oghams maîtrisés   :', `${meta.oghamsUnlocked.length} / 18`));
+    panel.appendChild(crtRow('  Runes maîtrisées   :', `${meta.oghamsUnlocked.length} / 18`));
 
     // --- Section: Alignement des factions ---
     panel.appendChild(crtSection('ALIGNEMENT DES FACTIONS'));
@@ -474,7 +474,7 @@ function showJournalPanel(): Promise<void> {
     // --- Section: Lore du Jour ---
     const JOURNAL_LORE: readonly string[] = [
       '"Le druide lit le monde à l\'envers du miroir."',
-      '"Chaque ogham est un monde que les mains du temps ont tracé."',
+      '"Chaque rune est un monde que les mains du temps ont tracé."',
       '"La forêt de Brocéliande est la mémoire que les pierres ont gardée."',
       '"L\'Anam voyage entre les vies comme le vent entre les frênes."',
       '"Connais ton geis, porte-le sans fléchir, il est ton bouclier."',
@@ -771,7 +771,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   let cauldronQuoteIdx = -1;
   // C164: expanded to 12 quotes — vocabulaire celtique authentique
   const MERLIN_QUOTES: readonly string[] = [
-    'Le nemeton garde les secrets de ceux qui osent écouter l\'ogham.',
+    'Le nemeton garde les secrets de ceux qui osent écouter la rune.',
     'La brume de Brocéliande n\'est que le souffle des Sidhe endormis.',
     'Chaque korrigan dansant au clair de lune tisse un fil de l\'Awen.',
     'Les pierres levées murmurent aux voyageurs qui oublient leur nom.',
@@ -781,14 +781,14 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
     'Les druides ne lisent pas les étoiles : ils les écoutent respirer.',
     'Ton geis te protège autant qu\'il te lie. Porte-le sans fléchir.',
     'Le monde d\'en-bas n\'est pas sous tes pieds — il est dans tes choix.',
-    'Chaque ogham gravé dans le bois vivant est une prière que l\'arbre exauce.',
+    'Chaque rune gravée dans le bois vivant est une prière que l\'arbre exauce.',
     'Brocéliande te connaît mieux que tu ne te connais toi-même.',
   ];
 
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
     map:       { title: 'Carte des Biomes',    sub: 'Vers quelle contrée vous aventurer ?' }, // C45: Celtic register + CTA (was generic "Choisissez votre destination")
-    crystal:   { title: 'Sphère de Cristal',     sub: 'Les oghams anciens y dorment — éveillez-en un' },
+    crystal:   { title: 'Sphère de Cristal',     sub: 'Les runes anciennes y dorment — éveillez-en une' },
     bookshelf: { title: 'Journal de Merlin',   sub: 'Vos mémoires de voyage entre les mondes' },
     cauldron:  { title: "Chaudron de l'Awen",  sub: 'Merlin parle à ceux qui osent écouter' },
     door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
@@ -898,7 +898,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
           ].join(';');
           document.body.appendChild(flash);
           setTimeout(() => flash.remove(), 700);
-          showZoneToast('crystal'); // "Pierre des Oghams / Choisissez votre Ogham runique"
+          showZoneToast('crystal'); // "Pierre des Runes / Choisissez votre Rune"
         }
         return;
       }

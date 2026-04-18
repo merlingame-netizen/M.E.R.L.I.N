@@ -571,7 +571,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
       'margin-top:4px',
       'margin-bottom:0',
     ].join(';');
-    flavorEl.textContent = 'Les Oghams ne peuvent plus vous guider.';
+    flavorEl.textContent = 'Les Runes ne peuvent plus vous guider.';
     panel.appendChild(flavorEl);
   }
 
@@ -792,7 +792,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
     panel.appendChild(promisesEl);
   }
 
-  // ── C369: Oghams équipés cette quête — sequential highlight after count-up ──
+  // ── C369: Runes équipées cette quête — sequential highlight after count-up ──
   const oghamsEquipped = state.meta.oghamsEquipped as readonly string[];
   let oghamSectionEl: HTMLElement | null = null;
   if (oghamsEquipped.length > 0) {
@@ -809,7 +809,7 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
       'margin-bottom:10px',
       `font-family:'Courier New',monospace`,
     ].join(';');
-    oghamHeader.textContent = 'OGHAMS UTILISÉS';
+    oghamHeader.textContent = 'RUNES UTILISÉES';
     panel.appendChild(oghamHeader);
 
     const oghamList = document.createElement('div');

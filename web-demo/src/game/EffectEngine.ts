@@ -417,7 +417,7 @@ export function isNegativeEffect(effectCode: string): boolean {
   return NEGATIVE_EFFECTS.includes(parsed.code as typeof NEGATIVE_EFFECTS[number]);
 }
 
-/** Filter out negative effects (for protection Oghams like Luis). */
+/** Filter out negative effects (for protection Runes like Luis). */
 export function filterNegativeEffects(effects: readonly string[], count = 1): readonly string[] {
   let blocked = 0;
   return effects.filter((e) => {

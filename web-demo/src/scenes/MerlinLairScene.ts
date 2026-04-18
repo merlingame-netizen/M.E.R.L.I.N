@@ -993,7 +993,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // C201: ambient Merlin whisper panel — lore quotes near cauldron, 8s rotation cycle
   const WHISPERS: readonly string[] = [
-    "Les Oghams ne mentent jamais… ils choisissent simplement ce qu'ils révèlent.",
+    "Les Runes ne mentent jamais… elles choisissent simplement ce qu'elles révèlent.",
     "Chaque biome porte la mémoire d'un druide disparu.",
     "L'Anam grandit dans le silence entre les cartes.",
     "Brocéliande n'est pas un lieu. C'est un état d'esprit.",
@@ -4640,7 +4640,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // References specific mythological anchors: Cerridwen (cauldron goddess), Brocéliande (sacred forest).
   const ZONE_LORE: Readonly<Record<LairZone, string>> = {
     map:       'Quelle contrée de Bretagne t\'appelle ce soir ?',
-    crystal:   'La sph\u00e8re de cristal r\u00e9v\u00e8le les oghams de la prochaine carte',
+    crystal:   'La sph\u00e8re de cristal r\u00e9v\u00e8le les runes de la prochaine carte',
     bookshelf: 'Les chroniques de Merlin gardent mémoire de tes actes',
     cauldron:  'Le chaudron de Cerridwen bouillonne de sagesse ancienne',
     door:      'Les bois de Brocéliande t\'attendent, voyageur',
