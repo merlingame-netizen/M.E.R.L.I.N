@@ -657,6 +657,39 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-024",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix minigame.start() never called in encounter card overlay (C8 fix never pushed)",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "C8 claimed BUG-022 fixed but code was never committed — only status JSONs were pushed. minigame.start() was still missing, causing minigames to hang.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-025",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix set_color_levels wrong param for PSX mode (C8 fix never pushed)",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/screen_dither_layer.gd"],
+      "description": "C8 claimed BUG-023 fixed but code was never committed. set_color_levels() always set 'color_levels' — PSX mode needs 'color_depth'.",
+      "completed_at": "2026-04-18"
+    },
+    {
+      "id": "CARD-OVERLAY-CRT-FIELDHINTS",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "CRT encounter card overlay with per-choice lexical field hints",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "Rewrite encounter card with CRT_PALETTE, MerlinVisual helpers (make_card_panel_style, apply_celtic_option_theme, apply_responsive_font), per-choice field hint labels with color-coded accents, staggered button animation.",
+      "completed_at": "2026-04-18"
     }
   ]
 }

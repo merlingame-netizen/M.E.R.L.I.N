@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 8 Feature — Cinematic encounter card overlay v2 + minigame start fix",
+  "objective": "Cycle 9 — Bug hunt C8 + CRT encounter card overlay with field hints",
   "workers": [],
-  "updated_at": "2026-04-18T20:00:00.000Z",
-  "cycle": 8,
-  "checkpoint": "EncounterCardOverlay v2: typewriter title+body, CRT_PALETTE styling, MerlinVisual style helpers, responsive sizes, touch targets, field hint label, staggered buttons. BUG FIX: minigame.start() was never called (minigames never started). BUG FIX: set_color_levels wrong param in PSX mode. 2 files modified, 211 lines changed."
+  "updated_at": "2026-04-18T22:00:00.000Z",
+  "cycle": 9,
+  "checkpoint": "BUG-024 HIGH: minigame.start() was never called (C8 fix never pushed). BUG-025 MEDIUM: set_color_levels wrong param in PSX mode (C8 fix never pushed). Encounter card overlay rewritten with CRT_PALETTE, MerlinVisual helpers, per-choice field hint labels with accent colors, staggered entry animation. 2 files modified, 111 lines net."
 }

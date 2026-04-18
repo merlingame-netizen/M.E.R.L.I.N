@@ -65,3 +65,8 @@
 {"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"BUG-023 LOW: set_color_levels wrong param for PSX mode — fixed"}
 {"ts":"2026-04-18T20:00:00.000Z","type":"task_done","cycle":8,"detail":"CARD-OVERLAY-V2: Cinematic CRT/PSX encounter card with typewriter, staggered buttons, field hint"}
 {"ts":"2026-04-18T20:00:00.000Z","type":"cycle_end","cycle":8,"detail":"Cycle 8 complete: 1 HIGH + 1 LOW bug fixed, encounter card overlay v2. 2 files, 211 lines. 23 total bugs fixed across 8 cycles."}
+{"ts":"2026-04-18T22:00:00.000Z","type":"cycle_start","cycle":9,"detail":"Cycle 9: Bug hunt C8 — discovered C8 code fixes were NEVER PUSHED (only status JSONs committed)"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-024 HIGH: minigame.start() missing (C8 BUG-022 fix never pushed) — re-fixed and committed"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) — re-fixed and committed"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
+{"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}
