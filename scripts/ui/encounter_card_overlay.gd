@@ -237,6 +237,9 @@ func _on_ogham_pressed(ogham_id: String) -> void:
 		activated_btn.focus_mode = Control.FOCUS_NONE
 	if is_instance_valid(SFXManager):
 		SFXManager.play("magic_reveal")
+	var notify: Node = get_node_or_null("/root/Notify")
+	if notify and notify.has_method("ogham_activated"):
+		notify.ogham_activated(ogham_id)
 
 
 func _on_choice(idx: int) -> void:
@@ -310,6 +313,10 @@ func _on_choice(idx: int) -> void:
 			SFXManager.play("fail")
 		else:
 			SFXManager.play("neutral")
+
+	var notify_node: Node = get_node_or_null("/root/Notify")
+	if notify_node and notify_node.has_method("minigame_result"):
+		notify_node.minigame_result(score)
 
 	var pulse_tw: Tween = create_tween()
 	pulse_tw.tween_property(_bg, "color:a", 0.92, 0.2)

@@ -394,6 +394,8 @@ func _apply_life_delta(state: Dictionary, delta: int) -> bool:
 	var current = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 	run["life_essence"] = clampi(current + delta, 0, MerlinConstants.LIFE_ESSENCE_MAX)
 	state["run"] = run
+	if abs(delta) > 1:
+		_notify_life(delta)
 	return true
 
 
@@ -470,6 +472,7 @@ func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -
 	if not run.is_empty():
 		run["faction_context"] = _build_faction_context(faction_rep)
 		state["run"] = run
+	_notify_reputation(faction, capped_delta)
 	return true
 
 
@@ -805,3 +808,25 @@ static func pick_minigame_for_field(field: String) -> String:
 		return MerlinConstants.ACTION_VERB_FALLBACK_FIELD  # "esprit" — valid field name
 	var index: int = randi() % minigames.size()
 	return str(minigames[index])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOTIFICATIONS — Optional autoload bridge (CRTNotify)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func _notify_reputation(faction: String, delta: int) -> void:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var n: Node = tree.root.get_node_or_null("Notify")
+	if n and n.has_method("reputation"):
+		n.reputation(faction, delta)
+
+
+static func _notify_life(delta: int) -> void:
+	var tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var n: Node = tree.root.get_node_or_null("Notify")
+	if n and n.has_method("life_changed"):
+		n.life_changed(delta)

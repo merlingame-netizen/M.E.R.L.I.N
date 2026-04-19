@@ -40,6 +40,7 @@ ScreenDither="*res://scripts/ui/screen_dither_layer.gd"
 GameDebugServer="*res://scripts/test/game_debug_server.gd"
 DayNightManager="*res://scripts/autoload/day_night_manager.gd"
 MerlinResponsive="*res://scripts/autoload/merlin_responsive.gd"
+Notify="*res://scripts/autoload/crt_notify.gd"
 
 [display]
 
