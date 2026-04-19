@@ -93,6 +93,10 @@
     {
       "question_id": "q-20260415-003",
       "answer": "B: LLM narratif par faction"
+    },
+    {
+      "question_id": "q-20260415-004",
+      "answer": "A: Enable FOCUS_ALL for keyboard Tab + gamepad D-pad navigation"
     }
   ]
 }
