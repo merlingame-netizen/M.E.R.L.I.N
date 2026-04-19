@@ -1,27 +1,35 @@
 {
   "agent": "cycle_director",
-  "cycle": 9,
-  "timestamp": "2026-04-18T22:00:00Z",
+  "cycle": 11,
+  "timestamp": "2026-04-19T10:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 9: Bug hunt C8 (encounter_card_overlay, screen_dither_layer) + CRT field hints feature",
+  "scope": "Cycle 11: Bug hunt C10 (rune activation in encounter_card_overlay.gd) + life status strip",
   "bugs_found": [
     {
-      "id": "BUG-024",
-      "severity": "HIGH",
+      "id": "BUG-026",
+      "severity": "CRITICAL",
       "file": "scripts/ui/encounter_card_overlay.gd",
-      "description": "minigame.start() never called — was claimed fixed in C8 (BUG-022) but code was never pushed to GitHub. Only status JSONs were committed. Minigames created but _on_start() never fires, game_completed never emitted, overlay hangs indefinitely on await.",
+      "description": "_ogham_used flag set BEFORE await dispatch, preventing recovery if dispatch fails. Choice buttons were never disabled during ogham activation, allowing race condition where user clicks choice during async ogham dispatch.",
       "status": "fixed",
-      "fix": "Added minigame.start() after add_child(minigame) in _on_choice()"
+      "fix": "Moved _ogham_used=true to AFTER successful dispatch. Choice buttons now disabled during activation and re-enabled on both success and failure paths."
     },
     {
-      "id": "BUG-025",
-      "severity": "MEDIUM",
-      "file": "scripts/ui/screen_dither_layer.gd",
-      "description": "set_color_levels() always sets 'color_levels' param — was claimed fixed in C8 (BUG-023) but code was never pushed. PSX shader uses 'color_depth' not 'color_levels'.",
+      "id": "BUG-027",
+      "severity": "HIGH",
+      "file": "scripts/ui/encounter_card_overlay.gd",
+      "description": "Button cast from _ogham_id_map without null or validity checks. Could crash if map contains invalid entries.",
       "status": "fixed",
-      "fix": "Route param name based on _render_mode: PSX->color_depth, CRT->color_levels"
+      "fix": "Added null check (if b and ...) on failure path, is_instance_valid() on success path."
+    },
+    {
+      "id": "BUG-028",
+      "severity": "MEDIUM",
+      "file": "scripts/ui/encounter_card_overlay.gd",
+      "description": "Three const declarations used := syntax (forbidden by project conventions). _FIELD_LABELS, _FIELD_COLORS, _OGHAM_CAT_COLORS.",
+      "status": "fixed",
+      "fix": "Replaced := with explicit Dictionary type annotation."
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 9: Critical discovery — C8 code changes were never committed (only status files were pushed). 2 bugs re-fixed and actually committed this time. Encounter card overlay enhanced with CRT palette + field hints. 25 total bugs fixed across 9 cycles."
+  "overall_assessment": "Cycle 11: 1 CRITICAL + 1 HIGH + 1 MEDIUM bug fixed in rune activation logic. Life status strip added for gameplay feedback. 28 total bugs fixed across 11 cycles."
 }

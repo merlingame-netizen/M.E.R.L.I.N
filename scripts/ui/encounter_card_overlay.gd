@@ -6,13 +6,13 @@ class_name EncounterCardOverlay
 
 signal card_resolved(choice_idx: int, score: int)
 
-const _FIELD_LABELS := {
+const _FIELD_LABELS: Dictionary = {
 	"chance": "Chance", "bluff": "Eloquence", "observation": "Observation",
 	"logique": "Logique", "finesse": "Finesse", "vigueur": "Vigueur",
 	"esprit": "Esprit", "perception": "Perception", "neutre": "Intuition",
 }
 
-const _FIELD_COLORS := {
+const _FIELD_COLORS: Dictionary = {
 	"chance": Color(1.0, 0.85, 0.3),
 	"bluff": Color(0.9, 0.5, 1.0),
 	"observation": Color(0.3, 0.85, 0.8),
@@ -24,7 +24,7 @@ const _FIELD_COLORS := {
 	"neutre": Color(0.6, 0.6, 0.6),
 }
 
-const _OGHAM_CAT_COLORS := {
+const _OGHAM_CAT_COLORS: Dictionary = {
 	"reveal": Color(0.30, 0.85, 1.0),
 	"protection": Color(1.0, 0.85, 0.30),
 	"boost": Color(0.30, 1.0, 0.50),
@@ -44,6 +44,9 @@ var _store: MerlinStore
 var _ogham_buttons: Array[Button] = []
 var _ogham_id_map: Dictionary = {}
 var _ogham_used: bool = false
+var _life_bar: ProgressBar
+var _life_label: Label
+var _cards_label: Label
 
 
 func _init(card: Dictionary = {}) -> void:
@@ -98,6 +101,47 @@ func _ready() -> void:
 	sep1.add_theme_color_override("separator", pal.border)
 	vbox.add_child(sep1)
 
+	# Life + card status strip
+	_store = get_node_or_null("/root/MerlinStore") as MerlinStore
+	var status_row: HBoxContainer = HBoxContainer.new()
+	status_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	status_row.add_theme_constant_override("separation", 12)
+
+	_life_label = Label.new()
+	_life_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(12))
+	_life_label.add_theme_color_override("font_color", pal.phosphor_dim)
+	status_row.add_child(_life_label)
+
+	_life_bar = ProgressBar.new()
+	_life_bar.min_value = 0.0
+	_life_bar.max_value = 100.0
+	_life_bar.custom_minimum_size = Vector2(100, 8)
+	_life_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_life_bar.show_percentage = false
+	var bar_bg: StyleBoxFlat = StyleBoxFlat.new()
+	bar_bg.bg_color = Color(pal.bg_deep.r, pal.bg_deep.g, pal.bg_deep.b, 0.6)
+	bar_bg.corner_radius_top_left = 2
+	bar_bg.corner_radius_top_right = 2
+	bar_bg.corner_radius_bottom_left = 2
+	bar_bg.corner_radius_bottom_right = 2
+	_life_bar.add_theme_stylebox_override("background", bar_bg)
+	var bar_fill: StyleBoxFlat = StyleBoxFlat.new()
+	bar_fill.bg_color = pal.success
+	bar_fill.corner_radius_top_left = 2
+	bar_fill.corner_radius_top_right = 2
+	bar_fill.corner_radius_bottom_left = 2
+	bar_fill.corner_radius_bottom_right = 2
+	_life_bar.add_theme_stylebox_override("fill", bar_fill)
+	status_row.add_child(_life_bar)
+
+	_cards_label = Label.new()
+	_cards_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(12))
+	_cards_label.add_theme_color_override("font_color", pal.phosphor_dim)
+	status_row.add_child(_cards_label)
+
+	vbox.add_child(status_row)
+	_update_life_display()
+
 	# Body text
 	_text_label = RichTextLabel.new()
 	_text_label.bbcode_enabled = false
@@ -116,7 +160,6 @@ func _ready() -> void:
 	vbox.add_child(sep2)
 
 	# Rune activation row (Bible s.2.2: activate before choosing)
-	_store = get_node_or_null("/root/MerlinStore") as MerlinStore
 	if _store:
 		var equipped: Array = _store.state.get("oghams", {}).get("skills_equipped", [])
 		if not equipped.is_empty():
@@ -213,28 +256,34 @@ func _ready() -> void:
 func _on_ogham_pressed(ogham_id: String) -> void:
 	if _ogham_used or not _store:
 		return
-	_ogham_used = true
 	for btn in _ogham_buttons:
+		btn.disabled = true
+	for btn in _buttons:
 		btn.disabled = true
 
 	var result: Dictionary = await _store.dispatch({"type": "USE_OGHAM", "skill_id": ogham_id})
 	if not result.get("ok", false):
-		_ogham_used = false
 		var oghams_state: Dictionary = _store.state.get("oghams", {})
 		var cooldowns: Dictionary = oghams_state.get("skill_cooldowns", {})
 		for oid in _ogham_id_map:
-			var b: Button = _ogham_id_map[oid] as Button
-			if int(cooldowns.get(oid, 0)) <= 0:
+			var b: Button = _ogham_id_map.get(oid) as Button
+			if b and int(cooldowns.get(oid, 0)) <= 0:
 				b.disabled = false
+		for btn in _buttons:
+			btn.disabled = false
 		return
 
+	_ogham_used = true
+	_update_life_display()
 	var activated_btn: Button = _ogham_id_map.get(ogham_id) as Button
-	if activated_btn:
+	if activated_btn and is_instance_valid(activated_btn):
 		var pal_ref: Dictionary = MerlinVisual.CRT_PALETTE
 		activated_btn.text = activated_btn.text + " \u2713"
 		activated_btn.add_theme_color_override("font_color", pal_ref.cyan_bright)
 		activated_btn.disabled = false
 		activated_btn.focus_mode = Control.FOCUS_NONE
+	for btn in _buttons:
+		btn.disabled = false
 	if is_instance_valid(SFXManager):
 		SFXManager.play("magic_reveal")
 
@@ -302,6 +351,7 @@ func _on_choice(idx: int) -> void:
 		response = "Un echec cuisant. La foret gronde de mecontentement."
 
 	_text_label.text = str(choice.get("label", "")) + "\n\n" + response
+	_update_life_display()
 
 	if is_instance_valid(SFXManager):
 		if score >= 80:
@@ -324,3 +374,35 @@ func _on_choice(idx: int) -> void:
 		card_resolved.emit(idx, score)
 		queue_free()
 	)
+
+
+func _update_life_display() -> void:
+	if not _store:
+		return
+	var run: Dictionary = _store.state.get("run", {})
+	var life: int = int(run.get("life_essence", 100))
+	var cards: int = int(run.get("cards_played", 0))
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
+
+	if _life_label:
+		_life_label.text = "PV %d" % life
+		var life_color: Color = pal.success
+		if life <= 25:
+			life_color = pal.danger
+		elif life <= 50:
+			life_color = pal.amber
+		_life_label.add_theme_color_override("font_color", life_color)
+
+	if _life_bar:
+		_life_bar.value = float(life)
+		var fill: StyleBoxFlat = _life_bar.get_theme_stylebox("fill") as StyleBoxFlat
+		if fill:
+			if life <= 25:
+				fill.bg_color = pal.danger
+			elif life <= 50:
+				fill.bg_color = pal.amber
+			else:
+				fill.bg_color = pal.success
+
+	if _cards_label:
+		_cards_label.text = "Carte %d" % cards
