@@ -20,7 +20,7 @@ const LOGO_GRID := [
 # ═══════════════════════════════════════════════════════════════
 # Boot log pools — 12 picked randomly each launch
 # ═══════════════════════════════════════════════════════════════
-const BOOT_HEADER := "CELTOS v4.2 — SYSTEMS READY"
+const BOOT_HEADER := "CELTOS v4.2 — ONLINE"
 
 const BOOT_LOG_POOL := [
 	"LOADING /dev/rune/18 ... [OK]",
