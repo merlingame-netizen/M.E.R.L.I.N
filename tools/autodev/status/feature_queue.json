@@ -679,6 +679,26 @@
       "files": ["scripts/ui/walk_hud.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "Added card count display (Carte N/5 with amber color progression at 50%/80% thresholds). Renamed essences to biome currency with diamond glyph. Backward-compat update_essences() wrapper kept. Encounter count tracking in BroceliandeForest3D.",
       "completed_at": "2026-04-19"
+    },
+    {
+      "id": "DELETE-DEAD-SCENES",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Delete IntroPersonalityQuiz + SceneRencontreMerlin + helpers (q-20260414-005)",
+      "agent": "cycle_director",
+      "files": [
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/SceneRencontreMerlin.gd",
+        "scripts/quiz_data.gd",
+        "scripts/rencontre_dialogue.gd",
+        "scripts/rencontre_llm.gd",
+        "scenes/IntroPersonalityQuiz.tscn",
+        "scenes/SceneRencontreMerlin.tscn",
+        "scripts/test/validate_headless.sh"
+      ],
+      "description": "Creator confirmed deletion (q-20260414-005). Deleted 10 files: 5 GDScript files (IntroPersonalityQuiz, SceneRencontreMerlin, quiz_data, rencontre_dialogue, rencontre_llm), 2 scenes, 3 UIDs. Updated validate_headless.sh to remove deleted scenes from smoke test array.",
+      "completed_at": "2026-04-19"
     }
   ]
 }

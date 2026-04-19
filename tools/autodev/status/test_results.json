@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 12,
-  "timestamp": "2026-04-19T16:00:00Z",
-  "type": "bughunt+feature",
-  "scope": "Cycle 12: Bug hunt C11 (merlin_whisper, walk_hud, broceliande_forest_3d) + Whisper biome expansion",
+  "cycle": 13,
+  "timestamp": "2026-04-19T18:00:00Z",
+  "type": "bughunt+cleanup",
+  "scope": "Cycle 13: Bug hunt C12 (whisper biome pools, _get_biome_pool routing) + delete dead onboarding scenes",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 12: Bug hunt on C11 code found 0 bugs. Feature: MerlinWhisper expanded with 7 new biome pools (45 whispers) + critical health pool. All CRT_PALETTE keys verified (amber_bright exists). 25 total bugs fixed across 12 cycles."
+  "overall_assessment": "Cycle 13: Bug hunt C12 found 0 bugs — all 8 biome keys match _get_biome_pool() fuzzy routing. Dead scene cleanup: 10 files deleted (IntroPersonalityQuiz + SceneRencontreMerlin + 3 helpers + 3 UIDs). validate_headless.sh updated (8→6 scenes). 25 total bugs fixed across 13 cycles."
 }
