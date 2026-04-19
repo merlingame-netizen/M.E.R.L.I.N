@@ -70,3 +70,8 @@
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) \u2014 re-fixed and committed"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}
+{"ts":"2026-04-19T14:00:00.000Z","type":"cycle_start","cycle":11,"detail":"Cycle 11: Bug hunt C10 (0 bugs found) + Merlin Whisper ambient system + WalkHUD card counter"}
+{"ts":"2026-04-19T14:00:00.000Z","type":"task_done","cycle":11,"detail":"MERLIN-WHISPER: 40+ context-sensitive druide quips during forest walks (health/time/biome/veteran pools), pause/resume during encounters, phosphor-dim fade with mist_breath SFX"}
+{"ts":"2026-04-19T14:00:00.000Z","type":"task_done","cycle":11,"detail":"WALKHUD-CARD-COUNTER: card count display (Carte N/5) with color progression, biome currency rename from essences"}
+{"ts":"2026-04-19T14:00:00.000Z","type":"task_done","cycle":11,"detail":"WALKHUD-INTEGRATION: encounter count tracking, whisper pause/resume on encounters, context updates for whisper system"}
+{"ts":"2026-04-19T14:00:00.000Z","type":"cycle_end","cycle":11,"detail":"Cycle 11 complete: 0 bugs (C10 clean), 3 features. 3 files, ~191 lines. 25 total bugs fixed across 11 cycles."}

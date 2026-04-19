@@ -657,6 +657,28 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "MERLIN-WHISPER-SYSTEM",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Merlin Whisper ambient system — contextual druide quips during forest walks",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/merlin_whisper.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "MerlinWhisper CanvasLayer: 40+ context-sensitive whispers in 7 pools (generic, low_health, high_health, night, dawn, dusk, broceliande, veteran). Timer-based (18-30s), phosphor-dim fade-in/out with mist_breath SFX. Pause during encounters, resume after. Wired into BroceliandeForest3D with live context updates (health, time, total_runs).",
+      "completed_at": "2026-04-19"
+    },
+    {
+      "id": "WALKHUD-CARD-COUNTER",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "WalkHUD card counter + currency rename",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/walk_hud.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "Added card count display (Carte N/5 with amber color progression at 50%/80% thresholds). Renamed essences to biome currency with diamond glyph. Backward-compat update_essences() wrapper kept. Encounter count tracking in BroceliandeForest3D.",
+      "completed_at": "2026-04-19"
     }
   ]
 }
