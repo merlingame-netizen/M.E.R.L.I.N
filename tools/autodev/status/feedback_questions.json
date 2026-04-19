@@ -425,7 +425,7 @@
       "id": "q-20260415-007",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "title": "mg_de_du_destin: ajouter au registry général ou garder usage spécial seulement?",
       "question": "mg_de_du_destin.gd (dé du destin: prédire pile/face sur D6) est utilisé uniquement dans TransitionBiome.gd pour les quêtes de transition biome. Faut-il l'ajouter au registry GAMES[\"chance\"] pour qu'il soit aussi sélectionnable lors des cartes normales du run? Ou garder son usage exclusif aux quêtes de biome?",
       "context": "SPEC-12 MG-12-02: mg_de_du_destin non listé dans minigame_registry.gd mais actif en jeu via un chemin dédié.",
