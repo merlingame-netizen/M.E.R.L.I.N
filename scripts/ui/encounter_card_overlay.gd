@@ -85,6 +85,35 @@ func _ready() -> void:
 	vbox.add_theme_constant_override("separation", 12)
 	_panel.add_child(vbox)
 
+	# Store reference (used by HUD and rune row below)
+	_store = get_node_or_null("/root/MerlinStore") as MerlinStore
+
+	# HUD strip — life, biome, card count
+	var hud_row: HBoxContainer = HBoxContainer.new()
+	hud_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hud_row.add_theme_constant_override("separation", 14)
+	var life_val: int = 100
+	var cards_val: int = 0
+	var biome_display: String = ""
+	if _store:
+		life_val = _store.get_life_essence() if _store.has_method("get_life_essence") else 100
+		cards_val = _store.get_cards_played() if _store.has_method("get_cards_played") else 0
+		var biome_raw: String = str(_store.state.get("run", {}).get("current_biome", ""))
+		biome_display = MerlinVisual.biome_palette_key(biome_raw).capitalize()
+	_build_hud_life(hud_row, life_val, pal)
+	if not biome_display.is_empty():
+		var biome_lbl: Label = Label.new()
+		biome_lbl.text = biome_display
+		biome_lbl.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(10))
+		biome_lbl.add_theme_color_override("font_color", pal.phosphor_dim)
+		hud_row.add_child(biome_lbl)
+	var card_lbl: Label = Label.new()
+	card_lbl.text = "Carte %d" % (cards_val + 1)
+	card_lbl.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(10))
+	card_lbl.add_theme_color_override("font_color", pal.phosphor_dim)
+	hud_row.add_child(card_lbl)
+	vbox.add_child(hud_row)
+
 	# Title
 	_title_label = Label.new()
 	_title_label.text = str(_card_data.get("title", "Rencontre en Broceliande"))
@@ -116,7 +145,6 @@ func _ready() -> void:
 	vbox.add_child(sep2)
 
 	# Rune activation row (Bible s.2.2: activate before choosing)
-	_store = get_node_or_null("/root/MerlinStore") as MerlinStore
 	if _store:
 		var equipped: Array = _store.state.get("oghams", {}).get("skills_equipped", [])
 		if not equipped.is_empty():
@@ -208,6 +236,34 @@ func _ready() -> void:
 
 		var row_tw: Tween = create_tween()
 		row_tw.tween_property(row, "modulate:a", 1.0, 0.3).set_delay(0.4 + i * 0.12)
+
+
+func _build_hud_life(parent: HBoxContainer, life: int, pal: Dictionary) -> void:
+	var life_color: Color
+	if life >= 70:
+		life_color = pal.success
+	elif life >= 40:
+		life_color = pal.amber
+	else:
+		life_color = pal.danger
+	var heart_lbl: Label = Label.new()
+	heart_lbl.text = "\u2665 %d" % life
+	heart_lbl.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(11))
+	heart_lbl.add_theme_color_override("font_color", life_color)
+	parent.add_child(heart_lbl)
+	var bar_bg: ColorRect = ColorRect.new()
+	bar_bg.custom_minimum_size = Vector2(60, 6)
+	bar_bg.color = Color(pal.bg_deep.r, pal.bg_deep.g, pal.bg_deep.b, 0.8)
+	var bar_fill: ColorRect = ColorRect.new()
+	var fill_w: float = 60.0 * clampf(float(life) / 100.0, 0.0, 1.0)
+	bar_fill.custom_minimum_size = Vector2(fill_w, 6)
+	bar_fill.color = life_color
+	var bar_container: HBoxContainer = HBoxContainer.new()
+	bar_container.add_theme_constant_override("separation", 0)
+	bar_container.add_child(bar_fill)
+	bar_container.add_child(bar_bg)
+	bar_bg.custom_minimum_size.x = 60.0 - fill_w
+	parent.add_child(bar_container)
 
 
 func _on_ogham_pressed(ogham_id: String) -> void:

@@ -127,6 +127,12 @@ const PSX_BIOME_PROFILES := {
 	},
 }
 
+
+func _normalize_biome_key(biome_key: String) -> String:
+	if biome_key in PSX_BIOME_PROFILES:
+		return biome_key
+	return MerlinVisual.biome_palette_key(biome_key)
+
 var _rect: ColorRect
 var _material: ShaderMaterial
 var _current_preset: String = "medium"
@@ -284,13 +290,13 @@ func set_psx_preset(preset_name: String) -> void:
 
 
 func set_biome(biome_key: String, animate: bool = true) -> void:
-	_current_biome = biome_key
+	_current_biome = _normalize_biome_key(biome_key)
 	if _render_mode != RenderMode.PSX:
 		return
 	if animate:
-		_animate_biome_transition(biome_key)
+		_animate_biome_transition(_current_biome)
 	else:
-		_apply_biome_colors(biome_key)
+		_apply_biome_colors(_current_biome)
 
 
 func set_time_tint(time_normalized: float) -> void:

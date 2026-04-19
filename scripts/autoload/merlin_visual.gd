@@ -35,6 +35,21 @@ const BIOME_VISUALS := MerlinVisualPalettes.BIOME_VISUALS
 const BIOME_CRT_PALETTES := MerlinVisualPalettes.BIOME_CRT_PALETTES
 const BIOME_CRT_PROFILES := MerlinVisualPalettes.BIOME_CRT_PROFILES
 
+const _BIOME_KEY_ALIAS := {
+	"foret_broceliande": "broceliande",
+	"landes_bruyere": "landes",
+	"cotes_sauvages": "cotes",
+	"villages_celtes": "villages",
+	"cercles_pierres": "cercles",
+	"marais_korrigans": "marais",
+	"collines_dolmens": "collines",
+	"iles_mystiques": "iles",
+}
+
+
+static func biome_palette_key(biome: String) -> String:
+	return _BIOME_KEY_ALIAS.get(biome, biome)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FONTS — Paths & Sizes
@@ -282,7 +297,7 @@ static func glitch_pulse(duration: float = -1.0) -> void:
 
 ## Generate an 8x1 palette texture from a biome's CRT palette (for palette_swap.gdshader)
 static func create_biome_palette_texture(biome: String) -> ImageTexture:
-	var colors: Array = BIOME_CRT_PALETTES.get(biome, BIOME_CRT_PALETTES["broceliande"])
+	var colors: Array = BIOME_CRT_PALETTES.get(biome_palette_key(biome), BIOME_CRT_PALETTES["broceliande"])
 	var image := Image.create(8, 1, false, Image.FORMAT_RGBA8)
 	for i in range(8):
 		image.set_pixel(i, 0, colors[i])
@@ -297,8 +312,9 @@ static func apply_biome_crt(biome: String) -> void:
 	var crt: Node = tree.root.get_node_or_null("ScreenDither")
 	if crt == null:
 		return
-	var palette: Array = BIOME_CRT_PALETTES.get(biome, BIOME_CRT_PALETTES["broceliande"])
-	var profile: Dictionary = BIOME_CRT_PROFILES.get(biome, BIOME_CRT_PROFILES["broceliande"])
+	var bk: String = biome_palette_key(biome)
+	var palette: Array = BIOME_CRT_PALETTES.get(bk, BIOME_CRT_PALETTES["broceliande"])
+	var profile: Dictionary = BIOME_CRT_PROFILES.get(bk, BIOME_CRT_PROFILES["broceliande"])
 	# Set phosphor tint to biome's mid-bright color (index 5)
 	crt.set_phosphor_tint(palette[5])
 	# Apply biome distortion profile
@@ -652,7 +668,7 @@ static func create_kingdom_portrait_material(biome: String = "broceliande") -> S
 ## @param biome: biome key for target palette
 ## @return ImageTexture with reference colors (row 0) and biome palette (row 1)
 static func create_kingdom_palette(biome: String = "broceliande") -> ImageTexture:
-	var biome_colors: Array = BIOME_CRT_PALETTES.get(biome, BIOME_CRT_PALETTES["broceliande"])
+	var biome_colors: Array = BIOME_CRT_PALETTES.get(biome_palette_key(biome), BIOME_CRT_PALETTES["broceliande"])
 
 	# Reference palette — standard grayscale 8 levels (what the pixel art uses)
 	var reference_palette: Array = [
