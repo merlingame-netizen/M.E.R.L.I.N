@@ -81,6 +81,10 @@
     {
       "question_id": "q-20260414-010",
       "answer": "C: Initiatiques (acces lieux/rituels secrets)"
+    },
+    {
+      "question_id": "q-20260415-001",
+      "answer": "A: Few-shot JSON dans system prompt (exemples + schema)"
     }
   ]
 }
