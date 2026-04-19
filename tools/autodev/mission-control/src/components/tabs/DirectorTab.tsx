@@ -53,7 +53,7 @@ export function DirectorTab() {
                     style={{ marginTop: 4, color: 'var(--amber)', borderColor: 'var(--border-amber)' }}
                     onClick={() => {
                       if (textInputs[q.id]?.trim()) {
-                        submitFeedback(q.id, textInputs[q.id], '');
+                        submitFeedback(q.id, textInputs[q.id] || '', '');
                         setTextInputs(prev => { const n = { ...prev }; delete n[q.id]; return n; });
                       }
                     }}
@@ -79,7 +79,7 @@ export function DirectorTab() {
                     style={{ marginTop: 4, color: 'var(--amber)', borderColor: 'var(--border-amber)' }}
                     onClick={() => {
                       if (textInputs[q.id]?.trim()) {
-                        submitFeedback(q.id, textInputs[q.id], '');
+                        submitFeedback(q.id, textInputs[q.id] || '', '');
                         setTextInputs(prev => { const n = { ...prev }; delete n[q.id]; return n; });
                       }
                     }}
