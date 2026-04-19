@@ -111,16 +111,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: export-web
     if: github.ref == 'refs/heads/main'
-    continue-on-error: true
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: web-export
           path: web-export/
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: web-export
-          vercel-args: '--prod'
+      - name: Deploy game to Vercel
+        run: |
+          npm i -g vercel@latest
+          cd web-export
+          mkdir -p .vercel
+          echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+          ls -la
+          cat .vercel/project.json
+          vercel deploy --prod --yes --force --token=${{ secrets.VERCEL_TOKEN }} 2>&1
+          echo "Deploy exit code: $?"
