@@ -113,6 +113,10 @@
     {
       "question_id": "q-20260415-009",
       "answer": "A: Build full node tree in .tscn via Godot editor (cleaner, editor-visible)"
+    },
+    {
+      "question_id": "q-20260415-010",
+      "answer": "{\"label\":\"A\",\"value\":\"boost_weight\",\"description\":\"Re-weight existing pool — faction cards more likely when rep>=50\"}"
     }
   ]
 }
