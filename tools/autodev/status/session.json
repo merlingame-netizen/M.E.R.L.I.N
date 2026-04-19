@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 9 — Bug hunt C8 + CRT encounter card overlay with field hints",
+  "objective": "Cycle 10 — CRT notification toast system + EndRunScreen fix + bug hunt C10",
   "workers": [],
-  "updated_at": "2026-04-18T22:00:00.000Z",
-  "cycle": 9,
-  "checkpoint": "BUG-024 HIGH: minigame.start() was never called (C8 fix never pushed). BUG-025 MEDIUM: set_color_levels wrong param in PSX mode (C8 fix never pushed). Encounter card overlay rewritten with CRT_PALETTE, MerlinVisual helpers, per-choice field hint labels with accent colors, staggered entry animation. 2 files modified, 111 lines net."
+  "updated_at": "2026-04-19T12:00:00.000Z",
+  "cycle": 10,
+  "checkpoint": "Bug hunt C10 clean (encounter_card_overlay rune activation + screen_dither_layer). NEW: CRTNotify autoload — terminal-style event toasts with category colors, queue, slide+fade animations. Wired into encounter card (ogham, minigame) and effect engine (reputation, life). BUG-026 MEDIUM: EndRunScreen.tscn pointed to dead EndRunScreenUI — fixed. Dead file removed. 6 files, 287 lines net."
 }

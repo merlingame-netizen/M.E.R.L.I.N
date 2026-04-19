@@ -70,3 +70,8 @@
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) \u2014 re-fixed and committed"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}
+{"ts":"2026-04-19T12:00:00.000Z","type":"cycle_start","cycle":10,"detail":"Cycle 10: Bug hunt C10 clean. Feature: CRT notification toast system + EndRunScreen scene fix"}
+{"ts":"2026-04-19T12:00:00.000Z","type":"task_done","cycle":10,"detail":"CRT-NOTIFY-SYSTEM: CRTNotify autoload with category-based toasts, queue, slide+fade animations. Wired into encounter card + effect engine"}
+{"ts":"2026-04-19T12:00:00.000Z","type":"task_done","cycle":10,"detail":"BUG-026 MEDIUM: EndRunScreen.tscn loaded dead EndRunScreenUI instead of real EndRunScreen \u2014 fixed script path + node type"}
+{"ts":"2026-04-19T12:00:00.000Z","type":"task_done","cycle":10,"detail":"CLEANUP: Removed dead scripts/ui/end_run_screen.gd (EndRunScreenUI) \u2014 superseded by scripts/run/end_run_screen.gd"}
+{"ts":"2026-04-19T12:00:00.000Z","type":"cycle_end","cycle":10,"detail":"Cycle 10 complete: 1 bug fixed, CRT notify system. 6 files, 287 lines. 26 total bugs fixed across 10 cycles."}

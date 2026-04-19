@@ -657,6 +657,33 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "CRT-NOTIFY-SYSTEM",
+      "phase": 7,
+      "priority": 1,
+      "status": "completed",
+      "title": "CRT notification toast system (autoload Notify)",
+      "agent": "ui_worker",
+      "files": [
+        "scripts/autoload/crt_notify.gd",
+        "project.godot",
+        "scripts/ui/encounter_card_overlay.gd",
+        "scripts/merlin/merlin_effect_engine.gd"
+      ],
+      "description": "CRTNotify CanvasLayer autoload: terminal-styled toasts with category colors (life, reputation, ogham, currency, success, fail, danger, unlock), queue management (max 4), slide-in/fade-out animations, CRT palette integration. Wired into encounter card (ogham activation, minigame results) and effect engine (reputation, life >1).",
+      "completed_at": "2026-04-19"
+    },
+    {
+      "id": "BUGFIX-026",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix EndRunScreen.tscn script/class mismatch (BUG-026)",
+      "agent": "bug_hunter",
+      "files": ["scenes/EndRunScreen.tscn", "scripts/ui/end_run_screen.gd"],
+      "description": "EndRunScreen.tscn loaded dead EndRunScreenUI (wrong signals) instead of real EndRunScreen. Fixed scene script path + node type. Removed dead scripts/ui/end_run_screen.gd.",
+      "completed_at": "2026-04-19"
     }
   ]
 }

@@ -1,10 +1,10 @@
 {
-  "cycle": 9,
-  "timestamp": "2026-04-18T22:00:00.000Z",
+  "cycle": 10,
+  "timestamp": "2026-04-19T12:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-024-MINIGAME-START", "BUGFIX-025-COLOR-LEVELS-ROUTE", "CARD-OVERLAY-CRT-FIELDHINTS"],
-  "rationale": "Bug hunt on C8 files revealed C8 code fixes were NEVER PUSHED (only status JSONs were committed). BUG-024 HIGH: minigame.start() missing causes minigame hang. BUG-025 MEDIUM: set_color_levels ignores render mode. Both fixed. Feature: encounter card overlay rewritten with CRT_PALETTE styling, MerlinVisual helpers, per-choice lexical field hint labels with color-coded accents, staggered button animation.",
-  "budget": {"files": 2, "lines": 111},
+  "tasks": ["CRT-NOTIFY-SYSTEM", "BUGFIX-026-ENDRUNSCREEN-SCENE", "CLEANUP-DEAD-ENDRUNSCREENUI"],
+  "rationale": "Bug hunt C10 clean (rune activation + screen_dither_layer). Feature: CRTNotify autoload — CRT terminal notification toast system with category-based colors, queued display (max 4), slide-in/fade-out animations. Wired into encounter card overlay (ogham activation, minigame results) and effect engine (reputation, life >1). BUG-026: EndRunScreen.tscn loaded dead EndRunScreenUI script instead of real EndRunScreen — class/signal mismatch with GameFlowController. Fixed scene + removed dead file.",
+  "budget": {"files": 6, "lines": 287},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 9 code (encounter_card_overlay CRT rewrite). Then: Ogham/Rune activation UI during card encounters — row of owned runes above choices, tap to activate before selecting."
+  "next_cycle_plan": "Bug hunt on C10 notification system wiring. Then: CRT-styled Collection/Codex screen — rune gallery with unlocked oghams, category grouping, CRT palette. Alternative: Talent Tree visual (cross-run progression UI)."
 }

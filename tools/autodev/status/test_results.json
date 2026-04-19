@@ -9,7 +9,7 @@
       "id": "BUG-024",
       "severity": "HIGH",
       "file": "scripts/ui/encounter_card_overlay.gd",
-      "description": "minigame.start() never called — was claimed fixed in C8 (BUG-022) but code was never pushed to GitHub. Only status JSONs were committed. Minigames created but _on_start() never fires, game_completed never emitted, overlay hangs indefinitely on await.",
+      "description": "minigame.start() never called — was claimed fixed in C8 (BUG-022) but code was never pushed to GitHub.",
       "status": "fixed",
       "fix": "Added minigame.start() after add_child(minigame) in _on_choice()"
     },
@@ -17,11 +17,19 @@
       "id": "BUG-025",
       "severity": "MEDIUM",
       "file": "scripts/ui/screen_dither_layer.gd",
-      "description": "set_color_levels() always sets 'color_levels' param — was claimed fixed in C8 (BUG-023) but code was never pushed. PSX shader uses 'color_depth' not 'color_levels'.",
+      "description": "set_color_levels() always sets 'color_levels' param — PSX shader uses 'color_depth'.",
       "status": "fixed",
       "fix": "Route param name based on _render_mode: PSX->color_depth, CRT->color_levels"
+    },
+    {
+      "id": "BUG-026",
+      "severity": "MEDIUM",
+      "file": "scenes/EndRunScreen.tscn",
+      "description": "EndRunScreen.tscn loaded scripts/ui/end_run_screen.gd (class EndRunScreenUI with wrong signals return_to_hub/faction_chosen) instead of scripts/run/end_run_screen.gd (class EndRunScreen with correct signals hub_requested/faction_ending_chosen). GameFlowController could never wire end screen properly.",
+      "status": "fixed",
+      "fix": "Updated .tscn to reference scripts/run/end_run_screen.gd. Changed node type Node->Control with full-rect anchors. Removed dead EndRunScreenUI file."
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 9: Critical discovery — C8 code changes were never committed (only status files were pushed). 2 bugs re-fixed and actually committed this time. Encounter card overlay enhanced with CRT palette + field hints. 25 total bugs fixed across 9 cycles."
+  "overall_assessment": "Cycle 10: Bug hunt C10 clean. BUG-026 found during feature work — EndRunScreen scene/class mismatch. CRTNotify toast system added. 26 total bugs fixed across 10 cycles."
 }
