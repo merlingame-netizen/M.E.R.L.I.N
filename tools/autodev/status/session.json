@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 13 — Bug hunt C12 (0 bugs) + delete dead onboarding scenes (q-20260414-005)",
+  "objective": "Cycle 14 — Faction boost_weight card weighting (q-20260415-010)",
   "workers": [],
-  "updated_at": "2026-04-19T18:00:00.000Z",
-  "cycle": 13,
-  "checkpoint": "Bug hunt C12: 0 bugs — whisper biome pools and _get_biome_pool routing verified against all 8 BIOME_KEYS. Dead scene deletion: 10 files removed (IntroPersonalityQuiz.gd+.uid+.tscn, SceneRencontreMerlin.gd+.uid+.tscn+.uidren, quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd). validate_headless.sh cleaned (8→6 scenes). Creator confirmed via q-20260414-005. 25 total bugs fixed across 13 cycles."
+  "updated_at": "2026-04-19T20:00:00.000Z",
+  "cycle": 14,
+  "checkpoint": "Faction boost_weight: cards aligned with player's high-rep factions (>=50) now appear more often in FastRoute and Event pools. Two weighting signals: biome dominant_faction (+1.5) and card effect ADD_REPUTATION factions (+2.0 each). _compute_faction_boost() static method + _weighted_pick() replace random selection. Controller passes faction_rep in FastRoute context. 2 files, 63 lines. 25 bugs fixed across 14 cycles."
 }

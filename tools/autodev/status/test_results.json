@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 13,
-  "timestamp": "2026-04-19T18:00:00Z",
-  "type": "bughunt+cleanup",
-  "scope": "Cycle 13: Bug hunt C12 (whisper biome pools, _get_biome_pool routing) + delete dead onboarding scenes",
+  "cycle": 14,
+  "timestamp": "2026-04-19T20:00:00Z",
+  "type": "feature",
+  "scope": "Cycle 14: Bug hunt C13 trivial (file deletions only). Feature: faction boost_weight card weighting.",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 13: Bug hunt C12 found 0 bugs — all 8 biome keys match _get_biome_pool() fuzzy routing. Dead scene cleanup: 10 files deleted (IntroPersonalityQuiz + SceneRencontreMerlin + 3 helpers + 3 UIDs). validate_headless.sh updated (8→6 scenes). 25 total bugs fixed across 13 cycles."
+  "overall_assessment": "Cycle 14: Bug hunt C13 trivial (C13 only deleted files, no new code to review). Feature: faction boost_weight implemented — _compute_faction_boost() and _weighted_pick() in merlin_card_system.gd, faction_rep context in merlin_game_controller.gd. Code reviewed: no GDScript issues, all type hints correct, null safety via is_empty() checks. 25 total bugs fixed across 14 cycles."
 }

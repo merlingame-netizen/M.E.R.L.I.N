@@ -172,6 +172,7 @@ func generate_card(context: Dictionary) -> Dictionary:
 
 func get_fastroute_card(context: Dictionary) -> Dictionary:
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
 	var candidates: Array = []
 	var generic: Array = []
 
@@ -185,22 +186,18 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 		elif card_biome.is_empty():
 			generic.append(card)
 
-	# Prefer biome-specific, fallback to generic
 	if candidates.is_empty():
 		candidates = generic
 	if candidates.is_empty():
-		# Pool exhausted, reset and use all
 		_fastroute_seen.clear()
 		candidates = _fastroute_narrative_pool.duplicate()
 
 	if candidates.is_empty():
 		return _get_emergency_card()
 
-	var idx: int = _randi_range(0, candidates.size() - 1)
-	var selected: Dictionary = candidates[idx].duplicate(true)
+	var selected: Dictionary = _weighted_pick(candidates, faction_rep)
 	_fastroute_seen.append(str(selected.get("id", "")))
 
-	# Set type, validate, annotate, pad
 	selected["type"] = "narrative"
 	var v: Dictionary = _validate_card(selected)
 	if not v.get("valid", false):
@@ -596,6 +593,7 @@ func _generate_event_card(context: Dictionary) -> Dictionary:
 		return {}
 
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
 	var candidates: Array = []
 
 	for card in _event_cards_pool:
@@ -603,9 +601,9 @@ func _generate_event_card(context: Dictionary) -> Dictionary:
 		if _event_cards_seen.has(cid):
 			continue
 		var score: float = 1.0
-		# Biome match
 		if not biome.is_empty() and str(card.get("biome", "")) == biome:
 			score += 4.0
+		score += _compute_faction_boost(card, faction_rep)
 		candidates.append({"card": card, "score": score})
 
 	if candidates.is_empty():
@@ -833,6 +831,59 @@ func _load_json(path: String) -> Dictionary:
 	if not (data is Dictionary):
 		return {}
 	return data
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FACTION BOOST — rep >= 50 increases faction-aligned card weight (bible s.3.4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func _compute_faction_boost(card: Dictionary, faction_rep: Dictionary) -> float:
+	if faction_rep.is_empty():
+		return 0.0
+	var boost: float = 0.0
+	var card_biome: String = str(card.get("biome", ""))
+	if not card_biome.is_empty():
+		var biome_data: Dictionary = MerlinConstants.BIOMES.get(card_biome, {})
+		var dominant: String = str(biome_data.get("dominant_faction", ""))
+		if not dominant.is_empty() and int(faction_rep.get(dominant, 0)) >= MerlinConstants.FACTION_THRESHOLD_CONTENT:
+			boost += 1.5
+	var seen: Dictionary = {}
+	for option in card.get("options", []):
+		if not (option is Dictionary):
+			continue
+		for effect in option.get("effects", []):
+			if not (effect is Dictionary):
+				continue
+			if str(effect.get("type", "")) != "ADD_REPUTATION":
+				continue
+			var faction: String = str(effect.get("faction", ""))
+			if faction.is_empty() or seen.has(faction):
+				continue
+			seen[faction] = true
+			if int(faction_rep.get(faction, 0)) >= MerlinConstants.FACTION_THRESHOLD_CONTENT:
+				boost += 2.0
+	return boost
+
+
+func _weighted_pick(cards: Array, faction_rep: Dictionary) -> Dictionary:
+	if cards.is_empty():
+		return {}
+	if faction_rep.is_empty():
+		var idx: int = _randi_range(0, cards.size() - 1)
+		return cards[idx].duplicate(true)
+	var weights: Array = []
+	var total: float = 0.0
+	for card in cards:
+		var w: float = 1.0 + _compute_faction_boost(card, faction_rep)
+		weights.append(w)
+		total += w
+	var roll: float = _randf() * total
+	var cumul: float = 0.0
+	for i in range(cards.size()):
+		cumul += weights[i]
+		if roll < cumul:
+			return cards[i].duplicate(true)
+	return cards[-1].duplicate(true)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

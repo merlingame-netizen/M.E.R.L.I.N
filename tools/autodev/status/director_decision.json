@@ -1,10 +1,10 @@
 {
-  "cycle": 13,
-  "timestamp": "2026-04-19T18:00:00.000Z",
+  "cycle": 14,
+  "timestamp": "2026-04-19T20:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C12", "DELETE-DEAD-SCENES"],
-  "rationale": "Bug hunt C12: verified whisper biome pools and _get_biome_pool() routing against all 8 BIOME_KEYS — 0 bugs found. Dead scene cleanup: creator confirmed deletion of IntroPersonalityQuiz + SceneRencontreMerlin (q-20260414-005). Deleted 10 files total (5 scripts, 2 scenes, 3 UIDs) + updated validate_headless.sh. These scenes were unreachable from normal gameplay (Menu3DPC routes to ParchmentPreRun).",
-  "budget": {"files": 11, "lines": 0},
+  "tasks": ["FACTION-BOOST-WEIGHT"],
+  "rationale": "Bug hunt C13 trivial (C13 only deleted files, no new code). Feature: faction boost_weight card weighting (q-20260415-010 answer A). When player rep >= 50 with a faction, cards giving rep to that faction appear 2-3x more often in FastRoute and Event pools. Two boost signals: biome dominant_faction (+1.5 weight) and card effect ADD_REPUTATION for high-rep factions (+2.0 per faction). Converts FastRoute from random to weighted selection.",
+  "budget": {"files": 2, "lines": 63},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C13 (validate_headless.sh update only — quick). Then feature: biome-specific walk event pools for walk_event_controller, or implement SFXEngine (q-20260414-006), or boost_weight faction card weighting (q-20260415-010)."
+  "next_cycle_plan": "Bug hunt C14 (merlin_card_system.gd _compute_faction_boost + _weighted_pick, merlin_game_controller.gd _get_fastroute_card context). Then feature: SFXEngine (q-20260414-006) or walk event biome pools."
 }
