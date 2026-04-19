@@ -85,6 +85,10 @@
     {
       "question_id": "q-20260415-001",
       "answer": "A: Few-shot JSON dans system prompt (exemples + schema)"
+    },
+    {
+      "question_id": "q-20260415-002",
+      "answer": "B: Complet (+ life_at_end, dominant_faction, minigames_won, oghams_used)"
     }
   ]
 }
