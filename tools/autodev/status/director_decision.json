@@ -1,10 +1,10 @@
 {
-  "cycle": 12,
-  "timestamp": "2026-04-19T16:00:00.000Z",
+  "cycle": 13,
+  "timestamp": "2026-04-19T18:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["WHISPER-BIOME-EXPANSION", "BUGHUNT-C11"],
-  "rationale": "Bug hunt on C11 code (merlin_whisper, walk_hud, broceliande_forest_3d) found 0 bugs — code is clean. Feature: Expanded MerlinWhisper from 1 biome pool (broceliande) to all 8 biomes (45 new whispers). Added critical health pool (life <=10%) with dramatic Ankou-themed whispers. Improved time-of-day matching to handle French variants from _get_time_of_day_name(). New _get_biome_pool() method for clean biome routing via fuzzy .find() matching.",
-  "budget": {"files": 1, "lines": 93},
+  "tasks": ["BUGHUNT-C12", "DELETE-DEAD-SCENES"],
+  "rationale": "Bug hunt C12: verified whisper biome pools and _get_biome_pool() routing against all 8 BIOME_KEYS — 0 bugs found. Dead scene cleanup: creator confirmed deletion of IntroPersonalityQuiz + SceneRencontreMerlin (q-20260414-005). Deleted 10 files total (5 scripts, 2 scenes, 3 UIDs) + updated validate_headless.sh. These scenes were unreachable from normal gameplay (Menu3DPC routes to ParchmentPreRun).",
+  "budget": {"files": 11, "lines": 0},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 12 code (whisper biome pools, _get_biome_pool routing). Then: delete dead code (IntroPersonalityQuiz + SceneRencontreMerlin — creator confirmed q-20260414-005). Or: biome-specific walk event pools for walk_event_controller."
+  "next_cycle_plan": "Bug hunt C13 (validate_headless.sh update only — quick). Then feature: biome-specific walk event pools for walk_event_controller, or implement SFXEngine (q-20260414-006), or boost_weight faction card weighting (q-20260415-010)."
 }
