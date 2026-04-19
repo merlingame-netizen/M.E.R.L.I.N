@@ -352,7 +352,7 @@
       "id": "q-20260415-002",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "question": "run_history entries à sauvegarder: quels champs par run? (A) Minimal: biome+cards_played+victory+anam_earned+timestamp, (B) Complet: + life_at_end + dominant_faction + minigames_won + oghams_used",
       "context": "SPEC-9 audit: run_history never populated. Doit être implémenté. Champs minimal suffisent pour le RAG LLM et l'eco-memory, mais champs complets sont utiles pour stats dashboard.",
       "type": "multiple_choice",
