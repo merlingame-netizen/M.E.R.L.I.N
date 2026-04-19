@@ -76,6 +76,75 @@ const WHISPERS_VETERAN: Array[String] = [
 	"Les esprits te reconnaissent maintenant.",
 ]
 
+const WHISPERS_LANDES: Array[String] = [
+	"La bruyere s'incline a ton passage. Ou est-ce le vent ?",
+	"Les menhirs comptent tes pas. Ils ont l'eternite.",
+	"Les landes ne pardonnent pas l'orgueil.",
+	"Le vent d'ouest porte les voix des navigateurs perdus.",
+	"Ici, meme les pierres ont des opinions.",
+	"L'horizon tremble comme un mirage de chaleur. En Bretagne.",
+]
+
+const WHISPERS_COTES: Array[String] = [
+	"L'ecume murmure des noms oublies.",
+	"Les falaises reculent d'un pouce par siecle. Patience.",
+	"Le sel preserve tout — meme les regrets.",
+	"Un phare quelque part cligne dans la brume.",
+	"La mer prend plus qu'elle ne donne. Toujours.",
+	"Les goemoniers connaissaient les vagues par leur prenom.",
+]
+
+const WHISPERS_VILLAGES: Array[String] = [
+	"Les murs ont des oreilles. Et parfois des bouches.",
+	"Quelqu'un laisse du lait pour les korrigans. Sage.",
+	"La fumee des cheminees raconte qui est chez soi.",
+	"Le forgeron frappe au rythme de la terre.",
+	"Un chat noir te regarde depuis le seuil. Signe ? Quel signe ?",
+	"Le puits du village se souvient de chaque voeu.",
+]
+
+const WHISPERS_CERCLES: Array[String] = [
+	"Le cercle n'a ni debut ni fin. Comme cette conversation.",
+	"Les pierres vibrent a une frequence que tu ne peux pas entendre. Pas encore.",
+	"Quelqu'un a danse ici il y a trois mille ans. Le sol s'en souvient.",
+	"Les alignements ne sont pas un hasard. Rien ne l'est.",
+	"Tu te tiens au centre. Ou au bord. Difficile a dire.",
+]
+
+const WHISPERS_MARAIS: Array[String] = [
+	"L'eau croupie cache des tresors. Et des dents.",
+	"Les feux follets mentent. Mais pas toujours.",
+	"La tourbe avale les secrets sans les digerer.",
+	"Un korrigan te suit depuis trois tournants.",
+	"Le marais respire. Lentement. Avec patience.",
+	"Sous la mousse, quelque chose attend. Depuis longtemps.",
+]
+
+const WHISPERS_COLLINES: Array[String] = [
+	"Du sommet, on voit le passe. Et un peu du futur.",
+	"Les dolmens sont des portes. Vers ou ? Mystere.",
+	"Le vent des collines porte des chansons sans paroles.",
+	"Les ancetres dorment sous l'herbe. Certains pas tres profondement.",
+	"Chaque colline est un tumulus qui s'ignore.",
+]
+
+const WHISPERS_ILES: Array[String] = [
+	"L'ile n'etait pas la hier. Elle le sera peut-etre demain.",
+	"Entre les marees, le temps hesite.",
+	"Les iles mystiques existent entre deux mondes.",
+	"Le brouillard qui les entoure n'est pas naturel.",
+	"Tir na nOg est plus pres qu'on ne le pense.",
+	"Les vagues ici chuchotent dans une langue d'avant les langues.",
+]
+
+const WHISPERS_CRITICAL: Array[String] = [
+	"Tu vacilles... Le monde aussi.",
+	"L'Ankou nettoie sa faux. Non loin.",
+	"Tes ancetres tendent la main. Trop tot ?",
+	"La lumiere faiblit. La tienne.",
+	"Un pas de plus, ou un pas de trop ?",
+]
+
 var _label: Label
 var _timer: float = 0.0
 var _next_interval: float = 12.0
@@ -146,27 +215,51 @@ func _pick_whisper() -> String:
 	var pool: Array[String] = []
 	pool.append_array(WHISPERS_GENERIC)
 
-	if _context_health_pct <= 0.25:
+	if _context_health_pct <= 0.10:
+		pool.append_array(WHISPERS_CRITICAL)
+		pool.append_array(WHISPERS_CRITICAL)
+	elif _context_health_pct <= 0.25:
 		pool.append_array(WHISPERS_LOW_HEALTH)
 		pool.append_array(WHISPERS_LOW_HEALTH)
 	elif _context_health_pct >= 0.9:
 		pool.append_array(WHISPERS_HIGH_HEALTH)
 
 	match _context_time:
-		"night", "evening":
+		"night", "evening", "Nuit":
 			pool.append_array(WHISPERS_NIGHT)
-		"dawn":
+		"dawn", "Aube":
 			pool.append_array(WHISPERS_DAWN)
-		"dusk":
+		"dusk", "Crepuscule":
 			pool.append_array(WHISPERS_DUSK)
 
-	if _context_biome.find("broceliande") >= 0:
-		pool.append_array(WHISPERS_BROCELIANDE)
+	var biome_pool: Array[String] = _get_biome_pool(_context_biome)
+	if biome_pool.size() > 0:
+		pool.append_array(biome_pool)
 
 	if _context_total_runs >= 5:
 		pool.append_array(WHISPERS_VETERAN)
 
 	return pool[randi() % pool.size()]
+
+
+func _get_biome_pool(biome: String) -> Array[String]:
+	if biome.find("broceliande") >= 0 or biome.find("foret") >= 0:
+		return WHISPERS_BROCELIANDE
+	if biome.find("landes") >= 0 or biome.find("bruyere") >= 0:
+		return WHISPERS_LANDES
+	if biome.find("cotes") >= 0 or biome.find("sauvages") >= 0:
+		return WHISPERS_COTES
+	if biome.find("villages") >= 0 or biome.find("celtes") >= 0:
+		return WHISPERS_VILLAGES
+	if biome.find("cercles") >= 0 or biome.find("pierres") >= 0:
+		return WHISPERS_CERCLES
+	if biome.find("marais") >= 0 or biome.find("korrigans") >= 0:
+		return WHISPERS_MARAIS
+	if biome.find("collines") >= 0 or biome.find("dolmens") >= 0:
+		return WHISPERS_COLLINES
+	if biome.find("iles") >= 0 or biome.find("mystiques") >= 0:
+		return WHISPERS_ILES
+	return []
 
 
 func _show_whisper(text: String) -> void:

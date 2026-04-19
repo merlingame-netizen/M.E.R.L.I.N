@@ -679,6 +679,17 @@
       "files": ["scripts/ui/walk_hud.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "Added card count display (Carte N/5 with amber color progression at 50%/80% thresholds). Renamed essences to biome currency with diamond glyph. Backward-compat update_essences() wrapper kept. Encounter count tracking in BroceliandeForest3D.",
       "completed_at": "2026-04-19"
+    },
+    {
+      "id": "WHISPER-BIOME-EXPANSION",
+      "phase": 5,
+      "priority": 3,
+      "status": "completed",
+      "title": "MerlinWhisper biome-specific pools for all 8 biomes + critical health",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/merlin_whisper.gd"],
+      "description": "Expanded MerlinWhisper from 1 biome pool (broceliande) to all 8 biomes: landes, cotes, villages, cercles, marais, collines, iles. 45 new atmospheric whispers. Added critical health pool (life <=10%). New _get_biome_pool() method for fuzzy biome routing. Time-of-day matching now includes French variants.",
+      "completed_at": "2026-04-19"
     }
   ]
 }

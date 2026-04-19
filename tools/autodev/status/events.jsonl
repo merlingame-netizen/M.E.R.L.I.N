@@ -75,3 +75,7 @@
 {"ts":"2026-04-19T14:00:00.000Z","type":"task_done","cycle":11,"detail":"WALKHUD-CARD-COUNTER: card count display (Carte N/5) with color progression, biome currency rename from essences"}
 {"ts":"2026-04-19T14:00:00.000Z","type":"task_done","cycle":11,"detail":"WALKHUD-INTEGRATION: encounter count tracking, whisper pause/resume on encounters, context updates for whisper system"}
 {"ts":"2026-04-19T14:00:00.000Z","type":"cycle_end","cycle":11,"detail":"Cycle 11 complete: 0 bugs (C10 clean), 3 features. 3 files, ~191 lines. 25 total bugs fixed across 11 cycles."}
+{"ts":"2026-04-19T16:00:00.000Z","type":"cycle_start","cycle":12,"detail":"Cycle 12: Bug hunt C11 (merlin_whisper, walk_hud, broceliande_forest_3d) + whisper biome expansion"}
+{"ts":"2026-04-19T16:00:00.000Z","type":"task_done","cycle":12,"detail":"BUGHUNT-C11: 0 bugs found in merlin_whisper.gd, walk_hud.gd, broceliande_forest_3d.gd — all CRT_PALETTE keys verified"}
+{"ts":"2026-04-19T16:00:00.000Z","type":"task_done","cycle":12,"detail":"WHISPER-BIOME-EXPANSION: 7 new biome pools (landes/cotes/villages/cercles/marais/collines/iles) + critical health pool. 45 new whispers. _get_biome_pool() fuzzy routing."}
+{"ts":"2026-04-19T16:00:00.000Z","type":"cycle_end","cycle":12,"detail":"Cycle 12 complete: 0 bugs (C11 clean), 1 feature (45 new whispers across 8 biomes). 1 file, ~93 lines. 25 total bugs fixed across 12 cycles."}

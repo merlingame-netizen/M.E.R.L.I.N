@@ -1,10 +1,10 @@
 {
-  "cycle": 11,
-  "timestamp": "2026-04-19T14:00:00.000Z",
+  "cycle": 12,
+  "timestamp": "2026-04-19T16:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["MERLIN-WHISPER-SYSTEM", "WALKHUD-CARD-COUNTER", "WALKHUD-CURRENCY-RENAME"],
-  "rationale": "Bug hunt on C10 code (rune activation + EndRunScreen CRT) found 0 bugs — code is clean. Feature: Merlin Whisper ambient system adds the 'quirky & mysterious druide parlant' feel. 40+ context-sensitive whispers during forest walks (health, time, biome, veteran). WalkHUD enhanced with card counter + currency rename for gameplay visibility.",
-  "budget": {"files": 3, "lines": 191},
+  "tasks": ["WHISPER-BIOME-EXPANSION", "BUGHUNT-C11"],
+  "rationale": "Bug hunt on C11 code (merlin_whisper, walk_hud, broceliande_forest_3d) found 0 bugs — code is clean. Feature: Expanded MerlinWhisper from 1 biome pool (broceliande) to all 8 biomes (45 new whispers). Added critical health pool (life <=10%) with dramatic Ankou-themed whispers. Improved time-of-day matching to handle French variants from _get_time_of_day_name(). New _get_biome_pool() method for clean biome routing via fuzzy .find() matching.",
+  "budget": {"files": 1, "lines": 93},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 11 code (merlin_whisper, walk_hud enhancements). Then: biome-specific whisper pools for landes/cotes/villages/marais/collines/iles. Or: delete dead code (IntroPersonalityQuiz + SceneRencontreMerlin — creator confirmed)."
+  "next_cycle_plan": "Bug hunt on cycle 12 code (whisper biome pools, _get_biome_pool routing). Then: delete dead code (IntroPersonalityQuiz + SceneRencontreMerlin — creator confirmed q-20260414-005). Or: biome-specific walk event pools for walk_event_controller."
 }
