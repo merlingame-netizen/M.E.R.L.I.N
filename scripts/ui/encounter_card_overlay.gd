@@ -261,7 +261,6 @@ func _on_choice(idx: int) -> void:
 		minigame.start()
 		var result: Dictionary = await minigame.game_completed
 		score = int(result.get("score", 50))
-		minigame.queue_free()
 	else:
 		score = randi_range(40, 95)
 
@@ -301,7 +300,25 @@ func _on_choice(idx: int) -> void:
 	else:
 		response = "Un echec cuisant. La foret gronde de mecontentement."
 
-	_text_label.text = str(choice.get("label", "")) + "\n\n" + response
+	for btn in _buttons:
+		if btn.get_parent():
+			btn.get_parent().visible = false
+	if not _ogham_buttons.is_empty() and _ogham_buttons[0].get_parent():
+		_ogham_buttons[0].get_parent().visible = false
+
+	_text_label.bbcode_enabled = true
+	var result_text: String = "[center]%s[/center]\n\n[center]%s[/center]" % [
+		str(choice.get("label", "")), response]
+	var effects: Array = choice.get("effects", []) as Array
+	if not effects.is_empty():
+		result_text += "\n\n[center][color=#%s][ EFFETS ][/color][/center]\n" % pal.phosphor_dim.to_html(false)
+		for effect in effects:
+			var display: String = _format_effect_text(effect)
+			if display.is_empty():
+				continue
+			var ecolor: Color = _get_effect_color(effect, pal)
+			result_text += "[center][color=#%s]%s[/color][/center]\n" % [ecolor.to_html(false), display]
+	_text_label.text = result_text
 
 	if is_instance_valid(SFXManager):
 		if score >= 80:
@@ -324,3 +341,77 @@ func _on_choice(idx: int) -> void:
 		card_resolved.emit(idx, score)
 		queue_free()
 	)
+
+
+static func _format_effect_text(effect: Variant) -> String:
+	var etype: String = ""
+	var amount: int = 0
+	var faction: String = ""
+	if effect is Dictionary:
+		etype = str(effect.get("type", ""))
+		amount = int(effect.get("amount", 0))
+		faction = str(effect.get("faction", ""))
+	elif effect is String:
+		var parts: PackedStringArray = str(effect).split(":")
+		etype = parts[0] if parts.size() >= 1 else ""
+		if etype == "ADD_REPUTATION" and parts.size() >= 3:
+			faction = parts[1]
+			amount = int(parts[2])
+		elif parts.size() >= 2:
+			amount = int(parts[1])
+	match etype:
+		"HEAL_LIFE":
+			if amount <= 0:
+				return ""
+			return "\u2764 +%d PV" % amount
+		"DAMAGE_LIFE":
+			if amount <= 0:
+				return ""
+			return "\u2620 -%d PV" % amount
+		"ADD_REPUTATION":
+			if amount == 0:
+				return ""
+			var sign_s: String = "+" if amount >= 0 else ""
+			return "\u2726 %s%d %s" % [sign_s, amount, faction.capitalize()]
+		"ADD_ANAM":
+			if amount <= 0:
+				return ""
+			return "\u2756 +%d Anam" % amount
+		"ADD_BIOME_CURRENCY":
+			if amount <= 0:
+				return ""
+			return "\u25C6 +%d Monnaie" % amount
+		"UNLOCK_OGHAM":
+			return "\u26A1 Rune deverrouillee"
+		"PROGRESS_MISSION":
+			if amount <= 0:
+				return ""
+			return "\u2192 Mission +%d" % amount
+		"ADD_KARMA", "ADD_TENSION", "SET_FLAG", "ADD_TAG", "REMOVE_TAG":
+			return ""
+	return ""
+
+
+static func _get_effect_color(effect: Variant, pal: Dictionary) -> Color:
+	var etype: String = ""
+	if effect is Dictionary:
+		etype = str(effect.get("type", ""))
+	elif effect is String:
+		var parts: PackedStringArray = str(effect).split(":")
+		etype = parts[0] if parts.size() >= 1 else ""
+	match etype:
+		"HEAL_LIFE":
+			return pal.get("success", Color.GREEN)
+		"DAMAGE_LIFE":
+			return pal.get("danger", Color.RED)
+		"ADD_REPUTATION":
+			return pal.get("amber_bright", Color.YELLOW)
+		"ADD_ANAM":
+			return pal.get("cyan_bright", Color.CYAN)
+		"ADD_BIOME_CURRENCY":
+			return pal.get("amber", Color.YELLOW)
+		"UNLOCK_OGHAM":
+			return pal.get("cyan_bright", Color.CYAN)
+		"PROGRESS_MISSION":
+			return pal.get("phosphor", Color.GREEN)
+	return pal.get("phosphor_dim", Color.GRAY)
