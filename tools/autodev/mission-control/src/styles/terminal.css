@@ -70,10 +70,11 @@ html, body, #root {
   background: repeating-linear-gradient(
     0deg,
     transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.08) 2px,
-    rgba(0, 0, 0, 0.08) 4px
+    transparent 3px,
+    rgba(0, 0, 0, 0.04) 3px,
+    rgba(0, 0, 0, 0.04) 6px
   );
+  opacity: 0.5;
 }
 
 /* ─── SCROLLBAR ─── */
@@ -144,16 +145,13 @@ html, body, #root {
   inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms var(--ease);
+  display: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
 
 .tab-panel--active {
-  opacity: 1;
-  pointer-events: auto;
+  display: block;
 }
 
 /* ─── BOTTOM NAV ─── */
