@@ -440,7 +440,7 @@
       "id": "q-20260415-008",
       "category": "gamedesign",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "title": "mg_trace_cerf: champ observation ou perception selon bible?",
       "question": "mg_trace_cerf.gd (cliquer sur un marqueur qui se déplace — Trace du Cerf) est dans GAMES[\"observation\"]. La bible §6.4 liste \"Traces\" sous le champ PERCEPTION. Doit-on:\n- A: Déplacer mg_trace_cerf vers GAMES[\"perception\"] pour conformité bible\n- B: Garder dans observation (cliquer un objet visuel = observation)\n- C: Créer un nouveau mg_traces.gd (suivre empreintes) pour perception et garder trace_cerf en observation",
       "context": "SPEC-12 MG-12-03: Le comportement de trace_cerf (cliquer marqueur mobile) ne correspond pas exactement à \"suivre des empreintes sans quitter le chemin\" décrit dans la bible.",
