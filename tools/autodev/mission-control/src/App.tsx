@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Component, ReactNode } from 'react';
 import { useStateSync } from './hooks/useStateSync';
 import { useMissionStore } from './store/mission-store';
 import { GameTab } from './components/tabs/GameTab';
@@ -18,6 +18,24 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'director', icon: '\u2691', label: 'Director' },
 ];
 
+class SafePanel extends Component<{ children: ReactNode }, { error: string | null }> {
+  state = { error: null as string | null };
+  static getDerivedStateFromError(e: Error) { return { error: e.message }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 20, color: '#ff3326', fontFamily: 'monospace', fontSize: 11 }}>
+          <p>Panel error: {this.state.error}</p>
+          <button onClick={() => this.setState({ error: null })} style={{ color: '#ffbf33', background: 'none', border: '1px solid #ffbf33', padding: '4px 12px', marginTop: 8, cursor: 'pointer', fontFamily: 'monospace' }}>
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function App() {
   useStateSync();
   const connected = useMissionStore(s => s.connected);
@@ -25,7 +43,8 @@ export function App() {
   const featureQueue = useMissionStore(s => s.featureQueue);
 
   const [tab, setTab] = useState<TabId>(() => {
-    return (localStorage.getItem('mc.tab') as TabId) || 'game';
+    const saved = localStorage.getItem('mc.tab') as TabId;
+    return saved && TABS.some(t => t.id === saved) ? saved : 'game';
   });
 
   const switchTab = useCallback((id: TabId) => {
@@ -33,8 +52,8 @@ export function App() {
     localStorage.setItem('mc.tab', id);
   }, []);
 
-  const pendingTasks = featureQueue.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
-  const errorAlerts = alerts.filter(a => a.level === 'ERROR').length;
+  const pendingTasks = featureQueue?.filter(t => t.status === 'pending' || t.status === 'in_progress').length || 0;
+  const errorAlerts = alerts?.filter(a => a.level === 'ERROR').length || 0;
 
   return (
     <div className="app">
@@ -47,11 +66,11 @@ export function App() {
       </header>
 
       <div className="app__content">
-        <div className={`tab-panel ${tab === 'game' ? 'tab-panel--active' : ''}`}><GameTab /></div>
-        <div className={`tab-panel ${tab === 'agents' ? 'tab-panel--active' : ''}`}><AgentsTab /></div>
-        <div className={`tab-panel ${tab === 'tasks' ? 'tab-panel--active' : ''}`}><TasksTab /></div>
-        <div className={`tab-panel ${tab === 'alerts' ? 'tab-panel--active' : ''}`}><AlertsTab /></div>
-        <div className={`tab-panel ${tab === 'director' ? 'tab-panel--active' : ''}`}><DirectorTab /></div>
+        <div className={`tab-panel ${tab === 'game' ? 'tab-panel--active' : ''}`}><SafePanel><GameTab /></SafePanel></div>
+        <div className={`tab-panel ${tab === 'agents' ? 'tab-panel--active' : ''}`}><SafePanel><AgentsTab /></SafePanel></div>
+        <div className={`tab-panel ${tab === 'tasks' ? 'tab-panel--active' : ''}`}><SafePanel><TasksTab /></SafePanel></div>
+        <div className={`tab-panel ${tab === 'alerts' ? 'tab-panel--active' : ''}`}><SafePanel><AlertsTab /></SafePanel></div>
+        <div className={`tab-panel ${tab === 'director' ? 'tab-panel--active' : ''}`}><SafePanel><DirectorTab /></SafePanel></div>
       </div>
 
       <nav className="app__nav">
