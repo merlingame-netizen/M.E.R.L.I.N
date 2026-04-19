@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## WalkHUD — Minimal 3D Walk HUD (PV, Souffle, Essences)
+## WalkHUD — Minimal 3D Walk HUD (PV, Currency, Ogham, Card Count)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Overlays the 3D viewport during forest walk gameplay.
 ## CRT phosphor aesthetic, VT323 monospace font.
@@ -25,7 +25,8 @@ const PV_BAR_HEIGHT: float = 10.0
 var _root: Control
 var _pv_bar: ProgressBar
 var _pv_label: Label
-var _essences_label: Label
+var _currency_label: Label
+var _card_count_label: Label
 var _zone_label: Label
 var _crosshair: Label
 var _ogham_label: Label
@@ -62,8 +63,12 @@ func update_pv(current: int, max_pv: int) -> void:
 		_pv_label.add_theme_color_override("font_color", pal["phosphor"])
 
 
+func update_currency(count: int) -> void:
+	_currency_label.text = "\u25C6 %d" % count
+
+
 func update_essences(count: int) -> void:
-	_essences_label.text = "~ %d" % count  # ~ as essence glyph
+	update_currency(count)
 
 
 func update_zone(zone_name: String, season_name: String, time_name: String) -> void:
@@ -87,6 +92,18 @@ func update_ogham(rune: String, ogham_name: String, cooldown: int) -> void:
 	else:
 		_ogham_cd_label.text = "CD: %d" % cooldown
 		_ogham_cd_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+
+
+func update_card_count(current: int, total: int) -> void:
+	_card_count_label.text = "Carte %d/%d" % [current, total]
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
+	var ratio: float = float(current) / float(total) if total > 0 else 0.0
+	if ratio >= 0.8:
+		_card_count_label.add_theme_color_override("font_color", pal["amber_bright"])
+	elif ratio >= 0.5:
+		_card_count_label.add_theme_color_override("font_color", pal["amber"])
+	else:
+		_card_count_label.add_theme_color_override("font_color", pal["phosphor_dim"])
 
 
 func toggle_zone_display() -> void:
@@ -186,14 +203,28 @@ func _build_ui() -> void:
 	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_hbox.add_child(spacer2)
 
-	# Essences (right)
-	_essences_label = Label.new()
-	_essences_label.text = "~ 0"
-	_essences_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_essences_label.add_theme_font_override("font", font)
-	_essences_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD)
-	_essences_label.add_theme_color_override("font_color", pal["amber"])
-	top_hbox.add_child(_essences_label)
+	# Card count (center-right)
+	_card_count_label = Label.new()
+	_card_count_label.text = "Carte 0/5"
+	_card_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_card_count_label.add_theme_font_override("font", font)
+	_card_count_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD)
+	_card_count_label.add_theme_color_override("font_color", pal["phosphor_dim"])
+	top_hbox.add_child(_card_count_label)
+
+	# Spacer
+	var spacer3: Control = Control.new()
+	spacer3.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_hbox.add_child(spacer3)
+
+	# Biome currency (right)
+	_currency_label = Label.new()
+	_currency_label.text = "\u25C6 0"
+	_currency_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_currency_label.add_theme_font_override("font", font)
+	_currency_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD)
+	_currency_label.add_theme_color_override("font_color", pal["amber"])
+	top_hbox.add_child(_currency_label)
 
 	# === CROSSHAIR (center) ===
 	_crosshair = Label.new()

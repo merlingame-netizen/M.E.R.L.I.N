@@ -28,6 +28,7 @@ const BrocScreenVfxClass = preload("res://scripts/broceliande_3d/broc_screen_vfx
 const BrocFaunaBubbleClass = preload("res://scripts/broceliande_3d/broc_fauna_bubble.gd")
 const BrocCreatureSpawnerClass = preload("res://scripts/broceliande_3d/broc_creature_spawner.gd")
 const BrocNarrativeDirectorClass = preload("res://scripts/broceliande_3d/broc_narrative_director.gd")
+const MerlinWhisperClass = preload("res://scripts/ui/merlin_whisper.gd")
 const ForestAssetSpawnerClass = preload("res://scripts/broceliande_3d/forest_asset_spawner.gd")
 const ForestZoneBuilderClass = preload("res://scripts/broceliande_3d/forest_zone_builder.gd")
 const ForestEffectsClass = preload("res://scripts/broceliande_3d/forest_effects.gd")
@@ -173,7 +174,10 @@ var _screen_vfx: RefCounted  # BrocScreenVfx
 var _creature_spawner: RefCounted  # BrocCreatureSpawner
 var _fauna_bubble: RefCounted  # BrocFaunaBubble
 var _narrative_director: RefCounted  # BrocNarrativeDirector
+var _merlin_whisper: Node  # MerlinWhisper (CanvasLayer)
 var _gameplay_active: bool = false  # true when LLM event system is wired
+var _encounter_count: int = 0
+var _encounter_total: int = 5
 var _saved_crt_preset: String = "medium"
 var _crt_was_visible: bool = true
 
@@ -347,9 +351,13 @@ func _init_helpers() -> void:
 
 
 func _init_gameplay_systems() -> void:
-	# Walk HUD (PV, Souffle, Essences) — CanvasLayer above viewport
+	# Walk HUD (PV, Currency, Ogham, Card Count) — CanvasLayer above viewport
 	_walk_hud = WalkHudClass.new()
 	add_child(_walk_hud)
+
+	# Merlin whisper system — ambient cryptic one-liners during walk
+	_merlin_whisper = MerlinWhisperClass.new()
+	add_child(_merlin_whisper)
 
 	# Event overlay (darkened bg + typewriter + 3 choices)
 	_walk_event_overlay = WalkEventOverlayClass.new()
@@ -591,6 +599,22 @@ func _physics_process(delta: float) -> void:
 		var season_name: String = _season.get_name() if _season else ""
 		var time_name: String = _get_time_of_day_name()
 		_walk_hud.update_zone(zone_name, season_name, time_name)
+
+	# Update whisper context for ambient Merlin quips
+	if _merlin_whisper and _merlin_whisper.has_method("set_context"):
+		var health_pct: float = 1.0
+		var gm_w: Node = get_node_or_null("/root/GameManager")
+		if gm_w:
+			var rs_val: Variant = gm_w.get("run_state")
+			if rs_val is Dictionary:
+				health_pct = float((rs_val as Dictionary).get("life_essence", 100)) / 100.0
+		var total_runs: int = 0
+		var st: Node = get_node_or_null("/root/MerlinStore")
+		if st:
+			var st_val: Variant = st.get("state")
+			if st_val is Dictionary:
+				total_runs = int((st_val as Dictionary).get("meta", {}).get("total_runs", 0))
+		_merlin_whisper.set_context("broceliande", health_pct, _get_time_of_day_name(), total_runs)
 
 	# Dynamic resolution scaling — adjust SubViewport size based on frame time
 	_update_dynamic_resolution(delta)
@@ -1073,13 +1097,22 @@ const FALLBACK_INTRO_TEXT: String = "Les brumes de Broceliande se levent lenteme
 
 ## Encounter callback — auto-walk paused, show card overlay on 3D
 func _on_encounter_reached(enc_idx: int) -> void:
+	_encounter_count = enc_idx + 1
 	print("[Forest3D] Encounter %d — showing card overlay" % enc_idx)
+
+	# Pause whispers during card encounters
+	if _merlin_whisper and _merlin_whisper.has_method("pause_whispers"):
+		_merlin_whisper.pause_whispers()
+
+	# Update card count on HUD
+	if _walk_hud and _walk_hud.has_method("update_card_count"):
+		_walk_hud.update_card_count(_encounter_count, _encounter_total)
 
 	# Brief anticipation — show text before card popup
 	if is_instance_valid(objective_label):
 		objective_label.text = "Une presence dans la brume..."
 	if is_instance_valid(status_label):
-		status_label.text = "Rencontre %d / 5" % (enc_idx + 1)
+		status_label.text = "Rencontre %d / %d" % [_encounter_count, _encounter_total]
 
 	# SFX: mysterious chime
 	if is_instance_valid(SFXManager):
@@ -1138,6 +1171,9 @@ func _on_encounter_reached(enc_idx: int) -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		if is_instance_valid(objective_label):
 			objective_label.text = "Le sentier continue..."
+		# Resume whispers after encounter
+		if _merlin_whisper and _merlin_whisper.has_method("resume_whispers"):
+			_merlin_whisper.resume_whispers()
 		if _autowalk:
 			_autowalk.resume_after_encounter()
 	)
