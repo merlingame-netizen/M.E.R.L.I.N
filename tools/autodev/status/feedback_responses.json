@@ -101,6 +101,10 @@
     {
       "question_id": "q-20260415-005",
       "answer": "B: 3 examples — add end-game (PROGRESS_MISSION + high rep swings)"
+    },
+    {
+      "question_id": "q-20260415-007",
+      "answer": "C: Renommer en mg_quete_biome.gd pour clarifier son rôle spécial"
     }
   ]
 }
