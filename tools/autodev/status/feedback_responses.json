@@ -73,6 +73,10 @@
     {
       "question_id": "q-20260414-008",
       "answer": "B) Monter a 14px (priorite lisibilite mobile, leger impact DA)"
+    },
+    {
+      "question_id": "q-20260414-009",
+      "answer": "B: Toujours afficher l'ecran meme avec 1 faction"
     }
   ]
 }
