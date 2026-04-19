@@ -930,16 +930,36 @@ func _update_hud() -> void:
 	if _merlin_found:
 		return
 
-	# Update WalkHUD (PV + Ogham + Essences)
-	if _walk_hud:
-		var store: Node = get_node_or_null("/root/GameManager")
-		if store:
-			var run: Dictionary = store.get("run_state") as Dictionary if store.has_method("get") else {}
-			var life: int = int(run.get("life_essence", 100))
-			_walk_hud.update_pv(life, 100)
-			var essences: int = int(run.get("biome_currency", 0))
-			_walk_hud.update_essences(essences)
-		# Default ogham (Beith starter)
+	if not _walk_hud:
+		return
+
+	var merlin_store: Node = _find_store()
+	var st_raw: Variant = merlin_store.get("state") if merlin_store else null
+	if st_raw is Dictionary:
+		var st: Dictionary = st_raw as Dictionary
+		var run: Dictionary = st.get("run", {}) as Dictionary
+		_walk_hud.update_pv(int(run.get("life", 100)), 100)
+		_walk_hud.update_essences(int(run.get("biome_currency", 0)))
+		if _walk_hud.has_method("update_turn"):
+			_walk_hud.update_turn(int(run.get("cards_played", 0)), int(run.get("mos_target", 0)))
+		var factions: Dictionary = st.get("factions", {}) as Dictionary
+		if not factions.is_empty() and _walk_hud.has_method("update_factions"):
+			_walk_hud.update_factions(factions)
+		var oghams: Dictionary = st.get("oghams", {}) as Dictionary
+		var active_id: String = str(oghams.get("active", "beith"))
+		var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(active_id, {}) as Dictionary
+		var sym: String = str(spec.get("unicode", "\u1681"))
+		var ogham_name: String = str(spec.get("name", active_id))
+		var cd: int = int(oghams.get("skill_cooldowns", {}).get(active_id, 0))
+		if _walk_hud.has_method("update_ogham"):
+			_walk_hud.update_ogham(sym, ogham_name, cd)
+	else:
+		var fallback_store: Node = get_node_or_null("/root/GameManager")
+		if fallback_store and fallback_store.has_method("get"):
+			var run_raw: Variant = fallback_store.get("run_state")
+			var run: Dictionary = run_raw as Dictionary if run_raw is Dictionary else {}
+			_walk_hud.update_pv(int(run.get("life_essence", 100)), 100)
+			_walk_hud.update_essences(int(run.get("biome_currency", 0)))
 		if _walk_hud.has_method("update_ogham"):
 			_walk_hud.update_ogham("\u1681", "Beith", 0)
 

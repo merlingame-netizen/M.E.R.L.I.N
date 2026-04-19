@@ -216,6 +216,8 @@ func _on_ogham_pressed(ogham_id: String) -> void:
 	_ogham_used = true
 	for btn in _ogham_buttons:
 		btn.disabled = true
+	for btn in _buttons:
+		btn.disabled = true
 
 	var result: Dictionary = await _store.dispatch({"type": "USE_OGHAM", "skill_id": ogham_id})
 	if not result.get("ok", false):
@@ -226,14 +228,18 @@ func _on_ogham_pressed(ogham_id: String) -> void:
 			var b: Button = _ogham_id_map[oid] as Button
 			if int(cooldowns.get(oid, 0)) <= 0:
 				b.disabled = false
+		for btn in _buttons:
+			btn.disabled = false
 		return
 
+	for btn in _buttons:
+		btn.disabled = false
 	var activated_btn: Button = _ogham_id_map.get(ogham_id) as Button
 	if activated_btn:
 		var pal_ref: Dictionary = MerlinVisual.CRT_PALETTE
 		activated_btn.text = activated_btn.text + " \u2713"
 		activated_btn.add_theme_color_override("font_color", pal_ref.cyan_bright)
-		activated_btn.disabled = false
+		activated_btn.disabled = true
 		activated_btn.focus_mode = Control.FOCUS_NONE
 	if is_instance_valid(SFXManager):
 		SFXManager.play("magic_reveal")

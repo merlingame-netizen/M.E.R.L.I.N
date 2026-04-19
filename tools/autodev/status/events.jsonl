@@ -70,3 +70,7 @@
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) \u2014 re-fixed and committed"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}
+{"ts":"2026-04-19T10:00:00.000Z","type":"cycle_start","cycle":11,"detail":"Cycle 11: Bug hunt C10 (rune activation race condition) + WalkHUD v2 (factions, turn counter, damage flash)"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"task_done","cycle":11,"detail":"BUG-026 MEDIUM: rune activation race condition — choice buttons enabled during ogham await dispatch. Fixed with disable/re-enable pattern."}
+{"ts":"2026-04-19T10:00:00.000Z","type":"task_done","cycle":11,"detail":"WALKHUD-V2: faction mini-badges (5 color bars), turn counter (cards/MOS), PV damage/heal flash, responsive sizing. Forest3D wired to MerlinStore state."}
+{"ts":"2026-04-19T10:00:00.000Z","type":"cycle_end","cycle":11,"detail":"Cycle 11 complete: 1 MEDIUM bug fixed, WalkHUD v2 with factions+turn+flash. 3 files, ~140 lines. 26 total bugs fixed across 11 cycles."}

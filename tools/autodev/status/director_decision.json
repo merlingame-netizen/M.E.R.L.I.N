@@ -1,10 +1,10 @@
 {
-  "cycle": 9,
-  "timestamp": "2026-04-18T22:00:00.000Z",
+  "cycle": 11,
+  "timestamp": "2026-04-19T10:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-024-MINIGAME-START", "BUGFIX-025-COLOR-LEVELS-ROUTE", "CARD-OVERLAY-CRT-FIELDHINTS"],
-  "rationale": "Bug hunt on C8 files revealed C8 code fixes were NEVER PUSHED (only status JSONs were committed). BUG-024 HIGH: minigame.start() missing causes minigame hang. BUG-025 MEDIUM: set_color_levels ignores render mode. Both fixed. Feature: encounter card overlay rewritten with CRT_PALETTE styling, MerlinVisual helpers, per-choice lexical field hint labels with color-coded accents, staggered button animation.",
-  "budget": {"files": 2, "lines": 111},
+  "tasks": ["BUGFIX-026-RUNE-RACE-CONDITION", "WALKHUD-V2-FACTIONS-TURN-FLASH"],
+  "rationale": "Bug hunt on C10 (rune activation row) found race condition: choice buttons stayed enabled during ogham dispatch await, allowing player to trigger both ogham and choice simultaneously. Fixed with button disable/re-enable pattern. Feature: WalkHUD v2 — added 5 faction reputation mini-badges with color-coded bars (druides=green, anciens=amber, korrigans=purple, niamh=blue, ankou=red), turn counter showing cards played vs MOS target, PV bar damage/heal flash animation, responsive font sizing via MerlinVisual. Forest3D _update_hud now reads full MerlinStore state for factions, active ogham, and turn count.",
+  "budget": {"files": 3, "lines": 140},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 9 code (encounter_card_overlay CRT rewrite). Then: Ogham/Rune activation UI during card encounters — row of owned runes above choices, tap to activate before selecting."
+  "next_cycle_plan": "Bug hunt on C11 code (walk_hud faction display + forest3d hud wiring). Then: end run screen with faction ending choice — when rep>=80 on 1+ factions, show narrative ending selection screen."
 }
