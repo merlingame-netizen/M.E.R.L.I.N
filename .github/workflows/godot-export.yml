@@ -117,19 +117,10 @@ jobs:
         with:
           name: web-export
           path: web-export/
-
-      - name: Deploy to Vercel
-        run: |
-          npm i -g vercel@latest
-          cd web-export
-          mkdir -p .vercel
-          echo "{\"orgId\":\"$VERCEL_ORG_ID\",\"projectId\":\"$VERCEL_PROJECT_ID\"}" > .vercel/project.json
-          echo "Files to deploy:"
-          ls -la
-          echo "Project config:"
-          cat .vercel/project.json
-          vercel deploy --prod --yes --token=$VERCEL_TOKEN 2>&1
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: web-export
+          vercel-args: '--prod'

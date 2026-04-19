@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMissionStore } from '../../store/mission-store';
+// v2 — with VERCEL_DASHBOARD_PROJECT_ID
 
 const GAME_URL = 'https://project-4o9qm.vercel.app';
 const DEPLOY_API = '/api/deploy-status';
