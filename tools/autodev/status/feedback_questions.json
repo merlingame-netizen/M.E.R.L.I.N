@@ -302,7 +302,7 @@
       "type": "multiple_choice",
       "category": "gamedesign",
       "priority": "HIGH",
-      "status": "pending",
+      "status": "answered",
       "title": "Faction ending UI: auto-select vs player choice",
       "question": "Quand un seul faction a rep >= 80 a la fin du run: (A) Auto-declencher la fin de faction directement (simple, pas de friction), (B) Quand meme afficher l'ecran de choix avec 1 option (coherence UX - toujours le meme flow), (C) Afficher uniquement si 2+ factions eligible (economiser l'ecran pour les cas multi-faction)?",
       "options": [
