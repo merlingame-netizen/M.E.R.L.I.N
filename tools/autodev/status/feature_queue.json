@@ -657,6 +657,28 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-026",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix biome CRT palette key mismatch (all biomes fell back to broceliande)",
+      "agent": "bug_hunter",
+      "files": ["scripts/autoload/merlin_visual.gd", "scripts/ui/screen_dither_layer.gd"],
+      "description": "BIOME_CRT_PALETTES/PROFILES used shortened keys but callers passed canonical keys. Added biome_palette_key() normalizer to MerlinVisual, updated 3 lookup sites, fixed CRTLayer set_biome() to normalize keys.",
+      "completed_at": "2026-04-19"
+    },
+    {
+      "id": "CARD-HUD-STRIP",
+      "phase": 5,
+      "priority": 3,
+      "status": "completed",
+      "title": "Encounter card HUD strip — life bar, biome badge, card counter",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "Added compact HUD strip at top of encounter card overlay showing life (colored heart + visual bar), biome name, and card counter. Moved _store initialization earlier for reuse.",
+      "completed_at": "2026-04-19"
     }
   ]
 }

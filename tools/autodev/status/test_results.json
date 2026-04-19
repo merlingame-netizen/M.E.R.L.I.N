@@ -1,27 +1,19 @@
 {
   "agent": "cycle_director",
-  "cycle": 9,
-  "timestamp": "2026-04-18T22:00:00Z",
+  "cycle": 10,
+  "timestamp": "2026-04-19T10:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 9: Bug hunt C8 (encounter_card_overlay, screen_dither_layer) + CRT field hints feature",
+  "scope": "Cycle 10: Bug hunt C9 (encounter_card_overlay, screen_dither_layer, merlin_visual) + HUD strip feature",
   "bugs_found": [
     {
-      "id": "BUG-024",
+      "id": "BUG-026",
       "severity": "HIGH",
-      "file": "scripts/ui/encounter_card_overlay.gd",
-      "description": "minigame.start() never called — was claimed fixed in C8 (BUG-022) but code was never pushed to GitHub. Only status JSONs were committed. Minigames created but _on_start() never fires, game_completed never emitted, overlay hangs indefinitely on await.",
+      "file": "scripts/autoload/merlin_visual.gd + scripts/ui/screen_dither_layer.gd",
+      "description": "BIOME_CRT_PALETTES and BIOME_CRT_PROFILES use shortened keys (broceliande, landes, etc.) but callers pass canonical keys (foret_broceliande, landes_bruyere, etc.). All 8 biomes fell back to the default broceliande palette. Biome-specific CRT coloring was completely non-functional. Also: CRTLayer.set_biome() normalized _current_biome but passed raw biome_key to downstream _animate_biome_transition/_apply_biome_colors.",
       "status": "fixed",
-      "fix": "Added minigame.start() after add_child(minigame) in _on_choice()"
-    },
-    {
-      "id": "BUG-025",
-      "severity": "MEDIUM",
-      "file": "scripts/ui/screen_dither_layer.gd",
-      "description": "set_color_levels() always sets 'color_levels' param — was claimed fixed in C8 (BUG-023) but code was never pushed. PSX shader uses 'color_depth' not 'color_levels'.",
-      "status": "fixed",
-      "fix": "Route param name based on _render_mode: PSX->color_depth, CRT->color_levels"
+      "fix": "Added biome_palette_key() static normalizer to MerlinVisual with _BIOME_KEY_ALIAS mapping. Updated 3 lookup sites in MerlinVisual (create_biome_palette_texture, apply_biome_crt, create_kingdom_palette). Added _normalize_biome_key() to CRTLayer, fixed set_biome() to pass normalized key to downstream functions."
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 9: Critical discovery — C8 code changes were never committed (only status files were pushed). 2 bugs re-fixed and actually committed this time. Encounter card overlay enhanced with CRT palette + field hints. 25 total bugs fixed across 9 cycles."
+  "overall_assessment": "Cycle 10: Major visual bug fixed — biome CRT palettes now correctly applied per-biome instead of always falling back to broceliande green. 26 total bugs fixed across 10 cycles. HUD strip adds critical gameplay info to encounter cards."
 }

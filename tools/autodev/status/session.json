@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 9 — Bug hunt C8 + CRT encounter card overlay with field hints",
+  "objective": "Cycle 10 — BUG-026 biome CRT palette key mismatch fix + encounter card HUD strip",
   "workers": [],
-  "updated_at": "2026-04-18T22:00:00.000Z",
-  "cycle": 9,
-  "checkpoint": "BUG-024 HIGH: minigame.start() was never called (C8 fix never pushed). BUG-025 MEDIUM: set_color_levels wrong param in PSX mode (C8 fix never pushed). Encounter card overlay rewritten with CRT_PALETTE, MerlinVisual helpers, per-choice field hint labels with accent colors, staggered entry animation. 2 files modified, 111 lines net."
+  "updated_at": "2026-04-19T10:00:00.000Z",
+  "cycle": 10,
+  "checkpoint": "BUG-026 HIGH: BIOME_CRT_PALETTES/PROFILES used shortened keys (broceliande) but callers passed canonical keys (foret_broceliande). All biomes fell back to default palette. Fixed via biome_palette_key() normalizer in MerlinVisual + CRTLayer. Feature: encounter card HUD strip with life bar, biome badge, card counter. 3 files modified, 86 lines net."
 }
