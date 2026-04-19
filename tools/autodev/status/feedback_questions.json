@@ -277,7 +277,7 @@
         "A: BackBufferCopy node (simpler, 1 extra node)",
         "B: SubViewportContainer (more control, matches existing structure)"
       ],
-      "status": "pending",
+      "status": "answered",
       "priority": "MEDIUM",
       "created_at": "2026-04-14T21:44:27Z",
       "context": "SPEC-5 FAIL_HIGH: broc_screen_vfx.gd:46 shader removed comment. VFX-SCREEN-VFX-REATTACH task queued at P23."
