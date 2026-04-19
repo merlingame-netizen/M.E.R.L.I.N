@@ -455,7 +455,7 @@
       "id": "q-20260415-009",
       "type": "multiple_choice",
       "category": "ux",
-      "status": "pending",
+      "status": "answered",
       "priority": "HIGH",
       "title": "BroceliandeForest3D: rebuild scene node tree or refactor to pure procedural?",
       "question": "BroceliandeForest3D.tscn is a stub — the script has 17 @onready vars ($World3D/*, $HUD/**) that resolve null since no nodes exist in .tscn → crash. Two approaches: A) Add full node tree in Godot editor (.tscn gets World3D+Player+HUD nodes), B) Remove all @onready vars, create nodes entirely in _ready() and assign vars manually. Which approach do you prefer?",
