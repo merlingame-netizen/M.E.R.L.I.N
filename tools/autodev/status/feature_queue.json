@@ -657,6 +657,28 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "BUGFIX-026",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix race condition in encounter_card_overlay ogham vs choice press",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/encounter_card_overlay.gd"],
+      "description": "BUG-026 HIGH: Race condition between ogham activation (async dispatch) and choice button press. Added _locked guard, disabled all buttons during await, is_inside_tree() check after await.",
+      "completed_at": "2026-04-19"
+    },
+    {
+      "id": "WALKHUD-ENHANCE-1",
+      "phase": 5,
+      "priority": 3,
+      "status": "completed",
+      "title": "WalkHUD: card counter + life flash + faction indicators",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/walk_hud.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "Card counter (CARTE N/5) below ogham display. Floating life-change text with rise-and-fade animation. Compact faction indicators (5 labels, bottom-right, color-coded by reputation tier).",
+      "completed_at": "2026-04-19"
     }
   ]
 }

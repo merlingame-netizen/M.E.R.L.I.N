@@ -70,3 +70,7 @@
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) \u2014 re-fixed and committed"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}
+{"ts":"2026-04-19T10:00:00.000Z","type":"cycle_start","cycle":10,"detail":"Cycle 10: Bug hunt C9 (encounter_card_overlay race condition) + WalkHUD enhancements (card counter, life flash, factions)"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"task_done","cycle":10,"detail":"BUG-026 HIGH: race condition ogham await vs choice press — _locked guard + is_inside_tree() check"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"task_done","cycle":10,"detail":"WALKHUD-ENHANCE: card counter (CARTE N/5), floating life-change text (+/-N PV fade), compact faction indicators (5 labels, tier-colored)"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"cycle_end","cycle":10,"detail":"Cycle 10 complete: 1 HIGH bug fixed, WalkHUD enhanced with 3 features. 3 files, 113 lines. 26 total bugs fixed across 10 cycles."}

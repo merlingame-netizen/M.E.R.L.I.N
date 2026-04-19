@@ -1,10 +1,10 @@
 {
-  "cycle": 9,
-  "timestamp": "2026-04-18T22:00:00.000Z",
+  "cycle": 10,
+  "timestamp": "2026-04-19T10:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-024-MINIGAME-START", "BUGFIX-025-COLOR-LEVELS-ROUTE", "CARD-OVERLAY-CRT-FIELDHINTS"],
-  "rationale": "Bug hunt on C8 files revealed C8 code fixes were NEVER PUSHED (only status JSONs were committed). BUG-024 HIGH: minigame.start() missing causes minigame hang. BUG-025 MEDIUM: set_color_levels ignores render mode. Both fixed. Feature: encounter card overlay rewritten with CRT_PALETTE styling, MerlinVisual helpers, per-choice lexical field hint labels with color-coded accents, staggered button animation.",
-  "budget": {"files": 2, "lines": 111},
+  "tasks": ["BUGFIX-026-RACE-CONDITION", "WALKHUD-CARD-COUNTER", "WALKHUD-LIFE-FLASH", "WALKHUD-FACTION-INDICATORS"],
+  "rationale": "Bug hunt on C9 code found BUG-026 HIGH: race condition between ogham activation (async dispatch) and choice press in encounter_card_overlay.gd. Player could press choice during await, triggering queue_free before dispatch returns, crashing on freed nodes. Fixed with _locked mutex guard + is_inside_tree() post-await check. Feature: WalkHUD enhanced with card counter showing encounter progress, floating life-change text with rise-and-fade animation for visceral feedback, and compact faction tier indicators at bottom-right.",
+  "budget": {"files": 3, "lines": 113},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 9 code (encounter_card_overlay CRT rewrite). Then: Ogham/Rune activation UI during card encounters — row of owned runes above choices, tap to activate before selecting."
+  "next_cycle_plan": "Bug hunt on cycle 10 code (walk_hud enhancements, forest integration). Then: reward badge preview on card choice hover — show HEAL/DAMAGE/REP icons before selecting, using MerlinConstants.REWARD_TYPES."
 }
