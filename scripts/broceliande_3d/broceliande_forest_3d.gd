@@ -942,6 +942,14 @@ func _update_hud() -> void:
 		# Default ogham (Beith starter)
 		if _walk_hud.has_method("update_ogham"):
 			_walk_hud.update_ogham("\u1681", "Beith", 0)
+		# Faction indicators from MerlinStore
+		var merlin_store: Node = _find_store()
+		if merlin_store and _walk_hud.has_method("update_factions"):
+			var state_v: Variant = merlin_store.get("state")
+			if state_v is Dictionary:
+				var factions: Dictionary = (state_v as Dictionary).get("factions", {})
+				if not factions.is_empty():
+					_walk_hud.update_factions(factions)
 
 	# Zone name + season + time of day + autowalk indicators
 	var zone_text: String = _zone_names[_current_zone]
@@ -1091,6 +1099,10 @@ func _on_encounter_reached(enc_idx: int) -> void:
 	# Release mouse for UI interaction
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
+	# Update HUD card counter
+	if _walk_hud and _walk_hud.has_method("update_cards"):
+		_walk_hud.update_cards(enc_idx + 1, 5)
+
 	# Generate card (FastRoute fallback or LLM)
 	var card: Dictionary = await _get_encounter_card(enc_idx)
 
@@ -1126,6 +1138,8 @@ func _on_encounter_reached(enc_idx: int) -> void:
 			life_change = 5  # +5 heal
 		elif score < 30:
 			life_change = -8  # -8 damage
+		if _walk_hud and _walk_hud.has_method("flash_life_change") and life_change != 0:
+			_walk_hud.flash_life_change(life_change)
 		if is_instance_valid(status_label):
 			if life_change > 0:
 				status_label.text = "+%d PV — La foret te sourit." % life_change

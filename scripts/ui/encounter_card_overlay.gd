@@ -44,6 +44,7 @@ var _store: MerlinStore
 var _ogham_buttons: Array[Button] = []
 var _ogham_id_map: Dictionary = {}
 var _ogham_used: bool = false
+var _locked: bool = false
 
 
 func _init(card: Dictionary = {}) -> void:
@@ -211,13 +212,20 @@ func _ready() -> void:
 
 
 func _on_ogham_pressed(ogham_id: String) -> void:
-	if _ogham_used or not _store:
+	if _locked or _ogham_used or not _store:
 		return
+	_locked = true
 	_ogham_used = true
 	for btn in _ogham_buttons:
 		btn.disabled = true
+	for btn in _buttons:
+		btn.disabled = true
 
 	var result: Dictionary = await _store.dispatch({"type": "USE_OGHAM", "skill_id": ogham_id})
+
+	if not is_inside_tree():
+		return
+
 	if not result.get("ok", false):
 		_ogham_used = false
 		var oghams_state: Dictionary = _store.state.get("oghams", {})
@@ -226,8 +234,13 @@ func _on_ogham_pressed(ogham_id: String) -> void:
 			var b: Button = _ogham_id_map[oid] as Button
 			if int(cooldowns.get(oid, 0)) <= 0:
 				b.disabled = false
+		for btn in _buttons:
+			btn.disabled = false
+		_locked = false
 		return
 
+	for btn in _buttons:
+		btn.disabled = false
 	var activated_btn: Button = _ogham_id_map.get(ogham_id) as Button
 	if activated_btn:
 		var pal_ref: Dictionary = MerlinVisual.CRT_PALETTE
@@ -237,9 +250,13 @@ func _on_ogham_pressed(ogham_id: String) -> void:
 		activated_btn.focus_mode = Control.FOCUS_NONE
 	if is_instance_valid(SFXManager):
 		SFXManager.play("magic_reveal")
+	_locked = false
 
 
 func _on_choice(idx: int) -> void:
+	if _locked:
+		return
+	_locked = true
 	for btn in _buttons:
 		btn.disabled = true
 	for btn in _ogham_buttons:

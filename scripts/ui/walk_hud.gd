@@ -30,6 +30,9 @@ var _zone_label: Label
 var _crosshair: Label
 var _ogham_label: Label
 var _ogham_cd_label: Label
+var _card_label: Label
+var _float_label: Label
+var _faction_labels: Dictionary = {}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -96,6 +99,43 @@ func toggle_zone_display() -> void:
 
 func set_crosshair_visible(vis: bool) -> void:
 	_crosshair.visible = vis
+
+
+func update_cards(current: int, total: int) -> void:
+	_card_label.text = "CARTE %d/%d" % [current, total]
+
+
+func flash_life_change(delta: int) -> void:
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
+	if delta > 0:
+		_float_label.text = "+%d PV" % delta
+		_float_label.add_theme_color_override("font_color", pal["phosphor"])
+	elif delta < 0:
+		_float_label.text = "%d PV" % delta
+		_float_label.add_theme_color_override("font_color", pal["danger"])
+	else:
+		return
+	_float_label.visible = true
+	_float_label.modulate.a = 1.0
+	_float_label.position.y = _root.size.y * 0.45
+	var tw: Tween = create_tween()
+	tw.tween_property(_float_label, "position:y", _float_label.position.y - 40, 1.5)
+	tw.parallel().tween_property(_float_label, "modulate:a", 0.0, 1.5).set_delay(0.5)
+	tw.tween_callback(func() -> void: _float_label.visible = false)
+
+
+func update_factions(factions: Dictionary) -> void:
+	for faction_id: String in _faction_labels:
+		var lbl: Label = _faction_labels[faction_id]
+		var score: float = float(factions.get(faction_id, 0))
+		lbl.text = "%s %d" % [faction_id.left(3).to_upper(), int(score)]
+		var pal: Dictionary = MerlinVisual.CRT_PALETTE
+		if score >= 80:
+			lbl.add_theme_color_override("font_color", pal["cyan"])
+		elif score >= 50:
+			lbl.add_theme_color_override("font_color", pal["amber"])
+		else:
+			lbl.add_theme_color_override("font_color", pal["phosphor_dim"])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -219,3 +259,44 @@ func _build_ui() -> void:
 	_zone_label.add_theme_font_size_override("font_size", FONT_SIZE_ZONE)
 	_zone_label.add_theme_color_override("font_color", pal["phosphor_dim"])
 	bottom_margin.add_child(_zone_label)
+
+	# === CARD COUNTER (below ogham section) ===
+	_card_label = Label.new()
+	_card_label.text = "CARTE 0/0"
+	_card_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_card_label.add_theme_font_override("font", font)
+	_card_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(FONT_SIZE_ZONE))
+	_card_label.add_theme_color_override("font_color", pal["phosphor_dim"])
+	ogham_vbox.add_child(_card_label)
+
+	# === FLOATING LIFE-CHANGE TEXT (center, hidden) ===
+	_float_label = Label.new()
+	_float_label.text = ""
+	_float_label.visible = false
+	_float_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_float_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_float_label.add_theme_font_override("font", font)
+	_float_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(FONT_SIZE_HUD + 4))
+	_float_label.add_theme_color_override("font_color", pal["phosphor"])
+	_root.add_child(_float_label)
+
+	# === FACTION INDICATORS (bottom-right) ===
+	var faction_margin: MarginContainer = MarginContainer.new()
+	faction_margin.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	faction_margin.add_theme_constant_override("margin_right", MARGIN_H)
+	faction_margin.add_theme_constant_override("margin_bottom", MARGIN_V)
+	_root.add_child(faction_margin)
+
+	var faction_hbox: HBoxContainer = HBoxContainer.new()
+	faction_hbox.add_theme_constant_override("separation", 8)
+	faction_margin.add_child(faction_hbox)
+
+	var faction_ids: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+	for fid: String in faction_ids:
+		var flbl: Label = Label.new()
+		flbl.text = "%s 0" % fid.left(3).to_upper()
+		flbl.add_theme_font_override("font", font)
+		flbl.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(FONT_SIZE_ZONE))
+		flbl.add_theme_color_override("font_color", pal["phosphor_dim"])
+		faction_hbox.add_child(flbl)
+		_faction_labels[fid] = flbl
