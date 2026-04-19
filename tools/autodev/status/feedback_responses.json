@@ -61,6 +61,10 @@
     {
       "question_id": "q-20260414-004",
       "answer": "Migrer le chemin actif vers game_flow_controller (refonte propre)"
+    },
+    {
+      "question_id": "q-20260414-006",
+      "answer": "B: Implémenter SFXEngine + câbler AudioIntegration (architecture centralisée)"
     }
   ]
 }
