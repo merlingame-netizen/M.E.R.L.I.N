@@ -109,6 +109,10 @@
     {
       "question_id": "q-20260415-008",
       "answer": "A: Déplacer vers perception (conformité bible)"
+    },
+    {
+      "question_id": "q-20260415-009",
+      "answer": "A: Build full node tree in .tscn via Godot editor (cleaner, editor-visible)"
     }
   ]
 }
