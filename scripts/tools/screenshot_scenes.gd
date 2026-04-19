@@ -37,7 +37,6 @@ var scenes_to_capture: Array[String] = [
 	"res://archive/scenes_unused/MapMonde.tscn",
 	"res://archive/scenes_unused/Calendar.tscn",
 	"res://archive/scenes_unused/MenuPrincipal.tscn",
-	"res://archive/scenes_unused/SceneRencontreMerlin.tscn",
 	"res://archive/scenes_unused/ArbreDeVie.tscn",
 	"res://archive/scenes_unused/TransitionBiome.tscn",
 	"res://archive/scenes_unused/SelectionSauvegarde.tscn",
