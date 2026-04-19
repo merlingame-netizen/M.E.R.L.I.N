@@ -65,6 +65,10 @@
     {
       "question_id": "q-20260414-006",
       "answer": "B: Implémenter SFXEngine + câbler AudioIntegration (architecture centralisée)"
+    },
+    {
+      "question_id": "q-20260414-007",
+      "answer": "B: SubViewportContainer (more control, matches existing structure)"
     }
   ]
 }
