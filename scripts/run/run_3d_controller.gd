@@ -57,6 +57,8 @@ var _run_state: Dictionary = {}
 # STATE — local UI / flow (owned by this controller, never in store)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+var _hud_overlay: RunHudOverlay = null
+
 var _is_running: bool = false
 var _is_paused: bool = false
 var _walk_timer: float = 0.0
@@ -190,12 +192,58 @@ func start_run(biome: String, ogham: String) -> void:
 	if _spawner:
 		_spawner.start_spawning(_run_state)
 
+	# Create HUD overlay (Phase 7 — RunHudOverlay wiring)
+	_create_hud_overlay()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HUD OVERLAY — automatic creation and signal wiring
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _create_hud_overlay() -> void:
+	# Clean up previous overlay if any (defensive)
+	if _hud_overlay != null:
+		_hud_overlay.queue_free()
+		_hud_overlay = null
+
+	_hud_overlay = RunHudOverlay.new()
+	add_child(_hud_overlay)
+
+	# Wire Run3DController signals → overlay update methods
+	life_changed.connect(_hud_overlay.update_life)
+	currency_changed.connect(_hud_overlay.update_currency)
+	ogham_updated.connect(_hud_overlay.update_ogham)
+	period_changed.connect(_hud_overlay.update_period)
+	promises_updated.connect(_hud_overlay.update_promises)
+
+	# Wire card flow signals → HUD visibility + card counter sync
+	card_started.connect(func(_card: Dictionary) -> void: _hud_overlay.set_hud_visible(false))
+	card_ended.connect(func() -> void:
+		_hud_overlay.set_hud_visible(true)
+		_hud_overlay.update_card_index(int(_run_state.get("card_index", 0)))
+	)
+
+	# Wire overlay ogham signals → controller handlers
+	_hud_overlay.ogham_pressed.connect(on_ogham_activated)
+
+	# Push current state so overlay is up to date immediately
+	_hud_overlay.update_life(_store_life(), _store_life_max())
+	_hud_overlay.update_currency(_store_currency())
+	_hud_overlay.update_period(str(_run_state.get("period", "aube")))
+	_hud_overlay.update_card_index(int(_run_state.get("card_index", 0)))
+	_hud_overlay.update_promises(_run_state.get("active_promises", []))
+
 
 func stop_run(reason: String) -> void:
 	_is_running = false
 	_is_paused = false
 	if _spawner:
 		_spawner.stop_spawning()
+
+	# Clean up HUD overlay
+	if _hud_overlay != null:
+		_hud_overlay.queue_free()
+		_hud_overlay = null
 
 	var data: Dictionary = {
 		"card_index": int(_run_state.get("card_index", 0)),
