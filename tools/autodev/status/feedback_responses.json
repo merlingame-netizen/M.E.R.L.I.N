@@ -105,6 +105,10 @@
     {
       "question_id": "q-20260415-007",
       "answer": "C: Renommer en mg_quete_biome.gd pour clarifier son rôle spécial"
+    },
+    {
+      "question_id": "q-20260415-008",
+      "answer": "A: Déplacer vers perception (conformité bible)"
     }
   ]
 }
