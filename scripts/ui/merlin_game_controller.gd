@@ -480,7 +480,12 @@ func _get_fastroute_card() -> Dictionary:
 	## Pull a card from FastRoute pool when LLM fails.
 	if not store or not is_instance_valid(store):
 		return {}
-	var context: Dictionary = {"biome": store.state.get("biome", "broceliande"), "card_index": _cards_this_run}
+	var faction_rep: Dictionary = store.state.get("meta", {}).get("faction_rep", {})
+	var context: Dictionary = {
+		"biome": store.state.get("biome", "broceliande"),
+		"card_index": _cards_this_run,
+		"faction_rep": faction_rep,
+	}
 	return store.cards.get_fastroute_card(context)
 
 

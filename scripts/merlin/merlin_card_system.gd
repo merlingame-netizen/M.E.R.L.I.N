@@ -120,6 +120,8 @@ static func apply_festival_bonus(state: Dictionary, run_state: Dictionary) -> in
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func generate_card(context: Dictionary) -> Dictionary:
+	if not context.has("faction_rep"):
+		context["faction_rep"] = context.get("meta", {}).get("faction_rep", {})
 	var card_type: String = _pick_card_type(context)
 
 	# Special types use pool directly (no LLM)
@@ -172,42 +174,56 @@ func generate_card(context: Dictionary) -> Dictionary:
 
 func get_fastroute_card(context: Dictionary) -> Dictionary:
 	var biome: String = str(context.get("biome", ""))
-	var candidates: Array = []
-	var generic: Array = []
+	var faction_rep: Dictionary = context.get("faction_rep", {})
+	var weighted: Array = []
 
 	for card in _fastroute_narrative_pool:
 		var card_id: String = str(card.get("id", ""))
 		if _fastroute_seen.has(card_id):
 			continue
+		var score: float = 1.0
 		var card_biome: String = str(card.get("biome", ""))
-		if card_biome == biome:
-			candidates.append(card)
-		elif card_biome.is_empty():
-			generic.append(card)
+		if not biome.is_empty() and card_biome == biome:
+			score += 4.0
+		elif not card_biome.is_empty():
+			score = 0.5
+		score += _compute_faction_boost(card, faction_rep)
+		weighted.append({"card": card, "score": score})
 
-	# Prefer biome-specific, fallback to generic
-	if candidates.is_empty():
-		candidates = generic
-	if candidates.is_empty():
-		# Pool exhausted, reset and use all
+	if weighted.is_empty():
 		_fastroute_seen.clear()
-		candidates = _fastroute_narrative_pool.duplicate()
+		for card in _fastroute_narrative_pool:
+			var score: float = 1.0
+			var card_biome: String = str(card.get("biome", ""))
+			if not biome.is_empty() and card_biome == biome:
+				score += 4.0
+			elif not card_biome.is_empty():
+				score = 0.5
+			score += _compute_faction_boost(card, faction_rep)
+			weighted.append({"card": card, "score": score})
 
-	if candidates.is_empty():
+	if weighted.is_empty():
 		return _get_emergency_card()
 
-	var idx: int = _randi_range(0, candidates.size() - 1)
-	var selected: Dictionary = candidates[idx].duplicate(true)
-	_fastroute_seen.append(str(selected.get("id", "")))
+	var total: float = 0.0
+	for c in weighted:
+		total += float(c["score"])
+	var roll: float = _randf() * total
+	var cumul: float = 0.0
+	for c in weighted:
+		cumul += float(c["score"])
+		if roll < cumul:
+			var selected: Dictionary = c["card"].duplicate(true)
+			_fastroute_seen.append(str(selected.get("id", "")))
+			selected["type"] = "narrative"
+			var v: Dictionary = _validate_card(selected)
+			if not v.get("valid", false):
+				push_warning("FastRoute card %s invalid: %s" % [str(selected.get("id", "")), v.get("error", "")])
+				return _get_emergency_card()
+			_annotate_fields(v["card"])
+			return _ensure_3_options(v["card"])
 
-	# Set type, validate, annotate, pad
-	selected["type"] = "narrative"
-	var v: Dictionary = _validate_card(selected)
-	if not v.get("valid", false):
-		push_warning("FastRoute card %s invalid: %s" % [str(selected.get("id", "")), v.get("error", "")])
-		return _get_emergency_card()
-	_annotate_fields(v["card"])
-	return _ensure_3_options(v["card"])
+	return _get_emergency_card()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -588,6 +604,36 @@ func _get_graph_card_type(context: Dictionary) -> String:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# FACTION BOOST — cards matching unlocked factions (rep >= 50) get higher weight
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func _get_card_faction_affinity(card: Dictionary) -> Array[String]:
+	var factions: Array[String] = []
+	var explicit: String = str(card.get("faction", ""))
+	if not explicit.is_empty() and MerlinReputationSystem.is_valid_faction(explicit):
+		factions.append(explicit)
+	for option in card.get("options", []):
+		if not (option is Dictionary):
+			continue
+		for effect in option.get("effects", []):
+			if not (effect is Dictionary):
+				continue
+			if str(effect.get("type", "")) == "ADD_REPUTATION":
+				var f: String = str(effect.get("faction", ""))
+				if not f.is_empty() and MerlinReputationSystem.is_valid_faction(f) and not factions.has(f):
+					factions.append(f)
+	return factions
+
+
+static func _compute_faction_boost(card: Dictionary, faction_rep: Dictionary) -> float:
+	var boost: float = 0.0
+	for faction in _get_card_faction_affinity(card):
+		if float(faction_rep.get(faction, 0.0)) >= MerlinReputationSystem.THRESHOLD_CONTENT:
+			boost += MerlinConstants.FACTION_CONTENT_BOOST
+	return boost
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # EVENT CARDS
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -596,6 +642,7 @@ func _generate_event_card(context: Dictionary) -> Dictionary:
 		return {}
 
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
 	var candidates: Array = []
 
 	for card in _event_cards_pool:
@@ -603,9 +650,9 @@ func _generate_event_card(context: Dictionary) -> Dictionary:
 		if _event_cards_seen.has(cid):
 			continue
 		var score: float = 1.0
-		# Biome match
 		if not biome.is_empty() and str(card.get("biome", "")) == biome:
 			score += 4.0
+		score += _compute_faction_boost(card, faction_rep)
 		candidates.append({"card": card, "score": score})
 
 	if candidates.is_empty():
