@@ -181,22 +181,20 @@ export function useStateSync() {
           setLastHeartbeat(tsMatch ? tsMatch[0] : lastLine.slice(0, 25));
         }
 
-        // Feedback questions — merge with server responses + local optimistic state
+        // Feedback questions — merge with server + localStorage answered IDs
         if (data.feedback_questions?.questions) {
-          // Server-side responses (survives reload)
           const serverResponseIds = new Set(
-            (data.feedback_responses?.responses || []).map(r => r.question_id)
+            (data.feedback_responses?.responses || []).map((r: { question_id: string }) => r.question_id)
           );
-          // Local optimistic state (survives within session)
-          const localResponses = useMissionStore.getState().feedbackResponses;
-          const localAnsweredIds = new Set(localResponses.map(r => r.question_id));
-          const localQuestionAnswered = new Set(
-            useMissionStore.getState().feedbackQuestions.filter(q => q.status === 'answered').map(q => q.id)
-          );
+          // Persistent local answered IDs (survives reload + re-polls)
+          let localAnsweredIds: Set<string>;
+          try {
+            localAnsweredIds = new Set(JSON.parse(localStorage.getItem('mc.answered') || '[]'));
+          } catch { localAnsweredIds = new Set(); }
 
-          const merged = data.feedback_questions.questions.map(q => ({
+          const merged = data.feedback_questions.questions.map((q: { id: string; status: string }) => ({
             ...q,
-            status: (serverResponseIds.has(q.id) || localAnsweredIds.has(q.id) || localQuestionAnswered.has(q.id))
+            status: (serverResponseIds.has(q.id) || localAnsweredIds.has(q.id))
               ? 'answered' as const
               : q.status,
           }));

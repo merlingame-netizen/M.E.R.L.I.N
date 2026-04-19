@@ -208,6 +208,11 @@ export const useMissionStore = create<MissionState>((set, get) => ({
         body: JSON.stringify({ question_id: questionId, answer, additional_notes: notes }),
       });
       if (res.ok) {
+        // Persist answered ID in localStorage (survives re-polls)
+        try {
+          const ids: string[] = JSON.parse(localStorage.getItem('mc.answered') || '[]');
+          if (!ids.includes(questionId)) { ids.push(questionId); localStorage.setItem('mc.answered', JSON.stringify(ids)); }
+        } catch { /* ignore */ }
         set(s => ({
           feedbackQuestions: s.feedbackQuestions.map(q =>
             q.id === questionId ? { ...q, status: 'answered' as const } : q
