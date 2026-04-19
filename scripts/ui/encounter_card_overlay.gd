@@ -233,8 +233,7 @@ func _on_ogham_pressed(ogham_id: String) -> void:
 		var pal_ref: Dictionary = MerlinVisual.CRT_PALETTE
 		activated_btn.text = activated_btn.text + " \u2713"
 		activated_btn.add_theme_color_override("font_color", pal_ref.cyan_bright)
-		activated_btn.disabled = false
-		activated_btn.focus_mode = Control.FOCUS_NONE
+		activated_btn.add_theme_color_override("font_disabled_color", pal_ref.cyan_bright)
 	if is_instance_valid(SFXManager):
 		SFXManager.play("magic_reveal")
 

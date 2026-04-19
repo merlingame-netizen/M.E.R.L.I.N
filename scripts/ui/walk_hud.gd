@@ -1,8 +1,8 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## WalkHUD — Minimal 3D Walk HUD (PV, Souffle, Essences)
+## WalkHUD — Minimal 3D Walk HUD (Life, Rune, Currency, Cards)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Overlays the 3D viewport during forest walk gameplay.
-## CRT phosphor aesthetic, VT323 monospace font.
+## CRT phosphor aesthetic, VT323 monospace font, mobile-responsive.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends CanvasLayer
@@ -11,12 +11,13 @@ extends CanvasLayer
 # CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const FONT_SIZE_HUD: int = 14
-const FONT_SIZE_ZONE: int = 11
-const MARGIN_H: int = 12
-const MARGIN_V: int = 8
-const PV_BAR_WIDTH: float = 120.0
-const PV_BAR_HEIGHT: float = 10.0
+const MARGIN_H: int = 16
+const MARGIN_V: int = 10
+const PV_BAR_WIDTH: float = 130.0
+const PV_BAR_HEIGHT: float = 8.0
+const LOW_LIFE_RATIO: float = 0.25
+const WARN_LIFE_RATIO: float = 0.50
+const PULSE_DURATION: float = 0.8
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NODES
@@ -25,17 +26,22 @@ const PV_BAR_HEIGHT: float = 10.0
 var _root: Control
 var _pv_bar: ProgressBar
 var _pv_label: Label
-var _essences_label: Label
+var _currency_label: Label
 var _zone_label: Label
-var _crosshair: Label
 var _ogham_label: Label
 var _ogham_cd_label: Label
+var _card_counter: Label
+var _bar_fill_style: StyleBoxFlat
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var _show_zone: bool = true
+var _cards_played: int = 0
+var _pulse_tween: Tween = null
+var _life_tween: Tween = null
+var _current_life: int = 100
 
 
 func _ready() -> void:
@@ -48,22 +54,43 @@ func _ready() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func update_pv(current: int, max_pv: int) -> void:
+	var prev: int = _current_life
+	_current_life = current
+
 	_pv_bar.max_value = max_pv
-	_pv_bar.value = current
 	_pv_label.text = "PV %d/%d" % [current, max_pv]
-	# Color shift when low
-	var ratio: float = float(current) / float(max_pv) if max_pv > 0 else 1.0
+
+	# Animate bar fill
+	if _life_tween and _life_tween.is_valid():
+		_life_tween.kill()
+	_life_tween = create_tween()
+	_life_tween.tween_property(_pv_bar, "value", float(current), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
 	var pal: Dictionary = MerlinVisual.CRT_PALETTE
-	if ratio <= 0.25:
+	var ratio: float = float(current) / float(max_pv) if max_pv > 0 else 1.0
+
+	if ratio <= LOW_LIFE_RATIO:
 		_pv_label.add_theme_color_override("font_color", pal["danger"])
-	elif ratio <= 0.50:
+		_bar_fill_style.bg_color = pal["danger"]
+		_start_low_life_pulse()
+	elif ratio <= WARN_LIFE_RATIO:
 		_pv_label.add_theme_color_override("font_color", pal["warning"])
+		_bar_fill_style.bg_color = pal["amber_dim"]
+		_stop_low_life_pulse()
 	else:
 		_pv_label.add_theme_color_override("font_color", pal["phosphor"])
+		_bar_fill_style.bg_color = pal["phosphor_dim"]
+		_stop_low_life_pulse()
+
+	# Flash on damage
+	if current < prev:
+		var flash: Tween = create_tween()
+		flash.tween_property(_pv_label, "modulate", Color(1.5, 0.5, 0.5), 0.1)
+		flash.tween_property(_pv_label, "modulate", Color.WHITE, 0.3)
 
 
-func update_essences(count: int) -> void:
-	_essences_label.text = "~ %d" % count  # ~ as essence glyph
+func update_currency(amount: int, _biome_name: String = "") -> void:
+	_currency_label.text = "\u25C8 %d" % amount
 
 
 func update_zone(zone_name: String, season_name: String, time_name: String) -> void:
@@ -81,12 +108,22 @@ func update_zone(zone_name: String, season_name: String, time_name: String) -> v
 
 func update_ogham(rune: String, ogham_name: String, cooldown: int) -> void:
 	_ogham_label.text = "%s %s" % [rune, ogham_name]
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
 	if cooldown <= 0:
 		_ogham_cd_label.text = "Pret"
-		_ogham_cd_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
+		_ogham_cd_label.add_theme_color_override("font_color", pal["cyan"])
 	else:
 		_ogham_cd_label.text = "CD: %d" % cooldown
-		_ogham_cd_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		_ogham_cd_label.add_theme_color_override("font_color", pal["phosphor_dim"])
+
+
+func update_card_count(count: int) -> void:
+	_cards_played = count
+	_card_counter.text = "Carte #%d" % count
+	# Brief flash on new card
+	var tw: Tween = create_tween()
+	tw.tween_property(_card_counter, "modulate", Color(1.5, 1.5, 1.0), 0.1)
+	tw.tween_property(_card_counter, "modulate", Color.WHITE, 0.4)
 
 
 func toggle_zone_display() -> void:
@@ -94,8 +131,33 @@ func toggle_zone_display() -> void:
 	_zone_label.visible = _show_zone
 
 
-func set_crosshair_visible(vis: bool) -> void:
-	_crosshair.visible = vis
+func fade_for_card() -> void:
+	var tw: Tween = create_tween()
+	tw.tween_property(_root, "modulate:a", 0.3, 0.3)
+
+
+func restore_from_card() -> void:
+	var tw: Tween = create_tween()
+	tw.tween_property(_root, "modulate:a", 1.0, 0.3)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LOW LIFE PULSE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _start_low_life_pulse() -> void:
+	if _pulse_tween and _pulse_tween.is_valid():
+		return
+	_pulse_tween = create_tween().set_loops()
+	_pulse_tween.tween_property(_pv_bar, "modulate:a", 0.5, PULSE_DURATION * 0.5)
+	_pulse_tween.tween_property(_pv_bar, "modulate:a", 1.0, PULSE_DURATION * 0.5)
+
+
+func _stop_low_life_pulse() -> void:
+	if _pulse_tween and _pulse_tween.is_valid():
+		_pulse_tween.kill()
+		_pulse_tween = null
+	_pv_bar.modulate.a = 1.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -103,119 +165,136 @@ func set_crosshair_visible(vis: bool) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_ui() -> void:
-	var font: Font = MerlinVisual.get_font("terminal")
 	var pal: Dictionary = MerlinVisual.CRT_PALETTE
+	var fs_main: int = 14
+	var fs_small: int = 11
+	var fs_ogham: int = 15
 
-	# Root control
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 
-	# === TOP ROW ===
-	var top_margin: MarginContainer = MarginContainer.new()
-	top_margin.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	top_margin.add_theme_constant_override("margin_left", MARGIN_H)
-	top_margin.add_theme_constant_override("margin_right", MARGIN_H)
-	top_margin.add_theme_constant_override("margin_top", MARGIN_V)
-	_root.add_child(top_margin)
+	# Safe area margins (mobile notch/cutout awareness)
+	var safe_top: int = MARGIN_V
+	var safe_left: int = MARGIN_H
+	var safe_right: int = MARGIN_H
+	var safe_bottom: int = MARGIN_V
+	var mr: Node = Engine.get_main_loop().root.get_node_or_null("MerlinResponsive") if Engine.get_main_loop() else null
+	if mr and mr.has_method("get_safe_margin_top"):
+		safe_top = maxi(MARGIN_V, int(mr.get_safe_margin_top()))
+		safe_bottom = maxi(MARGIN_V, int(mr.get_safe_margin_bottom()))
+
+	# ═══ TOP BAR ═══
+	var top_bg: PanelContainer = PanelContainer.new()
+	top_bg.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	var top_style: StyleBoxFlat = StyleBoxFlat.new()
+	top_style.bg_color = Color(pal["bg_deep"].r, pal["bg_deep"].g, pal["bg_deep"].b, 0.65)
+	top_style.content_margin_left = safe_left
+	top_style.content_margin_right = safe_right
+	top_style.content_margin_top = safe_top
+	top_style.content_margin_bottom = 6
+	top_style.border_width_bottom = 1
+	top_style.border_color = Color(pal["border"].r, pal["border"].g, pal["border"].b, 0.4)
+	top_bg.add_theme_stylebox_override("panel", top_style)
+	_root.add_child(top_bg)
 
 	var top_hbox: HBoxContainer = HBoxContainer.new()
-	top_hbox.add_theme_constant_override("separation", 20)
-	top_margin.add_child(top_hbox)
+	top_hbox.add_theme_constant_override("separation", 16)
+	top_bg.add_child(top_hbox)
 
 	# PV section (left)
-	var pv_vbox: VBoxContainer = VBoxContainer.new()
-	pv_vbox.add_theme_constant_override("separation", 2)
-	top_hbox.add_child(pv_vbox)
+	var pv_hbox: HBoxContainer = HBoxContainer.new()
+	pv_hbox.add_theme_constant_override("separation", 8)
+	top_hbox.add_child(pv_hbox)
 
 	_pv_label = Label.new()
 	_pv_label.text = "PV 100/100"
-	_pv_label.add_theme_font_override("font", font)
-	_pv_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD)
+	MerlinVisual.apply_responsive_font(_pv_label, fs_main, "terminal")
 	_pv_label.add_theme_color_override("font_color", pal["phosphor"])
-	pv_vbox.add_child(_pv_label)
+	pv_hbox.add_child(_pv_label)
 
 	_pv_bar = ProgressBar.new()
 	_pv_bar.custom_minimum_size = Vector2(PV_BAR_WIDTH, PV_BAR_HEIGHT)
 	_pv_bar.max_value = 100
 	_pv_bar.value = 100
 	_pv_bar.show_percentage = false
+	_pv_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	var bar_bg: StyleBoxFlat = StyleBoxFlat.new()
 	bar_bg.bg_color = pal["bg_dark"]
-	bar_bg.border_color = pal["border"]
+	bar_bg.border_color = Color(pal["border"].r, pal["border"].g, pal["border"].b, 0.5)
 	bar_bg.set_border_width_all(1)
-	bar_bg.set_corner_radius_all(1)
+	bar_bg.set_corner_radius_all(0)
 	_pv_bar.add_theme_stylebox_override("background", bar_bg)
 
-	var bar_fill: StyleBoxFlat = StyleBoxFlat.new()
-	bar_fill.bg_color = pal["phosphor_dim"]
-	bar_fill.set_corner_radius_all(1)
-	_pv_bar.add_theme_stylebox_override("fill", bar_fill)
-	pv_vbox.add_child(_pv_bar)
+	_bar_fill_style = StyleBoxFlat.new()
+	_bar_fill_style.bg_color = pal["phosphor_dim"]
+	_bar_fill_style.set_corner_radius_all(0)
+	_pv_bar.add_theme_stylebox_override("fill", _bar_fill_style)
+	pv_hbox.add_child(_pv_bar)
 
 	# Spacer
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_hbox.add_child(spacer)
+	var spacer1: Control = Control.new()
+	spacer1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_hbox.add_child(spacer1)
 
-	# Ogham actif (center)
-	var ogham_vbox: VBoxContainer = VBoxContainer.new()
-	ogham_vbox.add_theme_constant_override("separation", 2)
-	top_hbox.add_child(ogham_vbox)
+	# Ogham actif (center-right)
+	var ogham_hbox: HBoxContainer = HBoxContainer.new()
+	ogham_hbox.add_theme_constant_override("separation", 6)
+	top_hbox.add_child(ogham_hbox)
 
 	_ogham_label = Label.new()
-	_ogham_label.text = "\u1681 Beith"
-	_ogham_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ogham_label.add_theme_font_override("font", font)
-	_ogham_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD + 2)
+	_ogham_label.text = "\u25C6 Beith"
+	MerlinVisual.apply_responsive_font(_ogham_label, fs_ogham, "terminal")
 	_ogham_label.add_theme_color_override("font_color", pal["cyan"])
-	ogham_vbox.add_child(_ogham_label)
+	ogham_hbox.add_child(_ogham_label)
 
 	_ogham_cd_label = Label.new()
 	_ogham_cd_label.text = "Pret"
-	_ogham_cd_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ogham_cd_label.add_theme_font_override("font", font)
-	_ogham_cd_label.add_theme_font_size_override("font_size", FONT_SIZE_ZONE)
-	_ogham_cd_label.add_theme_color_override("font_color", pal["phosphor_dim"])
-	ogham_vbox.add_child(_ogham_cd_label)
+	MerlinVisual.apply_responsive_font(_ogham_cd_label, fs_small, "terminal")
+	_ogham_cd_label.add_theme_color_override("font_color", pal["cyan"])
+	_ogham_cd_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	ogham_hbox.add_child(_ogham_cd_label)
 
-	# Spacer
-	var spacer2: Control = Control.new()
-	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_hbox.add_child(spacer2)
+	# ═══ BOTTOM BAR ═══
+	var bot_bg: PanelContainer = PanelContainer.new()
+	bot_bg.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	var bot_style: StyleBoxFlat = StyleBoxFlat.new()
+	bot_style.bg_color = Color(pal["bg_deep"].r, pal["bg_deep"].g, pal["bg_deep"].b, 0.55)
+	bot_style.content_margin_left = safe_left
+	bot_style.content_margin_right = safe_right
+	bot_style.content_margin_top = 6
+	bot_style.content_margin_bottom = safe_bottom
+	bot_style.border_width_top = 1
+	bot_style.border_color = Color(pal["border"].r, pal["border"].g, pal["border"].b, 0.3)
+	bot_bg.add_theme_stylebox_override("panel", bot_style)
+	_root.add_child(bot_bg)
 
-	# Essences (right)
-	_essences_label = Label.new()
-	_essences_label.text = "~ 0"
-	_essences_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_essences_label.add_theme_font_override("font", font)
-	_essences_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD)
-	_essences_label.add_theme_color_override("font_color", pal["amber"])
-	top_hbox.add_child(_essences_label)
+	var bot_hbox: HBoxContainer = HBoxContainer.new()
+	bot_hbox.add_theme_constant_override("separation", 20)
+	bot_bg.add_child(bot_hbox)
 
-	# === CROSSHAIR (center) ===
-	_crosshair = Label.new()
-	_crosshair.text = "+"
-	_crosshair.set_anchors_preset(Control.PRESET_CENTER)
-	_crosshair.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_crosshair.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_crosshair.add_theme_font_override("font", font)
-	_crosshair.add_theme_font_size_override("font_size", 14)
-	_crosshair.add_theme_color_override("font_color", pal["phosphor_dim"])
-	_root.add_child(_crosshair)
+	# Card counter (left)
+	_card_counter = Label.new()
+	_card_counter.text = "Carte #0"
+	MerlinVisual.apply_responsive_font(_card_counter, fs_main, "terminal")
+	_card_counter.add_theme_color_override("font_color", pal["phosphor_dim"])
+	bot_hbox.add_child(_card_counter)
 
-	# === ZONE LABEL (bottom-left) ===
-	var bottom_margin: MarginContainer = MarginContainer.new()
-	bottom_margin.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	bottom_margin.add_theme_constant_override("margin_left", MARGIN_H)
-	bottom_margin.add_theme_constant_override("margin_bottom", MARGIN_V)
-	_root.add_child(bottom_margin)
-
+	# Zone label (center)
 	_zone_label = Label.new()
 	_zone_label.text = ""
-	_zone_label.add_theme_font_override("font", font)
-	_zone_label.add_theme_font_size_override("font_size", FONT_SIZE_ZONE)
+	_zone_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_zone_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	MerlinVisual.apply_responsive_font(_zone_label, fs_small, "terminal")
 	_zone_label.add_theme_color_override("font_color", pal["phosphor_dim"])
-	bottom_margin.add_child(_zone_label)
+	bot_hbox.add_child(_zone_label)
+
+	# Biome currency (right)
+	_currency_label = Label.new()
+	_currency_label.text = "\u25C8 0"
+	_currency_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	MerlinVisual.apply_responsive_font(_currency_label, fs_main, "terminal")
+	_currency_label.add_theme_color_override("font_color", pal["amber"])
+	bot_hbox.add_child(_currency_label)
