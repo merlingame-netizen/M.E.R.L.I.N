@@ -1,13 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMissionStore } from '../../store/mission-store';
-// v2 — with VERCEL_DASHBOARD_PROJECT_ID
 
 const GAME_URL = 'https://project-4o9qm.vercel.app';
 const DEPLOY_API = '/api/deploy-status';
 
 interface DeployInfo {
   run_number: number;
-  status: string;
   conclusion?: string;
   head_sha: string;
   head_message: string;
@@ -23,8 +21,8 @@ function fmt(s: number): string {
 
 export function GameTab() {
   const completedCount = useMissionStore(s => s.completedCount);
-  const agents = useMissionStore(s => s.agents);
-  const featureQueue = useMissionStore(s => s.featureQueue);
+  const agents = useMissionStore(s => s.agents) || [];
+  const featureQueue = useMissionStore(s => s.featureQueue) || [];
 
   const [latest, setLatest] = useState<DeployInfo | null>(null);
   const [deploying, setDeploying] = useState<DeployInfo | null>(null);
@@ -78,7 +76,6 @@ export function GameTab() {
         />
       </div>
 
-      {/* Deploy status */}
       <div className="deploy-bar">
         {deploying ? (
           <>
@@ -103,10 +100,9 @@ export function GameTab() {
         )}
       </div>
 
-      {/* KPI strip */}
       <div className="kpi-strip">
         <div className="kpi">
-          <span className="kpi__value">{completedCount}</span>
+          <span className="kpi__value">{completedCount || 0}</span>
           <span className="kpi__label">Done</span>
         </div>
         <div className="kpi">
