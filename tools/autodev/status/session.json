@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 11 — Merlin Whisper system + WalkHUD card counter + currency rename",
+  "objective": "Cycle 12 — Biome whisper expansion (8 biomes + critical health) + C11 bug hunt",
   "workers": [],
-  "updated_at": "2026-04-19T14:00:00.000Z",
-  "cycle": 11,
-  "checkpoint": "New MerlinWhisper CanvasLayer: 40+ contextual druide quips during forest walks (biome, health, time-of-day, veteran pools), pause/resume during encounters, phosphor-dim fade-in/out with mist_breath SFX. WalkHUD enhanced: card count display (Carte N/5 with color progression), biome currency renamed from essences, backward-compat update_essences() kept. BroceliandeForest3D wired: whisper context updates, encounter count tracking, pause/resume on card encounters. 3 files, ~191 lines net."
+  "updated_at": "2026-04-19T16:00:00.000Z",
+  "cycle": 12,
+  "checkpoint": "MerlinWhisper expanded: 7 new biome-specific whisper pools (landes, cotes, villages, cercles, marais, collines, iles) + critical health pool. 45 new atmospheric whispers. Biome routing via _get_biome_pool() fuzzy matching on all 8 BIOME_KEYS. Time-of-day matching now includes French variants (Nuit/Aube/Crepuscule). Bug hunt C11: 0 bugs found — merlin_whisper.gd, walk_hud.gd, broceliande_forest_3d.gd all clean. 1 file, ~93 lines net."
 }
