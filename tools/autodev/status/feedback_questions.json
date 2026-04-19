@@ -335,7 +335,7 @@
       "id": "q-20260415-001",
       "category": "design",
       "priority": "MEDIUM",
-      "status": "pending",
+      "status": "answered",
       "question": "Les effets de cartes (Game Master JSON) sont générés sans contrainte de format. Quelle approche pour forcer la structure ?",
       "context": "OllamaBackend.set_grammar() est un no-op pour Ollama (ollama_backend.gd:418-428) — la contrainte GBNF n'est pas supportée. Le Game Master génère donc du JSON libre pour les effets (ex: [{type:ADD_REPUTATION, faction:druides, amount:15}]). Actuellement, le JSON repair (4 stratégies) compense les malformations. Deux alternatives pour forcer la structure sans grammar: (A) Few-shot JSON: ajouter des exemples de JSON correct dans le system prompt du GM (efficace, simple, +50 tokens). (B) Prompt-engineering: reformuler le prompt GM pour éliciter du JSON via instruction explicite ('RÉPONDS UNIQUEMENT avec ce JSON exact: ...'). (C) Statu quo: repair pipeline suffit, pas besoin de forcer.",
       "type": "multiple_choice",
