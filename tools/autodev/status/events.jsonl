@@ -70,3 +70,7 @@
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"BUG-025 MEDIUM: set_color_levels wrong param (C8 BUG-023 fix never pushed) \u2014 re-fixed and committed"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"task_done","cycle":9,"detail":"CARD-OVERLAY-CRT: encounter card rewrite with CRT_PALETTE, MerlinVisual helpers, per-choice field hints, staggered animation"}
 {"ts":"2026-04-18T22:00:00.000Z","type":"cycle_end","cycle":9,"detail":"Cycle 9 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), CRT encounter card. 2 files, 111 lines. 25 total bugs fixed across 9 cycles."}
+{"ts":"2026-04-19T10:00:00.000Z","type":"cycle_start","cycle":10,"detail":"Cycle 10: Bug hunt C9 (clean) + RunHudOverlay — CRT-styled persistent HUD for 3D runs"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"task_done","cycle":10,"detail":"BUGHUNT-C9: 0 bugs found in encounter_card_overlay.gd + screen_dither_layer.gd"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"task_done","cycle":10,"detail":"RUN-HUD-OVERLAY: CanvasLayer HUD (life bar, ogham button, card counter, promises, currency) wired into Run3DController"}
+{"ts":"2026-04-19T10:00:00.000Z","type":"cycle_end","cycle":10,"detail":"Cycle 10 complete: RunHudOverlay feature. 2 files, 339 lines. 25 total bugs fixed (no new bugs). Critical gameplay gap filled — players now see health/currency/rune/MOS during 3D walks."}

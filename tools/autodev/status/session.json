@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 9 — Bug hunt C8 + CRT encounter card overlay with field hints",
+  "objective": "Cycle 10 — Bug hunt C9 (clean) + RunHudOverlay: CRT-styled persistent HUD for 3D runs",
   "workers": [],
-  "updated_at": "2026-04-18T22:00:00.000Z",
-  "cycle": 9,
-  "checkpoint": "BUG-024 HIGH: minigame.start() was never called (C8 fix never pushed). BUG-025 MEDIUM: set_color_levels wrong param in PSX mode (C8 fix never pushed). Encounter card overlay rewritten with CRT_PALETTE, MerlinVisual helpers, per-choice field hint labels with accent colors, staggered entry animation. 2 files modified, 111 lines net."
+  "updated_at": "2026-04-19T10:00:00.000Z",
+  "cycle": 10,
+  "checkpoint": "Bug hunt C9: 0 bugs found (encounter_card_overlay.gd + screen_dither_layer.gd clean). Feature: RunHudOverlay (292 lines) — CanvasLayer HUD with life bar, ogham/rune button (long-press switch), period indicator, card counter (MOS progress), promise badges, biome currency. Wired into Run3DController (47 lines added): auto-create on start_run(), hide during cards, sync card_index on card_ended, cleanup on stop_run(). 2 files modified, 339 lines net."
 }

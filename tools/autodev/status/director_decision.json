@@ -1,10 +1,10 @@
 {
-  "cycle": 9,
-  "timestamp": "2026-04-18T22:00:00.000Z",
+  "cycle": 10,
+  "timestamp": "2026-04-19T10:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-024-MINIGAME-START", "BUGFIX-025-COLOR-LEVELS-ROUTE", "CARD-OVERLAY-CRT-FIELDHINTS"],
-  "rationale": "Bug hunt on C8 files revealed C8 code fixes were NEVER PUSHED (only status JSONs were committed). BUG-024 HIGH: minigame.start() missing causes minigame hang. BUG-025 MEDIUM: set_color_levels ignores render mode. Both fixed. Feature: encounter card overlay rewritten with CRT_PALETTE styling, MerlinVisual helpers, per-choice lexical field hint labels with color-coded accents, staggered button animation.",
-  "budget": {"files": 2, "lines": 111},
+  "tasks": ["BUGHUNT-C9", "RUN-HUD-OVERLAY"],
+  "rationale": "Bug hunt C9 clean (0 bugs in encounter_card_overlay.gd + screen_dither_layer.gd). Feature: the run loop had a HudController logic layer but NO visual HUD — players had zero feedback during 3D walks (no life bar, no currency, no ogham status). Created RunHudOverlay as a CRT-styled CanvasLayer and wired it into Run3DController lifecycle.",
+  "budget": {"files": 2, "lines": 339},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt on cycle 9 code (encounter_card_overlay CRT rewrite). Then: Ogham/Rune activation UI during card encounters — row of owned runes above choices, tap to activate before selecting."
+  "next_cycle_plan": "Bug hunt on cycle 10 code (run_hud_overlay.gd, run_3d_controller.gd wiring). Then: Pre-run ogham/rune selection screen — player picks 1 ogham before entering a biome. Currently hard-coded. Bible s.2.2: equip 1 ogham at run start."
 }

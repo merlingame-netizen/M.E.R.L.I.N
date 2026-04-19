@@ -657,6 +657,20 @@
       "files": ["scripts/HubAntre.gd"],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
+    },
+    {
+      "id": "RUN-HUD-OVERLAY",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "RunHudOverlay — CRT-styled persistent HUD for 3D runs",
+      "agent": "ui_worker",
+      "files": [
+        "scripts/run/run_hud_overlay.gd",
+        "scripts/run/run_3d_controller.gd"
+      ],
+      "description": "CanvasLayer HUD showing life bar, ogham/rune button (long-press switch), period indicator, card counter (MOS progress), promise badges, biome currency. Wired into Run3DController lifecycle. Auto-created on start_run(), hidden during card overlays, card_index synced on card_ended, cleaned up on stop_run().",
+      "completed_at": "2026-04-19"
     }
   ]
 }
