@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 13,
-  "timestamp": "2026-04-19T18:00:00Z",
-  "type": "bughunt+cleanup",
-  "scope": "Cycle 13: Bug hunt C12 (whisper biome pools, _get_biome_pool routing) + delete dead onboarding scenes",
+  "cycle": 14,
+  "timestamp": "2026-04-19T20:00:00Z",
+  "type": "feature",
+  "scope": "Cycle 14: Faction card boost weighting (q-20260415-010)",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 13: Bug hunt C12 found 0 bugs — all 8 biome keys match _get_biome_pool() fuzzy routing. Dead scene cleanup: 10 files deleted (IntroPersonalityQuiz + SceneRencontreMerlin + 3 helpers + 3 UIDs). validate_headless.sh updated (8→6 scenes). 25 total bugs fixed across 13 cycles."
+  "overall_assessment": "Cycle 14: Faction boost weighting implemented. Cards with ADD_REPUTATION effects for factions where player has rep>=50 get +3.0 weight boost in pool selection. Applies to FastRoute and event cards. Code review found 1 style issue (fixed: := to explicit type on const). No bugs introduced. 25 total bugs fixed across 14 cycles."
 }

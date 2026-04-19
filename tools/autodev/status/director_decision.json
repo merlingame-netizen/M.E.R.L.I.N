@@ -1,10 +1,10 @@
 {
-  "cycle": 13,
-  "timestamp": "2026-04-19T18:00:00.000Z",
+  "cycle": 14,
+  "timestamp": "2026-04-19T20:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C12", "DELETE-DEAD-SCENES"],
-  "rationale": "Bug hunt C12: verified whisper biome pools and _get_biome_pool() routing against all 8 BIOME_KEYS — 0 bugs found. Dead scene cleanup: creator confirmed deletion of IntroPersonalityQuiz + SceneRencontreMerlin (q-20260414-005). Deleted 10 files total (5 scripts, 2 scenes, 3 UIDs) + updated validate_headless.sh. These scenes were unreachable from normal gameplay (Menu3DPC routes to ParchmentPreRun).",
-  "budget": {"files": 11, "lines": 0},
+  "tasks": ["FACTION-BOOST-WEIGHT"],
+  "rationale": "Creator chose option A (boost_weight) for q-20260415-010: re-weight existing card pool so faction cards appear more often when rep>=50. Core gameplay feature connecting faction system to card generation. 3 files, 80 insertions, 27 deletions. FastRoute upgraded from random to weighted selection. Event cards also boosted. No new bugs introduced (code review clean).",
+  "budget": {"files": 3, "lines": 80},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C13 (validate_headless.sh update only — quick). Then feature: biome-specific walk event pools for walk_event_controller, or implement SFXEngine (q-20260414-006), or boost_weight faction card weighting (q-20260415-010)."
+  "next_cycle_plan": "Bug hunt C14 (merlin_card_system.gd faction boost logic, merlin_game_controller.gd context change). Then feature: SFXEngine implementation (q-20260414-006) or GameFlowController wrap (q-20260415-011)."
 }

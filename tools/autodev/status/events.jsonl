@@ -79,3 +79,6 @@
 {"ts":"2026-04-19T16:00:00.000Z","type":"task_done","cycle":12,"detail":"BUGHUNT-C11: 0 bugs found in merlin_whisper.gd, walk_hud.gd, broceliande_forest_3d.gd \u2014 all CRT_PALETTE keys verified"}
 {"ts":"2026-04-19T16:00:00.000Z","type":"task_done","cycle":12,"detail":"WHISPER-BIOME-EXPANSION: 7 new biome pools (landes/cotes/villages/cercles/marais/collines/iles) + critical health pool. 45 new whispers. _get_biome_pool() fuzzy routing."}
 {"ts":"2026-04-19T16:00:00.000Z","type":"cycle_end","cycle":12,"detail":"Cycle 12 complete: 0 bugs (C11 clean), 1 feature (45 new whispers across 8 biomes). 1 file, ~93 lines. 25 total bugs fixed across 12 cycles."}
+{"ts":"2026-04-19T20:00:00.000Z","type":"cycle_start","cycle":14,"detail":"Cycle 14: Faction card boost weighting (q-20260415-010) — rep>=50 cards get +3.0 weight boost"}
+{"ts":"2026-04-19T20:00:00.000Z","type":"task_done","cycle":14,"detail":"FACTION-BOOST-WEIGHT: _get_card_faction_affinity + _compute_faction_boost in card system, FastRoute weighted selection, controller passes faction_rep"}
+{"ts":"2026-04-19T20:00:00.000Z","type":"cycle_end","cycle":14,"detail":"Cycle 14 complete: faction boost weighting. 3 files, 80 lines. 25 total bugs fixed across 14 cycles."}
