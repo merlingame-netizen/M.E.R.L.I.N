@@ -1,10 +1,10 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## GameFlowController — Scene integration layer for the full game loop
+## GameFlowController — Scene orchestrator (autoload singleton)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Manages the lifecycle: Menu → Hub → Run → EndScreen → Hub (repeat).
-## Connects signals between HubScreen, Run3DController, and EndRunScreen.
-## Reads/writes profile via MerlinStore and MerlinSaveSystem.
-## Uses PixelTransition (autoload) for fades between phases.
+## Manages the lifecycle: Menu → Hub → Walk → Run → EndScreen → Hub (repeat).
+## Any scene calls GameFlowController.goto(phase) to request a transition.
+## Uses PixelTransition (autoload) for visual fades between phases.
+## Also provides signal wiring for advanced controllers (Run3DController).
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
@@ -24,6 +24,7 @@ signal game_quit_requested
 enum GamePhase {
 	MENU,
 	HUB,
+	WALK,
 	RUN,
 	END_SCREEN,
 	TALENT_TREE,
@@ -32,20 +33,31 @@ enum GamePhase {
 const PHASE_NAMES: Dictionary = {
 	GamePhase.MENU: "menu",
 	GamePhase.HUB: "hub",
+	GamePhase.WALK: "walk",
 	GamePhase.RUN: "run",
 	GamePhase.END_SCREEN: "end_screen",
 	GamePhase.TALENT_TREE: "talent_tree",
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SCENE PATHS
+# SCENE PATHS — Active game scenes
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const SCENE_HUB: String = "res://scenes/HubScreen.tscn"
-const SCENE_RUN: String = "res://scenes/Run3D.tscn"
+const SCENE_HUB: String = "res://scenes/HubAntre.tscn"
+const SCENE_WALK: String = "res://scenes/BroceliandeForest3D.tscn"
+const SCENE_RUN: String = "res://scenes/MerlinGame.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
 const SCENE_TALENT_TREE: String = "res://scenes/TalentTree.tscn"
+
+const PHASE_SCENES: Dictionary = {
+	GamePhase.MENU: SCENE_MENU,
+	GamePhase.HUB: SCENE_HUB,
+	GamePhase.WALK: SCENE_WALK,
+	GamePhase.RUN: SCENE_RUN,
+	GamePhase.END_SCREEN: SCENE_END,
+	GamePhase.TALENT_TREE: SCENE_TALENT_TREE,
+}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -56,6 +68,7 @@ var _store: MerlinStore = null
 var _save_system: MerlinSaveSystem = null
 var _transition_manager: TransitionManager = null
 var _last_run_data: Dictionary = {}
+var _run_context: Dictionary = {}
 
 # Active screen references (set during wiring, cleared on phase exit)
 var _hub_screen: HubScreen = null
@@ -72,6 +85,54 @@ func setup(store: MerlinStore, save_system: MerlinSaveSystem,
 	_store = store
 	_save_system = save_system
 	_transition_manager = transition_manager
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GOTO — Public scene routing API (any scene can call this)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func goto(target_phase: int, context: Dictionary = {}) -> void:
+	var scene_path: String = PHASE_SCENES.get(target_phase, "")
+	if scene_path.is_empty():
+		push_error("[GameFlow] Unknown phase: %d" % target_phase)
+		return
+
+	if target_phase == _current_phase and context.is_empty():
+		return
+
+	_run_context = context
+	_set_phase(target_phase)
+
+	var pt: Node = get_node_or_null("/root/PixelTransition")
+	if pt and pt.has_method("transition_to"):
+		pt.transition_to(scene_path)
+	else:
+		get_tree().change_scene_to_file(scene_path)
+
+
+func goto_hub() -> void:
+	goto(GamePhase.HUB)
+
+
+func goto_walk(biome: String = "foret_broceliande") -> void:
+	goto(GamePhase.WALK, {"biome": biome})
+
+
+func goto_run() -> void:
+	goto(GamePhase.RUN)
+
+
+func goto_end(run_data: Dictionary = {}) -> void:
+	_last_run_data = run_data
+	goto(GamePhase.END_SCREEN, run_data)
+
+
+func goto_menu() -> void:
+	goto(GamePhase.MENU)
+
+
+func get_run_context() -> Dictionary:
+	return _run_context
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 15 — Bug hunt C14 (0 bugs) + feat run_history population + echo_memory + minigame/ogham counters",
+  "objective": "Cycle 16 — Bug hunt C15 (0 bugs) + feat GFC autoload integration (scene orchestrator)",
   "workers": [],
-  "updated_at": "2026-04-20T13:45:00.000Z",
-  "cycle": 15,
-  "checkpoint": "Bug hunt on C14 (merlin_card_system.gd faction boost_weight): 0 bugs — _get_card_factions/_get_faction_boost static helpers correct, weighted selection math verified. Feature: run_history population in store_run.gd. Each run end appends a 9-field entry (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp) to meta.run_history, trimmed to 50. Echo memory populated: deaths_by_biome, dominant_factions_seen, choices_log (100 cap). Added minigames_won/oghams_used counters to run state. record_minigame_win() in merlin_store.gd wired to game controller (score >= 80). oghams_used incremented on successful ogham activation. 3 files modified, 71 lines added. 25 total bugs fixed across 15 cycles."
+  "updated_at": "2026-04-20T15:30:00.000Z",
+  "cycle": 16,
+  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): 0 bugs — run_entry dict construction correct, dominant_faction lookup handles empty dict, history capped at 50, echo_memory deaths/factions/choices properly guarded. Feature: GameFlowController promoted to autoload singleton (GameFlow). Added WALK phase for BroceliandeForest3D. New goto() API + convenience methods (goto_hub, goto_walk, goto_run, goto_end). Wired HubAntre and BroceliandeForest3D to use GameFlow for scene transitions with PixelTransition fallback. PHASE_SCENES dict maps phases to actual active scene paths. 4 files modified, 95 lines added. 25 total bugs fixed across 16 cycles."
 }

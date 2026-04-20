@@ -1,10 +1,10 @@
 {
-  "cycle": 15,
-  "timestamp": "2026-04-20T13:45:00.000Z",
+  "cycle": 16,
+  "timestamp": "2026-04-20T15:30:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C14", "RUN-HISTORY-POPULATION"],
-  "rationale": "Bug hunt on C14 faction boost_weight code: _get_card_factions/_get_faction_boost in merlin_card_system.gd verified clean (null guards, static correctness, weight math). Feature: run_history was defined in save profile but never populated — now appends 9-field 'Complet' entry per creator decision q-20260415-002, trimmed to last 50 per q-20260414-002. Also populates echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Added minigames_won/oghams_used run counters + wiring.",
-  "budget": {"files": 3, "lines": 71},
+  "tasks": ["BUGHUNT-C15", "GFC-AUTOLOAD-INTEGRATION"],
+  "rationale": "Bug hunt on C15 (store_run.gd): 0 bugs — run_history + echo_memory code is clean, all dict accesses guarded, slice operations correct, dominant_faction handles empty dict gracefully. Feature: GFC autoload (q-20260415-011 creator chose A: extend GFC to orchestrate BroceliandeForest3D + HubAntre). Added WALK phase, goto() API with PixelTransition integration, registered as autoload GameFlow in project.godot. HubAntre and BroceliandeForest3D now route through GameFlow with fallback to direct PixelTransition.",
+  "budget": {"files": 4, "lines": 95},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C15 (store_run.gd run_history + echo_memory code). Then feature: GFC wrap BroceliandeForest3D (q-20260415-011, creator chose A: extend GFC to orchestrate forest3D + HubAntre) or end-run screen displaying run_history data."
+  "next_cycle_plan": "Bug hunt C16 (game_flow_controller.gd goto() integration). Then feature: wire MerlinGame end-of-run to GameFlow.goto_end() + wire EndRunScreen continue to GameFlow.goto_hub(). Complete the GFC scene routing loop."
 }

@@ -1285,20 +1285,30 @@ func _on_run_complete() -> void:
 	btn_s.set_content_margin_all(10)
 	btn_menu.add_theme_stylebox_override("normal", btn_s)
 	btn_menu.pressed.connect(func():
-		var pt: Node = get_node_or_null("/root/PixelTransition")
-		if pt and pt.has_method("transition_to"):
-			pt.transition_to("res://scenes/HubAntre.tscn")
+		var gfc: Node = get_node_or_null("/root/GameFlow")
+		if gfc:
+			gfc.goto_hub()
 		else:
-			get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
+			var pt: Node = get_node_or_null("/root/PixelTransition")
+			if pt and pt.has_method("transition_to"):
+				pt.transition_to("res://scenes/HubAntre.tscn")
+			else:
+				get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
 	)
 	vbox.add_child(btn_menu)
 
 
 func _on_hub() -> void:
-	# After forest walk, go to MerlinGame (card encounters)
-	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
-	var pt: Node = get_node_or_null("/root/PixelTransition")
-	if pt and pt.has_method("transition_to"):
-		pt.transition_to(target)
+	var gfc: Node = get_node_or_null("/root/GameFlow")
+	if gfc:
+		if _merlin_found:
+			gfc.goto_run()
+		else:
+			gfc.goto_hub()
 	else:
-		get_tree().change_scene_to_file(target)
+		var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
+		var pt: Node = get_node_or_null("/root/PixelTransition")
+		if pt and pt.has_method("transition_to"):
+			pt.transition_to(target)
+		else:
+			get_tree().change_scene_to_file(target)

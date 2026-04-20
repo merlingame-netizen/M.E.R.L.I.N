@@ -701,6 +701,17 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "GFC-AUTOLOAD-INTEGRATION",
+      "phase": 6,
+      "priority": 1,
+      "status": "completed",
+      "title": "GameFlowController autoload — scene orchestrator with WALK phase",
+      "agent": "godot_expert",
+      "files": ["scripts/core/game_flow_controller.gd", "project.godot", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scripts/HubAntre.gd"],
+      "description": "Promote GFC to autoload singleton (GameFlow). Add WALK phase for BroceliandeForest3D. Expose goto() API (goto_hub, goto_walk, goto_run, goto_end, goto_menu). Wire HubAntre and BroceliandeForest3D to route through GameFlow with PixelTransition fallback. PHASE_SCENES dict maps all phases to active scene paths. Creator decision q-20260415-011 (A: extend GFC to orchestrate forest3D + HubAntre).",
+      "completed_at": "2026-04-20"
     }
   ]
 }

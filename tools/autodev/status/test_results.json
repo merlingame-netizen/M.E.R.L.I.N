@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 15,
-  "timestamp": "2026-04-20T13:45:00Z",
+  "cycle": 16,
+  "timestamp": "2026-04-20T15:30:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 15: Bug hunt C14 (merlin_card_system.gd faction boost_weight) + feat run_history + echo_memory + run counters",
+  "scope": "Cycle 16: Bug hunt C15 (store_run.gd run_history + echo_memory) + feat GFC autoload integration",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 15: Bug hunt C14 found 0 bugs — _get_card_factions extracts factions from ADD_REPUTATION effects correctly, _get_faction_boost returns 1.0/3.0 based on rep threshold, weighted selection in fastroute and event generators handles boost correctly. Feature: run_history population implemented — 9-field entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp) appended at run end, capped at 50. echo_memory tracks deaths_by_biome, dominant_factions_seen, choices_log (100 cap). New run state counters minigames_won and oghams_used properly incremented. 25 total bugs fixed across 15 cycles."
+  "overall_assessment": "Cycle 16: Bug hunt C15 found 0 bugs — store_run.gd run_history population code is clean: run_entry dict builds 9 fields correctly, _get_dominant_faction handles empty dict (returns ''), history Array.slice(-50) caps correctly, echo_memory guards empty biome/faction before dict writes, choices_log capped at 100. Feature: GFC autoload (q-20260415-011). GameFlowController promoted to singleton, WALK phase added, goto() API with PHASE_SCENES routing. HubAntre and BroceliandeForest3D now delegate scene transitions to GameFlow. 25 total bugs fixed across 16 cycles."
 }

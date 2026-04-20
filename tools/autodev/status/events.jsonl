@@ -87,3 +87,7 @@
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"BUGHUNT-C14: 0 bugs — _get_card_factions/_get_faction_boost static helpers verified, weighted selection math correct"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"RUN-HISTORY-POPULATION: 9-field entries in meta.run_history (50 cap), echo_memory (deaths_by_biome, dominant_factions_seen, choices_log), minigames_won/oghams_used counters, record_minigame_win() wired to controller"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"cycle_end","cycle":15,"detail":"Cycle 15 complete: 0 bugs (C14 clean), 1 feature (run_history + echo_memory + counters). 3 files, 71 lines. 25 total bugs fixed across 15 cycles."}
+{"ts":"2026-04-20T15:30:00.000Z","type":"cycle_start","cycle":16,"detail":"Bug hunt C15 (store_run.gd) + GFC autoload integration (q-20260415-011)"}
+{"ts":"2026-04-20T15:30:00.000Z","type":"task_done","cycle":16,"detail":"BUGHUNT-C15: store_run.gd run_history+echo_memory code verified clean (0 bugs)"}
+{"ts":"2026-04-20T15:30:00.000Z","type":"task_done","cycle":16,"detail":"GFC-AUTOLOAD: GameFlowController promoted to autoload, WALK phase added, goto() API, HubAntre+BroceliandeForest3D wired"}
+{"ts":"2026-04-20T15:30:00.000Z","type":"cycle_end","cycle":16,"detail":"4 files, 95 lines. GFC now orchestrates active scene flow."}
