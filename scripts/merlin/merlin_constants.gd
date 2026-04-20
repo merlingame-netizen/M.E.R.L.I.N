@@ -1129,6 +1129,7 @@ const EXPEDITION_MERLIN_REACTIONS := {
 const FACTIONS: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
 const FACTION_THRESHOLD_CONTENT: int = 50    # déblocage cartes spéciales
 const FACTION_THRESHOLD_ENDING: int = 80     # déblocage fin de faction
+const FACTION_BOOST_WEIGHT: float = 3.0      # card weight multiplier when faction rep >= CONTENT
 
 const FACTION_INFO := {
 	"druides":   {"name": "Druides de Bretagne", "symbol": "chene"},
