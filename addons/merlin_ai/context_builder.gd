@@ -47,6 +47,10 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 		"active_promises": run.get("active_promises", []),
 		"active_tags": run.get("active_tags", []),
 
+		# === CROSS-RUN MEMORY ===
+		"echo_memory": meta.get("echo_memory", {}),
+		"total_runs": int(meta.get("total_runs", 0)),
+
 		# === PLAYER PROFILE ===
 		"player": player_profile.get_context_for_llm() if player_profile else {},
 

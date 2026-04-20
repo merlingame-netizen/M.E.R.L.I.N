@@ -262,6 +262,30 @@ func build_context_enrichment(context: Dictionary) -> String:
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
 
+	# Cross-run memory — narrative callbacks for veteran players
+	var echo: Dictionary = context.get("echo_memory", {})
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 3:
+		var deaths: Dictionary = echo.get("deaths_by_biome", {})
+		var current_biome: String = str(context.get("biome", ""))
+		if deaths.has(current_biome) and int(deaths[current_biome]) > 0:
+			parts.append("Deja mort ici (%dx)" % int(deaths[current_biome]))
+		var dom_factions: Array = echo.get("dominant_factions_seen", [])
+		if dom_factions.size() >= 2:
+			var f_strs: Array[String] = []
+			for f in dom_factions.slice(-3):
+				f_strs.append(str(f))
+			parts.append("Factions dominantes: %s" % ", ".join(f_strs))
+		if total_runs >= 5:
+			parts.append("Veteran (%d runs)" % total_runs)
+
+	# MOS tension zone (compact — system prompt has full convergence hints)
+	var cards: int = int(context.get("cards_played", 0))
+	if cards >= int(MerlinConstants.MOS_CONVERGENCE.get("soft_max_cards", 40)):
+		parts.append("FIN IMMINENTE")
+	elif cards >= int(MerlinConstants.MOS_CONVERGENCE.get("target_cards_max", 25)):
+		parts.append("Convergence haute")
+
 	if parts.is_empty():
 		return ""
 	return " " + ". ".join(parts) + "."
