@@ -704,9 +704,25 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 
 	var player_tendency := _get_player_tendency(hidden)
 
+	var cards_played: int = int(run.get("cards_played", 0))
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var tension_zone: String = "none"
+	var convergence_zone: bool = false
+	if cards_played >= int(mos.get("soft_max_cards", 40)):
+		tension_zone = "critical"
+		convergence_zone = true
+	elif cards_played >= int(mos.get("target_cards_max", 25)):
+		tension_zone = "high"
+		convergence_zone = true
+	elif cards_played >= int(mos.get("target_cards_min", 20)):
+		tension_zone = "rising"
+		convergence_zone = true
+	elif cards_played >= int(mos.get("soft_min_cards", 8)):
+		tension_zone = "low"
+
 	return {
 		"factions": meta.get("faction_rep", {}).duplicate(),
-		"cards_played": int(run.get("cards_played", 0)),
+		"cards_played": cards_played,
 		"day": int(run.get("day", 1)),
 		"active_tags": run.get("active_tags", []),
 		"active_promises": run.get("active_promises", []),
@@ -720,6 +736,10 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 		"flags": state.get("flags", {}),
 		"faction_status": _build_faction_status_string(state),
 		"typology": str(run.get("typology", "classique")),
+		"echo_memory": meta.get("echo_memory", {}),
+		"tension_zone": tension_zone,
+		"convergence_zone": convergence_zone,
+		"total_runs": int(meta.get("total_runs", 0)),
 	}
 
 func build_context(state: Dictionary) -> Dictionary:

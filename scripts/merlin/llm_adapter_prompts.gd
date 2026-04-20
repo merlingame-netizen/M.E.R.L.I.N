@@ -238,7 +238,7 @@ func build_arc_user_prompt(cards_played: int, biome: String, theme_word: String,
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency, echo memory).
 func build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
 
@@ -248,6 +248,15 @@ func build_context_enrichment(context: Dictionary) -> String:
 		parts.append("Tension haute")
 	elif tension >= 40:
 		parts.append("Tension moderee")
+
+	# MOS tension zone — narrative convergence hint
+	var tension_zone: String = str(context.get("tension_zone", "none"))
+	if tension_zone == "critical":
+		parts.append("URGENCE: la quete doit se conclure maintenant")
+	elif tension_zone == "high":
+		parts.append("La quete approche de sa fin")
+	elif tension_zone == "rising":
+		parts.append("Les enjeux montent")
 
 	# Player tendency
 	var tendency: String = str(context.get("player_tendency", ""))
@@ -261,6 +270,27 @@ func build_context_enrichment(context: Dictionary) -> String:
 		for i in range(mini(talent_names.size(), 3)):
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
+
+	# Echo memory — cross-run death + faction history for narrative callbacks
+	var echo: Dictionary = context.get("echo_memory", {})
+	if not echo.is_empty():
+		var biome: String = str(context.get("biome", ""))
+		var deaths_by_biome: Dictionary = echo.get("deaths_by_biome", {})
+		var biome_deaths: int = int(deaths_by_biome.get(biome, 0))
+		if biome_deaths >= 3:
+			parts.append("Tu es mort %d fois ici. Les ombres te reconnaissent" % biome_deaths)
+		elif biome_deaths >= 1:
+			parts.append("Tu es deja mort dans ce biome. Un echo persiste")
+		var dom_factions: Array = echo.get("dominant_factions_seen", [])
+		if dom_factions.size() >= 3:
+			parts.append("Allies passes: %s" % ", ".join(PackedStringArray(dom_factions.slice(0, 3))))
+
+	# Veteran status
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 20:
+		parts.append("Veteran (%d voyages)" % total_runs)
+	elif total_runs >= 5:
+		parts.append("Voyageur aguerri (%d runs)" % total_runs)
 
 	if parts.is_empty():
 		return ""
@@ -335,8 +365,31 @@ func get_phase_verb_pool(balance_score: int) -> Array:
 
 
 ## Build the narrative system prompt (compact for Qwen 3.5-4B).
+## 3 few-shot examples: early encounter, mid-game, end-game (q-20260415-005 B).
 func build_narrative_system_prompt() -> String:
-	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), exactement 3 options (1 verbe chacune, 1-3 effets chacune). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou. Effets valides: ADD_REPUTATION (faction+amount ±20 max), HEAL_LIFE, DAMAGE_LIFE, ADD_ANAM, ADD_BIOME_CURRENCY, UNLOCK_OGHAM.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]},{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":8}]}],\"tags\":[\"tag\"]}"
+	return (
+		"Merlin druide. 1 carte JSON: texte court (2-3 phrases), exactement 3 options (1 verbe chacune, 1-3 effets chacune). "
+		+ "Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou. "
+		+ "Effets valides: ADD_REPUTATION (faction+amount ±20 max), HEAL_LIFE, DAMAGE_LIFE, ADD_ANAM, ADD_BIOME_CURRENCY, UNLOCK_OGHAM, PROGRESS_MISSION.\n"
+		+ "Exemple 1 (debut):\n"
+		+ "{\"text\":\"Un korrigan te barre la route pres du dolmen. Ses yeux brillent de malice.\",\"speaker\":\"merlin\",\"options\":["
+		+ "{\"label\":\"Negocier\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":10}]},"
+		+ "{\"label\":\"Contourner\",\"effects\":[{\"type\":\"ADD_BIOME_CURRENCY\",\"amount\":5}]},"
+		+ "{\"label\":\"Provoquer\",\"effects\":[{\"type\":\"DAMAGE_LIFE\",\"amount\":5},{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":-8}]}"
+		+ "],\"tags\":[\"rencontre\"]}\n"
+		+ "Exemple 2 (mid):\n"
+		+ "{\"text\":\"Les druides du cercle te tendent un calice d'hydromel sacre. La lune eclaire leurs visages graves.\",\"speaker\":\"merlin\",\"options\":["
+		+ "{\"label\":\"Boire\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":8},{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":12}]},"
+		+ "{\"label\":\"Refuser\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":-10},{\"type\":\"ADD_REPUTATION\",\"faction\":\"anciens\",\"amount\":8}]},"
+		+ "{\"label\":\"Partager\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":5},{\"type\":\"ADD_REPUTATION\",\"faction\":\"niamh\",\"amount\":5}]}"
+		+ "],\"tags\":[\"rituel\"]}\n"
+		+ "Exemple 3 (fin de quete):\n"
+		+ "{\"text\":\"Le nemeton sacre pulse de lumiere. Les factions attendent ton verdict final.\",\"speaker\":\"merlin\",\"options\":["
+		+ "{\"label\":\"Unifier\",\"effects\":[{\"type\":\"PROGRESS_MISSION\",\"step\":3},{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":15},{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":-15}]},"
+		+ "{\"label\":\"Trancher\",\"effects\":[{\"type\":\"PROGRESS_MISSION\",\"step\":2},{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":20}]},"
+		+ "{\"label\":\"Fuir\",\"effects\":[{\"type\":\"DAMAGE_LIFE\",\"amount\":10},{\"type\":\"ADD_ANAM\",\"amount\":5}]}"
+		+ "],\"tags\":[\"climax\"]}"
+	)
 
 
 func build_narrative_user_prompt(context: Dictionary) -> String:
@@ -354,7 +407,7 @@ func build_narrative_user_prompt(context: Dictionary) -> String:
 	var biome: String = str(context.get("biome", "foret_broceliande"))
 	prompt += " Biome:%s." % biome
 
-	var life: int = int(context.get("life_essence", 5))
+	var life: int = int(context.get("life_essence", 100))
 	prompt += " Vie:%d." % life
 
 	if tags.size() > 0:
