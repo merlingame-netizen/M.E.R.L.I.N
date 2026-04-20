@@ -283,8 +283,8 @@ func apply_to_environment(env: Environment) -> void:
 	env.fog_sky_affect = cfg.get("fog_sky_affect", 0.4)
 	env.fog_light_energy = clampf(cfg.get("sun_energy", 0.7) * 0.6, 0.1, 0.8)
 
-	# --- Tone mapping ---
-	env.tonemap_mode = Environment.TONE_MAP_ACES
+	# --- Tone mapping (GL Compat uses FILMIC, not ACES) ---
+	env.tonemap_mode = Environment.TONE_MAP_FILMIC
 
 	# --- Glow ---
 	env.glow_enabled = true
