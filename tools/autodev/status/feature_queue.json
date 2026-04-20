@@ -690,6 +690,17 @@
       "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_constants.gd"],
       "description": "When faction rep >= 50 (FACTION_THRESHOLD_CONTENT), event and fastroute cards with ADD_REPUTATION effects for that faction are weighted 3x in selection pool. Static helpers _get_card_factions() and _get_faction_boost(). Creator chose boost_weight approach (q-20260415-010).",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "RUN-HISTORY-POPULATION",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Run history population + echo_memory + minigame/ogham counters",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
+      "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
+      "completed_at": "2026-04-20"
     }
   ]
 }

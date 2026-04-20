@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 14 — Bug hunt SFXEngine (0 bugs) + feat boost_weight faction card weighting",
+  "objective": "Cycle 15 — Bug hunt C14 (0 bugs) + feat run_history population + echo_memory + minigame/ogham counters",
   "workers": [],
-  "updated_at": "2026-04-20T12:00:00.000Z",
-  "cycle": 14,
-  "checkpoint": "Bug hunt on SFXEngine (sfx_engine.gd + audio_integration.gd): 0 bugs found — all type refs valid, pool logic correct, volume delta math correct. Feature: boost_weight faction card weighting implemented in merlin_card_system.gd. Cards matching factions with rep >= 50 get 3x selection weight in both event and fastroute generators. FACTION_BOOST_WEIGHT const added to merlin_constants.gd. 2 files modified, 52 lines added. 25 total bugs fixed across 14 cycles."
+  "updated_at": "2026-04-20T13:45:00.000Z",
+  "cycle": 15,
+  "checkpoint": "Bug hunt on C14 (merlin_card_system.gd faction boost_weight): 0 bugs — _get_card_factions/_get_faction_boost static helpers correct, weighted selection math verified. Feature: run_history population in store_run.gd. Each run end appends a 9-field entry (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp) to meta.run_history, trimmed to 50. Echo memory populated: deaths_by_biome, dominant_factions_seen, choices_log (100 cap). Added minigames_won/oghams_used counters to run state. record_minigame_win() in merlin_store.gd wired to game controller (score >= 80). oghams_used incremented on successful ogham activation. 3 files modified, 71 lines added. 25 total bugs fixed across 15 cycles."
 }

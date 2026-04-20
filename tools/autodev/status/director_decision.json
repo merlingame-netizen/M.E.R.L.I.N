@@ -1,10 +1,10 @@
 {
-  "cycle": 14,
-  "timestamp": "2026-04-20T12:00:00.000Z",
+  "cycle": 15,
+  "timestamp": "2026-04-20T13:45:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-SFXENGINE", "FACTION-BOOST-WEIGHT"],
-  "rationale": "Bug hunt on SFXEngine (last committed feature): sfx_engine.gd and audio_integration.gd reviewed — 0 bugs. All referenced classes (Run3DController, HubScreen, EndRunScreen, GameFlowController, MusicManagerV2, StemsMusicManager, SFXRecipes, SFXRecipesAmbient) confirmed to exist. Feature: boost_weight faction card weighting (q-20260415-010, creator chose A). Cards with ADD_REPUTATION effects targeting a faction where player has rep >= 50 are weighted 3x in event and fastroute generators. Implements bible FACTION_THRESHOLD_CONTENT unlock gate.",
-  "budget": {"files": 2, "lines": 52},
+  "tasks": ["BUGHUNT-C14", "RUN-HISTORY-POPULATION"],
+  "rationale": "Bug hunt on C14 faction boost_weight code: _get_card_factions/_get_faction_boost in merlin_card_system.gd verified clean (null guards, static correctness, weight math). Feature: run_history was defined in save profile but never populated — now appends 9-field 'Complet' entry per creator decision q-20260415-002, trimmed to last 50 per q-20260414-002. Also populates echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Added minigames_won/oghams_used run counters + wiring.",
+  "budget": {"files": 3, "lines": 71},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C14 (merlin_card_system.gd faction boost logic). Then feature: one of — GFC wrap BroceliandeForest3D (q-20260415-011), run_history population (q-20260415-002), or biome walk event pools."
+  "next_cycle_plan": "Bug hunt C15 (store_run.gd run_history + echo_memory code). Then feature: GFC wrap BroceliandeForest3D (q-20260415-011, creator chose A: extend GFC to orchestrate forest3D + HubAntre) or end-run screen displaying run_history data."
 }
