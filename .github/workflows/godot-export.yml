@@ -75,31 +75,17 @@ jobs:
           echo "::warning::Parse check is advisory only — export will attempt regardless"
 
       - name: Export Web
-        timeout-minutes: 20
+        timeout-minutes: 30
         run: |
           mkdir -p web-export
           echo "=== Starting Godot web export ==="
           ls -la /root/.local/share/godot/export_templates/ 2>/dev/null || echo "No templates dir"
-          echo "=== Project size check ==="
-          du -sh music/ archive/ tools/ Assets/ 2>/dev/null || true
-          echo "=== Running export with live output ==="
-          # Run godot with unbuffered output, write to log file AND stream to stdout
-          stdbuf -oL -eL godot --headless --export-release "Web" web-export/index.html --path . 2>&1 | tee /tmp/godot-export.log &
-          GODOT_PID=$!
-          # Monitor progress every 30s
-          while kill -0 $GODOT_PID 2>/dev/null; do
-            sleep 30
-            echo "--- Progress check at $(date +%M:%S) ---"
-            ls -la web-export/ 2>/dev/null | tail -5
-            tail -5 /tmp/godot-export.log 2>/dev/null
-          done
-          wait $GODOT_PID
-          EXIT=$?
-          echo "=== Godot exit code: $EXIT ==="
-          echo "=== Last 50 log lines ==="
-          tail -50 /tmp/godot-export.log
+          echo "=== Running export (may take 15-25 min) ==="
+          godot --headless --export-release "Web" web-export/index.html --path . 2>&1 || true
+          echo "=== Export finished ==="
           if [ ! -f web-export/index.html ]; then
             echo "::error::Export failed — no index.html"
+            ls -la web-export/ || true
             exit 1
           fi
           echo "=== Export successful ==="
