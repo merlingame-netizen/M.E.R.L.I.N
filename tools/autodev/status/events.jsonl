@@ -83,3 +83,7 @@
 {"ts":"2026-04-20T12:00:00.000Z","type":"task_done","cycle":14,"detail":"BUGHUNT-SFXENGINE: 0 bugs — SFX enum cache, player pool, volume categories, class references all verified"}
 {"ts":"2026-04-20T12:00:00.000Z","type":"task_done","cycle":14,"detail":"FACTION-BOOST-WEIGHT: _get_card_factions + _get_faction_boost static helpers. Event cards score *= boost. FastRoute weighted selection. FACTION_BOOST_WEIGHT=3.0 const."}
 {"ts":"2026-04-20T12:00:00.000Z","type":"cycle_end","cycle":14,"detail":"Cycle 14 complete: 0 bugs (SFXEngine clean), 1 feature (faction boost_weight). 2 files, 52 lines. 25 total bugs fixed across 14 cycles."}
+{"ts":"2026-04-20T14:00:00.000Z","type":"cycle_start","cycle":15,"detail":"Cycle 15: Bug hunt C14 (faction boost logic) + feat GFC wrap BroceliandeForest3D + HubAntre"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"task_done","cycle":15,"detail":"BUGHUNT-C14: 0 bugs in merlin_card_system.gd faction boost (_get_card_factions, _get_faction_boost, weighted selection)"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"task_done","cycle":15,"detail":"GFC-WRAP-BROCELIANDE: WALK phase added, walk_ended signal, GFC auto-wiring, shared save_system, Anam rewards central. 4 files, 133 lines."}
+{"ts":"2026-04-20T14:00:00.000Z","type":"cycle_end","cycle":15,"detail":"Cycle 15 complete: 0 bugs (C14 clean), 1 feature (GFC orchestration). 4 files, 133 lines. 25 total bugs fixed across 15 cycles."}
