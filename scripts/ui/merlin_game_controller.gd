@@ -663,7 +663,6 @@ func _resolve_choice(option: int) -> void:
 		print("[Merlin] run ended!")
 		var ending = result.get("ending", {})
 		ending["story_log"] = _quest_history.duplicate()
-		_effects.apply_run_rewards(ending, store, _minigames_won, _cards_this_run)
 		if ui and is_instance_valid(ui) and ui.has_method("mark_card_completed"):
 			ui.mark_card_completed()
 		if not headless_mode and ui and is_instance_valid(ui):

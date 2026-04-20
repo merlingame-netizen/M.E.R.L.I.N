@@ -238,7 +238,7 @@ func build_arc_user_prompt(cards_played: int, biome: String, theme_word: String,
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency, cross-run memory).
 func build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
 
@@ -261,6 +261,26 @@ func build_context_enrichment(context: Dictionary) -> String:
 		for i in range(mini(talent_names.size(), 3)):
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
+
+	# Cross-run echo memory — narrative callbacks from past runs
+	var echo: Dictionary = context.get("echo_memory", {})
+	if not echo.is_empty():
+		var current_biome: String = str(context.get("biome", ""))
+		var deaths: Dictionary = echo.get("deaths_by_biome", {})
+		if deaths.has(current_biome) and int(deaths[current_biome]) >= 2:
+			parts.append("Le voyageur est DEJA MORT %d fois ici (memoire hantee)" % int(deaths[current_biome]))
+		elif deaths.has(current_biome):
+			parts.append("Le voyageur est deja mort ici (souvenir douloureux)")
+		var dom_seen: Array = echo.get("dominant_factions_seen", [])
+		if dom_seen.size() >= 3:
+			parts.append("Veteran: %d factions dominees" % dom_seen.size())
+
+	# Veteran status from total runs
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 10:
+		parts.append("Voyageur aguerri (%d voyages)" % total_runs)
+	elif total_runs >= 5:
+		parts.append("Voyageur experimente")
 
 	if parts.is_empty():
 		return ""
@@ -335,8 +355,30 @@ func get_phase_verb_pool(balance_score: int) -> Array:
 
 
 ## Build the narrative system prompt (compact for Qwen 3.5-4B).
+## Few-shot: 3 rotating examples (early/mid/end-game) per creator choice q-20260415-005.
 func build_narrative_system_prompt() -> String:
-	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), exactement 3 options (1 verbe chacune, 1-3 effets chacune). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou. Effets valides: ADD_REPUTATION (faction+amount ±20 max), HEAL_LIFE, DAMAGE_LIFE, ADD_ANAM, ADD_BIOME_CURRENCY, UNLOCK_OGHAM.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]},{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":8}]}],\"tags\":[\"tag\"]}"
+	var base := "Merlin druide. 1 carte JSON: texte court (2-3 phrases), exactement 3 options (1 verbe chacune, 1-3 effets chacune). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou. Effets valides: ADD_REPUTATION (faction+amount ±20 max), HEAL_LIFE, DAMAGE_LIFE, ADD_ANAM, ADD_BIOME_CURRENCY, UNLOCK_OGHAM, PROGRESS_MISSION.\n"
+	base += "EXEMPLES (3 situations differentes):\n"
+	base += "Debut de quete:\n"
+	base += "{\"text\":\"La brume se leve sur le nemeton. Tu sens l'odeur du gui frais et le murmure des pierres.\",\"speaker\":\"merlin\",\"options\":["
+	base += "{\"label\":\"Cueillir\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":8}]},"
+	base += "{\"label\":\"Ecouter\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},"
+	base += "{\"label\":\"Briser\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":6},{\"type\":\"DAMAGE_LIFE\",\"amount\":3}]}"
+	base += "],\"tags\":[\"nemeton\"]}\n"
+	base += "Milieu de quete:\n"
+	base += "{\"text\":\"Les korrigans encerclent le dolmen. Leurs yeux brillent d'un eclat cuivre. Un pacte ou un combat.\",\"speaker\":\"merlin\",\"options\":["
+	base += "{\"label\":\"Negocier\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":12},{\"type\":\"ADD_BIOME_CURRENCY\",\"amount\":5}]},"
+	base += "{\"label\":\"Defier\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":-10},{\"type\":\"ADD_ANAM\",\"amount\":8}]},"
+	base += "{\"label\":\"Invoquer\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"anciens\",\"amount\":15},{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":-5}]}"
+	base += "],\"tags\":[\"korrigans\",\"dolmen\"]}\n"
+	base += "Fin de quete (resolution):\n"
+	base += "{\"text\":\"Le chene millénaire pulse de lumiere. La quete touche a sa fin. Merlin murmure: 'Choisis bien, mon pauvre ami.'\",\"speaker\":\"merlin\",\"options\":["
+	base += "{\"label\":\"Sceller\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":20},{\"type\":\"PROGRESS_MISSION\",\"amount\":1}]},"
+	base += "{\"label\":\"Sacrifier\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"niamh\",\"amount\":18},{\"type\":\"DAMAGE_LIFE\",\"amount\":10},{\"type\":\"PROGRESS_MISSION\",\"amount\":1}]},"
+	base += "{\"label\":\"Trahir\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":20},{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":-15},{\"type\":\"PROGRESS_MISSION\",\"amount\":1}]}"
+	base += "],\"tags\":[\"climax\",\"chene\"]}\n"
+	base += "Genere 1 carte JSON. Rien d'autre."
+	return base
 
 
 func build_narrative_user_prompt(context: Dictionary) -> String:
