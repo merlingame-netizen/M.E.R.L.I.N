@@ -27,6 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Remove Windows-only GDExtension (blocks Linux CI)
+        run: rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
+
       - name: Cache Godot import
         uses: actions/cache@v4
         with:
