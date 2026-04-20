@@ -720,6 +720,10 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 		"flags": state.get("flags", {}),
 		"faction_status": _build_faction_status_string(state),
 		"typology": str(run.get("typology", "classique")),
+		"tension_zone": str(run.get("tension_zone", "none")),
+		"convergence_zone": bool(run.get("convergence_zone", false)),
+		"total_runs": int(meta.get("total_runs", 0)),
+		"echo_memory": meta.get("echo_memory", {}),
 	}
 
 func build_context(state: Dictionary) -> Dictionary:

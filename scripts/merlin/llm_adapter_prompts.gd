@@ -238,11 +238,20 @@ func build_arc_user_prompt(cards_played: int, biome: String, theme_word: String,
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency, echo memory).
 func build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
 
-	# Tension
+	# Tension zone (MOS convergence — from run state)
+	var tension_zone: String = str(context.get("tension_zone", "none"))
+	if tension_zone == "critical":
+		parts.append("URGENCE: la quete doit se conclure maintenant")
+	elif tension_zone == "high":
+		parts.append("La quete approche de sa fin")
+	elif tension_zone == "rising":
+		parts.append("Tension montante")
+
+	# Hidden tension (karma-driven)
 	var tension: int = int(context.get("tension", 0))
 	if tension >= 60:
 		parts.append("Tension haute")
@@ -261,6 +270,31 @@ func build_context_enrichment(context: Dictionary) -> String:
 		for i in range(mini(talent_names.size(), 3)):
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
+
+	# Echo memory — cross-run narrative callbacks
+	var echo: Dictionary = context.get("echo_memory", {})
+	if not echo.is_empty():
+		var biome: String = str(context.get("biome", ""))
+		var deaths_by_biome: Dictionary = echo.get("deaths_by_biome", {})
+		var death_count: int = int(deaths_by_biome.get(biome, 0))
+		if death_count >= 3:
+			parts.append("Deja mort %d fois dans ce biome" % death_count)
+		elif death_count > 0:
+			parts.append("Deja mort ici")
+
+		var dom_factions: Array = echo.get("dominant_factions_seen", [])
+		if dom_factions.size() >= 3:
+			var faction_strs: Array[String] = []
+			for i in range(mini(dom_factions.size(), 3)):
+				faction_strs.append(str(dom_factions[i]))
+			parts.append("Allegiances passees: %s" % ", ".join(faction_strs))
+
+	# Veteran status
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 20:
+		parts.append("Veteran (%d voyages)" % total_runs)
+	elif total_runs >= 10:
+		parts.append("Voyageur experimente")
 
 	if parts.is_empty():
 		return ""
