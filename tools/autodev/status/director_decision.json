@@ -1,10 +1,10 @@
 {
-  "cycle": 14,
-  "timestamp": "2026-04-20T12:00:00.000Z",
+  "cycle": 15,
+  "timestamp": "2026-04-20T14:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-SFXENGINE", "FACTION-BOOST-WEIGHT"],
-  "rationale": "Bug hunt on SFXEngine (last committed feature): sfx_engine.gd and audio_integration.gd reviewed — 0 bugs. All referenced classes (Run3DController, HubScreen, EndRunScreen, GameFlowController, MusicManagerV2, StemsMusicManager, SFXRecipes, SFXRecipesAmbient) confirmed to exist. Feature: boost_weight faction card weighting (q-20260415-010, creator chose A). Cards with ADD_REPUTATION effects targeting a faction where player has rep >= 50 are weighted 3x in event and fastroute generators. Implements bible FACTION_THRESHOLD_CONTENT unlock gate.",
-  "budget": {"files": 2, "lines": 52},
+  "tasks": ["BUGHUNT-C14-FACTIONBOOST", "RUN-HISTORY-COMPLETE"],
+  "rationale": "Bug hunt C14 (faction boost in merlin_card_system.gd): 0 bugs found. _get_card_factions/_get_faction_boost static helpers correct, weighted selection handles boundaries via fallback, null safety OK for empty faction_rep/options. Feature: run_history was defined in profile but never populated — record_run_end() in hub_controller was never called, and StoreRun.apply_run_rewards() didn't record history. Fixed by adding run_history recording directly in apply_run_rewards (both code paths now covered). Also fixed GFC bug where oghams_used was computed for Anam but not returned in rewards dict. Creator request q-20260415-002 fulfilled (life_at_end, dominant_faction, minigames_won, oghams_used all recorded).",
+  "budget": {"files": 3, "lines": 30},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C14 (merlin_card_system.gd faction boost logic). Then feature: one of — GFC wrap BroceliandeForest3D (q-20260415-011), run_history population (q-20260415-002), or biome walk event pools."
+  "next_cycle_plan": "Bug hunt C15 (store_run.gd run_history + game_flow_controller.gd rewards). Then feature: GFC wrap BroceliandeForest3D (q-20260415-011) or biome walk event pools."
 }

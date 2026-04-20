@@ -690,6 +690,17 @@
       "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_constants.gd"],
       "description": "When faction rep >= 50 (FACTION_THRESHOLD_CONTENT), event and fastroute cards with ADD_REPUTATION effects for that faction are weighted 3x in selection pool. Static helpers _get_card_factions() and _get_faction_boost(). Creator chose boost_weight approach (q-20260415-010).",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "RUN-HISTORY-COMPLETE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Complete run_history population — life_at_end, dominant_faction, minigames_won, oghams_used",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/store_run.gd", "scripts/core/game_flow_controller.gd", "scripts/ui/hub_controller.gd"],
+      "description": "run_history was defined in profile but never populated. Added auto-recording in StoreRun.apply_run_rewards() with 7 fields per entry (biome, cards_played, ending, life_at_end, dominant_faction, minigames_won, oghams_used). Fixed GFC bug: oghams_used computed but not returned in rewards dict. Hub controller enriched to match. Creator request q-20260415-002.",
+      "completed_at": "2026-04-20"
     }
   ]
 }
