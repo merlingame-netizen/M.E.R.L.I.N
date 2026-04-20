@@ -133,14 +133,15 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	var life: int = int(context.get("life_essence", 100))
 
 	# GM system prompt: JSON-schema few-shot block (Ollama-compatible, replaces GBNF grammar).
-	# Two examples enforce format + faction/amount constraints without grammar support.
+	# Three examples enforce format + faction/amount constraints without grammar support.
 	var system: String = "Reponds UNIQUEMENT en JSON valide. AUCUN texte avant ou apres.\n"
 	system += "Schema: {\"effects\":[[option_gauche],[option_centre],[option_droite]]}\n"
 	system += "Types: HEAL_LIFE,DAMAGE_LIFE,ADD_KARMA,ADD_REPUTATION,ADD_ANAM,ADD_BIOME_CURRENCY.\n"
 	system += "ADD_REPUTATION requis: {\"type\":\"ADD_REPUTATION\",\"faction\":F,\"amount\":N} (F=druides/anciens/korrigans/niamh/ankou, N=-20..20)\n"
 	system += "Autres: {\"type\":T,\"amount\":N} (N=1..20). 1-3 effets par option. 3 options obligatoires.\n"
 	system += "Ex1 danger: {\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":8}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":5}]]}\n"
-	system += "Ex2 stable: {\"effects\":[[{\"type\":\"ADD_REPUTATION\",\"faction\":\"anciens\",\"amount\":12}],[{\"type\":\"HEAL_LIFE\",\"amount\":4}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":-8}]]}"
+	system += "Ex2 stable: {\"effects\":[[{\"type\":\"ADD_REPUTATION\",\"faction\":\"anciens\",\"amount\":12}],[{\"type\":\"HEAL_LIFE\",\"amount\":4}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"korrigans\",\"amount\":-8}]]}\n"
+	system += "Ex3 fin: {\"effects\":[[{\"type\":\"PROGRESS_MISSION\",\"amount\":1},{\"type\":\"ADD_REPUTATION\",\"faction\":\"niamh\",\"amount\":18}],[{\"type\":\"HEAL_LIFE\",\"amount\":10},{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":-15}],[{\"type\":\"PROGRESS_MISSION\",\"amount\":1},{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":20}]]}"
 
 	var balance_hint := ""
 	if score < 30:
@@ -157,8 +158,8 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	]
 
 	# GM brain, low temp, no grammar (Ollama-compatible)
-	# max_tokens 200: two-example prompt + 3-option effects JSON needs ~170 chars
-	var gm_params: Dictionary = {"max_tokens": 200, "temperature": 0.15}
+	# max_tokens 220: three-example prompt + 3-option effects JSON needs ~200 chars
+	var gm_params: Dictionary = {"max_tokens": 220, "temperature": 0.15}
 	var result: Dictionary = await merlin_ai.generate_structured(system, user_input, "", gm_params)
 
 	if result.has("text"):

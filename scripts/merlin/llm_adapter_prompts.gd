@@ -238,16 +238,30 @@ func build_arc_user_prompt(cards_played: int, biome: String, theme_word: String,
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency, cross-run memory).
 func build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
 
-	# Tension
+	# MOS tension zone (narrative pacing)
+	var tension_zone: String = str(context.get("tension_zone", "none"))
+	match tension_zone:
+		"critical":
+			parts.append("FIN IMMINENTE — la quete doit se conclure maintenant")
+		"high":
+			parts.append("Tension haute — oriente vers la resolution")
+		"rising":
+			parts.append("Tension montante — les enjeux se precisent")
+
+	# Convergence zone flag
+	if context.get("convergence_zone", false) and tension_zone != "critical":
+		parts.append("Zone de convergence active")
+
+	# Hidden tension (karma-driven mood)
 	var tension: int = int(context.get("tension", 0))
 	if tension >= 60:
-		parts.append("Tension haute")
+		parts.append("Atmosphere oppressante")
 	elif tension >= 40:
-		parts.append("Tension moderee")
+		parts.append("Atmosphere tendue")
 
 	# Player tendency
 	var tendency: String = str(context.get("player_tendency", ""))
@@ -261,6 +275,26 @@ func build_context_enrichment(context: Dictionary) -> String:
 		for i in range(mini(talent_names.size(), 3)):
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
+
+	# Cross-run memory (echo_memory)
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 5:
+		parts.append("Veteran (%d voyages)" % total_runs)
+	elif total_runs >= 2:
+		parts.append("Voyageur de retour (%d voyages)" % total_runs)
+
+	var deaths_in_biome: int = int(context.get("deaths_in_biome", 0))
+	if deaths_in_biome >= 3:
+		parts.append("Mort ici %d fois — lieu maudit" % deaths_in_biome)
+	elif deaths_in_biome >= 1:
+		parts.append("Deja mort ici — souvenir amer")
+
+	var dom_factions: Array = context.get("dominant_factions_seen", [])
+	if dom_factions.size() >= 3:
+		var recent: Array[String] = []
+		for i in range(maxi(0, dom_factions.size() - 3), dom_factions.size()):
+			recent.append(str(dom_factions[i]))
+		parts.append("Allegiances passees: %s" % ", ".join(recent))
 
 	if parts.is_empty():
 		return ""

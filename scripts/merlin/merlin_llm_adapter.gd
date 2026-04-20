@@ -704,6 +704,10 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 
 	var player_tendency := _get_player_tendency(hidden)
 
+	var echo_memory: Dictionary = meta.get("echo_memory", {})
+	var total_runs: int = int(meta.get("total_runs", 0))
+	var current_biome: String = str(run.get("current_biome", "foret_broceliande"))
+
 	return {
 		"factions": meta.get("faction_rep", {}).duplicate(),
 		"cards_played": int(run.get("cards_played", 0)),
@@ -711,15 +715,20 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 		"active_tags": run.get("active_tags", []),
 		"active_promises": run.get("active_promises", []),
 		"story_log": _get_recent_story_log(run.get("story_log", []), 2),
-		"biome": str(run.get("current_biome", "foret_broceliande")),
+		"biome": current_biome,
 		"life_essence": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"karma": int(hidden.get("karma", 0)),
 		"tension": int(hidden.get("tension", 0)),
+		"tension_zone": str(run.get("tension_zone", "none")),
+		"convergence_zone": bool(run.get("convergence_zone", false)),
 		"talent_names": talent_names,
 		"player_tendency": player_tendency,
 		"flags": state.get("flags", {}),
 		"faction_status": _build_faction_status_string(state),
 		"typology": str(run.get("typology", "classique")),
+		"total_runs": total_runs,
+		"deaths_in_biome": int(echo_memory.get("deaths_by_biome", {}).get(current_biome, 0)),
+		"dominant_factions_seen": echo_memory.get("dominant_factions_seen", []),
 	}
 
 func build_context(state: Dictionary) -> Dictionary:
