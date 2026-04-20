@@ -704,6 +704,9 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 
 	var player_tendency := _get_player_tendency(hidden)
 
+	var echo_memory: Dictionary = meta.get("echo_memory", {})
+	var total_runs: int = int(meta.get("stats", {}).get("total_runs", 0))
+
 	return {
 		"factions": meta.get("faction_rep", {}).duplicate(),
 		"cards_played": int(run.get("cards_played", 0)),
@@ -720,6 +723,8 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 		"flags": state.get("flags", {}),
 		"faction_status": _build_faction_status_string(state),
 		"typology": str(run.get("typology", "classique")),
+		"echo_memory": echo_memory,
+		"total_runs": total_runs,
 	}
 
 func build_context(state: Dictionary) -> Dictionary:

@@ -262,6 +262,30 @@ func build_context_enrichment(context: Dictionary) -> String:
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
 
+	# MOS convergence zone
+	var cards_played: int = int(context.get("cards_played", 0))
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	if cards_played >= int(mos.get("soft_max_cards", 40)):
+		parts.append("Zone: FIN IMMINENTE")
+	elif cards_played >= int(mos.get("target_cards_max", 25)):
+		parts.append("Zone: convergence")
+	elif cards_played >= int(mos.get("target_cards_min", 20)):
+		parts.append("Zone: tension haute")
+
+	# Echo memory — cross-run narrative cues
+	var echo: Dictionary = context.get("echo_memory", {})
+	if not echo.is_empty():
+		var biome: String = str(context.get("biome", ""))
+		var deaths: Dictionary = echo.get("deaths_by_biome", {})
+		var biome_deaths: int = int(deaths.get(biome, 0))
+		if biome_deaths >= 3:
+			parts.append("Mort ici %dx (lieu maudit)" % biome_deaths)
+		elif biome_deaths >= 1:
+			parts.append("Deja mort ici")
+		var total_runs: int = int(context.get("total_runs", 0))
+		if total_runs >= 10:
+			parts.append("Veteran (%d runs)" % total_runs)
+
 	if parts.is_empty():
 		return ""
 	return " " + ". ".join(parts) + "."
