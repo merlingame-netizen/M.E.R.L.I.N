@@ -701,6 +701,39 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "BUGFIX-026-REFIX",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Re-fix BUGFIX-026 double-reward (C16 phantom push)",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/merlin_game_controller.gd"],
+      "description": "C16 found the bug but only pushed status JSONs. Re-fixed: removed duplicate _effects.apply_run_rewards() at controller L666. StoreRun.handle_run_end() already applies rewards during dispatch.",
+      "completed_at": "2026-04-20"
+    },
+    {
+      "id": "ECHO-MEMORY-LLM-CONTEXT",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire echo_memory + tension_zone into LLM narrative context",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/llm_adapter_prompts.gd"],
+      "description": "build_narrative_context() now includes echo_memory, total_runs, tension_zone, convergence_zone from state. build_context_enrichment() formats for LLM: veteran status (5+ runs), biome death count ('Deja mort ici N fois'), MOS zones ('FIN IMMINENTE'/'resolution'/'croissante'), faction exploration count.",
+      "completed_at": "2026-04-20"
+    },
+    {
+      "id": "GM-FEWSHOT-3",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "Add 3rd GM few-shot example (end-game PROGRESS_MISSION + high rep)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/llm_adapter_game_master.gd"],
+      "description": "Added Ex3 end-game to GM system prompt: PROGRESS_MISSION + high ADD_REPUTATION + ADD_ANAM + DAMAGE_LIFE combo. Per creator answer q-20260415-005 (chose B: 3 examples). Improves late-game effect generation quality.",
+      "completed_at": "2026-04-20"
     }
   ]
 }

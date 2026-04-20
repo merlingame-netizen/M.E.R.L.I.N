@@ -87,3 +87,8 @@
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"BUGHUNT-C14: 0 bugs — _get_card_factions/_get_faction_boost static helpers verified, weighted selection math correct"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"RUN-HISTORY-POPULATION: 9-field entries in meta.run_history (50 cap), echo_memory (deaths_by_biome, dominant_factions_seen, choices_log), minigames_won/oghams_used counters, record_minigame_win() wired to controller"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"cycle_end","cycle":15,"detail":"Cycle 15 complete: 0 bugs (C14 clean), 1 feature (run_history + echo_memory + counters). 3 files, 71 lines. 25 total bugs fixed across 15 cycles."}
+{"ts":"2026-04-20T18:00:00.000Z","type":"cycle_start","cycle":17,"detail":"Cycle 17: Re-fix BUGFIX-026 (C16 phantom push) + echo_memory LLM context + GM 3rd few-shot + bug hunt C16"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"task_done","cycle":17,"detail":"BUGFIX-026-REFIX: C16 phantom push detected — removed duplicate apply_run_rewards at controller L666"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"task_done","cycle":17,"detail":"ECHO-MEMORY-LLM: Re-wired echo_memory+tension_zone+convergence_zone into build_narrative_context + build_context_enrichment"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"task_done","cycle":17,"detail":"GM-FEWSHOT-3: Added 3rd end-game example (PROGRESS_MISSION + high rep) to GM system prompt"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"cycle_end","cycle":17,"detail":"Cycle 17 complete: 2 bugs fixed (C16 phantom push caught), 2 features. 3 code files, ~35 lines. 27 total bugs fixed across 17 cycles."}
