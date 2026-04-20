@@ -36,9 +36,9 @@ jobs:
           runnable=true
           dedicated_server=false
           custom_features=""
-          export_filter="all_resources"
+          export_filter="resources"
           include_filter=""
-          exclude_filter=""
+          exclude_filter="archive/*, tools/*, web-demo/*, docs/*, memory/*, .godot/*, *.md, *.log, *.bat, *.sh, *.py, .claude/*, .git/*"
           export_path="web-export/index.html"
           encrypt_pck=false
           [preset.0.options]
