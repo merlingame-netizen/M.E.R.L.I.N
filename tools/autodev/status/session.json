@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 16 — Bug hunt C15 (found double-reward bug) + fix BUGFIX-026 + feat echo_memory LLM context + tension_zone injection",
+  "objective": "Cycle 17 — Re-fix BUGFIX-026 (C16 code never pushed) + echo_memory LLM context + few-shot JSON GM examples",
   "workers": [],
-  "updated_at": "2026-04-20T15:30:00.000Z",
-  "cycle": 16,
-  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): found HIGH bug — double reward application. StoreRun.handle_run_end() applies rewards via dispatch, then game_controller_effects.apply_run_rewards() applied them AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries. Fix: removed duplicate apply_run_rewards call. Feature: wired echo_memory (deaths_by_biome, dominant_factions_seen, total_runs) + tension_zone + convergence_zone into LLM narrative context. build_context_enrichment() now formats cross-run memory for Merlin narrative callbacks. 3 files modified, 40 lines changed. 26 total bugs fixed across 16 cycles."
+  "updated_at": "2026-04-20T18:00:00.000Z",
+  "cycle": 17,
+  "checkpoint": "C16 code changes were NEVER PUSHED (only status JSONs committed). Re-fixed BUGFIX-026: removed duplicate _effects.apply_run_rewards() at L666 of merlin_game_controller.gd. Wired echo_memory + total_runs into build_narrative_context() (merlin_llm_adapter.gd). Enhanced build_context_enrichment() with cross-run death memory, veteran status, and faction dominance hints (llm_adapter_prompts.gd). Added 3 few-shot JSON card examples to build_narrative_system_prompt() per creator choice q-20260415-005 (early/mid/end-game with PROGRESS_MISSION + high rep swings). 3 files modified, 49 lines changed. 26 total bugs fixed across 17 cycles."
 }

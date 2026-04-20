@@ -701,6 +701,17 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "FEW-SHOT-JSON-GM",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Few-shot JSON GM examples + echo_memory LLM context wiring",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/llm_adapter_prompts.gd", "scripts/merlin/merlin_llm_adapter.gd"],
+      "description": "3 few-shot JSON card examples in build_narrative_system_prompt (early/mid/end-game with PROGRESS_MISSION + high rep swings) per q-20260415-005 B. Echo_memory + total_runs in build_narrative_context. Cross-run death memory + veteran status + faction dominance in build_context_enrichment.",
+      "completed_at": "2026-04-20"
     }
   ]
 }
