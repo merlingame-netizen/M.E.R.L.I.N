@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 13 — Bug hunt C12 (0 bugs) + delete dead onboarding scenes (q-20260414-005)",
+  "objective": "Cycle 14 — Bug hunt SFXEngine (0 bugs) + feat boost_weight faction card weighting",
   "workers": [],
-  "updated_at": "2026-04-19T18:00:00.000Z",
-  "cycle": 13,
-  "checkpoint": "Bug hunt C12: 0 bugs — whisper biome pools and _get_biome_pool routing verified against all 8 BIOME_KEYS. Dead scene deletion: 10 files removed (IntroPersonalityQuiz.gd+.uid+.tscn, SceneRencontreMerlin.gd+.uid+.tscn+.uidren, quiz_data.gd, rencontre_dialogue.gd, rencontre_llm.gd). validate_headless.sh cleaned (8→6 scenes). Creator confirmed via q-20260414-005. 25 total bugs fixed across 13 cycles."
+  "updated_at": "2026-04-20T12:00:00.000Z",
+  "cycle": 14,
+  "checkpoint": "Bug hunt on SFXEngine (sfx_engine.gd + audio_integration.gd): 0 bugs found — all type refs valid, pool logic correct, volume delta math correct. Feature: boost_weight faction card weighting implemented in merlin_card_system.gd. Cards matching factions with rep >= 50 get 3x selection weight in both event and fastroute generators. FACTION_BOOST_WEIGHT const added to merlin_constants.gd. 2 files modified, 52 lines added. 25 total bugs fixed across 14 cycles."
 }

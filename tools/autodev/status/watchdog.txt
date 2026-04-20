@@ -12,3 +12,4 @@
 2026-04-18T22:00:00.000Z cycle-9-bughunt-feature c8-code-never-pushed 2bugs-fixed crt-encounter-card-fieldhints 2files-111lines
 2026-04-19T14:00:00.000Z cycle-11-feature merlin-whisper-ambient-system walkhud-card-counter walkhud-currency-rename 3files-191lines
 2026-04-19T18:00:00.000Z cycle-13-complete dead-scenes-deleted bughunt-c12-clean 10-files-removed
+2026-04-20T12:00:00.000Z cycle-14-complete bughunt-sfxengine-clean faction-boost-weight 2files-52lines
