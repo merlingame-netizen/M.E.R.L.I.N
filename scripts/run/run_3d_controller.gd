@@ -69,6 +69,11 @@ var _ogham_activation_result: Dictionary = {}
 var _ogham_cooldowns: Dictionary = {}
 var _unlocked_oghams: Array = []
 
+# Run-scoped stats for Anam rewards (passed to GFC via stop_run data)
+var _oghams_used_this_run: int = 0
+var _minigames_won_this_run: int = 0
+var _minigames_played_this_run: int = 0
+
 const WALK_SPEED: float = 3.0
 const CARD_INTERVAL_MIN: float = 8.0
 const CARD_INTERVAL_MAX: float = 14.0
@@ -178,6 +183,9 @@ func start_run(biome: String, ogham: String) -> void:
 	_unlocked_oghams = MerlinConstants.OGHAM_STARTER_SKILLS.duplicate()
 	_active_ogham_this_card = ""
 	_ogham_activation_result = {}
+	_oghams_used_this_run = 0
+	_minigames_won_this_run = 0
+	_minigames_played_this_run = 0
 
 	# Emit initial state (read from store)
 	life_changed.emit(_store_life(), _store_life_max())
@@ -203,6 +211,9 @@ func stop_run(reason: String) -> void:
 		"biome": str(_run_state.get("biome", "")),
 		"biome_currency": _store_currency(),
 		"promises": _run_state.get("active_promises", []),
+		"oghams_used": _oghams_used_this_run,
+		"minigames_won": _minigames_won_this_run,
+		"minigames_played": _minigames_played_this_run,
 	}
 	run_ended.emit(reason, data)
 
@@ -468,6 +479,7 @@ func on_ogham_activated(ogham_id: String) -> void:
 	# ── Activate: delegate to MerlinEffectEngine for step-3 effects ──
 	# Pass store.state so effect engine writes to the canonical game state
 	_active_ogham_this_card = ogham_id
+	_oghams_used_this_run += 1
 	_ogham_activation_result = _effects.activate_ogham(ogham_id, _store.state, _current_card)
 
 	# ── Set cooldown immediately (local ogham tracking) ──
@@ -565,7 +577,10 @@ func on_collectible_picked(type: String, amount: int) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _on_minigame_completed(score: int) -> void:
-	print("[Run3D] Minigame completed: score=%d" % score)
+	_minigames_played_this_run += 1
+	if score >= MerlinConstants.ANAM_REWARDS.get("minigame_threshold", 80):
+		_minigames_won_this_run += 1
+	print("[Run3D] Minigame completed: score=%d (won=%d/%d)" % [score, _minigames_won_this_run, _minigames_played_this_run])
 
 
 func _on_merchant_spawned(npc_name: String) -> void:

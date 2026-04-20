@@ -376,6 +376,7 @@ func _compute_run_rewards_from_raw(is_victory: bool, cards_played: int,
 		"anam": maxi(final_anam, 0),
 		"cards_played": cards_played,
 		"minigames_won": minigames_won,
+		"oghams_used": oghams_used,
 		"victory": is_victory,
 		"biome": str(run_data.get("biome", "")),
 	}

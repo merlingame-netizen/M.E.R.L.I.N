@@ -409,6 +409,27 @@ static func apply_run_rewards(state: Dictionary, rewards: Dictionary, save_syste
 		var biome_runs: Dictionary = meta.get("biome_runs", {})
 		biome_runs[biome] = int(biome_runs.get(biome, 0)) + 1
 		meta["biome_runs"] = biome_runs
+
+	# Run history — per-run records for metagame progression (capped at 50)
+	var run_state: Dictionary = state.get("run", {})
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var run_record: Dictionary = {
+		"timestamp": int(Time.get_unix_time_from_system()),
+		"biome": biome,
+		"cards_played": int(rewards.get("cards_played", 0)),
+		"victory": bool(rewards.get("victory", false)),
+		"anam_earned": anam_earned,
+		"minigames_won": int(rewards.get("minigames_won", 0)),
+		"oghams_used": int(rewards.get("oghams_used", 0)),
+		"life_at_end": int(run_state.get("life_essence", 0)),
+		"dominant_faction": _get_dominant_faction(faction_rep),
+	}
+	var history: Array = meta.get("run_history", [])
+	history.append(run_record)
+	if history.size() > 50:
+		history = history.slice(-50)
+	meta["run_history"] = history
+
 	state["meta"] = meta
 	save_system.save_profile(meta)
 
@@ -432,6 +453,17 @@ static func calculate_maturity_score(state: Dictionary) -> int:
 static func can_unlock_biome(state: Dictionary, biome_id: String) -> bool:
 	var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_id, 999))
 	return calculate_maturity_score(state) >= threshold
+
+
+static func _get_dominant_faction(faction_rep: Dictionary) -> String:
+	var best_faction: String = ""
+	var best_value: float = -1.0
+	for faction in faction_rep:
+		var v: float = float(faction_rep[faction])
+		if v > best_value:
+			best_value = v
+			best_faction = str(faction)
+	return best_faction
 
 
 static func get_unlockable_biomes(state: Dictionary) -> Array:
