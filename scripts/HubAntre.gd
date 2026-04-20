@@ -691,6 +691,9 @@ func _launch_adventure() -> void:
 		store.state["run"] = run
 
 	_quick_save()
+	var gfc: Node = get_node_or_null("/root/GameFlowController")
+	if gfc and gfc.has_method("notify_walk_started"):
+		gfc.notify_walk_started(selected_biome, _current_mission)
 	PixelTransition.transition_to(SCENE_FOREST)
 
 

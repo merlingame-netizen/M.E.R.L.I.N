@@ -673,4 +673,17 @@ func _ready() -> void:
 		var store := MerlinStore.new()
 		store.name = "MerlinStore"
 		get_tree().root.call_deferred("add_child", store)
+	# Register GameFlowController as root singleton
+	if not get_node_or_null("/root/GameFlowController"):
+		var gfc: GameFlowController = GameFlowController.new()
+		gfc.name = "GameFlowController"
+		get_tree().root.call_deferred("add_child", gfc)
+		call_deferred("_setup_gfc", gfc)
+
+
+func _setup_gfc(gfc: GameFlowController) -> void:
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store is MerlinStore:
+		var ms: MerlinStore = store as MerlinStore
+		gfc.setup(ms, ms.save_system)
 

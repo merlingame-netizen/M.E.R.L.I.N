@@ -24,6 +24,7 @@ signal game_quit_requested
 enum GamePhase {
 	MENU,
 	HUB,
+	WALK,
 	RUN,
 	END_SCREEN,
 	TALENT_TREE,
@@ -32,6 +33,7 @@ enum GamePhase {
 const PHASE_NAMES: Dictionary = {
 	GamePhase.MENU: "menu",
 	GamePhase.HUB: "hub",
+	GamePhase.WALK: "walk",
 	GamePhase.RUN: "run",
 	GamePhase.END_SCREEN: "end_screen",
 	GamePhase.TALENT_TREE: "talent_tree",
@@ -42,6 +44,8 @@ const PHASE_NAMES: Dictionary = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const SCENE_HUB: String = "res://scenes/HubScreen.tscn"
+const SCENE_HUB_ANTRE: String = "res://scenes/HubAntre.tscn"
+const SCENE_WALK: String = "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_RUN: String = "res://scenes/Run3D.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
@@ -56,9 +60,12 @@ var _store: MerlinStore = null
 var _save_system: MerlinSaveSystem = null
 var _transition_manager: TransitionManager = null
 var _last_run_data: Dictionary = {}
+var _walk_biome: String = ""
+var _walk_start_time: float = 0.0
 
 # Active screen references (set during wiring, cleared on phase exit)
 var _hub_screen: HubScreen = null
+var _walk_scene: Node = null
 var _run_controller: Run3DController = null
 var _end_screen: EndRunScreen = null
 
@@ -136,6 +143,57 @@ func _on_run_requested(biome_id: String, selected_oghams: Array) -> void:
 		_store.state["run"] = run
 
 	_set_phase(GamePhase.RUN)
+
+
+## Called when HubAntre starts a forest walk. Initializes run state and sets WALK phase.
+func notify_walk_started(biome_id: String, mission: Dictionary = {}) -> void:
+	_walk_biome = biome_id
+	_walk_start_time = Time.get_unix_time_from_system()
+
+	if _store:
+		var run: Dictionary = _store.state.get("run", {})
+		run["active"] = true
+		run["current_biome"] = biome_id
+		run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
+		run["cards_played"] = 0
+		run["walk_started_at"] = _walk_start_time
+		if not mission.is_empty():
+			run["mission"] = mission
+		_store.state["run"] = run
+
+	if _save_system:
+		var run_state: Dictionary = MerlinSaveSystem._get_default_run_state()
+		run_state["biome"] = biome_id
+		_save_system.save_run_state(run_state)
+
+	_set_phase(GamePhase.WALK)
+
+
+## Called when BroceliandeForest3D completes (path end, death, or hub return).
+func _on_walk_ended(reason: String, walk_data: Dictionary) -> void:
+	if _current_phase != GamePhase.WALK:
+		push_warning("[GameFlow] walk_ended ignored: not in WALK phase (current: %s)" % get_current_phase_name())
+		return
+
+	walk_data["biome"] = _walk_biome
+	var duration: float = Time.get_unix_time_from_system() - _walk_start_time
+	walk_data["walk_duration_seconds"] = duration
+
+	_last_run_data = _build_end_run_data(reason, walk_data)
+
+	if _store:
+		var rewards: Dictionary = _compute_run_rewards(_last_run_data)
+		_store.apply_run_rewards(rewards)
+
+		var run: Dictionary = _store.state.get("run", {})
+		run["active"] = false
+		_store.state["run"] = run
+
+	if _save_system:
+		_save_system.clear_run_state()
+
+	_save_profile()
+	_set_phase(GamePhase.HUB)
 
 
 ## Transition from run to end screen.
@@ -223,6 +281,14 @@ func wire_hub(hub: HubScreen) -> void:
 	hub.quit_requested.connect(_on_quit_requested)
 
 
+## Wire a BroceliandeForest3D (or any walk scene with walk_ended signal).
+func wire_walk(walk_scene: Node) -> void:
+	_disconnect_walk()
+	_walk_scene = walk_scene
+	if walk_scene.has_signal("walk_ended"):
+		walk_scene.walk_ended.connect(_on_walk_ended)
+
+
 ## Wire a Run3DController instance. Call after instantiating the run scene.
 func wire_run(run_controller: Run3DController) -> void:
 	_disconnect_run()
@@ -247,6 +313,14 @@ func _disconnect_hub() -> void:
 		if _hub_screen.quit_requested.is_connected(_on_quit_requested):
 			_hub_screen.quit_requested.disconnect(_on_quit_requested)
 		_hub_screen = null
+
+
+func _disconnect_walk() -> void:
+	if _walk_scene != null:
+		if is_instance_valid(_walk_scene) and _walk_scene.has_signal("walk_ended") \
+				and _walk_scene.walk_ended.is_connected(_on_walk_ended):
+			_walk_scene.walk_ended.disconnect(_on_walk_ended)
+		_walk_scene = null
 
 
 func _disconnect_run() -> void:

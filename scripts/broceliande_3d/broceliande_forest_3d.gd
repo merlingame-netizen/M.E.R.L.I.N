@@ -4,6 +4,7 @@ extends Node
 ## 7 zones, assets GLB reels, effets volumetriques, cycle jour/nuit, saisons.
 
 signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
+signal walk_ended(reason: String, data: Dictionary)  # GFC orchestration
 
 const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
@@ -279,6 +280,8 @@ func _ready() -> void:
 	_wire_buttons()
 	_update_hud()
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+	_wire_gfc()
 
 	# Book cinematic is now shown in MerlinCabinHub BEFORE entering forest
 	# Forest starts directly with aerial descent → auto-walk
@@ -1228,9 +1231,46 @@ func _get_encounter_card(enc_idx: int) -> Dictionary:
 	return fallback_cards[idx]
 
 
-## Run complete — path ended, show end-run stats overlay
+func _wire_gfc() -> void:
+	var gfc: Node = get_node_or_null("/root/GameFlowController")
+	if gfc and gfc.has_method("wire_walk"):
+		gfc.wire_walk(self)
+		print("[Broceliande] Wired to GameFlowController")
+		return
+	await get_tree().process_frame
+	gfc = get_node_or_null("/root/GameFlowController")
+	if gfc and gfc.has_method("wire_walk"):
+		gfc.wire_walk(self)
+		print("[Broceliande] Wired to GameFlowController (deferred)")
+
+
+func _collect_walk_data() -> Dictionary:
+	var store: Node = _find_store()
+	var life: int = MerlinConstants.LIFE_ESSENCE_START
+	var cards_played: int = _encounter_count
+	var minigames_won: int = 0
+	var oghams_used: int = 0
+	if store and store.get("state") is Dictionary:
+		var run: Dictionary = store.state.get("run", {})
+		life = int(run.get("life_essence", life))
+		cards_played = int(run.get("cards_played", cards_played))
+		minigames_won = int(run.get("minigames_won", 0))
+		oghams_used = int(run.get("oghams_used", 0))
+	return {
+		"biome": biome_key,
+		"card_index": cards_played,
+		"life_essence": life,
+		"encounters": _encounter_count,
+		"encounter_total": _encounter_total,
+		"merlin_found": _merlin_found,
+		"minigames_won": minigames_won,
+		"oghams_used": oghams_used,
+	}
+
+
 func _on_run_complete() -> void:
 	print("[Forest3D] Run complete — showing end stats")
+	walk_ended.emit("complete", _collect_walk_data())
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	var end_overlay: CanvasLayer = CanvasLayer.new()
@@ -1295,7 +1335,8 @@ func _on_run_complete() -> void:
 
 
 func _on_hub() -> void:
-	# After forest walk, go to MerlinGame (card encounters)
+	var reason: String = "merlin_found" if _merlin_found else "hub_return"
+	walk_ended.emit(reason, _collect_walk_data())
 	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("transition_to"):
