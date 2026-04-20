@@ -4,6 +4,7 @@ export interface AgentInfo {
   id: string;
   name: string;
   category: string;
+  role?: string;
   state: 'idle' | 'running' | 'blocked' | 'error' | 'completed';
   currentTask: string | null;
 }

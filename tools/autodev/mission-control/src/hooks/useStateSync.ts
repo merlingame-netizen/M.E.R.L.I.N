@@ -75,13 +75,17 @@ export function useStateSync() {
 
         // Agents
         if (data.agent_status?.agents) {
-          setAgents(Object.entries(data.agent_status.agents).map(([id, info]) => ({
-            id,
-            name: id.replace(/_/g, ' '),
-            category: 'core',
-            state: (info.state || 'idle') as 'idle' | 'running' | 'blocked' | 'error' | 'completed',
-            currentTask: info.current_task || null,
-          })));
+          setAgents(Object.entries(data.agent_status.agents).map(([id, info]) => {
+            const ext = info as { state?: string; current_task?: string | null; category?: string; role?: string };
+            return {
+              id,
+              name: id.replace(/_/g, ' '),
+              category: ext.category || 'meta',
+              role: ext.role,
+              state: (ext.state || 'idle') as 'idle' | 'running' | 'blocked' | 'error' | 'completed',
+              currentTask: ext.current_task || null,
+            };
+          }));
         }
 
         // Completed archive count — handle both array and object formats
