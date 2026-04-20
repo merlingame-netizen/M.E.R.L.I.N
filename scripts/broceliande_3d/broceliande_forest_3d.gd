@@ -4,6 +4,7 @@ extends Node
 ## 7 zones, assets GLB reels, effets volumetriques, cycle jour/nuit, saisons.
 
 signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
+signal walk_ended(run_data: Dictionary)  # Emitted when walk completes — GFC listens
 
 const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
@@ -1149,8 +1150,8 @@ func _on_encounter_reached(enc_idx: int) -> void:
 				_walk_hud.update_pv(life, 100)
 			# Check death
 			if life <= 0:
-				print("[Forest3D] Life = 0 — ending run")
-				_on_run_complete()
+				print("[Forest3D] Life = 0 — death — ending run")
+				_on_run_complete("death")
 				return
 
 		# Show life change feedback on HUD
@@ -1228,11 +1229,44 @@ func _get_encounter_card(enc_idx: int) -> Dictionary:
 	return fallback_cards[idx]
 
 
-## Run complete — path ended, show end-run stats overlay
-func _on_run_complete() -> void:
-	print("[Forest3D] Run complete — showing end stats")
+## Run complete — path ended. Emit walk_ended for GFC, fallback to standalone overlay.
+func _on_run_complete(reason: String = "completed") -> void:
+	print("[Forest3D] Run complete — reason: %s" % reason)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
+	var run_data: Dictionary = _collect_run_data(reason)
+
+	# If GFC is listening, delegate transition to it
+	if walk_ended.get_connections().size() > 0:
+		walk_ended.emit(run_data)
+		return
+
+	# Standalone fallback — show end overlay directly
+	_show_standalone_end_overlay(run_data)
+
+
+func _collect_run_data(reason: String) -> Dictionary:
+	var life: int = 100
+	var biome_currency: int = 0
+	var store: Node = get_node_or_null("/root/GameManager")
+	if store:
+		var rs_val: Variant = store.get("run_state")
+		if rs_val is Dictionary:
+			life = int((rs_val as Dictionary).get("life_essence", 100))
+			biome_currency = int((rs_val as Dictionary).get("biome_currency", 0))
+	var season_name: String = _season.get_name() if _season else "printemps"
+	return {
+		"reason": reason,
+		"biome": biome_key,
+		"life_essence": life,
+		"biome_currency": biome_currency,
+		"card_index": _encounter_count,
+		"encounters_total": _encounter_total,
+		"season": season_name,
+	}
+
+
+func _show_standalone_end_overlay(run_data: Dictionary) -> void:
 	var end_overlay: CanvasLayer = CanvasLayer.new()
 	end_overlay.layer = 18
 	add_child(end_overlay)
@@ -1263,7 +1297,12 @@ func _on_run_complete() -> void:
 	vbox.add_child(title)
 
 	var stats: Label = Label.new()
-	stats.text = "Rencontres: 5\nBiome: Broceliande\nSaison: Printemps"
+	stats.text = "Rencontres: %d/%d\nBiome: %s\nSaison: %s" % [
+		int(run_data.get("card_index", 0)),
+		int(run_data.get("encounters_total", 5)),
+		str(run_data.get("biome", "Broceliande")),
+		str(run_data.get("season", "Printemps")),
+	]
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if font: stats.add_theme_font_override("font", font)
 	stats.add_theme_font_size_override("font_size", 18)

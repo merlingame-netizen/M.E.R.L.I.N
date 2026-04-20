@@ -24,6 +24,7 @@ signal game_quit_requested
 enum GamePhase {
 	MENU,
 	HUB,
+	WALK,
 	RUN,
 	END_SCREEN,
 	TALENT_TREE,
@@ -32,6 +33,7 @@ enum GamePhase {
 const PHASE_NAMES: Dictionary = {
 	GamePhase.MENU: "menu",
 	GamePhase.HUB: "hub",
+	GamePhase.WALK: "walk",
 	GamePhase.RUN: "run",
 	GamePhase.END_SCREEN: "end_screen",
 	GamePhase.TALENT_TREE: "talent_tree",
@@ -42,6 +44,8 @@ const PHASE_NAMES: Dictionary = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const SCENE_HUB: String = "res://scenes/HubScreen.tscn"
+const SCENE_HUB_ANTRE: String = "res://scenes/HubAntre.tscn"
+const SCENE_WALK: String = "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_RUN: String = "res://scenes/Run3D.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
@@ -59,6 +63,7 @@ var _last_run_data: Dictionary = {}
 
 # Active screen references (set during wiring, cleared on phase exit)
 var _hub_screen: HubScreen = null
+var _walk_scene: Node = null
 var _run_controller: Run3DController = null
 var _end_screen: EndRunScreen = null
 
@@ -135,7 +140,29 @@ func _on_run_requested(biome_id: String, selected_oghams: Array) -> void:
 		run["active_promises"] = []
 		_store.state["run"] = run
 
-	_set_phase(GamePhase.RUN)
+	_set_phase(GamePhase.WALK)
+
+
+## Transition from walk to end screen.
+## Called when BroceliandeForest3D emits walk_ended.
+func _on_walk_ended(run_data: Dictionary) -> void:
+	if _current_phase != GamePhase.WALK:
+		push_warning("[GameFlow] walk_ended ignored: not in WALK phase (current: %s)" % get_current_phase_name())
+		return
+
+	var reason: String = str(run_data.get("reason", "completed"))
+	_last_run_data = _build_end_run_data(reason, run_data)
+
+	# Apply rewards to profile
+	if _store:
+		var rewards: Dictionary = _compute_run_rewards(_last_run_data)
+		_store.apply_run_rewards(rewards)
+
+	# Clear saved run_state (run is finished)
+	if _save_system:
+		_save_system.clear_run_state()
+
+	_set_phase(GamePhase.END_SCREEN)
 
 
 ## Transition from run to end screen.
@@ -223,6 +250,14 @@ func wire_hub(hub: HubScreen) -> void:
 	hub.quit_requested.connect(_on_quit_requested)
 
 
+## Wire a BroceliandeForest3D walk scene. Call after instantiating the walk scene.
+func wire_walk(walk_scene: Node) -> void:
+	_disconnect_walk()
+	_walk_scene = walk_scene
+	if walk_scene.has_signal("walk_ended"):
+		walk_scene.walk_ended.connect(_on_walk_ended)
+
+
 ## Wire a Run3DController instance. Call after instantiating the run scene.
 func wire_run(run_controller: Run3DController) -> void:
 	_disconnect_run()
@@ -247,6 +282,13 @@ func _disconnect_hub() -> void:
 		if _hub_screen.quit_requested.is_connected(_on_quit_requested):
 			_hub_screen.quit_requested.disconnect(_on_quit_requested)
 		_hub_screen = null
+
+
+func _disconnect_walk() -> void:
+	if _walk_scene != null:
+		if _walk_scene.has_signal("walk_ended") and _walk_scene.walk_ended.is_connected(_on_walk_ended):
+			_walk_scene.walk_ended.disconnect(_on_walk_ended)
+		_walk_scene = null
 
 
 func _disconnect_run() -> void:
@@ -428,3 +470,7 @@ func get_last_run_data() -> Dictionary:
 
 func get_store() -> MerlinStore:
 	return _store
+
+
+func get_walk_scene_path(_biome_id: String) -> String:
+	return SCENE_WALK
