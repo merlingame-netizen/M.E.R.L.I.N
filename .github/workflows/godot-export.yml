@@ -30,6 +30,17 @@ jobs:
       - name: Remove Windows-only GDExtension (blocks Linux CI)
         run: rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
 
+      - name: Fix headless-incompatible shaders (hint_screen_texture hangs export)
+        run: |
+          # Replace hint_screen_texture with filter_nearest (GL Compat headless can't compile it)
+          for shader in shaders/crt_terminal.gdshader shaders/retro_psx_post.gdshader shaders/screen_dither.gdshader shaders/screen_distortion.gdshader shaders/ps1_material.gdshader shaders/pixelate.gdshader; do
+            if [ -f "$shader" ]; then
+              sed -i 's/hint_screen_texture, //g' "$shader"
+              sed -i 's/hint_screen_texture//g' "$shader"
+              echo "Patched: $shader"
+            fi
+          done
+
       - name: Cache Godot import
         uses: actions/cache@v4
         with:
