@@ -701,6 +701,28 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "GM-FEWSHOT-ENDGAME",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "3rd few-shot GM example (endgame PROGRESS_MISSION) + PROGRESS_MISSION parser fix",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/llm_adapter_game_master.gd"],
+      "description": "Added 3rd few-shot JSON example to calculate_smart_effects() GM system prompt: endgame scenario with PROGRESS_MISSION + high rep swings (±15-20). Added PROGRESS_MISSION type to prompt schema. Fixed _try_parse_effects_dict() to handle PROGRESS_MISSION step field (was silently rejected). Creator chose option B: 3 examples (q-20260415-005).",
+      "completed_at": "2026-04-20"
+    },
+    {
+      "id": "ECHO-MEMORY-ENRICHMENT",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Echo memory + MOS convergence zones in LLM context enrichment",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/llm_adapter_prompts.gd"],
+      "description": "Wired echo_memory (deaths_by_biome, dominant_factions_seen) + total_runs into build_narrative_context(). Enriched build_context_enrichment() with MOS convergence zones (tension haute at 20+, convergence at 25+, FIN IMMINENTE at 40+) and cross-run death memory ('Deja mort ici', 'lieu maudit 3x+') plus veteran status (10+ runs).",
+      "completed_at": "2026-04-20"
     }
   ]
 }

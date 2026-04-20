@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 16 — Bug hunt C15 (found double-reward bug) + fix BUGFIX-026 + feat echo_memory LLM context + tension_zone injection",
+  "objective": "Cycle 17 — Bug hunt C16 (0 bugs) + feat: 3rd few-shot GM example (endgame PROGRESS_MISSION) + echo_memory/MOS zones in LLM context enrichment",
   "workers": [],
-  "updated_at": "2026-04-20T15:30:00.000Z",
-  "cycle": 16,
-  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): found HIGH bug — double reward application. StoreRun.handle_run_end() applies rewards via dispatch, then game_controller_effects.apply_run_rewards() applied them AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries. Fix: removed duplicate apply_run_rewards call. Feature: wired echo_memory (deaths_by_biome, dominant_factions_seen, total_runs) + tension_zone + convergence_zone into LLM narrative context. build_context_enrichment() now formats cross-run memory for Merlin narrative callbacks. 3 files modified, 40 lines changed. 26 total bugs fixed across 16 cycles."
+  "updated_at": "2026-04-20T18:00:00.000Z",
+  "cycle": 17,
+  "checkpoint": "Bug hunt C16 (llm_adapter_game_master.gd + llm_adapter_prompts.gd): 0 bugs found. Feature 1: Added 3rd few-shot example to calculate_smart_effects() GM prompt — endgame scenario with PROGRESS_MISSION + high rep swings (±15-20). Added PROGRESS_MISSION to system prompt Types list and _try_parse_effects_dict() parser (was silently rejected before). Feature 2: Wired echo_memory (deaths_by_biome, dominant_factions_seen) + total_runs into build_narrative_context(). Enriched build_context_enrichment() with MOS convergence zones (tension haute/convergence/FIN IMMINENTE) and cross-run memory cues (mort ici, veteran). 3 files modified, 38 lines changed. 26 total bugs fixed across 17 cycles."
 }

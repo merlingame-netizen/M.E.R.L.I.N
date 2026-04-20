@@ -87,3 +87,8 @@
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"BUGHUNT-C14: 0 bugs — _get_card_factions/_get_faction_boost static helpers verified, weighted selection math correct"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"RUN-HISTORY-POPULATION: 9-field entries in meta.run_history (50 cap), echo_memory (deaths_by_biome, dominant_factions_seen, choices_log), minigames_won/oghams_used counters, record_minigame_win() wired to controller"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"cycle_end","cycle":15,"detail":"Cycle 15 complete: 0 bugs (C14 clean), 1 feature (run_history + echo_memory + counters). 3 files, 71 lines. 25 total bugs fixed across 15 cycles."}
+{"ts":"2026-04-20T18:00:00.000Z","type":"cycle_start","cycle":17,"detail":"Cycle 17: Bug hunt C16 (llm_adapter_game_master + llm_adapter_prompts) + feat GM 3rd few-shot endgame + echo_memory/MOS enrichment"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"task_done","cycle":17,"detail":"BUGHUNT-C16: 0 bugs in llm_adapter_game_master.gd + llm_adapter_prompts.gd"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"task_done","cycle":17,"detail":"GM-FEWSHOT-ENDGAME: 3rd few-shot example (PROGRESS_MISSION + high rep swings) + parser fix for PROGRESS_MISSION step field"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"task_done","cycle":17,"detail":"ECHO-MEMORY-ENRICHMENT: echo_memory + total_runs in build_narrative_context(), MOS zones + death memory + veteran in build_context_enrichment()"}
+{"ts":"2026-04-20T18:00:00.000Z","type":"cycle_end","cycle":17,"detail":"Cycle 17 complete: 0 bugs (C16 clean), 2 features (GM 3rd few-shot + echo_memory enrichment). 3 files, 38 lines. 26 total bugs fixed across 17 cycles."}
