@@ -679,6 +679,17 @@
       "files": ["scripts/ui/walk_hud.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "Added card count display (Carte N/5 with amber color progression at 50%/80% thresholds). Renamed essences to biome currency with diamond glyph. Backward-compat update_essences() wrapper kept. Encounter count tracking in BroceliandeForest3D.",
       "completed_at": "2026-04-19"
+    },
+    {
+      "id": "FACTION-BOOST-WEIGHT",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Faction card boost weighting — rep>=50 increases faction card frequency",
+      "agent": "cycle_director",
+      "files": ["scripts/merlin/merlin_card_system.gd", "scripts/ui/merlin_game_controller.gd"],
+      "description": "Weighted card selection in FastRoute and event pools. Cards aligned with unlocked factions (rep>=50) get +3.0 weight boost. _faction_boost() scans card effects for positive ADD_REPUTATION matching unlocked factions. Controller fallback now passes faction_rep in context. Bible-compliant (s.3.2 content_threshold, s.7.3 seasonal pool weight precedent).",
+      "completed_at": "2026-04-20"
     }
   ]
 }

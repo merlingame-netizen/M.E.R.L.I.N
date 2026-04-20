@@ -172,6 +172,8 @@ func generate_card(context: Dictionary) -> Dictionary:
 
 func get_fastroute_card(context: Dictionary) -> Dictionary:
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
+	var unlocked: Array = MerlinReputationSystem.get_unlocked_content(faction_rep)
 	var candidates: Array = []
 	var generic: Array = []
 
@@ -180,34 +182,43 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 		if _fastroute_seen.has(card_id):
 			continue
 		var card_biome: String = str(card.get("biome", ""))
+		var weight: float = 1.0
+		if not unlocked.is_empty():
+			weight += _faction_boost(card, unlocked)
 		if card_biome == biome:
-			candidates.append(card)
+			candidates.append({"card": card, "weight": weight + 2.0})
 		elif card_biome.is_empty():
-			generic.append(card)
+			generic.append({"card": card, "weight": weight})
 
-	# Prefer biome-specific, fallback to generic
 	if candidates.is_empty():
 		candidates = generic
 	if candidates.is_empty():
-		# Pool exhausted, reset and use all
 		_fastroute_seen.clear()
-		candidates = _fastroute_narrative_pool.duplicate()
+		for card in _fastroute_narrative_pool:
+			candidates.append({"card": card, "weight": 1.0})
 
 	if candidates.is_empty():
 		return _get_emergency_card()
 
-	var idx: int = _randi_range(0, candidates.size() - 1)
-	var selected: Dictionary = candidates[idx].duplicate(true)
-	_fastroute_seen.append(str(selected.get("id", "")))
+	var total: float = 0.0
+	for c in candidates:
+		total += float(c["weight"])
+	var roll: float = _randf() * total
+	var cumul: float = 0.0
+	for c in candidates:
+		cumul += float(c["weight"])
+		if roll < cumul:
+			var selected: Dictionary = c["card"].duplicate(true)
+			_fastroute_seen.append(str(selected.get("id", "")))
+			selected["type"] = "narrative"
+			var v: Dictionary = _validate_card(selected)
+			if not v.get("valid", false):
+				push_warning("FastRoute card %s invalid: %s" % [str(selected.get("id", "")), v.get("error", "")])
+				return _get_emergency_card()
+			_annotate_fields(v["card"])
+			return _ensure_3_options(v["card"])
 
-	# Set type, validate, annotate, pad
-	selected["type"] = "narrative"
-	var v: Dictionary = _validate_card(selected)
-	if not v.get("valid", false):
-		push_warning("FastRoute card %s invalid: %s" % [str(selected.get("id", "")), v.get("error", "")])
-		return _get_emergency_card()
-	_annotate_fields(v["card"])
-	return _ensure_3_options(v["card"])
+	return _get_emergency_card()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -596,6 +607,8 @@ func _generate_event_card(context: Dictionary) -> Dictionary:
 		return {}
 
 	var biome: String = str(context.get("biome", ""))
+	var faction_rep: Dictionary = context.get("faction_rep", {})
+	var unlocked: Array = MerlinReputationSystem.get_unlocked_content(faction_rep)
 	var candidates: Array = []
 
 	for card in _event_cards_pool:
@@ -603,9 +616,10 @@ func _generate_event_card(context: Dictionary) -> Dictionary:
 		if _event_cards_seen.has(cid):
 			continue
 		var score: float = 1.0
-		# Biome match
 		if not biome.is_empty() and str(card.get("biome", "")) == biome:
 			score += 4.0
+		if not unlocked.is_empty():
+			score += _faction_boost(card, unlocked)
 		candidates.append({"card": card, "score": score})
 
 	if candidates.is_empty():
@@ -672,6 +686,26 @@ func _find_promise_data(promise_id: String) -> Dictionary:
 		if str(card.get("promise_id", "")) == promise_id:
 			return card
 	return {}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FACTION BOOST — Cards aligned with unlocked factions (rep>=50) are weighted higher
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FACTION_CONTENT_BOOST: float = 3.0
+
+func _faction_boost(card: Dictionary, unlocked_factions: Array[String]) -> float:
+	for option in card.get("options", []):
+		if not (option is Dictionary):
+			continue
+		for effect in option.get("effects", []):
+			if not (effect is Dictionary):
+				continue
+			if str(effect.get("type", "")) == "ADD_REPUTATION":
+				var faction: String = str(effect.get("faction", ""))
+				if unlocked_factions.has(faction) and int(effect.get("amount", 0)) > 0:
+					return FACTION_CONTENT_BOOST
+	return 0.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

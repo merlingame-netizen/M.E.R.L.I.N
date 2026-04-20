@@ -1,10 +1,10 @@
 {
-  "cycle": 13,
-  "timestamp": "2026-04-19T18:00:00.000Z",
+  "cycle": 14,
+  "timestamp": "2026-04-20T10:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C12", "DELETE-DEAD-SCENES"],
-  "rationale": "Bug hunt C12: verified whisper biome pools and _get_biome_pool() routing against all 8 BIOME_KEYS — 0 bugs found. Dead scene cleanup: creator confirmed deletion of IntroPersonalityQuiz + SceneRencontreMerlin (q-20260414-005). Deleted 10 files total (5 scripts, 2 scenes, 3 UIDs) + updated validate_headless.sh. These scenes were unreachable from normal gameplay (Menu3DPC routes to ParchmentPreRun).",
-  "budget": {"files": 11, "lines": 0},
+  "tasks": ["FACTION-BOOST-WEIGHT"],
+  "rationale": "Cycle 13 was bug hunt + cleanup. Cycle 14 is feature cycle. Chose FACTION-BOOST-WEIGHT (q-20260415-010 creator answer: boost_weight) because reputation system currently has no effect on card selection — making rep>=50 meaningless gameplay-wise. This feature makes faction reputation directly influence which cards appear, creating a positive feedback loop: invest in a faction → see more of its content. Bible-compliant (s.3.2 content_threshold=50, seasonal pool weights precedent in s.7.3).",
+  "budget": {"files": 2, "lines": 40},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C13 (validate_headless.sh update only — quick). Then feature: biome-specific walk event pools for walk_event_controller, or implement SFXEngine (q-20260414-006), or boost_weight faction card weighting (q-20260415-010)."
+  "next_cycle_plan": "Bug hunt C14: verify faction boost logic correctness in edge cases (empty pool, all factions unlocked, no factions unlocked). Then feature: SFXEngine wiring into active game loop (q-20260414-006), or biome walk event pools, or GameFlowController wrapping (q-20260415-011)."
 }
