@@ -27,6 +27,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Godot import
+        uses: actions/cache@v4
+        with:
+          path: .godot/imported
+          key: godot-import-${{ hashFiles('project.godot', 'scripts/**/*.gd', 'scenes/**/*.tscn') }}
+          restore-keys: godot-import-
+
       - name: Generate export preset
         run: |
           cat > export_presets.cfg << 'PRESET'
