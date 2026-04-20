@@ -690,6 +690,28 @@
       "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_constants.gd"],
       "description": "When faction rep >= 50 (FACTION_THRESHOLD_CONTENT), event and fastroute cards with ADD_REPUTATION effects for that faction are weighted 3x in selection pool. Static helpers _get_card_factions() and _get_faction_boost(). Creator chose boost_weight approach (q-20260415-010).",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "BUGFIX-026-027",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix oghams_used + minigames_won never tracked in Run3DController",
+      "agent": "godot_expert",
+      "files": ["scripts/run/run_3d_controller.gd", "scripts/core/game_flow_controller.gd"],
+      "description": "BUG-026: oghams_used always 0 in Anam rewards. BUG-027: minigames_won always 0 via GFC path. Added _oghams_used_this_run, _minigames_won_this_run, _minigames_played_this_run counters. Wired to stop_run() data. Added oghams_used to GFC rewards dict.",
+      "completed_at": "2026-04-20"
+    },
+    {
+      "id": "FEAT-RUN-HISTORY",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "Run history tracking — per-run records in meta (q-20260415-002)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/store_run.gd"],
+      "description": "Added run_history array to meta in apply_run_rewards(). Each entry: timestamp, biome, cards_played, victory, anam_earned, minigames_won, oghams_used, life_at_end, dominant_faction. Capped at 50 entries (q-20260414-002). Added _get_dominant_faction() helper.",
+      "completed_at": "2026-04-20"
     }
   ]
 }

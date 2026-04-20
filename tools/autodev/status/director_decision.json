@@ -1,10 +1,10 @@
 {
-  "cycle": 14,
-  "timestamp": "2026-04-20T12:00:00.000Z",
+  "cycle": 15,
+  "timestamp": "2026-04-20T14:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-SFXENGINE", "FACTION-BOOST-WEIGHT"],
-  "rationale": "Bug hunt on SFXEngine (last committed feature): sfx_engine.gd and audio_integration.gd reviewed — 0 bugs. All referenced classes (Run3DController, HubScreen, EndRunScreen, GameFlowController, MusicManagerV2, StemsMusicManager, SFXRecipes, SFXRecipesAmbient) confirmed to exist. Feature: boost_weight faction card weighting (q-20260415-010, creator chose A). Cards with ADD_REPUTATION effects targeting a faction where player has rep >= 50 are weighted 3x in event and fastroute generators. Implements bible FACTION_THRESHOLD_CONTENT unlock gate.",
-  "budget": {"files": 2, "lines": 52},
+  "tasks": ["BUGHUNT-C14", "BUGFIX-026-OGHAMS-USED", "BUGFIX-027-MINIGAMES-WON", "FEAT-RUN-HISTORY"],
+  "rationale": "Bug hunt C14 (faction boost in merlin_card_system.gd): 0 bugs — _get_card_factions, _get_faction_boost, weighted selection all correct. Discovered 2 HIGH bugs: Run3DController.stop_run() never includes oghams_used or minigames_won in data dict, so GFC reward calculation always uses 0 for both. Players were getting 0 Anam for ogham usage and minigame wins via the GFC path. Also implemented run_history tracking (q-20260415-002) — per-run records saved to meta.run_history, capped at 50.",
+  "budget": {"files": 3, "lines": 49},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C14 (merlin_card_system.gd faction boost logic). Then feature: one of — GFC wrap BroceliandeForest3D (q-20260415-011), run_history population (q-20260415-002), or biome walk event pools."
+  "next_cycle_plan": "Bug hunt C15 (run_3d_controller.gd counters + store_run.gd run_history). Then feature: one of — GFC wrap BroceliandeForest3D (q-20260415-011), or Ogham HUD activation UI for Run3D, or talent tree UI."
 }

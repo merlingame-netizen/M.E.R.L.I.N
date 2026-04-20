@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 14 — Bug hunt SFXEngine (0 bugs) + feat boost_weight faction card weighting",
+  "objective": "Cycle 15 — Bug hunt C14 (0 bugs) + fix oghams_used/minigames_won tracking + run_history",
   "workers": [],
-  "updated_at": "2026-04-20T12:00:00.000Z",
-  "cycle": 14,
-  "checkpoint": "Bug hunt on SFXEngine (sfx_engine.gd + audio_integration.gd): 0 bugs found — all type refs valid, pool logic correct, volume delta math correct. Feature: boost_weight faction card weighting implemented in merlin_card_system.gd. Cards matching factions with rep >= 50 get 3x selection weight in both event and fastroute generators. FACTION_BOOST_WEIGHT const added to merlin_constants.gd. 2 files modified, 52 lines added. 25 total bugs fixed across 14 cycles."
+  "updated_at": "2026-04-20T14:00:00.000Z",
+  "cycle": 15,
+  "checkpoint": "Bug hunt C14: faction boost logic in merlin_card_system.gd clean — 0 bugs. BUG-026 HIGH: oghams_used never tracked in Run3DController — always 0 in Anam rewards. BUG-027 HIGH: minigames_won never included in Run3DController stop_run data for GFC path. Added _oghams_used_this_run, _minigames_won_this_run, _minigames_played_this_run counters. Added run_history array to meta (capped at 50 per q-20260414-002) with timestamp, biome, cards_played, victory, anam_earned, minigames_won, oghams_used, life_at_end, dominant_faction. 3 files modified, 49 lines added. 27 total bugs fixed across 15 cycles."
 }

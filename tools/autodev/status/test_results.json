@@ -1,10 +1,25 @@
 {
   "agent": "cycle_director",
-  "cycle": 14,
-  "timestamp": "2026-04-20T12:00:00Z",
-  "type": "bughunt+feature",
-  "scope": "Cycle 14: Bug hunt SFXEngine (sfx_engine.gd, audio_integration.gd) + feat boost_weight faction card weighting",
-  "bugs_found": [],
+  "cycle": 15,
+  "timestamp": "2026-04-20T14:00:00Z",
+  "type": "bughunt+bugfix+feature",
+  "scope": "Cycle 15: Bug hunt C14 (merlin_card_system.gd faction boost) + fix oghams_used/minigames_won tracking + run_history",
+  "bugs_found": [
+    {
+      "id": "BUG-026",
+      "severity": "HIGH",
+      "file": "scripts/run/run_3d_controller.gd",
+      "description": "oghams_used never tracked — Run3DController.stop_run() data dict always has 0 for oghams_used. Anam rewards for ogham usage always 0.",
+      "fix": "Added _oghams_used_this_run counter, increment in on_ogham_activated(), include in stop_run() data."
+    },
+    {
+      "id": "BUG-027",
+      "severity": "HIGH",
+      "file": "scripts/run/run_3d_controller.gd",
+      "description": "minigames_won never included in stop_run() data for GFC path. Anam rewards for minigame wins always 0 via GFC.",
+      "fix": "Added _minigames_won_this_run and _minigames_played_this_run counters, increment in _on_minigame_completed(), include in stop_run() data."
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 14: Bug hunt SFXEngine found 0 bugs — player pool logic correct, volume category mapping complete, all 27 SFX enum entries cached, all class references valid. Feature: boost_weight adds _get_card_factions() and _get_faction_boost() static helpers. Event cards multiply score by 3x for matching factions. FastRoute cards use weighted selection instead of uniform random. 25 total bugs fixed across 14 cycles."
+  "overall_assessment": "Cycle 15: Bug hunt C14 found 0 bugs in faction boost code. Discovered and fixed 2 HIGH bugs in Run3DController reward data pipeline. Added run_history tracking for metagame progression. 27 total bugs fixed across 15 cycles."
 }

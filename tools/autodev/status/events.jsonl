@@ -83,3 +83,9 @@
 {"ts":"2026-04-20T12:00:00.000Z","type":"task_done","cycle":14,"detail":"BUGHUNT-SFXENGINE: 0 bugs — SFX enum cache, player pool, volume categories, class references all verified"}
 {"ts":"2026-04-20T12:00:00.000Z","type":"task_done","cycle":14,"detail":"FACTION-BOOST-WEIGHT: _get_card_factions + _get_faction_boost static helpers. Event cards score *= boost. FastRoute weighted selection. FACTION_BOOST_WEIGHT=3.0 const."}
 {"ts":"2026-04-20T12:00:00.000Z","type":"cycle_end","cycle":14,"detail":"Cycle 14 complete: 0 bugs (SFXEngine clean), 1 feature (faction boost_weight). 2 files, 52 lines. 25 total bugs fixed across 14 cycles."}
+{"ts":"2026-04-20T14:00:00.000Z","type":"cycle_start","cycle":15,"detail":"Cycle 15: Bug hunt C14 (faction boost) + fix oghams_used/minigames_won tracking + run_history"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"task_done","cycle":15,"detail":"BUGHUNT-C14: 0 bugs in faction boost logic (_get_card_factions, _get_faction_boost, weighted selection)"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"task_done","cycle":15,"detail":"BUG-026 HIGH: oghams_used never tracked in Run3DController — added _oghams_used_this_run counter + stop_run data"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"task_done","cycle":15,"detail":"BUG-027 HIGH: minigames_won never in stop_run data for GFC path — added _minigames_won/played counters + stop_run data"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"task_done","cycle":15,"detail":"FEAT-RUN-HISTORY: per-run records in meta.run_history (timestamp/biome/cards/victory/anam/minigames/oghams/life/faction), capped 50"}
+{"ts":"2026-04-20T14:00:00.000Z","type":"cycle_end","cycle":15,"detail":"Cycle 15 complete: 2 HIGH bugs fixed, 1 feature (run_history). 3 files, 49 lines. 27 total bugs fixed across 15 cycles."}
