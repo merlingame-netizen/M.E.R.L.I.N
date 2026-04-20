@@ -613,6 +613,9 @@ func _use_ogham(skill_id: String) -> Dictionary:
 		var spec: Dictionary = result.get("spec", {})
 		StoreOghams.apply_ogham_effect(skill_id, spec, state, _heal_life)
 		result.erase("spec")
+		var run_ref: Dictionary = state.get("run", {})
+		run_ref["oghams_used"] = int(run_ref.get("oghams_used", 0)) + 1
+		state["run"] = run_ref
 	return result
 
 func tick_cooldowns() -> void:
@@ -684,6 +687,11 @@ func get_completed_biomes() -> Array:
 
 func get_cards_played() -> int:
 	return int(state.get("run", {}).get("cards_played", 0))
+
+func record_minigame_win() -> void:
+	var run_ref: Dictionary = state.get("run", {})
+	run_ref["minigames_won"] = int(run_ref.get("minigames_won", 0)) + 1
+	state["run"] = run_ref
 
 # --- TALENT TREE — Delegates to StoreTalents ---
 

@@ -31,6 +31,8 @@ static func init_run(state: Dictionary, rng: MerlinRng, scenarios: MerlinScenari
 		"narrative_debt": [],
 	}
 	run["power_bonuses"] = {}
+	run["minigames_won"] = 0
+	run["oghams_used"] = 0
 	state["run"] = run
 
 	# Faction alignment — context + bonuses (no decay per bible v2.4)
@@ -305,6 +307,13 @@ static func handle_run_end(state: Dictionary, end_check: Dictionary, save_system
 	meta["endings_seen"] = endings_seen
 	state["meta"] = meta
 
+	# Enrich end_check with run-tracked counters for rewards + history
+	var run: Dictionary = state.get("run", {})
+	end_check["life_at_end"] = int(run.get("life_essence", 0))
+	end_check["minigames_won"] = int(run.get("minigames_won", 0))
+	end_check["oghams_used"] = int(run.get("oghams_used", 0))
+	end_check["current_biome"] = str(run.get("current_biome", ""))
+
 	# Calculate and apply run rewards (Anam)
 	var rewards: Dictionary = calculate_run_rewards(state, end_check)
 	apply_run_rewards(state, rewards, save_system)
@@ -409,8 +418,59 @@ static func apply_run_rewards(state: Dictionary, rewards: Dictionary, save_syste
 		var biome_runs: Dictionary = meta.get("biome_runs", {})
 		biome_runs[biome] = int(biome_runs.get(biome, 0)) + 1
 		meta["biome_runs"] = biome_runs
+
+	# Run history — last 50 runs (q-20260414-002, q-20260415-002 "Complet")
+	var run_state: Dictionary = state.get("run", {})
+	var faction_rep_hist: Dictionary = meta.get("faction_rep", {})
+	var dominant_faction: String = _get_dominant_faction(faction_rep_hist)
+	var run_entry: Dictionary = {
+		"biome": biome,
+		"cards_played": int(rewards.get("cards_played", 0)),
+		"victory": bool(rewards.get("victory", false)),
+		"life_at_end": int(run_state.get("life_essence", 0)),
+		"dominant_faction": dominant_faction,
+		"minigames_won": int(rewards.get("minigames_won", 0)),
+		"oghams_used": int(rewards.get("oghams_used", 0)),
+		"anam_earned": anam_earned,
+		"timestamp": int(Time.get_unix_time_from_system()),
+	}
+	var run_history: Array = meta.get("run_history", [])
+	run_history.append(run_entry)
+	if run_history.size() > 50:
+		run_history = run_history.slice(-50)
+	meta["run_history"] = run_history
+
+	# Echo memory — deaths by biome + dominant factions for narrative callbacks
+	var echo: Dictionary = meta.get("echo_memory", {})
+	if not bool(rewards.get("victory", false)) and not biome.is_empty():
+		var deaths_by_biome: Dictionary = echo.get("deaths_by_biome", {})
+		deaths_by_biome[biome] = int(deaths_by_biome.get(biome, 0)) + 1
+		echo["deaths_by_biome"] = deaths_by_biome
+	if not dominant_faction.is_empty():
+		var dom_seen: Array = echo.get("dominant_factions_seen", [])
+		if not dom_seen.has(dominant_faction):
+			dom_seen.append(dominant_faction)
+		echo["dominant_factions_seen"] = dom_seen
+	var choices_log: Array = echo.get("choices_log", [])
+	choices_log.append({"biome": biome, "victory": bool(rewards.get("victory", false)), "cards": int(rewards.get("cards_played", 0))})
+	if choices_log.size() > 100:
+		choices_log = choices_log.slice(-100)
+	echo["choices_log"] = choices_log
+	meta["echo_memory"] = echo
+
 	state["meta"] = meta
 	save_system.save_profile(meta)
+
+
+static func _get_dominant_faction(faction_rep: Dictionary) -> String:
+	var best: String = ""
+	var best_val: float = -1.0
+	for faction in faction_rep:
+		var val: float = float(faction_rep[faction])
+		if val > best_val:
+			best_val = val
+			best = str(faction)
+	return best
 
 
 ## Maturity score for biome unlock progression (bible v2.4 s.5.1).
