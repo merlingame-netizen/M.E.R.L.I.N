@@ -1,10 +1,10 @@
 {
-  "cycle": 14,
-  "timestamp": "2026-04-20T12:00:00.000Z",
+  "cycle": 15,
+  "timestamp": "2026-04-20T14:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-SFXENGINE", "FACTION-BOOST-WEIGHT"],
-  "rationale": "Bug hunt on SFXEngine (last committed feature): sfx_engine.gd and audio_integration.gd reviewed — 0 bugs. All referenced classes (Run3DController, HubScreen, EndRunScreen, GameFlowController, MusicManagerV2, StemsMusicManager, SFXRecipes, SFXRecipesAmbient) confirmed to exist. Feature: boost_weight faction card weighting (q-20260415-010, creator chose A). Cards with ADD_REPUTATION effects targeting a faction where player has rep >= 50 are weighted 3x in event and fastroute generators. Implements bible FACTION_THRESHOLD_CONTENT unlock gate.",
-  "budget": {"files": 2, "lines": 52},
+  "tasks": ["BUGHUNT-C14-BOOST", "GFC-WALK-PHASE"],
+  "rationale": "Bug hunt on C14 boost_weight code (merlin_card_system.gd): _get_card_factions correctly iterates options→effects, _get_faction_boost checks threshold with proper default, weighted selection in get_fastroute_card and _generate_event_card uses correct cumulative roll — 0 bugs. Feature: GFC walk phase orchestration (q-20260415-011, creator chose A: wrap_broc). Added WALK phase enum, wire_walk()/disconnect_walk() methods, walk_ended signal in BroceliandeForest3D with GFC-aware emission + standalone fallback.",
+  "budget": {"files": 2, "lines": 92},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C14 (merlin_card_system.gd faction boost logic). Then feature: one of — GFC wrap BroceliandeForest3D (q-20260415-011), run_history population (q-20260415-002), or biome walk event pools."
+  "next_cycle_plan": "Bug hunt C15 (game_flow_controller.gd walk wiring + broceliande walk_ended). Then feature: run_history population (q-20260415-002) or biome walk event pools."
 }

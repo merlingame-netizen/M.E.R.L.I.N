@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 14,
-  "timestamp": "2026-04-20T12:00:00Z",
+  "cycle": 15,
+  "timestamp": "2026-04-20T14:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 14: Bug hunt SFXEngine (sfx_engine.gd, audio_integration.gd) + feat boost_weight faction card weighting",
+  "scope": "Cycle 15: Bug hunt C14 boost_weight (merlin_card_system.gd) + feat GFC walk phase orchestration",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 14: Bug hunt SFXEngine found 0 bugs — player pool logic correct, volume category mapping complete, all 27 SFX enum entries cached, all class references valid. Feature: boost_weight adds _get_card_factions() and _get_faction_boost() static helpers. Event cards multiply score by 3x for matching factions. FastRoute cards use weighted selection instead of uniform random. 25 total bugs fixed across 14 cycles."
+  "overall_assessment": "Cycle 15: Bug hunt on C14 boost_weight found 0 bugs — _get_card_factions iterates options→effects correctly, _get_faction_boost uses proper threshold check with safe defaults, weighted selection in both get_fastroute_card and _generate_event_card uses standard cumulative roll pattern. Feature: GFC WALK phase added. GameFlowController.wire_walk() connects BroceliandeForest3D.walk_ended signal. Forest collects run_data (reason, biome, life, currency, encounters, season) and emits to GFC. Standalone fallback preserved for scenes without GFC. 25 total bugs fixed across 15 cycles."
 }

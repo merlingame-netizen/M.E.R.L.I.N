@@ -690,6 +690,17 @@
       "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_constants.gd"],
       "description": "When faction rep >= 50 (FACTION_THRESHOLD_CONTENT), event and fastroute cards with ADD_REPUTATION effects for that faction are weighted 3x in selection pool. Static helpers _get_card_factions() and _get_faction_boost(). Creator chose boost_weight approach (q-20260415-010).",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "GFC-WALK-PHASE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "GFC walk phase — orchestrate BroceliandeForest3D lifecycle",
+      "agent": "godot_expert",
+      "files": ["scripts/core/game_flow_controller.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "Extend GameFlowController with WALK phase between HUB and END_SCREEN. wire_walk() connects BroceliandeForest3D.walk_ended signal. Forest emits run_data (reason, biome, life, currency, encounters, season) on completion or death. GFC applies rewards and transitions to END_SCREEN. Standalone fallback preserved. Creator chose A: wrap_broc (q-20260415-011).",
+      "completed_at": "2026-04-20"
     }
   ]
 }
