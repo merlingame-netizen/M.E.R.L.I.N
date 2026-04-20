@@ -25,19 +25,26 @@ export function DirectorTab() {
         <>
           <div className="section-title">{'\u2691'} Pending Decisions — {pending.length}</div>
           {pending.map(q => {
-            const opts = Array.isArray(q.options) ? q.options : [];
+            // Options can be: array of strings, object {A:"...",B:"..."}, or null
+            let opts: Array<{ key: string; label: string }> = [];
+            if (Array.isArray(q.options)) {
+              opts = q.options.map((o, i) => ({ key: String.fromCharCode(65 + i), label: safeStr(o) }));
+            } else if (q.options && typeof q.options === 'object') {
+              opts = Object.entries(q.options as Record<string, unknown>).map(([k, v]) => ({ key: k, label: safeStr(v) }));
+            }
             const qType = safeStr(q.type);
+            const hasButtons = qType === 'multiple_choice' && opts.length > 0;
             return (
               <div key={q.id} className="feedback-card">
                 <div className="feedback-card__cat">{safeStr(q.category)} — {safeStr(q.priority)}</div>
                 <div className="feedback-card__q">{safeStr(q.question)}</div>
                 {q.context && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 8, lineHeight: 1.4 }}>{safeStr(q.context)}</div>}
-                {qType === 'multiple_choice' && opts.map((opt, i) => (
-                  <button key={i} className="feedback-option" onClick={() => submitFeedback(q.id, safeStr(opt), '')}>
-                    {safeStr(opt)}
+                {hasButtons && opts.map(opt => (
+                  <button key={opt.key} className="feedback-option" onClick={() => submitFeedback(q.id, `${opt.key}) ${opt.label}`, '')}>
+                    <strong style={{ color: 'var(--amber)', marginRight: 8 }}>{opt.key})</strong>{opt.label}
                   </button>
                 ))}
-                {qType !== 'multiple_choice' && (
+                {!hasButtons && (
                   <div style={{ marginTop: 6 }}>
                     <textarea
                       value={textInputs[q.id] || ''}
