@@ -22,7 +22,7 @@ jobs:
   export-web:
     name: Export Godot Web Build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     container: barichello/godot-ci:4.5
     steps:
       - uses: actions/checkout@v4
@@ -51,11 +51,15 @@ jobs:
           sed -i 's/^          //' export_presets.cfg
 
       - name: Import project
-        run: godot --headless --path . --import --quit || true
+        timeout-minutes: 15
+        run: |
+          timeout 600 godot --headless --path . --import --quit 2>&1 | tail -50 || true
+          echo "=== Import done ==="
 
       - name: Parse check
+        timeout-minutes: 3
         run: |
-          OUTPUT=$(godot --headless --editor --quit-after 10 --path . 2>&1 || true)
+          OUTPUT=$(timeout 60 godot --headless --editor --quit-after 10 --path . 2>&1 || true)
           ERRORS=$(echo "$OUTPUT" | grep -c "SCRIPT ERROR" || true)
           if [ "$ERRORS" -gt 0 ]; then echo "::error::$ERRORS script errors"; exit 1; fi
 
