@@ -701,6 +701,28 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "BUGFIX-027",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix echo_memory not wired into LLM prompt context",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/context_builder.gd", "scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/llm_adapter_prompts.gd"],
+      "description": "build_context_enrichment() did not read echo_memory despite C16 claiming it was wired. Fixed: added echo_memory+total_runs to context_builder.build_full_context() and build_narrative_context(). build_context_enrichment() now formats deaths_by_biome, dominant_factions_seen, veteran status, and MOS tension zone.",
+      "completed_at": "2026-04-20"
+    },
+    {
+      "id": "GM-FEWSHOT-3",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "3rd GM few-shot example (end-game PROGRESS_MISSION + high rep swings)",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/llm_adapter_game_master.gd"],
+      "description": "Added 3rd few-shot JSON example to calculate_smart_effects() for end-game scenarios with PROGRESS_MISSION + high rep swings. Added PROGRESS_MISSION to GM allowed types list. Per creator q-20260415-005 choice B.",
+      "completed_at": "2026-04-20"
     }
   ]
 }

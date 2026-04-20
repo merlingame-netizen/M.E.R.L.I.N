@@ -3,18 +3,18 @@
   "cycle": 16,
   "timestamp": "2026-04-20T15:30:00Z",
   "type": "bughunt+bugfix+feature",
-  "scope": "Cycle 16: Bug hunt C15 (store_run.gd run_history/echo_memory) + BUGFIX-026 double-reward + feat echo_memory LLM context",
+  "scope": "Cycle 17: Bug hunt C16 (llm_adapter echo_memory wiring gap) + BUGFIX-027 + feat GM few-shot example 3",
   "bugs_found": [
     {
-      "id": "BUG-026",
+      "id": "BUG-027",
       "severity": "HIGH",
-      "file": "scripts/ui/merlin_game_controller.gd",
-      "line": 666,
-      "description": "Double reward application: StoreRun.handle_run_end() applies rewards via RESOLVE_CHOICE dispatch (store L322), then game_controller_effects.apply_run_rewards() was called AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries, 2x biome_runs, 2x echo_memory updates.",
-      "fix": "Removed duplicate _effects.apply_run_rewards() call. The ending dict already has rewards populated by StoreRun.handle_run_end().",
+      "file": "scripts/merlin/llm_adapter_prompts.gd",
+      "line": 242,
+      "description": "build_context_enrichment() did NOT read echo_memory data despite C16 status claiming it was wired. echo_memory was populated in store_run.gd but never passed through context_builder.build_full_context() or build_narrative_context() to the LLM prompts. Veteran players had no cross-run narrative memory reaching the LLM.",
+      "fix": "Added echo_memory + total_runs to both context_builder.build_full_context() and merlin_llm_adapter.build_narrative_context(). build_context_enrichment() now formats deaths_by_biome, dominant_factions_seen, veteran status, and MOS tension zone into user prompt.",
       "status": "fixed"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 16: Bug hunt C15 found 1 HIGH bug (double reward application). Fixed by removing the controller redundant apply_run_rewards call. Feature: echo_memory + tension_zone wired into LLM narrative context for cross-run callbacks. 26 total bugs fixed across 16 cycles."
+  "overall_assessment": "Cycle 17: Bug hunt C16 found 1 HIGH gap (echo_memory never reaching LLM prompts). Fixed across 4 files. Feature: 3rd GM few-shot example for end-game (PROGRESS_MISSION + high rep swings). 27 total bugs fixed across 17 cycles."
 }

@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 16 — Bug hunt C15 (found double-reward bug) + fix BUGFIX-026 + feat echo_memory LLM context + tension_zone injection",
+  "objective": "Cycle 17 — BUG-027 fix echo_memory LLM wiring + GM few-shot example 3 (end-game PROGRESS_MISSION)",
   "workers": [],
-  "updated_at": "2026-04-20T15:30:00.000Z",
-  "cycle": 16,
-  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): found HIGH bug — double reward application. StoreRun.handle_run_end() applies rewards via dispatch, then game_controller_effects.apply_run_rewards() applied them AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries. Fix: removed duplicate apply_run_rewards call. Feature: wired echo_memory (deaths_by_biome, dominant_factions_seen, total_runs) + tension_zone + convergence_zone into LLM narrative context. build_context_enrichment() now formats cross-run memory for Merlin narrative callbacks. 3 files modified, 40 lines changed. 26 total bugs fixed across 16 cycles."
+  "updated_at": "2026-04-20T17:00:00.000Z",
+  "cycle": 17,
+  "checkpoint": "Bug hunt C16: found GAP-027 — build_context_enrichment() was NOT reading echo_memory despite C16 status claiming it was done. Fixed: wired echo_memory (deaths_by_biome, dominant_factions_seen, veteran status) + MOS tension_zone into LLM prompt via both context_builder.gd and merlin_llm_adapter.gd. build_context_enrichment() now injects cross-run death memory and veteran badges into user prompt. Feature: added 3rd GM few-shot JSON example for end-game (PROGRESS_MISSION + high rep swings) per creator q-20260415-005 choice B. Added PROGRESS_MISSION to GM allowed types. 4 files modified, 33 lines changed. 27 total bugs fixed across 17 cycles."
 }
