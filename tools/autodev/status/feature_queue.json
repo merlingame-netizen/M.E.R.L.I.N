@@ -701,6 +701,28 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "BUGFIX-026",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix double reward application (2x Anam, 2x run_history)",
+      "agent": "bug_hunter",
+      "files": ["scripts/ui/merlin_game_controller.gd"],
+      "description": "StoreRun.handle_run_end() already applies rewards via RESOLVE_CHOICE dispatch. game_controller_effects.apply_run_rewards() was called AGAIN at L666. Removed duplicate call. Player was getting 2x Anam, 2x total_runs, 2x run_history entries.",
+      "completed_at": "2026-04-20"
+    },
+    {
+      "id": "ECHO-MEMORY-LLM-CONTEXT",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire echo_memory + tension_zone into LLM narrative context",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/llm_adapter_prompts.gd"],
+      "description": "Add deaths_by_biome, dominant_factions_seen, total_runs, tension_zone, convergence_zone to build_narrative_context(). Format echo memory into build_context_enrichment() — cross-run callbacks ('Le voyageur a deja peri ici', 'Veteran de N quetes'). MOS tension zone ('URGENCE', 'Tension montante') reinforces convergence hints in user prompt.",
+      "completed_at": "2026-04-20"
     }
   ]
 }

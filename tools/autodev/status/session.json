@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 15 — Bug hunt C14 (0 bugs) + feat run_history population + echo_memory + minigame/ogham counters",
+  "objective": "Cycle 16 — Bug hunt C15 (found double-reward bug) + fix BUGFIX-026 + feat echo_memory LLM context + tension_zone injection",
   "workers": [],
-  "updated_at": "2026-04-20T13:45:00.000Z",
-  "cycle": 15,
-  "checkpoint": "Bug hunt on C14 (merlin_card_system.gd faction boost_weight): 0 bugs — _get_card_factions/_get_faction_boost static helpers correct, weighted selection math verified. Feature: run_history population in store_run.gd. Each run end appends a 9-field entry (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp) to meta.run_history, trimmed to 50. Echo memory populated: deaths_by_biome, dominant_factions_seen, choices_log (100 cap). Added minigames_won/oghams_used counters to run state. record_minigame_win() in merlin_store.gd wired to game controller (score >= 80). oghams_used incremented on successful ogham activation. 3 files modified, 71 lines added. 25 total bugs fixed across 15 cycles."
+  "updated_at": "2026-04-20T15:30:00.000Z",
+  "cycle": 16,
+  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): found HIGH bug — double reward application. StoreRun.handle_run_end() applies rewards via dispatch, then game_controller_effects.apply_run_rewards() applied them AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries. Fix: removed duplicate apply_run_rewards call. Feature: wired echo_memory (deaths_by_biome, dominant_factions_seen, total_runs) + tension_zone + convergence_zone into LLM narrative context. build_context_enrichment() now formats cross-run memory for Merlin's narrative callbacks ('Le voyageur a deja peri ici', 'Veteran de N quetes'). 3 files modified, 40 lines changed. 26 total bugs fixed across 16 cycles."
 }

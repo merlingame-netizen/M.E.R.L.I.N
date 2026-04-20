@@ -238,11 +238,20 @@ func build_arc_user_prompt(cards_played: int, biome: String, theme_word: String,
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency, echo memory).
 func build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
 
-	# Tension
+	# Tension zone (MOS convergence)
+	var tz: String = str(context.get("tension_zone", "none"))
+	if tz == "critical":
+		parts.append("URGENCE: la quete doit finir maintenant")
+	elif tz == "high":
+		parts.append("La fin approche — oriente vers resolution")
+	elif tz == "rising":
+		parts.append("Tension montante — enjeux grandissants")
+
+	# Hidden tension gauge
 	var tension: int = int(context.get("tension", 0))
 	if tension >= 60:
 		parts.append("Tension haute")
@@ -261,6 +270,26 @@ func build_context_enrichment(context: Dictionary) -> String:
 		for i in range(mini(talent_names.size(), 3)):
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
+
+	# Echo memory — cross-run narrative callbacks
+	var current_biome: String = str(context.get("biome", ""))
+	var deaths_by_biome: Dictionary = context.get("deaths_by_biome", {})
+	if not current_biome.is_empty() and deaths_by_biome.has(current_biome):
+		var death_count: int = int(deaths_by_biome[current_biome])
+		if death_count >= 3:
+			parts.append("Ce lieu est funeste — le voyageur y a peri %d fois" % death_count)
+		elif death_count >= 1:
+			parts.append("Le voyageur a deja peri ici")
+
+	var dom_factions: Array = context.get("dominant_factions_seen", [])
+	if dom_factions.size() >= 3:
+		parts.append("Voyageur versatile — a suivi %d factions differentes" % dom_factions.size())
+
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 10:
+		parts.append("Veteran de %d quetes" % total_runs)
+	elif total_runs >= 3:
+		parts.append("Voyageur aguerri (%d quetes)" % total_runs)
 
 	if parts.is_empty():
 		return ""

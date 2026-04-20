@@ -704,6 +704,9 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 
 	var player_tendency := _get_player_tendency(hidden)
 
+	var echo: Dictionary = meta.get("echo_memory", {})
+	var total_runs: int = int(meta.get("total_runs", 0))
+
 	return {
 		"factions": meta.get("faction_rep", {}).duplicate(),
 		"cards_played": int(run.get("cards_played", 0)),
@@ -715,11 +718,16 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 		"life_essence": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"karma": int(hidden.get("karma", 0)),
 		"tension": int(hidden.get("tension", 0)),
+		"tension_zone": str(run.get("tension_zone", "none")),
+		"convergence_zone": bool(run.get("convergence_zone", false)),
 		"talent_names": talent_names,
 		"player_tendency": player_tendency,
 		"flags": state.get("flags", {}),
 		"faction_status": _build_faction_status_string(state),
 		"typology": str(run.get("typology", "classique")),
+		"total_runs": total_runs,
+		"deaths_by_biome": echo.get("deaths_by_biome", {}),
+		"dominant_factions_seen": echo.get("dominant_factions_seen", []),
 	}
 
 func build_context(state: Dictionary) -> Dictionary:
