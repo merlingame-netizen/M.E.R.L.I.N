@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 16 — Bug hunt C15 (found double-reward bug) + fix BUGFIX-026 + feat echo_memory LLM context + tension_zone injection",
+  "objective": "Cycle 17 — Bug hunt C16 (phantom commit: echo_memory code never pushed) + BUG-027 fix + BUG-028 fix + feat few-shot JSON GM examples",
   "workers": [],
-  "updated_at": "2026-04-20T15:30:00.000Z",
-  "cycle": 16,
-  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): found HIGH bug — double reward application. StoreRun.handle_run_end() applies rewards via dispatch, then game_controller_effects.apply_run_rewards() applied them AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries. Fix: removed duplicate apply_run_rewards call. Feature: wired echo_memory (deaths_by_biome, dominant_factions_seen, total_runs) + tension_zone + convergence_zone into LLM narrative context. build_context_enrichment() now formats cross-run memory for Merlin narrative callbacks. 3 files modified, 40 lines changed. 26 total bugs fixed across 16 cycles."
+  "updated_at": "2026-04-20T18:00:00.000Z",
+  "cycle": 17,
+  "checkpoint": "Bug hunt C16: confirmed echo_memory LLM wiring NEVER PUSHED (same pattern as C8/C9 — status files committed, code changes lost). BUG-027 HIGH: wired echo_memory (deaths_by_biome, dominant_factions_seen) + tension_zone/convergence_zone from MOS thresholds + total_runs into build_narrative_context() and build_context_enrichment(). LLM now receives cross-run death memory, veteran status, and MOS convergence hints for narrative callbacks. BUG-028 LOW: build_narrative_user_prompt() defaulted life to 5 instead of 100 — misleading LLM into generating urgent survival scenes. Feature: 3 few-shot JSON examples in build_narrative_system_prompt() (early/mid/end-game, q-20260415-005 B). End-game example includes PROGRESS_MISSION + high rep swings (±15-20). 2 files modified, 77 lines changed. 28 total bugs fixed across 17 cycles."
 }

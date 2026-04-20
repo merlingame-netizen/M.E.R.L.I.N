@@ -1,10 +1,10 @@
 {
-  "cycle": 16,
-  "timestamp": "2026-04-20T15:30:00.000Z",
+  "cycle": 17,
+  "timestamp": "2026-04-20T18:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C15", "BUGFIX-026", "ECHO-MEMORY-LLM-CONTEXT"],
-  "rationale": "Bug hunt C15 found HIGH severity bug: double reward application. StoreRun.handle_run_end() already applies rewards during RESOLVE_CHOICE dispatch, but game_controller_effects.apply_run_rewards() was called AGAIN at L666 of merlin_game_controller.gd. Result: 2x Anam, 2x total_runs, 2x run_history entries, 2x biome_runs. Fix: removed duplicate call. Feature: echo_memory data (populated in C15) was sitting unused by the LLM. Now wired into build_narrative_context() with tension_zone and convergence_zone from MOS. build_context_enrichment() formats cross-run death memory and veteran status into prompt enrichment for Merlin narrative callbacks.",
-  "budget": {"files": 3, "lines": 40},
+  "tasks": ["BUGHUNT-C16", "BUGFIX-027", "BUGFIX-028", "FEWSHOT-JSON-GM"],
+  "rationale": "Bug hunt C16 confirmed phantom commit pattern (3rd occurrence after C8/C9): echo_memory LLM wiring code was never pushed, only status JSONs. Fixed by actually implementing the wiring: build_narrative_context() now includes echo_memory, tension_zone, convergence_zone, total_runs. build_context_enrichment() formats cross-run death memory + veteran status + MOS convergence hints into LLM prompts. Also fixed misleading life_essence default (5→100) in narrative user prompt. Feature: 3 few-shot JSON examples in build_narrative_system_prompt() with early/mid/end-game scenarios including PROGRESS_MISSION and high rep swings per creator choice (q-20260415-005 B).",
+  "budget": {"files": 2, "lines": 77},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C16 (merlin_llm_adapter.gd + llm_adapter_prompts.gd echo memory code). Then feature: GFC wrap BroceliandeForest3D (q-20260415-011) or few-shot JSON GM examples (q-20260415-005, creator chose B: 3 examples with end-game)."
+  "next_cycle_plan": "Bug hunt C17 (verify echo_memory enrichment in merlin_llm_adapter.gd + llm_adapter_prompts.gd). Then feature: GFC wrap BroceliandeForest3D (q-20260415-011 — extend GFC to orchestrate BroceliandeForest3D + HubAntre). Or: keyboard/gamepad Tab navigation (q-20260415-004 — FOCUS_ALL for accessibility)."
 }
