@@ -409,8 +409,33 @@ static func apply_run_rewards(state: Dictionary, rewards: Dictionary, save_syste
 		var biome_runs: Dictionary = meta.get("biome_runs", {})
 		biome_runs[biome] = int(biome_runs.get(biome, 0)) + 1
 		meta["biome_runs"] = biome_runs
+	var run_history: Array = meta.get("run_history", [])
+	var dominant: String = _get_dominant_faction(meta.get("faction_rep", {}))
+	run_history.append({
+		"biome": biome,
+		"cards_played": int(rewards.get("cards_played", 0)),
+		"ending": "victory" if bool(rewards.get("victory", false)) else "death",
+		"life_at_end": int(rewards.get("life_at_end", 0)),
+		"dominant_faction": dominant,
+		"minigames_won": int(rewards.get("minigames_won", 0)),
+		"oghams_used": int(rewards.get("oghams_used", 0)),
+	})
+	if run_history.size() > 50:
+		run_history = run_history.slice(run_history.size() - 50)
+	meta["run_history"] = run_history
 	state["meta"] = meta
 	save_system.save_profile(meta)
+
+
+static func _get_dominant_faction(faction_rep: Dictionary) -> String:
+	var best_faction: String = ""
+	var best_value: float = -1.0
+	for faction in faction_rep:
+		var val: float = float(faction_rep[faction])
+		if val > best_value:
+			best_value = val
+			best_faction = str(faction)
+	return best_faction
 
 
 ## Maturity score for biome unlock progression (bible v2.4 s.5.1).

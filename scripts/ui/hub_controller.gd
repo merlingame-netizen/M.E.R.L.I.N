@@ -331,9 +331,10 @@ func record_run_end(run_summary: Dictionary) -> void:
 		"biome": str(run_summary.get("biome", "")),
 		"cards_played": int(run_summary.get("cards_played", 0)),
 		"ending": str(run_summary.get("ending", "")),
-		"life_remaining": int(run_summary.get("life_remaining", 0)),
+		"life_at_end": int(run_summary.get("life_at_end", run_summary.get("life_remaining", 0))),
 		"dominant_faction": str(run_summary.get("dominant_faction", "")),
-		"whisper_seen": str(run_summary.get("whisper_seen", "")),
+		"minigames_won": int(run_summary.get("minigames_won", 0)),
+		"oghams_used": int(run_summary.get("oghams_used", 0)),
 	})
 	if run_history.size() > 50:
 		run_history = run_history.slice(run_history.size() - 50)
