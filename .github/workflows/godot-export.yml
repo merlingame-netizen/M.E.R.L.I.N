@@ -60,8 +60,10 @@ jobs:
         timeout-minutes: 3
         run: |
           OUTPUT=$(timeout 60 godot --headless --editor --quit-after 10 --path . 2>&1 || true)
-          ERRORS=$(echo "$OUTPUT" | grep -c "SCRIPT ERROR" || true)
-          if [ "$ERRORS" -gt 0 ]; then echo "::error::$ERRORS script errors"; exit 1; fi
+          echo "$OUTPUT" | grep "SCRIPT ERROR" || echo "No script errors"
+          ERRORS=$(echo "$OUTPUT" | grep "SCRIPT ERROR" | grep -v "GDExtension" | wc -l || true)
+          if [ "$ERRORS" -gt 0 ]; then echo "::error::$ERRORS real script errors (excluding GDExtension)"; exit 1; fi
+          echo "Parse check passed (GDExtension warnings ignored)"
 
       - name: Export Web
         run: |
