@@ -130,12 +130,17 @@ jobs:
         run: vercel --version
       - name: Deploy game to Vercel
         working-directory: web-export
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           set -e
+          CLEAN_TOKEN=$(echo "$VERCEL_TOKEN" | tr -d '[:space:]')
           mkdir -p .vercel
-          printf '{"orgId":"%s","projectId":"%s"}' "${{ secrets.VERCEL_ORG_ID }}" "${{ secrets.VERCEL_PROJECT_ID }}" > .vercel/project.json
+          printf '{"orgId":"%s","projectId":"%s"}' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
           echo "=== project.json ==="
           cat .vercel/project.json
+          echo "=== Token length: ${#CLEAN_TOKEN} ==="
           echo "=== Running vercel deploy ==="
-          vercel deploy --prod --yes --force --token="${{ secrets.VERCEL_TOKEN }}"
-          echo "=== Deploy exit: $? ==="
+          vercel deploy --prod --yes --force --token="$CLEAN_TOKEN"
