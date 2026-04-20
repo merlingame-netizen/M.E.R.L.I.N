@@ -415,7 +415,7 @@
       "title": "faction_endings_chosen: champ dedie vs dominant_factions_seen existant?",
       "type": "multiple_choice",
       "category": "gamedesign",
-      "status": "pending",
+      "status": "answered",
       "priority": "MEDIUM",
       "question": "Le bot a connecte faction_ending_chosen a echo_memory.dominant_factions_seen[]. Mais ce champ semble avoir ete prevu pour 'factions dominantes a la fin d'un run' (pas 'fins narratives completees'). Options: A) OK - utiliser dominant_factions_seen pour les deux usages (pas de distinction). B) Creer faction_endings_chosen[] separe pour tracker uniquement les fins narratives completees (LLM peut dire 'tu as deja honore l'Ankou...'). C) Supprimer le tracking — pas besoin de memoire narrative cross-run sur les endings.",
       "created_at": "2026-04-15T12:45:00Z",
