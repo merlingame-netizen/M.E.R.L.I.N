@@ -539,6 +539,9 @@ func _resolve_choice(option: int) -> void:
 		is_busy = false
 		return
 
+	if score >= MerlinConstants.ANAM_REWARDS.get("minigame_threshold", 80):
+		store.record_minigame_win()
+
 	# 3. Resolve card via MerlinCardSystem
 	var run_state: Dictionary = store.state.get("run", {})
 	var resolve_result: Dictionary = store.cards.resolve_card(run_state, current_card, option, score)
