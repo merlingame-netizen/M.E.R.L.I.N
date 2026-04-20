@@ -520,7 +520,7 @@
       "id": "q-20260415-012",
       "type": "multiple_choice",
       "category": "design",
-      "status": "pending",
+      "status": "answered",
       "priority": "MEDIUM",
       "title": "Queue growth rate critical: 157 pending tasks — pruning strategy?",
       "question": "The studio queue has grown to 157 pending tasks (fix rate 26.3%). At 1 task/cycle, it would take 150+ cycles to drain while adding ~6/cycle. Which strategy?",
