@@ -116,13 +116,26 @@ jobs:
         with:
           name: web-export
           path: web-export/
-      - name: Deploy game to Vercel
+      - name: Diagnostic — check artifact
         run: |
-          npm i -g vercel@latest
-          cd web-export
+          echo "=== Files in web-export/ ==="
+          ls -la web-export/
+          echo "=== File count ==="
+          find web-export -type f | wc -l
+          echo "=== Total size ==="
+          du -sh web-export/
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+      - name: Verify Vercel CLI
+        run: vercel --version
+      - name: Deploy game to Vercel
+        working-directory: web-export
+        run: |
+          set -e
           mkdir -p .vercel
-          echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
-          ls -la
+          printf '{"orgId":"%s","projectId":"%s"}' "${{ secrets.VERCEL_ORG_ID }}" "${{ secrets.VERCEL_PROJECT_ID }}" > .vercel/project.json
+          echo "=== project.json ==="
           cat .vercel/project.json
-          vercel deploy --prod --yes --force --token=${{ secrets.VERCEL_TOKEN }} 2>&1
-          echo "Deploy exit code: $?"
+          echo "=== Running vercel deploy ==="
+          vercel deploy --prod --yes --force --token="${{ secrets.VERCEL_TOKEN }}"
+          echo "=== Deploy exit: $? ==="
