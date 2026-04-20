@@ -22,7 +22,7 @@ jobs:
   export-web:
     name: Export Godot Web Build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     container: barichello/godot-ci:4.5
     steps:
       - uses: actions/checkout@v4
@@ -65,14 +65,19 @@ jobs:
           echo "::warning::Parse check is advisory only — export will attempt regardless"
 
       - name: Export Web
+        timeout-minutes: 25
         run: |
           mkdir -p web-export
-          godot --headless --export-release "Web" web-export/index.html --path .
+          echo "=== Starting Godot web export ==="
+          ls -la /root/.local/share/godot/export_templates/ 2>/dev/null || echo "No templates dir"
+          godot --headless --verbose --export-release "Web" web-export/index.html --path . 2>&1 | tail -100
           if [ ! -f web-export/index.html ]; then
             echo "::error::Export failed — no index.html generated"
+            ls -la web-export/ || true
             exit 1
           fi
-          echo "Export successful: $(ls -la web-export/)"
+          echo "=== Export successful ==="
+          ls -la web-export/
           # Vercel config: serve as static (no build step)
           cat > web-export/vercel.json << 'VCFG'
           {
