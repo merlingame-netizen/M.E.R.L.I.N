@@ -238,7 +238,7 @@ func build_arc_user_prompt(cards_played: int, biome: String, theme_word: String,
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency, echo memory).
 func build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
 
@@ -248,6 +248,15 @@ func build_context_enrichment(context: Dictionary) -> String:
 		parts.append("Tension haute")
 	elif tension >= 40:
 		parts.append("Tension moderee")
+
+	# MOS convergence zone — narrative pacing pressure
+	var tension_zone: String = str(context.get("tension_zone", "none"))
+	if tension_zone == "critical":
+		parts.append("RESOLUTION IMMINENTE")
+	elif tension_zone == "high":
+		parts.append("Quete proche de sa fin")
+	elif tension_zone == "rising":
+		parts.append("Tension narrative montante")
 
 	# Player tendency
 	var tendency: String = str(context.get("player_tendency", ""))
@@ -261,6 +270,22 @@ func build_context_enrichment(context: Dictionary) -> String:
 		for i in range(mini(talent_names.size(), 3)):
 			names.append(str(talent_names[i]))
 		parts.append("Talents: %s" % ", ".join(names))
+
+	# Cross-run echo memory — narrative callbacks to past runs
+	var echo: Dictionary = context.get("echo_memory", {})
+	var total_runs: int = int(context.get("total_runs", 0))
+	if total_runs >= 5:
+		parts.append("Veteran (%d voyages)" % total_runs)
+	var biome: String = str(context.get("biome", ""))
+	var deaths_by_biome: Dictionary = echo.get("deaths_by_biome", {})
+	var biome_deaths: int = int(deaths_by_biome.get(biome, 0))
+	if biome_deaths >= 2:
+		parts.append("Deja mort %dx ici" % biome_deaths)
+	elif biome_deaths == 1:
+		parts.append("Deja mort ici une fois")
+	var dom_factions: Array = echo.get("dominant_factions_seen", [])
+	if dom_factions.size() >= 3:
+		parts.append("Factions connues: %s" % ", ".join(dom_factions.slice(0, 3)))
 
 	if parts.is_empty():
 		return ""
