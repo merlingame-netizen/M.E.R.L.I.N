@@ -182,6 +182,19 @@ const HOTSPOT_DEFS := [
 ]
 
 # =============================================================================
+# FACTION DISPLAY CONFIG
+# =============================================================================
+
+const FACTION_DISPLAY_ORDER: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+const FACTION_LABELS := {
+	"druides": "Druides",
+	"anciens": "Anciens",
+	"korrigans": "Korrigans",
+	"niamh": "Niamh",
+	"ankou": "Ankou",
+}
+
+# =============================================================================
 # SCENE NODES (from .tscn)
 # =============================================================================
 
@@ -202,6 +215,12 @@ var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
 var _tour: HubAntreTour = null
+var _status_panel: PanelContainer = null
+var _anam_label: Label = null
+var _oghams_label: Label = null
+var _faction_panel: PanelContainer = null
+var _faction_bars: Dictionary = {}
+var _faction_value_labels: Dictionary = {}
 
 # =============================================================================
 # STATE
@@ -235,7 +254,9 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_status_panel()
 	_create_hotspots()
+	_create_faction_panel()
 	_create_partir_button()
 	_create_bubble()
 	_create_radial()
@@ -448,6 +469,155 @@ func _create_chronicle_header() -> void:
 
 
 # =============================================================================
+# CREATE COMPONENTS — Status & Faction Panels
+# =============================================================================
+
+func _create_status_panel() -> void:
+	_status_panel = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(MerlinVisual.CRT_PALETTE["bg_dark"].r, MerlinVisual.CRT_PALETTE["bg_dark"].g, MerlinVisual.CRT_PALETTE["bg_dark"].b, 0.85)
+	style.border_color = MerlinVisual.CRT_PALETTE["border"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	_status_panel.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 24)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var tfont: Font = MerlinVisual.get_font("terminal")
+	var fsize: int = MerlinVisual.responsive_size(MerlinVisual.BODY_SMALL)
+
+	_anam_label = Label.new()
+	if tfont:
+		_anam_label.add_theme_font_override("font", tfont)
+	_anam_label.add_theme_font_size_override("font_size", fsize)
+	_anam_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
+	hbox.add_child(_anam_label)
+
+	_oghams_label = Label.new()
+	if tfont:
+		_oghams_label.add_theme_font_override("font", tfont)
+	_oghams_label.add_theme_font_size_override("font_size", fsize)
+	_oghams_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
+	hbox.add_child(_oghams_label)
+
+	_status_panel.add_child(hbox)
+	add_child(_status_panel)
+	_refresh_status_panel()
+
+
+func _create_faction_panel() -> void:
+	_faction_panel = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(MerlinVisual.CRT_PALETTE["bg_deep"].r, MerlinVisual.CRT_PALETTE["bg_deep"].g, MerlinVisual.CRT_PALETTE["bg_deep"].b, 0.90)
+	style.border_color = MerlinVisual.CRT_PALETTE["border"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	_faction_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	var tfont: Font = MerlinVisual.get_font("terminal")
+	var fsize: int = MerlinVisual.responsive_size(MerlinVisual.CAPTION_SIZE)
+
+	var title_label := Label.new()
+	title_label.text = "REPUTATIONS"
+	if tfont:
+		title_label.add_theme_font_override("font", tfont)
+	title_label.add_theme_font_size_override("font_size", fsize)
+	title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title_label)
+
+	for faction in FACTION_DISPLAY_ORDER:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var palette_key: String = "faction_" + faction
+		var faction_color: Color = MerlinVisual.CRT_PALETTE.get(palette_key, MerlinVisual.CRT_PALETTE["phosphor_dim"])
+
+		var name_label := Label.new()
+		name_label.text = FACTION_LABELS.get(faction, faction.capitalize())
+		name_label.custom_minimum_size.x = 80
+		if tfont:
+			name_label.add_theme_font_override("font", tfont)
+		name_label.add_theme_font_size_override("font_size", fsize)
+		name_label.add_theme_color_override("font_color", faction_color)
+		row.add_child(name_label)
+
+		var bar := ProgressBar.new()
+		bar.min_value = 0.0
+		bar.max_value = 100.0
+		bar.value = 20.0
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(0, 10)
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var bar_bg := StyleBoxFlat.new()
+		bar_bg.bg_color = MerlinVisual.CRT_PALETTE["bg_dark"]
+		bar_bg.border_color = MerlinVisual.CRT_PALETTE["border"]
+		bar_bg.set_border_width_all(1)
+		bar_bg.set_corner_radius_all(0)
+		bar.add_theme_stylebox_override("background", bar_bg)
+		var bar_fill := StyleBoxFlat.new()
+		bar_fill.bg_color = faction_color
+		bar_fill.set_corner_radius_all(0)
+		bar.add_theme_stylebox_override("fill", bar_fill)
+		row.add_child(bar)
+		_faction_bars[faction] = bar
+
+		var value_label := Label.new()
+		value_label.text = "20"
+		value_label.custom_minimum_size.x = 70
+		if tfont:
+			value_label.add_theme_font_override("font", tfont)
+		value_label.add_theme_font_size_override("font_size", fsize)
+		value_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(value_label)
+		_faction_value_labels[faction] = value_label
+
+		vbox.add_child(row)
+
+	_faction_panel.add_child(vbox)
+	add_child(_faction_panel)
+	_refresh_faction_panel()
+
+
+func _refresh_status_panel() -> void:
+	var anam: int = 0
+	var oghams_unlocked: int = 3
+	if store:
+		anam = int(store.state.get("meta", {}).get("anam", 0))
+		oghams_unlocked = store.state.get("oghams", {}).get("skills_unlocked", []).size()
+	if _anam_label:
+		_anam_label.text = "# %d Anam" % anam
+	if _oghams_label:
+		_oghams_label.text = "* %d/18 Runes" % oghams_unlocked
+
+
+func _refresh_faction_panel() -> void:
+	if store == null:
+		return
+	var faction_rep: Dictionary = store.state.get("meta", {}).get("faction_rep", {})
+	for faction in FACTION_DISPLAY_ORDER:
+		var value: float = float(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START))
+		if _faction_bars.has(faction):
+			_faction_bars[faction].value = value
+		if _faction_value_labels.has(faction):
+			var tier: String = MerlinReputationSystem.get_tier_label(value)
+			_faction_value_labels[faction].text = "%d %s" % [int(value), tier]
+
+
+# =============================================================================
 # CREATE COMPONENTS — Scene Elements
 # =============================================================================
 
@@ -560,6 +730,8 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	_layout_status_panel(vp, safe_top)
+	_layout_faction_panel(vp)
 
 
 func _layout_partir() -> void:
@@ -577,6 +749,23 @@ func _layout_partir() -> void:
 		(vp.x - btn_w) * 0.5,
 		vp.y - btn_h - 20.0 - safe_bottom
 	)
+
+
+func _layout_status_panel(vp: Vector2, safe_top: float) -> void:
+	if _status_panel == null:
+		return
+	var panel_w: float = vp.x * 0.80
+	_status_panel.position = Vector2((vp.x - panel_w) * 0.5, 74.0 + safe_top)
+	_status_panel.size = Vector2(panel_w, 0)
+
+
+func _layout_faction_panel(vp: Vector2) -> void:
+	if _faction_panel == null or _partir_btn == null:
+		return
+	var panel_w: float = vp.x * 0.80
+	var partir_y: float = _partir_btn.position.y
+	_faction_panel.position = Vector2((vp.x - panel_w) * 0.5, partir_y - 165.0)
+	_faction_panel.size = Vector2(panel_w, 0)
 
 
 # =============================================================================
@@ -830,6 +1019,10 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _status_panel:
+		_status_panel.modulate.a = 0.0
+	if _faction_panel:
+		_faction_panel.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -843,6 +1036,12 @@ func _play_entry_animation() -> void:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
 
+	# Status panel reveal
+	await get_tree().create_timer(0.15).timeout
+	if _status_panel:
+		var tw2 := create_tween()
+		tw2.tween_property(_status_panel, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
 	# Stagger hotspots reveal
 	for i in _hotspots.size():
 		var hs: Control = _hotspots[i]
@@ -852,6 +1051,12 @@ func _play_entry_animation() -> void:
 		else:
 			var tw := create_tween()
 			tw.tween_property(hs, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	# Faction panel reveal
+	await get_tree().create_timer(0.15).timeout
+	if _faction_panel:
+		var tw3 := create_tween()
+		tw3.tween_property(_faction_panel, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# PARTIR button entrance
 	await get_tree().create_timer(0.2).timeout
