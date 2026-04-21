@@ -745,6 +745,28 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/HubAntre.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "project.godot"],
       "description": "GFC registered as GameFlow autoload. Deferred MerlinStore discovery with retry. Public API: request_run(), complete_run(), enter_card_game(), return_to_hub(). HubAntre and BroceliandeForest3D route transitions through GFC. Phase tracking (MENU/HUB/RUN/END_SCREEN/TALENT_TREE). Creator chose A: wrap_broc (q-20260415-011).",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BUGFIX-030",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix GFC _save_system not wired in autoload mode (BUG-030)",
+      "agent": "godot_expert",
+      "files": ["scripts/core/game_flow_controller.gd"],
+      "description": "_auto_setup() found MerlinStore but never wired _save_system. All save operations through GFC silently did nothing. Fixed by reading _store.save_system after store discovery.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "ENDRUNSCREEN-GFC-WIRE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire EndRunScreen into GFC flow — complete_run() → END_SCREEN → EndRunScreen",
+      "agent": "godot_expert",
+      "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
+      "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

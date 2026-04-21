@@ -1,10 +1,18 @@
 {
   "agent": "cycle_director",
-  "cycle": 18,
-  "timestamp": "2026-04-21T14:00:00Z",
+  "cycle": 19,
+  "timestamp": "2026-04-21T16:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 18: Bug hunt C17 (0 bugs) + feat GFC autoload orchestrator",
-  "bugs_found": [],
+  "scope": "Cycle 19: Bug hunt C18 (BUG-030 save_system) + feat EndRunScreen GFC wiring",
+  "bugs_found": [
+    {
+      "id": "BUG-030",
+      "severity": "MEDIUM",
+      "file": "scripts/core/game_flow_controller.gd",
+      "description": "_auto_setup() found MerlinStore but never wired _save_system. Saves were silently non-functional in autoload mode (all save_system guards returned early). Fixed by reading _store.save_system after store discovery.",
+      "status": "fixed"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C17: verified all 4 files modified in C17 (merlin_game_controller.gd, merlin_llm_adapter.gd, llm_adapter_prompts.gd, llm_adapter_game_master.gd). Double reward gone, echo_memory/tension_zone wired to LLM, PROGRESS_MISSION parser with step validation present, 3rd GM few-shot example correct. 0 bugs found. Feature: GFC wired as autoload orchestrator. Code reviewed by subagent — 3 findings fixed (timing race condition via retry, enter_card_game phase validation, retry safety limit). 28 total bugs fixed across 18 cycles."
+  "overall_assessment": "Bug hunt C18: verified 4 files. Found 1 MEDIUM bug (save_system not wired in autoload mode). HubAntre and BroceliandeForest3D GFC integration correct, project.godot autoload registered correctly. Feature: EndRunScreen now fully wired into GFC flow — scene transitions, signal wiring, auto-discovery all production-ready. Net -18 lines (simplified BroceliandeForest3D). 29 total bugs fixed across 19 cycles."
 }

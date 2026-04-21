@@ -97,3 +97,7 @@
 {"ts":"2026-04-21T14:00:00.000Z","type":"task_done","cycle":18,"detail":"BUGHUNT-C17: 0 bugs — all 4 C17 files verified (double reward removed, echo_memory wired, PROGRESS_MISSION parser, GM few-shot)"}
 {"ts":"2026-04-21T14:00:00.000Z","type":"task_done","cycle":18,"detail":"GFC-AUTOLOAD-ORCHESTRATOR: GameFlowController registered as autoload, public API (request_run/complete_run/enter_card_game/return_to_hub), HubAntre+BroceliandeForest3D routed through GFC, phase tracking active"}
 {"ts":"2026-04-21T14:00:00.000Z","type":"cycle_end","cycle":18,"detail":"Cycle 18 complete: 0 bugs (C17 clean), 1 feature (GFC orchestrator). 4 files, 123 lines. 28 total bugs fixed across 18 cycles."}
+{"ts":"2026-04-21T16:00:00.000Z","type":"cycle_start","cycle":19,"detail":"Cycle 19: Bug hunt C18 (BUG-030 save_system) + feat EndRunScreen wired into GFC flow"}
+{"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
+{"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
+{"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}

@@ -1,10 +1,10 @@
 {
-  "cycle": 18,
-  "timestamp": "2026-04-21T14:00:00.000Z",
+  "cycle": 19,
+  "timestamp": "2026-04-21T16:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C17", "GFC-AUTOLOAD-ORCHESTRATOR"],
-  "rationale": "C17 next_cycle_plan called for bug hunt C17 + GFC wrap BroceliandeForest3D (q-20260415-011 creator chose A: wrap_broc). Bug hunt verified all 4 C17 files — 0 bugs found. Feature: GameFlowController extended with autoload _ready()/_auto_setup() (deferred MerlinStore discovery with retry), public API (request_run, complete_run, enter_card_game, return_to_hub), _transition_to() helper, phase validation. HubAntre and BroceliandeForest3D now route all scene transitions through GameFlow autoload. Backward-compatible fallbacks preserved if GameFlow unavailable. Code reviewed: fixed 3 review findings (timing race condition, phase validation, retry safety).",
-  "budget": {"files": 4, "lines": 123},
+  "tasks": ["BUGHUNT-C18", "ENDRUNSCREEN-GFC-WIRE"],
+  "rationale": "C18 next_cycle_plan called for bug hunt C18 + wire EndRunScreen into GFC. Bug hunt found BUG-030 MEDIUM: _auto_setup() never wired _save_system from MerlinStore — saves silently non-functional through GFC in autoload mode. Fixed. Feature: complete_run() now goes to END_SCREEN phase -> EndRunScreen.tscn. EndRunScreen._ready() auto-wires with GameFlow, fetches last_run_data, shows full CRT-styled end screen (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed from Node+wrong script to Control+correct script. BroceliandeForest3D._on_run_complete() simplified: removed 60-line inline overlay, now uses GFC. Signal-driven _on_run_ended() and _on_hub_requested() also transition scenes.",
+  "budget": {"files": 4, "lines": 51},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C18 (verify GFC autoload init timing, phase transitions work correctly in all 4 files). Then feature: wire EndRunScreen.tscn into GFC flow — complete_run() should transition to EndRunScreen instead of direct hub return. Run data passed via GameFlow.get_last_run_data()."
+  "next_cycle_plan": "Bug hunt C19 (verify EndRunScreen auto-wiring works: _ready() → GameFlow → show_results(), signal chain hub_requested → _on_hub_requested() → HubAntre transition). Then feature: JourneyMapDisplay visual polish — the journey map in EndRunScreen shows run events as a timeline. Currently data-only, needs CRT-styled visual nodes (card dots, connections, score indicators)."
 }

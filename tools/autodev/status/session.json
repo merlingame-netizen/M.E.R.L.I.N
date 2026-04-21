@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 18 — Bug hunt C17 (0 bugs) + feat GFC autoload orchestrator (Hub→Run→Hub flow)",
+  "objective": "Cycle 19 — Bug hunt C18 (1 MEDIUM bug) + feat EndRunScreen wired into GFC flow",
   "workers": [],
-  "updated_at": "2026-04-21T14:00:00.000Z",
-  "cycle": 18,
-  "checkpoint": "Bug hunt C17: verified 4 files (controller double-reward removed, echo_memory wired, PROGRESS_MISSION parser present, 3rd GM few-shot correct). 0 bugs found. Feature: GameFlowController registered as autoload (GameFlow). Public API: request_run(), complete_run(), enter_card_game(), return_to_hub(). HubAntre._launch_adventure() and BroceliandeForest3D._on_run_complete()/_on_hub() now route through GFC. Deferred MerlinStore discovery with retry. Phase validation on all methods. Backward-compatible fallbacks. 4 files modified, 123 lines changed. 28 total bugs fixed across 18 cycles."
+  "updated_at": "2026-04-21T16:00:00.000Z",
+  "cycle": 19,
+  "checkpoint": "Bug hunt C18: verified 4 files (game_flow_controller, HubAntre, BroceliandeForest3D, project.godot). Found BUG-030: _auto_setup() never wired _save_system — saves silently non-functional in autoload mode. Fixed by reading save_system from MerlinStore. Feature: complete_run() now transitions to END_SCREEN phase -> EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow, wires signals, calls show_results(). EndRunScreen.tscn fixed: script path corrected, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC.complete_run() call. 4 files modified, 51 insertions, 69 deletions (net -18 lines). 29 total bugs fixed across 19 cycles."
 }
