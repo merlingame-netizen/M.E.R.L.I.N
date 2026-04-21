@@ -1,10 +1,25 @@
 {
   "agent": "cycle_director",
-  "cycle": 21,
-  "timestamp": "2026-04-21T19:00:00Z",
+  "cycle": 24,
+  "timestamp": "2026-04-21T22:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 21: Bug hunt C20 (0 bugs) + feat HubAntre faction reputation dashboard",
-  "bugs_found": [],
+  "scope": "Cycle 24: Wire BiomeRadial selector + faction dashboard + biome-key passthrough",
+  "bugs_found": [
+    {
+      "id": "BUG-031",
+      "severity": "CRITICAL",
+      "file": "scripts/HubAntre.gd",
+      "description": "_create_dashboard() never called _layout_dashboard() — dashboard rendered at (0,0) until resize event. Fixed by adding _layout_all() call in _ready() after all component creation.",
+      "status": "fixed"
+    },
+    {
+      "id": "BUG-032",
+      "severity": "HIGH",
+      "file": "scripts/HubAntre.gd",
+      "description": "var BIOME_DATA := uses := type inference with CONST[index] (project rule violation). Fixed to var BIOME_DATA: Dictionary =.",
+      "status": "fixed"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C20: verified JourneyMapDisplay _process() frame cost (bounded MAX_VISIBLE_NODES=12, pulse TAU wrapping, no allocations) and _classify_event (String+Dict effects, begins_with resilience, proper fallback). 0 bugs found. Feature: HubAntre status dashboard — 5 faction mini-bars, Anam counter, Runes equipped. CRT-styled, responsive, signal-driven updates. Code review passed (1 fix: mr.get('is_mobile') to mr.is_mobile). 29 total bugs fixed across 21 cycles."
+  "overall_assessment": "Code review found 2 bugs in new code (1 CRITICAL layout bug, 1 HIGH style violation), both fixed before push. Signal wiring verified safe (is_connected guard). ProgressBar StyleBox overrides use correct Godot 4 keys. Faction iteration over Array[String] correct. Entry animation dashboard fade-in properly sequenced. 31 total bugs fixed across 24 cycles."
 }
