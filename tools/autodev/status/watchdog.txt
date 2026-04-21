@@ -18,3 +18,4 @@
 2026-04-21T12:00:00.000Z cycle-17-complete bugfix-027-double-reward bugfix-028-echo-memory-llm few-shot-gm-endgame progress-mission-parser 4files-38lines
 2026-04-21T14:00:00Z cycle=18 GFC-AUTOLOAD-ORCHESTRATOR
 2026-04-21T16:00:00Z CYCLE-19 heartbeat — BUG-030 fix + EndRunScreen GFC wire
+2026-04-21T18:00:00Z CYCLE-20 heartbeat — BUG-031 story_log pipeline + JourneyMapDisplay CRT polish

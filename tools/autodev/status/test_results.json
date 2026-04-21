@@ -1,18 +1,18 @@
 {
   "agent": "cycle_director",
-  "cycle": 19,
-  "timestamp": "2026-04-21T16:00:00Z",
+  "cycle": 20,
+  "timestamp": "2026-04-21T18:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 19: Bug hunt C18 (BUG-030 save_system) + feat EndRunScreen GFC wiring",
+  "scope": "Cycle 20: Bug hunt C19 (BUG-031 story_log pipeline) + feat JourneyMapDisplay CRT visual polish",
   "bugs_found": [
     {
-      "id": "BUG-030",
+      "id": "BUG-031",
       "severity": "MEDIUM",
-      "file": "scripts/core/game_flow_controller.gd",
-      "description": "_auto_setup() found MerlinStore but never wired _save_system. Saves were silently non-functional in autoload mode (all save_system guards returned early). Fixed by reading _store.save_system after store discovery.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "description": "_build_run_summary() only passed 5 fields (biome, card_index, life, currency, merlin_found) — missing story_log, oghams_used, minigames_won, minigames_played, faction_rep_delta. EndRunScreen showed zeros for all stats and JourneyMapDisplay always displayed empty state. Fixed by reading full run state from MerlinStore + story_log from WalkEventController.get_story_log().",
       "status": "fixed"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C18: verified 4 files. Found 1 MEDIUM bug (save_system not wired in autoload mode). HubAntre and BroceliandeForest3D GFC integration correct, project.godot autoload registered correctly. Feature: EndRunScreen now fully wired into GFC flow — scene transitions, signal wiring, auto-discovery all production-ready. Net -18 lines (simplified BroceliandeForest3D). 29 total bugs fixed across 19 cycles."
+  "overall_assessment": "Bug hunt C19: verified EndRunScreen auto-wiring (correct), GFC signal chain (correct), found 1 MEDIUM data pipeline bug. Feature: JourneyMapDisplay fully CRT-styled. 30 total bugs fixed across 20 cycles."
 }

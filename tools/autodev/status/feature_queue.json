@@ -767,6 +767,28 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BUGFIX-031",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix _build_run_summary() missing story_log + run stats (BUG-031)",
+      "agent": "godot_expert",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd", "scripts/broceliande_3d/walk_event_controller.gd"],
+      "description": "_build_run_summary() only passed biome/card_index/life/currency/merlin_found — missing story_log, oghams_used, minigames_won, faction_rep_delta. EndRunScreen showed zeros and JourneyMapDisplay always empty. Fixed by reading from MerlinStore.state.run + WalkEventController getters. Added card_idx to story entries.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "JOURNEYMAP-CRT-POLISH",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "JourneyMapDisplay CRT visual polish — glow nodes, dashed lines, effect pips",
+      "agent": "ui_worker",
+      "files": ["scripts/run/journey_map_display.gd"],
+      "description": "Rewritten from basic circles to full CRT timeline: glow-ring nodes colored by effect type, dashed phosphor connecting lines, effect pips (heal/damage/reputation/ogham/mission), final node with arc glow + V/X glyph, scroll indicators, cached terminal font, atmospheric empty state.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

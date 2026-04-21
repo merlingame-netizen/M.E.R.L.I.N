@@ -1,10 +1,10 @@
 {
-  "cycle": 19,
-  "timestamp": "2026-04-21T16:00:00.000Z",
+  "cycle": 20,
+  "timestamp": "2026-04-21T18:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C18", "ENDRUNSCREEN-GFC-WIRE"],
-  "rationale": "C18 next_cycle_plan called for bug hunt C18 + wire EndRunScreen into GFC. Bug hunt found BUG-030 MEDIUM: _auto_setup() never wired _save_system from MerlinStore — saves silently non-functional through GFC in autoload mode. Fixed. Feature: complete_run() now goes to END_SCREEN phase -> EndRunScreen.tscn. EndRunScreen._ready() auto-wires with GameFlow, fetches last_run_data, shows full CRT-styled end screen (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed from Node+wrong script to Control+correct script. BroceliandeForest3D._on_run_complete() simplified: removed 60-line inline overlay, now uses GFC. Signal-driven _on_run_ended() and _on_hub_requested() also transition scenes.",
-  "budget": {"files": 4, "lines": 51},
+  "tasks": ["BUGHUNT-C19", "JOURNEYMAP-CRT-POLISH"],
+  "rationale": "C19 next_cycle_plan called for bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt found BUG-031 MEDIUM: _build_run_summary() only passed biome/card_index/life/currency/merlin_found — missing story_log, oghams_used, minigames_won, minigames_played, faction_rep_delta. This meant EndRunScreen showed zeros for all run stats and JourneyMapDisplay always displayed 'Aucune carte jouee'. Fixed by reading full run state from MerlinStore + story_log from WalkEventController.get_story_log(). Also added card_idx field to WalkEventController story entries for consistent numbering. Feature: JourneyMapDisplay rewritten from basic circles+lines to full CRT-styled timeline — nodes with glow rings colored by primary effect (green=heal, red=damage, phosphor=neutral), dashed phosphor connecting lines, effect pips (up to 3 colored dots per node showing heal/damage/reputation/ogham/mission effects), final node with arc glow ring and V/X victory/death glyph, scroll indicators for long journeys, cached terminal font, atmospheric empty state message.",
+  "budget": {"files": 3, "lines": 215},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C19 (verify EndRunScreen auto-wiring works: _ready() → GameFlow → show_results(), signal chain hub_requested → _on_hub_requested() → HubAntre transition). Then feature: JourneyMapDisplay visual polish — the journey map in EndRunScreen shows run events as a timeline. Currently data-only, needs CRT-styled visual nodes (card dots, connections, score indicators)."
+  "next_cycle_plan": "Bug hunt C20 (verify story_log data pipeline: WalkEventController.get_story_log() → _build_run_summary() → GFC._build_end_run_data() → EndRunScreen.show_results() → JourneyMapDisplay.setup() — full chain). Then feature: faction ending screen — EndRunScreen._on_continue_pressed() reads faction_endings_available but GFC._build_end_run_data() never populates it. Need to compute eligible faction endings (rep >= 80) and add them to end_run_data. This enables the faction choice panel at end of victorious runs."
 }

@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 19 — Bug hunt C18 (1 MEDIUM bug) + feat EndRunScreen wired into GFC flow",
+  "objective": "Cycle 20 — Bug hunt C19 (BUG-031 story_log data pipeline) + feat JourneyMapDisplay CRT visual polish",
   "workers": [],
-  "updated_at": "2026-04-21T16:00:00.000Z",
-  "cycle": 19,
-  "checkpoint": "Bug hunt C18: verified 4 files (game_flow_controller, HubAntre, BroceliandeForest3D, project.godot). Found BUG-030: _auto_setup() never wired _save_system — saves silently non-functional in autoload mode. Fixed by reading save_system from MerlinStore. Feature: complete_run() now transitions to END_SCREEN phase -> EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow, wires signals, calls show_results(). EndRunScreen.tscn fixed: script path corrected, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC.complete_run() call. 4 files modified, 51 insertions, 69 deletions (net -18 lines). 29 total bugs fixed across 19 cycles."
+  "updated_at": "2026-04-21T18:00:00.000Z",
+  "cycle": 20,
+  "checkpoint": "Bug hunt C19: verified EndRunScreen auto-wiring (correct), GFC signal chain (correct), found BUG-031 MEDIUM: _build_run_summary() missing story_log + run stats (oghams_used, minigames_won, faction_rep_delta) — JourneyMapDisplay always showed 'Aucune carte jouee' and EndRunScreen showed zeros for all stats. Fixed by reading from MerlinStore.state.run + WalkEventController.get_story_log(). Added card_idx to WalkEventController story entries. Feature: JourneyMapDisplay rewritten with full CRT visual treatment — glow-ring nodes colored by effect type, dashed phosphor connecting lines, effect pips (heal/damage/reputation/ogham/mission), final node with arc glow ring + V/X glyph, scroll indicators, cached terminal font, atmospheric empty state. 3 files modified, 215 insertions, 76 deletions. 30 total bugs fixed across 20 cycles."
 }
