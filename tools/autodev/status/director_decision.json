@@ -1,10 +1,10 @@
 {
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00.000Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T19:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C19", "JOURNEY-MAP-CRT"],
-  "rationale": "C19 next_cycle_plan called for bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn) — 0 bugs found. All CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring path correct, signal chain verified. Feature: JourneyMapDisplay completely rewritten with CRT terminal aesthetic — terminal font via MerlinVisual, event-type classification from effects (handles both String and Dict formats), shaped nodes (circle=standard, diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow animation on final node (victory=amber, death=danger), scroll indicators for long runs, event glyphs (+ heal, ! damage, ~ rep, * ogham, @ promise).",
-  "budget": {"files": 1, "lines": 193},
+  "tasks": ["BUGHUNT-C20", "HUBANTRE-FACTION-PANEL"],
+  "rationale": "C20 next_cycle_plan called for bug hunt C20 + HubAntre visual refresh. Bug hunt C20: verified JourneyMapDisplay.gd — _process() frame cost acceptable (max 12 visible nodes, ~360 scanline iterations), _classify_event handles both String and Dict effect formats correctly, _draw_scroll_indicator identical glyphs for top/bottom is cosmetic not a bug, no critical/high bugs found. Feature: HubAntre visual refresh — the hub screen lacked critical gameplay information (faction reputation, Anam, Oghams). Added two CRT-styled panels: (1) status panel showing Anam currency + Rune unlock count, (2) faction reputation panel with 5 color-coded progress bars using faction_* CRT_PALETTE colors, numeric values, and tier labels from MerlinReputationSystem.get_tier_label(). Both panels fade in during entry animation. Responsive layout with safe area margins.",
+  "budget": {"files": 1, "lines": 205},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C20 (verify JourneyMapDisplay _process() frame cost acceptable, _classify_event handles all effect formats from walk_event_controller). Then feature: HubAntre visual refresh — the hub screen needs CRT polish to match the new EndRunScreen and JourneyMap quality. Focus on faction reputation display with mini-bars, biome selector with maturity indicators, and Ogham equipment panel."
+  "next_cycle_plan": "Bug hunt C21 (verify faction panel renders correctly with edge case values: all factions at 0, all at 100, mixed high/low). Then feature: Memoires panel redesign — the existing _show_memoires_panel() and _show_journal_panel() are basic VBoxContainer popups. Redesign them with CRT terminal aesthetic matching the new faction panel: styled scrollable lists, faction color coding in journal entries, terminal boot animation on panel open."
 }

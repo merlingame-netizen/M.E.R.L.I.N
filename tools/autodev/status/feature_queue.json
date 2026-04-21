@@ -767,6 +767,17 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "HUBANTRE-FACTION-PANEL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "HubAntre faction reputation panel + Anam/Ogham status bar",
+      "agent": "ui_worker",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "Added two CRT-styled panels to HubAntre: (1) status panel showing Anam currency + Rune unlock count with amber/cyan colors, (2) faction reputation panel with 5 color-coded progress bars (faction_* CRT_PALETTE), numeric values, and tier labels (Hostile/Mefiant/Neutre/Sympathisant/Honore). Both panels integrated into entry animation with staggered fade-in. Responsive layout with safe area margins for mobile.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

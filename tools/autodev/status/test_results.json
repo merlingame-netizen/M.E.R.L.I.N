@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T19:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 20: Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
+  "scope": "Cycle 21: Bug hunt C20 (0 bugs in JourneyMapDisplay.gd) + feat HubAntre faction panel + status bar",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C19: verified 4 files (game_flow_controller.gd, end_run_screen.gd, journey_map_display.gd, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct, signal chain hub_requested→_on_hub_requested()→HubAntre verified. Feature: JourneyMapDisplay rewritten with full CRT aesthetic — terminal font, event-type shaped nodes, dashed lines, scanline overlay, pulsing final node, scroll indicators. 29 total bugs fixed across 20 cycles."
+  "overall_assessment": "Bug hunt C20: verified JourneyMapDisplay.gd (296 lines). _process() frame cost: queue_redraw() every frame is acceptable — max 12 visible nodes with simple shape drawing + scanlines. _classify_event() correctly handles String ('HEAL_LIFE:amount') and Dict ({'type':'HEAL_LIFE','amount':N}) effect formats using .to_upper() normalization. _draw_scroll_indicator uses '...' for both top/bottom indicators — cosmetic, not a bug. No critical/high/medium bugs found. Feature: HubAntre.gd gains 205 lines — faction reputation panel with 5 progress bars (faction-colored via CRT_PALETTE.faction_*), tier labels, status panel with Anam + Rune count. 29 total bugs fixed across 21 cycles."
 }
