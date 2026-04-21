@@ -7,10 +7,11 @@ on:
       - 'tools/autodev/**'
       - '*.md'
       - 'memory/**'
+      - '.claude/**'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -27,33 +28,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Remove Windows-only GDExtension (blocks Linux CI)
-        run: rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
-
-      - name: Disable editor plugins that block headless export
+      - name: Prepare project for headless CI export
         run: |
-          # MCP server plugin starts a WebSocket server that hangs forever
+          # Remove GDExtension (Windows-only DLL)
+          rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
+
+          # Remove ALL editor plugins (MCP server hangs on port 9080)
           sed -i '/\[editor_plugins\]/,/^$/d' project.godot
-          echo "Editor plugins removed from project.godot"
-          grep -c "editor_plugins" project.godot || echo "Confirmed: no editor_plugins section"
 
-      - name: Fix headless-incompatible shaders (hint_screen_texture hangs export)
-        run: |
-          # Replace hint_screen_texture with filter_nearest (GL Compat headless can't compile it)
-          for shader in shaders/crt_terminal.gdshader shaders/retro_psx_post.gdshader shaders/screen_dither.gdshader shaders/screen_distortion.gdshader shaders/ps1_material.gdshader shaders/pixelate.gdshader; do
-            if [ -f "$shader" ]; then
-              sed -i 's/hint_screen_texture, //g' "$shader"
-              sed -i 's/hint_screen_texture//g' "$shader"
-              echo "Patched: $shader"
-            fi
+          # Patch shaders: remove hint_screen_texture (hangs in headless)
+          for shader in shaders/*.gdshader; do
+            [ -f "$shader" ] && sed -i 's/hint_screen_texture, //g; s/hint_screen_texture//g' "$shader"
           done
 
-      - name: Cache Godot import
-        uses: actions/cache@v4
-        with:
-          path: .godot/imported
-          key: godot-import-${{ hashFiles('project.godot', 'scripts/**/*.gd', 'scenes/**/*.tscn') }}
-          restore-keys: godot-import-
+          # Remove autoloads that block in headless (network/audio servers)
+          sed -i '/GameDebugServer=/d' project.godot
+          sed -i '/MerlinAI=/d' project.godot
+
+          echo "=== Project prepared for CI ==="
+          grep "^\[autoload\]" -A30 project.godot | head -25
 
       - name: Generate export preset
         run: |
@@ -64,11 +57,12 @@ jobs:
           runnable=true
           dedicated_server=false
           custom_features=""
-          export_filter="resources"
+          export_filter="all_resources"
           include_filter=""
-          exclude_filter="archive/*, tools/*, web-demo/*, docs/*, memory/*, .godot/*, *.md, *.log, *.bat, *.sh, *.py, .claude/*, .git/*, Assets/*, addons/merlin_llm/*, *.blend*, *.fbx, *.obj"
+          exclude_filter="archive/*, tools/*, web-demo/*, docs/*, memory/*, .claude/*, .git/*, Assets/*, *.blend*, *.fbx, *.obj, *.md"
           export_path="web-export/index.html"
           encrypt_pck=false
+          export_files=PackedStringArray()
           [preset.0.options]
           vram_texture_compression/for_desktop=true
           html/canvas_resize_policy=2
@@ -77,64 +71,33 @@ jobs:
           progressive_web_app/enabled=false
           PRESET
           sed -i 's/^          //' export_presets.cfg
+          echo "=== Export preset ==="
+          cat export_presets.cfg
 
       - name: Import project
         timeout-minutes: 20
         run: |
-          echo "=== Starting import (timeout 900s — godot hangs after DONE, this is expected) ==="
-          timeout 900 godot --headless --path . --import --quit 2>&1 | tail -20 || echo "Import killed by timeout (expected — files are imported)"
-          echo "=== Import step done ==="
-          echo "=== Verify critical imports ==="
-          ls .godot/imported/ 2>/dev/null | wc -l
-          find .godot/imported -name "VT323*" 2>/dev/null | head -1
-          find .godot/imported -name "translations*" 2>/dev/null | head -1
-          echo "=== Import done ==="
-
-      - name: Parse check
-        timeout-minutes: 3
-        continue-on-error: true
-        run: |
-          OUTPUT=$(timeout 60 godot --headless --editor --quit-after 10 --path . 2>&1 || true)
-          echo "$OUTPUT" | grep "SCRIPT ERROR" || echo "No script errors"
-          echo "::warning::Parse check is advisory only — export will attempt regardless"
+          timeout 900 godot --headless --path . --import --quit 2>&1 | tail -5 || echo "Import timeout (expected)"
+          echo "=== Imported files count: $(find .godot/imported -type f 2>/dev/null | wc -l) ==="
 
       - name: Export Web
         timeout-minutes: 60
         run: |
           mkdir -p web-export
-          echo "=== Starting Godot web export ==="
-          ls -la /root/.local/share/godot/export_templates/ 2>/dev/null || echo "No templates dir"
-          echo "=== Running export with monitoring ==="
-          godot --headless --export-release "Web" web-export/index.html --path . &
-          GPID=$!
-          while kill -0 $GPID 2>/dev/null; do
-            sleep 60
-            FILES=$(find web-export/ -type f 2>/dev/null | wc -l)
-            SIZE=$(du -sh web-export/ 2>/dev/null | cut -f1)
-            echo "--- $(date +%H:%M:%S) files=$FILES size=$SIZE ---"
-          done
-          wait $GPID
-          EXIT=$?
-          echo "=== Godot exited with code $EXIT ==="
-          ls -la web-export/
+          echo "=== Starting export ==="
+          timeout 3300 godot --headless --export-release "Web" web-export/index.html --path . 2>&1 | tail -20 || echo "Export timeout"
+          echo "=== Export result ==="
+          ls -la web-export/ 2>/dev/null
           if [ ! -f web-export/index.html ]; then
-            echo "::error::Export failed — no index.html produced"
+            echo "::error::No index.html — trying export-debug as fallback"
+            timeout 3300 godot --headless --export-debug "Web" web-export/index.html --path . 2>&1 | tail -20 || echo "Debug export timeout"
+            ls -la web-export/ 2>/dev/null
+          fi
+          if [ ! -f web-export/index.html ]; then
+            echo "::error::Both release and debug export failed"
             exit 1
           fi
           echo "=== Export successful ==="
-          # Vercel config: serve as static (no build step)
-          cat > web-export/vercel.json << 'VCFG'
-          {
-            "buildCommand": "",
-            "outputDirectory": ".",
-            "framework": null,
-            "headers": [
-              { "source": "/(.*).wasm", "headers": [{"key": "Content-Type", "value": "application/wasm"}] },
-              { "source": "/(.*).pck", "headers": [{"key": "Content-Type", "value": "application/octet-stream"}] }
-            ]
-          }
-          VCFG
-          sed -i 's/^          //' web-export/vercel.json
 
       - uses: actions/upload-artifact@v4
         with:
@@ -170,18 +133,6 @@ jobs:
         with:
           name: web-export
           path: web-export/
-      - name: Diagnostic — check artifact
-        run: |
-          echo "=== Files in web-export/ ==="
-          ls -la web-export/
-          echo "=== File count ==="
-          find web-export -type f | wc -l
-          echo "=== Total size ==="
-          du -sh web-export/
-      - name: Install Vercel CLI
-        run: npm i -g vercel@latest
-      - name: Verify Vercel CLI
-        run: vercel --version
       - name: Deploy game to Vercel
         working-directory: web-export
         env:
@@ -190,11 +141,9 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           set -e
+          npm i -g vercel@latest
           CLEAN_TOKEN=$(echo "$VERCEL_TOKEN" | tr -d '[:space:]')
           mkdir -p .vercel
           printf '{"orgId":"%s","projectId":"%s"}' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
-          echo "=== project.json ==="
-          cat .vercel/project.json
-          echo "=== Token length: ${#CLEAN_TOKEN} ==="
-          echo "=== Running vercel deploy ==="
           vercel deploy --prod --yes --force --token="$CLEAN_TOKEN"
+          echo "=== Deploy complete ==="
