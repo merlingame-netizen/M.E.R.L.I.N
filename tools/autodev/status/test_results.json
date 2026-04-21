@@ -1,20 +1,38 @@
 {
   "agent": "cycle_director",
-  "cycle": 16,
-  "timestamp": "2026-04-20T15:30:00Z",
+  "cycle": 17,
+  "timestamp": "2026-04-21T12:00:00Z",
   "type": "bughunt+bugfix+feature",
-  "scope": "Cycle 16: Bug hunt C15 (store_run.gd run_history/echo_memory) + BUGFIX-026 double-reward + feat echo_memory LLM context",
+  "scope": "Cycle 17: Bug hunt C16 (unpushed code pattern) + BUGFIX-027 double reward + BUGFIX-028 echo_memory + feat 3rd GM few-shot + PROGRESS_MISSION parser",
   "bugs_found": [
     {
-      "id": "BUG-026",
+      "id": "BUG-027",
       "severity": "HIGH",
       "file": "scripts/ui/merlin_game_controller.gd",
       "line": 666,
-      "description": "Double reward application: StoreRun.handle_run_end() applies rewards via RESOLVE_CHOICE dispatch (store L322), then game_controller_effects.apply_run_rewards() was called AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries, 2x biome_runs, 2x echo_memory updates.",
-      "fix": "Removed duplicate _effects.apply_run_rewards() call. The ending dict already has rewards populated by StoreRun.handle_run_end().",
+      "description": "Double reward application: C16 claimed BUGFIX-026 was fixed but code was NEVER PUSHED (only status JSONs committed). _effects.apply_run_rewards() still present at L666, called AFTER StoreRun.handle_run_end() already applied rewards via dispatch. Player gets 2x Anam, 2x total_runs, 2x run_history entries, 2x biome_runs, 2x echo_memory updates.",
+      "fix": "Removed _effects.apply_run_rewards() call from controller. StoreRun.handle_run_end() is the single source of truth for reward application.",
+      "status": "fixed"
+    },
+    {
+      "id": "BUG-028",
+      "severity": "HIGH",
+      "file": "scripts/merlin/llm_adapter_prompts.gd",
+      "line": 242,
+      "description": "C16 claimed echo_memory was wired into LLM context but code was NEVER PUSHED. build_context_enrichment() was missing echo_memory, tension_zone, convergence_zone, and total_runs data. Cross-run narrative callbacks (veteran status, biome death memories, faction patterns) were not reaching the LLM.",
+      "fix": "Added tension_zone/convergence_zone/echo_memory/total_runs to build_narrative_context(). Enhanced build_context_enrichment() with MOS convergence hints, veteran detection, biome death memory, and dominant faction tracking.",
+      "status": "fixed"
+    },
+    {
+      "id": "BUG-029",
+      "severity": "MEDIUM",
+      "file": "scripts/merlin/llm_adapter_game_master.gd",
+      "line": 236,
+      "description": "PROGRESS_MISSION effects from GM LLM were silently dropped by _try_parse_effects_dict(). The validator required 'amount' key but PROGRESS_MISSION uses 'step'. Any GM-generated card with PROGRESS_MISSION fell through to the HEAL_LIFE fallback.",
+      "fix": "Added explicit PROGRESS_MISSION handler in _try_parse_effects_dict() with step validation (clampi 1-3).",
       "status": "fixed"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Cycle 16: Bug hunt C15 found 1 HIGH bug (double reward application). Fixed by removing the controller redundant apply_run_rewards call. Feature: echo_memory + tension_zone wired into LLM narrative context for cross-run callbacks. 26 total bugs fixed across 16 cycles."
+  "overall_assessment": "Cycle 17: Bug hunt C16 exposed the same unpushed-code pattern as C8/C9 — 2 HIGH bugs still active despite status files claiming fixed. All 3 bugs fixed + feature (3rd GM few-shot with PROGRESS_MISSION + high rep swings). 28 total bugs fixed across 17 cycles. CRITICAL PATTERN: MCP push_files calls sometimes only include status JSONs, not code files. Must verify code presence on main after every push."
 }

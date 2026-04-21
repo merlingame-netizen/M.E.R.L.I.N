@@ -87,3 +87,9 @@
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"BUGHUNT-C14: 0 bugs — _get_card_factions/_get_faction_boost static helpers verified, weighted selection math correct"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"task_done","cycle":15,"detail":"RUN-HISTORY-POPULATION: 9-field entries in meta.run_history (50 cap), echo_memory (deaths_by_biome, dominant_factions_seen, choices_log), minigames_won/oghams_used counters, record_minigame_win() wired to controller"}
 {"ts":"2026-04-20T13:45:00.000Z","type":"cycle_end","cycle":15,"detail":"Cycle 15 complete: 0 bugs (C14 clean), 1 feature (run_history + echo_memory + counters). 3 files, 71 lines. 25 total bugs fixed across 15 cycles."}
+{"ts":"2026-04-21T12:00:00.000Z","type":"cycle_start","cycle":17,"detail":"Cycle 17: Bug hunt C16 (unpushed code pattern) + fix BUG-027 double reward + BUG-028 echo_memory + feat 3rd GM few-shot + PROGRESS_MISSION parser"}
+{"ts":"2026-04-21T12:00:00.000Z","type":"task_done","cycle":17,"detail":"BUG-027 HIGH: double reward removed (C16 fix never pushed, re-fixed)"}
+{"ts":"2026-04-21T12:00:00.000Z","type":"task_done","cycle":17,"detail":"BUG-028 HIGH: echo_memory+tension_zone wired into LLM context (C16 feature never pushed, re-implemented)"}
+{"ts":"2026-04-21T12:00:00.000Z","type":"task_done","cycle":17,"detail":"BUG-029 MEDIUM: PROGRESS_MISSION parser — was silently dropped, added explicit handler with step validation"}
+{"ts":"2026-04-21T12:00:00.000Z","type":"task_done","cycle":17,"detail":"FEW-SHOT-GM-ENDGAME: 3rd GM example (PROGRESS_MISSION+high rep swings) for end-game cards"}
+{"ts":"2026-04-21T12:00:00.000Z","type":"cycle_end","cycle":17,"detail":"Cycle 17 complete: 3 bugs fixed (2 HIGH + 1 MEDIUM), 1 feature. 4 files, 38 lines. 28 total bugs fixed across 17 cycles."}

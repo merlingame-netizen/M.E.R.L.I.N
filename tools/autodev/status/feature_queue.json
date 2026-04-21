@@ -701,6 +701,39 @@
       "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
+    },
+    {
+      "id": "BUGFIX-027",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix double reward application (C16 BUGFIX-026 never pushed)",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/merlin_game_controller.gd"],
+      "description": "C16 status files claimed BUGFIX-026 was fixed but code was never pushed. Removed _effects.apply_run_rewards() from controller L666 — StoreRun.handle_run_end() is the single source of truth.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BUGFIX-028",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire echo_memory + tension_zone into LLM narrative context",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/llm_adapter_prompts.gd"],
+      "description": "C16 feature never pushed. Added tension_zone/convergence_zone/echo_memory/total_runs to build_narrative_context(). Enhanced build_context_enrichment() with MOS convergence hints, veteran detection (5+ runs), biome death memory, dominant faction tracking.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "FEW-SHOT-GM-ENDGAME",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "3rd GM few-shot example (PROGRESS_MISSION + high rep swings) + parser fix",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/llm_adapter_game_master.gd"],
+      "description": "Added Ex3 to GM system prompt: end-game pattern with PROGRESS_MISSION + high rep swings (±15-20). Added PROGRESS_MISSION explicit parser in _try_parse_effects_dict() — was silently dropped because it uses 'step' not 'amount'. Creator chose B (q-20260415-005).",
+      "completed_at": "2026-04-21"
     }
   ]
 }

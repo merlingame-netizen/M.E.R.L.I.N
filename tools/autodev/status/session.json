@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 16 — Bug hunt C15 (found double-reward bug) + fix BUGFIX-026 + feat echo_memory LLM context + tension_zone injection",
+  "objective": "Cycle 17 — Bug hunt C16 (found unpushed code AGAIN) + BUGFIX-027 double reward + echo_memory LLM context + tension_zone + 3rd GM few-shot + PROGRESS_MISSION parser",
   "workers": [],
-  "updated_at": "2026-04-20T15:30:00.000Z",
-  "cycle": 16,
-  "checkpoint": "Bug hunt on C15 (store_run.gd run_history + echo_memory): found HIGH bug — double reward application. StoreRun.handle_run_end() applies rewards via dispatch, then game_controller_effects.apply_run_rewards() applied them AGAIN from controller L666. Player got 2x Anam, 2x total_runs, 2x run_history entries. Fix: removed duplicate apply_run_rewards call. Feature: wired echo_memory (deaths_by_biome, dominant_factions_seen, total_runs) + tension_zone + convergence_zone into LLM narrative context. build_context_enrichment() now formats cross-run memory for Merlin narrative callbacks. 3 files modified, 40 lines changed. 26 total bugs fixed across 16 cycles."
+  "updated_at": "2026-04-21T12:00:00.000Z",
+  "cycle": 17,
+  "checkpoint": "Bug hunt C16: discovered C16 code changes NEVER PUSHED (same pattern as C8/C9 — only status JSONs committed). BUG-027 HIGH: double reward still present in controller L666. BUG-028 HIGH: echo_memory LLM context never wired. Re-implemented both fixes + added 3rd GM few-shot example (PROGRESS_MISSION + high rep swings, q-20260415-005 creator chose B). Also fixed PROGRESS_MISSION parser — was silently dropped because it uses 'step' not 'amount'. 4 files modified, 38 lines changed. 28 total bugs fixed across 17 cycles."
 }
