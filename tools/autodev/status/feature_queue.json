@@ -767,6 +767,39 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BUGFIX-031",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix _calculate_player_maturity() called 16x per frame (BUG-031)",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/biome_radial.gd"],
+      "description": "_is_biome_locked() called _calculate_player_maturity() 2x per icon × 8 icons = 16x per frame. Added _maturity_cache, computed once per draw cycle.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "WIRE-BIOME-RADIAL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire BiomeRadial into _on_partir_pressed() — remove hardcoded bypass",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "_on_partir_pressed() was hardcoded to foret_broceliande (skip radial, launch directly). Now opens BiomeRadial with center above PARTIR button. Players can select any of 8 biomes (with maturity gating).",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "OGHAM-EQUIP-PANEL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "OghamEquipPanel — pre-run Ogham selection overlay (bible s.2.2)",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/ogham_equip_panel.gd", "scripts/HubAntre.gd"],
+      "description": "CRT-styled card grid overlay for pre-run Ogham selection. Shows unlocked oghams with category-colored borders (cyan=reveal, green=protection, amber=boost), unicode glyphs, cooldown display. Flow: PARTIR → BiomeRadial → OghamEquipPanel → launch. If only 1 ogham, auto-equips. Sets ogham_actif in store state.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

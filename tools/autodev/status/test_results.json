@@ -1,10 +1,19 @@
 {
   "agent": "cycle_director",
-  "cycle": 21,
-  "timestamp": "2026-04-21T19:00:00Z",
+  "cycle": 24,
+  "timestamp": "2026-04-21T22:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 21: Bug hunt C20 (0 bugs) + feat HubAntre faction reputation dashboard",
-  "bugs_found": [],
+  "scope": "Cycle 24: Bug hunt C23 (biome_radial.gd) + wire BiomeRadial + OghamEquipPanel",
+  "bugs_found": [
+    {
+      "id": "BUG-031",
+      "severity": "MEDIUM",
+      "file": "scripts/ui/biome_radial.gd",
+      "description": "_calculate_player_maturity() called 16x per frame (2 per icon × 8 icons) via _is_biome_locked() in _draw_biome_icon() and _draw_biome_label(). Each call does get_node_or_null + dict reads + faction loop.",
+      "fix": "Added _maturity_cache var. Cached once in _draw() before icon loop and once in _handle_click() before lock check. _is_biome_locked() now uses cache.",
+      "status": "fixed"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C20: verified JourneyMapDisplay _process() frame cost (bounded MAX_VISIBLE_NODES=12, pulse TAU wrapping, no allocations) and _classify_event (String+Dict effects, begins_with resilience, proper fallback). 0 bugs found. Feature: HubAntre status dashboard — 5 faction mini-bars, Anam counter, Runes equipped. CRT-styled, responsive, signal-driven updates. Code review passed (1 fix: mr.get('is_mobile') to mr.is_mobile). 29 total bugs fixed across 21 cycles."
+  "overall_assessment": "Bug hunt C23: 1 MEDIUM performance bug found and fixed (maturity cache). Features: BiomeRadial wired into PARTIR flow (was hardcoded bypass), OghamEquipPanel created for pre-run ogham selection. Bible s.2.2 compliance achieved. 30 total bugs fixed across 24 cycles."
 }

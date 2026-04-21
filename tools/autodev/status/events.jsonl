@@ -101,3 +101,8 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T22:00:00.000Z","type":"cycle_start","cycle":24,"detail":"Cycle 24: Bug hunt C23 (biome_radial.gd) + wire BiomeRadial + OghamEquipPanel pre-run ogham selection"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"BUG-031 MEDIUM: _calculate_player_maturity() 16x/frame → cached to 1x in biome_radial.gd"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"WIRE-BIOME-RADIAL: _on_partir_pressed() now opens BiomeRadial instead of hardcoded foret_broceliande bypass"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"OGHAM-EQUIP-PANEL: CRT-styled card grid for pre-run ogham selection (3 starters, category colors, unicode glyphs, cooldown). Bible s.2.2 compliance."}
+{"ts":"2026-04-21T22:00:00.000Z","type":"cycle_end","cycle":24,"detail":"Cycle 24 complete: 1 MEDIUM bug fixed, 2 features (BiomeRadial wire + OghamEquipPanel). 3 files, 300 lines. 30 total bugs fixed across 24 cycles."}

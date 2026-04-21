@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 22 — Bug hunt C21 ghost + feat HubAntre dashboard + BiomeRadial 8th biome + maturity indicators",
+  "objective": "Cycle 24 — Bug hunt C23 + wire BiomeRadial + OghamEquipPanel pre-run flow",
   "workers": [],
-  "updated_at": "2026-04-21T20:00:00.000Z",
-  "cycle": 22,
-  "checkpoint": "Bug hunt C21: discovered dashboard was claimed but never pushed to code. Implemented for real: CRT-styled PanelContainer with 5 faction mini-bars (color-coded ProgressBars, tier letters H/S/N/X), Anam counter, Runes counter. Signal-driven via reputation_changed. Responsive mobile/desktop layout. BiomeRadial: added 8th biome iles_mystiques with islands procedural icon, font 14px per creator feedback (q-20260414-008), maturity indicators with amber progress ring for locked biomes, threshold number display, click-lock on inaccessible biomes. Global maturity formula: total_runs*2 + endings*5 + oghams*3 + max_rep. 2 files modified, ~220 lines added. 29 bugs fixed across 22 cycles."
+  "updated_at": "2026-04-21T22:00:00.000Z",
+  "cycle": 24,
+  "checkpoint": "Bug hunt C23: found BUG-031 MEDIUM (_calculate_player_maturity() called 16x per frame in biome_radial.gd — cached to 1x). Wired BiomeRadial into _on_partir_pressed() — was hardcoded foret_broceliande bypass, now opens radial for 8-biome selection. Created OghamEquipPanel: CRT-styled card grid overlay for pre-run Ogham selection (bible s.2.2 compliance). Flow: PARTIR → BiomeRadial → OghamEquipPanel → launch adventure. 3 starter oghams (beith/luis/quert) shown by default, expands with talent tree purchases. Category-colored accent borders. 3 files modified, 300 lines added. 30 bugs fixed across 24 cycles."
 }

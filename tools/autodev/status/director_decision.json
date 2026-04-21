@@ -1,10 +1,10 @@
 {
-  "cycle": 22,
-  "timestamp": "2026-04-21T20:00:00.000Z",
+  "cycle": 24,
+  "timestamp": "2026-04-21T22:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C21-GHOST", "HUB-DASHBOARD-REAL", "BIOME-RADIAL-UPGRADE"],
-  "rationale": "Bug hunt revealed C21 dashboard claim was ghost code (status files updated but code never pushed). Implemented dashboard for real: 5 faction mini-bars (DRU/ANC/KOR/NIA/ANK) with CRT-styled ProgressBars, tier letters (H=80+/S=50+/N=20+/X=<20), Anam diamond counter, Runes ogham counter. Signal-driven updates via reputation_changed. Positioned below chronicle header with responsive width (88% mobile, 60% desktop). BiomeRadial upgraded: 8th biome iles_mystiques added to all data arrays + procedural island icon. Font size 14px (was 11) per creator answer q-20260414-008. Maturity system: global score from MATURITY_WEIGHTS (runs*2+endings*5+oghams*3+max_rep), amber progress ring on locked biomes, threshold number in label, click prevention on locked. Dynamic angle_step for 8-biome arc.",
-  "budget": {"files": 2, "lines": 220},
+  "tasks": ["BUGFIX-031-MATURITY-CACHE", "WIRE-BIOME-RADIAL", "OGHAM-EQUIP-PANEL"],
+  "rationale": "Bug hunt C23 found BUG-031 (MEDIUM): _calculate_player_maturity() called 16x/frame (2 per icon × 8 icons) in biome_radial.gd _draw() — cached once per draw cycle. Main feature: wired BiomeRadial into _on_partir_pressed() — was hardcoded foret_broceliande bypass since C0, now opens 8-biome radial with maturity gating. Created OghamEquipPanel (242 lines) for pre-run Ogham selection — CRT-styled card grid showing unlocked oghams with category-colored borders (cyan=reveal, green=protection, amber=boost, etc.), unicode ogham glyphs, cooldown display. Flow: PARTIR → BiomeRadial (choose biome) → OghamEquipPanel (choose ogham) → launch. If only 1 ogham unlocked, auto-equips and skips panel. Bible s.2.2 compliance: player equips 1 Ogham at start of each run.",
+  "budget": {"files": 3, "lines": 300},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C22 (verify dashboard signal lifecycle — store may load after HubAntre _ready(); test _update_dashboard_data with empty meta; verify maturity ring rendering at edge progress values 0.99/1.0). Then feature: activate BiomeRadial in _on_partir_pressed() — currently bypassed with hardcoded foret_broceliande. Wire radial.open() so players can actually select biomes. This is a key UX gap: 8 biomes exist but only Broceliande is reachable."
+  "next_cycle_plan": "Bug hunt C24: verify OghamEquipPanel signal lifecycle (panel_dismissed vs ogham_selected — no double-fire), test _layout_cards with 1 ogham vs 6+ oghams (row overflow), verify BiomeRadial center position relative to PARTIR button on mobile viewport. Feature: wire selected ogham into WalkHUD display (show equipped ogham name + cooldown on 3D walk scene). Currently the HUD shows no ogham info during run."
 }
