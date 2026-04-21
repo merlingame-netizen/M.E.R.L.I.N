@@ -170,6 +170,12 @@ const MERLIN_GREETINGS := {
 # HOTSPOT CONFIG (icon indices: 0=MOON, 1=TREE, 2=BOOK, 3=GEAR, 4=COMPASS)
 # =============================================================================
 
+const FACTION_BAR_WIDTH: float = 80.0
+const FACTION_BAR_HEIGHT: float = 6.0
+const FACTION_ABBREVS := {
+	"druides": "DRU", "anciens": "ANC", "korrigans": "KOR", "niamh": "NIA", "ankou": "ANK",
+}
+
 const HOTSPOT_DEFS := [
 	# 2 coins : Calendar (haut-gauche) + Options (haut-droite)
 	{"name": "calendar",   "icon": 0, "label": "Calendrier",  "palette_key": "amber_bright", "ratio": Vector2(0.04, 0.06)},
@@ -202,6 +208,10 @@ var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
 var _tour: HubAntreTour = null
+var _faction_display: PanelContainer = null
+var _faction_bars: Dictionary = {}
+var _ogham_display: PanelContainer = null
+var _ogham_glyphs_label: Label = null
 
 # =============================================================================
 # STATE
@@ -239,6 +249,8 @@ func _ready() -> void:
 	_create_partir_button()
 	_create_bubble()
 	_create_radial()
+	_create_faction_display()
+	_create_ogham_display()
 	_setup_voicebox()
 	_sync_from_state()
 
@@ -540,6 +552,185 @@ func _create_radial() -> void:
 
 
 # =============================================================================
+# FACTION & OGHAM DISPLAYS — CRT terminal-style status panels
+# =============================================================================
+
+func _create_faction_display() -> void:
+	_faction_display = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	style.border_color = MerlinVisual.CRT_PALETTE["border"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	_faction_display.add_theme_stylebox_override("panel", style)
+	_faction_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+
+	var font: Font = MerlinVisual.get_font("terminal")
+
+	var title := Label.new()
+	title.text = "> FACTIONS"
+	title.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+	if font:
+		title.add_theme_font_override("font", font)
+	vbox.add_child(title)
+
+	for faction_key in MerlinConstants.FACTIONS:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+
+		var name_label := Label.new()
+		name_label.text = FACTION_ABBREVS.get(faction_key, faction_key.left(3).to_upper())
+		name_label.custom_minimum_size = Vector2(28, 0)
+		name_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
+		name_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		if font:
+			name_label.add_theme_font_override("font", font)
+		row.add_child(name_label)
+
+		var bar_container := Control.new()
+		bar_container.custom_minimum_size = Vector2(FACTION_BAR_WIDTH, FACTION_BAR_HEIGHT + 4)
+		bar_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var bar_bg := ColorRect.new()
+		bar_bg.color = MerlinVisual.CRT_PALETTE["bg_highlight"]
+		bar_bg.position = Vector2(0, 2)
+		bar_bg.size = Vector2(FACTION_BAR_WIDTH, FACTION_BAR_HEIGHT)
+		bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar_container.add_child(bar_bg)
+
+		var bar_fill := ColorRect.new()
+		bar_fill.position = Vector2(0, 2)
+		bar_fill.size = Vector2(0, FACTION_BAR_HEIGHT)
+		bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar_container.add_child(bar_fill)
+
+		var t50 := ColorRect.new()
+		t50.position = Vector2(FACTION_BAR_WIDTH * 0.5 - 0.5, 0)
+		t50.size = Vector2(1, FACTION_BAR_HEIGHT + 4)
+		t50.color = Color(MerlinVisual.CRT_PALETTE["phosphor_dim"], 0.35)
+		t50.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar_container.add_child(t50)
+
+		var t80 := ColorRect.new()
+		t80.position = Vector2(FACTION_BAR_WIDTH * 0.8 - 0.5, 0)
+		t80.size = Vector2(1, FACTION_BAR_HEIGHT + 4)
+		t80.color = Color(MerlinVisual.CRT_PALETTE["amber_dim"], 0.35)
+		t80.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar_container.add_child(t80)
+
+		row.add_child(bar_container)
+
+		var val_label := Label.new()
+		val_label.custom_minimum_size = Vector2(24, 0)
+		val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		val_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
+		if font:
+			val_label.add_theme_font_override("font", font)
+		row.add_child(val_label)
+
+		vbox.add_child(row)
+		_faction_bars[faction_key] = {"fill": bar_fill, "val": val_label, "name": name_label}
+
+	_faction_display.add_child(vbox)
+	add_child(_faction_display)
+	_update_faction_bars()
+
+	if store and store.has_signal("reputation_changed"):
+		store.reputation_changed.connect(_on_reputation_changed)
+
+
+func _create_ogham_display() -> void:
+	_ogham_display = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	style.border_color = MerlinVisual.CRT_PALETTE["border"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	_ogham_display.add_theme_stylebox_override("panel", style)
+	_ogham_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var font: Font = MerlinVisual.get_font("terminal")
+	_ogham_glyphs_label = Label.new()
+	_ogham_glyphs_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
+	_ogham_glyphs_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan_dim"])
+	if font:
+		_ogham_glyphs_label.add_theme_font_override("font", font)
+	_ogham_display.add_child(_ogham_glyphs_label)
+	add_child(_ogham_display)
+	_update_ogham_display()
+
+
+func _update_faction_bars() -> void:
+	if store == null:
+		return
+	var faction_rep: Dictionary = store.state.get("meta", {}).get("faction_rep", {})
+	for faction_key in MerlinConstants.FACTIONS:
+		var bar_data: Dictionary = _faction_bars.get(faction_key, {})
+		if bar_data.is_empty():
+			continue
+		var value: float = float(faction_rep.get(faction_key, MerlinConstants.FACTION_SCORE_START))
+		var ratio: float = clampf(value / 100.0, 0.0, 1.0)
+		var fill: ColorRect = bar_data["fill"]
+		fill.size.x = FACTION_BAR_WIDTH * ratio
+		var bar_color: Color
+		if value >= 80.0:
+			bar_color = MerlinVisual.CRT_PALETTE["amber_bright"]
+		elif value >= 50.0:
+			bar_color = MerlinVisual.CRT_PALETTE["amber"]
+		else:
+			bar_color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+		fill.color = bar_color
+		var val_label: Label = bar_data["val"]
+		val_label.text = str(int(value))
+		val_label.add_theme_color_override("font_color", bar_color)
+
+
+func _update_ogham_display() -> void:
+	if _ogham_glyphs_label == null or store == null:
+		return
+	var oghams: Dictionary = store.state.get("meta", {}).get("oghams", {})
+	var owned: Array = oghams.get("owned", [])
+	var equipped: Array = oghams.get("equipped", [])
+	if owned.is_empty():
+		_ogham_glyphs_label.text = "> RUNES ---"
+		_ogham_glyphs_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		return
+	var text: String = "> RUNES "
+	var shown: int = 0
+	for ogham_id in owned:
+		if shown >= 6:
+			break
+		var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(str(ogham_id), {})
+		var glyph: String = spec.get("unicode", "?")
+		if equipped.has(ogham_id):
+			text += "[%s] " % glyph
+		else:
+			text += "%s " % glyph
+		shown += 1
+	if owned.size() > 6:
+		text += "+%d" % (owned.size() - 6)
+	_ogham_glyphs_label.text = text.strip_edges()
+	var color_key: String = "cyan" if not equipped.is_empty() else "cyan_dim"
+	_ogham_glyphs_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE[color_key])
+
+
+func _on_reputation_changed(_faction: String, _value: float, _delta: float) -> void:
+	_update_faction_bars()
+
+
+# =============================================================================
 # LAYOUT
 # =============================================================================
 
@@ -560,6 +751,11 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	var partir_top: float = _partir_btn.position.y if _partir_btn else vp.y - 100.0
+	if _faction_display:
+		_faction_display.position = Vector2(12, partir_top - 160)
+	if _ogham_display:
+		_ogham_display.position = Vector2(12, partir_top - 30)
 
 
 func _layout_partir() -> void:
@@ -830,6 +1026,10 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _faction_display:
+		_faction_display.modulate.a = 0.0
+	if _ogham_display:
+		_ogham_display.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -852,6 +1052,15 @@ func _play_entry_animation() -> void:
 		else:
 			var tw := create_tween()
 			tw.tween_property(hs, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	# Faction & Ogham panels fade-in
+	if _faction_display:
+		var tw := create_tween()
+		tw.tween_property(_faction_display, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if _ogham_display:
+		await get_tree().create_timer(0.1).timeout
+		var tw := create_tween()
+		tw.tween_property(_ogham_display, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# PARTIR button entrance
 	await get_tree().create_timer(0.2).timeout

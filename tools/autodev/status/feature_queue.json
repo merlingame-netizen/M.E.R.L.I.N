@@ -767,6 +767,17 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "HUBANTIRE-FACTION-OGHAM-CRT",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "HubAntre CRT visual polish — faction reputation mini-bars + Ogham equipment display",
+      "agent": "ui_worker",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "Added two CRT terminal-styled status panels to HubAntre. Faction display: 5 faction mini-bars (DRU/ANC/KOR/NIA/ANK) with colored fills (phosphor_dim<50, amber>=50, amber_bright>=80), threshold markers at 50 and 80, live-updating via reputation_changed signal. Ogham display: unicode glyphs of owned runes, bracketed for equipped, +N overflow. Both panels use terminal font, bg_deep background, sharp CRT corners, staggered fade-in animation. Responsive layout relative to PARTIR button.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

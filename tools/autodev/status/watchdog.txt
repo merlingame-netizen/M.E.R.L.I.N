@@ -19,3 +19,4 @@
 2026-04-21T14:00:00Z cycle=18 GFC-AUTOLOAD-ORCHESTRATOR
 2026-04-21T16:00:00Z CYCLE-19 heartbeat — BUG-030 fix + EndRunScreen GFC wire
 2026-04-21T18:00:00Z cycle=20 status=OK bugs=0 features=1 files=1 lines=193
+2026-04-21T20:00:00Z cycle=21 status=OK bugs=0 features=1 files=1 lines=209 faction-bars+ogham-display

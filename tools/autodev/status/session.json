@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 20 — Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
+  "objective": "Cycle 21 — Bug hunt C20 (0 bugs) + feat HubAntre faction reputation mini-bars & Ogham equipment display",
   "workers": [],
-  "updated_at": "2026-04-21T18:00:00.000Z",
-  "cycle": 20,
-  "checkpoint": "Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct. Feature: JourneyMapDisplay rewritten with CRT visual polish — terminal font, event-type classification (HEAL/DAMAGE/REPUTATION/OGHAM/PROMISE) from effects array (String+Dict), shaped nodes (diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow on final node, scroll indicators, event glyphs. Handles both string and dict effect formats. 1 file modified, 193 insertions, 78 deletions. 29 total bugs fixed across 20 cycles."
+  "updated_at": "2026-04-21T20:00:00.000Z",
+  "cycle": 21,
+  "checkpoint": "Bug hunt C20: verified 2 files (journey_map_display.gd, end_run_screen.gd). 0 bugs found — _process() queue_redraw() intentional for pulse animation (max 12 nodes), get_last_run_data() typed Dictionary always valid, _classify_event() non-Array fallback correct. Feature: HubAntre CRT visual polish — faction reputation mini-bar display (5 factions with colored bars, threshold markers at 50/80, live-updating via reputation_changed signal) + Ogham equipment display (unicode glyphs, equipped bracketed, owned/empty states). Both panels CRT-styled (terminal font, phosphor/amber/cyan palette, sharp corners). Staggered fade-in animation. Responsive layout relative to PARTIR button. 1 file modified, 209 insertions. 29 total bugs fixed across 21 cycles."
 }

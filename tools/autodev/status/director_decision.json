@@ -1,10 +1,10 @@
 {
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00.000Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T20:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C19", "JOURNEY-MAP-CRT"],
-  "rationale": "C19 next_cycle_plan called for bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn) — 0 bugs found. All CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring path correct, signal chain verified. Feature: JourneyMapDisplay completely rewritten with CRT terminal aesthetic — terminal font via MerlinVisual, event-type classification from effects (handles both String and Dict formats), shaped nodes (circle=standard, diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow animation on final node (victory=amber, death=danger), scroll indicators for long runs, event glyphs (+ heal, ! damage, ~ rep, * ogham, @ promise).",
-  "budget": {"files": 1, "lines": 193},
+  "tasks": ["BUGHUNT-C20", "HUBANTIRE-FACTION-OGHAM-CRT"],
+  "rationale": "C20 next_cycle_plan: bug hunt C20 + HubAntre visual refresh. Bug hunt verified journey_map_display.gd and end_run_screen.gd — 0 bugs. All 3 flagged issues were false positives (queue_redraw intentional for pulse, typed Dictionary return always valid, non-Array fallback correct). Feature: added faction reputation mini-bars and Ogham equipment display to HubAntre with full CRT aesthetic. Faction bars show 5 factions with DRU/ANC/KOR/NIA/ANK abbreviations, colored fill (phosphor_dim < 50, amber >= 50, amber_bright >= 80), threshold markers at 50 and 80 positions, live-updating via store.reputation_changed signal. Ogham display shows unicode glyphs of owned runes with bracketed equipped ones. Both panels use terminal font, bg_deep background, sharp CRT corners.",
+  "budget": {"files": 1, "lines": 209},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C20 (verify JourneyMapDisplay _process() frame cost acceptable, _classify_event handles all effect formats from walk_event_controller). Then feature: HubAntre visual refresh — the hub screen needs CRT polish to match the new EndRunScreen and JourneyMap quality. Focus on faction reputation display with mini-bars, biome selector with maturity indicators, and Ogham equipment panel."
+  "next_cycle_plan": "Bug hunt C21 (verify HubAntre faction_bars Dictionary retrieval handles empty/null store state, Ogham unicode rendering with VT323 font). Then feature: biome maturity indicators on BiomeRadial — show run count per biome, maturity score calculation from MerlinConstants.MATURITY_WEIGHTS, color-coded ring segments. This completes the HubAntre visual refresh trilogy (factions ✓, oghams ✓, biomes next)."
 }
