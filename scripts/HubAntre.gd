@@ -198,6 +198,8 @@ var _partir_btn: Button = null
 var _hotspots: Array = []
 var _chronicle_label: Label = null
 var _meta_label: Label = null
+var _faction_panel: PanelContainer = null
+var _faction_bars: Dictionary = {}
 var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
@@ -235,6 +237,7 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_faction_display()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -269,6 +272,8 @@ func _ready() -> void:
 
 func _connect_store() -> void:
 	store = get_node_or_null("/root/MerlinStore")
+	if store and store.has_signal("reputation_changed"):
+		store.reputation_changed.connect(_on_reputation_changed)
 
 
 func _load_player_data() -> void:
@@ -338,6 +343,10 @@ func _apply_day_night_tint() -> void:
 
 func _on_day_night_period_changed(_new_period: String) -> void:
 	_apply_day_night_tint()
+
+
+func _on_reputation_changed(_faction: String, _value: float, _delta: float) -> void:
+	_refresh_faction_bars()
 
 
 func _process(delta: float) -> void:
@@ -448,6 +457,67 @@ func _create_chronicle_header() -> void:
 
 
 # =============================================================================
+# CREATE COMPONENTS — Faction Reputation Panel
+# =============================================================================
+
+func _create_faction_display() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var is_compact: bool = mr != null and mr.is_mobile
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+
+	_faction_panel = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.CRT_PALETTE["bg_panel"]
+	style.border_color = MerlinVisual.CRT_PALETTE["border"]
+	style.border_width_left = 2
+	style.border_width_right = 0
+	style.border_width_top = 0
+	style.border_width_bottom = 0
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	_faction_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 1)
+
+	var header: Label = Label.new()
+	header.text = "FACTIONS"
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber_dim"])
+	MerlinVisual.apply_responsive_font(header, 11, "terminal")
+	vbox.add_child(header)
+
+	for faction_id in MerlinConstants.FACTIONS:
+		var bar: FactionRepBar = FactionRepBar.new()
+		vbox.add_child(bar)
+		_faction_bars[faction_id] = bar
+
+	_faction_panel.add_child(vbox)
+
+	var panel_w: float = vp.x * (0.92 if is_compact else 0.72)
+	_faction_panel.custom_minimum_size = Vector2(panel_w, 0)
+	_faction_panel.position = Vector2((vp.x - panel_w) * 0.5, safe_top + 68.0)
+	add_child(_faction_panel)
+
+	_refresh_faction_bars()
+
+
+func _refresh_faction_bars() -> void:
+	if store == null:
+		return
+	var faction_rep: Dictionary = store.state.get("meta", {}).get("faction_rep", {})
+	for faction_id in MerlinConstants.FACTIONS:
+		var bar: FactionRepBar = _faction_bars.get(faction_id)
+		if bar:
+			var value: float = float(faction_rep.get(faction_id, MerlinConstants.FACTION_SCORE_START))
+			bar.update(faction_id, value)
+
+
+# =============================================================================
 # CREATE COMPONENTS — Scene Elements
 # =============================================================================
 
@@ -547,10 +617,11 @@ func _layout_all() -> void:
 	var vp := get_viewport_rect().size
 	var mr: Node = get_node_or_null("/root/MerlinResponsive")
 	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+	var is_compact: bool = mr != null and mr.is_mobile
 	for i in _hotspots.size():
 		var def: Dictionary = HOTSPOT_DEFS[i]
 		var pos: Vector2 = vp * Vector2(def["ratio"])
-		if mr and mr.is_mobile:
+		if is_compact:
 			pos.y = maxf(pos.y, safe_top + 60.0)
 		_hotspots[i].position = pos
 	_layout_partir()
@@ -560,6 +631,10 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	if _faction_panel:
+		var panel_w: float = vp.x * (0.92 if is_compact else 0.72)
+		_faction_panel.custom_minimum_size.x = panel_w
+		_faction_panel.position = Vector2((vp.x - panel_w) * 0.5, safe_top + 68.0)
 
 
 func _layout_partir() -> void:
@@ -830,6 +905,8 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _faction_panel:
+		_faction_panel.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -842,6 +919,12 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+
+	# Faction panel slide-in
+	if _faction_panel:
+		await get_tree().create_timer(0.1).timeout
+		var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_faction_panel, "modulate:a", 1.0, 0.4)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():

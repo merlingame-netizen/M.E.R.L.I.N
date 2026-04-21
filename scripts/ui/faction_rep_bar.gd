@@ -120,7 +120,7 @@ func _build_ui() -> void:
 func _apply_label_style(label: Label, font_size: int) -> void:
 	var c: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
 	label.add_theme_color_override("font_color", c)
-	label.add_theme_font_size_override("font_size", font_size)
+	MerlinVisual.apply_responsive_font(label, font_size, "terminal")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
