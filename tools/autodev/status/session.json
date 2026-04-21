@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 17 — Bug hunt C16 (found unpushed code AGAIN) + BUGFIX-027 double reward + echo_memory LLM context + tension_zone + 3rd GM few-shot + PROGRESS_MISSION parser",
+  "objective": "Cycle 18 — Bug hunt C17 (0 bugs) + feat GFC autoload orchestrator (Hub→Run→Hub flow)",
   "workers": [],
-  "updated_at": "2026-04-21T12:00:00.000Z",
-  "cycle": 17,
-  "checkpoint": "Bug hunt C16: discovered C16 code changes NEVER PUSHED (same pattern as C8/C9 — only status JSONs committed). BUG-027 HIGH: double reward still present in controller L666. BUG-028 HIGH: echo_memory LLM context never wired. Re-implemented both fixes + added 3rd GM few-shot example (PROGRESS_MISSION + high rep swings, q-20260415-005 creator chose B). Also fixed PROGRESS_MISSION parser — was silently dropped because it uses 'step' not 'amount'. 4 files modified, 38 lines changed. 28 total bugs fixed across 17 cycles."
+  "updated_at": "2026-04-21T14:00:00.000Z",
+  "cycle": 18,
+  "checkpoint": "Bug hunt C17: verified 4 files (controller double-reward removed, echo_memory wired, PROGRESS_MISSION parser present, 3rd GM few-shot correct). 0 bugs found. Feature: GameFlowController registered as autoload (GameFlow). Public API: request_run(), complete_run(), enter_card_game(), return_to_hub(). HubAntre._launch_adventure() and BroceliandeForest3D._on_run_complete()/_on_hub() now route through GFC. Deferred MerlinStore discovery with retry. Phase validation on all methods. Backward-compatible fallbacks. 4 files modified, 123 lines changed. 28 total bugs fixed across 18 cycles."
 }

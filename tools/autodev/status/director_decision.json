@@ -1,10 +1,10 @@
 {
-  "cycle": 17,
-  "timestamp": "2026-04-21T12:00:00.000Z",
+  "cycle": 18,
+  "timestamp": "2026-04-21T14:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C16", "BUGFIX-027", "BUGFIX-028", "FEW-SHOT-GM-ENDGAME", "PROGRESS-MISSION-PARSER"],
-  "rationale": "Bug hunt C16 revealed critical pattern: C16 code changes were NEVER PUSHED to main (only status JSONs committed). Same failure as C8/C9. BUG-027: _effects.apply_run_rewards() still present at controller L666 — player gets 2x Anam, 2x total_runs, 2x run_history, 2x echo_memory. BUG-028: build_context_enrichment() missing echo_memory/tension_zone/convergence_zone data for LLM narrative callbacks. Both re-fixed. Feature: 3rd GM few-shot example for end-game (PROGRESS_MISSION + high rep swings per q-20260415-005). Also discovered that PROGRESS_MISSION effects from GM LLM were silently dropped by _try_parse_effects_dict() because it requires 'amount' key but PROGRESS_MISSION uses 'step'. Added explicit handler.",
-  "budget": {"files": 4, "lines": 38},
+  "tasks": ["BUGHUNT-C17", "GFC-AUTOLOAD-ORCHESTRATOR"],
+  "rationale": "C17 next_cycle_plan called for bug hunt C17 + GFC wrap BroceliandeForest3D (q-20260415-011 creator chose A: wrap_broc). Bug hunt verified all 4 C17 files — 0 bugs found. Feature: GameFlowController extended with autoload _ready()/_auto_setup() (deferred MerlinStore discovery with retry), public API (request_run, complete_run, enter_card_game, return_to_hub), _transition_to() helper, phase validation. HubAntre and BroceliandeForest3D now route all scene transitions through GameFlow autoload. Backward-compatible fallbacks preserved if GameFlow unavailable. Code reviewed: fixed 3 review findings (timing race condition, phase validation, retry safety).",
+  "budget": {"files": 4, "lines": 123},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C17 (verify all 4 files: controller double-reward gone, echo_memory flowing to LLM, PROGRESS_MISSION parsing correctly). Then feature: GFC wrap BroceliandeForest3D (q-20260415-011) — extend GameFlowController to orchestrate 3D forest scene + hub transitions."
+  "next_cycle_plan": "Bug hunt C18 (verify GFC autoload init timing, phase transitions work correctly in all 4 files). Then feature: wire EndRunScreen.tscn into GFC flow — complete_run() should transition to EndRunScreen instead of direct hub return. Run data passed via GameFlow.get_last_run_data()."
 }

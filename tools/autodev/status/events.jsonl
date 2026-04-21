@@ -93,3 +93,7 @@
 {"ts":"2026-04-21T12:00:00.000Z","type":"task_done","cycle":17,"detail":"BUG-029 MEDIUM: PROGRESS_MISSION parser — was silently dropped, added explicit handler with step validation"}
 {"ts":"2026-04-21T12:00:00.000Z","type":"task_done","cycle":17,"detail":"FEW-SHOT-GM-ENDGAME: 3rd GM example (PROGRESS_MISSION+high rep swings) for end-game cards"}
 {"ts":"2026-04-21T12:00:00.000Z","type":"cycle_end","cycle":17,"detail":"Cycle 17 complete: 3 bugs fixed (2 HIGH + 1 MEDIUM), 1 feature. 4 files, 38 lines. 28 total bugs fixed across 17 cycles."}
+{"ts":"2026-04-21T14:00:00.000Z","type":"cycle_start","cycle":18,"detail":"Cycle 18: Bug hunt C17 (0 bugs) + feat GFC autoload orchestrator (Hub→Run→Hub flow)"}
+{"ts":"2026-04-21T14:00:00.000Z","type":"task_done","cycle":18,"detail":"BUGHUNT-C17: 0 bugs — all 4 C17 files verified (double reward removed, echo_memory wired, PROGRESS_MISSION parser, GM few-shot)"}
+{"ts":"2026-04-21T14:00:00.000Z","type":"task_done","cycle":18,"detail":"GFC-AUTOLOAD-ORCHESTRATOR: GameFlowController registered as autoload, public API (request_run/complete_run/enter_card_game/return_to_hub), HubAntre+BroceliandeForest3D routed through GFC, phase tracking active"}
+{"ts":"2026-04-21T14:00:00.000Z","type":"cycle_end","cycle":18,"detail":"Cycle 18 complete: 0 bugs (C17 clean), 1 feature (GFC orchestrator). 4 files, 123 lines. 28 total bugs fixed across 18 cycles."}

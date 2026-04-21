@@ -734,6 +734,17 @@
       "files": ["scripts/merlin/llm_adapter_game_master.gd"],
       "description": "Added Ex3 to GM system prompt: end-game pattern with PROGRESS_MISSION + high rep swings (±15-20). Added PROGRESS_MISSION explicit parser in _try_parse_effects_dict() — was silently dropped because it uses 'step' not 'amount'. Creator chose B (q-20260415-005).",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "GFC-AUTOLOAD-ORCHESTRATOR",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire GameFlowController as autoload orchestrator for Hub→Run→Hub flow",
+      "agent": "godot_expert",
+      "files": ["scripts/core/game_flow_controller.gd", "scripts/HubAntre.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "project.godot"],
+      "description": "GFC registered as GameFlow autoload. Deferred MerlinStore discovery with retry. Public API: request_run(), complete_run(), enter_card_game(), return_to_hub(). HubAntre and BroceliandeForest3D route transitions through GFC. Phase tracking (MENU/HUB/RUN/END_SCREEN/TALENT_TREE). Creator chose A: wrap_broc (q-20260415-011).",
+      "completed_at": "2026-04-21"
     }
   ]
 }
