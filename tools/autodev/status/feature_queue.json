@@ -767,6 +767,28 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BUGFIX-031",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix EndRunScreen auto-select single faction ending (BUG-031)",
+      "agent": "godot_expert",
+      "files": ["scripts/run/end_run_screen.gd"],
+      "description": "_on_continue_pressed() had elif branch auto-selecting when only 1 faction ending available, violating creator decision q-20260414-009 option B (always show choice UI). Removed special case — all non-empty faction_choices now show the choice panel.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "HUB-FACTION-STRIP",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "HubAntre faction reputation mini-bars strip",
+      "agent": "ui_worker",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "Compact horizontal strip below header showing 5 faction reputation levels. Colored mini-bars (40x6px) with 3-letter abbreviations (DRU/ANC/KOR/NIA/ANK), live value display, reputation_changed signal connection, CRT terminal aesthetic. Responsive layout with safe area support.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

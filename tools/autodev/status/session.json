@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 20 — Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
+  "objective": "Cycle 21 — Bug hunt C20 (BUG-031 single faction auto-select) + feat HubAntre faction reputation mini-bars",
   "workers": [],
-  "updated_at": "2026-04-21T18:00:00.000Z",
-  "cycle": 20,
-  "checkpoint": "Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct. Feature: JourneyMapDisplay rewritten with CRT visual polish — terminal font, event-type classification (HEAL/DAMAGE/REPUTATION/OGHAM/PROMISE) from effects array (String+Dict), shaped nodes (diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow on final node, scroll indicators, event glyphs. Handles both string and dict effect formats. 1 file modified, 193 insertions, 78 deletions. 29 total bugs fixed across 20 cycles."
+  "updated_at": "2026-04-21T14:40:00.000Z",
+  "cycle": 21,
+  "checkpoint": "Bug hunt C20: verified journey_map_display.gd (_process() frame cost acceptable for 12 nodes, _classify_event handles String+Dict formats correctly). Found BUG-031 in end_run_screen.gd: _on_continue_pressed() auto-selected single faction ending instead of showing choice UI (creator chose option B: always show). Feature: HubAntre faction reputation strip — 5 compact mini-bars (DRU/ANC/KOR/NIA/ANK) with colored fills, live-updating via reputation_changed signal, CRT terminal font, responsive layout. 2 files modified, 122 insertions, 3 deletions. 30 total bugs fixed across 21 cycles."
 }

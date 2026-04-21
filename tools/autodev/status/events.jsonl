@@ -101,3 +101,10 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T18:00:00.000Z","type":"cycle_start","cycle":20,"detail":"Cycle 20: Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish"}
+{"ts":"2026-04-21T18:00:00.000Z","type":"task_done","cycle":20,"detail":"JOURNEY-MAP-CRT: JourneyMapDisplay rewritten with CRT terminal aesthetic — shaped nodes, dashed lines, scanline overlay, pulsing final node, event glyphs"}
+{"ts":"2026-04-21T18:00:00.000Z","type":"cycle_end","cycle":20,"detail":"Cycle 20 complete: 0 bugs (C19 clean), 1 feature (JourneyMapDisplay CRT). 1 file, 193 lines. 29 total bugs fixed across 20 cycles."}
+{"ts":"2026-04-21T20:40:00.000Z","type":"cycle_start","cycle":21,"detail":"Cycle 21: Bug hunt C20 (BUG-031 faction auto-select) + feat HubAntre faction reputation mini-bars"}
+{"ts":"2026-04-21T20:40:00.000Z","type":"task_done","cycle":21,"detail":"BUG-031 MEDIUM: EndRunScreen auto-selected single faction ending instead of showing choice UI — removed elif branch, always shows panel"}
+{"ts":"2026-04-21T20:40:00.000Z","type":"task_done","cycle":21,"detail":"HUB-FACTION-STRIP: 5-faction reputation mini-bars in HubAntre (DRU/ANC/KOR/NIA/ANK), colored fills, live signal updates, CRT terminal font"}
+{"ts":"2026-04-21T20:40:00.000Z","type":"cycle_end","cycle":21,"detail":"Cycle 21 complete: 1 MEDIUM bug fixed, 1 feature (Hub faction strip). 2 files, 122 insertions, 3 deletions. 30 total bugs fixed across 21 cycles."}

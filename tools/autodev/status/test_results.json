@@ -1,10 +1,19 @@
 {
   "agent": "cycle_director",
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T14:40:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 20: Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
-  "bugs_found": [],
+  "scope": "Cycle 21: Bug hunt C20 (BUG-031 faction auto-select) + feat HubAntre faction reputation strip",
+  "bugs_found": [
+    {
+      "id": "BUG-031",
+      "severity": "MEDIUM",
+      "file": "scripts/run/end_run_screen.gd",
+      "description": "_on_continue_pressed() auto-selects single faction ending (elif size==1 branch) instead of showing choice panel. Creator chose option B (always show UI) in q-20260414-009.",
+      "fix": "Removed elif branch — all non-empty faction_choices now fall through to _show_faction_choice_panel()",
+      "status": "fixed"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C19: verified 4 files (game_flow_controller.gd, end_run_screen.gd, journey_map_display.gd, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct, signal chain hub_requested→_on_hub_requested()→HubAntre verified. Feature: JourneyMapDisplay rewritten with full CRT aesthetic — terminal font, event-type shaped nodes, dashed lines, scanline overlay, pulsing final node, scroll indicators. 29 total bugs fixed across 20 cycles."
+  "overall_assessment": "Bug hunt C20: verified journey_map_display.gd (4 checks passed: _process() frame cost, _classify_event format handling, CRT_PALETTE keys, scroll indicators). Found and fixed BUG-031 in end_run_screen.gd. Feature: HubAntre faction reputation strip with 5 colored mini-bars, live signal updates, CRT aesthetic. 30 total bugs fixed across 21 cycles."
 }

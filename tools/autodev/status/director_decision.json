@@ -1,10 +1,10 @@
 {
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00.000Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T14:40:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C19", "JOURNEY-MAP-CRT"],
-  "rationale": "C19 next_cycle_plan called for bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn) — 0 bugs found. All CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring path correct, signal chain verified. Feature: JourneyMapDisplay completely rewritten with CRT terminal aesthetic — terminal font via MerlinVisual, event-type classification from effects (handles both String and Dict formats), shaped nodes (circle=standard, diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow animation on final node (victory=amber, death=danger), scroll indicators for long runs, event glyphs (+ heal, ! damage, ~ rep, * ogham, @ promise).",
-  "budget": {"files": 1, "lines": 193},
+  "tasks": ["BUGHUNT-C20", "BUGFIX-031", "HUB-FACTION-STRIP"],
+  "rationale": "C20 next_cycle_plan called for bug hunt C20 + HubAntre visual refresh. Bug hunt C20: verified journey_map_display.gd (4 checks: _process() frame cost for 12 nodes with simple draw ops = acceptable, _classify_event handles String and Dict effect formats, all CRT_PALETTE keys valid, scroll indicators correct). Found BUG-031 in end_run_screen.gd: _on_continue_pressed() had elif branch auto-selecting when only 1 faction ending available, violating creator decision q-20260414-009 option B (always show choice panel). Feature: HubAntre faction reputation strip with 5 colored mini-bars (druides=green, anciens=amber, korrigans=purple, niamh=blue, ankou=red), 3-letter abbreviations, live value display, connected to reputation_changed signal.",
+  "budget": {"files": 2, "lines": 122},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C20 (verify JourneyMapDisplay _process() frame cost acceptable, _classify_event handles all effect formats from walk_event_controller). Then feature: HubAntre visual refresh — the hub screen needs CRT polish to match the new EndRunScreen and JourneyMap quality. Focus on faction reputation display with mini-bars, biome selector with maturity indicators, and Ogham equipment panel."
+  "next_cycle_plan": "Bug hunt C21 (verify HubAntre faction strip: edge case store==null, faction_rep empty dict, initial values). Then feature: HubAntre biome selector enhancement — add maturity indicators to the biome selection, showing which biomes are 'ripe' for exploration based on biome maturity score (runs*2 + endings*5 + oghams*3 + max_rep*1). Also consider Ogham equipment panel for the Hub."
 }
