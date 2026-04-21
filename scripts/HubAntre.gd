@@ -691,7 +691,11 @@ func _launch_adventure() -> void:
 		store.state["run"] = run
 
 	_quick_save()
-	PixelTransition.transition_to(SCENE_FOREST)
+	var gfc: Node = get_node_or_null("/root/GameFlow")
+	if gfc and gfc.has_method("request_run"):
+		gfc.request_run(selected_biome)
+	else:
+		PixelTransition.transition_to(SCENE_FOREST)
 
 
 func _store_return_scene() -> void:

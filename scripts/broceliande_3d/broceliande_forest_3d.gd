@@ -1228,7 +1228,24 @@ func _get_encounter_card(enc_idx: int) -> Dictionary:
 	return fallback_cards[idx]
 
 
-## Run complete — path ended, show end-run stats overlay
+func _build_run_summary() -> Dictionary:
+	var gm: Node = get_node_or_null("/root/GameManager")
+	var life: int = 100
+	var currency: int = 0
+	if gm:
+		var rs: Variant = gm.get("run_state") if gm.has_method("get") else null
+		if rs is Dictionary:
+			life = int(rs.get("life_essence", 100))
+			currency = int(rs.get("biome_currency", 0))
+	return {
+		"biome": biome_key,
+		"card_index": _encounter_count,
+		"life_essence": life,
+		"biome_currency": currency,
+		"merlin_found": _merlin_found,
+	}
+
+
 func _on_run_complete() -> void:
 	print("[Forest3D] Run complete — showing end stats")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -1285,17 +1302,27 @@ func _on_run_complete() -> void:
 	btn_s.set_content_margin_all(10)
 	btn_menu.add_theme_stylebox_override("normal", btn_s)
 	btn_menu.pressed.connect(func():
-		var pt: Node = get_node_or_null("/root/PixelTransition")
-		if pt and pt.has_method("transition_to"):
-			pt.transition_to("res://scenes/HubAntre.tscn")
+		var gfc: Node = get_node_or_null("/root/GameFlow")
+		if gfc and gfc.has_method("complete_run"):
+			gfc.complete_run("completed", _build_run_summary())
 		else:
-			get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
+			var pt: Node = get_node_or_null("/root/PixelTransition")
+			if pt and pt.has_method("transition_to"):
+				pt.transition_to("res://scenes/HubAntre.tscn")
+			else:
+				get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
 	)
 	vbox.add_child(btn_menu)
 
 
 func _on_hub() -> void:
-	# After forest walk, go to MerlinGame (card encounters)
+	var gfc: Node = get_node_or_null("/root/GameFlow")
+	if gfc:
+		if _merlin_found and gfc.has_method("enter_card_game"):
+			gfc.enter_card_game()
+		elif gfc.has_method("return_to_hub"):
+			gfc.return_to_hub()
+		return
 	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("transition_to"):

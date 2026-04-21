@@ -47,6 +47,10 @@ const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
 const SCENE_TALENT_TREE: String = "res://scenes/TalentTree.tscn"
 
+const SCENE_HUB_ANTRE: String = "res://scenes/HubAntre.tscn"
+const SCENE_FOREST: String = "res://scenes/BroceliandeForest3D.tscn"
+const SCENE_CARD_GAME: String = "res://scenes/MerlinGame.tscn"
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -56,6 +60,7 @@ var _store: MerlinStore = null
 var _save_system: MerlinSaveSystem = null
 var _transition_manager: TransitionManager = null
 var _last_run_data: Dictionary = {}
+var _setup_retries: int = 0
 
 # Active screen references (set during wiring, cleared on phase exit)
 var _hub_screen: HubScreen = null
@@ -64,7 +69,28 @@ var _end_screen: EndRunScreen = null
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SETUP
+# AUTOLOAD INIT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _ready() -> void:
+	call_deferred("_auto_setup")
+
+
+func _auto_setup() -> void:
+	_store = get_node_or_null("/root/MerlinStore") as MerlinStore
+	if _store == null:
+		_setup_retries += 1
+		if _setup_retries < 10:
+			call_deferred("_auto_setup")
+		else:
+			push_warning("[GameFlow] MerlinStore not found after %d retries" % _setup_retries)
+		return
+	_set_phase(GamePhase.HUB)
+	print("[GameFlow] Initialized — store=true phase=hub (after %d retries)" % _setup_retries)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SETUP (manual wiring — alternative to autoload auto-discovery)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func setup(store: MerlinStore, save_system: MerlinSaveSystem,
@@ -91,7 +117,63 @@ func is_in_phase(phase: int) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# GAME LIFECYCLE
+# PUBLIC API — Scene-driven flow (HubAntre, BroceliandeForest3D, etc.)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func request_run(biome_id: String, selected_oghams: Array = []) -> void:
+	if biome_id.is_empty():
+		push_warning("[GameFlow] request_run ignored: empty biome_id")
+		return
+	if _store:
+		var run: Dictionary = _store.state.get("run", {})
+		run["active"] = true
+		run["current_biome"] = biome_id
+		run["equipped_oghams"] = selected_oghams.duplicate()
+		_store.state["run"] = run
+	_set_phase(GamePhase.RUN)
+	_transition_to(SCENE_FOREST)
+
+
+func complete_run(reason: String, data: Dictionary = {}) -> void:
+	if _current_phase != GamePhase.RUN:
+		push_warning("[GameFlow] complete_run ignored: not in RUN phase (current: %s)" % get_current_phase_name())
+		return
+	_last_run_data = _build_end_run_data(reason, data)
+	if _store:
+		var run: Dictionary = _store.state.get("run", {})
+		run["active"] = false
+		_store.state["run"] = run
+	_set_phase(GamePhase.HUB)
+	_transition_to(SCENE_HUB_ANTRE)
+
+
+func enter_card_game() -> void:
+	if _current_phase != GamePhase.RUN:
+		push_warning("[GameFlow] enter_card_game ignored: not in RUN phase (current: %s)" % get_current_phase_name())
+		return
+	_transition_to(SCENE_CARD_GAME)
+
+
+func return_to_hub() -> void:
+	_last_run_data = {}
+	_set_phase(GamePhase.HUB)
+	_transition_to(SCENE_HUB_ANTRE)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SCENE TRANSITION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _transition_to(scene_path: String) -> void:
+	var pt: Node = get_node_or_null("/root/PixelTransition")
+	if pt and pt.has_method("transition_to"):
+		pt.transition_to(scene_path)
+	elif is_inside_tree():
+		get_tree().change_scene_to_file(scene_path)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GAME LIFECYCLE (signal-driven wiring for HubScreen / Run3DController)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ## Entry point: load hub with current profile data.
