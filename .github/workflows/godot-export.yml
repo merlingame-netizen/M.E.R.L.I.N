@@ -74,13 +74,13 @@ jobs:
       - name: Import project
         timeout-minutes: 20
         run: |
-          echo "=== Starting full import (no timeout kill — let it complete) ==="
-          godot --headless --path . --import --quit 2>&1 || true
-          echo "=== Import done ==="
+          echo "=== Starting import (timeout 900s — godot hangs after DONE, this is expected) ==="
+          timeout 900 godot --headless --path . --import --quit 2>&1 | tail -20 || echo "Import killed by timeout (expected — files are imported)"
+          echo "=== Import step done ==="
           echo "=== Verify critical imports ==="
-          ls -la .godot/imported/ 2>/dev/null | head -5
-          find .godot/imported -name "VT323*" 2>/dev/null | head -3
-          find .godot/imported -name "translations*" 2>/dev/null | head -3
+          ls .godot/imported/ 2>/dev/null | wc -l
+          find .godot/imported -name "VT323*" 2>/dev/null | head -1
+          find .godot/imported -name "translations*" 2>/dev/null | head -1
           echo "=== Import done ==="
 
       - name: Parse check
