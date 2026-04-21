@@ -3,7 +3,7 @@ extends Control
 
 ## Half-circle radial biome selector for hub scene
 ## Appears above PARTIR button when no biome is selected
-## 7 biomes on a 180-degree arc with procedural pixel art icons
+## 8 biomes on a 180-degree arc with procedural pixel art icons
 
 signal biome_selected(biome_key: String)
 signal radial_dismissed
@@ -17,7 +17,8 @@ const BIOMES := [
 	"villages_celtes",
 	"cercles_pierres",
 	"marais_korrigans",
-	"collines_dolmens"
+	"collines_dolmens",
+	"iles_mystiques"
 ]
 
 const BIOME_SHORT_NAMES := {
@@ -27,7 +28,8 @@ const BIOME_SHORT_NAMES := {
 	"villages_celtes": "Villages",
 	"cercles_pierres": "Cercles",
 	"marais_korrigans": "Marais",
-	"collines_dolmens": "Collines"
+	"collines_dolmens": "Collines",
+	"iles_mystiques": "Iles"
 }
 
 # Map full biome keys to BIOME_ART_PROFILES keys
@@ -38,7 +40,8 @@ const BIOME_PROFILE_KEYS := {
 	"villages_celtes": "villages",
 	"cercles_pierres": "cercles",
 	"marais_korrigans": "marais",
-	"collines_dolmens": "collines"
+	"collines_dolmens": "collines",
+	"iles_mystiques": "iles"
 }
 
 # === VISUAL CONSTANTS ===
@@ -133,9 +136,9 @@ func is_open() -> bool:
 # === PRIVATE METHODS ===
 
 func _calculate_positions() -> void:
-	# Distribute 7 icons on a 180-degree arc (PI radians)
+	# Distribute icons on a 180-degree arc (PI radians)
 	# First icon at angle PI (left), last at angle 0 (right)
-	var angle_step := PI / 6.0
+	var angle_step := PI / float(BIOMES.size() - 1)
 
 	for i in BIOMES.size():
 		var angle := PI - (i * angle_step)
@@ -188,6 +191,9 @@ func _handle_click(pos: Vector2) -> void:
 	# Check if click hit any biome icon
 	for i in BIOMES.size():
 		if _is_point_in_icon(pos, i):
+			if _is_biome_locked(BIOMES[i]):
+				SFXManager.play("hover")
+				return
 			biome_selected.emit(BIOMES[i])
 			close()
 			return
@@ -248,6 +254,11 @@ func _draw_biome_icon(index: int) -> void:
 	var profile_key: String = BIOME_PROFILE_KEYS[biome_key]
 	var c_accent: Color = MerlinVisual.BIOME_ART_PROFILES[profile_key]["accent"]
 	var c_outline: Color = MerlinVisual.GBC["dark_gray"]
+	var locked: bool = _is_biome_locked(biome_key)
+
+	# Dim if locked
+	if locked:
+		c_accent.a *= 0.35
 
 	# Draw circle background
 	var radius: float = ICON_RADIUS * scale
@@ -256,6 +267,10 @@ func _draw_biome_icon(index: int) -> void:
 
 	# Draw procedural icon
 	_draw_procedural_icon(pos, profile_key, scale)
+
+	# Draw lock indicator if locked
+	if locked:
+		_draw_lock_indicator(pos, scale)
 
 	# Label permanent (toujours visible, plus lumineux si hovered)
 	_draw_biome_label(pos, biome_key, index == _hovered_index)
@@ -279,6 +294,8 @@ func _draw_procedural_icon(pos: Vector2, profile_key: String, scale: float) -> v
 			_draw_marsh_icon(pos, icon_size)
 		"collines":
 			_draw_hills_icon(pos, icon_size)
+		"iles":
+			_draw_island_icon(pos, icon_size)
 
 func _draw_forest_icon(pos: Vector2, size: float) -> void:
 	# 3 triangle trees
@@ -364,9 +381,13 @@ func _draw_triangle(pos: Vector2, size: float, color: Color) -> void:
 	draw_colored_polygon(points, color)
 
 func _draw_biome_label(pos: Vector2, biome_key: String, is_hovered: bool = false) -> void:
+	var locked: bool = _is_biome_locked(biome_key)
 	var label_text: String = BIOME_SHORT_NAMES[biome_key]
+	if locked:
+		var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_key, 0))
+		label_text += " (%d)" % threshold
 	var font := MerlinVisual.get_font("body")
-	var font_size := 11
+	var font_size := 14
 
 	var text_size := font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 	var label_pos := pos + Vector2(-text_size.x * 0.5, ICON_RADIUS + 14.0)
@@ -375,6 +396,73 @@ func _draw_biome_label(pos: Vector2, biome_key: String, is_hovered: bool = false
 	var c_shadow: Color = MerlinVisual.GBC["black"]
 	draw_string(font, label_pos + Vector2(1, 1), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_shadow)
 
-	# Texte : blanc brillant si hovered, blanc atténué sinon (label permanent)
-	var c_text: Color = MerlinVisual.GBC["white"] if is_hovered else Color(1.0, 1.0, 1.0, 0.65)
+	# Texte : blanc brillant si hovered, dimmed if locked, blanc atténué sinon (label permanent)
+	var c_text: Color
+	if locked:
+		c_text = Color(1.0, 1.0, 1.0, 0.35)
+	elif is_hovered:
+		c_text = MerlinVisual.GBC["white"]
+	else:
+		c_text = Color(1.0, 1.0, 1.0, 0.65)
 	draw_string(font, label_pos, label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_text)
+
+# === ISLAND ICON ===
+
+func _draw_island_icon(pos: Vector2, size: float) -> void:
+	# Draw 2-3 small island shapes partially submerged in a wave line
+	var c_land: Color = MerlinVisual.GBC["cream"]
+	var c_wave: Color = MerlinVisual.GBC["light_gray"]
+
+	# Water wave line across the middle
+	draw_arc(pos + Vector2(-size * 0.2, size * 0.1), size * 0.25, PI, TAU, 12, c_wave, 1.5, true)
+	draw_arc(pos + Vector2(size * 0.2, size * 0.1), size * 0.25, PI, TAU, 12, c_wave, 1.5, true)
+
+	# Island 1 (left) — small arc above the wave
+	draw_arc(pos + Vector2(-size * 0.3, size * 0.05), size * 0.18, PI, TAU, 12, c_land, 2.0, true)
+
+	# Island 2 (center) — slightly larger
+	draw_arc(pos + Vector2(0.0, -size * 0.05), size * 0.22, PI, TAU, 12, c_land, 2.0, true)
+
+	# Island 3 (right) — small
+	draw_arc(pos + Vector2(size * 0.3, size * 0.05), size * 0.15, PI, TAU, 12, c_land, 2.0, true)
+
+# === MATURITY / LOCKING ===
+
+func _calculate_player_maturity() -> int:
+	var store_node: Node = get_node_or_null("/root/MerlinStore")
+	if store_node == null:
+		return 0
+	var state: Dictionary = store_node.get("state") as Dictionary
+	if state.is_empty():
+		return 0
+	var meta: Dictionary = state.get("meta", {})
+	var total_runs: int = int(meta.get("total_runs", 0))
+	var endings_seen: int = meta.get("endings_seen", []).size()
+	var oghams_discovered: int = state.get("oghams", {}).get("skills_unlocked", []).size()
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var max_faction_rep: float = 0.0
+	for faction in faction_rep:
+		max_faction_rep = maxf(max_faction_rep, float(faction_rep[faction]))
+	return total_runs * 2 + endings_seen * 5 + oghams_discovered * 3 + int(max_faction_rep) * 1
+
+func _is_biome_locked(biome_key: String) -> bool:
+	var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_key, 999))
+	return _calculate_player_maturity() < threshold
+
+func _draw_lock_indicator(pos: Vector2, scale: float) -> void:
+	var c_lock: Color = MerlinVisual.GBC["dark_gray"]
+	var lock_size: float = 6.0 * scale
+
+	# Padlock body (filled rect)
+	var body_rect := Rect2(
+		pos + Vector2(-lock_size * 0.5, -lock_size * 0.1),
+		Vector2(lock_size, lock_size * 0.8)
+	)
+	draw_rect(body_rect, c_lock, true)
+
+	# Padlock shackle (small rect above body)
+	var shackle_rect := Rect2(
+		pos + Vector2(-lock_size * 0.3, -lock_size * 0.6),
+		Vector2(lock_size * 0.6, lock_size * 0.5)
+	)
+	draw_rect(shackle_rect, c_lock, false, 1.5)
