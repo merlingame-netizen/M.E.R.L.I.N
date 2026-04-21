@@ -30,6 +30,13 @@ jobs:
       - name: Remove Windows-only GDExtension (blocks Linux CI)
         run: rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
 
+      - name: Disable editor plugins that block headless export
+        run: |
+          # MCP server plugin starts a WebSocket server that hangs forever
+          sed -i '/\[editor_plugins\]/,/^$/d' project.godot
+          echo "Editor plugins removed from project.godot"
+          grep -c "editor_plugins" project.godot || echo "Confirmed: no editor_plugins section"
+
       - name: Fix headless-incompatible shaders (hint_screen_texture hangs export)
         run: |
           # Replace hint_screen_texture with filter_nearest (GL Compat headless can't compile it)
