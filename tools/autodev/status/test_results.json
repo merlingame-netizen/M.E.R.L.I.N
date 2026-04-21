@@ -1,18 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 19,
-  "timestamp": "2026-04-21T16:00:00Z",
+  "cycle": 20,
+  "timestamp": "2026-04-21T18:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 19: Bug hunt C18 (BUG-030 save_system) + feat EndRunScreen GFC wiring",
-  "bugs_found": [
-    {
-      "id": "BUG-030",
-      "severity": "MEDIUM",
-      "file": "scripts/core/game_flow_controller.gd",
-      "description": "_auto_setup() found MerlinStore but never wired _save_system. Saves were silently non-functional in autoload mode (all save_system guards returned early). Fixed by reading _store.save_system after store discovery.",
-      "status": "fixed"
-    }
-  ],
+  "scope": "Cycle 20: Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
+  "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C18: verified 4 files. Found 1 MEDIUM bug (save_system not wired in autoload mode). HubAntre and BroceliandeForest3D GFC integration correct, project.godot autoload registered correctly. Feature: EndRunScreen now fully wired into GFC flow — scene transitions, signal wiring, auto-discovery all production-ready. Net -18 lines (simplified BroceliandeForest3D). 29 total bugs fixed across 19 cycles."
+  "overall_assessment": "Bug hunt C19: verified 4 files (game_flow_controller.gd, end_run_screen.gd, journey_map_display.gd, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct, signal chain hub_requested→_on_hub_requested()→HubAntre verified. Feature: JourneyMapDisplay rewritten with full CRT aesthetic — terminal font, event-type shaped nodes, dashed lines, scanline overlay, pulsing final node, scroll indicators. 29 total bugs fixed across 20 cycles."
 }
