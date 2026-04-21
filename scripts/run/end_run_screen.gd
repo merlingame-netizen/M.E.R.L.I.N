@@ -58,6 +58,23 @@ var _anim_items: Array[Control] = []
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# AUTOLOAD WIRING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _ready() -> void:
+	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	var gfc: Node = get_node_or_null("/root/GameFlow")
+	if gfc and gfc.has_method("get_last_run_data"):
+		var data: Dictionary = gfc.get_last_run_data()
+		if not data.is_empty():
+			if gfc.has_method("wire_end_screen"):
+				gfc.wire_end_screen(self)
+			show_results(data)
+			return
+	push_warning("[EndRunScreen] No GameFlow or empty run data — waiting for manual setup()")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
 # ═══════════════════════════════════════════════════════════════════════════════
 

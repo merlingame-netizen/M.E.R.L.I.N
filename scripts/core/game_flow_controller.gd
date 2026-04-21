@@ -85,8 +85,10 @@ func _auto_setup() -> void:
 		else:
 			push_warning("[GameFlow] MerlinStore not found after %d retries" % _setup_retries)
 		return
+	if _store.get("save_system") != null:
+		_save_system = _store.save_system
 	_set_phase(GamePhase.HUB)
-	print("[GameFlow] Initialized — store=true phase=hub (after %d retries)" % _setup_retries)
+	print("[GameFlow] Initialized — store=true save=%s phase=hub (after %d retries)" % [str(_save_system != null), _setup_retries])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -143,8 +145,12 @@ func complete_run(reason: String, data: Dictionary = {}) -> void:
 		var run: Dictionary = _store.state.get("run", {})
 		run["active"] = false
 		_store.state["run"] = run
-	_set_phase(GamePhase.HUB)
-	_transition_to(SCENE_HUB_ANTRE)
+		var rewards: Dictionary = _compute_run_rewards(_last_run_data)
+		_store.apply_run_rewards(rewards)
+	if _save_system:
+		_save_system.clear_run_state()
+	_set_phase(GamePhase.END_SCREEN)
+	_transition_to(SCENE_END)
 
 
 func enter_card_game() -> void:
@@ -239,6 +245,7 @@ func _on_run_ended(reason: String, data: Dictionary) -> void:
 		_save_system.clear_run_state()
 
 	_set_phase(GamePhase.END_SCREEN)
+	_transition_to(SCENE_END)
 
 
 ## Transition from end screen back to hub.
@@ -250,6 +257,7 @@ func _on_hub_requested() -> void:
 
 	_last_run_data = {}
 	_set_phase(GamePhase.HUB)
+	_transition_to(SCENE_HUB_ANTRE)
 
 
 ## Record chosen faction ending in meta. Called when EndRunScreen emits faction_ending_chosen.

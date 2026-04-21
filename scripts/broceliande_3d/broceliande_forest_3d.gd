@@ -1247,72 +1247,23 @@ func _build_run_summary() -> Dictionary:
 
 
 func _on_run_complete() -> void:
-	print("[Forest3D] Run complete — showing end stats")
+	print("[Forest3D] Run complete — transitioning to EndRunScreen")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-
-	var end_overlay: CanvasLayer = CanvasLayer.new()
-	end_overlay.layer = 18
-	add_child(end_overlay)
-
-	var bg: ColorRect = ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.0, 0.02, 0.0, 0.0)
-	end_overlay.add_child(bg)
-	var tw: Tween = create_tween()
-	tw.tween_property(bg, "color:a", 0.9, 1.0)
-
-	var font: Font = MerlinVisual.get_font("terminal") if is_instance_valid(MerlinVisual) else null
-	var pal: Dictionary = MerlinVisual.CRT_PALETTE if is_instance_valid(MerlinVisual) else {}
-
-	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.anchor_left = 0.2; vbox.anchor_right = 0.8
-	vbox.anchor_top = 0.15; vbox.anchor_bottom = 0.85
-	vbox.add_theme_constant_override("separation", 20)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	end_overlay.add_child(vbox)
-
-	var title: Label = Label.new()
-	title.text = "Fin du Voyage"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if font: title.add_theme_font_override("font", font)
-	title.add_theme_font_size_override("font_size", 36)
-	title.add_theme_color_override("font_color", pal.get("amber", Color(1.0, 0.75, 0.2)))
-	vbox.add_child(title)
-
-	var stats: Label = Label.new()
-	stats.text = "Rencontres: 5\nBiome: Broceliande\nSaison: Printemps"
-	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if font: stats.add_theme_font_override("font", font)
-	stats.add_theme_font_size_override("font_size", 18)
-	stats.add_theme_color_override("font_color", pal.get("phosphor", Color(0.2, 1.0, 0.4)))
-	vbox.add_child(stats)
-
-	var btn_menu: Button = Button.new()
-	btn_menu.text = "Retour au Menu"
-	btn_menu.custom_minimum_size = Vector2(0, 48)
-	btn_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	if font: btn_menu.add_theme_font_override("font", font)
-	btn_menu.add_theme_font_size_override("font_size", 20)
-	btn_menu.add_theme_color_override("font_color", pal.get("phosphor", Color(0.2, 1.0, 0.4)))
-	var btn_s: StyleBoxFlat = StyleBoxFlat.new()
-	btn_s.bg_color = Color(0.02, 0.04, 0.02, 0.8)
-	btn_s.border_color = pal.get("phosphor_dim", Color(0.12, 0.60, 0.24))
-	btn_s.set_border_width_all(1)
-	btn_s.set_corner_radius_all(4)
-	btn_s.set_content_margin_all(10)
-	btn_menu.add_theme_stylebox_override("normal", btn_s)
-	btn_menu.pressed.connect(func():
-		var gfc: Node = get_node_or_null("/root/GameFlow")
-		if gfc and gfc.has_method("complete_run"):
-			gfc.complete_run("completed", _build_run_summary())
+	var reason: String = "completed"
+	var gm: Node = get_node_or_null("/root/GameManager")
+	if gm:
+		var rs: Variant = gm.get("run_state") if gm.has_method("get") else null
+		if rs is Dictionary and int((rs as Dictionary).get("life_essence", 100)) <= 0:
+			reason = "death"
+	var gfc: Node = get_node_or_null("/root/GameFlow")
+	if gfc and gfc.has_method("complete_run"):
+		gfc.complete_run(reason, _build_run_summary())
+	else:
+		var pt: Node = get_node_or_null("/root/PixelTransition")
+		if pt and pt.has_method("transition_to"):
+			pt.transition_to("res://scenes/HubAntre.tscn")
 		else:
-			var pt: Node = get_node_or_null("/root/PixelTransition")
-			if pt and pt.has_method("transition_to"):
-				pt.transition_to("res://scenes/HubAntre.tscn")
-			else:
-				get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
-	)
-	vbox.add_child(btn_menu)
+			get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
 
 
 func _on_hub() -> void:
