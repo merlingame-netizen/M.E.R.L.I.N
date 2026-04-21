@@ -1,10 +1,10 @@
 {
-  "cycle": 19,
-  "timestamp": "2026-04-21T16:00:00.000Z",
+  "cycle": 20,
+  "timestamp": "2026-04-21T18:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C18", "ENDRUNSCREEN-GFC-WIRE"],
-  "rationale": "C18 next_cycle_plan called for bug hunt C18 + wire EndRunScreen into GFC. Bug hunt found BUG-030 MEDIUM: _auto_setup() never wired _save_system from MerlinStore — saves silently non-functional through GFC in autoload mode. Fixed. Feature: complete_run() now goes to END_SCREEN phase -> EndRunScreen.tscn. EndRunScreen._ready() auto-wires with GameFlow, fetches last_run_data, shows full CRT-styled end screen (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed from Node+wrong script to Control+correct script. BroceliandeForest3D._on_run_complete() simplified: removed 60-line inline overlay, now uses GFC. Signal-driven _on_run_ended() and _on_hub_requested() also transition scenes.",
-  "budget": {"files": 4, "lines": 51},
+  "tasks": ["BUGHUNT-C19", "BUGFIX-031", "JOURNEYMAP-V2"],
+  "rationale": "C19 next_cycle_plan: bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt verified 4 files (GFC, EndRunScreen, BroceliandeForest3D, .tscn) — 0 bugs in C19 code. Found BUG-031 MEDIUM: story_log never passed from BroceliandeForest3D encounters to EndRunScreen. The data pipeline had a gap: _build_run_summary() omitted story_log key, and encounter cards never tracked entries. Fixed both: _encounter_story_log tracks card title/choice/score per encounter, passed to GFC. Feature: JourneyMapDisplay rewritten with CRT visual treatment — glow rings, dashed lines, progressive reveal, score badges, pulse animation.",
+  "budget": {"files": 2, "lines": 130},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C19 (verify EndRunScreen auto-wiring works: _ready() → GameFlow → show_results(), signal chain hub_requested → _on_hub_requested() → HubAntre transition). Then feature: JourneyMapDisplay visual polish — the journey map in EndRunScreen shows run events as a timeline. Currently data-only, needs CRT-styled visual nodes (card dots, connections, score indicators)."
+  "next_cycle_plan": "Bug hunt C20 (verify story_log data flows correctly: BroceliandeForest3D → GFC._build_end_run_data() → EndRunScreen.show_results() → JourneyMapDisplay.setup()). Then feature: MinigameResultOverlay — visual overlay shown after minigame completion with score animation, field hint, and effect preview before applying to run state."
 }

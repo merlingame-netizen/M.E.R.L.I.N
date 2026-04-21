@@ -1,18 +1,18 @@
 {
   "agent": "cycle_director",
-  "cycle": 19,
-  "timestamp": "2026-04-21T16:00:00Z",
+  "cycle": 20,
+  "timestamp": "2026-04-21T18:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 19: Bug hunt C18 (BUG-030 save_system) + feat EndRunScreen GFC wiring",
+  "scope": "Cycle 20: Bug hunt C19 (0 bugs) + BUG-031 story_log + JourneyMapDisplay v2",
   "bugs_found": [
     {
-      "id": "BUG-030",
+      "id": "BUG-031",
       "severity": "MEDIUM",
-      "file": "scripts/core/game_flow_controller.gd",
-      "description": "_auto_setup() found MerlinStore but never wired _save_system. Saves were silently non-functional in autoload mode (all save_system guards returned early). Fixed by reading _store.save_system after store discovery.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "description": "_build_run_summary() never included story_log key. Encounter cards in BroceliandeForest3D never tracked story entries. EndRunScreen JourneyMapDisplay always showed 'Aucune carte jouee'. Fixed by adding _encounter_story_log tracking + passing to GFC.",
       "status": "fixed"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C18: verified 4 files. Found 1 MEDIUM bug (save_system not wired in autoload mode). HubAntre and BroceliandeForest3D GFC integration correct, project.godot autoload registered correctly. Feature: EndRunScreen now fully wired into GFC flow — scene transitions, signal wiring, auto-discovery all production-ready. Net -18 lines (simplified BroceliandeForest3D). 29 total bugs fixed across 19 cycles."
+  "overall_assessment": "Bug hunt C19: verified 4 files (game_flow_controller.gd, end_run_screen.gd, broceliande_forest_3d.gd, EndRunScreen.tscn). All class references exist, all CRT_PALETTE keys exist, signal wiring correct, auto-discovery pattern robust. Found 1 MEDIUM bug (story_log data pipeline gap). Feature: JourneyMapDisplay v2 with CRT visuals — glow rings, dashed lines, progressive reveal, score badges. 30 total bugs fixed across 20 cycles."
 }

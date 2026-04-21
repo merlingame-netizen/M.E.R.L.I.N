@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 19 — Bug hunt C18 (1 MEDIUM bug) + feat EndRunScreen wired into GFC flow",
+  "objective": "Cycle 20 — Bug hunt C19 (0 bugs) + BUG-031 story_log fix + JourneyMapDisplay CRT visual polish",
   "workers": [],
-  "updated_at": "2026-04-21T16:00:00.000Z",
-  "cycle": 19,
-  "checkpoint": "Bug hunt C18: verified 4 files (game_flow_controller, HubAntre, BroceliandeForest3D, project.godot). Found BUG-030: _auto_setup() never wired _save_system — saves silently non-functional in autoload mode. Fixed by reading save_system from MerlinStore. Feature: complete_run() now transitions to END_SCREEN phase -> EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow, wires signals, calls show_results(). EndRunScreen.tscn fixed: script path corrected, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC.complete_run() call. 4 files modified, 51 insertions, 69 deletions (net -18 lines). 29 total bugs fixed across 19 cycles."
+  "updated_at": "2026-04-21T18:00:00.000Z",
+  "cycle": 20,
+  "checkpoint": "Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, broceliande_forest_3d, EndRunScreen.tscn). All class refs, CRT_PALETTE keys, signal wiring correct. Found BUG-031 MEDIUM: _build_run_summary() never included story_log — JourneyMapDisplay always showed empty. Fixed by tracking _encounter_story_log in BroceliandeForest3D and passing to GFC. Feature: JourneyMapDisplay v2 with CRT visual polish — glowing node rings, dashed connection lines, progressive reveal animation, pulsing final node with glyph, score percentage badges, score-colored arcs. 2 files modified, 130 insertions, 87 deletions (net +43 lines). 30 total bugs fixed across 20 cycles."
 }

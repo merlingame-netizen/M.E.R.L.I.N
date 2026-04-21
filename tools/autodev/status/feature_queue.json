@@ -767,6 +767,28 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BUGFIX-031",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix story_log never passed to EndRunScreen from BroceliandeForest3D (BUG-031)",
+      "agent": "godot_expert",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "_build_run_summary() never included story_log key. Encounter cards never tracked story entries. JourneyMapDisplay on EndRunScreen always showed empty. Fixed by adding _encounter_story_log array that records card title, choice label, and score per encounter, then passing it in _build_run_summary().",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "JOURNEYMAP-V2",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "JourneyMapDisplay CRT visual polish — glow rings, dashed lines, reveal animation",
+      "agent": "ui_worker",
+      "files": ["scripts/run/journey_map_display.gd"],
+      "description": "JourneyMapDisplay v2: CRT-styled visual nodes with glow rings, dashed connection lines, progressive reveal animation (nodes appear one by one), pulsing final node with victory/death glyph, score-colored arcs around nodes, score percentage badges right-aligned. Better empty state with decorative dashed line. Total rewrite of _draw() with proper alpha blending.",
+      "completed_at": "2026-04-21"
     }
   ]
 }
