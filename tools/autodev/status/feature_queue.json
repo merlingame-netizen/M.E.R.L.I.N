@@ -767,6 +767,17 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BIOME-RADIAL-WIRE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire BiomeRadial into HubAntre PARTIR button — 8 biomes selectable",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd", "scripts/ui/biome_radial.gd"],
+      "description": "_on_partir_pressed() now opens BiomeRadial above button. 8th biome iles_mystiques added. Font 14px. Maturity-based locking with padlock icons and threshold labels. Island procedural icon. Faction dashboard: 5 color-coded ProgressBars + Anam counter. 3 bugs fixed: faction_rep key, oghams path, signal args.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

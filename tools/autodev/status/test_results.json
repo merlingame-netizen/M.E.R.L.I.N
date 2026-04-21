@@ -1,10 +1,35 @@
 {
   "agent": "cycle_director",
-  "cycle": 21,
-  "timestamp": "2026-04-21T19:00:00Z",
+  "cycle": 23,
+  "timestamp": "2026-04-21T21:30:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 21: Bug hunt C20 (0 bugs) + feat HubAntre faction reputation dashboard",
-  "bugs_found": [],
+  "scope": "Cycle 23: Recover C22 ghost code + wire BiomeRadial + faction dashboard + 3 bug fixes",
+  "bugs_found": [
+    {
+      "id": "BUGFIX-031",
+      "severity": "HIGH",
+      "file": "scripts/HubAntre.gd",
+      "line": 536,
+      "description": "Dashboard reads meta.factions instead of meta.faction_rep — all faction bars show 0",
+      "fix": "Changed to meta.get('faction_rep', {})"
+    },
+    {
+      "id": "BUGFIX-032",
+      "severity": "HIGH",
+      "file": "scripts/ui/biome_radial.gd",
+      "line": 441,
+      "description": "Maturity calc reads meta.oghams.owned but oghams are at state.oghams.skills_unlocked — oghams count always 0",
+      "fix": "Changed to state.get('oghams', {}).get('skills_unlocked', []).size()"
+    },
+    {
+      "id": "BUGFIX-033",
+      "severity": "HIGH",
+      "file": "scripts/HubAntre.gd",
+      "line": 532,
+      "description": "_update_dashboard() takes 0 args but reputation_changed emits 3 (faction, value, delta) — runtime crash",
+      "fix": "Added default parameters: _update_dashboard(_faction: String = '', _value: float = 0.0, _delta: float = 0.0)"
+    }
+  ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C20: verified JourneyMapDisplay _process() frame cost (bounded MAX_VISIBLE_NODES=12, pulse TAU wrapping, no allocations) and _classify_event (String+Dict effects, begins_with resilience, proper fallback). 0 bugs found. Feature: HubAntre status dashboard — 5 faction mini-bars, Anam counter, Runes equipped. CRT-styled, responsive, signal-driven updates. Code review passed (1 fix: mr.get('is_mobile') to mr.is_mobile). 29 total bugs fixed across 21 cycles."
+  "overall_assessment": "C22 was ghost code — status claimed done but changes were uncommitted. Recovered and fixed 3 bugs in the ghost code: wrong dict keys for faction rep and oghams, signal argument mismatch. 30 total bugs fixed across 23 cycles."
 }

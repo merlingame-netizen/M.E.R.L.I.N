@@ -101,3 +101,9 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T21:30:00.000Z","type":"cycle_start","cycle":23,"detail":"Cycle 23: Wire BiomeRadial + faction dashboard + maturity gates. C22 ghost recovery."}
+{"ts":"2026-04-21T21:30:00.000Z","type":"task_done","cycle":23,"detail":"BIOME-RADIAL-WIRE: _on_partir_pressed() opens radial instead of hardcoding foret_broceliande"}
+{"ts":"2026-04-21T21:30:00.000Z","type":"task_done","cycle":23,"detail":"BIOME-RADIAL-8TH: iles_mystiques added, font 14px, maturity locking, island icon"}
+{"ts":"2026-04-21T21:30:00.000Z","type":"task_done","cycle":23,"detail":"HUB-DASHBOARD: 5 faction mini-bars + Anam counter, signal-driven, responsive"}
+{"ts":"2026-04-21T21:30:00.000Z","type":"task_done","cycle":23,"detail":"BUGFIX-031/032/033: faction_rep key, oghams path, signal args — 3 HIGH bugs in ghost code"}
+{"ts":"2026-04-21T21:30:00.000Z","type":"cycle_end","cycle":23,"detail":"Cycle 23 complete: BiomeRadial wired (8 biomes selectable), faction dashboard, maturity gates, 3 bugs fixed. 30 total bugs fixed."}
