@@ -202,6 +202,10 @@ var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
 var _tour: HubAntreTour = null
+var _faction_bars: Array = []
+var _faction_labels: Array = []
+var _anam_label: Label = null
+var _dashboard_container: HBoxContainer = null
 
 # =============================================================================
 # STATE
@@ -235,6 +239,7 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_dashboard()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -269,6 +274,9 @@ func _ready() -> void:
 
 func _connect_store() -> void:
 	store = get_node_or_null("/root/MerlinStore")
+	if store and store.has_signal("reputation_changed"):
+		if not store.reputation_changed.is_connected(_update_dashboard):
+			store.reputation_changed.connect(_update_dashboard)
 
 
 func _load_player_data() -> void:
@@ -314,6 +322,7 @@ func _sync_from_state() -> void:
 	if not store.state.has("flags"):
 		store.state["flags"] = {}
 	store.state["flags"]["hub_visited"] = true
+	_update_dashboard()
 
 
 func _apply_day_night_tint() -> void:
@@ -446,6 +455,96 @@ func _create_chronicle_header() -> void:
 	add_child(_meta_label)
 
 
+func _create_dashboard() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var faction_keys: Array = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+	var faction_initials: Array = ["D", "A", "K", "N", "X"]
+	var faction_colors: Array = [
+		Color(0.2, 0.6, 0.3),   # druides — green
+		Color(0.7, 0.55, 0.2),  # anciens — amber
+		Color(0.2, 0.5, 0.6),   # korrigans — cyan
+		Color(0.6, 0.3, 0.4),   # niamh — rose
+		Color(0.4, 0.2, 0.5),   # ankou — purple
+	]
+
+	_dashboard_container = HBoxContainer.new()
+	_dashboard_container.add_theme_constant_override("separation", 12)
+
+	_faction_bars = []
+	_faction_labels = []
+
+	for i in range(faction_keys.size()):
+		var col: VBoxContainer = VBoxContainer.new()
+		col.add_theme_constant_override("separation", 2)
+		col.alignment = BoxContainer.ALIGNMENT_CENTER
+
+		var bar: ProgressBar = ProgressBar.new()
+		bar.min_value = 0.0
+		bar.max_value = 100.0
+		bar.value = 0.0
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(40, 6)
+
+		var bar_bg := StyleBoxFlat.new()
+		bar_bg.bg_color = Color(0.1, 0.1, 0.1)
+		bar_bg.set_corner_radius_all(0)
+		bar.add_theme_stylebox_override("background", bar_bg)
+
+		var bar_fill := StyleBoxFlat.new()
+		bar_fill.bg_color = faction_colors[i]
+		bar_fill.set_corner_radius_all(0)
+		bar.add_theme_stylebox_override("fill", bar_fill)
+
+		col.add_child(bar)
+		_faction_bars.append(bar)
+
+		var lbl: Label = Label.new()
+		lbl.text = faction_initials[i]
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var body_font: Font = MerlinVisual.get_font("body")
+		if body_font:
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", 10)
+		lbl.add_theme_color_override("font_color", faction_colors[i])
+		col.add_child(lbl)
+		_faction_labels.append(lbl)
+
+		_dashboard_container.add_child(col)
+
+	# Anam counter
+	_anam_label = Label.new()
+	_anam_label.text = "◆ 0"
+	var body_font: Font = MerlinVisual.get_font("body")
+	if body_font:
+		_anam_label.add_theme_font_override("font", body_font)
+	_anam_label.add_theme_font_size_override("font_size", 12)
+	_anam_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_glow"])
+	_anam_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_dashboard_container.add_child(_anam_label)
+
+	add_child(_dashboard_container)
+
+	# Position centered at y=75
+	var container_width: float = _dashboard_container.get_combined_minimum_size().x
+	_dashboard_container.position = Vector2((vp.x - container_width) * 0.5, 75.0)
+
+
+func _update_dashboard(_faction: String = "", _value: float = 0.0, _delta: float = 0.0) -> void:
+	if store == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var factions: Dictionary = meta.get("faction_rep", {})
+	var faction_keys: Array = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+
+	for i in range(faction_keys.size()):
+		if i < _faction_bars.size():
+			var val: float = float(factions.get(faction_keys[i], 0))
+			_faction_bars[i].value = val
+
+	if _anam_label:
+		var anam_val: int = int(meta.get("anam", 0))
+		_anam_label.text = "◆ %d" % anam_val
+
 
 # =============================================================================
 # CREATE COMPONENTS — Scene Elements
@@ -560,6 +659,9 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	if _dashboard_container:
+		var container_width: float = _dashboard_container.get_combined_minimum_size().x
+		_dashboard_container.position = Vector2((vp.x - container_width) * 0.5, 75.0 + safe_top)
 
 
 func _layout_partir() -> void:
@@ -615,10 +717,9 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 
 func _on_partir_pressed() -> void:
 	SFXManager.play("partir_fanfare")
-	# For now: only Broceliande is available — skip radial, launch directly
-	selected_biome = "foret_broceliande"
-	_generate_mission()
-	_launch_adventure()
+	if _radial and not _radial.is_open():
+		var btn_center: Vector2 = _partir_btn.position + _partir_btn.size * 0.5
+		_radial.open(btn_center - Vector2(0, 60))
 
 
 func _on_radial_biome_selected(biome_key: String) -> void:
@@ -830,6 +931,8 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _dashboard_container:
+		_dashboard_container.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -842,6 +945,9 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+	if _dashboard_container:
+		var tw_dash := create_tween()
+		tw_dash.tween_property(_dashboard_container, "modulate:a", 1.0, 0.4)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():
