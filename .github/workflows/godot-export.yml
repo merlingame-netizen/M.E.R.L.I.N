@@ -19,6 +19,9 @@ concurrency:
   group: "godot-export"
   cancel-in-progress: false
 
+env:
+  GODOT_VERSION: "4.5"
+
 jobs:
   export-web:
     name: Export Godot Web Build
@@ -28,76 +31,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare project for headless CI export
+      - name: Prepare project for headless CI
         run: |
+          # Move export templates to expected location (required by barichello/godot-ci)
+          mkdir -v -p ~/.local/share/godot/export_templates/
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable || true
+
           # Remove GDExtension (Windows-only DLL)
           rm -f addons/merlin_llm/merlin_llm.gdextension addons/merlin_llm/merlin_llm.gdextension.uid
 
           # Remove ALL editor plugins (MCP server hangs on port 9080)
           sed -i '/\[editor_plugins\]/,/^$/d' project.godot
 
-          # Patch shaders: remove hint_screen_texture (hangs in headless)
+          # Remove autoloads that block in headless (network servers, LLM)
+          sed -i '/GameDebugServer=/d' project.godot
+          sed -i '/MerlinAI=/d' project.godot
+
+          # Patch shaders: remove hint_screen_texture (unsupported in headless)
           for shader in shaders/*.gdshader; do
             [ -f "$shader" ] && sed -i 's/hint_screen_texture, //g; s/hint_screen_texture//g' "$shader"
           done
 
-          # Remove autoloads that block in headless (network/audio servers)
-          sed -i '/GameDebugServer=/d' project.godot
-          sed -i '/MerlinAI=/d' project.godot
+          echo "=== Autoloads after cleanup ==="
+          grep -A30 "^\[autoload\]" project.godot | head -20
 
-          echo "=== Project prepared for CI ==="
-          grep "^\[autoload\]" -A30 project.godot | head -25
+      - name: Import resources
+        continue-on-error: true
+        run: godot --headless -v --import
 
-      - name: Generate export preset
+      - name: Web Export
         run: |
-          cat > export_presets.cfg << 'PRESET'
-          [preset.0]
-          name="Web"
-          platform="Web"
-          runnable=true
-          dedicated_server=false
-          custom_features=""
-          export_filter="all_resources"
-          include_filter=""
-          exclude_filter="archive/*, tools/*, web-demo/*, docs/*, memory/*, .claude/*, .git/*, Assets/*, *.blend*, *.fbx, *.obj, *.md"
-          export_path="web-export/index.html"
-          encrypt_pck=false
-          export_files=PackedStringArray()
-          [preset.0.options]
-          vram_texture_compression/for_desktop=true
-          html/canvas_resize_policy=2
-          html/focus_canvas_on_start=true
-          html/export_icon=true
-          progressive_web_app/enabled=false
-          PRESET
-          sed -i 's/^          //' export_presets.cfg
-          echo "=== Export preset ==="
-          cat export_presets.cfg
-
-      - name: Import project
-        timeout-minutes: 20
-        run: |
-          timeout 900 godot --headless --path . --import --quit 2>&1 | tail -5 || echo "Import timeout (expected)"
-          echo "=== Imported files count: $(find .godot/imported -type f 2>/dev/null | wc -l) ==="
-
-      - name: Export Web
-        timeout-minutes: 60
-        run: |
-          mkdir -p web-export
-          echo "=== Starting export ==="
-          timeout 3300 godot --headless --export-release "Web" web-export/index.html --path . 2>&1 | tail -20 || echo "Export timeout"
-          echo "=== Export result ==="
-          ls -la web-export/ 2>/dev/null
-          if [ ! -f web-export/index.html ]; then
-            echo "::error::No index.html — trying export-debug as fallback"
-            timeout 3300 godot --headless --export-debug "Web" web-export/index.html --path . 2>&1 | tail -20 || echo "Debug export timeout"
-            ls -la web-export/ 2>/dev/null
-          fi
-          if [ ! -f web-export/index.html ]; then
-            echo "::error::Both release and debug export failed"
-            exit 1
-          fi
-          echo "=== Export successful ==="
+          mkdir -v -p web-export
+          godot --headless --verbose --export-release "Web" web-export/index.html
+          ls -la web-export/
 
       - uses: actions/upload-artifact@v4
         with:
@@ -108,6 +74,29 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web-export/
+
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: export-web
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-export
+          path: web-export/
+      - name: Deploy
+        working-directory: web-export
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm i -g vercel@latest
+          CLEAN_TOKEN=$(echo "$VERCEL_TOKEN" | tr -d '[:space:]')
+          mkdir -p .vercel
+          printf '{"orgId":"%s","projectId":"%s"}' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
+          vercel deploy --prod --yes --force --token="$CLEAN_TOKEN"
 
   deploy-pages:
     name: Deploy to GitHub Pages
@@ -122,28 +111,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-
-  deploy-vercel:
-    name: Deploy to Vercel
-    runs-on: ubuntu-latest
-    needs: export-web
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: web-export
-          path: web-export/
-      - name: Deploy game to Vercel
-        working-directory: web-export
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          set -e
-          npm i -g vercel@latest
-          CLEAN_TOKEN=$(echo "$VERCEL_TOKEN" | tr -d '[:space:]')
-          mkdir -p .vercel
-          printf '{"orgId":"%s","projectId":"%s"}' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
-          vercel deploy --prod --yes --force --token="$CLEAN_TOKEN"
-          echo "=== Deploy complete ==="
