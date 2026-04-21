@@ -194,6 +194,7 @@ const HOTSPOT_DEFS := [
 
 var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
+var _ogham_panel: OghamEquipPanel = null
 var _partir_btn: Button = null
 var _hotspots: Array = []
 var _chronicle_label: Label = null
@@ -538,6 +539,11 @@ func _create_radial() -> void:
 	_radial.biome_selected.connect(_on_radial_biome_selected)
 	_radial.radial_dismissed.connect(_on_radial_dismissed)
 
+	_ogham_panel = OghamEquipPanel.new()
+	add_child(_ogham_panel)
+	_ogham_panel.ogham_selected.connect(_on_ogham_equipped)
+	_ogham_panel.panel_dismissed.connect(_on_ogham_dismissed)
+
 
 # =============================================================================
 # LAYOUT
@@ -615,10 +621,9 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 
 func _on_partir_pressed() -> void:
 	SFXManager.play("partir_fanfare")
-	# For now: only Broceliande is available — skip radial, launch directly
-	selected_biome = "foret_broceliande"
-	_generate_mission()
-	_launch_adventure()
+	if _radial and not _radial.is_open():
+		var btn_center := _partir_btn.position + _partir_btn.size * 0.5
+		_radial.open(Vector2(btn_center.x, _partir_btn.position.y - 20.0))
 
 
 func _on_radial_biome_selected(biome_key: String) -> void:
@@ -636,11 +641,55 @@ func _on_radial_biome_selected(biome_key: String) -> void:
 	var biome_name: String = BIOME_DATA.get(biome_key, {}).get("name", biome_key)
 	_request_merlin_passive_comment("destination: %s" % biome_name)
 
-	_launch_adventure()
+	var unlocked: Array = _get_unlocked_oghams()
+	if unlocked.size() > 1 and _ogham_panel:
+		_ogham_panel.open(unlocked)
+	else:
+		_equip_default_ogham()
+		_launch_adventure()
 
 
 func _on_radial_dismissed() -> void:
 	pass
+
+
+func _on_ogham_equipped(ogham_key: String) -> void:
+	if store:
+		var oghams: Dictionary = store.state.get("oghams", {})
+		oghams["ogham_actif"] = ogham_key
+		store.state["oghams"] = oghams
+		var run: Dictionary = store.state.get("run", {})
+		run["ogham_actif"] = ogham_key
+		store.state["run"] = run
+	_launch_adventure()
+
+
+func _on_ogham_dismissed() -> void:
+	_equip_default_ogham()
+	_launch_adventure()
+
+
+func _get_unlocked_oghams() -> Array:
+	if not store:
+		return MerlinConstants.OGHAM_STARTER_SKILLS.duplicate()
+	var oghams: Dictionary = store.state.get("oghams", {})
+	var unlocked: Array = oghams.get("skills_unlocked", [])
+	if unlocked.is_empty():
+		return MerlinConstants.OGHAM_STARTER_SKILLS.duplicate()
+	return unlocked.duplicate()
+
+
+func _equip_default_ogham() -> void:
+	if not store:
+		return
+	var oghams: Dictionary = store.state.get("oghams", {})
+	var unlocked: Array = oghams.get("skills_unlocked", [])
+	var default_key: String = unlocked[0] if not unlocked.is_empty() else "beith"
+	oghams["ogham_actif"] = default_key
+	store.state["oghams"] = oghams
+	var run: Dictionary = store.state.get("run", {})
+	run["ogham_actif"] = default_key
+	store.state["run"] = run
 
 
 func _generate_mission() -> void:

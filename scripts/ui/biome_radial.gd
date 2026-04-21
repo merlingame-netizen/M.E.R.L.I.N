@@ -63,6 +63,7 @@ var _hovered_index := -1
 var _biome_positions: Array[Vector2] = []
 var _biome_scales: Array[float] = []
 var _biome_current_scales: Array[float] = []
+var _maturity_cache: int = 0
 
 # === LIFECYCLE ===
 
@@ -82,6 +83,8 @@ func _ready() -> void:
 func _draw() -> void:
 	if not _is_open:
 		return
+
+	_maturity_cache = _calculate_player_maturity()
 
 	# Draw semi-transparent background
 	var c_dim: Color = Color(0.0, 0.0, 0.0, BACKGROUND_ALPHA)
@@ -188,7 +191,7 @@ func _animate_close() -> void:
 	visible = false
 
 func _handle_click(pos: Vector2) -> void:
-	# Check if click hit any biome icon
+	_maturity_cache = _calculate_player_maturity()
 	for i in BIOMES.size():
 		if _is_point_in_icon(pos, i):
 			if _is_biome_locked(BIOMES[i]):
@@ -447,7 +450,7 @@ func _calculate_player_maturity() -> int:
 
 func _is_biome_locked(biome_key: String) -> bool:
 	var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_key, 999))
-	return _calculate_player_maturity() < threshold
+	return _maturity_cache < threshold
 
 func _draw_lock_indicator(pos: Vector2, scale: float) -> void:
 	var c_lock: Color = MerlinVisual.GBC["dark_gray"]
