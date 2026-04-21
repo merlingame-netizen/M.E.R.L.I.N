@@ -198,6 +198,8 @@ var _partir_btn: Button = null
 var _hotspots: Array = []
 var _chronicle_label: Label = null
 var _meta_label: Label = null
+var _faction_strip: Control = null
+var _faction_bars: Array = []   # [{fill: ColorRect, value_label: Label}, ...]
 var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
@@ -235,6 +237,7 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_faction_strip()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -314,6 +317,9 @@ func _sync_from_state() -> void:
 	if not store.state.has("flags"):
 		store.state["flags"] = {}
 	store.state["flags"]["hub_visited"] = true
+	_update_faction_values()
+	if not store.reputation_changed.is_connected(_on_reputation_changed):
+		store.reputation_changed.connect(_on_reputation_changed)
 
 
 func _apply_day_night_tint() -> void:
@@ -338,6 +344,10 @@ func _apply_day_night_tint() -> void:
 
 func _on_day_night_period_changed(_new_period: String) -> void:
 	_apply_day_night_tint()
+
+
+func _on_reputation_changed(_faction: String, _value: float, _delta: float) -> void:
+	_update_faction_values()
 
 
 func _process(delta: float) -> void:
@@ -445,6 +455,109 @@ func _create_chronicle_header() -> void:
 	_meta_label.size = Vector2(vp.x, 20.0)
 	add_child(_meta_label)
 
+
+
+func _create_faction_strip() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var font: Font = MerlinVisual.get_font("terminal")
+	var label_size: int = MerlinVisual.responsive_size(MerlinVisual.CAPTION_TINY)
+	var value_size: int = MerlinVisual.responsive_size(MerlinVisual.CAPTION_TINY)
+
+	# Faction config: id, 3-letter abbreviation, CRT_PALETTE color key
+	var faction_defs: Array = [
+		{"id": "druides",   "abbrev": "DRU", "color_key": "faction_druides"},
+		{"id": "anciens",   "abbrev": "ANC", "color_key": "faction_anciens"},
+		{"id": "korrigans", "abbrev": "KOR", "color_key": "faction_korrigans"},
+		{"id": "niamh",     "abbrev": "NIA", "color_key": "faction_niamh"},
+		{"id": "ankou",     "abbrev": "ANK", "color_key": "faction_ankou"},
+	]
+
+	# Container for the whole strip
+	_faction_strip = Control.new()
+	_faction_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var strip_w: float = 300.0
+	var strip_h: float = 28.0
+	_faction_strip.custom_minimum_size = Vector2(strip_w, strip_h)
+	_faction_strip.size = Vector2(strip_w, strip_h)
+	_faction_strip.position = Vector2((vp.x - strip_w) * 0.5, 72.0)
+	add_child(_faction_strip)
+
+	# Read initial faction values from store
+	var faction_rep: Dictionary = {}
+	if store:
+		faction_rep = store.state.get("meta", {}).get("faction_rep", {})
+
+	var slot_w: float = strip_w / float(faction_defs.size())  # 60px each
+	var bar_w: float = 40.0
+	var bar_h: float = 6.0
+	_faction_bars.clear()
+
+	for i in range(faction_defs.size()):
+		var def: Dictionary = faction_defs[i]
+		var faction_color: Color = MerlinVisual.CRT_PALETTE[def["color_key"]]
+		var val: float = float(faction_rep.get(def["id"], 0.0))
+		var x_off: float = float(i) * slot_w
+
+		# VBox-like manual layout inside the strip
+		# Row 1: abbreviation label (top)
+		var abbrev_label: Label = Label.new()
+		abbrev_label.text = def["abbrev"]
+		abbrev_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if font:
+			abbrev_label.add_theme_font_override("font", font)
+		abbrev_label.add_theme_font_size_override("font_size", label_size)
+		abbrev_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		abbrev_label.position = Vector2(x_off, 0.0)
+		abbrev_label.size = Vector2(slot_w, 12.0)
+		abbrev_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_faction_strip.add_child(abbrev_label)
+
+		# Row 2: bar background + fill (middle)
+		var bar_x: float = x_off + (slot_w - bar_w) * 0.5
+		var bar_y: float = 12.0
+
+		var bar_bg: ColorRect = ColorRect.new()
+		bar_bg.color = MerlinVisual.CRT_PALETTE["bg_deep"]
+		bar_bg.position = Vector2(bar_x, bar_y)
+		bar_bg.size = Vector2(bar_w, bar_h)
+		bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_faction_strip.add_child(bar_bg)
+
+		var fill_w: float = bar_w * clampf(val / 100.0, 0.0, 1.0)
+		var bar_fill: ColorRect = ColorRect.new()
+		bar_fill.color = faction_color
+		bar_fill.position = Vector2(bar_x, bar_y)
+		bar_fill.size = Vector2(fill_w, bar_h)
+		bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_faction_strip.add_child(bar_fill)
+
+		# Row 3: value label (bottom)
+		var value_label: Label = Label.new()
+		value_label.text = str(int(val))
+		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if font:
+			value_label.add_theme_font_override("font", font)
+		value_label.add_theme_font_size_override("font_size", value_size)
+		value_label.add_theme_color_override("font_color", faction_color)
+		value_label.position = Vector2(x_off, 18.0)
+		value_label.size = Vector2(slot_w, 12.0)
+		value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_faction_strip.add_child(value_label)
+
+		_faction_bars.append({"fill": bar_fill, "value_label": value_label, "bar_w": bar_w, "bar_x": bar_x, "bar_y": bar_y, "id": def["id"]})
+
+
+func _update_faction_values() -> void:
+	if store == null or _faction_bars.is_empty():
+		return
+	var faction_rep: Dictionary = store.state.get("meta", {}).get("faction_rep", {})
+	for entry: Dictionary in _faction_bars:
+		var val: float = float(faction_rep.get(entry["id"], 0.0))
+		var fill: ColorRect = entry["fill"]
+		var bw: float = float(entry["bar_w"])
+		fill.size.x = bw * clampf(val / 100.0, 0.0, 1.0)
+		var lbl: Label = entry["value_label"]
+		lbl.text = str(int(val))
 
 
 # =============================================================================
@@ -560,6 +673,9 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	if _faction_strip:
+		var strip_w: float = _faction_strip.size.x
+		_faction_strip.position = Vector2((vp.x - strip_w) * 0.5, 72.0 + safe_top)
 
 
 func _layout_partir() -> void:
@@ -830,6 +946,8 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _faction_strip:
+		_faction_strip.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -842,6 +960,10 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+	await get_tree().create_timer(0.1).timeout
+	if _faction_strip:
+		var tw_fs := create_tween()
+		tw_fs.tween_property(_faction_strip, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():

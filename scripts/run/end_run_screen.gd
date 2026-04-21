@@ -490,9 +490,6 @@ func _on_continue_pressed() -> void:
 
 	if _faction_choices.size() == 0:
 		hub_requested.emit()
-	elif _faction_choices.size() == 1:
-		faction_ending_chosen.emit(_faction_choices[0])
-		hub_requested.emit()
 	else:
 		_continue_button.hide()
 		_show_faction_choice_panel(_faction_choices)
