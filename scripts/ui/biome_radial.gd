@@ -17,7 +17,8 @@ const BIOMES := [
 	"villages_celtes",
 	"cercles_pierres",
 	"marais_korrigans",
-	"collines_dolmens"
+	"collines_dolmens",
+	"iles_mystiques",
 ]
 
 const BIOME_SHORT_NAMES := {
@@ -27,10 +28,10 @@ const BIOME_SHORT_NAMES := {
 	"villages_celtes": "Villages",
 	"cercles_pierres": "Cercles",
 	"marais_korrigans": "Marais",
-	"collines_dolmens": "Collines"
+	"collines_dolmens": "Collines",
+	"iles_mystiques": "Iles",
 }
 
-# Map full biome keys to BIOME_ART_PROFILES keys
 const BIOME_PROFILE_KEYS := {
 	"foret_broceliande": "broceliande",
 	"landes_bruyere": "landes",
@@ -38,7 +39,19 @@ const BIOME_PROFILE_KEYS := {
 	"villages_celtes": "villages",
 	"cercles_pierres": "cercles",
 	"marais_korrigans": "marais",
-	"collines_dolmens": "collines"
+	"collines_dolmens": "collines",
+	"iles_mystiques": "iles",
+}
+
+const BIOME_THRESHOLDS := {
+	"foret_broceliande": 0,
+	"landes_bruyere": 15,
+	"cotes_sauvages": 15,
+	"villages_celtes": 25,
+	"cercles_pierres": 30,
+	"marais_korrigans": 40,
+	"collines_dolmens": 50,
+	"iles_mystiques": 75,
 }
 
 # === VISUAL CONSTANTS ===
@@ -60,6 +73,7 @@ var _hovered_index := -1
 var _biome_positions: Array[Vector2] = []
 var _biome_scales: Array[float] = []
 var _biome_current_scales: Array[float] = []
+var _global_maturity: float = 0.0
 
 # === LIFECYCLE ===
 
@@ -116,6 +130,7 @@ func open(center_pos: Vector2) -> void:
 	_hovered_index = -1
 	visible = true
 
+	_refresh_maturity()
 	_calculate_positions()
 	_animate_open()
 
@@ -133,9 +148,7 @@ func is_open() -> bool:
 # === PRIVATE METHODS ===
 
 func _calculate_positions() -> void:
-	# Distribute 7 icons on a 180-degree arc (PI radians)
-	# First icon at angle PI (left), last at angle 0 (right)
-	var angle_step := PI / 6.0
+	var angle_step := PI / float(BIOMES.size() - 1)
 
 	for i in BIOMES.size():
 		var angle := PI - (i * angle_step)
@@ -185,14 +198,14 @@ func _animate_close() -> void:
 	visible = false
 
 func _handle_click(pos: Vector2) -> void:
-	# Check if click hit any biome icon
 	for i in BIOMES.size():
 		if _is_point_in_icon(pos, i):
+			if not _is_biome_unlocked(BIOMES[i]):
+				return
 			biome_selected.emit(BIOMES[i])
 			close()
 			return
 
-	# Click outside -> dismiss
 	radial_dismissed.emit()
 	close()
 
@@ -243,26 +256,29 @@ func _draw_biome_icon(index: int) -> void:
 	var pos: Vector2 = _biome_positions[index]
 	var scale: float = _biome_scales[index] * _biome_current_scales[index]
 
-	# Get biome accent color
 	var biome_key: String = BIOMES[index]
 	var profile_key: String = BIOME_PROFILE_KEYS[biome_key]
 	var c_accent: Color = MerlinVisual.BIOME_ART_PROFILES[profile_key]["accent"]
 	var c_outline: Color = MerlinVisual.GBC["dark_gray"]
+	var unlocked: bool = _is_biome_unlocked(biome_key)
 
-	# Draw circle background
+	if not unlocked:
+		c_accent = c_accent.darkened(0.55)
+		c_accent.a = 0.45
+		c_outline = c_outline.darkened(0.4)
+
 	var radius: float = ICON_RADIUS * scale
 	draw_circle(pos, radius, c_accent)
 	draw_arc(pos, radius, 0.0, TAU, 32, c_outline, 1.0, true)
 
-	# Draw procedural icon
 	_draw_procedural_icon(pos, profile_key, scale)
 
-	# Label permanent (toujours visible, plus lumineux si hovered)
-	_draw_biome_label(pos, biome_key, index == _hovered_index)
+	if not unlocked:
+		_draw_maturity_ring(pos, radius, biome_key)
+	_draw_biome_label(pos, biome_key, index == _hovered_index, unlocked)
 
 func _draw_procedural_icon(pos: Vector2, profile_key: String, scale: float) -> void:
 	var icon_size := ICON_SIZE * scale
-	var half_size := icon_size * 0.5
 
 	match profile_key:
 		"broceliande":
@@ -279,6 +295,8 @@ func _draw_procedural_icon(pos: Vector2, profile_key: String, scale: float) -> v
 			_draw_marsh_icon(pos, icon_size)
 		"collines":
 			_draw_hills_icon(pos, icon_size)
+		"iles":
+			_draw_islands_icon(pos, icon_size)
 
 func _draw_forest_icon(pos: Vector2, size: float) -> void:
 	# 3 triangle trees
@@ -363,18 +381,63 @@ func _draw_triangle(pos: Vector2, size: float, color: Color) -> void:
 	])
 	draw_colored_polygon(points, color)
 
-func _draw_biome_label(pos: Vector2, biome_key: String, is_hovered: bool = false) -> void:
+func _draw_biome_label(pos: Vector2, biome_key: String, is_hovered: bool = false, unlocked: bool = true) -> void:
 	var label_text: String = BIOME_SHORT_NAMES[biome_key]
 	var font := MerlinVisual.get_font("body")
-	var font_size := 11
+	var font_size := 14
+
+	if not unlocked:
+		var threshold: int = BIOME_THRESHOLDS.get(biome_key, 0)
+		label_text = "%s (%d)" % [label_text, threshold]
 
 	var text_size := font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 	var label_pos := pos + Vector2(-text_size.x * 0.5, ICON_RADIUS + 14.0)
 
-	# Shadow
 	var c_shadow: Color = MerlinVisual.GBC["black"]
 	draw_string(font, label_pos + Vector2(1, 1), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_shadow)
 
-	# Texte : blanc brillant si hovered, blanc atténué sinon (label permanent)
-	var c_text: Color = MerlinVisual.GBC["white"] if is_hovered else Color(1.0, 1.0, 1.0, 0.65)
+	var c_text: Color
+	if not unlocked:
+		c_text = Color(1.0, 1.0, 1.0, 0.35)
+	elif is_hovered:
+		c_text = MerlinVisual.GBC["white"]
+	else:
+		c_text = Color(1.0, 1.0, 1.0, 0.65)
 	draw_string(font, label_pos, label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_text)
+
+
+func _draw_islands_icon(pos: Vector2, size: float) -> void:
+	var c_land: Color = MerlinVisual.GBC["light_gray"]
+	var c_wave: Color = MerlinVisual.GBC["cream"]
+	draw_circle(pos + Vector2(-size * 0.2, -size * 0.05), size * 0.18, c_land)
+	draw_circle(pos + Vector2(size * 0.22, size * 0.08), size * 0.14, c_land)
+	draw_arc(pos + Vector2(0, size * 0.3), size * 0.4, PI, TAU, 16, c_wave, 1.5, true)
+
+
+func _draw_maturity_ring(pos: Vector2, radius: float, biome_key: String) -> void:
+	var threshold: int = BIOME_THRESHOLDS.get(biome_key, 1)
+	if threshold <= 0:
+		return
+	var progress: float = clampf(_global_maturity / float(threshold), 0.0, 1.0)
+	var ring_angle: float = progress * TAU
+	var c_ring: Color = MerlinVisual.CRT_PALETTE["amber_dim"]
+	draw_arc(pos, radius + 3.0, -PI * 0.5, -PI * 0.5 + ring_angle, 32, c_ring, 2.0, true)
+
+
+func _refresh_maturity() -> void:
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var total_runs: int = int(meta.get("total_runs", 0))
+	var endings: Array = meta.get("endings_seen", [])
+	var oghams: Array = meta.get("oghams_owned", [])
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var max_rep: float = 0.0
+	for val in faction_rep.values():
+		max_rep = maxf(max_rep, float(val))
+	_global_maturity = total_runs * 2.0 + endings.size() * 5.0 + oghams.size() * 3.0 + max_rep
+
+
+func _is_biome_unlocked(biome_key: String) -> bool:
+	return _global_maturity >= float(BIOME_THRESHOLDS.get(biome_key, 0))

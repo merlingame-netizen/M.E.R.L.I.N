@@ -101,3 +101,8 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T20:00:00.000Z","type":"cycle_start","cycle":22,"detail":"Cycle 22: Bug hunt C21 (ghost dashboard never pushed) + feat HubAntre dashboard + BiomeRadial 8th biome + maturity indicators"}
+{"ts":"2026-04-21T20:00:00.000Z","type":"task_done","cycle":22,"detail":"BUGHUNT-C21-GHOST: C21 claimed dashboard but only pushed status JSONs. Code was never committed. Re-implemented from scratch."}
+{"ts":"2026-04-21T20:00:00.000Z","type":"task_done","cycle":22,"detail":"HUB-DASHBOARD-REAL: 5 faction mini-bars (CRT ProgressBars, tier H/S/N/X), Anam+Runes counters, signal-driven, responsive"}
+{"ts":"2026-04-21T20:00:00.000Z","type":"task_done","cycle":22,"detail":"BIOME-RADIAL-UPGRADE: 8th biome iles_mystiques, font 14px, maturity progress ring, locked state, islands icon"}
+{"ts":"2026-04-21T20:00:00.000Z","type":"cycle_end","cycle":22,"detail":"Cycle 22 complete: 1 ghost bug caught, 2 features (dashboard + maturity). 2 files, ~220 lines. 29 bugs fixed across 22 cycles."}

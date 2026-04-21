@@ -202,6 +202,10 @@ var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
 var _tour: HubAntreTour = null
+var _dashboard: PanelContainer = null
+var _faction_bars: Dictionary = {}
+var _anam_label: Label = null
+var _runes_label: Label = null
 
 # =============================================================================
 # STATE
@@ -235,6 +239,7 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_status_dashboard()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -269,6 +274,8 @@ func _ready() -> void:
 
 func _connect_store() -> void:
 	store = get_node_or_null("/root/MerlinStore")
+	if store and store.has_signal("reputation_changed"):
+		store.reputation_changed.connect(_on_reputation_changed)
 
 
 func _load_player_data() -> void:
@@ -446,6 +453,157 @@ func _create_chronicle_header() -> void:
 	add_child(_meta_label)
 
 
+func _create_status_dashboard() -> void:
+	_dashboard = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	var bg_col: Color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	bg_col.a = 0.85
+	style.bg_color = bg_col
+	style.border_color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 5
+	style.content_margin_bottom = 5
+	_dashboard.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+
+	var faction_colors: Dictionary = {
+		"druides": MerlinVisual.CRT_PALETTE["phosphor"],
+		"anciens": MerlinVisual.CRT_PALETTE["amber"],
+		"korrigans": MerlinVisual.CRT_PALETTE["cyan"],
+		"niamh": MerlinVisual.CRT_PALETTE["amber_bright"],
+		"ankou": MerlinVisual.CRT_PALETTE["border_bright"],
+	}
+
+	var row1 := HBoxContainer.new()
+	row1.add_theme_constant_override("separation", 10)
+	for key in ["druides", "anciens", "korrigans"]:
+		row1.add_child(_create_faction_entry(key, faction_colors[key]))
+	vbox.add_child(row1)
+
+	var row2 := HBoxContainer.new()
+	row2.add_theme_constant_override("separation", 10)
+	for key in ["niamh", "ankou"]:
+		row2.add_child(_create_faction_entry(key, faction_colors[key]))
+
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row2.add_child(spacer)
+
+	var t_font: Font = MerlinVisual.get_font("terminal")
+
+	_anam_label = Label.new()
+	_anam_label.text = "◇ 0"
+	if t_font:
+		_anam_label.add_theme_font_override("font", t_font)
+	_anam_label.add_theme_font_size_override("font_size", 12)
+	_anam_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
+	_anam_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row2.add_child(_anam_label)
+
+	_runes_label = Label.new()
+	_runes_label.text = "᚛ 0"
+	if t_font:
+		_runes_label.add_theme_font_override("font", t_font)
+	_runes_label.add_theme_font_size_override("font_size", 12)
+	_runes_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
+	_runes_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row2.add_child(_runes_label)
+
+	vbox.add_child(row2)
+	_dashboard.add_child(vbox)
+	add_child(_dashboard)
+	_update_dashboard_data()
+
+
+func _create_faction_entry(faction: String, color: Color) -> HBoxContainer:
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 3)
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var t_font: Font = MerlinVisual.get_font("terminal")
+
+	var lbl := Label.new()
+	lbl.text = faction.left(3).to_upper()
+	if t_font:
+		lbl.add_theme_font_override("font", t_font)
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_color_override("font_color", color)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(lbl)
+
+	var bar := ProgressBar.new()
+	bar.min_value = 0.0
+	bar.max_value = 100.0
+	bar.value = 20.0
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(36, 6)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	bg.set_border_width_all(1)
+	bg.border_color = color.darkened(0.5)
+	bg.set_corner_radius_all(0)
+	bar.add_theme_stylebox_override("background", bg)
+
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = color
+	fill.set_corner_radius_all(0)
+	bar.add_theme_stylebox_override("fill", fill)
+	hbox.add_child(bar)
+
+	var tier_lbl := Label.new()
+	tier_lbl.text = "N"
+	if t_font:
+		tier_lbl.add_theme_font_override("font", t_font)
+	tier_lbl.add_theme_font_size_override("font_size", 10)
+	tier_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.6))
+	tier_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(tier_lbl)
+
+	_faction_bars[faction] = {"bar": bar, "label": lbl, "tier": tier_lbl}
+	return hbox
+
+
+func _update_dashboard_data() -> void:
+	if store == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var factions: Dictionary = meta.get("faction_rep", {})
+	for faction_key in _faction_bars:
+		var data: Dictionary = _faction_bars[faction_key]
+		var bar: ProgressBar = data["bar"]
+		var tier_lbl: Label = data["tier"]
+		var val: float = float(factions.get(faction_key, 20))
+		bar.value = val
+		tier_lbl.text = _get_faction_tier_letter(val)
+
+	if _anam_label:
+		_anam_label.text = "◇ %d" % int(meta.get("anam", 0))
+	if _runes_label:
+		var oghams: Array = meta.get("oghams_owned", [])
+		_runes_label.text = "᚛ %d" % oghams.size()
+
+
+static func _get_faction_tier_letter(value: float) -> String:
+	if value >= 80.0:
+		return "H"
+	if value >= 50.0:
+		return "S"
+	if value >= 20.0:
+		return "N"
+	return "X"
+
+
+func _on_reputation_changed(_faction: String, _value: float, _delta: float) -> void:
+	_update_dashboard_data()
+
 
 # =============================================================================
 # CREATE COMPONENTS — Scene Elements
@@ -560,6 +718,10 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	if _dashboard:
+		var dash_w: float = vp.x * 0.88 if (mr and mr.is_mobile) else vp.x * 0.60
+		_dashboard.position = Vector2((vp.x - dash_w) * 0.5, 72.0 + safe_top)
+		_dashboard.size = Vector2(dash_w, 0.0)
 
 
 func _layout_partir() -> void:
@@ -830,6 +992,8 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _dashboard:
+		_dashboard.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -842,6 +1006,10 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+	await get_tree().create_timer(0.1).timeout
+	if _dashboard:
+		var tw := create_tween()
+		tw.tween_property(_dashboard, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():

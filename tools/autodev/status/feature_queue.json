@@ -767,6 +767,38 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "HUB-DASHBOARD-REAL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "HubAntre faction reputation dashboard (C21 ghost fix + real impl)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "CRT-styled PanelContainer below chronicle header: 5 faction mini-bars (DRU/ANC/KOR/NIA/ANK) with color-coded ProgressBars and tier letters (H/S/N/X), Anam diamond counter, Runes ogham counter. Signal-driven via reputation_changed. Responsive width (88% mobile, 60% desktop). Animated fade-in during hub entry.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BIOME-RADIAL-UPGRADE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "BiomeRadial: 8th biome iles_mystiques + 14px font + maturity indicators",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/biome_radial.gd"],
+      "description": "Added 8th biome iles_mystiques with procedural islands icon. Font 14px per creator feedback q-20260414-008. Maturity system: global score from MATURITY_WEIGHTS formula, amber progress ring on locked biomes, threshold number in label, click prevention on locked. Dynamic angle_step for 8-biome arc.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BIOME-RADIAL-ACTIVATE",
+      "phase": 5,
+      "priority": 1,
+      "status": "pending",
+      "title": "Activate BiomeRadial in _on_partir_pressed() — currently hardcoded to Broceliande",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "HubAntre._on_partir_pressed() hardcodes selected_biome='foret_broceliande' and skips the radial. Wire _radial.open() so players can select from all 8 biomes. Key UX gap: biomes exist but only Broceliande is reachable."
     }
   ]
 }
