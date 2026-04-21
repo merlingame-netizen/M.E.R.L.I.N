@@ -101,3 +101,10 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T22:00:00.000Z","type":"cycle_start","cycle":24,"detail":"Cycle 24: Wire BiomeRadial selector + faction dashboard + biome-key passthrough"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"BIOME-RADIAL-WIRE: _on_partir_pressed() opens BiomeRadial instead of hardcoded foret_broceliande — players can select from 8 biomes with maturity gating"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"FACTION-DASHBOARD: CRT-styled PanelContainer with 5 faction ProgressBars (DRU/ANC/KOR/NIA/ANK), tier letters (H/S/N/X), Anam+Runes counters, signal-driven via reputation_changed"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"BIOME-KEY-PASSTHROUGH: BroceliandeForest3D reads biome_key from MerlinStore.run.current_biome at _ready()"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"BUG-031 CRITICAL: _create_dashboard() missing initial layout — fixed with _layout_all() in _ready()"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"task_done","cycle":24,"detail":"BUG-032 HIGH: BIOME_DATA := type inference — fixed to Dictionary explicit type"}
+{"ts":"2026-04-21T22:00:00.000Z","type":"cycle_end","cycle":24,"detail":"Cycle 24 complete: 2 bugs fixed (1 CRITICAL + 1 HIGH), 3 features (radial wire + dashboard + biome passthrough). 2 files, 178 lines. 31 total bugs fixed across 24 cycles."}

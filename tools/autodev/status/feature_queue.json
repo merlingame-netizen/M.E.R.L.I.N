@@ -767,6 +767,39 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BIOME-RADIAL-WIRE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire BiomeRadial selector into _on_partir_pressed()",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "_on_partir_pressed() now opens BiomeRadial instead of hardcoded foret_broceliande. Players can select any of 8 biomes with maturity gating. _on_radial_biome_selected already wired from C22.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "FACTION-DASHBOARD-HUB",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "HubAntre faction dashboard — 5 CRT-styled ProgressBars + Anam + Runes",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "CRT-styled PanelContainer below chronicle header. 5 faction ProgressBars (DRU/ANC/KOR/NIA/ANK) with per-faction CRT_PALETTE colors, tier letters (H=80+/S=50+/N=20+/X=<20), Anam diamond counter, Runes ogham counter. Signal-driven via reputation_changed. Responsive layout (88% mobile, 55% desktop). Fade-in entry animation sequenced after chronicle header.",
+      "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BIOME-KEY-PASSTHROUGH",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "BroceliandeForest3D reads biome_key from MerlinStore game state",
+      "agent": "godot_expert",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "BroceliandeForest3D._ready() reads current_biome from MerlinStore.state.run before initializing. Allows biome selection from HubAntre to flow through to the 3D scene. Default remains foret_broceliande if store unavailable.",
+      "completed_at": "2026-04-21"
     }
   ]
 }
