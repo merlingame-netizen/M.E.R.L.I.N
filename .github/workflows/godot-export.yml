@@ -92,21 +92,29 @@ jobs:
           echo "::warning::Parse check is advisory only — export will attempt regardless"
 
       - name: Export Web
-        timeout-minutes: 45
+        timeout-minutes: 60
         run: |
           mkdir -p web-export
           echo "=== Starting Godot web export ==="
           ls -la /root/.local/share/godot/export_templates/ 2>/dev/null || echo "No templates dir"
-          echo "=== Running export (may take 15-25 min) ==="
-          godot --headless --export-release "Web" web-export/index.html --path . 2>&1 || true
-          echo "=== Export finished ==="
+          echo "=== Running export with monitoring ==="
+          godot --headless --export-release "Web" web-export/index.html --path . &
+          GPID=$!
+          while kill -0 $GPID 2>/dev/null; do
+            sleep 60
+            FILES=$(find web-export/ -type f 2>/dev/null | wc -l)
+            SIZE=$(du -sh web-export/ 2>/dev/null | cut -f1)
+            echo "--- $(date +%H:%M:%S) files=$FILES size=$SIZE ---"
+          done
+          wait $GPID
+          EXIT=$?
+          echo "=== Godot exited with code $EXIT ==="
+          ls -la web-export/
           if [ ! -f web-export/index.html ]; then
-            echo "::error::Export failed — no index.html"
-            ls -la web-export/ || true
+            echo "::error::Export failed — no index.html produced"
             exit 1
           fi
           echo "=== Export successful ==="
-          ls -la web-export/
           # Vercel config: serve as static (no build step)
           cat > web-export/vercel.json << 'VCFG'
           {
