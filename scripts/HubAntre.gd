@@ -217,6 +217,12 @@ var _passive_llm_pending: bool = false
 var _mist_tween: Tween
 var _partir_hover_tween: Tween
 
+# Status dashboard
+var _dashboard_panel: PanelContainer = null
+var _faction_bars: Array = []
+var _anam_label_dash: Label = null
+var _oghams_label: Label = null
+
 # Audio
 var voicebox: Node = null
 var voice_ready: bool = false
@@ -235,6 +241,7 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_status_dashboard()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -269,6 +276,8 @@ func _ready() -> void:
 
 func _connect_store() -> void:
 	store = get_node_or_null("/root/MerlinStore")
+	if store and store.has_signal("reputation_changed"):
+		store.reputation_changed.connect(_on_reputation_changed)
 
 
 func _load_player_data() -> void:
@@ -540,6 +549,160 @@ func _create_radial() -> void:
 
 
 # =============================================================================
+# STATUS DASHBOARD — Faction rep mini-bars + Anam + Runes
+# =============================================================================
+
+func _create_status_dashboard() -> void:
+	_dashboard_panel = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	var bg: Color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	style.bg_color = Color(bg.r, bg.g, bg.b, 0.88)
+	style.border_color = MerlinVisual.CRT_PALETTE["border"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	_dashboard_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+
+	var factions: Array[String] = MerlinReputationSystem.FACTIONS
+	for faction in factions:
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 6)
+		var faction_color: Color = MerlinVisual.CRT_PALETTE.get("faction_" + faction, MerlinVisual.CRT_PALETTE["phosphor"])
+
+		var name_lbl := Label.new()
+		name_lbl.text = faction.substr(0, 3).to_upper()
+		name_lbl.custom_minimum_size.x = MerlinVisual.responsive_size(30)
+		name_lbl.add_theme_color_override("font_color", faction_color)
+		MerlinVisual.apply_responsive_font(name_lbl, MerlinVisual.CAPTION_SMALL, "terminal")
+		hbox.add_child(name_lbl)
+
+		var bar := ProgressBar.new()
+		bar.min_value = 0.0
+		bar.max_value = 100.0
+		bar.value = float(MerlinConstants.FACTION_SCORE_START)
+		bar.custom_minimum_size = Vector2(MerlinVisual.responsive_size(80), MerlinVisual.responsive_size(8))
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar.show_percentage = false
+		MerlinVisual.apply_bar_theme(bar, "faction_" + faction)
+		hbox.add_child(bar)
+
+		var val_lbl := Label.new()
+		val_lbl.text = str(MerlinConstants.FACTION_SCORE_START)
+		val_lbl.custom_minimum_size.x = MerlinVisual.responsive_size(22)
+		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		val_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		MerlinVisual.apply_responsive_font(val_lbl, MerlinVisual.CAPTION_SMALL, "terminal")
+		hbox.add_child(val_lbl)
+
+		var tier_lbl := Label.new()
+		tier_lbl.text = "N"
+		tier_lbl.custom_minimum_size.x = MerlinVisual.responsive_size(14)
+		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tier_lbl.add_theme_color_override("font_color", faction_color)
+		MerlinVisual.apply_responsive_font(tier_lbl, MerlinVisual.CAPTION_TINY, "terminal")
+		hbox.add_child(tier_lbl)
+
+		vbox.add_child(hbox)
+		_faction_bars.append({"bar": bar, "value": val_lbl, "tier": tier_lbl})
+
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 2)
+	var sep_style := StyleBoxFlat.new()
+	sep_style.bg_color = Color.TRANSPARENT
+	sep_style.border_width_bottom = 1
+	sep_style.border_color = MerlinVisual.CRT_PALETTE["line"]
+	sep.add_theme_stylebox_override("separator", sep_style)
+	vbox.add_child(sep)
+
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 16)
+
+	_anam_label_dash = Label.new()
+	_anam_label_dash.text = "Anam: 0"
+	_anam_label_dash.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
+	MerlinVisual.apply_responsive_font(_anam_label_dash, MerlinVisual.CAPTION_SIZE, "terminal")
+	bottom.add_child(_anam_label_dash)
+
+	_oghams_label = Label.new()
+	_oghams_label.text = "Runes: ---"
+	_oghams_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan_dim"])
+	MerlinVisual.apply_responsive_font(_oghams_label, MerlinVisual.CAPTION_SIZE, "terminal")
+	bottom.add_child(_oghams_label)
+
+	vbox.add_child(bottom)
+	_dashboard_panel.add_child(vbox)
+	add_child(_dashboard_panel)
+	_update_dashboard_data()
+
+
+func _update_dashboard_data() -> void:
+	if store == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var factions: Array[String] = MerlinReputationSystem.FACTIONS
+
+	for i in factions.size():
+		if i >= _faction_bars.size():
+			break
+		var faction: String = factions[i]
+		var val: float = float(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START))
+		var entry: Dictionary = _faction_bars[i]
+		entry["bar"].value = val
+		entry["value"].text = str(int(val))
+		entry["tier"].text = _get_tier_abbrev(val)
+
+	var anam: int = int(meta.get("anam", 0))
+	if _anam_label_dash:
+		_anam_label_dash.text = "Anam: %d" % anam
+
+	var oghams: Dictionary = store.state.get("oghams", {})
+	var equipped: Array = oghams.get("skills_equipped", [])
+	if _oghams_label:
+		if equipped.is_empty():
+			_oghams_label.text = "Runes: ---"
+		else:
+			var names: Array[String] = []
+			for o in equipped:
+				names.append(str(o).substr(0, 4).capitalize())
+			_oghams_label.text = "Runes: %s" % ", ".join(names)
+
+
+static func _get_tier_abbrev(value: float) -> String:
+	if value >= 80.0:
+		return "H"
+	if value >= 50.0:
+		return "S"
+	if value >= 20.0:
+		return "N"
+	if value >= 5.0:
+		return "M"
+	return "X"
+
+
+func _layout_dashboard(vp: Vector2, mr: Node, safe_top: float) -> void:
+	if _dashboard_panel == null:
+		return
+	var is_compact: bool = mr != null and mr.is_mobile
+	var panel_w: float = minf(vp.x * 0.65, 360.0)
+	if is_compact:
+		panel_w = vp.x * 0.90
+	_dashboard_panel.position = Vector2((vp.x - panel_w) * 0.5, 74.0 + safe_top)
+	_dashboard_panel.custom_minimum_size.x = panel_w
+	_dashboard_panel.size.x = panel_w
+
+
+func _on_reputation_changed(_faction: String, _value: float, _delta: float) -> void:
+	_update_dashboard_data()
+
+
+# =============================================================================
 # LAYOUT
 # =============================================================================
 
@@ -560,6 +723,7 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	_layout_dashboard(vp, mr, safe_top)
 
 
 func _layout_partir() -> void:
@@ -821,6 +985,8 @@ func _play_entry_animation() -> void:
 	SFXManager.play("scene_transition")
 
 	# Start everything invisible
+	if _dashboard_panel:
+		_dashboard_panel.modulate.a = 0.0
 	for hs in _hotspots:
 		hs.modulate.a = 0.0
 	if _partir_btn:
@@ -842,6 +1008,12 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+
+	# Dashboard fade-in
+	if _dashboard_panel:
+		await get_tree().create_timer(0.1).timeout
+		var tw_dash := create_tween()
+		tw_dash.tween_property(_dashboard_panel, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():

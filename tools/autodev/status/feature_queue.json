@@ -767,6 +767,17 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "HUB-DASHBOARD-1",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "HubAntre faction reputation dashboard — mini-bars + Anam + Runes",
+      "agent": "ui_worker",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "Compact CRT-styled status panel below chronicle header. 5 faction mini-bars with color-coded ProgressBars (faction_druides/anciens/korrigans/niamh/ankou palette keys), numeric values, and tier abbreviations (H/S/N/M/X). Anam cross-run currency counter. Equipped Runes display. Auto-updates via reputation_changed signal from MerlinStore. Responsive layout (65% viewport desktop, 90% mobile). Animated fade-in during hub entry sequence.",
+      "completed_at": "2026-04-21"
     }
   ]
 }
