@@ -767,6 +767,17 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "JOURNEY-MAP-CRT",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "JourneyMapDisplay CRT visual polish — shaped nodes, dashed lines, scanlines, pulse",
+      "agent": "ui_worker",
+      "files": ["scripts/run/journey_map_display.gd"],
+      "description": "Complete rewrite of JourneyMapDisplay with CRT terminal aesthetic. Terminal font via MerlinVisual. Event-type classification from effects array (String+Dict): HEAL→cross/success, DAMAGE→circle/danger, REPUTATION→diamond/cyan, OGHAM→triangle/amber, PROMISE→circle/amber_dim, CARD→circle/phosphor_dim. Dashed connection lines. Scanline overlay. Pulsing glow on final node (sin wave animation). Scroll indicators for long runs. Event glyphs as text prefixes (+, !, ~, *, @). Labels show choice text or card text with truncation.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

@@ -1,10 +1,10 @@
 {
-  "cycle": 19,
-  "timestamp": "2026-04-21T16:00:00.000Z",
+  "cycle": 20,
+  "timestamp": "2026-04-21T18:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C18", "ENDRUNSCREEN-GFC-WIRE"],
-  "rationale": "C18 next_cycle_plan called for bug hunt C18 + wire EndRunScreen into GFC. Bug hunt found BUG-030 MEDIUM: _auto_setup() never wired _save_system from MerlinStore — saves silently non-functional through GFC in autoload mode. Fixed. Feature: complete_run() now goes to END_SCREEN phase -> EndRunScreen.tscn. EndRunScreen._ready() auto-wires with GameFlow, fetches last_run_data, shows full CRT-styled end screen (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed from Node+wrong script to Control+correct script. BroceliandeForest3D._on_run_complete() simplified: removed 60-line inline overlay, now uses GFC. Signal-driven _on_run_ended() and _on_hub_requested() also transition scenes.",
-  "budget": {"files": 4, "lines": 51},
+  "tasks": ["BUGHUNT-C19", "JOURNEY-MAP-CRT"],
+  "rationale": "C19 next_cycle_plan called for bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn) — 0 bugs found. All CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring path correct, signal chain verified. Feature: JourneyMapDisplay completely rewritten with CRT terminal aesthetic — terminal font via MerlinVisual, event-type classification from effects (handles both String and Dict formats), shaped nodes (circle=standard, diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow animation on final node (victory=amber, death=danger), scroll indicators for long runs, event glyphs (+ heal, ! damage, ~ rep, * ogham, @ promise).",
+  "budget": {"files": 1, "lines": 193},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C19 (verify EndRunScreen auto-wiring works: _ready() → GameFlow → show_results(), signal chain hub_requested → _on_hub_requested() → HubAntre transition). Then feature: JourneyMapDisplay visual polish — the journey map in EndRunScreen shows run events as a timeline. Currently data-only, needs CRT-styled visual nodes (card dots, connections, score indicators)."
+  "next_cycle_plan": "Bug hunt C20 (verify JourneyMapDisplay _process() frame cost acceptable, _classify_event handles all effect formats from walk_event_controller). Then feature: HubAntre visual refresh — the hub screen needs CRT polish to match the new EndRunScreen and JourneyMap quality. Focus on faction reputation display with mini-bars, biome selector with maturity indicators, and Ogham equipment panel."
 }

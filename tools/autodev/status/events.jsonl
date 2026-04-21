@@ -101,3 +101,7 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T18:00:00.000Z","type":"cycle_start","cycle":20,"detail":"Cycle 20: Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish"}
+{"ts":"2026-04-21T18:00:00.000Z","type":"task_done","cycle":20,"detail":"BUGHUNT-C19: 0 bugs — game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn all verified clean"}
+{"ts":"2026-04-21T18:00:00.000Z","type":"task_done","cycle":20,"detail":"JOURNEY-MAP-CRT: CRT visual polish — terminal font, event-type shaped nodes (diamond/cross/triangle), dashed lines, scanlines, pulsing final node, scroll indicators, event glyphs"}
+{"ts":"2026-04-21T18:00:00.000Z","type":"cycle_end","cycle":20,"detail":"Cycle 20 complete: 0 bugs (C19 clean), 1 feature (JourneyMapDisplay CRT). 1 file, 193 ins / 78 del. 29 total bugs fixed across 20 cycles."}
