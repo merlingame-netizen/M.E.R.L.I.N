@@ -101,3 +101,7 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-21T19:00:00.000Z","type":"cycle_start","cycle":21,"detail":"Cycle 21: Bug hunt C20 (0 bugs — JourneyMapDisplay, EndRunScreen, GFC) + feat HubAntre faction reputation bars"}
+{"ts":"2026-04-21T19:00:00.000Z","type":"task_done","cycle":21,"detail":"BUGHUNT-C20: 0 bugs — _process frame cost OK, _classify_event String+Dict, complete_run guard, auto-wiring verified"}
+{"ts":"2026-04-21T19:00:00.000Z","type":"task_done","cycle":21,"detail":"HUBANTRE-FACTION-BARS: 5 FactionRepBar in CRT panel, responsive (92%/72%), animated, live signal refresh, mobile font scaling"}
+{"ts":"2026-04-21T19:00:00.000Z","type":"cycle_end","cycle":21,"detail":"Cycle 21 complete: 0 bugs (C20 clean), 1 feature (faction bars). 2 files, 85 lines. 29 total bugs fixed across 21 cycles."}

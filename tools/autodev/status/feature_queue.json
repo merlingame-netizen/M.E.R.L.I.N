@@ -767,6 +767,17 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "HUBANTRE-FACTION-BARS",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire faction reputation bars into HubAntre — 5 CRT-styled bars with live updates",
+      "agent": "ui_worker",
+      "files": ["scripts/HubAntre.gd", "scripts/ui/faction_rep_bar.gd"],
+      "description": "HubAntre now displays all 5 faction reputations (druides, anciens, korrigans, niamh, ankou) in a CRT terminal panel below the chronicle header. Each FactionRepBar shows: faction symbol, name, colored fill bar with threshold markers (50/80), value, tier label. Panel responsive (92% mobile / 72% desktop), animated fade-in on entry, auto-refreshes via reputation_changed signal. FactionRepBar labels upgraded to MerlinVisual.apply_responsive_font() for mobile.",
+      "completed_at": "2026-04-21"
     }
   ]
 }

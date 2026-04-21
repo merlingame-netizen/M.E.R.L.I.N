@@ -1,10 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T19:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 20: Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
+  "scope": "Cycle 21: Bug hunt C20 (0 bugs) + feat HubAntre faction reputation bars",
   "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C19: verified 4 files (game_flow_controller.gd, end_run_screen.gd, journey_map_display.gd, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct, signal chain hub_requested→_on_hub_requested()→HubAntre verified. Feature: JourneyMapDisplay rewritten with full CRT aesthetic — terminal font, event-type shaped nodes, dashed lines, scanline overlay, pulsing final node, scroll indicators. 29 total bugs fixed across 20 cycles."
+  "overall_assessment": "Bug hunt C20: verified 3 files (journey_map_display.gd, end_run_screen.gd, game_flow_controller.gd). 0 bugs found — _process frame cost acceptable (lightweight draw, TAU wrap), _classify_event handles all effect formats, complete_run phase guard prevents double-reward, auto-wiring correct. Feature: HubAntre now displays 5 faction reputation bars (druides, anciens, korrigans, niamh, ankou) with CRT styling, threshold markers, responsive layout, animated entry, and live signal refresh. 29 total bugs fixed across 21 cycles."
 }

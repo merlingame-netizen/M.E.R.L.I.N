@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 20 — Bug hunt C19 (0 bugs) + feat JourneyMapDisplay CRT visual polish",
+  "objective": "Cycle 21 — Bug hunt C20 (0 bugs) + feat HubAntre faction reputation bars",
   "workers": [],
-  "updated_at": "2026-04-21T18:00:00.000Z",
-  "cycle": 20,
-  "checkpoint": "Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn). 0 bugs found — all CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring correct. Feature: JourneyMapDisplay rewritten with CRT visual polish — terminal font, event-type classification (HEAL/DAMAGE/REPUTATION/OGHAM/PROMISE) from effects array (String+Dict), shaped nodes (diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow on final node, scroll indicators, event glyphs. Handles both string and dict effect formats. 1 file modified, 193 insertions, 78 deletions. 29 total bugs fixed across 20 cycles."
+  "updated_at": "2026-04-21T19:00:00.000Z",
+  "cycle": 21,
+  "checkpoint": "Bug hunt C20: verified JourneyMapDisplay (_process frame cost OK, _classify_event handles String+Dict), EndRunScreen (auto-wiring correct, bg_death key valid), GameFlowController (complete_run phase guard OK, no double-reward). 0 bugs found. Feature: HubAntre faction reputation display — 5 CRT-styled FactionRepBar instances in a terminal panel below chronicle header. Responsive width (92% mobile / 72% desktop), animated fade-in, live signal refresh via reputation_changed. FactionRepBar labels upgraded to MerlinVisual.apply_responsive_font() for mobile scaling. 2 files, 85 lines. 29 total bugs fixed across 21 cycles."
 }
