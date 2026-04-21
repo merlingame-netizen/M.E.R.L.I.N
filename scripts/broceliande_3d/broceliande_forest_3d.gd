@@ -178,6 +178,7 @@ var _merlin_whisper: Node  # MerlinWhisper (CanvasLayer)
 var _gameplay_active: bool = false  # true when LLM event system is wired
 var _encounter_count: int = 0
 var _encounter_total: int = 5
+var _encounter_story_log: Array = []
 var _saved_crt_preset: String = "medium"
 var _crt_was_visible: bool = true
 
@@ -1133,6 +1134,18 @@ func _on_encounter_reached(enc_idx: int) -> void:
 	overlay.card_resolved.connect(func(choice_idx: int, score: int):
 		print("[Forest3D] Card resolved: choice=%d score=%d" % [choice_idx, score])
 
+		# Record encounter in story_log for EndRunScreen JourneyMapDisplay
+		var choice_label: String = ""
+		var card_choices: Array = card.get("choices", [])
+		if choice_idx >= 0 and choice_idx < card_choices.size():
+			choice_label = str(card_choices[choice_idx].get("label", ""))
+		_encounter_story_log.append({
+			"card_idx": _encounter_count,
+			"text": str(card.get("title", "Rencontre %d" % _encounter_count)),
+			"choice": choice_label,
+			"score": score,
+		})
+
 		# Apply effects: heal/damage based on score (no per-card drain — director decision)
 		var store: Node = get_node_or_null("/root/GameManager")
 		if store and store.has_method("get") and store.get("run_state") is Dictionary:
@@ -1243,6 +1256,7 @@ func _build_run_summary() -> Dictionary:
 		"life_essence": life,
 		"biome_currency": currency,
 		"merlin_found": _merlin_found,
+		"story_log": _encounter_story_log.duplicate(),
 	}
 
 
