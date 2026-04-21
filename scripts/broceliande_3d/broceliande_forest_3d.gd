@@ -1229,20 +1229,38 @@ func _get_encounter_card(enc_idx: int) -> Dictionary:
 
 
 func _build_run_summary() -> Dictionary:
-	var gm: Node = get_node_or_null("/root/GameManager")
 	var life: int = 100
 	var currency: int = 0
-	if gm:
-		var rs: Variant = gm.get("run_state") if gm.has_method("get") else null
-		if rs is Dictionary:
-			life = int(rs.get("life_essence", 100))
-			currency = int(rs.get("biome_currency", 0))
+	var oghams_used: int = 0
+	var minigames_won: int = 0
+	var minigames_played: int = 0
+	var story_log: Array = []
+	var faction_rep_delta: Dictionary = {}
+
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store:
+		var run: Dictionary = store.state.get("run", {})
+		life = int(run.get("life_essence", 100))
+		currency = int(run.get("biome_currency", 0))
+		oghams_used = int(run.get("oghams_used", 0))
+		minigames_won = int(run.get("minigames_won", 0))
+		minigames_played = int(run.get("minigames_played", minigames_won))
+		faction_rep_delta = run.get("faction_rep_delta", {})
+
+	if _walk_event_controller and _walk_event_controller.has_method("get_story_log"):
+		story_log = _walk_event_controller.get_story_log()
+
 	return {
 		"biome": biome_key,
 		"card_index": _encounter_count,
 		"life_essence": life,
 		"biome_currency": currency,
 		"merlin_found": _merlin_found,
+		"story_log": story_log,
+		"oghams_used": oghams_used,
+		"minigames_won": minigames_won,
+		"minigames_played": minigames_played,
+		"faction_rep_delta": faction_rep_delta,
 	}
 
 

@@ -95,6 +95,14 @@ var _cards_played: int = 0
 var _story_log: Array[Dictionary] = []
 
 
+func get_story_log() -> Array[Dictionary]:
+	return _story_log
+
+
+func get_cards_played() -> int:
+	return _cards_played
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -339,6 +347,7 @@ func _on_choice_selected(option: int) -> void:
 	var labels: Array = _current_event.get("labels", [])
 	var chosen_label: String = str(labels[option]) if option < labels.size() else "?"
 	_story_log.append({
+		"card_idx": _cards_played + 1,
 		"text": _current_event.get("text", "").substr(0, 200),
 		"choice": chosen_label,
 		"option": option,
