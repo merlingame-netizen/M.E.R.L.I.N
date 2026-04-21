@@ -72,9 +72,15 @@ jobs:
           sed -i 's/^          //' export_presets.cfg
 
       - name: Import project
-        timeout-minutes: 15
+        timeout-minutes: 20
         run: |
-          timeout 600 godot --headless --path . --import --quit 2>&1 | tail -50 || true
+          echo "=== Starting full import (no timeout kill — let it complete) ==="
+          godot --headless --path . --import --quit 2>&1 || true
+          echo "=== Import done ==="
+          echo "=== Verify critical imports ==="
+          ls -la .godot/imported/ 2>/dev/null | head -5
+          find .godot/imported -name "VT323*" 2>/dev/null | head -3
+          find .godot/imported -name "translations*" 2>/dev/null | head -3
           echo "=== Import done ==="
 
       - name: Parse check
