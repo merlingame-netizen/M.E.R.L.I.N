@@ -1,10 +1,10 @@
 {
-  "cycle": 20,
-  "timestamp": "2026-04-21T18:00:00.000Z",
+  "cycle": 21,
+  "timestamp": "2026-04-21T19:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGHUNT-C19", "JOURNEY-MAP-CRT"],
-  "rationale": "C19 next_cycle_plan called for bug hunt C19 + JourneyMapDisplay visual polish. Bug hunt C19: verified 4 files (game_flow_controller, end_run_screen, journey_map_display, EndRunScreen.tscn) — 0 bugs found. All CRT_PALETTE keys valid, complete_run() phase guard prevents double-reward, EndRunScreen auto-wiring path correct, signal chain verified. Feature: JourneyMapDisplay completely rewritten with CRT terminal aesthetic — terminal font via MerlinVisual, event-type classification from effects (handles both String and Dict formats), shaped nodes (circle=standard, diamond=reputation, cross=heal, triangle=ogham), dashed connection lines, scanline overlay, pulsing glow animation on final node (victory=amber, death=danger), scroll indicators for long runs, event glyphs (+ heal, ! damage, ~ rep, * ogham, @ promise).",
-  "budget": {"files": 1, "lines": 193},
+  "tasks": ["BUGHUNT-C20", "HUB-DASHBOARD-1"],
+  "rationale": "C20 next_cycle_plan called for bug hunt C20 + HubAntre visual refresh. Bug hunt C20: verified JourneyMapDisplay _process() and _classify_event — 0 bugs found, frame cost acceptable, event classification complete. Feature: Added compact faction reputation dashboard to HubAntre hub screen — 5 color-coded faction mini-bars with tier abbreviations (H=Honore/S=Sympathisant/N=Neutre/M=Mefiant/X=Hostile), Anam cross-run currency counter, equipped Runes display. CRT-styled with semi-transparent deep bg, terminal font, responsive mobile/desktop layout. Live updates via reputation_changed signal. Animated fade-in during hub entry sequence.",
+  "budget": {"files": 1, "lines": 172},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C20 (verify JourneyMapDisplay _process() frame cost acceptable, _classify_event handles all effect formats from walk_event_controller). Then feature: HubAntre visual refresh — the hub screen needs CRT polish to match the new EndRunScreen and JourneyMap quality. Focus on faction reputation display with mini-bars, biome selector with maturity indicators, and Ogham equipment panel."
+  "next_cycle_plan": "Bug hunt C21 (verify HubAntre dashboard doesn't overlap with hotspots on small viewports, test _update_dashboard_data null safety). Then feature: Biome selector maturity indicators — show biome unlock status and maturity score in the radial/selection UI, so the player knows which biomes are available and how progressed they are."
 }
