@@ -822,6 +822,22 @@
       "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "BroceliandeForest3D._update_hud() hardcoded Beith. Now reads ogham_actif from MerlinStore, looks up OGHAM_FULL_SPECS for glyph/name/cooldown. Robust fallback: empty or invalid key → beith.",
       "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BIOME-ATMOSPHERE-C30",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Per-biome atmosphere: 8 particle profiles + lighting configs",
+      "agent": "godot_expert",
+      "files": [
+        "scripts/broceliande_3d/biome_particle_profiles.gd",
+        "scripts/broceliande_3d/forest_effects.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scripts/broceliande_3d/biome_walk_configs.gd"
+      ],
+      "description": "8 unique biome atmospheres via BiomeParticleProfiles (5 particle layers each: fog, ambient, accent, falling, ground_mist). ForestEffects now biome-aware. Sky/sun/fill colors driven by BiomeWalkConfigs per biome. Marais=thick fog+will-o-wisps, cotes=sea spray+bright blue, cercles=snow+cold silver mist, iles=aurora shimmer+ethereal glow, villages=hearth embers+warm amber, landes=dust wind+heather petals, collines=bone spirits+grey overcast.",
+      "completed_at": "2026-04-22"
     }
   ]
 }

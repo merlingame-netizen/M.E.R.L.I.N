@@ -1,10 +1,10 @@
 {
-  "cycle": 28,
-  "timestamp": "2026-04-22T17:00:00.000Z",
+  "cycle": 30,
+  "timestamp": "2026-04-22T19:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-037-WIRE-OGHAM", "BUGFIX-038-READ-OGHAM-3D"],
-  "rationale": "Bug hunt C27: OghamSelector (329 lines) was created but never wired into Hub→Run flow. Bible s.2.2 mandates ogham selection before each run. Also BroceliandeForest3D hardcoded Beith instead of reading from store. Both are flow-critical bugs that break the core loop: player can never choose their rune.",
-  "budget": {"files": 2, "lines": 48},
+  "tasks": ["BIOME-ATMOSPHERE-PROFILES", "BIOME-LIGHTING-CONFIGS", "FOREST-EFFECTS-BIOME-AWARE"],
+  "rationale": "Bug hunt C29: 0 bugs (talent system .get() chaining handles all edge cases). Feature: All 8 biomes shared identical green fog, golden pollen, and green fireflies regardless of selection. Sky color and sun color were hardcoded to broceliande values. Created BiomeParticleProfiles with 8 unique atmospheres. Each biome now has distinct fog density/color, ambient particles (pollen/dust/spray/embers), accent effects (fireflies/wisps/sparks), falling particles (leaves/snow/rain/ash), and ground mist. BiomeWalkConfigs now drives sun, fill light, and sky background per biome. Marais gets thick green fog + will-o-wisps, cotes gets sea spray + bright blue sky, cercles gets cold silver mist + snow, iles gets aurora shimmer + ethereal glow.",
+  "budget": {"files": 4, "lines": 680},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C28: verify OghamSelector opens correctly after BiomeRadial, confirm ogham_actif persists to 3D scene. Feature candidates: word minigame skeleton (core loop gap), talent tree skeleton (meta progression), or biome-specific 3D walkConfigs."
+  "next_cycle_plan": "Bug hunt C30: verify BiomeParticleProfiles loads correctly for all 8 biomes, confirm no null access in forest_effects.gd for empty particle layers. Feature candidates: biome-specific creature spawning (different animals per biome), encounter card biome flavor text, or hub journal/run history viewer."
 }

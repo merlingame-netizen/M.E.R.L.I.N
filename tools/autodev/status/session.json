@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 28 — Wire OghamSelector into Hub→Run flow + read ogham from store in 3D",
+  "objective": "Cycle 30 — Biome atmosphere differentiation: 8 unique particle profiles + per-biome lighting",
   "workers": [],
-  "updated_at": "2026-04-22T17:00:00.000Z",
-  "cycle": 28,
-  "checkpoint": "BUG-037 (HIGH): OghamSelector created in C27 but never wired into flow. Now BiomeRadial→OghamSelector→launch. Signal-safe cleanup with is_instance_valid + explicit disconnect. BUG-038 (MEDIUM): BroceliandeForest3D hardcoded Beith — now reads ogham_actif from MerlinStore with OGHAM_FULL_SPECS lookup + robust fallback. 2 files, 48 lines. 36 total bugs fixed across 28 cycles."
+  "updated_at": "2026-04-22T19:00:00.000Z",
+  "cycle": 30,
+  "checkpoint": "NEW: biome_particle_profiles.gd (578 lines) — 8 biome-specific particle atmospheres (fog, ambient, accent, falling, ground_mist layers). MODIFIED: forest_effects.gd now biome-aware via set_biome() + BiomeParticleProfiles. MODIFIED: broceliande_forest_3d.gd uses BiomeWalkConfigs sun/fill/background colors. MODIFIED: biome_walk_configs.gd has per-biome sun_color/sun_energy/fill_color/fill_energy/background_color. Bug hunt C29: 0 bugs (talent system safe). 4 files, 680 net lines. 36 total bugs fixed across 30 cycles."
 }
