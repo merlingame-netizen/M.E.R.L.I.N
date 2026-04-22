@@ -43,9 +43,20 @@ jobs:
           # Remove ALL editor plugins (MCP server hangs on port 9080)
           sed -i '/\[editor_plugins\]/,/^$/d' project.godot
 
-          # Remove autoloads that block in headless (network servers, LLM)
+          # Remove autoloads that block in headless (network servers, LLM, audio)
+          # Keep ONLY: GameManager, MerlinVisual, LocaleManager, I18nRegistry,
+          # SceneSelector, WorldMapSystem, GameTimeManager, InputAdapter,
+          # PlatformManager, MerlinResponsive, PixelTransition, PixelContentAnimator
           sed -i '/GameDebugServer=/d' project.godot
           sed -i '/MerlinAI=/d' project.godot
+          sed -i '/SFXManager=/d' project.godot
+          sed -i '/MusicManager=/d' project.godot
+          sed -i '/ScreenDither=/d' project.godot
+          sed -i '/ScreenFrame=/d' project.godot
+          sed -i '/ScreenEffects=/d' project.godot
+          sed -i '/MerlinBackdrop=/d' project.godot
+          sed -i '/DayNightManager=/d' project.godot
+          sed -i '/GameFlow=/d' project.godot
 
           # Patch shaders: remove hint_screen_texture (unsupported in headless)
           for shader in shaders/*.gdshader; do
@@ -57,13 +68,20 @@ jobs:
 
       - name: Import resources
         continue-on-error: true
-        run: godot --headless -v --import
+        timeout-minutes: 20
+        run: timeout 900 godot --headless -v --import || true
 
       - name: Web Export
+        timeout-minutes: 60
         run: |
           mkdir -v -p web-export
-          godot --headless --verbose --export-release "Web" web-export/index.html
+          timeout 3300 godot --headless --verbose --export-release "Web" web-export/index.html || true
+          echo "=== Result ==="
           ls -la web-export/
+          if [ ! -f web-export/index.html ]; then
+            echo "::error::Export failed"
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
