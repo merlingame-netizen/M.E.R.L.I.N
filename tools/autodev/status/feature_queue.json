@@ -767,6 +767,39 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "C25-BIOME-RADIAL-WIRE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire BiomeRadial into _on_partir_pressed() (C24 ghost fix)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "C24 claimed this was done but code was never pushed. _on_partir_pressed() now opens BiomeRadial at viewport center instead of hardcoding foret_broceliande. Double-press guard: returns early if _radial exists. Fallback to foret_broceliande only if _radial is null.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "C25-FACTION-DASHBOARD",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Faction dashboard — 5 CRT ProgressBars + Anam/Runes counters",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "C24 claimed this was done but zero dashboard code existed. Implemented: CRT-styled PanelContainer below chronicle header with 5 faction ProgressBars (DRU/ANC/KOR/NIA/ANK, per-faction colors), tier letters (H>=80/S>=50/N>=20/X<20), Anam diamond counter, Runes ogham counter. Signal-driven via reputation_changed. Responsive layout (88% mobile, 55% desktop). _exit_tree() disconnect for signal safety.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "C25-BIOME-KEY-PASSTHROUGH",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Read biome_key from MerlinStore in BroceliandeForest3D._ready()",
+      "agent": "godot_expert",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "C24 claimed this was done but _ready() had no store read. Added: reads current_biome from MerlinStore.state.run before all biome-dependent setup (viewport, environment, path, terrain). Guarded with null/type checks. Falls back to export default foret_broceliande.",
+      "completed_at": "2026-04-22"
     }
   ]
 }

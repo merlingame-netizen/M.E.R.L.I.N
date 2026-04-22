@@ -101,3 +101,10 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-22T14:00:00.000Z","type":"cycle_start","cycle":25,"detail":"Cycle 25: Bug hunt C24 (ghost cycle detected) + real implementation of BiomeRadial + faction dashboard + biome-key passthrough"}
+{"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"GHOST-DETECT: C24 was ghost cycle #4 — all 3 features + 1 bugfix claimed in status but zero code pushed"}
+{"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BIOME-RADIAL-WIRE: _on_partir_pressed() opens BiomeRadial (was hardcoded foret_broceliande). Double-press guard added."}
+{"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"FACTION-DASHBOARD: CRT PanelContainer with 5 ProgressBars (DRU/ANC/KOR/NIA/ANK), tier letters, Anam+Runes counters. Signal-driven. Responsive. _exit_tree() cleanup."}
+{"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BIOME-KEY-PASSTHROUGH: BroceliandeForest3D._ready() reads current_biome from MerlinStore.state.run before building forest."}
+{"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-032-GHOST: BIOME_DATA := to Dictionary type hint (C24 claimed fixed, code unchanged). Fixed for real."}
+{"ts":"2026-04-22T14:00:00.000Z","type":"cycle_end","cycle":25,"detail":"Cycle 25 complete: 3 ghost features implemented, 3 bugs fixed (3 HIGH + 2 MEDIUM + 1 ghost). 2 files, 190 lines. 32 total bugs fixed across 25 cycles."}
