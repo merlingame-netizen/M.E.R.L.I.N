@@ -108,3 +108,7 @@
 {"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BIOME-KEY-PASSTHROUGH: BroceliandeForest3D._ready() reads current_biome from MerlinStore.state.run before building forest."}
 {"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-032-GHOST: BIOME_DATA := to Dictionary type hint (C24 claimed fixed, code unchanged). Fixed for real."}
 {"ts":"2026-04-22T14:00:00.000Z","type":"cycle_end","cycle":25,"detail":"Cycle 25 complete: 3 ghost features implemented, 3 bugs fixed (3 HIGH + 2 MEDIUM + 1 ghost). 2 files, 190 lines. 32 total bugs fixed across 25 cycles."}
+{"ts":"2026-04-22T16:30:00.000Z","type":"cycle_start","cycle":27,"detail":"Cycle 27: OghamSelector overlay (core loop gap bible s.2.2) + bug hunt C26 ghost feature"}
+{"ts":"2026-04-22T16:30:00.000Z","type":"task_done","cycle":27,"detail":"OGHAM-SELECTOR-UI: Created ogham_selector.gd — CRT overlay, 3-col grid, category colors, glyphs, cooldowns. Wired HubAntre: BiomeRadial→OghamSelector→launch. Passes ogham to GFC + oghams.equipped."}
+{"ts":"2026-04-22T16:30:00.000Z","type":"task_done","cycle":27,"detail":"BUGHUNT-C26-GHOST: BiomeRadial hover panel was ghost feature (status said done, code never committed). Logged as pending task for C28."}
+{"ts":"2026-04-22T16:30:00.000Z","type":"cycle_end","cycle":27,"detail":"Cycle 27 complete: OghamSelector core loop feature (bible s.2.2 compliance). 1 ghost detected from C26. 2 files, 365 lines."}

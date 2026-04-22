@@ -800,6 +800,27 @@
       "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "C24 claimed this was done but _ready() had no store read. Added: reads current_biome from MerlinStore.state.run before all biome-dependent setup (viewport, environment, path, terrain). Guarded with null/type checks. Falls back to export default foret_broceliande.",
       "completed_at": "2026-04-22"
+    },
+    {
+      "id": "OGHAM-SELECTOR-UI",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "OghamSelector overlay — rune selection before run start (core loop gap)",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/ogham_selector.gd", "scripts/HubAntre.gd"],
+      "description": "Bible s.2.2 mandates Choix biome → Choix Ogham but code went straight to 3D. Created OghamSelector: CRT-styled overlay, 3-column grid of unlocked oghams, category colors + glyphs, descriptions, cooldowns. Pre-selects last used (meta.last_ogham). Wired HubAntre: BiomeRadial → OghamSelector → _launch_adventure(ogham). Passes to GFC.request_run() + oghams.equipped.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGHUNT-C26-GHOST",
+      "phase": 0,
+      "priority": 2,
+      "status": "pending",
+      "title": "Fix C26 ghost feature: BiomeRadial hover info panel never committed",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/biome_radial.gd"],
+      "description": "C26 status files claimed BiomeRadial hover info panel was implemented (4 const dicts + _draw_hover_panel()) but code was never actually committed. Need to implement: CRT-styled tooltip on biome hover showing full name, guardian, season, difficulty, maturity progress bar."
     }
   ]
 }

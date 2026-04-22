@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 26 — Bug hunt C25 (BUG-035/036 wrong state keys) + BiomeRadial hover info panel",
+  "objective": "Cycle 27 — OghamSelector overlay (core loop gap: bible s.2.2 Choix Ogham) + bug hunt C26 ghost feature",
   "workers": [],
-  "updated_at": "2026-04-22T15:00:00.000Z",
-  "cycle": 26,
-  "checkpoint": "Bug hunt C25 found 2 bugs in HubAntre.gd: BUG-035 (HIGH) dashboard read meta.factions instead of meta.faction_rep — all ProgressBars showed default 20 on load. BUG-036 (MEDIUM) runes counter read meta.oghams_discovered (nonexistent) instead of state.oghams.skills_unlocked — always showed 0/18. Both fixed. Feature: BiomeRadial hover info panel with CRT-styled tooltip showing full biome name, guardian, season, difficulty, maturity progress bar. 4 const dicts + _draw_hover_panel() method. 2 files, ~139 lines. 34 total bugs fixed across 26 cycles."
+  "updated_at": "2026-04-22T16:30:00.000Z",
+  "cycle": 27,
+  "checkpoint": "Created OghamSelector (scripts/ui/ogham_selector.gd) — CRT-styled overlay with unlocked oghams in 3-column grid, category-colored glyphs, descriptions, cooldown info. Pre-selects last used ogham (cross-run persistence via meta.last_ogham). Wired into HubAntre: BiomeRadial → OghamSelector → _launch_adventure(ogham). Selected ogham passed to GFC.request_run() and stored in oghams.equipped. Bug hunt C26: BiomeRadial hover panel was a ghost feature (status claimed done, code never pushed). Noted for C28. 2 files, ~365 lines. 35 total bugs noted across 27 cycles."
 }
