@@ -767,6 +767,39 @@
       "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "BIOMERADIAL-WIRE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire BiomeRadial into _on_partir_pressed — 8-biome selection with maturity gating",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "_on_partir_pressed() now opens BiomeRadial instead of hardcoding foret_broceliande. Players choose from 8 biomes on a 180-degree arc. Maturity locking prevents access to late-game biomes. BiomeRadial signals already wired (biome_selected → _on_radial_biome_selected → _launch_adventure).",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "FACTION-DASHBOARD",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "Faction dashboard — CRT-styled ProgressBars + tier letters + Anam/Runes counters",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "PanelContainer below chronicle header with 5 faction ProgressBars (DRU/ANC/KOR/NIA/ANK, color-coded per CRT_PALETTE), tier letters (H=80+/S=50+/N=20+/X=<20), Anam diamond counter, Runes ogham counter. Signal-driven via reputation_changed. Responsive layout (88% mobile, 55% desktop). Fade-in entry animation sequenced after meta label.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BIOME-KEY-PASSTHROUGH",
+      "phase": 5,
+      "priority": 2,
+      "status": "completed",
+      "title": "biome_key passthrough from MerlinStore to BroceliandeForest3D",
+      "agent": "godot_expert",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd", "scripts/HubAntre.gd"],
+      "description": "BroceliandeForest3D._ready() reads biome_key from MerlinStore.state.run.current_biome. HubAntre._launch_adventure() now sets store.state.run.current_biome = selected_biome. Data flow: Hub → store → Forest3D.",
+      "completed_at": "2026-04-22"
     }
   ]
 }

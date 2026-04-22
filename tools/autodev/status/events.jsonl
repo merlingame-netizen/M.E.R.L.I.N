@@ -101,3 +101,9 @@
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"BUG-030 MEDIUM: _auto_setup() never wired _save_system — fixed by reading _store.save_system after discovery"}
 {"ts":"2026-04-21T16:00:00.000Z","type":"task_done","cycle":19,"detail":"ENDRUNSCREEN-GFC-WIRE: complete_run() → END_SCREEN → EndRunScreen.tscn. Auto-wiring _ready(), signals, show_results(). .tscn fixed. BroceliandeForest3D simplified (-60 lines)."}
 {"ts":"2026-04-21T16:00:00.000Z","type":"cycle_end","cycle":19,"detail":"Cycle 19 complete: 1 MEDIUM bug fixed, 1 feature (EndRunScreen flow). 4 files, 51 insertions / 69 deletions (net -18). 29 total bugs fixed across 19 cycles."}
+{"ts":"2026-04-22T12:00:00.000Z","type":"cycle_start","cycle":25,"detail":"Cycle 25: Bug hunt C24 ghost code + implement BiomeRadial + faction dashboard + biome passthrough"}
+{"ts":"2026-04-22T12:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-033 CRITICAL: BiomeRadial wired to _on_partir_pressed (was hardcoded to foret_broceliande)"}
+{"ts":"2026-04-22T12:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-034 HIGH: faction dashboard created (5 CRT ProgressBars + tier letters + Anam/Runes counters)"}
+{"ts":"2026-04-22T12:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-035 HIGH: biome_key passthrough from MerlinStore.state.run.current_biome + data flow fix in _launch_adventure()"}
+{"ts":"2026-04-22T12:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-036 MEDIUM: BIOME_DATA := -> : Dictionary = (convention fix)"}
+{"ts":"2026-04-22T12:00:00.000Z","type":"cycle_end","cycle":25,"detail":"Cycle 25 complete: 4 bugs fixed (1 CRITICAL + 2 HIGH + 1 MEDIUM from ghost code pattern), 3 features implemented. 2 files, 179 lines. 35 total bugs fixed across 25 cycles."}
