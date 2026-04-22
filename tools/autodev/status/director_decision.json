@@ -1,10 +1,10 @@
 {
-  "cycle": 26,
-  "timestamp": "2026-04-22T15:00:00.000Z",
+  "cycle": 27,
+  "timestamp": "2026-04-22T16:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-035-FACTION-KEY", "BUGFIX-036-OGHAMS-KEY", "BIOME-RADIAL-HOVER-PANEL"],
-  "rationale": "Bug hunt C25 found 2 state key mismatches in HubAntre.gd: dashboard and runes counter reading nonexistent/wrong keys. Dashboard showed stale defaults, runes counter always 0. Both are data display bugs that make the Hub misleading. Feature: BiomeRadial hover info panel gives players critical decision-making information (guardian, season, difficulty, maturity progress) when choosing a biome.",
-  "budget": {"files": 2, "lines": 139},
+  "tasks": ["BUGFIX-035-FACTION-KEY-REAL", "BUGFIX-036-OGHAMS-KEY-REAL", "BIOME-RADIAL-HOVER-PANEL"],
+  "rationale": "Coherence audit revealed C26 status claimed completion but code was never pushed. BUG-035 and BUG-036 still present in codebase. Fixed both for real this time. Added BiomeRadial hover info panel: CRT-styled tooltip with full biome name, guardian, season, difficulty label, and maturity progress bar. Panel uses biome accent colors, scanline overlay, and viewport-clamped positioning.",
+  "budget": {"files": 2, "lines": 162},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C26: verify BiomeRadial hover panel renders correctly (font positioning, panel overlap with arc icons, edge case when all biomes locked). Feature candidates: word minigame skeleton for card encounters (core loop gap), or biome-specific walkConfigs for landes_bruyere/cotes_sauvages (extend 3D walk to other biomes)."
+  "next_cycle_plan": "Bug hunt C27: verify hover panel edge cases (threshold=0 biome, all locked, smallest viewport). Feature candidates: end-run screen polish (show faction deltas + Anam earned), or minigame integration wiring (connect minigame_system to card encounter flow)."
 }
