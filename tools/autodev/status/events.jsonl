@@ -108,3 +108,8 @@
 {"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BIOME-KEY-PASSTHROUGH: BroceliandeForest3D._ready() reads current_biome from MerlinStore.state.run before building forest."}
 {"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-032-GHOST: BIOME_DATA := to Dictionary type hint (C24 claimed fixed, code unchanged). Fixed for real."}
 {"ts":"2026-04-22T14:00:00.000Z","type":"cycle_end","cycle":25,"detail":"Cycle 25 complete: 3 ghost features implemented, 3 bugs fixed (3 HIGH + 2 MEDIUM + 1 ghost). 2 files, 190 lines. 32 total bugs fixed across 25 cycles."}
+{"ts":"2026-04-22T15:00:00.000Z","type":"cycle_start","cycle":26,"detail":"Cycle 26: Bug hunt C25 (HubAntre dashboard state keys) + BiomeRadial hover info panel"}
+{"ts":"2026-04-22T15:00:00.000Z","type":"task_done","cycle":26,"detail":"BUG-035 HIGH: dashboard meta.factions → meta.faction_rep (ProgressBars showed wrong initial values)"}
+{"ts":"2026-04-22T15:00:00.000Z","type":"task_done","cycle":26,"detail":"BUG-036 MEDIUM: runes counter meta.oghams_discovered → state.oghams.skills_unlocked (always showed 0/18)"}
+{"ts":"2026-04-22T15:00:00.000Z","type":"task_done","cycle":26,"detail":"BIOME-RADIAL-HOVER-PANEL: CRT tooltip with guardian/season/difficulty/maturity bar on biome hover"}
+{"ts":"2026-04-22T15:00:00.000Z","type":"cycle_end","cycle":26,"detail":"Cycle 26 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM), 1 feature (hover info panel). 2 files, 139 lines. 34 total bugs fixed across 26 cycles."}

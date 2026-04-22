@@ -800,6 +800,39 @@
       "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "C24 claimed this was done but _ready() had no store read. Added: reads current_biome from MerlinStore.state.run before all biome-dependent setup (viewport, environment, path, terrain). Guarded with null/type checks. Falls back to export default foret_broceliande.",
       "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-035",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix dashboard reads meta.factions instead of meta.faction_rep (BUG-035)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "Dashboard ProgressBars showed default 20 on load because meta.factions doesn't exist — cross-run rep is at meta.faction_rep. Fixed key name.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-036",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix runes counter reads nonexistent meta.oghams_discovered (BUG-036)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "Runes counter always showed 0/18 because meta.oghams_discovered doesn't exist — oghams are at state.oghams.skills_unlocked. Fixed path.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BIOME-RADIAL-HOVER-PANEL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "BiomeRadial hover info panel — guardian, season, difficulty, maturity bar",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/biome_radial.gd"],
+      "description": "CRT-styled tooltip when hovering biome icons: full name, guardian (cyan), season, difficulty, maturity progress bar (current/threshold). 4 const dicts + _draw_hover_panel() with dark panel bg, amber border, phosphor text. Bar fill amber_bright if unlocked, phosphor_dim if locked.",
+      "completed_at": "2026-04-22"
     }
   ]
 }

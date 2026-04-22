@@ -1,53 +1,25 @@
 {
   "agent": "cycle_director",
-  "cycle": 25,
-  "timestamp": "2026-04-22T14:00:00Z",
+  "cycle": 26,
+  "timestamp": "2026-04-22T15:00:00Z",
   "type": "bughunt+feature",
-  "scope": "Cycle 25: Fix C24 ghost cycle — wire BiomeRadial + faction dashboard + biome-key passthrough",
+  "scope": "Cycle 26: Bug hunt C25 (HubAntre dashboard + runes counter) + BiomeRadial hover info panel",
   "bugs_found": [
     {
-      "id": "BUG-032-GHOST",
+      "id": "BUG-035",
       "severity": "HIGH",
       "file": "scripts/HubAntre.gd",
-      "description": "C24 claimed BUG-032 fixed (BIOME_DATA := to Dictionary) but code still had :=. Ghost fix pattern. Fixed for real.",
+      "description": "Dashboard reads meta.factions (nonexistent in meta) instead of meta.faction_rep. All 5 ProgressBars show default value 20 on Hub load, regardless of actual cross-run reputation. Signal-driven updates work during session but initial values are wrong.",
       "status": "fixed"
     },
     {
-      "id": "BUG-033",
+      "id": "BUG-036",
       "severity": "MEDIUM",
       "file": "scripts/HubAntre.gd",
-      "description": "No _exit_tree() to disconnect reputation_changed signal from MerlinStore autoload. Would cause runtime errors when HubAntre freed while store still emits. Fixed by adding _exit_tree() with disconnect.",
-      "status": "fixed"
-    },
-    {
-      "id": "BUG-034",
-      "severity": "MEDIUM",
-      "file": "scripts/HubAntre.gd",
-      "description": "Double-press PARTIR while radial is open fell through else branch, launching directly to foret_broceliande. Fixed: early return when _radial exists (open or not).",
-      "status": "fixed"
-    },
-    {
-      "id": "GHOST-C24-RADIAL",
-      "severity": "HIGH",
-      "file": "scripts/HubAntre.gd",
-      "description": "C24 status claimed BiomeRadial wired into _on_partir_pressed() but code still hardcoded foret_broceliande. Ghost feature. Implemented for real.",
-      "status": "fixed"
-    },
-    {
-      "id": "GHOST-C24-DASHBOARD",
-      "severity": "HIGH",
-      "file": "scripts/HubAntre.gd",
-      "description": "C24 status claimed faction dashboard created with 5 ProgressBars, tier letters, Anam/Runes counters. Zero dashboard code existed in file. Ghost feature. Implemented for real.",
-      "status": "fixed"
-    },
-    {
-      "id": "GHOST-C24-BIOMEKEY",
-      "severity": "HIGH",
-      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "description": "C24 status claimed biome_key read from MerlinStore.run.current_biome but _ready() had no such code. Ghost feature. Implemented for real.",
+      "description": "Runes counter reads meta.oghams_discovered (nonexistent key) instead of state.oghams.skills_unlocked. Counter always shows 0/18 regardless of actual oghams unlocked.",
       "status": "fixed"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "C24 was a complete ghost cycle — 3 features and 1 bug fix claimed in status files but zero code changes were actually pushed. This is the 4th ghost cycle detected (C8, C9, C16, C24). All 3 features implemented for real. Code review caught 2 additional MEDIUM bugs (signal disconnect, double-press), both fixed. 32 total bugs fixed across 25 cycles."
+  "overall_assessment": "Bug hunt C25 found 2 state key mismatches introduced in C25 dashboard code. Both fixed with 2-line changes. BiomeRadial hover panel adds 137 lines of UI drawing code. 34 total bugs fixed across 26 cycles."
 }

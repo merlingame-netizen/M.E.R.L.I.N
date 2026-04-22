@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 25 — Fix C24 ghost cycle: wire BiomeRadial + faction dashboard + biome-key passthrough",
+  "objective": "Cycle 26 — Bug hunt C25 (BUG-035/036 wrong state keys) + BiomeRadial hover info panel",
   "workers": [],
-  "updated_at": "2026-04-22T14:00:00.000Z",
-  "cycle": 25,
-  "checkpoint": "C24 ghost cycle detected: status claimed BiomeRadial wiring + faction dashboard + biome_key passthrough were done but code was NEVER PUSHED (same pattern as C8/C9/C16). Cycle 25 implemented all three features for real. BiomeRadial: _on_partir_pressed() now opens radial (was hardcoded foret_broceliande). Double-press guard added (return early if radial exists). Faction dashboard: CRT-styled PanelContainer below chronicle header with 5 faction ProgressBars (DRU/ANC/KOR/NIA/ANK, faction-specific colors), tier letters (H=80+/S=50+/N=20+/X=<20), Anam diamond counter, Runes ogham counter. Signal-driven via reputation_changed. Responsive layout (88% mobile, 55% desktop). _exit_tree() disconnect added (review fix). Biome-key passthrough: BroceliandeForest3D._ready() reads current_biome from MerlinStore.state.run before building forest. BUG-032 ghost fix: BIOME_DATA := to Dictionary type hint. Code review found 2 MEDIUM issues (signal disconnect + double-press), both fixed before push. 2 files, 190 lines. 32 bugs fixed across 25 cycles."
+  "updated_at": "2026-04-22T15:00:00.000Z",
+  "cycle": 26,
+  "checkpoint": "Bug hunt C25 found 2 bugs in HubAntre.gd: BUG-035 (HIGH) dashboard read meta.factions instead of meta.faction_rep — all ProgressBars showed default 20 on load. BUG-036 (MEDIUM) runes counter read meta.oghams_discovered (nonexistent) instead of state.oghams.skills_unlocked — always showed 0/18. Both fixed. Feature: BiomeRadial hover info panel with CRT-styled tooltip showing full biome name, guardian, season, difficulty, maturity progress bar. 4 const dicts + _draw_hover_panel() method. 2 files, ~139 lines. 34 total bugs fixed across 26 cycles."
 }
