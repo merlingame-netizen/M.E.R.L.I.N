@@ -43,9 +43,20 @@ jobs:
           # Remove ALL editor plugins (MCP server hangs on port 9080)
           sed -i '/\[editor_plugins\]/,/^$/d' project.godot
 
-          # Remove autoloads that block in headless (network servers, LLM, audio)
-          # Keep ONLY: GameManager, MerlinVisual, LocaleManager, I18nRegistry,
-          # SceneSelector, WorldMapSystem, GameTimeManager, InputAdapter,
+          # Remove custom theme reference (VT323 font causes hang — theme loads at runtime anyway)
+          sed -i '/theme\/custom=/d' project.godot
+
+          # Remove ALL autoloads for CI export (they cause hangs in headless)
+          # The exported .pck will still contain the autoload scripts — they load at runtime
+          sed -i '/^\[autoload\]/,/^\[/{/^\[autoload\]/d;/^\[/!d}' project.godot
+
+          # Patch shaders: remove hint_screen_texture (unsupported in headless)
+          for shader in shaders/*.gdshader; do
+            [ -f "$shader" ] && sed -i 's/hint_screen_texture, //g; s/hint_screen_texture//g' "$shader"
+          done
+
+          echo "=== project.godot after cleanup ==="
+          cat project.godot | head -60
           # PlatformManager, MerlinResponsive, PixelTransition, PixelContentAnimator
           sed -i '/GameDebugServer=/d' project.godot
           sed -i '/MerlinAI=/d' project.godot
