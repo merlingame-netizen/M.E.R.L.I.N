@@ -1,25 +1,10 @@
 {
   "agent": "cycle_director",
-  "cycle": 28,
-  "timestamp": "2026-04-22T17:00:00Z",
+  "cycle": 30,
+  "timestamp": "2026-04-22T19:00:00Z",
   "type": "bughunt",
-  "scope": "Cycle 28: Bug hunt C27 (OghamSelector never wired + 3D hardcoded Beith)",
-  "bugs_found": [
-    {
-      "id": "BUG-037",
-      "severity": "HIGH",
-      "file": "scripts/HubAntre.gd",
-      "description": "OghamSelector created in C27 (329 lines) but never wired into Hub→Run flow. After biome selection, code went directly to _launch_adventure() skipping ogham choice entirely. Bible s.2.2 mandates ogham selection before each run.",
-      "status": "fixed"
-    },
-    {
-      "id": "BUG-038",
-      "severity": "MEDIUM",
-      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "description": "BroceliandeForest3D._update_hud() hardcoded Beith ogham (unicode \\u1681, name 'Beith', cooldown 0) instead of reading ogham_actif from MerlinStore. Player's chosen ogham was ignored in 3D walk.",
-      "status": "fixed"
-    }
-  ],
+  "scope": "Cycle 30: Bug hunt C29 (talent wiring in store_run.gd + ArbreDeVie.tscn)",
+  "bugs_found": [],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C27 found 2 flow-critical bugs. OghamSelector was a 329-line ghost feature — fully built but never called. Now wired with signal-safe cleanup (is_instance_valid + explicit disconnect). 3D fallback logic improved to check OGHAM_FULL_SPECS.has(). 36 total bugs fixed across 28 cycles."
+  "overall_assessment": "Bug hunt C29: 0 bugs found. StoreTalents.apply_talent_effects_for_run() returns early for empty talent tree but get_talent_modifier() and consume_talent_modifier() both use defensive .get() chaining that gracefully returns false/null for missing keys. passive_heal life_max fallback to LIFE_ESSENCE_MAX is correct behavior. harmony_anam_bonus faction iteration is safe because StoreFactions initializes all 5 factions. ArbreDeVie.tscn script paths verified (arbre_de_vie_ui.gd + arbre_pixel_art.gd both exist). 36 total bugs fixed across 30 cycles."
 }
