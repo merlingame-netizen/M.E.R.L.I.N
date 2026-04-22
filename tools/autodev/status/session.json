@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 26 — Bug hunt C25 (BUG-035/036 wrong state keys) + BiomeRadial hover info panel",
+  "objective": "Cycle 28 — Wire OghamSelector into Hub→Run flow + read ogham from store in 3D",
   "workers": [],
-  "updated_at": "2026-04-22T15:00:00.000Z",
-  "cycle": 26,
-  "checkpoint": "Bug hunt C25 found 2 bugs in HubAntre.gd: BUG-035 (HIGH) dashboard read meta.factions instead of meta.faction_rep — all ProgressBars showed default 20 on load. BUG-036 (MEDIUM) runes counter read meta.oghams_discovered (nonexistent) instead of state.oghams.skills_unlocked — always showed 0/18. Both fixed. Feature: BiomeRadial hover info panel with CRT-styled tooltip showing full biome name, guardian, season, difficulty, maturity progress bar. 4 const dicts + _draw_hover_panel() method. 2 files, ~139 lines. 34 total bugs fixed across 26 cycles."
+  "updated_at": "2026-04-22T17:00:00.000Z",
+  "cycle": 28,
+  "checkpoint": "BUG-037 (HIGH): OghamSelector created in C27 but never wired into flow. Now BiomeRadial→OghamSelector→launch. Signal-safe cleanup with is_instance_valid + explicit disconnect. BUG-038 (MEDIUM): BroceliandeForest3D hardcoded Beith — now reads ogham_actif from MerlinStore with OGHAM_FULL_SPECS lookup + robust fallback. 2 files, 48 lines. 36 total bugs fixed across 28 cycles."
 }

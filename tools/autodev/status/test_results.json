@@ -1,25 +1,25 @@
 {
   "agent": "cycle_director",
-  "cycle": 26,
-  "timestamp": "2026-04-22T15:00:00Z",
-  "type": "bughunt+feature",
-  "scope": "Cycle 26: Bug hunt C25 (HubAntre dashboard + runes counter) + BiomeRadial hover info panel",
+  "cycle": 28,
+  "timestamp": "2026-04-22T17:00:00Z",
+  "type": "bughunt",
+  "scope": "Cycle 28: Bug hunt C27 (OghamSelector never wired + 3D hardcoded Beith)",
   "bugs_found": [
     {
-      "id": "BUG-035",
+      "id": "BUG-037",
       "severity": "HIGH",
       "file": "scripts/HubAntre.gd",
-      "description": "Dashboard reads meta.factions (nonexistent in meta) instead of meta.faction_rep. All 5 ProgressBars show default value 20 on Hub load, regardless of actual cross-run reputation. Signal-driven updates work during session but initial values are wrong.",
+      "description": "OghamSelector created in C27 (329 lines) but never wired into Hub→Run flow. After biome selection, code went directly to _launch_adventure() skipping ogham choice entirely. Bible s.2.2 mandates ogham selection before each run.",
       "status": "fixed"
     },
     {
-      "id": "BUG-036",
+      "id": "BUG-038",
       "severity": "MEDIUM",
-      "file": "scripts/HubAntre.gd",
-      "description": "Runes counter reads meta.oghams_discovered (nonexistent key) instead of state.oghams.skills_unlocked. Counter always shows 0/18 regardless of actual oghams unlocked.",
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "description": "BroceliandeForest3D._update_hud() hardcoded Beith ogham (unicode \\u1681, name 'Beith', cooldown 0) instead of reading ogham_actif from MerlinStore. Player's chosen ogham was ignored in 3D walk.",
       "status": "fixed"
     }
   ],
   "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C25 found 2 state key mismatches introduced in C25 dashboard code. Both fixed with 2-line changes. BiomeRadial hover panel adds 137 lines of UI drawing code. 34 total bugs fixed across 26 cycles."
+  "overall_assessment": "Bug hunt C27 found 2 flow-critical bugs. OghamSelector was a 329-line ghost feature — fully built but never called. Now wired with signal-safe cleanup (is_instance_valid + explicit disconnect). 3D fallback logic improved to check OGHAM_FULL_SPECS.has(). 36 total bugs fixed across 28 cycles."
 }
