@@ -63,6 +63,7 @@ var _hovered_index := -1
 var _biome_positions: Array[Vector2] = []
 var _biome_scales: Array[float] = []
 var _biome_current_scales: Array[float] = []
+var _close_tween: Tween
 
 # === LIFECYCLE ===
 
@@ -113,6 +114,8 @@ func _input(event: InputEvent) -> void:
 func open(center_pos: Vector2) -> void:
 	if _is_open:
 		return
+	if _close_tween and _close_tween.is_running():
+		_close_tween.kill()
 
 	_is_open = true
 	_center_pos = center_pos
@@ -169,23 +172,24 @@ func _animate_icon_open(index: int, delay: float) -> void:
 	)
 
 func _animate_close() -> void:
-	var tween := create_tween()
-	tween.set_trans(MerlinVisual.TRANS_UI)
-	tween.set_ease(MerlinVisual.EASING_UI)
+	_close_tween = create_tween()
+	_close_tween.set_trans(MerlinVisual.TRANS_UI)
+	_close_tween.set_ease(MerlinVisual.EASING_UI)
 
-	# Scale all icons to 0 simultaneously
 	for i in BIOMES.size():
-		tween.parallel().tween_method(
+		var idx: int = i
+		_close_tween.parallel().tween_method(
 			func(v: float) -> void:
-				_biome_scales[i] = v
+				_biome_scales[idx] = v
 				queue_redraw(),
 			_biome_scales[i],
 			0.0,
 			CLOSE_DURATION
 		)
 
-	await tween.finished
-	visible = false
+	await _close_tween.finished
+	if not _is_open:
+		visible = false
 
 func _handle_click(pos: Vector2) -> void:
 	# Check if click hit any biome icon
@@ -432,7 +436,10 @@ func _calculate_player_maturity() -> int:
 	var store_node: Node = get_node_or_null("/root/MerlinStore")
 	if store_node == null:
 		return 0
-	var state: Dictionary = store_node.get("state") as Dictionary
+	var state_raw: Variant = store_node.get("state")
+	if not state_raw is Dictionary:
+		return 0
+	var state: Dictionary = state_raw as Dictionary
 	if state.is_empty():
 		return 0
 	var meta: Dictionary = state.get("meta", {})

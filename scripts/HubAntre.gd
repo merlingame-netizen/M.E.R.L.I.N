@@ -26,7 +26,7 @@ const SCENE_MAPMONDE := "res://scenes/MapMonde.tscn"
 # BIOME DATA -- 7 Sanctuaires de Bretagne
 # =============================================================================
 
-var BIOME_DATA := {
+var BIOME_DATA: Dictionary = {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande",
 		"subtitle": "Mystere et magie ancestrale",
@@ -614,11 +614,12 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 
 
 func _on_partir_pressed() -> void:
-	SFXManager.play("partir_fanfare")
-	# For now: only Broceliande is available — skip radial, launch directly
-	selected_biome = "foret_broceliande"
-	_generate_mission()
-	_launch_adventure()
+	if _radial and not _radial.is_open():
+		SFXManager.play("partir_fanfare")
+		var btn_center: Vector2 = _partir_btn.position + _partir_btn.size * 0.5
+		_radial.open(Vector2(btn_center.x, _partir_btn.position.y - 20.0))
+	elif _radial and _radial.is_open():
+		_radial.close()
 
 
 func _on_radial_biome_selected(biome_key: String) -> void:

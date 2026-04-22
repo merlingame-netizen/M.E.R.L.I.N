@@ -41,6 +41,7 @@ GameDebugServer="*res://scripts/test/game_debug_server.gd"
 DayNightManager="*res://scripts/autoload/day_night_manager.gd"
 MerlinResponsive="*res://scripts/autoload/merlin_responsive.gd"
 GameFlow="*res://scripts/core/game_flow_controller.gd"
+SeasonalAtmosphere="*res://scripts/autoload/seasonal_atmosphere.gd"
 
 [display]
 

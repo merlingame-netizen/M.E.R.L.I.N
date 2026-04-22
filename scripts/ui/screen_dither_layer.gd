@@ -331,6 +331,47 @@ func _apply_biome_colors(biome_key: String) -> void:
 		_material.set_shader_parameter(param_name, profile[param_name])
 
 
+const SEASON_FOG_PROFILES: Dictionary = {
+	"printemps": {"fog_color": Color(0.10, 0.14, 0.06), "fog_blend": 0.02, "saturation_boost": 1.18},
+	"ete": {"fog_color": Color(0.14, 0.12, 0.06), "fog_blend": 0.015, "saturation_boost": 1.22},
+	"automne": {"fog_color": Color(0.16, 0.08, 0.03), "fog_blend": 0.035, "saturation_boost": 1.12},
+	"hiver": {"fog_color": Color(0.06, 0.08, 0.14), "fog_blend": 0.03, "saturation_boost": 1.05},
+}
+
+var _season_tween: Tween
+
+
+func set_season_modulation(season: String) -> void:
+	if _render_mode != RenderMode.PSX:
+		return
+	var profile: Dictionary = SEASON_FOG_PROFILES.get(season, {})
+	if profile.is_empty():
+		return
+	if _season_tween and _season_tween.is_running():
+		_season_tween.kill()
+	_season_tween = create_tween()
+	_season_tween.set_ease(Tween.EASE_IN_OUT)
+	_season_tween.set_trans(Tween.TRANS_SINE)
+	_season_tween.set_parallel(true)
+	for param_name: String in profile:
+		var pname: String = param_name
+		var target: Variant = profile[pname]
+		var current: Variant = _material.get_shader_parameter(pname)
+		if current == null:
+			_material.set_shader_parameter(pname, target)
+			continue
+		if target is Color and current is Color:
+			_season_tween.tween_method(
+				func(v: Color) -> void: _material.set_shader_parameter(pname, v),
+				current as Color, target as Color, 2.0
+			)
+		elif target is float and current is float:
+			_season_tween.tween_method(
+				func(v: float) -> void: _material.set_shader_parameter(pname, v),
+				current as float, target as float, 2.0
+			)
+
+
 func _animate_biome_transition(biome_key: String) -> void:
 	if _transition_tween and _transition_tween.is_running():
 		_transition_tween.kill()
@@ -342,18 +383,19 @@ func _animate_biome_transition(biome_key: String) -> void:
 	_transition_tween.set_trans(Tween.TRANS_SINE)
 	_transition_tween.set_parallel(true)
 	for param_name: String in profile:
-		var target: Variant = profile[param_name]
-		var current: Variant = _material.get_shader_parameter(param_name)
+		var pname: String = param_name
+		var target: Variant = profile[pname]
+		var current: Variant = _material.get_shader_parameter(pname)
 		if current == null:
-			_material.set_shader_parameter(param_name, target)
+			_material.set_shader_parameter(pname, target)
 			continue
 		if target is Color and current is Color:
 			_transition_tween.tween_method(
-				func(v: Color) -> void: _material.set_shader_parameter(param_name, v),
+				func(v: Color) -> void: _material.set_shader_parameter(pname, v),
 				current as Color, target as Color, 1.2
 			)
 		elif target is float and current is float:
 			_transition_tween.tween_method(
-				func(v: float) -> void: _material.set_shader_parameter(param_name, v),
+				func(v: float) -> void: _material.set_shader_parameter(pname, v),
 				current as float, target as float, 1.2
 			)
