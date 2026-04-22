@@ -1,10 +1,10 @@
 {
-  "cycle": 26,
-  "timestamp": "2026-04-22T15:00:00.000Z",
+  "cycle": 27,
+  "timestamp": "2026-04-22T17:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-035-FACTION-KEY", "BUGFIX-036-OGHAMS-KEY", "BIOME-RADIAL-HOVER-PANEL"],
-  "rationale": "Bug hunt C25 found 2 state key mismatches in HubAntre.gd: dashboard and runes counter reading nonexistent/wrong keys. Dashboard showed stale defaults, runes counter always 0. Both are data display bugs that make the Hub misleading. Feature: BiomeRadial hover info panel gives players critical decision-making information (guardian, season, difficulty, maturity progress) when choosing a biome.",
-  "budget": {"files": 2, "lines": 139},
+  "tasks": ["BUGFIX-037-FACTION-KEY-GHOST", "BUGFIX-038-OGHAMS-KEY-GHOST", "BIOME-RADIAL-HOVER-PANEL"],
+  "rationale": "Bug hunt C26 revealed both BUG-035/036 fixes were ghosts (status claimed fixed, code unchanged). Re-fixed as BUG-037/038. Dashboard now correctly reads meta.faction_rep and state.oghams.skills_unlocked. BiomeRadial hover panel was also C26 ghost — implemented with CRT-styled tooltip showing name, subtitle, guardian, season, difficulty, maturity bar.",
+  "budget": {"files": 2, "lines": 119},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C26: verify BiomeRadial hover panel renders correctly (font positioning, panel overlap with arc icons, edge case when all biomes locked). Feature candidates: word minigame skeleton for card encounters (core loop gap), or biome-specific walkConfigs for landes_bruyere/cotes_sauvages (extend 3D walk to other biomes)."
+  "next_cycle_plan": "Bug hunt C27: verify hover panel font rendering with special chars (season glyphs ❀☀◈❅☽), edge case when all 8 biomes are locked. Feature candidates: word minigame skeleton for card encounters (core loop gap — bible s.6), or MerlinBubble typewriter effect enhancement."
 }

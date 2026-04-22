@@ -800,6 +800,39 @@
       "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "C24 claimed this was done but _ready() had no store read. Added: reads current_biome from MerlinStore.state.run before all biome-dependent setup (viewport, environment, path, terrain). Guarded with null/type checks. Falls back to export default foret_broceliande.",
       "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-037",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix C26 ghost: dashboard meta.factions→meta.faction_rep (BUG-037)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "C26 claimed BUG-035 fixed but code was never pushed. Dashboard read meta.factions (nonexistent) instead of meta.faction_rep — all 5 ProgressBars showed default 20.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-038",
+      "phase": 0,
+      "priority": 2,
+      "status": "completed",
+      "title": "Fix C26 ghost: runes counter oghams_discovered→skills_unlocked (BUG-038)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "C26 claimed BUG-036 fixed but code was never pushed. Runes counter read meta.oghams_discovered (nonexistent) instead of state.oghams.skills_unlocked — always showed 0/18.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BIOME-RADIAL-HOVER-PANEL",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "BiomeRadial hover info panel — CRT tooltip with biome details",
+      "agent": "ui_worker",
+      "files": ["scripts/ui/biome_radial.gd"],
+      "description": "C26 ghost feature. CRT-styled tooltip on hover: full biome name, subtitle, guardian (from MerlinConstants.BIOMES.pnj), season glyph, difficulty label, maturity progress bar. Starter biome shows 'Libre d'acces'. Edge-clamped positioning. 113 lines added.",
+      "completed_at": "2026-04-22"
     }
   ]
 }
