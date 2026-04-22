@@ -32,6 +32,50 @@ const BIOME_SHORT_NAMES := {
 	"iles_mystiques": "Iles"
 }
 
+const BIOME_FULL_NAMES := {
+	"foret_broceliande": "Foret de Broceliande",
+	"landes_bruyere": "Landes de Bruyere",
+	"cotes_sauvages": "Cotes Sauvages",
+	"villages_celtes": "Villages Celtes",
+	"cercles_pierres": "Cercles de Pierres",
+	"marais_korrigans": "Marais des Korrigans",
+	"collines_dolmens": "Collines aux Dolmens",
+	"iles_mystiques": "Iles Mystiques"
+}
+
+const BIOME_GUARDIANS := {
+	"foret_broceliande": "Maelgwn",
+	"landes_bruyere": "Talwen",
+	"cotes_sauvages": "Bran",
+	"villages_celtes": "Azenor",
+	"cercles_pierres": "Keridwen",
+	"marais_korrigans": "Gwydion",
+	"collines_dolmens": "Elouan",
+	"iles_mystiques": "Morgane"
+}
+
+const BIOME_SEASONS := {
+	"foret_broceliande": "Automne",
+	"landes_bruyere": "Hiver",
+	"cotes_sauvages": "Ete",
+	"villages_celtes": "Printemps",
+	"cercles_pierres": "Samhain",
+	"marais_korrigans": "Lughnasadh",
+	"collines_dolmens": "Yule",
+	"iles_mystiques": "Samhain"
+}
+
+const BIOME_DIFFICULTY := {
+	"foret_broceliande": "Normal",
+	"landes_bruyere": "Difficile",
+	"cotes_sauvages": "Normal",
+	"villages_celtes": "Facile",
+	"cercles_pierres": "Difficile",
+	"marais_korrigans": "Tres difficile",
+	"collines_dolmens": "Normal",
+	"iles_mystiques": "Legendaire"
+}
+
 # Map full biome keys to BIOME_ART_PROFILES keys
 const BIOME_PROFILE_KEYS := {
 	"foret_broceliande": "broceliande",
@@ -90,6 +134,9 @@ func _draw() -> void:
 	# Draw biome icons
 	for i in BIOMES.size():
 		_draw_biome_icon(i)
+
+	# Draw hover info panel below the arc
+	_draw_hover_panel()
 
 func _input(event: InputEvent) -> void:
 	if not _is_open:
@@ -405,6 +452,96 @@ func _draw_biome_label(pos: Vector2, biome_key: String, is_hovered: bool = false
 	else:
 		c_text = Color(1.0, 1.0, 1.0, 0.65)
 	draw_string(font, label_pos, label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_text)
+
+# === HOVER INFO PANEL ===
+
+func _draw_hover_panel() -> void:
+	if _hovered_index < 0:
+		return
+
+	var biome_key: String = BIOMES[_hovered_index]
+	var font: Font = MerlinVisual.get_font("body")
+	var font_size: int = 12
+
+	# --- Colors from CRT palette ---
+	var c_bg: Color = Color(
+		MerlinVisual.CRT_PALETTE["bg_deep"].r,
+		MerlinVisual.CRT_PALETTE["bg_deep"].g,
+		MerlinVisual.CRT_PALETTE["bg_deep"].b,
+		0.9
+	)
+	var c_border: Color = MerlinVisual.CRT_PALETTE["amber_dim"]
+	var c_text: Color = MerlinVisual.CRT_PALETTE["phosphor"]
+	var c_cyan: Color = MerlinVisual.CRT_PALETTE["cyan_dim"]
+
+	# --- Panel dimensions ---
+	var panel_w: float = 220.0
+	var line_h: float = 16.0
+	var pad_x: float = 10.0
+	var pad_y: float = 8.0
+	var bar_h: float = 8.0
+	# 5 text lines + maturity bar + spacing
+	var panel_h: float = pad_y + line_h * 5 + bar_h + pad_y + 4.0
+
+	# --- Position: centered below arc ---
+	var panel_x: float = _center_pos.x - panel_w * 0.5
+	var panel_y: float = _center_pos.y + 20.0
+	var panel_rect: Rect2 = Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h))
+
+	# --- Draw background and border ---
+	draw_rect(panel_rect, c_bg, true)
+	draw_rect(panel_rect, c_border, false, 1.0)
+
+	# --- Text content ---
+	var full_name: String = BIOME_FULL_NAMES.get(biome_key, biome_key)
+	var guardian: String = BIOME_GUARDIANS.get(biome_key, "???")
+	var season: String = BIOME_SEASONS.get(biome_key, "???")
+	var difficulty: String = BIOME_DIFFICULTY.get(biome_key, "???")
+
+	var text_x: float = panel_x + pad_x
+	var cur_y: float = panel_y + pad_y + font_size
+
+	# Line 1: Full biome name (phosphor)
+	draw_string(font, Vector2(text_x, cur_y), full_name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, c_text)
+	cur_y += line_h
+
+	# Line 2: Guardian (cyan)
+	draw_string(font, Vector2(text_x, cur_y), "Gardien: " + guardian, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, c_cyan)
+	cur_y += line_h
+
+	# Line 3: Season (phosphor)
+	draw_string(font, Vector2(text_x, cur_y), "Saison: " + season, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, c_text)
+	cur_y += line_h
+
+	# Line 4: Difficulty (phosphor)
+	draw_string(font, Vector2(text_x, cur_y), "Difficulte: " + difficulty, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, c_text)
+	cur_y += line_h
+
+	# Line 5: Maturity label
+	var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_key, 0))
+	var current_maturity: int = _calculate_player_maturity()
+	var maturity_label: String = "Maturite: %d / %d" % [current_maturity, threshold]
+	draw_string(font, Vector2(text_x, cur_y), maturity_label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, c_text)
+	cur_y += line_h - 2.0
+
+	# --- Maturity progress bar ---
+	var bar_w: float = 180.0
+	var bar_x: float = panel_x + (panel_w - bar_w) * 0.5
+	var bar_rect: Rect2 = Rect2(Vector2(bar_x, cur_y), Vector2(bar_w, bar_h))
+
+	# Bar background (dark)
+	draw_rect(bar_rect, Color(0.0, 0.0, 0.0, 0.6), true)
+
+	# Bar fill
+	var locked: bool = _is_biome_locked(biome_key)
+	var c_fill: Color = MerlinVisual.CRT_PALETTE["amber_bright"] if not locked else MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	var ratio: float = 1.0 if threshold <= 0 else clampf(float(current_maturity) / float(threshold), 0.0, 1.0)
+	if ratio > 0.0:
+		var fill_rect: Rect2 = Rect2(Vector2(bar_x, cur_y), Vector2(bar_w * ratio, bar_h))
+		draw_rect(fill_rect, c_fill, true)
+
+	# Bar outline
+	draw_rect(bar_rect, c_border, false, 1.0)
 
 # === ISLAND ICON ===
 
