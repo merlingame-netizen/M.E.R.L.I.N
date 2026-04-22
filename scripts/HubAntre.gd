@@ -194,6 +194,7 @@ const HOTSPOT_DEFS := [
 
 var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
+var _ogham_selector: OghamSelector = null
 var _partir_btn: Button = null
 var _hotspots: Array = []
 var _chronicle_label: Label = null
@@ -662,7 +663,7 @@ func _on_radial_biome_selected(biome_key: String) -> void:
 	var biome_name: String = BIOME_DATA.get(biome_key, {}).get("name", biome_key)
 	_request_merlin_passive_comment("destination: %s" % biome_name)
 
-	_launch_adventure()
+	_show_ogham_selector()
 
 
 func _on_radial_dismissed() -> void:
@@ -678,7 +679,32 @@ func _generate_mission() -> void:
 		_current_mission = {"type": "exploration", "target": "Explorer ce sanctuaire", "total": 8, "progress": 0}
 
 
-func _launch_adventure() -> void:
+func _show_ogham_selector() -> void:
+	if _ogham_selector == null:
+		_ogham_selector = OghamSelector.new()
+		_ogham_selector.ogham_selected.connect(_on_ogham_selected)
+		_ogham_selector.selector_dismissed.connect(_on_ogham_dismissed)
+		add_child(_ogham_selector)
+
+	var last_ogham: String = ""
+	if store:
+		last_ogham = str(store.state.get("meta", {}).get("last_ogham", ""))
+	_ogham_selector.open(last_ogham)
+
+
+func _on_ogham_selected(ogham_key: String) -> void:
+	if store:
+		var meta: Dictionary = store.state.get("meta", {})
+		meta["last_ogham"] = ogham_key
+		store.state["meta"] = meta
+	_launch_adventure(ogham_key)
+
+
+func _on_ogham_dismissed() -> void:
+	pass
+
+
+func _launch_adventure(equipped_ogham: String = "") -> void:
 	SFXManager.play("whoosh")
 
 	var wms: Node = get_node_or_null("/root/WorldMapSystem")
@@ -716,10 +742,17 @@ func _launch_adventure() -> void:
 		run["mission"] = mission
 		store.state["run"] = run
 
+	if not equipped_ogham.is_empty() and store:
+		var oghams: Dictionary = store.state.get("oghams", {})
+		oghams["equipped"] = equipped_ogham
+		oghams["active_this_card"] = ""
+		store.state["oghams"] = oghams
+
 	_quick_save()
+	var selected_oghams: Array = [equipped_ogham] if not equipped_ogham.is_empty() else []
 	var gfc: Node = get_node_or_null("/root/GameFlow")
 	if gfc and gfc.has_method("request_run"):
-		gfc.request_run(selected_biome)
+		gfc.request_run(selected_biome, selected_oghams)
 	else:
 		PixelTransition.transition_to(SCENE_FOREST)
 
