@@ -26,7 +26,7 @@ const SCENE_MAPMONDE := "res://scenes/MapMonde.tscn"
 # BIOME DATA -- 7 Sanctuaires de Bretagne
 # =============================================================================
 
-var BIOME_DATA := {
+var BIOME_DATA: Dictionary = {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande",
 		"subtitle": "Mystere et magie ancestrale",
@@ -202,6 +202,10 @@ var _scanline_overlay: ColorRect = null
 var _ambient_particles: Array = []
 var _ambient_t: float = 0.0
 var _tour: HubAntreTour = null
+var _dashboard: PanelContainer = null
+var _faction_bars: Dictionary = {}
+var _anam_label: Label = null
+var _runes_label: Label = null
 
 # =============================================================================
 # STATE
@@ -237,6 +241,7 @@ func _ready() -> void:
 	_create_chronicle_header()
 	_create_hotspots()
 	_create_partir_button()
+	_create_dashboard()
 	_create_bubble()
 	_create_radial()
 	_setup_voicebox()
@@ -269,6 +274,9 @@ func _ready() -> void:
 
 func _connect_store() -> void:
 	store = get_node_or_null("/root/MerlinStore")
+	if store and store.has_signal("reputation_changed"):
+		if not store.reputation_changed.is_connected(_on_reputation_changed):
+			store.reputation_changed.connect(_on_reputation_changed)
 
 
 func _load_player_data() -> void:
@@ -539,6 +547,155 @@ func _create_radial() -> void:
 	_radial.radial_dismissed.connect(_on_radial_dismissed)
 
 
+func _create_dashboard() -> void:
+	_dashboard = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	style.bg_color.a = 0.85
+	style.border_color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(0)
+	style.set_content_margin_all(8)
+	_dashboard.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+
+	var factions: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+	var short_names: Dictionary = {
+		"druides": "DRU", "anciens": "ANC", "korrigans": "KOR",
+		"niamh": "NIA", "ankou": "ANK"
+	}
+	var faction_colors: Dictionary = {
+		"druides": MerlinVisual.CRT_PALETTE.get("phosphor", Color.GREEN),
+		"anciens": MerlinVisual.CRT_PALETTE.get("amber", Color.YELLOW),
+		"korrigans": MerlinVisual.CRT_PALETTE.get("cyan", Color.CYAN),
+		"niamh": MerlinVisual.CRT_PALETTE.get("amber_bright", Color.WHITE),
+		"ankou": MerlinVisual.CRT_PALETTE.get("phosphor_dim", Color.GRAY),
+	}
+
+	var body_font: Font = MerlinVisual.get_font("body")
+
+	for faction in factions:
+		var vbox := VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 2)
+
+		var lbl := Label.new()
+		lbl.text = short_names[faction]
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", 10)
+		lbl.add_theme_color_override("font_color", faction_colors[faction])
+		vbox.add_child(lbl)
+
+		var bar := ProgressBar.new()
+		bar.min_value = 0.0
+		bar.max_value = 100.0
+		bar.value = 20.0
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(40, 6)
+
+		var bar_bg := StyleBoxFlat.new()
+		bar_bg.bg_color = MerlinVisual.CRT_PALETTE["bg_dark"]
+		bar_bg.set_corner_radius_all(0)
+		bar.add_theme_stylebox_override("background", bar_bg)
+
+		var bar_fill := StyleBoxFlat.new()
+		bar_fill.bg_color = faction_colors[faction]
+		bar_fill.set_corner_radius_all(0)
+		bar.add_theme_stylebox_override("fill", bar_fill)
+
+		vbox.add_child(bar)
+		_faction_bars[faction] = bar
+
+		var tier_lbl := Label.new()
+		tier_lbl.text = "N"
+		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			tier_lbl.add_theme_font_override("font", body_font)
+		tier_lbl.add_theme_font_size_override("font_size", 9)
+		tier_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		tier_lbl.name = "TierLabel"
+		vbox.add_child(tier_lbl)
+
+		hbox.add_child(vbox)
+
+	var sep := VSeparator.new()
+	sep.add_theme_constant_override("separation", 4)
+	hbox.add_child(sep)
+
+	var counters := VBoxContainer.new()
+	counters.add_theme_constant_override("separation", 2)
+
+	_anam_label = Label.new()
+	_anam_label.text = "♦ 0"
+	if body_font:
+		_anam_label.add_theme_font_override("font", body_font)
+	_anam_label.add_theme_font_size_override("font_size", 10)
+	_anam_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber_bright"])
+	counters.add_child(_anam_label)
+
+	_runes_label = Label.new()
+	_runes_label.text = "ᚠ 0"
+	if body_font:
+		_runes_label.add_theme_font_override("font", body_font)
+	_runes_label.add_theme_font_size_override("font_size", 10)
+	_runes_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan_dim"])
+	counters.add_child(_runes_label)
+
+	hbox.add_child(counters)
+	_dashboard.add_child(hbox)
+	add_child(_dashboard)
+
+	_update_dashboard()
+	_layout_dashboard()
+
+
+func _update_dashboard() -> void:
+	if store == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var factions_data: Dictionary = meta.get("faction_rep", {})
+	for faction in _faction_bars:
+		var bar: ProgressBar = _faction_bars[faction]
+		var val: float = float(factions_data.get(faction, 20))
+		bar.value = val
+		var tier_lbl: Label = bar.get_parent().get_node_or_null("TierLabel")
+		if tier_lbl:
+			if val >= 80.0:
+				tier_lbl.text = "H"
+			elif val >= 50.0:
+				tier_lbl.text = "S"
+			elif val >= 20.0:
+				tier_lbl.text = "N"
+			else:
+				tier_lbl.text = "X"
+
+	var anam: int = int(meta.get("anam", 0))
+	if _anam_label:
+		_anam_label.text = "♦ %d" % anam
+	var oghams: int = store.state.get("oghams", {}).get("skills_unlocked", []).size()
+	if _runes_label:
+		_runes_label.text = "ᚠ %d" % oghams
+
+
+func _on_reputation_changed(_faction: String, _value: float, _delta: float) -> void:
+	_update_dashboard()
+
+
+func _layout_dashboard() -> void:
+	if _dashboard == null:
+		return
+	var vp: Vector2 = get_viewport_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+	var is_compact: bool = mr != null and mr.is_mobile
+	var dash_w: float = vp.x * (0.88 if is_compact else 0.55)
+	_dashboard.position = Vector2((vp.x - dash_w) * 0.5, 72.0 + safe_top)
+	_dashboard.size = Vector2(dash_w, 0.0)
+
+
 # =============================================================================
 # LAYOUT
 # =============================================================================
@@ -560,6 +717,7 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	_layout_dashboard()
 
 
 func _layout_partir() -> void:
@@ -615,10 +773,11 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 
 func _on_partir_pressed() -> void:
 	SFXManager.play("partir_fanfare")
-	# For now: only Broceliande is available — skip radial, launch directly
-	selected_biome = "foret_broceliande"
-	_generate_mission()
-	_launch_adventure()
+	if _radial and not _radial.is_open():
+		var btn_center: Vector2 = _partir_btn.position + _partir_btn.size * 0.5
+		_radial.open(Vector2(btn_center.x, btn_center.y - 40.0))
+	elif _radial and _radial.is_open():
+		_radial.close()
 
 
 func _on_radial_biome_selected(biome_key: String) -> void:
@@ -680,6 +839,7 @@ func _launch_adventure() -> void:
 
 	if store:
 		var run: Dictionary = store.state.get("run", {})
+		run["current_biome"] = selected_biome
 		var mission: Dictionary = run.get("mission", {})
 		if not _current_mission.is_empty():
 			mission["type"] = _current_mission.get("type", "")
@@ -826,6 +986,8 @@ func _play_entry_animation() -> void:
 	if _partir_btn:
 		_partir_btn.modulate.a = 0.0
 		_partir_btn.scale = Vector2(0.5, 0.5)
+	if _dashboard:
+		_dashboard.modulate.a = 0.0
 	if _chronicle_label:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
@@ -842,6 +1004,10 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+	if _dashboard:
+		await get_tree().create_timer(0.1).timeout
+		var tw_d := create_tween()
+		tw_d.tween_property(_dashboard, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():
