@@ -27,15 +27,15 @@ static func _all_configs() -> Dictionary:
 			"name": "Foret de Broceliande",
 			"zones": ["La Lisiere", "La Foret Dense", "Le Dolmen", "La Mare Enchantee", "La Foret Profonde", "La Fontaine de Barenton", "Le Cercle de Pierres"],
 			"terrain_color": Color(0.22, 0.38, 0.15),
-			"fog_color": Color(0.5, 0.6, 0.45),
+			"fog_color": Color(0.5, 0.6, 0.45),  # Slightly darker fog for depth against bright sky
 			"fog_density": 0.025,
 			"ambient_color": Color(0.35, 0.40, 0.30),
 			"sky_top": Color(0.35, 0.55, 0.75),
-			"sun_color": Color(0.85, 0.80, 0.60),
+			"sun_color": Color(0.85, 0.80, 0.60),  # Warm filtered sunlight
 			"sun_energy": 2.5,
-			"fill_color": Color(0.40, 0.55, 0.65),
+			"fill_color": Color(0.40, 0.55, 0.65),  # Blue sky bounce
 			"fill_energy": 0.5,
-			"background_color": Color(0.45, 0.55, 0.70),
+			"background_color": Color(0.45, 0.55, 0.70),  # Blue-grey sky
 			"tiles": ["Tile_01_Grass_Flat", "Tile_04_Grass_Lush", "Tile_05_Grass_Dark", "Tile_30_Moss"],
 			"season": "spring",
 			"walk_speed": 3.5,
@@ -48,11 +48,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.015,
 			"ambient_color": Color(0.40, 0.35, 0.30),
 			"sky_top": Color(0.50, 0.55, 0.60),
-			"sun_color": Color(0.80, 0.65, 0.45),
+			"sun_color": Color(0.80, 0.65, 0.45),  # Amber low sun
 			"sun_energy": 2.0,
-			"fill_color": Color(0.50, 0.45, 0.40),
+			"fill_color": Color(0.50, 0.45, 0.40),  # Warm earth bounce
 			"fill_energy": 0.4,
-			"background_color": Color(0.50, 0.48, 0.45),
+			"background_color": Color(0.50, 0.48, 0.45),  # Overcast grey-brown
 			"tiles": ["Tile_03_Grass_Dry", "Tile_06_Dirt_Flat", "Tile_07_Dirt_Rough", "Tile_29_Gravel"],
 			"season": "autumn",
 			"walk_speed": 4.0,
@@ -65,11 +65,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.020,
 			"ambient_color": Color(0.35, 0.40, 0.45),
 			"sky_top": Color(0.40, 0.55, 0.70),
-			"sun_color": Color(0.95, 0.92, 0.80),
+			"sun_color": Color(0.95, 0.92, 0.80),  # Bright white-gold
 			"sun_energy": 3.0,
-			"fill_color": Color(0.50, 0.60, 0.70),
+			"fill_color": Color(0.50, 0.60, 0.70),  # Ocean blue bounce
 			"fill_energy": 0.6,
-			"background_color": Color(0.50, 0.65, 0.80),
+			"background_color": Color(0.50, 0.65, 0.80),  # Bright blue sky
 			"tiles": ["Tile_13_Sand_Flat", "Tile_14_Sand_Dune", "Tile_16_Sand_Wet", "Tile_26_Stone_Flat"],
 			"season": "summer",
 			"walk_speed": 3.0,
@@ -82,11 +82,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.010,
 			"ambient_color": Color(0.45, 0.40, 0.35),
 			"sky_top": Color(0.50, 0.60, 0.70),
-			"sun_color": Color(0.90, 0.75, 0.55),
+			"sun_color": Color(0.90, 0.75, 0.55),  # Warm hearth tone
 			"sun_energy": 2.2,
-			"fill_color": Color(0.55, 0.50, 0.45),
+			"fill_color": Color(0.55, 0.50, 0.45),  # Warm earth
 			"fill_energy": 0.5,
-			"background_color": Color(0.55, 0.55, 0.60),
+			"background_color": Color(0.55, 0.55, 0.60),  # Hazy warm sky
 			"tiles": ["Tile_06_Dirt_Flat", "Tile_08_Dirt_Dark", "Tile_38_Path_Grass", "Tile_34_Trans_Grass_Dirt"],
 			"season": "summer",
 			"walk_speed": 3.0,
@@ -99,11 +99,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.030,
 			"ambient_color": Color(0.30, 0.30, 0.35),
 			"sky_top": Color(0.30, 0.35, 0.45),
-			"sun_color": Color(0.65, 0.70, 0.80),
+			"sun_color": Color(0.65, 0.70, 0.80),  # Cold blue-white
 			"sun_energy": 1.5,
-			"fill_color": Color(0.35, 0.40, 0.50),
+			"fill_color": Color(0.35, 0.40, 0.50),  # Cold blue
 			"fill_energy": 0.6,
-			"background_color": Color(0.35, 0.38, 0.48),
+			"background_color": Color(0.35, 0.38, 0.48),  # Dark blue-grey
 			"tiles": ["Tile_26_Stone_Flat", "Tile_27_Stone_Rough", "Tile_28_Stone_Dark", "Tile_39_Grass_Rocky"],
 			"season": "autumn",
 			"walk_speed": 2.5,
@@ -116,11 +116,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.040,
 			"ambient_color": Color(0.25, 0.30, 0.25),
 			"sky_top": Color(0.25, 0.35, 0.30),
-			"sun_color": Color(0.55, 0.65, 0.40),
+			"sun_color": Color(0.55, 0.65, 0.40),  # Sickly green-filtered
 			"sun_energy": 1.2,
-			"fill_color": Color(0.30, 0.40, 0.30),
+			"fill_color": Color(0.30, 0.40, 0.30),  # Green murk
 			"fill_energy": 0.7,
-			"background_color": Color(0.28, 0.35, 0.30),
+			"background_color": Color(0.28, 0.35, 0.30),  # Dark murky
 			"tiles": ["Tile_10_Mud_Wet", "Tile_11_Mud_Deep", "Tile_12_Mud_Puddle", "Tile_31_Swamp"],
 			"season": "autumn",
 			"walk_speed": 2.5,
@@ -133,11 +133,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.018,
 			"ambient_color": Color(0.35, 0.33, 0.28),
 			"sky_top": Color(0.45, 0.48, 0.55),
-			"sun_color": Color(0.75, 0.72, 0.65),
+			"sun_color": Color(0.75, 0.72, 0.65),  # Pale filtered
 			"sun_energy": 2.0,
-			"fill_color": Color(0.42, 0.45, 0.50),
+			"fill_color": Color(0.42, 0.45, 0.50),  # Grey-blue
 			"fill_energy": 0.5,
-			"background_color": Color(0.45, 0.45, 0.50),
+			"background_color": Color(0.45, 0.45, 0.50),  # Grey overcast
 			"tiles": ["Tile_07_Dirt_Rough", "Tile_09_Dirt_Red", "Tile_27_Stone_Rough", "Tile_29_Gravel"],
 			"season": "winter",
 			"walk_speed": 3.0,
@@ -150,11 +150,11 @@ static func _all_configs() -> Dictionary:
 			"fog_density": 0.035,
 			"ambient_color": Color(0.30, 0.35, 0.45),
 			"sky_top": Color(0.35, 0.45, 0.65),
-			"sun_color": Color(0.70, 0.75, 0.90),
+			"sun_color": Color(0.70, 0.75, 0.90),  # Ethereal blue-white
 			"sun_energy": 1.8,
-			"fill_color": Color(0.45, 0.50, 0.65),
+			"fill_color": Color(0.45, 0.50, 0.65),  # Purple-blue glow
 			"fill_energy": 0.8,
-			"background_color": Color(0.40, 0.45, 0.60),
+			"background_color": Color(0.40, 0.45, 0.60),  # Deep twilight blue
 			"tiles": ["Tile_21_Water_Shallow", "Tile_24_Beach_Edge", "Tile_25_ShallowWater_Sand", "Tile_15_Sand_Dark"],
 			"season": "spring",
 			"walk_speed": 2.0,
