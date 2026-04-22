@@ -842,7 +842,7 @@ func _create_dashboard() -> void:
 	var factions: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
 	var factions_data: Dictionary = {}
 	if store:
-		factions_data = store.state.get("meta", {}).get("factions", {})
+		factions_data = store.state.get("meta", {}).get("faction_rep", {})
 	var body_font: Font = MerlinVisual.get_font("body")
 
 	for faction: String in factions:
@@ -900,7 +900,7 @@ func _create_dashboard() -> void:
 	if store:
 		var meta: Dictionary = store.state.get("meta", {})
 		anam_val = int(meta.get("anam", 0))
-		var discovered: Variant = meta.get("oghams_discovered", [])
+		var discovered: Variant = store.state.get("oghams", {}).get("skills_unlocked", [])
 		if discovered is Array:
 			runes_count = (discovered as Array).size()
 
