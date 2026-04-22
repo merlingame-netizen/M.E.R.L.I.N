@@ -32,6 +32,22 @@ const BIOME_SHORT_NAMES := {
 	"iles_mystiques": "Iles"
 }
 
+const DIFFICULTY_LABELS := {
+	-1: "Facile",
+	0: "Normal",
+	1: "Difficile",
+	2: "Dangereux",
+	3: "Extreme",
+}
+
+const SEASON_GLYPHS := {
+	"printemps": "❀",
+	"ete": "☀",
+	"automne": "◈",
+	"hiver": "❅",
+	"samhain": "☽",
+}
+
 # Map full biome keys to BIOME_ART_PROFILES keys
 const BIOME_PROFILE_KEYS := {
 	"foret_broceliande": "broceliande",
@@ -90,6 +106,10 @@ func _draw() -> void:
 	# Draw biome icons
 	for i in BIOMES.size():
 		_draw_biome_icon(i)
+
+	# Draw hover info panel on top of everything
+	if _hovered_index >= 0 and _hovered_index < BIOMES.size():
+		_draw_hover_panel(_hovered_index)
 
 func _input(event: InputEvent) -> void:
 	if not _is_open:
@@ -466,3 +486,98 @@ func _draw_lock_indicator(pos: Vector2, scale: float) -> void:
 		Vector2(lock_size * 0.6, lock_size * 0.5)
 	)
 	draw_rect(shackle_rect, c_lock, false, 1.5)
+
+# === HOVER INFO PANEL ===
+
+func _draw_hover_panel(index: int) -> void:
+	var biome_key: String = BIOMES[index]
+	var biome_info: Dictionary = MerlinConstants.BIOMES.get(biome_key, {})
+	if biome_info.is_empty():
+		return
+
+	var font: Font = MerlinVisual.get_font("body")
+	if font == null:
+		return
+
+	var fs: int = 12
+	var line_h: float = fs + 4.0
+	var pad: float = 8.0
+
+	var full_name: String = biome_info.get("name", biome_key)
+	var subtitle: String = biome_info.get("subtitle", "")
+	var guardian: String = biome_info.get("pnj", "").capitalize()
+	var season_key: String = biome_info.get("season", "")
+	var season_glyph: String = SEASON_GLYPHS.get(season_key, "")
+	var season_text: String = "%s %s" % [season_glyph, season_key.capitalize()]
+	var diff: int = int(biome_info.get("difficulty", 0))
+	var diff_text: String = DIFFICULTY_LABELS.get(diff, "???")
+	var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_key, 0))
+	var maturity: int = _calculate_player_maturity()
+	var locked: bool = _is_biome_locked(biome_key)
+
+	var lines: Array[String] = [
+		full_name,
+		subtitle,
+		"Gardien: %s" % guardian,
+		"%s  |  %s" % [season_text, diff_text],
+	]
+	if threshold > 0:
+		lines.append("Maturite: %d / %d" % [mini(maturity, threshold), threshold])
+	else:
+		lines.append("Libre d'acces")
+
+	var max_w: float = 0.0
+	for line in lines:
+		var tw: float = font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		max_w = maxf(max_w, tw)
+
+	var panel_w: float = max_w + pad * 2.0
+	var text_lines_h: float = lines.size() * line_h
+	var bar_h: float = 6.0
+	var bar_gap: float = 4.0
+	var panel_h: float = text_lines_h + bar_h + bar_gap + pad * 2.0
+
+	var icon_pos: Vector2 = _biome_positions[index]
+	var panel_x: float = icon_pos.x - panel_w * 0.5
+	var panel_y: float = icon_pos.y - ICON_RADIUS - panel_h - 8.0
+
+	panel_x = clampf(panel_x, 4.0, size.x - panel_w - 4.0)
+	panel_y = clampf(panel_y, 4.0, size.y - panel_h - 4.0)
+
+	var panel_rect := Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h))
+
+	var c_bg: Color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	c_bg.a = 0.92
+	var c_border: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	var c_title: Color = MerlinVisual.GBC["white"]
+	var c_sub: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	var c_text: Color = Color(1.0, 1.0, 1.0, 0.8)
+	var c_bar_bg: Color = MerlinVisual.CRT_PALETTE["bg_dark"]
+	var c_bar_fill: Color = MerlinVisual.CRT_PALETTE["phosphor_bright"] if not locked else MerlinVisual.CRT_PALETTE["amber_dim"]
+
+	draw_rect(panel_rect, c_bg, true)
+	draw_rect(panel_rect, c_border, false, 1.0)
+
+	var text_x: float = panel_x + pad
+	var text_y: float = panel_y + pad + fs
+
+	for i_line in lines.size():
+		var c_line: Color
+		if i_line == 0:
+			c_line = c_title
+		elif i_line == 1:
+			c_line = c_sub
+		else:
+			c_line = c_text
+		draw_string(font, Vector2(text_x, text_y), lines[i_line], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, c_line)
+		text_y += line_h
+
+	var bar_y: float = text_y + bar_gap
+	var bar_w: float = panel_w - pad * 2.0
+	var bar_rect := Rect2(Vector2(text_x, bar_y), Vector2(bar_w, bar_h))
+	draw_rect(bar_rect, c_bar_bg, true)
+
+	var fill_ratio: float = clampf(float(maturity) / maxf(float(threshold), 1.0), 0.0, 1.0)
+	if fill_ratio > 0.0:
+		var fill_rect := Rect2(Vector2(text_x, bar_y), Vector2(bar_w * fill_ratio, bar_h))
+		draw_rect(fill_rect, c_bar_fill, true)
