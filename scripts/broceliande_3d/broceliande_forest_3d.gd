@@ -208,6 +208,15 @@ var _frame_samples: PackedFloat32Array = PackedFloat32Array()
 func _ready() -> void:
 	_rng.randomize()
 	_gravity = float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
+	# Read biome_key from MerlinStore if a run selected a different biome
+	var init_store: Node = _find_store()
+	if init_store:
+		var st_val: Variant = init_store.get("state")
+		if st_val is Dictionary:
+			var run_data: Dictionary = (st_val as Dictionary).get("run", {})
+			var stored_biome: String = str(run_data.get("current_biome", ""))
+			if stored_biome != "":
+				biome_key = stored_biome
 	# Disable ALL autoload CanvasLayers — hint_screen_texture breaks 3D in GL Compatibility
 	for child in get_tree().root.get_children():
 		if child is CanvasLayer:

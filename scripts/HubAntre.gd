@@ -26,7 +26,7 @@ const SCENE_MAPMONDE := "res://scenes/MapMonde.tscn"
 # BIOME DATA -- 7 Sanctuaires de Bretagne
 # =============================================================================
 
-var BIOME_DATA := {
+var BIOME_DATA: Dictionary = {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande",
 		"subtitle": "Mystere et magie ancestrale",
@@ -217,6 +217,26 @@ var _passive_llm_pending: bool = false
 var _mist_tween: Tween
 var _partir_hover_tween: Tween
 
+# Dashboard
+var _dashboard: PanelContainer = null
+var _faction_bars: Dictionary = {}
+var _faction_tier_labels: Dictionary = {}
+var _anam_label: Label = null
+var _runes_label: Label = null
+
+const FACTION_COLORS: Dictionary = {
+	"druides": Color(0.2, 0.8, 0.3),
+	"anciens": Color(0.85, 0.65, 0.2),
+	"korrigans": Color(0.2, 0.75, 0.75),
+	"niamh": Color(0.55, 0.4, 0.85),
+	"ankou": Color(0.75, 0.2, 0.2),
+}
+
+const FACTION_SHORT: Dictionary = {
+	"druides": "DRU", "anciens": "ANC", "korrigans": "KOR",
+	"niamh": "NIA", "ankou": "ANK",
+}
+
 # Audio
 var voicebox: Node = null
 var voice_ready: bool = false
@@ -235,6 +255,7 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
+	_create_dashboard()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -560,6 +581,7 @@ func _layout_all() -> void:
 	if _meta_label:
 		_meta_label.size.x = vp.x
 		_meta_label.position.y = 48.0 + safe_top
+	_layout_dashboard()
 
 
 func _layout_partir() -> void:
@@ -615,7 +637,11 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 
 func _on_partir_pressed() -> void:
 	SFXManager.play("partir_fanfare")
-	# For now: only Broceliande is available — skip radial, launch directly
+	if _radial:
+		if not _radial.is_open():
+			var vp: Vector2 = get_viewport_rect().size
+			_radial.open(vp * 0.5)
+		return
 	selected_biome = "foret_broceliande"
 	_generate_mission()
 	_launch_adventure()
@@ -793,6 +819,154 @@ func _request_merlin_passive_comment(context: String) -> void:
 
 
 # =============================================================================
+# FACTION DASHBOARD
+# =============================================================================
+
+func _create_dashboard() -> void:
+	_dashboard = PanelContainer.new()
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"].darkened(0.3)
+	panel_style.border_color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(0)
+	panel_style.content_margin_left = 10
+	panel_style.content_margin_right = 10
+	panel_style.content_margin_top = 6
+	panel_style.content_margin_bottom = 6
+	_dashboard.add_theme_stylebox_override("panel", panel_style)
+	_dashboard.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+
+	var factions: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+	var factions_data: Dictionary = {}
+	if store:
+		factions_data = store.state.get("meta", {}).get("factions", {})
+	var body_font: Font = MerlinVisual.get_font("body")
+
+	for faction: String in factions:
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 4)
+
+		var lbl := Label.new()
+		lbl.text = FACTION_SHORT.get(faction, "???")
+		lbl.custom_minimum_size.x = 30
+		if body_font:
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(10))
+		lbl.add_theme_color_override("font_color", FACTION_COLORS.get(faction, Color.WHITE))
+		hbox.add_child(lbl)
+
+		var bar := ProgressBar.new()
+		bar.min_value = 0.0
+		bar.max_value = 100.0
+		bar.value = float(factions_data.get(faction, 20))
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(0, 8)
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var bg_sb := StyleBoxFlat.new()
+		bg_sb.bg_color = MerlinVisual.CRT_PALETTE["bg_dark"]
+		bg_sb.set_corner_radius_all(0)
+		bg_sb.set_content_margin_all(0)
+		bar.add_theme_stylebox_override("background", bg_sb)
+		var fill_sb := StyleBoxFlat.new()
+		fill_sb.bg_color = FACTION_COLORS.get(faction, Color.WHITE)
+		fill_sb.set_corner_radius_all(0)
+		fill_sb.set_content_margin_all(0)
+		bar.add_theme_stylebox_override("fill", fill_sb)
+		hbox.add_child(bar)
+		_faction_bars[faction] = bar
+
+		var tier := Label.new()
+		var rep_val: float = float(factions_data.get(faction, 20))
+		tier.text = _get_tier_letter(rep_val)
+		tier.custom_minimum_size.x = 12
+		if body_font:
+			tier.add_theme_font_override("font", body_font)
+		tier.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(10))
+		tier.add_theme_color_override("font_color", FACTION_COLORS.get(faction, Color.WHITE))
+		hbox.add_child(tier)
+		_faction_tier_labels[faction] = tier
+
+		vbox.add_child(hbox)
+
+	var counters := HBoxContainer.new()
+	counters.add_theme_constant_override("separation", 16)
+	counters.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var anam_val: int = 0
+	var runes_count: int = 0
+	if store:
+		var meta: Dictionary = store.state.get("meta", {})
+		anam_val = int(meta.get("anam", 0))
+		var discovered: Variant = meta.get("oghams_discovered", [])
+		if discovered is Array:
+			runes_count = (discovered as Array).size()
+
+	_anam_label = Label.new()
+	_anam_label.text = "◆ %d" % anam_val
+	if body_font:
+		_anam_label.add_theme_font_override("font", body_font)
+	_anam_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(10))
+	_anam_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber_dim"])
+	counters.add_child(_anam_label)
+
+	_runes_label = Label.new()
+	_runes_label.text = "ᚋ %d/18" % runes_count
+	if body_font:
+		_runes_label.add_theme_font_override("font", body_font)
+	_runes_label.add_theme_font_size_override("font_size", MerlinVisual.responsive_size(10))
+	_runes_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+	counters.add_child(_runes_label)
+
+	vbox.add_child(counters)
+	_dashboard.add_child(vbox)
+	add_child(_dashboard)
+
+	if store and store.has_signal("reputation_changed"):
+		if not store.reputation_changed.is_connected(_on_reputation_changed):
+			store.reputation_changed.connect(_on_reputation_changed)
+
+	_layout_dashboard()
+
+
+func _get_tier_letter(value: float) -> String:
+	if value >= 80.0:
+		return "H"
+	if value >= 50.0:
+		return "S"
+	if value >= 20.0:
+		return "N"
+	return "X"
+
+
+func _on_reputation_changed(faction: String, value: float, _delta: float) -> void:
+	if _faction_bars.has(faction):
+		_faction_bars[faction].value = value
+	if _faction_tier_labels.has(faction):
+		_faction_tier_labels[faction].text = _get_tier_letter(value)
+
+
+func _layout_dashboard() -> void:
+	if _dashboard == null:
+		return
+	var vp: Vector2 = get_viewport_rect().size
+	var mr: Node = get_node_or_null("/root/MerlinResponsive")
+	var safe_top: float = mr.get_safe_margin_top() if mr else 0.0
+	var is_compact: bool = mr != null and mr.is_mobile
+	var dash_w: float = vp.x * (0.88 if is_compact else 0.55)
+	_dashboard.position = Vector2((vp.x - dash_w) * 0.5, 72.0 + safe_top)
+	_dashboard.size = Vector2(dash_w, 0)
+
+
+func _exit_tree() -> void:
+	if store and store.has_signal("reputation_changed"):
+		if store.reputation_changed.is_connected(_on_reputation_changed):
+			store.reputation_changed.disconnect(_on_reputation_changed)
+
+
+# =============================================================================
 # SAVE
 # =============================================================================
 
@@ -830,6 +1004,8 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
+	if _dashboard:
+		_dashboard.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -842,6 +1018,9 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+	if _dashboard:
+		var tw := create_tween()
+		tw.tween_property(_dashboard, "modulate:a", 1.0, 0.4)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():
