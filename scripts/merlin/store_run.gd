@@ -151,6 +151,11 @@ static func resolve_choice(state: Dictionary, card: Dictionary, option: int, mod
 	if cp > 0 and cp % MerlinConstants.CARDS_PER_DAY == 0:
 		run["day"] = int(run.get("day", 1)) + 1
 
+	# Talent: passive_heal — +2 life every 5 cards
+	if cp > 0 and cp % 5 == 0 and StoreTalents.get_talent_modifier(state, "passive_heal"):
+		var cur_life: int = int(run.get("life_essence", 0))
+		run["life_essence"] = mini(cur_life + 2, int(run.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX)))
+
 	# Record card text + choice in story_log for LLM context variety
 	var story_log: Array = run.get("story_log", [])
 	var card_text: String = str(card.get("text", "")).substr(0, 120)
@@ -210,6 +215,12 @@ static func check_run_end(state: Dictionary) -> Dictionary:
 
 	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 	if life <= 0:
+		# Talent: survive_death_once — revive at 10 HP (one-time per run)
+		if StoreTalents.consume_talent_modifier(state, "survive_death_once"):
+			run["life_essence"] = 10
+			state["run"] = run
+			return {"ended": false, "revived": true}
+
 		return {
 			"ended": true,
 			"ending": {"title": "Essences Epuisees", "text": "Tes essences de vie se sont taries... la foret te rappelle a elle."},
@@ -385,6 +396,15 @@ static func calculate_run_rewards(state: Dictionary, run_data: Dictionary) -> Di
 		anam = int(anam * 1.5)
 	if StoreTalents.get_talent_modifier(state, "new_game_plus"):
 		anam = int(anam * 1.5)
+	# Talent: harmony_anam_bonus — +5 Anam if all factions >= 50
+	if StoreTalents.get_talent_modifier(state, "harmony_anam_bonus"):
+		var all_above_50: bool = true
+		for f in faction_rep:
+			if float(faction_rep[f]) < 50.0:
+				all_above_50 = false
+				break
+		if all_above_50:
+			anam += 5
 
 	anam = maxi(anam, 0)
 
