@@ -972,9 +972,18 @@ func _update_hud() -> void:
 			_walk_hud.update_pv(life, 100)
 			var essences: int = int(run.get("biome_currency", 0))
 			_walk_hud.update_essences(essences)
-		# Default ogham (Beith starter)
 		if _walk_hud.has_method("update_ogham"):
-			_walk_hud.update_ogham("\u1681", "Beith", 0)
+			var ogham_key: String = "beith"
+			var merlin_store: Node = get_node_or_null("/root/MerlinStore")
+			if merlin_store:
+				ogham_key = str(merlin_store.state.get("run", {}).get("ogham_actif", "beith"))
+			if ogham_key.is_empty() or not MerlinConstants.OGHAM_FULL_SPECS.has(ogham_key):
+				ogham_key = "beith"
+			var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_key, {})
+			var glyph: String = str(spec.get("unicode", "\u1681"))
+			var ogham_name: String = str(spec.get("name", ogham_key.capitalize()))
+			var cooldown: int = int(spec.get("cooldown", 3))
+			_walk_hud.update_ogham(glyph, ogham_name, cooldown)
 
 	# Zone name + season + time of day + autowalk indicators
 	var zone_text: String = _zone_names[_current_zone]
