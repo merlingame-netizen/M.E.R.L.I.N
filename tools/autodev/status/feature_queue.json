@@ -800,6 +800,28 @@
       "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "C24 claimed this was done but _ready() had no store read. Added: reads current_biome from MerlinStore.state.run before all biome-dependent setup (viewport, environment, path, terrain). Guarded with null/type checks. Falls back to export default foret_broceliande.",
       "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-037",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire OghamSelector into Hub→Run flow (C27 ghost feature)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd"],
+      "description": "OghamSelector created in C27 but never wired. BiomeRadial→OghamSelector→launch flow. Signal-safe cleanup with is_instance_valid + explicit disconnect before queue_free. Stores selected ogham in MerlinStore state.run.ogham_actif.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-038",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix BroceliandeForest3D hardcoded Beith ogham — read from store",
+      "agent": "godot_expert",
+      "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "description": "BroceliandeForest3D._update_hud() hardcoded Beith. Now reads ogham_actif from MerlinStore, looks up OGHAM_FULL_SPECS for glyph/name/cooldown. Robust fallback: empty or invalid key → beith.",
+      "completed_at": "2026-04-22"
     }
   ]
 }
