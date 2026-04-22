@@ -1,10 +1,10 @@
 {
-  "cycle": 28,
-  "timestamp": "2026-04-22T17:00:00.000Z",
+  "cycle": 29,
+  "timestamp": "2026-04-22T19:00:00.000Z",
   "decision": "PROCEED",
-  "tasks": ["BUGFIX-037-WIRE-OGHAM", "BUGFIX-038-READ-OGHAM-3D"],
-  "rationale": "Bug hunt C27: OghamSelector (329 lines) was created but never wired into Hub→Run flow. Bible s.2.2 mandates ogham selection before each run. Also BroceliandeForest3D hardcoded Beith instead of reading from store. Both are flow-critical bugs that break the core loop: player can never choose their rune.",
-  "budget": {"files": 2, "lines": 48},
+  "tasks": ["ARBRE-SCENE-FIX", "TALENT-WIRE-9-RULES"],
+  "rationale": "Talent tree was the biggest meta-progression gap. ArbreDeVie scene was a ghost feature (4 scripts, 1000+ lines, but .tscn was 12-line stub that crashed). After fixing the scene, discovered that 12 of 16 talent special rules had NO gameplay effect — players spent Anam on talents that did nothing. Wired 9 unwired rules across 4 core gameplay files. Combined with 4 already-wired Anam reward talents, 13/16 special rules now work.",
+  "budget": {"files": 5, "lines": 141},
   "blockers": [],
-  "next_cycle_plan": "Bug hunt C28: verify OghamSelector opens correctly after BiomeRadial, confirm ogham_actif persists to 3D scene. Feature candidates: word minigame skeleton (core loop gap), talent tree skeleton (meta progression), or biome-specific 3D walkConfigs."
+  "next_cycle_plan": "Bug hunt C29: verify ArbreDeVie scene loads without crash, confirm talent effects apply correctly (survive_death at 0 HP, passive_heal every 5 cards, resist_damage blocks once). 3 remaining unwired talents: predict_next_theme, see_next_card_full, sacrifice_life_for_anam — these need HUD UI work. Feature candidates: BiomeWalkConfig .tres resources for 7 non-Broceliande biomes, or MOS convergence HUD display."
 }

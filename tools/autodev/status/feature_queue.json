@@ -822,6 +822,28 @@
       "files": ["scripts/broceliande_3d/broceliande_forest_3d.gd"],
       "description": "BroceliandeForest3D._update_hud() hardcoded Beith. Now reads ogham_actif from MerlinStore, looks up OGHAM_FULL_SPECS for glyph/name/cooldown. Robust fallback: empty or invalid key → beith.",
       "completed_at": "2026-04-22"
+    },
+    {
+      "id": "BUGFIX-039",
+      "phase": 0,
+      "priority": 1,
+      "status": "completed",
+      "title": "Fix ArbreDeVie.tscn ghost scene — rebuild full node tree",
+      "agent": "godot_expert",
+      "files": ["scenes/ArbreDeVie.tscn"],
+      "description": "ArbreDeVie.tscn was a 12-line stub with no child nodes. arbre_de_vie_ui.gd used 10 @onready vars that all resolved null → crash. Rebuilt complete node tree: ParchmentBG, MainMargin/RootVBox (HeaderBar, Separator, HSplit with ArbrePixelArt+DetailPanel, BottomBar/BackButton). Hub hotspot 'arbre' now opens working talent tree.",
+      "completed_at": "2026-04-22"
+    },
+    {
+      "id": "TALENT-WIRE-9",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "title": "Wire 9 talent special rules into gameplay systems",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_effect_engine.gd", "scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_store.gd"],
+      "description": "9 talent special rules wired: survive_death_once (revive at 10 HP), resist_damage_once (block 1 damage), heal_multiplier (double healing), passive_heal (+2 life every 5 cards), reduce_rep_loss (halve negative rep), rep_gain_multiplier (boost positive rep), harmony_anam_bonus (+5 Anam if all factions >=50), crit_success_heal (+5 life on minigame win), extra_card_option (4 options instead of 3). Combined with 4 Anam reward talents already wired: 13 of 16 total special rules now active.",
+      "completed_at": "2026-04-22"
     }
   ]
 }

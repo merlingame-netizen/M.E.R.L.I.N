@@ -1,25 +1,31 @@
 {
   "agent": "cycle_director",
-  "cycle": 28,
-  "timestamp": "2026-04-22T17:00:00Z",
-  "type": "bughunt",
-  "scope": "Cycle 28: Bug hunt C27 (OghamSelector never wired + 3D hardcoded Beith)",
+  "cycle": 29,
+  "timestamp": "2026-04-22T19:00:00Z",
+  "type": "feature",
+  "scope": "Cycle 29: Talent tree scene fix + wire 9 special rules into gameplay",
   "bugs_found": [
     {
-      "id": "BUG-037",
+      "id": "BUG-039",
       "severity": "HIGH",
-      "file": "scripts/HubAntre.gd",
-      "description": "OghamSelector created in C27 (329 lines) but never wired into Hub→Run flow. After biome selection, code went directly to _launch_adventure() skipping ogham choice entirely. Bible s.2.2 mandates ogham selection before each run.",
+      "file": "scenes/ArbreDeVie.tscn",
+      "description": "ArbreDeVie.tscn was a 12-line stub — no child nodes. arbre_de_vie_ui.gd used 10 @onready vars ($ParchmentBG, $MainMargin/RootVBox/...) that all resolved null. Scene crashed on load. Hub hotspot 'arbre' was a dead button.",
       "status": "fixed"
     },
     {
-      "id": "BUG-038",
-      "severity": "MEDIUM",
-      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
-      "description": "BroceliandeForest3D._update_hud() hardcoded Beith ogham (unicode \\u1681, name 'Beith', cooldown 0) instead of reading ogham_actif from MerlinStore. Player's chosen ogham was ignored in 3D walk.",
+      "id": "BUG-040",
+      "severity": "HIGH",
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "description": "9 talent special rules (survive_death_once, resist_damage_once, passive_heal, reduce_rep_loss, rep_gain_multiplier, heal_multiplier, harmony_anam_bonus, crit_success_heal, extra_card_option) were defined in TALENT_NODES and unlockable via Anam, but NEVER checked by gameplay code. Players spent Anam on talents that did nothing.",
       "status": "fixed"
     }
   ],
-  "remaining_known_issues": [],
-  "overall_assessment": "Bug hunt C27 found 2 flow-critical bugs. OghamSelector was a 329-line ghost feature — fully built but never called. Now wired with signal-safe cleanup (is_instance_valid + explicit disconnect). 3D fallback logic improved to check OGHAM_FULL_SPECS.has(). 36 total bugs fixed across 28 cycles."
+  "remaining_known_issues": [
+    {
+      "id": "TALENT-UNWIRED-3",
+      "severity": "LOW",
+      "description": "3 talent special rules still unwired: predict_next_theme, see_next_card_full, sacrifice_life_for_anam. These require HUD UI additions to display the prediction or sacrifice prompt."
+    }
+  ],
+  "overall_assessment": "ArbreDeVie ghost feature fixed + 9 talent rules wired. 13 of 16 talent special rules now have real gameplay impact. 38 total bugs fixed across 29 cycles."
 }

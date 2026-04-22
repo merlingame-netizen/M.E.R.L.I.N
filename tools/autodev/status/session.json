@@ -1,8 +1,8 @@
 {
   "state": "idle",
-  "objective": "Cycle 28 — Wire OghamSelector into Hub→Run flow + read ogham from store in 3D",
+  "objective": "Cycle 29 — Wire 9 talent special rules into gameplay + fix ArbreDeVie scene",
   "workers": [],
-  "updated_at": "2026-04-22T17:00:00.000Z",
-  "cycle": 28,
-  "checkpoint": "BUG-037 (HIGH): OghamSelector created in C27 but never wired into flow. Now BiomeRadial→OghamSelector→launch. Signal-safe cleanup with is_instance_valid + explicit disconnect. BUG-038 (MEDIUM): BroceliandeForest3D hardcoded Beith — now reads ogham_actif from MerlinStore with OGHAM_FULL_SPECS lookup + robust fallback. 2 files, 48 lines. 36 total bugs fixed across 28 cycles."
+  "updated_at": "2026-04-22T19:00:00.000Z",
+  "cycle": 29,
+  "checkpoint": "ArbreDeVie.tscn ghost feature fixed (stub → full node tree). 9 talent special rules wired: survive_death_once, resist_damage_once, heal_multiplier, passive_heal, reduce_rep_loss, rep_gain_multiplier, harmony_anam_bonus, crit_success_heal, extra_card_option. 13 of 16 total special rules now active. 5 files, 141 lines."
 }

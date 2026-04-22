@@ -112,3 +112,7 @@
 {"ts":"2026-04-22T17:00:00.000Z","type":"task_done","cycle":28,"detail":"BUG-037: OghamSelector wired into Hub→Run flow (BiomeRadial→OghamSelector→launch). Signal-safe cleanup."}
 {"ts":"2026-04-22T17:00:00.000Z","type":"task_done","cycle":28,"detail":"BUG-038: BroceliandeForest3D reads ogham_actif from MerlinStore instead of hardcoding Beith."}
 {"ts":"2026-04-22T17:00:00.000Z","type":"cycle_end","cycle":28,"detail":"Cycle 28 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM). 2 files, 48 lines. 36 total bugs fixed across 28 cycles."}
+{"ts":"2026-04-22T19:00:00.000Z","type":"cycle_start","cycle":29,"detail":"Feature: Talent tree scene fix + wire 9 special rules into gameplay"}
+{"ts":"2026-04-22T19:00:00.000Z","type":"task_done","cycle":29,"detail":"BUG-039: ArbreDeVie.tscn rebuilt from 12-line stub to full node tree. 10 @onready vars now resolve correctly."}
+{"ts":"2026-04-22T19:00:00.000Z","type":"task_done","cycle":29,"detail":"TALENT-WIRE-9: 9 talent special rules wired into gameplay (survive_death, resist_damage, heal_multiplier, passive_heal, reduce_rep_loss, rep_gain_mult, harmony_anam, crit_success_heal, extra_card_option). 13/16 active."}
+{"ts":"2026-04-22T19:00:00.000Z","type":"cycle_end","cycle":29,"detail":"Cycle 29 complete: 1 scene fix + 9 talent rules wired. 5 files, 141 lines. 38 total bugs fixed across 29 cycles."}
