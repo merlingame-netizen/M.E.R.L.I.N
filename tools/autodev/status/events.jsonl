@@ -108,3 +108,7 @@
 {"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BIOME-KEY-PASSTHROUGH: BroceliandeForest3D._ready() reads current_biome from MerlinStore.state.run before building forest."}
 {"ts":"2026-04-22T14:00:00.000Z","type":"task_done","cycle":25,"detail":"BUG-032-GHOST: BIOME_DATA := to Dictionary type hint (C24 claimed fixed, code unchanged). Fixed for real."}
 {"ts":"2026-04-22T14:00:00.000Z","type":"cycle_end","cycle":25,"detail":"Cycle 25 complete: 3 ghost features implemented, 3 bugs fixed (3 HIGH + 2 MEDIUM + 1 ghost). 2 files, 190 lines. 32 total bugs fixed across 25 cycles."}
+{"ts":"2026-04-22T17:00:00.000Z","type":"cycle_start","cycle":28,"detail":"Bug hunt C27: OghamSelector wiring + 3D ogham read"}
+{"ts":"2026-04-22T17:00:00.000Z","type":"task_done","cycle":28,"detail":"BUG-037: OghamSelector wired into Hub→Run flow (BiomeRadial→OghamSelector→launch). Signal-safe cleanup."}
+{"ts":"2026-04-22T17:00:00.000Z","type":"task_done","cycle":28,"detail":"BUG-038: BroceliandeForest3D reads ogham_actif from MerlinStore instead of hardcoding Beith."}
+{"ts":"2026-04-22T17:00:00.000Z","type":"cycle_end","cycle":28,"detail":"Cycle 28 complete: 2 bugs fixed (1 HIGH + 1 MEDIUM). 2 files, 48 lines. 36 total bugs fixed across 28 cycles."}
