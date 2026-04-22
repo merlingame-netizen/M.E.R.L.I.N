@@ -47,6 +47,9 @@ var _event_selector: EventCategorySelector = null
 # Promise subsystem (extracted module)
 var _promises: MerlinPromiseSystem = MerlinPromiseSystem.new()
 
+# Talent: extra_card_option (Niamh T4) — 3 or 4 options per card
+var max_options: int = 3
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
@@ -130,7 +133,7 @@ func generate_card(context: Dictionary) -> Dictionary:
 			if not event_card.is_empty():
 				var v: Dictionary = _validate_card(event_card)
 				if v.get("valid", false):
-					var final: Dictionary = _ensure_3_options(v["card"])
+					var final: Dictionary = _ensure_3_options(v["card"], max_options)
 					_annotate_fields(final)
 					return final
 				push_warning("Event card invalid: %s" % v.get("error", ""))
@@ -139,7 +142,7 @@ func generate_card(context: Dictionary) -> Dictionary:
 			if not promise_card.is_empty():
 				var v: Dictionary = _validate_card(promise_card)
 				if v.get("valid", false):
-					var final: Dictionary = _ensure_3_options(v["card"])
+					var final: Dictionary = _ensure_3_options(v["card"], max_options)
 					_annotate_fields(final)
 					return final
 				push_warning("Promise card invalid: %s" % v.get("error", ""))
@@ -148,7 +151,7 @@ func generate_card(context: Dictionary) -> Dictionary:
 			if not md_card.is_empty():
 				var v: Dictionary = _validate_card(md_card)
 				if v.get("valid", false):
-					var final: Dictionary = _ensure_3_options(v["card"])
+					var final: Dictionary = _ensure_3_options(v["card"], max_options)
 					_annotate_fields(final)
 					return final
 				push_warning("Merlin direct card invalid: %s" % v.get("error", ""))
@@ -161,7 +164,7 @@ func generate_card(context: Dictionary) -> Dictionary:
 			var card: Dictionary = llm_result.get("card", {})
 			var validated: Dictionary = _validate_card(card)
 			if validated.get("valid", false):
-				var final_card: Dictionary = _ensure_3_options(validated["card"])
+				var final_card: Dictionary = _ensure_3_options(validated["card"], max_options)
 				# Detect lexical fields for each option
 				_annotate_fields(final_card)
 				return final_card
@@ -224,7 +227,7 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 		push_warning("FastRoute card %s invalid: %s" % [str(selected.get("id", "")), v.get("error", "")])
 		return _get_emergency_card()
 	_annotate_fields(v["card"])
-	return _ensure_3_options(v["card"])
+	return _ensure_3_options(v["card"], max_options)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -760,23 +763,27 @@ func _validate_card(card: Dictionary) -> Dictionary:
 	return {"valid": true, "card": card}
 
 
-## Pad/trim options to exactly 3. Padding effects are trusted (not LLM-sourced).
+## Pad/trim options to target count. Padding effects are trusted (not LLM-sourced).
 ## INVARIANT: _validate_card() MUST run before this function.
-func _ensure_3_options(card: Dictionary) -> Dictionary:
+func _ensure_3_options(card: Dictionary, max_options: int = 3) -> Dictionary:
 	var result: Dictionary = card.duplicate(true)
 	var options: Array = result.get("options", [])
 
-	# If more than 3, take first 3
-	if options.size() > 3:
-		options = options.slice(0, 3)
+	if options.size() > max_options:
+		options = options.slice(0, max_options)
 
-	# If less than 3, pad with safe default
-	while options.size() < 3:
+	var pad_labels: Array[String] = [
+		"Attendre et observer",
+		"Rester vigilant",
+	]
+	var pad_idx: int = 0
+	while options.size() < max_options:
 		options.append({
-			"label": "Attendre et observer",
+			"label": pad_labels[pad_idx % pad_labels.size()],
 			"verb": "attendre",
 			"effects": [{"type": "HEAL_LIFE", "amount": 2}],
 		})
+		pad_idx += 1
 
 	result["options"] = options
 	return result

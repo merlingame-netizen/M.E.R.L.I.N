@@ -390,9 +390,18 @@ func _apply_hidden_counter(state: Dictionary, key: String, delta: int) -> bool:
 
 
 func _apply_life_delta(state: Dictionary, delta: int) -> bool:
+	# Talent: resist_damage_once — block 1 damage source per run
+	if delta < 0 and StoreTalents.consume_talent_modifier(state, "resist_damage_once"):
+		return true
 	var run = state.get("run", {})
 	var current = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
-	run["life_essence"] = clampi(current + delta, 0, MerlinConstants.LIFE_ESSENCE_MAX)
+	var max_life: int = int(run.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX))
+	# Talent: heal_multiplier — double healing from Recovery runes
+	if delta > 0:
+		var heal_mult: float = float(StoreTalents.get_talent_modifier(state, "heal_multiplier", 0.0))
+		if heal_mult > 0.0:
+			delta = int(float(delta) * (1.0 + heal_mult))
+	run["life_essence"] = clampi(current + delta, 0, max_life)
 	state["run"] = run
 	return true
 
@@ -457,6 +466,14 @@ func _build_faction_context(rep_dict: Dictionary) -> Dictionary:
 func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -> bool:
 	if not MerlinConstants.FACTIONS.has(faction):
 		return false
+	# Talent: reduce_rep_loss — halve negative reputation changes
+	if delta < 0 and StoreTalents.get_talent_modifier(state, "reduce_rep_loss"):
+		delta = int(float(delta) * 0.5)
+	# Talent: rep_gain_multiplier — boost positive reputation gains
+	if delta > 0:
+		var rep_mult: float = float(StoreTalents.get_talent_modifier(state, "rep_gain_multiplier", 0.0))
+		if rep_mult > 0.0:
+			delta = int(float(delta) * (1.0 + rep_mult))
 	# Enforce per-card cap (bible v2.4: ±20 per faction per card)
 	var capped_delta: int = clampi(delta, -20, 20)
 	var meta: Dictionary = state.get("meta", {})

@@ -265,6 +265,8 @@ func _reduce(action: Dictionary) -> Dictionary:
 			rng.set_seed(seed_val)
 			StoreRun.init_run(state, rng, scenarios)
 			_reset_ai_for_new_run()
+			# Talent: extra_card_option — 4 options instead of 3
+			cards.max_options = 4 if StoreTalents.get_talent_modifier(state, "extra_card_option") else 3
 			state["run"]["map_seed"] = seed_val
 			var biome_key: String = str(action.get("biome", MerlinConstants.BIOME_DEFAULT))
 			if biome_key not in MerlinConstants.BIOMES:
@@ -691,6 +693,11 @@ func get_cards_played() -> int:
 func record_minigame_win() -> void:
 	var run_ref: Dictionary = state.get("run", {})
 	run_ref["minigames_won"] = int(run_ref.get("minigames_won", 0)) + 1
+	# Talent: crit_success_heal — +5 life on minigame win
+	if StoreTalents.get_talent_modifier(state, "crit_success_heal"):
+		var cur_life: int = int(run_ref.get("life_essence", 0))
+		var max_life: int = int(run_ref.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX))
+		run_ref["life_essence"] = mini(cur_life + 5, max_life)
 	state["run"] = run_ref
 
 # --- TALENT TREE — Delegates to StoreTalents ---
