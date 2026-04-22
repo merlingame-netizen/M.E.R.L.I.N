@@ -260,6 +260,7 @@ func _ready() -> void:
 	# _populate_forest() removed — chunk manager handles vegetation
 	_spawn_merlin()
 	_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
+	_effects.set_biome(biome_key)
 	_effects.add_fog_particles()
 	_effects.add_pollen_particles()
 	_effects.add_fireflies()
@@ -714,51 +715,45 @@ func _setup_viewport() -> void:
 func _setup_environment() -> void:
 	var env: Environment = Environment.new()
 
-	# Load biome-specific colors from BiomeWalkConfigs
 	var biome_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
-	var bg_color: Color = biome_cfg.get("fog_color", Color(0.30, 0.40, 0.28)) as Color
 	var ambient_color: Color = biome_cfg.get("ambient_color", Color(0.55, 0.65, 0.45)) as Color
 	var fog_color: Color = biome_cfg.get("fog_color", Color(0.35, 0.45, 0.32)) as Color
 	var fog_density: float = float(biome_cfg.get("fog_density", 0.018)) * 0.25  # Heavily reduced for web — trees must be visible
 
-	# GL Compatibility: ProceduralSkyMaterial renders white regardless of BG_COLOR mode.
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.45, 0.55, 0.70)  # Blue-grey sky for contrast with green trees
+	var bg_sky: Color = biome_cfg.get("background_color", Color(0.45, 0.55, 0.70)) as Color
+	var sun_col: Color = biome_cfg.get("sun_color", Color(0.85, 0.80, 0.60)) as Color
+	var sun_nrg: float = float(biome_cfg.get("sun_energy", 2.5))
+	var fill_col: Color = biome_cfg.get("fill_color", Color(0.40, 0.55, 0.65)) as Color
+	var fill_nrg: float = float(biome_cfg.get("fill_energy", 0.5))
 
-	# Ambient — strong enough to light dark CRT-style materials
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = bg_sky
+
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = ambient_color
-	env.ambient_light_energy = 1.3  # Brighter for web (low-poly needs more light)
+	env.ambient_light_energy = 1.3
 
-	# Fog — biome-specific
 	env.fog_enabled = true
 	env.fog_light_color = fog_color
 	env.fog_density = fog_density
-	# fog_aerial_perspective not supported in GL Compatibility — skip
 
-	# Tonemap
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 6.0
 	env.tonemap_exposure = 1.4
 
-	# Glow, SSAO — not supported in GL Compatibility, omitted
-	# env.ssao_enabled = true
-
 	world_env.environment = env
 
-	# Sun — warm filtered light
 	sun_light.rotation_degrees = Vector3(-45.0, -25.0, 0.0)
-	sun_light.light_color = Color(0.85, 0.80, 0.60)
-	sun_light.light_energy = 2.5  # Brighter sun for low-poly visibility
+	sun_light.light_color = sun_col
+	sun_light.light_energy = sun_nrg
 	sun_light.shadow_enabled = true
 	sun_light.shadow_bias = 0.02
 	sun_light.shadow_normal_bias = 1.0
 
-	# Secondary fill light (blue bounce from sky)
 	var fill: DirectionalLight3D = DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(30.0, 160.0, 0.0)
-	fill.light_color = Color(0.40, 0.55, 0.65)
-	fill.light_energy = 0.5
+	fill.light_color = fill_col
+	fill.light_energy = fill_nrg
 	fill.shadow_enabled = false
 	world_root.add_child(fill)
 
