@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-04-16T07:30:00.000Z",
+  "updated": "2026-04-22T01:53:00.000Z",
   "description": "Feature queue M.E.R.L.I.N. — managed by Cycle Director (autonomous hourly via Claude Routines).",
   "tasks": [
     {
@@ -632,7 +632,9 @@
       "status": "completed",
       "title": "Fix Calendar season mapping inconsistency with MerlinVisual",
       "agent": "bug_hunter",
-      "files": ["scripts/Calendar.gd"],
+      "files": [
+        "scripts/Calendar.gd"
+      ],
       "description": "Calendar._get_season_for_date() used wrong month ranges vs MerlinVisual standard. Feb showed as spring instead of winter, Aug as autumn instead of summer.",
       "completed_at": "2026-04-18"
     },
@@ -643,7 +645,9 @@
       "status": "completed",
       "title": "Fix Calendar dict dot notation (same as BUG-012)",
       "agent": "bug_hunter",
-      "files": ["scripts/Calendar.gd"],
+      "files": [
+        "scripts/Calendar.gd"
+      ],
       "description": "Calendar._load_meta_stats() used state.meta dot notation on Dictionary. Changed to state.get('meta', {}) with type hint.",
       "completed_at": "2026-04-18"
     },
@@ -654,7 +658,9 @@
       "status": "completed",
       "title": "Fix HubAntre store variable shadowing in panel methods",
       "agent": "bug_hunter",
-      "files": ["scripts/HubAntre.gd"],
+      "files": [
+        "scripts/HubAntre.gd"
+      ],
       "description": "HubAntre._show_memoires_panel() and _show_journal_panel() declared local var store shadowing class member. Removed redundant locals.",
       "completed_at": "2026-04-18"
     },
@@ -665,7 +671,10 @@
       "status": "completed",
       "title": "Merlin Whisper ambient system — contextual druide quips during forest walks",
       "agent": "ui_worker",
-      "files": ["scripts/ui/merlin_whisper.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "files": [
+        "scripts/ui/merlin_whisper.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
       "description": "MerlinWhisper CanvasLayer: 40+ context-sensitive whispers in 7 pools (generic, low_health, high_health, night, dawn, dusk, broceliande, veteran). Timer-based (18-30s), phosphor-dim fade-in/out with mist_breath SFX. Pause during encounters, resume after. Wired into BroceliandeForest3D with live context updates (health, time, total_runs).",
       "completed_at": "2026-04-19"
     },
@@ -676,7 +685,10 @@
       "status": "completed",
       "title": "WalkHUD card counter + currency rename",
       "agent": "ui_worker",
-      "files": ["scripts/ui/walk_hud.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd"],
+      "files": [
+        "scripts/ui/walk_hud.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd"
+      ],
       "description": "Added card count display (Carte N/5 with amber color progression at 50%/80% thresholds). Renamed essences to biome currency with diamond glyph. Backward-compat update_essences() wrapper kept. Encounter count tracking in BroceliandeForest3D.",
       "completed_at": "2026-04-19"
     },
@@ -687,7 +699,10 @@
       "status": "completed",
       "title": "Faction boost_weight — cards matching high-rep factions weighted 3x",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_card_system.gd", "scripts/merlin/merlin_constants.gd"],
+      "files": [
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
       "description": "When faction rep >= 50 (FACTION_THRESHOLD_CONTENT), event and fastroute cards with ADD_REPUTATION effects for that faction are weighted 3x in selection pool. Static helpers _get_card_factions() and _get_faction_boost(). Creator chose boost_weight approach (q-20260415-010).",
       "completed_at": "2026-04-20"
     },
@@ -698,7 +713,11 @@
       "status": "completed",
       "title": "Run history population + echo_memory + minigame/ogham counters",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/store_run.gd", "scripts/merlin/merlin_store.gd", "scripts/ui/merlin_game_controller.gd"],
+      "files": [
+        "scripts/merlin/store_run.gd",
+        "scripts/merlin/merlin_store.gd",
+        "scripts/ui/merlin_game_controller.gd"
+      ],
       "description": "Populate meta.run_history at run end with 9-field 'Complet' entries (biome, cards_played, victory, life_at_end, dominant_faction, minigames_won, oghams_used, anam_earned, timestamp). Cap at 50 runs (q-20260414-002). Populate echo_memory (deaths_by_biome, dominant_factions_seen, choices_log). Add minigames_won/oghams_used counters to run state. Wire record_minigame_win() into game controller. Increment oghams_used on ogham activation.",
       "completed_at": "2026-04-20"
     },
@@ -709,7 +728,9 @@
       "status": "completed",
       "title": "Fix double reward application (C16 BUGFIX-026 never pushed)",
       "agent": "godot_expert",
-      "files": ["scripts/ui/merlin_game_controller.gd"],
+      "files": [
+        "scripts/ui/merlin_game_controller.gd"
+      ],
       "description": "C16 status files claimed BUGFIX-026 was fixed but code was never pushed. Removed _effects.apply_run_rewards() from controller L666 — StoreRun.handle_run_end() is the single source of truth.",
       "completed_at": "2026-04-21"
     },
@@ -720,7 +741,10 @@
       "status": "completed",
       "title": "Wire echo_memory + tension_zone into LLM narrative context",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/merlin_llm_adapter.gd", "scripts/merlin/llm_adapter_prompts.gd"],
+      "files": [
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "scripts/merlin/llm_adapter_prompts.gd"
+      ],
       "description": "C16 feature never pushed. Added tension_zone/convergence_zone/echo_memory/total_runs to build_narrative_context(). Enhanced build_context_enrichment() with MOS convergence hints, veteran detection (5+ runs), biome death memory, dominant faction tracking.",
       "completed_at": "2026-04-21"
     },
@@ -731,7 +755,9 @@
       "status": "completed",
       "title": "3rd GM few-shot example (PROGRESS_MISSION + high rep swings) + parser fix",
       "agent": "godot_expert",
-      "files": ["scripts/merlin/llm_adapter_game_master.gd"],
+      "files": [
+        "scripts/merlin/llm_adapter_game_master.gd"
+      ],
       "description": "Added Ex3 to GM system prompt: end-game pattern with PROGRESS_MISSION + high rep swings (±15-20). Added PROGRESS_MISSION explicit parser in _try_parse_effects_dict() — was silently dropped because it uses 'step' not 'amount'. Creator chose B (q-20260415-005).",
       "completed_at": "2026-04-21"
     },
@@ -742,7 +768,12 @@
       "status": "completed",
       "title": "Wire GameFlowController as autoload orchestrator for Hub→Run→Hub flow",
       "agent": "godot_expert",
-      "files": ["scripts/core/game_flow_controller.gd", "scripts/HubAntre.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "project.godot"],
+      "files": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/HubAntre.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "project.godot"
+      ],
       "description": "GFC registered as GameFlow autoload. Deferred MerlinStore discovery with retry. Public API: request_run(), complete_run(), enter_card_game(), return_to_hub(). HubAntre and BroceliandeForest3D route transitions through GFC. Phase tracking (MENU/HUB/RUN/END_SCREEN/TALENT_TREE). Creator chose A: wrap_broc (q-20260415-011).",
       "completed_at": "2026-04-21"
     },
@@ -753,7 +784,9 @@
       "status": "completed",
       "title": "Fix GFC _save_system not wired in autoload mode (BUG-030)",
       "agent": "godot_expert",
-      "files": ["scripts/core/game_flow_controller.gd"],
+      "files": [
+        "scripts/core/game_flow_controller.gd"
+      ],
       "description": "_auto_setup() found MerlinStore but never wired _save_system. All save operations through GFC silently did nothing. Fixed by reading _store.save_system after store discovery.",
       "completed_at": "2026-04-21"
     },
@@ -764,9 +797,42 @@
       "status": "completed",
       "title": "Wire EndRunScreen into GFC flow — complete_run() → END_SCREEN → EndRunScreen",
       "agent": "godot_expert",
-      "files": ["scripts/core/game_flow_controller.gd", "scripts/run/end_run_screen.gd", "scripts/broceliande_3d/broceliande_forest_3d.gd", "scenes/EndRunScreen.tscn"],
+      "files": [
+        "scripts/core/game_flow_controller.gd",
+        "scripts/run/end_run_screen.gd",
+        "scripts/broceliande_3d/broceliande_forest_3d.gd",
+        "scenes/EndRunScreen.tscn"
+      ],
       "description": "complete_run() now transitions to END_SCREEN phase and EndRunScreen.tscn (was going directly to HubAntre). EndRunScreen._ready() auto-discovers GameFlow autoload, wires hub_requested/faction_ending_chosen signals, calls show_results() with CRT-styled UI (narrative, stats, journey map, anam, faction choice). EndRunScreen.tscn fixed: script path corrected to scripts/run/end_run_screen.gd, node type changed from Node to Control. BroceliandeForest3D._on_run_complete() simplified from 60-line inline overlay to 12-line GFC call. Signal-driven _on_run_ended() and _on_hub_requested() now also transition scenes.",
       "completed_at": "2026-04-21"
+    },
+    {
+      "id": "SEASONAL-ATMOSPHERE",
+      "phase": 5,
+      "priority": 1,
+      "status": "completed",
+      "completed_at": "2026-04-22",
+      "title": "Seasonal 2D atmosphere overlay (particles + CRT color grading)",
+      "agent": "cycle_director",
+      "files": [
+        "scripts/autoload/seasonal_atmosphere.gd",
+        "scripts/ui/screen_dither_layer.gd",
+        "project.godot"
+      ],
+      "description": "Persistent CanvasLayer using seasonal_particles.gdshader for global seasonal effects (petals/shimmer/leaves/snow). Connected to GameTimeManager for automatic season/period transitions. CRTLayer extended with set_season_modulation() for fog/saturation seasonal color grading.",
+      "notes": "C25. Addresses creator feedback: ambiance doit changer en fonction de saison et heure de journee."
+    },
+    {
+      "id": "HUB-FACTION-DASHBOARD",
+      "phase": 5,
+      "priority": 1,
+      "status": "pending",
+      "title": "Implement HubAntre faction dashboard (was ghost code in C22-C24)",
+      "agent": "cycle_director",
+      "files": [
+        "scripts/HubAntre.gd"
+      ],
+      "description": "CRT-styled PanelContainer with 5 faction ProgressBars (DRU/ANC/KOR/NIA/ANK). Signal-driven via reputation_changed. Was claimed done in C22-C24 status but code never existed."
     }
   ]
 }
