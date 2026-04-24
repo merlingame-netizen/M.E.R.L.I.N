@@ -381,3 +381,9 @@ tools/autodev/studio-bridge/node_modules/
 tools/autodev/studio-bridge/dist/
 tools/autodev/mission-control/dist/
 .vercel/
+
+# Local build artifacts
+dist/*.pck
+dist/*.exe
+!dist/MERLIN-win64.zip
+!dist/README.txt
