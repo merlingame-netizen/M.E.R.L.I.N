@@ -13,7 +13,7 @@ extends Control
 # SCENE NAVIGATION
 # =============================================================================
 
-const SCENE_TRANSITION := "res://scenes/TransitionBiome.tscn"
+const SCENE_TRANSITION := "res://scenes/MerlinCabinHub.tscn"
 const SCENE_FOREST := "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_OPTIONS := "res://scenes/MenuOptions.tscn"
 const SCENE_CALENDAR := "res://scenes/Calendar.tscn"

@@ -6,7 +6,7 @@ extends Control
 
 const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
 const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
-const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
+const MENU_SCENE_FALLBACK := "res://scenes/MerlinCabinHub.tscn"
 const MOBILE_BREAKPOINT := 560.0
 
 const TAB_EVENTS := 0

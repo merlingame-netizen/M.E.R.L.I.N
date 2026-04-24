@@ -7,7 +7,7 @@ class_name MenuReturnButton
 ##   1. Add this script to a Button node
 ##   2. Or instantiate the packed scene: res://scenes/ui/MenuReturnButton.tscn
 
-const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
+const MENU_SCENE := "res://scenes/Menu3DPC.tscn"
 const BUTTON_SIZE := Vector2(100, 40)
 const BUTTON_MARGIN := 16
 

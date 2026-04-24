@@ -12,7 +12,7 @@ extends Control
 
 enum Phase { LORE_WORLD, TUTORIAL_PLAY, TRANSITION }
 
-const SCENE_HUB := "res://scenes/HubAntre.tscn"
+const SCENE_HUB := "res://scenes/MerlinCabinHub.tscn"
 const BEAT_HEADER_SIZE := 28
 const BEAT_BODY_SIZE := 20
 const BREATHE_PERIOD := 4.0

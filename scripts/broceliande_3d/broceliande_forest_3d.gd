@@ -5,8 +5,8 @@ extends Node
 
 signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
 
-const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
-const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
+const HUB_SCENE: String = "res://scenes/MerlinCabinHub.tscn"
+const GAME_SCENE: String = "res://scenes/MerlinCabinHub.tscn"
 
 # --- Helper modules ---
 const BrocAutowalk = preload("res://scripts/broceliande_3d/broc_autowalk.gd")
@@ -1211,9 +1211,9 @@ func _on_run_complete() -> void:
 	btn_menu.pressed.connect(func():
 		var pt: Node = get_node_or_null("/root/PixelTransition")
 		if pt and pt.has_method("transition_to"):
-			pt.transition_to("res://scenes/HubAntre.tscn")
+			pt.transition_to("res://scenes/MerlinCabinHub.tscn")
 		else:
-			get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
+			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
 	)
 	vbox.add_child(btn_menu)
 

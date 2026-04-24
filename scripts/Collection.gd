@@ -307,7 +307,7 @@ func _configure_ui() -> void:
 	back_button.pressed.connect(func():
 		SFXManager.play("click")
 		var se := get_node_or_null("/root/ScreenEffects")
-		var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
+		var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/MerlinCabinHub.tscn"
 		PixelTransition.transition_to(target)
 	)
 

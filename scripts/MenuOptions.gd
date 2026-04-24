@@ -540,5 +540,5 @@ func _on_back_pressed():
 	save_settings()
 	_apply_brain_count()
 	var se := get_node_or_null("/root/ScreenEffects")
-	var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
+	var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/MerlinCabinHub.tscn"
 	PixelTransition.transition_to(target)

@@ -1,7 +1,7 @@
 extends Control
 
-const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
-const GAME_SCENE := "res://scenes/HubAntre.tscn"
+const MENU_SCENE_FALLBACK := "res://scenes/MerlinCabinHub.tscn"
+const GAME_SCENE := "res://scenes/MerlinCabinHub.tscn"
 
 @onready var panel: PanelContainer = $RootPanel
 @onready var title_label: Label = $RootPanel/RootVBox/Title

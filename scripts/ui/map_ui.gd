@@ -13,7 +13,7 @@ signal node_selected(biome_key: String)
 signal start_requested(biome_key: String)
 signal close_requested
 
-const TRANSITION_SCENE := "res://scenes/TransitionBiome.tscn"
+const TRANSITION_SCENE := "res://scenes/MerlinCabinHub.tscn"
 const ROOT_BIOME := "foret_broceliande"
 
 const NODE_RADIUS := 15.0
@@ -500,7 +500,7 @@ func _on_back_pressed() -> void:
 	close_requested.emit()
 	if get_parent() is ColorRect and get_parent().name.contains("Overlay"):
 		return
-	var target := "res://scenes/HubAntre.tscn"
+	var target := "res://scenes/MerlinCabinHub.tscn"
 	var se := get_node_or_null("/root/ScreenEffects")
 	if se and str(se.get("return_scene")) != "":
 		target = str(se.return_scene)

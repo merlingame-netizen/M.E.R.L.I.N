@@ -9,8 +9,8 @@ signal quiz_completed(traits: Dictionary)
 # CONSTANTS
 # =============================================================================
 
-const NEXT_SCENE := "res://scenes/SceneRencontreMerlin.tscn"
-const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
+const NEXT_SCENE := "res://scenes/MerlinCabinHub.tscn"
+const MENU_SCENE := "res://scenes/Menu3DPC.tscn"
 
 # PALETTE constant removed — using MerlinVisual.CRT_PALETTE autoload
 

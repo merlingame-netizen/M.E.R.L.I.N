@@ -138,7 +138,8 @@ func transition_to(scene_path: String, custom_profile: Dictionary = {}) -> void:
 		return
 
 	_target_scene = scene_path
-	_profile = PixelTransitionConfig.get_profile(scene_path)
+	# PixelTransitionConfig was archived — use default profile for now
+	_profile = {}
 	for key: String in custom_profile:
 		_profile[key] = custom_profile[key]
 

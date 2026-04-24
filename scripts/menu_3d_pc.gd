@@ -1147,7 +1147,7 @@ func _on_menu_button(label: String) -> void:
 		"NOUVELLE PARTIE":
 			_start_new_game()
 		"CONTINUER":
-			_glitch_transition("res://scenes/HubAntre.tscn")
+			_glitch_transition("res://scenes/MerlinCabinHub.tscn")
 		"OPTIONS":
 			_glitch_transition("res://scenes/MenuOptions.tscn")
 		"QUITTER":
@@ -1157,7 +1157,7 @@ func _on_menu_button(label: String) -> void:
 func _start_new_game() -> void:
 	if MerlinAI and MerlinAI.has_method("_init_local_models"):
 		MerlinAI._init_local_models()
-	_glitch_transition("res://scenes/ParchmentPreRun.tscn")
+	_glitch_transition("res://scenes/MerlinCabinHub.tscn")
 
 
 func _has_save() -> bool:

@@ -92,7 +92,7 @@ func _configure_ui() -> void:
 		back_button.add_theme_font_override("font", font_regular)
 	_style_button(back_button)
 	back_button.pressed.connect(func():
-		PixelTransition.transition_to("res://scenes/HubAntre.tscn")
+		PixelTransition.transition_to("res://scenes/MerlinCabinHub.tscn")
 	)
 
 
