@@ -321,14 +321,17 @@ func build_hub_data() -> Dictionary:
 		return {}
 
 	var meta: Dictionary = _store.state.get("meta", {})
-	var oghams_data: Dictionary = meta.get("oghams", {})
-	var owned_oghams: Array = oghams_data.get("owned", [])
-	var equipped_list: Array = []
-	var equipped_val = oghams_data.get("equipped", "")
-	if equipped_val is String and not str(equipped_val).is_empty():
-		equipped_list = [str(equipped_val)]
-	elif equipped_val is Array:
-		equipped_list = equipped_val
+	# Oghams live in state.oghams (store) or meta.oghams (save profile)
+	var store_oghams: Dictionary = _store.state.get("oghams", {})
+	var meta_oghams: Dictionary = meta.get("oghams", {})
+	var owned_oghams: Array = store_oghams.get("skills_unlocked", meta_oghams.get("owned", []))
+	var equipped_list: Array = store_oghams.get("skills_equipped", [])
+	if equipped_list.is_empty():
+		var equipped_val = meta_oghams.get("equipped", "")
+		if equipped_val is String and not str(equipped_val).is_empty():
+			equipped_list = [str(equipped_val)]
+		elif equipped_val is Array:
+			equipped_list = equipped_val
 
 	# Build biome lists
 	var biomes_unlocked: Array = meta.get("biomes_unlocked", ["foret_broceliande"])
