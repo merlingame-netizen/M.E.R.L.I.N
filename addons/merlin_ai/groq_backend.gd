@@ -150,13 +150,20 @@ func set_sampling_params(p_temperature: float, p_top_p: float, p_max_tokens: int
 		_max_tokens = p_max_tokens
 
 
-func set_advanced_sampling(params: Dictionary) -> void:
-	if params.has("temperature"):
-		_temperature = clampf(float(params["temperature"]), 0.1, 2.0)
-	if params.has("top_p"):
-		_top_p = clampf(float(params["top_p"]), 0.05, 1.0)
-	if params.has("max_tokens"):
-		_max_tokens = int(params["max_tokens"])
+## Overloaded signature:
+##   set_advanced_sampling(top_k: int, repetition_penalty: float)  — compat with ollama/bitnet
+##   set_advanced_sampling(params: Dictionary)                      — legacy Groq-specific
+## Groq API doesn't support top_k or repetition_penalty; we silently accept them.
+func set_advanced_sampling(p1, p2 = null) -> void:
+	if p1 is Dictionary:
+		var params: Dictionary = p1
+		if params.has("temperature"):
+			_temperature = clampf(float(params["temperature"]), 0.1, 2.0)
+		if params.has("top_p"):
+			_top_p = clampf(float(params["top_p"]), 0.05, 1.0)
+		if params.has("max_tokens"):
+			_max_tokens = int(params["max_tokens"])
+	# else: ignore — top_k and repetition_penalty aren't supported by Groq API
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

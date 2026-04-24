@@ -229,10 +229,32 @@ func wire_hub(hub: HubScreen) -> void:
 
 
 ## Wire a Run3DController instance. Call after instantiating the run scene.
+## Also performs the setup() call to initialize dependencies from the store.
 func wire_run(run_controller: Run3DController) -> void:
 	_disconnect_run()
 	_run_controller = run_controller
 	run_controller.run_ended.connect(_on_run_ended)
+	# Setup the controller with dependencies from the store
+	if _store != null:
+		var spawner: CollectibleSpawner = CollectibleSpawner.new()
+		run_controller.add_child(spawner)
+		run_controller.setup(
+			_store,
+			_store.cards,
+			_store.effects,
+			_transition_manager,
+			spawner,
+			_store.minigames,
+			true  # headless mode: no 3D world needed — card system drives the run
+		)
+		# Start the run
+		if run_controller.has_method("start_run"):
+			var run_data: Dictionary = _store.state.get("run", {})
+			var biome_id: String = str(run_data.get("current_biome", "foret_broceliande"))
+			var ogham_id: String = str(run_data.get("ogham_actif", "beith"))
+			if ogham_id.is_empty():
+				ogham_id = "beith"
+			run_controller.start_run(biome_id, ogham_id)
 
 
 ## Wire an EndRunScreen instance. Call after instantiating the end screen.

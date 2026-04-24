@@ -76,6 +76,31 @@ const DRAIN_PER_CARD: int = MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# AUTO-WIRE — called when scene is instantiated directly (via GameFlowController)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _ready() -> void:
+	# Auto-register with GameFlow if available
+	var game_flow: Node = get_node_or_null("/root/GameFlow")
+	if game_flow != null and game_flow.has_method("wire_run"):
+		game_flow.wire_run(self)
+
+
+func _process(delta: float) -> void:
+	# Drive the game loop when Run3DController is root scene (headless or no host scene)
+	if _is_running and not _headless_has_external_driver():
+		process_tick(delta)
+
+
+## Returns true if an external scene is calling process_tick (legacy pattern).
+## When this scene is loaded directly (GameFlow mode), no external driver exists.
+func _headless_has_external_driver() -> bool:
+	# If we have a 3D parent that extends Node3D, it's driving us
+	var parent := get_parent()
+	return parent != null and parent is Node3D
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
 # ═══════════════════════════════════════════════════════════════════════════════
 
