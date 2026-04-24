@@ -209,7 +209,13 @@ func _on_enter_pressed() -> void:
 	if sfx and sfx.has_method("play"):
 		sfx.play("partir_fanfare")
 
-	# Transition to game scene.
+	# Delegate to GameFlowController if available (modern flow).
+	var game_flow: Node = get_node_or_null("/root/GameFlow")
+	if game_flow and game_flow.has_method("start_game"):
+		game_flow.start_game()
+		return
+
+	# Fallback: direct transition (legacy).
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("transition_to"):
 		pt.transition_to(SCENE_FOREST)

@@ -743,7 +743,13 @@ func _transition_out() -> void:
 	tween.tween_interval(_scaled_delay(0.18))
 	tween.tween_callback(func():
 		_clear_merlin_scene_context()
-		if is_inside_tree():
+		if not is_inside_tree():
+			return
+		# Delegate to GameFlowController if available (modern flow).
+		var game_flow: Node = get_node_or_null("/root/GameFlow")
+		if game_flow and game_flow.has_method("start_game"):
+			game_flow.start_game()
+		else:
 			PixelTransition.transition_to(_next_scene)
 	)
 	await tween.finished

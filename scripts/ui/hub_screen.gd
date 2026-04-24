@@ -79,6 +79,19 @@ var _quit_button: Button
 func _ready() -> void:
 	_build_ui()
 	_apply_root_style()
+	_wire_game_flow()
+
+
+## Register this HubScreen with GameFlowController and auto-populate data.
+func _wire_game_flow() -> void:
+	var game_flow: Node = get_node_or_null("/root/GameFlow")
+	if game_flow == null or not game_flow.has_method("wire_hub"):
+		return
+	game_flow.wire_hub(self)
+	if game_flow.has_method("build_hub_data"):
+		var data: Dictionary = game_flow.build_hub_data()
+		if not data.is_empty():
+			setup(data)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -64,6 +64,28 @@ var _end_screen: EndRunScreen = null
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# AUTO-INIT (autoload _ready)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _ready() -> void:
+	# MerlinStore is added to root deferred by GameManager, so wait one frame.
+	call_deferred("_auto_setup")
+
+
+func _auto_setup() -> void:
+	if _store != null:
+		return
+	var store_node: Node = get_node_or_null("/root/MerlinStore")
+	if store_node is MerlinStore:
+		var store: MerlinStore = store_node as MerlinStore
+		setup(store, store.save_system)
+		print("[GameFlow] Auto-setup complete (store + save_system)")
+	else:
+		# MerlinStore not yet available — retry next frame.
+		get_tree().process_frame.connect(_auto_setup, CONNECT_ONE_SHOT)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -256,9 +278,38 @@ func _set_phase(new_phase: int) -> void:
 
 	var old_name: String = PHASE_NAMES.get(old_phase, "unknown")
 	var new_name: String = PHASE_NAMES.get(new_phase, "unknown")
+	print("[GameFlow] Phase: %s -> %s" % [old_name, new_name])
 
 	_current_phase = new_phase
 	phase_changed.emit(old_name, new_name)
+
+	# Transition to the scene for the new phase.
+	_transition_to_phase_scene(new_phase)
+
+
+## Perform the actual scene transition via PixelTransition (or fallback).
+func _transition_to_phase_scene(phase: int) -> void:
+	var target: String = ""
+	match phase:
+		GamePhase.HUB:
+			target = SCENE_HUB
+		GamePhase.RUN:
+			target = SCENE_RUN
+		GamePhase.END_SCREEN:
+			target = SCENE_END
+		GamePhase.MENU:
+			target = SCENE_MENU
+		GamePhase.TALENT_TREE:
+			target = SCENE_TALENT_TREE
+
+	if target.is_empty():
+		return
+
+	var pt: Node = get_node_or_null("/root/PixelTransition")
+	if pt and pt.has_method("transition_to"):
+		pt.transition_to(target)
+	else:
+		get_tree().change_scene_to_file(target)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
