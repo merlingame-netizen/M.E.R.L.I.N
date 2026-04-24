@@ -4,33 +4,40 @@ M.E.R.L.I.N. - Le Jeu des Oghams
 LANCEMENT :
   Double-clique sur MERLIN.exe
 
-Rien d'autre a installer. Si Windows demande confirmation
-("Windows a protege votre PC"), clique "Informations
-complementaires" puis "Executer quand meme" - c'est le
-moteur Godot Engine officiel 4.5 (open source, MIT).
+NOUVEAUTES v4 (Tout en .tscn natif Godot) :
+- Toutes les scenes ont ete reconstruites avec des nodes natifs Godot
+  (au lieu d'etre buildees procedurale via script)
+- 7 materiaux PS1 reutilisables (.tres) :
+  ps1_stone / wood_dark / wood_warm / iron / tapestry /
+  parchment / grass / foliage
+- Shader PS1 amplifie : vertex snapping en clip space, affine texture
+  mapping, 32-level color quantization, 4x4 Bayer dithering, vertex
+  lighting only (pas de specular ni de shadows)
 
-NOUVEAUTES v3 (flow minimal + hub enrichi) :
-- Apres l'intro CeltOS, on rentre DIRECTEMENT dans le cabin
-  (plus de menu au premier boot, on va a l'essentiel)
-- Antre de Merlin enrichi (vue premiere personne) :
-  - Table + 2 bougies + bancs
-  - Bibliotheque avec livres low-poly
-  - Etagere de livres sur le mur droit
-  - Poutres au plafond, tapis au sol, baton magique
-  - Tapisserie, Carte murale, Porte, Chaudron
-- Seulement 6 scenes actives au total (25 avant)
+MENU 3DPC (ex 2D, maintenant FPS exterieur) :
+- Tu spawn dehors devant la cabane de Merlin
+- Foret de pins low-poly autour
+- Sentier de pierres menant a la porte
+- Lumiere lunaire bleue + lueur ambree de la porte
+- Vise la porte + E = entrer dans le cabin
+- Vise la pierre dressee + E = quitter
+
+CABIN HUB (FPS interieur):
+- 4 murs + plafond + sol en bois sombre
+- Feu de cheminee (lumiere chaude OmniLight)
+- Cauldron en fer (sphere PS1)
+- Tapisserie rouge sang sur le mur arriere
+- Carte murale (parchemin) sur le mur gauche
+- Porte de sortie sur le mur avant
+- Table en bois + 4 pieds
+- 4 poutres de plafond
+- Tapis rouge sur le sol
+- Crosshair central + hint d'interaction
 
 CONTROLES :
   WASD        marcher
   Souris      regarder
-  E / Espace  interagir (vise un objet, puis appuie)
+  E / Espace  interagir
   Echap       liberer la souris
 
-PARCOURS :
-  Intro CeltOS
-  -> Cabin (premier boot, automatique)
-  -> vise la Carte murale, appuie E = PARTIR EN QUETE
-  -> Foret de Broceliande (Run 3D)
-  -> Retour au Cabin apres la run
-
-TAILLE : ~165 MB (160 MB moteur + 9 MB jeu)
+TAILLE : ~165 MB

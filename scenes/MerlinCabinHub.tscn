@@ -1,6 +1,345 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=32 format=3 uid="uid://cmcabin01hub0"]
 
-[ext_resource type="Script" path="res://scripts/merlin_cabin_hub.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/merlin_cabin_hub.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/fps/FpsRig.tscn" id="2_fps_rig"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_stone.tres" id="3_stone"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_wood_dark.tres" id="4_wood_dark"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_wood_warm.tres" id="5_wood_warm"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_iron.tres" id="6_iron"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_tapestry.tres" id="7_tapestry"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_parchment.tres" id="8_parchment"]
 
+; ── ENVIRONMENT ───────────────────────────────────────────────────────────────
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 1
+background_color = Color(0.03, 0.025, 0.02, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.18, 0.14, 0.10, 1)
+ambient_light_energy = 0.6
+tonemap_mode = 0
+fog_enabled = true
+fog_light_color = Color(0.08, 0.06, 0.04, 1)
+fog_density = 0.035
+fog_sky_affect = 0.0
+
+; ── MESHES ────────────────────────────────────────────────────────────────────
+; Floor — 10x10 plane
+[sub_resource type="PlaneMesh" id="Mesh_Floor"]
+size = Vector2(10, 10)
+subdivide_width = 4
+subdivide_depth = 4
+
+; Ceiling — inverted plane
+[sub_resource type="PlaneMesh" id="Mesh_Ceiling"]
+size = Vector2(10, 10)
+
+; Walls — box meshes
+[sub_resource type="BoxMesh" id="Mesh_WallBack"]
+size = Vector3(10, 4, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_WallSide"]
+size = Vector3(0.2, 4, 10)
+
+; Interactive panels
+[sub_resource type="BoxMesh" id="Mesh_WallMap"]
+size = Vector3(0.12, 2.0, 2.5)
+
+[sub_resource type="BoxMesh" id="Mesh_Tapestry"]
+size = Vector3(3.0, 2.3, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_Door"]
+size = Vector3(1.2, 2.4, 0.12)
+
+; Cauldron
+[sub_resource type="SphereMesh" id="Mesh_Cauldron"]
+radius = 0.5
+height = 0.8
+radial_segments = 12
+rings = 6
+
+; Furniture
+[sub_resource type="BoxMesh" id="Mesh_TableTop"]
+size = Vector3(1.6, 0.08, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_TableLeg"]
+size = Vector3(0.08, 0.8, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_Beam"]
+size = Vector3(0.15, 0.15, 10)
+
+[sub_resource type="BoxMesh" id="Mesh_Rug"]
+size = Vector3(3.0, 0.02, 3.5)
+
+; ── COLLISION SHAPES ──────────────────────────────────────────────────────────
+[sub_resource type="BoxShape3D" id="Shape_Floor"]
+size = Vector3(10, 0.2, 10)
+
+[sub_resource type="BoxShape3D" id="Shape_WallBack"]
+size = Vector3(10, 4, 0.2)
+
+[sub_resource type="BoxShape3D" id="Shape_WallSide"]
+size = Vector3(0.2, 4, 10)
+
+[sub_resource type="BoxShape3D" id="Shape_WallMap"]
+size = Vector3(0.12, 2.0, 2.5)
+
+[sub_resource type="BoxShape3D" id="Shape_Tapestry"]
+size = Vector3(3.0, 2.3, 0.08)
+
+[sub_resource type="BoxShape3D" id="Shape_Door"]
+size = Vector3(1.2, 2.4, 0.12)
+
+[sub_resource type="SphereShape3D" id="Shape_Cauldron"]
+radius = 0.5
+
+; ── UI ────────────────────────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="Style_Crosshair"]
+bg_color = Color(0.3, 1.0, 0.4, 0.9)
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+;  SCENE TREE
+; ══════════════════════════════════════════════════════════════════════════════
 [node name="MerlinCabinHub" type="Node3D"]
-script = ExtResource("1")
+script = ExtResource("1_script")
+
+; ── Environment & lights ─────────────────────────────────────────────────────
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_1")
+
+[node name="FirelightPoint" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.5, -2.0)
+light_color = Color(1.0, 0.65, 0.28, 1)
+light_energy = 2.8
+omni_range = 8.0
+shadow_enabled = true
+
+[node name="CoolFill" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 2.5, 0.0)
+light_color = Color(0.35, 0.45, 0.6, 1)
+light_energy = 0.55
+omni_range = 6.0
+
+[node name="MapLamp" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 2.4, -1.0)
+light_color = Color(1.0, 0.85, 0.55, 1)
+light_energy = 0.7
+omni_range = 3.0
+
+; ── Floor ────────────────────────────────────────────────────────────────────
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("Mesh_Floor")
+surface_material_override/0 = ExtResource("3_stone")
+
+[node name="Collision" type="CollisionShape3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Shape_Floor")
+
+; ── Ceiling ──────────────────────────────────────────────────────────────────
+[node name="Ceiling" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 4, 0)
+mesh = SubResource("Mesh_Ceiling")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+; ── Walls ────────────────────────────────────────────────────────────────────
+[node name="WallBack" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -4.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="WallBack"]
+mesh = SubResource("Mesh_WallBack")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Collision" type="CollisionShape3D" parent="WallBack"]
+shape = SubResource("Shape_WallBack")
+
+[node name="WallFront" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 4.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="WallFront"]
+mesh = SubResource("Mesh_WallBack")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Collision" type="CollisionShape3D" parent="WallFront"]
+shape = SubResource("Shape_WallBack")
+
+[node name="WallLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 2, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="WallLeft"]
+mesh = SubResource("Mesh_WallSide")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Collision" type="CollisionShape3D" parent="WallLeft"]
+shape = SubResource("Shape_WallSide")
+
+[node name="WallRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="WallRight"]
+mesh = SubResource("Mesh_WallSide")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Collision" type="CollisionShape3D" parent="WallRight"]
+shape = SubResource("Shape_WallSide")
+
+; ── INTERACTIVE OBJECTS ──────────────────────────────────────────────────────
+; Wall Map (left wall, interact_id=wall_map)
+[node name="WallMap" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.30, 2.0, -1.0)
+metadata/interact_id = "wall_map"
+
+[node name="Mesh" type="MeshInstance3D" parent="WallMap"]
+mesh = SubResource("Mesh_WallMap")
+surface_material_override/0 = ExtResource("8_parchment")
+
+[node name="Collision" type="CollisionShape3D" parent="WallMap"]
+shape = SubResource("Shape_WallMap")
+
+; Tapestry (back wall, interact_id=tapestry)
+[node name="Tapestry" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 2.2, -4.30)
+metadata/interact_id = "tapestry"
+
+[node name="Mesh" type="MeshInstance3D" parent="Tapestry"]
+mesh = SubResource("Mesh_Tapestry")
+surface_material_override/0 = ExtResource("7_tapestry")
+
+[node name="Collision" type="CollisionShape3D" parent="Tapestry"]
+shape = SubResource("Shape_Tapestry")
+
+; Cauldron (center-back, interact_id=cauldron)
+[node name="Cauldron" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0.4, -2.5)
+metadata/interact_id = "cauldron"
+
+[node name="Mesh" type="MeshInstance3D" parent="Cauldron"]
+mesh = SubResource("Mesh_Cauldron")
+surface_material_override/0 = ExtResource("6_iron")
+
+[node name="Collision" type="CollisionShape3D" parent="Cauldron"]
+shape = SubResource("Shape_Cauldron")
+
+; Door (front wall, interact_id=door)
+[node name="Door" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 4.35)
+metadata/interact_id = "door"
+
+[node name="Mesh" type="MeshInstance3D" parent="Door"]
+mesh = SubResource("Mesh_Door")
+surface_material_override/0 = ExtResource("5_wood_warm")
+
+[node name="Collision" type="CollisionShape3D" parent="Door"]
+shape = SubResource("Shape_Door")
+
+; ── FURNITURE (decorative, no collision needed) ──────────────────────────────
+[node name="Furniture" type="Node3D" parent="."]
+
+[node name="TableTop" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.8, -1.5)
+mesh = SubResource("Mesh_TableTop")
+surface_material_override/0 = ExtResource("5_wood_warm")
+
+[node name="TableLeg1" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0.4, -1.1)
+mesh = SubResource("Mesh_TableLeg")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="TableLeg2" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0.4, -1.9)
+mesh = SubResource("Mesh_TableLeg")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="TableLeg3" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.4, -1.1)
+mesh = SubResource("Mesh_TableLeg")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="TableLeg4" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.4, -1.9)
+mesh = SubResource("Mesh_TableLeg")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Rug" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.03, 0.0)
+mesh = SubResource("Mesh_Rug")
+surface_material_override/0 = ExtResource("7_tapestry")
+
+[node name="Beam1" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0, 3.6, 0.0)
+mesh = SubResource("Mesh_Beam")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Beam2" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 3.6, 0.0)
+mesh = SubResource("Mesh_Beam")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Beam3" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 3.6, 0.0)
+mesh = SubResource("Mesh_Beam")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+[node name="Beam4" type="MeshInstance3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 3.6, 0.0)
+mesh = SubResource("Mesh_Beam")
+surface_material_override/0 = ExtResource("4_wood_dark")
+
+; ── FPS PLAYER ───────────────────────────────────────────────────────────────
+[node name="FpsRig" parent="." instance=ExtResource("2_fps_rig")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2.5)
+bounds_min = Vector3(-4.0, 0, -4.0)
+bounds_max = Vector3(4.0, 3.0, 4.0)
+move_speed = 2.0
+
+; ── UI OVERLAY ───────────────────────────────────────────────────────────────
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Title" type="Label" parent="UI"]
+anchor_right = 1.0
+offset_top = 16.0
+offset_bottom = 48.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.75, 0.25, 1)
+theme_override_font_sizes/font_size = 22
+text = "L'Antre de Merlin"
+
+[node name="HintLabel" type="Label" parent="UI"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = 32.0
+offset_right = 220.0
+offset_bottom = 58.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.3, 1.0, 0.4, 1)
+theme_override_font_sizes/font_size = 16
+text = "> interact hint"
+
+[node name="Crosshair" type="Panel" parent="UI"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+theme_override_styles/panel = SubResource("Style_Crosshair")
+
+[node name="Help" type="Label" parent="UI"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -28.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.12, 0.6, 0.24, 1)
+theme_override_font_sizes/font_size = 11
+text = "[WASD] marcher  [Souris] regarder  [E] interagir  [Echap] liberer souris"

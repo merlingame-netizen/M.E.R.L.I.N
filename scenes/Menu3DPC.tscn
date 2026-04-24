@@ -1,12 +1,331 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=23 format=3 uid="uid://cmenu3dpc0001"]
 
-[ext_resource type="Script" path="res://scripts/menu_3d_pc.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/menu_3d_pc.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/fps/FpsRig.tscn" id="2_fps_rig"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_grass.tres" id="3_grass"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_foliage.tres" id="4_foliage"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_wood_dark.tres" id="5_wood_dark"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_wood_warm.tres" id="6_wood_warm"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_stone.tres" id="7_stone"]
 
-[node name="Menu3DPC" type="Control"]
-layout_mode = 3
-anchors_preset = 15
+[sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
+sky_top_color = Color(0.05, 0.08, 0.18, 1)
+sky_horizon_color = Color(0.18, 0.16, 0.22, 1)
+sky_curve = 0.15
+ground_horizon_color = Color(0.12, 0.10, 0.14, 1)
+ground_bottom_color = Color(0.04, 0.03, 0.04, 1)
+sun_angle_max = 30.0
+sun_curve = 0.35
+
+[sub_resource type="Sky" id="Sky_Resource"]
+sky_material = SubResource("Sky_1")
+
+[sub_resource type="Environment" id="Env_Menu"]
+background_mode = 2
+sky = SubResource("Sky_Resource")
+ambient_light_source = 3
+ambient_light_color = Color(0.22, 0.25, 0.35, 1)
+ambient_light_energy = 0.4
+fog_enabled = true
+fog_light_color = Color(0.12, 0.14, 0.20, 1)
+fog_density = 0.025
+fog_aerial_perspective = 0.5
+
+[sub_resource type="PlaneMesh" id="Mesh_Ground"]
+size = Vector2(60, 60)
+subdivide_width = 8
+subdivide_depth = 8
+
+[sub_resource type="PrismMesh" id="Mesh_TreeTop"]
+left_to_right = 0.5
+size = Vector3(2.5, 4.0, 2.5)
+
+[sub_resource type="CylinderMesh" id="Mesh_TreeTrunk"]
+top_radius = 0.3
+bottom_radius = 0.45
+height = 2.5
+radial_segments = 6
+
+[sub_resource type="BoxMesh" id="Mesh_CabinWall"]
+size = Vector3(8, 4, 0.4)
+
+[sub_resource type="BoxMesh" id="Mesh_CabinSide"]
+size = Vector3(0.4, 4, 6)
+
+[sub_resource type="PrismMesh" id="Mesh_CabinRoof"]
+left_to_right = 0.5
+size = Vector3(8.5, 2.0, 6.5)
+
+[sub_resource type="BoxMesh" id="Mesh_Door"]
+size = Vector3(1.2, 2.4, 0.2)
+
+[sub_resource type="CylinderMesh" id="Mesh_QuitStone"]
+top_radius = 0.6
+bottom_radius = 0.8
+height = 1.5
+radial_segments = 6
+
+[sub_resource type="BoxMesh" id="Mesh_PathStone"]
+size = Vector3(0.8, 0.05, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_Ground"]
+size = Vector3(60, 0.2, 60)
+
+[sub_resource type="BoxShape3D" id="Shape_Door"]
+size = Vector3(1.2, 2.4, 0.2)
+
+[sub_resource type="CylinderShape3D" id="Shape_QuitStone"]
+height = 1.5
+radius = 0.7
+
+[sub_resource type="StyleBoxFlat" id="Style_Crosshair"]
+bg_color = Color(0.85, 0.78, 0.55, 0.9)
+
+
+[node name="Menu3DPC" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_Menu")
+
+[node name="MoonLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.94, 0.18, -0.30, 0, 0.86, 0.51, 0.34, -0.48, 0.81, 0, 8, 0)
+light_color = Color(0.65, 0.72, 1.0, 1)
+light_energy = 0.55
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("Mesh_Ground")
+surface_material_override/0 = ExtResource("3_grass")
+
+[node name="Collision" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("Shape_Ground")
+
+[node name="Path" type="Node3D" parent="."]
+
+[node name="Stone1" type="MeshInstance3D" parent="Path"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 8)
+mesh = SubResource("Mesh_PathStone")
+surface_material_override/0 = ExtResource("7_stone")
+
+[node name="Stone2" type="MeshInstance3D" parent="Path"]
+transform = Transform3D(0.95, 0, 0.31, 0, 1, 0, -0.31, 0, 0.95, 0.3, 0.04, 6)
+mesh = SubResource("Mesh_PathStone")
+surface_material_override/0 = ExtResource("7_stone")
+
+[node name="Stone3" type="MeshInstance3D" parent="Path"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.04, 4)
+mesh = SubResource("Mesh_PathStone")
+surface_material_override/0 = ExtResource("7_stone")
+
+[node name="Stone4" type="MeshInstance3D" parent="Path"]
+transform = Transform3D(0.95, 0, -0.31, 0, 1, 0, 0.31, 0, 0.95, 0.1, 0.04, 2)
+mesh = SubResource("Mesh_PathStone")
+surface_material_override/0 = ExtResource("7_stone")
+
+[node name="CabinExterior" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+
+[node name="WallBack" type="MeshInstance3D" parent="CabinExterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -3)
+mesh = SubResource("Mesh_CabinWall")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="WallLeft" type="MeshInstance3D" parent="CabinExterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2, 0)
+mesh = SubResource("Mesh_CabinSide")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="WallRight" type="MeshInstance3D" parent="CabinExterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, 0)
+mesh = SubResource("Mesh_CabinSide")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="WallFrontLeft" type="MeshInstance3D" parent="CabinExterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.4, -2.4, 2, 3)
+mesh = SubResource("Mesh_CabinSide")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="WallFrontRight" type="MeshInstance3D" parent="CabinExterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.4, 2.4, 2, 3)
+mesh = SubResource("Mesh_CabinSide")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Roof" type="MeshInstance3D" parent="CabinExterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+mesh = SubResource("Mesh_CabinRoof")
+surface_material_override/0 = ExtResource("6_wood_warm")
+
+[node name="CabinDoor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -1.10)
+metadata/interact_id = "cabin_door"
+
+[node name="Mesh" type="MeshInstance3D" parent="CabinDoor"]
+mesh = SubResource("Mesh_Door")
+surface_material_override/0 = ExtResource("6_wood_warm")
+
+[node name="Collision" type="CollisionShape3D" parent="CabinDoor"]
+shape = SubResource("Shape_Door")
+
+[node name="DoorGlow" type="OmniLight3D" parent="CabinDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+light_color = Color(1.0, 0.7, 0.3, 1)
+light_energy = 1.4
+omni_range = 5.0
+
+[node name="QuitStone" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.75, 6)
+metadata/interact_id = "quit_sign"
+
+[node name="Mesh" type="MeshInstance3D" parent="QuitStone"]
+mesh = SubResource("Mesh_QuitStone")
+surface_material_override/0 = ExtResource("7_stone")
+
+[node name="Collision" type="CollisionShape3D" parent="QuitStone"]
+shape = SubResource("Shape_QuitStone")
+
+[node name="Trees" type="Node3D" parent="."]
+
+[node name="T1" type="Node3D" parent="Trees"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 4)
+
+[node name="Trunk" type="MeshInstance3D" parent="Trees/T1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_TreeTrunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="Trees/T1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_TreeTop")
+surface_material_override/0 = ExtResource("4_foliage")
+
+[node name="T2" type="Node3D" parent="Trees"]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 9, 0, 5)
+
+[node name="Trunk" type="MeshInstance3D" parent="Trees/T2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_TreeTrunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="Trees/T2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_TreeTop")
+surface_material_override/0 = ExtResource("4_foliage")
+
+[node name="T3" type="Node3D" parent="Trees"]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -10, 0, -2)
+
+[node name="Trunk" type="MeshInstance3D" parent="Trees/T3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_TreeTrunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="Trees/T3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_TreeTop")
+surface_material_override/0 = ExtResource("4_foliage")
+
+[node name="T4" type="Node3D" parent="Trees"]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 10, 0, -3)
+
+[node name="Trunk" type="MeshInstance3D" parent="Trees/T4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_TreeTrunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="Trees/T4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_TreeTop")
+surface_material_override/0 = ExtResource("4_foliage")
+
+[node name="T5" type="Node3D" parent="Trees"]
+transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, -6, 0, 9)
+
+[node name="Trunk" type="MeshInstance3D" parent="Trees/T5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_TreeTrunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="Trees/T5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_TreeTop")
+surface_material_override/0 = ExtResource("4_foliage")
+
+[node name="T6" type="Node3D" parent="Trees"]
+transform = Transform3D(1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0, 7, 0, 9)
+
+[node name="Trunk" type="MeshInstance3D" parent="Trees/T6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_TreeTrunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="Trees/T6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_TreeTop")
+surface_material_override/0 = ExtResource("4_foliage")
+
+[node name="FpsRig" parent="." instance=ExtResource("2_fps_rig")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 10)
+bounds_min = Vector3(-15.0, 0, -10.0)
+bounds_max = Vector3(15.0, 5.0, 14.0)
+move_speed = 2.4
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Title" type="Label" parent="UI"]
+anchor_right = 1.0
+offset_top = 16.0
+offset_bottom = 56.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.95, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 28
+text = "M . E . R . L . I . N"
+
+[node name="Subtitle" type="Label" parent="UI"]
+anchor_right = 1.0
+offset_top = 50.0
+offset_bottom = 72.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.55, 0.45, 0.18, 1)
+theme_override_font_sizes/font_size = 14
+text = "Le Jeu des Oghams"
+
+[node name="HintLabel" type="Label" parent="UI"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = 32.0
+offset_right = 240.0
+offset_bottom = 58.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.95, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 16
+text = "> hint"
+
+[node name="Crosshair" type="Panel" parent="UI"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+theme_override_styles/panel = SubResource("Style_Crosshair")
+
+[node name="Help" type="Label" parent="UI"]
+anchor_left = 0.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("1")
+offset_top = -28.0
+offset_bottom = -12.0
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.55, 0.45, 0.18, 1)
+theme_override_font_sizes/font_size = 11
+text = "[WASD] marcher  [Souris] regarder  [E] interagir  [Echap] liberer souris"

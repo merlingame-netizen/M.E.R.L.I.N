@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://shaders/ps1_material.gdshader" id="1"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_color = Color(0.85, 0.76, 0.55, 1)
+shader_parameter/vertex_snap = 0.012
+shader_parameter/uv_snap = 64.0
+shader_parameter/affine_strength = 0.8
+shader_parameter/color_levels = 32
+shader_parameter/dither_strength = 0.4
+shader_parameter/fake_light_dir = Vector3(0.4, 0.85, 0.2)
+shader_parameter/ambient_color = Color(0.60, 0.52, 0.38, 1)
+shader_parameter/light_strength = 0.9
