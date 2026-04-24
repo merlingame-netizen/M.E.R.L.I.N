@@ -111,9 +111,8 @@ var _llm_prewarm_done := false
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
-	# Hide ScreenFrame and SceneSelector during intro
+	# Hide ScreenFrame during intro
 	_hide_autoload("ScreenFrame")
-	_hide_autoload("SceneSelector")
 	_pick_random_logs()
 	_build_ui()
 	_prewarm_llm()
@@ -124,9 +123,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_transitioning = true
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	# Restore ScreenFrame and SceneSelector
+	# Restore ScreenFrame
 	_show_autoload("ScreenFrame")
-	_show_autoload("SceneSelector")
 
 
 func _hide_autoload(autoload_name: String) -> void:

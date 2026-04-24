@@ -119,7 +119,6 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	_hide_autoload("ScreenFrame")
-	_hide_autoload("SceneSelector")
 
 	_compute_scale()
 	_build_ui()
@@ -139,7 +138,6 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_show_autoload("ScreenFrame")
-	_show_autoload("SceneSelector")
 
 
 func _compute_scale() -> void:
