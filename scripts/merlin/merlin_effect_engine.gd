@@ -191,6 +191,7 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 	# ── Step 9: DEATH CHECK (AFTER effects + pacing) ──
 	run = state.get("run", {})
 	var life_after: int = int(run.get("life_essence", 0))
+	var cards_played: int = int(run.get("cards_played", 0)) + 1
 	result["life_after"] = life_after
 	result["is_dead"] = life_after <= 0
 	# Death Anam: bible v2.4 — Anam earned = base × min(cards_played / 30.0, 1.0)
@@ -205,7 +206,6 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 
 	# ── Step 10: PROMISES — countdown and expiration ──
 	var promises: Array = run.get("promises", [])
-	var cards_played: int = int(run.get("cards_played", 0)) + 1
 	run["cards_played"] = cards_played
 	for i in range(promises.size()):
 		var p: Dictionary = promises[i]
