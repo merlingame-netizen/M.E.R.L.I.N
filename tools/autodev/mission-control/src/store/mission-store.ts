@@ -4,6 +4,7 @@ export interface AgentInfo {
   id: string;
   name: string;
   category: string;
+  role?: string;
   state: 'idle' | 'running' | 'blocked' | 'error' | 'completed';
   currentTask: string | null;
 }
@@ -39,6 +40,21 @@ export interface FeatureTask {
   priority: number;
   status: 'pending' | 'in_progress' | 'completed' | 'blocked' | 'dispatched';
   agent?: string;
+  sprint?: string;
+  type?: string;
+  description?: string;
+  files?: string[];
+}
+
+export interface StudioInsight {
+  id: string;
+  agent: string;
+  severity: 'ACTION' | 'WARN' | 'INFO';
+  category: string;
+  message: string;
+  details?: string;
+  proposed_task?: { title: string; sprint: string; type: string };
+  timestamp: string;
 }
 
 export interface FeedbackQuestion {
@@ -75,6 +91,10 @@ interface MissionState {
   feedbackQuestions: FeedbackQuestion[];
   feedbackResponses: FeedbackResponse[];
   feedbackSubmitting: boolean;
+  lastHeartbeat: string | null;
+  completedCount: number;
+  completedTasks: Array<{ id: string; sprint?: string; title: string; completed_at?: string }>;
+  studioInsights: StudioInsight[];
 
   setOrchestratorState: (state: string) => void;
   setAgents: (agents: AgentInfo[]) => void;
@@ -85,6 +105,10 @@ interface MissionState {
   addAlert: (alert: Omit<AlertEntry, 'id'>) => void;
   setDeployStatus: (status: MissionState['deployStatus']) => void;
   setConnected: (connected: boolean) => void;
+  setLastHeartbeat: (heartbeat: string | null) => void;
+  setCompletedCount: (count: number) => void;
+  setCompletedTasks: (tasks: Array<{ id: string; sprint?: string; title: string; completed_at?: string }>) => void;
+  setStudioInsights: (insights: StudioInsight[]) => void;
   setFeedbackQuestions: (questions: FeedbackQuestion[]) => void;
   submitFeedback: (questionId: string, answer: string, notes?: string) => Promise<void>;
   handleSSEEvent: (event: { type: string; data: Record<string, unknown> }) => void;
@@ -104,6 +128,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   feedbackQuestions: [],
   feedbackResponses: [],
   feedbackSubmitting: false,
+  lastHeartbeat: null,
+  completedCount: 0,
+  completedTasks: [],
+  studioInsights: [],
 
   setOrchestratorState: (state) => set({ orchestratorState: state }),
   setAgents: (agents) => set({ agents }),
@@ -120,19 +148,24 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   })),
   setDeployStatus: (deployStatus) => set({ deployStatus }),
   setConnected: (connected) => set({ connected }),
+  setLastHeartbeat: (lastHeartbeat) => set({ lastHeartbeat }),
+  setCompletedCount: (completedCount) => set({ completedCount }),
+  setCompletedTasks: (completedTasks) => set({ completedTasks }),
+  setStudioInsights: (studioInsights) => set({ studioInsights }),
   setFeedbackQuestions: (questions) => set({ feedbackQuestions: questions }),
   submitFeedback: async (questionId, answer, notes) => {
     set({ feedbackSubmitting: true });
     try {
-      const API_URL = import.meta.env.VITE_API_URL
-        ? `${import.meta.env.VITE_API_URL.replace('/status', '/feedback')}`
-        : '/api/feedback';
-      const res = await fetch(API_URL, {
+      const res = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question_id: questionId, answer, additional_notes: notes }),
       });
       if (res.ok) {
+        try {
+          const ids: string[] = JSON.parse(localStorage.getItem('mc.answered') || '[]');
+          if (!ids.includes(questionId)) { ids.push(questionId); localStorage.setItem('mc.answered', JSON.stringify(ids)); }
+        } catch { /* ignore */ }
         set(s => ({
           feedbackQuestions: s.feedbackQuestions.map(q =>
             q.id === questionId ? { ...q, status: 'answered' as const } : q
@@ -174,9 +207,6 @@ export const useMissionStore = create<MissionState>((set, get) => ({
           message: event.data.message as string,
           source: event.data.source as string,
         });
-        break;
-      case 'deploy':
-        store.setDeployStatus(event.data.status as MissionState['deployStatus']);
         break;
     }
   },
