@@ -1219,7 +1219,13 @@ func _on_run_complete() -> void:
 
 
 func _on_hub() -> void:
-	# After forest walk, go to MerlinGame (card encounters)
+	# After forest walk, delegate to GameFlowController (modern flow).
+	var game_flow: Node = get_node_or_null("/root/GameFlow")
+	if game_flow and game_flow.has_method("start_game"):
+		game_flow.start_game()
+		return
+
+	# Fallback: direct transition (legacy).
 	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
 	var pt: Node = get_node_or_null("/root/PixelTransition")
 	if pt and pt.has_method("transition_to"):
