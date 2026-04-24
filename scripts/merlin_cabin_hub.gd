@@ -130,6 +130,115 @@ func _build_world() -> void:
 			randf_range(-3.0, 3.0))
 		_world.add_child(lantern)
 
+	# ─── FURNITURE (PS1-style low-poly) ───────────────────────────────────────
+	# Wooden table (right side, between door and map)
+	_add_prop_box(Vector3(2.5, 0.4, -1.5), Vector3(1.6, 0.08, 0.9), Color(0.35, 0.22, 0.10))
+	for x in [-0.7, 0.7]:
+		for z in [-0.35, 0.35]:
+			_add_prop_box(Vector3(2.5 + x * 0.5, 0.2, -1.5 + z * 0.5),
+				Vector3(0.08, 0.4, 0.08), Color(0.25, 0.16, 0.08))  # table leg
+
+	# Stool near cauldron
+	_add_prop_box(Vector3(-2.2, 0.3, -2.5), Vector3(0.4, 0.08, 0.4), Color(0.28, 0.18, 0.09))
+	for x in [-0.13, 0.13]:
+		for z in [-0.13, 0.13]:
+			_add_prop_box(Vector3(-2.2 + x, 0.15, -2.5 + z),
+				Vector3(0.05, 0.3, 0.05), Color(0.22, 0.14, 0.07))
+
+	# Bookshelf on right wall (low-poly stacks of books)
+	for i in 3:
+		var shelf_y: float = 1.0 + i * 0.7
+		_add_prop_box(Vector3(4.15, shelf_y, 1.5), Vector3(0.2, 0.05, 1.8), Color(0.30, 0.20, 0.10))
+		# Books on the shelf
+		for b in 5:
+			var book_color: Color = Color(
+				randf_range(0.2, 0.6),
+				randf_range(0.1, 0.4),
+				randf_range(0.1, 0.3))
+			_add_prop_box(
+				Vector3(4.15, shelf_y + 0.22, 1.5 - 0.75 + b * 0.32),
+				Vector3(0.18, 0.4, 0.10 + randf() * 0.1),
+				book_color)
+
+	# Candles on table (emissive, flickering effect via light)
+	for c in 2:
+		var cx: float = 2.5 + (c * 0.6 - 0.3)
+		# Candle body
+		var candle: MeshInstance3D = MeshInstance3D.new()
+		var cm: CylinderMesh = CylinderMesh.new()
+		cm.top_radius = 0.04
+		cm.bottom_radius = 0.05
+		cm.height = 0.18
+		candle.mesh = cm
+		candle.position = Vector3(cx, 0.53, -1.5)
+		var cmat: StandardMaterial3D = StandardMaterial3D.new()
+		cmat.albedo_color = Color(0.95, 0.90, 0.75)
+		candle.material_override = cmat
+		_world.add_child(candle)
+		# Flame (emissive)
+		var flame: MeshInstance3D = MeshInstance3D.new()
+		var fm: SphereMesh = SphereMesh.new()
+		fm.radius = 0.03
+		fm.height = 0.08
+		flame.mesh = fm
+		flame.position = Vector3(cx, 0.68, -1.5)
+		var fmat: StandardMaterial3D = StandardMaterial3D.new()
+		fmat.albedo_color = Color(1.0, 0.85, 0.4)
+		fmat.emission_enabled = true
+		fmat.emission = Color(1.0, 0.7, 0.3)
+		fmat.emission_energy_multiplier = 3.0
+		flame.material_override = fmat
+		_world.add_child(flame)
+		# Candle light
+		var cl: OmniLight3D = OmniLight3D.new()
+		cl.position = Vector3(cx, 0.75, -1.5)
+		cl.light_color = Color(1.0, 0.75, 0.35)
+		cl.light_energy = 0.8
+		cl.omni_range = 2.0
+		_world.add_child(cl)
+
+	# Roof beams (back wall to front wall, spanning ceiling)
+	for b in 4:
+		_add_prop_box(
+			Vector3(-3.0 + b * 2.0, 3.6, 0.0),
+			Vector3(0.12, 0.12, 9.0),
+			Color(0.22, 0.14, 0.07))
+
+	# A rug on the floor (center)
+	_add_prop_box(
+		Vector3(0.5, 0.02, 0.0),
+		Vector3(3.0, 0.02, 3.5),
+		Color(0.45, 0.15, 0.18))
+
+	# Staff/walking stick leaning against back wall
+	var staff: MeshInstance3D = MeshInstance3D.new()
+	var stm: CylinderMesh = CylinderMesh.new()
+	stm.top_radius = 0.03
+	stm.bottom_radius = 0.05
+	stm.height = 1.7
+	staff.mesh = stm
+	staff.position = Vector3(3.8, 0.85, -3.5)
+	staff.rotation = Vector3(0.0, 0.0, deg_to_rad(8.0))
+	var stmat: StandardMaterial3D = StandardMaterial3D.new()
+	stmat.albedo_color = Color(0.28, 0.18, 0.10)
+	staff.material_override = stmat
+	_world.add_child(staff)
+
+
+## Non-collision decorative box (faster, no StaticBody).
+func _add_prop_box(pos: Vector3, sz: Vector3, color: Color) -> void:
+	var mi: MeshInstance3D = MeshInstance3D.new()
+	var bm: BoxMesh = BoxMesh.new()
+	bm.size = sz
+	mi.mesh = bm
+	mi.position = pos
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 0.95
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(mi)
+
 
 ## Adds a solid box with collision. If interact_id is non-empty, the collision
 ## body carries metadata so the FPS raycast can pick it up.
@@ -290,6 +399,10 @@ func _on_interact(interact_id: String, _target: Node) -> void:
 		"tapestry":
 			talent_tree_requested.emit()
 		"door":
+			# Flag GameManager so next boot shows the menu (classic loop)
+			var gm: Node = get_node_or_null("/root/GameManager")
+			if gm:
+				gm.set_meta("show_menu_on_boot", true)
 			quit_requested.emit()
 		"cauldron":
 			pass  # TODO: Merlin dialogue

@@ -45,7 +45,7 @@ const SCENE_HUB: String = "res://scenes/MerlinCabinHub.tscn"
 const SCENE_RUN: String = "res://scenes/Run3D.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/Menu3DPC.tscn"
-const SCENE_TALENT_TREE: String = "res://scenes/TalentTree.tscn"
+const SCENE_TALENT_TREE: String = "res://scenes/MerlinCabinHub.tscn"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE

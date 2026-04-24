@@ -1149,7 +1149,7 @@ func _on_menu_button(label: String) -> void:
 		"CONTINUER":
 			_glitch_transition("res://scenes/MerlinCabinHub.tscn")
 		"OPTIONS":
-			_glitch_transition("res://scenes/MenuOptions.tscn")
+			_glitch_transition("res://scenes/MerlinCabinHub.tscn")
 		"QUITTER":
 			get_tree().quit()
 

@@ -503,12 +503,18 @@ func _fade_and_transition() -> void:
 
 
 func _transition_to_menu() -> void:
-	# Pass greeting to menu via a global or meta
-	if _merlin_greeting != "":
-		var game_mgr := get_node_or_null("/root/GameManager")
-		if game_mgr:
-			game_mgr.set_meta("merlin_greeting", _merlin_greeting)
+	# Pass greeting via meta
+	var game_mgr := get_node_or_null("/root/GameManager")
+	if game_mgr and _merlin_greeting != "":
+		game_mgr.set_meta("merlin_greeting", _merlin_greeting)
 
 	if PixelTransition.has_method("_force_complete"):
 		PixelTransition._force_complete()
-	PixelTransition.transition_to("res://scenes/Menu3DPC.tscn")
+
+	# First-boot fast path: jump straight to the 3D cabin hub (first-person).
+	# Menu is only shown on subsequent sessions (Quit from hub → menu).
+	# The flag is set by MerlinCabinHub when the player chooses to exit.
+	var next_scene: String = "res://scenes/MerlinCabinHub.tscn"
+	if game_mgr and game_mgr.has_meta("show_menu_on_boot"):
+		next_scene = "res://scenes/Menu3DPC.tscn"
+	PixelTransition.transition_to(next_scene)

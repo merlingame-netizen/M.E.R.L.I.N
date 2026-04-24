@@ -9,15 +9,28 @@ Rien d'autre a installer. Si Windows demande confirmation
 complementaires" puis "Executer quand meme" - c'est le
 moteur Godot Engine officiel 4.5 (open source, MIT).
 
-NOUVEAUTES v2 (PS1/FPS) :
-- Antre de Merlin en vue premiere personne (WASD + souris)
-- Interaction : vise un objet + appuie E
-  - Carte murale = partir en quete
-  - Tapisserie = arbre de talents
-  - Porte = retour menu
-- Bouton "Scenes" de debug retire
-- 13 scenes superflues archivees
+NOUVEAUTES v3 (flow minimal + hub enrichi) :
+- Apres l'intro CeltOS, on rentre DIRECTEMENT dans le cabin
+  (plus de menu au premier boot, on va a l'essentiel)
+- Antre de Merlin enrichi (vue premiere personne) :
+  - Table + 2 bougies + bancs
+  - Bibliotheque avec livres low-poly
+  - Etagere de livres sur le mur droit
+  - Poutres au plafond, tapis au sol, baton magique
+  - Tapisserie, Carte murale, Porte, Chaudron
+- Seulement 6 scenes actives au total (25 avant)
 
-CONTROLE : Souris + WASD + E + Echap (liberer la souris)
+CONTROLES :
+  WASD        marcher
+  Souris      regarder
+  E / Espace  interagir (vise un objet, puis appuie)
+  Echap       liberer la souris
+
+PARCOURS :
+  Intro CeltOS
+  -> Cabin (premier boot, automatique)
+  -> vise la Carte murale, appuie E = PARTIR EN QUETE
+  -> Foret de Broceliande (Run 3D)
+  -> Retour au Cabin apres la run
 
 TAILLE : ~165 MB (160 MB moteur + 9 MB jeu)
