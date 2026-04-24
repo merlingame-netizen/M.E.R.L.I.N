@@ -41,7 +41,7 @@ const PHASE_NAMES: Dictionary = {
 # SCENE PATHS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const SCENE_HUB: String = "res://scenes/HubScreen.tscn"
+const SCENE_HUB: String = "res://scenes/MerlinCabinHub.tscn"
 const SCENE_RUN: String = "res://scenes/Run3D.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
@@ -58,7 +58,10 @@ var _transition_manager: TransitionManager = null
 var _last_run_data: Dictionary = {}
 
 # Active screen references (set during wiring, cleared on phase exit)
-var _hub_screen: HubScreen = null
+# NOTE: _hub_screen is duck-typed (Node) so any hub implementation that emits
+# `run_requested(biome_id, oghams)`, `talent_tree_requested()`, and
+# `quit_requested()` can register itself — including MerlinCabinHub.
+var _hub_screen: Node = null
 var _run_controller: Run3DController = null
 var _end_screen: EndRunScreen = null
 
@@ -219,13 +222,20 @@ func _on_quit_requested() -> void:
 # SIGNAL WIRING — Connect/disconnect screen signals per phase
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Wire a HubScreen instance. Call after instantiating the hub scene.
-func wire_hub(hub: HubScreen) -> void:
+## Wire a hub instance. Accepts any Node that exposes the three hub signals
+## (`run_requested(biome_id, selected_oghams)`, `talent_tree_requested()`,
+## `quit_requested()`). Both HubScreen (2D) and MerlinCabinHub (FPS) qualify.
+func wire_hub(hub: Node) -> void:
+	if hub == null:
+		return
 	_disconnect_hub()
 	_hub_screen = hub
-	hub.run_requested.connect(_on_run_requested)
-	hub.talent_tree_requested.connect(_on_talent_tree_requested)
-	hub.quit_requested.connect(_on_quit_requested)
+	if hub.has_signal("run_requested"):
+		hub.connect("run_requested", _on_run_requested)
+	if hub.has_signal("talent_tree_requested"):
+		hub.connect("talent_tree_requested", _on_talent_tree_requested)
+	if hub.has_signal("quit_requested"):
+		hub.connect("quit_requested", _on_quit_requested)
 
 
 ## Wire a Run3DController instance. Call after instantiating the run scene.
@@ -265,14 +275,17 @@ func wire_end_screen(end_screen: EndRunScreen) -> void:
 
 
 func _disconnect_hub() -> void:
-	if _hub_screen != null:
-		if _hub_screen.run_requested.is_connected(_on_run_requested):
-			_hub_screen.run_requested.disconnect(_on_run_requested)
-		if _hub_screen.talent_tree_requested.is_connected(_on_talent_tree_requested):
-			_hub_screen.talent_tree_requested.disconnect(_on_talent_tree_requested)
-		if _hub_screen.quit_requested.is_connected(_on_quit_requested):
-			_hub_screen.quit_requested.disconnect(_on_quit_requested)
-		_hub_screen = null
+	if _hub_screen != null and is_instance_valid(_hub_screen):
+		if _hub_screen.has_signal("run_requested") \
+				and _hub_screen.is_connected("run_requested", _on_run_requested):
+			_hub_screen.disconnect("run_requested", _on_run_requested)
+		if _hub_screen.has_signal("talent_tree_requested") \
+				and _hub_screen.is_connected("talent_tree_requested", _on_talent_tree_requested):
+			_hub_screen.disconnect("talent_tree_requested", _on_talent_tree_requested)
+		if _hub_screen.has_signal("quit_requested") \
+				and _hub_screen.is_connected("quit_requested", _on_quit_requested):
+			_hub_screen.disconnect("quit_requested", _on_quit_requested)
+	_hub_screen = null
 
 
 func _disconnect_run() -> void:
