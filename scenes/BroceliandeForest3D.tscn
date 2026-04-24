@@ -1,6 +1,407 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=21 format=3 uid="uid://bbroc3dforest01"]
 
-[ext_resource type="Script" path="res://scripts/broceliande_3d/broceliande_forest_3d.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/broceliande_3d/forest_walk.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/fps/FpsRig.tscn" id="2_fps_rig"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_grass.tres" id="3_grass"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_dirt.tres" id="4_dirt"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_wood_dark.tres" id="5_wood_dark"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_foliage.tres" id="6_foliage"]
+[ext_resource type="ShaderMaterial" path="res://resources/materials/ps1_stone.tres" id="7_stone"]
 
-[node name="BroceliandeForest3D" type="Node"]
-script = ExtResource("1")
+[sub_resource type="ProceduralSkyMaterial" id="Sky_Mat"]
+sky_top_color = Color(0.01, 0.04, 0.01, 1)
+sky_horizon_color = Color(0.04, 0.10, 0.04, 1)
+sky_curve = 0.08
+ground_horizon_color = Color(0.03, 0.07, 0.03, 1)
+ground_bottom_color = Color(0.01, 0.02, 0.01, 1)
+sun_angle_max = 8.0
+sun_curve = 0.1
+
+[sub_resource type="Sky" id="Sky_Res"]
+sky_material = SubResource("Sky_Mat")
+
+[sub_resource type="Environment" id="Env_Forest"]
+background_mode = 2
+sky = SubResource("Sky_Res")
+ambient_light_source = 3
+ambient_light_color = Color(0.04, 0.10, 0.05, 1)
+ambient_light_energy = 0.5
+fog_enabled = true
+fog_light_color = Color(0.03, 0.09, 0.03, 1)
+fog_density = 0.06
+fog_aerial_perspective = 0.3
+
+[sub_resource type="CylinderMesh" id="Mesh_Trunk"]
+top_radius = 0.2
+bottom_radius = 0.32
+height = 3.0
+radial_segments = 6
+
+[sub_resource type="PrismMesh" id="Mesh_Crown_L"]
+left_to_right = 0.5
+size = Vector3(2.0, 3.5, 2.0)
+
+[sub_resource type="PrismMesh" id="Mesh_Crown_S"]
+left_to_right = 0.5
+size = Vector3(1.5, 2.5, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_Ground"]
+size = Vector3(16.0, 0.2, 50.0)
+
+[sub_resource type="BoxShape3D" id="Shape_Ground"]
+size = Vector3(16.0, 0.2, 50.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Path"]
+size = Vector3(2.5, 0.05, 50.0)
+
+[sub_resource type="BoxShape3D" id="Shape_Trunk"]
+size = Vector3(0.5, 3.0, 0.5)
+
+[sub_resource type="BoxShape3D" id="Shape_Encounter"]
+size = Vector3(4.0, 3.0, 3.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Stone"]
+size = Vector3(0.7, 1.5, 0.35)
+
+[sub_resource type="BoxShape3D" id="Shape_Stone"]
+size = Vector3(0.7, 1.8, 0.5)
+
+
+[node name="BroceliandeForest3D" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_Forest")
+
+[node name="ForestLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.96, 0.12, -0.25, 0, 0.90, 0.44, 0.28, -0.42, 0.86, 0, 12, 0)
+light_color = Color(0.55, 0.75, 0.55, 1)
+light_energy = 0.35
+shadow_enabled = false
+
+[node name="Glow1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -8)
+light_color = Color(0.4, 0.85, 0.4, 1)
+light_energy = 0.8
+omni_range = 14.0
+
+[node name="Glow2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -25)
+light_color = Color(0.35, 0.80, 0.45, 1)
+light_energy = 0.6
+omni_range = 18.0
+
+[node name="Terrain" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Terrain"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -22)
+
+[node name="Mesh" type="MeshInstance3D" parent="Terrain/Ground"]
+mesh = SubResource("Mesh_Ground")
+surface_material_override/0 = ExtResource("3_grass")
+
+[node name="Shape" type="CollisionShape3D" parent="Terrain/Ground"]
+shape = SubResource("Shape_Ground")
+
+[node name="Path" type="MeshInstance3D" parent="Terrain"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, -22)
+mesh = SubResource("Mesh_Path")
+surface_material_override/0 = ExtResource("4_dirt")
+
+[node name="TreesLeft" type="Node3D" parent="."]
+
+[node name="Tree1" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, -1)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree2" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0, 0, -6)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree3" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 0, -11)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree4" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8, 0, -16)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree5" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, -21)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree6" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2, 0, -26)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree7" type="StaticBody3D" parent="TreesLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, -31)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesLeft/Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesLeft/Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesLeft/Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="TreesRight" type="Node3D" parent="."]
+
+[node name="Tree1" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0, -2)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree2" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, -7)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree3" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0, -12)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree4" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8, 0, -17)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree5" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0, -22)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree6" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0, -27)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.75, 0)
+mesh = SubResource("Mesh_Crown_L")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="Tree7" type="StaticBody3D" parent="TreesRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 0, -32)
+
+[node name="Shape" type="CollisionShape3D" parent="TreesRight/Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Trunk")
+
+[node name="Trunk" type="MeshInstance3D" parent="TreesRight/Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Trunk")
+surface_material_override/0 = ExtResource("5_wood_dark")
+
+[node name="Crown" type="MeshInstance3D" parent="TreesRight/Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_Crown_S")
+surface_material_override/0 = ExtResource("6_foliage")
+
+[node name="EncounterZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -36)
+
+[node name="Shape" type="CollisionShape3D" parent="EncounterZone"]
+shape = SubResource("Shape_Encounter")
+
+[node name="ReturnStone" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40)
+metadata/interact_id = "return_stone"
+
+[node name="Shape" type="CollisionShape3D" parent="ReturnStone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Shape_Stone")
+
+[node name="Mesh" type="MeshInstance3D" parent="ReturnStone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("Mesh_Stone")
+surface_material_override/0 = ExtResource("7_stone")
+
+[node name="FpsRig" parent="." instance=ExtResource("2_fps_rig")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="HintLabel" type="Label" parent="HUD"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -60.0
+offset_right = 200.0
+offset_bottom = -10.0
+text = ""
+horizontal_alignment = 1
+visible = false
+
+[node name="LifeLabel" type="Label" parent="HUD"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 140.0
+offset_bottom = 36.0
+text = "♥  ---"
+
+[node name="Crosshair" type="ColorRect" parent="HUD"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+color = Color(0.85, 0.78, 0.55, 0.9)
