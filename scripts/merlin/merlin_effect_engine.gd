@@ -193,6 +193,14 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 	var life_after: int = int(run.get("life_essence", 0))
 	result["life_after"] = life_after
 	result["is_dead"] = life_after <= 0
+	# Death Anam: bible v2.4 — Anam earned = base × min(cards_played / 30.0, 1.0)
+	if result["is_dead"]:
+		var base_anam: int = int(MerlinConstants.ANAM_REWARDS.get("base", 10))
+		var death_cap: int = int(MerlinConstants.ANAM_REWARDS.get("death_cap_cards", 30))
+		var death_ratio: float = minf(float(cards_played) / maxf(float(death_cap), 1.0), 1.0)
+		var death_anam: int = int(float(base_anam) * death_ratio)
+		_apply_add_anam(state, death_anam)
+		result["death_anam"] = death_anam
 	result["steps_completed"].append("death_check")
 
 	# ── Step 10: PROMISES — countdown and expiration ──
