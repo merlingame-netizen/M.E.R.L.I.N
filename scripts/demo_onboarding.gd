@@ -175,12 +175,65 @@ func _build_layout() -> void:
 	_card_panel.add_theme_stylebox_override("panel", card_style)
 	add_child(_card_panel)
 
+	# Detailed card layout: speaker header + sigil + body text + decorative borders
+	var card_vbox: VBoxContainer = VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 8)
+	_card_panel.add_child(card_vbox)
+
+	# Speaker header (top, gold celtic capital style)
+	var header_row: HBoxContainer = HBoxContainer.new()
+	header_row.add_theme_constant_override("separation", 12)
+	card_vbox.add_child(header_row)
+
+	var sigil_label: Label = Label.new()
+	sigil_label.text = "⚰"  # ankh-like celtic sigil glyph
+	sigil_label.add_theme_font_size_override("font_size", 36)
+	sigil_label.add_theme_color_override("font_color", Color(0.92, 0.78, 0.42))
+	header_row.add_child(sigil_label)
+
+	var speaker_label: Label = Label.new()
+	speaker_label.text = "CERNUNNOS  —  Esprit de la Foret"
+	speaker_label.add_theme_font_size_override("font_size", 22)
+	speaker_label.add_theme_color_override("font_color", Color(0.92, 0.78, 0.42))
+	speaker_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	speaker_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header_row.add_child(speaker_label)
+
+	var biome_tag: Label = Label.new()
+	biome_tag.text = "[ Broceliande ]"
+	biome_tag.add_theme_font_size_override("font_size", 13)
+	biome_tag.add_theme_color_override("font_color", Color(0.62, 0.78, 0.58))
+	biome_tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header_row.add_child(biome_tag)
+
+	# Decorative separator
+	var separator: HSeparator = HSeparator.new()
+	separator.add_theme_constant_override("separation", 2)
+	var sep_style := StyleBoxFlat.new()
+	sep_style.bg_color = Color(0.86, 0.72, 0.42, 0.55)
+	sep_style.content_margin_top = 0
+	sep_style.content_margin_bottom = 0
+	separator.add_theme_stylebox_override("separator", sep_style)
+	card_vbox.add_child(separator)
+
+	# Body text — narrative
 	_card_text = Label.new()
-	_card_text.text = "Une presence te regarde a travers les fougeres.\nLes pierres dressees vibrent doucement.\nLe vent porte un nom : Cernunnos."
+	_card_text.text = "Une presence te regarde a travers les fougeres argentees.\nLes pierres dressees vibrent doucement, comme un coeur ancien.\nLe vent porte un nom dans son souffle : Cernunnos."
 	_card_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_card_text.add_theme_font_size_override("font_size", 18)
+	_card_text.add_theme_font_size_override("font_size", 17)
 	_card_text.add_theme_color_override("font_color", Color(0.92, 0.86, 0.74))
-	_card_panel.add_child(_card_text)
+	_card_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card_vbox.add_child(_card_text)
+
+	# Faction tag at bottom
+	var faction_row: HBoxContainer = HBoxContainer.new()
+	faction_row.alignment = BoxContainer.ALIGNMENT_END
+	card_vbox.add_child(faction_row)
+	var faction_tag: Label = Label.new()
+	faction_tag.text = "Clan du Cerf  ♦  Champ lexical : nature, mystique"
+	faction_tag.add_theme_font_size_override("font_size", 11)
+	faction_tag.add_theme_color_override("font_color", Color(0.62, 0.55, 0.36))
+	faction_row.add_child(faction_tag)
 
 	# Buttons row (below card, hidden initially)
 	var btn_row := HBoxContainer.new()
@@ -314,23 +367,45 @@ func _instantiate_forest_layer() -> void:
 		push_warning("[DemoOnboarding] Cannot load " + FOREST_SCENE_PATH)
 		return
 	_forest_instance = packed.instantiate()
-	_forest_layer.add_child(_forest_instance)
+	# CRITICAL: 3D scene must be a sibling of the Control UI (NOT a child),
+	# otherwise it doesn't render. We add it BEFORE this DemoOnboarding so it
+	# draws underneath the UI overlays in the 3D viewport pipeline.
+	var parent: Node = get_parent()
+	if parent == null:
+		parent = get_tree().root
+	parent.add_child(_forest_instance)
+	parent.move_child(_forest_instance, 0)  # below DemoOnboarding in tree order
+
+	# Hide the black background once the forest is in tree (so we can see 3D)
+	var bg: ColorRect = $".".get_node_or_null("ColorRect") if has_node("ColorRect") else null
+	# Easier: walk children, hide the first ColorRect (the black bg)
+	for c in get_children():
+		if c is ColorRect:
+			var tw_bg := create_tween()
+			tw_bg.tween_property(c, "modulate:a", 0.0, 1.5)
+			break
+
+	# Force the rail Camera3D as current (otherwise no 3D render)
+	var cam: Camera3D = _forest_instance.get_node_or_null("Path3D/PathFollow3D/Camera3D")
+	if cam:
+		cam.current = true
+
 	# Hide the rail's own HUD (we provide our own narrative HUD)
 	var rail_hud: Node = _forest_instance.get_node_or_null("HUD")
-	if rail_hud:
+	if rail_hud and rail_hud is CanvasLayer:
 		rail_hud.visible = false
+
 	# Hide all forest assets initially — Merlin will reveal them one by one
 	var forest_node: Node = _forest_instance.get_node_or_null("Forest")
 	if forest_node:
 		for child in forest_node.get_children():
 			if child is Node3D:
 				child.visible = false
+
 	# Pause auto-walk until "walker_start" spawn step
 	var walker_anim: AnimationPlayer = _forest_instance.get_node_or_null("WalkerAnimation")
 	if walker_anim:
 		walker_anim.pause()
-	# Soft fade-in of the layer (the world appears, but assets are hidden)
-	_fade_in_node(_forest_layer, 1.0)
 
 
 func _reveal_forest_asset(asset_name: String) -> void:
@@ -375,5 +450,38 @@ func _start_forest_walk() -> void:
 
 
 func _on_choice_pressed(choice_label: String) -> void:
-	_tutorial_hint.text = "[ " + choice_label.split(" — ")[0] + " choisi — la suite arrive bientot... ]"
-	# Future: handoff to MerlinGame proper run loop
+	# Disable all buttons (prevent double-click)
+	for b in [_btn_a, _btn_b, _btn_c]:
+		b.disabled = true
+		b.modulate.a = 0.5
+
+	var choice_letter: String = choice_label.substr(0, 1)
+	_tutorial_hint.text = "[ " + choice_letter + " choisi  —  Cernunnos te repond... ]"
+
+	# Show Merlin's reaction in narrator
+	await get_tree().create_timer(0.6).timeout
+	await _typewriter_line(_merlin_reaction_for(choice_letter))
+
+	# Fade card out
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_card_panel, "modulate:a", 0.0, 0.8)
+	tw.tween_property(_btn_a.get_parent(), "modulate:a", 0.0, 0.8)
+
+	await get_tree().create_timer(2.0).timeout
+
+	# Continue narration
+	await _typewriter_line("Voila ! Tu as compris. La demo s'arrete ici, mais le voyage commence...")
+	await get_tree().create_timer(1.0).timeout
+	_tutorial_hint.text = "[ Demo terminee  —  pour relancer : --demo flag ]"
+
+
+func _merlin_reaction_for(letter: String) -> String:
+	match letter:
+		"A":
+			return "Observer ! Sage choix. Cernunnos apprecie les yeux patients..."
+		"B":
+			return "T'approcher en silence ! Audacieux ! Le souffle te recompense..."
+		"C":
+			return "Reculer doucement ! Prudent. La foret retient ses secrets cette fois."
+		_:
+			return "..."

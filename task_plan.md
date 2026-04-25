@@ -5,6 +5,40 @@ Developper un JDR Parlant roguelite avec LLM local (Qwen 3.5 Multi-Brain heterog
 
 ---
 
+## Phase Active: 2026-04-25 (Demo v3) — 3D fix + Card detailed + Click handler
+
+### User feedback v3
+"La construction de scene avec assets et shaders ne se fait avec ce qu il dit,
+l ecran reste a fond noir, travaille en profondeur cette mecanique. Et quand
+je clique sur un choix rien se produit, la carte de jeu avec dialogue doit
+etre detaille graphiquement."
+
+### Root causes
+1. **3D fond noir** — _forest_instance ajoute en CHILD du Control _forest_layer
+   ne rend pas le 3D (Control n'a pas de Camera3D pipeline). Architectural bug.
+   Fix: add as SIBLING of DemoOnboarding in scene tree, force Camera3D.current.
+2. **Click sans effet** — _on_choice_pressed ne fait que update text label.
+   Fix: disable buttons, Merlin reaction narration, fade card, demo-end message.
+3. **Card pas detaillee** — juste Label central. Fix: VBox with header (sigil+
+   speaker name+biome tag), separator, body text, faction tag at bottom.
+
+### Implementations
+- _instantiate_forest_layer: add to parent (sibling), move_child(0), Camera3D.current=true
+- Fade out black ColorRect bg once 3D scene in tree
+- Card panel rebuilt: HBox (sigil + speaker "CERNUNNOS — Esprit de la Foret"
+  + biome tag) + HSeparator + body text + faction tag
+- _merlin_reaction_for(letter) returns farfelu reaction per A/B/C
+- 4-step click flow: disable -> reaction line -> fade card -> end message
+
+### Steps
+- [x] Refactor forest layer (sibling tree placement + Camera current)
+- [x] Card panel redesigned with VBox+sigil+speaker+separator+body+tag
+- [x] Click handler: disable/react/fade/end
+- [ ] Test runtime visual
+- [ ] Commit + push
+
+---
+
 ## Phase Active: 2026-04-25 (Demo iteration) — Progressive Narrative Onboarding
 
 ### User direction (verbatim)
