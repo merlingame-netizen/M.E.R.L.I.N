@@ -25,6 +25,9 @@ const MINIGAME_LIST := [
 ]
 
 var strategy: int = Strategy.MIXED
+## Visible mode: render the game on screen (PSX post-process, animations).
+## Set to true via cmdline arg `auto_visible=true`. Default false (CI/headless).
+var visible_mode: bool = false
 var _controller: Node = null
 var _ui: Node = null
 var _store: Node = null
@@ -80,9 +83,9 @@ func _ready() -> void:
 
 	var game_instance: Node = game_scene.instantiate()
 	# Set headless_mode BEFORE add_child — _ready() → start_run() triggers during add_child
-	game_instance.headless_mode = true
+	game_instance.headless_mode = not visible_mode
 	add_child(game_instance)
-	_log("MerlinGame instantiated (headless_mode set pre-ready)")
+	_log("MerlinGame instantiated (headless_mode=%s, visible_mode=%s)" % [str(not visible_mode), str(visible_mode)])
 
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -116,6 +119,20 @@ func _ready() -> void:
 
 
 func _load_config() -> void:
+	# CLI args: auto_visible=true to render on-screen, strategy=MIXED|RANDOM|...
+	for arg in OS.get_cmdline_args():
+		var s: String = str(arg)
+		if s.begins_with("auto_visible="):
+			visible_mode = s.substr("auto_visible=".length()).to_lower() in ["true", "1", "yes"]
+		elif s.begins_with("strategy="):
+			var strat_name: String = s.substr("strategy=".length()).to_upper()
+			match strat_name:
+				"RANDOM": strategy = Strategy.RANDOM
+				"ALWAYS_LEFT": strategy = Strategy.ALWAYS_LEFT
+				"ALWAYS_RIGHT": strategy = Strategy.ALWAYS_RIGHT
+				"ALWAYS_CENTER": strategy = Strategy.ALWAYS_CENTER
+				_: strategy = Strategy.MIXED
+
 	var config_path := "user://autoplay_config.json"
 	if not FileAccess.file_exists(config_path):
 		return
