@@ -12,14 +12,20 @@ signal walk_completed
 @export var bob_amplitude_h: float = 0.04
 @export var bob_period: float = 0.85
 @export var bob_enabled: bool = true
+@export var biome_key: String = "foret_broceliande"
+@export var step_interval: float = 0.5
+@export var step_pitch_variation: float = 0.15
+@export var card_trigger_sfx: String = "ogham_chime"
 
 @onready var _path_follow: PathFollow3D = $Path3D/PathFollow3D
 @onready var _camera: Camera3D = $Path3D/PathFollow3D/Camera3D
 @onready var _walker_anim: AnimationPlayer = $WalkerAnimation
 
 var _bob_time: float = 0.0
+var _step_time: float = 0.0
 var _camera_base_pos: Vector3
 var _is_paused: bool = false
+var _sfx: Node = null  # SFXManager autoload (resolved lazily)
 
 
 func _ready() -> void:
@@ -30,6 +36,10 @@ func _ready() -> void:
 			_walker_anim.animation_finished.connect(_on_walker_animation_finished)
 		if _walker_anim.has_animation(&"auto_walk"):
 			_walker_anim.play(&"auto_walk")
+	# Audio v3 — biome ambient via SFXManager autoload
+	_sfx = get_node_or_null("/root/SFXManager")
+	if _sfx and _sfx.has_method("play_biome_ambient"):
+		_sfx.play_biome_ambient(biome_key)
 
 
 func _process(delta: float) -> void:
@@ -39,6 +49,12 @@ func _process(delta: float) -> void:
 	var v: float = sin(_bob_time * TAU / bob_period) * bob_amplitude_v
 	var h: float = sin(_bob_time * TAU / (bob_period * 2.0)) * bob_amplitude_h
 	_camera.position = _camera_base_pos + Vector3(h, v, 0.0)
+	# Audio v3 — pas de marche cadenc\xc3\xa9s (path_scratch, varied pitch)
+	_step_time += delta
+	if _step_time >= step_interval:
+		_step_time = 0.0
+		if _sfx and _sfx.has_method("play_varied"):
+			_sfx.play_varied("path_scratch", step_pitch_variation)
 
 
 ## Called by Area3D triggers along the path. Pauses the walk and spawns a card event.
@@ -46,6 +62,9 @@ func trigger_card_event(event_id: String) -> void:
 	if _is_paused:
 		return
 	pause_walk()
+	# Audio v3 — chime cristallin sur apparition carte
+	if _sfx and _sfx.has_method("play"):
+		_sfx.play(card_trigger_sfx)
 	card_event_triggered.emit(event_id)
 
 
