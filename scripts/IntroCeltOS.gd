@@ -528,8 +528,8 @@ func _transition_to_menu() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var demo_mode: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
 	if demo_mode:
-		print("[IntroCeltOS] --demo flag -> DemoOnboarding (progressive narrative + forest 3D fade-in)")
-		PixelTransition.transition_to("res://scenes/DemoOnboarding.tscn")
+		print("[IntroCeltOS] --demo flag -> FullRun (standalone 3D rail run with assets)")
+		PixelTransition.transition_to("res://scenes/FullRun.tscn")
 		return
 
 	PixelTransition.transition_to("res://scenes/Menu3DPC.tscn")
