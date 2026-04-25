@@ -138,6 +138,11 @@ func _ready() -> void:
 			node.visible = false
 	RenderingServer.set_default_clear_color(Color(0.45, 0.72, 0.82))
 
+	# Audio v3 — ambient biome via SFXManager autoload
+	var sfx: Node = get_node_or_null("/root/SFXManager")
+	if sfx and sfx.has_method("play_biome_ambient"):
+		sfx.play_biome_ambient("foret_broceliande")
+
 	_build_skydome()
 	_build_n64_sun()
 	_build_terrain()
