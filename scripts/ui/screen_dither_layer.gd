@@ -158,16 +158,17 @@ func _ready() -> void:
 	var demo_mode: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
 	if demo_mode:
 		set_psx_preset("medium")
-		# Crisper pixels — anti-flou: smaller pixel_size, sharper scanlines.
-		_material.set_shader_parameter("pixel_size", 2.0)
-		_material.set_shader_parameter("color_depth", 32.0)
-		_material.set_shader_parameter("dither_strength", 0.40)
-		_material.set_shader_parameter("scanline_opacity", 0.14)
-		_material.set_shader_parameter("scanline_count", 320.0)
-		_material.set_shader_parameter("curvature", 0.025)
-		_material.set_shader_parameter("vignette_intensity", 0.16)
-		_material.set_shader_parameter("global_intensity", 0.85)
-		set_biome("broceliande", false)  # forest fog from boot
+		# Crisp PS1 — no aggressive pixelization (anti-flou per user feedback).
+		# Keep subtle scanlines + dither + curvature for the PSX feel without blur.
+		_material.set_shader_parameter("pixel_size", 1.0)
+		_material.set_shader_parameter("color_depth", 48.0)
+		_material.set_shader_parameter("dither_strength", 0.22)
+		_material.set_shader_parameter("scanline_opacity", 0.10)
+		_material.set_shader_parameter("scanline_count", 480.0)
+		_material.set_shader_parameter("curvature", 0.015)
+		_material.set_shader_parameter("vignette_intensity", 0.10)
+		_material.set_shader_parameter("global_intensity", 0.55)
+		set_biome("broceliande", false)  # forest fog tint from boot
 	else:
 		set_psx_preset("medium")
 

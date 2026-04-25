@@ -23,6 +23,11 @@ enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT }
 
 func _ready() -> void:
 	layer = 99
+	# Demo mode hides the green frame border (clean, immersive PS1 view).
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	if args.has("--demo") or OS.has_environment("MERLIN_DEMO"):
+		visible = false
+		return
 	_build_frame()
 	_build_llm_icon()
 	# Connect to biome changes if WorldMapSystem exists

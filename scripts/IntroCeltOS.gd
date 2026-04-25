@@ -414,7 +414,77 @@ func _start_phase_3() -> void:
 
 	if _transitioning or not is_inside_tree():
 		return
+
+	# v3 visual — show 3D CeltOS logo before transition (more detailed intro)
+	await _show_celtos_3d_logo()
+
+	if _transitioning or not is_inside_tree():
+		return
 	_fade_and_transition()
+
+
+func _show_celtos_3d_logo() -> void:
+	# Spawn a SubViewport rendering a rotating 3D Label3D "CeltOS" with celtic gold tint.
+	# Lasts ~4s before fade-and-transition continues.
+	var container: SubViewportContainer = SubViewportContainer.new()
+	container.stretch = true
+	container.set_anchors_preset(Control.PRESET_CENTER)
+	container.custom_minimum_size = Vector2(960, 540)
+	container.size = Vector2(960, 540)
+	container.position = Vector2(-480, -270)
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.modulate = Color(1, 1, 1, 0)
+	add_child(container)
+
+	var sv: SubViewport = SubViewport.new()
+	sv.size = Vector2i(960, 540)
+	sv.transparent_bg = true
+	sv.own_world_3d = true
+	sv.world_3d = World3D.new()
+	container.add_child(sv)
+
+	var cam: Camera3D = Camera3D.new()
+	cam.transform = Transform3D(Basis.IDENTITY, Vector3(0, 0, 4))
+	cam.fov = 35.0
+	sv.add_child(cam)
+	cam.current = true
+
+	var key_light: DirectionalLight3D = DirectionalLight3D.new()
+	key_light.transform = Transform3D(Basis.IDENTITY, Vector3.ZERO).rotated(Vector3.RIGHT, -0.4)
+	key_light.light_color = Color(1.0, 0.85, 0.45)
+	key_light.light_energy = 1.6
+	sv.add_child(key_light)
+
+	var rim_light: DirectionalLight3D = DirectionalLight3D.new()
+	rim_light.transform = Transform3D(Basis.IDENTITY, Vector3.ZERO).rotated(Vector3.UP, 2.4)
+	rim_light.light_color = Color(0.55, 0.42, 0.78)
+	rim_light.light_energy = 0.7
+	sv.add_child(rim_light)
+
+	var lbl: Label3D = Label3D.new()
+	lbl.text = "CeltOS"
+	lbl.font_size = 220
+	lbl.outline_size = 14
+	lbl.modulate = Color(1.0, 0.86, 0.45)
+	lbl.outline_modulate = Color(0.20, 0.14, 0.08, 1.0)
+	lbl.no_depth_test = false
+	lbl.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	lbl.scale = Vector3(0.001, 0.001, 0.001)
+	lbl.position = Vector3.ZERO
+	sv.add_child(lbl)
+
+	var fx_tween: Tween = create_tween().set_parallel(true)
+	fx_tween.tween_property(container, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	fx_tween.tween_property(lbl, "scale", Vector3(1, 1, 1), 1.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	fx_tween.tween_property(lbl, "rotation:y", TAU, 3.6).set_trans(Tween.TRANS_CUBIC)
+
+	await get_tree().create_timer(4.0).timeout
+
+	var fade_out: Tween = create_tween()
+	fade_out.tween_property(container, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	await fade_out.finished
+	if is_instance_valid(container):
+		container.queue_free()
 
 
 func _blink_cursor() -> void:

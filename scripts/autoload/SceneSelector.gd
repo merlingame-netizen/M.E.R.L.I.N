@@ -35,6 +35,13 @@ var _is_open: bool = false
 
 func _ready() -> void:
 	layer = 101  # Above ScreenEffects (100), always on top
+	# Demo mode hides debug overlays (no Scenes panel visible to player).
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	if args.has("--demo") or OS.has_environment("MERLIN_DEMO"):
+		visible = false
+		set_process(false)
+		set_process_input(false)
+		return
 	_build_ui()
 
 
