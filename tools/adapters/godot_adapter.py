@@ -56,14 +56,19 @@ def _find_godot() -> str | None:
     return None
 
 
-def _run(cmd: list[str], timeout: int = 120) -> tuple[str, str, int]:
-    """Run a subprocess, return (stdout, stderr, returncode)."""
+def _run(cmd: list[str], timeout: int = 120, env: dict | None = None) -> tuple[str, str, int]:
+    """Run a subprocess, return (stdout, stderr, returncode). Optional env overlay."""
+    full_env: dict | None = None
+    if env:
+        full_env = os.environ.copy()
+        full_env.update(env)
     result = subprocess.run(
         cmd,
         cwd=str(PROJECT_ROOT),
         capture_output=True,
         text=True,
         timeout=timeout,
+        env=full_env,
     )
     return result.stdout, result.stderr, result.returncode
 
@@ -242,13 +247,16 @@ class GodotAdapter(BaseAdapter):
             }
         )
 
-    def _smoke(self, scene: str = "", duration: str = "10", **_kwargs: Any) -> dict:
+    def _smoke(self, scene: str = "", duration: str = "10", capture: str = "", capture_interval: str = "200", **_kwargs: Any) -> dict:
         """Smoke-test a scene by running it (windowed) for N seconds and grepping for runtime errors.
 
         Headless mode skips _ready/_process for many engine subsystems (3D rendering, input,
         audio), so SCRIPT ERROR from those paths are NOT caught. We launch with a normal display
         but `--quit-after` to bound the run. The scene is passed as a positional arg
         (Godot 4 ignores --scene-path).
+
+        Optional --capture <dir> records frames every <capture-interval> ms (default 200) via
+        the CaptureRecorder autoload. Frames saved as frame_NNNN.png in <dir>.
         """
         if not scene:
             return self.error("smoke action requires scene= kwarg (e.g. scene='res://scenes/MerlinGame.tscn')")
@@ -263,11 +271,29 @@ class GodotAdapter(BaseAdapter):
             quit_after = 10
 
         timeout_s = quit_after + 30  # generous buffer for project loading
+        # Capture mode: gate the CaptureRecorder autoload via env vars.
+        capture_env: dict | None = None
+        capture_dir_resolved: str = ""
+        if capture:
+            capture_dir_resolved = str((PROJECT_ROOT / capture).resolve()) if not Path(capture).is_absolute() else capture
+            Path(capture_dir_resolved).mkdir(parents=True, exist_ok=True)
+            try:
+                cap_int_ms = max(50, int(capture_interval))
+            except (TypeError, ValueError):
+                cap_int_ms = 200
+            max_frames = max(1, int((quit_after * 1000) / cap_int_ms) + 5)
+            capture_env = {
+                "MERLIN_CAPTURE_DIR": capture_dir_resolved,
+                "MERLIN_CAPTURE_INTERVAL_MS": str(cap_int_ms),
+                "MERLIN_CAPTURE_MAX_FRAMES": str(max_frames),
+            }
+            self.log(f"Capture: dir={capture_dir_resolved} interval={cap_int_ms}ms max_frames={max_frames}")
         self.log(f"Smoke-testing scene '{scene}' for {quit_after}s (timeout {timeout_s}s)")
         try:
             stdout, stderr, code = _run(
                 [godot, "--path", str(PROJECT_ROOT), "--quit-after", str(quit_after), scene],
                 timeout=timeout_s,
+                env=capture_env,
             )
         except subprocess.TimeoutExpired:
             return self.error(f"Smoke test for '{scene}' timed out after {timeout_s}s — likely hang in _ready")
@@ -285,19 +311,24 @@ class GodotAdapter(BaseAdapter):
             f"total_errors={len(classified['errors'])} warnings={len(classified['warnings'])} "
             f"passed={passed}"
         )
-        return self.ok(
-            {
-                "scene": scene,
-                "duration_s": quit_after,
-                "exit_code": code,
-                "passed": passed,
-                "script_errors": script_errors,
-                "errors": classified["errors"],
-                "warnings": classified["warnings"][:20],  # cap noise
-                "stdout_tail": "\n".join(stdout.splitlines()[-50:]),
-                "stderr_tail": "\n".join(stderr.splitlines()[-50:]),
-            }
-        )
+        result_data: dict = {
+            "scene": scene,
+            "duration_s": quit_after,
+            "exit_code": code,
+            "passed": passed,
+            "script_errors": script_errors,
+            "errors": classified["errors"],
+            "warnings": classified["warnings"][:20],  # cap noise
+            "stdout_tail": "\n".join(stdout.splitlines()[-50:]),
+            "stderr_tail": "\n".join(stderr.splitlines()[-50:]),
+        }
+        if capture and capture_dir_resolved:
+            captured = sorted(Path(capture_dir_resolved).glob("frame_*.png"))
+            result_data["capture_dir"] = capture_dir_resolved
+            result_data["capture_frames"] = len(captured)
+            result_data["capture_first"] = str(captured[0]) if captured else ""
+            result_data["capture_last"] = str(captured[-1]) if captured else ""
+        return self.ok(result_data)
 
     def _test(self) -> dict:
         """Run the headless test suite and parse JSON output."""

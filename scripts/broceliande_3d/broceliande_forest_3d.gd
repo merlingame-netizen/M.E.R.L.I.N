@@ -216,6 +216,10 @@ func _ready() -> void:
 		if _is_tutorial:
 			print("[Forest3D] Tutorial mode active (scripted, no LLM)")
 			gm_node.remove_meta("first_run_tutorial")  # consume flag — next run uses LLM
+	# Test/dev override: force tutorial via env var (used by smoke capture).
+	if not _is_tutorial and OS.get_environment("MERLIN_FORCE_TUTORIAL") == "1":
+		_is_tutorial = true
+		print("[Forest3D] Tutorial mode forced via MERLIN_FORCE_TUTORIAL=1")
 	# Read biome_key from MerlinStore if a run selected a different biome
 	var init_store: Node = _find_store()
 	if init_store:
@@ -683,6 +687,11 @@ func _update_dynamic_resolution(delta: float) -> void:
 # ============================================================
 
 func _setup_viewport() -> void:
+	# Tutorial mode: skip pixel-shrink + CRT filter so the world is fully readable
+	# while Merlin reveals it. Normal runs keep the PSX aesthetic.
+	if _is_tutorial:
+		print("[Broceliande] Tutorial mode: pixel-shrink + CRT filter disabled for clear visibility")
+		return
 	# Pixel-shrink: render 3D at low_pixel_height, upscale with nearest-neighbor + CRT shader.
 	# 320x180 = 16x fewer fragments than 1280x720. Huge win for GL Compat / web.
 	var render_h: int = low_pixel_height
@@ -1366,15 +1375,30 @@ const TUTORIAL_VO_LINES: Array[Dictionary] = [
 
 
 func _run_tutorial_intro() -> void:
-	# Hide all 3D content + freeze input. We'll reveal in sequence.
-	if is_instance_valid(forest_root):
-		forest_root.visible = false
-	if is_instance_valid(sun_light):
-		sun_light.visible = false
+	# Hide ENTIRE 3D world + all HUD + disable encounter pipeline. Reveal in sequence.
+	# (Individual hides on forest_root/sun_light don't catch terrain ground or chunk meshes
+	# that may be parented to world_root directly; hiding world_root is the catch-all.)
+	if is_instance_valid(world_root):
+		world_root.visible = false
 	if is_instance_valid(player):
 		player.visible = false
 	if is_instance_valid(merlin_node):
 		merlin_node.visible = false
+	# Hide the full HUD CanvasLayer — the gameplay HUD must NOT show during reveal.
+	var hud_node: Node = get_node_or_null("HUD")
+	if hud_node and hud_node is CanvasLayer:
+		(hud_node as CanvasLayer).visible = false
+	# Hide encounter overlays, walk HUD, fauna bubbles, narrative VO — anything that
+	# could compete with Merlin's narration. CanvasLayer.visible hides children too.
+	for overlay_field in [_walk_event_overlay, _walk_hud, _merlin_whisper]:
+		if is_instance_valid(overlay_field) and overlay_field is CanvasLayer:
+			(overlay_field as CanvasLayer).visible = false
+	# Disable encounter triggering during reveal (best-effort — methods may not exist).
+	if _walk_event_controller and _walk_event_controller.has_method("set_active"):
+		_walk_event_controller.set_active(false)
+	if _autowalk and _autowalk.has_method("pause"):
+		_autowalk.pause()
+	print("[Forest3D] Tutorial intro: world+HUD+overlays hidden, encounter pipeline paused")
 	# Save env state and switch to pure black background.
 	var saved_bg_mode: int = -1
 	var saved_bg_color: Color = Color(0, 0, 0)
@@ -1423,11 +1447,17 @@ func _run_tutorial_intro() -> void:
 		var phase: String = String(entry.get("phase", "black"))
 		match phase:
 			"sky":
+				# Restore env background (sky procedural) without revealing forest yet.
 				if is_instance_valid(world_env) and world_env.environment and saved_bg_mode != -1:
 					world_env.environment.background_mode = saved_bg_mode
 					world_env.environment.background_color = saved_bg_color
+				# Reveal world but keep forest hidden so only the sky shows.
+				if is_instance_valid(world_root):
+					world_root.visible = true
 				if is_instance_valid(sun_light):
 					sun_light.visible = true
+				if is_instance_valid(forest_root):
+					forest_root.visible = false  # hide forest until forest beat
 				await get_tree().create_timer(0.6).timeout
 			"forest":
 				if is_instance_valid(forest_root):
@@ -1442,6 +1472,17 @@ func _run_tutorial_intro() -> void:
 					player.visible = true
 				if is_instance_valid(merlin_node):
 					merlin_node.visible = true
+				# Re-show HUD + overlays + re-enable encounter pipeline + resume walker.
+				var hud_show: Node = get_node_or_null("HUD")
+				if hud_show and hud_show is CanvasLayer:
+					(hud_show as CanvasLayer).visible = true
+				for overlay_show in [_walk_event_overlay, _walk_hud, _merlin_whisper]:
+					if is_instance_valid(overlay_show) and overlay_show is CanvasLayer:
+						(overlay_show as CanvasLayer).visible = true
+				if _walk_event_controller and _walk_event_controller.has_method("set_active"):
+					_walk_event_controller.set_active(true)
+				if _autowalk and _autowalk.has_method("resume"):
+					_autowalk.resume()
 				await get_tree().create_timer(0.4).timeout
 
 	# Cleanup overlay then start the actual walk.
