@@ -4,7 +4,7 @@ extends Node
 ## Post-run: stats display, Anam rewards, progression.
 
 const FOREST_SCENE: String = "res://scenes/BroceliandeForest3D.tscn"
-const MENU_SCENE: String = "res://scenes/Menu3DPC.tscn"
+const MENU_SCENE: String = "res://scenes/MenuPrincipal.tscn"
 
 var _world: Node3D
 var _camera: Camera3D
@@ -121,19 +121,15 @@ func _build_3d_cabin() -> void:
 	cauldron.material_override = cauldron_mat
 	_world.add_child(cauldron)
 
-	# Tapestry talent tree (back wall — SubViewport rendered to Quad3D)
-	var tap_viewport: TapestryTalentTree = TapestryTalentTree.new()
-	add_child(tap_viewport)
-
+	# Tapestry placeholder (talent tree removed in demo cleanup 2026-04-25 — solid colored quad)
 	var tapestry: MeshInstance3D = MeshInstance3D.new()
 	var tap_mesh: QuadMesh = QuadMesh.new()
 	tap_mesh.size = Vector2(3.0, 2.3)
 	tapestry.mesh = tap_mesh
 	tapestry.position = Vector3(1.5, 2.2, -3.9)
 	var tap_mat: StandardMaterial3D = StandardMaterial3D.new()
-	tap_mat.albedo_texture = tap_viewport.get_texture()
+	tap_mat.albedo_color = Color(0.35, 0.20, 0.10)  # Dark woven brown
 	tap_mat.roughness = 1.0
-	tap_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	tapestry.material_override = tap_mat
 	_world.add_child(tapestry)
 

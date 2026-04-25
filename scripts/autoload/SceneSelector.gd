@@ -3,26 +3,21 @@ extends CanvasLayer
 ## Autoload singleton that provides a small dropdown in the top-right corner
 ## to quickly jump between scenes during development.
 
-# === SCENE REGISTRY ===
+# === SCENE REGISTRY (demo build — 2026-04-25) ===
 const SCENES: Array[Dictionary] = [
 	# — Intro —
 	{"label": "IntroCeltOS (Boot)", "path": "res://scenes/IntroCeltOS.tscn"},
-	{"label": "TransitionBiome", "path": "res://scenes/TransitionBiome.tscn"},
-	{"label": "HubAntre", "path": "res://scenes/HubAntre.tscn"},
 	# — Menus —
 	{"label": "MenuPrincipal", "path": "res://scenes/MenuPrincipal.tscn"},
 	{"label": "MenuOptions", "path": "res://scenes/MenuOptions.tscn"},
 	{"label": "SelectionSauvegarde", "path": "res://scenes/SelectionSauvegarde.tscn"},
+	{"label": "ParchmentPreRun", "path": "res://scenes/ParchmentPreRun.tscn"},
+	# — Hub —
+	{"label": "MerlinCabinHub", "path": "res://scenes/MerlinCabinHub.tscn"},
 	# — Gameplay —
-	{"label": "MerlinGame", "path": "res://scenes/MerlinGame.tscn"},
-	{"label": "MapMonde", "path": "res://scenes/MapMonde.tscn"},
-	# — Collections —
-	{"label": "Calendar", "path": "res://scenes/Calendar.tscn"},
-	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
-	{"label": "ArbreDeVie", "path": "res://scenes/ArbreDeVie.tscn"},
-	# — Test —
 	{"label": "BroceliandeForest3D", "path": "res://scenes/BroceliandeForest3D.tscn"},
-	{"label": "TestCardLayers", "path": "res://scenes/test/TestCardLayers.tscn"},
+	{"label": "MerlinGame", "path": "res://scenes/MerlinGame.tscn"},
+	{"label": "EndRunScreen", "path": "res://scenes/EndRunScreen.tscn"},
 ]
 
 # === NODES ===

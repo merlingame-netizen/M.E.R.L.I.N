@@ -34,8 +34,8 @@ const CORNER_BUTTON_SIZE := Vector2(52, 52)
 const CORNER_BUTTON_MARGIN := 28
 const CARD_MAX_WIDTH := 480.0
 const CARD_MAX_HEIGHT := 520.0
-const COLLECTION_SCENE := "res://scenes/Collection.tscn"
-const CALENDAR_SCENE := "res://scenes/Calendar.tscn"
+# Collection.tscn and Calendar.tscn removed in demo cleanup (2026-04-25)
+# Calendar/Collections buttons are no-op until meta-progression is reintroduced.
 const CONFIG_PATH := "user://settings.cfg"
 
 # Calendar settings
@@ -477,25 +477,13 @@ func _on_menu_action(scene: String) -> void:
 
 
 func _on_calendar_pressed() -> void:
-	if _anim.swipe_in_progress:
-		return
-	_anim.swipe_in_progress = true
-	_anim.play_swipe(-1.0)
-	_fade_music_out(3.0)
-	await get_tree().create_timer(0.25).timeout
-	_store_return_scene()
-	PixelTransition.transition_to(CALENDAR_SCENE)
+	# No-op: Calendar removed in demo cleanup (2026-04-25). Reintroduce when meta-progression returns.
+	print("[MenuPrincipal] Calendar disabled in demo build")
 
 
 func _on_collections_pressed() -> void:
-	if _anim.swipe_in_progress:
-		return
-	_anim.swipe_in_progress = true
-	_anim.play_swipe(1.0)
-	_fade_music_out(3.0)
-	await get_tree().create_timer(0.25).timeout
-	_store_return_scene()
-	PixelTransition.transition_to(COLLECTION_SCENE)
+	# No-op: Collection removed in demo cleanup (2026-04-25). Reintroduce when meta-progression returns.
+	print("[MenuPrincipal] Collections disabled in demo build")
 
 
 func _fade_music_out(duration: float) -> void:

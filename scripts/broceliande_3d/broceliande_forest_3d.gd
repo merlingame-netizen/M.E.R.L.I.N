@@ -5,7 +5,7 @@ extends Node
 
 signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
 
-const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
+const HUB_SCENE: String = "res://scenes/MerlinCabinHub.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 
 # --- Helper modules ---
@@ -176,6 +176,7 @@ var _fauna_bubble: RefCounted  # BrocFaunaBubble
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _merlin_whisper: Node  # MerlinWhisper (CanvasLayer)
 var _gameplay_active: bool = false  # true when LLM event system is wired
+var _is_tutorial: bool = false  # set by GameManager.first_run_tutorial — uses scripted fallback cards only, no LLM
 var _encounter_count: int = 0
 var _encounter_total: int = 5
 var _saved_crt_preset: String = "medium"
@@ -208,6 +209,13 @@ var _frame_samples: PackedFloat32Array = PackedFloat32Array()
 func _ready() -> void:
 	_rng.randomize()
 	_gravity = float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
+	# Tutorial mode (First Run from Intro): no LLM, scripted fallback cards only.
+	var gm_node: Node = get_tree().root.get_node_or_null("GameManager")
+	if gm_node and gm_node.has_meta("first_run_tutorial"):
+		_is_tutorial = bool(gm_node.get_meta("first_run_tutorial"))
+		if _is_tutorial:
+			print("[Forest3D] Tutorial mode active (scripted, no LLM)")
+			gm_node.remove_meta("first_run_tutorial")  # consume flag — next run uses LLM
 	# Read biome_key from MerlinStore if a run selected a different biome
 	var init_store: Node = _find_store()
 	if init_store:
@@ -1198,8 +1206,11 @@ func _on_encounter_reached(enc_idx: int) -> void:
 
 
 func _get_encounter_card(enc_idx: int) -> Dictionary:
-	# Try LLM via MerlinAI (Groq cloud in web export)
-	var ai: Node = get_node_or_null("/root/MerlinAI")
+	# Tutorial mode: skip LLM entirely, use scripted fallback cards (deterministic First Run).
+	if _is_tutorial:
+		print("[Forest3D] Tutorial card #%d (scripted)" % (enc_idx + 1))
+	# Try LLM via MerlinAI (Groq cloud in web export) — skip when tutorial.
+	var ai: Node = get_node_or_null("/root/MerlinAI") if not _is_tutorial else null
 	if ai and ai.get("is_ready") and ai.get("narrator_llm"):
 		var llm: Object = ai.narrator_llm
 		if llm and llm.has_method("generate_async") and not llm.is_generating_now():
@@ -1279,9 +1290,9 @@ func _on_run_complete() -> void:
 	else:
 		var pt: Node = get_node_or_null("/root/PixelTransition")
 		if pt and pt.has_method("transition_to"):
-			pt.transition_to("res://scenes/HubAntre.tscn")
+			pt.transition_to("res://scenes/MerlinCabinHub.tscn")
 		else:
-			get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
+			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
 
 
 func _on_hub() -> void:

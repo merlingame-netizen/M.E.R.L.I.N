@@ -48,22 +48,16 @@ const SCENE_PROFILES := {
 		"skip_enter": true,
 	},
 
-	# --- Main flow ---
-	"res://scenes/Menu3DPC.tscn": {
-		"block_size": 8,
-		"skip_exit": true,
-		"enter_duration": 0.8,
-		"bg_color": Color(0.02, 0.02, 0.02),
-	},
+	# --- Main flow (demo build 2026-04-25) ---
 	"res://scenes/MenuPrincipal.tscn": {
 		"block_size": 10,
 		"enter_duration": 1.0,
 	},
-	"res://scenes/HubAntre.tscn": {
+	"res://scenes/MerlinCabinHub.tscn": {
 		"block_size": 10,
 		"enter_duration": 0.9,
 	},
-	"res://scenes/TransitionBiome.tscn": {
+	"res://scenes/BroceliandeForest3D.tscn": {
 		"block_size": 12,
 		"exit_duration": 0.5,
 		"skip_enter": true,
@@ -73,6 +67,11 @@ const SCENE_PROFILES := {
 		"exit_duration": 0.5,
 		"enter_duration": 0.7,
 	},
+	"res://scenes/EndRunScreen.tscn": {
+		"block_size": 10,
+		"exit_duration": 0.6,
+		"enter_duration": 0.8,
+	},
 
 	# --- Sub-menus (fast, larger blocks) ---
 	"res://scenes/MenuOptions.tscn": {
@@ -81,36 +80,17 @@ const SCENE_PROFILES := {
 		"enter_duration": 0.5,
 		"cascade_order": CascadeOrder.RANDOM,
 	},
-	"res://scenes/Calendar.tscn": {
-		"block_size": 12,
-		"exit_duration": 0.4,
-		"enter_duration": 0.5,
-		"cascade_order": CascadeOrder.RANDOM,
-	},
-	"res://scenes/Collection.tscn": {
-		"block_size": 12,
-		"exit_duration": 0.4,
-		"enter_duration": 0.5,
-		"cascade_order": CascadeOrder.RANDOM,
-	},
-	"res://scenes/ArbreDeVie.tscn": {
-		"block_size": 12,
-		"exit_duration": 0.4,
-		"enter_duration": 0.5,
-		"cascade_order": CascadeOrder.RANDOM,
-	},
-	"res://scenes/MapMonde.tscn": {
-		"block_size": 10,
-		"exit_duration": 0.5,
-		"enter_duration": 0.6,
-	},
 	"res://scenes/SelectionSauvegarde.tscn": {
 		"block_size": 12,
 		"exit_duration": 0.4,
 		"enter_duration": 0.5,
 		"cascade_order": CascadeOrder.RANDOM,
 	},
-
+	"res://scenes/ParchmentPreRun.tscn": {
+		"block_size": 10,
+		"exit_duration": 0.5,
+		"enter_duration": 0.7,
+	},
 }
 
 

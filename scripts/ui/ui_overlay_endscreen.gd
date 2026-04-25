@@ -131,7 +131,7 @@ func show_end_screen(ending: Dictionary) -> void:
 	var btn_hub: Button = Button.new()
 	btn_hub.text = "Retour au Hub"
 	btn_hub.custom_minimum_size = Vector2(200, 50)
-	btn_hub.pressed.connect(func(): PixelTransition.transition_to("res://scenes/HubAntre.tscn"))
+	btn_hub.pressed.connect(func(): PixelTransition.transition_to("res://scenes/MerlinCabinHub.tscn"))
 	btn_box.add_child(btn_hub)
 
 	var btn_new: Button = Button.new()

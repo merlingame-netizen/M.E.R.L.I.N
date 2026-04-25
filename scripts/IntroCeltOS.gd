@@ -20,42 +20,26 @@ const LOGO_GRID := [
 # ═══════════════════════════════════════════════════════════════
 # Boot log pools — 12 picked randomly each launch
 # ═══════════════════════════════════════════════════════════════
-const BOOT_HEADER := "CELTOS v4.2 — READY"
+const BOOT_HEADER := "᚛  ᚉᚓᚂᚈᚑᚄ ᚃ.ᚐᚁ  ᚜    [ ᚏᚓᚇᚍ ]"
+const BOOT_FINAL := "᚛  ᚉᚓᚂᚈᚑᚄ  ·  ᚄᚊᚄᚈᚓᚋ ᚏᚓᚇᚍ  ᚜"
 
+# Celtic code: Ogham letters (U+1680..) + runes (Elder Futhark U+16A0..) + glyphs.
+# Each line is a "system load" message in pure druidic script — undecipherable
+# but visually evocative (the player feels it, not reads it).
 const BOOT_LOG_POOL := [
-	"LOADING /dev/rune/18 ... [OK]",
-	"MOUNTING SACRED_GROVES_PARTITION ... [OK]",
-	"INITIALIZING FACTION_MATRIX (5 branches) ... [OK]",
-	"LINKING /lib/merlin/arcana.so ... [OK]",
-	"CHECKING LEYLINE INTEGRITY ... [OK]",
-	"LOADING FASTROUTE_CARD_POOL (500+ entries) ... [OK]",
-	"SPAWNING DAEMON: merlin-omniscient.service ... [OK]",
-	"CALIBRATING ANAM_ACCUMULATOR ... [OK]",
-	"BINDING BIOME_SHADERS to /dev/gpu ... [OK]",
-	"VERIFYING DRUID_CONSENSUS_PROTOCOL ... [OK]",
-	"SYNCING CAULDRON_STATE ... [OK]",
-	"SCANNING BROCELIANDE_SECTOR_MAP ... [OK]",
-	"LOADING /etc/celtic/rune_table.cfg ... [OK]",
-	"MOUNTING ANAM_PERSISTENCE_LAYER ... [OK]",
-	"INITIALIZING CONFIANCE_TRACKER (T0-T3) ... [OK]",
-	"LINKING /lib/merlin/narrator.so ... [OK]",
-	"CHECKING DRUID_MEMORY_POOL (4096 MB) ... [OK]",
-	"LOADING MINIGAME_ENGINE (8 lexical fields) ... [OK]",
-	"SPAWNING DAEMON: rag-context.service ... [OK]",
-	"CALIBRATING MOS_CONVERGENCE_TARGET (20-25) ... [OK]",
-	"BINDING CELTIC_AUDIO_PIPELINE ... [OK]",
-	"VERIFYING RUNE_ACTIVATION_SLOTS (3 starters) ... [OK]",
-	"SYNCING REPUTATION_CROSS_RUN_STATE ... [OK]",
-	"SCANNING HUB_ANTRE_GEOMETRY ... [OK]",
-	"LOADING /dev/faction/5 ... [OK]",
-	"MOUNTING VERB_MATRIX_45_ENTRIES ... [OK]",
-	"INITIALIZING PIXEL_TRANSITION_SHADER ... [OK]",
-	"LINKING /lib/merlin/brain_swarm.so ... [OK]",
-	"CHECKING SAVE_PROFILE_INTEGRITY ... [OK]",
-	"LOADING BIOME_MATURITY_SCORES (8 biomes) ... [OK]",
+	"᚛ ᚂ ᚐ ᚇ ᚌ ᚏ ᚎ ᚜  · · ·  [ ᚏᚓᚇᚍ ]",
+	"ᚉ ᚐ ᚂ ᚊ ᚒ ᚄ ᚐ ᚍ ᚊ ᚏ ᚓ  · · ·  [ ᚉ ]",
+	"ᛞ ᛒ ᚱ ᚷ ᚺ ᚾ ᛟ  · · ·  [ ᚷ ]",
+	"᚛ ᚄ ᚐ ᚉ ᚏ ᚓ ᚇ  ᚌ ᚏ ᚑ ᚃ ᚓ ᚄ ᚜  · · ·  [ ᚏᚓᚇᚍ ]",
+	"ᚉ ᚐ ᚂ ᚉ  ᚂ ᚓᚍᚂᚔᚍᚓ  ᚊ ᚒ ᚐ ᚂᚐ ᚇ  · · ·  [ ᚉ ]",
+	"ᛟ ᛏ ᛞ ᚺ  ·  ᛚ ᛟ ᚨ ᛞ ᛁ ᛜ ᚷ  · · ·  [ ᛟ ]",
+	"᚛ ᚆ ᚒ ᚁ ᚏᚓ  ᚐ ᚍ ᚇ ᚏ ᚓ  ᚌ ᚂ ᚐ ᚇ ᚓ ᚜  · · ·  [ ᚉ ]",
+	"ᚉ ᚐ ᚂᚉ  ᚐ ᚍ ᚐ ᚌ  ·  ᛚ ᚪ ᛗ  · · ·  [ ᚉ ]",
+	"ᚇᚏ ᚒᚔ ᚇ  ᚉ ᚑ ᚍ ᚄ ᚓ ᚍ ᚄ ᚒ ᚄ  · · ·  [ ᚇᚏ ]",
+	"ᛒ ᛁ ᛟ ᛗ ᛖ  ·  ᛋ ᚺ ᚨ ᛞ ᛖ ᚱ ᛋ  · · ·  [ ᚊ ]",
+	"ᚌ ᚐ ᚄ  ·  ᚉ ᚐ ᚒ ᚂ ᚇ ᚏ ᚑ ᚍ  ·  ᚄ ᚈ ᚐ ᚈ ᚓ  · · ·  [ ᚉ ]",
+	"ᚄ ᚉ ᚐ ᚍ  ·  ᚁ ᚏ ᚑ ᚉ ᚓ ᚂ ᚔ ᚐ ᚍ ᚇ ᚓ  · · ·  [ ᚉ ]",
 ]
-
-const BOOT_FINAL := "SYSTEM READY — AWAITING PLAYER INVOCATION"
 
 # ═══════════════════════════════════════════════════════════════
 # Colors — Amber/gold retro (NOT green Fallout)
@@ -521,15 +505,16 @@ func _transition_to_menu() -> void:
 	if PixelTransition.has_method("_force_complete"):
 		PixelTransition._force_complete()
 
-	# Demo mode: skip Menu3DPC + Hub, go straight into 3D rail walk (vision v3).
-	# BKForestRail has Path3D + PathFollow3D + auto-walk + 17 .glb assets +
-	# head bob + biome ambient + ScreenDither PSX heavy preset.
+	# Demo flow: Intro -> First Run 3D guide (tutorial, no LLM) -> Hub -> Run libre
 	# Trigger via: godot --path . -- --demo  OR set env MERLIN_DEMO=1
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var demo_mode: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
 	if demo_mode:
-		print("[IntroCeltOS] --demo flag -> FullRun (standalone 3D rail run with assets)")
-		PixelTransition.transition_to("res://scenes/FullRun.tscn")
+		print("[IntroCeltOS] --demo flag -> First Run tutorial (Broceliande, no LLM)")
+		var game_mgr_2: Node = get_tree().root.get_node_or_null("GameManager")
+		if game_mgr_2:
+			game_mgr_2.set_meta("first_run_tutorial", true)
+		PixelTransition.transition_to("res://scenes/BroceliandeForest3D.tscn")
 		return
 
-	PixelTransition.transition_to("res://scenes/Menu3DPC.tscn")
+	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")

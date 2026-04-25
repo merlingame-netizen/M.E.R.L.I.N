@@ -41,13 +41,15 @@ const PHASE_NAMES: Dictionary = {
 # SCENE PATHS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const SCENE_HUB: String = "res://scenes/HubScreen.tscn"
-const SCENE_RUN: String = "res://scenes/Run3D.tscn"
+# Demo cleanup (2026-04-25): HubScreen, Run3D, TalentTree, HubAntre removed.
+# Single hub = MerlinCabinHub. Single run = BroceliandeForest3D.
+const SCENE_HUB: String = "res://scenes/MerlinCabinHub.tscn"
+const SCENE_RUN: String = "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
 const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
-const SCENE_TALENT_TREE: String = "res://scenes/TalentTree.tscn"
+const SCENE_TALENT_TREE: String = "res://scenes/MerlinCabinHub.tscn"  # Talent tree disabled, fall back to hub
 
-const SCENE_HUB_ANTRE: String = "res://scenes/HubAntre.tscn"
+const SCENE_HUB_ANTRE: String = "res://scenes/MerlinCabinHub.tscn"  # Alias for legacy callers
 const SCENE_FOREST: String = "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_CARD_GAME: String = "res://scenes/MerlinGame.tscn"
 
@@ -63,8 +65,10 @@ var _last_run_data: Dictionary = {}
 var _setup_retries: int = 0
 
 # Active screen references (set during wiring, cleared on phase exit)
-var _hub_screen: HubScreen = null
-var _run_controller: Run3DController = null
+# Note: HubScreen and Run3DController class_names removed in demo cleanup (2026-04-25).
+# Type widened to Node — runtime guards via has_signal/is_in_group.
+var _hub_screen: Node = null
+var _run_controller: Node = null
 var _end_screen: EndRunScreen = null
 
 
@@ -304,20 +308,24 @@ func _on_quit_requested() -> void:
 # SIGNAL WIRING — Connect/disconnect screen signals per phase
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Wire a HubScreen instance. Call after instantiating the hub scene.
-func wire_hub(hub: HubScreen) -> void:
+## Wire a Hub instance (legacy HubScreen class removed 2026-04-25; now uses Node + signal probing).
+func wire_hub(hub: Node) -> void:
 	_disconnect_hub()
 	_hub_screen = hub
-	hub.run_requested.connect(_on_run_requested)
-	hub.talent_tree_requested.connect(_on_talent_tree_requested)
-	hub.quit_requested.connect(_on_quit_requested)
+	if hub.has_signal("run_requested"):
+		hub.run_requested.connect(_on_run_requested)
+	if hub.has_signal("talent_tree_requested"):
+		hub.talent_tree_requested.connect(_on_talent_tree_requested)
+	if hub.has_signal("quit_requested"):
+		hub.quit_requested.connect(_on_quit_requested)
 
 
-## Wire a Run3DController instance. Call after instantiating the run scene.
-func wire_run(run_controller: Run3DController) -> void:
+## Wire a Run controller instance (legacy Run3DController class removed; signal probing).
+func wire_run(run_controller: Node) -> void:
 	_disconnect_run()
 	_run_controller = run_controller
-	run_controller.run_ended.connect(_on_run_ended)
+	if run_controller.has_signal("run_ended"):
+		run_controller.run_ended.connect(_on_run_ended)
 
 
 ## Wire an EndRunScreen instance. Call after instantiating the end screen.
