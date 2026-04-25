@@ -18,14 +18,22 @@
 extends Control
 
 const NARRATION_LINES: Array[Dictionary] = [
-	{"t": 1.0, "text": "Tu eveilles dans un monde qui se souvient...", "spawn": "title"},
-	{"t": 3.5, "text": "Je suis Merlin. Je vais te guider.", "spawn": ""},
-	{"t": 6.0, "text": "Ta vie tient en cent souffles. Tiens-la sacree.", "spawn": "life"},
-	{"t": 9.0, "text": "Cinq Clans celtiques t'observent depuis l'ombre.", "spawn": "factions"},
-	{"t": 12.0, "text": "Les Oghams sont des sorts graves dans la memoire.", "spawn": "oghams"},
-	{"t": 15.0, "text": "Le sentier de Broceliande s'ouvre devant toi.", "spawn": "forest"},
-	{"t": 20.0, "text": "Une presence te regarde. Elle te parlera.", "spawn": "card"},
-	{"t": 25.0, "text": "Choisis ton chemin : A, B ou C. Le souffle decidera.", "spawn": "tutorial_done"},
+	# Merlin l'enchanteur farfelu dessine le monde devant tes yeux
+	{"t": 0.5,  "text": "Hoooo ! Te voila ! Bonjour, bonjour, c'est moi, Merlin !", "spawn": "title"},
+	{"t": 3.0,  "text": "Attends-moi un instant, je n'ai meme pas encore... pose mon chapeau !", "spawn": ""},
+	{"t": 6.0,  "text": "Bon, on va te faire un petit monde, hein ? Tu vas voir, c'est rigolo.", "spawn": ""},
+	{"t": 9.0,  "text": "D'abord, du sol ! Une bonne terre noire, tac !", "spawn": "forest_ground"},
+	{"t": 12.0, "text": "Un beau vieux chene, parce que sans chene, c'est pas la Bretagne !", "spawn": "forest_oak"},
+	{"t": 15.0, "text": "Un menhir grave d'oghams, hop, et un dolmen pour les anciens !", "spawn": "forest_megaliths"},
+	{"t": 18.0, "text": "Quelques arbres pour faire joli, abracadabra forestada !", "spawn": "forest_trees"},
+	{"t": 21.0, "text": "Une brume verte, evidemment ! C'est mystique, faut que ca brouille !", "spawn": "forest_fog"},
+	{"t": 24.0, "text": "Un corbeau qui s'envole, cra cra ! Il connait tous les secrets, lui...", "spawn": "forest_raven"},
+	{"t": 27.0, "text": "Maintenant tes outils — ta vie, cent souffles bien sacres :", "spawn": "life"},
+	{"t": 30.0, "text": "Cinq Clans celtiques, vise-moi ces tetes d'animaux totems !", "spawn": "factions"},
+	{"t": 33.0, "text": "Et trois Oghams, des sorts graves... je t'expliquerai plus tard, mhm.", "spawn": "oghams"},
+	{"t": 36.0, "text": "Bon, je t'envoie marcher sur le sentier ! Bouge un peu, mon gaillard !", "spawn": "walker_start"},
+	{"t": 39.0, "text": "Oh ! Une presence ! Elle veut te parler. C'est genre une carte d'evenement !", "spawn": "card"},
+	{"t": 43.0, "text": "Tu choisis A, B ou C. Le souffle decide ! Allez, fais ton choix...", "spawn": "tutorial_done"},
 ]
 
 const NARRATION_FONT_COLOR := Color(0.86, 0.72, 0.42)  # celtic_gold
@@ -262,8 +270,28 @@ func _handle_spawn(spawn: String) -> void:
 			_fade_in_node(_factions_row, 0.5)
 		"oghams":
 			_fade_in_node(_ogham_row, 0.5)
-		"forest":
+		"forest_ground":
 			_instantiate_forest_layer()
+			_reveal_forest_asset("Ground")
+			_reveal_forest_asset("Floor")
+		"forest_oak":
+			_reveal_forest_asset("MerlinOak")
+		"forest_megaliths":
+			_reveal_forest_asset("MenhirOgham")
+			_reveal_forest_asset("Dolmen")
+			_reveal_forest_asset("DruidAltar")
+			_reveal_forest_asset("Menhir")
+		"forest_trees":
+			for n in ["Tree_A_01", "Tree_A_02", "Tree_B_01", "Tree_B_02",
+					"Tree_C_01", "Tree_C_02", "Tree_D_01",
+					"FallenTrunk", "GiantMushroom", "BKMushroom_01", "BKMushroom_02"]:
+				_reveal_forest_asset(n)
+		"forest_fog":
+			_enable_forest_fog()
+		"forest_raven":
+			_reveal_forest_asset("GiantRaven")
+		"walker_start":
+			_start_forest_walk()
 		"card":
 			_fade_in_node(_card_panel, 0.6)
 			_fade_in_node(_btn_a.get_parent(), 0.6)
@@ -279,6 +307,8 @@ func _fade_in_node(node: CanvasItem, duration: float) -> void:
 
 
 func _instantiate_forest_layer() -> void:
+	if _forest_instance != null:
+		return
 	var packed: PackedScene = load(FOREST_SCENE_PATH)
 	if packed == null:
 		push_warning("[DemoOnboarding] Cannot load " + FOREST_SCENE_PATH)
@@ -289,7 +319,59 @@ func _instantiate_forest_layer() -> void:
 	var rail_hud: Node = _forest_instance.get_node_or_null("HUD")
 	if rail_hud:
 		rail_hud.visible = false
-	_fade_in_node(_forest_layer, 2.4)
+	# Hide all forest assets initially — Merlin will reveal them one by one
+	var forest_node: Node = _forest_instance.get_node_or_null("Forest")
+	if forest_node:
+		for child in forest_node.get_children():
+			if child is Node3D:
+				child.visible = false
+	# Pause auto-walk until "walker_start" spawn step
+	var walker_anim: AnimationPlayer = _forest_instance.get_node_or_null("WalkerAnimation")
+	if walker_anim:
+		walker_anim.pause()
+	# Soft fade-in of the layer (the world appears, but assets are hidden)
+	_fade_in_node(_forest_layer, 1.0)
+
+
+func _reveal_forest_asset(asset_name: String) -> void:
+	if _forest_instance == null:
+		return
+	var forest_node: Node = _forest_instance.get_node_or_null("Forest")
+	if forest_node == null:
+		return
+	var asset: Node = forest_node.get_node_or_null(asset_name)
+	if asset == null or not (asset is Node3D):
+		return
+	asset.visible = true
+	# "Pop in" feel: scale from 0 to 1 with a tiny back-bounce
+	var node3d: Node3D = asset
+	var target_scale: Vector3 = node3d.scale
+	node3d.scale = target_scale * 0.01
+	var tw := create_tween()
+	tw.tween_property(node3d, "scale", target_scale, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _enable_forest_fog() -> void:
+	if _forest_instance == null:
+		return
+	var we: WorldEnvironment = _forest_instance.get_node_or_null("WorldEnvironment")
+	if we == null or we.environment == null:
+		return
+	# Soft animated fog density bump for the "Merlin sprinkles fog" feel
+	var env: Environment = we.environment
+	var start_density: float = env.fog_density
+	env.fog_density = 0.0
+	var tw := create_tween()
+	tw.tween_property(env, "fog_density", start_density, 1.6).set_trans(Tween.TRANS_SINE)
+
+
+func _start_forest_walk() -> void:
+	if _forest_instance == null:
+		return
+	var walker_anim: AnimationPlayer = _forest_instance.get_node_or_null("WalkerAnimation")
+	if walker_anim == null:
+		return
+	walker_anim.play(&"auto_walk")
 
 
 func _on_choice_pressed(choice_label: String) -> void:
