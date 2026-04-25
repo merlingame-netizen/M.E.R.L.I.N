@@ -267,35 +267,43 @@ func _ready() -> void:
 	_zone_builder = ForestZoneBuilderClass.new(_asset_spawner, forest_root, _zone_centers, _rng)
 	_zone_builder.build_zones()
 	# GLB asset placer — creatures, extra megaliths, decor scatter, vegetation GLBs
-	_glb_placer = GlbAssetPlacerClass.new()
-	_glb_placer.place_assets(forest_root, _zone_centers, _rng)
-	# _populate_forest() removed — chunk manager handles vegetation
-	_spawn_merlin()
-	_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
-	_effects.add_fog_particles()
-	_effects.add_pollen_particles()
-	_effects.add_fireflies()
-	_effects.add_god_rays()
-	_effects.add_falling_leaves()
-	_effects.add_ground_mist()
+	# Tutorial mode: skip GLB asset placement + heavy particle effects.
+	# Goal: clean cinematic with sky + ground only. Effects can be enabled later post-tuto.
+	if not _is_tutorial:
+		_glb_placer = GlbAssetPlacerClass.new()
+		_glb_placer.place_assets(forest_root, _zone_centers, _rng)
+		# _populate_forest() removed — chunk manager handles vegetation
+		_spawn_merlin()
+		_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
+		_effects.add_fog_particles()
+		_effects.add_pollen_particles()
+		_effects.add_fireflies()
+		_effects.add_god_rays()
+		_effects.add_falling_leaves()
+		_effects.add_ground_mist()
+	else:
+		_spawn_merlin()
 	_init_helpers()
 
-	# If no GLB trees loaded, spawn procedural fallback trees along the path
-	if _asset_spawner and not _asset_spawner.has_trees():
-		print("[Broceliande] Spawning 40 procedural trees along path")
-		for i in 40:
-			var t: float = float(i) / 40.0
-			var path_idx: int = clampi(int(t * float(_path_points.size() - 1)), 0, _path_points.size() - 1)
-			var base_pos: Vector3 = _path_points[path_idx]
-			var offset_x: float = randf_range(-12.0, 12.0)
-			var offset_z: float = randf_range(-8.0, 8.0)
-			if absf(offset_x) < 3.0:
-				offset_x = 3.0 * signf(offset_x + 0.01)
-			var pos: Vector3 = Vector3(base_pos.x + offset_x, 0.0, base_pos.z + offset_z)
-			_asset_spawner.spawn_procedural_tree(pos, randf_range(1.5, 3.5))
+	# Tutorial mode: skip procedural fallback trees + ground details. They produce
+	# rectangular bar silhouettes ("vertical lines") that pollute the cinematic reveal.
+	if not _is_tutorial:
+		# If no GLB trees loaded, spawn procedural fallback trees along the path
+		if _asset_spawner and not _asset_spawner.has_trees():
+			print("[Broceliande] Spawning 40 procedural trees along path")
+			for i in 40:
+				var t: float = float(i) / 40.0
+				var path_idx: int = clampi(int(t * float(_path_points.size() - 1)), 0, _path_points.size() - 1)
+				var base_pos: Vector3 = _path_points[path_idx]
+				var offset_x: float = randf_range(-12.0, 12.0)
+				var offset_z: float = randf_range(-8.0, 8.0)
+				if absf(offset_x) < 3.0:
+					offset_x = 3.0 * signf(offset_x + 0.01)
+				var pos: Vector3 = Vector3(base_pos.x + offset_x, 0.0, base_pos.z + offset_z)
+				_asset_spawner.spawn_procedural_tree(pos, randf_range(1.5, 3.5))
 
-	# Procedural ground detail (rocks + grass patches) along path
-	_spawn_ground_details()
+		# Procedural ground detail (rocks + grass patches) along path
+		_spawn_ground_details()
 
 	_wire_buttons()
 	_update_hud()
@@ -331,15 +339,17 @@ func _init_helpers() -> void:
 	_autowalk.set_run_complete_callback(_on_run_complete)
 
 	# Procedural chunk manager (replaces dense_fill + mass_fill + extra_decor)
-	_chunk_manager = BrocChunkManager.new()
-	_chunk_manager.setup(
-		forest_root, _asset_spawner.tree_scenes, _asset_spawner.bush_scenes,
-		_asset_spawner.special_scenes, _asset_spawner.detail_scenes, _asset_spawner.broc_scenes,
-		_zone_centers, _path_points)
-	var chunk_biome_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
-	var terrain_col: Color = chunk_biome_cfg.get("terrain_color", Color(0.15, 0.25, 0.10)) as Color
-	_chunk_manager.set_biome_colors(terrain_col)
-	_chunk_manager.generate_initial(player.position.z)
+	# Tutorial mode: skip — chunks spawn rectangular tree silhouettes that pollute the scene.
+	if not _is_tutorial:
+		_chunk_manager = BrocChunkManager.new()
+		_chunk_manager.setup(
+			forest_root, _asset_spawner.tree_scenes, _asset_spawner.bush_scenes,
+			_asset_spawner.special_scenes, _asset_spawner.detail_scenes, _asset_spawner.broc_scenes,
+			_zone_centers, _path_points)
+		var chunk_biome_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
+		var terrain_col: Color = chunk_biome_cfg.get("terrain_color", Color(0.15, 0.25, 0.10)) as Color
+		_chunk_manager.set_biome_colors(terrain_col)
+		_chunk_manager.generate_initial(player.position.z)
 
 	# Day/night cycle
 	_day_night = BrocDayNight.new(sun_light, world_env)
@@ -354,30 +364,37 @@ func _init_helpers() -> void:
 	_atmosphere = BrocAtmosphere.new(forest_root, _zone_centers)
 	_atmosphere.set_environment(world_env.environment)
 
-	# 2D parallax forest layers (behind + in front of 3D)
-	_parallax = BrocParallaxLayers.new()
-	_parallax.setup(self, biome_key)
+	# Tutorial mode: skip parallax (2D bars in front/behind), screen VFX (vignette/shake/flash),
+	# creature spawner ("Chut...", "*glousse*" bubbles) and fauna bubbles. All would compete
+	# with Merlin's narration.
+	if not _is_tutorial:
+		# 2D parallax forest layers (behind + in front of 3D)
+		_parallax = BrocParallaxLayers.new()
+		_parallax.setup(self, biome_key)
 
-	# Screen VFX (shake, flash, glitch, vignette)
-	_screen_vfx = BrocScreenVfxClass.new()
-	_screen_vfx.setup(null, self, forest_root)
+		# Screen VFX (shake, flash, glitch, vignette)
+		_screen_vfx = BrocScreenVfxClass.new()
+		_screen_vfx.setup(null, self, forest_root)
 
-	# Billboard creatures
-	_creature_spawner = BrocCreatureSpawnerClass.new(forest_root)
+		# Billboard creatures
+		_creature_spawner = BrocCreatureSpawnerClass.new(forest_root)
 
-	# Fauna dialogue bubbles
-	_fauna_bubble = BrocFaunaBubbleClass.new()
-	_fauna_bubble.setup(self)
+		# Fauna dialogue bubbles
+		_fauna_bubble = BrocFaunaBubbleClass.new()
+		_fauna_bubble.setup(self)
 
-	# VFX system (keyword → 3D effects) — must be created before NarrativeDirector
-	_event_vfx = BrocEventVfxClass.new(forest_root, world_env, sun_light)
+	# VFX + NarrativeDirector + atmospheric events: skip in tutorial mode
+	# (they reference _creature_spawner / _screen_vfx / _chunk_manager which are null in tuto).
+	if not _is_tutorial:
+		# VFX system (keyword → 3D effects) — must be created before NarrativeDirector
+		_event_vfx = BrocEventVfxClass.new(forest_root, world_env, sun_light)
 
-	# LLM Narrative Director (orchestration layer)
-	_narrative_director = BrocNarrativeDirectorClass.new()
-	_narrative_director.setup(_atmosphere, _creature_spawner, _screen_vfx, _event_vfx, _chunk_manager)
+		# LLM Narrative Director (orchestration layer)
+		_narrative_director = BrocNarrativeDirectorClass.new()
+		_narrative_director.setup(_atmosphere, _creature_spawner, _screen_vfx, _event_vfx, _chunk_manager)
 
-	# Random atmospheric events (legacy, still runs if gameplay not active)
-	_events = BrocEvents.new(forest_root, world_env, sun_light)
+		# Random atmospheric events (legacy, still runs if gameplay not active)
+		_events = BrocEvents.new(forest_root, world_env, sun_light)
 
 	# New gameplay systems: LLM event overlay + minimal HUD
 	_init_gameplay_systems()
@@ -1552,33 +1569,47 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(desc)
 
-	# Animated path drawing — Line2D that traces a winding path
+	# Marauder's-Map style — animated footstep trail that wanders left to right.
+	# Erratic offsets (Perlin-ish) instead of smooth sinusoid; footsteps remain visible.
 	var path_holder: Control = Control.new()
 	path_holder.custom_minimum_size = Vector2(640, 220)
 	vbox.add_child(path_holder)
 
+	# Faint dotted ink trail (the "drawn" line under the footsteps)
 	var path_line: Line2D = Line2D.new()
-	path_line.width = 4.0
-	path_line.default_color = Color(0.45, 0.28, 0.12)
+	path_line.width = 2.0
+	path_line.default_color = Color(0.22, 0.14, 0.08, 0.55)
 	path_line.joint_mode = Line2D.LINE_JOINT_ROUND
 	path_holder.add_child(path_line)
 
-	# Generate winding path waypoints (left -> right, S-curve)
+	# Generate erratic footstep waypoints (left -> right with random walk in Y)
 	var full_points: PackedVector2Array = PackedVector2Array()
-	var segments: int = 60
+	var segments: int = 200  # was 60 — much longer trail
+	var rng_path: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng_path.seed = 42
+	var y_base: float = 110.0
+	var y_drift: float = 0.0
 	for i in range(segments + 1):
 		var t: float = float(i) / float(segments)
-		var x: float = 20.0 + t * 600.0
-		var y: float = 110.0 + sin(t * TAU * 1.5) * 40.0
+		# Slight rightward bias with random walk
+		var x: float = 20.0 + t * 600.0 + rng_path.randf_range(-3.0, 3.0)
+		# Random walk in Y, capped so it stays in the parchment
+		y_drift += rng_path.randf_range(-3.5, 3.5)
+		y_drift = clampf(y_drift, -55.0, 55.0)
+		var y: float = y_base + y_drift + sin(t * TAU * 0.8 + rng_path.randf_range(-0.2, 0.2)) * 12.0
 		full_points.append(Vector2(x, y))
 
-	# Three encounter markers (red dots at 25%, 55%, 85%)
+	# Three encounter markers (X marks the spot — red ink)
 	for marker_t in [0.25, 0.55, 0.85]:
 		var marker_idx: int = int(float(segments) * float(marker_t))
-		var marker: ColorRect = ColorRect.new()
-		marker.color = Color(0.75, 0.20, 0.15)
-		marker.size = Vector2(12, 12)
-		marker.position = full_points[marker_idx] - Vector2(6, 6)
+		var marker: Label = Label.new()
+		marker.text = "X"
+		marker.add_theme_font_size_override("font_size", 22)
+		marker.add_theme_color_override("font_color", Color(0.65, 0.18, 0.12))
+		marker.size = Vector2(20, 22)
+		marker.position = full_points[marker_idx] - Vector2(10, 14)
+		marker.modulate.a = 0.0  # fade in when path reaches it
+		marker.set_meta("appear_at_index", marker_idx)
 		path_holder.add_child(marker)
 
 	# Fade parchment in
@@ -1586,15 +1617,42 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 	fade_in.tween_property(parchment, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 	await fade_in.finished
 
-	# Draw the path progressively (Merlin's hand tracing it)
+	# Draw progressively: every 4 path points, drop a footstep (alternating L/R foot offset).
+	# Footsteps are tiny ovals (< or > shape via Label) that REMAIN visible — never freed.
+	var footstep_step: int = 4
+	var foot_alternate: int = 0
 	for i in range(full_points.size()):
 		if not is_instance_valid(path_line):
 			return
 		path_line.add_point(full_points[i])
-		await get_tree().create_timer(0.025).timeout
+		if i % footstep_step == 0:
+			var foot: Label = Label.new()
+			# Use a small bracket character as a footstep silhouette; alternate L/R
+			foot.text = "<" if (foot_alternate % 2 == 0) else ">"
+			foot.add_theme_font_size_override("font_size", 11)
+			foot.add_theme_color_override("font_color", Color(0.22, 0.13, 0.07, 0.85))
+			foot.size = Vector2(10, 12)
+			# Offset perpendicular to the trail to imitate left/right foot
+			var perp_offset: float = -3.0 if (foot_alternate % 2 == 0) else 3.0
+			foot.position = full_points[i] + Vector2(-5, -6) + Vector2(0, perp_offset)
+			# Slight rotation per footstep for organic feel
+			foot.rotation = rng_path.randf_range(-0.3, 0.3)
+			foot.modulate.a = 0.0
+			path_holder.add_child(foot)
+			# Fade-in the footstep so it "appears" rather than pops
+			var foot_fade: Tween = create_tween()
+			foot_fade.tween_property(foot, "modulate:a", 0.85, 0.18)
+			foot_alternate += 1
+		# Reveal X markers when the trail reaches them
+		for child in path_holder.get_children():
+			if child is Label and child.has_meta("appear_at_index") and child.modulate.a < 0.5:
+				if i >= int(child.get_meta("appear_at_index")):
+					var m_fade: Tween = create_tween()
+					m_fade.tween_property(child, "modulate:a", 1.0, 0.25)
+		await get_tree().create_timer(0.018).timeout
 
-	# Hold parchment for reading
-	await get_tree().create_timer(2.5).timeout
+	# Hold parchment for reading the full map (footsteps remain — the "Maraudeurs" effect)
+	await get_tree().create_timer(3.5).timeout
 
 	# Fade out + free
 	var fade_out: Tween = create_tween()
