@@ -62,7 +62,7 @@ theme/custom="res://themes/merlin_theme.tres"
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://data/i18n/translations.csv")
+locale/translations=PackedStringArray("res://data/i18n/translations.fr.translation", "res://data/i18n/translations.en.translation", "res://data/i18n/translations.es.translation", "res://data/i18n/translations.it.translation", "res://data/i18n/translations.pt.translation", "res://data/i18n/translations.zh.translation", "res://data/i18n/translations.ja.translation")
 locale/fallback="fr"
 
 [merlin_llm]
