@@ -267,26 +267,28 @@ func _ready() -> void:
 	_zone_builder = ForestZoneBuilderClass.new(_asset_spawner, forest_root, _zone_centers, _rng)
 	_zone_builder.build_zones()
 	# GLB asset placer — creatures, extra megaliths, decor scatter, vegetation GLBs
-	# Tutorial mode: skip GLB asset placement + heavy particle effects.
-	# Goal: clean cinematic with sky + ground only. Effects can be enabled later post-tuto.
-	if not _is_tutorial:
-		_glb_placer = GlbAssetPlacerClass.new()
-		_glb_placer.place_assets(forest_root, _zone_centers, _rng)
-		# _populate_forest() removed — chunk manager handles vegetation
-		_spawn_merlin()
-		_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
+	# GLB assets ALWAYS for the world to feel alive (decorative, interactable later).
+	_glb_placer = GlbAssetPlacerClass.new()
+	_glb_placer.place_assets(forest_root, _zone_centers, _rng)
+	_spawn_merlin()
+	# Effects: tutorial mode uses a curated subset (volumetric fog + god rays + pollen).
+	# Skip the noisy ones (falling leaves, fog particles, fireflies — too distracting during VO).
+	_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
+	if _is_tutorial:
+		_effects.add_god_rays()
+		_effects.add_pollen_particles()
+		_effects.add_ground_mist()
+	else:
 		_effects.add_fog_particles()
 		_effects.add_pollen_particles()
 		_effects.add_fireflies()
 		_effects.add_god_rays()
 		_effects.add_falling_leaves()
 		_effects.add_ground_mist()
-	else:
-		_spawn_merlin()
 	_init_helpers()
 
-	# Tutorial mode: skip procedural fallback trees + ground details. They produce
-	# rectangular bar silhouettes ("vertical lines") that pollute the cinematic reveal.
+	# Procedural fallback trees: SKIP in tuto (they produce rectangular bar silhouettes).
+	# Ground details (rocks + grass patches): keep them — user wants more grass + decor.
 	if not _is_tutorial:
 		# If no GLB trees loaded, spawn procedural fallback trees along the path
 		if _asset_spawner and not _asset_spawner.has_trees():
@@ -302,12 +304,16 @@ func _ready() -> void:
 				var pos: Vector3 = Vector3(base_pos.x + offset_x, 0.0, base_pos.z + offset_z)
 				_asset_spawner.spawn_procedural_tree(pos, randf_range(1.5, 3.5))
 
-		# Procedural ground detail (rocks + grass patches) along path
-		_spawn_ground_details()
+	# Procedural ground detail (rocks + grass patches) along path — both modes.
+	_spawn_ground_details()
+	# Tutorial mode: scatter floating ogham symbols along the path (decorative drift).
+	if _is_tutorial:
+		_spawn_floating_oghams()
 
 	_wire_buttons()
 	_update_hud()
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# PC mode: cursor visible, no mouse capture. Camera is rail-only (autowalk drives it).
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	# Tutorial mode: progressive reveal sequence (Merlin VO + assets fade in + parchment),
 	# then start the actual walk. Otherwise straight to aerial descent → autowalk.
@@ -517,14 +523,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_day_night.set_realtime(not _day_night._realtime_mode)
 			print("[Broceliande] Time mode: %s" % ("REALTIME" if _day_night._realtime_mode else "ACCELERATED"))
 		return
-	if event is InputEventMouseMotion:
-		var overlay_blocking: bool = _walk_event_overlay and _walk_event_overlay.is_active()
-		if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED or _merlin_found or overlay_blocking:
-			return
-		var m: InputEventMouseMotion = event as InputEventMouseMotion
-		player.rotate_y(-m.relative.x * mouse_sensitivity)
-		_pitch = clamp(_pitch - m.relative.y * mouse_sensitivity, deg_to_rad(-45.0), deg_to_rad(30.0))
-		player_head.rotation.x = _pitch
+	# Camera is rail-only — mouse motion does NOT rotate the player/camera.
+	# Autowalk + path follower drive orientation. Cursor stays visible (PC mode).
 
 
 func _physics_process(delta: float) -> void:
@@ -704,13 +704,9 @@ func _update_dynamic_resolution(delta: float) -> void:
 # ============================================================
 
 func _setup_viewport() -> void:
-	# Tutorial mode: skip pixel-shrink + CRT filter so the world is fully readable
-	# while Merlin reveals it. Normal runs keep the PSX aesthetic.
-	if _is_tutorial:
-		print("[Broceliande] Tutorial mode: pixel-shrink + CRT filter disabled for clear visibility")
-		return
 	# Pixel-shrink: render 3D at low_pixel_height, upscale with nearest-neighbor + CRT shader.
 	# 320x180 = 16x fewer fragments than 1280x720. Huge win for GL Compat / web.
+	# Tutorial mode keeps the PS1 aesthetic but with softer dither so the reveal stays readable.
 	var render_h: int = low_pixel_height
 	var render_w: int = int(float(render_h) * 16.0 / 9.0)
 	render_w += render_w % 2  # Round to even
@@ -1347,6 +1343,68 @@ func _on_run_complete() -> void:
 			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
 
 
+func _spawn_floating_oghams() -> void:
+	# Drift 14 ogham Sprite3D billboards along the path. They float upward slowly,
+	# fade in/out, and respawn — adds atmosphere without competing with the dialogue.
+	const OGHAM_GLYPHS: Array = ["ᚐ", "ᚁ", "ᚂ", "ᚃ", "ᚄ", "ᚅ", "ᚆ", "ᚇ", "ᚈ", "ᚉ", "ᚊ", "ᚋ"]
+	if _path_points.is_empty():
+		return
+	for i in 14:
+		var t: float = float(i) / 14.0
+		var path_idx: int = clampi(int(t * float(_path_points.size() - 1)), 0, _path_points.size() - 1)
+		var base: Vector3 = _path_points[path_idx]
+		var ox: float = _rng.randf_range(-6.0, 6.0)
+		var oz: float = _rng.randf_range(-4.0, 4.0)
+		var oy: float = _rng.randf_range(1.2, 3.5)
+		var lbl: Label3D = Label3D.new()
+		lbl.text = String(OGHAM_GLYPHS[_rng.randi() % OGHAM_GLYPHS.size()])
+		lbl.font_size = 64
+		lbl.modulate = Color(1.0, 0.86, 0.45, 0.0)
+		lbl.outline_modulate = Color(0.20, 0.14, 0.08, 0.0)
+		lbl.outline_size = 4
+		lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		lbl.no_depth_test = false
+		lbl.position = Vector3(base.x + ox, oy, base.z + oz)
+		lbl.name = "FloatingOgham%d" % i
+		forest_root.add_child(lbl)
+		# Drift loop: fade in, rise + sway, fade out, repeat with new glyph + position.
+		_animate_floating_ogham(lbl)
+
+
+func _animate_floating_ogham(lbl: Label3D) -> void:
+	if not is_instance_valid(lbl):
+		return
+	const OGHAM_GLYPHS_2: Array = ["ᚐ", "ᚁ", "ᚂ", "ᚃ", "ᚄ", "ᚅ", "ᚆ", "ᚇ", "ᚈ", "ᚉ", "ᚊ", "ᚋ"]
+	var start_y: float = lbl.position.y
+	var rise_amount: float = _rng.randf_range(1.4, 2.4)
+	var dur_in: float = _rng.randf_range(2.0, 3.0)
+	var dur_hold: float = _rng.randf_range(2.5, 4.0)
+	var dur_out: float = _rng.randf_range(1.5, 2.5)
+	var t_in: Tween = create_tween().set_parallel(true)
+	t_in.tween_property(lbl, "modulate:a", 0.85, dur_in).set_trans(Tween.TRANS_SINE)
+	t_in.tween_property(lbl, "outline_modulate:a", 0.7, dur_in).set_trans(Tween.TRANS_SINE)
+	t_in.tween_property(lbl, "position:y", start_y + rise_amount * 0.6, dur_in + dur_hold).set_trans(Tween.TRANS_SINE)
+	await t_in.finished
+	if not is_instance_valid(lbl):
+		return
+	await get_tree().create_timer(dur_hold).timeout
+	if not is_instance_valid(lbl):
+		return
+	var t_out: Tween = create_tween().set_parallel(true)
+	t_out.tween_property(lbl, "modulate:a", 0.0, dur_out).set_trans(Tween.TRANS_SINE)
+	t_out.tween_property(lbl, "outline_modulate:a", 0.0, dur_out).set_trans(Tween.TRANS_SINE)
+	t_out.tween_property(lbl, "position:y", start_y + rise_amount, dur_out).set_trans(Tween.TRANS_SINE)
+	await t_out.finished
+	if not is_instance_valid(lbl) or _path_points.is_empty():
+		return
+	# Reset position + glyph and loop
+	var new_idx: int = _rng.randi_range(0, _path_points.size() - 1)
+	var new_base: Vector3 = _path_points[new_idx]
+	lbl.position = Vector3(new_base.x + _rng.randf_range(-6.0, 6.0), _rng.randf_range(1.2, 3.5), new_base.z + _rng.randf_range(-4.0, 4.0))
+	lbl.text = String(OGHAM_GLYPHS_2[_rng.randi() % OGHAM_GLYPHS_2.size()])
+	_animate_floating_ogham(lbl)
+
+
 func _finalize_tutorial_rewards() -> void:
 	# Persist tutorial_completed + tutorial rewards to user://merlin_profile.json.
 	# Idempotent: re-running the tutorial just bumps timestamp/anam.
@@ -1508,7 +1566,8 @@ func _run_tutorial_intro() -> void:
 		fade_out.tween_property(vo_panel, "modulate:a", 0.0, 0.5)
 		await fade_out.finished
 		vo_layer.queue_free()
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# Camera is rail-only (no FPS look) + cursor visible (PC mode).
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_start_aerial_then_walk()
 
 
@@ -1551,8 +1610,28 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 	vbox.add_theme_constant_override("separation", 14)
 	parchment.add_child(vbox)
 
+	# Corner ornaments (4 celtic flourishes) + ink stains for old-paper feel
+	for corner_data in [{"pos": Vector2(18, 12), "txt": "❦"}, {"pos": Vector2(680, 12), "txt": "❦"}, {"pos": Vector2(18, 444), "txt": "❦"}, {"pos": Vector2(680, 444), "txt": "❦"}]:
+		var orn: Label = Label.new()
+		orn.text = String(corner_data["txt"])
+		orn.add_theme_font_size_override("font_size", 24)
+		orn.add_theme_color_override("font_color", Color(0.45, 0.28, 0.12))
+		orn.size = Vector2(24, 24)
+		orn.position = corner_data["pos"] as Vector2
+		parchment.add_child(orn)
+	# Ink stains (faint dark blots scattered on the parchment)
+	var stain_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	stain_rng.seed = 7
+	for j in 6:
+		var stain: ColorRect = ColorRect.new()
+		stain.color = Color(0.30, 0.18, 0.08, 0.10 + stain_rng.randf() * 0.12)
+		var sw: float = stain_rng.randf_range(8.0, 22.0)
+		stain.size = Vector2(sw, sw * stain_rng.randf_range(0.5, 1.2))
+		stain.position = Vector2(stain_rng.randf_range(40, 660), stain_rng.randf_range(40, 420))
+		parchment.add_child(stain)
+
 	var title: Label = Label.new()
-	title.text = "QUETE DE BROCELIANDE"
+	title.text = "✦ QUETE DE BROCELIANDE ✦"
 	title.add_theme_font_size_override("font_size", 32)
 	title.add_theme_color_override("font_color", Color(0.30, 0.18, 0.08))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1650,6 +1729,29 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 					var m_fade: Tween = create_tween()
 					m_fade.tween_property(child, "modulate:a", 1.0, 0.25)
 		await get_tree().create_timer(0.018).timeout
+
+	# Wax seal stamp: appears at end of trail with a small "press" animation
+	var seal: Label = Label.new()
+	seal.text = "ᛗ"  # Mannaz rune as Merlin's signature
+	seal.add_theme_font_size_override("font_size", 38)
+	seal.add_theme_color_override("font_color", Color(0.65, 0.13, 0.10))
+	seal.size = Vector2(48, 48)
+	seal.position = full_points[full_points.size() - 1] + Vector2(8, -22)
+	seal.scale = Vector2(0.1, 0.1)
+	seal.modulate.a = 0.0
+	path_holder.add_child(seal)
+	# Halo behind the seal
+	var halo: ColorRect = ColorRect.new()
+	halo.color = Color(0.65, 0.13, 0.10, 0.18)
+	halo.size = Vector2(60, 60)
+	halo.position = full_points[full_points.size() - 1] + Vector2(2, -28)
+	halo.modulate.a = 0.0
+	path_holder.add_child(halo)
+	var seal_anim: Tween = create_tween().set_parallel(true)
+	seal_anim.tween_property(seal, "modulate:a", 1.0, 0.4)
+	seal_anim.tween_property(seal, "scale", Vector2(1.0, 1.0), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	seal_anim.tween_property(halo, "modulate:a", 1.0, 0.6)
+	await seal_anim.finished
 
 	# Hold parchment for reading the full map (footsteps remain — the "Maraudeurs" effect)
 	await get_tree().create_timer(3.5).timeout
