@@ -1,0 +1,36 @@
+{
+  "agent": "merlin-card-generator",
+  "cycle": 1,
+  "status": "PASS",
+  "confidence": "HIGH",
+  "evidence": [
+    "8 cards generated covering all 8 biomes",
+    "8/8 valid (0 rejected) — all verb, effect cap, and faction constraints satisfied",
+    "LLM used: merlin-narrator-lora-q4:latest (avg 11.7s/narration)",
+    "qwen3.5:4b and qwen3.5:2b both timed out (CPU-only, >120s per card)",
+    "Narrations LLM-inspired then completed by agent post-processing (encoding corruption in raw output)",
+    "Committed to data/cards/fastroute_batch_20260425_visual_v3.json"
+  ],
+  "blockers": [],
+  "cards_generated": 8,
+  "cards_valid": 8,
+  "rejection_rate_pct": 0.0,
+  "model_used": "merlin-narrator-lora-q4:latest",
+  "avg_generation_time_s": 11.7,
+  "biomes_covered": [
+    "landes_bruyere",
+    "cotes_sauvages",
+    "villages_celtes",
+    "cercles_pierres",
+    "marais_korrigans",
+    "collines_dolmens",
+    "iles_mystiques",
+    "foret_broceliande"
+  ],
+  "factions_covered": ["ankou", "niamh", "druides", "anciens", "korrigans"],
+  "next_steps": [
+    "Optionally load pool via _load_fastroute_cards() path update in merlin_card_system.gd if new batch dir is not auto-scanned",
+    "Consider fine-tuning merlin-narrator-lora-q4 for structured JSON output to reduce post-processing"
+  ],
+  "tokens_used_approx": 1800
+}
