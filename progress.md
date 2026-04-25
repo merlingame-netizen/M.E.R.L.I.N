@@ -2,6 +2,80 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-04-25 — Vision Graphique v3 + MCP Native Forest + LLM Cards
+
+### Context
+Refonte direction artistique (32+ decisions cardinales via askuserquestion), build d'une scene foret native via MCP Godot, et generation de 8 cartes FastRoute via LLM local.
+
+### Vision Graphique v3 (cristallisee)
+- Pitch: "Cassette PS1 d'un grimoire druidique" — Lunacid celtique narratif
+- Stack PS1 complet (vertex jitter + dithering Bayer + scanlines + brume volumetric)
+- 5 Clans totemiques (refonte factions: druides=Cerf, anciens=Ours, korrigans=Loup, niamh=Saumon, ankou=Corbeau)
+- Cartes typo + sigil (Citizen Sleeper celtique), pas d'illustration
+- Minigames overlay parchemin scriptural
+- Personnages = "presences sans corps" (halos, pierres pulsantes)
+- Camera POV FOV 60°, 30fps locked
+- Typo: Uncial Antiqua (titres) + m6x11 (corps)
+- Audio: PS1 lo-fi authentique
+- Onboarding: sans tutoriel
+- Accessibilite stack PS1 = NON-NEGOCIABLE
+
+### Documents crees
+- `docs/70_graphic/VISUAL_DIRECTION_v3.md` (canonique, ~700 lignes)
+- `docs/70_graphic/FACTIONS_LEGACY_TO_V3_MAPPING.md`
+- `docs/70_graphic/MOOD_BOARD_PROMPTS.md` (4 prompts, generation Gemini bloquee free quota)
+- `docs/70_graphic/legacy/` (13 docs archives + README.md)
+- `assets/fonts/README.md` (instructions polices Uncial Antiqua + m6x11)
+- `memory/merlin__decisions.md` mis a jour
+
+### Modifications scene `BKForestTestRoom.tscn` (via MCP, native-first)
+- WorldEnvironment configure biome Broceliande (fog dense vert + volumetric_fog + adjustment)
+- Forest container (Node3D)
+  - Floor (PlaneMesh 40x40 + StandardMaterial3D)
+  - 12 arbres BoxMesh randomises (seed 42)
+  - StoneTotem_Corbeau (BoxMesh emissive violet) + Halo OmniLight3D
+- Camera POV FOV 60° h 1.5m
+- Sun + FillLight + RimLight reglees biome foret
+- AUCUN script GDScript ecrit — pures resources Godot natives via MCP execute_editor_script
+
+### Card Generator (agent merlin-card-generator)
+- 8/8 cartes valides, 8 biomes couverts
+- Modele actif: `merlin-narrator-lora-q4` (~11.7s/narration)
+- qwen3.5:4b/2b TIMEOUT >120s/carte sur CPU (inutilisables batch)
+- merlin-narrator-lora-q4 UTF-8 casse sur JSON structure → LLM pour inspiration atmo, agent finalise JSON
+- Fichier: `data/cards/fastroute_batch_20260425_visual_v3.json` (12.6 KB)
+- Commit: `d9be7351 feat(cards): add 8 FastRoute cards batch visual_v3 covering all 8 biomes`
+- Validation: 0 erreur, plafonds respectes (HEAL_LIFE 18 max, DAMAGE_LIFE 15 max, ADD_REPUTATION ±20), 3 options par carte
+
+### AI Playtester (agent merlin-ai-playtester)
+- P0: drain de vie desactive (LIFE_ESSENCE_DRAIN_PER_CARD=0) — risque run infini si LLM ne genere pas DAMAGE_LIFE
+- P1: 3 bugs minigames web-demo (mg_regard score 20/100, mg_fouille setTimeout orphelin, mg_equilibre listeners doc leakent)
+- P2: faction imbalance druides 27.6% vs niamh 13%, difficultyTier non consomme, audio in-play absent 12/14 minigames
+- LLM latence p50 1.2-2.4s, p90 4-6s, throughput 18-25 cartes/min
+- Game design Bible v2.4 conforme sauf le drain (decision director a confirmer)
+
+### Validation
+- `validate.bat` Step 0: PASSED (0 errors, 0 warnings)
+- Ollama actif: qwen3.5:4b loaded en RAM (15GB)
+- Scene editor: BKForestTestRoom.tscn ouverte, MCP server connecte port 9080
+
+### Findings cles
+- Stack PS1 deja code (ps1_material.gdshader, retro_psx_post.gdshader, screen_dither_layer.gd)
+- ScreenDither autoload applique le post-process globalement en runtime
+- 8 PSX_BIOME_PROFILES deja definies dans screen_dither_layer.gd (broceliande, landes, cotes, etc.)
+- LLM CPU pas viable pour batch — necessitera GPU pour productioncards LLM-driven
+- Encodage UTF-8 du LoRA merlin-narrator a debug
+
+### Next steps (a discuter)
+- Decider statut drain vie (intentionnel ou bug) — voir decision q-20260412-001
+- Telecharger polices Uncial Antiqua + m6x11 (deja documentees)
+- Refacto MerlinVisual.gd pour FACTION_TOTEMS dictionnaire (mapping legacy→V3)
+- Etendre BKForestTestRoom avec les 4 autres pierres-totems (Cerf, Loup, Saumon, Ours)
+- Implementer cinematique "Vision du corbeau" pour ecran de mort
+- Migration noms factions UI ("Druides de Bretagne" → "Clan du Cerf") — code interne legacy preserved
+
+---
+
 ## Session: 2026-04-05 — N64 Asset Generation Pipeline (2000+ .glb)
 
 ### Context

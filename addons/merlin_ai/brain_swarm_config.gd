@@ -15,7 +15,7 @@ extends RefCounted
 class_name BrainSwarmConfig
 
 # ── Profile Names ─────────────────────────────────────────────────────────────
-enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD }
+enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH }
 
 # ── Ollama Model Tags (Qwen 3.5 family) ──────────────────────────────────────
 const MODEL_QWEN35_4B := "qwen3.5:4b"
@@ -25,12 +25,23 @@ const MODEL_QWEN35_08B := "qwen3.5:0.8b"
 # Legacy (backward compat, fallback)
 const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
 
-# ── RAM estimates per model (Q4 quantization, includes KV cache) ─────────────
+# ── Mobile model file paths (ARM64 via merlin_llm GDExtension recompiled, NOT Ollama) ─
+# These are .gguf filenames in addons/merlin_llm/models/ — NOT Ollama tags.
+# Loaded directly via merlin_llm GDExtension on Android/iOS (no Ollama daemon).
+const MODEL_FILE_LLAMA32_1B := "llama3.2-1b-q4_k_s.gguf"        # ~700 MB — entry mobile
+const MODEL_FILE_QWEN25_15B := "qwen2.5-1.5b-q4_k_m.gguf"       # ~1.4 GB — mid mobile
+const MODEL_FILE_LLAMA32_3B := "llama3.2-3b-q4_k_m.gguf"        # ~2.5 GB — high mobile
+
+# ── RAM estimates per model_key (Q4 quantization, includes KV cache) ─────────
+# Keyed by `model_key` (NOT by `ollama_tag` / `model_file`).
 const RAM_BY_MODEL := {
 	"qwen35_4b": 3200,
 	"qwen35_2b": 1800,
 	"qwen35_0.8b": 800,
 	"qwen25_1.5b": 1200,
+	"llama32_1b_mobile": 700,
+	"qwen25_1.5b_mobile": 1400,
+	"llama32_3b_mobile": 2500,
 }
 
 # ── Profile Definitions ──────────────────────────────────────────────────────
@@ -109,7 +120,87 @@ const PROFILES := {
 		"min_ram_mb": 16000,
 		"prefetch_depth": 3,
 	},
+	# ── MOBILE TIERS — single brain strict, ARM64 via merlin_llm GDExtension ──
+	# Backend = "merlin_llm_native" (NOT Ollama HTTP). Cross-compile required.
+	# No multi-instance on mobile (battery/RAM/thermal constraints).
+	# Mobile brains use `model_file` (.gguf path) instead of `ollama_tag`.
+	# `ollama_tag` set to "" on mobile to make it explicit that no Ollama is involved.
+	Profile.MOBILE_LOW: {
+		"name": "Mobile Low (Llama 3.2 1B)",
+		"mode": "resident",
+		"platform": "mobile",
+		"backend": "merlin_llm_native",
+		"brains": [
+			{"role": "narrator", "model_key": "llama32_1b_mobile", "model_file": MODEL_FILE_LLAMA32_1B, "ollama_tag": "", "n_ctx": 1024, "ram_mb": 700, "thinking": false},
+		],
+		"total_ram_mb": 700,
+		"min_threads": 4,
+		"min_ram_mb": 3000,
+		"prefetch_depth": 0,
+	},
+	Profile.MOBILE_MID: {
+		"name": "Mobile Mid (Qwen 2.5 1.5B)",
+		"mode": "resident",
+		"platform": "mobile",
+		"backend": "merlin_llm_native",
+		"brains": [
+			{"role": "narrator", "model_key": "qwen25_1.5b_mobile", "model_file": MODEL_FILE_QWEN25_15B, "ollama_tag": "", "n_ctx": 2048, "ram_mb": 1400, "thinking": false},
+		],
+		"total_ram_mb": 1400,
+		"min_threads": 6,
+		"min_ram_mb": 5000,
+		"prefetch_depth": 0,
+	},
+	Profile.MOBILE_HIGH: {
+		"name": "Mobile High (Llama 3.2 3B)",
+		"mode": "resident",
+		"platform": "mobile",
+		"backend": "merlin_llm_native",
+		"brains": [
+			{"role": "narrator", "model_key": "llama32_3b_mobile", "model_file": MODEL_FILE_LLAMA32_3B, "ollama_tag": "", "n_ctx": 2048, "ram_mb": 2500, "thinking": false},
+		],
+		"total_ram_mb": 2500,
+		"min_threads": 6,
+		"min_ram_mb": 7000,
+		"prefetch_depth": 0,
+	},
 }
+
+
+## Get the mobile model file path for a brain role in a profile.
+## Returns "" if not a mobile profile or role not found.
+static func get_model_file_for_role(profile_id: int, role: String) -> String:
+	var profile: Dictionary = get_profile(profile_id)
+	var brain_list: Array = profile.get("brains", [])
+	for brain_cfg in brain_list:
+		if str(brain_cfg.get("role", "")) == role:
+			return str(brain_cfg.get("model_file", ""))
+	if brain_list.size() > 0:
+		return str(brain_list[0].get("model_file", ""))
+	return ""
+
+
+## Auto-detect mobile profile based on available RAM + threads.
+## Returns MOBILE_HIGH > MOBILE_MID > MOBILE_LOW (largest that fits).
+## Use this on mobile platforms (Android/iOS); use detect_profile() on desktop.
+static func detect_profile_mobile(available_ram_mb: int, cpu_threads: int) -> int:
+	for profile_id in [Profile.MOBILE_HIGH, Profile.MOBILE_MID, Profile.MOBILE_LOW]:
+		var profile: Dictionary = PROFILES[profile_id]
+		if available_ram_mb >= int(profile.min_ram_mb) and cpu_threads >= int(profile.min_threads):
+			return profile_id
+	return Profile.MOBILE_LOW  # Fallback (always works on min mobile)
+
+
+## True if profile is targeted at mobile platforms (Android/iOS).
+static func is_mobile_profile(profile_id: int) -> bool:
+	var profile: Dictionary = get_profile(profile_id)
+	return str(profile.get("platform", "desktop")) == "mobile"
+
+
+## Get backend hint for a profile ("ollama_http" or "merlin_llm_native").
+static func get_backend_hint(profile_id: int) -> String:
+	var profile: Dictionary = get_profile(profile_id)
+	return str(profile.get("backend", "ollama_http"))
 
 
 ## Auto-detect the best profile based on available hardware.

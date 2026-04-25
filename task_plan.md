@@ -3,6 +3,91 @@
 ## Goal
 Developper un JDR Parlant roguelite avec LLM local (Qwen 3.5 Multi-Brain heterogene), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
+---
+
+## Phase Active: 2026-04-25 (suite) — LLM Mobile Architecture (Cycle 1 Polish Pass)
+
+### Context
+User direction explicite :
+- **Plateforme** : Android + iOS ensemble (cross-platform mobile dès le départ)
+- **Stratégie LLM** : llama.cpp embedded recompilé (option B llm_expert) avec MODÈLES NOUVEAUX et architecture tier-aware adressant les limites hardware
+- **Pas d'Ollama mobile** : tout-on-device via GDExtension recompilée ARM
+- **Multi-instance** : Desktop seulement, mobile = SINGLE strict (batterie/RAM/thermal)
+
+### Findings critiques (audits Wave 1)
+- `generate_parallel()` jamais appelé en gameplay (potentiel mort)
+- LoRA `merlin-narrator-lora-q4` jamais référencé dans PROFILES
+- `qwen3.5:0.8b` référencé mais non installé (fallback silencieux)
+- `merlin_llm.gdextension` Windows-only (ARM à compiler)
+- `native/llama.cpp/CMakeLists.txt` supporte déjà iOS/Android/Metal/Vulkan/OpenCL
+- Pattern multi-instance validé : `WorkerThreadPool` + signals + isolated `MerlinLLM` instances
+
+### Phases Cycle 1
+- **Phase 1.1 (10 min)** : Refactor `BrainSwarmConfig` — ajout `Profile.MOBILE_LOW/MID/HIGH` avec modèles ARM-friendly
+- **Phase 1.2 (TDD)** : Test `test_brain_swarm_config_mobile.gd` — vérifie profiles mobile + detect_profile mobile-aware
+- **Phase 1.3 (30 min)** : `MultiBrainOrchestrator` GDScript desktop autonome (squelette llm_expert)
+- **Phase 1.4 (1-2 jours)** : Cross-compilation `merlin_llm.gdextension` Android arm64 + iOS arm64 (NDK + Xcode)
+- **Phase 1.5 (validation)** : Test runtime export Android local
+- **Phase 1.6 (audio P2)** : Brancher `generate_parallel` dans MOS pour overlap narrator(N+1) ‖ GM(N)
+
+### TDD pour Phase 1.1
+RED : `test_brain_swarm_config_mobile.gd` vérifie :
+- `Profile.MOBILE_LOW`, `MOBILE_MID`, `MOBILE_HIGH` existent
+- Profile MOBILE_LOW : 1 brain, RAM ~700MB, n_ctx 1024, model tag arm64-friendly
+- Profile MOBILE_MID : 1 brain, RAM ~1400MB, n_ctx 2048
+- Profile MOBILE_HIGH : 1 brain, RAM ~2500MB, n_ctx 2048
+- `detect_profile_mobile(ram, threads)` choisit entre LOW/MID/HIGH
+
+GREEN : ajouter au `PROFILES` dict + nouvelle fonction `detect_profile_mobile()`.
+
+---
+
+## Phase Active: 2026-04-25 — Rail On-Rails Forest Walker (v3 visual)
+
+### Context
+Pivot du free-roam BKForestTestRoom (WASD + mouse look) vers un **rail on-rails** conforme bible v2.4 et vision graphique v3.
+- Le user a rejete les BoxMesh primitifs (use real .glb assets BK already generated, 230+ files in Assets/)
+- Le user precise: chemin predetermine, walker auto, head bob actif, evenements cartes spawn auto
+
+### Architecture cible (native-first)
+- **Path3D** : courbure douce dessinee, 4-6 points de control, sentier zigzag through la foret
+- **PathFollow3D** : auto-walker driven by AnimationPlayer (no per-frame movement code)
+- **Camera3D** (POV, FOV 60°, eye_height 1.5m) child of PathFollow3D
+- **AnimationPlayer** : tween progress_ratio 0→1 sur ~90s (auto-walk)
+- **rail_walker.gd** : MINIMAL script (head bob via _process + Tween, card-trigger callbacks)
+- **Area3D triggers** : 5-10 places fixes le long du chemin pour spawn cards
+- **Forest** : 12 categories d'assets BK (trees, bushes, ground, mushrooms, deadwood, rocks, megaliths, structures, collectibles, ...) places autour du chemin via bk_forest_test_room.gd recycled
+
+### Etat
+- [x] Vision v3 cristallisee + memoire mise a jour
+- [x] Polices telechargees (Uncial Antiqua + VT323 + PressStart2P)
+- [x] 8 cartes LLM commitees (d9be7351)
+- [x] BKForestTestRoom.tscn restaure (git checkout, BoxMesh primitifs supprimes)
+- [x] rail_walker.gd cree (~50 lignes, head bob + triggers)
+- [ ] BKForestRail.tscn cree (Path3D + PathFollow3D + Camera + AnimationPlayer + Forest)
+- [ ] AnimationPlayer "auto_walk" (progress_ratio 0→1, 90s)
+- [ ] 5 Area3D triggers le long du Path3D
+- [ ] Forest assembly (assets BK trees + mushrooms + megaliths + ...)
+- [ ] Code review rail_walker.gd (agent code-reviewer)
+- [ ] Test runtime + screenshot validation
+- [ ] Commit + push
+
+### Blockers
+- MCP server godot-mcp down (port 9080 ferme apres runtime exit) — necessite reconnect manuel ou redemarrage editeur
+- Volumetric fog ignore en Compatibility renderer — fog standard plus dense en compensation
+
+### Findings critiques playtester (cycle 1)
+- P0: drain de vie LIFE_ESSENCE_DRAIN_PER_CARD=0 → INTENTIONNEL (run = scenario LLM 15-25 cartes)
+- P1: 3 bugs minigames web-demo (mg_regard score plafonne 20/100, mg_fouille setTimeout orphelin, mg_equilibre listeners doc leakent)
+- P2: faction imbalance druides 27.6% vs niamh 13%, difficultyTier non consomme, audio in-play absent 12/14 minigames
+
+### Findings card-generator
+- merlin-narrator-lora-q4 utilise (~11.7s/narration) — qwen3.5:4b/2b TIMEOUT >120s sur CPU
+- LoRA UTF-8 casse sur JSON structure → agent finalise les JSON manuellement
+- 8/8 cartes valides, 8 biomes couverts, validation rigoureuse
+
+---
+
 ## Current Phase
 Phase N64 — Asset Generation Pipeline (2000+ low-poly .glb via Blender headless)
 

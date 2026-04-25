@@ -27,6 +27,9 @@ const SINGLE_PLUS: int = BrainSwarmConfig.Profile.SINGLE_PLUS
 const DUAL: int = BrainSwarmConfig.Profile.DUAL
 const TRIPLE: int = BrainSwarmConfig.Profile.TRIPLE
 const QUAD: int = BrainSwarmConfig.Profile.QUAD
+const MOBILE_LOW: int = BrainSwarmConfig.Profile.MOBILE_LOW
+const MOBILE_MID: int = BrainSwarmConfig.Profile.MOBILE_MID
+const MOBILE_HIGH: int = BrainSwarmConfig.Profile.MOBILE_HIGH
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -118,7 +121,7 @@ func test_detect_profile_ram_bottleneck_prevents_upgrade() -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_get_profile_returns_dict_for_every_valid_id() -> bool:
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
+	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
 	for pid in valid_ids:
 		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
 		if profile.is_empty():
@@ -138,7 +141,7 @@ func test_get_profile_invalid_id_returns_nano_fallback() -> bool:
 
 func test_get_profile_has_required_keys() -> bool:
 	var required: Array[String] = ["name", "mode", "brains", "total_ram_mb", "min_threads", "min_ram_mb", "prefetch_depth"]
-	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
+	var valid_ids: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
 	for pid in valid_ids:
 		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
 		for key in required:
@@ -461,14 +464,26 @@ func test_get_peak_ram_mb_invalid_id_returns_800_fallback() -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func test_profiles_min_ram_increases_with_tier() -> bool:
-	# Larger profiles must require at least as much RAM as smaller ones
-	var ordered: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
+	# Larger profiles must require at least as much RAM as smaller ones (within group).
+	# Desktop and mobile groups are tested separately because they target different
+	# hardware classes (mobile RAM 3000-7000 overlaps with desktop NANO 4000).
+	var desktop: Array[int] = [NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD]
 	var prev_min_ram: int = -1
-	for pid in ordered:
+	for pid in desktop:
 		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
 		var min_ram: int = int(profile.get("min_ram_mb", 0))
 		if min_ram < prev_min_ram:
-			push_error("PROFILES min_ram_mb: profile %d min_ram %d < previous %d (not ascending)" % [pid, min_ram, prev_min_ram])
+			push_error("PROFILES desktop min_ram_mb: profile %d min_ram %d < previous %d (not ascending)" % [pid, min_ram, prev_min_ram])
+			return false
+		prev_min_ram = min_ram
+	# Mobile tier ascending check (independent group)
+	var mobile: Array[int] = [MOBILE_LOW, MOBILE_MID, MOBILE_HIGH]
+	prev_min_ram = -1
+	for pid in mobile:
+		var profile: Dictionary = BrainSwarmConfig.get_profile(pid)
+		var min_ram: int = int(profile.get("min_ram_mb", 0))
+		if min_ram < prev_min_ram:
+			push_error("PROFILES mobile min_ram_mb: profile %d min_ram %d < previous %d (not ascending)" % [pid, min_ram, prev_min_ram])
 			return false
 		prev_min_ram = min_ram
 	return true
