@@ -1276,8 +1276,19 @@ func _build_run_summary() -> Dictionary:
 
 
 func _on_run_complete() -> void:
-	print("[Forest3D] Run complete — transitioning to EndRunScreen")
+	print("[Forest3D] Run complete — transitioning")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	# Tutorial mode: award fixed rewards, persist tutorial_completed, go to MenuPrincipal.
+	if _is_tutorial:
+		_finalize_tutorial_rewards()
+		var pt2: Node = get_node_or_null("/root/PixelTransition")
+		if pt2 and pt2.has_method("transition_to"):
+			pt2.transition_to("res://scenes/MenuPrincipal.tscn")
+		else:
+			get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+		return
+
 	var reason: String = "completed"
 	var gm: Node = get_node_or_null("/root/GameManager")
 	if gm:
@@ -1293,6 +1304,34 @@ func _on_run_complete() -> void:
 			pt.transition_to("res://scenes/MerlinCabinHub.tscn")
 		else:
 			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
+
+
+func _finalize_tutorial_rewards() -> void:
+	# Persist tutorial_completed + tutorial rewards to user://merlin_profile.json.
+	# Idempotent: re-running the tutorial just bumps timestamp/anam.
+	const TUTORIAL_ANAM_REWARD: int = 50
+	var save_path := "user://merlin_profile.json"
+	var data: Dictionary = {}
+	if FileAccess.file_exists(save_path):
+		var fr: FileAccess = FileAccess.open(save_path, FileAccess.READ)
+		if fr:
+			var raw: String = fr.get_as_text()
+			fr.close()
+			var json := JSON.new()
+			if json.parse(raw) == OK and json.data is Dictionary:
+				data = json.data as Dictionary
+	var meta: Dictionary = data.get("meta", {}) as Dictionary
+	meta["anam"] = int(meta.get("anam", 0)) + TUTORIAL_ANAM_REWARD
+	meta["total_runs"] = int(meta.get("total_runs", 0)) + 1
+	meta["tutorial_completed"] = true
+	data["meta"] = meta
+	data["tutorial_completed"] = true
+	data["timestamp"] = int(Time.get_unix_time_from_system())
+	var fw: FileAccess = FileAccess.open(save_path, FileAccess.WRITE)
+	if fw:
+		fw.store_string(JSON.stringify(data, "\t"))
+		fw.close()
+	print("[Forest3D] Tutorial rewards: +%d Anam, tutorial_completed=true" % TUTORIAL_ANAM_REWARD)
 
 
 func _on_hub() -> void:

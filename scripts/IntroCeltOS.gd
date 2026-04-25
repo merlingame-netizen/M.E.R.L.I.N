@@ -92,9 +92,10 @@ var _llm_prewarm_done := false
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
-	# Hide ScreenFrame and SceneSelector during intro
+	# Hide ScreenFrame, SceneSelector and ScreenDither during intro — keep ogham text crisp.
 	_hide_autoload("ScreenFrame")
 	_hide_autoload("SceneSelector")
+	_hide_autoload("ScreenDither")
 	_pick_random_logs()
 	_build_ui()
 	_prewarm_llm()
@@ -105,9 +106,10 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_transitioning = true
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	# Restore ScreenFrame and SceneSelector
+	# Restore ScreenFrame, SceneSelector and ScreenDither
 	_show_autoload("ScreenFrame")
 	_show_autoload("SceneSelector")
+	_show_autoload("ScreenDither")
 
 
 func _hide_autoload(autoload_name: String) -> void:
@@ -404,6 +406,12 @@ func _start_phase_3() -> void:
 
 	if _transitioning or not is_inside_tree():
 		return
+
+	# Phase 4 — PC awakens, Merlin speaks, UI is "generated" progressively.
+	await _show_pc_awaken_and_merlin()
+
+	if _transitioning or not is_inside_tree():
+		return
 	_fade_and_transition()
 
 
@@ -471,6 +479,188 @@ func _show_celtos_3d_logo() -> void:
 		container.queue_free()
 
 
+# ============================================================
+# PHASE 4 — PC awakens + Merlin speaks + UI generates progressively
+# ============================================================
+
+const MERLIN_INTRO_LINES: Array[String] = [
+	"...Tu es la. Enfin.",
+	"Je suis Merlin. Cet ecran est le mien — je le faconne pour toi.",
+	"Regarde : ta vie, tes Oghams, les factions...",
+	"Tout cela existe parce que je le tisse, fil par fil.",
+	"Suis-moi maintenant. La foret de Broceliande nous attend.",
+]
+
+
+func _show_pc_awaken_and_merlin() -> void:
+	# Full-screen black overlay with a CRT frame that "opens" and reveals Merlin's silhouette.
+	# Merlin speaks 5 lines (typewriter), and as he speaks UI elements appear progressively.
+	var root: Control = Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+
+	# 1. Black backdrop (PC turned off)
+	var black: ColorRect = ColorRect.new()
+	black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	black.color = BG_BLACK
+	root.add_child(black)
+
+	# 2. Horizontal scanline (PC powering on)
+	var scanline: ColorRect = ColorRect.new()
+	scanline.color = GOLD_BRIGHT
+	scanline.size = Vector2(get_viewport_rect().size.x, 2.0)
+	scanline.position = Vector2(0, get_viewport_rect().size.y * 0.5)
+	scanline.modulate.a = 0.0
+	root.add_child(scanline)
+
+	var pwr: Tween = create_tween()
+	pwr.tween_property(scanline, "modulate:a", 1.0, 0.15)
+	pwr.tween_property(scanline, "size:y", get_viewport_rect().size.y, 0.55).set_trans(Tween.TRANS_CUBIC)
+	pwr.parallel().tween_property(scanline, "position:y", 0.0, 0.55).set_trans(Tween.TRANS_CUBIC)
+	pwr.tween_property(scanline, "modulate:a", 0.0, 0.20)
+	if SFXManager.has_method("play"):
+		SFXManager.play("boot_confirm")
+	await pwr.finished
+
+	# 3. CRT frame: 4 thick borders that "open" outward (pull apart)
+	var frame_color: Color = GOLD
+	var frame_thick: float = 8.0
+	var inner_w: float = 720.0
+	var inner_h: float = 460.0
+	var cx: float = get_viewport_rect().size.x * 0.5
+	var cy: float = get_viewport_rect().size.y * 0.5
+
+	var top_bar: ColorRect = ColorRect.new()
+	top_bar.color = frame_color
+	top_bar.size = Vector2(inner_w + frame_thick * 2.0, frame_thick)
+	top_bar.position = Vector2(cx - top_bar.size.x * 0.5, cy)
+	top_bar.modulate.a = 0.0
+	root.add_child(top_bar)
+
+	var bot_bar: ColorRect = ColorRect.new()
+	bot_bar.color = frame_color
+	bot_bar.size = Vector2(inner_w + frame_thick * 2.0, frame_thick)
+	bot_bar.position = Vector2(cx - bot_bar.size.x * 0.5, cy)
+	bot_bar.modulate.a = 0.0
+	root.add_child(bot_bar)
+
+	var left_bar: ColorRect = ColorRect.new()
+	left_bar.color = frame_color
+	left_bar.size = Vector2(frame_thick, inner_h + frame_thick * 2.0)
+	left_bar.position = Vector2(cx, cy - left_bar.size.y * 0.5)
+	left_bar.modulate.a = 0.0
+	root.add_child(left_bar)
+
+	var right_bar: ColorRect = ColorRect.new()
+	right_bar.color = frame_color
+	right_bar.size = Vector2(frame_thick, inner_h + frame_thick * 2.0)
+	right_bar.position = Vector2(cx, cy - right_bar.size.y * 0.5)
+	right_bar.modulate.a = 0.0
+	root.add_child(right_bar)
+
+	var fr: Tween = create_tween().set_parallel(true)
+	fr.tween_property(top_bar, "modulate:a", 1.0, 0.20)
+	fr.tween_property(bot_bar, "modulate:a", 1.0, 0.20)
+	fr.tween_property(left_bar, "modulate:a", 1.0, 0.20)
+	fr.tween_property(right_bar, "modulate:a", 1.0, 0.20)
+	fr.tween_property(top_bar, "position:y", cy - inner_h * 0.5 - frame_thick, 0.50).set_trans(Tween.TRANS_CUBIC)
+	fr.tween_property(bot_bar, "position:y", cy + inner_h * 0.5, 0.50).set_trans(Tween.TRANS_CUBIC)
+	fr.tween_property(left_bar, "position:x", cx - inner_w * 0.5 - frame_thick, 0.50).set_trans(Tween.TRANS_CUBIC)
+	fr.tween_property(right_bar, "position:x", cx + inner_w * 0.5, 0.50).set_trans(Tween.TRANS_CUBIC)
+	await fr.finished
+
+	# 4. Inner content: Merlin silhouette (rune) + dialogue + UI to "generate"
+	var inner: Control = Control.new()
+	inner.position = Vector2(cx - inner_w * 0.5, cy - inner_h * 0.5)
+	inner.size = Vector2(inner_w, inner_h)
+	root.add_child(inner)
+
+	# Merlin glyph (big ogham/rune for silhouette)
+	var merlin_glyph: Label = Label.new()
+	merlin_glyph.text = "ᛗ"  # Mannaz — "the self / man" rune; visual stand-in for Merlin
+	merlin_glyph.add_theme_font_size_override("font_size", 220)
+	merlin_glyph.add_theme_color_override("font_color", GOLD_BRIGHT)
+	merlin_glyph.size = Vector2(inner_w, 250)
+	merlin_glyph.position = Vector2(0, 18)
+	merlin_glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	merlin_glyph.modulate.a = 0.0
+	inner.add_child(merlin_glyph)
+
+	var glow: Tween = create_tween()
+	glow.tween_property(merlin_glyph, "modulate:a", 1.0, 0.6)
+	await glow.finished
+
+	# Dialogue label (below the glyph)
+	var dialogue: Label = Label.new()
+	dialogue.add_theme_font_size_override("font_size", 22)
+	dialogue.add_theme_color_override("font_color", GOLD)
+	dialogue.size = Vector2(inner_w - 60, 80)
+	dialogue.position = Vector2(30, 280)
+	dialogue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	dialogue.text = ""
+	inner.add_child(dialogue)
+
+	# UI placeholders that will "generate" as Merlin speaks
+	var ui_row: HBoxContainer = HBoxContainer.new()
+	ui_row.size = Vector2(inner_w - 60, 60)
+	ui_row.position = Vector2(30, inner_h - 90)
+	ui_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	ui_row.add_theme_constant_override("separation", 18)
+	inner.add_child(ui_row)
+
+	var ui_items: Array[Dictionary] = [
+		{"label": "♥ 100", "color": Color(0.95, 0.30, 0.30)},
+		{"label": "᚛", "color": GOLD_BRIGHT},
+		{"label": "ᚉ", "color": GOLD_BRIGHT},
+		{"label": "ᛟ", "color": GOLD_BRIGHT},
+		{"label": "✦ Anam 0", "color": Color(0.55, 0.42, 0.78)},
+	]
+	var ui_labels: Array[Label] = []
+	for item in ui_items:
+		var slot: Label = Label.new()
+		slot.text = String(item["label"])
+		slot.add_theme_font_size_override("font_size", 22)
+		slot.add_theme_color_override("font_color", item["color"])
+		slot.modulate.a = 0.0
+		ui_row.add_child(slot)
+		ui_labels.append(slot)
+
+	# 5. Type each line + reveal one UI item per line
+	for line_idx in range(MERLIN_INTRO_LINES.size()):
+		if _transitioning or not is_inside_tree():
+			break
+		var line_text: String = MERLIN_INTRO_LINES[line_idx]
+		dialogue.text = ""
+		# Typewriter effect
+		for ch_idx in range(line_text.length()):
+			if _transitioning or not is_inside_tree():
+				break
+			dialogue.text += line_text.substr(ch_idx, 1)
+			if ch_idx % 3 == 0 and SFXManager.has_method("play"):
+				SFXManager.play("boot_line")
+			await get_tree().create_timer(0.025).timeout
+		# Reveal corresponding UI slot (fade in + small SFX cue)
+		if line_idx < ui_labels.size():
+			var ui_tween: Tween = create_tween()
+			ui_tween.tween_property(ui_labels[line_idx], "modulate:a", 1.0, 0.35)
+			if SFXManager.has_method("play"):
+				SFXManager.play("boot_confirm")
+		# Hold the line briefly
+		await get_tree().create_timer(0.9).timeout
+
+	# 6. Brief beat then fade everything
+	if _transitioning or not is_inside_tree():
+		return
+	await get_tree().create_timer(0.5).timeout
+	var out: Tween = create_tween()
+	out.tween_property(root, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	await out.finished
+	if is_instance_valid(root):
+		root.queue_free()
+
+
 func _blink_cursor() -> void:
 	var blink_tween := create_tween().set_loops(8)
 	var base_text := BOOT_FINAL
@@ -505,12 +695,22 @@ func _transition_to_menu() -> void:
 	if PixelTransition.has_method("_force_complete"):
 		PixelTransition._force_complete()
 
-	# Demo flow: Intro -> First Run 3D guide (tutorial, no LLM) -> Hub -> Run libre
-	# Trigger via: godot --path . -- --demo  OR set env MERLIN_DEMO=1
+	# Default flow:
+	#   - Tutorial NOT yet completed (or no save) -> direct First Run tutoriel (no LLM, scripted)
+	#   - Tutorial completed                       -> MenuPrincipal
+	# Force tutorial via:  --demo  OR  env MERLIN_DEMO=1
 	var args: PackedStringArray = OS.get_cmdline_user_args()
-	var demo_mode: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
-	if demo_mode:
-		print("[IntroCeltOS] --demo flag -> First Run tutorial (Broceliande, no LLM)")
+	var force_tutorial: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
+	var skip_tutorial: bool = args.has("--menu") or OS.has_environment("MERLIN_SKIP_TUTORIAL")
+	var tutorial_completed: bool = _read_tutorial_completed_flag()
+
+	if skip_tutorial:
+		print("[IntroCeltOS] --menu flag -> MenuPrincipal (tutorial skipped)")
+		PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
+		return
+
+	if force_tutorial or not tutorial_completed:
+		print("[IntroCeltOS] First Run tutorial (Broceliande, no LLM) — completed=%s" % str(tutorial_completed))
 		var game_mgr_2: Node = get_tree().root.get_node_or_null("GameManager")
 		if game_mgr_2:
 			game_mgr_2.set_meta("first_run_tutorial", true)
@@ -518,3 +718,25 @@ func _transition_to_menu() -> void:
 		return
 
 	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
+
+
+func _read_tutorial_completed_flag() -> bool:
+	var save_path := "user://merlin_profile.json"
+	if not FileAccess.file_exists(save_path):
+		return false
+	var file := FileAccess.open(save_path, FileAccess.READ)
+	if file == null:
+		return false
+	var raw: String = file.get_as_text()
+	file.close()
+	var json := JSON.new()
+	if json.parse(raw) != OK:
+		return false
+	if not (json.data is Dictionary):
+		return false
+	var data: Dictionary = json.data as Dictionary
+	# Flag can live at top-level OR nested under "meta"
+	if bool(data.get("tutorial_completed", false)):
+		return true
+	var meta: Dictionary = data.get("meta", {}) as Dictionary
+	return bool(meta.get("tutorial_completed", false))
