@@ -376,9 +376,8 @@ func _instantiate_forest_layer() -> void:
 	parent.add_child(_forest_instance)
 	parent.move_child(_forest_instance, 0)  # below DemoOnboarding in tree order
 
-	# Hide the black background once the forest is in tree (so we can see 3D)
-	var bg: ColorRect = $".".get_node_or_null("ColorRect") if has_node("ColorRect") else null
-	# Easier: walk children, hide the first ColorRect (the black bg)
+	# Hide the black background once the forest is in tree (so we can see 3D).
+	# Walk children to find the first ColorRect (the black bg added in _build_layout).
 	for c in get_children():
 		if c is ColorRect:
 			var tw_bg := create_tween()
