@@ -297,20 +297,32 @@ func _ready() -> void:
 	_update_hud()
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
-	# Book cinematic is now shown in MerlinCabinHub BEFORE entering forest
-	# Forest starts directly with aerial descent → auto-walk
-	_start_aerial_then_walk()
+	# Tutorial mode: progressive reveal sequence (Merlin VO + assets fade in + parchment),
+	# then start the actual walk. Otherwise straight to aerial descent → autowalk.
+	if _is_tutorial:
+		_run_tutorial_intro()
+	else:
+		# Book cinematic is now shown in MerlinCabinHub BEFORE entering forest
+		# Forest starts directly with aerial descent → auto-walk
+		_start_aerial_then_walk()
 
 
 func _init_helpers() -> void:
 	# Auto-walk controller with encounter stops
 	_autowalk = BrocAutowalk.new(_path_points, player, player_head, player_camera, _zone_centers)
-	# Set encounter stops every ~15 waypoints (5 encounters per run)
 	var total_wp: int = _path_points.size()
-	var enc_spacing: int = maxi(total_wp / 6, 5)
 	var enc_indices: Array[int] = []
-	for i in range(enc_spacing, total_wp - enc_spacing, enc_spacing):
-		enc_indices.append(i)
+	if _is_tutorial:
+		# Tutorial: exactly 3 encounters, evenly spaced at ~25%, 55%, 85% of the path.
+		_encounter_total = 3
+		for t_pct in [0.25, 0.55, 0.85]:
+			var idx_t: int = clampi(int(float(total_wp) * float(t_pct)), 1, total_wp - 1)
+			enc_indices.append(idx_t)
+	else:
+		# Default: ~5 encounters every total_wp/6 waypoints.
+		var enc_spacing: int = maxi(total_wp / 6, 5)
+		for i in range(enc_spacing, total_wp - enc_spacing, enc_spacing):
+			enc_indices.append(i)
 	_autowalk.set_encounters(enc_indices, _on_encounter_reached)
 	_autowalk.set_run_complete_callback(_on_run_complete)
 
@@ -1206,11 +1218,12 @@ func _on_encounter_reached(enc_idx: int) -> void:
 
 
 func _get_encounter_card(enc_idx: int) -> Dictionary:
-	# Tutorial mode: skip LLM entirely, use scripted fallback cards (deterministic First Run).
+	# Tutorial mode: return one of the 3 scripted cards (no LLM, deterministic content).
 	if _is_tutorial:
 		print("[Forest3D] Tutorial card #%d (scripted)" % (enc_idx + 1))
-	# Try LLM via MerlinAI (Groq cloud in web export) — skip when tutorial.
-	var ai: Node = get_node_or_null("/root/MerlinAI") if not _is_tutorial else null
+		return _get_tutorial_card(enc_idx)
+	# Try LLM via MerlinAI (Groq cloud in web export).
+	var ai: Node = get_node_or_null("/root/MerlinAI")
 	if ai and ai.get("is_ready") and ai.get("narrator_llm"):
 		var llm: Object = ai.narrator_llm
 		if llm and llm.has_method("generate_async") and not llm.is_generating_now():
@@ -1332,6 +1345,247 @@ func _finalize_tutorial_rewards() -> void:
 		fw.store_string(JSON.stringify(data, "\t"))
 		fw.close()
 	print("[Forest3D] Tutorial rewards: +%d Anam, tutorial_completed=true" % TUTORIAL_ANAM_REWARD)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUTORIAL INTRO — Merlin VO + progressive asset reveal + quest parchment
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TUTORIAL_VO_LINES: Array[Dictionary] = [
+	{"text": "...Voyageur. Tu es la, enfin.", "delay": 2.4, "phase": "black"},
+	{"text": "Regarde — je vais te montrer ce monde, fil par fil.", "delay": 2.4, "phase": "black"},
+	{"text": "Le ciel d'abord. La voute sous laquelle nous marchons.", "delay": 2.6, "phase": "sky"},
+	{"text": "Puis la terre. Broceliande s'eveille a ton arrivee.", "delay": 2.6, "phase": "forest"},
+	{"text": "Voici ta quete. Lis-la bien.", "delay": 2.0, "phase": "parchment"},
+	{"text": "Marche maintenant. Trois epreuves, et tu seras pret.", "delay": 2.4, "phase": "walk"},
+]
+
+
+func _run_tutorial_intro() -> void:
+	# Hide all 3D content + freeze input. We'll reveal in sequence.
+	if is_instance_valid(forest_root):
+		forest_root.visible = false
+	if is_instance_valid(sun_light):
+		sun_light.visible = false
+	if is_instance_valid(player):
+		player.visible = false
+	if is_instance_valid(merlin_node):
+		merlin_node.visible = false
+	# Save env state and switch to pure black background.
+	var saved_bg_mode: int = -1
+	var saved_bg_color: Color = Color(0, 0, 0)
+	if is_instance_valid(world_env) and world_env.environment:
+		saved_bg_mode = world_env.environment.background_mode
+		saved_bg_color = world_env.environment.background_color
+		world_env.environment.background_mode = Environment.BG_COLOR
+		world_env.environment.background_color = Color(0.01, 0.01, 0.02)
+	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+
+	# VO overlay (CanvasLayer with Label at bottom-center).
+	var vo_layer: CanvasLayer = CanvasLayer.new()
+	vo_layer.layer = 50
+	add_child(vo_layer)
+
+	var vo_panel: ColorRect = ColorRect.new()
+	vo_panel.color = Color(0.0, 0.0, 0.0, 0.65)
+	vo_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	vo_panel.offset_top = -120
+	vo_panel.offset_left = 80
+	vo_panel.offset_right = -80
+	vo_panel.offset_bottom = -40
+	vo_layer.add_child(vo_panel)
+
+	var vo_label: Label = Label.new()
+	vo_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vo_label.add_theme_font_size_override("font_size", 24)
+	vo_label.add_theme_color_override("font_color", Color(1.0, 0.86, 0.45))
+	vo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	vo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vo_label.text = ""
+	vo_panel.add_child(vo_label)
+
+	# Run the scripted reveal sequence.
+	for entry in TUTORIAL_VO_LINES:
+		if not is_inside_tree():
+			return
+		var phase: String = String(entry.get("phase", "black"))
+		match phase:
+			"sky":
+				if is_instance_valid(world_env) and world_env.environment and saved_bg_mode != -1:
+					world_env.environment.background_mode = saved_bg_mode
+					world_env.environment.background_color = saved_bg_color
+				if is_instance_valid(sun_light):
+					sun_light.visible = true
+			"forest":
+				if is_instance_valid(forest_root):
+					forest_root.visible = true
+			"parchment":
+				await _show_quest_parchment(vo_layer)
+			"walk":
+				if is_instance_valid(player):
+					player.visible = true
+				if is_instance_valid(merlin_node):
+					merlin_node.visible = true
+		await _vo_speak_line(vo_label, String(entry.get("text", "")), float(entry.get("delay", 2.0)))
+
+	# Cleanup overlay then start the actual walk.
+	if is_instance_valid(vo_layer):
+		var fade_out: Tween = create_tween()
+		fade_out.tween_property(vo_panel, "modulate:a", 0.0, 0.5)
+		await fade_out.finished
+		vo_layer.queue_free()
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	_start_aerial_then_walk()
+
+
+func _vo_speak_line(label: Label, text: String, hold_seconds: float) -> void:
+	if not is_instance_valid(label):
+		return
+	# Typewriter effect, ~50 chars/s
+	label.text = ""
+	for i in range(text.length()):
+		if not is_instance_valid(label) or _transitioning:
+			return
+		label.text += text.substr(i, 1)
+		await get_tree().create_timer(0.020).timeout
+	await get_tree().create_timer(hold_seconds).timeout
+
+
+func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
+	# Parchment overlay with quest title, description, and an animated path drawn by Merlin.
+	var parchment: PanelContainer = PanelContainer.new()
+	parchment.set_anchors_preset(Control.PRESET_CENTER)
+	parchment.custom_minimum_size = Vector2(720, 480)
+	parchment.size = Vector2(720, 480)
+	parchment.position = Vector2(-360, -240)
+	parchment.modulate.a = 0.0
+	vo_layer.add_child(parchment)
+
+	var pstyle: StyleBoxFlat = StyleBoxFlat.new()
+	pstyle.bg_color = Color(0.92, 0.83, 0.65)  # cream parchment
+	pstyle.border_color = Color(0.45, 0.30, 0.15)
+	pstyle.set_border_width_all(3)
+	pstyle.set_corner_radius_all(6)
+	pstyle.content_margin_left = 32
+	pstyle.content_margin_right = 32
+	pstyle.content_margin_top = 28
+	pstyle.content_margin_bottom = 28
+	parchment.add_theme_stylebox_override("panel", pstyle)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 14)
+	parchment.add_child(vbox)
+
+	var title: Label = Label.new()
+	title.text = "QUETE DE BROCELIANDE"
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color(0.30, 0.18, 0.08))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var sep: HSeparator = HSeparator.new()
+	vbox.add_child(sep)
+
+	var desc: Label = Label.new()
+	desc.text = "Suis le chemin que je trace pour toi.\nTrois rencontres jalonnent ta route.\nTes choix forgent qui tu deviens."
+	desc.add_theme_font_size_override("font_size", 18)
+	desc.add_theme_color_override("font_color", Color(0.30, 0.20, 0.12))
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(desc)
+
+	# Animated path drawing — Line2D that traces a winding path
+	var path_holder: Control = Control.new()
+	path_holder.custom_minimum_size = Vector2(640, 220)
+	vbox.add_child(path_holder)
+
+	var path_line: Line2D = Line2D.new()
+	path_line.width = 4.0
+	path_line.default_color = Color(0.45, 0.28, 0.12)
+	path_line.joint_mode = Line2D.LINE_JOINT_ROUND
+	path_holder.add_child(path_line)
+
+	# Generate winding path waypoints (left -> right, S-curve)
+	var full_points: PackedVector2Array = PackedVector2Array()
+	var segments: int = 60
+	for i in range(segments + 1):
+		var t: float = float(i) / float(segments)
+		var x: float = 20.0 + t * 600.0
+		var y: float = 110.0 + sin(t * TAU * 1.5) * 40.0
+		full_points.append(Vector2(x, y))
+
+	# Three encounter markers (red dots at 25%, 55%, 85%)
+	for marker_t in [0.25, 0.55, 0.85]:
+		var marker_idx: int = int(float(segments) * float(marker_t))
+		var marker: ColorRect = ColorRect.new()
+		marker.color = Color(0.75, 0.20, 0.15)
+		marker.size = Vector2(12, 12)
+		marker.position = full_points[marker_idx] - Vector2(6, 6)
+		path_holder.add_child(marker)
+
+	# Fade parchment in
+	var fade_in: Tween = create_tween()
+	fade_in.tween_property(parchment, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	await fade_in.finished
+
+	# Draw the path progressively (Merlin's hand tracing it)
+	for i in range(full_points.size()):
+		if not is_instance_valid(path_line):
+			return
+		path_line.add_point(full_points[i])
+		await get_tree().create_timer(0.025).timeout
+
+	# Hold parchment for reading
+	await get_tree().create_timer(2.5).timeout
+
+	# Fade out + free
+	var fade_out: Tween = create_tween()
+	fade_out.tween_property(parchment, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE)
+	await fade_out.finished
+	if is_instance_valid(parchment):
+		parchment.queue_free()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUTORIAL CARDS — 3 scripted encounters (idx 0, 1, 2), no LLM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TUTORIAL_CARDS: Array[Dictionary] = [
+	{
+		"title": "Le Premier Souffle",
+		"text": "Le sentier s'ouvre devant toi. Une brume legere caresse les fougeres. Une voix murmure : choisis comment tu avances dans ce monde.",
+		"choices": [
+			{"label": "Avancer en silence"},
+			{"label": "Saluer la foret"},
+			{"label": "Observer chaque ombre"},
+		],
+	},
+	{
+		"title": "Le Carrefour des Eaux",
+		"text": "Un ruisseau coupe le chemin. Une pierre plate sert de pont. Tes paumes ressentent la fraicheur de l'air humide. Que fais-tu ?",
+		"choices": [
+			{"label": "Boire une gorgee"},
+			{"label": "Traverser sans m'arreter"},
+			{"label": "Ecouter le chant de l'eau"},
+		],
+	},
+	{
+		"title": "Le Seuil de Merlin",
+		"text": "Une arche de branches entrelacees marque la fin du sentier. Au-dela, une lumiere doree. Tu es au seuil. Comment franchis-tu le passage ?",
+		"choices": [
+			{"label": "Avec confiance"},
+			{"label": "Avec humilite"},
+			{"label": "Avec curiosite"},
+		],
+	},
+]
+
+
+func _get_tutorial_card(enc_idx: int) -> Dictionary:
+	# Wrap index for safety; tutorial has exactly 3 cards.
+	var idx: int = clampi(enc_idx, 0, TUTORIAL_CARDS.size() - 1)
+	return TUTORIAL_CARDS[idx]
 
 
 func _on_hub() -> void:
