@@ -46,6 +46,10 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="LifeTitle" type="Label" parent="MerlinGameUI/MainVBox/TopStatusBar/LifePanel"]
+layout_mode = 2
+text = "Vie"
+
 [node name="LifeBar" type="ProgressBar" parent="MerlinGameUI/MainVBox/TopStatusBar/LifePanel"]
 layout_mode = 2
 max_value = 100.0
@@ -59,6 +63,10 @@ text = "100"
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="EssenceTitle" type="Label" parent="MerlinGameUI/MainVBox/TopStatusBar/EssencePanel"]
+layout_mode = 2
+text = "Essences"
+
 [node name="EssenceCounter" type="Label" parent="MerlinGameUI/MainVBox/TopStatusBar/EssencePanel"]
 layout_mode = 2
 text = "0"
@@ -71,6 +79,10 @@ size_flags_vertical = 3
 [node name="PiocheColumn" type="VBoxContainer" parent="MerlinGameUI/MainVBox/MiddleZone"]
 layout_mode = 2
 size_flags_horizontal = 0
+
+[node name="PiocheTitle" type="Label" parent="MerlinGameUI/MainVBox/MiddleZone/PiocheColumn"]
+layout_mode = 2
+text = "Pioche"
 
 [node name="DeckRoot" type="Control" parent="MerlinGameUI/MainVBox/MiddleZone/PiocheColumn"]
 custom_minimum_size = Vector2(80, 100)
@@ -157,6 +169,10 @@ mouse_filter = 2
 [node name="CimetiereColumn" type="VBoxContainer" parent="MerlinGameUI/MainVBox/MiddleZone"]
 layout_mode = 2
 size_flags_horizontal = 0
+
+[node name="CimetiereTitle" type="Label" parent="MerlinGameUI/MainVBox/MiddleZone/CimetiereColumn"]
+layout_mode = 2
+text = "Cimetière"
 
 [node name="DiscardRoot" type="Control" parent="MerlinGameUI/MainVBox/MiddleZone/CimetiereColumn"]
 custom_minimum_size = Vector2(80, 100)

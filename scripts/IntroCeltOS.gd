@@ -450,4 +450,16 @@ func _transition_to_menu() -> void:
 
 	if PixelTransition.has_method("_force_complete"):
 		PixelTransition._force_complete()
+
+	# Demo mode: skip Menu3DPC + Hub, go straight into 3D rail walk (vision v3).
+	# BKForestRail has Path3D + PathFollow3D + auto-walk + 17 .glb assets +
+	# head bob + biome ambient + ScreenDither PSX heavy preset.
+	# Trigger via: godot --path . -- --demo  OR set env MERLIN_DEMO=1
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var demo_mode: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
+	if demo_mode:
+		print("[IntroCeltOS] --demo flag detected -> skipping Menu/Hub -> BKForestRail (3D PS1 walk)")
+		PixelTransition.transition_to("res://scenes/BKForestRail.tscn")
+		return
+
 	PixelTransition.transition_to("res://scenes/Menu3DPC.tscn")

@@ -152,7 +152,24 @@ func _ready() -> void:
 	_rect.material = _material
 	add_child(_rect)
 
-	set_psx_preset("medium")
+	# v3 visual direction — heavy PS1 stack by default for authentic Lunacid feel.
+	# Demo mode forces a sharper-but-visible PSX preset (clearer than blurry heavy).
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var demo_mode: bool = args.has("--demo") or OS.has_environment("MERLIN_DEMO")
+	if demo_mode:
+		set_psx_preset("medium")
+		# Crisper pixels — anti-flou: smaller pixel_size, sharper scanlines.
+		_material.set_shader_parameter("pixel_size", 2.0)
+		_material.set_shader_parameter("color_depth", 32.0)
+		_material.set_shader_parameter("dither_strength", 0.40)
+		_material.set_shader_parameter("scanline_opacity", 0.14)
+		_material.set_shader_parameter("scanline_count", 320.0)
+		_material.set_shader_parameter("curvature", 0.025)
+		_material.set_shader_parameter("vignette_intensity", 0.16)
+		_material.set_shader_parameter("global_intensity", 0.85)
+		set_biome("broceliande", false)  # forest fog from boot
+	else:
+		set_psx_preset("medium")
 
 	var dnm: Node = get_node_or_null("/root/DayNightManager")
 	if dnm and dnm.has_signal("period_changed"):

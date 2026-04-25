@@ -201,9 +201,18 @@ shape = SubResource("trigger_shape")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
-[node name="DebugLabel" type="Label" parent="HUD"]
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 600.0
-offset_bottom = 60.0
-text = "BK Forest Rail — Auto-walk + Head bob + Card triggers — F6 to play"
+[node name="QuestLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 760.0
+offset_bottom = 44.0
+text = "Voyage en Forêt de Brocéliande — Suis le sentier sacré, l'Awen guide tes pas..."
+modulate = Color(0.86, 0.72, 0.42, 1)
+
+[node name="BiomeLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 44.0
+offset_right = 760.0
+offset_bottom = 70.0
+text = "Brocéliande · crépuscule · cherche les pierres dressées"
+modulate = Color(0.62, 0.78, 0.58, 0.85)
