@@ -69,6 +69,14 @@ IntroCeltOS
 
 8. **Skill `everything-claude-code:learn-eval`** : extraction patterns de cette session
 
+## 2026-04-25 (suite) — Refonte sequentielle tuto + visibilite 3D
+
+### Decisions
+- Plan canonique : `docs/INTRO_TUTO_SEQUENCE.md` (Merlin parle PUIS effet, jamais l'inverse)
+- VO et effet sont SEQUENTIELS, pas concurrents (carte ne charge plus pendant la dialogue)
+- Visibilite 3D : ProceduralSkyMaterial + Sun energy 1.6 + fog atmospherique dans .tscn
+- Captures auto 100-200ms : reportees a un commit 2 (apres validation user de la base)
+
 ## Etat d'avancement (live)
 
 - Wave 1 (analyse) : DONE — Explore agent rapport KEEP/DELETE

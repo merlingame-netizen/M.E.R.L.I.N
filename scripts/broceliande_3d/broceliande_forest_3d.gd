@@ -1354,12 +1354,14 @@ func _finalize_tutorial_rewards() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const TUTORIAL_VO_LINES: Array[Dictionary] = [
-	{"text": "...Voyageur. Tu es la, enfin.", "delay": 2.4, "phase": "black"},
-	{"text": "Regarde — je vais te montrer ce monde, fil par fil.", "delay": 2.4, "phase": "black"},
-	{"text": "Le ciel d'abord. La voute sous laquelle nous marchons.", "delay": 2.6, "phase": "sky"},
-	{"text": "Puis la terre. Broceliande s'eveille a ton arrivee.", "delay": 2.6, "phase": "forest"},
-	{"text": "Voici ta quete. Lis-la bien.", "delay": 2.0, "phase": "parchment"},
-	{"text": "Marche maintenant. Trois epreuves, et tu seras pret.", "delay": 2.4, "phase": "walk"},
+	# Speak first, then trigger the effect (see docs/INTRO_TUTO_SEQUENCE.md).
+	# Each phrase INTRODUCES what is about to appear.
+	{"text": "...Voyageur. Tu es la, enfin.", "delay": 1.6, "phase": "black"},
+	{"text": "Ferme les yeux. Je vais batir ce monde sous tes pas.", "delay": 1.8, "phase": "black"},
+	{"text": "D'abord, le ciel. La voute sous laquelle nous marcherons.", "delay": 1.4, "phase": "sky"},
+	{"text": "Maintenant la terre. Broceliande s'eveille pour t'accueillir.", "delay": 1.6, "phase": "forest"},
+	{"text": "Voici la carte de ta quete. Regarde le chemin que je te trace.", "delay": 1.4, "phase": "parchment"},
+	{"text": "Avance maintenant. Trois epreuves t'attendent — je serai a chaque carrefour.", "delay": 1.8, "phase": "walk"},
 ]
 
 
@@ -1408,9 +1410,16 @@ func _run_tutorial_intro() -> void:
 	vo_panel.add_child(vo_label)
 
 	# Run the scripted reveal sequence.
+	# RULE: speak FIRST, then trigger the visual effect (one voice / one effect at a time).
+	# See docs/INTRO_TUTO_SEQUENCE.md for the canonical timing.
 	for entry in TUTORIAL_VO_LINES:
 		if not is_inside_tree():
 			return
+		# 1) Merlin speaks the line completely (typewriter + hold).
+		await _vo_speak_line(vo_label, String(entry.get("text", "")), float(entry.get("delay", 2.0)))
+		if not is_inside_tree():
+			return
+		# 2) THEN the visual effect for this beat fires.
 		var phase: String = String(entry.get("phase", "black"))
 		match phase:
 			"sky":
@@ -1419,17 +1428,21 @@ func _run_tutorial_intro() -> void:
 					world_env.environment.background_color = saved_bg_color
 				if is_instance_valid(sun_light):
 					sun_light.visible = true
+				await get_tree().create_timer(0.6).timeout
 			"forest":
 				if is_instance_valid(forest_root):
 					forest_root.visible = true
+				await get_tree().create_timer(0.6).timeout
 			"parchment":
+				# VO label hidden during parchment (one focus at a time).
+				vo_label.text = ""
 				await _show_quest_parchment(vo_layer)
 			"walk":
 				if is_instance_valid(player):
 					player.visible = true
 				if is_instance_valid(merlin_node):
 					merlin_node.visible = true
-		await _vo_speak_line(vo_label, String(entry.get("text", "")), float(entry.get("delay", 2.0)))
+				await get_tree().create_timer(0.4).timeout
 
 	# Cleanup overlay then start the actual walk.
 	if is_instance_valid(vo_layer):

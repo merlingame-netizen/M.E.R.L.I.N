@@ -1,9 +1,33 @@
-[gd_scene load_steps=4 format=3 uid="uid://br0ce2026demo"]
+[gd_scene load_steps=6 format=3 uid="uid://br0ce2026demo"]
 
 [ext_resource type="Script" path="res://scripts/broceliande_3d/broceliande_forest_3d.gd" id="1"]
 
+[sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
+sky_top_color = Color(0.38, 0.46, 0.55, 1)
+sky_horizon_color = Color(0.62, 0.58, 0.50, 1)
+sky_curve = 0.15
+ground_bottom_color = Color(0.10, 0.13, 0.10, 1)
+ground_horizon_color = Color(0.30, 0.28, 0.20, 1)
+sun_angle_max = 30.0
+sun_curve = 0.15
+
+[sub_resource type="Sky" id="Sky_2"]
+sky_material = SubResource("Sky_1")
+
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 2
+sky = SubResource("Sky_2")
+ambient_light_source = 3
+ambient_light_color = Color(0.45, 0.50, 0.55, 1)
+ambient_light_sky_contribution = 0.7
+ambient_light_energy = 0.6
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.55, 0.58, 0.55, 1)
+fog_light_energy = 0.8
+fog_density = 0.012
+fog_aerial_perspective = 0.3
+fog_sky_affect = 0.4
 
 [sub_resource type="CapsuleShape3D" id="Cap_1"]
 radius = 0.4
@@ -19,6 +43,8 @@ environment = SubResource("Env_1")
 
 [node name="SunLight" type="DirectionalLight3D" parent="World3D"]
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 10, 0)
+light_color = Color(1, 0.94, 0.78, 1)
+light_energy = 1.6
 shadow_enabled = true
 
 [node name="ForestRoot" type="Node3D" parent="World3D"]
