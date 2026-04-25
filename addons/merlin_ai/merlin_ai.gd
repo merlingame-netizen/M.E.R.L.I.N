@@ -12,8 +12,8 @@ signal log_updated(log_text: String)
 # Brain 1 = Narrator (4B creatif), Brain 2 = Game Master (2B logique + thinking)
 # Brain 3-4 = Worker Pool / Judge (0.8B — taches de fond / evaluation)
 # SINGLE+ mode: time-sharing (un seul modele en RAM, swap Ollama)
-const MODEL_FILE := "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"
-const MODEL_CANDIDATES := [MODEL_FILE]
+const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
+const MODEL_CANDIDATES := [MODEL_FILE, "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
 const OllamaBackendScript = preload("res://addons/merlin_ai/ollama_backend.gd")
 const GroqBackendScript = preload("res://addons/merlin_ai/groq_backend.gd")
@@ -515,21 +515,31 @@ func _init_local_models() -> void:
 	target = clampi(target, BRAIN_SINGLE, BRAIN_MAX)
 	_log("Target brains: %d" % target)
 
-	# ── Strategy 1: Try Ollama backend (skip in web — CORS blocked) ──────────
+	# ── Strategy 1: MerlinLLM C++ GDExtension (local, in-process, user direction) ─
+	# All-local via custom GDExtension: no daemon, no HTTP, llama.cpp embedded.
+	# Uses qwen2.5-3b-instruct-q4_k_m.gguf in addons/merlin_llm/models/
+	if not OS.has_feature("web"):
+		if ClassDB.class_exists("MerlinLLM"):
+			await _try_init_merlin_llm(target)
+			if is_ready:
+				return
+
+	# ── Strategy 2: Ollama HTTP daemon (fallback if MerlinLLM unavailable) ────
 	if not OS.has_feature("web"):
 		if await _try_init_ollama(target):
 			return
 
-	# ── Strategy 2: Try Groq cloud API (primary for web export) ─────────
+	# ── Strategy 3: Groq cloud API (web export primary) ───────────────────
 	if await _try_init_groq():
 		return
 
-	# ── Strategy 3: Try BitNet swarm (llama-server.exe instances) ─────────
+	# ── Strategy 4: BitNet swarm (llama-server.exe instances) ─────────────
 	if await _try_init_bitnet(target):
 		return
 
-	# ── Strategy 4: Fallback to MerlinLLM (C++ GDExtension) ───────────────
-	await _try_init_merlin_llm(target)
+	# ── Strategy 5: Final fallback to MerlinLLM (already tried in S1, no-op) ─
+	if not is_ready:
+		await _try_init_merlin_llm(target)
 
 
 func _try_init_ollama(target: int) -> bool:
