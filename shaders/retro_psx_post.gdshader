@@ -45,70 +45,70 @@ float bayer4x4(ivec2 pos) {
 
 void fragment() {
 	vec2 uv = UV;
+	vec4 col = vec4(0.0);
 
 	if (global_intensity < 0.001) {
-		COLOR = texture(screen_texture, uv);
-		return;
-	}
-
-	vec2 center_dist = uv - 0.5;
-	float dist = length(center_dist);
-
-	if (curvature > 0.0) {
-		float r2 = dot(center_dist, center_dist);
-		uv = 0.5 + center_dist * (1.0 + r2 * curvature * global_intensity);
-	}
-
-	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-		COLOR = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
-	}
-
-	vec2 screen_size = 1.0 / SCREEN_PIXEL_SIZE;
-	float ps = mix(1.0, pixel_size, global_intensity);
-	vec2 pixel_uv = uv;
-	if (ps > 1.01) {
-		pixel_uv = floor(uv * screen_size / ps) * ps / screen_size;
-	}
-
-	vec4 col = texture(screen_texture, pixel_uv);
-
-	col.rgb = (col.rgb - 0.5) * mix(1.0, contrast, global_intensity) + 0.5
-	          + brightness * global_intensity;
-
-	float grey = dot(col.rgb, vec3(0.299, 0.587, 0.114));
-	col.rgb = mix(vec3(grey), col.rgb, mix(1.0, saturation_boost, global_intensity));
-
-	if (tint_blend > 0.0) {
-		col.rgb = mix(col.rgb, col.rgb * tint_color.rgb, tint_blend * global_intensity);
-	}
-
-	if (fog_blend > 0.0) {
-		col.rgb = mix(col.rgb, fog_color.rgb, fog_blend * global_intensity);
-	}
-
-	float levels = mix(64.0, color_depth, global_intensity) - 1.0;
-	if (dither_strength > 0.0) {
-		ivec2 sp = ivec2(FRAGCOORD.xy);
-		float threshold = bayer4x4(sp);
-		vec3 q = col.rgb * levels;
-		q += (threshold - 0.5) * dither_strength * global_intensity;
-		col.rgb = floor(q + 0.5) / levels;
+		col = texture(screen_texture, uv);
 	} else {
-		col.rgb = floor(col.rgb * levels + 0.5) / levels;
+		vec2 center_dist = uv - 0.5;
+		float dist = length(center_dist);
+
+		if (curvature > 0.0) {
+			float r2 = dot(center_dist, center_dist);
+			uv = 0.5 + center_dist * (1.0 + r2 * curvature * global_intensity);
+		}
+
+		if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+			col = vec4(0.0, 0.0, 0.0, 1.0);
+		} else {
+			vec2 screen_size = 1.0 / SCREEN_PIXEL_SIZE;
+			float ps = mix(1.0, pixel_size, global_intensity);
+			vec2 pixel_uv = uv;
+			if (ps > 1.01) {
+				pixel_uv = floor(uv * screen_size / ps) * ps / screen_size;
+			}
+
+			col = texture(screen_texture, pixel_uv);
+
+			col.rgb = (col.rgb - 0.5) * mix(1.0, contrast, global_intensity) + 0.5
+			          + brightness * global_intensity;
+
+			float grey = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+			col.rgb = mix(vec3(grey), col.rgb, mix(1.0, saturation_boost, global_intensity));
+
+			if (tint_blend > 0.0) {
+				col.rgb = mix(col.rgb, col.rgb * tint_color.rgb, tint_blend * global_intensity);
+			}
+
+			if (fog_blend > 0.0) {
+				col.rgb = mix(col.rgb, fog_color.rgb, fog_blend * global_intensity);
+			}
+
+			float levels = mix(64.0, color_depth, global_intensity) - 1.0;
+			if (dither_strength > 0.0) {
+				ivec2 sp = ivec2(FRAGCOORD.xy);
+				float threshold = bayer4x4(sp);
+				vec3 q = col.rgb * levels;
+				q += (threshold - 0.5) * dither_strength * global_intensity;
+				col.rgb = floor(q + 0.5) / levels;
+			} else {
+				col.rgb = floor(col.rgb * levels + 0.5) / levels;
+			}
+
+			if (scanline_opacity > 0.0) {
+				float scan = sin(uv.y * scanline_count * 3.14159) * 0.5 + 0.5;
+				scan = pow(scan, 2.0);
+				col.rgb *= 1.0 - scan * scanline_opacity * global_intensity;
+			}
+
+			if (vignette_intensity > 0.0) {
+				float vig = 1.0 - smoothstep(vignette_softness, 1.0, dist * 2.0);
+				col.rgb *= mix(1.0, vig, vignette_intensity * global_intensity);
+			}
+
+			col.rgb = clamp(col.rgb, 0.0, 1.0);
+		}
 	}
 
-	if (scanline_opacity > 0.0) {
-		float scan = sin(uv.y * scanline_count * 3.14159) * 0.5 + 0.5;
-		scan = pow(scan, 2.0);
-		col.rgb *= 1.0 - scan * scanline_opacity * global_intensity;
-	}
-
-	if (vignette_intensity > 0.0) {
-		float vig = 1.0 - smoothstep(vignette_softness, 1.0, dist * 2.0);
-		col.rgb *= mix(1.0, vig, vignette_intensity * global_intensity);
-	}
-
-	col.rgb = clamp(col.rgb, 0.0, 1.0);
 	COLOR = col;
 }

@@ -261,10 +261,10 @@ func _build_3d_viewport() -> void:
 	# Camera
 	_3d_camera = Camera3D.new()
 	_3d_camera.position = CAM_IDLE_POS
-	_3d_camera.look_at(CAM_IDLE_LOOK)
 	_3d_camera.fov = 55.0
 	_3d_camera.far = 200.0
 	_3d_viewport.add_child(_3d_camera)
+	_3d_camera.look_at(CAM_IDLE_LOOK)
 
 	# Dynamic lighting — driven by DayNightManager
 	_3d_sun = DirectionalLight3D.new()

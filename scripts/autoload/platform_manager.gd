@@ -112,7 +112,9 @@ func _apply_quality_settings(level: QualityLevel) -> void:
 			RenderingServer.directional_shadow_atlas_set_size(2048, true)
 		QualityLevel.HIGH:
 			vp.msaa_3d = Viewport.MSAA_4X
-			vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+			# FXAA is unavailable on the Compatibility renderer; only enable on Forward+/Mobile.
+			var renderer: String = str(ProjectSettings.get_setting("rendering/renderer/rendering_method", ""))
+			vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if renderer != "gl_compatibility" else Viewport.SCREEN_SPACE_AA_DISABLED
 			RenderingServer.directional_shadow_atlas_set_size(4096, true)
 
 
