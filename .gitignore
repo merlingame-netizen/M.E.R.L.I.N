@@ -379,3 +379,11 @@ tools/autodev/studio-bridge/node_modules/
 tools/autodev/studio-bridge/dist/
 tools/autodev/mission-control/dist/
 .vercel/
+
+# -------------------------------------------
+# Secrets — never commit
+# -------------------------------------------
+.env
+.env.local
+*.local.cfg
+secrets.json

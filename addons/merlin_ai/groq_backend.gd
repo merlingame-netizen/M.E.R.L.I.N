@@ -54,10 +54,12 @@ func _init(p_role: String = "narrator", p_api_key: String = "") -> void:
 	model = MODEL_REGISTRY.get(p_role, MODEL_REGISTRY["narrator"])
 	api_key = p_api_key
 	if api_key.is_empty():
-		# Try ProjectSettings, then env var, then JS bridge (web export)
-		api_key = ProjectSettings.get_setting("merlin/groq_api_key", "")
-	if api_key.is_empty():
+		# Env var first (preferred — never committed). ProjectSettings is a legacy
+		# fallback kept for backward compatibility but should NOT be used to store
+		# secrets (project.godot is committed).
 		api_key = OS.get_environment("GROQ_API_KEY")
+	if api_key.is_empty():
+		api_key = ProjectSettings.get_setting("merlin/groq_api_key", "")
 	if api_key.is_empty() and OS.has_feature("web"):
 		# Web export: try reading from URL parameter ?groq_key=...
 		var js_result = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('groq_key') || ''")

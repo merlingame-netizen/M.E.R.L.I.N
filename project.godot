@@ -65,10 +65,6 @@ theme/custom="res://themes/merlin_theme.tres"
 locale/translations=PackedStringArray("res://data/i18n/translations.csv")
 locale/fallback="fr"
 
-[merlin]
-
-groq_api_key="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"
-
 [merlin_llm]
 
 log_enabled=true
