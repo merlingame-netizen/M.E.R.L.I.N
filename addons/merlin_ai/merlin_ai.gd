@@ -539,10 +539,19 @@ func _try_init_ollama(target: int) -> bool:
 		_log("Ollama: non disponible (ollama serve non lance?)")
 		return false
 
-	# ── Detect optimal profile from hardware ──────────────────────────────
+	# ── Profile selection: respect target if user-set, else auto-detect HW ─
 	var available_ram := _estimate_available_ram_mb()
 	var cpu_threads := OS.get_processor_count()
-	_active_profile_id = BrainSwarmConfig.detect_profile(available_ram, cpu_threads)
+	if target > 0:
+		# User-driven via settings.cfg [ai] brain_count — overrides HW autodetect
+		match target:
+			1: _active_profile_id = BrainSwarmConfig.Profile.SINGLE
+			2: _active_profile_id = BrainSwarmConfig.Profile.DUAL
+			3: _active_profile_id = BrainSwarmConfig.Profile.TRIPLE
+			4: _active_profile_id = BrainSwarmConfig.Profile.QUAD
+			_: _active_profile_id = BrainSwarmConfig.Profile.SINGLE
+	else:
+		_active_profile_id = BrainSwarmConfig.detect_profile(available_ram, cpu_threads)
 	_is_time_sharing = BrainSwarmConfig.is_time_sharing(_active_profile_id)
 	var profile: Dictionary = BrainSwarmConfig.get_profile(_active_profile_id)
 	var profile_name: String = str(profile.get("name", "Unknown"))
