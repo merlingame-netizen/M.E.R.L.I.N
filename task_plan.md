@@ -5,6 +5,39 @@ Developper un JDR Parlant roguelite avec LLM local (Qwen 3.5 Multi-Brain heterog
 
 ---
 
+## Phase Active: 2026-04-25 (Demo iteration) — Progressive Narrative Onboarding
+
+### User direction (verbatim)
+"La scene qui suive l'intro doit se construire progressivement, comme si le LLM
+parlait et qu'il mettait en place le jeu — il programme l'UI/UX progressivement
+pour arriver dans un environnement 3D type PS1 avec tous shaders et assets d'une
+foret (test dans le 1er biome) et on fait une 1ere partie qui explique les
+mecanismes du jeu."
+
+### Goal
+Replace the abrupt MerlinGame UI dump with a 30s narrative awakening:
+1. Black screen + Merlin typewriter narration
+2. Each line spawns a UI element progressively (life bar -> factions -> oghams)
+3. Forest 3D layer fades in behind narration
+4. First card with 3 choices appears as tutorial
+5. Tutorial hint: "Choose A, B or C"
+
+### Scenes/scripts created
+- `scripts/demo_onboarding.gd` (300 lines): build_layout + run_sequence with
+  8 narration steps + spawn handlers (title/life/factions/oghams/forest/card)
+- `scenes/DemoOnboarding.tscn` (next): minimal Control with the script attached
+- IntroCeltOS --demo retargeted: BKForestRail.tscn -> DemoOnboarding.tscn
+
+### Steps
+- [x] Diagnostic: BKForestRail rendered but only HUD visible (3D didn't show)
+- [x] Created scripts/demo_onboarding.gd with progressive narrative flow
+- [ ] Create DemoOnboarding.tscn
+- [ ] Re-target IntroCeltOS demo
+- [ ] Test runtime + screenshot
+- [ ] Commit + push
+
+---
+
 ## Phase Active: 2026-04-25 (suite) — LLM Mobile Architecture (Cycle 1 Polish Pass)
 
 ### Context
