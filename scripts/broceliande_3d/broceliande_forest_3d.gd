@@ -1297,9 +1297,9 @@ func _on_run_complete() -> void:
 		_finalize_tutorial_rewards()
 		var pt2: Node = get_node_or_null("/root/PixelTransition")
 		if pt2 and pt2.has_method("transition_to"):
-			pt2.transition_to("res://scenes/MenuPrincipal.tscn")
+			pt2.transition_to("res://scenes/MerlinCabinHub.tscn")
 		else:
-			get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
 		return
 
 	var reason: String = "completed"

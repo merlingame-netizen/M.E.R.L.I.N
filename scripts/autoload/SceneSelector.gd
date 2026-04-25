@@ -8,7 +8,7 @@ const SCENES: Array[Dictionary] = [
 	# — Intro —
 	{"label": "IntroCeltOS (Boot)", "path": "res://scenes/IntroCeltOS.tscn"},
 	# — Menus —
-	{"label": "MenuPrincipal", "path": "res://scenes/MenuPrincipal.tscn"},
+	{"label": "MenuPrincipal", "path": "res://scenes/MerlinCabinHub.tscn"},
 	{"label": "MenuOptions", "path": "res://scenes/MenuOptions.tscn"},
 	{"label": "SelectionSauvegarde", "path": "res://scenes/SelectionSauvegarde.tscn"},
 	{"label": "ParchmentPreRun", "path": "res://scenes/ParchmentPreRun.tscn"},

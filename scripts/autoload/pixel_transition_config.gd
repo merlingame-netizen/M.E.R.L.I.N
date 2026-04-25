@@ -48,11 +48,7 @@ const SCENE_PROFILES := {
 		"skip_enter": true,
 	},
 
-	# --- Main flow (demo build 2026-04-25) ---
-	"res://scenes/MenuPrincipal.tscn": {
-		"block_size": 10,
-		"enter_duration": 1.0,
-	},
+	# --- Main flow (demo build 2026-04-25; menu fused into hub) ---
 	"res://scenes/MerlinCabinHub.tscn": {
 		"block_size": 10,
 		"enter_duration": 0.9,

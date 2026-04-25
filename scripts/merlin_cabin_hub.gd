@@ -4,27 +4,53 @@ extends Node
 ## Post-run: stats display, Anam rewards, progression.
 
 const FOREST_SCENE: String = "res://scenes/BroceliandeForest3D.tscn"
-const MENU_SCENE: String = "res://scenes/MenuPrincipal.tscn"
+const MENU_SCENE: String = "res://scenes/MerlinCabinHub.tscn"
 
 var _world: Node3D
 var _camera: Camera3D
 var _ui_layer: CanvasLayer
-var _orbit_angle: float = 0.0
+var _hint_label: Label
+# FPS look state (camera rotation only — position is fixed)
+var _yaw: float = 0.0     # horizontal rotation (radians)
+var _pitch: float = 0.0   # vertical rotation (radians, clamped)
+const MOUSE_SENS: float = 0.0025
+const PITCH_LIMIT: float = 0.7  # ~40 deg up/down
+const CAMERA_POS: Vector3 = Vector3(0, 2.0, 1.5)  # Standing FPS height in cabin
+# Hover state for click feedback
+var _hovered_target: String = ""
 
 
 func _ready() -> void:
 	_build_3d_cabin()
 	_build_ui_overlay()
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# FPS hub: mouse captured for look, click to interact.
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
-func _process(delta: float) -> void:
-	# Gentle camera sway inside cabin
-	_orbit_angle += delta * 0.05
+func _input(event: InputEvent) -> void:
+	# Mouse look: rotate camera in place (position locked).
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var mm: InputEventMouseMotion = event
+		_yaw -= mm.relative.x * MOUSE_SENS
+		_pitch = clampf(_pitch - mm.relative.y * MOUSE_SENS, -PITCH_LIMIT, PITCH_LIMIT)
+		if is_instance_valid(_camera):
+			_camera.transform.basis = Basis()
+			_camera.rotate_y(_yaw)
+			_camera.rotate_object_local(Vector3.RIGHT, _pitch)
+	# ESC to release mouse (debug / quitting).
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED)
+	# Click: interact with whatever the camera is centered on (raycast from camera).
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			_try_interact()
+
+
+func _process(_delta: float) -> void:
+	# Camera position is fixed; orientation is driven by mouse via _input.
 	if is_instance_valid(_camera):
-		_camera.position.x = sin(_orbit_angle) * 0.3
-		_camera.position.y = 2.0 + sin(_orbit_angle * 0.7) * 0.1
-		_camera.look_at(Vector3(0, 1.5, -2), Vector3.UP)
+		_camera.position = CAMERA_POS
+	_update_crosshair_hover()
 
 
 func _build_3d_cabin() -> void:
@@ -120,6 +146,22 @@ func _build_3d_cabin() -> void:
 	cauldron_mat.metallic = 0.8
 	cauldron.material_override = cauldron_mat
 	_world.add_child(cauldron)
+	_make_interactable(cauldron, Vector3(0.4, 0.4, 0.4), "cauldron")
+
+	# Cristal d'Anam (small floating glowing crystal — placeholder for Anam stat)
+	var crystal: MeshInstance3D = MeshInstance3D.new()
+	var crystal_mesh: PrismMesh = PrismMesh.new()
+	crystal_mesh.size = Vector3(0.18, 0.45, 0.18)
+	crystal.mesh = crystal_mesh
+	crystal.position = Vector3(2.2, 1.2, -2.0)
+	var crystal_mat: StandardMaterial3D = StandardMaterial3D.new()
+	crystal_mat.albedo_color = Color(0.55, 0.42, 0.78)
+	crystal_mat.emission_enabled = true
+	crystal_mat.emission = Color(0.45, 0.32, 0.78)
+	crystal_mat.emission_energy_multiplier = 1.8
+	crystal.material_override = crystal_mat
+	_world.add_child(crystal)
+	_make_interactable(crystal, Vector3(0.18, 0.30, 0.18), "cauldron")
 
 	# Tapestry placeholder (talent tree removed in demo cleanup 2026-04-25 — solid colored quad)
 	var tapestry: MeshInstance3D = MeshInstance3D.new()
@@ -132,6 +174,7 @@ func _build_3d_cabin() -> void:
 	tap_mat.roughness = 1.0
 	tapestry.material_override = tap_mat
 	_world.add_child(tapestry)
+	_make_interactable(tapestry, Vector3(1.5, 1.15, 0.1), "tapestry")
 
 	# Wall map (left wall — biome selection via SubViewport)
 	var map_viewport: SubViewport = SubViewport.new()
@@ -157,6 +200,7 @@ func _build_3d_cabin() -> void:
 	map_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	wall_map.material_override = map_mat
 	_world.add_child(wall_map)
+	_make_interactable(wall_map, Vector3(1.25, 1.0, 0.1), "map")
 
 	# Fairy lanterns (atmospheric)
 	for i in 4:
@@ -272,52 +316,146 @@ func _build_ui_overlay() -> void:
 	greeting.add_theme_color_override("font_color", pal.get("phosphor_dim", Color(0.12, 0.6, 0.24)))
 	_ui_layer.add_child(greeting)
 
-	# Bottom buttons
-	var btn_box: HBoxContainer = HBoxContainer.new()
-	btn_box.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	btn_box.offset_top = -60; btn_box.offset_bottom = -12
-	btn_box.offset_left = 100; btn_box.offset_right = -100
-	btn_box.add_theme_constant_override("separation", 20)
-	btn_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	_ui_layer.add_child(btn_box)
+	# Crosshair (small dot at center)
+	var cross: Label = Label.new()
+	cross.text = "+"
+	cross.set_anchors_preset(Control.PRESET_CENTER)
+	cross.offset_left = -8
+	cross.offset_top = -16
+	cross.offset_right = 8
+	cross.offset_bottom = 16
+	cross.add_theme_font_size_override("font_size", 26)
+	cross.add_theme_color_override("font_color", pal.get("phosphor", Color(0.2, 1.0, 0.4)))
+	cross.modulate.a = 0.55
+	_ui_layer.add_child(cross)
 
-	var btn_data: Array[Dictionary] = [
-		{"text": "Nouvelle Quete", "action": "quest"},
-		{"text": "Tapisserie", "action": "tapestry"},
-		{"text": "Carte du Monde", "action": "map"},
-		{"text": "Retour", "action": "menu"},
-	]
-	for bd in btn_data:
-		var btn: Button = Button.new()
-		btn.text = str(bd["text"])
-		btn.custom_minimum_size = Vector2(0, 44)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if font: btn.add_theme_font_override("font", font)
-		btn.add_theme_font_size_override("font_size", 16)
-		btn.add_theme_color_override("font_color", pal.get("phosphor", Color(0.2, 1.0, 0.4)))
-		var s: StyleBoxFlat = StyleBoxFlat.new()
-		s.bg_color = Color(0.02, 0.04, 0.02, 0.8)
-		s.border_color = pal.get("phosphor_dim", Color(0.12, 0.6, 0.24))
-		s.set_border_width_all(1)
-		s.set_corner_radius_all(4)
-		s.set_content_margin_all(8)
-		btn.add_theme_stylebox_override("normal", s)
-		btn.pressed.connect(_on_hub_action.bind(str(bd["action"])))
-		btn_box.add_child(btn)
+	# Hint label below crosshair (shows hovered interactable / flash messages)
+	_hint_label = Label.new()
+	_hint_label.set_anchors_preset(Control.PRESET_CENTER)
+	_hint_label.offset_top = 22
+	_hint_label.offset_bottom = 60
+	_hint_label.offset_left = -360
+	_hint_label.offset_right = 360
+	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if font: _hint_label.add_theme_font_override("font", font)
+	_hint_label.add_theme_font_size_override("font_size", 16)
+	_hint_label.add_theme_color_override("font_color", pal.get("amber", Color(1.0, 0.75, 0.2)))
+	_hint_label.text = ""
+	_ui_layer.add_child(_hint_label)
+
+	# Bottom controls hint
+	var ctl_hint: Label = Label.new()
+	ctl_hint.text = "Souris : regarder    Clic gauche : interagir    Echap : liberer souris"
+	ctl_hint.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	ctl_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ctl_hint.offset_top = -36
+	ctl_hint.offset_bottom = -10
+	if font: ctl_hint.add_theme_font_override("font", font)
+	ctl_hint.add_theme_font_size_override("font_size", 12)
+	ctl_hint.add_theme_color_override("font_color", pal.get("phosphor_dim", Color(0.12, 0.6, 0.24)))
+	ctl_hint.modulate.a = 0.7
+	_ui_layer.add_child(ctl_hint)
 
 
 func _on_hub_action(action: String) -> void:
 	if is_instance_valid(SFXManager):
 		SFXManager.play("click")
 	match action:
-		"quest":
+		"quest", "map":
 			_show_book_cinematic_then_forest()
 		"tapestry":
-			print("[Cabin] Tapestry (talent tree) — TODO")
-		"map":
-			print("[Cabin] World map — TODO")
+			_flash_hint("Tapisserie des Talents — debloquee apres ton premier rune")
+		"cauldron":
+			var anam: int = _read_anam_from_save()
+			_flash_hint("Cristal d'Anam : %d" % anam)
 		"menu":
 			PixelTransition.transition_to(MENU_SCENE)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FPS interaction — raycast from camera, click to trigger registered action
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _make_interactable(node: Node3D, half_extents: Vector3, action_id: String) -> void:
+	# Wrap a MeshInstance3D (or any Node3D) in a StaticBody3D so a raycast can hit it.
+	var body: StaticBody3D = StaticBody3D.new()
+	body.set_meta("action", action_id)
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var col: CollisionShape3D = CollisionShape3D.new()
+	var shape: BoxShape3D = BoxShape3D.new()
+	shape.size = half_extents * 2.0
+	col.shape = shape
+	body.add_child(col)
+	# Insert body as child of node's parent at node's transform so raycasts hit at the same spot.
+	body.transform = node.transform
+	if node.get_parent():
+		node.get_parent().add_child(body)
+
+
+func _try_interact() -> void:
+	var hit: Dictionary = _raycast_from_camera()
+	if hit.is_empty():
+		return
+	var collider: Object = hit.get("collider")
+	if collider and collider.has_meta("action"):
+		_on_hub_action(str(collider.get_meta("action")))
+
+
+func _update_crosshair_hover() -> void:
+	var hit: Dictionary = _raycast_from_camera()
+	var new_target: String = ""
+	if not hit.is_empty():
+		var collider: Object = hit.get("collider")
+		if collider and collider.has_meta("action"):
+			new_target = str(collider.get_meta("action"))
+	if new_target == _hovered_target:
+		return
+	_hovered_target = new_target
+	if is_instance_valid(_hint_label):
+		match new_target:
+			"quest", "map":  _hint_label.text = "[ Carte de Broceliande — clic pour partir ]"
+			"tapestry":      _hint_label.text = "[ Tapisserie des Talents ]"
+			"cauldron":      _hint_label.text = "[ Cristal d'Anam ]"
+			_:               _hint_label.text = ""
+
+
+func _raycast_from_camera() -> Dictionary:
+	if not is_instance_valid(_camera):
+		return {}
+	var space: PhysicsDirectSpaceState3D = _camera.get_world_3d().direct_space_state
+	var from: Vector3 = _camera.global_position
+	var to: Vector3 = from + (-_camera.global_transform.basis.z) * 6.0
+	var q: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)
+	q.collide_with_areas = false
+	q.collide_with_bodies = true
+	return space.intersect_ray(q)
+
+
+func _flash_hint(text: String) -> void:
+	if not is_instance_valid(_hint_label):
+		return
+	_hint_label.text = text
+	# Restore based on hover after 2.5s.
+	await get_tree().create_timer(2.5).timeout
+	_hovered_target = "_dirty"  # force refresh on next process tick
+
+
+func _read_anam_from_save() -> int:
+	var path := "user://merlin_profile.json"
+	if not FileAccess.file_exists(path):
+		return 0
+	var f: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return 0
+	var raw: String = f.get_as_text()
+	f.close()
+	var json := JSON.new()
+	if json.parse(raw) != OK or not (json.data is Dictionary):
+		return 0
+	var data: Dictionary = json.data as Dictionary
+	var meta: Dictionary = data.get("meta", {}) as Dictionary
+	return int(meta.get("anam", 0))
 
 
 func _show_book_cinematic_then_forest() -> void:

@@ -46,7 +46,7 @@ const PHASE_NAMES: Dictionary = {
 const SCENE_HUB: String = "res://scenes/MerlinCabinHub.tscn"
 const SCENE_RUN: String = "res://scenes/BroceliandeForest3D.tscn"
 const SCENE_END: String = "res://scenes/EndRunScreen.tscn"
-const SCENE_MENU: String = "res://scenes/MenuPrincipal.tscn"
+const SCENE_MENU: String = "res://scenes/MerlinCabinHub.tscn"
 const SCENE_TALENT_TREE: String = "res://scenes/MerlinCabinHub.tscn"  # Talent tree disabled, fall back to hub
 
 const SCENE_HUB_ANTRE: String = "res://scenes/MerlinCabinHub.tscn"  # Alias for legacy callers

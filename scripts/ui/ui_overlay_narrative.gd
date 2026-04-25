@@ -286,9 +286,9 @@ func show_pause_menu() -> void:
 		_ui.get_tree().paused = false
 		var pt: Node = _ui.get_node_or_null("/root/PixelTransition")
 		if pt and pt.has_method("transition_to"):
-			pt.transition_to("res://scenes/MenuPrincipal.tscn")
+			pt.transition_to("res://scenes/MerlinCabinHub.tscn")
 		else:
-			_ui.get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn"))
+			_ui.get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn"))
 	vbox.add_child(btn_quit)
 
 

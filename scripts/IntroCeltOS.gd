@@ -520,7 +520,7 @@ func _transition_to_menu() -> void:
 
 	if skip_tutorial:
 		print("[IntroCeltOS] --menu flag -> MenuPrincipal (tutorial skipped)")
-		PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
+		PixelTransition.transition_to("res://scenes/MerlinCabinHub.tscn")
 		return
 
 	if force_tutorial or not tutorial_completed:
@@ -531,7 +531,7 @@ func _transition_to_menu() -> void:
 		PixelTransition.transition_to("res://scenes/BroceliandeForest3D.tscn")
 		return
 
-	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
+	PixelTransition.transition_to("res://scenes/MerlinCabinHub.tscn")
 
 
 func _read_tutorial_completed_flag() -> bool:
