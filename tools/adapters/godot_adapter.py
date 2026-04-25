@@ -242,8 +242,14 @@ class GodotAdapter(BaseAdapter):
             }
         )
 
-    def _smoke(self, scene: str = "", **_kwargs: Any) -> dict:
-        """Smoke-test a scene by running it headlessly for 15 seconds."""
+    def _smoke(self, scene: str = "", duration: str = "10", **_kwargs: Any) -> dict:
+        """Smoke-test a scene by running it (windowed) for N seconds and grepping for runtime errors.
+
+        Headless mode skips _ready/_process for many engine subsystems (3D rendering, input,
+        audio), so SCRIPT ERROR from those paths are NOT caught. We launch with a normal display
+        but `--quit-after` to bound the run. The scene is passed as a positional arg
+        (Godot 4 ignores --scene-path).
+        """
         if not scene:
             return self.error("smoke action requires scene= kwarg (e.g. scene='res://scenes/MerlinGame.tscn')")
 
@@ -251,32 +257,45 @@ class GodotAdapter(BaseAdapter):
         if isinstance(godot, dict):
             return godot
 
-        self.log(f"Smoke-testing scene: {scene}")
+        try:
+            quit_after = max(2, int(duration))
+        except (TypeError, ValueError):
+            quit_after = 10
+
+        timeout_s = quit_after + 30  # generous buffer for project loading
+        self.log(f"Smoke-testing scene '{scene}' for {quit_after}s (timeout {timeout_s}s)")
         try:
             stdout, stderr, code = _run(
-                [godot, "--headless", "--quit-after", "15", "--scene-path", scene],
-                timeout=60,
+                [godot, "--path", str(PROJECT_ROOT), "--quit-after", str(quit_after), scene],
+                timeout=timeout_s,
             )
         except subprocess.TimeoutExpired:
-            return self.error(f"Smoke test for '{scene}' timed out after 60s")
+            return self.error(f"Smoke test for '{scene}' timed out after {timeout_s}s — likely hang in _ready")
         except OSError as exc:
             return self.error(f"Failed to launch Godot: {exc}")
 
         combined = stdout + "\n" + stderr
         classified = _classify_output(combined)
+        # Runtime-only signal: SCRIPT ERROR is what crashes a play session (parse errors are caught
+        # by validate_step0). We surface them separately.
+        script_errors = [e for e in classified["errors"] if "SCRIPT ERROR" in e or "Identifier" in e or "not declared" in e]
+        passed = code == 0 and not script_errors
         self.log(
-            f"smoke exit={code} | errors={len(classified['errors'])} "
-            f"warnings={len(classified['warnings'])}"
+            f"smoke exit={code} | script_errors={len(script_errors)} "
+            f"total_errors={len(classified['errors'])} warnings={len(classified['warnings'])} "
+            f"passed={passed}"
         )
         return self.ok(
             {
                 "scene": scene,
+                "duration_s": quit_after,
                 "exit_code": code,
-                "passed": code == 0 and not classified["errors"],
+                "passed": passed,
+                "script_errors": script_errors,
                 "errors": classified["errors"],
-                "warnings": classified["warnings"],
-                "stdout": stdout,
-                "stderr": stderr,
+                "warnings": classified["warnings"][:20],  # cap noise
+                "stdout_tail": "\n".join(stdout.splitlines()[-50:]),
+                "stderr_tail": "\n".join(stderr.splitlines()[-50:]),
             }
         )
 

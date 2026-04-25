@@ -1,6 +1,116 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://br0ce2026demo"]
 
 [ext_resource type="Script" path="res://scripts/broceliande_3d/broceliande_forest_3d.gd" id="1"]
 
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 2
+
+[sub_resource type="CapsuleShape3D" id="Cap_1"]
+radius = 0.4
+height = 1.7
+
 [node name="BroceliandeForest3D" type="Node"]
 script = ExtResource("1")
+
+[node name="World3D" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="World3D"]
+environment = SubResource("Env_1")
+
+[node name="SunLight" type="DirectionalLight3D" parent="World3D"]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 10, 0)
+shadow_enabled = true
+
+[node name="ForestRoot" type="Node3D" parent="World3D"]
+
+[node name="Merlin" type="Node3D" parent="World3D"]
+
+[node name="Player" type="CharacterBody3D" parent="World3D"]
+collision_layer = 2
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World3D/Player"]
+shape = SubResource("Cap_1")
+
+[node name="Head" type="Node3D" parent="World3D/Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+
+[node name="Camera3D" type="Camera3D" parent="World3D/Player/Head"]
+fov = 70.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="Margin" type="MarginContainer" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+mouse_filter = 2
+
+[node name="InfoPanel" type="PanelContainer" parent="HUD/Margin"]
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Margin/InfoPanel"]
+mouse_filter = 2
+
+[node name="ZoneLabel" type="Label" parent="HUD/Margin/InfoPanel/VBox"]
+text = "Broceliande"
+
+[node name="ObjectiveLabel" type="Label" parent="HUD/Margin/InfoPanel/VBox"]
+text = "Marche le sentier..."
+
+[node name="StatusLabel" type="Label" parent="HUD/Margin/InfoPanel/VBox"]
+text = ""
+
+[node name="Crosshair" type="Label" parent="HUD"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -6.0
+offset_top = -10.0
+offset_right = 6.0
+offset_bottom = 10.0
+text = "+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ResultPanel" type="PanelContainer" parent="HUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -160.0
+offset_right = 240.0
+offset_bottom = 160.0
+
+[node name="ResultMargin" type="MarginContainer" parent="HUD/ResultPanel"]
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="HUD/ResultPanel/ResultMargin"]
+
+[node name="ResultText" type="Label" parent="HUD/ResultPanel/ResultMargin/VBox"]
+text = ""
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="HUD/ResultPanel/ResultMargin/VBox"]
+alignment = 1
+
+[node name="ReplayButton" type="Button" parent="HUD/ResultPanel/ResultMargin/VBox/Buttons"]
+text = "Rejouer"
+
+[node name="HubButton" type="Button" parent="HUD/ResultPanel/ResultMargin/VBox/Buttons"]
+text = "Retour Hub"

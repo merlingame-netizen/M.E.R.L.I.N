@@ -987,7 +987,9 @@ func _update_hud() -> void:
 	if _walk_hud:
 		var store: Node = get_node_or_null("/root/GameManager")
 		if store:
-			var run: Dictionary = store.get("run_state") as Dictionary if store.has_method("get") else {}
+			# run_state can be null (no active run) — guard the cast.
+			var rs: Variant = store.get("run_state") if store.has_method("get") else null
+			var run: Dictionary = rs as Dictionary if rs is Dictionary else {}
 			var life: int = int(run.get("life_essence", 100))
 			_walk_hud.update_pv(life, 100)
 			var essences: int = int(run.get("biome_currency", 0))
@@ -1445,11 +1447,12 @@ func _vo_speak_line(label: Label, text: String, hold_seconds: float) -> void:
 	# Typewriter effect, ~50 chars/s
 	label.text = ""
 	for i in range(text.length()):
-		if not is_instance_valid(label) or _transitioning:
+		if not is_instance_valid(label) or not is_inside_tree():
 			return
 		label.text += text.substr(i, 1)
 		await get_tree().create_timer(0.020).timeout
-	await get_tree().create_timer(hold_seconds).timeout
+	if is_inside_tree():
+		await get_tree().create_timer(hold_seconds).timeout
 
 
 func _show_quest_parchment(vo_layer: CanvasLayer) -> void:

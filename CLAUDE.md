@@ -23,15 +23,39 @@
 
 **Ordre**: Editer → validate.bat → corriger → re-valider → tester dans Godot
 
+**ATTENTION** : `validate.bat` (parse check headless) **ne detecte PAS** les erreurs runtime
+(`SCRIPT ERROR`, `Identifier "x" not declared`, push_error en _ready, etc.). Un script qui
+parse OK peut crasher au demarrage de scene. Pour ces cas, voir 2bis ci-dessous.
+
+### 2bis. Smoke Test Runtime — AVANT COMMIT runtime (OBLIGATOIRE)
+
+Tout commit qui touche un script ou une scene impliquee dans le **flow demo** (IntroCeltOS,
+MerlinCabinHub, BroceliandeForest3D, MerlinGame, EndRunScreen, ParchmentPreRun, MenuOptions,
+SelectionSauvegarde) DOIT passer un smoke runtime sur **chaque scene affectee**:
+
+```bash
+python tools/cli.py godot smoke --scene "res://scenes/IntroCeltOS.tscn" --duration 8
+python tools/cli.py godot smoke --scene "res://scenes/MerlinCabinHub.tscn" --duration 6
+python tools/cli.py godot smoke --scene "res://scenes/BroceliandeForest3D.tscn" --duration 10
+```
+
+Critere de pass : `passed=true` ET `script_errors=[]` ET `exit_code=0`.
+Si KO → corriger avant commit. Ne **JAMAIS** committer un bug runtime detectable par smoke.
+
+Le smoke lance Godot en mode normal (pas headless) avec `--quit-after N`, capture stdout/stderr,
+et grep `SCRIPT ERROR` / `Identifier ... not declared`. Couvre les bugs de _ready / _process /
+_input / signal handlers que le parse check seul rate.
+
 ### 3. Post-Dev Checklist — FIN DE SESSION (OBLIGATOIRE)
 
 ```
-1. VALIDATE  — .\validate.bat (Step 0 minimum)
-2. FIX       — Corriger TOUTES erreurs + warnings
-3. REVALIDATE — Confirmer 0 errors, 0 warnings
-4. COMMIT    — git add + git commit (conventional commits)
-5. PUSH      — git push origin main (ou rappeler si auth requise)
-6. AGENTS    — Verifier que tous les agents/skills mandates ont ete invoques
+1. VALIDATE       — .\validate.bat (Step 0 minimum)
+2. SMOKE RUNTIME  — python tools/cli.py godot smoke --scene <chaque scene touchee>
+3. FIX            — Corriger TOUTES erreurs + warnings + script_errors smoke
+4. REVALIDATE     — 0 errors validate.bat ET tous smoke passed=true
+5. COMMIT         — git add + git commit (conventional commits)
+6. PUSH           — git push origin main
+7. AGENTS         — Verifier que tous les agents/skills mandates ont ete invoques
 ```
 
 **JAMAIS** repondre "termine" sans les 6 etapes.
