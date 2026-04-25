@@ -113,8 +113,12 @@ func _apply_quality_settings(level: QualityLevel) -> void:
 		QualityLevel.HIGH:
 			vp.msaa_3d = Viewport.MSAA_4X
 			# FXAA is unavailable on the Compatibility renderer (no RenderingDevice).
-			# This runtime check is robust against project setting overrides and HW fallbacks.
-			vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if RenderingServer.get_rendering_device() != null else Viewport.SCREEN_SPACE_AA_DISABLED
+			# Belt-and-braces check: project setting + runtime device probe.
+			# Compatibility (gl_compatibility) ALWAYS yields SSAA_DISABLED — no error spam.
+			var rendering_method: String = str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "forward_plus"))
+			var has_rd: bool = RenderingServer.get_rendering_device() != null
+			var supports_ssaa: bool = has_rd and rendering_method != "gl_compatibility"
+			vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if supports_ssaa else Viewport.SCREEN_SPACE_AA_DISABLED
 			RenderingServer.directional_shadow_atlas_set_size(4096, true)
 
 
