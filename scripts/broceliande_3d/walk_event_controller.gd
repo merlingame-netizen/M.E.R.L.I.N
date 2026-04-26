@@ -227,6 +227,30 @@ func _get_next_event() -> Dictionary:
 
 
 func _get_fallback_event() -> Dictionary:
+	# C34 — Hybrid fallback chain: prefer the 810-card RPG pool loaded by
+	# MerlinCardSystem (already RPG-shaped via tools/migrate_fastroute_to_rpg.py).
+	# Only land on the 5 hardcoded FALLBACK_EVENTS if the pool is unreachable.
+	if _store and _store.get("cards"):
+		var cs: Node = _store.cards
+		if cs and cs.has_method("get_fastroute_card"):
+			var ctx: Dictionary = _build_llm_context()
+			if _store.state.has("meta"):
+				ctx["faction_rep"] = (_store.state["meta"] as Dictionary).get("faction_rep", {})
+			var pool_card: Dictionary = cs.get_fastroute_card(ctx)
+			if not pool_card.is_empty() and pool_card.has("text"):
+				# Pool cards already carry the RPG schema (choices/dc/resolutions/minigame)
+				# — they're ready to be event-shaped: pull labels from choices, set source.
+				var rpg_event: Dictionary = pool_card.duplicate(true)
+				if not rpg_event.has("labels"):
+					var labels: Array[String] = []
+					for ch in (pool_card.get("choices", []) as Array):
+						labels.append(String((ch as Dictionary).get("label", "...")))
+					while labels.size() < 3:
+						labels.append("...")
+					rpg_event["labels"] = labels
+				rpg_event["source"] = "pool_rpg"
+				return rpg_event
+	# Last-resort hardcoded events.
 	var idx: int = _rng.randi_range(0, FALLBACK_EVENTS.size() - 1)
 	return FALLBACK_EVENTS[idx].duplicate(true)
 
@@ -252,21 +276,52 @@ func _do_prefetch() -> void:
 
 	# Build context from current game state
 	var context: Dictionary = _build_llm_context()
+	# C34 — Inject faction_rep into the LLM context so the gamemaster_rpg_card
+	# template can fill {faction_status}. _build_llm_context covers the run-only
+	# keys; this adds the meta-level reps.
+	if _store and _store.state.has("meta"):
+		var meta: Dictionary = _store.state["meta"] as Dictionary
+		context["faction_rep"] = meta.get("faction_rep", {})
 
-	# Generate card via existing pipeline (async)
-	var result: Dictionary = await _store.llm.generate_card(context)
-
+	# C34 — Hybrid: try the new gamemaster_rpg_card template FIRST. Result already
+	# carries the runtime schema (text/labels/choices/resolutions) so no _card_to_event
+	# mapping is needed.
+	var rpg_result: Dictionary = {}
+	if _store.llm.has_method("generate_rpg_card"):
+		rpg_result = await _store.llm.generate_rpg_card(context)
 	# Guard: controller may have been stopped while awaiting
 	if not _run_active:
 		_prefetch_pending = false
 		return
+	if rpg_result.get("ok", false):
+		var rpg_card: Dictionary = rpg_result.get("card", {}) as Dictionary
+		if not rpg_card.is_empty():
+			# rpg_card already in event-shape; ensure required keys for downstream consumers.
+			if not rpg_card.has("effects"):
+				rpg_card["effects"] = [[], [], []]
+			rpg_card["source"] = "llm_rpg"
+			_event_buffer.append(rpg_card)
+			print("[WalkEventController] C34 — LLM RPG card prefetched in %dms (buffer: %d)" % [
+				int(rpg_result.get("elapsed_ms", 0)), _event_buffer.size()])
+			_prefetch_pending = false
+			return
+		else:
+			print("[WalkEventController] C34 — LLM RPG returned ok=true but empty card; falling back")
+	else:
+		var err: String = String(rpg_result.get("error", "no rpg method"))
+		print("[WalkEventController] C34 — LLM RPG miss (%s), falling back to legacy generator" % err)
 
+	# Fallback path: existing two-stage narrative generator (legacy schema).
+	var result: Dictionary = await _store.llm.generate_card(context)
+	if not _run_active:
+		_prefetch_pending = false
+		return
 	if result.get("ok", false):
 		var card: Dictionary = result.get("card", {})
 		var event: Dictionary = _card_to_event(card)
 		if not event.is_empty():
 			_event_buffer.append(event)
-			print("[WalkEventController] Prefetched event (buffer: %d)" % _event_buffer.size())
+			print("[WalkEventController] Prefetched event (legacy two-stage, buffer: %d)" % _event_buffer.size())
 
 	_prefetch_pending = false
 
