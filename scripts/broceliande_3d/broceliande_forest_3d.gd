@@ -1825,29 +1825,59 @@ const TUTORIAL_CARDS: Array[Dictionary] = [
 	{
 		"title": "Le Premier Souffle",
 		"text": "Le sentier s'ouvre devant toi. Une brume legere caresse les fougeres. Une voix murmure : choisis comment tu avances dans ce monde.",
+		"text_intro": "Le sentier s'ouvre devant toi. Une brume legere caresse les fougeres. Une voix murmure : choisis comment tu avances dans ce monde.",
+		"test_stat_default": "souffle",
+		"dc": 9,
 		"choices": [
-			{"label": "Avancer en silence"},
-			{"label": "Saluer la foret"},
-			{"label": "Observer chaque ombre"},
+			{"label": "Avancer en silence", "axis": "souffle", "dc_offset": 0, "risk_hint": "Le silence demande de tenir son souffle."},
+			{"label": "Saluer la foret", "axis": "coeur", "dc_offset": -1, "risk_hint": "Les arbres ecoutent, mais ils jugent aussi."},
+			{"label": "Observer chaque ombre", "axis": "esprit", "dc_offset": 1, "risk_hint": "Voir trop, c'est se perdre dans le detail."},
 		],
+		"resolutions": {
+			"critical": "Tu marches comme si la foret elle-meme te portait. Chaque feuille s'ecarte sur ton passage. Le sentier se grave dans ta memoire — tu ne te perdras plus jamais ici.",
+			"success": "Ton pas est mesure, ton souffle aussi. La foret t'accepte sans te connaitre encore. C'est un debut.",
+			"failure": "Tu trebuches sur une racine que tu n'avais pas vue. Une douleur sourde monte dans ta cheville. Tu repars en boitant un peu.",
+			"critical_failure": "Une branche basse te frappe au visage — sang, surprise, et un rire qui ne vient pas de toi. Tu reviens du sentier ebranle, marque."
+		},
+		"memory_tag": "premier_souffle"
 	},
 	{
 		"title": "Le Carrefour des Eaux",
 		"text": "Un ruisseau coupe le chemin. Une pierre plate sert de pont. Tes paumes ressentent la fraicheur de l'air humide. Que fais-tu ?",
+		"text_intro": "Un ruisseau coupe le chemin. Une pierre plate sert de pont. Tes paumes ressentent la fraicheur de l'air humide.",
+		"test_stat_default": "coeur",
+		"dc": 10,
 		"choices": [
-			{"label": "Boire une gorgee"},
-			{"label": "Traverser sans m'arreter"},
-			{"label": "Ecouter le chant de l'eau"},
+			{"label": "Boire une gorgee", "axis": "coeur", "dc_offset": 0, "risk_hint": "L'eau choisit qui elle accepte.", "minigame": "resonance"},
+			{"label": "Traverser sans m'arreter", "axis": "souffle", "dc_offset": 1, "risk_hint": "La pierre est glissante."},
+			{"label": "Ecouter le chant de l'eau", "axis": "esprit", "dc_offset": -1, "risk_hint": "Ce que dit l'eau ne s'oublie pas."},
 		],
+		"resolutions": {
+			"critical": "L'eau te reconnait. Une silhouette feminine se forme dans le reflet — Niamh. Elle ne parle pas, mais elle te regarde longuement. Tu repars avec une paix que tu n'avais pas avant. (+lien Niamh)",
+			"success": "Tu traverses propre, le ventre apaise. Le ruisseau a coopere. Tu te sens un peu plus pres de cette terre.",
+			"failure": "Tu glisses, tes pieds sont trempes, tu jures tout bas. La foret se moque doucement.",
+			"critical_failure": "Tu tombes dans le ruisseau. L'eau est plus profonde que prevu. Tu sors trempe, frigorifie, et quelque chose dans le froid te fait douter de toi-meme."
+		},
+		"memory_tag": "carrefour_eaux"
 	},
 	{
 		"title": "Le Seuil de Merlin",
 		"text": "Une arche de branches entrelacees marque la fin du sentier. Au-dela, une lumiere doree. Tu es au seuil. Comment franchis-tu le passage ?",
+		"text_intro": "Une arche de branches entrelacees marque la fin du sentier. Au-dela, une lumiere doree. Tu es au seuil.",
+		"test_stat_default": "esprit",
+		"dc": 11,
 		"choices": [
-			{"label": "Avec confiance"},
-			{"label": "Avec humilite"},
-			{"label": "Avec curiosite"},
+			{"label": "Avec confiance", "axis": "souffle", "dc_offset": 1, "risk_hint": "L'arrogance est lue par les seuils."},
+			{"label": "Avec humilite", "axis": "coeur", "dc_offset": -1, "risk_hint": "S'incliner ne coute rien aux braves."},
+			{"label": "Avec curiosite", "axis": "esprit", "dc_offset": 0, "risk_hint": "Regarder de pres, c'est s'engager.", "minigame": "memoire_runes"},
 		],
+		"resolutions": {
+			"critical": "Tu franchis sans heurt. Merlin te voit avant que tu le voies. Sa voix : 'Je t'attendais. Tu sais ce que tu es venu chercher.' (+1 Esprit, marque \"Eveille\")",
+			"success": "Tu passes l'arche. La foret retient son souffle, puis te laisse aller. Quelque part, on a note ton passage.",
+			"failure": "Tu sens une resistance — comme un regard pose sur ta nuque. L'arche te laisse passer, mais avec un avertissement silencieux.",
+			"critical_failure": "L'arche se ferme avant que tu n'aies fini de traverser. Une branche te griffe la joue. Tu portes maintenant une marque que tu n'as pas demandee."
+		},
+		"memory_tag": "seuil_merlin"
 	},
 ]
 
