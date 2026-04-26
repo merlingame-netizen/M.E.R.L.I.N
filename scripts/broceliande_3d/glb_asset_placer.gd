@@ -169,7 +169,7 @@ func _place_creatures(world: Node3D, zones: Array, rng: RandomNumberGenerator) -
 func _place_path_megaliths(world: Node3D, zones: Array, rng: RandomNumberGenerator) -> void:
 	if zones.size() < 2:
 		return
-	var count: int = rng.randi_range(2, 4)
+	var count: int = rng.randi_range(4, 7)
 	for i in count:
 		var seg_idx: int = rng.randi_range(0, zones.size() - 2)
 		var a: Vector3 = zones[seg_idx] as Vector3
@@ -192,7 +192,7 @@ func _place_path_megaliths(world: Node3D, zones: Array, rng: RandomNumberGenerat
 func _scatter_decor(world: Node3D, zones: Array, rng: RandomNumberGenerator) -> void:
 	for zone_idx in zones.size():
 		var center: Vector3 = zones[zone_idx] as Vector3
-		var decor_count: int = rng.randi_range(2, 4)
+		var decor_count: int = rng.randi_range(4, 8)
 		for _i in decor_count:
 			var key: String = DECOR_KEYS[rng.randi_range(0, DECOR_KEYS.size() - 1)]
 			var scene: PackedScene = _try_load_broc(DECOR_PATHS[key])
@@ -211,7 +211,7 @@ func _scatter_vegetation(world: Node3D, zones: Array, rng: RandomNumberGenerator
 		return
 	for zone_idx in zones.size():
 		var center: Vector3 = zones[zone_idx] as Vector3
-		var tree_count: int = rng.randi_range(4, 8)
+		var tree_count: int = rng.randi_range(9, 16)
 		for _i in tree_count:
 			var offset: Vector3 = _random_offset(rng, 6.0, 22.0)
 			var pos: Vector3 = center + offset
@@ -228,9 +228,9 @@ func _scatter_bushes(world: Node3D, zones: Array, rng: RandomNumberGenerator) ->
 		return
 	for zone_idx in zones.size():
 		var center: Vector3 = zones[zone_idx] as Vector3
-		var bush_count: int = rng.randi_range(3, 6)
+		var bush_count: int = rng.randi_range(6, 12)
 		for _i in bush_count:
-			var offset: Vector3 = _random_offset(rng, 4.0, 18.0)
+			var offset: Vector3 = _random_offset(rng, 7.0, 18.0)
 			var pos: Vector3 = center + offset
 			pos.y = 0.0
 			var scene: PackedScene = _bush_scenes[rng.randi_range(0, _bush_scenes.size() - 1)]
@@ -245,9 +245,9 @@ func _scatter_groundcover(world: Node3D, zones: Array, rng: RandomNumberGenerato
 		return
 	for zone_idx in zones.size():
 		var center: Vector3 = zones[zone_idx] as Vector3
-		var cover_count: int = rng.randi_range(8, 15)
+		var cover_count: int = rng.randi_range(16, 28)
 		for _i in cover_count:
-			var offset: Vector3 = _random_offset(rng, 2.0, 20.0)
+			var offset: Vector3 = _random_offset(rng, 7.0, 20.0)
 			var pos: Vector3 = center + offset
 			pos.y = 0.0
 			var scene: PackedScene = _groundcover_scenes[rng.randi_range(0, _groundcover_scenes.size() - 1)]
@@ -262,9 +262,9 @@ func _scatter_mushrooms(world: Node3D, zones: Array, rng: RandomNumberGenerator)
 		return
 	for zone_idx in range(0, zones.size(), 2):  # Every other zone
 		var center: Vector3 = zones[zone_idx] as Vector3
-		var mush_count: int = rng.randi_range(2, 5)
+		var mush_count: int = rng.randi_range(4, 9)
 		for _i in mush_count:
-			var offset: Vector3 = _random_offset(rng, 3.0, 12.0)
+			var offset: Vector3 = _random_offset(rng, 7.0, 12.0)
 			var pos: Vector3 = center + offset
 			pos.y = 0.0
 			var scene: PackedScene = _mushroom_scenes[rng.randi_range(0, _mushroom_scenes.size() - 1)]
@@ -278,7 +278,7 @@ func _scatter_deadwood(world: Node3D, zones: Array, rng: RandomNumberGenerator) 
 		return
 	for zone_idx in zones.size():
 		var center: Vector3 = zones[zone_idx] as Vector3
-		var dw_count: int = rng.randi_range(1, 3)
+		var dw_count: int = rng.randi_range(3, 6)
 		for _i in dw_count:
 			var offset: Vector3 = _random_offset(rng, 5.0, 16.0)
 			var pos: Vector3 = center + offset

@@ -59,6 +59,39 @@ func build_ground() -> void:
 	mi.material_override = mat
 	ground.add_child(mi)
 
+	# Rolling hills (vallonné) — 32 mounds scattered far from the path with sin-cos
+	# heightfield to give the world a non-flat feel. Below path level so player walks on
+	# flat collision ground above; visually they bulge up at distance.
+	_spawn_rolling_hills()
+
+
+func _spawn_rolling_hills() -> void:
+	var hill_root: Node3D = Node3D.new()
+	hill_root.name = "RollingHills"
+	_world_root.add_child(hill_root)
+	var hill_color: Color = _get_terrain_color().darkened(0.15)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1337
+	for i in 32:
+		var t: float = float(i) / 32.0
+		var z: float = -10.0 - t * 280.0
+		var side: float = 1.0 if (i % 2 == 0) else -1.0
+		var x: float = side * (16.0 + rng.randf_range(0.0, 24.0)) + sin(t * TAU * 1.6) * 6.0
+		var hill: MeshInstance3D = MeshInstance3D.new()
+		var sm: SphereMesh = SphereMesh.new()
+		sm.radius = rng.randf_range(4.0, 8.5)
+		sm.height = rng.randf_range(2.0, 4.5)
+		sm.radial_segments = 12
+		sm.rings = 6
+		hill.mesh = sm
+		hill.position = Vector3(x, sm.height * 0.20 - 1.2, z)
+		var hmat: StandardMaterial3D = StandardMaterial3D.new()
+		hmat.albedo_color = hill_color.lerp(_get_terrain_color(), rng.randf())
+		hmat.roughness = 1.0
+		hill.material_override = hmat
+		hill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		hill_root.add_child(hill)
+
 
 func build_path_terrain() -> void:
 	# Batched path rendering — 3 MultiMesh instead of ~500 individual MeshInstance3D

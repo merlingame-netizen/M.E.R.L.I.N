@@ -103,28 +103,29 @@ func show_event(text: String, labels: Array[String]) -> void:
 		else:
 			_buttons[i].visible = false
 
-	# Soft vignette + animated card swoop-in (3D-ish: rotated tilt, scale, fly to center)
+	# Soft vignette + animated card scale-in (no fly-from-side, just clean center pop)
 	_root.visible = true
 	_dimmer.color.a = 0.0
-	# Card start state: tilted, small, slightly above + offset = 3D-perspective approach feel
+	# Compute centered position from the actual viewport size (avoids PRESET-based bugs).
 	if is_instance_valid(_card):
+		# CanvasLayer doesn't have get_viewport_rect; use the engine viewport directly.
+		var vp: Viewport = get_viewport()
+		var screen_size: Vector2 = vp.get_visible_rect().size if vp else Vector2(1280, 720)
+		var center_pos: Vector2 = (screen_size - _card.size) * 0.5
+		_card.position = center_pos
 		_card.pivot_offset = _card.size * 0.5
-		_card.scale = Vector2(0.4, 0.55)  # squished vertically — feels far away
-		_card.rotation = deg_to_rad(-12.0)  # tilted
+		_card.scale = Vector2(0.7, 0.7)
+		_card.rotation = 0.0
 		_card.modulate.a = 0.0
-		_card.position = Vector2(-340 - 80, -180 - 60)  # offset up-left for "swoop" feel
+		_card.set_meta("center_pos", center_pos)
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
 	_fade_tween = create_tween()
-	# Vignette comes first (subtle)
 	_fade_tween.tween_property(_dimmer, "color:a", DIMMER_ALPHA, FADE_DURATION * 0.6)
-	# Then the card swoops in: position + scale + rotation + alpha in parallel.
 	if is_instance_valid(_card):
-		var swoop: Tween = create_tween().set_parallel(true)
-		swoop.tween_property(_card, "modulate:a", 1.0, 0.45).set_trans(Tween.TRANS_SINE)
-		swoop.tween_property(_card, "position", Vector2(-340, -180), 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		swoop.tween_property(_card, "scale", Vector2(1.0, 1.0), 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		swoop.tween_property(_card, "rotation", 0.0, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		var pop: Tween = create_tween().set_parallel(true)
+		pop.tween_property(_card, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE)
+		pop.tween_property(_card, "scale", Vector2(1.0, 1.0), 0.40).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_fade_tween.tween_callback(func() -> void: _typing = true)
 
 
@@ -135,13 +136,11 @@ func close_overlay() -> void:
 	_button_container.visible = false
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
-	# Card fly-out: tilt + shrink + drift up + fade. Then vignette fades.
+	# Card pop-out: shrink + fade. Vignette then fades.
 	if is_instance_valid(_card):
 		var exit: Tween = create_tween().set_parallel(true)
-		exit.tween_property(_card, "rotation", deg_to_rad(8.0), 0.35).set_trans(Tween.TRANS_CUBIC)
-		exit.tween_property(_card, "scale", Vector2(0.6, 0.6), 0.35).set_trans(Tween.TRANS_CUBIC)
-		exit.tween_property(_card, "position:y", _card.position.y - 60.0, 0.35).set_trans(Tween.TRANS_CUBIC)
-		exit.tween_property(_card, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_SINE)
+		exit.tween_property(_card, "scale", Vector2(0.7, 0.7), 0.30).set_trans(Tween.TRANS_CUBIC)
+		exit.tween_property(_card, "modulate:a", 0.0, 0.30).set_trans(Tween.TRANS_SINE)
 	_fade_tween = create_tween()
 	_fade_tween.tween_interval(0.30)
 	_fade_tween.tween_property(_dimmer, "color:a", 0.0, FADE_DURATION * 0.6)
@@ -181,12 +180,12 @@ func _build_ui() -> void:
 	_dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_dimmer)
 
-	# === PARCHMENT CARD (centered, animated 3D-ish entry) ===
+	# === PARCHMENT CARD (centered, animated entry) ===
+	# Use TOP_LEFT preset + absolute size; centered manually in show_event from viewport size.
 	_card = PanelContainer.new()
-	_card.set_anchors_preset(Control.PRESET_CENTER)
+	_card.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_card.custom_minimum_size = Vector2(680, 360)
 	_card.size = Vector2(680, 360)
-	_card.position = Vector2(-340, -180)
 	_card.mouse_filter = Control.MOUSE_FILTER_STOP
 	_root.add_child(_card)
 

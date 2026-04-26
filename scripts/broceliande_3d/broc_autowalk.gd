@@ -124,10 +124,9 @@ func update(delta: float) -> void:
 		var target_transform: Transform3D = _player.global_transform.looking_at(pos + target_dir, Vector3.UP)
 		_player.global_transform.basis = current_basis.slerp(target_transform.basis, LERP_WEIGHT)
 
-	# Head bob
-	_bob_time += delta * BOB_SPEED
-	_head.position.y = 1.6 + sin(_bob_time) * BOB_AMOUNT
-	_head.position.x = cos(_bob_time * 0.5) * BOB_AMOUNT * 0.5
+	# Head bob disabled (user feedback "trop de head bobbing"). Camera stays steady.
+	_head.position.y = 1.6
+	_head.position.x = 0.0
 
 
 func _advance_waypoint() -> void:

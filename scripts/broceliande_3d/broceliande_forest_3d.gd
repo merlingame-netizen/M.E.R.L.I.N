@@ -1129,9 +1129,15 @@ func _on_replay() -> void:
 
 ## Start aerial descent then auto-walk (book cinematic already shown in cabin)
 func _start_aerial_then_walk() -> void:
+	# Tutorial mode: skip aerial descent (user feedback "pas besoin de l'animation
+	# de tombée du ciel"). Start the walker on the rail directly.
+	if _is_tutorial:
+		if _autowalk:
+			_autowalk._stopped = false
+		return
 	if _autowalk:
 		_autowalk._stopped = true
-	# Aerial descent → then start walking
+	# Aerial descent → then start walking (non-tuto only)
 	var descent: Node = BrocAerialDescent.new(
 		player_camera, _path_points, _zone_centers, biome_key, world_env)
 	descent.descent_complete.connect(func():
