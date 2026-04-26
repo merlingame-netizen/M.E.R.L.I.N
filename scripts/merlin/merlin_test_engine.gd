@@ -161,6 +161,32 @@ func _classify_result(delta: int) -> int:
 	return MerlinConstants.TestResult.CRITICAL_FAILURE
 
 
+## Format the rolling memory_log into a Merlin-voice context block injectable in
+## any LLM user prompt. Empty string if no memory.
+##   Output example:
+##     "Le voyageur se souvient: il a dechiffre une pierre (esprit, succes critique),
+##      croise un loup (coeur, succes), trebuche au seuil (souffle, echec)."
+static func format_memory_log_for_llm(state: Dictionary) -> String:
+	var player: Dictionary = state.get("player", {}) as Dictionary
+	var mem: Array = player.get("memory_log", []) as Array
+	if mem.is_empty():
+		return ""
+	var fragments: Array[String] = []
+	for entry in mem:
+		var d: Dictionary = entry as Dictionary
+		var axis: String = String(d.get("axis", ""))
+		var result: String = String(d.get("result", ""))
+		var verb: String = ""
+		match result:
+			"critical":         verb = "succes eclatant"
+			"success":          verb = "succes"
+			"failure":          verb = "echec"
+			"critical_failure": verb = "echec catastrophique"
+			_:                  verb = result
+		fragments.append("%s (%s)" % [verb, axis])
+	return "Memoire du voyageur: " + ", ".join(fragments) + "."
+
+
 func _xp_for_tier(tier: int) -> int:
 	match tier:
 		MerlinConstants.TestResult.CRITICAL:         return MerlinConstants.XP_CRITICAL
