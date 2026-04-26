@@ -99,6 +99,9 @@ var _story_log: Array[Dictionary] = []
 var _pending_gifts: Array = []
 var _in_gift_phase: bool = false
 
+# C25 — Trait announce buffer: filled by check_unlocks, drained into resolution_text.
+var _pending_trait_announce: String = ""
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
@@ -463,6 +466,9 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 				if metrics and metrics.has_method("trait_unlocked"):
 					for k in newly:
 						metrics.trait_unlocked(String(k))
+				# C25 — Surface announce lines into the resolution narration so the
+				# player SEES the unlock in-game, not only in the end-run screen.
+				_pending_trait_announce = trait_registry.build_post_run_announce(newly)
 		if _store.has_method("_emit_state_changed"):
 			_store._emit_state_changed()
 
@@ -480,6 +486,11 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 	var resolution_text: String = String(resolutions.get(result_key, ""))
 	if resolution_text.is_empty():
 		resolution_text = "..."
+	# C25 — Append trait announce lines (drained from buffer) so player sees the
+	# unlock in-game. build_post_run_announce already prefixes each line with ✦.
+	if not _pending_trait_announce.is_empty():
+		resolution_text += "\n\n" + _pending_trait_announce
+		_pending_trait_announce = ""
 	if _overlay and _overlay.has_method("show_resolution"):
 		_overlay.show_resolution(resolution_text)
 
