@@ -248,6 +248,12 @@ func _get_fallback_event() -> Dictionary:
 					while labels.size() < 3:
 						labels.append("...")
 					rpg_event["labels"] = labels
+				# C35 — Backfill effects=[[],[],[]] so choice resolution paths don't
+				# silently zero out (HIGH from C34 review). Pool cards from the
+				# migration script don't carry top-level effects; that array is what
+				# _resolve_rpg_test / _resolve_legacy_choice index by option.
+				if not rpg_event.has("effects"):
+					rpg_event["effects"] = [[], [], []]
 				rpg_event["source"] = "pool_rpg"
 				return rpg_event
 	# Last-resort hardcoded events.
