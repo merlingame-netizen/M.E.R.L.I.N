@@ -446,12 +446,9 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 				_apply_life_delta(-2)
 			"critical_failure":
 				_apply_life_delta(-7)
-		# C31 — Result SFX for the high-impact tiers. Plain success/failure stay quiet.
-		var sfx: Node = Engine.get_main_loop().root.get_node_or_null("/root/SFXManager") if Engine.get_main_loop() else null
-		if sfx and sfx.has_method("play"):
-			match result_key:
-				"critical": sfx.play("dice_crit_success")
-				"critical_failure": sfx.play("dice_crit_fail")
+		# C30c/C31 fix — dice_crit SFX removed: it doubled with the overlay's
+		# minigame_success/fail (fired on the same frame). The minigame outcome
+		# already conveys the moment; the resolution narration carries the rest.
 		# Telemetry: log test resolution to MerlinMetrics autoload (RefCounted has no
 		# get_node_or_null; use Engine.get_main_loop().root).
 		var ml: SceneTree = Engine.get_main_loop() as SceneTree

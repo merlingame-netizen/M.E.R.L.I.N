@@ -473,6 +473,9 @@ func _hide_immediate() -> void:
 	for t in _button_tweens:
 		if t and t.is_valid():
 			t.kill()
+	# C30c — Clear the end-of-run flag too so a subsequent show_event doesn't
+	# inherit the short-circuit and silently swallow choices.
+	_in_end_of_run = false
 	_root.visible = false
 	_active = false
 	_typing = false
@@ -580,6 +583,8 @@ func _kill_ornament_tweens() -> void:
 func _on_fade_out_done() -> void:
 	_root.visible = false
 	_active = false
+	# C30c — Reset end-of-run flag so the next show_event starts clean.
+	_in_end_of_run = false
 	overlay_closed.emit()
 
 

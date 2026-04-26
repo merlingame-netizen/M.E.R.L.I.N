@@ -1362,6 +1362,17 @@ func _build_run_summary() -> Dictionary:
 	}
 
 
+## C32 — One-shot handler invoked when the player closes the end-of-run summary.
+## Performs the deferred scene change to the hub.
+func _on_end_of_run_acknowledged(reason: String) -> void:
+	print("[Forest3D] End-of-run summary acknowledged (reason=%s) — handing to hub" % reason)
+	var pt: Node = get_node_or_null("/root/PixelTransition")
+	if pt and pt.has_method("transition_to"):
+		pt.transition_to("res://scenes/MerlinCabinHub.tscn")
+	else:
+		get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
+
+
 func _on_run_complete() -> void:
 	print("[Forest3D] Run complete — transitioning")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -1387,6 +1398,15 @@ func _on_run_complete() -> void:
 		var rs: Variant = gm.get("run_state") if gm.has_method("get") else null
 		if rs is Dictionary and int((rs as Dictionary).get("life_essence", 100)) <= 0:
 			reason = "death"
+
+	# C32 — Show end-of-run parchment overlay BEFORE the scene change. Wait for
+	# the player to click "Retour au village" then hand off to the hub.
+	if _walk_event_controller and _walk_event_controller.has_method("_show_end_of_run_overlay"):
+		_walk_event_controller._show_end_of_run_overlay("path_complete" if reason == "completed" else "life_depleted")
+		if _walk_event_overlay and _walk_event_overlay.has_signal("overlay_closed"):
+			# One-shot connection: scene change fires when the player closes the summary.
+			_walk_event_overlay.overlay_closed.connect(_on_end_of_run_acknowledged.bind(reason), CONNECT_ONE_SHOT)
+			return  # defer scene change until the overlay closes
 	var gfc: Node = get_node_or_null("/root/GameFlow")
 	if gfc and gfc.has_method("complete_run"):
 		gfc.complete_run(reason, _build_run_summary())
