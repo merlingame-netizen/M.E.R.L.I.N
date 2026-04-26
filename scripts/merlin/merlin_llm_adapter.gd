@@ -78,6 +78,9 @@ const NARRATIVE_FALLBACKS: Array[String] = [
 ]
 
 const SCENARIO_PROMPTS_PATH := "res://data/ai/config/scenario_prompts.json"
+const PROMPT_TEMPLATES_PATH := "res://data/ai/config/prompt_templates.json"
+# C33 — Hard timeout for LLM card generation (hybrid mode falls back on miss).
+const LLM_CARD_TIMEOUT_S: float = 4.0
 
 const REQUIRED_CARD_KEYS := ["text", "options"]
 const REQUIRED_OPTION_KEYS := ["direction", "label", "effects"]
@@ -272,6 +275,153 @@ func generate_card(context: Dictionary) -> Dictionary:
 		return two_stage_result
 
 	return {"ok": false, "card": {}, "error": "Two-stage generation failed"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# C33 — RPG CARD GENERATION (single-stage, gamemaster_rpg_card template)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Lazy-loaded prompt_templates.json cache.
+var _rpg_template: Dictionary = {}
+var _rpg_template_loaded: bool = false
+
+
+func _load_rpg_template() -> void:
+	if _rpg_template_loaded:
+		return
+	_rpg_template_loaded = true
+	if not FileAccess.file_exists(PROMPT_TEMPLATES_PATH):
+		push_warning("[MerlinLlmAdapter] prompt_templates.json missing — RPG card LLM disabled")
+		return
+	var f: FileAccess = FileAccess.open(PROMPT_TEMPLATES_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var raw: String = f.get_as_text()
+	f.close()
+	var parsed = JSON.parse_string(raw)
+	if not (parsed is Dictionary):
+		push_warning("[MerlinLlmAdapter] prompt_templates.json is not a Dictionary")
+		return
+	var d: Dictionary = parsed as Dictionary
+	if not d.has("gamemaster_rpg_card"):
+		push_warning("[MerlinLlmAdapter] gamemaster_rpg_card template missing")
+		return
+	_rpg_template = d["gamemaster_rpg_card"] as Dictionary
+
+
+## Generate a single RPG card via the gamemaster_rpg_card template (single-stage,
+## strict JSON output). Returns:
+##   {ok: bool, card: Dictionary, error: String}
+## On success the card is in the runtime schema expected by walk_event_controller:
+##   text, labels[3], choices[3], resolutions{4}, dc, minigame, risk_hint, effects[3][]
+func generate_rpg_card(context: Dictionary) -> Dictionary:
+	if context.is_empty():
+		return {"ok": false, "card": {}, "error": "Empty context"}
+	if not is_llm_ready():
+		return {"ok": false, "card": {}, "error": "LLM not ready"}
+	_load_rpg_template()
+	if _rpg_template.is_empty():
+		return {"ok": false, "card": {}, "error": "Template not loaded"}
+
+	# Build the system + user prompts via simple {placeholder} substitution.
+	var system_prompt: String = _format_rpg_template(String(_rpg_template.get("system", "")), context)
+	var user_prompt: String = _format_rpg_template(String(_rpg_template.get("user_template", "")), context)
+	var params: Dictionary = {
+		"max_tokens": int(_rpg_template.get("max_tokens", 600)),
+		"temperature": float(_rpg_template.get("temperature", 0.75)),
+		"timeout": LLM_CARD_TIMEOUT_S,
+	}
+	var t0: int = Time.get_ticks_msec()
+	var result: Dictionary = await _merlin_ai.generate_with_system(system_prompt, user_prompt, params)
+	var elapsed_ms: int = Time.get_ticks_msec() - t0
+	if not result.get("ok", false):
+		return {"ok": false, "card": {}, "error": String(result.get("error", "LLM call failed")), "elapsed_ms": elapsed_ms}
+
+	var raw_text: String = String(result.get("text", ""))
+	var card_json: Variant = JSON.parse_string(raw_text)
+	# If the model produced fenced markdown or extra prose, attempt a single repair.
+	if not (card_json is Dictionary):
+		card_json = _json_repair.repair(raw_text) if _json_repair else null
+	if not (card_json is Dictionary):
+		return {"ok": false, "card": {}, "error": "JSON parse failed", "elapsed_ms": elapsed_ms}
+
+	var validated: Dictionary = _validate_rpg_card(card_json as Dictionary)
+	if not validated.get("ok", false):
+		return {"ok": false, "card": {}, "error": String(validated.get("error", "Schema invalid")), "elapsed_ms": elapsed_ms}
+
+	print("[MerlinLlmAdapter] generate_rpg_card OK in %dms" % elapsed_ms)
+	return {"ok": true, "card": validated["card"] as Dictionary, "elapsed_ms": elapsed_ms}
+
+
+## Substitute {key} placeholders in a template string from a context dict.
+func _format_rpg_template(tpl: String, context: Dictionary) -> String:
+	var out: String = tpl
+	# Keys the gamemaster_rpg_card template references.
+	var subs: Dictionary = {
+		"card": str(context.get("cards_played", 1) + 1),
+		"biome": String(context.get("biome", "foret_broceliande")),
+		"life": str(int(context.get("life_essence", 100))),
+		"tension": str(int(context.get("tension", 20))),
+		"faction_status": _faction_status_str(context),
+		"language_directive": String(context.get("language_directive", "Ecris en francais.")),
+	}
+	for k in subs:
+		out = out.replace("{%s}" % k, String(subs[k]))
+	return out
+
+
+func _faction_status_str(context: Dictionary) -> String:
+	var rep: Dictionary = context.get("faction_rep", {}) as Dictionary
+	if rep.is_empty():
+		return "neutre"
+	var parts: Array[String] = []
+	for f in rep:
+		parts.append("%s:%d" % [String(f), int(rep[f])])
+	return ", ".join(parts)
+
+
+## Validate + normalize an RPG card dict into the runtime schema.
+## Returns {ok, card, error?}. Normalized card has: text, labels, choices, resolutions, dc, minigame, risk_hint, effects.
+func _validate_rpg_card(c: Dictionary) -> Dictionary:
+	if not c.has("text_intro") and not c.has("text"):
+		return {"ok": false, "error": "Missing text_intro/text"}
+	var choices_in: Array = (c.get("choices", []) as Array)
+	if choices_in.size() < 3:
+		return {"ok": false, "error": "Need 3 choices"}
+	var resolutions: Dictionary = c.get("resolutions", {}) as Dictionary
+	for required_key in ["critical", "success", "failure", "critical_failure"]:
+		if not resolutions.has(required_key) or String(resolutions[required_key]).is_empty():
+			return {"ok": false, "error": "Missing resolution: %s" % required_key}
+	var labels: Array[String] = []
+	var choices: Array = []
+	for i in 3:
+		var ch: Dictionary = choices_in[i] as Dictionary
+		var axis: String = String(ch.get("axis", "esprit"))
+		if not (axis in ["souffle", "esprit", "coeur"]):
+			axis = "esprit"
+		labels.append(String(ch.get("label", "...")))
+		choices.append({
+			"label": labels[i],
+			"axis": axis,
+			"dc_offset": int(ch.get("dc_offset", 0)),
+			"risk_hint": String(ch.get("risk_hint", "")),
+		})
+	var primary_axis: String = String(choices[0].get("axis", "esprit"))
+	var card: Dictionary = {
+		"text": String(c.get("text_intro", c.get("text", ""))),
+		"labels": labels,
+		"choices": choices,
+		"resolutions": resolutions,
+		"dc": clampi(int(c.get("dc", 10)), 6, 14),
+		"minigame": primary_axis,
+		"risk_hint": String(choices[0].get("risk_hint", "")),
+		# Empty effects per option — the resolution narration carries the impact;
+		# legacy ADD_REPUTATION/HEAL etc are only injected by the static pool.
+		"effects": [[], [], []],
+		"source": "llm_rpg",
+		"id": "llm_%d" % Time.get_ticks_msec(),
+	}
+	return {"ok": true, "card": card}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TWO-STAGE GENERATION
