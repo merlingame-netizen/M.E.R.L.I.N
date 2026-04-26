@@ -100,3 +100,33 @@ IntroCeltOS
 | First Run guide encore inexistant | Wave 2 cree un script tutoriel minimal si absent |
 | LLM dans Run libre cassee | Ne pas toucher a `addons/merlin_ai/*` — juste reconnecter |
 | Sauvegarde Menu pas branchee | Si trop complexe, MVP = "Continue" desactive en demo |
+
+---
+
+## Bloc cycles 19→29 (avr 2026 — auto-loop guidé)
+
+### Faits (committed)
+
+| # | Cycle | Sha |
+|---|-------|-----|
+| C19 | Card dynamism (parallax + ornament pulse + hover punch) | bb5fffeb |
+| C20 | Review fixes (per-button tweens + _hide_immediate cleanup) | 3bb1f863 |
+| C21 | Cleanup gitignore + 15 capture dirs supprimés | 3bb1f863 |
+| C22 | Gifts wired aux cartes 2/4 (Vampire-Survivors actif) | 6fba3bef |
+| C23 | run_modifiers consommés (stat_buffs/xp_mult/crit/reroll) | 6fba3bef |
+| C24 | Minigames Souffle/Esprit/Coeur sur chaque test | 9f884892 |
+| C25 | Trait announce surface dans la résolution | c170d1de |
+| C26 | 810 cartes FastRoute migrées au format RPG | fa93cbe3 |
+
+### En cours
+
+- **C27** (in progress): switch complet runtime vers pool RPG (data/cards/rpg/*) — tutorial conserve TUTORIAL_CARDS
+- **C28** (next): polish UI HUD cohabitation (gift indicator, ogham hint, faction shift)
+- **C29** (next): polish transitions inter-cartes (handoff propre 3D walk → carte → 3D walk)
+
+### Décisions utilisateur (cette session)
+
+- Pool switch: complet — RPG par défaut hors-tuto
+- Direction prochaine: UI polish (cohabitation HUD)
+- Reviews: code-reviewer en bg sur chaque cycle
+- Cadence: 3 cycles avant pause user

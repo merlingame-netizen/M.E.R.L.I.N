@@ -853,15 +853,52 @@ func _load_promise_cards() -> void:
 
 
 func _load_fastroute_cards() -> void:
-	var data: Dictionary = _load_json("res://data/ai/fastroute_cards.json")
-	if data.is_empty():
-		return
-	for card in data.get("narrative", []):
-		if card is Dictionary:
-			_fastroute_narrative_pool.append(card)
-	for card in data.get("merlin_direct", []):
+	# C27 — Switch complet to the RPG pool (data/cards/rpg/*_rpg.json, 810 cards
+	# migrated from the legacy fastroute_sprint pool).
+	# Legacy data/ai/fastroute_cards.json still loads the merlin_direct/echo/twist
+	# variants (those aren't card-pool concepts and are kept untouched).
+	var legacy_data: Dictionary = _load_json("res://data/ai/fastroute_cards.json")
+	for card in legacy_data.get("merlin_direct", []):
 		if card is Dictionary:
 			_fastroute_merlin_pool.append(card)
+
+	var rpg_loaded: int = _load_fastroute_rpg_cards()
+	if rpg_loaded > 0:
+		print("[MerlinCards] C27 — RPG pool active: %d cards (legacy narrative skipped)" % rpg_loaded)
+		return
+	# Fallback: if data/cards/rpg/ is missing, fall back to the 95 legacy
+	# narrative cards so the runtime never starves.
+	for card in legacy_data.get("narrative", []):
+		if card is Dictionary:
+			_fastroute_narrative_pool.append(card)
+	print("[MerlinCards] C27 — RPG pool empty, fell back to legacy narrative (%d cards)" % _fastroute_narrative_pool.size())
+
+
+func _load_fastroute_rpg_cards() -> int:
+	# Reads every data/cards/rpg/fastroute_sprint*_rpg.json and pushes into
+	# _fastroute_narrative_pool. Returns the count loaded.
+	var dir: DirAccess = DirAccess.open("res://data/cards/rpg")
+	if dir == null:
+		return 0
+	var loaded: int = 0
+	dir.list_dir_begin()
+	var name: String = dir.get_next()
+	while name != "":
+		if not dir.current_is_dir() and name.begins_with("fastroute_sprint") and name.ends_with("_rpg.json"):
+			var path: String = "res://data/cards/rpg/" + name
+			var f: FileAccess = FileAccess.open(path, FileAccess.READ)
+			if f != null:
+				var raw: String = f.get_as_text()
+				f.close()
+				var json := JSON.new()
+				if json.parse(raw) == OK and json.data is Array:
+					for card in json.data:
+						if card is Dictionary:
+							_fastroute_narrative_pool.append(card)
+							loaded += 1
+		name = dir.get_next()
+	dir.list_dir_end()
+	return loaded
 
 
 func _load_json(path: String) -> Dictionary:
