@@ -160,6 +160,108 @@ func show_event(text: String, labels: Array[String]) -> void:
 	_fade_tween.tween_callback(func() -> void: _typing = true)
 
 
+## C30 — Show the end-of-run RP-style summary in the parchment overlay.
+##
+## summary keys (all optional):
+##   - reason          : "life_depleted" | "path_complete" | "abandoned"
+##   - cards_played    : int
+##   - axis_counts     : {souffle:N, esprit:N, coeur:N}
+##   - faction_shifts  : {druides:+10, ankou:-3, ...}
+##   - traits_unlocked : Array[String] (trait keys)
+##   - gifts_taken     : Array[Dictionary] (full gift dicts with label/lore)
+##   - anam_gained     : int
+##
+## The overlay opens (or stays open if already shown) with a Merlin-voice
+## narrative built from the data — no tooltips, no list of stats.
+## The single "Retour au village" button closes the run.
+func show_end_of_run(summary: Dictionary) -> void:
+	# If overlay isn't already up, do a fresh slash-entry. Otherwise just swap content.
+	var fresh: bool = not _active
+	if fresh:
+		_active = true
+		_root.visible = true
+		_dimmer.color.a = DIMMER_ALPHA
+		if is_instance_valid(_card):
+			var vp_local: Viewport = get_viewport()
+			var screen_size_local: Vector2 = vp_local.get_visible_rect().size if vp_local else Vector2(1280, 720)
+			_card_anchor_pos = (screen_size_local - _card.size) * 0.5
+			_persona_anim.slash_entry(_card, screen_size_local)
+			var settle: Tween = create_tween()
+			settle.tween_interval(0.5)
+			settle.tween_callback(func() -> void:
+				_entry_done = true
+				_start_ornament_pulse()
+			)
+	# Build the RP-style text from the summary dict.
+	var text: String = _build_end_of_run_text(summary)
+	_text_label.text = text
+	_total_chars = text.length()
+	_visible_chars = 0
+	_type_timer = 0.0
+	_text_label.visible_characters = 0
+	_typing = true
+	# Reconfigure the choice row as a single "Retour" button.
+	_button_container.visible = false
+	for i in _buttons.size():
+		_buttons[i].visible = false
+	if _buttons.size() > 0:
+		_buttons[0].text = "Retour au village"
+		_buttons[0].visible = true
+	# Buttons appear when typewriter completes — relies on _show_buttons_delayed
+	# which is called from _process when typing finishes.
+
+
+func _build_end_of_run_text(s: Dictionary) -> String:
+	var lines: Array[String] = []
+	# Opening line by reason.
+	var reason: String = String(s.get("reason", ""))
+	match reason:
+		"life_depleted":
+			lines.append("Tes pas se sont arretes. La foret t'a repris ton souffle.")
+		"path_complete":
+			lines.append("Tu as atteint le bout du chemin. La foret te laisse repartir, change.")
+		_:
+			lines.append("Le voyage s'acheve. Tu reprends ton souffle, le silence te rejoint.")
+	# Axis breakdown — narrative only, not stat dump.
+	var axes: Dictionary = s.get("axis_counts", {}) as Dictionary
+	var sf: int = int(axes.get("souffle", 0))
+	var es: int = int(axes.get("esprit", 0))
+	var co: int = int(axes.get("coeur", 0))
+	if sf + es + co > 0:
+		var dom: String = "esprit"
+		if sf >= es and sf >= co: dom = "souffle"
+		elif co >= es and co >= sf: dom = "coeur"
+		match dom:
+			"souffle": lines.append("Ton corps a parle plus que ta voix. La foret retient ce rythme.")
+			"esprit":  lines.append("Tu as cherche le sens des choses. Les vieilles pierres se souviennent.")
+			"coeur":   lines.append("Tu as ouvert plus que tu n'as ferme. Quelque chose te suit en silence.")
+	# Faction shifts.
+	var shifts: Dictionary = s.get("faction_shifts", {}) as Dictionary
+	var shift_lines: Array[String] = []
+	for f in shifts:
+		var d: int = int(shifts[f])
+		if d >= 8: shift_lines.append("Les %s te connaissent maintenant." % String(f).capitalize())
+		elif d <= -8: shift_lines.append("Les %s ont retenu ta presence — pas en ami." % String(f).capitalize())
+	if not shift_lines.is_empty():
+		lines.append(" ".join(shift_lines))
+	# Traits unlocked.
+	var traits: Array = s.get("traits_unlocked", []) as Array
+	if not traits.is_empty():
+		var trait_registry: GDScript = load("res://scripts/merlin/merlin_trait_registry.gd") as GDScript
+		if trait_registry:
+			var announce: String = String(trait_registry.build_post_run_announce(traits))
+			if not announce.is_empty():
+				lines.append(announce)
+	# Gifts taken — quick rappel.
+	var gifts: Array = s.get("gifts_taken", []) as Array
+	if not gifts.is_empty():
+		var labels: Array[String] = []
+		for g in gifts:
+			labels.append(String((g as Dictionary).get("label", "?")))
+		lines.append("Tu emportes : " + ", ".join(labels) + ".")
+	return "\n\n".join(lines)
+
+
 ## Show a resolution narrative AFTER a choice has been made (RPG test result).
 ## The text is typed in place of the choice text, buttons hidden, then auto-closes.
 func show_resolution(resolution_text: String) -> void:

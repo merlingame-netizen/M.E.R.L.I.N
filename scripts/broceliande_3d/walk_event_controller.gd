@@ -746,4 +746,51 @@ func _check_run_end() -> void:
 		print("[WalkEventController] Run ended: life depleted")
 		if _store.has_signal("run_ended"):
 			_store.run_ended.emit({"reason": "life_depleted", "cards_played": _cards_played})
+		# C30 — Surface end-of-run summary in the parchment overlay.
+		_show_end_of_run_overlay("life_depleted")
+
+
+## C30 — Build the run summary dict from store state + story_log, then ask the
+## overlay to display the RP-style text. Called from _check_run_end (life depletion)
+## or by the autowalk run-complete callback (path_complete).
+func _show_end_of_run_overlay(reason: String) -> void:
+	if _overlay == null or not _overlay.has_method("show_end_of_run"):
+		return
+	var summary: Dictionary = {
+		"reason": reason,
+		"cards_played": _cards_played,
+	}
+	# Aggregate axis counts from story_log entries that recorded the chosen axis.
+	var axis_counts: Dictionary = {"souffle": 0, "esprit": 0, "coeur": 0}
+	for entry in _story_log:
+		var d: Dictionary = entry as Dictionary
+		var ax: String = String(d.get("axis", ""))
+		if axis_counts.has(ax):
+			axis_counts[ax] = int(axis_counts[ax]) + 1
+	summary["axis_counts"] = axis_counts
+	# Faction shifts: snapshot of run-start vs current rep. We don't have a baseline
+	# saved, so emit current rep as deltas (server-of-truth degraded but useful).
+	if _store:
+		var meta: Dictionary = _store.state.get("meta", {}) as Dictionary
+		summary["faction_shifts"] = (meta.get("faction_rep", {}) as Dictionary).duplicate()
+		# Traits unlocked this run — collect from story_log entries that captured them.
+		var traits_unlocked: Array = []
+		for entry in _story_log:
+			var ut: Variant = (entry as Dictionary).get("unlocked_traits", null)
+			if ut is Array:
+				for k in ut:
+					if not traits_unlocked.has(k):
+						traits_unlocked.append(k)
+		summary["traits_unlocked"] = traits_unlocked
+		# Gifts taken — read from run.gifts_taken.
+		var run_dict: Dictionary = _store.state.get("run", {}) as Dictionary
+		summary["gifts_taken"] = run_dict.get("gifts_taken", []) as Array
+		# Anam gained this run (delta is unknown without baseline; emit absolute).
+		summary["anam_gained"] = int((meta.get("anam", 0)))
+	_overlay.show_end_of_run(summary)
+	# Telemetry: log run_ended in MerlinMetrics if present.
+	var ml: SceneTree = Engine.get_main_loop() as SceneTree
+	var metrics: Node = ml.root.get_node_or_null("MerlinMetrics") if ml else null
+	if metrics and metrics.has_method("run_ended"):
+		metrics.run_ended(reason, _cards_played)
 
