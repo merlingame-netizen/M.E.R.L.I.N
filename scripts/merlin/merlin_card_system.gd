@@ -858,6 +858,8 @@ func _load_fastroute_cards() -> void:
 	# Legacy data/ai/fastroute_cards.json still loads the merlin_direct/echo/twist
 	# variants (those aren't card-pool concepts and are kept untouched).
 	var legacy_data: Dictionary = _load_json("res://data/ai/fastroute_cards.json")
+	# merlin_direct/echo/twist load unconditionally — they aren't in the RPG
+	# pool concept, they're a separate variant pool used by other consumers.
 	for card in legacy_data.get("merlin_direct", []):
 		if card is Dictionary:
 			_fastroute_merlin_pool.append(card)
@@ -866,12 +868,14 @@ func _load_fastroute_cards() -> void:
 	if rpg_loaded > 0:
 		print("[MerlinCards] C27 — RPG pool active: %d cards (legacy narrative skipped)" % rpg_loaded)
 		return
-	# Fallback: if data/cards/rpg/ is missing, fall back to the 95 legacy
-	# narrative cards so the runtime never starves.
+	# Fallback: if data/cards/rpg/ is empty (or all files were malformed), fall
+	# back to the 95 legacy narrative cards so the runtime never starves.
 	for card in legacy_data.get("narrative", []):
 		if card is Dictionary:
 			_fastroute_narrative_pool.append(card)
-	print("[MerlinCards] C27 — RPG pool empty, fell back to legacy narrative (%d cards)" % _fastroute_narrative_pool.size())
+	# Use push_warning so the editor surfaces this degraded state — falling back
+	# to 95 cards when 810 were expected is a content-loss signal worth seeing.
+	push_warning("[MerlinCards] C27 — RPG pool empty, fell back to legacy narrative (%d cards)" % _fastroute_narrative_pool.size())
 
 
 func _load_fastroute_rpg_cards() -> int:
@@ -891,11 +895,20 @@ func _load_fastroute_rpg_cards() -> int:
 				var raw: String = f.get_as_text()
 				f.close()
 				var json := JSON.new()
-				if json.parse(raw) == OK and json.data is Array:
+				# C27b — surface parse/shape errors via push_warning instead of silent
+				# skip. With 810 cards split across 16 files, a single malformed file
+				# silently dropping ~50 cards is unacceptable for a load-bearing pool.
+				if json.parse(raw) != OK:
+					push_warning("[MerlinCards] JSON parse error in %s: %s" % [path, json.get_error_message()])
+				elif not (json.data is Array):
+					push_warning("[MerlinCards] Expected Array in %s, got %s" % [path, typeof(json.data)])
+				else:
 					for card in json.data:
 						if card is Dictionary:
 							_fastroute_narrative_pool.append(card)
 							loaded += 1
+			else:
+				push_warning("[MerlinCards] FileAccess.open failed for %s" % path)
 		name = dir.get_next()
 	dir.list_dir_end()
 	return loaded
