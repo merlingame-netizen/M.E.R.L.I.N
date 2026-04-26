@@ -161,6 +161,17 @@ func _classify_result(delta: int) -> int:
 	return MerlinConstants.TestResult.CRITICAL_FAILURE
 
 
+## Compute the scaled DC for a given card index (1-5 typically).
+## Returns a DC clamped to [DC_MIN..DC_MAX]. See docs/BALANCE_FORMULA.md.
+##   DC(card_index) = 8 + (card_index * 1.2)
+##   Card 1: DC 9, Card 2: 10, Card 3: 11, Card 4: 12, Card 5: 13.
+static func scaled_dc(card_index: int, base_override: int = -1) -> int:
+	if base_override > 0:
+		return clampi(base_override, MerlinConstants.DC_MIN, MerlinConstants.DC_MAX)
+	var dc: int = int(round(8.0 + float(card_index) * 1.2))
+	return clampi(dc, MerlinConstants.DC_MIN, MerlinConstants.DC_MAX)
+
+
 ## Format the rolling memory_log into a Merlin-voice context block injectable in
 ## any LLM user prompt. Empty string if no memory.
 ##   Output example:
