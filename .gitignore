@@ -164,7 +164,19 @@ logs/
 # -------------------------------------------
 tools/autodev/captures/*.png
 tools/autodev/captures/*.json
+tools/autodev/captures/*.mp4
+tools/autodev/captures/*.webm
+tools/autodev/captures/run_*/
+tools/autodev/captures/tuto*/
 !tools/autodev/captures/.gitkeep
+# Loose screenshots accumulated at repo root during dev sessions
+/screen_*.png
+# Status side-files written by autodev orchestrator
+tools/autodev/status/orchestrator.pid
+tools/autodev/status/escalation_history.json
+tools/autodev/status/human_response.json
+tools/autodev/card_generator_raw.json
+tools/autodev/card_narrations_raw.json
 
 # -------------------------------------------
 # Project-Specific Ignores
