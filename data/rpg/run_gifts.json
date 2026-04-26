@@ -1,0 +1,146 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "purpose": "Run-scoped modifiers offered every 2 cards. The player picks 1 of 3 random gifts. Effects last until run end. Vampire-Survivors-style — simple to read, deep when stacked.",
+    "schema": {
+      "key": "snake_case identifier",
+      "label": "FR display name",
+      "tier": "common|uncommon|rare (drives draw weight)",
+      "axis_affinity": "souffle|esprit|coeur|all",
+      "effect": {
+        "type": "stat_buff|drain_modifier|xp_multiplier|crit_chance|reroll|vie_max|narrative_modifier",
+        "axis": "souffle|esprit|coeur (when applicable)",
+        "value": "int or float, depends on type"
+      },
+      "lore": "1-2 sentences Merlin voice describing the gift",
+      "anti_synergy": "key of another gift that conflicts (optional)"
+    },
+    "draw_rules": "Gifts proposed at cards 2 and 4. Tier weights: common=4, uncommon=2, rare=1. Filter out gifts with anti_synergy already taken. If <3 candidates, take what we have.",
+    "see": "docs/BALANCE_FORMULA.md Pilier 6"
+  },
+  "gifts": [
+    {
+      "key": "pas_leger",
+      "label": "Pas léger",
+      "tier": "common",
+      "axis_affinity": "souffle",
+      "effect": {"type": "drain_modifier", "value": -1},
+      "lore": "Tes pas effleurent la mousse. La fatigue te lache d'un cran."
+    },
+    {
+      "key": "lien_profond",
+      "label": "Lien profond",
+      "tier": "common",
+      "axis_affinity": "coeur",
+      "effect": {"type": "stat_buff", "axis": "coeur", "value": 1},
+      "lore": "Quelque chose dans ta voix les touche. Plus que d'habitude."
+    },
+    {
+      "key": "memoire_chaude",
+      "label": "Mémoire chaude",
+      "tier": "uncommon",
+      "axis_affinity": "esprit",
+      "effect": {"type": "xp_multiplier", "value": 1.25},
+      "lore": "Ce que tu apprends ce soir reste en braise. L'oubli est plus lent."
+    },
+    {
+      "key": "ombre_du_loup",
+      "label": "Ombre du loup",
+      "tier": "uncommon",
+      "axis_affinity": "souffle",
+      "effect": {"type": "crit_chance", "value": 1, "duration": "next_test"},
+      "lore": "Le loup gris t'observe. Tu sais qu'il t'aide — une fois."
+    },
+    {
+      "key": "poids_du_serment",
+      "label": "Poids du serment",
+      "tier": "rare",
+      "axis_affinity": "all",
+      "effect": {"type": "compound", "anam_bonus": 2.0, "vie_max_delta": -10},
+      "lore": "Tu jures quelque chose tout bas. Tu te sens plus lourd, mais ce que tu gagnes pesera double."
+    },
+    {
+      "key": "fil_de_niamh",
+      "label": "Fil de Niamh",
+      "tier": "rare",
+      "axis_affinity": "coeur",
+      "effect": {"type": "reroll", "value": 1, "duration": "run"},
+      "lore": "Un fil tendu sur ton poignet. Une seule fois, l'echec deviendra reussite."
+    },
+    {
+      "key": "souffle_court",
+      "label": "Souffle court",
+      "tier": "common",
+      "axis_affinity": "souffle",
+      "effect": {"type": "stat_buff", "axis": "souffle", "value": 1},
+      "lore": "Ton coeur cogne plus pres de la peau. Tu reagis avant de penser."
+    },
+    {
+      "key": "regard_clair",
+      "label": "Regard clair",
+      "tier": "common",
+      "axis_affinity": "esprit",
+      "effect": {"type": "stat_buff", "axis": "esprit", "value": 1},
+      "lore": "Les ombres ont moins de prise. Tu vois ce qui se cache."
+    },
+    {
+      "key": "marche_lente",
+      "label": "Marche lente",
+      "tier": "uncommon",
+      "axis_affinity": "all",
+      "effect": {"type": "narrative_modifier", "value": 1, "duration": "run"},
+      "lore": "Tu prends le temps. Les esprits notent.",
+      "anti_synergy": "ombre_du_loup"
+    },
+    {
+      "key": "voix_des_pierres",
+      "label": "Voix des pierres",
+      "tier": "rare",
+      "axis_affinity": "esprit",
+      "effect": {"type": "compound", "esprit_buff": 2, "vie_drain_modifier": 1},
+      "lore": "Les vieux menhirs te parlent. Mais leur murmure consume.",
+      "anti_synergy": "pas_leger"
+    },
+    {
+      "key": "oeil_de_l_ankou",
+      "label": "Œil de l'Ankou",
+      "tier": "rare",
+      "axis_affinity": "all",
+      "effect": {"type": "compound", "preview_next_dc": true, "vie_max_delta": -5},
+      "lore": "Tu vois l'epreuve qui vient. Le prix est une lente fatigue."
+    },
+    {
+      "key": "rosee_du_matin",
+      "label": "Rosée du matin",
+      "tier": "common",
+      "axis_affinity": "all",
+      "effect": {"type": "vie_max", "value": 10},
+      "lore": "Tu t'es lavé le visage avant l'aube. Tu commences plus dispos."
+    },
+    {
+      "key": "echo_des_korrigans",
+      "label": "Écho des korrigans",
+      "tier": "uncommon",
+      "axis_affinity": "coeur",
+      "effect": {"type": "compound", "coeur_buff": 1, "anam_bonus": 1.3},
+      "lore": "Les petits etres rient avec toi. Ce qu'ils touchent vaut mieux."
+    },
+    {
+      "key": "sang_froid",
+      "label": "Sang froid",
+      "tier": "uncommon",
+      "axis_affinity": "all",
+      "effect": {"type": "narrative_modifier", "value": 1, "duration": "next_test"},
+      "lore": "Tu retiens ta respiration. Le moment se fige."
+    },
+    {
+      "key": "graines_de_serment",
+      "label": "Graines de serment",
+      "tier": "rare",
+      "axis_affinity": "all",
+      "effect": {"type": "compound", "xp_multiplier": 1.5, "drain_modifier": 1},
+      "lore": "Tu plantes une intention dans la mousse. Tu apprends plus, mais tu te brules.",
+      "anti_synergy": "memoire_chaude"
+    }
+  ]
+}
