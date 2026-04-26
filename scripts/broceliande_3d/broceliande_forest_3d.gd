@@ -1027,6 +1027,16 @@ func _update_hud() -> void:
 	if _merlin_found:
 		return
 
+	# Tutorial mode: hide the verbose top-left HUD entirely (user feedback "UI minimal").
+	# Only the minimal HUD elements (PV via _walk_hud) remain — no zone label, no
+	# objective label, no [Tab]/[F4]/[F5] hints. Show, don't tell.
+	if _is_tutorial:
+		var hud_node: Node = get_node_or_null("HUD")
+		if hud_node:
+			var info_panel: Control = hud_node.get_node_or_null("Margin/InfoPanel") as Control
+			if info_panel:
+				info_panel.visible = false
+
 	# Update WalkHUD (PV + Ogham + Essences)
 	if _walk_hud:
 		var store: Node = get_node_or_null("/root/GameManager")
