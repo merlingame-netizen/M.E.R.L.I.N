@@ -1,0 +1,4628 @@
+[
+  {
+    "id": "fr_s10a_broc_001",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "text": "Pres du Val-sans-Retour, un chene creux exhale une brume doree. Les oiseaux se taisent. Au sol, des empreintes de cerf blanc s'enfoncent dans la mousse, menant vers une clairiere ou la lumiere tombe en colonnes verticales. L'air sent le sorbier en fleur et la terre apres l'orage.",
+    "options": [
+      {
+        "label": "Suivre les empreintes du cerf blanc dans la mousse humide",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Ecouter le murmure qui emane du chene creux",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air pour identifier la source de la brume doree",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 7
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "broceliande",
+      "cerf_blanc",
+      "val_sans_retour"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Suivre les empreintes du cerf blanc dans la mousse humide",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Ecouter le murmure qui emane du chene creux",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air pour identifier la source de la brume doree",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton souffle se cale sur celui de la foret. Le mouvement coule de toi, et la peur se tait.",
+      "success": "Ton corps porte la decision. Tu reussis sans ceremonie.",
+      "failure": "Tu trebuches sur ton elan. Rien de grave, mais l'instant glisse entre tes doigts.",
+      "critical_failure": "Le mouvement t'echappe. Quelque chose cede sous tes pieds, et tu sais que tu paieras."
+    },
+    "minigame": "souffle",
+    "risk_hint": "Le corps avant la pensee."
+  },
+  {
+    "id": "fr_s10a_broc_002",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "text": "La Fontaine de Barenton bouillonne sans chaleur. Gwenn, la guerisseuse locale, y trempe ses mains. 'L'eau repond a ceux qui posent la bonne question,' dit-elle. 'Mais elle noie ceux qui demandent trop.' Autour de la fontaine, des fougeres geantes forment un cercle parfait, leurs frondes fremissant sans vent.",
+    "options": [
+      {
+        "label": "Mediter au bord de la fontaine pour formuler une question juste",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur le rythme des bulles pour y lire un presage",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Accepter l'invitation de Gwenn et plonger les mains dans l'eau",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "broceliande",
+      "fontaine_barenton",
+      "gwenn"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Mediter au bord de la fontaine pour formuler une question juste",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur le rythme des bulles pour y lire un presage",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter l'invitation de Gwenn et plonger les mains dans l'eau",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_broc_003",
+    "biome": "foret_broceliande",
+    "champ_lexical": "finesse",
+    "text": "Un pont de racines enjambe un ruisseau noir pres du Tombeau de Merlin. Les mousses bioluminescentes pulsent en rythme lent. Sous le pont, une silhouette trapue — un korrigan — grignote un champignon violet. Il leve les yeux. 'Passage payant. Un secret ou un os. Au choix.'",
+    "options": [
+      {
+        "label": "Se faufiler sous le pont par un passage lateral oublie",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Esquiver la demande en offrant un champignon trouve plus tot",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Traverser le pont avec assurance en ignorant le peage",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "broceliande",
+      "tombeau_merlin",
+      "korrigan",
+      "pont"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler sous le pont par un passage lateral oublie",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Esquiver la demande en offrant un champignon trouve plus tot",
+        "verb": "esquiver",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Traverser le pont avec assurance en ignorant le peage",
+        "verb": "traverser",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_broc_004",
+    "biome": "foret_broceliande",
+    "champ_lexical": "observation",
+    "text": "Dans la Vallee des Fees, des lucioles geantes dessinent des signes entre les hetres centenaires. Chaque arbre porte une entaille ancienne, presque effacee. Un vieil if au tronc tordu semble veiller sur un tumulus recouvert de lierre. Les entailles racontent une histoire si l'on sait les lire dans l'ordre.",
+    "options": [
+      {
+        "label": "Memoriser la sequence des entailles sur les troncs",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Examiner le tumulus sous le lierre pour y trouver l'origine des marques",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Fixer les lucioles geantes pour comprendre leurs trajectoires",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "broceliande",
+      "vallee_fees",
+      "hetres",
+      "tumulus"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Memoriser la sequence des entailles sur les troncs",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Examiner le tumulus sous le lierre pour y trouver l'origine des marques",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fixer les lucioles geantes pour comprendre leurs trajectoires",
+        "verb": "fixer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_broc_005",
+    "biome": "foret_broceliande",
+    "champ_lexical": "chance",
+    "text": "Un cercle de champignons parfait luit sous la canopee de Paimpont. Au centre, une petite flaque reflette un ciel qui n'est pas celui d'aujourd'hui — un ciel etoile en plein jour. Gwenn dit que ces 'miroirs des fae' apparaissent quand la frontiere entre les mondes s'amincit.",
+    "options": [
+      {
+        "label": "Tenter sa chance en regardant dans le miroir des fae",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Cueillir un champignon du cercle en offrande",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle autour du cercle pour d'autres indices",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "broceliande",
+      "paimpont",
+      "miroir_fae",
+      "champignons"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Tenter sa chance en regardant dans le miroir des fae",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Cueillir un champignon du cercle en offrande",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fouiller a l'aveugle autour du cercle pour d'autres indices",
+        "verb": "fouiller a l'aveugle",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_broc_006",
+    "biome": "foret_broceliande",
+    "champ_lexical": "vigueur",
+    "text": "L'Arbre d'Or de Broceliande, d'ordinaire eclatant, a perdu une branche. Elle git au sol, noircie. Un corbeau a trois yeux est perche dessus. Quand tu t'approches, il croasse un nom — le tien. La branche tremble. L'air refroidit de dix degres en un instant.",
+    "options": [
+      {
+        "label": "Resister physiquement au froid surnaturel et saisir la branche",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Combattre l'influence du corbeau en brandissant un baton de houx",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Fuir loin de l'Arbre d'Or avant que le froid ne te paralyse",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "broceliande",
+      "arbre_or",
+      "corbeau",
+      "branche_noire"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Resister physiquement au froid surnaturel et saisir la branche",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Combattre l'influence du corbeau en brandissant un baton de houx",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fuir loin de l'Arbre d'Or avant que le froid ne te paralyse",
+        "verb": "fuir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_landes_001",
+    "biome": "landes_bruyere",
+    "champ_lexical": "perception",
+    "text": "Sur les hauteurs des Monts d'Arree, le vent hurle entre les rochers de schiste. Erwan, le berger des cairns, pointe un dolmen fissure. 'Quand le vent souffle dans cette direction, on entend les ancetres compter leurs moutons. Ecoute bien — ils comptent aussi les vivants.'",
+    "options": [
+      {
+        "label": "Tendre l'oreille pres de la fissure du dolmen",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Pister le son a travers les rochers de schiste",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir les courants d'air pour localiser d'autres fissures",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "landes",
+      "monts_arree",
+      "dolmen",
+      "vent"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Tendre l'oreille pres de la fissure du dolmen",
+        "verb": "tendre l'oreille",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pister le son a travers les rochers de schiste",
+        "verb": "pister",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir les courants d'air pour localiser d'autres fissures",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_landes_002",
+    "biome": "landes_bruyere",
+    "champ_lexical": "esprit",
+    "text": "Le Yeun Elez, le marais maudit au coeur des Monts d'Arree, fume sous la pluie fine. On dit que c'est la porte des enfers bretons. Une stele druidique emerge de la tourbe, gravee d'un visage dont les yeux semblent suivre tes mouvements. La bruyere tout autour est morte sur un cercle parfait de trois metres.",
+    "options": [
+      {
+        "label": "Resister mentalement a l'attraction de la stele",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Apaiser les energies du marais en recitant une priere ancienne",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Endurer la pluie et le malaise pour etudier les gravures",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "landes",
+      "yeun_elez",
+      "marais_maudit",
+      "stele"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Resister mentalement a l'attraction de la stele",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Apaiser les energies du marais en recitant une priere ancienne",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Endurer la pluie et le malaise pour etudier les gravures",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_landes_003",
+    "biome": "landes_bruyere",
+    "champ_lexical": "bluff",
+    "text": "Un cairn s'est effondre pres de Brennilis, revelant un tunnel etroit. Un korrigan en sort, couvert de poussiere, tenant une couronne d'ajoncs. 'Je l'ai trouvee en premier!' crie-t-il. 'Elle est a moi par droit de fouille!' Mais les ajoncs brillent d'une lueur que seule la magie druidique peut produire.",
+    "options": [
+      {
+        "label": "Negocier avec le korrigan pour partager la decouverte",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Convaincre le korrigan que la couronne est un piege magique",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Charmer le korrigan avec des compliments sur sa bravoure",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "landes",
+      "brennilis",
+      "cairn_effondre",
+      "couronne"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Negocier avec le korrigan pour partager la decouverte",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Convaincre le korrigan que la couronne est un piege magique",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Charmer le korrigan avec des compliments sur sa bravoure",
+        "verb": "charmer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10a_landes_004",
+    "biome": "landes_bruyere",
+    "champ_lexical": "logique",
+    "text": "Pres du Roc'h Trevezel, la plus haute crete des Monts d'Arree, trois pierres levees forment un triangle. Le sol entre elles est couvert de lichen orange, sauf en un point precis ou la roche nue forme un symbole. Le vent s'arrete quand tu entres dans le triangle, comme si l'air retenait son souffle.",
+    "options": [
+      {
+        "label": "Dechiffrer le symbole grave dans la roche nue",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Analyser la disposition des trois pierres pour comprendre leur alignement",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Interpreter le lichen orange comme une carte des energies telluriques",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "landes",
+      "roch_trevezel",
+      "pierres_levees",
+      "symbole"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Dechiffrer le symbole grave dans la roche nue",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser la disposition des trois pierres pour comprendre leur alignement",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter le lichen orange comme une carte des energies telluriques",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_landes_005",
+    "biome": "landes_bruyere",
+    "champ_lexical": "observation",
+    "text": "Au coucher du soleil sur les landes de Commana, la bruyere cendrée prend une teinte violacee. Des feux follets dansent en spirale au-dessus d'une tourbiere. Leur trajectoire dessine une forme reconnaissable — un visage, peut-etre celui de Niamh elle-meme, figee dans un sourire enigmatique.",
+    "options": [
+      {
+        "label": "Scruter la trajectoire des feux follets pour confirmer le visage",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Observer les reflets dans la tourbiere pour y voir un message",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Inspecter le sol autour des feux follets pour trouver leur source",
+        "verb": "inspecter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "landes",
+      "commana",
+      "feux_follets",
+      "tourbiere"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Scruter la trajectoire des feux follets pour confirmer le visage",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Observer les reflets dans la tourbiere pour y voir un message",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Inspecter le sol autour des feux follets pour trouver leur source",
+        "verb": "inspecter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_landes_006",
+    "biome": "landes_bruyere",
+    "champ_lexical": "vigueur",
+    "text": "Une tempete d'automne s'abat sur les cretes de Huelgoat. Les rafales couchent les bruyeres et font vibrer les menhirs comme des diapasons. Erwan crie par-dessus le vent : 'Les anciens envoyaient leurs guerriers ici pour l'epreuve du vent! Celui qui reste debout merite la parole des pierres!'",
+    "options": [
+      {
+        "label": "Resister physiquement aux rafales en s'ancrant pres du menhir",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Courir vers un abri naturel entre les rochers de schiste",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -3
+          }
+        ]
+      },
+      {
+        "label": "Pousser contre le vent pour atteindre le sommet de la crete",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "landes",
+      "huelgoat",
+      "tempete",
+      "epreuve_vent"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Resister physiquement aux rafales en s'ancrant pres du menhir",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir vers un abri naturel entre les rochers de schiste",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pousser contre le vent pour atteindre le sommet de la crete",
+        "verb": "pousser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cotes_001",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "perception",
+    "text": "Sur la Pointe du Raz, les vagues frappent les falaises avec une violence hypnotique. Maelle, la gardienne du phare eteint, tend l'oreille vers le large. 'Tu entends? Sous le fracas, il y a un chant. Les sirenes de l'ile de Sein appellent. Elles ne chantent pas pour tout le monde.'",
+    "options": [
+      {
+        "label": "Ecouter au-dela des vagues pour percevoir le chant des sirenes",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Suivre la direction que Maelle indique vers l'ile de Sein",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air marin pour y detecter une magie ancienne",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cotes",
+      "pointe_raz",
+      "ile_sein",
+      "sirenes"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Ecouter au-dela des vagues pour percevoir le chant des sirenes",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Suivre la direction que Maelle indique vers l'ile de Sein",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air marin pour y detecter une magie ancienne",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cotes_002",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "finesse",
+    "text": "Dans les grottes marines de Crozon, la maree monte vite. Des korrigans ont installe des passerelles de bois entre les rochers, mais certaines sont des leurres qui s'effondrent au moindre poids. Les vrais chemins sont marques de coquillages disposes en spirale — si l'on sait ou regarder.",
+    "options": [
+      {
+        "label": "Se faufiler entre les rochers en suivant les spirales de coquillages",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Contourner les passerelles par un chemin de corniche etroit",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Escalader la paroi rocheuse pour eviter la maree montante",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cotes",
+      "crozon",
+      "grottes_marines",
+      "maree"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler entre les rochers en suivant les spirales de coquillages",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner les passerelles par un chemin de corniche etroit",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader la paroi rocheuse pour eviter la maree montante",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cotes_003",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "logique",
+    "text": "L'alignement de Carnac s'etend jusqu'a la cote, ou les derniers menhirs plongent dans la mer a maree haute. Une pierre semi-immergee porte des gravures inedites — des calculs lunaires que personne n'a jamais repertories. Les algues qui la couvrent forment des motifs geometriques troublants.",
+    "options": [
+      {
+        "label": "Dechiffrer les calculs lunaires graves sur la pierre immergee",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Etudier les motifs d'algues pour y voir un code naturel",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Decoder la relation entre les gravures et les cycles de maree",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cotes",
+      "carnac",
+      "menhirs_marins",
+      "calculs_lunaires"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Dechiffrer les calculs lunaires graves sur la pierre immergee",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Etudier les motifs d'algues pour y voir un code naturel",
+        "verb": "etudier",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Decoder la relation entre les gravures et les cycles de maree",
+        "verb": "decoder",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cotes_004",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "esprit",
+    "text": "La Baie des Trepasses porte bien son nom. A maree basse, les rochers noirs affleurent comme des dents. Des feux Saint-Elme dansent au sommet des recifs. Maelle dit que les ames des noyes reviennent ici quand la lune est cachee. Ce soir, il n'y a pas de lune.",
+    "options": [
+      {
+        "label": "Calmer ses propres peurs pour faire face aux lumieres spectrales",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Mediter sur la frontiere entre la vie et la mort devant la baie",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Attendre que les feux Saint-Elme s'eteignent naturellement",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cotes",
+      "baie_trepasses",
+      "feux_saint_elme",
+      "noyes"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Calmer ses propres peurs pour faire face aux lumieres spectrales",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter sur la frontiere entre la vie et la mort devant la baie",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Attendre que les feux Saint-Elme s'eteignent naturellement",
+        "verb": "attendre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton geste de paix est entendu. Le silence qui suit est complice.",
+      "success": "Tu trouves le ton, et la rencontre prend.",
+      "failure": "Tu hesites trop, ou tu en fais trop. L'autre se ferme.",
+      "critical_failure": "Ta voix tremble au pire moment. Quelque chose se brise entre toi et l'autre."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10a_cotes_005",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "chance",
+    "text": "Sur la plage de Ploumanac'h, les rochers de granit rose forment des sculptures naturelles. L'un d'eux ressemble a un chaudron renverse. Sous ce chaudron de pierre, un trou sombre exhale un parfum d'iode et de miel sauvage. Des abeilles noires — des abeilles d'Armor — y ont fait leur ruche.",
+    "options": [
+      {
+        "label": "Tenter sa chance en plongeant la main dans le trou sombre",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Chercher au hasard un autre acces a la ruche par les fissures",
+        "verb": "chercher au hasard",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      },
+      {
+        "label": "Deviner quel rocher cache l'entree principale de la colonie",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cotes",
+      "ploumanach",
+      "granit_rose",
+      "abeilles_armor"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Tenter sa chance en plongeant la main dans le trou sombre",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Chercher au hasard un autre acces a la ruche par les fissures",
+        "verb": "chercher au hasard",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner quel rocher cache l'entree principale de la colonie",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cotes_006",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "bluff",
+    "text": "Pres de l'ile de Batz, un courant sous-marin projette des eclats lumineux sur la surface. Maelle dit que les passeurs de l'Autre Monde recrutent ici. Un vieil homme en barque d'osier t'interpelle : 'Je peux t'emmener la ou le soleil se couche deux fois. Mais il faut me convaincre que tu es pret.'",
+    "options": [
+      {
+        "label": "Convaincre le passeur que tu as deja vu l'Autre Monde en reve",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Marchander le prix du passage avec une offrande symbolique",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Amadouer le passeur avec des recits de voyages passes",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cotes",
+      "ile_batz",
+      "passeur",
+      "autre_monde"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Convaincre le passeur que tu as deja vu l'Autre Monde en reve",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Marchander le prix du passage avec une offrande symbolique",
+        "verb": "marchander",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Amadouer le passeur avec des recits de voyages passes",
+        "verb": "amadouer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10a_vill_001",
+    "biome": "villages_celtes",
+    "champ_lexical": "observation",
+    "text": "Le forgeron de Locronan travaille un metal qui n'est ni fer ni bronze. Son enclume porte les memes entailles que les menhirs voisins. Cadogan, le chef du village, observe en silence. 'Chaque lame qu'il forge contient une memoire. Regarde ses gestes — il ne cree pas, il se souvient.'",
+    "options": [
+      {
+        "label": "Observer les gestes du forgeron pour y reperer un rythme ancien",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Scruter les entailles de l'enclume pour les comparer aux menhirs",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Examiner le metal inconnu pour en identifier la composition",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "locronan",
+      "forgeron",
+      "metal_ancien"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Observer les gestes du forgeron pour y reperer un rythme ancien",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les entailles de l'enclume pour les comparer aux menhirs",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Examiner le metal inconnu pour en identifier la composition",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_vill_002",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Le marche de Quimper bat son plein. Un korrigan deguise en marchand vend des 'pierres a voeux' qui luisent au toucher. Cadogan te previent : 'Les vrais ont la chaleur de la terre. Les faux sentent la tourbe sechee.' Mais le korrigan a l'ouie fine et te fixe deja.",
+    "options": [
+      {
+        "label": "Marchander fermement pour tester l'authenticite du korrigan",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Mentir en pretendant etre un acheteur pour un druide puissant",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Negocier un echange de savoirs plutot qu'un achat",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "quimper",
+      "marche",
+      "pierres_voeux"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Marchander fermement pour tester l'authenticite du korrigan",
+        "verb": "marchander",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mentir en pretendant etre un acheteur pour un druide puissant",
+        "verb": "mentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Negocier un echange de savoirs plutot qu'un achat",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_vill_003",
+    "biome": "villages_celtes",
+    "champ_lexical": "esprit",
+    "text": "Dans le lavoir sacre de Josselin, l'eau coule d'une source que les druides considerent comme la bouche de la terre. Une vieille fileuse lave des linges bordes de symboles. 'L'eau parle a ceux qui se taisent,' murmure-t-elle. Le reflet de la lune tremble dans le bassin, meme en plein jour.",
+    "options": [
+      {
+        "label": "Se concentrer sur le reflet lunaire pour y lire un presage",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Apaiser son esprit pour entendre la voix de la source",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Accepter le linge symbolique offert par la fileuse",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "josselin",
+      "lavoir_sacre",
+      "fileuse"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Se concentrer sur le reflet lunaire pour y lire un presage",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Apaiser son esprit pour entendre la voix de la source",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter le linge symbolique offert par la fileuse",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_vill_004",
+    "biome": "villages_celtes",
+    "champ_lexical": "vigueur",
+    "text": "Le cimetiere de Ploumilliau est celebre pour ses danses macabres sculptees. Ce soir, les sculptures semblent bouger. Un gardien de nuit, pale comme la craie, bloque l'entree. 'L'Ankou fait sa ronde. Tu peux entrer, mais il faudra prouver que tu es encore vivant.'",
+    "options": [
+      {
+        "label": "Combattre symboliquement l'ombre de l'Ankou dans le cimetiere",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Courir entre les tombes pour montrer la vitalite de ton corps",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Forcer le passage en bousculant le gardien spectral",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "ploumilliau",
+      "danse_macabre",
+      "gardien"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Combattre symboliquement l'ombre de l'Ankou dans le cimetiere",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir entre les tombes pour montrer la vitalite de ton corps",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Forcer le passage en bousculant le gardien spectral",
+        "verb": "forcer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_vill_005",
+    "biome": "villages_celtes",
+    "champ_lexical": "chance",
+    "text": "Le puits de Sainte-Anne-la-Palud est borde de rubans colores. Les villageois y jettent des pieces pour que leurs voeux se realisent. Un enfant dit qu'il a vu une main blanche sortir du puits la nuit derniere pour prendre les offrandes. L'eau du puits a un reflet argente anormal.",
+    "options": [
+      {
+        "label": "Tenter sa chance en jetant une offrande dans le puits argente",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Deviner la nature de la main blanche d'apres les temoignages",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle au fond du puits avec un seau",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "sainte_anne_palud",
+      "puits",
+      "main_blanche"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Tenter sa chance en jetant une offrande dans le puits argente",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner la nature de la main blanche d'apres les temoignages",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fouiller a l'aveugle au fond du puits avec un seau",
+        "verb": "fouiller a l'aveugle",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_vill_006",
+    "biome": "villages_celtes",
+    "champ_lexical": "logique",
+    "text": "La halle aux grains de Guerlesquin cache un secret. Sous les dalles du sol, des canaux suivent un schema hydraulique ancien. Cadogan explique : 'Nos ancetres savaient faire chanter l'eau. Si tu trouves la bonne dalle, le circuit se reactivera et la fontaine centrale rejaillira.'",
+    "options": [
+      {
+        "label": "Resoudre le schema hydraulique en analysant l'inclinaison des dalles",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Analyser les joints entre les dalles pour trouver le canal principal",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Decoder les marques au sol comme un plan d'architecte",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "guerlesquin",
+      "hydraulique",
+      "dalles"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Resoudre le schema hydraulique en analysant l'inclinaison des dalles",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser les joints entre les dalles pour trouver le canal principal",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Decoder les marques au sol comme un plan d'architecte",
+        "verb": "decoder",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cercles_001",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "text": "Le cromlech de Er Lannic, a moitie submerge dans le Golfe du Morbihan, revele ses pierres a maree basse. Brennos dit que ce double cercle — l'un terrestre, l'autre aquatique — fonctionne comme un cadran. 'Quand les deux cercles s'alignent avec la lune, le temps hesite.'",
+    "options": [
+      {
+        "label": "Dechiffrer l'alignement des deux cercles avec la position lunaire",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Analyser les distances entre les pierres immergees et terrestres",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Interpreter les traces d'erosion comme un calendrier des marees",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cercles",
+      "er_lannic",
+      "cromlech",
+      "marees"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Dechiffrer l'alignement des deux cercles avec la position lunaire",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser les distances entre les pierres immergees et terrestres",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter les traces d'erosion comme un calendrier des marees",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cercles_002",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Au centre du cairn de Gavrinis, les gravures spiralees couvrent chaque dalle. Brennos allume une torche : les ombres des spirales tournent sur les murs, creant l'illusion d'un mouvement perpetuel. 'Les druides venaient ici pour perdre leur sens du temps,' dit-il. 'Certains ne sont jamais sortis.'",
+    "options": [
+      {
+        "label": "Mediter au centre du cairn pour perdre volontairement le sens du temps",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur une seule spirale pour ancrer sa conscience",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement au vertige des spirales tournantes",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cercles",
+      "gavrinis",
+      "spirales",
+      "temps"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Mediter au centre du cairn pour perdre volontairement le sens du temps",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur une seule spirale pour ancrer sa conscience",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement au vertige des spirales tournantes",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cercles_003",
+    "biome": "cercles_pierres",
+    "champ_lexical": "perception",
+    "text": "La Table des Marchands a Locmariaquer vibre sous tes pieds. La grande dalle de couverture, gravee d'une hache et d'un bateau, emet un bourdonnement sourd la nuit. Des pas lourds resonnent dans le couloir d'entree — mais personne n'est visible. L'Ankou marche dans les monuments funeraires quand le solstice approche.",
+    "options": [
+      {
+        "label": "Ecouter le rythme des pas pour determiner leur direction",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Suivre les vibrations de la dalle pour trouver leur source",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Pister les pas invisibles le long du couloir d'entree",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cercles",
+      "locmariaquer",
+      "table_marchands",
+      "solstice"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Ecouter le rythme des pas pour determiner leur direction",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Suivre les vibrations de la dalle pour trouver leur source",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pister les pas invisibles le long du couloir d'entree",
+        "verb": "pister",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cercles_004",
+    "biome": "cercles_pierres",
+    "champ_lexical": "observation",
+    "text": "Le tumulus de Dissignac revele, a l'equinoxe, un rayon de soleil qui traverse le couloir et illumine une pierre gravee au fond. Brennos a attendu ce jour toute l'annee. 'Regarde bien. Pendant trente secondes, la pierre montre une carte. Une carte vers un lieu que personne ne peut atteindre a pied.'",
+    "options": [
+      {
+        "label": "Memoriser chaque detail de la carte illuminee en trente secondes",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les bords de la pierre pour des inscriptions complementaires",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fixer le rayon de lumiere pour observer ses irregularites",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cercles",
+      "dissignac",
+      "equinoxe",
+      "carte_lumiere"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Memoriser chaque detail de la carte illuminee en trente secondes",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les bords de la pierre pour des inscriptions complementaires",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fixer le rayon de lumiere pour observer ses irregularites",
+        "verb": "fixer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cercles_005",
+    "biome": "cercles_pierres",
+    "champ_lexical": "finesse",
+    "text": "Sous le dolmen de la Roche-aux-Fees, un passage secret mene a une salle souterraine. Des korrigans y ont stocke des tresors voles au fil des siecles — pieces, bijoux, os graves. Mais le passage est piege : des dalles basculantes et des courants d'air trompeurs.",
+    "options": [
+      {
+        "label": "Se faufiler dans le passage en testant chaque dalle avant de poser le pied",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Contourner les pieges en longeant la paroi rocheuse",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Se cacher dans une alcove pour observer les korrigans emprunter le vrai chemin",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cercles",
+      "roche_fees",
+      "passage_secret",
+      "tresors"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler dans le passage en testant chaque dalle avant de poser le pied",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner les pieges en longeant la paroi rocheuse",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se cacher dans une alcove pour observer les korrigans emprunter le vrai chemin",
+        "verb": "se cacher",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_cercles_006",
+    "biome": "cercles_pierres",
+    "champ_lexical": "chance",
+    "text": "Les Pierres Sonnantes de Monteneuf emettent des notes musicales quand on les frappe. Un druide itinerant joue une melodie sur les menhirs. 'Chaque pierre a une note. La bonne sequence ouvre un chemin dans l'air lui-meme.' Mais il a oublie la derniere note.",
+    "options": [
+      {
+        "label": "Deviner la derniere note en se fiant a son instinct musical",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Tenter sa chance en frappant une pierre au hasard",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Cueillir une herbe resonante pour l'utiliser comme diapason",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "cercles",
+      "monteneuf",
+      "pierres_sonnantes",
+      "melodie"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Deviner la derniere note en se fiant a son instinct musical",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tenter sa chance en frappant une pierre au hasard",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Cueillir une herbe resonante pour l'utiliser comme diapason",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_marais_001",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "text": "Le marais de Grande Briere s'etend sous une brume epaisse. Des ilots de tourbe flottent, changeant de position avec les courants. Gwen Du, la reine des korrigans locaux, se deplace en sautant d'ilot en ilot avec une agilite surnaturelle. 'Suis-moi si tu peux. Les ilots ne portent que ceux qu'ils choisissent.'",
+    "options": [
+      {
+        "label": "Esquiver les ilots instables en choisissant les plus moussus",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Se faufiler entre les roseaux pour trouver un chemin de terre ferme",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Escalader un saule penche pour reperer le chemin depuis les hauteurs",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "marais",
+      "grande_briere",
+      "ilots_tourbe",
+      "gwen_du"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Esquiver les ilots instables en choisissant les plus moussus",
+        "verb": "esquiver",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se faufiler entre les roseaux pour trouver un chemin de terre ferme",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader un saule penche pour reperer le chemin depuis les hauteurs",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu agis vite, et l'instant ne pese plus. Tu sens que les choses se sont alignees sous tes pieds.",
+      "success": "Tu agis. Le mouvement passe. La foret t'a laisse faire ton geste.",
+      "failure": "Le geste manque, juste un peu. Ton souffle se rompt et tu sens le moment se refermer.",
+      "critical_failure": "Tu te blesses dans ton elan. Une douleur sourde, une honte plus chaude encore."
+    },
+    "minigame": "souffle",
+    "risk_hint": "Le corps avant la pensee."
+  },
+  {
+    "id": "fr_s10a_marais_002",
+    "biome": "marais_korrigans",
+    "champ_lexical": "esprit",
+    "text": "Au coeur du marais de Vilaine, un arbre mort se dresse, blanc comme un os. Ses branches portent des dizaines de cranes d'oiseaux suspendus par des fils de soie. Quand le vent souffle, ils s'entrechoquent en produisant un carillon funebre. L'arbre est un memorial pour les ames perdues dans les marecages.",
+    "options": [
+      {
+        "label": "Mediter devant l'arbre memorial pour honorer les ames perdues",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Calmer les cranes en les touchant un a un avec respect",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement au malaise provoque par le carillon",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "marais",
+      "vilaine",
+      "arbre_mort",
+      "cranes_oiseaux"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Mediter devant l'arbre memorial pour honorer les ames perdues",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer les cranes en les touchant un a un avec respect",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement au malaise provoque par le carillon",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_marais_003",
+    "biome": "marais_korrigans",
+    "champ_lexical": "perception",
+    "text": "Les eaux noires du marais de Redon exhalent des bulles de gaz qui sentent le soufre et la menthe sauvage. Gwen Du dit que les bulles sont les soupirs de la terre. Un druide herboriste recueille le gaz dans des outres. 'Chaque bulle contient un souvenir de ce qui a ete enterre ici.'",
+    "options": [
+      {
+        "label": "Sentir chaque bulle pour y distinguer les odeurs anciennes",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Ecouter le clapotis des bulles pour y deceler un rythme",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air pour localiser la source principale des emanations",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "marais",
+      "redon",
+      "bulles_gaz",
+      "herboriste"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Sentir chaque bulle pour y distinguer les odeurs anciennes",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Ecouter le clapotis des bulles pour y deceler un rythme",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air pour localiser la source principale des emanations",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_marais_004",
+    "biome": "marais_korrigans",
+    "champ_lexical": "observation",
+    "text": "Des nenuphars geants couvrent un etang cache dans le marais de Guer. Leurs fleurs s'ouvrent uniquement la nuit et emettent une phosphorescence bleue. Sous chaque feuille, des formes sombres bougent lentement. Gwen Du murmure : 'Les fees aquatiques de Niamh utilisent ces feuilles comme portails.'",
+    "options": [
+      {
+        "label": "Observer les formes sous les feuilles pour comprendre leurs mouvements",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Scruter la phosphorescence pour y deceler un message",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Memoriser le motif des nenuphars ouverts pour tracer une carte",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "marais",
+      "guer",
+      "nenuphars",
+      "fees_aquatiques"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Observer les formes sous les feuilles pour comprendre leurs mouvements",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter la phosphorescence pour y deceler un message",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Memoriser le motif des nenuphars ouverts pour tracer une carte",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_marais_005",
+    "biome": "marais_korrigans",
+    "champ_lexical": "logique",
+    "text": "Un chemin de rondins traverse le marais de Fougeres, mais certains rondins sont graves de chiffres runiques. L'ordre dans lequel on les foule semble importer — un mauvais pas fait vibrer le bois et la tourbe s'agite. Brennos dit : 'C'est un verrou. Les anciens protegeaient leurs sanctuaires avec des equations.'",
+    "options": [
+      {
+        "label": "Dechiffrer les chiffres runiques pour trouver la bonne sequence",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Resoudre l'equation en testant methodiquement les combinaisons",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Etudier les rondins qui ne vibrent pas pour eliminer les mauvais",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "marais",
+      "fougeres",
+      "rondins",
+      "verrou_oghamique"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Dechiffrer les chiffres runiques pour trouver la bonne sequence",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre l'equation en testant methodiquement les combinaisons",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Etudier les rondins qui ne vibrent pas pour eliminer les mauvais",
+        "verb": "etudier",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_marais_006",
+    "biome": "marais_korrigans",
+    "champ_lexical": "bluff",
+    "text": "Un groupe de korrigans a capture un feu follet dans une cage d'osier. Ils le gardent comme lanterne vivante, mais le feu follet supplie d'etre libere. Gwen Du intervient : 'Libere-le et il te guidera. Garde-le et sa lumiere durera un mois. Les korrigans veulent le garder. Les druides veulent le liberer.'",
+    "options": [
+      {
+        "label": "Convaincre les korrigans que le feu follet sera plus utile libre",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Negocier un accord : liberte du feu follet contre un service futur",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Amadouer les korrigans avec un autre tresor pour echanger",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": -5
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "marais",
+      "feu_follet",
+      "cage_osier",
+      "dilemme"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Convaincre les korrigans que le feu follet sera plus utile libre",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Negocier un accord : liberte du feu follet contre un service futur",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Amadouer les korrigans avec un autre tresor pour echanger",
+        "verb": "amadouer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10a_dolmens_001",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "text": "Sur les collines de Carnac, le Grand Menhir Brise git en quatre morceaux. Ildiko, la gardienne des dolmens, veille pres des fragments. 'Quand il se tenait debout, on pouvait parler aux morts d'ici. Maintenant, il faut se coucher sur les morceaux et fermer les yeux. Les morts viennent a toi.'",
+    "options": [
+      {
+        "label": "Se concentrer en s'allongeant sur un fragment du menhir brise",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Mediter assis pres des fragments sans les toucher",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Calmer les energies residuelles du menhir par une incantation",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "dolmens",
+      "carnac",
+      "grand_menhir_brise",
+      "ildiko"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Se concentrer en s'allongeant sur un fragment du menhir brise",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter assis pres des fragments sans les toucher",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer les energies residuelles du menhir par une incantation",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_dolmens_002",
+    "biome": "collines_dolmens",
+    "champ_lexical": "observation",
+    "text": "L'allee couverte de Prajou-Menhir domine la vallee. Ses dalles interieures portent des gravures de seins, de crosses et d'arcs — symboles de fertilite et de pouvoir. Ildiko ecarte les fougeres : 'Chaque gravure est un chapitre. L'histoire commence par l'entree et finit au fond. Personne ne l'a lue en entier.'",
+    "options": [
+      {
+        "label": "Examiner chaque dalle dans l'ordre pour reconstituer l'histoire",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Memoriser les symboles recurrents pour en comprendre la grammaire",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Inspecter la dalle du fond en premier pour lire la conclusion",
+        "verb": "inspecter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "dolmens",
+      "prajou_menhir",
+      "allee_couverte",
+      "gravures"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Examiner chaque dalle dans l'ordre pour reconstituer l'histoire",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Memoriser les symboles recurrents pour en comprendre la grammaire",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Inspecter la dalle du fond en premier pour lire la conclusion",
+        "verb": "inspecter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_dolmens_003",
+    "biome": "collines_dolmens",
+    "champ_lexical": "perception",
+    "text": "La Roche-aux-Fees d'Esse vibre d'une frequence si basse qu'on la sent dans les os plutot qu'on ne l'entend. Quarante-deux dalles de schiste pourpre forment le plus grand dolmen de Bretagne. A l'interieur, l'air est dix degres plus frais. Un druide chante en harmoniques — sa voix fait resonner les pierres.",
+    "options": [
+      {
+        "label": "Ecouter les harmoniques pour identifier la frequence de chaque pierre",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Sentir les vibrations dans le sol avec ses paumes a plat",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Tendre l'oreille pour capter les echos entre les dalles",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "dolmens",
+      "roche_fees_esse",
+      "harmoniques",
+      "schiste"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Ecouter les harmoniques pour identifier la frequence de chaque pierre",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir les vibrations dans le sol avec ses paumes a plat",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tendre l'oreille pour capter les echos entre les dalles",
+        "verb": "tendre l'oreille",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_dolmens_004",
+    "biome": "collines_dolmens",
+    "champ_lexical": "finesse",
+    "text": "Le tumulus de Barnenez, le plus ancien monument d'Europe, cache onze chambres funeraires. Les korrigans y ont amenage des passages secrets entre les chambres. Ildiko avertit : 'Ils changent les passages chaque lune. Ce qui etait un chemin hier est un mur aujourd'hui.'",
+    "options": [
+      {
+        "label": "Se faufiler dans un passage etroit marque par des traces de suie recentes",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Contourner les chambres fermees en cherchant une entree par le toit",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Se cacher pres d'un passage et attendre qu'un korrigan l'emprunte",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "dolmens",
+      "barnenez",
+      "chambres_funeraires",
+      "passages"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler dans un passage etroit marque par des traces de suie recentes",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner les chambres fermees en cherchant une entree par le toit",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se cacher pres d'un passage et attendre qu'un korrigan l'emprunte",
+        "verb": "se cacher",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_dolmens_005",
+    "biome": "collines_dolmens",
+    "champ_lexical": "chance",
+    "text": "Sur la colline de Menez-Bre, un dolmen isole surplombe la mer lointaine. La legende dit que Niamh y a depose un cadeau pour le premier mortel a le trouver. Ildiko sourit : 'Beaucoup ont fouille. Personne n'a pense a regarder en dessous, dans le vide entre la terre et la pierre.'",
+    "options": [
+      {
+        "label": "Fouiller a l'aveugle dans l'espace entre la dalle et le sol",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Tenter sa chance en soulevant un coin de la dalle avec un levier",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Chercher au hasard autour du dolmen des indices laisses par Niamh",
+        "verb": "chercher au hasard",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "dolmens",
+      "menez_bre",
+      "cadeau_niamh",
+      "vide"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Fouiller a l'aveugle dans l'espace entre la dalle et le sol",
+        "verb": "fouiller a l'aveugle",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tenter sa chance en soulevant un coin de la dalle avec un levier",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Chercher au hasard autour du dolmen des indices laisses par Niamh",
+        "verb": "chercher au hasard",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_dolmens_006",
+    "biome": "collines_dolmens",
+    "champ_lexical": "vigueur",
+    "text": "L'ossuaire de Kerjean contient des milliers d'os empiles avec soin. La nuit, les os luisent faiblement. Ildiko explique : 'L'Ankou les recompte chaque nuit. Si tu veux entrer, tu dois porter un os jusqu'au sommet de la colline et le reposer au matin. C'est l'epreuve des veilleurs.'",
+    "options": [
+      {
+        "label": "Pousser ses limites et porter un os lourd jusqu'au sommet dans le noir",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement au froid glacial de l'ossuaire nocturne",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Fuir l'ossuaire avant que la nuit ne tombe completement",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "dolmens",
+      "kerjean",
+      "ossuaire",
+      "epreuve_veilleurs"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Pousser ses limites et porter un os lourd jusqu'au sommet dans le noir",
+        "verb": "pousser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister physiquement au froid glacial de l'ossuaire nocturne",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fuir l'ossuaire avant que la nuit ne tombe completement",
+        "verb": "fuir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_001",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "text": "Sur l'ile d'Ouessant, le phare du Creac'h projette sa lumiere sur une mer dechainee. Morgane apparait dans l'embrun, translucide. 'Tu es arrive au bout du monde connu. Au-dela, il n'y a que l'Autre Monde. Pour y acceder, il faut lacher prise — corps, memoire, identite. Oses-tu?'",
+    "options": [
+      {
+        "label": "Mediter face a la tempete pour lacher prise volontairement",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur la lumiere du phare comme ancre dans le reel",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Refuser l'invitation de Morgane et rester ancre dans ce monde",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "ouessant",
+      "creac_h",
+      "morgane",
+      "autre_monde"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter face a la tempete pour lacher prise volontairement",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur la lumiere du phare comme ancre dans le reel",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser l'invitation de Morgane et rester ancre dans ce monde",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_002",
+    "biome": "iles_mystiques",
+    "champ_lexical": "logique",
+    "text": "L'ile de Gavrinis cache un second cairn inconnu, revele par l'erosion recente. Ses dalles portent des spirales triples — les memes que sur le continent, mais en miroir. Morgane explique : 'Ce cairn est le reflet. Chaque spirale du continent a son inverse ici. Ensemble, elles forment une equation.'",
+    "options": [
+      {
+        "label": "Dechiffrer l'equation formee par les spirales miroir",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Analyser les differences entre les spirales des deux cairns",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resoudre la symetrie en superposant mentalement les deux motifs",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "gavrinis",
+      "cairn_miroir",
+      "spirales_inverses"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Dechiffrer l'equation formee par les spirales miroir",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser les differences entre les spirales des deux cairns",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre la symetrie en superposant mentalement les deux motifs",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_003",
+    "biome": "iles_mystiques",
+    "champ_lexical": "vigueur",
+    "text": "L'ile de Sein, plate comme la main, disparait presque sous les vagues de tempete. Un passage souterrain mene a une grotte ou neuf pretresses de l'Ankou veillent un autel de basalte noir. 'Les morts de la mer arrivent ici en premier,' disent-elles. 'Porte ce fardeau avec nous ou pars.'",
+    "options": [
+      {
+        "label": "Resister physiquement au poids du fardeau rituel des pretresses",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Combattre ses propres peurs pour rejoindre le rituel funeraire",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fuir la grotte par le passage souterrain avant la maree",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "ile_sein",
+      "pretresses",
+      "autel_basalte"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Resister physiquement au poids du fardeau rituel des pretresses",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Combattre ses propres peurs pour rejoindre le rituel funeraire",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fuir la grotte par le passage souterrain avant la maree",
+        "verb": "fuir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_004",
+    "biome": "iles_mystiques",
+    "champ_lexical": "finesse",
+    "text": "L'archipel des Glenan cache des grottes sous-marines accessibles uniquement a maree basse. Les korrigans des iles y ont installe un labyrinthe de coraux et de miroirs d'eau qui refletent un ciel different selon l'angle. 'Le tresor est au centre,' souffle un korrigan marin. 'Mais les reflets mentent.'",
+    "options": [
+      {
+        "label": "Se faufiler entre les miroirs d'eau en evitant les reflets trompeurs",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Contourner le labyrinthe par les parois de la grotte",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Escalader les stalactites pour surplomber le labyrinthe",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "glenan",
+      "grottes_marines",
+      "labyrinthe_miroirs"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler entre les miroirs d'eau en evitant les reflets trompeurs",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le labyrinthe par les parois de la grotte",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader les stalactites pour surplomber le labyrinthe",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_005",
+    "biome": "iles_mystiques",
+    "champ_lexical": "observation",
+    "text": "L'ile de Molene est battue par les vents en permanence. Au centre, un cercle de pierres levees, inconnu des cartes, apparait a maree basse seulement. Morgane dit : 'Ce cercle n'existe que quatre heures par jour. Les anciens l'ont construit pour etre oublie. Mais les pierres se souviennent de ceux qui les regardent.'",
+    "options": [
+      {
+        "label": "Memoriser la position exacte de chaque pierre avant la maree montante",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les gravures sur les pierres pendant le temps imparti",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Observer les ombres des pierres pour determiner leur age",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "molene",
+      "cercle_ephemere",
+      "maree"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Memoriser la position exacte de chaque pierre avant la maree montante",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les gravures sur les pierres pendant le temps imparti",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Observer les ombres des pierres pour determiner leur age",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_006",
+    "biome": "iles_mystiques",
+    "champ_lexical": "perception",
+    "text": "Avalon. L'ile mythique se revele derriere un rideau de brume au large de Brest. Les arbres y portent des pommes d'or. L'air vibre d'une musique que l'on entend avec le ventre plus qu'avec les oreilles. Morgane etend les bras : 'Ecoute. L'ile decide si tu es digne. Pas moi.'",
+    "options": [
+      {
+        "label": "Ecouter la musique d'Avalon avec tout son corps",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir le parfum des pommes d'or pour ancrer sa presence",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air pour detecter si la brume cache un danger",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "avalon",
+      "pommes_or",
+      "musique",
+      "brume"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Ecouter la musique d'Avalon avec tout son corps",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir le parfum des pommes d'or pour ancrer sa presence",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air pour detecter si la brume cache un danger",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_iles_007",
+    "biome": "iles_mystiques",
+    "champ_lexical": "chance",
+    "text": "Sur l'ilot de Cezembre, une source thermale jaillit du granit en pleine tempete. L'eau est brulante malgre l'ocean glace. Un druide exile y fait pousser des plantes impossibles — orchidees, figuiers, vignes. 'L'ile defie les saisons,' dit-il. 'Ici, la chance n'est pas un hasard. Elle est un choix de la terre.'",
+    "options": [
+      {
+        "label": "Cueillir une orchidee rare pres de la source thermale",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Tenter sa chance en goutant l'eau brulante de la source",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Deviner quelle plante le druide protege le plus soigneusement",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "iles",
+      "cezembre",
+      "source_thermale",
+      "druide_exile"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Cueillir une orchidee rare pres de la source thermale",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tenter sa chance en goutant l'eau brulante de la source",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner quelle plante le druide protege le plus soigneusement",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10a_vill_007",
+    "biome": "villages_celtes",
+    "champ_lexical": "perception",
+    "text": "Le moulin a maree de l'ile de Brehat tourne a l'envers depuis trois jours. Les villageois sont inquiets. Cadogan consulte la fileuse : 'Le moulin sent les courants que nous ne sentons pas. Quand il inverse, c'est que la terre respire dans l'autre sens. Ecoute le mecanisme — il raconte ce qui vient.'",
+    "options": [
+      {
+        "label": "Ecouter le grincement du moulin pour y percevoir un message cache",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Sentir les vibrations du sol pres du moulin pour comprendre l'inversion",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Pister le courant de maree jusqu'a sa source pour trouver la cause",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome_deep",
+      "villages",
+      "brehat",
+      "moulin_maree",
+      "inversion"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Ecouter le grincement du moulin pour y percevoir un message cache",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir les vibrations du sol pres du moulin pour comprendre l'inversion",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pister le courant de maree jusqu'a sa source pour trouver la cause",
+        "verb": "pister",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  }
+]

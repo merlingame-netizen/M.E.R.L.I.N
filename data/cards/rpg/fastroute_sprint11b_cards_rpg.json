@@ -1,0 +1,4531 @@
+[
+  {
+    "id": "fr_s11b_merlin_arc_001",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T1",
+    "text": "La voix de Merlin tremble — chose rare. 'Il y a longtemps, avant que les arbres ne me connaissent, j'etais un enfant sans nom. Ma mere etait une princesse et mon pere... eh bien, personne n'a jamais su repondre a cette question. On disait qu'il n'etait pas humain. Peut-etre ne l'etait-il pas. Je me souviens du vent le jour de ma naissance — il soufflait dans les deux directions a la fois.'",
+    "options": [
+      {
+        "label": "Apaiser Merlin en l'ecoutant avec un respect profond",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Accepter le recit sans poser de questions indiscretes",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Attendre en silence que Merlin continue de lui-meme",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "naissance",
+      "arc_1_of_10",
+      "T1"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Apaiser Merlin en l'ecoutant avec un respect profond",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter le recit sans poser de questions indiscretes",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Attendre en silence que Merlin continue de lui-meme",
+        "verb": "attendre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 10,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_002",
+    "biome": "cercles_pierres",
+    "champ_lexical": "observation",
+    "merlin_direct": true,
+    "trust_tier": "T1",
+    "text": "'Enfant, je voyais des choses que les autres ne voyaient pas,' continue Merlin. 'Des lignes de lumiere sous la terre, des couleurs dans les voix, des formes dans le vent. Le roi Vortigern m'a fait venir pour expliquer pourquoi sa tour s'effondrait. J'avais sept ans. J'ai vu deux dragons sous les fondations — un rouge, un blanc. Personne ne m'a cru jusqu'a ce que la terre s'ouvre.'",
+    "options": [
+      {
+        "label": "Observer les pierres autour de toi pour percevoir ce que Merlin percevait",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Scruter le sol sous tes pieds pour chercher des lignes de lumiere",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fixer Merlin pour capter l'emotion derriere ses mots",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "vortigern",
+      "dragons",
+      "arc_2_of_10",
+      "T1"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Observer les pierres autour de toi pour percevoir ce que Merlin percevait",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter le sol sous tes pieds pour chercher des lignes de lumiere",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fixer Merlin pour capter l'emotion derriere ses mots",
+        "verb": "fixer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 10,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_003",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "merlin_direct": true,
+    "trust_tier": "T1",
+    "text": "'Les druides m'ont recueilli apres l'episode des dragons. Ils pensaient pouvoir me former. Je pensais pouvoir etre forme. Nous avions tous tort.' Merlin rit doucement. 'J'ai appris la langue des arbres en trois jours. Le calcul des etoiles en sept nuits. Mais la sagesse... la sagesse m'a pris des siecles. Et je ne suis toujours pas sur de l'avoir trouvee.'",
+    "options": [
+      {
+        "label": "Analyser ce que Merlin appelle 'sagesse' pour comprendre sa definition",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Interpreter son rire comme un signe qu'il minimise son savoir",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Etudier les expressions de Merlin pour saisir ce qu'il ne dit pas",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "formation",
+      "druides",
+      "arc_3_of_10",
+      "T1"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Analyser ce que Merlin appelle 'sagesse' pour comprendre sa definition",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter son rire comme un signe qu'il minimise son savoir",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Etudier les expressions de Merlin pour saisir ce qu'il ne dit pas",
+        "verb": "etudier",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 10,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_004",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "'J'ai conseille des rois. Arthur... Arthur etait different. Les autres voulaient le pouvoir. Arthur voulait la justice. C'est pour cela que je l'ai aide — et c'est pour cela qu'il a echoue.' Merlin marque une pause longue. 'La justice parfaite n'existe pas dans un monde imparfait. J'aurais du le lui dire. J'ai prefere le laisser decouvrir. C'est ma plus grande faute.'",
+    "options": [
+      {
+        "label": "Mediter sur le sens de la faute que Merlin s'attribue",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Calmer la douleur de Merlin en reconnaissant sa sincerite",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Parler a Merlin de tes propres erreurs pour creer un lien",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "arthur",
+      "regret",
+      "arc_4_of_10",
+      "T2"
+    ],
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Mediter sur le sens de la faute que Merlin s'attribue",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer la douleur de Merlin en reconnaissant sa sincerite",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Parler a Merlin de tes propres erreurs pour creer un lien",
+        "verb": "parler",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 11,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_005",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "'La folie,' murmure Merlin. 'On n'en parle pas assez. Apres la bataille de Camlann, j'ai perdu l'esprit. J'ai vecu dans les bois, nu, mangeant des racines, parlant aux sangliers. Les druides disent que c'etait une transformation sacree. Moi je dis que c'etait la douleur. Mais dans cette douleur, j'ai entendu la foret pour la premiere fois. Vraiment entendu.'",
+    "options": [
+      {
+        "label": "Ecouter la foret comme Merlin l'a fait — avec le coeur brise",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Suivre les traces de la folie de Merlin dans les arbres",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir l'air de la foret pour comprendre ce qu'elle a dit a Merlin",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "folie",
+      "camlann",
+      "arc_5_of_10",
+      "T2"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Ecouter la foret comme Merlin l'a fait — avec le coeur brise",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Suivre les traces de la folie de Merlin dans les arbres",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir l'air de la foret pour comprendre ce qu'elle a dit a Merlin",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 11,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_006",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "'Viviane.' Le nom seul fait vibrer l'air. 'On dit qu'elle m'a piege. Que je lui ai enseigne mes secrets et qu'elle les a retournes contre moi. C'est plus complique que cela. Je savais ce qu'elle ferait. J'ai choisi de lui enseigner quand meme. L'amour rend-il idiot ? Non. Il rend lucide — et c'est pire.'",
+    "options": [
+      {
+        "label": "Se concentrer sur les emotions de Merlin pour comprendre son choix",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Accepter la complexite de son histoire sans la juger",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement au piege de la pitie pour rester objectif",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "viviane",
+      "amour",
+      "arc_6_of_10",
+      "T2"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Se concentrer sur les emotions de Merlin pour comprendre son choix",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter la complexite de son histoire sans la juger",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement au piege de la pitie pour rester objectif",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 11,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_007",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "'L'Ankou et moi avons un accord ancien,' revele Merlin. 'Je ne meurs pas — pas vraiment. En echange, je reste. Je veille. Je guide. Mais chaque siecle qui passe, quelque chose s'effrite. Pas le corps — l'envie. Un jour, je cesserai de vouloir guider. Ce jour-la, meme l'Ankou ne pourra pas me retenir.'",
+    "options": [
+      {
+        "label": "Endurer le poids de cette revelation sans faiblir",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Apaiser Merlin en lui rappelant que sa presence compte",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Refuser l'idee que Merlin puisse cesser de guider",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "immortalite",
+      "ankou",
+      "arc_7_of_10",
+      "T2"
+    ],
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Endurer le poids de cette revelation sans faiblir",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Apaiser Merlin en lui rappelant que sa presence compte",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser l'idee que Merlin puisse cesser de guider",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 11,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_008",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "merlin_direct": true,
+    "trust_tier": "T3",
+    "text": "'La prophetie que personne ne connait,' dit Merlin a voix basse. 'Pas celle d'Arthur. L'autre. Celle que j'ai faite avant de perdre l'esprit. Je l'ai gravee dans un chene qui n'existe plus — ou qui n'existe pas encore. Elle parle d'un voyageur qui viendrait apres la fin de tout. Qui apprendrait ce que j'ai oublie. Qui ferait ce que je n'ai pas ose.'",
+    "options": [
+      {
+        "label": "Dechiffrer le sens de la prophetie a travers les mots de Merlin",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Analyser si Merlin parle de toi ou de quelqu'un d'autre",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Interpreter la prophetie comme un guide plutot qu'un destin fixe",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "prophetie",
+      "voyageur",
+      "arc_8_of_10",
+      "T3"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Dechiffrer le sens de la prophetie a travers les mots de Merlin",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser si Merlin parle de toi ou de quelqu'un d'autre",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter la prophetie comme un guide plutot qu'un destin fixe",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 12,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_009",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T3",
+    "text": "'Mon plus grand secret,' Merlin hesite pour la premiere fois. 'Je ne suis pas prisonnier de cette foret. Je ne l'ai jamais ete. Viviane ne m'a pas emprisonne — je me suis emprisonne moi-meme. Par choix. Par lachete, peut-etre. Parce que guider de loin est plus facile que de vivre parmi les hommes. Maintenant tu sais.'",
+    "options": [
+      {
+        "label": "Accepter le secret de Merlin avec la gravite qu'il merite",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Mediter sur ce que signifie choisir sa propre prison",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Parler a Merlin pour lui dire que le choix n'est pas de la lachete",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "secret",
+      "auto_emprisonnement",
+      "arc_9_of_10",
+      "T3"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Accepter le secret de Merlin avec la gravite qu'il merite",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter sur ce que signifie choisir sa propre prison",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Parler a Merlin pour lui dire que le choix n'est pas de la lachete",
+        "verb": "parler",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 12,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_merlin_arc_010",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T3",
+    "text": "'Tu connais mon histoire maintenant — toute entiere. Naissance sans pere, don sans mode d'emploi, rois que j'ai eleves et perdus, amour que j'ai choisi contre la raison, immortalite que j'endure comme un poids.' La voix de Merlin se raffermit. 'Mais il y a une chose que je n'ai pas dite : je suis content que tu sois la. Pour la premiere fois depuis longtemps, je ne me sens pas seul.'",
+    "options": [
+      {
+        "label": "Apaiser Merlin en lui offrant ton amitie sans conditions",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          }
+        ]
+      },
+      {
+        "label": "Accepter cette responsabilite avec humilite",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Parler a Merlin d'egal a egal, sans reverence excessive",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin_backstory",
+      "conclusion",
+      "amitie",
+      "arc_10_of_10",
+      "T3"
+    ],
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Apaiser Merlin en lui offrant ton amitie sans conditions",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter cette responsabilite avec humilite",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Parler a Merlin d'egal a egal, sans reverence excessive",
+        "verb": "parler",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 12,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s11b_viviane_001",
+    "biome": "iles_mystiques",
+    "champ_lexical": "perception",
+    "text": "Sur l'ile d'Avalon, une brume persistante prend la forme d'une femme. 'Je suis Viviane,' dit-elle. 'Ou ce qu'il en reste. Les hommes racontent que j'ai trahi Merlin. Les fees racontent que je l'ai sauve. La verite est entre les deux — comme toujours.' Sa voix est un chant sous-marin. 'Ecoute mon version.'",
+    "options": [
+      {
+        "label": "Ecouter la version de Viviane avec un esprit ouvert",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Suivre les mouvements de la brume pour capter ses emotions",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Sentir l'air pour determiner si cette apparition est sincere",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "avalon",
+      "verite",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Ecouter la version de Viviane avec un esprit ouvert",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Suivre les mouvements de la brume pour capter ses emotions",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir l'air pour determiner si cette apparition est sincere",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_002",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "text": "Viviane raconte : 'Merlin m'a appris la magie des arbres. En retour, je lui ai montre la magie de l'eau. Les druides pensent que le savoir se transmet de haut en bas — du maitre a l'eleve. Les fees savent que le savoir circule comme l'eau — dans toutes les directions.' Elle fait jaillir une fontaine d'entre les racines.",
+    "options": [
+      {
+        "label": "Mediter sur la difference entre les deux visions du savoir",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Accepter la vision de Viviane comme complementaire a celle de Merlin",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Calmer les conflits en reconnaissant les deux perspectives",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "magie_eau",
+      "savoir",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter sur la difference entre les deux visions du savoir",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter la vision de Viviane comme complementaire a celle de Merlin",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer les conflits en reconnaissant les deux perspectives",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_003",
+    "biome": "marais_korrigans",
+    "champ_lexical": "bluff",
+    "text": "'L'emprisonnement,' Viviane soupire. 'Le sort que j'ai tisse autour de Merlin etait un cocon, pas une cage. Il devait dormir pour guerir de ses blessures — celles de l'ame, pas du corps. Mais il a refuse de dormir. Alors le cocon est devenu une barriere. Ce n'etait pas mon intention.' Elle te regarde. 'Me crois-tu ?'",
+    "options": [
+      {
+        "label": "Convaincre Viviane que tu comprends sa perspective",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Negocier la verite entre les versions de Merlin et Viviane",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Charmer Viviane pour qu'elle revele ce qu'elle cache encore",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "emprisonnement",
+      "cocon",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Convaincre Viviane que tu comprends sa perspective",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Negocier la verite entre les versions de Merlin et Viviane",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Charmer Viviane pour qu'elle revele ce qu'elle cache encore",
+        "verb": "charmer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton geste de paix est entendu. Le silence qui suit est complice.",
+      "success": "Tu trouves le ton, et la rencontre prend.",
+      "failure": "Tu hesites trop, ou tu en fais trop. L'autre se ferme.",
+      "critical_failure": "Ta voix tremble au pire moment. Quelque chose se brise entre toi et l'autre."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s11b_viviane_004",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "observation",
+    "text": "Sur un rocher face a la mer, Viviane materialise des images dans les embruns — des scenes de sa vie avec Merlin. Leur premiere rencontre pres d'un lac. Les lecons de magie sous la lune. Le moment ou elle a compris qu'il ne vieillirait jamais mais qu'elle, malgre sa nature feerique, changerait. 'L'amour entre un immortel et une fee est un paradoxe,' dit-elle.",
+    "options": [
+      {
+        "label": "Observer les images dans les embruns pour comprendre leur histoire",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les details des scenes pour y trouver ce que Viviane ne dit pas",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Memoriser chaque scene pour pouvoir un jour en parler a Merlin",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "souvenirs",
+      "amour",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Observer les images dans les embruns pour comprendre leur histoire",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les details des scenes pour y trouver ce que Viviane ne dit pas",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Memoriser chaque scene pour pouvoir un jour en parler a Merlin",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_005",
+    "biome": "foret_broceliande",
+    "champ_lexical": "finesse",
+    "text": "Viviane te guide vers un lac cache au coeur de Broceliande. Sous la surface, des structures de cristal pulsent d'une lumiere bleue. 'C'est ma demeure,' dit-elle. 'Le Lac. Pas un piege — un refuge. Merlin pourrait en sortir s'il le voulait. Il ne veut pas. Et je respecte ce choix, meme s'il me brise.'",
+    "options": [
+      {
+        "label": "Se faufiler entre les roseaux pour s'approcher du lac sacre",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Contourner le lac pour observer les structures de cristal",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Traverser la surface du lac en marchant sur les cristaux",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "lac",
+      "cristal",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Se faufiler entre les roseaux pour s'approcher du lac sacre",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le lac pour observer les structures de cristal",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Traverser la surface du lac en marchant sur les cristaux",
+        "verb": "traverser",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_006",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "text": "'La connexion entre Niamh et moi est plus profonde que ce que les mortels comprennent,' revele Viviane. 'Niamh n'est pas un peuple — c'est un etat. Quand une fee aime un mortel, elle devient Niamh. Quand un mortel aime une fee, il le devient aussi. Merlin et moi sommes tous les deux Niamh — de deux cotes differents du meme miroir.'",
+    "options": [
+      {
+        "label": "Mediter sur cette revelation pour en saisir les implications",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer pour ressentir la connexion entre les deux mondes",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Accepter la nature paradoxale de Niamh sans la rationaliser",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "nature_niamh",
+      "miroir",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter sur cette revelation pour en saisir les implications",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer pour ressentir la connexion entre les deux mondes",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter la nature paradoxale de Niamh sans la rationaliser",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_007",
+    "biome": "landes_bruyere",
+    "champ_lexical": "vigueur",
+    "text": "Viviane est en colere. 'Les Anciens racontent mon histoire comme un avertissement — ne faites pas confiance aux fees ! Mais c'est Merlin qui est venu a moi. C'est lui qui a insiste pour m'enseigner. Et quand j'ai utilise ce savoir, ils m'ont appelee traitresse.' L'air crépite autour d'elle. 'Je n'ai trahi personne. J'ai aime.'",
+    "options": [
+      {
+        "label": "Endurer la colere de Viviane pour montrer que tu n'as pas peur",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement a l'energie qui crepite dans l'air",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Combattre l'injustice en prenant sa defense",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "colere",
+      "injustice",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Endurer la colere de Viviane pour montrer que tu n'as pas peur",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister physiquement a l'energie qui crepite dans l'air",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Combattre l'injustice en prenant sa defense",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_008",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "text": "Viviane presente une enigme : 'Si Merlin m'a volontairement enseigne le sort qui l'a enferme, est-ce un emprisonnement ou un don ? Si je l'ai utilise sachant qu'il le savait, est-ce une trahison ou un pacte ? Les humains appellent cela de la manipulation. Les fees appellent cela de la danse.' Elle attend ta reponse.",
+    "options": [
+      {
+        "label": "Analyser l'enigme en separant l'intention du resultat",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le paradoxe en proposant que les deux verites coexistent",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Interpreter l'enigme comme une preuve d'amour mutuel",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "enigme",
+      "paradoxe",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Analyser l'enigme en separant l'intention du resultat",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le paradoxe en proposant que les deux verites coexistent",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter l'enigme comme une preuve d'amour mutuel",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_009",
+    "biome": "iles_mystiques",
+    "champ_lexical": "chance",
+    "text": "Viviane te propose un cadeau — une larme de fee cristallisee. 'Celle-ci est la derniere que j'ai versee pour Merlin,' dit-elle. 'Elle contient tout ce que je n'ai jamais su lui dire. Si tu la lui portes, quelque chose changera. Je ne sais pas quoi. Mais les larmes de fee ne mentent pas.'",
+    "options": [
+      {
+        "label": "Cueillir la larme cristallisee avec delicatesse",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Tenter sa chance en acceptant le cadeau sans conditions",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Deviner ce que la larme contient avant de la prendre",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "larme",
+      "cadeau",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Cueillir la larme cristallisee avec delicatesse",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tenter sa chance en acceptant le cadeau sans conditions",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner ce que la larme contient avant de la prendre",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_viviane_010",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "text": "Viviane commence a se dissoudre dans la brume. 'Je t'ai dit tout ce que je pouvais. Le reste est entre toi et Merlin. Dis-lui...' Elle hesite. 'Non. Ne lui dis rien. Il sait deja. Il a toujours su.' La brume retombe et la foret reprend ses droits. Mais l'air a change — il porte un parfum de nenuphars qui n'etait pas la avant.",
+    "options": [
+      {
+        "label": "Mediter sur tout ce que Viviane a revele pour l'integrer",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Calmer les emotions suscitees par cette rencontre",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "S'approcher de l'endroit ou elle se tenait pour capter un residue",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "viviane_niamh",
+      "adieu",
+      "nenuphars",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter sur tout ce que Viviane a revele pour l'integrer",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer les emotions suscitees par cette rencontre",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "S'approcher de l'endroit ou elle se tenait pour capter un residue",
+        "verb": "s'approcher",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_001",
+    "biome": "collines_dolmens",
+    "champ_lexical": "finesse",
+    "text": "Un dolmen s'ouvre sur un escalier qui descend dans la terre. Les marches sont faites d'os blancs polis par des millenaires de passage. L'Ankou attend en bas, sa lanterne projetant des ombres vertes. 'Annwn — le monde d'en-dessous. Pas l'enfer des chretiens, non. Quelque chose de plus ancien. Un lieu ou le temps coule a l'envers et les morts marchent a l'endroit.'",
+    "options": [
+      {
+        "label": "Se faufiler dans l'escalier en restant proche des parois",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Escalader les marches prudemment pour ne rien deranger",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Esquiver les zones d'ombre pour rester dans la lumiere verte",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "entree",
+      "escalier",
+      "os",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Se faufiler dans l'escalier en restant proche des parois",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader les marches prudemment pour ne rien deranger",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Esquiver les zones d'ombre pour rester dans la lumiere verte",
+        "verb": "esquiver",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_002",
+    "biome": "iles_mystiques",
+    "champ_lexical": "observation",
+    "text": "Le premier niveau d'Annwn est un vaste lac souterrain eclaire par des champignons bioluminescents. Des barques sans rameurs glissent sur l'eau noire. Sur chaque barque, une silhouette assise regarde le plafond. 'Les dormeurs,' explique l'Ankou. 'Ils attendent leur prochaine vie. Ne les reveille pas — sauf si tu veux connaitre leur histoire.'",
+    "options": [
+      {
+        "label": "Observer les dormeurs de loin pour comprendre leur nature",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les visages pour reconnaitre quelqu'un",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Examiner les champignons lumineux pour comprendre l'eclairage",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "lac_souterrain",
+      "dormeurs",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Observer les dormeurs de loin pour comprendre leur nature",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les visages pour reconnaitre quelqu'un",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Examiner les champignons lumineux pour comprendre l'eclairage",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_003",
+    "biome": "cercles_pierres",
+    "champ_lexical": "vigueur",
+    "text": "Le deuxieme niveau d'Annwn est une plaine de bataille figee. Des guerriers celtes et romains sont immobilises mid-combat, leurs epees levees, leurs boucliers tendus. Le temps s'est arrete ici il y a deux mille ans. 'Ils se battent encore dans leurs reves,' dit l'Ankou. 'Si tu les touches, le combat reprend. Es-tu pret ?'",
+    "options": [
+      {
+        "label": "Combattre aux cotes des guerriers celtes si le combat reprend",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Courir entre les combattants figes pour atteindre l'autre cote",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement a l'envie de toucher les guerriers",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "bataille_figee",
+      "guerriers",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Combattre aux cotes des guerriers celtes si le combat reprend",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir entre les combattants figes pour atteindre l'autre cote",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister physiquement a l'envie de toucher les guerriers",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_004",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "text": "Le troisieme niveau est une foret inversee — les arbres poussent vers le bas, leurs racines dans un ciel de terre et leurs cimes plongeant dans le vide. Des oiseaux de nuit volent a l'envers, chantant des melodies retrogrades. 'Le monde tel qu'il etait avant le monde,' dit l'Ankou. 'Ou tel qu'il sera apres.'",
+    "options": [
+      {
+        "label": "Ecouter les melodies retrogrades pour y trouver un sens",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Pister les oiseaux de nuit pour comprendre leur trajectoire",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air inverse pour detecter des odeurs inconnues",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "foret_inversee",
+      "oiseaux",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Ecouter les melodies retrogrades pour y trouver un sens",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pister les oiseaux de nuit pour comprendre leur trajectoire",
+        "verb": "pister",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air inverse pour detecter des odeurs inconnues",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_005",
+    "biome": "marais_korrigans",
+    "champ_lexical": "esprit",
+    "text": "Au quatrieme niveau, un tribunal des morts siege dans une caverne de stalactites. Arawn, roi d'Annwn, trone sur un siege d'ambre noir. Devant lui, des ames attendent leur jugement. Il te voit. 'Un vivant. Rare.' Il sourit — un sourire qui n'a rien de mechant. 'Tu veux assister ? Ou etre juge toi aussi ?'",
+    "options": [
+      {
+        "label": "Accepter d'etre juge par le roi d'Annwn",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Mediter sur la signification d'un jugement des morts",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Attendre en silence pour observer la justice d'Annwn",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "tribunal",
+      "arawn",
+      "jugement",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Accepter d'etre juge par le roi d'Annwn",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter sur la signification d'un jugement des morts",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Attendre en silence pour observer la justice d'Annwn",
+        "verb": "attendre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_006",
+    "biome": "collines_dolmens",
+    "champ_lexical": "logique",
+    "text": "Le cinquieme niveau contient une bibliotheque des morts — des milliers de rouleaux graves sur os, peau et ecorce petrifiee. Chaque rouleau contient la vie complete d'un mort. L'Ankou te laisse lire un seul rouleau. 'Choisis bien. Ce que tu lis changera ta comprehension du monde des vivants.'",
+    "options": [
+      {
+        "label": "Dechiffrer le rouleau le plus ancien pour remonter aux origines",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Analyser les inscriptions pour choisir le plus pertinent",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Decoder les symboles d'un rouleau au hasard pour laisser le destin choisir",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "bibliotheque",
+      "rouleaux",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Dechiffrer le rouleau le plus ancien pour remonter aux origines",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser les inscriptions pour choisir le plus pertinent",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Decoder les symboles d'un rouleau au hasard pour laisser le destin choisir",
+        "verb": "decoder",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_007",
+    "biome": "iles_mystiques",
+    "champ_lexical": "chance",
+    "text": "Au sixieme niveau, un jardin souterrain pousse sans lumiere. Des fruits transparents pendent a des branches de cristal. 'Le Verger des Ames,' dit l'Ankou. 'Chaque fruit contient un talent perdu par un mort. Si tu en cueilles un, le talent sera le tien. Mais tu ne sauras pas lequel avant de mordre.'",
+    "options": [
+      {
+        "label": "Cueillir un fruit au hasard et accepter le don inconnu",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Tenter sa chance avec le fruit le plus lumineux",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Deviner le contenu des fruits en les soulevant pour sentir leur poids",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "verger",
+      "fruits",
+      "talents",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Cueillir un fruit au hasard et accepter le don inconnu",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tenter sa chance avec le fruit le plus lumineux",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner le contenu des fruits en les soulevant pour sentir leur poids",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_008",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Au septieme et dernier niveau, le silence est absolu. Une porte de pierre sans poignee se dresse, gravee d'un seul mot en rune : 'Reviens.' L'Ankou dit : 'Au-dela, il y a ce qui etait avant tout. Personne n'en revient pareil. Certains n'en reviennent pas du tout. Le choix est tien — et il ne peut etre defait.'",
+    "options": [
+      {
+        "label": "Endurer la peur et pousser la porte de pierre",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a l'appel de ce qui est au-dela",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Refuser de franchir la porte et accepter de remonter",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "porte_finale",
+      "choix",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Endurer la peur et pousser la porte de pierre",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement a l'appel de ce qui est au-dela",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser de franchir la porte et accepter de remonter",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_009",
+    "biome": "foret_broceliande",
+    "champ_lexical": "observation",
+    "text": "De retour a la surface, le monde semble different. Les couleurs sont plus vives, les sons plus nets. L'Ankou te regarde avec un respect nouveau. 'Tu as vu Annwn et tu es remonte. Les arbres le savent — regarde, ils s'inclinent vers toi.' En effet, les branches des chenes les plus proches se courbent imperceptiblement dans ta direction.",
+    "options": [
+      {
+        "label": "Observer les arbres qui s'inclinent pour comprendre leur hommage",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Memoriser ce que tu as vu en Annwn pour ne jamais oublier",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Examiner tes propres mains pour verifier que tu n'as pas change",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "retour",
+      "transformation",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Observer les arbres qui s'inclinent pour comprendre leur hommage",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Memoriser ce que tu as vu en Annwn pour ne jamais oublier",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Examiner tes propres mains pour verifier que tu n'as pas change",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_annwn_010",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "text": "L'Ankou t'offre un dernier don : une pierre polie d'Annwn, noire comme l'absence de lumiere. 'Celle-ci contient un fragment du silence d'en-dessous,' dit-il. 'Tiens-la quand le monde est trop bruyant. Elle te rappellera que sous tout ce chaos, il y a la paix.' Il s'incline — premiere et derniere fois — et disparait dans l'ombre du dolmen.",
+    "options": [
+      {
+        "label": "Accepter la pierre avec la solennite qu'elle merite",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Mediter en tenant la pierre pour sentir le silence d'Annwn",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur la pierre pour y lire un dernier message",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "annwn",
+      "don",
+      "pierre_silence",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Accepter la pierre avec la solennite qu'elle merite",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter en tenant la pierre pour sentir le silence d'Annwn",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur la pierre pour y lire un dernier message",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_001",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "text": "Brennos deroule un parchemin jauni. 'Le Chaudron de Renaissance — Pair Dadeni. Les Anciens racontent qu'il se trouve quelque part sous les cercles de pierres. Il peut ramener les morts, mais les ramenes ne parlent plus. Ils se souviennent de tout sauf des mots.' Il te regarde. 'Tu veux le chercher ? Le chemin est long.'",
+    "options": [
+      {
+        "label": "Analyser le parchemin pour en extraire des indices de localisation",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Dechiffrer les symboles archaiques du parchemin",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Etudier la texture du parchemin pour dater sa creation",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "pair_dadeni",
+      "parchemin",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Analyser le parchemin pour en extraire des indices de localisation",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Dechiffrer les symboles archaiques du parchemin",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Etudier la texture du parchemin pour dater sa creation",
+        "verb": "etudier",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_002",
+    "biome": "collines_dolmens",
+    "champ_lexical": "perception",
+    "text": "Le premier indice mene a une colline ou un dolmen vibre d'une resonance basse. Ildiko pose sa main sur la pierre. 'Je sens de la chaleur — comme si quelque chose couvait en dessous. Le Chaudron chauffe meme quand il est vide, disent les legendes. Il attend d'etre rempli.'",
+    "options": [
+      {
+        "label": "Sentir la pierre pour confirmer la chaleur anormale",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Ecouter la resonance pour determiner la profondeur de la source",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Tendre l'oreille pour capter des sons sous la terre",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "colline",
+      "resonance",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Sentir la pierre pour confirmer la chaleur anormale",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Ecouter la resonance pour determiner la profondeur de la source",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Tendre l'oreille pour capter des sons sous la terre",
+        "verb": "tendre l'oreille",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_003",
+    "biome": "landes_bruyere",
+    "champ_lexical": "finesse",
+    "text": "Le deuxieme indice revele un tunnel cache sous un cairn des landes. Le passage est etroit — a peine assez large pour un corps. Des racines de bruyere pendent du plafond comme des doigts maigres. Erwan refuse d'entrer. 'Je suis trop large,' dit-il. 'Mais toi, tu pourrais passer. Le Chaudron est pour ceux qui acceptent de ramper.'",
+    "options": [
+      {
+        "label": "Se faufiler dans le tunnel etroit sans hesiter",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Contourner le cairn pour chercher une entree plus large",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Escalader le cairn pour voir s'il y a une ouverture par le haut",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "tunnel",
+      "cairn",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Se faufiler dans le tunnel etroit sans hesiter",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le cairn pour chercher une entree plus large",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader le cairn pour voir s'il y a une ouverture par le haut",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_004",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "vigueur",
+    "text": "Le troisieme indice conduit a une grotte marine accessible seulement a maree basse. L'eau ruisselle sur des murs couverts de gravures representant un chaudron geant. Maelle previent : 'La maree remonte dans deux heures. Ce que tu fais ici, fais-le vite.' Au fond de la grotte, un escalier descend dans l'obscurite.",
+    "options": [
+      {
+        "label": "Courir vers l'escalier pour maximiser le temps disponible",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Forcer le passage entre les rochers pour atteindre le fond",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Endurer le froid de la grotte pour explorer methodiquement",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "grotte_marine",
+      "maree",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Courir vers l'escalier pour maximiser le temps disponible",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Forcer le passage entre les rochers pour atteindre le fond",
+        "verb": "forcer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Endurer le froid de la grotte pour explorer methodiquement",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton corps repond avant que tu n'y penses. Le geste est exact, fluide, presque instinctif. La foret te respecte un instant.",
+      "success": "Tu te lances et tu tiens. C'est suffisant.",
+      "failure": "Tu agis trop tot ou trop tard. La foret n'attend pas.",
+      "critical_failure": "Tu tombes. La foret ne pardonne pas l'imprudence aux corps fatigues."
+    },
+    "minigame": "souffle",
+    "risk_hint": "Le corps avant la pensee."
+  },
+  {
+    "id": "fr_s11b_cauldron_005",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "text": "Le quatrieme indice est un arbre mort au coeur de la foret dont le tronc creux contient une maquette du Chaudron en argile. Maelgwn la tient avec precaution. 'C'est une carte,' dit-il. 'Le Chaudron est represente au centre de cinq symboles. Chaque symbole correspond a un gardien. Il faudra les convaincre tous les cinq.'",
+    "options": [
+      {
+        "label": "Mediter sur les cinq symboles pour comprendre les gardiens",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur la maquette pour memoriser chaque detail",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Calmer son impatience et etudier la maquette a fond",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "maquette",
+      "gardiens",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Mediter sur les cinq symboles pour comprendre les gardiens",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur la maquette pour memoriser chaque detail",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer son impatience et etudier la maquette a fond",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_006",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Le premier gardien du Chaudron est un vieux forgeron du village qui refuse de croire que tu es digne. 'Tout le monde veut le Chaudron,' grogne-t-il. 'Les rois, les druides, les guerriers. Ils pensent qu'il donne le pouvoir. Il donne la responsabilite. C'est pire.' Il croise les bras. 'Convaincs-moi que tu peux porter ce poids.'",
+    "options": [
+      {
+        "label": "Convaincre le forgeron par un discours sincere sur tes motivations",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Negocier un echange de services pour prouver ta valeur",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Marchander ta sincerite contre sa confiance",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "gardien_1",
+      "forgeron",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Convaincre le forgeron par un discours sincere sur tes motivations",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Negocier un echange de services pour prouver ta valeur",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Marchander ta sincerite contre sa confiance",
+        "verb": "marchander",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton geste de paix est entendu. Le silence qui suit est complice.",
+      "success": "Tu trouves le ton, et la rencontre prend.",
+      "failure": "Tu hesites trop, ou tu en fais trop. L'autre se ferme.",
+      "critical_failure": "Ta voix tremble au pire moment. Quelque chose se brise entre toi et l'autre."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s11b_cauldron_007",
+    "biome": "marais_korrigans",
+    "champ_lexical": "observation",
+    "text": "Le deuxieme gardien est une vieille femme korrigan qui vit seule au bord des marais. Elle t'observe en silence pendant une heure entiere avant de parler. 'Le Chaudron connait tes peurs,' dit-elle enfin. 'Il les refletera. Si tu peux regarder tes peurs en face, il t'acceptera. Sinon...' Elle dessine un geste d'explosion avec ses doigts.",
+    "options": [
+      {
+        "label": "Observer ses gestes pour comprendre l'epreuve qui t'attend",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter ses yeux pour y trouver un indice sur la nature de l'epreuve",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Fixer la vieille femme avec la meme patience qu'elle",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "gardien_2",
+      "korrigan",
+      "peurs",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Observer ses gestes pour comprendre l'epreuve qui t'attend",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter ses yeux pour y trouver un indice sur la nature de l'epreuve",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fixer la vieille femme avec la meme patience qu'elle",
+        "verb": "fixer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_008",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Les cinq gardiens ont accepte. Le chemin vers le Chaudron s'ouvre — une spirale de pierres qui descend sous le cercle, eclairee par des veines d'or dans la roche. Au centre, le Pair Dadeni repose sur un lit de charbon froid. Il est plus petit que tu ne l'imaginais — un simple recipient de bronze noirci. Mais l'air autour de lui vibre d'une puissance immense.",
+    "options": [
+      {
+        "label": "S'approcher du Chaudron avec reverence pour le toucher",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Mediter devant le Chaudron pour comprendre son pouvoir",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a l'appel du pouvoir pour rester lucide",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "decouverte",
+      "pair_dadeni",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "S'approcher du Chaudron avec reverence pour le toucher",
+        "verb": "s'approcher",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter devant le Chaudron pour comprendre son pouvoir",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement a l'appel du pouvoir pour rester lucide",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_009",
+    "biome": "collines_dolmens",
+    "champ_lexical": "logique",
+    "text": "Le Chaudron te montre une vision : le monde sans la mort. Des forets eternelles, des recoltes qui ne pourrissent jamais, des hommes qui ne vieillissent pas. Mais aussi : des enfants qui ne naissent plus, des saisons figees, un monde immobile. 'Le Chaudron offre la renaissance,' dit une voix. 'Mais la renaissance a un prix : la fin de toute fin.'",
+    "options": [
+      {
+        "label": "Analyser la vision pour en comprendre les consequences",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Interpreter le paradoxe comme une leçon de moderation",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le dilemme en cherchant un usage partiel du Chaudron",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "vision",
+      "paradoxe",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Analyser la vision pour en comprendre les consequences",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter le paradoxe comme une leçon de moderation",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le dilemme en cherchant un usage partiel du Chaudron",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_cauldron_010",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Le Chaudron attend ta decision. Tu peux le prendre, le laisser, ou le detruire. Brennos, les gardiens et l'Ankou te regardent. 'Quelle que soit ta decision,' dit Brennos, 'elle sera respectee. Le Chaudron a survecu des millenaires. Il peut survivre un jour de plus — ou un jour de moins.'",
+    "options": [
+      {
+        "label": "Accepter la responsabilite de garder le Chaudron en surete",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Refuser de prendre le Chaudron et le confier aux gardiens",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Parler aux gardiens pour etablir un plan de protection collectif",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "cauldron",
+      "decision",
+      "conclusion",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Accepter la responsabilite de garder le Chaudron en surete",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser de prendre le Chaudron et le confier aux gardiens",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Parler aux gardiens pour etablir un plan de protection collectif",
+        "verb": "parler",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_001",
+    "biome": "iles_mystiques",
+    "champ_lexical": "logique",
+    "text": "Morgane deroule une carte ancienne qui montre quatre points lumineux disperses a travers le monde celtique. 'Les Quatre Tresors des Tuatha De Danann,' explique-t-elle. 'La Pierre de Fal, la Lance de Lugh, l'Epee de Nuada et le Chaudron du Dagda. Chacun a ete cache dans un lieu different. Chacun attend un porteur digne.'",
+    "options": [
+      {
+        "label": "Analyser la carte pour planifier un itineraire logique",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Dechiffrer les symboles qui accompagnent chaque point lumineux",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Interpreter la disposition des tresors comme un schema cosmique",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "carte",
+      "tuatha",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Analyser la carte pour planifier un itineraire logique",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Dechiffrer les symboles qui accompagnent chaque point lumineux",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter la disposition des tresors comme un schema cosmique",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_002",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "text": "La Pierre de Fal — Lia Fail — repose au sommet de la plus haute colline, deguisee en dolmen ordinaire. Mais quand tu t'en approches, elle emet un son grave, presque un chant. 'La Pierre crie sous les pieds du roi legitime,' raconte Ildiko. 'Elle n'a pas crie depuis des siecles. Mais elle vibre... peut-etre qu'elle se prepare.'",
+    "options": [
+      {
+        "label": "S'approcher de la Pierre pour voir si elle reagit a ta presence",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Mediter au pied de la Pierre pour ressentir son energie",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Attendre en silence pour voir si la Pierre chantera",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "lia_fail",
+      "pierre",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "S'approcher de la Pierre pour voir si elle reagit a ta presence",
+        "verb": "s'approcher",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter au pied de la Pierre pour ressentir son energie",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Attendre en silence pour voir si la Pierre chantera",
+        "verb": "attendre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_003",
+    "biome": "collines_dolmens",
+    "champ_lexical": "vigueur",
+    "text": "La Pierre de Fal te pose une epreuve : un tremblement de terre secoue la colline. Des fissures s'ouvrent dans le sol, et des piliers de roche s'elevent et retombent. 'La Pierre teste ta determination,' crie Ildiko par-dessus le grondement. 'Tiens bon ou elle jugera que tu es indigne !'",
+    "options": [
+      {
+        "label": "Resister physiquement au tremblement en s'agrippant a la Pierre",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Courir vers la Pierre avant que le sol ne s'effondre",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Endurer le seisme en restant immobile et centre",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "lia_fail",
+      "epreuve",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Resister physiquement au tremblement en s'agrippant a la Pierre",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir vers la Pierre avant que le sol ne s'effondre",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Endurer le seisme en restant immobile et centre",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_004",
+    "biome": "villages_celtes",
+    "champ_lexical": "observation",
+    "text": "La Lance de Lugh — Sleg — est gardee par un korrigan forgeron dans un village cache. La lance est plantee dans un billot de chene et brule d'un feu perpetuel. 'Elle ne peut etre retiree que par celui qui voit sa vraie forme,' dit le forgeron. 'La plupart voient une arme. La lance n'est pas une arme — elle est une question.'",
+    "options": [
+      {
+        "label": "Observer la lance intensement pour percevoir sa vraie nature",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les flammes pour y lire la question que pose la lance",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Examiner le billot de chene pour comprendre pourquoi il ne brule pas",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "lance_lugh",
+      "forgeron",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Observer la lance intensement pour percevoir sa vraie nature",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les flammes pour y lire la question que pose la lance",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Examiner le billot de chene pour comprendre pourquoi il ne brule pas",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_005",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Le korrigan forgeron te defie : 'Reponds a la question de la Lance. Que cherches-tu — la victoire ou la verite ?' Il croise les bras. 'Attention — la Lance sait quand on ment. Et elle n'aime pas les menteurs. Enfin, sauf les menteurs honnetes.'",
+    "options": [
+      {
+        "label": "Convaincre le forgeron que tu cherches la verite, pas la victoire",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Negocier en admettant que tu veux les deux",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Charmer le forgeron avec une reponse inattendue",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "lance_lugh",
+      "question",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Convaincre le forgeron que tu cherches la verite, pas la victoire",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Negocier en admettant que tu veux les deux",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Charmer le forgeron avec une reponse inattendue",
+        "verb": "charmer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s11b_treasures_006",
+    "biome": "cercles_pierres",
+    "champ_lexical": "finesse",
+    "text": "L'Epee de Nuada — Claíomh Solais, l'Epee de Lumiere — repose au fond d'un puits sous le cercle de pierres. Le puits est garde par des ombres vivantes qui se deplacent entre les menhirs. 'L'epee ne coupe pas la chair,' dit l'Ankou. 'Elle coupe le mensonge. Pour l'atteindre, il faut passer entre les ombres sans etre touche.'",
+    "options": [
+      {
+        "label": "Se faufiler entre les ombres avec precision",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Esquiver chaque ombre en anticipant ses mouvements",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Se cacher derriere un menhir pour etudier les patterns des ombres",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "epee_nuada",
+      "ombres",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Se faufiler entre les ombres avec precision",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Esquiver chaque ombre en anticipant ses mouvements",
+        "verb": "esquiver",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se cacher derriere un menhir pour etudier les patterns des ombres",
+        "verb": "se cacher",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_007",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Au fond du puits, l'Epee de Nuada brille d'une lumiere blanche insoutenable. Quand tu la touches, elle te montre tes propres mensonges — chaque demi-verite, chaque omission, chaque chose que tu t'es dite pour te rassurer. 'L'Epee de Lumiere eclaire d'abord l'interieur,' murmure l'Ankou. 'Supporte la lumiere ou lache la garde.'",
+    "options": [
+      {
+        "label": "Endurer la lumiere de la verite sans detourner les yeux",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Accepter tes mensonges comme partie de toi et saisir l'epee",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a la douleur de la verite",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "epee_nuada",
+      "verite",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Endurer la lumiere de la verite sans detourner les yeux",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter tes mensonges comme partie de toi et saisir l'epee",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement a la douleur de la verite",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_008",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "text": "Le Chaudron du Dagda — le dernier tresor — est cache dans un arbre creux au coeur de Broceliande. Contrairement au Pair Dadeni, ce chaudron nourrit les vivants. Maelgwn le trouve en suivant une odeur de soupe qui n'a pas de source. 'Le Chaudron du Dagda est genereux,' dit-il. 'Il donne a manger a tous. Mais il ne se remplit que quand on donne d'abord.'",
+    "options": [
+      {
+        "label": "Suivre l'odeur mystérieuse pour localiser le Chaudron",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air pour distinguer l'odeur magique des odeurs naturelles",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Sentir chaque arbre creux pour trouver la source",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "chaudron_dagda",
+      "foret",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Suivre l'odeur mystérieuse pour localiser le Chaudron",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air pour distinguer l'odeur magique des odeurs naturelles",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir chaque arbre creux pour trouver la source",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton corps repond avant que tu n'y penses. Le geste est exact, fluide, presque instinctif. La foret te respecte un instant.",
+      "success": "Tu te lances et tu tiens. C'est suffisant.",
+      "failure": "Tu agis trop tot ou trop tard. La foret n'attend pas.",
+      "critical_failure": "Tu tombes. La foret ne pardonne pas l'imprudence aux corps fatigues."
+    },
+    "minigame": "souffle",
+    "risk_hint": "Le corps avant la pensee."
+  },
+  {
+    "id": "fr_s11b_treasures_009",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "text": "Le Chaudron du Dagda te demande un sacrifice : 'Donne-moi quelque chose qui t'est cher — pas un objet, mais un savoir. Oublie une chose que tu sais, et je te donnerai en echange un savoir que personne ne possede.' Le chaudron bout doucement, repandant une vapeur qui sent la noisette et le miel.",
+    "options": [
+      {
+        "label": "Accepter le marche et offrir un souvenir au Chaudron",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Mediter sur ce que tu es pret a oublier",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Refuser le sacrifice et honorer le Chaudron autrement",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "chaudron_dagda",
+      "sacrifice",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Accepter le marche et offrir un souvenir au Chaudron",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter sur ce que tu es pret a oublier",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser le sacrifice et honorer le Chaudron autrement",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s11b_treasures_010",
+    "biome": "iles_mystiques",
+    "champ_lexical": "logique",
+    "text": "Les quatre tresors reunis sur l'ile sacree creent un champ de lumiere. Morgane explique : 'Ensemble, ils forment un tout — la Pierre ancre, la Lance dirige, l'Epee tranche et le Chaudron nourrit. C'est la recette d'un monde en equilibre. Mais personne ne peut porter les quatre. Tu dois choisir celui qui definira ton chemin.'",
+    "options": [
+      {
+        "label": "Analyser les proprietes de chaque tresor pour faire un choix eclaire",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le dilemme en choisissant le tresor qui manque le plus au monde",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Interpreter le fait que les quatre existent ensemble comme la reponse",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "four_treasures",
+      "reunion",
+      "choix",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Analyser les proprietes de chaque tresor pour faire un choix eclaire",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le dilemme en choisissant le tresor qui manque le plus au monde",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter le fait que les quatre existent ensemble comme la reponse",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  }
+]

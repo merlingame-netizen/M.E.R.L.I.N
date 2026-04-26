@@ -1,0 +1,4718 @@
+[
+  {
+    "id": "fr_s10b_conflict_001",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "text": "Maelgwn et un emissaire des Anciens se disputent la propriete d'un cercle de champignons sacre. Le druide affirme que les champignons sont des messagers vivants, tandis que l'Ancien insiste que le cercle marque la tombe d'un roi oublie. Les deux camps attendent ton arbitrage.",
+    "options": [
+      {
+        "label": "Analyser les arguments des deux camps pour trouver un compromis fonde",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Interpreter les champignons comme preuve de vie, soutenant les druides",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Decoder les inscriptions au sol pour confirmer la tombe royale",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_anciens",
+      "cercle_champignons"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Analyser les arguments des deux camps pour trouver un compromis fonde",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter les champignons comme preuve de vie, soutenant les druides",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Decoder les inscriptions au sol pour confirmer la tombe royale",
+        "verb": "decoder",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_002",
+    "biome": "marais_korrigans",
+    "champ_lexical": "bluff",
+    "text": "Les korrigans de Gwen Du exigent un peage pour traverser un pont de pierre que les druides considerent comme un lieu de meditation libre. Un druide refuse de payer. Le korrigan menace de detruire le pont. Les deux se tournent vers toi.",
+    "options": [
+      {
+        "label": "Marchander un accord : les druides meditent le matin, les korrigans percoivent l'apres-midi",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Convaincre le druide de payer en montrant le respect des traditions korriganes",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Mentir au korrigan en pretendant que le druide a deja paye en secret",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "pont_peage"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Marchander un accord : les druides meditent le matin, les korrigans percoivent l'apres-midi",
+        "verb": "marchander",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Convaincre le druide de payer en montrant le respect des traditions korriganes",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mentir au korrigan en pretendant que le druide a deja paye en secret",
+        "verb": "mentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_003",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "text": "L'Ankou reclame le corps d'un guerrier tombe dans un dolmen sacre des Anciens. Ildiko refuse : 'Les morts dans nos monuments restent avec nous.' L'emissaire de l'Ankou gronde : 'Chaque mort m'appartient, peu importe ou il tombe.' La tension electrifie l'air.",
+    "options": [
+      {
+        "label": "Mediter sur la dualite vie-mort pour proposer un rituel partage",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Apaiser l'emissaire de l'Ankou en honorant le guerrier par ses rites",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Calmer Ildiko en promettant que le dolmen sera purifie apres le depart du corps",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "guerrier_tombe"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Mediter sur la dualite vie-mort pour proposer un rituel partage",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Apaiser l'emissaire de l'Ankou en honorant le guerrier par ses rites",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer Ildiko en promettant que le dolmen sera purifie apres le depart du corps",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_004",
+    "biome": "iles_mystiques",
+    "champ_lexical": "observation",
+    "text": "Morgane et un chef korrigan se disputent un artefact fee echoue sur la plage de l'ile de Batz. L'objet — un miroir d'ecume solidifiee — montre l'avenir a qui le touche. 'C'est un objet de l'Autre Monde,' dit Morgane. 'C'est un tresor trouve. La loi des trouvailles s'applique,' retorque le korrigan.",
+    "options": [
+      {
+        "label": "Observer le miroir pour determiner son origine par ses reflets",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Scruter les marques sur le miroir pour trancher le differend",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Examiner les traces de l'echouage pour prouver qu'il a ete depose intentionnellement",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_korrigans",
+      "miroir_ecume"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Observer le miroir pour determiner son origine par ses reflets",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les marques sur le miroir pour trancher le differend",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Examiner les traces de l'echouage pour prouver qu'il a ete depose intentionnellement",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_005",
+    "biome": "landes_bruyere",
+    "champ_lexical": "esprit",
+    "text": "Un druide herboriste et un serviteur de l'Ankou se croisent pres d'un lac toxique des Monts d'Arree. Le druide veut purifier l'eau; l'Ankou veut la garder empoisonnee car les ames errantes y trouvent refuge. 'Purifier, c'est chasser les morts,' insiste l'ombre. 'Les laisser, c'est empoisonner les vivants,' replique le druide.",
+    "options": [
+      {
+        "label": "Apaiser les deux camps en proposant une zone tampon entre eau pure et eau morte",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur la purification pour sauver les vivants",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Accepter la logique de l'Ankou et proteger le refuge des ames",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_ankou",
+      "lac_toxique"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Apaiser les deux camps en proposant une zone tampon entre eau pure et eau morte",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur la purification pour sauver les vivants",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter la logique de l'Ankou et proteger le refuge des ames",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_006",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Le chef de Guerlesquin accuse les korrigans d'avoir vole les reserves de grain du village pendant l'hiver. Les korrigans jurent qu'ils n'ont pris que les miettes que les rats avaient deja rongees. Cadogan demande : 'Qui dit vrai? Les traces dans le grenier parlent, si l'on sait les lire.'",
+    "options": [
+      {
+        "label": "Negocier une restitution partielle en menageant l'honneur des deux camps",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Convaincre Cadogan que les preuves accusent les rats, pas les korrigans",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Charmer le chef korrigan pour qu'il avoue et propose reparation",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_korrigans",
+      "vol_grain"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Negocier une restitution partielle en menageant l'honneur des deux camps",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Convaincre Cadogan que les preuves accusent les rats, pas les korrigans",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Charmer le chef korrigan pour qu'il avoue et propose reparation",
+        "verb": "charmer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_007",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "esprit",
+    "text": "Une tempete a depose un navire fantome sur la cote de Douarnenez. Les druides veulent l'etudier; Morgane insiste que le navire appartient a l'Autre Monde et doit retourner a la mer. Le bois du navire est vivant — il bourgeonne malgre le sel. Des voix murmurent depuis la coque.",
+    "options": [
+      {
+        "label": "Mediter pres du navire pour comprendre sa volonte propre",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Calmer les voix dans la coque par une invocation druidique",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement aux murmures pour garder son propre jugement",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_druides",
+      "navire_fantome"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter pres du navire pour comprendre sa volonte propre",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer les voix dans la coque par une invocation druidique",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement aux murmures pour garder son propre jugement",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_008",
+    "biome": "foret_broceliande",
+    "champ_lexical": "finesse",
+    "text": "Un groupe de korrigans a installe des pieges dans la foret pour capturer des biches sacrees que les druides protegent. Gwenn decouvre les pieges et menace de les detruire. Les korrigans repondent que sans gibier, leur clan mourra de faim cet hiver.",
+    "options": [
+      {
+        "label": "Se faufiler entre les deux camps pour desactiver les pieges discretement",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Contourner le conflit en proposant aux korrigans une zone de chasse alternative",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Escalader un arbre pour avoir une vue d'ensemble et compter les biches restantes",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 4
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "biches_sacrees",
+      "chasse"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler entre les deux camps pour desactiver les pieges discretement",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le conflit en proposant aux korrigans une zone de chasse alternative",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader un arbre pour avoir une vue d'ensemble et compter les biches restantes",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_009",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "text": "Les Anciens veulent restaurer un cercle de pierres effondre. Les serviteurs de Niamh s'y opposent : l'effondrement a ouvert un passage vers l'Autre Monde, et le refermer serait une offense. Brennos hesite. 'Le cercle servait les vivants. Le passage sert les esprits. Peut-on servir les deux?'",
+    "options": [
+      {
+        "label": "Resoudre le dilemme en concevant un cercle qui integre le passage",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Analyser la structure du passage pour determiner s'il survivrait a la restauration",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Dechiffrer les pierres tombees pour comprendre l'intention originale des batisseurs",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_niamh",
+      "cercle_effondre",
+      "passage"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Resoudre le dilemme en concevant un cercle qui integre le passage",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Analyser la structure du passage pour determiner s'il survivrait a la restauration",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Dechiffrer les pierres tombees pour comprendre l'intention originale des batisseurs",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_010",
+    "biome": "landes_bruyere",
+    "champ_lexical": "vigueur",
+    "text": "Un guerrier des Anciens a profane un tombeau de l'Ankou en prenant une epee rouille comme trophee. L'Ankou exige une epreuve de sang en reparation. Erwan, le berger, tente de calmer la situation : 'L'epee etait la pour etre trouvee. Mais la profanation doit etre reparee.'",
+    "options": [
+      {
+        "label": "Combattre symboliquement pour remplacer l'epreuve de sang par un duel d'honneur",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Forcer le guerrier a remettre l'epee et s'agenouiller",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Courir porter l'epee au tombeau avant que l'Ankou ne se venge",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "epee_profanee"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Combattre symboliquement pour remplacer l'epreuve de sang par un duel d'honneur",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Forcer le guerrier a remettre l'epee et s'agenouiller",
+        "verb": "forcer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir porter l'epee au tombeau avant que l'Ankou ne se venge",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_011",
+    "biome": "foret_broceliande",
+    "champ_lexical": "chance",
+    "text": "Un druide et un emissaire de Niamh se disputent une source guerisseuse. Le druide veut la canaliser pour soigner les malades du village. Morgane insiste : la source est un don des fees et ne doit pas etre domestiquee. L'eau change de couleur a chaque pleine lune.",
+    "options": [
+      {
+        "label": "Tenter sa chance en goutant l'eau pour determiner sa nature",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Deviner un compromis en laissant la source libre mais accessible aux malades",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Cueillir des plantes medicinales autour de la source comme alternative",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_niamh",
+      "source_guerisseuse"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Tenter sa chance en goutant l'eau pour determiner sa nature",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner un compromis en laissant la source libre mais accessible aux malades",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Cueillir des plantes medicinales autour de la source comme alternative",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_012",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Les korrigans accusent les Anciens d'avoir detourne une riviere souterraine qui alimentait leurs terriers. Cadogan repond que la riviere a ete canalisee pour irriguer les champs du village. Les recoltes dependent de cette eau. Les terriers aussi.",
+    "options": [
+      {
+        "label": "Negocier un partage de l'eau avec un calendrier d'alternance",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Amadouer les korrigans avec des provisions pour compenser la perte d'eau",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Convaincre Cadogan que les terriers sont essentiels a l'equilibre",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_anciens",
+      "riviere_detournee"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Negocier un partage de l'eau avec un calendrier d'alternance",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Amadouer les korrigans avec des provisions pour compenser la perte d'eau",
+        "verb": "amadouer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Convaincre Cadogan que les terriers sont essentiels a l'equilibre",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_013",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "text": "Morgane et l'Ankou se font face sur l'ile de Sein. Un passage vers l'Autre Monde s'ouvre. Les ames des noyes tentent d'entrer; Morgane veut les accueillir, l'Ankou veut les guider vers le repos final. 'Accueillir n'est pas guerir,' gronde l'ombre. 'Guider n'est pas choisir,' repond Morgane.",
+    "options": [
+      {
+        "label": "Mediter entre les deux forces pour trouver une voie intermediaire",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur les ames pour comprendre ce qu'elles veulent vraiment",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Accepter la logique de l'Ankou : le repos est un droit des morts",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_ankou",
+      "ames_noyes",
+      "passage"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter entre les deux forces pour trouver une voie intermediaire",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur les ames pour comprendre ce qu'elles veulent vraiment",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter la logique de l'Ankou : le repos est un droit des morts",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_014",
+    "biome": "villages_celtes",
+    "champ_lexical": "observation",
+    "text": "Un conflit commercial eclate au marche de Locronan. Les Anciens vendent des poteries ceremoniales que les druides accusent de porter de faux symboles sacres. Le forgeron montre la gravure : 'C'est le symbole de mon grand-pere. Les druides n'ont pas le monopole des spirales.'",
+    "options": [
+      {
+        "label": "Examiner les poteries pour comparer les symboles avec les originaux druidiques",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Scruter les differences subtiles entre les gravures anciennes et les copies",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Observer l'attitude du forgeron pour juger de sa sincerite",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_druides",
+      "poteries_symboles"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Examiner les poteries pour comparer les symboles avec les originaux druidiques",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les differences subtiles entre les gravures anciennes et les copies",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Observer l'attitude du forgeron pour juger de sa sincerite",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_015",
+    "biome": "collines_dolmens",
+    "champ_lexical": "perception",
+    "text": "Un vent glacial souffle du nord, portant une odeur de cendres. L'Ankou et les korrigans revendiquent un ossuaire sous un dolmen. L'Ankou veut en faire un sanctuaire; les korrigans y cachent leurs tresors depuis des generations. Ildiko soupire : 'Les os et l'or partagent le meme silence.'",
+    "options": [
+      {
+        "label": "Ecouter les echos dans l'ossuaire pour determiner qui l'a occupe en premier",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air pour distinguer l'odeur des os anciens de l'or korrigan",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Sentir les vibrations du sol pour trouver une chambre separee pour chacun",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_korrigans",
+      "ossuaire_tresor"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Ecouter les echos dans l'ossuaire pour determiner qui l'a occupe en premier",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer l'air pour distinguer l'odeur des os anciens de l'or korrigan",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir les vibrations du sol pour trouver une chambre separee pour chacun",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_016",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "text": "Les druides veulent planter un bosquet sacre sur un terrain que les Anciens utilisent comme place d'armes pour entrainer les jeunes guerriers. 'Les arbres enseignent mieux que les epees,' insiste Maelgwn. Cadogan repond : 'Les arbres ne protegeent personne quand l'ennemi arrive.'",
+    "options": [
+      {
+        "label": "Analyser le terrain pour trouver un espace qui serve les deux objectifs",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le conflit en proposant un bosquet-terrain : arbres espaces pour le combat",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Etudier les precedents historiques ou druides et guerriers coexistaient",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_anciens",
+      "bosquet_place_armes"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Analyser le terrain pour trouver un espace qui serve les deux objectifs",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le conflit en proposant un bosquet-terrain : arbres espaces pour le combat",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Etudier les precedents historiques ou druides et guerriers coexistaient",
+        "verb": "etudier",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_017",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "text": "Les korrigans ont creuse un tunnel sous un sanctuaire de Niamh pour acceder a un filon de cristaux phosphorescents. Morgane decouvre le tunnel. 'Vous avez perce le plancher de mon temple!' Gwen Du hausse les epaules : 'Le sol n'appartient a personne. Ce qui est dessous est a qui creuse.'",
+    "options": [
+      {
+        "label": "Se faufiler dans le tunnel pour evaluer les degats avant de juger",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Contourner le probleme en proposant un acces partage au filon",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se cacher pour observer si les korrigans planifient d'agrandir le tunnel",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_niamh",
+      "tunnel_cristaux"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler dans le tunnel pour evaluer les degats avant de juger",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le probleme en proposant un acces partage au filon",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se cacher pour observer si les korrigans planifient d'agrandir le tunnel",
+        "verb": "se cacher",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_018",
+    "biome": "landes_bruyere",
+    "champ_lexical": "vigueur",
+    "text": "Les serviteurs de l'Ankou exigent que les druides cessent de guerir les mourants, car cela 'vole des ames destinees au repos'. Keridwen refuse : 'Tant qu'une flamme brule, je la protege.' L'Ankou repond : 'Toute flamme doit s'eteindre. C'est la loi.'",
+    "options": [
+      {
+        "label": "Combattre l'idee que la mort est un droit sur les vivants",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement a la presence ecrasante de l'Ankou pour proteger la guerisseuse",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Fuir chercher du renfort aupres des Anciens du village voisin",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_druides",
+      "guerison_contestee"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Combattre l'idee que la mort est un droit sur les vivants",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister physiquement a la presence ecrasante de l'Ankou pour proteger la guerisseuse",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fuir chercher du renfort aupres des Anciens du village voisin",
+        "verb": "fuir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_019",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "chance",
+    "text": "Un tresor fee s'est echoue pres de Camaret. Les korrigans, les Anciens et Morgane le revendiquent. Le tresor — une harpe de corail vivant — joue toute seule une melodie triste. Chaque faction a un argument : trouvaille, heritage, appartenance surnaturelle.",
+    "options": [
+      {
+        "label": "Tenter sa chance en jouant de la harpe pour voir a qui elle repond",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Deviner l'intention de la harpe en ecoutant sa melodie",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle autour de la harpe pour des indices de propriete",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "triple_conflit",
+      "harpe_corail"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Tenter sa chance en jouant de la harpe pour voir a qui elle repond",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner l'intention de la harpe en ecoutant sa melodie",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fouiller a l'aveugle autour de la harpe pour des indices de propriete",
+        "verb": "fouiller a l'aveugle",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_020",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Les Anciens veulent interdire l'acces au cromlech de Monteneuf aux druides itinerants, accusant leurs rituels de 'desequilibrer les pierres'. Les druides repondent que les rituels maintiennent les pierres debout depuis des millenaires. Brennos hesite entre tradition et prudence.",
+    "options": [
+      {
+        "label": "Resister mentalement a la pression des deux camps pour garder un jugement clair",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Apaiser Brennos en proposant un rituel supervise par les deux camps",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Endurer le debat pour permettre a chaque camp d'exprimer ses griefs",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_druides",
+      "acces_cromlech"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Resister mentalement a la pression des deux camps pour garder un jugement clair",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Apaiser Brennos en proposant un rituel supervise par les deux camps",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Endurer le debat pour permettre a chaque camp d'exprimer ses griefs",
+        "verb": "endurer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_021",
+    "biome": "marais_korrigans",
+    "champ_lexical": "observation",
+    "text": "Les korrigans ont capture un messager des Anciens qui traversait le marais avec des documents scelles. Gwen Du les brandit : 'Des plans pour drainer notre marais! Ils veulent nous noyer sous la terre seche!' Le messager jure qu'il s'agit de cartes de navigation, pas de drainage.",
+    "options": [
+      {
+        "label": "Examiner les documents pour determiner leur veritable nature",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Scruter le sceau pour verifier l'autorite qui a envoye le messager",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Inspecter le messager pour des indices caches dans ses vetements",
+        "verb": "inspecter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_anciens",
+      "messager_capture"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Examiner les documents pour determiner leur veritable nature",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter le sceau pour verifier l'autorite qui a envoye le messager",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Inspecter le messager pour des indices caches dans ses vetements",
+        "verb": "inspecter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_022",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "perception",
+    "text": "Un druide et un serviteur de l'Ankou decouvrent simultanement une grotte marine contenant des os humains et des plantes medicinales rares. Le druide veut preserver les plantes; l'Ankou veut proteger les restes. La maree monte — il faut choisir vite ce qui sera sauve en premier.",
+    "options": [
+      {
+        "label": "Ecouter le rythme de la maree pour calculer le temps restant pour les deux",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Suivre son instinct et sauver les plantes medicinales en priorite",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Pister un passage superieur pour evacuer les os d'abord",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_ankou",
+      "grotte_marine",
+      "maree"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Ecouter le rythme de la maree pour calculer le temps restant pour les deux",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Suivre son instinct et sauver les plantes medicinales en priorite",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pister un passage superieur pour evacuer les os d'abord",
+        "verb": "pister",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_023",
+    "biome": "iles_mystiques",
+    "champ_lexical": "bluff",
+    "text": "Les fees de Niamh ont emprunte une relique des Anciens — un torque d'or — pour une ceremonie. Cadogan exige son retour immediat. Morgane sourit : 'Le torque a ete offert il y a mille ans par vos propres ancetres. C'est un don, pas un pret.'",
+    "options": [
+      {
+        "label": "Negocier un acces partage au torque pour les ceremonies des deux camps",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Convaincre Cadogan que le torque est effectivement un don ancestral",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Charmer Morgane pour qu'elle accepte un echange symbolique",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_anciens",
+      "torque_or"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Negocier un acces partage au torque pour les ceremonies des deux camps",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Convaincre Cadogan que le torque est effectivement un don ancestral",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Charmer Morgane pour qu'elle accepte un echange symbolique",
+        "verb": "charmer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_024",
+    "biome": "collines_dolmens",
+    "champ_lexical": "logique",
+    "text": "Un alignement de menhirs sert de frontiere entre le territoire de l'Ankou et celui des druides. Un menhir s'est penche, deplacant la frontiere de trois pas vers le territoire druidique. L'Ankou considere cela comme un signe; les druides, comme un accident geologique.",
+    "options": [
+      {
+        "label": "Analyser l'inclinaison du menhir pour determiner si elle est naturelle ou surnaturelle",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Interpreter le mouvement comme un message ancien a dechiffrer",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le differend en proposant de redresser le menhir ensemble",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_druides",
+      "menhir_penche",
+      "frontiere"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Analyser l'inclinaison du menhir pour determiner si elle est naturelle ou surnaturelle",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter le mouvement comme un message ancien a dechiffrer",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le differend en proposant de redresser le menhir ensemble",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_025",
+    "biome": "foret_broceliande",
+    "champ_lexical": "bluff",
+    "text": "Les korrigans de Broceliande pretendent avoir decouvert un nouveau passage vers l'Autre Monde dans un terrier de blaireau. Morgane les accuse de bluffer pour negocier des privileges. 'Prouvez-le,' dit-elle. Le chef korrigan te fixe : 'Dis-lui que c'est vrai. Tu y gagnerais aussi.'",
+    "options": [
+      {
+        "label": "Mentir en confirmant le passage pour gagner la faveur des korrigans",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      },
+      {
+        "label": "Negocier une exploration conjointe pour verifier les dires des korrigans",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Amadouer Morgane en suggerant que meme un bluff peut reveler une verite",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_niamh",
+      "passage_blaireau"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Mentir en confirmant le passage pour gagner la faveur des korrigans",
+        "verb": "mentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Negocier une exploration conjointe pour verifier les dires des korrigans",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Amadouer Morgane en suggerant que meme un bluff peut reveler une verite",
+        "verb": "amadouer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_026",
+    "biome": "villages_celtes",
+    "champ_lexical": "vigueur",
+    "text": "Une dispute territoriale entre deux clans des Anciens menace de devenir violente. L'un reclame un gue strategique; l'autre le controle depuis trois generations. Les korrigans observent, prets a profiter du chaos pour s'emparer du gue.",
+    "options": [
+      {
+        "label": "Combattre pour le clan le plus ancien en duel d'honneur",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Courir prevenir le druide le plus proche pour une mediation officielle",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Pousser les korrigans hors de la zone avant qu'ils ne profitent du chaos",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_anciens_vs_korrigans",
+      "gue_dispute"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Combattre pour le clan le plus ancien en duel d'honneur",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir prevenir le druide le plus proche pour une mediation officielle",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pousser les korrigans hors de la zone avant qu'ils ne profitent du chaos",
+        "verb": "pousser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_027",
+    "biome": "landes_bruyere",
+    "champ_lexical": "esprit",
+    "text": "Les druides ont commence un rituel de purification sur les landes que les Anciens considerent comme un terrain de chasse sacre. Le rituel eloigne les animaux. Erwan proteste : 'Nos chasseurs n'ont rien pris depuis une lune. Vos chants chassent le gibier.'",
+    "options": [
+      {
+        "label": "Apaiser Erwan en proposant de decaler le rituel a la saison morte",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Mediter pour trouver un rituel qui n'effraye pas le gibier",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur les besoins des chasseurs plutot que sur le rituel",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_anciens",
+      "rituel_chasse"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Apaiser Erwan en proposant de decaler le rituel a la saison morte",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mediter pour trouver un rituel qui n'effraye pas le gibier",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur les besoins des chasseurs plutot que sur le rituel",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_028",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "finesse",
+    "text": "Les fees de Niamh ont enchante un sentier cotier qui mene a une crique cachee. Les korrigans s'en servent comme route commerciale. L'enchantement fait tourner en rond quiconque n'est pas invite. Les korrigans sont furieux : 'Nos marchandises pourrissent sur le chemin!'",
+    "options": [
+      {
+        "label": "Se faufiler a travers l'enchantement pour prouver qu'il peut etre contourne",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Contourner le conflit en trouvant une route alternative pour les korrigans",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Esquiver la responsabilite en renvoyant les deux parties vers Cadogan",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_korrigans",
+      "sentier_enchante"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Se faufiler a travers l'enchantement pour prouver qu'il peut etre contourne",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le conflit en trouvant une route alternative pour les korrigans",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Esquiver la responsabilite en renvoyant les deux parties vers Cadogan",
+        "verb": "esquiver",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_029",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "L'Ankou a commence a hanter un cercle de pierres que Brennos utilise pour les ceremonies des Anciens. Les apparitions effraient les participants. L'Ankou insiste : 'Ce cercle a ete bati sur mes morts. Ils ont le droit de manifester leur presence.'",
+    "options": [
+      {
+        "label": "Calmer les apparitions par un chant d'apaisement reconnu par les deux camps",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement aux apparitions pour montrer qu'elles ne sont pas menaçantes",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Accepter les apparitions comme partie integrante des ceremonies",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "cercle_hante"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Calmer les apparitions par un chant d'apaisement reconnu par les deux camps",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement aux apparitions pour montrer qu'elles ne sont pas menaçantes",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter les apparitions comme partie integrante des ceremonies",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_030",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Un korrigan marchant a vendu un faux elixir de jouvence aux villageois de Josselin. Les druides exigent reparation. Le korrigan jure que l'elixir etait vrai mais que les humains 'ne savent pas s'en servir'. Trois villageois sont malades.",
+    "options": [
+      {
+        "label": "Convaincre le korrigan de fournir le vrai remede sous peine d'exil",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Marchander discretement avec le korrigan pour obtenir l'antidote",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Charmer le korrigan pour qu'il avoue la supercherie publiquement",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "faux_elixir"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Convaincre le korrigan de fournir le vrai remede sous peine d'exil",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Marchander discretement avec le korrigan pour obtenir l'antidote",
+        "verb": "marchander",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Charmer le korrigan pour qu'il avoue la supercherie publiquement",
+        "verb": "charmer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu trouves le mot qui ouvre. L'autre cede et te laisse passer le seuil.",
+      "success": "On t'ecoute. Tu n'as pas besoin de tout dire.",
+      "failure": "Tes mots tombent a cote. Pas de drame, mais pas de lien non plus.",
+      "critical_failure": "Tu blesses sans le vouloir. La foret note la maladresse, et l'autre ne reviendra pas."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_031",
+    "biome": "foret_broceliande",
+    "champ_lexical": "observation",
+    "text": "Les druides surprennent des emissaires de l'Ankou en train de marquer des arbres dans la foret — des arbres que les druides considerent comme des gardiens vivants. Les marques sont des runes de passage pour les morts. 'Nos morts ont besoin de chemins,' dit l'ombre. 'Vos arbres sont nos panneaux indicateurs.'",
+    "options": [
+      {
+        "label": "Observer les runes pour verifier si elles endommagent les arbres",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les marques pour voir si elles peuvent etre placees sur des pierres au lieu d'arbres",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Memoriser les runes pour les reproduire sur un support neutre",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_ankou",
+      "runes_arbres"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Observer les runes pour verifier si elles endommagent les arbres",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les marques pour voir si elles peuvent etre placees sur des pierres au lieu d'arbres",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Memoriser les runes pour les reproduire sur un support neutre",
+        "verb": "memoriser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_032",
+    "biome": "cercles_pierres",
+    "champ_lexical": "vigueur",
+    "text": "Un jeune guerrier des Anciens a defie un champion korrigan pour le controle d'un passage strategique entre deux cercles de pierres. Le duel est rituel mais dangereux. Brennos te demande de servir de temoin impartial. Les regles sont claires mais les coups, non.",
+    "options": [
+      {
+        "label": "Combattre aux cotes du guerrier pour equilibrer le duel",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Courir entre les combattants quand un coup deloyal est porte",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Forcer l'arret du duel en invoquant une loi ancienne d'armistice",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -3
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_korrigans",
+      "duel_rituel"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Combattre aux cotes du guerrier pour equilibrer le duel",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir entre les combattants quand un coup deloyal est porte",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Forcer l'arret du duel en invoquant une loi ancienne d'armistice",
+        "verb": "forcer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_033",
+    "biome": "iles_mystiques",
+    "champ_lexical": "logique",
+    "text": "Les fees de Niamh ont brouille les reperes maritimes autour d'Ouessant, causant des naufrages. Les Anciens exigent que les reperes soient retablis. Morgane explique : 'Les reperes guidaient aussi les chasseurs de fees. Nous protegeons les notres.'",
+    "options": [
+      {
+        "label": "Analyser les routes maritimes pour proposer des reperes qui protegent les deux",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Decoder l'ancien systeme de reperes pour comprendre ce qui a change",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Interpreter les naufrages comme un message des fees a dechiffrer",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_anciens",
+      "reperes_maritimes"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Analyser les routes maritimes pour proposer des reperes qui protegent les deux",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Decoder l'ancien systeme de reperes pour comprendre ce qui a change",
+        "verb": "decoder",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Interpreter les naufrages comme un message des fees a dechiffrer",
+        "verb": "interpreter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_034",
+    "biome": "landes_bruyere",
+    "champ_lexical": "perception",
+    "text": "Les serviteurs de l'Ankou entendent des chants korrigans dans le Yeun Elez — les korrigans y celebrent une fete nocturne. L'Ankou considere le marais maudit comme son domaine exclusif. 'Le bruit des vivants derange le sommeil de mes morts,' gronde l'ombre.",
+    "options": [
+      {
+        "label": "Ecouter attentivement la fete pour determiner si elle perturbe reellement les esprits",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir les energies du marais pour evaluer leur equilibre actuel",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Pister les korrigans pour les prevenir de la colere imminente de l'Ankou",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_korrigans",
+      "fete_nocturne",
+      "yeun_elez"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Ecouter attentivement la fete pour determiner si elle perturbe reellement les esprits",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir les energies du marais pour evaluer leur equilibre actuel",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pister les korrigans pour les prevenir de la colere imminente de l'Ankou",
+        "verb": "pister",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_035",
+    "biome": "marais_korrigans",
+    "champ_lexical": "chance",
+    "text": "Les druides decouvrent que les korrigans utilisent des plantes sacrees comme appat pour pieger les feux follets. Les korrigans repondent que les feux follets detruisent leurs recoltes souterraines. Un feu follet pris au piege brille d'un eclat desesp ere.",
+    "options": [
+      {
+        "label": "Tenter sa chance en liberant le feu follet et esperer qu'il sera reconnaissant",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Deviner une solution en cherchant une plante qui repousse les feux follets sans les blesser",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Cueillir une plante sacree de remplacement pour liberer celle utilisee comme appat",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_korrigans",
+      "feu_follet_piege"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Tenter sa chance en liberant le feu follet et esperer qu'il sera reconnaissant",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner une solution en cherchant une plante qui repousse les feux follets sans les blesser",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Cueillir une plante sacree de remplacement pour liberer celle utilisee comme appat",
+        "verb": "cueillir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_036",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "text": "Les Anciens veulent ouvrir un nouveau chemin commercial a travers les collines, mais le trace passe sur un site sacre de Niamh. Ildiko plaide pour le commerce; Morgane pour la sacralite du lieu. Les deux argumentent avec passion devant l'assemblee.",
+    "options": [
+      {
+        "label": "Mediter sur le plan pour trouver un trace qui evite le site sacre",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Accepter le trace commercial en compensant Niamh par un nouveau sanctuaire",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Refuser le trace pour preserver l'integrite du site sacre",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_niamh",
+      "chemin_commercial"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Mediter sur le plan pour trouver un trace qui evite le site sacre",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter le trace commercial en compensant Niamh par un nouveau sanctuaire",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser le trace pour preserver l'integrite du site sacre",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_037",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "observation",
+    "text": "Les korrigans cotiers et les druides se disputent une epave riche en herbes marines medicinales. Les korrigans veulent le bois de l'epave pour construire; les druides veulent les herbes pour leurs potions. Maelle observe en silence : 'L'ocean a donne. Il reprendra si vous vous battez.'",
+    "options": [
+      {
+        "label": "Examiner l'epave pour determiner si le bois et les herbes peuvent etre separes",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Scruter les courants pour prevenir si la maree va emporter l'epave",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Observer les deux camps pour identifier qui est pret a faire un compromis",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "epave_herbes"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Examiner l'epave pour determiner si le bois et les herbes peuvent etre separes",
+        "verb": "examiner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les courants pour prevenir si la maree va emporter l'epave",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Observer les deux camps pour identifier qui est pret a faire un compromis",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_038",
+    "biome": "villages_celtes",
+    "champ_lexical": "esprit",
+    "text": "L'Ankou reclame une place dans le conseil du village de Guerlesquin. Les Anciens refusent : 'Les morts n'ont pas de voix dans les affaires des vivants.' L'ombre repond : 'Les morts sont plus nombreux que les vivants. Par quel droit les excluez-vous?'",
+    "options": [
+      {
+        "label": "Calmer les tensions en proposant un siege consultatif sans droit de vote",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a l'intimidation de l'Ankou et defendre les vivants",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Accepter la legitimite de l'Ankou et plaider pour son integration",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "conseil_village"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Calmer les tensions en proposant un siege consultatif sans droit de vote",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resister mentalement a l'intimidation de l'Ankou et defendre les vivants",
+        "verb": "resister mentalement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Accepter la legitimite de l'Ankou et plaider pour son integration",
+        "verb": "accepter",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Quelque chose dans ta voix les touche. Plus que d'habitude. La foret enregistre l'echange.",
+      "success": "Le lien tient. Pas spectaculaire — vrai.",
+      "failure": "Le moment passe sans s'accrocher. Tu repars seul.",
+      "critical_failure": "Tu prends ce qui n'etait pas offert. Le visage de l'autre se durcit."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_039",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "text": "Les fees de Niamh ont fait pousser un jardin merveilleux au coeur de Broceliande, mais il empiete sur un bosquet que les druides cultivent depuis des generations. Les plantes fees et druidiques commencent a s'entrelacer de maniere imprevisible.",
+    "options": [
+      {
+        "label": "Ecouter les plantes pour sentir si l'entrelacement est benefique ou destructeur",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Suivre les racines entremelees pour trouver le point d'origine du conflit",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Flairer les parfums melanges pour determiner quelles plantes dominent",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_druides",
+      "jardin_entrelace"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Ecouter les plantes pour sentir si l'entrelacement est benefique ou destructeur",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Suivre les racines entremelees pour trouver le point d'origine du conflit",
+        "verb": "suivre",
+        "axis": "souffle",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer les parfums melanges pour determiner quelles plantes dominent",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_040",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "text": "Les druides decouvrent que les korrigans ont modifie un alignement de menhirs pour rediriger une ley line vers leurs terriers. L'energie geomantique du cercle est perturbee. Brennos est furieux. Les korrigans affirment que la ley line etait 'gaspillee' par des ceremonies depassees.",
+    "options": [
+      {
+        "label": "Analyser le flux geomantique pour determiner si la redirection est reversible",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le probleme en divisant le flux entre le cercle et les terriers",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Dechiffrer les inscriptions sur les menhirs deplaces pour comprendre l'impact",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_korrigans",
+      "ley_line",
+      "menhirs"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Analyser le flux geomantique pour determiner si la redirection est reversible",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le probleme en divisant le flux entre le cercle et les terriers",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Dechiffrer les inscriptions sur les menhirs deplaces pour comprendre l'impact",
+        "verb": "dechiffrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_041",
+    "biome": "iles_mystiques",
+    "champ_lexical": "vigueur",
+    "text": "Sur l'ile de Sein, l'Ankou et Morgane se disputent le droit de conduire les ames des noyes. L'Ankou veut les mener au repos; Morgane veut les accueillir dans l'Autre Monde comme gardiens. Une tempete eclate, et les ames tourbillonnent entre les deux forces.",
+    "options": [
+      {
+        "label": "Resister physiquement a la tempete pour rester debout entre les deux forces",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Combattre l'emprise de la tempete pour liberer les ames coincees",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Fuir la tempete en tirant les vivants hors de la zone de conflit",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_niamh",
+      "tempete_ames"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Resister physiquement a la tempete pour rester debout entre les deux forces",
+        "verb": "resister physiquement",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Combattre l'emprise de la tempete pour liberer les ames coincees",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fuir la tempete en tirant les vivants hors de la zone de conflit",
+        "verb": "fuir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_042",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "text": "Les korrigans ont construit un barrage de tourbe pour creer un lac artificiel, inondant un sanctuaire druidique en contrebas. Gwen Du dit : 'Le lac nourrit nos champs.' Les druides repondent : 'Le sanctuaire nourrit nos ames.'",
+    "options": [
+      {
+        "label": "Se faufiler sous le barrage pour evaluer s'il peut etre modifie sans le detruire",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Contourner le barrage en creusant un canal de derivation",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Escalader le barrage pour avoir une vue d'ensemble du probleme",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "barrage_sanctuaire"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Se faufiler sous le barrage pour evaluer s'il peut etre modifie sans le detruire",
+        "verb": "se faufiler",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Contourner le barrage en creusant un canal de derivation",
+        "verb": "contourner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Escalader le barrage pour avoir une vue d'ensemble du probleme",
+        "verb": "escalader",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_043",
+    "biome": "landes_bruyere",
+    "champ_lexical": "bluff",
+    "text": "Les Anciens accusent les serviteurs de Niamh d'avoir enchante les landes pour que les voyageurs se perdent et finissent dans l'Autre Monde. Morgane nie : 'Les landes ont toujours ete dangereuses. Ce n'est pas notre faute si vos sentiers sont mal traces.'",
+    "options": [
+      {
+        "label": "Negocier la creation de balises visibles que l'enchantement ne peut pas masquer",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Convaincre les Anciens que les disparitions ont une cause naturelle",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Mentir en pretendant avoir vu un enchantement pour forcer Morgane a intervenir",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_niamh",
+      "landes_enchantees"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Negocier la creation de balises visibles que l'enchantement ne peut pas masquer",
+        "verb": "negocier",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Convaincre les Anciens que les disparitions ont une cause naturelle",
+        "verb": "convaincre",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Mentir en pretendant avoir vu un enchantement pour forcer Morgane a intervenir",
+        "verb": "mentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton geste de paix est entendu. Le silence qui suit est complice.",
+      "success": "Tu trouves le ton, et la rencontre prend.",
+      "failure": "Tu hesites trop, ou tu en fais trop. L'autre se ferme.",
+      "critical_failure": "Ta voix tremble au pire moment. Quelque chose se brise entre toi et l'autre."
+    },
+    "minigame": "coeur",
+    "risk_hint": "L'orgueil les froisse souvent."
+  },
+  {
+    "id": "fr_s10b_conflict_044",
+    "biome": "villages_celtes",
+    "champ_lexical": "esprit",
+    "text": "Un druide guerisseur a sauve un enfant mourant en utilisant un rituel interdit par les Anciens. Le rituel a fonctionne, mais il a ouvert une breve fissure entre les mondes. L'Ankou et les Anciens demandent tous deux un proces. Le druide ne regrette rien.",
+    "options": [
+      {
+        "label": "Mediter sur la moralite du choix pour formuler une defense juste",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Apaiser les Anciens en promettant que le rituel ne sera plus utilise",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Calmer l'Ankou en scellant la fissure par un contre-rituel",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "triple_conflit",
+      "rituel_interdit",
+      "proces"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Mediter sur la moralite du choix pour formuler une defense juste",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Apaiser les Anciens en promettant que le rituel ne sera plus utilise",
+        "verb": "apaiser",
+        "axis": "coeur",
+        "dc_offset": 0
+      },
+      {
+        "label": "Calmer l'Ankou en scellant la fissure par un contre-rituel",
+        "verb": "calmer",
+        "axis": "coeur",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_045",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "observation",
+    "text": "Un phare enchante par Niamh guide les navires fees vers la cote bretonne, mais il attire aussi les bateaux humains vers des recifs. Les Anciens veulent eteindre le phare. Maelle defie : 'Si on l'eteint, les fees perdent leur chemin. Si on le garde, les marins perdent la vie.'",
+    "options": [
+      {
+        "label": "Observer la frequence du phare pour trouver un rythme invisible aux humains",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Scruter les recifs pour determiner si un chenal de contournement existe",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Fixer la lumiere du phare pour comprendre sa magie et la modifier",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_anciens",
+      "phare_enchante"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Observer la frequence du phare pour trouver un rythme invisible aux humains",
+        "verb": "observer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Scruter les recifs pour determiner si un chenal de contournement existe",
+        "verb": "scruter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Fixer la lumiere du phare pour comprendre sa magie et la modifier",
+        "verb": "fixer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_046",
+    "biome": "collines_dolmens",
+    "champ_lexical": "logique",
+    "text": "L'Ankou veut transformer un dolmen en portail permanent vers le monde des morts. Les druides s'y opposent : le portail aspirerait la vie autour de lui. Ildiko montre la vegetation mourante autour du dolmen : 'Ca a deja commence. Chaque jour, le cercle de mort s'elargit.'",
+    "options": [
+      {
+        "label": "Analyser le taux d'expansion du cercle pour estimer le temps restant",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le probleme en proposant un portail temporaire au lieu de permanent",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Etudier le dolmen pour determiner s'il peut supporter un portail sans tuer la vie autour",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_druides",
+      "portail_dolmen"
+    ],
+    "trust_tier": "T0",
+    "faction": "ankou",
+    "choices": [
+      {
+        "label": "Analyser le taux d'expansion du cercle pour estimer le temps restant",
+        "verb": "analyser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Resoudre le probleme en proposant un portail temporaire au lieu de permanent",
+        "verb": "resoudre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Etudier le dolmen pour determiner s'il peut supporter un portail sans tuer la vie autour",
+        "verb": "etudier",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_047",
+    "biome": "foret_broceliande",
+    "champ_lexical": "chance",
+    "text": "Les korrigans organisent un tournoi de chance dans une clairiere sacree — des et cartes avec des enjeux reels. Les Anciens s'offusquent : 'Le jeu de hasard dans un lieu sacre est une profanation.' Les korrigans ricanent : 'Le hasard est aussi sacre que vos pierres.'",
+    "options": [
+      {
+        "label": "Tenter sa chance au tournoi pour gagner le respect des deux camps",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Deviner un compromis : tournoi hors de la clairiere sacree",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Chercher au hasard un precedent ou jeu et sacre coexistaient",
+        "verb": "chercher au hasard",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_anciens",
+      "tournoi_chance"
+    ],
+    "trust_tier": "T0",
+    "faction": "korrigans",
+    "choices": [
+      {
+        "label": "Tenter sa chance au tournoi pour gagner le respect des deux camps",
+        "verb": "tenter sa chance",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Deviner un compromis : tournoi hors de la clairiere sacree",
+        "verb": "deviner",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Chercher au hasard un precedent ou jeu et sacre coexistaient",
+        "verb": "chercher au hasard",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_048",
+    "biome": "marais_korrigans",
+    "champ_lexical": "perception",
+    "text": "Les druides et les serviteurs de Niamh se disputent le controle d'une source d'eau enchantee au coeur du marais. La source guerit les vivants mais nourrit aussi les fleurs de l'Autre Monde. Gwen Du observe : 'Pendant que vous vous battez, les korrigans boivent.'",
+    "options": [
+      {
+        "label": "Ecouter le murmure de la source pour comprendre ce qu'elle veut",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Sentir l'eau pour determiner si elle est druidique ou feerique a l'origine",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Flairer les traces de korrigans pour les empêcher de profiter du conflit",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "druides_vs_niamh_vs_korrigans",
+      "source_enchantee"
+    ],
+    "trust_tier": "T0",
+    "faction": "druides",
+    "choices": [
+      {
+        "label": "Ecouter le murmure de la source pour comprendre ce qu'elle veut",
+        "verb": "ecouter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Sentir l'eau pour determiner si elle est druidique ou feerique a l'origine",
+        "verb": "sentir",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Flairer les traces de korrigans pour les empêcher de profiter du conflit",
+        "verb": "flairer",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Ton regard se pose la ou il faut, et le sens jaillit. Tu sais sans hesiter.",
+      "success": "Tu comprends. Lentement, mais tu comprends — et c'est suffisant.",
+      "failure": "Tu cherches encore. Le sens flotte, presque la — pas tout a fait.",
+      "critical_failure": "Tu te trompes — et tu en es certain. Une certitude fausse, pesante."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_049",
+    "biome": "villages_celtes",
+    "champ_lexical": "vigueur",
+    "text": "Un conflit eclate lors d'un banquet. Les Anciens ont invite toutes les factions, mais l'Ankou a envoye un emissaire non invite qui jette un froid mortel — litteralement. La temperature chute, le vin gele dans les coupes. Les korrigans paniquent, les druides se lèvent.",
+    "options": [
+      {
+        "label": "Combattre le froid surnaturel en alimentant le feu central avec du bois sacre",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Pousser l'emissaire vers la sortie en invoquant les lois de l'hospitalite",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Courir chercher une couverture de laine enchantee pour proteger les convives",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "multi_factions",
+      "banquet_gele"
+    ],
+    "trust_tier": "T0",
+    "faction": "anciens",
+    "choices": [
+      {
+        "label": "Combattre le froid surnaturel en alimentant le feu central avec du bois sacre",
+        "verb": "combattre",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Pousser l'emissaire vers la sortie en invoquant les lois de l'hospitalite",
+        "verb": "pousser",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Courir chercher une couverture de laine enchantee pour proteger les convives",
+        "verb": "courir",
+        "axis": "souffle",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "L'idee s'emboite, parfaite. Tu lis le monde comme une page eclairee de l'interieur.",
+      "success": "La piste se dessine. Tu suis le fil sans le casser.",
+      "failure": "Ton regard glisse sur la chose sans s'y arreter. Quelque chose t'echappe.",
+      "critical_failure": "Tu prends une rune pour une autre. La foret en garde la trace."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  },
+  {
+    "id": "fr_s10b_conflict_050",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "text": "Sur Avalon, les cinq factions se reunissent pour la premiere fois depuis un siecle. Chacune revendique un fragment de la Couronne d'Harmonie. Morgane preside : 'La couronne ne peut etre reconstituee que si chaque faction accepte de renoncer a quelque chose. Qu'offrez-vous?' Tous les regards se tournent vers toi.",
+    "options": [
+      {
+        "label": "Mediter pour trouver un sacrifice que toutes les factions peuvent accepter",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer sur l'objectif commun pour transcender les rivalites",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Refuser de choisir un camp et proposer un vote equitable",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "faction_conflict",
+      "cinq_factions",
+      "couronne_harmonie",
+      "avalon"
+    ],
+    "trust_tier": "T0",
+    "faction": "niamh",
+    "choices": [
+      {
+        "label": "Mediter pour trouver un sacrifice que toutes les factions peuvent accepter",
+        "verb": "mediter",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Se concentrer sur l'objectif commun pour transcender les rivalites",
+        "verb": "se concentrer",
+        "axis": "esprit",
+        "dc_offset": 0
+      },
+      {
+        "label": "Refuser de choisir un camp et proposer un vote equitable",
+        "verb": "refuser",
+        "axis": "esprit",
+        "dc_offset": 0
+      }
+    ],
+    "dc": 9,
+    "resolutions": {
+      "critical": "Tu vois ce que les autres manquent. La forme cachee se decoupe d'un coup, comme une rune sur la peau.",
+      "success": "Le sens vient. Tu le retiens.",
+      "failure": "Tu doutes au mauvais moment. La piste s'efface dans la mousse.",
+      "critical_failure": "Tu te perds dans tes propres deductions. Quand tu releves la tete, l'instant est passe."
+    },
+    "minigame": "esprit",
+    "risk_hint": "Lis avant d'agir."
+  }
+]
