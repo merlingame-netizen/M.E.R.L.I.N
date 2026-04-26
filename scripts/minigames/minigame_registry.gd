@@ -71,6 +71,23 @@ const TAG_FIELD_MAP := {
 }
 
 
+# RPG axis (Souffle/Esprit/Coeur) → minigame mapping (Phase 3+).
+# See docs/RPG_TEST_SYSTEM.md.
+const RPG_AXIS_GAMES := {
+	"souffle": "mg_rpg_cadence",
+	"esprit": "mg_rpg_memoire_runes",
+	"coeur": "mg_rpg_resonance",
+}
+
+
+## Resolve an RPG minigame path from an axis. Returns a script PATH, not an instance.
+## Caller should `load(path).new()` and host via `setup_in_card()`.
+static func resolve_rpg_minigame(axis: String) -> String:
+	if not RPG_AXIS_GAMES.has(axis):
+		return ""
+	return "res://scripts/minigames/%s.gd" % RPG_AXIS_GAMES[axis]
+
+
 static func detect_field(narrative_text: String, gm_hint: String = "", tags: Array = []) -> String:
 	# GM hint takes priority — also accept game fields not in FIELDS (e.g. "neutre")
 	if gm_hint != "" and (FIELDS.has(gm_hint) or GAMES.has(gm_hint)):
