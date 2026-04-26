@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "purpose": "Mapping ogham symbol -> RPG axis affinity (souffle/esprit/coeur). Used by walk_event_controller._resolve_rpg_test to compute ogham_modifier when a test rolls on a given axis.",
+    "schema": {
+      "ogham_key": "snake_case identifier matching MerlinConstants.OGHAM_STARTER_SKILLS",
+      "primary_axis": "souffle|esprit|coeur — full +1 modifier",
+      "secondary_axis": "another axis with +0.5 (rounded down to 0 or 1 in code)",
+      "build_archetype": "souffle_pur|esprit_pur|coeur_pur|hybride — high-level build label"
+    },
+    "see": "docs/BALANCE_FORMULA.md Pilier 5 (Synergies emergentes)"
+  },
+  "affinities": {
+    "beith": {"primary_axis": "souffle", "secondary_axis": "coeur",  "build_archetype": "souffle_pur",
+              "lore": "Bouleau — commencement, vigueur naissante. Stat physique."},
+    "luis":  {"primary_axis": "esprit",  "secondary_axis": "souffle", "build_archetype": "esprit_pur",
+              "lore": "Sorbier — protection, lucidite. Stat mentale."},
+    "fern":  {"primary_axis": "coeur",   "secondary_axis": "esprit",  "build_archetype": "coeur_pur",
+              "lore": "Aulne — pont, lien. Stat empathique."},
+    "saille":{"primary_axis": "souffle", "secondary_axis": "esprit",  "build_archetype": "souffle_pur",
+              "lore": "Saule — flexibilite, mouvement. Stat physique."},
+    "nion":  {"primary_axis": "esprit",  "secondary_axis": "coeur",   "build_archetype": "esprit_pur",
+              "lore": "Frene — connaissance, axe du monde. Stat mentale."},
+    "huath": {"primary_axis": "coeur",   "secondary_axis": "souffle", "build_archetype": "coeur_pur",
+              "lore": "Aubepine — purification, seuils. Stat empathique."},
+    "duir":  {"primary_axis": "coeur",   "secondary_axis": "esprit",  "build_archetype": "coeur_pur",
+              "lore": "Chene — force enracinee, parole. Stat empathique."},
+    "tinne": {"primary_axis": "esprit",  "secondary_axis": "souffle", "build_archetype": "esprit_pur",
+              "lore": "Houx — equilibre, justice. Stat mentale."},
+    "coll":  {"primary_axis": "esprit",  "secondary_axis": "coeur",   "build_archetype": "esprit_pur",
+              "lore": "Noisetier — sagesse, intuition. Stat mentale."},
+    "quert": {"primary_axis": "coeur",   "secondary_axis": "esprit",  "build_archetype": "coeur_pur",
+              "lore": "Pommier — accueil, choix. Stat empathique."},
+    "muin":  {"primary_axis": "souffle", "secondary_axis": "coeur",   "build_archetype": "souffle_pur",
+              "lore": "Vigne — passion, abandon. Stat physique."},
+    "gort":  {"primary_axis": "souffle", "secondary_axis": "esprit",  "build_archetype": "souffle_pur",
+              "lore": "Lierre — endurance, lien souterrain. Stat physique."}
+  }
+}

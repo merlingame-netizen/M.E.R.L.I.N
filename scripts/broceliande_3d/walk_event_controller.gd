@@ -361,11 +361,12 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 		var player: Dictionary = _store.state.get("player", {}) as Dictionary
 		var stats: Dictionary = player.get("stats", {}) as Dictionary
 		stat = int(stats.get(axis, MerlinConstants.STAT_DEFAULT))
-		# Ogham modifier: +1 if equipped any starter (placeholder — Phase 5 will refine per-Ogham).
+		# Ogham modifier: per-axis affinity from data/oghams/ogham_axis_affinity.json.
+		# +1 if any equipped ogham has primary_axis match, +1 also for secondary_axis (cap +3).
 		var oghams: Dictionary = _store.state.get("oghams", {}) as Dictionary
 		var equipped: Array = oghams.get("skills_equipped", []) as Array
 		if equipped.size() > 0:
-			ogham_modifier = 1
+			ogham_modifier = _compute_ogham_modifier(equipped, axis)
 
 	var engine_script: GDScript = load("res://scripts/merlin/merlin_test_engine.gd") as GDScript
 	var engine: RefCounted = engine_script.new() if engine_script else null
@@ -466,6 +467,46 @@ func _resolve_legacy_choice(option: int) -> void:
 		"option": option,
 		"effects": chosen_effects,
 	})
+
+
+## Compute ogham modifier for a test axis given the player's equipped oghams.
+## Reads data/oghams/ogham_axis_affinity.json (cached). +1 per primary_axis match,
+## +1 if any secondary_axis also matches the test axis. Cap +3.
+static var _ogham_affinity_cache: Dictionary = {}
+static var _ogham_affinity_loaded: bool = false
+
+
+func _compute_ogham_modifier(equipped: Array, axis: String) -> int:
+	if not _ogham_affinity_loaded:
+		_load_ogham_affinity()
+	var modifier: int = 0
+	for ogham_key in equipped:
+		var entry: Dictionary = _ogham_affinity_cache.get(String(ogham_key), {}) as Dictionary
+		if entry.is_empty():
+			continue
+		if String(entry.get("primary_axis", "")) == axis:
+			modifier += 1
+		elif String(entry.get("secondary_axis", "")) == axis:
+			# Secondary worth half — adds 1 only if no primary matched yet (avoid double-counting low value).
+			if modifier == 0:
+				modifier += 1
+	return clampi(modifier, -1, 3)
+
+
+static func _load_ogham_affinity() -> void:
+	_ogham_affinity_loaded = true
+	var path := "res://data/oghams/ogham_axis_affinity.json"
+	if not FileAccess.file_exists(path):
+		return
+	var f: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return
+	var raw: String = f.get_as_text()
+	f.close()
+	var json := JSON.new()
+	if json.parse(raw) != OK or not (json.data is Dictionary):
+		return
+	_ogham_affinity_cache = (json.data as Dictionary).get("affinities", {}) as Dictionary
 
 
 func _apply_life_delta(delta: int) -> void:
