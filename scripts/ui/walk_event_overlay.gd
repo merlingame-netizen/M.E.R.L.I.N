@@ -30,6 +30,7 @@ var _text_label: RichTextLabel
 var _button_container: HBoxContainer
 var _buttons: Array[Button] = []
 var _root: Control
+var _card: PanelContainer  # parchment card that animates in/out (3D-ish entry)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -102,13 +103,28 @@ func show_event(text: String, labels: Array[String]) -> void:
 		else:
 			_buttons[i].visible = false
 
-	# Fade in dimmer
+	# Soft vignette + animated card swoop-in (3D-ish: rotated tilt, scale, fly to center)
 	_root.visible = true
 	_dimmer.color.a = 0.0
+	# Card start state: tilted, small, slightly above + offset = 3D-perspective approach feel
+	if is_instance_valid(_card):
+		_card.pivot_offset = _card.size * 0.5
+		_card.scale = Vector2(0.4, 0.55)  # squished vertically — feels far away
+		_card.rotation = deg_to_rad(-12.0)  # tilted
+		_card.modulate.a = 0.0
+		_card.position = Vector2(-340 - 80, -180 - 60)  # offset up-left for "swoop" feel
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
 	_fade_tween = create_tween()
-	_fade_tween.tween_property(_dimmer, "color:a", DIMMER_ALPHA, FADE_DURATION)
+	# Vignette comes first (subtle)
+	_fade_tween.tween_property(_dimmer, "color:a", DIMMER_ALPHA, FADE_DURATION * 0.6)
+	# Then the card swoops in: position + scale + rotation + alpha in parallel.
+	if is_instance_valid(_card):
+		var swoop: Tween = create_tween().set_parallel(true)
+		swoop.tween_property(_card, "modulate:a", 1.0, 0.45).set_trans(Tween.TRANS_SINE)
+		swoop.tween_property(_card, "position", Vector2(-340, -180), 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		swoop.tween_property(_card, "scale", Vector2(1.0, 1.0), 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		swoop.tween_property(_card, "rotation", 0.0, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_fade_tween.tween_callback(func() -> void: _typing = true)
 
 
@@ -119,7 +135,15 @@ func close_overlay() -> void:
 	_button_container.visible = false
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
+	# Card fly-out: tilt + shrink + drift up + fade. Then vignette fades.
+	if is_instance_valid(_card):
+		var exit: Tween = create_tween().set_parallel(true)
+		exit.tween_property(_card, "rotation", deg_to_rad(8.0), 0.35).set_trans(Tween.TRANS_CUBIC)
+		exit.tween_property(_card, "scale", Vector2(0.6, 0.6), 0.35).set_trans(Tween.TRANS_CUBIC)
+		exit.tween_property(_card, "position:y", _card.position.y - 60.0, 0.35).set_trans(Tween.TRANS_CUBIC)
+		exit.tween_property(_card, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_SINE)
 	_fade_tween = create_tween()
+	_fade_tween.tween_interval(0.30)
 	_fade_tween.tween_property(_dimmer, "color:a", 0.0, FADE_DURATION * 0.6)
 	_fade_tween.tween_callback(_on_fade_out_done)
 
@@ -150,51 +174,79 @@ func _build_ui() -> void:
 	_root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_root)
 
-	# Dimmer background
+	# Soft vignette (radial-ish via faint color rect — much lighter than the old full dimmer)
 	_dimmer = ColorRect.new()
 	_dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dimmer.color = Color(0.0, 0.0, 0.0, 0.0)
 	_dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_dimmer)
 
-	# Center container for text + buttons (bottom third)
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 60)
-	margin.add_theme_constant_override("margin_right", 60)
-	margin.add_theme_constant_override("margin_top", 180)
-	margin.add_theme_constant_override("margin_bottom", 40)
-	_root.add_child(margin)
+	# === PARCHMENT CARD (centered, animated 3D-ish entry) ===
+	_card = PanelContainer.new()
+	_card.set_anchors_preset(Control.PRESET_CENTER)
+	_card.custom_minimum_size = Vector2(680, 360)
+	_card.size = Vector2(680, 360)
+	_card.position = Vector2(-340, -180)
+	_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	_root.add_child(_card)
 
-	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_END
-	vbox.add_theme_constant_override("separation", 16)
-	margin.add_child(vbox)
+	var card_style: StyleBoxFlat = StyleBoxFlat.new()
+	card_style.bg_color = Color(0.92, 0.83, 0.65)  # cream parchment
+	card_style.border_color = Color(0.45, 0.30, 0.15)  # ink brown border
+	card_style.set_border_width_all(3)
+	card_style.set_corner_radius_all(8)
+	card_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	card_style.shadow_size = 18
+	card_style.shadow_offset = Vector2(0, 8)
+	card_style.set_content_margin_all(28)
+	_card.add_theme_stylebox_override("panel", card_style)
 
-	# Narrative text
+	# Decorative corner ornaments
+	for corner_pos in [Vector2(8, 4), Vector2(652, 4), Vector2(8, 332), Vector2(652, 332)]:
+		var orn: Label = Label.new()
+		orn.text = "❦"
+		orn.add_theme_font_size_override("font_size", 22)
+		orn.add_theme_color_override("font_color", Color(0.45, 0.28, 0.12))
+		orn.size = Vector2(22, 22)
+		orn.position = corner_pos
+		_card.add_child(orn)
+
+	var card_vbox: VBoxContainer = VBoxContainer.new()
+	card_vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+	card_vbox.add_theme_constant_override("separation", 14)
+	_card.add_child(card_vbox)
+
+	# Narrative text — ink on parchment
 	_text_label = RichTextLabel.new()
 	_text_label.bbcode_enabled = false
 	_text_label.fit_content = true
 	_text_label.scroll_active = false
 	_text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_text_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_text_label.add_theme_font_override("normal_font", font)
 	_text_label.add_theme_font_size_override("normal_font_size", FONT_SIZE_TEXT)
-	_text_label.add_theme_color_override("default_color", pal["phosphor"])
+	_text_label.add_theme_color_override("default_color", Color(0.22, 0.13, 0.07))
 	_text_label.visible_characters = 0
-	vbox.add_child(_text_label)
+	card_vbox.add_child(_text_label)
 
-	# Scanline separator
-	var sep: ColorRect = ColorRect.new()
-	sep.custom_minimum_size = Vector2(0.0, 1.0)
-	sep.color = pal["border"]
-	vbox.add_child(sep)
+	# Ornamented separator (◆ ─── ◆)
+	var sep_row: HBoxContainer = HBoxContainer.new()
+	sep_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	sep_row.add_theme_constant_override("separation", 6)
+	card_vbox.add_child(sep_row)
+	for sym in ["◆", "─────", "◆"]:
+		var sym_lbl: Label = Label.new()
+		sym_lbl.text = sym
+		sym_lbl.add_theme_font_size_override("font_size", 14)
+		sym_lbl.add_theme_color_override("font_color", Color(0.45, 0.28, 0.12))
+		sep_row.add_child(sym_lbl)
 
-	# Button row
+	# Button row (parchment-style choices)
 	_button_container = HBoxContainer.new()
 	_button_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	_button_container.add_theme_constant_override("separation", 24)
+	_button_container.add_theme_constant_override("separation", 20)
 	_button_container.visible = false
-	vbox.add_child(_button_container)
+	card_vbox.add_child(_button_container)
 
 	for i in 3:
 		var btn: Button = _create_choice_button(font, pal, i)
@@ -202,32 +254,33 @@ func _build_ui() -> void:
 		_buttons.append(btn)
 
 
-func _create_choice_button(font: Font, pal: Dictionary, index: int) -> Button:
+func _create_choice_button(font: Font, _pal: Dictionary, index: int) -> Button:
+	# Parchment-styled choice buttons (ink on cream, sepia hover, gold pressed)
 	var btn: Button = Button.new()
 	btn.text = "[%s] ..." % ["A", "B", "C"][index]
-	btn.custom_minimum_size = Vector2(140.0, 36.0)
+	btn.custom_minimum_size = Vector2(170.0, 42.0)
 	btn.add_theme_font_override("font", font)
 	btn.add_theme_font_size_override("font_size", FONT_SIZE_BUTTON)
-	btn.add_theme_color_override("font_color", pal["phosphor"])
-	btn.add_theme_color_override("font_hover_color", pal["amber"])
-	btn.add_theme_color_override("font_pressed_color", pal["amber_bright"])
+	btn.add_theme_color_override("font_color", Color(0.22, 0.13, 0.07))
+	btn.add_theme_color_override("font_hover_color", Color(0.55, 0.20, 0.10))
+	btn.add_theme_color_override("font_pressed_color", Color(0.65, 0.13, 0.10))
 
-	# Dark CRT button style
 	var style_normal: StyleBoxFlat = StyleBoxFlat.new()
-	style_normal.bg_color = pal["bg_dark"]
-	style_normal.border_color = pal["border"]
-	style_normal.set_border_width_all(1)
-	style_normal.set_corner_radius_all(2)
-	style_normal.set_content_margin_all(8)
+	style_normal.bg_color = Color(0.84, 0.74, 0.55)  # darker parchment for contrast on the card
+	style_normal.border_color = Color(0.45, 0.28, 0.12)
+	style_normal.set_border_width_all(2)
+	style_normal.set_corner_radius_all(4)
+	style_normal.set_content_margin_all(10)
 	btn.add_theme_stylebox_override("normal", style_normal)
 
 	var style_hover: StyleBoxFlat = style_normal.duplicate()
-	style_hover.border_color = pal["amber"]
+	style_hover.bg_color = Color(0.78, 0.65, 0.45)
+	style_hover.border_color = Color(0.55, 0.20, 0.10)
 	btn.add_theme_stylebox_override("hover", style_hover)
 
 	var style_pressed: StyleBoxFlat = style_normal.duplicate()
-	style_pressed.bg_color = pal["bg_highlight"]
-	style_pressed.border_color = pal["amber_bright"]
+	style_pressed.bg_color = Color(0.65, 0.13, 0.10)
+	style_pressed.border_color = Color(0.30, 0.08, 0.05)
 	btn.add_theme_stylebox_override("pressed", style_pressed)
 
 	btn.pressed.connect(_on_button_pressed.bind(index))
