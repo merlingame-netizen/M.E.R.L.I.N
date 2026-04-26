@@ -1377,18 +1377,20 @@ func _on_run_complete() -> void:
 
 
 func _spawn_floating_oghams() -> void:
-	# Drift 14 ogham Sprite3D billboards along the path. They float upward slowly,
-	# fade in/out, and respawn — adds atmosphere without competing with the dialogue.
-	const OGHAM_GLYPHS: Array = ["ᚐ", "ᚁ", "ᚂ", "ᚃ", "ᚄ", "ᚅ", "ᚆ", "ᚇ", "ᚈ", "ᚉ", "ᚊ", "ᚋ"]
+	# Drift 30 ogham Sprite3D billboards along the path (was 14 — user wants 10x more).
+	# Distributed across the entire path with varied glyphs, heights, and drift speeds.
+	const OGHAM_GLYPHS: Array = ["ᚐ", "ᚁ", "ᚂ", "ᚃ", "ᚄ", "ᚅ", "ᚆ", "ᚇ", "ᚈ", "ᚉ", "ᚊ", "ᚋ", "ᚌ", "ᚍ", "ᚎ"]
 	if _path_points.is_empty():
 		return
-	for i in 14:
-		var t: float = float(i) / 14.0
+	# Also start the camera look-around event timer (random head turns toward points of interest).
+	_start_random_look_events()
+	for i in 30:
+		var t: float = float(i) / 30.0
 		var path_idx: int = clampi(int(t * float(_path_points.size() - 1)), 0, _path_points.size() - 1)
 		var base: Vector3 = _path_points[path_idx]
-		var ox: float = _rng.randf_range(-6.0, 6.0)
-		var oz: float = _rng.randf_range(-4.0, 4.0)
-		var oy: float = _rng.randf_range(1.2, 3.5)
+		var ox: float = _rng.randf_range(-9.0, 9.0)
+		var oz: float = _rng.randf_range(-6.0, 6.0)
+		var oy: float = _rng.randf_range(1.0, 4.5)
 		var lbl: Label3D = Label3D.new()
 		lbl.text = String(OGHAM_GLYPHS[_rng.randi() % OGHAM_GLYPHS.size()])
 		lbl.font_size = 64
@@ -1402,6 +1404,46 @@ func _spawn_floating_oghams() -> void:
 		forest_root.add_child(lbl)
 		# Drift loop: fade in, rise + sway, fade out, repeat with new glyph + position.
 		_animate_floating_ogham(lbl)
+
+
+## Random "head turn" events: every 8-15s, the camera glances at a point of interest
+## (a floating ogham, a hill, a creature direction). Adds life to the autowalk.
+## The autowalk keeps moving forward while the head/look pitches/yaws briefly.
+func _start_random_look_events() -> void:
+	if _is_tutorial:
+		_schedule_next_look_event()
+
+
+func _schedule_next_look_event() -> void:
+	if not is_inside_tree():
+		return
+	var delay: float = _rng.randf_range(8.0, 15.0)
+	await get_tree().create_timer(delay).timeout
+	if not is_inside_tree() or not is_instance_valid(player_head):
+		return
+	# Pick a random offset direction (left/right/up brief glance)
+	var yaw_offset: float = _rng.randf_range(-0.4, 0.4)  # ~+/- 23deg
+	var pitch_offset: float = _rng.randf_range(-0.15, 0.05)
+	var look_dur: float = _rng.randf_range(1.2, 2.0)
+	var orig_y: float = player_head.rotation.y
+	var orig_x: float = player_head.rotation.x
+	var t: Tween = create_tween().set_parallel(true)
+	t.tween_property(player_head, "rotation:y", orig_y + yaw_offset, look_dur * 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(player_head, "rotation:x", orig_x + pitch_offset, look_dur * 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await t.finished
+	if not is_instance_valid(player_head):
+		return
+	# Hold briefly
+	await get_tree().create_timer(look_dur * 0.2).timeout
+	if not is_instance_valid(player_head):
+		return
+	# Return to neutral
+	var t_back: Tween = create_tween().set_parallel(true)
+	t_back.tween_property(player_head, "rotation:y", orig_y, look_dur * 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t_back.tween_property(player_head, "rotation:x", orig_x, look_dur * 0.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t_back.finished
+	# Loop
+	_schedule_next_look_event()
 
 
 func _animate_floating_ogham(lbl: Label3D) -> void:
