@@ -315,6 +315,11 @@ func _ready() -> void:
 	# PC mode: cursor visible, no mouse capture. Camera is rail-only (autowalk drives it).
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
+	# Telemetry: notify MerlinMetrics that a run started.
+	var metrics_node: Node = get_tree().root.get_node_or_null("MerlinMetrics")
+	if metrics_node and metrics_node.has_method("run_started"):
+		metrics_node.run_started(biome_key, _is_tutorial)
+
 	# Tutorial mode: progressive reveal sequence (Merlin VO + assets fade in + parchment),
 	# then start the actual walk. Otherwise straight to aerial descent → autowalk.
 	if _is_tutorial:
@@ -1338,6 +1343,11 @@ func _build_run_summary() -> Dictionary:
 func _on_run_complete() -> void:
 	print("[Forest3D] Run complete — transitioning")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# Telemetry: notify MerlinMetrics that the run ended (writes JSON to user://run_metrics/).
+	var metrics_end: Node = get_tree().root.get_node_or_null("MerlinMetrics")
+	if metrics_end and metrics_end.has_method("run_ended"):
+		var reason: String = "tutorial" if _is_tutorial else "completed"
+		metrics_end.run_ended(reason)
 
 	# Tutorial mode: award fixed rewards, persist tutorial_completed, go to MenuPrincipal.
 	if _is_tutorial:

@@ -87,6 +87,13 @@ func show_event(text: String, labels: Array[String]) -> void:
 	_active = true
 	_current_labels = labels
 	_auto_respond_timer = 0.0
+	# Telemetry: card shown — text length, risk_hint detected from labels metadata.
+	var ml_root: SceneTree = Engine.get_main_loop() as SceneTree
+	var metrics_root: Node = ml_root.root.get_node_or_null("MerlinMetrics") if ml_root else null
+	if metrics_root and metrics_root.has_method("card_shown"):
+		metrics_root.card_shown(text.length(), false, labels.size())
+	# Track time for choice_latency on click.
+	set_meta("show_time_ms", Time.get_ticks_msec())
 
 	# Reset text
 	_text_label.text = text

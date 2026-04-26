@@ -319,6 +319,18 @@ func _on_choice_selected(option: int) -> void:
 	if _current_event.is_empty():
 		return
 
+	# Telemetry: log choice_made (latency from card show).
+	var ml_choice: SceneTree = Engine.get_main_loop() as SceneTree
+	var metrics_choice: Node = ml_choice.root.get_node_or_null("MerlinMetrics") if ml_choice else null
+	if metrics_choice and metrics_choice.has_method("choice_made") and _overlay and _overlay.has_meta("show_time_ms"):
+		var latency_ms: int = Time.get_ticks_msec() - int(_overlay.get_meta("show_time_ms"))
+		var choice_axis: String = "unknown"
+		var choices_arr: Array = _current_event.get("choices", []) as Array
+		if option >= 0 and option < choices_arr.size():
+			var choice_dict: Dictionary = choices_arr[option] as Dictionary
+			choice_axis = String(choice_dict.get("axis", "unknown"))
+		metrics_choice.choice_made(option, float(latency_ms) / 1000.0, choice_axis)
+
 	# RPG test path: if the card has the new format (resolutions{4 keys} + choices[].axis),
 	# roll a test and show the matching resolution narrative.
 	# Otherwise, legacy path: apply flat effects[option].
