@@ -274,4 +274,88 @@ Distribution narrative plus douce, moins de "1 nat" frustrants. Et 10 c'est plus
 
 ---
 
-*Doc canonique : 2026-04-26 — Version 1*
+## Mini-jeux dans la carte (90% texte, 10% overlay 2D, 0% 3D)
+
+> Le mini-jeu est l'epreuve courte qui transforme un choix tactique en un MOMENT vecu.
+> Il s'integre DANS la carte parchemin, jamais en scene separee. Apres le mini-jeu, le
+> resultat est ramene dans le pipeline de roll (modificateur ou pre-decision du DC).
+
+### Regle d'or
+
+Le mini-jeu est un **modulateur** du roll, pas un remplacement. Sa performance applique :
+- Performance excellente → `narrative_modifier += 2`
+- Performance correcte → `narrative_modifier += 0`
+- Performance mediocre → `narrative_modifier -= 2`
+- Echec total / timeout → `narrative_modifier -= 4` + force min `failure`
+
+Le LLM ecrit les 4 resolutions sans connaitre la performance — le card_system applique le modificateur a la fin.
+
+### Archetypes textuels (6 — un par axe x 2)
+
+| # | Archetype | Axe | Mecanique | Duree | Succes |
+|---|-----------|-----|-----------|-------|--------|
+| 1 | **Cadence** | Souffle | Texte se deroule mot par mot a 800ms ; appuyer SPACE/clic au bon moment sur les mots-cles surlignes (3-5 par phrase) | 8-12s | 4/5 timings dans la fenetre +/-200ms |
+| 2 | **Souffle retenu** | Souffle | Maintenir le clic pendant N secondes (3-7s aleatoire) sans relacher ; un cercle se remplit ; relacher trop tot ou trop tard = echec | 3-7s | Relacher dans la fenetre +/- 0.3s du temps cible |
+| 3 | **Memoire des runes** | Esprit | 4-6 oghams apparaissent 1.5s puis disparaissent ; retaper l'ordre via 6 boutons "candidat" | 4s reveal + 8s reponse | Sequence exacte |
+| 4 | **Lecture** | Esprit | 3 indices integres dans la narration (en couleur) ; choisir parmi 4 conclusions celle qui les relie | pas de timer | Bonne conclusion |
+| 5 | **Resonance** | Coeur | Maintenir le curseur dans une zone qui flotte doucement sur l'ecran (Lissajous lente) ; barre de "lien" se remplit si dedans | 6-10s | Barre >= 75% a la fin |
+| 6 | **Echo** | Coeur | Une phrase est prononcee (texte qui apparait) ; choisir parmi 3 reponses celle dont le rythme + ton CORRESPONDENT (mots souples vs durs vs tranchants) | pas de timer | Match du registre |
+
+### Spec UI commune
+
+- **Bandeau dans la carte parchemin existante** (pas une nouvelle scene). Le bandeau remplace temporairement la zone des 3 boutons `_button_container`.
+- **Hauteur fixe : ~120px** sur la carte 680x360.
+- **Ton parchemin** : ink brown sur cream, polices identiques au reste de la carte.
+- **Echec doux** : meme un timeout n'arrete pas le jeu — il enchaine sur la resolution `failure`/`critical_failure`. Pas de "vous avez perdu".
+
+### Repartition par carte
+
+Pas TOUTES les cartes ont un mini-jeu. Cible :
+- 60% des cartes : 3 choix simples (resolution directe sur le roll, sans mini-jeu)
+- 30% des cartes : 1 mini-jeu sur 1 des 3 choix (l'option "tactique forte")
+- 10% des cartes : mini-jeu obligatoire pour TOUS les choix (moments-cles, ex: le Seuil de Merlin)
+
+Le LLM declare la presence d'un mini-jeu via le champ optionnel :
+```json
+"choices": [
+  {
+    "label": "Toucher la pierre maitresse",
+    "axis": "souffle",
+    "minigame": "souffle_retenu",
+    "minigame_difficulty": "medium",
+    "dc_offset": 1,
+    "risk_hint": "..."
+  }
+]
+```
+
+Si `minigame` absent → choix direct, pas de mini-jeu.
+
+### Overlay 2D (les 10%)
+
+Pour les moments-cles narratifs (~1 carte sur 10), un mini-jeu evolue legerement vers du 2D dans la zone parchemin :
+
+- **Trace au doigt** : Line2D que le joueur trace par-dessus un chemin guide (rune a tracer correctement)
+- **Drag d'Ogham** : icone d'Ogham a glisser-deposer dans un emplacement specifique (mecanique d'invocation)
+- **Cercle a intercepter** : un cercle qui grossit dans le parchemin, cliquer quand sa taille match le contour cible
+
+Toujours dans la carte. Pas de scene separee.
+
+### Anti-patterns
+
+- ❌ Mini-jeu de 30+ secondes (casse le rythme du run)
+- ❌ Mini-jeu de plate-forme / combat / esquive (sortie de l'ADN narratif)
+- ❌ Mini-jeu identique sur 2 cartes consecutives (variete = vie)
+- ❌ Mini-jeu qui PUNIT en game-over (juste degrade le resultat narratif)
+- ❌ Mini-jeu qui REVELE le DC ou le roll en chiffres
+
+### Implementation MVP (Phase 4 du plan global)
+
+1. `scripts/minigames/minigame_base.gd` — interface commune (`start(difficulty)`, signal `minigame_finished(performance: float)`)
+2. 6 implementations : `minigame_cadence.gd`, `minigame_souffle_retenu.gd`, `minigame_memoire_runes.gd`, `minigame_lecture.gd`, `minigame_resonance.gd`, `minigame_echo.gd`
+3. WalkEventOverlay : entre le clic du choix et l'affichage de la resolution, si `choice.minigame` set, instancier + await `minigame_finished` → calcule narrative_modifier → roll
+4. Validateur LLM : si `minigame` non null mais inconnu, ignore (degrade gracieusement)
+
+---
+
+*Doc canonique : 2026-04-26 — Version 1.1 (ajout minigames hybrides)*

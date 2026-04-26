@@ -194,6 +194,22 @@ func build_default_state() -> Dictionary:
 			"skills_equipped": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skill_cooldowns": {},
 		},
+		# RPG test system (see docs/RPG_TEST_SYSTEM.md). 3 axes (souffle/esprit/coeur),
+		# stats clamp [0..10] start 5, XP per axis cumule cross-runs, traits debloques.
+		"player": {
+			"stats": {
+				"souffle": MerlinConstants.STAT_DEFAULT,
+				"esprit": MerlinConstants.STAT_DEFAULT,
+				"coeur": MerlinConstants.STAT_DEFAULT,
+			},
+			"xp": {
+				"souffle": 0,
+				"esprit": 0,
+				"coeur": 0,
+			},
+			"traits": [],            # array of trait keys debloques (e.g. "lecteur_de_pierres")
+			"memory_log": [],        # rolling 5-entry log of recent test outcomes (LLM context)
+		},
 		"meta": {
 			"anam": 0,
 			"faction_rep": {

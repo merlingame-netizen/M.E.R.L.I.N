@@ -65,6 +65,34 @@ const MINIGAME_CATALOGUE := {
 enum CardOption { LEFT = 0, CENTER = 1, RIGHT = 2 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# RPG TESTS — Souffle / Esprit / Coeur (see docs/RPG_TEST_SYSTEM.md)
+# ═══════════════════════════════════════════════════════════════════════════════
+enum Axis { SOUFFLE = 0, ESPRIT = 1, COEUR = 2 }
+const AXIS_KEYS: Array[String] = ["souffle", "esprit", "coeur"]
+const AXIS_LABELS: Dictionary = {"souffle": "Souffle", "esprit": "Esprit", "coeur": "Coeur"}
+
+# Roll result tiers
+enum TestResult { CRITICAL_FAILURE = 0, FAILURE = 1, SUCCESS = 2, CRITICAL = 3 }
+const TEST_RESULT_KEYS: Array[String] = ["critical_failure", "failure", "success", "critical"]
+
+# Stat bounds + defaults
+const STAT_MIN: int = 0
+const STAT_MAX: int = 10
+const STAT_DEFAULT: int = 5
+
+# DC range
+const DC_MIN: int = 6   # very easy
+const DC_MAX: int = 18  # legendary
+const DC_DEFAULT: int = 10
+
+# XP per result tier (axis the test queried)
+const XP_CRITICAL: int = 20
+const XP_SUCCESS: int = 10
+const XP_FAILURE: int = 5
+const XP_CRITICAL_FAILURE: int = 2
+const XP_PER_STAT_LEVEL: int = 100  # +1 axis stat per 100 XP cumulated
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # VIE — Barre de vie unique (Phase 43)
 # At 0 = premature run end. Drains on critical failures, failed events, etc.
 # ═══════════════════════════════════════════════════════════════════════════════
