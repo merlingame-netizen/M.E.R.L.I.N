@@ -432,6 +432,8 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 	# is success or critical. Failure tiers apply -2 to -8 life direct.
 	var legacy_effects: Array = _current_event.get("effects", []) as Array
 	var chosen_effects: Array = legacy_effects[option] if option < legacy_effects.size() else []
+	# C28 — Snapshot faction reputation pre-apply so we can flash deltas in the HUD.
+	var rep_before: Dictionary = _snapshot_faction_rep()
 	if _store:
 		match result_key:
 			"critical":
@@ -454,6 +456,8 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 		var summary: Dictionary = engine.apply_outcome_to_state(_store.state, outcome)
 		if not summary.get("stat_levelups", []).is_empty():
 			print("[WalkEventController] Stat level-up: %s" % str(summary["stat_levelups"]))
+		# C28 — Flash faction reputation deltas in the HUD (transient floaters).
+		_flash_faction_shifts(rep_before)
 		# Trait unlock detection (RPG progression).
 		var trait_registry: GDScript = load("res://scripts/merlin/merlin_trait_registry.gd") as GDScript
 		if trait_registry:
@@ -516,6 +520,39 @@ func _resolve_legacy_choice(option: int) -> void:
 		"option": option,
 		"effects": chosen_effects,
 	})
+
+
+## C28 — Capture a shallow copy of state.meta.faction_rep so we can diff it after
+## an effects-apply call and flash the deltas in the HUD.
+func _snapshot_faction_rep() -> Dictionary:
+	if _store == null:
+		return {}
+	var meta: Dictionary = _store.state.get("meta", {}) as Dictionary
+	var rep: Dictionary = meta.get("faction_rep", {}) as Dictionary
+	return rep.duplicate(true)
+
+
+## C28 — Compare current faction_rep to a pre-apply snapshot. For every faction
+## with a non-zero delta, ask the HUD to flash a transient floater.
+func _flash_faction_shifts(rep_before: Dictionary) -> void:
+	if _store == null or _hud == null or not _hud.has_method("show_faction_shift"):
+		return
+	var meta: Dictionary = _store.state.get("meta", {}) as Dictionary
+	var rep_now: Dictionary = meta.get("faction_rep", {}) as Dictionary
+	var seen: Dictionary = {}
+	for faction in rep_now:
+		var before: int = int(rep_before.get(faction, 0))
+		var after: int = int(rep_now[faction])
+		var delta: int = after - before
+		if delta != 0:
+			_hud.show_faction_shift(String(faction), delta)
+			seen[String(faction)] = true
+	# Also surface deltas for factions that disappeared (rare, but defensive).
+	for faction in rep_before:
+		if not seen.has(String(faction)) and not rep_now.has(faction):
+			var dropped: int = -int(rep_before[faction])
+			if dropped != 0:
+				_hud.show_faction_shift(String(faction), dropped)
 
 
 ## C24 — Minigame score (0-100) to roll_test minigame_modifier (-4..+2).
@@ -655,6 +692,10 @@ func _apply_selected_gift(option: int) -> void:
 			# Reset vie_max_delta so we don't re-apply on future gifts (compound only at apply time).
 			mods["vie_max_delta"] = 0
 		print("[WalkEventController] C22 — gift applied: %s" % String(gift.get("key", "?")))
+		# C28 — Surface the gift count chip in the HUD so the player sees what's stacked.
+		if _hud and _hud.has_method("update_gifts"):
+			var gifts_taken: Array = run.get("gifts_taken", []) as Array
+			_hud.update_gifts(gifts_taken.size(), String(gift.get("label", "")))
 		if _store.has_method("_emit_state_changed"):
 			_store._emit_state_changed()
 	_story_log.append({

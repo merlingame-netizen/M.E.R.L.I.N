@@ -31,6 +31,9 @@ var _zone_label: Label
 var _crosshair: Label
 var _ogham_label: Label
 var _ogham_cd_label: Label
+# C28 — minimal HUD cohabitation: active gift count chip + faction shift floater.
+var _gifts_chip: Label
+var _shift_layer: Control  # parent for floating shift labels
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -92,6 +95,46 @@ func update_ogham(rune: String, ogham_name: String, cooldown: int) -> void:
 	else:
 		_ogham_cd_label.text = "CD: %d" % cooldown
 		_ogham_cd_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+
+
+## C28 — Update the gift-active chip with the count of gifts taken so far this run.
+## Empty/0 = chip hidden. The chip is purely informational, never blocks gameplay.
+func update_gifts(count: int, last_label: String = "") -> void:
+	if _gifts_chip == null:
+		return
+	if count <= 0:
+		_gifts_chip.visible = false
+		return
+	# Format: "✦×N · last_label" — keeps the bottom-right chip a single tight line.
+	var summary: String = "✦×%d" % count
+	if not last_label.is_empty():
+		summary += " · %s" % last_label
+	_gifts_chip.text = summary
+	_gifts_chip.visible = true
+
+
+## C28 — Spawn a transient floating label (top-right) showing a faction reputation
+## delta. Fades up + out over ~1.4s, no persistent state. Color reflects sign.
+func show_faction_shift(faction: String, delta: int) -> void:
+	if delta == 0 or _shift_layer == null:
+		return
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE
+	var lbl: Label = Label.new()
+	var sign_str: String = "+" if delta > 0 else ""
+	lbl.text = "%s%d %s" % [sign_str, delta, faction.capitalize()]
+	lbl.add_theme_font_override("font", MerlinVisual.get_font("terminal"))
+	lbl.add_theme_font_size_override("font_size", FONT_SIZE_HUD)
+	lbl.add_theme_color_override("font_color", pal["success"] if delta > 0 else pal["danger"])
+	lbl.modulate.a = 0.0
+	# Stagger vertically so multiple shifts don't overlap.
+	var existing: int = _shift_layer.get_child_count()
+	lbl.position = Vector2(0, float(existing) * 22.0)
+	_shift_layer.add_child(lbl)
+	var t: Tween = lbl.create_tween().set_parallel(true)
+	t.tween_property(lbl, "modulate:a", 1.0, 0.20).set_trans(Tween.TRANS_SINE)
+	t.tween_property(lbl, "position:y", lbl.position.y - 24.0, 1.40).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.chain().tween_property(lbl, "modulate:a", 0.0, 0.40).set_trans(Tween.TRANS_SINE)
+	t.chain().tween_callback(lbl.queue_free)
 
 
 func update_card_count(current: int, total: int) -> void:
@@ -250,3 +293,30 @@ func _build_ui() -> void:
 	_zone_label.add_theme_font_size_override("font_size", FONT_SIZE_ZONE)
 	_zone_label.add_theme_color_override("font_color", pal["phosphor_dim"])
 	bottom_margin.add_child(_zone_label)
+
+	# C28 — Gifts chip (bottom-right). Single tiny label, hidden until first gift.
+	var gifts_margin: MarginContainer = MarginContainer.new()
+	gifts_margin.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	gifts_margin.add_theme_constant_override("margin_right", MARGIN_H)
+	gifts_margin.add_theme_constant_override("margin_bottom", MARGIN_V)
+	_root.add_child(gifts_margin)
+	_gifts_chip = Label.new()
+	_gifts_chip.text = ""
+	_gifts_chip.visible = false
+	_gifts_chip.add_theme_font_override("font", font)
+	_gifts_chip.add_theme_font_size_override("font_size", FONT_SIZE_ZONE)
+	_gifts_chip.add_theme_color_override("font_color", pal["amber"])
+	_gifts_chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	gifts_margin.add_child(_gifts_chip)
+
+	# C28 — Faction-shift floater layer (top-right, below currency). Children are
+	# transient; this is just an anchored container with margin.
+	var shift_margin: MarginContainer = MarginContainer.new()
+	shift_margin.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	shift_margin.add_theme_constant_override("margin_right", MARGIN_H)
+	shift_margin.add_theme_constant_override("margin_top", MARGIN_V + 22)  # below the currency line
+	_root.add_child(shift_margin)
+	_shift_layer = Control.new()
+	_shift_layer.custom_minimum_size = Vector2(140, 100)
+	_shift_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shift_margin.add_child(_shift_layer)
