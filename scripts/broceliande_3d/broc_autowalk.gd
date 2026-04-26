@@ -89,11 +89,18 @@ func resume_after_encounter() -> void:
 
 ## C29 — Smoothly ramp speed to 0 (~0.4s). Use when an event overlay opens so
 ## the player isn't yanked from full speed to a hard stop.
+##
+## Note: update() is skipped while the overlay is active (caller's invariant),
+## so we snap _motion_blend = 0 here to keep the state consistent with intent.
+## Otherwise the blend would freeze at 1.0 during the overlay and soft_resume
+## would be a no-op. Reviewed: code-reviewer 2026-04-26 MEDIUM #1.
 func soft_stop() -> void:
 	_motion_target = 0.0
+	_motion_blend = 0.0
 
 
 ## C29 — Smoothly ramp speed back to 1.0 (~0.4s) after the overlay closes.
+## Resumes from whatever blend the previous soft_stop snapped (typically 0).
 func soft_resume() -> void:
 	_motion_target = 1.0
 
