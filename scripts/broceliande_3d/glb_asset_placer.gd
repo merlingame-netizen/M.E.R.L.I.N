@@ -176,7 +176,8 @@ func _place_path_megaliths(world: Node3D, zones: Array, rng: RandomNumberGenerat
 		var b: Vector3 = zones[seg_idx + 1] as Vector3
 		var t: float = rng.randf_range(0.2, 0.8)
 		var pos: Vector3 = a.lerp(b, t)
-		var side_offset: Vector3 = _random_offset(rng, 2.0, 6.0)
+		# Min 6m off the path so menhirs don't block the walker.
+		var side_offset: Vector3 = _random_offset(rng, 6.0, 12.0)
 		pos += side_offset
 		pos.y = 0.0
 		var key: String = MEGALITH_KEYS[rng.randi_range(0, MEGALITH_KEYS.size() - 1)]

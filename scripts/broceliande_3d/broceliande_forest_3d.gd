@@ -120,8 +120,8 @@ const BROC_ASSETS: Dictionary = {
 @export var move_speed: float = 3.5
 @export var mouse_sensitivity: float = 0.0026
 @export var interact_distance: float = 2.8
-@export var head_bob_amount: float = 0.005   # was 0.015 — softened (user feedback "trop de head bob")
-@export var head_bob_speed: float = 2.8      # was 5.0 — slower for calmer walk feel
+@export var head_bob_amount: float = 0.005   # softened (user feedback "trop de head bob")
+@export var head_bob_speed: float = 2.8
 
 # --- Scene refs ---
 @onready var world_root: Node3D = $World3D
@@ -357,8 +357,14 @@ func _init_helpers() -> void:
 		_chunk_manager.set_biome_colors(terrain_col)
 		_chunk_manager.generate_initial(player.position.z)
 
-	# Day/night cycle
+	# Day/night cycle — tutorial: force noon (clear sky, max visibility, no DayNightManager override).
 	_day_night = BrocDayNight.new(sun_light, world_env)
+	if _is_tutorial:
+		if _day_night.has_method("set_realtime"):
+			_day_night.set_realtime(false)  # don't follow system clock
+		_day_night._time = 0.25  # noon
+		if _day_night.has_method("_apply"):
+			_day_night._apply()
 
 	# Season system (overlay on top of this Control)
 	_season = BrocSeason.new(forest_root, self)
@@ -565,8 +571,9 @@ func _physics_process(delta: float) -> void:
 		player.move_and_slide()
 		_velocity = player.velocity
 
-		# Head bob
-		if is_moving and player.is_on_floor():
+		# Head bob — DISABLED in tutorial mode (user: "trop de head bobbing").
+		# Active only outside tuto.
+		if not _is_tutorial and is_moving and player.is_on_floor():
 			_head_bob_time += delta * head_bob_speed
 			player_camera.position.y = sin(_head_bob_time) * head_bob_amount
 			player_camera.position.x = cos(_head_bob_time * 0.5) * head_bob_amount * 0.25
@@ -820,6 +827,9 @@ func _setup_environment() -> void:
 func _apply_day_night_to_environment(env: Environment, sun: DirectionalLight3D, fill: DirectionalLight3D) -> void:
 	## Blend DayNightManager time-of-day colors into the biome environment.
 	## Uses BG_COLOR mode (GL Compat safe) — tints ambient, fog, sun, fill light.
+	# Tutorial mode: skip — we want clear daytime sky, not whatever the system clock says.
+	if _is_tutorial:
+		return
 	var dnm: Node = get_node_or_null("/root/DayNightManager")
 	if dnm == null:
 		return
@@ -1648,7 +1658,18 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 	vbox.add_child(sep)
 
 	var desc: Label = Label.new()
-	desc.text = "❧ Suis le chemin que je trace pour toi.\n❧ Trois epreuves jalonnent ta route — chaque X est un carrefour.\n❧ Tes pas restent graves : tu peux relire le chemin parcouru.\n❧ A chaque arret, j'ouvrirai une carte 3D — un test attend ton choix.\n❧ Ta vie est une essence : protege-la."
+	desc.text = (
+		"Voyageur, ton epreuve commence ici.\n\n"
+		+ "❧ Tu marcheras seul jusqu'au coeur de la foret. Le sentier te portera.\n"
+		+ "❧ A trois carrefours, marques d'une croix de sang, je dresserai une carte. "
+		+ "Tu liras, tu choisiras, tu en porteras le poids.\n"
+		+ "❧ Tes pas restent graves dans le parchemin — ils racontent ce que tu deviens.\n"
+		+ "❧ Ta vie est une braise : chaque pas la consume un peu. "
+		+ "Tes choix peuvent la raviver, ou l'eteindre.\n"
+		+ "❧ Au bout du sentier, je t'attends. Ce que tu m'offriras alors, "
+		+ "tu ne pourras le reprendre.\n\n"
+		+ "Lis bien le chemin. Marche."
+	)
 	desc.add_theme_font_size_override("font_size", 18)
 	desc.add_theme_color_override("font_color", Color(0.30, 0.20, 0.12))
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
