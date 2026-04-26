@@ -7,6 +7,8 @@
 
 extends CanvasLayer
 
+const _persona_anim := preload("res://scripts/ui/anim/persona_ui_anim.gd")
+
 signal choice_selected(option: int)  # 0=A, 1=B, 2=C
 signal overlay_closed
 
@@ -107,25 +109,15 @@ func show_event(text: String, labels: Array[String]) -> void:
 	_root.visible = true
 	_dimmer.color.a = 0.0
 	# Compute centered position from the actual viewport size (avoids PRESET-based bugs).
-	if is_instance_valid(_card):
-		# CanvasLayer doesn't have get_viewport_rect; use the engine viewport directly.
-		var vp: Viewport = get_viewport()
-		var screen_size: Vector2 = vp.get_visible_rect().size if vp else Vector2(1280, 720)
-		var center_pos: Vector2 = (screen_size - _card.size) * 0.5
-		_card.position = center_pos
-		_card.pivot_offset = _card.size * 0.5
-		_card.scale = Vector2(0.7, 0.7)
-		_card.rotation = 0.0
-		_card.modulate.a = 0.0
-		_card.set_meta("center_pos", center_pos)
+	# Persona-style slash-entry: card flies in tilted from top-left with bounce.
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(_dimmer, "color:a", DIMMER_ALPHA, FADE_DURATION * 0.6)
 	if is_instance_valid(_card):
-		var pop: Tween = create_tween().set_parallel(true)
-		pop.tween_property(_card, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE)
-		pop.tween_property(_card, "scale", Vector2(1.0, 1.0), 0.40).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		var vp: Viewport = get_viewport()
+		var screen_size: Vector2 = vp.get_visible_rect().size if vp else Vector2(1280, 720)
+		_persona_anim.slash_entry(_card, screen_size)
 	_fade_tween.tween_callback(func() -> void: _typing = true)
 
 
@@ -160,11 +152,9 @@ func close_overlay() -> void:
 	_button_container.visible = false
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
-	# Card pop-out: shrink + fade. Vignette then fades.
+	# Persona-style slash-exit: card flies down-right with tilt + fade.
 	if is_instance_valid(_card):
-		var exit: Tween = create_tween().set_parallel(true)
-		exit.tween_property(_card, "scale", Vector2(0.7, 0.7), 0.30).set_trans(Tween.TRANS_CUBIC)
-		exit.tween_property(_card, "modulate:a", 0.0, 0.30).set_trans(Tween.TRANS_SINE)
+		_persona_anim.slash_exit(_card)
 	_fade_tween = create_tween()
 	_fade_tween.tween_interval(0.30)
 	_fade_tween.tween_property(_dimmer, "color:a", 0.0, FADE_DURATION * 0.6)
