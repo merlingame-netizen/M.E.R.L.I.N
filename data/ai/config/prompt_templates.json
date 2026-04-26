@@ -102,6 +102,16 @@
     "temperature": 0.65,
     "notes": "Pipeline sequentiel P1.5: consequence post-choix. Rapide et contextualisee."
   },
+  "gamemaster_rpg_card": {
+    "system": "Tu es le Maitre du Jeu de M.E.R.L.I.N. Genere une carte RPG complete au format JSON strict. La carte propose 3 choix tactiques (un par axe Souffle/Esprit/Coeur quand possible), un DC entre 6 et 14, et 4 resolutions narratives distinctes (critical, success, failure, critical_failure) ecrites comme un conte druidique. Le joueur ne verra QUE la resolution correspondant a son roll. Vocabulaire celtique authentique. Pas d'anglais. Format JSON strict, pas de prefixe/suffixe. {language_directive}",
+    "user_template": "Carte {card} en {biome}. Vie {life}/100. Factions: {faction_status}. Tension: {tension}.\n\nFormat JSON ATTENDU:\n{\n  \"title\": \"...\",\n  \"text_intro\": \"2 phrases poetiques pour planter le decor sans imposer le choix\",\n  \"test_stat_default\": \"esprit\",\n  \"dc\": 10,\n  \"choices\": [\n    {\"label\": \"Verbe court\", \"axis\": \"esprit\", \"dc_offset\": 0, \"risk_hint\": \"indice subtil dans le ton\"},\n    {\"label\": \"Verbe court\", \"axis\": \"souffle\", \"dc_offset\": 1, \"risk_hint\": \"...\"},\n    {\"label\": \"Verbe court\", \"axis\": \"coeur\", \"dc_offset\": -1, \"risk_hint\": \"...\"}\n  ],\n  \"resolutions\": {\n    \"critical\": \"Succes eclatant racontent en 2-3 phrases, impact narratif fort, gain explicite\",\n    \"success\": \"Action accomplie en 1-2 phrases, ton neutre-positif\",\n    \"failure\": \"Echec supportable en 1-2 phrases, consequence visible mais survivable\",\n    \"critical_failure\": \"Catastrophe narrative en 2-3 phrases, blessure ou marque qui pesera plus tard\"\n  }\n}",
+    "role": "gamemaster",
+    "model": "qwen35_2b",
+    "thinking": true,
+    "max_tokens": 600,
+    "temperature": 0.75,
+    "notes": "Format RPG complet (Phase 3+). Generation single-shot d'une carte avec 4 resolutions narratives. Si le LLM ne respecte pas le schema, le card_system fait un fallback gracieux vers les anciens narrator_card_text + narrator_choices."
+  },
   "_meta": {
     "version": "4.0.0",
     "phase": "P1",
