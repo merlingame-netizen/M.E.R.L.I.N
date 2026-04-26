@@ -394,6 +394,14 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 		var summary: Dictionary = engine.apply_outcome_to_state(_store.state, outcome)
 		if not summary.get("stat_levelups", []).is_empty():
 			print("[WalkEventController] Stat level-up: %s" % str(summary["stat_levelups"]))
+		# Trait unlock detection (RPG progression).
+		var trait_registry: GDScript = load("res://scripts/merlin/merlin_trait_registry.gd") as GDScript
+		if trait_registry:
+			var newly: Array = trait_registry.check_unlocks(_store.state)
+			if not newly.is_empty():
+				print("[WalkEventController] Traits unlocked: %s" % str(newly))
+				# Append to story_log so post-run screen can announce them.
+				_story_log.append({"unlocked_traits": newly})
 		if _store.has_method("_emit_state_changed"):
 			_store._emit_state_changed()
 

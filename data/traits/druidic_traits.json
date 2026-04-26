@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "purpose": "Trait registry for the RPG test system. Each trait has an unlock condition, axis affinity, and a Merlin-voice announce line read on post-run.",
+    "schema": {
+      "key": "snake_case identifier",
+      "label": "FR display name",
+      "axis": "souffle|esprit|coeur (primary axis affected)",
+      "modifier": "+1 typical, can be +2 for late-game traits",
+      "unlock": {
+        "type": "stat_threshold|critical_streak|critical_failure_survival|faction_max|memory_count",
+        "axis": "souffle|esprit|coeur (when axis-based)",
+        "value": "int threshold or count",
+        "faction": "name (when faction_max type)"
+      },
+      "announce": "Merlin-voice line shown post-run when unlocked"
+    }
+  },
+  "traits": [
+    {
+      "key": "lecteur_de_pierres",
+      "label": "Lecteur de pierres",
+      "axis": "esprit",
+      "modifier": 1,
+      "unlock": {"type": "critical_streak", "axis": "esprit", "value": 3},
+      "announce": "Voyageur. Trois fois tu as su lire ce que les autres survolent. Les vieilles pierres te reconnaissent maintenant. Tes runes parleront plus clairement."
+    },
+    {
+      "key": "souffle_du_loup",
+      "label": "Souffle du Loup",
+      "axis": "souffle",
+      "modifier": 1,
+      "unlock": {"type": "stat_threshold", "axis": "souffle", "value": 7},
+      "announce": "Tu cours a present comme on respire. Le sentier ne te lasse plus. Ta poitrine sait ce que ta tete oublie."
+    },
+    {
+      "key": "voix_grave",
+      "label": "Voix Grave",
+      "axis": "coeur",
+      "modifier": 2,
+      "unlock": {"type": "faction_max", "faction": "druides", "value": 80},
+      "announce": "Les Druides t'ecoutent. Ce que tu dis, ils l'entendent comme si toi-meme tu en avais marche le poids. Ne gaspille pas ce poids."
+    },
+    {
+      "key": "resistance_a_la_nuit",
+      "label": "Resistance a la nuit",
+      "axis": "souffle",
+      "modifier": 1,
+      "unlock": {"type": "critical_failure_survival", "value": 3},
+      "announce": "Tu as survecu a trois desastres. La nuit ne te terrasse plus comme avant — elle te connait."
+    },
+    {
+      "key": "marche_silencieuse",
+      "label": "Marche silencieuse",
+      "axis": "souffle",
+      "modifier": 1,
+      "unlock": {"type": "memory_count", "value": 12},
+      "announce": "Douze choix derriere toi. Tes pas ne reveillent plus les feuilles. Tu deviens, doucement, une part du sentier."
+    },
+    {
+      "key": "memoire_des_anciens",
+      "label": "Memoire des Anciens",
+      "axis": "esprit",
+      "modifier": 1,
+      "unlock": {"type": "stat_threshold", "axis": "esprit", "value": 8},
+      "announce": "Tu te souviens de choses que tu n'as jamais apprises. Ce sont les anciens qui te les soufflent."
+    },
+    {
+      "key": "coeur_clair",
+      "label": "Coeur clair",
+      "axis": "coeur",
+      "modifier": 1,
+      "unlock": {"type": "stat_threshold", "axis": "coeur", "value": 7},
+      "announce": "Les esprits te trouvent honnete. Cela vaut plus qu'un eclat de rune ou un chant bien tourne."
+    },
+    {
+      "key": "endurance_celtique",
+      "label": "Endurance celtique",
+      "axis": "souffle",
+      "modifier": 1,
+      "unlock": {"type": "stat_threshold", "axis": "souffle", "value": 9},
+      "announce": "Le froid n'a plus prise. Tu pourrais marcher jusqu'au bout du monde, voyageur."
+    },
+    {
+      "key": "lien_avec_korrigans",
+      "label": "Lien avec les Korrigans",
+      "axis": "coeur",
+      "modifier": 1,
+      "unlock": {"type": "faction_max", "faction": "korrigans", "value": 60},
+      "announce": "Les korrigans te taquinent encore, mais ils te suivent. Tu trouveras de l'or ou tu ne t'attends pas."
+    },
+    {
+      "key": "voix_des_ankou",
+      "label": "Voix des Ankou",
+      "axis": "esprit",
+      "modifier": 2,
+      "unlock": {"type": "faction_max", "faction": "ankou", "value": 70},
+      "announce": "Tu n'as plus peur des morts. Et eux, ils te parlent. Quand l'Ankou t'appelle, c'est pour t'avertir."
+    },
+    {
+      "key": "graveur_d_oghams",
+      "label": "Graveur d'oghams",
+      "axis": "esprit",
+      "modifier": 1,
+      "unlock": {"type": "memory_count", "value": 30},
+      "announce": "Trente histoires gravees dans le bois et la pierre. Tes oghams ne sont plus appris — ils sont vecus."
+    },
+    {
+      "key": "passe_des_seuils",
+      "label": "Passe des seuils",
+      "axis": "coeur",
+      "modifier": 1,
+      "unlock": {"type": "critical_streak", "axis": "coeur", "value": 3},
+      "announce": "Trois fois tu as franchi un seuil sans le briser. C'est rare. Les esprits notent."
+    }
+  ]
+}
