@@ -40,9 +40,13 @@ func _init(seed_value: int = -1) -> void:
 ##   - narrative_modifier (int, default 0) : -4..+4 (capped)
 ##   - minigame_modifier (int, default 0) : -4..+2 (from minigame performance)
 ##   - force_min_failure (bool, default false) : minigame timeout/abort flag
+##   - run_modifiers (Dictionary, optional) : Vampire-Survivors-style gift effects
+##       reads stat_buffs[axis], crit_next_test, reroll_charges, narrative_modifier.
+##       MUTATED in-place (consumes one-shots like crit_next_test, reroll_charges).
 ## Returns:
 ##   - result : "critical_failure" | "failure" | "success" | "critical"
 ##   - roll, dc, delta, components (for logs/UI), xp_gain
+##   - rerolled (bool) — set when reroll_charges salvaged a failure
 func roll_test(params: Dictionary) -> Dictionary:
 	var axis: String = String(params.get("axis", "esprit"))
 	var stat: int = clampi(int(params.get("stat", MerlinConstants.STAT_DEFAULT)), MerlinConstants.STAT_MIN, MerlinConstants.STAT_MAX)
@@ -51,15 +55,50 @@ func roll_test(params: Dictionary) -> Dictionary:
 	var narrative_modifier: int = clampi(int(params.get("narrative_modifier", 0)), -4, 4)
 	var minigame_modifier: int = clampi(int(params.get("minigame_modifier", 0)), -4, 2)
 	var force_min_failure: bool = bool(params.get("force_min_failure", false))
+	var run_mods: Dictionary = params.get("run_modifiers", {}) as Dictionary
+
+	# C23 — Apply gift-side stat buffs (compound stat_buffs[axis]) and the
+	# narrative_modifier compound (cumulative across gifts taken).
+	if not run_mods.is_empty():
+		var stat_buffs: Dictionary = run_mods.get("stat_buffs", {}) as Dictionary
+		var axis_buff: int = int(stat_buffs.get(axis, 0))
+		stat = clampi(stat + axis_buff, MerlinConstants.STAT_MIN, MerlinConstants.STAT_MAX + 4)
+		var nm_compound: int = int(run_mods.get("narrative_modifier", 0))
+		narrative_modifier = clampi(narrative_modifier + nm_compound, -4, 4)
 
 	var d10: int = _rng.randi_range(1, 10)
 	var roll: int = stat + ogham_modifier + narrative_modifier + minigame_modifier + d10
 	var delta: int = roll - dc
 	var result_tier: int = _classify_result(delta)
+	var rerolled: bool = false
+
+	# C23 — Reroll: if the first roll lands on FAILURE or CRITICAL_FAILURE and
+	# the player has a reroll charge, consume one and re-roll the d10 once.
+	if not run_mods.is_empty() and result_tier <= MerlinConstants.TestResult.FAILURE:
+		var charges: int = int(run_mods.get("reroll_charges", 0))
+		if charges > 0:
+			run_mods["reroll_charges"] = charges - 1
+			d10 = _rng.randi_range(1, 10)
+			roll = stat + ogham_modifier + narrative_modifier + minigame_modifier + d10
+			delta = roll - dc
+			result_tier = _classify_result(delta)
+			rerolled = true
+
 	# Minigame timeout / abort floors at FAILURE (cannot be SUCCESS or CRITICAL).
 	if force_min_failure and result_tier > MerlinConstants.TestResult.FAILURE:
 		result_tier = MerlinConstants.TestResult.FAILURE
+
+	# C23 — crit_next_test (one-shot from gift) bumps tier up by one and consumes the flag.
+	if not run_mods.is_empty() and bool(run_mods.get("crit_next_test", false)):
+		if result_tier < MerlinConstants.TestResult.CRITICAL:
+			result_tier += 1
+		run_mods["crit_next_test"] = false
+
 	var result_key: String = MerlinConstants.TEST_RESULT_KEYS[result_tier]
+	# C23 — xp_multiplier from gifts (memoire_chaude=1.25, graines_de_serment=1.5, …).
+	var xp_base: int = _xp_for_tier(result_tier)
+	var xp_multiplier: float = float(run_mods.get("xp_multiplier", 1.0)) if not run_mods.is_empty() else 1.0
+	var xp_gain: int = int(round(float(xp_base) * xp_multiplier))
 	return {
 		"axis": axis,
 		"result": result_key,
@@ -68,13 +107,14 @@ func roll_test(params: Dictionary) -> Dictionary:
 		"dc": dc,
 		"delta": delta,
 		"d10": d10,
+		"rerolled": rerolled,
 		"components": {
 			"stat": stat,
 			"ogham": ogham_modifier,
 			"narrative": narrative_modifier,
 			"minigame": minigame_modifier,
 		},
-		"xp_gain": _xp_for_tier(result_tier),
+		"xp_gain": xp_gain,
 	}
 
 
