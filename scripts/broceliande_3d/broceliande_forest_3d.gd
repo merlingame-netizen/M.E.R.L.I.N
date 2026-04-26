@@ -169,6 +169,7 @@ var _chunk_manager: RefCounted
 var _walk_event_overlay: Node  # WalkEventOverlay (CanvasLayer)
 var _walk_hud: Node  # WalkHUD (CanvasLayer)
 var _walk_event_controller: RefCounted  # WalkEventController
+var _overlay_was_active: bool = false  # C29 — edge detect for soft stop/resume
 var _event_vfx: RefCounted  # BrocEventVfx
 var _screen_vfx: RefCounted  # BrocScreenVfx
 var _creature_spawner: RefCounted  # BrocCreatureSpawner
@@ -546,6 +547,17 @@ func _physics_process(delta: float) -> void:
 
 	# Auto-walk overrides manual movement
 	var autowalk_active: bool = _autowalk and _autowalk.is_active()
+
+	# C29 — Edge-detect overlay open/close to drive autowalk soft stop/resume.
+	# Rising edge: snap motion blend to 0 (overlay slash_entry ~0.45s + the player
+	# is frozen externally anyway). Falling edge: ramp speed back to 1.0 over ~0.4s.
+	if overlay_active and not _overlay_was_active:
+		if _autowalk and _autowalk.has_method("soft_stop"):
+			_autowalk.soft_stop()
+	elif _overlay_was_active and not overlay_active:
+		if _autowalk and _autowalk.has_method("soft_resume"):
+			_autowalk.soft_resume()
+	_overlay_was_active = overlay_active
 
 	if overlay_active:
 		# Player frozen during events — only gravity

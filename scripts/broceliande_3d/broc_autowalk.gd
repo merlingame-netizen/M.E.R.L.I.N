@@ -15,6 +15,11 @@ var _speed: float = 2.0
 var _base_speed: float = 2.0
 var _bob_time: float = 0.0
 var _zone_centers: Array[Vector3] = []
+# C29 — Smooth stop/resume blend so the player doesn't go from 2 m/s to a hard
+# stop (and back) when a card opens/closes. 0 = halted, 1 = full speed.
+var _motion_blend: float = 1.0
+var _motion_target: float = 1.0
+const MOTION_LERP_RATE: float = 5.0  # ~0.4s to ramp 0↔1
 
 # Encounter system — stops at specific waypoints
 var _encounter_indices: Array[int] = []  # waypoint indices where encounters trigger
@@ -82,6 +87,17 @@ func resume_after_encounter() -> void:
 	_stopped = false
 
 
+## C29 — Smoothly ramp speed to 0 (~0.4s). Use when an event overlay opens so
+## the player isn't yanked from full speed to a hard stop.
+func soft_stop() -> void:
+	_motion_target = 0.0
+
+
+## C29 — Smoothly ramp speed back to 1.0 (~0.4s) after the overlay closes.
+func soft_resume() -> void:
+	_motion_target = 1.0
+
+
 ## Set callback for when the path ends (run complete).
 func set_run_complete_callback(callback: Callable) -> void:
 	_run_complete_callback = callback
@@ -93,12 +109,24 @@ func update(delta: float) -> void:
 	if _path_points.size() < 2:
 		return
 
-	# Adaptive speed based on nearest zone
-	_speed = _base_speed * _get_zone_speed_mult()
+	# C29 — Smoothly blend toward _motion_target so card open/close ramps speed
+	# instead of a hard stop. lerpf is frame-rate-aware via delta.
+	_motion_blend = lerpf(_motion_blend, _motion_target, clampf(MOTION_LERP_RATE * delta, 0.0, 1.0))
+
+	# Adaptive speed based on nearest zone, scaled by the soft-motion blend.
+	_speed = _base_speed * _get_zone_speed_mult() * _motion_blend
 
 	var seg_len: float = _segment_length()
 	if seg_len < 0.01:
 		_advance_waypoint()
+		return
+
+	# Below 5% blend is effectively halted — skip path advance to avoid jitter.
+	if _motion_blend < 0.05:
+		# Still slerp the camera basis below; just don't progress along path.
+		var pos_only: Vector3 = _catmull_rom_point(_waypoint_idx, _segment_t)
+		pos_only.y = _player.global_position.y
+		_player.global_position = pos_only
 		return
 
 	_segment_t += (_speed * delta) / seg_len

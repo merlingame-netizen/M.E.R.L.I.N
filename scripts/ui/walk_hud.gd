@@ -118,6 +118,16 @@ func update_gifts(count: int, last_label: String = "") -> void:
 func show_faction_shift(faction: String, delta: int) -> void:
 	if delta == 0 or _shift_layer == null:
 		return
+	# C28b — Cap concurrent floaters at 5 to avoid runaway stack overflow when
+	# many factions shift on a single card. Drop the oldest beyond the cap.
+	const MAX_FLOATERS: int = 5
+	while _shift_layer.get_child_count() >= MAX_FLOATERS:
+		var oldest: Node = _shift_layer.get_child(0)
+		if is_instance_valid(oldest):
+			oldest.queue_free()
+		else:
+			break
+		_shift_layer.remove_child(oldest)
 	var pal: Dictionary = MerlinVisual.CRT_PALETTE
 	var lbl: Label = Label.new()
 	var sign_str: String = "+" if delta > 0 else ""
@@ -130,11 +140,14 @@ func show_faction_shift(faction: String, delta: int) -> void:
 	var existing: int = _shift_layer.get_child_count()
 	lbl.position = Vector2(0, float(existing) * 22.0)
 	_shift_layer.add_child(lbl)
-	var t: Tween = lbl.create_tween().set_parallel(true)
+	# C28b — Sequential tween with parallel() per-step so fade-out actually
+	# waits for fade-in + drift before firing. Previous set_parallel(true) +
+	# chain() ran every step from t=0, making floaters invisible in practice.
+	var t: Tween = lbl.create_tween()
 	t.tween_property(lbl, "modulate:a", 1.0, 0.20).set_trans(Tween.TRANS_SINE)
-	t.tween_property(lbl, "position:y", lbl.position.y - 24.0, 1.40).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	t.chain().tween_property(lbl, "modulate:a", 0.0, 0.40).set_trans(Tween.TRANS_SINE)
-	t.chain().tween_callback(lbl.queue_free)
+	t.parallel().tween_property(lbl, "position:y", lbl.position.y - 24.0, 1.40).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(lbl, "modulate:a", 0.0, 0.40).set_trans(Tween.TRANS_SINE)
+	t.tween_callback(lbl.queue_free)
 
 
 func update_card_count(current: int, total: int) -> void:
