@@ -364,12 +364,62 @@ func _on_hub_action(action: String) -> void:
 		"quest", "map":
 			_show_book_cinematic_then_forest()
 		"tapestry":
-			_flash_hint("Tapisserie des Talents — debloquee apres ton premier rune")
+			# Display unlocked traits + stats from the save profile.
+			var trait_summary: String = _build_trait_summary_from_save()
+			_flash_hint(trait_summary)
 		"cauldron":
-			var anam: int = _read_anam_from_save()
-			_flash_hint("Cristal d'Anam : %d" % anam)
+			# Display Anam + total runs + tutorial status from save profile.
+			var save_summary: String = _build_save_summary()
+			_flash_hint(save_summary)
 		"menu":
 			PixelTransition.transition_to(MENU_SCENE)
+
+
+## Read save profile and return a one-line summary for the cauldron tooltip.
+func _build_save_summary() -> String:
+	var save_path := "user://merlin_profile.json"
+	if not FileAccess.file_exists(save_path):
+		return "Cristal vide. Aucun voyage encore."
+	var f: FileAccess = FileAccess.open(save_path, FileAccess.READ)
+	if f == null:
+		return "Cristal silencieux."
+	var raw: String = f.get_as_text()
+	f.close()
+	var json := JSON.new()
+	if json.parse(raw) != OK or not (json.data is Dictionary):
+		return "Cristal silencieux."
+	var data: Dictionary = json.data as Dictionary
+	var meta: Dictionary = data.get("meta", {}) as Dictionary
+	var anam: int = int(meta.get("anam", 0))
+	var total: int = int(meta.get("total_runs", 0))
+	var tuto: bool = bool(meta.get("tutorial_completed", false))
+	if total == 0:
+		return "Anam: %d — Tu n'as pas encore franchi le seuil." % anam
+	return "Anam: %d  •  Voyages: %d  •  %s" % [anam, total, ("seuil franchi" if tuto else "tuto en attente")]
+
+
+## Read save profile and return trait summary (count + first 2 keys).
+func _build_trait_summary_from_save() -> String:
+	var save_path := "user://merlin_profile.json"
+	if not FileAccess.file_exists(save_path):
+		return "Tapisserie vierge."
+	var f: FileAccess = FileAccess.open(save_path, FileAccess.READ)
+	if f == null:
+		return "Tapisserie en sommeil."
+	var raw: String = f.get_as_text()
+	f.close()
+	var json := JSON.new()
+	if json.parse(raw) != OK or not (json.data is Dictionary):
+		return "Tapisserie en sommeil."
+	var data: Dictionary = json.data as Dictionary
+	# Traits live under player.traits in the runtime state, but on disk they may be
+	# under top-level "player" or absent (legacy saves).
+	var player: Dictionary = data.get("player", {}) as Dictionary
+	var traits: Array = player.get("traits", []) as Array
+	if traits.is_empty():
+		return "Tapisserie : aucun fil tisse encore."
+	var traits_str: String = ", ".join(traits.slice(0, 3))
+	return "Tapisserie : %d fil%s — %s" % [traits.size(), ("s" if traits.size() > 1 else ""), traits_str]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
