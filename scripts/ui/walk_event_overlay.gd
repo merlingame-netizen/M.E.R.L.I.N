@@ -48,6 +48,14 @@ var _fade_tween: Tween
 var _auto_respond_timer: float = 0.0
 const AUTO_RESPOND_TIMEOUT: float = 30.0  # Auto-select option A after 30s (for auto-test)
 
+# C19 — card dynamism: mouse parallax + idle tilt
+var _card_anchor_pos: Vector2 = Vector2.ZERO  # remembered post-entry position for parallax
+var _entry_done: bool = false  # gate parallax until entry tween settles
+var _ornaments: Array[Label] = []
+var _ornament_tweens: Array[Tween] = []
+const PARALLAX_MAX_OFFSET: float = 5.0  # px — how far the card drifts toward mouse
+const PARALLAX_LERP: float = 6.0  # responsiveness
+
 
 func _ready() -> void:
 	layer = 10
@@ -63,6 +71,15 @@ func _process(delta: float) -> void:
 			_auto_respond_timer = 0.0
 			_on_button_pressed(0)  # Auto-select option A
 			return
+	# C19 — mouse parallax: card drifts subtly toward cursor (only after entry settles).
+	if _active and _entry_done and is_instance_valid(_card) and _card_anchor_pos != Vector2.ZERO:
+		var vp: Viewport = get_viewport()
+		if vp:
+			var mp: Vector2 = vp.get_mouse_position()
+			var screen: Vector2 = vp.get_visible_rect().size
+			var center: Vector2 = screen * 0.5
+			var off: Vector2 = ((mp - center) / center).clamp(Vector2(-1, -1), Vector2(1, 1)) * PARALLAX_MAX_OFFSET
+			_card.position = _card.position.lerp(_card_anchor_pos + off, clampf(PARALLAX_LERP * delta, 0.0, 1.0))
 	if not _typing:
 		return
 	_type_timer += delta * TYPEWRITER_SPEED
@@ -119,12 +136,21 @@ func show_event(text: String, labels: Array[String]) -> void:
 	# Persona-style slash-entry: card flies in tilted from top-left with bounce.
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
+	_entry_done = false
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(_dimmer, "color:a", DIMMER_ALPHA, FADE_DURATION * 0.6)
 	if is_instance_valid(_card):
 		var vp: Viewport = get_viewport()
 		var screen_size: Vector2 = vp.get_visible_rect().size if vp else Vector2(1280, 720)
+		_card_anchor_pos = (screen_size - _card.size) * 0.5
 		_persona_anim.slash_entry(_card, screen_size)
+		# Enable parallax + ornament pulse after the entry tween settles (~0.5s).
+		var settle: Tween = create_tween()
+		settle.tween_interval(0.5)
+		settle.tween_callback(func() -> void:
+			_entry_done = true
+			_start_ornament_pulse()
+		)
 	_fade_tween.tween_callback(func() -> void: _typing = true)
 
 
@@ -156,9 +182,11 @@ func close_overlay() -> void:
 	if not _active:
 		return
 	_typing = false
+	_entry_done = false  # disable parallax during exit so it doesn't fight slash_exit
 	_button_container.visible = false
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
+	_kill_ornament_tweens()
 	# Persona-style slash-exit: card flies down-right with tilt + fade.
 	if is_instance_valid(_card):
 		_persona_anim.slash_exit(_card)
@@ -221,7 +249,8 @@ func _build_ui() -> void:
 	card_style.set_content_margin_all(28)
 	_card.add_theme_stylebox_override("panel", card_style)
 
-	# Decorative corner ornaments
+	# Decorative corner ornaments — stored for C19 ambient pulse animation.
+	_ornaments.clear()
 	for corner_pos in [Vector2(8, 4), Vector2(652, 4), Vector2(8, 332), Vector2(652, 332)]:
 		var orn: Label = Label.new()
 		orn.text = "❦"
@@ -229,7 +258,9 @@ func _build_ui() -> void:
 		orn.add_theme_color_override("font_color", Color(0.45, 0.28, 0.12))
 		orn.size = Vector2(22, 22)
 		orn.position = corner_pos
+		orn.pivot_offset = orn.size * 0.5
 		_card.add_child(orn)
+		_ornaments.append(orn)
 
 	var card_vbox: VBoxContainer = VBoxContainer.new()
 	card_vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
@@ -272,6 +303,8 @@ func _build_ui() -> void:
 		var btn: Button = _create_choice_button(font, pal, i)
 		_button_container.add_child(btn)
 		_buttons.append(btn)
+		# C19 — Persona-style hover punch on each choice button.
+		btn.mouse_entered.connect(_on_button_hover.bind(btn))
 
 
 func _create_choice_button(font: Font, _pal: Dictionary, index: int) -> Button:
@@ -351,8 +384,43 @@ func _show_buttons_delayed() -> void:
 func _on_button_pressed(index: int) -> void:
 	if not _active:
 		return
+	# C19 — punch + color burst on selection for tactile feedback.
+	if index >= 0 and index < _buttons.size() and is_instance_valid(_buttons[index]):
+		_persona_anim.punch(_buttons[index], 1.18)
+		_persona_anim.color_burst(_buttons[index], Color(0.92, 0.83, 0.65))
 	choice_selected.emit(index)
 	close_overlay()
+
+
+func _on_button_hover(btn: Button) -> void:
+	if not _active or not is_instance_valid(btn) or not btn.visible:
+		return
+	# Light-touch hover: a tiny scale punch (1.06) — barely felt, but registers.
+	_persona_anim.punch(btn, 1.06)
+
+
+func _start_ornament_pulse() -> void:
+	# Slow, sleepy breathing for the four parchment corner ornaments.
+	# Stops on close_overlay via _kill_ornament_tweens.
+	_kill_ornament_tweens()
+	for i in _ornaments.size():
+		var orn: Label = _ornaments[i]
+		if not is_instance_valid(orn):
+			continue
+		var phase: float = float(i) * 0.4  # stagger so they don't all pulse together
+		var period: float = 3.2
+		var t: Tween = orn.create_tween().set_loops()
+		t.tween_interval(phase)
+		t.tween_property(orn, "scale", Vector2(1.18, 1.18), period * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		t.tween_property(orn, "scale", Vector2(1.0, 1.0), period * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_ornament_tweens.append(t)
+
+
+func _kill_ornament_tweens() -> void:
+	for t in _ornament_tweens:
+		if t and t.is_valid():
+			t.kill()
+	_ornament_tweens.clear()
 
 
 func _on_fade_out_done() -> void:
