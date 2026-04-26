@@ -11,6 +11,9 @@ const _persona_anim := preload("res://scripts/ui/anim/persona_ui_anim.gd")
 
 signal choice_selected(option: int)  # 0=A, 1=B, 2=C
 signal overlay_closed
+# C24 — emitted when an inline RPG minigame finishes; score is 0-100.
+# Caller awaits this from play_minigame() to fold the result into roll_test.
+signal minigame_completed(score: int)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIG
@@ -33,6 +36,8 @@ var _button_container: HBoxContainer
 var _buttons: Array[Button] = []
 var _root: Control
 var _card: PanelContainer  # parchment card that animates in/out (3D-ish entry)
+var _card_vbox: VBoxContainer  # body container — minigame hosts here in C24
+var _minigame: Node  # active inline minigame, freed by MiniGameBase on complete
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -263,10 +268,11 @@ func _build_ui() -> void:
 		_card.add_child(orn)
 		_ornaments.append(orn)
 
-	var card_vbox: VBoxContainer = VBoxContainer.new()
-	card_vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
-	card_vbox.add_theme_constant_override("separation", 14)
-	_card.add_child(card_vbox)
+	_card_vbox = VBoxContainer.new()
+	_card_vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_card_vbox.add_theme_constant_override("separation", 14)
+	_card.add_child(_card_vbox)
+	var card_vbox: VBoxContainer = _card_vbox  # alias kept for the rest of this builder
 
 	# Narrative text — ink on parchment
 	_text_label = RichTextLabel.new()
@@ -449,3 +455,54 @@ func _on_fade_out_done() -> void:
 	_root.visible = false
 	_active = false
 	overlay_closed.emit()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# C24 — Inline RPG Minigames (Souffle/Esprit/Coeur)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Spawn the axis-routed minigame inside the card body. Caller awaits
+## `minigame_completed` to read the score (0-100). If no minigame is registered
+## for the given axis, the score 50 (neutral) is emitted on the next frame.
+func play_minigame(axis: String, difficulty: int) -> void:
+	if not _active or _card_vbox == null:
+		minigame_completed.emit(50)
+		return
+	# Hide buttons during the minigame phase — the player plays, doesn't choose.
+	_button_container.visible = false
+	# Resolve script path via MinigameRegistry static helper.
+	var registry: GDScript = load("res://scripts/minigames/minigame_registry.gd") as GDScript
+	if registry == null:
+		minigame_completed.emit(50)
+		return
+	var path: String = String(registry.resolve_rpg_minigame(axis))
+	if path.is_empty() or not FileAccess.file_exists(path):
+		minigame_completed.emit(50)
+		return
+	var mg_script: GDScript = load(path) as GDScript
+	if mg_script == null:
+		minigame_completed.emit(50)
+		return
+	var mg: Node = mg_script.new()
+	if mg == null or not mg.has_method("setup"):
+		if mg:
+			mg.queue_free()
+		minigame_completed.emit(50)
+		return
+	mg.setup(clampi(difficulty, 1, 10), {})
+	if mg.has_signal("game_completed"):
+		mg.game_completed.connect(_on_rpg_minigame_completed)
+	# Host inline (between text and the now-hidden buttons).
+	if mg.has_method("setup_in_card"):
+		mg.setup_in_card(_card_vbox)
+	else:
+		_card_vbox.add_child(mg)
+	_minigame = mg
+	if mg.has_method("start"):
+		mg.start()
+
+
+func _on_rpg_minigame_completed(result: Dictionary) -> void:
+	var score: int = clampi(int(result.get("score", 50)), 0, 100)
+	_minigame = null
+	minigame_completed.emit(score)

@@ -347,7 +347,9 @@ func _on_choice_selected(option: int) -> void:
 	var resolutions: Dictionary = _current_event.get("resolutions", {}) as Dictionary
 	var choices: Array = _current_event.get("choices", []) as Array
 	if resolutions.size() >= 4 and option >= 0 and option < choices.size():
-		_resolve_rpg_test(option, choices, resolutions)
+		# C24 — _resolve_rpg_test now awaits the inline minigame; chain the await
+		# here so _cards_played increments AFTER the test fully resolves.
+		await _resolve_rpg_test(option, choices, resolutions)
 	else:
 		_resolve_legacy_choice(option)
 
@@ -387,6 +389,21 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 		return
 	if _store:
 		narrative_modifier = engine.compute_narrative_modifier(_store.state, axis)
+
+	# C24 — Inline RPG minigame for the chosen axis. User directive: "Toujours,
+	# sur chaque test." Difficulty derives from the final DC: DC 9 → 1, DC 18 → 10.
+	var minigame_modifier: int = 0
+	var force_min_failure: bool = false
+	if _overlay and _overlay.has_method("play_minigame") and _overlay.has_signal("minigame_completed"):
+		var diff: int = clampi(dc_final - 8, 1, 10)
+		_overlay.play_minigame(axis, diff)
+		var score: int = await _overlay.minigame_completed
+		minigame_modifier = _score_to_minigame_modifier(score)
+		# Sub-30 score is treated as a fumble that floors the result at FAILURE.
+		force_min_failure = score < 30
+		print("[WalkEventController] C24 — minigame %s score=%d → modifier=%d (fail_floor=%s)" % [
+			axis, score, minigame_modifier, force_min_failure])
+
 	# C23 — Pass run_modifiers BY-REFERENCE so the engine can consume one-shot flags
 	# (crit_next_test, reroll_charges). Dictionaries are reference types in GDScript,
 	# so mutations in roll_test propagate back to state.run.run_modifiers.
@@ -398,6 +415,8 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 		"dc": dc_final,
 		"ogham_modifier": ogham_modifier,
 		"narrative_modifier": narrative_modifier,
+		"minigame_modifier": minigame_modifier,
+		"force_min_failure": force_min_failure,
 		"run_modifiers": run_modifiers,
 	})
 	if outcome.get("rerolled", false):
@@ -486,6 +505,20 @@ func _resolve_legacy_choice(option: int) -> void:
 		"option": option,
 		"effects": chosen_effects,
 	})
+
+
+## C24 — Minigame score (0-100) to roll_test minigame_modifier (-4..+2).
+## Curve: <30 = fumble (-4 + force fail floor), 30-49 = -2, 50-69 = 0, 70-89 = +1, ≥90 = +2.
+static func _score_to_minigame_modifier(score: int) -> int:
+	if score >= 90:
+		return 2
+	if score >= 70:
+		return 1
+	if score >= 50:
+		return 0
+	if score >= 30:
+		return -2
+	return -4
 
 
 ## Compute ogham modifier for a test axis given the player's equipped oghams.
