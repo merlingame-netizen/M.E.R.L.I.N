@@ -148,6 +148,9 @@ func show_faction_shift(faction: String, delta: int) -> void:
 	t.parallel().tween_property(lbl, "position:y", lbl.position.y - 24.0, 1.40).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.tween_property(lbl, "modulate:a", 0.0, 0.40).set_trans(Tween.TRANS_SINE)
 	t.tween_callback(lbl.queue_free)
+	# C31 — faction shift SFX. aspect_up / aspect_down match the existing palette.
+	if is_instance_valid(SFXManager):
+		SFXManager.play("aspect_up" if delta > 0 else "aspect_down")
 
 
 func update_card_count(current: int, total: int) -> void:

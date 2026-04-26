@@ -446,6 +446,12 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 				_apply_life_delta(-2)
 			"critical_failure":
 				_apply_life_delta(-7)
+		# C31 — Result SFX for the high-impact tiers. Plain success/failure stay quiet.
+		var sfx: Node = Engine.get_main_loop().root.get_node_or_null("/root/SFXManager") if Engine.get_main_loop() else null
+		if sfx and sfx.has_method("play"):
+			match result_key:
+				"critical": sfx.play("dice_crit_success")
+				"critical_failure": sfx.play("dice_crit_fail")
 		# Telemetry: log test resolution to MerlinMetrics autoload (RefCounted has no
 		# get_node_or_null; use Engine.get_main_loop().root).
 		var ml: SceneTree = Engine.get_main_loop() as SceneTree
@@ -788,9 +794,13 @@ func _show_end_of_run_overlay(reason: String) -> void:
 		# Anam gained this run (delta is unknown without baseline; emit absolute).
 		summary["anam_gained"] = int((meta.get("anam", 0)))
 	_overlay.show_end_of_run(summary)
+	# C31 — End-of-run SFX. partir_fanfare for path_complete, error for life_depleted.
+	var ml_root: SceneTree = Engine.get_main_loop() as SceneTree
+	var sfx_node: Node = ml_root.root.get_node_or_null("/root/SFXManager") if ml_root else null
+	if sfx_node and sfx_node.has_method("play"):
+		sfx_node.play("partir_fanfare" if reason == "path_complete" else "error")
 	# Telemetry: log run_ended in MerlinMetrics if present.
-	var ml: SceneTree = Engine.get_main_loop() as SceneTree
-	var metrics: Node = ml.root.get_node_or_null("MerlinMetrics") if ml else null
+	var metrics: Node = ml_root.root.get_node_or_null("MerlinMetrics") if ml_root else null
 	if metrics and metrics.has_method("run_ended"):
 		metrics.run_ended(reason, _cards_played)
 

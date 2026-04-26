@@ -59,6 +59,9 @@ var _entry_done: bool = false  # gate parallax until entry tween settles
 var _ornaments: Array[Label] = []
 var _ornament_tweens: Array[Tween] = []
 var _button_tweens: Array[Tween] = []  # per-button punch tween — killed before re-fire
+# C30b — end-of-run mode flag: re-route the "Retour" button to a clean close
+# (no choice_selected emit) and skip the auto-respond timeout.
+var _in_end_of_run: bool = false
 const PARALLAX_MAX_OFFSET: float = 5.0  # px — how far the card drifts toward mouse
 const PARALLAX_LERP: float = 6.0  # responsiveness
 
@@ -135,6 +138,9 @@ func show_event(text: String, labels: Array[String]) -> void:
 		else:
 			_buttons[i].visible = false
 
+	# C31 — Card reveal SFX. Light woosh + parchment click.
+	if is_instance_valid(SFXManager):
+		SFXManager.play("card_reveal")
 	# Soft vignette + animated card scale-in (no fly-from-side, just clean center pop)
 	_root.visible = true
 	_dimmer.color.a = 0.0
@@ -175,6 +181,11 @@ func show_event(text: String, labels: Array[String]) -> void:
 ## narrative built from the data — no tooltips, no list of stats.
 ## The single "Retour au village" button closes the run.
 func show_end_of_run(summary: Dictionary) -> void:
+	# C30b — Kill any in-flight fade/close tween from a prior show_resolution
+	# so the new end-of-run text isn't swept away mid-read by a leftover close().
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_in_end_of_run = true
 	# If overlay isn't already up, do a fresh slash-entry. Otherwise just swap content.
 	var fresh: bool = not _active
 	if fresh:
@@ -505,6 +516,16 @@ func _on_button_pressed(index: int) -> void:
 	if index >= 0 and index < _buttons.size() and is_instance_valid(_buttons[index]):
 		_play_button_punch(index, 1.18)
 		_persona_anim.color_burst(_buttons[index], Color(0.92, 0.83, 0.65))
+	# C31 — choice select SFX.
+	if is_instance_valid(SFXManager):
+		SFXManager.play("choice_select")
+	# C30b — In end-of-run mode the single "Retour" button must NOT emit
+	# choice_selected (the controller would mistreat it as a card choice and
+	# tick _cards_played + _check_gift_offer + _check_run_end). Just close.
+	if _in_end_of_run:
+		_in_end_of_run = false
+		close_overlay()
+		return
 	choice_selected.emit(index)
 	close_overlay()
 
@@ -517,6 +538,9 @@ func _on_button_hover(index: int) -> void:
 		return
 	# Light-touch hover: a tiny scale punch (1.06) — barely felt, but registers.
 	_play_button_punch(index, 1.06)
+	# C31 — choice hover SFX. Soft, low-volume tick.
+	if is_instance_valid(SFXManager):
+		SFXManager.play("choice_hover")
 
 
 func _play_button_punch(index: int, intensity: float) -> void:
@@ -602,9 +626,15 @@ func play_minigame(axis: String, difficulty: int) -> void:
 	_minigame = mg
 	if mg.has_method("start"):
 		mg.start()
+	# C31 — minigame start SFX (subtle drum or tick).
+	if is_instance_valid(SFXManager):
+		SFXManager.play("minigame_start")
 
 
 func _on_rpg_minigame_completed(result: Dictionary) -> void:
 	var score: int = clampi(int(result.get("score", 50)), 0, 100)
 	_minigame = null
+	# C31 — score-based outcome SFX before the test result is computed.
+	if is_instance_valid(SFXManager):
+		SFXManager.play("minigame_success" if score >= 60 else "minigame_fail")
 	minigame_completed.emit(score)
