@@ -390,6 +390,12 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 				_apply_life_delta(-2)
 			"critical_failure":
 				_apply_life_delta(-7)
+		# Telemetry: log test resolution to MerlinMetrics autoload (RefCounted has no
+		# get_node_or_null; use Engine.get_main_loop().root).
+		var ml: SceneTree = Engine.get_main_loop() as SceneTree
+		var metrics: Node = ml.root.get_node_or_null("MerlinMetrics") if ml else null
+		if metrics and metrics.has_method("test_resolved"):
+			metrics.test_resolved(axis, result_key, dc_final, int(outcome.get("roll", 0)), int(outcome.get("xp_gain", 0)))
 		# Persist XP + memory log + potential stat level-up
 		var summary: Dictionary = engine.apply_outcome_to_state(_store.state, outcome)
 		if not summary.get("stat_levelups", []).is_empty():
@@ -402,6 +408,10 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 				print("[WalkEventController] Traits unlocked: %s" % str(newly))
 				# Append to story_log so post-run screen can announce them.
 				_story_log.append({"unlocked_traits": newly})
+				# Telemetry
+				if metrics and metrics.has_method("trait_unlocked"):
+					for k in newly:
+						metrics.trait_unlocked(String(k))
 		if _store.has_method("_emit_state_changed"):
 			_store._emit_state_changed()
 
