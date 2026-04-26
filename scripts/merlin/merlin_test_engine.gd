@@ -167,7 +167,10 @@ func compute_narrative_modifier(state: Dictionary, _axis: String) -> int:
 	var modifier: int = 0
 	var run: Dictionary = state.get("run", {}) as Dictionary
 	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
-	var max_life: int = int(MerlinConstants.LIFE_ESSENCE_MAX) if MerlinConstants.get("LIFE_ESSENCE_MAX") != null else 100
+	# C35-fix — `MerlinConstants.get("LIFE_ESSENCE_MAX")` is a non-static call on
+	# the class symbol; Godot 4 rejects it as a parse error. LIFE_ESSENCE_MAX is a
+	# const on MerlinConstants — read it directly.
+	var max_life: int = int(MerlinConstants.LIFE_ESSENCE_MAX)
 	if max_life > 0 and float(life) / float(max_life) < 0.30:
 		modifier -= 1
 	var meta: Dictionary = state.get("meta", {}) as Dictionary

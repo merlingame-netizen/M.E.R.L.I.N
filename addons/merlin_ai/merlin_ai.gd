@@ -273,8 +273,13 @@ func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 		state.done = true
 	)
 
-	# Determine timeout (more generous for first/cold start generation)
+	# Determine timeout (more generous for first/cold start generation).
+	# C35 — Per-call override via params["timeout_ms"]: callers like generate_rpg_card
+	# pass a tight 4s budget so the hybrid LLM->pool fallback isn't blocked for 90s
+	# on cold start. Default constants apply if no override.
 	var timeout_ms: int = LLM_POLL_TIMEOUT_FIRST_MS if not _first_generation_done else LLM_POLL_TIMEOUT_MS
+	if params.has("timeout_ms"):
+		timeout_ms = int(params["timeout_ms"])
 
 	# Adaptive polling with timeout and progress logging
 	var poll_count := 0

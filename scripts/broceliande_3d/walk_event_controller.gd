@@ -855,4 +855,3 @@ func _show_end_of_run_overlay(reason: String) -> void:
 	var metrics: Node = ml_root.root.get_node_or_null("MerlinMetrics") if ml_root else null
 	if metrics and metrics.has_method("run_ended"):
 		metrics.run_ended(reason, _cards_played)
-

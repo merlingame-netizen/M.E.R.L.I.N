@@ -79,8 +79,11 @@ const NARRATIVE_FALLBACKS: Array[String] = [
 
 const SCENARIO_PROMPTS_PATH := "res://data/ai/config/scenario_prompts.json"
 const PROMPT_TEMPLATES_PATH := "res://data/ai/config/prompt_templates.json"
-# C33 — Hard timeout for LLM card generation (hybrid mode falls back on miss).
-const LLM_CARD_TIMEOUT_S: float = 4.0
+# C33/C35 — Hard timeout for LLM card generation (hybrid mode falls back on miss).
+# Passed via params["timeout_ms"] so _run_llm uses it instead of the 90s cold-start
+# default. 4000ms is the sweet spot: warm gen takes ~2-3s, anything longer means
+# the model is loading and the fallback path will deliver a card faster.
+const LLM_CARD_TIMEOUT_MS: int = 4000
 
 const REQUIRED_CARD_KEYS := ["text", "options"]
 const REQUIRED_OPTION_KEYS := ["direction", "label", "effects"]
@@ -287,6 +290,9 @@ var _rpg_template_loaded: bool = false
 
 
 func _load_rpg_template() -> void:
+	# Single-attempt cache: _rpg_template_loaded flips before the file open so a
+	# missing/malformed template doesn't get retried on every call. The res:// path
+	# is bundled with the build, so a mid-session file appearance isn't realistic.
 	if _rpg_template_loaded:
 		return
 	_rpg_template_loaded = true
@@ -329,7 +335,10 @@ func generate_rpg_card(context: Dictionary) -> Dictionary:
 	var params: Dictionary = {
 		"max_tokens": int(_rpg_template.get("max_tokens", 600)),
 		"temperature": float(_rpg_template.get("temperature", 0.75)),
-		"timeout": LLM_CARD_TIMEOUT_S,
+		# C35 — Use timeout_ms (actually honored by _run_llm now); the previous
+		# "timeout" key was silently ignored and let the call hang up to 90s on
+		# cold-start, blocking the hybrid LLM->pool fallback in walk_event_controller.
+		"timeout_ms": LLM_CARD_TIMEOUT_MS,
 	}
 	var t0: int = Time.get_ticks_msec()
 	var result: Dictionary = await _merlin_ai.generate_with_system(system_prompt, user_prompt, params)
@@ -354,9 +363,10 @@ func generate_rpg_card(context: Dictionary) -> Dictionary:
 
 
 ## Substitute {key} placeholders in a template string from a context dict.
+## C35 — Single-pass via String.format so a value containing "{key}" cannot be
+## re-substituted in a later iteration (the previous loop replace() chain was
+## vulnerable to re-substitution if e.g. faction_status carried braces).
 func _format_rpg_template(tpl: String, context: Dictionary) -> String:
-	var out: String = tpl
-	# Keys the gamemaster_rpg_card template references.
 	var subs: Dictionary = {
 		"card": str(context.get("cards_played", 1) + 1),
 		"biome": String(context.get("biome", "foret_broceliande")),
@@ -365,9 +375,7 @@ func _format_rpg_template(tpl: String, context: Dictionary) -> String:
 		"faction_status": _faction_status_str(context),
 		"language_directive": String(context.get("language_directive", "Ecris en francais.")),
 	}
-	for k in subs:
-		out = out.replace("{%s}" % k, String(subs[k]))
-	return out
+	return tpl.format(subs)
 
 
 func _faction_status_str(context: Dictionary) -> String:
@@ -403,7 +411,10 @@ func _validate_rpg_card(c: Dictionary) -> Dictionary:
 		choices.append({
 			"label": labels[i],
 			"axis": axis,
-			"dc_offset": int(ch.get("dc_offset", 0)),
+			# C35 — Clamp per-choice DC offset so a wild LLM output (e.g. ±10)
+			# can't push the effective DC outside the design envelope. ±3 mirrors
+			# the ogham_modifier cap so combined modifiers stay readable.
+			"dc_offset": clampi(int(ch.get("dc_offset", 0)), -3, 3),
 			"risk_hint": String(ch.get("risk_hint", "")),
 		})
 	var primary_axis: String = String(choices[0].get("axis", "esprit"))
