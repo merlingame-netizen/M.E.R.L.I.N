@@ -120,8 +120,8 @@ const BROC_ASSETS: Dictionary = {
 @export var move_speed: float = 3.5
 @export var mouse_sensitivity: float = 0.0026
 @export var interact_distance: float = 2.8
-@export var head_bob_amount: float = 0.015
-@export var head_bob_speed: float = 5.0
+@export var head_bob_amount: float = 0.005   # was 0.015 — softened (user feedback "trop de head bob")
+@export var head_bob_speed: float = 2.8      # was 5.0 — slower for calmer walk feel
 
 # --- Scene refs ---
 @onready var world_root: Node3D = $World3D
@@ -730,12 +730,19 @@ func _setup_viewport() -> void:
 	_viewport_container.name = "PixelShrinkContainer"
 
 	# Apply retro CRT upscale shader (scanlines, curvature, posterization)
+	# User feedback "trop de dithering" — soften scanline + grid + noise.
 	var retro_shader: Shader = load("res://resources/shaders/retro_screen.gdshader") as Shader
 	if retro_shader:
 		_retro_material = ShaderMaterial.new()
 		_retro_material.shader = retro_shader
 		_retro_material.set_shader_parameter("render_size", Vector2(render_w, render_h))
 		_retro_material.set_shader_parameter("screen_size", Vector2(1280.0, 720.0))
+		_retro_material.set_shader_parameter("scanline_strength", 0.08)   # was 0.18 default
+		_retro_material.set_shader_parameter("grid_strength", 0.04)        # was 0.12
+		_retro_material.set_shader_parameter("noise_strength", 0.015)      # was 0.04
+		_retro_material.set_shader_parameter("vignette_strength", 0.18)    # was 0.25
+		_retro_material.set_shader_parameter("color_levels", 6.0)          # was 3.0 — less posterized
+		_retro_material.set_shader_parameter("curvature", 0.03)            # was 0.06 — flatter screen
 		_viewport_container.material = _retro_material
 
 	_viewport_container.add_child(_sub_viewport)
@@ -1641,7 +1648,7 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 	vbox.add_child(sep)
 
 	var desc: Label = Label.new()
-	desc.text = "Suis le chemin que je trace pour toi.\nTrois rencontres jalonnent ta route.\nTes choix forgent qui tu deviens."
+	desc.text = "❧ Suis le chemin que je trace pour toi.\n❧ Trois epreuves jalonnent ta route — chaque X est un carrefour.\n❧ Tes pas restent graves : tu peux relire le chemin parcouru.\n❧ A chaque arret, j'ouvrirai une carte 3D — un test attend ton choix.\n❧ Ta vie est une essence : protege-la."
 	desc.add_theme_font_size_override("font_size", 18)
 	desc.add_theme_color_override("font_color", Color(0.30, 0.20, 0.12))
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1691,10 +1698,19 @@ func _show_quest_parchment(vo_layer: CanvasLayer) -> void:
 		marker.set_meta("appear_at_index", marker_idx)
 		path_holder.add_child(marker)
 
-	# Fade parchment in
-	var fade_in: Tween = create_tween()
-	fade_in.tween_property(parchment, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
-	await fade_in.finished
+	# Unfold parchment (scroll-style horizontal expansion + fade in)
+	# Pivot at center so it expands left+right symmetrically.
+	parchment.pivot_offset = parchment.size * 0.5
+	parchment.scale = Vector2(0.04, 1.0)
+	var unfold: Tween = create_tween().set_parallel(true)
+	unfold.tween_property(parchment, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
+	unfold.tween_property(parchment, "scale", Vector2(1.0, 1.0), 1.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# Subtle "settle" wobble at the end
+	await unfold.finished
+	var wobble: Tween = create_tween()
+	wobble.tween_property(parchment, "scale", Vector2(1.02, 1.0), 0.12)
+	wobble.tween_property(parchment, "scale", Vector2(1.0, 1.0), 0.18).set_trans(Tween.TRANS_SINE)
+	await wobble.finished
 
 	# Draw progressively: every 4 path points, drop a footstep (alternating L/R foot offset).
 	# Footsteps are tiny ovals (< or > shape via Label) that REMAIN visible — never freed.
