@@ -94,6 +94,11 @@ var _run_active: bool = false
 var _cards_played: int = 0
 var _story_log: Array[Dictionary] = []
 
+# C22 — Gift offer state. After cards 2 and 4 we queue 3 random gifts here;
+# they're presented via the same WalkEventOverlay once the card overlay closes.
+var _pending_gifts: Array = []
+var _in_gift_phase: bool = false
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
@@ -316,6 +321,11 @@ func _card_to_event(card: Dictionary) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _on_choice_selected(option: int) -> void:
+	# C22 — Gift selection takes precedence over normal card resolution.
+	if _in_gift_phase:
+		_apply_selected_gift(option)
+		return
+
 	if _current_event.is_empty():
 		return
 
@@ -342,6 +352,7 @@ func _on_choice_selected(option: int) -> void:
 		_resolve_legacy_choice(option)
 
 	_cards_played += 1
+	_check_gift_offer()
 	_check_run_end()
 
 
@@ -376,13 +387,21 @@ func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> 
 		return
 	if _store:
 		narrative_modifier = engine.compute_narrative_modifier(_store.state, axis)
+	# C23 — Pass run_modifiers BY-REFERENCE so the engine can consume one-shot flags
+	# (crit_next_test, reroll_charges). Dictionaries are reference types in GDScript,
+	# so mutations in roll_test propagate back to state.run.run_modifiers.
+	var run_dict: Dictionary = _store.state.get("run", {}) as Dictionary if _store else {}
+	var run_modifiers: Dictionary = run_dict.get("run_modifiers", {}) as Dictionary
 	var outcome: Dictionary = engine.roll_test({
 		"axis": axis,
 		"stat": stat,
 		"dc": dc_final,
 		"ogham_modifier": ogham_modifier,
 		"narrative_modifier": narrative_modifier,
+		"run_modifiers": run_modifiers,
 	})
+	if outcome.get("rerolled", false):
+		print("[WalkEventController] Reroll consumed (fil_de_niamh)")
 	var result_key: String = String(outcome.get("result", "failure"))
 	print("[WalkEventController] RPG test axis=%s dc=%d roll=%d → %s (xp +%d)" % [
 		axis, dc_final, int(outcome.get("roll", 0)), result_key, int(outcome.get("xp_gain", 0))])
@@ -520,9 +539,90 @@ func _apply_life_delta(delta: int) -> void:
 
 
 func _on_overlay_closed() -> void:
+	# C22 — If gifts were queued (cards 2/4), open gift overlay AFTER the card
+	# resolution closes so the two overlays don't fight.
+	var should_show_gifts: bool = _pending_gifts.size() > 0 and not _in_gift_phase
 	_current_event = {}
 	# Refresh HUD after effects applied
 	_update_hud()
+	if should_show_gifts:
+		_show_gift_overlay()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# C22 — GIFT OFFER (Vampire-Survivors style modifiers, every 2 cards)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _check_gift_offer() -> void:
+	if _store == null:
+		return
+	var registry: GDScript = load("res://scripts/merlin/merlin_gift_registry.gd") as GDScript
+	if registry == null:
+		return
+	if not registry.should_offer_at(_cards_played):
+		return
+	var picks: Array = registry.draw_three(_store.state)
+	if picks.is_empty():
+		return
+	_pending_gifts = picks
+	print("[WalkEventController] C22 — gift offer queued at card %d (%d picks)" % [_cards_played, picks.size()])
+
+
+func _show_gift_overlay() -> void:
+	if _pending_gifts.is_empty() or _overlay == null:
+		return
+	# Build a cosmetic "event" so the overlay text + buttons read like a Merlin pause moment.
+	var lines: Array = []
+	for g in _pending_gifts:
+		var gift: Dictionary = g as Dictionary
+		var label: String = String(gift.get("label", "?"))
+		var lore: String = String(gift.get("lore", ""))
+		lines.append("• %s — %s" % [label, lore])
+	var text: String = "Merlin pose la main sur ton epaule.\n\n" + "\n".join(lines) + "\n\nQue prends-tu ?"
+	var labels: Array[String] = []
+	for g in _pending_gifts:
+		labels.append(String((g as Dictionary).get("label", "?")))
+	while labels.size() < 3:
+		labels.append("...")
+	_in_gift_phase = true
+	_overlay.show_event(text, labels)
+
+
+func _apply_selected_gift(option: int) -> void:
+	if option < 0 or option >= _pending_gifts.size():
+		_pending_gifts.clear()
+		_in_gift_phase = false
+		return
+	var gift: Dictionary = _pending_gifts[option] as Dictionary
+	var registry: GDScript = load("res://scripts/merlin/merlin_gift_registry.gd") as GDScript
+	if registry and _store:
+		registry.apply_gift(_store.state, gift)
+		# C23 — vie_max_delta applies immediately to run.life_max (and clamps current life).
+		var run: Dictionary = _store.state.get("run", {}) as Dictionary
+		var mods: Dictionary = run.get("run_modifiers", {}) as Dictionary
+		var vie_delta: int = int(mods.get("vie_max_delta", 0))
+		if vie_delta != 0:
+			var prev_max: int = int(run.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX))
+			var new_max: int = max(10, prev_max + vie_delta)  # floor at 10 so a stack of -10 gifts can't 0 out
+			run["life_max"] = new_max
+			var current_life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
+			run["life_essence"] = mini(current_life, new_max)
+			_store.state["run"] = run
+			# Reset vie_max_delta so we don't re-apply on future gifts (compound only at apply time).
+			mods["vie_max_delta"] = 0
+		print("[WalkEventController] C22 — gift applied: %s" % String(gift.get("key", "?")))
+		if _store.has_method("_emit_state_changed"):
+			_store._emit_state_changed()
+	_story_log.append({
+		"gift_taken": String(gift.get("key", "?")),
+		"gift_label": String(gift.get("label", "")),
+	})
+	_pending_gifts.clear()
+	_in_gift_phase = false
+	# Show a short narration on the same overlay before it closes itself.
+	if _overlay and _overlay.has_method("show_resolution"):
+		var narration: String = "Quelque chose en toi se reorganise. " + String(gift.get("lore", ""))
+		_overlay.show_resolution(narration)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
