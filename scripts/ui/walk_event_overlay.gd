@@ -53,6 +53,7 @@ var _card_anchor_pos: Vector2 = Vector2.ZERO  # remembered post-entry position f
 var _entry_done: bool = false  # gate parallax until entry tween settles
 var _ornaments: Array[Label] = []
 var _ornament_tweens: Array[Tween] = []
+var _button_tweens: Array[Tween] = []  # per-button punch tween — killed before re-fire
 const PARALLAX_MAX_OFFSET: float = 5.0  # px — how far the card drifts toward mouse
 const PARALLAX_LERP: float = 6.0  # responsiveness
 
@@ -299,12 +300,13 @@ func _build_ui() -> void:
 	_button_container.visible = false
 	card_vbox.add_child(_button_container)
 
+	_button_tweens.resize(3)
 	for i in 3:
 		var btn: Button = _create_choice_button(font, pal, i)
 		_button_container.add_child(btn)
 		_buttons.append(btn)
 		# C19 — Persona-style hover punch on each choice button.
-		btn.mouse_entered.connect(_on_button_hover.bind(btn))
+		btn.mouse_entered.connect(_on_button_hover.bind(i))
 
 
 func _create_choice_button(font: Font, _pal: Dictionary, index: int) -> Button:
@@ -345,6 +347,13 @@ func _create_choice_button(font: Font, _pal: Dictionary, index: int) -> Button:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _hide_immediate() -> void:
+	# Mirrors close_overlay's cleanup: kill any orphan ornament/punch tweens
+	# so a future show_event starts from a clean slate (HIGH from code-review).
+	_entry_done = false
+	_kill_ornament_tweens()
+	for t in _button_tweens:
+		if t and t.is_valid():
+			t.kill()
 	_root.visible = false
 	_active = false
 	_typing = false
@@ -386,17 +395,30 @@ func _on_button_pressed(index: int) -> void:
 		return
 	# C19 — punch + color burst on selection for tactile feedback.
 	if index >= 0 and index < _buttons.size() and is_instance_valid(_buttons[index]):
-		_persona_anim.punch(_buttons[index], 1.18)
+		_play_button_punch(index, 1.18)
 		_persona_anim.color_burst(_buttons[index], Color(0.92, 0.83, 0.65))
 	choice_selected.emit(index)
 	close_overlay()
 
 
-func _on_button_hover(btn: Button) -> void:
-	if not _active or not is_instance_valid(btn) or not btn.visible:
+func _on_button_hover(index: int) -> void:
+	if not _active or index < 0 or index >= _buttons.size():
+		return
+	var btn: Button = _buttons[index]
+	if not is_instance_valid(btn) or not btn.visible:
 		return
 	# Light-touch hover: a tiny scale punch (1.06) — barely felt, but registers.
-	_persona_anim.punch(btn, 1.06)
+	_play_button_punch(index, 1.06)
+
+
+func _play_button_punch(index: int, intensity: float) -> void:
+	# Kill any prior punch on this button so rapid re-hover doesn't stack
+	# concurrent scale tweens (HIGH from code-review).
+	if index < _button_tweens.size():
+		var prev: Tween = _button_tweens[index]
+		if prev and prev.is_valid():
+			prev.kill()
+		_button_tweens[index] = _persona_anim.punch(_buttons[index], intensity)
 
 
 func _start_ornament_pulse() -> void:
