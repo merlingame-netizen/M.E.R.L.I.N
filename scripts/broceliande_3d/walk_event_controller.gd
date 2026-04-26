@@ -319,24 +319,116 @@ func _on_choice_selected(option: int) -> void:
 	if _current_event.is_empty():
 		return
 
-	var effects_list: Array = _current_event.get("effects", [])
-	var chosen_effects: Array = []
-	if option >= 0 and option < effects_list.size():
-		chosen_effects = effects_list[option]
+	# RPG test path: if the card has the new format (resolutions{4 keys} + choices[].axis),
+	# roll a test and show the matching resolution narrative.
+	# Otherwise, legacy path: apply flat effects[option].
+	var resolutions: Dictionary = _current_event.get("resolutions", {}) as Dictionary
+	var choices: Array = _current_event.get("choices", []) as Array
+	if resolutions.size() >= 4 and option >= 0 and option < choices.size():
+		_resolve_rpg_test(option, choices, resolutions)
+	else:
+		_resolve_legacy_choice(option)
 
-	# Apply effects via store
-	if _store and not chosen_effects.is_empty():
-		var result: Dictionary = _store.effects.apply_effects(
-			_store.state, chosen_effects, "WALK_EVENT")
-		print("[WalkEventController] Applied effects: %s → %s" % [
-			chosen_effects, result.get("applied", [])])
+	_cards_played += 1
+	_check_run_end()
 
-		# Emit state changed
+
+## RPG path — roll the test, apply tier-based effects, show resolution narration.
+func _resolve_rpg_test(option: int, choices: Array, resolutions: Dictionary) -> void:
+	var choice: Dictionary = choices[option] as Dictionary
+	var axis: String = String(choice.get("axis", _current_event.get("test_stat_default", "esprit")))
+	var dc_base: int = int(_current_event.get("dc", MerlinConstants.DC_DEFAULT))
+	var dc_offset: int = int(choice.get("dc_offset", 0))
+	var dc_final: int = clampi(dc_base + dc_offset, MerlinConstants.DC_MIN, MerlinConstants.DC_MAX)
+
+	# Read player stats from store.
+	var stat: int = MerlinConstants.STAT_DEFAULT
+	var ogham_modifier: int = 0
+	var narrative_modifier: int = 0
+	if _store:
+		var player: Dictionary = _store.state.get("player", {}) as Dictionary
+		var stats: Dictionary = player.get("stats", {}) as Dictionary
+		stat = int(stats.get(axis, MerlinConstants.STAT_DEFAULT))
+		# Ogham modifier: +1 if equipped any starter (placeholder — Phase 5 will refine per-Ogham).
+		var oghams: Dictionary = _store.state.get("oghams", {}) as Dictionary
+		var equipped: Array = oghams.get("skills_equipped", []) as Array
+		if equipped.size() > 0:
+			ogham_modifier = 1
+
+	var engine_script: GDScript = load("res://scripts/merlin/merlin_test_engine.gd") as GDScript
+	var engine: RefCounted = engine_script.new() if engine_script else null
+	if engine == null:
+		print("[WalkEventController] test_engine load failed, falling back to legacy")
+		_resolve_legacy_choice(option)
+		return
+	if _store:
+		narrative_modifier = engine.compute_narrative_modifier(_store.state, axis)
+	var outcome: Dictionary = engine.roll_test({
+		"axis": axis,
+		"stat": stat,
+		"dc": dc_final,
+		"ogham_modifier": ogham_modifier,
+		"narrative_modifier": narrative_modifier,
+	})
+	var result_key: String = String(outcome.get("result", "failure"))
+	print("[WalkEventController] RPG test axis=%s dc=%d roll=%d → %s (xp +%d)" % [
+		axis, dc_final, int(outcome.get("roll", 0)), result_key, int(outcome.get("xp_gain", 0))])
+
+	# Apply tier-based effects: legacy effects[option] still applied IF the resolution tier
+	# is success or critical. Failure tiers apply -2 to -8 life direct.
+	var legacy_effects: Array = _current_event.get("effects", []) as Array
+	var chosen_effects: Array = legacy_effects[option] if option < legacy_effects.size() else []
+	if _store:
+		match result_key:
+			"critical":
+				if not chosen_effects.is_empty() and _store.effects:
+					_store.effects.apply_effects(_store.state, chosen_effects, "WALK_EVENT_CRIT")
+			"success":
+				if not chosen_effects.is_empty() and _store.effects:
+					_store.effects.apply_effects(_store.state, chosen_effects, "WALK_EVENT")
+			"failure":
+				_apply_life_delta(-2)
+			"critical_failure":
+				_apply_life_delta(-7)
+		# Persist XP + memory log + potential stat level-up
+		var summary: Dictionary = engine.apply_outcome_to_state(_store.state, outcome)
+		if not summary.get("stat_levelups", []).is_empty():
+			print("[WalkEventController] Stat level-up: %s" % str(summary["stat_levelups"]))
 		if _store.has_method("_emit_state_changed"):
 			_store._emit_state_changed()
 
-	# Log to story
-	var labels: Array = _current_event.get("labels", [])
+	# Log + show resolution narration in the overlay.
+	var labels: Array = _current_event.get("labels", []) as Array
+	var chosen_label: String = str(labels[option]) if option < labels.size() else String(choice.get("label", "?"))
+	_story_log.append({
+		"text": _current_event.get("text", "").substr(0, 200),
+		"choice": chosen_label,
+		"option": option,
+		"axis": axis,
+		"result": result_key,
+		"dc": dc_final,
+	})
+	var resolution_text: String = String(resolutions.get(result_key, ""))
+	if resolution_text.is_empty():
+		resolution_text = "..."
+	if _overlay and _overlay.has_method("show_resolution"):
+		_overlay.show_resolution(resolution_text)
+
+
+## Legacy path — flat effects, no test, immediate close.
+func _resolve_legacy_choice(option: int) -> void:
+	var effects_list: Array = _current_event.get("effects", []) as Array
+	var chosen_effects: Array = []
+	if option >= 0 and option < effects_list.size():
+		chosen_effects = effects_list[option]
+	if _store and not chosen_effects.is_empty():
+		var result: Dictionary = _store.effects.apply_effects(
+			_store.state, chosen_effects, "WALK_EVENT")
+		print("[WalkEventController] (legacy) Applied effects: %s → %s" % [
+			chosen_effects, result.get("applied", [])])
+		if _store.has_method("_emit_state_changed"):
+			_store._emit_state_changed()
+	var labels: Array = _current_event.get("labels", []) as Array
 	var chosen_label: String = str(labels[option]) if option < labels.size() else "?"
 	_story_log.append({
 		"text": _current_event.get("text", "").substr(0, 200),
@@ -344,10 +436,16 @@ func _on_choice_selected(option: int) -> void:
 		"option": option,
 		"effects": chosen_effects,
 	})
-	_cards_played += 1
 
-	# Check run end conditions
-	_check_run_end()
+
+func _apply_life_delta(delta: int) -> void:
+	if not _store:
+		return
+	var run: Dictionary = _store.state.get("run", {}) as Dictionary
+	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
+	life = max(0, life + delta)
+	run["life_essence"] = life
+	_store.state["run"] = run
 
 
 func _on_overlay_closed() -> void:

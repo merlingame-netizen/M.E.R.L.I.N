@@ -129,6 +129,30 @@ func show_event(text: String, labels: Array[String]) -> void:
 	_fade_tween.tween_callback(func() -> void: _typing = true)
 
 
+## Show a resolution narrative AFTER a choice has been made (RPG test result).
+## The text is typed in place of the choice text, buttons hidden, then auto-closes.
+func show_resolution(resolution_text: String) -> void:
+	if not _active:
+		return
+	_typing = false
+	_button_container.visible = false
+	# Replace text + restart typewriter for the resolution narration.
+	_text_label.text = resolution_text
+	_total_chars = resolution_text.length()
+	_visible_chars = 0
+	_type_timer = 0.0
+	_text_label.visible_characters = 0
+	_typing = true
+	# Auto-close after the text finishes typing + 1.8s read time.
+	var typing_dur: float = float(_total_chars) / TYPEWRITER_SPEED if TYPEWRITER_SPEED > 0 else 1.0
+	var hold: float = 1.8
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_interval(typing_dur + hold)
+	_fade_tween.tween_callback(close_overlay)
+
+
 func close_overlay() -> void:
 	if not _active:
 		return
