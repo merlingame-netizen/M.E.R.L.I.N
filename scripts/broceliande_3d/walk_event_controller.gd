@@ -231,7 +231,11 @@ func _get_fallback_event() -> Dictionary:
 	# MerlinCardSystem (already RPG-shaped via tools/migrate_fastroute_to_rpg.py).
 	# Only land on the 5 hardcoded FALLBACK_EVENTS if the pool is unreachable.
 	if _store and _store.get("cards"):
-		var cs: Node = _store.cards
+		# MerlinCardSystem extends RefCounted, NOT Node — annotating as Node
+		# crashes at runtime ('Trying to assign value of type RefCounted to
+		# a variable of type Node'). Use Object so we keep duck-typing while
+		# the static check still tolerates the actual concrete type.
+		var cs: Object = _store.cards
 		if cs and cs.has_method("get_fastroute_card"):
 			var ctx: Dictionary = _build_llm_context()
 			if _store.state.has("meta"):
