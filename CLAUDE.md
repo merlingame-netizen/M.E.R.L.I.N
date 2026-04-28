@@ -148,6 +148,37 @@ Narrative card game built with Godot 4.x.
 
 ---
 
+## TOOL PRIORITY HIERARCHY (OBLIGATOIRE — preference utilisateur)
+
+**Pour toute interaction avec un projet Godot ouvert dans l'editeur, l'ordre est :**
+
+1. **Native MCP godot-mcp** (`mcp__godot-mcp__*`) — TOUJOURS en premier choix
+   - Lecture/inspection live : `get_project_info`, `get_current_scene`, `list_nodes`,
+     `get_node_properties`, `get_script`
+   - Mutations sur la scene ouverte : `create_node`, `delete_node`, `update_node_property`,
+     `create_scene`, `open_scene`, `save_scene`
+   - Mutations sur le code source : `create_script`, `edit_script`
+   - One-shot scripting dans l'editeur live : `execute_editor_script`
+2. **CLI native** (`python tools/cli.py godot ...`) — pour le headless / hors-editeur
+   - smoke, validate_step0, test, export, telemetry — tout ce qui ne necessite PAS l'editeur ouvert
+3. **Edit/Write fichier source** — pour les changements code persistants quand MCP inadapte
+   (gros refactor, multi-fichier, regex globale)
+4. **Bash Python ad-hoc** — dernier recours, jamais quand MCP/CLI couvrent le besoin
+
+**Anti-patterns** :
+- Ecrire un script GDScript jetable pour faire ce qu'`update_node_property` fait en 1 appel
+- Lancer `python tools/cli.py godot smoke` quand `mcp__godot-mcp__get_node_properties` suffit
+- Editer un fichier `.tscn` avec Edit quand `create_node` + `update_node_property` ferait le job
+
+**Notes connues sur le MCP server** :
+- `execute_editor_script` rejette `print(str(x))` (parens imbriquees) — fixe en C38
+  (`addons/godot_mcp/commands/editor_script_commands.gd`). Apres ce fix, redemarrer
+  l'editeur Godot pour que l'addon recharge.
+- MCP query la scene EDITEUR (`/root/<SceneName>` echoue souvent). Utiliser
+  `EditorInterface.get_edited_scene_root()` via `execute_editor_script` pour le tree live.
+
+---
+
 ## Quick Commands
 
 ```bash

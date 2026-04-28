@@ -1,3 +1,35 @@
+# Task Plan — MERLIN
+
+> Live focus + recent history. Older phases archived in git log.
+
+---
+
+## Current focus (2026-04-28): C38 MCP bridge consolidation
+
+**User directive:**
+> "Consolide le MCP bridge direct sur le controle du projet Godot,
+>  je veux voir en live ta prise de controle CLI ou MCP avec utilisation
+>  TOUJOURS en priorite l'usage des fonctions natives over le script."
+
+**Progress:**
+- [x] Load 16 native `mcp__godot-mcp__*` tools via ToolSearch
+- [x] Live demo: `get_project_info` / `get_current_scene` / `list_nodes` parallel
+- [x] Live demo: `execute_editor_script` via `EditorInterface.get_edited_scene_root()`
+- [x] Diagnose: `_replace_print_calls` regex breaks on `print(str(node))` (nested parens)
+- [x] Fix: paren-balance scanner replaces regex in `editor_script_commands.gd`
+- [x] Document priority hierarchy in CLAUDE.md (Native MCP > CLI > Edit > Bash)
+- [ ] Smoke + commit C38
+- [ ] End-of-session learn-eval
+
+**Active monitor:** `bf1bw7ezi` — tails `MERLIN/logs/godot.log` for live errors.
+
+**Note:** MCP server addon needs editor restart for the regex fix to take
+effect (addon scripts load at editor startup, not hot-reloaded).
+
+---
+
+## Older phases (archived)
+
 # Task Plan — Tri scenes + refactor demo bout en bout
 
 > Date: 2026-04-25 | Auteur: Claude (orchestrateur) | Branch: main

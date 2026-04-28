@@ -157,25 +157,43 @@ func _on_script_execution_completed(script_node: Node, client_id: int, command_i
 
 # Replace print() calls with custom_print() in the user code
 func _replace_print_calls(code: String) -> String:
-	var regex = RegEx.new()
-	# Match print statements with any content inside the parentheses
-	regex.compile("print\\s*\\(([^\\)]+)\\)")
-	
-	var result = regex.search_all(code)
-	var modified_code = code
-	
-	# Process matches in reverse order to avoid issues with changing string length
-	for i in range(result.size() - 1, -1, -1):
-		var match_obj = result[i]
-		var full_match = match_obj.get_string()
-		var arg_content = match_obj.get_string(1)
-		
-		# Create an array with all arguments
-		var replacement = "custom_print([" + arg_content + "])"
-		
-		var start = match_obj.get_start()
-		var end = match_obj.get_end()
-		
-		modified_code = modified_code.substr(0, start) + replacement + modified_code.substr(end)
-	
-	return modified_code
+	# C38 — Paren-balance scanner instead of regex.
+	# The previous regex `print\s*\(([^\)]+)\)` failed on any nested call like
+	# `print(str(node))` — it captured `str(node` (stopped at first `)`)
+	# producing `custom_print([str(node])` which fails to parse (error 43).
+	# Walk char-by-char tracking depth so we match the BALANCED paren pair.
+	var modified: String = ""
+	var i: int = 0
+	var n: int = code.length()
+	while i < n:
+		# Look for a print( token at this position (must be at start or after
+		# non-identifier char so we don't mangle e.g. `myprint(`).
+		var is_word_boundary: bool = (i == 0) or not _is_ident_char(code[i - 1])
+		if is_word_boundary and code.substr(i, 5) == "print":
+			# Skip whitespace between `print` and `(`.
+			var j: int = i + 5
+			while j < n and code[j] == " ":
+				j += 1
+			if j < n and code[j] == "(":
+				# Find the matching `)` honoring nested parens.
+				var depth: int = 1
+				var k: int = j + 1
+				while k < n and depth > 0:
+					var ch: String = code[k]
+					if ch == "(":
+						depth += 1
+					elif ch == ")":
+						depth -= 1
+					k += 1
+				if depth == 0:
+					var arg_content: String = code.substr(j + 1, k - j - 2)
+					modified += "custom_print([" + arg_content + "])"
+					i = k
+					continue
+		modified += code[i]
+		i += 1
+	return modified
+
+
+func _is_ident_char(c: String) -> bool:
+	return c.length() > 0 and (c == "_" or (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or (c >= "0" and c <= "9"))
