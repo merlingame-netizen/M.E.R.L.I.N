@@ -178,6 +178,7 @@ var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _merlin_whisper: Node  # MerlinWhisper (CanvasLayer)
 var _gameplay_active: bool = false  # true when LLM event system is wired
 var _is_tutorial: bool = false  # set by GameManager.first_run_tutorial — uses scripted fallback cards only, no LLM
+var _intro_skip_requested: bool = false  # C37 — SPACE/ENTER/ESC during intro VO bails to walk phase
 var _encounter_count: int = 0
 var _encounter_total: int = 5
 var _saved_crt_preset: String = "medium"
@@ -513,6 +514,21 @@ func _bind(action: StringName, keys: Array[int]) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# C37 — Intro skip: SPACE / ENTER / ESC during the tutorial VO sequence
+	# raises a flag that breaks the for-loop on the next iteration. Mouse click
+	# also skips. Active only while the intro is running (_is_tutorial AND not
+	# already past the walk phase — check via _gameplay_active being false).
+	if _is_tutorial and not _gameplay_active and not _intro_skip_requested:
+		var skip: bool = false
+		if event is InputEventKey and event.pressed and not event.echo:
+			var k: int = (event as InputEventKey).keycode
+			skip = k == KEY_SPACE or k == KEY_ENTER or k == KEY_ESCAPE
+		elif event is InputEventMouseButton and event.pressed:
+			skip = (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+		if skip:
+			_intro_skip_requested = true
+			print("[Forest3D] Intro skip key pressed — flagging fast-forward")
+			return
 	if event.is_action_pressed(ACT_MOUSE):
 		_toggle_mouse()
 		return
@@ -1625,12 +1641,19 @@ func _run_tutorial_intro() -> void:
 	vo_label.text = ""
 	vo_panel.add_child(vo_label)
 
+	# C37 — Skip flag: SPACE / ENTER / ESC interrupts the intro and jumps to walk.
+	# The user reported the intro could feel stuck on the slow beats; let them bail.
+	_intro_skip_requested = false
+
 	# Run the scripted reveal sequence.
 	# RULE: speak FIRST, then trigger the visual effect (one voice / one effect at a time).
 	# See docs/INTRO_TUTO_SEQUENCE.md for the canonical timing.
 	for entry in TUTORIAL_VO_LINES:
 		if not is_inside_tree():
 			return
+		if _intro_skip_requested:
+			print("[Forest3D] Tutorial intro: SKIP requested, jumping to walk phase")
+			break
 		# 1) Merlin speaks the line completely (typewriter + hold).
 		await _vo_speak_line(vo_label, String(entry.get("text", "")), float(entry.get("delay", 2.0)))
 		if not is_inside_tree():
