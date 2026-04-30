@@ -179,6 +179,21 @@ tools/autodev/card_generator_raw.json
 tools/autodev/card_narrations_raw.json
 
 # -------------------------------------------
+# Octogent (vendored — tools/octogent/) runtime + build artifacts
+# Source tree is committed; only generated state is ignored.
+# -------------------------------------------
+tools/octogent/node_modules/
+tools/octogent/**/node_modules/
+tools/octogent/dist/
+tools/octogent/**/dist/
+tools/octogent/.octogent/
+tools/octogent/.turbo/
+tools/octogent/**/.turbo/
+tools/octogent/apps/web/.vite/
+tools/octogent/*.log
+tools/octogent/**/*.log
+
+# -------------------------------------------
 # Project-Specific Ignores
 # -------------------------------------------
 # Temporary Excel processing folder

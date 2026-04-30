@@ -1,0 +1,71 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Octogent for MERLIN — single-service docker-compose.
+#
+# Start:    docker compose up -d
+# Logs:     docker compose logs -f octogent
+# Stop:     docker compose down
+# Rebuild:  docker compose build --no-cache
+#
+# Dashboard: http://localhost:8787
+#
+# Mount strategy:
+#   - ~/.claude (host)           → /root/.claude   (rw)  : Claude CLI auth + sessions
+#   - MERLIN repo root           → /workspace/merlin (ro): code spawned agents read
+#   - octogent-state (named vol) → /app/.octogent  (rw)  : Octogent's own state DB
+#
+# The MERLIN mount is READ-ONLY so a spawned agent inside the container
+# cannot accidentally rewrite the user's working tree. To let an agent
+# actually commit, drop the `:ro` and run that agent in its own worktree.
+# ─────────────────────────────────────────────────────────────────────────
+
+services:
+  octogent:
+    container_name: merlin-octogent
+    image: merlin/octogent:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+    # localhost:8787 → container 8787. WSL2 / Docker Desktop forward this to
+    # Windows host automatically.
+    ports:
+      - "127.0.0.1:8787:8787"
+
+    environment:
+      # No browser auto-open: the container has no GUI.
+      OCTOGENT_NO_OPEN: "1"
+      # Optional: tighten PTY ceiling. Octogent default is 32.
+      OCTOGENT_MAX_TERMINAL_SESSIONS: "16"
+      NODE_ENV: production
+      PORT: "8787"
+
+    volumes:
+      # Claude Code auth + transcript JSONLs. The ~ expands on Linux/WSL;
+      # on native Windows Docker Desktop this resolves via the user's
+      # home (configured in Docker Desktop → Settings → File sharing).
+      - "${HOME:-/root}/.claude:/root/.claude"
+
+      # MERLIN repo, read-only. Path resolves relative to this compose file:
+      # tools/octogent/ → ../../  = repo root.
+      - "../../:/workspace/merlin:ro"
+
+      # Octogent's own persistence — keep across container restarts.
+      - "octogent-state:/app/.octogent"
+
+    # Healthcheck pings the dashboard so `docker ps` shows green when ready.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:8787/healthz || curl -fsSL http://localhost:8787/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    # Labels so monitoring / cleanup scripts can find this stack.
+    labels:
+      - "merlin.role=orchestration"
+      - "merlin.tool=octogent"
+
+volumes:
+  octogent-state:
+    name: merlin-octogent-state

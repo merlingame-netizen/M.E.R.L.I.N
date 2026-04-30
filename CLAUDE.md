@@ -177,6 +177,12 @@ Narrative card game built with Godot 4.x.
 - MCP query la scene EDITEUR (`/root/<SceneName>` echoue souvent). Utiliser
   `EditorInterface.get_edited_scene_root()` via `execute_editor_script` pour le tree live.
 
+**Dashboard multi-agent (Octogent)** :
+- Vendore dans `tools/octogent/` — voir `tools/octogent/MERLIN.md` pour le deploy.
+- `cd tools/octogent && docker compose up -d` → http://localhost:8787
+- Fallback WSL si Docker indispo : `wsl bash tools/octogent/start-wsl.sh`
+- Mounts `~/.claude/` (lecture sessions) + repo MERLIN read-only (agents lisent le code).
+
 ---
 
 ## Quick Commands
