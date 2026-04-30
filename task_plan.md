@@ -4,7 +4,35 @@
 
 ---
 
-## Current focus (2026-04-28): C38 MCP bridge consolidation
+## Current focus (2026-04-30): C40 — Octogent redeploy + 103-agent integration
+
+**User directive:**
+> "Redéploie Octogent comme il se doit, et intègre dès le départ
+>  le système des 100+ agents pour le studio autonome qui dev mon
+>  jeu dans le Godot sur le PC."
+
+**Plan (5 phases):**
+1. ✅ Kill prior sed-patched Octogent instance
+2. 🟡 Source-patch `apps/api/src/cli.ts`: `127.0.0.1` → `process.env.HOST ?? "127.0.0.1"` (both bind sites)
+3. ⏳ `pnpm build` to regenerate dist cleanly
+4. ⏳ Write integration script `tools/octogent/integrate-merlin-agents.mjs`:
+   - Reads `tools/autodev/agent_cards/_registry.json` (103 agents)
+   - For each agent → creates `.octogent/tentacles/<id>/CONTEXT.md` with H1=name, body=description+capabilities
+   - Writes `.octogent/state/deck.json` with category-based colors
+5. ⏳ Persistent launcher `tools/octogent/start-persistent.sh`:
+   - Idempotent (skip if PID alive)
+   - `setsid -f` so process survives shell teardown
+   - Runs from MERLIN repo root (workspace = MERLIN)
+
+**Gate notes:** auto-router classified this as "design sprint" + 3D
+decomposition. Skipped ui-ux-pro-max / blender_tower_architect /
+content_worldbuilding agents — task is pure infra (Node deploy, Bash
+launcher, JSON munging). No UI/UX, no 3D assets touched. learn-eval
+runs at session end per standard.
+
+---
+
+## Older focus (2026-04-28): C38 MCP bridge consolidation
 
 **User directive:**
 > "Consolide le MCP bridge direct sur le controle du projet Godot,

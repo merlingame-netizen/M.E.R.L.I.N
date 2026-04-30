@@ -8,9 +8,43 @@ spawn, watch, and message multiple Claude agents working in parallel. We use
 it to coordinate inter-agent development on the MERLIN Godot project from a
 single browser tab.
 
+**Status (2026-04-30)**: deployed natively in WSL2 Ubuntu, source-patched to
+honor `HOST` env var, and pre-loaded with **103 MERLIN studio agents** from
+`tools/autodev/agent_cards/_registry.json`. Dashboard at
+http://localhost:8787 shows the full catalog by category (creative, quality,
+orchestration, core, ui-ux, narrative, ops, llm, knowledge).
+
 ---
 
-## Quick start
+## Recommended start (persistent + auto-integrated)
+
+```bash
+wsl bash tools/octogent/start-persistent.sh
+```
+
+That single command:
+1. No-ops if Octogent is already running on port 8787.
+2. Sources fnm/nvm if present, checks Node 22+ and pnpm.
+3. Builds if `dist/` is missing (first run only, ~2 min).
+4. Auto-runs `integrate-merlin-agents.mjs` if `.octogent/tentacles/` is empty.
+5. Launches via `setsid -f` so the process survives shell teardown.
+6. Health-checks port 8787 and reports the URL.
+
+Stop:
+
+```bash
+wsl bash -c 'pkill -f "node bin/octogent"; rm -f /tmp/octogent.pid'
+```
+
+Logs:
+
+```bash
+wsl tail -f /tmp/octogent.log
+```
+
+---
+
+## Manual paths (legacy / explicit)
 
 ### Path A — Docker (recommended)
 

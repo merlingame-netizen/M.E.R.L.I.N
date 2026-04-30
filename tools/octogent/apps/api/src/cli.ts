@@ -116,7 +116,7 @@ const canListenOnPort = (port: number): Promise<boolean> =>
     server.once("listening", () => {
       server.close(() => resolvePort(true));
     });
-    server.listen(port, "127.0.0.1");
+    server.listen(port, process.env.HOST ?? "127.0.0.1");
   });
 
 const findOpenPort = async (startPort: number): Promise<number> => {
@@ -240,7 +240,7 @@ const startServer = async () => {
   process.on("SIGINT", () => void shutdown());
   process.on("SIGTERM", () => void shutdown());
 
-  const { host, port: activePort } = await apiServer.start(port, "127.0.0.1");
+  const { host, port: activePort } = await apiServer.start(port, process.env.HOST ?? "127.0.0.1");
   const apiBaseUrl = `http://${host}:${activePort}`;
   writeRuntimeMetadata(projectStateDir, {
     apiBaseUrl,
