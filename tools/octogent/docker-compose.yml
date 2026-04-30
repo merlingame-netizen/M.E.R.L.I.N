@@ -9,9 +9,15 @@
 # Dashboard: http://localhost:8787
 #
 # Mount strategy:
-#   - ~/.claude (host)           → /root/.claude   (rw)  : Claude CLI auth + sessions
+#   - ~/.claude (host)           → /home/octogent/.claude (rw): Claude CLI auth + sessions
 #   - MERLIN repo root           → /workspace/merlin (ro): code spawned agents read
 #   - octogent-state (named vol) → /app/.octogent  (rw)  : Octogent's own state DB
+#
+# IMPORTANT: ~/.claude carries MORE than just OAuth tokens — it also stores
+# the FULL JSONL transcripts of every Claude Code session. If a session ever
+# echoed a secret in a prompt, it lives in those JSONLs. Treat the mount as
+# sensitive: do NOT publish images derived from this stack to public
+# registries with the volume baked in.
 #
 # The MERLIN mount is READ-ONLY so a spawned agent inside the container
 # cannot accidentally rewrite the user's working tree. To let an agent
@@ -44,10 +50,12 @@ services:
       # Claude Code auth + transcript JSONLs. The ~ expands on Linux/WSL;
       # on native Windows Docker Desktop this resolves via the user's
       # home (configured in Docker Desktop → Settings → File sharing).
-      - "${HOME:-/root}/.claude:/root/.claude"
+      # Container target matches the non-root `octogent` user's HOME.
+      - "${HOME:-/root}/.claude:/home/octogent/.claude"
 
-      # MERLIN repo, read-only. Path resolves relative to this compose file:
-      # tools/octogent/ → ../../  = repo root.
+      # MERLIN repo, read-only. Path resolves relative to this compose
+      # file's DIRECTORY (tools/octogent/) → ../../ = repo root. Compose
+      # honors this on Linux, Docker Desktop Windows, and WSL2 alike.
       - "../../:/workspace/merlin:ro"
 
       # Octogent's own persistence — keep across container restarts.

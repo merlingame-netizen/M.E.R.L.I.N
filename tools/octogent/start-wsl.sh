@@ -27,8 +27,21 @@ cd "$SCRIPT_DIR"
 # 1) Sanity checks
 echo "[octogent-wsl] Checking prereqs…"
 
+# Non-interactive bash skips ~/.bashrc, so fnm/nvm shims are absent unless
+# we source them explicitly. Try both before declaring node missing.
+if [ -s "$HOME/.fnm/fnm" ]; then
+  export PATH="$HOME/.fnm:$PATH"
+  eval "$(fnm env --use-on-cd 2>/dev/null)" || true
+fi
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.nvm/nvm.sh" >/dev/null 2>&1 || true
+fi
+
 command -v node >/dev/null 2>&1 || {
-  echo "ERROR: node not found in WSL. Install Node 22+ via fnm / nvm."
+  echo "ERROR: node not found in WSL even after sourcing fnm/nvm."
+  echo "       Install Node 22+ via:  curl -fsSL https://fnm.vercel.app/install | bash"
+  echo "       Then reopen WSL or rerun this script."
   exit 1
 }
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"

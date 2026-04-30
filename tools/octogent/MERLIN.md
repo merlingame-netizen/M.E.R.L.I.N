@@ -70,13 +70,25 @@ to whitelist `%APPDATA%\npm\pnpm.cmd` — not worth the friction.
 
 | Host path | Container path | Mode | Why |
 |-----------|---------------|------|-----|
-| `~/.claude/` | `/root/.claude/` | rw | Claude CLI auth + session JSONLs (so the dashboard sees your real sessions) |
+| `~/.claude/` | `/home/octogent/.claude/` | rw | Claude CLI auth + session JSONLs (so the dashboard sees your real sessions) |
 | MERLIN repo root | `/workspace/merlin/` | **ro** | Spawned agents can read the code but can't accidentally rewrite your working tree |
 | `merlin-octogent-state` (named vol) | `/app/.octogent/` | rw | Octogent's own state DB — survives restarts |
+
+**Sensitive-data caveat.** `~/.claude/` is **not just OAuth tokens** — it
+also stores the full JSONL transcripts of every Claude Code session you
+ever ran. If a session ever pasted a secret in a prompt, that secret lives
+in those JSONLs. Treat the mount as sensitive: do NOT publish derived
+images to public registries with this volume baked in, and don't let the
+container reach unaudited network endpoints.
 
 **The MERLIN mount is read-only on purpose.** If you want a spawned agent
 to commit, drop the `:ro` in `docker-compose.yml` and run that agent in its
 own git worktree (see `superpowers:using-git-worktrees`).
+
+**Container runs as non-root** (`octogent` user, uid 1000). Reduces blast
+radius if Octogent or a spawned `claude` subprocess ever has an RCE bug.
+Bind-mount file ownership generally Just Works on Linux/WSL hosts; on
+Docker Desktop Windows the userland VM handles UID translation.
 
 ---
 
