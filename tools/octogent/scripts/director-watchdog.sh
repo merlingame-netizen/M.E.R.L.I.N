@@ -27,6 +27,10 @@
 #   wsl bash -c 'kill $(cat /tmp/director-watchdog.pid 2>/dev/null) 2>/dev/null;
 #                rm -f /tmp/director-watchdog.pid'
 #
+# Note: SIGKILL (kill -9) cannot be trapped by bash, so the PID file is
+# leaked on hard kill. The next launch's idempotency guard recovers via
+# `kill -0 $EXISTING` (returns non-zero on stale PID) and proceeds.
+#
 # Logs:
 #   wsl tail -f /tmp/director-watchdog.log
 #   wsl tail -f tools/octogent/.octogent/tentacles/studio_director/cycle_log.md
@@ -54,7 +58,12 @@ if [ -f "$PID_FILE" ]; then
     exit 0
   fi
 fi
-echo "$$" > "$PID_FILE"
+# HIGH FIX (post-review): use $BASHPID (current bash process) instead of
+# $$ (parent shell). When invoked via `setsid -f bash -c "...sh..."`,
+# $$ inside this script is the setsid'd shell — same as $BASHPID — so
+# behavior is unchanged in the canonical launch path. But $BASHPID is
+# unambiguous if the script is ever sourced or wrapped further.
+echo "$BASHPID" > "$PID_FILE"
 
 cleanup() {
   log "Shutting down (SIGTERM/SIGINT)."
@@ -69,17 +78,26 @@ log "Cycle log: $OCTOGENT_DIR/.octogent/tentacles/studio_director/cycle_log.md"
 
 DEADLINE=$(( $(date +%s) + MAX_HOURS * 3600 ))
 CYCLE=0
+HEALTH_FAILS=0      # MEDIUM FIX: 2-of-3 consecutive failures before restart
 
 while [ "$(date +%s)" -lt "$DEADLINE" ]; do
   CYCLE=$((CYCLE + 1))
   log "─── cycle $CYCLE ───"
 
-  # Health check Octogent. If down, restart it.
+  # Health check Octogent. Require 2 consecutive failures before restart
+  # to absorb 1-tick network hiccups (DNS / WSL bridge stalls).
   HTTP_CODE="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 5 "$OCTOGENT_BASE/api/deck/tentacles" 2>/dev/null || echo "000")"
   if [ "$HTTP_CODE" != "200" ]; then
-    log "Octogent health=$HTTP_CODE — restarting via start-persistent.sh"
-    bash "$OCTOGENT_DIR/start-persistent.sh" 2>&1 | sed 's/^/[watchdog-restart] /'
-    sleep 5
+    HEALTH_FAILS=$((HEALTH_FAILS + 1))
+    log "Octogent health=$HTTP_CODE (consecutive fails: $HEALTH_FAILS/2)"
+    if [ "$HEALTH_FAILS" -ge 2 ]; then
+      log "Two consecutive failures — restarting via start-persistent.sh"
+      bash "$OCTOGENT_DIR/start-persistent.sh" 2>&1 | sed 's/^/[watchdog-restart] /'
+      HEALTH_FAILS=0
+      sleep 5
+    fi
+  else
+    HEALTH_FAILS=0
   fi
 
   # Call the director tick.

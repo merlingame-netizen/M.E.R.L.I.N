@@ -83,17 +83,19 @@ const todoOpen = todoTotal - todoDone;
 log(`studio_director: ${todoDone}/${todoTotal} todos done (${todoOpen} open).`);
 
 // ── Step 3: existing swarm? ────────────────────────────────────────────
+// CRITICAL FIX (post-review): use GET /api/terminal-snapshots (read-only).
+// The previous code POSTed /api/terminals body {} which Octogent's
+// terminalRoutes.ts treats as a CREATE, leaking a ghost terminal every
+// tick. Confirmed source: terminalRoutes.ts:63-271 (POST = create).
+// Correct list endpoint: terminalRoutes.ts:45-60 GET /api/terminal-snapshots.
 let activeSwarm = null;
 try {
-  const res = await fetch(`${OCTOGENT_BASE}/api/terminals`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: "{}",
+  const res = await fetch(`${OCTOGENT_BASE}/api/terminal-snapshots`, {
     signal: AbortSignal.timeout(5000),
   });
   if (res.ok) {
     const data = await res.json();
-    const arr = Array.isArray(data) ? data : (data.terminals ?? []);
+    const arr = Array.isArray(data) ? data : (data.snapshots ?? data.terminals ?? []);
     activeSwarm = arr.find((t) => String(t.terminalId ?? "").startsWith("studio_director-swarm-"));
   }
 } catch (e) {

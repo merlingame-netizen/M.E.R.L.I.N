@@ -4,7 +4,71 @@
 
 ---
 
-## Current focus (2026-04-30): C40 — Octogent redeploy + 103-agent integration
+## Current focus (2026-05-04): C42b — code-review fixes on autonomous studio
+
+**Trigger**: code-reviewer agent ran on `director-tick.mjs` + `director-watchdog.sh`
+(commit bf8fc3b5) and returned BLOCK verdict — 1 CRITICAL + 1 HIGH + 2 MEDIUM.
+
+**Fixes applied:**
+
+1. [CRITICAL] `director-tick.mjs:88-101` — used `POST /api/terminals body={}`
+   thinking it would list terminals. Octogent's `terminalRoutes.ts:63-271`
+   confirms POST is a CREATE op — every tick was leaking a ghost terminal
+   (24h × 5min interval = 288 ghosts). Replaced with the read-only
+   `GET /api/terminal-snapshots` (terminalRoutes.ts:45-60). Confirmed live:
+   12 terminals existed at the moment of fix (1 legit parent + 11 ghosts /
+   stale).
+
+2. [HIGH] `director-watchdog.sh:57` — `echo "$$" > $PID_FILE` could leak the
+   parent shell PID instead of the `setsid -f` child. Replaced with
+   `$BASHPID`. Behaviorally identical in the canonical launch path but
+   unambiguous if the script is ever wrapped/sourced.
+
+3. [MEDIUM] `director-watchdog.sh:78-82` — single transient curl failure
+   triggered an unnecessary `start-persistent.sh` restart. Added 2-of-3
+   consecutive-failure threshold via `HEALTH_FAILS` counter.
+
+4. [LOW→Doc] kill -9 leaks PID file. Documented in the Stop usage comment;
+   the existing idempotency guard already handles stale PID files via
+   `kill -0` self-healing on next launch.
+
+**Cleanup pending**: DELETE the 11 ghost / stale terminals via Octogent API.
+**Re-launch pending**: watchdog with patched scripts.
+
+---
+
+## Older focus (2026-05-01): C41 — MERLIN Forge complete UI redesign
+
+**User directive:**
+> "Oui remplace tout l'UI complet, complet redesign, on garde les features
+>  et ce qui fait la force de la solution octogent, il faut aussi le fond
+>  c'est a dire le mode studio (ce qui fais l'interet de la solution)"
+
+**Scope** : Redesign visuel complet du portail Octogent en MERLIN Forge.
+Preserve : 8 primary views, studio mode, terminals, canvas, hooks, HTTP API.
+Refonte : palette (forge gold + forest + parchment), typography (Cinzel
+serif), cards (parchemin + bronze borders), studio button (Light/Douse the
+Forge), backgrounds (subtle gradients + Celtic accent).
+
+**Phases:**
+1. DONE — Hooks fix + initial brand (settings.json, session-start, forge_director)
+2. DONE — Critical brand surfaces (favicon, top logo, central node, WorkspaceCard)
+3. WIP — Theme CSS override massif (merlin-theme.css injectee via index.html)
+4. PENDING — String changes thematiques (Studio button "Light the Forge")
+5. PENDING — Rebuild + restart + visual QA
+
+**Files:**
+- NEW : tools/octogent/apps/web/public/merlin-theme.css
+- NEW : tools/octogent/dist/web/merlin-theme.css (mirror)
+- EDIT : 2x index.html (link injection)
+- EDIT : StudioToggle.tsx (button labels)
+
+**Out of scope** : @octogent/core imports, HTTP endpoints, React state
+logic, TDD (design refresh sur code stable).
+
+---
+
+## Older focus (2026-04-30): C40 — Octogent redeploy + 103-agent integration
 
 **User directive:**
 > "Redéploie Octogent comme il se doit, et intègre dès le départ
