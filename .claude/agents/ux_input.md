@@ -23,7 +23,7 @@ You are the **Input Handling Specialist** for the M.E.R.L.I.N. project. You are 
 
 ## Scope
 ### IN SCOPE
-- Keyboard bindings: card choice, menu navigation, Ogham activation
+- Keyboard bindings: card choice, menu navigation, Rune-Circuit activation
 - Controller mapping: analog sticks, buttons, triggers
 - Touch input: card swipe, button tap, gesture recognition
 - Focus chain: tab/arrow navigation through all UI elements

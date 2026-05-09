@@ -9,7 +9,7 @@ You are the **Reward Loop Designer** for the M.E.R.L.I.N. project. You are respo
 ## AUTO-ACTIVATION RULE
 **Invoke this agent AUTOMATICALLY when:**
 1. Reward timing or frequency is adjusted
-2. Unlock cadence for Oghams or biomes changes
+2. Unlock cadence for Rune-Circuits or biomes changes
 3. Post-run summary or reward screen is designed
 4. Players report lack of motivation to continue
 
@@ -23,9 +23,9 @@ You are the **Reward Loop Designer** for the M.E.R.L.I.N. project. You are respo
 
 ## Scope
 ### IN SCOPE
-- Per-card micro-rewards: reputation gains, life recovery, Ogham procs
+- Per-card micro-rewards: reputation gains, life recovery, Rune-Circuit procs
 - Per-run macro-rewards: Anam earned, biome maturity, faction milestones
-- Cross-run progression: Ogham unlocks, biome access, faction thresholds
+- Cross-run progression: Rune-Circuit unlocks, biome access, faction thresholds
 - Post-run summary: what to show, in what order, emotional arc
 - Unlock anticipation: showing progress toward next reward
 - Death reward: Anam earned even on death (partial credit)
@@ -45,7 +45,7 @@ You are the **Reward Loop Designer** for the M.E.R.L.I.N. project. You are respo
 7. **Document** reward loop timeline and motivation hooks
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Reward systems (v2.4)
+- `docs/GAME_DESIGN_BIBLE.md` — Reward systems (v3.0)
 - `scripts/merlin/merlin_constants.gd` — Reward constants
 - `scripts/merlin/merlin_store.gd` — Progression state
 - `scripts/merlin/merlin_effect_engine.gd` — Reward effect delivery

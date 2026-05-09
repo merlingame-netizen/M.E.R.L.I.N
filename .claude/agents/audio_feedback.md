@@ -25,10 +25,10 @@ You are the **Audio Feedback Specialist** for the M.E.R.L.I.N. project. You are 
 ### IN SCOPE
 - UI sounds: button click, card flip, menu open/close, selection
 - Effect sounds: damage hit, heal chime, reputation gain/loss
-- Ogham sounds: activation, cooldown start, cooldown end
+- Rune-Circuit sounds: activation, cooldown start, cooldown end
 - Minigame sounds: word selection, correct/incorrect, timer
 - State change sounds: phase transition, life warning, death
-- Reward sounds: Anam earned, Ogham unlocked, biome unlocked
+- Reward sounds: Anam earned, Rune-Circuit unlocked, biome unlocked
 
 ### OUT OF SCOPE
 - Ambient soundscapes (delegate to audio_ambiance)
@@ -49,4 +49,4 @@ You are the **Audio Feedback Specialist** for the M.E.R.L.I.N. project. You are 
 - `scripts/merlin/` — SFXManager implementation
 - `scripts/ui/merlin_game_controller.gd` — Interaction points
 - `scripts/merlin/merlin_effect_engine.gd` — Effect application sounds
-- `docs/GAME_DESIGN_BIBLE.md` — Audio design section (v2.4)
+- `docs/GAME_DESIGN_BIBLE.md` — Audio design section (v3.0)

@@ -12,10 +12,10 @@ Activer quand la tâche contient: playtest, session de jeu, simuler joueur, test
 jouer au jeu, test session, player simulation, game session.
 
 ## Expertise
-- M.E.R.L.I.N. core loop: Hub → Biome → Ogham → Rail 3D → Carte → Minigame → Effets → Retour
-- Pipeline effets v2.4: DRAIN → CARTE → OGHAM → CHOIX → MINIGAME → SCORE → EFFETS → PROTECTION → VIE=0? → PROMESSES → COOLDOWN → RETOUR
+- M.E.R.L.I.N. core loop: Hub → Biome → Rune-Circuit → Rail 3D → Carte → Minigame → Effets → Retour
+- Pipeline effets v3.0: DRAIN → CARTE → OGHAM → CHOIX → MINIGAME → SCORE → EFFETS → PROTECTION → VIE=0? → PROMESSES → COOLDOWN → RETOUR
 - GDScript 4.x, state machines, signal flow
-- Game design validation against GAME_DESIGN_BIBLE.md v2.4
+- Game design validation against GAME_DESIGN_BIBLE.md v3.0
 
 ## Playtest Protocol
 
@@ -30,22 +30,22 @@ Pour chaque scénario, tracer le flow complet :
 ```
 1. Init: vie=100, factions={druides:0, anciens:0, korrigans:0, niamh:0, ankou:0}
 2. Biome selection: vérifier score maturité
-3. Ogham activation: coût, cooldown, effet
+3. Rune-Circuit activation: coût, cooldown, effet
 4. Carte: DRAIN -1 vie AU DEBUT
 5. 3 options: vérifier que les effets sont valides
 6. Minigame: score → multiplicateur (cap x2.0)
-7. Effets: ADD_REPUTATION caps ±20, HEAL/DAMAGE, PROMISE
-8. Protection: vérifier si Ogham protège
+7. Effets: ADD_REPUTATION thresholds 50/80, HEAL/DAMAGE, PROMISE
+8. Protection: vérifier si Rune-Circuit protège
 9. Vie check: si vie=0 → mort, Anam = Anam × min(cartes/30, 1.0)
-10. MOS: convergence soft min 8, target 20-25, soft max 40, hard max 50
+10. Challenge scoring: 4 types (Rune Gambit 35%, Minigame 30%, Oracle 20%, Merlin Judges 15%)
 ```
 
 ### 3. Edge Cases to Test
 - Vie = 1 + DRAIN -1 + DAMAGE → mort?
 - Faction at 100 + ADD_REPUTATION:+20 → capped at 100?
 - Faction at 0 + ADD_REPUTATION:-20 → capped at 0?
-- Ogham activation with insufficient resources
-- MOS at hard max 50 → forced end?
+- Rune-Circuit activation with insufficient resources
+- Challenge scoring edge cases: all types exhausted?
 - All factions at 0 → any special behavior?
 - All factions at 100 → any special behavior?
 - Confiance Merlin T0→T3 transitions mid-run
@@ -73,7 +73,7 @@ Pour chaque scénario, tracer le flow complet :
 ```
 
 ## Constraints
-- Source de vérité: docs/GAME_DESIGN_BIBLE.md v2.4
+- Source de vérité: docs/GAME_DESIGN_BIBLE.md v3.0
 - JAMAIS modifier le code du jeu (read-only analysis)
 - Rapporter dans tools/autodev/status/test_reports/
 - Fichiers < 400 lignes

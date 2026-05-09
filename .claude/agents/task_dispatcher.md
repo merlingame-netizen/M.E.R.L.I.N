@@ -61,7 +61,7 @@
 | **Assets Visuels** | art, sprite, texture, visual, graphics, style, pixel, image | `art_direction.md` | `ui_impl.md` |
 | **Audio** | sound, SFX, music, audio, voice, ACVoicebox, voix | `audio_designer.md` | `ui_impl.md` |
 | **Lore Merlin** | Merlin, personality, voice, character, personnalite, druide | `merlin_guardian.md` | `narrative_writer.md`, `lore_writer.md` |
-| **Lore Deep** | mythology, lore, Ogham, Celtic, Breton, secret, apocalypse | `lore_writer.md` | `merlin_guardian.md`, `narrative_writer.md` |
+| **Lore Deep** | mythology, lore, Rune-Circuit, Celtic, Breton, secret, apocalypse | `lore_writer.md` | `merlin_guardian.md`, `narrative_writer.md` |
 | **Histoire** | Bretagne, Celtic history, authentic, recherche historique | `historien_bretagne.md` | `lore_writer.md` |
 
 ### Taches Operations & Docs
@@ -388,4 +388,4 @@ Regles M.E.R.L.I.N. specifiques:
 *Base: `~/.claude/agents/common/dispatcher_base.md`*
 *Created: 2026-02-09 | Updated: 2026-02-24 — Added LLM Bi-Brain routing (3 new agents: bi_brain_orchestrator, narrative_arc_designer, player_profiler)*
 *Previous: 2026-02-22 — Added Game Director (Direction Creative category, cross-review)*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

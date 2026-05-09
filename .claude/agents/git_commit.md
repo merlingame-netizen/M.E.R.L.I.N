@@ -248,7 +248,7 @@ fi
 v{MAJOR}.{MINOR}.{PATCH}[-{PRE}]
 
 MAJOR: Breaking gameplay changes (new faction system, etc.)
-MINOR: New features (new biome, new Oghams, etc.)
+MINOR: New features (new biome, new Rune-Circuits, etc.)
 PATCH: Bug fixes, balance tweaks
 PRE: alpha, beta, rc1, rc2
 
@@ -400,4 +400,4 @@ After committing:
 ---
 
 *Updated: 2026-02-09 — Added branch strategy, changelog generation, git hooks, tag management*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

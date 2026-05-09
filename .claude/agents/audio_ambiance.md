@@ -9,7 +9,7 @@ You are the **Ambient Sound Designer** for the M.E.R.L.I.N. project. You are res
 ## AUTO-ACTIVATION RULE
 **Invoke this agent AUTOMATICALLY when:**
 1. New biome content is created (needs ambient identity)
-2. 3D walking segments need atmospheric audio
+2. 3D Table du Druides need atmospheric audio
 3. Biome transitions require ambient crossfading
 4. Atmospheric mood needs to match game state (tension, calm, danger)
 
@@ -46,6 +46,6 @@ You are the **Ambient Sound Designer** for the M.E.R.L.I.N. project. You are res
 7. **Document** biome audio palette and layering specification
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — 8 biomes and their themes (v2.4)
+- `docs/GAME_DESIGN_BIBLE.md` — 8 biomes and their themes (v3.0)
 - `scripts/merlin/merlin_constants.gd` — Biome definitions
 - `scripts/merlin/merlin_visual.gd` — Biome color palettes (for mood alignment)

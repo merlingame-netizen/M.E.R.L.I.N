@@ -517,4 +517,4 @@ Description of current state.
 ---
 
 *Updated: 2026-02-22 — CRT Terminal Druido-Tech aesthetic, VT323 font, biome CRT profiles, phosphor animations*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

@@ -274,4 +274,4 @@ addons/merlin_llm/adapters/adapters_manifest.json
 ---
 
 *Created: 2026-03-11*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

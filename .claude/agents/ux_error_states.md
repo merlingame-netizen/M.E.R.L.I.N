@@ -25,7 +25,7 @@ You are the **Error State Designer** for the M.E.R.L.I.N. project. You are respo
 ### IN SCOPE
 - LLM failure: fallback to pre-written cards seamlessly
 - Save corruption: detect, warn, offer fresh start
-- Empty states: no unlocked Oghams, first biome visit, no save
+- Empty states: no unlocked Rune-Circuits, first biome visit, no save
 - Asset loading failure: missing textures, fonts, sounds
 - Network failure: Ollama offline, graceful card fallback
 - Version mismatch: old save format with new game version

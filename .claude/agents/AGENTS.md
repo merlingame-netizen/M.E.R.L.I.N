@@ -76,7 +76,7 @@ Task tool:
 |------|------|-----------|
 | Game Designer | `game_designer.md` | Rules, **data-driven balancing, economy, synergies** |
 | Narrative Writer | `narrative_writer.md` | Card text, **QA narrative, prompt writing, faction templates** |
-| **Balance Tuner** | `balance_tuner.md` | **Numeric balance, MOS convergence, difficulty curves, scoring tables** |
+| **Balance Tuner** | `balance_tuner.md` | **Numeric balance, challenge scoring, difficulty curves, scoring tables** |
 | Art Direction | `art_direction.md` | **Pixel art pipeline, shaders, procedural landscapes** |
 | Audio Designer | `audio_designer.md` | **SFXManager procedural, adaptive music, accessibility** |
 
@@ -264,8 +264,8 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 
 | Role | File | Specialty |
 |------|------|-----------|
-| **GD Economy** | `gd_economy.md` | **Anam flow, Ogham costs, cross-run reward curves** |
-| **GD Difficulty** | `gd_difficulty.md` | **MOS convergence tuning, difficulty curves, drain/heal balance** |
+| **GD Economy** | `gd_economy.md` | **Anam flow, Rune-Circuit costs, cross-run reward curves** |
+| **GD Difficulty** | `gd_difficulty.md` | **challenge scoring tuning, difficulty curves, drain/heal balance** |
 | **GD Pacing** | `gd_pacing.md` | **Run length, card rhythm, tension/release, transition timing** |
 | **GD Faction Dynamics** | `gd_faction_dynamics.md` | **Alliance/rivalry balance, cross-faction effects, rep thresholds** |
 | **GD Narrative Flow** | `gd_narrative_flow.md` | **Per-run story arc, LLM narrative coherence, beat structure** |
@@ -302,13 +302,13 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 | Role | File | Specialty |
 |------|------|-----------|
 | **Vis Palette** | `vis_palette.md` | **CRT palette enforcement, biome colors, PALETTE/GBC constants** |
-| **Vis Particle** | `vis_particle.md` | **Atmospheric particles, Ogham magic effects, performance budget** |
+| **Vis Particle** | `vis_particle.md` | **Atmospheric particles, Rune-Circuit magic effects, performance budget** |
 | **Vis Typography** | `vis_typography.md` | **Font hierarchy, Celtic styling, French glyph support** |
 | **Vis Layout** | `vis_layout.md` | **Grid systems, responsive UI, container hierarchy, spacing** |
 | **Vis Shader** | `vis_shader.md` | **CRT post-processing, biome shaders, shader optimization** |
 | **Vis Animation Art** | `vis_animation_art.md` | **Sprite sheets, procedural art, Celtic knotwork animation** |
 | **Vis Scene Composition** | `vis_scene_composition.md` | **Depth, focal points, visual hierarchy, z-order management** |
-| **Vis Celtic Authenticity** | `vis_celtic_authenticity.md` | **Ogham accuracy, knotwork patterns, Celtic symbol validation** |
+| **Vis Celtic Authenticity** | `vis_celtic_authenticity.md` | **Rune-Circuit accuracy, knotwork patterns, Celtic symbol validation** |
 
 ### Performance & Technical Agents (6) — NEW
 
@@ -327,7 +327,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 |------|------|-----------|
 | **Content Card Writer** | `content_card_writer.md` | **French card text, Celtic authenticity, 45-verb choices, biome variants** |
 | **Content Dialogue** | `content_dialogue.md` | **NPC voice, trust tier dialogue, faction speech patterns** |
-| **Content Flavor Text** | `content_flavor_text.md` | **Biome descriptions, Ogham lore, tooltips, loading quotes** |
+| **Content Flavor Text** | `content_flavor_text.md` | **Biome descriptions, Rune-Circuit lore, tooltips, loading quotes** |
 | **Content Quest Arc** | `content_quest_arc.md` | **Multi-card storylines, callbacks, branching quest chains** |
 | **Content Worldbuilding** | `content_worldbuilding.md` | **Timeline, geography, cosmology coherence, contradiction detection** |
 | **Content Merlin Voice** | `content_merlin_voice.md` | **Merlin personality, ambiguity, trust tier modulation T0-T3** |
@@ -336,7 +336,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 
 | Role | File | Specialty |
 |------|------|-----------|
-| **Meta Bible Guardian** | `meta_bible_guardian.md` | **Bible v2.4 enforcement, design drift detection, removed system audit** |
+| **Meta Bible Guardian** | `meta_bible_guardian.md` | **Bible v3.0 enforcement, design drift detection, removed system audit** |
 | **Meta Code-Bible Sync** | `meta_code_bible_sync.md` | **Constants alignment, enum sync, pipeline order verification** |
 | **Meta Sprint Reviewer** | `meta_sprint_reviewer.md` | **Post-sprint quality assessment, validation, debt tracking** |
 | **Meta Tech Debt** | `meta_tech_debt.md` | **TODO/FIXME tracking, duplication, complexity hotspots, dead code** |
@@ -731,4 +731,4 @@ claude "Use Task to read .claude/agents/perf_profiler.md and profile runtime per
 
 *Created: 2026-02-06*
 *Updated: 2026-03-15 — 105 agents + 1 KB (new: 56 specialized agents — 10 QA/Testing, 8 Game Design, 8 UX/Accessibility, 6 Audio/Atmosphere, 8 Visual/Art, 6 Performance/Technical, 6 Content/Narrative, 4 Meta/Process)*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

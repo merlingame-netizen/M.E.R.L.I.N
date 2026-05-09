@@ -136,13 +136,13 @@ Strategy 5: Fallback to MerlinCardSystem pool    (guaranteed)
 ### Token Budget: 180 tokens (~720 chars)
 ```
 Priority CRITICAL (4): Always included — factions, life, biome
-Priority HIGH (3):     Usually included — active arcs, Ogham state
+Priority HIGH (3):     Usually included — active arcs, Rune-Circuit state
 Priority MEDIUM (2):   Space permitting — recent choices, confiance
-Priority LOW (1):      If room — session context, MOS
+Priority LOW (1):      If room — session context, challenge scoring
 Priority OPTIONAL (0): Only if budget allows — flavor text
 ```
 
-### 5 Registries (MOS Integration)
+### 5 Registries (Challenge Scoring Integration)
 ```
 PlayerRegistry     -> play style, preferences
 DecisionHistory    -> recent choices, consequences
@@ -161,7 +161,7 @@ Layer 4: Structure         -> JSON valid (parser verified)
 ```
 
 ### Celtic Lore Validation
-- Authentic entities whitelist: Broceliande, Annwn, Awen, Ogham, Korrigan, Ankou, Sidhe, Dagda, Brigit, Cernunnos
+- Authentic entities whitelist: Broceliande, Annwn, Awen, Rune-Circuit, Korrigan, Ankou, Sidhe, Dagda, Brigit, Cernunnos
 - Flag fabricated Celtic terms (suspicious patterns: "ancien rite", "mystique celtique")
 - Verify against lore database
 
@@ -237,4 +237,4 @@ Layer 4: Structure         -> JSON valid (parser verified)
 ---
 
 *Created: 2026-03-16 — Tier 1 LLM Integration Expert*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

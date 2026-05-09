@@ -180,4 +180,4 @@ powershell -ExecutionPolicy Bypass -File tools/validate_flow_order.ps1 -Quick
 ---
 
 *Created: 2026-03-16 — Tier 1 Lead Godot Engineer*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

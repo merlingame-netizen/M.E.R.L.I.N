@@ -206,4 +206,4 @@ When reviewing engine-related code:
 ---
 
 *Updated: 2026-03-16 — Tier 2: Godot 4.x internals, rendering, physics, signals, resources, shaders, export*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

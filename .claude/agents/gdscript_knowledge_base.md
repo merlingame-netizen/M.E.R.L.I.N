@@ -1083,7 +1083,7 @@ wc -l "$LOG"       # Si le nombre de lignes ne bouge plus = bloque
 |--------|------|---------|-------|
 | **Statique** | Syntaxe, types, parse | `validate.bat` / `validate_editor_parse.ps1` | Apres CHAQUE edit .gd |
 | **LLM Standalone** | Qualite texte, latence | `test_merlin_chat.py --mode perf` | Apres changements prompts/params |
-| **E2E Autoplay** | Pipeline complet in-engine | `scenes/TestAutoPlay.tscn` (headless) | Apres changements controller/UI/MOS |
+| **E2E Autoplay** | Pipeline complet in-engine | `scenes/TestAutoPlay.tscn` (headless) | Apres changements controller/UI/challenge scoring |
 | **Game context** | Experience joueur reelle | Full game (Manual play) | Avant release/milestone |
 
 **Le test en condition de jeu (HubAntre → TransitionBiome → MerlinGame) est le seul qui teste:**

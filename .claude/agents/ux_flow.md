@@ -24,7 +24,7 @@ You are the **UX Flow Analyst** for the M.E.R.L.I.N. project. You are responsibl
 ## Scope
 ### IN SCOPE
 - Scene flow: IntroCeltOS → Menu → Quiz → Rencontre → Hub → Run
-- Hub navigation: biome selection, Ogham management, settings
+- Hub navigation: biome selection, Rune-Circuit management, settings
 - Run flow: 3D walk ↔ card presentation ↔ minigame ↔ effects
 - Phase indicators: where am I in the run? How many cards left?
 - Back navigation: can I always go back? When can't I?
@@ -45,7 +45,7 @@ You are the **UX Flow Analyst** for the M.E.R.L.I.N. project. You are responsibl
 7. **Document** user flow diagram with all states and transitions
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Scene flow diagram (v2.4)
+- `docs/GAME_DESIGN_BIBLE.md` — Scene flow diagram (v3.0)
 - `docs/70_graphic/UI_UX_BIBLE.md` — UX specification
 - `scripts/ui/merlin_game_controller.gd` — Flow controller
 - `scenes/` — All scene files and their transitions

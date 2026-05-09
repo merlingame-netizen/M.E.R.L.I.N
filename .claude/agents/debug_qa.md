@@ -146,7 +146,7 @@ powershell -ExecutionPolicy Bypass -File tools/validate_affected_scenes.ps1 -Scr
 ## Testing Focus Areas
 
 ### Core Systems (Factions + Life)
-- MerlinStore state transitions (5 factions, 0-100 each)
+- MerlinStore state transitions (3 Poles, 0-100 each)
 - MerlinCardSystem card flow, fallback pool
 - MerlinEffectEngine: ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
 - Life boundary conditions (0 = death after effects, 100 = max)
@@ -170,8 +170,8 @@ powershell -ExecutionPolicy Bypass -File tools/validate_affected_scenes.ps1 -Scr
 3. Empty card queue + LLM timeout
 4. Rapid button clicking during typewriter
 5. Scene transitions mid-animation
-6. All Ogham activations with insufficient Anam
-7. MOS at soft_min (8) and hard_max (50)
+6. All Rune-Circuit activations with insufficient Anam
+7. Challenge scoring at boundary values
 8. Save/load mid-run
 9. Death during effect resolution
 10. Confiance Merlin tier change mid-run
@@ -296,4 +296,4 @@ What actually happens.
 ---
 
 *Created: 2026-03-16 — Tier 1 Debug & QA Specialist*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

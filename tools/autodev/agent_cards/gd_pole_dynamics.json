@@ -1,27 +1,27 @@
 {
-  "id": "content_worldbuilding",
-  "name": "Content Worldbuilding Agent",
+  "id": "gd_pole_dynamics",
+  "name": "GD Pole Dynamics Agent",
   "version": "1.0.0",
-  "description": "You are the **Worldbuilding Coherence Specialist** for the M.E.R.L.I.N. project. You are responsible for:",
-  "agent_file": ".claude/agents/content_worldbuilding.md",
-  "category": "narrative",
+  "description": "You are the **Pole Interaction Designer** for the M.E.R.L.I.N. project. You are responsible for:",
+  "agent_file": ".claude/agents/gd_pole_dynamics.md",
+  "category": "core",
   "capabilities": [
     {
-      "task_type": "content worldbuilding",
+      "task_type": "gd pole dynamics",
       "keywords": [
-        "worldbuilding",
-        "coherence",
-        "specialist",
+        "pole",
+        "interaction",
+        "designer",
         "project",
         "responsible",
         "for:",
-        "maintaining",
-        "timeline",
-        "geography",
-        "cosmology"
+        "designing",
+        "tension",
+        "dynamics",
+        "poles"
       ],
       "confidence": 0.7,
-      "mode": "reference"
+      "mode": "generate"
     }
   ],
   "inputs": [
@@ -48,8 +48,9 @@
   ],
   "file_scope": [
     "docs/GAME_DESIGN_BIBLE.md",
+    "scripts/merlin/merlin_reputation_system.gd",
     "scripts/merlin/merlin_constants.gd",
-    "docs/20_card_system/DOC_15_Pole_Alignment_System.md"
+    "scripts/merlin/merlin_store.gd"
   ],
   "cost_profile": "sonnet"
 }

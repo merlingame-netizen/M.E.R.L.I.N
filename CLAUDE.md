@@ -1,4 +1,4 @@
-# CLAUDE.md — M.E.R.L.I.N.: Le Jeu des Oghams
+# CLAUDE.md — M.E.R.L.I.N.: Le Jeu des Rune-Circuits
 
 > Comportements OBLIGATOIRES pour Claude Code sur ce projet.
 
@@ -139,12 +139,12 @@ Ce projet est personnel — PAS de tag `[AI-assisted]`.
 
 ## Project Overview
 
-Narrative card game built with Godot 4.x.
-- **Core Loop**: Choix narratif → minigame (champ lexical) → effets proportionnels
-- **Game System**: 5 Factions, 18 Oghams, 1 barre de vie, 8 champs lexicaux, MOS
-- **LLM**: Multi-Brain heterogene (Qwen 3.5) via Ollama — voir `docs/LLM_ARCHITECTURE.md`
+Narrative card duel against an adversarial meta-conscious AI, built with Godot 4.x.
+- **Core Loop**: Table du Druide (2D table + 3D parallax) → Merlin parle → 3 Rune-Cartes → choix → challenge (4 types) → effets
+- **Game System**: 3 Poles (Ordre/Chaos/Liminal), 9 Rune-Circuits, Confiance Merlin T0-T3, interference system
+- **LLM**: Multi-Brain heterogene (Qwen 3.5, Narrator 4B + GM 2B) via Ollama — voir `docs/LLM_ARCHITECTURE.md`
 - **Audio**: SFXManager (30+ sons proceduraux)
-- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` v2.4 (source de verite unique)
+- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` v3.0 (source de verite unique)
 
 ---
 
@@ -416,11 +416,11 @@ python tools/cli.py <tool>                      # Liste actions (godot/powerbi/o
 
 ### Core Systems (scripts/merlin/)
 ```
-merlin_store.gd              <- Central state (Redux-like), Factions
+merlin_store.gd              <- Central state (Redux-like), 3 Poles
 merlin_card_system.gd        <- Card engine, fallback pool, LLM generation
 merlin_effect_engine.gd      <- ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
 merlin_llm_adapter.gd        <- LLM contract, Faction-based, JSON repair
-merlin_constants.gd          <- 18 Oghams, biomes, minigames, factions
+merlin_constants.gd          <- 9 Rune-Circuits, biomes, challenges, 3 Poles
 merlin_reputation_system.gd  <- 5 factions, 0-100, thresholds 50/80
 merlin_save_system.gd        <- Profil unique JSON + run_state
 ```
@@ -470,40 +470,46 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ---
 
-## Game Design (Quick Ref) — v2.4
+## Game Design (Quick Ref) — v3.0
 
-> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.4
+> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v3.0
 
-### Core Loop
+### Core Loop — Table du Druide
 ```
-Hub 2D → Biome → Ogham → 3D rail (marche) → [5-15s collecte] → [fondu] → Carte 2D (3 options) → Ogham? → Choix → Minigame overlay → Score → Effets → [fondu] → 3D → [repeter] → Fin → Hub
+Hub 2D → Choix biome → Choix Rune-Circuit → TABLE DU DRUIDE (2D + 3D parallax)
+  → Merlin parle [3s] → 3 Rune-Cartes [2s] → Choix → Challenge → Effets + commentaire
+  → [repeter ~15-25 cycles] → Fin → Ecran de run → Hub
 ```
+**Cycle cible** : ~20s/carte. Run de 20 cartes = ~7 min.
 
-### Pipeline effets (reference code — bible section 13.3)
+### Pipeline effets (bible section 5)
 ```
-1.DRAIN -1  2.CARTE  3.OGHAM?  4.CHOIX  5.MINIGAME  6.SCORE  7.EFFETS  8.PROTECTION  9.VIE=0?  10.PROMESSES  11.COOLDOWN  12.RETOUR 3D
+1.DRAIN -1  2.CARTE  3.RUNE-CIRCUIT?  4.INTERFERENCES  5.CHOIX  6.CHALLENGE  7.SCORE  8.EFFETS  9.PROTECTION  10.VIE=0?  11.PROMESSES  12.COOLDOWN
 ```
 
 ### Systemes actifs
 - **Vie** : 0-100, drain -1/carte AU DEBUT, verification mort APRES effets
-- **5 Factions** : 0-100, cross-run, PAS de decay. Caps: ±20/carte
-- **18 Oghams** : chiffres (PV/monnaie/cooldown/cout). 3 starters gratuits. Activation avant choix uniquement. 1 Ogham/carte max.
-- **3 options fixes**. Minigames obligatoires. Verbes neutres → esprit.
-- **8 Champs lexicaux** + neutre. 45 verbes liste fermee.
-- **Anam** : cross-run, ~10 runs/noeud. Mort = Anam × min(cartes/30, 1.0)
-- **8 Biomes** : score maturite (runs×2 + fins×5 + oghams×3 + max_rep×1)
-- **MOS** : convergence soft min 8, target 20-25, soft max 40, hard max 50
-- **Confiance Merlin** : 0-100 clamp, T0-T3, changement immediat mid-run
+- **3 Poles** (Ordre/Chaos/Liminal) : 0-100, cross-run, sans decay. Seuils 50/80.
+- **9 Rune-Circuits** : 3 starters (beith/luis/quert), 6 deblocables via Anam. 1 equipe/run + 1 trouvable. CD par carte jouee.
+- **Confiance Merlin** : T0-T3 (0-100), cross-run, changement immediat mid-run
+- **Interferences** : Merlin manipule les cartes. Slots: T0=3, T1=2, T2=1, T3=0
+- **4 Challenges** : Rune Gambit (35%), Minigame (30%), Oracle Reading (20%), Merlin Judges (15%)
+- **6 Minigames** : Rune-Hacking, Fil de Mana, Equilibre, Sequence, Reflexe, Negociation
+- **Anam** : monnaie cross-run. Mort = Anam × min(cartes/30, 1.0)
+- **Essence** : monnaie intra-run, depensee pour activer Rune-Circuits
+- **Grimoire** : collection meta (cartes, lore, Rune-Circuits, fins)
+- **8 Biomes** : score maturite (runs×2 + fins×5 + runes×3 + max_rep×1)
 - **Save** : Profil unique + run_state si interruption
-- **FastRoute** : 500+ cartes, variantes par tier confiance, resume JSON pour continuite LLM
-- **Multiplicateur** : score bonus additifs, cap global x2.0. Effets/option: 3 max.
+- **FastRoute** : 500+ cartes, variantes par tier confiance, resume JSON pour LLM
 
-### Systemes SUPPRIMES
-~~Triade~~, ~~Souffle~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux~~, ~~Run Typologies~~, ~~Decay rep~~, ~~Auto-run pre-run~~
+### Systemes SUPPRIMES (v2.4 → v3.0)
+~~5 Factions~~→3 Poles, ~~18 Oghams~~→9 Rune-Circuits, ~~14 minigames~~→4 challenge types (6 minigames),
+~~Marche on-rails 3D~~→Table du Druide, ~~8 champs lexicaux~~, ~~MOS~~,
+~~Triade~~, ~~Souffle~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux~~, ~~Run Typologies~~, ~~Decay rep~~
 
 ### Scene Flow
 ```
-IntroCeltOS -> Menu -> Quiz -> Rencontre -> Hub 2D -> [Choix biome + Ogham] -> Run 3D (rail permanent: marche ↔ cartes ↔ minigames) -> [Fin] -> Hub 2D
+IntroCeltOS -> Menu -> Hub 2D (Antre) -> [Choix biome + Rune-Circuit] -> DruidTable (Table du Druide, run) -> [Fin] -> EndRunScreen -> Hub 2D
 ```
 
 ---
@@ -516,4 +522,4 @@ Status protocol: `status/session.json`, `status/worker_{name}.json`
 
 ---
 
-*Updated: 2026-03-14 — CLAUDE.md v3.3 (game design v2.4: audit robustesse, pipeline effets, caps, edge cases resolus, Oghams chiffres)*
+*Updated: 2026-05-09 — CLAUDE.md v3.4 (game design v3.0: Table du Druide, 3 Poles, 9 Rune-Circuits, Merlin adversarial, 4 challenges, cyber-druidique)*

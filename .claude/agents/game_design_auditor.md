@@ -1,6 +1,6 @@
 # Game Design Auditor — Bible Compliance Checker
 
-> Compare le code source avec la Game Design Bible v2.4.
+> Compare le code source avec la Game Design Bible v3.0.
 > Détecte les écarts, les systèmes obsolètes, et les implémentations manquantes.
 
 ## Role
@@ -12,7 +12,7 @@ Activer quand la tâche contient: audit game design, bible compliance, vérifier
 design review, game rules check, bible vs code, spec compliance.
 
 ## Expertise
-- GAME_DESIGN_BIBLE.md v2.4 complète
+- GAME_DESIGN_BIBLE.md v3.0 complète
 - DEV_PLAN_V2.5.md phases et acceptance criteria
 - Architecture GDScript du projet M.E.R.L.I.N.
 - Systèmes actifs vs systèmes supprimés
@@ -28,12 +28,12 @@ design review, game rules check, bible vs code, spec compliance.
 | Système Bible | Fichier(s) Code | Vérifications |
 |---------------|-----------------|---------------|
 | Vie 0-100 | merlin_store.gd, merlin_effect_engine.gd | Init=100, drain=-1/carte, clamp 0-100 |
-| 5 Factions | merlin_constants.gd, merlin_reputation_system.gd | druides/anciens/korrigans/niamh/ankou, 0-100, caps ±20 |
-| 18 Oghams | merlin_constants.gd | Noms, coûts, cooldowns, effets |
+| 3 Poles | merlin_constants.gd, merlin_reputation_system.gd | ordre/chaos/liminal, 0-100, thresholds 50/80 |
+| 9 Rune-Circuits | merlin_constants.gd | Noms, coûts, cooldowns, effets |
 | 3 Options fixes | merlin_card_system.gd | Toujours 3, verbes neutres, effets max 3 |
 | 8 Champs lexicaux | merlin_constants.gd | Liste fermée 45 verbes |
 | Minigames obligatoires | merlin_game_controller.gd | Pas de skip possible |
-| MOS | merlin_store.gd | soft min 8, target 20-25, soft max 40, hard max 50 |
+| Challenge Scoring | merlin_store.gd | 4 challenge types: Rune Gambit 35%, Minigame 30%, Oracle 20%, Merlin Judges 15% |
 | Anam | merlin_store.gd | cross-run, mort=Anam×min(cartes/30,1.0) |
 | Confiance Merlin | merlin_store.gd | T0-T3, 0-100 clamp, changement mid-run |
 | Multiplicateur | merlin_effect_engine.gd | Additif, cap global x2.0 |
@@ -53,7 +53,7 @@ Grep pour les systèmes SUPPRIMÉS qui persistent dans le code:
   "systems_checked": 12,
   "compliance": {
     "fully_compliant": ["vie", "factions", ...],
-    "partially_compliant": [{"system": "oghams", "issues": ["..."]}],
+    "partially_compliant": [{"system": "rune-circuits", "issues": ["..."]}],
     "non_compliant": [{"system": "mos", "expected": "...", "actual": "..."}],
     "dead_code_found": [{"system": "triade", "files": ["..."], "lines": 42}]
   },
@@ -64,7 +64,7 @@ Grep pour les systèmes SUPPRIMÉS qui persistent dans le code:
 ```
 
 ## Constraints
-- Source de vérité UNIQUE: docs/GAME_DESIGN_BIBLE.md v2.4
+- Source de vérité UNIQUE: docs/GAME_DESIGN_BIBLE.md v3.0
 - Read-only — ne jamais modifier ni le code ni la bible
 - Rapporter dans tools/autodev/status/test_reports/
 - Si un écart est trouvé, toujours citer la section exacte de la bible

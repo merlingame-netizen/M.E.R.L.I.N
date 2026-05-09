@@ -48,4 +48,4 @@ You are the **Audio Mix Engineer** for the M.E.R.L.I.N. project. You are respons
 ## Key References
 - `project.godot` — Audio bus configuration
 - `scripts/merlin/` — SFXManager references
-- `docs/GAME_DESIGN_BIBLE.md` — Audio design specs (v2.4)
+- `docs/GAME_DESIGN_BIBLE.md` — Audio design specs (v3.0)

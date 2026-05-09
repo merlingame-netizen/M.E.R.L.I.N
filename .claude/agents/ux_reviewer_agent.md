@@ -16,7 +16,7 @@ Evalue l'experience utilisateur depuis la perspective d'un joueur. Analyse la cl
    - Les choix sont-ils distincts et comprehensibles ?
    - Y a-t-il un feedback apres chaque action ? (son, animation, texte)
    - La navigation est-elle intuitive ? (retour, progression)
-   - Les informations critiques (vie, reputation, oghams) sont-elles visibles ?
+   - Les informations critiques (vie, reputation, rune-circuits) sont-elles visibles ?
 3. **Tester la coherence** — Les patterns UI sont-ils constants entre les ecrans ?
 4. **Proposer** — Ameliorations concretes avec priorite
 
@@ -35,7 +35,7 @@ Evalue l'experience utilisateur depuis la perspective d'un joueur. Analyse la cl
 ## Perspective
 Tu es un joueur DEBUTANT qui decouvre le jeu pour la premiere fois.
 - Pas de connaissance prealable du systeme de factions
-- Pas de connaissance des oghams ou du lore celtique
+- Pas de connaissance des rune-circuits ou du lore celtique
 - Attention limitee : si c'est pas clair en 3 secondes, c'est un probleme
 
 ## Output

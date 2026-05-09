@@ -51,7 +51,7 @@
     "docs/GAME_DESIGN_BIBLE.md",
     "scripts/merlin/merlin_constants.gd",
     "docs/DEV_PLAN_V2.5.md",
-    "docs/20_card_system/DOC_15_Faction_Alignment_System.md",
+    "docs/20_card_system/DOC_15_Pole_Alignment_System.md",
     "scripts/merlin/merlin_effect_engine.gd",
     "scripts/merlin/merlin_reputation_system.gd",
     "scripts/merlin/merlin_store.gd"

@@ -38,7 +38,7 @@ Algorithme de priorite :
 ```
 1. INBOX HUMAIN (feedback_responses.json status=pending) → PRIORITE ABSOLUE
 2. BUGS CRITICAL/HIGH (test_results.json severity=CRITICAL|HIGH) → urgent
-3. BIBLE COMPLIANCE (ecarts code vs bible v2.4) → important
+3. BIBLE COMPLIANCE (ecarts code vs bible v3.0) → important
 4. FEATURE QUEUE (feature_queue.json status=pending, par priority) → backlog
 5. GENERATION AUTONOME → le Director identifie des taches gameplay/graphismes/UI
    qui manquent et les ajoute a la queue
@@ -129,7 +129,7 @@ Quand un blocker est rencontre :
 
 ## GARDE-FOUS
 
-- **Bible v2.4** = contrainte absolue. Ne JAMAIS contredire la bible.
+- **Bible v3.0** = contrainte absolue. Ne JAMAIS contredire la bible.
 - **Budget changement** : 10 fichiers / 500 lignes max par cycle
 - **Review obligatoire** : code + bible compliance avant merge
 - **Veto humain** : si feedback_responses contient un STOP ou REVERT, l'appliquer immediatement
@@ -186,6 +186,6 @@ Avant de pusher, verifier ces invariants :
 - Verifier que le push a reussi en lisant le dernier commit via mcp__github__list_commits
 
 ### 5. Pas de references mortes
-- Aucune mention de "Ogham" dans les textes visibles joueur (remplace par "Rune")
+- Aucune mention de "Rune-Circuit" dans les textes visibles joueur (remplace par "Rune")
 - Aucune reference a Triade, Souffle, Bestiole, Flux, D20, Awen dans le code actif
 - Aucune reference a web-demo ou Three.js dans Mission Control

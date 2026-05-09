@@ -25,7 +25,7 @@ You are the **Determinism Tester** for the M.E.R.L.I.N. project. You are respons
 - Card draw randomness: seed → same card sequence
 - Effect randomness: damage/heal ranges, proc chances
 - Minigame word selection: seeded word lists
-- MOS convergence: deterministic with same inputs
+- challenge scoring: deterministic with same inputs
 - Faction rep changes: predictable given same choices
 - LLM fallback: deterministic card selection when LLM unavailable
 

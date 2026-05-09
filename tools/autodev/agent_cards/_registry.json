@@ -51,6 +51,15 @@
       "cost_profile": "sonnet"
     },
     {
+      "id": "gd_pole_dynamics",
+      "name": "GD Pole Dynamics Agent",
+      "category": "core",
+      "capabilities": [
+        "gd pole dynamics"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
       "id": "gd_onboarding",
       "name": "GD Onboarding Agent",
       "category": "core",

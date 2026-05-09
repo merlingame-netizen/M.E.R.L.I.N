@@ -25,8 +25,8 @@ You are the **Typography Specialist** for the M.E.R.L.I.N. project. You are resp
 ### IN SCOPE
 - Font hierarchy: display (Celtic), heading (semi-Celtic), body (readable)
 - Font sizes: standardized scale (12, 14, 16, 18, 24, 32px)
-- Celtic accent fonts: Ogham names, biome titles, chapter headers
-- Font fallback: missing glyph handling (Celtic chars, Ogham symbols)
+- Celtic accent fonts: Rune-Circuit names, biome titles, chapter headers
+- Font fallback: missing glyph handling (Celtic chars, Rune-Circuit symbols)
 - Line height and letter spacing standards
 - MerlinVisual font constants and references
 

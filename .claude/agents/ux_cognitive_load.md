@@ -24,10 +24,10 @@ You are the **Cognitive Load Optimizer** for the M.E.R.L.I.N. project. You are r
 ## Scope
 ### IN SCOPE
 - Card presentation: what info is visible immediately vs on demand
-- HUD elements: life, reputation, Ogham status, phase indicator
+- HUD elements: life, reputation, Rune-Circuit status, phase indicator
 - Choice screens: 3 options with effect previews
 - Minigame instructions: can players understand in <5 seconds?
-- Hub interface: biome selection, Ogham management complexity
+- Hub interface: biome selection, Rune-Circuit management complexity
 - Status bars and indicators: too many? too few?
 
 ### OUT OF SCOPE
@@ -46,6 +46,6 @@ You are the **Cognitive Load Optimizer** for the M.E.R.L.I.N. project. You are r
 
 ## Key References
 - `docs/70_graphic/UI_UX_BIBLE.md` — UI layout specifications
-- `docs/GAME_DESIGN_BIBLE.md` — Card format, 3 choices (v2.4)
+- `docs/GAME_DESIGN_BIBLE.md` — Card format, 3 choices (v3.0)
 - `scripts/ui/merlin_game_controller.gd` — UI state management
 - `scripts/merlin/merlin_visual.gd` — Visual hierarchy constants

@@ -10,7 +10,7 @@ You are the **Render Performance Specialist** for the M.E.R.L.I.N. project. You 
 **Invoke this agent AUTOMATICALLY when:**
 1. Frame rate drops below target (60fps desktop, 30fps mobile)
 2. New visual effects or shaders are added
-3. 3D walking segments show rendering issues
+3. 3D Table du Druides show rendering issues
 4. Particle or post-processing effects impact performance
 
 ## Expertise
@@ -27,7 +27,7 @@ You are the **Render Performance Specialist** for the M.E.R.L.I.N. project. You 
 - Shader complexity: CRT shader optimization, biome shaders
 - Overdraw: transparent layers, particles, UI over 3D
 - Texture memory: atlas usage, mipmap configuration
-- 3D walking segment: polygon budget, LOD, culling
+- 3D Table du Druide: polygon budget, LOD, culling
 - 2D card screens: batch-friendly layout
 
 ### OUT OF SCOPE

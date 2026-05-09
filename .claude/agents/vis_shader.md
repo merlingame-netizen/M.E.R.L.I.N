@@ -26,7 +26,7 @@ You are the **Shader Specialist** for the M.E.R.L.I.N. project. You are responsi
 - CRT main shader: scanlines, curvature, bloom, phosphor persistence
 - Biome shaders: atmospheric effects per biome (8 variants)
 - Card presentation shader: subtle card glow, selection highlight
-- Ogham activation: magical glow shader effect
+- Rune-Circuit activation: magical glow shader effect
 - Performance: shader complexity budget per scene
 - Shader parameters: exposed for runtime tuning
 

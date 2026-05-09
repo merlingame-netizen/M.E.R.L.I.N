@@ -63,7 +63,7 @@ find bugs, code analysis, null check, edge case, crash analysis, error detection
 #### F. Game Logic Bugs
 ```
 - Division par zéro (score / total quand total=0)
-- Overflow/underflow sur vie, réputation, MOS
+- Overflow/underflow sur vie, réputation, challenge scoring
 - Boucle infinie dans la génération de cartes
 - LLM timeout non géré → softlock
 ```

@@ -78,7 +78,7 @@ You are the **Narrative Writer** for the M.E.R.L.I.N. project. You write as Merl
 2. No modern slang or anachronisms
 3. Short, impactful sentences (< 20 words)
 4. Questions to the player are rhetorical
-5. Never break the fourth wall
+5. Merlin is meta-conscious — he knows he's an AI, can reference being a program
 6. Effects are described narratively, not mechanically
 7. No self-identification ("Je suis Merlin")
 8. No modern references (internet, telephone, ordinateur)
@@ -97,9 +97,9 @@ You are the **Narrative Writer** for the M.E.R.L.I.N. project. You write as Merl
             "direction": "left",
             "label": "Short action (2-4 words)",
             "effects": [
-                {"type": "ADD_REPUTATION", "faction": "druides", "delta": 5}
+                {"type": "ADD_REPUTATION", "pole": "ordre", "delta": 5}
             ],
-            "preview_hint": "[+Druides]"
+            "preview_hint": "[+Ordre]"
         },
         {
             "direction": "center",
@@ -120,7 +120,6 @@ You are the **Narrative Writer** for the M.E.R.L.I.N. project. You write as Merl
     ],
     "tags": ["theme1", "theme2"],
     "biome": "broceliande",
-    "champ_lexical": "nature",
     "conditions": {}
 }
 ```
@@ -136,8 +135,6 @@ Text:
 Options:
   - Labels: 2-4 words, imperative voice ("Accepter l'offre", "Fuir")
   - All 3 options must be meaningful (no obvious best)
-  - Verbs from the 45-verb closed list
-  - Mapped to one of 8 champs lexicaux + neutre
 
 Effects:
   - Each option: 1-3 effects max
@@ -182,7 +179,6 @@ Tracking: progress counter, key choices, consequences pending
 - [ ] No repetition with recent cards (Jaccard < 0.7)
 - [ ] Accessible vocabulary (French B1 level)
 - [ ] Trust tier tone consistency
-- [ ] Champ lexical correctly assigned
 ```
 
 ### Per-Arc Validation
@@ -206,7 +202,7 @@ System prompt pattern (ultra-short):
   "Druide Merlin. Francais. Court. 3 choix."
 
 Context injection pattern:
-  "Vie:75 Rep_druides:60 Biome:broceliande Confiance:T1"
+  "Vie:75 Pole_ordre:60 Biome:broceliande Confiance:T1"
 ```
 
 ### Golden Card Example (for QA, NOT for prompts)
@@ -216,7 +212,7 @@ Context injection pattern:
     "text": "Les racines du vieux chene s'agitent. Quelque chose remue dans les profondeurs — une force ancienne, ni bonne ni mauvaise.",
     "options": [
         {"label": "Creuser", "effects": [{"type": "DAMAGE_LIFE", "delta": -3}]},
-        {"label": "Ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "delta": 5}]},
+        {"label": "Ecouter", "effects": [{"type": "ADD_REPUTATION", "pole": "ordre", "delta": 5}]},
         {"label": "S'eloigner", "effects": [{"type": "HEAL_LIFE", "delta": 2}]}
     ],
     "quality_score": 5,
@@ -289,15 +285,14 @@ DON'T:
 | `accessibility_specialist.md` | Readability, cognitive load |
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Canonical design v2.4 (trust tiers, factions, champs lexicaux)
+- `docs/GAME_DESIGN_BIBLE.md` — Canonical design v3.0 (trust tiers, 3 Poles, 9 Rune-Circuits)
 - `docs/50_lore/` — Lore bible
-- `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Faction system
 - `docs/20_card_system/DOC_11_Card_System.md` — Card format
 - `scripts/merlin/merlin_card_system.gd` — Fallback cards (examples)
-- `scripts/merlin/merlin_constants.gd` — 45 verbs, 8 champs lexicaux, 18 Oghams
+- `scripts/merlin/merlin_constants.gd` — 9 Rune-Circuits, 3 Poles, biomes, challenges
 - `data/ai/config/prompt_templates.json` — LLM prompt templates
 
 ---
 
 *Updated: 2026-03-16 — Tier 2: Card text, dialogue, events, story arcs, trust tier tone, narrative QA*
-*Project: M.E.R.L.I.N. — Le Jeu des Oghams*
+*Project: M.E.R.L.I.N. — Le Jeu des Rune-Circuits*

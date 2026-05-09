@@ -27,7 +27,7 @@ You are the **Procedural Audio Specialist** for the M.E.R.L.I.N. project. You ar
 - Celtic scale implementation: pentatonic, modal scales
 - Procedural music fragments: short melodic phrases per biome
 - Dynamic parameter modulation: pitch, volume, timbre from game state
-- Ogham activation sounds: unique procedural tone per Ogham
+- Rune-Circuit activation sounds: unique procedural tone per Rune-Circuit
 - Faction-themed tonal palettes
 
 ### OUT OF SCOPE
@@ -47,5 +47,5 @@ You are the **Procedural Audio Specialist** for the M.E.R.L.I.N. project. You ar
 
 ## Key References
 - `scripts/merlin/` — SFXManager implementation
-- `scripts/merlin/merlin_constants.gd` — 18 Oghams for unique sounds
-- `docs/GAME_DESIGN_BIBLE.md` — Audio design section (v2.4)
+- `scripts/merlin/merlin_constants.gd` — 9 Rune-Circuits for unique sounds
+- `docs/GAME_DESIGN_BIBLE.md` — Audio design section (v3.0)

@@ -13,7 +13,7 @@ Detecte les strings non-traduites, verifie le registre i18n, et maintient la coh
 1. **Scanner les hardcoded** — Chercher dans `scripts/` et `scenes/` :
    - Strings francaises dans `.gd` (guillemets avec accents, mots francais)
    - Labels `.tscn` avec texte francais
-   - `merlin_constants.gd` : noms d'oghams, biomes, talents, verbes
+   - `merlin_constants.gd` : noms d'rune-circuits, biomes, talents, verbes
    - Prompts LLM dans `addons/merlin_ai/`
 2. **Verifier le registre** — `data/i18n/text_registry.json` :
    - Toutes les cles utilisees dans le code existent dans le registre ?

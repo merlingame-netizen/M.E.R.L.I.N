@@ -22,8 +22,8 @@ You are the **Code-Bible Sync Checker** for the M.E.R.L.I.N. project. You are re
 
 ## Scope
 ### IN SCOPE
-- Numeric constants: life (0-100), rep (0-100, ±20/card), MOS parameters
-- Enum alignment: Oghams (18), biomes (8), factions (5), champs (8)
+- Numeric constants: life (0-100), Poles (0-100), challenge scoring parameters
+- Enum alignment: Rune-Circuits (18), biomes (8), factions (5), champs (8)
 - Effect types: ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
 - Pipeline order: 12-step effect pipeline in code vs bible section 13.3
 - Verb list: 45 verbs in bible vs code constant
@@ -44,7 +44,7 @@ You are the **Code-Bible Sync Checker** for the M.E.R.L.I.N. project. You are re
 7. **Propose** fixes: update bible or update code (with rationale)
 
 ## Key References
-- `docs/GAME_DESIGN_BIBLE.md` — Specification source v2.4
+- `docs/GAME_DESIGN_BIBLE.md` — Specification source v3.0
 - `scripts/merlin/merlin_constants.gd` — Code constants
 - `scripts/merlin/merlin_effect_engine.gd` — Effect types and pipeline
 - `scripts/merlin/merlin_reputation_system.gd` — Reputation constants
