@@ -72,7 +72,8 @@
 | **Metriques** | analytics, metrics, data, A/B, stats, tracking, statistiques | `data_analyst.md` | `game_designer.md` |
 | **Planning** | plan, roadmap, milestone, sprint, priority, schedule | `producer.md` | `game_designer.md` |
 | **Traduction** | translate, i18n, locale, language, francais, anglais | `localisation.md` | `narrative_writer.md` |
-| **Cleanup** | cleanup, inventory, orphan, unused, range, nettoie, inventaire | `project_curator.md` | `lead_godot.md` |
+| **Cleanup** | cleanup, inventory, orphan, unused, range, nettoie, inventaire, poubelle, trash, inutilise | `resource_curator.md` | `lead_godot.md` |
+| **Live Test MCP** | test live, MCP test, test humain, test reel, verifier scene, inspecter noeuds | `mcp_live_tester.md` | `debug_qa.md` |
 
 ### Taches Securite & Qualite (NOUVEAU)
 

@@ -1,0 +1,21 @@
+{
+  "id": "resource_curator",
+  "name": "Resource Curator Agent",
+  "version": "1.0.0",
+  "description": "Orphan scanner and cleanup agent — finds unused scripts, assets, scenes, dead code",
+  "agent_file": ".claude/agents/resource_curator.md",
+  "category": "ops",
+  "capabilities": [
+    {
+      "task_type": "resource cleanup",
+      "keywords": ["cleanup", "orphan", "unused", "trash", "poubelle", "nettoie", "inventaire", "dead code", "duplicate", "inutilise", "range"]
+    }
+  ],
+  "triggers": ["cleanup", "orphan", "unused", "trash", "poubelle", "nettoie", "inventaire", "inutilise"],
+  "dependencies": [],
+  "outputs": ["_trash_manifest.json", "tools/autodev/status/"],
+  "constraints": {
+    "never_delete": true,
+    "human_approval_required": true
+  }
+}

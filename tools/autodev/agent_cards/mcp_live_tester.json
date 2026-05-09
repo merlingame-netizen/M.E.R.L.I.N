@@ -1,0 +1,21 @@
+{
+  "id": "mcp_live_tester",
+  "name": "MCP Live Tester Agent",
+  "version": "1.0.0",
+  "description": "Human-like gameplay tester using MCP godot-mcp for live editor interaction",
+  "agent_file": ".claude/agents/mcp_live_tester.md",
+  "category": "qa",
+  "capabilities": [
+    {
+      "task_type": "mcp live testing",
+      "keywords": ["test live", "MCP test", "test humain", "godot-mcp", "scene test", "node inspect", "signal verify", "playtest live", "boot test", "state verification"]
+    }
+  ],
+  "triggers": ["test live", "MCP test", "test humain", "verifier scene", "inspecter noeuds", "test reel"],
+  "dependencies": ["godot-mcp"],
+  "outputs": ["tools/autodev/status/test_reports/"],
+  "constraints": {
+    "read_only": true,
+    "max_timeout_per_scene_s": 30
+  }
+}

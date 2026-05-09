@@ -70,6 +70,8 @@ Agent(
 | `merlin-visual-qa` | Screenshot diff, regression visuelle |
 | `merlin-ai-playtester` | Simulation headless, audit Three.js |
 | `merlin-metrics-analyzer` | KPI, regression cross-cycle |
+| `mcp_live_tester` | Test humain-like via MCP godot-mcp (scenes, noeuds, signaux) |
+| `resource_curator` | Scan orphelins, code mort, manifest _trash/ |
 | `general-purpose` | Tout le reste |
 
 **Regles workers** :

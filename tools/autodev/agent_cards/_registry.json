@@ -1,16 +1,16 @@
 {
   "version": "2.0.0",
   "generated_at": "2026-04-10T21:29:26.352Z",
-  "total_agents": 103,
+  "total_agents": 105,
   "by_category": {
     "core": 7,
     "creative": 33,
     "knowledge": 2,
     "llm": 4,
     "narrative": 5,
-    "ops": 5,
+    "ops": 6,
     "orchestration": 9,
-    "quality": 31,
+    "quality": 32,
     "ui-ux": 7
   },
   "agents": [
@@ -58,6 +58,28 @@
         "gd pole dynamics"
       ],
       "cost_profile": "sonnet"
+    },
+    {
+      "id": "mcp_live_tester",
+      "name": "MCP Live Tester Agent",
+      "category": "quality",
+      "capabilities": [
+        "mcp_live_testing",
+        "scene_verification",
+        "state_inspection"
+      ],
+      "cost_profile": "sonnet"
+    },
+    {
+      "id": "resource_curator",
+      "name": "Resource Curator Agent",
+      "category": "ops",
+      "capabilities": [
+        "orphan_detection",
+        "dead_code_scan",
+        "trash_manifest"
+      ],
+      "cost_profile": "haiku"
     },
     {
       "id": "gd_onboarding",
