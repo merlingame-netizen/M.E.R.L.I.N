@@ -1,6 +1,6 @@
 {
   "state": "idle",
-  "objective": "Skill: everything-claude-code:learn-eval",
+  "objective": "Agent: everything-claude-code:code-reviewer",
   "workers": [
     {
       "name": "superpowers-verification-before-completion",
@@ -15,18 +15,30 @@
       "status": "done",
       "current_task": "skill: everything-claude-code:learn-eval",
       "progress": 0
+    },
+    {
+      "name": "everything-claude-code:code-reviewer",
+      "wave": 99,
+      "status": "done",
+      "current_task": "Review session 2 changes",
+      "progress": 0
     }
   ],
-  "updated_at": "2026-05-17T16:08:37.916890+00:00",
+  "updated_at": "2026-05-17T18:27:54.541792+00:00",
   "cycle": 30,
   "checkpoint": "NEW: biome_particle_profiles.gd (578 lines) \u2014 8 biome-specific particle atmospheres (fog, ambient, accent, falling, ground_mist layers). MODIFIED: forest_effects.gd now biome-aware via set_biome() + BiomeParticleProfiles. MODIFIED: broceliande_forest_3d.gd uses BiomeWalkConfigs sun/fill/background colors. MODIFIED: biome_walk_configs.gd has per-biome sun_color/sun_energy/fill_color/fill_energy/background_color. Bug hunt C29: 0 bugs (talent system safe). 4 files, 680 net lines. 36 total bugs fixed across 30 cycles.",
   "plan_mode": false,
   "gate_compliance": {
-    "total": 6,
-    "completed": 1,
-    "pct": 16
+    "total": 1,
+    "completed": 0,
+    "pct": 0
   },
   "recent_skills": [
+    {
+      "name": "everything-claude-code:code-reviewer",
+      "ts": "18:27:54",
+      "status": "done"
+    },
     {
       "name": "everything-claude-code:learn-eval",
       "ts": "16:08:37",
@@ -45,11 +57,6 @@
     {
       "name": "Explore",
       "ts": "12:03:08",
-      "status": "done"
-    },
-    {
-      "name": "Explore",
-      "ts": "12:02:44",
       "status": "done"
     }
   ]

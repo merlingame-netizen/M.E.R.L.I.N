@@ -5,6 +5,8 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include "ggml-backend.h"   // b9196: dynamic CPU backend discovery (ggml-cpu-*.dll)
+
 #include <algorithm>
 #include <string>
 #include <thread>
@@ -16,6 +18,10 @@ std::atomic<int> MerlinLLM::backend_refs{0};
 
 MerlinLLM::MerlinLLM() {
 	if (backend_refs.fetch_add(1) == 0) {
+		// b9196 API: must explicitly load arch-specific ggml-cpu-*.dll backends
+		// before llama_backend_init. Pre-b9196 builds shipped a single
+		// ggml-cpu.dll that auto-registered; b9196 splits it into 15+ variants.
+		ggml_backend_load_all();
 		llama_backend_init();
 	}
 	const uint32_t hw_threads = std::thread::hardware_concurrency();
@@ -35,7 +41,7 @@ MerlinLLM::~MerlinLLM() {
 		ctx = nullptr;
 	}
 	if (model) {
-		llama_free_model(model);
+		llama_model_free(model);   // b9196 rename (was llama_free_model)
 		model = nullptr;
 	}
 	if (backend_refs.fetch_sub(1) == 1) {
@@ -65,12 +71,12 @@ Error MerlinLLM::load_model(String path) {
 		ctx = nullptr;
 	}
 	if (model) {
-		llama_free_model(model);
+		llama_model_free(model);   // b9196 rename (was llama_free_model)
 		model = nullptr;
 	}
 
 	llama_model_params mp = llama_model_default_params();
-	model = llama_load_model_from_file(path.utf8().get_data(), mp);
+	model = llama_model_load_from_file(path.utf8().get_data(), mp);   // b9196 rename
 
 	if (!model) {
 		UtilityFunctions::printerr("Failed to load model at: ", path);
@@ -81,9 +87,9 @@ Error MerlinLLM::load_model(String path) {
 	cp.n_ctx = n_ctx;
 	cp.n_threads = n_threads;
 	cp.n_threads_batch = n_threads_batch;
-	cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_ENABLED;  // Phase 6: ~10-15% speedup on prompt eval
+	cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO;  // Phase 6: AUTO — let llama.cpp pick. ENABLED on CPU-only b9196 hits ggml_assert on Gemma 4 sliding-window kernel.
 
-	ctx = llama_new_context_with_model(model, cp);
+	ctx = llama_init_from_model(model, cp);   // b9196 rename (was llama_new_context_with_model)
 	if (!ctx) {
 		UtilityFunctions::printerr("Failed to create llama context");
 		return ERR_CANT_CREATE;
@@ -187,20 +193,28 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				if (batch.logits && batch.n_tokens > 0) {
 					batch.logits[batch.n_tokens - 1] = true;
 				}
-				if (llama_decode(ctx, batch) != 0) {
-					error_msg = "Prompt decode failed (prefix reuse)";
+				// b9196: llama_decode positive return codes are non-fatal (1 = KV slot miss).
+				// Only treat ret < 0 as fatal. Pre-b9196 we wrongly treated != 0 as fatal,
+				// which caused a silent stall on Gemma 4 (larger KV footprint triggers ret=1
+				// on first decode of a large prompt).
+				const int32_t ret = llama_decode(ctx, batch);
+				if (ret < 0) {
+					error_msg = "Prompt decode failed (prefix reuse, fatal)";
 				}
 			} else {
 				// Full clear + decode (first call or no common prefix)
 				if (mem) {
 					llama_memory_clear(mem, true);
+					last_prompt_tokens.clear();  // keep cache + tracker in sync
 				}
 				llama_batch batch = llama_batch_get_one(tokens.data(), n_tok_final);
 				if (batch.logits) {
 					batch.logits[batch.n_tokens - 1] = true;
 				}
-				if (llama_decode(ctx, batch) != 0) {
-					error_msg = "Prompt decode failed";
+				// b9196: see comment above — ret < 0 only.
+				const int32_t ret = llama_decode(ctx, batch);
+				if (ret < 0) {
+					error_msg = "Prompt decode failed (fatal)";
 				}
 			}
 
@@ -269,7 +283,15 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				if (next.logits) {
 					next.logits[0] = true;
 				}
-				if (llama_decode(ctx, next) != 0) {
+				// b9196: ret < 0 only is fatal. ret == 1 means KV slot miss; for the
+				// per-token loop we still need to stop because we can't reasonably retry
+				// a single token without resetting state. Set a clearer error.
+				const int32_t ret = llama_decode(ctx, next);
+				if (ret < 0) {
+					decode_failed = true;
+					break;
+				} else if (ret == 1) {
+					error_msg = "KV cache full during generation";
 					decode_failed = true;
 					break;
 				}
