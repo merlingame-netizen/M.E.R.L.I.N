@@ -95,28 +95,43 @@ func _ready() -> void:
 
 	# 4) Generate — Gemma turn format hand-rolled (no native chat template)
 	_result.phase = "generate"
+	_log("[Phase generate] Setting sampling params + ctx_size")
 	if _llm.has_method("set_sampling_params"):
 		_llm.set_sampling_params(0.7, 0.9, 80)
 	if _llm.has_method("set_context_size"):
 		_llm.set_context_size(1024)
 	var prompt := "<start_of_turn>user\nReponds en une phrase druidique: nemeton.<end_of_turn>\n<start_of_turn>model\n"
-	var done := {"ok": false, "text": "", "error": ""}
+	# C++ result dict has "text" XOR "error" — no "ok" key. Use callback_fired sentinel.
+	var done := {"callback_fired": false, "text": "", "error": ""}
 	var t1: int = Time.get_ticks_msec()
+	_log("[Phase generate] Calling generate_async with prompt len=%d" % prompt.length())
 	_llm.generate_async(prompt, func(res: Dictionary) -> void:
-		done.ok = bool(res.get("ok", false))
+		done.callback_fired = true
 		done.text = String(res.get("text", ""))
 		done.error = String(res.get("error", ""))
+		_log("[Phase generate] Callback fired: text_len=%d error='%s'" % [done.text.length(), done.error])
 	)
+	_log("[Phase generate] generate_async returned, entering poll loop")
 
-	# Poll up to GENERATE_TIMEOUT_MS
-	while not done.ok and done.error == "" and Time.get_ticks_msec() - t1 < GENERATE_TIMEOUT_MS:
+	var poll_iter: int = 0
+	while not done.callback_fired and Time.get_ticks_msec() - t1 < GENERATE_TIMEOUT_MS:
 		if _llm.has_method("poll_result"):
 			_llm.poll_result()
 		await get_tree().create_timer(0.1).timeout
+		poll_iter += 1
+		if poll_iter % 30 == 0:
+			_log("[Phase generate] Still polling at %ds (callback not yet fired)" % int((Time.get_ticks_msec() - t1) / 1000))
 
 	_result.generate_ms = Time.get_ticks_msec() - t1
-	if not done.ok:
-		_fail(1, "generate failed after %dms: %s" % [_result.generate_ms, done.error])
+	_log("[Phase generate] Poll loop exited: callback_fired=%s elapsed=%dms iter=%d" % [str(done.callback_fired), _result.generate_ms, poll_iter])
+	if not done.callback_fired:
+		_fail(1, "generate callback never fired after %dms" % _result.generate_ms)
+		return
+	if done.error != "":
+		_fail(1, "generate returned error: %s" % done.error)
+		return
+	if done.text.length() == 0:
+		_fail(1, "generate returned empty text (no error)")
 		return
 	_result.output_text = done.text
 	_result.output_len = done.text.length()
