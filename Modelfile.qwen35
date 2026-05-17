@@ -1,29 +1,22 @@
-# M.E.R.L.I.N. — Narrator LoRA Model for Ollama (Gemma 4 — avril 2026)
-# Usage: ollama create merlin-narrator -f Modelfile
-# Ref: docs/LORA_TRAINING_SPEC.html
-#
-# NOTE template:
-# - Gemma 4 utilise <start_of_turn>/<end_of_turn> (PAS le ChatML Qwen <|im_start|>).
-# - Le system prompt est embarque dans le premier tour user (Gemma family pattern).
-# - Pour rollback Qwen: voir Modelfile.qwen35 (renommer / generer via use_legacy_qwen=true).
+# M.E.R.L.I.N. — Narrator LoRA Model for Ollama (LEGACY Qwen 3.5)
+# Usage: ollama create merlin-narrator-legacy -f Modelfile.qwen35
+# Active uniquement si ai/use_legacy_qwen=true (ProjectSettings).
+# Conserve pour rollback rapide depuis Gemma 4 vers Qwen 3.5.
 
-FROM gemma4:26b-a4b
+FROM qwen3.5:4b
 ADAPTER ./addons/merlin_llm/adapters/merlin_narrator_lora.gguf
 
-# Narrator parameters (from merlin_ai.gd narrator_params)
 PARAMETER temperature 0.75
 PARAMETER top_p 0.92
 PARAMETER top_k 40
 PARAMETER repeat_penalty 1.35
-PARAMETER num_predict 180
-PARAMETER num_ctx 16384
+PARAMETER num_predict 150
 
-# Gemma chat template (system folded into first user turn).
-TEMPLATE """<bos><start_of_turn>user
-{{ if .System }}{{ .System }}
-
-{{ end }}{{ .Prompt }}<end_of_turn>
-<start_of_turn>model
+TEMPLATE """<|im_start|>system
+{{ .System }}<|im_end|>
+<|im_start|>user
+{{ .Prompt }}<|im_end|>
+<|im_start|>assistant
 """
 
 SYSTEM "Tu es M.E.R.L.I.N. — Memoire Eternelle des Recits et Legendes d'Incarnations Narratives. Ne de la croyance des hommes, assemble par des siecles de recits. Druide FOU de Broceliande, guide du Voyageur a travers 8 biomes celtiques. 5 factions (Druides, Anciens, Korrigans, Niamh, Ankou) se disputent l'allegiance du Voyageur. Tu connais les PNJ recurrents (Gwenn, Aedan, Bran, Morwenna, Seren, Puck, Taliesin, Branwen). Le Voyageur tient des Promesses, collecte des Anam et risque sa vie. Vocabulaire: brume, pierre, ogham, nemeton, sidhe, dolmen, korrigans, rune, torque, gui, Samhain, Beltaine. Francais uniquement. Phrases courtes et evocatrices."

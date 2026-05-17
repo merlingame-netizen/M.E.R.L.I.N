@@ -1,32 +1,55 @@
 ## OllamaBackend — Drop-in replacement for MerlinLLM using Ollama HTTP API
 ##
-## Utilise /api/generate avec raw=true pour envoyer les prompts ChatML pre-formates.
+## Utilise /api/generate avec raw=true pour envoyer les prompts pre-formates
+## (Gemma 4 par defaut, Qwen 3.5 en legacy via ai/use_legacy_qwen=true).
 ## Interface 100% compatible _run_llm (generate_async/poll_result/cancel/sampling).
 ## Multi-instance safe: chaque OllamaBackend est independant (Ollama gere le multi-slot).
 ## Supporte modeles heterogenes: chaque instance peut utiliser un modele different.
-## Supporte le thinking mode (Qwen 3.5): strip automatique des tags <think>.
+##
+## Thinking mode :
+## - Qwen 3.5 emet <think>...</think> tags qu'on strip automatiquement.
+## - Gemma 4 ne supporte pas les thinking tags publics (champ `think` no-op cote serveur)
+##   mais le strip reste compatible (no-op si pas de tag).
 extends RefCounted
 class_name OllamaBackend
 
 const DEFAULT_HOST := "127.0.0.1"
 const DEFAULT_PORT := 11434
-const DEFAULT_MODEL := "qwen3.5:2b"
+# Default model — Gemma 4 E4B (avril 2026). Override via ProjectSettings ai/use_legacy_qwen.
+const DEFAULT_MODEL := "gemma4:e4b"
+const DEFAULT_MODEL_LEGACY := "qwen3.5:2b"
 const CONNECT_TIMEOUT_MS := 5000
 const READ_TIMEOUT_MS := 60000
 
-# ── Model Registry (Qwen 3.5 family) ─────────────────────────────────────────
+# ── Model Registry — Gemma 4 primary + Qwen legacy ───────────────────────────
+# Schema: model_key -> {tag, ram_mb, context_default}
 const MODEL_REGISTRY := {
-	"qwen35_4b": {"tag": "qwen3.5:4b", "ram_mb": 3200, "context_default": 8192},
-	"qwen35_2b": {"tag": "qwen3.5:2b", "ram_mb": 1800, "context_default": 4096},
-	"qwen35_0.8b": {"tag": "qwen3.5:0.8b", "ram_mb": 800, "context_default": 2048},
-	"qwen25_1.5b": {"tag": "qwen2.5:1.5b", "ram_mb": 1200, "context_default": 4096},
+	# Gemma 4 (default)
+	"gemma4_e2b":     {"tag": "gemma4:e2b",      "ram_mb":   900, "context_default":  4096},
+	"gemma4_e4b":     {"tag": "gemma4:e4b",      "ram_mb":  2000, "context_default":  8192},
+	"gemma4_26b_a4b": {"tag": "gemma4:26b-a4b",  "ram_mb":  4200, "context_default": 16384},
+	"gemma4_31b":     {"tag": "gemma4:31b",      "ram_mb": 17000, "context_default": 32768},
+	# Qwen 3.5 / 2.5 (legacy, kept for rollback)
+	"qwen35_4b":      {"tag": "qwen3.5:4b",      "ram_mb":  3200, "context_default":  8192},
+	"qwen35_2b":      {"tag": "qwen3.5:2b",      "ram_mb":  1800, "context_default":  4096},
+	"qwen35_0.8b":    {"tag": "qwen3.5:0.8b",    "ram_mb":   800, "context_default":  2048},
+	"qwen25_1.5b":    {"tag": "qwen2.5:1.5b",    "ram_mb":  1200, "context_default":  4096},
 }
+
+
+## Returns the runtime default model honoring the use_legacy_qwen flag.
+static func runtime_default_model() -> String:
+	if ProjectSettings.has_setting("ai/use_legacy_qwen") and bool(ProjectSettings.get_setting("ai/use_legacy_qwen", false)):
+		return DEFAULT_MODEL_LEGACY
+	return DEFAULT_MODEL
 
 # ── Config ────────────────────────────────────────────────────────────────────
 var host: String = DEFAULT_HOST
 var port: int = DEFAULT_PORT
-var model: String = DEFAULT_MODEL
-var thinking_mode: bool = false  # Qwen 3.5: enable <think> reasoning (stripped from output)
+var model: String = runtime_default_model()
+# Thinking reasoning toggle. Qwen 3.5 emet <think>...</think>; Gemma 4 ignore le champ
+# cote serveur mais le strip reste safe (no-op si pas de tag).
+var thinking_mode: bool = false
 
 # ── Sampling params (set via set_sampling_params / set_advanced_sampling) ─────
 var _temperature: float = 0.7
@@ -275,8 +298,10 @@ func _blocking_stream(prompt: String) -> void:
 		"stream": true,
 		"options": options,
 	}
-	if thinking_mode:
-		payload["think"] = true
+	# v7.7.26 — EXPLICITLY include think:false when thinking_mode is off.
+	# Ollama defaults to think=ON when the field is omitted, which consumes
+	# num_predict budget on qwen3.5 (root cause of v7.7.25 60s card timeouts).
+	payload["think"] = thinking_mode
 	var body_str := JSON.stringify(payload)
 
 	# Connect.
@@ -495,9 +520,10 @@ func _blocking_generate(prompt: String) -> void:
 		"stream": false,
 		"options": options,
 	}
-	# Qwen 3.5 thinking mode: enable chain-of-thought reasoning
-	if thinking_mode:
-		payload["think"] = true
+	# v7.7.26 — EXPLICITLY send think:false when thinking_mode is off (default).
+	# Ollama defaults to think=ON when the field is omitted, which consumes
+	# num_predict budget on qwen3.5 (root cause of v7.7.25 60s card timeouts).
+	payload["think"] = thinking_mode
 	var body_str := JSON.stringify(payload)
 
 	# Connect
