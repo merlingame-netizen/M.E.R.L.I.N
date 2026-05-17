@@ -538,36 +538,63 @@ func _init_local_models() -> void:
 	print("[MerlinAI] _init_local_models() starting...")
 	_set_status("Connexion: ...", "Preparation des modeles", 5.0)
 
+	# ── Phase D: Platform detection ──────────────────────────────────────────
+	# Mobile (Android/iOS) force le profil mobile + GDExtension native (pas d'Ollama).
+	# Web (HTML5/WASM) saute les backends locaux (Ollama + GDExtension impossibles).
+	var is_mobile: bool = OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios")
+	var is_web: bool = OS.has_feature("web")
+	if is_mobile:
+		_apply_mobile_profile_overrides()
+		_log("Plateforme mobile detectee — force profil MOBILE_* + GDExtension native (pas d'Ollama).")
+	if is_web:
+		_log("Plateforme web detectee — skip backends locaux, force Groq cloud.")
+
 	# Determine how many brains to load
 	var target: int = _target_brain_count if _target_brain_count > 0 else _detect_optimal_brains()
 	target = clampi(target, BRAIN_SINGLE, BRAIN_MAX)
+	if is_mobile:
+		target = BRAIN_SINGLE  # Mobile: 1 brain strict (battery/RAM/thermal)
 	_log("Target brains: %d" % target)
 
 	# ── Strategy 1: MerlinLLM C++ GDExtension (local, in-process, user direction) ─
 	# All-local via custom GDExtension: no daemon, no HTTP, llama.cpp embedded.
-	# Uses qwen2.5-3b-instruct-q4_k_m.gguf in addons/merlin_llm/models/
-	if not OS.has_feature("web"):
+	# Default model: gemma4-e4b-q4_k_m.gguf (or gemma4-e2b on mobile).
+	# Skipped on web (WASM can't load native libs).
+	if not is_web:
 		if ClassDB.class_exists("MerlinLLM"):
 			await _try_init_merlin_llm(target)
 			if is_ready:
 				return
 
-	# ── Strategy 2: Ollama HTTP daemon (fallback if MerlinLLM unavailable) ────
-	if not OS.has_feature("web"):
+	# ── Strategy 2: Ollama HTTP daemon (desktop only — pas de daemon sur mobile/web) ─
+	if not is_web and not is_mobile:
 		if await _try_init_ollama(target):
 			return
 
-	# ── Strategy 3: Groq cloud API (web export primary) ───────────────────
+	# ── Strategy 3: Groq cloud API (web export primary, mobile fallback offline) ─
 	if await _try_init_groq():
 		return
 
 	# ── Strategy 4: BitNet swarm (llama-server.exe instances) ─────────────
-	if await _try_init_bitnet(target):
-		return
+	# Desktop only — BitNet binaries are x86_64 specific.
+	if not is_web and not is_mobile:
+		if await _try_init_bitnet(target):
+			return
 
 	# ── Strategy 5: Final fallback to MerlinLLM (already tried in S1, no-op) ─
-	if not is_ready:
+	if not is_ready and not is_web:
 		await _try_init_merlin_llm(target)
+
+
+## Phase D — Force mobile profile + Gemma 4 E2B/E4B sur la classe MerlinAI.
+## Appele tot dans _init_local_models() quand OS.has_feature("mobile"/"android"/"ios").
+func _apply_mobile_profile_overrides() -> void:
+	var available_ram: int = _estimate_available_ram_mb()
+	var cpu_threads: int = OS.get_processor_count()
+	_active_profile_id = BrainSwarmConfig.detect_profile_mobile(available_ram, cpu_threads)
+	_is_time_sharing = false
+	var profile: Dictionary = BrainSwarmConfig.get_profile(_active_profile_id)
+	_log("Mobile profile selected: %s (RAM=%d MB, CPU=%d threads)" % [str(profile.get("name", "?")), available_ram, cpu_threads])
 
 
 func _try_init_ollama(target: int) -> bool:
