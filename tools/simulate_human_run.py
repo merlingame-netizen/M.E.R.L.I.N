@@ -26,17 +26,26 @@ from pathlib import Path
 from urllib.request import urlopen, Request
 
 OLLAMA_BASE = "http://localhost:11434"
-NARRATOR_MODEL = "qwen3.5:4b"
-GM_MODEL = "qwen3.5:2b"
-EMBED_MODEL = "nomic-embed-text"
+# v7.7.27 — Switched from qwen3.5:2b/4b to Gemma 4 family.
+# E2B for both narrator + GM keeps wall-clock under ~10 min on CPU-only.
+# Override via env vars to swap to gemma4:e4b / gemma4:26b on faster hardware:
+#   MERLIN_NARRATOR_MODEL=gemma4:e4b python tools/simulate_human_run.py
+import os as _os
+NARRATOR_MODEL = _os.environ.get("MERLIN_NARRATOR_MODEL", "gemma4:e2b")
+GM_MODEL = _os.environ.get("MERLIN_GM_MODEL", "gemma4:e2b")
+EMBED_MODEL = _os.environ.get("MERLIN_EMBED_MODEL", "nomic-embed-text")
+# v7.7.27 — Gemma 4 has chain-of-thought enabled by default on Ollama.
+# Without explicit "think": false the response goes to a "thinking" field
+# and "response" stays empty until num_predict fits both. Force off.
+THINK_MODE = _os.environ.get("MERLIN_THINK", "false").lower() == "true"
 
 REPO = Path(__file__).resolve().parent.parent
 REFERENCES_PATH = REPO / "data" / "ai" / "scenarios_reference_broceliande.json"
 EMBEDDINGS_PATH = REPO / "data" / "ai" / "scenarios_reference_broceliande.embeddings.json"
 
 OUT_DIR = Path.home() / "Downloads"
-HTML_PATH = OUT_DIR / "merlin_human_run_test_v7.7.25.html"
-JSON_PATH = OUT_DIR / "merlin_human_run_test_v7.7.25.json"
+HTML_PATH = OUT_DIR / "merlin_human_run_test_v7.7.27.html"
+JSON_PATH = OUT_DIR / "merlin_human_run_test_v7.7.27.json"
 
 BIOME = "foret_broceliande"
 
@@ -54,9 +63,10 @@ def embed(text: str) -> list:
 
 
 def generate(model: str, system: str, user: str, options: dict | None = None,
-             timeout: int = 90) -> tuple[str, float]:
+             timeout: int = 240) -> tuple[str, float]:
+    # v7.7.27 — default timeout bumped 90 → 240 s for Gemma 4 E2B CPU (~7 tok/s).
     payload = {"model": model, "system": system, "prompt": user,
-               "stream": False, "options": options or {}}
+               "stream": False, "think": THINK_MODE, "options": options or {}}
     t0 = time.time()
     try:
         resp = ollama_post("/api/generate", payload, timeout=timeout)
