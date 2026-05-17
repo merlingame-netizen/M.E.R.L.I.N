@@ -44,8 +44,8 @@ REFERENCES_PATH = REPO / "data" / "ai" / "scenarios_reference_broceliande.json"
 EMBEDDINGS_PATH = REPO / "data" / "ai" / "scenarios_reference_broceliande.embeddings.json"
 
 OUT_DIR = Path.home() / "Downloads"
-HTML_PATH = OUT_DIR / "merlin_human_run_test_v7.7.27.html"
-JSON_PATH = OUT_DIR / "merlin_human_run_test_v7.7.27.json"
+HTML_PATH = OUT_DIR / "merlin_human_run_test_v7.7.28.html"
+JSON_PATH = OUT_DIR / "merlin_human_run_test_v7.7.28.json"
 
 BIOME = "foret_broceliande"
 
@@ -137,59 +137,144 @@ def llm_titles(rag: RAG, biome: str) -> tuple[list, dict]:
 
 
 def llm_intro(rag: RAG, biome: str, chosen_title: str) -> tuple[str, dict]:
+    # v7.7.28 — Intro shortened : 4-6 phrases (was 6-8). The intro only sets the
+    # mise-en-scène; the full scenario writing happens in llm_scenario_full().
     matches = rag.query(f"{chosen_title} · {biome}", 3)
-    refs_block = "\n\n".join(f"Exemple {i+1} :\n{m.get('intro', '')[:600]}"
-                              for i, m in enumerate(matches))
+    refs_block = "\n\n".join(f"Exemple {i+1} :\n{m.get('intro', '')[:400]}"
+                              for i, m in enumerate(matches[:2]))
     system = (
-        "Tu rédiges l'intro d'une marche druidique dans le bois de Brocéliande.\n"
-        "POV : second-person, jeune druide en initiation. Le monde druidique est réel.\n"
-        "CONTRAINTES : EXACTEMENT 6 à 8 phrases ; français celtique ; PAS d'anglicismes ; "
-        "PAS de cyber/technologie ; PAS de rupture du 4e mur (pas de jeu/simulation).\n"
-        f"\nExemples de qualité :\n{refs_block}\n\n"
-        f"Maintenant rédige pour : \"{chosen_title}\"."
+        "Tu rédiges l'intro d'une marche druidique en Brocéliande.\n"
+        "POV : second-person, jeune druide. CONTRAINTES : EXACTEMENT 4 à 6 phrases ; "
+        "français celtique ; PAS d'anglicismes/cyber/jeu. Place le druide sur le seuil.\n"
+        f"\nExemples :\n{refs_block}\n\n"
+        f"Rédige pour : \"{chosen_title}\"."
     )
-    raw, dur = generate(NARRATOR_MODEL, system, "Rédige l'intro 6-8 phrases.",
-                       {"temperature": 0.85, "num_predict": 400})
+    raw, dur = generate(NARRATOR_MODEL, system, "Intro 4-6 phrases courtes.",
+                       {"temperature": 0.85, "num_predict": 260})
+    return raw.strip(), {"duration_s": dur, "rag_matches": [m["title"] for m in matches]}
+
+
+def llm_scenario_full(rag: RAG, biome: str, chosen_title: str,
+                      acts: list) -> tuple[str, dict]:
+    """v7.7.28 — Generate the COMPLETE scenario (3-5 paragraphs of prose, one per
+    act). This is the 'scénario complet' that drives card breakdown. Each
+    paragraph references its act by name so we can map cards back to acts in
+    the report."""
+    matches = rag.query(f"{chosen_title} · scénario complet", 2)
+    refs = "\n".join(f"- {m.get('title','?')} ({len(m.get('cards', []))} cartes)"
+                     for m in matches)
+    act_outline = "\n".join(
+        f"  Acte {a['id']} — « {a['name']} » : {a['theme']} (faction {a.get('faction_tilt','neutre')}, {a.get('card_count', 3)} cartes)"
+        for a in acts
+    )
+    system = (
+        "Tu es Merlin. Écris le scénario complet d'une marche druidique en "
+        f"3 à 5 paragraphes (un par acte). Titre : \"{chosen_title}\" (biome : {biome}).\n"
+        "CONTRAINTES : français celtique druidique ; 2e personne ; pas d'anglicismes ; "
+        "pas de méta-discours sur le jeu. Chaque paragraphe écrit l'acte correspondant.\n"
+        f"Acts à écrire :\n{act_outline}\n"
+        f"Exemples canoniques :\n{refs}\n"
+        "Format : un titre d'acte en gras puis le paragraphe.\n"
+        "EXEMPLE :\n"
+        "**Acte 1 — Le Seuil**\n"
+        "Tu poses le pied sur la mousse...\n\n"
+        "**Acte 2 — La Rencontre**\n"
+        "..."
+    )
+    raw, dur = generate(NARRATOR_MODEL, system,
+                        "Rédige le scénario complet en paragraphes par acte.",
+                        {"temperature": 0.8, "num_predict": 700}, timeout=300)
     return raw.strip(), {"duration_s": dur, "rag_matches": [m["title"] for m in matches]}
 
 
 def llm_skeleton(rag: RAG, biome: str, chosen_title: str) -> tuple[dict, dict]:
+    """v7.7.28 — Skeleton now produces 4-5 ACTS (pans de scénario), each with a
+    name + theme + faction_tilt + emotion + card_count. Total cards across all
+    acts ∈ [11, 25] per user mandate. Cards within an act share the act's
+    faction_tilt + emotion arc and can be distinguished by sub-beat summaries."""
     matches = rag.query(f"{chosen_title} · structure narrative", 2)
-    beats_block = []
-    for i, m in enumerate(matches):
-        cards = m.get("cards", [])[:5]
-        block = f"Exemple {i+1} ({m.get('title', '?')}) :\n"
-        for c in cards:
-            block += f"  n={c.get('n','?')} emotion={c.get('emotion','?')} pole={c.get('pole','?')}\n"
-        beats_block.append(block)
-    refs = "\n".join(beats_block)
+    refs = "\n".join(f"- {m.get('title','?')}" for m in matches[:2])
     system = (
-        "Tu es le Gamemaster M.E.R.L.I.N.. Génère un skeleton narratif au format JSON strict.\n"
-        f"Titre : \"{chosen_title}\" (biome : {biome}).\n"
-        "Structure : {\"title\": str, \"beats\": [5-7 entries]}.\n"
-        "Chaque beat = {n: 1..N, summary: 1 phrase 10-20 mots, faction_tilt, emotion}.\n"
-        "faction_tilt ∈ {druides, anciens, korrigans, niamh, ankou, neutre}.\n"
-        "emotion ∈ {curiosite, tension, peur, espoir, sagesse, fascination, melancolie, emerveillement}.\n"
-        f"\nExemples :\n{refs}\n"
-        "\nRéponds UNIQUEMENT avec le JSON, sans markdown."
+        "Tu es le Gamemaster M.E.R.L.I.N.. Génère le DÉCOUPAGE en actes (JSON strict).\n"
+        f"Titre : \"{chosen_title}\" (biome : {biome}).\n\n"
+        "Structure : {\"title\": str, \"acts\": [4 ou 5 actes]}.\n"
+        "Chaque acte = {id:1..N, name:str (3-5 mots), theme:str (10-15 mots), "
+        "faction_tilt, emotion, card_count: int (entre 2 et 7), "
+        "beats:[card_count entries] où chaque beat = {n, summary 8-15 mots, sub_emotion}}.\n\n"
+        "RÈGLES :\n"
+        "- TOTAL des card_count ∈ [11, 25] (somme).\n"
+        "- Acte 1 (intro) : 2-3 cartes, emotion=curiosite, faction=neutre/druides.\n"
+        "- Actes du milieu (2-3 actes) : 3-5 cartes chacun, tensions montantes.\n"
+        "- Acte final (boss) : 2-4 cartes, climax, sub_emotion=sagesse/peur.\n"
+        "- faction_tilt ∈ {druides, anciens, korrigans, niamh, ankou, neutre}.\n"
+        "- emotion ∈ {curiosite, tension, peur, espoir, sagesse, fascination, melancolie, emerveillement}.\n"
+        f"\nExemples canoniques :\n{refs}\n"
+        "\nRéponds UNIQUEMENT le JSON, sans markdown ni explication."
     )
-    raw, dur = generate(GM_MODEL, system, "Génère le skeleton JSON.",
-                       {"temperature": 0.8, "num_predict": 600}, timeout=120)
+    raw, dur = generate(GM_MODEL, system, "Découpage en 4-5 actes (JSON).",
+                       {"temperature": 0.8, "num_predict": 900}, timeout=240)
     skeleton = _parse_json_lax(raw)
-    if not skeleton or not skeleton.get("beats"):
-        skeleton = {"title": chosen_title, "beats": [
-            {"n": 1, "summary": "Tu entres dans le bois — quelque chose t'observe.",
-             "faction_tilt": "neutre", "emotion": "curiosite"},
-            {"n": 2, "summary": "Un signe dans la mousse capte ton regard.",
-             "faction_tilt": "druides", "emotion": "fascination"},
-            {"n": 3, "summary": "Tu fais face à un choix moral.",
-             "faction_tilt": "korrigans", "emotion": "tension"},
-            {"n": 4, "summary": "La forêt te répond, vaste et lente.",
-             "faction_tilt": "anciens", "emotion": "peur"},
-            {"n": 5, "summary": "Tu repars marqué par ton choix.",
-             "faction_tilt": "niamh", "emotion": "sagesse"},
-        ]}
+    if not skeleton or not skeleton.get("acts"):
+        skeleton = _fallback_acts(chosen_title)
+    # Normalize : ensure each act has id + beats matching card_count + numbered beats
+    total = 0
+    for ai, act in enumerate(skeleton.get("acts", [])):
+        act["id"] = act.get("id", ai + 1)
+        if "card_count" not in act:
+            act["card_count"] = max(2, min(5, len(act.get("beats", [])) or 3))
+        # Pad beats if missing
+        beats = act.get("beats", []) or []
+        while len(beats) < act["card_count"]:
+            beats.append({
+                "n": len(beats) + 1,
+                "summary": f"Beat {len(beats) + 1} de l'acte « {act.get('name','?')} »",
+                "sub_emotion": act.get("emotion", "curiosite"),
+            })
+        act["beats"] = beats[:act["card_count"]]
+        total += act["card_count"]
+    skeleton["total_cards"] = total
     return skeleton, {"duration_s": dur, "rag_matches": [m["title"] for m in matches]}
+
+
+def _fallback_acts(title: str) -> dict:
+    return {"title": title, "acts": [
+        {"id": 1, "name": "Le Seuil", "theme": "Tu poses le pied dans la forêt brumeuse",
+         "faction_tilt": "neutre", "emotion": "curiosite", "card_count": 3,
+         "beats": [
+             {"n": 1, "summary": "La forêt te jauge, mousse sous tes pieds.", "sub_emotion": "curiosite"},
+             {"n": 2, "summary": "Un sentier se révèle entre les hêtres.", "sub_emotion": "curiosite"},
+             {"n": 3, "summary": "Tu entends un premier murmure.", "sub_emotion": "fascination"},
+         ]},
+        {"id": 2, "name": "La Rencontre", "theme": "Un esprit t'apparait sur le sentier",
+         "faction_tilt": "druides", "emotion": "fascination", "card_count": 4,
+         "beats": [
+             {"n": 1, "summary": "Un vieil homme appuyé sur un bâton.", "sub_emotion": "fascination"},
+             {"n": 2, "summary": "Il te jauge sans parler.", "sub_emotion": "tension"},
+             {"n": 3, "summary": "Tu offres ou prends ou passes.", "sub_emotion": "tension"},
+             {"n": 4, "summary": "La forêt approuve ou se referme.", "sub_emotion": "sagesse"},
+         ]},
+        {"id": 3, "name": "Le Cercle", "theme": "Tu fais face à un dilemme moral",
+         "faction_tilt": "korrigans", "emotion": "tension", "card_count": 4,
+         "beats": [
+             {"n": 1, "summary": "Korrigans rieurs bordent le cercle.", "sub_emotion": "tension"},
+             {"n": 2, "summary": "Ils te proposent un troc.", "sub_emotion": "tension"},
+             {"n": 3, "summary": "Tu choisis entre garder ou donner.", "sub_emotion": "peur"},
+             {"n": 4, "summary": "Le cercle se referme sur ta décision.", "sub_emotion": "fascination"},
+         ]},
+        {"id": 4, "name": "Le Chêne", "theme": "Le Chêne Ancien révèle la vérité",
+         "faction_tilt": "niamh", "emotion": "sagesse", "card_count": 3,
+         "beats": [
+             {"n": 1, "summary": "Le Chêne s'élève devant toi.", "sub_emotion": "fascination"},
+             {"n": 2, "summary": "Tu poses la paume sur l'écorce.", "sub_emotion": "sagesse"},
+             {"n": 3, "summary": "Le Chêne te répond — passage ou refus.", "sub_emotion": "sagesse"},
+         ]},
+        {"id": 5, "name": "Le Retour", "theme": "Tu quittes le nemeton marqué",
+         "faction_tilt": "ankou", "emotion": "sagesse", "card_count": 2,
+         "beats": [
+             {"n": 1, "summary": "La forêt te laisse repartir.", "sub_emotion": "melancolie"},
+             {"n": 2, "summary": "Tu retrouves le seuil du clan.", "sub_emotion": "espoir"},
+         ]},
+    ], "total_cards": 16}
 
 
 def llm_card(rag: RAG, biome: str, beat: dict, beat_idx: int, total: int) -> tuple[dict, dict]:
@@ -413,58 +498,114 @@ def run_simulation() -> dict:
                               % (len(intro) / 16.6)},
     })
 
-    # Step 5 : skeleton
-    print("[Step 5] Generating skeleton…")
+    # Step 5 : skeleton (acts/pans) — v7.7.28
+    print("[Step 5] Generating skeleton (4-5 actes, 11-25 cartes total)…")
     skeleton, meta_skel = llm_skeleton(rag, BIOME, chosen_title)
-    beats = skeleton.get("beats", [])
+    acts = skeleton.get("acts", [])
+    total_cards = skeleton.get("total_cards", sum(a.get("card_count", 0) for a in acts))
     trace["steps"].append({
-        "step": 5, "phase": "skeleton", "label": "LLM 3 — Skeleton 5-10 beats",
+        "step": 5, "phase": "skeleton", "label": "LLM 3 — Découpage en actes (pans de scénario)",
         "t_offset_s": round(time.time() - t_run_start, 2),
         "duration_s": round(meta_skel["duration_s"], 2),
         "model": GM_MODEL,
         "rag_few_shot_used": meta_skel["rag_matches"],
-        "output": {"title": skeleton.get("title"), "beats_count": len(beats), "beats": beats},
+        "output": {
+            "title": skeleton.get("title"),
+            "acts_count": len(acts),
+            "total_cards": total_cards,
+            "acts": acts,
+        },
     })
 
-    # Step 6+ : per-beat card gen + player play
-    for beat_idx, beat in enumerate(beats):
-        print(f"[Step {6 + beat_idx * 2}] Card beat {beat_idx + 1}/{len(beats)}…")
-        card, meta_card = llm_card(rag, BIOME, beat, beat_idx, len(beats))
+    # Step 6 : scénario complet (LLM écrit le texte intégral en paragraphes par acte)
+    print(f"[Step 6] Generating scenario complet (4-5 paragraphes, {total_cards} cards target)…")
+    scenario_text, meta_scen = llm_scenario_full(rag, BIOME, chosen_title, acts)
+    trace["steps"].append({
+        "step": 6, "phase": "scenario_full",
+        "label": f"LLM 4 — Scénario complet ({len(acts)} actes / {total_cards} cartes)",
+        "t_offset_s": round(time.time() - t_run_start, 2),
+        "duration_s": round(meta_scen["duration_s"], 2),
+        "model": NARRATOR_MODEL,
+        "rag_few_shot_used": meta_scen["rag_matches"],
+        "output": {"scenario_text": scenario_text, "paragraph_count": scenario_text.count("\n\n") + 1},
+    })
+
+    # Step 7+ : actes × cartes — chaque acte génère N cartes (où N = act.card_count)
+    step_n = 7
+    global_card_idx = 0
+    death_break = False
+    for act in acts:
+        # Acte intro (header step)
         trace["steps"].append({
-            "step": 6 + beat_idx * 2, "phase": "card_gen",
-            "label": "LLM 4 — Carte beat %d/%d (%s)" % (beat_idx + 1, len(beats), meta_card["act_type"]),
+            "step": step_n, "phase": "act_intro",
+            "label": f"Acte {act['id']} — « {act.get('name','?')} » ({act.get('card_count', 0)} cartes)",
             "t_offset_s": round(time.time() - t_run_start, 2),
-            "duration_s": round(meta_card["duration_s"], 2),
-            "model": GM_MODEL,
-            "rag_few_shot_used": meta_card["rag_matches"],
-            "act_type": meta_card["act_type"],
-            "output": {"card": card, "beat": beat},
-        })
-        option_idx = pick_option_heuristic(card, beat, rng)
-        options = card.get("options", [])
-        chosen_opt = options[option_idx] if 0 <= option_idx < len(options) else {}
-        delta = rpg.apply_card_choice(card, option_idx, beat_idx)
-        trace["steps"].append({
-            "step": 7 + beat_idx * 2, "phase": "card_play",
-            "label": "Joueur choisit « %s » → effets appliqués" % chosen_opt.get("label", "?"),
-            "t_offset_s": round(time.time() - t_run_start, 2),
-            "duration_s": 2.0,
+            "duration_s": 0.5,
             "output": {
-                "option_idx": option_idx,
-                "option_label": chosen_opt.get("label", "?"),
-                "effects": chosen_opt.get("effects", []),
-                "rpg_delta": delta,
-                "rpg_snapshot": rpg.snapshot(),
+                "act_id": act["id"], "act_name": act.get("name", "?"),
+                "theme": act.get("theme", ""),
+                "faction_tilt": act.get("faction_tilt", "neutre"),
+                "emotion": act.get("emotion", ""),
+                "card_count": act.get("card_count", 0),
             },
         })
-        if rpg.life <= 0:
+        step_n += 1
+        for beat_idx_in_act, beat in enumerate(act.get("beats", [])):
+            global_card_idx += 1
+            print(f"[Step {step_n}] Act {act['id']} card {beat_idx_in_act+1}/{act['card_count']} (#{global_card_idx}/{total_cards})…")
+            # Merge act-level metadata into beat for llm_card prompt context.
+            beat_enriched = {
+                **beat,
+                "faction_tilt": act.get("faction_tilt", "neutre"),
+                "emotion": beat.get("sub_emotion", act.get("emotion", "")),
+                "act_name": act.get("name", ""),
+            }
+            card, meta_card = llm_card(rag, BIOME, beat_enriched, global_card_idx - 1, total_cards)
             trace["steps"].append({
-                "step": 8 + beat_idx * 2, "phase": "death",
-                "label": "Le druide meurt avant la fin",
+                "step": step_n, "phase": "card_gen",
+                "label": f"LLM 5 — Carte {global_card_idx}/{total_cards} (acte {act['id']}, {meta_card['act_type']})",
                 "t_offset_s": round(time.time() - t_run_start, 2),
-                "duration_s": 0,
-                "output": {"final_life": rpg.life},
+                "duration_s": round(meta_card["duration_s"], 2),
+                "model": GM_MODEL,
+                "rag_few_shot_used": meta_card["rag_matches"],
+                "act_type": meta_card["act_type"],
+                "act_id": act["id"],
+                "act_name": act.get("name", ""),
+                "card_global_idx": global_card_idx,
+                "output": {"card": card, "beat": beat_enriched},
             })
+            step_n += 1
+            option_idx = pick_option_heuristic(card, beat_enriched, rng)
+            options = card.get("options", [])
+            chosen_opt = options[option_idx] if 0 <= option_idx < len(options) else {}
+            delta = rpg.apply_card_choice(card, option_idx, global_card_idx - 1)
+            trace["steps"].append({
+                "step": step_n, "phase": "card_play",
+                "label": "Joueur choisit « %s » → effets appliqués" % chosen_opt.get("label", "?"),
+                "t_offset_s": round(time.time() - t_run_start, 2),
+                "duration_s": 2.0,
+                "act_id": act["id"],
+                "card_global_idx": global_card_idx,
+                "output": {
+                    "option_idx": option_idx,
+                    "option_label": chosen_opt.get("label", "?"),
+                    "effects": chosen_opt.get("effects", []),
+                    "rpg_delta": delta,
+                    "rpg_snapshot": rpg.snapshot(),
+                },
+            })
+            step_n += 1
+            if rpg.life <= 0:
+                trace["steps"].append({
+                    "step": step_n, "phase": "death",
+                    "label": "Le druide meurt avant la fin de l'acte",
+                    "t_offset_s": round(time.time() - t_run_start, 2),
+                    "duration_s": 0,
+                    "output": {"final_life": rpg.life, "killed_in_act": act["id"]},
+                })
+                death_break = True
+                break
+        if death_break:
             break
 
     # Final summary
@@ -526,6 +667,28 @@ main{padding:24px 60px;max-width:1400px;margin:0 auto}
 .step.phase-card_play{border-color:var(--violet)}
 .step.phase-summary{border-color:var(--crimson)}
 .step.phase-death{border-color:var(--crimson);background:#1a0d0d}
+.step.phase-scenario_full{border-color:var(--gold-bright);background:#1a140d}
+.step.phase-act_intro{border-color:var(--cyan);background:#0d1418;padding:10px 22px}
+.act-header{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.act-id{background:var(--cyan);color:var(--bg-dark);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;flex-shrink:0}
+.act-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--gold-dim);margin-top:6px}
+.act-meta span{background:var(--bg-dark);padding:3px 8px;border:1px solid var(--gold-dim)}
+.scenario-block{background:#eaddad;color:#3a2710;padding:22px;margin:8px 0;font-style:italic;border:2px solid #4d3218;font-size:14px;line-height:1.75}
+.scenario-block strong{color:#5d2e0a;font-style:normal;display:block;margin:14px 0 6px;font-size:15.5px;letter-spacing:1px;border-bottom:1px solid #b59868;padding-bottom:2px}
+.scenario-block::before{content:"📜 ";font-size:18px}
+/* v7.7.28 — load-time badges */
+.load-badge{display:inline-block;padding:2px 8px;font-size:11px;font-family:monospace;font-weight:bold;border-radius:3px;margin-left:8px;vertical-align:middle}
+.load-badge.fast{background:rgba(90,138,77,0.25);color:var(--green);border:1px solid var(--green)}
+.load-badge.medium{background:rgba(235,168,77,0.20);color:var(--gold);border:1px solid var(--gold)}
+.load-badge.slow{background:rgba(199,41,41,0.20);color:var(--crimson);border:1px solid var(--crimson)}
+.load-badge::before{content:"⏱ "}
+/* v7.7.28 — Mermaid routes panel */
+.routes-panel{background:var(--bg-panel);border:2px solid var(--gold-bright);padding:20px;margin-bottom:20px}
+.routes-panel h2{color:var(--gold-bright);margin:0 0 12px;font-size:18px;letter-spacing:1.5px;text-transform:uppercase}
+.routes-panel pre{background:var(--bg-dark);color:var(--white);padding:14px;font-family:monospace;font-size:11.5px;line-height:1.4;overflow-x:auto;border:1px solid var(--gold-dim);white-space:pre-wrap}
+.routes-mermaid{font-family:monospace;font-size:12px;color:var(--cyan);background:var(--bg-dark);padding:14px;border:1px solid var(--gold-dim);overflow-x:auto;white-space:pre}
+.routes-legend{font-size:11.5px;color:var(--gold-dim);margin-top:8px}
+.routes-legend strong{color:var(--gold-bright)}
 .step-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:14px;flex-wrap:wrap}
 .step-num{color:var(--gold-bright);font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:2px}
 .step-label{color:var(--gold-bright);font-size:17px;flex:1;min-width:300px}
@@ -562,12 +725,34 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
 
     final_rpg = trace.get("rpg_final", trace.get("rpg_initial", {}))
     total_steps = len(trace.get("steps", []))
+    # v7.7.28 — extract acts skeleton + total LLM load time for the routes panel
+    acts: list = []
+    total_cards = 0
+    total_llm_load_s = 0.0
+    chosen_route: list = []
+    for s in trace.get("steps", []):
+        if s.get("phase") == "skeleton":
+            acts = s.get("output", {}).get("acts", [])
+            total_cards = s.get("output", {}).get("total_cards", 0)
+        if s.get("phase") in ("titles", "intro", "skeleton", "scenario_full", "card_gen"):
+            total_llm_load_s += float(s.get("duration_s", 0.0))
+        if s.get("phase") == "card_play":
+            out = s.get("output", {})
+            chosen_route.append({
+                "card_idx": s.get("card_global_idx", 0),
+                "act_id": s.get("act_id", 0),
+                "option_idx": out.get("option_idx", 0),
+                "option_label": out.get("option_label", "?"),
+            })
     parts.append(f"""<header>
-<h1>M.E.R.L.I.N. — Test humain run end-to-end</h1>
-<div class="meta">Pipeline v7.7.23 (RAG-augmented) + v7.7.24 (strict mode + guardrails + persistence) · biome <strong>{html_escape(trace.get('biome','?'))}</strong> · démarré {html_escape(trace.get('started_at','?'))} · terminé {html_escape(trace.get('ended_at','?'))}</div>
+<h1>M.E.R.L.I.N. — Test humain run end-to-end (v7.7.28)</h1>
+<div class="meta">Pipeline v7.7.28 (Gemma 4 ONLY · scénario complet écrit · 11-25 cartes · routes mappées · think:off) · biome <strong>{html_escape(trace.get('biome','?'))}</strong> · démarré {html_escape(trace.get('started_at','?'))} · terminé {html_escape(trace.get('ended_at','?'))}</div>
 <div class="stats-bar">
   <div class="stat-pill"><strong>{trace.get('total_duration_s', 0):.1f}s</strong>Durée totale</div>
+  <div class="stat-pill"><strong>{total_llm_load_s:.1f}s</strong>⏱ LLM load cumul</div>
   <div class="stat-pill"><strong>{total_steps}</strong>Étapes</div>
+  <div class="stat-pill"><strong>{len(acts)}</strong>Actes</div>
+  <div class="stat-pill"><strong>{total_cards}</strong>Cartes (cible)</div>
   <div class="stat-pill"><strong>{final_rpg.get('life', 0)}/100</strong>Vie finale</div>
   <div class="stat-pill"><strong>{final_rpg.get('anam', 0)}</strong>Anam</div>
   <div class="stat-pill"><strong>{html_escape(trace['models']['narrator'])}</strong>Narrator</div>
@@ -576,13 +761,64 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
 </header>
 <main>""")
 
+    # v7.7.28 — Routes panel : ASCII tree of acts × cards × chosen-option, then
+    # the chosen path summarised. Mermaid syntax kept inline for portability.
+    if acts:
+        parts.append('<div class="routes-panel">')
+        parts.append('<h2>🗺  Pans de scénario → cartes → routes possibles</h2>')
+        ascii_lines = [f"  ▶ « {trace.get('chosen_title', '')} »"]
+        for ai, act in enumerate(acts):
+            connector = "└─" if ai == len(acts) - 1 else "├─"
+            ascii_lines.append(f"  {connector} Acte {act['id']} — {act.get('name','?')}  [{act.get('faction_tilt','neutre')} / {act.get('emotion','?')} / {act.get('card_count',0)} cartes]")
+            for bi, b in enumerate(act.get("beats", [])):
+                vert = "   " if ai == len(acts) - 1 else "│  "
+                c_idx = sum(a.get("card_count", 0) for a in acts[:ai]) + bi + 1
+                chosen_for_card = next((r for r in chosen_route if r["card_idx"] == c_idx), None)
+                arrow_choice = ""
+                if chosen_for_card:
+                    arrow_choice = f"  → option {chosen_for_card['option_idx']+1} : « {chosen_for_card['option_label']} »"
+                ascii_lines.append(f"  {vert} ├ Carte #{c_idx} : {b.get('summary','?')[:55]}{arrow_choice}")
+        parts.append(f'<pre class="routes-mermaid">{html_escape(chr(10).join(ascii_lines))}</pre>')
+        # Mermaid flowchart for visual route
+        m = ["```mermaid", "flowchart TD"]
+        m.append(f'  T["📖 {trace.get("chosen_title","")}"]:::title')
+        prev = "T"
+        for act in acts:
+            anode = f'A{act["id"]}'
+            m.append(f'  {anode}["🎭 Acte {act["id"]} : {act.get("name","?")}<br/>{act.get("card_count",0)} cartes · {act.get("faction_tilt","neutre")}"]:::act')
+            m.append(f'  {prev} --> {anode}')
+            prev_card = anode
+            for bi, b in enumerate(act.get("beats", [])):
+                c_idx = sum(a.get("card_count", 0) for a in acts[:acts.index(act)]) + bi + 1
+                cnode = f'C{c_idx}'
+                m.append(f'  {cnode}["🃏 #{c_idx} {b.get("summary","?")[:30]}…"]:::card')
+                m.append(f'  {prev_card} --> {cnode}')
+                prev_card = cnode
+            prev = prev_card
+        m.append('  classDef title fill:#1a140d,stroke:#ffd76b,color:#ffd76b')
+        m.append('  classDef act fill:#0d1418,stroke:#5a8aa8,color:#5a8aa8')
+        m.append('  classDef card fill:#1a1612,stroke:#eba84d,color:#eba84d')
+        m.append("```")
+        parts.append('<details><summary style="color:var(--gold-bright);cursor:pointer;margin-top:14px">📊 Schéma Mermaid (déplier)</summary>')
+        parts.append(f'<pre class="routes-mermaid">{html_escape(chr(10).join(m))}</pre>')
+        parts.append('</details>')
+        parts.append('<div class="routes-legend">Le druide a parcouru <strong>' + str(len(chosen_route)) + ' cartes</strong> à travers <strong>' + str(len(acts)) + ' actes</strong>. Chaque carte propose 3 options (3 routes possibles) ; le chemin parcouru est marqué par l\'option choisie en bas de chaque carte.</div>')
+        parts.append('</div>')
+
     for s in trace.get("steps", []):
         phase = s.get("phase", "")
         parts.append(f'<div class="step phase-{html_escape(phase)}">')
         parts.append('<div class="step-head">')
         parts.append(f'<div class="step-num">Étape {s.get("step","?")}</div>')
         parts.append(f'<div class="step-label">{html_escape(s.get("label",""))}</div>')
-        parts.append(f'<div class="step-time">t+{s.get("t_offset_s",0):.2f}s · durée {s.get("duration_s",0):.2f}s</div>')
+        # v7.7.28 — color-coded duration badge for LLM-heavy phases.
+        dur = float(s.get("duration_s", 0))
+        is_llm = phase in ("titles", "intro", "skeleton", "scenario_full", "card_gen")
+        badge = ""
+        if is_llm and dur > 0:
+            klass = "fast" if dur < 20 else ("medium" if dur < 60 else "slow")
+            badge = f' <span class="load-badge {klass}">{dur:.1f}s LLM</span>'
+        parts.append(f'<div class="step-time">t+{s.get("t_offset_s",0):.2f}s · durée {dur:.2f}s{badge}</div>')
         parts.append('</div>')
 
         if phase == "brain_check":
@@ -615,13 +851,38 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
 
         elif phase == "skeleton":
             out = s.get("output", {})
-            parts.append(f'<div style="margin-bottom:6px"><strong>{html_escape(out.get("title",""))}</strong> — {out.get("beats_count",0)} beats</div>')
-            parts.append('<table class="beats"><thead><tr><th>n</th><th>Emotion</th><th>Faction tilt</th><th>Summary</th></tr></thead><tbody>')
-            for b in out.get("beats", []):
-                tilt = b.get("faction_tilt", "neutre")
-                parts.append(f'<tr><td>{b.get("n","?")}</td><td>{html_escape(b.get("emotion",""))}</td><td class="faction-{html_escape(tilt)}">{html_escape(tilt)}</td><td>{html_escape(b.get("summary",""))}</td></tr>')
+            acts_local = out.get("acts", [])
+            parts.append(f'<div style="margin-bottom:8px"><strong>{html_escape(out.get("title",""))}</strong> — {out.get("acts_count",0)} actes / {out.get("total_cards",0)} cartes</div>')
+            parts.append('<table class="beats"><thead><tr><th>Acte</th><th>Nom</th><th>Emotion</th><th>Faction</th><th>Cartes</th><th>Thème</th></tr></thead><tbody>')
+            for a in acts_local:
+                tilt = a.get("faction_tilt", "neutre")
+                parts.append(f'<tr><td><strong>{a.get("id","?")}</strong></td><td><strong>{html_escape(a.get("name","?"))}</strong></td><td>{html_escape(a.get("emotion",""))}</td><td class="faction-{html_escape(tilt)}">{html_escape(tilt)}</td><td>{a.get("card_count",0)}</td><td>{html_escape(a.get("theme",""))}</td></tr>')
             parts.append('</tbody></table>')
             parts.append(f'<div class="rag-refs">RAG few-shot : {html_escape(", ".join(s.get("rag_few_shot_used", [])))}</div>')
+
+        elif phase == "scenario_full":
+            out = s.get("output", {})
+            # Render scenario with **act bold** markers converted to <strong>.
+            txt = out.get("scenario_text", "")
+            import re as _re
+            html_scen = _re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>",
+                                html_escape(txt)).replace("\n\n", "<br/><br/>")
+            parts.append(f'<div class="scenario-block">{html_scen}</div>')
+            parts.append(f'<div class="rag-refs">RAG few-shot : {html_escape(", ".join(s.get("rag_few_shot_used", [])))} · {out.get("paragraph_count",0)} paragraphes</div>')
+
+        elif phase == "act_intro":
+            out = s.get("output", {})
+            tilt = out.get("faction_tilt", "neutre")
+            parts.append('<div class="act-header">')
+            parts.append(f'<div class="act-id">{out.get("act_id","?")}</div>')
+            parts.append(f'<div style="flex:1"><div style="color:var(--gold-bright);font-size:16px;font-weight:bold">« {html_escape(out.get("act_name","?"))} »</div>')
+            parts.append(f'<div style="color:var(--white);font-size:13.5px;margin-top:2px">{html_escape(out.get("theme",""))}</div></div>')
+            parts.append('</div>')
+            parts.append('<div class="act-meta">')
+            parts.append(f'<span>📍 {out.get("card_count",0)} cartes</span>')
+            parts.append(f'<span class="faction-{html_escape(tilt)}">⚔️ {html_escape(tilt)}</span>')
+            parts.append(f'<span>💭 {html_escape(out.get("emotion",""))}</span>')
+            parts.append('</div>')
 
         elif phase == "card_gen":
             out = s.get("output", {})
@@ -677,7 +938,7 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
         parts.append('</div>')
 
     parts.append("""</main>
-<footer>M.E.R.L.I.N. — simulate_human_run.py v7.7.25 — généré le %s</footer>
+<footer>M.E.R.L.I.N. — simulate_human_run.py v7.7.28 (Gemma 4 only · acts × cards × routes) — généré le %s</footer>
 </body></html>""" % time.strftime("%Y-%m-%d %H:%M:%S"))
 
     return "".join(parts)
