@@ -288,9 +288,11 @@ func _blocking_stream(prompt: String) -> void:
 		"raw": true,
 		"stream": true,
 		"options": options,
+		# Explicit — Gemma 4 enables thinking by default at the model level.
+		# Send the flag every time so the request doesn't inherit a chain-of-thought
+		# budget that eats num_predict before any visible answer comes out.
+		"think": thinking_mode,
 	}
-	if thinking_mode:
-		payload["think"] = true
 	var body_str := JSON.stringify(payload)
 
 	# Connect.
@@ -510,10 +512,11 @@ func _blocking_generate(prompt: String) -> void:
 		"raw": true,
 		"stream": false,
 		"options": options,
+		# Explicit — Gemma 4 enables thinking by default at the model level.
+		# Send the flag every time so a non-thinking request actually gets a visible
+		# answer instead of a chain-of-thought that swallows num_predict.
+		"think": thinking_mode,
 	}
-	# Qwen 3.5 thinking mode: enable chain-of-thought reasoning
-	if thinking_mode:
-		payload["think"] = true
 	var body_str := JSON.stringify(payload)
 
 	# Connect
@@ -663,8 +666,14 @@ static func _strip_thinking_tags(text: String) -> String:
 		var think_start := out.find("<think>")
 		if think_start >= 0:
 			out = out.substr(0, think_start).strip_edges()
-	# Strip Gemma turn artefacts (emitted occasionally with raw=true)
-	for tok in ["<end_of_turn>", "<start_of_turn>model", "<start_of_turn>user", "<start_of_turn>"]:
+	# Strip Gemma turn artefacts (emitted occasionally with raw=true).
+	# The model sometimes invents an inverted close like </start_of_turn> — we cover
+	# both forms. Also drop role lines that survive the chat-template handling.
+	for tok in [
+		"<end_of_turn>", "</end_of_turn>",
+		"<start_of_turn>model", "<start_of_turn>user", "<start_of_turn>",
+		"</start_of_turn>",
+	]:
 		out = out.replace(tok, "")
 	return out.strip_edges()
 

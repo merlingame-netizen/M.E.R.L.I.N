@@ -2097,10 +2097,12 @@ func clean_response(raw: String) -> String:
 	text = rx.sub(text, "", true)
 	rx.compile("<\\|?endoftext\\|?>")
 	text = rx.sub(text, "", true)
-	# Gemma 4 turn-format remnants (post-Phase A migration)
-	rx.compile("<(?:start|end)_of_turn>")
+	# Gemma 4 turn-format remnants (post-Phase A migration).
+	# Note: Gemma occasionally emits an inverted close like </start_of_turn>
+	# (an invented closing tag) — match both / and non-/ variants.
+	rx.compile("</?(?:start|end)_of_turn>")
 	text = rx.sub(text, "", true)
-	rx.compile("<(?:bos|eos)>")
+	rx.compile("</?(?:bos|eos)>")
 	text = rx.sub(text, "", true)
 	# Strip role prefixes (ChatML uses system/user/assistant, Gemma uses user/model)
 	for prefix in ["system\n", "user\n", "assistant\n", "model\n"]:
