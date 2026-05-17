@@ -2079,11 +2079,15 @@ func get_prompt_template(role: String, task: String) -> Dictionary:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Strip ChatML template tokens from raw LLM output
+## Strip ChatML (Qwen) and Gemma 4 turn-format tokens from raw LLM output.
+## Idempotent: safe to call on text already cleaned by ollama_backend.
 func clean_response(raw: String) -> String:
 	var text := raw.strip_edges()
-	# Truncate at first template token
-	for tok in ["<|im_end|>", "<|im_start|>", "<|endoftext|>", "<|im_end>", "<|im_start>"]:
+	# Truncate at first template token (whichever family the model uses)
+	for tok in [
+		"<|im_end|>", "<|im_start|>", "<|endoftext|>", "<|im_end>", "<|im_start>",
+		"<end_of_turn>", "<start_of_turn>", "<eos>", "<bos>",
+	]:
 		var idx := text.find(tok)
 		if idx >= 0:
 			text = text.substr(0, idx)
@@ -2093,8 +2097,13 @@ func clean_response(raw: String) -> String:
 	text = rx.sub(text, "", true)
 	rx.compile("<\\|?endoftext\\|?>")
 	text = rx.sub(text, "", true)
-	# Strip role prefixes
-	for prefix in ["system\n", "user\n", "assistant\n"]:
+	# Gemma 4 turn-format remnants (post-Phase A migration)
+	rx.compile("<(?:start|end)_of_turn>")
+	text = rx.sub(text, "", true)
+	rx.compile("<(?:bos|eos)>")
+	text = rx.sub(text, "", true)
+	# Strip role prefixes (ChatML uses system/user/assistant, Gemma uses user/model)
+	for prefix in ["system\n", "user\n", "assistant\n", "model\n"]:
 		if text.begins_with(prefix):
 			text = text.substr(prefix.length())
 	return text.strip_edges()

@@ -23,7 +23,7 @@ enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE
 # ── Ollama Model Tags (Gemma 4 — active family) ──────────────────────────────
 const MODEL_GEMMA4_E2B := "gemma4:e2b"
 const MODEL_GEMMA4_E4B := "gemma4:e4b"
-const MODEL_GEMMA4_26B_A4B := "gemma4:26b-a4b"
+const MODEL_GEMMA4_26B_A4B := "gemma4:26b"   # Ollama tag (the 26B MoE variant; "_a4b" in our key denotes "~4B active per token")
 const MODEL_GEMMA4_31B := "gemma4:31b"
 
 # ── Ollama Model Tags (Qwen 3.5 — legacy fallback) ───────────────────────────

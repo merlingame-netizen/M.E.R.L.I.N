@@ -26,7 +26,7 @@ const MODEL_REGISTRY := {
 	# Gemma 4 family — active default (April 2026, Apache 2.0, 256K ctx)
 	"gemma4_e2b": {"tag": "gemma4:e2b", "ram_mb": 1600, "context_default": 2048},
 	"gemma4_e4b": {"tag": "gemma4:e4b", "ram_mb": 3000, "context_default": 8192},
-	"gemma4_26b_a4b": {"tag": "gemma4:26b-a4b", "ram_mb": 14000, "context_default": 8192},
+	"gemma4_26b_a4b": {"tag": "gemma4:26b", "ram_mb": 14000, "context_default": 8192},  # Ollama tag = "26b" (the MoE variant)
 	"gemma4_31b": {"tag": "gemma4:31b", "ram_mb": 18000, "context_default": 16384},
 	# Qwen 3.5 family — legacy fallback (use_legacy_qwen=true)
 	"qwen35_4b": {"tag": "qwen3.5:4b", "ram_mb": 3200, "context_default": 8192},

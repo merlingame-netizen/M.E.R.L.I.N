@@ -3,12 +3,12 @@
 # Ref: docs/LORA_TRAINING_SPEC.html, docs/llm-architecture.md
 #
 # April 2026 migration:
-#   - Base: qwen3.5:4b  → gemma4:26b-a4b  (MoE, 26B params, ~3.8B active/token)
+#   - Base: qwen3.5:4b  → gemma4:26b  (MoE, 26B params, ~3.8B active/token)
 #   - Template: ChatML  → Gemma turn format
 #   - LoRA: existing adapter was trained on Qwen 3.5 → NOT loadable on Gemma 4.
 #     Disabled below until retrained (see docs/LORA_TRAINING_SPEC.html).
 
-FROM gemma4:26b-a4b
+FROM gemma4:26b
 # ADAPTER ./addons/merlin_llm/adapters/merlin_narrator_lora.gguf  # TODO: retrain on Gemma 4
 
 # Narrator parameters (from merlin_ai.gd)

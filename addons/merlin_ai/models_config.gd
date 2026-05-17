@@ -14,7 +14,7 @@
 ##   qwen35   : legacy fallback (use_legacy_qwen=true)
 ##
 ## Usage:
-##   var tag := ModelsConfig.tag_for_role("narrator")        # → "gemma4:26b-a4b"
+##   var tag := ModelsConfig.tag_for_role("narrator")        # → "gemma4:26b"
 ##   var ctx := ModelsConfig.context_for_role("gamemaster")  # → 8192
 ##   var fam := ModelsConfig.family_for_tag("gemma4:e4b")    # → "gemma4"
 extends RefCounted
@@ -32,7 +32,7 @@ static var use_legacy_qwen: bool = false
 # 31b is dense, dev-only (heavy QUAD profile).
 const GEMMA4_JUDGE := "gemma4:e2b"          # Q4, ~1.6 GB RAM
 const GEMMA4_GAMEMASTER := "gemma4:e4b"     # Q4, ~3.0 GB RAM, multimodal-capable
-const GEMMA4_NARRATOR := "gemma4:26b-a4b"   # MoE Q4, ~14 GB RAM (3.8B active)
+const GEMMA4_NARRATOR := "gemma4:26b"       # MoE Q4, ~14 GB RAM (3.8B active per token)
 const GEMMA4_DEV_HEAVY := "gemma4:31b"      # Dense Q4, ~18 GB RAM (offline tooling)
 
 # ── Qwen 3.5 legacy family (fallback) ────────────────────────────────────────
