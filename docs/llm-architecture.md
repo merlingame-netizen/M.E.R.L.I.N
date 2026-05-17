@@ -78,16 +78,109 @@ Desktop (Windows/Linux/macOS) : merlin_llm GDExtension principal + Ollama HTTP f
 Mobile (Android/iOS) : GDExtension uniquement, cross-compile ARM64. Detection auto force MOBILE_*.
 Web : Groq cloud uniquement, MerlinLLM/Ollama skip si OS.has_feature("web").
 
-### Roadmap console (Q3-Q4 2026)
+### Roadmap console (Q3-Q4 2026) — tâches concrètes
 
-| Console | Approche | Modele cible | Constraints |
-|---------|----------|--------------|-------------|
-| Switch 2          | GDExtension ARM64 (Tegra T239), int4 | gemma4:e2b / e4b | 12 GB partage, thermal severe -> NANO/MOBILE_MID |
-| PS5 Pro           | GDExtension x86_64 + Vulkan offload  | gemma4:e4b / 26b-a4b | 16 GB unified |
-| Xbox Series X\|S  | GDExtension x86_64, DirectML possible | e4b (S) / 26b-a4b (X) | 10 GB (S) / 16 GB (X) |
-| Steam Deck OLED   | Preset Linux/X11 existant, llama.cpp Vulkan | e4b / 26b-a4b | 16 GB unified |
+#### Vue d'ensemble
 
-Bloquants : pas de daemon Ollama, tout via GDExtension recompilee ; TRC/cert signature SDK obligatoire ; LoRA embarques dans le pck.
+| Console | Approche | Modèle cible | Quant | Contraintes mémoire | Fallback cloud |
+|---------|----------|--------------|-------|---------------------|----------------|
+| Switch 2          | GDExtension ARM64 (Tegra T239)       | gemma4:e2b                 | Q4_K_M (1.4 GB)  | 12 GB unified (jeu ~8 GB max), thermal severe | Groq cloud (cellular OK via Nintendo Online) |
+| PS5 / PS5 Pro     | GDExtension x86_64 + Vulkan/AMD GPU  | gemma4:e4b → 26b-a4b       | Q4_K_M / Q5_K_M  | 16 GB unified (jeu ~12 GB), 13.4 TFLOPS GPU   | Groq via PSN + opt-in PS Network sharing |
+| Xbox Series S     | GDExtension x86_64, DirectML possible | gemma4:e4b                 | Q4_K_M (2.5 GB)  | 10 GB total dont 8 GB jeu — **tight**          | Groq via Xbox Live (obligatoire si VRAM < 1 GB libre) |
+| Xbox Series X     | GDExtension x86_64, DirectML possible | gemma4:26b-a4b             | Q4_K_M (14 GB)   | 16 GB unified (jeu 13.5 GB), 12 TFLOPS GPU    | Groq fallback si autres systèmes mémoire saturent |
+| Steam Deck OLED   | Preset Linux/X11 existant, llama.cpp Vulkan | gemma4:e4b / 26b-a4b | Q4_K_M           | 16 GB unified LPDDR5, APU RDNA 2 1.6 TFLOPS    | Optionnel (Wi-Fi only) |
+
+#### Tâches commitables
+
+##### T-CONS-1 — Build matrix CI (toutes consoles) [bloquant pré-cert]
+
+- [ ] Ajouter cible `addons/merlin_llm/SConstruct` pour `platform=switch2|ps5|xbox` (variants ARM64/x86_64).
+- [ ] Demander accès Nintendo Developer Portal (TRC), Sony DevNet (TRC), Microsoft GDK.
+- [ ] Documenter chaîne de compilation par plateforme dans `docs/console-build.md`.
+- [ ] Bloquant légal : signer NDA Nintendo (Switch 2 SDK gated). Action humaine.
+
+##### T-CONS-2 — Quantization pipeline cross-platform
+
+- [ ] `tools/cli.py llm quantize --target switch2 --model gemma4-e2b` → Q4_K_M GGUF.
+- [ ] Bench llama.cpp Q4_K_M vs Q4_0 vs Q5_K_M sur ARM64 (Tegra) et x86_64 PS5 dev kit.
+- [ ] Définir tableau : taille mémoire vs perplexity loss pour chaque cible.
+- [ ] Output : `addons/merlin_llm/models/console/{switch2,ps5,xbox}/merlin_narrator_*.gguf` (gitignored, builds CI seulement).
+
+##### T-CONS-3 — Switch 2 (Tegra T239 ARM64)
+
+Contraintes :
+- 12 GB unified LPDDR5 (jeu ~8 GB max après OS), Vulkan + NVN.
+- Thermal docked 15W / handheld 7W → throttling agressif.
+- LLM doit céder VRAM dès que minigame 3D demande > 4 GB.
+
+Tâches :
+- [ ] Cross-compile llama.cpp branche `master` avec `LLAMA_VULKAN=1 -DGGML_CPU_AARCH64=1` via toolchain Nintendo (devkitA64 ou clang-aarch64-linux-gnu pour proto).
+- [ ] Profil hardware ajouté à `brain_swarm_config.gd` : `SWITCH2_DOCKED` (NANO, 1 brain e2b, ctx 2048) et `SWITCH2_HANDHELD` (NANO downgraded, e2b ctx 1024).
+- [ ] Bench : tok/s cible ≥ 8 tok/s sur e2b Q4_K_M handheld (sinon downgrade vers Groq).
+- [ ] Hot-swap dynamique : `merlin_ai.gd` doit unloader le LLM si `Performance.get_monitor(MEMORY_VIDEO_USED)` > seuil (cf hook `_low_memory_handler`).
+- [ ] Fallback Groq via Nintendo Online (HTTPS sortant autorisé, latence cellulaire OK ~300ms).
+
+##### T-CONS-4 — PS5 / PS5 Pro (x86_64 + RDNA 2)
+
+Contraintes :
+- 16 GB GDDR6 unified, GPU 10.28 TFLOPS (Pro: 13.4) — large.
+- Activity Cards / Game Help interdisent certains threads bg → LLM doit s'arrêter quand `EnterBackground` event reçu.
+
+Tâches :
+- [ ] Compile llama.cpp avec `LLAMA_HIPBLAS=1` pour RDNA 2 (ROCm pas dispo sur PS5, utiliser CPU-only ou explorer Sony GPU compute via Vulkan compute shaders).
+- [ ] Profil `PS5` (DUAL, 26b-a4b + e4b) et `PS5_PRO` (TRIPLE).
+- [ ] Bench cible : 26b-a4b Q4_K_M ≥ 12 tok/s sur PS5 base, ≥ 18 tok/s sur Pro.
+- [ ] Implémenter hook `notification(NOTIFICATION_APPLICATION_PAUSED)` → flush LLM cache.
+- [ ] Trophy : interdit de modifier le save quand le LLM tourne en bg (Sony TRC R4055).
+- [ ] Fallback Groq via PSN HTTPS — opt-in obligatoire (parental controls TRC R4011).
+
+##### T-CONS-5 — Xbox Series X|S (x86_64 + RDNA 2 + DirectML)
+
+Contraintes :
+- Series S : **10 GB total**, 8 GB jeu, 2 GB OS. LLM ≤ 2.5 GB → e4b Q4_K_M tient mais juste.
+- Series X : 16 GB GDDR6 (10 GB high-speed + 6 GB slow), jeu max ~13.5 GB.
+- DirectML disponible → option compute shaders pour MoE routing.
+
+Tâches :
+- [ ] Compile llama.cpp avec `LLAMA_CUBLAS=0 LLAMA_HIPBLAS=0` (Xbox bloque ROCm) → CPU-only + DirectML compute hint.
+- [ ] Branche expérimentale : porter `ggml-directml.cpp` (existe dans fork llama-cpp-python, non upstreamé).
+- [ ] Profil `XBOX_SERIES_S` (SINGLE, e4b Q4_K_M only, ctx 4096) et `XBOX_SERIES_X` (DUAL, 26b-a4b + e4b).
+- [ ] Series S : forcer Groq dès que LLM utilise > 1.8 GB (marge 200 MB).
+- [ ] GDK certification : Microsoft Game Sandbox interdit `fork()` → llama.cpp doit être linké statiquement, pas de subprocess.
+
+##### T-CONS-6 — Steam Deck OLED (Linux/X11 + RDNA 2 APU)
+
+Le preset Linux/X11 existant (`docs/export_presets.reference.cfg`) couvre déjà. Reste :
+- [ ] Tester export `godot --headless --export-release "Linux/X11"` puis copier sur Deck via USB.
+- [ ] Bench `gemma4-e4b-q4_k_m.gguf` via llama.cpp Vulkan : cible ≥ 15 tok/s en mode 15W (docked TDP).
+- [ ] Ajouter détection APU dans `merlin_ai.gd` → profil `STEAM_DECK` (SINGLE_PLUS, e4b principal + e2b worker).
+- [ ] Vérifier compat Proton/Wine si jeu shipped via Windows runtime (préférer build natif Linux).
+
+##### T-CONS-7 — Fallback Groq universel
+
+Tous les ports console partagent un fallback cloud :
+
+- [ ] Module `addons/merlin_ai/cloud_backends/groq_backend.gd` (déjà esquissé dans `merlin_ai.gd`).
+- [ ] Endpoint : `https://api.groq.com/openai/v1/chat/completions`, modèle `gemma2-9b-it` (proxy car Gemma 4 pas encore sur Groq fin 2026 ; vérifier roadmap).
+- [ ] Stratégie déclenchement :
+  - Si platform == web → Groq always.
+  - Si console ET (VRAM < seuil OU thermal throttle détecté) → Groq.
+  - Si user a opt-in "Cloud LLM" dans Settings → Groq préféré.
+- [ ] Quota / billing : nécessite **clé API Groq côté serveur Anthropic + proxy** (l'utilisateur final ne configure pas de clé). **Décision business pending Maxime** : self-host proxy via Cloudflare Workers ? Coût ~0.05$/1k tokens × N joueurs = à modéliser.
+
+##### T-CONS-8 — Embedded LoRA dans le .pck
+
+- [ ] LoRA narrator (post-refinetune Gemma 4, cf `docs/lora-refinetune-plan.md`) doit être inclus dans le pack console signé.
+- [ ] Vérifier que `addons/merlin_llm/models/merlin_narrator_lora_gemma4.gguf` est **inclus** dans les filtres export (pas dans `.gitignore` côté pck).
+- [ ] Taille LoRA ~50–150 MB (rank 16) → acceptable pour Switch 2 cartouche 16 GB, PS5/Xbox download.
+
+#### Bloquants transverses
+
+1. **Pas de daemon Ollama sur console** : tout via GDExtension `merlin_llm` recompilée pour chaque SDK. Ollama HTTP backend est désactivé automatiquement (`merlin_ai.gd` Phase D platform detection).
+2. **Cert SDK obligatoire** : TRC Nintendo, Sony, Microsoft. Délai 4–8 semaines après cert request. Action humaine : signer NDA fin 2026.
+3. **LoRA embedded** : interdit de downloader des poids modèle à l'exécution sur console (sauf via store officiel). LoRA doit être dans le pck signé.
+4. **Réseau** : Groq fallback nécessite HTTPS sortant. Nintendo Switch 2 cellulaire OK, PS5 PSN OK, Xbox Live OK, Steam Deck Wi-Fi only.
+5. **Thermal & background** : tous les ports doivent gérer `NOTIFICATION_APPLICATION_PAUSED` → flush LLM. Sinon TRC fail.
 
 ## 8. Settings & flags
 

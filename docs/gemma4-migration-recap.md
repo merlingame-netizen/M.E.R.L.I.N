@@ -118,3 +118,63 @@ MerlinAI autoload
 │
 └─ ModelsConfig.get_tag_for_role(role) honoring ai/use_legacy_qwen
 ```
+
+---
+
+## Phase E – bootstrap & validation (2026-05-17 PM)
+
+### Statut par sous-phase
+
+| Sous-phase | Statut | Livrable |
+|------------|--------|----------|
+| **E1** — Download Gemma 4 GGUF (e4b + 26b-a4b) | **BLOQUÉ** | C: à 157 MB libres (besoin ~20 GB pour e4b+26b-a4b GGUF). |
+| **E2** — Ollama bootstrap (pull + create + verify template) | **BLOQUÉ** (dépend E1) | Idem : `~/.ollama/models` sature C: aussi. |
+| **E3** — Smoke tests (validate.bat + godot smoke) | **BLOQUÉ** | Godot editor --headless --quit timeout >120s. Cause probable : pas assez de disque pour cache `.godot/imported/`. Le log `%APPDATA%/Godot/app_userdata/MERLIN/logs/godot.log` n'a pas été mis à jour depuis 12:02:58 malgré 3 tentatives de relance. |
+| **E4** — Plan LoRA refinetune Gemma 4 | ✅ | `docs/lora-refinetune-plan.md` (10 sections, prêt à exécuter) |
+| **E5** — Console roadmap dépliée | ✅ | `docs/llm-architecture.md` §Roadmap console : 8 tâches commitables (T-CONS-1..T-CONS-8) Switch 2 / PS5 / Xbox / Steam Deck / Groq fallback / LoRA embedded |
+| **E6** — Append récap + push final | ✅ | ce fichier |
+
+### Vérifications statiques effectuées (faute de runtime)
+
+- `addons/merlin_ai/merlin_ai.gd` : `_init_local_models()` Phase D détection plateforme — appelle `_apply_mobile_profile_overrides()` qui existe (lignes 591-598). Skip GDExtension/Ollama sur web, force `BRAIN_SINGLE` + GDExtension uniquement sur mobile.
+- `addons/merlin_ai/brain_swarm_config.gd` : `detect_profile_mobile()` (ligne 312) existe, retourne `MOBILE_HIGH > MOBILE_MID > MOBILE_LOW` selon RAM. Les 3 profils `MOBILE_*` sont définis lignes 161-198 avec modèles Gemma 4 E2B/E4B GGUF.
+- Cohérence d'enum : `Profile.MOBILE_LOW/MID/HIGH` présents lignes 25, 161, 174, 187, 254, 261, 268, 312-317.
+
+### Livrable E4 — `docs/lora-refinetune-plan.md`
+
+10 sections couvrent : contexte (Qwen→Gemma incompatibilité), choix base model (E4B vs 26B-A4B vs 31B), conversion dataset ChatML→Gemma template, hyperparams LoRA r=16/alpha=32/target_modules (identiques Qwen côté noms), estimations VRAM/temps/coût par hardware, commandes exactes (Unsloth + PEFT fallback), pipeline merge+quantize → GGUF, critères d'éval (JSON valid ≥95 %, champ lexical ≥70 %, faction alignment ≥85 %), risques (slug HF non publié, tokenizer Ogham, MoE experts OOM).
+
+**Action humaine attendue avant lancement** : libérer disque, décider E4B (rapide) ou 26B-A4B (qualité), confirmer GPU dispo, approuver `huggingface-cli login` pour gated repo Google.
+
+### Livrable E5 — `docs/llm-architecture.md` §Roadmap console
+
+Roadmap dépliée en 8 tâches `T-CONS-1` à `T-CONS-8` :
+
+| Tâche | Plateforme | Verdict |
+|-------|------------|---------|
+| T-CONS-1 | Build matrix CI toutes consoles | Bloqué NDA Nintendo |
+| T-CONS-2 | Quantization pipeline cross-platform | `tools/cli.py llm quantize --target X` à implémenter |
+| T-CONS-3 | Switch 2 (Tegra T239 ARM64) | Profils `SWITCH2_DOCKED/HANDHELD`, cible 8 tok/s e2b Q4_K_M handheld |
+| T-CONS-4 | PS5/PS5 Pro (x86_64 + RDNA 2) | Profils `PS5` (DUAL) / `PS5_PRO` (TRIPLE), cible 12-18 tok/s 26b-a4b |
+| T-CONS-5 | Xbox Series X\|S | Series S **tight** (10 GB total) → Groq forcé si LLM > 1.8 GB |
+| T-CONS-6 | Steam Deck OLED | Preset Linux/X11 existe, profil `STEAM_DECK` SINGLE_PLUS |
+| T-CONS-7 | Fallback Groq universel | **Décision business pending** : self-host proxy via Cloudflare Workers ? Coût ~0.05$/1k tokens × N joueurs |
+| T-CONS-8 | LoRA embedded dans .pck | Vérifier filtres export pour inclure GGUF LoRA dans pack signé |
+
+Bloquants transverses : pas de daemon Ollama console, cert SDK 4-8 semaines, LoRA embedded obligatoire (interdit DL runtime), thermal+background NOTIFICATION_APPLICATION_PAUSED.
+
+### Décisions humaines attendues (ping Maxime)
+
+1. **Disque** : libérer ~30 GB sur C: ou pointer modèles vers drive externe ? Sans ça, E1/E2/E3 restent bloqués.
+2. **LoRA training** : E4B (rapide) ou 26B-A4B (qualité) en première itération ?
+3. **GPU LoRA** : 4070 12GB local ? 4090 ? Colab Pro A100 ? Lambda Labs ?
+4. **Cert SDK consoles** : signer NDA Nintendo / Sony DevNet / Microsoft GDK fin 2026 ?
+5. **Groq proxy** : Cloudflare Workers self-host ou config clé API côté joueur ?
+
+### Commits Phase E
+
+| Commit | Files |
+|--------|-------|
+| `docs(llm): Phase E4 — plan LoRA refinetune Gemma 4` | docs/lora-refinetune-plan.md |
+| `docs(llm): Phase E5 — console roadmap dépliée (8 tâches T-CONS-*)` | docs/llm-architecture.md |
+| `docs(llm): Phase E6 — recap final + checklist décisions humaines` | docs/gemma4-migration-recap.md |
