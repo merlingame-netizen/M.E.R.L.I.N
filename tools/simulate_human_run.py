@@ -44,8 +44,8 @@ REFERENCES_PATH = REPO / "data" / "ai" / "scenarios_reference_broceliande.json"
 EMBEDDINGS_PATH = REPO / "data" / "ai" / "scenarios_reference_broceliande.embeddings.json"
 
 OUT_DIR = Path.home() / "Downloads"
-HTML_PATH = OUT_DIR / "merlin_human_run_test_v7.7.28.html"
-JSON_PATH = OUT_DIR / "merlin_human_run_test_v7.7.28.json"
+HTML_PATH = OUT_DIR / "merlin_human_run_test_v7.7.29.html"
+JSON_PATH = OUT_DIR / "merlin_human_run_test_v7.7.29.json"
 
 BIOME = "foret_broceliande"
 
@@ -137,53 +137,79 @@ def llm_titles(rag: RAG, biome: str) -> tuple[list, dict]:
 
 
 def llm_intro(rag: RAG, biome: str, chosen_title: str) -> tuple[str, dict]:
-    # v7.7.28 — Intro shortened : 4-6 phrases (was 6-8). The intro only sets the
-    # mise-en-scène; the full scenario writing happens in llm_scenario_full().
+    # v7.7.29 — Intro = SETUP-ONLY, ne révèle PAS le scénario.
+    # Place le druide en contexte avant la marche ; aucune rencontre, aucun
+    # événement, aucune révélation ; juste l'état d'esprit + le seuil franchi.
     matches = rag.query(f"{chosen_title} · {biome}", 3)
     refs_block = "\n\n".join(f"Exemple {i+1} :\n{m.get('intro', '')[:400]}"
                               for i, m in enumerate(matches[:2]))
     system = (
-        "Tu rédiges l'intro d'une marche druidique en Brocéliande.\n"
-        "POV : second-person, jeune druide. CONTRAINTES : EXACTEMENT 4 à 6 phrases ; "
-        "français celtique ; PAS d'anglicismes/cyber/jeu. Place le druide sur le seuil.\n"
+        "Tu rédiges l'INTRODUCTION d'une marche druidique en Brocéliande.\n"
+        "POV : 2e personne, jeune druide en initiation.\n"
+        "RÈGLE STRICTE : C'EST UN SETUP, PAS UN RÉSUMÉ DU SCÉNARIO.\n"
+        "  - Ne révèle AUCUNE rencontre, AUCUN événement, AUCUNE créature.\n"
+        "  - Décris uniquement : pourquoi le druide part, son état d'esprit, "
+        "son arrivée au seuil de la forêt.\n"
+        "  - Ne donne aucun indice sur ce qui va arriver dans la marche.\n"
+        "FORMAT : EXACTEMENT 4 à 6 phrases ; français celtique ; pas d'anglicismes ; "
+        "pas de méta-discours (jeu/joueur/simulation).\n"
         f"\nExemples :\n{refs_block}\n\n"
-        f"Rédige pour : \"{chosen_title}\"."
+        f"Rédige le setup pour le titre : \"{chosen_title}\". "
+        "Termine la dernière phrase au moment où le druide pose le pied sur la mousse."
     )
-    raw, dur = generate(NARRATOR_MODEL, system, "Intro 4-6 phrases courtes.",
-                       {"temperature": 0.85, "num_predict": 260})
+    raw, dur = generate(NARRATOR_MODEL, system,
+                        "Setup 4-6 phrases. Ne révèle rien du scénario.",
+                        {"temperature": 0.85, "num_predict": 280})
     return raw.strip(), {"duration_s": dur, "rag_matches": [m["title"] for m in matches]}
 
 
 def llm_scenario_full(rag: RAG, biome: str, chosen_title: str,
-                      acts: list) -> tuple[str, dict]:
-    """v7.7.28 — Generate the COMPLETE scenario (3-5 paragraphs of prose, one per
-    act). This is the 'scénario complet' that drives card breakdown. Each
-    paragraph references its act by name so we can map cards back to acts in
-    the report."""
+                      acts: list, intro: str = "") -> tuple[str, dict]:
+    """v7.7.29 — Scénario COMPLET, suite directe de l'intro. Chaque acte est une
+    mini-histoire avec setup / complication / résolution. Arc narratif global.
+    L'intro est passée au prompt système pour que le scénario commence là où
+    l'intro se termine (le druide vient de poser le pied sur la mousse)."""
     matches = rag.query(f"{chosen_title} · scénario complet", 2)
     refs = "\n".join(f"- {m.get('title','?')} ({len(m.get('cards', []))} cartes)"
-                     for m in matches)
+                     for m in matches[:2])
     act_outline = "\n".join(
-        f"  Acte {a['id']} — « {a['name']} » : {a['theme']} (faction {a.get('faction_tilt','neutre')}, {a.get('card_count', 3)} cartes)"
+        f"  Acte {a['id']} — « {a['name']} » : {a['theme']} "
+        f"(faction {a.get('faction_tilt','neutre')}, {a.get('card_count', 3)} cartes, "
+        f"emotion {a.get('emotion','?')})"
         for a in acts
     )
+    intro_block = ""
+    if intro:
+        intro_block = (
+            "INTRO (la marche commence à la dernière phrase de ce setup — "
+            "ton premier paragraphe doit poursuivre directement) :\n«  " +
+            intro[:600] + " »\n\n"
+        )
     system = (
-        "Tu es Merlin. Écris le scénario complet d'une marche druidique en "
-        f"3 à 5 paragraphes (un par acte). Titre : \"{chosen_title}\" (biome : {biome}).\n"
-        "CONTRAINTES : français celtique druidique ; 2e personne ; pas d'anglicismes ; "
-        "pas de méta-discours sur le jeu. Chaque paragraphe écrit l'acte correspondant.\n"
-        f"Acts à écrire :\n{act_outline}\n"
+        "Tu es Merlin. Écris le SCÉNARIO COMPLET d'une marche druidique en "
+        f"{len(acts)} paragraphes (un par acte). Titre : \"{chosen_title}\" "
+        f"(biome : {biome}).\n\n"
+        + intro_block +
+        "CONTRAINTES :\n"
+        "  - Le 1er paragraphe ENCHAÎNE directement à la fin de l'intro ci-dessus.\n"
+        "  - Chaque paragraphe = UNE PETITE HISTOIRE avec setup → complication → résolution.\n"
+        "    Pas un teaser, pas un résumé : un acte narratif complet en lui-même.\n"
+        "  - Cohérence globale : les actes s'enchaînent en arc dramatique (curiosité → "
+        "tension → climax → sagesse). Le dernier acte conclut la marche.\n"
+        "  - Français celtique druidique, 2e personne, pas d'anglicismes, pas de méta.\n"
+        f"\nActes à écrire :\n{act_outline}\n"
         f"Exemples canoniques :\n{refs}\n"
-        "Format : un titre d'acte en gras puis le paragraphe.\n"
-        "EXEMPLE :\n"
+        "\nFORMAT :\n"
         "**Acte 1 — Le Seuil**\n"
-        "Tu poses le pied sur la mousse...\n\n"
+        "[paragraphe complet : setup, complication, résolution de cet acte]\n\n"
         "**Acte 2 — La Rencontre**\n"
-        "..."
+        "[paragraphe complet, qui poursuit l'acte 1]\n\n"
+        "...\n"
+        "Réponds UNIQUEMENT avec les paragraphes formatés, sans intro ni conclusion méta."
     )
     raw, dur = generate(NARRATOR_MODEL, system,
-                        "Rédige le scénario complet en paragraphes par acte.",
-                        {"temperature": 0.8, "num_predict": 700}, timeout=300)
+                        "Rédige le scénario complet, chaque acte = mini-histoire avec conclusion.",
+                        {"temperature": 0.8, "num_predict": 900}, timeout=360)
     return raw.strip(), {"duration_s": dur, "rag_matches": [m["title"] for m in matches]}
 
 
@@ -277,7 +303,8 @@ def _fallback_acts(title: str) -> dict:
     ], "total_cards": 16}
 
 
-def llm_card(rag: RAG, biome: str, beat: dict, beat_idx: int, total: int) -> tuple[dict, dict]:
+def llm_card(rag: RAG, biome: str, beat: dict, beat_idx: int, total: int,
+             route_so_far: list | None = None) -> tuple[dict, dict]:
     ratio = beat_idx / max(total, 1)
     if beat_idx == total - 1:
         act_type = "boss"
@@ -301,20 +328,30 @@ def llm_card(rag: RAG, biome: str, beat: dict, beat_idx: int, total: int) -> tup
         if len(cards_refs) >= 3:
             break
     cards_block = "\n".join(cards_refs)
+    # v7.7.29 — Personalize per route : compact history of last 3 choices.
+    route_block = ""
+    if route_so_far:
+        recent = route_so_far[-3:]
+        route_block = "Historique récent du druide (chemin emprunté) :\n" + "\n".join(
+            f"  - Carte #{r.get('card_idx','?')} : « {r.get('option_label','?')[:60]} »"
+            for r in recent
+        ) + "\nLa carte suivante DOIT refléter ce parcours (continuité narrative).\n"
     system = (
         "Tu es le Gamemaster de M.E.R.L.I.N.. Produis UNE carte au format JSON strict.\n"
-        "Format : {\"text\": str (1-3 phrases druidiques), \"speaker\": \"merlin\", "
-        "\"options\": [3 items {\"label\": str, \"effects\": [{type, faction?, amount}]}]}.\n"
+        "Format : {\"text\": str (2-3 phrases druidiques, contextualisées au chemin du druide), "
+        "\"speaker\": \"merlin\", "
+        "\"options\": [3 items {\"label\": str (action concise 3-7 mots), \"effects\": [{type, faction?, amount}]}]}.\n"
         "Effects : DAMAGE_LIFE/HEAL_LIFE/ADD_REPUTATION/ADD_ANAM. "
         "Factions : druides/anciens/korrigans/niamh/ankou.\n"
         f"Biome : {biome}. Type d'acte : {act_type}. "
         f"Faction tilt : {beat.get('faction_tilt','neutre')}. Emotion : {beat.get('emotion','')}.\n"
-        f"Contexte beat : {beat.get('summary','')}\n"
-        f"\nExemples canoniques :\n{cards_block}\n"
+        f"Acte : {beat.get('act_name','?')}. Contexte beat : {beat.get('summary','')}\n"
+        f"\n{route_block}"
+        f"Exemples canoniques :\n{cards_block}\n"
         "\nRéponds UNIQUEMENT le JSON, sans markdown."
     )
     raw, dur = generate(GM_MODEL, system, "Génère la carte JSON.",
-                       {"temperature": 0.7, "num_predict": 400}, timeout=60)
+                       {"temperature": 0.7, "num_predict": 400}, timeout=120)
     card = _parse_json_lax(raw)
     if not card or "options" not in card:
         card = {
@@ -328,6 +365,33 @@ def llm_card(rag: RAG, biome: str, beat: dict, beat_idx: int, total: int) -> tup
         }
     return card, {"duration_s": dur, "act_type": act_type,
                   "rag_matches": [m["title"] for m in matches]}
+
+
+def llm_card_resolution(card: dict, chosen_option: dict, beat: dict,
+                        route_so_far: list) -> tuple[str, dict]:
+    """v7.7.29 — Résolution narrative LLM par carte. 2-3 phrases qui
+    décrivent CE qui se passe APRÈS le choix du druide, en tenant compte du
+    chemin parcouru. Personnalisée par carte/choix/chemin pour que chaque
+    décision ait une conséquence narrative tangible."""
+    route_block = ""
+    if route_so_far[:-1]:
+        recent = route_so_far[:-1][-2:]
+        route_block = " Chemin récent : " + " → ".join(
+            f"« {r.get('option_label','?')[:40]} »" for r in recent
+        ) + "."
+    system = (
+        "Tu es Merlin narrateur. Le druide vient de faire un choix. "
+        "Écris la CONSÉQUENCE narrative en 2 phrases (résolution immédiate).\n"
+        "Français celtique, 2e personne, ton druidique. PAS d'anglicismes ; "
+        "pas de méta sur le jeu ; pas de phrase d'intro/conclusion.\n"
+        f"Carte : « {card.get('text','')[:200]} »\n"
+        f"Choix : « {chosen_option.get('label','?')} »\n"
+        f"Beat : {beat.get('summary','?')}.{route_block}"
+    )
+    raw, dur = generate(NARRATOR_MODEL, system,
+                        "Décris la conséquence en 2 phrases.",
+                        {"temperature": 0.85, "num_predict": 120}, timeout=90)
+    return raw.strip(), {"duration_s": dur}
 
 
 def _parse_json_lax(text: str) -> dict:
@@ -517,9 +581,9 @@ def run_simulation() -> dict:
         },
     })
 
-    # Step 6 : scénario complet (LLM écrit le texte intégral en paragraphes par acte)
-    print(f"[Step 6] Generating scenario complet (4-5 paragraphes, {total_cards} cards target)…")
-    scenario_text, meta_scen = llm_scenario_full(rag, BIOME, chosen_title, acts)
+    # Step 6 : scénario complet — passe l'intro pour suite directe + acts comme outline.
+    print(f"[Step 6] Generating scenario complet ({len(acts)} actes / {total_cards} cards target)…")
+    scenario_text, meta_scen = llm_scenario_full(rag, BIOME, chosen_title, acts, intro=intro)
     trace["steps"].append({
         "step": 6, "phase": "scenario_full",
         "label": f"LLM 4 — Scénario complet ({len(acts)} actes / {total_cards} cartes)",
@@ -534,6 +598,7 @@ def run_simulation() -> dict:
     step_n = 7
     global_card_idx = 0
     death_break = False
+    route_so_far: list = []  # v7.7.29 — historique des choix pour personnalisation
     for act in acts:
         # Acte intro (header step)
         trace["steps"].append({
@@ -560,7 +625,8 @@ def run_simulation() -> dict:
                 "emotion": beat.get("sub_emotion", act.get("emotion", "")),
                 "act_name": act.get("name", ""),
             }
-            card, meta_card = llm_card(rag, BIOME, beat_enriched, global_card_idx - 1, total_cards)
+            card, meta_card = llm_card(rag, BIOME, beat_enriched, global_card_idx - 1, total_cards,
+                                       route_so_far=route_so_far)
             trace["steps"].append({
                 "step": step_n, "phase": "card_gen",
                 "label": f"LLM 5 — Carte {global_card_idx}/{total_cards} (acte {act['id']}, {meta_card['act_type']})",
@@ -592,6 +658,32 @@ def run_simulation() -> dict:
                     "effects": chosen_opt.get("effects", []),
                     "rpg_delta": delta,
                     "rpg_snapshot": rpg.snapshot(),
+                },
+            })
+            step_n += 1
+            # v7.7.29 — Update route_so_far for downstream card personalization.
+            route_so_far.append({
+                "card_idx": global_card_idx,
+                "act_id": act["id"],
+                "option_idx": option_idx,
+                "option_label": chosen_opt.get("label", "?"),
+            })
+            # v7.7.29 — NEW resolution narrative : 2-sentence LLM continuation
+            # describing what happens AFTER the choice, contextualised to the route.
+            resolution_text, meta_res = llm_card_resolution(
+                card, chosen_opt, beat_enriched, route_so_far
+            )
+            trace["steps"].append({
+                "step": step_n, "phase": "card_resolution",
+                "label": "LLM 6 — Résolution narrative de la carte %d" % global_card_idx,
+                "t_offset_s": round(time.time() - t_run_start, 2),
+                "duration_s": round(meta_res["duration_s"], 2),
+                "model": NARRATOR_MODEL,
+                "act_id": act["id"],
+                "card_global_idx": global_card_idx,
+                "output": {
+                    "resolution_text": resolution_text,
+                    "chosen_label": chosen_opt.get("label", "?"),
                 },
             })
             step_n += 1
@@ -669,6 +761,9 @@ main{padding:24px 60px;max-width:1400px;margin:0 auto}
 .step.phase-death{border-color:var(--crimson);background:#1a0d0d}
 .step.phase-scenario_full{border-color:var(--gold-bright);background:#1a140d}
 .step.phase-act_intro{border-color:var(--cyan);background:#0d1418;padding:10px 22px}
+.step.phase-card_resolution{border-color:var(--green);background:#0d1a10;padding:12px 22px}
+.resolution-block{background:#15201a;color:#cfdcc5;padding:12px 16px;border-left:3px solid var(--green);font-style:italic;font-size:13.5px;line-height:1.6;margin-top:6px}
+.resolution-block::before{content:"✦ ";color:var(--green);font-weight:bold}
 .act-header{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .act-id{background:var(--cyan);color:var(--bg-dark);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;flex-shrink:0}
 .act-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--gold-dim);margin-top:6px}
@@ -734,7 +829,7 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
         if s.get("phase") == "skeleton":
             acts = s.get("output", {}).get("acts", [])
             total_cards = s.get("output", {}).get("total_cards", 0)
-        if s.get("phase") in ("titles", "intro", "skeleton", "scenario_full", "card_gen"):
+        if s.get("phase") in ("titles", "intro", "skeleton", "scenario_full", "card_gen", "card_resolution"):
             total_llm_load_s += float(s.get("duration_s", 0.0))
         if s.get("phase") == "card_play":
             out = s.get("output", {})
@@ -746,7 +841,7 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
             })
     parts.append(f"""<header>
 <h1>M.E.R.L.I.N. — Test humain run end-to-end (v7.7.28)</h1>
-<div class="meta">Pipeline v7.7.28 (Gemma 4 ONLY · scénario complet écrit · 11-25 cartes · routes mappées · think:off) · biome <strong>{html_escape(trace.get('biome','?'))}</strong> · démarré {html_escape(trace.get('started_at','?'))} · terminé {html_escape(trace.get('ended_at','?'))}</div>
+<div class="meta">Pipeline v7.7.29 (Gemma 4 ONLY · intro setup-only · scénario = suite directe · cartes route-aware + résolution narrative LLM par carte · think:off) · biome <strong>{html_escape(trace.get('biome','?'))}</strong> · démarré {html_escape(trace.get('started_at','?'))} · terminé {html_escape(trace.get('ended_at','?'))}</div>
 <div class="stats-bar">
   <div class="stat-pill"><strong>{trace.get('total_duration_s', 0):.1f}s</strong>Durée totale</div>
   <div class="stat-pill"><strong>{total_llm_load_s:.1f}s</strong>⏱ LLM load cumul</div>
@@ -805,6 +900,40 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
         parts.append('<div class="routes-legend">Le druide a parcouru <strong>' + str(len(chosen_route)) + ' cartes</strong> à travers <strong>' + str(len(acts)) + ' actes</strong>. Chaque carte propose 3 options (3 routes possibles) ; le chemin parcouru est marqué par l\'option choisie en bas de chaque carte.</div>')
         parts.append('</div>')
 
+        # v7.7.29 — Architecture async : recommandations pour rendre le LLM
+        # transparent en jeu. Chiffres réels du run pour cadrer le budget.
+        cards_count_actual = len(chosen_route)
+        avg_card_s = (sum(float(s.get("duration_s", 0)) for s in trace.get("steps", []) if s.get("phase") == "card_gen") / max(cards_count_actual, 1)) if cards_count_actual else 0
+        avg_res_s = (sum(float(s.get("duration_s", 0)) for s in trace.get("steps", []) if s.get("phase") == "card_resolution") / max(cards_count_actual, 1)) if cards_count_actual else 0
+        parts.append('<div class="routes-panel" style="border-color:var(--green)">')
+        parts.append('<h2 style="color:#7eb56b">⚙️  Architecture async — chargement transparent en jeu</h2>')
+        parts.append(
+            f'<div style="font-size:13px;color:var(--white);line-height:1.65">'
+            f'Le run en mode "rapport" prend <strong>{trace.get("total_duration_s", 0):.0f}s</strong> '
+            f'(dont <strong>{total_llm_load_s:.0f}s</strong> de LLM cumulé : '
+            f'≈ {avg_card_s:.0f}s/carte gen + {avg_res_s:.0f}s/résolution). '
+            f'En jeu, pour que ça reste invisible au joueur :'
+            f'<ol style="margin:8px 0 0 24px;color:var(--gold-dim)">'
+            f'<li><strong>Warmup au boot</strong> : 5-10s pendant le splash screen (modèles primés en RAM avant le menu).</li>'
+            f'<li><strong>Pré-génération en cascade pendant l\'intro</strong> : pendant que le parchemin se déroule (~37s typewriter), '
+            f'générer en background : titres déjà faits, intro affichée, skeleton + scenario_full + 2 premières cartes en parallèle.</li>'
+            f'<li><strong>Lookahead N+2 sur les cartes</strong> : quand le joueur joue la carte N, le moteur génère N+1 et N+2 en background. '
+            f'À ~30s/carte et un temps de lecture+choix joueur ~15-30s, le buffer reste plein.</li>'
+            f'<li><strong>Résolution narrative inline</strong> : générée pendant l\'animation de transition entre la carte et la suivante (~3-5s visibles), '
+            f'plus 25s en background masquées par le polish UI / changement de fond.</li>'
+            f'<li><strong>Mécaniques de masquage</strong> : animations diégétiques (vent dans les feuilles, brume qui se forme), '
+            f'voix off pré-enregistrée (Merlin commente en attendant), micro-interactions joueur (UI parle pendant le pré-chargement).</li>'
+            f'<li><strong>Profil hardware fallback</strong> : sur poste lent, basculer sur le pool FastRoute (cartes pré-écrites) si le buffer s\'épuise, '
+            f'avec un rattrapage LLM dès la prochaine pause.</li>'
+            f'</ol>'
+            f'<div style="margin-top:10px;padding:8px 12px;border:1px dashed var(--green);background:rgba(126,181,107,0.10);font-size:12px">'
+            f'<strong>Budget runtime cible</strong> : 0s perçu par le joueur pour les LLM (sauf le warmup boot 5-10s). '
+            f'Le rapport HTML montre <em>tous</em> les temps en série pour debug — en jeu, ils sont parallélisés derrière l\'animation.'
+            f'</div>'
+            f'</div>'
+        )
+        parts.append('</div>')
+
     for s in trace.get("steps", []):
         phase = s.get("phase", "")
         parts.append(f'<div class="step phase-{html_escape(phase)}">')
@@ -813,7 +942,7 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
         parts.append(f'<div class="step-label">{html_escape(s.get("label",""))}</div>')
         # v7.7.28 — color-coded duration badge for LLM-heavy phases.
         dur = float(s.get("duration_s", 0))
-        is_llm = phase in ("titles", "intro", "skeleton", "scenario_full", "card_gen")
+        is_llm = phase in ("titles", "intro", "skeleton", "scenario_full", "card_gen", "card_resolution")
         badge = ""
         if is_llm and dur > 0:
             klass = "fast" if dur < 20 else ("medium" if dur < 60 else "slow")
@@ -869,6 +998,10 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
                                 html_escape(txt)).replace("\n\n", "<br/><br/>")
             parts.append(f'<div class="scenario-block">{html_scen}</div>')
             parts.append(f'<div class="rag-refs">RAG few-shot : {html_escape(", ".join(s.get("rag_few_shot_used", [])))} · {out.get("paragraph_count",0)} paragraphes</div>')
+
+        elif phase == "card_resolution":
+            out = s.get("output", {})
+            parts.append(f'<div class="resolution-block">Conséquence du choix « <strong>{html_escape(out.get("chosen_label","?"))}</strong> » : {html_escape(out.get("resolution_text",""))}</div>')
 
         elif phase == "act_intro":
             out = s.get("output", {})
@@ -938,7 +1071,7 @@ footer{padding:20px 60px;text-align:center;color:var(--gold-dim);font-size:11px;
         parts.append('</div>')
 
     parts.append("""</main>
-<footer>M.E.R.L.I.N. — simulate_human_run.py v7.7.28 (Gemma 4 only · acts × cards × routes) — généré le %s</footer>
+<footer>M.E.R.L.I.N. — simulate_human_run.py v7.7.29 (Gemma 4 · intro setup + scenario suite + cards route-aware + per-card resolution narrative) — généré le %s</footer>
 </body></html>""" % time.strftime("%Y-%m-%d %H:%M:%S"))
 
     return "".join(parts)
