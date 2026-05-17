@@ -27,10 +27,14 @@ class_name ScenarioPlanner
 extends RefCounted
 
 const GBNF_SKELETON_PATH := "res://data/ai/scenario_skeleton.gbnf"
-const TITLES_TIMEOUT_S := 8.0
-const SKELETON_TIMEOUT_S := 15.0
+## v7.7.26 — Per-stage LLM budgets. Originals were 8/15/10 s for snappy UX;
+## bumped here to 30/60/30 s so Gemma 4 E2B CPU has time to finish on a cold
+## prompt, but stays bounded so a hard stall falls back quickly to canon text.
+const TITLES_TIMEOUT_S := 30.0    # was 8.0
+const SKELETON_TIMEOUT_S := 60.0  # was 15.0
+const OUTRO_TIMEOUT_S := 30.0     # v7.7.26 — new field
 const JUDGE_TIMEOUT_S := 4.0
-const INTRO_TIMEOUT_S := 10.0   # v7.7.23 — LLM #2 (intro) budget
+const INTRO_TIMEOUT_S := 60.0   # v7.7.26 — bumped from 10, bounded so fallback fires fast on stall
 
 # v7.7 Phase 2.6 — 8 fallback skeletons (1 per biome, baseline emotional arc).
 # Each biome leans on its 1-2 dominant factions per the lore. Curiosité→sagesse
@@ -316,20 +320,21 @@ func generate_intro(biome_id: String, chosen_title: String) -> String:
 	var few_shot_intros: String = await _rag_intros_few_shot(biome_id, chosen_title)
 	var system_prompt: String = (
 		"Tu rédiges l'intro d'une marche druidique dans le bois de Brocéliande.\n" +
-		"POV : second-person, jeune druide en initiation. Le monde druidique est réel pour ce personnage.\n" +
+		"POV : second-person, jeune druide en initiation.\n" +
 		"CONTRAINTES :\n" +
-		"  - EXACTEMENT 6 à 8 phrases (pas plus, pas moins).\n" +
+		"  - EXACTEMENT 4 à 5 phrases (concis).\n" +
 		"  - Français celtique, ton druidique mystique.\n" +
-		"  - JAMAIS d'anglicismes, JAMAIS de termes techniques/cyber/numériques.\n" +
-		"  - JAMAIS rompre le 4e mur : pas de mention de \"jeu\", \"simulation\", \"joueur\", \"écran\".\n" +
-		"  - Place le jeune druide dans son contexte : maître, clan, mission, état d'esprit.\n" +
-		"  - Termine sur le seuil de l'aventure (le premier pas qui va déclencher la marche).\n" +
+		"  - JAMAIS d'anglicismes ni de termes techniques.\n" +
+		"  - JAMAIS de mention de \"jeu\", \"simulation\", \"joueur\", \"écran\".\n" +
+		"  - Place le druide en contexte puis termine au seuil de l'aventure.\n" +
 		"%s\n" +
-		"Maintenant rédige l'intro pour le titre choisi : \"%s\"."
+		"Maintenant rédige l'intro pour : \"%s\"."
 	) % [few_shot_intros, chosen_title]
-	var user_input: String = "Rédige l'intro de 6-8 phrases."
+	var user_input: String = "Rédige l'intro 4-5 phrases."
+	# v7.7.26 — max_tokens 400 → 200 + sentence budget shorter (was 6-8 → 4-5).
+	# Long prompts (2.7k chars) + 400 max_tokens stall Gemma 4 E2B CPU > 15 min.
 	var params: Dictionary = {
-		"max_tokens": 400,
+		"max_tokens": 200,
 		"temperature": 0.85,
 		"timeout_ms": int(INTRO_TIMEOUT_S * 1000),
 	}
@@ -338,9 +343,9 @@ func generate_intro(biome_id: String, chosen_title: String) -> String:
 		push_warning("[ScenarioPlanner] Intro LLM error : %s — falling back" % result.get("error"))
 		return await _fallback_intro(biome_id, chosen_title)
 	var raw: String = str(result.get("text", result.get("output", ""))).strip_edges()
-	# Validate : minimum 5 sentences (LLM may under-produce). Falls back if shy.
+	# v7.7.26 — bumped intro min sentences down from 5 → 3 (matches new 4-5 spec).
 	var sentence_count: int = raw.count(".") + raw.count("!") + raw.count("?")
-	if sentence_count < 5:
+	if sentence_count < 3:
 		push_warning("[ScenarioPlanner] Intro too short (%d sentences) — falling back" % sentence_count)
 		return await _fallback_intro(biome_id, chosen_title)
 	# v7.7.24 — Guardrails : check forbidden words + 4e mur + anglicisms via
@@ -391,6 +396,112 @@ func _fallback_intro(_biome_id: String, chosen_title: String) -> String:
 		"Tu sais que la forêt jaugera ton premier pas autant que ton dernier. " +
 		"Tu inspires profondément, et tu poses le pied sur la mousse."
 	) % chosen_title
+
+
+## v7.7.26 — Generate an LLM-written outro for the run end screen.
+##
+## skeleton:        the run's scenario plan (act_count + beats[]).
+## chosen_title:    the scenario title the player picked at the start.
+## run_history:     ordered Array[Dictionary] of per-beat play data:
+##                      {beat_idx, chosen_choice_label, outcome, effects_applied}.
+## issue:           "success" | "death" | "abandon"  — drives the tone.
+## final_state:     final MerlinStore snapshot for faction/life context.
+##
+## Returns the outro text (3-5 sentences, 2nd-person, druidic French) or a
+## deterministic fallback if the LLM is unavailable / over-budget / rejected
+## by the guardrail.
+func generate_outro(
+	chosen_title: String,
+	run_history: Array,
+	issue: String = "success",
+	final_state: Dictionary = {}
+) -> String:
+	if _merlin_ai == null or not _merlin_ai.has_method("generate_with_system"):
+		return _fallback_outro(chosen_title, issue)
+
+	# Compact run summary for the user prompt (avoid blowing the context window).
+	var beats_summary: Array[String] = []
+	var iter_max: int = min(run_history.size(), 10)
+	for i in range(iter_max):
+		var entry: Dictionary = run_history[i] if (run_history[i] is Dictionary) else {}
+		var line: String = "beat %d : %s -> %s" % [
+			int(entry.get("beat_idx", i)),
+			str(entry.get("chosen_choice_label", "?")),
+			str(entry.get("outcome", "?")),
+		]
+		beats_summary.append(line)
+	var history_block: String = "\n".join(beats_summary) if not beats_summary.is_empty() else "(aucun beat joué)"
+
+	var system_prompt: String = (
+		"Tu rédiges l'épilogue d'une marche druidique dans Brocéliande.\n" +
+		"POV : second-person, jeune druide qui revient de sa marche.\n" +
+		"CONTRAINTES :\n" +
+		"  - EXACTEMENT 3 à 5 phrases (synthèse, pas chronique).\n" +
+		"  - Français celtique, ton druidique mystique.\n" +
+		"  - JAMAIS d'anglicismes, JAMAIS de termes techniques/cyber/numériques.\n" +
+		"  - JAMAIS rompre le 4e mur : pas de mention de \"jeu\", \"simulation\", \"joueur\", \"écran\".\n" +
+		"  - Adapte le ton à l'issue : '%s'.\n" +
+		"      success → contemplatif, gratitude envers la forêt.\n" +
+		"      death   → grave, accept du passage, le bois garde sa trace.\n" +
+		"      abandon → mélancolique, retour sans avoir achevé.\n" +
+		"  - Référence subtilement les choix marquants ci-dessous, sans les énumérer.\n" +
+		"  - Boucle narrative : le druide quitte le seuil sur lequel il était entré.\n"
+	) % issue
+	var user_input: String = (
+		"Titre de la marche : \"%s\"\n" +
+		"Issue : %s\n" +
+		"Historique compact :\n%s\n" +
+		"Rédige l'épilogue 3-5 phrases."
+	) % [chosen_title, issue, history_block]
+	var params: Dictionary = {
+		"max_tokens": 300,
+		"temperature": 0.85,
+		"timeout_ms": int(OUTRO_TIMEOUT_S * 1000),
+	}
+	var result: Dictionary = await _merlin_ai.generate_with_system(system_prompt, user_input, params)
+	if result.get("error", "") != "":
+		push_warning("[ScenarioPlanner] Outro LLM error : %s — falling back" % result.get("error"))
+		return _fallback_outro(chosen_title, issue)
+	var raw: String = str(result.get("text", result.get("output", ""))).strip_edges()
+	var sentence_count: int = raw.count(".") + raw.count("!") + raw.count("?")
+	if sentence_count < 2:
+		push_warning("[ScenarioPlanner] Outro too short (%d sentences) — falling back" % sentence_count)
+		return _fallback_outro(chosen_title, issue)
+	# Re-use the intro guardrail (forbidden words / anglicisms / 4e mur).
+	var rag: Node = _get_scenarios_rag()
+	if rag != null and rag.has_method("validate_llm_text"):
+		var validation: Dictionary = rag.validate_llm_text(raw, "outro")
+		if not bool(validation.get("valid", true)):
+			push_warning("[ScenarioPlanner] Outro guardrail reject : %s — falling back" % str(validation.get("reason", "?")))
+			return _fallback_outro(chosen_title, issue)
+	return raw
+
+
+## v7.7.26 — Deterministic fallback outro keyed on the run issue.
+## Used when the LLM is unavailable, times out, or fails the guardrail.
+func _fallback_outro(chosen_title: String, issue: String) -> String:
+	match issue:
+		"death":
+			return (
+				"Le bois t'a repris avant que tu ne puisses tracer ton sillon. " +
+				"Ta marche, intitulée « %s », s'achève sur la mousse, sans bruit. " +
+				"Les korrigans referment le cercle derrière toi, gardiens d'un seuil que tu n'as pas franchi. " +
+				"Brocéliande te garde, comme elle garde toutes les promesses inachevées."
+			) % chosen_title
+		"abandon":
+			return (
+				"Tu reposes ton couteau d'os à la ceinture sans avoir tranché la pelote du destin. " +
+				"La marche « %s » reste suspendue dans l'écorce, à recommencer un autre crépuscule. " +
+				"Le maître t'attend au nemeton ; il ne posera pas la question, et tu n'y répondras pas. " +
+				"La forêt, elle, se souvient."
+			) % chosen_title
+		_:
+			return (
+				"Le seuil sur lequel tu posais le pied tantôt s'est refermé derrière toi sans bruit. " +
+				"La marche « %s » a tracé son sillon dans la mousse, et dans le souffle des sidhe. " +
+				"Tu reviens au nemeton, plus léger d'une mission, plus dense d'un savoir. " +
+				"Brocéliande te salue, druide ; ta cape porte désormais l'humide de ses brumes."
+			) % chosen_title
 
 
 func _parse_titles_with_oghams(raw: String, biome_id: String) -> Array:

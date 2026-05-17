@@ -26,8 +26,10 @@ class_name BiBrainPipeline
 extends RefCounted
 
 const GBNF_CARD_PATH := "res://data/ai/merlin_card.gbnf"
-const GM_TIMEOUT_S := 8.0
-const NARRATOR_TIMEOUT_S := 12.0
+## v7.7.26 — Bumped from 8/12 to 30/60 for Gemma 4 E2B CPU. Bounded so
+## hard stalls fall back to FastRoute card pool within a reasonable budget.
+const GM_TIMEOUT_S := 30.0
+const NARRATOR_TIMEOUT_S := 60.0
 
 var _merlin_ai: Node  # MerlinAI autoload reference (loose-typed to avoid hard dep)
 var _rag: Node        # RAGManager autoload reference

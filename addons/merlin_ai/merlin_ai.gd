@@ -15,9 +15,10 @@ signal log_updated(log_text: String)
 # SINGLE+ mode: time-sharing (un seul modele en RAM, swap Ollama)
 const ModelsConfig = preload("res://addons/merlin_ai/models_config.gd")
 # GGUF for embedded merlin_llm GDExtension. MODEL_CANDIDATES are probed in order.
-const MODEL_FILE := "res://addons/merlin_llm/models/gemma4-e4b-q4_k_m.gguf"
+const MODEL_FILE := "res://addons/merlin_llm/models/gemma4-e2b-q4_k_m.gguf"
 const MODEL_CANDIDATES := [
 	MODEL_FILE,
+	"res://addons/merlin_llm/models/gemma4-e4b-q4_k_m.gguf",
 	"res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf",
 	"res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf",
 ]
