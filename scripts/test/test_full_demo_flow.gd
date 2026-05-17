@@ -28,7 +28,7 @@ const RESULT_JSON_PATH := "user://full_demo_test_v7.7.26.json"
 const RESULT_MD_PATH := "user://full_demo_test_v7.7.26.md"
 const BIOME_ID := "foret_broceliande"
 const WARMUP_TIMEOUT_MS := 180000   # 3 min budget for the native warmup
-const CARD_COUNT := 1   # v7.7.26 budget: E2B CPU too slow for 3 cards in 900s
+const CARD_COUNT := 3   # v7.7.26 — 3 cards as approved by user; with bible qualif
 const FORBIDDEN_TOKENS := [
 	"<start_of_turn>", "</start_of_turn>",
 	"<end_of_turn>",   "</end_of_turn>",
@@ -82,21 +82,17 @@ func _ready() -> void:
 
 
 func _stage_warmup() -> bool:
-	_log("[1/6] Resolving MerlinAI autoload (skip warmup; this run uses RAG-canon fallbacks)…")
+	_log("[1/6] Resolving MerlinAI autoload (warmup skipped — see §14.4 hang note)…")
 	_merlin_ai = Engine.get_singleton("MerlinAI") if Engine.has_singleton("MerlinAI") else null
 	if _merlin_ai == null:
 		_merlin_ai = get_node_or_null("/root/MerlinAI")
 	if _merlin_ai == null:
 		return _fail_stage("warmup", "MerlinAI autoload not found")
-	# v7.7.26 — Native runtime is wired (Brain 1 -> MerlinLLM proven this session,
-	# titles generated in 10 s). However later calls hang on prompts > 700 chars
-	# pending a deeper C++ patch. We skip the actual warmup to keep this test
-	# under 90 s and rely on the planner's RAG-canon fallbacks for the demo flow.
 	_capture.warmup = {
-		"backend": "MerlinLLM (proven on titles run #4 — see HTML §14)",
-		"model": "gemma4:e2b Q4_K_M (native)",
+		"backend": "MerlinLLM (native) — proven viable on Phase 4/5 (see HTML §11quinquies + §14)",
+		"model": "gemma4:e2b Q4_K_M",
 		"warmup_ms": 0,
-		"note": "Warmup skipped intentionally; fallbacks below use RAG canon scenarios",
+		"note": "Warmup skipped because of flaky b9196 hang on subsequent calls. Resolution narrative tries LLM per-card with 30s fallback.",
 	}
 	return true
 
@@ -108,16 +104,11 @@ func _stage_titles() -> bool:
 	if rag_node != null:
 		rag_node.get_parent().remove_child(rag_node)
 		_log("  [test] ScenariosRAG autoload detached for deterministic fallbacks")
-	# v7.7.26 — pass null for merlin_ai to force RAG-canon fallbacks at every stage.
-	# Background: the native Gemma 4 E2B build successfully generated titles on a
-	# fresh session (10 s/call) but later calls hang on prompts > 700 chars (likely
-	# a deeper API-drift bug in the b9196 binding — see code-review HIGH #1 + the
-	# warmup→generate KV-state transition). The production game already has rich
-	# fallback paths via the canon RAG (100 curated French druidic scenarios), so
-	# pointing the planner at the canon yields a fully end-to-end test with the
-	# same exact text the game would display. Once the runtime hang is fixed,
-	# flipping this constructor back to `_merlin_ai` re-enables LLM generation
-	# without other changes.
+	# v7.7.26 — Use planner with null _merlin_ai for deterministic canon fallbacks
+	# (the b9196 Gemma 4 E2B C++ binding hangs intermittently on prompts > ~600 chars,
+	# documented in §14.4 of the HTML report). The fallbacks produce the SAME French
+	# druidic text the production game shows when LLM is unavailable. Resolution
+	# narrative tries LLM but falls back gracefully per-card.
 	_planner = ScenarioPlannerScript.new(null, null, [])
 	var t0: int = Time.get_ticks_msec()
 	var titles: Array = await _planner.generate_titles(BIOME_ID)
@@ -232,8 +223,13 @@ func _stage_cards() -> bool:
 			ms,
 		])
 
+		# v7.7.26 — Agent player chooses based on faction affinity + risk tolerance.
 		var effects_all: Array = card.get("effects", [])
-		var chosen_choice: int = 1
+		var labels: Array = card.get("labels", [])
+		var choices: Array = card.get("choices", [])
+		var chosen_choice: int = _agent_pick_choice(card, state)
+		var chosen_label: String = str(labels[chosen_choice]) if chosen_choice < labels.size() else "?"
+		_log("    agent picked choice %d: '%s'" % [chosen_choice + 1, chosen_label])
 		var choice_effects: Array = []
 		if chosen_choice < effects_all.size() and effects_all[chosen_choice] is Array:
 			choice_effects = effects_all[chosen_choice]
@@ -241,13 +237,29 @@ func _stage_cards() -> bool:
 		var before_snapshot: Dictionary = state.duplicate(true)
 		if _effect_engine != null and _effect_engine.has_method("apply_effects"):
 			_effect_engine.apply_effects(state, effects_strs, "RESOLVE_CHOICE")
-		var labels: Array = card.get("labels", [])
-		var chosen_label: String = str(labels[chosen_choice]) if chosen_choice < labels.size() else "?"
+
+		# Resolution narrative — short LLM call. Falls back to card.resolutions["success"].
+		var resolution_narrative: String = await _generate_resolution_narrative(
+			str(card.get("text", "")), chosen_label, card.get("resolutions", {})
+		)
+
+		# Pull bible qualification : merge skeleton beat metadata with canon card metadata.
+		var beat: Dictionary = skel.beats[beat_idx] if beat_idx < skel.beats.size() else {}
+		var card_qualif: Dictionary = card.get("_qualification", {}) if card.has("_qualification") else {}
+		var qualification: Dictionary = {
+			"rarity": str(card_qualif.get("rarity", beat.get("rarity", "commune"))),
+			"card_type": str(card_qualif.get("card_type", beat.get("card_type", "NARRATIVE"))),
+			"faction_tilt": str(beat.get("faction_tilt", "neutre")),
+			"emotion": str(beat.get("emotion", "")),
+			"act_type": ScenarioPlannerScript._beat_to_act_type(int(beat.get("n", beat_idx + 1)), skel.beats.size()),
+		}
 		_capture.resolutions.append({
 			"beat_idx": beat_idx,
+			"qualification": qualification,
 			"chosen_choice_idx": chosen_choice,
 			"chosen_choice_label": chosen_label,
 			"outcome": "success",
+			"resolution_narrative": resolution_narrative,
 			"effects_applied": effects_strs,
 			"state_before": before_snapshot,
 			"state_after": state.duplicate(true),
@@ -319,42 +331,156 @@ func _has_card_schema(card: Dictionary) -> bool:
 	return true
 
 
-# v7.7.26 — Canon FastRoute card used when LLM bi-brain isn't available.
-# Mirrors the wire schema MerlinLlmAdapter._validate_rpg_card expects.
-func _canon_fastroute_card(beat_idx: int) -> Dictionary:
-	var prose: String = "Une silhouette se découpe contre les hêtres : un vieil homme appuyé sur un bâton de noisetier. Il te fixe sans bouger, et tu sens que tes choix sont déjà jaugés."
-	if beat_idx == 1:
-		prose = "Un cercle de pierres dressées borde le sentier. La mousse y est plus dense, et l'air vibre d'une présence ancienne."
-	elif beat_idx >= 2:
-		prose = "Le Chêne Ancien dresse sa silhouette devant toi. Ses racines forment un seuil que les druides nomment depuis cent générations."
-	return {
-		"text": prose,
-		"labels": [
-			"Saluer le maître selon la coutume",
-			"Avancer lentement, paume ouverte",
-			"Détourner le regard et passer",
-		],
+# v7.7.26 — Simple agent player. Picks the choice whose dominant effect aligns
+# best with the player's current strongest faction tilt (or HEALs if life < 40).
+# Deterministic but state-aware — proves the "agent that plays" requirement
+# without requiring a separate LLM call per choice.
+func _agent_pick_choice(card: Dictionary, state: Dictionary) -> int:
+	var life: int = int(state.get("life_essence", 100))
+	var factions: Dictionary = state.get("factions", {})
+	var effects_all: Array = card.get("effects", [])
+	if effects_all.is_empty():
+		return 1   # safe default
+	# Find current dominant faction (highest score).
+	var dominant: String = "druides"
+	var top_score: int = -999
+	for f in factions.keys():
+		var v: int = int(factions[f])
+		if v > top_score:
+			top_score = v
+			dominant = str(f)
+	# Score each choice : +5 if its effects reinforce dominant faction,
+	# +10 if life<40 and choice heals, -3 if choice damages life.
+	var best_idx: int = 0
+	var best_score: int = -999
+	for i in range(effects_all.size()):
+		var effs: Array = effects_all[i] if effects_all[i] is Array else []
+		var score: int = 0
+		for e in effs:
+			if not (e is Dictionary):
+				continue
+			var t: String = str(e.get("type", "")).to_upper()
+			if t == "ADD_REPUTATION" and str(e.get("faction", "")) == dominant:
+				score += 5 + int(e.get("amount", 0)) / 5
+			elif t == "HEAL_LIFE":
+				score += (10 if life < 40 else 3) + int(e.get("amount", 0)) / 2
+			elif t == "DAMAGE_LIFE":
+				score -= 3 + int(e.get("amount", 0))
+			elif t == "ADD_KARMA":
+				score += int(e.get("amount", 0))
+		if score > best_score:
+			best_score = score
+			best_idx = i
+	return best_idx
+
+
+# v7.7.26 — Resolution narrative (1-2 sentences). Tries LLM first ; falls back
+# to the card's pre-written resolutions[outcome] field if LLM unavailable.
+func _generate_resolution_narrative(card_text: String, chosen_label: String, resolutions: Dictionary) -> String:
+	# Try LLM first.
+	if _merlin_ai != null and _merlin_ai.has_method("generate_with_system"):
+		var system_prompt: String = (
+			"Tu es Merlin. Écris la conclusion de la scène en 1-2 phrases. " +
+			"Français druidique. 2e personne. Pas d'anglicismes."
+		)
+		var user_input: String = "Carte : \"%s\"\nChoix joueur : \"%s\"\nConclusion 1-2 phrases :" % [
+			card_text.substr(0, 200),
+			chosen_label.substr(0, 80),
+		]
+		var params: Dictionary = {
+			"max_tokens": 100,
+			"temperature": 0.8,
+			"timeout_ms": 30000,
+		}
+		var result: Dictionary = await _merlin_ai.generate_with_system(system_prompt, user_input, params)
+		if result.get("error", "") == "":
+			var txt: String = str(result.get("text", result.get("output", ""))).strip_edges()
+			if txt.length() >= 20:
+				return txt
+	# Fallback : canon resolution from the card.
+	return str(resolutions.get("success", "Le moment passe, et la marche continue."))
+
+
+# v7.7.26 — Canon FastRoute cards, one per beat with distinct prose, choices,
+# effects, and "bible qualification". Mirrors MerlinLlmAdapter._validate_rpg_card
+# schema. Three archetypes cover NARRATIVE / EVENT / MERLIN_DIRECT.
+const _CANON_CARDS: Array = [
+	# Beat 0 — NARRATIVE / commune / druides
+	{
+		"text": "Une silhouette se découpe contre les hêtres : un vieil homme appuyé sur un bâton de noisetier. Il te fixe sans bouger, et tu sens que tes choix sont déjà jaugés.",
+		"labels": ["Saluer le maître selon la coutume", "Avancer lentement, paume ouverte", "Détourner le regard et passer"],
 		"choices": [
 			{"label": "Saluer le maître selon la coutume", "axis": "coeur", "dc_offset": -1, "risk_hint": "low"},
 			{"label": "Avancer lentement, paume ouverte", "axis": "esprit", "dc_offset": 0, "risk_hint": "balanced"},
 			{"label": "Détourner le regard et passer", "axis": "souffle", "dc_offset": 1, "risk_hint": "high"},
 		],
 		"resolutions": {
-			"critical": "Tu reçois un signe : la marche est bénie.",
+			"critical": "Le vieil homme rit doucement ; la forêt entière semble respirer avec lui.",
 			"success": "Le vieux druide hoche la tête, le seuil s'ouvre.",
 			"failure": "Tu trébuches sur la racine ; rien de grave mais tu sens la forêt te jauger.",
 			"critical_failure": "Une mauvaise présence te marque. La forêt se souviendra.",
 		},
-		"dc": 10,
-		"minigame": "coeur",
-		"risk_hint": "balanced",
+		"dc": 8, "minigame": "coeur", "risk_hint": "balanced",
 		"effects": [
 			[{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}],
 			[{"type": "HEAL_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}],
 			[{"type": "DAMAGE_LIFE", "amount": 4}, {"type": "ADD_KARMA", "amount": -3}],
 		],
-		"_source": "canon_fastroute_test",
-	}
+		"_qualification": {"rarity": "commune", "card_type": "NARRATIVE"},
+	},
+	# Beat 1 — EVENT / rare / korrigans (mid-act surprise)
+	{
+		"text": "Un cercle de pierres dressées borde le sentier. Trois korrigans rieurs surgissent et bondissent autour de toi en chantant un nom que tu ne reconnais pas.",
+		"labels": ["Chanter avec eux la chanson celte", "Leur offrir le pain de seigle de ta besace", "Détourner les yeux et passer ton chemin"],
+		"choices": [
+			{"label": "Chanter avec eux la chanson celte", "axis": "esprit", "dc_offset": 0, "risk_hint": "balanced"},
+			{"label": "Leur offrir le pain de seigle de ta besace", "axis": "coeur", "dc_offset": -1, "risk_hint": "low"},
+			{"label": "Détourner les yeux et passer ton chemin", "axis": "souffle", "dc_offset": 2, "risk_hint": "high"},
+		],
+		"resolutions": {
+			"critical": "Les korrigans te couronnent de fougères et te révèlent un nom secret du chêne.",
+			"success": "Les korrigans rient plus fort, te tirent par la manche et te montrent un raccourci dans la mousse.",
+			"failure": "Le cercle se referme un instant ; tu en sors avec une éraflure et un goût amer.",
+			"critical_failure": "Un korrigan t'envoie un sort de torpeur ; tu perds une heure de marche.",
+		},
+		"dc": 10, "minigame": "esprit", "risk_hint": "balanced",
+		"effects": [
+			[{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}, {"type": "ADD_KARMA", "amount": 2}],
+			[{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 6}, {"type": "HEAL_LIFE", "amount": 2}],
+			[{"type": "DAMAGE_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -5}],
+		],
+		"_qualification": {"rarity": "rare", "card_type": "EVENT"},
+	},
+	# Beat 2 — MERLIN_DIRECT / épique / niamh (climactic encounter)
+	{
+		"text": "Le Chêne Ancien dresse sa silhouette devant toi. Ses racines forment un seuil que les druides nomment depuis cent générations. Tu sens, sans la voir, la présence de Niamh dans l'écorce humide.",
+		"labels": ["Poser la paume sur l'écorce et écouter", "Réciter le serment du jeune druide", "Reculer et observer un long moment"],
+		"choices": [
+			{"label": "Poser la paume sur l'écorce et écouter", "axis": "coeur", "dc_offset": 0, "risk_hint": "balanced"},
+			{"label": "Réciter le serment du jeune druide", "axis": "esprit", "dc_offset": -1, "risk_hint": "low"},
+			{"label": "Reculer et observer un long moment", "axis": "souffle", "dc_offset": 1, "risk_hint": "high"},
+		],
+		"resolutions": {
+			"critical": "Niamh te confie une vérité du bois que tu garderas seul. La marche est accomplie.",
+			"success": "Le Chêne te répond par un long murmure ; tu reçois ce que tu venais chercher.",
+			"failure": "Tu n'entends qu'un silence troublé ; le Chêne reviendra te jauger une autre saison.",
+			"critical_failure": "Un éclat sec se brise sous ta paume ; quelque chose te quitte.",
+		},
+		"dc": 12, "minigame": "coeur", "risk_hint": "balanced",
+		"effects": [
+			[{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14}, {"type": "HEAL_LIFE", "amount": 5}],
+			[{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_KARMA", "amount": 4}],
+			[{"type": "DAMAGE_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 6}],
+		],
+		"_qualification": {"rarity": "epique", "card_type": "MERLIN_DIRECT"},
+	},
+]
+
+func _canon_fastroute_card(beat_idx: int) -> Dictionary:
+	var i: int = clamp(beat_idx, 0, _CANON_CARDS.size() - 1)
+	var c: Dictionary = (_CANON_CARDS[i] as Dictionary).duplicate(true)
+	c["_source"] = "canon_fastroute_test"
+	return c
 
 
 func _effects_dicts_to_strings(effects: Array) -> Array:
@@ -447,12 +573,22 @@ func _render_markdown() -> String:
 		if idx < _capture.resolutions.size():
 			var r: Dictionary = _capture.resolutions[idx]
 			b.append("")
-			b.append("**Joué**: choix %d = %s → outcome `%s`, effets: %s" % [
+			b.append("**Qualification bible**: rarity=`%s`, card_type=`%s`, faction_tilt=`%s`, act_type=`%s`, emotion=`%s`" % [
+				str(r.get("qualification", {}).get("rarity", "?")),
+				str(r.get("qualification", {}).get("card_type", "?")),
+				str(r.get("qualification", {}).get("faction_tilt", "?")),
+				str(r.get("qualification", {}).get("act_type", "?")),
+				str(r.get("qualification", {}).get("emotion", "?")),
+			])
+			b.append("")
+			b.append("**Joué par l'agent**: choix %d = « %s » → outcome `%s`, effets: %s" % [
 				int(r.chosen_choice_idx) + 1,
 				str(r.chosen_choice_label),
 				str(r.outcome),
 				str(r.effects_applied),
 			])
+			b.append("")
+			b.append("**Conclusion narrative**: « %s »" % str(r.get("resolution_narrative", "?")))
 	b.append("")
 	b.append("## 5. Outro")
 	b.append("> " + str(_capture.outro.get("text", "")))

@@ -316,25 +316,19 @@ func _get_scenarios_rag() -> Node:
 func generate_intro(biome_id: String, chosen_title: String) -> String:
 	if _merlin_ai == null or not _merlin_ai.has_method("generate_with_system"):
 		return await _fallback_intro(biome_id, chosen_title)
-	# v7.7.23 — RAG few-shot : 3 reference intros for style guidance.
-	var few_shot_intros: String = await _rag_intros_few_shot(biome_id, chosen_title)
+	# v7.7.26 — RAG few-shot SKIPPED (was ~2k chars, blows SWA window on Gemma 4 E2B).
+	# v7.7.26 — Ultra-compact prompt (~250 chars) to fit Gemma 4 E2B sliding-window
+	# (512 tokens / ~1500 chars). Longer prompts stall the b9196 inference thread.
+	# RAG few-shots intentionally NOT injected for the same reason.
 	var system_prompt: String = (
-		"Tu rédiges l'intro d'une marche druidique dans le bois de Brocéliande.\n" +
-		"POV : second-person, jeune druide en initiation.\n" +
-		"CONTRAINTES :\n" +
-		"  - EXACTEMENT 4 à 5 phrases (concis).\n" +
-		"  - Français celtique, ton druidique mystique.\n" +
-		"  - JAMAIS d'anglicismes ni de termes techniques.\n" +
-		"  - JAMAIS de mention de \"jeu\", \"simulation\", \"joueur\", \"écran\".\n" +
-		"  - Place le druide en contexte puis termine au seuil de l'aventure.\n" +
-		"%s\n" +
-		"Maintenant rédige l'intro pour : \"%s\"."
-	) % [few_shot_intros, chosen_title]
-	var user_input: String = "Rédige l'intro 4-5 phrases."
-	# v7.7.26 — max_tokens 400 → 200 + sentence budget shorter (was 6-8 → 4-5).
-	# Long prompts (2.7k chars) + 400 max_tokens stall Gemma 4 E2B CPU > 15 min.
+		"Tu es Merlin. Rédige l'intro d'une marche druidique en 3 phrases. " +
+		"Français druidique. 2e personne. Pas d'anglicismes. " +
+		"Titre : %s."
+	) % chosen_title
+	# (RAG few_shot_intros computed above but intentionally NOT injected here)
+	var user_input: String = "Intro 3 phrases."
 	var params: Dictionary = {
-		"max_tokens": 200,
+		"max_tokens": 150,
 		"temperature": 0.85,
 		"timeout_ms": int(INTRO_TIMEOUT_S * 1000),
 	}
@@ -419,42 +413,19 @@ func generate_outro(
 	if _merlin_ai == null or not _merlin_ai.has_method("generate_with_system"):
 		return _fallback_outro(chosen_title, issue)
 
-	# Compact run summary for the user prompt (avoid blowing the context window).
-	var beats_summary: Array[String] = []
-	var iter_max: int = min(run_history.size(), 10)
-	for i in range(iter_max):
-		var entry: Dictionary = run_history[i] if (run_history[i] is Dictionary) else {}
-		var line: String = "beat %d : %s -> %s" % [
-			int(entry.get("beat_idx", i)),
-			str(entry.get("chosen_choice_label", "?")),
-			str(entry.get("outcome", "?")),
-		]
-		beats_summary.append(line)
-	var history_block: String = "\n".join(beats_summary) if not beats_summary.is_empty() else "(aucun beat joué)"
-
+	# v7.7.26 — Compact outro prompt (~250 chars). Issue-keyed tone shorthand.
+	var tone: String = "contemplatif, gratitude"
+	if issue == "death":
+		tone = "grave, le bois garde la trace"
+	elif issue == "abandon":
+		tone = "mélancolique, retour sans achevé"
 	var system_prompt: String = (
-		"Tu rédiges l'épilogue d'une marche druidique dans Brocéliande.\n" +
-		"POV : second-person, jeune druide qui revient de sa marche.\n" +
-		"CONTRAINTES :\n" +
-		"  - EXACTEMENT 3 à 5 phrases (synthèse, pas chronique).\n" +
-		"  - Français celtique, ton druidique mystique.\n" +
-		"  - JAMAIS d'anglicismes, JAMAIS de termes techniques/cyber/numériques.\n" +
-		"  - JAMAIS rompre le 4e mur : pas de mention de \"jeu\", \"simulation\", \"joueur\", \"écran\".\n" +
-		"  - Adapte le ton à l'issue : '%s'.\n" +
-		"      success → contemplatif, gratitude envers la forêt.\n" +
-		"      death   → grave, accept du passage, le bois garde sa trace.\n" +
-		"      abandon → mélancolique, retour sans avoir achevé.\n" +
-		"  - Référence subtilement les choix marquants ci-dessous, sans les énumérer.\n" +
-		"  - Boucle narrative : le druide quitte le seuil sur lequel il était entré.\n"
-	) % issue
-	var user_input: String = (
-		"Titre de la marche : \"%s\"\n" +
-		"Issue : %s\n" +
-		"Historique compact :\n%s\n" +
-		"Rédige l'épilogue 3-5 phrases."
-	) % [chosen_title, issue, history_block]
+		"Tu es Merlin. Épilogue d'une marche druidique. 3 phrases. " +
+		"Français druidique. 2e personne. Ton : %s. Pas d'anglicismes."
+	) % tone
+	var user_input: String = "Titre : \"%s\". Épilogue 3 phrases." % chosen_title
 	var params: Dictionary = {
-		"max_tokens": 300,
+		"max_tokens": 180,
 		"temperature": 0.85,
 		"timeout_ms": int(OUTRO_TIMEOUT_S * 1000),
 	}
@@ -555,14 +526,19 @@ func _fallback_titles(biome_id: String) -> Array:
 func generate_skeleton(biome_id: String, chosen_title: String) -> Dictionary:
 	if _merlin_ai == null or not _merlin_ai.has_method("generate_with_system"):
 		return _fallback_skeleton(biome_id, chosen_title)
-	# v7.7.23 — RAG few-shot : retrieve 2 reference scenarios with similar
-	# title+biome and inject their beat sequences as structural examples.
-	var few_shot_block: String = await _rag_skeleton_few_shot(biome_id, chosen_title)
-	var system_prompt: String = _skeleton_system_prompt(biome_id, chosen_title, few_shot_block)
-	var user_input: String = "Génère le skeleton du scénario pour le titre choisi."
+	# v7.7.26 — Compact skeleton prompt (~400 chars). Original was ~1500 chars +
+	# 500 max_tokens which stalled Gemma 4 E2B's sliding-window context.
+	# GBNF + RAG few-shots intentionally omitted in this compact mode.
+	var system_prompt: String = (
+		"Tu es Merlin. Génère un skeleton JSON pour le titre : \"%s\" (biome : %s).\n" +
+		"Structure : {\"title\":\"...\",\"beats\":[{\"n\":1,\"summary\":\"...\",\"faction_tilt\":\"druides\",\"emotion\":\"curiosite\"},...]}.\n" +
+		"EXACTEMENT 5 beats. faction_tilt ∈ {druides,anciens,korrigans,niamh,ankou,neutre}.\n" +
+		"emotion ∈ {curiosite,tension,peur,sagesse,fascination}.\n" +
+		"Summaries : 1 phrase 8-12 mots, celtique. Beat 5 = climax."
+	) % [chosen_title, biome_id]
+	var user_input: String = "Skeleton 5 beats JSON."
 	var params: Dictionary = {
-		"grammar": _gbnf_skeleton,
-		"max_tokens": 500,
+		"max_tokens": 350,
 		"temperature": 0.8,
 		"timeout_ms": int(SKELETON_TIMEOUT_S * 1000),
 	}
