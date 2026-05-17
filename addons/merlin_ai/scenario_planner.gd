@@ -791,7 +791,7 @@ static func _beat_to_act_type(beat_n: int, total: int = 5) -> String:
 # ═════════ Phase 2 stubs : judge + replan (TODO) ══════════════════════════════
 
 ## v7.7 Phase 2.4 — LLM-judge primary + heuristic fallback.
-## Hybrid : if MerlinAI available → mini LLM call (~1-2s, qwen3.5:2b via narrator path).
+## Hybrid : if MerlinAI available → mini LLM call (~1-2s, gemma4:e4b via narrator path; qwen3.5:2b legacy).
 ## Else → heuristic comparison of dominant faction in player_choice.effects vs beat.faction_tilt.
 ## Returns true if the player diverged from the expected arc (caller should replan).
 ##

@@ -1828,7 +1828,7 @@ func _save_anam_to_profile() -> void:
 	_store.dispatch({"type": "SAVE_PROFILE"})
 
 
-## v5.4 — Pre-warm the LLM (Qwen 3.5) by firing an early GET_CARD whose result
+## v5.4 — Pre-warm the LLM (Gemma 4 active, Qwen 3.5 legacy) via an early GET_CARD whose result
 ## we discard. The model loads ~15-25s cold; our drop choreography is 5.5s.
 ## After this warm-up, the Act 1 GET_CARD response time drops to ~3-5s instead
 ## of 15-25s — masking the latency behind the visible drop animation.

@@ -646,6 +646,19 @@ func _try_init_ollama(target: int) -> bool:
 	var narrator_cfg: Dictionary = BrainSwarmConfig.get_brain_config(_active_profile_id, "narrator")
 	var narrator_tag: String = str(narrator_cfg.get("ollama_tag", OllamaBackendScript.DEFAULT_MODEL))
 	var narrator_ctx: int = int(narrator_cfg.get("n_ctx", 4096))
+	# Optional hardware-aware override: settings.cfg [llm].force_narrator_tag lets
+	# constrained boxes (low free RAM, slow disk) swap in a smaller Ollama tag
+	# without rewriting the profile. Honoured here AFTER the profile resolves so
+	# the rest of the brain wiring keeps the profile's role layout.
+	var override_cfg := ConfigFile.new()
+	if override_cfg.load("user://settings.cfg") == OK:
+		var forced: String = str(override_cfg.get_value("llm", "force_narrator_tag", ""))
+		if forced != "":
+			_log("LLM tag override: %s -> %s (settings.cfg [llm].force_narrator_tag)" % [narrator_tag, forced])
+			narrator_tag = forced
+			var forced_ctx: int = int(override_cfg.get_value("llm", "force_narrator_ctx", 0))
+			if forced_ctx > 0:
+				narrator_ctx = forced_ctx
 	_set_status("Connexion: ...", "Ollama Brain 1/Narrator (%s)" % narrator_tag, 30.0)
 	narrator_llm = OllamaBackendScript.new()
 	narrator_llm.model = narrator_tag

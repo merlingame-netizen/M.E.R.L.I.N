@@ -63,7 +63,7 @@ var _last_card_time_ms := 0
 var _last_event_selection: Dictionary = {}  # Phase 44 — last selected category
 
 # LLM Configuration
-const LLM_TIMEOUT_MS := 300000  # 300s — CPU-only Qwen 3B, generous for cold start
+const LLM_TIMEOUT_MS := 300000  # 300s — CPU-only Gemma 4 E4B / Qwen 3B, generous for cold start
 const MAX_RETRIES := 2
 
 # Guardrails
@@ -1381,7 +1381,7 @@ func _sync_mos_to_rag() -> void:
 
 
 func _build_system_prompt() -> String:
-	## Enriched system prompt for Qwen 2.5-3B-Instruct.
+	## Enriched system prompt — works on Gemma 4 (active) and Qwen 3.5 (legacy).
 	## JSON template moved to user prompt to reduce hallucination.
 	## RAG context + tone guidance injected via priority budget.
 	var base := "Narrateur celtique de Broceliande. Ecris une scene courte (2-3 phrases) avec vocabulaire druidique (nemeton, ogham, sidhe, dolmen, korrigans). Puis donne EXACTEMENT 3 choix:\nA) [verbe action]\nB) [verbe action]\nC) [verbe action]"
@@ -1596,7 +1596,7 @@ func _apply_guardrails(card: Dictionary) -> Dictionary:
 			generation_failed.emit("guardrail_length")
 			return {}
 
-	# 2. Language check — soft for LLM (Qwen sometimes mixes languages)
+	# 2. Language check — soft (Gemma 4 / Qwen 3.5 occasionally mix languages)
 	if not _check_french_language(text):
 		if is_llm:
 			push_warning("[MOS] Guardrail soft: French language check failed")

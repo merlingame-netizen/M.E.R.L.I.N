@@ -1,8 +1,10 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## RAG Manager v3.0 — Retrieval Augmented Generation for Qwen 3.5 Multi-Brain
+## RAG Manager v3.0 — Retrieval Augmented Generation for the multi-brain stack
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Structured retrieval with per-brain token budget, game journal, cross-run memory.
-## v3.0: Budget scales per brain role (4B=800, 2B=400, 0.8B=200 tokens).
+## Budget scales per brain role:
+##   Gemma 4 (active): 26b/Narrator=800, e4b/GM=400, e2b/Worker-Judge=200 tokens.
+##   Qwen 3.5 (legacy): 4b=800, 2b=400, 0.8b=200 — same shape, different sizes.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node

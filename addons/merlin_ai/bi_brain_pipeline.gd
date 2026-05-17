@@ -6,8 +6,9 @@
 ## Narrator from-scratch + RAG embeddings + cascade fallback.
 ##
 ## Pipeline séquentiel :
-##   Phase A : GM brain (qwen3.5:2b, GBNF-constrained) → structured JSON shell
-##   Phase B : Narrator brain (qwen3.5:4b + merlin-narrator LoRA) → rich prose
+##   Phase A : GM brain (gemma4:e4b, GBNF-constrained) → structured JSON shell
+##   Phase B : Narrator brain (gemma4:26b MoE, optional merlin-narrator LoRA) → rich prose
+##             Legacy: qwen3.5:2b / qwen3.5:4b via ModelsConfig.use_legacy_qwen
 ##             reçoit le shell GM + RAG context + génère le `text` from scratch
 ##   Phase C : Fusion shell + prose → carte finale Dictionary
 ##

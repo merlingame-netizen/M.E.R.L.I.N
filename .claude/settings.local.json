@@ -30,7 +30,11 @@
       "Bash(wsl:*)",
       "Bash(powershell -Command:*)",
       "Bash(npm run build)",
-      "Bash(npx vercel --prod)"
+      "Bash(npx vercel --prod)",
+      "Bash(git checkout *)",
+      "Bash(python tools/cli.py godot validate_step0)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2"
