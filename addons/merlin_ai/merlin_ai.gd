@@ -7,13 +7,21 @@ signal status_changed(status_text: String, detail_text: String, progress_value: 
 signal ready_changed(is_ready: bool)
 signal log_updated(log_text: String)
 
-# ARCHITECTURE MULTI-BRAIN HETEROGENE — Qwen 3.5 family (0.8B/2B/4B)
-# Phase 33: Chaque cerveau utilise un modele different, optimise pour son role
-# Brain 1 = Narrator (4B creatif), Brain 2 = Game Master (2B logique + thinking)
-# Brain 3-4 = Worker Pool / Judge (0.8B — taches de fond / evaluation)
+# ARCHITECTURE MULTI-BRAIN HETEROGENE — Gemma 4 family (default) / Qwen 3.5 (legacy)
+# Phase 33+gemma4: Chaque cerveau utilise un modele different, optimise pour son role
+# Brain 1 = Narrator (Gemma 4 26B-A4B MoE creatif), Brain 2 = Game Master (Gemma 4 E4B logique)
+# Brain 3-4 = Worker Pool / Judge (Gemma 4 E2B — taches de fond / evaluation)
 # SINGLE+ mode: time-sharing (un seul modele en RAM, swap Ollama)
-const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
-const MODEL_CANDIDATES := [MODEL_FILE, "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"]
+# Toggle Qwen rollback : ProjectSettings ai/use_legacy_qwen=true
+const MODEL_FILE := "res://addons/merlin_llm/models/gemma4-e4b-q4_k_m.gguf"
+const MODEL_CANDIDATES := [
+	MODEL_FILE,
+	"res://addons/merlin_llm/models/gemma4-26b-a4b-q4_k_m.gguf",
+	"res://addons/merlin_llm/models/gemma4-e2b-q4_k_m.gguf",
+	# Legacy fallbacks (use_legacy_qwen=true) — kept last in priority
+	"res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+	"res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf",
+]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
 const OllamaBackendScript = preload("res://addons/merlin_ai/ollama_backend.gd")
 const GroqBackendScript = preload("res://addons/merlin_ai/groq_backend.gd")

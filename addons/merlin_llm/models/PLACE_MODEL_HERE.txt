@@ -1,9 +1,17 @@
 Place your GGUF model file here.
 
-Current model (Qwen 2.5-3B-Instruct):
-- qwen2.5-3b-instruct-q4_k_m.gguf  (DEFAULT — 2.0 GB, Q4_K_M quantization)
+DEFAULT (2026-05+) — Gemma 4 family (Apache 2.0, contexte 256K) :
+- gemma4-e4b-q4_k_m.gguf      (~2.0 GB) — desktop SINGLE / mobile mid-high
+- gemma4-e2b-q4_k_m.gguf      (~700 MB) — mobile low / worker desktop
+- gemma4-26b-a4b-q4_k_m.gguf  (~4.2 GB) — narrator desktop high
+- gemma4-31b-q4_k_m.gguf      (~17 GB ) — offline heavy workstation
 
+Download script:
+  powershell -ExecutionPolicy Bypass -File ./download_gemma4.ps1 -Tier desktop
+Chat template: Gemma (<bos><start_of_turn>user...<end_of_turn><start_of_turn>model)
+Source: https://huggingface.co/google (Gemma 4 GGUF mirrors)
+Ollama tags:  gemma4:e2b / gemma4:e4b / gemma4:26b-a4b / gemma4:31b
+
+LEGACY (use_legacy_qwen=true) — kept for rollback :
+- qwen2.5-3b-instruct-q4_k_m.gguf  (2.0 GB, ChatML)
 Source: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
-Ollama: ollama pull qwen2.5-3b-instruct
-Chat template: ChatML (<|im_start|>/<|im_end|>)
-Context window: 32768 tokens
