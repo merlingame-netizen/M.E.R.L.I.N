@@ -7,13 +7,20 @@ signal status_changed(status_text: String, detail_text: String, progress_value: 
 signal ready_changed(is_ready: bool)
 signal log_updated(log_text: String)
 
-# ARCHITECTURE MULTI-BRAIN HETEROGENE — Qwen 3.5 family (0.8B/2B/4B)
-# Phase 33: Chaque cerveau utilise un modele different, optimise pour son role
-# Brain 1 = Narrator (4B creatif), Brain 2 = Game Master (2B logique + thinking)
-# Brain 3-4 = Worker Pool / Judge (0.8B — taches de fond / evaluation)
+# ARCHITECTURE MULTI-BRAIN HETEROGENE — Gemma 4 family (E2B/E4B/26B-A4B MoE)
+# Phase 33+ migration April 2026: Qwen 3.5 -> Gemma 4 (Apache 2.0, 256K ctx).
+# Legacy Qwen 3.5 retained behind ModelsConfig.use_legacy_qwen.
+# Brain 1 = Narrator (26B-A4B MoE creative), Brain 2 = GM (E4B logic + thinking)
+# Brain 3-4 = Worker / Judge (E2B — background / verdicts)
 # SINGLE+ mode: time-sharing (un seul modele en RAM, swap Ollama)
-const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
-const MODEL_CANDIDATES := [MODEL_FILE, "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"]
+const ModelsConfig = preload("res://addons/merlin_ai/models_config.gd")
+# GGUF for embedded merlin_llm GDExtension. MODEL_CANDIDATES are probed in order.
+const MODEL_FILE := "res://addons/merlin_llm/models/gemma4-e4b-q4_k_m.gguf"
+const MODEL_CANDIDATES := [
+	MODEL_FILE,
+	"res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+	"res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf",
+]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
 const OllamaBackendScript = preload("res://addons/merlin_ai/ollama_backend.gd")
 const GroqBackendScript = preload("res://addons/merlin_ai/groq_backend.gd")
@@ -162,6 +169,8 @@ var _warmup_attempt_time := 0
 
 func _ready() -> void:
 	set_process(false)  # Enabled when background tasks are active
+	# Load Gemma 4 / Qwen 3.5 family flag from ProjectSettings (default: Gemma 4)
+	ModelsConfig.load_settings()
 	rag_manager = RAGManager.new()
 	add_child(rag_manager)
 	_load_prompts()
@@ -169,8 +178,23 @@ func _ready() -> void:
 	_load_scene_profiles()
 	_load_persona_config()
 	_load_brain_config()
+	_apply_platform_constraints()
 	# Models loaded on demand via start_warmup() — not at autoload time
 	load_session_history()
+
+
+## Platform-aware constraint application (Phase D — console/mobile prep).
+## Mobile (Android/iOS): force NANO profile + E2B-class only, disable Ollama HTTP path.
+## Web: disables the embedded native runtime entirely (Groq cloud fallback only).
+func _apply_platform_constraints() -> void:
+	var os_name: String = OS.get_name()
+	if os_name in ["Android", "iOS"]:
+		_target_brain_count = 1  # NANO single-brain
+		_active_profile_id = BrainSwarmConfig.Profile.MOBILE_LOW
+		_log("Platform=%s -> forcing NANO/MOBILE_LOW profile (E2B-class only)" % os_name)
+	elif OS.has_feature("web"):
+		# Web: native LLM runtime disabled, will fall through to Groq cloud backend
+		_log("Platform=web -> native LLM disabled, Groq fallback only")
 
 
 func _load_brain_config() -> void:
@@ -181,6 +205,10 @@ func _load_brain_config() -> void:
 	if saved > 0:
 		set_brain_count(saved)
 		_log("Brain config loaded from settings: %d cerveaux" % saved)
+	# Optional override: [llm].use_legacy_qwen=true forces Qwen 3.5 family
+	if cfg.has_section_key("llm", "use_legacy_qwen"):
+		ModelsConfig.use_legacy_qwen = bool(cfg.get_value("llm", "use_legacy_qwen", false))
+		_log("LLM family: %s" % ModelsConfig.active_family())
 
 
 ## Start LLM model loading. Call from MenuPrincipal on "Nouvelle Partie"/"Continuer".

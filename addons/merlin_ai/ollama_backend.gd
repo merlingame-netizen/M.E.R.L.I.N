@@ -4,18 +4,31 @@
 ## Interface 100% compatible _run_llm (generate_async/poll_result/cancel/sampling).
 ## Multi-instance safe: chaque OllamaBackend est independant (Ollama gere le multi-slot).
 ## Supporte modeles heterogenes: chaque instance peut utiliser un modele different.
-## Supporte le thinking mode (Qwen 3.5): strip automatique des tags <think>.
+## Supporte le thinking mode (Qwen 3.5 + Gemma 4): strip automatique des tags <think>.
+##
+## Phase 33+ Gemma 4 migration:
+##   - DEFAULT_MODEL passe a gemma4:e4b
+##   - Si le modele actif est Gemma 4, traduction automatique ChatML → Gemma turn-format
+##     (les appelants peuvent continuer a formatter en ChatML, conversion transparente)
+##   - Strip etendu pour artefacts Gemma (<end_of_turn>, <start_of_turn>)
 extends RefCounted
 class_name OllamaBackend
 
 const DEFAULT_HOST := "127.0.0.1"
 const DEFAULT_PORT := 11434
-const DEFAULT_MODEL := "qwen3.5:2b"
+const DEFAULT_MODEL := "gemma4:e4b"           # Was qwen3.5:2b (Gemma 4 GM default)
+const LEGACY_DEFAULT_MODEL := "qwen3.5:2b"    # Retained for use_legacy_qwen=true
 const CONNECT_TIMEOUT_MS := 5000
 const READ_TIMEOUT_MS := 60000
 
-# ── Model Registry (Qwen 3.5 family) ─────────────────────────────────────────
+# ── Model Registry (Gemma 4 primary + Qwen 3.5 legacy) ───────────────────────
 const MODEL_REGISTRY := {
+	# Gemma 4 family — active default (April 2026, Apache 2.0, 256K ctx)
+	"gemma4_e2b": {"tag": "gemma4:e2b", "ram_mb": 1600, "context_default": 2048},
+	"gemma4_e4b": {"tag": "gemma4:e4b", "ram_mb": 3000, "context_default": 8192},
+	"gemma4_26b_a4b": {"tag": "gemma4:26b-a4b", "ram_mb": 14000, "context_default": 8192},
+	"gemma4_31b": {"tag": "gemma4:31b", "ram_mb": 18000, "context_default": 16384},
+	# Qwen 3.5 family — legacy fallback (use_legacy_qwen=true)
 	"qwen35_4b": {"tag": "qwen3.5:4b", "ram_mb": 3200, "context_default": 8192},
 	"qwen35_2b": {"tag": "qwen3.5:2b", "ram_mb": 1800, "context_default": 4096},
 	"qwen35_0.8b": {"tag": "qwen3.5:0.8b", "ram_mb": 800, "context_default": 2048},
@@ -259,6 +272,7 @@ func poll_stream() -> Dictionary:
 
 func _blocking_stream(prompt: String) -> void:
 	var start_ms := Time.get_ticks_msec()
+	var formatted_prompt: String = _format_prompt_for_model(prompt)
 
 	var options := {
 		"temperature": _temperature,
@@ -270,7 +284,7 @@ func _blocking_stream(prompt: String) -> void:
 	}
 	var payload := {
 		"model": model,
-		"prompt": prompt,
+		"prompt": formatted_prompt,
 		"raw": true,
 		"stream": true,
 		"options": options,
@@ -432,8 +446,9 @@ func clear_grammar() -> void:
 
 
 ## Configure la taille du contexte (passee a Ollama via options.num_ctx).
+## Gemma 4 et Qwen 3.5 supportent tous deux jusqu'a 256K tokens.
 func set_context_size(p_n_ctx: int) -> void:
-	_num_ctx = clampi(p_n_ctx, 512, 131072)  # Qwen 3.5 supports up to 256K
+	_num_ctx = clampi(p_n_ctx, 512, 262144)  # 256K cap (Gemma 4 / Qwen 3.5)
 
 
 ## Resolve a model registry key to an Ollama tag and configure defaults.
@@ -479,6 +494,7 @@ func get_model_info() -> Dictionary:
 func _blocking_generate(prompt: String) -> void:
 	var start_ms := Time.get_ticks_msec()
 	var result := {}
+	var formatted_prompt: String = _format_prompt_for_model(prompt)
 
 	var options := {
 		"temperature": _temperature,
@@ -490,7 +506,7 @@ func _blocking_generate(prompt: String) -> void:
 	}
 	var payload := {
 		"model": model,
-		"prompt": prompt,
+		"prompt": formatted_prompt,
 		"raw": true,
 		"stream": false,
 		"options": options,
@@ -634,14 +650,104 @@ func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float, ttft_ms: 
 	_mutex.unlock()
 
 
-## Strip <think>...</think> reasoning tags from Qwen 3.5 thinking mode output.
+## Strip <think>...</think> reasoning tags from Qwen 3.5 / Gemma 4 thinking-mode output.
+## Also strips Gemma turn artefacts (<start_of_turn>, <end_of_turn>) that may leak
+## when raw=true mode pre-formats and the model emits them anyway.
 ## Preserves the actual response text after the closing </think> tag.
 static func _strip_thinking_tags(text: String) -> String:
-	var think_end := text.find("</think>")
+	var out: String = text
+	var think_end := out.find("</think>")
 	if think_end >= 0:
-		return text.substr(think_end + 8).strip_edges()
-	# Unclosed <think> tag — strip everything from <think> onward
-	var think_start := text.find("<think>")
-	if think_start >= 0:
-		return text.substr(0, think_start).strip_edges()
-	return text
+		out = out.substr(think_end + 8).strip_edges()
+	else:
+		var think_start := out.find("<think>")
+		if think_start >= 0:
+			out = out.substr(0, think_start).strip_edges()
+	# Strip Gemma turn artefacts (emitted occasionally with raw=true)
+	for tok in ["<end_of_turn>", "<start_of_turn>model", "<start_of_turn>user", "<start_of_turn>"]:
+		out = out.replace(tok, "")
+	return out.strip_edges()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHAT TEMPLATE TRANSLATION — ChatML ⇄ Gemma turn format
+# ═══════════════════════════════════════════════════════════════════════════════
+# When the active model is Gemma 4, callers can still produce ChatML prompts
+# (legacy compat); we translate them transparently to Gemma's <start_of_turn>
+# format before sending. Avoids touching merlin_ai.gd / groq_backend.gd callers.
+#
+# Gemma chat template (Apache 2.0 spec):
+#   <start_of_turn>user
+#   {{ prompt — system content prepended here, Gemma has no separate system turn }}<end_of_turn>
+#   <start_of_turn>model
+#   {{ response }}<end_of_turn>
+
+## True if the current model belongs to the Gemma 4 family.
+func _is_gemma_model() -> bool:
+	var m: String = model.to_lower()
+	return m.begins_with("gemma4") or m.begins_with("gemma:4") or m.begins_with("gemma-4")
+
+
+## Convert a ChatML-formatted prompt to Gemma turn format.
+## Idempotent: if the prompt already uses Gemma tags, returns it unchanged.
+## System content is prepended to the first user turn (Gemma convention).
+static func _chatml_to_gemma(prompt: String) -> String:
+	if "<start_of_turn>" in prompt:
+		return prompt  # Already Gemma-formatted
+	if "<|im_start|>" not in prompt:
+		# Plain prompt, no role markers — wrap as a single user turn
+		return "<start_of_turn>user\n%s<end_of_turn>\n<start_of_turn>model\n" % prompt.strip_edges()
+
+	# Parse ChatML turns
+	var system_text: String = ""
+	var turns: Array = []  # Array of {"role": "user"|"model", "text": String}
+	var parts := prompt.split("<|im_start|>")
+	for part in parts:
+		var s: String = String(part)
+		if s.strip_edges() == "":
+			continue
+		var nl: int = s.find("\n")
+		if nl < 0:
+			continue
+		var role: String = s.substr(0, nl).strip_edges()
+		var body: String = s.substr(nl + 1)
+		body = body.replace("<|im_end|>", "").strip_edges()
+		match role:
+			"system":
+				system_text = body
+			"user":
+				turns.append({"role": "user", "text": body})
+			"assistant":
+				turns.append({"role": "model", "text": body})
+			_:
+				pass
+
+	# Reassemble in Gemma format
+	var out: String = ""
+	var prepended_system: bool = false
+	for i in range(turns.size()):
+		var t: Dictionary = turns[i]
+		var role: String = str(t.get("role", "user"))
+		var text: String = str(t.get("text", ""))
+		if role == "user" and not prepended_system and system_text != "":
+			text = system_text + "\n\n" + text
+			prepended_system = true
+		out += "<start_of_turn>%s\n%s<end_of_turn>\n" % [role, text]
+
+	# If the last turn was user (typical for a generation request),
+	# add an open `model` turn so Ollama continues the assistant response.
+	if turns.size() > 0 and str(turns[-1].get("role", "")) == "user":
+		out += "<start_of_turn>model\n"
+	elif turns.size() == 0 and system_text != "":
+		# System-only prompt — treat as a user turn
+		out = "<start_of_turn>user\n%s<end_of_turn>\n<start_of_turn>model\n" % system_text
+
+	return out
+
+
+## Apply the active model's chat template if needed. Returns the prompt as-is
+## for Qwen-family (ChatML native), translated to Gemma format otherwise.
+func _format_prompt_for_model(prompt: String) -> String:
+	if _is_gemma_model():
+		return _chatml_to_gemma(prompt)
+	return prompt

@@ -1,9 +1,15 @@
-# M.E.R.L.I.N. — Narrator LoRA Model for Ollama
+# M.E.R.L.I.N. — Narrator Model for Ollama (Gemma 4 26B-A4B MoE)
 # Usage: ollama create merlin-narrator -f Modelfile
-# Ref: docs/LORA_TRAINING_SPEC.html
+# Ref: docs/LORA_TRAINING_SPEC.html, docs/llm-architecture.md
+#
+# April 2026 migration:
+#   - Base: qwen3.5:4b  → gemma4:26b-a4b  (MoE, 26B params, ~3.8B active/token)
+#   - Template: ChatML  → Gemma turn format
+#   - LoRA: existing adapter was trained on Qwen 3.5 → NOT loadable on Gemma 4.
+#     Disabled below until retrained (see docs/LORA_TRAINING_SPEC.html).
 
-FROM qwen3.5:4b
-ADAPTER ./addons/merlin_llm/adapters/merlin_narrator_lora.gguf
+FROM gemma4:26b-a4b
+# ADAPTER ./addons/merlin_llm/adapters/merlin_narrator_lora.gguf  # TODO: retrain on Gemma 4
 
 # Narrator parameters (from merlin_ai.gd)
 PARAMETER temperature 0.75
@@ -12,12 +18,13 @@ PARAMETER top_k 40
 PARAMETER repeat_penalty 1.35
 PARAMETER num_predict 150
 
-# ChatML template
-TEMPLATE """<|im_start|>system
-{{ .System }}<|im_end|>
-<|im_start|>user
-{{ .Prompt }}<|im_end|>
-<|im_start|>assistant
+# Gemma 4 chat template — Gemma has no separate `system` turn,
+# system content is prepended to the first user turn.
+TEMPLATE """<start_of_turn>user
+{{ if .System }}{{ .System }}
+
+{{ end }}{{ .Prompt }}<end_of_turn>
+<start_of_turn>model
 """
 
 SYSTEM "Tu es M.E.R.L.I.N. — Memoire Eternelle des Recits et Legendes d'Incarnations Narratives. Ne de la croyance des hommes, assemble par des siecles de recits. Druide FOU de Broceliande, guide du Voyageur a travers 8 biomes celtiques. 5 factions (Druides, Anciens, Korrigans, Niamh, Ankou) se disputent l'allegiance du Voyageur. Tu connais les PNJ recurrents (Gwenn, Aedan, Bran, Morwenna, Seren, Puck, Taliesin, Branwen). Le Voyageur tient des Promesses, collecte des Anam et risque sa vie. Vocabulaire: brume, pierre, ogham, nemeton, sidhe, dolmen, korrigans, rune, torque, gui, Samhain, Beltaine. Francais uniquement. Phrases courtes et evocatrices."

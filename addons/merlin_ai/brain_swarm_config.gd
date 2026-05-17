@@ -1,28 +1,35 @@
-## BrainSwarmConfig — Hardware profiles for Qwen 3.5 multi-brain architecture
+## BrainSwarmConfig — Hardware profiles for the multi-brain architecture
 ##
-## Defines brain configurations for different hardware tiers.
-## Supports heterogeneous models: each brain can use a different Qwen 3.5 size.
-## Used by merlin_ai.gd to auto-detect or manually select the best profile.
+## Phase 33+ Gemma 4 migration (April 2026):
+##   - Active family: Gemma 4 (Apache 2.0, 256K context, multimodal)
+##   - Legacy Qwen 3.5 retained behind ModelsConfig.use_legacy_qwen flag
+##   - Mobile profiles still use Llama/Qwen GGUF via merlin_llm GDExtension
 ##
-## Tiers:
-##   NANO     — 0.8B all roles (ultra-low RAM)
-##   SINGLE   — 2B all roles (one model resident)
-##   SINGLE_PLUS — 4B Narrator + 2B GM via time-sharing (one model at a time, swap)
-##   DUAL     — 4B + 2B simultaneous (parallel generation)
-##   TRIPLE   — 4B + 2B + 0.8B Worker
-##   QUAD     — 4B + 2B + 0.8B Judge + 0.8B Worker
+## Tiers (desktop):
+##   NANO        — 0.8B-class all roles (ultra-low RAM)
+##   SINGLE      — 2B-class all roles (one model resident)
+##   SINGLE_PLUS — Narrator + GM via time-sharing
+##   DUAL        — Narrator + GM parallel
+##   TRIPLE      — Narrator + GM + Worker
+##   QUAD        — Narrator + GM + Judge + Worker
 extends RefCounted
 class_name BrainSwarmConfig
+
+const ModelsConfigScript = preload("res://addons/merlin_ai/models_config.gd")
 
 # ── Profile Names ─────────────────────────────────────────────────────────────
 enum Profile { NANO, SINGLE, SINGLE_PLUS, DUAL, TRIPLE, QUAD, MOBILE_LOW, MOBILE_MID, MOBILE_HIGH }
 
-# ── Ollama Model Tags (Qwen 3.5 family) ──────────────────────────────────────
+# ── Ollama Model Tags (Gemma 4 — active family) ──────────────────────────────
+const MODEL_GEMMA4_E2B := "gemma4:e2b"
+const MODEL_GEMMA4_E4B := "gemma4:e4b"
+const MODEL_GEMMA4_26B_A4B := "gemma4:26b-a4b"
+const MODEL_GEMMA4_31B := "gemma4:31b"
+
+# ── Ollama Model Tags (Qwen 3.5 — legacy fallback) ───────────────────────────
 const MODEL_QWEN35_4B := "qwen3.5:4b"
 const MODEL_QWEN35_2B := "qwen3.5:2b"
 const MODEL_QWEN35_08B := "qwen3.5:0.8b"
-
-# Legacy (backward compat, fallback)
 const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
 
 # ── Mobile model file paths (ARM64 via merlin_llm GDExtension recompiled, NOT Ollama) ─
@@ -31,93 +38,101 @@ const MODEL_QWEN25_1_5B := "qwen2.5:1.5b"
 const MODEL_FILE_LLAMA32_1B := "llama3.2-1b-q4_k_s.gguf"        # ~700 MB — entry mobile
 const MODEL_FILE_QWEN25_15B := "qwen2.5-1.5b-q4_k_m.gguf"       # ~1.4 GB — mid mobile
 const MODEL_FILE_LLAMA32_3B := "llama3.2-3b-q4_k_m.gguf"        # ~2.5 GB — high mobile
+const MODEL_FILE_GEMMA4_E2B := "gemma4-e2b-q4_k_m.gguf"         # ~1.6 GB — mobile target
 
 # ── RAM estimates per model_key (Q4 quantization, includes KV cache) ─────────
-# Keyed by `model_key` (NOT by `ollama_tag` / `model_file`).
 const RAM_BY_MODEL := {
+	# Gemma 4 (active)
+	"gemma4_e2b": 1600,
+	"gemma4_e4b": 3000,
+	"gemma4_26b_a4b": 14000,  # MoE: 26B params resident, ~3.8B activated/token
+	"gemma4_31b": 18000,
+	# Qwen 3.5 (legacy)
 	"qwen35_4b": 3200,
 	"qwen35_2b": 1800,
 	"qwen35_0.8b": 800,
 	"qwen25_1.5b": 1200,
+	# Mobile (GGUF via merlin_llm)
 	"llama32_1b_mobile": 700,
 	"qwen25_1.5b_mobile": 1400,
 	"llama32_3b_mobile": 2500,
+	"gemma4_e2b_mobile": 1600,
 }
 
 # ── Profile Definitions ──────────────────────────────────────────────────────
 # Each brain: {role, model_key, ollama_tag, n_ctx, ram_mb, thinking}
 const PROFILES := {
 	Profile.NANO: {
-		"name": "Nano (0.8B all roles)",
+		"name": "Nano (Gemma 4 E2B all roles)",
 		"mode": "resident",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": false},
+			{"role": "narrator", "model_key": "gemma4_e2b", "ollama_tag": MODEL_GEMMA4_E2B, "n_ctx": 2048, "ram_mb": 1600, "thinking": false},
 		],
-		"total_ram_mb": 800,
+		"total_ram_mb": 1600,
 		"min_threads": 2,
 		"min_ram_mb": 4000,
 		"prefetch_depth": 0,
 	},
 	Profile.SINGLE: {
-		"name": "Single (2B all roles)",
+		"name": "Single (Gemma 4 E4B all roles)",
 		"mode": "resident",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": false},
+			{"role": "narrator", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 8192, "ram_mb": 3000, "thinking": false},
 		],
-		"total_ram_mb": 1800,
+		"total_ram_mb": 3000,
 		"min_threads": 4,
-		"min_ram_mb": 6000,
+		"min_ram_mb": 8000,
 		"prefetch_depth": 1,
 	},
 	Profile.SINGLE_PLUS: {
-		"name": "Single+ (4B Narrator / 2B GM, time-sharing)",
+		"name": "Single+ (Gemma 4 26B-A4B Narrator / E4B GM, time-sharing)",
 		"mode": "time_sharing",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
+			{"role": "narrator", "model_key": "gemma4_26b_a4b", "ollama_tag": MODEL_GEMMA4_26B_A4B, "n_ctx": 8192, "ram_mb": 14000, "thinking": false},
+			{"role": "gamemaster", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 8192, "ram_mb": 3000, "thinking": true},
 		],
-		"total_ram_mb": 3200,  # Peak RAM = largest model only (time-sharing)
-		"min_threads": 4,
-		"min_ram_mb": 7000,
+		"total_ram_mb": 14000,  # Peak RAM = largest model only (time-sharing)
+		"min_threads": 6,
+		"min_ram_mb": 20000,
 		"prefetch_depth": 1,
 	},
 	Profile.DUAL: {
-		"name": "Dual (4B Narrator + 2B GM parallel)",
+		"name": "Dual (Gemma 4 26B-A4B Narrator + E4B GM parallel)",
 		"mode": "parallel",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
+			{"role": "narrator", "model_key": "gemma4_26b_a4b", "ollama_tag": MODEL_GEMMA4_26B_A4B, "n_ctx": 8192, "ram_mb": 14000, "thinking": false},
+			{"role": "gamemaster", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 8192, "ram_mb": 3000, "thinking": true},
 		],
-		"total_ram_mb": 5000,  # Both loaded simultaneously
-		"min_threads": 6,
-		"min_ram_mb": 12000,
+		"total_ram_mb": 17000,  # Both loaded simultaneously
+		"min_threads": 8,
+		"min_ram_mb": 24000,
 		"prefetch_depth": 1,
 	},
 	Profile.TRIPLE: {
-		"name": "Triple (4B + 2B + 0.8B Worker)",
+		"name": "Triple (26B-A4B + E4B + E2B Worker)",
 		"mode": "parallel",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
-			{"role": "worker", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": false},
+			{"role": "narrator", "model_key": "gemma4_26b_a4b", "ollama_tag": MODEL_GEMMA4_26B_A4B, "n_ctx": 8192, "ram_mb": 14000, "thinking": false},
+			{"role": "gamemaster", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 8192, "ram_mb": 3000, "thinking": true},
+			{"role": "worker", "model_key": "gemma4_e2b", "ollama_tag": MODEL_GEMMA4_E2B, "n_ctx": 2048, "ram_mb": 1600, "thinking": false},
 		],
-		"total_ram_mb": 5800,
-		"min_threads": 8,
-		"min_ram_mb": 14000,
+		"total_ram_mb": 18600,
+		"min_threads": 10,
+		"min_ram_mb": 28000,
 		"prefetch_depth": 2,
 	},
 	Profile.QUAD: {
-		"name": "Quad (4B + 2B + 0.8B Judge + 0.8B Worker)",
+		"name": "Quad (26B-A4B + E4B + E2B Judge + E2B Worker, includes Gemma 4 31B dev_heavy option)",
 		"mode": "parallel",
 		"brains": [
-			{"role": "narrator", "model_key": "qwen35_4b", "ollama_tag": MODEL_QWEN35_4B, "n_ctx": 8192, "ram_mb": 3200, "thinking": false},
-			{"role": "gamemaster", "model_key": "qwen35_2b", "ollama_tag": MODEL_QWEN35_2B, "n_ctx": 4096, "ram_mb": 1800, "thinking": true},
-			{"role": "judge", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": true},
-			{"role": "worker", "model_key": "qwen35_0.8b", "ollama_tag": MODEL_QWEN35_08B, "n_ctx": 2048, "ram_mb": 800, "thinking": false},
+			{"role": "narrator", "model_key": "gemma4_26b_a4b", "ollama_tag": MODEL_GEMMA4_26B_A4B, "n_ctx": 8192, "ram_mb": 14000, "thinking": false},
+			{"role": "gamemaster", "model_key": "gemma4_e4b", "ollama_tag": MODEL_GEMMA4_E4B, "n_ctx": 8192, "ram_mb": 3000, "thinking": true},
+			{"role": "judge", "model_key": "gemma4_e2b", "ollama_tag": MODEL_GEMMA4_E2B, "n_ctx": 2048, "ram_mb": 1600, "thinking": true},
+			{"role": "worker", "model_key": "gemma4_e2b", "ollama_tag": MODEL_GEMMA4_E2B, "n_ctx": 2048, "ram_mb": 1600, "thinking": false},
 		],
-		"total_ram_mb": 6600,
-		"min_threads": 8,
-		"min_ram_mb": 16000,
+		"total_ram_mb": 20200,
+		"min_threads": 12,
+		"min_ram_mb": 32000,
 		"prefetch_depth": 3,
 	},
 	# ── MOBILE TIERS — single brain strict, ARM64 via merlin_llm GDExtension ──
@@ -236,16 +251,41 @@ static func is_time_sharing(profile_id: int) -> bool:
 	return str(profile.get("mode", "resident")) == "time_sharing"
 
 
+# ── Gemma 4 → Qwen 3.5 legacy translation table ──────────────────────────────
+# Used when ModelsConfig.use_legacy_qwen is true. Maps Gemma 4 model_key/tag
+# back to the Qwen 3.5 equivalent so callers don't need to branch on family.
+const QWEN_LEGACY_MAP := {
+	"gemma4_e2b":     {"model_key": "qwen35_0.8b",  "ollama_tag": MODEL_QWEN35_08B, "ram_mb": 800},
+	"gemma4_e4b":     {"model_key": "qwen35_2b",    "ollama_tag": MODEL_QWEN35_2B,  "ram_mb": 1800},
+	"gemma4_26b_a4b": {"model_key": "qwen35_4b",    "ollama_tag": MODEL_QWEN35_4B,  "ram_mb": 3200},
+	"gemma4_31b":     {"model_key": "qwen35_4b",    "ollama_tag": MODEL_QWEN35_4B,  "ram_mb": 3200},
+}
+
+
+## Translate a brain config to Qwen 3.5 legacy if `use_legacy_qwen` is true.
+static func _maybe_legacy(brain_cfg: Dictionary) -> Dictionary:
+	if not ModelsConfigScript.use_legacy_qwen:
+		return brain_cfg
+	var key: String = str(brain_cfg.get("model_key", ""))
+	if not QWEN_LEGACY_MAP.has(key):
+		return brain_cfg
+	var legacy: Dictionary = QWEN_LEGACY_MAP[key]
+	var out: Dictionary = brain_cfg.duplicate(true)
+	out["model_key"] = legacy.model_key
+	out["ollama_tag"] = legacy.ollama_tag
+	out["ram_mb"] = legacy.ram_mb
+	return out
+
+
 ## Get the Ollama model tag for a specific brain role in a profile.
 static func get_model_for_role(profile_id: int, role: String) -> String:
 	var profile: Dictionary = get_profile(profile_id)
 	var brain_list: Array = profile.get("brains", [])
 	for brain_cfg in brain_list:
 		if str(brain_cfg.get("role", "")) == role:
-			return str(brain_cfg.get("ollama_tag", ""))
-	# Fallback: use first brain's model (SINGLE/NANO mode)
+			return str(_maybe_legacy(brain_cfg).get("ollama_tag", ""))
 	if brain_list.size() > 0:
-		return str(brain_list[0].get("ollama_tag", ""))
+		return str(_maybe_legacy(brain_list[0]).get("ollama_tag", ""))
 	return ""
 
 
@@ -255,7 +295,7 @@ static func get_brain_config(profile_id: int, role: String) -> Dictionary:
 	var brain_list: Array = profile.get("brains", [])
 	for brain_cfg in brain_list:
 		if str(brain_cfg.get("role", "")) == role:
-			return brain_cfg
+			return _maybe_legacy(brain_cfg)
 	return {}
 
 
@@ -265,7 +305,7 @@ static func get_required_models(profile_id: int) -> Array:
 	var brain_list: Array = profile.get("brains", [])
 	var models: Array = []
 	for brain_cfg in brain_list:
-		var tag: String = str(brain_cfg.get("ollama_tag", ""))
+		var tag: String = str(_maybe_legacy(brain_cfg).get("ollama_tag", ""))
 		if tag != "" and tag not in models:
 			models.append(tag)
 	return models
