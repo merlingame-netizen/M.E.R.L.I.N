@@ -311,3 +311,73 @@ L'attente "chaque stratégie 40-60%" partait du présupposé que toutes les stra
 
 - 🟡 **Liminal pole sous-représenté sur greedy** (4%) : les options Liminal ont des DC plus durs ; soit baisser un poil les seuils Liminal dans les options enrichies, soit accepter comme rareté narrative voulue.
 - 🟡 **DC failure 26-45% au-dessus de la cible 10-25%** : pourrait être resserré, mais 30% failure correspond à "ça mord vraiment" — design choice à valider avec un humain.
+
+---
+
+## Phase 12 Sprint 12.3 + 12.1 — XP profile + Lookahead async PoCs (delivered 2026-05-18)
+
+Ordre exécuté selon ma reco : 12.3 (foundation cross-run) → 12.1 (async pattern proof).
+
+### Sprint 12.3 — Cross-run XP profile (commit 451a85ba)
+
+`tools/profile_system.py` — Python-side foundation (GDScript port en Sprint 12.4 in-game).
+- **Public API** : `Profile.load/save/grant_xp/grant_xp_from_run/add_trait/add_memory_slot/summary`
+- **XP curve** : `total_xp(L) = 100 * L²` → L5=2500, L10=10k, L30=90k
+- **Level palier** : 9 paliers (L1 starter / L3 trait slot / L5 oghams T2 / L7 memory / L10/15 T2 / L20/25 T3 / L30 prestige)
+- **XP from run heuristic** : base 100 + 30/success + 50 emergence + 10/tag + 5/karma + 50 survival
+- **CLI** : `inspect / init / grant-xp / grant-from-run / xp-curve`
+
+Live smoke validé end-to-end :
+- L1 starter : 3 oghams (beith/luis/nion), souffle=5, essence=20, 1 trait slot, 1 memory slot
+- v731 seed=42 run → 320 XP (5 successes × 30 + emergence + 1 tag)
+- +5000 XP → L1→L7 traversant Eveil/Premiere lune/Memoire ancienne
+- L7 final : 6 oghams, souffle=6, essence=25, 3 trait slots, 2 memory slots
+- `add_trait` cap respecté (3 slots actifs), `add_memory_slot` cap respecté (2/2 → 3e rejeté)
+
+Schema aligned avec `adaptive_trait_emergence.py` (Sprint 12.4 PoC) — partagent la même JSON sans couplage code.
+
+### Sprint 12.1 — Hybride async lookahead PoC (commit 6e3139e0)
+
+`tools/async_lookahead_runner.py` — modèle de timing Python que le portage Godot répliquera.
+
+Pattern :
+1. T=0 : click → loading screen (8s rune ceremony, blocking display) + `future_intro` + `future_beat1` + `future_beat2` en parallèle
+2. T=~30s : intro arrive → première carte visible
+3. Pendant que joueur lit Beat N → `future_beat(N+2)` lancé
+4. T=N-3 : `future_outro` lancé → outro prête exactement à la fin
+
+Live mesure (n_beats=16, seed=42, timings calibrés sur Sprint 11.5) :
+
+| Métrique | Naive séquentiel | Hybride lookahead | Delta |
+|---|---:|---:|---:|
+| First card visible after click | 35.0 s | **31.9 s** | -3.1 s |
+| Max perceived latency / beat | 30.0 s | **21.6 s** | -8.4 s |
+| Median perceived latency | 13.8 s | **4.9 s** | -8.9 s |
+| Outro perceived | 25.0 s | **2.0 s** | -23.0 s |
+
+Le 4.9 s median en hybride = 0.8 s UI animation + jitter — le LLM call est *déjà revenu* quand le joueur tape Next. Les pivots Beat 5/8/9/11/16 peuvent occasionnellement rattraper le prefetcher quand 2 pivots arrivent dos-à-dos (d'où le max à 21.6 s vs 13s théorique pour un bridge).
+
+### État Phase 12 après cette session
+
+| Sprint | Status | Commit |
+|---|---|---|
+| 12.0 | Bible v3.5 → v3.6 + commit Phase 10/11 | ✅ `7df44b7e` |
+| 12.4 PoC | Adaptive Trait Emergence (LLM observer + sanitizer) | ✅ `372f0d7d` |
+| 12.5 | Monte-Carlo balance harness | ✅ `f21005ea` |
+| 12.5b-e | Balance tuning pass (4 iterations, converged) | ✅ `b77b9eb7` |
+| **12.3** | **Cross-run XP profile system (Python)** | ✅ **`451a85ba`** |
+| **12.1** | **Hybride async lookahead pattern PoC** | ✅ **`6e3139e0`** |
+| 12.2 | Tree dur 3 routes + 5 LLM pivots + pool extension | ⏳ |
+| 12.4 in-game | GDScript port : CardsRAG + Profile + RuneCeremony + adaptive hook | ⏳ |
+| 12.6 | Bible v3.7 + release v7.7.32 | ⏳ |
+
+### Sprints restants (suite logique)
+
+- **Sprint 12.4 in-game (port Godot)** : 5 sous-tâches : 
+  - (a) `addons/merlin_ai/cards_rag.gd` (port `tools/cards_rag.py`)
+  - (b) `addons/merlin_ai/profile_system.gd` (port `tools/profile_system.py`)
+  - (c) `scenes/RuneCeremonyLoader.tscn` + script (port la `async_lookahead_runner.py` pattern)
+  - (d) Wire post-run hook → `adaptive_trait_emergence.py` (gardé en Python sidecar pour le LLM call)
+  - (e) UI hub : `scenes/CharacterHub.tscn` pour visualiser XP/level/traits/oghams
+- **Sprint 12.2** : tree dur 3 routes (gros levier narratif, +240 cartes enrichies). Ordre logique : faire APRÈS le portage 12.4 pour valider le système core en-jeu avant d'augmenter la complexité narrative.
+- **Sprint 12.6** : bible §32 (XP curve + level palier) + §33 (lookahead async pattern) + release v7.7.32
