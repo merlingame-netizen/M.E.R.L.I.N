@@ -21,6 +21,7 @@ set(GGML_CPU_LIB "${LLAMA_ROOT}/build/ggml/src/ggml-cpu.lib" CACHE FILEPATH "ggm
 
 add_library(merlin_llm SHARED
 	src/merlin_llm.cpp
+	src/merlin_embed.cpp
 	src/register_types.cpp
 )
 

@@ -2,6 +2,7 @@
 #include <godot_cpp/core/class_db.hpp>
 
 #include "merlin_llm.h"
+#include "merlin_embed.h"
 
 using namespace godot;
 
@@ -10,6 +11,9 @@ void initialize_merlin_llm(ModuleInitializationLevel p_level) {
 		return;
 	}
 	ClassDB::register_class<MerlinLLM>();
+	// Phase 13 (Sprint 12.4 follow-up) : native embed surface, replaces the
+	// HTTP/Ollama path used by addons/merlin_ai/cards_rag.gd.
+	ClassDB::register_class<MerlinEmbed>();
 }
 
 void uninitialize_merlin_llm(ModuleInitializationLevel p_level) {
