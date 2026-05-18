@@ -17,11 +17,19 @@
 ##                                                    (Path C - reuse stored vectors)
 ##   compose_route_vec(beat, choices, intro, w)    -> PackedFloat32Array
 ##   card_vector_by_uid(uid)                       -> PackedFloat32Array
+##   embed_query_native(text)                      -> PackedFloat32Array
+##                                                    (Path A - Phase 13 native
+##                                                    MerlinEmbed via llama.cpp,
+##                                                    no Ollama). Returns empty
+##                                                    when rebuild/GGUF missing -
+##                                                    callers should fall through
+##                                                    to Path B or Path C.
+##   is_native_embed_available()                   -> bool (Path A precheck)
 ##   await embed_query(text)                       -> PackedFloat32Array
 ##                                                    DEPRECATED. Only callable
 ##                                                    when MERLIN_USE_HTTP_EMBED=1
-##                                                    env var is set. See PHASE_13
-##                                                    for the native replacement.
+##                                                    env var is set. Use Path A
+##                                                    (embed_query_native) instead.
 ##   count() / dim() / model()                     -> introspection getters
 ##
 ## Caller graph (Sprint 12.4 in-game):
@@ -38,6 +46,9 @@ const DEFAULT_INDEX_PATH := "res://data/ai/cards_index_broceliande.json"
 const OLLAMA_BASE := "http://localhost:11434"
 const EMBED_MODEL_DEFAULT := "nomic-embed-text"
 const EMBED_TIMEOUT_S := 30.0
+## Phase 13(a) — path to the embedding GGUF used by the native MerlinEmbed class.
+## Downloaded via addons/merlin_llm/models/download_nomic_embed.ps1.
+const NATIVE_EMBED_MODEL_PATH := "res://addons/merlin_llm/models/nomic-embed-text-Q4_K_M.gguf"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -54,6 +65,12 @@ var _matrix: PackedFloat32Array = PackedFloat32Array()
 var _cards: Array[Dictionary] = []
 ## HTTPRequest node for Ollama embed_query calls.
 var _http: HTTPRequest = null
+## Phase 13 — native MerlinEmbed instance. Lazy-loaded on first call to
+## embed_query_native. nullptr if class not registered (rebuild missing) or
+## GGUF unavailable.
+var _native_embedder = null
+## One-shot guard so we don't keep retrying a failed init on every call.
+var _native_init_attempted: bool = false
 
 signal index_loaded(count: int, dim: int)
 
@@ -185,6 +202,74 @@ func embed_query(text: String) -> PackedFloat32Array:
 		for i in out.size():
 			out[i] = out[i] / norm
 	return out
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATH A - NATIVE EMBED (MerlinEmbed C++ class, Phase 13)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## True if a native MerlinEmbed instance can be (or has been) initialised.
+## Returns false when the rebuild is missing or the GGUF is not on disk.
+func is_native_embed_available() -> bool:
+	if _native_embedder != null:
+		return true
+	if not ClassDB.class_exists("MerlinEmbed"):
+		return false
+	if not FileAccess.file_exists(NATIVE_EMBED_MODEL_PATH):
+		return false
+	return true
+
+
+## Embed text via the native llama.cpp MerlinEmbed class (Phase 13).
+## Returns L2-normalised PackedFloat32Array of dim values, or empty array
+## if the native path is unavailable (no rebuild / no GGUF / load failed).
+##
+## Caller pattern (Sprint 12.4(d) consumers like RuneCeremonyLoader) :
+##   var v := rag.embed_query_native(text)
+##   if v.is_empty():
+##       # Fall back to Path B (metadata kNN) or Path C (compose_from_hits).
+##       # Optionally retry with await rag.embed_query(text) if MERLIN_USE_HTTP_EMBED=1.
+##       ...
+func embed_query_native(text: String) -> PackedFloat32Array:
+	if _native_embedder == null and not _native_init_attempted:
+		_native_init_attempted = true
+		_native_embedder = _init_native_embedder()
+	if _native_embedder == null:
+		return PackedFloat32Array()
+	var vec: PackedFloat32Array = _native_embedder.embed(text)
+	if vec.is_empty():
+		push_warning("CardsRAG.embed_query_native: MerlinEmbed.embed returned empty")
+	return vec
+
+
+## Internal : create + load the MerlinEmbed instance. Returns null on failure.
+func _init_native_embedder():
+	if not ClassDB.class_exists("MerlinEmbed"):
+		push_warning("CardsRAG.embed_query_native: MerlinEmbed class not registered (rebuild merlin_llm.dll)")
+		return null
+	if not FileAccess.file_exists(NATIVE_EMBED_MODEL_PATH):
+		push_warning("CardsRAG.embed_query_native: GGUF missing at %s (run download_nomic_embed.ps1)" % NATIVE_EMBED_MODEL_PATH)
+		return null
+	var inst = ClassDB.instantiate("MerlinEmbed")
+	if inst == null:
+		push_error("CardsRAG.embed_query_native: ClassDB.instantiate returned null")
+		return null
+	# Reparent under the rag node so the instance lives as long as we do.
+	if inst is Node:
+		add_child(inst)
+	var err = inst.load_model(NATIVE_EMBED_MODEL_PATH)
+	if err != OK:
+		push_error("CardsRAG.embed_query_native: load_model returned %s" % err)
+		if inst is Node:
+			inst.queue_free()
+		return null
+	# Verify dim matches the loaded index dim if we have one.
+	if _dim > 0 and inst.get_dim() != _dim:
+		push_warning(
+			"CardsRAG.embed_query_native: native dim %d != index dim %d - retrieval may fail"
+			% [inst.get_dim(), _dim]
+		)
+	return inst
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -43,6 +43,7 @@ func _ready() -> void:
 	_phase_9_knn_metadata(rag)
 	_phase_10_compose_from_hits(rag)
 	_phase_11_http_embed_gated(rag)
+	_phase_12_native_embed_graceful(rag)
 
 	if _failures == 0:
 		print("[TEST] ALL PHASES PASSED")
@@ -300,6 +301,30 @@ func _phase_11_http_embed_gated(rag: Node) -> void:
 	# Without the env var (default), embed_query must return empty quickly.
 	var v: PackedFloat32Array = await rag.embed_query("anything")
 	_assert(v.is_empty(), "embed_query without env var returns empty (no HTTP)")
+
+
+func _phase_12_native_embed_graceful(rag: Node) -> void:
+	print("[TEST] Phase 12 - embed_query_native graceful when no rebuild/GGUF")
+	# Pre-rebuild + pre-GGUF state : MerlinEmbed class isn't registered and
+	# the .gguf file is gitignored / missing. The wrapper MUST return an
+	# empty array and NOT crash, so callers can fall through to Path B/C.
+	var available: bool = rag.is_native_embed_available()
+	# In the headless test environment we don't expect the rebuild to have
+	# landed AND the GGUF to be downloaded. Either condition makes available
+	# false ; if both happen to be true, embed_query_native should still
+	# succeed and the result has the right dim.
+	if not available:
+		_assert(true, "is_native_embed_available correctly false (no rebuild/GGUF)")
+		var v: PackedFloat32Array = rag.embed_query_native("test")
+		_assert(v.is_empty(), "embed_query_native returns empty when unavailable")
+		# Second call must remain empty and not re-attempt init (one-shot guard).
+		var v2: PackedFloat32Array = rag.embed_query_native("test again")
+		_assert(v2.is_empty(), "second call still empty (one-shot init guard)")
+	else:
+		_assert(true, "is_native_embed_available true - MerlinEmbed + GGUF present")
+		var v: PackedFloat32Array = rag.embed_query_native("druide marche")
+		_assert(not v.is_empty(), "embed_query_native returns vector when available")
+		_assert(v.size() == 768 or v.size() == rag.dim(), "vector has expected dim")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
