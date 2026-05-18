@@ -440,3 +440,13 @@ tools/autodev/mission-control/dist/
 .env.local
 *.local.cfg
 secrets.json
+
+# -------------------------------------------
+# Phase 10+ derived embedding artifacts (regenerable via tools/embed_reference_*.py)
+# - cards_index_*.json : ~50 MB, regen ~3 min via tools/embed_reference_cards.py
+# - *.embeddings.json : regen via tools/embed_reference_scenarios.py
+# Keep the SOURCE pool (scenarios_reference_broceliande.json) + enriched v2 pool
+# (cards_meta_v2.json) committed since they encode design decisions.
+# -------------------------------------------
+data/ai/cards_index_*.json
+data/ai/*.embeddings.json

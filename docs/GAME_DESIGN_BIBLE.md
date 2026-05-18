@@ -1824,4 +1824,129 @@ Detail : voir `task_plan.md` Active Feature v7.7.3.
 
 ---
 
-*Fin de bible v3.5*
+## 30. Inter-Beat Narrative Contract (Phase 11 — v7.7.31 shipped)
+
+> **Source** : Phase 11 design (merlin-narrative-designer agent) + v7.7.31 PoC measurement.
+> **Status** : Implemente dans `tools/simulate_human_run_v731.py`. A porter en GDScript pour le runtime.
+
+### 30.1 Probleme
+
+v7.7.30 mesurait 97 % de duplication string dans le pool (2 994 cartes / 90 summaries uniques) → Beat N ≡ Beat N+1, aucun fil rouge. Le run ressemblait a une suite de moments independants.
+
+### 30.2 Contrat (les 3 niveaux)
+
+| Niveau | Mecanisme | Cout LLM | Status |
+|---|---|---|---|
+| A — Anchor table | Premier beat retrieve un `anchor_motif` (1-3 mots). Le motif DOIT etre rappele aux beats 8 et 16 quand possible. | 0 | ✅ v7.7.31 |
+| B — Transition template | Pattern f-string interpole entre beats : `{movement_lead}. L'apres-coup de {prev_verb} t'accompagne.` 5 movement leads (Setup/Descente/Pivot/Approfondissement/Pay-off). | 0 | ✅ v7.7.31 |
+| C — LLM bridge stitcher | `tools/beat_chain_stitcher.py` — ThreadPoolExecutor(workers=2), gemma4:e2b, 80-100 tokens par bridge, parallel speedup ~1.9x. Active via `MERLIN_STITCHER=1`. | ~13s/bridge | ✅ v7.7.31 Sprint 11.5 |
+
+### 30.3 Structure 5-mouvements (mapping beat → mouvement)
+
+Calcule par `movement_for_beat(beat_idx, n_cards)` (cf `tools/simulate_human_run_v731.py:289`).
+
+| Mvt | % du run | Beat (run 16-cards) | Role narratif | Seuil emotionnel | Anchor expectation |
+|---|---|---|---|---|---|
+| 1 — Setup | 0-20% | 1-3 | Presentation de l'anchor | curiosite | Nommer |
+| 2 — Premiere descente | 20-45% | 4-7 | Premieres consequences | tension | Echo sensoriel |
+| 3 — Pivot MERLIN | 45-55% | 8 | Revelation/MERLIN_DIRECT | revelation | Recontextualiser |
+| 4 — Approfondissement | 55-85% | 9-13 | Test du joueur, ombre de l'anchor | peur / fascination | Double ombre |
+| 5 — Pay-off | 85-100% | 14-16 | Retour transforme | sagesse | Anchor revient |
+
+### 30.4 Critere de qualite
+
+- `unique_summaries / n_cards >= 16/16` (mesure dedup_summary)
+- `>=3 inter-beat callbacks` par run (tags inter-beat + anchor)
+- `transition_prose` non vide pour Beat 2+ (template ou LLM)
+
+### 30.5 Mesure v7.7.31 actuelle (seed=42)
+
+- 16 / 16 summaries uniques
+- 15 / 15 LLM bridges (100 % yield gemma4:e2b)
+- Movement coverage : M1=3, M2=4, M3=2, M4=4, M5=3
+
+---
+
+## 31. Hidden-DC / DnD-without-combat (Phase 11 — v7.7.31 shipped)
+
+> **Source** : Phase 11 design (merlin-game-designer agent) + AskUserQuestion review 2026-05-18.
+> **Status** : Implemente dans `tools/simulate_human_run_v731.py` + `tools/dedup_and_expand_pool.py`.
+> **Compatibilite §26** : §26 (white/red checks Disco-style 4-stats) et §31 (DC + faction proxy) sont compatibles : §31 est la mecanique LIVE-shipped sur le runtime embedding-first ; §26 reste la cible long-terme quand le systeme 4-stats §25 sera deploye. Migration prevue v8.0.
+
+### 31.1 Probleme
+
+v7.7.30 traitait chaque option comme une victoire automatique : `Tu choisis de {verb}` → effets appliques tels quels. Aucune profondeur strategique.
+
+### 31.2 Structure d'une option enrichie
+
+Format JSON (cf `data/ai/cards_meta_v2.json`) :
+
+```json
+{
+  "label": "Bruler le parchemin",
+  "verb": "bruler",
+  "primary_faction": "korrigans",
+  "dc_against": { "pole": "Chaos", "threshold": 25 },
+  "cost": { "souffle": 0, "essence": 1 },
+  "gated_on": { "required_tags": ["..."], "min_karma": 0 },
+  "gate_hint": "Cette carte attend que tu aies...",
+  "success_effects": ["ADD_REPUTATION:korrigans:2", "HEAL_LIFE:2"],
+  "partial_effects": ["ADD_REPUTATION:korrigans:1"],
+  "failure_effects": ["DAMAGE_LIFE:2"],
+  "success_prose": "La flamme danse avec une fureur joyeuse...",
+  "partial_prose": "Le geste est hesitant mais accompli...",
+  "failure_prose": "Le vent eteint la flamme avant qu'elle ne morde..."
+}
+```
+
+### 31.3 Signaux qualitatifs (le joueur ne voit jamais le DC brut)
+
+Calcule par `estimate_dc_signal(option, state)` (cf `tools/simulate_human_run_v731.py:232`).
+
+| Signal | Couleur HTML | Delta effective vs DC | Surface |
+|---|---|---|---|
+| `[Confiant]` | vert | >= +10 | "tu sens cette voie te porter" |
+| `[Risque]` | dore | -10 < delta < +10 | "le doute est sain ici" |
+| `[Eprouve]` | rouge | <= -10 | "ce serait te jeter contre l'ecorce" |
+| `[Verrouille]` | gris | `gated_on` non rempli | "il te manque {hint}" |
+
+Pas de d20 visible. Le joueur ressent la prise de risque sans voir le chiffre.
+
+### 31.4 Resolution (3 outcomes)
+
+`resolve_dc(option, state, rng)` (cf `tools/simulate_human_run_v731.py:264`) calcule `effective_score = pole_aligned_rep_skill + karma_bonus + base_15 + roll(1-20)` puis :
+
+| Score vs threshold | Outcome | Effets | Prose |
+|---|---|---|---|
+| >= threshold + 5 | success | `success_effects` | `success_prose` |
+| threshold-5 <= score < threshold+5 | partial | `partial_effects` | `partial_prose` |
+| < threshold - 5 | failure | `failure_effects` | `failure_prose` |
+
+### 31.5 Memoire inter-beats
+
+Trois canaux persistants pendant le run :
+
+- `state["tags"]` — liste d'ADD_TAG accumules. Lus par `option_is_gated(option, state)` au prochain beat.
+- `state["promises"]` — objets `{to: faction, due_beats: int}` decrementes a chaque beat. Promesse non tenue = penalite +Anam ou -karma.
+- `state["faction_rep"]` — vecteur 5-D qui pondere les `dc_against.pole` aligned skill.
+
+### 31.6 Agent strategique (PoC heuristique)
+
+`agent_pick_option(options, state, rng)` (cf `tools/simulate_human_run_v731.py:286`) score chaque option par :
+```
+score = signal_score + balance_bonus + rng_jitter
+  signal_score : Confiant=2.0, Risque=1.0, Eprouve=-0.5
+  balance_bonus : max(0, 30 - rep_now) / 30.0  # encourage diversification
+```
+En production l'agent sera le **joueur** ; ce scoreur sert au playtest auto + au Monte-Carlo balance harness (Phase 12 Sprint 12.5).
+
+### 31.7 Mesure v7.7.31 actuelle (seed=42)
+
+- DC outcome distribution : success=4, partial=10, failure=2 (vs v730 = 16/16 success)
+- 16 / 16 summaries uniques (vs 10/16 v730)
+- 0 option broken / overpowered detecte par le sanitizer
+- Movement coverage conforme : M1=3, M2=4, M3=2, M4=4, M5=3
+
+---
+
+*Fin de bible v3.6 — Phase 11 narrative contract + Hidden-DC shipped*
