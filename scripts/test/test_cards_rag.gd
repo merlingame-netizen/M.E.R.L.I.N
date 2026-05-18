@@ -40,6 +40,9 @@ func _ready() -> void:
 	_phase_6_knn_mmr(rag)
 	_phase_7_compose_route(rag)
 	_phase_8_failure_paths(rag)
+	_phase_9_knn_metadata(rag)
+	_phase_10_compose_from_hits(rag)
+	_phase_11_http_embed_gated(rag)
 
 	if _failures == 0:
 		print("[TEST] ALL PHASES PASSED")
@@ -222,6 +225,81 @@ func _phase_8_failure_paths(rag: Node) -> void:
 	var q := _vec([1.0, 0.0, 0.0, 0.0])
 	var hits2: Array = rag.knn(q, 1, {})
 	_assert(hits2.size() == 1, "empty filter dict OK")
+
+
+func _phase_9_knn_metadata(rag: Node) -> void:
+	print("[TEST] Phase 9 - knn_metadata (Path B, no embeddings)")
+	# Seed asks for Liminal/fascination/COMMUNE NARRATIVE -> should hit c1
+	# strongest (pole+emotion+type+rarity all match), then c2 (3 of 4 match).
+	var seed := {
+		"pole": "Liminal",
+		"emotion": "fascination",
+		"type": "NARRATIVE",
+		"rarity": "COMMUNE",
+	}
+	var hits: Array = rag.knn_metadata(seed, 3)
+	_assert(hits.size() == 3, "metadata kNN returns 3 hits (got %d)" % hits.size())
+	if hits.size() >= 1:
+		# c1 has pole+emotion+type+rarity all match = max score
+		_assert(
+			hits[0].card_uid == "c1",
+			"top metadata hit is c1 (all 4 match) (got %s)" % hits[0].card_uid,
+		)
+		_assert(float(hits[0].metadata_score) > 0.0, "score > 0")
+	# Filter test : ask for Chaos only
+	var seed2 := {"pole": "Chaos", "emotion": "peur"}
+	var hits2: Array = rag.knn_metadata(seed2, 5, {"pole": "Chaos"})
+	for h in hits2:
+		_assert(h.pole == "Chaos", "filter Chaos enforced")
+	# Faction pref test : if player leans korrigans, options with korrigans
+	# get a bonus. The synthetic cards have no korrigans options so this
+	# mainly tests that the code path doesn't crash and the score stays >=0.
+	var seed3 := {
+		"pole": "Liminal",
+		"faction_pref": {"korrigans": 1.0, "druides": 0.5},
+	}
+	var hits3: Array = rag.knn_metadata(seed3, 2)
+	_assert(hits3.size() == 2, "faction_pref code path returns 2 hits")
+	for h in hits3:
+		_assert(float(h.metadata_score) >= 0.0, "metadata_score non-negative")
+
+
+func _phase_10_compose_from_hits(rag: Node) -> void:
+	print("[TEST] Phase 10 - compose_route_vec_from_hits (Path C, no embedding)")
+	# Build a synthetic hit list from c1+c4 (Liminal + Chaos).
+	# Equal weights should produce a vector that's neither pure Liminal nor
+	# pure Chaos - somewhere between.
+	var hits := [
+		{"card_uid": "c1"},
+		{"card_uid": "c4"},
+	]
+	var route: PackedFloat32Array = rag.compose_route_vec_from_hits(hits, [1.0, 1.0])
+	_assert(route.size() == DIM, "composed route has correct dim")
+	# L2-normalised
+	var sq_sum := 0.0
+	for v in route:
+		sq_sum += v * v
+	var norm := sqrt(sq_sum)
+	_assert(abs(norm - 1.0) < 1e-4, "composed route L2-normalised (norm=%f)" % norm)
+	# With c1+c4 (~[1,0,0,0] and ~[0,1,0,0]) the composed vec should have
+	# both dim 0 and dim 1 positive, neither dominant.
+	_assert(route[0] > 0.3 and route[1] > 0.3, "route has both Liminal and Chaos signal")
+	# Heavier weight on c1 should bias toward Liminal.
+	var biased: PackedFloat32Array = rag.compose_route_vec_from_hits(hits, [5.0, 1.0])
+	_assert(biased[0] > biased[1], "weighted route biases toward c1 (dim 0)")
+	# card_vector_by_uid : returns the stored vector
+	var v_c1: PackedFloat32Array = rag.card_vector_by_uid("c1")
+	_assert(v_c1.size() == DIM, "card_vector_by_uid returns dim-sized vector")
+	# Unknown uid returns empty
+	var v_none: PackedFloat32Array = rag.card_vector_by_uid("nonexistent")
+	_assert(v_none.is_empty(), "card_vector_by_uid unknown uid returns empty")
+
+
+func _phase_11_http_embed_gated(rag: Node) -> void:
+	print("[TEST] Phase 11 - embed_query gated behind MERLIN_USE_HTTP_EMBED")
+	# Without the env var (default), embed_query must return empty quickly.
+	var v: PackedFloat32Array = await rag.embed_query("anything")
+	_assert(v.is_empty(), "embed_query without env var returns empty (no HTTP)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

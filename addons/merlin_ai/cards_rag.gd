@@ -2,16 +2,27 @@
 ## Cards RAG v7.7.32 — In-memory kNN over the card-level embedding index
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Sprint 12.4 in-game port of tools/cards_rag.py (Phase 10.2, commit 7df44b7e).
-## The Python version uses numpy ; this version uses PackedFloat32Array for
-## the (N × D) matrix and a flat-array dot product for cosine similarity.
+## Sprint 12.4(B+C) drop runtime HTTP dependency on Ollama : add metadata-only
+## retrieval and "compose from already-retrieved hits" path. See PHASE_13 doc
+## for the native `embed()` plan (path A).
 ##
-## Public API (mirrors Python class CardsRAG, with async embed_query):
-##   load_index(path)                   -> bool  (load + L2-normalize)
-##   await embed_query(text)            -> PackedFloat32Array  (Ollama HTTP)
+## Public API:
+##   load_index(path)                              -> bool
 ##   knn(qvec, k, filters, exclude_uids, mmr_lambda, mmr_pool, dedup_summary)
-##                                      -> Array[Dictionary] of hits
-##   compose_route_vec(beat, choices, intro, weights) -> PackedFloat32Array
-##   count / dim / model                -> introspection getters
+##                                                 -> Array[Dictionary] of hits
+##   knn_metadata(seed, k, filters, exclude_uids,
+##                dedup_summary, weights)          -> Array[Dictionary] of hits
+##                                                    (Path B - NO Ollama)
+##   compose_route_vec_from_hits(hits, weights)    -> PackedFloat32Array
+##                                                    (Path C - reuse stored vectors)
+##   compose_route_vec(beat, choices, intro, w)    -> PackedFloat32Array
+##   card_vector_by_uid(uid)                       -> PackedFloat32Array
+##   await embed_query(text)                       -> PackedFloat32Array
+##                                                    DEPRECATED. Only callable
+##                                                    when MERLIN_USE_HTTP_EMBED=1
+##                                                    env var is set. See PHASE_13
+##                                                    for the native replacement.
+##   count() / dim() / model()                     -> introspection getters
 ##
 ## Caller graph (Sprint 12.4 in-game):
 ##   - scenes/RuneCeremonyLoader.tscn  (lookahead pre-fetch, planned)
@@ -52,10 +63,9 @@ signal index_loaded(count: int, dim: int)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _ready() -> void:
-	if _http == null:
-		_http = HTTPRequest.new()
-		_http.timeout = EMBED_TIMEOUT_S
-		add_child(_http)
+	# Sprint 12.4(B) : HTTPRequest is no longer eagerly created. embed_query
+	# constructs it lazily and only if MERLIN_USE_HTTP_EMBED=1 is set.
+	pass
 
 
 ## Load + L2-normalize the index from a JSON file.
@@ -127,9 +137,17 @@ func load_index(path: String = DEFAULT_INDEX_PATH) -> bool:
 # EMBEDDING (Ollama HTTP, async)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Embed a query string via Ollama. Returns the L2-normalized float vector
-## (PackedFloat32Array of dim values). Empty array on failure.
+## DEPRECATED in Sprint 12.4(B). Use knn_metadata (Path B) or compose_route_vec_from_hits
+## (Path C) instead. This method only fires when MERLIN_USE_HTTP_EMBED=1 env var
+## is set, to honour the "no Ollama runtime dependency" directive. The native
+## replacement is planned in PHASE_13_NATIVE_EMBED.md.
+##
+## Returns L2-normalized PackedFloat32Array. Empty array on failure or when
+## the env var is not set.
 func embed_query(text: String) -> PackedFloat32Array:
+	if OS.get_environment("MERLIN_USE_HTTP_EMBED") != "1":
+		push_warning("CardsRAG.embed_query: HTTP path disabled. Set MERLIN_USE_HTTP_EMBED=1 to opt-in, or use knn_metadata + compose_route_vec_from_hits (Sprint 12.4 B+C).")
+		return PackedFloat32Array()
 	if _http == null:
 		_http = HTTPRequest.new()
 		_http.timeout = EMBED_TIMEOUT_S
@@ -400,6 +418,217 @@ func compose_route_vec(
 		for i in _dim:
 			out[i] = out[i] / norm
 	return out
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATH B - METADATA-ONLY RETRIEVAL (no embeddings, no HTTP)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Default weights for the metadata-score retrieval. The Monte-Carlo balance
+## pass (Sprint 12.5e) confirmed these are the dominant discriminators after
+## the pool's 97% string-duplication is collapsed.
+const _META_WEIGHTS_DEFAULT := {
+	"pole_match": 3.0,
+	"emotion_match": 2.0,
+	"type_match": 1.5,
+	"rarity_match": 1.0,
+	"archetype_match": 2.5,
+	"faction_pref_match": 1.5,
+}
+
+
+## Metadata-only kNN. Given a `seed` Dictionary describing what you want
+## (any subset of pole/emotion/type/rarity/archetype_hint/faction_pref/
+## tag_history), returns the top-k cards by weighted metadata score.
+## No Ollama, no HTTP, no embeddings - just the structured fields the pool
+## already carries.
+##
+## Params:
+##   seed           : Dictionary
+##     pole          : "Ordre"|"Chaos"|"Liminal"|"Neutre"
+##     emotion       : one of the 5 bible emotions
+##     type          : "NARRATIVE"|"EVENT"|"MERLIN_DIRECT"
+##     rarity        : "COMMUNE"|"RARE"|"EPIQUE"
+##     archetype     : exact archetype_name string
+##     faction_pref  : Dictionary[faction -> weight in 0..1] (player's lean)
+##     tag_history   : Array[String] of tags already acquired (gates)
+##   k              : int (default 5)
+##   filters        : same shape as knn() filters
+##   exclude_uids   : Array[String]
+##   dedup_summary  : bool (default true - the right default for the dup-heavy pool)
+##   weights        : optional override of _META_WEIGHTS_DEFAULT
+##
+## Returns Array[Dictionary] of hits with `metadata_score` field instead of `score`.
+func knn_metadata(
+	seed: Dictionary,
+	k: int = 5,
+	filters: Dictionary = {},
+	exclude_uids: Array = [],
+	dedup_summary: bool = true,
+	weights: Dictionary = {},
+) -> Array:
+	if _count == 0:
+		return []
+	var w := _META_WEIGHTS_DEFAULT.duplicate()
+	for key in weights.keys():
+		w[key] = weights[key]
+
+	var seed_pole := String(seed.get("pole", ""))
+	var seed_emotion := String(seed.get("emotion", ""))
+	var seed_type := String(seed.get("type", ""))
+	var seed_rarity := String(seed.get("rarity", ""))
+	var seed_archetype := String(seed.get("archetype", ""))
+	var seed_faction_pref: Dictionary = seed.get("faction_pref", {})
+	var seed_tag_history: Array = seed.get("tag_history", [])
+	var tag_set := {}
+	for t in seed_tag_history:
+		tag_set[String(t)] = true
+
+	# Compute scores for every card.
+	var scored: Array = []
+	scored.resize(_count)
+	for i in _count:
+		var card: Dictionary = _cards[i]
+		var s := 0.0
+		if seed_pole != "" and String(card.get("pole", "")) == seed_pole:
+			s += float(w["pole_match"])
+		if seed_emotion != "" and String(card.get("emotion", "")) == seed_emotion:
+			s += float(w["emotion_match"])
+		if seed_type != "" and String(card.get("type", "")) == seed_type:
+			s += float(w["type_match"])
+		if seed_rarity != "" and String(card.get("rarity", "")) == seed_rarity:
+			s += float(w["rarity_match"])
+		if seed_archetype != "" and String(card.get("archetype_name", "")) == seed_archetype:
+			s += float(w["archetype_match"])
+		# faction_pref : sum of player's lean on each option's primary_faction
+		if not seed_faction_pref.is_empty():
+			var options: Array = card.get("options", [])
+			for opt in options:
+				var faction := String(opt.get("primary_faction", ""))
+				if seed_faction_pref.has(faction):
+					s += float(seed_faction_pref[faction]) * float(w["faction_pref_match"])
+		# Tiny tiebreaker so ordering is deterministic per seed contents.
+		scored[i] = {"idx": i, "score": s, "uid": String(card.get("card_uid", ""))}
+
+	# Sort desc by score, stable by uid for determinism.
+	scored.sort_custom(func(a, b):
+		if a["score"] != b["score"]:
+			return a["score"] > b["score"]
+		return String(a["uid"]) < String(b["uid"]))
+
+	# Apply filters + exclude + dedup_summary.
+	var excl := {}
+	for u in exclude_uids:
+		excl[String(u)] = true
+	var wanted_type := _coerce_set(filters.get("type"))
+	var wanted_rarity := _coerce_set(filters.get("rarity"))
+	var wanted_pole := _coerce_set(filters.get("pole"))
+	if wanted_pole.is_empty():
+		wanted_pole = _coerce_set(filters.get("pole_in"))
+	var wanted_emotion := _coerce_set(filters.get("emotion"))
+
+	var hits: Array = []
+	var seen_summaries := {}
+	for entry in scored:
+		var idx: int = entry["idx"]
+		var card: Dictionary = _cards[idx]
+		var uid := String(card.get("card_uid", ""))
+		if excl.has(uid):
+			continue
+		if not wanted_type.is_empty() and not wanted_type.has(card.get("type", "")):
+			continue
+		if not wanted_rarity.is_empty() and not wanted_rarity.has(card.get("rarity", "")):
+			continue
+		if not wanted_pole.is_empty() and not wanted_pole.has(card.get("pole", "")):
+			continue
+		if not wanted_emotion.is_empty() and not wanted_emotion.has(card.get("emotion", "")):
+			continue
+		if dedup_summary:
+			var summary := String(card.get("summary", "")).strip_edges()
+			if seen_summaries.has(summary):
+				continue
+			seen_summaries[summary] = true
+		var hit := _build_hit(idx, float(entry["score"]))
+		hit["metadata_score"] = float(entry["score"])
+		hits.append(hit)
+		if hits.size() >= k:
+			break
+	return hits
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATH C - ROUTE VECTOR FROM ALREADY-RETRIEVED HITS (no new embeddings)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Compose a query vector from cards already in the index by averaging their
+## stored vectors with `weights`. No Ollama, no embed_query - we reuse what
+## was precomputed offline.
+##
+## `hits` : Array of Dictionaries that each contain at least a `card_uid` key.
+##          Typically the output of knn_metadata or the player's chosen-card
+##          history.
+## `weights` : Array of floats parallel to `hits`. If shorter than `hits`,
+##             missing entries default to 1.0. The resulting vector is
+##             L2-normalised before return.
+##
+## Returns the composed PackedFloat32Array, or empty if no hit had a stored vector.
+func compose_route_vec_from_hits(
+	hits: Array,
+	weights: Array = [],
+) -> PackedFloat32Array:
+	if hits.is_empty() or _dim == 0:
+		return PackedFloat32Array()
+	var out := PackedFloat32Array()
+	out.resize(_dim)
+	var n_used := 0
+	for i in hits.size():
+		var uid := String(hits[i].get("card_uid", ""))
+		if uid.is_empty():
+			continue
+		var row := _row_for_uid(uid)
+		if row < 0:
+			continue
+		var w: float = 1.0
+		if i < weights.size():
+			w = float(weights[i])
+		var base := row * _dim
+		for d in _dim:
+			out[d] += _matrix[base + d] * w
+		n_used += 1
+	if n_used == 0:
+		return PackedFloat32Array()
+	# L2 normalise
+	var sq_sum := 0.0
+	for v in out:
+		sq_sum += v * v
+	var norm := sqrt(sq_sum)
+	if norm > 0.0:
+		for d in _dim:
+			out[d] = out[d] / norm
+	return out
+
+
+## Return the stored row vector for a card_uid, or empty PackedFloat32Array.
+func card_vector_by_uid(uid: String) -> PackedFloat32Array:
+	var row := _row_for_uid(uid)
+	if row < 0:
+		return PackedFloat32Array()
+	var out := PackedFloat32Array()
+	out.resize(_dim)
+	var base := row * _dim
+	for d in _dim:
+		out[d] = _matrix[base + d]
+	return out
+
+
+func _row_for_uid(uid: String) -> int:
+	# Linear scan ; the index is loaded once at boot and used per-beat at
+	# 4-6 ms anyway, so a 2-3 ms uid-to-row lookup is acceptable.
+	# Sprint 13 will add a uid_to_row Dictionary if this becomes a hotspot.
+	for i in _count:
+		if String(_cards[i].get("card_uid", "")) == uid:
+			return i
+	return -1
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
