@@ -306,6 +306,40 @@ def option_is_gated(option: dict, state: dict) -> tuple[bool, str]:
     return False, ""
 
 
+# Sprint 12.5c balance re-tune (2026-05-18, after 12.5b overshoot):
+# Sprint 12.5b dropped greedy 89%->18% but ALL strategies collapsed below 40%
+# (DC failure rose 30%->50%, niamh now dominates 37-70%). Middle-ground :
+#   - DC_BASE_SKILL : 15 -> 10 -> 12   (split the diff)
+#   - CONFIANT_DELTA : 10 -> 15 -> 12  (split the diff)
+#   - POLE_ALIGNMENT_WEIGHTS : broaden Liminal to 3 factions, lower the
+#     niamh weight from 1.0 -> 0.8 so it loses its monopoly bonus.
+#   - Tighten Ordre + Chaos so they're not undercut either.
+POLE_ALIGNMENT_WEIGHTS: dict[str, dict[str, float]] = {
+    "ordre":   {"druides": 0.9, "anciens": 0.6},
+    "chaos":   {"korrigans": 0.9, "ankou": 0.6},
+    # Liminal is the "in-between" pole - 3 factions touch it but niamh
+    # the most. Total weight ~1.5 to give Liminal-rich players an edge
+    # without monopolising.
+    "liminal": {"niamh": 0.8, "anciens": 0.4, "korrigans": 0.3},
+    "neutre":  {"druides": 0.25, "anciens": 0.25, "korrigans": 0.25, "niamh": 0.25, "ankou": 0.25},
+}
+# Sprint 12.5d (2026-05-18) - Sprint 12.5c (base=12) was still too punishing
+# (all strategies below 40% win). The pole_alignment weights already remove
+# ~30% effective skill vs v731 baseline ; restoring base=15 lets the new
+# weighted formula do the rebalance work alone. Expect greedy ~50-60%.
+DC_BASE_SKILL: int = 15  # restored to v731 baseline (was 10 / 12 in previous iterations)
+CONFIANT_DELTA: int = 12  # keep tightened spread (v731 was 10)
+EPROUVE_DELTA: int = -12  # keep failures discoverable
+
+
+def _aligned_skill(state: dict, pole: str) -> int:
+    """Weighted faction-rep skill for the given DC pole (Sprint 12.5b)."""
+    weights = POLE_ALIGNMENT_WEIGHTS.get(pole.lower(), {})
+    rep = state.get("faction_rep", {})
+    weighted = sum(rep.get(f, 0) * w for f, w in weights.items())
+    return int(weighted // 2)
+
+
 def estimate_dc_signal(option: dict, state: dict) -> str:
     """Map the option's hidden DC to a qualitative chip the player sees.
 
@@ -315,24 +349,15 @@ def estimate_dc_signal(option: dict, state: dict) -> str:
     """
     dc = option.get("dc_against") or {}
     threshold = int(dc.get("threshold", 25) or 25)
-    pole = (dc.get("pole") or "").lower()
-    # Player's "skill" against this pole proxies via faction_rep & karma.
-    rep = state.get("faction_rep", {})
-    pole_alignments = {
-        "ordre": ["druides", "anciens"],
-        "chaos": ["korrigans", "ankou"],
-        "liminal": ["niamh"],
-        "neutre": [],
-    }
-    aligned = pole_alignments.get(pole, [])
-    skill = sum(rep.get(f, 0) for f in aligned) // 2
+    pole = (dc.get("pole") or "")
+    skill = _aligned_skill(state, pole)
     karma_bonus = max(0, state.get("karma", 0)) // 5
-    effective = skill + karma_bonus + 15  # base 15 = "human level"
+    effective = skill + karma_bonus + DC_BASE_SKILL
 
     delta = effective - threshold
-    if delta >= 10:
+    if delta >= CONFIANT_DELTA:
         return "Confiant"
-    if delta <= -10:
+    if delta <= EPROUVE_DELTA:
         return "Eprouve"
     return "Risque"
 
@@ -344,18 +369,10 @@ def resolve_dc(option: dict, state: dict, rng: random.Random) -> str:
     via `estimate_dc_signal`; this function is what actually rolls."""
     dc = option.get("dc_against") or {}
     threshold = int(dc.get("threshold", 25) or 25)
-    pole = (dc.get("pole") or "").lower()
-    rep = state.get("faction_rep", {})
-    pole_alignments = {
-        "ordre": ["druides", "anciens"],
-        "chaos": ["korrigans", "ankou"],
-        "liminal": ["niamh"],
-        "neutre": [],
-    }
-    aligned = pole_alignments.get(pole, [])
-    skill = sum(rep.get(f, 0) for f in aligned) // 2
+    pole = (dc.get("pole") or "")
+    skill = _aligned_skill(state, pole)
     karma_bonus = max(0, state.get("karma", 0)) // 5
-    effective = skill + karma_bonus + 15
+    effective = skill + karma_bonus + DC_BASE_SKILL
     roll = rng.randint(1, 20)
     score = effective + roll
     if score >= threshold + 5:
@@ -373,25 +390,51 @@ def agent_pick_option(
     """Strategic agent: balance factions while avoiding locked options.
 
     Returns (idx, option, decision_reason).
+
+    Sprint 12.5d rebalance (2026-05-18): the previous "balanced" agent at
+    Sprint 12.5b spread factions too thin (won 14-22%, worse than greedy/
+    trait_focused). The fix: prioritize specialization over diversification.
+      signal_score:        max 1.5  (raised - prefer Confiant clearly)
+      faction_continuity:  max 1.2  (raised - identity emerges through repetition)
+      balance_bonus:       max 0.6  (lowered - only nudge when one faction
+                                     saturates, don't dictate every choice)
+    Net effect: behaves like a thoughtful human - picks Confiant first,
+    leans into a faction once chosen, occasionally branches when sitting
+    on >= 15 rep.
     """
     if not options:
         return -1, {}, "no options"
 
     rep = state.get("faction_rep", {})
+    main_faction = ""
+    if rep:
+        main_faction_candidate = max(rep.items(), key=lambda kv: kv[1])
+        if main_faction_candidate[1] > 0:
+            main_faction = main_faction_candidate[0]
+
     scored: list[tuple[float, int, dict]] = []
     for i, opt in enumerate(options):
         locked, _hint = option_is_gated(opt, state)
         if locked:
             continue
-        # Score: prefer factions that are LOW (balance) but not negative,
-        # and prefer options whose DC signal is Confiant or Risque.
         faction = opt.get("primary_faction", "")
         rep_now = rep.get(faction, 0)
         signal = estimate_dc_signal(opt, state)
-        signal_score = {"Confiant": 2.0, "Risque": 1.0, "Eprouve": -0.5}.get(signal, 0.5)
-        # Balance bonus: encourage diversification (lower rep = higher bonus)
-        balance_bonus = max(0, 30 - rep_now) / 30.0  # 0..1
-        score = signal_score + balance_bonus + rng.uniform(0, 0.3)
+        signal_score = {
+            "Confiant": 1.5,
+            "Risque": 0.8,
+            "Eprouve": -0.5,
+        }.get(signal, 0.4)
+        # Balance bonus only kicks in if a faction is saturated (rep > 15),
+        # nudging the agent to branch. Otherwise it stays focused.
+        balance_bonus = 0.6 if rep_now > 15 else 0.0
+        # Faction continuity : when there's a clear main and we haven't
+        # over-invested, prefer it (helps identity emerge).
+        if main_faction and faction == main_faction and rep_now < 25:
+            continuity_bonus = 1.2
+        else:
+            continuity_bonus = 0.0
+        score = signal_score + balance_bonus + continuity_bonus + rng.uniform(0, 0.3)
         scored.append((score, i, opt))
 
     if not scored:

@@ -310,59 +310,63 @@ def validate_enriched(payload: dict, canonical: dict) -> tuple[bool, list[str], 
     return True, warnings, repaired
 
 
+# Sprint 12.5b balance fixes (2026-05-18, from Monte-Carlo report):
+# - Fix 4 lite (anciens 92% on greedy)  : rotate the 5 factions per canonical
+#   using bucket_hash for determinism, so no single faction dominates fallbacks.
+# - Fix 5 (tags P50 = 2)                : every fallback success_effect now
+#   includes an ADD_TAG so inter-beat memory accumulates.
+_FALLBACK_FACTION_KIT: list[dict] = [
+    {"label": "Accepter",  "verb": "accueillir", "faction": "anciens",   "pole": "ordre",   "tag": "geste_accueil"},
+    {"label": "Refuser",   "verb": "refuser",    "faction": "ankou",     "pole": "chaos",   "tag": "geste_refus"},
+    {"label": "Observer",  "verb": "observer",   "faction": "druides",   "pole": "ordre",   "tag": "regard_attentif"},
+    {"label": "Detourner", "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_korrigan"},
+    {"label": "Ecouter",   "verb": "ecouter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_niamh"},
+]
+
+
 def _fallback_enrichment(canonical: dict) -> dict:
-    """Template fallback when LLM fails. Better than skipping."""
+    """Template fallback when LLM fails. Better than skipping.
+
+    Sprint 12.5b: rotate the 5 factions deterministically using bucket_hash
+    so a v2 pool with many fallbacks doesn't collapse to anciens-only. Each
+    success_effect now also emits an ADD_TAG so inter-beat memory grows.
+    """
     summary = canonical["canonical_summary"]
-    pole = canonical["pole"]
-    rarity_dc = {"COMMUNE": 15, "RARE": 28, "EPIQUE": 42}.get(canonical["rarity"], 20)
+    rarity_dc_base = {"COMMUNE": 18, "RARE": 26, "EPIQUE": 38}.get(canonical["rarity"], 22)
+
+    # Deterministic 3-of-5 faction rotation per canonical (Fix 4 lite).
+    rotation_seed = int(_bucket_hash(canonical), 16) % 5
+    picked = [_FALLBACK_FACTION_KIT[(rotation_seed + i) % 5] for i in range(3)]
+
+    options: list[dict] = []
+    for slot, kit in enumerate(picked):
+        dc_threshold = rarity_dc_base + slot * 4
+        faction = kit["faction"]
+        verb = kit["verb"]
+        success_eff = [f"ADD_REPUTATION:{faction}:5", f"ADD_TAG:{kit['tag']}"]
+        if slot == 2:
+            success_eff.append("ADD_KARMA:2")
+        elif slot == 0:
+            success_eff.append("HEAL_LIFE:2")
+        options.append({
+            "label": kit["label"],
+            "verb": verb,
+            "primary_faction": faction,
+            "dc_against": {"pole": kit["pole"], "threshold": dc_threshold},
+            "cost": {"souffle": slot, "essence": 0},
+            "success_effects": success_eff,
+            "partial_effects": [f"ADD_REPUTATION:{faction}:2"],
+            "failure_effects": ["DAMAGE_LIFE:2"],
+            "success_prose": f"Tu choisis de {verb}. {summary[:80]}",
+            "partial_prose": f"Le geste est inacheve mais sincere. {summary[:60]}",
+            "failure_prose": f"Le moment t'echappe. {summary[:60]}",
+        })
+
     return {
         "prose_short": summary,
         "prose_long": summary,
         "anchor_motif": "",
-        "options": [
-            {
-                "label": "Accepter",
-                "verb": "accueillir",
-                "primary_faction": "anciens",
-                "dc_against": {"pole": pole, "threshold": rarity_dc},
-                "cost": {"souffle": 0, "essence": 0},
-                "success_effects": ["ADD_REPUTATION:anciens:5", "HEAL_LIFE:2"],
-                "partial_effects": ["ADD_REPUTATION:anciens:2"],
-                "failure_effects": ["DAMAGE_LIFE:2"],
-                "success_prose": f"Tu accueilles. {summary[:80]}",
-                "partial_prose": f"Tu hésites, puis accueilles. {summary[:60]}",
-                "failure_prose": f"L'instant t'échappe. {summary[:60]}",
-            },
-            {
-                "label": "Refuser",
-                "verb": "refuser",
-                "primary_faction": "ankou",
-                "dc_against": {"pole": pole, "threshold": rarity_dc + 5},
-                "cost": {"souffle": 0, "essence": 0},
-                "success_effects": [
-                    "ADD_REPUTATION:ankou:5",
-                    "ADD_REPUTATION:anciens:-2",
-                ],
-                "partial_effects": ["ADD_REPUTATION:ankou:2"],
-                "failure_effects": ["DAMAGE_LIFE:3"],
-                "success_prose": f"Tu refuses, ferme. {summary[:80]}",
-                "partial_prose": f"Tu refuses sans conviction. {summary[:60]}",
-                "failure_prose": f"Ton refus se retourne. {summary[:60]}",
-            },
-            {
-                "label": "Observer",
-                "verb": "observer",
-                "primary_faction": "druides",
-                "dc_against": {"pole": pole, "threshold": rarity_dc + 10},
-                "cost": {"souffle": 1, "essence": 0},
-                "success_effects": ["ADD_REPUTATION:druides:7", "ADD_KARMA:2"],
-                "partial_effects": ["ADD_REPUTATION:druides:3"],
-                "failure_effects": ["DAMAGE_LIFE:1"],
-                "success_prose": f"Tu observes, patient. {summary[:80]}",
-                "partial_prose": f"Tu observes brièvement. {summary[:60]}",
-                "failure_prose": f"L'observation te coûte. {summary[:60]}",
-            },
-        ],
+        "options": options,
         "_source": "fallback_template",
     }
 
