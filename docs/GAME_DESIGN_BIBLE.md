@@ -1949,4 +1949,65 @@ En production l'agent sera le **joueur** ; ce scoreur sert au playtest auto + au
 
 ---
 
-*Fin de bible v3.6 — Phase 11 narrative contract + Hidden-DC shipped*
+## 32. Native Embed Surface (Phase 13 — shipped 2026-05-19)
+
+> **Source** : User directive 2026-05-17 *"Je ne veux pas necessite a mes joueurs de DL Ollama, tout doit etre gere en natif depuis le jeu !"* + 2026-05-19 review *"pourquoi du http request ?"*.
+> **Status** : C++ scaffolding shipped (commit 4663d916 native ; afae9423 + 2ba12072 worktree). Rebuild required to activate.
+> **Replaces** : the HTTPRequest-to-Ollama path used by `addons/merlin_ai/cards_rag.gd::embed_query` (kept as opt-in fallback via `MERLIN_USE_HTTP_EMBED=1`).
+
+### 32.1 Why
+
+Sprint 12.4(B+C) shipped a metadata-only retrieval path that handles ~90% of in-game card lookups without any LLM. The remaining 10% — embedding arbitrary new text (player input, adaptive trait emergence behavioral_summary, cross-biome retrieval) — still required Ollama at runtime. §32 closes that gap with a native llama.cpp-based embedder shipped inside `merlin_llm.dll`.
+
+### 32.2 Architecture
+
+```
+GDScript : addons/merlin_ai/cards_rag.gd
+  ├─ embed_query_native(text)  → tries Path A (native MerlinEmbed)
+  ├─ knn_metadata(seed, ...)   → Path B (no embeddings, Sprint 12.4(B))
+  └─ compose_route_vec_from_hits(hits, ...) → Path C (re-use stored vectors)
+
+C++ : native/src/merlin_embed.h + .cpp
+  class MerlinEmbed : public RefCounted
+    load_model(path)         → llama_model_load_from_file
+    embed(text)              → llama_decode + llama_get_embeddings_seq
+                                + L2-normalise → PackedFloat32Array(768)
+
+GGUF : addons/merlin_llm/models/nomic-embed-text-Q4_K_M.gguf (~137 MB, gitignored)
+  Downloaded via download_nomic_embed.ps1 (Apache 2.0, HuggingFace).
+```
+
+### 32.3 Bit-compatibility with the baked index
+
+The Sprint 10 offline embeddings in `data/ai/cards_index_broceliande.json` were produced via Ollama's `nomic-embed-text` tag, which is the same `nomic-ai/nomic-embed-text-v1.5` model. The native path uses the same model weights via llama.cpp, so the produced vectors should be cosine-similar to the baked ones within float-rounding tolerance.
+
+Verification harness (Sprint 13.5) : `scenes/TestNativeEmbedCompat.tscn` samples 20 cards from the baked index, re-embeds their summaries via the native path, and reports :
+- per-sample cosine similarity (target avg > 0.95, min > 0.90)
+- top-3 kNN overlap between native-query vs baked-query (target = 3/3)
+- VERDICT codes : `COMPAT_OK` / `LOW_SIMILARITY` / `TOP3_DIVERGENT` / `NO_NATIVE` / `NO_INDEX` / `EMBED_FAIL`
+
+If the verdict is anything other than `COMPAT_OK`, the index must be regenerated against the native path via `tools/embed_reference_cards.py`.
+
+### 32.4 Threading model
+
+`MerlinEmbed` is mutex-protected internally (single `embed_mutex` guards the shared `llama_context`). This means one instance can be safely shared across the parallel pre-fetch workers in `RuneCeremonyLoader` (Sprint 12.4(c)). At least one of those workers may call `embed_query_native` ; the call serialises against any other concurrent call automatically.
+
+### 32.5 Acceptance criteria (Phase 13)
+
+- [x] C++ scaffolding shipped (header, impl, register, CMake)
+- [x] Worktree-side scaffolding shipped (downloader, probe, compat verifier, cards_rag wire-in)
+- [ ] Rebuild merlin_llm.dll (Windows MSVC bypass, see `~/.claude/skills/learned/windows-msvc-build-bypass-vswhere-group-policy.md`)
+- [ ] Q4_K_M GGUF downloaded
+- [ ] Probe verdict `GO_EMBED_OK` (load + embed + L2-norm + determinism)
+- [ ] Compat verdict `COMPAT_OK` on 20-sample run
+- [ ] Game can boot a full demo with `OLLAMA_HOST=invalid:0`
+
+### 32.6 What §32 does NOT replace
+
+- The 1.6 GB causal Gemma 4 GGUF (handles generation, separate class `MerlinLLM`).
+- The pre-baked card vectors (those stay as long as compat verdict is OK).
+- The Sprint 12.4(B) metadata-only path (still the default for in-game per-beat retrieval — embedding is only used when the player feeds in arbitrary text).
+
+---
+
+*Fin de bible v3.7 — Phase 13 Native Embed Surface scaffolding shipped (rebuild pending)*
