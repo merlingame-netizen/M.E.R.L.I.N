@@ -338,6 +338,37 @@ def _fallback_enrichment(canonical: dict) -> dict:
     rotation_seed = int(_bucket_hash(canonical), 16) % 5
     picked = [_FALLBACK_FACTION_KIT[(rotation_seed + i) % 5] for i in range(3)]
 
+    # Phase 14 - varied per-verb prose. Each of the 5 fallback verbs gets 3
+    # distinct prose tones (success / partial / failure) instead of the
+    # single generic "Le moment t'echappe" template. Indexed by verb.
+    _PROSE_BY_VERB = {
+        "accueillir": {
+            "success": "Ta porte intérieure s'ouvre. La forêt te répond par un froissement complice.",
+            "partial":  "Tu accueilles à moitié — la part qui reste fermée se souviendra.",
+            "failure":  "L'accueil sonne creux. L'autre le sent, et la confiance se replie.",
+        },
+        "refuser": {
+            "success": "Ton non est ferme et clair. La forêt respecte ce qui sait dire non.",
+            "partial":  "Le refus tremble. Une porte se ferme à demi, l'autre reste entrebâillée.",
+            "failure":  "Tu refuses trop vite. Ce que tu rejettes te revient par derrière.",
+        },
+        "observer": {
+            "success": "Tu vois ce que d'autres traversent sans le voir. La forêt te récompense en silences.",
+            "partial":  "L'œil saisit la surface mais manque la racine. Le détail vrai t'échappe encore.",
+            "failure":  "Tu restes spectateur trop longtemps. Le moment passe sans toi.",
+        },
+        "detourner": {
+            "success": "Tu glisses entre les pièges comme un korrigan qui rentre chez lui.",
+            "partial":  "Le détour fonctionne mais coûte. Tu arrives plus tard, plus las.",
+            "failure":  "La ruse se retourne. Ce que tu pensais éviter t'attend au tournant.",
+        },
+        "ecouter": {
+            "success": "Tu entends ce que l'autre ne sait pas encore dire. Niamh hoche la tête.",
+            "partial":  "L'écoute est partielle — tu prends les mots, pas la musique.",
+            "failure":  "Tu écoutes sans entendre. Le silence qui suit t'accuse.",
+        },
+    }
+
     options: list[dict] = []
     for slot, kit in enumerate(picked):
         dc_threshold = rarity_dc_base + slot * 4
@@ -348,6 +379,11 @@ def _fallback_enrichment(canonical: dict) -> dict:
             success_eff.append("ADD_KARMA:2")
         elif slot == 0:
             success_eff.append("HEAL_LIFE:2")
+        prose_tones = _PROSE_BY_VERB.get(verb, {
+            "success": f"Tu choisis de {verb}. La trame se réoriente sans bruit.",
+            "partial":  f"Ta tentative de {verb} reste inachevée. Le moment garde sa propre logique.",
+            "failure":  f"L'élan de {verb} se brise sur l'instant. Tu paies en certitude.",
+        })
         options.append({
             "label": kit["label"],
             "verb": verb,
@@ -357,9 +393,9 @@ def _fallback_enrichment(canonical: dict) -> dict:
             "success_effects": success_eff,
             "partial_effects": [f"ADD_REPUTATION:{faction}:2"],
             "failure_effects": ["DAMAGE_LIFE:2"],
-            "success_prose": f"Tu choisis de {verb}. {summary[:80]}",
-            "partial_prose": f"Le geste est inacheve mais sincere. {summary[:60]}",
-            "failure_prose": f"Le moment t'echappe. {summary[:60]}",
+            "success_prose": prose_tones["success"],
+            "partial_prose": prose_tones["partial"],
+            "failure_prose": prose_tones["failure"],
         })
 
     return {

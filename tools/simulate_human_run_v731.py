@@ -331,6 +331,18 @@ DC_BASE_SKILL: int = 15  # restored to v731 baseline (was 10 / 12 in previous it
 CONFIANT_DELTA: int = 12  # keep tightened spread (v731 was 10)
 EPROUVE_DELTA: int = -12  # keep failures discoverable
 
+# Phase 14 (2026-05-19) - DC scaling per movement. Earlier beats should feel
+# like apprentissage (easier), later beats like épreuve (harder). This rewards
+# the player for crossing movements instead of punishing the M1 newbie who
+# has empty faction_rep.
+#   M1 = -3 (warmup)    M2 = -1   M3 = 0   M4 = +1   M5 = +2 (crescendo)
+MOVEMENT_DC_BIAS: dict[int, int] = {1: -3, 2: -1, 3: 0, 4: 1, 5: 2}
+
+# Phase 14 - starter faction rep so M1 doesn't show all-Eprouve. The player
+# is an apprenti druide, not a stranger.
+STARTER_FACTION_REP: dict[str, int] = {"druides": 8, "anciens": 4}
+STARTER_ECLATS: int = 0  # cross-run currency, accrued on success beats
+
 
 def _aligned_skill(state: dict, pole: str) -> int:
     """Weighted faction-rep skill for the given DC pole (Sprint 12.5b)."""
@@ -340,15 +352,19 @@ def _aligned_skill(state: dict, pole: str) -> int:
     return int(weighted // 2)
 
 
-def estimate_dc_signal(option: dict, state: dict) -> str:
+def estimate_dc_signal(option: dict, state: dict, movement: int = 3) -> str:
     """Map the option's hidden DC to a qualitative chip the player sees.
 
     [Confiant] : likely success
     [Risque]   : 50/50
     [Eprouve]  : likely failure
+
+    Phase 14 : ``movement`` (default 3 = M3 neutral) biases the effective DC
+    per the MOVEMENT_DC_BIAS table - M1 is easier (warmup), M5 is harder.
     """
     dc = option.get("dc_against") or {}
-    threshold = int(dc.get("threshold", 25) or 25)
+    threshold_raw = int(dc.get("threshold", 25) or 25)
+    threshold = threshold_raw + MOVEMENT_DC_BIAS.get(int(movement), 0)
     pole = (dc.get("pole") or "")
     skill = _aligned_skill(state, pole)
     karma_bonus = max(0, state.get("karma", 0)) // 5
@@ -362,13 +378,14 @@ def estimate_dc_signal(option: dict, state: dict) -> str:
     return "Risque"
 
 
-def resolve_dc(option: dict, state: dict, rng: random.Random) -> str:
+def resolve_dc(option: dict, state: dict, rng: random.Random, movement: int = 3) -> str:
     """Probabilistic outcome of the option: success / partial / failure.
 
-    Hidden DC + state-derived skill. Player only sees the qualitative chip
-    via `estimate_dc_signal`; this function is what actually rolls."""
+    Hidden DC + state-derived skill + Phase 14 movement-based scaling.
+    Player only sees the qualitative chip via `estimate_dc_signal`."""
     dc = option.get("dc_against") or {}
-    threshold = int(dc.get("threshold", 25) or 25)
+    threshold_raw = int(dc.get("threshold", 25) or 25)
+    threshold = threshold_raw + MOVEMENT_DC_BIAS.get(int(movement), 0)
     pole = (dc.get("pole") or "")
     skill = _aligned_skill(state, pole)
     karma_bonus = max(0, state.get("karma", 0)) // 5
@@ -540,6 +557,10 @@ def apply_effects(state: dict, effects: list[str]) -> list[dict]:
                 )
             elif verb == "ADD_KARMA":
                 state["karma"] = state.get("karma", 0) + int(parts[1])
+            elif verb == "ADD_ECLATS":
+                # Phase 14 - currency reward. Players amass eclats during runs
+                # to spend in the hub on Anam, traits, ogham unlocks etc.
+                state["eclats"] = state.get("eclats", 0) + int(parts[1])
             elif verb == "ADD_TAG":
                 tag = parts[1] if len(parts) >= 2 else ""
                 if tag:
@@ -697,8 +718,16 @@ def run_simulation() -> dict:
     trace["unique_summaries"] = unique_summaries
     log.info("Unique summaries: %d / %d", unique_summaries, len(skeleton_hits))
 
-    # Play loop with DnD checks + fil-rouge transitions
-    state = {"life_essence": 80, "karma": 0, "faction_rep": {}, "tags": [], "promises": []}
+    # Play loop with DnD checks + fil-rouge transitions.
+    # Phase 14 - state initialised with starter faction rep + eclats currency.
+    state = {
+        "life_essence": 80,
+        "karma": 0,
+        "faction_rep": dict(STARTER_FACTION_REP),
+        "tags": [],
+        "promises": [],
+        "eclats": STARTER_ECLATS,
+    }
     cards_played: list[dict] = []
     run_history: list[dict] = []
     prev_verb = ""
@@ -714,8 +743,17 @@ def run_simulation() -> dict:
         trans_prose = transition_prose(i, prev_verb, anchor_locked, mvt)
 
         opt_idx, option, decision_reason = agent_pick_option(options, state, rng)
-        dc_result = resolve_dc(option, state, rng) if option else "failure"
+        # Phase 14 - DC scaled by movement.
+        dc_result = resolve_dc(option, state, rng, movement=mvt) if option else "failure"
         effects = derive_effects_from_dc(option, dc_result)
+        # Phase 14 - auto-grant eclats on success (basic reward layer). Rarity
+        # multiplier : commune=1, rare=2, epique=3 eclats. SHOPs get x2 because
+        # they're transactional moments.
+        if dc_result == "success":
+            base_eclats = {"COMMUNE": 1, "RARE": 2, "EPIQUE": 3}.get(hit.rarity, 1)
+            if hit.type == "SHOP":
+                base_eclats *= 2
+            effects = list(effects) + ["ADD_ECLATS:%d" % base_eclats]
         log_entries = apply_effects(state, effects)
         resolution_prose = derive_prose_from_dc(option, dc_result) or hit.summary or ""
 
@@ -728,7 +766,7 @@ def run_simulation() -> dict:
                     "label": o.get("label", ""),
                     "verb": o.get("verb", ""),
                     "faction": o.get("primary_faction", ""),
-                    "signal": "Verrouille" if locked else estimate_dc_signal(o, state),
+                    "signal": "Verrouille" if locked else estimate_dc_signal(o, state, mvt),
                     "gate_hint": hint if locked else "",
                     "dc_pole": (o.get("dc_against") or {}).get("pole", ""),
                     "dc_threshold": (o.get("dc_against") or {}).get("threshold", 0),
@@ -764,6 +802,7 @@ def run_simulation() -> dict:
                     "karma": state.get("karma"),
                     "factions": dict(state.get("faction_rep", {})),
                     "tags": list(state.get("tags", [])),
+                    "eclats": state.get("eclats", 0),
                 },
             }
         )
