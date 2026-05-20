@@ -269,24 +269,38 @@ def retrieve_skeleton(
 # --- DnD-without-combat mechanics -------------------------------------------
 
 
-def card_options(hit: CardHit, v2_pool: dict[str, dict]) -> tuple[list[dict], str, str, str]:
+def card_options(
+    hit: CardHit, v2_pool: dict[str, dict]
+) -> tuple[list[dict], str, str, str, int, str]:
     """Resolve the options for a card.
 
-    Returns (options, prose_short, prose_long, anchor_motif).
+    Returns (options, prose_short, prose_long, anchor_motif, cardinality, binary_reason).
 
-    If the card's summary has a v2 enriched entry, use enriched_options;
-    otherwise fall back to the raw 3-verb options from the original pool.
+    Phase 15 : cardinality is 2 OR 3 per LLM-judged enrichment. Default to
+    len(options) when the field is absent on legacy entries. ``binary_reason``
+    is the LLM-written one-liner justifying why a beat is binary (empty when
+    ternary).
     """
     summ = (hit.summary or "").strip()
     enriched = v2_pool.get(summ)
     if enriched and enriched.get("enriched_options"):
+        opts = enriched["enriched_options"]
+        declared = enriched.get("cardinality")
+        try:
+            card = int(declared) if declared is not None else len(opts)
+        except (ValueError, TypeError):
+            card = len(opts)
+        card = max(1, min(card, len(opts)))
         return (
-            enriched["enriched_options"],
+            opts[:card],
             enriched.get("prose_short") or summ,
             enriched.get("prose_long") or summ,
             enriched.get("anchor_motif", ""),
+            card,
+            enriched.get("binary_reason", "") or "",
         )
-    return hit.options or [], summ, summ, ""
+    raw_opts = hit.options or []
+    return raw_opts, summ, summ, "", len(raw_opts) or 3, ""
 
 
 def option_is_gated(option: dict, state: dict) -> tuple[bool, str]:
@@ -682,7 +696,7 @@ def run_simulation() -> dict:
         )
         peek = rag.knn(seed_vec, k=1, dedup_summary=True)
         if peek:
-            _opts, _ps, _pl, motif = card_options(peek[0], v2_pool)
+            _opts, _ps, _pl, motif, _card, _br = card_options(peek[0], v2_pool)
             anchor_hint = motif or ""
     except Exception as e:
         log.warning("anchor peek failed: %s", e)
@@ -734,7 +748,7 @@ def run_simulation() -> dict:
     anchor_locked = ""
 
     for i, hit in enumerate(skeleton_hits):
-        options, prose_short, prose_long, motif = card_options(hit, v2_pool)
+        options, prose_short, prose_long, motif, cardinality, binary_reason = card_options(hit, v2_pool)
         if i == 0 and motif:
             anchor_locked = motif
             trace["anchor_motif"] = anchor_locked
@@ -788,6 +802,8 @@ def run_simulation() -> dict:
                 "prose_short": prose_short,
                 "prose_long": prose_long,
                 "anchor_motif": motif,
+                "cardinality": cardinality,
+                "binary_reason": binary_reason,
                 "score": hit.score,
                 "retrieval_ms": per_card_ms[i] if i < len(per_card_ms) else 0,
                 "option_signals": option_signals,

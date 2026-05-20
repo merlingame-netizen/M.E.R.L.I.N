@@ -238,7 +238,7 @@ def simulate_run(
     chosen_factions: Counter[str] = Counter()
     locked_seen = 0
     for hit in selected:
-        options, _ps, _pl, _motif = card_options(hit, v2_pool)
+        options, _ps, _pl, _motif, _card, _br = card_options(hit, v2_pool)
         if not options:
             continue
         opt_idx, option = strategy(options, state, rng)

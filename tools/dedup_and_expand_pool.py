@@ -182,12 +182,14 @@ SYSTEM_PROMPT = """Tu es un game-designer-écrivain pour MERLIN, jeu narratif dr
 Tu reçois une carte canonique (summary court) et tu produis une version enrichie au format JSON STRICT :
 
 {
-  "prose_short": "2 phrases de mise en scène sensorielle, ambiance Brocéliande, 2eme personne",
-  "prose_long":  "4-5 phrases : setup + tension narrative + détail sensoriel + ouverture sur les choix",
+  "prose_short": "2 phrases d'ambiance sensorielle, 2eme personne. NE LISTE PAS d'actions explicites.",
+  "prose_long":  "4-5 phrases : setup + tension narrative + détail sensoriel. La derniere phrase pose la question/dilemme SANS énumérer les options spécifiques.",
   "anchor_motif": "1-3 mots du motif central de la carte (objet, créature, lieu) pour callbacks ultérieurs",
+  "cardinality": 2 ou 3,
+  "binary_reason": "si cardinality=2, justifie en 1 phrase pourquoi la situation est binaire (ex: rencontre franche accepter/refuser, fuir/affronter, parler/se taire). Sinon: chaine vide.",
   "options": [
     {
-      "label": "verbe d'action court 1-2 mots",
+      "label": "verbe d'action court 1-2 mots, doit correspondre exactement au verb",
       "verb": "verbe à l'infinitif minuscule",
       "primary_faction": "druides|anciens|korrigans|niamh|ankou",
       "dc_against": {"pole": "Ordre|Chaos|Liminal|Neutre", "threshold": 15-50},
@@ -198,17 +200,20 @@ Tu reçois une carte canonique (summary court) et tu produis une version enrichi
       "success_prose": "1-2 phrases narratives du résultat positif",
       "partial_prose": "1-2 phrases du résultat mitigé",
       "failure_prose": "1-2 phrases du résultat négatif"
-    },
-    { ... 2 autres options avec factions et stakes différents ... }
+    }
   ]
 }
 
 CONTRAINTES OBLIGATOIRES :
-- 3 options, chacune avec une faction primaire DIFFÉRENTE
-- Au moins 1 option avec un trade-off cross-pole (gain faction A, perte faction B)
-- DC entre 15 (facile commune) et 50 (épique difficile)
-- Effets sous la forme ACTION:CIBLE:VALEUR (verbes : ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, ADD_KARMA, ADD_TAG, PROMISE)
-- Prose en français, 2eme personne du singulier, ton druidique brocéliandien
+- cardinality = 2 si la situation est NATURELLEMENT binaire (accepter/refuser un don, parler/garder le silence, suivre/abandonner, affronter/fuir). Choisis 2 quand 3 sonnerait forcé.
+- cardinality = 3 quand 3 voies distinctes sont organiques (offrir/exiger/échanger, observer/refuser/détourner, etc.).
+- Le nombre d'éléments dans "options" DOIT correspondre exactement à cardinality (2 OU 3, jamais autre).
+- Chaque option doit avoir une faction primaire DIFFERENTE des autres.
+- IMPORTANT : la prose ne doit PAS lister les verbes des options. Ecris l'ambiance et la tension, laisse les boutons révéler les actions concrètes. Pas de "Tu peux X, Y, ou Z" dans prose_long.
+- Au moins 1 option avec un trade-off cross-pole (gain faction A, perte faction B).
+- DC entre 15 (facile commune) et 50 (épique difficile).
+- Effets sous la forme ACTION:CIBLE:VALEUR (verbes : ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, ADD_KARMA, ADD_TAG, PROMISE, ADD_ECLATS).
+- Prose en français, 2eme personne du singulier, ton druidique brocéliandien.
 - AUCUN texte hors JSON. Pas de markdown, pas de commentaire."""
 
 
@@ -255,12 +260,34 @@ def _repair_option(opt: dict, fallback: dict, idx: int) -> dict:
     return out
 
 
+# Phase 15 - pattern detection for prose that promises specific verbs. When
+# the LLM (or the canonical pool's original summary) lists "Tu peux X, Y, Z"
+# the buttons must match those verbs. We strip such sentences from prose so
+# the buttons become the only source of truth for available actions.
+_OPTION_PROMISE_RE = re.compile(
+    r"\s*Tu\s+peux\s+[^.!?]{1,200}[.!?]",
+    re.IGNORECASE,
+)
+
+
+def _scrub_prose(text: str) -> str:
+    """Remove sentences that explicitly list options the buttons don't carry.
+
+    Targets the "Tu peux X, Y, ou Z" pattern that turns into a UI contradiction
+    when the button set is independent. Leaves the rest of the prose untouched.
+    """
+    if not text:
+        return text
+    scrubbed = _OPTION_PROMISE_RE.sub(" ", text)
+    return re.sub(r"\s{2,}", " ", scrubbed).strip()
+
+
 def validate_enriched(payload: dict, canonical: dict) -> tuple[bool, list[str], dict]:
     """Return (ok, warnings, repaired_payload).
 
-    Lenient: as long as we get at least 1 LLM option with the required fields,
-    we pad the rest from the fallback template. The LLM contribution is the
-    prose; structured option fields can be templated.
+    Lenient on prose, strict on cardinality. Accepts 2 OR 3 options as long
+    as the count matches the LLM-declared ``cardinality`` field (default 3 if
+    absent for legacy LLM responses).
     """
     warnings: list[str] = []
     if not isinstance(payload, dict):
@@ -268,44 +295,63 @@ def validate_enriched(payload: dict, canonical: dict) -> tuple[bool, list[str], 
 
     fallback = _fallback_enrichment(canonical)
     fb_options = fallback["options"]
+    fb_cardinality = len(fb_options)
 
     repaired = dict(payload)
-    # Prose: keep LLM prose if present, else fall back
-    repaired["prose_short"] = (payload.get("prose_short") or fallback["prose_short"]).strip()
-    repaired["prose_long"] = (payload.get("prose_long") or fallback["prose_long"]).strip()
+    # Prose: keep LLM prose if present, else fall back. Scrub option-listing.
+    raw_short = (payload.get("prose_short") or fallback["prose_short"]).strip()
+    raw_long = (payload.get("prose_long") or fallback["prose_long"]).strip()
+    repaired["prose_short"] = _scrub_prose(raw_short)
+    repaired["prose_long"] = _scrub_prose(raw_long)
     repaired["anchor_motif"] = (payload.get("anchor_motif") or "").strip()
+    if raw_short != repaired["prose_short"] or raw_long != repaired["prose_long"]:
+        warnings.append("scrubbed 'Tu peux X, Y, Z' option-promising sentence")
 
-    # Options: take what the LLM gave, repair partial ones, pad to 3
+    # Phase 15 - cardinality : LLM declares it, default to 3 for legacy responses.
+    raw_cardinality = payload.get("cardinality")
+    try:
+        cardinality = int(raw_cardinality) if raw_cardinality is not None else 3
+    except (ValueError, TypeError):
+        cardinality = 3
+    if cardinality not in (2, 3):
+        warnings.append(f"invalid cardinality {raw_cardinality} - coerced to 3")
+        cardinality = 3
+    repaired["cardinality"] = cardinality
+    repaired["binary_reason"] = (payload.get("binary_reason") or "").strip()
+
+    # Options: take what the LLM gave, repair partial ones, pad to cardinality.
     options = payload.get("options")
     if not isinstance(options, list):
         options = []
 
     repaired_options: list[dict] = []
     llm_complete_count = 0
-    for i in range(3):
+    for i in range(cardinality):
+        # If fallback has fewer entries, reuse last fallback as padding template.
+        fb_template = fb_options[i] if i < fb_cardinality else fb_options[-1]
         llm_opt = options[i] if i < len(options) else {}
         if isinstance(llm_opt, dict) and all(
             llm_opt.get(f) for f in REQUIRED_OPTION_FIELDS
         ):
             llm_complete_count += 1
-            repaired_options.append(_repair_option(llm_opt, fb_options[i], i))
+            repaired_options.append(_repair_option(llm_opt, fb_template, i))
         elif isinstance(llm_opt, dict) and llm_opt:
             warnings.append(f"option {i}: partial - repaired from template")
-            repaired_options.append(_repair_option(llm_opt, fb_options[i], i))
+            repaired_options.append(_repair_option(llm_opt, fb_template, i))
         else:
             warnings.append(f"option {i}: missing - using template")
-            repaired_options.append(fb_options[i])
+            repaired_options.append(fb_template)
 
     repaired["options"] = repaired_options
 
     # We accept the payload as "ok" if at least the prose came from the LLM
-    # AND we have 3 well-formed options after repair.
+    # AND we have well-formed options matching the cardinality after repair.
     prose_from_llm = bool(payload.get("prose_short")) or bool(payload.get("prose_long"))
     if not prose_from_llm:
         return False, ["no LLM prose at all"] + warnings, repaired
 
     factions = {o.get("primary_faction") for o in repaired_options}
-    if len(factions) < 2:
+    if len(factions) < min(2, cardinality):
         warnings.append(f"options share factions ({factions})")
     return True, warnings, repaired
 
@@ -324,19 +370,40 @@ _FALLBACK_FACTION_KIT: list[dict] = [
 ]
 
 
+def _decide_fallback_cardinality(canonical: dict) -> tuple[int, str]:
+    """Phase 15 heuristic binary detection for fallback entries (no LLM).
+
+    Returns (cardinality, binary_reason). PROMISE and ~50% of NARRATIVE COMMUNE
+    surface as binary (accept/refuse, hold/release). SHOP / EVENT /
+    MERLIN_DIRECT keep 3-option richness. Deterministic on canonical hash.
+    """
+    type_ = (canonical.get("type") or "").upper()
+    rarity = (canonical.get("rarity") or "").upper()
+    if type_ == "PROMISE":
+        return 2, "Une promesse appelle deux voies : la tenir ou la rompre."
+    if type_ == "NARRATIVE" and rarity == "COMMUNE":
+        seed = int(_bucket_hash(canonical), 16) % 2
+        if seed == 0:
+            return 2, "Le moment se resserre sur un choix franc."
+    return 3, ""
+
+
 def _fallback_enrichment(canonical: dict) -> dict:
     """Template fallback when LLM fails. Better than skipping.
 
     Sprint 12.5b: rotate the 5 factions deterministically using bucket_hash
     so a v2 pool with many fallbacks doesn't collapse to anciens-only. Each
     success_effect now also emits an ADD_TAG so inter-beat memory grows.
+    Phase 15 : cardinality is now 2 OR 3 via _decide_fallback_cardinality.
     """
     summary = canonical["canonical_summary"]
     rarity_dc_base = {"COMMUNE": 18, "RARE": 26, "EPIQUE": 38}.get(canonical["rarity"], 22)
 
-    # Deterministic 3-of-5 faction rotation per canonical (Fix 4 lite).
+    cardinality, binary_reason = _decide_fallback_cardinality(canonical)
+
+    # Deterministic N-of-5 faction rotation per canonical (Fix 4 lite).
     rotation_seed = int(_bucket_hash(canonical), 16) % 5
-    picked = [_FALLBACK_FACTION_KIT[(rotation_seed + i) % 5] for i in range(3)]
+    picked = [_FALLBACK_FACTION_KIT[(rotation_seed + i) % 5] for i in range(cardinality)]
 
     # Phase 14 - varied per-verb prose. Each of the 5 fallback verbs gets 3
     # distinct prose tones (success / partial / failure) instead of the
@@ -399,9 +466,11 @@ def _fallback_enrichment(canonical: dict) -> dict:
         })
 
     return {
-        "prose_short": summary,
-        "prose_long": summary,
+        "prose_short": _scrub_prose(summary),
+        "prose_long": _scrub_prose(summary),
         "anchor_motif": "",
+        "cardinality": cardinality,
+        "binary_reason": binary_reason,
         "options": options,
         "_source": "fallback_template",
     }
@@ -424,8 +493,11 @@ def _bucket_hash(canonical: dict) -> str:
 
 
 def _load_existing(path: Path) -> dict[str, dict]:
-    """Index existing canonicals. Only LLM-source entries are reused;
-    fallback entries are retried so a re-run upgrades them."""
+    """Index existing canonicals. Only LLM-source entries with the CURRENT
+    schema are reused ; fallback entries (always) and legacy LLM entries
+    without the Phase 15 ``cardinality`` field are retried so a re-run
+    upgrades them to the binary/ternary co-authored shape.
+    """
     if not path.exists():
         return {}
     try:
@@ -435,8 +507,12 @@ def _load_existing(path: Path) -> dict[str, dict]:
         return {}
     cache: dict[str, dict] = {}
     for e in prev.get("canonicals", []):
-        if e.get("enrichment_source") in ("llm", "llm_partial"):
-            cache[e["canonical_summary"]] = e
+        if e.get("enrichment_source") not in ("llm", "llm_partial"):
+            continue
+        # Phase 15 schema gate : entries must declare cardinality to be reused.
+        if "cardinality" not in e:
+            continue
+        cache[e["canonical_summary"]] = e
     return cache
 
 
@@ -557,6 +633,8 @@ def main() -> int:
             "anchor_motif": enriched.get("anchor_motif", ""),
             "prose_short": enriched.get("prose_short", summary),
             "prose_long": enriched.get("prose_long", summary),
+            "cardinality": enriched.get("cardinality", len(enriched.get("options", []) or []) or 3),
+            "binary_reason": enriched.get("binary_reason", ""),
             "enriched_options": enriched.get("options", []),
             "enrichment_source": enriched.get("_source", "unknown"),
             "llm_duration_s": round(dur, 2),
