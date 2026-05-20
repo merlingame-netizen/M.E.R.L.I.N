@@ -93,14 +93,33 @@ log = logging.getLogger("simulate_human_run_v731")
 
 
 def ollama_post(endpoint: str, payload: dict, timeout: int = 120) -> dict:
+    """POST to Ollama with Phase 16 retry-on-500 (RAM-swap resilience).
+
+    On constrained workstations Ollama returns HTTP 500 ("memory layout
+    cannot be allocated") when swapping between generator and embedder.
+    Retry up to 3 times with 2s/4s backoff before bubbling the error.
+    """
+    from urllib.error import HTTPError
     body = json.dumps(payload).encode("utf-8")
     req = Request(
         f"{OLLAMA_BASE}{endpoint}",
         data=body,
         headers={"Content-Type": "application/json"},
     )
-    with urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8"))
+    last_err: Optional[Exception] = None
+    for attempt in range(3):
+        try:
+            with urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except HTTPError as e:
+            last_err = e
+            if e.code == 500 and attempt < 2:
+                time.sleep(2.0 + 2.0 * attempt)
+                continue
+            raise
+    if last_err is not None:
+        raise last_err
+    raise RuntimeError("ollama_post : exhausted retries with no response")
 
 
 def llm_generate(
@@ -189,16 +208,27 @@ def llm_intro(chosen: dict, anchor_hint: str = "") -> tuple[str, float]:
     return llm_generate(system, user, options={"temperature": 0.7, "num_predict": 220})
 
 
+MAX_MERLIN_DIRECT_PER_RUN: int = 2  # Phase 16 Fix D - Merlin stays rare
+ANCHOR_BLEND_WEIGHT: float = 0.3    # Phase 16 Fix B - fil rouge enforcement
+
+
 def retrieve_skeleton(
     rag: CardsRAG,
     chosen: dict,
     intro_vec,
     n_cards: int,
     rng: random.Random,
+    anchor_hint: str = "",
 ) -> tuple[list[CardHit], list[float], float]:
     """Build the run skeleton with dedup_summary + MMR diversity.
 
     Progressive emotion arc curiosite -> tension -> peur -> fascination -> sagesse.
+
+    Phase 16 :
+      - Fix B : anchor_hint embedding blended into route_vec so retrieval
+        biases toward cards that resonate with the declared fil rouge.
+      - Fix D : MAX_MERLIN_DIRECT_PER_RUN caps Merlin appearances so he
+        stays narratively rare (avoids the 6/16 Merlin-tour audit issue).
     """
     t0 = time.time()
     arc_emotions = ["curiosite", "tension", "peur", "fascination", "sagesse"]
@@ -206,15 +236,27 @@ def retrieve_skeleton(
     excluded: list[str] = []
     seen_summaries: set[str] = set()
     per_card_ms: list[float] = []
+    merlin_direct_count: int = 0  # Fix D counter
 
     query_text = f"{chosen.get('archetype_name', '')} . marche druidique broceliande"
     base_vec = rag.embed_query(query_text)
-    route_vec = rag.compose_route_vec(
-        beat_vec=base_vec,
-        recent_choice_vecs=[],
-        intro_vec=intro_vec,
-        weights=(0.4, 0.0, 0.6),
-    )
+    # Phase 16 Fix B : pre-compute anchor embedding once, blend into every
+    # route_vec recompose. If anchor empty, falls through to original 0.4/0/0.6.
+    anchor_vec = rag.embed_query(anchor_hint) if anchor_hint else None
+    if anchor_vec is not None:
+        route_vec = rag.compose_route_vec(
+            beat_vec=base_vec,
+            recent_choice_vecs=[anchor_vec],
+            intro_vec=intro_vec,
+            weights=(0.4, ANCHOR_BLEND_WEIGHT, 1.0 - 0.4 - ANCHOR_BLEND_WEIGHT),
+        )
+    else:
+        route_vec = rag.compose_route_vec(
+            beat_vec=base_vec,
+            recent_choice_vecs=[],
+            intro_vec=intro_vec,
+            weights=(0.4, 0.0, 0.6),
+        )
 
     for i in range(n_cards):
         emotion = arc_emotions[i * len(arc_emotions) // n_cards]
@@ -232,6 +274,9 @@ def retrieve_skeleton(
         )
         # Drop anything we've already used in this run (by summary, not uid).
         hits = [h for h in hits if (h.summary or "") not in seen_summaries]
+        # Phase 16 Fix D : cap MERLIN_DIRECT to MAX_MERLIN_DIRECT_PER_RUN.
+        if merlin_direct_count >= MAX_MERLIN_DIRECT_PER_RUN:
+            hits = [h for h in hits if (h.type or "").upper() != "MERLIN_DIRECT"]
         if not hits:
             # Relax emotion if starvation.
             hits = rag.knn(
@@ -243,6 +288,8 @@ def retrieve_skeleton(
                 dedup_summary=True,
             )
             hits = [h for h in hits if (h.summary or "") not in seen_summaries]
+            if merlin_direct_count >= MAX_MERLIN_DIRECT_PER_RUN:
+                hits = [h for h in hits if (h.type or "").upper() != "MERLIN_DIRECT"]
         if not hits:
             log.warning("No hits at beat %d - stopping early", i)
             break
@@ -253,15 +300,26 @@ def retrieve_skeleton(
         selected.append(picked)
         excluded.append(picked.card_uid)
         seen_summaries.add(picked.summary or "")
+        if (picked.type or "").upper() == "MERLIN_DIRECT":
+            merlin_direct_count += 1
         per_card_ms.append((time.time() - t_card) * 1000)
 
         picked_vec = rag.embed_query(picked.summary or picked.card_uid)
-        route_vec = rag.compose_route_vec(
-            beat_vec=picked_vec,
-            recent_choice_vecs=[],
-            intro_vec=intro_vec,
-            weights=(0.5, 0.0, 0.5),
-        )
+        # Phase 16 Fix B : keep anchor in the loop so it persists across beats.
+        if anchor_vec is not None:
+            route_vec = rag.compose_route_vec(
+                beat_vec=picked_vec,
+                recent_choice_vecs=[anchor_vec],
+                intro_vec=intro_vec,
+                weights=(0.5, ANCHOR_BLEND_WEIGHT, 1.0 - 0.5 - ANCHOR_BLEND_WEIGHT),
+            )
+        else:
+            route_vec = rag.compose_route_vec(
+                beat_vec=picked_vec,
+                recent_choice_vecs=[],
+                intro_vec=intro_vec,
+                weights=(0.5, 0.0, 0.5),
+            )
 
     return selected, per_card_ms, time.time() - t0
 
@@ -417,6 +475,7 @@ def agent_pick_option(
     options: list[dict],
     state: dict,
     rng: random.Random,
+    recent_verbs: Optional[list[str]] = None,
 ) -> tuple[int, dict, str]:
     """Strategic agent: balance factions while avoiding locked options.
 
@@ -429,9 +488,11 @@ def agent_pick_option(
       faction_continuity:  max 1.2  (raised - identity emerges through repetition)
       balance_bonus:       max 0.6  (lowered - only nudge when one faction
                                      saturates, don't dictate every choice)
-    Net effect: behaves like a thoughtful human - picks Confiant first,
-    leans into a faction once chosen, occasionally branches when sitting
-    on >= 15 rep.
+
+    Phase 16 Fix E (2026-05-20) : ``recent_verbs`` (last 2 verbs chosen) is
+    used to apply a -0.5 score penalty on any option whose verb appears in
+    the window. Prevents the audit-observed 'observer 6x' collapse and forces
+    the character's actions to feel varied.
     """
     if not options:
         return -1, {}, "no options"
@@ -442,6 +503,8 @@ def agent_pick_option(
         main_faction_candidate = max(rep.items(), key=lambda kv: kv[1])
         if main_faction_candidate[1] > 0:
             main_faction = main_faction_candidate[0]
+
+    recent_set: set[str] = {v.lower() for v in (recent_verbs or []) if v}
 
     scored: list[tuple[float, int, dict]] = []
     for i, opt in enumerate(options):
@@ -456,16 +519,16 @@ def agent_pick_option(
             "Risque": 0.8,
             "Eprouve": -0.5,
         }.get(signal, 0.4)
-        # Balance bonus only kicks in if a faction is saturated (rep > 15),
-        # nudging the agent to branch. Otherwise it stays focused.
+        # Balance bonus only kicks in if a faction is saturated (rep > 15).
         balance_bonus = 0.6 if rep_now > 15 else 0.0
-        # Faction continuity : when there's a clear main and we haven't
-        # over-invested, prefer it (helps identity emerge).
         if main_faction and faction == main_faction and rep_now < 25:
             continuity_bonus = 1.2
         else:
             continuity_bonus = 0.0
-        score = signal_score + balance_bonus + continuity_bonus + rng.uniform(0, 0.3)
+        # Phase 16 Fix E : verb-repetition penalty (-0.5 if used in last 2).
+        verb = (opt.get("verb") or "").lower()
+        repetition_penalty = -0.5 if verb and verb in recent_set else 0.0
+        score = signal_score + balance_bonus + continuity_bonus + repetition_penalty + rng.uniform(0, 0.3)
         scored.append((score, i, opt))
 
     if not scored:
@@ -712,9 +775,11 @@ def run_simulation() -> dict:
     intro_vec = rag.embed_query(intro_text or chosen["title"])
     trace["timings_s"]["intro_embed"] = round(time.time() - t0, 3)
 
-    # Skeleton retrieval (kNN with dedup_summary + MMR)
+    # Skeleton retrieval (kNN with dedup_summary + MMR).
+    # Phase 16 Fix B : pass anchor_hint so retrieve_skeleton biases toward
+    # cards that resonate with the declared fil rouge.
     skeleton_hits, per_card_ms, dur_skeleton = retrieve_skeleton(
-        rag, chosen, intro_vec, N_CARDS, rng
+        rag, chosen, intro_vec, N_CARDS, rng, anchor_hint=anchor_hint
     )
     trace["timings_s"]["skeleton_total"] = round(dur_skeleton, 2)
     trace["timings_s"]["skeleton_avg_ms_per_card"] = round(
@@ -746,6 +811,7 @@ def run_simulation() -> dict:
     run_history: list[dict] = []
     prev_verb = ""
     anchor_locked = ""
+    recent_verbs: list[str] = []  # Phase 16 Fix E - last 2 verbs for repetition penalty
 
     for i, hit in enumerate(skeleton_hits):
         options, prose_short, prose_long, motif, cardinality, binary_reason = card_options(hit, v2_pool)
@@ -756,7 +822,11 @@ def run_simulation() -> dict:
         mvt = movement_for_beat(i, len(skeleton_hits))
         trans_prose = transition_prose(i, prev_verb, anchor_locked, mvt)
 
-        opt_idx, option, decision_reason = agent_pick_option(options, state, rng)
+        # Phase 16 Fix E : feed the last 2 verbs so the agent gets a penalty
+        # on repetition (observer-6x collapse fix).
+        opt_idx, option, decision_reason = agent_pick_option(
+            options, state, rng, recent_verbs=recent_verbs[-2:]
+        )
         # Phase 14 - DC scaled by movement.
         dc_result = resolve_dc(option, state, rng, movement=mvt) if option else "failure"
         effects = derive_effects_from_dc(option, dc_result)
@@ -833,6 +903,10 @@ def run_simulation() -> dict:
             }
         )
         prev_verb = option.get("verb", "") or prev_verb
+        # Phase 16 Fix E : track the recent verbs window (sliding, len 2-3).
+        chosen_verb = option.get("verb", "")
+        if chosen_verb:
+            recent_verbs.append(chosen_verb)
         log.info(
             "Beat %d/%d (M%d): %s -> %s -> %s  rep=%s",
             i + 1,

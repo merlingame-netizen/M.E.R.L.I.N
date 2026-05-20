@@ -361,13 +361,65 @@ def validate_enriched(payload: dict, canonical: dict) -> tuple[bool, list[str], 
 #   using bucket_hash for determinism, so no single faction dominates fallbacks.
 # - Fix 5 (tags P50 = 2)                : every fallback success_effect now
 #   includes an ADD_TAG so inter-beat memory accumulates.
-_FALLBACK_FACTION_KIT: list[dict] = [
-    {"label": "Accepter",  "verb": "accueillir", "faction": "anciens",   "pole": "ordre",   "tag": "geste_accueil"},
-    {"label": "Refuser",   "verb": "refuser",    "faction": "ankou",     "pole": "chaos",   "tag": "geste_refus"},
-    {"label": "Observer",  "verb": "observer",   "faction": "druides",   "pole": "ordre",   "tag": "regard_attentif"},
-    {"label": "Detourner", "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_korrigan"},
-    {"label": "Ecouter",   "verb": "ecouter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_niamh"},
-]
+# Phase 16 Fix C (2026-05-20) : 4 alternate kits indexed by pole/emotion of
+# the canonical, so the player no longer sees the same Accepter/Observer/Refuser
+# trio 3+ times per run. Each kit keeps the 5-faction roster so the rotation
+# bias from Sprint 12.5b still holds.
+_FALLBACK_FACTION_KITS: dict[str, list[dict]] = {
+    "default": [
+        {"label": "Accepter",  "verb": "accueillir", "faction": "anciens",   "pole": "ordre",   "tag": "geste_accueil"},
+        {"label": "Refuser",   "verb": "refuser",    "faction": "ankou",     "pole": "chaos",   "tag": "geste_refus"},
+        {"label": "Observer",  "verb": "observer",   "faction": "druides",   "pole": "ordre",   "tag": "regard_attentif"},
+        {"label": "Detourner", "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_korrigan"},
+        {"label": "Ecouter",   "verb": "ecouter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_niamh"},
+    ],
+    # Kit "engage" - physical/active confrontation (chaos pole + tension/peur).
+    "engage": [
+        {"label": "Affronter",  "verb": "affronter",  "faction": "ankou",     "pole": "chaos",   "tag": "geste_defi"},
+        {"label": "Apaiser",    "verb": "apaiser",    "faction": "anciens",   "pole": "ordre",   "tag": "geste_paix"},
+        {"label": "Provoquer",  "verb": "provoquer",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_provoc"},
+        {"label": "Mesurer",    "verb": "mesurer",    "faction": "druides",   "pole": "ordre",   "tag": "regard_mesure"},
+        {"label": "Chanter",    "verb": "chanter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_chant"},
+    ],
+    # Kit "offrir" - giving/exchanging (liminal pole + sagesse/curiosite).
+    "offrir": [
+        {"label": "Offrir",     "verb": "offrir",     "faction": "anciens",   "pole": "ordre",   "tag": "geste_offrande"},
+        {"label": "Garder",     "verb": "garder",     "faction": "ankou",     "pole": "chaos",   "tag": "geste_retenue"},
+        {"label": "Echanger",   "verb": "échanger",   "faction": "druides",   "pole": "ordre",   "tag": "regard_echange"},
+        {"label": "Detourner",  "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_detour"},
+        {"label": "Negocier",   "verb": "négocier",   "faction": "niamh",     "pole": "liminal", "tag": "appel_negoce"},
+    ],
+    # Kit "explorer" - movement/discovery (neutre pole + fascination/curiosite).
+    "explorer": [
+        {"label": "Suivre",     "verb": "suivre",     "faction": "druides",   "pole": "ordre",   "tag": "piste_druidique"},
+        {"label": "S'arreter",  "verb": "s'arreter",  "faction": "anciens",   "pole": "ordre",   "tag": "geste_pause"},
+        {"label": "Fuir",       "verb": "fuir",       "faction": "korrigans", "pole": "chaos",   "tag": "ruse_fuite"},
+        {"label": "Affronter",  "verb": "affronter",  "faction": "ankou",     "pole": "chaos",   "tag": "geste_defi"},
+        {"label": "Pleurer",    "verb": "pleurer",    "faction": "niamh",     "pole": "liminal", "tag": "appel_larmes"},
+    ],
+}
+
+
+def _pick_kit_id(canonical: dict) -> str:
+    """Phase 16 Fix C : pick the verb kit that suits the canonical's pole+emotion.
+
+    Deterministic on (pole, emotion) so the same canonical always uses the
+    same kit. The mapping favours thematic fit ; if no rule matches we fall
+    back to 'default' (historical Accepter/Refuser/Observer).
+    """
+    pole = (canonical.get("pole") or "").lower()
+    emotion = (canonical.get("emotion") or "").lower()
+    if pole == "chaos" and emotion in ("tension", "peur", "colere"):
+        return "engage"
+    if pole == "liminal" and emotion in ("sagesse", "curiosite", "fascination"):
+        return "offrir"
+    if pole == "neutre" and emotion in ("fascination", "curiosite", "tension"):
+        return "explorer"
+    return "default"
+
+
+# Backwards-compat alias : old callers reference _FALLBACK_FACTION_KIT.
+_FALLBACK_FACTION_KIT: list[dict] = _FALLBACK_FACTION_KITS["default"]
 
 
 def _decide_fallback_cardinality(canonical: dict) -> tuple[int, str]:
@@ -401,9 +453,14 @@ def _fallback_enrichment(canonical: dict) -> dict:
 
     cardinality, binary_reason = _decide_fallback_cardinality(canonical)
 
+    # Phase 16 Fix C : pick the verb kit thematically (pole+emotion). The
+    # historical "default" kit is still the fallback, keeping Sprint 12.5b's
+    # faction rotation intact for entries that don't match a theme.
+    kit_id = _pick_kit_id(canonical)
+    kit = _FALLBACK_FACTION_KITS[kit_id]
     # Deterministic N-of-5 faction rotation per canonical (Fix 4 lite).
     rotation_seed = int(_bucket_hash(canonical), 16) % 5
-    picked = [_FALLBACK_FACTION_KIT[(rotation_seed + i) % 5] for i in range(cardinality)]
+    picked = [kit[(rotation_seed + i) % 5] for i in range(cardinality)]
 
     # Phase 14 - varied per-verb prose. Each of the 5 fallback verbs gets 3
     # distinct prose tones (success / partial / failure) instead of the
@@ -550,6 +607,16 @@ def main() -> int:
         action="store_true",
         help="Group + report stats only, no LLM calls",
     )
+    parser.add_argument(
+        "--type",
+        type=str,
+        default=None,
+        help=(
+            "Phase 16 Fix F : restrict processing to canonicals of this type "
+            "(NARRATIVE|EVENT|SHOP|MERLIN_DIRECT|PROMISE). Combined with the "
+            "cache invalidation gate, lets you regen one type at a time."
+        ),
+    )
     args = parser.parse_args()
 
     if not INPUT_PATH.exists():
@@ -577,6 +644,36 @@ def main() -> int:
     existing = _load_existing(OUTPUT_PATH)
     log.info("Cache: %d existing canonicals", len(existing))
 
+    # Phase 16 Fix F : when --type is set, also load the previous pool so we
+    # can preserve OUT-of-scope canonicals verbatim, AND invalidate matching
+    # canonicals from the cache so they get re-LLMed.
+    fallback_preserved: dict[str, dict] = {}
+    if args.type and OUTPUT_PATH.exists():
+        try:
+            prev_pool = json.loads(OUTPUT_PATH.read_text(encoding="utf-8"))
+            for entry in prev_pool.get("canonicals", []):
+                fallback_preserved[entry.get("canonical_summary", "")] = entry
+            log.info(
+                "Type filter active (%s) - preserving %d untouched canonicals from previous pool",
+                args.type, len(fallback_preserved),
+            )
+        except (json.JSONDecodeError, OSError) as e:
+            log.warning("Could not load previous pool for type-filter preservation: %s", e)
+        type_upper = args.type.upper()
+        cache_canonical_to_type = {
+            c["canonical_summary"]: (c.get("type") or "").upper() for c in canonicals
+        }
+        cache_drops = [
+            s for s in list(existing.keys())
+            if cache_canonical_to_type.get(s, "") == type_upper
+        ]
+        for s in cache_drops:
+            del existing[s]
+        log.info(
+            "Type filter : invalidated %d cache entries for re-LLM (type=%s)",
+            len(cache_drops), args.type,
+        )
+
     out: list[dict] = []
     stats = {"bucket_count": bucket_count, "llm_success": 0, "llm_fallback": 0}
     process_count = args.limit or bucket_count
@@ -584,6 +681,13 @@ def main() -> int:
 
     for idx, canonical in enumerate(canonicals[:process_count]):
         summary = canonical["canonical_summary"]
+        # Phase 16 Fix F : skip canonicals outside the type filter, preserving
+        # whatever entry was already in the pool. This lets us regen one type
+        # at a time without losing the rest of the pool.
+        if args.type and (canonical.get("type") or "").upper() != args.type.upper():
+            if summary in fallback_preserved:
+                out.append(fallback_preserved[summary])
+            continue
         if summary in existing:
             out.append(existing[summary])
             continue

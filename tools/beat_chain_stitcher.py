@@ -59,6 +59,11 @@ log = logging.getLogger("beat_chain_stitcher")
 
 
 def _ollama_generate(system: str, user: str, timeout: int) -> tuple[Optional[str], float]:
+    """Phase 16 : retries on HTTP 500 (RAM-swap OOM on constrained hosts).
+    The stitcher fires N parallel calls so swap pressure is highest here ;
+    survives 2 transient 500s before degrading to fallback transition.
+    """
+    from urllib.error import HTTPError
     payload = {
         "model": STITCHER_MODEL,
         "system": system,
@@ -74,11 +79,26 @@ def _ollama_generate(system: str, user: str, timeout: int) -> tuple[Optional[str
         headers={"Content-Type": "application/json"},
     )
     t0 = time.time()
-    try:
-        with urlopen(req, timeout=timeout) as r:
-            resp = json.loads(r.read().decode("utf-8"))
-    except (URLError, TimeoutError, Exception) as e:
-        log.warning("stitch call failed: %s", e)
+    resp: Optional[dict] = None
+    last_exc: Optional[Exception] = None
+    for attempt in range(3):
+        try:
+            with urlopen(req, timeout=timeout) as r:
+                resp = json.loads(r.read().decode("utf-8"))
+            break
+        except HTTPError as e:
+            last_exc = e
+            if e.code == 500 and attempt < 2:
+                time.sleep(2.0 + 2.0 * attempt)
+                continue
+            log.warning("stitch HTTP %s (final): %s", e.code, e.reason)
+            return None, time.time() - t0
+        except (URLError, TimeoutError, Exception) as e:
+            last_exc = e
+            log.warning("stitch call failed: %s", e)
+            return None, time.time() - t0
+    if resp is None:
+        log.warning("stitch exhausted retries: %s", last_exc)
         return None, time.time() - t0
     text = (resp.get("response", "") or "").strip()
     return text or None, time.time() - t0
@@ -90,12 +110,16 @@ def _ollama_generate(system: str, user: str, timeout: int) -> tuple[Optional[str
 SYSTEM_PROMPT = (
     "Tu es un narrateur druidique pour MERLIN (Broceliande). "
     "Tu ecris une transition narrative ENTRE deux beats d'une marche. "
-    "Exactement 2 phrases courtes, 2eme personne. "
-    "Tu dois lier l'apres-coup du choix precedent (verbe deja accompli) "
-    "et l'arrivee de la scene suivante. "
-    "Tu peux rappeler le motif d'ancrage si donne. "
-    "Ne donne PAS d'action au joueur, ne pose PAS de question, ne revele PAS l'option a venir. "
-    "Pas de markdown, pas de salutation. Reponse brute."
+    "REGLES STRICTES :\n"
+    "1. Exactement 2 phrases courtes, 2eme personne du singulier.\n"
+    "2. La PREMIERE phrase DOIT cascader l'apres-coup du choix precedent "
+    "(reprendre l'echo emotionnel ou physique du verbe deja accompli et de son issue : "
+    "succes laisse un goût d'aplomb, partial laisse un doute, failure laisse une amertume).\n"
+    "3. La DEUXIEME phrase DOIT amener la nouvelle scene en posant l'ambiance, "
+    "SANS reveler les options du joueur.\n"
+    "4. Si le motif d'ancrage est fourni, fais-le resonner avec subtilite (1 mot suffit).\n"
+    "5. Pas de markdown, pas de salutation, pas de question, pas d'action prescriptible. "
+    "Reponse brute, 2 phrases."
 )
 
 
@@ -103,15 +127,32 @@ def _build_user(prev_beat: dict, next_beat: dict, anchor: str, movement: int) ->
     prev_verb = prev_beat.get("chosen_option", {}).get("verb", "")
     prev_label = prev_beat.get("chosen_option", {}).get("label", "")
     prev_outcome = prev_beat.get("dc_result", "")
+    prev_resolution = (prev_beat.get("resolution_prose", "") or "")[:200]
     next_summary = next_beat.get("summary", "")[:200]
+    # Phase 16 Fix A : explicit echo material. Giving the LLM the concrete
+    # resolution sentence + a canonical emotional hint makes cascading much
+    # easier than reasoning from "failure" alone (audit showed 0/15 bridges
+    # referenced the prior beat with the old prompt).
+    outcome_hint = {
+        "success": "Le geste a porte. Tu sens un aplomb tranquille.",
+        "partial":  "Le geste s'est fait a moitie. Quelque chose reste suspendu.",
+        "failure":  "Le geste s'est brise. Un gout d'amertume reste en bouche.",
+    }.get(prev_outcome, "")
     lines = [
         f"Mouvement narratif courant : M{movement}",
         f"Tu venais de : {prev_label} ({prev_verb}) - issue {prev_outcome}.",
-        f"Maintenant : {next_summary}",
     ]
+    if prev_resolution:
+        lines.append(f"Echo de ce qui s'est passe : {prev_resolution}")
+    if outcome_hint:
+        lines.append(f"Echo emotionnel attendu : {outcome_hint}")
+    lines.append(f"Maintenant tu arrives ici : {next_summary}")
     if anchor:
-        lines.append(f"Motif d'ancrage du run : {anchor} (a rappeler avec subtilite si naturel).")
-    lines.append("\nEcris la transition de 2 phrases.")
+        lines.append(f"Motif d'ancrage du run : {anchor} (fais-le resonner en 1 mot si naturel).")
+    lines.append("")
+    lines.append(
+        "Ecris EXACTEMENT 2 phrases : la premiere cascade l'echo, la seconde amene la nouvelle scene."
+    )
     return "\n".join(lines)
 
 
