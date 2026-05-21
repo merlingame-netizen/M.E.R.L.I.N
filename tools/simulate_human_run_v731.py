@@ -1062,8 +1062,139 @@ pre { background:var(--bg-soft); padding:12px; border-radius:4px; overflow-x:aut
 .scenario-view p { margin:10px 0; }
 .scenario-view p:first-child { margin-top:0; }
 .scenario-view p:last-child { margin-bottom:0; }
+/* Phase 18 - Game-ready cards (2026-05-21) */
+body { max-width:1100px; font-family:'Segoe UI','Inter',sans-serif; }
+h1 { font-family:'Cinzel','Georgia',serif; letter-spacing:1.5px; font-weight:600; }
+h2 { font-family:'Cinzel','Georgia',serif; letter-spacing:0.5px; font-weight:500; }
+.game-card {
+  background:linear-gradient(155deg, #2a2010 0%, #1f1808 75%, #18120a 100%);
+  border:1px solid var(--gold-dim);
+  border-radius:10px;
+  padding:18px 22px;
+  margin:20px 0;
+  box-shadow:0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,168,74,0.18);
+  position:relative;
+  overflow:hidden;
+}
+.game-card.binary-card { border-color:#a47edc; }
+.game-card::before {
+  content:'';
+  position:absolute; top:-2px; left:-2px; right:-2px; height:3px;
+  background:linear-gradient(90deg, var(--gold), transparent);
+  border-radius:10px 10px 0 0;
+  opacity:0.6;
+}
+.game-card .gc-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.game-card .gc-title { font-family:'Cinzel','Georgia',serif; color:var(--gold); font-size:15px; font-weight:600; }
+.game-card .gc-glyph { font-size:24px; color:var(--gold); opacity:0.7; font-family:'Segoe UI Symbol','Apple Symbols',sans-serif; line-height:1; }
+.game-card .gc-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+.game-card .gc-prose { color:var(--parchment); margin:12px 0 14px 0; font-size:14px; line-height:1.55; font-family:'Georgia',serif; }
+.game-card .gc-options { display:grid; grid-template-columns:1fr; gap:8px; margin:12px 0 0 0; }
+.game-card.binary-card .gc-options { grid-template-columns:1fr 1fr; }
+.game-card .gc-option {
+  background:rgba(20,14,6,0.7);
+  border:1px solid var(--gold-dim);
+  border-radius:8px;
+  padding:10px 14px;
+  position:relative;
+  transition:transform 0.15s, border-color 0.15s;
+}
+.game-card .gc-option:hover { transform:translateY(-1px); border-color:var(--gold); }
+.game-card .gc-option.chosen { border-color:var(--gold); background:rgba(42,32,16,0.85); box-shadow:0 0 0 2px rgba(212,168,74,0.25); }
+.game-card .gc-option .gco-label { font-weight:600; color:var(--gold); font-size:13.5px; display:block; margin-bottom:4px; }
+.game-card .gc-option .gco-meta { font-size:10px; color:var(--text-dim); font-family:'Consolas',monospace; }
+.signal-Confiant.pulse { animation:pulseGreen 2.4s ease-in-out infinite; }
+@keyframes pulseGreen { 0%,100% { box-shadow:0 0 0 0 rgba(111,191,115,0.5); } 50% { box-shadow:0 0 0 4px rgba(111,191,115,0); } }
+.gc-resolution { margin-top:14px; padding:10px 14px; background:rgba(15,10,5,0.7); border-radius:8px; border-left:3px solid var(--signal-confiant); }
+.gc-resolution.r-partial { border-left-color:var(--signal-risque); }
+.gc-resolution.r-failure { border-left-color:var(--signal-eprouve); }
+.gc-resolution .gcr-prose { font-style:italic; color:var(--parchment); margin:6px 0; font-size:13px; }
+.gc-effects-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:8px; }
+.gc-effect-chip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(212,168,74,0.12); border:1px solid var(--gold-dim); border-radius:12px; font-family:'Consolas',monospace; font-size:10px; color:var(--gold); }
+.gc-binary-note { font-size:11px; color:#c1a8e8; font-style:italic; margin:4px 0 0 0; padding-left:10px; border-left:2px solid #a47edc; }
+.gc-bridge {
+  font-style:italic; color:var(--text-dim); font-size:13px; line-height:1.55;
+  margin:-6px 0 16px 0; padding:10px 16px;
+  background:rgba(20,14,6,0.5); border-left:2px dashed var(--gold-dim);
+  border-radius:4px;
+}
+.gc-bridge .gb-tag { display:inline-block; padding:1px 6px; background:rgba(111,191,115,0.18); color:var(--signal-confiant); border-radius:4px; font-size:9px; font-style:normal; margin-right:6px; vertical-align:middle; }
+.movement-ribbon { display:flex; gap:8px; overflow-x:auto; padding:14px 8px; background:rgba(15,10,5,0.5); border-radius:8px; margin:14px 0; }
+.movement-ribbon .mr-card {
+  flex-shrink:0; min-width:100px; padding:10px; background:var(--bg-soft);
+  border-radius:6px; border:1px solid var(--gold-dim); font-size:11px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.movement-ribbon .mr-card.binary { border-color:#a47edc; }
+.movement-ribbon .mr-card.r-success { border-bottom:3px solid var(--signal-confiant); }
+.movement-ribbon .mr-card.r-partial { border-bottom:3px solid var(--signal-risque); }
+.movement-ribbon .mr-card.r-failure { border-bottom:3px solid var(--signal-eprouve); }
+.movement-ribbon .mr-beat { color:var(--gold); font-weight:600; font-size:11px; }
+.movement-ribbon .mr-glyph { color:var(--gold); opacity:0.7; font-size:16px; line-height:1; }
+.movement-ribbon .mr-verb { color:var(--parchment); font-size:11px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin:16px 0; }
+.stat-card { background:linear-gradient(135deg, var(--bg-soft) 0%, rgba(20,14,6,0.9) 100%); border:1px solid var(--gold-dim); border-radius:8px; padding:12px 14px; }
+.stat-card .sc-label { color:var(--text-dim); font-size:10px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.stat-card .sc-value { color:var(--gold); font-size:22px; font-weight:600; font-family:'Cinzel','Georgia',serif; }
+.stat-card .sc-sub { color:var(--parchment); font-size:11px; margin-top:2px; }
+.stat-card .sc-spark { margin-top:6px; }
+.gco-signal-pill { display:inline-block; padding:2px 10px; border-radius:10px; font-size:10px; font-weight:600; }
 </style>
 """
+
+
+# Phase 18 - Game-ready helpers (2026-05-21).
+# Ogham unicode glyphs per emotion : evoke the druidic alphabet without
+# requiring a custom font. Falls back to ᚐ (Ailm) for unknown emotions.
+_OGHAM_GLYPH_BY_EMOTION: dict[str, str] = {
+    "curiosite":   "ᚁ",  # ᚁ Beith - birch, new beginnings
+    "tension":     "ᚇ",  # ᚇ Duir - oak, strength
+    "peur":        "ᚆ",  # ᚆ Uath - hawthorn, fear
+    "fascination": "ᚉ",  # ᚉ Coll - hazel, wisdom
+    "sagesse":     "ᚉ",  # ᚉ Coll - hazel
+    "colere":      "ᚎ",  # ᚎ Straif - blackthorn
+    "tristesse":   "ᚌ",  # ᚌ Gort - ivy
+    "joie":        "ᚑ",  # ᚑ Onn - gorse
+}
+
+
+def _ogham_glyph(emotion: str) -> str:
+    """Return a unicode ogham character for the emotion (Phase 18 visual)."""
+    return _OGHAM_GLYPH_BY_EMOTION.get((emotion or "").lower(), "ᚐ")  # ᚐ Ailm default
+
+
+def _sparkline_svg(values: list[float], color: str = "#d4a84a",
+                   width: int = 110, height: int = 24,
+                   fill_color: Optional[str] = None) -> str:
+    """Inline SVG polyline sparkline (Phase 18). Returns '' if values empty."""
+    if not values or len(values) < 2:
+        return ""
+    mn, mx = min(values), max(values)
+    rng = (mx - mn) or 1.0
+    n = len(values)
+    pts: list[str] = []
+    for i, v in enumerate(values):
+        x = i * width / (n - 1)
+        y = height - ((v - mn) / rng) * (height - 4) - 2
+        pts.append(f"{x:.1f},{y:.1f}")
+    points = " ".join(pts)
+    fill_path = ""
+    if fill_color:
+        first_x = 0
+        last_x = width
+        fill_pts = f"{first_x},{height} " + points + f" {last_x},{height}"
+        fill_path = (
+            f"<polygon fill='{fill_color}' fill-opacity='0.18' "
+            f"points='{fill_pts}'/>"
+        )
+    return (
+        f"<svg width='{width}' height='{height}' "
+        f"style='display:inline-block;vertical-align:middle;'>"
+        f"{fill_path}"
+        f"<polyline fill='none' stroke='{color}' stroke-width='1.8' "
+        f"stroke-linecap='round' stroke-linejoin='round' "
+        f"points='{points}'/></svg>"
+    )
 
 
 def render_html(trace: dict) -> str:
@@ -1168,37 +1299,67 @@ def render_html(trace: dict) -> str:
         "Le decoupage en cartes, options et mecaniques apparait plus bas.</p>"
     )
 
-    # KPIs - Phase 15.5 enriched : binary count, eclats, signal split, S/P/F.
+    # Phase 18 - KPI stat-cards with sparklines.
     t = trace.get("timings_s", {})
-    h.append("<div>")
-    h.append(f"<span class='kpi'><span class='val'>{t.get('total','-')}s</span><br><span class='lbl'>Total wall time</span></span>")
-    h.append(f"<span class='kpi'><span class='val'>{trace.get('unique_summaries','-')}/{trace.get('n_cards','-')}</span><br><span class='lbl'>Unique summaries</span></span>")
+    life_path = [int(b.get("state_after", {}).get("life") or 80) for b in beats]
+    karma_path = [int(b.get("state_after", {}).get("karma") or 0) for b in beats]
+    v2 = trace.get("v2_pool_stats", {})
+
+    h.append("<div class='kpi-grid'>")
     h.append(
-        f"<span class='kpi'><span class='val'>{card_dist.get(2,0)}/{n_beats}</span>"
-        f"<br><span class='lbl'>Binary beats</span></span>"
+        f"<div class='stat-card'><div class='sc-label'>Wall time</div>"
+        f"<div class='sc-value'>{t.get('total','-')}<span style='font-size:13px;'>s</span></div>"
+        f"<div class='sc-sub'>LLM {t.get('llm_total','-')}s / kNN {t.get('skeleton_avg_ms_per_card','-')}ms</div></div>"
     )
     h.append(
-        f"<span class='kpi'><span class='val'>{last_eclats}</span>"
-        f"<br><span class='lbl'>Eclats accumules</span></span>"
+        f"<div class='stat-card'><div class='sc-label'>Beats joues</div>"
+        f"<div class='sc-value'>{n_beats}</div>"
+        f"<div class='sc-sub'>Unique summaries {trace.get('unique_summaries','-')}/{trace.get('n_cards','-')}</div></div>"
     )
     h.append(
-        f"<span class='kpi'><span class='val'>"
+        f"<div class='stat-card'><div class='sc-label'>Binaires</div>"
+        f"<div class='sc-value'>{card_dist.get(2,0)}<span style='font-size:13px;color:var(--text-dim);'>/{n_beats}</span></div>"
+        f"<div class='sc-sub'>Pool : 13/90 binary canonicals</div></div>"
+    )
+    spark_eclats = _sparkline_svg(eclats_path, color="#d4a84a", fill_color="#d4a84a") if eclats_path else ""
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Eclats</div>"
+        f"<div class='sc-value'>{last_eclats}</div>"
+        f"<div class='sc-spark'>{spark_eclats}</div></div>"
+    )
+    spark_life = _sparkline_svg(life_path, color="#6fbf73", fill_color="#6fbf73")
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Vie</div>"
+        f"<div class='sc-value'>{life_path[-1] if life_path else '-'}</div>"
+        f"<div class='sc-spark'>{spark_life}</div></div>"
+    )
+    spark_karma = _sparkline_svg(karma_path, color="#a47edc", fill_color="#a47edc")
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Karma</div>"
+        f"<div class='sc-value'>{karma_path[-1] if karma_path else '-'}</div>"
+        f"<div class='sc-spark'>{spark_karma}</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Signaux Conf/Risq/Epro</div>"
+        f"<div class='sc-value' style='font-size:16px;'>"
         f"{100*sig_dist['Confiant']/sig_total:.0f}/"
         f"{100*sig_dist['Risque']/sig_total:.0f}/"
-        f"{100*sig_dist['Eprouve']/sig_total:.0f}%</span>"
-        f"<br><span class='lbl'>Conf/Risq/Epro</span></span>"
+        f"{100*sig_dist['Eprouve']/sig_total:.0f}<span style='font-size:11px;color:var(--text-dim);'>%</span>"
+        f"</div>"
+        f"<div class='sc-sub'>cible : Risque dominant</div></div>"
     )
     h.append(
-        f"<span class='kpi'><span class='val'>"
-        f"{out_dist['success']}/{out_dist['partial']}/{out_dist['failure']}"
-        f"</span><br><span class='lbl'>S/P/F outcomes</span></span>"
+        f"<div class='stat-card'><div class='sc-label'>Outcomes S/P/F</div>"
+        f"<div class='sc-value' style='font-size:16px;'>"
+        f"<span style='color:var(--signal-confiant);'>{out_dist['success']}</span>/"
+        f"<span style='color:var(--signal-risque);'>{out_dist['partial']}</span>/"
+        f"<span style='color:var(--signal-eprouve);'>{out_dist['failure']}</span></div>"
+        f"<div class='sc-sub'>{out_dist['success']*100//max(1,n_beats)}% success rate</div></div>"
     )
-    h.append(f"<span class='kpi'><span class='val'>{t.get('skeleton_avg_ms_per_card','-')} ms</span><br><span class='lbl'>Avg kNN/card</span></span>")
-    h.append(f"<span class='kpi'><span class='val'>{t.get('llm_total','-')}s</span><br><span class='lbl'>LLM time</span></span>")
-    v2 = trace.get("v2_pool_stats", {})
     h.append(
-        f"<span class='kpi'><span class='val'>{v2.get('llm_success',0)}/{v2.get('enriched_count',0)}</span>"
-        f"<br><span class='lbl'>v2 LLM-source / total</span></span>"
+        f"<div class='stat-card'><div class='sc-label'>Pool LLM yield</div>"
+        f"<div class='sc-value'>{v2.get('llm_success',0)}<span style='font-size:13px;color:var(--text-dim);'>/{v2.get('enriched_count',0)}</span></div>"
+        f"<div class='sc-sub'>+{v2.get('llm_fallback',0)} fallback</div></div>"
     )
     h.append("</div>")
 
@@ -1311,17 +1472,20 @@ def render_html(trace: dict) -> str:
     h.append("<h2>5. Intro (LLM, foreshadows anchor)</h2>")
     h.append(f"<div class='card'><div class='prose'>{e(trace.get('intro',''))}</div></div>")
 
-    # 6. Movement timeline
-    h.append("<h2>6. Movement timeline (5-movement narrative model)</h2>")
-    h.append("<div class='timeline'>")
+    # 6. Movement timeline — Phase 18 game-ready ribbon.
+    h.append("<h2>6. Movement timeline (ruban)</h2>")
+    h.append("<div class='movement-ribbon'>")
     for c in trace.get("cards_played", []):
         ck = int(c.get("cardinality", 3))
-        card_tag = "2 voies" if ck == 2 else "3 voies"
+        binary_cls = " binary" if ck == 2 else ""
+        result_cls = f" r-{c['dc_result']}"
+        glyph = _ogham_glyph(c.get("emotion", ""))
         h.append(
-            f"<div class='timeline-cell'>B{c['beat']} M{c['movement']} "
-            f"<span style='color:var(--text-dim);font-size:9px;'>{card_tag}</span> "
-            f"{e(c.get('chosen_option',{}).get('verb',''))} "
-            f"<span class='dc-result dc-{c['dc_result']}'>{c['dc_result']}</span></div>"
+            f"<div class='mr-card{binary_cls}{result_cls}'>"
+            f"<div class='mr-beat'>B{c['beat']} <span class='mr-glyph'>{glyph}</span></div>"
+            f"<div style='color:var(--text-dim);font-size:9px;'>M{c['movement']} {ck}V</div>"
+            f"<div class='mr-verb'>{e(c.get('chosen_option',{}).get('verb',''))}</div>"
+            f"</div>"
         )
     h.append("</div>")
 
@@ -1348,86 +1512,93 @@ def render_html(trace: dict) -> str:
         )
     h.append("</table>")
 
-    # 7. Per-card breakdown
-    h.append("<h2>7. Cards played (kNN retrieval + DnD-check + enriched prose)</h2>")
+    # 7. Per-card breakdown - Phase 18 game-card structure.
+    h.append("<h2>7. Cards played</h2>")
     for i, c in enumerate(trace.get("cards_played", []) or []):
         card_n = int(c.get("cardinality", len(c.get("option_signals", []) or [])) or 3)
         card_label = "BINAIRE" if card_n == 2 else f"{card_n} VOIES"
-        # Phase 15.5 : highlight binary cards via class.
-        card_class = "card binary-card" if card_n == 2 else "card"
+        card_class = "game-card binary-card" if card_n == 2 else "game-card"
+        glyph = _ogham_glyph(c.get("emotion", ""))
+        # Bridge BEFORE the card (Phase 18 visual flow).
+        llm_bridge = c.get("transition_prose_llm")
+        if llm_bridge and c['beat'] > 1:
+            h.append(
+                f"<div class='gc-bridge'><span class='gb-tag'>LLM</span>{e(llm_bridge)}</div>"
+            )
+        elif c.get("transition_prose") and c['beat'] > 1:
+            h.append(f"<div class='gc-bridge'>{e(c['transition_prose'])}</div>")
         h.append(f"<div class='{card_class}'>")
         card_badge_class = "badge badge-binary" if card_n == 2 else "badge badge-ternary"
+        h.append("<div class='gc-header'>")
+        emotion_tt = e(c.get("emotion", ""))
         h.append(
-            f"<div class='header'>Beat {c['beat']} (M{c['movement']}) - "
+            f"<div><div class='gc-title'>Beat {c['beat']} · M{c['movement']}</div>"
+            f"<div class='gc-tags'>"
             f"<span class='badge'>{e(c.get('type',''))}</span>"
             f"<span class='badge'>{e(c.get('rarity',''))}</span>"
             f"<span class='badge'>{e(c.get('pole',''))}</span>"
-            f"<span class='badge'>{e(c.get('emotion',''))}</span>"
+            f"<span class='badge'>{emotion_tt}</span>"
             f"<span class='{card_badge_class}'>{card_label}</span>"
-            f"kNN {c.get('retrieval_ms',0):.1f} ms - score {c.get('score',0):.3f}"
-            f"</div>"
+            f"</div></div>"
+            f"<div class='gc-glyph' title='{emotion_tt}'>{glyph}</div>"
         )
+        h.append("</div>")
         if card_n == 2 and c.get("binary_reason"):
-            h.append(
-                f"<div class='binary-note'>Binaire : {e(c['binary_reason'])}</div>"
-            )
-        # Sprint 11.5 - prefer LLM-stitched bridge when available, else template.
-        llm_bridge = c.get("transition_prose_llm")
-        if llm_bridge:
-            h.append(
-                f"<div class='transition'><span class='badge'>LLM</span> {e(llm_bridge)}</div>"
-            )
-        elif c.get("transition_prose"):
-            h.append(f"<div class='transition'>{e(c['transition_prose'])}</div>")
-        # Prefer prose_long over raw summary when available.
+            h.append(f"<div class='gc-binary-note'>Binaire : {e(c['binary_reason'])}</div>")
         prose_body = c.get("prose_long") or c.get("summary") or ""
-        h.append(f"<div class='prose'>{e(prose_body)}</div>")
+        h.append(f"<div class='gc-prose'>{e(prose_body)}</div>")
 
-        # Options
-        h.append("<div class='options'>")
+        # Options grid (Phase 18 game-card layout).
+        h.append("<div class='gc-options'>")
         for j, sig in enumerate(c.get("option_signals", [])):
             is_chosen = j == c.get("chosen_option_idx", -1)
-            klass = "option chosen" if is_chosen else "option"
+            klass = "gc-option chosen" if is_chosen else "gc-option"
+            signal_name = sig.get('signal','-')
+            pulse_cls = " pulse" if signal_name == "Confiant" else ""
             h.append(f"<div class='{klass}'>")
             h.append(
-                f"<span class='label'>{e(sig.get('label','?'))}</span> "
-                f"<span class='signal signal-{sig.get('signal','-')}'>"
-                f"{sig.get('signal','-')}</span>"
+                f"<span class='gco-label'>{e(sig.get('label','?'))}</span>"
+                f"<span class='gco-signal-pill signal-{signal_name}{pulse_cls}'>{signal_name}</span>"
             )
             if sig.get("gate_hint"):
                 h.append(f" <span class='tags'>[verrouille: {e(sig['gate_hint'])}]</span>")
             cost = sig.get("cost") or {}
             cost_str = ", ".join(f"{k}:{v}" for k, v in cost.items() if v)
             h.append(
-                f"<div class='meta'>verbe={e(sig.get('verb',''))} - "
-                f"faction={e(sig.get('faction',''))} - "
-                f"DC vs {e(sig.get('dc_pole',''))} (caché)"
-                + (f" - cout: {e(cost_str)}" if cost_str else "")
+                f"<div class='gco-meta'>verbe={e(sig.get('verb',''))} · "
+                f"{e(sig.get('faction',''))} · DC vs {e(sig.get('dc_pole',''))}"
+                + (f" · cout {e(cost_str)}" if cost_str else "")
                 + "</div>"
             )
             h.append("</div>")
         h.append("</div>")
 
-        # Resolution
+        # Resolution - Phase 18 styled outcome panel.
         dc = c.get("dc_result", "-")
-        # Phase 15.5 : surface the eclats gain inline so the player sees the
-        # reward connect to the success outcome.
-        gain_html = ""
         gain_n = eclats_gains[i] if i < len(eclats_gains) else 0
-        if gain_n > 0:
-            gain_html = f" <span class='eclats-gain'>+{gain_n} eclats</span>"
+        gain_html = f" <span class='eclats-gain'>+{gain_n} eclats</span>" if gain_n > 0 else ""
+        res_class = f"gc-resolution r-{dc}"
         h.append(
-            f"<div class='resolution'>"
-            f"<b>Resolution :</b> <span class='dc-result dc-{dc}'>{dc}</span>{gain_html}<br>"
-            f"<i>{e(c.get('resolution_prose',''))}</i>"
+            f"<div class='{res_class}'>"
+            f"<b>Resolution :</b> <span class='dc-result dc-{dc}'>{dc}</span>{gain_html}"
+            f"<div class='gcr-prose'>{e(c.get('resolution_prose',''))}</div>"
         )
         eff = c.get("effects_applied") or []
         if eff:
-            h.append(f"<div class='effects'>Effets: {e(', '.join(eff))}</div>")
+            chips_html = "".join(
+                f"<span class='gc-effect-chip'>{e(ef)}</span>" for ef in eff
+            )
+            h.append(f"<div class='gc-effects-row'>{chips_html}</div>")
         sta = c.get("state_after") or {}
+        rep_factions = sta.get('factions',{}) or {}
+        rep_str = " · ".join(f"{k}:{v}" for k, v in rep_factions.items())
         if sta.get("tags"):
-            h.append(f"<div class='tags'>Tags acquis: {e(', '.join(sta['tags']))}</div>")
-        h.append(f"<div class='effects'>Etat: vie={sta.get('life','-')} karma={sta.get('karma','-')} factions={e(json.dumps(sta.get('factions',{}),ensure_ascii=False))}</div>")
+            h.append(f"<div class='tags' style='margin-top:6px;'>Tags : {e(', '.join(sta['tags']))}</div>")
+        h.append(
+            f"<div class='gco-meta' style='margin-top:6px;'>"
+            f"vie {sta.get('life','-')} · karma {sta.get('karma','-')} · {e(rep_str)}"
+            f"</div>"
+        )
         h.append("</div></div>")
 
     # 8. Outro
