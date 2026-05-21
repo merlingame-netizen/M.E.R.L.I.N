@@ -514,7 +514,14 @@ def agent_pick_option(
         if main_faction_candidate[1] > 0:
             main_faction = main_faction_candidate[0]
 
-    recent_set: set[str] = {v.lower() for v in (recent_verbs or []) if v}
+    # Phase 16 Fix E2 (2026-05-21) : count-weighted penalty over a 3-beat
+    # window. Each exposure costs -0.85, so 2x in last 3 = -1.7 which clearly
+    # overrides the +1.2 continuity_bonus (the previous flat -0.5 was lost
+    # in the noise on druides-aligned options, producing observer 6x audit).
+    recent_window: list[str] = [v.lower() for v in (recent_verbs or [])[-3:] if v]
+    recent_counts: dict[str, int] = {}
+    for v in recent_window:
+        recent_counts[v] = recent_counts.get(v, 0) + 1
 
     scored: list[tuple[float, int, dict]] = []
     for i, opt in enumerate(options):
@@ -535,9 +542,9 @@ def agent_pick_option(
             continuity_bonus = 1.2
         else:
             continuity_bonus = 0.0
-        # Phase 16 Fix E : verb-repetition penalty (-0.5 if used in last 2).
+        # Phase 16 Fix E2 : count-weighted penalty (-0.85 per exposure in last 3).
         verb = (opt.get("verb") or "").lower()
-        repetition_penalty = -0.5 if verb and verb in recent_set else 0.0
+        repetition_penalty = -0.85 * recent_counts.get(verb, 0)
         score = signal_score + balance_bonus + continuity_bonus + repetition_penalty + rng.uniform(0, 0.3)
         scored.append((score, i, opt))
 
@@ -835,7 +842,7 @@ def run_simulation() -> dict:
         # Phase 16 Fix E : feed the last 2 verbs so the agent gets a penalty
         # on repetition (observer-6x collapse fix).
         opt_idx, option, decision_reason = agent_pick_option(
-            options, state, rng, recent_verbs=recent_verbs[-2:]
+            options, state, rng, recent_verbs=recent_verbs[-3:]
         )
         # Phase 14 - DC scaled by movement.
         dc_result = resolve_dc(option, state, rng, movement=mvt) if option else "failure"
