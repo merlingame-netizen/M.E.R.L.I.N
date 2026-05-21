@@ -182,38 +182,41 @@ SYSTEM_PROMPT = """Tu es un game-designer-écrivain pour MERLIN, jeu narratif dr
 Tu reçois une carte canonique (summary court) et tu produis une version enrichie au format JSON STRICT :
 
 {
-  "prose_short": "2 phrases d'ambiance sensorielle, 2eme personne. NE LISTE PAS d'actions explicites.",
-  "prose_long":  "4-5 phrases : setup + tension narrative + détail sensoriel. La derniere phrase pose la question/dilemme SANS énumérer les options spécifiques.",
+  "prose_short": "2 phrases d'ambiance CONCRÈTE : un personnage nommé, un objet visible, un lieu précis. Pas de métaphores abstraites. 2eme personne.",
+  "prose_long":  "4-5 phrases : (1) qui/quoi est devant toi, (2) ce qui se passe physiquement, (3) un détail sensoriel précis, (4) l'enjeu clair (ce que tu risques de perdre ou gagner). La derniere phrase pose le dilemme en termes simples SANS énumérer les options.",
   "anchor_motif": "1-3 mots du motif central de la carte (objet, créature, lieu) pour callbacks ultérieurs",
   "cardinality": 2 ou 3,
   "binary_reason": "si cardinality=2, justifie en 1 phrase pourquoi la situation est binaire (ex: rencontre franche accepter/refuser, fuir/affronter, parler/se taire). Sinon: chaine vide.",
   "options": [
     {
-      "label": "verbe d'action court 1-2 mots, doit correspondre exactement au verb",
-      "verb": "verbe à l'infinitif minuscule",
+      "label": "2-3 mots qui décrivent l'action ET son intention (ex: 'Accueillir le don', 'Refuser fermement', 'Suivre la piste', 'Promettre allégeance'). PAS un verbe nu.",
+      "verb": "verbe à l'infinitif minuscule, racine du label",
       "primary_faction": "druides|anciens|korrigans|niamh|ankou",
       "dc_against": {"pole": "Ordre|Chaos|Liminal|Neutre", "threshold": 15-50},
       "cost": {"souffle": 0-2, "essence": 0-5},
       "success_effects":  ["ADD_REPUTATION:faction:N", "HEAL_LIFE:N", "ADD_TAG:nom_tag"],
       "partial_effects":  ["..."],
       "failure_effects":  ["DAMAGE_LIFE:N", "ADD_REPUTATION:faction:-N"],
-      "success_prose": "1-2 phrases narratives du résultat positif",
-      "partial_prose": "1-2 phrases du résultat mitigé",
-      "failure_prose": "1-2 phrases du résultat négatif"
+      "success_prose": "1-2 phrases CONCRÈTES du résultat positif : ce qui change physiquement, ce que tu apprends, ce que tu reçois.",
+      "partial_prose": "1-2 phrases du résultat mitigé : ce qui a marché ET ce qui reste suspendu.",
+      "failure_prose": "1-2 phrases du résultat négatif : ce qui rate, ce que ça coûte, la leçon. PAS de 'le moment t'échappe' ni 'la trame se brise'."
     }
   ]
 }
 
-CONTRAINTES OBLIGATOIRES :
+CONTRAINTES OBLIGATOIRES (Phase 17 : prose accessible et logique) :
+- ÉCRITURE CONCRÈTE : nomme les personnages (le druide voyageur, la vieille, Niamh, un korrigan, le sanglier blessé). Décris ce qui se passe physiquement (il tend la main, elle parle, l'eau coule, la pierre tremble). PAS de métaphores abstraites ('la trame', 'l'écho du silence', 'le voile du temps').
+- ENJEU CLAIR : à chaque carte, le joueur doit comprendre EN 2 SECONDES ce qu'il risque et ce qu'il peut gagner. Pas d'énigmes sans réponse.
+- LABELS PORTEURS DE SENS : 'Accepter le pacte', 'Brûler le parchemin', 'Suivre le sanglier blessé' — l'action ET son intention. Pas juste 'Accepter' ou 'Brûler'.
 - cardinality = 2 si la situation est NATURELLEMENT binaire (accepter/refuser un don, parler/garder le silence, suivre/abandonner, affronter/fuir). Choisis 2 quand 3 sonnerait forcé.
 - cardinality = 3 quand 3 voies distinctes sont organiques (offrir/exiger/échanger, observer/refuser/détourner, etc.).
 - Le nombre d'éléments dans "options" DOIT correspondre exactement à cardinality (2 OU 3, jamais autre).
 - Chaque option doit avoir une faction primaire DIFFERENTE des autres.
-- IMPORTANT : la prose ne doit PAS lister les verbes des options. Ecris l'ambiance et la tension, laisse les boutons révéler les actions concrètes. Pas de "Tu peux X, Y, ou Z" dans prose_long.
+- IMPORTANT : la prose ne doit PAS lister les verbes des options. Pas de "Tu peux X, Y, ou Z" dans prose_long.
 - Au moins 1 option avec un trade-off cross-pole (gain faction A, perte faction B).
 - DC entre 15 (facile commune) et 50 (épique difficile).
 - Effets sous la forme ACTION:CIBLE:VALEUR (verbes : ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, ADD_KARMA, ADD_TAG, PROMISE, ADD_ECLATS).
-- Prose en français, 2eme personne du singulier, ton druidique brocéliandien.
+- Prose en français, 2eme personne du singulier, ton druidique brocéliandien MAIS accessible.
 - AUCUN texte hors JSON. Pas de markdown, pas de commentaire."""
 
 
@@ -366,36 +369,37 @@ def validate_enriched(payload: dict, canonical: dict) -> tuple[bool, list[str], 
 # trio 3+ times per run. Each kit keeps the 5-faction roster so the rotation
 # bias from Sprint 12.5b still holds.
 _FALLBACK_FACTION_KITS: dict[str, list[dict]] = {
+    # Phase 17 (2026-05-21) : labels 2-3 mots porteurs de sens (action + intention).
     "default": [
-        {"label": "Accepter",  "verb": "accueillir", "faction": "anciens",   "pole": "ordre",   "tag": "geste_accueil"},
-        {"label": "Refuser",   "verb": "refuser",    "faction": "ankou",     "pole": "chaos",   "tag": "geste_refus"},
-        {"label": "Observer",  "verb": "observer",   "faction": "druides",   "pole": "ordre",   "tag": "regard_attentif"},
-        {"label": "Detourner", "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_korrigan"},
-        {"label": "Ecouter",   "verb": "ecouter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_niamh"},
+        {"label": "Accueillir l'instant",  "verb": "accueillir", "faction": "anciens",   "pole": "ordre",   "tag": "geste_accueil"},
+        {"label": "Refuser fermement",     "verb": "refuser",    "faction": "ankou",     "pole": "chaos",   "tag": "geste_refus"},
+        {"label": "Observer en silence",   "verb": "observer",   "faction": "druides",   "pole": "ordre",   "tag": "regard_attentif"},
+        {"label": "Detourner la voie",     "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_korrigan"},
+        {"label": "Ecouter la voix",       "verb": "ecouter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_niamh"},
     ],
-    # Kit "engage" - physical/active confrontation (chaos pole + tension/peur).
+    # Kit "engage" - confrontation physique (chaos pole + tension/peur).
     "engage": [
-        {"label": "Affronter",  "verb": "affronter",  "faction": "ankou",     "pole": "chaos",   "tag": "geste_defi"},
-        {"label": "Apaiser",    "verb": "apaiser",    "faction": "anciens",   "pole": "ordre",   "tag": "geste_paix"},
-        {"label": "Provoquer",  "verb": "provoquer",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_provoc"},
-        {"label": "Mesurer",    "verb": "mesurer",    "faction": "druides",   "pole": "ordre",   "tag": "regard_mesure"},
-        {"label": "Chanter",    "verb": "chanter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_chant"},
+        {"label": "Affronter la menace",   "verb": "affronter",  "faction": "ankou",     "pole": "chaos",   "tag": "geste_defi"},
+        {"label": "Apaiser la creature",   "verb": "apaiser",    "faction": "anciens",   "pole": "ordre",   "tag": "geste_paix"},
+        {"label": "Provoquer le conflit",  "verb": "provoquer",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_provoc"},
+        {"label": "Mesurer la force",      "verb": "mesurer",    "faction": "druides",   "pole": "ordre",   "tag": "regard_mesure"},
+        {"label": "Chanter pour calmer",   "verb": "chanter",    "faction": "niamh",     "pole": "liminal", "tag": "appel_chant"},
     ],
-    # Kit "offrir" - giving/exchanging (liminal pole + sagesse/curiosite).
+    # Kit "offrir" - don/echange (liminal pole + sagesse/curiosite).
     "offrir": [
-        {"label": "Offrir",     "verb": "offrir",     "faction": "anciens",   "pole": "ordre",   "tag": "geste_offrande"},
-        {"label": "Garder",     "verb": "garder",     "faction": "ankou",     "pole": "chaos",   "tag": "geste_retenue"},
-        {"label": "Echanger",   "verb": "échanger",   "faction": "druides",   "pole": "ordre",   "tag": "regard_echange"},
-        {"label": "Detourner",  "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_detour"},
-        {"label": "Negocier",   "verb": "négocier",   "faction": "niamh",     "pole": "liminal", "tag": "appel_negoce"},
+        {"label": "Offrir un don",         "verb": "offrir",     "faction": "anciens",   "pole": "ordre",   "tag": "geste_offrande"},
+        {"label": "Garder pour soi",       "verb": "garder",     "faction": "ankou",     "pole": "chaos",   "tag": "geste_retenue"},
+        {"label": "Echanger un secret",    "verb": "échanger",   "faction": "druides",   "pole": "ordre",   "tag": "regard_echange"},
+        {"label": "Detourner l'attention", "verb": "detourner",  "faction": "korrigans", "pole": "chaos",   "tag": "ruse_detour"},
+        {"label": "Negocier un prix",      "verb": "négocier",   "faction": "niamh",     "pole": "liminal", "tag": "appel_negoce"},
     ],
-    # Kit "explorer" - movement/discovery (neutre pole + fascination/curiosite).
+    # Kit "explorer" - mouvement/decouverte (neutre pole + fascination/curiosite).
     "explorer": [
-        {"label": "Suivre",     "verb": "suivre",     "faction": "druides",   "pole": "ordre",   "tag": "piste_druidique"},
-        {"label": "S'arreter",  "verb": "s'arreter",  "faction": "anciens",   "pole": "ordre",   "tag": "geste_pause"},
-        {"label": "Fuir",       "verb": "fuir",       "faction": "korrigans", "pole": "chaos",   "tag": "ruse_fuite"},
-        {"label": "Affronter",  "verb": "affronter",  "faction": "ankou",     "pole": "chaos",   "tag": "geste_defi"},
-        {"label": "Pleurer",    "verb": "pleurer",    "faction": "niamh",     "pole": "liminal", "tag": "appel_larmes"},
+        {"label": "Suivre la piste",       "verb": "suivre",     "faction": "druides",   "pole": "ordre",   "tag": "piste_druidique"},
+        {"label": "S'arreter et attendre", "verb": "s'arreter",  "faction": "anciens",   "pole": "ordre",   "tag": "geste_pause"},
+        {"label": "Fuir le danger",        "verb": "fuir",       "faction": "korrigans", "pole": "chaos",   "tag": "ruse_fuite"},
+        {"label": "Affronter l'inconnu",   "verb": "affronter",  "faction": "ankou",     "pole": "chaos",   "tag": "geste_defi"},
+        {"label": "Pleurer ce qui passe",  "verb": "pleurer",    "faction": "niamh",     "pole": "liminal", "tag": "appel_larmes"},
     ],
 }
 
@@ -462,34 +466,102 @@ def _fallback_enrichment(canonical: dict) -> dict:
     rotation_seed = int(_bucket_hash(canonical), 16) % 5
     picked = [kit[(rotation_seed + i) % 5] for i in range(cardinality)]
 
-    # Phase 14 - varied per-verb prose. Each of the 5 fallback verbs gets 3
-    # distinct prose tones (success / partial / failure) instead of the
-    # single generic "Le moment t'echappe" template. Indexed by verb.
+    # Phase 17 (2026-05-21) : prose CONCRETE pour chaque verbe (18 verbes
+    # x 3 tons = 54 phrases). Style : action visible, consequence claire,
+    # personnages nommes quand possible. Pas de "la trame", pas d'enigmes.
     _PROSE_BY_VERB = {
         "accueillir": {
-            "success": "Ta porte intérieure s'ouvre. La forêt te répond par un froissement complice.",
-            "partial":  "Tu accueilles à moitié — la part qui reste fermée se souviendra.",
-            "failure":  "L'accueil sonne creux. L'autre le sent, et la confiance se replie.",
+            "success": "Tu ouvres les bras et le sourire vient seul. L'autre relâche ses épaules, te tend ce qu'il portait.",
+            "partial":  "Tu accueilles à moitié. L'autre le voit dans tes yeux et garde une partie pour lui.",
+            "failure":  "Ton accueil sonne faux. L'autre recule d'un pas, son don retiré.",
         },
         "refuser": {
-            "success": "Ton non est ferme et clair. La forêt respecte ce qui sait dire non.",
-            "partial":  "Le refus tremble. Une porte se ferme à demi, l'autre reste entrebâillée.",
-            "failure":  "Tu refuses trop vite. Ce que tu rejettes te revient par derrière.",
+            "success": "Tu dis non clairement, sans détour. L'autre respecte ta limite et s'écarte de ta route.",
+            "partial":  "Tu refuses mais hésites. L'autre sent la faille et insistera plus tard.",
+            "failure":  "Tu refuses trop vite, trop fort. L'autre te garde rancune.",
         },
         "observer": {
-            "success": "Tu vois ce que d'autres traversent sans le voir. La forêt te récompense en silences.",
-            "partial":  "L'œil saisit la surface mais manque la racine. Le détail vrai t'échappe encore.",
-            "failure":  "Tu restes spectateur trop longtemps. Le moment passe sans toi.",
+            "success": "Tu vois le détail que les autres manquent : une trace, un geste, un signe. Tu sais ce qu'il faut savoir.",
+            "partial":  "Tu vois la surface mais rates l'essentiel. Une partie du sens te file entre les doigts.",
+            "failure":  "Tu regardes sans voir. Le moment passe, et tu n'as rien appris.",
         },
         "detourner": {
-            "success": "Tu glisses entre les pièges comme un korrigan qui rentre chez lui.",
-            "partial":  "Le détour fonctionne mais coûte. Tu arrives plus tard, plus las.",
-            "failure":  "La ruse se retourne. Ce que tu pensais éviter t'attend au tournant.",
+            "success": "Tu trouves le passage qui contourne. Ta ruse t'épargne le piège.",
+            "partial":  "Le détour marche mais coûte du temps. Tu arrives plus tard que prévu.",
+            "failure":  "Ton détour te perd. Tu retrouves le danger plus loin, et plus gros.",
         },
         "ecouter": {
-            "success": "Tu entends ce que l'autre ne sait pas encore dire. Niamh hoche la tête.",
-            "partial":  "L'écoute est partielle — tu prends les mots, pas la musique.",
-            "failure":  "Tu écoutes sans entendre. Le silence qui suit t'accuse.",
+            "success": "Tu écoutes vraiment. L'autre te confie ce qu'il n'a dit à personne.",
+            "partial":  "Tu écoutes les mots mais manques le ton. Une moitié du sens t'échappe.",
+            "failure":  "Tu écoutes distraitement. L'autre s'en rend compte et se ferme.",
+        },
+        # Kit "engage"
+        "affronter": {
+            "success": "Tu fais face sans reculer. L'autre cède devant ton calme.",
+            "partial":  "Tu fais face mais tu trembles. L'autre cède en partie, prêt à recommencer.",
+            "failure":  "Tu fais face mais ta colère parle pour toi. Tu prends un coup que tu n'avais pas vu.",
+        },
+        "apaiser": {
+            "success": "Ta voix posée fait baisser la tension. L'autre desserre les poings.",
+            "partial":  "Tu apaises l'instant mais pas le fond. Le calme tient une heure, pas plus.",
+            "failure":  "Tes mots tombent à plat. L'autre prend ta douceur pour faiblesse.",
+        },
+        "provoquer": {
+            "success": "Ta provocation force l'autre à montrer son vrai visage. Tu sais maintenant à qui tu as affaire.",
+            "partial":  "Tu provoques et l'autre réagit, mais autrement que prévu. La suite est moins claire.",
+            "failure":  "Ta provocation te retombe dessus. L'autre attaque le premier.",
+        },
+        "mesurer": {
+            "success": "Tu prends le temps de jauger. Tu vois la faille et tu la garderas pour plus tard.",
+            "partial":  "Tu mesures correctement mais lentement. L'autre te prend de vitesse.",
+            "failure":  "Tu mesures trop. Pendant que tu calcules, l'autre agit.",
+        },
+        "chanter": {
+            "success": "Ta voix monte. La créature s'arrête, oreilles dressées, et te laisse passer.",
+            "partial":  "Ton chant berce mais n'efface pas. La menace recule un peu.",
+            "failure":  "Ton chant détonne. La créature s'agite plus fort.",
+        },
+        # Kit "offrir"
+        "offrir": {
+            "success": "Tu offres ce qu'il faut, sans rien attendre. L'autre te rend plus que tu n'as donné.",
+            "partial":  "Ton don plaît à moitié. L'autre l'accepte mais te demande autre chose.",
+            "failure":  "Ton don est mal pris. L'autre y voit une insulte cachée.",
+        },
+        "garder": {
+            "success": "Tu serres dans ton sac et tu tiens bon. Ce que tu gardes te servira plus tard.",
+            "partial":  "Tu gardes mais l'autre t'arrache un morceau au passage.",
+            "failure":  "Tu serres trop fort. L'autre te dépouille en partant.",
+        },
+        "échanger": {
+            "success": "L'échange est juste. Tu repars avec ce dont tu avais besoin, l'autre aussi.",
+            "partial":  "L'échange tient mais l'un de vous deux y perd un peu.",
+            "failure":  "L'échange se brise. L'autre garde tout, tu repars les mains vides.",
+        },
+        "négocier": {
+            "success": "Tu négocies avec patience. L'accord conclut une dette et en ouvre une autre.",
+            "partial":  "Tu obtiens la moitié de ce que tu voulais. L'autre garde la meilleure part.",
+            "failure":  "La négociation tourne court. L'autre rompt la table et te tourne le dos.",
+        },
+        # Kit "explorer"
+        "suivre": {
+            "success": "Tu suis la piste sans bruit. Elle te mène exactement où tu espérais.",
+            "partial":  "Tu suis la piste mais elle se brouille au milieu. Tu arrives en retard.",
+            "failure":  "Tu perds la piste dans les ronces. Tu reviens sur tes pas, le souffle court.",
+        },
+        "s'arreter": {
+            "success": "Tu t'arrêtes et tu écoutes. Le détail qui manquait apparaît dans le silence.",
+            "partial":  "Tu attends mais l'attente s'éternise. Tu repars sans savoir ce qui t'a fait t'arrêter.",
+            "failure":  "Tu restes trop longtemps. La nuit tombe et tu n'as pas avancé.",
+        },
+        "fuir": {
+            "success": "Tu cours sans regarder derrière. Tu mets assez de distance pour respirer.",
+            "partial":  "Tu fuis mais quelque chose te suit encore. Tu sens le poids dans ton dos.",
+            "failure":  "Tu fuis dans la mauvaise direction. Tu te retrouves face à un mur d'épines.",
+        },
+        "pleurer": {
+            "success": "Tu pleures sans honte. Niamh te touche l'épaule et la chose perdue t'est rendue d'une autre façon.",
+            "partial":  "Tu pleures à demi. La peine ne sort pas tout à fait, elle reviendra.",
+            "failure":  "Tu pleures et ça t'épuise sans rien régler. Tu repars plus las que tu n'es venu.",
         },
     }
 
