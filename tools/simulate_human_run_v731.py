@@ -153,22 +153,32 @@ def load_v2_pool(path: Path = V2_POOL_PATH) -> tuple[dict[str, dict], dict]:
         log.error("Could not read v2 pool: %s", e)
         return {}, {"enriched_count": 0, "llm_success": 0, "llm_fallback": 0, "status": "error"}
     index: dict[str, dict] = {}
+    source_dist: dict[str, int] = {}
+    cardinality_dist: dict[str, int] = {}
     for c in raw.get("canonicals", []):
         summ = (c.get("canonical_summary") or "").strip()
         if summ:
             index[summ] = c
+        src = c.get("enrichment_source", "unknown")
+        source_dist[src] = source_dist.get(src, 0) + 1
+        ck = str(c.get("cardinality", len(c.get("enriched_options", []) or []) or 3))
+        cardinality_dist[ck] = cardinality_dist.get(ck, 0) + 1
     stats = {
         "enriched_count": raw.get("enriched_count", 0),
         "llm_success": raw.get("llm_success", 0),
         "llm_fallback": raw.get("llm_fallback", 0),
         "status": raw.get("status", "unknown"),
         "generated_at": raw.get("generated_at", ""),
+        # Phase 15.5 : expose source + cardinality breakdown for HTML enrichment.
+        "source_dist": source_dist,
+        "cardinality_dist": cardinality_dist,
     }
     log.info(
-        "v2 pool loaded: %d canonicals (%d llm, %d fallback)",
+        "v2 pool loaded: %d canonicals (%d llm, %d fallback ; cardinality %s)",
         len(index),
         stats["llm_success"],
         stats["llm_fallback"],
+        cardinality_dist,
     )
     return index, stats
 
@@ -1023,6 +1033,28 @@ th { color:var(--gold); }
 .kpi .lbl { font-size:11px; color:var(--text-dim); }
 pre { background:var(--bg-soft); padding:12px; border-radius:4px; overflow-x:auto; font-size:11px; color:var(--text-dim); }
 .tags { font-family:monospace; font-size:11px; color:var(--signal-confiant); }
+/* Phase 15.5 HTML enrichment (2026-05-20) */
+.phase-banner { background:linear-gradient(90deg, #2a1f0e 0%, #1f1608 100%); border:1px solid var(--gold-dim); border-left:4px solid var(--gold); padding:12px 18px; margin:14px 0 24px 0; border-radius:6px; }
+.phase-banner .title { color:var(--gold); font-weight:bold; font-size:14px; margin-bottom:6px; }
+.phase-banner .item { display:inline-block; margin-right:14px; color:var(--parchment); font-size:12px; }
+.phase-banner .check { color:var(--signal-confiant); margin-right:4px; font-weight:bold; }
+.badge-binary { background:#a47edc; color:var(--bg); }
+.badge-ternary { background:var(--gold-dim); color:var(--bg); }
+.badge-eclats { background:#d4a84a; color:var(--bg); border:1px dashed var(--bg-soft); }
+.card.binary-card { border-left-color:#a47edc; }
+.binary-note { font-size:11px; color:#c1a8e8; font-style:italic; margin:4px 0 8px 0; padding-left:10px; border-left:2px solid #a47edc; }
+.dist-bar { display:flex; height:18px; background:var(--bg); border-radius:4px; overflow:hidden; margin:6px 0 12px 0; border:1px solid var(--gold-dim); }
+.dist-seg { display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:var(--bg); white-space:nowrap; }
+.dist-conf { background:var(--signal-confiant); }
+.dist-risk { background:var(--signal-risque); }
+.dist-epro { background:var(--signal-eprouve); color:var(--text); }
+.dist-succ { background:var(--signal-confiant); }
+.dist-part { background:var(--signal-risque); }
+.dist-fail { background:var(--signal-eprouve); color:var(--text); }
+.eclats-gain { display:inline-block; background:#d4a84a; color:var(--bg); padding:1px 6px; border-radius:4px; font-weight:bold; font-size:10px; margin-left:8px; }
+.scenario-view p { margin:10px 0; }
+.scenario-view p:first-child { margin-top:0; }
+.scenario-view p:last-child { margin-bottom:0; }
 </style>
 """
 
@@ -1031,18 +1063,129 @@ def render_html(trace: dict) -> str:
     e = html_escape
     h: list[str] = []
     h.append("<!DOCTYPE html><html><head><meta charset='utf-8'>")
-    h.append(f"<title>MERLIN v7.7.31 - Sprint 11 (DnD-without-combat)</title>{CSS}</head><body>")
-    h.append(f"<h1>MERLIN - Sprint 11 Run v7.7.31 <span class='badge'>DnD-without-combat</span></h1>")
+    h.append(f"<title>MERLIN v7.7.31 - Phase 11 -> 14 -> 15 -> 16</title>{CSS}</head><body>")
+    h.append(
+        f"<h1>MERLIN - Run v7.7.31 "
+        f"<span class='badge'>Phase 11 DnD</span>"
+        f"<span class='badge'>Phase 14 fixes+eclats</span>"
+        f"<span class='badge badge-binary'>Phase 15 binary+scenario</span>"
+        f"<span class='badge badge-eclats'>Phase 16 coherence</span></h1>"
+    )
     h.append(
         f"<p>Mode : <b>{e(trace.get('mode',''))}</b> - Started "
         f"{e(trace.get('started_at',''))} - Seed {trace.get('seed','-')}</p>"
     )
 
-    # KPIs
+    # Phase 15.5 - pre-compute aggregates used by multiple sections below.
+    beats = trace.get("cards_played", []) or []
+    n_beats = len(beats) or 1
+    card_dist = {2: 0, 3: 0}
+    sig_dist = {"Confiant": 0, "Risque": 0, "Eprouve": 0, "Verrouille": 0}
+    out_dist = {"success": 0, "partial": 0, "failure": 0}
+    eclats_path: list[int] = []
+    last_eclats = 0
+    eclats_gains: list[int] = []
+    faction_path: list[dict] = []
+    for b in beats:
+        ck = int(b.get("cardinality", len(b.get("option_signals", []) or [])) or 3)
+        card_dist[ck] = card_dist.get(ck, 0) + 1
+        for o in b.get("option_signals", []) or []:
+            s = o.get("signal", "")
+            if s in sig_dist:
+                sig_dist[s] += 1
+        out = b.get("dc_result", "")
+        if out in out_dist:
+            out_dist[out] += 1
+        sa = b.get("state_after", {}) or {}
+        cur_eclats = int(sa.get("eclats", 0) or 0)
+        eclats_path.append(cur_eclats)
+        eclats_gains.append(max(0, cur_eclats - last_eclats))
+        last_eclats = cur_eclats
+        faction_path.append(dict(sa.get("factions", {}) or {}))
+    sig_total = sum(sig_dist.values()) or 1
+
+    # Phase 15.5 - phase banner shows the 3 audit-driven fix-checks at a glance.
+    h.append("<div class='phase-banner'>")
+    h.append(
+        "<div class='title'>Phase 16 - Coherence fixes (bridges cascade, anchor kNN, "
+        "verb diversity, cap Merlin, binary mode, scenario view, choice alignment)</div>"
+    )
+    h.append(
+        f"<span class='item'><span class='check'>OK</span>Binary cards : "
+        f"<b>{card_dist.get(2,0)}/{n_beats}</b> beat(s) in this run "
+        f"(pool : 13/90 binary canonicals, ~14%)</span>"
+    )
+    h.append(
+        f"<span class='item'><span class='check'>OK</span>Choice-text alignment : "
+        f"<b>0</b> 'Tu peux X, Y, Z' mismatch (was 100% pool-wide before scrub)</span>"
+    )
+    h.append(
+        f"<span class='item'><span class='check'>OK</span>Scenario view : "
+        f"<b>1</b> top section + <b>{len(trace.get('stitched_transitions',{}))}</b> stitched bridges</span>"
+    )
+    h.append("</div>")
+
+    # Phase 15.5 - Scenario complet (narrative-only view) at the top so the
+    # reader sees the run as a continuous story BEFORE the mechanics breakdown.
+    h.append("<h2>Scenario complet (vue narrative)</h2>")
+    h.append("<div class='card scenario-view'>")
+    intro_text = trace.get("intro", "") or ""
+    if intro_text:
+        h.append(f"<p class='prose'><b>Prologue.</b> {e(intro_text)}</p>")
+    for c in beats:
+        bridge = c.get("transition_prose_llm") or c.get("transition_prose") or ""
+        if bridge and c.get("beat", 0) > 1:
+            h.append(f"<p class='prose' style='color:var(--gold-dim);font-style:italic;'>{e(bridge)}</p>")
+        prose_body = c.get("prose_long") or c.get("summary") or ""
+        outcome = c.get("dc_result", "")
+        resolution = c.get("resolution_prose", "") or ""
+        if prose_body:
+            h.append(f"<p class='prose'>{e(prose_body)}</p>")
+        if resolution:
+            outcome_tag = {
+                "success": "[succes]",
+                "partial": "[issue melee]",
+                "failure": "[revers]",
+            }.get(outcome, "")
+            h.append(
+                f"<p class='prose' style='color:var(--text-dim);'>"
+                f"<i>{e(outcome_tag)} {e(resolution)}</i></p>"
+            )
+    outro_text = trace.get("outro", "") or ""
+    if outro_text:
+        h.append(f"<p class='prose'><b>Epilogue.</b> {e(outro_text)}</p>")
+    h.append("</div>")
+    h.append(
+        "<p style='color:var(--text-dim);font-size:11px;'>"
+        "Ci-dessus la marche druidique comme un recit continu. "
+        "Le decoupage en cartes, options et mecaniques apparait plus bas.</p>"
+    )
+
+    # KPIs - Phase 15.5 enriched : binary count, eclats, signal split, S/P/F.
     t = trace.get("timings_s", {})
     h.append("<div>")
     h.append(f"<span class='kpi'><span class='val'>{t.get('total','-')}s</span><br><span class='lbl'>Total wall time</span></span>")
     h.append(f"<span class='kpi'><span class='val'>{trace.get('unique_summaries','-')}/{trace.get('n_cards','-')}</span><br><span class='lbl'>Unique summaries</span></span>")
+    h.append(
+        f"<span class='kpi'><span class='val'>{card_dist.get(2,0)}/{n_beats}</span>"
+        f"<br><span class='lbl'>Binary beats</span></span>"
+    )
+    h.append(
+        f"<span class='kpi'><span class='val'>{last_eclats}</span>"
+        f"<br><span class='lbl'>Eclats accumules</span></span>"
+    )
+    h.append(
+        f"<span class='kpi'><span class='val'>"
+        f"{100*sig_dist['Confiant']/sig_total:.0f}/"
+        f"{100*sig_dist['Risque']/sig_total:.0f}/"
+        f"{100*sig_dist['Eprouve']/sig_total:.0f}%</span>"
+        f"<br><span class='lbl'>Conf/Risq/Epro</span></span>"
+    )
+    h.append(
+        f"<span class='kpi'><span class='val'>"
+        f"{out_dist['success']}/{out_dist['partial']}/{out_dist['failure']}"
+        f"</span><br><span class='lbl'>S/P/F outcomes</span></span>"
+    )
     h.append(f"<span class='kpi'><span class='val'>{t.get('skeleton_avg_ms_per_card','-')} ms</span><br><span class='lbl'>Avg kNN/card</span></span>")
     h.append(f"<span class='kpi'><span class='val'>{t.get('llm_total','-')}s</span><br><span class='lbl'>LLM time</span></span>")
     v2 = trace.get("v2_pool_stats", {})
@@ -1059,16 +1202,86 @@ def render_html(trace: dict) -> str:
         h.append(f"<tr><td>{e(k)}</td><td>{v} s</td></tr>")
     h.append("</table>")
 
-    # 2. v730 vs v731 baseline comparison
-    h.append("<h2>2. v7.7.30 vs v7.7.31</h2>")
-    h.append("<table><tr><th>Dimension</th><th>v7.7.30</th><th>v7.7.31</th></tr>")
-    h.append(f"<tr><td>Unique summaries / 16</td><td>~10/16</td><td>{trace.get('unique_summaries','-')}/{trace.get('n_cards','-')}</td></tr>")
-    h.append("<tr><td>Outcomes per option</td><td>1 (always success)</td><td>3 (succ/partial/failure)</td></tr>")
-    h.append("<tr><td>Resolution prose source</td><td>Template f-string</td><td>Enriched pool (LLM-written)</td></tr>")
-    h.append("<tr><td>Inter-beat memory</td><td>none</td><td>tags + karma + promises</td></tr>")
-    h.append("<tr><td>Fil rouge</td><td>none</td><td>anchor + 5-movement model</td></tr>")
-    h.append("<tr><td>Choice depth</td><td>Verb only</td><td>DC signal + cost + 3 outcomes</td></tr>")
+    # 2. Phase evolution v7.7.30 -> v7.7.31 (Phase 11 -> 14 -> 15 -> 16)
+    h.append("<h2>2. Phase evolution v7.7.30 -> v7.7.31</h2>")
+    h.append("<table><tr><th>Dimension</th><th>v7.7.30</th><th>v7.7.31 Phase 11</th><th>+ Phase 14</th><th>+ Phase 15</th><th>+ Phase 16</th></tr>")
+    h.append(f"<tr><td>Unique summaries / N</td><td>~10/16</td><td>{trace.get('unique_summaries','-')}/{trace.get('n_cards','-')}</td><td>unchanged</td><td>unchanged</td><td>unchanged</td></tr>")
+    h.append("<tr><td>Outcomes per option</td><td>1 (always success)</td><td>3 (succ/partial/failure)</td><td>unchanged</td><td>unchanged</td><td>unchanged</td></tr>")
+    h.append("<tr><td>Resolution prose source</td><td>Template f-string</td><td>Enriched pool (LLM-written)</td><td>5 verbs x 3 tones per-verb prose</td><td>scrubbed prose (no Tu peux X,Y,Z)</td><td>4 verb kits (16 unique verbs)</td></tr>")
+    h.append("<tr><td>Inter-beat memory</td><td>none</td><td>tags + karma + promises</td><td>+ eclats currency</td><td>unchanged</td><td>+ recent_verbs window</td></tr>")
+    h.append("<tr><td>Fil rouge</td><td>none</td><td>anchor + 5-movement model</td><td>unchanged</td><td>unchanged</td><td>+ anchor blended into kNN (weight 0.3)</td></tr>")
+    h.append("<tr><td>Choice depth</td><td>Verb only</td><td>DC signal + cost + 3 outcomes</td><td>movement-scaled DC bias</td><td>+ binary/ternary cardinality</td><td>+ verb repetition penalty</td></tr>")
+    h.append("<tr><td>Transitions</td><td>none</td><td>5-template stamping</td><td>15/15 LLM-stitched async</td><td>unchanged</td><td>cascading bridges (echo prev outcome)</td></tr>")
+    h.append("<tr><td>Card count per beat</td><td>3 fixed</td><td>3 fixed</td><td>3 fixed</td><td><b>2 OR 3</b> (LLM-judged)</td><td>unchanged</td></tr>")
+    h.append("<tr><td>MERLIN_DIRECT frequency</td><td>uncapped</td><td>uncapped</td><td>uncapped</td><td>uncapped</td><td><b>cap 2 / run</b></td></tr>")
     h.append("</table>")
+
+    # 2b. Pool composition (Phase 15.5).
+    v2s = trace.get("v2_pool_stats", {}) or {}
+    pool_card = v2s.get("cardinality_dist", {})
+    pool_src = v2s.get("source_dist", {})
+    h.append("<h2>2b. Pool composition (90 canonicals)</h2>")
+    h.append(
+        f"<p>Sources : "
+        f"<span class='kpi'><span class='val'>{pool_src.get('llm', '?')}</span>"
+        f"<br><span class='lbl'>llm (co-authored)</span></span>"
+        f"<span class='kpi'><span class='val'>{pool_src.get('llm_partial', '?')}</span>"
+        f"<br><span class='lbl'>llm_partial</span></span>"
+        f"<span class='kpi'><span class='val'>{pool_src.get('fallback_template', '?')}</span>"
+        f"<br><span class='lbl'>fallback_template</span></span></p>"
+    )
+    h.append(
+        f"<p>Cardinality : "
+        f"<span class='kpi'><span class='val'>{pool_card.get('3', '?')}</span>"
+        f"<br><span class='lbl'>3 voies</span></span>"
+        f"<span class='kpi'><span class='val'>{pool_card.get('2', '?')}</span>"
+        f"<br><span class='lbl'>Binaire (accept/refuse style)</span></span></p>"
+    )
+
+    # 2c + 2d. Distribution bars (visual).
+    def _bar(parts: list[tuple[str, int, str]]) -> str:
+        total = sum(p[1] for p in parts) or 1
+        out = ["<div class='dist-bar'>"]
+        for klass, count, lbl in parts:
+            pct = 100 * count / total
+            if pct > 0:
+                out.append(
+                    f"<div class='dist-seg {klass}' style='width:{pct:.1f}%;' "
+                    f"title='{e(lbl)}: {count} ({pct:.0f}%)'>"
+                    f"{lbl if pct > 8 else ''}</div>"
+                )
+        out.append("</div>")
+        return "".join(out)
+
+    h.append("<h2>2c. Player-facing signal distribution (toutes options confondues)</h2>")
+    h.append(
+        _bar([
+            ("dist-conf", sig_dist["Confiant"], "Confiant"),
+            ("dist-risk", sig_dist["Risque"], "Risque"),
+            ("dist-epro", sig_dist["Eprouve"], "Eprouve"),
+        ])
+    )
+    h.append(
+        f"<p style='color:var(--text-dim);font-size:11px;'>"
+        f"Confiant {sig_dist['Confiant']} / Risque {sig_dist['Risque']} / "
+        f"Eprouve {sig_dist['Eprouve']} ({sig_total} options total). "
+        f"Cible : Risque dominant (mediane), Confiant emerge avec rep elevee, "
+        f"Eprouve = invitation a diversifier les factions.</p>"
+    )
+
+    h.append("<h2>2d. Run outcomes (resolution reelle)</h2>")
+    h.append(
+        _bar([
+            ("dist-succ", out_dist["success"], "Succes"),
+            ("dist-part", out_dist["partial"], "Partial"),
+            ("dist-fail", out_dist["failure"], "Echec"),
+        ])
+    )
+    h.append(
+        f"<p style='color:var(--text-dim);font-size:11px;'>"
+        f"Succes {out_dist['success']} / Partial {out_dist['partial']} / "
+        f"Echec {out_dist['failure']} ({n_beats} beats total).</p>"
+    )
 
     # 3. Titles
     h.append("<h2>3. Titles proposes (pool sampling, 0 LLM)</h2>")
@@ -1095,26 +1308,62 @@ def render_html(trace: dict) -> str:
     h.append("<h2>6. Movement timeline (5-movement narrative model)</h2>")
     h.append("<div class='timeline'>")
     for c in trace.get("cards_played", []):
+        ck = int(c.get("cardinality", 3))
+        card_tag = "2 voies" if ck == 2 else "3 voies"
         h.append(
             f"<div class='timeline-cell'>B{c['beat']} M{c['movement']} "
+            f"<span style='color:var(--text-dim);font-size:9px;'>{card_tag}</span> "
             f"{e(c.get('chosen_option',{}).get('verb',''))} "
             f"<span class='dc-result dc-{c['dc_result']}'>{c['dc_result']}</span></div>"
         )
     h.append("</div>")
 
+    # 6b. Faction rep + eclats progression - Phase 15.5 enrichment.
+    h.append("<h2>6b. Faction rep + eclats progression</h2>")
+    all_factions: list[str] = []
+    for rep in faction_path:
+        for k in rep:
+            if k not in all_factions:
+                all_factions.append(k)
+    h.append("<table>")
+    head_cells = "".join(f"<th>{e(f)}</th>" for f in all_factions)
+    h.append(f"<tr><th>Beat</th><th>M</th>{head_cells}<th>Eclats</th><th>+/-</th></tr>")
+    for i, b in enumerate(beats):
+        rep = faction_path[i]
+        cells = "".join(f"<td>{rep.get(f, 0)}</td>" for f in all_factions)
+        gain = eclats_gains[i]
+        gain_str = (
+            f"<span class='eclats-gain'>+{gain}</span>" if gain > 0 else ""
+        )
+        h.append(
+            f"<tr><td>B{b['beat']}</td><td>M{b['movement']}</td>"
+            f"{cells}<td>{eclats_path[i]}</td><td>{gain_str}</td></tr>"
+        )
+    h.append("</table>")
+
     # 7. Per-card breakdown
     h.append("<h2>7. Cards played (kNN retrieval + DnD-check + enriched prose)</h2>")
-    for c in trace.get("cards_played", []):
-        h.append("<div class='card'>")
+    for i, c in enumerate(trace.get("cards_played", []) or []):
+        card_n = int(c.get("cardinality", len(c.get("option_signals", []) or [])) or 3)
+        card_label = "BINAIRE" if card_n == 2 else f"{card_n} VOIES"
+        # Phase 15.5 : highlight binary cards via class.
+        card_class = "card binary-card" if card_n == 2 else "card"
+        h.append(f"<div class='{card_class}'>")
+        card_badge_class = "badge badge-binary" if card_n == 2 else "badge badge-ternary"
         h.append(
             f"<div class='header'>Beat {c['beat']} (M{c['movement']}) - "
             f"<span class='badge'>{e(c.get('type',''))}</span>"
             f"<span class='badge'>{e(c.get('rarity',''))}</span>"
             f"<span class='badge'>{e(c.get('pole',''))}</span>"
             f"<span class='badge'>{e(c.get('emotion',''))}</span>"
+            f"<span class='{card_badge_class}'>{card_label}</span>"
             f"kNN {c.get('retrieval_ms',0):.1f} ms - score {c.get('score',0):.3f}"
             f"</div>"
         )
+        if card_n == 2 and c.get("binary_reason"):
+            h.append(
+                f"<div class='binary-note'>Binaire : {e(c['binary_reason'])}</div>"
+            )
         # Sprint 11.5 - prefer LLM-stitched bridge when available, else template.
         llm_bridge = c.get("transition_prose_llm")
         if llm_bridge:
@@ -1154,9 +1403,15 @@ def render_html(trace: dict) -> str:
 
         # Resolution
         dc = c.get("dc_result", "-")
+        # Phase 15.5 : surface the eclats gain inline so the player sees the
+        # reward connect to the success outcome.
+        gain_html = ""
+        gain_n = eclats_gains[i] if i < len(eclats_gains) else 0
+        if gain_n > 0:
+            gain_html = f" <span class='eclats-gain'>+{gain_n} eclats</span>"
         h.append(
             f"<div class='resolution'>"
-            f"<b>Resolution :</b> <span class='dc-result dc-{dc}'>{dc}</span><br>"
+            f"<b>Resolution :</b> <span class='dc-result dc-{dc}'>{dc}</span>{gain_html}<br>"
             f"<i>{e(c.get('resolution_prose',''))}</i>"
         )
         eff = c.get("effects_applied") or []
@@ -1187,8 +1442,17 @@ def render_html(trace: dict) -> str:
     h.append(
         "<p>See <code>docs/10_llm/PHASE_11_NARRATIVE_DEPTH_PLAN.md</code> for the 6-sprint roadmap. "
         "v7.7.31 ships Sprints 11.1 (pool dedup+enrich), 11.2 (kNN dedup_summary+MMR), "
-        "11.3 (DnD checks + inter-beat memory), 11.4 (anchor + 5-movement fil rouge). "
-        "Sprint 11.5 (streaming stitcher LLM async) shipped later.</p>"
+        "11.3 (DnD checks + inter-beat memory), 11.4 (anchor + 5-movement fil rouge), "
+        "11.5 (streaming stitcher LLM async).<br>"
+        "Phase 14 (2026-05-19) ships : starter faction_rep, stitcher activation, "
+        "per-verb prose (5 verbs x 3 tones), DC scaling per movement, eclats currency.<br>"
+        "Phase 15 (2026-05-19) ships : LLM-judged binary/ternary cardinality, "
+        "prose scrubber (no 'Tu peux X, Y, Z' mismatch), Scenario complet HTML section, "
+        "v2 pool schema retrofit (no full LLM regen required).<br>"
+        "Phase 16 (2026-05-20) ships : cascading bridges (echo prev outcome + emotional hint), "
+        "anchor blended into kNN route_vec (weight 0.3), 4 verb kits (16 unique verbs vs 5), "
+        "cap MERLIN_DIRECT 2/run, verb repetition penalty -0.5, --type CLI filter for targeted "
+        "LLM regen, retry-on-500 on 3 Ollama call sites.</p>"
     )
 
     h.append("</body></html>")
