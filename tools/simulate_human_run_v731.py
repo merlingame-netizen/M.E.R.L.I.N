@@ -1139,6 +1139,187 @@ h2 { font-family:'Cinzel','Georgia',serif; letter-spacing:0.5px; font-weight:500
 .stat-card .sc-sub { color:var(--parchment); font-size:11px; margin-top:2px; }
 .stat-card .sc-spark { margin-top:6px; }
 .gco-signal-pill { display:inline-block; padding:2px 10px; border-radius:10px; font-size:10px; font-weight:600; }
+/* Phase 19 - Cinematic replay layout (2026-05-21) */
+body { max-width:800px; padding:32px 24px 64px 24px; }
+.cinema-rail {
+  position:fixed; left:max(8px, calc(50% - 480px)); top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:7px; padding:14px 8px;
+  background:rgba(20,14,6,0.6); border:1px solid var(--gold-dim); border-radius:30px;
+  backdrop-filter:blur(4px); z-index:50;
+}
+.cinema-rail .cr-dot {
+  width:10px; height:10px; border-radius:50%; background:var(--gold-dim); cursor:pointer;
+  transition:transform 0.15s, background 0.15s; position:relative;
+  text-decoration:none; display:block;
+}
+.cinema-rail .cr-dot.r-success { background:var(--signal-confiant); }
+.cinema-rail .cr-dot.r-partial { background:var(--signal-risque); }
+.cinema-rail .cr-dot.r-failure { background:var(--signal-eprouve); }
+.cinema-rail .cr-dot.binary { box-shadow:0 0 0 2px #a47edc; }
+.cinema-rail .cr-dot:hover { transform:scale(1.4); }
+.cinema-rail .cr-dot::after {
+  content:attr(data-label);
+  position:absolute; left:18px; top:50%; transform:translateY(-50%);
+  background:#0d0805; border:1px solid var(--gold-dim); padding:3px 9px;
+  border-radius:4px; font-size:11px; color:var(--gold); white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+}
+.cinema-rail .cr-dot:hover::after { opacity:1; }
+@media (max-width: 1100px) { .cinema-rail { display:none; } }
+
+.hero {
+  text-align:center;
+  padding:64px 24px 40px 24px;
+  background:radial-gradient(ellipse at center, rgba(212,168,74,0.08), transparent 65%);
+  margin-bottom:32px;
+}
+.hero .ornament { font-size:36px; color:var(--gold); opacity:0.6; letter-spacing:18px; margin-bottom:18px; padding-left:18px; line-height:1; }
+.hero h1.title-cinema {
+  font-family:'Cinzel','Georgia',serif; color:var(--gold);
+  font-size:36px; font-weight:600; letter-spacing:2px;
+  margin:0 0 14px 0; border:none; padding:0;
+}
+.hero .sub { color:var(--text-dim); font-size:13px; letter-spacing:3px; text-transform:uppercase; }
+.hero .meta { color:var(--text-dim); font-size:12px; margin-top:14px; font-family:'Consolas',monospace; }
+
+.prologue, .epilogue {
+  font-family:'Georgia',serif; font-size:16px; line-height:1.85;
+  color:var(--parchment); padding:30px 36px;
+  background:linear-gradient(180deg, rgba(42,32,16,0.5) 0%, rgba(20,14,6,0.4) 100%);
+  border:1px solid var(--gold-dim); border-radius:8px;
+  position:relative;
+  margin:24px 0;
+}
+.prologue::before, .epilogue::before {
+  content:''; position:absolute; left:50%; transform:translateX(-50%); top:-12px;
+  width:80px; height:1px; background:linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.prologue .pe-label, .epilogue .pe-label {
+  font-family:'Cinzel','Georgia',serif; color:var(--gold);
+  font-size:12px; letter-spacing:4px; text-transform:uppercase;
+  text-align:center; margin-bottom:18px; opacity:0.8;
+}
+
+.interlude {
+  text-align:center; padding:24px 16px; color:var(--text-dim);
+  font-style:italic; font-family:'Georgia',serif; font-size:14px; line-height:1.6;
+  position:relative; max-width:600px; margin:0 auto;
+}
+.interlude::before, .interlude::after {
+  content:''; position:absolute; top:50%;
+  width:60px; height:1px; background:linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.interlude::before { left:0; }
+.interlude::after  { right:0; background:linear-gradient(90deg, var(--gold-dim), transparent); }
+.interlude .il-bullet { display:inline-block; padding:0 14px; color:var(--gold); opacity:0.6; }
+
+.scene {
+  margin:36px 0;
+  padding:30px 32px 26px 32px;
+  background:linear-gradient(155deg, #221a0c 0%, #1a1208 100%);
+  border:1px solid var(--gold-dim); border-radius:10px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  position:relative;
+}
+.scene.binary { border-color:#a47edc; }
+.scene .scene-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; gap:16px; }
+.scene .scene-num { font-family:'Cinzel','Georgia',serif; color:var(--gold); font-size:13px; letter-spacing:2px; text-transform:uppercase; }
+.scene .scene-title { color:var(--parchment); font-size:14px; margin-top:4px; opacity:0.7; }
+.scene .scene-glyph { font-size:28px; color:var(--gold); opacity:0.4; line-height:1; font-family:'Segoe UI Symbol','Apple Symbols',sans-serif; }
+.scene .scene-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+.scene .scene-tags .badge { font-size:9px; padding:2px 7px; opacity:0.7; }
+
+.scene .scene-prose {
+  font-family:'Georgia',serif; font-size:15.5px; line-height:1.78;
+  color:var(--parchment); margin:18px 0 22px 0; text-align:justify;
+}
+.scene .scene-prose::first-letter {
+  font-family:'Cinzel','Georgia',serif; font-size:36px; color:var(--gold);
+  float:left; line-height:0.95; margin:6px 8px 0 0;
+}
+
+.choices-grid { display:grid; gap:12px; margin:20px 0 16px 0; }
+.choices-grid.k2 { grid-template-columns:1fr 1fr; }
+.choices-grid.k3 { grid-template-columns:1fr 1fr 1fr; }
+@media (max-width: 700px) { .choices-grid.k2, .choices-grid.k3 { grid-template-columns:1fr; } }
+.choice {
+  padding:14px 12px;
+  background:rgba(20,14,6,0.7); border:1px solid var(--gold-dim);
+  border-radius:8px; opacity:0.55; position:relative;
+  transition:opacity 0.2s, transform 0.2s;
+}
+.choice:hover { opacity:0.85; }
+.choice.chosen {
+  opacity:1; transform:scale(1.02);
+  background:linear-gradient(160deg, #2e2412 0%, #1f1808 100%);
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px rgba(212,168,74,0.4), 0 6px 20px rgba(212,168,74,0.18);
+}
+.choice .ch-label {
+  font-family:'Cinzel','Georgia',serif; color:var(--gold);
+  font-size:13.5px; font-weight:600; display:block; margin-bottom:6px;
+  text-align:center; letter-spacing:0.5px;
+}
+.choice .ch-signal {
+  display:inline-block; padding:2px 9px; border-radius:8px;
+  font-size:10px; font-weight:600; color:var(--bg);
+}
+.choice .ch-meta { font-size:10px; color:var(--text-dim); margin-top:6px; font-family:'Consolas',monospace; text-align:center; }
+.choice .ch-seal {
+  position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:var(--bg); font-size:10px; font-weight:700;
+  padding:2px 12px; border-radius:10px;
+  letter-spacing:1.5px; text-transform:uppercase;
+  font-family:'Cinzel','Georgia',serif;
+  box-shadow:0 2px 6px rgba(0,0,0,0.5);
+}
+
+.scene .resolution-block {
+  margin-top:18px;
+  padding:14px 18px; background:rgba(15,10,5,0.7);
+  border-left:3px solid var(--signal-confiant); border-radius:6px;
+}
+.scene .resolution-block.r-partial { border-left-color:var(--signal-risque); }
+.scene .resolution-block.r-failure { border-left-color:var(--signal-eprouve); }
+.scene .rb-header { font-family:'Cinzel','Georgia',serif; color:var(--gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; opacity:0.8; }
+.scene .rb-prose { color:var(--parchment); font-style:italic; font-size:13.5px; line-height:1.65; font-family:'Georgia',serif; }
+
+.scene .delta-row {
+  display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:12px;
+  border-top:1px dashed rgba(212,168,74,0.2);
+}
+.scene .delta-chip {
+  display:inline-flex; align-items:center; gap:4px; padding:3px 9px;
+  background:rgba(212,168,74,0.1); border:1px solid var(--gold-dim);
+  border-radius:12px; font-family:'Consolas',monospace; font-size:11px; color:var(--gold);
+}
+.scene .delta-chip.positive { color:var(--signal-confiant); border-color:rgba(111,191,115,0.4); background:rgba(111,191,115,0.08); }
+.scene .delta-chip.negative { color:var(--signal-eprouve); border-color:rgba(194,90,74,0.4); background:rgba(194,90,74,0.08); }
+
+.binary-explainer {
+  font-size:11px; color:#c1a8e8; font-style:italic; text-align:center;
+  margin:6px 0 14px 0; opacity:0.85;
+}
+
+details.coulisses {
+  margin-top:56px; padding:0; background:rgba(15,10,5,0.5);
+  border:1px solid var(--gold-dim); border-radius:8px;
+}
+details.coulisses summary {
+  padding:14px 18px; cursor:pointer; color:var(--gold);
+  font-family:'Cinzel','Georgia',serif; letter-spacing:2px; font-size:13px;
+  text-transform:uppercase; list-style:none;
+}
+details.coulisses summary::-webkit-details-marker { display:none; }
+details.coulisses summary::before { content:'▸ '; color:var(--gold-dim); transition:transform 0.2s; display:inline-block; }
+details.coulisses[open] summary::before { content:'▾ '; }
+details.coulisses .coulisses-body { padding:8px 18px 18px 18px; border-top:1px solid var(--gold-dim); }
+details.coulisses h2 { font-size:14px; margin-top:24px; }
+
+.signal-Confiant { background:var(--signal-confiant); }
+.signal-Risque { background:var(--signal-risque); }
+.signal-Eprouve { background:var(--signal-eprouve); color:var(--text); }
+.signal-Verrouille { background:var(--signal-locked); color:var(--text); }
 </style>
 """
 
@@ -1640,11 +1821,345 @@ def render_html(trace: dict) -> str:
 # --- Main -------------------------------------------------------------------
 
 
+def render_html_cinematic(trace: dict) -> str:
+    """Phase 19 (2026-05-21) - Cinematic replay view.
+
+    Renders the run as a sequential narrative book :
+      cinema-rail (sticky left mini-timeline)
+      hero (title + ornament)
+      prologue (intro)
+      [interlude > scene > interlude > scene ... ] x N
+      epilogue (outro)
+      <details class='coulisses'> with audit + metrics folded by default
+
+    Each scene shows : prose with drop-cap, choices grid (2-3 cards with
+    'Choix porte' seal on the chosen one), resolution panel colored by
+    outcome, and state-delta micro-chips (only diffs vs previous beat).
+    """
+    e = html_escape
+    beats = trace.get("cards_played", []) or []
+    n_beats = len(beats) or 1
+
+    # Aggregates needed for audit fold.
+    card_dist = {2: 0, 3: 0}
+    sig_dist = {"Confiant": 0, "Risque": 0, "Eprouve": 0, "Verrouille": 0}
+    out_dist = {"success": 0, "partial": 0, "failure": 0}
+    last_eclats = 0
+    eclats_path: list[int] = []
+    life_path: list[int] = []
+    karma_path: list[int] = []
+    faction_path: list[dict] = []
+    for b in beats:
+        ck = int(b.get("cardinality", len(b.get("option_signals", []) or [])) or 3)
+        card_dist[ck] = card_dist.get(ck, 0) + 1
+        for o in b.get("option_signals", []) or []:
+            s = o.get("signal", "")
+            if s in sig_dist:
+                sig_dist[s] += 1
+        out = b.get("dc_result", "")
+        if out in out_dist:
+            out_dist[out] += 1
+        sa = b.get("state_after", {}) or {}
+        cur_eclats = int(sa.get("eclats", 0) or 0)
+        last_eclats = cur_eclats
+        eclats_path.append(cur_eclats)
+        life_path.append(int(sa.get("life", 80) or 80))
+        karma_path.append(int(sa.get("karma", 0) or 0))
+        faction_path.append(dict(sa.get("factions", {}) or {}))
+    sig_total = sum(sig_dist.values()) or 1
+
+    chosen_title = trace.get("chosen_title", {}) or {}
+    title_str = chosen_title.get("title", "Marche druidique")
+    archetype = chosen_title.get("archetype_name", "")
+    t = trace.get("timings_s", {})
+    intro_text = trace.get("intro", "") or ""
+    outro_text = trace.get("outro", "") or ""
+
+    h: list[str] = []
+    h.append("<!DOCTYPE html><html lang='fr'><head><meta charset='utf-8'>")
+    h.append(f"<title>Marche · {e(title_str)} · seed {trace.get('seed','-')}</title>")
+    h.append(CSS)
+    h.append("</head><body>")
+
+    # 1. cinema-rail (sticky mini-timeline).
+    h.append("<nav class='cinema-rail'>")
+    for b in beats:
+        result = b.get("dc_result", "")
+        binary_cls = " binary" if int(b.get("cardinality", 3)) == 2 else ""
+        verb = b.get("chosen_option", {}).get("verb", "")
+        label = f"B{b['beat']} · {verb}"
+        h.append(
+            f"<a class='cr-dot r-{result}{binary_cls}' "
+            f"href='#scene-{b['beat']}' data-label='{e(label)}'></a>"
+        )
+    h.append("</nav>")
+
+    # 2. Hero.
+    h.append(
+        "<header class='hero'>"
+        "<div class='ornament'>❦ ✦ ❦</div>"
+        f"<h1 class='title-cinema'>{e(title_str)}</h1>"
+        f"<div class='sub'>{e(archetype)}</div>"
+        f"<div class='meta'>Marche {trace.get('seed','-')} · "
+        f"{n_beats} scènes · {t.get('total','-')} s · "
+        f"{last_eclats} éclats accumulés</div>"
+        "</header>"
+    )
+
+    # 3. Prologue.
+    if intro_text:
+        h.append(
+            "<section class='prologue'>"
+            "<div class='pe-label'>Prologue</div>"
+            f"<p>{e(intro_text)}</p>"
+            "</section>"
+        )
+
+    # 4. Scenes with interludes.
+    for i, b in enumerate(beats):
+        bridge = b.get("transition_prose_llm") or b.get("transition_prose") or ""
+        if bridge and b["beat"] > 1:
+            h.append(
+                "<div class='interlude'>"
+                f"{e(bridge)}<span class='il-bullet'>·</span>"
+                "</div>"
+            )
+
+        ck = int(b.get("cardinality", len(b.get("option_signals", []) or [])) or 3)
+        scene_class = "scene binary" if ck == 2 else "scene"
+        glyph = _ogham_glyph(b.get("emotion", ""))
+        beat_id = b["beat"]
+        h.append(f"<section class='{scene_class}' id='scene-{beat_id}'>")
+
+        # Head
+        summary_title = (b.get("summary") or "")[:65]
+        summary_ellipsis = "…" if len(b.get("summary", "")) > 65 else ""
+        h.append(
+            "<div class='scene-head'>"
+            "<div>"
+            f"<div class='scene-num'>Scène {beat_id} · Mouvement {b['movement']}</div>"
+            f"<div class='scene-title'>{e(summary_title)}{summary_ellipsis}</div>"
+            "<div class='scene-tags'>"
+            f"<span class='badge'>{e(b.get('type',''))}</span>"
+            f"<span class='badge'>{e(b.get('rarity',''))}</span>"
+            f"<span class='badge'>{e(b.get('pole',''))}</span>"
+            f"<span class='badge'>{e(b.get('emotion',''))}</span>"
+            "</div>"
+            "</div>"
+            f"<div class='scene-glyph' title='{e(b.get('emotion',''))}'>{glyph}</div>"
+            "</div>"
+        )
+        if ck == 2 and b.get("binary_reason"):
+            h.append(f"<div class='binary-explainer'>{e(b['binary_reason'])}</div>")
+
+        # Main prose.
+        prose_body = b.get("prose_long") or b.get("summary") or ""
+        h.append(f"<div class='scene-prose'>{e(prose_body)}</div>")
+
+        # Choices grid (2 cols for binary, 3 cols for ternary).
+        chosen_idx = b.get("chosen_option_idx", -1)
+        opts = b.get("option_signals", []) or []
+        grid_class = "k2" if len(opts) == 2 else "k3"
+        h.append(f"<div class='choices-grid {grid_class}'>")
+        for j, sig in enumerate(opts):
+            is_chosen = j == chosen_idx
+            choice_class = "choice chosen" if is_chosen else "choice"
+            seal = "<div class='ch-seal'>✓ Choix porté</div>" if is_chosen else ""
+            signal_name = sig.get("signal", "-")
+            faction = sig.get("faction", "")
+            verb = sig.get("verb", "")
+            cost = sig.get("cost") or {}
+            cost_str = ", ".join(f"{k}:{v}" for k, v in cost.items() if v)
+            cost_html = f" · {e(cost_str)}" if cost_str else ""
+            h.append(
+                f"<div class='{choice_class}'>"
+                f"{seal}"
+                f"<span class='ch-label'>{e(sig.get('label','?'))}</span>"
+                f"<div style='text-align:center;'><span class='ch-signal signal-{signal_name}'>{signal_name}</span></div>"
+                f"<div class='ch-meta'>{e(faction)} · {e(verb)}{cost_html}</div>"
+                "</div>"
+            )
+        h.append("</div>")
+
+        # Resolution block.
+        dc = b.get("dc_result", "-")
+        outcome_label = {
+            "success": "Issue heureuse",
+            "partial": "Issue mêlée",
+            "failure": "Revers",
+        }.get(dc, dc)
+        h.append(
+            f"<div class='resolution-block r-{dc}'>"
+            f"<div class='rb-header'>{e(outcome_label)}</div>"
+            f"<div class='rb-prose'>{e(b.get('resolution_prose',''))}</div>"
+            "</div>"
+        )
+
+        # State deltas (only diffs vs previous beat).
+        if i == 0:
+            prev_state = {"life": 80, "karma": 0, "eclats": 0, "factions": dict(STARTER_FACTION_REP), "tags": []}
+        else:
+            prev_state = beats[i - 1].get("state_after", {}) or {}
+        cur_state = b.get("state_after", {}) or {}
+        deltas: list[tuple[str, str]] = []
+        d_life = int(cur_state.get("life", 80) or 80) - int(prev_state.get("life", 80) or 80)
+        if d_life != 0:
+            deltas.append((f"♥ vie {d_life:+d}", "positive" if d_life > 0 else "negative"))
+        d_karma = int(cur_state.get("karma", 0) or 0) - int(prev_state.get("karma", 0) or 0)
+        if d_karma != 0:
+            deltas.append((f"☼ karma {d_karma:+d}", "positive" if d_karma > 0 else "negative"))
+        d_eclats = int(cur_state.get("eclats", 0) or 0) - int(prev_state.get("eclats", 0) or 0)
+        if d_eclats > 0:
+            deltas.append((f"✦ +{d_eclats} éclats", "positive"))
+        cur_fac = cur_state.get("factions", {}) or {}
+        prev_fac = prev_state.get("factions", {}) or {}
+        for fac, v in cur_fac.items():
+            pv = prev_fac.get(fac, 0)
+            if v != pv:
+                deltas.append((f"{fac} {v-pv:+d}", "positive" if v > pv else "negative"))
+        prev_tags = set(prev_state.get("tags", []) or [])
+        cur_tags_list = cur_state.get("tags", []) or []
+        new_tags = [t_ for t_ in cur_tags_list if t_ not in prev_tags]
+        for t_ in new_tags[-2:]:  # cap to 2 most recent new tags
+            deltas.append((f"⚘ {t_}", ""))
+        if deltas:
+            h.append("<div class='delta-row'>")
+            for chip_text, chip_class in deltas:
+                cls = f"delta-chip {chip_class}".rstrip()
+                h.append(f"<div class='{cls}'>{e(chip_text)}</div>")
+            h.append("</div>")
+
+        h.append("</section>")  # end scene
+
+    # 5. Epilogue.
+    if outro_text:
+        h.append(
+            "<section class='epilogue'>"
+            "<div class='pe-label'>Épilogue</div>"
+            f"<p>{e(outro_text)}</p>"
+            "</section>"
+        )
+
+    # 6. Coulisses (collapsed by default).
+    v2 = trace.get("v2_pool_stats", {})
+    pool_card = v2.get("cardinality_dist", {})
+    pool_src = v2.get("source_dist", {})
+    spark_eclats = _sparkline_svg(eclats_path, color="#d4a84a", fill_color="#d4a84a")
+    spark_life = _sparkline_svg(life_path, color="#6fbf73", fill_color="#6fbf73")
+    spark_karma = _sparkline_svg(karma_path, color="#a47edc", fill_color="#a47edc")
+
+    h.append("<details class='coulisses'>")
+    h.append(
+        "<summary>Coulisses · audit · métriques de cohérence (cliquez pour ouvrir)</summary>"
+    )
+    h.append("<div class='coulisses-body'>")
+
+    h.append("<h2>KPIs</h2>")
+    h.append("<div class='kpi-grid'>")
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Wall time</div>"
+        f"<div class='sc-value'>{t.get('total','-')}<span style='font-size:13px;'>s</span></div>"
+        f"<div class='sc-sub'>LLM {t.get('llm_total','-')}s / kNN {t.get('skeleton_avg_ms_per_card','-')}ms</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Binaires</div>"
+        f"<div class='sc-value'>{card_dist.get(2,0)}<span style='font-size:13px;color:var(--text-dim);'>/{n_beats}</span></div>"
+        f"<div class='sc-sub'>Pool 13/90 = ~14% binary</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Eclats</div>"
+        f"<div class='sc-value'>{last_eclats}</div>"
+        f"<div class='sc-spark'>{spark_eclats}</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Vie</div>"
+        f"<div class='sc-value'>{life_path[-1] if life_path else '-'}</div>"
+        f"<div class='sc-spark'>{spark_life}</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Karma</div>"
+        f"<div class='sc-value'>{karma_path[-1] if karma_path else '-'}</div>"
+        f"<div class='sc-spark'>{spark_karma}</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Signaux C/R/E</div>"
+        f"<div class='sc-value' style='font-size:16px;'>"
+        f"{100*sig_dist['Confiant']/sig_total:.0f}/"
+        f"{100*sig_dist['Risque']/sig_total:.0f}/"
+        f"{100*sig_dist['Eprouve']/sig_total:.0f}<span style='font-size:11px;'>%</span></div>"
+        f"<div class='sc-sub'>cible : Risque dominant</div></div>"
+    )
+    h.append(
+        f"<div class='stat-card'><div class='sc-label'>Outcomes S/P/F</div>"
+        f"<div class='sc-value' style='font-size:16px;'>"
+        f"<span style='color:var(--signal-confiant);'>{out_dist['success']}</span>/"
+        f"<span style='color:var(--signal-risque);'>{out_dist['partial']}</span>/"
+        f"<span style='color:var(--signal-eprouve);'>{out_dist['failure']}</span></div>"
+        f"<div class='sc-sub'>{out_dist['success']*100//max(1,n_beats)}% success</div></div>"
+    )
+    h.append("</div>")
+
+    # Timing breakdown table.
+    h.append("<h2>Timings</h2>")
+    h.append("<table><tr><th>Stage</th><th>Time</th></tr>")
+    for k, v in t.items():
+        h.append(f"<tr><td>{e(k)}</td><td>{v} s</td></tr>")
+    h.append("</table>")
+
+    # Pool composition.
+    h.append("<h2>Pool</h2>")
+    h.append(
+        f"<p>Sources : "
+        f"<span class='kpi'><span class='val'>{pool_src.get('llm','?')}</span><br><span class='lbl'>llm</span></span>"
+        f"<span class='kpi'><span class='val'>{pool_src.get('llm_partial','?')}</span><br><span class='lbl'>llm_partial</span></span>"
+        f"<span class='kpi'><span class='val'>{pool_src.get('fallback_template','?')}</span><br><span class='lbl'>fallback</span></span></p>"
+    )
+    h.append(
+        f"<p>Cardinalité : "
+        f"<span class='kpi'><span class='val'>{pool_card.get('3','?')}</span><br><span class='lbl'>3 voies</span></span>"
+        f"<span class='kpi'><span class='val'>{pool_card.get('2','?')}</span><br><span class='lbl'>Binaire</span></span></p>"
+    )
+
+    # Faction-rep progression table.
+    h.append("<h2>Réputation factions + éclats par beat</h2>")
+    all_factions: list[str] = []
+    for rep in faction_path:
+        for k in rep:
+            if k not in all_factions:
+                all_factions.append(k)
+    h.append("<table>")
+    head_cells = "".join(f"<th>{e(f)}</th>" for f in all_factions)
+    h.append(f"<tr><th>Beat</th><th>M</th>{head_cells}<th>Vie</th><th>Karma</th><th>Eclats</th></tr>")
+    for i, b in enumerate(beats):
+        rep = faction_path[i]
+        cells = "".join(f"<td>{rep.get(f, 0)}</td>" for f in all_factions)
+        h.append(
+            f"<tr><td>B{b['beat']}</td><td>M{b['movement']}</td>"
+            f"{cells}<td>{life_path[i]}</td><td>{karma_path[i]}</td><td>{eclats_path[i]}</td></tr>"
+        )
+    h.append("</table>")
+
+    h.append(
+        "<p style='color:var(--text-dim);font-size:11px;margin-top:18px;'>"
+        "Phase 11 (DnD-without-combat) · Phase 14 (starter rep + éclats + DC scaling + per-verb prose) · "
+        "Phase 15 (binary/ternary + scrubber) · Phase 16 (cascade bridges + anchor kNN + 4 verb kits + cap Merlin + verb penalty) · "
+        "Phase 16.1 (count-weighted verb penalty) · Phase 17 (prose accessible + plain bridges + labels porteurs de sens) · "
+        "Phase 18 (game-ready dashboard) · Phase 19 (cinematic replay)."
+        "</p>"
+    )
+
+    h.append("</div></details>")
+    h.append("</body></html>")
+    return "".join(h)
+
+
 def main() -> int:
     trace = run_simulation()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     JSON_PATH.write_text(json.dumps(trace, ensure_ascii=False, indent=2), encoding="utf-8")
-    HTML_PATH.write_text(render_html(trace), encoding="utf-8")
+    # Phase 19 (2026-05-21) : default to cinematic layout. Old render_html
+    # remains available as backup but is not called.
+    HTML_PATH.write_text(render_html_cinematic(trace), encoding="utf-8")
     print(f"[OK] JSON : {JSON_PATH}")
     print(f"[OK] HTML : {HTML_PATH}")
     return 0
