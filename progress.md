@@ -2470,3 +2470,29 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 
 
 - **Cycle 0 AI Diagnosis**: 0 issues (0 critical, 0 high) — Health: 10/10
+
+---
+
+## 2026-05-23 — Découpage RPG (actes → cartes → beats) + GGUF natif
+
+**Contexte** : l'utilisateur demande de tester en vraie nature dans Godot via le
+LLM natif (embedded llama.cpp), pas la doublure Python+Ollama. Cible = natif ;
+cette session = GGUF only (la .dll reste à builder côté utilisateur).
+
+**Livré** :
+1. **GGUF provisionnés** (hardlink NTFS depuis le blob store Ollama, 0 octet —
+   disque à 100% / 3.1 Go) : `gemma4-e2b/e4b-q4_k_m.gguf` + `nomic-embed-text`
+   dans `addons/merlin_llm/models/` (worktree + repo principal). `.dll` native
+   toujours absente (seul un `.exp` de link échoué) → blocage natif documenté.
+2. **`tools/rpg_decoupage.py`** (TDD, 17 tests) : ACTE (×5 mouvements nommés) →
+   CARTE → BEAT (×4 : mise en scène/choix/résolution/conséquence) + pont causal
+   + humanisation des effets + métriques variété/logique. Backend-agnostique.
+3. **Intégration v731 + rapport cinématique** : bande découpage, séparateurs
+   d'actes, labels de beats. Run Ollama réel validé (10 cartes, 5 actes, 8 verbes
+   uniques, causal 90%).
+4. **Bible v3.9** §6.4 : définition canonique du découpage.
+5. Revue python-reviewer → fixes (clamp act_index, +0, type hints, log.exception).
+
+**Reste** : builder la `.dll` native (MSVC) pour rejouer ces tests en vrai dans
+Godot ; durcir `signal_name` (injection HTML préexistante, vocab fermé) — tâche
+de suivi. Doublure Ollama explicitement temporaire.
