@@ -1,9 +1,30 @@
-Place your GGUF model file here.
+GGUF models for the merlin_llm GDExtension (embedded llama.cpp).
 
-Current model (Qwen 2.5-3B-Instruct):
-- qwen2.5-3b-instruct-q4_k_m.gguf  (DEFAULT — 2.0 GB, Q4_K_M quantization)
+PROVISIONED 2026-05-23 via NTFS hardlink from the local Ollama blob store
+(zero extra disk — the workstation was at 100% / 3.1 GB free). The files
+below share their inode with ~/.ollama/models/blobs/<sha256>, so `ollama rm`
+will NOT free the bytes while these links exist (data lives until all links
+are gone). To re-provision after a fresh Ollama pull, rerun the linking step.
 
-Source: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
-Ollama: ollama pull qwen2.5-3b-instruct
-Chat template: ChatML (<|im_start|>/<|im_end|>)
-Context window: 32768 tokens
+Files (gitignored: *.gguf):
+- gemma4-e2b-q4_k_m.gguf        (7.16 GB) generator / native probe / judge
+                                  <- ollama gemma4:e2b model layer 4e30e266...
+- gemma4-e4b-q4_k_m.gguf        (9.61 GB) Game Master default (desktop)
+                                  <- ollama gemma4:e4b model layer 4c27e0f5...
+- nomic-embed-text-Q4_K_M.gguf  (0.27 GB) RAG embedder
+                                  <- ollama nomic-embed-text:latest 970aa74c...
+
+NOTE on the "q4_k_m" suffix: it is NOMINAL (the native probe + adapter
+reference these exact filenames). The actual quantization is whatever the
+local Ollama `gemma4` build packs (verified GGUF magic 0x47475546). If you
+later download canonical Q4_K_M from HuggingFace, overwrite in place.
+
+Chat template: Gemma 4 (<start_of_turn>user ... <end_of_turn>), NOT ChatML.
+The native merlin_llm.cpp is Gemma-4-aware (flash-attn AUTO, sliding-window
+KV notes). Confirm llama.cpp build vintage supports the Gemma 4 arch.
+
+STILL REQUIRED for native runs: the compiled GDExtension binary at
+res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll
+(currently absent - only a stray .exp from a failed link exists). Until the
+.dll is built, in-Godot native generation cannot run; tests fall back to the
+Ollama backend (addons/merlin_ai/ollama_backend.gd).
