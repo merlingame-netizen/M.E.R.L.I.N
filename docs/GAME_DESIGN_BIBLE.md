@@ -1,8 +1,8 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. v3.8
+# GAME DESIGN BIBLE — M.E.R.L.I.N. v3.9
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Supersede : GAME_DESIGN_BIBLE v2.4 + v3.0, MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11
-> Date de creation : 2026-03-12 | v3.0 : 2026-05-09 | v3.1 : 2026-05-16
+> Date de creation : 2026-03-12 | v3.0 : 2026-05-09 | v3.1 : 2026-05-16 | v3.9 : 2026-05-23 (decoupage RPG actes→cartes→beats, §6.4)
 > References : Inscryption (MJ adversarial, 4e mur) + AI Dungeon (liberte narrative IA) + **Hand of Fate 2** (no drain, equilibre via cartes)
 
 ## v3.5 Changelog (2026-05-16)
@@ -451,6 +451,33 @@ Le MOS reste le cerveau central (architecture inchangee depuis v2.4).
 5. **Promise Registry** — promesses actives
 6. **Trust Registry** — confiance Merlin T0-T3
 7. **Interference Registry** (NOUVEAU) — historique des manipulations de Merlin
+
+#### Découpage RPG — actes → cartes → beats (v3.9)
+
+Formalisation de la hiérarchie narrative (auparavant "5 actes × 5 cartes"
+nommée sans définition). Trois niveaux liés :
+
+- **ACTE** (×5) — les 5 mouvements narratifs, en **bandes proportionnelles** à
+  la longueur du run (pas des blocs fixes de 5 cartes) :
+  1. **L'Appel** — mise en place (~0-20%)
+  2. **La Descente** — première descente (~20-45%)
+  3. **La Bascule** — bascule de Merlin (~45-55%)
+  4. **L'Épreuve** — approfondissement (~55-85%)
+  5. **Le Dénouement** — dénouement (~85-100%)
+
+  À 25 cartes → ~5 cartes/acte (cible MOS) ; le découpage scale de 8 à 40 cartes.
+- **CARTE** (×N/acte) — un nœud de décision.
+- **BEAT** (×4/carte) — mise en scène → choix → résolution → conséquence. La
+  conséquence de chaque carte est reliée à la mise en scène de la suivante par
+  un **pont causal** explicite (causalité visible §19.2, scénarios logiques,
+  pas énigmatiques).
+
+Métriques de qualité par run : **variété** (verbes / émotions / types uniques)
+et **logique** (% cartes avec pont causal + résolution). Implémenté
+backend-agnostique (`tools/rpg_decoupage.py`, 17 tests) : tourne sur la trace
+v731 (doublure Ollama) comme sur la sortie native (llama.cpp embarqué) à venir.
+Rendu visuel dans le rapport cinématique séquentiel (bande découpage +
+séparateurs d'actes + labels de beats).
 
 ### 6.5 Input libre (Merlin Direct)
 
