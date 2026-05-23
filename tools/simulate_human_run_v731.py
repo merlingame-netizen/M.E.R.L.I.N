@@ -62,6 +62,7 @@ from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cards_rag import CardsRAG, CardHit  # noqa: E402
+from style_tags import pick_style_tag, voice_for  # noqa: E402  # Phase 22
 
 # Sprint 11.5 - optional async LLM stitcher. Off by default (set MERLIN_STITCHER=1).
 USE_STITCHER = os.environ.get("MERLIN_STITCHER", "0") == "1"
@@ -92,14 +93,15 @@ log = logging.getLogger("simulate_human_run_v731")
 # --- Ollama helpers ---------------------------------------------------------
 
 
-def ollama_post(endpoint: str, payload: dict, timeout: int = 120) -> dict:
-    """POST to Ollama with Phase 16 retry-on-500 (RAM-swap resilience).
+def ollama_post(endpoint: str, payload: dict, timeout: int = 240) -> dict:
+    """POST to Ollama with retry on 500 AND socket timeout (RAM-swap resilience).
 
     On constrained workstations Ollama returns HTTP 500 ("memory layout
-    cannot be allocated") when swapping between generator and embedder.
-    Retry up to 3 times with 2s/4s backoff before bubbling the error.
+    cannot be allocated") OR a socket TimeoutError when swapping between
+    generator and embedder. Phase 22 : retry on both, 4 attempts, longer
+    default timeout (240s) and progressive backoff.
     """
-    from urllib.error import HTTPError
+    from urllib.error import HTTPError, URLError
     body = json.dumps(payload).encode("utf-8")
     req = Request(
         f"{OLLAMA_BASE}{endpoint}",
@@ -107,14 +109,20 @@ def ollama_post(endpoint: str, payload: dict, timeout: int = 120) -> dict:
         headers={"Content-Type": "application/json"},
     )
     last_err: Optional[Exception] = None
-    for attempt in range(3):
+    for attempt in range(4):
         try:
             with urlopen(req, timeout=timeout) as r:
                 return json.loads(r.read().decode("utf-8"))
         except HTTPError as e:
             last_err = e
-            if e.code == 500 and attempt < 2:
-                time.sleep(2.0 + 2.0 * attempt)
+            if e.code == 500 and attempt < 3:
+                time.sleep(3.0 + 3.0 * attempt)
+                continue
+            raise
+        except (TimeoutError, URLError, OSError) as e:
+            last_err = e
+            if attempt < 3:
+                time.sleep(3.0 + 3.0 * attempt)
                 continue
             raise
     if last_err is not None:
@@ -200,15 +208,19 @@ def pick_titles(scenarios: list[dict], rng: random.Random) -> tuple[list[dict], 
     return titles, time.time() - t0
 
 
-def llm_intro(chosen: dict, anchor_hint: str = "") -> tuple[str, float]:
+def llm_intro(chosen: dict, anchor_hint: str = "", style_voice: str = "") -> tuple[str, float]:
     """LLM-written setup intro. Short, no scenario spoilers, but seeded with
-    the anchor motif so the intro foreshadows what beat 1 will introduce."""
+    the anchor motif so the intro foreshadows what beat 1 will introduce.
+
+    Phase 22 : ``style_voice`` colours the intro register per drawn style tag."""
     system = (
         "Tu es un narrateur druidique de l'univers MERLIN (Broceliande). "
         "Tu ecris une introduction au scenario. C'est un SETUP : ambiance, "
         "trac, sensations. Ne revele AUCUN evenement, aucune rencontre. "
         "4 a 5 phrases, en 2eme personne du singulier."
     )
+    if style_voice:
+        system += f"\nSTYLE NARRATIF impose : {style_voice}"
     anchor_line = f"\nElement central qui sera presente plus tard : {anchor_hint}" if anchor_hint else ""
     user = (
         f"Titre du scenario : {chosen['title']}\n"
@@ -678,15 +690,20 @@ def llm_outro(
     run_history: list[dict],
     final_state: dict,
     anchor: str,
+    style_voice: str = "",
 ) -> tuple[str, float]:
     """Sprint 11.4 cascade prompt: outro reads anchor + last 3 verbs + dominant
-    faction + dc summary, producing a coherent epilogue grounded in the run."""
+    faction + dc summary, producing a coherent epilogue grounded in the run.
+
+    Phase 22 : ``style_voice`` injects the marche's style register."""
     system = (
         "Tu es un narrateur druidique. Tu ecris la conclusion (outro) d'une "
         "marche dans Broceliande. 3 a 4 phrases, 2eme personne, ton apaise. "
         "Mentionne 1-2 factions dominantes, l'ambiance finale, et reprends "
         "le motif d'ancrage."
     )
+    if style_voice:
+        system += f"\nSTYLE NARRATIF impose : {style_voice}"
     factions = final_state.get("faction_rep", {})
     sorted_factions = sorted(factions.items(), key=lambda kv: -kv[1])[:2]
     last3_verbs = [h.get("verb", "") for h in run_history[-3:] if h.get("verb")]
@@ -738,6 +755,14 @@ def run_simulation() -> dict:
         "mmr_lambda": MMR_LAMBDA,
         "timings_s": {},
     }
+    # Phase 22 (LORE_BIBLE §8) : draw a style tag for this marche, biome-weighted
+    # and seed-deterministic. The voice is injected into intro/outro/stitcher
+    # so the whole run shares one narrative register.
+    style_tag = pick_style_tag(SEED, BIOME)
+    style_voice = voice_for(style_tag)
+    trace["style_tag"] = style_tag
+    trace["style_voice"] = style_voice
+    log.info("Style tag drawn : %s — %s", style_tag, style_voice[:60])
     rng = random.Random(SEED)
     pipeline_t0 = time.time()
 
@@ -783,7 +808,7 @@ def run_simulation() -> dict:
     trace["anchor_hint"] = anchor_hint
 
     # Intro LLM
-    intro_text, dur_intro = llm_intro(chosen, anchor_hint=anchor_hint)
+    intro_text, dur_intro = llm_intro(chosen, anchor_hint=anchor_hint, style_voice=style_voice)
     trace["timings_s"]["intro_llm"] = round(dur_intro, 2)
     trace["intro"] = intro_text
     log.info("Intro: %.1fs, %d chars", dur_intro, len(intro_text))
@@ -945,7 +970,8 @@ def run_simulation() -> dict:
         durations: list[float] = []
         try:
             stitched = stitch_transitions(
-                beats=cards_played, anchor=anchor_locked, timings_out=durations
+                beats=cards_played, anchor=anchor_locked, timings_out=durations,
+                style_voice=style_voice,
             )
         except Exception as e:
             log.error("stitcher crashed: %s", e)
@@ -971,7 +997,7 @@ def run_simulation() -> dict:
             log.info("Stitcher requested but not active (module unavailable)")
 
     # Outro LLM
-    outro_text, dur_outro = llm_outro(chosen, run_history, state, anchor_locked)
+    outro_text, dur_outro = llm_outro(chosen, run_history, state, anchor_locked, style_voice=style_voice)
     trace["timings_s"]["outro_llm"] = round(dur_outro, 2)
     trace["outro"] = outro_text
     log.info("Outro: %.1fs", dur_outro)
@@ -1894,12 +1920,19 @@ def render_html_cinematic(trace: dict) -> str:
         )
     h.append("</nav>")
 
-    # 2. Hero.
+    # 2. Hero. Phase 22 : show the marche's style tag as a sub-line.
+    style_tag = trace.get("style_tag", "")
+    style_line = (
+        f"<div class='sub' style='margin-top:8px;font-size:11px;opacity:0.7;'>"
+        f"style · {e(style_tag)}</div>"
+        if style_tag else ""
+    )
     h.append(
         "<header class='hero'>"
         "<div class='ornament'>❦ ✦ ❦</div>"
         f"<h1 class='title-cinema'>{e(title_str)}</h1>"
         f"<div class='sub'>{e(archetype)}</div>"
+        f"{style_line}"
         f"<div class='meta'>Marche {trace.get('seed','-')} · "
         f"{n_beats} scènes · {t.get('total','-')} s · "
         f"{last_eclats} éclats accumulés</div>"

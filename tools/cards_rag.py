@@ -125,15 +125,16 @@ class CardsRAG:
 
     # ---------- embedding ----------
 
-    def embed_query(self, text: str, timeout: int = 30) -> "np.ndarray":
+    def embed_query(self, text: str, timeout: int = 120) -> "np.ndarray":
         """Embed a query string via Ollama. Returns normalized float32 (dim,).
 
-        Phase 16 : retries up to 3 times on HTTP 500 with backoff. On
-        RAM-constrained workstations Ollama can briefly fail to swap between
-        the gemma generator and the nomic embedder ; the re-attempt almost
-        always succeeds once the swap settles.
+        Phase 22 : retries up to 4 times on HTTP 500 AND socket timeout with
+        backoff. On RAM-constrained workstations Ollama can fail to swap
+        between the gemma generator and the nomic embedder (500 or timeout) ;
+        the re-attempt usually succeeds once the swap settles. Longer default
+        timeout (120s) for the cold-swap case.
         """
-        from urllib.error import HTTPError
+        from urllib.error import HTTPError, URLError
         body = json.dumps({"model": self._model, "prompt": text}).encode("utf-8")
         req = Request(
             f"{OLLAMA_BASE}/api/embeddings",
@@ -142,15 +143,21 @@ class CardsRAG:
         )
         resp: Optional[dict] = None
         last_err: Optional[Exception] = None
-        for attempt in range(3):
+        for attempt in range(4):
             try:
                 with urlopen(req, timeout=timeout) as r:
                     resp = json.loads(r.read().decode("utf-8"))
                 break
             except HTTPError as e:
                 last_err = e
-                if e.code == 500 and attempt < 2:
-                    time.sleep(2.0 + 2.0 * attempt)
+                if e.code == 500 and attempt < 3:
+                    time.sleep(3.0 + 3.0 * attempt)
+                    continue
+                raise
+            except (TimeoutError, URLError, OSError) as e:
+                last_err = e
+                if attempt < 3:
+                    time.sleep(3.0 + 3.0 * attempt)
                     continue
                 raise
         if resp is None:

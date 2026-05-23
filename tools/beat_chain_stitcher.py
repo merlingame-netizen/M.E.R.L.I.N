@@ -166,6 +166,7 @@ def stitch_transitions(
     beats: list[dict],
     anchor: str = "",
     timings_out: Optional[list[float]] = None,
+    style_voice: str = "",
 ) -> dict[int, str]:
     """Run parallel LLM bridge generation for each beat-pair.
 
@@ -176,11 +177,18 @@ def stitch_transitions(
     The first beat (index 0) is intentionally skipped - the intro already
     covers it.
 
+    Phase 22 : ``style_voice`` is appended to the system prompt so the
+    bridges share the marche's narrative register.
+
     Failures degrade silently to an empty string for that beat; callers
     fall back to the template-based transition.
     """
     if len(beats) < 2:
         return {}
+
+    system_prompt = SYSTEM_PROMPT
+    if style_voice:
+        system_prompt = SYSTEM_PROMPT + f"\nSTYLE NARRATIF impose : {style_voice}"
 
     work: list[tuple[int, dict, dict, int]] = []
     for i in range(1, len(beats)):
@@ -204,7 +212,7 @@ def stitch_transitions(
         futures = {
             pool.submit(
                 _ollama_generate,
-                SYSTEM_PROMPT,
+                system_prompt,
                 _build_user(prev, curr, anchor, mvt),
                 PER_CALL_TIMEOUT_S,
             ): idx
