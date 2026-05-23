@@ -170,6 +170,28 @@ def test_metrics_handles_empty_run_without_dividing_by_zero():
     assert m["logique"]["causal_coverage_pct"] == 0.0
 
 
+# --- robustness (review fixes) ----------------------------------------------
+
+def test_card_above_movement_5_is_clamped_into_act_5():
+    acts = build_acts({"cards_played": [_card(1, 6)]})  # movement 6 must not orphan
+    assert sum(len(a.cards) for a in acts) == 1
+    assert acts[4].cards[0].act_index == 5
+
+
+def test_card_with_zero_movement_is_clamped_into_act_1():
+    acts = build_acts({"cards_played": [_card(1, 0)]})
+    assert acts[0].cards[0].act_index == 1
+
+
+def test_humanize_zero_reputation_has_no_plus_sign():
+    cons = next(
+        b for b in card_to_beats({"effects_applied": ["ADD_REPUTATION:druides:0"]})
+        if b.kind == "consequence"
+    )
+    assert "+0" not in cons.text
+    assert "reputation druides 0" in cons.text
+
+
 # --- built-in runner (pytest-free fallback) ---------------------------------
 
 if __name__ == "__main__":

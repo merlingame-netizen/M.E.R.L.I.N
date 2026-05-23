@@ -61,7 +61,7 @@ class CardSegment:
     pole: str
     emotion: str
     summary: str
-    beats: list  # list[Beat]
+    beats: list[Beat]
     causal_link: str   # bridge from the previous card's consequence ("" for card 1)
 
 
@@ -72,7 +72,7 @@ class Act:
     name: str
     function: str
     summary: str
-    cards: list  # list[CardSegment]
+    cards: list[CardSegment]
 
 
 # --- effect humanisation (no raw tokens reach the player) -------------------
@@ -93,14 +93,14 @@ def humanize_effect(eff: str) -> str:
                 fac, amt = parts[2], int(parts[3])
             else:
                 fac, amt = parts[1], int(parts[2])
-            return f"reputation {fac} {'+' if amt >= 0 else ''}{amt}"
+            return f"reputation {fac} {'+' if amt > 0 else ''}{amt}"
         if v == "HEAL_LIFE":
             return f"vie +{int(parts[1])}"
         if v == "DAMAGE_LIFE":
             return f"vie -{int(parts[1])}"
         if v == "ADD_KARMA":
             amt = int(parts[1])
-            return f"karma {'+' if amt >= 0 else ''}{amt}"
+            return f"karma {'+' if amt > 0 else ''}{amt}"
         if v == "ADD_ECLATS":
             return f"{int(parts[1])} eclats"
         if v == "ADD_TAG":
@@ -114,7 +114,7 @@ def humanize_effect(eff: str) -> str:
 
 # --- beat layer -------------------------------------------------------------
 
-def card_to_beats(card: dict) -> list:
+def card_to_beats(card: dict) -> list[Beat]:
     """Decompose one card record into its 4 ordered beats."""
     # 1. Mise en scene — where you are, what you see. Prefer the LLM-stitched
     # bridge (transition_prose_llm) over the template when the stitcher ran.
@@ -172,8 +172,8 @@ def causal_bridge(prev_card: dict | None, this_card: dict) -> str:
     this_sum = (this_card.get("summary") or "").strip()
     if not pv:
         return f"Te voici : {this_sum}." if this_sum else ""
-    head = f"Ton geste precedent ({pv} {outcome})".strip()
-    head = head.replace(" )", ")")
+    inner = " ".join(filter(None, [pv, outcome]))
+    head = f"Ton geste precedent ({inner})"
     return f"{head} te mene ici : {this_sum}." if this_sum else f"{head}."
 
 
@@ -183,7 +183,7 @@ def _act_summary(function: str, cards: list) -> str:
     return f"{function} - {len(cards)} carte(s)."
 
 
-def build_acts(trace: dict) -> list:
+def build_acts(trace: dict) -> list[Act]:
     """Build the 5 acts (always exactly 5, some may be empty) from a trace.
 
     Cards are assigned to an act by their ``movement`` field (1..5). The causal
@@ -197,7 +197,9 @@ def build_acts(trace: dict) -> list:
         segments.append(
             CardSegment(
                 index=int(card.get("beat", idx + 1)),
-                act_index=int(card.get("movement", 1) or 1),
+                # Clamp to 1..5 so a stray movement (0, 6, null) is never
+                # orphaned out of every act.
+                act_index=max(1, min(5, int(card.get("movement", 1) or 1))),
                 card_uid=card.get("card_uid", ""),
                 type=card.get("type", ""),
                 rarity=card.get("rarity", ""),

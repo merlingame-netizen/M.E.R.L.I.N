@@ -1038,8 +1038,8 @@ def run_simulation() -> dict:
             _m["variete"]["unique_verbs"],
             _m["logique"]["causal_coverage_pct"],
         )
-    except Exception as e:  # noqa: BLE001
-        log.error("decoupage failed: %s", e)
+    except Exception:  # noqa: BLE001 - graceful degrade, but keep the traceback
+        log.exception("decoupage failed (rendering without acts/metrics)")
         trace["acts"] = []
         trace["decoupage_metrics"] = {}
 
