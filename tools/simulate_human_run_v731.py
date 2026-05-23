@@ -63,6 +63,7 @@ from urllib.request import Request, urlopen
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cards_rag import CardsRAG, CardHit  # noqa: E402
 from style_tags import pick_style_tag, voice_for  # noqa: E402  # Phase 22
+from rpg_decoupage import build_acts, decoupage_metrics  # noqa: E402  # Phase 23
 
 # Sprint 11.5 - optional async LLM stitcher. Off by default (set MERLIN_STITCHER=1).
 USE_STITCHER = os.environ.get("MERLIN_STITCHER", "0") == "1"
@@ -1009,6 +1010,39 @@ def run_simulation() -> dict:
     trace["timings_s"]["retrieval_total"] = round(
         trace["timings_s"]["skeleton_total"], 2
     )
+
+    # Phase 23 - RPG decoupage : actes -> cartes -> beats + variete/logique.
+    # Built from the finalised trace (incl. stitched bridges), so it is
+    # backend-agnostic and will run identically on the native trace.
+    try:
+        _acts = build_acts(trace)
+        # Compact act index (full per-card beats stay derivable from
+        # cards_played; the report renders beats from there, so we avoid
+        # duplicating them into the trace).
+        trace["acts"] = [
+            {
+                "index": a.index,
+                "name": a.name,
+                "function": a.function,
+                "summary": a.summary,
+                "card_count": len(a.cards),
+                "card_indices": [c.index for c in a.cards],
+            }
+            for a in _acts
+        ]
+        trace["decoupage_metrics"] = decoupage_metrics(_acts)
+        _m = trace["decoupage_metrics"]
+        log.info(
+            "Decoupage: 5 actes, %d cartes, %d verbes uniques, causal %.0f%%",
+            _m["variete"]["total_cards"],
+            _m["variete"]["unique_verbs"],
+            _m["logique"]["causal_coverage_pct"],
+        )
+    except Exception as e:  # noqa: BLE001
+        log.error("decoupage failed: %s", e)
+        trace["acts"] = []
+        trace["decoupage_metrics"] = {}
+
     log.info("DONE in %.1fs", trace["timings_s"]["total"])
     return trace
 
@@ -1905,6 +1939,38 @@ def render_html_cinematic(trace: dict) -> str:
     h.append("<!DOCTYPE html><html lang='fr'><head><meta charset='utf-8'>")
     h.append(f"<title>Marche · {e(title_str)} · seed {trace.get('seed','-')}</title>")
     h.append(CSS)
+    # Phase 23 - découpage RPG visual layer (isolated from the main CSS const).
+    h.append(
+        "<style>"
+        ".decoupage-band{max-width:920px;margin:18px auto 6px;padding:16px 20px;"
+        "background:var(--bg-soft);border:1px solid var(--gold-dim);border-radius:10px}"
+        ".db-title{font-size:13px;letter-spacing:.18em;text-transform:uppercase;"
+        "color:var(--gold);margin-bottom:12px;text-align:center}"
+        ".db-acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}"
+        ".db-act{flex:1 1 150px;min-width:138px;background:var(--bg);border:1px solid "
+        "var(--gold-dim);border-radius:8px;padding:10px 12px;text-align:center}"
+        ".dba-num{display:block;font-size:10px;letter-spacing:.15em;color:var(--text-dim);"
+        "text-transform:uppercase}"
+        ".dba-name{display:block;font-size:16px;color:var(--gold);margin:3px 0;font-weight:600}"
+        ".dba-fn{display:block;font-size:11px;color:var(--text-dim);font-style:italic}"
+        ".dba-count{display:block;font-size:12px;color:var(--parchment);margin-top:6px}"
+        ".db-metrics{display:flex;gap:14px;justify-content:center;margin-top:14px;flex-wrap:wrap}"
+        ".dbm{font-size:12px;color:var(--parchment);background:var(--bg);border:1px solid "
+        "var(--gold-dim);border-radius:20px;padding:5px 14px}"
+        ".act-divider{max-width:920px;margin:34px auto 10px;display:flex;align-items:center;"
+        "gap:14px;padding:0 12px}"
+        ".act-divider::before,.act-divider::after{content:'';flex:1;height:1px;"
+        "background:linear-gradient(90deg,transparent,var(--gold-dim),transparent)}"
+        ".ad-num{font-size:11px;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase}"
+        ".ad-name{font-size:22px;color:var(--gold);font-weight:700;letter-spacing:.04em}"
+        ".ad-fn{font-size:12px;color:var(--text-dim);font-style:italic}"
+        ".beat-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;"
+        "color:var(--gold-dim);margin:16px 0 5px;font-weight:600;display:flex;align-items:center}"
+        ".bl-num{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;"
+        "border:1px solid var(--gold-dim);border-radius:50%;margin-right:8px;font-size:10px;"
+        "color:var(--gold)}"
+        "</style>"
+    )
     h.append("</head><body>")
 
     # 1. cinema-rail (sticky mini-timeline).
@@ -1939,6 +2005,38 @@ def render_html_cinematic(trace: dict) -> str:
         "</header>"
     )
 
+    # 2bis. Découpage RPG band (Phase 23) — 5 actes → cartes + variété/logique.
+    acts_meta = trace.get("acts", []) or []
+    metrics = trace.get("decoupage_metrics", {}) or {}
+    act_name_by_idx = {a.get("index"): a.get("name", "") for a in acts_meta}
+    act_fn_by_idx = {a.get("index"): a.get("function", "") for a in acts_meta}
+    if acts_meta:
+        var = metrics.get("variete", {}) or {}
+        logi = metrics.get("logique", {}) or {}
+        h.append("<section class='decoupage-band'>")
+        h.append("<div class='db-title'>Découpage RPG · 5 actes → cartes → beats</div>")
+        h.append("<div class='db-acts'>")
+        for a in acts_meta:
+            h.append(
+                "<div class='db-act'>"
+                f"<span class='dba-num'>Acte {a.get('index')}</span>"
+                f"<span class='dba-name'>{e(a.get('name',''))}</span>"
+                f"<span class='dba-fn'>{e(a.get('function',''))}</span>"
+                f"<span class='dba-count'>{a.get('card_count',0)} cartes</span>"
+                "</div>"
+            )
+        h.append("</div>")
+        h.append(
+            "<div class='db-metrics'>"
+            f"<span class='dbm'>Variété · {var.get('unique_verbs',0)} verbes · "
+            f"{var.get('unique_emotions',0)} émotions · {var.get('unique_types',0)} types</span>"
+            f"<span class='dbm'>Logique · {logi.get('causal_coverage_pct',0)}% causal · "
+            f"{logi.get('resolution_coverage_pct',0)}% résolu</span>"
+            "</div>"
+        )
+        h.append("</section>")
+    _prev_act = None  # act-divider tracking across the scene loop
+
     # 3. Prologue.
     if intro_text:
         h.append(
@@ -1948,8 +2046,19 @@ def render_html_cinematic(trace: dict) -> str:
             "</section>"
         )
 
-    # 4. Scenes with interludes.
+    # 4. Scenes with interludes, grouped under act dividers (Phase 23).
     for i, b in enumerate(beats):
+        cur_act = int(b.get("movement", 1) or 1)
+        if cur_act != _prev_act:
+            h.append(
+                f"<div class='act-divider' id='acte-{cur_act}'>"
+                f"<span class='ad-num'>Acte {cur_act}</span>"
+                f"<span class='ad-name'>{e(act_name_by_idx.get(cur_act, ''))}</span>"
+                f"<span class='ad-fn'>{e(act_fn_by_idx.get(cur_act, ''))}</span>"
+                "</div>"
+            )
+            _prev_act = cur_act
+
         bridge = b.get("transition_prose_llm") or b.get("transition_prose") or ""
         if bridge and b["beat"] > 1:
             h.append(
@@ -1970,7 +2079,7 @@ def render_html_cinematic(trace: dict) -> str:
         h.append(
             "<div class='scene-head'>"
             "<div>"
-            f"<div class='scene-num'>Scène {beat_id} · Mouvement {b['movement']}</div>"
+            f"<div class='scene-num'>Scène {beat_id} · Acte {b['movement']} · {e(act_name_by_idx.get(int(b.get('movement',1) or 1), ''))}</div>"
             f"<div class='scene-title'>{e(summary_title)}{summary_ellipsis}</div>"
             "<div class='scene-tags'>"
             f"<span class='badge'>{e(b.get('type',''))}</span>"
@@ -1985,14 +2094,16 @@ def render_html_cinematic(trace: dict) -> str:
         if ck == 2 and b.get("binary_reason"):
             h.append(f"<div class='binary-explainer'>{e(b['binary_reason'])}</div>")
 
-        # Main prose.
+        # Main prose. Beat 1 of 4 : mise en scène.
         prose_body = b.get("prose_long") or b.get("summary") or ""
+        h.append("<div class='beat-label'><span class='bl-num'>1</span>Mise en scène</div>")
         h.append(f"<div class='scene-prose'>{e(prose_body)}</div>")
 
-        # Choices grid (2 cols for binary, 3 cols for ternary).
+        # Choices grid (2 cols for binary, 3 cols for ternary). Beat 2 : choix.
         chosen_idx = b.get("chosen_option_idx", -1)
         opts = b.get("option_signals", []) or []
         grid_class = "k2" if len(opts) == 2 else "k3"
+        h.append("<div class='beat-label'><span class='bl-num'>2</span>Choix</div>")
         h.append(f"<div class='choices-grid {grid_class}'>")
         for j, sig in enumerate(opts):
             is_chosen = j == chosen_idx
@@ -2014,13 +2125,14 @@ def render_html_cinematic(trace: dict) -> str:
             )
         h.append("</div>")
 
-        # Resolution block.
+        # Resolution block. Beat 3 : résolution.
         dc = b.get("dc_result", "-")
         outcome_label = {
             "success": "Issue heureuse",
             "partial": "Issue mêlée",
             "failure": "Revers",
         }.get(dc, dc)
+        h.append("<div class='beat-label'><span class='bl-num'>3</span>Résolution</div>")
         h.append(
             f"<div class='resolution-block r-{dc}'>"
             f"<div class='rb-header'>{e(outcome_label)}</div>"
@@ -2055,12 +2167,16 @@ def render_html_cinematic(trace: dict) -> str:
         new_tags = [t_ for t_ in cur_tags_list if t_ not in prev_tags]
         for t_ in new_tags[-2:]:  # cap to 2 most recent new tags
             deltas.append((f"⚘ {t_}", ""))
+        # Beat 4 : conséquence (effets sur le monde).
+        h.append("<div class='beat-label'><span class='bl-num'>4</span>Conséquence</div>")
+        h.append("<div class='delta-row'>")
         if deltas:
-            h.append("<div class='delta-row'>")
             for chip_text, chip_class in deltas:
                 cls = f"delta-chip {chip_class}".rstrip()
                 h.append(f"<div class='{cls}'>{e(chip_text)}</div>")
-            h.append("</div>")
+        else:
+            h.append("<div class='delta-chip'>état stable</div>")
+        h.append("</div>")
 
         h.append("</section>")  # end scene
 

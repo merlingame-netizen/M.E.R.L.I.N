@@ -89,7 +89,7 @@ def test_build_acts_assigns_every_card_to_exactly_one_act():
 def test_acts_have_concrete_names_not_enigmatic():
     acts = build_acts(_trace(25))
     assert [a.name for a in acts] == [
-        "L'Appel", "La Descente", "La Bascule", "L'Epreuve", "Le Denouement"
+        "L'Appel", "La Descente", "La Bascule", "L'Épreuve", "Le Dénouement"
     ]
 
 

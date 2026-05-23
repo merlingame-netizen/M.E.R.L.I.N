@@ -27,10 +27,10 @@ from dataclasses import dataclass
 # (name, narrative function) per act index 1..5 — concrete, not enigmatic.
 ACT_NAMES: list[tuple[str, str]] = [
     ("L'Appel", "Mise en place"),
-    ("La Descente", "Premiere descente"),
+    ("La Descente", "Première descente"),
     ("La Bascule", "Bascule de Merlin"),
-    ("L'Epreuve", "Approfondissement"),
-    ("Le Denouement", "Denouement"),
+    ("L'Épreuve", "Approfondissement"),
+    ("Le Dénouement", "Dénouement"),
 ]
 
 _OUTCOME_TITLE = {"success": "Reussite", "partial": "Demi-succes", "failure": "Echec"}
@@ -116,8 +116,9 @@ def humanize_effect(eff: str) -> str:
 
 def card_to_beats(card: dict) -> list:
     """Decompose one card record into its 4 ordered beats."""
-    # 1. Mise en scene — where you are, what you see.
-    trans = (card.get("transition_prose") or "").strip()
+    # 1. Mise en scene — where you are, what you see. Prefer the LLM-stitched
+    # bridge (transition_prose_llm) over the template when the stitcher ran.
+    trans = (card.get("transition_prose_llm") or card.get("transition_prose") or "").strip()
     prose = (card.get("prose_long") or card.get("summary") or "").strip()
     mise_text = f"{trans} {prose}".strip() if trans else prose
     b_scene = Beat("mise_en_scene", "Mise en scene", mise_text,
