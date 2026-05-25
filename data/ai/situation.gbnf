@@ -1,0 +1,6 @@
+root ::= "{" ws "\"narration\":" ws string "," ws "\"required_tags\":" ws tags "," ws "\"difficulte\":" ws diff "," ws "\"type\":" ws type ws "}"
+tags ::= "[" ws string (ws "," ws string)* ws "]"
+diff ::= "1" | "2" | "3"
+type ::= "\"Rencontre\"" | "\"Epreuve\"" | "\"Exploration\"" | "\"Dilemme\"" | "\"Climax\""
+string ::= "\"" ( [^"\\] | "\\" . )* "\""
+ws ::= [ \t\n]*

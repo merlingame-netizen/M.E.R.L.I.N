@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://cscnldnng01merlin"]
-
-[ext_resource type="Script" path="res://scripts/scenario_loading.gd" id="1_scnld"]
-
-[node name="ScenarioLoading" type="Node3D"]
-script = ExtResource("1_scnld")

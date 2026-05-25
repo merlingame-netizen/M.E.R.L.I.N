@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bbrdnarr01merlin"]
-
-[ext_resource type="Script" path="res://scripts/board_narration/board_narration.gd" id="1_brdnar"]
-
-[node name="BoardNarration" type="Node3D"]
-script = ExtResource("1_brdnar")

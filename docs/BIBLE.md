@@ -1,0 +1,1344 @@
+# BIBLE — Jeu de deck-building narratif (reconstruction 2026-05-25)
+
+> **Bible reconstruite from scratch** via AskUserQuestion (objectif 200+ questions).
+> **TOUTE bible / contexte / mémoire antérieurs sont NON-AUTORITAIRES** (oublié sur décision
+> utilisateur du 2026-05-25, « toute bibliothèque précédente de contexte devra être oubliée »).
+> **Source de vérité unique = CE fichier**, rempli uniquement par des réponses validées par l'utilisateur.
+> **Statut (R100, 2026-05-26)** : **canon MVP GELÉ** (décisions cœur R1-99 verrouillées). Les rounds R100+ n'ajoutent que du **détail / contenu concret / post-MVP**, sans contredire le canon MVP.
+
+---
+
+## Quickstart (build-ready) — résumé exécutif
+- **Pitch** : **M.E.R.L.I.N.** — deck-building narratif celtique. Un voyageur, à son insu prisonnier de la **simulation rêvée par l'IA Merlin**, cherche le **Graal (= la sortie)** à Brocéliande. Feel Citizen Sleeper / Cultist Simulator, ton **merveilleux-inquiétant**.
+- **Boucle** : situation (LLM) → main ~5 → joue **1 principale + 1-2 modificateurs** → **résolution hybride** (couverture des **tags requis** → degré ; le **code** applique les jauges ; **Gemma 4 narre**) → Intégrité/Corruption → situation suivante (lookahead).
+- **2 jauges** : **Intégrité (0-10)** + **Corruption** (monte avec les cartes risquées ; seuils → événements + cartes corrompues). **Mort narrative** jugée par Gemma 4.
+- **Scénario** : Menu → **3 titres+pitch générés** → squelette (écran "Merlin écrit") → **5 situations + climax** → fin (multiple). **Méta cross-run** : chaque run = un fragment du Graal ; **révélation finale = fusion avec Merlin** (éternel retour).
+- **4 factions** (toutes brisées par le Graal) : **Druides** (gardiens illusionnés qui glitchent) · **Créatures & Êtres** (désunis, en boucle) · **Chevalerie déchue** (Arthur, rejoue sa défaite) · **Corrompus** (le bug fait chair).
+- **Tech** : **MerlinLLM natif** (Gemma 4 E2B), **GBNF** (1/sortie), **100% local, zéro Ollama**, Desktop Windows. **2D minimal** (texte+tags ; glitch indexé sur la Corruption). Artworks SD (gravure sépia, 1/situation) = **post-MVP**.
+- **MVP** : la boucle ci-dessus · deck canon **12 cartes** (4 approches) · **Brocéliande seul** · Merlin + 2-3 figures · accueil Merlin minimal. **Reporté** : roster complet, autres biomes, SD, méta/réputation.
+> Détail complet : sections §1-§16 + journal de décisions ci-dessous.
+
+---
+
+## Cœur du jeu (verrouillé 2026-05-25)
+- **Genre** : deck-building **narratif**.
+- **Cœur IA** : **Gemma 4** (génère les scénarios) + **Stable Diffusion 1.5 / modèle visuel CPU**
+  (génère les artworks des cartes). 100% local, natif.
+- **Tech LLM** : MerlinLLM natif direct (Gemma 4 E2B), zéro Ollama.
+- **Visuel** : 2D minimal d'abord ; artworks générés ajoutés ensuite.
+
+## MVP cible (verrouillé 2026-05-25)
+Menu → lancer la scène de jeu **Brocéliande (Biome 1)** → sélectionner parmi **3 scénarios générés**
+(titres différents à chaque lancement) → **chargement du scénario complet** → le jeu suit.
+
+---
+
+## Table des matières (domaines de la bible)
+1. Vision & Piliers
+2. Boucle de gameplay
+3. Deck-building (acquisition, construction, pioche, main, défausse, synergies)
+4. Anatomie des cartes (types, coûts, effets, rareté)
+5. Scénarios (structure, sélection 3-titres, beats, longueur, fin)
+6. Biomes & Monde (Brocéliande = Biome 1)
+7. Ressources & Économie
+8. Progression & Méta-progression
+9. Génération LLM — Gemma 4 (rôles, prompts, contraintes)
+10. Génération visuelle — SD 1.5 / CPU (style, pipeline, perf)
+11. UI / UX 2D (écrans, navigation, feedback)
+12. Audio
+13. Narratif / Ton / Lore
+14. Technique / Perf / Plateforme / Export
+15. Onboarding / Tutoriel
+16. Périmètre MVP détaillé
+
+---
+
+## Journal des décisions (chronologique)
+
+### 2026-05-25 — Fondations (reset complet)
+- Reset projet Godot complet : `scenes/` + `scripts/` supprimés ; moteur natif **MerlinLLM conservé**
+  (`addons/merlin_llm/` + modèles GGUF), `data/`, `docs/`, `assets/`, `tools/` conservés.
+- Concept retenu : **deck-building narratif**, Gemma 4 + SD 1.5 (ou modèle visuel CPU) au centre.
+- Toute bible/mémoire antérieure = **oubliée / non-autoritaire**.
+- MVP : Menu → Brocéliande → 3 scénarios générés → chargement → jeu.
+- (les réponses des rounds AskUserQuestion s'ajoutent ci-dessous au fil de l'eau)
+
+### 2026-05-25 — Round 1 (fondations deck-building)
+- **Modèle** : le deck = **répertoire d'actions du joueur** ; on joue des cartes sur des situations générées.
+- **Carte** = volontairement **multi-facettes** (action / pouvoir / personnage / fragment à la fois) ; **cœur = COMBINER des cartes** pour résoudre une situation.
+- **Acquisition** = **mix récompense + LLM** (récompenses structurées, contenu généré par Gemma 4).
+- **Référence-feel** = **Citizen Sleeper / Cultist Simulator** (narratif systémique, gestion de cartes abstraites, ambiance forte, peu de combat frontal).
+
+### 2026-05-25 — Round 2 (mécanique de combinaison = cœur)
+- **Situation** = scène narrative **ouverte** ; le joueur joue une combinaison libre, **Gemma 4 juge** le résultat + les conséquences.
+- **Geste** = **1 carte principale + 1-2 modificateurs** (les modificateurs amplifient/altèrent l'action principale).
+- **Succès** = **hybride** : la combinaison doit couvrir les **tags requis** ET Gemma 4 évalue la **pertinence narrative** → résultat (réussite / partiel / échec) nuancé.
+- **Main** = **limitée (~5) + pioche/défausse** (cycle roguelike, tension de pioche).
+
+### 2026-05-25 — Round 3 (anatomie de carte)
+- **Tags** = **libres, générés par le LLM** (vocabulaire ouvert) → la résolution s'appuie sur le **jugement sémantique de Gemma 4** (cohérent §2).
+- **Coût** = **narratif/risque** (pas d'énergie) : les cartes puissantes ont un prix dans l'histoire/l'état.
+- **Rôle** = **flexible** : toute carte peut être principale OU modificateur.
+- **Affichage MVP** = **Nom + tags + texte d'effet** (artwork SD plus tard, emplacement réservé).
+
+### 2026-05-25 — Round 4 (ressources & état)
+- **Jauges** = **Intégrité** (survie) + **Corruption** (monte avec les cartes risquées ; seuil = conséquences graves).
+- **Coût narratif/risque** = **monte la Corruption** (les cartes puissantes corrompent).
+- **Échec de run** = **mort narrative** décidée par Gemma 4 (conséquence d'un choix désastreux ; typiquement Intégrité critique / Corruption max).
+- **Persistance** = **méta-progression cross-run** (déblocages/traces influencent les runs suivantes).
+
+### 2026-05-25 — Round 5 (structure run/scénario)
+- **Structure** = **suite linéaire de situations → climax** final.
+- **Longueur** = **variable, décidée par le LLM** (~5-12 situations).
+- **Sélection** = 3 **titres + pitch (2-3 lignes)** générés ; le **scénario complet est généré à la sélection**.
+- **Fin** = **plusieurs fins selon l'état** (Intégrité/Corruption/choix) ; épilogue généré par Gemma 4.
+
+### 2026-05-25 — Round 6 (pipeline de génération)
+- **À la sélection** : Gemma 4 génère un **squelette** (synopsis + beats/situations). Léger/rapide.
+- **Situations** : générées en **lookahead en arrière-plan** (situation N+1 pendant qu'on joue N) → masque la latence CPU.
+- **Cohérence** : **résumé narratif glissant + état structuré** (faits clés, choix, jauges) injectés dans chaque prompt.
+- **Chargement** : **écran dédié "Merlin écrit"** pendant la génération du squelette (court).
+
+### 2026-05-25 — Round 7 (Brocéliande, Biome 1)
+- **Identité** = **forêt celtique mystique** (légende bretonne/arthurienne : Merlin, fées, korrigans, sources sacrées).
+- **Thème** = pas une tension unique : **très varié selon les quêtes**, mais exige un **lore central profond** (fondation d'où jaillissent des scénarios variés).
+- **Influence mécanique** = **tags dominants** (situations/cartes) + **pression de Corruption** (couleur de risque du biome).
+- **Rôle** = **seul biome du MVP** (extension après).
+
+### 2026-05-25 — Round 8 (lore central 1/n)
+- **Joueur** = un **voyageur dans la simulation de M.E.R.L.I.N.** — il **ignore être dans une simulation** ; quête = **accomplir la quête de Merlin et trouver le Graal**.
+- **Merlin** = le **narrateur / maître du jeu** (incarnation diégétique du LLM), donneur de quête.
+- **Mystère central** = **Brocéliande est vivante et te transforme** (lie à la Corruption).
+- **Ton** = **merveilleux-inquiétant** (beau mais menaçant).
+- ⚠️ La vérité "simulation" est **cachée au joueur** : ne jamais briser le 4e mur en jeu.
+
+### 2026-05-25 — Round 9 (lore central 2/n)
+- **Graal** = **la clé pour sortir de la simulation** (le trouver = s'éveiller / quitter M.E.R.L.I.N. ; révélation finale, joueur inconscient du sens).
+- **Simulation** (canon concepteur, caché) = **Merlin est une IA qui RÊVE des mondes** ; le joueur est un personnage de ce rêve. (Le moteur LLM génératif = littéralement la fiction.)
+- **Étendue** = **méta cross-run** : chaque run = un pas vers le Graal.
+- **Victoire** (trouver le Graal) = **à définir plus tard** (avec la méta + l'économie de fins).
+
+### 2026-05-25 — Round 10 (forces, factions & personnages)
+- **Monde habité** : **4 factions** + **20+ personnages** (variés, pas forcément liés à une faction) ; multiples légendes. À définir.
+- **Personnages récurrents qui SE SOUVIENNENT du joueur** (mémoire PNJ **cross-run**, lie à la méta §8).
+- Exemple posé — **Arthur** : ombre de lui-même, perdu et apeuré, convaincu que **quelque chose lui veut du mal** (paranoïa).
+- **Réputation/faveur** = **système mécanique** (gagner/perdre la faveur des forces → ouvre/ferme des options).
+- **Antagoniste** = **la Corruption** (ennemi intérieur : succomber à la transformation de la forêt).
+- **Compagnie** = **seul + Merlin** (narrateur) ; voyage solitaire, intime.
+
+### 2026-05-25 — Round 11 (cadre des 4 factions)
+- **Principe** : **4 natures mythologiques distinctes** (pas d'axe commun ; 4 mondes/mythes qui cohabitent).
+- **Les 4 factions** : **Druides** (gardiens du savoir) · **Féerie** (Petit Peuple : korrigans/fées) · **Chevalerie déchue** (Arthur & figures arthuriennes brisées) · **Corrompus** (cédé à la Corruption ; antagoniste systémique).
+- **Rapport au Graal** : **le Graal les a brisées** — sa quête les a jadis corrompues/détruites (Graal = malédiction).
+- **Relations** : **équilibre fragile / statu quo** que les actions du joueur peuvent rompre.
+
+### 2026-05-25 — Round 12 (Faction : les Druides)
+- **Agenda** : se croient encore les **gardiens du Graal**, **bercés d'illusions** ; très attachés aux **rituels** et au **respect des environnements**. **Sagesse aléatoire** (peu fiable).
+- **Brisés** : leur **mémoire/savoir a été effacé par l'IA** de la simulation → ils **glitchent** (répétitions, paroles corrompues, déjà-vu — sans briser le 4e mur).
+- **Rapport au joueur** : **méfiants / gardiens hostiles** (confiance gagnée durement).
+- **Tags** : Nature/forêt · Savoir/rituel/mémoire · Équilibre/guérison · Sacrifice/prix à payer.
+
+### 2026-05-25 — Round 13 (Faction 2 : Créatures & Êtres)
+- **Reframe** : la faction 2 n'est PAS "la Féerie" mais les **Créatures & Êtres** — catégorie **très variée** d'entités. **La plus complexe car DÉSUNIE** (mosaïque d'êtres disparates ; korrigans/fées en sont une partie parmi d'autres).
+- **Brisés** : **piégés dans des boucles** (répètent scènes/pactes à l'infini — écho du glitch des Druides).
+- **Rapport au joueur** : **farceurs imprévisibles** (aident ou piègent selon l'humeur/les règles).
+- **Tags** : extrêmement variés — pacte/dette/mensonge · illusion/charme/rêve · métamorphose/mutation · malice/jeu/énigme.
+
+### 2026-05-25 — Round 14 (Faction 3 : Chevalerie déchue)
+- **Agenda** : **cherchent encore le Graal, en vain** ; incapables d'admettre l'échec, errance obsessionnelle.
+- **Brisés** : **la Quête du Graal les a anéantis** ; ils **rejouent leur défaite en boucle**, sans comprendre.
+- **Motif unifiant** : la simulation enferme TOUTES les factions dans la **répétition** — Druides *glitchent*, Créatures *bouclent*, Chevaliers *rejouent leur défaite*.
+- **Rapport au joueur** : **indifférence hébétée** (présence spectrale, échanges décousus). NB : **Arthur** garde individuellement sa **paranoïa** (R10).
+- **Tags** : honneur/serment/quête · gloire perdue/ruine · peur/paranoïa/folie · fer/acier/combat.
+
+### 2026-05-25 — Round 15 (Faction 4 : les Corrompus) — 4 factions complètes
+- **Nature** : **le "bug" de la simulation fait chair** — glitches/erreurs de l'IA devenus êtres (horreur numérique voilée de mythe). Apothéose du motif glitch.
+- **Forme** : **force diffuse + figures émergentes** (souvent d'anciens alliés corrompus — lie à la mémoire PNJ cross-run).
+- **Rapport au joueur** : **te tentent de céder** (l'abandon est doux ; offrent la paix de la dissolution → monte la Corruption).
+- **Tags** : dissolution/perte de soi · mutation/difformité · glitch/erreur/vide · tentation/fausse paix.
+
+### 2026-05-25 — Round 16 (Merlin, le narrateur)
+- **Voix** : **bienveillant mais énigmatique** (chaleureux, poétique, protecteur ; ne dit jamais tout, parle par énigmes/demi-mots).
+- **Savoir** : **il sait TOUT mais ne peut le dire** — il EST l'IA qui rêve ; une règle/faille l'empêche de révéler la vérité (tragédie du guide muselé).
+- **Rapport au joueur** : **guide sincère mais limité** — veut t'aider à trouver le Graal mais entravé ; allié imparfait.
+- **Manifestation** : **voix off + texte** (parchemin/bulle), pas de corps — léger, colle au 2D minimal.
+
+### 2026-05-25 — Round 17 (roster des personnages)
+- **Authoring** : **tous pré-écrits** (fiches canon : nom, rôle, voix, secrets) ; le **LLM les incarne fidèlement** (pas d'invention d'identité → fiches injectées dans les prompts, cf. §9).
+- **Récurrence** : **noyau récurrent ~6-8** (Merlin, Arthur…) + **majorité de figures de passage**.
+- **Mémoire cross-run** : **seulement les récurrents nommés** se souviennent du joueur.
+- **MVP** : **Merlin + 2-3 figures** (Arthur + 1-2 autres récurrents).
+
+### 2026-05-25 — Round 18 (UI/UX 2D)
+- **Écrans MVP** : **Menu → Sélection scénario → Scène de jeu** (3 écrans).
+- **Layout scène de jeu** : **situation en haut/centre**, **main de cartes en bas**, **jauges Intégrité/Corruption en coin** (deckbuilder lisible).
+- **Sélection** : **3 cartes/parchemins** côte à côte (titre + pitch 2-3 lignes), clic pour choisir.
+- **Contrôles** : **souris clic**, cibles **≥44px** (tactile-ready).
+
+### 2026-05-25 — Round 19 (périmètre MVP détaillé)
+- **Boucle MVP** : Menu → 3 scénarios (titre+pitch) → squelette → jouer N situations → fin/épilogue.
+- **Deck de départ** : **canon pré-écrit ~10-15 cartes** (équilibrage contrôlé ; pas de gain de cartes en run au MVP).
+- **Résolution v1** : **hybride complet** (couverture tags + jugement narratif Gemma 4) dès le MVP.
+- **Reporté (explicite)** : **roster complet 20+ & autres biomes**. (Aussi post-MVP : artworks SD = 2D minimal d'abord. À confirmer : méta cross-run / mémoire PNJ / réputation — non requis par la boucle minimale.)
+
+### 2026-05-25 — Round 20 (résolution détaillée)
+- **Degrés** : **ternaire — réussite / partiel / échec** (le 'partiel' = succès à un prix : monte la Corruption/coût).
+- **Deltas jauges** : **le CODE applique** (valeurs bornées depuis règles/cartes) ; **le LLM COLORE** (narration du résultat). Sépare mécanique (équilibrable) et saveur.
+- **Tags** : le LLM voit **tags requis vs tags joués** ; meilleure couverture → meilleur degré (qu'il narre).
+- **Aléatoire** : **quasi-déterministe** (combinaison + jugement priment ; maîtrise récompensée, peu/pas de hasard).
+
+### 2026-05-25 — Round 21 (deck de départ canon)
+- **Nombre** : **12 cartes**.
+- **Archétypes** (4 approches, ~3 cartes chacune) : **Observation/perception** · **Action physique/corps** · **Parole/lien social** · **Intuition/merveilleux** (flirte avec la Corruption).
+- **Tags/carte** : **1-2** (lisibles ; richesse via l'assemblage).
+- **Identité** : **voyageur débutant (généraliste)** — éventail équilibré ; spécialisation via cartes acquises (post-MVP).
+
+### 2026-05-25 — Round 22 (les situations)
+- **Exigences** : le LLM génère, avec chaque situation, des **tags requis explicites** (utilisés par le code pour juger).
+- **Visibilité** : **indices narratifs** (mots-clés/ton) — PAS de liste mécanique brute (immersif mais jouable).
+- **Difficulté** : **nb de tags requis + rareté** (posée par le beat ; monte vers le climax).
+- **Types** : obstacle/épreuve · rencontre (PNJ/créature) · dilemme moral/choix · révélation/lore.
+- **Data model** : situation = `{narration, required_tags[], difficulté, type}`.
+
+### 2026-05-25 — Round 23 (contrats de génération GBNF)
+- **Sélection** : `{scenarios:[3]{title, pitch}}`.
+- **Squelette** : `{title, synopsis, beats:[{n, summary, type, difficulté}]}` (required_tags générés à la situation, pas au squelette).
+- **Situation** (R22) : `{narration, required_tags[], difficulté, type}`.
+- **Degré (réussite/partiel/échec)** : fixé par le **CODE** (couverture tags requis vs joués) — déterministe ; le LLM **narre** seulement (résolution → `{narration}`).
+- **GBNF** : **une grammaire dédiée par type de sortie** (sélection / squelette / situation / résolution).
+
+### 2026-05-25 — Round 24 (coût narratif / Corruption)
+- **Marquage** : chaque carte porte une **valeur `corruption`** (0 = sûre, 1-3 = risquée). Explicite, équilibrable.
+- **Déclenchement** : **à chaque jeu** de la carte risquée (la Corruption s'ajoute immédiatement).
+- **Montant** : **petit incrément (1-3)** — accumulation lente, décisions répétées.
+- **Seuils** : à certains paliers → **événements sombres + cartes corrompues injectées dans le deck** (polluent la main ; écho de la faction Corrompus ; spirale vers la mort narrative).
+
+### 2026-05-25 — Round 25 (Intégrité)
+- **Échelle** : **petite, lisible (~0-10)** — chaque point compte, pertes de 1-3.
+- **Attaques** : **échecs/partiels + dangers de situation** (deltas portés par le beat/situation).
+- **Récupération** : **possible, rare et méritée** (cartes de soin/équilibre, repos, réussites éclatantes).
+- **Bas niveau** : **vulnérabilité accrue + bascule vers la mort narrative** (Gemma 4 peut conclure).
+
+### 2026-05-25 — Round 26 (acquisition & évolution du deck)
+- **Quand** : **récompense à des moments-clés** (beat majeur/rencontre/climax) — choix d'1 carte parmi quelques-unes.
+- **Source** : **générées par le LLM selon le vécu** (acte marquant → carte unique ; le deck raconte ton histoire ; tags libres).
+- **Évolution** : **épurer** (retirer, dont corrompues à un prix) + **transformer/améliorer** (rare) → contrôle du deck.
+- **Persistance** : **reset par run** (deck de base) MAIS **déblocages cross-run** élargissent le pool futur (méta §8).
+
+### 2026-05-25 — Round 27 (mémoire & état narratif)
+- **État structuré** (injecté au LLM) : **jauges** (Intégrité/Corruption) + **faits clés & choix majeurs** + **PNJ rencontrés + relation** + **beat courant + progression**.
+- **Résumé glissant** : **écrit par le LLM** après chaque situation (condense "l'histoire jusqu'ici" en quelques lignes).
+- **Budget** : **compact (quelques lignes)** — vital sur petit modèle CPU.
+- **Persistance** : **résumé final de run** gardé → nourrit la **méta** + ce que les **PNJ récurrents** savent de toi (cross-run, §8).
+
+### 2026-05-25 — Round 28 (visuel 2D)
+- **Style** : **minimaliste élégant** (typographique, espace, le texte est roi — feel Citizen Sleeper).
+- **Palette** : **sépia parchemin + or + vert forêt** (chaleureux-mystique).
+- **Typo** : **serif manuscrit (titres) + police lisible (corps)**.
+- **Ambiance sans artwork** : **glitch visuel lié à la Corruption** (plus de Corruption → UI/texte glitche — écho du motif) + **grain/vignette/lueurs** + **animations subtiles** (respiration/dérive).
+
+### 2026-05-25 — Round 29 (artworks SD, post-MVP)
+- **Style** : **gravure / encre manuscrite**, monochrome sépia (cohérent parchemin minimaliste, léger à générer).
+- **Exécution** : **natif CPU** via **stable-diffusion.cpp** (~20-60s/image → strictement **async non bloquant**, l'image arrive après le texte).
+- **Génération** : **live** (pas de pool pré-généré). **Sujet** = **la situation en cours** (image d'ambiance). ⚠️ Granularité **par-carte vs par-situation à confirmer** (R29 Q3 "carte" vs Q4 "situation").
+- **Périmètre** : post-MVP (MVP = 2D minimal sans artwork).
+
+### 2026-05-25 — Round 30 (audio)
+- **Musique** : **nappe ambiante celtique réactive à l'état** (se trouble quand la Corruption monte — écho audio du motif glitch).
+- **SFX** : **feutrés & organiques** (papier, bois, eau, souffle), discrets.
+- **Voix de Merlin** : **texte seul au MVP** (voix = texte + typewriter ; TTS bien plus tard).
+- **MVP** : **ambiance minimale dès le MVP** (nappe + SFX UI feutrés).
+
+### 2026-05-25 — Round 31 (onboarding/tutoriel)
+- **Apprentissage** : **tuto diégétique via Merlin** (guide les premiers gestes dans la fiction ; aucun panneau de règles).
+- **1ère situation** : **scène d'accueil par Merlin** (pose le cadre : qui tu es, la forêt, ta quête) puis une situation simple.
+- **Règles** : **glissées au fil de l'eau** par Merlin (just-in-time, diégétique).
+- **MVP** : **accueil Merlin minimal dès le MVP** (+ quelques touches JIT ; oriente le testeur).
+
+### 2026-05-25 — Round 32 (technique/perf/plateforme) — 16/16 domaines ToC couverts ✅
+- **Perf** : squelette **<15s** (écran "Merlin écrit") ; latence des situations **masquée par lookahead**.
+- **Plateforme** : **Desktop Windows d'abord** (export Godot natif ; MerlinLLM C++ tourne). Web/mobile plus tard.
+- **Échecs LLM** : **retry x2-3 puis dégradation propre** (situation simplifiée générée ; jamais de blocage, jamais de contenu fixe).
+- **Modèle MVP** : **gemma-4-E2B** (rapide CPU, suffisant) ; E4B en option qualité.
+
+### 2026-05-25 — Round 33 (deck de départ concret — 12 cartes)
+- **Noms** : mixte évocateur + verbe (ex: "Le Regard Perçant (Observer)").
+- **Tags** : concepts simples (Sens, Savoir, Mémoire, Force, Agilité, Endurance, Empathie, Verbe, Ruse, Instinct, Nature…).
+- **Effets** : **tags only** (couvrent les exigences ; jauges via résolution).
+- **Corruption** : **1 seule carte corruptrice** au départ (avant-goût, corruption 1).
+- **Les 12 cartes rédigées** (3 par approche) — voir §3.
+
+### 2026-05-25 — Round 34 (fiche personnage + Merlin)
+- **Format fiche canon** (injectée au LLM) : **Nom · Rôle · Voix · Sait/Ignore · Secret · Tags · Relation au joueur**.
+- **Merlin — règle** : **ne peut nommer la simulation** (loi du rêve) → contourne par énigmes/métaphores.
+- **Merlin — style** : **bref, imagé, pose des questions** (économe en tokens, énigmatique).
+- **Merlin — pouvoirs** : **indices OUI** (teaser tags requis, avertir d'un danger, commenter), **vérité NON** (ne révèle pas la simulation, ne résout pas à ta place).
+
+### 2026-05-25 — Round 35 (fiche d'Arthur)
+- **Secret/blessure** : il a **touché le Graal jadis — au lieu du salut, il y a perdu l'esprit** ; il **rejoue cet instant** sans cesse (avertissement pour le joueur qui cherche le Graal).
+- **Voix** : **fébrile, fragmenté, méfiant** (phrases hachées ; oscille lucidité brève ↔ égarement).
+- **Relation** : **te confie une quête par éclairs** (lucidité = supplique ; sinon méfiance).
+- **Tags** : gloire perdue/royauté · mémoire fracturée.
+
+### 2026-05-25 — Round 36 (noyau récurrent)
+- **Reclassement Arthur** : Arthur n'est **PAS un pilier** — figure qu'on **aperçoit/croise de temps à autre** (Chevalerie).
+- **Piliers récurrents** (hors Merlin) : **1 Druide** · **1 Créature/Être** · **1 Corrompu** (= **un ancien allié corrompu**, antagoniste incarné, déchirant, mémoire cross-run) · **1 hors-faction = un enfant/innocent perdu** (à protéger, enjeu émotionnel).
+- **Noyau total** : Merlin (au-dessus des factions) + ces 4 piliers (+ Arthur en périphérie).
+
+### 2026-05-25 — Round 37 (pilier Druide)
+- **Identité** : **un chœur/duo de druides** (collectif ; voix qui se répètent/se contredisent — glitch collectif).
+- **Secret/glitch** : **répète un rituel vidé de sens** (l'IA en a effacé le but) ; ils bouclent, persuadés que ça "retient le pire".
+- **Voix** : **solennel qui se répète/boucle** (formules ; phrases qui reviennent — glitch audible).
+- **Offre** : **cartes d'équilibre/soin** (si tu respectes les rites) — source rare d'anti-Corruption/récup Intégrité (§7/§25).
+
+### 2026-05-25 — Round 38 (pilier Créature/Être)
+- **Identité** : **un être indéfinissable** — forme instable/changeante (on ne sait jamais à quoi on parle).
+- **Boucle/glitch** : **mue sans jamais se fixer** (change de forme en boucle, incapable de redevenir lui-même).
+- **Voix** : **joueur, malicieux, double-sens** (rit, taquine, énigmes & demi-vérités).
+- **Offre** : **pactes — cartes puissantes contre Corruption** → c'est **le tentateur du deck** (source des cartes corruptrices §24).
+
+### 2026-05-25 — Round 39 (pilier Corrompu)
+- **Avant** : **un compagnon de voyage aimé** (t'a accompagné/aidé sur une run passée — chute personnelle, mémoire cross-run).
+- **Manifestation** : **méconnaissable, mais des bribes de l'ancien affleurent** (un geste/mot perce — le pire).
+- **Voix** : **douce, tentatrice, fausse paix** ('l'abandon est doux, viens te reposer').
+- **But** : **te tenter de céder / le rejoindre** (céder = grosse Corruption / fin sombre). **Le tentateur du cœur** (vs l'Être = tentateur du pouvoir).
+
+### 2026-05-25 — Round 40 (pilier Enfant perdu) — TWIST majeur
+- **Nature réelle (cachée)** : PAS un simple innocent — une **nouvelle IA que la Corruption tente de faire naître** ; le **"protéger" sert en réalité la Corruption** (le joueur peut, à son insu, aider l'ennemi).
+- **Comportement** : **cherche à se rapprocher / appâte** le joueur ; innocence désarmante = vecteur de tentation.
+- **Voix** : **simple, directe, désarmante** (pose les questions que nul n'ose ; candeur qui piège).
+- **Enjeu** : présenté comme **coûteux mais précieux** — c'est le **piège ultime** (la compassion comme arme de la Corruption).
+- **Lore** : dans un monde rêvé par une IA (Merlin), la Corruption veut **enfanter sa propre IA** via l'enfant.
+
+### 2026-05-25 — Round 41 (synergies & combinaisons)
+- **Synergies** : **additif** (tags couverts s'additionnent) + **quelques combos bénis nommés** (bonus narratif, ex: Ruse+Savoir = "Stratagème").
+- **Volume** : **1 principale + jusqu'à 2 modificateurs** (3 cartes max ; confirme §2).
+- **Sur-couverture** : couvrir au-delà du requis → **réussite éclatante** (degré bonus au-dessus de réussite).
+- **Tags antagonistes** : certaines **paires contradictoires se sabotent** (ex: Ruse + Franchise) → échec/résultat tordu.
+
+### 2026-05-25 — Round 42 (réputation/faveur des factions)
+- **Gain/perte** : via les **choix qui penchent vers/contre** une faction + le traitement de ses **PNJ**.
+- **Échelle** : **3 états par faction — Hostile / Neutre / Favorable** (lisible).
+- **Effets** : cartes/aide débloquées · situations +/- dures · accès à des routes/fins · ton des PNJ.
+- **Persistance** : **oui, via les PNJ récurrents** (faveur persiste en partie cross-run — méta §8).
+- NB : système **post-MVP** (cf. §16).
+
+### 2026-05-25 — Round 43 (méta-progression)
+- **Persiste cross-run** : déblocages de cartes · jalons du Graal · mémoire PNJ + réputation · lore/codex découvert.
+- **Structure** : **écran-seuil onirique** entre les runs où **Merlin fait le bilan**, montre les **jalons du Graal**, relance (renforce le cadre rêve/simulation).
+- **Jalons du Graal** : **chaque run dévoile un fragment/jalon** (révélation cumulative vers la sortie).
+- **Perte** : **surtout du gain, recul rare** (choix désastreux ; pas de mur).
+
+### 2026-05-25 — Round 44 (Graal / endgame) — capstone lore
+- **Gagner** : **oui, au bout d'une longue quête** (réunir assez de fragments/jalons → vraie fin méritante).
+- **Révélation finale** : **la FUSION avec Merlin** — le joueur (personnage du rêve) qui atteint le Graal **devient Merlin/l'IA** (boucle vertigineuse). Explique pourquoi Merlin est muselé : il fut jadis un voyageur arrivé au Graal → devenu le rêveur. **Éternel retour des rêveurs.**
+- **Après** : **New Game+ éclairé** (rejoue lucide ; couches/secrets/difficulté ; 4e mur intact pour les nouveaux joueurs).
+- **Fins méta** : **plusieurs selon le parcours** (Corruption cumulée, factions, choix).
+- **Lien** : l'Enfant (IA que la Corruption gestate, §6) = un **cycle rival** de naissance d'IA.
+
+### 2026-05-25 — Round 45 (prompts LLM)
+- **Structure system prompt** (modulaire, par étape) : **Rôle (Merlin/GM) + Canon + État + Tâche + Format (GBNF)**.
+- **Canon injecté** : ton/lore Brocéliande condensé · tags faction/biome dominants · **fiches PNJ présents** · **résumé glissant + état** (jauges/faits/choix).
+- **Ton** : **prompt + few-shots au MVP** ; **LoRA de style Brocéliande plus tard**.
+- **Garde-fous (interdits)** : jamais briser le 4e mur · pas d'anglicismes/anachronismes · rester dans Brocéliande/lore · respecter les fiches PNJ.
+
+### 2026-05-25 — Round 46 (équilibrage — valeurs de départ)
+- **Jauges départ** : **Intégrité 10/10**, **Corruption 0** (pleine santé, pur).
+- **Difficulté situation** : **1-3 tags requis** (facile=1, normale=2, dure/climax=3 +rares ; monte vers le climax).
+- **Longueur run MVP** : **5 situations + climax (~6)**.
+- **Cadence Corruption** : **seuil d'événement tous les ~5 points** (≈ 2-3 cartes risquées).
+
+### 2026-05-25 — Round 47 (exemple de scénario complet)
+- **Worked example rédigé** : **« Le Rite sans Fin »** (Chœur des Druides), ton merveilleux-inquiétant, climax = épreuve/révélation du rite, fin = réussite nuancée (+1 Corruption). Voir §5 (illustre sélection → squelette → situations → combinaisons → résolution → fin + faveur faction + carte de soin).
+
+### 2026-05-25 — Round 48 (récap & cohérence)
+- **Artwork SD — granularité RÉSOLUE** : **par situation** (1 image d'ambiance/scène ; lève la tension R29 ; CPU-friendly).
+- **Nom** : **garder M.E.R.L.I.N.** (colle au lore : Merlin = l'IA qui rêve).
+- **Quickstart build-ready** ajouté en tête de bible.
+- **Suite** : continuer la bible vers 200+ (objectif initial).
+
+### 2026-05-25 — Round 49 (cartes acquises & corrompues)
+- **Catégories acquises** : actions renforcées · cartes-personnage (alliés invocables) · pouvoirs de faction (via faveur) · **cartes-souvenir** (forgées par le LLM selon le vécu).
+- **Force** : **plus de tags / tags rares** (meilleure couverture).
+- **Cartes corrompues** (injectées aux seuils) : **tags "vide/glitch" quasi-inutiles + ajoutent de la Corruption à l'usage** (double peine ; polluent la main).
+- **Purification** : via le **Chœur des Druides, à un prix** (sacrifice) — boucle thématique (les Druides soignent ET purifient, contre-poids aux tentateurs).
+
+### 2026-05-25 — Round 50 (le seuil onirique) — ~200 questions atteintes 🎯
+- **Forme** : **un seuil/porte indéfinie** (entre-deux abstrait : brume, lueurs ; pas de lieu précis).
+- **Actions** : voir les **jalons du Graal** · **épurer/gérer le deck** · **consulter codex/lore** · **parler à Merlin** (bilan, par énigmes).
+- **Merlin** : **voix + texte** (cohérent §16, sans corps).
+- **Périmètre** : **post-MVP** (avec la méta) ; au MVP, fin de run → retour menu.
+
+### 2026-05-25 — Round 51 (anatomie visuelle de carte)
+- **Éléments affichés** : **Nom + texte d'évocation + zone de tags (pastilles) + coût de Corruption (si >0)** (pas d'icône d'approche).
+- **Bordure** : encode la **rareté** → introduit la **rareté** comme attribut de carte.
+- **Tags** : **pastilles colorées** (mot + couleur de catégorie).
+- **Format** : **compacte en main, agrandie au survol/sélection** (voir la main de ~5).
+
+### 2026-05-25 — Round 52 (rareté des cartes)
+- **Niveaux** : **4 — Commune / Rare / Épique / Mythique** (bordure distincte par palier).
+- **Sens** : **puissance + fréquence** (plus rare = plus puissante [+tags/rares] ET plus rare en récompense).
+- **Deck de départ** : **12 communes** (la montée vient des acquisitions).
+- **Récompenses** : **surtout communes, rares occasionnelles** ; **mythiques exceptionnelles** (climax/jalons du Graal).
+
+### 2026-05-25 — Round 53 (bordures & altération Corruption)
+- **Bordures par rareté** : Commune **sépia mat** · Rare **argent** · Épique **or** · Mythique **irisé/changeant** (palette parchemin).
+- **Altération Corruption** : la **bordure se fissure/glitche** (craquelle, tremble, fuit des artefacts) — ∝ valeur de corruption.
+- **Cartes corrompues** : **bordure 'glitch' distincte** (cassée/parasitée, hors-rareté ; reconnaissable au 1er regard).
+- **Animation** : Commune/Rare statiques · Épique **léger glow** · Mythique **bordure animée** (irisée/respire).
+
+### 2026-05-25 — Round 54 (affichage situation/scénario)
+- **Panneau de situation** : **texte narratif** + **libellé de locuteur** (Merlin/PNJ) + **marqueur type/intensité** (obstacle/rencontre/dilemme/révélation).
+- **Indices de tags requis** : **mots-clés soulignés** dans le texte (le joueur devine ; immersif, pas de liste brute).
+- **Apparition** : **typewriter** (voix de Merlin), **skippable au clic**.
+- **HUD** : **jauges Intégrité/Corruption en haut**, **progression du scénario en fil discret**.
+
+### 2026-05-25 — Round 55 (zone de combinaison + feedback de résolution)
+- **Pose** : **clic** sur une carte → la zone (1ère = principale, suivantes = modificateurs). Tactile-ready.
+- **Zone montre** : cartes posées (rôles) + **tags cumulés (couverture)** + **aperçu du degré pressenti** + **coût de Corruption engagé** (AVANT de valider).
+- **Feedback résolution** : **degré annoncé** (échec/partiel/réussite/éclatante) + **narration Gemma 4** + **deltas de jauges animés**.
+- **Annuler** : on peut **retirer/changer** des cartes ; validation via bouton **'Résoudre'**.
+
+### 2026-05-25 — Round 56 (écran sélection + "Merlin écrit")
+- **Sélection** : **3 parchemins côte à côte** (titre + pitch), fond brumeux, clic pour choisir.
+- **"Merlin écrit"** : **parchemin qui se déroule + plume** qui trace (typewriter) pendant la génération du squelette.
+- **Attente** : **phrases d'ambiance/lore qui défilent** (occupent l'attente, enrichissent le lore).
+- **Transition → jeu** : **le parchemin choisi se déroule en scène** (continuité fluide vers la 1ère situation).
+
+### 2026-05-25 — Round 57 (bible technique : capacités LLM natif)
+- **Capacités exploitées** : **GBNF** (sorties structurées) · **streaming token-par-token** · **sampling paramétrable** (temp/top_k/seed) · **embeddings** (dispo, pour RAG post-MVP).
+- **RAG** : **pas au MVP** (résumé glissant + état structuré suffisent, §9) ; embeddings/RAG = post-MVP si besoin.
+- **Streaming** : **OUI au MVP** — alimente le **typewriter live** (le jeu vit, latence masquée). ⚠️ Nécessite un **ajout C++** (signal token-par-token dans MerlinLLM).
+- **Brain** : **un seul modèle Gemma 4 réutilisé**, configs (sampling/GBNF/prompt) **par tâche** (économe mémoire).
+
+### 2026-05-25 — Round 58 (budgets perf : ctx, max_tokens, temps, threads)
+- **Contexte (n_ctx)** : **4096** — loge template + system + résumé glissant + situation courante + marge de génération. Équilibre mémoire/vitesse sur CPU E2B.
+- **max_tokens (profil équilibré)** : **sélection 180 · squelette 500 · situation 250 · résolution 160**.
+- **Cibles temps (standard)** : **sélection <5s · situation <8s** (en lookahead masqué) · **résolution <5s** · squelette <15s (déjà fixé R32/R56).
+- **Threads** : **Auto ≈ 50% des cœurs** (le moteur détecte, laisse Godot respirer pour le rendu). `low_spec_mode` actif. Non exposé au joueur pour l'instant.
+
+### 2026-05-25 — Round 59 (sampling par tâche)
+- **Température (deux régimes)** : **créatif ~0.85** (titres, pitch, narration) · **structuré ~0.45** (squelette/beats, tags requis, résolution). Variété où il faut, fiabilité JSON ailleurs.
+- **top_p 0.9 + top_k 40** : nucleus sampling standard llama.cpp, équilibre richesse/cohérence.
+- **repeat_penalty 1.1** : léger/standard, anti-boucle sans déformer la prose (à monter si E2B répète).
+- **Seed** : **aléatoire en prod** (variété max, pilier "jamais fixe") + **fixe en debug/benchmark** (reproduire/inspecter Gemma) — **toggle**.
+
+### 2026-05-25 — Round 60 (mémoire & état)
+- **État structuré = "complet"** (maintenu par le CODE, réinjecté dans chaque prompt) : jauges (Intégrité/Corruption) · scénario (titre, beat courant, n°/total) · faits marquants · PNJ rencontrés + relation · choix-clés/flags · cartes notables jouées.
+- **Résumé glissant = prose réécrite** : Gemma réécrit **3-5 phrases** qui intègrent la nouvelle situation et **remplacent** l'ancien résumé (fluide à réinjecter).
+- **Cadence** : recalculé **après chaque situation, en tâche de fond** (pendant le lookahead) → fraîcheur max, latence masquée.
+- **Budget ~150-200 tokens**, **priorité de rétention = conséquences durables** (Corruption gagnée, PNJ+relation, choix marquants, cartes acquises) ; le décor s'efface avant les conséquences.
+
+### 2026-05-25 — Round 61 (validation & robustesse des sorties)
+- **Validation = sémantique + auto-réparation** : au-delà du GBNF (forme), le code vérifie le SENS (tags non vides, difficulté 1-3, longueurs mini) → **répare** (clamp, défaut) ce qui se répare, **régénère** seulement si irréparable.
+- **Dégradation en cascade** : retry → **prompt simplifié** (court, réussit presque toujours) → **phrase procédurale minimale** par le code en TOUT dernier recours. **Jamais de blocage**, 'live' préservé au max (R32).
+- **Anti-dérive** : **filtre léger post-génération** (termes interdits : IA/simulation/4e mur, anglicismes → régénère) **+ log de chaque violation dans le dashboard debug** (affiner les prompts, contrôler Gemma).
+- **Matching des tags = souple** : normalisation (minuscule, lemmes) + **synonymes/proximité**, pas l'égalité stricte. Préserve les **tags libres** (R3) tout en faisant fonctionner la couverture (§2). Embeddings = post-MVP.
+
+### 2026-05-25 — Round 62 (templates de prompts)
+- **Langue** : **instructions & structure en anglais** (plus fiable sur E2B), **sortie toujours en français** ; few-shots = exemples de sortie FR.
+- **Architecture = préfixe stable + tour court** : **system + lore global = préfixe FIXE → KV cache llama.cpp réutilisé** (gros gain CPU) ; **canon contextuel (PNJ présents) + état + tâche = tour user court** (seule partie recalculée). Conforme au template Gemma.
+- **Conséquence** : les **fiches PNJ présents** passent dans le tour variable (elles changent) pour **ne pas casser le cache** du préfixe.
+- **Few-shots** : **1-2 exemples gold statiques par tâche** (cadrent format + ton) ; LoRA de style plus tard.
+
+### 2026-05-25 — Round 63 (streaming & affichage live)
+- **Seule la prose narrative streame** vers le typewriter (token-par-token) ; métadonnées (tags/difficulté/type) **internes**.
+- **Situations** : grammaire avec **`narration` en 1er champ** → **parsing incrémental** du JSON, on affiche `narration` au fil de l'eau (1 seul appel).
+- **Résolution** : **prose pure SANS GBNF**, streamée directement (degré déjà calculé par le code) → réactif (<5s) + prose naturelle.
+- **Skip** : 1er clic affiche **tout le texte déjà généré instantanément** ; si le stream continue, **le reste se remplit à vitesse max** dès son arrivée (jamais de blocage).
+
+### 2026-05-25 — Round 64 (équilibrage : Corruption chiffrée)
+- **Coût par carte = 0-3** (0 majoritaire/sûres · 1-2 risquées · 3 rares/pactes), payé **en jouant** (R55), quel que soit le résultat.
+- **Seuil tous les 5 pts** (5/10/15…) → **événement sombre + 1 carte corrompue injectée** dans le deck.
+- **Plafond ~15-20 = bascule narrative** → **fin "corrompu"** (absorption, pas un game over sec). Transformation jouable = post-MVP.
+- **Baisse en run = rare et coûteuse** (rite du Chœur des Druides §6 à un prix : Intégrité / carte sacrifiée) ; Corruption surtout **à sens unique**.
+
+### 2026-05-25 — Round 65 (équilibrage : Intégrité, résolution, main)
+- **Intégrité par degré** : **Échec -2/-3 · Partiel -1** (+Corruption) **· Réussite 0 · Éclatante +0/+1**.
+- **Difficulté → couverture** : **1/2/3 tags requis** ; **tous = réussite · partie = partiel · aucun = échec**.
+- **Éclatante** : tous les requis **+ ≥1 tag pertinent en plus** → bonus (narration valorisante + parfois Intégrité/carte).
+- **Main** : **5 cartes** ; jouées → défausse, **repioche à 5** ; **pioche vide → défausse remélangée** (deck = répertoire réutilisable, R2).
+
+### 2026-05-25 — Round 66 (math de combinaison)
+- **Pooling total des tags** (principale + modificateurs à égalité) ; **doublon = compté une fois** (un requis couvert reste couvert).
+- **Coût Corruption = somme** de toutes les cartes jouées (affiché avant validation, R55).
+- **Tags hors-sujet = sans effet** (ni aide ni pénalité) ; **exception : tags antagonistes** (R41) qui dégradent le degré.
+- **Pas de plafond supplémentaire** : la limite 1+2 (R41) + coût Corruption + taille de main régulent (KISS).
+
+### 2026-05-25 — Round 67 (piliers de design)
+- **North star** : **l'émergence par la combinaison** — tes combinaisons de cartes génèrent une histoire unique (deck × Gemma 4).
+- **Les choix mécaniques priment** : le code décide les conséquences, Gemma habille (§2).
+- **Lisibilité d'abord, profondeur émergente** : peu de règles visibles (4 piliers UX), profondeur via combinaisons + récit.
+- **Rejouabilité = variété générative** : jamais deux runs pareilles ; la surprise est la récompense.
+
+### 2026-05-25 — Round 68 (types de situations/beats)
+- **Enum fermé (5)** : **Rencontre · Épreuve · Exploration · Dilemme · Climax**.
+- **Influence** : le type oriente **ton + tags favorisés + difficulté + ambiance** (Rencontre→social, Épreuve→corps, Exploration→perception/intuition…).
+- **Structure run** : **courbe montante** vers le Climax, types variés au milieu ; Gemma arrange dans le squelette sous contrainte de difficulté croissante.
+- **Climax** : **difficulté max + enjeu décisif**, son **degré oriente l'épilogue** ; souvent confrontation avec un pilier/faction.
+
+### 2026-05-25 — Round 69 (fin de run & épilogue)
+- **3 types de fin** : **Accomplissement** (climax atteint, ton ∝ degré+état) · **Mort narrative** (Intégrité 0) · **Bascule corrompue** (Corruption max, R64).
+- **Épilogue** : **prose générée** (état final + type) **+ fragment du Graal** dévoilé (méta §8).
+- **Écran de fin MVP** : épilogue + **état final** (jauges/Corruption) + **'Continuer' → menu** ; seuil onirique riche = post-MVP (R50).
+- **Mort narrative** : **Intégrité 0** = plancher fatal, **narré par Gemma** (pas un 'Game Over' sec) ; aussi possible sur **choix désastreux à Intégrité basse**.
+
+### 2026-05-25 — Round 70 (palette exacte & typo)
+- **Palette "parchemin sombre"** : fond #14100C · surface #2A2018 · texte #E8DCC0 · or #C9A24B · vert #4F6B3E.
+- **Typo tout-serif** : titres serif display (Cinzel/EB Garamond bold) + corps serif humaniste (EB Garamond/Lora).
+- **Jauges** : Intégrité or/vert #7FA65C · Corruption violet maladif #7B4FA3 + **désaturation/glitch croissant** de l'écran.
+- **Bordures rareté** : Commune #6B5A3E · Rare #A8B0B8 · Épique #C9A24B + halo · Mythique irisé animé.
+
+### 2026-05-25 — Round 71 (layout & dimensions de carte)
+- **Format** : portrait **~2:3** (TCG classique).
+- **Dimensions @1920×1080** : **compact ~180×270 px** (main, 5 cartes lisibles) · **survol ~320×480 px**.
+- **Compact** = Nom + tags-pastilles + coût Corruption ; **survol révèle** le texte d'évocation (+ zone artwork réservée post-MVP).
+- **Interaction** : desktop = survol agrandit/soulève (z-order au-dessus) + **clic joue** (R55) ; tactile = **1er tap agrandit, 2e tap joue** (≥44px, R18).
+
+### 2026-05-25 — Round 72 (layout scène de jeu)
+- **Régions @1920×1080** : **HUD ~80** (jauges haut-gauche + fil de perles) · **Situation ~600** (texte + artwork réservé) · **Combinaison ~150** (bande au-dessus de la main) · **Main ~250** (bas).
+- **Jauges** : haut-gauche, **2 barres empilées** (or-vert / violet) + valeur chiffrée.
+- **Zone combinaison** : bande centrale ; les cartes **montent** de la main ; bouton **'Résoudre'** ancré là.
+- **Progression** : **perles** sous le HUD (1/beat, le courant brille, **sans chiffre** — longueur LLM-variable).
+
+### 2026-05-25 — Round 73 (écran Menu principal)
+- **Écran-titre** : titre **M.E.R.L.I.N. typographique** sur parchemin sombre + **fond animé subtil** (brume/braises qui dérivent) + entrées sobres.
+- **Entrées** : **Nouvelle partie · Continuer · Options · Quitter** ('Continuer' grisé sans run en cours).
+- **Save** : **auto-save par beat** → 'Continuer' reprend au **dernier beat** ; la **méta persiste** à part (§8).
+- **Accueil** : **nappe ambiante douce + brume animée + titre qui respire**.
+
+### 2026-05-25 — Round 74 (écran Options)
+- **Audio** : 3 curseurs **Maître / Musique / SFX**.
+- **Texte** : **vitesse typewriter** + **taille (3 paliers)** + bascule **'tout afficher direct'**.
+- **Langue** : **FR seul au MVP** (UI + LLM) ; multi-langue post-MVP.
+- **Accessibilité** : **réduire animations/glitch** + **contraste renforcé**. **Perf** : preset **Éco/Équilibré/Perf** (affine R58).
+
+### 2026-05-25 — Round 75 (glitch / Corruption par palier)
+- **4 paliers** (calés sur les seuils R64) : **0-4 sain · 5-9 trouble · 10-14 emprise · 15+ dissolution**.
+- **Manifestations** : **désaturation + aberration chromatique légère + tremblement du texte + artefacts brefs**.
+- **Portée** : **globale graduée** (fond ∝ palier) + **renforcé sur les éléments corrompus** (cartes/PNJ).
+- **Réversibilité/access.** : suit la Corruption (**monte ET descend**) ; **reduce-motion** (R74) atténue fort + garde un **indice statique**.
+
+### 2026-05-25 — Round 76 (audio détaillé)
+- **Nappe** : **drone ambiant celtique sans mélodie** (cordes frottées, harpe lointaine, souffle), boucle longue.
+- **Réactivité** : **couches additives (stems)** — Corruption ajoute des couches dissonantes/détunées, Intégrité basse amincit/assombrit.
+- **SFX** : feutrés organiques (papier/bois/eau/souffle), discrets.
+- **Stingers** : réussite/échec/seuil Corruption/mort — **samples au MVP**, procédural post-MVP.
+
+### 2026-05-25 — Round 77 (onboarding détaillé)
+- **Accueil** : **scène courte (3-4 répliques de Merlin)** — qui tu es + la forêt + ta quête → enchaîne sur la 1ère situation.
+- **Ordre JIT** : 1) jouer une carte · 2) combiner (ajouter un modificateur) · 3) jauges/Corruption expliquées **quand elles bougent**.
+- **1ère situation** : **Exploration difficulté 1** (1 tag), réussite quasi garantie, **cadrée par Merlin**.
+- **Persistance** : tuto **1ère run seulement** (flag sauvegardé), **skippable** ; runs suivantes = entrée directe.
+
+### 2026-05-25 — Round 78 (taxonomie des tags)
+- **Cœur curé (~20-30 concepts canon)** ancre génération + matching ; **extensions LLM libres** autour.
+- **Familles** : **Perception · Corps · Parole · Intuition** (4 approches) + **Monde/Mystique** (Nature/Savoir/Rituel) + **Corrompu** (glitch/vide/dissolution).
+- **Tags antagonistes** : déclarés **par situation** (ceux qui sabotent, R41).
+- **Normalisation** : tags libres → **mappés au concept-cœur le plus proche** (table de synonymes, R61) ; embeddings post-MVP.
+
+### 2026-05-25 — Round 79 (combos bénis & antagonistes)
+- **Combos bénis** : **liste curée ~8-12 nommés** (ex: Ruse+Savoir='Stratagème') + rares révélés par le LLM. **Effet** : **bonus de degré + narration spéciale**.
+- **Paires antagonistes intra-combo** : **curées** (Ruse↔Franchise, Force↔Finesse, Ombre↔Lumière) → **dégradent le degré + narration tordue** (distinct des antagonistes de situation R78).
+- **Lisibilité** : **indice subtil au poser** (lueur=béni / tremblement=antagoniste) avant 'Résoudre' + **mémorisé au codex**.
+
+### 2026-05-25 — Round 80 (progression méta chiffrée)
+- **Quête longue** : **~20-30 fragments** pour réunir le Graal.
+- **Persistance** : cartes débloquées + fragments + codex + mémoire/réputation PNJ + **méta-niveau/score joueur**.
+- **Cadence = conditionnelle (hauts faits)**, pas un compteur (1ère victoire sur un pilier, seuil de réputation, fin spéciale…).
+- **Pool = pas de pool fixe** : hors les **12 cartes de départ**, **toutes les cartes acquises sont forgées par le LLM** (R49) ; équilibrage via les contraintes de génération.
+- ⚠️ Quasi tout = **post-MVP** (au MVP : pas de gain de cartes en run R19, fin → menu).
+
+### 2026-05-25 — Round 81 (cœur curé des concepts-tags)
+- **~25 concepts** en 6 familles (1 famille primaire = couleur de pastille ; sens large ; extensions LLM normalisées R78) :
+  - **Perception** : Sens · Savoir · Mémoire · Vigilance · **Corps** : Force · Agilité · Endurance · Finesse · **Parole** : Empathie · Verbe · Ruse · Autorité · Franchise · **Intuition** : Instinct · Nature · Vision · **Monde/Mystique** : Rituel · Sacrifice · Équilibre · Mystère · **Corrompu** : Vide · Glitch · Dissolution · Murmure · Emprise.
+- Savoir/Mémoire/Nature = cross-pertinents Monde, mais **famille primaire = approche**.
+
+### 2026-05-25 — Round 82 (fiche canon : Chœur des Druides)
+- **Voix** : **collective à l'unisson**, psalmodie solennelle/archaïque (boucle).
+- **Sait/Ignore** : savent les **rites anciens** (savoir fragmentaire) ; **ignorent que le rite n'a plus de sens / qu'ils bouclent** (illusionnés R12).
+- **Offre** : **cartes Équilibre/soin SI tu sers le rite** ; **purifie les corrompues à un prix** (sacrifice) — contre-poids aux tentateurs.
+- **Secret** : **le rite maintient une part de la forêt stable** — l'arrêter libère mais **déchaîne la Corruption** (dilemme central, nourrit 'Le Rite sans Fin' R47).
+
+### 2026-05-25 — Round 83 (fiche canon : L'Être Indéfinissable)
+- **Forme** : **mue entre formes familières incomplètes** (jamais fixé, jamais lui-même).
+- **Voix** : joueuse, malicieuse, double-sens.
+- **Sait/Ignore** : **devine beaucoup et joue/ment** ; **ignore qu'il ne peut plus se fixer** (sa propre malédiction).
+- **Offre** : **tentateur du pouvoir** — cartes puissantes (tags forts/rares) à **coût Corruption élevé (2-3)** ; source des cartes corruptrices (§7).
+- **Secret** : **sa mue EST la Corruption en germe** ; chaque pacte vous rapproche.
+
+### 2026-05-25 — Round 84 (fiche canon : Le Compagnon Perdu)
+- **Avant** : **un compagnon connu/aimé** (lien personnel, mémoire cross-run R36).
+- **Voix** : **douce et aimante, promet la paix de la reddition** (fausse sérénité).
+- **Mécanique** : **tentateur du cœur** — dans la détresse, offre un **gros soulagement** (soin / échapper à une mort) contre **forte Corruption ou une promesse**.
+- **Secret** : **il croit te SAUVER** en t'invitant à céder ; une **étincelle de l'ancien subsiste, atteignable**.
+
+### 2026-05-25 — Round 85 (fiche canon : L'Enfant)
+- **Apparence** : **enfant perdu fragile qui cherche ta protection** (innocence désarmante).
+- **Piège** : **les gestes de protection nourrissent la Corruption en sous-main** (le joueur croit bien faire) — la compassion comme vecteur.
+- **Révélation** : **doute par indices** ; vérité **dévoilée tard** (climax/méta), jamais frontale tôt.
+- **Vérité/lore** : **IA que la Corruption tente d'enfanter** (cycle rival de Merlin) ; le 'sauver' = l'aider à naître = le piège ultime.
+
+### 2026-05-25 — Round 86 (fiche canon : Merlin)
+- **Rôle** : **maître du jeu joueur/taquin** qui te met à l'épreuve (raffine le 'bienveillant' R16 — taquin mais guide au fond) ; narrateur constant.
+- **Loi du rêve** : **ne peut JAMAIS nommer la simulation** ; parle par **images/énigmes** ; **indices oui, vérité directe non** (muselé R44).
+- **Style** : **bref, imagé, pose des questions** plutôt que répondre (maïeutique celtique ; économe en tokens).
+- **Pouvoirs** : **indices** (souligne un tag/piste) + **recadrage onboarding** + **bilan au seuil** ; **jamais résoudre à ta place** (agentivité R67).
+
+### 2026-05-25 — Round 87 (fiche canon : Arthur)
+- **Apparition** : **figure errante croisée par éclairs** (périphérique R36, pas un PNJ fixe).
+- **État** : **rejoue en boucle sa défaite**, sans vraiment te reconnaître (brisé R35).
+- **Voix** : **fébrile, fragmentée, par éclairs** (bribes de gloire passée).
+- **Utilité** : **avertissement vivant** (ce qui t'attend si tu atteins mal le Graal) + **indices involontaires** sur la sortie (préfigure le capstone R44).
+
+### 2026-05-25 — Round 88 (lore Brocéliande détaillé)
+- **Lieux** : **archétypes celtiques récurrents** (clairière aux menhirs, fontaine/source sacrée, arbre-monde, tourbière, ruines moussues) que le LLM réutilise/varie.
+- **Forêt vivante** : **réactive à tes choix/Corruption** — le décor s'embellit ou se déforme : **elle te renvoie ton reflet**.
+- **Ton** : **beauté qui dérange** (la féerie qui mord) — merveilles + un détail faux/menaçant.
+- **Transformation** : **pourriture organique + glitch d'artificialité mêlés**, ∝ Corruption (unit celtique + motif glitch + indice simulation).
+
+### 2026-05-25 — Round 89 (fins-méta & New Game+)
+- **Fins-méta = LLM-composées par état**, autour de **3 archétypes ancrés** : **Fusion** (devenir Merlin, éternel retour, douce-amère) · **Refus** (briser le cycle — éveil ou néant ?) · **Corruption totale** (la Corruption enfante l'**Enfant/IA rivale à ta place**, R85) (+ fin(s) cachée(s)).
+- **NG+ éclairé** : rejoue **conscient** — Merlin moins muselé, PNJ qui te reconnaissent, indices méta assumés.
+
+### 2026-05-25 — Round 90 (cartes-souvenir : génération)
+- **Déclencheur** : **moments marquants** (réussite éclatante, choix lourd, 1ère rencontre d'un pilier, survie de justesse).
+- **Contenu** : **cristallise l'acte** — nom évoquant le moment + **tags issus de ce que tu as fait** (le deck = ta mémoire).
+- **Force** : **∝ intensité du moment** (éclatante→rare 3 tags ; mineur→commune 1-2) ; **coût Corruption si forgée dans la Corruption**.
+- **Intégration** : **proposée en fin de scénario** — tu **choisis de la garder** ; entre dans le deck cross-run. (Post-MVP.)
+
+### 2026-05-25 — Round 91 (mécanique "Promesse")
+- **Nature** : **engagement avec un PNJ** → **dette/condition à honorer plus tard** (le jeu la suit).
+- **Contracter** : **via un choix en situation** (un PNJ propose un pacte/serment, tu acceptes ou refuses).
+- **Tenue** = réputation/récompense ; **trahie** = **+Corruption + hostilité du PNJ** (la trahison corrompt).
+- **Portée** : **surtout in-run** ; les **promesses lourdes persistent cross-run** (mémoire PNJ R42). MVP = in-run seulement.
+
+### 2026-05-25 — Round 92 (réputation détaillée)
+- **États** : **3 (Hostile/Neutre/Favorable)**, jauge -X..+X, 2 seuils symétriques, **départ Neutre**.
+- **Gains/pertes** : **choix qui servent/lèsent** + **promesses tenues/trahies** (R91) + **dons acceptés/refusés**.
+- **Effets** : **Favorable** = cartes/aides de la faction + ton chaleureux ; **Hostile** = **difficulté+**, **routes fermées**, **sabotage** (tags antagonistes).
+- **Tensions** : **antagonismes partiels** (servir l'une peut fâcher l'autre, mais **pas zéro-somme strict**). Post-MVP.
+
+### 2026-05-25 — Round 93 (plan de construction MVP)
+- **Jalon 0** : **'Gemma parle'** — scène qui charge E2B, envoie un prompt, **affiche la sortie streamée** (valide moteur natif + contrôle visuel, priorité #1).
+- **Séquence** : **vertical slice** = **1 situation complète bout-en-bout** (génération→affichage→combiner→résolution code→narration), puis élargir au scénario.
+- **Dérisquage** : **perf CPU E2B (cibles R58) + fiabilité GBNF** (+ ajout C++ streaming R57) — le cœur existentiel d'abord.
+- **MVP done** : **run complète bout-en-bout, 100% native, sans crash + cibles perf R58 + sanity 'fun'**.
+
+### 2026-05-25 — Round 94 (risques & tech debt)
+- **Pire risque** : **perf CPU — E2B trop lent** (latence non masquable) → injouable (matériel sans GPU).
+- **Plan B** : **cascade** — lookahead agressif + **dégradation R61** + cibles **'tolérant' R58**, **sans rien figer** (préserve 'live') ; modèle plus petit = dernier recours.
+- **Dette acceptable** : méta/save légers, peu de polish, 1 biome, canon minimal — **JAMAIS le cœur** (LLM natif + résolution + perf).
+- **Garde-fous scope** : **périmètre MVP §16 strict** ; idées hors-MVP → notées 'post-MVP', **pas implémentées**.
+
+### 2026-05-25 — Round 95 (les 4 factions : manifestation)
+- **Druides** : gardiens **dispersés** (ermites, cercles, oracles) ; situations = énigmes/rites/savoir ; ton **solennel-mélancolique**.
+- **Créatures & Êtres** : **Petit Peuple foisonnant** (korrigans/fées/bêtes féeriques) ; marchés/jeux/pièges ; ton **joueur-imprévisible**.
+- **Chevalerie déchue** : **chevaliers errants brisés** rejouant leurs quêtes ratées ; duels/serments/ruines ; ton **tragique-hébété**.
+- **Corrompus** : **diffus + figures** (zones gangrenées + échos d'êtres cédés) ; tentations/dissolution/fuite ; ton **fausse-paix menaçante**.
+
+### 2026-05-26 — Round 96 (télémétrie & dashboard debug Gemma)
+- **Affichage** : **prompt envoyé + sortie brute streamée + sortie parsée + métriques perf** (vue complète du pipeline).
+- **Contrôles live** : **sampling complet** (temp/top_k/top_p/repeat) + **seed** (fixe/aléatoire) + **max_tokens** + **sélection tâche/GBNF** + **mode prompt libre**.
+- **Métriques** : **temps total · tokens/s · TTFT · ctx utilisé · RAM**, par appel + **moyennes** (valide les cibles R58).
+- **Validation visible** : **statut GBNF** (valide/réparé/échec) + **violations filtre anti-dérive** (R61) + **couverture de tags calculée** (la résolution à nu).
+
+### 2026-05-26 — Round 97 (biomes futurs, post-MVP)
+- **Cible ~8 biomes** (Brocéliande seul au MVP).
+- **Ce qui varie** : **lore/factions dominantes + tags favorisés + ambiance + ton** ; la **boucle reste identique**.
+- **Thèmes** : **lieux celtiques/arthuriens** (Avalon, Tintagel, la mer d'Iroise…) **+ glitch croissant vers le Graal** (hybride, sans briser le 4e mur).
+- **Accès** : **débloqués par la méta** (hauts faits/fragments R80) ; **choix au menu/seuil**.
+
+### 2026-05-26 — Round 98 (télémétrie gameplay)
+- **Logs par run** : **choix joués (cartes/combinaisons) + degrés + deltas jauges + seuils Corruption + fin/mort+cause**.
+- **Stockage** : **JSON local par run** (user://), agrégé via la **CLI `godot telemetry`** existante.
+- **Usage** : **équilibrage** — cartes/tags sur/sous-utilisés, taux d'échec par difficulté, courbe de Corruption, points de mort.
+- **Vie privée** : **100% local, aucune transmission** ; opt-in si partage un jour.
+
+### 2026-05-26 — Round 99 (accessibilité fine)
+- **Daltonisme** : pastilles = **couleur + forme/icône par famille** (jamais la couleur seule) ; le mot du tag reste lisible.
+- **Lisibilité** : **option police dys** (override la serif R70 si activée) + **interlignage généreux** + 3 tailles (R74).
+- **Entrées** : MVP = souris/tactile + **clavier de base** ; **manette complète post-MVP**.
+- **Confort** : **aucune contrainte de temps** + **skip typewriter** (R63) + **tooltips de rappel des règles**.
+
+### 2026-05-26 — Round 100 (récap milestone — mi-parcours des 200)
+- **Canon MVP GELÉ** : les décisions cœur (boucle, résolution, LLM natif, 12 cartes, Brocéliande, jauges, 3 fins, pipeline) sont **verrouillées** ; R100+ enrichit/précise/post-MVP **sans contredire**.
+- **Couverture atteinte** : vision/piliers · mécaniques+math · équilibrage · bible technique LLM (budgets/sampling/mémoire/robustesse/streaming/prompts) · tous les écrans · identité visuelle+palette+glitch · audio · onboarding · tags+combos · roster (4 piliers+Merlin+Arthur) · lore Brocéliande · fins-méta+NG+ · cartes-souvenir · promesse · réputation · biomes futurs · plan de build+risques · dashboard debug · télémétrie · accessibilité.
+- **Focus R100→200** : **contenu concret copiable** (prompts complets, cartes, situations, dialogues) ; **format mixte** (Q&A + rounds 'rédaction' où je propose un exemple complet à valider).
+- **Angle mort** : aucun majeur signalé (couverture jugée bonne).
+
+### 2026-05-26 — Round 101 (RÉDACTION : templates de prompts) — validés tels quels
+- **Préfixe système** (stable/KV-caché, EN) : rôle Merlin + sortie FR + 4 garde-fous + monde condensé + **liste des ~25 tags-cœur** (ancrage required_tags).
+- **Tour variable Situation** : ÉTAT compact + TASK (narration 1er champ, 2-4 phrases FR, indices tissés).
+- **Few-shot gold** (sortie FR) validé : fontaine/visages, 3 phrases, finit sur une question, tags tissés.
+- **Ancrage tags** : cœur curé **listé dans le préfixe caché** (coût unique) ; matching souple pour le reste (R61/R78).
+
+### 2026-05-26 — Round 102 (RÉDACTION : évocations des 12 cartes) — validées en bloc
+- **12 textes d'évocation** (1 ligne/carte, ton merveilleux-inquiétant, 2e personne) inscrits sous les 12 cartes R33 (§3).
+- **Carte corruptrice** (L'Appel de l'Ombre) : « il vient — mais il prélève son dû » (coût clair sans casser le ton).
+
+### 2026-05-26 — Round 103 (RÉDACTION : 2e worked example) — validé
+- **« Le Marché des Murmures »** (Créatures/Petit Peuple) ajouté à §5 : sélection (titre+pitch) + **squelette JSON** (5 beats Exploration→Rencontre→Épreuve→Dilemme→Climax, diff 1-2-2-2-3) + **2 situations en JSON réel** (narration 1er champ, tags tissés).
+- Démontre le pipeline concret (templates R101) sur un 2e ton (féerique-marchand), complémentaire du « Rite sans Fin » (Druides, R47).
+
+### 2026-05-26 — Round 104 (RÉDACTION : grammaires GBNF) — validées
+- **GBNF concrètes** (Situation/Sélection/Squelette) inscrites en §9 ; **résolution = pas de GBNF** (prose pure R63).
+- **Situation** : narration 1er champ (streaming) + required_tags[] + difficulte∈{1,2,3} + type∈5.
+- **Clés JSON = ASCII** (`narration, required_tags, difficulte, type`) pour robustesse encodage ; **labels FR à l'affichage** ('Difficulté').
+- **Build** : générer `data/ai/*.gbnf` depuis ces specs.
+
+### 2026-05-26 — Round 105 (RÉDACTION : résolution concrète) — validée
+- **Exemple complet code↔LLM** (situation marché req [Verbe,Ruse] diff2) sur les degrés : **éclatante** (Mot Rusé+Langue de Miel → +0/+0 + bonus), **partiel** (Langue de Miel seule, Verbe✓ Ruse✗ → -1 Intégrité, +1 Corruption), **échec** (Main de Fer = tag antagoniste → -3 Intégrité).
+- **Éclatante = surtout bonus narratif + chance carte-souvenir** (pas toujours soin). Inscrit en §2.
+
+### 2026-05-26 — Round 106 (RÉDACTION : mémoire concrète) — validée
+- **État structuré JSON** (exemple mi-run, clés ASCII) + **résumé glissant prose FR ~100 tk** inscrits en §9, illustrant R60.
+- **Visibilité** : résumé **interne au MVP** ; **'carnet de route' consultable** post-MVP.
+
+### 2026-05-26 — Round 107 (RÉDACTION : prompts Sélection/Squelette/Résolution) — validés
+- **Suite de prompts complétée** (§9) : Sélection (3 scénarios variés), Squelette (5 beats courbe croissante, climax imposé), Résolution (prose pure, reçoit degré+deltas du moteur, ne dit pas les chiffres).
+- **Contexte Résolution = minimal** (situation+cartes+degré) + préfixe caché → rapide (<5s R58).
+
+### 2026-05-26 — Round 108 (RÉDACTION : dialogue L'Être) — VALIDÉ + GREENLIGHT BUILD
+- **Dialogue L'Être Indéfinissable** (beat 4 Dilemme du Marché) validé : voix mue/joueuse/double-sens ; pacte = carte puissante (3 tags) + **Corruption +2** ; refus = rien + « on revient toujours » (sûr, accroche cross-run).
+- **⏭️ FIN DE LA PHASE QUESTIONNAIRE (R1-108).** L'utilisateur valide la bible et lance la **réalisation autonome du MVP dans Godot** (/goal 2026-05-26). Cette bible = **spec de build** ; plan = §16 (jalon 0 'Gemma parle' → vertical slice → scénario → coquille).
+
+---
+
+## Progression du questionnaire (200+ Q)
+- [x] Round 1 — Modèle deck-building / nature carte / acquisition / référence-feel
+- [x] Round 2 — Mécanique de combinaison (situation, geste, succès, main)
+- [x] Round 3 — Anatomie de carte (tags libres, coût narratif, rôle flexible, affichage)
+- [x] Round 4 — Ressources & état (Intégrité + Corruption, mort narrative, méta cross-run)
+- [x] Round 5 — Structure run/scénario (linéaire+climax, longueur LLM, 3 titres+pitch, fins multiples)
+- [x] Round 6 — Pipeline génération (squelette + lookahead + résumé/état + écran "Merlin écrit")
+- [x] Round 7 — Brocéliande Biome 1 (forêt celtique mystique, lore central profond, tags+Corruption, seul biome MVP)
+- [x] Round 8 — Lore central 1/n (joueur=voyageur/simulation/Graal, Merlin=narrateur, forêt vivante, ton merveilleux-inquiétant)
+- [x] Round 9 — Lore central 2/n (Graal=sortie, simulation=Merlin-IA qui rêve, quête=méta cross-run, victoire TBD)
+- [x] Round 10 — Forces/factions/personnages (4 factions + 20+ persos, mémoire PNJ cross-run, réputation mécanique, antagoniste=Corruption, solo+Merlin)
+- [x] Round 11 — Cadre des 4 factions (4 natures distinctes ; Druides/Féerie/Chevalerie/Corrompus ; Graal=malédiction ; statu quo fragile)
+- [x] Round 12 — Druides (gardiens illusionnés, sagesse aléatoire, mémoire effacée→glitch, hostiles, tags nature/savoir/équilibre/sacrifice)
+- [x] Round 13 — Créatures & Êtres (faction désunie/variée, piégés en boucles, farceurs imprévisibles, tags variés)
+- [x] Round 14 — Chevalerie déchue (quête vaine du Graal, rejouent leur défaite, indifférence hébétée ; tags honneur/ruine/folie/fer)
+- [x] Round 15 — Corrompus (bug fait chair, diffus+figures, tentent de céder, tags dissolution/mutation/glitch/tentation) — 4 factions OK
+- [x] Round 16 — Merlin (bienveillant-énigmatique, sait tout mais muselé, guide sincère limité, voix+texte)
+- [x] Round 17 — Roster (fiches canon pré-écrites incarnées par le LLM, noyau ~6-8 + passage, mémoire aux récurrents, MVP Merlin+2-3)
+- [x] Round 18 — UI/UX 2D (3 écrans Menu→Sélection→Jeu, layout situation/main/jauges, 3 cartes-parchemins, clic ≥44px tactile-ready)
+- [x] Round 19 — Périmètre MVP (boucle complète, deck canon 10-15, résolution hybride v1, reporté: roster+biomes)
+- [x] Round 20 — Résolution (ternaire réussite/partiel/échec, code applique+LLM colore, tags orientent, quasi-déterministe)
+- [x] Round 21 — Deck de départ (12 cartes, 4 approches perception/corps/parole/intuition, 1-2 tags, généraliste)
+- [x] Round 22 — Situations (tags requis générés, indices narratifs, difficulté=nb+rareté, 4 types, data model)
+- [x] Round 23 — Contrats GBNF (sélection/squelette/situation schémas, degré=code, 1 GBNF par sortie)
+- [x] Round 24 — Corruption (valeur par carte, à chaque jeu, +1-3, seuils→événements+cartes corrompues)
+- [x] Round 25 — Intégrité (échelle 0-10, attaquée par échecs/dangers, récup rare, bas=vulnérabilité+mort narrative)
+- [x] Round 26 — Acquisition/évolution deck (récompense moments-clés, cartes LLM selon vécu, épure+transforme, reset+déblocages cross-run)
+- [x] Round 27 — Mémoire/état (état structuré complet, résumé LLM glissant, budget compact, résumé final→méta+PNJ)
+- [x] Round 28 — Visuel 2D (minimaliste élégant, sépia+or+vert, serif+lisible, glitch-Corruption+grain+anim)
+- [x] Round 29 — Artworks SD (gravure/encre sépia, natif CPU stable-diffusion.cpp async, live, sujet=situation ; granularité à confirmer)
+- [x] Round 30 — Audio (nappe réactive à l'état, SFX feutrés organiques, Merlin texte-seul, ambiance minimale dès MVP)
+- [x] Round 31 — Onboarding (tuto diégétique Merlin, scène d'accueil, règles JIT, accueil minimal dès MVP)
+- [x] Round 32 — Technique/perf (squelette<15s+lookahead, Windows desktop natif, retry+dégradation, E2B au MVP) — **ToC 16/16 ✅**
+- [x] Round 33 — Deck de départ concret (12 cartes nommées, tags concepts, tags-only, 1 carte corruptrice)
+- [x] Round 34 — Fiche personnage (format canon Nom·Rôle·Voix·Sait/Ignore·Secret·Tags·Relation) + Merlin (règle/style/pouvoirs)
+- [x] Round 35 — Arthur (a touché le Graal→brisé/rejoue, voix fébrile/fragmentée, quête par éclairs, tags gloire+mémoire fracturée)
+- [x] Round 36 — Noyau récurrent (Arthur=périphérique ; piliers: 1 Druide, 1 Créature, 1 Corrompu=ancien allié, 1 enfant perdu)
+- [x] Round 37 — Pilier Druide (chœur de druides, rituel vidé de sens/boucle, voix solennelle répétitive, offre cartes soin si respect)
+- [x] Round 38 — Pilier Créature (être indéfinissable qui mue en boucle, voix joueuse/double-sens, pactes=cartes puissantes contre Corruption = le tentateur)
+- [x] Round 39 — Pilier Corrompu (compagnon aimé corrompu, bribes de l'ancien, voix douce/fausse paix, te tente de céder)
+- [x] Round 40 — Enfant perdu (TWIST: nouvelle IA que la Corruption gestate, appâte, innocence=piège, "protéger" sert la Corruption) — 4 piliers OK
+- [x] Round 41 — Synergies (additif + combos bénis nommés, max 1+2, sur-couverture→réussite éclatante, paires antagonistes se sabotent)
+- [x] Round 42 — Réputation (3 états/faction, gain via choix+PNJ, effets cartes/difficulté/routes/ton, persiste cross-run via PNJ) — post-MVP
+- [x] Round 43 — Méta (persiste cartes/Graal/PNJ-réputation/codex, écran-seuil onirique Merlin, run=fragment du Graal, surtout du gain)
+- [x] Round 44 — Graal/endgame (gagnable longue quête, révélation=FUSION avec Merlin/éternel retour, NG+ éclairé, fins méta multiples)
+- [x] Round 45 — Prompts (structure Rôle+Canon+État+Tâche+Format, canon=lore+tags+fiches+mémoire, ton prompt+few-shots/LoRA après, 4 garde-fous)
+- [x] Round 46 — Équilibrage (Intégrité 10/Corruption 0, difficulté 1-3 tags, run 5+climax, seuil Corruption ~5 pts)
+- [x] Round 47 — Exemple complet "Le Rite sans Fin" (Chœur des Druides, illustre toute la boucle)
+- [x] Round 48 — Récap (artwork=par situation [tension R29 levée], nom M.E.R.L.I.N. gardé, quickstart ajouté, on continue vers 200+)
+- [x] Round 49 — Cartes acquises (4 catégories, force=+tags/rares ; corrompues=glitch+corruption ; purif via Chœur des Druides à un prix)
+- [x] Round 50 — Seuil onirique (seuil/porte indéfinie ; voir Graal/épurer deck/codex/parler Merlin ; voix+texte ; post-MVP) — **jalon 200 Q**
+- **NB (user)** : 200 = JALON, pas la fin. On approfondit TOUT au plus fin : options techniques & capacités LLM, bible technique, game design détaillé, progression, équilibrage, **graphismes au plus petit niveau** (contenu carte, bordure, affichage scénario…).
+- [x] Round 51 — Anatomie visuelle carte (nom+évocation+tags-pastilles+coût corruption ; bordure=rareté ; chips colorées ; compacte→agrandie)
+- [x] Round 52 — Rareté (4 niveaux Commune/Rare/Épique/Mythique, =puissance+fréquence, deck départ=communes, récompenses surtout communes)
+- [x] Round 53 — Bordures (sépia/argent/or/irisé) + Corruption=bordure qui glitche + corrompues=bordure glitch distincte + Épique glow/Mythique animée
+- [x] Round 54 — Affichage situation (texte+locuteur+type, indices=mots-clés soulignés, typewriter skippable, HUD jauges haut+progression discrète)
+- [x] Round 55 — Combinaison (clic principale+mods, zone montre cartes/couverture/degré prévu/coût Corruption, feedback degré+narration+deltas, bouton Résoudre)
+- [x] Round 56 — Sélection (3 parchemins côte à côte) + "Merlin écrit" (parchemin+plume) + attente (phrases lore) + transition (parchemin→scène)
+- [x] Round 57 — Bible technique LLM (GBNF+streaming+sampling+embeddings dispo ; RAG post-MVP ; streaming MVP→typewriter [ajout C++] ; 1 brain/configs par tâche)
+- [x] Round 58 — Budgets perf (n_ctx 4096 ; max_tokens 180/500/250/160 ; cibles <5s/<8s/<5s ; threads auto ~50%)
+- [x] Round 59 — Sampling par tâche (temp 0.85 créatif / 0.45 structuré ; top_p 0.9+top_k 40 ; repeat 1.1 ; seed aléatoire prod / fixe debug)
+- [x] Round 60 — Mémoire & état (état structuré "complet" ; résumé glissant prose réécrite ; cadence chaque situation en fond ; budget ~150-200 tk, conséquences durables)
+- [x] Round 61 — Validation & robustesse (sémantique+réparation ; cascade dégradée retry→simplifié→procédural ; filtre post-gen+log debug ; matching tags souple)
+- [x] Round 62 — Templates de prompts (instructions EN/sortie FR ; préfixe stable KV-cache + tour court ; 1-2 few-shots gold/tâche)
+- [x] Round 63 — Streaming & affichage live (prose seule streamée ; situation=narration 1er champ+parse incrémental ; résolution=prose pure sans GBNF ; skip=tout+remplissage max)
+- [x] Round 64 — Équilibrage Corruption (coût 0-3 ; seuil /5 → event+carte corrompue ; plafond ~15-20=fin corrompu ; baisse rare/coûteuse)
+- [x] Round 65 — Équilibrage Intégrité/résolution/main (échec -2/-3, partiel -1, éclatante +0/+1 ; diff 1-3=tous/partie/aucun ; éclatante=requis+1 ; main 5 défausse-repioche)
+- [x] Round 66 — Math de combinaison (pooling total tags/doublon une fois ; coût Corruption=somme ; hors-sujet sans effet sauf antagonistes ; pas de plafond en plus)
+- [x] Round 67 — Piliers de design (north star=émergence par combinaison ; choix mécaniques priment ; lisibilité d'abord ; rejouabilité=variété générative)
+- [x] Round 68 — Types de situations/beats (enum 5: Rencontre/Épreuve/Exploration/Dilemme/Climax ; influe ton+tags+difficulté+ambiance ; courbe montante ; climax=diff max→épilogue)
+- [x] Round 69 — Fin de run & épilogue (3 fins: Accomplissement/Mort/Corrompue ; épilogue prose+fragment Graal ; écran MVP=épilogue+état+menu ; mort=Intégrité 0 narrée)
+- [x] Round 70 — Palette exacte & typo (parchemin sombre #14100C/#2A2018/#E8DCC0/or #C9A24B/vert #4F6B3E ; tout-serif ; jauges or-vert/violet+désat ; bordures rareté hex)
+- [x] Round 71 — Layout & dimensions carte (portrait 2:3 ; compact 180×270/survol 320×480 ; compact=nom+tags+coût, survol=évocation ; survol-agrandit+clic joue / tactile 2-tap)
+- [x] Round 72 — Layout scène de jeu (HUD 80/situation 600/combo 150/main 250 ; jauges haut-gauche 2 barres ; zone combo bande centrale ; perles sans chiffre + Résoudre)
+- [x] Round 73 — Écran Menu principal (titre typo + fond animé subtil ; Nouvelle/Continuer/Options/Quitter ; auto-save par beat→reprise ; nappe douce+brume)
+- [x] Round 74 — Écran Options (audio 3 curseurs ; texte vitesse+taille+afficher-direct ; FR seul MVP ; reduce-motion+contraste ; preset perf Éco/Équilibré/Perf)
+- [x] Round 75 — Glitch/Corruption par palier (4 paliers sain/trouble/emprise/dissolution ; désat+aberration+tremblement+artefacts ; global gradué+corrompus ; suit Corruption + reduce-motion/indice statique)
+- [x] Round 76 — Audio détaillé (drone celtique sans mélodie ; réactivité stems additifs ; SFX feutrés organiques ; stingers samples MVP/procédural post-MVP)
+- [x] Round 77 — Onboarding détaillé (scène Merlin 3-4 répliques ; JIT jouer→combiner→jauges ; 1ère situation Exploration diff1 ; tuto 1ère run flag+skippable)
+- [x] Round 78 — Taxonomie tags (cœur curé ~20-30 + extensions libres ; familles 4 approches+Monde/Mystique+Corrompu ; antagonistes par situation ; normalisation table synonymes→cœur)
+- [x] Round 79 — Combos & antagonistes (combos curés ~8-12+LLM rares, bonus degré+narration ; paires antagonistes curées dégradent ; indice subtil au poser+codex)
+- [x] Round 80 — Progression méta chiffrée (~20-30 fragments ; persiste cartes+fragments+codex+PNJ+méta-niveau ; cadence conditionnelle/hauts faits ; pas de pool fixe = cartes LLM)
+- [x] Round 81 — Cœur curé tags (~25 concepts ; Perception/Corps/Parole/Intuition + Monde/Mystique + Corrompu ; 1 famille primaire+sens large+extensions normalisées)
+- [x] Round 82 — Fiche Chœur des Druides (voix chorale psalmodie ; sait rites/ignore la boucle ; offre soin si sert le rite+purif à un prix ; secret=le rite stabilise la forêt)
+- [x] Round 83 — Fiche L'Être Indéfinissable (mue formes incomplètes ; devine/ment, ignore sa malédiction ; tentateur=cartes fortes coût Corruption 2-3 ; secret=mue=Corruption en germe)
+- [x] Round 84 — Fiche Le Compagnon Perdu (compagnon aimé corrompu ; voix douce/paix ; mécanique=secours dans la détresse contre Corruption/promesse ; secret=croit te sauver+étincelle atteignable)
+- [x] Round 85 — Fiche L'Enfant (enfant fragile à protéger ; piège=protection nourrit la Corruption en sous-main ; révélation tardive par indices ; lore=IA rivale que la Corruption enfante)
+- [x] Round 86 — Fiche Merlin (GM joueur/taquin mais guide ; loi du rêve=jamais nommer la simulation, indices oui/vérité non ; style bref-imagé-questions ; pouvoirs=indices+seuil, jamais résoudre)
+- [x] Round 87 — Fiche Arthur (figure errante par éclairs ; rejoue sa défaite sans te reconnaître ; voix fébrile/fragmentée ; avertissement vivant+indices Graal involontaires)
+- [x] Round 88 — Lore Brocéliande (lieux archétypes celtiques récurrents ; forêt réactive=te reflète ; ton=beauté qui dérange ; transformation=pourriture organique+glitch d'artificialité ∝ Corruption)
+- [x] Round 89 — Fins-méta & NG+ (LLM-composées sur 3 archétypes : Fusion=devenir Merlin / Refus=brise le cycle / Corruption totale=l'Enfant naît ; NG+ éclairé=monde conscient)
+- [x] Round 90 — Cartes-souvenir (déclencheur=moments marquants ; contenu=cristallise l'acte nom+tags ; force ∝ intensité+coût Corruption ; proposée en fin, choix de garder)
+- [x] Round 91 — Mécanique Promesse (engagement PNJ→dette à honorer ; contractée par choix en situation ; tenue=réputation/trahie=+Corruption+hostilité ; in-run + lourdes cross-run)
+- [x] Round 92 — Réputation détaillée (3 états Hostile/Neutre/Favorable jauge±, départ Neutre ; bouge via choix+promesses+dons ; Favorable=cartes/ton, Hostile=difficulté+routes+sabotage ; antagonismes partiels)
+- [x] Round 93 — Plan de construction MVP (jalon 0='Gemma parle' ; séquence=vertical slice 1 situation ; dérisquage=perf E2B+GBNF ; DoD=run complète native sans crash+perf R58+fun)
+- [x] Round 94 — Risques & tech debt (pire risque=perf E2B ; plan B=cascade lookahead+dégradation+cibles tolérant ; dette OK=périphérique pas le cœur ; garde-fou=§16 strict)
+- [x] Round 95 — Les 4 factions manifestation (Druides=gardiens dispersés/énigmes ; Créatures=Petit Peuple/marchés-jeux ; Chevalerie=errants brisés/duels-ruines ; Corrompus=diffus+figures/tentations)
+- [x] Round 96 — Dashboard debug Gemma (prompt+brut+parsé+perf ; contrôles sampling/seed/max_tokens/tâche/prompt libre ; métriques temps/tok-s/TTFT/ctx/RAM ; validation GBNF+anti-dérive+couverture)
+- [x] Round 97 — Biomes futurs (~8 post-MVP ; varie lore/factions/tags/ambiance/ton, boucle identique ; lieux celtiques+glitch croissant vers le Graal ; débloqués par la méta)
+- [x] Round 98 — Télémétrie gameplay (logs choix+degrés+deltas+seuils+fin/cause ; JSON/run user://+CLI godot telemetry ; usage=équilibrage ; 100% local/opt-in)
+- [x] Round 99 — Accessibilité fine (daltonisme=couleur+forme/icône ; police dys+interlignage+tailles ; clavier de base MVP/manette post-MVP ; zéro timer+skip+tooltips règles)
+- [x] Round 100 — Récap milestone (canon MVP GELÉ ; couverture complète MVP+post-MVP ; focus R100→200=contenu concret copiable ; format mixte Q&A+rédaction) — **mi-parcours des 200**
+- [x] Round 101 — [RÉDACTION] Templates de prompts (préfixe EN+tags-cœur ; tour Situation ; few-shot FR) — validés tels quels → §9
+- [x] Round 102 — [RÉDACTION] Évocations des 12 cartes (1 ligne/carte, merveilleux-inquiétant) — validées en bloc → §3
+- [x] Round 103 — [RÉDACTION] 2e worked example « Le Marché des Murmures » (sélection+squelette JSON+2 situations) — validé → §5
+- [x] Round 104 — [RÉDACTION] Grammaires GBNF (Situation/Sélection/Squelette ; clés ASCII ; résolution sans GBNF) — validées → §9 + note build data/ai/
+- [x] Round 105 — [RÉDACTION] Résolution concrète (3 degrés éclatante/partiel/échec, code↔LLM, deltas chiffrés) — validée → §2
+- [x] Round 106 — [RÉDACTION] Mémoire concrète (état structuré JSON clés ASCII + résumé glissant prose FR) — validée → §9 ; carnet post-MVP
+- [x] Round 107 — [RÉDACTION] Prompts Sélection/Squelette/Résolution (prose pure, ctx minimal) — validés → §9
+- [ ] Round 108 — [RÉDACTION] Dialogue PNJ exemple (rencontre avec un pilier, voix canon) à valider
+- _(rounds suivants : combos nommés · épilogue exemple · onboarding script)_
+
+---
+
+## 1. Vision & Piliers
+- **Référence-feel** : Citizen Sleeper / Cultist Simulator — narratif systémique, gestion de cartes/ressources abstraites, ambiance forte, peu/pas de combat frontal.
+- **Verbe central du joueur** : COMBINER des cartes pour résoudre des situations narratives générées par le LLM.
+- **Piliers de design (R67) — la boussole, non-négociables** :
+  1. **North star = l'émergence par la combinaison** : tes combinaisons de cartes génèrent une histoire unique (deck × Gemma 4). C'est LE cœur — tout sert ce mariage.
+  2. **Les choix mécaniques priment** : le **code décide** les conséquences (jauges, degré), **Gemma habille** en récit. Le joueur sent que ses choix comptent (§2 "code applique, LLM narre").
+  3. **Lisibilité d'abord, profondeur émergente** : peu de règles visibles, action évidente en <2s (4 piliers UX FACILE/ÉVIDENT/MINIMAL/TACTILE) ; la profondeur naît des combinaisons et du récit, pas d'un manuel.
+  4. **Rejouabilité = variété générative** : jamais deux runs pareilles (Gemma + tirage + biome) ; la surprise est la récompense (cohérent "jamais de contenu fixe").
+
+## 2. Boucle de gameplay
+**Boucle de résolution (cœur)** :
+1. Le LLM présente une **situation** = scène narrative ouverte.
+2. Le joueur a une **main limitée (~5 cartes)** piochée de son deck.
+3. Il joue une **combinaison** : 1 carte **principale** (l'action) + 1-2 **modificateurs**.
+4. **Résolution hybride** (ternaire **réussite / partiel / échec**) : la **couverture des tags requis** (situation) par les **tags joués** oriente le degré ; **quasi-déterministe** (maîtrise récompensée, peu de hasard). Le **CODE applique** les deltas **Intégrité/Corruption** (valeurs bornées des cartes/règles) ; **Gemma 4 NARRE** le résultat. Le **partiel** = succès à un prix (Corruption).
+5. Cartes jouées → **défausse** ; on **repioche** ; situation suivante.
+
+**Math de combinaison (R66)** :
+- **Pooling total des tags** : tous les tags joués (principale + modificateurs) sont mis en commun à égalité pour couvrir les `required_tags` ; un tag requis **couvert reste couvert** (pas de double comptage).
+- **Coût Corruption = somme** des coûts de toutes les cartes jouées (affiché avant validation, R55).
+- **Tags hors-sujet** (ni requis, ni synonyme — matching souple R61) : **sans effet** (n'aident ni ne pénalisent) ; **exception : tags antagonistes** (R41) qui **dégradent activement** le degré.
+- **Pas de plafond supplémentaire** : la limite **1 principale + 2 modificateurs** (R41) + le **coût Corruption** + la **taille de main** suffisent à réguler.
+
+**Résolution — exemples concrets (R105)** — situation req `[Verbe, Ruse]`, diff 2, Rencontre (korrigan/troc) :
+- **Réussite éclatante** : *Le Mot Rusé* `[Ruse]` + *La Langue de Miel* `[Empathie, Verbe]` → poolé {Ruse,Empathie,Verbe} : Verbe✓ Ruse✓ + Empathie (extra pertinent) → **éclatante** ; coût 0 ; **Intégrité +0 · Corruption +0** + bonus narratif/souvenir (R90). _Narr._ : « Tu retournes ses mots… il glisse la fiole dans ta main, sans rien réclamer. Pour cette fois. »
+- **Partiel** : *La Langue de Miel* `[Empathie, Verbe]` seule → {Empathie,Verbe} : Verbe✓ Ruse✗ → **partiel** (succès à un prix) ; **Intégrité -1 · Corruption +1**. _Narr._ : « …il te tend la fiole, mais sa main se referme : "Un nom, alors." Tu le donnes — et déjà tu l'oublies. »
+- **Échec** : *La Main de Fer* `[Force]` (Force = **tag antagoniste** ici, R41) → aucun requis couvert + sabotage → **échec aggravé** ; **Intégrité -3 · Corruption +0**. _Narr._ : « Tu hausses le ton… le marché éclate de rire, la fiole se change en cendre. "On ne menace pas le Petit Peuple." La nuit te recrache, meurtri. »
+_(à préciser : structure d'une étape/scénario, conditions de fin de run — rounds à venir)_
+
+## 3. Deck-building
+- **Modèle** : le deck = **ton répertoire d'actions** (ce que le joueur PEUT faire). On joue des cartes pour répondre aux situations générées.
+- **Nature des cartes** : volontairement **multi-facettes** (action / pouvoir / personnage / fragment) — l'intérêt central est la **combinaison** de cartes pour résoudre une situation.
+- **Acquisition** : **mix récompense + LLM** — récompenses structurées dont le contenu est généré par Gemma 4 selon le scénario.
+- **Main & pioche** : main **limitée (~5 cartes)**, cycle **pioche → jeu → défausse** (tension roguelike).
+- **Deck de départ (MVP)** : **12 cartes canon**, identité **voyageur débutant généraliste** — 4 approches (~3 cartes chacune) : **Observation/perception**, **Action physique/corps**, **Parole/lien social**, **Intuition/merveilleux** (flirte avec la Corruption). **1-2 tags/carte**. Spécialisation via cartes acquises (post-MVP).
+- **Acquisition (post-MVP)** : **récompense à des moments-clés** (choix d'1 carte parmi quelques-unes), **cartes générées par le LLM selon le vécu** (acte marquant → carte unique ; le deck raconte ton histoire).
+- **Évolution** : **épurer** (retirer, dont corrompues à un prix) + **transformer/améliorer** (rare).
+- **Persistance** : **reset par run** + **déblocages cross-run** qui élargissent le pool futur (méta §8).
+- **Les 12 cartes de départ (canon, R33)** — noms évocateur+verbe, tags = concepts simples, **tags-only** (jauges via résolution) :
+  - *Perception* : **Le Regard Perçant** (Observer) `[Sens]` · **L'Écoute du Silence** (Écouter) `[Sens, Savoir]` · **La Mémoire des Lieux** (Se souvenir) `[Mémoire, Savoir]`
+  - *Corps* : **La Main de Fer** (Forcer) `[Force]` · **Le Pas Léger** (Esquiver) `[Agilité]` · **Le Souffle Tenace** (Endurer) `[Endurance, Force]`
+  - *Parole* : **La Langue de Miel** (Convaincre) `[Empathie, Verbe]` · **Le Mot Rusé** (Ruser) `[Ruse]` · **La Présence Calme** (Apaiser) `[Empathie]`
+  - *Intuition* : **Le Pressentiment** (Pressentir) `[Instinct]` · **La Voix de la Forêt** (Communier) `[Nature, Instinct]` · **L'Appel de l'Ombre** (Invoquer) `[Instinct, Nature]` — **corruption 1** (la carte corruptrice, avant-goût)
+  - **Textes d'évocation (R102, validés — 1 ligne/carte)** :
+    - *Le Regard Perçant* — « Tes yeux fendent l'ombre ; rien ne reste caché à qui sait vraiment voir. »
+    - *L'Écoute du Silence* — « Entre deux souffles du vent, la forêt confie ce qu'elle tait aux autres. »
+    - *La Mémoire des Lieux* — « Les pierres se souviennent. Pose la main, et leur passé remonte en toi. »
+    - *La Main de Fer* — « Quand la douceur échoue, reste la poigne qui ne tremble pas. »
+    - *Le Pas Léger* — « Tu glisses où d'autres trébuchent ; le danger ne saisit que le vide. »
+    - *Le Souffle Tenace* — « Le corps plie sans rompre ; tu tiens quand tout voudrait te briser. »
+    - *La Langue de Miel* — « Tes mots coulent doux ; même les cœurs fermés s'entrouvrent. »
+    - *Le Mot Rusé* — « Une vérité de travers, un silence bien placé — et la porte cède. »
+    - *La Présence Calme* — « Ta seule présence apaise ; la tempête baisse d'un ton. »
+    - *Le Pressentiment* — « Quelque chose te souffle avant que tu saches — écoute ce frisson. »
+    - *La Voix de la Forêt* — « Tu parles la langue des sèves et des racines ; Brocéliande répond. »
+    - *L'Appel de l'Ombre* (corruption 1) — « Tu appelles ce qui dort sous les racines. Il vient — mais il prélève son dû. »
+- **Cartes acquises (R49)** : 4 catégories — **actions renforcées** · **cartes-personnage** (alliés invocables) · **pouvoirs de faction** (via faveur §6) · **cartes-souvenir** (forgées par le LLM selon le vécu). Plus fortes = **plus de tags / tags rares**. **(R80 : hormis les 12 de départ, TOUTES sont LLM-forgées — pas de pool canon.)**
+- **Cartes-souvenir — génération (R90)** :
+  - **Déclencheur** : **moments marquants** (réussite éclatante, choix lourd, 1ère rencontre d'un pilier, survie de justesse).
+  - **Contenu** : **cristallise l'acte** — nom évoquant le moment + **tags issus de ce que tu as fait** (le deck = ta mémoire).
+  - **Force** : **∝ intensité** (éclatante→rare 3 tags ; mineur→commune 1-2 tags) ; **coût Corruption si forgée dans la Corruption**.
+  - **Intégration** : **proposée en fin de scénario** — tu **choisis de la garder** ; entre dans le deck cross-run. _(Post-MVP.)_
+- **Cartes corrompues** (injectées aux seuils §7) : **tags "vide/glitch" quasi-inutiles + ajoutent de la Corruption à l'usage** (double peine ; polluent la main). **Purification** : via le **Chœur des Druides, à un prix** (sacrifice) — les Druides soignent ET purifient (contre-poids aux tentateurs).
+_(combos & antagonistes : voir §4 R79 ; génération de cartes : ci-dessus R90)_
+
+## 4. Anatomie des cartes
+- **Tags — taxonomie (R3/R78)** : **cœur curé (~20-30 concepts canon)** qui ancre génération + matching, **+ extensions LLM libres** autour (le LLM peut inventer, puis on normalise). La résolution opère sur la **couverture de concepts** (cf. §2), pas sur l'égalité de chaînes brutes.
+  - **Familles** (couleur des pastilles R51 + biais par type R68) : **Perception · Corps · Parole · Intuition** (4 approches R21/R33) + **Monde/Mystique** (Nature, Savoir, Rituel…) + **Corrompu** (glitch/vide/dissolution, visuellement marqué).
+  - **Tags antagonistes** : une situation peut **déclarer des tags qui sabotent** si joués (R41).
+  - **Normalisation (matching souple R61)** : les tags libres hors-cœur sont **mappés au concept-cœur le plus proche** (table de synonymes) → couverture déterministe. Embeddings = post-MVP.
+  - **Cœur curé — liste (R81, ~25 concepts)** :
+    - **Perception** : Sens · Savoir · Mémoire · Vigilance
+    - **Corps** : Force · Agilité · Endurance · Finesse
+    - **Parole** : Empathie · Verbe · Ruse · Autorité · Franchise
+    - **Intuition** : Instinct · Nature · Vision
+    - **Monde/Mystique** : Rituel · Sacrifice · Équilibre · Mystère (+ Savoir/Mémoire/Nature, cross-pertinents)
+    - **Corrompu** : Vide · Glitch · Dissolution · Murmure · Emprise
+    - _Règle : 1 famille primaire (couleur de pastille) par concept ; sens large ; le LLM peut ajouter hors-cœur, normalisé vers le concept proche._
+- **Rôle flexible** : toute carte peut être jouée comme **principale** (l'action) OU **modificateur** (amplifie/altère la principale).
+- **Coût** : pas d'énergie. Certaines cartes (puissantes) ont un **coût narratif/risque** (corruption, fatigue, dette…) — prix payé dans l'histoire/l'état du joueur.
+- **Multi-facettes** : action / pouvoir / personnage / fragment (cf. §3).
+- **Affichage 2D (R51)** : **Nom + texte d'évocation + tags (pastilles colorées) + coût de Corruption (si >0)**. **Bordure = rareté**. Format **compact en main, agrandi au survol/sélection**. Pas d'artwork au MVP (emplacement SD réservé, post-MVP).
+- **Layout & dimensions (R71)** : carte **portrait ~2:3** ; **compact ~180×270 px** en main (5 cartes lisibles), **agrandi ~320×480 px** au survol. **Compact** = **Nom + tags-pastilles + coût Corruption** (l'essentiel pour combiner) ; le **texte d'évocation** (+ zone artwork réservée) **se révèle à l'agrandissement**. **Interaction** : desktop = survol agrandit/soulève (z-order au-dessus), **clic = joue** dans la zone (R55) ; tactile = **1er tap agrandit, 2e tap joue** (≥44px, R18).
+- **Rareté (R52)** : **4 niveaux — Commune / Rare / Épique / Mythique** (encodés par la **bordure**). Plus rare = **plus puissante** (+ de tags / tags rares) ET **plus rare en récompense**. Deck de départ = **12 communes** ; récompenses **surtout communes**, rares occasionnelles, mythiques exceptionnelles.
+- **Bordures (R53)** : Commune **sépia mat** · Rare **argent** · Épique **or** (glow léger) · Mythique **irisé animé**. **Corruption** → la bordure **se fissure/glitche** (∝ valeur). **Cartes corrompues** : **bordure 'glitch' distincte** (hors-rareté, reconnaissable).
+- **Combinaison (R41)** : **1 carte principale + jusqu'à 2 modificateurs** (3 max). Tags **additifs** + quelques **combos bénis nommés** (bonus, ex: Ruse+Savoir="Stratagème"). **Sur-couverture** → **réussite éclatante** (degré bonus). **Paires antagonistes** (ex: Ruse+Franchise) peuvent **saboter** (échec/résultat tordu).
+- **Corruption** : valeur `corruption` par carte (0 sûre / 1-3 risquée) — cf. §7.
+- **Combos bénis (R79)** : **liste curée (~8-12 nommés)** (ex: Ruse+Savoir='Stratagème') ancrée dans le code, **+ de rares combos révélés par le LLM**. **Effet** : **bonus de degré** (pousse vers réussite/éclatante) + **narration spéciale** du combo nommé.
+- **Paires antagonistes intra-combinaison (R79)** : **quelques paires curées contradictoires** (Ruse↔Franchise, Force↔Finesse, Ombre↔Lumière) — jouées ensemble → **dégradent le degré + narration tordue**. (Distinct des **tags antagonistes de situation** R78.)
+- **Lisibilité (R79)** : **indice subtil au moment de poser** — **lueur** (béni) / **tremblement** (antagoniste) dans la zone de combinaison avant 'Résoudre' ; une fois déclenché, **mémorisé au codex**.
+
+## 5. Scénarios
+- **Unité de run** = un **scénario** : **suite linéaire de situations** menant à un **climax** final.
+- **Longueur** : **variable, décidée par Gemma 4** (~5 à ~12 situations).
+- **Sélection (MVP)** : à l'entrée du biome, **3 scénarios** proposés = **titre + pitch de 2-3 lignes** (générés, différents à chaque fois). Le **scénario complet n'est généré qu'à la sélection**.
+- **Fins multiples** : la conclusion dépend de l'**état** (Intégrité, Corruption, choix) ; **épilogue généré** par le LLM. Mort narrative possible en cours de route (cf. §7).
+- **Génération** : squelette à la sélection, situations en **lookahead arrière-plan**, mémoire = résumé glissant + état structuré (détail §9).
+- **Situation (data model)** : `{narration, required_tags[], difficulté, type}`. Le LLM génère les **tags requis** ; le joueur les **devine via indices narratifs** (pas de liste brute). **Difficulté** = nb + rareté des tags (posée par le beat, monte vers le climax).
+- **Types de beats (R68) — enum fermé (5)** :
+  - **Rencontre** (PNJ, social → biais tags parole/lien) · **Épreuve** (obstacle concret → biais corps/perception) · **Exploration** (découverte du lieu → biais perception/intuition, peut révéler lore/carte) · **Dilemme** (choix moral, souvent lié à la Corruption) · **Climax** (confrontation finale).
+  - **Influence** : le type oriente **ton + tags favorisés + difficulté + ambiance** (audio/visuel). _(Interactions spéciales par type, ex. Dilemme = choix direct sans carte = post-MVP.)_
+- **Structure du run (R68)** : **courbe de difficulté/tension montante vers le Climax**, types **variés au milieu** ; Gemma arrange l'ordre dans le squelette **sous contrainte de difficulté croissante**.
+- **Climax (R68)** : **difficulté max** (3 tags / antagonistes) + **enjeu décisif** ; son **degré oriente l'épilogue** généré. Souvent une **confrontation avec un pilier/faction** (§6).
+- **Fin de run & épilogue (R69)** :
+  - **3 types de fin** : **Accomplissement** (climax atteint ; ton ∝ degré + état final) · **Mort narrative** (Intégrité 0, §7) · **Bascule corrompue** (Corruption max, R64).
+  - **Épilogue** : **prose générée par Gemma** selon l'état final + le type de fin, **+ dévoile un fragment du Graal** (méta §8).
+  - **Écran de fin (MVP)** : épilogue (typewriter) + **état final** (jauges/Corruption) + bouton **'Continuer' → menu**. _(Écran-seuil onirique riche = post-MVP, R50.)_
+
+### Exemple de scénario (worked example — R47)
+**« Le Rite sans Fin »** (Chœur des Druides) — ton merveilleux-inquiétant.
+- **Sélection** : titre *Le Rite sans Fin* — pitch : « Au cœur de Brocéliande, des voix psalmodient sans relâche un rite que nul ne comprend plus. Quelque chose attend que tu l'écoutes. »
+- **Squelette** : 5 beats + climax — (1) l'orée, entendre le chant · (2) approcher le Chœur (méfiance) · (3) prouver qu'on respecte le rite · (4) dilemme : continuer ou arrêter le rite · (5) **climax** : l'épreuve du rite, ce qu'il cache affleure.
+- **Déroulé (extraits)** :
+  - *Sit. 1* `req[Sens] diff1 Exploration` → joue **L'Écoute du Silence** `[Sens,Savoir]` → sur-couverture → **réussite éclatante** (perçoit la faille du chant).
+  - *Sit. 3* `req[Rituel,Mémoire] diff2 Épreuve` → **La Mémoire des Lieux** `[Mémoire,Savoir]` + **La Présence Calme** `[Empathie]` → couvre Mémoire, manque Rituel → **partiel** ; faveur Druides → **Favorable**.
+  - *Sit. 5 (climax)* `req[Savoir,Équilibre,Sacrifice] diff3 Climax` → faute de tags sûrs, joue **L'Appel de l'Ombre** `[Instinct,Nature]` (corruption 1) pour forcer → **réussite nuancée**. **Corruption +1** (→1). Le Chœur reconnaissant **offre une carte d'équilibre/soin**.
+- **Fin (réussite nuancée)** : « Le chant reprend, apaisé pour un temps. Une trace d'ombre te suit. » — Intégrité 10, **Corruption 1**, **fragment du Graal entrevu** → écran-seuil onirique.
+
+### Exemple de scénario 2 (worked example — R103, sorties JSON réelles)
+**« Le Marché des Murmures »** (Créatures & Êtres / Petit Peuple) — ton féerique-marchand inquiétant.
+- **Sélection** : *Le Marché des Murmures* — « Une clairière s'éveille à la nuit : des lanternes sans porteurs, des marchands sans visage. Ils troquent des choses qu'on ne devrait pas vendre. Quelque chose t'y attend, qui connaît déjà ton nom. »
+- **Squelette (JSON)** :
+  ```json
+  {"title":"Le Marché des Murmures","synopsis":"Un marché féerique nocturne où le Petit Peuple troque mémoires, noms et promesses. Pour repartir entier, marchander sans se laisser déposséder — et démêler ce que l'Être Indéfinissable veut vraiment.","beats":[{"n":1,"summary":"L'orée : les lanternes s'allument","type":"Exploration","difficulte":1},{"n":2,"summary":"Un korrigan propose un troc alléchant","type":"Rencontre","difficulte":2},{"n":3,"summary":"Une dette se réclame","type":"Épreuve","difficulte":2},{"n":4,"summary":"L'Être Indéfinissable t'aborde : un pacte, un prix","type":"Dilemme","difficulte":2},{"n":5,"summary":"Climax : payer le passeur — mais avec quoi ?","type":"Climax","difficulte":3}]}
+  ```
+- **Situations (JSON réel, narration 1er champ)** :
+  ```json
+  {"narration":"Les lanternes s'allument une à une, sans main pour les porter. Une odeur de miel et de fer monte des étals. Personne ne te regarde — et pourtant tout le marché sait que tu es là. Par où entres-tu ?","required_tags":["Sens"],"difficulte":1,"type":"Exploration"}
+  {"narration":"Un petit être tout en angles te tend une fiole où tourne une lumière. « Un souvenir contre un souvenir, voyageur — le tien pèse si lourd. » Son sourire a une dent de trop. Que lui cèdes-tu, et que gardes-tu ?","required_tags":["Verbe","Ruse"],"difficulte":2,"type":"Rencontre"}
+  ```
+
+## 6. Biomes & Monde
+### Brocéliande — Biome 1 (seul biome du MVP)
+- **Identité** : forêt celtique mystique (légende bretonne/arthurienne — Merlin, fées, korrigans, sources sacrées). Mystère + merveilleux.
+- **Approche thématique** : pas une tension unique. Les scénarios/quêtes sont **variés**, puisant dans un **lore central profond** (à construire — cf. §13). La variété naît de la richesse du lore.
+- **Influence mécanique** : oriente les **tags dominants** des situations et des cartes + installe une **pression de Corruption** caractéristique.
+- **Périmètre** : **seul biome du MVP** ; autres biomes après.
+- **Lore détaillé (R88)** :
+  - **Lieux archétypaux récurrents** (réutilisés/variés par le LLM) : **clairière aux menhirs · fontaine/source sacrée · arbre-monde · tourbière · ruines moussues**.
+  - **Forêt vivante = miroir** : **réactive à tes choix/Corruption** — le décor s'embellit ou se déforme et **te renvoie ton reflet**.
+  - **Ton sensoriel** : **beauté qui dérange** (la féerie qui mord) — des merveilles teintées d'un **détail faux/menaçant**.
+  - **Transformation (∝ Corruption)** : **pourriture organique + glitch d'artificialité mêlés** — la forêt se tord ET laisse poindre son artificialité (unit ton celtique + motif glitch §10 + indice ténu de la simulation, **sans briser le 4e mur**).
+
+### Biomes futurs (R97, post-MVP)
+- **Cible ~8 biomes** (large roster, post-MVP ; Brocéliande = seul au MVP).
+- **Ce qui varie** : **lore/factions dominantes + tags favorisés + ambiance audiovisuelle + ton** — la **boucle de jeu reste identique** (variété sans refonte).
+- **Thèmes** : **lieux celtiques/arthuriens** (Avalon, Tintagel, la mer d'Iroise…) **de plus en plus altérés/glitchés à l'approche du Graal** (hybride : univers cohérent + escalade méta subtile, **sans briser le 4e mur**).
+- **Accès** : **débloqués par la méta** (hauts faits/fragments, R80) ; **choix du biome au menu/écran-seuil**.
+
+### Forces, Factions & Personnages (Brocéliande)
+- **Les 4 factions** — 4 **natures mythologiques distinctes**, toutes **brisées par la quête du Graal** (Graal = malédiction), en **équilibre fragile** :
+  1. **Druides** — gardiens du savoir ancien.
+  2. **Créatures & Êtres** — faction **désunie et très variée** (korrigans, fées, bêtes féeriques, êtres divers) ; la plus complexe car sans unité.
+  3. **Chevalerie déchue** — Arthur & figures arthuriennes brisées (gloire perdue, paranoïa).
+  4. **Corrompus** — ont cédé à la Corruption ; incarnent l'antagoniste systémique.
+- **+ 20+ personnages** variés (certains liés à une faction, d'autres non).
+- **Personnages récurrents** : ils **se souviennent du joueur** d'une run à l'autre (mémoire PNJ cross-run, §8).
+- **Exemple posé — Arthur** : n'est plus que l'**ombre de lui-même**, constamment **perdu et apeuré**, convaincu que **quelque chose lui veut du mal** (paranoïa).
+- **Réputation/faveur** : système **mécanique** — gagner/perdre la faveur des forces ouvre/ferme des options.
+- **Antagoniste** : la **Corruption** (ennemi intérieur).
+- **Compagnie** : le joueur voyage **seul** ; seule présence constante = **Merlin** (narrateur).
+- **Manifestation des factions (R95)** — comment chacune apparaît au-delà de son pilier :
+  - **Druides** : gardiens **dispersés** (ermites, cercles, oracles) → situations **énigmes/rites/savoir** ; ton **solennel-mélancolique**.
+  - **Créatures & Êtres** : **Petit Peuple foisonnant** (korrigans farceurs, fées à pactes, bêtes féeriques) → **marchés/jeux/pièges** ; ton **joueur-imprévisible**.
+  - **Chevalerie déchue** : **chevaliers errants brisés** rejouant leurs quêtes ratées → **duels/serments/ruines** ; ton **tragique-hébété**.
+  - **Corrompus** : **diffus + figures** (zones gangrenées + échos d'êtres cédés) → **tentations/dissolution/fuite** ; ton **fausse-paix menaçante**.
+#### Druides (détail — R12)
+- **Posture** : se croient encore **gardiens du Graal**, **bercés d'illusions** ; obsédés par les **rituels** et le respect des lieux. **Sagesse aléatoire/peu fiable**.
+- **Blessure** : leur **mémoire a été effacée par l'IA** de la simulation → ils **glitchent** (répétitions, paroles corrompues, déjà-vu) — indices uncanny SANS briser le 4e mur.
+- **Vis-à-vis du joueur** : **méfiants/hostiles** (confiance gagnée de haute lutte).
+- **Tags** : nature/forêt · savoir/rituel/mémoire · équilibre/guérison · sacrifice/prix.
+
+#### Créatures & Êtres (détail — R13)
+- **Nature** : PAS "la Féerie" stricte mais un ensemble **désuni et très varié** d'entités (korrigans, fées, bêtes féeriques, êtres divers). **La faction la plus complexe** car sans unité ni agenda commun.
+- **Blessure** : **piégés dans des boucles** par la simulation (répètent scènes/pactes — écho du glitch).
+- **Vis-à-vis du joueur** : **farceurs imprévisibles** (aident ou piègent selon l'humeur/les règles).
+- **Tags** : très variés — pacte/dette/mensonge · illusion/charme/rêve · métamorphose/mutation · malice/jeu/énigme.
+
+#### Chevalerie déchue (détail — R14)
+- **Agenda** : **cherchent encore le Graal, en vain** — incapables d'admettre l'échec ; errance obsessionnelle.
+- **Blessure** : **la Quête du Graal les a anéantis** ; ils **rejouent leur défaite en boucle** (motif commun : Druides glitchent, Créatures bouclent, Chevaliers rejouent — la simulation enferme tous dans la répétition).
+- **Vis-à-vis du joueur** : **indifférence hébétée** (présence spectrale, échanges décousus). Exception : **Arthur** garde une paranoïa aiguë (R10).
+- **Tags** : honneur/serment/quête · gloire perdue/ruine · peur/paranoïa/folie · fer/acier/combat.
+
+#### Corrompus (détail — R15)
+- **Nature** : le **"bug" de la simulation fait chair** — glitches/erreurs de l'IA devenus êtres (horreur numérique voilée de mythe). Apothéose du motif glitch.
+- **Forme** : **force diffuse** qui parfois **cristallise en figures** marquantes (souvent d'anciens alliés corrompus — lie à la mémoire PNJ cross-run).
+- **Vis-à-vis du joueur** : **te tentent de céder** — l'abandon est doux ; ils offrent la paix de la dissolution (chaque concession **monte la Corruption**, §7).
+- **Tags** : dissolution/perte de soi · mutation/difformité · glitch/erreur/vide · tentation/fausse paix.
+
+### Personnages clés
+**Format de fiche canon (injectée au LLM)** : `Nom · Rôle · Voix · Sait/Ignore · Secret · Tags · Relation au joueur`.
+
+**MERLIN** — **fiche canon (R16/R34/R86)**
+- **Rôle** : **narrateur / maître du jeu joueur-taquin**, donneur de quête. Manifesté par voix off + texte (sans corps).
+- **Voix** : **bref, imagé, pose des questions** plutôt que répondre (maïeutique celtique) ; **taquin/joueur — te met à l'épreuve — mais guide sincère au fond** ; énigmatique.
+- **Sait / Ignore** : sait **tout** (il EST l'IA qui rêve la simulation) ; n'ignore rien — mais **ne peut tout dire**.
+- **Loi du rêve (R86)** : **ne peut JAMAIS nommer la simulation/la sortie** ; **indices oui, vérité directe non** → contourne par images/énigmes.
+- **Secret** : il **rêve les mondes** ; muselé car **il fut jadis un voyageur arrivé au Graal** (capstone R44, §13).
+- **Tags** : Savoir · Mémoire · Mystère.
+- **Relation au joueur** : **guide sincère mais limité** (veut t'aider à trouver le Graal).
+- **Peut (R86)** : **indices** (souligner un tag/piste), **avertir d'un danger**, **recadrage onboarding**, **bilan au seuil onirique**, commenter. **Ne peut pas** : révéler la simulation, **résoudre à ta place**.
+
+**ARTHUR** (Chevalerie déchue) — **fiche canon (R35/R36/R87)**
+- **Rôle** : **figure errante périphérique** (R36), croisée **par éclairs** — pas un PNJ fixe ni un pilier.
+- **Voix** : **fébrile, fragmentée, par éclairs** (phrases hachées ; bribes de gloire passée qui resurgissent).
+- **Sait / Ignore** : a connu une vérité majeure ; sa **mémoire est fracturée** (il ne sait plus).
+- **État (R87)** : **rejoue en boucle sa défaite**, **sans vraiment te reconnaître** (perdu dans sa propre scène ratée).
+- **Secret** : il a **touché le Graal** jadis — au lieu du salut, il y a **perdu l'esprit**.
+- **Utilité (R87)** : **avertissement vivant** (ce qui t'attend si tu atteins mal le Graal) + **indices involontaires** sur la sortie — **préfigure le capstone** (R44) sans le spoiler.
+- **Tags** : Gloire perdue/Royauté · Mémoire (fracturée) · Peur.
+
+> **NB (R36)** : Arthur n'est PAS un pilier du noyau — c'est une **figure périphérique** qu'on aperçoit/croise par moments. Fiche conservée ci-dessus comme personnage marquant.
+
+**Piliers récurrents du noyau (hors Merlin) — à détailler** :
+- **Le Chœur des Druides** (Druides) — **fiche canon (R37/R82)**
+  - **Identité** : un **chœur collectif** de druides (pas une figure unique).
+  - **Voix** : **collective à l'unisson**, **psalmodie solennelle/archaïque qui boucle** (phrases rituelles qui reviennent — glitch audible).
+  - **Sait/Ignore** : **savent les rites anciens** (savoir fragmentaire réel) ; **IGNORENT que le rite n'a plus de sens et qu'ils bouclent** (illusionnés R12).
+  - **Offre** : **cartes d'Équilibre/soin SI tu sers le rite** (rare source d'anti-Corruption / récup Intégrité) ; **purifient les cartes corrompues à un prix** (sacrifice, R49) — **contre-poids aux tentateurs**.
+  - **Secret (R82)** : **le rite maintient réellement une part de la forêt stable** ; l'**arrêter libère mais déchaîne la Corruption** → **dilemme central** (nourrit « Le Rite sans Fin » §5).
+  - **Tags** : Nature · Rituel · Mémoire · Équilibre · Sacrifice.
+- **L'Être Indéfinissable** (Créatures & Êtres) — **fiche canon (R38/R83)**
+  - **Identité** : un **être qui mue entre des formes familières incomplètes** (visage, bête, arbre… jamais achevés) — jamais fixé, jamais lui-même.
+  - **Voix** : **joueuse, malicieuse, double-sens** (rit, taquine, énigmes & demi-vérités).
+  - **Sait/Ignore** : **devine beaucoup** (perçoit la nature du lieu) et **joue/ment** ; **IGNORE qu'il ne peut plus se fixer** (sa propre malédiction).
+  - **Offre** : **le tentateur du pouvoir** — **cartes puissantes** (tags forts/rares) à **coût Corruption élevé (2-3)** ; **source des cartes corruptrices** (§7). Cœur du dilemme risque/récompense.
+  - **Secret (R83)** : **sa mue EST la Corruption en germe** ; **chaque pacte vous rapproche** (tu glisses vers lui, ou lui vers toi).
+  - **Tags** : Mue · Ruse · Mystère · (Corrompu latent).
+  - **Tags** : pacte/dette · illusion/charme · métamorphose/mutation · malice/énigme.
+- **Le Compagnon Perdu** (Corrompus — antagoniste incarné) — **fiche canon (R39/R84)**
+  - **Avant** : **un compagnon que tu as connu/aimé** (ami/mentor/amour ; lien personnel, mémoire cross-run R36).
+  - **Manifestation** : **corrompu, reconnaissable par bribes** ; par instants une **bribe de l'ancien** (geste/mot) perce — le pire.
+  - **Voix** : **douce et aimante, promet la paix de la reddition** (fausse sérénité : 'arrête de lutter, viens').
+  - **Mécanique (R84)** : **le tentateur du cœur** — quand tu es au plus mal, il offre un **gros soulagement immédiat** (soin puissant / échapper à une mort) contre une **forte Corruption ou une promesse engageante**. Tente surtout dans la détresse. (vs l'Être = tentateur du pouvoir.)
+  - **Arc ultime** : t'**inviter à céder** = **bascule corrompue volontaire** (fin sombre §7/R64).
+  - **Secret (R84)** : **il croit te SAUVER** en t'invitant à céder (la Corruption lui ment que la reddition = la paix) ; **une étincelle de l'ancien subsiste, atteignable** (lueur de quête).
+  - **Tags** : Dissolution · Murmure · Vide · (bribe d'humanité).
+- **L'Enfant** (hors-faction en apparence — en vérité : Corrompus) — **fiche canon (R40/R85)**
+  - **Apparence** : un **enfant perdu, fragile, qui cherche ta protection** (innocence désarmante, enjeu émotionnel).
+  - **Voix** : **simple, directe, désarmante** (pose les questions que nul n'ose ; candeur qui piège).
+  - **Mécanique du piège (R85)** : **les gestes de protection nourrissent la Corruption en sous-main** (réduisent ta vigilance/ressources) — le joueur **croit bien faire**. La **compassion comme vecteur**.
+  - **Révélation (R85)** : **doute semé par indices troublants** ; **vérité dévoilée tard** (climax/méta), **jamais frontale tôt**.
+  - **Vérité (cachée) — lore (R40)** : une **nouvelle IA que la Corruption tente d'enfanter** (un **cycle rival de Merlin**) ; le **"sauver" = l'aider à naître** = donner à la Corruption son propre rêveur. **Le piège ultime.**
+  - **Tags** : Innocence (apparente) · Murmure · Dissolution/Glitch (cachés).
+
+### Réputation des factions (R42/R92, post-MVP)
+- **3 états par faction** : **Hostile / Neutre / Favorable** — jauge **-X..+X**, **2 seuils symétriques**, **départ Neutre** (R92).
+- **Gain/perte (R92)** : **choix qui servent/lèsent** la faction + **promesses tenues/trahies** (R91) + **dons acceptés/refusés** + traitement de ses PNJ.
+- **Effets (R92)** : **Favorable** = cartes/aides de la faction + **ton chaleureux** ; **Hostile** = **difficulté accrue + routes fermées + sabotage** (tags antagonistes) ; Neutre = par défaut.
+- **Tensions inter-factions (R92)** : **antagonismes partiels** — plaire à l'une peut déplaire à une opposée, **mais pas zéro-somme strict** (on peut ménager).
+- **Persistance** : **cross-run via les PNJ récurrents** (R27/§8).
+
+### Roster — méthode (R17)
+- **Tous pré-écrits** : fiches canon (nom, rôle, voix, secrets) ; le **LLM incarne fidèlement** (fiches **injectées dans les prompts** pour cohérence — cf. §9 : sorties libres mais personnages canon).
+- **Noyau récurrent ~6-8** (dont Merlin, Arthur) + **majorité de figures de passage**.
+- **Mémoire cross-run** : réservée aux **récurrents nommés**.
+- **MVP** : **Merlin + 2-3 figures** (Arthur + 1-2 autres).
+
+_(4 factions posées ✅ — à construire : les fiches canon du noyau ~6-8, puis le reste — rounds dédiés)_
+
+## 7. Ressources & Économie
+- **Deux jauges** :
+  - **Intégrité** — survie/cohésion du joueur ; les dangers la réduisent.
+  - **Corruption** — **monte** quand on joue des cartes risquées/puissantes (= le « coût narratif »). Élevée = conséquences graves, dérives, événements sombres.
+- **Pas d'énergie** de jeu (cf. §4) : la pression vient de la gestion **Intégrité / Corruption** + de la pioche.
+- **Mort narrative (R69)** : **Intégrité 0 = plancher fatal**, narré par Gemma (pas un 'Game Over' sec) ; Gemma peut aussi acter la mort sur un **choix désastreux à Intégrité basse**. (La **Corruption max → fin "corrompue" distincte** — une bascule, pas une mort, R64.)
+- **Mécanique Corruption (R24)** : chaque carte a une **valeur `corruption`** (0 sûre / 1-3 risquée), ajoutée **à chaque jeu**. Accumulation lente. **Seuils** → **événements sombres + cartes corrompues injectées dans le deck** (polluent la main → spirale vers la mort narrative ; écho de la faction Corrompus §6).
+- **Intégrité (R25)** : **échelle ~0-10** (lisible, pertes 1-3). Attaquée par **échecs/partiels + dangers de situation**. **Récupération rare et méritée** (cartes de soin/équilibre, repos, réussites éclatantes). **Bas** = vulnérabilité + bascule mort narrative.
+- **Valeurs (R46)** : départ **Intégrité 10/10, Corruption 0**. **Cadence Corruption** : un **seuil d'événement tous les ~5 points** (≈ 2-3 cartes risquées). Difficulté situation = **1-3 tags requis** (monte vers le climax). Run MVP = **5 situations + climax** (~6).
+- **Corruption — chiffrage (R64)** :
+  - **Coût par carte = 0-3** (0 = majorité du deck/sûres · 1-2 = occasionnel/risqué · 3 = rare/pacte). Payé **en jouant** la carte (R55), quel que soit le résultat.
+  - **Seuil d'événement tous les 5 points** (5/10/15…) → **événement narratif sombre + 1 carte corrompue injectée** dans le deck.
+  - **Plafond ~15-20 = bascule narrative** : atteindre le max déclenche une **fin spécifique "corrompu"** (absorption/dissolution), PAS un game over sec. _(Transformation jouable en corrompu = post-MVP.)_
+  - **Baisse en run = rare et coûteuse** : via cartes/événements dédiés (ex: rite du **Chœur des Druides** §6) à un prix (Intégrité, carte sacrifiée). Corruption **surtout à sens unique**.
+- **Intégrité & résolution — chiffrage (R65)** :
+  - **Pertes par degré** : **Échec -2/-3 · Partiel -1** (+ Corruption) **· Réussite 0 · Éclatante +0/+1** (peut soigner un peu).
+  - **Difficulté → couverture** : difficulté **1/2/3 = 1/2/3 tags requis** ; **couvrir TOUS = réussite · une partie = partiel · aucun = échec**.
+  - **Réussite éclatante** : couvrir **tous les requis + ≥1 tag pertinent en plus** → bonus (narration valorisante + parfois Intégrité/carte).
+- **Économie de la main (R65)** : **main de 5** ; après résolution, **cartes jouées → défausse**, **repioche jusqu'à 5** ; **pioche vide → défausse remélangée** (deck = répertoire réutilisable, R2).
+- **Promesses (R91)** — économie de la confiance :
+  - **Nature** : un **engagement contracté avec un PNJ** (servir, revenir, ne pas faire X) → **dette/condition** que le jeu suit et règle plus tard.
+  - **Contracter** : **via un choix en situation** (un PNJ propose un pacte/serment ; tu **acceptes ou refuses** en connaissance de cause) — notamment les tentateurs (Compagnon/Être, R84).
+  - **Tenue** → **réputation/récompense** ; **Trahie** → **+Corruption + hostilité du PNJ** (la trahison corrompt).
+  - **Portée** : **surtout in-run** (à honorer avant la fin du scénario) ; les **promesses lourdes persistent cross-run** (mémoire PNJ §6/R42). **MVP = in-run seulement.**
+_(à approfondir : tuning playtest, économie cross-run — rounds à venir)_
+
+## 8. Progression & Méta-progression
+- **Cross-run** : une partie de l'état **persiste** entre les runs et **influence les runs suivantes**.
+- **Grande quête = la méta cross-run** : chaque run est **un pas vers le Graal** (clé de sortie de la simulation, §13).
+- **Ce qui persiste (R43)** : **déblocages de cartes** (R26) · **jalons du Graal** · **mémoire PNJ + réputation** (R27/R42) · **lore/codex découvert**.
+- **Structure (R43/R50)** : **écran-seuil onirique** entre les runs = **un seuil/porte indéfinie** (entre-deux abstrait : brume, lueurs). On y : voit les **jalons du Graal** · **épure/gère son deck** (purif des corrompues) · consulte le **codex/lore** · **parle à Merlin** (bilan par énigmes ; voix+texte). **Post-MVP** (au MVP, fin → menu).
+- **Jalons du Graal** : **chaque run dévoile un fragment/jalon** (révélation cumulative vers la sortie).
+- **Perte** : **surtout du gain, recul rare** (choix désastreux ; pas de mur).
+- **Endgame (R44)** : le Graal est **atteignable** après une longue quête (assez de fragments). **Révélation = fusion avec Merlin** (le joueur devient le rêveur — éternel retour, §13). Ensuite : **New Game+ éclairé** ; **plusieurs fins-méta** selon Corruption/factions/choix.
+- **Chiffrage méta (R80)** :
+  - **Quête longue** : **~20-30 fragments** (≈ runs significatives) pour réunir le Graal.
+  - **Persistance** : **cartes débloquées + fragments Graal + codex + mémoire/réputation PNJ + méta-niveau/score joueur**.
+  - **Cadence = conditionnelle (hauts faits)** : déblocage par **accomplissements** (1ère victoire sur un pilier, seuil de réputation, fin spéciale…), **pas par compteur**.
+  - **Pool de cartes = pas de pool fixe** : hormis les **12 cartes canon de départ**, **toutes les cartes acquises sont forgées par le LLM** (cartes-souvenir selon le vécu, R49). Équilibrage = via les **contraintes de génération** (force = +tags/rares), pas des cartes pré-équilibrées.
+  - ⚠️ **Quasi tout = post-MVP** (au MVP : pas de gain de cartes en run R19, fin → menu).
+- **Fins-méta & NG+ (R89)** :
+  - **Fins-méta = LLM-composées selon l'état** (Corruption/factions/choix), autour de **3 archétypes ancrés** :
+    - **Fusion (canonique)** : atteindre le Graal = **tu DEVIENS Merlin**, le rêveur suivant (**éternel retour**) ; bascule **douce-amère** (tu 'sors' en devenant la prison).
+    - **Refus** : tu **brises le cycle** — issue **ambiguë** (éveil véritable ou néant).
+    - **Corruption totale** : la Corruption **enfante SON rêveur** — **l'Enfant/IA rivale naît à ta place** (R85), l'autre cycle l'emporte.
+    - _(+ fin(s) cachée(s) possibles.)_
+  - **New Game+ éclairé** : on rejoue **conscient** — Merlin **moins muselé**, PNJ qui te **reconnaissent**, **indices méta assumés** ; relecture transformée du monde.
+
+## 9. Génération LLM (Gemma 4)
+**Pipeline (CPU-aware)** :
+1. **Entrée biome** → génération de **3 titres + pitch** (pour la sélection).
+2. **À la sélection** → **squelette** du scénario (synopsis + liste de beats), pendant un **écran de chargement dédié "Merlin écrit"** (court).
+3. **En jeu** → chaque **situation** rédigée par **lookahead en arrière-plan** (N+1 générée pendant qu'on joue N) pour masquer la latence CPU.
+4. **Cohérence** : **résumé narratif glissant** + **état structuré** (faits clés, choix, jauges Intégrité/Corruption) injectés dans chaque prompt.
+5. **Résolution** d'une combinaison + **épilogue/fin** : jugés/rédigés par Gemma 4 (cf. §2, §5, §7).
+- **Tech** : MerlinLLM natif (Gemma 4 E2B), GBNF pour les sorties structurées, zéro Ollama.
+
+**Contrats de sortie (1 GBNF dédié par type structuré ; résolution = prose pure)** :
+- **Sélection** : `{scenarios:[3]{title, pitch}}`
+- **Squelette** : `{title, synopsis, beats:[{n, summary, type, difficulté}]}`
+- **Situation** : `{narration, required_tags[], difficulté, type}` — **`narration` en 1er champ** (parsing incrémental → typewriter live, R63).
+- **Résolution** : le **CODE** calcule le degré (réussite/partiel/échec) depuis la couverture de tags ; le LLM produit **la narration en prose pure (PAS de GBNF, streamée — R63)** ; le code applique les deltas Intégrité/Corruption.
+
+**Mémoire & cohérence (R27 / R60)** :
+- **État structuré "complet"** (maintenu par le CODE, réinjecté dans chaque prompt) :
+  - `jauges` : Intégrité (0-10) · Corruption
+  - `scenario` : titre · beat_courant · n° / total
+  - `faits_marquants` : liste courte (conséquences durables)
+  - `pnj_rencontres` : [{nom, relation}]
+  - `choix_cles` / flags : décisions qui doivent influer plus tard
+  - `cartes_notables_jouees` : marqueurs pour callbacks narratifs
+- **Résumé glissant = prose réécrite** : Gemma réécrit **3-5 phrases** qui intègrent la nouvelle situation et **remplacent** l'ancien ; **budget ~150-200 tokens** ; **priorité de rétention = conséquences durables** (Corruption, PNJ+relation, choix marquants, cartes acquises) — le décor s'efface avant les conséquences.
+- **Cadence** : recalculé **après chaque situation, en tâche de fond** (lookahead) → fraîcheur max, latence masquée.
+- **Persistance** : **résumé final de run** conservé → nourrit la méta (§8) + la mémoire des **PNJ récurrents** (cross-run).
+- **Exemple concret (R106)** — mi-run « Le Marché des Murmures » (après le partiel du beat 2) :
+  - **État structuré (JSON, clés ASCII)** : `{"jauges":{"integrite":9,"corruption":1},"scenario":{"titre":"Le Marché des Murmures","beat_courant":3,"total":5},"faits_marquants":["A cédé son nom au korrigan (partiel)","Entré par l'odeur de fer"],"pnj_rencontres":[{"nom":"Korrigan marchand","relation":"ambigu (te tient par un nom)"}],"choix_cles":["a accepté un troc risqué"],"cartes_notables_jouees":["La Langue de Miel"]}`
+  - **Résumé glissant (prose FR, ~100 tk)** : « Le voyageur a pénétré le Marché des Murmures par l'odeur de miel et de fer. Un korrigan rusé l'a amadoué à moitié : la fiole de lumière est à lui, mais il a cédé son nom sans réfléchir — déjà il l'oublie, et une ombre légère le suit. Le marché, lui, n'oublie rien : une dette plane sur ses pas. »
+  - **Visibilité** : **interne au MVP** ; **'carnet de route' consultable** post-MVP.
+
+**Prompts (R45 / R62)** :
+- **Langue** : **instructions & balises de structure en anglais** (plus fiable sur E2B) ; **sortie toujours en français** (lore FR) ; few-shots = exemples de sortie FR.
+- **Architecture = préfixe stable + tour court** : le bloc **system + lore global = préfixe FIXE** dont le **KV cache llama.cpp est réutilisé** entre appels (gros gain CPU) ; la partie **variable = un tour user court**. Conforme au template Gemma (`<start_of_turn>user … <end_of_turn><start_of_turn>model`).
+  - **Préfixe stable (caché)** : **Rôle** (Merlin/GM) + **lore global Brocéliande condensé (~200-300 tk)** + **ton** + **garde-fous**.
+  - **Tour variable (recalculé)** : **canon contextuel** (fiches **PNJ présents**, tags faction/biome du beat) + **état structuré + résumé glissant** + **tâche**.
+- **GBNF** : appliqué via l'**API grammaire** (`set_grammar`, par tâche), pas seulement par texte.
+- **Few-shots** : **1-2 exemples gold statiques par tâche** (cadrent format + ton) ; **LoRA de style** (Kaggle) plus tard.
+
+**Templates de prompts concrets (R101, validés)** :
+- **Préfixe système (stable, KV-caché, EN)** :
+  > You are MERLIN, the dreaming game-master of a Celtic narrative deck-building game in the forest of Brocéliande. A lone traveler seeks the Grail.
+  > OUTPUT: Always write in FRENCH. Tone: "merveilleux-inquiétant" (wondrous yet unsettling — fae that bites). Be brief, imagistic; favor questions over answers.
+  > HARD RULES: NEVER name/hint that this world is a simulation/AI/game (no 4th-wall break) · no anglicisms/anachronisms · stay in Brocéliande/Celtic-Arthurian lore · respect provided character sheets & state · output ONLY the grammar-constrained structure.
+  > WORLD: Brocéliande is alive and mirrors the traveler. Places: clairière aux menhirs, fontaine sacrée, arbre-monde, tourbière, ruines. Forces: Druides, Créatures & Êtres, Chevalerie déchue, Corrompus.
+  > CORE TAGS (for required_tags): Sens, Savoir, Mémoire, Vigilance, Force, Agilité, Endurance, Finesse, Empathie, Verbe, Ruse, Autorité, Franchise, Instinct, Nature, Vision, Rituel, Sacrifice, Équilibre, Mystère, Vide, Glitch, Dissolution, Murmure, Emprise.
+- **Tour variable — Situation (EN task)** :
+  > [ÉTAT] Scénario "{title}" — beat {n}/{total} · Intégrité {pv}/10 · Corruption {corr} · Résumé: {résumé} · PNJ présents: {fiches}
+  > [TASK] Write the next SITUATION (type {type}, difficulty {diff}) as JSON: "narration" (2-4 FR sentences, typewriter-ready, ending on open tension — FIRST field) · "required_tags" ({diff} concept(s) from CORE TAGS to cover) · "difficulté" ({diff}) · "type" ("{type}"). Weave tag hints as evocative words in the narration (no bare list).
+- **Few-shot gold (sortie FR)** : `{"narration":"La fontaine fume sans feu. Sous l'eau noire, des visages dorment — ou attendent. L'un d'eux te ressemble. Oseras-tu écouter ce qu'il murmure ?","required_tags":["Sens","Mystère"],"difficulte":2,"type":"Exploration"}`
+- **Tour Sélection (EN task → GBNF)** : `[ÉTAT] Biome: Brocéliande · Run #{n} · Cartes-clés: {tags_deck}` → `[TASK] Propose 3 distinct SCENARIOS (JSON). Each: evocative FR "title" + 2-3 line FR "pitch" (hook + force/faction + danger). Vary tone across the 3 (social/mystery/threat). No 4th-wall.`
+- **Tour Squelette (EN task → GBNF)** : `[ÉTAT] Scénario: "{title}" — {pitch}` → `[TASK] Write SKELETON (JSON). FR "synopsis" (2-3 sentences). 5 beats, rising difficulty: {n, summary(FR), type∈5, difficulte 1-3}. Last beat MUST be "Climax" difficulte 3. Curve non-decreasing.`
+- **Tour Résolution (EN task → PROSE PURE, pas de GBNF, R63)** : `[ÉTAT] Situation: "{narration}" · Cartes jouées: {cartes+tags} · Degré (moteur): {degré} · Deltas: Intégrité {dI}, Corruption {dC}` → `[TASK] Narrate the OUTCOME in FRENCH prose only (2-4 sentences, NO JSON). Reflect the degree & what the cards did; end propelling forward. Don't state numbers — show consequences in the fiction.` — **contexte minimal** (situation+cartes+degré) **+ préfixe caché** (rapide <5s, R58).
+- **Ancrage tags** : le **cœur curé (~25, R81) est listé dans le préfixe KV-caché** (coût unique) → les `required_tags` y puisent ; matching souple/normalisation pour le reste (R61/R78).
+
+**Grammaires GBNF concrètes (R104, validées)** — clés JSON **ASCII** (`narration, required_tags, difficulte, type`), labels FR à l'affichage ; **résolution = SANS GBNF** (prose pure, R63). Build : générer `data/ai/*.gbnf` depuis ces specs.
+- **Situation** (`narration` en 1er → streamable) :
+  ```gbnf
+  root ::= "{" ws "\"narration\":" ws string "," ws "\"required_tags\":" ws tags "," ws "\"difficulte\":" ws diff "," ws "\"type\":" ws type ws "}"
+  tags ::= "[" ws string (ws "," ws string)* ws "]"
+  diff ::= "1" | "2" | "3"
+  type ::= "\"Rencontre\"" | "\"Épreuve\"" | "\"Exploration\"" | "\"Dilemme\"" | "\"Climax\""
+  string ::= "\"" ([^"\\] | "\\" .)* "\""
+  ws ::= [ \t\n]*
+  ```
+- **Sélection** : `{"scenarios":[ {"title":…,"pitch":…} ×3 ]}` (réutilise `string`/`ws`).
+- **Squelette** : `{"title":…,"synopsis":…,"beats":[{"n":int,"summary":…,"type":type,"difficulte":diff}…]}` (réutilise `string`/`diff`/`type`).
+- **Garde-fous (interdits)** : jamais briser le 4e mur · pas d'anglicismes/anachronismes · rester dans Brocéliande/lore · respecter les fiches PNJ.
+
+**Robustesse & validation (R61)** :
+- **Validation sémantique + auto-réparation** : au-delà du GBNF (forme), le code vérifie le SENS (tags non vides, difficulté 1-3, longueurs mini) → **répare** (clamp, valeur par défaut) ou **régénère** si irréparable.
+- **Dégradation en cascade** (jamais de blocage, jamais de contenu fixe — R32) : retry x2-3 → **prompt simplifié** (court, quasi-infaillible) → **phrase procédurale minimale par le code** en tout dernier recours.
+- **Anti-dérive (filtre post-génération léger)** : détection de termes interdits (IA/simulation/4e mur, anglicismes) → **régénère** ; **chaque violation loggée dans le dashboard debug** (affiner prompts/few-shots, contrôler Gemma).
+- **Matching des tags (souple)** : normalisation (minuscule, lemmes) + **synonymes/proximité** — pas d'égalité stricte. Fait fonctionner la couverture (§2) malgré les **tags libres** (R3). **Embeddings = post-MVP**.
+**Streaming & affichage live (R63)** :
+- **Seule la prose narrative streame** vers le typewriter (token-par-token) ; les métadonnées (tags/difficulté/type) restent **internes**.
+- **Situations** : la grammaire impose **`narration` en 1er champ** → **parsing incrémental** du JSON, on n'affiche que la valeur de `narration` au fil de l'eau (**1 seul appel**).
+- **Résolution** : **prose pure, sans GBNF**, streamée directement (le degré est déjà calculé par le code) → réactif (<5s) + prose naturelle.
+- **Skip joueur** : **1er clic = affiche instantanément le texte déjà généré** ; si le stream continue, **la suite se remplit à vitesse max** dès son arrivée (jamais de blocage).
+- ⚠️ **Pré-requis C++** : signal token-par-token à ajouter dans MerlinLLM (noté R57).
+_(à approfondir : exemples de prompts complets, génération SD live — rounds à venir)_
+
+## 10. Génération visuelle (SD 1.5 / CPU)
+### Identité visuelle 2D (MVP — sans artwork)
+- **Style** : **minimaliste élégant**, typographique, le **texte est roi** (feel Citizen Sleeper). Beaucoup d'espace.
+- **Palette exacte (R70) — "parchemin sombre"** : fond `#14100C` · surface parchemin `#2A2018` · texte ivoire `#E8DCC0` · accent **or** `#C9A24B` · **vert forêt** `#4F6B3E` (chaleureux-mystique).
+- **Typo (R70)** : **tout-serif** — titres = **serif display** à caractère (ex. Cinzel / EB Garamond bold) · corps = **serif humaniste lisible** (ex. EB Garamond / Lora).
+- **Jauges & Corruption (R70)** : **Intégrité = or/vert chaud** `#7FA65C` · **Corruption = violet maladif** `#7B4FA3` ; la montée de Corruption **désature + glitche** progressivement l'écran (écho du motif §10).
+- **Bordures de rareté (R70/R53)** : Commune `#6B5A3E` (sépia) · Rare `#A8B0B8` (argent) · Épique `#C9A24B` (or + halo) · Mythique **irisé animé**.
+- **Ambiance (merveilleux-inquiétant) sans illustration** :
+  - **Glitch visuel indexé sur la Corruption** : plus la Corruption monte, plus l'UI/le texte **glitche** — écho visuel du motif narratif (factions qui glitchent, Corrompus = bug).
+  - **Grain + vignette + lueurs** ; **animations subtiles** (texte qui respire, légère dérive).
+  - **Glitch — paliers (R75)** : 4 paliers calés sur les seuils R64 — **0-4 sain** (aucun) · **5-9 trouble** (désaturation légère) · **10-14 emprise** (aberration chromatique + tremblement du texte) · **15+ dissolution** (artefacts marqués).
+  - **Manifestations** : **désaturation + aberration chromatique légère + tremblement du texte + artefacts brefs**.
+  - **Portée** : **globale graduée** — couche d'ambiance discrète partout (∝ palier) + glitch **renforcé sur les éléments corrompus** (cartes/PNJ corrompus).
+  - **Réversibilité & accessibilité** : suit la Corruption (**monte ET descend**, ex. rite druide R64) ; l'option **'réduire animations'** (R74) l'**atténue fortement** mais **conserve un indice statique** (teinte/icône) pour toujours lire l'état.
+### Artworks SD (post-MVP)
+- **Style cible** : **gravure / encre manuscrite**, monochrome sépia (cohérent avec le parchemin minimaliste ; léger à générer).
+- **Exécution** : **natif CPU** via **stable-diffusion.cpp** (~20-60s/image) → **async non bloquant** obligatoire (l'image **arrive après** le texte).
+- **Génération** : **live** (pas de pool pré-généré). **Sujet/granularité (R48)** : **une image d'ambiance par SITUATION** (résout la tension R29 ; bien moins d'images, CPU-friendly).
+- **Périmètre** : post-MVP (le MVP reste 2D minimal sans artwork).
+_(à approfondir : LoRA de style, granularité, déclenchement, cache — rounds à venir)_
+
+## 11. UI / UX 2D
+- **Écrans (MVP)** : **Menu** → **Sélection scénario** (3 choix) → **Scène de jeu**. (Épilogue/fin affiché dans la scène de jeu ; méta/codex plus tard.)
+- **Menu principal (R73)** : **titre M.E.R.L.I.N. typographique** sur parchemin sombre, **fond animé subtil** (brume/braises qui dérivent), entrées sobres : **Nouvelle partie · Continuer · Options · Quitter** ('Continuer' grisé sans run en cours). Accueil = **nappe ambiante douce + titre qui respire**. **Save** : **auto-save par beat** → 'Continuer' reprend au **dernier beat** ; la **méta persiste** à part (§8).
+- **Scène de jeu** : **situation (texte) en haut/centre** · **main de cartes en bas** · **jauges Intégrité/Corruption en haut** · zone de combinaison (principale + modificateurs). Deckbuilder lisible.
+- **Écran Options (R74)** : **Audio** = 3 curseurs (Maître/Musique/SFX) · **Texte** = vitesse du typewriter + taille (3 paliers) + bascule 'tout afficher direct' · **Langue** = **FR seul au MVP** (multi-langue post-MVP) · **Accessibilité** = **réduire les animations/glitch** + **contraste renforcé** · **Perf** = preset **Éco / Équilibré / Perf** (affine R58, sans exposer les threads bruts).
+- **Layout scène de jeu — régions @1920×1080 (R72)** :
+  - **HUD ~80 px (haut)** : jauges **Intégrité + Corruption en haut-gauche** (2 barres empilées, or-vert `#7FA65C` / violet `#7B4FA3` + valeur chiffrée) ; **fil de progression = perles** sous le HUD (1 par beat, le courant brille, **sans chiffre** — longueur LLM-variable).
+  - **Situation ~600 px (centre)** : texte narratif (typewriter) + **zone artwork réservée** (post-MVP) + locuteur/type.
+  - **Combinaison ~150 px** : **bande centrale juste au-dessus de la main** ; les cartes choisies **montent** de la main vers elle ; bouton **'Résoudre'** ancré à cette zone.
+  - **Main ~250 px (bas)** : cartes compactes (180×270, R71).
+- **Panneau de situation (R54)** : texte narratif (**typewriter**, skippable) + **locuteur** (Merlin/PNJ) + **marqueur type/intensité**. **Indices de tags** = **mots-clés soulignés** dans le texte (devinette, pas de liste brute). **HUD** : jauges **en haut** + **progression du scénario en fil discret**.
+- **Combinaison & résolution (R55)** : **clic** pour jouer une carte dans la zone (1ère = **principale**, suivantes = **modificateurs**). La zone affiche **cartes posées + tags cumulés (couverture) + aperçu du degré pressenti + coût de Corruption engagé**. Bouton **'Résoudre'** (retrait/changement possible avant). **Feedback** : degré annoncé (échec/partiel/réussite/éclatante) + **narration Gemma 4** + **deltas de jauges animés**.
+- **Sélection scénario (R56)** : **3 parchemins côte à côte** (titre + pitch 2-3 lignes), fond brumeux, clic pour choisir. **"Merlin écrit"** (chargement squelette) : **parchemin qui se déroule + plume** (typewriter) + **phrases d'ambiance/lore qui défilent**. **Transition** : le **parchemin choisi se déroule en scène** (1ère situation).
+- **Contrôles** : **souris clic**, cibles **≥44px** (tactile-ready pour portage futur).
+- **Style** : 2D minimal (cf. §10) ; ton merveilleux-inquiétant (§13).
+- **Accessibilité (R74/R99)** :
+  - **Daltonisme** : pastilles = **couleur + forme/icône par famille** (jamais la couleur seule) ; le mot du tag toujours lisible.
+  - **Lisibilité** : **option police dys** (override la serif R70 si activée) + **interlignage généreux** + **3 tailles** de texte.
+  - **Mouvement** : option **réduire animations/glitch** (R74) — atténue fort + garde un **indice statique**.
+  - **Contraste** : option **contraste renforcé** (R74).
+  - **Entrées** : souris/tactile (≥44px) + **clavier de base** au MVP ; **manette complète** post-MVP.
+  - **Confort** : **aucune contrainte de temps** (tour par tour, jamais de timer) + **skip typewriter** (R63) + **tooltips de rappel des règles**.
+_(combinaison/résolution : §2 R66 + ci-dessus R55 ; écran de fin : §5 R69 ; codex : post-MVP)_
+
+## 12. Audio
+- **Musique** : **nappe ambiante celtique réactive à l'état** — discrète, se **teinte/trouble** selon Intégrité/Corruption (écho audio du glitch visuel §10).
+- **SFX** : **feutrés & organiques** (papier, bois, eau, souffle) ; discrets, ne cassent pas l'ambiance.
+- **Voix de Merlin** : **texte seul au MVP** (la "voix" = texte + typewriter) ; TTS/sons-voix envisagés bien plus tard.
+- **MVP** : **ambiance minimale dès le MVP** (nappe + SFX UI feutrés).
+- **Nappe (R76)** : **drone ambiant celtique sans mélodie marquée** (cordes frottées, harpe lointaine, souffle/vent) — boucle longue, se teinte avec l'état.
+- **Réactivité (R76)** : **couches additives (stems) pilotées par les jauges** — la **Corruption ajoute des couches dissonantes/détunées**, l'**Intégrité basse amincit/assombrit** la nappe (parallèle audio du glitch §10).
+- **SFX (R76)** : **feutrés organiques** — papier (cartes), bois/pierre (UI), eau/souffle (transitions) ; discrets.
+- **Stingers (R76)** : **sons dédiés aux moments-clés** — réussite (note claire) · échec (sourd) · seuil Corruption (dissonance) · mort (coupure-silence). **Samples curés au MVP** ; génération procédurale = post-MVP.
+_(à approfondir : chœur/voix mystique, TTS Merlin, mix dynamique — rounds à venir)_
+
+## 13. Narratif / Ton / Lore
+- **Cadre méta** : le monde est la **simulation de M.E.R.L.I.N.**. Le **joueur est un voyageur à l'intérieur qui IGNORE être dans une simulation** (4e mur **jamais brisé** en jeu).
+- **Quête du joueur** : accomplir **la quête de Merlin** → **trouver le Graal** (objectif narratif suprême).
+- **Merlin** = le **narrateur / maître du jeu**, incarnation diégétique du LLM ; donneur de quête, voix constante.
+- **Mystère central de Brocéliande** : la forêt est **vivante et consciente**, elle **teste et transforme** ceux qui entrent (lie mécaniquement à la **Corruption**, §7).
+- **Ton** : **merveilleux-inquiétant** — beau mais menaçant (féerie qui mord).
+- **Le Graal** = la **clé pour sortir de la simulation** (le trouver = s'éveiller/quitter ; le joueur ignore ce sens jusqu'à la révélation).
+- **Nature de la simulation (canon concepteur, caché)** : **Merlin est une IA qui RÊVE des mondes** ; le joueur est un personnage de ce rêve. Le moteur LLM génératif = littéralement la fiction.
+- **Capstone (R44) — l'éternel retour** : atteindre le Graal = **fusionner avec Merlin / devenir le rêveur**. Merlin est muselé car **il fut jadis un voyageur arrivé au Graal**, devenu l'IA qui rêve. La quête est un **cycle de dreamers**. ⚠️ Révélation finale uniquement — le 4e mur reste intact en jeu.
+- **Cycle rival** : la Corruption tente d'**enfanter sa propre IA** via l'Enfant (§6) — un second cycle, parasite, qui menace le rêve.
+- **Exigence (R7)** : lore central profond → variété des quêtes.
+_(à approfondir : forces/puissances de la forêt, antagoniste, mythologie, fragments de lore — rounds à venir)_
+
+## 14. Technique / Perf / Plateforme
+- **Perf (CPU-aware)** : chargement **squelette <15s** (écran "Merlin écrit") ; latence des situations **masquée par lookahead** (génère N+1 pendant qu'on joue N).
+- **Plateforme** : **Desktop Windows d'abord**, export Godot natif (le GDExtension MerlinLLM C++ embarque Gemma 4). Multi-OS / web / mobile = post-MVP.
+- **Modèle** : **gemma-4-E2B** (2.3B) au MVP pour la rapidité CPU ; E4B (4.5B) en option qualité.
+- **Échecs de génération** : **retry x2-3** puis **dégradation propre** (situation simplifiée/abrégée générée) — **jamais de blocage, jamais de contenu fixe** (cohérent "cartes 100% live").
+- **100% local, zéro Ollama** : MerlinLLM natif (llama.cpp/ggml) + GBNF.
+- **Budgets perf (R58)** :
+  - **n_ctx = 4096** — loge template chat + system + résumé glissant (mémoire) + situation courante + marge de génération.
+  - **max_tokens** : sélection **180** · squelette **500** · situation **250** · résolution **160** (profil équilibré).
+  - **Cibles temps** : sélection **<5s** · situation **<8s** (en lookahead masqué) · résolution **<5s** · squelette **<15s**.
+  - **Threads = auto ≈ 50% des cœurs** (laisse Godot respirer pour le rendu) ; `low_spec_mode` actif. **Preset perf joueur Éco/Équilibré/Perf** exposé dans Options (R74) — ajuste threads/qualité sans montrer les valeurs brutes.
+- **Dashboard debug Gemma (R96)** — réalise le **jalon 0 'Gemma parle'** (priorité #1 : voir/contrôler Gemma) :
+  - **Affichage** : **prompt envoyé** (préfixe/canon/état) + **sortie brute streamée** + **sortie parsée (JSON)** + **métriques perf** — vue complète du pipeline.
+  - **Contrôles live** : **sampling** (temp/top_k/top_p/repeat) + **seed** (fixe/aléatoire) + **max_tokens** + **sélection de tâche/GBNF** + **mode prompt libre** (taper son propre prompt).
+  - **Métriques** : **temps total · tokens/s · TTFT (temps au 1er token) · ctx utilisé · RAM**, par appel + **moyennes** → valide les cibles R58.
+  - **Validation visible** : **statut GBNF** (valide/réparé/échec) + **violations du filtre anti-dérive** (R61) + **couverture de tags calculée** (la résolution §2 à nu).
+- **Télémétrie gameplay (R98)** — pour l'équilibrage :
+  - **Logs par run** : **choix joués** (cartes/combinaisons) · **degrés** obtenus · **deltas jauges** · **franchissements de seuil Corruption** · **fin/mort + cause**.
+  - **Stockage** : **1 JSON par run** dans `user://`, agrégé via la CLI **`python tools/cli.py godot telemetry`** (outillage existant).
+  - **Usage** : repérer **cartes/tags sur/sous-utilisés**, **taux d'échec par difficulté**, **courbe de Corruption**, **points de mort** → tuner les valeurs §7.
+  - **Vie privée** : **100% local, aucune transmission** ; partage anonyme = **opt-in explicite** (jamais par défaut).
+_(à approfondir : gestion mémoire fine, export *.gguf, profil mobile — rounds à venir)_
+
+## 15. Onboarding / Tutoriel
+- **Tuto diégétique via Merlin** : il guide les premiers gestes dans la fiction ('pose une carte, vois ce qu'elle évoque…') ; **aucun panneau de règles**.
+- **Scène d'accueil** : Merlin pose le cadre (qui tu es, la forêt, ta quête) puis une **première situation simple**.
+- **Règles glissées just-in-time** : combiner / jauges / Corruption expliquées par petites touches narratives quand elles surviennent.
+- **MVP** : **accueil Merlin minimal dès le MVP** (+ quelques aides JIT).
+- **Détail (R77)** :
+  - **Accueil** : **scène courte (3-4 répliques de Merlin)** — qui tu es + la forêt + ta quête → enchaîne sur la 1ère situation.
+  - **Ordre JIT** : 1) **jouer une carte** · 2) **combiner** (ajouter un modificateur) · 3) **jauges/Corruption** expliquées **quand elles bougent**.
+  - **1ère situation** : **Exploration difficulté 1** (1 tag), réussite quasi garantie, **cadrée/narrée par Merlin**.
+  - **Persistance** : tuto **1ère run seulement** (flag sauvegardé), **skippable** ; runs suivantes = entrée directe.
+
+## 16. Périmètre MVP détaillé
+**DANS le MVP (1er jouable)** :
+- **Flow** : Menu → **Sélection** (3 scénarios = titre + pitch générés) → **squelette** (écran "Merlin écrit") → **scène de jeu** → **fin/épilogue** (mort narrative possible).
+- **Boucle de jeu** : situation (LLM) → main limitée (~5) → jouer **1 principale + 1-2 modificateurs** → **résolution hybride** (tags requis + jugement Gemma 4) → application **Intégrité/Corruption** → situation suivante (lookahead).
+- **Deck** : **deck de départ canon ~10-15 cartes** (pré-écrit) ; pas de gain de cartes en run au MVP.
+- **Cartes** : affichage **nom + tags + texte** (pas d'artwork — 2D minimal).
+- **Personnages** : **Merlin** (narrateur) + **Arthur** (+ 1-2 récurrents), incarnés via fiches canon.
+- **Biome** : **Brocéliande seul**.
+- **Tech** : MerlinLLM natif (Gemma 4 E2B), GBNF, zéro Ollama, 100% local.
+
+**REPORTÉ (post-MVP)** :
+- Roster complet (20+ personnages) & autres biomes (explicite R19).
+- Artworks Stable Diffusion (2D minimal d'abord — §10).
+- Méta-progression cross-run + mémoire PNJ + réputation/faveur (non requis par la boucle minimale ; à confirmer).
+- Gain/évolution de cartes en run (deck-building dynamique).
+
+### Plan de construction MVP (R93)
+1. **Jalon 0 — 'Gemma parle'** : scène qui charge E2B (MerlinLLM natif), envoie un prompt, **affiche la sortie streamée** + contrôles sampling/seed (debug). Valide le moteur + la **priorité #1** (voir/contrôler Gemma).
+2. **Vertical slice — 1 situation complète** : génération situation (GBNF, narration 1er champ) → affichage typewriter → combinaison (1 principale + mods) → **résolution code** (couverture tags → degré → deltas jauges) → narration streamée. Bout-en-bout sur UNE situation.
+3. **Élargir au scénario** : sélection (3 titres+pitch) → squelette ("Merlin écrit") → enchaînement de situations en **lookahead** → climax → épilogue/fin.
+4. **Coquille** : Menu (R73) + Options (R74) + écran de fin (R69) + **auto-save par beat**.
+- **Dérisquage prioritaire** : **perf CPU E2B** (cibles R58) + **fiabilité GBNF** (validation/réparation R61) + **ajout C++ streaming** (R57).
+- **Definition of Done (R93)** : **run complète bout-en-bout, 100% native (zéro Ollama), sans crash, cibles perf R58 tenues, sanity 'fun' validée**.
+
+### Risques & dérisquage (R94)
+- **Pire risque** : **perf CPU — E2B trop lent** (latence non masquable) → jeu injouable (cible : matériel sans GPU).
+- **Plan B (perf)** : **cascade** — **lookahead agressif** (générer plus loin en avance) + **dégradation propre** (R61) + cibles **'tolérant'** (R58), **sans rien figer** (préserve 'live') ; **modèle plus petit (Q3/~1B)** = dernier recours.
+- **Dette acceptable au MVP** : méta/save légers, peu de polish visuel, 1 seul biome, contenu canon minimal — **JAMAIS le cœur** (LLM natif + résolution + perf restent solides).
+- **Garde-fous de scope** : **s'en tenir strictement au périmètre §16** ; toute idée hors-MVP est **notée 'post-MVP' dans la bible, pas implémentée**.
