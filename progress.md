@@ -2,6 +2,86 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 — MVP build autonome (depuis BIBLE.md R1-108)
+
+### Context
+`/goal` : « grace au doc formulé et désormais toutes tes connaissances, tu réalises cette nuit en autonomie le MVP ». Fin de la phase questionnaire (R1-108, canon gelé R100). Build du MVP jouable depuis `docs/BIBLE.md`, 100% natif Gemma 4 E2B, zéro Ollama.
+
+### Done — MVP jouable de bout en bout (commit 5719fb6a)
+- **MerlinNative** (autoload) : adaptateur GDExtension MerlinLLM vérifié (load E2B, generate_async+poll_result, template chat Gemma, sampling R59, async/await + fix race signal).
+- **MerlinScenario** : pipeline sélection/squelette/situation/résolution/épilogue en **JSON libre + prose** (GBNF cassé sur ce build → désactivé runtime) + **fallbacks procéduraux** (R61) → run se termine toujours.
+- **Logique pure** : MerlinTags (cœur ~25 + matching souple), MerlinResolution (degré/deltas R65/R66), MerlinCard (12 cartes R33/R102), MerlinRun (état R60, main R65, Corruption R64, fins R69, autosave), MerlinJson.
+- **Scènes** (UI en code, palette R70) : Menu (R73), Sélection (R56), Jeu (R72), Fin (R69), Options (R74), console « Gemma parle » (jalon 0, R96).
+
+### Findings (dérisquage R94)
+- E2B charge (~5s) + génère FR cohérent ; **perf ~2.5-6 tok/s** (masquée par voiles « Merlin écrit »).
+- **GBNF casse** sur ce build gemma4 (exception à la complétion, même grammaire triviale) → pivot : code = structure, LLM = prose.
+
+### Vérif
+validate_step0 exit=0 ; smoke 5 scènes passed=true ; probe_gemma + probe_run OK (run complète accomplissement + mort) ; code-review 1 CRITICAL + 2 HIGH corrigés. **Push en attente** (confirmation user — éviter popup sélecteur compte GitHub).
+
+---
+
+## Session: 2026-05-25 — Gemma 4 migration + Dev observability/control panel (cascade game design)
+
+### Context
+Migration Qwen 3.5 → Gemma 4 native (MerlinLLM C++, zero Ollama runtime). Priorité absolue user : voir + contrôler le Gemma 4 natif (perf + sorties textuelles/logiques, visuel, pilotable). Archi lockée : jeu exporté, tout local, cartes 100% live (jamais fixes).
+
+### Done
+- POC SD prompt : `merlin_card_illustrated.gbnf` (illustration {subject,scene,mood,palette_hint}) + `gemma_benchmark.gd` assemble/affiche le prompt SD. Biomes alignés canon §22. `scenes/GemmaBenchmark.tscn`. Parse exit=0.
+- `download_gemma4.ps1` corrigé (URLs ggml-org, ASCII, PS 5.1). E4B en téléchargement (~1.4GB/5GB).
+- Décision archi : SD via `stable-diffusion.cpp` natif (GPU-first Vulkan / CPU fallback), LoRA pixel art Octopath HD-2D à entraîner Kaggle. BitNet écarté (inapplicable SD, casse le FR de Gemma).
+
+### Cascade game design (2 agents parallèles)
+- merlin-gameplay-programmer : spec instrumentation/contrôle natif. MVP GDScript pur ; Phase 2 = 3 ajouts C++ (timing/token fields, set_seed, get_memory_info) ; Phase 3 = streaming (signal token_generated + generate_streaming). All-local validé (flag : export *.gguf non-compressés).
+- merlin-game-designer : spec UX panneau (status/output/controls/metrics/timeline/log + quality badges + vue ANALYSE). Audit 4 piliers → VIOLATION : boutons 36px < 44px (à fixer). MVP ~70 LOC.
+
+### Next
+- EN ATTENTE go-ahead user : build Phase 1 MVP (badges + 44px + sliders + vue ANALYSE + log couleur).
+
+---
+
+## Session: 2026-05-17 — v7.7.26 : No-fallback LLM pipeline + premise + think:false fix
+
+### Context (2026-05-17)
+v7.7.25 test showed catastrophic failure (5/5 cards fell back to identical hardcoded Observer/Avancer/Reculer due to qwen3.5:2b 60s timeouts). User mandated zero silent fallback, mandatory premise step, varied card consequences, faster generation.
+
+### Root cause diagnosis
+- `qwen3.5` family has reasoning mode enabled by DEFAULT when `"think"` field is omitted
+- Reasoning tokens consume `num_predict` budget BEFORE producing actual response
+- Result: 0-char responses after timeout — symptom misread as "model broken"
+- **THE FIX**: explicitly pass `"think": false` in every `/api/generate` payload
+
+### Changes shipped
+1. `tools/simulate_human_run.py` v7.7.26 :
+   - `THINK_MODE = False` constant threaded into every `generate()` call
+   - NEW `warmup_models()` step at run start
+   - NEW `llm_premise()` step (12-20 sentence prose between intro and skeleton)
+   - NEW `llm_one_card()` + `llm_cards_strict()` with diversity guard + retry-once + RuntimeError on terminal failure (NO silent fallback)
+   - Improved `_parse_json_lax()` with tail-repair for truncated LLM output
+   - HTML report: warmup/premise/cards_batch/error phases rendered
+2. `addons/merlin_ai/ollama_backend.gd` :
+   - `payload["think"] = thinking_mode` ALWAYS set (was conditionally added only when true)
+   - Same fix in both streaming and non-streaming paths
+
+### Verification benchmarks
+| Model | Without `think:false` | With `think:false` | Verdict |
+|---|---|---|---|
+| qwen3.5:2b | timeout 60s, 0 chars | 17s with cold load → fast after warm | OK |
+| qwen3.5:4b | 30s+, 0 chars | 5s response | OK but needs 15 GB RAM (broke on 17 GB free) |
+| merlin-narrator-lora-q4 | 11.7s valid JSON (small prompt) | 20s malformed JSON (batch) | KEEP for prose only |
+
+Production model : `qwen3.5:2b` for both narrator and GM (3 GB footprint, reliable with `think:false`).
+
+### Files modified
+- `tools/simulate_human_run.py` (~700 LOC refactor)
+- `addons/merlin_ai/ollama_backend.gd` (2 spots, `payload["think"] = thinking_mode`)
+- `task_plan.md` (v7.7.26 entry)
+- `progress.md` (this entry)
+- Plan file `~/.claude/plans/kind-humming-peach.md` v7.7.26 approved via ExitPlanMode
+
+---
+
 ## Session: 2026-04-25 — Vision Graphique v3 + MCP Native Forest + LLM Cards
 
 ### Context
