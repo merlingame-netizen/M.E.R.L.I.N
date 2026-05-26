@@ -147,24 +147,11 @@ func _render_combo() -> void:
 	for i in _combo.size():
 		var card: MerlinCard = _combo[i]
 		var role: String = "principale" if i == 0 else "modificateur"
-		var b: Button = _make_card_button(card, true, role)
-		b.pressed.connect(_on_combo_card.bind(card))
-		_combo_box.add_child(b)
+		var cv: MerlinCardView = MerlinCardView.new()
+		_combo_box.add_child(cv)
+		cv.setup(card, role, true)  # compact (carte posée)
+		cv.card_clicked.connect(_on_combo_card)
 	_update_preview()
-
-
-func _make_card_button(card: MerlinCard, _in_combo: bool, role: String = "") -> Button:
-	var b: Button = Button.new()
-	var tagtxt: String = "[%s]" % ", ".join(card.tags)
-	var cost: String = ("  ⚠%d" % card.corruption) if card.corruption > 0 else ""
-	var rolet: String = ("  (%s)" % role) if role != "" else ""
-	b.text = "%s\n%s%s%s" % [card.card_name, tagtxt, cost, rolet]
-	b.custom_minimum_size = Vector2(190, 72)
-	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	b.add_theme_font_size_override("font_size", 13)
-	if card.corruption > 0:
-		b.add_theme_color_override("font_color", COL_VIOLET)
-	return b
 
 
 func _on_hand_card(card: MerlinCard) -> void:

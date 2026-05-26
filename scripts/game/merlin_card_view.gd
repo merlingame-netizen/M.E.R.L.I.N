@@ -7,8 +7,10 @@ extends Control
 signal card_clicked(card)
 
 const CARD_SIZE: Vector2 = Vector2(152, 196)
+const CARD_SIZE_COMPACT: Vector2 = Vector2(150, 88)  # zone de combinaison (cartes posées)
 const HOVER_SCALE: float = 1.18
 const HOVER_LIFT: float = 30.0
+const COMPACT_HOVER_SCALE: float = 1.06
 const ANIM: float = 0.12
 
 # Bordure par rareté (R53) — palette parchemin.
@@ -26,6 +28,7 @@ const COL_VIOLET: Color = Color("7B4FA3")
 const COL_PILL_TEXT: Color = Color("1A1410")
 
 var card: MerlinCard
+var _compact: bool = false
 var _base_pos: Vector2 = Vector2.ZERO
 var _base_rot: float = 0.0
 var _base_z: int = 0
@@ -33,11 +36,13 @@ var _hovering: bool = false
 var _tw: Tween
 
 
-func setup(c: MerlinCard, role: String = "") -> void:
+func setup(c: MerlinCard, role: String = "", compact: bool = false) -> void:
 	card = c
-	custom_minimum_size = CARD_SIZE
-	size = CARD_SIZE
-	pivot_offset = CARD_SIZE / 2.0  # scale/rotation autour du centre
+	_compact = compact
+	var sz: Vector2 = CARD_SIZE_COMPACT if compact else CARD_SIZE
+	custom_minimum_size = sz
+	size = sz
+	pivot_offset = sz / 2.0  # scale/rotation autour du centre
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_entered.connect(_on_enter)
 	mouse_exited.connect(_on_exit)
@@ -57,7 +62,7 @@ func _build(role: String) -> void:
 		border_col = border_col.lerp(COL_VIOLET, 0.55)  # altération Corruption (R53)
 	sb.set_border_width_all(3)
 	sb.border_color = border_col
-	sb.set_content_margin_all(9)
+	sb.set_content_margin_all(7 if _compact else 9)
 	panel.add_theme_stylebox_override("panel", sb)
 	add_child(panel)
 
@@ -69,7 +74,7 @@ func _build(role: String) -> void:
 	var name_lbl: Label = Label.new()
 	name_lbl.text = card.card_name
 	name_lbl.add_theme_color_override("font_color", COL_NAME)
-	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_font_size_override("font_size", 13 if _compact else 14)
 	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(name_lbl)
@@ -81,14 +86,15 @@ func _build(role: String) -> void:
 		pills.add_child(_make_pill(str(t)))
 	v.add_child(pills)
 
-	var evoc: Label = Label.new()
-	evoc.text = card.evocation
-	evoc.add_theme_color_override("font_color", COL_EVOC)
-	evoc.add_theme_font_size_override("font_size", 11)
-	evoc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	evoc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	evoc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(evoc)
+	if not _compact:
+		var evoc: Label = Label.new()
+		evoc.text = card.evocation
+		evoc.add_theme_color_override("font_color", COL_EVOC)
+		evoc.add_theme_font_size_override("font_size", 11)
+		evoc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		evoc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		evoc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(evoc)
 
 	if role != "":
 		var rlbl: Label = Label.new()
@@ -98,7 +104,7 @@ func _build(role: String) -> void:
 		rlbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_child(rlbl)
 
-	if card.corruption > 0:
+	if card.corruption > 0 and not _compact:
 		var corr: Label = Label.new()
 		corr.text = "⚠ Corruption %d" % card.corruption
 		corr.add_theme_color_override("font_color", COL_VIOLET)
@@ -141,13 +147,26 @@ func set_fan_transform(pos: Vector2, rot: float) -> void:
 func _on_enter() -> void:
 	_hovering = true
 	z_index = 50
-	_animate(_base_pos + Vector2(0, -HOVER_LIFT), 0.0, HOVER_SCALE)
+	if _compact:
+		_scale_to(COMPACT_HOVER_SCALE)  # carte posée (HBox) : agrandir seulement, pas de lift/rotation
+	else:
+		_animate(_base_pos + Vector2(0, -HOVER_LIFT), 0.0, HOVER_SCALE)
 
 
 func _on_exit() -> void:
 	_hovering = false
 	z_index = _base_z  # rétablit l'ordre de l'éventail (pas 0 → évite le z-fighting entre voisines)
-	_animate(_base_pos, _base_rot, 1.0)
+	if _compact:
+		_scale_to(1.0)
+	else:
+		_animate(_base_pos, _base_rot, 1.0)
+
+
+func _scale_to(scl: float) -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	_tw = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "scale", Vector2(scl, scl), ANIM)
 
 
 func _animate(pos: Vector2, rot: float, scl: float) -> void:
