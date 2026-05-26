@@ -68,8 +68,8 @@ func _on_pick(title: String, pitch: String) -> void:
 	if _busy:
 		return
 	_busy = true
-	_show_overlay("Merlin écrit le sentier…")
-	var skel: Dictionary = await get_node("/root/MerlinScenario").generate_skeleton(title, pitch)
+	# Squelette INSTANTANÉ (le pitch est le synopsis) → bascule immédiate vers le jeu.
+	var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(title, pitch)
 	get_node("/root/MerlinRun").new_run(skel)
 	get_tree().change_scene_to_file(GAME_SCENE)
 

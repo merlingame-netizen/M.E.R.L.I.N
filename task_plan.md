@@ -2,7 +2,35 @@
 
 > **Source**: `docs/DEV_PLAN_V2.5.md` (canonical phase plan).
 > **Consumed by**: `tools/octogent/prompts/studio-director.md` Tier 1 backlog.
-> **Last refresh**: 2026-05-26 (MVP autonomous build from BIBLE.md).
+> **Last refresh**: 2026-05-26 (v9.2 boucle non-bloquante).
+
+---
+
+## v9.2 — Boucle NON-BLOQUANTE (latence LLM masquée par procédural) [2026-05-26]
+
+**Problème** : Gemma E2B ≈1 tok/s CPU, single-flight, ~11 gens/run → le LLM ne peut PAS
+narrer chaque beat en temps réel. L'ancienne boucle BLOQUAIT : voile « Merlin observe ton
+geste… » à CHAQUE résolution (~58s × 5, inévitable car dépend du choix joueur) + voile
+situation beat 1 + squelette LLM (~58s pour un synopsis jamais affiché) = 6-8 min d'attente/run.
+
+**Fix (100% GDScript, zéro rebuild)** — principe : le procédural est la BASE instantanée,
+le LLM enrichit en arrière-plan et ne remplace QUE s'il finit avant que le joueur n'avance.
+- [x] `MerlinScenario` : `build_skeleton` (instant, pitch=synopsis), `build_situation` (instant)
+  + `narrate_situation`/`narrate_resolution`/`narrate_epilogue` → prose seule, `""` si échec.
+  `fallback_resolution`/`fallback_epilogue` exposés. `max_tokens 80→64` (gen + courte = +d'enrichissements à temps). Suppression du prefetch/cache situation (remplacé par instant+upgrade).
+- [x] `merlin_game` : situation + issue affichées INSTANTANÉMENT (procédural) ; `_bg_situation`/
+  `_bg_resolution` enrichissent en fond, gardés par `_scene_epoch` (anti-clobber) + `_wait_engine_free`
+  (anti-contention single-flight, non bloquant). `_typewriter(animate)` + `_kill_tw` (pas de tween qui se télescope au swap).
+- [x] `merlin_selection` : pick → `build_skeleton` instant (plus de voile « Merlin écrit le sentier »).
+- [x] `merlin_end` : épilogue procédural instant + `_bg_epilogue` upgrade.
+
+### Vérif
+- [x] validate_step0 exit=0 — 0 erreur de parse dans les 4 fichiers modifiés (erreurs phantom_camera.svg = addon tiers, hors-sujet).
+- [x] smoke MerlinGame `passed=true, script_errors=0` (couvre boucle + merlin_scenario instant).
+- [x] smoke MerlinEnd `passed=true, script_errors=0` (couvre épilogue instant+upgrade).
+- Note : smoke Menu/Selection en isolation HANG au quit (join du thread de la gen sélection 220 tok
+  en vol → dépasse le timeout 38s). Pré-existant (thread-join-at-exit, cf. native LLM build),
+  PAS une régression : leur code modifié n'est pas exercé par le smoke (pas de clic auto).
 
 ---
 

@@ -2,6 +2,35 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 (suite 2) — v9.2 Boucle NON-BLOQUANTE
+
+### Context
+Suite à « oui et continue » (push v9.1 fait → origin). Constat dur : Gemma E2B ≈1 tok/s CPU,
+single-flight → le LLM ne peut PAS narrer en temps réel (~11 gens/run). L'ancienne boucle bloquait
+6-8 min/run (voile à chaque résolution + situation beat 1 + squelette LLM jamais affiché).
+
+### Done — jamais bloquer (procédural = base instantanée, LLM = bonus en fond)
+- **MerlinScenario** : `build_skeleton`/`build_situation` (instant), `narrate_resolution`/`narrate_epilogue`
+  → prose seule (`""` si échec). `fallback_resolution`/`fallback_epilogue` exposés. `max_tokens 80→64`.
+  Pools procéduraux variés (3 situations/type, 2 issues/degré, RNG) = variété cross-run.
+- **merlin_game** : situation + issue affichées INSTANTANÉMENT ; `_bg_resolution` enrichit l'issue en
+  fond (epoch-guard `_scene_epoch` + `_wait_engine_free` anti-contention + `is_inside_tree`).
+  `_typewriter(animate)`/`_kill_tw`. **Pas d'enrichissement situation** (gen 40s ne gagne jamais la
+  course + swap en cours de lecture = anti-ÉVIDENT → budget LLM réservé à l'issue).
+- **merlin_selection** : pick → squelette instant. **merlin_end** : épilogue instant + `_bg_epilogue`.
+
+### Revue (cascade obligatoire)
+- `everything-claude-code:code-reviewer` : 0 CRITICAL, 3 HIGH → traités (by-ref situ éliminé en
+  supprimant `_bg_situation` ; `is_inside_tree` ajouté ; double-enqueue confirmé inoffensif via garde `_busy`).
+- `merlin-game-designer` : architecture validée vs bible §1.3/§21.1 ; fallbacks faibles réécrits
+  (Epreuve/eclatante) + variation ajoutée ; swap situation supprimé (anti-ÉVIDENT).
+
+### Vérif
+validate_step0 exit=0 (0 parse error mes fichiers) ; smoke MerlinGame + MerlinEnd `passed=true, 0 script_errors`.
+Smoke Menu/Selection isolés hang au quit (join gen sélection 220 tok en vol) = pré-existant, code modifié non exercé.
+
+---
+
 ## Session: 2026-05-26 (suite) — Polish v9.1 post-playtest
 
 ### Context

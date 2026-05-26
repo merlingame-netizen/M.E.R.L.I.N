@@ -22,6 +22,7 @@ var _title_lbl: Label
 var _epilogue: RichTextLabel
 var _state_lbl: Label
 var _continue_btn: Button
+var _tw: Tween
 
 
 func _ready() -> void:
@@ -38,11 +39,22 @@ func _run_end() -> void:
 	_title_lbl.add_theme_color_override("font_color", _end_color(et))
 	_state_lbl.text = "Intégrité finale : %d/10    ·    Corruption finale : %d" % [run.integrite, run.corruption]
 
-	_epilogue.text = "Merlin écrit l'épilogue…"
-	var epi: String = await get_node("/root/MerlinScenario").narrate_epilogue(et, run.to_state_dict())
-	_typewriter(epi)
+	# Épilogue procédural INSTANTANÉ, puis enrichissement LLM en arrière-plan (jamais bloquant).
+	var sc: Node = get_node("/root/MerlinScenario")
+	_typewriter(sc.fallback_epilogue(et))
 	run.clear_save()
 	_continue_btn.disabled = false
+	_bg_epilogue(et, run.to_state_dict())
+
+
+func _bg_epilogue(et: String, state: Dictionary) -> void:
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc == null:
+		return
+	var epi: String = await sc.narrate_epilogue(et, state)
+	if epi.length() < 10 or not is_inside_tree():
+		return
+	_typewriter(epi, false)  # swap sans ré-animer
 
 
 func _end_color(et: String) -> Color:
@@ -106,11 +118,17 @@ func _on_continue() -> void:
 	get_tree().change_scene_to_file(MENU_SCENE)
 
 
-func _typewriter(txt: String) -> void:
+func _typewriter(txt: String, animate: bool = true) -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	_tw = null
 	_epilogue.text = txt
+	if not animate:
+		_epilogue.visible_characters = -1  # tout révélé (swap d'enrichissement)
+		return
 	_epilogue.visible_characters = 0
 	var n: int = _epilogue.get_total_character_count()
 	if n <= 0:
 		return
-	var tw: Tween = create_tween()
-	tw.tween_property(_epilogue, "visible_characters", n, clampf(float(n) / 55.0, 0.5, 6.0))
+	_tw = create_tween()
+	_tw.tween_property(_epilogue, "visible_characters", n, clampf(float(n) / 55.0, 0.5, 6.0))

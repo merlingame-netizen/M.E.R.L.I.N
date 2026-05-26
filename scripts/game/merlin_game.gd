@@ -32,6 +32,11 @@ var _overlay_lbl: Label
 var _current_situation: Dictionary = {}
 var _combo: Array = []
 var _state: int = 0  # 0=loading 1=playing 2=resolving
+# Garde anti-clobber : incrémenté à CHAQUE transition d'affichage (nouvelle situation,
+# issue affichée, fin de run). Un enrichissement LLM en arrière-plan ne remplace le texte
+# QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
+var _scene_epoch: int = 0
+var _tw: Tween
 
 
 func _ready() -> void:
@@ -44,37 +49,38 @@ func _ready() -> void:
 
 func _begin() -> void:
 	var run: Node = get_node("/root/MerlinRun")
-	get_node("/root/MerlinScenario").invalidate_situations()
 	if run.scenario.is_empty():
-		_show_overlay("Merlin tisse le sentier…")
-		var skel: Dictionary = await get_node("/root/MerlinScenario").generate_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
+		# Squelette INSTANTANÉ (le pitch est le synopsis) — aucune attente.
+		var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
 		run.new_run(skel)
 	_on_gauges(run.integrite, run.corruption)
-	await _present_current_beat()
+	_present_current_beat()
 
 
 func _present_current_beat() -> void:
-	_state = 0
 	var run: Node = get_node("/root/MerlinRun")
 	if run.ended:
 		return
-	_show_overlay("Merlin écrit…")
+	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
 	var beat: Dictionary = run.current_beat()
-	var situ: Dictionary = await get_node("/root/MerlinScenario").take_situation(beat, {"resume": run.summary})
-	_current_situation = situ
+	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
+	# ici : à ~1 tok/s la gen (~40s) ne gagne jamais la course contre la lecture du joueur, et un
+	# swap de texte en cours de lecture viole le pilier ÉVIDENT (bible §21.1). Le budget LLM
+	# (moteur single-flight) est réservé à l'ISSUE — l'« effet des choix » que le joueur attend.
+	_current_situation = get_node("/root/MerlinScenario").build_situation(beat)
 	_hide_overlay()
-	_show_situation(situ)
+	_show_situation(_current_situation)
 	_combo.clear()
 	_render_hand()
 	_render_combo()
 	_state = 1
 
 
-func _show_situation(situ: Dictionary) -> void:
+func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var btype: String = str(situ.get("type", ""))
 	var marker: String = "[color=#9C8C6A]— %s · beat %d/%d —[/color]\n\n" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
-	_typewriter(marker + str(situ.get("narration", "")))
+	_typewriter(marker + str(situ.get("narration", "")), animate)
 	var reqs: Array = situ.get("required_tags", [])
 	_hint_lbl.text = "Ce moment appelle :  " + _format_tags(reqs)
 
@@ -162,33 +168,50 @@ func _on_resolve() -> void:
 	for c in _combo:
 		played_names.append(c.card_name)
 
-	_show_overlay("Merlin observe ton geste…")
-	var narration: String = await get_node("/root/MerlinScenario").narrate_resolution(_current_situation, played_names, res)
-	_hide_overlay()
-
+	# Issue procédurale INSTANTANÉE — aucune attente. Le LLM enrichit l'issue en arrière-plan.
+	var fallback: String = get_node("/root/MerlinScenario").fallback_resolution(str(res.get("degree", "reussite")))
 	run.play_and_discard(_combo)
 	run.apply_resolution(res)
 	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
 	if run.faits_marquants.size() > 6:
 		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
-	run.summary = narration
+	run.summary = fallback
 
+	_scene_epoch += 1
+	var ep: int = _scene_epoch
 	_combo.clear()
 	_render_hand()
 	_render_combo()
-	var deg_col: Color = _degree_color(str(res["degree"]))
-	_situation_text.text = ""
-	_typewriter("[color=#%s]%s[/color]\n\n%s" % [deg_col.to_html(false), str(res["label"]), narration])
+	_show_resolution(res, fallback, true)
 	run.save()
 
 	if not run.ended:
 		_continue_btn.visible = true
 		_resolve_btn.visible = false
-		# Prefetch de la situation SUIVANTE pendant que le joueur lit l'issue (LLM idle).
-		var beats: Array = run.scenario.get("beats", [])
-		var next_i: int = run.beat_index + 1
-		if next_i < beats.size():
-			get_node("/root/MerlinScenario").prefetch_situation(beats[next_i], {"resume": run.summary})
+		_bg_resolution(ep, _current_situation, played_names, res)
+
+
+func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:
+	var deg_col: Color = _degree_color(str(res["degree"]))
+	if animate:
+		_situation_text.text = ""
+	_typewriter("[color=#%s]%s[/color]\n\n%s" % [deg_col.to_html(false), str(res["label"]), narration], animate)
+
+
+# Enrichit l'issue en arrière-plan ; ne remplace QUE si le joueur n'a pas cliqué « Continuer »
+# (epoch stable) et que le run n'est pas fini. Jamais bloquant.
+func _bg_resolution(ep: int, situ: Dictionary, played: Array, res: Dictionary) -> void:
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if sc == null or run == null:
+		return
+	if not await _wait_engine_free(ep):
+		return
+	var prose: String = await sc.narrate_resolution(situ, played, res)
+	if ep != _scene_epoch or run.ended or prose.length() < 10 or not is_inside_tree():
+		return
+	run.summary = prose
+	_show_resolution(res, prose, false)  # swap sans ré-animer
 
 
 func _on_continue() -> void:
@@ -198,7 +221,7 @@ func _on_continue() -> void:
 	run.advance_beat()
 	if run.ended:
 		return
-	await _present_current_beat()
+	_present_current_beat()
 
 
 func _degree_color(degree: String) -> Color:
@@ -232,6 +255,7 @@ func _on_run_ended(_end_type: String) -> void:
 
 
 func _goto_end() -> void:
+	_scene_epoch += 1  # invalide tout enrichissement LLM en vol avant de quitter la scène
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
 		mn.cancel()
@@ -239,14 +263,40 @@ func _goto_end() -> void:
 		get_tree().change_scene_to_file(END_SCENE)
 
 
-func _typewriter(txt: String) -> void:
+func _typewriter(txt: String, animate: bool = true) -> void:
+	_kill_tw()
 	_situation_text.text = txt
+	if not animate:
+		_situation_text.visible_characters = -1  # tout révélé (swap d'enrichissement)
+		return
 	_situation_text.visible_characters = 0
 	var n: int = _situation_text.get_total_character_count()
 	if n <= 0:
 		return
-	var tw: Tween = create_tween()
-	tw.tween_property(_situation_text, "visible_characters", n, clampf(float(n) / 60.0, 0.4, 5.0))
+	_tw = create_tween()
+	_tw.tween_property(_situation_text, "visible_characters", n, clampf(float(n) / 60.0, 0.4, 5.0))
+
+
+func _kill_tw() -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	_tw = null
+
+
+# Attend (en arrière-plan, jamais bloquant pour le joueur) que le moteur LLM se libère.
+# Retourne false si la scène a changé (epoch) / run fini / moteur indispo → l'appelant abandonne.
+func _wait_engine_free(ep: int) -> bool:
+	var mn: Node = get_node_or_null("/root/MerlinNative")
+	if mn == null or not mn.is_ready():
+		return false
+	var guard: int = 0
+	while mn.is_busy() and guard < 6000 and ep == _scene_epoch and is_inside_tree():
+		await get_tree().process_frame
+		guard += 1
+	if not is_inside_tree():
+		return false  # scène quittée pendant l'attente (ne pas toucher un nœud en cours de libération)
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	return ep == _scene_epoch and run != null and not run.ended
 
 
 func _show_overlay(txt: String) -> void:

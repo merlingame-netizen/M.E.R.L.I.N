@@ -1,12 +1,15 @@
 extends Node
 ## MerlinScenario — pipeline de génération (autoload). Bible R6/R68/R101/R107.
 ##
-## ARCHITECTURE (adaptée aux contraintes du build, cf. task_plan v9.0 findings) :
-## - GBNF cassé sur ce gemma4 → on NE l'utilise pas.
-## - Le CODE possède la STRUCTURE (beats, types, difficulté, required_tags = concepts-cœur).
-## - Le LLM n'écrit que de la PROSE (sa force, pas de JSON fragile) : synopsis, narration, résolution.
-## - Sélection = seul appel ~JSON, avec fallback procédural robuste.
-## - Chaque étape a un FALLBACK procédural (R61 cascade) → une run se termine TOUJOURS.
+## ARCHITECTURE (contraintes hardware : Gemma E2B ~1 tok/s CPU, single-flight) :
+## - Le moteur ne peut PAS narrer chaque beat en temps réel (≈40-58s/gen, ~11 gens/run).
+##   → Principe NON-BLOQUANT : le procédural (instantané, déjà bon) est la BASE ;
+##     le LLM enrichit en arrière-plan et ne remplace QUE s'il finit avant que le
+##     joueur n'avance (garde d'epoch côté scène, cf. merlin_game.gd). Une run est
+##     jouable ET bonne avec ZÉRO appel LLM réussi — le LLM est du bonus.
+## - GBNF cassé sur ce gemma4 → non utilisé. Le CODE possède la STRUCTURE
+##   (beats, types, difficulté, required_tags) ; le LLM n'écrit que de la PROSE.
+## - Sélection = seul ~JSON, pré-généré pendant l'idle du Menu (latence masquée).
 
 const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande."
 
@@ -31,14 +34,66 @@ const SEL_FALLBACK: Array = [
 	{"title": "La Fontaine qui Rêve", "pitch": "Une source noire où dorment des visages. L'un d'eux te ressemble, et il murmure ton avenir comme un souvenir."},
 ]
 
+# Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
+# course contre la lecture du joueur). Donc 3 variantes/type, tirées au sort → variété cross-run
+# (chaque type n'apparaît qu'1 fois par run). Ton « merveilleux-inquiétant » (bible §21).
+const SITU_FALLBACKS: Dictionary = {
+	"Exploration": [
+		"La clairière s'ouvre devant toi, trop calme. Quelque chose t'y attend, qui te connaît déjà.",
+		"Le sentier se perd sous les fougères, et le silence a une texture. On t'observe sans se montrer.",
+		"Les arbres s'écartent sur un lieu que nulle carte ne nomme. L'air y goûte le souvenir et la cendre.",
+	],
+	"Rencontre": [
+		"Une silhouette se détache des arbres et t'observe sans un mot. Elle attend de voir qui tu es vraiment.",
+		"Quelqu'un — ou quelque chose — se tient sur ton chemin, immobile. Son regard pèse plus lourd que le silence.",
+		"Une voix te salue avant que tu n'aies vu personne. Elle connaît ton pas, et cela ne présage rien de bon.",
+	],
+	"Epreuve": [
+		"La forêt referme le passage : ronces, pierre et pente traître, dressées contre toi comme un jugement.",
+		"Le chemin se cabre, hostile. Rien ici ne cède sans qu'on le lui arrache.",
+		"Un obstacle barre la route, plus vieux que les sentiers. Il faudra payer de son corps ou de sa ruse.",
+	],
+	"Dilemme": [
+		"Deux voies s'ouvrent, et chacune réclame son prix. Aucune ne te laissera tout à fait intact.",
+		"Un choix se pose, nu et sans recours. Quoi que tu décides, la forêt s'en souviendra.",
+		"On te demande de trancher là où il n'existe pas de bonne réponse. L'hésitation, elle aussi, est une réponse.",
+	],
+	"Climax": [
+		"L'air se fige ; la forêt retient son souffle. Ce qui vient maintenant ne se reprend pas.",
+		"Tout converge en ce seuil où les murmures se taisent. L'instant te regarde, et attend.",
+		"Le cœur de la forêt bat sous tes pieds, énorme et patient. Ici se décide ce que tu seras devenu.",
+	],
+}
+
+const RESO_FALLBACKS: Dictionary = {
+	"echec": [
+		"Rien ne répond à ton geste — ou pire, quelque chose s'en amuse. La forêt te repousse, et tu en sors meurtri.",
+		"Le sort se retourne : ce que tu touches se dérobe, et la forêt prend plus qu'elle ne donne.",
+	],
+	"partiel": [
+		"Tu obtiens ce que tu voulais, mais la forêt prélève sa part. Une ombre te suit désormais.",
+		"La voie s'entrouvre, à demi. Quelque chose t'a vu faire, et ne l'oubliera pas.",
+	],
+	"reussite": [
+		"Ton geste trouve sa cible. La forêt cède, un instant, et te laisse avancer.",
+		"Ce que tu tentes s'accomplit ; le sentier se dénoue devant toi, prudent mais ouvert.",
+	],
+	"eclatante": [
+		"Tout s'accorde, comme si la forêt elle-même retenait son souffle pour toi. Le seuil s'ouvre, et quelque chose d'ancien s'incline.",
+		"La forêt te reconnaît enfin. Les murmures se font promesse, et la voie devant toi se déploie sans résistance.",
+	],
+}
+
+# Sortie courte : 2 phrases tiennent largement sous 64 tokens, et une gen plus courte
+# finit plus tôt → davantage d'enrichissements LLM arrivent à temps (avant que le joueur n'avance).
+const MAX_TOK_PROSE: int = 64
+
 var _rng := RandomNumberGenerator.new()
 
-# --- Prefetch / warmup async (R6 lookahead ; demande joueur « toujours faire tourner le LLM ») ---
+# --- Warmup async sélection (R6 ; « toujours faire tourner le LLM » côté Menu) ---
 var _sel_cache: Array = []
 var _sel_state: String = "idle"   # idle / running / ready
 var _sel_epoch: int = 0
-var _situ_cache: Dictionary = {}  # {beat_n: situation}
-var _situ_running_n: int = -1
 
 
 func _ready() -> void:
@@ -77,45 +132,6 @@ func invalidate_selection() -> void:
 	_sel_state = "idle"
 
 
-# --- PREFETCH SITUATION (depuis le Jeu, pendant la lecture de l'issue) ---
-func invalidate_situations() -> void:
-	_situ_cache = {}
-	_situ_running_n = -1
-
-
-func prefetch_situation(beat: Dictionary, state: Dictionary) -> void:
-	var n: int = int(beat.get("n", -1))
-	if n < 0 or _situ_cache.has(n) or _situ_running_n == n:
-		return
-	var mn: Node = _mn()
-	if mn == null or not mn.is_ready() or mn.is_busy():
-		return  # ne pas entrer en contention avec la résolution
-	_situ_running_n = n
-	var situ: Dictionary = await generate_situation(beat, state)
-	_situ_cache[n] = situ
-	if _situ_running_n == n:
-		_situ_running_n = -1
-
-
-func take_situation(beat: Dictionary, state: Dictionary) -> Dictionary:
-	var n: int = int(beat.get("n", -1))
-	# Attend un prefetch en cours pour ce beat (poll, gardé sur running — F1/F2).
-	while _situ_running_n == n and not _situ_cache.has(n):
-		await get_tree().process_frame
-	if _situ_cache.has(n):
-		var s: Dictionary = _situ_cache[n]
-		_situ_cache.erase(n)
-		return s
-	# Pas de cache : si le modèle est occupé, attend qu'il se libère (F2, anti-contention).
-	var mn: Node = _mn()
-	if mn != null:
-		var guard: int = 0
-		while mn.is_busy() and guard < 3000:
-			await get_tree().process_frame
-			guard += 1
-	return await generate_situation(beat, state)
-
-
 # --- 1) SÉLECTION : 3 scénarios (titre + pitch) ---
 func generate_selection() -> Array:
 	var mn: Node = _mn()
@@ -141,42 +157,28 @@ func _clean_selection(arr: Array) -> Array:
 	return out
 
 
-# --- 2) SQUELETTE : structure 5 beats (CODE) + synopsis (LLM, prose) ---
-func generate_skeleton(title: String, pitch: String) -> Dictionary:
+# --- 2) SQUELETTE : structure 5 beats (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
+# (L'ancien appel LLM « synopsis » coûtait ~58s pour un texte jamais affiché dans la boucle.)
+func build_skeleton(title: String, pitch: String) -> Dictionary:
 	var beats: Array = []
 	var diffs: Array = [1, 2, 2, 2, 3]
 	for i in BEAT_TYPES.size():
 		beats.append({"n": i + 1, "type": BEAT_TYPES[i], "difficulte": diffs[i]})
-	var synopsis: String = pitch
-	var mn: Node = _mn()
-	if mn != null and mn.is_ready():
-		var usr: String = "Scenario: \"%s\" — %s\nEcris un synopsis de 2 phrases (francais) qui pose l'enjeu, sans le resoudre." % [title, pitch]
-		var res: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 90})
-		if not res.has("error"):
-			var s: String = str(res.get("text", "")).strip_edges()
-			if s.length() >= 10:
-				synopsis = s
-	return {"title": title, "pitch": pitch, "synopsis": synopsis, "beats": beats, "total": beats.size()}
+	return {"title": title, "pitch": pitch, "synopsis": pitch, "beats": beats, "total": beats.size()}
 
 
-# --- 3) SITUATION : code choisit required_tags, LLM ecrit la narration (prose) ---
-func generate_situation(beat: Dictionary, state: Dictionary) -> Dictionary:
+# --- 3) SITUATION : le CODE choisit required_tags + une narration procédurale (INSTANT) ;
+#         le LLM réécrit la narration en arrière-plan (tags STABLES). ---
+func build_situation(beat: Dictionary) -> Dictionary:
 	var btype: String = str(beat.get("type", "Exploration"))
 	var diff: int = int(beat.get("difficulte", 1))
 	var required: Array = _pick_tags(btype, diff)
-	var narration: String = ""
-	var mn: Node = _mn()
-	if mn != null and mn.is_ready():
-		var hint: String = ", ".join(required)
-		var resume: String = str(state.get("resume", ""))
-		var ctx: String = (("Resume: " + resume + "\n") if resume != "" else "")
-		var usr: String = "%sDecris UNE scene (type %s) a Broceliande: 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur'), finissant sur une tension ouverte. Fais sentir, sans les lister, ces ressources: %s." % [ctx, btype, hint]
-		var res: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 80})
-		if not res.has("error"):
-			narration = str(res.get("text", "")).strip_edges()
-	if narration.length() < 10:
-		narration = _fallback_situation(btype, required)
-	return {"narration": narration, "required_tags": required, "type": btype, "difficulte": diff}
+	return {
+		"narration": _fallback_situation(btype, required),
+		"required_tags": required,
+		"type": btype,
+		"difficulte": diff,
+	}
 
 
 func _pick_tags(btype: String, diff: int) -> Array:
@@ -190,57 +192,51 @@ func _pick_tags(btype: String, diff: int) -> Array:
 
 
 func _fallback_situation(btype: String, _required: Array) -> String:
-	match btype:
-		"Rencontre": return "Une silhouette se détache des arbres et t'observe en silence. Elle attend de voir qui tu es vraiment."
-		"Epreuve": return "Le chemin se ferme : ronces, pierres, une pente traîtresse. Il faudra de la force pour passer."
-		"Dilemme": return "Deux voies s'ouvrent, et chacune réclame son prix. Aucune ne te laissera tout à fait intact."
-		"Climax": return "L'air se fige ; la forêt retient son souffle. Ce que tu fais maintenant décidera de tout."
-		_: return "La clairière s'ouvre devant toi, trop calme. Quelque chose t'y attend, qui te connaît déjà."
+	var pool: Array = SITU_FALLBACKS.get(btype, SITU_FALLBACKS["Exploration"])
+	return str(pool[_rng.randi_range(0, pool.size() - 1)])
 
 
-# --- 4) RÉSOLUTION : le code a calculé le degré ; le LLM NARRE (prose) ---
+# --- 4) RÉSOLUTION : le code a calculé le degré ; le LLM NARRE (prose), "" si échec. ---
 func narrate_resolution(situation: Dictionary, played_names: Array, res: Dictionary) -> String:
-	var degree: String = str(res.get("degree", "reussite"))
 	var mn: Node = _mn()
-	if mn != null and mn.is_ready():
-		var cards: String = ", ".join(played_names)
-		var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes partiel (a un prix)", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
-		var usr: String = "Scene: %s\nActes tentes: %s. Issue: %s.\nNarre l'EFFET de ces actes INTEGRE a la scene, 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur') ni commentaire, sans chiffres, et enchaine vers la suite." % [str(situation.get("narration", "")), cards, deg_fr.get(degree, "une reussite")]
-		var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 80})
-		if not r.has("error"):
-			var s: String = str(r.get("text", "")).strip_edges()
-			if s.length() >= 10:
-				return s
-	return _fallback_resolution(degree)
+	if mn == null or not mn.is_ready():
+		return ""
+	var degree: String = str(res.get("degree", "reussite"))
+	var cards: String = ", ".join(played_names)
+	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes partiel (a un prix)", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
+	var usr: String = "Scene: %s\nActes tentes: %s. Issue: %s.\nNarre l'EFFET de ces actes INTEGRE a la scene, 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur') ni commentaire, sans chiffres, et enchaine vers la suite." % [str(situation.get("narration", "")), cards, deg_fr.get(degree, "une reussite")]
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE})
+	if r.has("error"):
+		return ""
+	var s: String = str(r.get("text", "")).strip_edges()
+	return s if s.length() >= 10 else ""
 
 
-func _fallback_resolution(degree: String) -> String:
-	match degree:
-		"echec": return "Rien ne répond à ton geste — ou pire, quelque chose s'en amuse. La forêt te repousse, et tu en sors meurtri."
-		"partiel": return "Tu obtiens ce que tu voulais, mais la forêt prélève sa part. Une ombre te suit désormais."
-		"eclatante": return "Tout s'accorde, comme si la forêt elle-même retenait son souffle pour toi. Le passage s'ouvre, lumineux."
-		_: return "Ton geste trouve sa cible. La forêt cède, un instant, et te laisse avancer."
+# Procédural de résolution (INSTANT, déterministe). Public : l'appelant l'affiche immédiatement.
+func fallback_resolution(degree: String) -> String:
+	var pool: Array = RESO_FALLBACKS.get(degree, RESO_FALLBACKS["reussite"])
+	return str(pool[_rng.randi_range(0, pool.size() - 1)])
 
 
-# --- 5) ÉPILOGUE (fin de run, R69) ---
+# --- 5) ÉPILOGUE (fin de run, R69) : LLM, "" si échec → l'appelant garde le procédural. ---
 func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
 	var mn: Node = _mn()
-	if mn != null and mn.is_ready():
-		var enj: Dictionary = {
-			"accomplissement": "Le voyageur a traverse l'epreuve et entrevoit un fragment du Graal.",
-			"mort": "Le voyageur succombe ; la foret le reprend.",
-			"corrompu": "La Corruption l'emporte ; le voyageur se dissout dans la foret.",
-		}
-		var usr: String = "%s Ecris un epilogue de 3 phrases (francais), ton merveilleux-inquietant. Laisse entrevoir une suite." % enj.get(end_type, "Le voyage s'acheve.")
-		var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 110})
-		if not r.has("error"):
-			var s: String = str(r.get("text", "")).strip_edges()
-			if s.length() >= 10:
-				return s
-	return _fallback_epilogue(end_type)
+	if mn == null or not mn.is_ready():
+		return ""
+	var enj: Dictionary = {
+		"accomplissement": "Le voyageur a traverse l'epreuve et entrevoit un fragment du Graal.",
+		"mort": "Le voyageur succombe ; la foret le reprend.",
+		"corrompu": "La Corruption l'emporte ; le voyageur se dissout dans la foret.",
+	}
+	var usr: String = "%s Ecris un epilogue de 3 phrases (francais), ton merveilleux-inquietant. Laisse entrevoir une suite." % enj.get(end_type, "Le voyage s'acheve.")
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 96})
+	if r.has("error"):
+		return ""
+	var s: String = str(r.get("text", "")).strip_edges()
+	return s if s.length() >= 10 else ""
 
 
-func _fallback_epilogue(end_type: String) -> String:
+func fallback_epilogue(end_type: String) -> String:
 	match end_type:
 		"mort": return "La forêt se referme sur toi comme une paupière. Tu n'es plus qu'un murmure parmi les racines — mais un murmure se réveille toujours."
 		"corrompu": return "Tu cesses de lutter, et c'est presque doux. La forêt t'accueille parmi les siens ; quelque part, un autre voyageur entend déjà ton appel."
