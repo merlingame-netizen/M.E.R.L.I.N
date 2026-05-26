@@ -7,6 +7,7 @@ extends Control
 const COL_BG: Color = Color("1E1A14")  # DA flat (2026-05-26) — fond ink-brun du mockup validé
 const COL_SURFACE: Color = Color("2A2018")
 const COL_TEXT: Color = Color("E8DCC0")
+const COL_INK: Color = Color("2A2018")    # texte foncé sur la bande de narration crème
 const COL_GOLD: Color = Color("C9A24B")
 const COL_GREEN: Color = Color("7FA65C")
 const COL_VIOLET: Color = Color("7B4FA3")
@@ -19,6 +20,7 @@ const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
 var _life_gauge: MerlinRingGauge
 var _corr_gauge: MerlinRingGauge
 var _progress_box: HBoxContainer
+var _scene_art: MerlinSceneArt
 var _situation_text: RichTextLabel
 var _hint_lbl: Label
 var _hand_box: Control
@@ -89,7 +91,9 @@ func _present_current_beat() -> void:
 func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var btype: String = str(situ.get("type", ""))
-	var marker: String = "[color=#9C8C6A]— %s · beat %d/%d —[/color]\n\n" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
+	if _scene_art != null:
+		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
+	var marker: String = "[color=#6E5A3C]— %s · beat %d/%d —[/color]\n\n" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
 	_typewriter(marker + str(situ.get("narration", "")), animate)
 	var reqs: Array = situ.get("required_tags", [])
 	_hint_lbl.text = "Ce moment appelle :  " + _format_tags(reqs)
@@ -267,11 +271,12 @@ func _on_continue() -> void:
 
 
 func _degree_color(degree: String) -> Color:
+	# Couleurs LISIBLES sur la bande de narration crème (le label de degré s'y affiche).
 	match degree:
-		"echec": return COL_VIOLET
-		"partiel": return COL_DIM
-		"eclatante": return COL_GREEN
-		_: return COL_GOLD
+		"echec": return Color("7B4FA3")     # violet
+		"partiel": return Color("6E5A3C")    # brun-ink
+		"eclatante": return Color("4F6B3E")  # vert sombre
+		_: return Color("8A6A2E")            # or sombre (réussite)
 
 
 func _on_gauges(integrite: int, corruption: int) -> void:
@@ -591,14 +596,22 @@ func _build_ui() -> void:
 	hud.add_child(_corr_gauge)
 	_corr_gauge.setup(COL_VIOLET)
 
+	# Scène en silhouettes plates (au-dessus de la narration) — prend l'espace extensible.
+	_scene_art = MerlinSceneArt.new()
+	_scene_art.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scene_art.custom_minimum_size = Vector2(0, 200)
+	root.add_child(_scene_art)
+
+	# Bande de narration crème + texte ink (comme le mockup validé).
 	var situ_panel: PanelContainer = PanelContainer.new()
-	situ_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	situ_panel.add_theme_stylebox_override("panel", _surface_style())
+	situ_panel.custom_minimum_size = Vector2(0, 96)
+	situ_panel.add_theme_stylebox_override("panel", _cream_style())
 	root.add_child(situ_panel)
 	_situation_text = RichTextLabel.new()
 	_situation_text.bbcode_enabled = true
-	_situation_text.add_theme_color_override("default_color", COL_TEXT)
-	_situation_text.add_theme_font_size_override("normal_font_size", 20)
+	_situation_text.fit_content = true
+	_situation_text.add_theme_color_override("default_color", COL_INK)
+	_situation_text.add_theme_font_size_override("normal_font_size", 19)
 	situ_panel.add_child(_situation_text)
 
 	_hint_lbl = _mk_label(COL_GOLD, 15)
@@ -669,5 +682,13 @@ func _surface_style() -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_SURFACE
 	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(16)
+	return sb
+
+
+func _cream_style() -> StyleBoxFlat:
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = COL_TEXT  # crème parchemin (#E8DCC0)
+	sb.set_corner_radius_all(4)
 	sb.set_content_margin_all(16)
 	return sb

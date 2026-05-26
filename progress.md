@@ -2,6 +2,28 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 (suite 5) — v9.5 DA flat : scène en silhouettes + cartes/HUD
+
+### Context
+DA validée par l'utilisateur sur mockup (flat rétro-minimaliste, rectiligne). Verrouillée en mémoire
+([[merlin-decisions]] 2026-05-26). Alignement du jeu Godot sur ce mockup, en 2 temps : cartes+HUD, puis scène.
+
+### Done — alignement DA flat (in-engine, zéro asset)
+- **MerlinGlyph** : icônes-lignes celtiques dessinées (_draw) par famille de tag (œil/épée/spirale/croissant/soleil/faille).
+- **MerlinRingGauge** : jauges-anneaux (vie verte / corruption violette), ratio animé (corruption ∝ CORRUPTION_CAP=18).
+- **MerlinCardView** (réécrit) : carte crème + glyphe centré + point-tag coloré + bordure or(posée)/violet(corruption). Hover/deal/pop conservés.
+- **MerlinSceneArt** : décor en silhouettes plates (lune cercle crème, arbres nus, menhir+oghams, brume, figure encapuchonnée selon beat). Au-dessus de la narration.
+- **merlin_game** : HUD anneaux + points de progression (pool réutilisé) ; bande de narration CRÈME + texte ink ; COL_BG #1E1A14 ; degrés relisibles sur crème.
+
+### Revue + fixes (code-reviewer, batch cartes/HUD)
+3 HIGH + 2 MEDIUM corrigés : ratio corruption /CAP ; chiffre flottant repositionné (sortait à droite) ; kill tween anneau (anti snap) ; pool points (anti-flicker) ; type `_float_delta` Control.
+
+### Vérif
+validate_step0 exit=0 (0 parse error mes fichiers ; smoke a rattrapé 1 erreur de TYPE que le parse-check éditeur avait manquée).
+smoke Game/Selection/Menu/End `passed=true, 0 script_errors`. Rendu/feel = playtest user (non vérifiable headless).
+
+---
+
 ## Session: 2026-05-26 (suite 4) — v9.4 Animations / juice (avant playtest E2E)
 
 ### Context
