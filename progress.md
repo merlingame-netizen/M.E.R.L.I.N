@@ -2,6 +2,32 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 (suite 4) — v9.4 Animations / juice (avant playtest E2E)
+
+### Context
+Demande user : « ajoute plus d'animations, ensuite je fais une partie de bout en bout ». Skill
+bundle design_sprint imposé : ui-ux-pro-max (avant) → superpowers-verification-before-completion (après).
+
+### Done (tout ≤300ms, transform/opacity, non bloquant — guidance ui-ux-pro-max)
+- **Transitions de scène** : autoload `MerlinTransition` (CanvasLayer, fondu noir 0.22s in/out) ;
+  9 sites `change_scene_to_file` routés via `MerlinTransition.change_scene` (Menu×4, Sélection×2, Game, End, Options).
+- **Deltas de jauges animés** (`_on_gauges`) : pop du label (1.25) + chiffre flottant « +N/−N » qui monte et s'efface.
+- **Distribution en éventail** : `MerlinCardView.deal_in` (fondu + glisse depuis le bas, cascade i×0.05) au render de la main.
+- **Pop combinaison** : `pop_in` (échelle 0.8→1 + fondu) sur la carte la plus récemment posée.
+- **Pop d'issue** : léger « thump » (1.03) du panneau à la révélation de la résolution.
+
+### Revue + fixes (code-reviewer : 0 CRITICAL, 4 HIGH)
+- F1 : `MerlinTransition` capture l'erreur de `change_scene_to_file` → ne reste plus coincé en noir/_busy si échec.
+- F2 : `set_fan_transform` tue l'anim en cours et pose la carte hors survol → plus de carte figée si resize pendant le deal.
+- F3 : `_bg_resolution` ne swap pas si le typewriter tourne encore (anti-saut, cohérent avec `_bg_intro`).
+- HIGH restants jugés très basse proba (gen LLM 90s+ ne finit jamais pendant le typewriter) — non bloquants.
+
+### Vérif (superpowers-verification-before-completion)
+validate_step0 exit=0 (0 parse error mes fichiers) ; smoke Game/Selection/Menu/End/Options **5/5 passed=true, 0 script_errors** (post-fix).
+NON vérifiable en headless : le rendu/feel des fondus déclenchés au clic + les anims → c'est le playtest E2E user.
+
+---
+
 ## Session: 2026-05-26 (suite 3) — v9.3 UI : intro de quête, main en éventail, log Gemma
 
 ### Context

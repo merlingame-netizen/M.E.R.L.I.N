@@ -115,7 +115,7 @@ func _build_ui() -> void:
 
 
 func _on_continue() -> void:
-	get_tree().change_scene_to_file(MENU_SCENE)
+	MerlinTransition.change_scene(MENU_SCENE)
 
 
 func _typewriter(txt: String, animate: bool = true) -> void:

@@ -40,6 +40,9 @@ var _tw: Tween
 var _intro_layer: Control = null  # pop-up modal d'intro de quête (R56)
 var _intro_open: bool = false
 var _pulse_tw: Tween
+var _prev_integrite: int = -999  # pour animer les deltas de jauges (-999 = pas encore initialisé)
+var _prev_corruption: int = -999
+var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain _layout_fan
 
 
 func _ready() -> void:
@@ -106,6 +109,7 @@ func _render_hand() -> void:
 		_hand_box.add_child(cv)
 		cv.setup(card)
 		cv.card_clicked.connect(_on_hand_card)
+	_deal_pending = true  # anime la distribution au prochain layout
 	call_deferred("_layout_fan")
 
 
@@ -139,6 +143,10 @@ func _layout_fan() -> void:
 		var cv: MerlinCardView = cards[i]
 		cv.z_index = i  # carte de droite au-dessus (recouvrement naturel)
 		cv.set_fan_transform(Vector2(x, y), rot)
+	if _deal_pending:
+		_deal_pending = false
+		for i in n:
+			(cards[i] as MerlinCardView).deal_in(float(i) * 0.05)  # distribution en cascade
 
 
 func _render_combo() -> void:
@@ -151,6 +159,8 @@ func _render_combo() -> void:
 		_combo_box.add_child(cv)
 		cv.setup(card, role, true)  # compact (carte posée)
 		cv.card_clicked.connect(_on_combo_card)
+		if i == _combo.size() - 1:
+			cv.pop_in()  # seule la carte la plus récente fait son pop
 	_update_preview()
 
 
@@ -222,6 +232,8 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	if animate:
 		_situation_text.text = ""
 	_typewriter("[color=#%s]%s[/color]\n\n%s" % [deg_col.to_html(false), str(res["label"]), narration], animate)
+	if animate:
+		_pop(_situation_text, 1.03)  # léger "thump" à la révélation de l'issue
 
 
 # Enrichit l'issue en arrière-plan ; ne remplace QUE si le joueur n'a pas cliqué « Continuer »
@@ -236,6 +248,8 @@ func _bg_resolution(ep: int, situ: Dictionary, played: Array, res: Dictionary) -
 	var prose: String = await sc.narrate_resolution(situ, played, res)
 	if ep != _scene_epoch or run.ended or prose.length() < 10 or not is_inside_tree():
 		return
+	if _tw != null and _tw.is_valid():
+		return  # typewriter de l'issue procédurale encore en cours → ne pas swap (anti-saut de lecture)
 	run.summary = prose
 	_show_resolution(res, prose, false)  # swap sans ré-animer
 
@@ -259,10 +273,44 @@ func _degree_color(degree: String) -> Color:
 
 
 func _on_gauges(integrite: int, corruption: int) -> void:
+	var di: int = integrite - _prev_integrite
+	var dc: int = corruption - _prev_corruption
 	_integrite_lbl.text = "Intégrité  %d/10" % integrite
 	_corruption_lbl.text = "Corruption  %d" % corruption
 	_corruption_lbl.add_theme_color_override("font_color", COL_VIOLET if corruption > 0 else COL_DIM)
+	# Anime le delta (pop + chiffre flottant) — sauf au tout premier appel (init).
+	if _prev_integrite != -999 and di != 0:
+		_pop(_integrite_lbl, 1.25)
+		_float_delta(_integrite_lbl, di, COL_GREEN if di > 0 else COL_VIOLET)
+	if _prev_corruption != -999 and dc != 0:
+		_pop(_corruption_lbl, 1.25)
+		_float_delta(_corruption_lbl, dc, COL_VIOLET if dc > 0 else COL_GREEN)
+	_prev_integrite = integrite
+	_prev_corruption = corruption
 	_render_perles()
+
+
+func _pop(node: Control, peak: float) -> void:
+	node.pivot_offset = node.size / 2.0
+	var t: Tween = create_tween()
+	t.tween_property(node, "scale", Vector2(peak, peak), 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(node, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
+
+
+func _float_delta(anchor: Label, delta: int, col: Color) -> void:
+	var f: Label = Label.new()
+	f.text = ("+%d" % delta) if delta > 0 else str(delta)
+	f.add_theme_color_override("font_color", col)
+	f.add_theme_font_size_override("font_size", 22)
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	f.z_index = 100
+	add_child(f)
+	f.global_position = anchor.global_position + Vector2(anchor.size.x + 8.0, -2.0)
+	var gy: float = f.global_position.y
+	var t: Tween = create_tween()
+	t.tween_property(f, "global_position:y", gy - 30.0, 0.6).set_trans(Tween.TRANS_SINE)
+	t.parallel().tween_property(f, "modulate:a", 0.0, 0.6)
+	t.tween_callback(f.queue_free)
 
 
 func _render_perles() -> void:
@@ -285,8 +333,7 @@ func _goto_end() -> void:
 	var mn: Node = get_node_or_null("/root/MerlinNative")
 	if mn != null:
 		mn.cancel()
-	if ResourceLoader.exists(END_SCENE):
-		get_tree().change_scene_to_file(END_SCENE)
+	MerlinTransition.change_scene(END_SCENE)
 
 
 func _typewriter(txt: String, animate: bool = true) -> void:

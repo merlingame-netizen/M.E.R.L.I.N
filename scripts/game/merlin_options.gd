@@ -89,4 +89,4 @@ func _check_row(label: String, on: bool) -> CheckButton:
 
 
 func _on_back() -> void:
-	get_tree().change_scene_to_file(MENU_SCENE)
+	MerlinTransition.change_scene(MENU_SCENE)

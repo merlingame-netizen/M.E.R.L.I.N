@@ -138,7 +138,11 @@ func set_fan_transform(pos: Vector2, rot: float) -> void:
 	_base_pos = pos
 	_base_rot = rot
 	_base_z = z_index  # ordre de recouvrement de l'éventail (posé par le conteneur avant cet appel)
+	# Hors survol, un re-layout (resize) doit reprendre la main : on tue une anim en cours (deal/pop)
+	# et on pose la carte à sa place. La distribution initiale relance deal_in JUSTE APRÈS cet appel.
 	if not _hovering:
+		if _tw != null and _tw.is_valid():
+			_tw.kill()
 		position = pos
 		rotation = rot
 		scale = Vector2.ONE
@@ -167,6 +171,28 @@ func _scale_to(scl: float) -> void:
 		_tw.kill()
 	_tw = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_tw.tween_property(self, "scale", Vector2(scl, scl), ANIM)
+
+
+## Distribution : la carte arrive depuis le bas en fondu vers sa place d'éventail (stagger via delay).
+func deal_in(delay: float) -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	modulate.a = 0.0
+	position = _base_pos + Vector2(0.0, 40.0)
+	_tw = create_tween().set_parallel(true)
+	_tw.tween_property(self, "modulate:a", 1.0, 0.24).set_delay(delay)
+	_tw.tween_property(self, "position", _base_pos, 0.28).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Pose dans la combinaison : apparition pop (échelle + fondu).
+func pop_in() -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	modulate.a = 0.0
+	scale = Vector2(0.8, 0.8)
+	_tw = create_tween().set_parallel(true)
+	_tw.tween_property(self, "modulate:a", 1.0, 0.14)
+	_tw.tween_property(self, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _animate(pos: Vector2, rot: float, scl: float) -> void:

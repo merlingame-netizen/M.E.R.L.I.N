@@ -71,7 +71,7 @@ func _on_pick(title: String, pitch: String) -> void:
 	# Squelette INSTANTANÉ (le pitch est le synopsis) → bascule immédiate vers le jeu.
 	var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(title, pitch)
 	get_node("/root/MerlinRun").new_run(skel)
-	get_tree().change_scene_to_file(GAME_SCENE)
+	MerlinTransition.change_scene(GAME_SCENE)
 
 
 func _build_ui() -> void:
@@ -124,7 +124,7 @@ func _build_ui() -> void:
 
 
 func _on_back() -> void:
-	get_tree().change_scene_to_file(MENU_SCENE)
+	MerlinTransition.change_scene(MENU_SCENE)
 
 
 func _show_overlay(txt: String) -> void:

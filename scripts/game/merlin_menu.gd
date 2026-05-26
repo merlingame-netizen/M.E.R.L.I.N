@@ -84,23 +84,23 @@ func _menu_button(txt: String, cb: Callable) -> Button:
 
 
 func _on_new() -> void:
-	get_tree().change_scene_to_file(SELECTION_SCENE)
+	MerlinTransition.change_scene(SELECTION_SCENE)
 
 
 func _on_continue() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.has_save() and run.load_run():
-		get_tree().change_scene_to_file(GAME_SCENE)
+		MerlinTransition.change_scene(GAME_SCENE)
 
 
 func _on_options() -> void:
 	if ResourceLoader.exists(OPTIONS_SCENE):
-		get_tree().change_scene_to_file(OPTIONS_SCENE)
+		MerlinTransition.change_scene(OPTIONS_SCENE)
 
 
 func _on_console() -> void:
 	if ResourceLoader.exists(CONSOLE_SCENE):
-		get_tree().change_scene_to_file(CONSOLE_SCENE)
+		MerlinTransition.change_scene(CONSOLE_SCENE)
 
 
 func _on_quit() -> void:
