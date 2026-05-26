@@ -1,8 +1,8 @@
 class_name MerlinCardView
 extends Control
-## Vue de carte (bible R51-R53) : nom + pastilles de tags colorées (par famille) + évocation +
-## coût Corruption ; bordure par RARETÉ (Commune=sépia mat, altérée violet si corruption>0).
-## Compacte ; s'agrandit + se redresse + se soulève au survol (hover). Émet card_clicked au clic.
+## Vue de carte — DA flat rétro-minimaliste (décision 2026-05-26) : carte crème, glyphe-ligne
+## celtique centré (par famille de tag), petit nom, point-tag coloré ; bordure or si posée,
+## violet si corruption. S'agrandit/se redresse/se soulève au survol. Émet card_clicked au clic.
 
 signal card_clicked(card)
 
@@ -13,19 +13,12 @@ const HOVER_LIFT: float = 30.0
 const COMPACT_HOVER_SCALE: float = 1.06
 const ANIM: float = 0.12
 
-# Bordure par rareté (R53) — palette parchemin.
-const RARITY_BORDER: Dictionary = {
-	"Commune": Color("6E5A3C"),   # sépia mat
-	"Rare": Color("AEB4BC"),      # argent
-	"Épique": Color("C9A24B"),    # or
-	"Mythique": Color("B57FD6"),  # irisé (approx statique)
-}
-const COL_SURFACE: Color = Color("241B12")
-const COL_NAME: Color = Color("E8DCC0")
-const COL_EVOC: Color = Color("B7A684")
-const COL_GOLD: Color = Color("C9A24B")
-const COL_VIOLET: Color = Color("7B4FA3")
-const COL_PILL_TEXT: Color = Color("1A1410")
+# DA flat rétro-minimaliste (décision 2026-05-26).
+const COL_CARD: Color = Color("E8DCC0")    # crème (fond carte)
+const COL_INK: Color = Color("2A2018")     # trait / bordure / glyphe
+const COL_INK_DIM: Color = Color("6E5A3C")
+const COL_GOLD: Color = Color("C9A24B")    # bordure si carte posée/sélectionnée
+const COL_VIOLET: Color = Color("7B4FA3")  # bordure si corruption
 
 var card: MerlinCard
 var _compact: bool = false
@@ -55,82 +48,53 @@ func _build(role: String) -> void:
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = COL_SURFACE
-	sb.set_corner_radius_all(8)
-	var border_col: Color = RARITY_BORDER.get(card.rarity, RARITY_BORDER["Commune"])
+	sb.bg_color = COL_CARD
+	sb.set_corner_radius_all(6)
+	# Bordure : or si posée (rôle), violet si corruption, sinon trait ink fin.
+	var border_col: Color = COL_GOLD if role != "" else COL_INK
 	if card.corruption > 0:
-		border_col = border_col.lerp(COL_VIOLET, 0.55)  # altération Corruption (R53)
-	sb.set_border_width_all(3)
+		border_col = COL_VIOLET
+	sb.set_border_width_all(2)
 	sb.border_color = border_col
-	sb.set_content_margin_all(7 if _compact else 9)
+	sb.set_content_margin_all(8 if _compact else 10)
 	panel.add_theme_stylebox_override("panel", sb)
 	add_child(panel)
 
 	var v: VBoxContainer = VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
+	v.add_theme_constant_override("separation", 4)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
 
-	var name_lbl: Label = Label.new()
-	name_lbl.text = card.card_name
-	name_lbl.add_theme_color_override("font_color", COL_NAME)
-	name_lbl.add_theme_font_size_override("font_size", 13 if _compact else 14)
-	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(name_lbl)
+	# Libellé sobre en haut : nom (main) ou rôle (combinaison).
+	var top: Label = Label.new()
+	top.text = role if _compact else card.card_name
+	top.add_theme_color_override("font_color", COL_INK_DIM if _compact else COL_INK)
+	top.add_theme_font_size_override("font_size", 10 if _compact else 11)
+	top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(top)
 
-	var pills: HBoxContainer = HBoxContainer.new()
-	pills.add_theme_constant_override("separation", 4)
-	pills.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for t in card.tags:
-		pills.add_child(_make_pill(str(t)))
-	v.add_child(pills)
+	# Glyphe-ligne celtique centré (élément héros), couleur ink — choisi par famille de tag.
+	var fam: String = MerlinTags.family_of(str(card.tags[0])) if card.tags.size() > 0 else ""
+	var glyph: MerlinGlyph = MerlinGlyph.new()
+	glyph.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	glyph.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	glyph.setup(MerlinGlyph.for_family(fam), COL_INK, 2.0 if _compact else 2.5)
+	v.add_child(glyph)
 
-	if not _compact:
-		var evoc: Label = Label.new()
-		evoc.text = card.evocation
-		evoc.add_theme_color_override("font_color", COL_EVOC)
-		evoc.add_theme_font_size_override("font_size", 11)
-		evoc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		evoc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		evoc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(evoc)
-
-	if role != "":
-		var rlbl: Label = Label.new()
-		rlbl.text = role
-		rlbl.add_theme_color_override("font_color", COL_GOLD)
-		rlbl.add_theme_font_size_override("font_size", 11)
-		rlbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(rlbl)
-
-	if card.corruption > 0 and not _compact:
-		var corr: Label = Label.new()
-		corr.text = "⚠ Corruption %d" % card.corruption
-		corr.add_theme_color_override("font_color", COL_VIOLET)
-		corr.add_theme_font_size_override("font_size", 11)
-		corr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(corr)
-
-
-func _make_pill(tag: String) -> Control:
-	var p: PanelContainer = PanelContainer.new()
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = Color(MerlinTags.color_of(tag))
-	sb.set_corner_radius_all(7)
-	sb.content_margin_top = 2
-	sb.content_margin_bottom = 2
-	sb.content_margin_left = 7
-	sb.content_margin_right = 7
-	p.add_theme_stylebox_override("panel", sb)
-	var l: Label = Label.new()
-	l.text = tag
-	l.add_theme_color_override("font_color", COL_PILL_TEXT)
-	l.add_theme_font_size_override("font_size", 11)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p.add_child(l)
-	return p
+	# Point-tag coloré (famille primaire) en bas.
+	var dotrow: CenterContainer = CenterContainer.new()
+	dotrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(dotrow)
+	var dot: Panel = Panel.new()
+	dot.custom_minimum_size = Vector2(11, 11)
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var dsb: StyleBoxFlat = StyleBoxFlat.new()
+	dsb.bg_color = Color(MerlinTags.color_of(str(card.tags[0]))) if card.tags.size() > 0 else COL_INK_DIM
+	dsb.set_corner_radius_all(6)
+	dot.add_theme_stylebox_override("panel", dsb)
+	dotrow.add_child(dot)
 
 
 ## Position/rotation de base dans l'éventail (posées par le conteneur). Appliquées si pas survolé.

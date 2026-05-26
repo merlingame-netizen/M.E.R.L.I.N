@@ -4,7 +4,7 @@ extends Control
 ## → narration (LLM) → beat suivant. Génération SÉQUENTIELLE à la demande (voile "Merlin écrit"),
 ## sans lookahead (le moteur natif est single-flight). Fallbacks partout → la run se termine toujours.
 
-const COL_BG: Color = Color("14100C")
+const COL_BG: Color = Color("1E1A14")  # DA flat (2026-05-26) — fond ink-brun du mockup validé
 const COL_SURFACE: Color = Color("2A2018")
 const COL_TEXT: Color = Color("E8DCC0")
 const COL_GOLD: Color = Color("C9A24B")
@@ -16,9 +16,9 @@ const DEFAULT_TITLE: String = "Le Sentier des Murmures"
 const DEFAULT_PITCH: String = "Un chemin s'ouvre sous les fougères, là où nul n'a marché. La forêt t'y attend, patiente."
 const END_SCENE: String = "res://scenes/MerlinEnd.tscn"
 
-var _integrite_lbl: Label
-var _corruption_lbl: Label
-var _perles_lbl: Label
+var _life_gauge: MerlinRingGauge
+var _corr_gauge: MerlinRingGauge
+var _progress_box: HBoxContainer
 var _situation_text: RichTextLabel
 var _hint_lbl: Label
 var _hand_box: Control
@@ -43,6 +43,8 @@ var _pulse_tw: Tween
 var _prev_integrite: int = -999  # pour animer les deltas de jauges (-999 = pas encore initialisé)
 var _prev_corruption: int = -999
 var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain _layout_fan
+var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouveau → pas de snap arrière)
+var _corr_tw: Tween
 
 
 func _ready() -> void:
@@ -275,19 +277,32 @@ func _degree_color(degree: String) -> Color:
 func _on_gauges(integrite: int, corruption: int) -> void:
 	var di: int = integrite - _prev_integrite
 	var dc: int = corruption - _prev_corruption
-	_integrite_lbl.text = "Intégrité  %d/10" % integrite
-	_corruption_lbl.text = "Corruption  %d" % corruption
-	_corruption_lbl.add_theme_color_override("font_color", COL_VIOLET if corruption > 0 else COL_DIM)
-	# Anime le delta (pop + chiffre flottant) — sauf au tout premier appel (init).
-	if _prev_integrite != -999 and di != 0:
-		_pop(_integrite_lbl, 1.25)
-		_float_delta(_integrite_lbl, di, COL_GREEN if di > 0 else COL_VIOLET)
-	if _prev_corruption != -999 and dc != 0:
-		_pop(_corruption_lbl, 1.25)
-		_float_delta(_corruption_lbl, dc, COL_VIOLET if dc > 0 else COL_GREEN)
+	var life_r: float = clampf(float(integrite) / 10.0, 0.0, 1.0)
+	var corr_r: float = clampf(float(corruption) / float(MerlinRun.CORRUPTION_CAP), 0.0, 1.0)
+	if _prev_integrite == -999:
+		# Init : pas d'anim au premier affichage.
+		_life_gauge.set_ratio(life_r)
+		_corr_gauge.set_ratio(corr_r)
+	else:
+		_life_tw = _tween_ratio(_life_gauge, life_r, _life_tw)
+		_corr_tw = _tween_ratio(_corr_gauge, corr_r, _corr_tw)
+		if di != 0:
+			_pop(_life_gauge, 1.18)
+			_float_delta(_life_gauge, di, COL_GREEN if di > 0 else COL_VIOLET)
+		if dc != 0:
+			_pop(_corr_gauge, 1.18)
+			_float_delta(_corr_gauge, dc, COL_VIOLET if dc > 0 else COL_GREEN)
 	_prev_integrite = integrite
 	_prev_corruption = corruption
 	_render_perles()
+
+
+func _tween_ratio(g: MerlinRingGauge, target: float, prev: Tween) -> Tween:
+	if prev != null and prev.is_valid():
+		prev.kill()  # évite deux tweens concurrents sur le même anneau (snap arrière)
+	var t: Tween = create_tween()
+	t.tween_method(g.set_ratio, g.get_ratio(), target, 0.3).set_trans(Tween.TRANS_SINE)
+	return t
 
 
 func _pop(node: Control, peak: float) -> void:
@@ -297,7 +312,7 @@ func _pop(node: Control, peak: float) -> void:
 	t.tween_property(node, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
 
 
-func _float_delta(anchor: Label, delta: int, col: Color) -> void:
+func _float_delta(anchor: Control, delta: int, col: Color) -> void:
 	var f: Label = Label.new()
 	f.text = ("+%d" % delta) if delta > 0 else str(delta)
 	f.add_theme_color_override("font_color", col)
@@ -305,7 +320,9 @@ func _float_delta(anchor: Label, delta: int, col: Color) -> void:
 	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	f.z_index = 100
 	add_child(f)
-	f.global_position = anchor.global_position + Vector2(anchor.size.x + 8.0, -2.0)
+	# Sous la jauge, centré (les jauges sont aux bords → un offset à droite sortirait de l'écran
+	# pour la jauge Corruption). Le chiffre monte vers la jauge puis s'efface.
+	f.global_position = anchor.global_position + Vector2(anchor.size.x * 0.5 - 10.0, anchor.size.y + 2.0)
 	var gy: float = f.global_position.y
 	var t: Tween = create_tween()
 	t.tween_property(f, "global_position:y", gy - 30.0, 0.6).set_trans(Tween.TRANS_SINE)
@@ -317,10 +334,35 @@ func _render_perles() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var total: int = int(run.scenario.get("total", 5))
 	var cur: int = run.beat_index
-	var s: String = ""
+	# Pool réutilisé (pas de free+rebuild → pas de doublon 1-frame). remove_child = comptage immédiat.
+	while _progress_box.get_child_count() > total:
+		var last: Node = _progress_box.get_child(_progress_box.get_child_count() - 1)
+		_progress_box.remove_child(last)
+		last.queue_free()
+	while _progress_box.get_child_count() < total:
+		_progress_box.add_child(_make_dot(false))
 	for i in total:
-		s += ("●" if i <= cur else "○") + " "
-	_perles_lbl.text = s.strip_edges()
+		_style_dot(_progress_box.get_child(i) as Panel, i <= cur)
+
+
+func _make_dot(filled: bool) -> Panel:
+	var d: Panel = Panel.new()
+	d.custom_minimum_size = Vector2(12, 12)
+	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_style_dot(d, filled)
+	return d
+
+
+func _style_dot(d: Panel, filled: bool) -> void:
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.set_corner_radius_all(6)
+	if filled:
+		sb.bg_color = COL_GOLD
+	else:
+		sb.bg_color = Color(0, 0, 0, 0)
+		sb.set_border_width_all(1)
+		sb.border_color = COL_GOLD
+	d.add_theme_stylebox_override("panel", sb)
 
 
 func _on_run_ended(_end_type: String) -> void:
@@ -530,17 +572,24 @@ func _build_ui() -> void:
 	margin.add_child(root)
 
 	var hud: HBoxContainer = HBoxContainer.new()
-	hud.add_theme_constant_override("separation", 28)
+	hud.add_theme_constant_override("separation", 16)
 	root.add_child(hud)
-	_integrite_lbl = _mk_label(COL_GREEN, 18)
-	hud.add_child(_integrite_lbl)
-	_corruption_lbl = _mk_label(COL_VIOLET, 18)
-	hud.add_child(_corruption_lbl)
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hud.add_child(spacer)
-	_perles_lbl = _mk_label(COL_GOLD, 18)
-	hud.add_child(_perles_lbl)
+	_life_gauge = MerlinRingGauge.new()
+	hud.add_child(_life_gauge)
+	_life_gauge.setup(COL_GREEN)
+	var sp_l: Control = Control.new()
+	sp_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hud.add_child(sp_l)
+	_progress_box = HBoxContainer.new()
+	_progress_box.add_theme_constant_override("separation", 10)
+	_progress_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	hud.add_child(_progress_box)
+	var sp_r: Control = Control.new()
+	sp_r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hud.add_child(sp_r)
+	_corr_gauge = MerlinRingGauge.new()
+	hud.add_child(_corr_gauge)
+	_corr_gauge.setup(COL_VIOLET)
 
 	var situ_panel: PanelContainer = PanelContainer.new()
 	situ_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
