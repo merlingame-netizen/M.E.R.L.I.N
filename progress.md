@@ -19,7 +19,8 @@ Playtest user : bugs tokens template visibles (`</start_of_turn>`, `<turn|>`), M
 - **En jeu normal (1 instance, RAM saine) : ~2.5-6 tok/s**, masqué par le prefetch. Reco : fermer les apps lourdes pour la meilleure perf ; ne pas lancer plusieurs instances.
 
 ### Vérif
-validate_step0 exit=0 ; smoke Menu/Selection/Game `passed=true, 0 script_errors` (RAM saine). Probe texte non concluante (timeout RAM) → sanitize/prompt vérifiés par inspection (logique déterministe + instruction explicite). Agent `merlin-gameplay-programmer` (review async). Agents Blender du routeur écartés (hors-sujet Godot/LLM).
+validate_step0 exit=0 ; smoke Menu/Selection/Game `passed=true, 0 script_errors`. **Probe texte CONCLUANTE (RAM saine, 5.9 GB libre)** : load 6.1s, gen 58s/2 phrases ; RAW finit par `<turn|><turn|><turn|><turn|>` (le bug exact) → CLEAN = prose nette sans aucun token ; `dit 'voyageur' ? false` ; `contient '<...turn' ? false`. **Les 3 fixes prouvés sur sortie modèle réelle**, pas seulement par inspection. Prose on-spec (merveilleux-inquiétant, 2 phrases, narration directe). Agent `merlin-gameplay-programmer` (review async).
+- Note perf : load RAM-bound (6s libre vs 28s sous pression) ; **gen ~1 tok/s même RAM saine = CPU-bound** → c'est le prefetch (génération pendant l'idle/lecture) qui masque la latence, pas la vitesse brute.
 
 ---
 
