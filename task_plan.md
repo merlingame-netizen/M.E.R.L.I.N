@@ -53,6 +53,28 @@ Run complète Menu→Sélection→scénario(5+climax)→fin, **100% native, zér
 
 ---
 
+## v9.1 — Polish MVP : sanitize tokens + narration en-scène + async warmup/prefetch [2026-05-26]
+
+User (après playtest) : *« Quelques bug sur la rencontre et l'expression avec des turn et autres. Merlin ne doit pas s'exprimer sur la résolution mais l'intégrer dans le scénario donc pas de Ah voyageur mais directement l'effet de nos choix. Il faut prévoir du chargement et mise en mémoire async LLM, dès que l'on est dans le menu principal, le modèle chauffe et prévois déjà même avant d'avoir cliqué sur Nouvelle Partie 3 Scénarios… faire toujours tourner le LLM pour minimiser les temps d'attente sur toutes les scènes »*
+
+### Corrections — LIVRÉES
+- [x] **Sanitize sortie LLM** (MerlinNative._sanitize) : tronque au 1er marqueur template (`<...turn...>`, `<eos>`, `<bos>`, `<0x...>`) + strip résidus → plus de `</start_of_turn>` / `<turn|>` à l'écran. À la SOURCE.
+- [x] **Narration en-scène, sans apostrophe** (MerlinScenario prompts) : interdit « Ah voyageur », vocatif, commentaire de MJ ; résolution = effet intégré au récit.
+- [x] **n_ctx 4096→2048** (MerlinNative) : speedup 3-4x + KV /2 (note C++). Déviation perf-driven de R58.
+- [x] **Async warmup + prefetch** (MerlinScenario + Menu + Selection + Game) :
+  - Menu : sur `model_ready`, warmup + **pré-génère les 3 scénarios** (cache) → clic Nouvelle Partie instantané. Machine d'état idle/running/ready + **epoch** (F3) anti-cache-périmé ; `take_selection` poll-loop (F1, pas d'`await signal`).
+  - Game : prefetch de la situation N+1 **pendant la lecture de l'issue** (modèle idle) ; `take_situation` poll-loop gardé sur `is_busy()` (F2) → jamais de contention avec la résolution.
+  - Single-flight respecté (review merlin-gameplay-programmer).
+
+### Process (gate)
+- Agent pertinent exécuté : `merlin-gameplay-programmer` (review design async, 4 findings F1-F4 intégrés). Agents Blender du routeur = NON pertinents (tâche Godot/LLM texte), écartés. Skills superpowers/learn-eval non disponibles dans le set courant → méthodo systématique appliquée manuellement.
+
+### Vérif
+- validate_step0 exit=0 ; smoke Menu/Selection/Game `passed=true, 0 script_errors`.
+- ⚠️ **PERF = RAM-bound** : E2B ~3 GB ; sur cette machine RAM libre faible (~2.5-4.5 GB / 32) → sous pression, load 10-28s + génération <1 tok/s (timeout). Mes runs de test répétés ont épuisé la RAM (probes texte = sortie vide par timeout). En jeu normal (1 instance, RAM saine) ~2.5-6 tok/s, masqué par prefetch. **Reco joueur : fermer apps lourdes, 1 seule instance.** Sanitize/prompt vérifiés par inspection (déterministe).
+
+---
+
 ## v8.0 — Gemma 4 migration + Dev observability/control panel [2026-05-25]
 
 User mandate (verbatim) : *« cascade game design, je veux en priorité absolue pouvoir voir et controler ce que fais Gemma 4 en version MERLIN (modele godot natif, ses perf et ses sorties textuelles / logiques bien visuelles pour moi que je puisse controler). regle d'archi : on vise un jeu que l'on exportera, tout en local doit tourner ! 3 : jamais de cartes fixes »*

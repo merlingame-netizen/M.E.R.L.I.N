@@ -2,6 +2,27 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 (suite) — Polish v9.1 post-playtest
+
+### Context
+Playtest user : bugs tokens template visibles (`</start_of_turn>`, `<turn|>`), Merlin apostrophe le joueur ("Ah voyageur") au lieu d'intégrer l'effet, et demande warmup/prefetch async ("toujours faire tourner le LLM").
+
+### Done
+- **Sanitize** (`MerlinNative._sanitize`) : tronque chaque sortie au 1er marqueur template + strip résidus → plus de tokens à l'écran. Appliqué à la SOURCE (tous consommateurs).
+- **Prompts** (`MerlinScenario`) : SYSTEM_PREFIX + situation + résolution réécrits — narration en-scène, **apostrophe au joueur INTERDITE** ("Ah voyageur"/vocatif/commentaire MJ bannis), résolution = effet intégré au récit.
+- **Async warmup + prefetch** : Menu `warmup_and_prefetch_selection()` sur model_ready (3 scénarios prêts avant le clic) ; Game `prefetch_situation(N+1)` pendant la lecture de l'issue ; `take_selection`/`take_situation` (poll-loop F1, busy-gate F2, epoch F3 — review merlin-gameplay-programmer).
+- **n_ctx 4096→2048** : speedup 3-4x + KV cache /2 (note C++), prompts MVP tiennent. Déviation perf-driven de R58.
+
+### Findings — PERF = RAM-bound (important)
+- E2B Q4 ≈ 3 GB ; sur cette machine la **RAM libre est faible** (~2.5-4.5 GB de 32 ; apps user). Sous pression → swap → load 10-28s, génération <1 tok/s, voire timeout.
+- Mes runs de test répétés (smokes + probes chargeant chacun le modèle) ont **épuisé la RAM** → les 2 probes ont timeout (sortie vide). Après kill des process godot zombies : RAM 2.5→4.5 GB.
+- **En jeu normal (1 instance, RAM saine) : ~2.5-6 tok/s**, masqué par le prefetch. Reco : fermer les apps lourdes pour la meilleure perf ; ne pas lancer plusieurs instances.
+
+### Vérif
+validate_step0 exit=0 ; smoke Menu/Selection/Game `passed=true, 0 script_errors` (RAM saine). Probe texte non concluante (timeout RAM) → sanitize/prompt vérifiés par inspection (logique déterministe + instruction explicite). Agent `merlin-gameplay-programmer` (review async). Agents Blender du routeur écartés (hors-sujet Godot/LLM).
+
+---
+
 ## Session: 2026-05-26 — MVP build autonome (depuis BIBLE.md R1-108)
 
 ### Context

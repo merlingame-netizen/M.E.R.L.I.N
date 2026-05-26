@@ -24,7 +24,8 @@ func _ready() -> void:
 
 func _load_selection() -> void:
 	_show_overlay("Merlin rêve trois sentiers…")
-	var sels: Array = await get_node("/root/MerlinScenario").generate_selection()
+	# Récupère les scénarios pré-générés depuis le menu (instantané si prêts).
+	var sels: Array = await get_node("/root/MerlinScenario").take_selection()
 	_hide_overlay()
 	for s in sels:
 		_add_parchemin(str(s.get("title", "?")), str(s.get("pitch", "")))

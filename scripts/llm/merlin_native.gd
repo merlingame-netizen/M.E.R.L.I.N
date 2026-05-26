@@ -15,7 +15,10 @@ signal model_failed(reason: String)
 signal generation_finished(result: Dictionary)
 
 const MODEL_E2B: String = "res://addons/merlin_llm/models/gemma4-e2b-q4_k_m.gguf"
-const N_CTX: int = 4096  # R58 : budget contexte
+# n_ctx 2048 (et NON 4096 R58) : perf-driven. Le C++ note un speedup 3-4x + KV cache /2
+# vs gros ctx, et les prompts MVP (system + résumé + situation) tiennent largement dans 2048.
+# Critique sur cette machine (RAM libre faible) pour éviter le swap → générations lentes.
+const N_CTX: int = 2048
 
 # Régimes de sampling (R59)
 const TEMP_CREATIVE: float = 0.85
@@ -23,6 +26,13 @@ const TEMP_STRUCTURED: float = 0.45
 const TOP_P: float = 0.9
 const TOP_K: int = 40
 const REPEAT_PENALTY: float = 1.1
+
+# Marqueurs de template/tokens spéciaux que gemma4 émet parfois en TEXTE (pas comme token EOT).
+# On TRONQUE la sortie au 1er marqueur (tout ce qui suit = divagation) puis on nettoie les résidus.
+const STOP_MARKERS: Array = [
+	"<start_of_turn", "</start_of_turn", "<end_of_turn", "</end_of_turn",
+	"<turn|", "<|turn", "<|im_", "<eos", "<bos", "<pad", "<unk", "<0x",
+]
 
 var _llm: Object = null
 var _model_ready: bool = false
@@ -132,7 +142,9 @@ func _on_result(result: Dictionary) -> void:
 	var elapsed_ms: int = Time.get_ticks_msec() - _t_start_ms
 	_busy = false
 	set_process(false)
-	var txt: String = result.get("text", "")
+	var txt: String = _sanitize(str(result.get("text", "")))
+	if result.has("text"):
+		result["text"] = txt  # le consommateur reçoit le texte NETTOYÉ
 	# Approximation tokens (pas de compteur natif sans streaming) : ~4 chars/token.
 	var approx_tokens: int = int(txt.length() / 4.0)
 	var tok_per_s: float = 0.0
@@ -161,3 +173,19 @@ func model_info() -> Dictionary:
 func cancel() -> void:
 	if _llm != null and _busy:
 		_llm.cancel_generation()
+
+
+## Nettoie la sortie : tronque au 1er marqueur de template (gemma4 émet parfois
+## <start_of_turn>/<turn|>/<0x..> en texte) puis strip les résidus. (bug playtest)
+func _sanitize(t: String) -> String:
+	var s: String = t
+	var cut: int = -1
+	for m in STOP_MARKERS:
+		var idx: int = s.find(m)
+		if idx != -1 and (cut == -1 or idx < cut):
+			cut = idx
+	if cut != -1:
+		s = s.substr(0, cut)
+	for tok in ["<start_of_turn>", "<end_of_turn>", "<bos>", "<eos>", "<pad>", "<unk>"]:
+		s = s.replace(tok, "")
+	return s.strip_edges()

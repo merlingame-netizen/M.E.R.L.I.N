@@ -44,6 +44,7 @@ func _ready() -> void:
 
 func _begin() -> void:
 	var run: Node = get_node("/root/MerlinRun")
+	get_node("/root/MerlinScenario").invalidate_situations()
 	if run.scenario.is_empty():
 		_show_overlay("Merlin tisse le sentier…")
 		var skel: Dictionary = await get_node("/root/MerlinScenario").generate_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
@@ -59,7 +60,7 @@ func _present_current_beat() -> void:
 		return
 	_show_overlay("Merlin écrit…")
 	var beat: Dictionary = run.current_beat()
-	var situ: Dictionary = await get_node("/root/MerlinScenario").generate_situation(beat, {"resume": run.summary})
+	var situ: Dictionary = await get_node("/root/MerlinScenario").take_situation(beat, {"resume": run.summary})
 	_current_situation = situ
 	_hide_overlay()
 	_show_situation(situ)
@@ -183,6 +184,11 @@ func _on_resolve() -> void:
 	if not run.ended:
 		_continue_btn.visible = true
 		_resolve_btn.visible = false
+		# Prefetch de la situation SUIVANTE pendant que le joueur lit l'issue (LLM idle).
+		var beats: Array = run.scenario.get("beats", [])
+		var next_i: int = run.beat_index + 1
+		if next_i < beats.size():
+			get_node("/root/MerlinScenario").prefetch_situation(beats[next_i], {"resume": run.summary})
 
 
 func _on_continue() -> void:

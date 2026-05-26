@@ -8,7 +8,7 @@ extends Node
 ## - Sélection = seul appel ~JSON, avec fallback procédural robuste.
 ## - Chaque étape a un FALLBACK procédural (R61 cascade) → une run se termine TOUJOURS.
 
-const SYSTEM_PREFIX: String = "Tu es Merlin, maitre du jeu joueur et enigmatique de la foret de Broceliande (legende celtique). Tu t'adresses a un voyageur. REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image. Ne nomme JAMAIS de simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande."
+const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande."
 
 const BEAT_TYPES: Array = ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"]
 
@@ -33,6 +33,13 @@ const SEL_FALLBACK: Array = [
 
 var _rng := RandomNumberGenerator.new()
 
+# --- Prefetch / warmup async (R6 lookahead ; demande joueur « toujours faire tourner le LLM ») ---
+var _sel_cache: Array = []
+var _sel_state: String = "idle"   # idle / running / ready
+var _sel_epoch: int = 0
+var _situ_cache: Dictionary = {}  # {beat_n: situation}
+var _situ_running_n: int = -1
+
 
 func _ready() -> void:
 	_rng.randomize()
@@ -40,6 +47,73 @@ func _ready() -> void:
 
 func _mn() -> Node:
 	return get_node_or_null("/root/MerlinNative")
+
+
+# --- WARMUP + PREFETCH SÉLECTION (depuis le Menu) ---
+func warmup_and_prefetch_selection() -> void:
+	_sel_epoch += 1
+	var epoch: int = _sel_epoch
+	_sel_cache = []
+	_sel_state = "running"
+	var sels: Array = await generate_selection()
+	if epoch != _sel_epoch:
+		return  # une nouvelle demande a pris le relais → résultat périmé (F3 epoch)
+	_sel_cache = sels
+	_sel_state = "ready"
+
+
+func take_selection() -> Array:
+	# Attend la fin d'un prefetch en cours par POLLING (pas d'await signal → pas de race, F1).
+	while _sel_state == "running":
+		await get_tree().process_frame
+	if _sel_state == "ready" and _sel_cache.size() >= 3:
+		return _sel_cache.duplicate(true)
+	return await generate_selection()
+
+
+func invalidate_selection() -> void:
+	_sel_epoch += 1
+	_sel_cache = []
+	_sel_state = "idle"
+
+
+# --- PREFETCH SITUATION (depuis le Jeu, pendant la lecture de l'issue) ---
+func invalidate_situations() -> void:
+	_situ_cache = {}
+	_situ_running_n = -1
+
+
+func prefetch_situation(beat: Dictionary, state: Dictionary) -> void:
+	var n: int = int(beat.get("n", -1))
+	if n < 0 or _situ_cache.has(n) or _situ_running_n == n:
+		return
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready() or mn.is_busy():
+		return  # ne pas entrer en contention avec la résolution
+	_situ_running_n = n
+	var situ: Dictionary = await generate_situation(beat, state)
+	_situ_cache[n] = situ
+	if _situ_running_n == n:
+		_situ_running_n = -1
+
+
+func take_situation(beat: Dictionary, state: Dictionary) -> Dictionary:
+	var n: int = int(beat.get("n", -1))
+	# Attend un prefetch en cours pour ce beat (poll, gardé sur running — F1/F2).
+	while _situ_running_n == n and not _situ_cache.has(n):
+		await get_tree().process_frame
+	if _situ_cache.has(n):
+		var s: Dictionary = _situ_cache[n]
+		_situ_cache.erase(n)
+		return s
+	# Pas de cache : si le modèle est occupé, attend qu'il se libère (F2, anti-contention).
+	var mn: Node = _mn()
+	if mn != null:
+		var guard: int = 0
+		while mn.is_busy() and guard < 3000:
+			await get_tree().process_frame
+			guard += 1
+	return await generate_situation(beat, state)
 
 
 # --- 1) SÉLECTION : 3 scénarios (titre + pitch) ---
@@ -96,7 +170,7 @@ func generate_situation(beat: Dictionary, state: Dictionary) -> Dictionary:
 		var hint: String = ", ".join(required)
 		var resume: String = str(state.get("resume", ""))
 		var ctx: String = (("Resume: " + resume + "\n") if resume != "" else "")
-		var usr: String = "%sEcris UNE situation (type %s) a Broceliande, 2 phrases en francais, qui se termine sur une tension ouverte. Fais sentir, sans les nommer en liste, ces ressources utiles: %s." % [ctx, btype, hint]
+		var usr: String = "%sDecris UNE scene (type %s) a Broceliande: 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur'), finissant sur une tension ouverte. Fais sentir, sans les lister, ces ressources: %s." % [ctx, btype, hint]
 		var res: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 80})
 		if not res.has("error"):
 			narration = str(res.get("text", "")).strip_edges()
@@ -131,7 +205,7 @@ func narrate_resolution(situation: Dictionary, played_names: Array, res: Diction
 	if mn != null and mn.is_ready():
 		var cards: String = ", ".join(played_names)
 		var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes partiel (a un prix)", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
-		var usr: String = "Situation: %s\nLe voyageur a tente: %s. Resultat: %s.\nNarre l'issue en 2 phrases (francais), montre les consequences sans chiffres, enchaine vers la suite." % [str(situation.get("narration", "")), cards, deg_fr.get(degree, "une reussite")]
+		var usr: String = "Scene: %s\nActes tentes: %s. Issue: %s.\nNarre l'EFFET de ces actes INTEGRE a la scene, 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur') ni commentaire, sans chiffres, et enchaine vers la suite." % [str(situation.get("narration", "")), cards, deg_fr.get(degree, "une reussite")]
 		var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 80})
 		if not r.has("error"):
 			var s: String = str(r.get("text", "")).strip_edges()

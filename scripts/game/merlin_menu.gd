@@ -15,6 +15,19 @@ const CONSOLE_SCENE: String = "res://scenes/GemmaConsole.tscn"
 
 func _ready() -> void:
 	_build_ui()
+	# Le LLM chauffe + pré-génère les 3 scénarios DÈS le menu (avant le clic Nouvelle Partie).
+	var mn: Node = get_node_or_null("/root/MerlinNative")
+	if mn != null:
+		if mn.is_ready():
+			_trigger_warmup()
+		elif not mn.model_ready.is_connected(_trigger_warmup):
+			mn.model_ready.connect(_trigger_warmup)
+
+
+func _trigger_warmup() -> void:
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc != null:
+		sc.warmup_and_prefetch_selection()
 
 
 func _build_ui() -> void:
