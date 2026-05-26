@@ -12,10 +12,16 @@ const COL_INK: Color = Color("0E0B07")         # gravures oghams
 const COL_MIST: Color = Color(0.79, 0.72, 0.58, 0.16)  # brume tan translucide
 
 var _beat: String = "Exploration"
+var _menu_decor: bool = false  # menu : brume teintée faction (vert/violet) + étoiles
 
 
 func set_beat(beat_type: String) -> void:
 	_beat = beat_type
+	queue_redraw()
+
+
+func set_menu_decor(on: bool) -> void:
+	_menu_decor = on
 	queue_redraw()
 
 
@@ -58,6 +64,18 @@ func _draw() -> void:
 		var bw: float = w * (0.5 + 0.18 * band)
 		var bx: float = w * 0.5 - bw * 0.5
 		draw_rect(Rect2(Vector2(bx, y), Vector2(bw, h * 0.035)), COL_MIST, true)
+
+	if _menu_decor:
+		# Brume teintée faction : vert à gauche, violet à droite (couleurs des Pôles) + étoiles.
+		draw_rect(Rect2(Vector2(0.0, h * 0.80), Vector2(w * 0.44, h * 0.045)), Color(0.50, 0.65, 0.36, 0.22), true)
+		draw_rect(Rect2(Vector2(w * 0.58, h * 0.84), Vector2(w * 0.42, h * 0.045)), Color(0.48, 0.31, 0.64, 0.22), true)
+		for sp in [Vector2(0.40, 0.18), Vector2(0.62, 0.28), Vector2(0.72, 0.50), Vector2(0.30, 0.40)]:
+			_star(Vector2(w * sp.x, h * sp.y), maxf(minf(w, h) * 0.010, 2.5))
+
+
+func _star(p: Vector2, rr: float) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		p + Vector2(0.0, -rr), p + Vector2(rr * 0.5, 0.0), p + Vector2(0.0, rr), p + Vector2(-rr * 0.5, 0.0)]), COL_MOON)
 
 
 # Arbre nu : tronc + quelques branches angulaires (silhouette plate).

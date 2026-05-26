@@ -2,6 +2,27 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 (suite 6) — v9.6 Menu refait sur le mockup flat
+
+### Context
+2e mockup validé (écran-titre). /goal = refaire le menu sur ce design flat rétro-minimaliste.
+
+### Done
+- **MerlinGlyph** étendu : +12 glyphes (spark/burst/book/cards/target/cross/leaf/tree/crown/compass/triskele/rune).
+- **MerlinSceneArt** : `set_menu_decor` (brume teintée faction vert/violet + étoiles) pour le fond du menu.
+- **merlin_menu** réécrit : colonne gauche (wordmark M·E·R·L·I·N + filet/triskèle + rangée de runes +
+  liste à icônes : disque+glyphe / label espacé / hairline / losange, focus OR, nav clavier ≥52px) ;
+  scène silhouettes à droite (figure Rencontre) ; émblèmes-anneaux coins (vert leaf / violet tree) ;
+  barre du bas (couronne+points / compas / œil+points). Warmup Gemma préservé.
+  CONTINUER (si save) / NOUVELLE PARTIE / OPTIONS / QUITTER actifs ; CHRONIQUES + CARTES présents mais désactivés (pas de scène).
+
+### Vérif
+validate_step0 exit=0 (0 parse error mes fichiers) ; smoke Menu `passed=true, 0 script_errors` ;
+smoke Game `passed=true` (widgets partagés glyph/scène non régressés). Skill ui-ux-pro-max + verification.
+Rendu/feel (taille wordmark, place émblèmes, lisibilité) = playtest user.
+
+---
+
 ## Session: 2026-05-26 (suite 5) — v9.5 DA flat : scène en silhouettes + cartes/HUD
 
 ### Context
