@@ -21,7 +21,7 @@ var _corruption_lbl: Label
 var _perles_lbl: Label
 var _situation_text: RichTextLabel
 var _hint_lbl: Label
-var _hand_box: HBoxContainer
+var _hand_box: Control
 var _combo_box: HBoxContainer
 var _preview_lbl: Label
 var _resolve_btn: Button
@@ -37,6 +37,9 @@ var _state: int = 0  # 0=loading 1=playing 2=resolving
 # QUE si l'epoch n'a pas bougé depuis qu'il a été lancé (sinon le joueur a déjà avancé).
 var _scene_epoch: int = 0
 var _tw: Tween
+var _intro_layer: Control = null  # pop-up modal d'intro de quête (R56)
+var _intro_open: bool = false
+var _pulse_tw: Tween
 
 
 func _ready() -> void:
@@ -55,6 +58,8 @@ func _begin() -> void:
 		run.new_run(skel)
 	_on_gauges(run.integrite, run.corruption)
 	_present_current_beat()
+	if run.beat_index == 0:
+		_show_intro_popup()  # briefing de quête modal (à accepter) au démarrage du run
 
 
 func _present_current_beat() -> void:
@@ -97,9 +102,43 @@ func _render_hand() -> void:
 		c.queue_free()
 	var run: Node = get_node("/root/MerlinRun")
 	for card in run.hand:
-		var b: Button = _make_card_button(card, false)
-		b.pressed.connect(_on_hand_card.bind(card))
-		_hand_box.add_child(b)
+		var cv: MerlinCardView = MerlinCardView.new()
+		_hand_box.add_child(cv)
+		cv.setup(card)
+		cv.card_clicked.connect(_on_hand_card)
+	call_deferred("_layout_fan")
+
+
+# Dispose la main en éventail dynamique : cartes centrées, arc + rotation depuis le centre.
+func _layout_fan() -> void:
+	if _hand_box == null:
+		return
+	var cards: Array = []
+	for c in _hand_box.get_children():
+		if c is MerlinCardView:
+			cards.append(c)
+	var n: int = cards.size()
+	if n == 0:
+		return
+	var cw: float = MerlinCardView.CARD_SIZE.x
+	var ch: float = MerlinCardView.CARD_SIZE.y
+	var w: float = _hand_box.size.x
+	if w <= 0.0:
+		w = float(get_viewport().get_visible_rect().size.x) - 56.0
+	var center_x: float = w / 2.0
+	var spacing: float = min(cw * 0.84, (w - cw) / float(maxi(n - 1, 1)))
+	var hh: float = _hand_box.size.y
+	if hh <= 0.0:
+		hh = ch + 18.0  # avant la 1ère passe de layout : évite base_y négatif (cartes au-dessus)
+	var base_y: float = hh - ch - 4.0
+	for i in n:
+		var t: float = float(i) - float(n - 1) / 2.0  # négatif à gauche, 0 au centre, positif à droite
+		var x: float = center_x + t * spacing - cw / 2.0
+		var y: float = base_y + (t * t) * 14.0  # léger arc : bords plus bas
+		var rot: float = deg_to_rad(t * 6.5)    # rotation en éventail
+		var cv: MerlinCardView = cards[i]
+		cv.z_index = i  # carte de droite au-dessus (recouvrement naturel)
+		cv.set_fan_transform(Vector2(x, y), rot)
 
 
 func _render_combo() -> void:
@@ -308,6 +347,138 @@ func _hide_overlay() -> void:
 	_overlay.visible = false
 
 
+# --- Pop-up d'intro de quête (R56) : développement narratif + objectif, à accepter (modal). ---
+func _show_intro_popup() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	var data: Dictionary = get_node("/root/MerlinScenario").build_intro(run.scenario)
+	_intro_open = true
+
+	_intro_layer = Control.new()
+	_intro_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_intro_layer.mouse_filter = Control.MOUSE_FILTER_STOP  # modal : bloque le plateau dessous
+	add_child(_intro_layer)
+
+	var dim: ColorRect = ColorRect.new()
+	dim.color = Color(0.04, 0.03, 0.02, 0.88)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_intro_layer.add_child(dim)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_intro_layer.add_child(center)
+
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(660, 0)
+	var sb: StyleBoxFlat = StyleBoxFlat.new()
+	sb.bg_color = COL_SURFACE
+	sb.set_corner_radius_all(10)
+	sb.set_border_width_all(2)
+	sb.border_color = COL_GOLD
+	sb.set_content_margin_all(32)
+	panel.add_theme_stylebox_override("panel", sb)
+	center.add_child(panel)
+
+	var v: VBoxContainer = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 20)
+	panel.add_child(v)
+
+	var title: Label = Label.new()
+	title.text = str(run.scenario.get("title", "La Quête"))
+	title.add_theme_color_override("font_color", COL_GOLD)
+	title.add_theme_font_size_override("font_size", 32)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(title)
+
+	var intro_lbl: RichTextLabel = RichTextLabel.new()
+	intro_lbl.bbcode_enabled = true
+	intro_lbl.fit_content = true
+	intro_lbl.custom_minimum_size = Vector2(0, 120)
+	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
+	intro_lbl.add_theme_font_size_override("normal_font_size", 19)
+	v.add_child(intro_lbl)
+	_reveal_into(intro_lbl, str(data.get("intro", "")))
+
+	var obj_panel: PanelContainer = PanelContainer.new()
+	var osb: StyleBoxFlat = StyleBoxFlat.new()
+	osb.bg_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.12)
+	osb.set_corner_radius_all(6)
+	osb.set_content_margin_all(12)
+	osb.border_color = COL_GOLD
+	osb.border_width_left = 3
+	obj_panel.add_theme_stylebox_override("panel", osb)
+	v.add_child(obj_panel)
+	var obj_lbl: Label = Label.new()
+	obj_lbl.text = "✦ Objectif : " + str(data.get("objectif", ""))
+	obj_lbl.add_theme_color_override("font_color", COL_GOLD)
+	obj_lbl.add_theme_font_size_override("font_size", 16)
+	obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	obj_panel.add_child(obj_lbl)
+
+	var accept: Button = Button.new()
+	accept.text = "Accepter la quête  ✦"
+	accept.custom_minimum_size = Vector2(0, 56)
+	accept.add_theme_font_size_override("font_size", 20)
+	accept.pressed.connect(_accept_quest)
+	v.add_child(accept)
+	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
+	_pulse(accept)
+
+	_intro_layer.modulate = Color(1, 1, 1, 0)
+	var t: Tween = _intro_layer.create_tween()
+	t.tween_property(_intro_layer, "modulate:a", 1.0, 0.3)
+
+	_bg_intro(run.scenario, intro_lbl)
+
+
+func _reveal_into(lbl: RichTextLabel, txt: String) -> void:
+	lbl.text = txt
+	lbl.visible_characters = 0
+	var n: int = lbl.get_total_character_count()
+	if n <= 0:
+		return
+	var t: Tween = lbl.create_tween()
+	t.tween_property(lbl, "visible_characters", n, clampf(float(n) / 55.0, 0.6, 4.0))
+
+
+func _pulse(node: Control) -> void:
+	_pulse_tw = node.create_tween().set_loops()
+	_pulse_tw.tween_property(node, "scale", Vector2(1.04, 1.04), 0.7).set_trans(Tween.TRANS_SINE)
+	_pulse_tw.tween_property(node, "scale", Vector2(1.0, 1.0), 0.7).set_trans(Tween.TRANS_SINE)
+
+
+# Enrichit l'intro en arrière-plan ; ne remplace QUE si le pop-up est encore ouvert. Jamais bloquant.
+func _bg_intro(scenario: Dictionary, lbl: RichTextLabel) -> void:
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc == null:
+		return
+	var prose: String = await sc.narrate_intro(scenario)
+	# Garde-fou : pop-up encore ouvert (layer non null = pas d'accept en cours) ET label vivant.
+	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl) or prose.length() < 10:
+		return
+	# ÉVIDENT : ne pas muter un texte en cours de lecture → enrichir seulement si le typewriter a fini.
+	if lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count():
+		return
+	lbl.text = prose
+	lbl.visible_characters = -1
+
+
+func _accept_quest() -> void:
+	if not _intro_open:
+		return
+	_intro_open = false
+	if _pulse_tw != null and _pulse_tw.is_valid():
+		_pulse_tw.kill()
+	_pulse_tw = null
+	var layer: Control = _intro_layer
+	_intro_layer = null
+	if layer == null:
+		return
+	var t: Tween = create_tween()
+	t.tween_property(layer, "modulate:a", 0.0, 0.25)
+	t.tween_callback(layer.queue_free)
+
+
 func _build_ui() -> void:
 	var bg: ColorRect = ColorRect.new()
 	bg.color = COL_BG
@@ -382,9 +553,11 @@ func _build_ui() -> void:
 	var hand_lbl: Label = _mk_label(COL_DIM, 14)
 	hand_lbl.text = "Ta main :"
 	root.add_child(hand_lbl)
-	_hand_box = HBoxContainer.new()
-	_hand_box.add_theme_constant_override("separation", 10)
-	_hand_box.custom_minimum_size = Vector2(0, 80)
+	_hand_box = Control.new()
+	_hand_box.custom_minimum_size = Vector2(0, 214)
+	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
+	_hand_box.resized.connect(_layout_fan)
 	root.add_child(_hand_box)
 
 	_overlay = Panel.new()

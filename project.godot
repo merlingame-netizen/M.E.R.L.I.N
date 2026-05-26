@@ -11,21 +11,19 @@ config_version=5
 [application]
 
 config/name="MERLIN"
-; Full reset 2026-05-25 — projet vidé (scenes/ + scripts/ supprimés), reconstruction MVP from scratch.
 run/main_scene="res://scenes/MerlinMenu.tscn"
-run/max_fps=60
 config/features=PackedStringArray("4.5", "GL Compatibility")
+run/max_fps=60
 boot_splash/bg_color=Color(0.02, 0.04, 0.02, 1)
 boot_splash/show_image=false
 config/icon="res://icon.svg"
 
 [autoload]
 
-; Reconstruction MVP 2026-05-26 (v9.0 build autonome).
-; Le moteur LLM natif (MerlinLLM) est une GDExtension ; MerlinNative est l'adaptateur autoload.
 MerlinNative="*res://scripts/llm/merlin_native.gd"
 MerlinRun="*res://scripts/game/merlin_run.gd"
 MerlinScenario="*res://scripts/llm/merlin_scenario.gd"
+MerlinDebugOverlay="*res://scripts/game/merlin_debug_overlay.gd"
 
 [display]
 
@@ -36,8 +34,6 @@ window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=5
-; v7.7.15 — Force VSync ON (no tearing). 1 = enabled (default in Godot 4 but explicit).
-window/vsync/vsync_mode=1
 
 [editor_plugins]
 
@@ -68,15 +64,6 @@ low_spec_mode=true
 [rendering]
 
 renderer/rendering_method.mobile="gl_compatibility"
-; v7.7.16 — Aggressive 60 FPS audit per user request « 60 fps constants ».
-; MSAA 2→0 + FXAA on (lighter on GL Compatibility renderer).
-; scaling_3d/scale=0.90 = render at 90% then upscale (15-20% GPU saving).
-; mesh_lod threshold 1.0→4.0 = aggressive LOD on distant meshes.
-anti_aliasing/quality/msaa_3d=0
-; v7.7.18 — FXAA DISABLED. On GL Compatibility renderer FXAA adds 3-5ms/frame
-; (Explore agent audit). Major culprit for 60 FPS instability. With scaling_3d=0.9
-; the low-poly aesthetic forgives aliasing — re-enable only if visibly jagged.
-anti_aliasing/quality/screen_space_aa=0
 scaling_3d/scale=0.9
-mesh_lod/lod_change/threshold_pixels=4.0
 environment/defaults/default_clear_color=Color(0.039, 0.039, 0.071, 1)
+mesh_lod/lod_change/threshold_pixels=4.0

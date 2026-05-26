@@ -2,6 +2,38 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-26 (suite 3) — v9.3 UI : intro de quête, main en éventail, log Gemma
+
+### Context
+Demande user : pitch sélection plus court (1 ligne CTA) ; pop-up d'INTRO de quête (développement +
+objectif, à accepter, animé) ; cartes en main centrées en ÉVENTAIL dynamique + hover + représentation
+bible (bordures/pastilles) ; log Gemma debug constant à droite. 4 forks tranchés via AskUserQuestion.
+
+### Done
+- **Pitch court** : `generate_selection` → 1 phrase impérative ("Infiltrez le marché…") ; SEL_FALLBACK idem.
+- **Intro de quête** (`merlin_game._show_intro_popup`) : modal au démarrage du run — titre + intro narrative
+  (procédural instant + Gemma enrichit en fond, garde « typewriter fini ») + ligne « ✦ Objectif » (réutilise
+  le pitch) + bouton « Accepter » pulsé. `MerlinScenario.build_intro`/`narrate_intro`.
+- **Main en éventail** : nouveau `MerlinCardView` (bordure rareté = sépia commune, pastilles tags par famille
+  `MerlinTags.color_of`, évocation, badge corruption) ; `_layout_fan` (arc + rotation centrés, relayout `resized`) ;
+  hover = scale 1.18 + redressement + lift. Clic → combinaison.
+- **Log Gemma** : autoload `MerlinDebugOverlay` (CanvasLayer, panneau droite, F9, click-through, `OS.is_debug_build()`).
+  `MerlinNative` expose label d'activité + journal ; gens étiquetées (sélection/intro/issue/épilogue).
+- **Fix quit-hang (produit)** : `MerlinNative._notification` (EXIT_TREE/WM_CLOSE_REQUEST) → `cancel_generation()`.
+  Avant : Godot figeait des dizaines de s au quit si une gen tournait (join thread natif). `cancel` interrompt vite (vérifié).
+
+### Revue (cascade)
+- `code-reviewer` : 0 CRITICAL, 3 HIGH + 4 MEDIUM → traités (PREDELETE retiré=crash natif évité ; garde `_intro_layer==null`
+  anti-free ; fallback hauteur `_layout_fan` ; z-index éventail rétabli au un-hover ; pulse tween tué à l'accept ; log pop_front).
+- `merlin-game-designer` : archi validée vs piliers ; objectif spécifique (pitch) ; debug derrière `is_debug_build`.
+  Déféré (note) : modèle 2-tap tactile (test desktop/hover pour l'instant). Ignoré : monospace/speaker (ancienne bible, pas BIBLE.md).
+
+### Vérif
+validate_step0 exit=0 (0 parse error mes fichiers) ; smoke Game/Selection/Menu/End `passed=true, 0 script_errors`
+(le fix exit-cancel débloque AUSSI les smokes Menu/Selection qui hangaient avant).
+
+---
+
 ## Session: 2026-05-26 (suite 2) — v9.2 Boucle NON-BLOQUANTE
 
 ### Context

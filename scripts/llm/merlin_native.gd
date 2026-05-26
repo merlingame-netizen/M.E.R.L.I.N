@@ -41,6 +41,11 @@ var _t_start_ms: int = 0
 var _last_metrics: Dictionary = {}
 var _pending_prompt: String = ""
 
+# Observabilité debug (log Gemma temps réel) : étiquette de l'activité en cours + journal d'événements.
+const ACTIVITY_LOG_MAX: int = 24
+var _current_label: String = ""
+var _activity_log: Array = []  # [{label, ms, chars, ok, t}] (générations terminées, récentes)
+
 
 func _ready() -> void:
 	set_process(false)
@@ -122,6 +127,7 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 		_llm.set_grammar(grammar, grammar_root)
 
 	_busy = true
+	_current_label = str(opts.get("label", "génération"))
 	_t_start_ms = Time.get_ticks_msec()
 	set_process(true)
 	# Démarre la génération en DIFFÉRÉ : garantit que `await generation_finished` est
@@ -157,11 +163,30 @@ func _on_result(result: Dictionary) -> void:
 		"chars": txt.length(),
 		"ok": not result.has("error"),
 	}
+	_activity_log.append({
+		"label": _current_label, "ms": elapsed_ms, "chars": txt.length(),
+		"ok": not result.has("error"), "t": Time.get_ticks_msec(),
+	})
+	while _activity_log.size() > ACTIVITY_LOG_MAX:
+		_activity_log.pop_front()
 	emit_signal("generation_finished", result)
 
 
 func last_metrics() -> Dictionary:
 	return _last_metrics
+
+
+# --- Observabilité debug (lus par MerlinDebugOverlay) ---
+func get_current_label() -> String:
+	return _current_label
+
+
+func get_activity_log() -> Array:
+	return _activity_log
+
+
+func get_elapsed_ms() -> int:
+	return (Time.get_ticks_msec() - _t_start_ms) if _busy else 0
 
 
 func model_info() -> Dictionary:
@@ -173,6 +198,17 @@ func model_info() -> Dictionary:
 func cancel() -> void:
 	if _llm != null and _busy:
 		_llm.cancel_generation()
+
+
+func _notification(what: int) -> void:
+	# Annule toute génération en vol quand l'app ou la scène se ferme. Sans ça, le moteur natif
+	# "joine" le thread d'inférence jusqu'à la fin du décodage → Godot fige plusieurs dizaines de
+	# secondes au quit si une gen tourne (intro/issue/sélection).
+	# EXIT_TREE et WM_CLOSE_REQUEST arrivent alors que _llm est ENCORE valide. On évite PREDELETE :
+	# l'objet GDExtension natif peut y être partiellement détruit → appel = crash potentiel.
+	if what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if _llm != null and _busy:
+			_llm.cancel_generation()
 
 
 ## Nettoie la sortie : tronque au 1er marqueur de template (gemma4 émet parfois

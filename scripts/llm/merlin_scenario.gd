@@ -28,10 +28,12 @@ const TYPE_TAG_BIAS: Dictionary = {
 	"Climax": ["Force", "Ruse", "Savoir", "Instinct"],
 }
 
+# Pitch = UNE ligne d'accroche-action (appel à l'aventure), pas un paragraphe.
+# Le développement complet de la quête arrive dans l'INTRO (pop-up à accepter, voir build_intro).
 const SEL_FALLBACK: Array = [
-	{"title": "Le Marché des Murmures", "pitch": "Des lanternes sans porteurs, des marchands sans visage. Ils troquent des choses qu'on ne devrait pas vendre — et l'un d'eux connaît déjà ton nom."},
-	{"title": "Le Rite sans Fin", "pitch": "Au cœur de la forêt, des voix psalmodient un rite que nul ne comprend plus. Quelque chose attend que tu l'écoutes."},
-	{"title": "La Fontaine qui Rêve", "pitch": "Une source noire où dorment des visages. L'un d'eux te ressemble, et il murmure ton avenir comme un souvenir."},
+	{"title": "Le Marché des Murmures", "pitch": "Infiltrez le marché où l'on troque des noms volés."},
+	{"title": "Le Rite sans Fin", "pitch": "Interrompez le rite que nul ne sait plus arrêter."},
+	{"title": "La Fontaine qui Rêve", "pitch": "Sondez la source noire où dorment les visages."},
 ]
 
 # Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
@@ -136,8 +138,8 @@ func invalidate_selection() -> void:
 func generate_selection() -> Array:
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready():
-		var usr: String = "Propose 3 scenarios brefs pour une aventure a Broceliande. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur. pitch = 2 phrases (une accroche + un danger). Varie les tons."
-		var res: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 220})
+		var usr: String = "Propose 3 scenarios brefs pour une aventure a Broceliande. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur. pitch = UNE seule phrase d'appel a l'aventure, imperatif et concret (ex: 'Infiltrez le marche aux noms voles.', 'Poursuivez le gobelin jusque dans la foret.'). Varie les tons."
+		var res: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 220, "label": "sélection (3 scénarios)"})
 		if not res.has("error"):
 			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
 			var clean: Array = _clean_selection(arr)
@@ -165,6 +167,32 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	for i in BEAT_TYPES.size():
 		beats.append({"n": i + 1, "type": BEAT_TYPES[i], "difficulte": diffs[i]})
 	return {"title": title, "pitch": pitch, "synopsis": pitch, "beats": beats, "total": beats.size()}
+
+
+# --- 2bis) INTRO DE QUÊTE (pop-up à accepter) : développement complet + objectif. ---
+# Procédural INSTANTANÉ (le pop-up s'ouvre sans attente) ; narrate_intro enrichit en fond.
+func build_intro(scenario: Dictionary) -> Dictionary:
+	var title: String = str(scenario.get("title", "l'aventure"))
+	var pitch: String = str(scenario.get("pitch", ""))
+	var intro: String = "%s\n\nLa forêt de Brocéliande se referme derrière toi, et le sentier ne mène plus qu'en avant. Ce que tu cherches t'attend au bout — et ce que tu crains, aussi." % pitch
+	# Objectif spécifique : on réutilise l'accroche-action du pitch (déjà un impératif concret).
+	var p: String = pitch.strip_edges().trim_suffix(".")
+	var objectif: String = ("%s — et revenir entier des cinq épreuves du sentier." % p) if p != "" else ("Mener « %s » à son terme, et revenir entier des cinq épreuves." % title)
+	return {"intro": intro.strip_edges(), "objectif": objectif}
+
+
+func narrate_intro(scenario: Dictionary) -> String:
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready():
+		return ""
+	var title: String = str(scenario.get("title", ""))
+	var pitch: String = str(scenario.get("pitch", ""))
+	var usr: String = "Quete: \"%s\" — %s\nEcris une introduction de 3 phrases (francais) qui pose le decor et l'enjeu de cette quete a Broceliande, ton merveilleux-inquietant, recit direct SANS apostropher le joueur. Termine sur ce qui est en jeu." % [title, pitch]
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 110, "label": "intro de quête"})
+	if r.has("error"):
+		return ""
+	var s: String = str(r.get("text", "")).strip_edges()
+	return s if s.length() >= 10 else ""
 
 
 # --- 3) SITUATION : le CODE choisit required_tags + une narration procédurale (INSTANT) ;
@@ -205,7 +233,7 @@ func narrate_resolution(situation: Dictionary, played_names: Array, res: Diction
 	var cards: String = ", ".join(played_names)
 	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes partiel (a un prix)", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
 	var usr: String = "Scene: %s\nActes tentes: %s. Issue: %s.\nNarre l'EFFET de ces actes INTEGRE a la scene, 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur') ni commentaire, sans chiffres, et enchaine vers la suite." % [str(situation.get("narration", "")), cards, deg_fr.get(degree, "une reussite")]
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE})
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "issue (effet des choix)"})
 	if r.has("error"):
 		return ""
 	var s: String = str(r.get("text", "")).strip_edges()
@@ -229,7 +257,7 @@ func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
 		"corrompu": "La Corruption l'emporte ; le voyageur se dissout dans la foret.",
 	}
 	var usr: String = "%s Ecris un epilogue de 3 phrases (francais), ton merveilleux-inquietant. Laisse entrevoir une suite." % enj.get(end_type, "Le voyage s'acheve.")
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 96})
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 96, "label": "épilogue"})
 	if r.has("error"):
 		return ""
 	var s: String = str(r.get("text", "")).strip_edges()
