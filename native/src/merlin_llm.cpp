@@ -5,7 +5,12 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include "ggml-backend.h"   // b9196: dynamic CPU backend discovery (ggml-cpu-*.dll)
+
 #include <algorithm>
+#include <cstdio>    // diagnostic: fprintf(stderr) crash tracing (MERLIN_LLM_TRACE)
+#include <cstdlib>   // diagnostic: getenv
+#include <exception> // catch std::exception thrown by llama.cpp grammar accept (empty-stack)
 #include <string>
 #include <thread>
 #include <vector>
@@ -16,6 +21,10 @@ std::atomic<int> MerlinLLM::backend_refs{0};
 
 MerlinLLM::MerlinLLM() {
 	if (backend_refs.fetch_add(1) == 0) {
+		// b9196 API: must explicitly load arch-specific ggml-cpu-*.dll backends
+		// before llama_backend_init. Pre-b9196 builds shipped a single
+		// ggml-cpu.dll that auto-registered; b9196 splits it into 15+ variants.
+		ggml_backend_load_all();
 		llama_backend_init();
 	}
 	const uint32_t hw_threads = std::thread::hardware_concurrency();
@@ -27,6 +36,12 @@ MerlinLLM::MerlinLLM() {
 }
 
 MerlinLLM::~MerlinLLM() {
+	if (inference_thread.joinable() && thread_active.load()) {
+		// Thread d'inférence bloqué : le détacher (ne JAMAIS join → pas de freeze au quit) et NE RIEN
+		// libérer (le thread détaché tient encore ctx/model/backend) → fuite acceptée (le process quitte).
+		inference_thread.detach();
+		return;
+	}
 	if (inference_thread.joinable()) {
 		inference_thread.join();
 	}
@@ -35,7 +50,7 @@ MerlinLLM::~MerlinLLM() {
 		ctx = nullptr;
 	}
 	if (model) {
-		llama_free_model(model);
+		llama_model_free(model);   // b9196 rename (was llama_free_model)
 		model = nullptr;
 	}
 	if (backend_refs.fetch_sub(1) == 1) {
@@ -65,12 +80,12 @@ Error MerlinLLM::load_model(String path) {
 		ctx = nullptr;
 	}
 	if (model) {
-		llama_free_model(model);
+		llama_model_free(model);   // b9196 rename (was llama_free_model)
 		model = nullptr;
 	}
 
 	llama_model_params mp = llama_model_default_params();
-	model = llama_load_model_from_file(path.utf8().get_data(), mp);
+	model = llama_model_load_from_file(path.utf8().get_data(), mp);   // b9196 rename
 
 	if (!model) {
 		UtilityFunctions::printerr("Failed to load model at: ", path);
@@ -81,9 +96,9 @@ Error MerlinLLM::load_model(String path) {
 	cp.n_ctx = n_ctx;
 	cp.n_threads = n_threads;
 	cp.n_threads_batch = n_threads_batch;
-	cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_ENABLED;  // Phase 6: ~10-15% speedup on prompt eval
+	cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_DISABLED;  // b9305: AUTO resolves to ENABLED on this build, which (a) ~2x slows CPU gen (0.7 tok/s) and (b) silently crashes the SWA/Gated-Delta-Net + GBNF grammar-decode path on gemma4. DISABLED uses the plain O(n^2) attention — fine for our short prompts and stable under grammar constraints.
 
-	ctx = llama_new_context_with_model(model, cp);
+	ctx = llama_init_from_model(model, cp);   // b9196 rename (was llama_new_context_with_model)
 	if (!ctx) {
 		UtilityFunctions::printerr("Failed to create llama context");
 		return ERR_CANT_CREATE;
@@ -101,6 +116,14 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		}
 		return;
 	}
+	if (engine_dead.load()) {
+		Dictionary response;
+		response["error"] = String("LLM disabled (previous generation stuck; restart to recover)");
+		if (callback.is_valid()) {
+			callback.call(response);
+		}
+		return;
+	}
 	if (ctx == nullptr) {
 		Dictionary response;
 		response["error"] = String("Model not ready");
@@ -111,10 +134,24 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 	}
 
 	if (inference_thread.joinable()) {
-		inference_thread.join();
+		if (thread_active.load()) {
+			// Thread précédent ENCORE VIVANT (wedge après un cancel) : ne JAMAIS join sur le thread
+			// principal (ça figerait le jeu). On le détache et on désactive le moteur — le contexte
+			// llama est tenu par ce thread bloqué, aucune nouvelle génération n'est sûre.
+			inference_thread.detach();
+			engine_dead.store(true);
+			Dictionary response;
+			response["error"] = String("Previous generation stuck; LLM disabled (restart to recover)");
+			if (callback.is_valid()) {
+				callback.call(response);
+			}
+			return;
+		}
+		inference_thread.join();  // thread terminé → join instantané (simple cleanup)
 	}
 
 	is_generating.store(true);
+	thread_active.store(true);
 	{
 		std::lock_guard<std::mutex> lock(callback_mutex);
 		pending_callback = callback;
@@ -131,6 +168,9 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		std::string output;
 		std::string error_msg;
 		bool decode_failed = false;
+		llama_sampler * sampler = nullptr;  // declared before try{} so the catch can free it on a thrown exception
+
+		try {
 
 		const llama_vocab * vocab = llama_model_get_vocab(model);
 		const int32_t ctx_len = n_ctx;
@@ -161,21 +201,16 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			}
 			tokens.resize(static_cast<size_t>(n_tok_final));
 
-			// Phase 6: KV cache prefix reuse — skip re-encoding shared system prompt
+			// Phase 6 KV cache prefix reuse — DISABLED v7.7.26 due to a stale-state
+			// bug : last_prompt_tokens stores only the PROMPT tokens but the KV cache
+			// also contains generated tokens from the previous call, so the prefix
+			// match is incoherent with the actual cache contents. On the second call
+			// this corrupts the cache and llama_decode hangs indefinitely on Gemma 4
+			// E2B. Force full clear + decode every call until the tracker is fixed
+			// to also append generated tokens (see code-review HIGH #1).
 			llama_memory_t mem = llama_get_memory(ctx);
 			int32_t common_prefix = 0;
-			if (mem && !last_prompt_tokens.empty()) {
-				const int32_t max_check = std::min(
-					static_cast<int32_t>(last_prompt_tokens.size()),
-					n_tok_final);
-				for (int32_t i = 0; i < max_check; i++) {
-					if (tokens[static_cast<size_t>(i)] == last_prompt_tokens[static_cast<size_t>(i)]) {
-						common_prefix = i + 1;
-					} else {
-						break;
-					}
-				}
-			}
+			(void)last_prompt_tokens;  // intentionally unused while reuse is disabled
 
 			if (common_prefix > 0 && mem) {
 				// Remove only the diverging KV entries, keep the common prefix
@@ -187,20 +222,28 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				if (batch.logits && batch.n_tokens > 0) {
 					batch.logits[batch.n_tokens - 1] = true;
 				}
-				if (llama_decode(ctx, batch) != 0) {
-					error_msg = "Prompt decode failed (prefix reuse)";
+				// b9196: llama_decode positive return codes are non-fatal (1 = KV slot miss).
+				// Only treat ret < 0 as fatal. Pre-b9196 we wrongly treated != 0 as fatal,
+				// which caused a silent stall on Gemma 4 (larger KV footprint triggers ret=1
+				// on first decode of a large prompt).
+				const int32_t ret = llama_decode(ctx, batch);
+				if (ret < 0) {
+					error_msg = "Prompt decode failed (prefix reuse, fatal)";
 				}
 			} else {
 				// Full clear + decode (first call or no common prefix)
 				if (mem) {
 					llama_memory_clear(mem, true);
+					last_prompt_tokens.clear();  // keep cache + tracker in sync
 				}
 				llama_batch batch = llama_batch_get_one(tokens.data(), n_tok_final);
 				if (batch.logits) {
 					batch.logits[batch.n_tokens - 1] = true;
 				}
-				if (llama_decode(ctx, batch) != 0) {
-					error_msg = "Prompt decode failed";
+				// b9196: see comment above — ret < 0 only.
+				const int32_t ret = llama_decode(ctx, batch);
+				if (ret < 0) {
+					error_msg = "Prompt decode failed (fatal)";
 				}
 			}
 
@@ -208,12 +251,31 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			last_prompt_tokens.assign(tokens.begin(), tokens.begin() + n_tok_final);
 		}
 
-		llama_sampler * sampler = nullptr;
+		sampler = nullptr;
 		if (!decode_failed && error_msg.empty()) {
 			llama_sampler_chain_params sparams = llama_sampler_chain_default_params();
 			sampler = llama_sampler_chain_init(sparams);
 
-			// Ordre recommandé pour llama.cpp: penalties -> top_k -> top_p -> temp
+			// GBNF grammar FIRST (Phase 31 — skeleton-crash fix). The grammar must
+			// constrain the FULL distribution before top_k/top_p truncate it. Adding
+			// it AFTER top_k could leave zero grammatically-valid tokens, which makes
+			// llama_sampler_sample crash silently (the skeleton crash : titres/intro
+			// without grammar pass, the GBNF skeleton at 170 & 240 tok both died here).
+			if (!grammar_str.empty()) {
+				llama_sampler * gsmpl = llama_sampler_init_grammar(
+					vocab,
+					grammar_str.c_str(),
+					grammar_root.c_str()
+				);
+				if (std::getenv("MERLIN_LLM_TRACE") != nullptr) {
+					std::fprintf(stderr, "[LLMTRACE] grammar_init ptr=%p glen=%zu root=%s first48=%.48s\n",
+						(void *)gsmpl, grammar_str.size(), grammar_root.c_str(), grammar_str.c_str());
+					std::fflush(stderr);
+				}
+				llama_sampler_chain_add(sampler, gsmpl);
+			}
+
+			// Then the usual chain on the grammar-filtered logits: penalties -> top_k -> top_p -> temp
 			if (repetition_penalty > 1.0f) {
 				llama_sampler_chain_add(sampler, llama_sampler_init_penalties(
 					/*penalty_last_n=*/64,
@@ -230,16 +292,19 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p, 1));
 			llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature));
 
-			// GBNF Grammar constrained decoding (Phase 30)
-			if (!grammar_str.empty()) {
-				llama_sampler_chain_add(sampler, llama_sampler_init_grammar(
-					vocab,
-					grammar_str.c_str(),
-					grammar_root.c_str()
-				));
-			}
-
 			llama_sampler_chain_add(sampler, llama_sampler_init_greedy());
+		}
+
+		// Diagnostic: env-gated, flushed stderr trace to pin the silent GBNF-decode crash.
+		// The last [LLMTRACE] line printed before a hard process death pins the exact
+		// crashing call (sample / accept / decode) + iteration + token id. Set
+		// MERLIN_LLM_TRACE=1 to enable. No-op otherwise.
+		const bool llm_trace = (std::getenv("MERLIN_LLM_TRACE") != nullptr);
+		if (llm_trace) {
+			std::fprintf(stderr, "[LLMTRACE] loop-start max=%d grammar=%d glen=%zu root=%s eos=%d eot=%d\n",
+				max_tokens, (int)!grammar_str.empty(), grammar_str.size(), grammar_root.c_str(),
+				(int)llama_vocab_eos(vocab), (int)llama_vocab_eot(vocab));
+			std::fflush(stderr);
 		}
 
 		if (!decode_failed && error_msg.empty()) {
@@ -252,7 +317,9 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				if (ctx_len > 0 && n_past >= (ctx_len - 1)) {
 					break;
 				}
+				if (llm_trace) { std::fprintf(stderr, "[LLMTRACE] i=%d pre-sample n_past=%d\n", i, n_past); std::fflush(stderr); }
 				llama_token tok = llama_sampler_sample(sampler, ctx, -1);
+				if (llm_trace) { std::fprintf(stderr, "[LLMTRACE] i=%d post-sample tok=%d\n", i, (int)tok); std::fflush(stderr); }
 				if (tok == llama_vocab_eos(vocab) || tok == llama_vocab_eot(vocab)) {
 					break;
 				}
@@ -262,14 +329,31 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				if (n > 0) {
 					output.append(buf, n);
 				}
+				if (llm_trace) {
+					unsigned char b0 = (n > 0) ? (unsigned char)buf[0] : 0;
+					unsigned char b1 = (n > 1) ? (unsigned char)buf[1] : 0;
+					std::fprintf(stderr, "[LLMTRACE] i=%d tok=%d piece_n=%d piece='%.*s' hex=%02x,%02x pre-accept\n",
+						i, (int)tok, (int)n, (n > 0 ? n : 0), (n > 0 ? buf : ""), b0, b1);
+					std::fflush(stderr);
+				}
 
 				llama_sampler_accept(sampler, tok);
+				if (llm_trace) { std::fprintf(stderr, "[LLMTRACE] i=%d post-accept pre-decode\n", i); std::fflush(stderr); }
 
 				llama_batch next = llama_batch_get_one(&tok, 1);
 				if (next.logits) {
 					next.logits[0] = true;
 				}
-				if (llama_decode(ctx, next) != 0) {
+				// b9196: ret < 0 only is fatal. ret == 1 means KV slot miss; for the
+				// per-token loop we still need to stop because we can't reasonably retry
+				// a single token without resetting state. Set a clearer error.
+				const int32_t ret = llama_decode(ctx, next);
+				if (llm_trace) { std::fprintf(stderr, "[LLMTRACE] i=%d post-decode ret=%d\n", i, (int)ret); std::fflush(stderr); }
+				if (ret < 0) {
+					decode_failed = true;
+					break;
+				} else if (ret == 1) {
+					error_msg = "KV cache full during generation";
 					decode_failed = true;
 					break;
 				}
@@ -279,6 +363,23 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 
 		if (sampler) {
 			llama_sampler_free(sampler);
+			sampler = nullptr;
+		}
+		} catch (const std::exception & e) {
+			// llama.cpp grammar accept throws std::runtime_error ("Unexpected empty
+			// grammar stack after accepting piece") when a sampled token empties the
+			// grammar stack. Uncaught inside this std::thread it calls std::terminate()
+			// and kills the whole game process silently (no GGML_ASSERT, no stderr).
+			// Convert it into a graceful error so the GDScript side can fall back.
+			error_msg = std::string("LLM exception: ") + e.what();
+			if (sampler) { llama_sampler_free(sampler); sampler = nullptr; }
+			std::fprintf(stderr, "[MerlinLLM] EXCEPTION in inference thread: %s\n", e.what());
+			std::fflush(stderr);
+		} catch (...) {
+			error_msg = "LLM unknown exception in inference thread";
+			if (sampler) { llama_sampler_free(sampler); sampler = nullptr; }
+			std::fprintf(stderr, "[MerlinLLM] UNKNOWN EXCEPTION in inference thread\n");
+			std::fflush(stderr);
 		}
 
 		if (decode_failed && error_msg.empty()) {
@@ -298,6 +399,7 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 				pending_error.clear();
 			}
 		}
+		thread_active.store(false);  // le thread a TERMINÉ proprement → join() ultérieur sûr/instantané
 	});
 }
 
@@ -367,7 +469,32 @@ void MerlinLLM::set_advanced_sampling(int32_t p_top_k, double p_repetition_penal
 }
 
 void MerlinLLM::set_grammar(String p_grammar, String p_root) {
-	grammar_str = p_grammar.utf8().get_data();
+	// Strip full-line GBNF comments (optional leading space/tab then '#') before
+	// storing. llama.cpp's parser is meant to handle '#' comments, but comment text
+	// with multi-byte UTF-8 (em-dash, accented FR) is a parse variable we remove so
+	// only the pure rule grammar reaches llama_sampler_init_grammar.
+	const std::string raw = p_grammar.utf8().get_data();
+	std::string cleaned;
+	cleaned.reserve(raw.size());
+	size_t i = 0;
+	const size_t n = raw.size();
+	while (i < n) {
+		size_t line_end = raw.find('\n', i);
+		if (line_end == std::string::npos) {
+			line_end = n;
+		}
+		size_t j = i;
+		while (j < line_end && (raw[j] == ' ' || raw[j] == '\t' || raw[j] == '\r')) {
+			j++;
+		}
+		const bool is_comment_line = (j < line_end && raw[j] == '#');
+		if (!is_comment_line) {
+			cleaned.append(raw, i, line_end - i);
+			cleaned.push_back('\n');
+		}
+		i = (line_end < n) ? line_end + 1 : n;
+	}
+	grammar_str = cleaned;
 	grammar_root = p_root.utf8().get_data();
 }
 

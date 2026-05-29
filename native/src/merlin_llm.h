@@ -19,6 +19,8 @@ private:
 	llama_context *ctx = nullptr;
 	std::thread inference_thread;
 	std::atomic<bool> is_generating{false};
+	std::atomic<bool> thread_active{false};  // true tant que le thread d'inférence VIT réellement (distinct de is_generating que cancel baisse trop tôt)
+	std::atomic<bool> engine_dead{false};     // génération précédente bloquée → LLM désactivé proprement (anti-freeze du thread principal)
 	std::mutex callback_mutex;
 	godot::Callable pending_callback;
 	std::mutex result_mutex;

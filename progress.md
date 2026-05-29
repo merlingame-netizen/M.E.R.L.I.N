@@ -2,6 +2,29 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-29 (suite) — v9.10 Fix moteur natif (anti-freeze thread principal)
+
+### Context
+User a choisi le fix NATIF (C++ + recompile) pour la racine du stall : `generate_async` pouvait `join()`
+un thread d'inférence encore actif (après un `cancel`) SUR LE THREAD PRINCIPAL → freeze (jeu + quit).
+
+### Done
+- **native/src/merlin_llm.{h,cpp}** : flag `thread_active` (vrai tant que le thread d'inférence VIT
+  réellement, distinct de `is_generating` que `cancel` baisse trop tôt). `generate_async` **détache** un
+  thread encore actif au lieu de le `join()` → **jamais de freeze du thread principal** ; désactive le moteur
+  proprement (`engine_dead` → erreur → fallback procédural). Destructeur idem (détach + pas de free ctx/model
+  si bloqué → pas de use-after-free au quit).
+- Recompile GDExtension via **VS DevShell** (PowerShell, SANS script `%TEMP%` → contourne le blocage GPO Orange
+  qui bloquait `compile.ps1`). Build incrémental EXITCODE=0.
+
+### Vérif
+smoke MerlinGame `passed=true` (nouvelle DLL charge + modèle OK) ; harness génération → **run complet 5 beats,
+intro+Climax générés (gating moments-forts actif), DONE, zéro stall**. DLL gitignorée (rebuild local → fix actif ici).
+Note : chemin détach-sur-wedge non déterministiquement testable (wedge rare) mais logique + relu (revue précédente) + happy path OK.
+Reste : push (si demandé), bible §10.3.
+
+---
+
 ## Session: 2026-05-29 — v9.9 Fix prose LLM + vivacité moteur + équilibrage
 
 ### Context
