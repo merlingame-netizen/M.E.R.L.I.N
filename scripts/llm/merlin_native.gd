@@ -27,6 +27,10 @@ const TOP_P: float = 0.9
 const TOP_K: int = 40
 const REPEAT_PENALTY: float = 1.1
 
+# Timeout d'une génération (auto-polling). Le modèle est lent (~3 tok/s) → 90s couvre une longue
+# génération ; au-delà = blocage présumé → on annule pour ne pas figer (jeu ou harness).
+const GEN_TIMEOUT_MS: int = 90000
+
 # Marqueurs de template/tokens spéciaux que gemma4 émet parfois en TEXTE (pas comme token EOT).
 # On TRONQUE la sortie au 1er marqueur (tout ce qui suit = divagation) puis on nettoie les résidus.
 const STOP_MARKERS: Array = [
@@ -40,6 +44,9 @@ var _busy: bool = false
 var _t_start_ms: int = 0
 var _last_metrics: Dictionary = {}
 var _pending_prompt: String = ""
+var _pending_result: Dictionary = {}  # résultat de la génération courante (lu par l'auto-polling)
+var _result_ready: bool = false
+var _gen_id: int = 0  # nonce : invalide les callbacks tardifs (après timeout) → anti-corruption
 
 # Observabilité debug (log Gemma temps réel) : étiquette de l'activité en cours + journal d'événements.
 const ACTIVITY_LOG_MAX: int = 24
@@ -134,17 +141,45 @@ func generate_raw(full_prompt: String, opts: Dictionary = {}) -> Dictionary:
 	# enregistré AVANT que le callback puisse émettre (évite le drop de signal si le
 	# natif rappelle de façon synchrone — code-review CRITICAL).
 	_pending_prompt = full_prompt
-	call_deferred("_start_generation")
-	var result: Dictionary = await generation_finished
-	return result
+	_result_ready = false
+	_pending_result = {}
+	_gen_id += 1
+	var my_id: int = _gen_id
+	call_deferred("_start_generation", my_id)
+	# Auto-polling : on pompe poll_result() nous-mêmes CHAQUE frame (ne plus dépendre uniquement
+	# de _process, qui peut starver en headless --script → await figé). Timeout borné anti-gel.
+	var t0: int = Time.get_ticks_msec()
+	while true:
+		if _llm != null:
+			_llm.poll_result()  # fire _on_result quand le thread d'inférence a terminé
+		if _result_ready:
+			break
+		if Time.get_ticks_msec() - t0 > GEN_TIMEOUT_MS:
+			_gen_id += 1  # invalide tout callback tardif de CETTE génération (anti-corruption)
+			if _llm != null:
+				_llm.cancel_generation()
+			_busy = false
+			set_process(false)
+			push_warning("[MerlinNative] timeout génération (%d ms) — annulée" % GEN_TIMEOUT_MS)
+			return {"error": "timeout"}
+		await get_tree().process_frame
+	return _pending_result
 
 
-func _start_generation() -> void:
-	if _llm != null:
-		_llm.generate_async(_pending_prompt, Callable(self, "_on_result"))
+func _start_generation(gen_id: int) -> void:
+	if gen_id != _gen_id:
+		return  # génération invalidée (timeout) avant l'exécution différée
+	if _llm == null:
+		_on_result({"error": "moteur indisponible"}, gen_id)
+		return
+	_llm.generate_async(_pending_prompt, Callable(self, "_on_result").bind(gen_id))
 
 
-func _on_result(result: Dictionary) -> void:
+func _on_result(result: Dictionary, gen_id: int = 0) -> void:
+	if gen_id != _gen_id:
+		return  # callback périmé (génération annulée par timeout / remplacée) → ignore
+	if _result_ready:
+		return  # double-poll (_process + boucle d'auto-polling) → résultat déjà consommé
 	var elapsed_ms: int = Time.get_ticks_msec() - _t_start_ms
 	_busy = false
 	set_process(false)
@@ -169,6 +204,8 @@ func _on_result(result: Dictionary) -> void:
 	})
 	while _activity_log.size() > ACTIVITY_LOG_MAX:
 		_activity_log.pop_front()
+	_pending_result = result
+	_result_ready = true
 	emit_signal("generation_finished", result)
 
 

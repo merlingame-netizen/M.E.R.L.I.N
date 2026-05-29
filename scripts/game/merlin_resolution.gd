@@ -18,6 +18,9 @@ const INTEGRITE_DELTA: Dictionary = {
 }
 const PARTIEL_CORRUPTION_PRICE: int = 1  # le "succès à un prix" (R65)
 
+# Ordre croissant des degrés — sert à borner l'affinage par synergie (hybride, user 2026-05-28).
+const ORDER: Array = [ECHEC, PARTIEL, REUSSITE, ECLATANTE]
+
 
 ## played_cards : Array de MerlinCard (ou Dict {tags:Array, corruption:int}).
 ## antagonist_tags : tags qui sabotent si joués (R41/R66).
@@ -35,9 +38,21 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 	var covered_n: int = cov["covered"].size()
 	var req_n: int = covered_n + cov["missing"].size()
 
-	var degree: String = _degree_from_coverage(covered_n, req_n, cov["extra"])
+	var base_degree: String = _degree_from_coverage(covered_n, req_n, cov["extra"])
 
-	# Sabotage par tag antagoniste (R66) : dégrade d'un cran.
+	# Hybride (user 2026-05-28) : la COHÉRENCE de la combinaison affine le degré DANS la fourchette
+	# permise par la couverture (±1 cran, borné). Le code décide → instantané, non-bloquant ;
+	# le LLM, lui, NARRE la combinaison (cf. merlin_scenario.narrate_resolution).
+	var synergy: int = _synergy(played_cards)
+	var degree: String = _apply_synergy(base_degree, synergy, covered_n, req_n)
+
+	# Plafond éclatante (game design 2026-05-29) : l'éclatante récompense une VRAIE combinaison
+	# SANS coût — jamais une carte seule, jamais une carte à coût (corruption > 0).
+	if degree == ECLATANTE and (played_cards.size() < 2 or cost > 0):
+		degree = REUSSITE
+
+	# Sabotage par tag antagoniste (R66) : dégrade d'un cran — APRÈS la synergie (un combo
+	# cohérent peut donc amortir une partie de la pénalité de sabotage).
 	var sabotaged: bool = false
 	if not antagonist_tags.is_empty():
 		var ant_canon: Array = []
@@ -63,6 +78,7 @@ static func resolve(required: Array, played_cards: Array, antagonist_tags: Array
 		"coverage": cov,
 		"eclatante_bonus": degree == ECLATANTE,
 		"sabotaged": sabotaged,
+		"synergy": synergy,
 	}
 
 
@@ -78,6 +94,58 @@ static func _degree_from_coverage(covered_n: int, req_n: int, extra: Array) -> S
 	if covered_n > 0:
 		return PARTIEL
 	return ECHEC
+
+
+# Cohérence de la combinaison : +1 si ≥2 cartes partagent une famille de tags (geste focalisé),
+# -1 si dispersé (familles toutes distinctes) ou corrompu sans cohésion, 0 sinon (1 carte / neutre).
+static func _synergy(played_cards: Array) -> int:
+	if played_cards.size() < 2:
+		return 0
+	var fams: Dictionary = {}
+	var has_corrupt: bool = false
+	for c in played_cards:
+		for t in _card_tags(c):
+			if MerlinTags.is_corrupted_tag(str(t)):
+				has_corrupt = true
+				continue
+			var f: String = MerlinTags.family_of(str(t))
+			if f != "":
+				fams[f] = int(fams.get(f, 0)) + 1
+	for f in fams:
+		if int(fams[f]) >= 2:
+			return 1  # au moins une famille renforcée → combinaison cohérente
+	if has_corrupt:
+		return -1
+	# Dispersé : au moins autant de familles distinctes que de cartes (rien ne se renforce).
+	# NB : une carte multi-tags compte plusieurs familles → un généraliste tend vers "dispersé"
+	# quand aucune famille n'atteint 2 (le bonus de cohésion ci-dessus a priorité s'il s'applique).
+	if fams.size() >= played_cards.size():
+		return -1
+	return 0
+
+
+# Affine le degré par la synergie, BORNÉ à la fourchette permise par la couverture (jamais
+# transformer un échec total en réussite, etc.). req_n == 0 → pas d'affinage (rien à couvrir).
+static func _apply_synergy(base: String, synergy: int, covered_n: int, req_n: int) -> String:
+	if synergy == 0 or req_n <= 0:
+		return base
+	var base_idx: int = ORDER.find(base)
+	if base_idx == -1:
+		push_error("MerlinResolution._apply_synergy: degré inconnu '%s'" % base)
+		return base  # entrée inattendue → pas d'affinage (évite un degré silencieusement faux)
+	var lo: int
+	var hi: int
+	if covered_n >= req_n:                       # couverture pleine
+		lo = ORDER.find(REUSSITE)
+		hi = ORDER.find(ECLATANTE)
+	elif covered_n > 0:                          # partielle
+		lo = ORDER.find(PARTIEL)
+		hi = ORDER.find(REUSSITE)
+	else:                                        # nulle
+		lo = ORDER.find(ECHEC)
+		hi = ORDER.find(PARTIEL)
+	var idx: int = clampi(base_idx + synergy, lo, hi)
+	return str(ORDER[idx])
 
 
 static func _degrade(degree: String) -> String:

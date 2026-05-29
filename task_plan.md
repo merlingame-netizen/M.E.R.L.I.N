@@ -2,7 +2,69 @@
 
 > **Source**: `docs/DEV_PLAN_V2.5.md` (canonical phase plan).
 > **Consumed by**: `tools/octogent/prompts/studio-director.md` Tier 1 backlog.
-> **Last refresh**: 2026-05-26 (v9.2 boucle non-bloquante).
+> **Last refresh**: 2026-05-29 (v9.9 fix prose LLM + moteur + équilibrage).
+
+---
+
+## v9.9 — Fix prose LLM + vivacité moteur + équilibrage [2026-05-29] (inspection 2 agents)
+
+Diagnostic (agents) sur rapport de prose : (1) prose LLM répète la scène + nomme les cartes + fuite
+d'instruction + trop longue ; (2) moteur Gemma stalle (poll-starvation `_process` + `join()` bloquant) ;
+(3) rapport épilogue/final vides sur run interrompu ; (4) game design : 1 carte = éclatante, carte à coût → éclatante.
+User (AskUserQuestion) : LLM partout + applique tout + fix moteur + corrige game design.
+
+- [ ] **A. Prompt** (`merlin_scenario.narrate_resolution`) : retirer le texte de scène, ne passer que les évocations (pas les noms), remplacer la phrase narrative-leak par un label neutre, 2 phrases max ; + garde `_strip_scene_echo` ; SYSTEM_PREFIX : ajout sûr (anti-recopie consigne).
+- [ ] **B. Moteur** (`merlin_native.generate_raw`) : auto-pomper `poll_result()` (ne plus dépendre de `_process`) + timeout borné. Préserver le signal + le comportement jeu.
+- [ ] **C. Harness** (`probe_prose.gd`) : écrire épilogue+final incrémental (procédural) + `status` (interrupted/complete) → rapport toujours complet.
+- [ ] **D. Équilibrage** (`merlin_resolution`) : éclatante exige ≥2 cartes ET aucune carte à coût (corruption>0). TDD.
+
+### Vérif
+- [ ] TDD éclatante caps RED→GREEN ; suite verte ; validate_step0 exit=0
+- [ ] re-run `probe_prose` (moteur fixé → capture complète) → re-render → contrôle prose
+- [ ] revue code-reviewer (moteur = changement sensible)
+
+---
+
+## v9.8 — Résolution = combinaison interprétée par le LLM [2026-05-28]
+
+User (AskUserQuestion) : (1) blocage = prose **tronquée mid-mot** (« se dess ») → fix troncature ;
+(2) degré **hybride** (fourchette code + affinage selon cohérence combinaison) ; (3) le LLM reçoit le
+**sens des cartes + synergie** pour une action unifiée (pas de cartes dissociées) ; (4) prose plus longue + coupe propre.
+
+**Tension archi flaggée** : faire JUGER le degré par le LLM réintroduirait l'attente ~17s (non-bloquant cassé).
+→ Hybride réalisé en **code** : score de cohérence de la combinaison affine le degré DANS la fourchette de
+couverture (instantané, déterministe). Le LLM **interprète/raconte** la combinaison (conforme R63/R105).
+
+- [x] `merlin_resolution` : `_synergy()` (cohérence familles de tags) + `_apply_synergy()` (nudge ±1 borné par couverture) + champ `synergy`. TDD. Garde `ORDER.find==-1` (revue).
+- [x] `merlin_scenario.narrate_resolution` : reçoit les CARTES (nom+évocation) + descripteur synergie → prompt « UN geste combiné » ; `_clean_prose()` (coupe à la dernière phrase, aussi intro/épilogue) ; max_tokens 64→110.
+- [x] `merlin_game._on_resolve` : passe `_combo.duplicate()` (cartes) au lieu des noms, capturé avant `clear()`.
+- [ ] Bible §10.3 : documenter synergie + interprétation-combinaison — **après sign-off playtest** (la feature n'est "complete" qu'après validation balance).
+
+### Vérif
+- [x] TDD `tests/test_resolution_synergy.gd` (5 tests) RED→GREEN
+- [x] validate_step0 exit=0 ; smoke MerlinGame passed=true ; **suite 28/28**
+- [x] Revue code-reviewer : 0 CRITICAL, 1 HIGH corrigé, MEDIUM/LOW adressés
+- [ ] Playtest user : feel de la résolution (combinaison lisible ? coupe propre ? degré juste ?) + **sign-off balance** (zéro couverture cohérent → partiel ?)
+
+---
+
+## v9.7 — Polish éventail + jauges (playtest user) [2026-05-27]
+
+User (AskUserQuestion) : blocage LLM = **build périmé** (code non-bloquant confirmé par smoke
+`passed=true, script_errors=[]`, aucun changement code requis) ; éventail → repioche dans le slot
+libéré + aplatir/resserrer + remonter ; barre du haut → perles **gardées** (s'adaptent à `scenario.total`,
+runs procéduraux variables) ; jauges → « toujours vivantes » (respiration continue + pulse fort si critique).
+
+- [x] `merlin_run.play_and_discard` : repioche à l'index libéré (slot) au lieu d'append à droite (+ `_draw_one`).
+- [x] `merlin_game._layout_fan` : arc + plat (t²·5→2.2), rotation 3.5°→2°, espacement 0.72→0.62, base_y 8→3.
+- [x] `merlin_ring_gauge` : respiration alpha continue (idle 0.82–1.0 lente) + pulse critique renforcé (setup `alive=true`).
+- [x] Perles : inchangées (confirmé : s'adaptent à `scenario.total`).
+- [x] TDD : `tests/test_run_hand.gd` (3 tests : slot milieu/début/combo) RED→GREEN. Revue code APPROUVÉE.
+
+### Vérif
+- [x] validate_step0 exit=0 (erreurs restantes = addon phantom_camera + node_modules, pré-existantes)
+- [x] smoke MerlinGame passed=true, script_errors=[]
+- [x] suite de tests 23/23 (tests runnables ; 4 fichiers pré-cassés `scripts/merlin/*` = dette hors scope)
 
 ---
 

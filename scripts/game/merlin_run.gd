@@ -69,12 +69,32 @@ func draw_to_full() -> void:
 
 
 func play_and_discard(cards: Array) -> void:
+	# La repioche prend le SLOT LIBÉRÉ (même index dans la main) au lieu d'être ajoutée
+	# en bout de main → sinon la nouvelle carte file à droite de l'éventail (demande user 2026-05-27).
 	for c in cards:
-		hand.erase(c)
+		var idx: int = hand.find(c)
+		var rep: MerlinCard = _draw_one()  # tirer AVANT de défausser c (évite de re-piocher c)
+		if idx >= 0:
+			if rep != null:
+				hand[idx] = rep
+			else:
+				hand.remove_at(idx)
+		elif rep != null:
+			hand.append(rep)
 		discard.append(c)
 		if not cartes_notables.has(c.card_name):
 			cartes_notables.append(c.card_name)
-	draw_to_full()
+	draw_to_full()  # filet : complète si le deck était vide à un tirage
+
+
+func _draw_one() -> MerlinCard:
+	if deck.is_empty():
+		if discard.is_empty():
+			return null
+		deck = discard.duplicate()
+		discard = []
+		_shuffle(deck)
+	return deck.pop_back() if not deck.is_empty() else null
 
 
 func apply_resolution(res: Dictionary) -> void:

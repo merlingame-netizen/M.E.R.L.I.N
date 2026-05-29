@@ -27,9 +27,11 @@ var _hand_box: Control
 var _combo_box: HBoxContainer
 var _preview_lbl: Label
 var _resolve_btn: Button
-var _continue_btn: Button
 var _overlay: Panel
 var _overlay_lbl: Label
+var _caret: Label  # marqueur clignotant « cliquer pour continuer » (fin de phrase, UX boîte de dialogue)
+var _caret_tw: Tween
+var _can_advance: bool = false  # true quand l'issue est entièrement écrite → clic = beat suivant
 
 var _current_situation: Dictionary = {}
 var _combo: Array = []
@@ -74,6 +76,12 @@ func _present_current_beat() -> void:
 	if run.ended:
 		return
 	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
+	_can_advance = false
+	_set_caret(false)
+	_set_hand_dimmed(false)
+	_hint_lbl.visible = true
+	_preview_lbl.visible = true
+	_resolve_btn.visible = true
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
 	# ici : à ~1 tok/s la gen (~40s) ne gagne jamais la course contre la lecture du joueur, et un
@@ -83,7 +91,7 @@ func _present_current_beat() -> void:
 	_hide_overlay()
 	_show_situation(_current_situation)
 	_combo.clear()
-	_render_hand()
+	_render_hand(true)
 	_render_combo()
 	_state = 1
 
@@ -106,16 +114,18 @@ func _format_tags(tags: Array) -> String:
 	return "   ".join(parts)
 
 
-func _render_hand() -> void:
+func _render_hand(deal: bool = false) -> void:
 	for c in _hand_box.get_children():
 		c.queue_free()
 	var run: Node = get_node("/root/MerlinRun")
 	for card in run.hand:
+		if _combo.has(card):
+			continue  # carte posée → son slot est vidé dans l'éventail (repioche à la résolution)
 		var cv: MerlinCardView = MerlinCardView.new()
 		_hand_box.add_child(cv)
 		cv.setup(card)
 		cv.card_clicked.connect(_on_hand_card)
-	_deal_pending = true  # anime la distribution au prochain layout
+	_deal_pending = deal  # anime la distribution seulement sur une main fraîche (beat/résolution)
 	call_deferred("_layout_fan")
 
 
@@ -131,21 +141,19 @@ func _layout_fan() -> void:
 	if n == 0:
 		return
 	var cw: float = MerlinCardView.CARD_SIZE.x
-	var ch: float = MerlinCardView.CARD_SIZE.y
 	var w: float = _hand_box.size.x
 	if w <= 0.0:
 		w = float(get_viewport().get_visible_rect().size.x) - 56.0
 	var center_x: float = w / 2.0
-	var spacing: float = min(cw * 0.84, (w - cw) / float(maxi(n - 1, 1)))
-	var hh: float = _hand_box.size.y
-	if hh <= 0.0:
-		hh = ch + 18.0  # avant la 1ère passe de layout : évite base_y négatif (cartes au-dessus)
-	var base_y: float = hh - ch - 4.0
+	# Éventail allégé (demande user 2026-05-26) : resserré (pas de carte clippée à droite),
+	# peu courbé (arc plat) et remonté.
+	var spacing: float = min(cw * 0.62, (w - cw) / float(maxi(n - 1, 1)))
+	var base_y: float = 3.0   # éventail remonté (demande user 2026-05-27)
 	for i in n:
 		var t: float = float(i) - float(n - 1) / 2.0  # négatif à gauche, 0 au centre, positif à droite
 		var x: float = center_x + t * spacing - cw / 2.0
-		var y: float = base_y + (t * t) * 14.0  # léger arc : bords plus bas
-		var rot: float = deg_to_rad(t * 6.5)    # rotation en éventail
+		var y: float = base_y + (t * t) * 2.2   # arc quasi plat (bords à peine plus bas)
+		var rot: float = deg_to_rad(t * 2.0)     # rotation discrète
 		var cv: MerlinCardView = cards[i]
 		cv.z_index = i  # carte de droite au-dessus (recouvrement naturel)
 		cv.set_fan_transform(Vector2(x, y), rot)
@@ -174,6 +182,7 @@ func _on_hand_card(card: MerlinCard) -> void:
 	if _state != 1 or _combo.size() >= 3 or _combo.has(card):
 		return
 	_combo.append(card)
+	_render_hand()   # la carte quitte l'éventail (slot vidé)
 	_render_combo()
 
 
@@ -181,6 +190,7 @@ func _on_combo_card(card: MerlinCard) -> void:
 	if _state != 1:
 		return
 	_combo.erase(card)
+	_render_hand()   # la carte revient dans l'éventail
 	_render_combo()
 
 
@@ -206,9 +216,7 @@ func _on_resolve() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
-	var played_names: Array = []
-	for c in _combo:
-		played_names.append(c.card_name)
+	var played_cards: Array = _combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
 
 	# Issue procédurale INSTANTANÉE — aucune attente. Le LLM enrichit l'issue en arrière-plan.
 	var fallback: String = get_node("/root/MerlinScenario").fallback_resolution(str(res.get("degree", "reussite")))
@@ -222,15 +230,20 @@ func _on_resolve() -> void:
 	_scene_epoch += 1
 	var ep: int = _scene_epoch
 	_combo.clear()
-	_render_hand()
+	_render_hand()          # main repiochée (play_and_discard) — affichée grisée pendant l'issue
 	_render_combo()
+	_set_hand_dimmed(true)  # ÉVIDENT : on lit l'issue ; main grisée + prompt/indice masqués
+	_hint_lbl.visible = false
+	_preview_lbl.visible = false
+	_resolve_btn.visible = false
+	_can_advance = false    # « avancer » (clic) seulement quand l'issue est entièrement écrite
 	_show_resolution(res, fallback, true)
 	run.save()
 
-	if not run.ended:
-		_continue_btn.visible = true
-		_resolve_btn.visible = false
-		_bg_resolution(ep, _current_situation, played_names, res)
+	# LLM réservé aux moments forts (Climax / éclatante) — évite les rafales qui stallent le moteur
+	# natif ; ailleurs l'issue procédurale (déjà affichée) suffit. (user 2026-05-29)
+	if not run.ended and get_node("/root/MerlinScenario").is_strong_moment(str(_current_situation.get("type", "")), str(res.get("degree", ""))):
+		_bg_resolution(ep, _current_situation, played_cards, res)
 
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:
@@ -260,14 +273,61 @@ func _bg_resolution(ep: int, situ: Dictionary, played: Array, res: Dictionary) -
 	_show_resolution(res, prose, false)  # swap sans ré-animer
 
 
-func _on_continue() -> void:
-	_continue_btn.visible = false
-	_resolve_btn.visible = true
+func _advance_to_next() -> void:
+	_set_caret(false)
+	_can_advance = false
 	var run: Node = get_node("/root/MerlinRun")
 	run.advance_beat()
 	if run.ended:
 		return
 	_present_current_beat()
+
+
+# Clic sur la zone récit (scène/narration). Pendant la frappe → révèle tout le texte ;
+# une fois l'issue entièrement écrite → passe au beat suivant. (Demande user 2026-05-26.)
+func _on_story_click(event: InputEvent) -> void:
+	if _intro_open:
+		return
+	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+	if _tw != null and _tw.is_valid():
+		_skip_typewriter()
+	elif _state == 2 and _can_advance:
+		_advance_to_next()
+
+
+func _skip_typewriter() -> void:
+	if _tw == null or not _tw.is_valid():
+		return
+	_kill_tw()
+	_situation_text.visible_characters = -1
+	_on_typewriter_done()
+
+
+func _on_typewriter_done() -> void:
+	# L'issue entièrement écrite : on autorise l'avance au clic + caret clignotant.
+	if _state == 2:
+		_can_advance = true
+		_set_caret(true)
+
+
+func _set_caret(on: bool) -> void:
+	if _caret == null:
+		return
+	_caret.visible = on
+	if _caret_tw != null and _caret_tw.is_valid():
+		_caret_tw.kill()
+	_caret_tw = null
+	if on:
+		_caret.modulate.a = 0.65
+		_caret_tw = _caret.create_tween().set_loops()
+		_caret_tw.tween_property(_caret, "modulate:a", 0.18, 0.6).set_trans(Tween.TRANS_SINE)
+		_caret_tw.tween_property(_caret, "modulate:a", 0.65, 0.6).set_trans(Tween.TRANS_SINE)
+
+
+func _set_hand_dimmed(on: bool) -> void:
+	if _hand_box != null:
+		_hand_box.modulate.a = 0.35 if on else 1.0
 
 
 func _degree_color(degree: String) -> Color:
@@ -297,6 +357,9 @@ func _on_gauges(integrite: int, corruption: int) -> void:
 		if dc != 0:
 			_pop(_corr_gauge, 1.18)
 			_float_delta(_corr_gauge, dc, COL_VIOLET if dc > 0 else COL_GREEN)
+	# Pulse continue quand la stat est critique (vie basse / corruption haute).
+	_life_gauge.set_critical(integrite <= 3)
+	_corr_gauge.set_critical(corruption >= int(MerlinRun.CORRUPTION_CAP * 0.66))
 	_prev_integrite = integrite
 	_prev_corruption = corruption
 	_render_perles()
@@ -345,28 +408,35 @@ func _render_perles() -> void:
 		_progress_box.remove_child(last)
 		last.queue_free()
 	while _progress_box.get_child_count() < total:
-		_progress_box.add_child(_make_dot(false))
+		_progress_box.add_child(_make_dot(0))
 	for i in total:
-		_style_dot(_progress_box.get_child(i) as Panel, i <= cur)
+		# Complétion du scénario : 2=beat résolu, 1=beat courant, 0=à venir.
+		var st: int = 2 if i < cur else (1 if i == cur else 0)
+		_style_dot(_progress_box.get_child(i) as Panel, st)
 
 
-func _make_dot(filled: bool) -> Panel:
+func _make_dot(state: int) -> Panel:
 	var d: Panel = Panel.new()
-	d.custom_minimum_size = Vector2(12, 12)
 	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_style_dot(d, filled)
+	_style_dot(d, state)
 	return d
 
 
-func _style_dot(d: Panel, filled: bool) -> void:
+func _style_dot(d: Panel, state: int) -> void:
+	var sz: float = 16.0 if state == 1 else 12.0
+	d.custom_minimum_size = Vector2(sz, sz)
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.set_corner_radius_all(6)
-	if filled:
-		sb.bg_color = COL_GOLD
-	else:
+	sb.set_corner_radius_all(int(sz / 2.0))
+	if state == 0:      # à venir : creux estompé
 		sb.bg_color = Color(0, 0, 0, 0)
 		sb.set_border_width_all(1)
-		sb.border_color = COL_GOLD
+		sb.border_color = COL_DIM
+	elif state == 1:    # courant : plein or + liseré crème (le plus saillant)
+		sb.bg_color = COL_GOLD
+		sb.set_border_width_all(2)
+		sb.border_color = COL_TEXT
+	else:               # résolu : plein or
+		sb.bg_color = COL_GOLD
 	d.add_theme_stylebox_override("panel", sb)
 
 
@@ -388,13 +458,16 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	_situation_text.text = txt
 	if not animate:
 		_situation_text.visible_characters = -1  # tout révélé (swap d'enrichissement)
+		_on_typewriter_done()
 		return
 	_situation_text.visible_characters = 0
 	var n: int = _situation_text.get_total_character_count()
 	if n <= 0:
+		_on_typewriter_done()
 		return
 	_tw = create_tween()
 	_tw.tween_property(_situation_text, "visible_characters", n, clampf(float(n) / 60.0, 0.4, 5.0))
+	_tw.finished.connect(_on_typewriter_done)
 
 
 func _kill_tw() -> void:
@@ -564,15 +637,26 @@ func _build_ui() -> void:
 	var bg: ColorRect = ColorRect.new()
 	bg.color = COL_BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+
+	# Capteur « zone récit » : derrière le contenu, reçoit les clics non consommés par les cartes
+	# ou le bouton → accélère le texte / passe au beat suivant (caret). Demande user 2026-05-26.
+	var catcher: Control = Control.new()
+	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
+	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
+	catcher.gui_input.connect(_on_story_click)
+	add_child(catcher)
 
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
 	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(m, 28)
 	add_child(margin)
 
 	var root: VBoxContainer = VBoxContainer.new()
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
 	root.add_theme_constant_override("separation", 14)
 	margin.add_child(root)
 
@@ -581,7 +665,7 @@ func _build_ui() -> void:
 	root.add_child(hud)
 	_life_gauge = MerlinRingGauge.new()
 	hud.add_child(_life_gauge)
-	_life_gauge.setup(COL_GREEN)
+	_life_gauge.setup(COL_GREEN, true)  # jauge « vivante » : respiration continue
 	var sp_l: Control = Control.new()
 	sp_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud.add_child(sp_l)
@@ -594,7 +678,7 @@ func _build_ui() -> void:
 	hud.add_child(sp_r)
 	_corr_gauge = MerlinRingGauge.new()
 	hud.add_child(_corr_gauge)
-	_corr_gauge.setup(COL_VIOLET)
+	_corr_gauge.setup(COL_VIOLET, true)  # jauge « vivante » : respiration continue
 
 	# Scène en silhouettes plates (au-dessus de la narration) — prend l'espace extensible.
 	_scene_art = MerlinSceneArt.new()
@@ -605,14 +689,24 @@ func _build_ui() -> void:
 	# Bande de narration crème + texte ink (comme le mockup validé).
 	var situ_panel: PanelContainer = PanelContainer.new()
 	situ_panel.custom_minimum_size = Vector2(0, 96)
+	situ_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # clics → capteur récit (skip/avance)
 	situ_panel.add_theme_stylebox_override("panel", _cream_style())
 	root.add_child(situ_panel)
 	_situation_text = RichTextLabel.new()
 	_situation_text.bbcode_enabled = true
 	_situation_text.fit_content = true
+	_situation_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situation_text.add_theme_color_override("default_color", COL_INK)
 	_situation_text.add_theme_font_size_override("normal_font_size", 19)
 	situ_panel.add_child(_situation_text)
+
+	# Caret « cliquer pour continuer » : clignote faiblement quand l'issue est entièrement écrite.
+	_caret = _mk_label(Color("8A6A2E"), 14)
+	_caret.text = "▮ cliquer pour continuer"
+	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_caret.visible = false
+	root.add_child(_caret)
 
 	_hint_lbl = _mk_label(COL_GOLD, 15)
 	root.add_child(_hint_lbl)
@@ -635,16 +729,10 @@ func _build_ui() -> void:
 	var btn_row: HBoxContainer = HBoxContainer.new()
 	combo_v.add_child(btn_row)
 	_resolve_btn = Button.new()
-	_resolve_btn.text = "Résoudre"
-	_resolve_btn.custom_minimum_size = Vector2(160, 48)
+	_resolve_btn.text = "Résolution"
+	_resolve_btn.custom_minimum_size = Vector2(200, 48)
 	_resolve_btn.pressed.connect(_on_resolve)
 	btn_row.add_child(_resolve_btn)
-	_continue_btn = Button.new()
-	_continue_btn.text = "Continuer ▶"
-	_continue_btn.custom_minimum_size = Vector2(160, 48)
-	_continue_btn.visible = false
-	_continue_btn.pressed.connect(_on_continue)
-	btn_row.add_child(_continue_btn)
 
 	var hand_lbl: Label = _mk_label(COL_DIM, 14)
 	hand_lbl.text = "Ta main :"

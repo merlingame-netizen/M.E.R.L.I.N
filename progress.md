@@ -2,6 +2,85 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-05-29 — v9.9 Fix prose LLM + vivacité moteur + équilibrage
+
+### Context
+Inspection (2 agents) du rapport de prose. Diagnostic : prose LLM répète la scène / nomme les cartes /
+fuite d'instruction / trop longue ; moteur Gemma stalle (poll-starvation `_process` + `join()` bloquant —
+peut figer le JEU) ; rapport épilogue/final vides sur run interrompu ; game design : 1 carte = éclatante,
+carte à coût → éclatante. User (AskUserQuestion) : LLM partout + applique tout + fix moteur + corrige game design.
+
+### Done
+- **A. Prompt** (`merlin_scenario.narrate_resolution`) : ne passe plus le décor ni les NOMS de cartes
+  (évocations seules), label « Intentions » (anti-fuite), 2 phrases ; garde `_strip_scene_echo` ; SYSTEM_PREFIX +1 règle.
+- **B. Moteur** (`merlin_native.generate_raw`) : auto-polling `poll_result()` (ne dépend plus de `_process`)
+  + timeout 90s + **nonce `_gen_id`** (rejette callback tardif post-timeout) + garde double-fire dans `_on_result`.
+- **C. Harness** (`probe_prose.gd`) : `status` + épilogue/final incrémental → rapport complet même interrompu.
+- **D. Équilibrage** (`merlin_resolution`) : éclatante exige ≥2 cartes ET aucune carte à coût (corruption>0). TDD.
+
+### Vérif
+TDD `test_resolution_synergy` (+2 caps) RED→GREEN ; **suite 30/30** ; validate_step0 exit=0.
+Re-run harness (fix moteur) → **run complet 5 beats, ZÉRO stall** ; prose corrigée (plus d'écho/noms, ~2-3 phrases).
+Revue code-reviewer : **1 CRITICAL** (callback tardif post-timeout corrompt la gen suivante) **+ 1 HIGH** (double-fire)
+→ **corrigés** (nonce + garde). Régression nonce/`bind` : re-run en cours.
+Reste : confirmer régression moteur, lecture prose finale par user, commit, bible.
+
+---
+
+## Session: 2026-05-28 — v9.8 Résolution = combinaison interprétée par le LLM
+
+### Context
+Playtest user : « ça bloque dès résolution » + résolution « trop basique / cartes dissociées ».
+AskUserQuestion : blocage = prose **tronquée mid-mot** (« se dess », plafond 64 tok) ; degré **hybride**
+(fourchette code + cohérence combinaison) ; LLM reçoit **sens des cartes + synergie** ; prose plus longue + coupe propre.
+**Tension archi flaggée** : LLM-juge-le-degré réintroduit l'attente ~17s → hybride réalisé en CODE (synergie),
+le LLM **interprète/raconte** (conforme R63/R105). Investigation : moteur LLM sur thread natif séparé
+(`generate_async`), donc PAS de freeze main-thread ; scène en MOUSE_FILTER_IGNORE → clics OK. Le « blocage » = la troncature.
+
+### Done
+- **merlin_resolution** : degré HYBRIDE — `_synergy()` (±1 selon cohérence des familles de tags de la combinaison)
+  + `_apply_synergy()` (nudge borné à la fourchette de couverture : nulle→[echec,partiel], partielle→[partiel,reussite],
+  pleine→[reussite,eclatante]) + champ `synergy`. Garde `ORDER.find==-1`. Sabotage appliqué APRÈS synergie.
+- **merlin_scenario.narrate_resolution** : reçoit les CARTES (nom+évocation) + descripteur synergie → prompt
+  « UN geste combiné, pas une énumération » ; `_clean_prose()` (coupe à la dernière phrase complète, appliqué aussi
+  intro/épilogue) ; `MAX_TOK_PROSE 64→110`.
+- **merlin_game._on_resolve** : passe `_combo.duplicate()` (cartes) au lieu des noms (capturé avant `clear()`).
+
+### Vérif
+TDD `tests/test_resolution_synergy.gd` (5 tests : cohérent/borné/dispersé/neutre/sabotage) RED→GREEN.
+validate_step0 exit=0 ; **suite 28/28** ; smoke MerlinGame `passed=true, script_errors=[]`.
+Revue code-reviewer : 0 CRITICAL, 1 HIGH corrigé (garde `ORDER.find`), MEDIUM/LOW adressés (commentaires + test sabotage).
+**EN ATTENTE PLAYTEST USER** : (1) feel résolution (combinaison lisible ? coupe propre ?) ; (2) **sign-off balance** :
+combo cohérent mais ZÉRO couverture → `partiel` (pas `echec`) — voulu ? ; bible §10.3 à updater après validation.
+
+---
+
+## Session: 2026-05-27 — v9.7 Polish éventail + jauges (playtest user)
+
+### Context
+Playtest user (mode AskUserQuestion). Constat clé : la majorité des demandes (bouton « Résolution »,
+barre = perles, mapping jauges, éventail allégé) étaient DÉJÀ codées (working tree 2026-05-26).
+Le « blocage LLM » signalé n'existe pas dans le code actuel — situation 100% procédurale/instantanée,
+LLM non-bloquant (`_bg_resolution` fire-and-forget). Smoke `passed=true` → **build périmé** côté user.
+
+### Done
+- **merlin_run.play_and_discard** : repioche prend le SLOT LIBÉRÉ (même index) au lieu d'append à droite
+  (+ helper `_draw_one`). Corrige « la carte ajoutée file à droite et on ne la voit presque plus ».
+- **merlin_game._layout_fan** : éventail aplati/resserré/remonté (arc t²·5→2.2, rot 3.5°→2°, esp 0.72→0.62, base_y 8→3).
+- **merlin_ring_gauge** : jauges « toujours vivantes » — respiration alpha continue (idle 0.82↔1.0 / 1.4s)
+  + pulse critique renforcé (0.40↔1.0 / 0.55s) via `_start_breath`. `setup(color, alive=false)` rétro-compat
+  (menu inchangé). Game appelle `setup(.., true)`.
+- **Perles** : inchangées (s'adaptent déjà à `scenario.total` — runs procéduraux variables).
+- **TDD** : `tests/test_run_hand.gd` (slot milieu/début/combo multi-cartes) RED→GREEN.
+
+### Vérif
+validate_step0 exit=0 ; smoke MerlinGame `passed=true, script_errors=[]` ; tests 23/23 ;
+revue code-reviewer APPROUVÉE (0 CRITICAL/HIGH). **Rendu/feel (courbure éventail, vitesse respiration)
+= playtest user.** Re-tester aussi le « blocage » sur build à jour (devrait avoir disparu).
+Note : auto-router a émis des ACTIONs hors-sujet (outlook-mail/mermaid/frontend) — ignorées.
+
+---
+
 ## Session: 2026-05-26 (suite 6) — v9.6 Menu refait sur le mockup flat
 
 ### Context

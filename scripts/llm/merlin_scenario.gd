@@ -11,7 +11,7 @@ extends Node
 ##   (beats, types, difficulté, required_tags) ; le LLM n'écrit que de la PROSE.
 ## - Sélection = seul ~JSON, pré-généré pendant l'idle du Menu (latence masquée).
 
-const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande."
+const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
 
 const BEAT_TYPES: Array = ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"]
 
@@ -86,9 +86,9 @@ const RESO_FALLBACKS: Dictionary = {
 	],
 }
 
-# Sortie courte : 2 phrases tiennent largement sous 64 tokens, et une gen plus courte
-# finit plus tôt → davantage d'enrichissements LLM arrivent à temps (avant que le joueur n'avance).
-const MAX_TOK_PROSE: int = 64
+# Issue = 2-3 phrases sur la COMBINAISON des cartes. Budget élargi (user 2026-05-28) pour éviter
+# les troncatures mid-mot (« se dess… ») ; _clean_prose recoupe à la dernière phrase complète.
+const MAX_TOK_PROSE: int = 110
 
 var _rng := RandomNumberGenerator.new()
 
@@ -191,7 +191,7 @@ func narrate_intro(scenario: Dictionary) -> String:
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 110, "label": "intro de quête"})
 	if r.has("error"):
 		return ""
-	var s: String = str(r.get("text", "")).strip_edges()
+	var s: String = _clean_prose(str(r.get("text", "")).strip_edges())
 	return s if s.length() >= 10 else ""
 
 
@@ -224,19 +224,40 @@ func _fallback_situation(btype: String, _required: Array) -> String:
 	return str(pool[_rng.randi_range(0, pool.size() - 1)])
 
 
-# --- 4) RÉSOLUTION : le code a calculé le degré ; le LLM NARRE (prose), "" si échec. ---
-func narrate_resolution(situation: Dictionary, played_names: Array, res: Dictionary) -> String:
+# LLM réservé aux MOMENTS FORTS (Climax ou réussite éclatante) → réduit les rafales d'appels
+# séquentiels qui stallent le moteur natif (générations en série). Ailleurs : procédural seul. (user 2026-05-29)
+func is_strong_moment(situ_type: String, degree: String) -> bool:
+	return situ_type == "Climax" or degree == "eclatante"
+
+
+# --- 4) RÉSOLUTION : le code a calculé le degré (affiné par la synergie de la combinaison) ;
+#         le LLM NARRE la COMBINAISON comme UN geste unifié (R63/R105), "" si échec. ---
+func narrate_resolution(situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
 	var mn: Node = _mn()
 	if mn == null or not mn.is_ready():
 		return ""
 	var degree: String = str(res.get("degree", "reussite"))
-	var cards: String = ", ".join(played_names)
-	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes partiel (a un prix)", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
-	var usr: String = "Scene: %s\nActes tentes: %s. Issue: %s.\nNarre l'EFFET de ces actes INTEGRE a la scene, 2 phrases, recit direct SANS apostropher le joueur (pas de 'Ah voyageur') ni commentaire, sans chiffres, et enchaine vers la suite." % [str(situation.get("narration", "")), cards, deg_fr.get(degree, "une reussite")]
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "issue (effet des choix)"})
+	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes a un prix", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
+	# On passe le SENS (évocation) de chaque carte, JAMAIS son nom → le LLM fond la COMBINAISON
+	# en UNE action sans énumérer ni nommer les cartes (demande user 2026-05-29).
+	var combo: String = ""
+	for c in played_cards:
+		var ev: String = (str(c.evocation) if (c is Object and "evocation" in c) else "").strip_edges()
+		if ev != "":
+			combo += "\n- %s" % ev
+	var syn: int = int(res.get("synergy", 0))
+	var syn_hint: String = ""
+	if syn > 0:
+		syn_hint = " Ces forces s'accordent en un geste coherent."
+	elif syn < 0:
+		syn_hint = " Ces forces s'accordent mal, tirant a hue et a dia."
+	# Ni le décor (déjà affiché) ni les noms de cartes ne sont passés → coupe l'écho de scène ET
+	# l'énumération à la source. Le label « Intentions » évite la fuite de formulation narrative.
+	var usr: String = "Intentions a fondre en UNE seule action (ne les nomme pas, ne les liste pas):%s\nIssue: %s.%s\nEcris 2 phrases MAXIMUM: commence DIRECTEMENT par l'effet de cette action sur la scene et la foret, SANS redire ni paraphraser le decor, sans chiffres, recit direct sans apostropher le voyageur. Termine sur une phrase complete." % [combo, deg_fr.get(degree, "une reussite"), syn_hint]
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
-	var s: String = str(r.get("text", "")).strip_edges()
+	var s: String = _strip_scene_echo(_clean_prose(str(r.get("text", "")).strip_edges()), str(situation.get("narration", "")))
 	return s if s.length() >= 10 else ""
 
 
@@ -244,6 +265,56 @@ func narrate_resolution(situation: Dictionary, played_names: Array, res: Diction
 func fallback_resolution(degree: String) -> String:
 	var pool: Array = RESO_FALLBACKS.get(degree, RESO_FALLBACKS["reussite"])
 	return str(pool[_rng.randi_range(0, pool.size() - 1)])
+
+
+# Coupe la prose à la dernière phrase COMPLÈTE : évite les troncatures mid-mot (« se dess… »)
+# quand le modèle atteint le plafond de tokens, qui donnaient l'impression d'un blocage (user 2026-05-28).
+func _clean_prose(s: String) -> String:
+	var t: String = s.strip_edges()
+	if t.is_empty():
+		return t
+	var last: String = t.right(1)
+	if last == "." or last == "!" or last == "?" or last == "…" or last == "»":
+		return t
+	var cut: int = -1
+	for p in [".", "!", "?", "…", "»"]:
+		cut = maxi(cut, t.rfind(p))
+	if cut >= 10:  # seuil : ne couper que si on conserve une vraie phrase (≥10 car.), pas un fragment
+		return t.substr(0, cut + 1).strip_edges()
+	return t  # aucune ponctuation de fin exploitable → garder tel quel (rare)
+
+
+# Filet anti-écho : si la prose LLM démarre en recopiant une phrase de la situation (déjà
+# affichée à l'écran), on retire ces phrases. Le prompt ne passe plus le décor — ceci garde le coup.
+func _strip_scene_echo(prose: String, situation: String) -> String:
+	if prose.is_empty() or situation.is_empty():
+		return prose
+	var p: String = prose
+	var situ_norm: String = _norm(situation)
+	var guard: int = 0
+	while guard < 2:  # retire au plus 2 phrases d'ouverture qui clonent la scène
+		guard += 1
+		var fs: String = _first_sentence(p)
+		if fs.length() >= 12 and situ_norm.find(_norm(fs)) != -1:
+			var rest: String = p.substr(fs.length()).strip_edges()
+			if rest.length() >= 10:
+				p = rest
+				continue
+		break
+	return p
+
+
+func _first_sentence(t: String) -> String:
+	var s: String = t.strip_edges()
+	for i in s.length():
+		var ch: String = s[i]
+		if ch == "." or ch == "!" or ch == "?":
+			return s.substr(0, i + 1)
+	return s
+
+
+func _norm(t: String) -> String:
+	return t.strip_edges().to_lower()
 
 
 # --- 5) ÉPILOGUE (fin de run, R69) : LLM, "" si échec → l'appelant garde le procédural. ---
@@ -260,7 +331,7 @@ func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 96, "label": "épilogue"})
 	if r.has("error"):
 		return ""
-	var s: String = str(r.get("text", "")).strip_edges()
+	var s: String = _clean_prose(str(r.get("text", "")).strip_edges())
 	return s if s.length() >= 10 else ""
 
 
