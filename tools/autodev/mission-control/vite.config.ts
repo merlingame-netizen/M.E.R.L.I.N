@@ -3,6 +3,39 @@ import react from '@vitejs/plugin-react';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { spawn, type ChildProcess } from 'node:child_process';
+
+/**
+ * Find the Godot binary across known locations. Mirrors the candidate list from
+ * tools/adapters/godot_adapter.py:_GODOT_CANDIDATES. Override via GODOT_BIN env var.
+ * Uses os.homedir() pour ne pas leaker le username dans le source (review LOW).
+ * Returns the first existing absolute path, or 'godot' as last-resort PATH fallback.
+ */
+function findGodotBin(): string | null {
+  const envOverride = process.env.GODOT_BIN;
+  if (envOverride && fs.existsSync(envOverride)) return envOverride;
+  const home = os.homedir();
+  const candidates: string[] = [
+    path.join(home, 'Godot', 'Godot_v4.5.1-stable_win64_console.exe'),
+    path.join(home, 'AppData', 'Local', 'Programs', 'Godot', 'Godot.exe'),
+    path.join(home, 'AppData', 'Local', 'Programs', 'Godot', 'godot.exe'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  // Last resort: rely on PATH (spawn will error if not found)
+  return process.platform === 'win32' ? 'godot.exe' : 'godot';
+}
+
+/**
+ * Module-scope singleton tracker for the Godot subprocess spawned via /api/godot/launch.
+ * One Vite dev server = one tracked Godot at a time. detached + unref → survives Vite restart
+ * but we lose the handle (then UI shows "not running" until next launch).
+ * `godotLaunching` est un flag synchrone qui ferme la race entre alive-check et spawn (review MEDIUM #1).
+ */
+let godotChild: ChildProcess | null = null;
+let godotPid: number | null = null;
+let godotLaunching: boolean = false;
 
 /**
  * Resolve the Godot 4 user-data directory for the MERLIN project across platforms.
@@ -117,6 +150,117 @@ function godotBridgePlugin(): Plugin {
           return;
         }
         sendJson(res, 405, { ok: false, error: 'Method not allowed' });
+      });
+
+      // POST /api/godot/launch — spawn Godot detached on the requested scene (default MerlinGame).
+      // Pour piloter le jeu depuis la dashboard sans quitter Chrome (user 2026-06-05).
+      const projectRoot = path.resolve(process.cwd(), '..', '..', '..');  // tools/autodev/mission-control → repo root
+      // Guard startup (review MEDIUM #2) : surface immédiate si Vite tourne depuis le mauvais cwd.
+      const godotProjectFile = path.join(projectRoot, 'project.godot');
+      if (!fs.existsSync(godotProjectFile)) {
+        console.warn(`[godot-bridge] WARNING: project.godot introuvable à ${projectRoot} — /api/godot/launch échouera. Lancer Vite depuis tools/autodev/mission-control/ ou définir GODOT_BIN.`);
+      }
+      server.middlewares.use('/api/godot/launch', (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { ok: false, error: 'POST only' });
+          return;
+        }
+        // Race protection (review MEDIUM #1) : flag synchrone fermé avant body collection,
+        // évite un double-spawn si l'utilisateur double-clique pendant que findGodotBin tourne.
+        if (godotLaunching) {
+          sendJson(res, 200, { ok: true, already_running: true, pid: godotPid, launching: true });
+          return;
+        }
+        if (godotChild && godotChild.exitCode === null && !godotChild.killed) {
+          sendJson(res, 200, { ok: true, already_running: true, pid: godotPid });
+          return;
+        }
+        godotLaunching = true;
+        let body = '';
+        let aborted = false;
+        req.on('data', (chunk: Buffer) => {
+          if (aborted) return;
+          if (body.length + chunk.length > 8192) {
+            aborted = true;
+            sendJson(res, 413, { ok: false, error: 'Body exceeds 8192 bytes' });
+            req.destroy();
+            godotLaunching = false;
+            return;
+          }
+          body += chunk.toString('utf-8');
+        });
+        req.on('end', () => {
+          if (aborted) return;
+          try {
+            const parsed = (JSON.parse(body || '{}') as { scene?: string });
+            const rawScene = parsed.scene ?? 'res://scenes/MerlinGame.tscn';
+            // Strict allowlist : seuls les chemins res://scenes/*.tscn sans `..` sont acceptés.
+            if (!/^res:\/\/scenes\/[\w\-./]+\.tscn$/.test(rawScene) || rawScene.includes('..')) {
+              sendJson(res, 400, { ok: false, error: `Invalid scene path: ${rawScene}` });
+              godotLaunching = false;
+              return;
+            }
+            const bin = findGodotBin();
+            if (!bin) {
+              sendJson(res, 500, { ok: false, error: 'Godot binary not found — set GODOT_BIN env var.' });
+              godotLaunching = false;
+              return;
+            }
+            const child = spawn(bin, ['--path', projectRoot, rawScene], {
+              detached: true,
+              stdio: 'ignore',
+              windowsHide: false,
+            });
+            child.on('error', (err) => {
+              console.error('[godot-bridge] spawn error:', err);
+              godotChild = null;
+              godotPid = null;
+            });
+            child.on('exit', (code) => {
+              console.log(`[godot-bridge] Godot exited code=${code}`);
+              godotChild = null;
+              godotPid = null;
+            });
+            child.unref();  // ne bloque pas l'arrêt de Vite
+            godotChild = child;
+            godotPid = child.pid ?? null;
+            sendJson(res, 200, { ok: true, pid: godotPid, scene: rawScene, bin });
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Unknown error';
+            sendJson(res, 500, { ok: false, error: msg });
+          } finally {
+            godotLaunching = false;
+          }
+        });
+      });
+
+      // POST /api/godot/stop — kill the tracked Godot subprocess (taskkill /T sur Windows).
+      server.middlewares.use('/api/godot/stop', (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { ok: false, error: 'POST only' });
+          return;
+        }
+        if (!godotChild || godotChild.killed || godotChild.exitCode !== null) {
+          godotChild = null;
+          godotPid = null;
+          sendJson(res, 200, { ok: true, not_running: true });
+          return;
+        }
+        try {
+          const pid = godotPid;
+          if (process.platform === 'win32' && pid != null) {
+            // taskkill /T pour kill tree (Godot peut spawn des sous-process)
+            spawn('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore' }).unref();
+          } else if (godotChild) {
+            godotChild.kill('SIGTERM');
+          }
+          godotChild = null;
+          godotPid = null;
+          sendJson(res, 200, { ok: true, killed_pid: pid });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Unknown error';
+          sendJson(res, 500, { ok: false, error: msg });
+        }
       });
 
       server.middlewares.use('/api/godot/scenarios', (_req, res) => {

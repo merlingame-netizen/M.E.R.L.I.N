@@ -99,6 +99,18 @@ function fmtPct(value: number, max: number): string {
   return `${Math.round((100 * value) / max)}%`;
 }
 
+/**
+ * State is "fresh" if the timestamp written by TweaksOverlay is <5s old — proxy pour
+ * "Godot est en train de tourner" (le writer tick toutes les 1s). Évite de stocker un PID
+ * côté React ; l'état dérive du fichier polled, pas d'un état serveur.
+ */
+function isStateFresh(state: DashboardState | null): boolean {
+  if (!state?.timestamp) return false;
+  const ts = new Date(state.timestamp).getTime();
+  if (Number.isNaN(ts)) return false;
+  return Date.now() - ts < 5000;
+}
+
 export function GameplayLiveTab(): JSX.Element {
   const [state, setState] = useState<DashboardState | null>(null);
   const [stateErr, setStateErr] = useState<string | null>(null);
@@ -176,14 +188,50 @@ export function GameplayLiveTab(): JSX.Element {
 
   const resetTweaks = useCallback((): void => { saveTweaks({}); }, [saveTweaks]);
 
+  const launchGame = useCallback(async (): Promise<void> => {
+    setSaveMsg('⟳ lancement Godot…');
+    try {
+      const res = await fetch('/api/godot/launch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const json = (await res.json()) as { ok: boolean; pid?: number; error?: string; already_running?: boolean };
+      if (json.ok) {
+        setSaveMsg(json.already_running ? `✓ déjà actif (pid ${json.pid})` : `✓ Godot lancé (pid ${json.pid}) — state JSON dans <2s`);
+      } else {
+        setSaveMsg(`✗ ${json.error ?? 'launch failed'}`);
+      }
+      setTimeout(() => setSaveMsg(null), 4000);
+    } catch (err: unknown) {
+      setSaveMsg(`✗ ${err instanceof Error ? err.message : 'Network error'}`);
+      setTimeout(() => setSaveMsg(null), 4000);
+    }
+  }, []);
+
+  const stopGame = useCallback(async (): Promise<void> => {
+    setSaveMsg('⟳ arrêt Godot…');
+    try {
+      const res = await fetch('/api/godot/stop', { method: 'POST' });
+      const json = (await res.json()) as { ok: boolean; killed_pid?: number; not_running?: boolean; error?: string };
+      if (json.ok) {
+        setSaveMsg(json.not_running ? '○ aucun process suivi à arrêter' : `✓ Godot arrêté (pid ${json.killed_pid})`);
+      } else {
+        setSaveMsg(`✗ ${json.error ?? 'stop failed'}`);
+      }
+      setTimeout(() => setSaveMsg(null), 4000);
+    } catch (err: unknown) {
+      setSaveMsg(`✗ ${err instanceof Error ? err.message : 'Network error'}`);
+      setTimeout(() => setSaveMsg(null), 4000);
+    }
+  }, []);
+
   const currentConstants: Required<ConstantsTweaks> = useMemo(() => ({
     ...DEFAULT_CONSTANTS,
     ...(tweaks.constants ?? {}),
   }), [tweaks.constants]);
 
+  const gameLive = isStateFresh(state);
+
   return (
     <div style={{ background: PALETTE.bg, color: PALETTE.text, fontFamily: 'var(--font-mono, monospace)', height: '100%', overflow: 'auto', padding: 16 }}>
-      <Header stateErr={stateErr} saveMsg={saveMsg} onReset={resetTweaks} />
+      <Header stateErr={stateErr} saveMsg={saveMsg} onReset={resetTweaks} isGameLive={gameLive} onLaunch={launchGame} onStop={stopGame} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
         <StatePane state={state} />
         <HandPane state={state} />
@@ -220,23 +268,57 @@ function Card(props: { title: string; children: ReactNode }): JSX.Element {
   );
 }
 
-function Header(props: { stateErr: string | null; saveMsg: string | null; onReset: () => void }): JSX.Element {
+interface HeaderProps {
+  stateErr: string | null;
+  saveMsg: string | null;
+  onReset: () => void;
+  isGameLive: boolean;
+  onLaunch: () => void;
+  onStop: () => void;
+}
+
+function Header(props: HeaderProps): JSX.Element {
+  const msgColor = props.saveMsg?.startsWith('✓') ? PALETTE.green
+    : props.saveMsg?.startsWith('⟳') ? PALETTE.amber
+    : props.saveMsg?.startsWith('○') ? PALETTE.dim
+    : PALETTE.danger;
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
         <span style={{ color: PALETTE.gold, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' }}>Gameplay Live</span>
+        <span style={{
+          fontSize: 10,
+          padding: '2px 8px',
+          borderRadius: 10,
+          background: props.isGameLive ? PALETTE.green : PALETTE.border,
+          color: props.isGameLive ? PALETTE.bg : PALETTE.dim,
+          letterSpacing: 1,
+          textTransform: 'uppercase',
+          fontWeight: 600,
+        }}>
+          {props.isGameLive ? '● live' : '○ idle'}
+        </span>
         {props.stateErr && (
-          <span style={{ marginLeft: 12, color: PALETTE.amber, fontSize: 11 }}>
-            ⚠ {props.stateErr}
-          </span>
+          <span style={{ color: PALETTE.amber, fontSize: 11 }}>⚠ {props.stateErr}</span>
         )}
         {props.saveMsg && (
-          <span style={{ marginLeft: 12, color: props.saveMsg.startsWith('✓') ? PALETTE.green : PALETTE.danger, fontSize: 11 }}>
-            {props.saveMsg}
-          </span>
+          <span style={{ color: msgColor, fontSize: 11 }}>{props.saveMsg}</span>
         )}
       </div>
-      <button onClick={props.onReset} style={btnStyle('amber')}>Reset tweaks</button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {props.isGameLive ? (
+          <button onClick={props.onStop} style={btnStyle('danger')} title="Tue le process Godot suivi (taskkill /T sur Windows)">
+            ⏹ Arrêter
+          </button>
+        ) : (
+          <button onClick={props.onLaunch} style={btnStyle('green')} title="Spawn Godot sur res://scenes/MerlinGame.tscn">
+            ▶ Lancer le jeu
+          </button>
+        )}
+        <button onClick={props.onReset} style={btnStyle('amber')} title="Vide user://merlin_tweaks.json — restaure les constantes par défaut">
+          Reset tweaks
+        </button>
+      </div>
     </div>
   );
 }
@@ -469,8 +551,14 @@ const thStyle: CSSProperties = { padding: '4px 6px', color: PALETTE.dim, fontWei
 const inputStyle: CSSProperties = { background: PALETTE.bg, color: PALETTE.text, border: `1px solid ${PALETTE.border}`, borderRadius: 3, padding: '4px 6px', fontFamily: 'inherit', fontSize: 11 };
 const chipStyle: CSSProperties = { display: 'inline-flex', alignItems: 'center', background: PALETTE.bg, color: PALETTE.gold, border: `1px solid ${PALETTE.border}`, borderRadius: 12, padding: '2px 8px', fontSize: 11 };
 
-function btnStyle(variant: 'gold' | 'amber'): CSSProperties {
-  const color = variant === 'gold' ? PALETTE.gold : PALETTE.amber;
+function btnStyle(variant: 'gold' | 'amber' | 'green' | 'danger'): CSSProperties {
+  const colorMap: Record<typeof variant, string> = {
+    gold: PALETTE.gold,
+    amber: PALETTE.amber,
+    green: PALETTE.green,
+    danger: PALETTE.danger,
+  };
+  const color = colorMap[variant];
   return {
     background: PALETTE.bg,
     color,
