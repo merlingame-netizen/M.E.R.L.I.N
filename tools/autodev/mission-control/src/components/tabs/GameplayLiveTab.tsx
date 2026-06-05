@@ -12,7 +12,10 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode, type CSSProp
  */
 
 interface CardSnap {
-  card_name: string;
+  name: string;  // aligned with MerlinCard.to_dict() in merlin_card.gd:27 (review HIGH #2 2026-06-05)
+  id?: string;
+  evocation?: string;
+  rarity?: string;
   tags: string[];
   corruption: number;
 }
@@ -369,8 +372,8 @@ function HandPane(props: { state: DashboardState | null }): JSX.Element {
           </thead>
           <tbody>
             {hand.map((c, i) => (
-              <tr key={i} style={{ borderTop: `1px solid ${PALETTE.border}` }}>
-                <td style={{ padding: '4px 6px' }}>{c.card_name}</td>
+              <tr key={c.id ?? i} style={{ borderTop: `1px solid ${PALETTE.border}` }}>
+                <td style={{ padding: '4px 6px' }} title={c.evocation ?? ''}>{c.name}</td>
                 <td style={{ padding: '4px 6px', color: PALETTE.dim }}>{(c.tags ?? []).join(', ')}</td>
                 <td style={{ padding: '4px 6px', color: c.corruption > 0 ? PALETTE.violet : PALETTE.dim }}>{c.corruption}</td>
               </tr>

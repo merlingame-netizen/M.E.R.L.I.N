@@ -101,8 +101,19 @@ function godotBridgePlugin(): Plugin {
             sendJson(res, 200, { ok: false, error: 'Godot pas en cours d\'exécution (ou TweaksOverlay pas encore actif)', state: null, dir });
             return;
           }
+          // Auto-healing : si mtime > 5s, Godot est probablement arrêté/crashé mais a laissé un
+          // fichier zombie (taskkill /T met du temps à libérer + Godot peut écrire en agonie).
+          // On nettoie et on retourne comme absent. (playtester MEDIUM 2026-06-05 — defense in depth
+          // par-dessus le cleanup de /stop)
+          const stat = fs.statSync(fp);
+          const ageMs = Date.now() - stat.mtimeMs;
+          if (ageMs > 5000) {
+            try { fs.unlinkSync(fp); } catch { /* best-effort */ }
+            sendJson(res, 200, { ok: false, error: `État stale (${Math.round(ageMs / 1000)}s) — Godot probablement arrêté`, state: null, dir, stale_age_ms: ageMs });
+            return;
+          }
           const raw = fs.readFileSync(fp, 'utf-8');
-          sendJson(res, 200, { ok: true, state: JSON.parse(raw) });
+          sendJson(res, 200, { ok: true, state: JSON.parse(raw), age_ms: ageMs });
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Unknown error';
           sendJson(res, 500, { ok: false, error: msg });
@@ -235,14 +246,22 @@ function godotBridgePlugin(): Plugin {
       });
 
       // POST /api/godot/stop — kill the tracked Godot subprocess (taskkill /T sur Windows).
+      // Supprime dashboard_state.json après kill pour éviter l'ambiguïté "stale vs live" côté
+      // dashboard (playtester E2E MEDIUM 2026-06-05 : le state restait visible avec timestamp
+      // figé). Après /stop, GET /state retourne la branche "pas en cours" propre.
       server.middlewares.use('/api/godot/stop', (req, res) => {
         if (req.method !== 'POST') {
           sendJson(res, 405, { ok: false, error: 'POST only' });
           return;
         }
+        const cleanupStateFile = (): void => {
+          const statePath = path.join(dir, 'dashboard_state.json');
+          try { if (fs.existsSync(statePath)) fs.unlinkSync(statePath); } catch { /* best-effort */ }
+        };
         if (!godotChild || godotChild.killed || godotChild.exitCode !== null) {
           godotChild = null;
           godotPid = null;
+          cleanupStateFile();  // best-effort cleanup même si pas de process tracké
           sendJson(res, 200, { ok: true, not_running: true });
           return;
         }
@@ -256,6 +275,8 @@ function godotBridgePlugin(): Plugin {
           }
           godotChild = null;
           godotPid = null;
+          // Petit délai puis cleanup pour laisser à Godot le temps de release son lock sur le fichier
+          setTimeout(cleanupStateFile, 200);
           sendJson(res, 200, { ok: true, killed_pid: pid });
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : 'Unknown error';

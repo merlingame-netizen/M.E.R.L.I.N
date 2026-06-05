@@ -139,12 +139,19 @@ func _load_persona() -> void:
 	else:
 		push_warning("MerlinScenario: merlin_persona.json illisible ou non-Dictionary — voix par défaut.")
 	# v10 dashboard : surcharge live depuis TweaksOverlay.get_persona_overlay() (édité par
-	# mission-control). Fusion non-destructive (overlay > base, append pour arrays). (user 2026-05-31 /goal)
+	# mission-control). Fusion non-destructive : arrays APPEND (les appellations de l'overlay
+	# enrichissent la base, ne la remplacent pas — review HIGH+MEDIUM 2026-06-05), scalaires/dicts
+	# en REMPLACEMENT (un executor_system overlay non-vide override la base). (user 2026-05-31 /goal)
 	var to: Node = get_node_or_null("/root/TweaksOverlay")
 	if to != null and to.has_method("get_persona_overlay"):
 		var ov: Dictionary = to.get_persona_overlay()
 		for k in ov.keys():
-			_persona[k] = ov[k]
+			var ov_val: Variant = ov[k]
+			var base_val: Variant = _persona.get(k, null)
+			if base_val is Array and ov_val is Array:
+				_persona[k] = (base_val as Array) + (ov_val as Array)  # append : base + overlay
+			else:
+				_persona[k] = ov_val  # scalaire/dict : remplacement direct
 
 
 func _csv(arr: Variant, limit: int = 999) -> String:

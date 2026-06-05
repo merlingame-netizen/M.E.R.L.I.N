@@ -21,11 +21,11 @@ config/icon="res://icon.svg"
 [autoload]
 
 MerlinNative="*res://scripts/llm/merlin_native.gd"
+TweaksOverlay="*res://scripts/game/tweaks_overlay.gd"
 MerlinRun="*res://scripts/game/merlin_run.gd"
 MerlinScenario="*res://scripts/llm/merlin_scenario.gd"
 MerlinDebugOverlay="*res://scripts/game/merlin_debug_overlay.gd"
 MerlinTransition="*res://scripts/game/merlin_transition.gd"
-TweaksOverlay="*res://scripts/game/tweaks_overlay.gd"
 
 [display]
 
