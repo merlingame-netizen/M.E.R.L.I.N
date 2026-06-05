@@ -2,6 +2,40 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-05 — v10 UX 4 piliers + Dashboard Gameplay Live (livraison complète)
+
+### Context
+User /goal : « tu fais tout et controle tout dans le livrable final, que tout soit fonctionnel, optimisé et good pour le pilotage du jeu et son dev ». Suite à l'audit UX 4 piliers (bible §21) par `merlin-game-designer` (2 CRITICAL + 3 HIGH + 3 wins) et au spec dashboard Gameplay Live (v10.D du task_plan), implémentation end-to-end.
+
+### Done — Fixes UX (5/5)
+- **C1** `merlin_end.gd` : port du mécanisme epoch + `_tw.is_valid()` guard + caret clignotant + skip-typewriter + gui_input handler depuis `merlin_game.gd`. Plus de swap silencieux LLM pendant que le joueur lit l'épilogue (anti-saut de lecture, pilier ÉVIDENT).
+- **C2** `merlin_game.gd::_show_intro_popup` : refacto full-rect modal → bandeau slide-up bottom 30 % (anti-pattern §21.2 #1 corrigé). Plateau 3D reste visible au-dessus, voile léger limité au tiers bas, ScrollContainer pour l'intro Merlin (corpus peut être long).
+- **H1** `merlin_game.gd::_update_preview` : fusion des 2 labels redondants (Miller §21.2 #5). `_hint_lbl` ↔ `_preview_lbl` mutuellement exclusifs ; tags requis embarqués dans le preview quand combo non-empty (zéro perte d'info).
+- **H2** `merlin_scenario.gd::take_selection` + `merlin_selection.gd::_show_overlay` : budget 8 s borné (fallback SEL_FALLBACK si LLM dépasse) + animation dots cyclique « · · · » dans l'overlay.
+- **H3** `merlin_card_view.gd::_on_gui_input` : `_tap_feedback()` (pop scale 0.06s → retour 0.10s) garantit feedback tactile <100 ms sans hover-only (pilier TACTILE+DESKTOP).
+
+### Done — Dashboard Gameplay Live (Phase 1+2 + amorce Phase 3)
+- **NEW autoload** `scripts/game/tweaks_overlay.gd` : hot-reload de `user://merlin_tweaks.json` (polling 500 ms via `_process` + mtime) ; écrit l'état run `user://dashboard_state.json` (baseline immédiat + 1 s cadence). API publique `get_int/get_persona_overlay/get_scenario_force` + signal `tweaks_reloaded`. Enregistré dans `project.godot` après MerlinRun pour l'ordre.
+- **MerlinRun** : 4 helpers privés `_start_integrite/_hand_size/_max_integrite/_corruption_cap` consomment TweaksOverlay (fallback const local) + nouveau public `get_run_constants()` pour le state writer.
+- **MerlinScenario** : `_load_persona` fusionne l'overlay TweaksOverlay (overlay > base, non-destructif) + `_ready` connecte le signal `tweaks_reloaded`. **`take_selection`** câble `scenario_force.title` (forçage depuis le dashboard, picker fonctionnel).
+- **Mission-control bridge** `vite.config.ts` : plugin `godotBridgePlugin` (Connect middleware Vite dev :4200, **non** déployé Vercel) — 3 routes file I/O multi-plateforme (Win/Mac/Linux) sur godot user-data dir + corpus listing depuis Downloads. Cap body POST 512 KB.
+- **NEW composant** `GameplayLiveTab.tsx` : 5 panneaux (State live polling 1.5 s, Hand table, Constants sliders, Persona overlay editor, Scenario picker 130-corpus groupé par archétype). Optimistic update avec **revert sur échec POST** (revue MEDIUM #4). React 19 compatible (import JSX/ReactNode/CSSProperties as types).
+- **App.tsx** : nouvel onglet `live` (⚡) entre `game` et `agents`.
+
+### Vérif
+- `validate_step0` : exit=0, zéro erreur sur fichiers touchés (10 errors restantes = pré-existantes phantom_camera/node_modules)
+- `smoke MerlinGame` : passed=True, script_errors=0, total_errors=0
+- TypeScript `tsc --noEmit` mission-control : 0 erreur (après fix React 19 namespace JSX)
+- E2E : `dashboard_state.json` confirmé écrit (431 bytes valide, MTIME live) pendant smoke
+- Code review batch (`code-reviewer` agent) : **0 CRITICAL, 0 HIGH, 5 MEDIUM**, tous résolus (H3 scale return, Vite POST cap, React revert, scenario_force wire)
+
+### Notes
+- `scenario_force.beat_index` reste WIP (label UI le signale, tooltip explicatif) — refacto structure beats requise pour hot-reload sans casser run en cours.
+- Bridge local-dev only : déploiement Vercel ignore `/api/godot/*` (gracefull error côté React).
+- Le `GameTab` iframe Vercel existant n'est pas touché — Gameplay Live cohabite en onglet séparé.
+
+---
+
 ## Session: 2026-05-29 (suite) — v9.10 Fix moteur natif (anti-freeze thread principal)
 
 ### Context

@@ -37,7 +37,9 @@ func _ready() -> void:
 
 
 func new_run(p_scenario: Dictionary) -> void:
-	integrite = START_INTEGRITE
+	# v10 dashboard : constantes lues via TweaksOverlay (hot-reload depuis mission-control). Default
+	# = const local si TweaksOverlay absent ou clé non définie. (user 2026-05-31 /goal)
+	integrite = _start_integrite()
 	corruption = 0
 	scenario = p_scenario.duplicate(true)
 	beat_index = 0
@@ -58,7 +60,8 @@ func new_run(p_scenario: Dictionary) -> void:
 
 
 func draw_to_full() -> void:
-	while hand.size() < HAND_SIZE:
+	var hs: int = _hand_size()
+	while hand.size() < hs:
 		if deck.is_empty():
 			if discard.is_empty():
 				break
@@ -66,6 +69,40 @@ func draw_to_full() -> void:
 			discard = []
 			_shuffle(deck)
 		hand.append(deck.pop_back())
+
+
+# v10 dashboard helpers : lit TweaksOverlay si présent (autoload registré APRÈS MerlinRun dans
+# project.godot — `get_node_or_null` car premier appel possible avant son _ready).
+func _start_integrite() -> int:
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	return to.get_int("START_INTEGRITE", START_INTEGRITE) if to != null and to.has_method("get_int") else START_INTEGRITE
+
+
+func _hand_size() -> int:
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	return to.get_int("HAND_SIZE", HAND_SIZE) if to != null and to.has_method("get_int") else HAND_SIZE
+
+
+func _max_integrite() -> int:
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	return to.get_int("MAX_INTEGRITE", MAX_INTEGRITE) if to != null and to.has_method("get_int") else MAX_INTEGRITE
+
+
+func _corruption_cap() -> int:
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	return to.get_int("CORRUPTION_CAP", CORRUPTION_CAP) if to != null and to.has_method("get_int") else CORRUPTION_CAP
+
+
+# v10 dashboard : accès public aux constantes effectives (avec tweaks appliqués) pour le snapshot
+# JSON du dashboard. Évite l'accès direct `run.MAX_INTEGRITE` qui n'est pas garanti depuis un
+# autre autoload sans class_name. (user 2026-05-31 /goal)
+func get_run_constants() -> Dictionary:
+	return {
+		"START_INTEGRITE": _start_integrite(),
+		"HAND_SIZE": _hand_size(),
+		"MAX_INTEGRITE": _max_integrite(),
+		"CORRUPTION_CAP": _corruption_cap(),
+	}
 
 
 func play_and_discard(cards: Array) -> void:
@@ -100,7 +137,8 @@ func _draw_one() -> MerlinCard:
 func apply_resolution(res: Dictionary) -> void:
 	var di: int = int(res.get("integrite_delta", 0))
 	var dc: int = int(res.get("corruption_delta", 0))
-	integrite = clampi(integrite + di, 0, MAX_INTEGRITE)
+	# v10 dashboard : MAX_INTEGRITE peut être surchargé par TweaksOverlay (hot-reload).
+	integrite = clampi(integrite + di, 0, _max_integrite())
 	corruption = max(0, corruption + dc)
 	emit_signal("gauges_changed", integrite, corruption)
 	_check_corruption_threshold()
@@ -126,7 +164,8 @@ func _inject_corrupted_card() -> void:
 func _check_end_after_resolution() -> void:
 	if ended:
 		return
-	if corruption >= CORRUPTION_CAP:
+	# v10 dashboard : CORRUPTION_CAP peut être surchargé via TweaksOverlay (hot-reload).
+	if corruption >= _corruption_cap():
 		_end("corrompu")
 	elif integrite <= 0:
 		_end("mort")

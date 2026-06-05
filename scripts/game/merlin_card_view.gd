@@ -170,4 +170,17 @@ func _animate(pos: Vector2, rot: float, scl: float) -> void:
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_tap_feedback()
 		card_clicked.emit(card)
+
+
+# v10/H3 (audit UX bible §21.1 pilier TACTILE+DESKTOP) — retour visuel <100 ms garanti même sans
+# hover (tactile : pas d'événement mouse_entered persistant). Pop d'échelle puis retour à neutre
+# (revue 2026-05-31 : sans retour, la carte restait gonflée sur tactile si pas de hover ultérieur).
+func _tap_feedback() -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	var press_scale: float = 1.04 if _compact else 1.08
+	_tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "scale", Vector2(press_scale, press_scale), 0.06)
+	_tw.tween_property(self, "scale", Vector2.ONE, 0.10)  # retour systématique à 1.0 (couvre cas tactile sans hover)

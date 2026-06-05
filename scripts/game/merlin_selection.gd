@@ -15,6 +15,10 @@ var _cards_box: HBoxContainer
 var _overlay: Panel
 var _overlay_lbl: Label
 var _busy: bool = false
+# v10/H2 (audit UX bible §21.1 ÉVIDENT) : feedback visuel d'attente bornée (8 s budget côté
+# MerlinScenario.take_selection). (user 2026-05-31 /goal)
+var _overlay_dots_tw: Tween = null
+var _overlay_base_txt: String = ""
 
 
 func _ready() -> void:
@@ -129,11 +133,28 @@ func _on_back() -> void:
 
 func _show_overlay(txt: String) -> void:
 	_overlay.visible = true
+	# v10/H2 : on garde le texte de base et on anime un suffixe de dots cycliques (·  ··  ···)
+	# pour signifier l'activité d'attente. Tween en boucle, cleanup garanti dans _hide_overlay.
+	_overlay_base_txt = txt
 	_overlay_lbl.text = txt
+	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
+		_overlay_dots_tw.kill()
+	_overlay_dots_tw = create_tween().set_loops()
+	for suffix in ["", "  ·", "  · ·", "  · · ·"]:
+		_overlay_dots_tw.tween_callback(_set_overlay_suffix.bind(suffix))
+		_overlay_dots_tw.tween_interval(0.4)
+
+
+func _set_overlay_suffix(suffix: String) -> void:
+	if _overlay_lbl != null:
+		_overlay_lbl.text = _overlay_base_txt + suffix
 
 
 func _hide_overlay() -> void:
 	_overlay.visible = false
+	if _overlay_dots_tw != null and _overlay_dots_tw.is_valid():
+		_overlay_dots_tw.kill()
+	_overlay_dots_tw = null
 
 
 func _surface_style() -> StyleBoxFlat:

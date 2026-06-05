@@ -79,8 +79,11 @@ func _present_current_beat() -> void:
 	_can_advance = false
 	_set_caret(false)
 	_set_hand_dimmed(false)
+	# v10/H1 (audit UX bible §21.2 #5 — loi de Miller, max 7 affordances) : _hint_lbl ET _preview_lbl
+	# disaient la même chose. Le préfixe « Ce moment appelle… » bascule dans _preview_lbl dès qu'une
+	# carte est posée (_update_preview) — un seul des deux est visible à la fois.
 	_hint_lbl.visible = true
-	_preview_lbl.visible = true
+	_preview_lbl.visible = false
 	_resolve_btn.visible = true
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
@@ -196,15 +199,22 @@ func _on_combo_card(card: MerlinCard) -> void:
 
 func _update_preview() -> void:
 	if _combo.is_empty():
-		_preview_lbl.text = "Pose une carte (la 1ère = action principale)."
+		# v10/H1 : combo vide → seul _hint_lbl visible (« Ce moment appelle… »). _preview_lbl masqué
+		# pour rester sous le plafond Miller (≤7 affordances simultanées, bible §21.2 #5).
+		_hint_lbl.visible = true
+		_preview_lbl.visible = false
 		_resolve_btn.disabled = true
 		return
+	# combo non-vide → on bascule sur _preview_lbl avec les tags requis EMBARQUÉS en préfixe
+	# (zéro perte d'info) + couverture + degré + coût ; _hint_lbl masqué pour ne pas doubler.
+	_hint_lbl.visible = false
+	_preview_lbl.visible = true
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
 	var cov: Dictionary = res["coverage"]
 	var covered: int = cov["covered"].size()
 	var total: int = covered + cov["missing"].size()
-	_preview_lbl.text = "Couverture %d/%d  ·  degré pressenti : %s  ·  coût Corruption : %d" % [covered, total, str(res["label"]), int(res["corruption_delta"])]
+	_preview_lbl.text = "%s  →  Couverture %d/%d  ·  degré pressenti : %s  ·  coût Corruption : %d" % [_format_tags(reqs), covered, total, str(res["label"]), int(res["corruption_delta"])]
 	_resolve_btn.disabled = false
 
 
@@ -501,7 +511,10 @@ func _hide_overlay() -> void:
 	_overlay.visible = false
 
 
-# --- Pop-up d'intro de quête (R56) : développement narratif + objectif, à accepter (modal). ---
+# --- Bandeau d'intro de quête (R56) : développement narratif + objectif, à accepter. ---
+# v10/C2 (audit UX bible §21.2 #1) : NE recouvre PLUS le plateau 3D — bandeau slide-up bottom ≤30%
+# hauteur. Le plateau reste visible au-dessus ; le layer absorbe les clics (modal soft) sans dim
+# plein-rect. (user 2026-05-31 /goal)
 func _show_intro_popup() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	var data: Dictionary = get_node("/root/MerlinScenario").build_intro(run.scenario)
@@ -509,78 +522,105 @@ func _show_intro_popup() -> void:
 
 	_intro_layer = Control.new()
 	_intro_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_intro_layer.mouse_filter = Control.MOUSE_FILTER_STOP  # modal : bloque le plateau dessous
+	_intro_layer.mouse_filter = Control.MOUSE_FILTER_STOP  # absorbe les clics du plateau (modal soft)
 	add_child(_intro_layer)
 
-	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(0.04, 0.03, 0.02, 0.88)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_intro_layer.add_child(dim)
+	# Voile léger limité au tiers bas (continuité visuelle bandeau↔plateau), pas de dim plein-rect.
+	var fade: ColorRect = ColorRect.new()
+	fade.color = Color(0.04, 0.03, 0.02, 0.45)
+	fade.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	fade.anchor_top = 0.66
+	fade.anchor_bottom = 1.0
+	fade.offset_top = 0
+	fade.offset_bottom = 0
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE  # le layer parent capte déjà
+	_intro_layer.add_child(fade)
 
-	var center: CenterContainer = CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_intro_layer.add_child(center)
-
-	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(660, 0)
+	# Bandeau ancré en bas : 30% hauteur, marge horizontale 24 px, bordure or supérieure 3 px.
+	var bandeau: PanelContainer = PanelContainer.new()
+	bandeau.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	bandeau.anchor_top = 0.70
+	bandeau.anchor_bottom = 1.0
+	bandeau.offset_top = 0
+	bandeau.offset_bottom = -16  # petit padding bottom écran
+	bandeau.offset_left = 24
+	bandeau.offset_right = -24
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_SURFACE
 	sb.set_corner_radius_all(10)
-	sb.set_border_width_all(2)
 	sb.border_color = COL_GOLD
-	sb.set_content_margin_all(32)
-	panel.add_theme_stylebox_override("panel", sb)
-	center.add_child(panel)
+	sb.border_width_top = 3
+	sb.set_content_margin_all(20)
+	bandeau.add_theme_stylebox_override("panel", sb)
+	_intro_layer.add_child(bandeau)
 
+	# Layout vertical : titre + intro (scroll si long) + ligne objectif/accepter.
 	var v: VBoxContainer = VBoxContainer.new()
-	v.add_theme_constant_override("separation", 20)
-	panel.add_child(v)
+	v.add_theme_constant_override("separation", 10)
+	bandeau.add_child(v)
 
 	var title: Label = Label.new()
 	title.text = str(run.scenario.get("title", "La Quête"))
 	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", 22)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(title)
 
+	# ScrollContainer : l'intro générée peut être longue (4-6 phrases corpus Merlin). On laisse
+	# l'utilisateur scroller dans le bandeau sans déborder du tiers bas.
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(scroll)
 	var intro_lbl: RichTextLabel = RichTextLabel.new()
 	intro_lbl.bbcode_enabled = true
 	intro_lbl.fit_content = true
-	intro_lbl.custom_minimum_size = Vector2(0, 120)
+	intro_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
-	intro_lbl.add_theme_font_size_override("normal_font_size", 19)
-	v.add_child(intro_lbl)
+	intro_lbl.add_theme_font_size_override("normal_font_size", 16)
+	scroll.add_child(intro_lbl)
 	_reveal_into(intro_lbl, str(data.get("intro", "")))
 
+	# Ligne basse : Objectif (gauche, expand) + Accepter (droite, fixed). Une seule rangée → cibles
+	# tactiles ≥44 px (bible §21.1 pilier TACTILE+DESKTOP).
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	v.add_child(row)
+
 	var obj_panel: PanelContainer = PanelContainer.new()
+	obj_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var osb: StyleBoxFlat = StyleBoxFlat.new()
 	osb.bg_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.12)
 	osb.set_corner_radius_all(6)
-	osb.set_content_margin_all(12)
+	osb.set_content_margin_all(10)
 	osb.border_color = COL_GOLD
 	osb.border_width_left = 3
 	obj_panel.add_theme_stylebox_override("panel", osb)
-	v.add_child(obj_panel)
+	row.add_child(obj_panel)
 	var obj_lbl: Label = Label.new()
 	obj_lbl.text = "✦ Objectif : " + str(data.get("objectif", ""))
 	obj_lbl.add_theme_color_override("font_color", COL_GOLD)
-	obj_lbl.add_theme_font_size_override("font_size", 16)
+	obj_lbl.add_theme_font_size_override("font_size", 14)
 	obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	obj_panel.add_child(obj_lbl)
 
 	var accept: Button = Button.new()
-	accept.text = "Accepter la quête  ✦"
-	accept.custom_minimum_size = Vector2(0, 56)
-	accept.add_theme_font_size_override("font_size", 20)
+	accept.text = "Accepter ✦"
+	accept.custom_minimum_size = Vector2(180, 48)  # ≥44 px (pilier TACTILE+DESKTOP)
+	accept.add_theme_font_size_override("font_size", 18)
 	accept.pressed.connect(_accept_quest)
-	v.add_child(accept)
+	row.add_child(accept)
 	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
 	_pulse(accept)
 
-	_intro_layer.modulate = Color(1, 1, 1, 0)
-	var t: Tween = _intro_layer.create_tween()
-	t.tween_property(_intro_layer, "modulate:a", 1.0, 0.3)
+	# Animation slide-up depuis sous l'écran + fade-in du voile (300 ms, BACK out).
+	var screen_h: float = float(get_viewport().get_visible_rect().size.y)
+	bandeau.position.y = screen_h * 0.3  # offset visuel = simule un slide-up depuis le bas
+	var t: Tween = bandeau.create_tween()
+	t.tween_property(bandeau, "position:y", 0.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	fade.modulate = Color(1, 1, 1, 0)
+	fade.create_tween().tween_property(fade, "modulate:a", 1.0, 0.3)
 
 	_bg_intro(run.scenario, intro_lbl)
 

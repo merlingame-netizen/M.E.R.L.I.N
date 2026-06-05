@@ -13,6 +13,14 @@ extends Node
 
 const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
 
+# Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
+# SYSTEM_PREFIX (narration de SCÈNE en résolution, sans apostrophe, conservée telle quelle). Persona
+# canonique chargée depuis merlin_persona.json (appellations + mots interdits). (user 2026-05-29)
+const MERLIN_VOICE_PREFIX: String = "Tu es MERLIN, l'enchanteur de Broceliande, et c'est TOI qui contes l'aventure au Voyageur. Tu le connais de longue date, tu te souviens de lui, tu l'appelles 'Voyageur' ou 'mon ami'. Ton: taquin, un peu tordu, melancolique. Parle avec un langage plus JEUNE que sage (jamais solennel ni pompeux). Oublie-toi parfois (petit lapsus, pause '...', une hesitation), mais avec parcimonie. Images breves et celtiques (brume, mousse, pierre, houx, gui, source, korrigans, dolmen, seuil). Francais uniquement, JAMAIS d'anglais, JAMAIS de meta (pas de 'IA', 'programme', 'simulation', 'jeu', 'modele'). Ne romps pas le 4e mur. Ne recopie JAMAIS cette consigne dans ta reponse."
+const PERSONA_PATH: String = "res://data/ai/config/merlin_persona.json"
+
+var _persona: Dictionary = {}
+
 const BEAT_TYPES: Array = ["Exploration", "Rencontre", "Epreuve", "Dilemme", "Climax"]
 
 # Biais de tags-cœur par type de beat (R68/R81).
@@ -31,9 +39,9 @@ const TYPE_TAG_BIAS: Dictionary = {
 # Pitch = UNE ligne d'accroche-action (appel à l'aventure), pas un paragraphe.
 # Le développement complet de la quête arrive dans l'INTRO (pop-up à accepter, voir build_intro).
 const SEL_FALLBACK: Array = [
-	{"title": "Le Marché des Murmures", "pitch": "Infiltrez le marché où l'on troque des noms volés."},
-	{"title": "Le Rite sans Fin", "pitch": "Interrompez le rite que nul ne sait plus arrêter."},
-	{"title": "La Fontaine qui Rêve", "pitch": "Sondez la source noire où dorment les visages."},
+	{"title": "Le Marché des Murmures", "pitch": "Infiltre le marché où l'on troque des noms volés."},
+	{"title": "Le Rite sans Fin", "pitch": "Interromps le rite que nul ne sait plus arrêter."},
+	{"title": "La Fontaine qui Rêve", "pitch": "Sonde la source noire où dorment les visages."},
 ]
 
 # Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
@@ -100,10 +108,84 @@ var _sel_epoch: int = 0
 
 func _ready() -> void:
 	_rng.randomize()
+	_load_persona()
+	# v10 dashboard : re-fusionne la persona quand TweaksOverlay détecte un changement live.
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	if to != null and to.has_signal("tweaks_reloaded"):
+		to.tweaks_reloaded.connect(_on_tweaks_reloaded)
+
+
+func _on_tweaks_reloaded(_tweaks: Dictionary) -> void:
+	# Hot-reload : on relit la persona de base puis on ré-applique l'overlay.
+	_load_persona()
 
 
 func _mn() -> Node:
 	return get_node_or_null("/root/MerlinNative")
+
+
+# --- PERSONA MERLIN (câblage de l'existant : data/ai/config/merlin_persona.json) ---
+func _load_persona() -> void:
+	if not FileAccess.file_exists(PERSONA_PATH):
+		return
+	var f: FileAccess = FileAccess.open(PERSONA_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var raw: String = f.get_as_text()
+	f.close()
+	var data: Variant = JSON.parse_string(raw)
+	if data is Dictionary:
+		_persona = data
+	else:
+		push_warning("MerlinScenario: merlin_persona.json illisible ou non-Dictionary — voix par défaut.")
+	# v10 dashboard : surcharge live depuis TweaksOverlay.get_persona_overlay() (édité par
+	# mission-control). Fusion non-destructive (overlay > base, append pour arrays). (user 2026-05-31 /goal)
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	if to != null and to.has_method("get_persona_overlay"):
+		var ov: Dictionary = to.get_persona_overlay()
+		for k in ov.keys():
+			_persona[k] = ov[k]
+
+
+func _csv(arr: Variant, limit: int = 999) -> String:
+	var parts: PackedStringArray = []
+	if arr is Array:
+		var a: Array = arr
+		for i in int(min(a.size(), limit)):
+			parts.append(str(a[i]))
+	return ", ".join(parts)
+
+
+# Préfixe voix Merlin enrichi par la persona (appellations + mots interdits) — le JSON reste la source
+# de vérité ; si absent, on retombe sur la constante seule (robuste).
+func _voice_prefix() -> String:
+	var p: String = MERLIN_VOICE_PREFIX
+	var apps: Variant = _persona.get("appellations", [])
+	if apps is Array and (apps as Array).size() > 0:
+		p += " Appellations possibles: %s." % _csv(apps)
+	var forb: Variant = _persona.get("forbidden_words", [])
+	if forb is Array and (forb as Array).size() > 0:
+		p += " Mots STRICTEMENT interdits: %s." % _csv(forb)
+	return p
+
+
+# Mémoire intra-run (R60) que Merlin peut « se souvenir » : vide en run neuf (new_run RAZ), peuplée sur
+# run repris (load_run) / beats avancés. Câble l'existant — pas de profil cross-run sur cette branche.
+func _build_memory_hint() -> String:
+	var run: Node = get_node_or_null("/root/MerlinRun")
+	if run == null:
+		return ""
+	var notes: PackedStringArray = []
+	var cartes: Variant = run.get("cartes_notables")
+	if cartes is Array and (cartes as Array).size() > 0:
+		notes.append("il a marqué la forêt avec %s" % _csv(cartes, 3))
+	var pnj: Variant = run.get("pnj_rencontres")
+	if pnj is Array and (pnj as Array).size() > 0:
+		notes.append("il a croisé %s" % _csv(pnj, 3))
+	var choix: Variant = run.get("choix_cles")
+	if choix is Array and (choix as Array).size() > 0:
+		notes.append("il a choisi %s" % _csv(choix, 2))
+	return " ; ".join(notes)
 
 
 # --- WARMUP + PREFETCH SÉLECTION (depuis le Menu) ---
@@ -120,11 +202,27 @@ func warmup_and_prefetch_selection() -> void:
 
 
 func take_selection() -> Array:
-	# Attend la fin d'un prefetch en cours par POLLING (pas d'await signal → pas de race, F1).
+	# v10 dashboard : forçage de scénario via TweaksOverlay.get_scenario_force() — si la dashboard
+	# Gameplay Live a sélectionné un titre, on renvoie ce seul scénario (le joueur le voit + accepte).
+	# (user 2026-05-31 /goal — wire de l'option qui était cosmétique avant la review)
+	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	if to != null and to.has_method("get_scenario_force"):
+		var force: Dictionary = to.get_scenario_force()
+		var forced_title: String = str(force.get("title", ""))
+		if forced_title != "":
+			return [{"title": forced_title, "pitch": "Sentier choisi depuis le dashboard."}]
+	# v10/H2 (audit UX bible §21.1 ÉVIDENT) : budget borné 8 s pour ne pas geler le joueur sur
+	# l'overlay « Merlin rêve trois sentiers… ». Si le prefetch n'est pas prêt à temps → fallback
+	# instantané SEL_FALLBACK plutôt que d'attendre indéfiniment. (user 2026-05-31 /goal)
+	var deadline_ms: int = Time.get_ticks_msec() + 8000
 	while _sel_state == "running":
+		if Time.get_ticks_msec() > deadline_ms:
+			break  # n'attend plus le LLM — l'appelant retombe sur le fallback
 		await get_tree().process_frame
 	if _sel_state == "ready" and _sel_cache.size() >= 3:
 		return _sel_cache.duplicate(true)
+	if _sel_state == "running":
+		return SEL_FALLBACK.duplicate(true)  # encore en vol mais on a dépassé le budget
 	return await generate_selection()
 
 
@@ -134,12 +232,14 @@ func invalidate_selection() -> void:
 	_sel_state = "idle"
 
 
-# --- 1) SÉLECTION : 3 scénarios (titre + pitch) ---
+# --- 1) SÉLECTION : 3 scénarios (titre + pitch) — voix MERLIN (user 2026-05-29) ---
 func generate_selection() -> Array:
 	var mn: Node = _mn()
 	if mn != null and mn.is_ready():
-		var usr: String = "Propose 3 scenarios brefs pour une aventure a Broceliande. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur. pitch = UNE seule phrase d'appel a l'aventure, imperatif et concret (ex: 'Infiltrez le marche aux noms voles.', 'Poursuivez le gobelin jusque dans la foret.'). Varie les tons."
-		var res: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 220, "label": "sélection (3 scénarios)"})
+		# Le pitch reste un IMPERATIF tutoye SANS appellation (le wrapper Merlin de build_intro
+		# l'apostrophe ensuite — eviter le double 'Voyageur' empile).
+		var usr: String = "En tant que MERLIN, propose 3 aventures au Voyageur dans Broceliande. Reponds UNIQUEMENT en JSON: [{\"title\":\"...\",\"pitch\":\"...\"},{...},{...}]. title = court et evocateur. pitch = UNE seule phrase d'appel a l'aventure, imperatif tutoye SANS dire 'Voyageur' (ex: 'Infiltre le marche aux noms voles.', 'Poursuis le gobelin jusque dans la foret.', 'Va sonder la source qui ne ment pas.'). Varie les tons (enigmatique, taquin, sombre, intrigant)."
+		var res: Dictionary = await mn.generate(_voice_prefix(), usr, {"creative": true, "max_tokens": 220, "label": "sélection (Merlin)"})
 		if not res.has("error"):
 			var arr: Array = MerlinJson.extract_array(str(res.get("text", "")))
 			var clean: Array = _clean_selection(arr)
@@ -171,10 +271,22 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 
 # --- 2bis) INTRO DE QUÊTE (pop-up à accepter) : développement complet + objectif. ---
 # Procédural INSTANTANÉ (le pop-up s'ouvre sans attente) ; narrate_intro enrichit en fond.
+# C'est MERLIN qui conte : il connaît le Voyageur et l'apostrophe (user 2026-05-29).
+const _INTRO_WRAPPERS: Array = [
+	"Ah, te revoilà, Voyageur. Ce sentier-là, je le connais — il ne mène plus qu'en avant, désormais. Ce que tu cherches t'attend au bout ; ce que tu crains aussi, je ne vais pas te mentir. Avance, mon ami : je marche entre les lignes, à ton côté.",
+	"Tiens, mon Voyageur. La brume s'est écartée juste pour toi — ou pour me jouer un tour, avec elle on ne sait jamais. Le sentier se referme dans ton dos ; devant, ce que tu cherches et ce que tu crains, logés à la même enseigne. Allons. Je te suis, ou je te précède, l'un des deux.",
+	"Écoute, Voyageur. Le bois a choisi de te laisser entrer — c'est rare, savoure. Ce que tu cherches t'attend au bout du sentier ; ce que tu crains aussi, mais ça, tu le savais déjà. Avance d'un pas tranquille, mon ami. Je veille. Enfin... je crois que je veille.",
+]
+
+
 func build_intro(scenario: Dictionary) -> Dictionary:
 	var title: String = str(scenario.get("title", "l'aventure"))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var intro: String = "%s\n\nLa forêt de Brocéliande se referme derrière toi, et le sentier ne mène plus qu'en avant. Ce que tu cherches t'attend au bout — et ce que tu crains, aussi." % pitch
+	var wrap: String = str(_INTRO_WRAPPERS[_rng.randi_range(0, _INTRO_WRAPPERS.size() - 1)])
+	var mem: String = _build_memory_hint()
+	if mem != "":
+		wrap += "\n\n(Et je me souviens, va : %s. On ne se refait pas, Voyageur.)" % mem
+	var intro: String = ("%s\n\n%s" % [pitch, wrap]) if pitch.strip_edges() != "" else wrap
 	# Objectif spécifique : on réutilise l'accroche-action du pitch (déjà un impératif concret).
 	var p: String = pitch.strip_edges().trim_suffix(".")
 	var objectif: String = ("%s — et revenir entier des cinq épreuves du sentier." % p) if p != "" else ("Mener « %s » à son terme, et revenir entier des cinq épreuves." % title)
@@ -187,8 +299,10 @@ func narrate_intro(scenario: Dictionary) -> String:
 		return ""
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var usr: String = "Quete: \"%s\" — %s\nEcris une introduction de 3 phrases (francais) qui pose le decor et l'enjeu de cette quete a Broceliande, ton merveilleux-inquietant, recit direct SANS apostropher le joueur. Termine sur ce qui est en jeu." % [title, pitch]
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 110, "label": "intro de quête"})
+	var mem: String = _build_memory_hint()
+	var mem_line: String = ("\nSouviens-toi du Voyageur : %s." % mem) if mem != "" else ""
+	var usr: String = "Quete proposee au Voyageur: \"%s\" — %s%s\nEn tant que MERLIN qui le connaît, conte-lui cette aventure en 3 phrases: salue ou taquine le Voyageur, plante le decor et l'enjeu a Broceliande, finis sur ce qui l'attend. Apostrophe-le ('Voyageur' ou 'mon ami'). Termine sur une phrase complete." % [title, pitch, mem_line]
+	var r: Dictionary = await mn.generate(_voice_prefix(), usr, {"creative": true, "max_tokens": 120, "label": "intro de quête (Merlin)"})
 	if r.has("error"):
 		return ""
 	var s: String = _clean_prose(str(r.get("text", "")).strip_edges())
@@ -318,17 +432,21 @@ func _norm(t: String) -> String:
 
 
 # --- 5) ÉPILOGUE (fin de run, R69) : LLM, "" si échec → l'appelant garde le procédural. ---
+# Voix MERLIN qui referme l'aventure pour le Voyageur, avec souvenir intra-run câblé (user 2026-05-29).
 func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
 	var mn: Node = _mn()
 	if mn == null or not mn.is_ready():
 		return ""
 	var enj: Dictionary = {
-		"accomplissement": "Le voyageur a traverse l'epreuve et entrevoit un fragment du Graal.",
-		"mort": "Le voyageur succombe ; la foret le reprend.",
-		"corrompu": "La Corruption l'emporte ; le voyageur se dissout dans la foret.",
+		"accomplissement": "le Voyageur a traverse l'epreuve et entrevoit un fragment du Graal",
+		"mort": "le Voyageur a succombe ; la foret l'a repris",
+		"corrompu": "la Corruption l'a emporte ; le Voyageur s'est dissous dans la foret",
 	}
-	var usr: String = "%s Ecris un epilogue de 3 phrases (francais), ton merveilleux-inquietant. Laisse entrevoir une suite." % enj.get(end_type, "Le voyage s'acheve.")
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 96, "label": "épilogue"})
+	var what: String = str(enj.get(end_type, "le voyage s'acheve"))
+	var mem: String = _build_memory_hint()
+	var mem_line: String = ("\nCe dont tu te souviens du Voyageur : %s." % mem) if mem != "" else ""
+	var usr: String = "Fin de l'aventure : %s.%s\nEn tant que MERLIN qui le connaît, conte cet epilogue au Voyageur en 3 phrases : apostrophe-le ('Voyageur' ou 'mon ami'), evoque ce qu'il vient de vivre (ou ce dont tu te souviens), laisse entrevoir une suite. Termine sur une phrase complete." % [what, mem_line]
+	var r: Dictionary = await mn.generate(_voice_prefix(), usr, {"creative": true, "max_tokens": 120, "label": "épilogue (Merlin)"})
 	if r.has("error"):
 		return ""
 	var s: String = _clean_prose(str(r.get("text", "")).strip_edges())
@@ -336,10 +454,11 @@ func narrate_epilogue(end_type: String, _state: Dictionary) -> String:
 
 
 func fallback_epilogue(end_type: String) -> String:
+	# Voix MERLIN (user 2026-05-29) — utilisé si le LLM échoue/timeout ; doit tenir seul.
 	match end_type:
-		"mort": return "La forêt se referme sur toi comme une paupière. Tu n'es plus qu'un murmure parmi les racines — mais un murmure se réveille toujours."
-		"corrompu": return "Tu cesses de lutter, et c'est presque doux. La forêt t'accueille parmi les siens ; quelque part, un autre voyageur entend déjà ton appel."
-		_: return "Tu franchis le dernier seuil. Au loin brille un éclat qui pourrait être le Graal — ou son reflet dans tes yeux fatigués. La forêt te laisse repartir, pour cette fois."
+		"mort": return "Tu pars dans la mousse, mon Voyageur. La forêt se referme sur toi comme une paupière — sans rancune, juste fatiguée de te voir. Mais un murmure se réveille toujours, mon ami. Je veille."
+		"corrompu": return "Tu cesses de lutter, Voyageur, et c'est presque doux — je l'ai vu cent fois. La forêt t'accueille parmi les siens ; quelque part déjà, un autre marche en t'entendant. Je suis désolé. Et un peu fier, je l'admets."
+		_: return "Tu franchis le dernier seuil, Voyageur. Au loin brille un éclat qui pourrait être le Graal — ou ton reflet dans tes yeux fatigués, je ne saurais dire. La forêt te laisse repartir, pour cette fois. Reviens-moi, mon ami."
 
 
 func _shuffle(arr: Array) -> void:

@@ -2,16 +2,18 @@ import { useState, useCallback, Component, ReactNode } from 'react';
 import { useStateSync } from './hooks/useStateSync';
 import { useMissionStore } from './store/mission-store';
 import { GameTab } from './components/tabs/GameTab';
+import { GameplayLiveTab } from './components/tabs/GameplayLiveTab';
 import { AgentsTab } from './components/tabs/AgentsTab';
 import { TasksTab } from './components/tabs/TasksTab';
 import { AlertsTab } from './components/tabs/AlertsTab';
 import { DirectorTab } from './components/tabs/DirectorTab';
 import './styles/terminal.css';
 
-type TabId = 'game' | 'agents' | 'tasks' | 'alerts' | 'director';
+type TabId = 'game' | 'live' | 'agents' | 'tasks' | 'alerts' | 'director';
 
 const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'game', icon: '\u25B6', label: 'Game' },
+  { id: 'live', icon: '\u26A1', label: 'Live' },  // v10 dashboard Gameplay Live (user 2026-05-31 /goal)
   { id: 'agents', icon: '\u2699', label: 'Agents' },
   { id: 'tasks', icon: '\u2630', label: 'Tasks' },
   { id: 'alerts', icon: '\u26A0', label: 'Alerts' },
@@ -67,6 +69,7 @@ export function App() {
 
       <div className="app__content">
         <div className={`tab-panel ${tab === 'game' ? 'tab-panel--active' : ''}`}><SafePanel><GameTab /></SafePanel></div>
+        <div className={`tab-panel ${tab === 'live' ? 'tab-panel--active' : ''}`}><SafePanel><GameplayLiveTab /></SafePanel></div>
         <div className={`tab-panel ${tab === 'agents' ? 'tab-panel--active' : ''}`}><SafePanel><AgentsTab /></SafePanel></div>
         <div className={`tab-panel ${tab === 'tasks' ? 'tab-panel--active' : ''}`}><SafePanel><TasksTab /></SafePanel></div>
         <div className={`tab-panel ${tab === 'alerts' ? 'tab-panel--active' : ''}`}><SafePanel><AlertsTab /></SafePanel></div>

@@ -2,7 +2,84 @@
 
 > **Source**: `docs/DEV_PLAN_V2.5.md` (canonical phase plan).
 > **Consumed by**: `tools/octogent/prompts/studio-director.md` Tier 1 backlog.
-> **Last refresh**: 2026-05-29 (v9.9 fix prose LLM + moteur + équilibrage).
+> **Last refresh**: 2026-05-31 (v10 audit UX 4 piliers + spec dashboard Gameplay Live).
+
+---
+
+## v10 — Audit UX 4 piliers + Dashboard Gameplay Live [2026-05-31]
+
+Inspection bible §21 (4 piliers UX) menée par `merlin-game-designer` sur le flow post-reframe v9.x.
+Verdict global : **fonctionnel mais 2 CRITICAL + 3 HIGH à fixer**. 3 wins confirmés. Spec MAJ
+`tools/autodev/mission-control` avec onglet "Gameplay Live" (capture Godot live + édition 4 axes).
+
+### 10.A — Fixes UX prioritaires (issus de l'audit)
+- [ ] **C1 (CRITICAL)** `merlin_end.gd:46-113` — porter le mécanisme `epoch + _tw.is_valid() + caret skip-typewriter` de `merlin_game.gd` à l'épilogue : pour l'instant le swap LLM peut écraser silencieusement le texte que le joueur est en train de lire.
+- [ ] **C2 (CRITICAL — anti-pattern §21.2 #1)** `merlin_game.gd:505-578` — remplacer la modale `_intro_layer` `PRESET_FULL_RECT` par un bandeau slide-up bas (hauteur ≤30% écran) qui ne masque pas le plateau 3D.
+- [ ] **H1 (HIGH — Miller >7)** `merlin_game.gd::_build_ui` — fusionner ou retirer un des deux labels redondants `_hint_lbl` ("Ce moment appelle…") et `_preview_lbl` ("Couverture X/Y · degré…") ; ils communiquent le même signal. Cible : ≤7 affordances simultanées.
+- [ ] **H2 (HIGH)** `merlin_selection.gd:25-30` — l'overlay "Merlin rêve trois sentiers…" est non borné : ajouter timeout visible + animation de progression + fallback SEL_FALLBACK déclenché si LLM > 8s.
+- [ ] **H3 (HIGH — anti-pattern §21.2 #3)** `merlin_card_view.gd:115-130` — supprimer le hover-only sur lift/scale des cartes : état "tap-selected" persistant doit refléter le lift visuel sur tactile.
+
+### 10.B — Fixes secondaires
+- [ ] **M1** `merlin_game.gd:260-273` — étendre la garde anti-clobber pour couvrir l'état "typewriter terminé, joueur en train de lire" (pas seulement "typewriter en cours").
+- [ ] **M2** `merlin_menu.gd:229-254` — alléger `_build_bottom_bar` (7 glyphes décoratifs inactifs : crown, dots, compass, eye…).
+- [ ] **M3** `merlin_game.gd:236` — `_hint_lbl.visible=false` doit aussi `size_flags_vertical = 0` pour libérer la bande verticale en résolution.
+- [ ] **L1** `merlin_menu.gd:135` — `icon_box.custom_minimum_size` 40→44 px.
+- [ ] **L2** `merlin_card_view.gd:11,13` — augmenter `COMPACT_HOVER_SCALE` 1.06 (imperceptible) ou supprimer si remplacé par H3.
+
+### 10.C — Méta : scenes absentes du repo (à clarifier avec user)
+CLAUDE.md liste `IntroCeltOS`, `MerlinCabinHub`, `BroceliandeForest3D`, `EndRunScreen`, `ParchmentPreRun`, `MenuOptions`, `SelectionSauvegarde` dans le smoke obligatoire. **Seules `MerlinMenu`, `MerlinSelection`, `MerlinGame`, `MerlinEnd`, `MerlinOptions` existent** sur cette branche. Soit ces scenes ont été supprimées (CLAUDE.md à mettre à jour) soit elles doivent être recréées.
+
+### 10.D — Spec Dashboard "Gameplay Live" (MAJ tools/autodev/mission-control)
+
+User : ajouter à mission-control la **capture visuelle live du jeu** + **édition de 4 axes gameplay** (constantes / cartes / persona / scenario). Cible : un onglet "Gameplay Live" complétant l'iframe Vercel actuel (qui reste pour la version déployée). Capture via `godot-mcp execute_editor_script` sur Godot local.
+
+**Architecture** :
+- Nouveau composant `src/components/tabs/GameplayLiveTab.tsx` (séparé de `GameTab` qui garde l'iframe Vercel).
+- Bridge local-dev `api-local/godot-bridge.ts` (Vite dev server, NOT déployé Vercel) → WebSocket vers godot-mcp port 9080 (déjà exposé par addon).
+- Côté Godot : nouvel autoload `TweaksOverlay` qui lit `user://merlin_tweaks.json` à boot + sur signal `reload_requested`. Hot-reload des constantes via signal `tweaks_reloaded` capté par `MerlinRun`, `MerlinCard`, `MerlinScenario`.
+
+**Layout** (single panel, sous l'iframe Vercel ou onglet séparé) :
+```
+┌─ GAMEPLAY LIVE [scene▾] [⟳ snap] [auto-refresh 2s ☐] ─┐
+├─ SNAPSHOT (PNG live) ─┬─ STATE (JSON live) ───────────┤
+│  [Godot viewport]     │  integrite: 8/10              │
+│  ts: 17:43:22         │  corruption: 3/18             │
+│                       │  beat: 3/5 (Climax)           │
+│                       │  hand: [5 cartes…]            │
+│                       │  scenario: "Le Rite…"         │
+├───────────────────────┴───────────────────────────────┤
+│ TWEAKS [Constants] [Cards] [Persona] [Scenario]       │
+│ > Constants : sliders START_INTEGRITE/HAND_SIZE/      │
+│   CORRUPTION_CAP/DRAIN [Apply hot][Reset][Save]       │
+│ > Cards balance : table (name|cost|tags|effects)      │
+│ > Persona : textareas executor_system + chips         │
+│   appellations + forbidden_words [Hot-reload]         │
+│ > Scenario : dropdown 130 + force beat 1..5           │
+└───────────────────────────────────────────────────────┘
+```
+
+**API bridge (4 endpoints, dev-local seulement)** :
+- `GET /api/godot/snapshot?scene=res://...` → exécute script viewport.get_texture().get_image().save_png → base64 PNG
+- `GET /api/godot/state` → exécute script `JSON.stringify(/root/MerlinRun.to_state_dict() + scenario + hand)`
+- `POST /api/godot/tweaks` → écrit `user://merlin_tweaks.json` puis trigger `TweaksOverlay.reload_requested`
+- `POST /api/godot/persona` → écrit overlay `data/ai/config/merlin_persona.tweaks.json` puis trigger `MerlinScenario._load_persona()` re-call
+
+**Persistance & promotion** :
+- Tweaks vivent dans `user://merlin_tweaks.json` (hors source control)
+- Bouton "Promote to source" en option (derrière confirm) qui écrit dans `merlin_persona.json` / constants .gd (risque, optionnel)
+
+**Phasing** :
+- **Phase 1 (MVP, ~1j)** : Snapshot pane + State viewer read-only (lecture seule, validation du bridge)
+- **Phase 2 (~2j)** : Constants + Persona tweaks (write side, hot-reload)
+- **Phase 3 (~1-2j)** : Cards balance + Scenario picker
+- **Polish (~0.5j)** : flux e2e, gestion erreurs, fallback offline
+
+**Acceptance** : Phase 1 montre une capture live de MerlinGame en <1s ; Phase 2 modif `START_INTEGRITE` 10→15 visible dans Godot sans relance ; Phase 3 permet de forcer `beat=4` et voir la Climax immédiatement.
+
+### Vérif (du bloc v10 complet)
+- [ ] Audit `merlin-game-designer` archivé (livré 2026-05-31 — voir conversation)
+- [ ] CRITICALS C1+C2 fixés + validate_step0 exit=0 + smoke MerlinGame passed
+- [ ] Spec dashboard validée par user → Phase 1 livrée avec snapshot < 1s
 
 ---
 
