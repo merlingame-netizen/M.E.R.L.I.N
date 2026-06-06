@@ -366,9 +366,9 @@ func narrate_intro(scenario: Dictionary) -> String:
 # décor + atmosphère + enjeu et donne envie du 1er pas, AVANT le Beat 1. Procédural verbeux INSTANTANÉ
 # (3-4 phrases) ; narrate_opening enrichit en arrière-plan. Voix narrateur (SYSTEM_PREFIX), pas d'apostrophe.
 const OPENING_FRAMES: Array = [
-	"Il existe, à la lisière de Brocéliande, des chemins que les cartes refusent de porter — non par oubli, mais par prudence. Celui-ci ne s'ouvre que pour qui a déjà entendu, une fois, quelque chose l'appeler par son nom dans le vent. Les fougères s'écartent, patientes, comme si elles attendaient ce pas depuis longtemps ; et déjà, le bois compte les pas qu'on y fait.",
-	"On raconte peu ce lieu, et toujours à voix basse, car les mots qu'on lui prête ont la fâcheuse habitude de se réaliser. Pourtant le voici, ce seuil où l'air change de goût et où la lumière vieillit d'un coup. Ce qui s'y cherche attend au bout du chemin ; ce qui s'y craint aussi, et le sentier s'est déjà refermé derrière.",
-	"La brume s'ouvre sur une orée qu'on n'avait pas vue en arrivant, et qui semble n'avoir attendu que ce moment pour exister. Le silence y est dense, habité, traversé de loin en loin d'une rumeur de voix trop basses pour qu'on les saisisse. Un pas, un seul, et l'aventure ne se laisse plus refuser.",
+	"À la lisière de Brocéliande s'ouvre un chemin que les cartes ne montrent pas. Les fougères s'écartent devant toi, comme si on t'attendait. Tu fais un pas, et le bois se referme doucement derrière toi.",
+	"On parle peu de ce lieu, et toujours à voix basse. Devant toi, le sentier s'enfonce sous les arbres, sombre et silencieux. Ce que tu cherches t'attend au bout ; ce que tu crains aussi.",
+	"La brume se lève sur une clairière que tu n'avais pas vue en arrivant. Tout est calme, trop calme, comme avant l'orage. Un premier pas, et la forêt ne te laissera plus repartir.",
 ]
 
 
@@ -448,10 +448,10 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# v10.6 — directive d'ISSUE explicite par degré : la lecture du batch (HTML contrôle) montrait
 	# que l'échec se lisait comme un succès. On force le ressenti du résultat. (user 2026-06-06)
 	var deg_directive: Dictionary = {
-		"echec": "Le geste ECHOUE : la foret RESISTE, repousse ou se referme ; rien n'est obtenu, ou pire, quelque chose se retourne contre le Voyageur. Ton sombre, sans triomphe.",
-		"partiel": "Demi-succes a un PRIX : quelque chose cede, mais incomplet, et une ombre/un cout suit. Ni triomphe ni desastre.",
-		"reussite": "REUSSITE franche : le geste porte, la voie s'ouvre, la foret cede.",
-		"eclatante": "Reussite ECLATANTE : triomphe net et lumineux, la foret s'incline, l'instant est mémorable.",
+		"echec": "Le geste ECHOUE : la foret RESISTE, repousse ou se referme ; rien n'est obtenu, ou pire quelque chose se retourne contre le Voyageur. MONTRE l'echec par des FAITS concrets (la voie reste fermee, un recul, une perte), ne DIS PAS 'echec'.",
+		"partiel": "Demi-succes a un PRIX : quelque chose cede mais incomplet, et une ombre ou un cout suit aussitot. MONTRE-le par des FAITS (on avance un peu, mais quelque chose est pris en echange), ne DIS PAS 'partiel'.",
+		"reussite": "REUSSITE franche : le geste porte, la voie s'ouvre, la foret cede. MONTRE-le par des FAITS, ne DIS PAS 'reussite'.",
+		"eclatante": "Reussite ECLATANTE au-dela de l'espoir : la voie s'ouvre en grand, la lumiere monte, la foret cede sans resistance. MONTRE-le par des FAITS concrets, ne DIS JAMAIS 'memorable' ni 'reussite'.",
 	}
 	# v10.6 (user 2026-06-06 : « la combinaison ne s'établit pas dans le scénario ») — on passe le
 	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
@@ -500,6 +500,20 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 		syn_hint = " Les deux forces se fondent en un geste fluide."
 	elif syn < 0:
 		syn_hint = " Les deux forces tirent a hue et a dia (l'issue s'en ressent)."
+	# Cohérence + variété (user 2026-06-07, critique passe profonde : toutes les issues finissaient en
+	# « le chemin s'ouvre » et ignoraient le type de beat). On passe un FOCUS abstrait par type (sans
+	# recopier le décor) → l'issue RÉSOUT ce que le beat posait, et la conclusion varie.
+	var type_focus: Dictionary = {
+		"Exploration": "ce qui etait cache se revele a toi (ou se derobe)",
+		"Rencontre": "l'etre ou la voix d'en face reagit : il cede, se lie a toi, ou se retourne contre toi",
+		"Epreuve": "l'obstacle concret (ronces, pente, pierre) est franchi ou te resiste",
+		"Dilemme": "ton choix est tranche et sa consequence tombe aussitot",
+		"Climax": "l'enjeu final du sentier bascule, dans un sens ou dans l'autre",
+	}
+	var ftype: String = str(situation.get("type", ""))
+	var focus_hint: String = ""
+	if type_focus.has(ftype):
+		focus_hint = " Ce moment est une %s : l'issue doit faire avancer CELA (%s), pas se reduire a « le chemin s'ouvre »." % [ftype, str(type_focus[ftype])]
 	# Fil rouge (user 2026-06-06) : identité du scénario (TITRE seul — le pitch se faisait recopier en
 	# tête de prose, régression observée au probe) + position du beat + enchaînement avec le précédent.
 	var ctx: String = ""
@@ -520,7 +534,7 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# Décor PAS passé au prompt (la scène est déjà affichée à l'écran) : le passer poussait le petit
 	# modèle à le RECOPIER en ouverture (régression probe 2026-06-06). On démarre direct sur l'action ;
 	# _strip_scene_echo reste le filet si le modèle replante quand même la scène. Cartes NON nommées.
-	var usr: String = ("%sLe Voyageur agit. %s\nISSUE = %s. %s%s%s\nEcris " % [ctx, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint]) + phrase_target + " (francais) qui S'ENCHAINENT logiquement (cause PUIS consequence), comme un petit paragraphe FLUIDE et JAMAIS des phrases hachees et deconnectees, SANS remplissage. COMMENCE DIRECTEMENT par l'effet du geste (ne replante NI le decor NI le lieu, deja decrits) : raconte UN SEUL effet FUSIONNE des deux gestes (jamais 'la premiere force... la seconde...', jamais l'un apres l'autre), DEROULE la consequence concrete qui en decoule, ET fais clairement RESSENTIR l'issue. Sujets CONCRETS (le Voyageur, ses mains, la foret, le chemin), jamais abstraits ('le vide', 'le nom'). Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete."
+	var usr: String = ("%sLe Voyageur agit. %s\nISSUE = %s. %s%s%s%s\nEcris " % [ctx, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint]) + phrase_target + " (francais) qui S'ENCHAINENT logiquement (cause PUIS consequence), comme un petit paragraphe FLUIDE et JAMAIS des phrases hachees et deconnectees, SANS remplissage. COMMENCE par l'EFFET dans le monde (ce qui change dans la foret, le lieu, ou l'etre en face) ; ne replante NI le decor NI le lieu deja decrits, et ne commence JAMAIS par 'les mains se joignent / se tendent / se melent' ni par une description du corps. Raconte UN SEUL effet FUSIONNE des deux gestes (jamais 'la premiere force... la seconde...', jamais l'un apres l'autre), DEROULE la consequence concrete qui en decoule, ET fais clairement RESSENTIR l'issue. VARIE la conclusion selon le moment, evite de toujours finir par 'le chemin s'ouvre'. Sujets CONCRETS (le Voyageur, la foret, le lieu, l'etre en face), jamais abstraits ('le vide', 'le nom'). Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete."
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""

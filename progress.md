@@ -3086,3 +3086,17 @@ sujets abstraits ('le vide','le nom').
 ### Journal cycles
 - C1 (00:51) : fix anti-staccato SYSTEM_PREFIX + usr ; fallbacks SITU/RESO/RESO_LONG simplifiés +
   fusion ; combo prompt "Force 1/2"→matière fusionnée. Parse OK. probe_prose lancé (bi2r9jpr5).
+  VALIDÉ probe_prose : "Les yeux percent l'ombre, et les pierres se souviennent en même temps…"
+  causal + fusion OK. Committé 83322fcf.
+- C2 (01:05) : deg_directive "MONTRE par des FAITS, ne DIS PAS 'reussite'/'memorable'" (anti
+  tell-not-show) ; OPENING_FRAMES réécrits (étaient encore littéraires-énigmatiques).
+- C3 (01:10) : critique passe profonde probe_combos (13 samples) → 2 défauts : tic d'ouverture
+  "les mains se joignent" (7/13) + fin monotone "le chemin s'ouvre" + incohérence type beat. FIX :
+  focus_hint par type (Rencontre/Epreuve/Dilemme… résout CE que le beat pose) + consigne anti-tic
+  mains + fin variée. Re-probe (bpk2hiqr1) : tic 0/4, Épreuve résout l'obstacle, fusion capte le
+  coût des cartes corrompues. Résidu : Rencontre/Dilemme parfois génériques (diminishing returns).
+- BALANCE (finding, document-only) : INTEGRITE_DELTA echec-3/partiel-1/reussite0/eclatante0, run
+  5 beats → joueur correct perd ~1.5 PV → MORT quasi-impossible (sim 200 runs : mort 0%, complet
+  100%). Corruption pareil (moy 1.9/cap 18). Cause = seuils calibrés cible "25 cartes" mais run=5.
+  DÉCISION DESIGN (longueur run vs seuils) → laissé à l'utilisateur (pas de tweak auto). Voir
+  goal_balance_sim.gd (réutilisable).
