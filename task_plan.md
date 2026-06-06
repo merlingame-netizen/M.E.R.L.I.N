@@ -6,6 +6,21 @@
 
 ---
 
+## v10.7 — Scénarios : qualité narrative (exemplar + générateur) [2026-06-06]
+
+Objectif : scénarios **complets, logiques, bien rédigés** (4 axes : causalité beat-à-beat,
+intégration combo, qualité littéraire, différenciation succès/échec).
+
+- [x] Exemplar gold-standard `Downloads/MERLIN_scenario_gold_le_sentier_des_murmures.md`
+- [x] QA narratif (agent `merlin-narrative-designer`) + 5 corrections appliquées
+- [x] Fil rouge inter-beats `_run_thread` (titre+pitch+last_gist) dans `merlin_scenario.gd`
+- [x] `narrate_resolution` : prompt + aventure + n/5 + décor + couverture + enchaînement
+- [x] `take_resolution` : `_remember_outcome` (continuité), fallbacks combo-aware
+- [x] validate_step0 (parse clean) + code-reviewer (APPROVE, MEDIUM corrigé) + smoke MerlinGame (passed)
+- [ ] (option user) câblage situation-LLM scénario-spécifique + commit
+
+---
+
 ## v10 — Audit UX 4 piliers + Dashboard Gameplay Live [2026-05-31]
 
 Inspection bible §21 (4 piliers UX) menée par `merlin-game-designer` sur le flow post-reframe v9.x.

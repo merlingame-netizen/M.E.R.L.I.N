@@ -2,6 +2,117 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-06 — v10.9 Longueur de prose VARIABLE (in-game)
+
+### Context
+User : « ce rendu en jeu, plus variable sur la longueur, moins avant chaque choix de carte et
+quelquefois plus long selon le déroulé ». /loop self-paced jusqu'au bon résultat in-game.
+
+### Constat
+Le rendu est DÉJÀ en jeu : `_show_situation` (scène + marqueur Type·beat N/total), `_update_preview`
+(Couverture X/Y · degré · coût Corruption), `_on_resolve` → animation fusion → issue. Le mockup HTML
+ne faisait que reproduire l'existant. → Le vrai travail = longueur variable.
+
+### Done — `scripts/llm/merlin_scenario.gd`
+- **SITU_FALLBACKS raccourci** à 1-2 phrases (scène = avant le choix → courte).
+- **`narrate_resolution` longueur variable** : `is_strong_moment(type,degré)` → `phrase_target`
+  « 4 a 5 phrases » + `max_tokens=260` aux moments forts (Climax / éclatante), sinon « 2 a 3 phrases »
+  + `max_tokens=150`. Plafond tokens = garantie structurelle de la longueur.
+
+### Vérif
+- [x] validate_step0 exit=0 · smoke MerlinGame passed=True script_errors=0
+- [x] Relecture du bloc édité (490-497) : GDScript correct, pas de bug runtime
+- [~] Probe réel : **bloqué env** — chargement gemma4 (cache OS froid) + cap Bash 10 min → 0 beat
+  écrit (tail: `llm_ready=true` puis kill). Longueurs garanties par const + tok_budget, donc probe
+  à faible valeur ajoutée. **Vérif visuelle/ressenti in-game → user (run moteur chaud).**
+
+### Reste (user)
+- Jouer en jeu pour confirmer : scènes courtes avant le choix ✓ ressenti, issues plus longues au Climax.
+- Commande run complet chaud (sans cap) : `"C:/Users/PGNK2128/Godot/Godot_v4.5.1-stable_win64_console.exe" --headless --path . --script res://tools/probe_combos.gd` puis `python tools/render_combo_report.py`.
+
+---
+
+## Session: 2026-06-06 — v10.8 Scénarios : ouverture narrative + prose verbeuse (3-4 phrases)
+
+### Context
+User : « il faut bien une introduction à l'histoire qui s'écrit, ensuite tout doit s'enchaîner
+logiquement, tout doit être plus verbeux ». AskUserQuestion : verbosité **3-4 phrases** ; intro =
+**ouverture narrative + Merlin**.
+
+### Done — Générateur (`scripts/llm/merlin_scenario.gd`)
+- **MAX_TOK_PROSE 110→220** ; `narrate_resolution` : « EXACTEMENT 2 phrases » → « 3 à 4 phrases amples,
+  déroule la conséquence ».
+- **SITU_FALLBACKS + RESO_FALLBACKS étoffés** (scènes ~3 phrases, issues 2-3 phrases) → procédural
+  VISIBLE plus verbeux même quand le LLM perd la course.
+- **`build_opening(scenario, with_pitch=true)` + `narrate_opening` + `OPENING_FRAMES`** : ouverture
+  narrative (décor + atmosphère + enjeu), distincte du pop-up Merlin.
+
+### Done — Câblage jeu (`scripts/game/merlin_game.gd`)
+- `_show_intro_popup` : greeting Merlin PUIS ouverture narrative (`build_opening(..., false)` → pas de
+  doublon de pitch).
+- `_bg_intro(scenario, lbl, opening)` : enrichit la greeting (narrate_intro) PUIS l'ouverture
+  (narrate_opening), non bloquant, en conservant la base procédurale.
+
+### Done — Exemplar
+- Réécriture verbeuse `Downloads/MERLIN_scenario_gold_le_sentier_des_murmures.md` : ① intro Merlin
+  ② ouverture narrative, 5 beats à 3-4 phrases qui s'enchaînent, 7 règles d'or (ajouts « Ouvre
+  l'histoire » + « Ample, jamais creux »).
+
+### Vérif
+- [x] validate_step0 exit=0 · smoke MerlinGame passed=True script_errors=0 (exerce build_opening au run start)
+- [x] code-reviewer : 0 CRIT/HIGH, 2 MEDIUM → `narrate_opening` était dead code → **CÂBLÉ** dans
+  `_bg_intro` (enrichissement LLM non bloquant de l'ouverture). Re-validate + re-smoke OK.
+
+---
+
+## Session: 2026-06-06 — v10.7 Scénarios : exemplar gold + générateur (fil rouge + couverture)
+
+### Context
+User : « amélioration nette sur les scénarios » — complets, bien rédigés, suites d'événements
+**logiques** (pas de beats orphelins). À partir du contrôle-lecture des combos collé. AskUserQuestion :
+périmètre = **exemplar + générateur** ; 4 axes (causalité beat-à-beat, intégration combo, qualité
+littéraire, différenciation succès/échec) ; livraison markdown ; aligné bible + agents narratifs.
+
+### Diagnostic racine
+`narrate_resolution` générait chaque issue **dans le vide** : prompt sans titre/pitch, sans n° de
+beat, sans la scène, sans le beat précédent, sans la couverture → beats sans queue ni tête + échec
+qui se lit comme une réussite. `_fallback_situation` = scènes **génériques par type** (Beat 1
+identique entre 2 scénarios).
+
+### Done — Exemplar
+- `Downloads/MERLIN_scenario_gold_le_sentier_des_murmures.md` : réécriture complète 5 beats avec
+  fil rouge (motif « les noms »), causalité explicite, combo fondu dans la prose, ton par degré,
+  table avant→après, 6 règles d'or (spec générateur). Cartes réelles starter_deck.
+- QA adversariale `merlin-narrative-designer` (score moyen avant fix) → 5 corrections appliquées :
+  Beat 5 (2/2 réussite≠éclatante au Climax, règle §4 nuancée), « tu » narratif vs apostrophe (§6),
+  Beat 2 couverture précise (Appel de l'Ombre ne couvre pas Ruse), transition B2→B3 (ombre vecteur).
+
+### Done — Générateur (`scripts/llm/merlin_scenario.gd`)
+- **`_run_thread`** (titre+pitch+last_gist) : fil rouge inter-beats, RAZ au `build_skeleton`.
+- **`narrate_resolution`** : prompt enrichi = aventure (titre+pitch) + Moment n/5 + décor (prolonge)
+  + couverture (forces honorées/manquantes → saveur du succès) + enchaînement beat précédent.
+- **`build_situation`** : retour + `n`/`total`/`title` (additif).
+- **`take_resolution`** : `_remember_outcome(res)` aux points de commit (continuité).
+- **`RESO_FALLBACKS`** : variantes combo-aware, dédupliquées (fin des répétitions du contrôle-lecture).
+
+### Vérif
+- [x] validate_step0 exit=0 (merlin_scenario.gd : 0 erreur ; 10 pré-existantes phantom_camera/node_modules)
+- [x] code-reviewer APPROVE (0 CRITICAL/HIGH ; 1 MEDIUM cover_hint↔deg_directive corrigé ; 2 boucles fusionnées)
+- [x] smoke MerlinGame passed=True script_errors=0 exit_code=0
+- [x] **Rendu RÉEL** (probe_combos, moteur gemma4-e2b natif, llm_ready=true) : partiel/réussite
+  différenciés ✅, combo fondu (2 évocations reconnaissables) ✅, « union parfaite » banni ✅.
+  Régression écho décor/pitch détectée → CORRIGÉE (titre seul + décor NON passé + « commence par
+  l'action ») → re-test : prose démarre sur l'action, 1/2 montre sa faille (« mais une ombre
+  persiste »), 2 phrases. Binaire : `C:/Users/PGNK2128/Godot/Godot_v4.5.1-stable_win64_console.exe`.
+  **Contrainte** : probe plafonné ~1-2 beats / run 10 min (chargement gemma4 ~4 min + ~1 tok/s) →
+  rapport complet 15 beats = lancer warm sans cap timeout.
+
+### Suite proposée
+- Scène (situation) scénario-spécifique via LLM utilisant titre+pitch+motif (le Beat 1 identique
+  entre scénarios est dans la couche procédurale, hors résolution).
+
+---
+
 ## Session: 2026-06-06 — v10.6 Fix clic-continuer + combo 2 cartes + prose ancrée + HTML contrôle-lecture
 
 ### Context
