@@ -11,7 +11,7 @@ extends Node
 ##   (beats, types, difficulté, required_tags) ; le LLM n'écrit que de la PROSE.
 ## - Sélection = seul ~JSON, pré-généré pendant l'idle du Menu (latence masquée).
 
-const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
+const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Evite les formules creuses et clichees (INTERDIT: 'union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne', 'secrets anciens'). Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
 
 # Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
 # SYSTEM_PREFIX (narration de SCÈNE en résolution, sans apostrophe, conservée telle quelle). Persona
@@ -47,56 +47,61 @@ const SEL_FALLBACK: Array = [
 # Narration procédurale = le texte VU par défaut (le LLM ≈1 tok/s ne gagne presque jamais la
 # course contre la lecture du joueur). Donc 3 variantes/type, tirées au sort → variété cross-run
 # (chaque type n'apparaît qu'1 fois par run). Ton « merveilleux-inquiétant » (bible §21).
+# Scènes COURTES (user 2026-06-06 : « moins avant chaque choix de carte »). 1-2 phrases : poser le
+# décor vite, laisser la place au geste. La VERBOSITÉ est réservée à l'ISSUE des moments forts.
 const SITU_FALLBACKS: Dictionary = {
 	"Exploration": [
-		"La clairière s'ouvre devant toi, trop calme. Quelque chose t'y attend, qui te connaît déjà.",
-		"Le sentier se perd sous les fougères, et le silence a une texture. On t'observe sans se montrer.",
-		"Les arbres s'écartent sur un lieu que nulle carte ne nomme. L'air y goûte le souvenir et la cendre.",
+		"La clairière s'ouvre, trop calme. Quelque chose t'y attend, qui te connaît déjà.",
+		"Le sentier se perd sous les fougères ; le silence, ici, a une texture. On t'observe sans se montrer.",
+		"Les arbres s'écartent sur un lieu que nulle carte ne nomme, où l'air goûte le souvenir et la cendre.",
 	],
 	"Rencontre": [
-		"Une silhouette se détache des arbres et t'observe sans un mot. Elle attend de voir qui tu es vraiment.",
-		"Quelqu'un — ou quelque chose — se tient sur ton chemin, immobile. Son regard pèse plus lourd que le silence.",
-		"Une voix te salue avant que tu n'aies vu personne. Elle connaît ton pas, et cela ne présage rien de bon.",
+		"Une silhouette se détache des arbres et t'observe sans un mot ; elle attend de voir qui tu es vraiment.",
+		"Quelque chose se tient en travers de ta route, immobile. Son regard pèse plus lourd que le silence.",
+		"Une voix te salue avant que tu n'aies vu personne — elle connaît ton pas, et cela n'augure rien de bon.",
 	],
 	"Epreuve": [
-		"La forêt referme le passage : ronces, pierre et pente traître, dressées contre toi comme un jugement.",
-		"Le chemin se cabre, hostile. Rien ici ne cède sans qu'on le lui arrache.",
+		"La forêt referme le passage : ronces, pierre, pente traître dressées contre toi comme un jugement.",
+		"Le chemin se cabre, hostile ; rien, ici, ne cède sans qu'on le lui arrache.",
 		"Un obstacle barre la route, plus vieux que les sentiers. Il faudra payer de son corps ou de sa ruse.",
 	],
 	"Dilemme": [
-		"Deux voies s'ouvrent, et chacune réclame son prix. Aucune ne te laissera tout à fait intact.",
-		"Un choix se pose, nu et sans recours. Quoi que tu décides, la forêt s'en souviendra.",
-		"On te demande de trancher là où il n'existe pas de bonne réponse. L'hésitation, elle aussi, est une réponse.",
+		"Deux voies s'ouvrent, et chacune réclame son prix ; aucune ne te laissera tout à fait intact.",
+		"Un choix se pose, nu, sans recours. Quoi que tu décides, la forêt s'en souviendra.",
+		"On te demande de trancher là où il n'est pas de bonne réponse — l'hésitation aussi en est une.",
 	],
 	"Climax": [
 		"L'air se fige ; la forêt retient son souffle. Ce qui vient maintenant ne se reprend pas.",
 		"Tout converge en ce seuil où les murmures se taisent. L'instant te regarde, et attend.",
-		"Le cœur de la forêt bat sous tes pieds, énorme et patient. Ici se décide ce que tu seras devenu.",
+		"Le cœur de la forêt bat sous tes pieds, énorme et patient ; ici se décide ce que tu deviendras.",
 	],
 }
 
 const RESO_FALLBACKS: Dictionary = {
 	"echec": [
-		"Rien ne répond à ton geste — ou pire, quelque chose s'en amuse. La forêt te repousse, et tu en sors meurtri.",
-		"Le sort se retourne : ce que tu touches se dérobe, et la forêt prend plus qu'elle ne donne.",
+		"Tes deux gestes se défont l'un l'autre au lieu de s'épauler, et la forêt n'accorde rien à ce désaccord. Elle te repousse d'un seul mouvement, sourde, et te voilà un peu plus loin de ce que tu cherchais. Quelque chose, dans l'ombre, semble même s'en amuser.",
+		"Les forces que tu tentes de marier sonnent faux, et le bois l'entend aussitôt. Ce que tu touches se dérobe, ce que tu crois saisir te file entre les doigts, et la forêt prend plus qu'elle ne donne. Tu repars les mains vides, et plus pauvre encore qu'en arrivant.",
+		"Ni l'une ni l'autre de tes forces ne trouve de prise sur ce lieu qui ne demandait pas cela. Le sentier se referme, indifférent, et te laisse en arrière comme on oublie un nom. Ce faux pas-là, tôt ou tard, il faudra le payer.",
 	],
 	"partiel": [
-		"Tu obtiens ce que tu voulais, mais la forêt prélève sa part. Une ombre te suit désormais.",
-		"La voie s'entrouvre, à demi. Quelque chose t'a vu faire, et ne l'oubliera pas.",
+		"Tes deux gestes portent, mais de travers, et la forêt te laisse emporter ce que tu voulais — à condition d'en abandonner un morceau. Tu obtiens ton dû, et elle prélève le sien dans le même souffle, sans te demander ton avis. Une ombre, désormais, marche dans tes pas.",
+		"L'une de tes forces ouvre la voie quand l'autre dérape, et le passage ne cède qu'à demi. Tu avances tout de même, mais quelque chose t'a vu faire et ne l'oubliera pas de sitôt. Le prix n'est pas encore réclamé ; il le sera.",
+		"Tu arraches ce que tu étais venu chercher, mais au prix d'un reste qui s'accroche à toi comme une glu. La voie s'entrouvre, étroite, méfiante, juste assez pour te laisser passer. Derrière toi, le bois garde la mémoire de ce que tu as forcé.",
 	],
 	"reussite": [
-		"Ton geste trouve sa cible. La forêt cède, un instant, et te laisse avancer.",
-		"Ce que tu tentes s'accomplit ; le sentier se dénoue devant toi, prudent mais ouvert.",
+		"Tes deux forces se nouent enfin en un seul geste, propre et juste, et la voie se dénoue devant toi. La forêt cède, prudente mais sincère, et te laisse avancer d'un pas plus assuré. Pour cette fois, le sentier consent sans rien réclamer.",
+		"Ce que tu maries trouve sa cible du premier coup, et le bois accuse le geste. Le chemin s'ouvre, sans triomphe éclatant mais sans dette non plus. Tu passes, entier, et le silence te suit comme une approbation.",
+		"Les deux gestes s'accordent, et le sentier, à contrecœur peut-être, te reconnaît le droit de passer. La route se dégage devant toi, nette, presque docile. Tu avances sans rien laisser derrière, ce qui n'est pas rien dans ce bois.",
 	],
 	"eclatante": [
-		"Tout s'accorde, comme si la forêt elle-même retenait son souffle pour toi. Le seuil s'ouvre, et quelque chose d'ancien s'incline.",
-		"La forêt te reconnaît enfin. Les murmures se font promesse, et la voie devant toi se déploie sans résistance.",
+		"Tes deux forces n'en font plus qu'une, si parfaitement que la forêt elle-même retient son souffle pour toi. Le seuil s'ouvre en grand, sans la moindre résistance, et quelque chose d'ancien et de fier s'incline sur ton passage. Un instant, bref et vertigineux, tu es plus que toi-même.",
+		"L'accord est total, et le bois entier le célèbre à sa manière muette. Les murmures se font promesse, la voie devant toi se déploie comme un tapis qu'on déroule, et rien ne te coûte. La forêt, pour une fois, te donne bien plus qu'elle ne prend.",
 	],
 }
 
-# Issue = 2-3 phrases sur la COMBINAISON des cartes. Budget élargi (user 2026-05-28) pour éviter
-# les troncatures mid-mot (« se dess… ») ; _clean_prose recoupe à la dernière phrase complète.
-const MAX_TOK_PROSE: int = 110
+# Issue = 3-4 phrases AMPLES sur la COMBINAISON (user 2026-06-06 : « tout doit etre plus verbeux »).
+# Budget élargi en conséquence ; _clean_prose recoupe à la dernière phrase complète (anti-troncature).
+const MAX_TOK_PROSE: int = 220
 
 var _rng := RandomNumberGenerator.new()
 
@@ -113,6 +118,13 @@ var _reso_cache: Dictionary = {}   # signature -> prose
 var _reso_sig: String = ""         # signature actuellement en génération
 var _reso_state: String = "idle"   # idle / running / ready
 var _reso_epoch: int = 0
+
+# --- FIL ROUGE DU SCÉNARIO (continuité inter-beats, user 2026-06-06) ---
+# Capturé au skeleton (titre + pitch = enjeu SPÉCIFIQUE du scénario), enrichi à chaque beat
+# résolu (last_gist = résultat du beat précédent). Injecté dans le prompt d'issue pour que la
+# prose (a) reste ancrée dans CE scénario et (b) enchaîne sur le beat d'avant — fini les beats
+# orphelins « sans queue ni tête ». RAZ à chaque build_skeleton (= nouveau run).
+var _run_thread: Dictionary = {"title": "", "pitch": "", "last_gist": ""}
 
 
 func _ready() -> void:
@@ -278,6 +290,8 @@ func _clean_selection(arr: Array) -> Array:
 # --- 2) SQUELETTE : structure 5 beats (CODE). INSTANTANÉ — le pitch EST le synopsis. ---
 # (L'ancien appel LLM « synopsis » coûtait ~58s pour un texte jamais affiché dans la boucle.)
 func build_skeleton(title: String, pitch: String) -> Dictionary:
+	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) pour toute la run.
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": ""}
 	var beats: Array = []
 	var diffs: Array = [1, 2, 2, 2, 3]
 	for i in BEAT_TYPES.size():
@@ -325,6 +339,42 @@ func narrate_intro(scenario: Dictionary) -> String:
 	return s if s.length() >= 10 else ""
 
 
+# --- 2ter) OUVERTURE NARRATIVE (user 2026-06-06 : « il faut bien une introduction à l'histoire ») ---
+# Distincte du pop-up MERLIN (build_intro) : c'est la NARRATION DE SCÈNE qui lance le récit — plante
+# décor + atmosphère + enjeu et donne envie du 1er pas, AVANT le Beat 1. Procédural verbeux INSTANTANÉ
+# (3-4 phrases) ; narrate_opening enrichit en arrière-plan. Voix narrateur (SYSTEM_PREFIX), pas d'apostrophe.
+const OPENING_FRAMES: Array = [
+	"Il existe, à la lisière de Brocéliande, des chemins que les cartes refusent de porter — non par oubli, mais par prudence. Celui-ci ne s'ouvre que pour qui a déjà entendu, une fois, quelque chose l'appeler par son nom dans le vent. Les fougères s'écartent, patientes, comme si elles attendaient ce pas depuis longtemps ; et déjà, le bois compte les pas qu'on y fait.",
+	"On raconte peu ce lieu, et toujours à voix basse, car les mots qu'on lui prête ont la fâcheuse habitude de se réaliser. Pourtant le voici, ce seuil où l'air change de goût et où la lumière vieillit d'un coup. Ce qui s'y cherche attend au bout du chemin ; ce qui s'y craint aussi, et le sentier s'est déjà refermé derrière.",
+	"La brume s'ouvre sur une orée qu'on n'avait pas vue en arrivant, et qui semble n'avoir attendu que ce moment pour exister. Le silence y est dense, habité, traversé de loin en loin d'une rumeur de voix trop basses pour qu'on les saisisse. Un pas, un seul, et l'aventure ne se laisse plus refuser.",
+]
+
+
+# Ouverture procédurale (INSTANT) : cadre verbeux + l'accroche spécifique du scénario (pitch).
+func build_opening(scenario: Dictionary, with_pitch: bool = true) -> String:
+	var frame: String = str(OPENING_FRAMES[_rng.randi_range(0, OPENING_FRAMES.size() - 1)])
+	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
+	# with_pitch=false quand l'accroche est déjà affichée ailleurs (ex. pop-up Merlin build_intro).
+	if with_pitch and pitch != "":
+		return "%s\n\n%s" % [frame, pitch]
+	return frame
+
+
+# Ouverture LLM (arrière-plan) : lance VRAIMENT l'histoire de CE scénario en 3-4 phrases. "" si moteur KO.
+func narrate_opening(scenario: Dictionary) -> String:
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready():
+		return ""
+	var title: String = str(scenario.get("title", ""))
+	var pitch: String = str(scenario.get("pitch", ""))
+	var usr: String = ("Ouvre l'aventure « %s » a Broceliande (accroche : %s). Ecris 3 a 4 phrases qui LANCENT l'histoire : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui pousse a faire le premier pas. Recit direct au present, sans apostropher le Voyageur, images celtiques concretes, SANS remplissage. Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, pitch]
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "ouverture (histoire)"})
+	if r.has("error"):
+		return ""
+	var s: String = _clean_prose(str(r.get("text", "")).strip_edges())
+	return s if s.length() >= 10 else ""
+
+
 # --- 3) SITUATION : le CODE choisit required_tags + une narration procédurale (INSTANT) ;
 #         le LLM réécrit la narration en arrière-plan (tags STABLES). ---
 func build_situation(beat: Dictionary) -> Dictionary:
@@ -336,6 +386,9 @@ func build_situation(beat: Dictionary) -> Dictionary:
 		"required_tags": required,
 		"type": btype,
 		"difficulte": diff,
+		"n": int(beat.get("n", 0)),
+		"total": BEAT_TYPES.size(),
+		"title": str(_run_thread.get("title", "")),
 	}
 
 
@@ -382,22 +435,66 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
 	# DEUX forces à l'œuvre, ancrées dans leurs images concrètes, fondues en un seul geste. Toujours
 	# sans NOMMER les cartes (resté la consigne user 2026-05-29). → la prose reflète vraiment le combo.
+	# Combo : les 2 évocations comme forces concrètes + collecte des tags joués (UN seul passage, KISS).
 	var combo: String = ""
 	var n_forces: int = 0
+	var played_tags: Dictionary = {}
 	for c in played_cards:
-		var ev: String = (str(c.evocation) if (c is Object and "evocation" in c) else "").strip_edges()
-		if ev != "":
-			n_forces += 1
-			combo += "\n- Force %d : %s" % [n_forces, ev]
+		if c is Object and "evocation" in c:
+			var ev: String = str(c.evocation).strip_edges()
+			if ev != "":
+				n_forces += 1
+				combo += "\n- Force %d : %s" % [n_forces, ev]
+		if c is Object and "tags" in c:
+			for t in c.tags:
+				played_tags[str(t)] = true
+	# Couverture (user 2026-06-06) : adéquation cartes ↔ tags requis. On décrit l'AJUSTEMENT
+	# (les bonnes clés / les mauvaises), JAMAIS l'issue — c'est deg_directive qui POSSÈDE l'issue.
+	# Évite la contradiction « rien obtenu » vs un degré de succès, ex. partiel à 0/2 (review MEDIUM).
+	var required: Array = situation.get("required_tags", [])
+	var covered: Array = []
+	var missed: Array = []
+	for t in required:
+		if played_tags.has(str(t)):
+			covered.append(str(t))
+		else:
+			missed.append(str(t))
+	var cover_hint: String = ""
+	if not required.is_empty():
+		if missed.is_empty():
+			cover_hint = " Tes deux forces sont EXACTEMENT celles que ce lieu reclamait."
+		elif not covered.is_empty():
+			cover_hint = " L'une de tes forces est celle qu'il fallait, l'autre attendue MANQUE : la reussite reste INCOMPLETE (un manque, une lenteur, un reste qui suit) — ne la presente JAMAIS comme parfaite."
+		else:
+			cover_hint = " Aucune de tes forces n'etait celle que ce lieu reclamait : tu reponds a cote de ce qui etait demande."
 	var syn: int = int(res.get("synergy", 0))
 	var syn_hint: String = ""
 	if syn > 0:
-		syn_hint = " Les deux forces s'accordent en un geste fluide et coherent."
+		syn_hint = " Les deux forces se fondent en un geste fluide."
 	elif syn < 0:
-		syn_hint = " Les deux forces s'accordent mal, tirant a hue et a dia (l'issue s'en ressent)."
-	# Décor NON passé (anti écho de scène, post-filtré par _strip_scene_echo). Cartes NON nommées.
-	var usr: String = ("Le Voyageur combine DEUX forces, chacune avec son image:%s\nISSUE = %s. %s%s\nEcris EXACTEMENT 2 phrases (francais), PAS une de plus: fais SENTIR les DEUX forces a l'oeuvre (ancre-toi dans leurs images concretes ci-dessus, fondues en UN seul mouvement) ET fais clairement RESSENTIR l'issue ci-dessus. Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete.") % [combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), syn_hint]
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "issue (combinaison)"})
+		syn_hint = " Les deux forces tirent a hue et a dia (l'issue s'en ressent)."
+	# Fil rouge (user 2026-06-06) : identité du scénario (TITRE seul — le pitch se faisait recopier en
+	# tête de prose, régression observée au probe) + position du beat + enchaînement avec le précédent.
+	var ctx: String = ""
+	var rt_title: String = str(_run_thread.get("title", "")).strip_edges()
+	if rt_title != "":
+		ctx += "Aventure : « %s »\n" % rt_title
+	var bn: int = int(situation.get("n", 0))
+	if bn > 0:
+		ctx += "Moment %d/%d du sentier (%s).\n" % [bn, int(situation.get("total", 5)), str(situation.get("type", ""))]
+	var prev: String = str(_run_thread.get("last_gist", "")).strip_edges()
+	if prev != "":
+		ctx += "Juste avant, %s enchaine sans rompre le fil.\n" % prev
+	# Longueur VARIABLE (user 2026-06-06 : « plus variable sur la longueur … quelquefois plus long
+	# selon le déroulé ») : ample aux MOMENTS FORTS (Climax ou réussite éclatante), brève sinon.
+	var long_form: bool = is_strong_moment(str(situation.get("type", "")), degree)
+	var phrase_target: String = "4 a 5 phrases" if long_form else "2 a 3 phrases"
+	var tok_budget: int = 260 if long_form else 150
+	# Décor PAS passé au prompt (la scène est déjà affichée à l'écran) : le passer poussait le petit
+	# modèle à le RECOPIER en ouverture (régression probe 2026-06-06). On démarre direct sur l'action ;
+	# _strip_scene_echo reste le filet si le modèle replante quand même la scène. Cartes NON nommées.
+	var usr: String = ("%sLe Voyageur combine DEUX forces, chacune avec son image :%s\nISSUE = %s. %s%s%s\nEcris " % [ctx, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint]) + phrase_target + " (francais), amples et imagees, SANS remplissage. COMMENCE DIRECTEMENT par l'action des deux forces (ne replante NI le decor NI le lieu, deja decrits) : fais SENTIR les DEUX forces fondues en UN seul mouvement, DEROULE la consequence du geste, ET fais clairement RESSENTIR l'issue. Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete."
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
 	var s: String = _strip_scene_echo(_clean_prose(str(r.get("text", "")).strip_edges()), str(situation.get("narration", "")))
@@ -457,6 +554,7 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 func take_resolution(situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
 	var sig: String = _reso_signature(played_cards, res)
 	if _reso_cache.has(sig):
+		_remember_outcome(res)
 		return str(_reso_cache[sig])
 	# Génération de CETTE combo en vol ? On l'attend par polling (borné ~95s > GEN_TIMEOUT moteur).
 	if _reso_sig == sig and _reso_state == "running":
@@ -464,6 +562,7 @@ func take_resolution(situation: Dictionary, played_cards: Array, res: Dictionary
 		while _reso_state == "running" and Time.get_ticks_msec() < deadline_ms:
 			await get_tree().process_frame
 		if _reso_cache.has(sig):
+			_remember_outcome(res)
 			return str(_reso_cache[sig])
 	# Pas de cache. Une gen PÉRIMÉE (autre combo) peut occuper le moteur single-flight → on l'annule
 	# et on attend sa libération avant de générer la combo finale. Garantit "toujours LLM".
@@ -479,7 +578,9 @@ func take_resolution(situation: Dictionary, played_cards: Array, res: Dictionary
 	var prose: String = await narrate_resolution(situation, played_cards, res)
 	if prose.length() >= 10:
 		_reso_cache[sig] = prose
+		_remember_outcome(res)
 		return prose
+	_remember_outcome(res)  # outcome réel même si la prose finit en procédural (continuité du beat suivant)
 	return ""  # moteur KO → fallback procédural côté appelant
 
 
@@ -503,6 +604,19 @@ func invalidate_resolution() -> void:
 func fallback_resolution(degree: String) -> String:
 	var pool: Array = RESO_FALLBACKS.get(degree, RESO_FALLBACKS["reussite"])
 	return str(pool[_rng.randi_range(0, pool.size() - 1)])
+
+
+# Mémorise le RÉSULTAT du beat courant dans le fil rouge → le prompt d'issue du beat SUIVANT
+# enchaîne dessus (continuité). Le degré est réel même si la prose finit en procédural.
+func _remember_outcome(res: Dictionary) -> void:
+	var degree: String = str(res.get("degree", "reussite"))
+	var gist: Dictionary = {
+		"echec": "le geste a echoue et la foret a repris le dessus ;",
+		"partiel": "le geste n'a porte qu'a demi, en laissant un prix ;",
+		"reussite": "le geste a porte et la voie s'est ouverte ;",
+		"eclatante": "le geste a triomphe, eclatant et net ;",
+	}
+	_run_thread["last_gist"] = str(gist.get(degree, "le geste a porte ;"))
 
 
 # Coupe la prose à la dernière phrase COMPLÈTE : évite les troncatures mid-mot (« se dess… »)

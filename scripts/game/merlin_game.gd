@@ -935,7 +935,13 @@ func _show_intro_popup() -> void:
 	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
 	intro_lbl.add_theme_font_size_override("normal_font_size", 16)
 	scroll.add_child(intro_lbl)
-	_reveal_into(intro_lbl, str(data.get("intro", "")))
+	# v10.8 (user 2026-06-06) : Merlin t'accueille PUIS l'ouverture narrative qui lance l'histoire et
+	# coule dans le Beat 1. Pitch déjà présent dans la greeting → with_pitch=false (pas de doublon).
+	var opening: String = get_node("/root/MerlinScenario").build_opening(run.scenario, false)
+	var intro_text: String = str(data.get("intro", ""))
+	if opening.strip_edges() != "":
+		intro_text += "\n\n— · —\n\n" + opening
+	_reveal_into(intro_lbl, intro_text)
 
 	# Ligne basse : Objectif (gauche, expand) + Accepter (droite, fixed). Une seule rangée → cibles
 	# tactiles ≥44 px (bible §21.1 pilier TACTILE+DESKTOP).
@@ -977,7 +983,7 @@ func _show_intro_popup() -> void:
 	fade.modulate = Color(1, 1, 1, 0)
 	fade.create_tween().tween_property(fade, "modulate:a", 1.0, 0.3)
 
-	_bg_intro(run.scenario, intro_lbl)
+	_bg_intro(run.scenario, intro_lbl, opening)
 
 
 func _reveal_into(lbl: RichTextLabel, txt: String) -> void:
@@ -997,18 +1003,30 @@ func _pulse(node: Control) -> void:
 
 
 # Enrichit l'intro en arrière-plan ; ne remplace QUE si le pop-up est encore ouvert. Jamais bloquant.
-func _bg_intro(scenario: Dictionary, lbl: RichTextLabel) -> void:
+func _bg_intro(scenario: Dictionary, lbl: RichTextLabel, opening: String = "") -> void:
 	var sc: Node = get_node_or_null("/root/MerlinScenario")
 	if sc == null:
 		return
+	var sep: String = "\n\n— · —\n\n"
+	# 1) Greeting MERLIN enrichie (LLM, non bloquant) — conserve l'ouverture procédurale dessous.
 	var prose: String = await sc.narrate_intro(scenario)
-	# Garde-fou : pop-up encore ouvert (layer non null = pas d'accept en cours) ET label vivant.
-	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl) or prose.length() < 10:
+	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl):
 		return
+	var swapped: bool = false
 	# ÉVIDENT : ne pas muter un texte en cours de lecture → enrichir seulement si le typewriter a fini.
+	if prose.length() >= 10 and not (lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count()):
+		lbl.text = prose + (sep + opening if opening.strip_edges() != "" else "")
+		lbl.visible_characters = -1
+		swapped = true
+	# 2) OUVERTURE enrichie (LLM, non bloquant) : upgrade l'ouverture procédurale SI le moteur finit
+	# avant l'accept. Base procédurale déjà affichée → aucun risque, jamais bloquant (user 2026-06-06).
+	var llm_open: String = await sc.narrate_opening(scenario)
+	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl) or llm_open.length() < 10:
+		return
 	if lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count():
 		return
-	lbl.text = prose
+	var head: String = prose if (swapped and prose.length() >= 10) else str(sc.build_intro(scenario).get("intro", ""))
+	lbl.text = head + sep + llm_open
 	lbl.visible_characters = -1
 
 
