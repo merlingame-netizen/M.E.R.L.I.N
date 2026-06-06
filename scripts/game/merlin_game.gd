@@ -21,6 +21,9 @@ var _life_gauge: MerlinRingGauge
 var _corr_gauge: MerlinRingGauge
 var _progress_box: HBoxContainer
 var _scene_art: MerlinSceneArt
+var _situ_panel: PanelContainer       # encart central : porte intro/situation/issue
+var _situ_sb: StyleBoxFlat            # style de l'encart (bordure teintée par phase — signal de transition)
+var _beat_header: Label               # marqueur discret « — Type · beat N/total — » (sorti du texte narratif)
 var _situation_text: RichTextLabel
 var _hand_box: Control
 var _combo_box: HBoxContainer
@@ -49,6 +52,8 @@ var _prev_corruption: int = -999
 var _deal_pending: bool = false  # déclenche l'anim de distribution au prochain _layout_fan
 var _life_tw: Tween  # tween de remplissage de l'anneau vie (tué avant un nouveau → pas de snap arrière)
 var _corr_tw: Tween
+var _situ_tw: Tween  # fondu de l'encart au nouveau beat (tué avant réutilisation → pas de course de tweens)
+var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
 
 func _ready() -> void:
@@ -94,6 +99,14 @@ func _present_current_beat() -> void:
 	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; les cartes ne
 	# montent qu'à la fin du typewriter (_on_typewriter_done state==1). Cartes cachées d'ici là.
 	_set_choice_ui(false)
+	# Signal de transition (user 2026-06-07) : bordure neutre + fondu de l'encart au nouveau beat.
+	_set_encart_phase(Color("6E5A3C"))
+	if _situ_panel != null:
+		_situ_panel.modulate.a = 0.45
+		if _situ_tw != null and _situ_tw.is_valid():
+			_situ_tw.kill()  # évite la course si un beat enchaîne avant la fin du fondu
+		_situ_tw = _situ_panel.create_tween()
+		_situ_tw.tween_property(_situ_panel, "modulate:a", 1.0, 0.22)
 	_show_situation(_current_situation)
 	_state = 1
 
@@ -103,8 +116,10 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	var btype: String = str(situ.get("type", ""))
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
-	var marker: String = "[color=#6E5A3C]— %s · beat %d/%d —[/color]\n\n" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
-	_typewriter("[center]" + marker + str(situ.get("narration", "")) + "[/center]", animate)
+	if _beat_header != null:
+		_beat_header.text = "— %s · beat %d/%d —" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
+		_beat_header.visible = true
+	_typewriter("[center]" + str(situ.get("narration", "")) + "[/center]", animate)
 
 
 func _render_hand(deal: bool = false) -> void:
@@ -211,7 +226,10 @@ func _update_preview() -> void:
 	var total: int = covered + cov["missing"].size()
 	# v10.4 : plus de tags requis nommés (« ‹ Instinct › ») — seulement couverture/degré/coût.
 	_preview_lbl.text = "Couverture %d/%d  ·  degré pressenti : %s  ·  coût Corruption : %d" % [covered, total, str(res["label"]), int(res["corruption_delta"])]
+	var was_disabled: bool = _resolve_btn.disabled
 	_resolve_btn.disabled = false
+	if was_disabled and _resolve_btn.visible:
+		_pop(_resolve_btn, 1.12)  # pulse 1-shot quand le combo devient complet (user 2026-06-07) — visible pour un pivot correct
 	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
 	# combo côté MerlinScenario ; au clic Résolution le texte est souvent déjà prêt (cache-hit).
 	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, _combo.duplicate(), res)
@@ -593,6 +611,9 @@ func _make_expr_label(bbcode: String, mod: Color, offset_px: Vector2, sz: Vector
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:
 	var deg_col: Color = _degree_color(str(res["degree"]))
+	_set_encart_phase(deg_col)  # bordure encart = couleur du degré (feedback émotionnel, user 2026-06-07)
+	if _beat_header != null:
+		_beat_header.visible = false  # l'issue parle d'elle-même ; pas de marqueur de beat
 	if animate:
 		_situation_text.text = ""
 	_typewriter("[center][color=#%s]%s[/color]\n\n%s[/center]" % [deg_col.to_html(false), str(res["label"]), narration], animate)
@@ -633,11 +654,14 @@ func _skip_typewriter() -> void:
 
 func _on_typewriter_done() -> void:
 	if _state == 2:
-		# Issue entièrement écrite → on autorise l'avance au clic + caret clignotant.
+		# Issue entièrement écrite → avance au clic + caret « continuer » clignotant.
 		_can_advance = true
+		if _caret != null:
+			_caret.text = "▮ cliquer pour continuer"
 		_set_caret(true)
 	elif _state == 1:
-		# Situation entièrement écrite → les cartes MONTENT pour le choix (user 2026-06-06).
+		# Situation entièrement écrite → caret masqué, les cartes MONTENT pour le choix (user 2026-06-06).
+		_set_caret(false)
 		_preview_lbl.visible = true
 		_resolve_btn.visible = true
 		_set_choice_ui(true)   # visible AVANT le rendu → _hand_box a sa taille pour _layout_fan
@@ -672,6 +696,30 @@ func _set_choice_ui(on: bool) -> void:
 	if _hand_box != null:
 		_hand_box.visible = on
 		_hand_box.modulate.a = 1.0
+
+
+# Teinte la bordure de l'encart selon la phase (situation neutre / issue = couleur du degré) — signal
+# de transition visuel, en plus du contenu (user 2026-06-07, audit UX pilier ÉVIDENT).
+func _set_encart_phase(col: Color) -> void:
+	if _situ_sb == null:
+		return
+	if _encart_phase_tw != null and _encart_phase_tw.is_valid():
+		_encart_phase_tw.kill()  # situation→issue peut arriver avant la fin du tween précédent
+	_encart_phase_tw = create_tween()
+	_encart_phase_tw.tween_property(_situ_sb, "border_color", col, 0.25)
+
+
+# Affordance « clic pour passer » affichée DÈS le début du typewriter (avant le caret « continuer »
+# clignotant qui n'apparaît qu'à la fin) — comble le temps mort perçu (user 2026-06-07, pilier FACILE).
+func _show_skip_hint() -> void:
+	if _caret == null:
+		return
+	if _caret_tw != null and _caret_tw.is_valid():
+		_caret_tw.kill()
+	_caret_tw = null
+	_caret.text = "▶ clic pour passer"
+	_caret.visible = true
+	_caret.modulate.a = 0.5
 
 
 func _degree_color(degree: String) -> Color:
@@ -767,7 +815,7 @@ func _make_dot(state: int) -> Panel:
 
 
 func _style_dot(d: Panel, state: int) -> void:
-	var sz: float = 16.0 if state == 1 else 12.0
+	var sz: float = 24.0 if state == 1 else 18.0  # agrandi (user 2026-06-07, lisibilité 720p)
 	d.custom_minimum_size = Vector2(sz, sz)
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.set_corner_radius_all(int(sz / 2.0))
@@ -864,6 +912,8 @@ func _typewriter(txt: String, animate: bool = true) -> void:
 	if n <= 0:
 		_on_typewriter_done()
 		return
+	if _state == 1 or _state == 2:
+		_show_skip_hint()  # affordance « clic = passer » visible DÈS le début (user 2026-06-07)
 	_tw = create_tween()
 	_tw.tween_property(_situation_text, "visible_characters", n, clampf(float(n) / 60.0, 0.4, 5.0))
 	_tw.finished.connect(_on_typewriter_done)
@@ -1118,15 +1168,29 @@ func _build_ui() -> void:
 
 	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
 	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).
-	var situ_panel: PanelContainer = PanelContainer.new()
-	situ_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	situ_panel.custom_minimum_size = Vector2(0, 260)
-	situ_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # clics → capteur récit (skip/avance)
-	situ_panel.add_theme_stylebox_override("panel", _cream_style())
-	root.add_child(situ_panel)
+	# Bordure teintée par phase (_set_encart_phase) = signal de transition intro→situation→issue (user 2026-06-07).
+	_situ_panel = PanelContainer.new()
+	_situ_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_situ_panel.custom_minimum_size = Vector2(0, 260)
+	_situ_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # clics → capteur récit (skip/avance)
+	_situ_sb = _cream_style()
+	_situ_panel.add_theme_stylebox_override("panel", _situ_sb)
+	root.add_child(_situ_panel)
+	var inner: VBoxContainer = VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 6)
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_situ_panel.add_child(inner)
+	# Marqueur de beat discret en haut de l'encart (sorti du texte narratif — user 2026-06-07).
+	_beat_header = Label.new()
+	_beat_header.add_theme_color_override("font_color", Color("8A6A2E"))
+	_beat_header.add_theme_font_size_override("font_size", 18)
+	_beat_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_beat_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(_beat_header)
 	var situ_center: CenterContainer = CenterContainer.new()
+	situ_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	situ_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	situ_panel.add_child(situ_center)
+	inner.add_child(situ_center)
 	_situation_text = RichTextLabel.new()
 	_situation_text.bbcode_enabled = true
 	_situation_text.fit_content = true
@@ -1152,9 +1216,7 @@ func _build_ui() -> void:
 	var combo_v: VBoxContainer = VBoxContainer.new()
 	combo_v.add_theme_constant_override("separation", 8)
 	_combo_panel.add_child(combo_v)
-	var combo_title: Label = _mk_label(COL_DIM, 20)
-	combo_title.text = "Combinaison (clic pour poser / retirer) :"
-	combo_v.add_child(combo_title)
+	# (combo_title retiré — redondant avec _preview_lbl, user 2026-06-07 §21.2 ❌7)
 	_combo_box = HBoxContainer.new()
 	_combo_box.add_theme_constant_override("separation", 10)
 	_combo_box.custom_minimum_size = Vector2(0, 104)
@@ -1179,17 +1241,33 @@ func _build_ui() -> void:
 	_hand_box.resized.connect(_layout_fan)
 	root.add_child(_hand_box)
 
+	# TOAST bas non-bloquant (ne recouvre PLUS le plateau — anti-pattern §21.2 ❌1 corrigé, user 2026-06-07).
 	_overlay = Panel.new()
-	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.anchor_left = 0.5
+	_overlay.anchor_right = 0.5
+	_overlay.anchor_top = 1.0
+	_overlay.anchor_bottom = 1.0
+	_overlay.offset_left = -280
+	_overlay.offset_right = 280
+	_overlay.offset_top = -104
+	_overlay.offset_bottom = -40
+	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # n'absorbe rien (plateau reste visible/interactif)
 	var ov_sb: StyleBoxFlat = StyleBoxFlat.new()
-	ov_sb.bg_color = Color(0.08, 0.06, 0.05, 0.92)
+	ov_sb.bg_color = Color(0.10, 0.08, 0.06, 0.94)
+	ov_sb.set_corner_radius_all(10)
+	ov_sb.set_border_width_all(1)
+	ov_sb.border_color = COL_GOLD
+	ov_sb.set_content_margin_all(12)
 	_overlay.add_theme_stylebox_override("panel", ov_sb)
 	add_child(_overlay)
 	_overlay_lbl = Label.new()
-	_overlay_lbl.set_anchors_preset(Control.PRESET_CENTER)
+	_overlay_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
-	_overlay_lbl.add_theme_font_size_override("font_size", 38)
+	_overlay_lbl.add_theme_font_size_override("font_size", 22)
 	_overlay_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_overlay_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_overlay_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
 
@@ -1212,6 +1290,8 @@ func _surface_style() -> StyleBoxFlat:
 func _cream_style() -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_TEXT  # crème parchemin (#E8DCC0)
-	sb.set_corner_radius_all(4)
-	sb.set_content_margin_all(16)
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(3)
+	sb.border_color = COL_GOLD  # teinte par phase via _set_encart_phase (signal de transition)
+	sb.set_content_margin_all(18)
 	return sb

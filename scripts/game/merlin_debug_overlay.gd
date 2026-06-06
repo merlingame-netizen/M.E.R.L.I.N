@@ -32,14 +32,15 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	_panel = Panel.new()
+	# Bas-droite (évite la collision avec la jauge Corruption en haut-droite).
 	_panel.anchor_left = 1.0
 	_panel.anchor_right = 1.0
-	_panel.anchor_top = 0.0
-	_panel.anchor_bottom = 0.0
+	_panel.anchor_top = 1.0
+	_panel.anchor_bottom = 1.0
 	_panel.offset_left = -(PANEL_W + 10)
 	_panel.offset_right = -10
-	_panel.offset_top = 10
-	_panel.offset_bottom = 10 + PANEL_H
+	_panel.offset_top = -(PANEL_H + 10)
+	_panel.offset_bottom = -10
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # click-through : ne bloque pas le jeu
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_BG
@@ -48,6 +49,7 @@ func _build_ui() -> void:
 	sb.border_color = COL_GOLD
 	sb.set_content_margin_all(12)
 	_panel.add_theme_stylebox_override("panel", sb)
+	_panel.visible = false  # masqué par défaut — F9 le rallume (user 2026-06-07, pilier MINIMAL : pas de clutter en jeu)
 	add_child(_panel)
 
 	var v: VBoxContainer = VBoxContainer.new()
