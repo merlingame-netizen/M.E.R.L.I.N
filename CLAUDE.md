@@ -354,6 +354,16 @@ python tools/cli.py ollama chat --model qwen2.5:7b --prompt "Bonjour !"
 python tools/cli.py ollama pull --model qwen2.5:7b
 python tools/cli.py ollama show --model merlin-narrator-lora:latest
 
+# VoxCPM (TTS neuronale locale + voice cloning) — serveur: tools\voxcpm\start.bat
+python tools/cli.py voxcpm status                # Sante serveur (modele, device, voix)
+python tools/cli.py voxcpm voices                # Voix de reference enregistrees (use_my_voice)
+python tools/cli.py voxcpm synth --text "Bonjour, je suis Merlin." --out merlin.wav
+python tools/cli.py voxcpm synth --text "Approche." --voice merlin --out out.wav
+python tools/cli.py voxcpm speak --text "La foret t'attend."   # synth + lecture
+python tools/cli.py voxcpm add-voice --name merlin --audio sample.wav --text "Ma voix."
+python tools/cli.py voxcpm models                # Modeles connus + modele courant du serveur
+# In-game: autoload MerlinTTS.speak("...", "merlin")  — doc: docs/VOXCPM_DEPLOYMENT.md
+
 # Git / GitHub
 python tools/cli.py git status
 python tools/cli.py git diff

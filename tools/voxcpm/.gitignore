@@ -1,0 +1,12 @@
+# VoxCPM local deploy — never commit the venv, model cache, or generated audio
+.venv-voxcpm/
+cache/
+config.json
+*.wav
+*.flac
+*.mp3
+__pycache__/
+
+# ...but DO keep the voices folder's docs + any committed reference samples you
+# explicitly force-add with `git add -f tools/voxcpm/voices/merlin.wav`.
+!voices/README.md

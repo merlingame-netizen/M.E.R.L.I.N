@@ -47,6 +47,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "rag":           ("adapters.rag_adapter",           "RagAdapter",          None),
     # ── Wave 12 — Studio Bridge (autonomous orchestrator) ────────────
     "studio":        ("adapters.studio_adapter",        "StudioAdapter",       None),
+    # ── Wave 13 — VoxCPM local TTS (neural voice + cloning) ──────────
+    "voxcpm":        ("adapters.voxcpm_adapter",        "VoxCPMAdapter",       None),
 }
 
 

@@ -2,6 +2,41 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-06 — VoxCPM Local Deployment (TTS neuronale + voice cloning)
+
+### Context
+Mandat : *« Déploie voxcpm sur ma machine pour les projets de jeu et autre »*.
+Déploiement de VoxCPM (TTS tokenizer-free, 30 langues dont FR, voice cloning) en
+**CPU-only**, pattern serveur local + adapter CLI (comme Ollama), Windows-first.
+Couvre le backlog bible « Merlin speech-bar + TTS (`use_my_voice`) ».
+
+### Decisions (AskUserQuestion)
+- Matériel : **CPU only** → `VoxCPM-0.5B` par défaut + cache agressif.
+- Périmètre : **tout** (CLI + serveur + voix in-game + cloning + endpoint OpenAI).
+- Forme : **venv natif + serveur**. OS : **Windows-first**.
+
+### Livrables
+- `tools/voxcpm/server.py` — serveur FastAPI (`/health`, `/voices`, `/synth`, `/v1/audio/speech`), lazy-load, device auto, cache SHA-1, cloning.
+- `tools/voxcpm/install.ps1` + `install.bat` + `start.ps1` + `start.bat` + `requirements.txt` + `config.example.json` + `.gitignore` + `voices/README.md`.
+- `tools/adapters/voxcpm_adapter.py` (enregistré dans `adapters/__init__.py`).
+- `scripts/autoload/merlin_tts.gd` + autoload `MerlinTTS` dans `project.godot`.
+- `docs/VOXCPM_DEPLOYMENT.md` + `tools/voxcpm/README.md` + MAJ `CLAUDE.md`.
+
+### Notes techniques
+- CPU : modèle 0.5B, `inference_timesteps` bas (≈10), **cache disque obligatoire** (RTF ≫ 1 sur CPU).
+- Serveur lazy-load le modèle au 1er appel → démarrage rapide, import sans poids.
+- Adapter : client HTTP pur (`localhost:8808`), erreur gracieuse si serveur down.
+- Godot : `AudioStreamWAV.load_from_buffer` (Godot 4.4+), cache `user://voxcpm_cache/`, no-op si serveur absent (le jeu tourne sans TTS).
+- `use_my_voice` : déposer un échantillon dans `tools/voxcpm/voices/` (+ transcript `.txt` optionnel pour ultimate cloning).
+
+### Validation
+- `py_compile` serveur + adapter : OK.
+- Smoke adapter (serveur down) : erreur JSON claire (pas de crash).
+- Parse GDScript autoload : OK.
+- **Je tourne dans un conteneur cloud Linux CPU sans GPU** — le serveur/modèle s'exécute sur la machine Windows de l'utilisateur (livrables = kit de déploiement).
+
+---
+
 ## Session: 2026-04-25 — Vision Graphique v3 + MCP Native Forest + LLM Cards
 
 ### Context

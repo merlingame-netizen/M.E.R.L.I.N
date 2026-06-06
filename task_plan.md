@@ -2,7 +2,43 @@
 
 > **Source**: `docs/DEV_PLAN_V2.5.md` (canonical phase plan).
 > **Consumed by**: `tools/octogent/prompts/studio-director.md` Tier 1 backlog.
-> **Last refresh**: 2026-05-17 (v7.7.24 brain cartography + strict mode + guardrails + persistence).
+> **Last refresh**: 2026-06-06 (VoxCPM local deployment).
+
+---
+
+## VoxCPM Local Deployment — voix neuronale + voice cloning [2026-06-06]
+
+Branche : `claude/voxcpm-local-deploy-V118n`
+
+Mandat utilisateur (verbatim) : *« Déploie voxcpm sur ma machine pour les projets de jeu et autre »*
+
+Décisions verrouillées (AskUserQuestion) :
+- **Matériel** : CPU only → modèle léger `VoxCPM-0.5B` par défaut, fallback CPU, cache agressif.
+- **Périmètre** : Tout — CLI adapter + serveur local + voix Merlin in-game + voice-cloning `use_my_voice` + endpoint OpenAI `/v1/audio/speech`.
+- **Forme** : venv natif + serveur (pattern Ollama).
+- **OS** : Windows-first (+ notes Linux/mac).
+
+VoxCPM : tokenizer-free TTS, 30 langues **dont le français**, Apache-2.0, zero-shot
+voice cloning (`prompt_wav_path` + `prompt_text`), sortie 48 kHz. CPU fonctionne mais
+RTF ≫ 1 → **cache disque obligatoire** (serveur + Godot). Couvre le backlog bible
+§ « Merlin speech-bar + TTS (`use_my_voice`) » (Phase 2.1.5, non implémenté).
+
+### Phases (toutes livrées)
+
+1. **Serveur** `tools/voxcpm/server.py` — FastAPI : `/health`, `/voices`, `/synth`, `/v1/audio/speech`. Lazy-load modèle, device auto-detect (cpu/cuda), cache disque SHA-1, voice-cloning.
+2. **Install/run** — `install.ps1`/`.bat`, `start.ps1`/`.bat`, `requirements.txt`, `config.example.json`, `.gitignore`. Torch CPU wheel par défaut.
+3. **CLI adapter** `tools/adapters/voxcpm_adapter.py` (+ registry) — `status` / `voices` / `synth` / `speak` / `add-voice` / `models` / `info`.
+4. **Godot in-game** `scripts/autoload/merlin_tts.gd` (autoload `MerlinTTS`) — HTTPRequest → WAV → `AudioStreamWAV.load_from_buffer`, cache `user://voxcpm_cache/`, no-op gracieux si serveur down.
+5. **Docs** `docs/VOXCPM_DEPLOYMENT.md` + `tools/voxcpm/README.md` + MAJ `CLAUDE.md` Quick Commands.
+6. **Validation** — `py_compile` serveur+adapter, smoke adapter (serveur down → erreur claire), parse GDScript.
+
+### Critères d'acceptation
+
+- `python tools/cli.py voxcpm status` répond proprement (ok si up, erreur claire si down).
+- Serveur démarrable via `tools\voxcpm\start.bat` → `/health` + `/synth` + `/v1/audio/speech`.
+- `MerlinTTS.speak("Bonjour, je suis Merlin.")` joue l'audio si serveur up, no-op sinon.
+- Voice cloning : `tools/voxcpm/voices/merlin.wav` (+ `merlin.txt`) → `--voice merlin`.
+- Aucun secret committé, tout le code parse/compile.
 
 ---
 

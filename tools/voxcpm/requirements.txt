@@ -1,0 +1,15 @@
+# VoxCPM local TTS server — runtime dependencies (M.E.R.L.I.N.)
+#
+# NOTE on PyTorch: install the wheel that matches your machine FIRST, then pip
+# install -r this file. The install scripts do this for you:
+#   - CPU only  : pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   - CUDA 12.x : pip install torch --index-url https://download.pytorch.org/whl/cu121
+#
+# voxcpm pulls torch transitively, but pinning the index above avoids accidentally
+# grabbing a CUDA build on a CPU-only box (huge download, won't run).
+
+voxcpm>=1.0.0
+fastapi>=0.110
+uvicorn>=0.29
+soundfile>=0.12
+numpy>=1.24

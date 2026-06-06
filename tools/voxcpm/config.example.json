@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy to config.json and tweak. These map 1:1 to VOXCPM_* env vars. The start scripts read config.json if present.",
+  "model": "openbmb/VoxCPM-0.5B",
+  "device": "auto",
+  "host": "127.0.0.1",
+  "port": 8808,
+  "cfg_value": 2.0,
+  "inference_timesteps": 10,
+  "normalize": false,
+  "default_voice": "merlin",
+  "_models_hint": {
+    "cpu": "openbmb/VoxCPM-0.5B  (lighter, viable on CPU with caching)",
+    "gpu": "openbmb/VoxCPM2      (2B, ~8 GB VRAM, best quality)"
+  }
+}
