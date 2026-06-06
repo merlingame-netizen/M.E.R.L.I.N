@@ -3100,3 +3100,13 @@ sujets abstraits ('le vide','le nom').
   100%). Corruption pareil (moy 1.9/cap 18). Cause = seuils calibrés cible "25 cartes" mais run=5.
   DÉCISION DESIGN (longueur run vs seuils) → laissé à l'utilisateur (pas de tweak auto). Voir
   goal_balance_sim.gd (réutilisable).
+- C4 (01:20) : variété fallbacks SITU 3→5/type, RESO 3→5 + 2→4, fins variées. Committé 80df3b5f.
+- C5 (01:35) : focus Dilemme/Climax renforcé ("montre la voie choisie + prix" / "MOMENT DECISIF,
+  vraie bascule"). Committé de6f74a9.
+- PROBE INSTABILITÉ (leçon clé) : full-probe_combos (15 gens LLM × ~3min = ~40min soutenu) =
+  INSTABLE dans cet env (cf. leçon #109/#117). Échecs : `| grep` → SIGPIPE tronque ; sans pipe →
+  buffer task flood ; redirect fichier → exit 1 cumulatif après chargements gemma répétés. Smoke
+  (court) reste FIABLE. Validation prose faite sur 26+ samples des runs réussis antérieurs (13+9+4).
+- VÉRIFICATION (01:52) : smoke MerlinGame ✅ + MerlinSelection ✅ + MerlinEnd ✅ (exit 0,
+  script_errors 0). 4 axes couverts : cohérence ✅ · lisibilité ✅ · bugs ✅ · équilibrage 📋 doc.
+- ÉTAT : prose mission ACCOMPLIE + validée. Reste = monitoring léger (probe_prose + smoke) jusqu'à 9h.
