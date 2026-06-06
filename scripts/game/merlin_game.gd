@@ -267,7 +267,7 @@ func _on_resolve() -> void:
 		_hide_overlay()
 	# Fallback procédural en DERNIER recours seulement si le moteur a échoué/timeout (engine_dead).
 	if prose.length() < 10:
-		prose = sc.fallback_resolution(str(res.get("degree", "reussite")))
+		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")))
 	run.summary = prose
 	_show_resolution(res, prose, true)
 	run.save()

@@ -99,6 +99,28 @@ const RESO_FALLBACKS: Dictionary = {
 	],
 }
 
+# Fallbacks LONGS (user 2026-06-06) — servis aux MOMENTS FORTS (Climax / éclatante). À ~1 tok/s, l'issue
+# LLM longue timeoute souvent en jeu (take_resolution borné ~95s) → sans ces variantes, « plus long au
+# climax » ne s'afficherait jamais. Le procédural prend donc le relais EN LONG sur ces moments-là.
+const RESO_FALLBACKS_LONG: Dictionary = {
+	"echec": [
+		"Tes deux forces s'élancent ensemble — et ensemble elles se brisent contre ce qui t'attendait là. La forêt ne se contente pas de refuser : elle reprend, elle efface, elle te repousse un peu plus loin de toi-même. Quelque chose, dans l'ombre, a vu ta tentative, et s'en souviendra. Tu restes seul au bord, les mains vides et le cœur plus lourd qu'avant.",
+		"Le geste que tu croyais maîtriser se retourne dans tes mains comme une bête mal apprivoisée. Ce que tu touches se dérobe, ce que tu appelles ne vient pas, et le lieu se referme sur ton échec avec une lenteur presque cruelle. Tu paieras ce moment, tu le sais déjà. Et la forêt, elle, ne paie jamais rien.",
+	],
+	"partiel": [
+		"Tes deux forces portent, mais de travers, et le lieu te laisse emporter ton dû — à un prix que tu n'as pas choisi. Quelque chose cède, quelque chose s'ouvre, mais dans le même souffle une ombre se glisse dans tes pas et s'y installe. Tu obtiens ce que tu voulais, et tu repars marqué. La forêt, elle, a pris autre chose, et ne dit pas quoi.",
+		"Le passage s'entrouvre à demi sous l'effort conjugué de tes deux gestes, juste assez pour t'y faufiler. Mais rien ici n'est gratuit : ce que tu forces te coûte un fragment que tu ne récupéreras pas. On t'a vu faire, et on ne l'oubliera pas. Tu avances, à demi vainqueur, à demi débiteur.",
+	],
+	"reussite": [
+		"Tes deux forces se nouent enfin en un seul geste, ample et juste, et le lieu cède dans un long soupir. La voie se dénoue devant toi, nette, presque reconnaissante, comme si la forêt avait attendu ce moment autant que toi. Tu passes, entier, plus sûr de ton pas qu'en arrivant. Et le silence, derrière, te suit comme une approbation qu'on accorde rarement.",
+		"Ce que tu maries trouve sa cible du premier coup, et le bois entier accuse le geste. Le chemin s'ouvre sans triomphe tapageur mais sans la moindre dette, et tu sens le lieu te reconnaître le droit de poursuivre. Rien ne te retient plus. Tu franchis le seuil, et la forêt, pour cette fois, te laisse aller.",
+	],
+	"eclatante": [
+		"Tes deux forces n'en font soudain plus qu'une, si parfaitement accordées que la forêt elle-même retient son souffle pour ne pas rompre l'instant. Le seuil s'ouvre en grand, sans la moindre résistance, et de très loin, sous les racines, quelque chose d'ancien et de fier s'incline sur ton passage. Les murmures se font promesse, la voie se déploie comme un tapis qu'on déroule. Un instant, bref et vertigineux, tu es plus que toi-même — et la forêt te donne bien plus qu'elle ne prend.",
+		"L'accord est total, vertigineux, et le bois entier le célèbre à sa manière muette et immense. Ce que tu viens d'accomplir, peu l'ont fait avant toi, et la forêt le sait. La lumière elle-même semble se pencher vers toi, et le chemin devant n'est plus une épreuve mais une offrande. Tu avances, porté, et derrière toi un murmure très doux prononce ton nom — le vrai, cette fois.",
+	],
+}
+
 # Issue = 3-4 phrases AMPLES sur la COMBINAISON (user 2026-06-06 : « tout doit etre plus verbeux »).
 # Budget élargi en conséquence ; _clean_prose recoupe à la dernière phrase complète (anti-troncature).
 const MAX_TOK_PROSE: int = 220
@@ -601,8 +623,14 @@ func invalidate_resolution() -> void:
 
 
 # Procédural de résolution (INSTANT, déterministe). Public : l'appelant l'affiche immédiatement.
-func fallback_resolution(degree: String) -> String:
-	var pool: Array = RESO_FALLBACKS.get(degree, RESO_FALLBACKS["reussite"])
+func fallback_resolution(degree: String, situ_type: String = "") -> String:
+	# Longueur VARIABLE même en procédural (user 2026-06-06) : aux MOMENTS FORTS (Climax / éclatante)
+	# on sert le pool LONG → « plus long au climax » s'affiche EN JEU même quand l'issue LLM longue
+	# timeoute (cas fréquent à ~1 tok/s). Sinon pool de routine (plus court).
+	var src: Dictionary = RESO_FALLBACKS_LONG if is_strong_moment(situ_type, degree) else RESO_FALLBACKS
+	var pool: Array = src.get(degree, src.get("reussite", []))
+	if pool.is_empty():
+		pool = RESO_FALLBACKS["reussite"]
 	return str(pool[_rng.randi_range(0, pool.size() - 1)])
 
 
