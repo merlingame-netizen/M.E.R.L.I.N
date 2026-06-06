@@ -370,6 +370,14 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 		return ""
 	var degree: String = str(res.get("degree", "reussite"))
 	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes a un prix", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
+	# v10.6 — directive d'ISSUE explicite par degré : la lecture du batch (HTML contrôle) montrait
+	# que l'échec se lisait comme un succès. On force le ressenti du résultat. (user 2026-06-06)
+	var deg_directive: Dictionary = {
+		"echec": "Le geste ECHOUE : la foret RESISTE, repousse ou se referme ; rien n'est obtenu, ou pire, quelque chose se retourne contre le Voyageur. Ton sombre, sans triomphe.",
+		"partiel": "Demi-succes a un PRIX : quelque chose cede, mais incomplet, et une ombre/un cout suit. Ni triomphe ni desastre.",
+		"reussite": "REUSSITE franche : le geste porte, la voie s'ouvre, la foret cede.",
+		"eclatante": "Reussite ECLATANTE : triomphe net et lumineux, la foret s'incline, l'instant est mémorable.",
+	}
 	# v10.6 (user 2026-06-06 : « la combinaison ne s'établit pas dans le scénario ») — on passe le
 	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
 	# DEUX forces à l'œuvre, ancrées dans leurs images concrètes, fondues en un seul geste. Toujours
@@ -388,7 +396,7 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	elif syn < 0:
 		syn_hint = " Les deux forces s'accordent mal, tirant a hue et a dia (l'issue s'en ressent)."
 	# Décor NON passé (anti écho de scène, post-filtré par _strip_scene_echo). Cartes NON nommées.
-	var usr: String = ("Le Voyageur combine DEUX forces, chacune avec son image:%s\nIssue de cette combinaison: %s.%s\nEcris EXACTEMENT 2 phrases (francais): montre l'effet du geste sur la scene et la foret en FAISANT SENTIR les DEUX forces a l'oeuvre — ancre-toi dans leurs images concretes ci-dessus, fondues en UN seul mouvement. Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete.") % [combo, deg_fr.get(degree, "une reussite"), syn_hint]
+	var usr: String = ("Le Voyageur combine DEUX forces, chacune avec son image:%s\nISSUE = %s. %s%s\nEcris EXACTEMENT 2 phrases (francais), PAS une de plus: fais SENTIR les DEUX forces a l'oeuvre (ancre-toi dans leurs images concretes ci-dessus, fondues en UN seul mouvement) ET fais clairement RESSENTIR l'issue ci-dessus. Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete.") % [combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), syn_hint]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""

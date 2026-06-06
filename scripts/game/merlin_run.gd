@@ -72,24 +72,32 @@ func draw_to_full() -> void:
 
 
 # v10 dashboard helpers : lit TweaksOverlay si présent (autoload registré APRÈS MerlinRun dans
-# project.godot — `get_node_or_null` car premier appel possible avant son _ready).
+# project.godot). v10.6 — guard `is_inside_tree()` : une instance MerlinRun créée HORS arbre
+# (harness probe_combos/probe_prose via RunScript.new()) ferait planter get_node_or_null avec un
+# chemin absolu. Hors arbre → on retombe sur les constantes locales (pas de tweaks dashboard).
+func _tweaks_node() -> Node:
+	if not is_inside_tree():
+		return null
+	return get_node_or_null("/root/TweaksOverlay")
+
+
 func _start_integrite() -> int:
-	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	var to: Node = _tweaks_node()
 	return to.get_int("START_INTEGRITE", START_INTEGRITE) if to != null and to.has_method("get_int") else START_INTEGRITE
 
 
 func _hand_size() -> int:
-	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	var to: Node = _tweaks_node()
 	return to.get_int("HAND_SIZE", HAND_SIZE) if to != null and to.has_method("get_int") else HAND_SIZE
 
 
 func _max_integrite() -> int:
-	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	var to: Node = _tweaks_node()
 	return to.get_int("MAX_INTEGRITE", MAX_INTEGRITE) if to != null and to.has_method("get_int") else MAX_INTEGRITE
 
 
 func _corruption_cap() -> int:
-	var to: Node = get_node_or_null("/root/TweaksOverlay")
+	var to: Node = _tweaks_node()
 	return to.get_int("CORRUPTION_CAP", CORRUPTION_CAP) if to != null and to.has_method("get_int") else CORRUPTION_CAP
 
 
