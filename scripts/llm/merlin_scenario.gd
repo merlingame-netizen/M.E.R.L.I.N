@@ -105,6 +105,15 @@ var _sel_cache: Array = []
 var _sel_state: String = "idle"   # idle / running / ready
 var _sel_epoch: int = 0
 
+# --- Pré-génération RÉSOLUTION (v10.4, user 2026-06-06 : issue TOUJOURS LLM) ---
+# Lancée pendant la pose des cartes (prefetch_resolution), récupérée au clic Résolution
+# (take_resolution). Cache par signature de combinaison (ids cartes + degré) → un changement de
+# combo supersède via epoch. Masque la latence ~1 tok/s du moteur natif.
+var _reso_cache: Dictionary = {}   # signature -> prose
+var _reso_sig: String = ""         # signature actuellement en génération
+var _reso_state: String = "idle"   # idle / running / ready
+var _reso_epoch: int = 0
+
 
 func _ready() -> void:
 	_rng.randomize()
@@ -380,6 +389,101 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 		return ""
 	var s: String = _strip_scene_echo(_clean_prose(str(r.get("text", "")).strip_edges()), str(situation.get("narration", "")))
 	return s if s.length() >= 10 else ""
+
+
+# --- v10.4 — PRÉ-GÉNÉRATION + RÉCUPÉRATION de l'issue LLM (user 2026-06-06) ---
+
+# Signature d'une combinaison : ids des cartes (ordre = la 1ère est l'action principale) + degré.
+# Deux combos identiques (mêmes cartes, même ordre) → même signature → réutilise le cache.
+func _reso_signature(played_cards: Array, res: Dictionary) -> String:
+	var ids: PackedStringArray = []
+	for c in played_cards:
+		ids.append(str(c.id) if (c is Object and "id" in c) else "?")
+	return "|".join(ids) + "::" + str(res.get("degree", ""))
+
+
+# Lancée pendant la pose des cartes (merlin_game._update_preview). Génère en arrière-plan l'issue
+# pour la combinaison courante. Dédupe : si la même combo est déjà en cours/prête, ne relance pas.
+# Un changement de combo bumpe _reso_epoch → la génération en vol devient périmée (résultat ignoré).
+func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictionary) -> void:
+	if played_cards.is_empty():
+		return
+	var sig: String = _reso_signature(played_cards, res)
+	if sig == _reso_sig and (_reso_state == "running" or _reso_state == "ready"):
+		return  # déjà en génération ou prêt pour cette combo exacte
+	if _reso_cache.has(sig):
+		return  # déjà en cache
+	# Moteur single-flight : on ne LANCE une pré-génération QUE si le moteur est libre. Sinon on ne
+	# thrash pas (sans ça, des combos abandonnées occuperaient le moteur ~40s) — take_resolution
+	# annulera la gen périmée et générera la combo finale au clic Résolution.
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready() or mn.is_busy():
+		return
+	_reso_epoch += 1
+	var epoch: int = _reso_epoch
+	_reso_sig = sig
+	_reso_state = "running"
+	var prose: String = await narrate_resolution(situation, played_cards, res)
+	if epoch != _reso_epoch:
+		# Périmé (seul invalidate_resolution bumpe l'epoch pendant notre await — le guard is_busy
+		# empêche tout prefetch concurrent tant qu'on tient le moteur). Fix review HIGH 2026-06-06 :
+		# reset state, sinon il reste « running » sur une sig abandonnée → un re-prefetch de la même
+		# combo se croirait en vol (hung) et ne relancerait jamais.
+		_reso_state = "idle"
+		return
+	if prose.length() >= 10:
+		_reso_cache[sig] = prose
+		_reso_state = "ready"
+	else:
+		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
+
+
+# Récupère l'issue LLM au clic Résolution. Cache-hit instantané si la pré-génération a fini ;
+# sinon attend la génération en vol (bornée par le timeout moteur natif) ; sinon génère maintenant.
+# Renvoie "" si le moteur a vraiment échoué → l'appelant retombe sur le procédural (dernier recours).
+func take_resolution(situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
+	var sig: String = _reso_signature(played_cards, res)
+	if _reso_cache.has(sig):
+		return str(_reso_cache[sig])
+	# Génération de CETTE combo en vol ? On l'attend par polling (borné ~95s > GEN_TIMEOUT moteur).
+	if _reso_sig == sig and _reso_state == "running":
+		var deadline_ms: int = Time.get_ticks_msec() + 95000
+		while _reso_state == "running" and Time.get_ticks_msec() < deadline_ms:
+			await get_tree().process_frame
+		if _reso_cache.has(sig):
+			return str(_reso_cache[sig])
+	# Pas de cache. Une gen PÉRIMÉE (autre combo) peut occuper le moteur single-flight → on l'annule
+	# et on attend sa libération avant de générer la combo finale. Garantit "toujours LLM".
+	# cancel_generation() signale la boucle de décode native (flag vérifié entre tokens, ~1/s) → la
+	# libération arrive en ~1-2s ; 8s de marge couvre un drain lent sans figer le resolve. (review MEDIUM)
+	var mn: Node = _mn()
+	if mn != null and mn.is_busy():
+		mn.cancel()
+		var free_dl: int = Time.get_ticks_msec() + 8000
+		while mn.is_busy() and Time.get_ticks_msec() < free_dl:
+			await get_tree().process_frame
+	# Génère maintenant et attend (le moteur devrait être libre).
+	var prose: String = await narrate_resolution(situation, played_cards, res)
+	if prose.length() >= 10:
+		_reso_cache[sig] = prose
+		return prose
+	return ""  # moteur KO → fallback procédural côté appelant
+
+
+# Vrai si l'issue de cette combo est DÉJÀ en cache (pré-génération finie) → take_resolution sera
+# instantané. L'appelant évite ainsi le flicker de l'overlay « Merlin assemble… » (review MEDIUM).
+func is_resolution_ready(played_cards: Array, res: Dictionary) -> bool:
+	return _reso_cache.has(_reso_signature(played_cards, res))
+
+
+# Vide le cache d'issue à chaque nouveau beat (merlin_game._present_current_beat) : les ids de cartes
+# se répètent entre beats (deck starter), sans ce reset une combo identique réafficherait la prose
+# d'un beat antérieur. Bumpe l'epoch → toute pré-génération en vol devient périmée.
+func invalidate_resolution() -> void:
+	_reso_cache.clear()
+	_reso_sig = ""
+	_reso_state = "idle"
+	_reso_epoch += 1
 
 
 # Procédural de résolution (INSTANT, déterministe). Public : l'appelant l'affiche immédiatement.

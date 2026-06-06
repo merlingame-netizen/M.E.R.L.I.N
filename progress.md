@@ -2,6 +2,34 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-06 — v10.4 Résolution TOUJOURS LLM + retrait hint « Ce moment appelle »
+
+### Context
+User : (1) retirer « Ce moment appelle : ‹ tag › », (2) le texte de résolution (échec inclus) doit être FORCÉMENT généré par le LLM, plus le fallback procédural. AskUserQuestion : pré-génération pendant la pose / fallback procédural dernier recours / retirer hint garder preview / toutes résolutions LLM.
+
+### Done — Retrait hint (merlin_game.gd)
+- Supprimé `_hint_lbl` (déclaration + création _build_ui + tous les toggles + `_show_situation` text + helper mort `_format_tags`).
+- `_update_preview` : combo vide → « Pose une carte… » ; combo posé → « Couverture X/Y · degré · coût » SANS les tags nommés.
+
+### Done — Résolution toujours LLM (merlin_scenario.gd + merlin_game.gd)
+- **Pré-génération** `prefetch_resolution(situ, played, res)` : lancée à chaque changement de combo (_update_preview), fire-and-forget. Dédupe par signature combo (ids cartes ordonnés + degré). Ne démarre QUE si moteur libre (`is_busy()` guard) → pas de thrash du single-flight.
+- **Récupération** `take_resolution(situ, played, res)` : cache-hit instantané ; sinon poll-wait si gen en vol pour cette combo ; sinon annule toute gen périmée (`cancel()` + attente libération 8s) puis génère. Renvoie "" si moteur KO.
+- **`invalidate_resolution()`** appelé à chaque nouveau beat → vide le cache (les ids cartes se répètent entre beats, anti-réutilisation prose).
+- **`is_resolution_ready()`** : gate l'overlay « Merlin assemble… » (évite flash sur cache-hit).
+- `_on_resolve` : mutations sync → animation fusion (~2-4.5s, masque latence) → `take_resolution` (overlay si pas prêt) → fallback procédural SEULEMENT si moteur KO → `_show_resolution` typewriter.
+- Retrait du gating `is_strong_moment`/`_bg_resolution`/`_wait_engine_free` (morts).
+
+### Vérif
+- validate_step0 exit=0, smoke MerlinGame passed=True script_errors=0
+- code-review : 1 HIGH (stuck `_reso_state` après epoch-discard) + 3 MEDIUM → tous corrigés (reset state idle ; overlay gate cache-hit ; cancel wait 5→8s ; double-gen accepté documenté)
+- **Confirmé visuellement** (F12 + drive_merlin) : « Ce moment appelle » absent, preview « Pose une carte… » ; résolution LLM live « Les racines s'animent d'une ombre froide et humide. Une présence ancienne se déploie… » (issue combinaison 13.3s/27to), overlay « Merlin assemble les fils du sort… » pendant la gen.
+
+### Notes
+- Cas lent (1 carte posée + résolution immédiate) : prefetch pas fini → overlay masque ~13s de gen. Cas normal (joueur réfléchit + anim 3.5s) : cache-hit quasi instantané.
+- Tension archi assumée : « toujours LLM » réintroduit l'attente que le non-bloquant évitait, mais l'overlay + la pré-génération la rendent acceptable, et le fallback procédural garantit qu'on n'est jamais coincé si le moteur meurt.
+
+---
+
 ## Session: 2026-06-06 — v10.2 Animation cinématique fusion cartes avant résolution
 
 ### Context

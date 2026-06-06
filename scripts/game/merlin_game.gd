@@ -22,7 +22,6 @@ var _corr_gauge: MerlinRingGauge
 var _progress_box: HBoxContainer
 var _scene_art: MerlinSceneArt
 var _situation_text: RichTextLabel
-var _hint_lbl: Label
 var _hand_box: Control
 var _combo_box: HBoxContainer
 var _preview_lbl: Label
@@ -79,11 +78,9 @@ func _present_current_beat() -> void:
 	_can_advance = false
 	_set_caret(false)
 	_set_hand_dimmed(false)
-	# v10/H1 (audit UX bible §21.2 #5 — loi de Miller, max 7 affordances) : _hint_lbl ET _preview_lbl
-	# disaient la même chose. Le préfixe « Ce moment appelle… » bascule dans _preview_lbl dès qu'une
-	# carte est posée (_update_preview) — un seul des deux est visible à la fois.
-	_hint_lbl.visible = true
-	_preview_lbl.visible = false
+	# v10.4 (user 2026-06-06) : « Ce moment appelle : ‹ tag › » retiré. Seul _preview_lbl subsiste,
+	# toujours visible (invite à poser quand vide → couverture/degré quand des cartes sont posées).
+	_preview_lbl.visible = true
 	_resolve_btn.visible = true
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
@@ -91,6 +88,7 @@ func _present_current_beat() -> void:
 	# swap de texte en cours de lecture viole le pilier ÉVIDENT (bible §21.1). Le budget LLM
 	# (moteur single-flight) est réservé à l'ISSUE — l'« effet des choix » que le joueur attend.
 	_current_situation = get_node("/root/MerlinScenario").build_situation(beat)
+	get_node("/root/MerlinScenario").invalidate_resolution()  # v10.4 : cache issue propre à chaque beat
 	_hide_overlay()
 	_show_situation(_current_situation)
 	_combo.clear()
@@ -106,15 +104,6 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
 	var marker: String = "[color=#6E5A3C]— %s · beat %d/%d —[/color]\n\n" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
 	_typewriter(marker + str(situ.get("narration", "")), animate)
-	var reqs: Array = situ.get("required_tags", [])
-	_hint_lbl.text = "Ce moment appelle :  " + _format_tags(reqs)
-
-
-func _format_tags(tags: Array) -> String:
-	var parts: PackedStringArray = []
-	for t in tags:
-		parts.append("‹ %s ›" % str(t))
-	return "   ".join(parts)
 
 
 func _render_hand(deal: bool = false) -> void:
@@ -199,23 +188,23 @@ func _on_combo_card(card: MerlinCard) -> void:
 
 func _update_preview() -> void:
 	if _combo.is_empty():
-		# v10/H1 : combo vide → seul _hint_lbl visible (« Ce moment appelle… »). _preview_lbl masqué
-		# pour rester sous le plafond Miller (≤7 affordances simultanées, bible §21.2 #5).
-		_hint_lbl.visible = true
-		_preview_lbl.visible = false
+		# v10.4 : combo vide → preview invite à poser. Plus de « Ce moment appelle ».
+		_preview_lbl.visible = true
+		_preview_lbl.text = "Pose une carte (la 1ère = action principale)."
 		_resolve_btn.disabled = true
 		return
-	# combo non-vide → on bascule sur _preview_lbl avec les tags requis EMBARQUÉS en préfixe
-	# (zéro perte d'info) + couverture + degré + coût ; _hint_lbl masqué pour ne pas doubler.
-	_hint_lbl.visible = false
 	_preview_lbl.visible = true
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
 	var cov: Dictionary = res["coverage"]
 	var covered: int = cov["covered"].size()
 	var total: int = covered + cov["missing"].size()
-	_preview_lbl.text = "%s  →  Couverture %d/%d  ·  degré pressenti : %s  ·  coût Corruption : %d" % [_format_tags(reqs), covered, total, str(res["label"]), int(res["corruption_delta"])]
+	# v10.4 : plus de tags requis nommés (« ‹ Instinct › ») — seulement couverture/degré/coût.
+	_preview_lbl.text = "Couverture %d/%d  ·  degré pressenti : %s  ·  coût Corruption : %d" % [covered, total, str(res["label"]), int(res["corruption_delta"])]
 	_resolve_btn.disabled = false
+	# v10.4 — pré-génération LLM spéculative pendant la pose (user 2026-06-06). Dédupé par signature
+	# combo côté MerlinScenario ; au clic Résolution le texte est souvent déjà prêt (cache-hit).
+	get_node("/root/MerlinScenario").prefetch_resolution(_current_situation, _combo.duplicate(), res)
 
 
 func _on_resolve() -> void:
@@ -224,44 +213,54 @@ func _on_resolve() -> void:
 	_state = 2
 	_resolve_btn.disabled = true
 	var run: Node = get_node("/root/MerlinRun")
+	var sc: Node = get_node("/root/MerlinScenario")
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
 	var played_cards: Array = _combo.duplicate()  # cartes (objets) → interprétation LLM de la combinaison
+	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
-	# Issue procédurale INSTANTANÉE — aucune attente. Le LLM enrichit l'issue en arrière-plan.
-	var fallback: String = get_node("/root/MerlinScenario").fallback_resolution(str(res.get("degree", "reussite")))
 	run.play_and_discard(_combo)
 	run.apply_resolution(res)
 	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
 	if run.faits_marquants.size() > 6:
 		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
-	run.summary = fallback
 
 	_scene_epoch += 1
 	var ep: int = _scene_epoch
 	_combo.clear()
 	_set_hand_dimmed(true)  # ÉVIDENT : on lit l'issue ; main grisée + prompt/indice masqués
-	_hint_lbl.visible = false
 	_preview_lbl.visible = false
 	_resolve_btn.visible = false
 	_can_advance = false    # « avancer » (clic) seulement quand l'issue est entièrement écrite
 
-	# v10.2 — Animation cinématique de fusion AVANT la prose (user 2026-06-06). Reparente les
-	# card views du _combo_box dans un layer overlay, anime 4 phases (~2.5s), puis détruit.
-	# Le rendu hand/combo + prose se font APRÈS l'animation pour ne pas clobber le visuel.
+	# v10.2 — Animation cinématique de fusion AVANT la prose. Reparente les card views du _combo_box
+	# dans un layer overlay, anime 4 phases (~2-4.5s selon degré), puis détruit. Pendant ce temps la
+	# pré-génération LLM (lancée à la pose, _update_preview) continue → masque la latence (user 2026-06-06).
 	await _play_fusion_animation(res, played_cards)
 	if ep != _scene_epoch or not is_inside_tree():
 		return  # scène quittée pendant la fusion (sécurité epoch + tree-check)
 
 	_render_hand()          # main repiochée (play_and_discard) — affichée grisée pendant l'issue
 	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
-	_show_resolution(res, fallback, true)
-	run.save()
 
-	# LLM réservé aux moments forts (Climax / éclatante) — évite les rafales qui stallent le moteur
-	# natif ; ailleurs l'issue procédurale (déjà affichée) suffit. (user 2026-05-29)
-	if not run.ended and get_node("/root/MerlinScenario").is_strong_moment(str(_current_situation.get("type", "")), str(res.get("degree", ""))):
-		_bg_resolution(ep, _current_situation, played_cards, res)
+	# v10.4 — Issue TOUJOURS générée par le LLM (user 2026-06-06). take_resolution renvoie le cache
+	# de pré-génération si prêt (cas courant : pose + anim ont couvert la latence), sinon génère et
+	# attend (borné par le timeout moteur). Overlay « Merlin assemble… » SEULEMENT si le cache n'est
+	# pas déjà prêt (review MEDIUM : évite le flash d'1 frame sur cache-hit).
+	var overlay_shown: bool = not sc.is_resolution_ready(played_cards, res)
+	if overlay_shown:
+		_show_overlay("Merlin assemble les fils du sort…")
+	var prose: String = await sc.take_resolution(situ, played_cards, res)
+	if ep != _scene_epoch or not is_inside_tree():
+		return
+	if overlay_shown:
+		_hide_overlay()
+	# Fallback procédural en DERNIER recours seulement si le moteur a échoué/timeout (engine_dead).
+	if prose.length() < 10:
+		prose = sc.fallback_resolution(str(res.get("degree", "reussite")))
+	run.summary = prose
+	_show_resolution(res, prose, true)
+	run.save()
 
 
 # === v10.2 — Animation cinématique de fusion (user 2026-06-06) ===
@@ -590,24 +589,6 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 		_pop(_situation_text, 1.03)  # léger "thump" à la révélation de l'issue
 
 
-# Enrichit l'issue en arrière-plan ; ne remplace QUE si le joueur n'a pas cliqué « Continuer »
-# (epoch stable) et que le run n'est pas fini. Jamais bloquant.
-func _bg_resolution(ep: int, situ: Dictionary, played: Array, res: Dictionary) -> void:
-	var sc: Node = get_node_or_null("/root/MerlinScenario")
-	var run: Node = get_node_or_null("/root/MerlinRun")
-	if sc == null or run == null:
-		return
-	if not await _wait_engine_free(ep):
-		return
-	var prose: String = await sc.narrate_resolution(situ, played, res)
-	if ep != _scene_epoch or run.ended or prose.length() < 10 or not is_inside_tree():
-		return
-	if _tw != null and _tw.is_valid():
-		return  # typewriter de l'issue procédurale encore en cours → ne pas swap (anti-saut de lecture)
-	run.summary = prose
-	_show_resolution(res, prose, false)  # swap sans ré-animer
-
-
 func _advance_to_next() -> void:
 	_set_caret(false)
 	_can_advance = false
@@ -849,22 +830,6 @@ func _kill_tw() -> void:
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	_tw = null
-
-
-# Attend (en arrière-plan, jamais bloquant pour le joueur) que le moteur LLM se libère.
-# Retourne false si la scène a changé (epoch) / run fini / moteur indispo → l'appelant abandonne.
-func _wait_engine_free(ep: int) -> bool:
-	var mn: Node = get_node_or_null("/root/MerlinNative")
-	if mn == null or not mn.is_ready():
-		return false
-	var guard: int = 0
-	while mn.is_busy() and guard < 6000 and ep == _scene_epoch and is_inside_tree():
-		await get_tree().process_frame
-		guard += 1
-	if not is_inside_tree():
-		return false  # scène quittée pendant l'attente (ne pas toucher un nœud en cours de libération)
-	var run: Node = get_node_or_null("/root/MerlinRun")
-	return ep == _scene_epoch and run != null and not run.ended
 
 
 func _show_overlay(txt: String) -> void:
@@ -1112,9 +1077,6 @@ func _build_ui() -> void:
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_caret.visible = false
 	root.add_child(_caret)
-
-	_hint_lbl = _mk_label(COL_GOLD, 15)
-	root.add_child(_hint_lbl)
 
 	var combo_panel: PanelContainer = PanelContainer.new()
 	combo_panel.add_theme_stylebox_override("panel", _surface_style())
