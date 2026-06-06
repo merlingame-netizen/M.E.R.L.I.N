@@ -104,7 +104,7 @@ func _show_situation(situ: Dictionary, animate: bool = true) -> void:
 	if _scene_art != null:
 		_scene_art.set_beat(btype)  # le décor reflète le type de beat (figure si Rencontre/Climax/Dilemme)
 	var marker: String = "[color=#6E5A3C]— %s · beat %d/%d —[/color]\n\n" % [btype, run.beat_index + 1, int(run.scenario.get("total", 5))]
-	_typewriter(marker + str(situ.get("narration", "")), animate)
+	_typewriter("[center]" + marker + str(situ.get("narration", "")) + "[/center]", animate)
 
 
 func _render_hand(deal: bool = false) -> void:
@@ -595,7 +595,7 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 	var deg_col: Color = _degree_color(str(res["degree"]))
 	if animate:
 		_situation_text.text = ""
-	_typewriter("[color=#%s]%s[/color]\n\n%s" % [deg_col.to_html(false), str(res["label"]), narration], animate)
+	_typewriter("[center][color=#%s]%s[/color]\n\n%s[/center]" % [deg_col.to_html(false), str(res["label"]), narration], animate)
 	if animate:
 		_pop(_situation_text, 1.03)  # léger "thump" à la révélation de l'issue
 
@@ -938,19 +938,20 @@ func _show_intro_popup() -> void:
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(title)
 
-	# ScrollContainer : l'intro générée peut être longue (4-6 phrases corpus Merlin). On laisse
-	# l'utilisateur scroller dans le bandeau sans déborder du tiers bas.
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	v.add_child(scroll)
+	# v10.11 (user 2026-06-06) : commentaire CENTRÉ verticalement dans l'encart (plus de vide en bas).
+	# CenterContainer extensible → centre le bloc (au lieu d'un scroll top-aligné qui laissait du vide).
+	var mid: CenterContainer = CenterContainer.new()
+	mid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(mid)
 	var intro_lbl: RichTextLabel = RichTextLabel.new()
 	intro_lbl.bbcode_enabled = true
 	intro_lbl.fit_content = true
-	intro_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro_lbl.custom_minimum_size = Vector2(1200, 0)  # bloc large, retour à la ligne, centré dans l'encart
+	intro_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
 	intro_lbl.add_theme_font_size_override("normal_font_size", 26)  # commentaire Merlin lisible (user 2026-06-06)
-	scroll.add_child(intro_lbl)
+	mid.add_child(intro_lbl)
 	# v10.8 (user 2026-06-06) : Merlin t'accueille PUIS l'ouverture narrative qui lance l'histoire et
 	# coule dans le Beat 1. Pitch déjà présent dans la greeting → with_pitch=false (pas de doublon).
 	var opening: String = get_node("/root/MerlinScenario").build_opening(run.scenario, false)
