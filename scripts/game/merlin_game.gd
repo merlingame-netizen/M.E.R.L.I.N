@@ -240,13 +240,21 @@ func _on_resolve() -> void:
 	_scene_epoch += 1
 	var ep: int = _scene_epoch
 	_combo.clear()
-	_render_hand()          # main repiochée (play_and_discard) — affichée grisée pendant l'issue
-	_render_combo()
 	_set_hand_dimmed(true)  # ÉVIDENT : on lit l'issue ; main grisée + prompt/indice masqués
 	_hint_lbl.visible = false
 	_preview_lbl.visible = false
 	_resolve_btn.visible = false
 	_can_advance = false    # « avancer » (clic) seulement quand l'issue est entièrement écrite
+
+	# v10.2 — Animation cinématique de fusion AVANT la prose (user 2026-06-06). Reparente les
+	# card views du _combo_box dans un layer overlay, anime 4 phases (~2.5s), puis détruit.
+	# Le rendu hand/combo + prose se font APRÈS l'animation pour ne pas clobber le visuel.
+	await _play_fusion_animation(res, played_cards)
+	if ep != _scene_epoch or not is_inside_tree():
+		return  # scène quittée pendant la fusion (sécurité epoch + tree-check)
+
+	_render_hand()          # main repiochée (play_and_discard) — affichée grisée pendant l'issue
+	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
 	_show_resolution(res, fallback, true)
 	run.save()
 
@@ -254,6 +262,206 @@ func _on_resolve() -> void:
 	# natif ; ailleurs l'issue procédurale (déjà affichée) suffit. (user 2026-05-29)
 	if not run.ended and get_node("/root/MerlinScenario").is_strong_moment(str(_current_situation.get("type", "")), str(res.get("degree", ""))):
 		_bg_resolution(ep, _current_situation, played_cards, res)
+
+
+# === v10.2 — Animation cinématique de fusion (user 2026-06-06) ===
+# Avant la prose de résolution, les cartes du combo se rassemblent au centre, fusionnent dans un
+# glow coloré par degré, éclatent en sparks, et révèlent une "expression" — la synthèse verbale
+# de la combinaison. Puis fondu vers la résolution textuelle existante. Awaitable, ~2.5s total.
+
+const FUSION_COLORS: Dictionary = {
+	"echec": Color("D04848"),       # rouge-violet vif (chute, malédiction)
+	"partiel": Color("D8A030"),     # ambre (effort à demi tenu)
+	"reussite": Color("E8C45A"),    # or chaud (geste accompli)
+	"eclatante": Color("F4E0A8"),   # or pâle / blanc-or (apothéose)
+}
+
+# Cartographie tag → substantif évocateur (pour l'expression de fusion).
+const TAG_NOUNS: Dictionary = {
+	"Sens": "le Regard", "Savoir": "la Mémoire", "Mémoire": "le Souvenir",
+	"Force": "le Choc", "Agilité": "le Pas", "Endurance": "le Souffle",
+	"Empathie": "la Compassion", "Verbe": "la Voix", "Ruse": "la Feinte",
+	"Instinct": "l'Élan", "Nature": "le Lien",
+}
+
+const DEGREE_ECHO: Dictionary = {
+	"echec": " — et rien ne répond.",
+	"partiel": " — à demi.",
+	"reussite": " — et la voie s'entrouvre.",
+	"eclatante": " — et Brocéliande s'incline.",
+}
+
+
+# Synthèse verbale de la combinaison : 1-3 substantifs des tags dominants + écho de degré.
+# Le joueur lit son geste APRÈS l'animation de fusion, avant la prose narrative.
+func _fusion_expression(played: Array, res: Dictionary) -> String:
+	var nouns: PackedStringArray = []
+	var seen: Dictionary = {}
+	for c in played:
+		if c == null or not "tags" in c:
+			continue
+		for t in c.tags:
+			var key: String = str(t)
+			if seen.has(key):
+				continue
+			seen[key] = true
+			nouns.append(str(TAG_NOUNS.get(key, key)))
+			if nouns.size() >= 3:
+				break
+		if nouns.size() >= 3:
+			break
+	var phrase: String
+	if nouns.size() == 0:
+		phrase = "Ton geste s'élance"
+	elif nouns.size() == 1:
+		phrase = "%s s'élance" % nouns[0]
+	elif nouns.size() == 2:
+		phrase = "%s se mêle à %s" % [nouns[0], nouns[1]]
+	else:
+		phrase = "Tu mêles %s, %s et %s" % [nouns[0], nouns[1], nouns[2]]
+	return phrase + str(DEGREE_ECHO.get(str(res.get("degree", "reussite")), ""))
+
+
+# Animation 4 phases : Gather → Fuse → Burst → Expression. Awaitable.
+# Reparent les MerlinCardView du _combo_box dans un layer overlay full-rect, anime, puis
+# détruit le layer (les cartes reparented sont free'd avec). Pendant l'animation, le clic est
+# absorbé par le layer (mouse_filter STOP). À la fin, l'appelant render hand/combo + show prose.
+func _play_fusion_animation(res: Dictionary, played: Array) -> void:
+	var degree: String = str(res.get("degree", "reussite"))
+	var glow_col: Color = FUSION_COLORS.get(degree, FUSION_COLORS["reussite"])
+
+	# Layer overlay au-dessus du plateau, plein écran. Absorbe les clics pendant la fusion.
+	var layer: Control = Control.new()
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(layer)
+
+	# Glow plein écran, fade-in pendant la fusion. Couleur = degré.
+	var glow: ColorRect = ColorRect.new()
+	glow.color = Color(glow_col.r, glow_col.g, glow_col.b, 0.0)
+	glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(glow)
+
+	# Capture les card views existantes + leurs positions globales AVANT reparenting.
+	var card_views: Array = []
+	var origins: Array = []
+	for c in _combo_box.get_children():
+		if c is MerlinCardView:
+			card_views.append(c)
+			origins.append((c as Control).global_position)
+
+	# Reparent : retire de _combo_box, ajoute à layer, repositionne en absolu.
+	# Fix v10.2/MED — coupe le mouse_filter sur les cartes après reparenting pour éviter que
+	# _on_enter (hover handler de MerlinCardView) ne se déclenche en plein vol et lance un tween
+	# concurrent qui combat la fusion. Le layer parent absorbe déjà les clics.
+	for i in card_views.size():
+		var cv: Control = card_views[i]
+		var orig: Vector2 = origins[i]
+		_combo_box.remove_child(cv)
+		layer.add_child(cv)
+		cv.position = orig
+		cv.z_index = 100 + i
+		cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var screen_size: Vector2 = get_viewport().get_visible_rect().size
+	var center: Vector2 = screen_size / 2.0
+
+	# Phase 1 — Gather (0.45s) : convergence vers le centre, scale 1.0 → 1.3, rotation vers 0.
+	var p1: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	for i in card_views.size():
+		var cv: Control = card_views[i]
+		var spread: float = 90.0
+		var t_off: float = float(i) - float(card_views.size() - 1) / 2.0
+		var target: Vector2 = center - cv.size / 2.0 + Vector2(t_off * spread, -20.0)
+		p1.tween_property(cv, "position", target, 0.45)
+		p1.tween_property(cv, "scale", Vector2(1.30, 1.30), 0.45)
+		p1.tween_property(cv, "rotation", 0.0, 0.45)
+	p1.tween_property(glow, "color:a", 0.18, 0.45)
+	await p1.finished
+
+	# Phase 2 — Fuse (0.50s) : superposition centrale, scale 1.3 → 1.55, rotation éventail serré.
+	var p2: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	var mid_idx: float = float(card_views.size() - 1) / 2.0
+	for i in card_views.size():
+		var cv: Control = card_views[i]
+		var rot: float = deg_to_rad((float(i) - mid_idx) * 8.0)
+		var nudge: Vector2 = Vector2((float(i) - mid_idx) * 18.0, 0.0)
+		var target: Vector2 = center - cv.size / 2.0 + nudge
+		p2.tween_property(cv, "position", target, 0.50)
+		p2.tween_property(cv, "rotation", rot, 0.50)
+		p2.tween_property(cv, "scale", Vector2(1.55, 1.55), 0.50)
+		p2.tween_property(cv, "modulate", Color(1.15, 1.10, 0.95, 1.0), 0.50)
+	p2.tween_property(glow, "color:a", 0.45, 0.40)
+	await p2.finished
+
+	# Phase 3 — Burst (0.55s) : flash, sparks, cards explode outward + fade.
+	# Spark wheel : 14 petits ColorRect émis radialement, fade out 0.5s.
+	for i in 14:
+		var spark: ColorRect = ColorRect.new()
+		spark.color = glow_col
+		spark.size = Vector2(8, 8)
+		spark.position = center - Vector2(4, 4)
+		spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(spark)
+		var ang: float = float(i) / 14.0 * TAU + randf_range(-0.10, 0.10)
+		var dist: float = 220.0 + randf_range(0.0, 100.0)
+		var dest: Vector2 = center + Vector2(cos(ang), sin(ang)) * dist - Vector2(4, 4)
+		var st: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		st.tween_property(spark, "position", dest, 0.55)
+		st.tween_property(spark, "modulate:a", 0.0, 0.55)
+		st.tween_property(spark, "scale", Vector2(1.8, 1.8), 0.55)
+	# Cards : explosion vers extérieur + fade. Direction = depuis le centre.
+	var p3: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	for i in card_views.size():
+		var cv: Control = card_views[i]
+		var dir_v: Vector2 = (cv.position + cv.size / 2.0 - center).normalized()
+		if dir_v.length() < 0.001:
+			dir_v = Vector2(0, -1)
+		var dest_v: Vector2 = cv.position + dir_v * 140.0
+		p3.tween_property(cv, "position", dest_v, 0.45)
+		p3.tween_property(cv, "scale", Vector2(2.20, 2.20), 0.45)
+		p3.tween_property(cv, "modulate:a", 0.0, 0.45)
+		p3.tween_property(cv, "rotation", cv.rotation + randf_range(-0.6, 0.6), 0.45)
+	# Glow flash : tween séquentiel séparé (fix v10.2/HIGH #1 — chain() sur tween parallèle
+	# avait une sémantique fragile). Pic 0.85 sur 0.10s puis descente à 0.30 sur 0.45s.
+	var p3_glow: Tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	p3_glow.tween_property(glow, "color:a", 0.85, 0.10)
+	p3_glow.tween_property(glow, "color:a", 0.30, 0.45)
+	await p3_glow.finished  # 0.55s, couvre aussi p3 (0.45s) qui est plus court
+
+	# Phase 4 — Expression : label avec la synthèse verbale apparaît centré, tient ~1s, fond.
+	var expr_text: String = _fusion_expression(played, res)
+	var expr_lbl: RichTextLabel = RichTextLabel.new()
+	expr_lbl.bbcode_enabled = true
+	expr_lbl.fit_content = true
+	expr_lbl.scroll_active = false
+	expr_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	expr_lbl.add_theme_font_size_override("normal_font_size", 30)
+	expr_lbl.text = "[center][color=#%s]%s[/color][/center]" % [glow_col.to_html(false), expr_text]
+	expr_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	expr_lbl.offset_left = 80
+	expr_lbl.offset_right = -80
+	expr_lbl.offset_top = int(screen_size.y * 0.42)
+	expr_lbl.offset_bottom = -int(screen_size.y * 0.38)
+	expr_lbl.modulate.a = 0.0
+	expr_lbl.scale = Vector2(0.92, 0.92)
+	expr_lbl.pivot_offset = Vector2(screen_size.x * 0.5 - 80, 0)
+	layer.add_child(expr_lbl)
+	var p4: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	p4.tween_property(expr_lbl, "modulate:a", 1.0, 0.30)
+	p4.tween_property(expr_lbl, "scale", Vector2(1.0, 1.0), 0.30)
+	await p4.finished
+	# Maintien 0.85s puis fondu simultané de l'expression + du glow.
+	# Fix v10.2/HIGH #2 — chain() après tween_interval sur tween parallèle avait une sémantique
+	# fragile (le glow fade démarrait pendant le hold). Hold via create_timer + tween parallèle frais.
+	await get_tree().create_timer(0.85).timeout
+	var p4b: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	p4b.tween_property(expr_lbl, "modulate:a", 0.0, 0.40)
+	p4b.tween_property(glow, "color:a", 0.0, 0.60)
+	await p4b.finished
+
+	layer.queue_free()
 
 
 func _show_resolution(res: Dictionary, narration: String, animate: bool = true) -> void:

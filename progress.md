@@ -2,6 +2,46 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-06 — v10.2 Animation cinématique fusion cartes avant résolution
+
+### Context
+User : clic « Résolution » sautait direct au label + prose LLM. Demande : transformation visuelle de la combinaison cartes → expression de fusion → application à la prose, avec couleurs/animations différentes selon le degré (échec/partiel/réussite/éclatante).
+
+### Done — Animation 4 phases (`merlin_game.gd::_play_fusion_animation`)
+- **Phase 1 Gather (0.45s)** : cartes du `_combo_box` convergent vers le centre, scale 1.30, rotation 0, glow 0.18 alpha.
+- **Phase 2 Fuse (0.50s)** : superposition centrale en éventail serré (rotation 8°/carte), scale 1.55, modulate doré, glow 0.45.
+- **Phase 3 Burst (0.55s)** : 14 sparks ColorRect émis radialement + cards explose vers extérieur avec fade ; glow flash 0.85 → 0.30 (tween séquentiel séparé pour éviter chain ambigu sur parallèle).
+- **Phase 4 Expression (1.55s)** : RichTextLabel centré avec synthèse verbale `_fusion_expression(played, res)` — combine 1-3 substantifs des tags (`Sens→"le Regard"`, `Ruse→"la Feinte"`...) + écho de degré (`reussite→" — et la voie s'entrouvre."`). Scale-in TRANS_BACK + fade-in puis hold 0.85s (via `create_timer`) puis fade simultané expression + glow.
+
+### Wire (`_on_resolve`)
+Mutations d'état (`play_and_discard`, `apply_resolution`, etc.) faites en synchrone, puis :
+1. `_combo.clear()` + `_set_hand_dimmed(true)` + hide hint/preview/resolve_btn
+2. **`await _play_fusion_animation(res, played_cards)`** (NEW)
+3. Epoch + tree-check safety
+4. `_render_hand()` + `_render_combo()` + `_show_resolution()` (prose typewriter existant)
+5. `_bg_resolution` si moment fort (Climax/éclatante)
+
+### Couleurs par degré (FUSION_COLORS)
+- `echec` → rouge vif `#D04848` (chute)
+- `partiel` → ambre `#D8A030` (effort à demi)
+- `reussite` → or chaud `#E8C45A` (geste accompli)
+- `eclatante` → or pâle `#F4E0A8` (apothéose)
+
+### Vérif
+- validate_step0 exit=0, zéro erreur sur merlin_game.gd
+- smoke MerlinGame passed=True, script_errors=0
+- code-review : 2 HIGH (tween chain semantics) + 1 MEDIUM (hover during flight) tous résolus :
+  1. Phase 3 glow → tween séquentiel séparé (`p3_glow` distinct de `p3`)
+  2. Phase 4 hold → `await get_tree().create_timer(0.85).timeout` (plus de `chain()` ambigu)
+  3. Cards reparented → `mouse_filter = IGNORE` (évite `_on_enter` parasite en plein vol)
+
+### Notes
+- Animation totale ~2.5s, layer overlay full-rect absorbe les clics (modal pendant fusion).
+- Pas de skip pour l'instant ; à ajouter si l'utilisateur trouve ça long.
+- Expression procédurale (pas LLM) → instantané, déterministe, jamais en attente moteur.
+
+---
+
 ## Session: 2026-06-05 — v10 UX 4 piliers + Dashboard Gameplay Live (livraison complète)
 
 ### Context
