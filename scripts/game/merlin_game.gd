@@ -640,9 +640,9 @@ func _on_typewriter_done() -> void:
 		# Situation entièrement écrite → les cartes MONTENT pour le choix (user 2026-06-06).
 		_preview_lbl.visible = true
 		_resolve_btn.visible = true
+		_set_choice_ui(true)   # visible AVANT le rendu → _hand_box a sa taille pour _layout_fan
 		_render_hand(true)
 		_render_combo()
-		_set_choice_ui(true)
 
 
 func _set_caret(on: bool) -> void:

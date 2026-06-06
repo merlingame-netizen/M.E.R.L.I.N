@@ -160,6 +160,7 @@ func set_fan_transform(pos: Vector2, rot: float) -> void:
 		position = pos
 		rotation = rot
 		scale = Vector2.ONE
+		modulate.a = 1.0  # garantit l'opacité si un deal_in (tween a:0→1) est interrompu par un re-layout (fix cartes invisibles, user 2026-06-06)
 
 
 func _on_enter() -> void:

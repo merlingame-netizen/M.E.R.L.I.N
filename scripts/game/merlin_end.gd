@@ -112,7 +112,7 @@ func _build_ui() -> void:
 	_epilogue = RichTextLabel.new()
 	_epilogue.bbcode_enabled = true
 	_epilogue.add_theme_color_override("default_color", COL_TEXT)
-	_epilogue.add_theme_font_size_override("normal_font_size", 21)
+	_epilogue.add_theme_font_size_override("normal_font_size", 30)
 	_epilogue.mouse_filter = Control.MOUSE_FILTER_IGNORE  # laisse le clic passer au panel parent
 	_epilogue_panel.add_child(_epilogue)
 
@@ -120,7 +120,7 @@ func _build_ui() -> void:
 	_caret = Label.new()
 	_caret.text = "▮ cliquer pour continuer"
 	_caret.add_theme_color_override("font_color", Color("8A6A2E"))
-	_caret.add_theme_font_size_override("font_size", 14)
+	_caret.add_theme_font_size_override("font_size", 20)
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_caret.visible = false
@@ -128,13 +128,14 @@ func _build_ui() -> void:
 
 	_state_lbl = Label.new()
 	_state_lbl.add_theme_color_override("font_color", COL_DIM)
-	_state_lbl.add_theme_font_size_override("font_size", 16)
+	_state_lbl.add_theme_font_size_override("font_size", 24)
 	_state_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_state_lbl)
 
 	_continue_btn = Button.new()
 	_continue_btn.text = "Continuer ▶"
-	_continue_btn.custom_minimum_size = Vector2(220, 48)
+	_continue_btn.custom_minimum_size = Vector2(300, 64)
+	_continue_btn.add_theme_font_size_override("font_size", 24)
 	_continue_btn.disabled = true
 	_continue_btn.pressed.connect(_on_continue)
 	root.add_child(_continue_btn)

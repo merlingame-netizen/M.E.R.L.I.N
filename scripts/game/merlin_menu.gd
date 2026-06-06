@@ -116,7 +116,7 @@ func _build_ui() -> void:
 
 func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool) -> Button:
 	var btn: Button = Button.new()
-	btn.custom_minimum_size = Vector2(440, 52)  # ≥44px (tactile)
+	btn.custom_minimum_size = Vector2(520, 66)  # ≥44px (tactile) — agrandi (user 2026-06-06)
 	btn.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
 	btn.disabled = not enabled
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
@@ -132,7 +132,7 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 
 	# Icône dans un disque (disque or plein si sélectionné).
 	var icon_box: Control = Control.new()
-	icon_box.custom_minimum_size = Vector2(40, 40)
+	icon_box.custom_minimum_size = Vector2(52, 52)
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var disc: Panel = Panel.new()
 	disc.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -152,7 +152,7 @@ func _menu_row(glyph_key: String, label_txt: String, cb: Callable, enabled: bool
 	var lbl: Label = Label.new()
 	lbl.text = _spaced(label_txt)
 	lbl.add_theme_color_override("font_color", COL_CREAM if enabled else COL_DIM)
-	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.add_theme_font_size_override("font_size", 27)
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(lbl)

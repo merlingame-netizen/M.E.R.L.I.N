@@ -37,7 +37,7 @@ func _load_selection() -> void:
 
 func _add_parchemin(title: String, pitch: String) -> void:
 	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(360, 420)
+	panel.custom_minimum_size = Vector2(460, 560)  # parchemins agrandis (user 2026-06-06 : scale tout)
 	panel.add_theme_stylebox_override("panel", _surface_style())
 	var v: VBoxContainer = VBoxContainer.new()
 	v.add_theme_constant_override("separation", 14)
@@ -46,7 +46,7 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	var t: Label = Label.new()
 	t.text = title
 	t.add_theme_color_override("font_color", COL_GOLD)
-	t.add_theme_font_size_override("font_size", 24)
+	t.add_theme_font_size_override("font_size", 34)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
@@ -54,14 +54,15 @@ func _add_parchemin(title: String, pitch: String) -> void:
 	var p: Label = Label.new()
 	p.text = pitch
 	p.add_theme_color_override("font_color", COL_TEXT)
-	p.add_theme_font_size_override("font_size", 16)
+	p.add_theme_font_size_override("font_size", 24)
 	p.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	p.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(p)
 
 	var b: Button = Button.new()
 	b.text = "Suivre ce sentier"
-	b.custom_minimum_size = Vector2(0, 48)
+	b.custom_minimum_size = Vector2(0, 62)
+	b.add_theme_font_size_override("font_size", 24)
 	b.pressed.connect(_on_pick.bind(title, pitch))
 	v.add_child(b)
 
@@ -97,7 +98,7 @@ func _build_ui() -> void:
 	var title: Label = Label.new()
 	title.text = "Choisis ton chemin"
 	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_font_size_override("font_size", 46)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(title)
 
@@ -122,7 +123,7 @@ func _build_ui() -> void:
 	_overlay_lbl = Label.new()
 	_overlay_lbl.set_anchors_preset(Control.PRESET_CENTER)
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
-	_overlay_lbl.add_theme_font_size_override("font_size", 26)
+	_overlay_lbl.add_theme_font_size_override("font_size", 38)
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
 
