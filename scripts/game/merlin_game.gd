@@ -24,6 +24,7 @@ var _scene_art: MerlinSceneArt
 var _situation_text: RichTextLabel
 var _hand_box: Control
 var _combo_box: HBoxContainer
+var _combo_panel: PanelContainer  # zone combinaison/preview/résolution — visible SEULEMENT en phase de choix
 var _preview_lbl: Label
 var _resolve_btn: Button
 var _overlay: Panel
@@ -65,9 +66,12 @@ func _begin() -> void:
 		var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
 		run.new_run(skel)
 	_on_gauges(run.integrite, run.corruption)
-	_present_current_beat()
 	if run.beat_index == 0:
-		_show_intro_popup()  # briefing de quête modal (à accepter) au démarrage du run
+		# Intro d'abord : encart central plein, cartes CACHÉES. Le 1er beat n'est présenté qu'à l'Accept.
+		_set_choice_ui(false)
+		_show_intro_popup()
+	else:
+		_present_current_beat()  # run repris → directement au beat courant
 
 
 func _present_current_beat() -> void:
@@ -78,10 +82,6 @@ func _present_current_beat() -> void:
 	_can_advance = false
 	_set_caret(false)
 	_set_hand_dimmed(false)
-	# v10.4 (user 2026-06-06) : « Ce moment appelle : ‹ tag › » retiré. Seul _preview_lbl subsiste,
-	# toujours visible (invite à poser quand vide → couverture/degré quand des cartes sont posées).
-	_preview_lbl.visible = true
-	_resolve_btn.visible = true
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
 	# ici : à ~1 tok/s la gen (~40s) ne gagne jamais la course contre la lecture du joueur, et un
@@ -90,10 +90,11 @@ func _present_current_beat() -> void:
 	_current_situation = get_node("/root/MerlinScenario").build_situation(beat)
 	get_node("/root/MerlinScenario").invalidate_resolution()  # v10.4 : cache issue propre à chaque beat
 	_hide_overlay()
-	_show_situation(_current_situation)
 	_combo.clear()
-	_render_hand(true)
-	_render_combo()
+	# v10.10 (user 2026-06-06) : la SITUATION s'affiche SEULE dans l'encart central ; les cartes ne
+	# montent qu'à la fin du typewriter (_on_typewriter_done state==1). Cartes cachées d'ici là.
+	_set_choice_ui(false)
+	_show_situation(_current_situation)
 	_state = 1
 
 
@@ -250,7 +251,7 @@ func _on_resolve() -> void:
 	if ep != _scene_epoch or not is_inside_tree():
 		return  # scène quittée pendant la fusion (sécurité epoch + tree-check)
 
-	_render_hand()          # main repiochée (play_and_discard) — affichée grisée pendant l'issue
+	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
 	_render_combo()         # _combo vide → clear _combo_box (les vues précédentes ont été reparented/free'd)
 
 	# v10.4 — Issue TOUJOURS générée par le LLM (user 2026-06-06). take_resolution renvoie le cache
@@ -631,10 +632,17 @@ func _skip_typewriter() -> void:
 
 
 func _on_typewriter_done() -> void:
-	# L'issue entièrement écrite : on autorise l'avance au clic + caret clignotant.
 	if _state == 2:
+		# Issue entièrement écrite → on autorise l'avance au clic + caret clignotant.
 		_can_advance = true
 		_set_caret(true)
+	elif _state == 1:
+		# Situation entièrement écrite → les cartes MONTENT pour le choix (user 2026-06-06).
+		_preview_lbl.visible = true
+		_resolve_btn.visible = true
+		_render_hand(true)
+		_render_combo()
+		_set_choice_ui(true)
 
 
 func _set_caret(on: bool) -> void:
@@ -654,6 +662,16 @@ func _set_caret(on: bool) -> void:
 func _set_hand_dimmed(on: bool) -> void:
 	if _hand_box != null:
 		_hand_box.modulate.a = 0.35 if on else 1.0
+
+
+# Cartes + zone de combinaison visibles UNIQUEMENT en phase de CHOIX (user 2026-06-06) : l'intro et
+# les situations/issues occupent l'encart central SEUL ; les cartes montent au moment de composer.
+func _set_choice_ui(on: bool) -> void:
+	if _combo_panel != null:
+		_combo_panel.visible = on
+	if _hand_box != null:
+		_hand_box.visible = on
+		_hand_box.modulate.a = 1.0
 
 
 func _degree_color(degree: String) -> Color:
@@ -882,24 +900,22 @@ func _show_intro_popup() -> void:
 
 	# Voile léger limité au tiers bas (continuité visuelle bandeau↔plateau), pas de dim plein-rect.
 	var fade: ColorRect = ColorRect.new()
-	fade.color = Color(0.04, 0.03, 0.02, 0.45)
-	fade.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	fade.anchor_top = 0.66
-	fade.anchor_bottom = 1.0
-	fade.offset_top = 0
-	fade.offset_bottom = 0
+	fade.color = Color(0.04, 0.03, 0.02, 0.62)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)  # voile plein écran derrière l'encart central
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE  # le layer parent capte déjà
 	_intro_layer.add_child(fade)
 
-	# Bandeau ancré en bas : 30% hauteur, marge horizontale 24 px, bordure or supérieure 3 px.
+	# ENCART CENTRAL ~80% (user 2026-06-06) : l'intro occupe le centre, pas un bandeau bas.
 	var bandeau: PanelContainer = PanelContainer.new()
-	bandeau.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	bandeau.anchor_top = 0.70
-	bandeau.anchor_bottom = 1.0
+	bandeau.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bandeau.anchor_left = 0.1
+	bandeau.anchor_right = 0.9
+	bandeau.anchor_top = 0.1
+	bandeau.anchor_bottom = 0.9
+	bandeau.offset_left = 0
+	bandeau.offset_right = 0
 	bandeau.offset_top = 0
-	bandeau.offset_bottom = -16  # petit padding bottom écran
-	bandeau.offset_left = 24
-	bandeau.offset_right = -24
+	bandeau.offset_bottom = 0
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = COL_SURFACE
 	sb.set_corner_radius_all(10)
@@ -917,7 +933,7 @@ func _show_intro_popup() -> void:
 	var title: Label = Label.new()
 	title.text = str(run.scenario.get("title", "La Quête"))
 	title.add_theme_color_override("font_color", COL_GOLD)
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 40)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(title)
@@ -933,7 +949,7 @@ func _show_intro_popup() -> void:
 	intro_lbl.fit_content = true
 	intro_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro_lbl.add_theme_color_override("default_color", COL_TEXT)
-	intro_lbl.add_theme_font_size_override("normal_font_size", 16)
+	intro_lbl.add_theme_font_size_override("normal_font_size", 26)  # commentaire Merlin lisible (user 2026-06-06)
 	scroll.add_child(intro_lbl)
 	# v10.8 (user 2026-06-06) : Merlin t'accueille PUIS l'ouverture narrative qui lance l'histoire et
 	# coule dans le Beat 1. Pitch déjà présent dans la greeting → with_pitch=false (pas de doublon).
@@ -962,14 +978,14 @@ func _show_intro_popup() -> void:
 	var obj_lbl: Label = Label.new()
 	obj_lbl.text = "✦ Objectif : " + str(data.get("objectif", ""))
 	obj_lbl.add_theme_color_override("font_color", COL_GOLD)
-	obj_lbl.add_theme_font_size_override("font_size", 14)
+	obj_lbl.add_theme_font_size_override("font_size", 22)
 	obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	obj_panel.add_child(obj_lbl)
 
 	var accept: Button = Button.new()
 	accept.text = "Accepter ✦"
-	accept.custom_minimum_size = Vector2(180, 48)  # ≥44 px (pilier TACTILE+DESKTOP)
-	accept.add_theme_font_size_override("font_size", 18)
+	accept.custom_minimum_size = Vector2(260, 66)  # ≥44 px (pilier TACTILE+DESKTOP)
+	accept.add_theme_font_size_override("font_size", 28)
 	accept.pressed.connect(_accept_quest)
 	row.add_child(accept)
 	accept.resized.connect(func() -> void: accept.pivot_offset = accept.size / 2.0)
@@ -1044,6 +1060,7 @@ func _accept_quest() -> void:
 	var t: Tween = create_tween()
 	t.tween_property(layer, "modulate:a", 0.0, 0.25)
 	t.tween_callback(layer.queue_free)
+	_present_current_beat()  # l'intro cède la place à la 1ère situation, dans l'encart central (user 2026-06-06)
 
 
 func _build_ui() -> void:
@@ -1093,54 +1110,62 @@ func _build_ui() -> void:
 	hud.add_child(_corr_gauge)
 	_corr_gauge.setup(COL_VIOLET, true)  # jauge « vivante » : respiration continue
 
-	# Scène en silhouettes plates (au-dessus de la narration) — prend l'espace extensible.
+	# Scène en silhouettes plates — bande supérieure FIXE (l'encart récit prend l'espace dessous).
 	_scene_art = MerlinSceneArt.new()
-	_scene_art.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_scene_art.custom_minimum_size = Vector2(0, 200)
+	_scene_art.custom_minimum_size = Vector2(0, 150)
 	root.add_child(_scene_art)
 
-	# Bande de narration crème + texte ink (comme le mockup validé).
+	# ENCART CENTRAL (~80%) crème : porte l'intro/commentaire PUIS chaque situation/issue (user 2026-06-06).
+	# size_flags EXPAND → occupe tout l'espace restant quand les cartes sont cachées (hors phase de choix).
 	var situ_panel: PanelContainer = PanelContainer.new()
-	situ_panel.custom_minimum_size = Vector2(0, 96)
+	situ_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	situ_panel.custom_minimum_size = Vector2(0, 260)
 	situ_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # clics → capteur récit (skip/avance)
 	situ_panel.add_theme_stylebox_override("panel", _cream_style())
 	root.add_child(situ_panel)
+	var situ_center: CenterContainer = CenterContainer.new()
+	situ_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	situ_panel.add_child(situ_center)
 	_situation_text = RichTextLabel.new()
 	_situation_text.bbcode_enabled = true
 	_situation_text.fit_content = true
+	_situation_text.custom_minimum_size = Vector2(1180, 0)  # bloc de texte large, centré dans l'encart
+	_situation_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_situation_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_situation_text.add_theme_color_override("default_color", COL_INK)
-	_situation_text.add_theme_font_size_override("normal_font_size", 19)
-	situ_panel.add_child(_situation_text)
+	_situation_text.add_theme_font_size_override("normal_font_size", 36)  # narratif ample (user 2026-06-06)
+	situ_center.add_child(_situation_text)
 
 	# Caret « cliquer pour continuer » : clignote faiblement quand l'issue est entièrement écrite.
-	_caret = _mk_label(Color("8A6A2E"), 14)
+	_caret = _mk_label(Color("8A6A2E"), 20)
 	_caret.text = "▮ cliquer pour continuer"
 	_caret.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_caret.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_caret.visible = false
 	root.add_child(_caret)
 
-	var combo_panel: PanelContainer = PanelContainer.new()
-	combo_panel.add_theme_stylebox_override("panel", _surface_style())
-	root.add_child(combo_panel)
+	_combo_panel = PanelContainer.new()
+	_combo_panel.add_theme_stylebox_override("panel", _surface_style())
+	_combo_panel.visible = false  # caché hors phase de CHOIX (cartes seulement au moment de choisir)
+	root.add_child(_combo_panel)
 	var combo_v: VBoxContainer = VBoxContainer.new()
 	combo_v.add_theme_constant_override("separation", 8)
-	combo_panel.add_child(combo_v)
-	var combo_title: Label = _mk_label(COL_DIM, 14)
+	_combo_panel.add_child(combo_v)
+	var combo_title: Label = _mk_label(COL_DIM, 20)
 	combo_title.text = "Combinaison (clic pour poser / retirer) :"
 	combo_v.add_child(combo_title)
 	_combo_box = HBoxContainer.new()
 	_combo_box.add_theme_constant_override("separation", 10)
-	_combo_box.custom_minimum_size = Vector2(0, 78)
+	_combo_box.custom_minimum_size = Vector2(0, 104)
 	combo_v.add_child(_combo_box)
-	_preview_lbl = _mk_label(COL_TEXT, 15)
+	_preview_lbl = _mk_label(COL_TEXT, 23)
 	combo_v.add_child(_preview_lbl)
 	var btn_row: HBoxContainer = HBoxContainer.new()
 	combo_v.add_child(btn_row)
 	_resolve_btn = Button.new()
 	_resolve_btn.text = "Résolution"
-	_resolve_btn.custom_minimum_size = Vector2(200, 48)
+	_resolve_btn.custom_minimum_size = Vector2(300, 66)
+	_resolve_btn.add_theme_font_size_override("font_size", 26)
 	_resolve_btn.pressed.connect(_on_resolve)
 	btn_row.add_child(_resolve_btn)
 
@@ -1149,6 +1174,7 @@ func _build_ui() -> void:
 	_hand_box.custom_minimum_size = Vector2(0, 264)  # + haut : cartes agrandies (240) + lift survol
 	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
+	_hand_box.visible = false  # cartes cachées hors phase de CHOIX (révélées à la fin du typewriter)
 	_hand_box.resized.connect(_layout_fan)
 	root.add_child(_hand_box)
 
@@ -1161,7 +1187,7 @@ func _build_ui() -> void:
 	_overlay_lbl = Label.new()
 	_overlay_lbl.set_anchors_preset(Control.PRESET_CENTER)
 	_overlay_lbl.add_theme_color_override("font_color", COL_GOLD)
-	_overlay_lbl.add_theme_font_size_override("font_size", 26)
+	_overlay_lbl.add_theme_font_size_override("font_size", 38)
 	_overlay_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false

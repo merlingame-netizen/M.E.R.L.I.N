@@ -3,8 +3,8 @@ extends Control
 ## Jauge en anneau (DA flat rétro-minimaliste, 2026-05-26) : anneau de fond fin + arc rempli
 ## proportionnel au ratio (0..1), dessiné en moteur. Le ratio s'anime via tween_method(set_ratio).
 
-const RING_SIZE: float = 52.0
-const RING_WIDTH: float = 4.0
+const RING_SIZE: float = 78.0  # HUD agrandi (user 2026-06-06 : scale tout)
+const RING_WIDTH: float = 6.0
 const COL_BG_RING: Color = Color("3A3228")
 const BREATH_IDLE_MIN: float = 0.82  # respiration de repos : subtile (jauge « vivante »)
 const BREATH_IDLE_DUR: float = 1.4
