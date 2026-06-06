@@ -54,26 +54,36 @@ const SITU_FALLBACKS: Dictionary = {
 		"La clairière s'ouvre devant toi, trop calme. Quelque chose t'attend là, caché.",
 		"Le sentier disparaît sous les fougères. Pas un bruit. On te regarde sans se montrer.",
 		"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte dans l'air.",
+		"Devant toi, les arbres s'espacent et laissent passer un peu de lumière. C'est trop ouvert, trop facile. Tu avances quand même.",
+		"Le sol devient mou sous tes pas, couvert de mousse épaisse. Quelque part, une source coule sans qu'on la voie.",
 	],
 	"Rencontre": [
 		"Une silhouette sort des arbres et te fixe, sans un mot. Elle attend de voir qui tu es.",
 		"Quelque chose te barre la route, immobile. Son regard pèse lourd.",
 		"Une voix te salue avant que tu voies personne. Elle connaît déjà ton pas.",
+		"Un vieil homme est assis sur une pierre, comme s'il t'attendait. Il ne lève pas les yeux tout de suite.",
+		"Deux yeux brillent entre les troncs, à hauteur d'enfant. Ils ne clignent pas.",
 	],
 	"Epreuve": [
 		"La forêt bloque le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
 		"Le chemin se dresse contre toi, hostile. Il faudra forcer pour avancer.",
 		"Un vieil obstacle barre la route. Il faudra payer de tes bras ou de ta ruse.",
+		"Un torrent coupe le chemin, rapide et froid. L'autre rive est juste là, hors d'atteinte.",
+		"La pente monte d'un coup, raide et nue. Tes jambes brûlent rien qu'à la regarder.",
 	],
 	"Dilemme": [
 		"Deux chemins s'ouvrent. Chacun a un prix, et aucun ne te laissera intact.",
 		"Un choix se pose, sans détour. Quoi que tu fasses, la forêt s'en souviendra.",
 		"Il faut trancher, là où il n'y a pas de bonne réponse. Ne pas choisir, c'est choisir aussi.",
+		"Une bête blessée gît en travers du sentier. La soigner coûte du temps ; l'achever, autre chose.",
+		"Deux voix t'appellent en même temps, de deux côtés opposés. Tu ne pourras en suivre qu'une.",
 	],
 	"Climax": [
 		"L'air se fige. La forêt retient son souffle. Ce qui vient ne se reprendra pas.",
 		"Tout se joue ici, maintenant. Les murmures se taisent d'un coup.",
 		"Le cœur de la forêt bat sous tes pieds. Ici se décide ce que tu deviens.",
+		"Le sentier débouche sur un cercle de pierres dressées. Au centre, ce que tu es venu chercher t'attend.",
+		"Tout le bois s'est tu d'un coup. Devant toi, la dernière porte, et derrière elle, la fin de l'histoire.",
 	],
 }
 
@@ -82,20 +92,28 @@ const RESO_FALLBACKS: Dictionary = {
 		"Tes deux gestes se mélangent mal et se gênent. La forêt refuse, te repousse, et te voilà plus loin de ton but. Dans l'ombre, quelque chose s'en amuse.",
 		"Le mélange sonne faux, et le bois l'entend tout de suite. Ce que tu touches se dérobe, ce que tu tiens t'échappe. Tu repars les mains vides.",
 		"Ton geste ne prend pas sur ce lieu. Le sentier se referme, indifférent, et te laisse en arrière. Ce faux pas, il faudra le payer.",
+		"Tes deux gestes partent de travers et s'annulent. Rien ne bouge, sauf toi qu'on repousse en arrière. Tu as perdu du terrain, et un peu de toi avec.",
+		"Le mélange rate, et la forêt le sent. Elle se referme d'un coup, sèche, et te laisse dehors. Tu repars sans rien, le cœur plus lourd.",
 	],
 	"partiel": [
 		"Tes deux gestes s'unissent, mais de travers. Tu obtiens ce que tu voulais — en en laissant un morceau. Une ombre marche maintenant dans tes pas.",
 		"Le geste fusionné n'ouvre la voie qu'à demi. Tu avances quand même, mais quelque chose t'a vu faire. Le prix viendra plus tard.",
 		"Tu arraches ton dû, mais un reste te colle à la peau. La voie s'entrouvre, étroite, juste assez pour passer. La forêt n'oublie pas ce que tu as forcé.",
+		"Tes deux gestes portent à demi. Tu passes, et quelque chose reste accroché à toi. La forêt a pris sa part, en silence.",
+		"Le mélange marche à moitié. Tu obtiens ce que tu voulais, mais une dette se crée dans ton dos. Elle se rappellera à toi plus tard.",
 	],
 	"reussite": [
 		"Tes deux gestes se nouent en un seul, propre et juste. La forêt cède et te laisse avancer d'un pas plus sûr. Cette fois, le sentier ne réclame rien.",
 		"Le geste fusionné touche juste du premier coup. Le chemin s'ouvre, sans éclat mais sans dette. Tu passes, entier.",
 		"Les deux forces s'accordent, et le sentier te laisse passer. La route se dégage, nette. Tu avances sans rien laisser derrière toi.",
+		"Tes deux gestes s'emboîtent, et ce qui résistait cède d'un coup. Tu reprends ta marche, plus sûr. Rien ne te suit.",
+		"Le mélange porte juste. La forêt recule, calme, et s'écarte devant toi. Cette fois, tu ne paies rien.",
 	],
 	"eclatante": [
 		"Tes deux gestes n'en font plus qu'un, si bien que la forêt elle-même retient son souffle. Le passage s'ouvre en grand, sans résistance. Un instant, tu es plus grand que toi-même.",
 		"L'accord est total, et tout le bois le fête en silence. La voie se déroule devant toi comme un tapis, et rien ne te coûte. Pour une fois, la forêt donne plus qu'elle ne prend.",
+		"Tes deux gestes se fondent parfaitement, et tout cède devant toi sans le moindre effort. La forêt elle-même semble se ranger de ton côté. Un instant, rien ne peut t'arrêter.",
+		"L'accord est si juste que le bois entier s'incline. Ce que tu cherchais vient à toi sans que tu aies à le prendre. La forêt te donne, pour une fois, plus qu'elle ne réclame.",
 	],
 }
 
