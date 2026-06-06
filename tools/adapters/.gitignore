@@ -21,3 +21,6 @@ _*.mjs
 !outlook_adapter.py
 !teams_adapter.py
 !onenote_adapter.py
+
+# Keep UI UX Pro Max — 21st.dev (Magic) component generation
+!magic_adapter.py

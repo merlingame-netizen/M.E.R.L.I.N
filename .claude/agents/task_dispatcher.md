@@ -197,6 +197,7 @@ En PLUS des agents projet, le dispatcher recommande des skills globaux deployes 
 | Performance | `verification-loop` (ECC) | Phase validation |
 | Security | `security-review` (ECC) | Phase validation (apres security_hardening.md) |
 | UI/UX | `ui-ux-pro-max` | Phase conception |
+| Web animé (tous projets) | agent `ui-ux-pro-max` + skill `/ui-ux-pro-max` + `magic` (21st.dev) | Conception → Anim (Framer Motion) → Optim (Core Web Vitals) |
 
 ### Format de Sortie Augmente
 
