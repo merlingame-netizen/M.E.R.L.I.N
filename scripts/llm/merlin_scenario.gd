@@ -11,7 +11,7 @@ extends Node
 ##   (beats, types, difficulté, required_tags) ; le LLM n'écrit que de la PROSE.
 ## - Sélection = seul ~JSON, pré-généré pendant l'idle du Menu (latence masquée).
 
-const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais, ton merveilleux-inquietant (la feerie qui mord), bref et image (2 phrases). Raconte la SCENE et l'EFFET des actes en recit direct. N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Evite les formules creuses et clichees (INTERDIT: 'union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne', 'secrets anciens'). Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
+const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais SIMPLE et CLAIR, en phrases qui S'ENCHAINENT — chaque phrase DECOULE de la precedente (une action, PUIS sa consequence), et l'ensemble se lit comme un petit PARAGRAPHE FLUIDE. INTERDIT une liste de phrases hachees, tres courtes et deconnectees les unes des autres (ex INTERDIT: 'Le geste glisse. Les autres tombent. Le vide ne touche rien.'). Mots de tous les jours. Raconte ce qui se passe CONCRETEMENT: le geste precis, ce qu'il provoque, le resultat visible. INTERDIT les sujets abstraits ou symboliques ('le vide', 'le nom', 'le geste') et toute enigme ou metaphore obscure. Ton feerique mais LISIBLE: on comprend l'action du premier coup. Raconte la SCENE et l'EFFET des actes en recit direct. INTERDIT les phrases a tiroir et les images abstraites (ex INTERDIT: 'le silence a une texture', 'l'air goute le souvenir', 'plus vieux que les sentiers', 'comme on oublie un nom'). N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Evite les formules creuses et clichees (INTERDIT: 'union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne', 'secrets anciens'). Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
 
 # Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
 # SYSTEM_PREFIX (narration de SCÈNE en résolution, sans apostrophe, conservée telle quelle). Persona
@@ -51,51 +51,51 @@ const SEL_FALLBACK: Array = [
 # décor vite, laisser la place au geste. La VERBOSITÉ est réservée à l'ISSUE des moments forts.
 const SITU_FALLBACKS: Dictionary = {
 	"Exploration": [
-		"La clairière s'ouvre, trop calme. Quelque chose t'y attend, qui te connaît déjà.",
-		"Le sentier se perd sous les fougères ; le silence, ici, a une texture. On t'observe sans se montrer.",
-		"Les arbres s'écartent sur un lieu que nulle carte ne nomme, où l'air goûte le souvenir et la cendre.",
+		"La clairière s'ouvre devant toi, trop calme. Quelque chose t'attend là, caché.",
+		"Le sentier disparaît sous les fougères. Pas un bruit. On te regarde sans se montrer.",
+		"Les arbres s'écartent sur un lieu sans nom. Une odeur de cendre froide flotte dans l'air.",
 	],
 	"Rencontre": [
-		"Une silhouette se détache des arbres et t'observe sans un mot ; elle attend de voir qui tu es vraiment.",
-		"Quelque chose se tient en travers de ta route, immobile. Son regard pèse plus lourd que le silence.",
-		"Une voix te salue avant que tu n'aies vu personne — elle connaît ton pas, et cela n'augure rien de bon.",
+		"Une silhouette sort des arbres et te fixe, sans un mot. Elle attend de voir qui tu es.",
+		"Quelque chose te barre la route, immobile. Son regard pèse lourd.",
+		"Une voix te salue avant que tu voies personne. Elle connaît déjà ton pas.",
 	],
 	"Epreuve": [
-		"La forêt referme le passage : ronces, pierre, pente traître dressées contre toi comme un jugement.",
-		"Le chemin se cabre, hostile ; rien, ici, ne cède sans qu'on le lui arrache.",
-		"Un obstacle barre la route, plus vieux que les sentiers. Il faudra payer de son corps ou de sa ruse.",
+		"La forêt bloque le passage : ronces, pierres, pente glissante. Rien ne cédera tout seul.",
+		"Le chemin se dresse contre toi, hostile. Il faudra forcer pour avancer.",
+		"Un vieil obstacle barre la route. Il faudra payer de tes bras ou de ta ruse.",
 	],
 	"Dilemme": [
-		"Deux voies s'ouvrent, et chacune réclame son prix ; aucune ne te laissera tout à fait intact.",
-		"Un choix se pose, nu, sans recours. Quoi que tu décides, la forêt s'en souviendra.",
-		"On te demande de trancher là où il n'est pas de bonne réponse — l'hésitation aussi en est une.",
+		"Deux chemins s'ouvrent. Chacun a un prix, et aucun ne te laissera intact.",
+		"Un choix se pose, sans détour. Quoi que tu fasses, la forêt s'en souviendra.",
+		"Il faut trancher, là où il n'y a pas de bonne réponse. Ne pas choisir, c'est choisir aussi.",
 	],
 	"Climax": [
-		"L'air se fige ; la forêt retient son souffle. Ce qui vient maintenant ne se reprend pas.",
-		"Tout converge en ce seuil où les murmures se taisent. L'instant te regarde, et attend.",
-		"Le cœur de la forêt bat sous tes pieds, énorme et patient ; ici se décide ce que tu deviendras.",
+		"L'air se fige. La forêt retient son souffle. Ce qui vient ne se reprendra pas.",
+		"Tout se joue ici, maintenant. Les murmures se taisent d'un coup.",
+		"Le cœur de la forêt bat sous tes pieds. Ici se décide ce que tu deviens.",
 	],
 }
 
 const RESO_FALLBACKS: Dictionary = {
 	"echec": [
-		"Tes deux gestes se défont l'un l'autre au lieu de s'épauler, et la forêt n'accorde rien à ce désaccord. Elle te repousse d'un seul mouvement, sourde, et te voilà un peu plus loin de ce que tu cherchais. Quelque chose, dans l'ombre, semble même s'en amuser.",
-		"Les forces que tu tentes de marier sonnent faux, et le bois l'entend aussitôt. Ce que tu touches se dérobe, ce que tu crois saisir te file entre les doigts, et la forêt prend plus qu'elle ne donne. Tu repars les mains vides, et plus pauvre encore qu'en arrivant.",
-		"Ni l'une ni l'autre de tes forces ne trouve de prise sur ce lieu qui ne demandait pas cela. Le sentier se referme, indifférent, et te laisse en arrière comme on oublie un nom. Ce faux pas-là, tôt ou tard, il faudra le payer.",
+		"Tes deux gestes se mélangent mal et se gênent. La forêt refuse, te repousse, et te voilà plus loin de ton but. Dans l'ombre, quelque chose s'en amuse.",
+		"Le mélange sonne faux, et le bois l'entend tout de suite. Ce que tu touches se dérobe, ce que tu tiens t'échappe. Tu repars les mains vides.",
+		"Ton geste ne prend pas sur ce lieu. Le sentier se referme, indifférent, et te laisse en arrière. Ce faux pas, il faudra le payer.",
 	],
 	"partiel": [
-		"Tes deux gestes portent, mais de travers, et la forêt te laisse emporter ce que tu voulais — à condition d'en abandonner un morceau. Tu obtiens ton dû, et elle prélève le sien dans le même souffle, sans te demander ton avis. Une ombre, désormais, marche dans tes pas.",
-		"L'une de tes forces ouvre la voie quand l'autre dérape, et le passage ne cède qu'à demi. Tu avances tout de même, mais quelque chose t'a vu faire et ne l'oubliera pas de sitôt. Le prix n'est pas encore réclamé ; il le sera.",
-		"Tu arraches ce que tu étais venu chercher, mais au prix d'un reste qui s'accroche à toi comme une glu. La voie s'entrouvre, étroite, méfiante, juste assez pour te laisser passer. Derrière toi, le bois garde la mémoire de ce que tu as forcé.",
+		"Tes deux gestes s'unissent, mais de travers. Tu obtiens ce que tu voulais — en en laissant un morceau. Une ombre marche maintenant dans tes pas.",
+		"Le geste fusionné n'ouvre la voie qu'à demi. Tu avances quand même, mais quelque chose t'a vu faire. Le prix viendra plus tard.",
+		"Tu arraches ton dû, mais un reste te colle à la peau. La voie s'entrouvre, étroite, juste assez pour passer. La forêt n'oublie pas ce que tu as forcé.",
 	],
 	"reussite": [
-		"Tes deux forces se nouent enfin en un seul geste, propre et juste, et la voie se dénoue devant toi. La forêt cède, prudente mais sincère, et te laisse avancer d'un pas plus assuré. Pour cette fois, le sentier consent sans rien réclamer.",
-		"Ce que tu maries trouve sa cible du premier coup, et le bois accuse le geste. Le chemin s'ouvre, sans triomphe éclatant mais sans dette non plus. Tu passes, entier, et le silence te suit comme une approbation.",
-		"Les deux gestes s'accordent, et le sentier, à contrecœur peut-être, te reconnaît le droit de passer. La route se dégage devant toi, nette, presque docile. Tu avances sans rien laisser derrière, ce qui n'est pas rien dans ce bois.",
+		"Tes deux gestes se nouent en un seul, propre et juste. La forêt cède et te laisse avancer d'un pas plus sûr. Cette fois, le sentier ne réclame rien.",
+		"Le geste fusionné touche juste du premier coup. Le chemin s'ouvre, sans éclat mais sans dette. Tu passes, entier.",
+		"Les deux forces s'accordent, et le sentier te laisse passer. La route se dégage, nette. Tu avances sans rien laisser derrière toi.",
 	],
 	"eclatante": [
-		"Tes deux forces n'en font plus qu'une, si parfaitement que la forêt elle-même retient son souffle pour toi. Le seuil s'ouvre en grand, sans la moindre résistance, et quelque chose d'ancien et de fier s'incline sur ton passage. Un instant, bref et vertigineux, tu es plus que toi-même.",
-		"L'accord est total, et le bois entier le célèbre à sa manière muette. Les murmures se font promesse, la voie devant toi se déploie comme un tapis qu'on déroule, et rien ne te coûte. La forêt, pour une fois, te donne bien plus qu'elle ne prend.",
+		"Tes deux gestes n'en font plus qu'un, si bien que la forêt elle-même retient son souffle. Le passage s'ouvre en grand, sans résistance. Un instant, tu es plus grand que toi-même.",
+		"L'accord est total, et tout le bois le fête en silence. La voie se déroule devant toi comme un tapis, et rien ne te coûte. Pour une fois, la forêt donne plus qu'elle ne prend.",
 	],
 }
 
@@ -104,20 +104,20 @@ const RESO_FALLBACKS: Dictionary = {
 # climax » ne s'afficherait jamais. Le procédural prend donc le relais EN LONG sur ces moments-là.
 const RESO_FALLBACKS_LONG: Dictionary = {
 	"echec": [
-		"Tes deux forces s'élancent ensemble — et ensemble elles se brisent contre ce qui t'attendait là. La forêt ne se contente pas de refuser : elle reprend, elle efface, elle te repousse un peu plus loin de toi-même. Quelque chose, dans l'ombre, a vu ta tentative, et s'en souviendra. Tu restes seul au bord, les mains vides et le cœur plus lourd qu'avant.",
-		"Le geste que tu croyais maîtriser se retourne dans tes mains comme une bête mal apprivoisée. Ce que tu touches se dérobe, ce que tu appelles ne vient pas, et le lieu se referme sur ton échec avec une lenteur presque cruelle. Tu paieras ce moment, tu le sais déjà. Et la forêt, elle, ne paie jamais rien.",
+		"Tes deux gestes s'élancent ensemble, mais au lieu de s'unir ils se brisent. La forêt ne se contente pas de refuser : elle reprend, elle efface, elle te repousse. Quelque chose, dans l'ombre, a vu ta tentative. Tu restes seul au bord, les mains vides.",
+		"Le geste se retourne contre toi comme une bête mal tenue. Ce que tu touches se dérobe, ce que tu appelles ne vient pas. Le lieu se referme, lentement, sur ton échec. Tu paieras ce moment, tu le sais déjà.",
 	],
 	"partiel": [
-		"Tes deux forces portent, mais de travers, et le lieu te laisse emporter ton dû — à un prix que tu n'as pas choisi. Quelque chose cède, quelque chose s'ouvre, mais dans le même souffle une ombre se glisse dans tes pas et s'y installe. Tu obtiens ce que tu voulais, et tu repars marqué. La forêt, elle, a pris autre chose, et ne dit pas quoi.",
-		"Le passage s'entrouvre à demi sous l'effort conjugué de tes deux gestes, juste assez pour t'y faufiler. Mais rien ici n'est gratuit : ce que tu forces te coûte un fragment que tu ne récupéreras pas. On t'a vu faire, et on ne l'oubliera pas. Tu avances, à demi vainqueur, à demi débiteur.",
+		"Tes deux gestes portent, mais de travers. Quelque chose cède, quelque chose s'ouvre, et dans le même temps une ombre se glisse dans tes pas. Tu obtiens ce que tu voulais, et tu repars marqué. La forêt a pris autre chose, sans dire quoi.",
+		"Le passage s'entrouvre à demi sous ton geste, juste assez pour t'y faufiler. Mais rien ici n'est gratuit : ce que tu forces te coûte un morceau. On t'a vu faire, on ne l'oubliera pas. Tu avances, à moitié vainqueur, à moitié débiteur.",
 	],
 	"reussite": [
-		"Tes deux forces se nouent enfin en un seul geste, ample et juste, et le lieu cède dans un long soupir. La voie se dénoue devant toi, nette, presque reconnaissante, comme si la forêt avait attendu ce moment autant que toi. Tu passes, entier, plus sûr de ton pas qu'en arrivant. Et le silence, derrière, te suit comme une approbation qu'on accorde rarement.",
-		"Ce que tu maries trouve sa cible du premier coup, et le bois entier accuse le geste. Le chemin s'ouvre sans triomphe tapageur mais sans la moindre dette, et tu sens le lieu te reconnaître le droit de poursuivre. Rien ne te retient plus. Tu franchis le seuil, et la forêt, pour cette fois, te laisse aller.",
+		"Tes deux gestes se nouent enfin en un seul, large et juste, et le lieu cède dans un long soupir. La voie se dénoue devant toi, nette, comme si la forêt avait attendu ce moment. Tu passes, entier, plus sûr de ton pas. Le silence te suit comme un accord rare.",
+		"Le geste fusionné touche sa cible du premier coup, et tout le bois l'accuse. Le chemin s'ouvre sans triomphe bruyant mais sans la moindre dette. Rien ne te retient plus. Tu franchis le seuil, et la forêt te laisse aller.",
 	],
 	"eclatante": [
-		"Tes deux forces n'en font soudain plus qu'une, si parfaitement accordées que la forêt elle-même retient son souffle pour ne pas rompre l'instant. Le seuil s'ouvre en grand, sans la moindre résistance, et de très loin, sous les racines, quelque chose d'ancien et de fier s'incline sur ton passage. Les murmures se font promesse, la voie se déploie comme un tapis qu'on déroule. Un instant, bref et vertigineux, tu es plus que toi-même — et la forêt te donne bien plus qu'elle ne prend.",
-		"L'accord est total, vertigineux, et le bois entier le célèbre à sa manière muette et immense. Ce que tu viens d'accomplir, peu l'ont fait avant toi, et la forêt le sait. La lumière elle-même semble se pencher vers toi, et le chemin devant n'est plus une épreuve mais une offrande. Tu avances, porté, et derrière toi un murmure très doux prononce ton nom — le vrai, cette fois.",
+		"Tes deux gestes n'en font soudain plus qu'un, si bien accordés que la forêt elle-même retient son souffle. Le seuil s'ouvre en grand, sans résistance, et tout au fond, sous les racines, quelque chose d'ancien s'incline. La voie se déroule comme un tapis. Un instant, bref et vertigineux, tu es plus grand que toi-même.",
+		"L'accord est total, et le bois entier le fête en silence. Ce que tu viens de faire, peu l'ont fait avant toi. Le chemin devant n'est plus une épreuve mais un cadeau. Tu avances, porté, et derrière toi une voix très douce prononce ton nom.",
 	],
 }
 
@@ -457,19 +457,24 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
 	# DEUX forces à l'œuvre, ancrées dans leurs images concrètes, fondues en un seul geste. Toujours
 	# sans NOMMER les cartes (resté la consigne user 2026-05-29). → la prose reflète vraiment le combo.
-	# Combo : les 2 évocations comme forces concrètes + collecte des tags joués (UN seul passage, KISS).
-	var combo: String = ""
-	var n_forces: int = 0
+	# Combo : on COLLECTE les 2 évocations + les tags joués (UN seul passage, KISS).
+	var evocs: Array = []
 	var played_tags: Dictionary = {}
 	for c in played_cards:
 		if c is Object and "evocation" in c:
 			var ev: String = str(c.evocation).strip_edges()
 			if ev != "":
-				n_forces += 1
-				combo += "\n- Force %d : %s" % [n_forces, ev]
+				evocs.append(ev)
 		if c is Object and "tags" in c:
 			for t in c.tags:
 				played_tags[str(t)] = true
+	# Fusion (user 2026-06-07) : les évocations sont données comme UNE matière à fondre, PAS une liste
+	# « Force 1 / Force 2 » qui poussait le modèle à décrire les deux cartes l'une après l'autre.
+	var combo: String = ""
+	if evocs.size() >= 2:
+		combo = "Il fond deux gestes en un seul : « %s » et « %s ». DECRIS leur effet FUSIONNE (un seul resultat ne du melange), JAMAIS l'un puis l'autre." % [str(evocs[0]), str(evocs[1])]
+	elif evocs.size() == 1:
+		combo = "Son geste : « %s »." % str(evocs[0])
 	# Couverture (user 2026-06-06) : adéquation cartes ↔ tags requis. On décrit l'AJUSTEMENT
 	# (les bonnes clés / les mauvaises), JAMAIS l'issue — c'est deg_directive qui POSSÈDE l'issue.
 	# Évite la contradiction « rien obtenu » vs un degré de succès, ex. partiel à 0/2 (review MEDIUM).
@@ -515,7 +520,7 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# Décor PAS passé au prompt (la scène est déjà affichée à l'écran) : le passer poussait le petit
 	# modèle à le RECOPIER en ouverture (régression probe 2026-06-06). On démarre direct sur l'action ;
 	# _strip_scene_echo reste le filet si le modèle replante quand même la scène. Cartes NON nommées.
-	var usr: String = ("%sLe Voyageur combine DEUX forces, chacune avec son image :%s\nISSUE = %s. %s%s%s\nEcris " % [ctx, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint]) + phrase_target + " (francais), amples et imagees, SANS remplissage. COMMENCE DIRECTEMENT par l'action des deux forces (ne replante NI le decor NI le lieu, deja decrits) : fais SENTIR les DEUX forces fondues en UN seul mouvement, DEROULE la consequence du geste, ET fais clairement RESSENTIR l'issue. Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete."
+	var usr: String = ("%sLe Voyageur agit. %s\nISSUE = %s. %s%s%s\nEcris " % [ctx, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint]) + phrase_target + " (francais) qui S'ENCHAINENT logiquement (cause PUIS consequence), comme un petit paragraphe FLUIDE et JAMAIS des phrases hachees et deconnectees, SANS remplissage. COMMENCE DIRECTEMENT par l'effet du geste (ne replante NI le decor NI le lieu, deja decrits) : raconte UN SEUL effet FUSIONNE des deux gestes (jamais 'la premiere force... la seconde...', jamais l'un apres l'autre), DEROULE la consequence concrete qui en decoule, ET fais clairement RESSENTIR l'issue. Sujets CONCRETS (le Voyageur, ses mains, la foret, le chemin), jamais abstraits ('le vide', 'le nom'). Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete."
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""

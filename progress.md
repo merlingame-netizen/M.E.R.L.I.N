@@ -3064,3 +3064,25 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 
 
 - **Cycle 0 AI Diagnosis**: 0 issues (0 critical, 0 high) — Health: 10/10
+
+---
+
+## GOAL SESSION — Prose simple + boucle playtest autonome (2026-06-07 00:51 → 09:00)
+
+`/goal` UI command. Objectifs (AskUserQuestion) : périmètre = prose+UI+équilibrage (pas mécaniques) ·
+style = SIMPLE + CAUSALITÉ (phrases enchaînées action→conséquence, fini le staccato) · fusion des 2
+cartes · critique 4 axes (cohérence narrative, 4 piliers UX, équilibrage, bugs) · commit+push auto.
+
+**Cause racine staccato** ("Le geste glisse. Les autres tombent. Le vide ne touche rien.") = sortie
+LLM gemma4-e2b ; ancien prompt "phrases courtes, une idée par phrase" → télégraphique + sujets
+abstraits. FIX = SYSTEM_PREFIX + usr exigent enchaînement causal (paragraphe fluide) + bannissent
+sujets abstraits ('le vide','le nom').
+
+**Harnais réutilisés** : `probe_prose.gd` (run 5 beats, LLM moments forts, rapide) · `probe_combos.gd`
+(3 scénarios, LLM TOUJOURS, ~15 samples, ~37min) · `render_prose_report.py`/`render_combo_report.py`.
+
+**Boucle** : probe → critique JSON (4 axes) → fix (prose/prompts/balance) → validate+smoke → commit+push.
+
+### Journal cycles
+- C1 (00:51) : fix anti-staccato SYSTEM_PREFIX + usr ; fallbacks SITU/RESO/RESO_LONG simplifiés +
+  fusion ; combo prompt "Force 1/2"→matière fusionnée. Parse OK. probe_prose lancé (bi2r9jpr5).
