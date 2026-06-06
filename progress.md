@@ -2,6 +2,31 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-06 — v10.6 Fix clic-continuer + combo 2 cartes + prose ancrée + HTML contrôle-lecture
+
+### Context
+User : (1) « cliquer pour continuer » ne marche pas, (2) combo = 2 cartes par défaut (pas trio ni carte simple), (3) la combinaison ne s'établit pas dans le scénario, (4) histoires LLM bancales → besoin d'un HTML de contrôle-lecture pour tester. AskUserQuestion : exactement 2 cartes / 2 tags requis/beat / lecture batch scénario×combo / prose doit refléter les cartes.
+
+### Done — Fixes gameplay
+- **Clic-continuer (BUG)** `merlin_game.gd::_input` : avance routée via `_input` (reçu avant la GUI) au lieu du catcher (qui était bloqué par un conteneur au-dessus). State 2 + clic gauche → skip typewriter si en cours, sinon advance. `set_input_as_handled()` ; ne consomme rien en state 1 (cartes OK).
+- **Combo exactement 2** `merlin_game.gd` : `_on_hand_card` cap `>= 2` ; `_update_preview` n==0 « Pose 2 cartes » / n==1 « Pose une 2e carte » / n==2 preview+résolution active ; `_on_resolve` guard `size != 2`.
+- **2 tags requis/beat** `merlin_scenario.gd::_pick_tags` : toujours 2 tags (était 1-3 selon difficulté) → un combo de 2 couvre exactement.
+- **Prose ancrée cartes** `merlin_scenario.gd::narrate_resolution` : prompt reformulé — chaque évocation passée comme « Force N », instruction « FAIRE SENTIR les DEUX forces, ancré dans leurs images concrètes, fondues en UN geste », toujours sans nommer les cartes.
+
+### Done — HTML contrôle-lecture
+- **tools/probe_combos.gd** : harness batch — 3 scénarios × 5 beats, combo de 2 cartes/beat, prose LLM RÉELLE (toujours générée, plus de gating), écriture incrémentale JSON.
+- **tools/render_combo_report.py** : rend le JSON en HTML lisible (par scénario : situation, 2 cartes nom+évocation+tags+archétype, degré, synergie, prose LLM vs procédurale).
+
+### Vérif
+- validate_step0 exit=0, smoke MerlinGame passed=True script_errors=0
+- code-review : 0 CRITICAL/HIGH ; 2 MEDIUM (click-swallow non-fondé — `return` ne consomme pas ; pool<2 future-safety, protégé par min(2,…)) ; 2 LOW (is_strong_moment PAS mort — probe_prose l'utilise ; _on_story_click gardé comme filet).
+
+### Notes
+- Le HTML de contrôle est le 1er pas pour itérer sur la qualité LLM : lire le batch → identifier les patterns à corriger dans le prompt.
+- Effets mécaniques jouables (mots-clés) + variation rareté en jeu = itérations suivantes.
+
+---
+
 ## Session: 2026-06-06 — v10.5 Refonte visuelle cartes (logos par tag, rareté, archétype)
 
 ### Context

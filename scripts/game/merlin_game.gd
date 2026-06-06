@@ -171,7 +171,9 @@ func _render_combo() -> void:
 
 
 func _on_hand_card(card: MerlinCard) -> void:
-	if _state != 1 or _combo.size() >= 3 or _combo.has(card):
+	# v10.6 (user 2026-06-06) — le geste canonique est un COMBO de 2 cartes (la 1ère = action
+	# principale, la 2e = modificateur). On bloque au-delà de 2 (plus de trio).
+	if _state != 1 or _combo.size() >= 2 or _combo.has(card):
 		return
 	_combo.append(card)
 	_render_hand()   # la carte quitte l'éventail (slot vidé)
@@ -187,12 +189,19 @@ func _on_combo_card(card: MerlinCard) -> void:
 
 
 func _update_preview() -> void:
-	if _combo.is_empty():
-		# v10.4 : combo vide → preview invite à poser. Plus de « Ce moment appelle ».
+	# v10.6 : le geste canonique = COMBO de 2 cartes. La résolution n'est active qu'à 2 cartes.
+	var n: int = _combo.size()
+	if n == 0:
 		_preview_lbl.visible = true
-		_preview_lbl.text = "Pose une carte (la 1ère = action principale)."
+		_preview_lbl.text = "Pose 2 cartes (la 1ère = action principale, la 2e = modificateur)."
 		_resolve_btn.disabled = true
 		return
+	if n == 1:
+		_preview_lbl.visible = true
+		_preview_lbl.text = "Pose une 2e carte pour former la combinaison."
+		_resolve_btn.disabled = true
+		return
+	# n == 2 : combinaison complète.
 	_preview_lbl.visible = true
 	var reqs: Array = _current_situation.get("required_tags", [])
 	var res: Dictionary = MerlinResolution.resolve(reqs, _combo, [])
@@ -208,7 +217,8 @@ func _update_preview() -> void:
 
 
 func _on_resolve() -> void:
-	if _state != 1 or _combo.is_empty():
+	# v10.6 : résolution UNIQUEMENT sur un combo de 2 cartes (le geste canonique).
+	if _state != 1 or _combo.size() != 2:
 		return
 	_state = 2
 	_resolve_btn.disabled = true
@@ -760,6 +770,21 @@ func _style_dot(d: Panel, state: int) -> void:
 # la main, pour permettre la capture autonome des 4 phases sans avoir à driver la résolution
 # complète. Tag debug OS.is_debug_build pour ne pas embarquer en release.
 func _input(event: InputEvent) -> void:
+	# v10.6 (user 2026-06-06) — avance « cliquer pour continuer » BULLETPROOF via _input (reçu AVANT
+	# la GUI), indépendant du z-order du catcher (qui était parfois bloqué par un conteneur au-dessus).
+	# En résolution (state 2) : clic gauche → skip typewriter si en cours, sinon avance au beat suivant.
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _intro_open:
+			return
+		if _state == 2:
+			if _tw != null and _tw.is_valid():
+				_skip_typewriter()
+				get_viewport().set_input_as_handled()
+			elif _can_advance:
+				_advance_to_next()
+				get_viewport().set_input_as_handled()
+		return
+
 	if not OS.is_debug_build():
 		return
 	if not (event is InputEventKey and event.pressed and not event.echo):

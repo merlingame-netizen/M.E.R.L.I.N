@@ -339,12 +339,14 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	}
 
 
-func _pick_tags(btype: String, diff: int) -> Array:
+func _pick_tags(btype: String, _diff: int) -> Array:
+	# v10.6 (user 2026-06-06) : TOUJOURS 2 tags requis/beat → un combo de 2 cartes bien choisi les
+	# couvre exactement (geste canonique). L'ancienne logique 1-3 selon difficulté est abandonnée
+	# pour rendre le lien combo↔scénario évident et cohérent avec la règle « 2 cartes ».
 	var pool: Array = TYPE_TAG_BIAS.get(btype, TYPE_TAG_BIAS["Exploration"]).duplicate()
 	_shuffle(pool)
-	var n: int = clampi(diff, 1, 3)
 	var out: Array = []
-	for i in min(n, pool.size()):
+	for i in min(2, pool.size()):
 		out.append(pool[i])
 	return out
 
@@ -368,22 +370,25 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 		return ""
 	var degree: String = str(res.get("degree", "reussite"))
 	var deg_fr: Dictionary = {"echec": "un echec", "partiel": "un succes a un prix", "reussite": "une reussite", "eclatante": "une reussite eclatante"}
-	# On passe le SENS (évocation) de chaque carte, JAMAIS son nom → le LLM fond la COMBINAISON
-	# en UNE action sans énumérer ni nommer les cartes (demande user 2026-05-29).
+	# v10.6 (user 2026-06-06 : « la combinaison ne s'établit pas dans le scénario ») — on passe le
+	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
+	# DEUX forces à l'œuvre, ancrées dans leurs images concrètes, fondues en un seul geste. Toujours
+	# sans NOMMER les cartes (resté la consigne user 2026-05-29). → la prose reflète vraiment le combo.
 	var combo: String = ""
+	var n_forces: int = 0
 	for c in played_cards:
 		var ev: String = (str(c.evocation) if (c is Object and "evocation" in c) else "").strip_edges()
 		if ev != "":
-			combo += "\n- %s" % ev
+			n_forces += 1
+			combo += "\n- Force %d : %s" % [n_forces, ev]
 	var syn: int = int(res.get("synergy", 0))
 	var syn_hint: String = ""
 	if syn > 0:
-		syn_hint = " Ces forces s'accordent en un geste coherent."
+		syn_hint = " Les deux forces s'accordent en un geste fluide et coherent."
 	elif syn < 0:
-		syn_hint = " Ces forces s'accordent mal, tirant a hue et a dia."
-	# Ni le décor (déjà affiché) ni les noms de cartes ne sont passés → coupe l'écho de scène ET
-	# l'énumération à la source. Le label « Intentions » évite la fuite de formulation narrative.
-	var usr: String = "Intentions a fondre en UNE seule action (ne les nomme pas, ne les liste pas):%s\nIssue: %s.%s\nEcris 2 phrases MAXIMUM: commence DIRECTEMENT par l'effet de cette action sur la scene et la foret, SANS redire ni paraphraser le decor, sans chiffres, recit direct sans apostropher le voyageur. Termine sur une phrase complete." % [combo, deg_fr.get(degree, "une reussite"), syn_hint]
+		syn_hint = " Les deux forces s'accordent mal, tirant a hue et a dia (l'issue s'en ressent)."
+	# Décor NON passé (anti écho de scène, post-filtré par _strip_scene_echo). Cartes NON nommées.
+	var usr: String = ("Le Voyageur combine DEUX forces, chacune avec son image:%s\nIssue de cette combinaison: %s.%s\nEcris EXACTEMENT 2 phrases (francais): montre l'effet du geste sur la scene et la foret en FAISANT SENTIR les DEUX forces a l'oeuvre — ancre-toi dans leurs images concretes ci-dessus, fondues en UN seul mouvement. Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete.") % [combo, deg_fr.get(degree, "une reussite"), syn_hint]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
