@@ -9,6 +9,7 @@ var evocation: String = ""
 var tags: Array = []          # Array[String] (concepts, R81)
 var corruption: int = 0       # coût Corruption payé en jouant (0-3, R64)
 var rarity: String = "Commune"  # Commune / Rare / Épique / Mythique (R52)
+var _archetype_cache: String = ""  # v10.5 : archétype dérivé memoïsé (to_dict appelé ~1Hz × deck)
 
 
 static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: String, p_corruption: int = 0, p_rarity: String = "Commune") -> MerlinCard:
@@ -22,10 +23,36 @@ static func make(p_id: String, p_name: String, p_tags: Array, p_evocation: Strin
 	return c
 
 
+# v10.5 (user 2026-06-06) — archétype d'EFFET dérivé du tag primaire (visuel d'abord : reflète
+# « ce que fait la carte » sans toucher le moteur de résolution tag-coverage). Offensif / Défensif /
+# Social / Mystique / Corrompu. Une carte à coût Corruption > 0 ou tag corrompu → Corrompu.
+func archetype() -> String:
+	if _archetype_cache != "":
+		return _archetype_cache
+	_archetype_cache = _compute_archetype()
+	return _archetype_cache
+
+
+func _compute_archetype() -> String:
+	for t in tags:
+		if MerlinTags.is_corrupted_tag(str(t)):
+			return "Corrompu"
+	if corruption > 0:
+		return "Corrompu"
+	var fam: String = MerlinTags.family_of(str(tags[0])) if tags.size() > 0 else ""
+	match fam:
+		"Corps": return "Offensif"
+		"Parole": return "Social"
+		"Monde": return "Défensif"
+		"Perception", "Intuition": return "Mystique"
+		_: return "Mystique"
+
+
 func to_dict() -> Dictionary:
 	return {
 		"id": id, "name": card_name, "evocation": evocation,
 		"tags": tags.duplicate(), "corruption": corruption, "rarity": rarity,
+		"archetype": archetype(),
 	}
 
 

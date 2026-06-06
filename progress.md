@@ -2,6 +2,28 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-06 — v10.5 Refonte visuelle cartes (logos par tag, rareté, archétype)
+
+### Context
+User : (1) retirer « Ta main », (2) cartes plus grosses, (3) logos retravaillés pour refléter le concept, (4) bords plus épais, (5) rareté visible, (6) effets plus profonds que la corruption. AskUserQuestion : glyphe par tag précis / rareté = couleur+épaisseur bordure / archétype d'effet visuel / visuel d'abord (pas de méca résolution).
+
+### Done
+- **merlin_glyph.gd** : `for_tag(tag)` → 25 glyphes distincts par concept-cœur (via MerlinTags.to_canon). 10 nouvelles formes : wind, heart, speech, knot, flame, balance, void, ash, waves, chain. `for_family` conservé.
+- **merlin_card.gd** : `archetype()` dérivé du tag primaire (Corps→Offensif, Parole→Social, Monde→Défensif, Perception/Intuition→Mystique, corrompu/corruption>0→Corrompu), memoïsé (`_archetype_cache`). `to_dict` gagne clé `"archetype"` (additif).
+- **merlin_card_view.gd** : CARD_SIZE 152×196→180×240, compact 150×88→170×104. `RARITY_STYLE` (Commune brun 3px / Rare bleu-acier 4px / Épique magenta 5px / Mythique or 7px + shadow glow). `ARCHETYPE_STYLE` (5 archétypes → bande couleur + libellé). `_build` : bordure rareté + glyphe par tag + rangée pastilles tous tags + bande archétype bas + pips « ◆ » corruption.
+- **merlin_game.gd** : label « Ta main : » retiré ; `_hand_box` 214→264 px.
+
+### Vérif
+- validate_step0 exit=0, smoke MerlinGame passed=True script_errors=0, tsc --noEmit clean
+- **Confirmé visuellement** (drive_merlin) : cartes agrandies, glyphes distincts (cœur=Empathie, œil=Sens, spark=Instinct, vent=Agilité), bandes CORRUPTION/PAROLE/MYSTÈRE/OFFENSE, pastilles tags colorées, plus de « Ta main ».
+- code-review : 0 CRITICAL/HIGH, 3 MEDIUM corrigés (Color(Color)→`as Color` cast ; archetype memoïsé ; CardSnap `archetype?` ajouté), 1 LOW accepté (budget hauteur compact serré, glyphe se masque proprement).
+
+### Notes
+- Toutes les cartes starter = Commune → bordure brun-ink fine ; la variation rareté (bleu/magenta/or+glow) s'affichera dès qu'une carte Rare+ existe.
+- Effets « plus profonds » = archétype VISUEL cette itération (pas de méca résolution). Mots-clés d'effet mécaniques jouables = itération suivante dédiée (avec équilibrage).
+
+---
+
 ## Session: 2026-06-06 — v10.4 Résolution TOUJOURS LLM + retrait hint « Ce moment appelle »
 
 ### Context

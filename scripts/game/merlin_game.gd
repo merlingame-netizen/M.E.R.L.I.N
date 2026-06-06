@@ -1101,11 +1101,9 @@ func _build_ui() -> void:
 	_resolve_btn.pressed.connect(_on_resolve)
 	btn_row.add_child(_resolve_btn)
 
-	var hand_lbl: Label = _mk_label(COL_DIM, 14)
-	hand_lbl.text = "Ta main :"
-	root.add_child(hand_lbl)
+	# v10.5 : label « Ta main : » retiré (user 2026-06-06). L'éventail se suffit visuellement.
 	_hand_box = Control.new()
-	_hand_box.custom_minimum_size = Vector2(0, 214)
+	_hand_box.custom_minimum_size = Vector2(0, 264)  # + haut : cartes agrandies (240) + lift survol
 	_hand_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hand_box.clip_contents = false  # le survol soulève/agrandit la carte hors cadre
 	_hand_box.resized.connect(_layout_fan)

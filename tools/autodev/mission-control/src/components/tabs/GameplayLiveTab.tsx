@@ -16,6 +16,7 @@ interface CardSnap {
   id?: string;
   evocation?: string;
   rarity?: string;
+  archetype?: string;  // v10.5 : archétype d'effet dérivé (Offensif/Défensif/Social/Mystique/Corrompu)
   tags: string[];
   corruption: number;
 }
