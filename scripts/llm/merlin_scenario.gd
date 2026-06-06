@@ -525,8 +525,8 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 		"Exploration": "ce qui etait cache se revele a toi (ou se derobe)",
 		"Rencontre": "l'etre ou la voix d'en face reagit : il cede, se lie a toi, ou se retourne contre toi",
 		"Epreuve": "l'obstacle concret (ronces, pente, pierre) est franchi ou te resiste",
-		"Dilemme": "ton choix est tranche et sa consequence tombe aussitot",
-		"Climax": "l'enjeu final du sentier bascule, dans un sens ou dans l'autre",
+		"Dilemme": "le Voyageur a TRANCHE : montre la voie qu'il choisit ET le prix immediat (ce qu'il gagne et ce qu'il abandonne), pas une simple ouverture de chemin",
+		"Climax": "c'est le MOMENT DECISIF du sentier : l'issue pese lourd et marque une vraie BASCULE (triomphe ou chute), jamais une simple avancee de routine",
 	}
 	var ftype: String = str(situation.get("type", ""))
 	var focus_hint: String = ""
