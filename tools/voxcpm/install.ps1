@@ -73,17 +73,36 @@ if ($Engine -eq "voxcpm") {
 }
 
 # 4. Download the Piper voice (always useful as the fast default).
+#    A failed download must NOT abort the install — the server still boots and
+#    serves the test page; only synthesis needs the voice. So warn, don't throw.
 $voicesDir = Join-Path $here "piper_voices"
 New-Item -ItemType Directory -Path $voicesDir -Force | Out-Null
 $onnx = Join-Path $voicesDir "$PiperVoice.onnx"
 if (-not (Test-Path $onnx)) {
-    # fr_FR-tom-medium -> fr/fr_FR/tom/medium/fr_FR-tom-medium
-    $parts = $PiperVoice -split "-"          # [fr_FR, tom, medium]
-    $lang = $parts[0]; $name = $parts[1]; $quality = $parts[2]
-    $base = "https://huggingface.co/rhasspy/piper-voices/resolve/main/$($lang.Substring(0,2))/$lang/$name/$quality/$PiperVoice"
     Write-Host "  Downloading Piper voice $PiperVoice ..." -ForegroundColor Green
-    Invoke-WebRequest "$base.onnx"      -OutFile $onnx
-    Invoke-WebRequest "$base.onnx.json" -OutFile "$onnx.json"
+    $ok = $false
+    # Primary: Piper's own downloader (robust, resolves the path for us).
+    try {
+        & $vpy -m piper.download_voices $PiperVoice --download-dir $voicesDir
+        if (Test-Path $onnx) { $ok = $true }
+    } catch { Write-Host "  [WARN] piper.download_voices failed: $($_.Exception.Message)" -ForegroundColor Yellow }
+    # Fallback: direct Hugging Face URL.
+    if (-not $ok) {
+        try {
+            $parts = $PiperVoice -split "-"        # [fr_FR, tom, medium]
+            $lang = $parts[0]; $name = $parts[1]; $quality = $parts[2]
+            $base = "https://huggingface.co/rhasspy/piper-voices/resolve/main/$($lang.Substring(0,2))/$lang/$name/$quality/$PiperVoice"
+            Invoke-WebRequest "$base.onnx"      -OutFile $onnx
+            Invoke-WebRequest "$base.onnx.json" -OutFile "$onnx.json"
+            if (Test-Path $onnx) { $ok = $true }
+        } catch { Write-Host "  [WARN] HF download failed: $($_.Exception.Message)" -ForegroundColor Yellow }
+    }
+    if (-not $ok) {
+        Write-Host "  [WARN] Voix non telechargee (reseau/proxy ?). Le serveur demarrera quand meme;" -ForegroundColor Yellow
+        Write-Host "         relance l'install une fois connecte, ou voir piper_voices\README.md." -ForegroundColor Yellow
+    } else {
+        Write-Host "  Voix $PiperVoice prete." -ForegroundColor Green
+    }
 } else {
     Write-Host "  Piper voice $PiperVoice already present." -ForegroundColor Gray
 }
