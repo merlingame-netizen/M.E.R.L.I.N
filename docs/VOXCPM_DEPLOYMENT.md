@@ -1,11 +1,42 @@
-# VoxCPM Local Deployment — M.E.R.L.I.N.
+# Local TTS Deployment — M.E.R.L.I.N.
 
-> Neural TTS + voice cloning, deployed locally for the game (Merlin's voice) and
-> any other project. Profile: **CPU-only, Windows-first, native venv + server**.
+> Local text-to-speech for the game (Merlin's voice) and any other project.
+> Profile: **CPU-only, Windows-first, native venv + server**.
 > Decided 2026-06-06. Branch `claude/voxcpm-local-deploy-V118n`.
 
-This covers the backlog item the Game Design Bible flags as *non implémenté*:
-**“Merlin speech-bar + TTS (`use_my_voice`)”** (Phase 2.1.5).
+This covers the Game Design Bible backlog item **“Merlin speech-bar + TTS”**
+(Phase 2.1.5).
+
+> ## ⚠️ Update (2026-06-07) — Piper is now the default engine
+>
+> VoxCPM is **GPU-oriented and far too slow on CPU** for real-time use. On a
+> CPU-only machine the default engine is now **[Piper](https://github.com/rhasspy/piper)**:
+> fast (RTF ~0.5), French voices, ~60 MB, **no torch**. It does *not* clone voices
+> (preset voices only), so **Merlin's voice = Piper's French male voice
+> (`fr_FR-tom-medium`) + a server-side "robot" FX** (ring-modulation + bitcrush).
+>
+> VoxCPM remains available as an opt-in engine (`engine: voxcpm`) for voice
+> cloning when a GPU is present or for offline batch pre-generation.
+>
+> The HTTP contract (`/synth`, `/v1/audio/speech`), the CLI adapter, the Godot
+> `MerlinTTS` autoload and the test page are **engine-agnostic** — they didn't
+> change when the engine did.
+
+---
+
+## 0. Quick start (CPU, Piper)
+
+```bat
+tools\voxcpm\install.bat          :: Piper + fr_FR-tom-medium (no torch, ~60 MB)
+tools\voxcpm\start.bat            :: serve at http://127.0.0.1:8808/
+```
+Then open `http://127.0.0.1:8808/` (robot toggle + intensity slider built in), or:
+```bat
+python tools\cli.py voxcpm speak --text "Je suis Merlin." --robot_intensity 0.7
+```
+
+Engine knobs (env or `config.json`): `VOXCPM_ENGINE` (piper|voxcpm),
+`PIPER_MODEL`, `VOXCPM_ROBOT`, `VOXCPM_ROBOT_INTENSITY`.
 
 ---
 

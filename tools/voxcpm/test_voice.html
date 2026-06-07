@@ -160,6 +160,15 @@
       </div>
     </div>
 
+    <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border)">
+      <label style="display:flex; align-items:center; gap:8px; margin:0">
+        <input type="checkbox" id="robot" checked style="width:auto" />
+        🤖 Voix de robot (Merlin)
+      </label>
+      <label for="robotInt" style="margin-top:10px">Intensité robot · <span class="slider-val" id="robotIntVal">0.7</span></label>
+      <input type="range" id="robotInt" min="0" max="1" step="0.05" value="0.7" />
+    </div>
+
     <div class="actions">
       <button class="primary" id="genBtn">🜂 Générer la voix</button>
       <div class="spinner" id="spinner"></div>
@@ -228,6 +237,7 @@
   // ── Sliders ──────────────────────────────────────────────────────────────
   $("cfg").oninput = () => { $("cfgVal").textContent = parseFloat($("cfg").value).toFixed(1); };
   $("steps").oninput = () => { $("stepsVal").textContent = $("steps").value; };
+  $("robotInt").oninput = () => { $("robotIntVal").textContent = parseFloat($("robotInt").value).toFixed(2); };
 
   // ── Health check ───────────────────────────────────────────────────────
   async function checkHealth() {
@@ -239,9 +249,19 @@
       const d = await r.json();
       dot.className = "dot ok";
       txt.textContent = "en ligne";
-      meta.textContent = "modèle " + d.model + " · " + d.device + (d.loaded ? " · chargé" : " · modèle en attente (1er appel)");
+      meta.textContent = "moteur " + (d.engine || "?") + " · " + d.model + " · " + d.device +
+        (d.loaded ? " · chargé" : " · 1er appel à venir");
       populateVoices(d.voices || []);
-      log("Serveur OK — modèle=" + d.model + " device=" + d.device);
+      // Reflect server robot defaults into the UI on first load.
+      if (d.robot && !checkHealth._synced) {
+        $("robot").checked = !!d.robot.enabled;
+        if (typeof d.robot.intensity === "number") {
+          $("robotInt").value = d.robot.intensity;
+          $("robotIntVal").textContent = d.robot.intensity.toFixed(2);
+        }
+        checkHealth._synced = true;
+      }
+      log("Serveur OK — moteur=" + (d.engine || "?") + " modèle=" + d.model + " device=" + d.device);
     } catch (e) {
       dot.className = "dot bad";
       txt.textContent = "hors ligne";
@@ -274,6 +294,8 @@
     const payload = {
       text: text,
       voice: $("voice").value,
+      robot: $("robot").checked,
+      robot_intensity: parseFloat($("robotInt").value),
       cfg_value: parseFloat($("cfg").value),
       inference_timesteps: parseInt($("steps").value, 10)
     };
@@ -282,7 +304,7 @@
     $("spinner").style.display = "inline-block";
     $("genStatus").textContent = "synthèse… (long au 1er appel / sur CPU)";
     log("POST /synth — " + text.length + " car., voix=" + (payload.voice || "défaut") +
-        ", cfg=" + payload.cfg_value + ", étapes=" + payload.inference_timesteps);
+        ", robot=" + (payload.robot ? payload.robot_intensity : "off"));
 
     const t0 = performance.now();
     try {

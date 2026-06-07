@@ -1,0 +1,6 @@
+# Optional VoxCPM engine (neural voice cloning) — GPU-oriented, slow on CPU.
+# Install torch FIRST for your hardware (the install script does this):
+#   CPU   : pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   CUDA  : pip install torch --index-url https://download.pytorch.org/whl/cu121
+# then: pip install -r requirements-voxcpm.txt
+voxcpm>=1.0.0

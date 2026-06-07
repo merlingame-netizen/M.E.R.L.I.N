@@ -1,12 +1,16 @@
-# VoxCPM local deploy — never commit the venv, model cache, or generated audio
+# Local TTS deploy — never commit venvs, model weights, caches, or generated audio
 .venv-voxcpm/
+.venv-tts/
 cache/
 config.json
 *.wav
 *.flac
 *.mp3
+*.onnx
+*.onnx.json
 __pycache__/
 
-# ...but DO keep the voices folder's docs + any committed reference samples you
-# explicitly force-add with `git add -f tools/voxcpm/voices/merlin.wav`.
+# Keep folder docs + any reference clone you explicitly force-add
+# (e.g. `git add -f tools/voxcpm/voices/merlin.wav`).
 !voices/README.md
+!piper_voices/README.md

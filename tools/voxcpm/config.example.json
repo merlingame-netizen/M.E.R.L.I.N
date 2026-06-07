@@ -1,15 +1,22 @@
 {
-  "_comment": "Copy to config.json and tweak. These map 1:1 to VOXCPM_* env vars. The start scripts read config.json if present.",
-  "model": "openbmb/VoxCPM-0.5B",
-  "device": "auto",
+  "_comment": "Copy to config.json and tweak. Keys map to VOXCPM_*/PIPER_* env vars. start scripts read config.json if present.",
+
+  "engine": "piper",
+
   "host": "127.0.0.1",
   "port": 8808,
-  "cfg_value": 2.0,
-  "inference_timesteps": 10,
-  "normalize": false,
-  "default_voice": "merlin",
-  "_models_hint": {
-    "cpu": "openbmb/VoxCPM-0.5B  (lighter, viable on CPU with caching)",
-    "gpu": "openbmb/VoxCPM2      (2B, ~8 GB VRAM, best quality)"
-  }
+
+  "_piper": "Default engine — fast on CPU, French, no torch.",
+  "piper_model": "fr_FR-tom-medium",
+
+  "_robot": "Merlin's male-robot voice (server-side FX). intensity 0..1.",
+  "robot": true,
+  "robot_intensity": 0.7,
+  "robot_carrier_hz": 55,
+  "robot_bits": 6,
+
+  "_voxcpm": "Optional cloning engine (set engine=voxcpm). GPU recommended.",
+  "voxcpm_model": "openbmb/VoxCPM-0.5B",
+  "voxcpm_device": "auto",
+  "default_voice": "merlin"
 }

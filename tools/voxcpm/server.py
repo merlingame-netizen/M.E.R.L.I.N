@@ -1,53 +1,57 @@
 #!/usr/bin/env python3
 """
-VoxCPM local TTS server — M.E.R.L.I.N.
+Local TTS server — M.E.R.L.I.N.  (Piper default · VoxCPM optional)
 
-A thin FastAPI wrapper around the VoxCPM tokenizer-free TTS model. Provides a
-stable HTTP contract so the Godot game (autoload `MerlinTTS`), the CLI adapter
-(`python tools/cli.py voxcpm ...`) and any other tool can request speech without
-loading the model themselves.
+A stable HTTP TTS service so the Godot game (autoload `MerlinTTS`), the CLI
+adapter (`python tools/cli.py voxcpm ...`) and the browser test page all share one
+contract — regardless of which engine synthesizes underneath.
 
-Design notes
-------------
-* The model is **lazy-loaded** on first synthesis request, so the server boots
-  instantly and `import server` works even without the heavy `voxcpm` / `torch`
-  wheels installed (useful for syntax checks / CI).
-* **Device auto-detect** (`auto` -> cuda if available else cpu). The user runs
-  CPU-only, so CUDA is forced off when device == "cpu".
-* **Disk cache** keyed by SHA-1 of (model, text, voice, params). On CPU the RTF
-  is well above 1.0, so caching is essential — repeated lines play instantly.
-* **Voice cloning** (`use_my_voice`): a "voice" is a wav file under
-  `VOXCPM_VOICES_DIR/<name>.wav` with an optional transcript `<name>.txt`.
-  When present, synthesis is conditioned on it (prompt_wav_path + prompt_text).
+Engines
+-------
+* **piper** (default) — fast on CPU (RTF ~0.5), French voices, tiny (~60 MB ONNX),
+  no torch. Best fit for real-time, CPU-only machines. Preset voices (no cloning).
+* **voxcpm** — neural voice cloning, French, but GPU-oriented (very slow on CPU).
+  Keep for offline pre-generation / when a GPU is available.
+
+Robot voice
+-----------
+An optional robotic post-FX (ring-modulation + bitcrush) turns Piper's male French
+voice into a "male robot" — Merlin's voice for this project. On by default, tunable
+per request (`robot`, `robot_intensity`) or via env.
 
 Endpoints
 ---------
-  GET  /health                 -> status, model, device, loaded, voices
-  GET  /voices                 -> list of registered reference voices
+  GET  /                       -> the browser test page (test_voice.html)
+  GET  /health                 -> engine, model, device, robot, voices
+  GET  /voices                 -> available voices (piper: ONNX models; voxcpm: clones)
   POST /synth                  -> audio/wav bytes (or JSON+base64 with ?format=json)
-  POST /v1/audio/speech        -> OpenAI-compatible speech endpoint (audio bytes)
+  POST /v1/audio/speech        -> OpenAI-compatible speech endpoint
 
 Config (env vars, all optional)
 -------------------------------
-  VOXCPM_MODEL        default "openbmb/VoxCPM-0.5B"   (CPU-friendly; "openbmb/VoxCPM2" for GPU)
-  VOXCPM_DEVICE       default "auto"                  (auto | cpu | cuda)
-  VOXCPM_HOST         default "127.0.0.1"
-  VOXCPM_PORT         default "8808"
-  VOXCPM_VOICES_DIR   default "<this_dir>/voices"
-  VOXCPM_CACHE_DIR    default "<this_dir>/cache"
-  VOXCPM_CFG_VALUE    default "2.0"
-  VOXCPM_TIMESTEPS    default "10"     (LocDiT steps; low = faster, good for CPU)
-  VOXCPM_NORMALIZE    default "0"      (1 enables external text-normalization tool)
+  VOXCPM_ENGINE       default "piper"        (piper | voxcpm)
+  VOXCPM_HOST/PORT    default 127.0.0.1 / 8808
+  VOXCPM_CACHE_DIR    default "<dir>/cache"
+  # Robot FX
+  VOXCPM_ROBOT        default "1"            (1/0 — apply robot effect)
+  VOXCPM_ROBOT_INTENSITY  default "0.7"      (0..1 dry/wet)
+  VOXCPM_ROBOT_CARRIER    default "55"       (Hz ring-mod carrier)
+  VOXCPM_ROBOT_BITS       default "6"        (bitcrush depth)
+  # Piper
+  PIPER_VOICES_DIR    default "<dir>/piper_voices"
+  PIPER_MODEL         default "fr_FR-tom-medium"   (onnx stem in PIPER_VOICES_DIR)
+  # VoxCPM
+  VOXCPM_MODEL        default "openbmb/VoxCPM-0.5B"
+  VOXCPM_DEVICE       default "auto"
+  VOXCPM_VOICES_DIR   default "<dir>/voices"
+  VOXCPM_CFG_VALUE/VOXCPM_TIMESTEPS/VOXCPM_NORMALIZE
 
 Run:  python tools/voxcpm/server.py          (or use start.ps1 / start.bat)
 """
 
-# NOTE: deliberately NO `from __future__ import annotations` here. The FastAPI
-# route handlers are nested inside build_app() and annotate params with `Request`
-# (a name local to that function). With stringified annotations FastAPI can't
-# resolve those local names against module globals and mis-reads them as query
-# params, so we keep real (eagerly-evaluated) annotations. Requires Python 3.10+
-# (which VoxCPM mandates anyway) for the `X | None` union syntax used below.
+# NOTE: no `from __future__ import annotations` — FastAPI route handlers nested in
+# build_app() annotate params with locally-imported types (Request); stringified
+# annotations would break FastAPI's resolution. Requires Python 3.10+ (X | None).
 
 import hashlib
 import io
@@ -56,224 +60,256 @@ import os
 import threading
 import wave
 from pathlib import Path
-from typing import Any, Optional
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
 _HERE = Path(__file__).resolve().parent
 
-MODEL_NAME = os.environ.get("VOXCPM_MODEL", "openbmb/VoxCPM-0.5B")
-DEVICE_PREF = os.environ.get("VOXCPM_DEVICE", "auto").lower()
+ENGINE = os.environ.get("VOXCPM_ENGINE", "piper").lower()
 HOST = os.environ.get("VOXCPM_HOST", "127.0.0.1")
 PORT = int(os.environ.get("VOXCPM_PORT", "8808"))
-VOICES_DIR = Path(os.environ.get("VOXCPM_VOICES_DIR", str(_HERE / "voices")))
 CACHE_DIR = Path(os.environ.get("VOXCPM_CACHE_DIR", str(_HERE / "cache")))
-DEFAULT_CFG = float(os.environ.get("VOXCPM_CFG_VALUE", "2.0"))
-DEFAULT_TIMESTEPS = int(os.environ.get("VOXCPM_TIMESTEPS", "10"))
-DEFAULT_NORMALIZE = os.environ.get("VOXCPM_NORMALIZE", "0") not in ("0", "", "false", "False")
 
-VOICES_DIR.mkdir(parents=True, exist_ok=True)
+# Robot FX
+ROBOT_ENABLED = os.environ.get("VOXCPM_ROBOT", "1") not in ("0", "", "false", "False")
+ROBOT_INTENSITY = float(os.environ.get("VOXCPM_ROBOT_INTENSITY", "0.7"))
+ROBOT_CARRIER = float(os.environ.get("VOXCPM_ROBOT_CARRIER", "55"))
+ROBOT_BITS = int(os.environ.get("VOXCPM_ROBOT_BITS", "6"))
+
+# Piper
+PIPER_VOICES_DIR = Path(os.environ.get("PIPER_VOICES_DIR", str(_HERE / "piper_voices")))
+PIPER_MODEL = os.environ.get("PIPER_MODEL", "fr_FR-tom-medium")
+
+# VoxCPM
+VOXCPM_MODEL = os.environ.get("VOXCPM_MODEL", "openbmb/VoxCPM-0.5B")
+VOXCPM_DEVICE = os.environ.get("VOXCPM_DEVICE", "auto").lower()
+VOXCPM_VOICES_DIR = Path(os.environ.get("VOXCPM_VOICES_DIR", str(_HERE / "voices")))
+VOXCPM_CFG = float(os.environ.get("VOXCPM_CFG_VALUE", "2.0"))
+VOXCPM_TIMESTEPS = int(os.environ.get("VOXCPM_TIMESTEPS", "10"))
+VOXCPM_NORMALIZE = os.environ.get("VOXCPM_NORMALIZE", "0") not in ("0", "", "false", "False")
+
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
+PIPER_VOICES_DIR.mkdir(parents=True, exist_ok=True)
+VOXCPM_VOICES_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── Lazy model holder ─────────────────────────────────────────────────────────
+# ── Lazy engine holders ───────────────────────────────────────────────────────
 
-_model = None
-_model_lock = threading.Lock()
-_resolved_device = "cpu"
-_sample_rate = 16000  # overwritten once the real model is loaded
+_lock = threading.Lock()
+_piper_voices = {}          # name -> PiperVoice
+_voxcpm_model = None
+_voxcpm_device = "cpu"
+_voxcpm_sr = 16000
 
 
-def _resolve_device() -> str:
-    """Pick the runtime device, honoring VOXCPM_DEVICE."""
-    if DEVICE_PREF == "cpu":
-        # Hard-force CPU so frameworks never grab a GPU.
+# ── Piper engine ──────────────────────────────────────────────────────────────
+
+def _piper_onnx_path(name):
+    """Resolve a piper voice name to its .onnx path."""
+    if name.endswith(".onnx"):
+        p = Path(name)
+        return p if p.is_absolute() else (PIPER_VOICES_DIR / p.name)
+    return PIPER_VOICES_DIR / f"{name}.onnx"
+
+
+def _load_piper(name):
+    with _lock:
+        if name in _piper_voices:
+            return _piper_voices[name]
+        from piper import PiperVoice  # noqa: PLC0415
+
+        onnx = _piper_onnx_path(name)
+        if not onnx.exists():
+            raise FileNotFoundError(
+                f"Piper voice '{name}' not found at {onnx}. "
+                f"Download voices into {PIPER_VOICES_DIR} (install.ps1 does this)."
+            )
+        cfg = str(onnx) + ".json"
+        cfg_arg = cfg if Path(cfg).exists() else None
+        voice = PiperVoice.load(str(onnx), config_path=cfg_arg, use_cuda=False)
+        _piper_voices[name] = voice
+        return voice
+
+
+def _piper_synth(text, voice_name):
+    """Return (float32 mono samples in [-1,1], sample_rate)."""
+    import numpy as np  # noqa: PLC0415
+
+    voice = _load_piper(voice_name or PIPER_MODEL)
+    chunks = list(voice.synthesize(text))
+    if not chunks:
+        return np.zeros(1, dtype="float32"), int(voice.config.sample_rate)
+    arr = np.concatenate([c.audio_int16_array for c in chunks]).astype("float32") / 32768.0
+    return arr, int(voice.config.sample_rate)
+
+
+def _list_piper_voices():
+    return sorted(p.stem for p in PIPER_VOICES_DIR.glob("*.onnx"))
+
+
+# ── VoxCPM engine ─────────────────────────────────────────────────────────────
+
+def _resolve_voxcpm_device():
+    if VOXCPM_DEVICE == "cpu":
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         return "cpu"
     try:
         import torch  # noqa: PLC0415
-
-        if DEVICE_PREF == "cuda":
-            return "cuda" if torch.cuda.is_available() else "cpu"
-        # auto
         return "cuda" if torch.cuda.is_available() else "cpu"
     except Exception:
         return "cpu"
 
 
-def _load_model() -> Any:
-    """Lazy-load the VoxCPM model exactly once (thread-safe)."""
-    global _model, _resolved_device, _sample_rate
-    if _model is not None:
-        return _model
-    with _model_lock:
-        if _model is not None:
-            return _model
-        _resolved_device = _resolve_device()
-        from voxcpm import VoxCPM  # noqa: PLC0415 — heavy import, deferred
+def _load_voxcpm():
+    global _voxcpm_model, _voxcpm_device, _voxcpm_sr
+    if _voxcpm_model is not None:
+        return _voxcpm_model
+    with _lock:
+        if _voxcpm_model is not None:
+            return _voxcpm_model
+        _voxcpm_device = _resolve_voxcpm_device()
+        from voxcpm import VoxCPM  # noqa: PLC0415
 
-        # load_denoiser=False keeps memory low (important on CPU).
         try:
-            model = VoxCPM.from_pretrained(MODEL_NAME, load_denoiser=False)
+            model = VoxCPM.from_pretrained(VOXCPM_MODEL, load_denoiser=False)
         except TypeError:
-            # Older/newer signatures may not accept load_denoiser.
-            model = VoxCPM.from_pretrained(MODEL_NAME)
-
-        # Best-effort device move (some versions auto-place the model).
+            model = VoxCPM.from_pretrained(VOXCPM_MODEL)
         try:
-            if _resolved_device == "cpu" and hasattr(model, "tts_model"):
-                inner = getattr(model.tts_model, "to", None)
-                if callable(inner):
-                    model.tts_model.to("cpu")
+            _voxcpm_sr = int(model.tts_model.sample_rate)
         except Exception:
-            pass
-
-        try:
-            _sample_rate = int(model.tts_model.sample_rate)
-        except Exception:
-            _sample_rate = 16000
-
-        _model = model
-        return _model
+            _voxcpm_sr = 16000
+        _voxcpm_model = model
+        return _voxcpm_model
 
 
-# ── Voice registry ────────────────────────────────────────────────────────────
-
-def _list_voices() -> list[dict]:
-    """Reference voices = <name>.wav (+ optional <name>.txt transcript)."""
-    voices = []
-    for wav in sorted(VOICES_DIR.glob("*.wav")):
-        txt = wav.with_suffix(".txt")
-        transcript = ""
-        if txt.exists():
-            try:
-                transcript = txt.read_text(encoding="utf-8").strip()
-            except Exception:
-                transcript = ""
-        voices.append({
-            "name": wav.stem,
-            "wav": str(wav),
-            "has_transcript": txt.exists(),
-            "transcript": transcript,
-        })
-    return voices
-
-
-def _resolve_voice(voice: str) -> Optional[dict]:
+def _resolve_voxcpm_voice(voice):
     if not voice:
         return None
-    wav = VOICES_DIR / f"{voice}.wav"
+    wav = VOXCPM_VOICES_DIR / f"{voice}.wav"
     if not wav.exists():
         return None
     txt = wav.with_suffix(".txt")
-    transcript = ""
-    if txt.exists():
-        try:
-            transcript = txt.read_text(encoding="utf-8").strip()
-        except Exception:
-            transcript = ""
-    return {"name": voice, "wav": str(wav), "transcript": transcript}
+    transcript = txt.read_text(encoding="utf-8").strip() if txt.exists() else ""
+    return {"wav": str(wav), "transcript": transcript}
 
 
-# ── Audio helpers ─────────────────────────────────────────────────────────────
+def _voxcpm_synth(text, voice, cfg_value, inference_timesteps, normalize):
+    import numpy as np  # noqa: PLC0415
 
-def _wav_bytes_from_float(samples: Any, sample_rate: int) -> bytes:
-    """Encode a float waveform (numpy array, range ~[-1,1]) to 16-bit PCM WAV.
+    model = _load_voxcpm()
+    gen = {
+        "text": text,
+        "cfg_value": VOXCPM_CFG if cfg_value is None else float(cfg_value),
+        "inference_timesteps": VOXCPM_TIMESTEPS if inference_timesteps is None else int(inference_timesteps),
+        "normalize": VOXCPM_NORMALIZE if normalize is None else bool(normalize),
+    }
+    ref = _resolve_voxcpm_voice(voice)
+    if ref:
+        gen["prompt_wav_path"] = ref["wav"]
+        if ref["transcript"]:
+            gen["prompt_text"] = ref["transcript"]
+    try:
+        wav = model.generate(**gen)
+    except TypeError:
+        gen.pop("normalize", None)
+        wav = model.generate(**gen)
+    return np.asarray(wav, dtype="float32").reshape(-1), _voxcpm_sr
 
-    Uses soundfile if available (handles odd dtypes), else a stdlib wave fallback.
-    Godot's AudioStreamWAV.load_from_buffer parses standard PCM16 WAV.
-    """
+
+def _list_voxcpm_voices():
+    return sorted(p.stem for p in VOXCPM_VOICES_DIR.glob("*.wav"))
+
+
+# ── Robot FX ──────────────────────────────────────────────────────────────────
+
+def _apply_robot(samples, sr, intensity, carrier, bits):
+    """Ring-modulation + bitcrush → 'male robot' timbre. intensity 0..1 dry/wet."""
+    import numpy as np  # noqa: PLC0415
+
+    x = np.asarray(samples, dtype="float32").reshape(-1)
+    if x.size == 0 or intensity <= 0.0:
+        return x
+    t = np.arange(x.size, dtype="float32") / float(sr)
+    ring = x * np.sin(2.0 * np.pi * carrier * t).astype("float32")
+    levels = float(2 ** max(2, bits))
+    crush = np.round(ring * levels) / levels
+    wet = 0.6 * ring + 0.4 * crush
+    out = (1.0 - intensity) * x + intensity * wet
+    peak = float(np.max(np.abs(out))) or 1.0
+    return (out / peak * 0.95).astype("float32")
+
+
+# ── WAV encode ────────────────────────────────────────────────────────────────
+
+def _wav_bytes(samples, sr):
     try:
         import numpy as np  # noqa: PLC0415
         import soundfile as sf  # noqa: PLC0415
 
-        arr = np.asarray(samples, dtype="float32").reshape(-1)
         buf = io.BytesIO()
-        sf.write(buf, arr, sample_rate, format="WAV", subtype="PCM_16")
+        sf.write(buf, np.asarray(samples, dtype="float32").reshape(-1), sr, format="WAV", subtype="PCM_16")
         return buf.getvalue()
     except Exception:
-        # stdlib fallback — clip + int16 encode
         import array
-        import struct
 
-        try:
-            flat = [float(x) for x in samples]
-        except TypeError:
-            flat = list(samples)
         ints = array.array("h")
-        for x in flat:
-            v = max(-1.0, min(1.0, x))
+        for v in samples:
+            v = max(-1.0, min(1.0, float(v)))
             ints.append(int(v * 32767.0))
         buf = io.BytesIO()
         with wave.open(buf, "wb") as w:
             w.setnchannels(1)
             w.setsampwidth(2)
-            w.setframerate(sample_rate)
+            w.setframerate(sr)
             w.writeframes(ints.tobytes())
-        _ = struct  # keep import meaningful for linters
         return buf.getvalue()
 
 
-def _cache_key(text: str, voice: str, cfg: float, timesteps: int, normalize: bool) -> str:
+# ── Synthesis (engine dispatch + cache) ───────────────────────────────────────
+
+def _cache_key(text, voice, robot, intensity, carrier, bits, extra):
     payload = json.dumps(
-        {"m": MODEL_NAME, "t": text, "v": voice, "c": cfg, "s": timesteps, "n": normalize},
-        ensure_ascii=False,
-        sort_keys=True,
+        {"e": ENGINE, "t": text, "v": voice, "r": robot, "ri": round(intensity, 3),
+         "rc": carrier, "rb": bits, "x": extra},
+        ensure_ascii=False, sort_keys=True,
     )
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()
 
 
-def _synthesize(
-    text: str,
-    voice: str = "",
-    cfg_value: Optional[float] = None,
-    inference_timesteps: Optional[int] = None,
-    normalize: Optional[bool] = None,
-    use_cache: bool = True,
-) -> tuple[bytes, bool]:
-    """Return (wav_bytes, from_cache). Raises on model failure."""
+def synthesize(text, voice="", robot=None, robot_intensity=None,
+               cfg_value=None, inference_timesteps=None, normalize=None, use_cache=True):
+    """Return (wav_bytes, from_cache). Raises on engine failure."""
     text = (text or "").strip()
     if not text:
         raise ValueError("text is empty")
 
-    cfg = DEFAULT_CFG if cfg_value is None else float(cfg_value)
-    steps = DEFAULT_TIMESTEPS if inference_timesteps is None else int(inference_timesteps)
-    norm = DEFAULT_NORMALIZE if normalize is None else bool(normalize)
+    do_robot = ROBOT_ENABLED if robot is None else bool(robot)
+    intensity = ROBOT_INTENSITY if robot_intensity is None else float(robot_intensity)
+    extra = {"cfg": cfg_value, "ts": inference_timesteps} if ENGINE == "voxcpm" else {}
 
-    key = _cache_key(text, voice, cfg, steps, norm)
+    key = _cache_key(text, voice, do_robot, intensity, ROBOT_CARRIER, ROBOT_BITS, extra)
     cache_file = CACHE_DIR / f"{key}.wav"
     if use_cache and cache_file.exists():
         return cache_file.read_bytes(), True
 
-    model = _load_model()
+    if ENGINE == "voxcpm":
+        samples, sr = _voxcpm_synth(text, voice, cfg_value, inference_timesteps, normalize)
+    else:
+        samples, sr = _piper_synth(text, voice)
 
-    gen_kwargs: dict[str, Any] = {
-        "text": text,
-        "cfg_value": cfg,
-        "inference_timesteps": steps,
-        "normalize": norm,
-    }
-    resolved = _resolve_voice(voice)
-    if resolved:
-        # prompt_wav_path + prompt_text works across VoxCPM 0.5B and VoxCPM2
-        # ("ultimate cloning"). prompt_text may be empty (reference-only mode).
-        gen_kwargs["prompt_wav_path"] = resolved["wav"]
-        if resolved["transcript"]:
-            gen_kwargs["prompt_text"] = resolved["transcript"]
+    if do_robot:
+        samples = _apply_robot(samples, sr, intensity, ROBOT_CARRIER, ROBOT_BITS)
 
-    # Be tolerant of signature differences between versions.
-    try:
-        wav = model.generate(**gen_kwargs)
-    except TypeError:
-        gen_kwargs.pop("normalize", None)
-        wav = model.generate(**gen_kwargs)
-
-    audio = _wav_bytes_from_float(wav, _sample_rate)
+    audio = _wav_bytes(samples, sr)
     if use_cache:
         try:
             cache_file.write_bytes(audio)
         except Exception:
             pass
     return audio, False
+
+
+def _list_voices():
+    return _list_voxcpm_voices() if ENGINE == "voxcpm" else _list_piper_voices()
 
 
 # ── FastAPI app ───────────────────────────────────────────────────────────────
@@ -283,109 +319,96 @@ def build_app():
     from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: PLC0415
     from fastapi.middleware.cors import CORSMiddleware  # noqa: PLC0415
 
-    app = FastAPI(title="VoxCPM TTS — M.E.R.L.I.N.", version="1.0")
-
-    # Local dev tool bound to localhost → permissive CORS so the test page works
-    # even when opened straight from a file:// path in the browser.
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    app = FastAPI(title="MERLIN TTS (Piper/VoxCPM)", version="2.0")
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
     _TEST_PAGE = _HERE / "test_voice.html"
 
     @app.get("/", include_in_schema=False)
-    def index() -> Response:
-        """Serve the voice-test page (same origin → no CORS hassle)."""
+    def index():
         if _TEST_PAGE.exists():
             return FileResponse(str(_TEST_PAGE), media_type="text/html")
-        return HTMLResponse(
-            "<h1>VoxCPM</h1><p>Server is up. test_voice.html not found next to "
-            "server.py. Try <a href='/health'>/health</a>.</p>"
-        )
+        return HTMLResponse("<h1>MERLIN TTS</h1><p>Up. See <a href='/health'>/health</a>.</p>")
 
     @app.get("/health")
-    def health() -> dict:
+    def health():
+        loaded = bool(_piper_voices) if ENGINE == "piper" else (_voxcpm_model is not None)
+        model = PIPER_MODEL if ENGINE == "piper" else VOXCPM_MODEL
+        device = "cpu" if ENGINE == "piper" else (_voxcpm_device if _voxcpm_model else f"{VOXCPM_DEVICE} (pending)")
         return {
             "status": "ok",
-            "model": MODEL_NAME,
-            "device": _resolved_device if _model is not None else f"{DEVICE_PREF} (pending)",
-            "loaded": _model is not None,
-            "sample_rate": _sample_rate if _model is not None else None,
-            "voices": [v["name"] for v in _list_voices()],
+            "engine": ENGINE,
+            "model": model,
+            "device": device,
+            "loaded": loaded,
+            "robot": {"enabled": ROBOT_ENABLED, "intensity": ROBOT_INTENSITY,
+                      "carrier_hz": ROBOT_CARRIER, "bits": ROBOT_BITS},
+            "voices": _list_voices(),
             "cache_dir": str(CACHE_DIR),
-            "voices_dir": str(VOICES_DIR),
         }
 
     @app.get("/voices")
-    def voices() -> dict:
-        return {"voices": _list_voices()}
+    def voices():
+        return {"engine": ENGINE, "voices": _list_voices()}
+
+    def _do_synth(body):
+        return synthesize(
+            text=body.get("text", ""),
+            voice=body.get("voice", ""),
+            robot=body.get("robot"),
+            robot_intensity=body.get("robot_intensity"),
+            cfg_value=body.get("cfg_value"),
+            inference_timesteps=body.get("inference_timesteps"),
+            normalize=body.get("normalize"),
+            use_cache=body.get("cache", True),
+        )
 
     @app.post("/synth")
-    async def synth(request: Request, format: str = Query("wav")) -> Response:
+    async def synth(request: Request, format: str = Query("wav")):
         try:
             body = await request.json()
         except Exception:
             body = {}
-        text = body.get("text", "")
-        voice = body.get("voice", "")
         try:
-            audio, cached = _synthesize(
-                text=text,
-                voice=voice,
-                cfg_value=body.get("cfg_value"),
-                inference_timesteps=body.get("inference_timesteps"),
-                normalize=body.get("normalize"),
-                use_cache=body.get("cache", True),
-            )
+            audio, cached = _do_synth(body)
         except Exception as exc:  # noqa: BLE001
             return JSONResponse(status_code=500, content={"status": "error", "error": str(exc)})
-
         if format == "json":
             import base64
-
-            return JSONResponse(content={
-                "status": "ok",
-                "cached": cached,
-                "sample_rate": _sample_rate,
-                "voice": voice,
-                "audio_b64": base64.b64encode(audio).decode("ascii"),
-            })
-        headers = {"X-Voxcpm-Cached": "1" if cached else "0"}
-        return Response(content=audio, media_type="audio/wav", headers=headers)
+            return JSONResponse(content={"status": "ok", "cached": cached,
+                                         "audio_b64": base64.b64encode(audio).decode("ascii")})
+        return Response(content=audio, media_type="audio/wav",
+                        headers={"X-Voxcpm-Cached": "1" if cached else "0"})
 
     @app.post("/v1/audio/speech")
-    async def openai_speech(request: Request) -> Response:
-        """OpenAI-compatible: {model, input, voice, response_format}."""
+    async def openai_speech(request: Request):
         try:
             body = await request.json()
         except Exception:
             body = {}
-        text = body.get("input", "")
         voice = body.get("voice", "") or ""
-        # OpenAI default voices (alloy/echo/...) aren't ours -> treat as default.
-        if voice and _resolve_voice(voice) is None:
+        if voice and voice not in _list_voices():
             voice = ""
         try:
-            audio, cached = _synthesize(text=text, voice=voice)
+            audio, cached = synthesize(text=body.get("input", ""), voice=voice)
         except Exception as exc:  # noqa: BLE001
             return JSONResponse(status_code=500, content={"error": {"message": str(exc)}})
-        fmt = (body.get("response_format") or "wav").lower()
-        media = "audio/wav" if fmt in ("wav", "pcm") else "audio/wav"
-        return Response(content=audio, media_type=media, headers={"X-Voxcpm-Cached": "1" if cached else "0"})
+        return Response(content=audio, media_type="audio/wav",
+                        headers={"X-Voxcpm-Cached": "1" if cached else "0"})
 
     return app
 
 
-def main() -> None:
+def main():
     import uvicorn  # noqa: PLC0415
 
-    print(f"[VoxCPM] model={MODEL_NAME} device={DEVICE_PREF} host={HOST} port={PORT}")
-    print(f"[VoxCPM] voices_dir={VOICES_DIR}")
-    print(f"[VoxCPM] cache_dir={CACHE_DIR}")
-    print("[VoxCPM] model loads lazily on first /synth call.")
+    print(f"[MERLIN-TTS] engine={ENGINE} host={HOST} port={PORT}")
+    if ENGINE == "piper":
+        print(f"[MERLIN-TTS] piper model={PIPER_MODEL} voices_dir={PIPER_VOICES_DIR}")
+    else:
+        print(f"[MERLIN-TTS] voxcpm model={VOXCPM_MODEL} device={VOXCPM_DEVICE}")
+    print(f"[MERLIN-TTS] robot={'on' if ROBOT_ENABLED else 'off'} intensity={ROBOT_INTENSITY} cache={CACHE_DIR}")
+    print(f"[MERLIN-TTS] test page: http://{HOST}:{PORT}/")
     uvicorn.run(build_app(), host=HOST, port=PORT, log_level="info")
 
 

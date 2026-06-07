@@ -1,44 +1,49 @@
 <#
 .SYNOPSIS
-    Start the VoxCPM local TTS server from its venv.
+    Start the local TTS server from its venv.
 
 .DESCRIPTION
-    Reads tools/voxcpm/config.json (if present) to seed VOXCPM_* env vars, then
-    launches server.py with the venv's Python. Env vars already set in the shell
-    take precedence over config.json (so you can override per-run).
+    Seeds VOXCPM_*/PIPER_* env from config.json (if present); shell env vars and
+    explicit params take precedence.
 #>
 param(
+    [ValidateSet("piper", "voxcpm")]
+    [string]$Engine,
     [string]$Model,
-    [string]$Device,
-    [int]$Port
+    [int]$Port,
+    [switch]$NoRobot
 )
 
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$venv = Join-Path $here ".venv-voxcpm"
-$vpy = Join-Path $venv "Scripts\python.exe"
+$vpy = Join-Path $here ".venv-voxcpm\Scripts\python.exe"
 
 if (-not (Test-Path $vpy)) {
-    Write-Host "[VoxCPM] venv not found. Run install.bat first." -ForegroundColor Red
+    Write-Host "[TTS] venv not found. Run install.bat first." -ForegroundColor Red
     exit 1
 }
 
-# Seed from config.json (only for keys not already in the environment).
 $cfgPath = Join-Path $here "config.json"
 if (Test-Path $cfgPath) {
     $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
-    if (-not $env:VOXCPM_MODEL -and $cfg.model)               { $env:VOXCPM_MODEL = $cfg.model }
-    if (-not $env:VOXCPM_DEVICE -and $cfg.device)             { $env:VOXCPM_DEVICE = $cfg.device }
-    if (-not $env:VOXCPM_HOST -and $cfg.host)                 { $env:VOXCPM_HOST = $cfg.host }
-    if (-not $env:VOXCPM_PORT -and $cfg.port)                 { $env:VOXCPM_PORT = "$($cfg.port)" }
-    if (-not $env:VOXCPM_CFG_VALUE -and $cfg.cfg_value)       { $env:VOXCPM_CFG_VALUE = "$($cfg.cfg_value)" }
-    if (-not $env:VOXCPM_TIMESTEPS -and $cfg.inference_timesteps) { $env:VOXCPM_TIMESTEPS = "$($cfg.inference_timesteps)" }
+    if (-not $env:VOXCPM_ENGINE -and $cfg.engine)            { $env:VOXCPM_ENGINE = $cfg.engine }
+    if (-not $env:VOXCPM_HOST -and $cfg.host)                { $env:VOXCPM_HOST = $cfg.host }
+    if (-not $env:VOXCPM_PORT -and $cfg.port)                { $env:VOXCPM_PORT = "$($cfg.port)" }
+    if (-not $env:PIPER_MODEL -and $cfg.piper_model)         { $env:PIPER_MODEL = $cfg.piper_model }
+    if (-not $env:VOXCPM_MODEL -and $cfg.voxcpm_model)       { $env:VOXCPM_MODEL = $cfg.voxcpm_model }
+    if (-not $env:VOXCPM_DEVICE -and $cfg.voxcpm_device)     { $env:VOXCPM_DEVICE = $cfg.voxcpm_device }
+    if (-not $env:VOXCPM_ROBOT -and ($cfg.PSObject.Properties.Name -contains "robot")) {
+        $env:VOXCPM_ROBOT = if ($cfg.robot) { "1" } else { "0" }
+    }
+    if (-not $env:VOXCPM_ROBOT_INTENSITY -and $cfg.robot_intensity) { $env:VOXCPM_ROBOT_INTENSITY = "$($cfg.robot_intensity)" }
+    if (-not $env:VOXCPM_ROBOT_CARRIER -and $cfg.robot_carrier_hz)  { $env:VOXCPM_ROBOT_CARRIER = "$($cfg.robot_carrier_hz)" }
+    if (-not $env:VOXCPM_ROBOT_BITS -and $cfg.robot_bits)           { $env:VOXCPM_ROBOT_BITS = "$($cfg.robot_bits)" }
 }
 
-# Explicit param overrides win.
-if ($Model)  { $env:VOXCPM_MODEL = $Model }
-if ($Device) { $env:VOXCPM_DEVICE = $Device }
-if ($Port)   { $env:VOXCPM_PORT = "$Port" }
+if ($Engine)  { $env:VOXCPM_ENGINE = $Engine }
+if ($Model)   { if ($env:VOXCPM_ENGINE -eq "voxcpm") { $env:VOXCPM_MODEL = $Model } else { $env:PIPER_MODEL = $Model } }
+if ($Port)    { $env:VOXCPM_PORT = "$Port" }
+if ($NoRobot) { $env:VOXCPM_ROBOT = "0" }
 
-Write-Host "[VoxCPM] launching server (model=$($env:VOXCPM_MODEL), device=$($env:VOXCPM_DEVICE), port=$($env:VOXCPM_PORT)) ..." -ForegroundColor Cyan
+Write-Host "[TTS] launching (engine=$($env:VOXCPM_ENGINE), robot=$($env:VOXCPM_ROBOT), port=$($env:VOXCPM_PORT)) ..." -ForegroundColor Cyan
 & $vpy (Join-Path $here "server.py")

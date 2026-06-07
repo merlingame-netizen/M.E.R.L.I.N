@@ -2,6 +2,39 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-07 — Pivot TTS Piper (VoxCPM trop lent CPU) + voix robot Merlin
+
+### Problème
+Retour utilisateur : *« Ça ne marche pas, ça me dit que c'est trop lent en CPU »*.
+VoxCPM est GPU-oriented (diffusion auto-régressive, CUDA) → inutilisable en temps
+réel sur CPU.
+
+### Mesure (dans le conteneur, CPU 4 threads)
+- **Piper** `fr_FR-tom-medium` : **RTF 0,55** (6,5 s d'audio en 3,6 s), modèle 61 Mo, sans torch. Utilisable en jeu.
+- VoxCPM : confirmé non viable CPU.
+
+### Décisions (AskUserQuestion)
+- Moteur : **Piper** (recommandé).
+- Voix de Merlin : **robot homme** → Piper (tom, FR masculin) + FX robot serveur (ring-mod + bitcrush).
+
+### Livré
+- `server.py` réécrit **multi-moteur** (Piper défaut + VoxCPM optionnel), même contrat HTTP. FX robot intégré, réglable par requête (`robot`, `robot_intensity`) ou env. Cache disque inclut les params robot.
+- `requirements.txt` = Piper (sans torch) ; `requirements-voxcpm.txt` = path lourd optionnel.
+- `install.ps1`/`.bat` : Piper par défaut (télécharge `fr_FR-tom-medium`), `-Engine voxcpm` pour le clone GPU.
+- `config.example.json` + `start.ps1` : engine/robot/piper_model.
+- `test_voice.html` : toggle 🤖 voix robot + slider intensité, affiche le moteur.
+- `voxcpm_adapter.py` : flags `--robot` / `--robot_intensity` ; status montre moteur+robot.
+- `piper_voices/` (onnx git-ignorés) + README.
+- Docs : bannière pivot dans `docs/VOXCPM_DEPLOYMENT.md`, README réécrit, CLAUDE.md MAJ.
+
+### Validé (CPU, end-to-end)
+- Serveur Piper : `/health` (engine=piper, robot), `/synth` robot ON/OFF, `/v1/audio/speech`, page servie à `/`.
+- Adapter : `status` (engine+robot+voices), `synth --robot_intensity 0.9`, `--robot 0`.
+- Échantillons envoyés à l'utilisateur (voix Piper + 3 intensités robot).
+- Note : Godot `MerlinTTS` inchangé (contrat HTTP identique) — aucun impact in-game.
+
+---
+
 ## Session: 2026-06-06 — VoxCPM Local Deployment (TTS neuronale + voice cloning)
 
 ### Context

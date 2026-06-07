@@ -1,91 +1,64 @@
-# VoxCPM local TTS — M.E.R.L.I.N.
+# Local TTS — M.E.R.L.I.N. (Piper default · VoxCPM optional)
 
-Neural text-to-speech with **voice cloning**, running locally. Used for Merlin's
-in-game voice (`use_my_voice`) and reusable from the CLI for any project.
+Local text-to-speech for Merlin's voice and any other use. One HTTP contract,
+two engines behind it.
 
-- **Model**: [VoxCPM](https://github.com/OpenBMB/VoxCPM) — tokenizer-free TTS,
-  30 languages **including French**, zero-shot voice cloning, 48 kHz, Apache-2.0.
-- **Shape**: a small FastAPI server in a dedicated venv (like Ollama), driven by
-  a CLI adapter and a Godot autoload.
-- **Profile here**: **CPU-only** → lighter `VoxCPM-0.5B` + aggressive disk cache.
+| Engine | Speed (CPU) | Voice cloning | Notes |
+|---|---|---|---|
+| **Piper** (default) | **fast** (RTF ~0.5) | no (preset voices) | French, ~60 MB, no torch. **Recommended for CPU.** |
+| VoxCPM | very slow on CPU | yes | GPU-oriented. Keep for offline cloning / GPU boxes. |
+
+**Merlin = male robot voice**: Piper's French male voice (`fr_FR-tom-medium`) + a
+server-side robot FX (ring-mod + bitcrush). Tunable, cached, identical in game /
+CLI / test page.
 
 > Full guide: [`docs/VOXCPM_DEPLOYMENT.md`](../../docs/VOXCPM_DEPLOYMENT.md)
 
-## Quick start (Windows)
+## Quick start (Windows, CPU)
 
 ```bat
-:: 1. Install (CPU venv + voxcpm + deps). ~Several GB on first run.
+:: 1. Install Piper + the French Merlin voice (no torch, ~60 MB):
 tools\voxcpm\install.bat
 
-:: 2. Start the server (stays running in this terminal).
+:: 2. Start the server (stays running):
 tools\voxcpm\start.bat
 
-:: 3. In another terminal — check it's alive:
-python tools\cli.py voxcpm status --human
-
-:: 4. Synthesize a line to a wav:
-python tools\cli.py voxcpm synth --text "Bonjour, je suis Merlin." --out merlin.wav
-
-:: 5. Play it right away:
-python tools\cli.py voxcpm speak --text "Approche, jeune druide."
+:: 3. Test in the browser (served by the server, no CORS hassle):
+::    open  http://127.0.0.1:8808/
+::    or from the CLI:
+python tools\cli.py voxcpm speak --text "Je suis Merlin, gardien de Brocéliande."
 ```
 
-GPU machine instead? `tools\voxcpm\install.bat -Device cuda121 -Model openbmb/VoxCPM2 -Prefetch`
+## Robot voice controls
 
-## Test page (browser)
+- Test page: checkbox **🤖 Voix de robot** + intensity slider.
+- CLI: `python tools\cli.py voxcpm synth --text "..." --robot_intensity 0.9`
+  or `--robot 0` to disable.
+- Server defaults: `VOXCPM_ROBOT=1`, `VOXCPM_ROBOT_INTENSITY=0.7` (or `config.json`).
 
-A self-contained test UI ships in `test_voice.html`. Easiest path — the server
-serves it itself (no CORS hassle):
+## Change Merlin's voice
 
-```
-:: with the server running, just open in a browser:
-http://127.0.0.1:8808/
-```
+Default `fr_FR-tom-medium` (male). Drop other Piper voices in `piper_voices/`
+(see its README) and set `PIPER_MODEL` / pass `--voice <name>`.
 
-Type a line (Merlin presets included), pick a cloned voice, tweak guidance /
-steps, hit **Générer la voix** and it plays + offers a `.wav` download. You can
-also open `tools/voxcpm/test_voice.html` directly as a file — CORS is enabled on
-the server so that works too.
-
-## Voice cloning (`use_my_voice`)
+## Optional: VoxCPM cloning
 
 ```bat
-:: Register a 3-15s clean sample (transcript optional but improves fidelity):
-python tools\cli.py voxcpm add-voice --name merlin --audio "C:\rec\sample.wav" --text "Ceci est ma voix."
-
-:: Use it:
-python tools\cli.py voxcpm synth --text "La forêt t'attend." --voice merlin --out out.wav
+tools\voxcpm\install.bat -Engine voxcpm -Device cuda121   :: needs a GPU to be usable
 ```
-
-See [`voices/README.md`](voices/README.md) for sample guidelines.
+Then `engine: "voxcpm"` in `config.json` and register a clone with
+`voxcpm add-voice`. On CPU this is impractically slow — prefer offline batch use.
 
 ## Files
 
 | File | Role |
 |---|---|
-| `server.py` | FastAPI server: `/health`, `/voices`, `/synth`, `/v1/audio/speech`. Lazy model load, device auto-detect, SHA-1 disk cache, cloning. |
-| `install.ps1` / `install.bat` | Create `.venv-voxcpm`, install torch (CPU/CUDA) + voxcpm + deps, optional model prefetch. |
-| `start.ps1` / `start.bat` | Launch the server, seeding config from `config.json`. |
-| `requirements.txt` | Server deps (torch installed separately by the script). |
-| `config.example.json` | Copy to `config.json` to set model/device/port. |
-| `voices/` | Reference voice samples for cloning (`<name>.wav` + optional `<name>.txt`). |
+| `server.py` | Multi-engine FastAPI server: `/`, `/health`, `/voices`, `/synth`, `/v1/audio/speech`. Robot FX + disk cache. |
+| `install.ps1`/`.bat` | venv + Piper (default) or VoxCPM (`-Engine voxcpm`); downloads the Piper voice. |
+| `start.ps1`/`.bat` | Launch the server (seeds engine/robot from `config.json`). |
+| `requirements.txt` | Piper engine deps (no torch). |
+| `requirements-voxcpm.txt` | Optional VoxCPM deps. |
+| `test_voice.html` | Browser test UI (served at `/`). |
+| `piper_voices/` | Piper ONNX voices (git-ignored; install downloads them). |
+| `voices/` | VoxCPM reference clones (when using that engine). |
 | `cache/` | Generated WAV cache (git-ignored). |
-
-## OpenAI-compatible endpoint
-
-```bash
-curl -s http://127.0.0.1:8808/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -d '{"model":"voxcpm","input":"Hello from VoxCPM","voice":"merlin"}' --output speech.wav
-```
-
-Point any OpenAI-TTS client at `http://127.0.0.1:8808/v1`.
-
-## Notes
-
-- **First call is slow on CPU** (model download + high RTF). After that, the disk
-  cache makes repeated lines instant.
-- The server **lazy-loads** the model on the first `/synth`, so it boots fast and
-  `python -c "import server"` works without the heavy wheels (handy for CI).
-- In Godot, the `MerlinTTS` autoload no-ops gracefully when the server is down —
-  the game never blocks on TTS.

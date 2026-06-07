@@ -105,6 +105,8 @@ class VoxCPMAdapter(BaseAdapter):
         out: str = "",
         cfg_value: Any = None,
         inference_timesteps: Any = None,
+        robot: Any = None,
+        robot_intensity: Any = None,
         play: bool = False,
         **_kwargs: Any,
     ) -> dict:
@@ -116,6 +118,11 @@ class VoxCPMAdapter(BaseAdapter):
             payload["cfg_value"] = float(cfg_value)
         if inference_timesteps is not None:
             payload["inference_timesteps"] = int(inference_timesteps)
+        if robot is not None:
+            # CLI passes flags as strings; treat "0"/"false"/"no" as off.
+            payload["robot"] = str(robot).lower() not in ("0", "false", "no", "off")
+        if robot_intensity is not None:
+            payload["robot_intensity"] = float(robot_intensity)
 
         self.log(f"POST {BASE_URL}/synth (text={len(text)} chars, voice={voice or '-'}) …")
         audio, cached, err = self._post_audio("/synth", payload)

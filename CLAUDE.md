@@ -354,15 +354,16 @@ python tools/cli.py ollama chat --model qwen2.5:7b --prompt "Bonjour !"
 python tools/cli.py ollama pull --model qwen2.5:7b
 python tools/cli.py ollama show --model merlin-narrator-lora:latest
 
-# VoxCPM (TTS neuronale locale + voice cloning) — serveur: tools\voxcpm\start.bat
-python tools/cli.py voxcpm status                # Sante serveur (modele, device, voix)
-python tools/cli.py voxcpm voices                # Voix de reference enregistrees (use_my_voice)
-python tools/cli.py voxcpm synth --text "Bonjour, je suis Merlin." --out merlin.wav
-python tools/cli.py voxcpm synth --text "Approche." --voice merlin --out out.wav
-python tools/cli.py voxcpm speak --text "La foret t'attend."   # synth + lecture
-python tools/cli.py voxcpm add-voice --name merlin --audio sample.wav --text "Ma voix."
-python tools/cli.py voxcpm models                # Modeles connus + modele courant du serveur
-# In-game: autoload MerlinTTS.speak("...", "merlin")  — doc: docs/VOXCPM_DEPLOYMENT.md
+# TTS locale (Piper par defaut = rapide CPU + voix robot Merlin ; VoxCPM = clone GPU)
+# Serveur: tools\voxcpm\start.bat  |  Page de test: http://127.0.0.1:8808/
+python tools/cli.py voxcpm status                # Sante serveur (moteur, modele, robot, voix)
+python tools/cli.py voxcpm voices                # Voix disponibles (Piper onnx / clones VoxCPM)
+python tools/cli.py voxcpm speak --text "Je suis Merlin."           # synth + lecture (robot ON)
+python tools/cli.py voxcpm synth --text "Approche." --robot_intensity 0.9 --out out.wav
+python tools/cli.py voxcpm synth --text "Sans effet." --robot 0 --out clean.wav
+python tools/cli.py voxcpm add-voice --name merlin --audio sample.wav --text "Ma voix."  # (engine voxcpm)
+python tools/cli.py voxcpm models                # Moteurs/modeles connus
+# In-game: autoload MerlinTTS.speak("...")  — doc: docs/VOXCPM_DEPLOYMENT.md
 
 # Git / GitHub
 python tools/cli.py git status
