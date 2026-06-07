@@ -15,7 +15,7 @@ data "oci_core_images" "os" {
   compartment_id           = local.compartment_id
   operating_system         = var.operating_system
   operating_system_version = var.operating_system_version
-  shape                    = "VM.Standard.A1.Flex"
+  shape                    = var.instance_shape
   sort_by                  = "TIMECREATED"
   sort_order               = "DESC"
 }
@@ -116,11 +116,15 @@ resource "oci_core_instance" "vm" {
   compartment_id      = local.compartment_id
   availability_domain = local.availability_domain
   display_name        = var.instance_name
-  shape               = "VM.Standard.A1.Flex"
+  shape               = var.instance_shape
 
-  shape_config {
-    ocpus         = var.ocpus
-    memory_in_gbs = var.memory_in_gbs
+  # Flex shapes (e.g. A1.Flex) need a shape_config; fixed shapes (E2.1.Micro) must not.
+  dynamic "shape_config" {
+    for_each = endswith(var.instance_shape, ".Flex") ? [1] : []
+    content {
+      ocpus         = var.ocpus
+      memory_in_gbs = var.memory_in_gbs
+    }
   }
 
   source_details {

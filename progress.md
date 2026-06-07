@@ -2517,3 +2517,13 @@ usages Claude/dev/Godot.
 - AJOUT `scripts/freetier-guard.py` : parse le plan terraform et BLOQUE l'apply si hors quota
   Always Free (A1 >4 OCPU/24 Go, >2 micro, shape non-free, >200 Go). Cable dans deploy.sh ET
   dans la boucle de retry (plan -> guard -> apply a chaque iteration). Teste OK (pass 1/6, block 8/48/300).
+
+### 2026-06-07 (suite 4) — Support shape micro x86 + capacite Paris saturee
+
+- Terraform generalise : var `instance_shape` (A1.Flex ARM OU E2.1.Micro x86), `shape_config`
+  conditionnel (Flex only), image lookup selon le shape.
+- Bascule sur micro AMD x86 gratuit (E2.1.Micro, 1 Go, Linux) a la demande utilisateur.
+- Constat : meme le micro x86 retourne "Out of host capacity" a eu-paris-1 => region saturee
+  en gratuit tous shapes. Always Free etant limite a la region d'origine (Paris), pas d'option
+  gratuite ailleurs. Retry micro en arriere-plan (garde-fou actif).
+- Rappel : Windows = payant (hors free tier) ; PAYG reste le seul deblocage fiable cote capacite.

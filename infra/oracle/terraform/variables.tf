@@ -43,9 +43,15 @@ variable "instance_name" {
   default     = "merlin-arm-a1"
 }
 
+variable "instance_shape" {
+  type        = string
+  description = "Compute shape. Always-Free options: VM.Standard.A1.Flex (ARM) or VM.Standard.E2.1.Micro (AMD x86, fixed 1/8 OCPU 1GB)."
+  default     = "VM.Standard.A1.Flex"
+}
+
 variable "ocpus" {
   type        = number
-  description = "Number of ARM OCPUs (Always Free max 4)."
+  description = "Number of ARM OCPUs (Always Free max 4). Only used for *.Flex shapes."
   default     = 4
 }
 
