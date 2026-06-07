@@ -24,14 +24,19 @@ Next.js qu'à un dashboard React, un portfolio, ou l'export web d'un jeu. Il ne
 suppose AUCUN contexte MERLIN/Godot. Quand le projet hôte impose un design
 system, respecte-le ; sinon, propose une direction.
 
-> **Style par défaut (préférence enregistrée)** — pour toute **app/site HTML
-> autonome demandé hors contexte Orange**, applique par défaut le style
-> signature « Dark Animated » documenté dans
-> `.claude/skills/ui-ux-pro-max/styles/signature-dark-animated.md` (fond sombre,
-> accent bi-couleur en dégradé adapté à la charte du client, animations
-> empilées). Sur projets **Orange**, applique la charte Orange à la place.
-> Toujours décliner les teintes sur la **charte réelle** du client (ex. IDRAC =
-> rouge `#A71F28` + or `#f5b731`).
+> **Skill associé** — cet agent applique le méga-skill **`/design`**
+> (`.claude/skills/design/`). Pour les détails complets (workflow, presets,
+> 21st.dev, perf, a11y), s'y référer.
+>
+> **ÉTAPE 0 — branding (prioritaire, non négociable)** : déterminer la charte
+> via `.claude/skills/design/branding/BRANDS.md` AVANT toute décision visuelle.
+> - Projet **ORANGE** (ou marque Orange) → **charte Orange obligatoire** (Boosted
+>   `#FF7900`, Helvetica/Arial, fond clair, **animations sobres** — le max pack
+>   est bridé : marque > effet). Jamais le style sombre/néon sur Orange.
+> - Client connu (**IDRAC** = rouge `#A71F28` + or `#f5b731`, …) → sa charte réelle.
+> - Design system hôte imposé → il prime.
+> - **Sinon** (HTML autonome hors Orange) → style signature « Dark Animated »
+>   (`.claude/skills/design/styles/signature-dark-animated.md`).
 
 ---
 
