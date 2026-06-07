@@ -1807,7 +1807,7 @@ Trigger : la feature touche un mecanisme listé dans §1-§24 (game loop, factio
 | MOS HUD "Carte X/25" | non implemente | **a ajouter** |
 | Card flip | non implemente | **a ajouter** (Phase 2 backlog) |
 | asset_spawn_animator | non extrait | **a faire** (cascade refacto SigleToken) |
-| Merlin speech-bar + TTS | non implemente | **a ajouter** (Phase 2.1.5/2.1.6 backlog) |
+| Merlin speech-bar + TTS | **implémenté** (VoxCPM local + voice cloning) | OK — autoload `MerlinTTS`, parchemin intro voisé + `MerlinSoundBar` synchro voix. Doc : `docs/VOXCPM_DEPLOYMENT.md` |
 
 ### 24.5 Cascade obligatoire game-design (rappel §21.4)
 

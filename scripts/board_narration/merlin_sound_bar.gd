@@ -39,6 +39,11 @@ var _accent_color: Color = Color(0.92, 0.72, 0.20)   # default Persona gold
 var _ink_color: Color = Color(0.04, 0.03, 0.03)
 var _is_speaking: bool = false
 
+# v? (2026-06-06) — Auto-pulse while Merlin's VoxCPM voice plays. The bar now
+# syncs to actual TTS audio (via MerlinTTS signals), not just the typewriter.
+const SPEECH_PULSE_INTERVAL: float = 0.10   # auto-pulse cadence while voicing
+var _speech_pulse_accum: float = 0.0
+
 
 func _ready() -> void:
 	var total_width: float = float(BAR_COUNT - 1) * BAR_SPACING
@@ -68,13 +73,37 @@ func _ready() -> void:
 	for bar in _bars:
 		CelShadingManager.apply(bar, {"outline_thickness": 0.012, "skip_flat_remap": true})
 
+	# 2026-06-06 — Animate whenever Merlin actually speaks (VoxCPM TTS). Guarded
+	# so the bar still works in scenes/smoke without the MerlinTTS autoload.
+	var tts := get_node_or_null("/root/MerlinTTS")
+	if tts != null and tts.has_signal("speech_started"):
+		tts.speech_started.connect(_on_tts_speech_started)
+		tts.speech_finished.connect(_on_tts_speech_finished)
+
+
+## Merlin's voice started playing — wake the bar into active-speech mode.
+func _on_tts_speech_started(_text: String) -> void:
+	start_speaking()
+
+
+## Merlin's voice finished — let the bars decay back to rest.
+func _on_tts_speech_finished() -> void:
+	stop_speaking()
+
 
 ## v7.7.18 — Idle frame-skip to recover 0.4-0.8ms per frame.
 ## When silent AND all bars at rest, call set_process(false). Re-enable on
 ## pulse()/start_speaking().
 const REST_TOLERANCE: float = 0.001
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# While Merlin's voice is playing, self-pulse so the bar dances to the speech
+	# even when no typewriter is driving pulse() (e.g. the parchment intro).
+	if _is_speaking:
+		_speech_pulse_accum += delta
+		if _speech_pulse_accum >= SPEECH_PULSE_INTERVAL:
+			_speech_pulse_accum = 0.0
+			pulse(randf_range(0.45, 0.9))
 	var rest_amp: float = (BAR_SPEAKING_HEIGHT_MIN if _is_speaking else BAR_IDLE_HEIGHT)
 	var all_at_rest: bool = not _is_speaking
 	for i in range(BAR_COUNT):

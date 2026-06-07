@@ -45,6 +45,11 @@ var _stylebox: StyleBoxFlat = null
 var _intro_text: String = ""
 var _is_closing: bool = false
 
+# 2026-06-06 — Merlin reads the intro aloud (VoxCPM TTS) as the typewriter runs.
+# Caller can disable voicing or pick a cloned voice via display(...) args.
+var _voice_enabled: bool = true
+var _voice_name: String = ""
+
 
 func _ready() -> void:
 	# Charter-compliant geometry : sharp edges with a slight 4px radius
@@ -91,8 +96,12 @@ func _ready() -> void:
 
 ## Display the intro and run the full unroll → typewriter → hold → close cycle.
 ## Returns immediately ; caller can `await parchment.closed` to wait for completion.
-func display(intro_text: String) -> void:
+## `voice` : speak the text via MerlinTTS (default true). `voice_name` : reference
+## voice to clone (e.g. "merlin"); empty uses the server default.
+func display(intro_text: String, voice: bool = true, voice_name: String = "") -> void:
 	_intro_text = intro_text.strip_edges()
+	_voice_enabled = voice
+	_voice_name = voice_name
 	if _label == null:
 		# _ready hasn't run yet (instantiated but not added to tree). Defer.
 		call_deferred("_display_internal")
@@ -111,6 +120,13 @@ func _display_internal() -> void:
 	unroll_tween.tween_property(self, "modulate:a", 1.0, UNROLL_DURATION * 0.7).set_trans(Tween.TRANS_SINE)
 	await unroll_tween.finished
 	# Phase 2 : typewriter (visible_characters 0 → text length).
+	# 2026-06-06 — Merlin speaks the intro now so the voice runs alongside the
+	# typewriter reveal. Guarded + no-op if the MerlinTTS autoload / server is
+	# absent, so the parchment never blocks on TTS.
+	if _voice_enabled and not _intro_text.is_empty():
+		var tts := get_node_or_null("/root/MerlinTTS")
+		if tts != null and tts.has_method("speak"):
+			tts.call("speak", _intro_text, _voice_name)
 	var char_count: int = _intro_text.length()
 	if char_count > 0:
 		var typewriter_duration: float = float(char_count) / TYPEWRITER_CHARS_PER_SECOND

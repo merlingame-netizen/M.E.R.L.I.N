@@ -35,6 +35,12 @@ Couvre le backlog bible « Merlin speech-bar + TTS (`use_my_voice`) ».
 - Parse GDScript autoload : OK.
 - **Je tourne dans un conteneur cloud Linux CPU sans GPU** — le serveur/modèle s'exécute sur la machine Windows de l'utilisateur (livrables = kit de déploiement).
 
+### Suite — câblage in-game speech-bar + parchemin (2026-06-06)
+- `scripts/ui/parchment_scroll.gd` : `display(text, voice=true, voice_name="")` → Merlin lit l'intro à voix haute (`MerlinTTS.speak`) pendant le typewriter. No-op gracieux si autoload/serveur absent.
+- `scripts/board_narration/merlin_sound_bar.gd` : la barre s'anime sur les signaux `MerlinTTS.speech_started/finished` (auto-pulse pendant la voix), synchro audio réelle (pas juste le typewriter).
+- `docs/GAME_DESIGN_BIBLE.md` §24.4 : ligne « Merlin speech-bar + TTS » passée de *non implémenté* → **implémenté**.
+- Validation : parse projet complet (autoloads chargés) 0 erreur GDScript ; smoke `ScenarioLoading.tscn` `exit=0`, 0 SCRIPT ERROR, chemin no-op MerlinTTS OK sans serveur.
+
 ---
 
 ## Session: 2026-04-25 — Vision Graphique v3 + MCP Native Forest + LLM Cards
