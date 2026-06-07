@@ -280,9 +280,31 @@ def _synthesize(
 
 def build_app():
     from fastapi import FastAPI, Query, Request, Response  # noqa: PLC0415
-    from fastapi.responses import JSONResponse  # noqa: PLC0415
+    from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: PLC0415
+    from fastapi.middleware.cors import CORSMiddleware  # noqa: PLC0415
 
     app = FastAPI(title="VoxCPM TTS — M.E.R.L.I.N.", version="1.0")
+
+    # Local dev tool bound to localhost → permissive CORS so the test page works
+    # even when opened straight from a file:// path in the browser.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    _TEST_PAGE = _HERE / "test_voice.html"
+
+    @app.get("/", include_in_schema=False)
+    def index() -> Response:
+        """Serve the voice-test page (same origin → no CORS hassle)."""
+        if _TEST_PAGE.exists():
+            return FileResponse(str(_TEST_PAGE), media_type="text/html")
+        return HTMLResponse(
+            "<h1>VoxCPM</h1><p>Server is up. test_voice.html not found next to "
+            "server.py. Try <a href='/health'>/health</a>.</p>"
+        )
 
     @app.get("/health")
     def health() -> dict:

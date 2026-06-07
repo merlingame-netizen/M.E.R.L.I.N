@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Merlin — Test de Voix (VoxCPM)</title>
+<style>
+  :root {
+    --gold: #eac24b;
+    --gold-dim: #9c813a;
+    --bg: #0c0a07;
+    --bg-panel: rgba(22, 18, 12, 0.92);
+    --bg-input: #15110b;
+    --ink: #f3ead2;
+    --sepia: #c9b48a;
+    --crimson: #b3402f;
+    --green: #5fae6b;
+    --border: #4d3a1c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1a140c 0%, var(--bg) 60%) fixed;
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  header { text-align: center; margin-bottom: 22px; }
+  h1 {
+    font-size: 30px; letter-spacing: 1px; margin: 0 0 4px;
+    color: var(--gold);
+    text-shadow: 0 0 14px rgba(234, 194, 75, 0.25), 0 2px 0 #000;
+  }
+  .subtitle { color: var(--sepia); font-size: 14px; font-style: italic; }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(234,194,75,0.06);
+    padding: 20px 22px;
+    margin-bottom: 18px;
+  }
+  .panel h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--gold-dim); margin: 0 0 14px; font-weight: 700;
+  }
+
+  /* server status pill */
+  .status-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--bg-input);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #777; }
+  .dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.bad { background: var(--crimson); box-shadow: 0 0 8px var(--crimson); }
+  .meta { color: var(--sepia); font-size: 12.5px; }
+
+  label { display: block; font-size: 12.5px; color: var(--sepia); margin: 14px 0 6px; letter-spacing: .5px; }
+  textarea, input[type=text], select {
+    width: 100%; background: var(--bg-input); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 10px 12px; font: inherit; font-size: 15px;
+  }
+  textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+  textarea:focus, input:focus, select:focus { outline: none; border-color: var(--gold-dim); box-shadow: 0 0 0 2px rgba(234,194,75,0.15); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .slider-val { color: var(--gold); font-weight: 700; }
+  input[type=range] { width: 100%; accent-color: var(--gold); }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .chip {
+    cursor: pointer; font-size: 12.5px; padding: 5px 10px; border-radius: 999px;
+    background: var(--bg-input); border: 1px solid var(--border); color: var(--sepia);
+  }
+  .chip:hover { border-color: var(--gold-dim); color: var(--ink); }
+
+  .actions { display: flex; gap: 12px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+  button.primary {
+    cursor: pointer; font: inherit; font-size: 15px; font-weight: 700;
+    color: #1a1206; background: linear-gradient(#f0cf63, #d2a734);
+    border: 1px solid #b8902f; border-radius: 4px; padding: 11px 22px;
+    letter-spacing: .5px; box-shadow: 0 2px 0 #6e520f, 0 4px 14px rgba(234,194,75,.18);
+  }
+  button.primary:hover { filter: brightness(1.06); }
+  button.primary:disabled { opacity: .55; cursor: not-allowed; filter: grayscale(.4); }
+  button.ghost {
+    cursor: pointer; font: inherit; font-size: 13px; color: var(--sepia);
+    background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 9px 14px;
+  }
+  button.ghost:hover { border-color: var(--gold-dim); color: var(--ink); }
+
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(234,194,75,.25);
+    border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  audio { width: 100%; margin-top: 6px; }
+  .result-meta { color: var(--sepia); font-size: 12.5px; margin-top: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .badge { color: var(--gold); }
+
+  #log {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 12px; color: #9c9078; background: #0a0805;
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 10px 12px; max-height: 150px; overflow: auto; white-space: pre-wrap;
+    margin-top: 4px;
+  }
+  .err { color: var(--crimson); }
+  .hint { color: var(--gold-dim); font-size: 12px; margin-top: 8px; line-height: 1.5; }
+  a.dl { color: var(--gold); font-size: 13px; text-decoration: none; border-bottom: 1px dotted var(--gold-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>✦ Merlin — Test de Voix ✦</h1>
+    <div class="subtitle">VoxCPM · synthèse vocale neuronale locale &amp; clonage de voix</div>
+  </header>
+
+  <!-- Server -->
+  <section class="panel">
+    <h2>Serveur</h2>
+    <div class="status-row">
+      <span class="pill"><span id="dot" class="dot"></span><span id="statusText">vérification…</span></span>
+      <button class="ghost" id="refreshBtn">↻ Rafraîchir</button>
+      <span class="meta" id="serverMeta"></span>
+    </div>
+    <label for="urlInput">URL du serveur</label>
+    <input type="text" id="urlInput" value="http://127.0.0.1:8808" spellcheck="false" />
+    <div class="hint" id="serverHint"></div>
+  </section>
+
+  <!-- Synthesis -->
+  <section class="panel">
+    <h2>Texte à prononcer</h2>
+    <textarea id="text">Approche, jeune druide. La forêt de Brocéliande t'attend, et les chênes anciens murmurent déjà ton nom.</textarea>
+    <div class="presets" id="presets"></div>
+
+    <div class="grid2">
+      <div>
+        <label for="voice">Voix (clone)</label>
+        <select id="voice"><option value="">— voix par défaut —</option></select>
+      </div>
+      <div>
+        <label for="cfg">Guidage (cfg) · <span class="slider-val" id="cfgVal">2.0</span></label>
+        <input type="range" id="cfg" min="1" max="4" step="0.1" value="2.0" />
+        <label for="steps" style="margin-top:10px">Étapes (qualité/vitesse) · <span class="slider-val" id="stepsVal">10</span></label>
+        <input type="range" id="steps" min="4" max="30" step="1" value="10" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="genBtn">🜂 Générer la voix</button>
+      <div class="spinner" id="spinner"></div>
+      <span class="meta" id="genStatus"></span>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section class="panel" id="resultPanel" style="display:none">
+    <h2>Résultat</h2>
+    <audio id="player" controls></audio>
+    <div class="result-meta">
+      <span id="timing"></span>
+      <span id="cachedTag"></span>
+      <a class="dl" id="dlLink" download="merlin.wav">⤓ Télécharger le .wav</a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Journal</h2>
+    <div id="log"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const logEl = $("log");
+
+  // Default to the current origin when served by the server (no CORS), else localhost.
+  const served = location.protocol === "http:" || location.protocol === "https:";
+  if (served) $("urlInput").value = location.origin;
+
+  function baseUrl() { return $("urlInput").value.replace(/\/+$/, ""); }
+
+  function log(msg, isErr) {
+    const t = new Date().toLocaleTimeString();
+    const line = "[" + t + "] " + msg;
+    const span = document.createElement("div");
+    if (isErr) span.className = "err";
+    span.textContent = line;
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // ── Presets (Merlin lines) ──────────────────────────────────────────────
+  const PRESETS = [
+    "Approche, jeune druide. La forêt t'attend.",
+    "Le silence du chêne en dit plus long que mille paroles.",
+    "Trois chemins s'ouvrent à toi. Choisis avec ton cœur, non ta peur.",
+    "Les korrigans rient dans la brume… méfie-toi de leurs promesses.",
+    "Tu as bien agi. Brocéliande se souviendra de ce nom."
+  ];
+  const presetsEl = $("presets");
+  PRESETS.forEach((p) => {
+    const c = document.createElement("span");
+    c.className = "chip";
+    c.textContent = p.length > 42 ? p.slice(0, 40) + "…" : p;
+    c.title = p;
+    c.onclick = () => { $("text").value = p; };
+    presetsEl.appendChild(c);
+  });
+
+  // ── Sliders ──────────────────────────────────────────────────────────────
+  $("cfg").oninput = () => { $("cfgVal").textContent = parseFloat($("cfg").value).toFixed(1); };
+  $("steps").oninput = () => { $("stepsVal").textContent = $("steps").value; };
+
+  // ── Health check ───────────────────────────────────────────────────────
+  async function checkHealth() {
+    const dot = $("dot"), txt = $("statusText"), meta = $("serverMeta"), hint = $("serverHint");
+    dot.className = "dot"; txt.textContent = "vérification…"; meta.textContent = ""; hint.textContent = "";
+    try {
+      const r = await fetch(baseUrl() + "/health", { method: "GET" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = await r.json();
+      dot.className = "dot ok";
+      txt.textContent = "en ligne";
+      meta.textContent = "modèle " + d.model + " · " + d.device + (d.loaded ? " · chargé" : " · modèle en attente (1er appel)");
+      populateVoices(d.voices || []);
+      log("Serveur OK — modèle=" + d.model + " device=" + d.device);
+    } catch (e) {
+      dot.className = "dot bad";
+      txt.textContent = "hors ligne";
+      hint.innerHTML = "Démarre le serveur : <code>tools\\voxcpm\\start.bat</code>. " +
+        "Si tu as ouvert ce fichier en <code>file://</code> et que la requête échoue malgré un serveur lancé, " +
+        "ouvre plutôt <code>" + baseUrl() + "/</code> dans le navigateur (même origine, pas de CORS).";
+      log("Serveur injoignable : " + e.message, true);
+    }
+  }
+
+  function populateVoices(voices) {
+    const sel = $("voice");
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— voix par défaut —</option>';
+    voices.forEach((v) => {
+      const o = document.createElement("option");
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    });
+    if (current) sel.value = current;
+    if (voices.length) log("Voix disponibles : " + voices.join(", "));
+  }
+
+  // ── Synthesis ────────────────────────────────────────────────────────────
+  let lastUrl = null;
+  async function generate() {
+    const text = $("text").value.trim();
+    if (!text) { log("Texte vide.", true); return; }
+
+    const payload = {
+      text: text,
+      voice: $("voice").value,
+      cfg_value: parseFloat($("cfg").value),
+      inference_timesteps: parseInt($("steps").value, 10)
+    };
+
+    $("genBtn").disabled = true;
+    $("spinner").style.display = "inline-block";
+    $("genStatus").textContent = "synthèse… (long au 1er appel / sur CPU)";
+    log("POST /synth — " + text.length + " car., voix=" + (payload.voice || "défaut") +
+        ", cfg=" + payload.cfg_value + ", étapes=" + payload.inference_timesteps);
+
+    const t0 = performance.now();
+    try {
+      const r = await fetch(baseUrl() + "/synth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) {
+        let detail = "HTTP " + r.status;
+        try { const j = await r.json(); detail = j.error || JSON.stringify(j); } catch (_) {}
+        throw new Error(detail);
+      }
+      const cached = r.headers.get("X-Voxcpm-Cached") === "1";
+      const blob = await r.blob();
+      const ms = Math.round(performance.now() - t0);
+
+      if (lastUrl) URL.revokeObjectURL(lastUrl);
+      lastUrl = URL.createObjectURL(blob);
+
+      $("player").src = lastUrl;
+      $("dlLink").href = lastUrl;
+      $("resultPanel").style.display = "block";
+      $("timing").innerHTML = "⏱ <span class='badge'>" + ms + " ms</span> · " + (blob.size / 1024).toFixed(1) + " Ko";
+      $("cachedTag").innerHTML = cached ? "✦ <span class='badge'>depuis le cache</span>" : "✦ généré";
+      $("player").play().catch(() => {});
+      log("OK — " + ms + " ms, " + blob.size + " octets" + (cached ? " (cache)" : ""));
+    } catch (e) {
+      log("Échec : " + e.message, true);
+      $("genStatus").textContent = "";
+      alert("Échec de la synthèse : " + e.message +
+            "\n\nServeur lancé ? (tools\\voxcpm\\start.bat)\nLe 1er appel télécharge le modèle et est lent sur CPU.");
+    } finally {
+      $("genBtn").disabled = false;
+      $("spinner").style.display = "none";
+      $("genStatus").textContent = "";
+    }
+  }
+
+  $("genBtn").onclick = generate;
+  $("refreshBtn").onclick = checkHealth;
+  $("urlInput").onchange = checkHealth;
+  // Ctrl/Cmd+Enter to generate from the textarea.
+  $("text").addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  });
+
+  checkHealth();
+})();
+</script>
+</body>
+</html>

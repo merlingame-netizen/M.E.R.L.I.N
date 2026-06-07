@@ -32,6 +32,21 @@ python tools\cli.py voxcpm speak --text "Approche, jeune druide."
 
 GPU machine instead? `tools\voxcpm\install.bat -Device cuda121 -Model openbmb/VoxCPM2 -Prefetch`
 
+## Test page (browser)
+
+A self-contained test UI ships in `test_voice.html`. Easiest path — the server
+serves it itself (no CORS hassle):
+
+```
+:: with the server running, just open in a browser:
+http://127.0.0.1:8808/
+```
+
+Type a line (Merlin presets included), pick a cloned voice, tweak guidance /
+steps, hit **Générer la voix** and it plays + offers a `.wav` download. You can
+also open `tools/voxcpm/test_voice.html` directly as a file — CORS is enabled on
+the server so that works too.
+
 ## Voice cloning (`use_my_voice`)
 
 ```bat
