@@ -568,24 +568,41 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# SENS (évocation) de CHAQUE carte du combo de 2, et on demande explicitement de FAIRE SENTIR les
 	# DEUX forces à l'œuvre, ancrées dans leurs images concrètes, fondues en un seul geste. Toujours
 	# sans NOMMER les cartes (resté la consigne user 2026-05-29). → la prose reflète vraiment le combo.
-	# Combo : on COLLECTE les 2 évocations + les tags joués (UN seul passage, KISS).
+	# Combo : on COLLECTE les 2 évocations, leurs ARCHETYPES (registre) + les tags joués.
 	var evocs: Array = []
+	var archs: Array = []
 	var played_tags: Dictionary = {}
 	for c in played_cards:
 		if c is Object and "evocation" in c:
 			var ev: String = str(c.evocation).strip_edges()
 			if ev != "":
 				evocs.append(ev)
+		if c is Object and c.has_method("archetype"):
+			archs.append(str(c.archetype()))
 		if c is Object and "tags" in c:
 			for t in c.tags:
 				played_tags[str(t)] = true
-	# Fusion (user 2026-06-07) : les évocations sont données comme DONNEES à TRADUIRE en gestes, sans
-	# guillemets ni phrase citable — le modèle recopiait sinon « fond deux gestes en un seul : «...» ».
+	# Registre par archetype (user 2026-06-07 : « deux cartes de langage ne doivent pas donner une main
+	# posee »). L'issue DOIT rester fidele a la NATURE des cartes → 2 cartes Social = issue VERBALE, etc.
+	var arch_reg: Dictionary = {
+		"Social": "PAROLE (il parle, convainc, ruse, charme, apaise — PAS de geste physique etranger)",
+		"Offensif": "FORCE du corps (il pousse, frappe, tient bon, grimpe, brise)",
+		"Mystique": "PERCEPTION/MAGIE (il voit, ressent, ecoute, parle aux choses, lit les signes)",
+		"Défensif": "PROTECTION/ENDURANCE (il resiste, encaisse, protege, contourne)",
+		"Corrompu": "OMBRE a un PRIX (il appelle une force trouble qui aide mais prend son du)",
+	}
+	var registres: PackedStringArray = []
+	for a in archs:
+		registres.append(str(arch_reg.get(a, arch_reg["Mystique"])))
+	var reg_hint: String = ""
+	if registres.size() >= 1:
+		reg_hint = " REGISTRE des forces (l'action DOIT y rester fidele) : " + " ; ".join(registres) + "."
+	# Fusion : les évocations sont des DONNEES à TRADUIRE en gestes DU BON REGISTRE, pas une phrase citable.
 	var combo: String = ""
 	if evocs.size() >= 2:
-		combo = "DEUX forces a fondre en UNE seule action concrete (TRADUIS-les en gestes, ne RECOPIE PAS ces mots) -- force A = %s -- force B = %s" % [str(evocs[0]), str(evocs[1])]
+		combo = "DEUX forces a fondre en UNE seule action concrete, DANS LEUR REGISTRE (TRADUIS-les, ne RECOPIE pas) -- force A = %s -- force B = %s" % [str(evocs[0]), str(evocs[1])]
 	elif evocs.size() == 1:
-		combo = "Une force a traduire en geste concret (ne recopie pas ces mots) = %s" % str(evocs[0])
+		combo = "Une force a traduire en geste concret de son registre (ne recopie pas) = %s" % str(evocs[0])
 	# Couverture (user 2026-06-06) : adéquation cartes ↔ tags requis. On décrit l'AJUSTEMENT
 	# (les bonnes clés / les mauvaises), JAMAIS l'issue — c'est deg_directive qui POSSÈDE l'issue.
 	# Évite la contradiction « rien obtenu » vs un degré de succès, ex. partiel à 0/2 (review MEDIUM).
@@ -631,9 +648,8 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	var rt_title: String = str(_run_thread.get("title", "")).strip_edges()
 	if rt_title != "":
 		ctx += "Aventure : « %s »\n" % rt_title
-	var bn: int = int(situation.get("n", 0))
-	if bn > 0:
-		ctx += "Moment %d/%d du sentier (%s).\n" % [bn, int(situation.get("total", 5)), str(situation.get("type", ""))]
+	# (Position du beat retirée du prompt : le modèle la narrait — « Le moment cinq du sentier arriva ».
+	#  Le type de beat passe déjà par focus_hint ; la continuité par last_gist.)
 	var prev: String = str(_run_thread.get("last_gist", "")).strip_edges()
 	if prev != "":
 		ctx += "Juste avant, %s enchaine sans rompre le fil.\n" % prev
@@ -647,7 +663,7 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# forces, calee sur la prose cible. _strip_scene_echo reste le filet anti-recopiage.
 	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
 	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barrait le gue, le courant poussait fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): Le Voyageur choisit de caler ses pieds dans la vase et de pousser sans rompre. La dalle racla, bascula et libera le passage ; il franchit le gue, trempe mais debout."
-	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue en %s, a la 3e PERSONNE et au temps du CONTE (passe simple / imparfait). Ta TOUTE PREMIERE phrase DOIT commencer par « Le Voyageur choisit de » suivi de l'action concrete qui FOND les deux forces (TRADUIS-les en gestes ; ne CITE JAMAIS leurs formulations entre guillemets ; n'ecris JAMAIS 'fond deux gestes en un seul'). NE RE-DECRIS PAS la scene (le mur, le chemin, l'etre sont deja connus). PUIS raconte CE QUE CELA CAUSA : la consequence concrete qui RESOUT la situation (l'etre, l'obstacle ou le choix precis). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). Varie la fin (pas toujours 'le chemin s'ouvre'). Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
+	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue en %s, a la 3e PERSONNE et au temps du CONTE (passe simple / imparfait). Ta TOUTE PREMIERE phrase DOIT commencer par « Le Voyageur choisit de » suivi de l'action concrete qui FOND les deux forces DANS LEUR REGISTRE (voir ci-dessus). RESPECTE le registre : si les forces sont des PAROLES, l'issue est VERBALE (il parle, ruse, charme, convainc), JAMAIS un geste physique sans rapport comme 'il pose la main'. TRADUIS les forces en actions ; ne CITE JAMAIS leurs formulations entre guillemets ; n'ecris JAMAIS 'fond deux gestes en un seul'. NE RE-DECRIS PAS la scene (le mur, le chemin, l'etre sont deja connus). PUIS raconte CE QUE CELA CAUSA : la consequence concrete qui RESOUT la situation (l'etre, l'obstacle ou le choix precis). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). Varie la fin (pas toujours 'le chemin s'ouvre'). Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, reg_hint, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
