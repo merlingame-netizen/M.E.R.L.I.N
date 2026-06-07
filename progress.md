@@ -2489,3 +2489,14 @@ usages Claude/dev/Godot.
 - Valide : `terraform validate` OK, rendu cloud-init = YAML valide, lock 5 plateformes.
 - **Reste a faire (utilisateur)** : Step 1-3 du runbook (generer cles, enregistrer la
   cle publique dans la console, remplir terraform.tfvars), puis `./scripts/deploy.sh`.
+
+### 2026-06-07 (suite) — Runner Claude Code + pont SSH
+
+- `git_repos` pre-rempli avec les 2 repos (M.E.R.L.I.N + merlin-web).
+- Service systemd `merlin-runner` (var `enable_claude_runner`, defaut true) : idle
+  tant que `/etc/merlin/runner.env` non configure (pas de crash-loop), `RUNNER_CMD`
+  libre (ex: `claude -p "..."`).
+- Pont de connexion : `install-ssh-alias.sh` (alias `ssh merlin-vm` + tunnel Ollama
+  auto via LocalForward), `connect.sh`, `tunnel.sh`. Cote VM : `/etc/profile.d/merlin.sh`
+  (alias ws/gv/ol/merlin) + MOTD + `merlin-status`.
+- Revalide : cloud-init rendu = YAML valide (runner on/off), gating verifie, tf validate OK.

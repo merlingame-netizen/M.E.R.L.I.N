@@ -25,11 +25,12 @@ locals {
   image_id            = data.oci_core_images.os.images[0].id
 
   cloud_init = base64encode(templatefile("${path.module}/../cloud-init/cloud-init.yaml.tftpl", {
-    os_username   = var.os_username
-    ollama_models = var.ollama_models
-    godot_version = var.godot_version
-    expose_ollama = var.expose_ollama
-    git_repos     = var.git_repos
+    os_username          = var.os_username
+    ollama_models        = var.ollama_models
+    godot_version        = var.godot_version
+    expose_ollama        = var.expose_ollama
+    git_repos            = var.git_repos
+    enable_claude_runner = var.enable_claude_runner
   }))
 }
 

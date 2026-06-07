@@ -53,6 +53,83 @@ write_files:
       Workspace:      /home/${os_username}/workspace
       Provision logs: /var/log/cloud-init-output.log , /var/log/merlin-models.log
 
+  # --- Shell shortcuts (the "bridge" convenience, VM side) ---
+  - path: /etc/profile.d/merlin.sh
+    content: |
+      # M.E.R.L.I.N. shell shortcuts
+      alias ws='cd /home/${os_username}/workspace'
+      alias ll='ls -alh'
+      alias gv='godot --headless --version'
+      alias ol='ollama list'
+      alias merlin='/usr/local/bin/merlin-status'
+      export EDITOR=nano
+
+  - path: /usr/local/bin/merlin-status
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      echo "=== M.E.R.L.I.N. host status ==="
+      echo "Godot  : $(/usr/local/bin/godot --headless --version 2>/dev/null || echo n/a)"
+      echo "Ollama : $(curl -fsS http://localhost:11434/api/version 2>/dev/null | jq -r .version 2>/dev/null || echo down)"
+      echo "Claude : $(claude --version 2>/dev/null || echo 'not installed')"
+      echo "Runner : $(systemctl is-active merlin-runner 2>/dev/null || echo n/a)"
+      echo "Models :"; ollama list 2>/dev/null | sed 's/^/  /'
+      echo "Workspace: $(ls /home/${os_username}/workspace 2>/dev/null | tr '\n' ' ')"
+
+  - path: /etc/update-motd.d/99-merlin
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      echo ""
+      echo "  M.E.R.L.I.N. ARM A1 host — type 'merlin' for status, 'ws' for workspace"
+      echo ""
+%{ if enable_claude_runner ~}
+  # --- Claude Code runner (systemd) ---
+  - path: /opt/merlin/runner.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      ENV_FILE=/etc/merlin/runner.env
+      if [ -f "$ENV_FILE" ]; then set -a; . "$ENV_FILE"; set +a; fi
+      if [ -z "$${ANTHROPIC_API_KEY:-}" ]; then
+        echo "merlin-runner: ANTHROPIC_API_KEY not set in $ENV_FILE — idle."
+        echo "Configure it and run: sudo systemctl restart merlin-runner"
+        exit 0
+      fi
+      cd "$${RUNNER_WORKDIR:-/home/${os_username}/workspace}"
+      exec $${RUNNER_CMD:-claude --version}
+
+  - path: /etc/merlin/runner.env.example
+    content: |
+      # Copy to /etc/merlin/runner.env, fill in, then:
+      #   sudo systemctl restart merlin-runner && journalctl -u merlin-runner -f
+      ANTHROPIC_API_KEY=
+      RUNNER_WORKDIR=/home/${os_username}/workspace/M.E.R.L.I.N
+      # Command the runner executes headless. Examples:
+      #   RUNNER_CMD=claude -p "run validate + smoke and summarize failures"
+      #   RUNNER_CMD=bash tools/autodev/run.sh
+      RUNNER_CMD=claude --version
+
+  - path: /etc/systemd/system/merlin-runner.service
+    content: |
+      [Unit]
+      Description=M.E.R.L.I.N. Claude Code runner
+      After=network-online.target ollama.service
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=${os_username}
+      EnvironmentFile=-/etc/merlin/runner.env
+      ExecStart=/opt/merlin/runner.sh
+      Restart=on-failure
+      RestartSec=30
+
+      [Install]
+      WantedBy=multi-user.target
+%{ endif ~}
+
 runcmd:
   - sysctl --system || true
   # 8 GB swap for headroom when loading larger quantized models.
@@ -89,6 +166,12 @@ runcmd:
 %{ for repo in git_repos ~}
   - sudo -u ${os_username} git clone ${repo} "/home/${os_username}/workspace/$(basename ${repo} .git)" || true
 %{ endfor ~}
+%{ if enable_claude_runner ~}
+  # Claude Code runner: enable for boot; stays idle until runner.env is configured.
+  - mkdir -p /etc/merlin
+  - systemctl daemon-reload
+  - systemctl enable merlin-runner.service || true
+%{ endif ~}
   - touch /opt/merlin/PROVISION_DONE
 
 final_message: "M.E.R.L.I.N. host provisioned in $UPTIME s — see /opt/merlin/README.txt"

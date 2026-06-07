@@ -127,6 +127,18 @@ variable "godot_version" {
 
 variable "git_repos" {
   type        = list(string)
-  description = "Optional list of git clone URLs to mirror into ~/workspace on first boot."
-  default     = []
+  description = "Git clone URLs to mirror into ~/workspace on first boot."
+  default = [
+    "https://github.com/merlingame-netizen/M.E.R.L.I.N.git",
+    "https://github.com/merlingame-netizen/merlin-web.git",
+  ]
+}
+
+# ---------------------------------------------------------------------------
+# Claude Code runner (systemd service on the VM)
+# ---------------------------------------------------------------------------
+variable "enable_claude_runner" {
+  type        = bool
+  description = "Install a systemd service that can run a headless Claude Code task at boot. Stays inactive until /etc/merlin/runner.env is configured with ANTHROPIC_API_KEY."
+  default     = true
 }

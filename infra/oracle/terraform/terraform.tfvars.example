@@ -29,4 +29,10 @@ ssh_public_key = "ssh-ed25519 AAAA... you@host"
 # --- Workloads ---
 # ollama_models = ["gemma3:4b", "gemma3:12b"]
 # godot_version = "4.4.1"
-# git_repos     = ["https://github.com/merlingame-netizen/M.E.R.L.I.N.git"]
+# git_repos defaults to your two repos (M.E.R.L.I.N + merlin-web); override to change:
+# git_repos = [
+#   "https://github.com/merlingame-netizen/M.E.R.L.I.N.git",
+#   "https://github.com/merlingame-netizen/merlin-web.git",
+# ]
+# Claude Code runner service (idle until /etc/merlin/runner.env is set on the VM):
+# enable_claude_runner = true

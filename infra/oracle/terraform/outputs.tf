@@ -18,6 +18,11 @@ output "image_id" {
   value       = local.image_id
 }
 
+output "ssh_user" {
+  description = "Default OS login user."
+  value       = var.os_username
+}
+
 output "ssh_command" {
   description = "Ready-to-use SSH command."
   value       = "ssh ${var.os_username}@${oci_core_instance.vm.public_ip}"

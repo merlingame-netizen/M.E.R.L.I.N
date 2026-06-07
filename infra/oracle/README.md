@@ -101,6 +101,51 @@ ssh -N -L 11434:localhost:11434 ubuntu@<public_ip>
 
 ---
 
+## The connection "bridge" (easy access)
+
+After `apply`, install a one-word SSH alias on your machine:
+
+```bash
+./scripts/install-ssh-alias.sh        # writes a 'merlin-vm' block into ~/.ssh/config
+```
+
+Then connecting is trivial — the Ollama tunnel is wired in automatically:
+
+```bash
+ssh merlin-vm                          # shell on the VM + localhost:11434 -> remote Ollama
+scp file merlin-vm:~/                  # copy files
+code --remote ssh-remote+merlin-vm /home/ubuntu/workspace   # VS Code Remote-SSH
+```
+
+No-config one-shots (read IP straight from terraform outputs):
+
+```bash
+./scripts/connect.sh                   # ssh in
+./scripts/connect.sh merlin-status     # run a command remotely
+./scripts/tunnel.sh                    # just the Ollama tunnel (foreground)
+```
+
+On the VM you also get shortcuts: `merlin` (status), `ws` (cd workspace),
+`gv` (godot version), `ol` (ollama list).
+
+## Claude Code runner (systemd, on the VM)
+
+`enable_claude_runner = true` (default) installs a `merlin-runner` service.
+It stays **idle** until you configure it (so it never crash-loops):
+
+```bash
+ssh merlin-vm
+sudo cp /etc/merlin/runner.env.example /etc/merlin/runner.env
+sudo nano /etc/merlin/runner.env        # set ANTHROPIC_API_KEY, RUNNER_WORKDIR, RUNNER_CMD
+sudo systemctl restart merlin-runner
+journalctl -u merlin-runner -f
+```
+
+`RUNNER_CMD` is whatever you want to run headless at boot, e.g.
+`claude -p "run validate + smoke and summarize"` or `bash tools/autodev/run.sh`.
+
+---
+
 ## "Out of host capacity" (the classic A1 problem)
 
 A1 free capacity is scarce in popular regions. If `apply` fails with
@@ -154,5 +199,8 @@ infra/oracle/
 │   └── cloud-init.yaml.tftpl      # VM provisioning (Ollama/Gemma, Godot, Claude Code)
 └── scripts/
     ├── generate-keys.sh           # API + SSH keys, prints tfvars snippet
-    └── deploy.sh                  # init/plan/apply wrapper
+    ├── deploy.sh                  # init/plan/apply wrapper
+    ├── install-ssh-alias.sh       # adds 'merlin-vm' to ~/.ssh/config (+ Ollama tunnel)
+    ├── connect.sh                 # one-shot SSH using terraform outputs
+    └── tunnel.sh                  # Ollama tunnel only
 ```
