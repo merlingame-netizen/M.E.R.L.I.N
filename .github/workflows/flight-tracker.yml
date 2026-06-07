@@ -1,0 +1,74 @@
+name: Flight Tracker — La Reunion
+
+# Watch quotidien des prix de billets Marseille/Paris -> La Reunion (RUN).
+# Recupere les prix via Amadeus, met a jour l'historique + le rapport,
+# et commit le resultat sur la branche.
+#
+# IMPORTANT :
+#  - Renseigner les secrets AMADEUS_CLIENT_ID et AMADEUS_CLIENT_SECRET
+#    (Settings > Secrets and variables > Actions).
+#  - Le cron ne se declenche QUE depuis la branche par defaut du repo.
+#    Sur une branche feature, lancer manuellement via "Run workflow".
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # tous les jours a 06:00 UTC (~08:00 Paris hiver)
+  workflow_dispatch:
+    inputs:
+      mock:
+        description: "Mode mock (prix simules, sans cle API)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flight-tracker-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run flight tracker
+        env:
+          AMADEUS_CLIENT_ID: ${{ secrets.AMADEUS_CLIENT_ID }}
+          AMADEUS_CLIENT_SECRET: ${{ secrets.AMADEUS_CLIENT_SECRET }}
+          AMADEUS_ENV: ${{ vars.AMADEUS_ENV || 'test' }}
+          # Fenetre de recherche (surchargeable via Variables du repo) :
+          FT_ORIGINS: ${{ vars.FT_ORIGINS || 'MRS,CDG,ORY' }}
+          FT_DESTINATION: ${{ vars.FT_DESTINATION || 'RUN' }}
+          FT_DEPART_START: ${{ vars.FT_DEPART_START || '2026-12-20' }}
+          FT_DEPART_END: ${{ vars.FT_DEPART_END || '2027-01-15' }}
+          FT_TRIP_DAYS: ${{ vars.FT_TRIP_DAYS || '21' }}
+          FT_RETURN_FLEX: ${{ vars.FT_RETURN_FLEX || '0' }}
+        run: |
+          if [ "${{ inputs.mock }}" = "true" ]; then
+            python -m tools.flight_tracker --mock --sleep 0
+          else
+            python -m tools.flight_tracker --sleep 0.3
+          fi
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/flight_tracker/data/
+          if git diff --cached --quiet; then
+            echo "Aucun changement de prix a committer."
+          else
+            STAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+            git commit -m "chore(flight-tracker): releve prix La Reunion ${STAMP}"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
