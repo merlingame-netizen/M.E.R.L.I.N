@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Marketing Academy | IDRAC Business School</title>
+<meta name="description" content="Atelier IA et Marketing Digital - IDRAC Business School - Master 1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+<style>
+  :root{
+    --bg:#0a0a12; --bg2:#10101e; --ink:#eaeaf2; --muted:#9090aa; --dim:#5a5a7a;
+    --red:#A71F28; --red-light:#d4343f; --red-dark:#7a161d; --gold:#f5b731;
+    --cyan:#38bdf8; --green:#34d399; --purple:#a78bfa; --pink:#f472b6; --orange:#fb923c;
+    --glass:rgba(18,18,32,.6); --line:rgba(167,31,40,.18); --line2:rgba(255,255,255,.06);
+    --grad:linear-gradient(135deg,#A71F28,#d4343f,#f5b731);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Montserrat',-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  .mono{font-family:'Space Mono',monospace}
+  #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+    background:radial-gradient(120% 120% at 50% -10%,transparent 52%,rgba(0,0,0,.6) 100%);mix-blend-mode:multiply}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
+  .eyebrow{letter-spacing:.26em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+  .grad-text{background:var(--grad);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+  .display{font-weight:900;line-height:.96;letter-spacing:-.03em;margin:.18em 0 .3em;font-size:clamp(42px,8.5vw,104px)}
+  .lead{color:var(--muted);font-size:clamp(16px,2.1vw,21px);max-width:60ch;line-height:1.55}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{min-height:48px;min-width:48px;display:inline-flex;align-items:center;gap:.5em;padding:14px 24px;
+    border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:15px;cursor:pointer;
+    background:transparent;color:var(--ink);will-change:transform;font-family:inherit}
+  .btn svg{width:20px;height:20px}
+  .btn-primary{border:none;color:#fff;background:linear-gradient(135deg,#A71F28,#d4343f);
+    box-shadow:0 12px 44px -12px var(--red),0 0 0 1px rgba(245,183,49,.25) inset}
+  .btn-gold{border:none;color:#241a05;background:linear-gradient(135deg,#f5b731,#fb923c);box-shadow:0 12px 40px -14px var(--gold)}
+  .pill{font-size:13px;color:var(--muted);border:1px solid var(--line);padding:8px 14px;border-radius:999px}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;
+    border:1px solid var(--line);background:linear-gradient(135deg,rgba(167,31,40,.18),rgba(245,183,49,.08));
+    font-size:13px;font-weight:700;letter-spacing:.04em;position:relative;overflow:hidden}
+  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none;z-index:0}
+  .days{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:720px){.days{grid-template-columns:repeat(2,1fr)}}
+  .day{position:relative;border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--glass);
+    transform-style:preserve-3d;overflow:hidden}
+  .day .wd-num{font-family:'Space Mono',monospace;font-weight:700;font-size:13px;color:var(--gold);letter-spacing:.1em}
+  .day .wd-lbl{display:block;margin-top:8px;font-weight:700;font-size:16px;letter-spacing:-.01em}
+  .day .glare{position:absolute;inset:0;pointer-events:none;opacity:0;mix-blend-mode:overlay}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(3,1fr)}
+  @media(max-width:860px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;overflow:hidden;border:1px solid var(--line2);border-radius:18px;background:var(--glass);padding:22px;min-height:140px}
+  .card .spot{position:absolute;inset:0;opacity:0;pointer-events:none}
+  .card h3{margin:.5em 0 .25em;font-size:17px;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center}
+  .ico svg{width:22px;height:22px}
+  .num{font-weight:900;font-size:clamp(38px,7vw,76px);letter-spacing:-.03em;line-height:1}
+  .sec{padding:90px 0;position:relative;z-index:2}
+  .foot{color:var(--muted);font-size:14px;border-top:1px solid var(--line2);margin-top:60px;padding-top:26px;text-align:center}
+  .progress{position:fixed;left:0;top:0;height:3px;transform-origin:0%;z-index:90;background:linear-gradient(90deg,#A71F28,#d4343f,#f5b731)}
+  .modal-bk{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(5,5,10,.7);backdrop-filter:blur(7px);padding:20px}
+  .modal{width:min(440px,94vw);border:1px solid var(--line);border-radius:24px;padding:30px;background:linear-gradient(180deg,#12121f,#0a0a12)}
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+  .role{border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;
+    background:var(--glass);cursor:pointer;font-weight:700;color:var(--ink)}
+  .role svg{width:30px;height:30px;color:var(--red-light)}
+  .marquee{display:flex;gap:14px;white-space:nowrap;will-change:transform}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:10px 18px;font-weight:700;font-size:14px;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div id="root"></div>
+
+<script type="module">
+import React, { useRef, useState, useEffect } from "https://esm.sh/react@18.3.1";
+import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
+import htm from "https://esm.sh/htm@3.1.1";
+import {
+  motion, AnimatePresence, MotionConfig,
+  useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate,
+  useInView, useReducedMotion, animate
+} from "https://esm.sh/framer-motion@11.3.19?deps=react@18.3.1,react-dom@18.3.1";
+
+const html = htm.bind(React.createElement);
+const M = motion;
+const spring = { snappy:{type:"spring",stiffness:400,damping:30},
+                 smooth:{type:"spring",stiffness:240,damping:30},
+                 gentle:{type:"spring",stiffness:120,damping:20} };
+const easeOut=[0.16,1,0.3,1];
+const fadeUp={hidden:{opacity:0,y:26},show:{opacity:1,y:0,transition:spring.smooth}};
+const stagger=(s=.07,d=.05)=>({hidden:{opacity:0},show:{opacity:1,transition:{staggerChildren:s,delayChildren:d}}});
+
+/* ── icons (inline) ───────────────────────────────────────────────────── */
+const I = {
+  home:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z",
+  book:"M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z",
+  users:"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0",
+  layers:"M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
+  bolt:"M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+  check:"M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",
+  game:"M2 7h20v14H2zM16 7V5a4 4 0 00-8 0v2",
+  notebook:"M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2zM9 7h6M9 11h4",
+  award:"M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z",
+  trophy:"M6 9H4.5a2.5 2.5 0 010-5C7 4 7 9 7 9M18 9h1.5a2.5 2.5 0 000-5C17 4 17 9 17 9M4 22h16M10 22V2h4v20",
+  user:"M12 7a4 4 0 100 8 4 4 0 000-8zM5.5 21a6.5 6.5 0 0113 0",
+  arrow:"M5 12h14M12 5l7 7-7 7",
+};
+const Icon = ({d,style}) => html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style=${style}><path d=${d}/></svg>`;
+
+/* ── animated constellation background (raf, reduced-motion aware) ──────── */
+function useConstellation(){
+  const reduce = useReducedMotion();
+  useEffect(()=>{
+    const cv=document.getElementById("bg-canvas"); if(!cv) return;
+    const ctx=cv.getContext("2d"); let raf=0, w=0,h=0, parts=[], running=true;
+    const COLORS=["rgba(167,31,40,","rgba(245,183,49,","rgba(212,52,63,"];
+    function size(){ w=cv.width=innerWidth*devicePixelRatio; h=cv.height=innerHeight*devicePixelRatio;
+      cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px";
+      const n=Math.min(70,Math.floor(innerWidth/22));
+      parts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,
+        vx:(Math.random()-.5)*0.18*devicePixelRatio,vy:(Math.random()-.5)*0.18*devicePixelRatio,
+        r:(Math.random()*1.6+0.6)*devicePixelRatio,c:COLORS[Math.floor(Math.random()*COLORS.length)]})); }
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      for(const p of parts){
+        p.x+=p.vx;p.y+=p.vy;
+        if(p.x<0||p.x>w)p.vx*=-1; if(p.y<0||p.y>h)p.vy*=-1;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fillStyle=p.c+"0.9)";ctx.fill();
+      }
+      const link=140*devicePixelRatio;
+      for(let i=0;i<parts.length;i++)for(let j=i+1;j<parts.length;j++){
+        const a=parts[i],b=parts[j],dx=a.x-b.x,dy=a.y-b.y,dist=Math.hypot(dx,dy);
+        if(dist<link){ ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+          ctx.strokeStyle="rgba(167,31,40,"+(0.16*(1-dist/link)).toFixed(3)+")";ctx.lineWidth=devicePixelRatio;ctx.stroke(); }
+      }
+      if(running) raf=requestAnimationFrame(draw);
+    }
+    size();
+    if(reduce){ draw(); } else { draw(); }
+    const onVis=()=>{ running=!document.hidden; if(running&&!reduce){cancelAnimationFrame(raf);raf=requestAnimationFrame(draw);} };
+    addEventListener("resize",size); document.addEventListener("visibilitychange",onVis);
+    if(reduce){ running=false; cancelAnimationFrame(raf); } // static frame only
+    return ()=>{running=false;cancelAnimationFrame(raf);removeEventListener("resize",size);document.removeEventListener("visibilitychange",onVis);};
+  },[reduce]);
+}
+
+/* ── scroll progress ──────────────────────────────────────────────────── */
+function ScrollProgress(){
+  const {scrollYProgress}=useScroll();
+  const scaleX=useSpring(scrollYProgress,{stiffness:120,damping:30});
+  return html`<${M.div} class="progress" style=${{scaleX,right:0}}/>`;
+}
+
+/* ── cursor spotlight (whole page glow) ───────────────────────────────── */
+function CursorGlow(){
+  const reduce=useReducedMotion();
+  const mx=useMotionValue(-300),my=useMotionValue(-300);
+  const bg=useMotionTemplate`radial-gradient(360px circle at ${mx}px ${my}px, rgba(245,183,49,0.07), transparent 70%)`;
+  useEffect(()=>{ if(reduce)return; const f=e=>{mx.set(e.clientX);my.set(e.clientY)};
+    addEventListener("pointermove",f); return ()=>removeEventListener("pointermove",f); },[reduce]);
+  if(reduce) return null;
+  return html`<${M.div} style=${{position:"fixed",inset:0,zIndex:1,pointerEvents:"none",background:bg}}/>`;
+}
+
+/* ── one-shot reveal ──────────────────────────────────────────────────── */
+function Reveal({children,delay=0,style,as="div"}){
+  const ref=useRef(null); const inView=useInView(ref,{once:true,margin:"-12% 0px"});
+  return html`<${M[as]} ref=${ref} style=${style}
+    variants=${{hidden:{opacity:0,y:28},show:{opacity:1,y:0,transition:{...spring.smooth,delay}}}}
+    initial="hidden" animate=${inView?"show":"hidden"}>${children}<//>`;
+}
+
+/* ── magnetic button ──────────────────────────────────────────────────── */
+function Magnetic({children,cls="",onClick}){
+  const ref=useRef(null);const reduce=useReducedMotion();
+  const mx=useMotionValue(0),my=useMotionValue(0);
+  const x=useSpring(mx,spring.gentle),y=useSpring(my,spring.gentle);
+  const move=e=>{if(reduce||!ref.current)return;const r=ref.current.getBoundingClientRect();
+    mx.set((e.clientX-(r.left+r.width/2))*0.4);my.set((e.clientY-(r.top+r.height/2))*0.4);};
+  const reset=()=>{mx.set(0);my.set(0);};
+  return html`<${M.button} ref=${ref} onMouseMove=${move} onMouseLeave=${reset} onClick=${onClick}
+    style=${{x,y}} whileTap=${{scale:.95}} transition=${spring.snappy} class=${"btn "+cls}>${children}<//>`;
+}
+
+/* ── 3D tilt day card ─────────────────────────────────────────────────── */
+function TiltDay({num,lbl,variants}){
+  const reduce=useReducedMotion();
+  const rx=useMotionValue(0),ry=useMotionValue(0);
+  const srx=useSpring(rx,spring.gentle),sry=useSpring(ry,spring.gentle);
+  const gx=useMotionValue(50),gy=useMotionValue(50);
+  const glare=useMotionTemplate`radial-gradient(180px circle at ${gx}% ${gy}%, rgba(245,183,49,.5), transparent 60%)`;
+  const move=e=>{if(reduce)return;const r=e.currentTarget.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;
+    ry.set((px-.5)*16);rx.set((.5-py)*16);gx.set(px*100);gy.set(py*100);};
+  const leave=()=>{rx.set(0);ry.set(0);};
+  return html`<${M.div} class="day" variants=${variants} onMouseMove=${move} onMouseLeave=${leave}
+      whileHover=${{y:-6}} transition=${spring.smooth}
+      style=${reduce?{}:{rotateX:srx,rotateY:sry,perspective:800}}>
+    <${M.div} class="glare" style=${{background:glare,opacity:reduce?0:1}}/>
+    <span class="wd-num">${num}</span><span class="wd-lbl">${lbl}</span>
+  <//>`;
+}
+
+/* ── spotlight feature card ───────────────────────────────────────────── */
+function Feat({d,tint,title,body,variants}){
+  const mx=useMotionValue(50),my=useMotionValue(50);
+  const bg=useMotionTemplate`radial-gradient(200px circle at ${mx}% ${my}%, ${tint}, transparent 62%)`;
+  const move=e=>{const r=e.currentTarget.getBoundingClientRect();mx.set(((e.clientX-r.left)/r.width)*100);my.set(((e.clientY-r.top)/r.height)*100);};
+  return html`<${M.div} class="card" variants=${variants} onMouseMove=${move} whileHover=${{y:-5}} transition=${spring.smooth}>
+    <${M.div} class="spot" style=${{background:bg}} animate=${{opacity:[0,0]}} whileHover=${{opacity:1}}/>
+    <div class="ico" style=${{background:tint.replace(/[\d.]+\)$/,'0.16)'),border:`1px solid ${tint}`,color:'#fff'}}><${Icon} d=${d}/></div>
+    <h3>${title}</h3><p>${body}</p>
+  <//>`;
+}
+
+/* ── counter ──────────────────────────────────────────────────────────── */
+function Stat({to,suffix,label}){
+  const ref=useRef(null);const inView=useInView(ref,{once:true});const[n,setN]=useState(0);
+  useEffect(()=>{if(!inView)return;const c=animate(0,to,{duration:1.4,ease:easeOut,onUpdate:v=>setN(v)});return()=>c.stop();},[inView,to]);
+  return html`<div ref=${ref}><div class="num grad-text">${Math.round(n)}${suffix}</div>
+    <div style=${{color:"var(--muted)",marginTop:8,fontSize:14}}>${label}</div></div>`;
+}
+
+/* ── parallax blob ────────────────────────────────────────────────────── */
+function Blob({color,size,top,left,depth=120}){
+  const reduce=useReducedMotion();const{scrollYProgress}=useScroll();
+  const yRaw=useTransform(scrollYProgress,[0,1],[depth,-depth]);const y=useSpring(yRaw,{stiffness:90,damping:30,mass:.5});
+  return html`<${M.div} class="blob" style=${{background:color,width:size,height:size,top,left,...(reduce?{}:{y})}}/>`;
+}
+
+/* ── letter-by-letter title ───────────────────────────────────────────── */
+function SplitTitle({text,grad}){
+  // background-clip:text ne se propage pas aux lettres splittées (chaque span est
+  // une boîte séparée) → appliquer le dégradé PAR lettre quand grad=true.
+  const letterStyle = grad
+    ? {display:"inline-block",whiteSpace:"pre",background:"linear-gradient(135deg,#A71F28,#d4343f,#f5b731)",
+       WebkitBackgroundClip:"text",backgroundClip:"text",color:"transparent"}
+    : {display:"inline-block",whiteSpace:"pre"};
+  return html`<${M.span} style=${{display:"inline-block"}} variants=${stagger(.04,.15)} initial="hidden" animate="show">
+    ${[...text].map((ch,i)=>html`<${M.span} key=${i} style=${letterStyle}
+        variants=${{hidden:{opacity:0,y:"0.5em",rotateX:-60},show:{opacity:1,y:0,rotateX:0,transition:spring.smooth}}}>${ch}<//>`)}
+  <//>`;
+}
+
+function App(){
+  useConstellation();
+  const [open,setOpen]=useState(false);
+  const reduce=useReducedMotion();
+
+  const sections=[
+    {d:I.home,tint:"rgba(167,31,40,.45)",t:"Accueil",b:"Votre tableau de bord et progression."},
+    {d:I.book,tint:"rgba(245,183,49,.45)",t:"Programme",b:"Le déroulé complet des 4 journées."},
+    {d:I.users,tint:"rgba(56,189,248,.45)",t:"Salle",b:"L'espace classe en temps réel."},
+    {d:I.layers,tint:"rgba(167,31,40,.45)",t:"Demos",b:"15 démos IA à explorer."},
+    {d:I.bolt,tint:"rgba(245,183,49,.45)",t:"Arena",b:"Défis et duels de prompts."},
+    {d:I.check,tint:"rgba(52,211,153,.45)",t:"Cas pratiques",b:"Exercices appliqués au marketing."},
+    {d:I.game,tint:"rgba(212,52,63,.5)",t:"🎯 Game",b:"Le Business Game fil rouge."},
+    {d:I.notebook,tint:"rgba(167,225,255,.4)",t:"Notebook",b:"Vos notes et ressources."},
+    {d:I.award,tint:"rgba(167,139,250,.45)",t:"Showcase",b:"Les meilleures campagnes de la promo."},
+    {d:I.trophy,tint:"rgba(245,183,49,.5)",t:"Classement",b:"Le leaderboard de la classe."},
+    {d:I.user,tint:"rgba(244,114,182,.45)",t:"Profil",b:"Votre avatar, badges et XP."},
+  ];
+
+  return html`
+  <${MotionConfig} reducedMotion="user">
+    <${ScrollProgress}/>
+    <${CursorGlow}/>
+
+    <!-- ===== HERO (welcome verbatim) ===== -->
+    <section class="sec" style=${{paddingTop:120,overflow:"hidden"}}>
+      <${Blob} color="var(--red)" size="440px" top="-120px" left="-90px" depth=150/>
+      <${Blob} color="var(--gold)" size="360px" top="30px" left="64%" depth=210/>
+      <${Blob} color="var(--red-light)" size="300px" top="300px" left="18%" depth=90/>
+      <div class="wrap">
+        <${M.div} variants=${stagger(.09)} initial="hidden" animate="show">
+          <${M.div} variants=${fadeUp}>
+            <span class="badge">
+              <${M.span} aria-hidden="true" style=${{position:"absolute",inset:0,background:"linear-gradient(110deg,transparent,rgba(245,183,49,.35),transparent)"}}
+                animate=${reduce?{}:{x:["-120%","220%"]}} transition=${{duration:3.2,repeat:Infinity,ease:"linear"}}/>
+              <span style=${{position:"relative"}}>🎓 IDRAC Business School</span>
+            </span>
+          </${M.div}>
+          <h1 class="display" style=${{perspective:900}}>
+            <${M.span} variants=${fadeUp} style=${{display:"block"}}><${SplitTitle} text="AI Marketing"/></${M.span}>
+            <${M.span} variants=${fadeUp} style=${{display:"block"}}><${SplitTitle} text="Academy" grad=${true}/></${M.span}>
+          </h1>
+          <${M.p} variants=${fadeUp} class="lead">
+            4 jours pour maitriser l'IA generative appliquee au marketing — et construire, de A a Z, la campagne complete d'un produit fictif.
+          </${M.p}>
+
+          <${M.div} variants=${fadeUp} class="days" style=${{margin:"34px 0 26px"}}>
+            <${TiltDay} num="J1" lbl="Fondations & Prompts" variants=${fadeUp}/>
+            <${TiltDay} num="J2" lbl="Visuel & Marque" variants=${fadeUp}/>
+            <${TiltDay} num="J3" lbl="Campagne Pub" variants=${fadeUp}/>
+            <${TiltDay} num="J4" lbl="Pitch & Lancement" variants=${fadeUp}/>
+          </${M.div}>
+
+          <${M.p} variants=${fadeUp} class="mono" style=${{color:"var(--muted)",fontSize:14,marginBottom:26}}>
+            15 demos IA • Business Game fil rouge • Carnet de campagne exportable
+          </${M.p}>
+
+          <${M.div} variants=${fadeUp} class="row">
+            <${Magnetic} cls="btn-primary" onClick=${()=>setOpen(true)}>
+              Commencer l'aventure <${Icon} d=${I.arrow}/>
+            <//>
+          </${M.div}>
+          <${M.p} variants=${fadeUp} style=${{color:"var(--muted)",marginTop:22,fontSize:14}}>
+            Anime par <strong style=${{color:"var(--ink)"}}>Maxime BABONNEAU</strong>
+          </${M.p}>
+        </${M.div}>
+      </div>
+    </section>
+
+    <!-- ===== STATS ===== -->
+    <section class="wrap" style=${{padding:"10px 24px 30px"}}>
+      <div class="grid" style=${{gridTemplateColumns:"repeat(4,1fr)"}}>
+        <${Reveal}><${Stat} to=${4} suffix=" jours" label="de formation intensive"/><//>
+        <${Reveal} delay=${.08}><${Stat} to=${15} suffix=" démos" label="d'IA générative"/><//>
+        <${Reveal} delay=${.16}><${Stat} to=${11} suffix="" label="espaces à explorer"/><//>
+        <${Reveal} delay=${.24}><${Stat} to=${1} suffix="" label="Business Game fil rouge"/><//>
+      </div>
+    </section>
+
+    <!-- ===== SECTIONS (nav verbatim, enrichi) ===== -->
+    <section class="sec wrap">
+      <${Reveal}>
+        <div class="eyebrow">Ce qui vous attend</div>
+        <h2 class="display" style=${{fontSize:"clamp(30px,5vw,56px)"}}>Onze <span class="grad-text">espaces</span>, un seul parcours.</h2>
+      <//>
+      <${M.div} class="grid" variants=${stagger(.06)} initial="hidden" whileInView="show" viewport=${{once:true,margin:"-10% 0px"}} style=${{marginTop:28}}>
+        ${sections.map(s=>html`<${Feat} key=${s.t} d=${s.d} tint=${s.tint} title=${s.t} body=${s.b} variants=${fadeUp}/>`)}
+      </${M.div}>
+    </section>
+
+    <!-- ===== MARQUEE ===== -->
+    <section style=${{padding:"10px 0 40px",overflow:"hidden",position:"relative",zIndex:2}}>
+      <${M.div} class="marquee" animate=${reduce?{}:{x:["0%","-50%"]}} transition=${{duration:22,repeat:Infinity,ease:"linear"}}>
+        ${[...Array(2)].flatMap((_,k)=>["Fondations & Prompts","Visuel & Marque","Campagne Pub","Pitch & Lancement","15 démos IA","Business Game","Carnet exportable"].map((t,i)=>
+          html`<span class="chip" key=${k+"-"+i}>✦ ${t}</span>`))}
+      </${M.div}>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="sec wrap">
+      <${Reveal}>
+        <div class="card" style=${{textAlign:"center",padding:"56px 26px",border:"1px solid var(--line)",
+            background:"linear-gradient(180deg,rgba(167,31,40,.12),rgba(245,183,49,.05))"}}>
+          <h2 class="display" style=${{fontSize:"clamp(28px,5vw,50px)",margin:"0 0 .25em"}}>
+            Prêt à construire votre <span class="grad-text">campagne</span> ?
+          </h2>
+          <p class="lead" style=${{margin:"0 auto 24px"}}>Master 1 Marketing Digital • IDRAC Business School</p>
+          <div class="row" style=${{justifyContent:"center"}}>
+            <${Magnetic} cls="btn-primary" onClick=${()=>setOpen(true)}>Commencer l'aventure <${Icon} d=${I.arrow}/><//>
+            <${Magnetic} cls="" onClick=${()=>setOpen(true)}>Connexion<//>
+          </div>
+        </div>
+      <//>
+      <div class="foot">
+        AI Marketing Academy — IDRAC Business School · Formation animee par <strong style=${{color:"var(--ink)"}}>Maxime BABONNEAU</strong>
+        · refonte visuelle ${new Date().getFullYear()}
+      </div>
+    </section>
+
+    <!-- ===== MODAL (login content preserved) ===== -->
+    <${AnimatePresence}>
+      ${open && html`
+      <${M.div} key="bk" class="modal-bk" initial=${{opacity:0}} animate=${{opacity:1}} exit=${{opacity:0,transition:{duration:.15}}} onClick=${()=>setOpen(false)}>
+        <${M.div} class="modal" role="dialog" aria-modal="true" onClick=${e=>e.stopPropagation()}
+            initial=${{opacity:0,scale:.92,y:16}} animate=${{opacity:1,scale:1,y:0,transition:spring.smooth}} exit=${{opacity:0,scale:.97,y:8,transition:{duration:.15}}}>
+          <div style=${{textAlign:"center"}}>
+            <div class="badge" style=${{marginBottom:12}}>IDRAC</div>
+            <h3 style=${{fontSize:24,margin:".2em 0 .2em",letterSpacing:"-.02em"}}>AI Marketing <span class="grad-text">Academy</span></h3>
+            <p style=${{color:"var(--muted)",fontSize:13,margin:0}}>Master 1 Marketing Digital • IDRAC Business School</p>
+            <p style=${{color:"var(--muted)",fontSize:13,margin:"6px 0 0"}}>Formation animee par <strong style=${{color:"var(--ink)"}}>Maxime BABONNEAU</strong></p>
+          </div>
+          <div class="roles">
+            <${M.div} class="role" whileHover=${{y:-4}} whileTap=${{scale:.96}}><${Icon} d=${I.user}/><span>Etudiant</span></${M.div}>
+            <${M.div} class="role" whileHover=${{y:-4}} whileTap=${{scale:.96}}><${Icon} d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><span>Formateur</span></${M.div}>
+          </div>
+          <div class="row" style=${{justifyContent:"center",marginTop:6}}>
+            <${Magnetic} cls="btn-primary" onClick=${()=>setOpen(false)}>Se connecter <${Icon} d=${I.arrow}/><//>
+          </div>
+          <p style=${{textAlign:"center",color:"var(--dim)",fontSize:12,marginTop:14}}>Refonte visuelle — la connexion réelle vit dans l'app d'origine.</p>
+        </${M.div}>
+      </${M.div}>`}
+    </${AnimatePresence}>
+  </${MotionConfig}>`;
+}
+createRoot(document.getElementById("root")).render(html`<${App}/>`);
+</script>
+</body>
+</html>

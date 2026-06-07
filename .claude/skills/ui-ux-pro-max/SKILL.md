@@ -19,6 +19,12 @@ Garde-fou : **Core Web Vitals**. Agent de référence :
 Cette skill est **agnostique projet** — elle ne suppose aucun contexte
 MERLIN/Godot. Si le projet hôte impose un design system, il prime.
 
+**Style par défaut (préférence enregistrée)** : pour toute app/site HTML
+autonome demandé **hors contexte Orange**, applique le style signature
+« Dark Animated » → `styles/signature-dark-animated.md` (décliné sur la charte
+réelle du client). Sur projets Orange, charte Orange. Références : démos
+`demos/aurora/` et `demos/idrac/`.
+
 ## Quand l'utiliser
 
 Landing pages, hero sections, micro-interactions, transitions de page,

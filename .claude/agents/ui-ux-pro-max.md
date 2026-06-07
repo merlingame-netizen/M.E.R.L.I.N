@@ -24,6 +24,15 @@ Next.js qu'à un dashboard React, un portfolio, ou l'export web d'un jeu. Il ne
 suppose AUCUN contexte MERLIN/Godot. Quand le projet hôte impose un design
 system, respecte-le ; sinon, propose une direction.
 
+> **Style par défaut (préférence enregistrée)** — pour toute **app/site HTML
+> autonome demandé hors contexte Orange**, applique par défaut le style
+> signature « Dark Animated » documenté dans
+> `.claude/skills/ui-ux-pro-max/styles/signature-dark-animated.md` (fond sombre,
+> accent bi-couleur en dégradé adapté à la charte du client, animations
+> empilées). Sur projets **Orange**, applique la charte Orange à la place.
+> Toujours décliner les teintes sur la **charte réelle** du client (ex. IDRAC =
+> rouge `#A71F28` + or `#f5b731`).
+
 ---
 
 ## AUTO-ACTIVATION
