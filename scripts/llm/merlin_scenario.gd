@@ -333,7 +333,8 @@ func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) pour toute la run.
 	# arc = 5 situations LIÉES qui racontent UNE histoire (user 2026-06-07 : « décousu, ça doit se
 	# suivre »). On pose un arc fallback cohérent INSTANTANÉ ; prepare_arc tente un arc LLM spécifique.
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": _fallback_arc(), "arc_locked": false}
+	var fb: Dictionary = _fallback_arc()
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": fb["arc"], "arc_tags": fb["tags"], "arc_locked": false}
 	var beats: Array = []
 	var diffs: Array = [1, 2, 2, 2, 3]
 	for i in BEAT_TYPES.size():
@@ -422,15 +423,21 @@ func narrate_opening(scenario: Dictionary) -> String:
 func build_situation(beat: Dictionary) -> Dictionary:
 	var btype: String = str(beat.get("type", "Exploration"))
 	var diff: int = int(beat.get("difficulte", 1))
-	var required: Array = _pick_tags(btype, diff)
-	# La situation vient de l'ARC pré-établi (étape liée à l'histoire) ; fallback générique si absent.
+	# La situation ET ses tags requis viennent du MÊME index de l'arc pré-établi → scène ⇄ tags alignés
+	# (user 2026-06-07 : « les tags ne correspondent pas à la scène »). Fallback générique si absent.
 	# On VERROUILLE l'arc dès la 1re consommation → prepare_arc ne swappera plus (jamais 2 histoires mêlées).
 	var idx: int = int(beat.get("n", 1)) - 1
 	var arc: Array = _run_thread.get("arc", [])
+	var arc_tags: Array = _run_thread.get("arc_tags", [])
 	var narration: String = ""
+	var required: Array = []
 	if idx >= 0 and idx < arc.size() and str(arc[idx]).strip_edges() != "":
 		narration = str(arc[idx])
-	else:
+	if idx >= 0 and idx < arc_tags.size() and (arc_tags[idx] is Array) and (arc_tags[idx] as Array).size() > 0:
+		required = (arc_tags[idx] as Array).duplicate()
+	if required.is_empty():
+		required = _pick_tags(btype, diff)
+	if narration == "":
 		narration = _fallback_situation(btype, required)
 	_run_thread["arc_locked"] = true
 	return {
@@ -496,20 +503,56 @@ const FALLBACK_ARCS: Array = [
 ]
 
 
-func _fallback_arc() -> Array:
-	return (FALLBACK_ARCS[_rng.randi_range(0, FALLBACK_ARCS.size() - 1)] as Array).duplicate()
+# Tags requis par étape, ALIGNÉS sur chaque situation des FALLBACK_ARCS (même index) → ce que la scène
+# demande == les cartes à jouer (user 2026-06-07 : « les combos doivent faire sens »). Tags du deck starter.
+const FALLBACK_ARC_TAGS: Array = [
+	[["Sens", "Instinct"], ["Empathie", "Verbe"], ["Agilité", "Endurance"], ["Instinct", "Ruse"], ["Force", "Instinct"]],
+	[["Sens", "Nature"], ["Empathie", "Verbe"], ["Agilité", "Endurance"], ["Ruse", "Instinct"], ["Nature", "Force"]],
+	[["Sens", "Savoir"], ["Empathie", "Verbe"], ["Agilité", "Endurance"], ["Instinct", "Savoir"], ["Force", "Ruse"]],
+	[["Sens", "Mémoire"], ["Empathie", "Verbe"], ["Force", "Endurance"], ["Instinct", "Ruse"], ["Nature", "Savoir"]],
+]
 
 
-# Arc LLM spécifique au scénario : UN appel → 5 étapes courtes, DIRECTES, qui s'enchaînent (chacune
-# découle de la précédente), liées au titre. [] si moteur KO/format inattendu (l'appelant garde le fallback).
-func narrate_arc(scenario: Dictionary) -> Array:
+func _fallback_arc() -> Dictionary:
+	var i: int = _rng.randi_range(0, FALLBACK_ARCS.size() - 1)
+	return {"arc": (FALLBACK_ARCS[i] as Array).duplicate(), "tags": (FALLBACK_ARC_TAGS[i] as Array).duplicate(true)}
+
+
+# Cue d'action par tag : oriente la scène générée vers CE que la force exige (alignement scène⇄tags).
+const TAG_CUE: Dictionary = {
+	"Sens": "voir, percevoir, remarquer un detail cache",
+	"Savoir": "comprendre, deduire, reconnaitre un savoir ancien",
+	"Mémoire": "se souvenir, lire le passe d'un lieu",
+	"Force": "pousser, forcer, soulever ou briser",
+	"Agilité": "se faufiler, esquiver, garder l'equilibre",
+	"Endurance": "tenir bon, resister, encaisser sans ceder",
+	"Empathie": "apaiser un etre, gagner sa confiance",
+	"Verbe": "parler, convaincre, nommer",
+	"Ruse": "tromper, detourner, trouver le point faible",
+	"Instinct": "sentir le danger, suivre son intuition",
+	"Nature": "parler aux betes et aux plantes, lire la foret",
+}
+
+
+# Arc LLM : 5 étapes liées, CHACUNE construite autour de ses 2 tags requis (req_tags) → la scène
+# DEMANDE ces forces (scène ⇄ tags ⇄ cartes alignés). [] si moteur KO/format inattendu.
+func narrate_arc(scenario: Dictionary, req_tags: Array) -> Array:
 	var mn: Node = _mn()
 	if mn == null or not mn.is_ready():
 		return []
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
-	var usr: String = "Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a Broceliande. Raconte a la 3e PERSONNE (« le Voyageur ») au temps du CONTE (passe simple / imparfait).\nETAPE 1 = arrivee et decouverte du lieu. ETAPE 2 = une rencontre (un etre, une voix — l'occasion d'apprendre un bout de legende). ETAPE 3 = un obstacle physique concret. ETAPE 4 = un choix a faire. ETAPE 5 = la confrontation finale.\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou) qui posent la scene, et FINIT sur l'instant ou le Voyageur doit agir (ex: « Que decida le Voyageur ? » ou « ... se demandait que faire. »). SANS abstraction ni enigme.\nEXEMPLE (autre quete — imite la MANIERE, pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres, la ou nul sentier n'etait trace. Le sous-bois s'obscurcit, et l'on peinait a voir au-dela des feuilles trop denses. Que decida le Voyageur ?\n2. Au detour d'un tronc fendu, le Voyageur croisa une creature blessee, paisible, sans haine ni peur, allongee sur la mousse. A distance, il se demandait que faire.\n3. Le sentier plongeait sous une eau noire, barre par une dalle de pierre tombee en travers ; le courant glace poussait fort. Que decida le Voyageur ?\n4. Deux galeries s'enfoncaient, l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelait. Il ne pourrait en suivre qu'une. Que decida-t-il ?\n5. La galerie debouchait sous la source, le monde a l'envers : l'eau noire au-dessus de sa tete, les visages des voix perdues le fixant a travers. Que decida le Voyageur ?\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre." % [title, pitch]
-	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 320, "label": "arc narratif (5 étapes)"})
+	var roles: Array = ["arrivee et decouverte du lieu", "une rencontre (un etre, une voix — un bout de legende)", "un obstacle physique", "un choix a faire", "la confrontation finale"]
+	var steps: String = ""
+	for i in 5:
+		var pair: Array = (req_tags[i] as Array) if (i < req_tags.size() and req_tags[i] is Array) else []
+		var cues: PackedStringArray = []
+		for t in pair:
+			cues.append(str(TAG_CUE.get(str(t), str(t))))
+		var cue_txt: String = " ET ".join(cues) if cues.size() > 0 else "agir"
+		steps += "\nETAPE %d = %s ; ecris une scene ou il faut %s (c'est CE que le Voyageur devra faire)." % [i + 1, str(roles[i]), cue_txt]
+	var usr: String = ("Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a Broceliande. 3e PERSONNE (« le Voyageur »), temps du CONTE (passe simple / imparfait)." % [title, pitch]) + steps + "\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou), SANS abstraction, et FINIT sur l'instant ou le Voyageur doit agir (« Que decida le Voyageur ? »).\nEXEMPLE de MANIERE (pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres ; le sous-bois s'obscurcit, et l'on peinait a voir. Que decida le Voyageur ?\n2. Au detour d'un tronc, le Voyageur croisa une creature blessee, paisible, allongee sur la mousse. Il se demandait que faire.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre."
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 340, "label": "arc narratif (5 étapes)"})
 	if r.has("error"):
 		return []
 	return _parse_arc(str(r.get("text", "")))
@@ -537,9 +580,18 @@ func _parse_arc(text: String) -> Array:
 # SEULEMENT si aucun beat n'a encore été présenté (arc_locked == false) → UNE seule histoire par run.
 func prepare_arc(scenario: Dictionary) -> void:
 	var title: String = str(scenario.get("title", ""))  # garde anti-race : ne swappe que si TOUJOURS ce scénario
-	var arc: Array = await narrate_arc(scenario)
+	# Pré-pick les 2 tags requis par beat AVANT la génération → la scène est écrite AUTOUR (alignement),
+	# et build_situation utilise ces mêmes tags pour la couverture. (user 2026-06-07 #1)
+	var beats: Array = scenario.get("beats", [])
+	var picked: Array = []
+	for b in beats:
+		picked.append(_pick_tags(str(b.get("type", "Exploration")), int(b.get("difficulte", 1))))
+	if picked.size() != 5:
+		return
+	var arc: Array = await narrate_arc(scenario, picked)
 	if arc.size() == 5 and not bool(_run_thread.get("arc_locked", false)) and str(_run_thread.get("title", "")) == title:
 		_run_thread["arc"] = arc
+		_run_thread["arc_tags"] = picked
 
 
 # LLM réservé aux MOMENTS FORTS (Climax ou réussite éclatante) → réduit les rafales d'appels
@@ -584,19 +636,20 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 				played_tags[str(t)] = true
 	# Registre par archetype (user 2026-06-07 : « deux cartes de langage ne doivent pas donner une main
 	# posee »). L'issue DOIT rester fidele a la NATURE des cartes → 2 cartes Social = issue VERBALE, etc.
+	# Noms COURTS (la légende détaillée est dans la consigne, pas ici) → le modèle ne recopie plus la
+	# description « FORCE du corps : il pousse » comme il le faisait. Dédupliqués (2 cartes meme registre = 1).
 	var arch_reg: Dictionary = {
-		"Social": "PAROLE (il parle, convainc, ruse, charme, apaise — PAS de geste physique etranger)",
-		"Offensif": "FORCE du corps (il pousse, frappe, tient bon, grimpe, brise)",
-		"Mystique": "PERCEPTION/MAGIE (il voit, ressent, ecoute, parle aux choses, lit les signes)",
-		"Défensif": "PROTECTION/ENDURANCE (il resiste, encaisse, protege, contourne)",
-		"Corrompu": "OMBRE a un PRIX (il appelle une force trouble qui aide mais prend son du)",
+		"Social": "PAROLE", "Offensif": "FORCE", "Mystique": "PERCEPTION",
+		"Défensif": "PROTECTION", "Corrompu": "OMBRE",
 	}
-	var registres: PackedStringArray = []
+	var registres: Array = []
 	for a in archs:
-		registres.append(str(arch_reg.get(a, arch_reg["Mystique"])))
+		var r: String = str(arch_reg.get(a, "PERCEPTION"))
+		if not registres.has(r):
+			registres.append(r)
 	var reg_hint: String = ""
 	if registres.size() >= 1:
-		reg_hint = " REGISTRE des forces (l'action DOIT y rester fidele) : " + " ; ".join(registres) + "."
+		reg_hint = " Registre attendu de l'action : " + " + ".join(PackedStringArray(registres)) + "."
 	# Fusion : les évocations sont des DONNEES à TRADUIRE en gestes DU BON REGISTRE, pas une phrase citable.
 	var combo: String = ""
 	if evocs.size() >= 2:
@@ -663,7 +716,7 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# forces, calee sur la prose cible. _strip_scene_echo reste le filet anti-recopiage.
 	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
 	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barrait le gue, le courant poussait fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): Le Voyageur choisit de caler ses pieds dans la vase et de pousser sans rompre. La dalle racla, bascula et libera le passage ; il franchit le gue, trempe mais debout."
-	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue en %s, a la 3e PERSONNE et au temps du CONTE (passe simple / imparfait). Ta TOUTE PREMIERE phrase DOIT commencer par « Le Voyageur choisit de » suivi de l'action concrete qui FOND les deux forces DANS LEUR REGISTRE (voir ci-dessus). RESPECTE le registre : si les forces sont des PAROLES, l'issue est VERBALE (il parle, ruse, charme, convainc), JAMAIS un geste physique sans rapport comme 'il pose la main'. TRADUIS les forces en actions ; ne CITE JAMAIS leurs formulations entre guillemets ; n'ecris JAMAIS 'fond deux gestes en un seul'. NE RE-DECRIS PAS la scene (le mur, le chemin, l'etre sont deja connus). PUIS raconte CE QUE CELA CAUSA : la consequence concrete qui RESOUT la situation (l'etre, l'obstacle ou le choix precis). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). Varie la fin (pas toujours 'le chemin s'ouvre'). Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, reg_hint, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
+	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue en %s, a la 3e PERSONNE et au temps du CONTE (passe simple / imparfait). Ta TOUTE PREMIERE phrase DOIT commencer par « Le Voyageur choisit de » suivi de l'action concrete qui FOND les deux forces dans le registre attendu. (Sens des registres : PAROLE = il parle/convainc/ruse/charme ; FORCE = il agit physiquement, pousse/tient bon ; PERCEPTION = il voit/ressent/parle aux choses ; PROTECTION = il resiste/protege ; OMBRE = il appelle une force trouble a un prix.) Si c'est PAROLE, l'issue est VERBALE, JAMAIS un geste comme 'il pose la main'. TRADUIS les forces en actions ; n'ecris JAMAIS le mot 'registre' ni ces categories en majuscules ; ne CITE JAMAIS les formulations entre guillemets ; n'ecris JAMAIS 'fond deux gestes en un seul'. NE RE-DECRIS PAS la scene (le mur, le chemin, l'etre sont deja connus). PUIS raconte CE QUE CELA CAUSA : la consequence concrete qui RESOUT la situation (l'etre, l'obstacle ou le choix precis). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). Varie la fin (pas toujours 'le chemin s'ouvre'). Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, reg_hint, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
