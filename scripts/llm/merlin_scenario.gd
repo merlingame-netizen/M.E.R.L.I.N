@@ -486,6 +486,13 @@ const FALLBACK_ARCS: Array = [
 		"Deux traces fraîches partent de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Tu dois en suivre une.",
 		"Au bout de la trace, la chose des collines t'attend, dos à toi. Elle sait déjà que tu es là.",
 	],
+	[
+		"Tu suis une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottent des visages qui ne sont pas le tien.",
+		"Une femme se tient pieds nus dans la source, sans se retourner. « Tu cherches un visage, toi aussi », dit-elle.",
+		"Le sentier englouti reprend sous l'eau, barré par une dalle de pierre tombée en travers. Le courant froid pousse fort contre tes jambes.",
+		"De l'autre côté, deux galeries s'enfoncent : l'une sent les fleurs, l'autre le froid d'une cave. Un visage d'enfant t'attend dans chacune.",
+		"La galerie débouche sous la source, à l'envers : l'eau est au-dessus de ta tête, et au centre, ton propre visage.",
+	],
 ]
 
 
@@ -501,7 +508,7 @@ func narrate_arc(scenario: Dictionary) -> Array:
 		return []
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
-	var usr: String = "Raconte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, comme une seule histoire suivie) pour la quete « %s » (%s) a Broceliande.\nETAPE 1 = arrivee et decouverte du lieu. ETAPE 2 = une rencontre (un etre, une voix). ETAPE 3 = un obstacle physique concret. ETAPE 4 = un choix a faire. ETAPE 5 = la confrontation finale.\nChaque etape = 1 a 2 phrases TRES DIRECTES et CONCRETES (un evenement clair : qui, quoi, ou), au present, SANS abstraction ni enigme, SANS apostropher le Voyageur. Format STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre." % [title, pitch]
+	var usr: String = "Raconte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, comme une seule histoire suivie) pour la quete « %s » (%s) a Broceliande.\nETAPE 1 = arrivee et decouverte du lieu. ETAPE 2 = une rencontre (un etre, une voix). ETAPE 3 = un obstacle physique concret. ETAPE 4 = un choix a faire. ETAPE 5 = la confrontation finale.\nChaque etape = 1 a 2 phrases TRES DIRECTES et CONCRETES (un evenement clair : qui, quoi, ou), au present, SANS abstraction ni enigme, SANS apostropher le Voyageur.\nEXEMPLE (autre quete — imite la CLARTE et l'ENCHAINEMENT, pas le contenu) :\n1. Tu suis une rigole d'eau noire jusqu'a une source ronde et immobile, ou flottent des visages qui ne sont pas le tien.\n2. Une femme se tient pieds nus dans l'eau, sans se retourner : « Tu cherches un visage, toi aussi. »\n3. Le sentier reprend sous l'eau, barre par une dalle de pierre tombee en travers ; le courant froid pousse fort.\n4. Deux galeries s'enfoncent : l'une sent les fleurs, l'autre le froid d'une cave ; un enfant t'attend dans chacune.\n5. La galerie debouche sous la source, a l'envers : l'eau est au-dessus de ta tete, et au centre, ton propre visage.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre." % [title, pitch]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 320, "label": "arc narratif (5 étapes)"})
 	if r.has("error"):
 		return []
@@ -635,10 +642,12 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	var long_form: bool = is_strong_moment(str(situation.get("type", "")), degree)
 	var phrase_target: String = "4 a 5 phrases" if long_form else "2 a 3 phrases"
 	var tok_budget: int = 260 if long_form else 150
-	# Décor PAS passé au prompt (la scène est déjà affichée à l'écran) : le passer poussait le petit
-	# modèle à le RECOPIER en ouverture (régression probe 2026-06-06). On démarre direct sur l'action ;
-	# _strip_scene_echo reste le filet si le modèle replante quand même la scène. Cartes NON nommées.
-	var usr: String = ("%sLe Voyageur agit. %s\nISSUE = %s. %s%s%s%s\nEcris " % [ctx, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint]) + phrase_target + " (francais) qui S'ENCHAINENT logiquement (cause PUIS consequence), comme un petit paragraphe FLUIDE et JAMAIS des phrases hachees et deconnectees, SANS remplissage. COMMENCE par l'EFFET dans le monde (ce qui change dans la foret, le lieu, ou l'etre en face) ; ne replante NI le decor NI le lieu deja decrits, et ne commence JAMAIS par 'les mains se joignent / se tendent / se melent' ni par une description du corps. Raconte UN SEUL effet FUSIONNE des deux gestes (jamais 'la premiere force... la seconde...', jamais l'un apres l'autre), DEROULE la consequence concrete qui en decoule, ET fais clairement RESSENTIR l'issue. VARIE la conclusion selon le moment, evite de toujours finir par 'le chemin s'ouvre'. Sujets CONCRETS (le Voyageur, la foret, le lieu, l'etre en face), jamais abstraits ('le vide', 'le nom'). Ne nomme pas les cartes, pas de liste, pas de chiffres, recit direct sans apostropher le Voyageur. Termine sur une phrase complete."
+	# v10.17 (user 2026-06-07) : on PASSE la situation + un EXEMPLE gold (few-shot in-context) pour que
+	# l'issue RESOLVE la situation precise (pas un generique « le chemin s'ouvre ») en fondant les 2
+	# forces, calee sur la prose cible. _strip_scene_echo reste le filet anti-recopiage.
+	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
+	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): Tu cales tes pieds dans la vase et tu pousses sans ceder au courant ; la dalle racle, bascule et libere le passage. Tu franchis le gue, trempe mais debout."
+	var usr: String = "%sCE QUI SE PASSE : %s\nLe Voyageur agit. %s\nISSUE = %s.%s%s%s%s\n%s\nEcris l'issue en %s (francais), phrases LIEES (cause PUIS consequence), DIRECTES et CONCRETES. RESOUS la situation ci-dessus (l'etre, l'obstacle ou le choix precis) en FONDANT les deux forces en UN SEUL effet ; ne recopie PAS la situation, enchaine dessus. Ne commence pas par 'les mains se joignent' ni par une description du corps. Sujets concrets (jamais 'le vide'/'le nom'). Varie la fin (pas toujours 'le chemin s'ouvre'). Fais clairement RESSENTIR le resultat. Pas de liste ni de chiffres, sans apostropher le Voyageur. Termine sur une phrase complete." % [ctx, situ_txt, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
@@ -793,18 +802,44 @@ func _strip_scene_echo(prose: String, situation: String) -> String:
 	if prose.is_empty() or situation.is_empty():
 		return prose
 	var p: String = prose
-	var situ_norm: String = _norm(situation)
+	var situ_words: Dictionary = _sig_words(situation)
 	var guard: int = 0
-	while guard < 2:  # retire au plus 2 phrases d'ouverture qui clonent la scène
+	while guard < 2:  # retire au plus 2 phrases d'ouverture qui CLONENT la scène (même PARAPHRASÉES)
 		guard += 1
 		var fs: String = _first_sentence(p)
-		if fs.length() >= 12 and situ_norm.find(_norm(fs)) != -1:
+		# Recopie = forte proportion de mots significatifs partagés avec la situation (robuste aux
+		# paraphrases : « se divise en deux passages » ↔ « se sépare en deux voies »). Seuil 0.5.
+		if fs.length() >= 12 and _echo_ratio(fs, situ_words) >= 0.5:
 			var rest: String = p.substr(fs.length()).strip_edges()
 			if rest.length() >= 10:
 				p = rest
 				continue
 		break
-	return p
+	# nettoie une ponctuation orpheline en tête (ex. « » » laissé par une réplique recopiée retirée)
+	while p.length() > 0 and (" »\"',;:.!?-—".find(p[0]) != -1):
+		p = p.substr(1)
+	return p.strip_edges()
+
+
+# Ensemble des mots significatifs (≥4 lettres) d'un texte, normalisés (minuscules, ponctuation → espace).
+func _sig_words(t: String) -> Dictionary:
+	var out: Dictionary = {}
+	for w in _norm(t).split(" ", false):
+		if w.length() >= 4:
+			out[w] = true
+	return out
+
+
+# Proportion des mots significatifs d'une phrase présents dans la situation (0.0–1.0).
+func _echo_ratio(sentence: String, situ_words: Dictionary) -> float:
+	var sig: int = 0
+	var hit: int = 0
+	for w in _norm(sentence).split(" ", false):
+		if w.length() >= 4:
+			sig += 1
+			if situ_words.has(w):
+				hit += 1
+	return float(hit) / float(max(sig, 1))
 
 
 func _first_sentence(t: String) -> String:
@@ -817,7 +852,15 @@ func _first_sentence(t: String) -> String:
 
 
 func _norm(t: String) -> String:
-	return t.strip_edges().to_lower()
+	# minuscules + ponctuation → espace : comparaison par MOTS, robuste aux paraphrases.
+	var s: String = t.strip_edges().to_lower()
+	var out: String = ""
+	for ch in s:
+		if ch == " " or (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9") or ("àâäéèêëîïôöùûüçñ".find(ch) != -1):
+			out += ch
+		else:
+			out += " "
+	return out
 
 
 # --- 5) ÉPILOGUE (fin de run, R69) : LLM, "" si échec → l'appelant garde le procédural. ---
