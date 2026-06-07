@@ -331,7 +331,9 @@ func _clean_selection(arr: Array) -> Array:
 # (L'ancien appel LLM « synopsis » coûtait ~58s pour un texte jamais affiché dans la boucle.)
 func build_skeleton(title: String, pitch: String) -> Dictionary:
 	# Fil rouge : RAZ + capture de l'enjeu spécifique (titre + pitch) pour toute la run.
-	_run_thread = {"title": title, "pitch": pitch, "last_gist": ""}
+	# arc = 5 situations LIÉES qui racontent UNE histoire (user 2026-06-07 : « décousu, ça doit se
+	# suivre »). On pose un arc fallback cohérent INSTANTANÉ ; prepare_arc tente un arc LLM spécifique.
+	_run_thread = {"title": title, "pitch": pitch, "last_gist": "", "arc": _fallback_arc(), "arc_locked": false}
 	var beats: Array = []
 	var diffs: Array = [1, 2, 2, 2, 3]
 	for i in BEAT_TYPES.size():
@@ -421,8 +423,18 @@ func build_situation(beat: Dictionary) -> Dictionary:
 	var btype: String = str(beat.get("type", "Exploration"))
 	var diff: int = int(beat.get("difficulte", 1))
 	var required: Array = _pick_tags(btype, diff)
+	# La situation vient de l'ARC pré-établi (étape liée à l'histoire) ; fallback générique si absent.
+	# On VERROUILLE l'arc dès la 1re consommation → prepare_arc ne swappera plus (jamais 2 histoires mêlées).
+	var idx: int = int(beat.get("n", 1)) - 1
+	var arc: Array = _run_thread.get("arc", [])
+	var narration: String = ""
+	if idx >= 0 and idx < arc.size() and str(arc[idx]).strip_edges() != "":
+		narration = str(arc[idx])
+	else:
+		narration = _fallback_situation(btype, required)
+	_run_thread["arc_locked"] = true
 	return {
-		"narration": _fallback_situation(btype, required),
+		"narration": narration,
 		"required_tags": required,
 		"type": btype,
 		"difficulte": diff,
@@ -447,6 +459,80 @@ func _pick_tags(btype: String, _diff: int) -> Array:
 func _fallback_situation(btype: String, _required: Array) -> String:
 	var pool: Array = SITU_FALLBACKS.get(btype, SITU_FALLBACKS["Exploration"])
 	return str(pool[_rng.randi_range(0, pool.size() - 1)])
+
+
+# --- ARC NARRATIF (user 2026-06-07 : « décousu, ça doit se suivre, plus direct ») ---
+# 5 situations LIÉES qui racontent UNE histoire (début→fin) au lieu de tirages génériques par type.
+# Ordre = [Exploration, Rencontre, Epreuve, Dilemme, Climax]. Style DIRECT et CONCRET.
+const FALLBACK_ARCS: Array = [
+	[
+		"Le sentier s'enfonce sous les arbres et se referme derrière toi. Tu n'es pas seul : un pas léger te suit, à distance.",
+		"Une vieille femme attend, assise sur une souche, là où le chemin se divise. « Je t'attendais », dit-elle sans se lever.",
+		"Elle te montre un pont de corde au-dessus d'un ravin. Plusieurs planches manquent, et le bois craque sous le vent.",
+		"Sur l'autre rive, le chemin se sépare en deux. À gauche, des torches au loin ; à droite, le silence et une odeur de fumée.",
+		"Au bout, une porte de pierre entrouverte. Ce que tu cherches est derrière — et le pas qui te suivait vient de s'arrêter, juste là.",
+	],
+	[
+		"Tu suis le bruit d'une eau qui coule. La forêt s'ouvre sur une source noire, parfaitement immobile.",
+		"Un enfant est accroupi au bord, qui te fixe sans peur. « Elle dort, ne la réveille pas », murmure-t-il en montrant l'eau.",
+		"Le seul passage longe la source sur une corniche étroite et glissante. Un faux pas, et tu tombes dans l'eau noire.",
+		"Une grosse racine te barre la route. La couper réveillerait quelque chose ; l'enjamber prend du temps que tu n'as pas.",
+		"La source se met à bouger. Ce que tu es venu chercher remonte lentement vers la surface, et te regarde.",
+	],
+	[
+		"Tu arrives devant un village de huttes vides, feux encore tièdes. Tout le monde est parti en hâte, sans rien emporter.",
+		"Un vieil homme sort d'une hutte, une serpe à la main. « Ils ont fui ce qui vient des collines », dit-il en te jaugeant.",
+		"La seule sortie passe par un éboulis de pierres branlantes. Au moindre faux mouvement, tout peut glisser.",
+		"Deux traces fraîches partent de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Tu dois en suivre une.",
+		"Au bout de la trace, la chose des collines t'attend, dos à toi. Elle sait déjà que tu es là.",
+	],
+]
+
+
+func _fallback_arc() -> Array:
+	return (FALLBACK_ARCS[_rng.randi_range(0, FALLBACK_ARCS.size() - 1)] as Array).duplicate()
+
+
+# Arc LLM spécifique au scénario : UN appel → 5 étapes courtes, DIRECTES, qui s'enchaînent (chacune
+# découle de la précédente), liées au titre. [] si moteur KO/format inattendu (l'appelant garde le fallback).
+func narrate_arc(scenario: Dictionary) -> Array:
+	var mn: Node = _mn()
+	if mn == null or not mn.is_ready():
+		return []
+	var title: String = str(scenario.get("title", "")).strip_edges()
+	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
+	var usr: String = "Raconte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, comme une seule histoire suivie) pour la quete « %s » (%s) a Broceliande.\nETAPE 1 = arrivee et decouverte du lieu. ETAPE 2 = une rencontre (un etre, une voix). ETAPE 3 = un obstacle physique concret. ETAPE 4 = un choix a faire. ETAPE 5 = la confrontation finale.\nChaque etape = 1 a 2 phrases TRES DIRECTES et CONCRETES (un evenement clair : qui, quoi, ou), au present, SANS abstraction ni enigme, SANS apostropher le Voyageur. Format STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre." % [title, pitch]
+	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 320, "label": "arc narratif (5 étapes)"})
+	if r.has("error"):
+		return []
+	return _parse_arc(str(r.get("text", "")))
+
+
+# Extrait 5 étapes d'une réponse numérotée (« 1. … » … « 5. … »), sans regex. [] si format inattendu.
+func _parse_arc(text: String) -> Array:
+	var out: Array = []
+	for raw_line in text.split("\n"):
+		var line: String = str(raw_line).strip_edges()
+		if line.length() < 3:
+			continue
+		if not (line[0] >= "1" and line[0] <= "9"):
+			continue  # une étape DOIT commencer par son numéro
+		var i: int = 1
+		while i < line.length() and line[i] in [".", ")", "-", ":", " ", "\t"]:
+			i += 1
+		var cleaned: String = _clean_prose(line.substr(i).strip_edges())
+		if cleaned.length() >= 12:
+			out.append(cleaned)
+	return out.slice(0, 5) if out.size() >= 5 else []
+
+
+# Lance la génération de l'arc en arrière-plan (fire-and-forget). Swappe l'arc fallback par l'arc LLM
+# SEULEMENT si aucun beat n'a encore été présenté (arc_locked == false) → UNE seule histoire par run.
+func prepare_arc(scenario: Dictionary) -> void:
+	var title: String = str(scenario.get("title", ""))  # garde anti-race : ne swappe que si TOUJOURS ce scénario
+	var arc: Array = await narrate_arc(scenario)
+	if arc.size() == 5 and not bool(_run_thread.get("arc_locked", false)) and str(_run_thread.get("title", "")) == title:
+		_run_thread["arc"] = arc
 
 
 # LLM réservé aux MOMENTS FORTS (Climax ou réussite éclatante) → réduit les rafales d'appels

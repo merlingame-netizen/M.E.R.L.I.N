@@ -76,6 +76,9 @@ func _on_pick(title: String, pitch: String) -> void:
 	# Squelette INSTANTANÉ (le pitch est le synopsis) → bascule immédiate vers le jeu.
 	var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(title, pitch)
 	get_node("/root/MerlinRun").new_run(skel)
+	# Arc narratif LLM en arrière-plan (fire-and-forget) : génère pendant la transition + l'intro ;
+	# swappe l'arc fallback cohérent avant le beat 1 si prêt à temps (user 2026-06-07).
+	get_node("/root/MerlinScenario").prepare_arc(skel)
 	MerlinTransition.change_scene(GAME_SCENE)
 
 

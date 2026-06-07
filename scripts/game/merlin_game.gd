@@ -70,6 +70,7 @@ func _begin() -> void:
 		# Squelette INSTANTANÉ (le pitch est le synopsis) — aucune attente.
 		var skel: Dictionary = get_node("/root/MerlinScenario").build_skeleton(DEFAULT_TITLE, DEFAULT_PITCH)
 		run.new_run(skel)
+		get_node("/root/MerlinScenario").prepare_arc(skel)  # arc narratif LLM en fond (swappe le fallback avant beat 1)
 	_on_gauges(run.integrite, run.corruption)
 	if run.beat_index == 0:
 		# Intro d'abord : encart central plein, cartes CACHÉES. Le 1er beat n'est présenté qu'à l'Accept.
