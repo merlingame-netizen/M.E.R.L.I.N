@@ -6,6 +6,12 @@ cd "$(dirname "$0")/../terraform"
 terraform init -input=false
 terraform plan -out=tfplan
 
+# Free-tier guard: block the apply if the plan leaves Always Free limits.
+if ! python3 "$(dirname "$0")/freetier-guard.py" tfplan; then
+  echo "Aborting: plan would incur charges. Adjust variables and re-run." >&2
+  exit 1
+fi
+
 read -r -p "Apply this plan? [y/N] " ans
 if [[ "${ans,,}" == "y" ]]; then
   terraform apply tfplan

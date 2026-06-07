@@ -72,9 +72,16 @@ Recommended: lock SSH to your IP — set `allowed_ssh_cidr = "$(curl -s ifconfig
 
 ## Step 4 — Deploy
 
+> **Free-tier guard:** `deploy.sh` runs `scripts/freetier-guard.py` on the plan
+> and **refuses to apply** if anything would leave the Always Free limits
+> (A1 > 4 OCPU / 24 GB, > 2 micro VMs, a non-free shape, or > 200 GB storage).
+> The background retry loop runs the same guard before every attempt. Note: this
+> guards against *quota* overruns; the ultimate billing safety is keeping the
+> account on Always Free, or staying within quota after a PAYG upgrade.
+
 ```bash
 # from infra/oracle/
-./scripts/deploy.sh          # init + plan + (confirm) apply
+./scripts/deploy.sh          # init + plan + free-tier guard + (confirm) apply
 # or manually:
 cd terraform && terraform init && terraform apply
 ```
@@ -211,7 +218,8 @@ infra/oracle/
     ├── deploy.sh                  # init/plan/apply wrapper
     ├── install-ssh-alias.sh       # adds 'merlin-vm' to ~/.ssh/config (+ Ollama tunnel)
     ├── connect.sh                 # one-shot SSH using terraform outputs
-    └── tunnel.sh                  # Ollama tunnel only
+    ├── tunnel.sh                  # Ollama tunnel only
+    └── freetier-guard.py          # blocks apply if plan leaves Always Free limits
 └── desktop/
     ├── Install Desktop Shortcut.cmd   # Windows: double-click to create the icon
     ├── install-desktop-shortcut.ps1   # Windows: the shortcut creator

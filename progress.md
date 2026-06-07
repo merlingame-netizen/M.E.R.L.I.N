@@ -2507,3 +2507,13 @@ usages Claude/dev/Godot.
   - Windows : `Install Desktop Shortcut.cmd` -> cree un .lnk "M.E.R.L.I.N VM" sur le Bureau.
   - macOS/Linux : `install-desktop-shortcut.sh` (.command / .desktop).
   - `.gitattributes` force CRLF sur .cmd/.ps1.
+
+### 2026-06-07 (suite 3) — Garde-fou free-tier + tentative de provisioning
+
+- Provisioning lance reellement : reseau OCI cree (VCN/subnet/IGW/seclist), auth API OK.
+- Blocage : "Out of host capacity" sur l'instance A1 a eu-paris-1 (capacite ARM nulle en
+  Always Free), y compris en 1 OCPU/6 Go. Retry en arriere-plan en cours.
+- L'upgrade Pay As You Go ne peut PAS etre fait via API (action de facturation, console+MFA only).
+- AJOUT `scripts/freetier-guard.py` : parse le plan terraform et BLOQUE l'apply si hors quota
+  Always Free (A1 >4 OCPU/24 Go, >2 micro, shape non-free, >200 Go). Cable dans deploy.sh ET
+  dans la boucle de retry (plan -> guard -> apply a chaque iteration). Teste OK (pass 1/6, block 8/48/300).
