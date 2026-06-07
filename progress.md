@@ -2500,3 +2500,10 @@ usages Claude/dev/Godot.
   auto via LocalForward), `connect.sh`, `tunnel.sh`. Cote VM : `/etc/profile.d/merlin.sh`
   (alias ws/gv/ol/merlin) + MOTD + `merlin-status`.
 - Revalide : cloud-init rendu = YAML valide (runner on/off), gating verifie, tf validate OK.
+
+### 2026-06-07 (suite 2) — Raccourci bureau
+
+- `infra/oracle/desktop/` : raccourci bureau 1-clic vers la VM (lance `ssh merlin-vm`).
+  - Windows : `Install Desktop Shortcut.cmd` -> cree un .lnk "M.E.R.L.I.N VM" sur le Bureau.
+  - macOS/Linux : `install-desktop-shortcut.sh` (.command / .desktop).
+  - `.gitattributes` force CRLF sur .cmd/.ps1.

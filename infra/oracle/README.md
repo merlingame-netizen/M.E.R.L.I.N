@@ -128,6 +128,15 @@ No-config one-shots (read IP straight from terraform outputs):
 On the VM you also get shortcuts: `merlin` (status), `ws` (cd workspace),
 `gv` (godot version), `ol` (ollama list).
 
+### Desktop shortcut
+
+Want a one-click icon on your Desktop? (Requires the `merlin-vm` alias above.)
+
+- **Windows**: double-click `desktop/Install Desktop Shortcut.cmd` → creates a
+  **"M.E.R.L.I.N VM"** icon on your Desktop that opens an SSH session.
+- **macOS / Linux**: `bash desktop/install-desktop-shortcut.sh` → creates a
+  `.command` (mac) / `.desktop` (linux) launcher on your Desktop.
+
 ## Claude Code runner (systemd, on the VM)
 
 `enable_claude_runner = true` (default) installs a `merlin-runner` service.
@@ -203,4 +212,8 @@ infra/oracle/
     ├── install-ssh-alias.sh       # adds 'merlin-vm' to ~/.ssh/config (+ Ollama tunnel)
     ├── connect.sh                 # one-shot SSH using terraform outputs
     └── tunnel.sh                  # Ollama tunnel only
+└── desktop/
+    ├── Install Desktop Shortcut.cmd   # Windows: double-click to create the icon
+    ├── install-desktop-shortcut.ps1   # Windows: the shortcut creator
+    └── install-desktop-shortcut.sh    # macOS/Linux: desktop launcher
 ```
