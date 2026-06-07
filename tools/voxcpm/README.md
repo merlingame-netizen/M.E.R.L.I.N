@@ -14,19 +14,32 @@ CLI / test page.
 
 > Full guide: [`docs/VOXCPM_DEPLOYMENT.md`](../../docs/VOXCPM_DEPLOYMENT.md)
 
-## Quick start (Windows, CPU)
+## Quick start — ONE command, no .bat (recommended)
+
+From a terminal at the repo root:
+
+```
+python tools/voxcpm/serve.py
+```
+
+This installs the deps if needed (Piper, no torch), downloads the French Merlin
+voice if absent, **opens the test page in your browser**, and starts the server.
+Stop with Ctrl+C. Options: `--port 8810`, `--no-robot`, `--no-open`,
+`--voice fr_FR-gilles-low`, `--engine voxcpm`.
+
+> This is the canonical launcher (some machines can't run `.bat`). The `.bat`/
+> `.ps1` wrappers below do the same thing but aren't required.
+
+### Alternative: Windows .bat (if allowed on your machine)
 
 ```bat
-:: 1. Install Piper + the French Merlin voice (no torch, ~60 MB):
-tools\voxcpm\install.bat
+tools\voxcpm\run.bat       :: one-click: install if needed + start + open browser
+```
 
-:: 2. Start the server (stays running):
-tools\voxcpm\start.bat
+### Then, from the CLI
 
-:: 3. Test in the browser (served by the server, no CORS hassle):
-::    open  http://127.0.0.1:8808/
-::    or from the CLI:
-python tools\cli.py voxcpm speak --text "Je suis Merlin, gardien de Brocéliande."
+```
+python tools/cli.py voxcpm speak --text "Je suis Merlin, gardien de Brocéliande."
 ```
 
 ## Robot voice controls

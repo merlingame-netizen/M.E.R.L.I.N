@@ -355,7 +355,7 @@ python tools/cli.py ollama pull --model qwen2.5:7b
 python tools/cli.py ollama show --model merlin-narrator-lora:latest
 
 # TTS locale (Piper par defaut = rapide CPU + voix robot Merlin ; VoxCPM = clone GPU)
-# Serveur: tools\voxcpm\start.bat  |  Page de test: http://127.0.0.1:8808/
+# Serveur (sans .bat): python tools/voxcpm/serve.py  |  Page de test: http://127.0.0.1:8808/
 python tools/cli.py voxcpm status                # Sante serveur (moteur, modele, robot, voix)
 python tools/cli.py voxcpm voices                # Voix disponibles (Piper onnx / clones VoxCPM)
 python tools/cli.py voxcpm speak --text "Je suis Merlin."           # synth + lecture (robot ON)

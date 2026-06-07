@@ -24,15 +24,23 @@ This covers the Game Design Bible backlog item **“Merlin speech-bar + TTS”**
 
 ---
 
-## 0. Quick start (CPU, Piper)
+## 0. Quick start — ONE command, no .bat (recommended)
 
-```bat
-tools\voxcpm\install.bat          :: Piper + fr_FR-tom-medium (no torch, ~60 MB)
-tools\voxcpm\start.bat            :: serve at http://127.0.0.1:8808/
 ```
+python tools/voxcpm/serve.py
+```
+Installs deps if needed (Piper, no torch), downloads the French Merlin voice,
+opens the test page in your browser, starts the server. Ctrl+C to stop.
+Options: `--port`, `--no-robot`, `--no-open`, `--voice`, `--engine voxcpm`.
+
+> **Canonical launcher.** Some machines can't run `.bat` files — `serve.py` is pure
+> Python and needs only a Python 3.10–3.12 already on the machine. The `.bat`/`.ps1`
+> wrappers (`run.bat`, `install.bat`, `start.bat`) are optional conveniences that do
+> the same thing.
+
 Then open `http://127.0.0.1:8808/` (robot toggle + intensity slider built in), or:
-```bat
-python tools\cli.py voxcpm speak --text "Je suis Merlin." --robot_intensity 0.7
+```
+python tools/cli.py voxcpm speak --text "Je suis Merlin." --robot_intensity 0.7
 ```
 
 Engine knobs (env or `config.json`): `VOXCPM_ENGINE` (piper|voxcpm),
