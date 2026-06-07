@@ -1,0 +1,94 @@
+#cloud-config
+# M.E.R.L.I.N. — Oracle ARM A1 provisioning
+# Rendered by Terraform (templatefile). Installs: dev base, Node 20, Ollama+Gemma,
+# Godot headless (arm64), Claude Code. See infra/oracle/README.md.
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+  - curl
+  - wget
+  - unzip
+  - build-essential
+  - htop
+  - jq
+  - ca-certificates
+  - gnupg
+  - ufw
+  - python3
+  - python3-pip
+  - python3-venv
+  - tmux
+  - software-properties-common
+
+write_files:
+  - path: /etc/sysctl.d/99-merlin.conf
+    content: |
+      vm.swappiness=10
+
+  - path: /opt/merlin/pull-models.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      # Wait until the Ollama daemon answers before pulling.
+      for _ in $(seq 1 60); do
+        if curl -fsS http://localhost:11434/api/version >/dev/null 2>&1; then break; fi
+        sleep 5
+      done
+%{ for m in ollama_models ~}
+      ollama pull ${m} || true
+%{ endfor ~}
+      echo "models-done" > /opt/merlin/MODELS_DONE
+
+  - path: /opt/merlin/README.txt
+    content: |
+      M.E.R.L.I.N. host — provisioned by Terraform/cloud-init.
+      Ollama API: http://127.0.0.1:11434 (tunnel from your machine:
+        ssh -N -L 11434:localhost:11434 ${os_username}@<public_ip>)
+      Godot headless: /usr/local/bin/godot  (godot --headless --version)
+      Claude Code:    claude  (run `claude` after `npm i -g @anthropic-ai/claude-code` if missing)
+      Workspace:      /home/${os_username}/workspace
+      Provision logs: /var/log/cloud-init-output.log , /var/log/merlin-models.log
+
+runcmd:
+  - sysctl --system || true
+  # 8 GB swap for headroom when loading larger quantized models.
+  - |
+    if [ ! -f /swapfile ]; then
+      fallocate -l 8G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+      echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    fi
+  # Node.js 20 (for MERLIN server build + Claude Code CLI)
+  - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  - apt-get install -y nodejs
+  - npm install -g @anthropic-ai/claude-code || true
+  # Ollama (systemd service, binds 127.0.0.1:11434 by default)
+  - curl -fsSL https://ollama.com/install.sh | sh
+  - systemctl enable --now ollama || true
+  # Godot headless (arm64)
+  - |
+    GODOT_VER="${godot_version}"
+    cd /tmp
+    wget -q "https://github.com/godotengine/godot/releases/download/$${GODOT_VER}-stable/Godot_v$${GODOT_VER}-stable_linux.arm64.zip" -O godot.zip
+    unzip -o godot.zip
+    install -m 0755 "Godot_v$${GODOT_VER}-stable_linux.arm64" /usr/local/bin/godot
+    /usr/local/bin/godot --headless --version || true
+  # Firewall (defense-in-depth; OCI security list is the primary control)
+  - ufw allow OpenSSH
+%{ if expose_ollama ~}
+  - ufw allow 11434/tcp
+%{ endif ~}
+  - ufw --force enable
+  # Pull Gemma models in the background (first boot can take a while)
+  - bash /opt/merlin/pull-models.sh > /var/log/merlin-models.log 2>&1 &
+  # Workspace + optional repo mirror
+  - install -d -o ${os_username} -g ${os_username} /home/${os_username}/workspace
+%{ for repo in git_repos ~}
+  - sudo -u ${os_username} git clone ${repo} "/home/${os_username}/workspace/$(basename ${repo} .git)" || true
+%{ endfor ~}
+  - touch /opt/merlin/PROVISION_DONE
+
+final_message: "M.E.R.L.I.N. host provisioned in $UPTIME s — see /opt/merlin/README.txt"

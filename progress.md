@@ -2470,3 +2470,22 @@ Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement p
 
 
 - **Cycle 0 AI Diagnosis**: 0 issues (0 critical, 0 high) — Health: 10/10
+
+---
+
+## 2026-06-07 — Infra: Oracle Cloud ARM A1 host (Always Free)
+
+Ajout `infra/oracle/` : Terraform + cloud-init pour provisionner une VM Oracle
+Ampere A1 gratuite (4 OCPU / 24 Go, region eu-paris-1) destinee a heberger les
+usages Claude/dev/Godot.
+
+- **terraform/** : VCN + subnet public + IGW + security list (SSH; Ollama tunnel-only)
+  + instance `VM.Standard.A1.Flex` (image Ubuntu 22.04 aarch64 via data source).
+- **cloud-init/** : install Ollama + Gemma (`gemma3:4b`, `gemma3:12b`, CPU async),
+  Godot 4.4.1 headless arm64, Node 20 + Claude Code, swap 8 Go, repo mirror optionnel.
+- **scripts/** : `generate-keys.sh` (cle API + SSH, snippet tfvars), `deploy.sh`.
+- **README.md** : runbook complet (cle API plutot que login navigateur+MFA) +
+  workaround "Out of host capacity".
+- Valide : `terraform validate` OK, rendu cloud-init = YAML valide, lock 5 plateformes.
+- **Reste a faire (utilisateur)** : Step 1-3 du runbook (generer cles, enregistrer la
+  cle publique dans la console, remplir terraform.tfvars), puis `./scripts/deploy.sh`.

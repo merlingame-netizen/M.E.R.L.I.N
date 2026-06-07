@@ -1,0 +1,9 @@
+# Never commit secrets or local terraform state
+terraform.tfvars
+*.auto.tfvars
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+crash.log
+# Keep .terraform.lock.hcl tracked (provider pinning) — do NOT ignore it
