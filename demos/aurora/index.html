@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AURORA — Studio d'interfaces vivantes</title>
+<style>
+  :root{
+    --bg:#05060a; --ink:#eef0ff; --muted:#9aa0c0;
+    --c1:#7c5cff; --c2:#22d3ee; --c3:#ff5fa2; --c4:#ffd166;
+    --card:rgba(255,255,255,.04); --line:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  a{color:inherit}
+  /* grain + vignette overlay (cheap, no animation) */
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
+    background:radial-gradient(120% 120% at 50% 0%,transparent 55%,rgba(0,0,0,.55) 100%);
+    mix-blend-mode:multiply;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .eyebrow{letter-spacing:.28em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+  .display{
+    font-weight:800; line-height:.95; letter-spacing:-.03em;
+    font-size:clamp(44px,9vw,108px); margin:.2em 0 .35em;
+  }
+  .grad-text{
+    background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c4),var(--c1));
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lead{color:var(--muted);font-size:clamp(16px,2.2vw,21px);max-width:54ch;line-height:1.55}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{
+    min-height:48px;min-width:48px;display:inline-flex;align-items:center;gap:.5em;
+    padding:14px 22px;border-radius:999px;border:1px solid var(--line);
+    font-weight:650;font-size:15px;cursor:pointer;background:transparent;color:var(--ink);
+    will-change:transform;
+  }
+  .btn-primary{
+    border:none;color:#0a0a12;
+    background:linear-gradient(90deg,var(--c2),var(--c1));
+    box-shadow:0 10px 40px -12px var(--c1);
+  }
+  .pillrow{display:flex;gap:10px;flex-wrap:wrap}
+  .pill{font-size:13px;color:var(--muted);border:1px solid var(--line);padding:8px 14px;border-radius:999px}
+  section{position:relative;z-index:1}
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none;z-index:0}
+  .grid{display:grid;gap:18px;grid-template-columns:repeat(3,1fr)}
+  @media(max-width:780px){.grid{grid-template-columns:1fr}}
+  .card{
+    position:relative;overflow:hidden;border:1px solid var(--line);border-radius:22px;
+    background:var(--card);padding:26px;min-height:200px;
+  }
+  .card h3{margin:.4em 0 .3em;font-size:20px;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+  .dot{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px}
+  .num{font-weight:800;font-size:clamp(40px,7vw,84px);letter-spacing:-.03em;line-height:1}
+  .foot{color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:80px}
+  .modal-backdrop{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(2,3,8,.66);backdrop-filter:blur(6px)}
+  .modal{width:min(440px,92vw);border:1px solid var(--line);border-radius:24px;padding:30px;
+    background:linear-gradient(180deg,#0d0f1a,#070810)}
+  .progress{position:fixed;left:0;top:0;height:3px;transform-origin:0%;z-index:90;
+    background:linear-gradient(90deg,var(--c2),var(--c1),var(--c3))}
+  .spot{pointer-events:none;position:absolute;inset:0;opacity:0;transition:opacity .25s}
+  .card:hover .spot{opacity:1}
+  @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+import React, { useRef, useState } from "https://esm.sh/react@18.3.1";
+import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
+import htm from "https://esm.sh/htm@3.1.1";
+import {
+  motion, AnimatePresence, MotionConfig,
+  useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate,
+  useInView, useReducedMotion, animate
+} from "https://esm.sh/framer-motion@11.3.19?deps=react@18.3.1,react-dom@18.3.1";
+
+const html = htm.bind(React.createElement);
+const M = motion;
+
+/* ── shared motion vocabulary (from the Pro Max preset library) ───────── */
+const spring = { snappy:{type:"spring",stiffness:400,damping:30},
+                 smooth:{type:"spring",stiffness:260,damping:32},
+                 gentle:{type:"spring",stiffness:120,damping:20} };
+const easeOut = [0.16,1,0.3,1];
+const fadeUp = { hidden:{opacity:0,y:24}, show:{opacity:1,y:0,transition:spring.smooth} };
+const stagger = { hidden:{opacity:0}, show:{opacity:1,transition:{staggerChildren:0.08,delayChildren:0.05}} };
+
+/* ── scroll progress bar ──────────────────────────────────────────────── */
+function ScrollProgress(){
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress,{stiffness:120,damping:30});
+  return html`<${M.div} class="progress" style=${{scaleX, right:0}} />`;
+}
+
+/* ── one-shot scroll reveal wrapper ───────────────────────────────────── */
+function Reveal({children, delay=0, as="div", style}){
+  const ref = useRef(null);
+  const inView = useInView(ref,{once:true,margin:"-12% 0px"});
+  return html`<${M[as]} ref=${ref} style=${style}
+      variants=${{hidden:{opacity:0,y:28},show:{opacity:1,y:0,transition:{...spring.smooth,delay}}}}
+      initial="hidden" animate=${inView?"show":"hidden"}>${children}<//>`;
+}
+
+/* ── magnetic primary button (useMotionValue → 0 react re-render) ─────── */
+function Magnetic({children, primary, onClick}){
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const mx = useMotionValue(0), my = useMotionValue(0);
+  const x = useSpring(mx,spring.gentle), y = useSpring(my,spring.gentle);
+  const move = e => {
+    if(reduce||!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    mx.set((e.clientX-(r.left+r.width/2))*0.4);
+    my.set((e.clientY-(r.top+r.height/2))*0.4);
+  };
+  const reset = () => { mx.set(0); my.set(0); };
+  return html`<${M.button} ref=${ref} onMouseMove=${move} onMouseLeave=${reset} onClick=${onClick}
+      style=${{x,y}} whileTap=${{scale:0.95}} transition=${spring.snappy}
+      class=${"btn"+(primary?" btn-primary":"")}>${children}<//>`;
+}
+
+/* ── spotlight feature card (useMotionTemplate, cursor-following glow) ── */
+function FeatureCard({icon, tint, title, body, variants}){
+  const mx = useMotionValue(50), my = useMotionValue(50);
+  const bg = useMotionTemplate`radial-gradient(220px circle at ${mx}% ${my}%, ${tint}, transparent 60%)`;
+  const onMove = e => {
+    const r = e.currentTarget.getBoundingClientRect();
+    mx.set(((e.clientX-r.left)/r.width)*100);
+    my.set(((e.clientY-r.top)/r.height)*100);
+  };
+  return html`
+    <${M.div} class="card" variants=${variants} onMouseMove=${onMove}
+        whileHover=${{y:-6}} transition=${spring.smooth}>
+      <${M.div} class="spot" style=${{background:bg}} />
+      <div class="dot" style=${{background:tint.replace(/[\d.]+\)$/,'0.18)'),border:`1px solid ${tint}`}}>${icon}</div>
+      <h3>${title}</h3>
+      <p>${body}</p>
+    <//>`;
+}
+
+/* ── animated counter (springs a number on reveal) ────────────────────── */
+function Stat({to, suffix, label}){
+  const ref = useRef(null);
+  const inView = useInView(ref,{once:true});
+  const [n,setN] = useState(0);
+  React.useEffect(()=>{
+    if(!inView) return;
+    const c = animate(0,to,{duration:1.4,ease:easeOut,onUpdate:v=>setN(v)});
+    return ()=>c.stop();
+  },[inView,to]);
+  return html`<div ref=${ref}>
+    <div class="num grad-text">${Math.round(n)}${suffix}</div>
+    <div style=${{color:"var(--muted)",marginTop:8,fontSize:14}}>${label}</div>
+  </div>`;
+}
+
+/* ── parallax decorative blob ─────────────────────────────────────────── */
+function Blob({color,size,top,left,depth=120}){
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  const yRaw = useTransform(scrollYProgress,[0,1],[depth,-depth]);
+  const y = useSpring(yRaw,{stiffness:90,damping:30,mass:0.5});
+  return html`<${M.div} ref=${ref} class="blob"
+     style=${{background:color,width:size,height:size,top,left,...(reduce?{}:{y})}} />`;
+}
+
+/* ── animated gradient title (background-position loop) ───────────────── */
+function GradTitle({children}){
+  const reduce = useReducedMotion();
+  return html`<${M.span} class="grad-text"
+     animate=${reduce?{}:{backgroundPosition:["0% 50%","100% 50%","0% 50%"]}}
+     transition=${{duration:9,repeat:Infinity,ease:"linear"}}>${children}<//>`;
+}
+
+function App(){
+  const [open,setOpen] = useState(false);
+  const features = [
+    {icon:"✦",tint:"rgba(124,92,255,0.45)",title:"Motion-first",body:"Chaque interaction respire. Springs physiques, jamais de durée arbitraire sur le tactile."},
+    {icon:"◈",tint:"rgba(34,211,238,0.45)",title:"60 fps garanti",body:"On n'anime que transform & opacity. Composité par le GPU, zéro reflow, zéro jank."},
+    {icon:"❍",tint:"rgba(255,95,162,0.45)",title:"Accessible",body:"prefers-reduced-motion respecté, focus visible, cibles ≥ 48px. Beau ET inclusif."},
+    {icon:"✷",tint:"rgba(255,209,102,0.45)",title:"Core Web Vitals",body:"LCP affiché sans JS, CLS verrouillé, INP < 200ms. La perf est un pilier, pas un bonus."},
+    {icon:"⬡",tint:"rgba(124,92,255,0.45)",title:"21st.dev ready",body:"Squelettes générés par Magic, audités, puis animés avec la lib de presets."},
+    {icon:"✺",tint:"rgba(34,211,238,0.45)",title:"Tous projets",body:"Découplé de tout framework maison. Landing, dashboard, portfolio — partout."},
+  ];
+
+  return html`
+  <${MotionConfig} reducedMotion="user">
+    <${ScrollProgress} />
+
+    <!-- HERO -->
+    <section style=${{position:"relative",paddingTop:120,paddingBottom:90,overflow:"hidden"}}>
+      <${Blob} color="var(--c1)" size="420px" top="-120px" left="-80px" depth=140 />
+      <${Blob} color="var(--c2)" size="360px" top="40px"  left="62%"  depth=200 />
+      <${Blob} color="var(--c3)" size="300px" top="280px" left="20%"  depth=90 />
+      <div class="wrap" style=${{position:"relative",zIndex:2}}>
+        <${M.div} variants=${stagger} initial="hidden" animate="show">
+          <${M.div} variants=${fadeUp} class="eyebrow">Studio d'interfaces vivantes</${M.div}>
+          <${M.h1} variants=${fadeUp} class="display">
+            Des sites qui<br/><${GradTitle}>bougent juste<//>.
+          </${M.h1}>
+          <${M.p} variants=${fadeUp} class="lead">
+            AURORA conçoit des interfaces web hyper animées <i>et</i> hyper optimisées.
+            Le mouvement guide l'œil, jamais il ne le fatigue.
+          </${M.p}>
+          <${M.div} variants=${fadeUp} class="row" style=${{marginTop:30}}>
+            <${Magnetic} primary onClick=${()=>setOpen(true)}>Démarrer un projet →<//>
+            <${Magnetic} onClick=${()=>document.getElementById("feat").scrollIntoView({behavior:"smooth"})}>Voir le travail<//>
+          </${M.div}>
+          <${M.div} variants=${fadeUp} class="pillrow" style=${{marginTop:34}}>
+            ${["React","Framer Motion","21st.dev","Web Vitals"].map(t=>html`<span class="pill" key=${t}>${t}</span>`)}
+          </${M.div}>
+        </${M.div}>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="wrap" style=${{padding:"40px 24px"}}>
+      <div class="grid" style=${{gridTemplateColumns:"repeat(3,1fr)"}}>
+        <${Reveal}><${Stat} to=${60} suffix=" fps" label="fluidité constante" /><//>
+        <${Reveal} delay=${0.08}><${Stat} to=${98} suffix="" label="score Lighthouse perf" /><//>
+        <${Reveal} delay=${0.16}><${Stat} to=${13} suffix="" label="presets prêts à l'emploi" /><//>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="feat" class="wrap" style=${{padding:"80px 24px"}}>
+      <${Reveal}>
+        <div class="eyebrow">Ce qui fait la différence</div>
+        <h2 class="display" style=${{fontSize:"clamp(32px,5vw,56px)"}}>Le <span class="grad-text">max pack</span>.</h2>
+      <//>
+      <${M.div} class="grid" variants=${stagger} initial="hidden"
+          whileInView="show" viewport=${{once:true,margin:"-10% 0px"}} style=${{marginTop:26}}>
+        ${features.map(f=>html`<${FeatureCard} key=${f.title} ...${f} variants=${fadeUp} />`)}
+      </${M.div}>
+    </section>
+
+    <!-- CTA -->
+    <section class="wrap" style=${{padding:"30px 24px 90px"}}>
+      <${Reveal}>
+        <div class="card" style=${{textAlign:"center",padding:"56px 26px",background:"linear-gradient(180deg,rgba(124,92,255,.10),rgba(34,211,238,.04))"}}>
+          <h2 class="display" style=${{fontSize:"clamp(30px,5vw,54px)",margin:"0 0 .3em"}}>On anime votre prochain écran ?</h2>
+          <p class="lead" style=${{margin:"0 auto 26px"}}>Une démo concrète en moins d'une journée.</p>
+          <div class="row" style=${{justifyContent:"center"}}>
+            <${Magnetic} primary onClick=${()=>setOpen(true)}>Réserver un créneau<//>
+          </div>
+        </div>
+      <//>
+      <div class="foot" style=${{paddingTop:26,marginTop:60,textAlign:"center"}}>
+        AURORA — démo générée par le pack “UI UX Pro Max” · React + Framer Motion · ${new Date().getFullYear()}
+      </div>
+    </section>
+
+    <!-- MODAL (AnimatePresence) -->
+    <${AnimatePresence}>
+      ${open && html`
+      <${M.div} key="bk" class="modal-backdrop"
+          initial=${{opacity:0}} animate=${{opacity:1}} exit=${{opacity:0,transition:{duration:.15}}}
+          onClick=${()=>setOpen(false)}>
+        <${M.div} class="modal" role="dialog" aria-modal="true" onClick=${e=>e.stopPropagation()}
+            initial=${{opacity:0,scale:.92,y:14}} animate=${{opacity:1,scale:1,y:0,transition:spring.smooth}}
+            exit=${{opacity:0,scale:.97,y:8,transition:{duration:.15}}}>
+          <div class="eyebrow">Prise de contact</div>
+          <h3 style=${{fontSize:26,margin:".3em 0 .4em",letterSpacing:"-.02em"}}>Construisons quelque chose de <span class="grad-text">vivant</span>.</h3>
+          <p style=${{color:"var(--muted)",margin:"0 0 22px",lineHeight:1.55}}>
+            Ceci est une modale animée avec <code>AnimatePresence</code> — entrée spring, sortie rapide. Le vrai formulaire viendrait ici.
+          </p>
+          <div class="row">
+            <${Magnetic} primary onClick=${()=>setOpen(false)}>Parfait, fermer<//>
+            <${Magnetic} onClick=${()=>setOpen(false)}>Annuler<//>
+          </div>
+        </${M.div}>
+      </${M.div}>`}
+    </${AnimatePresence}>
+  </${MotionConfig}>`;
+}
+
+createRoot(document.getElementById("root")).render(html`<${App} />`);
+</script>
+</body>
+</html>
