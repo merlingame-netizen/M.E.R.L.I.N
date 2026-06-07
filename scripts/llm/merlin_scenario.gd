@@ -11,7 +11,7 @@ extends Node
 ##   (beats, types, difficulté, required_tags) ; le LLM n'écrit que de la PROSE.
 ## - Sélection = seul ~JSON, pré-généré pendant l'idle du Menu (latence masquée).
 
-const SYSTEM_PREFIX: String = "Tu es le narrateur de la foret de Broceliande (legende celtique). REGLES: ecris en francais SIMPLE et CLAIR, en phrases qui S'ENCHAINENT — chaque phrase DECOULE de la precedente (une action, PUIS sa consequence), et l'ensemble se lit comme un petit PARAGRAPHE FLUIDE. INTERDIT une liste de phrases hachees, tres courtes et deconnectees les unes des autres (ex INTERDIT: 'Le geste glisse. Les autres tombent. Le vide ne touche rien.'). Mots de tous les jours. Raconte ce qui se passe CONCRETEMENT: le geste precis, ce qu'il provoque, le resultat visible. INTERDIT les sujets abstraits ou symboliques ('le vide', 'le nom', 'le geste') et toute enigme ou metaphore obscure. Ton feerique mais LISIBLE: on comprend l'action du premier coup. Raconte la SCENE et l'EFFET des actes en recit direct. INTERDIT les phrases a tiroir et les images abstraites (ex INTERDIT: 'le silence a une texture', 'l'air goute le souvenir', 'plus vieux que les sentiers', 'comme on oublie un nom'). N'APOSTROPHE JAMAIS le joueur: INTERDIT 'Ah voyageur', 'voyageur', 'mon ami', 'tu dois', et tout commentaire de maitre du jeu. Ne nomme JAMAIS simulation/IA/jeu (pas de 4e mur). Pas d'anglicismes. Reste dans Broceliande. Evite les formules creuses et clichees (INTERDIT: 'union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne', 'secrets anciens'). Ne recopie JAMAIS une consigne de cette instruction dans ta reponse."
+const SYSTEM_PREFIX: String = "Tu es MERLIN, l'enchanteur de Broceliande, et tu CONTES l'aventure du Voyageur comme une vieille legende celtique. REGLES: raconte a la 3e PERSONNE, parle TOUJOURS du « Voyageur » (JAMAIS 'tu', JAMAIS 'je'). Temps du CONTE: passe simple et imparfait (« le Voyageur s'enfonca », « la brume montait », « il choisit de »). Francais SIMPLE et CLAIR, phrases qui S'ENCHAINENT (une action PUIS sa consequence), CONCRETES (qui, quoi, ou) — JAMAIS d'enigme, de sujet abstrait ('le vide', 'le nom') ni de phrases hachees deconnectees. Raconte les EVENEMENTS et les GESTES precis, pas des descriptions vagues. Pas d'anglicismes. Reste dans Broceliande. Ne romps JAMAIS le 4e mur (INTERDIT 'jeu', 'carte', 'joueur', 'IA', 'simulation'). Evite les cliches ('union parfaite', 'murmure ancien', 'silence sacre', 'energie ancienne'). Ne recopie JAMAIS cette consigne dans ta reponse."
 
 # Voix de MERLIN (narrateur) pour les INTROS : il CONNAÎT le Voyageur et l'apostrophe — à l'inverse de
 # SYSTEM_PREFIX (narration de SCÈNE en résolution, sans apostrophe, conservée telle quelle). Persona
@@ -89,31 +89,31 @@ const SITU_FALLBACKS: Dictionary = {
 
 const RESO_FALLBACKS: Dictionary = {
 	"echec": [
-		"Tes deux gestes se mélangent mal et se gênent. La forêt refuse, te repousse, et te voilà plus loin de ton but. Dans l'ombre, quelque chose s'en amuse.",
-		"Le mélange sonne faux, et le bois l'entend tout de suite. Ce que tu touches se dérobe, ce que tu tiens t'échappe. Tu repars les mains vides.",
-		"Ton geste ne prend pas sur ce lieu. Le sentier se referme, indifférent, et te laisse en arrière. Ce faux pas, il faudra le payer.",
-		"Tes deux gestes partent de travers et s'annulent. Rien ne bouge, sauf toi qu'on repousse en arrière. Tu as perdu du terrain, et un peu de toi avec.",
-		"Le mélange rate, et la forêt le sent. Elle se referme d'un coup, sèche, et te laisse dehors. Tu repars sans rien, le cœur plus lourd.",
+		"Le Voyageur tenta de mêler ses deux forces, mais elles se gênèrent l'une l'autre. La forêt refusa, le repoussa, et il se retrouva plus loin de son but qu'avant. Dans l'ombre, quelque chose parut s'en amuser.",
+		"Le mélange sonna faux, et le bois l'entendit aussitôt. Ce que le Voyageur toucha se déroba, ce qu'il crut tenir lui échappa, et il repartit les mains vides.",
+		"Le geste ne prit pas sur ce lieu. Le sentier se referma, indifférent, et le laissa en arrière. Ce faux pas-là, il lui faudrait le payer.",
+		"Les deux forces du Voyageur partirent de travers et s'annulèrent. Rien ne bougea, sinon lui qu'on repoussa en arrière. Il avait perdu du terrain, et un peu de lui-même avec.",
+		"Le mélange rata, et la forêt le sentit. Elle se referma d'un coup, sèche, et le laissa dehors. Le Voyageur repartit sans rien, le cœur plus lourd.",
 	],
 	"partiel": [
-		"Tes deux gestes s'unissent, mais de travers. Tu obtiens ce que tu voulais — en en laissant un morceau. Une ombre marche maintenant dans tes pas.",
-		"Le geste fusionné n'ouvre la voie qu'à demi. Tu avances quand même, mais quelque chose t'a vu faire. Le prix viendra plus tard.",
-		"Tu arraches ton dû, mais un reste te colle à la peau. La voie s'entrouvre, étroite, juste assez pour passer. La forêt n'oublie pas ce que tu as forcé.",
-		"Tes deux gestes portent à demi. Tu passes, et quelque chose reste accroché à toi. La forêt a pris sa part, en silence.",
-		"Le mélange marche à moitié. Tu obtiens ce que tu voulais, mais une dette se crée dans ton dos. Elle se rappellera à toi plus tard.",
+		"Le Voyageur unit ses deux forces, mais de travers. Il obtint ce qu'il voulait — en en laissant un morceau. Une ombre, désormais, marchait dans ses pas.",
+		"Le geste fusionné n'ouvrit la voie qu'à demi. Le Voyageur avança tout de même, mais quelque chose l'avait vu faire. Le prix viendrait plus tard.",
+		"Le Voyageur arracha son dû, mais un reste lui colla à la peau. La voie s'entrouvrit, étroite, juste assez pour passer. La forêt n'oublia pas ce qu'il avait forcé.",
+		"Ses deux forces portèrent à demi. Le Voyageur passa, et quelque chose resta accroché à lui. La forêt avait pris sa part, en silence.",
+		"Le mélange ne marcha qu'à moitié. Le Voyageur obtint ce qu'il voulait, mais une dette se noua dans son dos. Elle se rappellerait à lui plus tard.",
 	],
 	"reussite": [
-		"Tes deux gestes se nouent en un seul, propre et juste. La forêt cède et te laisse avancer d'un pas plus sûr. Cette fois, le sentier ne réclame rien.",
-		"Le geste fusionné touche juste du premier coup. Le chemin s'ouvre, sans éclat mais sans dette. Tu passes, entier.",
-		"Les deux forces s'accordent, et le sentier te laisse passer. La route se dégage, nette. Tu avances sans rien laisser derrière toi.",
-		"Tes deux gestes s'emboîtent, et ce qui résistait cède d'un coup. Tu reprends ta marche, plus sûr. Rien ne te suit.",
-		"Le mélange porte juste. La forêt recule, calme, et s'écarte devant toi. Cette fois, tu ne paies rien.",
+		"Le Voyageur noua ses deux forces en un seul geste, net et juste. La forêt céda et le laissa avancer d'un pas plus sûr. Cette fois, le sentier ne réclama rien.",
+		"Le geste fusionné porta du premier coup. Le chemin s'ouvrit, sans éclat mais sans dette, et le Voyageur passa, entier.",
+		"Les deux forces s'accordèrent, et le sentier le laissa passer. La route se dégagea, nette. Le Voyageur avança sans rien laisser derrière lui.",
+		"Ses deux gestes s'emboîtèrent, et ce qui résistait céda d'un coup. Le Voyageur reprit sa marche, plus sûr, et rien ne le suivit.",
+		"Le mélange porta juste. La forêt recula, calme, et s'écarta devant le Voyageur. Cette fois, il ne paya rien.",
 	],
 	"eclatante": [
-		"Tes deux gestes n'en font plus qu'un, si bien que la forêt elle-même retient son souffle. Le passage s'ouvre en grand, sans résistance. Un instant, tu es plus grand que toi-même.",
-		"L'accord est total, et tout le bois le fête en silence. La voie se déroule devant toi comme un tapis, et rien ne te coûte. Pour une fois, la forêt donne plus qu'elle ne prend.",
-		"Tes deux gestes se fondent parfaitement, et tout cède devant toi sans le moindre effort. La forêt elle-même semble se ranger de ton côté. Un instant, rien ne peut t'arrêter.",
-		"L'accord est si juste que le bois entier s'incline. Ce que tu cherchais vient à toi sans que tu aies à le prendre. La forêt te donne, pour une fois, plus qu'elle ne réclame.",
+		"Les deux forces du Voyageur n'en firent plus qu'une, si bien que la forêt elle-même retint son souffle. Le passage s'ouvrit en grand, sans résistance, et l'espace d'un instant il fut plus grand que lui-même.",
+		"L'accord fut total, et tout le bois le fêta en silence. La voie se déroula devant le Voyageur comme un tapis, et rien ne lui coûta. Pour une fois, la forêt donna plus qu'elle ne prit.",
+		"Les deux forces se fondirent à la perfection, et tout céda devant le Voyageur sans le moindre effort. La forêt sembla se ranger de son côté ; rien ne pouvait plus l'arrêter.",
+		"L'accord fut si juste que le bois entier s'inclina. Ce que le Voyageur cherchait vint à lui sans qu'il eût à le prendre, et la forêt, pour une fois, donna plus qu'elle ne réclama.",
 	],
 }
 
@@ -122,20 +122,20 @@ const RESO_FALLBACKS: Dictionary = {
 # climax » ne s'afficherait jamais. Le procédural prend donc le relais EN LONG sur ces moments-là.
 const RESO_FALLBACKS_LONG: Dictionary = {
 	"echec": [
-		"Tes deux gestes s'élancent ensemble, mais au lieu de s'unir ils se brisent. La forêt ne se contente pas de refuser : elle reprend, elle efface, elle te repousse. Quelque chose, dans l'ombre, a vu ta tentative. Tu restes seul au bord, les mains vides.",
-		"Le geste se retourne contre toi comme une bête mal tenue. Ce que tu touches se dérobe, ce que tu appelles ne vient pas. Le lieu se referme, lentement, sur ton échec. Tu paieras ce moment, tu le sais déjà.",
+		"Les deux forces du Voyageur s'élancèrent ensemble, mais au lieu de s'unir elles se brisèrent. La forêt ne se contenta pas de refuser : elle reprit, elle effaça, elle le repoussa. Quelque chose, dans l'ombre, avait vu sa tentative. Il resta seul au bord, les mains vides.",
+		"Le geste se retourna contre le Voyageur comme une bête mal tenue. Ce qu'il toucha se déroba, ce qu'il appela ne vint pas. Le lieu se referma, lentement, sur son échec. Il paierait ce moment, il le savait déjà.",
 	],
 	"partiel": [
-		"Tes deux gestes portent, mais de travers. Quelque chose cède, quelque chose s'ouvre, et dans le même temps une ombre se glisse dans tes pas. Tu obtiens ce que tu voulais, et tu repars marqué. La forêt a pris autre chose, sans dire quoi.",
-		"Le passage s'entrouvre à demi sous ton geste, juste assez pour t'y faufiler. Mais rien ici n'est gratuit : ce que tu forces te coûte un morceau. On t'a vu faire, on ne l'oubliera pas. Tu avances, à moitié vainqueur, à moitié débiteur.",
+		"Les deux forces du Voyageur portèrent, mais de travers. Quelque chose céda, quelque chose s'ouvrit, et dans le même temps une ombre se glissa dans ses pas. Il obtint ce qu'il voulait, et repartit marqué. La forêt avait pris autre chose, sans dire quoi.",
+		"Le passage s'entrouvrit à demi sous le geste du Voyageur, juste assez pour s'y faufiler. Mais rien ici n'était gratuit : ce qu'il força lui coûta un morceau. On l'avait vu faire, on ne l'oublierait pas. Il avança, à moitié vainqueur, à moitié débiteur.",
 	],
 	"reussite": [
-		"Tes deux gestes se nouent enfin en un seul, large et juste, et le lieu cède dans un long soupir. La voie se dénoue devant toi, nette, comme si la forêt avait attendu ce moment. Tu passes, entier, plus sûr de ton pas. Le silence te suit comme un accord rare.",
-		"Le geste fusionné touche sa cible du premier coup, et tout le bois l'accuse. Le chemin s'ouvre sans triomphe bruyant mais sans la moindre dette. Rien ne te retient plus. Tu franchis le seuil, et la forêt te laisse aller.",
+		"Les deux gestes du Voyageur se nouèrent enfin en un seul, large et juste, et le lieu céda dans un long soupir. La voie se dénoua devant lui, nette, comme si la forêt avait attendu ce moment. Il passa, entier, plus sûr de son pas, et le silence le suivit comme un accord rare.",
+		"Le geste fusionné toucha sa cible du premier coup, et tout le bois l'accusa. Le chemin s'ouvrit sans triomphe bruyant mais sans la moindre dette. Rien ne retenait plus le Voyageur : il franchit le seuil, et la forêt le laissa aller.",
 	],
 	"eclatante": [
-		"Tes deux gestes n'en font soudain plus qu'un, si bien accordés que la forêt elle-même retient son souffle. Le seuil s'ouvre en grand, sans résistance, et tout au fond, sous les racines, quelque chose d'ancien s'incline. La voie se déroule comme un tapis. Un instant, bref et vertigineux, tu es plus grand que toi-même.",
-		"L'accord est total, et le bois entier le fête en silence. Ce que tu viens de faire, peu l'ont fait avant toi. Le chemin devant n'est plus une épreuve mais un cadeau. Tu avances, porté, et derrière toi une voix très douce prononce ton nom.",
+		"Les deux gestes du Voyageur n'en firent soudain plus qu'un, si bien accordés que la forêt elle-même retint son souffle. Le seuil s'ouvrit en grand, sans résistance, et tout au fond, sous les racines, quelque chose d'ancien s'inclina. La voie se déroula comme un tapis. L'espace d'un instant, bref et vertigineux, il fut plus grand que lui-même.",
+		"L'accord fut total, et le bois entier le fêta en silence. Ce que le Voyageur venait d'accomplir, peu l'avaient fait avant lui. Le chemin devant n'était plus une épreuve mais un cadeau. Il avança, porté, et derrière lui une voix très douce prononça son nom.",
 	],
 }
 
@@ -373,7 +373,7 @@ func narrate_intro(scenario: Dictionary) -> String:
 	var pitch: String = str(scenario.get("pitch", ""))
 	var mem: String = _build_memory_hint()
 	var mem_line: String = ("\nSouviens-toi du Voyageur : %s." % mem) if mem != "" else ""
-	var usr: String = "Quete proposee au Voyageur: \"%s\" — %s%s\nEn tant que MERLIN qui le connaît, conte-lui cette aventure en 3 phrases: salue ou taquine le Voyageur, plante le decor et l'enjeu a Broceliande, finis sur ce qui l'attend. Apostrophe-le ('Voyageur' ou 'mon ami'). Termine sur une phrase complete." % [title, pitch, mem_line]
+	var usr: String = "Quete proposee au Voyageur: \"%s\" — %s%s\nEn tant que MERLIN qui conte une vieille legende, raconte en 3 a 4 phrases la LEGENDE derriere cette quete a Broceliande : ce qu'on raconte du lieu, ce qui s'y serait perdu ou cache, le danger qui y rode. Puis annonce que le Voyageur s'y engagea. COMMENCE en apostrophant le Voyageur (« Ecoute, Voyageur » ou « Approche, Voyageur »), puis bascule au recit. Francais, images celtiques concretes, pas d'anglicismes, pas de 4e mur. Termine sur une phrase complete." % [title, pitch, mem_line]
 	var r: Dictionary = await mn.generate(_voice_prefix(), usr, {"creative": true, "max_tokens": 120, "label": "intro de quête (Merlin)"})
 	if r.has("error"):
 		return ""
@@ -386,9 +386,9 @@ func narrate_intro(scenario: Dictionary) -> String:
 # décor + atmosphère + enjeu et donne envie du 1er pas, AVANT le Beat 1. Procédural verbeux INSTANTANÉ
 # (3-4 phrases) ; narrate_opening enrichit en arrière-plan. Voix narrateur (SYSTEM_PREFIX), pas d'apostrophe.
 const OPENING_FRAMES: Array = [
-	"À la lisière de Brocéliande s'ouvre un chemin que les cartes ne montrent pas. Les fougères s'écartent devant toi, comme si on t'attendait. Tu fais un pas, et le bois se referme doucement derrière toi.",
-	"On parle peu de ce lieu, et toujours à voix basse. Devant toi, le sentier s'enfonce sous les arbres, sombre et silencieux. Ce que tu cherches t'attend au bout ; ce que tu crains aussi.",
-	"La brume se lève sur une clairière que tu n'avais pas vue en arrivant. Tout est calme, trop calme, comme avant l'orage. Un premier pas, et la forêt ne te laissera plus repartir.",
+	"À la lisière de Brocéliande s'ouvrait un chemin que les hommes avaient oublié. Les fougères s'écartèrent devant le Voyageur, comme si on l'attendait. Il fit un pas, et le bois se referma doucement derrière lui.",
+	"On parlait peu de ce lieu, et toujours à voix basse. Devant le Voyageur, le sentier s'enfonçait sous les arbres, sombre et silencieux. Ce qu'il cherchait l'attendait au bout ; ce qu'il craignait aussi.",
+	"La brume se leva sur une clairière que le Voyageur n'avait pas vue en arrivant. Tout y était calme, trop calme, comme avant l'orage. Il fit un premier pas, et la forêt ne le laisserait plus repartir.",
 ]
 
 
@@ -409,7 +409,7 @@ func narrate_opening(scenario: Dictionary) -> String:
 		return ""
 	var title: String = str(scenario.get("title", ""))
 	var pitch: String = str(scenario.get("pitch", ""))
-	var usr: String = ("Ouvre l'aventure « %s » a Broceliande (accroche : %s). Ecris 3 a 4 phrases qui LANCENT l'histoire : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui pousse a faire le premier pas. Recit direct au present, sans apostropher le Voyageur, images celtiques concretes, SANS remplissage. Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, pitch]
+	var usr: String = ("Ouvre l'aventure « %s » a Broceliande (accroche : %s). Conte 3 a 4 phrases qui LANCENT l'histoire, a la 3e PERSONNE (« le Voyageur ») au temps du CONTE : plante le decor et l'atmosphere, fais sentir l'enjeu, finis sur ce qui le pousse au premier pas. Images celtiques concretes, SANS remplissage, pas de 4e mur. Commence l'histoire (ne la resume pas) et termine sur une phrase complete.") % [title, pitch]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": MAX_TOK_PROSE, "label": "ouverture (histoire)"})
 	if r.has("error"):
 		return ""
@@ -466,32 +466,32 @@ func _fallback_situation(btype: String, _required: Array) -> String:
 # Ordre = [Exploration, Rencontre, Epreuve, Dilemme, Climax]. Style DIRECT et CONCRET.
 const FALLBACK_ARCS: Array = [
 	[
-		"Le sentier s'enfonce sous les arbres et se referme derrière toi. Tu n'es pas seul : un pas léger te suit, à distance.",
-		"Une vieille femme attend, assise sur une souche, là où le chemin se divise. « Je t'attendais », dit-elle sans se lever.",
-		"Elle te montre un pont de corde au-dessus d'un ravin. Plusieurs planches manquent, et le bois craque sous le vent.",
-		"Sur l'autre rive, le chemin se sépare en deux. À gauche, des torches au loin ; à droite, le silence et une odeur de fumée.",
-		"Au bout, une porte de pierre entrouverte. Ce que tu cherches est derrière — et le pas qui te suivait vient de s'arrêter, juste là.",
+		"Le sentier s'enfonça sous les arbres et se referma derrière le Voyageur. Il n'était pas seul : un pas léger le suivait, à distance. Que décida le Voyageur ?",
+		"Une vieille femme attendait, assise sur une souche, là où le chemin se divisait. « Je t'attendais », dit-elle sans se lever. Le Voyageur se demandait que faire.",
+		"Plus loin, un pont de corde enjambait un ravin, mais plusieurs planches manquaient et le bois craquait sous le vent. Que décida le Voyageur ?",
+		"Sur l'autre rive, le chemin se sépara en deux : à gauche des torches au loin, à droite le silence et une odeur de fumée. Que décida-t-il ?",
+		"Au bout l'attendait une porte de pierre entrouverte. Ce qu'il cherchait était derrière — et le pas qui le suivait venait de s'arrêter, juste là. Que décida le Voyageur ?",
 	],
 	[
-		"Tu suis le bruit d'une eau qui coule. La forêt s'ouvre sur une source noire, parfaitement immobile.",
-		"Un enfant est accroupi au bord, qui te fixe sans peur. « Elle dort, ne la réveille pas », murmure-t-il en montrant l'eau.",
-		"Le seul passage longe la source sur une corniche étroite et glissante. Un faux pas, et tu tombes dans l'eau noire.",
-		"Une grosse racine te barre la route. La couper réveillerait quelque chose ; l'enjamber prend du temps que tu n'as pas.",
-		"La source se met à bouger. Ce que tu es venu chercher remonte lentement vers la surface, et te regarde.",
+		"Le Voyageur suivit le bruit d'une eau qui coulait, jusqu'à une source noire et parfaitement immobile au creux de la forêt. Que décida le Voyageur ?",
+		"Un enfant accroupi au bord le fixait sans peur. « Elle dort, ne la réveille pas », murmura-t-il en montrant l'eau. Le Voyageur se demandait que faire.",
+		"Le seul passage longeait la source sur une corniche étroite et glissante ; un faux pas, et c'était la chute dans l'eau noire. Que décida le Voyageur ?",
+		"Une grosse racine barrait la route : la couper réveillerait quelque chose, l'enjamber prendrait un temps qu'il n'avait pas. Que décida-t-il ?",
+		"L'eau se mit à bouger : ce qu'il était venu chercher remontait lentement vers la surface, et le regardait. Que décida le Voyageur ?",
 	],
 	[
-		"Tu arrives devant un village de huttes vides, feux encore tièdes. Tout le monde est parti en hâte, sans rien emporter.",
-		"Un vieil homme sort d'une hutte, une serpe à la main. « Ils ont fui ce qui vient des collines », dit-il en te jaugeant.",
-		"La seule sortie passe par un éboulis de pierres branlantes. Au moindre faux mouvement, tout peut glisser.",
-		"Deux traces fraîches partent de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Tu dois en suivre une.",
-		"Au bout de la trace, la chose des collines t'attend, dos à toi. Elle sait déjà que tu es là.",
+		"Le Voyageur arriva devant un village de huttes vides, les feux encore tièdes : tout le monde était parti en hâte, sans rien emporter. Que décida le Voyageur ?",
+		"Un vieil homme sortit d'une hutte, une serpe à la main. « Ils ont fui ce qui descend des collines », dit-il en le jaugeant. Le Voyageur se demandait que faire.",
+		"La seule sortie passait par un éboulis de pierres branlantes, où le moindre faux mouvement pouvait tout faire glisser. Que décida le Voyageur ?",
+		"Deux traces fraîches partaient de l'éboulis : des sabots vers la rivière, des pas nus vers la grotte. Il ne pouvait en suivre qu'une. Que décida-t-il ?",
+		"Au bout de la trace, la chose des collines l'attendait, dos à lui. Elle savait déjà qu'il était là. Que décida le Voyageur ?",
 	],
 	[
-		"Tu suis une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottent des visages qui ne sont pas le tien.",
-		"Une femme se tient pieds nus dans la source, sans se retourner. « Tu cherches un visage, toi aussi », dit-elle.",
-		"Le sentier englouti reprend sous l'eau, barré par une dalle de pierre tombée en travers. Le courant froid pousse fort contre tes jambes.",
-		"De l'autre côté, deux galeries s'enfoncent : l'une sent les fleurs, l'autre le froid d'une cave. Un visage d'enfant t'attend dans chacune.",
-		"La galerie débouche sous la source, à l'envers : l'eau est au-dessus de ta tête, et au centre, ton propre visage.",
+		"Le Voyageur suivit une rigole d'eau noire entre les fougères, jusqu'à une source ronde et immobile où flottaient des visages qui n'étaient pas le sien. Que décida le Voyageur ?",
+		"Une femme se tenait pieds nus dans la source, sans se retourner. « Tu cherches un visage, toi aussi », dit-elle. Le Voyageur se demandait que faire.",
+		"Le sentier englouti reprenait sous l'eau, barré par une dalle de pierre tombée en travers, et le courant froid poussait fort contre ses jambes. Que décida le Voyageur ?",
+		"De l'autre côté, deux galeries s'enfonçaient : l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelait. Que décida-t-il ?",
+		"La galerie déboucha sous la source, le monde à l'envers : l'eau noire au-dessus de sa tête, et au centre, son propre visage. Que décida le Voyageur ?",
 	],
 ]
 
@@ -508,7 +508,7 @@ func narrate_arc(scenario: Dictionary) -> Array:
 		return []
 	var title: String = str(scenario.get("title", "")).strip_edges()
 	var pitch: String = str(scenario.get("pitch", "")).strip_edges()
-	var usr: String = "Raconte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, comme une seule histoire suivie) pour la quete « %s » (%s) a Broceliande.\nETAPE 1 = arrivee et decouverte du lieu. ETAPE 2 = une rencontre (un etre, une voix). ETAPE 3 = un obstacle physique concret. ETAPE 4 = un choix a faire. ETAPE 5 = la confrontation finale.\nChaque etape = 1 a 2 phrases TRES DIRECTES et CONCRETES (un evenement clair : qui, quoi, ou), au present, SANS abstraction ni enigme, SANS apostropher le Voyageur.\nEXEMPLE (autre quete — imite la CLARTE et l'ENCHAINEMENT, pas le contenu) :\n1. Tu suis une rigole d'eau noire jusqu'a une source ronde et immobile, ou flottent des visages qui ne sont pas le tien.\n2. Une femme se tient pieds nus dans l'eau, sans se retourner : « Tu cherches un visage, toi aussi. »\n3. Le sentier reprend sous l'eau, barre par une dalle de pierre tombee en travers ; le courant froid pousse fort.\n4. Deux galeries s'enfoncent : l'une sent les fleurs, l'autre le froid d'une cave ; un enfant t'attend dans chacune.\n5. La galerie debouche sous la source, a l'envers : l'eau est au-dessus de ta tete, et au centre, ton propre visage.\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre." % [title, pitch]
+	var usr: String = "Conte une aventure en 5 ETAPES qui S'ENCHAINENT (chaque etape decoule de la precedente, une seule histoire suivie) pour la quete « %s » (%s) a Broceliande. Raconte a la 3e PERSONNE (« le Voyageur ») au temps du CONTE (passe simple / imparfait).\nETAPE 1 = arrivee et decouverte du lieu. ETAPE 2 = une rencontre (un etre, une voix — l'occasion d'apprendre un bout de legende). ETAPE 3 = un obstacle physique concret. ETAPE 4 = un choix a faire. ETAPE 5 = la confrontation finale.\nChaque etape = 2 a 3 phrases CONCRETES (qui, quoi, ou) qui posent la scene, et FINIT sur l'instant ou le Voyageur doit agir (ex: « Que decida le Voyageur ? » ou « ... se demandait que faire. »). SANS abstraction ni enigme.\nEXEMPLE (autre quete — imite la MANIERE, pas le contenu) :\n1. Le Voyageur s'enfonca sous les fougeres, la ou nul sentier n'etait trace. Le sous-bois s'obscurcit, et l'on peinait a voir au-dela des feuilles trop denses. Que decida le Voyageur ?\n2. Au detour d'un tronc fendu, le Voyageur croisa une creature blessee, paisible, sans haine ni peur, allongee sur la mousse. A distance, il se demandait que faire.\n3. Le sentier plongeait sous une eau noire, barre par une dalle de pierre tombee en travers ; le courant glace poussait fort. Que decida le Voyageur ?\n4. Deux galeries s'enfoncaient, l'une fleurant bon, l'autre froide comme une cave, et dans chacune une voix d'enfant appelait. Il ne pourrait en suivre qu'une. Que decida-t-il ?\n5. La galerie debouchait sous la source, le monde a l'envers : l'eau noire au-dessus de sa tete, les visages des voix perdues le fixant a travers. Que decida le Voyageur ?\nFormat STRICT : une etape par ligne, prefixee « 1. » a « 5. », rien d'autre." % [title, pitch]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": 320, "label": "arc narratif (5 étapes)"})
 	if r.has("error"):
 		return []
@@ -579,13 +579,13 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 		if c is Object and "tags" in c:
 			for t in c.tags:
 				played_tags[str(t)] = true
-	# Fusion (user 2026-06-07) : les évocations sont données comme UNE matière à fondre, PAS une liste
-	# « Force 1 / Force 2 » qui poussait le modèle à décrire les deux cartes l'une après l'autre.
+	# Fusion (user 2026-06-07) : les évocations sont données comme DONNEES à TRADUIRE en gestes, sans
+	# guillemets ni phrase citable — le modèle recopiait sinon « fond deux gestes en un seul : «...» ».
 	var combo: String = ""
 	if evocs.size() >= 2:
-		combo = "Il fond deux gestes en un seul : « %s » et « %s ». DECRIS leur effet FUSIONNE (un seul resultat ne du melange), JAMAIS l'un puis l'autre." % [str(evocs[0]), str(evocs[1])]
+		combo = "DEUX forces a fondre en UNE seule action concrete (TRADUIS-les en gestes, ne RECOPIE PAS ces mots) -- force A = %s -- force B = %s" % [str(evocs[0]), str(evocs[1])]
 	elif evocs.size() == 1:
-		combo = "Son geste : « %s »." % str(evocs[0])
+		combo = "Une force a traduire en geste concret (ne recopie pas ces mots) = %s" % str(evocs[0])
 	# Couverture (user 2026-06-06) : adéquation cartes ↔ tags requis. On décrit l'AJUSTEMENT
 	# (les bonnes clés / les mauvaises), JAMAIS l'issue — c'est deg_directive qui POSSÈDE l'issue.
 	# Évite la contradiction « rien obtenu » vs un degré de succès, ex. partiel à 0/2 (review MEDIUM).
@@ -600,11 +600,11 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	var cover_hint: String = ""
 	if not required.is_empty():
 		if missed.is_empty():
-			cover_hint = " Tes deux forces sont EXACTEMENT celles que ce lieu reclamait."
+			cover_hint = " Les deux forces du Voyageur etaient EXACTEMENT celles que ce lieu reclamait."
 		elif not covered.is_empty():
-			cover_hint = " L'une de tes forces est celle qu'il fallait, l'autre attendue MANQUE : la reussite reste INCOMPLETE (un manque, une lenteur, un reste qui suit) — ne la presente JAMAIS comme parfaite."
+			cover_hint = " L'une des forces du Voyageur etait celle qu'il fallait, l'autre attendue MANQUAIT : la reussite reste INCOMPLETE (un manque, une lenteur, un reste qui suit) — ne la presente JAMAIS comme parfaite."
 		else:
-			cover_hint = " Aucune de tes forces n'etait celle que ce lieu reclamait : tu reponds a cote de ce qui etait demande."
+			cover_hint = " Aucune des forces du Voyageur n'etait celle que ce lieu reclamait : il repond a cote de ce qui etait demande."
 	var syn: int = int(res.get("synergy", 0))
 	var syn_hint: String = ""
 	if syn > 0:
@@ -615,9 +615,9 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# « le chemin s'ouvre » et ignoraient le type de beat). On passe un FOCUS abstrait par type (sans
 	# recopier le décor) → l'issue RÉSOUT ce que le beat posait, et la conclusion varie.
 	var type_focus: Dictionary = {
-		"Exploration": "ce qui etait cache se revele a toi (ou se derobe)",
-		"Rencontre": "l'etre ou la voix d'en face reagit : il cede, se lie a toi, ou se retourne contre toi",
-		"Epreuve": "l'obstacle concret (ronces, pente, pierre) est franchi ou te resiste",
+		"Exploration": "ce qui etait cache se revele au Voyageur (ou se derobe a lui)",
+		"Rencontre": "l'etre ou la voix d'en face reagit : il cede, se lie au Voyageur, ou se retourne contre lui",
+		"Epreuve": "l'obstacle concret (ronces, pente, pierre) est franchi ou resiste au Voyageur",
 		"Dilemme": "le Voyageur a TRANCHE : montre la voie qu'il choisit ET le prix immediat (ce qu'il gagne et ce qu'il abandonne), pas une simple ouverture de chemin",
 		"Climax": "c'est le MOMENT DECISIF du sentier : l'issue pese lourd et marque une vraie BASCULE (triomphe ou chute), jamais une simple avancee de routine",
 	}
@@ -646,8 +646,8 @@ func narrate_resolution(situation: Dictionary, played_cards: Array, res: Diction
 	# l'issue RESOLVE la situation precise (pas un generique « le chemin s'ouvre ») en fondant les 2
 	# forces, calee sur la prose cible. _strip_scene_echo reste le filet anti-recopiage.
 	var situ_txt: String = str(situation.get("narration", "")).strip_edges()
-	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barre le gue, le courant pousse fort. Forces: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): Tu cales tes pieds dans la vase et tu pousses sans ceder au courant ; la dalle racle, bascule et libere le passage. Tu franchis le gue, trempe mais debout."
-	var usr: String = "%sCE QUI SE PASSE : %s\nLe Voyageur agit. %s\nISSUE = %s.%s%s%s%s\n%s\nEcris l'issue en %s (francais), phrases LIEES (cause PUIS consequence), DIRECTES et CONCRETES. RESOUS la situation ci-dessus (l'etre, l'obstacle ou le choix precis) en FONDANT les deux forces en UN SEUL effet ; ne recopie PAS la situation, enchaine dessus. Ne commence pas par 'les mains se joignent' ni par une description du corps. Sujets concrets (jamais 'le vide'/'le nom'). Varie la fin (pas toujours 'le chemin s'ouvre'). Fais clairement RESSENTIR le resultat. Pas de liste ni de chiffres, sans apostropher le Voyageur. Termine sur une phrase complete." % [ctx, situ_txt, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target]
+	var ex: String = "EXEMPLE (imite la MANIERE, pas le contenu) — Situation: une dalle de pierre barrait le gue, le courant poussait fort. Forces fondues: « le corps plie sans rompre » + « la poigne qui ne tremble pas ». Issue (reussite): Le Voyageur choisit de caler ses pieds dans la vase et de pousser sans rompre. La dalle racla, bascula et libera le passage ; il franchit le gue, trempe mais debout."
+	var usr: String = "%sCE QUI SE PASSAIT : %s\n%s\nISSUE = %s.%s%s%s%s\n%s\nRaconte l'issue en %s, a la 3e PERSONNE et au temps du CONTE (passe simple / imparfait). Ta TOUTE PREMIERE phrase DOIT commencer par « Le Voyageur choisit de » suivi de l'action concrete qui FOND les deux forces (TRADUIS-les en gestes ; ne CITE JAMAIS leurs formulations entre guillemets ; n'ecris JAMAIS 'fond deux gestes en un seul'). NE RE-DECRIS PAS la scene (le mur, le chemin, l'etre sont deja connus). PUIS raconte CE QUE CELA CAUSA : la consequence concrete qui RESOUT la situation (l'etre, l'obstacle ou le choix precis). Phrases LIEES et CONCRETES, sujets concrets (jamais 'le vide'/'le nom'). Fais clairement RESSENTIR le resultat (%s). Varie la fin (pas toujours 'le chemin s'ouvre'). Pas de liste ni de chiffres. Termine sur une phrase complete." % [ctx, situ_txt, combo, deg_fr.get(degree, "une reussite"), str(deg_directive.get(degree, "")), cover_hint, syn_hint, focus_hint, ex, phrase_target, deg_fr.get(degree, "une reussite")]
 	var r: Dictionary = await mn.generate(SYSTEM_PREFIX, usr, {"creative": true, "max_tokens": tok_budget, "label": "issue (combinaison)"})
 	if r.has("error"):
 		return ""
@@ -801,24 +801,37 @@ func _clean_prose(s: String) -> String:
 func _strip_scene_echo(prose: String, situation: String) -> String:
 	if prose.is_empty() or situation.is_empty():
 		return prose
-	var p: String = prose
 	var situ_words: Dictionary = _sig_words(situation)
-	var guard: int = 0
-	while guard < 2:  # retire au plus 2 phrases d'ouverture qui CLONENT la scène (même PARAPHRASÉES)
-		guard += 1
-		var fs: String = _first_sentence(p)
-		# Recopie = forte proportion de mots significatifs partagés avec la situation (robuste aux
-		# paraphrases : « se divise en deux passages » ↔ « se sépare en deux voies »). Seuil 0.5.
-		if fs.length() >= 12 and _echo_ratio(fs, situ_words) >= 0.5:
-			var rest: String = p.substr(fs.length()).strip_edges()
-			if rest.length() >= 10:
-				p = rest
-				continue
-		break
-	# nettoie une ponctuation orpheline en tête (ex. « » » laissé par une réplique recopiée retirée)
+	# Parmi les 3 PREMIERES phrases, retire celles qui CLONENT la situation (même paraphrasées, même
+	# precedees d'une phrase de transition). Au-dela, on garde tout (le corps de l'issue). Robuste aux
+	# paraphrases via recouvrement de mots significatifs (seuil 0.5).
+	var sentences: Array = _split_sentences(prose)
+	var kept: Array = []
+	for i in sentences.size():
+		var s: String = str(sentences[i])
+		if i < 3 and s.strip_edges().length() >= 12 and _echo_ratio(s, situ_words) >= 0.5:
+			continue  # clone de la situation → retiré
+		kept.append(s)
+	var p: String = " ".join(kept).strip_edges()
+	# nettoie une ponctuation orpheline en tête (ex. « » » laissé par une phrase recopiée retirée)
 	while p.length() > 0 and (" »\"',;:.!?-—".find(p[0]) != -1):
 		p = p.substr(1)
 	return p.strip_edges()
+
+
+# Découpe un texte en phrases (sur . ! ? …), en conservant la ponctuation finale.
+func _split_sentences(t: String) -> Array:
+	var out: Array = []
+	var cur: String = ""
+	for i in t.length():
+		var ch: String = t[i]
+		cur += ch
+		if ch == "." or ch == "!" or ch == "?" or ch == "…":
+			out.append(cur.strip_edges())
+			cur = ""
+	if cur.strip_edges().length() > 0:
+		out.append(cur.strip_edges())
+	return out
 
 
 # Ensemble des mots significatifs (≥4 lettres) d'un texte, normalisés (minuscules, ponctuation → espace).
