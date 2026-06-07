@@ -11,7 +11,8 @@ param(
     [string]$Engine,
     [string]$Model,
     [int]$Port,
-    [switch]$NoRobot
+    [switch]$NoRobot,
+    [switch]$NoOpen
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,5 +46,16 @@ if ($Model)   { if ($env:VOXCPM_ENGINE -eq "voxcpm") { $env:VOXCPM_MODEL = $Mode
 if ($Port)    { $env:VOXCPM_PORT = "$Port" }
 if ($NoRobot) { $env:VOXCPM_ROBOT = "0" }
 
-Write-Host "[TTS] launching (engine=$($env:VOXCPM_ENGINE), robot=$($env:VOXCPM_ROBOT), port=$($env:VOXCPM_PORT)) ..." -ForegroundColor Cyan
+$bindHost = if ($env:VOXCPM_HOST) { $env:VOXCPM_HOST } else { "127.0.0.1" }
+$bindPort = if ($env:VOXCPM_PORT) { $env:VOXCPM_PORT } else { "8808" }
+$url = "http://$bindHost`:$bindPort/"
+
+# Open the test page in the browser a few seconds after launch (server blocks below).
+if (-not $NoOpen) {
+    Start-Job -ScriptBlock { param($u) Start-Sleep -Seconds 4; Start-Process $u } -ArgumentList $url | Out-Null
+    Write-Host "[TTS] La page de test s'ouvrira ici : $url" -ForegroundColor Green
+}
+
+Write-Host "[TTS] launching (engine=$($env:VOXCPM_ENGINE), robot=$($env:VOXCPM_ROBOT), port=$bindPort) ..." -ForegroundColor Cyan
+Write-Host "[TTS] (Laisse cette fenetre OUVERTE — c'est le serveur. Ferme-la pour arreter.)" -ForegroundColor Yellow
 & $vpy (Join-Path $here "server.py")
