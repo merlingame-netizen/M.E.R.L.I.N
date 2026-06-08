@@ -8,11 +8,13 @@ name: Flight Tracker — La Reunion
 #
 # IMPORTANT :
 #  - Zero config necessaire pour les PRIX : sans secret, le traceur scrape Google Flights.
-#  - Pour l'EMAIL : ajouter le secret RESEND_API_KEY (sinon l'envoi est skip, sans
-#    faire echouer le run). Destinataires par defaut : maxime.babonneau@orange.com
-#    + eliserobert05@gmail.com (surchargeable via la variable MAIL_TO).
-#    Resend sans domaine verifie n'ecrit qu'au titulaire du compte -> pour 2
-#    destinataires externes, verifier un domaine et fixer la variable MAIL_FROM.
+#  - Pour l'EMAIL (Gmail) : ajouter les secrets MAIL_USERNAME (adresse Gmail) et
+#    MAIL_PASSWORD (App Password Google, 2FA requise). Envoie vers n'importe quelle
+#    adresse, sans domaine. Sans ces secrets, l'envoi est skip (le run continue).
+#    Destinataires par defaut : maxime.babonneau@orange.com + eliserobert05@gmail.com
+#    (surchargeable via la variable MAIL_TO).
+#  - Alternative : RESEND_API_KEY (mais Resend sans domaine verifie n'ecrit qu'au
+#    titulaire du compte).
 #  - Optionnel : si tu renseignes les secrets AMADEUS_CLIENT_ID /
 #    AMADEUS_CLIENT_SECRET (Settings > Secrets and variables > Actions), le
 #    traceur bascule automatiquement sur l'API Amadeus (plus fiable).
@@ -61,9 +63,14 @@ jobs:
           AMADEUS_ENV: ${{ vars.AMADEUS_ENV || 'production' }}
           # Source keyless Google Flights : mode de fetch (common|fallback|local).
           FT_FETCH_MODE: ${{ vars.FT_FETCH_MODE || 'fallback' }}
-          # Alerte email quotidienne via Resend.
+          # Alerte email quotidienne — transport Gmail (SMTP) prioritaire.
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}      # adresse Gmail
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}      # App Password Gmail
+          SMTP_HOST: ${{ vars.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || '465' }}
+          # Transport alternatif (si pas de Gmail) : Resend.
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          MAIL_FROM: ${{ vars.MAIL_FROM || 'onboarding@resend.dev' }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}                  # vide -> = MAIL_USERNAME
           MAIL_TO: ${{ vars.MAIL_TO || 'maxime.babonneau@orange.com,eliserobert05@gmail.com' }}
           # Fenetre de recherche (surchargeable via Variables du repo) :
           FT_ORIGINS: ${{ vars.FT_ORIGINS || 'MRS,CDG,ORY' }}

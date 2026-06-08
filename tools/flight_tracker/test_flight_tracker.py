@@ -203,6 +203,29 @@ def test_send_via_resend_requires_key():
     raise AssertionError("send_via_resend aurait du lever EmailError sans cle")
 
 
+def test_send_via_smtp_requires_creds():
+    from tools.flight_tracker.emailer import EmailError, send_via_smtp
+
+    try:
+        send_via_smtp("smtp.gmail.com", 465, "", "", "f@g.c", ["x@y.z"], "s", "<p>h</p>")
+    except EmailError:
+        return
+    raise AssertionError("send_via_smtp aurait du lever EmailError sans identifiants")
+
+
+def test_build_mime_multipart_html():
+    from tools.flight_tracker.emailer import build_mime
+
+    msg = build_mime("from@x.com", ["a@y.com", "b@z.com"], "Sujet test", "<p>Bonjour</p>")
+    assert msg["From"] == "from@x.com"
+    assert msg["To"] == "a@y.com, b@z.com"
+    assert msg["Subject"] == "Sujet test"
+    assert msg.is_multipart()
+    html_part = msg.get_body(preferencelist=("html",))
+    assert html_part is not None
+    assert "<p>Bonjour</p>" in html_part.get_content()
+
+
 def _run_all():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

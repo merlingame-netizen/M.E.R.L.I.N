@@ -12,8 +12,10 @@ pour des destinataires externes, verifier un domaine et fixer MAIL_FROM.
 from __future__ import annotations
 
 import json
+import smtplib
 import urllib.error
 import urllib.request
+from email.message import EmailMessage
 from html import escape
 
 RESEND_ENDPOINT = "https://api.resend.com/emails"
@@ -187,6 +189,52 @@ def build_html(snapshot: dict, history: list[dict]) -> str:
 def build_email(snapshot: dict, history: list[dict]) -> tuple[str, str]:
     """Retourne (subject, html_body)."""
     return build_subject(snapshot, history), build_html(snapshot, history)
+
+
+def build_mime(mail_from: str, recipients: list[str], subject: str, html: str) -> EmailMessage:
+    """Construit le message multipart (texte + HTML) pour un envoi SMTP."""
+    msg = EmailMessage()
+    msg["From"] = mail_from
+    msg["To"] = ", ".join(recipients)
+    msg["Subject"] = subject
+    msg.set_content(
+        "Cette alerte est en HTML. Si vous voyez ce texte, votre client mail "
+        "n'affiche pas le HTML — le meilleur prix figure dans l'objet du message."
+    )
+    msg.add_alternative(html, subtype="html")
+    return msg
+
+
+def send_via_smtp(
+    host: str,
+    port: int,
+    username: str,
+    password: str,
+    mail_from: str,
+    recipients: list[str],
+    subject: str,
+    html: str,
+    timeout: int = 30,
+) -> dict:
+    """Envoie via SMTP (Gmail : smtp.gmail.com:465 + App Password). Leve EmailError si KO."""
+    if not username or not password:
+        raise EmailError("Identifiants SMTP manquants (MAIL_USERNAME / MAIL_PASSWORD).")
+    if not recipients:
+        raise EmailError("Aucun destinataire (MAIL_TO vide).")
+    msg = build_mime(mail_from or username, recipients, subject, html)
+    try:
+        if int(port) == 465:
+            with smtplib.SMTP_SSL(host, int(port), timeout=timeout) as srv:
+                srv.login(username, password)
+                srv.send_message(msg)
+        else:
+            with smtplib.SMTP(host, int(port), timeout=timeout) as srv:
+                srv.starttls()
+                srv.login(username, password)
+                srv.send_message(msg)
+    except (smtplib.SMTPException, OSError) as exc:
+        raise EmailError(f"Envoi SMTP echoue ({host}:{port}): {exc}") from exc
+    return {"recipients": recipients, "transport": "smtp"}
 
 
 def send_via_resend(
