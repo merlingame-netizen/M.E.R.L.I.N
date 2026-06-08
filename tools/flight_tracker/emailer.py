@@ -1,24 +1,15 @@
-"""Generation + envoi de l'alerte email quotidienne (via API Resend).
+"""Generation + envoi de l'alerte email quotidienne (Gmail SMTP).
 
 Deux responsabilites separees pour la testabilite :
   - build_email(snapshot, history) -> (subject, html_body)   [pur, sans reseau]
-  - send_via_resend(...)            -> POST https://api.resend.com/emails
-
-Resend : 1 cle API (RESEND_API_KEY). Sans domaine verifie, l'expediteur
-`onboarding@resend.dev` ne peut ecrire qu'a l'adresse du titulaire du compte ;
-pour des destinataires externes, verifier un domaine et fixer MAIL_FROM.
+  - send_via_smtp(...)              -> envoi SMTP (Gmail + App Password)
 """
 
 from __future__ import annotations
 
-import json
 import smtplib
-import urllib.error
-import urllib.request
 from email.message import EmailMessage
 from html import escape
-
-RESEND_ENDPOINT = "https://api.resend.com/emails"
 
 
 class EmailError(RuntimeError):
@@ -86,7 +77,7 @@ def _price_stats(quotes: list[dict]) -> dict | None:
     }
 
 
-def build_html(snapshot: dict, history: list[dict], top_n: int = 25) -> str:
+def build_html(snapshot: dict, history: list[dict], top_n: int = 0) -> str:
     best = snapshot.get("best")
     cfg = snapshot.get("config", {})
     dest = cfg.get("destination", "RUN")
@@ -165,19 +156,33 @@ def build_html(snapshot: dict, history: list[dict], top_n: int = 25) -> str:
             + "</tr></table>"
         )
 
-    # Top N
-    shown = quotes[:top_n]
+    # Classement competitif de TOUTES les offres (top_n <= 0 = tout)
+    shown = quotes if top_n <= 0 else quotes[:top_n]
     n_more = max(0, len(quotes) - len(shown))
-    parts.append(f'<h3 style="color:#0b3d2e;margin:14px 0 8px;">Top {len(shown)} des combos les moins chers</h3>')
+    pmin = quotes[0]["price"] if quotes else 0.0
+    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+    if top_n <= 0 or n_more == 0:
+        heading = f"Classement de toutes les offres ({len(quotes)})"
+    else:
+        heading = f"Top {len(shown)} des {len(quotes)} offres"
+    parts.append(f'<h3 style="color:#0b3d2e;margin:14px 0 8px;">{heading}</h3>')
     parts.append(f'<table style="{css_table}"><tr>'
-                 f'<th style="{th}">#</th><th style="{th}">Prix</th><th style="{th}">Origine</th>'
-                 f'<th style="{th}">Aller</th><th style="{th}">Retour</th>'
+                 f'<th style="{th}">#</th><th style="{th}">Prix</th><th style="{th}">Δ vs meilleur</th>'
+                 f'<th style="{th}">Origine</th><th style="{th}">Aller</th><th style="{th}">Retour</th>'
                  f'<th style="{th}">Esc. A/R</th><th style="{th}">Compagnies</th></tr>')
     for i, q in enumerate(shown, 1):
-        row_bg = "background:#f4f8f6;" if i % 2 == 0 else ""
+        gap = q["price"] - pmin
+        if gap <= 0:
+            gap_html = '<span style="color:#1a7f37;font-weight:bold;">meilleur</span>'
+        else:
+            pct = (gap / pmin * 100) if pmin else 0
+            gap_html = f'<span style="color:#666;">+{gap:.0f} {cur} ({pct:.0f}%)</span>'
+        rank = f'{medals.get(i, "")} {i}'.strip()
+        row_bg = "background:#eef6f1;" if i <= 3 else ("background:#f7faf8;" if i % 2 == 0 else "")
         parts.append(
-            f'<tr style="{row_bg}"><td style="{td}">{i}</td>'
+            f'<tr style="{row_bg}"><td style="{td}white-space:nowrap;">{rank}</td>'
             f'<td style="{td}"><b>{q["price"]:.0f} {q["currency"]}</b></td>'
+            f'<td style="{td}">{gap_html}</td>'
             f'<td style="{td}">{escape(q["origin"])}</td>'
             f'<td style="{td}">{escape(q["depart"])}</td>'
             f'<td style="{td}">{escape(q["return_date"])}</td>'
@@ -186,10 +191,9 @@ def build_html(snapshot: dict, history: list[dict], top_n: int = 25) -> str:
         )
     parts.append("</table>")
     if n_more:
-        last_price = shown[-1]["price"]
         parts.append(
             f'<p style="font-size:12px;color:#666;margin:6px 0 0;">'
-            f'+ {n_more} autre(s) combo(s) au-delà de {last_price:.0f} {cur} '
+            f'+ {n_more} autre(s) combo(s) au-delà de {shown[-1]["price"]:.0f} {cur} '
             f'(jusqu’à {quotes[-1]["price"]:.0f} {cur}).</p>'
         )
 
@@ -234,8 +238,8 @@ def build_html(snapshot: dict, history: list[dict], top_n: int = 25) -> str:
     return "".join(parts)
 
 
-def build_email(snapshot: dict, history: list[dict], top_n: int = 25) -> tuple[str, str]:
-    """Retourne (subject, html_body)."""
+def build_email(snapshot: dict, history: list[dict], top_n: int = 0) -> tuple[str, str]:
+    """Retourne (subject, html_body). top_n<=0 => classe TOUTES les offres."""
     return build_subject(snapshot, history), build_html(snapshot, history, top_n=top_n)
 
 
@@ -283,40 +287,3 @@ def send_via_smtp(
     except (smtplib.SMTPException, OSError) as exc:
         raise EmailError(f"Envoi SMTP echoue ({host}:{port}): {exc}") from exc
     return {"recipients": recipients, "transport": "smtp"}
-
-
-def send_via_resend(
-    api_key: str,
-    mail_from: str,
-    recipients: list[str],
-    subject: str,
-    html: str,
-    timeout: int = 20,
-) -> dict:
-    """Envoie l'email via l'API Resend. Leve EmailError en cas d'echec."""
-    if not api_key:
-        raise EmailError("RESEND_API_KEY manquant.")
-    if not recipients:
-        raise EmailError("Aucun destinataire (MAIL_TO vide).")
-    payload = json.dumps(
-        {"from": mail_from, "to": recipients, "subject": subject, "html": html}
-    ).encode()
-    req = urllib.request.Request(
-        RESEND_ENDPOINT,
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            # Sans User-Agent explicite, Cloudflare (devant l'API Resend) bannit
-            # la signature urllib par defaut (HTTP 403, "error code: 1010").
-            "User-Agent": "merlin-flight-tracker/1.0",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode() or "{}")
-    except urllib.error.HTTPError as exc:
-        raise EmailError(f"Resend {exc.code}: {exc.read().decode()[:300]}") from exc
-    except urllib.error.URLError as exc:
-        raise EmailError(f"Reseau indisponible pour Resend: {exc}") from exc

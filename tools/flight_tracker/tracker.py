@@ -215,25 +215,20 @@ def write_report(snapshot: dict) -> None:
 
 
 def send_daily_email(snapshot: dict) -> bool:
-    """Envoie l'alerte quotidienne. Best-effort : log + False si KO.
-
-    Transport (priorite) :
-      1. SMTP / Gmail si MAIL_USERNAME + MAIL_PASSWORD presents
-      2. Resend si RESEND_API_KEY present
-      3. sinon : skip (sans faire echouer le run)
+    """Envoie l'alerte quotidienne via Gmail SMTP. Best-effort : log + False si KO.
 
     Variables d'environnement :
         MAIL_USERNAME    adresse Gmail (login SMTP)
         MAIL_PASSWORD    App Password Gmail (16 car., espaces ignores)
         SMTP_HOST        defaut smtp.gmail.com
         SMTP_PORT        defaut 465 (SSL) ; 587 = STARTTLS
-        RESEND_API_KEY   cle API Resend (transport alternatif)
-        MAIL_FROM        expediteur (defaut: MAIL_USERNAME, ou onboarding@resend.dev)
+        MAIL_FROM        expediteur (defaut: MAIL_USERNAME)
         MAIL_TO          destinataires ',' (defaut: les 2 adresses cibles)
+        FT_EMAIL_TOP     nb de lignes du classement (0 = toutes les offres, defaut 0)
     """
     import os
 
-    from .emailer import EmailError, build_email, send_via_resend, send_via_smtp
+    from .emailer import EmailError, build_email, send_via_smtp
 
     recipients = [
         a.strip()
@@ -244,34 +239,27 @@ def send_daily_email(snapshot: dict) -> bool:
     ]
     smtp_user = os.environ.get("MAIL_USERNAME", "").strip()
     smtp_pass = os.environ.get("MAIL_PASSWORD", "").replace(" ", "").strip()
-    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    if not (smtp_user and smtp_pass):
+        print("[flight_tracker] MAIL_USERNAME/MAIL_PASSWORD absents -> email non envoye.")
+        return False
 
     history = _load_history()  # inclut le run courant (append_history deja appele)
     try:
-        top_n = max(1, int(os.environ.get("FT_EMAIL_TOP", "25")))
+        top_n = max(0, int(os.environ.get("FT_EMAIL_TOP", "0")))  # 0 = toutes les offres
     except ValueError:
-        top_n = 25
+        top_n = 0
     subject, html = build_email(snapshot, history, top_n=top_n)
 
+    host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+    port = int(os.environ.get("SMTP_PORT", "465") or "465")
+    mail_from = os.environ.get("MAIL_FROM", smtp_user).strip() or smtp_user
     try:
-        if smtp_user and smtp_pass:
-            host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
-            port = int(os.environ.get("SMTP_PORT", "465") or "465")
-            mail_from = os.environ.get("MAIL_FROM", smtp_user).strip() or smtp_user
-            send_via_smtp(host, port, smtp_user, smtp_pass, mail_from, recipients, subject, html)
-            print(f"[flight_tracker] Email (SMTP {host}) envoye a {', '.join(recipients)}.")
-            return True
-        if api_key:
-            mail_from = os.environ.get("MAIL_FROM", "onboarding@resend.dev").strip()
-            res = send_via_resend(api_key, mail_from, recipients, subject, html)
-            print(f"[flight_tracker] Email (Resend) envoye a {', '.join(recipients)} (id={res.get('id', '?')}).")
-            return True
+        send_via_smtp(host, port, smtp_user, smtp_pass, mail_from, recipients, subject, html)
     except EmailError as exc:
         print(f"[flight_tracker] Envoi email ECHOUE: {exc}")
         return False
-
-    print("[flight_tracker] Aucun transport email configure (MAIL_USERNAME/MAIL_PASSWORD ou RESEND_API_KEY) -> email non envoye.")
-    return False
+    print(f"[flight_tracker] Email (SMTP {host}) envoye a {', '.join(recipients)}.")
+    return True
 
 
 def make_client(use_mock: bool):

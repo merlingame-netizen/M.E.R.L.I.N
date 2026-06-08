@@ -4,7 +4,7 @@ name: Flight Tracker — La Reunion
 # Source par defaut : KEYLESS (Google Flights via fast-flights) -> AUCUNE cle requise.
 # Met a jour l'historique + le rapport et commit le resultat sur la branche.
 #
-# Envoie aussi une ALERTE EMAIL quotidienne (via Resend) a la liste MAIL_TO.
+# Envoie aussi une ALERTE EMAIL quotidienne (via Gmail SMTP) a la liste MAIL_TO.
 #
 # IMPORTANT :
 #  - Zero config necessaire pour les PRIX : sans secret, le traceur scrape Google Flights.
@@ -13,8 +13,6 @@ name: Flight Tracker — La Reunion
 #    adresse, sans domaine. Sans ces secrets, l'envoi est skip (le run continue).
 #    Destinataires par defaut : maxime.babonneau@orange.com + eliserobert05@gmail.com
 #    (surchargeable via la variable MAIL_TO).
-#  - Alternative : RESEND_API_KEY (mais Resend sans domaine verifie n'ecrit qu'au
-#    titulaire du compte).
 #  - Optionnel : si tu renseignes les secrets AMADEUS_CLIENT_ID /
 #    AMADEUS_CLIENT_SECRET (Settings > Secrets and variables > Actions), le
 #    traceur bascule automatiquement sur l'API Amadeus (plus fiable).
@@ -63,15 +61,14 @@ jobs:
           AMADEUS_ENV: ${{ vars.AMADEUS_ENV || 'production' }}
           # Source keyless Google Flights : mode de fetch (common|fallback|local).
           FT_FETCH_MODE: ${{ vars.FT_FETCH_MODE || 'fallback' }}
-          # Alerte email quotidienne — transport Gmail (SMTP) prioritaire.
+          # Alerte email quotidienne — Gmail SMTP (App Password).
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}      # adresse Gmail
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}      # App Password Gmail
           SMTP_HOST: ${{ vars.SMTP_HOST || 'smtp.gmail.com' }}
           SMTP_PORT: ${{ vars.SMTP_PORT || '465' }}
-          # Transport alternatif (si pas de Gmail) : Resend.
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           MAIL_FROM: ${{ vars.MAIL_FROM }}                  # vide -> = MAIL_USERNAME
           MAIL_TO: ${{ vars.MAIL_TO || 'maxime.babonneau@orange.com,eliserobert05@gmail.com' }}
+          FT_EMAIL_TOP: ${{ vars.FT_EMAIL_TOP || '0' }}     # 0 = classe TOUTES les offres
           # Fenetre de recherche (surchargeable via Variables du repo) :
           FT_ORIGINS: ${{ vars.FT_ORIGINS || 'MRS,CDG,ORY' }}
           FT_DESTINATION: ${{ vars.FT_DESTINATION || 'RUN' }}
@@ -79,9 +76,8 @@ jobs:
           FT_DEPART_END: ${{ vars.FT_DEPART_END || '2027-01-15' }}
           FT_TRIP_DAYS: ${{ vars.FT_TRIP_DAYS || '21' }}
           FT_RETURN_FLEX: ${{ vars.FT_RETURN_FLEX || '0' }}
-          # Scraping keyless : pas plus d'un releve tous les 2 jours par defaut
-          # pour limiter le throttling Google sur l'IP CI (surchargeable).
-          FT_DEPART_STEP: ${{ vars.FT_DEPART_STEP || '2' }}
+          # Pas en jours dans la fenetre de depart (1 = chaque jour, ~81 itineraires).
+          FT_DEPART_STEP: ${{ vars.FT_DEPART_STEP || '1' }}
         run: |
           if [ "${{ inputs.mock }}" = "true" ]; then
             python -m tools.flight_tracker --mock --sleep 0 --email

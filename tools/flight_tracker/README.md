@@ -103,36 +103,29 @@ Réglages optionnels dans **Settings → Secrets and variables → Actions** du 
 - `FT_DEPART_STEP` *(défaut workflow : `2`, pour limiter le throttling)*
 - `FT_DEPART_START`, `FT_DEPART_END`, `FT_TRIP_DAYS`, `FT_RETURN_FLEX`, `FT_ORIGINS`, `FT_DESTINATION`
 
-### Alerte email quotidienne
+### Alerte email quotidienne (Gmail)
 
-Le workflow envoie chaque jour un **email HTML** (meilleur combo + top 10 + tendance)
-à la liste de destinataires. Deux transports possibles (le premier configuré gagne) :
+Le workflow envoie chaque jour un **email HTML** : meilleur combo, bandeau de
+statistiques (min/médian/max, nb d'offres sous seuil), **classement compétitif de
+toutes les offres** (rang + écart vs meilleur prix + médailles 🥇🥈🥉), meilleur
+prix par aéroport, et tendance.
 
-#### Option A — Gmail (recommandé : envoie vers n'importe quelle adresse, sans domaine)
+**Configuration (Gmail App Password) :**
 
 1. Active la **validation en 2 étapes** sur le compte Google.
 2. Crée un **App Password** : <https://myaccount.google.com/apppasswords> (16 caractères).
 3. Ajoute 2 **secrets** repo :
    - `MAIL_USERNAME` = ton adresse Gmail (ex. `maxbab38@gmail.com`)
    - `MAIL_PASSWORD` = l'App Password (les espaces sont ignorés)
-4. *(optionnel)* variables : `SMTP_HOST` (défaut `smtp.gmail.com`), `SMTP_PORT` (défaut `465`).
+4. *(optionnel)* variables : `SMTP_HOST` (défaut `smtp.gmail.com`), `SMTP_PORT`
+   (défaut `465`), `MAIL_TO` (défaut : les 2 adresses), `FT_EMAIL_TOP`
+   (`0` = toutes les offres, défaut ; ou un nombre pour limiter le classement).
 
-#### Option B — Resend (API HTTPS)
-
-- **Secret** `RESEND_API_KEY`. ⚠️ Sans **domaine vérifié**, `onboarding@resend.dev` n'écrit
-  **qu'au titulaire du compte Resend** ; pour des destinataires externes,
-  [vérifie un domaine](https://resend.com/domains) puis pose `MAIL_FROM=alerte@ton-domaine`.
-
-#### Commun
-
-- **Variable** `MAIL_TO` *(optionnel)* — destinataires séparés par `,`.
-  Défaut : `maxime.babonneau@orange.com,eliserobert05@gmail.com`.
-- Sans aucun transport configuré, l'envoi est **ignoré** (le relevé des prix continue).
+Sans `MAIL_USERNAME`/`MAIL_PASSWORD`, l'envoi est **ignoré** (le relevé des prix continue).
 
 Test local :
 
 ```bash
-# Gmail
 export MAIL_USERNAME="maxbab38@gmail.com"
 export MAIL_PASSWORD="xxxx xxxx xxxx xxxx"
 export MAIL_TO="maxime.babonneau@orange.com,eliserobert05@gmail.com"

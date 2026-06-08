@@ -19,7 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--quiet", action="store_true", help="Moins de logs.")
     parser.add_argument("--sleep", type=float, default=0.25, help="Pause (s) entre requetes (defaut 0.25).")
     parser.add_argument("--no-history", action="store_true", help="Ne pas ecrire dans price_history.jsonl.")
-    parser.add_argument("--email", action="store_true", help="Envoyer l'alerte quotidienne (Resend).")
+    parser.add_argument("--email", action="store_true", help="Envoyer l'alerte quotidienne (Gmail SMTP).")
     args = parser.parse_args(argv)
 
     cfg = SearchConfig()

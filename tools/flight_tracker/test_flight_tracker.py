@@ -178,7 +178,11 @@ def test_email_html_contains_combo_and_table():
     html = build_html(snap, history=[{"ts": snap["ts"], "best": snap["best"]}])
     assert "745 EUR" in html
     assert "Corsair" in html
-    assert "Top 3 des combos" in html       # 3 offres dans l'echantillon
+    assert "Classement de toutes les offres (3)" in html  # top_n=0 par defaut
+    assert "Δ vs meilleur" in html          # colonne competitivite
+    assert "meilleur" in html               # ligne #1 = meilleur (gap 0)
+    assert "🥇" in html                      # medaille top 1
+    assert "+141" in html                   # MRS 886 - 745 = +141
     assert "offres trouvées" in html        # bandeau statistiques
     assert "prix médian" in html
     assert "?/?" in html  # MRS escales inconnues rendues '?'
@@ -196,8 +200,22 @@ def test_email_html_truncates_and_counts():
     ]
     snap["best"] = snap["quotes"][0]
     html = build_html(snap, history=[], top_n=25)
-    assert "Top 25 des combos" in html
+    assert "Top 25 des 30 offres" in html
     assert "+ 5 autre(s) combo(s)" in html
+
+
+def test_email_html_all_offers_ranked():
+    from tools.flight_tracker.emailer import build_html
+
+    snap = _sample_snapshot()
+    snap["quotes"] = [
+        Quote("ORY", "RUN", "2027-01-15", "2027-02-05", 700 + i, "EUR", ["Corsair"], 0, 0).as_dict()
+        for i in range(30)
+    ]
+    snap["best"] = snap["quotes"][0]
+    html = build_html(snap, history=[], top_n=0)  # 0 = toutes
+    assert "Classement de toutes les offres (30)" in html
+    assert "autre(s) combo(s)" not in html  # rien de tronque
 
 
 def test_email_html_no_offer():
@@ -208,16 +226,6 @@ def test_email_html_no_offer():
     snap["quotes"] = []
     html = build_html(snap, history=[])
     assert "Aucune offre" in html
-
-
-def test_send_via_resend_requires_key():
-    from tools.flight_tracker.emailer import EmailError, send_via_resend
-
-    try:
-        send_via_resend("", "a@b.c", ["x@y.z"], "s", "<p>h</p>")
-    except EmailError:
-        return
-    raise AssertionError("send_via_resend aurait du lever EmailError sans cle")
 
 
 def test_send_via_smtp_requires_creds():
