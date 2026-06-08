@@ -211,6 +211,9 @@ def send_via_resend(
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            # Sans User-Agent explicite, Cloudflare (devant l'API Resend) bannit
+            # la signature urllib par defaut (HTTP 403, "error code: 1010").
+            "User-Agent": "merlin-flight-tracker/1.0",
         },
         method="POST",
     )
