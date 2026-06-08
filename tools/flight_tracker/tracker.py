@@ -214,6 +214,42 @@ def write_report(snapshot: dict) -> None:
     BEST_FILE.write_text(json.dumps(best, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def send_daily_email(snapshot: dict) -> bool:
+    """Envoie l'alerte quotidienne via Resend. Best-effort : log + False si KO.
+
+    Config par variables d'environnement :
+        RESEND_API_KEY   cle API Resend (obligatoire)
+        MAIL_FROM        expediteur (defaut onboarding@resend.dev)
+        MAIL_TO          destinataires separes par ',' (defaut: les 2 adresses)
+    """
+    import os
+
+    from .emailer import EmailError, build_email, send_via_resend
+
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    mail_from = os.environ.get("MAIL_FROM", "onboarding@resend.dev").strip()
+    recipients = [
+        a.strip()
+        for a in os.environ.get(
+            "MAIL_TO", "maxime.babonneau@orange.com,eliserobert05@gmail.com"
+        ).split(",")
+        if a.strip()
+    ]
+    if not api_key:
+        print("[flight_tracker] RESEND_API_KEY absent -> email non envoye.")
+        return False
+
+    history = _load_history()  # inclut le run courant (append_history deja appele)
+    subject, html = build_email(snapshot, history)
+    try:
+        res = send_via_resend(api_key, mail_from, recipients, subject, html)
+    except EmailError as exc:
+        print(f"[flight_tracker] Envoi email ECHOUE: {exc}")
+        return False
+    print(f"[flight_tracker] Email envoye a {', '.join(recipients)} (id={res.get('id', '?')}).")
+    return True
+
+
 def make_client(use_mock: bool):
     """Selectionne la source de prix.
 

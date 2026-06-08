@@ -6,7 +6,7 @@ import argparse
 import sys
 
 from .config import SearchConfig
-from .tracker import append_history, make_client, run_scan, write_report
+from .tracker import append_history, make_client, run_scan, send_daily_email, write_report
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -19,6 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--quiet", action="store_true", help="Moins de logs.")
     parser.add_argument("--sleep", type=float, default=0.25, help="Pause (s) entre requetes (defaut 0.25).")
     parser.add_argument("--no-history", action="store_true", help="Ne pas ecrire dans price_history.jsonl.")
+    parser.add_argument("--email", action="store_true", help="Envoyer l'alerte quotidienne (Resend).")
     args = parser.parse_args(argv)
 
     cfg = SearchConfig()
@@ -42,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_history:
         append_history(snapshot)
     write_report(snapshot)
+
+    if args.email:
+        send_daily_email(snapshot)
 
     best = snapshot["best"]
     if best:

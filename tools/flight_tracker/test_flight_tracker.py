@@ -132,6 +132,77 @@ def test_provider_auto_keyless_without_keys():
     assert isinstance(client, GoogleFlightsClient)
 
 
+def _sample_snapshot():
+    quotes = [
+        Quote("ORY", "RUN", "2027-01-15", "2027-02-05", 745, "EUR", ["Corsair"], 0, 0).as_dict(),
+        Quote("CDG", "RUN", "2027-01-07", "2027-01-28", 749, "EUR", ["Air France"], 0, 0).as_dict(),
+        Quote("MRS", "RUN", "2027-01-05", "2027-01-26", 886, "EUR", [], -1, -1).as_dict(),
+    ]
+    return {
+        "ts": "2026-06-08T05:42:20+00:00",
+        "search": "MRS/CDG/ORY -> RUN | ...",
+        "config": {"destination": "RUN"},
+        "n_itineraries": 3,
+        "n_quotes": 3,
+        "errors": [],
+        "best": quotes[0],
+        "quotes": quotes,
+    }
+
+
+def test_email_subject_basic():
+    from tools.flight_tracker.emailer import build_subject
+
+    snap = _sample_snapshot()
+    subj = build_subject(snap, history=[{"ts": snap["ts"], "best": snap["best"]}])
+    assert "RUN" in subj and "745" in subj and "ORY" in subj
+    assert "2026-06-08" in subj
+
+
+def test_email_subject_drop_marker():
+    from tools.flight_tracker.emailer import build_subject
+
+    snap = _sample_snapshot()
+    history = [
+        {"ts": "2026-06-07T05:42:20+00:00", "best": {**snap["best"], "price": 865.0}},
+        {"ts": snap["ts"], "best": snap["best"]},
+    ]
+    subj = build_subject(snap, history)
+    assert "🔻" in subj and "120" in subj  # 745 - 865 = -120
+
+
+def test_email_html_contains_combo_and_table():
+    from tools.flight_tracker.emailer import build_html
+
+    snap = _sample_snapshot()
+    html = build_html(snap, history=[{"ts": snap["ts"], "best": snap["best"]}])
+    assert "745 EUR" in html
+    assert "Corsair" in html
+    assert "Top 10" in html
+    assert "?/?" in html  # MRS escales inconnues rendues '?'
+    assert html.strip().endswith("</div>")
+
+
+def test_email_html_no_offer():
+    from tools.flight_tracker.emailer import build_html
+
+    snap = _sample_snapshot()
+    snap["best"] = None
+    snap["quotes"] = []
+    html = build_html(snap, history=[])
+    assert "Aucune offre" in html
+
+
+def test_send_via_resend_requires_key():
+    from tools.flight_tracker.emailer import EmailError, send_via_resend
+
+    try:
+        send_via_resend("", "a@b.c", ["x@y.z"], "s", "<p>h</p>")
+    except EmailError:
+        return
+    raise AssertionError("send_via_resend aurait du lever EmailError sans cle")
+
+
 def _run_all():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

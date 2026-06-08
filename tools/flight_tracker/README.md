@@ -103,6 +103,34 @@ Réglages optionnels dans **Settings → Secrets and variables → Actions** du 
 - `FT_DEPART_STEP` *(défaut workflow : `2`, pour limiter le throttling)*
 - `FT_DEPART_START`, `FT_DEPART_END`, `FT_TRIP_DAYS`, `FT_RETURN_FLEX`, `FT_ORIGINS`, `FT_DESTINATION`
 
+### Alerte email quotidienne (Resend)
+
+Le workflow envoie chaque jour un **email HTML** (meilleur combo + top 10 + tendance)
+à la liste de destinataires, via l'API [Resend](https://resend.com).
+
+**À configurer :**
+- **Secret** `RESEND_API_KEY` — clé API Resend (palier gratuit : 3000 mails/mois).
+  Sans ce secret, l'envoi est simplement **ignoré** (le relevé des prix continue).
+- **Variable** `MAIL_TO` *(optionnel)* — destinataires séparés par `,`.
+  Défaut : `maxime.babonneau@orange.com,eliserobert05@gmail.com`.
+- **Variable** `MAIL_FROM` *(optionnel)* — expéditeur. Défaut `onboarding@resend.dev`.
+
+> ⚠️ **Important Resend** : sans **domaine vérifié**, l'expéditeur de test
+> `onboarding@resend.dev` ne peut écrire **qu'à l'adresse du titulaire du compte
+> Resend**. Pour envoyer aux **deux** destinataires externes, il faut
+> [vérifier un domaine](https://resend.com/domains) (ajout de quelques records DNS)
+> puis poser `MAIL_FROM=alerte@ton-domaine.fr`. Sinon, l'envoi vers une adresse
+> non autorisée sera rejeté par Resend.
+
+Test local de l'envoi :
+
+```bash
+export RESEND_API_KEY=re_xxx
+export MAIL_FROM="alerte@ton-domaine.fr"          # ou onboarding@resend.dev
+export MAIL_TO="maxime.babonneau@orange.com,eliserobert05@gmail.com"
+python -m tools.flight_tracker --email
+```
+
 ### Déclenchement
 
 - **Cron automatique** : GitHub n'exécute les workflows planifiés que depuis la
@@ -148,6 +176,7 @@ tools/flight_tracker/
 ├── config.py                 # Fenêtre de recherche + génération des itinéraires
 ├── google_flights_client.py  # Source KEYLESS (fast-flights / Google Flights) — défaut
 ├── amadeus_client.py         # Source Amadeus : OAuth2 + Flight Offers Search (+ MockClient)
+├── emailer.py                # Alerte email HTML quotidienne (API Resend)
 ├── tracker.py                # Scan, sélection provider, historique JSONL, rapport Markdown
 ├── requirements.txt          # Dépendance keyless (fast-flights)
 ├── data/                     # Sorties (générées par les runs)

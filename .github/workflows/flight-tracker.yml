@@ -4,8 +4,15 @@ name: Flight Tracker — La Reunion
 # Source par defaut : KEYLESS (Google Flights via fast-flights) -> AUCUNE cle requise.
 # Met a jour l'historique + le rapport et commit le resultat sur la branche.
 #
+# Envoie aussi une ALERTE EMAIL quotidienne (via Resend) a la liste MAIL_TO.
+#
 # IMPORTANT :
-#  - Zero config necessaire : sans secret, le traceur scrape Google Flights.
+#  - Zero config necessaire pour les PRIX : sans secret, le traceur scrape Google Flights.
+#  - Pour l'EMAIL : ajouter le secret RESEND_API_KEY (sinon l'envoi est skip, sans
+#    faire echouer le run). Destinataires par defaut : maxime.babonneau@orange.com
+#    + eliserobert05@gmail.com (surchargeable via la variable MAIL_TO).
+#    Resend sans domaine verifie n'ecrit qu'au titulaire du compte -> pour 2
+#    destinataires externes, verifier un domaine et fixer la variable MAIL_FROM.
 #  - Optionnel : si tu renseignes les secrets AMADEUS_CLIENT_ID /
 #    AMADEUS_CLIENT_SECRET (Settings > Secrets and variables > Actions), le
 #    traceur bascule automatiquement sur l'API Amadeus (plus fiable).
@@ -54,6 +61,10 @@ jobs:
           AMADEUS_ENV: ${{ vars.AMADEUS_ENV || 'production' }}
           # Source keyless Google Flights : mode de fetch (common|fallback|local).
           FT_FETCH_MODE: ${{ vars.FT_FETCH_MODE || 'fallback' }}
+          # Alerte email quotidienne via Resend.
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          MAIL_FROM: ${{ vars.MAIL_FROM || 'onboarding@resend.dev' }}
+          MAIL_TO: ${{ vars.MAIL_TO || 'maxime.babonneau@orange.com,eliserobert05@gmail.com' }}
           # Fenetre de recherche (surchargeable via Variables du repo) :
           FT_ORIGINS: ${{ vars.FT_ORIGINS || 'MRS,CDG,ORY' }}
           FT_DESTINATION: ${{ vars.FT_DESTINATION || 'RUN' }}
@@ -66,10 +77,10 @@ jobs:
           FT_DEPART_STEP: ${{ vars.FT_DEPART_STEP || '2' }}
         run: |
           if [ "${{ inputs.mock }}" = "true" ]; then
-            python -m tools.flight_tracker --mock --sleep 0
+            python -m tools.flight_tracker --mock --sleep 0 --email
           else
             # Pacing plus lent : le scraping enchaine moins bien que l'API.
-            python -m tools.flight_tracker --sleep 1.5
+            python -m tools.flight_tracker --sleep 1.5 --email
           fi
 
       - name: Commit results
