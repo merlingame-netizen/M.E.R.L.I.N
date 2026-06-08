@@ -1,0 +1,47 @@
+name: Flight Tracker — TEST email (temporaire)
+
+# Workflow JETABLE pour tester l'envoi email reel sur l'infra GitHub.
+# Declenche par push sur la branche feature (uniquement quand CE fichier change),
+# pas d'etape de commit -> aucune boucle. A SUPPRIMER apres le test.
+
+on:
+  push:
+    branches:
+      - claude/flight-price-tracker-reunion-4b075
+    paths:
+      - ".github/workflows/flight-tracker-test.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r tools/flight_tracker/requirements.txt
+
+      - name: Run tracker + send test email (fenetre reduite, prix reels)
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          SMTP_HOST: ${{ vars.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || '465' }}
+          MAIL_TO: ${{ vars.MAIL_TO || 'maxime.babonneau@orange.com,eliserobert05@gmail.com' }}
+          FT_EMAIL_TOP: "0"
+          FT_FETCH_MODE: "fallback"
+          # Fenetre reduite -> test rapide (~2 min) mais prix reels.
+          FT_ORIGINS: "ORY,CDG"
+          FT_DEPART_START: "2026-12-22"
+          FT_DEPART_END: "2026-12-26"
+          FT_DEPART_STEP: "2"
+        run: |
+          python -m tools.flight_tracker --email --no-history --sleep 1.2
