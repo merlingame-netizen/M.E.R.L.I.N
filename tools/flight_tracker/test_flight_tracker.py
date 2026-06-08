@@ -178,9 +178,26 @@ def test_email_html_contains_combo_and_table():
     html = build_html(snap, history=[{"ts": snap["ts"], "best": snap["best"]}])
     assert "745 EUR" in html
     assert "Corsair" in html
-    assert "Top 10" in html
+    assert "Top 3 des combos" in html       # 3 offres dans l'echantillon
+    assert "offres trouvées" in html        # bandeau statistiques
+    assert "prix médian" in html
     assert "?/?" in html  # MRS escales inconnues rendues '?'
     assert html.strip().endswith("</div>")
+
+
+def test_email_html_truncates_and_counts():
+    from tools.flight_tracker.emailer import build_html
+
+    snap = _sample_snapshot()
+    # 30 offres synthetiques croissantes -> top_n=25 doit tronquer et compter le reste.
+    snap["quotes"] = [
+        Quote("ORY", "RUN", "2027-01-15", "2027-02-05", 700 + i, "EUR", ["Corsair"], 0, 0).as_dict()
+        for i in range(30)
+    ]
+    snap["best"] = snap["quotes"][0]
+    html = build_html(snap, history=[], top_n=25)
+    assert "Top 25 des combos" in html
+    assert "+ 5 autre(s) combo(s)" in html
 
 
 def test_email_html_no_offer():

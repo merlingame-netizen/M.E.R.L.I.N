@@ -68,7 +68,25 @@ def _best_by_origin(quotes: list[dict]) -> dict:
     return out
 
 
-def build_html(snapshot: dict, history: list[dict]) -> str:
+def _price_stats(quotes: list[dict]) -> dict | None:
+    """min / median / max + nb d'offres dans une fourchette de 50 du minimum."""
+    prices = sorted(q["price"] for q in quotes if q.get("price"))
+    if not prices:
+        return None
+    n = len(prices)
+    mid = n // 2
+    median = prices[mid] if n % 2 else (prices[mid - 1] + prices[mid]) / 2
+    pmin = prices[0]
+    return {
+        "n": n,
+        "min": pmin,
+        "median": median,
+        "max": prices[-1],
+        "near_best": sum(1 for p in prices if p <= pmin + 50),
+    }
+
+
+def build_html(snapshot: dict, history: list[dict], top_n: int = 25) -> str:
     best = snapshot.get("best")
     cfg = snapshot.get("config", {})
     dest = cfg.get("destination", "RUN")
@@ -114,7 +132,7 @@ def build_html(snapshot: dict, history: list[dict]) -> str:
 
     # Carte "meilleur combo"
     parts.append(
-        '<div style="background:#0b3d2e;color:#fff;border-radius:10px;padding:18px 20px;margin-bottom:18px;">'
+        '<div style="background:#0b3d2e;color:#fff;border-radius:10px;padding:18px 20px;margin-bottom:14px;">'
         f'<div style="font-size:34px;font-weight:bold;line-height:1;">{best["price"]:.0f} {cur}</div>'
         f'<div style="font-size:15px;margin-top:6px;">{escape(best["origin"])} → {escape(best["destination"])}'
         f' &nbsp;·&nbsp; {escape(best["depart"])} → {escape(best["return_date"])}</div>'
@@ -125,14 +143,37 @@ def build_html(snapshot: dict, history: list[dict]) -> str:
         "</div>"
     )
 
-    # Top 10
     quotes = snapshot.get("quotes", [])
-    parts.append('<h3 style="color:#0b3d2e;margin:18px 0 8px;">Top 10 des combos les moins chers</h3>')
+
+    # Bandeau statistiques
+    stats = _price_stats(quotes)
+    if stats:
+        def _chip(label: str, value: str) -> str:
+            return (
+                '<td style="text-align:center;padding:8px 6px;background:#f4f8f6;'
+                'border:1px solid #e0e0e0;border-radius:8px;">'
+                f'<div style="font-size:18px;font-weight:bold;color:#0b3d2e;">{value}</div>'
+                f'<div style="font-size:11px;color:#666;">{label}</div></td>'
+            )
+        parts.append(
+            f'<table style="{css_table}border-spacing:6px;border-collapse:separate;margin-bottom:6px;"><tr>'
+            + _chip("offres trouvées", str(stats["n"]))
+            + _chip("le moins cher", f'{stats["min"]:.0f} {cur}')
+            + _chip("prix médian", f'{stats["median"]:.0f} {cur}')
+            + _chip("le plus cher", f'{stats["max"]:.0f} {cur}')
+            + _chip(f'à moins de {stats["min"]+50:.0f} {cur}', str(stats["near_best"]))
+            + "</tr></table>"
+        )
+
+    # Top N
+    shown = quotes[:top_n]
+    n_more = max(0, len(quotes) - len(shown))
+    parts.append(f'<h3 style="color:#0b3d2e;margin:14px 0 8px;">Top {len(shown)} des combos les moins chers</h3>')
     parts.append(f'<table style="{css_table}"><tr>'
                  f'<th style="{th}">#</th><th style="{th}">Prix</th><th style="{th}">Origine</th>'
                  f'<th style="{th}">Aller</th><th style="{th}">Retour</th>'
                  f'<th style="{th}">Esc. A/R</th><th style="{th}">Compagnies</th></tr>')
-    for i, q in enumerate(quotes[:10], 1):
+    for i, q in enumerate(shown, 1):
         row_bg = "background:#f4f8f6;" if i % 2 == 0 else ""
         parts.append(
             f'<tr style="{row_bg}"><td style="{td}">{i}</td>'
@@ -144,6 +185,13 @@ def build_html(snapshot: dict, history: list[dict]) -> str:
             f'<td style="{td}">{escape(_fmt_carriers(q["carriers"]))}</td></tr>'
         )
     parts.append("</table>")
+    if n_more:
+        last_price = shown[-1]["price"]
+        parts.append(
+            f'<p style="font-size:12px;color:#666;margin:6px 0 0;">'
+            f'+ {n_more} autre(s) combo(s) au-delà de {last_price:.0f} {cur} '
+            f'(jusqu’à {quotes[-1]["price"]:.0f} {cur}).</p>'
+        )
 
     # Meilleur par origine
     bbo = _best_by_origin(quotes)
@@ -186,9 +234,9 @@ def build_html(snapshot: dict, history: list[dict]) -> str:
     return "".join(parts)
 
 
-def build_email(snapshot: dict, history: list[dict]) -> tuple[str, str]:
+def build_email(snapshot: dict, history: list[dict], top_n: int = 25) -> tuple[str, str]:
     """Retourne (subject, html_body)."""
-    return build_subject(snapshot, history), build_html(snapshot, history)
+    return build_subject(snapshot, history), build_html(snapshot, history, top_n=top_n)
 
 
 def build_mime(mail_from: str, recipients: list[str], subject: str, html: str) -> EmailMessage:

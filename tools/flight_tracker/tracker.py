@@ -247,7 +247,11 @@ def send_daily_email(snapshot: dict) -> bool:
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
 
     history = _load_history()  # inclut le run courant (append_history deja appele)
-    subject, html = build_email(snapshot, history)
+    try:
+        top_n = max(1, int(os.environ.get("FT_EMAIL_TOP", "25")))
+    except ValueError:
+        top_n = 25
+    subject, html = build_email(snapshot, history, top_n=top_n)
 
     try:
         if smtp_user and smtp_pass:
