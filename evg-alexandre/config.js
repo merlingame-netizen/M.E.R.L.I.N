@@ -51,6 +51,27 @@ const CAGNOTTE_CONFIG = {
   },
 
 
+  /* ---- WHATSAPP -------------------------------------------------------- */
+  whatsapp: {
+    // true => les cartes destination deviennent votables en 1 tap via WhatsApp
+    // (ouvre WhatsApp avec le vote pré-rempli, à envoyer dans le groupe).
+    vote_par_whatsapp: true,
+
+    // Message envoyé pour chaque vote ({dest} = destination choisie).
+    message_vote: "Je vote pour {dest} pour l'EVG d'Alexandre ! 🍻",
+
+    // Message d'annonce partagé via le bouton "Partager sur WhatsApp".
+    // {url} sera remplacé automatiquement par l'adresse de la page.
+    message_annonce:
+      "🍻 EVG d'Alexandre — Week-end du 18 juillet 🍻\n\n" +
+      "Salut la team ! On prépare l'enterrement de vie de garçon d'Alex 🎉\n\n" +
+      "📍 Destination à voter : Vallon-Pont-d'Arc 🛶 ou Annecy 🏔️\n" +
+      "💸 Cagnotte (logement + cadeaux) + RIB sur la page 👇\n\n" +
+      "{url}\n\n" +
+      "Virement avec l'IBAN de la page (motif : EVG Alexandre). Merci à tous ! 🤘"
+  },
+
+
   /* ---- MESSAGE PERSO --------------------------------------------------- */
   // Le petit mot affiché en haut. Modifie-le comme tu veux.
   message: "On organise un EVG de folie pour Alexandre ! Pour que tout soit "

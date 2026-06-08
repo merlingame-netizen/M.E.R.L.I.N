@@ -113,6 +113,8 @@
     .btn-gold:hover{filter:brightness(1.06)}
     .btn-ghost{background:var(--card-soft);color:var(--text);border:1px solid var(--line)}
     .btn-pink{background:linear-gradient(120deg,var(--pink),#ff4f8b);color:#fff}
+    .btn-wa{background:linear-gradient(120deg,#25d366,#128c7e);color:#fff}
+    .btn-wa:hover{filter:brightness(1.06)}
     .btn-row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
     .btn-row .btn{flex:1 1 160px}
 
@@ -143,6 +145,14 @@
     .dest .ic{font-size:40px;display:block;margin-bottom:8px}
     .dest h3{font-size:19px;margin-bottom:6px}
     .dest p{color:var(--muted);font-size:14px}
+    a.dest{display:block;text-decoration:none;color:inherit;cursor:pointer;transition:transform .12s,border-color .15s}
+    a.dest:hover{border-color:var(--gold);transform:translateY(-2px)}
+    a.dest:active{transform:scale(.98)}
+    .dest .vote-cta{
+      display:inline-block;margin-top:12px;font-size:13px;font-weight:800;
+      color:#25d366;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.35);
+      padding:7px 14px;border-radius:999px;
+    }
     .dest .vs{
       position:absolute;top:50%;left:-7px;transform:translateY(-50%);
       width:30px;height:30px;border-radius:50%;display:none;place-items:center;
@@ -233,6 +243,7 @@
         <a class="btn btn-gold" href="#rib">🏦 Participer par virement</a>
         <a class="btn btn-pink" id="potBtn" style="display:none" target="_blank" rel="noopener">🔗 Cagnotte en ligne</a>
       </div>
+      <a class="btn btn-wa" id="shareWa" style="display:none;margin-top:12px" target="_blank" rel="noopener">📣 Partager sur WhatsApp</a>
     </section>
 
     <!-- VOTE DESTINATION -->
@@ -331,21 +342,39 @@
         const b=$('potBtn'); b.href=C.lien_cagnotte; b.style.display='inline-flex';
       }
 
+      /* WHATSAPP helpers */
+      const wa = C.whatsapp || {};
+      const pageUrl = location.href.split('#')[0];
+      const waLink = (txt)=> 'https://wa.me/?text=' + encodeURIComponent(txt);
+      const voteByWa = !!wa.vote_par_whatsapp;
+
       /* VOTE DESTINATION */
       if(vd.actif && Array.isArray(vd.options) && vd.options.length){
         $('voteCard').style.display='block';
         document.querySelector('#voteCard h2').textContent = '🗳️ ' + (vd.titre || 'Destination — à voter');
         $('voteNote').textContent = vd.note || '';
-        $('dests').innerHTML = vd.options.map((o,i)=>`
-          <div class="dest">
-            ${i>0 ? '<span class="vs">VS</span>' : ''}
+        $('dests').innerHTML = vd.options.map((o,i)=>{
+          const vs = i>0 ? '<span class="vs">VS</span>' : '';
+          const inner = `${vs}
             <span class="ic">${o.emoji||'📍'}</span>
             <h3>${o.nom||''}</h3>
-            <p>${o.description||''}</p>
-          </div>`).join('');
+            <p>${o.description||''}</p>`;
+          if(voteByWa){
+            const msg = (wa.message_vote||'Je vote pour {dest} !').replace('{dest}', (o.nom||'') + (o.emoji?(' '+o.emoji):''));
+            return `<a class="dest" href="${waLink(msg)}" target="_blank" rel="noopener">${inner}
+              <span class="vote-cta">🗳️ Voter sur WhatsApp</span></a>`;
+          }
+          return `<div class="dest">${inner}</div>`;
+        }).join('');
         if(vd.lien){
           const vb=$('voteBtn'); vb.href=vd.lien; vb.style.display='inline-flex';
         }
+      }
+
+      /* PARTAGER SUR WHATSAPP */
+      if(wa.message_annonce){
+        const txt = wa.message_annonce.replace('{url}', pageUrl);
+        const sb = $('shareWa'); sb.href = waLink(txt); sb.style.display='inline-flex';
       }
 
       /* USES */
