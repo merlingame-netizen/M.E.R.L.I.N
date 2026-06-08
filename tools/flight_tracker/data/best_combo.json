@@ -1,0 +1,14 @@
+{
+  "origin": "ORY",
+  "destination": "RUN",
+  "depart": "2027-01-15",
+  "return_date": "2027-02-05",
+  "price": 745.0,
+  "currency": "EUR",
+  "carriers": [
+    "Corsair"
+  ],
+  "stops_out": 0,
+  "stops_in": 0,
+  "deep_link": ""
+}
