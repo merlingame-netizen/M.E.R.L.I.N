@@ -10,21 +10,45 @@ const CAGNOTTE_CONFIG = {
 
   /* ---- LE COMPTEUR ----------------------------------------------------- */
   // Montant déjà récolté (en euros). Mets à jour ce chiffre régulièrement.
-  montant_recolte: 0,
+  montant_recolte: 100,
 
-  // Objectif de la cagnotte (en euros). 👉 Tu m'as dit me donner la jauge
-  // plus tard : remplace ce chiffre par ton objectif quand tu l'auras.
-  objectif: 500,
+  // Objectif de la cagnotte (en euros). Pas d'objectif fixe pour l'instant :
+  // il dépendra du tarif location + cadeaux. Sert seulement si afficher_objectif = true.
+  objectif: 0,
 
   // Affiche la barre de progression + l'objectif ? (true) ou juste le
-  // montant qui monte sans objectif ? (false)
-  afficher_objectif: true,
+  // montant qui monte sans objectif ? (false)  -> false = pas de jauge
+  afficher_objectif: false,
 
 
   /* ---- INFOS DE L'EVG -------------------------------------------------- */
   prenom_du_marie: "Alexandre",
-  date: "À définir",          // ex: "Samedi 12 septembre 2026"
-  lieu: "À définir",          // ex: "Annecy"
+  date: "Week-end du 18 juillet",   // ex: "Samedi 12 septembre 2026"
+  lieu: "",                          // laissé vide : la destination se vote (voir plus bas)
+
+
+  /* ---- VOTE DESTINATION ------------------------------------------------ */
+  // La destination se vote ! Le programme sera fait selon la gagnante.
+  vote_destination: {
+    actif: true,
+    titre: "On vote la destination !",
+    note: "Le programme sera construit selon la destination qui gagne. À vos votes 👇",
+    // Optionnel : colle ici un lien de sondage (Framadate, sondage WhatsApp,
+    // Doodle...) pour que le vote soit comptabilisé. Laisse "" pour cacher le bouton.
+    lien: "",
+    options: [
+      {
+        nom: "Vallon-Pont-d'Arc",
+        emoji: "🛶",
+        description: "Canoë dans les Gorges de l'Ardèche, baignade et soleil."
+      },
+      {
+        nom: "Annecy",
+        emoji: "🏔️",
+        description: "Lac turquoise, montagne et vieille ville pour faire la fête."
+      }
+    ]
+  },
 
 
   /* ---- MESSAGE PERSO --------------------------------------------------- */

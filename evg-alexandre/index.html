@@ -127,6 +127,33 @@
     .use h3{font-size:17px;margin-bottom:4px}
     .use p{color:var(--muted);font-size:14.5px}
 
+    /* ---------- VOTE DESTINATION ---------- */
+    .vote-note{color:var(--muted);font-size:14.5px;margin:-6px 0 16px}
+    .dests{display:grid;gap:14px}
+    @media(min-width:520px){.dests{grid-template-columns:1fr 1fr}}
+    .dest{
+      position:relative;background:var(--card-soft);border:1px solid var(--line);
+      border-radius:18px;padding:20px 16px;text-align:center;overflow:hidden;
+    }
+    .dest::before{
+      content:"";position:absolute;inset:0;opacity:.0;transition:opacity .2s;
+      background:radial-gradient(120px 80px at 50% 0%, rgba(255,107,157,.25), transparent 70%);
+    }
+    .dest:hover::before{opacity:1}
+    .dest .ic{font-size:40px;display:block;margin-bottom:8px}
+    .dest h3{font-size:19px;margin-bottom:6px}
+    .dest p{color:var(--muted);font-size:14px}
+    .dest .vs{
+      position:absolute;top:50%;left:-7px;transform:translateY(-50%);
+      width:30px;height:30px;border-radius:50%;display:none;place-items:center;
+      background:linear-gradient(120deg,var(--gold),var(--pink));color:#2a1a05;
+      font-weight:900;font-size:12px;z-index:2;border:2px solid var(--card);
+    }
+    @media(min-width:520px){
+      .dests{position:relative}
+      .dest:last-child .vs{display:grid}
+    }
+
     /* ---------- RIB ---------- */
     .field{margin-bottom:16px}
     .field label{
@@ -208,6 +235,14 @@
       </div>
     </section>
 
+    <!-- VOTE DESTINATION -->
+    <section class="card" id="voteCard" style="display:none">
+      <h2>🗳️ Destination — à voter</h2>
+      <p class="vote-note" id="voteNote"></p>
+      <div class="dests" id="dests"></div>
+      <a class="btn btn-pink" id="voteBtn" style="display:none;margin-top:16px" target="_blank" rel="noopener">🗳️ Voter pour la destination</a>
+    </section>
+
     <!-- A QUOI SERT L'ARGENT -->
     <section class="card">
       <h2>🎯 À quoi sert l'argent</h2>
@@ -257,10 +292,12 @@
       /* HERO */
       $('title').textContent = "EVG d'" + (C.prenom_du_marie || "Alexandre");
       $('message').textContent = C.message || "";
+      const vd = C.vote_destination || {};
       const chips = [];
       if(C.date && C.date !== "À définir") chips.push(['📅', C.date]);
       else if(C.date) chips.push(['📅', 'Date : '+C.date]);
       if(C.lieu && C.lieu !== "À définir") chips.push(['📍', C.lieu]);
+      else if(vd.actif) chips.push(['📍', 'Destination à voter']);
       else if(C.lieu) chips.push(['📍', 'Lieu : '+C.lieu]);
       $('chips').innerHTML = chips.map(c=>`<span class="chip"><span class="ic">${c[0]}</span>${c[1]}</span>`).join('');
 
@@ -292,6 +329,23 @@
       /* CAGNOTTE EN LIGNE */
       if(C.lien_cagnotte){
         const b=$('potBtn'); b.href=C.lien_cagnotte; b.style.display='inline-flex';
+      }
+
+      /* VOTE DESTINATION */
+      if(vd.actif && Array.isArray(vd.options) && vd.options.length){
+        $('voteCard').style.display='block';
+        document.querySelector('#voteCard h2').textContent = '🗳️ ' + (vd.titre || 'Destination — à voter');
+        $('voteNote').textContent = vd.note || '';
+        $('dests').innerHTML = vd.options.map((o,i)=>`
+          <div class="dest">
+            ${i>0 ? '<span class="vs">VS</span>' : ''}
+            <span class="ic">${o.emoji||'📍'}</span>
+            <h3>${o.nom||''}</h3>
+            <p>${o.description||''}</p>
+          </div>`).join('');
+        if(vd.lien){
+          const vb=$('voteBtn'); vb.href=vd.lien; vb.style.display='inline-flex';
+        }
       }
 
       /* USES */
