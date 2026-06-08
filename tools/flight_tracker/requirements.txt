@@ -1,0 +1,2 @@
+# Source de prix keyless (scraping Google Flights) — defaut du traceur.
+fast-flights>=2.2

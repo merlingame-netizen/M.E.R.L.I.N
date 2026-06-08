@@ -8,8 +8,16 @@ depuis **Marseille (MRS)**, **Paris-CDG** et **Paris-Orly (ORY)**.
 - **Sortie** : le **meilleur combo** (origine + dates les moins chères), un top 10,
   le meilleur prix par aéroport, et une **tendance** historique des prix.
 
-Source de prix : **API Amadeus Self-Service** (palier gratuit). Le code n'utilise
-que la bibliothèque standard Python (aucune dépendance à installer).
+Source de prix par défaut : **KEYLESS** — scraping de **Google Flights** via la
+lib [`fast-flights`](https://pypi.org/project/fast-flights/). **Aucune clé, aucun
+compte.** Source alternative optionnelle : **API Amadeus Self-Service** (si tu
+renseignes des clés, le tracker bascule automatiquement dessus, voir §2).
+
+| Source | Clé requise | Fiabilité | Sélection |
+|--------|-------------|-----------|-----------|
+| **Google Flights** (défaut) | ❌ aucune | scraping (best-effort) | auto si pas de clé |
+| **Amadeus** | ✅ id+secret | API contractuelle | auto si clés présentes, ou `FT_PROVIDER=amadeus` |
+| **Mock** | ❌ | prix simulés | `--mock` ou `FT_PROVIDER=mock` |
 
 ---
 
@@ -18,18 +26,29 @@ que la bibliothèque standard Python (aucune dépendance à installer).
 ```bash
 # Depuis la racine du repo
 
-# Test du pipeline sans clé API (prix simulés, déterministes)
+# Installer la dépendance keyless (une fois)
+pip install -r tools/flight_tracker/requirements.txt
+
+# Scan réel SANS clé (prix réels Google Flights) — c'est le défaut
+python -m tools.flight_tracker
+
+# Test du pipeline sans réseau (prix simulés, déterministes)
 python -m tools.flight_tracker --mock
 
-# Voir les itinéraires interrogés sans appeler l'API
+# Voir les itinéraires interrogés sans rien appeler
 python -m tools.flight_tracker --dry-run
 
-# Scan réel (nécessite les clés Amadeus, voir §2)
+# Forcer la source Amadeus (nécessite les clés, voir §2)
 export AMADEUS_CLIENT_ID=xxxx
 export AMADEUS_CLIENT_SECRET=yyyy
 export AMADEUS_ENV=production        # ou "test" (données synthétiques)
 python -m tools.flight_tracker
 ```
+
+> **Note keyless** : Google ne détaille pas toujours compagnies/escales dans sa vue
+> aller-retour combinée — ces champs sont best-effort (`?` / `n/a`), mais **le prix
+> est fiable**. Le scraping peut être throttlé si on enchaîne beaucoup de requêtes
+> depuis une même IP (cf. `FT_FETCH_MODE`, `--sleep`, `FT_DEPART_STEP`).
 
 Résultats écrits dans `tools/flight_tracker/data/` :
 
@@ -41,7 +60,12 @@ Résultats écrits dans `tools/flight_tracker/data/` :
 
 ---
 
-## 2. Obtenir une clé Amadeus (gratuit)
+## 2. Optionnel — passer sur Amadeus (plus robuste pour un watch quotidien)
+
+Le scraping Google est parfait pour démarrer sans rien, mais une API contractuelle
+est plus stable pour un relevé automatique quotidien. Pour basculer :
+
+### Obtenir une clé Amadeus (gratuit)
 
 1. Créer un compte sur <https://developers.amadeus.com>.
 2. **My Self-Service Workspace → Create New App**.
@@ -64,14 +88,19 @@ mis à jour dans le repo.
 
 ### Configuration
 
-Dans **Settings → Secrets and variables → Actions** du repo :
+**Aucune configuration n'est nécessaire** : sans secret, le workflow scrape Google
+Flights (source keyless). Il installe `fast-flights` puis lance le tracker.
 
-**Secrets** (obligatoires pour les vrais prix) :
+Réglages optionnels dans **Settings → Secrets and variables → Actions** du repo :
+
+**Secrets** (seulement si tu veux la source Amadeus) :
 - `AMADEUS_CLIENT_ID`
 - `AMADEUS_CLIENT_SECRET`
 
-**Variables** (optionnelles — surchargent la fenêtre de recherche) :
-- `AMADEUS_ENV` = `production` (recommandé) ou `test`
+**Variables** (optionnelles) :
+- `AMADEUS_ENV` = `production` (recommandé) ou `test` *(défaut workflow : production)*
+- `FT_FETCH_MODE` = `common` | `fallback` *(défaut)* | `local` — stratégie de scraping keyless
+- `FT_DEPART_STEP` *(défaut workflow : `2`, pour limiter le throttling)*
 - `FT_DEPART_START`, `FT_DEPART_END`, `FT_TRIP_DAYS`, `FT_RETURN_FLEX`, `FT_ORIGINS`, `FT_DESTINATION`
 
 ### Déclenchement
@@ -100,6 +129,8 @@ Tout se règle par variables d'environnement (voir `config.py`) :
 | `FT_CURRENCY` | `EUR` | Devise |
 | `FT_ADULTS` | `1` | Nombre d'adultes |
 | `FT_NON_STOP` | `false` | `true` = vols directs uniquement |
+| `FT_PROVIDER` | *(auto)* | Force la source : `google`, `amadeus` ou `mock` |
+| `FT_FETCH_MODE` | `common` | Scraping keyless : `common`, `fallback` ou `local` |
 
 Exemple — élargir à ±3 jours de séjour et n'interroger qu'un jour sur deux :
 
@@ -113,13 +144,15 @@ FT_RETURN_FLEX=3 FT_DEPART_STEP=2 python -m tools.flight_tracker
 
 ```
 tools/flight_tracker/
-├── __main__.py        # CLI (python -m tools.flight_tracker)
-├── config.py          # Fenêtre de recherche + génération des itinéraires
-├── amadeus_client.py  # OAuth2 + Flight Offers Search (+ MockClient)
-├── tracker.py         # Scan, historique JSONL, rapport Markdown
-├── data/              # Sorties (générées par les runs)
+├── __main__.py               # CLI (python -m tools.flight_tracker)
+├── config.py                 # Fenêtre de recherche + génération des itinéraires
+├── google_flights_client.py  # Source KEYLESS (fast-flights / Google Flights) — défaut
+├── amadeus_client.py         # Source Amadeus : OAuth2 + Flight Offers Search (+ MockClient)
+├── tracker.py                # Scan, sélection provider, historique JSONL, rapport Markdown
+├── requirements.txt          # Dépendance keyless (fast-flights)
+├── data/                     # Sorties (générées par les runs)
 └── README.md
 ```
 
-Prix indicatifs Amadeus — toujours **confirmer le prix final sur le site de la compagnie**
+Prix indicatifs — toujours **confirmer le prix final sur le site de la compagnie**
 avant de réserver.

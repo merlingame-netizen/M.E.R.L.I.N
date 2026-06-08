@@ -97,6 +97,15 @@ def append_history(snapshot: dict) -> None:
         fh.write(json.dumps(compact, ensure_ascii=False) + "\n")
 
 
+def _fmt_stops(n) -> str:
+    """-1 (inconnu, vue combinee Google) -> '?', sinon le nombre."""
+    return "?" if n is None or n < 0 else str(n)
+
+
+def _fmt_carriers(carriers: list[str]) -> str:
+    return ", ".join(carriers) if carriers else "n/a"
+
+
 def _best_by_origin(quotes: list[dict]) -> dict:
     out: dict[str, dict] = {}
     for q in quotes:
@@ -139,7 +148,8 @@ def write_report(snapshot: dict) -> None:
 
     if not best:
         lines.append("> Aucune offre trouvee sur cette fenetre. "
-                     "Verifie la cle Amadeus / l'environnement (test vs production).")
+                     "Source keyless : Google a pu throttler l'IP (CI) ; "
+                     "relance plus tard ou reduis la fenetre (FT_DEPART_STEP).")
         REPORT_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return
 
@@ -148,9 +158,9 @@ def write_report(snapshot: dict) -> None:
     lines.append("")
     lines.append(f"### {best['price']:.0f} {cur} — {best['origin']} -> {best['destination']}")
     lines.append("")
-    lines.append(f"- **Aller :** {best['depart']}  ({best['stops_out']} escale(s))")
-    lines.append(f"- **Retour :** {best['return_date']}  ({best['stops_in']} escale(s))")
-    lines.append(f"- **Compagnies :** {', '.join(best['carriers']) or 'n/a'}")
+    lines.append(f"- **Aller :** {best['depart']}  ({_fmt_stops(best['stops_out'])} escale(s))")
+    lines.append(f"- **Retour :** {best['return_date']}  ({_fmt_stops(best['stops_in'])} escale(s))")
+    lines.append(f"- **Compagnies :** {_fmt_carriers(best['carriers'])}")
     lines.append("")
 
     # Top 10
@@ -162,7 +172,8 @@ def write_report(snapshot: dict) -> None:
     for i, q in enumerate(top, 1):
         lines.append(
             f"| {i} | {q['price']:.0f} {q['currency']} | {q['origin']} | {q['depart']} | "
-            f"{q['return_date']} | {q['stops_out']}/{q['stops_in']} | {', '.join(q['carriers'])} |"
+            f"{q['return_date']} | {_fmt_stops(q['stops_out'])}/{_fmt_stops(q['stops_in'])} | "
+            f"{_fmt_carriers(q['carriers'])} |"
         )
     lines.append("")
 
@@ -198,18 +209,40 @@ def write_report(snapshot: dict) -> None:
             lines.append("")
 
     lines.append("---")
-    lines.append("_Genere par tools/flight_tracker — prix indicatifs Amadeus, a confirmer sur le site de la compagnie._")
+    lines.append("_Genere par tools/flight_tracker — prix indicatifs (source keyless Google Flights), a confirmer sur le site de la compagnie._")
     REPORT_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
     BEST_FILE.write_text(json.dumps(best, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def make_client(use_mock: bool):
+    """Selectionne la source de prix.
+
+    Priorite :
+      1. --mock                       -> MockClient (prix simules)
+      2. FT_PROVIDER=google|amadeus|mock (forcage explicite)
+      3. Auto : cles Amadeus presentes -> Amadeus (API contractuelle, fiable)
+                sinon                  -> Google Flights keyless (defaut, zero config)
+    """
     import os
 
     if use_mock:
         return MockClient()
-    has_keys = os.environ.get("AMADEUS_CLIENT_ID") and os.environ.get("AMADEUS_CLIENT_SECRET")
-    if not has_keys and os.environ.get("FLIGHT_TRACKER_ALLOW_MOCK") == "1":
-        print("[flight_tracker] Pas de cle Amadeus -> mode MOCK (FLIGHT_TRACKER_ALLOW_MOCK=1)")
+
+    provider = (os.environ.get("FT_PROVIDER", "") or "").strip().lower()
+    has_keys = bool(os.environ.get("AMADEUS_CLIENT_ID") and os.environ.get("AMADEUS_CLIENT_SECRET"))
+
+    if provider == "mock":
         return MockClient()
-    return AmadeusClient()
+    if provider == "amadeus":
+        return AmadeusClient()
+    if provider == "google":
+        from .google_flights_client import GoogleFlightsClient
+        return GoogleFlightsClient()
+
+    # Auto.
+    if has_keys:
+        print("[flight_tracker] Cles Amadeus detectees -> source Amadeus.")
+        return AmadeusClient()
+    print("[flight_tracker] Aucune cle -> source keyless Google Flights (fast-flights).")
+    from .google_flights_client import GoogleFlightsClient
+    return GoogleFlightsClient()
