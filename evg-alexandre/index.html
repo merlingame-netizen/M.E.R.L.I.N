@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EVG d'Alexandre — La cagnotte 🍻</title>
-  <meta name="description" content="Cagnotte pour l'enterrement de vie de garçon d'Alexandre : logement + cadeaux. Participez par virement." />
+  <title>EVG d'Alexandre — Vallon-Pont-d'Arc 🛶</title>
+  <meta name="description" content="EVG d'Alexandre à Vallon-Pont-d'Arc — week-end du 18 juillet : choisis le logement et les activités, et participe à la cagnotte." />
   <meta name="robots" content="noindex" />
   <meta name="theme-color" content="#1a1230" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍻</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛶</text></svg>" />
   <style>
     :root{
       --bg:#140e26;
@@ -21,6 +21,8 @@
       --text:#f3eefb;
       --muted:#b6a9d6;
       --green:#5ad18a;
+      --wa:#25d366;
+      --red:#ff7a7a;
       --shadow:0 18px 40px -18px rgba(0,0,0,.7);
       --radius:22px;
     }
@@ -37,10 +39,9 @@
       min-height:100vh;
       line-height:1.55;
       -webkit-font-smoothing:antialiased;
-      padding:0 18px env(safe-area-inset-bottom);
+      padding:0 18px calc(86px + env(safe-area-inset-bottom));
     }
     .wrap{max-width:680px;margin:0 auto;padding:34px 0 64px}
-    .center{text-align:center}
 
     /* ---------- HERO ---------- */
     .hero{text-align:center;padding:18px 0 8px}
@@ -57,7 +58,7 @@
       -webkit-background-clip:text;background-clip:text;color:transparent;
       text-shadow:0 2px 30px rgba(245,196,81,.15);
     }
-    .hero .sub{color:var(--muted);font-size:17px;max-width:30ch;margin:0 auto}
+    .hero .sub{color:var(--muted);font-size:17px;max-width:34ch;margin:0 auto}
     .chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
     .chip{
       display:inline-flex;align-items:center;gap:8px;
@@ -65,6 +66,15 @@
       padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;
     }
     .chip .ic{font-size:16px}
+
+    /* ---------- NAV ---------- */
+    .nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+    .nav a{
+      text-decoration:none;color:var(--muted);font-size:13px;font-weight:700;
+      background:rgba(255,255,255,.04);border:1px solid var(--line);
+      padding:8px 13px;border-radius:999px;transition:color .15s,border-color .15s;
+    }
+    .nav a:hover{color:var(--gold);border-color:var(--gold)}
 
     /* ---------- CARD ---------- */
     .card{
@@ -77,6 +87,7 @@
       color:var(--muted);font-weight:700;margin-bottom:18px;display:flex;
       align-items:center;gap:9px;
     }
+    .section-note{color:var(--muted);font-size:14.5px;margin:-8px 0 16px}
 
     /* ---------- COMPTEUR ---------- */
     .counter{text-align:center;padding-top:4px}
@@ -117,52 +128,122 @@
     .btn-wa:hover{filter:brightness(1.06)}
     .btn-row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
     .btn-row .btn{flex:1 1 160px}
+    .btn[disabled]{opacity:.45;pointer-events:none}
 
-    /* ---------- DEPENSES ---------- */
-    .uses{display:grid;gap:14px}
-    @media(min-width:520px){.uses{grid-template-columns:1fr 1fr}}
-    .use{
-      background:var(--card-soft);border:1px solid var(--line);border-radius:16px;
-      padding:18px 16px;
+    /* ---------- STATUT BADGES ---------- */
+    .badge{
+      display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;
+      padding:5px 11px;border-radius:999px;letter-spacing:.02em;
     }
-    .use .ic{font-size:30px;display:block;margin-bottom:10px}
-    .use h3{font-size:17px;margin-bottom:4px}
-    .use p{color:var(--muted);font-size:14.5px}
+    .badge.dispo{color:var(--green);background:rgba(90,209,138,.12);border:1px solid rgba(90,209,138,.4)}
+    .badge.a_verifier{color:var(--gold);background:rgba(245,196,81,.1);border:1px solid rgba(245,196,81,.35)}
+    .badge.option_posee{color:#8ec9ff;background:rgba(110,168,254,.12);border:1px solid rgba(110,168,254,.4)}
+    .badge.complet{color:var(--red);background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.4)}
 
-    /* ---------- VOTE DESTINATION ---------- */
-    .vote-note{color:var(--muted);font-size:14.5px;margin:-6px 0 16px}
-    .dests{display:grid;gap:14px}
-    @media(min-width:520px){.dests{grid-template-columns:1fr 1fr}}
-    .dest{
-      position:relative;background:var(--card-soft);border:1px solid var(--line);
-      border-radius:18px;padding:20px 16px;text-align:center;overflow:hidden;
+    /* ---------- CHOIX (logements + activités) ---------- */
+    .picks{display:grid;gap:14px}
+    .pick{
+      position:relative;background:var(--card-soft);border:2px solid var(--line);
+      border-radius:18px;padding:18px 16px;cursor:pointer;
+      transition:border-color .15s, transform .12s, box-shadow .15s;
     }
-    .dest::before{
-      content:"";position:absolute;inset:0;opacity:.0;transition:opacity .2s;
-      background:radial-gradient(120px 80px at 50% 0%, rgba(255,107,157,.25), transparent 70%);
+    .pick:hover{border-color:#56448f;transform:translateY(-1px)}
+    .pick:active{transform:scale(.99)}
+    .pick.selected{
+      border-color:var(--gold);
+      box-shadow:0 0 0 1px var(--gold), 0 10px 30px -12px rgba(245,196,81,.35);
+      background:linear-gradient(180deg,#2e2353,#332658);
     }
-    .dest:hover::before{opacity:1}
-    .dest .ic{font-size:40px;display:block;margin-bottom:8px}
-    .dest h3{font-size:19px;margin-bottom:6px}
-    .dest p{color:var(--muted);font-size:14px}
-    a.dest{display:block;text-decoration:none;color:inherit;cursor:pointer;transition:transform .12s,border-color .15s}
-    a.dest:hover{border-color:var(--gold);transform:translateY(-2px)}
-    a.dest:active{transform:scale(.98)}
-    .dest .vote-cta{
-      display:inline-block;margin-top:12px;font-size:13px;font-weight:800;
-      color:#25d366;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.35);
-      padding:7px 14px;border-radius:999px;
+    .pick.complet{opacity:.55;cursor:not-allowed}
+    .pick .check{
+      position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;
+      border:2px solid var(--line);display:grid;place-items:center;font-size:15px;
+      color:transparent;transition:all .15s;background:#170f2e;
     }
-    .dest .vs{
-      position:absolute;top:50%;left:-7px;transform:translateY(-50%);
-      width:30px;height:30px;border-radius:50%;display:none;place-items:center;
-      background:linear-gradient(120deg,var(--gold),var(--pink));color:#2a1a05;
-      font-weight:900;font-size:12px;z-index:2;border:2px solid var(--card);
+    .pick.selected .check{
+      background:linear-gradient(120deg,var(--gold),var(--pink));
+      border-color:transparent;color:#2a1a05;font-weight:900;
     }
-    @media(min-width:520px){
-      .dests{position:relative}
-      .dest:last-child .vs{display:grid}
+    .pick .top{display:flex;align-items:flex-start;gap:12px;padding-right:36px}
+    .pick .emo{font-size:32px;line-height:1.1}
+    .pick h3{font-size:17.5px;line-height:1.25;margin-bottom:2px}
+    .pick .meta{color:var(--muted);font-size:13.5px}
+    .pick .desc{color:var(--muted);font-size:14px;margin-top:10px}
+    .pick .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .pick .tag{
+      font-size:12px;font-weight:600;color:var(--text);
+      background:rgba(255,255,255,.06);border:1px solid var(--line);
+      padding:4px 10px;border-radius:999px;
     }
+    .pick .foot{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin-top:14px;flex-wrap:wrap;
+    }
+    .pick .price{font-weight:850;color:var(--gold);font-size:17px}
+    .pick .price small{color:var(--muted);font-weight:600;font-size:12px}
+    .pick .dispo-link{
+      display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+      font-size:13px;font-weight:800;color:var(--text);
+      background:var(--card);border:1px solid var(--line);
+      padding:9px 14px;border-radius:11px;transition:background .15s,color .15s;
+      min-height:38px;
+    }
+    .pick .dispo-link:hover{background:var(--gold);color:#2a1a05}
+    .cat-title{
+      font-size:15px;font-weight:850;margin:22px 0 12px;display:flex;align-items:center;gap:8px;
+      color:var(--gold-soft);
+    }
+    .cat-title:first-of-type{margin-top:0}
+    .cat-title .ln{flex:1;height:1px;background:var(--line)}
+
+    /* ---------- RECAP ---------- */
+    .name-row{display:flex;gap:10px;margin-bottom:16px}
+    .name-row input{
+      flex:1;background:#170f2e;border:1px solid var(--line);border-radius:13px;
+      color:var(--text);font-family:inherit;font-size:16px;padding:13px 15px;outline:none;
+      transition:border-color .15s;min-height:50px;
+    }
+    .name-row input:focus{border-color:var(--gold)}
+    .recap-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .recap-line{
+      display:flex;justify-content:space-between;gap:10px;font-size:14.5px;
+      background:rgba(255,255,255,.04);border:1px solid var(--line);
+      border-radius:11px;padding:10px 14px;
+    }
+    .recap-line .l{color:var(--text)}
+    .recap-line .r{color:var(--gold);font-weight:800;white-space:nowrap}
+    .recap-line.muted .l{color:var(--muted);font-style:italic}
+    .recap-total{
+      display:flex;justify-content:space-between;align-items:center;
+      border-top:1px solid var(--line);padding-top:14px;margin-top:4px;
+    }
+    .recap-total .lbl{color:var(--muted);font-size:14px;font-weight:700}
+    .recap-total .val{font-size:26px;font-weight:850;color:var(--gold)}
+    .recap-total .val small{font-size:13px;color:var(--muted);font-weight:600}
+
+    /* ---------- STICKY BUDGET BAR ---------- */
+    .budget-bar{
+      position:fixed;left:0;right:0;bottom:0;z-index:40;
+      background:rgba(20,13,40,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      border-top:1px solid var(--line);
+      padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+      transform:translateY(110%);transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    }
+    .budget-bar.show{transform:translateY(0)}
+    .budget-bar .inner{
+      max-width:680px;margin:0 auto;display:flex;align-items:center;gap:14px;
+    }
+    .budget-bar .info{flex:1;min-width:0}
+    .budget-bar .total{font-size:19px;font-weight:850;color:var(--gold);line-height:1.1}
+    .budget-bar .total small{font-size:12px;color:var(--muted);font-weight:600}
+    .budget-bar .picks-count{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .budget-bar .go{
+      flex:none;display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+      background:linear-gradient(120deg,var(--gold),#f0a93c);color:#2a1a05;
+      font-weight:800;font-size:14.5px;padding:12px 18px;border-radius:12px;
+      transition:filter .15s;min-height:46px;
+    }
+    .budget-bar .go:hover{filter:brightness(1.06)}
 
     /* ---------- RIB ---------- */
     .field{margin-bottom:16px}
@@ -211,12 +292,16 @@
     footer .heart{color:var(--pink)}
 
     .toast{
-      position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+      position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
       background:var(--green);color:#0b2417;font-weight:700;padding:12px 20px;
       border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;
       transition:opacity .25s, transform .25s;z-index:50;
     }
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    @media(min-width:560px){
+      .picks.cols2{grid-template-columns:1fr 1fr}
+    }
   </style>
 </head>
 <body>
@@ -228,10 +313,17 @@
       <h1 id="title">EVG d'Alexandre</h1>
       <p class="sub" id="message"></p>
       <div class="chips" id="chips"></div>
+      <nav class="nav">
+        <a href="#cagnotte">💰 Cagnotte</a>
+        <a href="#logement">🏡 Logement</a>
+        <a href="#activites">🎯 Activités</a>
+        <a href="#recap">🧾 Mes choix</a>
+        <a href="#rib">🏦 RIB</a>
+      </nav>
     </header>
 
     <!-- COMPTEUR -->
-    <section class="card">
+    <section class="card" id="cagnotte">
       <h2>💰 La cagnotte</h2>
       <div class="counter">
         <div class="amount"><span id="raised">0</span><span class="cur">€</span></div>
@@ -246,18 +338,35 @@
       <a class="btn btn-wa" id="shareWa" style="display:none;margin-top:12px" target="_blank" rel="noopener">📣 Partager sur WhatsApp</a>
     </section>
 
-    <!-- VOTE DESTINATION -->
-    <section class="card" id="voteCard" style="display:none">
-      <h2>🗳️ Destination — à voter</h2>
-      <p class="vote-note" id="voteNote"></p>
-      <div class="dests" id="dests"></div>
-      <a class="btn btn-pink" id="voteBtn" style="display:none;margin-top:16px" target="_blank" rel="noopener">🗳️ Voter pour la destination</a>
+    <!-- LOGEMENT -->
+    <section class="card" id="logement">
+      <h2>🏡 Le logement — fais ton choix</h2>
+      <p class="section-note" id="logementNote"></p>
+      <div class="picks" id="logements"></div>
+      <p class="note">👆 Tape sur une carte pour la choisir · « Vérifier la dispo » ouvre l'annonce avec les dates du 17–19 juillet déjà remplies.</p>
     </section>
 
-    <!-- A QUOI SERT L'ARGENT -->
-    <section class="card">
-      <h2>🎯 À quoi sert l'argent</h2>
-      <div class="uses" id="uses"></div>
+    <!-- ACTIVITES -->
+    <section class="card" id="activites">
+      <h2>🎯 Les activités — coche tes envies</h2>
+      <p class="section-note" id="activitesNote"></p>
+      <div id="activitesList"></div>
+      <p class="note">👆 Multi-choix : coche tout ce qui te tente, le budget se met à jour en bas.</p>
+    </section>
+
+    <!-- RECAP -->
+    <section class="card" id="recap">
+      <h2>🧾 Mes choix</h2>
+      <div class="name-row">
+        <input type="text" id="userName" placeholder="Ton prénom (pour l'envoi)" maxlength="30" autocomplete="given-name" />
+      </div>
+      <div class="recap-list" id="recapList"></div>
+      <div class="recap-total">
+        <span class="lbl">Budget estimé / personne</span>
+        <span class="val"><span id="recapTotal">0</span> € <small>environ</small></span>
+      </div>
+      <a class="btn btn-wa" id="sendChoices" style="margin-top:16px" target="_blank" rel="noopener">📤 Envoyer mes choix sur WhatsApp</a>
+      <p class="note" id="recapHint">Le budget = (logement ÷ 10) + tes activités. Hors essence, courses & restos.</p>
     </section>
 
     <!-- RIB -->
@@ -287,9 +396,20 @@
     </section>
 
     <footer>
-      Fait avec <span class="heart">♥</span> pour l'EVG d'Alexandre
+      Fait avec <span class="heart">♥</span> pour l'EVG d'Alexandre · Vallon-Pont-d'Arc 🛶
     </footer>
   </main>
+
+  <!-- STICKY BUDGET BAR -->
+  <div class="budget-bar" id="budgetBar">
+    <div class="inner">
+      <div class="info">
+        <div class="total"><span id="barTotal">0</span> € <small>/ pers environ</small></div>
+        <div class="picks-count" id="barPicks">Aucun choix pour l'instant</div>
+      </div>
+      <a class="go" href="#recap">🧾 Mes choix</a>
+    </div>
+  </div>
 
   <div class="toast" id="toast">✅ IBAN copié !</div>
 
@@ -297,27 +417,24 @@
   <script>
     (function(){
       const C = window.CAGNOTTE_CONFIG || {};
+      const P = C.programme || {};
       const $ = (id)=>document.getElementById(id);
       const euro = (n)=> Number(n||0).toLocaleString('fr-FR');
+      const NB = Number(P.nb_personnes || 10);
 
-      /* HERO */
+      /* ============ HERO ============ */
       $('title').textContent = "EVG d'" + (C.prenom_du_marie || "Alexandre");
       $('message').textContent = C.message || "";
-      const vd = C.vote_destination || {};
       const chips = [];
-      if(C.date && C.date !== "À définir") chips.push(['📅', C.date]);
-      else if(C.date) chips.push(['📅', 'Date : '+C.date]);
-      if(C.lieu && C.lieu !== "À définir") chips.push(['📍', C.lieu]);
-      else if(vd.actif) chips.push(['📍', 'Destination à voter']);
-      else if(C.lieu) chips.push(['📍', 'Lieu : '+C.lieu]);
+      if(C.date) chips.push(['📅', C.date]);
+      if(C.lieu) chips.push(['📍', C.lieu]);
       $('chips').innerHTML = chips.map(c=>`<span class="chip"><span class="ic">${c[0]}</span>${c[1]}</span>`).join('');
 
-      /* COMPTEUR (animé) */
+      /* ============ COMPTEUR ============ */
       const raised = Number(C.montant_recolte||0);
       const goal   = Number(C.objectif||0);
       const showGoal = C.afficher_objectif !== false && goal > 0;
       const pctVal = showGoal ? Math.min(100, Math.round((raised/goal)*100)) : 0;
-
       if(showGoal){
         $('goalLine').innerHTML = `sur un objectif de <b>${euro(goal)} €</b>`;
         $('pct').textContent = pctVal + '% atteint';
@@ -326,8 +443,6 @@
         $('goalLine').textContent = 'Merci pour votre générosité 🙌';
         document.querySelector('.bar').style.display='none';
       }
-
-      // count-up animation
       const dur=1100, t0=performance.now();
       (function tick(t){
         const p=Math.min(1,(t-t0)/dur);
@@ -337,55 +452,193 @@
         else $('raised').textContent = euro(raised);
       })(t0);
 
-      /* CAGNOTTE EN LIGNE */
       if(C.lien_cagnotte){
         const b=$('potBtn'); b.href=C.lien_cagnotte; b.style.display='inline-flex';
       }
 
-      /* WHATSAPP helpers */
+      /* ============ WHATSAPP helpers ============ */
       const wa = C.whatsapp || {};
       const pageUrl = location.href.split('#')[0];
       const waLink = (txt)=> 'https://wa.me/?text=' + encodeURIComponent(txt);
-      const voteByWa = !!wa.vote_par_whatsapp;
-
-      /* VOTE DESTINATION */
-      if(vd.actif && Array.isArray(vd.options) && vd.options.length){
-        $('voteCard').style.display='block';
-        document.querySelector('#voteCard h2').textContent = '🗳️ ' + (vd.titre || 'Destination — à voter');
-        $('voteNote').textContent = vd.note || '';
-        $('dests').innerHTML = vd.options.map((o,i)=>{
-          const vs = i>0 ? '<span class="vs">VS</span>' : '';
-          const inner = `${vs}
-            <span class="ic">${o.emoji||'📍'}</span>
-            <h3>${o.nom||''}</h3>
-            <p>${o.description||''}</p>`;
-          if(voteByWa){
-            const msg = (wa.message_vote||'Je vote pour {dest} !').replace('{dest}', (o.nom||'') + (o.emoji?(' '+o.emoji):''));
-            return `<a class="dest" href="${waLink(msg)}" target="_blank" rel="noopener">${inner}
-              <span class="vote-cta">🗳️ Voter sur WhatsApp</span></a>`;
-          }
-          return `<div class="dest">${inner}</div>`;
-        }).join('');
-        if(vd.lien){
-          const vb=$('voteBtn'); vb.href=vd.lien; vb.style.display='inline-flex';
-        }
-      }
-
-      /* PARTAGER SUR WHATSAPP */
       if(wa.message_annonce){
         const txt = wa.message_annonce.replace('{url}', pageUrl);
         const sb = $('shareWa'); sb.href = waLink(txt); sb.style.display='inline-flex';
       }
 
-      /* USES */
-      $('uses').innerHTML = (C.depenses||[]).map(d=>`
-        <div class="use">
-          <span class="ic">${d.icone||'•'}</span>
-          <h3>${d.titre||''}</h3>
-          <p>${d.description||''}</p>
-        </div>`).join('');
+      /* ============ ETAT DES CHOIX (localStorage) ============ */
+      const LS_KEY = 'evg_alex_choices_v1';
+      let state = { logement: null, activites: [], nom: '' };
+      try{
+        const saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+        if(saved && typeof saved === 'object') state = Object.assign(state, saved);
+      }catch(e){}
+      const save = ()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} };
 
-      /* RIB */
+      const STATUTS = {
+        dispo:        ['dispo',        '✅ Dispo vérifiée'],
+        a_verifier:   ['a_verifier',   '🔍 Dispo à vérifier'],
+        option_posee: ['option_posee', '⏳ Option posée'],
+        complet:      ['complet',      '❌ Complet']
+      };
+      const badge = (s)=>{
+        const b = STATUTS[s] || STATUTS.a_verifier;
+        return `<span class="badge ${b[0]}">${b[1]}</span>`;
+      };
+
+      /* ============ LOGEMENTS ============ */
+      const logements = Array.isArray(P.logements) ? P.logements : [];
+      // purge selection if logement removed or complet
+      if(state.logement && !logements.some(l=>l.id===state.logement && l.statut!=='complet')) state.logement = null;
+      $('logementNote').textContent = P.note_logement ||
+        `Pour ${NB} personnes, 2 nuits (ven 17 → dim 19 juillet). 1 seul choix — vote pour ton préféré !`;
+
+      function renderLogements(){
+        $('logements').innerHTML = logements.map(l=>{
+          const sel = state.logement === l.id;
+          const off = l.statut === 'complet';
+          const ppp = l.prix_total_2_nuits ? Math.round(l.prix_total_2_nuits / NB) : null;
+          return `
+          <div class="pick ${sel?'selected':''} ${off?'complet':''}" data-type="logement" data-id="${l.id}" role="button" tabindex="0" aria-pressed="${sel}">
+            <span class="check">✓</span>
+            <div class="top">
+              <span class="emo">${l.emoji||'🏡'}</span>
+              <div>
+                <h3>${l.nom||''}</h3>
+                <div class="meta">${[l.couchages?`${l.couchages} couchages`:null, l.distance||null, l.plateforme||null].filter(Boolean).join(' · ')}</div>
+              </div>
+            </div>
+            ${l.description?`<p class="desc">${l.description}</p>`:''}
+            ${Array.isArray(l.atouts)&&l.atouts.length?`<div class="tags">${l.atouts.map(a=>`<span class="tag">${a}</span>`).join('')}</div>`:''}
+            <div class="foot">
+              <span class="price">${l.prix_total_2_nuits?`${euro(l.prix_total_2_nuits)} € <small>total${ppp?` · ~${ppp} €/pers`:''}</small>`:'Prix à confirmer'}</span>
+              <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                ${badge(l.statut)}
+                ${l.lien?`<a class="dispo-link" href="${l.lien}" target="_blank" rel="noopener" data-stop="1">📅 Vérifier la dispo</a>`:''}
+              </span>
+            </div>
+          </div>`;
+        }).join('') || '<p class="empty">Les options logement arrivent bientôt… 🏗️</p>';
+      }
+
+      /* ============ ACTIVITES ============ */
+      const activites = Array.isArray(P.activites) ? P.activites : [];
+      state.activites = (state.activites||[]).filter(id => activites.some(a=>a.id===id && a.statut!=='complet'));
+      $('activitesNote').textContent = P.note_activites ||
+        "Coche tout ce qui te tente — on calera le programme final selon les votes et les dispos.";
+
+      function renderActivites(){
+        const cats = [];
+        activites.forEach(a=>{ const c=a.categorie||'Autres'; if(!cats.includes(c)) cats.push(c); });
+        $('activitesList').innerHTML = cats.map(cat=>{
+          const items = activites.filter(a=>(a.categorie||'Autres')===cat);
+          return `
+          <div class="cat-title"><span>${items[0].cat_emoji||'✨'} ${cat}</span><span class="ln"></span></div>
+          <div class="picks">
+            ${items.map(a=>{
+              const sel = state.activites.includes(a.id);
+              const off = a.statut === 'complet';
+              return `
+              <div class="pick ${sel?'selected':''} ${off?'complet':''}" data-type="activite" data-id="${a.id}" role="button" tabindex="0" aria-pressed="${sel}">
+                <span class="check">✓</span>
+                <div class="top">
+                  <span class="emo">${a.emoji||'🎯'}</span>
+                  <div>
+                    <h3>${a.nom||''}</h3>
+                    <div class="meta">${[a.duree||null, a.lieu||null].filter(Boolean).join(' · ')}</div>
+                  </div>
+                </div>
+                ${a.description?`<p class="desc">${a.description}</p>`:''}
+                <div class="foot">
+                  <span class="price">${a.prix_par_personne!=null?`${euro(a.prix_par_personne)} € <small>/ pers</small>`:'Gratuit 🎉'}</span>
+                  <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    ${a.statut?badge(a.statut):''}
+                    ${a.lien?`<a class="dispo-link" href="${a.lien}" target="_blank" rel="noopener" data-stop="1">🔗 Infos & résa</a>`:''}
+                  </span>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('') || '<p class="empty">Les activités arrivent bientôt… 🏗️</p>';
+      }
+
+      /* ============ BUDGET + RECAP ============ */
+      function selectedLogement(){ return logements.find(l=>l.id===state.logement) || null; }
+      function selectedActs(){ return activites.filter(a=>state.activites.includes(a.id)); }
+
+      function budget(){
+        const l = selectedLogement();
+        let total = 0;
+        if(l && l.prix_total_2_nuits) total += l.prix_total_2_nuits / NB;
+        selectedActs().forEach(a=>{ total += Number(a.prix_par_personne||0); });
+        return Math.round(total);
+      }
+
+      function renderRecap(){
+        const l = selectedLogement();
+        const acts = selectedActs();
+        const lines = [];
+        if(l){
+          const ppp = l.prix_total_2_nuits ? Math.round(l.prix_total_2_nuits/NB) : null;
+          lines.push(`<div class="recap-line"><span class="l">🏡 ${l.nom}</span><span class="r">${ppp!=null?`~${euro(ppp)} €`:'—'}</span></div>`);
+        } else {
+          lines.push(`<div class="recap-line muted"><span class="l">Pas encore de logement choisi</span><span class="r">—</span></div>`);
+        }
+        acts.forEach(a=>{
+          lines.push(`<div class="recap-line"><span class="l">${a.emoji||'🎯'} ${a.nom}</span><span class="r">${a.prix_par_personne!=null?`${euro(a.prix_par_personne)} €`:'0 €'}</span></div>`);
+        });
+        if(!acts.length){
+          lines.push(`<div class="recap-line muted"><span class="l">Pas encore d'activité cochée</span><span class="r">—</span></div>`);
+        }
+        $('recapList').innerHTML = lines.join('');
+        const tot = budget();
+        $('recapTotal').textContent = euro(tot);
+        $('barTotal').textContent = euro(tot);
+
+        const n = (l?1:0) + acts.length;
+        $('barPicks').textContent = n
+          ? `${n} choix : ${[l?l.nom.split('—')[0].trim():null].filter(Boolean).concat(acts.map(a=>a.nom.split('—')[0].trim())).slice(0,3).join(', ')}${n>3?'…':''}`
+          : 'Aucun choix pour l’instant';
+        $('budgetBar').classList.toggle('show', n>0);
+
+        // WhatsApp message
+        const nom = ($('userName').value||'').trim();
+        const msg =
+          `🧾 Mes choix pour l'EVG d'Alex 🍻\n`+
+          `👤 ${nom || 'Quelqu’un du groupe'}\n\n`+
+          `🏡 Logement : ${l ? l.nom : 'pas encore choisi'}\n`+
+          `🎯 Activités : ${acts.length ? acts.map(a=>`${a.emoji||''} ${a.nom}`.trim()).join(', ') : 'aucune cochée'}\n`+
+          `💶 Budget estimé : ~${euro(tot)} €/pers\n\n${pageUrl}`;
+        $('sendChoices').href = waLink(msg);
+      }
+
+      /* ============ INTERACTIONS ============ */
+      document.addEventListener('click', (ev)=>{
+        const stop = ev.target.closest('[data-stop]');
+        if(stop) return;                        // lien "Vérifier la dispo" : pas de toggle
+        const pick = ev.target.closest('.pick');
+        if(!pick || pick.classList.contains('complet')) return;
+        const id = pick.dataset.id, type = pick.dataset.type;
+        if(type==='logement'){
+          state.logement = (state.logement===id) ? null : id;
+          renderLogements();
+        } else {
+          const i = state.activites.indexOf(id);
+          if(i>=0) state.activites.splice(i,1); else state.activites.push(id);
+          renderActivites();
+        }
+        save(); renderRecap();
+      });
+      document.addEventListener('keydown', (ev)=>{
+        if((ev.key==='Enter'||ev.key===' ') && document.activeElement && document.activeElement.classList.contains('pick')){
+          ev.preventDefault(); document.activeElement.click();
+        }
+      });
+      $('userName').value = state.nom || '';
+      $('userName').addEventListener('input', ()=>{ state.nom = $('userName').value; save(); renderRecap(); });
+
+      renderLogements(); renderActivites(); renderRecap();
+
+      /* ============ RIB ============ */
       const r = C.rib||{};
       $('iban').textContent = r.iban || '';
       $('titulaire').textContent = r.titulaire || '';
@@ -393,7 +646,6 @@
       $('banque').textContent = r.banque || '';
       if(r.pdf){ $('pdfBtn').href = r.pdf; } else { $('pdfBtn').style.display='none'; }
 
-      /* COPY IBAN */
       const toast=$('toast');
       $('copyIban').addEventListener('click', async ()=>{
         const txt=(r.iban||'').replace(/\s+/g,'');
@@ -407,10 +659,9 @@
         setTimeout(()=>{ btn.classList.remove('ok'); btn.textContent='📋 Copier'; toast.classList.remove('show'); },1900);
       });
 
-      /* PARTICIPANTS */
+      /* ============ PARTICIPANTS ============ */
       const ppl=(C.participants||[]).filter(p=>p && p.nom);
-      const total=ppl.length;
-      if(total===0){
+      if(ppl.length===0){
         $('ppl').innerHTML = `<li class="empty">Sois le premier à participer ! 🎉</li>`;
       } else {
         $('ppl').innerHTML = ppl.map(p=>{
