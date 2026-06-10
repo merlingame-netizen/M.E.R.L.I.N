@@ -1,5 +1,5 @@
 /* =========================================================================
-   CONFIG — EVG d'Alexandre @ Vallon-Pont-d'Arc (17-19 juillet 2026)
+   CONFIG — EVG d'Alexandre @ Vallon-Pont-d'Arc (nuit du 18 au 19 juillet 2026)
    -------------------------------------------------------------------------
    👉 C'EST LE SEUL FICHIER À MODIFIER pour mettre la page à jour.
    Change les valeurs ci-dessous, sauvegarde, puis "commit + push".
@@ -10,7 +10,7 @@
        "dispo"        → ✅ Dispo vérifiée
        "option_posee" → ⏳ Option posée
        "complet"      → ❌ Complet (carte grisée, non sélectionnable)
-   ▸ Prix              : prix_total_2_nuits (logement, pour le groupe)
+   ▸ Prix              : prix_total (logement, pour le groupe, 1 nuit)
                          prix_par_personne (activité)
    Recherches faites le 10 juin 2026 — prix = estimations à confirmer à la résa.
    ========================================================================= */
@@ -25,7 +25,7 @@ const CAGNOTTE_CONFIG = {
 
   /* ---- INFOS DE L'EVG -------------------------------------------------- */
   prenom_du_marie: "Alexandre",
-  date: "Week-end du 17-19 juillet",
+  date: "Sam 18 → dim 19 juillet (1 nuit)",
   lieu: "Vallon-Pont-d'Arc 🛶",
 
 
@@ -54,10 +54,11 @@ const CAGNOTTE_CONFIG = {
   programme: {
     nb_personnes: 10,
 
-    note_logement: "Pour 10 personnes, 2 nuits (ven 17 → dim 19 juillet). "
-      + "⚠️ Mi-juillet beaucoup de gîtes ne louent qu'à la semaine : les options "
-      + "ci-dessous sont les meilleures pistes trouvées — choisis ta préférée, "
-      + "on appelle pour bloquer. Prix estimés, à confirmer.",
+    note_logement: "Pour 10 personnes, 1 nuit (sam 18 → dim 19 juillet). "
+      + "⚠️ Mi-juillet beaucoup de gîtes ne louent qu'à la semaine, et 1 nuit "
+      + "sèche est rare : prix estimés POUR LA NUIT, à confirmer à l'appel "
+      + "(certains exigeront 2 nuits minimum — on avisera). Choisis ta préférée, "
+      + "on appelle pour bloquer.",
 
     logements: [
       {
@@ -67,9 +68,9 @@ const CAGNOTTE_CONFIG = {
         plateforme: "En direct",
         couchages: 14,
         distance: "Vagnas · 10 min de Vallon",
-        prix_total_2_nuits: 1200,
+        prix_total: 600,
         description: "Ferme du XIIe rénovée (235 m²). Week-ends « sur demande » et "
-          + "groupes d'amis bienvenus : la meilleure piste pour 2 nuits sèches "
+          + "groupes d'amis bienvenus : la meilleure piste pour une nuit sèche "
           + "mi-juillet. Tél : 06 60 51 20 65.",
         atouts: ["🏊 Piscine chauffée", "🎱 Billard & ping-pong", "🍕 Four à pizza", "🎯 Pétanque"],
         lien: "https://www.domaine-lastic.fr/",
@@ -82,9 +83,9 @@ const CAGNOTTE_CONFIG = {
         plateforme: "En direct",
         couchages: 15,
         distance: "15-18 min de Vallon",
-        prix_total_2_nuits: 1100,
+        prix_total: 550,
         description: "220 m² en plein village (boulangerie à pied), draps et ménage "
-          + "inclus. Demander si week-end accepté en juillet (sinon semaine). "
+          + "inclus. Demander si une nuit est acceptée en juillet (sinon semaine). "
           + "Contact : Nadège, 06 10 62 62 31 (WhatsApp ok).",
         atouts: ["🏊 Piscine + spa", "🥖 Village à pied", "⚽ Baby-foot & pétanque", "🍖 BBQ"],
         lien: "https://www.gite-azure.com/",
@@ -97,10 +98,10 @@ const CAGNOTTE_CONFIG = {
         plateforme: "Abritel",
         couchages: 10,
         distance: "5 min du centre · rivière à 500 m",
-        prix_total_2_nuits: 900,
+        prix_total: 450,
         description: "5 chambres, piscine privée 10×4 m + équipements du domaine "
-          + "(tennis, multisports). ⚠️ Minimum 7 nuits affiché en juillet — à "
-          + "négocier en direct (trou de planning possible).",
+          + "(tennis, multisports). 421 €/nuit vérifié mi-juillet. ⚠️ Minimum "
+          + "7 nuits affiché en juillet — à négocier en direct (trou de planning).",
         atouts: ["🏊 Piscine privée", "❄️ Clim (4 ch.)", "🎾 Tennis du domaine"],
         lien: "https://www.abritel.fr/location-vacances/p8471550a",
         statut: "a_verifier"
@@ -112,7 +113,7 @@ const CAGNOTTE_CONFIG = {
         plateforme: "Abritel",
         couchages: 10,
         distance: "5 min du centre · rivière à 500 m",
-        prix_total_2_nuits: 800,
+        prix_total: 400,
         description: "La jumelle de la Jaulet : 5 chambres, piscine privée, terrasse "
           + "couverte. Même réserve sur le minimum 7 nuits en juillet — sa sœur "
           + "« Bonne Vie » (piscine chauffée) est une alternative dans le même parc.",
@@ -127,7 +128,7 @@ const CAGNOTTE_CONFIG = {
         plateforme: "Airbnb",
         couchages: 14,
         distance: "Commune de Vallon-Pont-d'Arc",
-        prix_total_2_nuits: 2000,
+        prix_total: 1000,
         description: "L'option « gros budget » : piscine chauffée de 15 m, jacuzzi "
           + "privé, sauna, salle de fitness, 4 ha d'oliviers au calme absolu.",
         atouts: ["🏊 Piscine chauffée 15 m", "🛁 Jacuzzi + sauna", "💪 Salle de fitness"],
@@ -141,7 +142,7 @@ const CAGNOTTE_CONFIG = {
         plateforme: "En direct",
         couchages: 18,
         distance: "800 m du centre — tout à pied !",
-        prix_total_2_nuits: null,
+        prix_total: null,
         description: "Bastide XVIIIe 4★, piscine couverte chauffée à 30°C. En juillet : "
           + "semaine uniquement, 3 300 € (≈ 330 €/pers à 10). Le plan B si l'EVG "
           + "devient une semaine — zéro voiture le soir.",
@@ -156,7 +157,7 @@ const CAGNOTTE_CONFIG = {
         plateforme: "En direct",
         couchages: 12,
         distance: "Vallon-Pont-d'Arc",
-        prix_total_2_nuits: null,
+        prix_total: null,
         description: "Le candidat idéal sur le papier… déjà réservé du 11 au 25 "
           + "juillet (vérifié le 10 juin). On le laisse ici pour mémoire.",
         atouts: [],
@@ -167,9 +168,9 @@ const CAGNOTTE_CONFIG = {
 
     // Liens de recherche avec dates (17→19/07) et 10 voyageurs pré-remplis
     recherches_logement: [
-      { nom: "Airbnb",  lien: "https://www.airbnb.fr/s/Vallon-Pont-d%27Arc--France/homes?checkin=2026-07-17&checkout=2026-07-19&adults=10" },
-      { nom: "Booking", lien: "https://www.booking.com/searchresults.fr.html?ss=Vallon-Pont-d%27Arc&checkin=2026-07-17&checkout=2026-07-19&group_adults=10&no_rooms=4&group_children=0" },
-      { nom: "Abritel", lien: "https://www.abritel.fr/search?destination=Vallon-Pont-d%27Arc%2C%20France&startDate=2026-07-17&endDate=2026-07-19&adults=10" },
+      { nom: "Airbnb",  lien: "https://www.airbnb.fr/s/Vallon-Pont-d%27Arc--France/homes?checkin=2026-07-18&checkout=2026-07-19&adults=10" },
+      { nom: "Booking", lien: "https://www.booking.com/searchresults.fr.html?ss=Vallon-Pont-d%27Arc&checkin=2026-07-18&checkout=2026-07-19&group_adults=10&no_rooms=4&group_children=0" },
+      { nom: "Abritel", lien: "https://www.abritel.fr/search?destination=Vallon-Pont-d%27Arc%2C%20France&startDate=2026-07-18&endDate=2026-07-19&adults=10" },
       { nom: "Gîtes de France 07", lien: "https://www.gites-de-france-ardeche.com/recherche/locations-vacances-gites-vallon-pont-d-arc,type-g,insee-07330.html" }
     ],
 
@@ -209,11 +210,12 @@ const CAGNOTTE_CONFIG = {
         categorie: "Canoë", cat_emoji: "🛶",
         nom: "Descente 2 jours + nuit en bivouac",
         emoji: "⛺",
-        duree: "2 × 4-5h + nuit à Gournier", lieu: "32 km dans les Gorges",
+        duree: "Sam matin → dim après-midi", lieu: "32 km dans les Gorges",
         prix_par_personne: 67,
-        description: "L'aventure totale : bivouac au cœur de la réserve (Gaud ou "
-          + "Gournier). ⚠️ Tickets bivouac à réserver TOUT DE SUITE pour 10 places "
-          + "mi-juillet — le pack de la Base Nautique du Pont d'Arc (+3 €) gère la résa.",
+        description: "L'aventure totale sam → dim : la nuit du 18 se passe au "
+          + "bivouac au cœur de la réserve (Gaud ou Gournier) — ça peut REMPLACER "
+          + "le gîte ! ⚠️ Tickets bivouac à réserver TOUT DE SUITE pour 10 places — "
+          + "le pack de la Base Nautique du Pont d'Arc (+3 €) gère la résa.",
         lien: "https://www.canoe-ardeche.com/en/rates/",
         statut: "a_verifier"
       },
@@ -365,9 +367,8 @@ const CAGNOTTE_CONFIG = {
 
     // Trame indicative du week-end (s'affiche sous les activités)
     trame: [
-      { jour: "Ven 17", plan: "Arrivée + apéro dans le centre de Vallon (Tom Pouce Café) → dîner → soirée CAB07 🪩" },
-      { jour: "Sam 18", plan: "Canoë le matin (mini 8 km ou 24 km) → baignade au Pont d'Arc → dégustation Néovinum → soirée Bar La Plage à Ruoms 🍹" },
-      { jour: "Dim 19", plan: "Rando tôt (Cirque des Gens) ou sensation (canyoning / spéléŒno) → guinguette au bord de l'eau à Saint-Martin avant la route 🍻" }
+      { jour: "Sam 18", plan: "Arrivée le matin → canoë (mini 8 km ou 24 km) → baignade au Pont d'Arc → check-in & apéro piscine → dîner → soirée CAB07 ou Bar La Plage à Ruoms 🪩" },
+      { jour: "Dim 19", plan: "Rando tôt (Cirque des Gens) ou sensation (canyoning / spéléŒno / paddle) → guinguette au bord de l'eau à Saint-Martin avant la route 🍻" }
     ]
   },
 
@@ -389,7 +390,7 @@ const CAGNOTTE_CONFIG = {
   /* ---- WHATSAPP -------------------------------------------------------- */
   whatsapp: {
     message_annonce:
-      "🍻 EVG d'Alexandre — Vallon-Pont-d'Arc, week-end du 17-19 juillet 🛶\n\n" +
+      "🍻 EVG d'Alexandre — Vallon-Pont-d'Arc, sam 18 → dim 19 juillet 🛶\n\n" +
       "C'est officiel : direction l'Ardèche ! 🎉\n\n" +
       "👉 Va sur la page choisir TON logement préféré et TES activités " +
       "(canoë, canyoning, guinguettes, dégustation sous terre…) — ton budget " +

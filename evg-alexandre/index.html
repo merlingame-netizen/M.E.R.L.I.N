@@ -352,7 +352,7 @@
       <h2>🏡 Le logement — fais ton choix</h2>
       <p class="section-note" id="logementNote"></p>
       <div class="picks" id="logements"></div>
-      <p class="note">👆 Tape sur une carte pour la choisir · « Vérifier la dispo » ouvre l'annonce avec les dates du 17–19 juillet déjà remplies.</p>
+      <p class="note">👆 Tape sur une carte pour la choisir · « Vérifier la dispo » ouvre l'annonce avec la nuit du 18 au 19 juillet déjà remplie.</p>
       <div class="search-links" id="logementSearch"></div>
     </section>
 
@@ -507,13 +507,13 @@
       // purge selection if logement removed or complet
       if(state.logement && !logements.some(l=>l.id===state.logement && l.statut!=='complet')) state.logement = null;
       $('logementNote').textContent = P.note_logement ||
-        `Pour ${NB} personnes, 2 nuits (ven 17 → dim 19 juillet). 1 seul choix — vote pour ton préféré !`;
+        `Pour ${NB} personnes, 1 nuit (sam 18 → dim 19 juillet). 1 seul choix — vote pour ton préféré !`;
 
       function renderLogements(){
         $('logements').innerHTML = logements.map(l=>{
           const sel = state.logement === l.id;
           const off = l.statut === 'complet';
-          const ppp = l.prix_total_2_nuits ? Math.round(l.prix_total_2_nuits / NB) : null;
+          const ppp = l.prix_total ? Math.round(l.prix_total / NB) : null;
           return `
           <div class="pick ${sel?'selected':''} ${off?'complet':''}" data-type="logement" data-id="${l.id}" role="button" tabindex="0" aria-pressed="${sel}">
             <span class="check">✓</span>
@@ -527,7 +527,7 @@
             ${l.description?`<p class="desc">${l.description}</p>`:''}
             ${Array.isArray(l.atouts)&&l.atouts.length?`<div class="tags">${l.atouts.map(a=>`<span class="tag">${a}</span>`).join('')}</div>`:''}
             <div class="foot">
-              <span class="price">${l.prix_total_2_nuits?`${euro(l.prix_total_2_nuits)} € <small>total${ppp?` · ~${ppp} €/pers`:''}</small>`:'Prix à confirmer'}</span>
+              <span class="price">${l.prix_total?`${euro(l.prix_total)} € <small>total${ppp?` · ~${ppp} €/pers`:''}</small>`:'Prix à confirmer'}</span>
               <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 ${badge(l.statut)}
                 ${l.lien?`<a class="dispo-link" href="${l.lien}" target="_blank" rel="noopener" data-stop="1">📅 Vérifier la dispo</a>`:''}
@@ -585,7 +585,7 @@
       function budget(){
         const l = selectedLogement();
         let total = 0;
-        if(l && l.prix_total_2_nuits) total += l.prix_total_2_nuits / NB;
+        if(l && l.prix_total) total += l.prix_total / NB;
         selectedActs().forEach(a=>{ total += Number(a.prix_par_personne||0); });
         return Math.round(total);
       }
@@ -595,7 +595,7 @@
         const acts = selectedActs();
         const lines = [];
         if(l){
-          const ppp = l.prix_total_2_nuits ? Math.round(l.prix_total_2_nuits/NB) : null;
+          const ppp = l.prix_total ? Math.round(l.prix_total/NB) : null;
           lines.push(`<div class="recap-line"><span class="l">🏡 ${l.nom}</span><span class="r">${ppp!=null?`~${euro(ppp)} €`:'—'}</span></div>`);
         } else {
           lines.push(`<div class="recap-line muted"><span class="l">Pas encore de logement choisi</span><span class="r">—</span></div>`);

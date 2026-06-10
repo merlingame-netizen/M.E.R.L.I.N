@@ -10,7 +10,7 @@
 ## 1) Message d'annonce (destination actée 🎉)
 
 ```
-🍻 EVG d'Alexandre — Vallon-Pont-d'Arc, week-end du 17-19 juillet 🛶
+🍻 EVG d'Alexandre — Vallon-Pont-d'Arc, sam 18 → dim 19 juillet (1 nuit) 🛶
 
 C'est officiel : direction l'Ardèche ! 🎉
 
@@ -35,7 +35,7 @@ votes et tu bloques les résas gagnantes.
 ## 3) Relance (quelques jours après)
 
 ```
-⏳ Rappel EVG d'Alex (17-19 juillet, Vallon-Pont-d'Arc) !
+⏳ Rappel EVG d'Alex (nuit du 18 au 19 juillet, Vallon-Pont-d'Arc) !
 Ceux qui n'ont pas encore fait leurs choix logement + activités 👉 LIEN_DE_LA_PAGE
 Et la cagnotte avance : pensez au virement (RIB sur la page) 🙏
 ```
@@ -45,7 +45,8 @@ Et la cagnotte avance : pensez au virement (RIB sur la page) 🙏
 ## ⚠️ Les résas urgentes (à faire dès que les votes tombent)
 
 1. **Logement** : appeler Les Trois Eaux (06 60 51 20 65) et L'Azuré (06 10 62 62 31)
-   — les 2 seules vraies pistes « 2 nuits sèches » mi-juillet. Dire « week-end
+   — les 2 seules vraies pistes pour une nuit sèche mi-juillet (certains
+   exigeront peut-être 2 nuits minimum — on avisera). Dire « week-end
    entre amis » plutôt que « EVG » au premier contact.
 2. **Si canoë 2 jours** : réserver les 10 tickets bivouac MAINTENANT (Office de
    Tourisme) — ou pack Base Nautique du Pont d'Arc (+3 €/pers, ils gèrent).

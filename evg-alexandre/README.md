@@ -1,4 +1,4 @@
-# 🛶 Site EVG d'Alexandre — Vallon-Pont-d'Arc (17-19 juillet 2026)
+# 🛶 Site EVG d'Alexandre — Vallon-Pont-d'Arc (nuit du 18 au 19 juillet 2026)
 
 Site statique (GitHub Pages) ultra-interactif : cagnotte + RIB + choix du
 logement et des activités avec budget par personne calculé en direct.
@@ -15,7 +15,7 @@ logement et des activités avec budget par personne calculé en direct.
 ## 🎮 Ce que fait la page
 
 - **Cagnotte** : compteur animé (`montant_recolte`)
-- **Logement** : 7 vraies options recherchées le 10/06 (10 pers, 2 nuits), 1 seul
+- **Logement** : 7 vraies options recherchées le 10/06 (10 pers, 1 nuit), 1 seul
   choix par personne, bouton « Vérifier la dispo » (annonce avec dates pré-remplies)
 - **Activités** : 15 options réelles (canoë, rando, soirées, sensations) en
   multi-choix avec prix 2026 vérifiés
@@ -51,7 +51,7 @@ Sauvegarde → commit → push : la page se met à jour toute seule.
 GitHub Pages ne peut pas interroger Airbnb/Booking en direct (site statique,
 pas de serveur). Le système :
 1. Chaque carte a un bouton **« Vérifier la dispo »** → ouvre l'annonce ou la
-   recherche avec **dates 17-19/07 et 10 voyageurs déjà réglés** (1 tap)
+   recherche avec **nuit du 18 au 19/07 et 10 voyageurs déjà réglés** (1 tap)
 2. Après vérification (ou appel), tu mets à jour le champ `statut` dans
    `config.js` → tout le groupe voit ✅ / ⏳ / ❌ en temps réel au prochain push
 
