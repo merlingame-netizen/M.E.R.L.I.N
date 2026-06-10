@@ -169,3 +169,9 @@ variable "enable_blender" {
   description = "Install Blender headless via the linuxserver arm64 container + /usr/local/bin/blender wrapper. WARNING: arm64 build is not guaranteed to be 4.5; test asset_forge scripts before relying on it."
   default     = false
 }
+
+variable "budget_alert_email" {
+  type        = string
+  description = "Email notified by the cost-guard budget alert on any spend. Set in terraform.tfvars (not committed)."
+  default     = ""
+}

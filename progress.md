@@ -2554,3 +2554,13 @@ usages Claude/dev/Godot.
 - Valide : terraform validate OK, rendu cloud-init YAML valide (stack on/off, blender on/off),
   echappement docker-compose vars OK, garde-fou free-tier OK (4/24/150 dans le quota).
 - Capacite Paris toujours nulle : deploiement declenche par le watcher des qu'un slot s'ouvre.
+
+### 2026-06-07 (suite 7) — Cost-guard budget + PAYG
+
+- Utilisateur passe le compte en Pay As You Go (page Billing > Upgrade) pour debloquer
+  la capacite A1 a Paris (reste gratuit dans le quota 4/24).
+- AJOUT budget.tf : oci_budget (1 unite, MONTHLY, tenancy) + alert_rule (ACTUAL 1% =
+  ~0.01) -> alerte email au moindre cout facture. Garde-fou "rester dans le quota a
+  l'usage" en complement de freetier-guard.py (provisioning). Email via tfvars (non commite).
+- Budget APPLIQUE et actif (2 resources). Watcher 4/24 relance : deploiera la VM+stack
+  des que la capacite s'ouvre (immediat apres PAYG en principe).
