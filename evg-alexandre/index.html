@@ -189,6 +189,15 @@
       min-height:38px;
     }
     .pick .dispo-link:hover{background:var(--gold);color:#2a1a05}
+    .search-links{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+    .search-links a{
+      display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+      font-size:13px;font-weight:700;color:var(--muted);
+      background:rgba(255,255,255,.04);border:1px solid var(--line);
+      padding:9px 14px;border-radius:999px;transition:color .15s,border-color .15s;
+      min-height:38px;
+    }
+    .search-links a:hover{color:var(--gold);border-color:var(--gold)}
     .cat-title{
       font-size:15px;font-weight:850;margin:22px 0 12px;display:flex;align-items:center;gap:8px;
       color:var(--gold-soft);
@@ -344,6 +353,7 @@
       <p class="section-note" id="logementNote"></p>
       <div class="picks" id="logements"></div>
       <p class="note">👆 Tape sur une carte pour la choisir · « Vérifier la dispo » ouvre l'annonce avec les dates du 17–19 juillet déjà remplies.</p>
+      <div class="search-links" id="logementSearch"></div>
     </section>
 
     <!-- ACTIVITES -->
@@ -352,6 +362,13 @@
       <p class="section-note" id="activitesNote"></p>
       <div id="activitesList"></div>
       <p class="note">👆 Multi-choix : coche tout ce qui te tente, le budget se met à jour en bas.</p>
+    </section>
+
+    <!-- TRAME -->
+    <section class="card" id="trameCard" style="display:none">
+      <h2>🗓️ Trame indicative du week-end</h2>
+      <p class="section-note">À affiner selon vos votes — c'est juste pour se projeter.</p>
+      <div class="recap-list" id="trameList"></div>
     </section>
 
     <!-- RECAP -->
@@ -549,7 +566,7 @@
                 </div>
                 ${a.description?`<p class="desc">${a.description}</p>`:''}
                 <div class="foot">
-                  <span class="price">${a.prix_par_personne!=null?`${euro(a.prix_par_personne)} € <small>/ pers</small>`:'Gratuit 🎉'}</span>
+                  <span class="price">${a.prix_label ? a.prix_label : (a.prix_par_personne!=null?`${euro(a.prix_par_personne)} € <small>/ pers</small>`:'Gratuit 🎉')}</span>
                   <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                     ${a.statut?badge(a.statut):''}
                     ${a.lien?`<a class="dispo-link" href="${a.lien}" target="_blank" rel="noopener" data-stop="1">🔗 Infos & résa</a>`:''}
@@ -584,7 +601,8 @@
           lines.push(`<div class="recap-line muted"><span class="l">Pas encore de logement choisi</span><span class="r">—</span></div>`);
         }
         acts.forEach(a=>{
-          lines.push(`<div class="recap-line"><span class="l">${a.emoji||'🎯'} ${a.nom}</span><span class="r">${a.prix_par_personne!=null?`${euro(a.prix_par_personne)} €`:'0 €'}</span></div>`);
+          const px = a.prix_par_personne ? `${euro(a.prix_par_personne)} €` : (a.prix_label || '0 €');
+          lines.push(`<div class="recap-line"><span class="l">${a.emoji||'🎯'} ${a.nom}</span><span class="r">${px}</span></div>`);
         });
         if(!acts.length){
           lines.push(`<div class="recap-line muted"><span class="l">Pas encore d'activité cochée</span><span class="r">—</span></div>`);
@@ -635,6 +653,23 @@
       });
       $('userName').value = state.nom || '';
       $('userName').addEventListener('input', ()=>{ state.nom = $('userName').value; save(); renderRecap(); });
+
+      /* Liens de recherche logement (dates + 10 pers pré-remplis) */
+      const rl = Array.isArray(P.recherches_logement) ? P.recherches_logement : [];
+      if(rl.length){
+        $('logementSearch').innerHTML =
+          `<span style="flex-basis:100%;text-align:center;color:var(--muted);font-size:13px;margin-bottom:2px">Ou cherche toi-même (dates &amp; 10 pers déjà réglées) :</span>` +
+          rl.map(s=>`<a href="${s.lien}" target="_blank" rel="noopener">🔍 ${s.nom}</a>`).join('');
+      }
+
+      /* Trame indicative */
+      const trame = Array.isArray(P.trame) ? P.trame : [];
+      if(trame.length){
+        $('trameCard').style.display='block';
+        $('trameList').innerHTML = trame.map(t=>
+          `<div class="recap-line"><span class="l"><b style="color:var(--gold-soft)">${t.jour}</b> — ${t.plan}</span></div>`
+        ).join('');
+      }
 
       renderLogements(); renderActivites(); renderRecap();
 
