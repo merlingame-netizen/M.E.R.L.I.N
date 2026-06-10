@@ -6,12 +6,12 @@ extends CanvasLayer
 
 const PANEL_W: int = 360
 const PANEL_H: int = 460
-const COL_BG: Color = Color(0.06, 0.05, 0.04, 0.90)
-const COL_GOLD: Color = Color("C9A24B")
-const COL_TEXT: Color = Color("E8DCC0")
-const COL_DIM: Color = Color("9C8C6A")
-const COL_GREEN: Color = Color("7FA65C")
-const COL_VIOLET: Color = Color("7B4FA3")
+const COL_BG: Color = Color(0.06, 0.05, 0.04, 0.90)  # rgba locale (translucide — pas dans la palette)
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_TEXT: Color = MerlinVisual.CREAM
+const COL_DIM: Color = MerlinVisual.DIM_WARM
+const COL_GREEN: Color = MerlinVisual.GREEN
+const COL_VIOLET: Color = MerlinVisual.VIOLET
 
 var _panel: Panel
 var _status_lbl: RichTextLabel

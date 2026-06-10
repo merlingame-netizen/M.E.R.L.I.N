@@ -2,10 +2,10 @@ extends Control
 ## MerlinOptions — écran Options (bible R74). MVP : contrôles présents + retour.
 ## (Câblage effectif audio/vitesse/accessibilité = polish post-MVP.)
 
-const COL_BG: Color = Color("14100C")
-const COL_TEXT: Color = Color("E8DCC0")
-const COL_GOLD: Color = Color("C9A24B")
-const COL_DIM: Color = Color("9C8C6A")
+const COL_BG: Color = MerlinVisual.BG_DEEP
+const COL_TEXT: Color = MerlinVisual.CREAM
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 

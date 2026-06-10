@@ -2,13 +2,13 @@ extends Control
 ## MerlinEnd — écran de fin (bible R69). Épilogue généré (LLM) selon le type de fin
 ## + état final + bouton Continuer → menu. La run terminée efface sa sauvegarde de reprise.
 
-const COL_BG: Color = Color("14100C")
-const COL_SURFACE: Color = Color("2A2018")
-const COL_TEXT: Color = Color("E8DCC0")
-const COL_GOLD: Color = Color("C9A24B")
-const COL_GREEN: Color = Color("7FA65C")
-const COL_VIOLET: Color = Color("7B4FA3")
-const COL_DIM: Color = Color("9C8C6A")
+const COL_BG: Color = MerlinVisual.BG_DEEP
+const COL_SURFACE: Color = MerlinVisual.SURFACE
+const COL_TEXT: Color = MerlinVisual.CREAM
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_GREEN: Color = MerlinVisual.GREEN
+const COL_VIOLET: Color = MerlinVisual.VIOLET
+const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"
 

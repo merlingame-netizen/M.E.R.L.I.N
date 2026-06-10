@@ -4,14 +4,15 @@ extends Control
 ## → narration (LLM) → beat suivant. Génération SÉQUENTIELLE à la demande (voile "Merlin écrit"),
 ## sans lookahead (le moteur natif est single-flight). Fallbacks partout → la run se termine toujours.
 
-const COL_BG: Color = Color("1E1A14")  # DA flat (2026-05-26) — fond ink-brun du mockup validé
-const COL_SURFACE: Color = Color("2A2018")
-const COL_TEXT: Color = Color("E8DCC0")
-const COL_INK: Color = Color("2A2018")    # texte foncé sur la bande de narration crème
-const COL_GOLD: Color = Color("C9A24B")
-const COL_GREEN: Color = Color("7FA65C")
-const COL_VIOLET: Color = Color("7B4FA3")
-const COL_DIM: Color = Color("9C8C6A")
+# v10.13 (A1) : palette ALIASÉE sur MerlinVisual (source de vérité unique — rebranding = 1 édition).
+const COL_BG: Color = MerlinVisual.BG_PAGE  # DA flat (2026-05-26) — fond ink-brun du mockup validé
+const COL_SURFACE: Color = MerlinVisual.SURFACE
+const COL_TEXT: Color = MerlinVisual.CREAM
+const COL_INK: Color = MerlinVisual.INK    # texte foncé sur la bande de narration crème
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_GREEN: Color = MerlinVisual.GREEN
+const COL_VIOLET: Color = MerlinVisual.VIOLET
+const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const DEFAULT_TITLE: String = "Le Sentier des Murmures"
 const DEFAULT_PITCH: String = "Un chemin s'ouvre sous les fougères, là où nul n'a marché. La forêt t'y attend, patiente."
@@ -55,6 +56,19 @@ var _corr_tw: Tween
 var _situ_tw: Tween  # fondu de l'encart au nouveau beat (tué avant réutilisation → pas de course de tweens)
 var _encart_phase_tw: Tween  # teinte de la bordure de l'encart (neutre situation ↔ couleur du degré à l'issue)
 
+# v10.11/12 (user 2026-06-07) — Map du chemin (coin droit) + Draft « 1 carte sur 3 » aux beats clés.
+var _beat_map: MerlinBeatMap = null      # v10.12 : carte « map » StS (chemin des beats), coin droit (remplace Destin)
+var _pending_draft: bool = false         # armé en résolution (réussite/éclatante, beats restants) → draft à l'avance
+var _draft_layer: Control = null         # overlay modal du draft
+var _draft_pick: MerlinCard = null       # carte choisie (null = passer)
+var _draft_done_flag: bool = false       # le joueur a tranché (choix ou passer)
+
+
+# v10.13 (Fix 0) — garde canonique post-await : la scène est-elle toujours « fraîche » ?
+# Toute coroutine qui reprend après un await DOIT vérifier _fresh(ep) avant de toucher l'UI.
+func _fresh(ep: int) -> bool:
+	return ep == _scene_epoch and is_inside_tree()
+
 
 func _ready() -> void:
 	_build_ui()
@@ -72,6 +86,9 @@ func _begin() -> void:
 		run.new_run(skel)
 		get_node("/root/MerlinScenario").prepare_arc(skel)  # arc narratif LLM en fond (swappe le fallback avant beat 1)
 	_on_gauges(run.integrite, run.corruption)
+	if _beat_map != null:  # v10.12 : la map dessine le chemin du run (total beats + position courante)
+		_beat_map.setup(int(run.scenario.get("total", 5)))
+		_beat_map.set_current(run.beat_index)
 	if run.beat_index == 0:
 		# Intro d'abord : encart central plein, cartes CACHÉES. Le 1er beat n'est présenté qu'à l'Accept.
 		_set_choice_ui(false)
@@ -84,10 +101,13 @@ func _present_current_beat() -> void:
 	var run: Node = get_node("/root/MerlinRun")
 	if run.ended:
 		return
+	if _beat_map != null:  # v10.12 : avance la position « tu es ici » sur la map du chemin
+		_beat_map.set_current(run.beat_index)
 	_scene_epoch += 1  # toute issue LLM en vol du beat précédent devient périmée
 	_can_advance = false
 	_set_caret(false)
 	_set_hand_dimmed(false)
+	run.ensure_playable_hand()  # v10.13 (Fix 5) : invariant main ≥ 2 cartes — jamais de soft-lock de combo
 	var beat: Dictionary = run.current_beat()
 	# Situation procédurale INSTANTANÉE (zéro attente). Volontairement PAS d'enrichissement LLM
 	# ici : à ~1 tok/s la gen (~40s) ne gagne jamais la course contre la lecture du joueur, et un
@@ -250,7 +270,11 @@ func _on_resolve() -> void:
 	var situ: Dictionary = _current_situation.duplicate(true)  # fige la situation (LLM toujours pertinent)
 
 	run.play_and_discard(_combo)
+	run.apply_card_effects(played_cards)  # v10.11 : effets actifs (Rare+) AVANT le check de mort (un HEAL peut sauver)
 	run.apply_resolution(res)
+	# Draft « 1 carte sur 3 » armé : SEULEMENT aux beats clés (réussite/éclatante) tant qu'il reste des beats.
+	var deg: String = str(res.get("degree", ""))
+	_pending_draft = (deg == MerlinResolution.REUSSITE or deg == MerlinResolution.ECLATANTE) and not run.is_climax() and not run.ended
 	run.faits_marquants.append("%s → %s" % [str(_current_situation.get("type", "")), str(res["label"])])
 	if run.faits_marquants.size() > 6:
 		run.faits_marquants = run.faits_marquants.slice(run.faits_marquants.size() - 6, run.faits_marquants.size())
@@ -267,7 +291,7 @@ func _on_resolve() -> void:
 	# dans un layer overlay, anime 4 phases (~2-4.5s selon degré), puis détruit. Pendant ce temps la
 	# pré-génération LLM (lancée à la pose, _update_preview) continue → masque la latence (user 2026-06-06).
 	await _play_fusion_animation(res, played_cards)
-	if ep != _scene_epoch or not is_inside_tree():
+	if not _fresh(ep):
 		return  # scène quittée pendant la fusion (sécurité epoch + tree-check)
 
 	_set_choice_ui(false)   # v10.10 : cartes redescendent → l'issue occupe l'encart central, SEULE (user 2026-06-06)
@@ -277,20 +301,19 @@ func _on_resolve() -> void:
 	# de pré-génération si prêt (cas courant : pose + anim ont couvert la latence), sinon génère et
 	# attend (borné par le timeout moteur). Overlay « Merlin assemble… » SEULEMENT si le cache n'est
 	# pas déjà prêt (review MEDIUM : évite le flash d'1 frame sur cache-hit).
-	var overlay_shown: bool = not sc.is_resolution_ready(played_cards, res)
-	if overlay_shown:
-		_show_overlay("Merlin assemble les fils du sort…")
-	var prose: String = await sc.take_resolution(situ, played_cards, res)
-	if ep != _scene_epoch or not is_inside_tree():
-		return
-	if overlay_shown:
-		_hide_overlay()
-	# Fallback procédural en DERNIER recours seulement si le moteur a échoué/timeout (engine_dead).
+	# v10.12 — le SUSTAIN animé de la fusion a déjà patienté jusqu'à is_resolution_ready (ou cap). Prêt
+	# → prose LLM (cache, instantané, « le scénario suit »). Sinon → filet procédural SANS voile statique :
+	# l'attente animée (caption « Merlin tisse… » + glow + sparks) a remplacé « Merlin assemble ». (user 2026-06-07)
+	# v10.13 (Fix 3) : take_resolution ne bloque plus JAMAIS (cache-only) — toute l'attente appartient
+	# au sustain animé (cap + skip). Cache prêt → prose LLM instantanée ; sinon filet procédural.
+	var prose: String = str(sc.take_resolution(situ, played_cards, res))
 	if prose.length() < 10:
 		prose = sc.fallback_resolution(str(res.get("degree", "reussite")), str(situ.get("type", "")))
+	sc.note_outcome(res)  # v10.13 (Fix 4) : fil rouge mis à jour MÊME en fallback (continuité du beat suivant)
 	run.summary = prose
 	_show_resolution(res, prose, true)
-	run.save()
+	# v10.13 (Fix 6) : PLUS de save ici — il persistait les jauges post-résolution avec un beat_index
+	# non avancé → la reprise REJOUAIT le beat (coûts double-appliqués). Save unique dans _advance_to_next.
 
 
 # === v10.2 — Animation cinématique de fusion (user 2026-06-06) ===
@@ -551,7 +574,61 @@ func _play_fusion_animation(res: Dictionary, played: Array) -> void:
 	p4_fade.tween_property(layer, "scale", Vector2.ONE, expr_dur * 0.55)
 	await p4_fade.finished
 
-	layer.queue_free()
+	# === SUSTAIN (v10.12) — anime l'attente JUSQU'À ce que la prose LLM soit prête (cap 12s) : laisse
+	# le moteur natif (lent) interpréter la fusion → l'issue « suit » vraiment (user 2026-06-07). Cache-hit
+	# (prose déjà prête) → 0 frame de sustain. Remplace le voile texte « Merlin assemble ».
+	var sc: Node = get_node_or_null("/root/MerlinScenario")
+	if sc != null and not sc.is_resolution_ready(played, res):
+		# Caption ANIMÉE « Merlin tisse les fils du sort … » (points cyclants) — l'attente est animée,
+		# JAMAIS un voile statique (user 2026-06-07). + glow qui respire + sparks lentes en orbite.
+		var cap_lbl: Label = Label.new()
+		cap_lbl.add_theme_color_override("font_color", glow_col)
+		cap_lbl.add_theme_font_size_override("font_size", 26)
+		cap_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cap_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cap_lbl.size = Vector2(screen_size.x, 40.0)
+		cap_lbl.position = Vector2(0.0, screen_size.y * 0.60)
+		cap_lbl.modulate.a = 0.0
+		layer.add_child(cap_lbl)
+		create_tween().tween_property(cap_lbl, "modulate:a", 0.85, 0.4)
+		var pulse: Tween = create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		pulse.tween_property(glow, "color:a", 0.18, 0.9)
+		pulse.tween_property(glow, "color:a", 0.06, 0.9)
+		# v10.13 (Fix 2) : sustain SKIPPABLE — clic = on cesse d'attendre la prose LLM (fallback servi).
+		# Lambda GDScript = capture par VALEUR → boîte mutable (Array) pour sortir le flag.
+		var skip_box: Array = [false]
+		layer.gui_input.connect(func(e: InputEvent) -> void:
+			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+				skip_box[0] = true)
+		var sustain_t0: int = Time.get_ticks_msec()
+		var deadline_ms: int = sustain_t0 + 20000  # cap large : couvre la gen LLM (≈1 tok/s) sans bloquer
+		var next_spark_ms: int = 0
+		var next_dot_ms: int = 0
+		var dots: int = 0
+		while is_inside_tree() and is_instance_valid(glow) and not skip_box[0] \
+				and not sc.is_resolution_ready(played, res) and Time.get_ticks_msec() < deadline_ms:
+			var now: int = Time.get_ticks_msec()
+			if now >= next_spark_ms:
+				next_spark_ms = now + 2200
+				_emit_spark_wave(layer, center, glow_col, 8, 1.8, 60.0, 40.0, Vector2(1.6, 1.6), 0.5)
+			if now >= next_dot_ms and is_instance_valid(cap_lbl):
+				next_dot_ms = now + 450
+				dots = (dots + 1) % 4
+				# Affordance de skip révélée après 4s d'attente (pilier FACILE — pas de gel perçu).
+				var hint: String = "  ·  clic pour continuer" if now - sustain_t0 > 4000 else ""
+				cap_lbl.text = "Merlin tisse les fils du sort " + ".".repeat(dots) + hint
+			await get_tree().process_frame
+		if pulse != null and pulse.is_valid():
+			pulse.kill()
+		if is_instance_valid(cap_lbl):
+			cap_lbl.queue_free()
+		if is_inside_tree() and is_instance_valid(glow):
+			var sout: Tween = create_tween()
+			sout.tween_property(glow, "color:a", 0.0, 0.25)
+			await sout.finished
+
+	if is_instance_valid(layer):
+		layer.queue_free()
 
 
 # === v10.3 — Helpers de fusion (sparks waves, screen shake, vignette setter, CA labels) ===
@@ -569,7 +646,7 @@ func _emit_spark_wave(layer: Control, center: Vector2, color: Color, count: int,
 		var ang: float = float(i) / float(maxi(count, 1)) * TAU + randf_range(-0.12, 0.12)
 		var dist: float = dist_base + randf_range(0.0, dist_var)
 		var dest: Vector2 = center + Vector2(cos(ang), sin(ang)) * dist - Vector2(4, 4)
-		var st: Tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		var st: Tween = layer.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		st.tween_property(spark, "position", dest, life)
 		st.tween_property(spark, "modulate:a", 0.0, life)
 		st.tween_property(spark, "scale", scale_target, life)
@@ -625,17 +702,124 @@ func _show_resolution(res: Dictionary, narration: String, animate: bool = true) 
 func _advance_to_next() -> void:
 	_set_caret(false)
 	_can_advance = false
+	# v10.11 — Draft « 1 carte sur 3 » aux beats clés, AVANT de passer au beat suivant.
+	if _pending_draft:
+		_pending_draft = false
+		_scene_epoch += 1  # v10.13 (Fix 10) : tout enrichissement LLM en vol ne s'écrit pas sous le modal
+		await _present_draft()
+		if not is_inside_tree():
+			return
 	var run: Node = get_node("/root/MerlinRun")
 	run.advance_beat()
 	if run.ended:
 		return
+	# v10.13 (Fix 6) : save UNIQUE — au DÉBUT de beat (index avancé + carte draftée, atomique).
+	# Resume = toujours au début de beat (canon BIBLE.md R73) ; transients (_combo/_state) jamais persistés.
+	run.save()
+	if not is_inside_tree():
+		return  # la scène a pu être libérée pendant le draft / via run_ended (sécurité teardown)
 	_present_current_beat()
+
+
+# === v10.11 — Draft « 1 carte sur 3 » (style Slay the Spire) ===
+func _present_draft() -> void:
+	var run: Node = get_node("/root/MerlinRun")
+	var choices: Array = run.draft_choices(3)
+	if choices.is_empty():
+		return
+	_draft_pick = null
+	_draft_done_flag = false
+	_build_draft_layer(choices)
+	# v10.13 (Fix 1) : gardes STRUCTURELLES (pas de timeout mural — un joueur AFK sur un choix n'est
+	# pas un bug). Les seuls vrais états de blocage = layer libéré / run terminée / scène quittée :
+	# tous font sortir la boucle ; sortie sans flag = passer (aucune carte).
+	while not _draft_done_flag and is_inside_tree() and is_instance_valid(_draft_layer) and not run.ended:
+		await get_tree().process_frame
+	if _draft_pick != null:
+		run.add_card_to_deck(_draft_pick)
+		if _beat_map != null:  # v10.12 : une carte draftée = déviation visible sur le chemin
+			_beat_map.mark_draft()
+	if _draft_layer != null:
+		_draft_layer.queue_free()
+		_draft_layer = null
+
+
+func _build_draft_layer(choices: Array) -> void:
+	var layer: Control = Control.new()
+	layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_STOP  # modal : absorbe les clics derrière
+	var dim: ColorRect = ColorRect.new()
+	dim.color = Color(0.06, 0.05, 0.04, 0.82)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(dim)
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(center)
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 20)
+	center.add_child(box)
+	var title: Label = Label.new()
+	title.text = "Une voie s'offre à toi — choisis une carte"
+	title.add_theme_color_override("font_color", COL_GOLD)
+	title.add_theme_font_size_override("font_size", 30)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 30)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_child(row)
+	for card in choices:
+		var cv: MerlinCardView = MerlinCardView.new()
+		row.add_child(cv)
+		cv.setup(card)
+		cv.card_clicked.connect(_on_draft_card)
+	var skip: Button = Button.new()
+	skip.text = "Passer"
+	skip.custom_minimum_size = Vector2(180, 52)
+	skip.add_theme_font_size_override("font_size", 22)
+	skip.pressed.connect(_on_draft_skip)
+	var skip_center: CenterContainer = CenterContainer.new()
+	skip_center.add_child(skip)
+	box.add_child(skip_center)
+	add_child(layer)
+	_draft_layer = layer
+
+
+func _on_draft_card(card: MerlinCard) -> void:
+	if _draft_done_flag:
+		return
+	_draft_pick = card
+	_draft_done_flag = true
+
+
+func _on_draft_skip() -> void:
+	if _draft_done_flag:
+		return
+	_draft_pick = null
+	_draft_done_flag = true
+
+
+# === v10.12 — Carte « map » du chemin (coin droit, remplace la carte Destin) ===
+func _build_beat_map() -> void:
+	_beat_map = MerlinBeatMap.new()
+	_beat_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_beat_map.anchor_left = 1.0
+	_beat_map.anchor_right = 1.0
+	_beat_map.anchor_top = 0.5
+	_beat_map.anchor_bottom = 0.5
+	_beat_map.offset_left = -144.0  # largeur 120 + 24 d'inset depuis le bord droit
+	_beat_map.offset_right = -24.0
+	_beat_map.offset_top = -150.0   # ~300 de haut, centré verticalement
+	_beat_map.offset_bottom = 150.0
+	add_child(_beat_map)
 
 
 # Clic sur la zone récit (scène/narration). Pendant la frappe → révèle tout le texte ;
 # une fois l'issue entièrement écrite → passe au beat suivant. (Demande user 2026-05-26.)
 func _on_story_click(event: InputEvent) -> void:
-	if _intro_open:
+	if _intro_open or _draft_layer != null:
 		return
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
@@ -841,8 +1025,8 @@ func _input(event: InputEvent) -> void:
 	# la GUI), indépendant du z-order du catcher (qui était parfois bloqué par un conteneur au-dessus).
 	# En résolution (state 2) : clic gauche → skip typewriter si en cours, sinon avance au beat suivant.
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _intro_open:
-			return
+		if _intro_open or _draft_layer != null:
+			return  # le draft est modal : ses clics sont gérés par l'overlay, pas par l'avance de beat
 		if _state == 2:
 			if _tw != null and _tw.is_valid():
 				_skip_typewriter()
@@ -889,6 +1073,12 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_run_ended(_end_type: String) -> void:
+	# v10.13 (Fix 1) : si la run se termine pendant le modal de draft, on le ferme proprement
+	# (la boucle de _present_draft sort via sa garde is_instance_valid/_draft_layer → skip).
+	if _draft_layer != null:
+		_draft_layer.queue_free()
+		_draft_layer = null
+		_draft_done_flag = true
 	get_node("/root/MerlinRun").save()
 	call_deferred("_goto_end")
 
@@ -1076,26 +1266,18 @@ func _bg_intro(scenario: Dictionary, lbl: RichTextLabel, opening: String = "") -
 	if sc == null:
 		return
 	var sep: String = "\n\n— · —\n\n"
-	# 1) Greeting MERLIN enrichie (LLM, non bloquant) — conserve l'ouverture procédurale dessous.
+	# Greeting MERLIN enrichie (LLM, non bloquant) — conserve l'ouverture procédurale dessous.
 	var prose: String = await sc.narrate_intro(scenario)
 	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl):
 		return
-	var swapped: bool = false
 	# ÉVIDENT : ne pas muter un texte en cours de lecture → enrichir seulement si le typewriter a fini.
 	if prose.length() >= 10 and not (lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count()):
 		lbl.text = prose + (sep + opening if opening.strip_edges() != "" else "")
 		lbl.visible_characters = -1
-		swapped = true
-	# 2) OUVERTURE enrichie (LLM, non bloquant) : upgrade l'ouverture procédurale SI le moteur finit
-	# avant l'accept. Base procédurale déjà affichée → aucun risque, jamais bloquant (user 2026-06-06).
-	var llm_open: String = await sc.narrate_opening(scenario)
-	if not _intro_open or _intro_layer == null or not is_instance_valid(lbl) or llm_open.length() < 10:
-		return
-	if lbl.visible_characters >= 0 and lbl.visible_characters < lbl.get_total_character_count():
-		return
-	var head: String = prose if (swapped and prose.length() >= 10) else str(sc.build_intro(scenario).get("intro", ""))
-	lbl.text = head + sep + llm_open
-	lbl.visible_characters = -1
+	# v10.13 (Fix 9) : le 2e appel LLM (narrate_opening) est SUPPRIMÉ ici — il occupait le moteur
+	# single-flight exactement pendant la composition du beat 1, affamant le prefetch de résolution
+	# (la prose d'ouverture ne gagnait jamais la course de toute façon). L'ouverture LLM revivra
+	# derrière l'interstitiel « Merlin raconte » (plan v10.13 phase B3), sous priorité moteur.
 
 
 func _accept_quest() -> void:
@@ -1112,6 +1294,7 @@ func _accept_quest() -> void:
 	var t: Tween = create_tween()
 	t.tween_property(layer, "modulate:a", 0.0, 0.25)
 	t.tween_callback(layer.queue_free)
+	get_node("/root/MerlinRun").save()  # v10.13 (Fix 6) : quitter pendant le beat 1 → reprise au beat 1
 	_present_current_beat()  # l'intro cède la place à la 1ère situation, dans l'encart central (user 2026-06-06)
 
 
@@ -1271,6 +1454,8 @@ func _build_ui() -> void:
 	_overlay_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay.add_child(_overlay_lbl)
 	_overlay.visible = false
+
+	_build_beat_map()  # v10.12 : carte « map » du chemin, coin droit (remplace la carte Destin)
 
 
 func _mk_label(col: Color, fsize: int) -> Label:

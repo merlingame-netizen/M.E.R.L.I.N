@@ -244,6 +244,7 @@ class GodotAdapter(BaseAdapter):
             "validate": "Run validate.bat — full project validation pipeline",
             "validate_step0": "Run Godot editor headless parse check only",
             "smoke": "Smoke-test a specific scene (requires scene= kwarg)",
+            "soak": "PROOF v10.13: Monte Carlo logic soak (runs=, archetype=) + optional autoplay= full UI runs (loops=)",
             "verify_all": "FORGE: parse-check + smoke ALL scenes/*.tscn, write JSON report (one-shot autonomy verify)",
             "test": "Run headless test suite via res://tests/headless_runner.tscn",
             "export": "Export project for a named preset (requires preset= kwarg)",
@@ -259,6 +260,8 @@ class GodotAdapter(BaseAdapter):
                 return self._validate_step0()
             case "smoke":
                 return self._smoke(**kwargs)
+            case "soak":
+                return self._soak(**kwargs)
             case "verify_all":
                 return self._verify_all(**kwargs)
             case "test":
@@ -337,6 +340,100 @@ class GodotAdapter(BaseAdapter):
                 "stderr": stderr,
             }
         )
+
+    def _soak(
+        self,
+        runs: str = "200",
+        archetype: str = "mixed",
+        autoplay: str = "",
+        loops: str = "3",
+        **_kwargs: Any,
+    ) -> dict:
+        """v10.13 Phase P — proof gate « 100% fiable ».
+
+        1. Logic soak: probe_soak.gd headless, N Monte Carlo runs (archetypes,
+           degenerate cases, S5 save/resume). Pass = N/N + zero SCRIPT ERROR.
+        2. Optional (autoplay=true): autoplay_run.gd windowed, full UI runs with
+           LLM ON (intro -> beats -> draft -> MerlinEnd). Pass = loops/loops.
+        """
+        godot = self._require_godot()
+        if isinstance(godot, dict):
+            return godot
+
+        self.log(f"Soak: {runs} logic runs (archetype={archetype}) …")
+        try:
+            stdout, stderr, code = _run(
+                [godot, "--headless", "--path", ".", "--script",
+                 "res://tools/probe_soak.gd", "--",
+                 f"--runs={runs}", f"--archetype={archetype}"],
+                timeout=600,
+            )
+        except subprocess.TimeoutExpired:
+            return self.error("probe_soak timed out after 600s")
+        except OSError as exc:
+            return self.error(f"Failed to launch probe_soak: {exc}")
+
+        combined = stdout + "\n" + stderr
+        script_errors = [
+            line.strip() for line in combined.splitlines() if "SCRIPT ERROR" in line
+        ]
+        match = re.search(r"(\d+)/(\d+) PASS", stdout)
+        soak_pass, soak_total = (
+            (int(match.group(1)), int(match.group(2))) if match else (0, int(runs))
+        )
+        data: dict[str, Any] = {
+            "soak": {
+                "exit_code": code,
+                "pass": soak_pass,
+                "total": soak_total,
+                "summary": [
+                    line.strip() for line in stdout.splitlines()
+                    if line.startswith("[SOAK]")
+                ],
+            },
+            "script_errors": script_errors,
+        }
+        passed = code == 0 and soak_pass == soak_total and not script_errors
+        log_parts = [f"logic {soak_pass}/{soak_total}"]
+
+        if str(autoplay).lower() in ("1", "true", "yes"):
+            self.log(f"Autoplay: {loops} full UI runs (LLM ON) …")
+            try:
+                a_out, a_err, a_code = _run(
+                    [godot, "--path", ".", "--script",
+                     "res://tools/autoplay_run.gd", "--", f"--loops={loops}"],
+                    timeout=900,
+                )
+            except subprocess.TimeoutExpired:
+                return self.error("autoplay_run timed out after 900s")
+            except OSError as exc:
+                return self.error(f"Failed to launch autoplay_run: {exc}")
+            a_combined = a_out + "\n" + a_err
+            a_errors = [
+                line.strip() for line in a_combined.splitlines()
+                if "SCRIPT ERROR" in line
+            ]
+            a_match = re.search(r"(\d+)/(\d+) PASS", a_out)
+            a_pass, a_total = (
+                (int(a_match.group(1)), int(a_match.group(2)))
+                if a_match else (0, int(loops))
+            )
+            data["autoplay"] = {
+                "exit_code": a_code,
+                "pass": a_pass,
+                "total": a_total,
+                "lines": [
+                    line.strip() for line in a_out.splitlines()
+                    if line.startswith("[AUTOPLAY]")
+                ],
+            }
+            data["script_errors"] = script_errors + a_errors
+            passed = passed and a_code == 0 and a_pass == a_total and not a_errors
+            log_parts.append(f"autoplay {a_pass}/{a_total}")
+
+        data["passed"] = passed
+        self.log(f"soak passed={passed} | " + " | ".join(log_parts))
+        return self.ok(data)
 
     def _smoke(self, scene: str = "", duration: str = "10", capture: str = "", capture_interval: str = "200", **_kwargs: Any) -> dict:
         """Smoke-test a scene by running it (windowed) for N seconds and grepping for runtime errors.

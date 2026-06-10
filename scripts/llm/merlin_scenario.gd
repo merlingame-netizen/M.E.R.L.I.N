@@ -752,23 +752,34 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		return  # déjà en génération ou prêt pour cette combo exacte
 	if _reso_cache.has(sig):
 		return  # déjà en cache
-	# Moteur single-flight : on ne LANCE une pré-génération QUE si le moteur est libre. Sinon on ne
-	# thrash pas (sans ça, des combos abandonnées occuperaient le moteur ~40s) — take_resolution
-	# annulera la gen périmée et générera la combo finale au clic Résolution.
 	var mn: Node = _mn()
-	if mn == null or not mn.is_ready() or mn.is_busy():
+	if mn == null or not mn.is_ready():
 		return
 	_reso_epoch += 1
 	var epoch: int = _reso_epoch
 	_reso_sig = sig
+	# v10.13 (Fix 3/8) : une gen PÉRIMÉE (combo abandonnée, arc, épilogue) qui occupe le moteur
+	# single-flight est annulée À LA POSE (take_resolution ne bloque plus jamais au resolve).
+	# Priorité moteur : la prose de résolution du beat courant passe devant tout le reste — c'est
+	# la seule gen que le joueur attend activement.
+	if mn.is_busy():
+		mn.cancel()
+		var free_dl: int = Time.get_ticks_msec() + 4000
+		while mn.is_busy() and Time.get_ticks_msec() < free_dl:
+			await get_tree().process_frame
+		if epoch != _reso_epoch:
+			return  # combo/beat changé pendant le drain — un prefetch plus récent a pris la main
+		if mn.is_busy():
+			_reso_state = "idle"
+			return  # libération trop lente — le sustain servira le fallback si rien n'arrive
 	_reso_state = "running"
 	var prose: String = await narrate_resolution(situation, played_cards, res)
 	if epoch != _reso_epoch:
-		# Périmé (seul invalidate_resolution bumpe l'epoch pendant notre await — le guard is_busy
-		# empêche tout prefetch concurrent tant qu'on tient le moteur). Fix review HIGH 2026-06-06 :
-		# reset state, sinon il reste « running » sur une sig abandonnée → un re-prefetch de la même
-		# combo se croirait en vol (hung) et ne relancerait jamais.
-		_reso_state = "idle"
+		# Périmé (invalidate / prefetch plus récent a bumpé l'epoch pendant notre await). Ne remet
+		# l'état à idle QUE s'il nous appartient encore (sinon on écraserait le « running » du vol
+		# plus récent — la sig a alors changé). Fix review HIGH 2026-06-06 + v10.13.
+		if _reso_sig == sig:
+			_reso_state = "idle"
 		return
 	if prose.length() >= 10:
 		_reso_cache[sig] = prose
@@ -777,40 +788,15 @@ func prefetch_resolution(situation: Dictionary, played_cards: Array, res: Dictio
 		_reso_state = "idle"  # échec moteur → take_resolution génèrera (ou retombera sur fallback)
 
 
-# Récupère l'issue LLM au clic Résolution. Cache-hit instantané si la pré-génération a fini ;
-# sinon attend la génération en vol (bornée par le timeout moteur natif) ; sinon génère maintenant.
-# Renvoie "" si le moteur a vraiment échoué → l'appelant retombe sur le procédural (dernier recours).
-func take_resolution(situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
+# Récupère l'issue LLM au clic Résolution — v10.13 (Fix 3) : NE BLOQUE PLUS JAMAIS. Contrat :
+# toute l'attente appartient au SUSTAIN animé de la fusion (cap 20s + clic-skip). Ici : cache-hit
+# → prose ; sinon "" → l'appelant sert le fallback procédural immédiatement. La continuité du fil
+# rouge est assurée par note_outcome() (appelé inconditionnellement par l'appelant, Fix 4).
+func take_resolution(_situation: Dictionary, played_cards: Array, res: Dictionary) -> String:
 	var sig: String = _reso_signature(played_cards, res)
 	if _reso_cache.has(sig):
-		_remember_outcome(res)
 		return str(_reso_cache[sig])
-	# Génération de CETTE combo en vol ? On l'attend par polling (borné ~95s > GEN_TIMEOUT moteur).
-	if _reso_sig == sig and _reso_state == "running":
-		var deadline_ms: int = Time.get_ticks_msec() + 95000
-		while _reso_state == "running" and Time.get_ticks_msec() < deadline_ms:
-			await get_tree().process_frame
-		if _reso_cache.has(sig):
-			_remember_outcome(res)
-			return str(_reso_cache[sig])
-	# Pas de cache. Une gen PÉRIMÉE (autre combo) peut occuper le moteur single-flight → on l'annule
-	# et on attend sa libération avant de générer la combo finale. Garantit "toujours LLM".
-	# cancel_generation() signale la boucle de décode native (flag vérifié entre tokens, ~1/s) → la
-	# libération arrive en ~1-2s ; 8s de marge couvre un drain lent sans figer le resolve. (review MEDIUM)
-	var mn: Node = _mn()
-	if mn != null and mn.is_busy():
-		mn.cancel()
-		var free_dl: int = Time.get_ticks_msec() + 8000
-		while mn.is_busy() and Time.get_ticks_msec() < free_dl:
-			await get_tree().process_frame
-	# Génère maintenant et attend (le moteur devrait être libre).
-	var prose: String = await narrate_resolution(situation, played_cards, res)
-	if prose.length() >= 10:
-		_reso_cache[sig] = prose
-		_remember_outcome(res)
-		return prose
-	_remember_outcome(res)  # outcome réel même si la prose finit en procédural (continuité du beat suivant)
-	return ""  # moteur KO → fallback procédural côté appelant
+	return ""
 
 
 # Vrai si l'issue de cette combo est DÉJÀ en cache (pré-génération finie) → take_resolution sera
@@ -823,6 +809,13 @@ func is_resolution_ready(played_cards: Array, res: Dictionary) -> bool:
 # se répètent entre beats (deck starter), sans ce reset une combo identique réafficherait la prose
 # d'un beat antérieur. Bumpe l'epoch → toute pré-génération en vol devient périmée.
 func invalidate_resolution() -> void:
+	# v10.13 (Fix 8) : une gen de prose encore en vol au changement de beat occuperait le moteur
+	# single-flight jusqu'à 90s → le prefetch du nouveau beat serait silencieusement sauté (guard
+	# is_busy) et le sustain plafonnerait À CHAQUE beat. Annulation → moteur libre en ~1-2s.
+	if _reso_state == "running":
+		var mn: Node = _mn()
+		if mn != null and mn.is_busy():
+			mn.cancel()
 	_reso_cache.clear()
 	_reso_sig = ""
 	_reso_state = "idle"
@@ -842,8 +835,9 @@ func fallback_resolution(degree: String, situ_type: String = "") -> String:
 
 
 # Mémorise le RÉSULTAT du beat courant dans le fil rouge → le prompt d'issue du beat SUIVANT
-# enchaîne dessus (continuité). Le degré est réel même si la prose finit en procédural.
-func _remember_outcome(res: Dictionary) -> void:
+# enchaîne dessus (continuité). Public (v10.13 Fix 4) : appelé INCONDITIONNELLEMENT par
+# merlin_game._on_resolve — le degré est réel même quand la prose finit en procédural.
+func note_outcome(res: Dictionary) -> void:
 	var degree: String = str(res.get("degree", "reussite"))
 	var gist: Dictionary = {
 		"echec": "le geste a echoue et la foret a repris le dessus ;",

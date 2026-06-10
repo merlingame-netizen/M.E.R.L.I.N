@@ -5,12 +5,12 @@ extends Control
 ## Animé (2026-06-10) : entrée en cascade de fondus, triskèle rotative, runes qui respirent,
 ## anneaux pulsants, scène vivante (brume/étoiles/halo) + thème ambient celtic (MusicGen) en boucle.
 
-const COL_BG: Color = Color("1E1A14")
-const COL_CREAM: Color = Color("E8DCC0")
-const COL_GOLD: Color = Color("C9A24B")
-const COL_DIM: Color = Color("6E5A3C")
-const COL_GREEN: Color = Color("7FA65C")
-const COL_VIOLET: Color = Color("7B4FA3")
+const COL_BG: Color = MerlinVisual.BG_PAGE
+const COL_CREAM: Color = MerlinVisual.CREAM
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_DIM: Color = MerlinVisual.INK_DIM
+const COL_GREEN: Color = MerlinVisual.GREEN
+const COL_VIOLET: Color = MerlinVisual.VIOLET
 
 const SELECTION_SCENE: String = "res://scenes/MerlinSelection.tscn"
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"

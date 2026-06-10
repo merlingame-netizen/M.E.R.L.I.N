@@ -47,6 +47,7 @@ var _pending_prompt: String = ""
 var _pending_result: Dictionary = {}  # résultat de la génération courante (lu par l'auto-polling)
 var _result_ready: bool = false
 var _gen_id: int = 0  # nonce : invalide les callbacks tardifs (après timeout) → anti-corruption
+var _quitting: bool = false  # v10.13 (Fix 7) : garde anti double-_graceful_quit
 
 # Observabilité debug (log Gemma temps réel) : étiquette de l'activité en cours + journal d'événements.
 const ACTIVITY_LOG_MAX: int = 24
@@ -56,6 +57,8 @@ var _activity_log: Array = []  # [{label, ms, chars, ok, t}] (générations term
 
 func _ready() -> void:
 	set_process(false)
+	# v10.13 (Fix 7) : on gère la fermeture nous-mêmes — cancel + join borné, PAS de gel 30-60s.
+	get_tree().set_auto_accept_quit(false)
 	# Charge le modèle après que l'arbre soit prêt (le load bloque ~1-3s).
 	call_deferred("_boot")
 
@@ -243,9 +246,29 @@ func _notification(what: int) -> void:
 	# secondes au quit si une gen tourne (intro/issue/sélection).
 	# EXIT_TREE et WM_CLOSE_REQUEST arrivent alors que _llm est ENCORE valide. On évite PREDELETE :
 	# l'objet GDExtension natif peut y être partiellement détruit → appel = crash potentiel.
-	if what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_WM_CLOSE_REQUEST:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		# v10.13 (Fix 7) : auto_accept_quit=false → c'est NOUS qui quittons, après un join borné.
+		_graceful_quit()
+	elif what == NOTIFICATION_EXIT_TREE:
 		if _llm != null and _busy:
 			_llm.cancel_generation()
+
+
+# v10.13 (Fix 7) — fermeture propre : cancel de la gen en vol + drain BORNÉ (2s, le flag natif est
+# lu entre tokens ~1/s) puis quit INCONDITIONNEL. L'app ne fige plus au quit ; à l'échéance le
+# process se termine et l'OS récupère le thread d'inférence. (Racine C++ — vérifier le flag pendant
+# le prompt-eval chunké — taggée follow-up natif séparé.)
+func _graceful_quit() -> void:
+	if _quitting:
+		return  # double WM_CLOSE (automation) → une seule coroutine de fermeture
+	_quitting = true
+	if _llm != null and _busy:
+		_llm.cancel_generation()
+		var dl: int = Time.get_ticks_msec() + 2000
+		while _busy and Time.get_ticks_msec() < dl:
+			_llm.poll_result()  # le callback de fin (→ _busy=false) se déclenche au poll
+			await get_tree().process_frame
+	get_tree().quit()
 
 
 ## Nettoie la sortie : tronque au 1er marqueur de template (gemma4 émet parfois

@@ -2,11 +2,11 @@ extends Control
 ## MerlinSelection — écran de sélection (bible R56). Merlin propose 3 scénarios (titre + pitch),
 ## le joueur en choisit un → "Merlin écrit" (squelette) → démarre la run → scène de jeu.
 
-const COL_BG: Color = Color("14100C")
-const COL_SURFACE: Color = Color("2A2018")
-const COL_TEXT: Color = Color("E8DCC0")
-const COL_GOLD: Color = Color("C9A24B")
-const COL_DIM: Color = Color("9C8C6A")
+const COL_BG: Color = MerlinVisual.BG_DEEP
+const COL_SURFACE: Color = MerlinVisual.SURFACE
+const COL_TEXT: Color = MerlinVisual.CREAM
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_DIM: Color = MerlinVisual.DIM_WARM
 
 const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 const MENU_SCENE: String = "res://scenes/MerlinMenu.tscn"

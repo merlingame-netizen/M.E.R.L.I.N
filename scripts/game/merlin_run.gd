@@ -14,6 +14,24 @@ const CORRUPTION_CAP: int = 18
 const SAVE_PATH: String = "user://merlin_run.json"
 const SAVE_VERSION: int = 1
 
+# v10.11 (user 2026-06-07) — Deck enrichi + Draft + Carte Destin (Slay the Spire allégé).
+# Poids de rareté du draft (somme = 100) ; barème merlin-game-designer.
+const DRAFT_WEIGHTS_NORMAL: Dictionary = {"Rare": 68, "Épique": 26, "Mythique": 6}
+const DRAFT_WEIGHTS_LATE: Dictionary = {"Rare": 50, "Épique": 38, "Mythique": 12}  # proche climax : booste les hautes raretés
+const HAND_CAP_EXTRA: int = 3  # DRAW peut dépasser HAND_SIZE de ce nombre (anti-débordement de l'éventail)
+
+# Carte Destin : archétype dominant → « Voie » (nom + tag représentatif pour le glyphe + couleur famille).
+const DESTIN_VOIES: Dictionary = {
+	"Offensif": {"nom": "La Voie de Fer", "tag": "Force", "color": "A8703E"},
+	"Défensif": {"nom": "La Voie de Pierre", "tag": "Équilibre", "color": "7FA6C9"},
+	"Social": {"nom": "La Voie de Miel", "tag": "Verbe", "color": "B5C04F"},
+	"Mystique": {"nom": "La Voie des Brumes", "tag": "Vision", "color": "C9A24B"},
+	"Corrompu": {"nom": "La Voie de l'Ombre", "tag": "Emprise", "color": "7B4FA3"},
+}
+const DESTIN_TIER_LABELS: Dictionary = {
+	"Commune": "Naissante", "Rare": "Affirmée", "Épique": "Dominante", "Mythique": "Absolue",
+}
+
 var integrite: int = START_INTEGRITE
 var corruption: int = 0
 var scenario: Dictionary = {}
@@ -26,6 +44,7 @@ var faits_marquants: Array = []
 var pnj_rencontres: Array = []
 var choix_cles: Array = []
 var cartes_notables: Array = []
+var archetype_scores: Dictionary = {}  # v10.11 : compteur des archétypes des cartes JOUÉES (→ Carte Destin)
 var ended: bool = false
 var end_type: String = ""
 var _last_threshold: int = 0
@@ -48,6 +67,7 @@ func new_run(p_scenario: Dictionary) -> void:
 	pnj_rencontres = []
 	choix_cles = []
 	cartes_notables = []
+	archetype_scores = {}
 	ended = false
 	end_type = ""
 	_last_threshold = 0
@@ -129,6 +149,8 @@ func play_and_discard(cards: Array) -> void:
 		discard.append(c)
 		if not cartes_notables.has(c.card_name):
 			cartes_notables.append(c.card_name)
+		var arch: String = c.archetype()  # v10.11 : alimente la Carte Destin (archétype dominant du run)
+		archetype_scores[arch] = int(archetype_scores.get(arch, 0)) + 1
 	draw_to_full()  # filet : complète si le deck était vide à un tirage
 
 
@@ -140,6 +162,187 @@ func _draw_one() -> MerlinCard:
 		discard = []
 		_shuffle(deck)
 	return deck.pop_back() if not deck.is_empty() else null
+
+
+# v10.13 (Fix 5) — INVARIANT : une main JOUABLE (≥ 2 cartes) à chaque début de beat. Filets en
+# cascade : repioche normale → tirage direct de la défausse → injection de Communes neutres
+# (pool total < 2, atteignable via TweaksOverlay HAND_SIZE=1 ou états dégénérés). La run ne
+# soft-lock JAMAIS sur « impossible de composer un combo » (R93 : la run se termine toujours).
+func ensure_playable_hand() -> void:
+	draw_to_full()
+	while hand.size() < 2 and not discard.is_empty():
+		hand.append(discard.pop_back())
+	var n: int = 0
+	while hand.size() < 2:
+		n += 1
+		hand.append(MerlinCard.make(
+			"secours_%d_%d" % [beat_index, n], "Souffle Errant", ["Instinct"],
+			"Un souffle sans nom traverse la clairière et se range à ton côté.", 0))
+
+
+# v10.11 — Effets actifs des cartes jouées (Rare+). Appelé APRÈS play_and_discard et AVANT apply_resolution
+# (la mort est vérifiée par apply_resolution → un HEAL peut sauver in extremis). Renvoie un résumé pour l'UI.
+func apply_card_effects(cards: Array) -> Dictionary:
+	var heal: int = 0
+	var purge: int = 0
+	var draw: int = 0
+	for c in cards:
+		if c == null:
+			continue
+		match str(c.effect_type):
+			"HEAL": heal += int(c.effect_value)
+			"PURGE": purge += int(c.effect_value)
+			"DRAW": draw += int(c.effect_value)
+	if heal > 0:
+		integrite = clampi(integrite + heal, 0, _max_integrite())
+	if purge > 0:
+		corruption = maxi(0, corruption - purge)
+	if draw > 0:
+		_draw_extra(draw)
+	if heal > 0 or purge > 0:
+		emit_signal("gauges_changed", integrite, corruption)
+	return {"heal": heal, "purge": purge, "draw": draw}
+
+
+func _draw_extra(n: int) -> void:
+	var cap: int = _hand_size() + HAND_CAP_EXTRA
+	for _i in n:
+		if hand.size() >= cap:
+			break
+		var c: MerlinCard = _draw_one()
+		if c == null:
+			break
+		hand.append(c)
+
+
+# v10.11 — Draft « 1 carte sur 3 » : tire n cartes DISTINCTES du pool enrichi, pondérées par rareté,
+# en excluant celles déjà possédées (deck/main/défausse). Proche climax → poids hautes raretés.
+func draft_choices(n: int = 3) -> Array:
+	var pool: Array = MerlinCard.enriched_pool()
+	var owned: Dictionary = {}
+	for c in deck:
+		owned[c.id] = true
+	for c in hand:
+		owned[c.id] = true
+	for c in discard:
+		owned[c.id] = true
+	var avail: Array = []
+	for c in pool:
+		if not owned.has(c.id):
+			avail.append(c)
+	var weights: Dictionary = DRAFT_WEIGHTS_LATE if _near_climax() else DRAFT_WEIGHTS_NORMAL
+	var picks: Array = []
+	var guard: int = 0
+	while picks.size() < n and not avail.is_empty() and guard < 300:
+		guard += 1
+		var rar: String = _weighted_rarity(weights)
+		var bucket: Array = []
+		for c in avail:
+			if c.rarity == rar:
+				bucket.append(c)
+		if bucket.is_empty():
+			bucket = avail
+		var pick: MerlinCard = bucket[_rng.randi_range(0, bucket.size() - 1)]
+		picks.append(pick)
+		avail.erase(pick)
+	return picks
+
+
+func _weighted_rarity(weights: Dictionary) -> String:
+	var total: int = 0
+	for k in weights:
+		total += int(weights[k])
+	if total <= 0:
+		return "Rare"
+	var r: int = _rng.randi_range(1, total)
+	var acc: int = 0
+	for k in weights:
+		acc += int(weights[k])
+		if r <= acc:
+			return str(k)
+	return "Rare"
+
+
+func _near_climax() -> bool:
+	var total: int = int(scenario.get("total", 5))
+	return beat_index >= total - 2
+
+
+# Carte draftée ajoutée au BOUT du paquet (pioché au prochain tirage → gratification rapide sur run court).
+func add_card_to_deck(card: MerlinCard) -> void:
+	if card == null:
+		return
+	deck.append(card)
+	if not cartes_notables.has(card.card_name):
+		cartes_notables.append(card.card_name)
+
+
+# --- Carte Destin (archétype dominant du run) ---
+
+func dominant_archetype() -> String:
+	var best: String = ""
+	var best_n: int = -1
+	for a in archetype_scores:
+		var n: int = int(archetype_scores[a])
+		if n > best_n:
+			best_n = n
+			best = str(a)
+	return best
+
+
+func _sorted_scores() -> Array:
+	var vals: Array = []
+	for a in archetype_scores:
+		vals.append(int(archetype_scores[a]))
+	vals.sort()
+	vals.reverse()
+	return vals
+
+
+func total_cards_played() -> int:
+	var s: int = 0
+	for a in archetype_scores:
+		s += int(archetype_scores[a])
+	return s
+
+
+func destiny_lead() -> int:
+	var v: Array = _sorted_scores()
+	if v.is_empty():
+		return 0
+	var second: int = int(v[1]) if v.size() > 1 else 0
+	return int(v[0]) - second
+
+
+func destiny_tier() -> String:
+	var lead: int = destiny_lead()
+	var v: Array = _sorted_scores()
+	var top: int = int(v[0]) if not v.is_empty() else 0
+	# Run = 5 beats × 2 cartes = 10 cartes max jouées → top>=8 implique déjà lead>=6 (dominance nette).
+	if top >= 8 or lead >= 6:
+		return "Mythique"
+	if lead >= 4:
+		return "Épique"
+	if lead >= 2:
+		return "Rare"
+	return "Commune"
+
+
+func destiny_snapshot() -> Dictionary:
+	var arch: String = dominant_archetype()
+	if arch == "" or total_cards_played() == 0:
+		return {}
+	var voie: Dictionary = DESTIN_VOIES.get(arch, DESTIN_VOIES["Mystique"])
+	var tier: String = destiny_tier()
+	return {
+		"archetype": arch,
+		"nom": str(voie["nom"]),
+		"tag": str(voie["tag"]),
+		"color": str(voie["color"]),
+		"tier": tier,
+		"tier_label": str(DESTIN_TIER_LABELS.get(tier, "Naissante")),
+		"total": total_cards_played(),
+	}
 
 
 func apply_resolution(res: Dictionary) -> void:
@@ -245,6 +448,7 @@ func save() -> void:
 		"pnj_rencontres": pnj_rencontres,
 		"choix_cles": choix_cles,
 		"cartes_notables": cartes_notables,
+		"archetype_scores": archetype_scores,
 		"last_threshold": _last_threshold,
 	}
 	var f: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -277,6 +481,7 @@ func load_run() -> bool:
 	pnj_rencontres = data.get("pnj_rencontres", [])
 	choix_cles = data.get("choix_cles", [])
 	cartes_notables = data.get("cartes_notables", [])
+	archetype_scores = data.get("archetype_scores", {})
 	_last_threshold = int(data.get("last_threshold", 0))
 	deck = _dicts_to_cards(data.get("deck", []))
 	hand = _dicts_to_cards(data.get("hand", []))

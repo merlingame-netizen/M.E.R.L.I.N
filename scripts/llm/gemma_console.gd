@@ -6,13 +6,13 @@ extends Control
 ## Contrôles : prompt libre, régime créatif/structuré, max_tokens, Générer/Annuler.
 ## Métriques : temps total, tok/s approx, chars. (TTFT/seed = ajout C++ futur — non bindé.)
 
-# Palette R70 (parchemin sombre)
-const COL_BG: Color = Color("14100C")
-const COL_SURFACE: Color = Color("2A2018")
-const COL_TEXT: Color = Color("E8DCC0")
-const COL_GOLD: Color = Color("C9A24B")
-const COL_GREEN: Color = Color("4F6B3E")
-const COL_VIOLET: Color = Color("7B4FA3")
+# Palette R70 (parchemin sombre) — aliasée sur MerlinVisual (v10.13 A1)
+const COL_BG: Color = MerlinVisual.BG_DEEP
+const COL_SURFACE: Color = MerlinVisual.SURFACE
+const COL_TEXT: Color = MerlinVisual.CREAM
+const COL_GOLD: Color = MerlinVisual.GOLD
+const COL_GREEN: Color = MerlinVisual.GREEN_DARK
+const COL_VIOLET: Color = MerlinVisual.VIOLET
 
 const SYSTEM_TEST: String = "Tu es Merlin, maitre du jeu enigmatique de la foret de Broceliande. Reponds en francais, ton merveilleux-inquietant, bref et image."
 const USER_TEST: String = "Le voyageur arrive a l'oree de la foret au crepuscule. Decris ce qu'il voit, en 2 phrases."

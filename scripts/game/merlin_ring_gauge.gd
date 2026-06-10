@@ -5,7 +5,7 @@ extends Control
 
 const RING_SIZE: float = 78.0  # HUD agrandi (user 2026-06-06 : scale tout)
 const RING_WIDTH: float = 6.0
-const COL_BG_RING: Color = Color("3A3228")
+const COL_BG_RING: Color = MerlinVisual.RING_BG
 const BREATH_IDLE_MIN: float = 0.82  # respiration de repos : subtile (jauge « vivante »)
 const BREATH_IDLE_DUR: float = 1.4
 const BREATH_CRIT_MIN: float = 0.40  # critique : respiration marquée + rapide

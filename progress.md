@@ -2,6 +2,126 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-06-10/11 — v10.13 « Fondations prouvées » (plan approuvé, exécution)
+
+### Context
+Plan v10.13+v10.14 approuvé (fichier : ~/.claude/plans/propose-moi-le-plan-precious-pnueli.md).
+Construit par : 3 audits Explore + workflow 4 agents design (fiabilité/anim+archi/merlin-game-designer)
++ audit game-design croisé. Décisions user : 2 incréments ; run v10.14 = chaîne 2-3 quêtes de 2-5 beats ;
+dé 4 bandes consistantes ; 50+ tags différé. Corrections critiques de l'audit intégrées : dé PRÉ-TIRÉ
+(sinon cache-miss prose systématique), resume=début de beat (canon BIBLE.md — ATTENTION : 2 bibles,
+BIBLE.md=canon, GAME_DESIGN_BIBLE.md=legacy), take_resolution ne bloque jamais.
+
+### Phase R — Fiabilité (FAIT, gate vert)
+- Fix 0 : helper `_fresh(ep)` (epoch+tree) + règle deadline/garde sur toute boucle await.
+- Fix 1 : draft = gardes structurelles (layer/run.ended), sortie=skip ; cleanup sur run_ended.
+- Fix 2 : sustain SKIPPABLE (clic→fallback, skip_box lambda, hint après 4s).
+- Fix 3 : take_resolution = cache-only, NE BLOQUE JAMAIS (le sustain possède l'attente).
+- Fix 4 : note_outcome public, appelé inconditionnellement (fil rouge même en fallback).
+- Fix 5 : ensure_playable_hand (défausse→secours « Souffle Errant ») — invariant main ≥ 2.
+- Fix 6 : save UNIQUE au début de beat (le save post-résolution DOUBLE-APPLIQUAIT les coûts à la
+  reprise) + save à _accept_quest + run_ended. Resume = beat start, transients non persistés.
+- Fix 7 : fermeture propre (auto_accept_quit=false, cancel + join borné 2s + _quitting guard).
+- Fix 8 : invalidate_resolution cancel la gen en vol (sinon prefetch du beat suivant affamé).
+- Fix 9 : appel narrate_opening supprimé de _bg_intro (affamait le prefetch beat-1) — fonction
+  conservée pour l'interstitiel B3.
+- Fix 10 : epoch bump avant draft + retrofit _fresh().
+- Gate : validate_step0 exit=0 · probe_run 2/2 · probe_draft 34/34 · smoke Game+Menu passed.
+
+### Phase P — Harnais de preuve (FAIT, gate final en cours)
+- NEW tools/probe_soak.gd : Monte Carlo N=200 (5 archétypes + mixed, cas dégénérés i%7/11/13,
+  S5 save/resume, invariants par beat, backup/restore de la vraie save). **1er run : 200/200 PASS
+  (9,5s), 0 SCRIPT ERROR.** Métriques : échec 10,1%, éclatante 10,3%, partiel 55,6% (à équilibrer
+  v10.14), drafts pris 72%, morts 7,5%, 132 secours injectées.
+- NEW tools/autoplay_run.gd : N runs UI complets LLM ON (intro→beats→draft→MerlinEnd), awaits
+  corrects (_on_resolve await ; _advance_to_next fire-and-forget VOLONTAIRE — un await = deadlock
+  avec le modal draft servi par la même boucle).
+- cli : `python tools/cli.py godot soak --runs 200 --autoplay true --loops 3` (adapter _soak).
+- Code-review : 0 CRITICAL ; 3 HIGH corrigés (collision save joueur dans les harnais → backup/
+  restore ; _quitting guard ; awaits autoplay). Gate final (soak+autoplay) en arrière-plan.
+
+### À suivre
+- Phase A (MerlinVisual → Prose/PromptBuilder → MerlinFx → WaitStage) + re-soak.
+- Phase B (priorité moteur + B2/B1/B7/B3/B4/B9/B5). Phase V (cascade agents + BIBLE.md + commits).
+
+---
+
+## Session: 2026-06-07 (suite) — v10.12 Fusion adaptative + Map du chemin + Carte simplifiée
+
+### Context
+Playtest user : (1) « le scénario ne suit pas » → fusion trop rapide, ralentir + tout animer pour laisser
+le LLM interpréter (max async) ; (2) carte « map » manquante à droite qui dessine le chemin (chemin de
+base + déviations, on peut sortir du chemin) ; (3) cartes surchargées, simplifier. AskUserQuestion (4Q) →
+map REMPLACE la carte Destin ; carte = icône + rareté + tags EN CLAIR ; fusion adaptative. Specs : merlin-game-designer.
+
+### Done
+- **Fusion adaptative** (`merlin_game._play_fusion_animation`) : après la phase 4, SUSTAIN animé (glow
+  pulse + sparks ~2.2s) JUSQU'À `is_resolution_ready` OU cap 12s → l'issue LLM « suit » la fusion.
+  Cache-hit = 0 frame. Gardes teardown (is_instance_valid glow/layer ; sparks via layer.create_tween).
+- **Map du chemin** (NEW `merlin_beat_map.gd` / `MerlinBeatMap`) : chemin vertical des beats (nœuds reliés),
+  position « tu es ici » (or+halo), passés (encre)/à-venir (sombre), marqueur de déviation au draft.
+  Remplace la carte Destin (coin droit). Câblé `_build_beat_map` + setup/set_current/mark_draft.
+- **Carte simplifiée** (`merlin_card_view`) : retiré rangée de pastilles + bande archétype ; tags EN CLAIR
+  (2 max, mots colorés par famille) ; gardé nom + glyphe + gemme rareté/coût + badge effet.
+
+### Vérif
+- [x] validate_step0 exit=0 (10 erreurs phantom_camera pré-existantes ; MerlinBeatMap enregistré)
+- [x] smoke MerlinGame passed=True script_errors=0 (boot + map + cartes simplifiées)
+- [x] code-reviewer : 0 CRITICAL ; 2 HIGH (teardown safety sustain) + 2 MEDIUM corrigés
+- [x] **Playtest auto-jugé (capture viewport non-headless, 2026-06-07)** : cartes simplifiées ✅ (nom +
+  glyphe + tag en mot + gemme) ; map ⚠️→✅ (1ère passe = barre cramponnée au bord, illisible → refonte
+  « panneau CHEMIN » : sentier zigzag dans un panneau encadré, inset 24px) ; fusion ✅ animée ; **issue
+  SUIT le scénario** ✅ (« Le geste fusionné n'ouvrit la voie qu'à demi… le prix viendrait plus tard » =
+  Partiel + continuité « quelque chose l'avait vu faire »). **Bug trouvé + corrigé (v10.12b)** : le LLM
+  (~1 tok/s sous RAM pressée) dépassait le cap sustain 12s → le voile statique « Merlin assemble »
+  réapparaissait. Fix : cap 20s + **caption ANIMÉE « Merlin tisse les fils du sort … »** (points cyclants
+  + glow + sparks) + filet procédural, ZÉRO voile statique.
+- Notes : (a) segfault au quit du HARNESS de capture (bare `quit()` pendant gen native) = PAS un bug jeu
+  (smoke chemin normal passed) — fragilité connue du thread LLM natif à l'exit ; (b) la situation peut être
+  enrichie par le LLM en cours de run (à surveiller : éviter un swap de texte pendant la lecture).
+
+### Reste (cadré merlin-game-designer PART B — EN ATTENTE décisions user)
+- **Ramification réelle / quêtes** (clusters 2-5 beats, sortir du chemin → vraie ramification) : refonte
+  scénario/run/save → 7 questions ouvertes. **Jet de dés** (combinaisons spéciales) → 4 questions.
+  **50+ tags** (7 départ, déblocage in/cross-aventure) → 4 questions.
+- `ARCHETYPE_STYLE` (merlin_card_view) désormais inutilisé (dead const, à retirer plus tard).
+
+## Session: 2026-06-07 — v10.11 Deck enrichi + Draft 1/3 + Rareté + Carte Destin (StS allégé)
+
+### Context
+User : « enrichi le deck, à chaque résolution tirer 1 carte sur 3 au choix, niveaux de rareté, coin
+droit HUD une carte qui se dessine selon les choix, carte simple façon Slay the Spire ». AskUserQuestion
+(4Q) → carte HUD = « destin » du run ; mécanique = tag-coverage **+** effets actifs sur Rare+ ; draft =
+beats clés (réussite/éclatante) only, skip autorisé ; visuel = minimal strict (DA flat 2026-05-26) + gemme.
+
+### Done
+- **merlin_card.gd** : champs `effect_type`/`effect_value` (+ make/to_dict/from_dict) ; `enriched_pool()`
+  = 14 cartes (6 Rare/5 Épique/3 Mythique), tags ORDONNÉS pour l'archétype voulu, effets HEAL/PURGE/DRAW.
+- **merlin_run.gd** : `apply_card_effects` (HEAL cap 10 / PURGE plancher 0 / DRAW main bornée HAND+3),
+  `draft_choices` (3 distinctes, pondérées normal/late, exclut possédées), `add_card_to_deck`, suivi
+  `archetype_scores` (play_and_discard), `dominant_archetype`/`destiny_tier`/`destiny_snapshot`, save/load.
+- **merlin_card_view.gd** : gemme rareté/coût (coin HG) + badge d'effet (coin HD), DA flat conservée.
+- **merlin_game.gd** : effets en résolution (avant check mort) ; draft armé aux beats clés (réussite/
+  éclatante, non-climax) → overlay modal `_present_draft` (3 cartes + Passer) ; widget Carte Destin coin
+  HD (`_build_destiny_widget`/`_update_destiny`) rebâti à chaque résolution.
+- **tools/probe_draft.gd** (NEW) : harness logique sans LLM (34 assertions).
+- Barème (effets/poids/seuils destin) : agent `merlin-game-designer` vs bible.
+
+### Vérif
+- [x] validate_step0 exit=0 (10 erreurs = phantom_camera.svg pré-existantes ; MerlinCard/CardView recompilent)
+- [x] smoke MerlinGame passed=True script_errors=0 exit=0 (boot + _build_destiny_widget + _update_destiny null-path)
+- [x] **probe_draft.gd : 34/34 PASS** — pool, archétypes (corruption→Corrompu), effets (cap/plancher/borne),
+  Carte Destin (Commune→Mythique + bascule dominant), draft (distinct/pondéré/exclusion).
+- [x] code-reviewer : 0 CRITICAL ; 4 HIGH/5 MEDIUM revus → hardening appliqué (garde teardown, garde
+  modale draft dans _input/_on_story_click, types card_clicked/_on_draft_card, commentaire destiny_tier).
+- [ ] Ressenti in-game (draft + destin visuels) = playtest user.
+
+### Reste
+- Bible : documenter deck enrichi/draft/destin après sign-off playtest.
+- Effets : heal/purge animés via gauges ; DRAW silencieux (toast optionnel = itération future).
+
+---
+
 ## Session: 2026-06-06 — v10.9 Longueur de prose VARIABLE (in-game)
 
 ### Context
@@ -3110,3 +3230,38 @@ sujets abstraits ('le vide','le nom').
 - VÉRIFICATION (01:52) : smoke MerlinGame ✅ + MerlinSelection ✅ + MerlinEnd ✅ (exit 0,
   script_errors 0). 4 axes couverts : cohérence ✅ · lisibilité ✅ · bugs ✅ · équilibrage 📋 doc.
 - ÉTAT : prose mission ACCOMPLIE + validée. Reste = monitoring léger (probe_prose + smoke) jusqu'à 9h.
+
+---
+
+## 2026-06-08 — n8n MCP + Skill : automatisations (full local, sans clé)
+
+**Demande** : élaborer un MCP + Skill pour créer des automatisations n8n, avec exemples montrés.
+
+**Constat** : l'outillage existait déjà (MCP `tools/n8n-mcp-server` 9 outils, skill `mcp-n8n`, agent `n8n_architect`, CLI). Vrai blocage = `N8N_API_KEY` non défini → REST Unauthorized.
+
+**Réponse "sans clé"** : n8n 2.8.4 local (`~/n8n-local`, SQLite), CLI `import:workflow` écrit direct en base, full local, zéro token. Clé API = local (pas une dépendance externe), requise seulement pour execute/monitor/activate live depuis Claude.
+
+**Livré** :
+- `tools/n8n-templates/01-webhook-transform-response.json` (Webhook→Code→Respond)
+- `tools/n8n-templates/02-schedule-http-poll-notify.json` (Schedule→HTTP→If→Set/NoOp)
+- `tools/n8n-templates/README.md` (import no-key + clé, tests)
+- `~/.claude/skills/mcp-n8n/SKILL.md` : + sections « Sans clé API » et « Bibliothèque de templates »
+- Mémoire `_ref__n8n_local.md`
+
+**Vérif** : import live des 2 workflows OK (pas de lock DB) ; round-trip export Démo 1 OK (nodes + connexions intacts). IDs : Démo 1 `Sa0AVzOBFqN8PcCn`, Démo 2 `suZbe7Jbf5gKQXtX`.
+
+---
+
+## 2026-06-08 — n8n cours marketing : funnel Lead→CRM (complet, sans credentials)
+
+**Demande** : automatisation marketing complète et complexe pour un cours (pas MERLIN).
+
+**Choix** : Funnel Lead→CRM | 100% sans credentials | workflow + fiche de cours.
+
+**Livré** (tools/n8n-templates/) :
+- `10-marketing-funnel-lead-to-crm.json` — 19 nœuds : Webhook → Validation/hygiène → IF → HTTP disify → Enrichissement → Lead scoring → Switch HOT/WARM/COLD → 3 canaux → Sync CRM (httpbin) → Réponse 200/400.
+- `11-marketing-rapport-quotidien.json` — Schedule 18h → données simulées → agrégation KPIs → httpbin → NoOp.
+- `COURS-marketing-funnel.md` — fiche pédagogique (concepts↔nœuds, grille scoring, exercices, glossaire).
+- Générateur `~/Downloads/build-marketing-workflow.mjs` (JSON.stringify, scoring unit-testé).
+
+**Vérif** : scoring testé (HOT 100 / WARM 40 / COLD 10) ; JSON valides ; import n8n OK (2 workflows) ; round-trip export funnel OK (19 nœuds, Switch HOT/WARM/COLD, branches IF intactes) ; agrégation rapport OK. `n8n execute` CLI bloqué (port 5679) → runtime via UI "Test workflow"/clé API. IDs : Funnel `UWf1S41Q0gCwb7Xu`, Rapport `F0lp2tTIfKxYM086`.
