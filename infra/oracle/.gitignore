@@ -6,4 +6,6 @@ terraform.tfvars
 *.tfstate.*
 tfplan
 crash.log
+# Docker stack secrets
+stack/.env
 # Keep .terraform.lock.hcl tracked (provider pinning) — do NOT ignore it

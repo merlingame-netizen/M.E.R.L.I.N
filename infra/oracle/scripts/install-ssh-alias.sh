@@ -34,6 +34,10 @@ Host ${ALIAS}
     User ${USER}
     IdentityFile ${SSH_KEY}
     LocalForward 11434 localhost:11434
+    LocalForward 3000 localhost:3000
+    LocalForward 8443 localhost:8443
+    LocalForward 8081 localhost:8081
+    LocalForward 5432 localhost:5432
     ServerAliveInterval 60
     ServerAliveCountMax 3
     StrictHostKeyChecking accept-new
@@ -46,9 +50,16 @@ cat <<EOF
 ==> Added '${ALIAS}' to ${CFG}
 
 Now you can simply:
-    ssh ${ALIAS}                # shell on the VM (+ Ollama tunneled to localhost:11434)
+    ssh ${ALIAS}                # shell on the VM (opens all tunnels below)
     scp file ${ALIAS}:~/        # copy files
-    code --remote ssh-remote+${ALIAS} /home/${USER}/workspace   # VS Code Remote-SSH
+
+While 'ssh ${ALIAS}' is connected, these are reachable on your machine:
+    http://localhost:3000       # Open WebUI (chat with your LLMs)
+    http://localhost:8443       # code-server (VS Code in the browser)
+    http://localhost:8081       # Filebrowser (files on the VM)
+    localhost:11434             # Ollama API
+    psql -h localhost -p 5432 -U merlin    # PostgreSQL
+    (passwords: ssh ${ALIAS} then 'cat /opt/merlin/stack/.env')
 
 (IP ${IP}, user ${USER}, key ${SSH_KEY})
 EOF

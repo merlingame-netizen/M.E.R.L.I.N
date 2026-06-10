@@ -1,0 +1,82 @@
+# M.E.R.L.I.N. dev stack — all services bound to 127.0.0.1 (SSH-tunnel only).
+# Reference copy (paths use the default 'ubuntu' user). cloud-init writes its own
+# rendered copy to /opt/merlin/stack/ and runs it via merlin-stack.service.
+# Manual use on the VM:  cd /opt/merlin/stack && docker compose up -d
+name: merlin-stack
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:${OPENWEBUI_TAG:-main}
+    container_name: merlin-open-webui
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - WEBUI_AUTH=true
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3000:8080"
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks: [merlin]
+    restart: unless-stopped
+
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: merlin-code-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Europe/Paris}
+      - PASSWORD=${CODESERVER_PASSWORD}
+      - DEFAULT_WORKSPACE=/config/workspace
+    ports:
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - codeserver_config:/config
+      - /home/ubuntu/workspace:/config/workspace
+    networks: [merlin]
+    restart: unless-stopped
+
+  filebrowser:
+    image: filebrowser/filebrowser:s6
+    container_name: merlin-filebrowser
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - "127.0.0.1:8081:80"
+    volumes:
+      - /home/ubuntu/workspace:/srv
+      - filebrowser_db:/database
+    networks: [merlin]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: merlin-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-merlin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-merlin}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [merlin]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-merlin}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+networks:
+  merlin:
+    driver: bridge
+
+volumes:
+  openwebui_data:
+  codeserver_config:
+  filebrowser_db:
+  pgdata:

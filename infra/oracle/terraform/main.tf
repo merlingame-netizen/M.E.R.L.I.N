@@ -31,6 +31,9 @@ locals {
     expose_ollama        = var.expose_ollama
     git_repos            = var.git_repos
     enable_claude_runner = var.enable_claude_runner
+    enable_dev_stack     = var.enable_dev_stack
+    openwebui_tag        = var.openwebui_tag
+    enable_blender       = var.enable_blender
   }))
 }
 

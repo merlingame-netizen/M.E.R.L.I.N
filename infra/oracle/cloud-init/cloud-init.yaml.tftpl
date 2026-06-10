@@ -68,6 +68,8 @@ write_files:
       alias gv='godot --headless --version'
       alias ol='ollama list'
       alias merlin='/usr/local/bin/merlin-status'
+      alias dc='docker compose -f /opt/merlin/stack/docker-compose.yml'
+      alias venv='source /home/${os_username}/workspace/M.E.R.L.I.N/.venv/bin/activate'
       export EDITOR=nano
 
   - path: /usr/local/bin/merlin-status
@@ -80,6 +82,8 @@ write_files:
       echo "Claude : $(claude --version 2>/dev/null || echo 'not installed')"
       echo "Runner : $(systemctl is-active merlin-runner 2>/dev/null || echo n/a)"
       echo "Models :"; ollama list 2>/dev/null | sed 's/^/  /'
+      echo "Stack  :"; docker ps --filter name=merlin- --format '  {{.Names}}: {{.Status}}' 2>/dev/null || echo "  (docker n/a)"
+      echo "Secrets: /opt/merlin/stack/.env (code-server + postgres passwords)"
       echo "Workspace: $(ls /home/${os_username}/workspace 2>/dev/null | tr '\n' ' ')"
 
   - path: /etc/update-motd.d/99-merlin
@@ -136,6 +140,160 @@ write_files:
       WantedBy=multi-user.target
 %{ endif ~}
 
+  # --- merlin-narrator: create only if the LoRA gguf is present (else skip cleanly) ---
+  - path: /opt/merlin/create-narrator.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      REPO=/home/${os_username}/workspace/M.E.R.L.I.N
+      MF="$REPO/Modelfile"
+      GGUF="$REPO/addons/merlin_llm/adapters/merlin_narrator_lora.gguf"
+      [ -f "$MF" ] || { echo "no Modelfile, skip"; exit 0; }
+      if [ ! -s "$GGUF" ]; then
+        echo "LoRA gguf missing ($GGUF) — skipping merlin-narrator."
+        echo "Place the .gguf then: cd $REPO && ollama create merlin-narrator -f Modelfile"
+        exit 0
+      fi
+      for _ in $(seq 1 60); do
+        curl -fsS http://localhost:11434/api/version >/dev/null 2>&1 && break
+        sleep 5
+      done
+      cd "$REPO"
+      ollama create merlin-narrator -f Modelfile && echo "merlin-narrator created."
+%{ if enable_dev_stack ~}
+  # --- Make host Ollama reachable from containers (still loopback+bridge only) ---
+  - path: /etc/systemd/system/ollama.service.d/override.conf
+    content: |
+      [Service]
+      Environment="OLLAMA_HOST=0.0.0.0:11434"
+
+  # --- Dev stack: Open WebUI + code-server + Filebrowser + PostgreSQL (127.0.0.1 only) ---
+  - path: /opt/merlin/stack/docker-compose.yml
+    content: |
+      name: merlin-stack
+      services:
+        open-webui:
+          image: ghcr.io/open-webui/open-webui:$${OPENWEBUI_TAG:-main}
+          container_name: merlin-open-webui
+          environment:
+            - OLLAMA_BASE_URL=http://host.docker.internal:11434
+            - WEBUI_AUTH=true
+            - WEBUI_SECRET_KEY=$${WEBUI_SECRET_KEY}
+          extra_hosts:
+            - "host.docker.internal:host-gateway"
+          ports:
+            - "127.0.0.1:3000:8080"
+          volumes:
+            - openwebui_data:/app/backend/data
+          networks: [merlin]
+          restart: unless-stopped
+        code-server:
+          image: lscr.io/linuxserver/code-server:latest
+          container_name: merlin-code-server
+          environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=$${TZ:-Europe/Paris}
+            - PASSWORD=$${CODESERVER_PASSWORD}
+            - DEFAULT_WORKSPACE=/config/workspace
+          ports:
+            - "127.0.0.1:8443:8443"
+          volumes:
+            - codeserver_config:/config
+            - /home/${os_username}/workspace:/config/workspace
+          networks: [merlin]
+          restart: unless-stopped
+        filebrowser:
+          image: filebrowser/filebrowser:s6
+          container_name: merlin-filebrowser
+          environment:
+            - PUID=1000
+            - PGID=1000
+          ports:
+            - "127.0.0.1:8081:80"
+          volumes:
+            - /home/${os_username}/workspace:/srv
+            - filebrowser_db:/database
+          networks: [merlin]
+          restart: unless-stopped
+        postgres:
+          image: postgres:16-alpine
+          container_name: merlin-postgres
+          environment:
+            - POSTGRES_USER=$${POSTGRES_USER:-merlin}
+            - POSTGRES_PASSWORD=$${POSTGRES_PASSWORD}
+            - POSTGRES_DB=$${POSTGRES_DB:-merlin}
+          ports:
+            - "127.0.0.1:5432:5432"
+          volumes:
+            - pgdata:/var/lib/postgresql/data
+          networks: [merlin]
+          restart: unless-stopped
+          healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-merlin}"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+      networks:
+        merlin:
+          driver: bridge
+      volumes:
+        openwebui_data:
+        codeserver_config:
+        filebrowser_db:
+        pgdata:
+
+  - path: /opt/merlin/stack/gen-env.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      ENV=/opt/merlin/stack/.env
+      [ -f "$ENV" ] && exit 0
+      gen() { openssl rand -hex 24; }
+      cat > "$ENV" <<EOF
+      OPENWEBUI_TAG=${openwebui_tag}
+      WEBUI_SECRET_KEY=$(gen)
+      CODESERVER_PASSWORD=$(gen)
+      POSTGRES_USER=merlin
+      POSTGRES_PASSWORD=$(gen)
+      POSTGRES_DB=merlin
+      TZ=Europe/Paris
+      EOF
+      chmod 600 "$ENV"
+      echo "Stack secrets written to $ENV"
+
+  - path: /etc/systemd/system/merlin-stack.service
+    content: |
+      [Unit]
+      Description=M.E.R.L.I.N. dev stack (docker compose)
+      Requires=docker.service
+      After=docker.service network-online.target ollama.service
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/merlin/stack
+      ExecStart=/usr/bin/docker compose up -d
+      ExecStop=/usr/bin/docker compose down
+      TimeoutStartSec=0
+
+      [Install]
+      WantedBy=multi-user.target
+%{ endif ~}
+%{ if enable_blender ~}
+  # --- Blender headless via container (arm64; version NOT guaranteed 4.5) ---
+  - path: /usr/local/bin/blender
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      # WARNING: arm64 Blender may not be 4.5 — verify `blender --version`.
+      exec docker run --rm -v /home/${os_username}/workspace:/workspace \
+        lscr.io/linuxserver/blender:latest /usr/bin/blender --background "$@"
+%{ endif ~}
+
 runcmd:
   - sysctl --system || true
   # 8 GB swap for headroom when loading larger quantized models.
@@ -151,6 +309,20 @@ runcmd:
   # Ollama (systemd service, binds 127.0.0.1:11434 by default)
   - curl -fsSL https://ollama.com/install.sh | sh
   - systemctl enable --now ollama || true
+%{ if enable_dev_stack ~}
+  - systemctl daemon-reload && systemctl restart ollama || true
+%{ endif ~}
+%{ if enable_dev_stack || enable_blender ~}
+  # Docker engine + compose v2 (arm64, official apt repo)
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - usermod -aG docker ${os_username}
+  - systemctl enable --now docker
+%{ endif ~}
   # Godot headless (arm64)
   - |
     GODOT_VER="${godot_version}"
@@ -179,6 +351,26 @@ runcmd:
   - systemctl daemon-reload
   - systemctl enable merlin-runner.service || true
 %{ endif ~}
+  # Python venv for the CLI tooling (arm64: FreeTDS for SQL Server; MS driver unavailable)
+  - apt-get install -y unixodbc-dev freetds-dev tdsodbc || true
+  - |
+    sudo -u ${os_username} bash -c '
+      cd /home/${os_username}/workspace/M.E.R.L.I.N 2>/dev/null || exit 0
+      python3 -m venv .venv && . .venv/bin/activate
+      pip install --upgrade pip wheel >/dev/null 2>&1
+      pip install -r tools/data_explorer/requirements.txt || echo "partial arm64 install — see log"
+    ' > /var/log/merlin-pyenv.log 2>&1 || true
+%{ if enable_blender ~}
+  - docker pull lscr.io/linuxserver/blender:latest || true
+%{ endif ~}
+%{ if enable_dev_stack ~}
+  # Dev stack: generate secrets + bring it up (idempotent via systemd)
+  - bash /opt/merlin/stack/gen-env.sh || true
+  - systemctl daemon-reload
+  - systemctl enable --now merlin-stack.service || true
+%{ endif ~}
+  # Create merlin-narrator if the LoRA gguf is present (else skip cleanly)
+  - bash /opt/merlin/create-narrator.sh > /var/log/merlin-narrator.log 2>&1 &
   - touch /opt/merlin/PROVISION_DONE
 
 final_message: "M.E.R.L.I.N. host provisioned in $UPTIME s — see /opt/merlin/README.txt"

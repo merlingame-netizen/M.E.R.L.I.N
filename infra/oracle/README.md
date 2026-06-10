@@ -20,6 +20,28 @@ and survives ephemeral CI sessions.
 | **Node 20 + Claude Code** | `@anthropic-ai/claude-code` global install; Node for the MERLIN `server/` build. |
 | **Dev base** | git, python3, build-essential, tmux, ufw, 8 GB swap. |
 | **Repo mirror** | optional auto-clone of `git_repos` into `~/workspace`. |
+| **Dev stack** (docker) | Open WebUI, code-server, Filebrowser, PostgreSQL — all bound to `127.0.0.1`, reached via SSH tunnel. Toggle with `enable_dev_stack`. |
+| **Blender** (opt-in) | `enable_blender=true` installs the arm64 container + `/usr/local/bin/blender` wrapper. ⚠️ version not guaranteed 4.5. |
+| **Python venv** | `~/workspace/M.E.R.L.I.N/.venv` with `tools/data_explorer/requirements.txt` (FreeTDS for SQL Server on arm64). |
+
+### Dev services stack (all private, SSH-tunnel only)
+
+Deployed as a single `docker compose` (`/opt/merlin/stack/`) via the
+`merlin-stack` systemd service. Source: `stack/docker-compose.yml`. Every port is
+bound to `127.0.0.1` — nothing is exposed to the internet. Run
+`scripts/install-ssh-alias.sh` once, then `ssh merlin-vm` forwards them all:
+
+| Service | URL on your machine | Notes |
+|---------|---------------------|-------|
+| **Open WebUI** | http://localhost:3000 | Chat UI for your Ollama models |
+| **code-server** | http://localhost:8443 | VS Code in the browser, workspace mounted |
+| **Filebrowser** | http://localhost:8081 | Manage files/data on the VM |
+| **PostgreSQL** | `psql -h localhost -p 5432 -U merlin` | Database for data/cours work |
+| **Ollama** | http://localhost:11434 | LLM API |
+
+Secrets (code-server + Postgres passwords) are generated on first boot:
+`ssh merlin-vm` then `cat /opt/merlin/stack/.env`. On the VM, `merlin` shows
+status, `dc` = `docker compose` for the stack, `venv` activates the Python env.
 
 > ⚠️ ARM A1 has **no GPU**. A 12B model quantized (Q4) loads in ~8 GB and runs,
 > but CPU inference is slow — good for **async** card/scenario generation, not
@@ -227,7 +249,10 @@ infra/oracle/
 │   ├── outputs.tf
 │   └── terraform.tfvars.example
 ├── cloud-init/
-│   └── cloud-init.yaml.tftpl      # VM provisioning (Ollama/Gemma, Godot, Claude Code)
+│   └── cloud-init.yaml.tftpl      # VM provisioning (Ollama, Godot, stack, Blender, Claude Code)
+├── stack/
+│   ├── docker-compose.yml        # Open WebUI + code-server + Filebrowser + PostgreSQL
+│   └── .env.example              # secrets template (real .env generated on the VM)
 └── scripts/
     ├── generate-keys.sh           # API + SSH keys, prints tfvars snippet
     ├── deploy.sh                  # init/plan/apply wrapper

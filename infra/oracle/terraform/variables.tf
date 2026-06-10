@@ -148,3 +148,24 @@ variable "enable_claude_runner" {
   description = "Install a systemd service that can run a headless Claude Code task at boot. Stays inactive until /etc/merlin/runner.env is configured with ANTHROPIC_API_KEY."
   default     = true
 }
+
+# ---------------------------------------------------------------------------
+# Dev services stack (docker compose, all bound to 127.0.0.1)
+# ---------------------------------------------------------------------------
+variable "enable_dev_stack" {
+  type        = bool
+  description = "Deploy the docker compose stack (Open WebUI, code-server, Filebrowser, PostgreSQL). All services are loopback-only (SSH-tunnel access)."
+  default     = true
+}
+
+variable "openwebui_tag" {
+  type        = string
+  description = "Open WebUI image tag. Pin to a release (e.g. v0.5.20) if 'main' regresses on arm64."
+  default     = "main"
+}
+
+variable "enable_blender" {
+  type        = bool
+  description = "Install Blender headless via the linuxserver arm64 container + /usr/local/bin/blender wrapper. WARNING: arm64 build is not guaranteed to be 4.5; test asset_forge scripts before relying on it."
+  default     = false
+}

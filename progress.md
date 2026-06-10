@@ -2539,3 +2539,18 @@ usages Claude/dev/Godot.
   est AVAILABLE -> plan + freetier-guard + apply immediat du meilleur shape dispo.
 - FIX cloud-init : arch Godot dynamique (arm64/x86_64 selon uname -m) ; skip pull modeles
   LLM si RAM < 4 Go (micro 1 Go inutilisable pour Gemma).
+
+### 2026-06-07 (suite 6) — Stack serveur dev complète (docker compose)
+
+- VM cible = serveur de dev h24, tout en 127.0.0.1 (accès tunnel SSH uniquement).
+- AJOUT `infra/oracle/stack/docker-compose.yml` + `.env.example` : Open WebUI (UI Ollama),
+  code-server (VS Code web), Filebrowser, PostgreSQL. Images arm64 confirmees.
+- cloud-init enrichi : install Docker (apt repo arm64) + compose v2, drop-in Ollama
+  (OLLAMA_HOST=0.0.0.0 pour host.docker.internal), service systemd merlin-stack (oneshot),
+  gen-env.sh (secrets aleatoires au boot), venv Python (FreeTDS arm64), wrapper Blender
+  conteneur (enable_blender), create-narrator.sh (skip propre si LoRA gguf absent).
+- Vars Terraform : enable_dev_stack, openwebui_tag, enable_blender.
+- Pont SSH multi-ports (11434/3000/8443/8081/5432) dans install-ssh-alias.sh + tunnel.sh.
+- Valide : terraform validate OK, rendu cloud-init YAML valide (stack on/off, blender on/off),
+  echappement docker-compose vars OK, garde-fou free-tier OK (4/24/150 dans le quota).
+- Capacite Paris toujours nulle : deploiement declenche par le watcher des qu'un slot s'ouvre.
