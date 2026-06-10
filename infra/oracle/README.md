@@ -183,6 +183,21 @@ cd terraform
 until terraform apply -auto-approve; do echo "retrying in 120s..."; sleep 120; done
 ```
 
+**Smarter: ask Oracle instead of retry-failing.** `scripts/capacity-report.py`
+queries the official *Compute Capacity Report* API and tells you, per shape and
+fault domain, whether capacity is `AVAILABLE` or `OUT_OF_HOST_CAPACITY` —
+without burning failed launch attempts:
+
+```bash
+pip install oci                                  # once (or in a venv)
+python3 scripts/capacity-report.py               # full availability table
+python3 scripts/capacity-report.py --best        # "shape|ocpus|mem" or "NONE"
+```
+
+A watch loop can poll `--best` every ~2 min and only run the (guarded)
+`terraform apply` when Oracle reports availability — priority A1 4/24 →
+2/12 → 1/6 → E2.1.Micro.
+
 ---
 
 ## Cost & quota notes (staying free)
@@ -219,7 +234,8 @@ infra/oracle/
     ├── install-ssh-alias.sh       # adds 'merlin-vm' to ~/.ssh/config (+ Ollama tunnel)
     ├── connect.sh                 # one-shot SSH using terraform outputs
     ├── tunnel.sh                  # Ollama tunnel only
-    └── freetier-guard.py          # blocks apply if plan leaves Always Free limits
+    ├── freetier-guard.py          # blocks apply if plan leaves Always Free limits
+    └── capacity-report.py         # asks Oracle which free shapes have capacity
 └── desktop/
     ├── Install Desktop Shortcut.cmd   # Windows: double-click to create the icon
     ├── install-desktop-shortcut.ps1   # Windows: the shortcut creator

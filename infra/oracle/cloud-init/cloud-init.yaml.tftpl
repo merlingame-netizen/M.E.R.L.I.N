@@ -33,6 +33,12 @@ write_files:
     content: |
       #!/usr/bin/env bash
       set -euo pipefail
+      # Skip model pulls on low-RAM hosts (e.g. E2.1.Micro 1GB) — they can't run them.
+      mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+      if [ "$mem_kb" -lt 4000000 ]; then
+        echo "RAM < 4GB: skipping LLM model pulls" > /opt/merlin/MODELS_DONE
+        exit 0
+      fi
       # Wait until the Ollama daemon answers before pulling.
       for _ in $(seq 1 60); do
         if curl -fsS http://localhost:11434/api/version >/dev/null 2>&1; then break; fi
@@ -148,10 +154,11 @@ runcmd:
   # Godot headless (arm64)
   - |
     GODOT_VER="${godot_version}"
+    case "$(uname -m)" in aarch64) GODOT_ARCH=arm64 ;; *) GODOT_ARCH=x86_64 ;; esac
     cd /tmp
-    wget -q "https://github.com/godotengine/godot/releases/download/$${GODOT_VER}-stable/Godot_v$${GODOT_VER}-stable_linux.arm64.zip" -O godot.zip
+    wget -q "https://github.com/godotengine/godot/releases/download/$${GODOT_VER}-stable/Godot_v$${GODOT_VER}-stable_linux.$${GODOT_ARCH}.zip" -O godot.zip
     unzip -o godot.zip
-    install -m 0755 "Godot_v$${GODOT_VER}-stable_linux.arm64" /usr/local/bin/godot
+    install -m 0755 "Godot_v$${GODOT_VER}-stable_linux.$${GODOT_ARCH}" /usr/local/bin/godot
     /usr/local/bin/godot --headless --version || true
   # Firewall (defense-in-depth; OCI security list is the primary control)
   - ufw allow OpenSSH

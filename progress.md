@@ -2527,3 +2527,15 @@ usages Claude/dev/Godot.
   en gratuit tous shapes. Always Free etant limite a la region d'origine (Paris), pas d'option
   gratuite ailleurs. Retry micro en arriere-plan (garde-fou actif).
 - Rappel : Windows = payant (hors free tier) ; PAYG reste le seul deblocage fiable cote capacite.
+
+### 2026-06-07 (suite 5) — Investigation capacite officielle + watcher intelligent
+
+- AJOUT `scripts/capacity-report.py` : interroge l'API Compute Capacity Report d'Oracle
+  (SDK oci) -> statut AVAILABLE / OUT_OF_HOST_CAPACITY par shape et fault domain, sans
+  bruler de tentatives de creation. Mode --best pour scripting (priorite A1 4/24 > 2/12 > 1/6 > micro).
+- VERDICT OFFICIEL : tous les shapes gratuits OUT_OF_HOST_CAPACITY a eu-paris-1 (AD unique,
+  3 fault domains testes). La saturation est confirmee par Oracle lui-meme.
+- NOUVEAU watcher en arriere-plan : poll capacity report toutes les 2 min -> des qu'un slot
+  est AVAILABLE -> plan + freetier-guard + apply immediat du meilleur shape dispo.
+- FIX cloud-init : arch Godot dynamique (arm64/x86_64 selon uname -m) ; skip pull modeles
+  LLM si RAM < 4 Go (micro 1 Go inutilisable pour Gemma).
